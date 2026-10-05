@@ -1,5 +1,4 @@
 import {
-  IconCalendarEventFilled,
   IconMoodSmile,
   IconStarFilled,
   IconTargetArrow,
@@ -8,17 +7,25 @@ import {
 import dayjs from "dayjs";
 import React from "react";
 import type { ComponentType, ReactNode } from "react";
-import {
-  Bar,
-  CartesianGrid,
-  ComposedChart,
-  Line,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { useTranslation } from "react-i18next";
+import { Bar, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from "recharts";
 
+import { NPS_COLORS } from "@/components/common/sentimentScale.ts";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card.tsx";
+import {
+  type ChartConfig,
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+} from "@/components/ui/chart.tsx";
 import {
   Select,
   SelectContent,
@@ -26,6 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
 
 const TIME_PERIODS = [
   { label: "Hourly", value: "hourly" },
@@ -44,40 +52,33 @@ const OverallResponseGraphWebForm = ({
   setTimePeriod: (period: string) => void;
   isLoading: boolean;
 }) => {
-  if (isLoading) {
-    return <div className="w-full h-100 animate-pulse bg-gray-100 rounded-xl" />;
-  }
+  const { t } = useTranslation();
+  // The bars are outcomes (detractor → promoter), so they wear the sentiment scale; the
+  // index line is a different measure on its own axis and stays neutral ink.
+  const config: ChartConfig = {
+    detractors: { label: t("Detractors"), color: NPS_COLORS.detractor },
+    passives: { label: t("Passives"), color: NPS_COLORS.passive },
+    promoters: { label: t("Promoters"), color: NPS_COLORS.promoter },
+    happinessIndex: { label: t("Happiness Index"), color: "var(--foreground)" },
+  };
+  // A period with no responses has no index, not an index of 0; the line skips it.
+  const series = data?.map((d) => (Number(d.total ?? 0) > 0 ? d : { ...d, happinessIndex: null }));
 
   return (
-    <div className="bg-white p-4 rounded-2xl shadow border border-gray-200 overflow-y-auto">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-4">
-        <div className="text-xl font-bold text-gray-800">Happiness Journey</div>
-
-        {/* Legends */}
-        <div className="flex flex-wrap gap-4 items-center text-xs font-medium">
-          <div className="flex items-center gap-1">
-            <div className="bg-[#004F98] w-2 h-2 rounded-full" />
-            <span>Responses</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="bg-[#66BF00] w-2 h-2 rounded-full" />
-            <span>Happiness Index</span>
-          </div>
-        </div>
-
-        {/* Time Selector */}
-        <div className="flex items-center gap-2">
-          <div className="bg-gray-100 p-1 rounded-md flex items-center justify-center">
-            <IconCalendarEventFilled color="#343A40" stroke={1} size={28} />
-          </div>
+    <Card className="min-w-0">
+      <CardHeader>
+        <CardTitle className="text-base">{t("Happiness Journey")}</CardTitle>
+        <CardDescription>
+          {t("Responses by sentiment, with the happiness index (0–10) on the right axis.")}
+        </CardDescription>
+        <CardAction>
           <Select
             items={TIME_PERIODS}
             value={timePeriod}
             onValueChange={(val) => setTimePeriod(val ?? "")}
           >
-            <SelectTrigger size="sm" className="w-30">
-              <SelectValue placeholder="Select" />
+            <SelectTrigger size="sm" className="w-30" aria-label={t("Time period")}>
+              <SelectValue placeholder={t("Select")} />
             </SelectTrigger>
             <SelectContent>
               {TIME_PERIODS.map((period) => (
@@ -87,53 +88,79 @@ const OverallResponseGraphWebForm = ({
               ))}
             </SelectContent>
           </Select>
-        </div>
-      </div>
-
-      {/* Chart */}
-      <div className="overflow-x-auto">
-        <ResponsiveContainer minWidth={600} height={400}>
-          <ComposedChart data={data} margin={{ top: 20, right: 20, bottom: 0, left: 0 }}>
-            <defs>
-              <linearGradient id="lineColor" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#000" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="#000" stopOpacity={0.1} />
-              </linearGradient>
-            </defs>
-
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis dataKey="date" fontSize={12} tickLine={false} height={40} interval={0} />
-            <YAxis
-              yAxisId="left"
-              orientation="left"
-              allowDecimals={false}
-              tickLine={false}
-              interval={0}
-            />
-            <YAxis
-              yAxisId="right"
-              orientation="right"
-              domain={[0, 10]}
-              tickLine={false}
-              interval={0}
-            />
-            <Tooltip content={<CustomTooltip timePeriod={timePeriod} />} />
-            <Bar yAxisId="left" dataKey="detractors" stackId="a" fill="#FF6161" barSize={20} />
-            <Bar yAxisId="left" dataKey="passives" stackId="a" fill="#FFC107" barSize={20} />
-            <Bar yAxisId="left" dataKey="promoters" stackId="a" fill="#00BF83" barSize={20} />
-            <Line
-              yAxisId="right"
-              type="monotone"
-              dataKey="promoters"
-              stroke="black"
-              strokeWidth={2}
-              dot={{ r: 3.5, fill: "black" }}
-              activeDot={{ r: 3.5 }}
-            />
-          </ComposedChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
+        </CardAction>
+      </CardHeader>
+      <CardContent className="min-w-0">
+        {isLoading ? (
+          <Skeleton className="h-80 w-full" />
+        ) : (
+          <div className="overflow-x-auto">
+            <ChartContainer config={config} className="h-80 w-full min-w-150">
+              <ComposedChart data={series} margin={{ top: 8, right: 4, bottom: 0, left: 4 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  minTickGap={16}
+                />
+                <YAxis
+                  yAxisId="left"
+                  allowDecimals={false}
+                  tickLine={false}
+                  axisLine={false}
+                  width={40}
+                />
+                <YAxis
+                  yAxisId="right"
+                  orientation="right"
+                  domain={[0, 10]}
+                  ticks={[0, 2, 4, 6, 8, 10]}
+                  tickLine={false}
+                  axisLine={false}
+                  width={32}
+                />
+                <ChartTooltip content={<CustomTooltip timePeriod={timePeriod} />} />
+                <ChartLegend content={<ChartLegendContent />} />
+                <Bar
+                  yAxisId="left"
+                  dataKey="detractors"
+                  stackId="a"
+                  fill="var(--color-detractors)"
+                  maxBarSize={28}
+                />
+                <Bar
+                  yAxisId="left"
+                  dataKey="passives"
+                  stackId="a"
+                  fill="var(--color-passives)"
+                  maxBarSize={28}
+                />
+                <Bar
+                  yAxisId="left"
+                  dataKey="promoters"
+                  stackId="a"
+                  fill="var(--color-promoters)"
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={28}
+                />
+                <Line
+                  yAxisId="right"
+                  type="monotone"
+                  dataKey="happinessIndex"
+                  connectNulls
+                  stroke="var(--color-happinessIndex)"
+                  strokeWidth={2}
+                  dot={{ r: 3, fill: "var(--color-happinessIndex)" }}
+                  activeDot={{ r: 4 }}
+                />
+              </ComposedChart>
+            </ChartContainer>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
@@ -187,10 +214,10 @@ const CustomTooltip = ({
     const happinessIndex = d.happinessIndex ?? 0;
 
     return (
-      <div className="bg-white rounded-xl shadow-xl border border-gray-200 px-4 py-3 min-w-[300px] text-[13px] text-gray-800 flex flex-col gap-2">
-        <p className="text-sm font-semibold">{labelFormatted}</p>
+      <div className="flex min-w-72 flex-col gap-2 rounded-lg border border-border bg-popover px-3 py-2.5 text-xs text-popover-foreground shadow-xl">
+        <p className="font-medium">{labelFormatted}</p>
 
-        <div className="grid grid-cols-2 gap-y-3 gap-x-4">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
           <Metric label="NPS Score" icon={IconTargetArrow} value={npsScore} />
           <Metric
             label="Average NPS Rating"
@@ -201,21 +228,21 @@ const CustomTooltip = ({
           <Metric label="Total Responses" icon={IconUsersGroup} value={total} />
         </div>
 
-        <div className="flex flex-wrap justify-between gap-4 text-xs pt-3 mt-3 border-t border-dashed border-gray-300">
+        <div className="flex flex-wrap justify-between gap-3 border-t border-dashed border-border pt-2">
           <Breakdown
             label="Promoters"
             value={((promoters / total) * 100 || 0).toFixed(0)}
-            color="green"
+            color={NPS_COLORS.promoter}
           />
           <Breakdown
             label="Passives"
             value={((passives / total) * 100 || 0).toFixed(0)}
-            color="yellow"
+            color={NPS_COLORS.passive}
           />
           <Breakdown
             label="Detractors"
             value={((detractors / total) * 100 || 0).toFixed(0)}
-            color="red"
+            color={NPS_COLORS.detractor}
           />
         </div>
       </div>
@@ -234,36 +261,21 @@ const Metric = ({
   icon: ComponentType<{ className?: string; size?: number }>;
   value: ReactNode;
 }) => (
-  <div className="flex justify-between items-center gap-2">
-    <div className="flex items-center gap-2 text-blue-600">
-      <Icon size={18} className="text-blue-500" />
-      <span className="text-gray-700">{label}</span>
+  <div className="flex items-center justify-between gap-2">
+    <div className="flex items-center gap-1.5 text-muted-foreground">
+      <Icon size={14} />
+      <span>{label}</span>
     </div>
-    <div className="font-bold text-blue-600 text-sm">{value}</div>
+    <div className="font-mono font-medium tabular-nums text-foreground">{value}</div>
   </div>
 );
 
-const Breakdown = ({
-  label,
-  value,
-  color,
-}: {
-  label: string;
-  value: ReactNode;
-  color: "green" | "yellow" | "red";
-}) => {
-  const colorMap = {
-    green: "text-green-600 bg-green-500",
-    yellow: "text-yellow-600 bg-yellow-400",
-    red: "text-destructive bg-destructive",
-  };
-  return (
-    <div className={`flex items-center gap-1 ${colorMap[color].split(" ")[0]}`}>
-      <div className={`w-2 h-2 rounded-full ${colorMap[color].split(" ")[1]}`} />
-      <span className="text-gray-700">{label}</span>
-      <span className={`font-semibold ${colorMap[color].split(" ")[0]}`}>{value}%</span>
-    </div>
-  );
-};
+const Breakdown = ({ label, value, color }: { label: string; value: ReactNode; color: string }) => (
+  <div className="flex items-center gap-1.5">
+    <span className="size-2 rounded-[2px]" style={{ backgroundColor: color }} aria-hidden />
+    <span className="text-muted-foreground">{label}</span>
+    <span className="font-medium tabular-nums text-foreground">{value}%</span>
+  </div>
+);
 
 export default React.memo(OverallResponseGraphWebForm);

@@ -1,8 +1,22 @@
-import { IconMoodSmile, IconTarget, IconUsers } from "@tabler/icons-react";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { useTranslation } from "react-i18next";
+import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
 
+import { NPS_COLORS } from "@/components/common/sentimentScale.ts";
+import { StatTile } from "@/components/common/StatTile.tsx";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card.tsx";
+import {
+  type ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart.tsx";
 import type { FlowQuestionSummary } from "@/components/whatsapp/flow-v2/utils/store.ts";
-import { stringToColour } from "@/utils/essential/index.ts";
 import { getResponseArrayByQuestionType } from "@/utils/response.ts";
 
 import { getReplacedTitleFromVariable } from "../TakeSurvey/TakeSurveyComponent/util.tsx";
@@ -50,193 +64,172 @@ const SurveyQuestion = ({
   surveyId,
   defaultLanguage,
 }: SurveyQuestionProps) => {
+  const { t } = useTranslation();
   if (choiceWise.length === 0) return null;
 
   function getQuestion(questionId: string) {
     if (version === 1) {
       const question = questions?.find((q) => q.id === questionId);
-      return { type: question?.type, questionTitle: question?.title || question?.label };
+      return {
+        type: question?.type,
+        questionTitle: question?.title || question?.label,
+        dataSource: undefined,
+      };
     }
     const question = flowQuestions?.find((q) => q.id === questionId);
-    return { type: question?.metaType, questionTitle: question?.header || question?.label };
+    return {
+      type: question?.metaType,
+      questionTitle: question?.header || question?.label,
+      dataSource: question?.dataSource,
+    };
   }
 
   const getPercentage = (count: number, total: number) =>
-    total > 0 ? Math.round((count / total) * 100) : "0";
+    total > 0 ? Math.round((count / total) * 100) : 0;
 
-  const CustomTooltip = ({
-    active,
-    payload,
-  }: {
-    active?: boolean;
-    payload?: Array<{ payload: { count?: number; percentage?: number | string } }>;
-  }) => {
-    if (active && payload?.length) {
-      const { count, percentage } = payload[0].payload;
-      return (
-        <div className="bg-card border px-3 py-1 rounded shadow-sm text-sm text-foreground">
-          {count} Votes ({percentage}%)
-        </div>
-      );
-    }
-    return null;
-  };
   return (
-    <div className="space-y-8 border rounded-md shadow-sm bg-card">
-      <h2 className="font-bold text-md px-6 pt-6">Survey Question Breakdown</h2>
-      <div className="py-8 px-4 md:px-14 flex flex-col gap-16">
-        {choiceWise?.map(([questionId, questionData], index) => {
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">{t("Question breakdown")}</CardTitle>
+        <CardDescription>{t("How each answer was distributed.")}</CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col divide-y divide-border">
+        {choiceWise.map(([questionId, questionData], index) => {
           const questionDetails = getQuestion(questionId);
           const npsEntry = NPS.find(([id]) => id === questionId)?.[1];
           const responseCount = questionData?.responseCount || 0;
-          const npsscore = npsEntry?.npsData?.npsScore ?? 0;
-          const npsScore = Math.round(npsscore);
+          const npsScore = Math.round(npsEntry?.npsData?.npsScore ?? 0);
           const promoters = npsEntry?.npsData?.promoters ?? 0;
           const passives = npsEntry?.npsData?.passives ?? 0;
           const detractors = npsEntry?.npsData?.detractors ?? 0;
           const total = promoters + passives + detractors;
-          const happinessIndex = total > 0 ? ((promoters / total) * 10).toFixed(1) : 0;
+          const happinessIndex = total > 0 ? ((promoters / total) * 10).toFixed(1) : "0";
 
-          const chartData = questionData?.data.map((item) => {
-            const color =
-              getResponseArrayByQuestionType(questionDetails?.type)?.find(
-                (ch) => ch.value.toString() === item.choice.toString(),
-              )?.color ?? stringToColour(item.choice);
-            return {
-              ...item,
-              percentage: getPercentage(item.count, responseCount),
-              fill: color,
-            };
-          });
+          const scale = getResponseArrayByQuestionType(questionDetails.type);
+          // A v2 flow reports a choice by its title; its data-source id is the scale value.
+          const scaleValueOf = (choice: string | number) =>
+            questionDetails.dataSource?.find((d) => d.title === String(choice))?.id ??
+            String(choice);
+          const chartData = questionData?.data.map((item) => ({
+            ...item,
+            percentage: getPercentage(item.count, responseCount),
+            fill:
+              scale?.find((ch) => ch.value.toString() === scaleValueOf(item.choice))?.color ??
+              "var(--chart-2)",
+          }));
+
+          const title =
+            typeof questionDetails.questionTitle === "object"
+              ? getReplacedTitleFromVariable({
+                  title: questionDetails.questionTitle[defaultLanguage],
+                  surveyId,
+                })
+              : questionDetails.questionTitle;
+
+          const npsParts = [
+            { label: t("Promoters"), value: promoters, color: NPS_COLORS.promoter },
+            { label: t("Passives"), value: passives, color: NPS_COLORS.passive },
+            { label: t("Detractors"), value: detractors, color: NPS_COLORS.detractor },
+          ];
 
           return (
-            <div key={questionId}>
-              <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
-                {/* Left Section */}
-                <div className="w-full md:w-[40%] space-y-3">
-                  <div className="flex items-center gap-2">
-                    <div className="bg-[#004F98] rounded-full w-6 h-6 text-white flex items-center justify-center text-xs font-bold">
-                      {index + 1}
-                    </div>
-                    <span className="text-sm font-bold text-[#343A40]">
-                      {typeof questionDetails?.questionTitle === "object"
-                        ? getReplacedTitleFromVariable({
-                            title: questionDetails?.questionTitle[defaultLanguage],
-                            surveyId,
-                          })
-                        : questionDetails?.questionTitle}
-                    </span>
-                  </div>
-
-                  <SurveyResultByType
-                    questionType={questionDetails?.type}
-                    chartData={chartData}
-                    version={version}
-                  />
+            <section key={questionId} className="flex flex-col gap-6 py-8 first:pt-0 last:pb-0">
+              <div className="flex items-start gap-3">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary tabular-nums">
+                  {index + 1}
+                </span>
+                <div className="min-w-0">
+                  <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+                  <p className="text-xs text-muted-foreground">
+                    {t("{count, plural, one {# response} other {# responses}}", {
+                      count: responseCount,
+                    })}
+                  </p>
                 </div>
+              </div>
 
-                {/* Right Section */}
-                <div className="w-full md:w-[60%] flex flex-col gap-4">
-                  {/* Chart */}
-                  <div className="h-[300px] border rounded-md bg-card shadow-sm px-4 pt-4">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={chartData} barSize={30} barGap={4} barCategoryGap="15%">
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e0e0e0" />
-                        <XAxis dataKey="choice" tick={{ fontSize: 12 }} tickLine={false} />
-                        <YAxis tick={{ fontSize: 12 }} tickLine={false} />
-                        <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} />
-                        <Bar dataKey="count" radius={[6, 6, 0, 0]} fill="#607D8B" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
+              <div className="grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] md:items-start">
+                <SurveyResultByType
+                  questionType={questionDetails.type}
+                  chartData={chartData}
+                  version={version}
+                />
 
-                  {/* NPS Breakdown */}
+                <div className="flex min-w-0 flex-col gap-4">
+                  <ChartContainer config={chartConfig} className="h-64 w-full">
+                    <BarChart data={chartData} margin={{ top: 8, left: 4, right: 8 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis dataKey="choice" tickLine={false} axisLine={false} tickMargin={8} />
+                      <YAxis tickLine={false} axisLine={false} allowDecimals={false} width={32} />
+                      <ChartTooltip
+                        cursor={false}
+                        content={
+                          <ChartTooltipContent
+                            hideIndicator
+                            formatter={(_value, _name, item) => {
+                              const datum = item.payload as { count: number; percentage: number };
+                              return (
+                                <span className="tabular-nums">
+                                  {t("{count, plural, one {# vote} other {# votes}}", {
+                                    count: datum.count,
+                                  })}{" "}
+                                  ({datum.percentage}%)
+                                </span>
+                              );
+                            }}
+                          />
+                        }
+                      />
+                      <Bar dataKey="count" radius={[4, 4, 0, 0]} maxBarSize={48}>
+                        {chartData?.map((d) => (
+                          <Cell key={String(d.choice)} fill={d.fill} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ChartContainer>
+
                   {npsEntry?.npsData && (
-                    <div className="flex flex-col gap-6">
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        {[
-                          {
-                            label: "Responses",
-                            value: responseCount,
-                            icon: <IconUsers size={18} color="#2B82DE" />,
-                          },
-                          {
-                            label: "NPS",
-                            value: npsScore >= 0 ? `+${npsScore}` : npsScore,
-                            icon: <IconTarget size={20} color="#2B82DE" />,
-                          },
-                          {
-                            label: "Happiness Index",
-                            value: happinessIndex,
-                            icon: <IconMoodSmile size={20} color="#2B82DE" />,
-                          },
-                        ].map((item) => (
+                    <div className="flex flex-col gap-4">
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                        <StatTile label={t("Responses")} value={responseCount.toLocaleString()} />
+                        <StatTile
+                          label={t("NPS")}
+                          value={npsScore >= 0 ? `+${npsScore}` : String(npsScore)}
+                        />
+                        <StatTile label={t("Happiness Index")} value={happinessIndex} />
+                      </div>
+
+                      <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-muted">
+                        {npsParts.map((part) => (
                           <div
-                            key={item.label}
-                            className="border bg-[#FAFAFA] rounded-sm shadow-sm px-2 py-2 flex items-center justify-between"
-                          >
-                            <div>
-                              <p className="text-[10px] font-semibold text-[#343A40]">
-                                {item.label}
-                              </p>
-                              <p className="text-2xl font-bold text-[#004F98]">{item.value}</p>
-                            </div>
-                            <div className="bg-[#2B82DE1F] p-1 rounded-md">{item.icon}</div>
-                          </div>
+                            key={part.label}
+                            style={{
+                              width: `${getPercentage(part.value, responseCount)}%`,
+                              backgroundColor: part.color,
+                            }}
+                          />
                         ))}
                       </div>
 
-                      <div className="flex h-4 w-full overflow-hidden rounded-full">
-                        <div
-                          style={{
-                            width: `${getPercentage(promoters, responseCount)}%`,
-                            backgroundColor: "#00BF83",
-                          }}
-                        />
-                        <div
-                          style={{
-                            width: `${getPercentage(passives, responseCount)}%`,
-                            backgroundColor: "#FFC107",
-                          }}
-                        />
-                        <div
-                          style={{
-                            width: `${getPercentage(detractors, responseCount)}%`,
-                            backgroundColor: "#FF6161",
-                          }}
-                        />
-                      </div>
-
-                      <div className="flex justify-between items-center">
-                        {[
-                          {
-                            label: "Promoters",
-                            value: promoters,
-                            percentage: getPercentage(promoters, responseCount),
-                            color: "#00BF83",
-                          },
-                          {
-                            label: "Passives",
-                            value: passives,
-                            percentage: getPercentage(passives, responseCount),
-                            color: "#FFC107",
-                          },
-                          {
-                            label: "Detractors",
-                            value: detractors,
-                            percentage: getPercentage(detractors, responseCount),
-                            color: "#FF6161",
-                          },
-                        ].map((item) => (
-                          <div
-                            key={item.label}
-                            className="flex flex-col items-center justify-center"
-                          >
-                            <p className="text-xs font-semibold text-[#343A40]">{item.label}</p>
-                            <p className="text-2xl font-bold" style={{ color: item.color }}>
-                              {item.percentage}%
+                      <div className="grid grid-cols-3 gap-2">
+                        {npsParts.map((part) => (
+                          <div key={part.label} className="flex flex-col gap-0.5">
+                            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                              <span
+                                className="size-2 rounded-[2px]"
+                                style={{ backgroundColor: part.color }}
+                                aria-hidden
+                              />
+                              {part.label}
                             </p>
-                            <p className="text-[#7A8289] text-xs">{item.value} Responses</p>
+                            <p className="text-xl font-semibold tabular-nums text-foreground">
+                              {getPercentage(part.value, responseCount)}%
+                            </p>
+                            <p className="text-xs tabular-nums text-muted-foreground">
+                              {t("{count, plural, one {# response} other {# responses}}", {
+                                count: part.value,
+                              })}
+                            </p>
                           </div>
                         ))}
                       </div>
@@ -244,15 +237,15 @@ const SurveyQuestion = ({
                   )}
                 </div>
               </div>
-
-              {/* Divider */}
-              <div className="w-full border border-border mt-10" />
-            </div>
+            </section>
           );
         })}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
+
+/** Bars take their colour per cell; the config only names the series for the tooltip. */
+const chartConfig: ChartConfig = { count: { label: "Votes", color: "var(--chart-2)" } };
 
 export default SurveyQuestion;

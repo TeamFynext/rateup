@@ -43,16 +43,6 @@ export const deleteIntegration = async (type: IntegratedApps) => {
   return response.data;
 };
 
-export async function getGoogleSheetAuthorizationUrl() {
-  const res = await axiosClient.get(`${ROUTE_URL}google/auth-url`);
-  return res.data;
-}
-
-export async function createGoogleSheetAuthToken(data: RequestPayload) {
-  const res = await axiosClient.post(`${ROUTE_URL}google/auth-token`, data);
-  return res.data;
-}
-
 export const getWaPaymentConfigurations = async (whatsappSettingsId?: string) => {
   const response = await axiosClient.get(`${ROUTE_URL}wa_payment_configurations`, {
     params: whatsappSettingsId ? { whatsappSettingsId } : undefined,
@@ -206,9 +196,13 @@ export async function getIntegrationActivity(name: string) {
   return (await axiosClient.get(`${ROUTE_URL}${name}/activity`)).data as IntegrationActivity;
 }
 
-/** Where to send the browser to start an OAuth connect; the state is signed server-side. */
-export async function getOAuthAuthorizeUrl(name: string) {
-  return (await axiosClient.get(`${ROUTE_URL}${name}/oauth/authorize-url`)).data as {
+/**
+ * Where to send the browser to start an OAuth connect; the state is signed server-side.
+ * `options` are choices that shape the consent request — Zoho's `products`.
+ */
+export async function getOAuthAuthorizeUrl(name: string, options?: Record<string, string>) {
+  return (await axiosClient.get(`${ROUTE_URL}${name}/oauth/authorize-url`, { params: options }))
+    .data as {
     url: string;
   };
 }
@@ -221,18 +215,4 @@ export async function finishOAuthConnect(name: string, data: { code: string; sta
 
 export async function deleteZapierTriggerHook(data: RequestPayload) {
   return (await axiosClient.delete(`${ROUTE_URL}zapier-hook`, { data })).data;
-}
-
-export async function connectZoho(code: string, orgId: string) {
-  const res = await axiosClient.post(
-    `/integration/external/zoho/auth`,
-    { code },
-    {
-      params: {
-        orgId,
-      },
-    },
-  );
-
-  return res.data;
 }

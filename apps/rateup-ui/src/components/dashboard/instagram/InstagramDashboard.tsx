@@ -5,8 +5,10 @@ import {
   IconBrandInstagram,
   IconMenu2,
   IconMessageDots,
+  IconMessageQuestion,
   IconRobot,
   IconHistory,
+  IconLink,
 } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
@@ -154,7 +156,7 @@ export function InstagramDashboard() {
           </TabsTrigger>
           <TabsTrigger value="comments">
             <IconMessageDots className="mr-1.5 size-4" />
-            {t("Private Replies")}
+            {t("Comments")}
           </TabsTrigger>
           <TabsTrigger value="stories">
             <IconHistory className="mr-1.5 size-4" />
@@ -165,25 +167,25 @@ export function InstagramDashboard() {
             {t("Persistent Menu")}
           </TabsTrigger>
           <TabsTrigger value="ice-breakers">
-            <IconMessageDots className="mr-1.5 size-4" />
+            <IconMessageQuestion className="mr-1.5 size-4" />
             {t("Ice Breakers")}
           </TabsTrigger>
-          {/* <TabsTrigger value="ig-me-links">
+          <TabsTrigger value="ig-me-links">
             <IconLink className="mr-1.5 size-4" />
             {t("ig.me Links")}
-          </TabsTrigger> */}
+          </TabsTrigger>
         </TabsList>
 
-        {selectedSetting && (
+        {selectedSetting?.ibaId && (
           <>
             <TabsContent value="chatbots" className="mt-4">
               <ChatbotsTab />
             </TabsContent>
             <TabsContent value="comments" className="mt-4">
-              <CommentsTab />
+              <CommentsTab ibaId={selectedSetting.ibaId} />
             </TabsContent>
             <TabsContent value="stories" className="mt-4">
-              <StoriesTab />
+              <StoriesTab ibaId={selectedSetting.ibaId} />
             </TabsContent>
             <TabsContent value="persistent-menu" className="mt-4">
               <PersistentMenuTab

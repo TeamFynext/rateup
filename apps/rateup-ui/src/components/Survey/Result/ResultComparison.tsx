@@ -126,30 +126,32 @@ export default function ResultComparison({
             <Card key={q.questionId} className="min-h-[500px]">
               <CardContent className="flex flex-col gap-4 pt-6">
                 <div className="flex items-start justify-between gap-4">
-                  <p className="w-[85%] font-black text-muted-foreground">{localizedTitle}</p>
+                  <p className="w-[85%] text-sm font-semibold text-foreground">{localizedTitle}</p>
                   <Badge variant="secondary">{question.badge}</Badge>
                 </div>
                 <ResponsiveContainer height={400}>
                   <BarChart data={graphData} margin={{ top: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="teamCode" />
-                    <YAxis />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="teamCode" tickLine={false} axisLine={false} />
+                    <YAxis tickLine={false} axisLine={false} allowDecimals={false} />
                     <Tooltip />
                     {Object.keys(q.data?.[0] ?? {})
                       .filter((key) => !["teamCode", "mapId"].includes(key))
-                      .map((key) => (
+                      .map((key, i) => (
                         <Bar
                           dataKey={key}
                           key={key}
                           stackId="a"
+                          // Answers off a known scale take its colour; free choices step through
+                          // the ramp, with a card-coloured gap so adjacent segments stay apart.
                           fill={
                             getResponseArrayByQuestionType(question.responseType)?.find(
                               (j) => j.value.toString() === key,
-                            )?.color
+                            )?.color ?? `var(--chart-${(i % 4) + 1})`
                           }
-                          maxBarSize={50}
-                          radius={10}
-                          style={{ zIndex: 999, marginTop: 10, gap: 10 }}
+                          stroke="var(--card)"
+                          strokeWidth={1}
+                          maxBarSize={48}
                         />
                       ))}
                   </BarChart>
@@ -193,11 +195,11 @@ const TeamResponseActivitySection = ({ data }: { data: { teamCode: string; count
       <TabsContent value={ActivePlot.Bar}>
         <ResponsiveContainer width="100%" height={400}>
           <BarChart data={data} margin={{ top: 20 }}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="teamCode" />
-            <YAxis />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="teamCode" tickLine={false} axisLine={false} />
+            <YAxis tickLine={false} axisLine={false} allowDecimals={false} />
             <Tooltip />
-            <Bar dataKey="count" fill="#52ba66" maxBarSize={50} radius={10} />
+            <Bar dataKey="count" fill="var(--chart-2)" maxBarSize={48} radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </TabsContent>
@@ -209,7 +211,7 @@ const TeamResponseActivitySection = ({ data }: { data: { teamCode: string; count
               dataKey="count"
               cx="50%"
               cy="50%"
-              fill="#52ba66"
+              fill="var(--chart-2)"
               label={({ index }) => data?.[index]?.teamCode}
             />
             <Tooltip />
@@ -221,7 +223,13 @@ const TeamResponseActivitySection = ({ data }: { data: { teamCode: string; count
           <RadarChart height={400} data={data}>
             <PolarGrid />
             <PolarAngleAxis dataKey="teamCode" />
-            <Radar name="Responses" dataKey="count" fill="#52ba66" />
+            <Radar
+              name="Responses"
+              dataKey="count"
+              stroke="var(--chart-2)"
+              fill="var(--chart-2)"
+              fillOpacity={0.25}
+            />
             <Tooltip />
           </RadarChart>
         </ResponsiveContainer>

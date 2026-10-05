@@ -220,6 +220,14 @@ const NODE_BODY: Record<string, (d: NodeFields) => Part[]> = {
     const c = d.elements?.length || 0;
     return [field("Products", `${c} product${c !== 1 ? "s" : ""}`)];
   },
+  // Handle ids are read by the Instagram engine in rateup-api (instagram_automation.service.ts).
+  instagramFollowCheckNode: () => [
+    choices([
+      { id: "following", title: "Follows you" },
+      { id: "notFollowing", title: "Doesn't follow yet" },
+    ]),
+  ],
+
   instagramIceBreakerNode: (d) => {
     const c = d.iceBreakers?.length || 0;
     return [field("Ice breakers", `${c} question${c !== 1 ? "s" : ""}`)];
