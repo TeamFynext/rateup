@@ -7,7 +7,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion.tsx";
 
-import { faqs } from "../WhatsAppSurveyConstants.tsx";
+import { faqs } from "../whatsAppSurveyFaqs.ts";
 
 export function WhatsAppSurveyFaq() {
   return (

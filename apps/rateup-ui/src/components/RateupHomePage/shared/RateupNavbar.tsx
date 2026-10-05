@@ -1,7 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
-import { useCheckSession } from "@/hooks/checkSession.tsx";
+import { useHasSessionCookie } from "@/hooks/useHasSessionCookie.ts";
 
 import { BOOK_DEMO_ROUTE } from "../helper/BookDemoLink.tsx";
 import DropDownNavItems from "../helpers/DropDownNavItems.tsx";
@@ -41,7 +41,7 @@ const SHEET_LINK =
   "flex h-13 items-center rounded-lg px-3 text-[16.5px] font-semibold text-ru-n-700 transition-colors hover:bg-ru-n-50 hover:text-ru-blue-600";
 
 export default function RateupNavbar() {
-  const hasSession = useCheckSession();
+  const hasSession = useHasSessionCookie();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 

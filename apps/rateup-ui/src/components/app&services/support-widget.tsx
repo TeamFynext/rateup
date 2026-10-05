@@ -1,19 +1,17 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
-import { isValidPhoneNumber } from "libphonenumber-js";
-import QRCode from "qrcode";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { z } from "zod";
 
-import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "@/backend/org/ws/org.ws.api";
 import { useClickOutside } from "@/hooks/use-click-outside.ts";
 import { useScrollIntoView } from "@/hooks/use-scroll-into-view.ts";
 import { getBrowserId } from "@/lib/browserId.ts";
 
 import { WhatsAppMark } from "../RateupHomePage/shared/channel-marks.tsx";
-import { parseWhatsAppToReact } from "../RichTextEditor/wa-editor/format.tsx";
-import { PhoneInput } from "../ui/phone-input.tsx";
+import { AUTO_OPENED_KEY, PersonGlyph, SupportLauncher } from "./support-launcher.tsx";
+import { renderWhatsAppMarkup } from "./waMarkup.tsx";
+
+/* Only the contact card draws it, and it carries the phone metadata the validator needs too. */
+const loadPhoneInput = () => import("./widget-phone-input.tsx");
+const WidgetPhoneInput = lazy(loadPhoneInput);
 
 /**
  * The support widget, drawn to the marketing design.
@@ -46,6 +44,8 @@ interface SupportWidgetProps {
    * default) and the panel only ever opens on a tap.
    */
   autoOpenDelayMs?: number;
+  /** Mount with the panel already open — for a host that drew its own launcher first. */
+  defaultOpen?: boolean;
 }
 
 interface Message {
@@ -68,19 +68,49 @@ interface Message {
   };
 }
 
-const supportSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  phone: z.string().refine(isValidPhoneNumber, { message: "Invalid phone number" }),
+interface ContactValues {
+  name: string;
+  phone: string;
   /* Optional: the conversation is carried on WhatsApp, so the number is the only address we
      actually need. Left blank it is dropped from the payload rather than posted as "". */
-  email: z.union([z.email("Invalid email"), z.literal("")]).optional(),
-});
+  email: string;
+}
 
-const emailSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.email("Invalid email"),
-  message: z.string().min(1, "Message is required"),
-});
+interface EmailValues {
+  name: string;
+  email: string;
+  message: string;
+}
+
+/* zod's `z.email()` pattern, so the widget accepts what it accepted before without zod. */
+const EMAIL_PATTERN =
+  /^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+.-]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9-]*\.)+[A-Za-z]{2,}$/;
+
+const required = (message: string) => (value: string) => value.length > 0 || message;
+const validEmail = (value: string) => EMAIL_PATTERN.test(value) || "Invalid email";
+const validPhone = async (value: string) =>
+  (await loadPhoneInput()).isValidPhoneNumber(value) || "Invalid phone number";
+
+/* Mirrors `WA_INBOX_WEBSOCKET_CONNECTION_STRING` in `backend/org/ws/org.ws.api.ts`, which
+   cannot be imported here: it drags the authenticated API client into the marketing bundle. */
+const API_BASE: string = import.meta.env.VITE_API_URL || "http://localhost:3001";
+const WS_BASE = `${API_BASE.replace(/(http)s?/, API_BASE.startsWith("https") ? "wss" : "ws")}/api/org/ws`;
+
+/* Throws on a non-2xx status and reads a JSON body when there is one, as axios did. */
+async function postJson(url: string, body: unknown, token: string) {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) throw new Error(`POST ${url} failed with ${response.status}`);
+  const text = await response.text();
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return text;
+  }
+}
 
 /* The design's field styling: 50px tall, 12px radius, accent border on focus. */
 const FIELD =
@@ -92,15 +122,6 @@ const ERROR_TEXT = "mt-1 text-[12.5px] text-destructive";
    pushes it back, so someone firing off two or three questions in a row is never cut off
    mid-thought — the card only lands once they have actually paused. */
 const CONTACT_PROMPT_DELAY_MS = 2500;
-
-/* Marks that `autoOpenDelayMs` has had its turn. Session-scoped on purpose: a new visit is
-   worth one opener, the same visit re-reading a third page is not. */
-const AUTO_OPENED_KEY = "support_widget_auto_opened";
-
-/* The launcher's face. Served from the web-images distribution like every other `/images/…`
-   asset; `VITE_CLOUDFRONT_WEB_IMAGES_URL` is the same base the rest of the app resolves them
-   against. */
-const LAUNCHER_AVATAR = `${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/images/support.jpeg`;
 
 /* Deliberately generic: the widget is embedded on customers' own sites, not RateUp's, so the
    openers have to make sense for any of them. Anything sharper is the embedder's to pass in. */
@@ -114,24 +135,6 @@ function ChatGlyph({ className = "size-5" }: Readonly<{ className?: string }>) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
       <path d="M4 4h16v11H9l-5 4V4Z" />
-    </svg>
-  );
-}
-
-function PersonGlyph({ className = "size-6" }: Readonly<{ className?: string }>) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden="true"
-    >
-      <circle cx="12" cy="8.6" r="3.9" />
-      <path d="M4.8 20.2a7.4 7.4 0 0 1 14.4 0" />
     </svg>
   );
 }
@@ -239,8 +242,9 @@ export default function SupportWidget({
   webhookUrl,
   icebreakers = DEFAULT_ICEBREAKERS,
   autoOpenDelayMs,
+  defaultOpen = false,
 }: Readonly<SupportWidgetProps>) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   const [tab, setTab] = useState<"chat" | "whatsapp" | "email">("chat");
   const [newMessage, setNewMessage] = useState("");
   const [contactId, setContactId] = useState<string | null>(null);
@@ -256,7 +260,6 @@ export default function SupportWidget({
   /* Whether the contact card has had its beat and is ready to be drawn. */
   const [askForContact, setAskForContact] = useState(false);
   const [qr, setQr] = useState<string | null>(null);
-  const [avatarFailed, setAvatarFailed] = useState(false);
   const socketRef = useRef<WebSocket | null>(null);
   const contactIdRef = useRef<string | null>(null);
   const retryCountRef = useRef(0);
@@ -274,28 +277,24 @@ export default function SupportWidget({
   const socketUrl =
     contactId && orgId && token
       ? webhookUrl ||
-        `${WA_INBOX_WEBSOCKET_CONNECTION_STRING}/${browserId}/widget?role=fab&orgId=${encodeURIComponent(orgId)}&accessToken=${encodeURIComponent(token)}&contactId=${encodeURIComponent(contactId)}`
+        `${WS_BASE}/${browserId}/widget?role=fab&orgId=${encodeURIComponent(orgId)}&accessToken=${encodeURIComponent(token)}&contactId=${encodeURIComponent(contactId)}`
       : null;
   const queryParams = orgId ? `?orgId=${orgId}` : "";
   const waHref = `https://wa.me/${(whatsappNumber || "").replace(/\D/g, "")}?text=${encodeURIComponent(
     "Hi, I need help with support",
   )}`;
 
-  const form = useForm<z.infer<typeof supportSchema>>({
-    resolver: zodResolver(supportSchema),
+  const form = useForm<ContactValues>({
     defaultValues: { name: "", phone: "", email: "" },
   });
 
-  const emailForm = useForm<z.infer<typeof emailSchema>>({
-    resolver: zodResolver(emailSchema),
+  const emailForm = useForm<EmailValues>({
     defaultValues: { name: "", email: "", message: "" },
   });
 
   const handleEmailSubmit = emailForm.handleSubmit(async (values) => {
     try {
-      await axios.post(`${API_URL}/api/support/email${queryParams}`, values, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await postJson(`${API_URL}/api/support/email${queryParams}`, values, token);
       setEmailSent(true);
       emailForm.reset();
     } catch (error) {
@@ -409,17 +408,20 @@ export default function SupportWidget({
     return () => clearTimeout(timer);
   }, [contactId, pendingMessages.length]);
 
-  /* Only drawn on the WhatsApp tab, so it is not worth generating until the panel opens. */
+  /* Only drawn on the WhatsApp tab, so neither `qrcode` nor the image is fetched before it. */
   useEffect(() => {
-    if (!isOpen || qr) return;
-    QRCode.toDataURL(waHref, {
-      margin: 0,
-      width: 320,
-      color: { dark: "#091729", light: "#ffffff" },
-    })
+    if (tab !== "whatsapp" || qr) return;
+    import("qrcode")
+      .then((QRCode) =>
+        QRCode.toDataURL(waHref, {
+          margin: 0,
+          width: 320,
+          color: { dark: "#091729", light: "#ffffff" },
+        }),
+      )
       .then(setQr)
       .catch(() => setQr(null));
-  }, [isOpen, qr, waHref]);
+  }, [tab, qr, waHref]);
 
   useEffect(() => {
     scrollIntoView();
@@ -453,9 +455,7 @@ export default function SupportWidget({
       ],
     };
 
-    await axios.post(`${API_URL}/api/support${queryParams}`, messageBody, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    await postJson(`${API_URL}/api/support${queryParams}`, messageBody, token);
   };
 
   const handleContactSubmit = form.handleSubmit(async (formValues) => {
@@ -467,12 +467,10 @@ export default function SupportWidget({
     };
 
     try {
-      /* Axios, not `fetch`: the route replies with the bare contact id, so it comes back as
-         text/plain and `response.json()` would throw on it. */
-      const res = await axios.post(`${API_URL}/api/support/contact${queryParams}`, values, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const newContactId = res.data;
+      /* The route replies with the bare contact id as text/plain. */
+      const newContactId = String(
+        await postJson(`${API_URL}/api/support/contact${queryParams}`, values, token),
+      );
 
       localStorage.setItem("support_contact_id", newContactId);
       localStorage.setItem("support_contact_name", values.phone);
@@ -528,7 +526,7 @@ export default function SupportWidget({
         key={message?.id ?? index}
         className="max-w-[86%] self-end rounded-[16px_16px_5px_16px] bg-ru-blue-600 px-3.75 py-3 text-[15.5px]/[1.5] text-white"
       >
-        {parseWhatsAppToReact(messageText(message))}
+        {renderWhatsAppMarkup(messageText(message))}
         <div className="mt-1 text-[11.5px] opacity-[0.72]">{messageTime(message)}</div>
       </div>
     ) : (
@@ -538,7 +536,7 @@ export default function SupportWidget({
         </span>
         <div className="max-w-[86%]">
           <div className="rounded-[16px_16px_16px_5px] border border-ru-n-200 bg-white px-3.75 py-3 text-[15.5px]/[1.5] text-ru-n-700">
-            {parseWhatsAppToReact(messageText(message))}
+            {renderWhatsAppMarkup(messageText(message))}
           </div>
           <div className="mt-1.25 text-xs text-ru-n-400">{messageTime(message)}</div>
         </div>
@@ -554,47 +552,7 @@ export default function SupportWidget({
 
   if (!orgId || !token) return null;
 
-  if (!isOpen) {
-    return (
-      <div className="fixed right-5.5 bottom-5.5 z-[88] flex items-center gap-3">
-        {/* The pill is 240px of chrome over the page; below `sm` the tile carries it alone. */}
-        <button
-          type="button"
-          onClick={() => setIsOpen(true)}
-          className="hidden h-13 cursor-pointer items-center gap-2.75 rounded-full bg-ru-blue-950 px-5.5 text-base font-semibold text-white shadow-[0_12px_30px_rgba(9,23,41,0.26)] transition-transform hover:-translate-y-px sm:inline-flex"
-        >
-          <span className="size-2.25 flex-none rounded-full bg-[#4ecb8b]" />
-          How can we help you?
-        </button>
-        <button
-          type="button"
-          onClick={() => setIsOpen(true)}
-          aria-label="Open chat"
-          className="relative size-15.5 flex-none cursor-pointer rounded-full bg-ru-blue-950 text-white/85 shadow-[0_14px_32px_rgba(9,23,41,0.3)] transition-transform hover:-translate-y-px"
-        >
-          {/* The glyph stays underneath: it shows through while the photo loads, and remains
-              if the photo never arrives — a broken image on a customer's page is worse than
-              the tile the design already draws. */}
-          <span className="absolute inset-0 flex items-center justify-center">
-            <PersonGlyph className="size-7.5" />
-          </span>
-          {!avatarFailed && (
-            <img
-              src={LAUNCHER_AVATAR}
-              alt=""
-              loading="lazy"
-              decoding="async"
-              onError={() => setAvatarFailed(true)}
-              className="absolute inset-0 size-full rounded-full object-cover"
-            />
-          )}
-          {/* Pulled in from the corner: on a circle the old -0.5 offsets left the badge
-              floating off the edge rather than sitting on it. */}
-          <span className="absolute right-0.5 bottom-0.5 size-3.75 rounded-full border-[2.5px] border-ru-n-25 bg-wa-green" />
-        </button>
-      </div>
-    );
-  }
+  if (!isOpen) return <SupportLauncher onOpen={() => setIsOpen(true)} />;
 
   return (
     <div
@@ -684,7 +642,7 @@ export default function SupportWidget({
                 key={`pending-${i}`}
                 className="max-w-[86%] self-end rounded-[16px_16px_5px_16px] bg-ru-blue-600 px-3.75 py-3 text-[15.5px]/[1.5] text-white"
               >
-                {parseWhatsAppToReact(pending.body)}
+                {renderWhatsAppMarkup(pending.body)}
                 <div className="mt-1 text-[11.5px] opacity-[0.72]">{pending.time}</div>
               </div>
             ))}
@@ -704,6 +662,7 @@ export default function SupportWidget({
                   <Controller
                     name="name"
                     control={form.control}
+                    rules={{ validate: required("Name is required") }}
                     render={({ field, fieldState }) => (
                       <div>
                         <input {...field} placeholder="Your name" className={FIELD} />
@@ -716,17 +675,20 @@ export default function SupportWidget({
                   <Controller
                     name="phone"
                     control={form.control}
+                    rules={{ validate: validPhone }}
                     render={({ field, fieldState }) => (
                       <div>
-                        <PhoneInput
-                          defaultCountry="IN"
-                          international
-                          value={field.value}
-                          onChange={field.onChange}
-                          onBlur={field.onBlur}
-                          placeholder="WhatsApp number"
-                          className="w-full"
-                        />
+                        <Suspense fallback={<div className="h-9 w-full" />}>
+                          <WidgetPhoneInput
+                            defaultCountry="IN"
+                            international
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            placeholder="WhatsApp number"
+                            className="w-full"
+                          />
+                        </Suspense>
                         {fieldState.error && (
                           <div className={ERROR_TEXT}>{fieldState.error.message}</div>
                         )}
@@ -736,6 +698,7 @@ export default function SupportWidget({
                   <Controller
                     name="email"
                     control={form.control}
+                    rules={{ validate: (value) => !value || validEmail(value) }}
                     render={({ field, fieldState }) => (
                       <div>
                         <input
@@ -807,8 +770,7 @@ export default function SupportWidget({
               </a>
             </div>
 
-            {/* The design carries a QR placeholder here. `qrcode` is already a dependency, so
-                this is a real code for the same `wa.me` link the button opens. */}
+            {/* A real code for the same `wa.me` link the button opens. */}
             <div className="flex items-start gap-3.5 rounded-2xl border border-ru-n-200 bg-white p-4">
               <div className="size-22 flex-none rounded-[10px] border border-ru-n-200 bg-white p-1.75">
                 {qr && <img src={qr} alt="" className="size-full" />}
@@ -848,6 +810,7 @@ export default function SupportWidget({
                 <Controller
                   name="name"
                   control={emailForm.control}
+                  rules={{ validate: required("Name is required") }}
                   render={({ field, fieldState }) => (
                     <div>
                       <input {...field} placeholder="Name" className={FIELD} />
@@ -860,6 +823,7 @@ export default function SupportWidget({
                 <Controller
                   name="email"
                   control={emailForm.control}
+                  rules={{ validate: validEmail }}
                   render={({ field, fieldState }) => (
                     <div>
                       <input {...field} type="email" placeholder="Email" className={FIELD} />
@@ -874,6 +838,7 @@ export default function SupportWidget({
                 <Controller
                   name="message"
                   control={emailForm.control}
+                  rules={{ validate: required("Message is required") }}
                   render={({ field, fieldState }) => (
                     <div>
                       <div className="relative">

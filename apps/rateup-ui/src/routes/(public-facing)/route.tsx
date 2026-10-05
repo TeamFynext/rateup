@@ -1,5 +1,7 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 
+import { AppProviders } from "@/components/AppProviders";
+import { loadAppRuntime } from "@/lib/appRuntime";
 import { noindexHead } from "@/lib/metadata.ts";
 
 import appCss from "@/styles/app.css?url";
@@ -14,7 +16,12 @@ import appCss from "@/styles/app.css?url";
  * index. Individual routes may still override this with their own head.
  */
 export const Route = createFileRoute("/(public-facing)")({
-  component: () => <Outlet />,
+  beforeLoad: loadAppRuntime,
+  component: () => (
+    <AppProviders>
+      <Outlet />
+    </AppProviders>
+  ),
   head: () => ({
     ...noindexHead(undefined, { follow: false }),
     /* The application half of the Tailwind scan — these pages render survey, loyalty and

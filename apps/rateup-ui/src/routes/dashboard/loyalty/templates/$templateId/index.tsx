@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { z } from "zod";
 
 import {
   loyaltyMessageCatalog,
@@ -10,16 +9,15 @@ import {
 import { LOYALTY_PATHS } from "@/components/dashboard/loyalty/paths.ts";
 import { WhatsappTemplateById } from "@/components/whatsapp/templates/WhatsappTemplateById.tsx";
 import { TemplateType } from "@/types/enums.ts";
+import { optionalString } from "@/utils/search.ts";
 
 // `?starter=loyalty_points_issued` on `/create` opens the editor already filled in with
 // that message's starter. It carries the catalog's template name rather than the message
 // itself, so the link stays short and the words stay in one place.
-const searchSchema = z.object({
-  starter: z.string().optional().catch(undefined),
-});
-
 export const Route = createFileRoute("/dashboard/loyalty/templates/$templateId/")({
-  validateSearch: searchSchema,
+  validateSearch: (search: Record<string, unknown>): { starter?: string } => ({
+    starter: optionalString(search.starter),
+  }),
   component: LoyaltyTemplateEditPage,
 });
 

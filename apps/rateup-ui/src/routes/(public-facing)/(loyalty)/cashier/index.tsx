@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SessionAuth } from "supertokens-auth-react/recipe/session";
 
-import { cashierSearchSchema } from "@/components/loyalty/cashier/cashier.search.ts";
+import { validateCashierSearch } from "@/components/loyalty/cashier/cashier.search.ts";
 import { CashierPage } from "@/components/loyalty/cashier/CashierPage.tsx";
 import { StandaloneShell } from "@/components/loyalty/cashier/StandaloneShell.tsx";
 import { ConfirmProvider } from "@/context/confirm-provider";
@@ -11,7 +11,7 @@ import { ConfirmProvider } from "@/context/confirm-provider";
  * dashboard around it. Signed in, and gated server-side by the loyalty team feature.
  */
 export const Route = createFileRoute("/(public-facing)/(loyalty)/cashier/")({
-  validateSearch: cashierSearchSchema,
+  validateSearch: validateCashierSearch,
   component: CashierPortalPage,
 });
 

@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
-import { getPublicLinktreeWithShortId } from "@/backend/linktree/linktree.api";
 import type { LinktreeData } from "@/backend/linktree/linktree.api";
 import { useLinkPageTracking } from "@/components/(public-facing)/lt/$shortId/useLinkPageTracking.ts";
 import { LinkPageView } from "@/components/dashboard/qr-links/link-pages/LinkPageView.tsx";
@@ -12,6 +11,8 @@ import { rateupIconBw } from "@/utils/constants";
 export const Route = createFileRoute("/(public-facing)/lt/$shortId/")({
   component: LinkPage,
   loader: async ({ params }) => {
+    // Imported here: route options land in the client entry, and the API client is axios.
+    const { getPublicLinktreeWithShortId } = await import("@/backend/linktree/linktree.api");
     const page = await getPublicLinktreeWithShortId(params.shortId);
     return { page: page?.isPublished ? page : null };
   },

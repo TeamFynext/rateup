@@ -1,7 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { getPublicSurvey, getPublicSurveyGoogleLink } from "@/backend/surveys/survey.api";
-import { getPublicReviewsBySurveyTeamMapId } from "@/backend/team/reviewSuggestion/reviewSuggestion.api";
 import GoogleReview from "@/components/Survey/TakeSurvey/GoogleReview/index.tsx";
 import type { ReviewSuggestion } from "@/types/global";
 
@@ -11,6 +9,12 @@ export const Route = createFileRoute(
   component: ReviewUsOnGoogle,
   loader: async ({ params }) => {
     const { surveyId } = params;
+    // Imported here: route options land in the client entry, and these bring axios.
+    const [{ getPublicSurvey, getPublicSurveyGoogleLink }, { getPublicReviewsBySurveyTeamMapId }] =
+      await Promise.all([
+        import("@/backend/surveys/survey.api"),
+        import("@/backend/team/reviewSuggestion/reviewSuggestion.api"),
+      ]);
 
     const propsToPass: {
       googleLink?: string;

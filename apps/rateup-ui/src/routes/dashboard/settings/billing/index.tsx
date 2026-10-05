@@ -1,17 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { z } from "zod";
 
 import { BillingPage } from "@/components/dashboard/settings/billing/BillingPage.tsx";
+import { oneOf } from "@/utils/search.ts";
 
 // `?tab=` so a link can land on the usage meters or the charge history rather than always
-// on the plan. `.catch` keeps an unknown value from throwing a search-validation error on
-// an old bookmark — it falls back to the plan tab.
-const searchSchema = z.object({
-  tab: z.enum(["plan", "usage", "history"]).optional().catch(undefined),
-});
+// on the plan. An unknown value (an old bookmark) falls back to the plan tab.
+const BILLING_TABS = ["plan", "usage", "history"] as const;
 
 export const Route = createFileRoute("/dashboard/settings/billing/")({
-  validateSearch: searchSchema,
+  validateSearch: (search: Record<string, unknown>): { tab?: (typeof BILLING_TABS)[number] } => ({
+    tab: oneOf(BILLING_TABS, search.tab),
+  }),
   component: RouteComponent,
 });
 

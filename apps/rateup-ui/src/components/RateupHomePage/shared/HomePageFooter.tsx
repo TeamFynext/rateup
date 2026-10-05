@@ -215,7 +215,7 @@ export default function HomePageFooter() {
 
         <div className="py-5 sm:py-7">
           <Link to="/" aria-label="RateUp home" className="mx-auto block max-w-192.5">
-            <RateupLockup onDark className="opacity-90" />
+            <RateupLockup onDark large className="opacity-90" />
           </Link>
         </div>
 

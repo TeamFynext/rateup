@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { referralKeys } from "@/backend/campaign/campaign.keys";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 
-import { createReferral, deleteReferral, getAllReferrals, trackVisit } from "./referrals.api";
+import { createReferral, deleteReferral, getAllReferrals } from "./referrals.api";
 
 export function useCreateReferralMutation({
   onSuccess,
@@ -61,24 +61,5 @@ export function useAllReferralsQuery() {
   return useQuery({
     queryKey: referralKeys.all(),
     queryFn: () => getAllReferrals(),
-  });
-}
-
-export function useTrackVisitMutation({
-  onSuccess,
-  onError,
-}: {
-  onSuccess?: () => void;
-  onError?: (error: Error) => void;
-} = {}) {
-  return useMutation({
-    mutationFn: (code: string) => trackVisit(code),
-    onSuccess: () => {
-      if (onSuccess) onSuccess();
-    },
-    onError: (error) => {
-      console.error("Error tracking visit:", error);
-      if (onError) onError(error);
-    },
   });
 }

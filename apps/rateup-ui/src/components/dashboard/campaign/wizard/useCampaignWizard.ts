@@ -13,21 +13,17 @@ import type { RequestPayload } from "@/types/api.ts";
 import { CampaignType } from "@/types/enums.ts";
 import type { Campaign } from "@/types/global";
 
-/** The wizard's steps, in order. `id` is what rides in `?step=`. */
-export const CAMPAIGN_WIZARD_STEPS = [
-  "basics",
-  "template",
-  "audience",
-  "schedule",
-  "retries",
-  "review",
-] as const;
+import {
+  CAMPAIGN_WIZARD_STEPS,
+  isCampaignWizardStep,
+  type CampaignWizardStep,
+} from "./wizardSteps.ts";
 
-export type CampaignWizardStep = (typeof CAMPAIGN_WIZARD_STEPS)[number];
-
-export function isCampaignWizardStep(value: unknown): value is CampaignWizardStep {
-  return typeof value === "string" && (CAMPAIGN_WIZARD_STEPS as readonly string[]).includes(value);
-}
+export {
+  CAMPAIGN_WIZARD_STEPS,
+  isCampaignWizardStep,
+  type CampaignWizardStep,
+} from "./wizardSteps.ts";
 
 /**
  * The two steps a campaign cannot launch without. Everything else can be left

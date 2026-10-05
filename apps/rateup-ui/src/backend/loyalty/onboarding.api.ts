@@ -1,5 +1,6 @@
 import { axiosClient } from "../apiClient";
 import { LOYALTY_BASE } from "./base";
+import type { OnboardingStep } from "./onboardingSteps";
 import type { LoyaltyProgram } from "./program.api";
 
 /**
@@ -11,9 +12,7 @@ import type { LoyaltyProgram } from "./program.api";
  * so a half-finished wizard is invisible to customers.
  */
 
-export const ONBOARDING_STEPS = ["profile", "earning", "tiers", "rewards", "messages"] as const;
-
-export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
+export { ONBOARDING_STEPS, type OnboardingStep } from "./onboardingSteps";
 
 export type LoyaltyPresetKey = "cafe" | "retail" | "salon" | "gym" | "generic";
 

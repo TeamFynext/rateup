@@ -1,7 +1,4 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
-
-import "@xyflow/react/dist/style.css";
-
 import { useState } from "react";
 
 import { useWaAutomatedReplyById } from "@/backend/whatsapp/automated-reply/automatedReply.query";

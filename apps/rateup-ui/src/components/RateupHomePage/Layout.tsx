@@ -1,5 +1,6 @@
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 
+import { AUTO_OPENED_KEY, SupportLauncher } from "@/components/app&services/support-launcher.tsx";
 import { fbConsent } from "@/utils/fbpixel.ts";
 import { setGAConsent } from "@/utils/gtag.ts";
 
@@ -9,7 +10,11 @@ import RateupNavbar from "./shared/RateupNavbar";
 
 import styles from "@/styles/commonCssModules/homepagecss.module.css";
 
-const SupportWidget = lazy(() => import("@/components/app&services/support-widget.tsx"));
+const loadSupportWidget = () => import("@/components/app&services/support-widget.tsx");
+const SupportWidget = lazy(loadSupportWidget);
+
+const SUPPORT_ORG = import.meta.env.VITE_ROOT_ORG || "";
+const SUPPORT_TOKEN = import.meta.env.VITE_ROOT_TOKEN || "";
 
 /**
  * Openers for RateUp's own site. The widget's built-in defaults are written for the shops that
@@ -23,8 +28,65 @@ const RATEUP_ICEBREAKERS = [
 ];
 
 /* The support panel opens itself shortly after the page settles, so a prospect is offered a
-   conversation without having to find the launcher. The widget only does this once a session. */
+   conversation without having to find the launcher. Only once a session. */
 const SUPPORT_AUTO_OPEN_MS = 5000;
+
+/**
+ * Draws the widget's launcher without the widget, which is fetched on hover,
+ * on click, or once the page is idle when the session's auto-open is still due — and mounted
+ * already open, since both ways in mean the visitor is about to see the panel.
+ */
+function SupportCorner() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    if (!SUPPORT_ORG || !SUPPORT_TOKEN || sessionStorage.getItem(AUTO_OPENED_KEY)) return;
+
+    let idle = 0;
+    const prefetch = () => {
+      if (typeof requestIdleCallback === "function") {
+        idle = requestIdleCallback(() => void loadSupportWidget(), { timeout: 2000 });
+      } else void loadSupportWidget();
+    };
+    if (document.readyState === "complete") prefetch();
+    else window.addEventListener("load", prefetch, { once: true });
+
+    const timer = setTimeout(() => {
+      sessionStorage.setItem(AUTO_OPENED_KEY, "true");
+      setMounted(true);
+    }, SUPPORT_AUTO_OPEN_MS);
+
+    return () => {
+      window.removeEventListener("load", prefetch);
+      if (idle) cancelIdleCallback(idle);
+      clearTimeout(timer);
+    };
+  }, []);
+
+  if (!SUPPORT_ORG || !SUPPORT_TOKEN) return null;
+
+  const launcher = (
+    <SupportLauncher
+      onOpen={() => {
+        sessionStorage.setItem(AUTO_OPENED_KEY, "true");
+        setMounted(true);
+      }}
+      onIntent={() => void loadSupportWidget()}
+    />
+  );
+  if (!mounted) return launcher;
+
+  return (
+    <Suspense fallback={launcher}>
+      <SupportWidget
+        orgId={SUPPORT_ORG}
+        token={SUPPORT_TOKEN}
+        icebreakers={RATEUP_ICEBREAKERS}
+        defaultOpen
+      />
+    </Suspense>
+  );
+}
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -76,24 +138,7 @@ export default function Layout({
       </header>
       <main>{children}</main>
       {footer}
-      <Suspense
-        fallback={
-          /* Placeholder launcher so the corner reserves its space instead of popping in.
-             Matches the real launcher's tile — 62px, circular, same offsets. */
-          <div
-            role="status"
-            aria-label="Loading support chat"
-            className="fixed right-5.5 bottom-5.5 z-50 size-15.5 animate-pulse rounded-full bg-muted"
-          />
-        }
-      >
-        <SupportWidget
-          orgId={import.meta.env.VITE_ROOT_ORG || ""}
-          token={import.meta.env.VITE_ROOT_TOKEN || ""}
-          icebreakers={RATEUP_ICEBREAKERS}
-          autoOpenDelayMs={SUPPORT_AUTO_OPEN_MS}
-        />
-      </Suspense>
+      <SupportCorner />
       <CookieConsent
         variant="small"
         onAcceptCallback={() => {

@@ -1,7 +1,4 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
-
-import "@xyflow/react/dist/style.css";
-
 import { useState } from "react";
 
 import { useInstagramAutomationById } from "@/backend/whatsapp/instagram-automation/instagramAutomation.query";

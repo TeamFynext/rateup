@@ -7,8 +7,9 @@ const BASE_PATH = "/loyalty/dashboard/";
  * `rateup-api/src/modules/loyalty/dashboard/dashboard.schema.ts`.
  */
 
-export const DASHBOARD_PERIODS = ["30d", "90d", "12m"] as const;
-export type DashboardPeriod = (typeof DASHBOARD_PERIODS)[number];
+import type { DashboardPeriod } from "./dashboardPeriods";
+
+export { DASHBOARD_PERIODS, type DashboardPeriod } from "./dashboardPeriods";
 
 /** A value in the current window against the previous window of the same length. */
 export interface PeriodMetric {

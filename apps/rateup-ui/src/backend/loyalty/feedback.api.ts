@@ -2,6 +2,7 @@ import { axiosClient } from "@/backend/apiClient.ts";
 import type { WaFlowStatus } from "@/types/enums.ts";
 
 import { LOYALTY_BASE } from "./base.ts";
+import type { FeedbackPeriod, FeedbackRequestStatus } from "./feedback.constants.ts";
 import type { LoyaltyRewardStatus } from "./reward.api.ts";
 
 /**
@@ -84,14 +85,12 @@ export type FeedbackSettingsPatch = Partial<
   >
 >;
 
-export const FEEDBACK_REQUEST_STATUSES = [
-  "SCHEDULED",
-  "SENT",
-  "COMPLETED",
-  "CANCELLED",
-  "FAILED",
-] as const;
-export type FeedbackRequestStatus = (typeof FEEDBACK_REQUEST_STATUSES)[number];
+export {
+  FEEDBACK_PERIODS,
+  FEEDBACK_REQUEST_STATUSES,
+  type FeedbackPeriod,
+  type FeedbackRequestStatus,
+} from "./feedback.constants.ts";
 
 export interface FeedbackRequestRow {
   id: string;
@@ -109,9 +108,6 @@ export interface FeedbackRequestRow {
   reviewClickedAt: string | null;
   rewardGrantedAt: string | null;
 }
-
-export const FEEDBACK_PERIODS = ["30d", "90d", "12m"] as const;
-export type FeedbackPeriod = (typeof FEEDBACK_PERIODS)[number];
 
 export interface FeedbackResults {
   period: { key: FeedbackPeriod; label: string; start: string; end: string };

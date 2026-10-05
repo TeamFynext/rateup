@@ -1,7 +1,7 @@
-import * as Sentry from "@sentry/tanstackstart-react";
 import { Component, type ErrorInfo, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button.tsx";
+import { reportError } from "@/lib/errorReporting.ts";
 
 interface AppErrorBoundaryProps {
   children: ReactNode;
@@ -24,7 +24,7 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    Sentry.captureException(error, { extra: { componentStack: info.componentStack } });
+    reportError(error, { componentStack: info.componentStack });
   }
 
   resetErrorBoundary = () => {

@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { getPublicSurvey } from "@/backend/surveys/survey.api";
 import ThankYou from "@/components/(public-facing)/public/survey/$surveyId/end";
 import { PageType } from "@/types/enums.ts";
 
 export const Route = createFileRoute("/(public-facing)/ws/$shortId/end/")({
   loader: async ({ params }) => {
+    // Imported here: route options land in the client entry, and the API client is axios.
+    const { getPublicSurvey } = await import("@/backend/surveys/survey.api");
     const {
       id: surveyId,
       kioskMode,

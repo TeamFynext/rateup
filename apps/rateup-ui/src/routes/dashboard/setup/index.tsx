@@ -1,15 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { z } from "zod/v4";
 
 import { RateUpOnboarding } from "@/components/dashboard/setup/RateUpOnboarding.tsx";
-
-/** `step` is which task the sidebar's "Get started" section is pointing at. */
-const setupSearchSchema = z.object({
-  step: z.string().optional(),
-});
+import { optionalString } from "@/utils/search.ts";
 
 export const Route = createFileRoute("/dashboard/setup/")({
-  validateSearch: setupSearchSchema,
+  /** `step` is which task the sidebar's "Get started" section is pointing at. */
+  validateSearch: (search: Record<string, unknown>): { step?: string } => ({
+    step: optionalString(search.step),
+  }),
   component: RouteComponent,
 });
 

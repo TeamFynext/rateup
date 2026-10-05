@@ -1,16 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { z } from "zod";
 
 import { LoyaltyOnboardingPage } from "@/components/dashboard/loyalty/onboarding/LoyaltyOnboardingPage.tsx";
-import { WIZARD_STEPS } from "@/components/dashboard/loyalty/onboarding/wizardSteps.ts";
-
-const searchSchema = z.object({
-  /** Deep-link into a specific step. Omitted, the wizard resumes where the user left off. */
-  step: z.enum(WIZARD_STEPS).optional().catch(undefined),
-});
+import {
+  WIZARD_STEP_IDS,
+  type WizardStep,
+} from "@/components/dashboard/loyalty/onboarding/wizardStepIds.ts";
+import { oneOf } from "@/utils/search.ts";
 
 export const Route = createFileRoute("/dashboard/loyalty/onboarding/")({
-  validateSearch: searchSchema,
+  /** `step` deep-links into a step. Omitted, the wizard resumes where the user left off. */
+  validateSearch: (search: Record<string, unknown>): { step?: WizardStep } => ({
+    step: oneOf(WIZARD_STEP_IDS, search.step),
+  }),
   component: RouteComponent,
 });
 

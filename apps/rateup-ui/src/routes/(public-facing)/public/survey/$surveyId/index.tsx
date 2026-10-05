@@ -1,10 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import {
-  formClosedMessage,
-  getPublicSurvey,
-  isFormClosedError,
-} from "@/backend/surveys/survey.api";
 import { FormClosed } from "@/components/(public-facing)/ws/$shortId/FormClosed.tsx";
 import { rateupLogoOg } from "@/utils/constants.ts";
 
@@ -29,6 +24,8 @@ const getMimeTypeFromPath = (path?: string) => {
 
 export const Route = createFileRoute("/(public-facing)/public/survey/$surveyId/")({
   loader: async ({ params }) => {
+    const { formClosedMessage, getPublicSurvey, isFormClosedError } =
+      await import("@/backend/surveys/survey.api");
     try {
       return await getPublicSurvey(params.surveyId);
     } catch (error) {

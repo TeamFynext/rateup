@@ -1,14 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { z } from "zod";
 
 import { NewRewardPage } from "@/components/dashboard/loyalty/rewards/RewardEditorPage.tsx";
+import { oneOf } from "@/utils/search.ts";
 
-const searchSchema = z.object({
-  type: z.enum(["point", "coupon", "assigned"]).catch("point"),
-});
+const REWARD_TYPES = ["point", "coupon", "assigned"] as const;
 
 export const Route = createFileRoute("/dashboard/loyalty/rewards/new/")({
-  validateSearch: searchSchema,
+  validateSearch: (search: Record<string, unknown>): { type: (typeof REWARD_TYPES)[number] } => ({
+    type: oneOf(REWARD_TYPES, search.type) ?? "point",
+  }),
   component: RouteComponent,
 });
 

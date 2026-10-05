@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { buildFaqs } from "@/components/HomePage/pages/Pricing/FAQ.tsx";
+import { buildFaqs } from "@/components/HomePage/pages/Pricing/faq.data.ts";
 import {
   conversationPackAnswer,
   resolveConversationPack,

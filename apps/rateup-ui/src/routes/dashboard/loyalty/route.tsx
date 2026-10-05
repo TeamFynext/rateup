@@ -1,7 +1,6 @@
 import { createFileRoute, Outlet, redirect, useLocation } from "@tanstack/react-router";
 
 import { loyaltyKeys } from "@/backend/loyalty/loyalty.keys";
-import { getLoyaltyOnboardingState } from "@/backend/loyalty/onboarding.api";
 import { useLoyaltyOnboardingState } from "@/backend/loyalty/onboarding.query";
 import { LoyaltySetupRequired } from "@/components/dashboard/loyalty/LoyaltySetupRequired.tsx";
 import { LOYALTY_PATHS } from "@/components/dashboard/loyalty/paths.ts";
@@ -25,7 +24,9 @@ export const Route = createFileRoute("/dashboard/loyalty")({
     try {
       const state = await context.getQueryClient().fetchQuery({
         queryKey: loyaltyKeys.onboardingState(),
-        queryFn: getLoyaltyOnboardingState,
+        // Imported on demand: `beforeLoad` lands in the client entry, and this brings axios.
+        queryFn: async () =>
+          (await import("@/backend/loyalty/onboarding.api")).getLoyaltyOnboardingState(),
         // This runs on every navigation between loyalty pages; without it each click
         // would refetch.
         staleTime: 30_000,

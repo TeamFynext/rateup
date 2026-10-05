@@ -1,23 +1,26 @@
 import { createFileRoute } from "@tanstack/react-router";
-import z from "zod";
 
-import { getPublicSurvey, getPublicSurveyGoogleLink } from "@/backend/surveys/survey.api";
-import { getPublicReviewsBySurveyTeamMapId } from "@/backend/team/reviewSuggestion/reviewSuggestion.api";
 import ThankYou from "@/components/(public-facing)/public/survey/$surveyId/end";
 import { PageType, ReviewPagePlatform } from "@/types/enums.ts";
+import { optionalString } from "@/utils/search.ts";
 
 export const Route = createFileRoute("/(public-facing)/public/survey/$surveyId/end/")({
   component: End,
-  validateSearch: z.object({
-    language: z.string().optional(),
-    msg: z.string().optional(),
+  validateSearch: (search: Record<string, unknown>): { language?: string; msg?: string } => ({
+    language: optionalString(search.language),
+    msg: optionalString(search.msg),
   }),
 
   loaderDeps: ({ search: { language, msg } }) => ({ language, msg }),
 
   loader: async ({ params, deps: { language, msg } }) => {
     const { surveyId } = params;
+    // Imported here: route options land in the client entry, and these bring axios.
+    const { getPublicSurvey, getPublicSurveyGoogleLink } =
+      await import("@/backend/surveys/survey.api");
     if (msg == "thanks") {
+      const { getPublicReviewsBySurveyTeamMapId } =
+        await import("@/backend/team/reviewSuggestion/reviewSuggestion.api");
       const [googleLink, reviews, survey] = await Promise.all([
         getPublicSurveyGoogleLink(surveyId),
         getPublicReviewsBySurveyTeamMapId(surveyId, language),

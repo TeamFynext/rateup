@@ -1,6 +1,5 @@
-import { z } from "zod";
-
 import type { TransactionFilter } from "@/backend/loyalty/redemption/redemption.api";
+import { oneOf, optionalString, pageNumber } from "@/utils/search.ts";
 
 /**
  * Activity is one page over two tables: the ledger, and the approval requests that will
@@ -12,12 +11,19 @@ export type ActivityFilter = (typeof ACTIVITY_FILTERS)[number];
 
 export const PAGE_SIZE = 20;
 
-export const activitySearchSchema = z.object({
-  filter: z.enum(ACTIVITY_FILTERS).catch("all"),
-  page: z.coerce.number().int().min(1).catch(1),
-  customerId: z.string().optional().catch(undefined),
-});
-export type ActivitySearch = z.infer<typeof activitySearchSchema>;
+export interface ActivitySearch {
+  filter: ActivityFilter;
+  page: number;
+  customerId?: string;
+}
+
+export function validateActivitySearch(search: Record<string, unknown>): ActivitySearch {
+  return {
+    filter: oneOf(ACTIVITY_FILTERS, search.filter) ?? "all",
+    page: pageNumber(search.page),
+    customerId: optionalString(search.customerId),
+  };
+}
 
 /** The ledger query for a filter, or null when the filter shows approvals instead. */
 export function ledgerQueryFor(search: ActivitySearch): TransactionFilter | null {

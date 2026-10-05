@@ -1,10 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import {
-  formClosedMessage,
-  getPublicSurvey,
-  isFormClosedError,
-} from "@/backend/surveys/survey.api";
 import { FormClosed } from "@/components/(public-facing)/ws/$shortId/FormClosed.tsx";
 import { ResponseSubmitted } from "@/components/(public-facing)/ws/$shortId/ResponseSubmitted.tsx";
 
@@ -18,6 +13,8 @@ export const Route = createFileRoute("/(public-facing)/ws/$shortId/")({
     const ip =
       request?.headers.get("x-forwarded-for") || request?.headers.get("x-real-ip") || undefined;
 
+    const { formClosedMessage, getPublicSurvey, isFormClosedError } =
+      await import("@/backend/surveys/survey.api");
     try {
       const surveyData = await getPublicSurvey(params.shortId, ip);
 
