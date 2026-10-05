@@ -45,18 +45,17 @@ vi.mock("./instagram_automation.service.js", () => ({ startInstagramAutomationFl
 vi.mock("./instagram_automatedReply.service.js", () => ({
   getInstagramAutomatedReplyById: vi.fn(),
 }));
-vi.mock("../../integrations/shopify/shopify.service.js", () => ({
+vi.mock("../../integrations/shopify/shopify.mapping.js", () => ({
   resolveShopifyPathValue: vi.fn(),
+}));
+vi.mock("../../integrations/shopify/shopify.catalog.js", () => ({
   getShopifyProductImage: vi.fn(),
 }));
 vi.mock("axios", () => ({ default: { get: vi.fn(), post: vi.fn() } }));
 vi.mock("../../integrations/meta/conversions.service.js", () => ({
   triggerConversionsApiForContact: vi.fn(),
 }));
-vi.mock("../../integrations/external/zoho/zoho.service.js", () => ({
-  updateZohoLeadQueue: { add: vi.fn() },
-  ZohoTriggers: {},
-}));
+
 vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));
@@ -70,7 +69,7 @@ import { getContactByPhoneNumberAndOrgId } from "../../contact/contact.service.j
 import { WaAutomatedReplyMatchType } from "../../../types/enums.js";
 import { TriggerEvent } from "../../../../generated/prisma/enums.js";
 import { sendTemplateToUserCore } from "../messageTemplates/wa_templates.controller.js";
-import { resolveShopifyPathValue } from "../../integrations/shopify/shopify.service.js";
+import { resolveShopifyPathValue } from "../../integrations/shopify/shopify.mapping.js";
 import {
   executeScheduledRule,
   generateInternalMessageId,

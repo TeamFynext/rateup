@@ -196,6 +196,8 @@ export async function handleInstagramComment(
       message: text || "",
       phone: igsId,
       instagramMediaId: comment.media?.id,
+      instagramCommentId: commentId,
+      instagramLiveComment: event === InstagramEvent.LIVE_COMMENT,
       platform: "INSTAGRAM",
     });
   } catch (error) {
@@ -242,6 +244,27 @@ async function handleInstagramStoryMentionRule(
   }
 }
 
+/** Runs the "ig.me link opened" rules for a ref; true when one of them ran. */
+async function runInstagramLinkRules(
+  ref: string,
+  igsId: string,
+  waSettings: { orgId: string; ibaId: string },
+): Promise<boolean> {
+  try {
+    const result = await checkAndExecuteRuleByTriggerEvent("INSTAGRAM_REFERRAL", {
+      orgId: waSettings.orgId,
+      phoneNumberId: waSettings.ibaId,
+      phone: igsId,
+      instagramRef: ref,
+      platform: "INSTAGRAM",
+    });
+    return Boolean(result);
+  } catch (error) {
+    log.error({ err: error, ref }, "[Instagram] Error in link rule execution");
+    return false;
+  }
+}
+
 export async function handleInstagramMessages(
   data: InstagramWebhookBody,
   waSettings: { orgId: string; ibaId: string },
@@ -276,6 +299,20 @@ export async function handleInstagramMessages(
     log.error({ err: error }, "[Instagram] Error storing message");
     throw error;
   }
+
+  // A first message sent from an ig.me link carries its ref; the link's own rule wins.
+  const linkRef = message.referral && "ref" in message.referral ? message.referral.ref : undefined;
+  if (linkRef && (await runInstagramLinkRules(linkRef, sender.id, waSettings))) return;
+
+  // An answer to a running flow belongs to that flow, not to the keyword rules.
+  const answeredFlow = await handleInstagramUserResponse(
+    sender.id,
+    message.text || "",
+    orgId,
+    ibaId,
+    message.quick_reply?.payload,
+  );
+  if (answeredFlow) return;
 
   try {
     await checkAndExecuteRuleByTriggerEvent("MESSAGE_RECEIVED", {
@@ -331,6 +368,15 @@ export async function handleInstagramPostback(
       `ig_postback_${timestamp}`,
     );
 
+    const answeredFlow = await handleInstagramUserResponse(
+      sender.id,
+      postback.title ?? "",
+      orgId,
+      ibaId,
+      postback.payload,
+    );
+    if (answeredFlow) return;
+
     await checkAndExecuteRuleByTriggerEvent("MESSAGE_RECEIVED", {
       orgId,
       phoneNumberId: ibaId,
@@ -352,7 +398,8 @@ export async function handleInstagramReferral(
   const { orgId, ibaId } = waSettings;
   const messaging = data.entry[0].messaging[0];
   const { sender, timestamp } = messaging;
-  const referral = messaging.message?.referral || messaging.postback?.referral;
+  const referral =
+    messaging.referral || messaging.message?.referral || messaging.postback?.referral;
 
   if (!referral) {
     log.warn("No referral payload in Instagram event");
@@ -387,6 +434,11 @@ export async function handleInstagramReferral(
       `ig_referral_${timestamp}`,
     );
 
+    const ref = "ref" in referral ? referral.ref : undefined;
+    if (ref && (await runInstagramLinkRules(ref, sender.id, waSettings))) return;
+
+    // Keyword rules on the ref text were the only way to answer a link before the
+    // INSTAGRAM_REFERRAL trigger; rules written that way keep working.
     await checkAndExecuteRuleByTriggerEvent("MESSAGE_RECEIVED", {
       orgId,
       phoneNumberId: ibaId,

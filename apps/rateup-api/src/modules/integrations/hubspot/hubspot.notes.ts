@@ -45,6 +45,8 @@ export async function handleHubSpotNoteEvent(
   if (event.type === "conversation.closed") {
     data = { kind: "conversation", contactId: event.contact.id };
   } else if (event.type === "survey.response_submitted") {
+    // An anonymous response has no contact to put the note on.
+    if (!event.response.contactId) return;
     data = {
       kind: "survey",
       contactId: event.response.contactId,

@@ -1,4 +1,3 @@
-import { google } from "googleapis";
 import { IntegratedApps } from "../../types/enums.js";
 import { encryptCredentialSecrets } from "./shared/credentialCrypto.js";
 import prisma from "../../utils/prisma.js";
@@ -12,7 +11,7 @@ import {
 import { callMetaApi } from "../whatsapp/wa_axios.js";
 import { log } from "../../utils/logger.js";
 import { getWaSettings, getWaSettingsById } from "../whatsapp/settings/wa_settings.service.js";
-import { sendWhatsAppTemplateToCustomer } from "./shopify/shopify.service.js";
+import { sendWhatsAppTemplateToCustomer } from "./shopify/shopify.messages.js";
 import { getUniqueRandomAlphaId } from "../../utils/misc/random.utils.js";
 import { getScheduleTime } from "../../utils/date.js";
 import { generateApiKey } from "../apiAccessToken/apiAccessToken.service.js";
@@ -432,40 +431,6 @@ export const getWaAmeliaTimeSlot = async ({
     console.log("error from wa amel", error);
   }
 };
-
-export async function initializeAuthClient() {
-  const oauth2Client = new google.auth.OAuth2(
-    process.env.GOOGLE_OAUTH_CLIENT_ID,
-    process.env.GOOGLE_OAUTH_CLIENT_SECRET,
-    `${process.env.FRONTEND_URL}/auth/oauth2callback`,
-  );
-  google.options({ auth: oauth2Client });
-  return oauth2Client;
-}
-
-export async function getGoogleAuthUrl() {
-  const scopes = [
-    "https://www.googleapis.com/auth/drive.file",
-    "https://www.googleapis.com/auth/userinfo.email",
-  ];
-  const oauth2Client = await initializeAuthClient();
-  return oauth2Client.generateAuthUrl({
-    access_type: "offline",
-    scope: scopes.join(" "),
-    prompt: "consent",
-  });
-}
-
-export async function removeSurveySpreadSheetSheetId(orgId: string) {
-  await prisma.survey.updateMany({
-    where: {
-      orgId,
-    },
-    data: {
-      spreadSheetId: null,
-    },
-  });
-}
 
 export async function getIntegrationByPetPoojaRestaurantId(restaurantId: string) {
   return (await prisma.integration.findFirst({

@@ -16,6 +16,7 @@ import {
   WaMessageAssignBody,
 } from "./wamessage.schema.js";
 import { log } from "../../../../utils/logger.js";
+import { emitIntegrationEvent } from "../../../integrations/events/emitIntegrationEvent.js";
 import { callMetaApi } from "../../wa_axios.js";
 import { getWaSettings, getWaSettingsByPhone } from "../../settings/wa_settings.service.js";
 import { getScopedSourceIdentifiers } from "../../settings/wa_channel_access.js";
@@ -51,10 +52,6 @@ import { getInboxCountsFromConversations } from "../inboxStats/inboxStats.servic
 import { getTeamIdsByUserId } from "../../../team/team.service.js";
 import { UserAvailabilityStatus } from "../../../user/user.schema.js";
 import { notify } from "../../../notification/notify.js";
-import {
-  addZapierTriggerToQueue,
-  ZapierTriggers,
-} from "../../../integrations/external/zapier/zapier.service.js";
 import { faker } from "@faker-js/faker";
 import {
   getConversationById,
@@ -1530,17 +1527,13 @@ export async function assignWaMessageToUser(
       actorUserId: userId,
     });
 
-    //Change zapier schema
-    await addZapierTriggerToQueue(
-      ZapierTriggers.CONTACT_ASSIGN,
-      {
-        [ZapierTriggers.CONTACT_ASSIGN]: {
-          contact: updatedContact,
-          newAssignees: newUsers,
-        },
-      },
-      orgId,
-    );
+    if (newUsers.length) {
+      await emitIntegrationEvent(orgId, {
+        type: "contact.assigned",
+        contact: updatedContact,
+        assignees: newUsers,
+      });
+    }
     // The ticket is part of the result: assigning a contact whose last ticket was
     // closed opens a successor above, and the caller has no other way to learn
     // which ticket the assignment actually landed on.

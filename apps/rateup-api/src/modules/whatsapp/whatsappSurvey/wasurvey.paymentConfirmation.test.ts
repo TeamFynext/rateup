@@ -12,7 +12,7 @@ vi.mock("./wasurvey.service.js", async (importOriginal) => ({
   sendMessage,
 }));
 const captureShopifyOrderPayment = vi.fn();
-vi.mock("../../integrations/shopify/shopify.service.js", async (importOriginal) => ({
+vi.mock("../../integrations/shopify/shopify.catalog.js", async (importOriginal) => ({
   ...(await importOriginal<object>()),
   captureShopifyOrderPayment,
 }));

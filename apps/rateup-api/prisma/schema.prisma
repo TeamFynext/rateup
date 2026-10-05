@@ -842,6 +842,8 @@ enum TriggerEvent {
   WOOCOMMERCE_EVENT
   INSTAGRAM_COMMENT
   INSTAGRAM_STORY_MENTION
+  /// Someone opened the DM thread from an ig.me link; options.instagramRef narrows it to one ?ref=.
+  INSTAGRAM_REFERRAL
 }
 
 model RuleAction {
@@ -3562,6 +3564,9 @@ model Webhook {
   orgId     String   @unique @db.Uuid
   url       String
   events    String[]
+  /// HMAC key for the `X-Rateup-Signature` header, `encryptSecret`-encrypted.
+  /// Null on rows saved before signing; the first delivery or reveal fills it.
+  secret    String?
 }
 
 enum InboxAutomationAction {

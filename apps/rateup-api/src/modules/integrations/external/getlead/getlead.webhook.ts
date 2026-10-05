@@ -4,15 +4,16 @@ import { appConfig } from "../../../../config.js";
 import prisma from "../../../../utils/prisma.js";
 import { IntegratedApps } from "../../../../types/enums.js";
 import { generateApiKey } from "../../../apiAccessToken/apiAccessToken.service.js";
+import { mergeGetLeadCredential } from "./getlead.credential.js";
 import { getGetLeadCredential, type GetLeadInbound } from "./getlead.types.js";
 
 /**
  * The inbound half of the GetLead integration: the URL and secret an admin
  * pastes into a GetLead workflow's "Send webhook notification" action.
  *
- * Kept apart from `getlead.service.ts` because none of it touches the GetLead
- * API — this is credential issuing and request authentication, and the outbound
- * service is already the larger of the two.
+ * Kept apart from `getlead.connect.ts` and `getlead.push.ts` because none of it
+ * touches the GetLead API — this is credential issuing and request
+ * authentication.
  */
 
 /** Where the receiver is mounted; see `integration.public.route.ts`. */
@@ -76,9 +77,6 @@ export async function createGetLeadInbound(): Promise<GetLeadInbound> {
 export async function issueGetLeadWebhook(orgId: string) {
   const inbound = await createGetLeadInbound();
 
-  // Imported lazily: `getlead.service.ts` imports this module, so an eager
-  // import back into it would close a cycle.
-  const { mergeGetLeadCredential } = await import("./getlead.service.js");
   await mergeGetLeadCredential(orgId, { inbound });
 
   return describeGetLeadInbound(inbound);
@@ -175,7 +173,6 @@ export async function markGetLeadDeliveryRejected(
   if (Date.now() - last < 60_000) return;
 
   try {
-    const { mergeGetLeadCredential } = await import("./getlead.service.js");
     await mergeGetLeadCredential(orgId, {
       inbound: {
         ...inbound,
@@ -201,7 +198,6 @@ export async function markGetLeadDeliveryReceived(
   lastEvent?: string,
 ) {
   try {
-    const { mergeGetLeadCredential } = await import("./getlead.service.js");
     await mergeGetLeadCredential(orgId, {
       inbound: {
         ...inbound,

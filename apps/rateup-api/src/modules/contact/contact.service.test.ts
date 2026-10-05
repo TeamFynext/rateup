@@ -39,7 +39,7 @@ vi.mock("../../utils/prisma.js", () => ({
 // on the events alone, each one is run through the real fan-out and adapters
 // inline, so the assertions below still check the Zoho jobs and Zapier triggers
 // that come out the other end — the same ones the service used to enqueue
-// itself. The org is treated as having Zoho and GetLead connected.
+// itself. The org is treated as having Zoho, GetLead and Zapier connected.
 vi.mock("../integrations/events/emitIntegrationEvent.js", async () => {
   const { processIntegrationEvent } =
     await import("../integrations/events/integrationEvent.fanout.js");
@@ -79,15 +79,9 @@ vi.mock("../whatsapp/inbox/message/wamessage.service.js", () => ({
 
 vi.mock("../notification/notify.js", () => ({ notify: vi.fn() }));
 
-vi.mock("../integrations/external/zapier/zapier.service.js", () => ({
-  addZapierTriggerToQueue: vi.fn(),
-  ZapierTriggers: {
-    CONTACT_CREATE: "new_contact_create",
-    CONTACT_UPDATED: "contact_updated",
-    CONTACT_DELETED: "contact_deleted",
-    CONTACT_LIFECYCLE_UPDATED: "contact_lifecycle_updated",
-    CONVERSATION_CLOSED: "conversation_closed",
-  },
+vi.mock("../integrations/external/zapier/zapier.deliver.js", () => ({
+  queueZapierTrigger: vi.fn(),
+  deliverZapierHook: vi.fn(),
 }));
 
 vi.mock("./conversation/conversation.service.js", () => ({
@@ -117,19 +111,11 @@ vi.mock("../whatsapp/inbox/inboxStats/inboxStats.service.js", () => ({
   decrementInboxStat: vi.fn(),
 }));
 
-vi.mock("../integrations/external/zoho/zoho.service.js", () => ({
+vi.mock("../integrations/external/zoho/zoho.crm.js", () => ({
   pushCrmLeadStatus: vi.fn(),
-  ZohoTriggers: {
-    CONTACT_CREATE: "contact_created",
-    LEAD_CREATE: "lead_created",
-    LEAD_UPDATE: "lead_updated",
-    BIGIN_CONTACT_CREATE: "bigin_contact_created",
-    CONTACT_UPDATE: "contact_updated",
-    CONTACT_DELETE: "contact_deleted",
-    BIGIN_DEAL_CREATE: "bigin_deal_created",
-    BIGIN_CONTACT_UPDATE: "bigin_contact_updated",
-    BIGIN_CONTACT_DELETE: "bigin_contact_deleted",
-  },
+  updateZohoLeadQueue: vi.fn(),
+  processZohoCrmJob: vi.fn(),
+  ZOHO_CRM_TRIGGERS: [],
 }));
 
 vi.mock("../integrations/external/zoho/zoho.utils.js", async () => ({
@@ -147,7 +133,8 @@ vi.mock("../integrations/external/zoho/zoho.utils.js", async () => ({
 import prisma from "../../utils/prisma.js";
 import { releaseThreadsOnTicketClose } from "../metaAgent/metaAgent.autoRelease.js";
 import { addExistingContactsToMultipleGroups } from "./contactGroup/contactGroup.service.js";
-import { addZapierTriggerToQueue } from "../integrations/external/zapier/zapier.service.js";
+import { queueZapierTrigger } from "../integrations/external/zapier/zapier.deliver.js";
+import { emitIntegrationEvent } from "../integrations/events/emitIntegrationEvent.js";
 import { integrationTriggerQueue } from "../../workers/bullmq/queues/index.js";
 import { checkAndExecuteRuleByTriggerEvent } from "../whatsapp/automatedReply/wa_automatedReply.utils.js";
 import { addZohoContactToQueue } from "../integrations/external/zoho/zoho.utils.js";
@@ -236,6 +223,18 @@ const CONNECTED_INTEGRATIONS = [
     name: "getlead",
     active: true,
     credential: subscribed("getlead_lead_create", "getlead_lead_update"),
+  },
+  {
+    name: "zapier",
+    active: true,
+    credential: subscribed(
+      "new_contact_create",
+      "contact_updated",
+      "contact_deleted",
+      "contact_lifecycle_updated",
+      "contact_stage_updated",
+      "conversation_closed",
+    ),
   },
 ];
 
@@ -368,10 +367,14 @@ describe("createContact", () => {
   test("fires the contact-created automation and the zapier trigger", async () => {
     await createContact({ ...base, lifecycleId: "" }, USER);
 
-    expect(addZapierTriggerToQueue).toHaveBeenCalledWith(
+    expect(queueZapierTrigger).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "zapier" }),
       "new_contact_create",
-      { new_contact_create: { id: "c1", orgId: ORG, phone: "919000000001" } },
-      ORG,
+      {
+        id: "c1",
+        orgId: ORG,
+        phone: "919000000001",
+      },
     );
   });
 
@@ -409,7 +412,7 @@ describe("createContact", () => {
 
     expect(db.contact.create).toHaveBeenCalled();
     expect(checkAndExecuteRuleByTriggerEvent).not.toHaveBeenCalled();
-    expect(addZapierTriggerToQueue).not.toHaveBeenCalled();
+    expect(queueZapierTrigger).not.toHaveBeenCalled();
     expect(addZohoContactToQueue).not.toHaveBeenCalled();
     expect(integrationTriggerQueue.add).not.toHaveBeenCalled();
   });
@@ -449,7 +452,7 @@ describe("getOrcreateContact", () => {
 
     expect(res).toEqual({ id: "existing", orgId: ORG });
     expect(db.contact.create).not.toHaveBeenCalled();
-    expect(addZapierTriggerToQueue).not.toHaveBeenCalled();
+    expect(queueZapierTrigger).not.toHaveBeenCalled();
   });
 
   test("looks the contact up by phone within the org", async () => {
@@ -470,7 +473,7 @@ describe("getOrcreateContact", () => {
     await getOrcreateContact(base);
 
     expect(db.contact.create).toHaveBeenCalled();
-    expect(addZapierTriggerToQueue).toHaveBeenCalled();
+    expect(queueZapierTrigger).toHaveBeenCalled();
     expect(integrationTriggerQueue.add).toHaveBeenCalledWith("zoho-lead-create", expect.anything());
   });
 
@@ -582,7 +585,7 @@ describe("createMultipleContacts", () => {
       ORG,
     );
 
-    expect((addZapierTriggerToQueue as Mock).mock.calls).toHaveLength(2);
+    expect((queueZapierTrigger as unknown as Mock).mock.calls).toHaveLength(2);
     expect((integrationTriggerQueue.add as unknown as Mock).mock.calls).toHaveLength(2);
   });
 
@@ -592,7 +595,7 @@ describe("createMultipleContacts", () => {
     await createMultipleContacts([{ name: "A", phone: "9190001", source: "CSV" } as any], ORG);
 
     expect(db.contactCustomFieldValue.deleteMany).not.toHaveBeenCalled();
-    expect(addZapierTriggerToQueue).not.toHaveBeenCalled();
+    expect(queueZapierTrigger).not.toHaveBeenCalled();
   });
 });
 
@@ -845,7 +848,11 @@ describe("deleteContactById", () => {
     await deleteContactById("c1", ORG);
 
     expect(db.contact.delete).toHaveBeenCalledWith({ where: { id: "c1", orgId: ORG } });
-    expect(addZapierTriggerToQueue).toHaveBeenCalledWith("contact_deleted", expect.anything(), ORG);
+    expect(queueZapierTrigger).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "zapier" }),
+      "contact_deleted",
+      expect.anything(),
+    );
   });
 
   test("passes the mirrored CRM ids on to the delete jobs", async () => {
@@ -895,10 +902,11 @@ describe("deleteManyContacts", () => {
 
     await deleteManyContacts(["c1", "c2"], ORG);
 
-    expect((addZapierTriggerToQueue as Mock).mock.calls.map((c) => c[2])).toEqual([
-      "org-a",
-      "org-b",
-    ]);
+    expect(
+      (emitIntegrationEvent as unknown as Mock).mock.calls
+        .filter(([, event]) => event.type === "contact.deleted")
+        .map(([orgId]) => orgId),
+    ).toEqual(["org-a", "org-b"]);
   });
 
   test("returns the delete count from prisma", async () => {
@@ -1373,7 +1381,7 @@ describe("updateContactById", () => {
   // the org's mapping decides which Zoho status it means, and a lifecycle named
   // something Zoho's picklist does not hold is a rejected push.
   test("reports the lifecycle to the mirrored zoho lead", async () => {
-    const { pushCrmLeadStatus } = await import("../integrations/external/zoho/zoho.service.js");
+    const { pushCrmLeadStatus } = await import("../integrations/external/zoho/zoho.crm.js");
     db.contact.update.mockResolvedValue(
       updated({ lifecycleId: "lc-1", integrationIds: { zoho: { lead: { id: "lead-1" } } } }),
     );
@@ -1390,7 +1398,7 @@ describe("updateContactById", () => {
   });
 
   test("skips the lead update when the contact has no mirrored lead", async () => {
-    const { pushCrmLeadStatus } = await import("../integrations/external/zoho/zoho.service.js");
+    const { pushCrmLeadStatus } = await import("../integrations/external/zoho/zoho.crm.js");
     db.contact.update.mockResolvedValue(updated({ lifecycleId: "lc-1" }));
 
     await updateContactById("c1", ORG, { lifecycleId: "lc-1" } as any, USER, existing);
@@ -1431,7 +1439,7 @@ describe("updateContactById", () => {
       existing,
     );
 
-    expect((addZapierTriggerToQueue as Mock).mock.calls.map((c) => c[0])).toContain(
+    expect((queueZapierTrigger as unknown as Mock).mock.calls.map((c) => c[1])).toContain(
       "conversation_closed",
     );
   });
@@ -1455,16 +1463,14 @@ describe("updateContactLabelsById", () => {
       where: { id: "c1" },
       data: { lifecycleId: "lc-1" },
     });
-    expect(addZapierTriggerToQueue).toHaveBeenCalledWith(
+    expect(queueZapierTrigger).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "zapier" }),
       "contact_lifecycle_updated",
       {
-        contact_lifecycle_updated: {
-          contactId: "c1",
-          lifecycleId: "lc-1",
-          lifecycleName: "Customer",
-        },
+        contactId: "c1",
+        lifecycleId: "lc-1",
+        lifecycleName: "Customer",
       },
-      ORG,
     );
   });
 });
@@ -1502,7 +1508,7 @@ describe("updateLifecycleStageofContacts", () => {
   });
 
   test("pushes the new stage to contacts that are mirrored as zoho leads", async () => {
-    const { pushCrmLeadStatus } = await import("../integrations/external/zoho/zoho.service.js");
+    const { pushCrmLeadStatus } = await import("../integrations/external/zoho/zoho.crm.js");
     db.contact.findMany.mockResolvedValue([
       { id: "c1", orgId: ORG, integrationIds: { zoho: { lead: { id: "lead-1" } } } },
     ]);
@@ -1698,7 +1704,7 @@ describe("getOrCreateContactByIgsId", () => {
     const res = await getOrCreateContactByIgsId("igs-1", ORG);
 
     expect(db.contact.create.mock.calls[0][0].data).toMatchObject({ igsId: "igs-1", orgId: ORG });
-    expect(addZapierTriggerToQueue).toHaveBeenCalled();
+    expect(queueZapierTrigger).toHaveBeenCalled();
     expect(res).toEqual({ contact: { id: "c1", orgId: ORG }, conversation: undefined });
   });
 

@@ -80,23 +80,15 @@ vi.mock("../whatsapp/automatedReply/wa_automatedReply.utils.js", () => ({
   checkAndExecuteRuleByTriggerEvent: vi.fn(),
   resolveContactChannel: vi.fn().mockResolvedValue({ platform: "whatsapp" }),
 }));
-vi.mock("../integrations/external/zapier/zapier.service.js", () => ({
-  addZapierTriggerToQueue: vi.fn(),
-  ZapierTriggers: { CONTACT_STAGE_UPDATED: "contact_stage_updated" },
+vi.mock("../integrations/external/zapier/zapier.deliver.js", () => ({
+  queueZapierTrigger: vi.fn(),
+  deliverZapierHook: vi.fn(),
 }));
-vi.mock("../integrations/external/zoho/zoho.service.js", () => ({
+vi.mock("../integrations/external/zoho/zoho.crm.js", () => ({
   pushCrmLeadStatus: vi.fn(),
-  ZohoTriggers: {
-    CONTACT_CREATE: "contact_created",
-    CONTACT_UPDATE: "contact_updated",
-    CONTACT_DELETE: "contact_deleted",
-    LEAD_CREATE: "lead_created",
-    LEAD_UPDATE: "lead_updated",
-    BIGIN_CONTACT_CREATE: "bigin_contact_created",
-    BIGIN_CONTACT_UPDATE: "bigin_contact_updated",
-    BIGIN_CONTACT_DELETE: "bigin_contact_deleted",
-    BIGIN_DEAL_CREATE: "bigin_deal_created",
-  },
+  updateZohoLeadQueue: vi.fn(),
+  processZohoCrmJob: vi.fn(),
+  ZOHO_CRM_TRIGGERS: [],
 }));
 vi.mock("../integrations/meta/conversions.service.js", () => ({
   sendWonConversionEvent: vi.fn(),
@@ -105,8 +97,8 @@ vi.mock("../integrations/meta/conversions.service.js", () => ({
 import { Prisma } from "../../../generated/prisma/client.js";
 import prisma from "../../utils/prisma.js";
 import { integrationTriggerQueue } from "../../workers/bullmq/queues/index.js";
-import { addZapierTriggerToQueue } from "../integrations/external/zapier/zapier.service.js";
-import { pushCrmLeadStatus } from "../integrations/external/zoho/zoho.service.js";
+import { queueZapierTrigger } from "../integrations/external/zapier/zapier.deliver.js";
+import { pushCrmLeadStatus } from "../integrations/external/zoho/zoho.crm.js";
 import { sendWonConversionEvent } from "../integrations/meta/conversions.service.js";
 import {
   isPipelineAccessible,
@@ -148,7 +140,7 @@ const db = prisma as unknown as Record<string, any>;
 const USER = "11111111-1111-1111-1111-111111111111";
 
 /**
- * The org's connected integrations: Zoho and GetLead, every trigger switched on,
+ * The org's connected integrations: Zoho, GetLead and Zapier, every trigger switched on,
  * so the providers' subscription filter lets every event through.
  */
 const subscribed = (...fields: string[]) => ({
@@ -175,6 +167,7 @@ const CONNECTED_INTEGRATIONS = [
     active: true,
     credential: subscribed("getlead_lead_create", "getlead_lead_update"),
   },
+  { name: "zapier", active: true, credential: subscribed("contact_stage_updated") },
 ];
 /** A team-scoped actor reaching exactly these teams. */
 const scoped = (teamIds: string[]) =>
@@ -1296,7 +1289,7 @@ describe("telling the CRMs a lead changed column", () => {
   beforeEach(() => {
     vi.mocked(integrationTriggerQueue.add).mockClear();
     vi.mocked(pushCrmLeadStatus).mockClear();
-    vi.mocked(addZapierTriggerToQueue).mockClear();
+    vi.mocked(queueZapierTrigger).mockClear();
     db.lead.findUniqueOrThrow.mockResolvedValue({
       stageId: "old-stage",
       stage: { name: "New Lead" },
@@ -1430,21 +1423,18 @@ describe("telling the CRMs a lead changed column", () => {
   test("a move emits the Contact Stage Updated Zapier trigger", async () => {
     await moveLead(LEAD, STAGE, null);
 
-    expect(addZapierTriggerToQueue).toHaveBeenCalledWith(
+    expect(queueZapierTrigger).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "zapier" }),
       "contact_stage_updated",
       {
-        contact_stage_updated: {
-          contactId: CONTACT,
-          leadId: LEAD,
-          pipelineId: PIPELINE,
-          pipelineName: "Sales",
-          pipelineType: "LEADS",
-          stageId: STAGE,
-          stageName: "Qualified",
-          stageStatus: "OPEN",
-        },
+        contactId: CONTACT,
+        leadId: LEAD,
+        pipelineId: PIPELINE,
+        pipelineName: "Sales",
+        stageId: STAGE,
+        stageName: "Qualified",
+        stageStatus: "OPEN",
       },
-      "org-1",
     );
   });
 
@@ -1467,7 +1457,7 @@ describe("telling the CRMs a lead changed column", () => {
 
     await moveLead(LEAD, STAGE, null);
 
-    expect(addZapierTriggerToQueue).not.toHaveBeenCalled();
+    expect(queueZapierTrigger).not.toHaveBeenCalled();
   });
 
   // Unlike the CRM fan-out, this is outside the `syncIntegrations` guard: that
@@ -1476,7 +1466,7 @@ describe("telling the CRMs a lead changed column", () => {
   test("a move that came from an integration still emits the Zapier trigger", async () => {
     await moveLead(LEAD, STAGE, null, false);
 
-    expect(addZapierTriggerToQueue).toHaveBeenCalled();
+    expect(queueZapierTrigger).toHaveBeenCalled();
   });
 
   // Both ids ride along: the handler prefers the contact, matching where the

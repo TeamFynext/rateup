@@ -589,7 +589,7 @@ export async function dispatchPaymentMessage(
   if (method === CatalogPaymentMethod.SHOPIFY_CHECKOUT) {
     try {
       const { createShopifyDraftOrderWithAddress } =
-        await import("../../integrations/shopify/shopify.service.js");
+        await import("../../integrations/shopify/shopify.catalog.js");
       const draftOrder = await createShopifyDraftOrderWithAddress(
         catalog.orgId,
         toNumericOrderLines(order.products),
@@ -636,7 +636,7 @@ export async function dispatchPaymentMessage(
   if (method === CatalogPaymentMethod.SHOPIFY_NATIVE) {
     try {
       const { createShopifyDraftOrderWithAddress } =
-        await import("../../integrations/shopify/shopify.service.js");
+        await import("../../integrations/shopify/shopify.catalog.js");
       const draftOrder = await createShopifyDraftOrderWithAddress(
         catalog.orgId,
         toNumericOrderLines(order.products),
@@ -860,7 +860,7 @@ export async function handleAddressFlowResponse({
   if (catalog.storeType === "shopify" || catalog.storeType === "SHOPIFY") {
     try {
       const { fetchShopifyShippingRates } =
-        await import("../../integrations/shopify/shopify.service.js");
+        await import("../../integrations/shopify/shopify.catalog.js");
       const shopifyRates = await fetchShopifyShippingRates(
         orgId,
         toNumericOrderLines(order.products),
@@ -953,7 +953,7 @@ export async function handleDeliveryListReply({
   if (catalog.storeType === "shopify" || catalog.storeType === "SHOPIFY") {
     try {
       const { fetchShopifyShippingRates } =
-        await import("../../integrations/shopify/shopify.service.js");
+        await import("../../integrations/shopify/shopify.catalog.js");
       // Shopify prices delivery against a destination, so without a stored
       // address there is nothing to quote (previously null was passed through).
       const shopifyRates = order.shippingAddress

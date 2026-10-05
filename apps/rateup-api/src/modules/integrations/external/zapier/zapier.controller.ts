@@ -19,8 +19,8 @@ import {
   getLifecyclesByOrgId,
   getSampleDataForTrigger,
   getUserIdByEmailAndOrgId,
-  ZapierTriggers,
 } from "./zapier.service.js";
+import { ZapierTriggers } from "./zapier.types.js";
 import {
   addNewContactsToGroup,
   getContactGroupsByOrgId,

@@ -787,7 +787,7 @@ async function reportLeadWon(lead: {
       : null;
 
     // Imported here rather than at the top: the Conversions API service pulls in
-    // the WhatsApp settings and Meta client, and `zoho.service` already imports
+    // the WhatsApp settings and Meta client, and `zoho.inbound` already imports
     // this file — an eager edge widened that cycle enough to break module loading.
     // A win is rare, so paying for the import only when one happens is no loss.
     const { sendWonConversionEvent } =

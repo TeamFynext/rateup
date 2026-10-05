@@ -27,10 +27,8 @@ import {
   getSurveyResponseBySurveyId,
   getSurveyResponseCount,
   resetResponsesStats,
-  saveResponseToGoogleSheet,
   sendEmailOnResponseCreation,
   sendResponseToWebhook,
-  syncResponseToGoogleSheet,
   updateResponse,
   happyIndexResponsesBySurveyId,
 } from "./response.service.js";
@@ -45,11 +43,8 @@ import { getSubscription } from "../subscription/subscription.service.js";
 import { getFlowFromDb } from "../whatsapp/flows/flow.service.js";
 import { BySurveyIdParamsInput } from "../testimonial/testimonial.schema.js";
 import { PrismaClientKnownRequestError } from "../../../generated/prisma/internal/prismaNamespace.js";
-import {
-  addZapierTriggerToQueue,
-  ZapierTriggers,
-} from "../integrations/external/zapier/zapier.service.js";
 import { getSpreadsheetContentType, getSpreadsheetFilename } from "../../utils/spreadsheet.js";
+import { syncResponseToGoogleSheet } from "../integrations/googlesheet/googlesheet.sync.js";
 
 export async function getResponsesHandler(
   request: FastifyRequest<{
@@ -243,15 +238,6 @@ export async function createResponseHandler(
   try {
     const response = await createResponse(data, checkUniqueDevice, ip);
     reply.code(201).send();
-    const {
-      surveyTeamMapId,
-      responses: responseArray,
-      language,
-      createdAt,
-      Contact,
-      tag,
-    } = response;
-    const responses = responseArray as unknown as QuestionResponse[];
     const coords = response.location?.coordinates;
     const location = (await fetchLocation(coords)) ?? undefined;
     // checking location information after response is created since we dont
@@ -260,23 +246,10 @@ export async function createResponseHandler(
       // TODO: check if its possible to get location from whatsapp
     } else {
       const sideEffects = await Promise.allSettled([
-        saveResponseToGoogleSheet({
-          surveyTeamMapId,
-          responses,
-          language,
-          createdAt,
-          respondent: Contact?.phone,
-          tag,
-        }),
         sendEmailOnResponseCreation(data.surveyTeamMapId, response),
         updateResponse(response.id, { ip, location }),
         sendResponseToWebhook(response, response.surveyTeamMap.team.orgId),
         createTestimonial(data, response.id),
-        addZapierTriggerToQueue(
-          ZapierTriggers.RESPONSE_SUBMITTED,
-          { [ZapierTriggers.RESPONSE_SUBMITTED]: response },
-          response.surveyTeamMap.team.orgId,
-        ),
         emitSurveyResponseSubmitted(response.surveyTeamMap.team.orgId, response),
       ]);
       for (const [index, result] of sideEffects.entries()) {

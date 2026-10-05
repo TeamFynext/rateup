@@ -105,6 +105,32 @@ export type IntegrationEvent =
       contact: ContactRecord;
     }
   | { type: "conversation.closed"; contact: ContactRecord }
+  | {
+      /**
+       * A lifecycle was set on the contact through the lifecycle endpoint (the
+       * inbox's lifecycle picker, the Zapier action). Not the `lifecycle` change
+       * on `contact.updated`, which means the contact carries one, not that it
+       * moved.
+       */
+      type: "contact.lifecycle_changed";
+      contactId: string;
+      lifecycleId: string;
+      lifecycleName: string;
+    }
+  | {
+      /** People newly assigned to the contact's conversation; never empty. */
+      type: "contact.assigned";
+      contact: ContactRecord;
+      assignees: { userId: string; teamId: string }[];
+    }
+  | {
+      /** Contacts that were not in the group before this write. */
+      type: "contact_group.members_added";
+      contactGroupId: string;
+      contactIds: string[];
+    }
+  | { type: "message.received"; message: ReceivedMessageSnapshot }
+  | { type: "team.member_joined"; member: TeamMemberSnapshot }
   | { type: "survey.response_submitted"; response: SurveyResponseSnapshot }
   | ({ type: "lead.created" } & LeadStageEventBase)
   | ({
@@ -122,16 +148,40 @@ export type IntegrationEvent =
     };
 
 /**
- * A survey response from a known contact. Only ids and when: the answers can be
- * encrypted, and a listener that needs them loads the response and decides what
- * it may send.
+ * A survey response. Only ids and when: the answers can be encrypted, and a
+ * listener that needs them loads the response and decides what it may send.
+ * `contactId` is null for an anonymous response (a public web survey); the CRMs
+ * have nobody to put one on and skip it.
  */
 export interface SurveyResponseSnapshot {
   id: string;
-  contactId: string;
+  contactId: string | null;
   /** `WEB`, `WHATSAPP`, … — `ResponsePlatform`. */
   platform: string;
   createdAt: string;
+}
+
+/** An inbound message on any channel, as the inbox received it. */
+export interface ReceivedMessageSnapshot {
+  /** The sender: a phone number, or the channel's user id (PSID, IGSID, webchat id). */
+  from: string;
+  messageId?: string;
+  /** The channel's own payload for the message. */
+  messageBody: unknown;
+  /** `WHATSAPP`, `INSTAGRAM`, … — `PlatformType`. */
+  sourcePlatform: string;
+  /** The org's number or page the message arrived on. */
+  sourceIdentifier?: string | null;
+}
+
+/** Someone who accepted an invitation and joined the org. */
+export interface TeamMemberSnapshot {
+  name: string;
+  email: string;
+  /** Already had a RateUp login before accepting. */
+  isExistingUser: boolean;
+  /** The team the invitation was filed under; none for an org-level invite. */
+  team: { name: string; code: string } | null;
 }
 
 /** Order statuses, as `commerce.types.ts` defines them; each is its own event. */

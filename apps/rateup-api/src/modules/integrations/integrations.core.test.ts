@@ -37,14 +37,8 @@ vi.mock("../whatsapp/settings/wa_settings.service.js", () => ({
   getWaSettings: vi.fn(),
   getWaSettingsById: vi.fn(),
 }));
-vi.mock("./shopify/shopify.service.js", () => ({ sendWhatsAppTemplateToCustomer: vi.fn() }));
+vi.mock("./shopify/shopify.messages.js", () => ({ sendWhatsAppTemplateToCustomer: vi.fn() }));
 vi.mock("./integration_axios.js", () => ({ callWaAmeliaApi: vi.fn() }));
-vi.mock("googleapis", () => ({
-  google: {
-    auth: { OAuth2: class {} },
-    options: vi.fn(),
-  },
-}));
 
 import axios from "axios";
 import prisma from "../../utils/prisma.js";
@@ -52,7 +46,7 @@ import { log } from "../../utils/logger.js";
 import { generateApiKey } from "../apiAccessToken/apiAccessToken.service.js";
 import { callMetaApi } from "../whatsapp/wa_axios.js";
 import { getWaSettings } from "../whatsapp/settings/wa_settings.service.js";
-import { sendWhatsAppTemplateToCustomer } from "./shopify/shopify.service.js";
+import { sendWhatsAppTemplateToCustomer } from "./shopify/shopify.messages.js";
 import {
   createIntegration,
   deleteIntegrationByName,

@@ -45,9 +45,9 @@ vi.mock("../../../team/team.service.js", () => ({ getTeamIdsByUserId: vi.fn(asyn
 vi.mock("../../../notification/notification.service.js", () => ({
   getNotificationSettings: vi.fn(),
 }));
-vi.mock("../../../integrations/external/zapier/zapier.service.js", () => ({
-  addZapierTriggerToQueue: vi.fn(),
-  ZapierTriggers: { CONTACT_ASSIGN: "CONTACT_ASSIGN" },
+vi.mock("../../../integrations/events/emitIntegrationEvent.js", () => ({
+  emitIntegrationEvent: vi.fn(),
+  emitSurveyResponseSubmitted: vi.fn(),
 }));
 vi.mock("@faker-js/faker", () => ({
   faker: {

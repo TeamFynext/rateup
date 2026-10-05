@@ -6,19 +6,12 @@ import { log } from "../../../utils/logger.js";
 import type { IntegrationProvider } from "../providers/integrationProvider.types.js";
 import { getIntegrationProvider } from "../providers/registry.js";
 
-/**
- * Thrown by a provider's `handleInbound` when a delivery fails verification — a
- * bad or missing signature, a stale timestamp. Answered 401.
- */
-export class InboundWebhookRejected extends Error {}
+import { InboundWebhookRejected, type InboundWebhookRequest } from "./inboundWebhookContract.js";
 
-/** A request as `handleInbound` receives it: parsed body plus the exact bytes sent. */
-export type InboundWebhookRequest = FastifyRequest & { rawBody?: string };
-
-/** Where a provider tells the remote side to deliver, for its connect flow. */
-export function inboundWebhookUrl(provider: string, integrationId: string) {
-  return `${process.env.API_URL ?? ""}/api/public/integrations/webhooks/${provider}/${integrationId}`;
-}
+// Providers import these from `inboundWebhookContract.ts`; re-exported for the
+// callers that already take them from here.
+export { InboundWebhookRejected, inboundWebhookUrl } from "./inboundWebhookContract.js";
+export type { InboundWebhookRequest } from "./inboundWebhookContract.js";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -36,8 +29,10 @@ interface Params {
  * Every lookup failure answers the same 404: a receiver that says whether an id
  * exists, or which provider it belongs to, is an oracle for guessing them.
  *
- * Zoho and GetLead keep the receivers they had: their URLs are registered at
- * the provider, and moving them would need every org to reconnect.
+ * GetLead keeps the receiver it had: its URL is registered at the provider, and
+ * moving it would need every org to reconnect. Zoho moved here without one,
+ * because its scheduled refresh re-registers every channel anyway; its old
+ * address forwards here until that has happened.
  */
 export async function receiveInboundWebhook(
   request: FastifyRequest<{ Params: Params }>,

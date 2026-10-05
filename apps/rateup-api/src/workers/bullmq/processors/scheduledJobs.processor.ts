@@ -15,9 +15,8 @@ import {
   publishSurveyCronAction,
 } from "../../../modules/survey/survey.service.js";
 import { sendCampaignCronAction } from "../../../modules/campaign/campaign.service.js";
-import { syncShopifyWebhooks } from "../../../modules/integrations/shopify/shopify.service.js";
+import { syncShopifyWebhooks } from "../../../modules/integrations/shopify/shopify.webhooks.js";
 import { cleanupShopifyCheckouts } from "../../../modules/integrations/shopify/shopify.checkouts.service.js";
-import { renewShopifyTokensCronAction } from "../../../modules/integrations/shopify/shopify.session.js";
 import { refreshIntegrationCredentials } from "../../../modules/integrations/shared/credentialRefresh.js";
 import {
   processDripCampaigns,
@@ -75,11 +74,6 @@ const HANDLERS: Record<ScheduledJobId, () => Promise<void>> = {
 
   shopifyWebhookSync: async () => {
     await safeRun("syncShopifyWebhooks", syncShopifyWebhooks);
-  },
-
-  shopifyTokenRenewal: async () => {
-    log.info("Running daily JOB --> Shopify offline token renewal");
-    await safeRun("renewShopifyTokensCronAction", renewShopifyTokensCronAction);
   },
 
   integrationCredentialRefresh: async () => {

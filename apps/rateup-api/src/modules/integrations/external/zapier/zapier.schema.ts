@@ -1,5 +1,5 @@
 import z from "zod";
-import { ZapierTriggers } from "./zapier.service.js";
+import { ZapierTriggers } from "./zapier.types.js";
 import { WaMessageAssignStatus } from "../../../../types/enums.js";
 import { contactCoreSchema } from "../../../contact/contact.schema.js";
 

@@ -35,7 +35,6 @@ import { getQuestionsBySurveyId } from "../../question/question.service.js";
 import { CreateResponseInput } from "../../response/response.schema.js";
 import {
   createResponse,
-  saveResponseToGoogleSheet,
   sendResponseToWebhook,
   updateResponse,
 } from "../../response/response.service.js";
@@ -55,10 +54,6 @@ import { logAutomationAction } from "./automation-logger.utils.js";
 import { processNextNode } from "./wasurvey.controller.js";
 import { LeadgenNodeData } from "./node-types.js";
 import { hasFeature } from "../../subscription/subscription.service.js";
-import {
-  addZapierTriggerToQueue,
-  ZapierTriggers,
-} from "../../integrations/external/zapier/zapier.service.js";
 import { producer } from "../../../plugins/kafka.js";
 import { assertWithinConversationLimit } from "./wasurvey.auth.js";
 import type { sendPaymentInitTemplate } from "../automatedReply/wa_automatedReply.utils.js";
@@ -557,17 +552,7 @@ export interface SaveResponsesContext {
 async function publishSavedResponse(
   res: Awaited<ReturnType<typeof createResponse>>,
   session: SaveResponsesContext,
-  anonymous: boolean,
 ) {
-  const { surveyTeamMapId, responses, language, createdAt, Contact, tag } = res;
-  await saveResponseToGoogleSheet({
-    surveyTeamMapId,
-    responses,
-    language,
-    createdAt,
-    respondent: !anonymous && Contact?.phone,
-    tag,
-  });
   await sendResponseToWebhook(res, session.orgId);
   if (session.surveyTeamMapId) {
     await updateCompletedSurvey(session.surveyTeamMapId);
@@ -588,12 +573,7 @@ async function publishSavedResponse(
 
     await updateCampaignStats(session.campaignParticipantId);
   }
-  addZapierTriggerToQueue(
-    ZapierTriggers.RESPONSE_SUBMITTED,
-    { [ZapierTriggers.RESPONSE_SUBMITTED]: res },
-    res.surveyTeamMap.team.orgId,
-  );
-  // Best effort, like the Zap: the response is filed whether or not this lands.
+  // Best effort: the response is filed whether or not this lands.
   await emitSurveyResponseSubmitted(res.surveyTeamMap.team.orgId, res).catch((err) =>
     log.error({ err, responseId: res.id }, "Failed to announce the survey response"),
   );
@@ -687,7 +667,7 @@ export async function saveResponses(session: SaveResponsesContext) {
   // the whole request, so none of it is allowed to hold the caller. Each is
   // logged on failure rather than surfaced: the respondent has already been told
   // their answers were saved, which is true.
-  void publishSavedResponse(res, session, anonymous).catch((e) =>
+  void publishSavedResponse(res, session).catch((e) =>
     log.error({ err: e, responseId: res.id }, "Post-save fan-out failed"),
   );
 

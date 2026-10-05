@@ -30,11 +30,13 @@ import { PlatformType } from "../../../../generated/prisma/enums.js";
 import {
   deleteInstagramIceBreakers,
   deleteInstagramPersistentMenu,
+  doesUserFollowInstagramAccount,
   getInstagramIceBreakers,
   getInstagramMediaPermalink,
   getInstagramMediaPosts,
   getInstagramPersistentMenu,
   getInstagramStories,
+  replyToInstagramComment,
   sendInstagramFile,
   sendInstagramGenericTemplate,
   sendInstagramImage,
@@ -640,5 +642,48 @@ describe("reading the account's own posts and stories", () => {
     await expect(getInstagramMediaPosts(IBA_ID)).rejects.toThrow(
       `No Instagram settings found for ibaId ${IBA_ID}`,
     );
+  });
+});
+
+describe("replyToInstagramComment", () => {
+  test("posts the reply under the comment with the page token", async () => {
+    callMetaApiMock.mockResolvedValue({ data: { id: "reply-1" } });
+
+    await expect(replyToInstagramComment("comment-1", "Check your DMs", IBA_ID)).resolves.toEqual({
+      id: "reply-1",
+    });
+    expect(lastCall()).toMatchObject({
+      url: "/comment-1/replies",
+      method: "POST",
+      token: "page-token-abc",
+      body: { message: "Check your DMs" },
+    });
+  });
+
+  test("refuses an account with no page token", async () => {
+    getSettingsMock.mockResolvedValue({ ...SETTINGS, pageAccessToken: null });
+
+    await expect(replyToInstagramComment("comment-1", "Hi", IBA_ID)).rejects.toThrow();
+    expect(callMetaApiMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("doesUserFollowInstagramAccount", () => {
+  test("reads the follow flag from the user's profile", async () => {
+    callMetaApiMock.mockResolvedValue({ data: { is_user_follow_business: true } });
+
+    await expect(doesUserFollowInstagramAccount(IGS_ID, IBA_ID)).resolves.toBe(true);
+    expect(lastCall()).toMatchObject({
+      url: `/${IGS_ID}?fields=is_user_follow_business`,
+      method: "GET",
+      token: "page-token-abc",
+    });
+  });
+
+  // Meta refuses the profile read until the user has messaged the business.
+  test("treats a refused profile read as not following", async () => {
+    callMetaApiMock.mockRejectedValue(new Error("User consent is required"));
+
+    await expect(doesUserFollowInstagramAccount(IGS_ID, IBA_ID)).resolves.toBe(false);
   });
 });

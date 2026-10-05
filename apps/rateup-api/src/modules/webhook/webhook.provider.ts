@@ -1,25 +1,20 @@
 import prisma from "../../utils/prisma.js";
 import type { IntegrationEventType } from "../integrations/events/integrationEvent.types.js";
 import type { IntegrationProvider } from "../integrations/providers/integrationProvider.types.js";
+import { toWebhookPayload } from "./webhook.payloads.js";
+import { WEBHOOK_EVENTS } from "./webhook.schema.js";
 import { enqueueOrgWebhookDispatch } from "./webhook.service.js";
 
-const EVENTS: readonly IntegrationEventType[] = [
-  "contact.created",
-  "contact.updated",
-  "contact.deleted",
-  "conversation.closed",
-  "lead.created",
-  "lead.stage_changed",
-];
+/** Every webhook event that is an integration event — all but the WhatsApp status callback. */
+const EVENTS = WEBHOOK_EVENTS.filter(
+  (event): event is Exclude<(typeof WEBHOOK_EVENTS)[number], "message_status"> =>
+    event !== "message_status",
+) satisfies readonly IntegrationEventType[];
 
 /**
  * Forwards integration events to the org's outgoing Webhook, for the events it
- * subscribed to.
- *
- * `WEBHOOK_EVENTS` offers only `message_status` today, so no org can have
- * subscribed to any of these yet and this delivers nothing. Phase 3 widens that
- * list — and adds signing — at which point this starts delivering with no change
- * at the call sites.
+ * subscribed to, in the public shape `webhook.payloads.ts` defines. Delivery and
+ * signing happen on `outgoingWebhookQueue` (`deliverOutgoingWebhook`).
  */
 export const webhookProvider: IntegrationProvider = {
   name: "webhook",
@@ -29,7 +24,13 @@ export const webhookProvider: IntegrationProvider = {
   events: EVENTS,
   // Subscriptions live on the `Webhook` row, which `handleEvent` reads.
   subscribedEvents: () => EVENTS,
-  // Delivered from `outgoingWebhookQueue`, so there is no `processJob` here.
+  async orgSubscribedEvents(orgId) {
+    const webhook = await prisma.webhook.findUnique({
+      where: { orgId },
+      select: { events: true },
+    });
+    return EVENTS.filter((event) => webhook?.events.includes(event));
+  },
   async handleEvent(event, { orgId }) {
     const webhook = await prisma.webhook.findUnique({
       where: { orgId },
@@ -37,7 +38,8 @@ export const webhookProvider: IntegrationProvider = {
     });
     if (!webhook?.events.includes(event.type)) return;
 
-    const { type, ...payload } = event;
-    await enqueueOrgWebhookDispatch(orgId, type, payload);
+    const delivery = toWebhookPayload(event);
+    if (!delivery) return;
+    await enqueueOrgWebhookDispatch(orgId, delivery.event, delivery.payload);
   },
 };
