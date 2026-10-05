@@ -7,6 +7,7 @@ import { getInstagramMediaPermalink } from "./instagram_messaging.service.js";
 import { InstagramEvent } from "../../../types/enums.js";
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 import { checkAndExecuteRuleByTriggerEvent } from "../automatedReply/wa_automatedReply.utils.js";
+import { handleInstagramUserResponse } from "../automatedReply/instagram_automation.service.js";
 import { getInstagramChannel } from "../metaChannel/metaChannel.service.js";
 
 export async function getIgUserDetailsFromMeta(igsId: string, ibaId: string) {

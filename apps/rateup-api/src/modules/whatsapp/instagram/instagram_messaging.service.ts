@@ -869,12 +869,12 @@ export async function replyToInstagramComment(
   text: string,
   ibaId: string,
 ): Promise<{ id?: string }> {
-  const waSettings = await getWaSettingsByIbaId(ibaId);
-  if (!waSettings?.pageAccessToken) {
+  const channel = await getInstagramChannel(ibaId);
+  if (!channel?.pageAccessToken) {
     throw new Error(`No Instagram settings found for ibaId ${ibaId}`);
   }
 
-  const response = await callMetaApi(`/${commentId}/replies`, "POST", waSettings.pageAccessToken, {
+  const response = await callMetaApi(`/${commentId}/replies`, "POST", channel.pageAccessToken, {
     message: text,
   });
   return response.data ?? {};
@@ -885,8 +885,8 @@ export async function replyToInstagramComment(
  * has messaged the business; before that, and on any error, the answer is "no".
  */
 export async function doesUserFollowInstagramAccount(igsId: string, ibaId: string) {
-  const waSettings = await getWaSettingsByIbaId(ibaId);
-  if (!waSettings?.pageAccessToken) {
+  const channel = await getInstagramChannel(ibaId);
+  if (!channel?.pageAccessToken) {
     throw new Error(`No Instagram settings found for ibaId ${ibaId}`);
   }
 
@@ -894,7 +894,7 @@ export async function doesUserFollowInstagramAccount(igsId: string, ibaId: strin
     const response = await callMetaApi(
       `/${igsId}?fields=is_user_follow_business`,
       "GET",
-      waSettings.pageAccessToken,
+      channel.pageAccessToken,
     );
     return response.data?.is_user_follow_business === true;
   } catch (error) {
