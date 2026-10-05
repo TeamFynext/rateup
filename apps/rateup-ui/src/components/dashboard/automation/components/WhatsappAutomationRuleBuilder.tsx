@@ -20,6 +20,8 @@ interface WhatsappAutomationRuleBuilderProps {
   ruleId?: string;
   initialPlatform?: Platform;
   initialTriggerEvent?: string;
+  /** Preselects the channel when a rule is started from that channel's own page. */
+  initialChannelId?: string;
 }
 
 const defaultValues = {
@@ -44,6 +46,7 @@ const defaultValues = {
     },
     instagramScope: "ALL",
     instagramPostIds: [],
+    instagramPublicReplies: [],
     shopifyProductIds: [],
     wooProductIds: [],
   },
@@ -53,6 +56,7 @@ const WhatsappAutomationRuleBuilder: React.FC<WhatsappAutomationRuleBuilderProps
   ruleId,
   initialPlatform,
   initialTriggerEvent,
+  initialChannelId,
 }) => {
   const isEditMode = ruleId && ruleId !== "new";
   const { data: ruleData, isLoading: isRuleLoading } = useRuleById(isEditMode ? ruleId : "");
@@ -67,6 +71,7 @@ const WhatsappAutomationRuleBuilder: React.FC<WhatsappAutomationRuleBuilderProps
       ...defaultValues,
       ...(initialPlatform && { platform: initialPlatform }),
       ...(initialTriggerEvent && { triggerEvent: initialTriggerEvent }),
+      ...(initialChannelId && { whatsappSettingsPhoneIds: [initialChannelId] }),
     },
   });
 

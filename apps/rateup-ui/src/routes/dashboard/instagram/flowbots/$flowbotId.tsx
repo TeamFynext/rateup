@@ -8,6 +8,7 @@ import { useInstagramAutomationById } from "@/backend/whatsapp/instagram-automat
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { AutomatedReplyForm } from "@/components/dashboard/whatsapp/flowbots/create.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import FlowEditor from "@/components/whatsapp/automation/components/flow-editor.tsx";
@@ -42,9 +43,7 @@ function InstagramFlowbotId() {
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <p className="text-destructive mb-4">Failed to load automation</p>
-          <button onClick={refetch} className="px-4 py-2 bg-blue-500 text-white rounded">
-            Retry
-          </button>
+          <Button onClick={refetch}>Retry</Button>
         </div>
       </div>
     );

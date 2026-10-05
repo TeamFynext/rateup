@@ -21,6 +21,7 @@ import { ContactsNodeEditor } from "./node-editors/ContactsNodeEditor.tsx";
 import { CtaUrlNodeEditor } from "./node-editors/CtaUrlNodeEditor.tsx";
 import { FlowNodeEditor } from "./node-editors/FlowNodeEditor.tsx";
 import { InputNodeEditor } from "./node-editors/InputNodeEditor.tsx";
+import { InstagramFollowCheckNodeEditor } from "./node-editors/InstagramFollowCheckNodeEditor.tsx";
 import { InstagramGenericTemplateNodeEditor } from "./node-editors/InstagramGenericTemplateNodeEditor.tsx";
 import { InstagramIceBreakerNodeEditor } from "./node-editors/InstagramIceBreakerNodeEditor.tsx";
 import { InstagramProductTemplateNodeEditor } from "./node-editors/InstagramProductTemplateNodeEditor.tsx";
@@ -255,6 +256,8 @@ export default function NodeEditor({ node, onChange, onClose }: Readonly<NodeEdi
             handleInputChange={handleInputChange}
           />
         );
+      case "instagramFollowCheckNode":
+        return <InstagramFollowCheckNodeEditor />;
       case "instagramIceBreakerNode":
         return (
           <InstagramIceBreakerNodeEditor

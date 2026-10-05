@@ -48,6 +48,34 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     kinds: ["improvement"],
     area: "Flows",
     link: { to: "/dashboard/whatsapp/flows" },
+    id: "2026-10-01-instagram-comment-replies",
+    title: "Instagram comments: public replies and lives",
+    summary:
+      "Comment automations can now post a public reply under the comment as well as sending the DM, and can answer comments on your live videos. The DM now arrives as a private reply, so it reaches people who have never messaged you.",
+    publishedAt: "2026-10-01",
+    kinds: ["new", "fix"],
+    area: "Instagram",
+    link: { to: "/dashboard/instagram" },
+  },
+  {
+    id: "2026-10-01-instagram-links-follow-check",
+    title: "ig.me links and follow-to-unlock",
+    summary:
+      "Create ig.me links that start a chosen automation when someone opens them, and add a Follow check step to a chatbot to reward people who follow you.",
+    publishedAt: "2026-10-01",
+    kinds: ["new"],
+    area: "Instagram",
+    link: { to: "/dashboard/instagram" },
+  },
+  {
+    id: "2026-10-01-instagram-chatbot-replies",
+    title: "Instagram chatbots continue after a reply",
+    summary:
+      "Chatbots now carry on when someone taps a button or answers a question, and can ask for details like an email address.",
+    publishedAt: "2026-10-01",
+    kinds: ["fix", "improvement"],
+    area: "Instagram",
+    link: { to: "/dashboard/instagram" },
   },
   {
     id: "2026-09-30-shopify-cart-reminder-results",

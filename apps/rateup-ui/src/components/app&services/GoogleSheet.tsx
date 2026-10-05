@@ -1,12 +1,12 @@
 import { IconBrandGoogleDrive } from "@tabler/icons-react";
-import { useId, useState } from "react";
+import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import {
   useDeleteIntegrationMutation,
-  useGetGoogleSheetAuthorizationUrl,
   useIntegrationByType,
+  useStartOAuthConnect,
 } from "@/backend/appsIntegration/integration.query";
 import { IntegrationEmptyState } from "@/components/dashboard/settings/integrations/IntegrationEmptyState.tsx";
 import { IntegrationFormCard } from "@/components/dashboard/settings/integrations/IntegrationFormCard.tsx";
@@ -27,23 +27,8 @@ export function GoogleSheet() {
 
   const deleteAccount = useDeleteIntegrationMutation(IntegratedApps.googlesheet);
   const { t: translations } = useTranslation();
-  const { data: authUrl } = useGetGoogleSheetAuthorizationUrl();
-  const [, setCallBackRoute] = useState<string>(() => {
-    try {
-      return (
-        localStorage.getItem("google-callback-route") ??
-        "/dashboard/settings/integrations/googlesheet"
-      );
-    } catch {
-      return "/dashboard/settings/integrations/googlesheet";
-    }
-  });
-  const persistCallbackRoute = (value: string) => {
-    setCallBackRoute(value);
-    try {
-      localStorage.setItem("google-callback-route", value);
-    } catch {}
-  };
+  // The shared OAuth connect; Google returns to `/auth/oauth2callback`, which finishes it.
+  const startConnect = useStartOAuthConnect(IntegratedApps.googlesheet);
 
   const handleSignOutGoogleSync = async () => {
     const shouldSignOut = await confirm({
@@ -62,11 +47,6 @@ export function GoogleSheet() {
   const config = INTEGRATIONS_CONFIG.googlesheet;
   const syncedEmail = googleAccessToken?.credential?.userEmail;
 
-  const connect = () => {
-    persistCallbackRoute("/dashboard/settings/integrations/googlesheet");
-    window.open(authUrl);
-  };
-
   if (!googleAccessToken)
     return (
       <IntegrationShell icon={config.icon} name={config.name}>
@@ -77,7 +57,11 @@ export function GoogleSheet() {
             "RateUp writes responses and contacts straight into your spreadsheets, so your team can work where it already works.",
           )}
           action={
-            <Button onClick={connect} size="lg">
+            <Button
+              onClick={() => startConnect.mutate(undefined)}
+              loading={startConnect.isPending || startConnect.isSuccess}
+              size="lg"
+            >
               <IconBrandGoogleDrive data-icon="inline-start" />
               {translations("Connect Google account")}
             </Button>

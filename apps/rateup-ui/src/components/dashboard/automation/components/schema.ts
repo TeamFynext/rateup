@@ -100,6 +100,11 @@ const TRIGGER_EVENTS = [
     value: "INSTAGRAM_STORY_MENTION",
     platforms: ["INSTAGRAM"],
   },
+  {
+    label: "ig.me Link Opened",
+    value: "INSTAGRAM_REFERRAL",
+    platforms: ["INSTAGRAM"],
+  },
 ] as const;
 
 /**
@@ -117,10 +122,21 @@ export function getTriggerEventsForPlatform(platform: Platform, current?: string
   );
 }
 
+/** A trigger's display name; an event missing from the list falls back to its raw value. */
+export function getTriggerEventLabel(value: string): string {
+  return TRIGGER_EVENTS.find((e) => e.value === value)?.label ?? value;
+}
+
 /** Condition fields, hiding a legacy one unless it is the field already chosen. */
 export function getConditionFields(current?: string) {
   return CONDITION_FIELDS.filter((f) => !("legacy" in f && f.legacy) || f.value === current);
 }
+
+export const INSTAGRAM_COMMENT_SOURCES = [
+  { label: "Posts & reels", value: "POSTS" },
+  { label: "Live videos", value: "LIVE" },
+  { label: "Both", value: "ALL" },
+] as const;
 
 export const INSTAGRAM_SCOPE_OPTIONS = [
   { label: "All posts", value: "ALL" },
@@ -324,6 +340,19 @@ const ruleOptionsSchema = z.object({
   // Instagram-specific options
   instagramScope: z.enum(["ALL", "SPECIFIC"]).default("ALL"),
   instagramPostIds: z.array(z.string()).default([]),
+  instagramCommentSource: z.enum(["ALL", "POSTS", "LIVE"]).optional(),
+  // Mirrors the API's check in wa_rule.schema.ts.
+  instagramRef: z
+    .string()
+    .trim()
+    .max(250)
+    .regex(/^[A-Za-z0-9_=-]*$/, "Use letters, numbers, - _ and = only")
+    .optional(),
+  instagramPublicReplies: z
+    .array(z.string().trim().max(2200, "Instagram comments stop at 2200 characters"))
+    .max(10)
+    .default([])
+    .transform((replies) => replies.filter((reply) => reply.length > 0)),
 });
 
 const createRuleBaseSchema = z.object({
@@ -365,6 +394,7 @@ const createRuleBaseSchema = z.object({
     wooProductIds: [],
     instagramScope: "ALL",
     instagramPostIds: [],
+    instagramPublicReplies: [],
   }),
 });
 

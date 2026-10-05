@@ -35,7 +35,10 @@ export function Zoho() {
       detail={connectedTo || undefined}
     >
       <ZohoAuthentication integration={integration} />
-      <ZohoTriggerList integration={integration} refetch={refetch} isLoading={isRefetching} />
+      {/* Only once connected: it loads Bigin pipelines and users, which fail without a connection. */}
+      {integration && (
+        <ZohoTriggerList integration={integration} refetch={refetch} isLoading={isRefetching} />
+      )}
       {products?.crm && <ZohoLeadsTable integration={integration} />}
       {products?.crm && <ZohoContactsTable integration={integration} />}
       {products?.bigin && <BiginContactsTable integration={integration} />}
