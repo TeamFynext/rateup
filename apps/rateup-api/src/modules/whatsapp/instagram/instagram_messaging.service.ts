@@ -7,8 +7,8 @@
 import { log } from "../../../utils/logger.js";
 import { callMetaApi } from "../wa_axios.js";
 import { sendMetaMessage } from "../meta/metaMessage.service.js";
-import { getWaSettingsByIbaId, updateWaSettingsById } from "../settings/wa_settings.service.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
+import { getInstagramChannel, updateMetaChannelById } from "../metaChannel/metaChannel.service.js";
 
 /** Instagram's messenger-profile surface (ice breakers, persistent menu). */
 async function callInstagramMessengerProfileApi(
@@ -52,13 +52,13 @@ export async function sendInstagramPrivateReply(
   igsId?: string,
 ): Promise<unknown> {
   try {
-    const waSettings = await getWaSettingsByIbaId(ibaId);
+    const channel = await getInstagramChannel(ibaId, orgId);
 
-    if (!waSettings) {
+    if (!channel) {
       throw new Error(`No Instagram settings found for ibaId ${ibaId}`);
     }
 
-    const { pageAccessToken, fbPageId } = waSettings;
+    const { pageAccessToken, fbPageId } = channel;
 
     if (!fbPageId) {
       throw new Error(`No Facebook Page ID configured for ibaId ${ibaId}`);
@@ -109,13 +109,13 @@ export async function sendInstagramTextMessage(
 ): Promise<unknown> {
   try {
     // Get settings for this organization
-    const waSettings = await getWaSettingsByIbaId(ibaId);
+    const channel = await getInstagramChannel(ibaId, orgId);
 
-    if (!waSettings) {
+    if (!channel) {
       throw new Error(`No Instagram settings found for organization ${orgId}`);
     }
 
-    const { pageAccessToken } = waSettings;
+    const { pageAccessToken } = channel;
 
     // Prepare the message payload
     const payload = {
@@ -162,13 +162,13 @@ export async function sendInstagramImage(
   caption?: string,
 ): Promise<{ image: unknown; caption?: { sent: boolean; error?: unknown } }> {
   try {
-    const waSettings = await getWaSettingsByIbaId(ibaId);
+    const channel = await getInstagramChannel(ibaId, orgId);
 
-    if (!waSettings) {
+    if (!channel) {
       throw new Error(`No Instagram settings found for igsId ${igsId} in org ${orgId}`);
     }
 
-    const { pageAccessToken } = waSettings;
+    const { pageAccessToken } = channel;
 
     const payload = {
       recipient: {
@@ -245,13 +245,13 @@ export async function sendInstagramGenericTemplate(
   ibaId: string,
 ): Promise<unknown> {
   try {
-    const waSettings = await getWaSettingsByIbaId(ibaId);
+    const channel = await getInstagramChannel(ibaId, orgId);
 
-    if (!waSettings) {
+    if (!channel) {
       throw new Error(`No Instagram settings found for organization ${orgId}`);
     }
 
-    const { pageAccessToken } = waSettings;
+    const { pageAccessToken } = channel;
 
     const payload = {
       recipient: {
@@ -318,13 +318,13 @@ export async function sendInstagramQuickReply(
   ibaId: string,
 ): Promise<unknown> {
   try {
-    const waSettings = await getWaSettingsByIbaId(ibaId);
+    const channel = await getInstagramChannel(ibaId, orgId);
 
-    if (!waSettings) {
+    if (!channel) {
       throw new Error(`No Instagram settings found for organization ${orgId}`);
     }
 
-    const { pageAccessToken } = waSettings;
+    const { pageAccessToken } = channel;
 
     const payload = {
       recipient: {
@@ -376,13 +376,13 @@ export async function sendInstagramProductTemplate(
   ibaId: string,
 ): Promise<unknown> {
   try {
-    const waSettings = await getWaSettingsByIbaId(ibaId);
+    const channel = await getInstagramChannel(ibaId, orgId);
 
-    if (!waSettings) {
+    if (!channel) {
       throw new Error(`No Instagram settings found for organization ${orgId}`);
     }
 
-    const { pageAccessToken } = waSettings;
+    const { pageAccessToken } = channel;
 
     const payload = {
       recipient: {
@@ -433,13 +433,13 @@ export async function sendInstagramStoryReply(
   ibaId: string,
 ): Promise<unknown> {
   try {
-    const waSettings = await getWaSettingsByIbaId(ibaId);
+    const channel = await getInstagramChannel(ibaId, orgId);
 
-    if (!waSettings) {
+    if (!channel) {
       throw new Error(`No Instagram settings found for organization ${orgId}`);
     }
 
-    const { pageAccessToken } = waSettings;
+    const { pageAccessToken } = channel;
 
     const payload = {
       recipient: {
@@ -490,13 +490,13 @@ export async function setInstagramIceBreakers(
   ibaId: string,
 ): Promise<unknown> {
   try {
-    const waSettings = await getWaSettingsByIbaId(ibaId);
+    const channel = await getInstagramChannel(ibaId, orgId);
 
-    if (!waSettings) {
+    if (!channel) {
       throw new Error(`No Instagram settings found for organization ${orgId}`);
     }
 
-    const { pageAccessToken } = waSettings;
+    const { pageAccessToken } = channel;
     if (!pageAccessToken) {
       throw new Error(`No Instagram page access token configured for ibaId ${ibaId}`);
     }
@@ -510,7 +510,7 @@ export async function setInstagramIceBreakers(
 
     const response = await callInstagramMessengerProfileApi(pageAccessToken, "POST", payload);
 
-    await updateWaSettingsById(waSettings.id, waSettings.orgId, {
+    await updateMetaChannelById(channel.id, channel.orgId, {
       instagramIceBreakers: iceBreakers,
     });
 
@@ -527,19 +527,19 @@ export async function setInstagramIceBreakers(
 }
 
 export async function getInstagramIceBreakers(orgId: string, ibaId: string) {
-  const waSettings = await getWaSettingsByIbaId(ibaId);
+  const channel = await getInstagramChannel(ibaId, orgId);
 
-  if (!waSettings) {
+  if (!channel) {
     throw new Error(`No Instagram settings found for organization ${orgId}`);
   }
 
-  if (waSettings.instagramIceBreakers) {
+  if (channel.instagramIceBreakers) {
     return {
-      ice_breakers: waSettings.instagramIceBreakers,
+      ice_breakers: channel.instagramIceBreakers,
     };
   }
 
-  const { pageAccessToken } = waSettings;
+  const { pageAccessToken } = channel;
   if (!pageAccessToken) {
     throw new Error(`No Instagram page access token configured for ibaId ${ibaId}`);
   }
@@ -551,7 +551,7 @@ export async function getInstagramIceBreakers(orgId: string, ibaId: string) {
     response,
     "ice_breakers",
   );
-  await updateWaSettingsById(waSettings.id, waSettings.orgId, {
+  await updateMetaChannelById(channel.id, channel.orgId, {
     instagramIceBreakers: iceBreakers,
   });
 
@@ -575,20 +575,20 @@ function unwrapMessengerProfileField<T>(response: unknown, field: string): T[] {
 }
 
 export async function deleteInstagramIceBreakers(orgId: string, ibaId: string) {
-  const waSettings = await getWaSettingsByIbaId(ibaId);
+  const channel = await getInstagramChannel(ibaId, orgId);
 
-  if (!waSettings) {
+  if (!channel) {
     throw new Error(`No Instagram settings found for organization ${orgId}`);
   }
 
-  const { pageAccessToken } = waSettings;
+  const { pageAccessToken } = channel;
   if (!pageAccessToken) {
     throw new Error(`No Instagram page access token configured for ibaId ${ibaId}`);
   }
   const response = await callInstagramMessengerProfileApi(pageAccessToken, "DELETE", {
     fields: ["ice_breakers"],
   });
-  await updateWaSettingsById(waSettings.id, waSettings.orgId, {
+  await updateMetaChannelById(channel.id, channel.orgId, {
     instagramIceBreakers: [],
   });
   return response;
@@ -607,13 +607,13 @@ export async function setInstagramPersistentMenu(
   orgId: string,
   ibaId: string,
 ): Promise<unknown> {
-  const waSettings = await getWaSettingsByIbaId(ibaId);
+  const channel = await getInstagramChannel(ibaId, orgId);
 
-  if (!waSettings) {
+  if (!channel) {
     throw new Error(`No Instagram settings found for organization ${orgId}`);
   }
 
-  const { pageAccessToken } = waSettings;
+  const { pageAccessToken } = channel;
   if (!pageAccessToken) {
     throw new Error(`No Instagram page access token configured for ibaId ${ibaId}`);
   }
@@ -621,7 +621,7 @@ export async function setInstagramPersistentMenu(
     persistent_menu: menus,
   });
 
-  await updateWaSettingsById(waSettings.id, waSettings.orgId, {
+  await updateMetaChannelById(channel.id, channel.orgId, {
     instagramPersistentMenu: menus,
   });
 
@@ -629,19 +629,19 @@ export async function setInstagramPersistentMenu(
 }
 
 export async function getInstagramPersistentMenu(orgId: string, ibaId: string) {
-  const waSettings = await getWaSettingsByIbaId(ibaId);
+  const channel = await getInstagramChannel(ibaId, orgId);
 
-  if (!waSettings) {
+  if (!channel) {
     throw new Error(`No Instagram settings found for organization ${orgId}`);
   }
 
-  if (waSettings.instagramPersistentMenu) {
+  if (channel.instagramPersistentMenu) {
     return {
-      persistent_menu: waSettings.instagramPersistentMenu,
+      persistent_menu: channel.instagramPersistentMenu,
     };
   }
 
-  const { pageAccessToken } = waSettings;
+  const { pageAccessToken } = channel;
   if (!pageAccessToken) {
     throw new Error(`No Instagram page access token configured for ibaId ${ibaId}`);
   }
@@ -653,7 +653,7 @@ export async function getInstagramPersistentMenu(orgId: string, ibaId: string) {
     response,
     "persistent_menu",
   );
-  await updateWaSettingsById(waSettings.id, waSettings.orgId, {
+  await updateMetaChannelById(channel.id, channel.orgId, {
     instagramPersistentMenu: persistentMenu,
   });
 
@@ -661,20 +661,20 @@ export async function getInstagramPersistentMenu(orgId: string, ibaId: string) {
 }
 
 export async function deleteInstagramPersistentMenu(orgId: string, ibaId: string) {
-  const waSettings = await getWaSettingsByIbaId(ibaId);
+  const channel = await getInstagramChannel(ibaId, orgId);
 
-  if (!waSettings) {
+  if (!channel) {
     throw new Error(`No Instagram settings found for organization ${orgId}`);
   }
 
-  const { pageAccessToken } = waSettings;
+  const { pageAccessToken } = channel;
   if (!pageAccessToken) {
     throw new Error(`No Instagram page access token configured for ibaId ${ibaId}`);
   }
   const response = await callInstagramMessengerProfileApi(pageAccessToken, "DELETE", {
     fields: ["persistent_menu"],
   });
-  await updateWaSettingsById(waSettings.id, waSettings.orgId, {
+  await updateMetaChannelById(channel.id, channel.orgId, {
     instagramPersistentMenu: [],
   });
   return response;
@@ -690,13 +690,13 @@ export async function sendInstagramVideo(
   ibaId: string,
 ): Promise<unknown> {
   try {
-    const waSettings = await getWaSettingsByIbaId(ibaId);
+    const channel = await getInstagramChannel(ibaId, orgId);
 
-    if (!waSettings) {
+    if (!channel) {
       throw new Error(`No Instagram settings found for organization ${orgId}`);
     }
 
-    const { pageAccessToken } = waSettings;
+    const { pageAccessToken } = channel;
 
     const payload = {
       recipient: {
@@ -744,13 +744,13 @@ export async function sendInstagramFile(
   ibaId: string,
 ): Promise<unknown> {
   try {
-    const waSettings = await getWaSettingsByIbaId(ibaId);
+    const channel = await getInstagramChannel(ibaId, orgId);
 
-    if (!waSettings) {
+    if (!channel) {
       throw new Error(`No Instagram settings found for organization ${orgId}`);
     }
 
-    const { pageAccessToken } = waSettings;
+    const { pageAccessToken } = channel;
 
     const payload = {
       recipient: {
@@ -806,15 +806,15 @@ export interface InstagramStoryItem {
 }
 
 export async function getInstagramMediaPosts(ibaId: string): Promise<InstagramMediaItem[]> {
-  const waSettings = await getWaSettingsByIbaId(ibaId);
-  if (!waSettings?.pageAccessToken) {
+  const channel = await getInstagramChannel(ibaId);
+  if (!channel?.pageAccessToken) {
     throw new Error(`No Instagram settings found for ibaId ${ibaId}`);
   }
 
   const response = await callMetaApi(
     `/${ibaId}/media?fields=id,caption,media_type,thumbnail_url,media_url,timestamp,permalink&limit=50`,
     "GET",
-    waSettings.pageAccessToken,
+    channel.pageAccessToken,
   );
 
   return (response.data?.data as InstagramMediaItem[]) ?? [];
@@ -832,15 +832,15 @@ export async function getInstagramMediaPermalink(
   mediaId: string,
   ibaId: string,
 ): Promise<string | null> {
-  const waSettings = await getWaSettingsByIbaId(ibaId);
-  if (!waSettings?.pageAccessToken) {
+  const channel = await getInstagramChannel(ibaId);
+  if (!channel?.pageAccessToken) {
     throw new Error(`No Instagram settings found for ibaId ${ibaId}`);
   }
 
   const response = await callMetaApi(
     `/${mediaId}?fields=permalink,media_type`,
     "GET",
-    waSettings.pageAccessToken,
+    channel.pageAccessToken,
   );
 
   // Deleted media, and media on an account the token no longer covers, answer
@@ -849,15 +849,15 @@ export async function getInstagramMediaPermalink(
 }
 
 export async function getInstagramStories(ibaId: string): Promise<InstagramStoryItem[]> {
-  const waSettings = await getWaSettingsByIbaId(ibaId);
-  if (!waSettings?.pageAccessToken) {
+  const channel = await getInstagramChannel(ibaId);
+  if (!channel?.pageAccessToken) {
     throw new Error(`No Instagram settings found for ibaId ${ibaId}`);
   }
 
   const response = await callMetaApi(
     `/${ibaId}/stories?fields=id,media_type,media_url,timestamp&limit=50`,
     "GET",
-    waSettings.pageAccessToken,
+    channel.pageAccessToken,
   );
 
   return (response.data?.data as InstagramStoryItem[]) ?? [];

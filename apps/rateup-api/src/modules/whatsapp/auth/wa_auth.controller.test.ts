@@ -311,15 +311,116 @@ describe("registerBusinessClientHandler - failures", () => {
     expect(m.updateSettings).not.toHaveBeenCalled();
   });
 
-  test("still saves settings when the account reports no numbers", async () => {
+  test("refuses, without saving anything, when the account reports no numbers", async () => {
     m.getPhones.mockResolvedValue({ data: [] });
+    const reply = makeReply();
 
+    await registerBusinessClientHandler(makeRequest(), reply);
+
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(m.createSettings).not.toHaveBeenCalled();
+    expect(m.updateSettings).not.toHaveBeenCalled();
+  });
+});
+
+describe("registerBusinessClientHandler - picking the signed-up number", () => {
+  const FIRST_PHONE = { ...CONNECTED_PHONE };
+  const SECOND_PHONE = {
+    id: "phone-2",
+    display_phone_number: "+1 555 0002",
+    verified_name: "Acme Support",
+    status: "PENDING",
+  };
+  const secondNumberRequest = () =>
+    makeRequest({
+      body: { code: "code-1", waba_id: "waba-1", phone_number_id: "phone-2", assets: {} },
+    });
+
+  beforeEach(() => {
+    m.getPhones.mockResolvedValue({ data: [{ ...FIRST_PHONE }, { ...SECOND_PHONE }] });
+    // The first number of the WABA is already this org's channel.
+    db.findFirst.mockImplementation(async ({ where }: { where: Record<string, unknown> }) =>
+      where.orgId === "org-1" && where.phoneId === "phone-1" ? { id: "settings-1" } : null,
+    );
+  });
+
+  test("a second number on the same WABA gets its own channel row", async () => {
+    const reply = makeReply();
+
+    await registerBusinessClientHandler(secondNumberRequest(), reply);
+
+    expect(reply.status).toHaveBeenCalledWith(200);
+    expect(db.findFirst.mock.calls[1][0].where).toEqual({ orgId: "org-1", phoneId: "phone-2" });
+    expect(m.createSettings).toHaveBeenCalledWith(
+      "org-1",
+      expect.objectContaining({ phoneId: "phone-2", phone: "+15550002" }),
+    );
+    // Taking the WABA's first number used to overwrite that number's channel instead.
+    expect(m.updateSettings).not.toHaveBeenCalled();
+  });
+
+  test("registers and publishes the key for the signed-up number, not the first one", async () => {
+    await registerBusinessClientHandler(secondNumberRequest(), makeReply());
+
+    expect(m.registerPhone).toHaveBeenCalledWith("phone-2", "token-abc");
+    expect(m.setPublicKey).toHaveBeenCalledWith("public-key", "phone-2", "token-abc");
+  });
+
+  test("reconnecting the first number still updates its own row", async () => {
     await registerBusinessClientHandler(makeRequest(), makeReply());
 
-    expect(m.createSettings.mock.calls[0][1]).toMatchObject({
-      phoneId: undefined,
-      phone: undefined,
+    expect(m.updateSettings).toHaveBeenCalledWith("org-1", "phone-1", {
+      accessToken: "token-abc",
+      assets: {},
     });
+    expect(m.createSettings).not.toHaveBeenCalled();
+  });
+
+  test("answers 400, without saving, when the signed-up number is not on the WABA", async () => {
+    const reply = makeReply();
+
+    await registerBusinessClientHandler(
+      makeRequest({
+        body: { code: "code-1", waba_id: "waba-1", phone_number_id: "phone-9", assets: {} },
+      }),
+      reply,
+    );
+
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.payload).toEqual({
+      message: "Could not find the phone number from this signup. Try again.",
+    });
+    expect(m.subscribe).not.toHaveBeenCalled();
+    expect(m.createSettings).not.toHaveBeenCalled();
+    expect(m.updateSettings).not.toHaveBeenCalled();
+  });
+
+  test("with no number named, falls back to the WABA's only number", async () => {
+    db.findFirst.mockResolvedValue(null);
+    m.getPhones.mockResolvedValue({ data: [{ ...SECOND_PHONE }] });
+
+    await registerBusinessClientHandler(
+      makeRequest({ body: { code: "code-1", waba_id: "waba-1", assets: {} } }),
+      makeReply(),
+    );
+
+    expect(m.createSettings.mock.calls[0][1]).toMatchObject({
+      phoneId: "phone-2",
+      phone: "+15550002",
+    });
+  });
+
+  test("with no number named and several on the WABA, refuses rather than guess", async () => {
+    const reply = makeReply();
+
+    await registerBusinessClientHandler(
+      makeRequest({ body: { code: "code-1", waba_id: "waba-1", assets: {} } }),
+      reply,
+    );
+
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(m.createSettings).not.toHaveBeenCalled();
+    expect(m.updateSettings).not.toHaveBeenCalled();
   });
 });
 

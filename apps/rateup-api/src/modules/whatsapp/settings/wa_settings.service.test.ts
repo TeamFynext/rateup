@@ -8,10 +8,14 @@ vi.mock("../../../utils/prisma.js", () => ({
       findFirst: vi.fn(),
       findMany: vi.fn(),
       findUnique: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
       update: vi.fn(),
       updateMany: vi.fn(),
       count: vi.fn(),
     },
+    channel: { create: vi.fn(), update: vi.fn(), updateMany: vi.fn(), delete: vi.fn() },
+    // A batch transaction: every operation is already a call made, the batch awaits them.
+    $transaction: vi.fn(async (ops: unknown[]) => Promise.all(ops)),
     waAccountSettings: { findFirst: vi.fn(), upsert: vi.fn() },
     metaAssets: { findUnique: vi.fn(), upsert: vi.fn() },
   },
@@ -29,9 +33,6 @@ vi.mock("../wa_axios.js", () => ({
   callMetaApi: vi.fn(),
   GraphApiError: class GraphApiError extends Error {},
 }));
-// wa_settings.service imports subscribePageToApp back out of the controller, which
-// imports the service — a cycle. Stubbing the controller keeps the test on one side.
-vi.mock("./wa_settings.controller.js", () => ({ subscribePageToApp: vi.fn() }));
 vi.mock("./wa_channel_access.js", () => ({ getChannelScope: vi.fn() }));
 vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), fatal: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
@@ -41,7 +42,6 @@ import prisma from "../../../utils/prisma.js";
 import { aes_decrypt, aes_encrypt } from "../../../../utils/encryption/encryption.utils.js";
 import { getPhoneDetails, registerPhoneNumber } from "../auth/wa_auth.service.js";
 import { callMetaApi } from "../wa_axios.js";
-import { subscribePageToApp } from "./wa_settings.controller.js";
 import { getChannelScope } from "./wa_channel_access.js";
 import { log } from "../../../utils/logger.js";
 import { WaConfigType, WhatsappSettingsStatus } from "../../../types/enums.js";
@@ -61,8 +61,6 @@ import {
   getWaSendingSettings,
   getWaSettings,
   getWaSettingsById,
-  getWaSettingsByIbaId,
-  getWaSettingsByPageId,
   getWaSettingsWithAccessTokenDecrypted,
   reRegisterPhoneNumber,
   syncDisplayName,
@@ -87,10 +85,13 @@ const db = prisma as unknown as {
     | "findFirst"
     | "findMany"
     | "findUnique"
+    | "findUniqueOrThrow"
     | "update"
     | "updateMany",
     Mock
   >;
+  channel: Record<"create" | "update" | "updateMany" | "delete", Mock>;
+  $transaction: Mock;
   waAccountSettings: Record<"findFirst" | "upsert", Mock>;
   metaAssets: Record<"findUnique" | "upsert", Mock>;
 };
@@ -99,7 +100,6 @@ const decryptMock = aes_decrypt as unknown as Mock;
 const getPhoneDetailsMock = getPhoneDetails as unknown as Mock;
 const registerPhoneNumberMock = registerPhoneNumber as unknown as Mock;
 const callMetaApiMock = callMetaApi as unknown as Mock;
-const subscribePageToAppMock = subscribePageToApp as unknown as Mock;
 const getChannelScopeMock = getChannelScope as unknown as Mock;
 const logMock = log as unknown as Record<string, Mock>;
 
@@ -107,12 +107,14 @@ const ORG_A = "org-a";
 const ORG_B = "org-b";
 const PHONE_ID = "phone-1";
 const SETTINGS_ID = "settings-1";
+const CHANNEL_ID = "channel-1";
 
 /** A stored channel row, WhatsApp-connected unless told otherwise. */
 function row(overrides: Record<string, unknown> = {}): any {
   return {
     id: SETTINGS_ID,
     orgId: ORG_A,
+    channelId: CHANNEL_ID,
     accessToken: "cipher-text",
     accessToken_iv: "iv-hex",
     wabaId: "waba-1",
@@ -122,6 +124,8 @@ function row(overrides: Record<string, unknown> = {}): any {
     fbPageId: null,
     ibaId: null,
     pageAccessToken: null,
+    phoneDisplayName: "The Shop",
+    status: "ACTIVE",
     createdAt: new Date("2026-01-01"),
     ...overrides,
   };
@@ -135,7 +139,6 @@ beforeEach(() => {
   getPhoneDetailsMock.mockResolvedValue({ display_phone_number: "+1 555 0001" });
   registerPhoneNumberMock.mockResolvedValue({ success: true });
   callMetaApiMock.mockResolvedValue({ data: { data: [] } });
-  subscribePageToAppMock.mockResolvedValue(undefined);
   getChannelScopeMock.mockResolvedValue({ all: false, ids: new Set([SETTINGS_ID]) });
   db.whatsappSettings.create.mockResolvedValue(row());
   db.whatsappSettings.findFirst.mockResolvedValue(row());
@@ -144,6 +147,11 @@ beforeEach(() => {
   db.whatsappSettings.update.mockResolvedValue(row());
   db.whatsappSettings.updateMany.mockResolvedValue({ count: 1 });
   db.whatsappSettings.delete.mockResolvedValue(row());
+  db.whatsappSettings.findUniqueOrThrow.mockResolvedValue(row());
+  db.channel.create.mockImplementation(async ({ data }: { data: object }) => data);
+  db.channel.update.mockResolvedValue({});
+  db.channel.updateMany.mockResolvedValue({ count: 1 });
+  db.channel.delete.mockResolvedValue({});
 });
 
 describe("createWaSettings", () => {
@@ -206,6 +214,69 @@ describe("createWaSettings", () => {
     await createWaSettings(ORG_A, { accessToken: "plain-token" } as any);
 
     expect(db.whatsappSettings.create.mock.calls[0][0].data.pageAccessToken).toBeUndefined();
+  });
+
+  test("writes the registry row and the settings in one transaction, sharing one id", async () => {
+    const result = await createWaSettings(ORG_A, {
+      accessToken: "plain-token",
+      phoneId: PHONE_ID,
+      phone: "+15550001",
+      phoneDisplayName: "The Shop",
+    } as any);
+
+    expect(db.$transaction).toHaveBeenCalledTimes(1);
+    expect(db.$transaction.mock.calls[0][0]).toHaveLength(2);
+    const channel = db.channel.create.mock.calls[0][0].data;
+    const settings = db.whatsappSettings.create.mock.calls[0][0].data;
+    expect(channel).toEqual({
+      id: expect.any(String),
+      orgId: ORG_A,
+      platform: "WHATSAPP",
+      accountId: PHONE_ID,
+      address: "+15550001",
+      name: "The Shop",
+    });
+    expect(settings.id).toBe(channel.id);
+    expect(settings.channelId).toBe(channel.id);
+    // The settings row comes back, not the registry row.
+    expect(result).toEqual(row());
+  });
+
+  test("a number with no phone id yet is registered under its own id", async () => {
+    await createWaSettings(ORG_A, { accessToken: "plain-token" } as any);
+
+    const channel = db.channel.create.mock.calls[0][0].data;
+    expect(channel.accountId).toBe(channel.id);
+    expect(channel).toMatchObject({ platform: "WHATSAPP", address: null, name: null });
+  });
+
+  test("an id the caller chose is used for both rows", async () => {
+    await createWaSettings(ORG_A, {
+      accessToken: "plain-token",
+      phoneId: PHONE_ID,
+      phone: "1",
+      channelId: "chosen-id",
+      status: "PENDING",
+    } as any);
+
+    expect(db.channel.create.mock.calls[0][0].data).toMatchObject({
+      id: "chosen-id",
+      status: "PENDING",
+    });
+    expect(db.whatsappSettings.create.mock.calls[0][0].data).toMatchObject({
+      id: "chosen-id",
+      channelId: "chosen-id",
+    });
+  });
+
+  test("writes nothing when the token cannot be encrypted", async () => {
+    delete process.env.wa_access_token_encryption_key;
+
+    await expect(
+      createWaSettings(ORG_A, { accessToken: "plain-token", phone: "1" } as any),
+    ).rejects.toThrow("wa_access_token_encryption_key is not configured");
+    expect(db.$transaction).not.toHaveBeenCalled();
+    expect(db.channel.create).not.toHaveBeenCalled();
   });
 });
 
@@ -302,24 +373,6 @@ describe("reading a channel", () => {
     expect(result!.accessToken).toBe("plain-token");
   });
 
-  test("does the same when looking a channel up by Instagram account", async () => {
-    db.whatsappSettings.findFirst.mockResolvedValue(row({ wabaId: null, accessToken_iv: null }));
-
-    await getWaSettingsByIbaId("iba-1");
-
-    expect(decryptMock).not.toHaveBeenCalled();
-  });
-
-  test("reads a page-only channel by page id without throwing", async () => {
-    db.whatsappSettings.findFirst.mockResolvedValue(
-      row({ wabaId: null, accessToken_iv: null, accessToken: "plain-token" }),
-    );
-
-    await expect(getWaSettingsByPageId("page-1")).resolves.toMatchObject({
-      accessToken: "plain-token",
-    });
-  });
-
   test("returns the whole channel list when one channel has no WhatsApp account", async () => {
     db.whatsappSettings.findMany.mockResolvedValue([
       row(),
@@ -380,9 +433,10 @@ describe("getAccessibleWaSettings", () => {
 
     await getAccessibleWaSettings(SCOPED);
 
+    // Scope ids are Channel ids, so a number is matched through its registry row.
     expect(db.whatsappSettings.findMany.mock.calls[0][0].where).toEqual({
       orgId: ORG_A,
-      id: { in: ["c-1", "c-2"] },
+      channelId: { in: ["c-1", "c-2"] },
     });
   });
 
@@ -445,12 +499,77 @@ describe("updating a channel", () => {
     expect(encryptMock).not.toHaveBeenCalled();
   });
 
-  test("scopes a delete to the org and the number", async () => {
-    await deleteWaSettings(ORG_A, PHONE_ID);
+  test("writes the settings and the registry row in one transaction", async () => {
+    db.whatsappSettings.findUniqueOrThrow.mockResolvedValue(
+      row({ phone: "+15557777", phoneDisplayName: "Old", status: "DISCONNECTED" }),
+    );
+    db.whatsappSettings.update.mockResolvedValue(row({ phoneDisplayName: "Support" }));
 
-    expect(db.whatsappSettings.delete.mock.calls[0][0]).toEqual({
+    const result = await updateWaSettings(ORG_A, PHONE_ID, { phoneDisplayName: "Support" } as any);
+
+    expect(db.$transaction).toHaveBeenCalledTimes(1);
+    expect(db.$transaction.mock.calls[0][0]).toHaveLength(2);
+    // The row is the current settings with this update applied.
+    expect(db.channel.update).toHaveBeenCalledWith({
+      where: { id: CHANNEL_ID },
+      data: {
+        accountId: PHONE_ID,
+        address: "+15557777",
+        name: "Support",
+        status: "DISCONNECTED",
+      },
+    });
+    expect(result).toMatchObject({ id: SETTINGS_ID, phoneDisplayName: "Support" });
+  });
+
+  test("the registry row falls back to the settings id while there is no phone id", async () => {
+    db.whatsappSettings.findUniqueOrThrow.mockResolvedValue(row({ phoneId: null, phone: null }));
+
+    await updateWaSettingsById(SETTINGS_ID, ORG_A, { phoneDisplayName: "x" } as any);
+
+    expect(db.channel.update.mock.calls[0][0].data).toMatchObject({
+      accountId: SETTINGS_ID,
+      address: null,
+      name: "x",
+    });
+  });
+
+  test("an update of a number the org does not have writes nothing", async () => {
+    db.whatsappSettings.findUniqueOrThrow.mockRejectedValue(new Error("not found"));
+
+    await expect(updateWaSettings(ORG_B, PHONE_ID, {} as any)).rejects.toThrow("not found");
+    expect(db.whatsappSettings.findUniqueOrThrow).toHaveBeenCalledWith({
+      where: { orgId: ORG_B, phoneId: PHONE_ID },
+    });
+    expect(db.whatsappSettings.update).not.toHaveBeenCalled();
+    expect(db.channel.update).not.toHaveBeenCalled();
+    expect(db.$transaction).not.toHaveBeenCalled();
+  });
+
+  test("a status change moves the registry row's status with it", async () => {
+    await updateWaSettingsStatus(PHONE_ID, "DISCONNECTED" as any);
+
+    expect(db.$transaction).toHaveBeenCalledTimes(1);
+    expect(db.channel.update.mock.calls[0][0].data.status).toBe("DISCONNECTED");
+  });
+
+  test("a delete removes the number's Channel, which cascades to its settings", async () => {
+    const result = await deleteWaSettings(ORG_A, PHONE_ID);
+
+    expect(db.whatsappSettings.findUniqueOrThrow).toHaveBeenCalledWith({
       where: { orgId: ORG_A, phoneId: PHONE_ID },
     });
+    expect(db.channel.delete).toHaveBeenCalledWith({ where: { id: CHANNEL_ID } });
+    expect(db.whatsappSettings.delete).not.toHaveBeenCalled();
+    // The deleted settings come back to the caller.
+    expect(result).toEqual(row());
+  });
+
+  test("a delete of a number the org does not have removes nothing", async () => {
+    db.whatsappSettings.findUniqueOrThrow.mockRejectedValue(new Error("No record found"));
+
+    await expect(deleteWaSettings(ORG_B, PHONE_ID)).rejects.toThrow("No record found");
+    expect(db.channel.delete).not.toHaveBeenCalled();
   });
 
   test("scopes the update to the caller's org and encrypts the token", async () => {
@@ -463,12 +582,13 @@ describe("updating a channel", () => {
     expect(encryptMock).toHaveBeenCalledWith("new-plain", expect.anything());
   });
 
-  test("encrypts a replacement page access token too", async () => {
-    await updateWaSettingsById(SETTINGS_ID, ORG_A, { pageAccessToken: "page-token" } as any);
+  test("an update by id syncs that number's registry row", async () => {
+    await updateWaSettingsById(SETTINGS_ID, ORG_A, { phoneDisplayName: "The Shop" } as any);
 
-    expect(db.whatsappSettings.update.mock.calls[0][0].data.pageAccessToken).toBe(
-      "iv-hex:cipher-text",
-    );
+    expect(db.channel.update).toHaveBeenCalledWith({
+      where: { id: CHANNEL_ID },
+      data: { accountId: PHONE_ID, address: "15550001", name: "The Shop", status: "ACTIVE" },
+    });
   });
 
   test("sets a channel's status by its number", async () => {
@@ -480,17 +600,40 @@ describe("updating a channel", () => {
     });
   });
 
-  test("sets every channel on a business account at once", async () => {
-    await updateWaSettingsStatusByWabaId("waba-1", WhatsappSettingsStatus.DISCONNECTED);
+  test("a status change reaches the number's registry row too", async () => {
+    db.whatsappSettings.update.mockResolvedValue(
+      row({ status: WhatsappSettingsStatus.DISCONNECTED }),
+    );
 
-    expect(db.whatsappSettings.updateMany.mock.calls[0][0].where).toEqual({ wabaId: "waba-1" });
+    await updateWaSettingsStatus(PHONE_ID, WhatsappSettingsStatus.DISCONNECTED);
+
+    expect(db.channel.update).toHaveBeenCalledWith({
+      where: { id: CHANNEL_ID },
+      data: expect.objectContaining({ status: WhatsappSettingsStatus.DISCONNECTED }),
+    });
+  });
+
+  test("sets every channel on a business account at once, settings and registry together", async () => {
+    const result = await updateWaSettingsStatusByWabaId(
+      "waba-1",
+      WhatsappSettingsStatus.DISCONNECTED,
+    );
+
+    expect(db.$transaction).toHaveBeenCalledTimes(1);
+    expect(db.whatsappSettings.updateMany).toHaveBeenCalledWith({
+      where: { wabaId: "waba-1" },
+      data: { status: WhatsappSettingsStatus.DISCONNECTED },
+    });
+    expect(db.channel.updateMany).toHaveBeenCalledWith({
+      where: { whatsapp: { wabaId: "waba-1" } },
+      data: { status: WhatsappSettingsStatus.DISCONNECTED },
+    });
+    // The settings' count is what the caller gets back.
+    expect(result).toEqual({ count: 1 });
   });
 });
 
 describe("upsertWaSettings", () => {
-  // The inline `<32-hex iv>:<ciphertext>` form; the mocked aes_decrypt reads it as "plain-token".
-  const STORED_PAGE_TOKEN = `${"0".repeat(32)}:cipher-text`;
-
   test("creates a manual channel when the org has none for that number", async () => {
     db.whatsappSettings.findUnique.mockResolvedValue(null);
 
@@ -500,55 +643,11 @@ describe("upsertWaSettings", () => {
       orgId: ORG_A,
       type: WaConfigType.Manual,
     });
-  });
-
-  test("subscribes a newly connected page to the message webhooks", async () => {
-    await upsertWaSettings(ORG_A, PHONE_ID, {
-      fbPageId: "page-1",
-      pageAccessToken: "page-token",
-    } as any);
-
-    expect(subscribePageToAppMock).toHaveBeenCalledWith("page-1", "page-token", [
-      "messages",
-      "message_reads",
-      "message_reactions",
-    ]);
-  });
-
-  test("records the Facebook and Instagram display names for a connected page", async () => {
-    callMetaApiMock
-      .mockResolvedValueOnce({ data: { username: "the_shop" } })
-      .mockResolvedValueOnce({ data: { name: "The Shop" } });
-
-    await upsertWaSettings(ORG_A, PHONE_ID, {
-      fbPageId: "page-1",
-      ibaId: "iba-1",
-      pageAccessToken: "page-token",
-    } as any);
-
-    expect(db.whatsappSettings.update.mock.calls[0][0].data).toMatchObject({
-      igUserName: "the_shop",
-      fbUserName: "The Shop",
+    expect(db.channel.create.mock.calls[0][0].data).toMatchObject({
+      orgId: ORG_A,
+      platform: "WHATSAPP",
     });
   });
-
-  test.each([null, ""])(
-    "clears every page field when the page is disconnected (fbPageId %j)",
-    async (fbPageId) => {
-      db.whatsappSettings.findUnique.mockResolvedValue(row({ fbPageId: "page-1" }));
-
-      await upsertWaSettings(ORG_A, PHONE_ID, { appId: "app-1", fbPageId } as any);
-
-      expect(db.whatsappSettings.update.mock.calls[0][0].data).toMatchObject({
-        fbPageId: null,
-        ibaId: null,
-        pageAccessToken: null,
-        igUserName: null,
-        igDisplayName: null,
-        fbUserName: null,
-      });
-    },
-  );
 
   test("leaves the page connected when an update doesn't mention it", async () => {
     db.whatsappSettings.findUnique.mockResolvedValue(row({ fbPageId: "page-1" }));
@@ -561,67 +660,15 @@ describe("upsertWaSettings", () => {
     expect(data).not.toHaveProperty("pageAccessToken");
   });
 
-  test("re-saving the connected page falls back to its stored token", async () => {
-    db.whatsappSettings.findUnique.mockResolvedValue(
-      row({ fbPageId: "page-1", pageAccessToken: STORED_PAGE_TOKEN }),
-    );
+  // Pages are connected through /api/meta/channels now: saving a WhatsApp channel never
+  // subscribes a Page or reads its names from Meta.
+  test("never calls Meta when updating a channel that has a legacy page", async () => {
+    db.whatsappSettings.findUnique.mockResolvedValue(row({ fbPageId: "page-1", ibaId: "iba-1" }));
 
-    await upsertWaSettings(ORG_A, PHONE_ID, { fbPageId: "page-1" } as any);
+    await upsertWaSettings(ORG_A, PHONE_ID, { appId: "app-1" } as any);
 
-    expect(subscribePageToAppMock).toHaveBeenCalledWith("page-1", "plain-token", expect.anything());
-    // The stored token is reused, not rewritten.
-    expect(db.whatsappSettings.update.mock.calls[0][0].data.pageAccessToken).toBeUndefined();
-  });
-
-  test("still needs a token to switch to a different page", async () => {
-    db.whatsappSettings.findUnique.mockResolvedValue(
-      row({ fbPageId: "page-1", pageAccessToken: STORED_PAGE_TOKEN }),
-    );
-
-    await expect(upsertWaSettings(ORG_A, PHONE_ID, { fbPageId: "page-2" } as any)).rejects.toThrow(
-      "pageAccessToken is required to connect a Facebook page",
-    );
-    expect(db.whatsappSettings.update).not.toHaveBeenCalled();
-  });
-
-  test.each([null, ""])(
-    "disconnecting Instagram alone keeps the Facebook page (ibaId %j)",
-    async (ibaId) => {
-      db.whatsappSettings.findUnique.mockResolvedValue(
-        row({
-          fbPageId: "page-1",
-          pageAccessToken: STORED_PAGE_TOKEN,
-          ibaId: "iba-1",
-          igUserName: "the_shop",
-        }),
-      );
-      callMetaApiMock.mockResolvedValue({ data: { name: "The Shop" } });
-
-      await upsertWaSettings(ORG_A, PHONE_ID, { fbPageId: "page-1", ibaId } as any);
-
-      const { data } = db.whatsappSettings.update.mock.calls[0][0];
-      expect(data).toMatchObject({
-        fbPageId: "page-1",
-        ibaId: null,
-        igUserName: null,
-        igDisplayName: null,
-        fbUserName: "The Shop",
-      });
-      expect(data.pageAccessToken).toBeUndefined();
-    },
-  );
-
-  test("passes the org's access token as the auth header on both lookups", async () => {
-    await upsertWaSettings(ORG_A, PHONE_ID, {
-      fbPageId: "page-1",
-      ibaId: "iba-1",
-      pageAccessToken: "page-token",
-    } as any);
-
-    for (const [url, , token] of callMetaApiMock.mock.calls) {
-      expect(url).not.toContain("access_token=");
-      expect(token).toBe("plain-token");
-    }
+    expect(callMetaApiMock).not.toHaveBeenCalled();
+    expect(db.whatsappSettings.update).toHaveBeenCalledTimes(1);
   });
 });
 

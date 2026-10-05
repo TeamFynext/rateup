@@ -60,6 +60,8 @@ import { apiAnalyticsRoutes } from "./modules/apiAnalytics/apianalytics.routes.j
 import { webhookRoutes } from "./modules/webhook/webhook.route.js";
 import { referralRoutes } from "./modules/referrals/referrals.route.js";
 import { metaAgentRoutes } from "./modules/metaAgent/metaAgent.route.js";
+import { metaChannelRoutes } from "./modules/whatsapp/metaChannel/metaChannel.route.js";
+import { channelRoutes } from "./modules/channel/channel.route.js";
 import { metaAgentWebhookRoutes } from "./modules/metaAgent/metaAgent.webhook.route.js";
 import { rateupToolsRoutes } from "./modules/metaAgent/rateupTools/rateupTools.route.js";
 import { maintenanceRoutes } from "./modules/maintenance/maintenance.route.js";
@@ -139,6 +141,8 @@ const routeConfigs = [
   { plugin: webhookRoutes, prefix: "/api/webhook" },
   { plugin: referralRoutes, prefix: "/api/referrals" },
   { plugin: metaAgentRoutes, prefix: "/api/meta-agent" },
+  { plugin: metaChannelRoutes, prefix: "/api/meta/channels" },
+  { plugin: channelRoutes, prefix: "/api/channels" },
   { plugin: metaAgentWebhookRoutes, prefix: "/api/meta-agent/webhook" },
   // Called by Meta, with the key the built-in RateUp connector was installed with.
   { plugin: rateupToolsRoutes, prefix: "/api/public/meta-agent-tools" },

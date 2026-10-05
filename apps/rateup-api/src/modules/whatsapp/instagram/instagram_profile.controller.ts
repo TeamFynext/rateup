@@ -1,11 +1,12 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 
+import { PlatformType } from "../../../../generated/prisma/enums.js";
 import { log } from "../../../utils/logger.js";
 import {
-  getWaSettingsByIbaId,
-  getWaSettingsById,
-  updateWaSettingsById,
-} from "../settings/wa_settings.service.js";
+  getInstagramChannel,
+  getMetaChannelById,
+  updateMetaChannelById,
+} from "../metaChannel/metaChannel.service.js";
 import {
   deleteInstagramIceBreakers,
   deleteInstagramPersistentMenu,
@@ -18,12 +19,13 @@ import {
 } from "./instagram_messaging.service.js";
 
 interface InstagramProfileParams {
-  whatsappSettingsId: string;
+  /** MetaChannel id of an Instagram channel. */
+  channelId: string;
 }
 
 // resolveInstagramSettings always guards `ibaId` before returning, so callers can rely
 // on it being present without a non-null assertion at every use site.
-type InstagramWaSettings = NonNullable<Awaited<ReturnType<typeof getWaSettingsById>>> & {
+type InstagramWaSettings = NonNullable<Awaited<ReturnType<typeof getMetaChannelById>>> & {
   ibaId: string;
 };
 
@@ -79,25 +81,26 @@ function validatePersistentMenu(
 }
 
 async function resolveInstagramSettings(
-  whatsappSettingsId: string,
+  channelId: string,
   orgId: string,
 ): Promise<InstagramWaSettings | null> {
-  const settings = await getWaSettingsById(whatsappSettingsId, orgId);
+  const settings = await getMetaChannelById(channelId, orgId);
 
   if (!settings || settings.orgId !== orgId) {
     return null;
   }
 
-  const { ibaId } = settings;
-  if (!ibaId) {
+  // The id names a channel, but not necessarily an Instagram one.
+  if (settings.platform !== PlatformType.INSTAGRAM) {
     throw new InstagramNotConnectedError();
   }
+  const ibaId = settings.accountId;
 
   return { ...settings, ibaId };
 }
 
 async function resolveInstagramSettingsByIbaId(ibaId: string, orgId: string) {
-  const settings = await getWaSettingsByIbaId(ibaId);
+  const settings = await getInstagramChannel(ibaId, orgId);
   if (!settings || settings.orgId !== orgId) {
     return null;
   }
@@ -110,7 +113,7 @@ export async function getInstagramProfileHandler(
 ) {
   try {
     const { orgId } = request.user;
-    const settings = await resolveInstagramSettings(request.params.whatsappSettingsId, orgId);
+    const settings = await resolveInstagramSettings(request.params.channelId, orgId);
 
     if (!settings) {
       return reply.code(404).send({
@@ -152,7 +155,7 @@ export async function setInstagramIceBreakersHandler(
 ) {
   try {
     const { orgId } = request.user;
-    const settings = await resolveInstagramSettings(request.params.whatsappSettingsId, orgId);
+    const settings = await resolveInstagramSettings(request.params.channelId, orgId);
 
     if (!settings) {
       return reply.code(404).send({
@@ -183,7 +186,7 @@ export async function setInstagramIceBreakersHandler(
       });
     }
 
-    await updateWaSettingsById(settings.id, orgId, {
+    await updateMetaChannelById(settings.id, orgId, {
       instagramIceBreakers: request.body.iceBreakers,
     });
 
@@ -206,7 +209,7 @@ export async function deleteInstagramIceBreakersHandler(
 ) {
   try {
     const { orgId } = request.user;
-    const settings = await resolveInstagramSettings(request.params.whatsappSettingsId, orgId);
+    const settings = await resolveInstagramSettings(request.params.channelId, orgId);
 
     if (!settings) {
       return reply.code(404).send({
@@ -244,7 +247,7 @@ export async function setInstagramPersistentMenuHandler(
 ) {
   try {
     const { orgId } = request.user;
-    const settings = await resolveInstagramSettings(request.params.whatsappSettingsId, orgId);
+    const settings = await resolveInstagramSettings(request.params.channelId, orgId);
 
     if (!settings) {
       return reply.code(404).send({
@@ -273,7 +276,7 @@ export async function setInstagramPersistentMenuHandler(
       });
     }
 
-    await updateWaSettingsById(settings.id, orgId, {
+    await updateMetaChannelById(settings.id, orgId, {
       instagramPersistentMenu: request.body.persistentMenu,
     });
 
@@ -296,7 +299,7 @@ export async function deleteInstagramPersistentMenuHandler(
 ) {
   try {
     const { orgId } = request.user;
-    const settings = await resolveInstagramSettings(request.params.whatsappSettingsId, orgId);
+    const settings = await resolveInstagramSettings(request.params.channelId, orgId);
 
     if (!settings) {
       return reply.code(404).send({
@@ -320,7 +323,7 @@ export async function syncInstagramIceBreakersHandler(
 ) {
   try {
     const { orgId } = request.user;
-    const settings = await resolveInstagramSettings(request.params.whatsappSettingsId, orgId);
+    const settings = await resolveInstagramSettings(request.params.channelId, orgId);
 
     if (!settings) {
       return reply.code(404).send({
@@ -344,7 +347,7 @@ export async function syncInstagramPersistentMenuHandler(
 ) {
   try {
     const { orgId } = request.user;
-    const settings = await resolveInstagramSettings(request.params.whatsappSettingsId, orgId);
+    const settings = await resolveInstagramSettings(request.params.channelId, orgId);
 
     if (!settings) {
       return reply.code(404).send({

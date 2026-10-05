@@ -1,11 +1,8 @@
 import { PlatformType } from "../../../../generated/prisma/enums.js";
 import { WaTemplateCategory } from "../../../types/enums.js";
-import {
-  getWaSendingSettings,
-  getWaSettingsByIbaId,
-  getWaSettingsByPageId,
-} from "../settings/wa_settings.service.js";
+import { getWaSendingSettings } from "../settings/wa_settings.service.js";
 import { channelDigits } from "../../../utils/channelIdentifier.js";
+import { getInstagramChannel, getMessengerChannel } from "../metaChannel/metaChannel.service.js";
 
 /**
  * What every Meta surface differs on, and nothing else.
@@ -81,14 +78,14 @@ const whatsapp: MetaChannel = {
 /** Instagram and Messenger share the Send API; only the settings lookup differs. */
 function sendApiChannel(
   platform: PlatformType,
-  lookup: (identifier: string) => Promise<{ pageAccessToken: string | null } | null>,
+  lookup: (identifier: string, orgId: string) => Promise<{ pageAccessToken: string } | null>,
   auth: MetaCredentials["auth"],
 ): MetaChannel {
   return {
     platform,
-    async resolveCredentials({ sourceIdentifier }) {
+    async resolveCredentials({ orgId, sourceIdentifier }) {
       if (!sourceIdentifier) return null;
-      const settings = await lookup(sourceIdentifier);
+      const settings = await lookup(sourceIdentifier, orgId);
       if (!settings?.pageAccessToken) return null;
       return { accessToken: settings.pageAccessToken, sourceIdentifier, auth };
     },
@@ -109,8 +106,8 @@ const CHANNELS: Partial<Record<PlatformType, MetaChannel>> = {
   // Header auth, as the Instagram senders have always used. `auth` stays on the
   // credentials because the older inbox path passes the token as a query
   // parameter instead, and both have to keep working while it is routed here.
-  [PlatformType.INSTAGRAM]: sendApiChannel(PlatformType.INSTAGRAM, getWaSettingsByIbaId, "header"),
-  [PlatformType.FACEBOOK]: sendApiChannel(PlatformType.FACEBOOK, getWaSettingsByPageId, "header"),
+  [PlatformType.INSTAGRAM]: sendApiChannel(PlatformType.INSTAGRAM, getInstagramChannel, "header"),
+  [PlatformType.FACEBOOK]: sendApiChannel(PlatformType.FACEBOOK, getMessengerChannel, "header"),
 };
 
 export function getMetaChannel(platform: PlatformType): MetaChannel | undefined {

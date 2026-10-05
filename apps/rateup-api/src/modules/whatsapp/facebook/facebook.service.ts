@@ -1,9 +1,8 @@
-import type { WhatsappSettings } from "../../../../generated/prisma/client.js";
+import type { DecryptedMetaChannel } from "../metaChannel/metaChannel.service.js";
 
-/** The Facebook handlers only need the page identity off the settings row. */
-type FacebookPageSettings = Pick<WhatsappSettings, "orgId" | "fbPageId" | "pageAccessToken">;
+/** The Facebook handlers only need the page identity off the channel row. */
+type FacebookPageSettings = Pick<DecryptedMetaChannel, "orgId" | "fbPageId" | "pageAccessToken">;
 import { callMetaApi } from "../wa_axios.js";
-import { getWaSettingsByPageId } from "../settings/wa_settings.service.js";
 import { log } from "../../../utils/logger.js";
 import { updateWaMessageByMessageId } from "../inbox/message/wamessage.service.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
@@ -11,10 +10,11 @@ import { FacebookEvent } from "../../../types/enums.js";
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 import { getFacebookWebhookEvent } from "./facebook.util.js";
 import prisma from "../../../utils/prisma.js";
+import { getMessengerChannel } from "../metaChannel/metaChannel.service.js";
 
 export async function getFacebookUserDetailsFromMeta(userId: string, pageId: string) {
   try {
-    const waSettings = await getWaSettingsByPageId(pageId);
+    const waSettings = await getMessengerChannel(pageId);
     if (!waSettings) {
       log.error(`No Facebook settings found for pageId: ${pageId}`);
       throw new Error(`No Facebook settings found for pageId: ${pageId}`);
@@ -44,7 +44,7 @@ export async function getFacebookUserDetailsFromMeta(userId: string, pageId: str
  * Processes a webhook batch, returning a per-event outcome.
  *
  * Meta batches events, so both loops are guarded per item: previously
- * getWaSettingsByPageId sat outside every handler's own try/catch, so one transient DB
+ * the settings lookup sat outside every handler's own try/catch, so one transient DB
  * error on entry 1 silently skipped entries 2..n and dropped a whole batch of inbound
  * messages.
  *
@@ -62,8 +62,9 @@ export async function handleFacebookWebhook(
 
     let waSettings;
     try {
-      // Get Facebook settings for this page
-      waSettings = await getWaSettingsByPageId(pageId);
+      // The Messenger channel for this page. A Page connected only for Instagram
+      // has none, so its Messenger inbox is ignored here.
+      waSettings = await getMessengerChannel(pageId);
     } catch (error) {
       log.error({ err: error, pageId }, "[Facebook] Failed to load settings for page");
       failed++;

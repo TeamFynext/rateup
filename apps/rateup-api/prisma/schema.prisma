@@ -204,6 +204,7 @@ model Org {
   loyaltyApiSettings      LoyaltyApiSettings[]
   expoPushTokens          ExpoPushToken[]
   WhatsappSettings        WhatsappSettings[]
+  Channel                 Channel[]
   metaBusinessAgents      MetaBusinessAgent[]
   WaCatalog               WhatsappCatalog[]
   productSets             WhatsappProductSet[]
@@ -342,9 +343,12 @@ model Lifecycle {
 }
 
 model WhatsappSettings {
-  id    String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  org   Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId String @db.Uuid
+  id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org       Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId     String  @db.Uuid
+  /// The registry row for this number. Deleting the channel deletes these settings.
+  channel   Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  channelId String  @unique @db.Uuid
 
   accessToken              String // encrypted
   accessToken_iv           String?
@@ -390,6 +394,77 @@ model WhatsappSettings {
   waFlows                 WaFlow[] // flows created under this channel's WABA
 }
 
+/// Every connected channel, whatever the platform: each WhatsApp number, Messenger Page and
+/// Instagram account is one row, any number of each per org — and webchat widgets and RCS
+/// agents join the same table as further `platform`s. Team access, inbox scoping,
+/// notifications and channel pickers read only this table. What a platform needs beyond it
+/// (credentials, profile, per-platform features) lives in that platform's own 1:1 settings
+/// table: `WhatsappSettings`, `MetaChannelSettings`.
+model Channel {
+  id    String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org   Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId String @db.Uuid
+
+  platform  PlatformType
+  /// The platform's own id for the channel: the WhatsApp phone number id, the Page id, the
+  /// Instagram account id. What webhooks name the channel by.
+  accountId String
+  /// What messages record as `sourceIdentifier` when that is not `accountId` — the
+  /// WhatsApp display number. Null when it is `accountId`.
+  address   String?
+  /// The org's name for the channel: WhatsApp display name, Page name, Instagram name.
+  name      String?
+  /// Handle, where the platform has one (Instagram).
+  username  String?
+  status    String       @default("ACTIVE") // enums.ts: WhatsappSettingsStatus
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @default(now()) @updatedAt
+
+  teamAccess TeamChannel[]
+  whatsapp   WhatsappSettings?
+  meta       MetaChannelSettings?
+
+  @@unique([platform, accountId])
+  @@index([orgId, platform])
+}
+
+/// Grants one team access to one channel of any platform. Only consulted while
+/// `Team.allChannels` is false. Replaces TeamWhatsappChannel, which is no longer read.
+model TeamChannel {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId    String   @db.Uuid
+  channel   Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  channelId String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  @@unique([teamId, channelId])
+  @@index([channelId])
+}
+
+/// Messenger and Instagram channels' own settings, 1:1 with their Channel. Both send through
+/// a Facebook Page's token: the Page itself for Messenger, the linked Page for Instagram.
+model MetaChannelSettings {
+  channel         Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  channelId       String  @id @db.Uuid
+  /// The Page itself for Messenger; for Instagram, the Page the account is linked to.
+  fbPageId        String
+  pageName        String?
+  pageAccessToken String // encrypted inline as `<iv>:<ciphertext>`
+  /// Token of the login that connected the channel (encrypted inline).
+  accessToken     String?
+  appId           String?
+
+  /// Instagram only.
+  /// [PInstagramIceBreakers]
+  instagramIceBreakers    Json?
+  /// Instagram only.
+  /// [PInstagramPersistentMenu]
+  instagramPersistentMenu Json?
+
+  @@index([fbPageId])
+}
+
 model MetaBusinessAgent {
   id    String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   org   Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
@@ -419,20 +494,20 @@ model MetaBusinessAgent {
   /// Local only, never sent to Meta: when a ticket is closed or resolved while
   /// staff hold the thread, hand it back to the agent. Without it, Meta AI stays
   /// silent for that customer until someone releases the thread by hand.
-  releaseOnTicketClose    Boolean   @default(true)
+  releaseOnTicketClose Boolean @default(true)
 
   /// The Business Manager that owns the agent. Only agent_budget is addressed by
   /// it (every other agent endpoint takes the phone number id), so it is looked
   /// up from the WABA the first time a budget is read or saved.
-  businessManagerId       String?
+  businessManagerId String?
   // agent_budget, cached locally, replaced wholesale at Meta on save
   /// [PMetaAgentBudgets]
-  budgets                 Json?
-  budgetsSyncedAt         DateTime?
+  budgets           Json?
+  budgetsSyncedAt   DateTime?
 
   /// bcrypt hash of the key the built-in RateUp connector sends. Meta holds the
   /// key itself; a reinstall rotates it.
-  rateupToolsKeyHash      String?
+  rateupToolsKeyHash String?
 
   // agent_config/business_info, cached locally
   /// [PMetaAgentBusinessInfo]
@@ -663,16 +738,16 @@ enum ShopifyCheckoutStatus {
 /// One abandoned-checkout rule's reminder for one checkout. The row is the send's claim:
 /// the delayed job only decides when it is looked at.
 model ShopifyCheckoutReminder {
-  id         String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  checkoutId String                        @db.Uuid
-  checkout   ShopifyCheckout               @relation(fields: [checkoutId], references: [id], onDelete: Cascade)
-  ruleId     String                        @db.Uuid
-  rule       Rule                          @relation(fields: [ruleId], references: [id], onDelete: Cascade)
-  dueAt      DateTime
-  status     ShopifyCheckoutReminderStatus @default(SCHEDULED)
+  id                String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  checkoutId        String                        @db.Uuid
+  checkout          ShopifyCheckout               @relation(fields: [checkoutId], references: [id], onDelete: Cascade)
+  ruleId            String                        @db.Uuid
+  rule              Rule                          @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  dueAt             DateTime
+  status            ShopifyCheckoutReminderStatus @default(SCHEDULED)
   /// Why a reminder was skipped or failed.
-  reason     String?
-  sentAt     DateTime?
+  reason            String?
+  sentAt            DateTime?
   /// The code in the reminder's tracked recovery link, /api/public/r/<linkCode>.
   linkCode          String                        @unique
   /// The WhatsApp message id (wamid) the send returned; WaMessage.messageId holds the same.
@@ -685,8 +760,8 @@ model ShopifyCheckoutReminder {
   /// The order total in the shop's own currency.
   revenue           Decimal?                      @db.Decimal(12, 2)
   currency          String?
-  createdAt  DateTime                      @default(now())
-  updatedAt  DateTime                      @updatedAt
+  createdAt         DateTime                      @default(now())
+  updatedAt         DateTime                      @updatedAt
 
   @@unique([checkoutId, ruleId])
   @@index([status, dueAt])
@@ -751,6 +826,7 @@ enum ConditionOperator {
   STARTS_WITH
   ENDS_WITH
 }
+
 // abhinav/integrations didnt run migration
 enum TriggerEvent {
   MESSAGE_RECEIVED
@@ -865,6 +941,7 @@ model Team {
   /// and every team existing at rollout — keep full access until scoped explicitly.
   allChannels   Boolean               @default(true)
   channelAccess TeamWhatsappChannel[]
+  channelGrants TeamChannel[]
 
   @@unique([name, orgId], name: "team_name_org_id_unique")
   @@unique([code, orgId], name: "team_code_org_id_unique")
@@ -882,8 +959,8 @@ model TeamFeatureAccess {
   @@unique([teamId, feature])
 }
 
-/// Grants one team access to one channel. Only consulted while `Team.allChannels` is false —
-/// when that flag is true the team reaches every channel and these rows are cleared.
+/// Legacy: superseded by TeamChannel (copied by 20261003100000) and no longer read or written.
+/// Dropped by a later contract migration.
 model TeamWhatsappChannel {
   id        String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   team      Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
@@ -2175,20 +2252,20 @@ model GenerateQr {
 }
 
 model Integration {
-  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name       String
-  credential Json
-  org        Org?      @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId      String?   @db.Uuid //case of orgId not available when getting credential. can be update later
-  createdAt  DateTime? @default(now())
-  active     Boolean   @default(true)
-  links      IntegrationEntityLink[]
+  id                  String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                String
+  credential          Json
+  org                 Org?                    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId               String?                 @db.Uuid //case of orgId not available when getting credential. can be update later
+  createdAt           DateTime?               @default(now())
+  active              Boolean                 @default(true)
+  links               IntegrationEntityLink[]
   /// Health, kept by the shared refresh cron and job runner: the last failure
   /// and how many have happened in a row. Reset by the next success. Admins are
   /// notified when the streak reaches the provider's threshold.
   lastError           String?
   lastErrorAt         DateTime?
-  consecutiveFailures Int       @default(0)
+  consecutiveFailures Int                     @default(0)
 
   @@unique([orgId, name], name: "orgid_integration_name_unique")
 }
@@ -2273,13 +2350,13 @@ model LoyaltyProgram {
   averageOrderValue Decimal? @db.Decimal(12, 2)
 
   // Fixed Bonuses
-  signupBonus       Int     @default(0)
-  referralBonus     Int     @default(0) // For referrer
-  referralBonusType String  @default("points") // 'points' or 'gift'
-  referralRewardId  String? @db.Uuid // Reward ID when referralBonusType is 'gift'
-  refereeBonus      Int     @default(0) // For new customer
-  refereeBonusType  String  @default("points") // 'points' or 'gift'
-  refereeRewardId   String? @db.Uuid // Reward ID when refereeBonusType is 'gift'
+  signupBonus          Int     @default(0)
+  referralBonus        Int     @default(0) // For referrer
+  referralBonusType    String  @default("points") // 'points' or 'gift'
+  referralRewardId     String? @db.Uuid // Reward ID when referralBonusType is 'gift'
+  refereeBonus         Int     @default(0) // For new customer
+  refereeBonusType     String  @default("points") // 'points' or 'gift'
+  refereeRewardId      String? @db.Uuid // Reward ID when refereeBonusType is 'gift'
   /// Off keeps the amounts above for when it is switched back on; nothing is paid meanwhile.
   signupBonusEnabled   Boolean @default(true)
   referralBonusEnabled Boolean @default(true)
@@ -2314,7 +2391,7 @@ model LoyaltyProgram {
   enableShopifyOrderPoints Boolean          @default(false)
   /// WooCommerce orders earn points when they reach `completed`, not on payment.
   enableWooOrderPoints     Boolean          @default(false)
-  enablePointsExpiration  Boolean          @default(false)
+  enablePointsExpiration   Boolean          @default(false)
   pointsExpirationMonths   Int              @default(12)
   // Inside an open 24-hour customer-service window, send a notification's text as a
   // plain message instead of the Meta template (free, and works before approval).
@@ -3709,16 +3786,16 @@ model LeadLabelMap {
 }
 
 model Lead {
-  id      String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   /// The card's share link (`/pl/<shortUrlId>`), minted like a web survey's.
-  shortUrlId String? @unique
-  name    String
+  shortUrlId  String? @unique
+  name        String
   /// What the work is; used by the non-Leads boards, whose cards lead with a title.
   description String? @db.Text
   /// Business the lead represents; blank for walk-in customers.
-  company String?
-  phone   String?
-  email   String?
+  company     String?
+  phone       String?
+  email       String?
 
   status  LeadStatus  @default(OPEN)
   source  LeadSource  @default(MANUAL)
