@@ -31,7 +31,6 @@ const PRODUCTS = [
   { label: "Omnichannel Inbox", to: "/products/omnichannel-inbox" },
   { label: "Pipeline", to: "/products/pipeline" },
   { label: "Meta AI Agent", to: "/products/meta-ai-agent" },
-  { label: "Integrations", to: "/integrations" },
 ] as const;
 
 const DESKTOP_LINK =
