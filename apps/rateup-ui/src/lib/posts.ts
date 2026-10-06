@@ -112,7 +112,10 @@ export async function getPosts(
 
   return (await api.posts
     .browse({
-      limit: 35,
+      // A fixed cap silently dropped every post older than the newest N from the index, tag
+      // pages and sitemap. Lists are projected to LIST_FIELDS, so fetching all stays cheap; only
+      // the RSS feed (full html) is capped.
+      limit: detail === "list" ? "all" : 35,
       include: "tags,authors",
       filter: filterStr,
       ...(detail === "list" ? { fields: LIST_FIELDS } : {}),
