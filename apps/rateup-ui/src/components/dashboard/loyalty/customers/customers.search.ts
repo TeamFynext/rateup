@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { coercedString } from "@/utils/search.ts";
 
 /**
  * The Customers page's URL state.
@@ -11,7 +11,10 @@ import { z } from "zod";
  * The router's default search parser JSON-parses values, so an all-digit phone arrives as
  * a number — hence the coercion, as on the cashier.
  */
-export const customersSearchSchema = z.object({
-  phone: z.coerce.string().optional().catch(undefined),
-});
-export type CustomersSearch = z.infer<typeof customersSearchSchema>;
+export interface CustomersSearch {
+  phone?: string;
+}
+
+export function validateCustomersSearch(search: Record<string, unknown>): CustomersSearch {
+  return { phone: coercedString(search.phone) };
+}

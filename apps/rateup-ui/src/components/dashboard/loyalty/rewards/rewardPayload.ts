@@ -8,7 +8,12 @@ import type {
   PointRewardFormValues,
   PointRewardValues,
 } from "./schemas.ts";
-import { shopifyRulesFrom, shopifyRulesToForm } from "./shopifyRules.ts";
+import {
+  shopifyRulesFrom,
+  shopifyRulesToForm,
+  wooRulesFrom,
+  wooRulesToForm,
+} from "./shopifyRules.ts";
 
 /** The three kinds this editor creates. Review rewards are made under Feedback. */
 export type EditableRewardType = "point" | "coupon" | "assigned";
@@ -30,6 +35,8 @@ export const BLANK_POINT_REWARD: PointRewardFormValues = {
   timeTo: undefined,
   shopifyDiscountEnabled: false,
   shopifyValidForDays: undefined,
+  wooDiscountEnabled: false,
+  wooValidForDays: undefined,
 };
 
 export const BLANK_COUPON: CouponFormValues = {
@@ -48,6 +55,7 @@ export const BLANK_COUPON: CouponFormValues = {
   waTemplateId: "",
   tierIds: [],
   shopifyDiscountEnabled: false,
+  wooDiscountEnabled: false,
 };
 
 export const BLANK_GIFT: GiftFormValues = {
@@ -102,6 +110,7 @@ export function pointRewardFormValues(reward: LoyaltyReward): PointRewardFormVal
     timeFrom: time?.allowed_time_ranges?.[0]?.start || undefined,
     timeTo: time?.allowed_time_ranges?.[0]?.end || undefined,
     ...shopifyRulesToForm(reward.redemptionRules?.shopify),
+    ...wooRulesToForm(reward.redemptionRules?.woocommerce),
   };
 }
 
@@ -131,6 +140,7 @@ export function couponFormValues(reward: LoyaltyReward): CouponFormValues {
     waTemplateId: reward.waTemplateId || undefined,
     tierIds: reward.availableForTiers || [],
     shopifyDiscountEnabled: !!rules?.shopify?.enabled,
+    wooDiscountEnabled: !!rules?.woocommerce?.enabled,
   };
 }
 
@@ -182,6 +192,7 @@ export function pointRewardPayload(data: PointRewardValues): LoyaltyRewardInput 
           }
         : {}),
       shopify: shopifyRulesFrom(data),
+      woocommerce: wooRulesFrom(data),
     },
   };
 }
@@ -195,7 +206,7 @@ export function couponPayload(data: CouponValues): LoyaltyRewardInput {
     rewardValue: {
       // A synced coupon has no fixed code — each redemption generates its own, and storing
       // a stale one here would show up on the reward card as if customers could use it.
-      code: data.shopifyDiscountEnabled ? undefined : data.couponCode,
+      code: data.shopifyDiscountEnabled || data.wooDiscountEnabled ? undefined : data.couponCode,
       description: data.couponDescription,
       discountType: data.discountType || undefined,
       discountValue: data.discountValue || undefined,
@@ -221,6 +232,7 @@ export function couponPayload(data: CouponValues): LoyaltyRewardInput {
       // Only the switch: the code's end date is Valid To, already in `time_restrictions`,
       // and a second deadline here could silently contradict it.
       shopify: shopifyRulesFrom({ shopifyDiscountEnabled: data.shopifyDiscountEnabled }),
+      woocommerce: wooRulesFrom({ wooDiscountEnabled: data.wooDiscountEnabled }),
     },
   };
 }

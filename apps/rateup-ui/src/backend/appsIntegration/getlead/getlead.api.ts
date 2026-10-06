@@ -33,13 +33,13 @@ export interface GetLeadStatus {
 }
 
 /**
- * Saves an API key, having proved it works.
+ * Saves an API key, having proved it works — through the shared pasted-key connect.
  *
  * Not the generic `POST /integrations`: that stores whatever it is handed, so a
  * typo would surface much later as leads quietly failing to sync.
  */
 export async function connectGetLead(apiKey: string) {
-  const res = await axiosClient.post(`${GETLEAD_BASE_URL}/connect`, { apiKey });
+  const res = await axiosClient.post(`integrations/getlead/connect`, { apiKey });
   return res.data as { meta: GetLeadMeta };
 }
 

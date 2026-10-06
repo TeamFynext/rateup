@@ -55,6 +55,7 @@ export interface LoyaltyProgram {
   /** Channels this server can send on — only these can be switched on. */
   availableChannels?: LoyaltyChannel[];
   enableShopifyOrderPoints?: boolean;
+  enableWooOrderPoints?: boolean;
   /** Months of trailing spend that count towards a tier; null = lifetime. */
   tierQualificationWindowMonths?: number | null;
   /* ── Venue & branding profile ── */
@@ -103,6 +104,7 @@ export interface LoyaltyProgramInput {
   sendTextInSession?: boolean;
   enabledChannels?: LoyaltyChannel[];
   enableShopifyOrderPoints?: boolean;
+  enableWooOrderPoints?: boolean;
   programActive?: boolean;
   pointsActivityAlerts?: boolean;
   enablePointsExpiration?: boolean;

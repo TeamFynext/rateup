@@ -1,25 +1,26 @@
-import { rateupLogo, rateupLogoWhite } from "@/utils/constants";
+import { rateupLockup, rateupLockupWhite, rateupLockupWhiteLarge } from "@/utils/constants";
 
 /**
- * The RateUp lockup, cropped to the mark.
- *
- * Both bucket PNGs are 2500×992 but the lockup only covers x 289–2214, y 298–759; the rest is
- * transparent. The frame takes the lockup's own ratio and the image is scaled and offset to
- * fill it, so `className` sizes what is visible. Re-measure if either asset is replaced.
+ * The RateUp lockup. `className` sizes the visible mark; the files are cropped to it.
+ * `large` swaps in the 1600px white file for display sizes (the footer) — only on dark.
  */
 export default function RateupLockup({
   onDark = false,
   eager = false,
+  large = false,
   className = "",
-}: Readonly<{ onDark?: boolean; eager?: boolean; className?: string }>) {
+}: Readonly<{ onDark?: boolean; eager?: boolean; large?: boolean; className?: string }>) {
+  const whiteSrc = large ? rateupLockupWhiteLarge : rateupLockupWhite;
   return (
-    <span className={`relative block aspect-[1926/462] flex-none overflow-hidden ${className}`}>
+    <span className={`relative block aspect-[1926/462] flex-none ${className}`}>
       <img
-        src={onDark ? rateupLogoWhite : rateupLogo}
+        src={onDark ? whiteSrc : rateupLockup}
         alt="RateUp"
+        width={large ? 1600 : 480}
+        height={large ? 384 : 115}
         loading={eager ? "eager" : "lazy"}
         decoding={eager ? "sync" : "async"}
-        className="absolute top-[-64.5%] left-[-15%] h-auto w-[129.8%] max-w-none"
+        className="absolute inset-0 size-full"
       />
     </span>
   );

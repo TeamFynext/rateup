@@ -1,16 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { z } from "zod";
 
 import { MaterialsPage } from "@/components/dashboard/loyalty/materials/MaterialsPage.tsx";
-import { MATERIALS_TABS } from "@/components/dashboard/loyalty/materials/materialsTabs.ts";
-
-// Materials — the join QR card and the rewards brochure, as tabs.
-const searchSchema = z.object({
-  tab: z.enum(MATERIALS_TABS).optional().catch(undefined),
-});
+import {
+  MATERIALS_TABS,
+  type MaterialsTab,
+} from "@/components/dashboard/loyalty/materials/materialsTabs.ts";
+import { oneOf } from "@/utils/search.ts";
 
 export const Route = createFileRoute("/dashboard/loyalty/materials/")({
-  validateSearch: searchSchema,
+  // Materials — the join QR card and the rewards brochure, as tabs.
+  validateSearch: (search: Record<string, unknown>): { tab?: MaterialsTab } => ({
+    tab: oneOf(MATERIALS_TABS, search.tab),
+  }),
   component: RouteComponent,
 });
 

@@ -1,17 +1,24 @@
 import { createFileRoute, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 
 import { useUserInfo } from "@/backend/user/user.query";
+import { AppProviders } from "@/components/AppProviders";
 import NavHeader from "@/components/nav-header.tsx";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { ConfirmProvider } from "@/context/confirm-provider.tsx";
+import { loadAppRuntime } from "@/lib/appRuntime";
 
 import { AppSidebar } from "../../components/admin/admin-sidebar/app-sidebar.tsx";
 
 import appCss from "@/styles/app.css?url";
 
 export const Route = createFileRoute("/admin")({
-  component: Page,
+  beforeLoad: loadAppRuntime,
+  component: () => (
+    <AppProviders>
+      <Page />
+    </AppProviders>
+  ),
   /* The application half of the Tailwind scan — see src/styles/app.css. */
   head: () => ({ links: [{ rel: "stylesheet", href: appCss }] }),
 });

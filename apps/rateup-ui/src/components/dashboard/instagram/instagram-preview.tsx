@@ -179,8 +179,12 @@ export function IgMeLinkPhone({
             {link || "ig.me/m/username?ref=..."}
           </p>
           <p className="mt-1 text-center text-[9px] text-muted-foreground">↓</p>
+          {/* The notice Instagram itself shows in a thread opened from a link. */}
           <p className="text-center text-[9px] text-muted-foreground">
-            {t("Opens this DM thread")}
+            {t(
+              "You opened this conversation from a link. {name} will see that you used their link once you send a message.",
+              { name: businessName || "Your Business" },
+            )}
           </p>
         </div>
       </div>

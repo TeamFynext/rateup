@@ -32,8 +32,8 @@ export interface SetupNavInput {
 }
 
 const GROUP_LABEL: Record<TaskGroup, string> = {
-  required: "Required",
   channels: "Channels",
+  whatsapp: "WhatsApp",
   optional: "Recommended",
 };
 
@@ -51,7 +51,7 @@ export function buildSetupNavItems({
 }: SetupNavInput): NavEntry[] {
   if (dismissed) return [];
 
-  const { visibleTasks, checklistMap, skippedMap, allDone } = getSetupProgress({
+  const { visibleTasks, checklistMap, effectiveSkips, allDone } = getSetupProgress({
     checklist,
     connected,
     hasLoyaltyFeature,
@@ -64,7 +64,7 @@ export function buildSetupNavItems({
   const rowsIn = (group: TaskGroup): NavEntry[] =>
     visibleTasks
       // A skipped step is not outstanding, so it has no business in the rail.
-      .filter((task) => task.group === group && !skippedMap[task.id])
+      .filter((task) => task.group === group && !effectiveSkips[task.id])
       .map((task) => ({
         title: copy[task.id].navLabel,
         url: `${SETUP_PATH}?step=${task.id}`,
@@ -77,7 +77,7 @@ export function buildSetupNavItems({
         isActive: task.id === activeStep,
       }));
 
-  return (["required", "channels", "optional"] as const)
+  return (["channels", "whatsapp", "optional"] as const)
     .map((group) => ({ group: t(GROUP_LABEL[group]), items: rowsIn(group) }))
     .filter((section) => section.items.length > 0);
 }

@@ -1,6 +1,7 @@
 import QRCode from "qrcode";
 import { type Ref, useMemo } from "react";
 
+import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { cn } from "@/lib/utils.ts";
 
 import { LOGO_SIZE_BASE, TRANSPARENT } from "./qrDesign.ts";
@@ -31,7 +32,9 @@ export function QrArtboard({
   logoRadius: number;
   className?: string;
 }>) {
-  const { size, path } = useMemo(() => {
+  const encoded = useMemo(() => {
+    // `QRCode.create` throws on an empty string, and callers pass one while their URL loads.
+    if (!value) return null;
     const { modules } = QRCode.create(value, { errorCorrectionLevel: "H" });
     let d = "";
     for (let y = 0; y < modules.size; y++) {
@@ -42,6 +45,13 @@ export function QrArtboard({
     return { size: modules.size, path: d };
   }, [value]);
 
+  if (!encoded) {
+    return (
+      <Skeleton ref={ref} className={cn("aspect-square", className)} aria-label="Loading QR code" />
+    );
+  }
+
+  const { size, path } = encoded;
   const clear = background === TRANSPARENT;
   const box = size + QUIET_ZONE * 2;
   const logoPercent = Math.min(30, (logoSize / LOGO_SIZE_BASE) * 100);

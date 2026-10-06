@@ -2,7 +2,7 @@ import { IconCopy } from "@tabler/icons-react";
 import React, { useState } from "react";
 import { toast } from "sonner";
 
-import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import { useChannels } from "@/backend/channels/channels.query";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import ShareQR from "@/components/Survey/ShareSurvey/ShareQR/index.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -29,7 +29,7 @@ interface RuleShareProps {
 const RuleShare: React.FC<RuleShareProps> = ({ groups, channels, platform = "WHATSAPP" }) => {
   const [shareAccountId, setShareAccountId] = useState<string>("");
   const [shareKeyword, setShareKeyword] = useState<string>("");
-  const { data: waSettings } = useWaSettings();
+  const { data: connected = [] } = useChannels();
 
   const keywordOptions = (groups || [])
     .flatMap((g) => g.conditions)
@@ -42,20 +42,24 @@ const RuleShare: React.FC<RuleShareProps> = ({ groups, channels, platform = "WHA
   const validAccountId =
     shareAccountId && channels?.includes(shareAccountId) ? shareAccountId : channels?.[0] || "";
 
-  const selectedAccount =
-    platform === "WHATSAPP"
-      ? waSettings?.find((s) => s.phoneId === validAccountId)
-      : waSettings?.find((s) => s.ibaId === validAccountId);
-
   const shareUrl = (() => {
-    if (!selectedAccount || !validKeyword) return "";
-    if (platform === "INSTAGRAM" && selectedAccount.igUserName) {
-      return `https://ig.me/m/${selectedAccount.igUserName}?text=${encodeURIComponent(validKeyword)}`;
+    if (!validKeyword) return "";
+    const text = encodeURIComponent(validKeyword);
+    // WhatsApp automations name the number by phone id, which is its channel's account id.
+    const channel = connected.find(
+      (candidate) => candidate.platform === platform && candidate.accountId === validAccountId,
+    );
+    if (!channel) return "";
+    if (platform === "WHATSAPP") {
+      return channel.address
+        ? `https://wa.me/${channel.address.replaceAll(/\D/g, "")}?text=${text}`
+        : "";
     }
-    if (platform === "FACEBOOK" && selectedAccount.fbPageId) {
-      return `https://m.me/${selectedAccount.fbPageId}?text=${encodeURIComponent(validKeyword)}`;
+    if (platform === "INSTAGRAM") {
+      return channel.username ? `https://ig.me/m/${channel.username}?text=${text}` : "";
     }
-    return `https://wa.me/${selectedAccount.phone.replaceAll(/\D/g, "")}?text=${encodeURIComponent(validKeyword)}`;
+    if (platform === "FACEBOOK") return `https://m.me/${channel.accountId}?text=${text}`;
+    return "";
   })();
 
   return (

@@ -20,7 +20,7 @@ const CHANNELS = {
   },
   instagram: {
     title: "Instagram Messaging",
-    description: "Story replies and DMs land next to your WhatsApp threads.",
+    description: "Story replies and DMs land in the same inbox as your other channels.",
   },
 } as const;
 
@@ -65,7 +65,7 @@ export function ChannelDetailsPage() {
         <WhatsAppSettingsDetail waSettings={waSettings} isLoading={isLoading} />
       )}
       {(channel === "instagram" || channel === "facebook") && (
-        <MetaConnectionsList platform={channel} waSettings={waSettings} isLoading={isLoading} />
+        <MetaConnectionsList platform={channel} />
       )}
     </div>
   );

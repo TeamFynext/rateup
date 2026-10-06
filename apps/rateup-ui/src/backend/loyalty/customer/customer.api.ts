@@ -128,7 +128,9 @@ export const importCustomers = async (data: RequestPayload) => {
   return res;
 };
 
-export const exportCustomers = async (format: "csv" | "excel" = "excel") => {
+export type CustomerExportFormat = "csv" | "xlsx" | "ods";
+
+export const exportCustomers = async (format: CustomerExportFormat = "xlsx") => {
   return (
     await axiosClient.get(`${base}/export?format=${format}`, {
       responseType: "blob",

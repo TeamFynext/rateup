@@ -27,8 +27,6 @@ import { CreateFlowWizard } from "@/components/whatsapp/flows/CreateFlowWizard/C
 import FlowCardsList from "@/components/whatsapp/flows/FlowCardsList/index.tsx";
 import { SyncFlowsButton } from "@/components/whatsapp/flows/SyncFlows.tsx";
 
-import styles from "@/components/dashboard/whatsapp/flows/flows.module.css";
-
 export function FlowsPage() {
   const searchParams = useSearch({ strict: false });
   const { t: translations } = useTranslation();
@@ -95,7 +93,6 @@ export function FlowsPage() {
             />
             <div className="flex gap-2">
               <TeamSelector
-                className={styles["team-select-option"]}
                 value={selectedTeamId}
                 onChange={(teamId) => setSelectedTeamId(teamId)}
                 enableAll={true}
@@ -130,7 +127,7 @@ export function FlowsPage() {
           emptyDescription={translations("Try adjusting your filters or create a new flow.")}
           onRetry={refetch}
         >
-          <div className={styles["flows-list-div"]}>
+          <div className="p-1">
             <FlowCardsList flows={sortedFlows} teamsData={teamsData ?? []} />
           </div>
         </ListPageContent>

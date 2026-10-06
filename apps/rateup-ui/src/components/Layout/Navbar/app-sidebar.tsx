@@ -24,7 +24,6 @@ import type { NavEntry, NavProgress } from "@/components/Layout/Navbar/hooks.tsx
 import NotificationBellIcon from "@/components/Layout/Notification/index.tsx";
 import type { PipelineNavInput } from "@/components/pipeline/pipeline.nav.tsx";
 import { checkExpiry } from "@/components/Premium/ExpiryComponent.tsx";
-import { ModeToggle } from "@/components/theme/ModeToggle.tsx";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
@@ -61,7 +60,6 @@ import { useChatFilterStore } from "@/store/chat-filter.store.ts";
 import { useChatContactCountStore } from "@/store/inbox.store.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
-import DocsButton from "./docs-button.tsx";
 import { useNavMain } from "./hooks.tsx";
 import { NavUser } from "./user-nav.tsx";
 import WhatsNewButton from "./whats-new/WhatsNewButton.tsx";
@@ -836,9 +834,9 @@ export default function AppSidebar({
           </SidebarGroup>
         </SidebarContent>
 
-        <SidebarFooter>
-          <ModeToggle />
-          <DocsButton />
+        {/* What carries an unread count, then the account menu, which holds the
+            theme and docs links. Ruled off from the nav above. */}
+        <SidebarFooter className="items-center gap-1.5 border-t border-sidebar-border pt-3">
           <WhatsNewButton />
           <NotificationBellIcon />
           <NavUser user={userData?.data} />

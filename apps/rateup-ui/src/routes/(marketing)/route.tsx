@@ -13,7 +13,7 @@ import marketingCss from "@/styles/marketing.css?url";
  *
  * `Vary: Accept` is not optional: `createMarkdownMiddleware` returns markdown instead of HTML for
  * the same URL when the client asks for it, and without the Vary the edge would serve one to the
- * other. Session state never reaches SSR — `useCheckSession` runs in an effect — so the HTML is
+ * other. Session state never reaches SSR — `useHasSessionCookie` runs in an effect — so the HTML is
  * identical for every visitor and is safe to share.
  *
  * `headers` from every matched route are merged by the server handler, so a child route can add

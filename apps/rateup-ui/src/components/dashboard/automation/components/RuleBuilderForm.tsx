@@ -13,10 +13,12 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import React, { useState } from "react";
-import type { UseFormReturn } from "react-hook-form";
+import type { FieldErrors, UseFormReturn } from "react-hook-form";
 import { Controller, FormProvider, useFieldArray, useWatch } from "react-hook-form";
+import { toast } from "sonner";
 
 import { getProductsFromShopify } from "@/backend/appsIntegration/shopify/shopify.api";
+import { getWooProducts } from "@/backend/appsIntegration/woocommerce/woocommerce.api";
 import {
   useInstagramMediaPosts,
   useInstagramStories,
@@ -45,10 +47,12 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { cn } from "@/lib/utils.ts";
 import { ShopifyEvents } from "@/types/enums.ts";
-import { shopifyEventData } from "@/utils/constants.ts";
+import { shopifyEventData, wooEventData } from "@/utils/constants.ts";
 
 import ActionList from "./ActionList.tsx";
 import ConditionList from "./ConditionList.tsx";
+import { InstagramPublicReplies } from "./InstagramPublicReplies.tsx";
+import { InstagramCommentSource, InstagramLinkRef } from "./InstagramTriggerOptions.tsx";
 import RuleOptions from "./RuleOptions.tsx";
 import type { CreateRuleInput, CreateRuleValues, Platform } from "./schema.ts";
 import { getTriggerEventsForPlatform, INSTAGRAM_SCOPE_OPTIONS, PLATFORMS } from "./schema.ts";
@@ -62,6 +66,31 @@ interface RuleBuilderFormProps {
 }
 
 type Section = "trigger" | "conditions" | "actions" | "options";
+
+/** The first error message anywhere in a nested react-hook-form error tree, with its path. */
+function firstError(
+  errors: unknown,
+  path: string[] = [],
+): { path: string[]; message: string } | null {
+  if (!errors || typeof errors !== "object") return null;
+  const message = (errors as { message?: unknown }).message;
+  if (typeof message === "string" && message) return { path, message };
+  for (const [key, value] of Object.entries(errors)) {
+    if (key === "ref" || key === "type" || key === "message") continue;
+    const found = firstError(value, [...path, key]);
+    if (found) return found;
+  }
+  return null;
+}
+
+/** Which step of the builder shows the field a form path points at. */
+function sectionFor(path: string[]): Section {
+  const [root] = path;
+  if (root === "groups") return "conditions";
+  if (root === "actions") return "actions";
+  if (root === "options") return path[1] === "instagramPublicReplies" ? "actions" : "options";
+  return "trigger";
+}
 
 const SECTION_META: Record<Section, { icon: React.ElementType; label: string; color: string }> = {
   trigger: { icon: IconBolt, label: "When", color: "text-amber-500" },
@@ -126,8 +155,10 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
 
   const isMessageReceivedTrigger = triggerEvent === "MESSAGE_RECEIVED";
   const isShopifyTrigger = triggerEvent === "SHOPIFY_EVENT";
+  const isWooTrigger = triggerEvent === "WOOCOMMERCE_EVENT";
   const isInstagramCommentTrigger = triggerEvent === "INSTAGRAM_COMMENT";
   const isInstagramStoryTrigger = triggerEvent === "INSTAGRAM_STORY_MENTION";
+  const isInstagramReferralTrigger = triggerEvent === "INSTAGRAM_REFERRAL";
   const isInstagramTrigger = isInstagramCommentTrigger || isInstagramStoryTrigger;
 
   const shopifyEvent = useWatch({
@@ -136,8 +167,13 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
   });
   const shopifyProductIds =
     useWatch({ control: form.control, name: "options.shopifyProductIds" }) ?? [];
+  const wooProductIds = useWatch({ control: form.control, name: "options.wooProductIds" }) ?? [];
   const instagramScope =
     useWatch({ control: form.control, name: "options.instagramScope" }) ?? "ALL";
+  const instagramCommentSource = useWatch({
+    control: form.control,
+    name: "options.instagramCommentSource",
+  });
   const selectedPhoneIds =
     useWatch({ control: form.control, name: "whatsappSettingsPhoneIds" }) ?? [];
 
@@ -178,6 +214,19 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
     }
   };
 
+  const [wooProductData, setWooProductData] = useState<{ label: string; value: string }[]>([]);
+  const [loadingWooProducts, setLoadingWooProducts] = useState(false);
+
+  const loadWooProducts = async () => {
+    setLoadingWooProducts(true);
+    try {
+      const products = await getWooProducts();
+      setWooProductData(products.map((product) => ({ label: product.name, value: product.id })));
+    } finally {
+      setLoadingWooProducts(false);
+    }
+  };
+
   // Build live summary
   const triggerLabel = filteredTriggerEvents.find((e) => e.value === triggerEvent)?.label;
   const conditionCount = groups?.reduce((sum, g) => sum + (g.conditions?.length ?? 0), 0) ?? 0;
@@ -185,13 +234,22 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
 
   const sections: Section[] = ["trigger", "conditions", "actions", "options"];
 
+  // Without this a field the builder doesn't render an error for (or one in a collapsed
+  // step) failed validation silently: Save did nothing and said nothing.
+  const onInvalid = (errors: FieldErrors<CreateRuleInput>) => {
+    const found = firstError(errors);
+    console.warn("Automation rule failed validation", errors);
+    toast.error(found?.message ?? "Some fields need attention before saving");
+    if (found) setActiveSection(sectionFor(found.path));
+  };
+
   const toggleSection = (section: Section) => {
     setActiveSection((prev) => (prev === section ? prev : section));
   };
 
   return (
     <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5">
+      <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="flex flex-col gap-5">
         {/* ── Top bar: Platform + Name ── */}
         <div className={cn("rounded-2xl border bg-card p-5 shadow-sm", pColor.glow)}>
           <FieldGroup>
@@ -230,6 +288,8 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                             ]);
                             form.setValue("options.shopifyEvent", undefined);
                             form.setValue("options.shopifyProductIds", []);
+                            form.setValue("options.wooEvent", undefined);
+                            form.setValue("options.wooProductIds", []);
                             form.setValue("options.instagramScope", "ALL");
                             form.setValue("options.instagramPostIds", []);
                           }}
@@ -424,6 +484,7 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                           form={form}
                           filteredTriggerEvents={filteredTriggerEvents}
                           isShopifyTrigger={isShopifyTrigger}
+                          isWooTrigger={isWooTrigger}
                         />
                       )}
                       {s === "conditions" && (
@@ -438,6 +499,8 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                           isInstagramTrigger={isInstagramTrigger}
                           isInstagramCommentTrigger={isInstagramCommentTrigger}
                           isInstagramStoryTrigger={isInstagramStoryTrigger}
+                          isInstagramReferralTrigger={isInstagramReferralTrigger}
+                          instagramCommentSource={instagramCommentSource}
                           shopifyEvent={shopifyEvent}
                           shopifyProductIds={shopifyProductIds}
                           instagramScope={instagramScope}
@@ -448,6 +511,11 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                           productData={productData}
                           loadingProducts={loadingProducts}
                           loadShopifyProducts={loadShopifyProducts}
+                          isWooTrigger={isWooTrigger}
+                          wooProductIds={wooProductIds}
+                          wooProductData={wooProductData}
+                          loadingWooProducts={loadingWooProducts}
+                          loadWooProducts={loadWooProducts}
                           pColor={pColor}
                         />
                       )}
@@ -459,6 +527,9 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                             <Field data-invalid={fieldState.invalid}>
                               <ActionList />
                               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                              {/* Replying under the comment is something the rule does, so it
+                                  sits with the actions, not with the conditions. */}
+                              {isInstagramCommentTrigger && <InstagramPublicReplies />}
                             </Field>
                           )}
                         />
@@ -499,7 +570,8 @@ const TriggerPanel: React.FC<{
   form: UseFormReturn<CreateRuleInput, unknown, CreateRuleValues>;
   filteredTriggerEvents: { label: string; value: string }[];
   isShopifyTrigger: boolean;
-}> = ({ form, filteredTriggerEvents, isShopifyTrigger }) => (
+  isWooTrigger: boolean;
+}> = ({ form, filteredTriggerEvents, isShopifyTrigger, isWooTrigger }) => (
   <div className="space-y-4">
     <Controller
       control={form.control}
@@ -516,9 +588,19 @@ const TriggerPanel: React.FC<{
                 form.setValue("options.shopifyEvent", undefined);
                 form.setValue("options.shopifyProductIds", []);
               }
+              if (value !== "WOOCOMMERCE_EVENT") {
+                form.setValue("options.wooEvent", undefined);
+                form.setValue("options.wooProductIds", []);
+              }
               if (value !== "INSTAGRAM_COMMENT" && value !== "INSTAGRAM_STORY_MENTION") {
                 form.setValue("options.instagramScope", "ALL");
                 form.setValue("options.instagramPostIds", []);
+              }
+              if (value !== "INSTAGRAM_COMMENT") {
+                form.setValue("options.instagramCommentSource", undefined);
+              }
+              if (value !== "INSTAGRAM_REFERRAL") {
+                form.setValue("options.instagramRef", undefined);
               }
               if (value !== "MESSAGE_RECEIVED") {
                 form.setValue("groups", []);
@@ -569,6 +651,31 @@ const TriggerPanel: React.FC<{
               </SelectTrigger>
               <SelectContent>
                 {shopifyEventData.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          </Field>
+        )}
+      />
+    )}
+
+    {isWooTrigger && (
+      <Controller
+        control={form.control}
+        name="options.wooEvent"
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <FieldTitle>WooCommerce order status</FieldTitle>
+            <Select onValueChange={field.onChange} value={field.value} items={wooEventData}>
+              <SelectTrigger className="w-full" aria-invalid={fieldState.invalid}>
+                <SelectValue placeholder="Select order status" />
+              </SelectTrigger>
+              <SelectContent>
+                {wooEventData.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
                   </SelectItem>
@@ -736,6 +843,8 @@ const ConditionsPanel: React.FC<{
   isInstagramTrigger: boolean;
   isInstagramCommentTrigger: boolean;
   isInstagramStoryTrigger: boolean;
+  isInstagramReferralTrigger: boolean;
+  instagramCommentSource: string | undefined;
   shopifyEvent: string | undefined;
   shopifyProductIds: string[];
   instagramScope: string;
@@ -746,6 +855,11 @@ const ConditionsPanel: React.FC<{
   productData: { label: string; value: string }[];
   loadingProducts: boolean;
   loadShopifyProducts: () => void;
+  isWooTrigger: boolean;
+  wooProductIds: string[];
+  wooProductData: { label: string; value: string }[];
+  loadingWooProducts: boolean;
+  loadWooProducts: () => void;
   pColor: typeof platformColor.WHATSAPP;
 }> = ({
   form,
@@ -758,6 +872,8 @@ const ConditionsPanel: React.FC<{
   isInstagramTrigger,
   isInstagramCommentTrigger,
   isInstagramStoryTrigger,
+  isInstagramReferralTrigger,
+  instagramCommentSource,
   shopifyEvent,
   shopifyProductIds,
   instagramScope,
@@ -768,6 +884,11 @@ const ConditionsPanel: React.FC<{
   productData,
   loadingProducts,
   loadShopifyProducts,
+  isWooTrigger,
+  wooProductIds,
+  wooProductData,
+  loadingWooProducts,
+  loadWooProducts,
 }) => (
   <div className="space-y-4">
     {groupFields.length > 1 && (
@@ -789,11 +910,13 @@ const ConditionsPanel: React.FC<{
       <div className="space-y-4">
         <div className="rounded-lg border border-dashed p-3.5 text-sm text-muted-foreground">
           {isInstagramCommentTrigger
-            ? "Sends a private reply when someone comments on your post, reel, or ad."
+            ? "Runs when someone comments on your post, reel, or ad. The first message your actions send arrives as a private reply to that comment."
             : "Triggers when someone mentions your account in their Instagram Story."}
         </div>
 
-        {isInstagramCommentTrigger && (
+        {isInstagramCommentTrigger && <InstagramCommentSource />}
+
+        {isInstagramCommentTrigger && instagramCommentSource !== "LIVE" && (
           <div className="rounded-xl border p-4 bg-muted/20 space-y-3">
             <span className="text-sm font-semibold block">Apply to</span>
             <Controller
@@ -860,6 +983,16 @@ const ConditionsPanel: React.FC<{
             )}
           </div>
         )}
+      </div>
+    )}
+
+    {isInstagramReferralTrigger && (
+      <div className="space-y-4">
+        <div className="rounded-lg border border-dashed p-3.5 text-sm text-muted-foreground">
+          Runs when someone opens a chat with you from this ig.me link — share it in your bio,
+          stories or anywhere online.
+        </div>
+        <InstagramLinkRef />
       </div>
     )}
 
@@ -958,9 +1091,101 @@ const ConditionsPanel: React.FC<{
       </div>
     )}
 
+    {/* WooCommerce-specific */}
+    {isWooTrigger && (
+      <div className="space-y-4">
+        <div className="rounded-lg border border-dashed p-3.5 text-sm text-muted-foreground">
+          WooCommerce rules fire when an order reaches the selected status. The message goes to the
+          phone number on the order.
+        </div>
+
+        <div className="rounded-xl border p-4 bg-muted/20 space-y-3">
+          <span className="text-sm font-semibold block">Product Filter (optional)</span>
+          <p className="text-xs text-muted-foreground">
+            The rule triggers if the order contains any selected product.
+          </p>
+
+          {wooProductIds.map((_, index: number) => (
+            <div key={index} className="flex items-end gap-2 mt-2">
+              <Controller
+                control={form.control}
+                name={`options.wooProductIds.${index}`}
+                render={({ field, fieldState }) => (
+                  <Field className="flex-1" data-invalid={fieldState.invalid}>
+                    <FieldTitle>Product {index + 1}</FieldTitle>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value ?? ""}
+                      items={wooProductData}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select Product" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {wooProductData.map((prod) => (
+                          <SelectItem key={prod.value} value={prod.value}>
+                            {prod.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  </Field>
+                )}
+              />
+              <Button
+                aria-label="Delete"
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  const next = wooProductIds.filter((_, i: number) => i !== index);
+                  form.setValue("options.wooProductIds", next);
+                }}
+                className="text-muted-foreground hover:text-destructive"
+              >
+                <IconTrash className="w-4 h-4" />
+              </Button>
+            </div>
+          ))}
+
+          <div className="flex items-center gap-2 pt-1">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                form.setValue("options.wooProductIds", [...wooProductIds, ""]);
+                if (!wooProductData.length) loadWooProducts();
+              }}
+            >
+              <IconPlus className="w-4 h-4 mr-2" />
+              Add product
+            </Button>
+            <Button
+              aria-label="Refresh products"
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={loadWooProducts}
+              disabled={loadingWooProducts}
+              title="Refresh products"
+            >
+              {loadingWooProducts ? (
+                <IconLoader2 className="animate-spin h-4 w-4" />
+              ) : (
+                <IconRefresh size={18} />
+              )}
+            </Button>
+          </div>
+        </div>
+      </div>
+    )}
+
     {/* Standard condition blocks */}
     {!isInstagramStoryTrigger &&
+      !isInstagramReferralTrigger &&
       !isShopifyTrigger &&
+      !isWooTrigger &&
       groupFields.map((group, groupIndex: number) => (
         <div key={group.id} className="rounded-xl border p-4 bg-muted/20">
           <div className="flex items-center justify-between mb-3 pb-3 border-b">
@@ -987,7 +1212,7 @@ const ConditionsPanel: React.FC<{
         </div>
       ))}
 
-    {!isShopifyTrigger && !isInstagramStoryTrigger && (
+    {!isShopifyTrigger && !isInstagramStoryTrigger && !isInstagramReferralTrigger && (
       <Button
         type="button"
         variant="outline"

@@ -3,17 +3,9 @@
  *
  * This is the single source of truth for the tools sidebar, the `/tools` index,
  * the tools sitemap, cross-links between tools and the FAQ JSON-LD on each page.
- * Adding a tool = add an entry here + a route + a component.
+ * Adding a tool = add an entry here + a route + a component + its icon in `ToolsIndex`.
+ * Icon-free because route `head`s read it, and those land in the client entry.
  */
-import {
-  IconBrandWhatsapp,
-  IconCalculator,
-  IconMessage2Star,
-  IconQrcode,
-  IconTruckReturn,
-  type Icon,
-} from "@tabler/icons-react";
-
 export type ToolCategory =
   | "WhatsApp essentials"
   | "Calculators"
@@ -50,7 +42,6 @@ export interface ToolDefinition {
   tagline: string;
   /** Card copy on the /tools index. */
   description: string;
-  icon: Icon;
   category: ToolCategory;
   /** Third pill in the hero, after "No signup" and "No email gate". */
   badge: string;
@@ -75,7 +66,6 @@ export const TOOLS: ToolDefinition[] = [
       "Turn any phone number into a click-to-chat wa.me link with a message already typed for your customer.",
     description:
       "Create a wa.me click-to-chat link with a prefilled message. Paste it in your bio, emails, ads or QR codes.",
-    icon: IconBrandWhatsapp,
     category: "WhatsApp essentials",
     badge: "Works on mobile",
     cta: "Answer every one of those chats automatically.",
@@ -145,7 +135,6 @@ export const TOOLS: ToolDefinition[] = [
       "Generate a scannable WhatsApp QR code for your packaging, receipts, counter or table tents. Download as PNG or SVG.",
     description:
       "Turn your WhatsApp number into a print-ready QR code. High error correction, custom colour, PNG and SVG download.",
-    icon: IconQrcode,
     category: "WhatsApp essentials",
     badge: "Print ready",
     cta: "Turn every scan into an automated conversation.",
@@ -216,7 +205,6 @@ export const TOOLS: ToolDefinition[] = [
       "Estimate what Meta will charge you per month for marketing, utility and authentication messages — by country and volume.",
     description:
       "Work out your monthly WhatsApp Business API bill from Meta's per-message rates, in USD and INR.",
-    icon: IconCalculator,
     category: "Calculators",
     badge: "2026 rate card",
     cta: "Same Meta rates. No reseller markup.",
@@ -297,7 +285,6 @@ export const TOOLS: ToolDefinition[] = [
       "Find out what refused cash-on-delivery orders actually cost your business every month — shipping, packaging and blocked working capital.",
     description:
       "Built for Indian D2C. Put a rupee figure on your COD RTO losses and see what a small reduction is worth.",
-    icon: IconTruckReturn,
     category: "Calculators",
     badge: "India specific",
     cta: "Confirm every COD order on WhatsApp before you ship.",
@@ -367,7 +354,6 @@ export const TOOLS: ToolDefinition[] = [
       "Ready-to-send Net Promoter Score questions written for your industry, with the follow-ups that actually get answered.",
     description:
       "15+ industry-specific NPS question sets, plus a calculator to score your responses. Copy, edit and send.",
-    icon: IconMessage2Star,
     category: "Feedback & surveys",
     badge: "16 templates",
     cta: "Run NPS on WhatsApp and get replies, not silence.",
@@ -437,7 +423,6 @@ export const TOOLS: ToolDefinition[] = [
     tagline:
       "Generate random, unique discount codes for your Shopify store in bulk and download a CSV ready to import.",
     description: "Generate bulk unique discount codes and export them as a Shopify-ready CSV.",
-    icon: IconCalculator,
     category: "Ecommerce essentials",
     badge: "Shopify ready",
     cta: "Send codes via WhatsApp automatically.",
@@ -473,7 +458,6 @@ export const TOOLS: ToolDefinition[] = [
     tagline:
       "Calculate your LTV:CAC ratio and find out if you are under-investing or burning money.",
     description: "Calculate Customer Lifetime Value, payback period and LTV:CAC ratio.",
-    icon: IconCalculator,
     category: "Calculators",
     badge: "Growth metric",
     cta: "Improve LTV with WhatsApp retention.",
@@ -509,7 +493,6 @@ export const TOOLS: ToolDefinition[] = [
     tagline: "Calculate your exact net profit on a single Shopify transaction.",
     description:
       "Calculate your exact net profit per order including Shopify transaction fees and payment processing costs.",
-    icon: IconCalculator,
     category: "Calculators",
     badge: "Shopify pricing",
     cta: "Reduce RTO to offset gateway fees.",
@@ -544,7 +527,6 @@ export const TOOLS: ToolDefinition[] = [
     headline: "Ecommerce Profit Margin Calculator",
     tagline: "Calculate gross margin, net margin, markup and breakeven ROAS.",
     description: "Calculate gross margin, net margin, markup and breakeven ROAS per order.",
-    icon: IconCalculator,
     category: "Calculators",
     badge: "Margin analysis",
     cta: "Improve net margin with higher RTO delivery.",

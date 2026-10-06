@@ -15,6 +15,7 @@ import {
   IconPlayCard,
   IconSquare,
   IconUser,
+  IconUserCheck,
   IconUsers,
   IconVideo,
 } from "@tabler/icons-react";
@@ -86,6 +87,11 @@ const categories = [
         id: "instagramProductTemplateNode",
         label: "Product Template",
         icon: <IconBuildingStore size={16} />,
+      },
+      {
+        id: "instagramFollowCheckNode",
+        label: "Follow Check",
+        icon: <IconUserCheck size={16} />,
       },
     ],
   },

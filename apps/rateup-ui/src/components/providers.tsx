@@ -12,14 +12,11 @@ import {
 } from "@tanstack/react-query";
 import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
-import axios from "axios";
 import { Suspense } from "react";
 import type { ReactNode } from "react";
-import Session from "supertokens-auth-react/recipe/session";
 
 import { AppErrorBoundary } from "@/components/AppErrorBoundary.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import { SuperTokensProvider } from "@/components/SuperToken/supertokensProvider.tsx";
 import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 import { UserProvider } from "@/context/UserContext.tsx";
 import { asApiError, getApiErrorData } from "@/utils/apiError.ts";
@@ -44,12 +41,16 @@ function makeQueryClient() {
     },
     queryCache: new QueryCache({
       onError: async (error) => {
-        // Check if error is an instance of an Axios error
-        if (!axios.isAxiosError(error)) return;
-        const serverError = getApiErrorData(error);
-        if (error?.response?.status === 401 && serverError?.message === "Not authorized") {
-          await Session.attemptRefreshingSession();
+        if (
+          asApiError(error).response?.status !== 401 ||
+          getApiErrorData(error)?.message !== "Not authorized"
+        ) {
+          return;
         }
+        // Loaded here, not at the top: this module is on every marketing page.
+        await import("@/lib/auth/supertokens");
+        const { default: Session } = await import("supertokens-auth-react/recipe/session");
+        await Session.attemptRefreshingSession();
       },
     }),
   });
@@ -85,35 +86,33 @@ export default function Providers({ children }: { children: ReactNode }) {
 
   return (
     <AppErrorBoundary>
-      <SuperTokensProvider>
-        <QueryClientProvider client={queryClient}>
-          {/* This boundary wraps the whole app tree, so anything that suspends here (lazy modal
+      <QueryClientProvider client={queryClient}>
+        {/* This boundary wraps the whole app tree, so anything that suspends here (lazy modal
             chunks, UserProvider) would otherwise blank the screen with no feedback. */}
-          <Suspense fallback={<RateupLoader className="h-dvh" />}>
-            <UserProvider>
-              <RouteChangeHandler />
-              <HydrationBoundary state={dehydrate(queryClient)}>
-                <TooltipProvider>{children}</TooltipProvider>
-              </HydrationBoundary>
-            </UserProvider>
-          </Suspense>
-          <TanStackDevtools
-            config={{
-              position: "bottom-right",
-            }}
-            plugins={[
-              {
-                name: "Tanstack Query",
-                render: <ReactQueryDevtoolsPanel />,
-              },
-              {
-                name: "Tanstack Router",
-                render: <TanStackRouterDevtoolsPanel />,
-              },
-            ]}
-          />
-        </QueryClientProvider>
-      </SuperTokensProvider>
+        <Suspense fallback={<RateupLoader className="h-dvh" />}>
+          <UserProvider>
+            <RouteChangeHandler />
+            <HydrationBoundary state={dehydrate(queryClient)}>
+              <TooltipProvider>{children}</TooltipProvider>
+            </HydrationBoundary>
+          </UserProvider>
+        </Suspense>
+        <TanStackDevtools
+          config={{
+            position: "bottom-right",
+          }}
+          plugins={[
+            {
+              name: "Tanstack Query",
+              render: <ReactQueryDevtoolsPanel />,
+            },
+            {
+              name: "Tanstack Router",
+              render: <TanStackRouterDevtoolsPanel />,
+            },
+          ]}
+        />
+      </QueryClientProvider>
     </AppErrorBoundary>
   );
 }

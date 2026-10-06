@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import { useContext, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { tint } from "@/components/common/sentimentScale.ts";
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -267,15 +268,13 @@ function BadgeorTextorPreview({
       </div>
     );
   } else if (badgeRequired.includes(questionType)) {
+    const color = getResponseArrayByQuestionType(questionType)?.find(
+      (res) => res.value === response,
+    )?.color;
     return (
       <Badge
-        className="text-background"
         variant="secondary"
-        style={{
-          backgroundColor: getResponseArrayByQuestionType(questionType)?.find(
-            (res) => res.value === response,
-          )?.color,
-        }}
+        style={color ? { color, backgroundColor: tint(color) } : undefined}
       >
         {response}
       </Badge>

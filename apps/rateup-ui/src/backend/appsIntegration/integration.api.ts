@@ -1,6 +1,6 @@
 import type { RequestPayload } from "@/types/api.ts";
 import type { IntegratedApps } from "@/types/enums.ts";
-import type { AmeliaCredential, petpoojaCredential } from "@/types/global";
+import type { PetpoojaOrderEvent, petpoojaCredential } from "@/types/global";
 
 import { axiosClient } from "../apiClient";
 
@@ -18,7 +18,7 @@ export const getIntegrationByType = async (type: IntegratedApps) => {
 export interface integrationSchemaProps {
   id?: string;
   /** Zapier creates with no credential — the server mints the API key. */
-  credential: AmeliaCredential | petpoojaCredential | Record<string, never>;
+  credential: petpoojaCredential | Record<string, never>;
   name: string;
 }
 
@@ -43,46 +43,38 @@ export const deleteIntegration = async (type: IntegratedApps) => {
   return response.data;
 };
 
-export async function getGoogleSheetAuthorizationUrl() {
-  const res = await axiosClient.get(`${ROUTE_URL}google/auth-url`);
-  return res.data;
+/** One payment gateway linked to the WhatsApp Business account in WhatsApp Manager. */
+export interface WaPaymentConfiguration {
+  configuration_name: string;
+  provider_name?: string;
+  status?: string;
+  /** Both arrive as code objects carrying a human-readable description. */
+  purpose_code?: { code?: string; description?: string };
+  merchant_category_code?: { code?: string; description?: string };
+  oauth_url?: string;
+  /** Unix seconds when `oauth_url` stops working. */
+  expiration?: number;
 }
 
-export async function createGoogleSheetAuthToken(data: RequestPayload) {
-  const res = await axiosClient.post(`${ROUTE_URL}google/auth-token`, data);
-  return res.data;
+export interface WaPaymentConfigurationsView {
+  /** The WhatsApp number whose account was read. */
+  phone: string | null;
+  configurations: WaPaymentConfiguration[];
+  /** Set when Meta could not be read and the list is the last one saved. */
+  syncError?: string;
 }
 
-export const getWaPaymentConfigurations = async (whatsappSettingsId?: string) => {
-  const response = await axiosClient.get(`${ROUTE_URL}wa_payment_configurations`, {
-    params: whatsappSettingsId ? { whatsappSettingsId } : undefined,
-  });
-  return response.data;
-};
-export const getWaPaymentConfigurationByName = async ({
-  configuration_name,
-}: {
-  configuration_name?: string;
-}) => {
-  const response = await axiosClient.post(
-    `${ROUTE_URL}wa_payment_configuration/${configuration_name}`,
-    {},
-  );
-  return response.data;
-};
-
-export const createWaPaymentConfiguration = async (data: RequestPayload) => {
-  const response = await axiosClient.post(`${ROUTE_URL}wa_payment_configuration`, data);
-  return response.data;
-};
-export const deleteWaPaymentConfiguration = async (name: string) => {
-  const response = await axiosClient.delete(`${ROUTE_URL}wa_payment_configuration/${name}`);
-  return response.data;
+/** Syncs the default number's payment configurations from Meta and returns them. */
+export const getWaPaymentConfigurations = async () => {
+  const response = await axiosClient.get(`${ROUTE_URL}wa_payment_configurations`);
+  return response.data as WaPaymentConfigurationsView;
 };
 
 export const regenerateWaPaymentConfigurationOauth = async (name: string) => {
-  const response = await axiosClient.get(`${ROUTE_URL}regenerate_wa_payment_config_oauth/${name}`);
-  return response.data;
+  const response = await axiosClient.get(
+    `${ROUTE_URL}regenerate_wa_payment_config_oauth/${encodeURIComponent(name)}`,
+  );
+  return response.data as { oauth_url?: string; expiration?: number };
 };
 
 /** An installed app integration row. */
@@ -100,7 +92,7 @@ export interface AppIntegration {
     session?: { shop?: string };
     accessToken?: string;
     restaurantId?: string;
-    orderEvent?: Record<string, unknown>;
+    orderEvent?: PetpoojaOrderEvent;
     history?: Array<{
       phone?: string;
       name?: string;
@@ -156,24 +148,109 @@ export async function getAllIntegrations() {
   return (await axiosClient.get(`${ROUTE_URL}all`)).data as AppIntegration[];
 }
 
+/** One row per known integration, connected or not. */
+export interface IntegrationStatus {
+  name: IntegratedApps;
+  isConnected: boolean;
+  /**
+   * Jobs whose final retry failed since the last success. Any at all means a sync was lost,
+   * so the list flags the card.
+   */
+  consecutiveFailures: number;
+  lastErrorAt: string | null;
+}
+
 export async function getIntegrationStatuses() {
-  return (await axiosClient.get(`${ROUTE_URL}statuses`)).data;
+  return (await axiosClient.get(`${ROUTE_URL}statuses`)).data as IntegrationStatus[];
+}
+
+export interface IntegrationHealth {
+  consecutiveFailures: number;
+  lastError: string | null;
+  lastErrorAt: string | null;
+}
+
+/** A sync entry an integration left on a lead's timeline. */
+export interface IntegrationActivityEntry {
+  id: string;
+  type: "INTEGRATION_SYNCED" | "INTEGRATION_SKIPPED" | "INTEGRATION_RECEIVED" | (string & {});
+  createdAt: string;
+  details: {
+    integrationName?: string;
+    externalId?: string;
+    externalCreated?: boolean;
+    inboundCreated?: boolean;
+    statusRejected?: boolean;
+    toStageName?: string;
+    statusName?: string;
+    skipReason?: string;
+    sourceLabel?: string;
+  } | null;
+  lead: { id: string; name: string; pipelineId: string };
+}
+
+export interface IntegrationActivity {
+  health: IntegrationHealth;
+  entries: IntegrationActivityEntry[];
+}
+
+export async function getIntegrationActivity(name: string) {
+  return (await axiosClient.get(`${ROUTE_URL}${name}/activity`)).data as IntegrationActivity;
+}
+
+/**
+ * Where to send the browser to start an OAuth connect; the state is signed server-side.
+ * `options` are choices that shape the consent request — Zoho's `products`.
+ */
+export async function getOAuthAuthorizeUrl(name: string, options?: Record<string, string>) {
+  return (await axiosClient.get(`${ROUTE_URL}${name}/oauth/authorize-url`, { params: options }))
+    .data as {
+    url: string;
+  };
+}
+
+export async function finishOAuthConnect(name: string, data: { code: string; state: string }) {
+  return (await axiosClient.post(`${ROUTE_URL}${name}/oauth/callback`, data)).data as {
+    success: true;
+  };
+}
+
+/** Merged into the stored credential on the server; `orderEvent: null` clears it. */
+export async function savePetpoojaSettings(data: {
+  restaurantId?: string;
+  orderEvent?: PetpoojaOrderEvent | null;
+}) {
+  return (await axiosClient.put(`${ROUTE_URL}petpooja/settings`, data)).data as { success: true };
+}
+
+/** The org's own order webhook URL, issued on first ask; `rotate` replaces it. */
+export async function getPetpoojaWebhookUrl(rotate = false) {
+  return (await axiosClient.post(`${ROUTE_URL}petpooja/webhook-url`, { rotate })).data as {
+    url: string;
+  };
 }
 
 export async function deleteZapierTriggerHook(data: RequestPayload) {
   return (await axiosClient.delete(`${ROUTE_URL}zapier-hook`, { data })).data;
 }
 
-export async function connectZoho(code: string, orgId: string) {
-  const res = await axiosClient.post(
-    `/integration/external/zoho/auth`,
-    { code },
-    {
-      params: {
-        orgId,
-      },
-    },
-  );
-
-  return res.data;
+export interface AmeliaConnectFields {
+  /** The WordPress site; the API works out Amelia's API address from it. */
+  baseUrl: string;
+  /** Blank keeps the saved key. */
+  apiKey: string;
+  serviceId: number;
 }
+
+/**
+ * Saves Amelia through the shared pasted-key connect, which first runs a slot
+ * search with the details and refuses them if Amelia does.
+ */
+export const connectAmelia = async (fields: AmeliaConnectFields) => {
+  const response = await axiosClient.post(`${ROUTE_URL}amelia/connect`, {
+    baseUrl: fields.baseUrl,
+    apiKey: fields.apiKey,
+    serviceId: String(fields.serviceId),
+  });
+  return response.data as { baseUrl: string; serviceId: number };
+};

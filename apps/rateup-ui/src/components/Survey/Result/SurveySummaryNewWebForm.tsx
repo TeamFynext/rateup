@@ -1,6 +1,8 @@
 import { IconStar, IconThumbDownFilled, IconThumbUpFilled } from "@tabler/icons-react";
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
+import { Badge } from "@/components/ui/badge.tsx";
 import { QuestionType, WaQuestions } from "@/types/enums.ts";
 import type { AnyQuestionType } from "@/utils/response.ts";
 import {
@@ -25,6 +27,7 @@ const SurveyResultByType = ({
   chartData: ChartDatum[];
   version?: string | number;
 }) => {
+  const { t } = useTranslation();
   const isSmiley = questionType === QuestionType.Smiley;
   const responseArray =
     version === 2 && isSmiley
@@ -34,8 +37,6 @@ const SurveyResultByType = ({
   const getResObj = (val: string | number) =>
     chartData.find((res) => res?.choice?.toString() === val?.toString());
 
-  const getVoteText = (count: number) => (count > 1 ? "votes" : "vote");
-
   const getMostVotedChoice = () => {
     const maxCount = Math.max(...chartData?.map((c) => c.count));
     return chartData.find((c) => c.count === maxCount)?.choice;
@@ -43,52 +44,53 @@ const SurveyResultByType = ({
 
   const mostVotedChoice = getMostVotedChoice();
 
+  /** One answer: its label, its votes, and a bar in the answer's own scale colour. */
   const renderStatRow = ({
     label,
-    value,
+    value: res,
     isMostVoted,
     badge = null,
   }: {
     label: ReactNode;
-    value: ReactNode;
+    value: ChartDatum | undefined;
     isMostVoted?: boolean;
     badge?: ReactNode;
-  }) => (
-    <div
-      key={label?.toString()}
-      className={`flex justify-start gap-4 items-center rounded-md px-3 py-2`}
-    >
-      <div className="flex items-center gap-4">
-        {badge ? (
-          <div
-            className={`min-w-[36px] h-[28px] px-2 border border-[#004F98] text-[#004F98] rounded-sm text-sm font-semibold flex justify-center items-center
-           ${isMostVoted && "bg-[#C4D7F5]"}`}
-          >
-            {badge}
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 text-sm text-[#343A40] font-medium">{label}</div>
-        )}
-      </div>
-      <div className="flex items-center gap-2">
-        <span className="bg-[#F5F5F5] px-2 py-0.5 rounded-full text-xs font-semibold text-[#343A40]">
-          {value}
-        </span>
-        {isMostVoted && (
-          <span className="text-[#004F98] bg-[#C4D7F5] text-[10px] px-2 py-0.5 rounded-full font-semibold">
-            Most Voted
+  }) => {
+    const percentage = Number(res?.percentage ?? 0);
+    const color = typeof res?.fill === "string" ? res.fill : "var(--chart-2)";
+    return (
+      <div key={label?.toString()} className="flex flex-col gap-1.5">
+        <div className="flex items-center justify-between gap-3 text-sm">
+          <span className="flex min-w-0 items-center gap-2 font-medium text-foreground">
+            <span className="truncate">{badge ?? label}</span>
+            {isMostVoted && (
+              <Badge variant="secondary" className="shrink-0">
+                {t("Most voted")}
+              </Badge>
+            )}
           </span>
-        )}
+          <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+            {t("{count, plural, one {# vote} other {# votes}}", { count: res?.count ?? 0 })}
+            <span className="ml-2 font-medium text-foreground">{percentage}%</span>
+          </span>
+        </div>
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+          <div
+            className="h-full rounded-full"
+            style={{ width: `${percentage}%`, backgroundColor: color }}
+          />
+        </div>
       </div>
+    );
+  };
+
+  const renderAll = (renderFn: () => ReactNode) => (
+    <div className="flex max-h-125 flex-col gap-4 overflow-y-auto overscroll-contain pr-1">
+      {renderFn()}
     </div>
   );
 
-  const renderAll = (renderFn: () => ReactNode) => (
-    <div className="flex max-h-[500px] flex-col gap-2 overflow-scroll">{renderFn()}</div>
-  );
-
-  const getValue = (res: ChartDatum | undefined) =>
-    res ? `${res.count} ${getVoteText(res.count)} (${res.percentage}%)` : "0 vote (0.00%)";
+  const getValue = (res: ChartDatum | undefined) => res;
 
   // --- Types ---
   switch (questionType) {
@@ -134,7 +136,7 @@ const SurveyResultByType = ({
               label: (
                 <div className="flex items-center gap-0.5">
                   {Array.from({ length: Number(item.choice) }, (_, i) => (
-                    <IconStar key={i} className="size-4 fill-blue-500 text-blue-500" />
+                    <IconStar key={i} className="size-4 fill-amber-400 text-amber-400" />
                   ))}
                 </div>
               ),
@@ -155,9 +157,9 @@ const SurveyResultByType = ({
           const isMost = item.choice === mostVotedChoice;
           const icon =
             item.choice === "Like" ? (
-              <IconThumbUpFilled color="#00BF83" />
+              <IconThumbUpFilled className="size-4 text-primary" />
             ) : (
-              <IconThumbDownFilled color="#FF6161" />
+              <IconThumbDownFilled className="size-4 text-destructive" />
             );
           if (version === 2) {
             return renderStatRow({

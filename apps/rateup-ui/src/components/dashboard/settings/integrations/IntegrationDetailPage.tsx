@@ -52,6 +52,17 @@ const GetLeadPage = lazy(() =>
     default: m.GetLead,
   })),
 );
+// Hidden until WooCommerce and HubSpot launch — uncomment to show.
+// const WooCommercePage = lazy(() =>
+//   import("@/components/app&services/WooCommerce.tsx").then((m) => ({
+//     default: m.WooCommerce,
+//   })),
+// );
+// const HubSpotPage = lazy(() =>
+//   import("@/components/app&services/HubSpot.tsx").then((m) => ({
+//     default: m.HubSpot,
+//   })),
+// );
 const ApiServicePage = lazy(() =>
   import("@/components/ExternalApi/ApiAccessKey.tsx").then((m) => ({
     default: m.default,
@@ -77,6 +88,8 @@ const INTEGRATION_PAGES: Record<string, React.ComponentType> = {
   zapier: ZapierPage,
   zoho: ZohoPage,
   getlead: GetLeadPage,
+  // woocommerce: WooCommercePage,
+  // hubspot: HubSpotPage,
   apiservice: ApiServicePage,
   widget: WidgetPage,
   webhook: WebhookPage,

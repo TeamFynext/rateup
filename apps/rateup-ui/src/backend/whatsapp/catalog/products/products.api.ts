@@ -39,7 +39,9 @@ export interface CatalogProductRow {
 export interface ShopifyAvailableProduct {
   retailer_id: string;
   title: string;
-  sale_price?: string;
+  price?: number | string;
+  /** Shopify always sends one; WooCommerce only while the product is on sale. */
+  sale_price?: number | string;
   currencyCode?: string;
   availability?: string;
   image?: Array<{ url: string }>;
@@ -84,6 +86,19 @@ export async function importShopifyProducts(
   items: RequestPayload[],
 ): Promise<{ imported: number }> {
   return (await axiosClient.post(`${baseUrl}/import-shopify/${catalogId}`, { items })).data;
+}
+
+/** The WooCommerce twin of `getShopifyAvailableProducts`: products not yet in this catalog. */
+export async function getWooAvailableProducts(catalogId: string) {
+  return (await axiosClient.get(`${baseUrl}/woocommerce-available/${catalogId}`))
+    .data as ShopifyAvailableProduct[];
+}
+
+export async function importWooProducts(
+  catalogId: string,
+  items: RequestPayload[],
+): Promise<{ imported: number }> {
+  return (await axiosClient.post(`${baseUrl}/import-woocommerce/${catalogId}`, { items })).data;
 }
 
 export async function createShopifyProduct(

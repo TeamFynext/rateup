@@ -1,6 +1,6 @@
-import { IconPlug, IconPlus } from "@tabler/icons-react";
+import { IconPlug, IconPlus, IconSearch } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useIntegrationStatuses } from "@/backend/appsIntegration/integration.query";
@@ -14,10 +14,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
+import { usePermissions } from "@/hooks/usePermission.ts";
+import { cn } from "@/lib/utils";
 
 import { IntegrationPlate } from "./IntegrationPlate.tsx";
-import { ALL_INTEGRATIONS, type IntegrationConfig } from "./integrations.config.ts";
+import {
+  ALL_INTEGRATIONS,
+  categoryLabel,
+  INTEGRATION_CATEGORIES,
+  type IntegrationConfig,
+} from "./integrations.config.ts";
 
 /**
  * One integration, as a card. The whole card is the hit area, but the only control is the
@@ -26,11 +34,14 @@ import { ALL_INTEGRATIONS, type IntegrationConfig } from "./integrations.config.
 function IntegrationCard({
   config,
   connected,
+  failing = false,
   action,
   onOpen,
 }: Readonly<{
   config: IntegrationConfig;
   connected: boolean;
+  /** Connected, but syncs have been failing since the last one that worked. */
+  failing?: boolean;
   action: string;
   onOpen: () => void;
 }>) {
@@ -48,16 +59,24 @@ function IntegrationCard({
       </CardContent>
       <CardContent className="flex flex-col gap-3">
         {isOwn ? null : (
-          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <p
+            className={cn(
+              "flex items-center gap-1.5 text-xs",
+              failing ? "text-amber-700 dark:text-amber-500" : "text-muted-foreground",
+            )}
+          >
             <span
               aria-hidden="true"
-              className={
-                connected
-                  ? "size-1.5 shrink-0 rounded-full bg-green-600 dark:bg-green-500"
-                  : "size-1.5 shrink-0 rounded-full bg-muted-foreground/40"
-              }
+              className={cn(
+                "size-1.5 shrink-0 rounded-full",
+                !connected
+                  ? "bg-muted-foreground/40"
+                  : failing
+                    ? "bg-amber-500"
+                    : "bg-green-600 dark:bg-green-500",
+              )}
             />
-            {connected ? t("Connected") : t("Not connected")}
+            {!connected ? t("Not connected") : failing ? t("Needs attention") : t("Connected")}
           </p>
         )}
         <Button
@@ -73,7 +92,20 @@ function IntegrationCard({
   );
 }
 
-/** The picker behind "Add integration": everything external that is not connected yet. */
+/** Whether a catalogue entry matches what was typed into the picker's search. */
+function matches(config: IntegrationConfig, category: string, query: string) {
+  const needle = query.trim().toLowerCase();
+  if (!needle) return true;
+  return [config.name, config.description, category, ...(config.keywords ?? [])].some((text) =>
+    text.toLowerCase().includes(needle),
+  );
+}
+
+/**
+ * The picker behind "Add integration": everything external that is not connected yet,
+ * grouped by what it is for and searchable, since that is how an admin looks for one — "our
+ * CRM", "the store" — more often than by the vendor's name.
+ */
 function AddIntegrationDialog({
   open,
   onOpenChange,
@@ -86,9 +118,31 @@ function AddIntegrationDialog({
   onPick: (id: string) => void;
 }>) {
   const { t } = useTranslation();
+  const [query, setQuery] = useState("");
+
+  const groups = useMemo(
+    () =>
+      INTEGRATION_CATEGORIES.map((category) => {
+        const label = categoryLabel(t, category);
+        return {
+          category,
+          label,
+          items: available.filter(
+            (config) => config.category === category && matches(config, label, query),
+          ),
+        };
+      }).filter((group) => group.items.length > 0),
+    [available, query, t],
+  );
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        onOpenChange(next);
+        if (!next) setQuery("");
+      }}
+    >
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{t("Add an integration")}</DialogTitle>
@@ -102,23 +156,53 @@ function AddIntegrationDialog({
             {t("Everything available is already connected.")}
           </p>
         ) : (
-          <div className="grid max-h-[60vh] grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
-            {available.map((config) => (
-              <button
-                key={config.id}
-                type="button"
-                onClick={() => onPick(config.id)}
-                className="flex items-start gap-3 rounded-lg border border-border p-3 text-left transition-colors hover:border-primary hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-              >
-                <IntegrationPlate icon={config.icon} size="sm" />
-                <div className="flex min-w-0 flex-col gap-0.5">
-                  <span className="text-sm font-medium">{config.name}</span>
-                  <span className="text-xs leading-relaxed text-muted-foreground">
-                    {config.description}
-                  </span>
-                </div>
-              </button>
-            ))}
+          <div className="flex flex-col gap-4">
+            <InputGroup>
+              <InputGroupAddon>
+                <IconSearch />
+              </InputGroupAddon>
+              <InputGroupInput
+                autoFocus
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder={t("Search by name or what it does")}
+                aria-label={t("Search integrations")}
+              />
+            </InputGroup>
+
+            <div className="flex max-h-[55vh] flex-col gap-5 overflow-y-auto pr-1">
+              {groups.length === 0 && (
+                <p className="py-6 text-center text-sm text-muted-foreground">
+                  {t("No integration matches “{query}”.", { query: query.trim() })}
+                </p>
+              )}
+
+              {groups.map((group) => (
+                <section key={group.category} className="flex flex-col gap-2">
+                  <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                    {group.label}
+                  </h3>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    {group.items.map((config) => (
+                      <button
+                        key={config.id}
+                        type="button"
+                        onClick={() => onPick(config.id)}
+                        className="flex items-start gap-3 rounded-lg border border-border p-3 text-left transition-colors hover:border-primary hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                      >
+                        <IntegrationPlate icon={config.icon} size="sm" />
+                        <div className="flex min-w-0 flex-col gap-0.5">
+                          <span className="text-sm font-medium">{config.name}</span>
+                          <span className="text-xs leading-relaxed text-muted-foreground">
+                            {config.description}
+                          </span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
           </div>
         )}
       </DialogContent>
@@ -132,11 +216,16 @@ export function IntegrationsPage() {
   const { data: webhook } = useWebhook();
   const { data: integrationStatuses = [], isLoading: statusesLoading } = useIntegrationStatuses();
   const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const permissions = usePermissions();
+  // Connecting is a manage action; anyone who can read may still open what is connected.
+  const canManage = permissions.isPending || permissions.can("integrations.manage");
+
+  const statusOf = (integrationId: string) =>
+    integrationStatuses.find((s) => s.name === integrationId);
 
   const isConnected = (integrationId: string): boolean => {
     if (integrationId === "webhook") return Boolean(webhook?.url);
-    const status = integrationStatuses.find((s: { name?: string }) => s.name === integrationId);
-    return Boolean(status?.isConnected);
+    return Boolean(statusOf(integrationId)?.isConnected);
   };
 
   const openIntegration = (id: string) => {
@@ -149,12 +238,12 @@ export function IntegrationsPage() {
   const connectedExternal = external.filter((config) => isConnected(config.id));
   const availableExternal = external.filter((config) => !isConnected(config.id));
 
-  const addButton = (
+  const addButton = canManage ? (
     <Button onClick={() => setIsPickerOpen(true)}>
       <IconPlus className="size-4" />
       {t("Add integration")}
     </Button>
-  );
+  ) : null;
 
   return (
     <div className="mx-auto w-full max-w-265 space-y-8 pb-2">
@@ -207,7 +296,11 @@ export function IntegrationsPage() {
               <div className="space-y-1">
                 <p className="text-sm font-medium">{t("No external services connected")}</p>
                 <p className="text-sm text-muted-foreground">
-                  {t("Connect a store, a CRM or a spreadsheet to move data in and out of RateUp.")}
+                  {canManage
+                    ? t(
+                        "Connect a store, a CRM or a spreadsheet to move data in and out of RateUp.",
+                      )
+                    : t("Ask an admin to connect a store, a CRM or a spreadsheet.")}
                 </p>
               </div>
               {addButton}
@@ -222,7 +315,8 @@ export function IntegrationsPage() {
                 key={config.id}
                 config={config}
                 connected
-                action={t("Manage")}
+                failing={(statusOf(config.id)?.consecutiveFailures ?? 0) > 0}
+                action={canManage ? t("Manage") : t("View")}
                 onOpen={() => openIntegration(config.id)}
               />
             ))}

@@ -1,7 +1,8 @@
-import type { ComponentType, ReactNode } from "react";
+import type { ComponentType, KeyboardEvent, MouseEvent, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import { BackLink } from "@/components/common/back-link.tsx";
+import { usePermissions } from "@/hooks/usePermission.ts";
 import { cn } from "@/lib/utils";
 
 import { IntegrationPlate } from "./IntegrationPlate.tsx";
@@ -40,10 +41,33 @@ function ConnectionStatus({
   );
 }
 
+/** Base UI's switches and checkboxes are spans with a role, which a disabled fieldset misses. */
+const NON_NATIVE_CONTROL = '[role="switch"],[role="checkbox"],[role="radio"],[role="slider"]';
+
+/**
+ * Stops a non-native control inside a read-only page from toggling. Runs in the capture
+ * phase, so the control's own handler never sees the event.
+ */
+function blockNonNativeControl(event: MouseEvent | KeyboardEvent) {
+  if ("key" in event && event.key !== " " && event.key !== "Enter") return;
+  const control = (event.target as HTMLElement).closest(NON_NATIVE_CONTROL);
+  if (control && !(control instanceof HTMLButtonElement || control instanceof HTMLInputElement)) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+}
+
 /**
  * The frame all eleven integration pages sit in: the same width as Settings › Account, the
  * same header, the same rhythm. A page passes its own cards as `children` and sets no
  * padding, width or height of its own.
+ *
+ * It is also where `integrations.manage` is enforced on screen. Anyone with
+ * `integrations.read` may open a partner integration's page, but without manage every
+ * control on it is disabled through a `<fieldset disabled>`, so a page need not check the
+ * permission control by control — and a page added later is covered without remembering to.
+ * The API refuses the writes regardless; this is so the page does not offer them. RateUp's
+ * own services (`own`) have their own permissions and are left to their pages.
  */
 export function IntegrationShell({
   icon,
@@ -64,6 +88,10 @@ export function IntegrationShell({
   children: ReactNode;
 }>) {
   const { t } = useTranslation();
+  const permissions = usePermissions();
+  // Not read-only while the permissions are still loading: a page that greys out and then
+  // springs back to life reads as broken.
+  const readOnly = !own && !permissions.isPending && !permissions.can("integrations.manage");
 
   return (
     <div className="mx-auto flex w-full max-w-265 flex-col gap-6 pb-2">
@@ -80,11 +108,33 @@ export function IntegrationShell({
               )}
             </div>
           </div>
-          {action}
+          {action ? (
+            <fieldset disabled={readOnly} className="min-w-0">
+              {action}
+            </fieldset>
+          ) : null}
         </div>
+
+        {readOnly && (
+          <p className="text-sm text-muted-foreground">
+            {t("You can view this integration. Ask an admin to connect it or change its settings.")}
+          </p>
+        )}
       </div>
 
-      <div className="flex flex-col gap-4">{children}</div>
+      {/* `min-w-0`: a fieldset's default minimum width is its content's, which would stop
+          wide cards shrinking to the page. */}
+      <fieldset
+        disabled={readOnly}
+        onClickCapture={readOnly ? blockNonNativeControl : undefined}
+        onKeyDownCapture={readOnly ? blockNonNativeControl : undefined}
+        className={cn(
+          "flex min-w-0 flex-col gap-4",
+          readOnly && "[&_[role=checkbox]]:opacity-50 [&_[role=switch]]:opacity-50",
+        )}
+      >
+        {children}
+      </fieldset>
     </div>
   );
 }

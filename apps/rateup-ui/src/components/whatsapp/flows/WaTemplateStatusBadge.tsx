@@ -1,18 +1,29 @@
-import { Badge } from "@/components/ui/badge.tsx";
+import { useTranslation } from "react-i18next";
+
+import { DotBadge } from "@/components/dashboard/analytics/kit/StatusBadges.tsx";
 import { WaFlowStatus } from "@/types/enums.ts";
 
-interface WaFlowStatusBadgleProps {
-  status: WaFlowStatus;
-}
-const AMBER = "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-500";
-const RED = "bg-destructive/10 text-destructive";
-const classMap = {
-  [WaFlowStatus.PUBLISHED]: "bg-green-600/10 text-green-600 dark:text-green-500",
-  [WaFlowStatus.DRAFT]: AMBER,
-  [WaFlowStatus.BLOCKED]: RED,
-  [WaFlowStatus.DEPRECATED]: RED,
-  [WaFlowStatus.THROTTLED]: AMBER,
+const DOT: Record<WaFlowStatus, string> = {
+  [WaFlowStatus.PUBLISHED]: "bg-green-500",
+  [WaFlowStatus.DRAFT]: "bg-muted-foreground/50",
+  [WaFlowStatus.DEPRECATED]: "bg-muted-foreground/50",
+  [WaFlowStatus.THROTTLED]: "bg-amber-500",
+  [WaFlowStatus.BLOCKED]: "bg-destructive",
 };
-export default function WaFlowStatusBadge({ status }: WaFlowStatusBadgleProps) {
-  return <Badge className={classMap[status]}>{status}</Badge>;
+
+export default function WaFlowStatusBadge({ status }: Readonly<{ status: WaFlowStatus }>) {
+  const { t } = useTranslation();
+  const labels: Record<WaFlowStatus, string> = {
+    [WaFlowStatus.PUBLISHED]: t("Active"),
+    [WaFlowStatus.DRAFT]: t("Draft"),
+    [WaFlowStatus.DEPRECATED]: t("Deprecated"),
+    [WaFlowStatus.THROTTLED]: t("Throttled"),
+    [WaFlowStatus.BLOCKED]: t("Blocked"),
+  };
+  return (
+    <DotBadge
+      dotClassName={DOT[status] ?? "bg-muted-foreground/50"}
+      label={labels[status] ?? status}
+    />
+  );
 }

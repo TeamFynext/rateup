@@ -316,9 +316,13 @@ export function CustomerPage({ search }: Readonly<{ search: CustomersSearch }>) 
                     <IconFileText className="w-4 h-4 mr-2" />
                     {t("Export as CSV")}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => exportMutation.mutate("excel")}>
+                  <DropdownMenuItem onClick={() => exportMutation.mutate("xlsx")}>
                     <IconFileSpreadsheet className="w-4 h-4 mr-2" />
                     {t("Export as Excel")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => exportMutation.mutate("ods")}>
+                    <IconFileSpreadsheet className="w-4 h-4 mr-2" />
+                    {t("Export as OpenDocument (ODS)")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

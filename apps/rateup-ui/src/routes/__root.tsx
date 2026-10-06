@@ -9,16 +9,11 @@ import {
   Outlet,
   redirect,
   Scripts,
-  useRouterState,
 } from "@tanstack/react-router";
 import { Suspense } from "react";
-import { useTranslation } from "react-i18next";
 
 import ErrorPage from "@/components/error.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-
-import "keen-slider/keen-slider.min.css";
-
 import Error from "@/components/not-found.tsx";
 import { ThemeProvider } from "@/components/theme/theme-provider.tsx";
 import { Toaster } from "@/components/ui/sonner.tsx";
@@ -200,20 +195,11 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 });
 
 function RootLayout() {
-  const { i18n } = useTranslation();
-  /* The marketing site is written in English and is not translated — only the app is. Letting
-     `lang` follow the i18n language there would tell a crawler the page is (say) Hindi while the
-     copy stays English, which is worse than saying nothing. Hreflang belongs here too, but only
-     once locale-prefixed URLs exist; today there is one URL per page. */
-  const isMarketing = useRouterState({
-    select: (state) => state.matches.some((match) => match.routeId === "/(marketing)"),
-  });
+  /* The marketing site is written in English and is not translated, so the shell says `en`; the
+     app moves `lang` to its own language once `AppProviders` loads the translations. Hreflang
+     belongs here too, but only once locale-prefixed URLs exist; today there is one URL per page. */
   return (
-    <html
-      lang={isMarketing ? "en" : i18n.language}
-      suppressHydrationWarning
-      className={cn("h-full antialiased")}
-    >
+    <html lang="en" suppressHydrationWarning className={cn("h-full antialiased")}>
       <head>
         <HeadContent />
       </head>

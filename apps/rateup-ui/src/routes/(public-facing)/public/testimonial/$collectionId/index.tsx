@@ -1,7 +1,6 @@
 import { createFileRoute, useSearch } from "@tanstack/react-router";
 
 import type { CollectionTestimonial } from "@/backend/testimonials/testimonial.api";
-import { getAllTestimonialsByCollection } from "@/backend/testimonials/testimonial.api";
 import TestimonialCard from "@/components/testimonial/TestimonialCard.tsx";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
@@ -9,7 +8,11 @@ import { rateupLogoOg } from "@/utils/constants.ts";
 
 export const Route = createFileRoute("/(public-facing)/public/testimonial/$collectionId/")({
   component: Collections,
-  loader: ({ params }) => getAllTestimonialsByCollection(params.collectionId),
+  // Imported here: route options land in the client entry, and the API client is axios.
+  loader: async ({ params }) =>
+    (await import("@/backend/testimonials/testimonial.api")).getAllTestimonialsByCollection(
+      params.collectionId,
+    ),
   head: ({ params, loaderData }) => {
     const collectionName = loaderData?.name ?? "";
     const collectionId = loaderData?.id ?? params.collectionId;

@@ -1,12 +1,14 @@
 import { z } from "zod";
 
 import { MessagePlatform, ShopifyEvents } from "@/types/enums.ts";
+import { wooEventData, type WooEvent } from "@/utils/constants.ts";
 
 /** The `value`s of an option list, as the non-empty tuple `z.enum` expects. */
 const optionValues = (options: readonly { value: string }[]) =>
   options.map((option) => option.value) as [string, ...string[]];
 
 const SHOPIFY_TRIGGER_EVENTS = Object.values(ShopifyEvents) as [ShopifyEvents, ...ShopifyEvents[]];
+const WOO_TRIGGER_EVENTS = wooEventData.map((event) => event.value) as [WooEvent, ...WooEvent[]];
 
 // Single source of truth for condition fields
 export const CONDITION_FIELDS = [
@@ -82,6 +84,12 @@ const TRIGGER_EVENTS = [
     value: "SHOPIFY_EVENT",
     platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
   },
+  // Hidden until WooCommerce and HubSpot launch — uncomment to show.
+  // {
+  //   label: "WooCommerce Event",
+  //   value: "WOOCOMMERCE_EVENT",
+  //   platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
+  // },
   {
     label: "Instagram Comment (Private Reply)",
     value: "INSTAGRAM_COMMENT",
@@ -90,6 +98,11 @@ const TRIGGER_EVENTS = [
   {
     label: "Instagram Story Mention",
     value: "INSTAGRAM_STORY_MENTION",
+    platforms: ["INSTAGRAM"],
+  },
+  {
+    label: "ig.me Link Opened",
+    value: "INSTAGRAM_REFERRAL",
     platforms: ["INSTAGRAM"],
   },
 ] as const;
@@ -109,10 +122,21 @@ export function getTriggerEventsForPlatform(platform: Platform, current?: string
   );
 }
 
+/** A trigger's display name; an event missing from the list falls back to its raw value. */
+export function getTriggerEventLabel(value: string): string {
+  return TRIGGER_EVENTS.find((e) => e.value === value)?.label ?? value;
+}
+
 /** Condition fields, hiding a legacy one unless it is the field already chosen. */
 export function getConditionFields(current?: string) {
   return CONDITION_FIELDS.filter((f) => !("legacy" in f && f.legacy) || f.value === current);
 }
+
+export const INSTAGRAM_COMMENT_SOURCES = [
+  { label: "Posts & reels", value: "POSTS" },
+  { label: "Live videos", value: "LIVE" },
+  { label: "Both", value: "ALL" },
+] as const;
 
 export const INSTAGRAM_SCOPE_OPTIONS = [
   { label: "All posts", value: "ALL" },
@@ -302,6 +326,9 @@ const ruleOptionsSchema = z.object({
     }),
   // Shopify-specific options
   shopifyProductIds: z.array(z.string()).default([]),
+  // WooCommerce-specific options
+  wooEvent: z.enum(WOO_TRIGGER_EVENTS).optional(),
+  wooProductIds: z.array(z.string()).default([]),
   // Abandoned checkouts; the API applies 60 minutes and true when these are unset.
   abandonedCheckoutDelayMinutes: z
     .number()
@@ -313,6 +340,20 @@ const ruleOptionsSchema = z.object({
   // Instagram-specific options
   instagramScope: z.enum(["ALL", "SPECIFIC"]).default("ALL"),
   instagramPostIds: z.array(z.string()).default([]),
+  instagramCommentSource: z.enum(["ALL", "POSTS", "LIVE"]).optional(),
+  // Mirrors the API's check in wa_rule.schema.ts.
+  // Meta's own limit for an ig.me ref.
+  instagramRef: z
+    .string()
+    .trim()
+    .max(2083)
+    .regex(/^[A-Za-z0-9_=-]*$/, "Use letters, numbers, - _ and = only")
+    .optional(),
+  instagramPublicReplies: z
+    .array(z.string().trim().max(2200, "Instagram comments stop at 2200 characters"))
+    .max(10)
+    .default([])
+    .transform((replies) => replies.filter((reply) => reply.length > 0)),
 });
 
 const createRuleBaseSchema = z.object({
@@ -350,8 +391,11 @@ const createRuleBaseSchema = z.object({
       businessHoursId: undefined,
     },
     shopifyProductIds: [],
+    wooEvent: undefined,
+    wooProductIds: [],
     instagramScope: "ALL",
     instagramPostIds: [],
+    instagramPublicReplies: [],
   }),
 });
 
@@ -371,6 +415,14 @@ export const createRuleSchema = createRuleBaseSchema.superRefine((data, ctx) => 
       code: "custom",
       path: ["options", "shopifyEvent"],
       message: "Select a Shopify event",
+    });
+  }
+
+  if (data.triggerEvent === "WOOCOMMERCE_EVENT" && !data.options?.wooEvent) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["options", "wooEvent"],
+      message: "Select a WooCommerce order status",
     });
   }
 

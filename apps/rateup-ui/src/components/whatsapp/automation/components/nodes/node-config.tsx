@@ -17,6 +17,7 @@ import {
   IconPlayerStop,
   IconSquareRounded,
   IconUser,
+  IconUserCheck,
   IconUsers,
   IconVideo,
 } from "@tabler/icons-react";
@@ -72,6 +73,7 @@ export const NODE_VISUALS: Record<string, NodeVisual> = {
   instagramStoryReplyNode: { color: "#a92ed1", icon: <IconMessage size={ICON_SIZE} /> },
   instagramProductTemplateNode: { color: "#c0e250", icon: <IconBuildingStore size={ICON_SIZE} /> },
   instagramIceBreakerNode: { color: "#6e92ed", icon: <IconAddressBook size={ICON_SIZE} /> },
+  instagramFollowCheckNode: { color: "#d6336c", icon: <IconUserCheck size={ICON_SIZE} /> },
 };
 
 const FALLBACK: NodeVisual = { color: "#64748b", icon: <IconSquareRounded size={ICON_SIZE} /> };
@@ -116,6 +118,7 @@ export const NODE_LABELS: Record<string, string> = {
   instagramStoryReplyNode: "Story Reply",
   instagramProductTemplateNode: "Product Template",
   instagramIceBreakerNode: "Ice Breakers",
+  instagramFollowCheckNode: "Follow Check",
 };
 
 export function getNodeLabel(type?: string): string {

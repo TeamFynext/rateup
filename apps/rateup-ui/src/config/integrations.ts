@@ -1,3 +1,5 @@
+import { imagesPath } from "@/utils/constants";
+
 /**
  * Registry for the `/integrations` cluster.
  *
@@ -8,8 +10,6 @@
  * as plain tiles rather than links, so the hub never ships a link to a 404. Adding a page =
  * flip the flag, add a `pageMetadata` entry and add the route.
  */
-import { imagesPath } from "@/utils/constants";
-
 export const INTEGRATIONS_BASE_PATH = "/integrations";
 
 export interface IntegrationDefinition {
@@ -33,7 +33,7 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
     role: "Orders & customers",
     description:
       "One-click install from the Shopify App Store. Orders and customers sync both ways, loyalty points post automatically, and abandoned carts and COD orders get chased on WhatsApp.",
-    logo: `${imagesPath}/landing/logos/shopyfy.png`,
+    logo: `${imagesPath}/brand/partners/shopyfy.webp`,
     page: true,
     marketplaceUrl: "https://apps.shopify.com/rateup",
   },
@@ -41,9 +41,12 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
     slug: "woocommerce",
     name: "WooCommerce",
     role: "Orders & customers",
+    // Hidden until WooCommerce and HubSpot launch — uncomment to show. (the launch copy)
+    // description:
+    //   "Connect your store in a few clicks: WhatsApp messages on order status changes, loyalty points on completed orders, rewards as checkout coupons, and your catalog on WhatsApp.",
     description:
       "Connect your WooCommerce store to sync orders and customers, trigger post-purchase feedback and award loyalty points on every paid order.",
-    logo: `${imagesPath}/landing/logos/woo.png`,
+    logo: `${imagesPath}/brand/partners/woo.webp`,
     page: false,
   },
   {
@@ -52,7 +55,7 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
     role: "POS & billing",
     description:
       "Restaurant billing that talks to your loyalty program. Points are awarded at the counter and redeemed against the bill, with no extra device for the cashier.",
-    logo: `${imagesPath}/landing/logos/petlogo.png`,
+    logo: `${imagesPath}/brand/partners/petlogo.webp`,
     page: false,
   },
   {
@@ -61,16 +64,26 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
     role: "CRM sync",
     description:
       "Keep contacts, deals and conversation history in step between Zoho CRM and the RateUp inbox.",
-    logo: `${imagesPath}/landing/logos/zoho.png`,
+    logo: `${imagesPath}/brand/partners/zoho.webp`,
     page: false,
   },
+  // Hidden until WooCommerce and HubSpot launch — uncomment to show. (needs a HubSpot logo on the image CDN first)
+  // {
+  //   slug: "hubspot",
+  //   name: "HubSpot",
+  //   role: "CRM sync",
+  //   description:
+  //     "Contacts in step both ways, Leads board leads as HubSpot deals that move with them, and closed WhatsApp conversations and survey responses logged on the contact.",
+  //   logo: `${imagesPath}/landing/logos/hubspot.png`,
+  //   page: true,
+  // },
   {
     slug: "zapier",
     name: "Zapier",
     role: "3,000+ apps",
     description:
       "Trigger WhatsApp campaigns, loyalty events and feedback flows from any of the 3,000+ apps Zapier connects to.",
-    logo: `${imagesPath}/landing/logos/zapier.png`,
+    logo: `${imagesPath}/brand/partners/zapier.webp`,
     page: false,
   },
   {

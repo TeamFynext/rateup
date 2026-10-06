@@ -14,6 +14,7 @@ import {
   createLoyaltyCustomer,
   deleteLoyaltyCustomer,
   exportCustomers,
+  type CustomerExportFormat,
   getAllCustomers,
   getLoyaltyCustomerByContactId,
   getLoyaltyCustomerById,
@@ -156,13 +157,12 @@ export const useImportCSVCustomerMutation = () => {
 
 export const useExportCustomersMutation = () => {
   return useMutation({
-    mutationFn: (format: "csv" | "excel" = "excel") => exportCustomers(format),
-    onSuccess: (data, variables = "excel") => {
+    mutationFn: (format: CustomerExportFormat = "xlsx") => exportCustomers(format),
+    onSuccess: (data, format = "xlsx") => {
       const url = window.URL.createObjectURL(new Blob([data]));
       const link = document.createElement("a");
       link.href = url;
-      const extension = variables === "csv" ? "csv" : "xlsx";
-      link.setAttribute("download", `customers-${new Date().toISOString()}.${extension}`);
+      link.setAttribute("download", `customers-${new Date().toISOString()}.${format}`);
       document.body.appendChild(link);
       link.click();
       link.parentNode?.removeChild(link);

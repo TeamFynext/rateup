@@ -6,10 +6,12 @@ import {
   IconUsers,
 } from "@tabler/icons-react";
 import { useContext, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 import { useResponseCount } from "@/backend/surveys/response/response.query";
 import { useGetSurveyStats } from "@/backend/surveys/surveys.query";
-import { Card } from "@/components/ui/card.tsx";
+import { StatTile } from "@/components/common/StatTile.tsx";
+import { DotBadge } from "@/components/dashboard/analytics/kit/StatusBadges.tsx";
 import SurveyContext from "@/context/SurveyContext.ts";
 
 const SurveyStatsWebForm = ({ surveyId }: { surveyId: string }) => {
@@ -49,101 +51,48 @@ const SurveyStatsWebForm = ({ surveyId }: { surveyId: string }) => {
     );
   }, [surveyStats, filterTeams]);
 
-  const { responseRatePercentage, responseRateStatus, responseRateColor } = getResponseRateInfo(
-    responseCount,
-    visited,
+  const { t } = useTranslation();
+  const rate = getResponseRateInfo(responseCount, visited);
+  const rateLabels = { Great: t("Great"), Good: t("Good"), Low: t("Low"), "Too Low": t("Too Low") };
+  const count = (value: number | undefined) =>
+    value === undefined ? null : value.toLocaleString();
+  const icon = (Icon: typeof IconUsers) => (
+    <Icon className="size-4 text-muted-foreground" aria-hidden />
   );
 
-  const stats = [
-    {
-      title: "Total Responses",
-      value: responseCount ?? 0,
-      badge: null as string | null,
-      icon: <IconMessageCircle className="text-[#2B82DE]" size={24} />,
-    },
-    {
-      title: "Started",
-      value: started ?? "NA",
-      badge: null,
-      icon: <IconPlayerPlay className="text-[#2B82DE]" size={24} />,
-    },
-    {
-      title: "Total Visits",
-      value: visited ?? "NA",
-      badge: null,
-      icon: <IconUsers className="text-[#2B82DE]" size={24} />,
-    },
-    {
-      title: "Google Review Redirects",
-      value: reviewLinkVisited ?? "NA",
-      badge: null,
-      icon: <IconGlobe className="text-[#2B82DE]" size={24} />,
-    },
-    {
-      title: "Response Rate",
-      value: responseRatePercentage,
-      badge: (
-        <span
-          className="ml-2 px-2 py-0.5 text-xs rounded text-white"
-          style={{ backgroundColor: responseRateColor }}
-        >
-          {responseRateStatus}
-        </span>
-      ),
-      icon: <IconPercentage className="text-[#2B82DE]" size={24} />,
-    },
-  ];
-
   return (
-    <div className="pt-6 psw-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-      {stats.map(({ title, value, badge, icon }) => (
-        <Card key={title} size="sm" className="flex-row items-center justify-between gap-4 p-2">
-          <div>
-            <p className="text-xs font-bold text-[#343A40]">{title}</p>
-            <div className="text-3xl font-bold flex items-end">
-              <div>{value}</div>
-              <div className="mb-1">{badge}</div>
-            </div>
-          </div>
-          <div className="p-2 bg-[#2B82DE1F] rounded-md self-start">{icon}</div>
-        </Card>
-      ))}
+    <div className="grid grid-cols-1 gap-4 pt-6 sm:grid-cols-2 lg:grid-cols-5">
+      <StatTile
+        label={t("Total Responses")}
+        value={count(responseCount ?? 0)}
+        icon={icon(IconMessageCircle)}
+      />
+      <StatTile label={t("Started")} value={count(started)} icon={icon(IconPlayerPlay)} />
+      <StatTile label={t("Total Visits")} value={count(visited)} icon={icon(IconUsers)} />
+      <StatTile
+        label={t("Google Review Redirects")}
+        value={count(reviewLinkVisited)}
+        icon={icon(IconGlobe)}
+      />
+      <StatTile
+        label={t("Response Rate")}
+        value={rate ? `${rate.rate}%` : null}
+        icon={icon(IconPercentage)}
+        note={rate && <DotBadge dotClassName={rate.dotClassName} label={rateLabels[rate.status]} />}
+      />
     </div>
   );
 };
 
 export default SurveyStatsWebForm;
 
+/** Null when more responses than visits were recorded, so no rate can be given. */
 function getResponseRateInfo(responseCount: number, visited: number) {
-  if (responseCount > visited) {
-    return {
-      responseRate: "NA",
-      responseRatePercentage: "NA",
-      responseRateStatus: "NA",
-      responseRateColor: "#BDBDBD",
-    };
-  }
+  if (responseCount > visited) return null;
 
   const rate = visited > 0 ? Number(((responseCount / visited) * 100).toFixed(1)) : 0;
-
-  let status: "Great" | "Good" | "Low" | "Too Low" = "Too Low";
-  if (rate >= 70) status = "Great";
-  else if (rate >= 50) status = "Good";
-  else if (rate >= 30) status = "Low";
-
-  const percentage = `${rate}%`;
-
-  const colorMap = {
-    Great: "#66BF00",
-    Good: "#FFC107",
-    Low: "#FF8B07",
-    "Too Low": "#FF6161",
-  };
-
-  return {
-    responseRate: rate,
-    responseRatePercentage: percentage,
-    responseRateStatus: status,
-    responseRateColor: colorMap[status],
-  };
+  if (rate >= 70) return { rate, status: "Great" as const, dotClassName: "bg-green-500" };
+  if (rate >= 50) return { rate, status: "Good" as const, dotClassName: "bg-primary" };
+  if (rate >= 30) return { rate, status: "Low" as const, dotClassName: "bg-amber-500" };
+  return { rate, status: "Too Low" as const, dotClassName: "bg-destructive" };
 }

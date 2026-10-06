@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { channelKeys } from "@/backend/channels/channels.query";
 import { orgKeys, teamKeys } from "@/backend/org/org.keys";
 import { surveyKeys } from "@/backend/surveys/survey.keys";
 import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
@@ -247,6 +248,7 @@ export function useUpdateTeamChannels(teamId: string) {
       // The caller's own channel list is derived from their teams, so it can change here too.
       // `waSettings` is cached with staleTime: Infinity and would otherwise stay stale until reload.
       queryClient.invalidateQueries({ queryKey: whatsappKeys.settings() });
+      queryClient.invalidateQueries({ queryKey: channelKeys.all() });
     },
     onError: (error) => {
       toast.error(error?.message || "Failed to update channel access.");

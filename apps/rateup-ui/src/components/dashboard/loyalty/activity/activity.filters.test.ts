@@ -1,14 +1,14 @@
 import { describe, expect, test } from "vitest";
 
-import { activitySearchSchema, ledgerQueryFor } from "./activity.filters";
+import { validateActivitySearch, ledgerQueryFor } from "./activity.filters";
 
 describe("activity filters", () => {
   test("bad search params fall back rather than throw", () => {
-    expect(activitySearchSchema.parse({ filter: "nonsense", page: "x" })).toEqual({
+    expect(validateActivitySearch({ filter: "nonsense", page: "x" })).toEqual({
       filter: "all",
       page: 1,
     });
-    expect(activitySearchSchema.parse({ filter: "earned", page: "3", customerId: "c1" })).toEqual({
+    expect(validateActivitySearch({ filter: "earned", page: "3", customerId: "c1" })).toEqual({
       filter: "earned",
       page: 3,
       customerId: "c1",

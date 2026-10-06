@@ -1,3 +1,4 @@
+import { IconInbox } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 import type { ColumnFiltersState } from "@tanstack/react-table";
 import dayjs from "dayjs";
@@ -18,7 +19,9 @@ import {
   useSyncResponseToGoogleSheet,
 } from "@/backend/surveys/response/response.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
+import { BINARY_COLORS, SCALE_10, SCALE_5 } from "@/components/common/sentimentScale.ts";
 import type { DataTableToolbarProps } from "@/components/Table/data-table.tsx";
+import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Dialog,
@@ -27,6 +30,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty.tsx";
 import { markdownToPlainText } from "@/components/whatsapp/flow-v2/FlowScreensList/ScreenListItem.tsx";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { useDebounce } from "@/hooks/use-debounce.ts";
@@ -216,7 +226,21 @@ const WaResponses = ({
       {
         accessorKey: "createdAt",
         header: "Created At",
-        cell: (info: CellInfo) => dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
+        cell: (info: CellInfo) => (
+          <span className="whitespace-nowrap tabular-nums text-muted-foreground">
+            {dayjs(info.getValue() as string).format("DD MMM, hh:mm A")}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "mobile",
+        header: "Respondent",
+        id: "mobile",
+        cell: (info: CellInfo) => (
+          <span className="whitespace-nowrap font-medium tabular-nums text-foreground">
+            {String(info.getValue() ?? "")}
+          </span>
+        ),
       },
       ...(questions?.map((question: WaFlowQuestion) => ({
         id:
@@ -239,13 +263,8 @@ const WaResponses = ({
         cell: (info: CellInfo) => getCellData(info?.getValue(), question),
       })) ?? []),
       {
-        accessorKey: "mobile",
-        header: "Respondent Mobile",
-        id: "mobile",
-      },
-      {
         header: "Tags",
-        accessorKey: "tags",
+        accessorKey: "tag",
       },
       {
         accessorKey: "action",
@@ -345,6 +364,14 @@ const WaResponses = ({
   if (error) return <ErrorComponent refetch={refetchResponse} isRefetching={isRefetching} />;
 
   const responseCount = responseData?.totalCount;
+  // Only the unfiltered empty table gets the empty state; a filter with no matches keeps
+  // the toolbar so it can be cleared.
+  const hasNoResponses =
+    !isPending &&
+    responseCount === 0 &&
+    columnFilters.length === 0 &&
+    campaignIds.length === 0 &&
+    !ranges[0]?.startDate;
 
   const Toolbar = useCallback(
     (props: DataTableToolbarProps<WaResponseRow, unknown>) => (
@@ -379,23 +406,37 @@ const WaResponses = ({
   );
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="h-full px-6 p-2">
-        <DataTable
-          data={data ?? []}
-          columns={
-            disableTags.current ? columns?.filter((col) => col.accessorKey !== "tag") : columns
-          }
-          serverSide={{
-            pagination,
-            onPaginationChange: setPagination,
-            rowCount: responseCount,
-            columnFilters,
-            onColumnFiltersChange: setColumnFilters,
-          }}
-          isPending={isPending}
-          DataTableToolbar={Toolbar}
-        />
+    <div className="flex h-full flex-col">
+      <div className="h-full px-4 py-2 sm:px-6">
+        {hasNoResponses ? (
+          <Empty className="min-h-[50vh]">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <IconInbox />
+              </EmptyMedia>
+              <EmptyTitle>{translations("No responses yet")}</EmptyTitle>
+              <EmptyDescription>
+                {translations("Share the flow on WhatsApp and answers will show up here.")}
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        ) : (
+          <DataTable
+            data={data ?? []}
+            columns={
+              disableTags.current ? columns?.filter((col) => col.accessorKey !== "tag") : columns
+            }
+            serverSide={{
+              pagination,
+              onPaginationChange: setPagination,
+              rowCount: responseCount,
+              columnFilters,
+              onColumnFiltersChange: setColumnFilters,
+            }}
+            isPending={isPending}
+            DataTableToolbar={Toolbar}
+          />
+        )}
       </div>
       <DeleteModal confirmDelete={confirmDelete} opened={opened} close={close} />
     </div>
@@ -445,31 +486,79 @@ const DeleteModal = ({
     </Dialog>
   );
 };
+/** A scale answer: its label, led by a dot in the scale's colour. */
+function ScaleAnswer({ label, color }: Readonly<{ label: ReactNode; color?: string }>) {
+  if (!label) return "";
+  return (
+    <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+      {color && (
+        <span className="size-1.5 rounded-full" style={{ backgroundColor: color }} aria-hidden />
+      )}
+      {label}
+    </span>
+  );
+}
+
+function ChoiceBadges({ titles }: Readonly<{ titles: string[] }>) {
+  if (!titles.length) return "";
+  return (
+    <span className="flex flex-wrap gap-1">
+      {titles.map((title) => (
+        <Badge key={title} variant="secondary" className="font-normal">
+          {title}
+        </Badge>
+      ))}
+    </span>
+  );
+}
+
 export const getCellData = (info: unknown, question: WaFlowQuestion) => {
   // The scale maps are keyed by the numeric answer value.
   const scaleKey = info as keyof typeof LDResponseMap;
+  const step = Number(info);
+  const titleOf = (id: unknown) => question.dataSource?.find((data) => data.id === id)?.title;
   switch (question.metaType) {
     case WaQuestions.LD:
-      return LDResponseMap[scaleKey] || "";
+      return (
+        <ScaleAnswer
+          label={LDResponseMap[scaleKey]}
+          color={step === 1 ? BINARY_COLORS.positive : BINARY_COLORS.negative}
+        />
+      );
     case WaQuestions.YN:
-      return YNResponseMap[scaleKey] || "";
+      return (
+        <ScaleAnswer
+          label={YNResponseMap[scaleKey]}
+          color={step === 1 ? BINARY_COLORS.positive : BINARY_COLORS.negative}
+        />
+      );
     case WaQuestions.Smiley:
-      return SmileyResponseMap[scaleKey] || "";
+      return <ScaleAnswer label={SmileyResponseMap[scaleKey]} color={SCALE_5[step - 1]} />;
     case WaQuestions.Rating:
-      return RatingScaleMap[scaleKey] || "";
+      return (
+        <ScaleAnswer
+          label={RatingScaleMap[scaleKey] && `${step}/5 · ${RatingScaleMap[scaleKey]}`}
+          color={SCALE_5[step - 1]}
+        />
+      );
     case WaQuestions.Opinion:
-      // Opinion answers render as their raw numeric value.
-      return (info as ReactNode) || "";
+      return <ScaleAnswer label={info ? `${step}/10` : ""} color={SCALE_10[step - 1]} />;
     case WaQuestions.RadioButtonsGroup:
-    case WaQuestions.Dropdown:
-      return question.dataSource?.find((data) => data.id === info)?.title || "";
+    case WaQuestions.Dropdown: {
+      const title = titleOf(info);
+      return title ? <ChoiceBadges titles={[title]} /> : "";
+    }
     case WaQuestions.CheckboxGroup:
     case WaQuestions.ChipsSelector:
       return (
-        (Array.isArray(info) &&
-          info?.map((i) => question.dataSource?.find((data) => data.id === i)?.title)?.join(",")) ||
-        ""
+        <ChoiceBadges
+          titles={(Array.isArray(info) ? info : [])
+            .map(titleOf)
+            .filter((title): title is string => Boolean(title))}
+        />
       );
+    case WaQuestions.OptIn:
+      return info === true || info === "true" ? "Opted in" : "—";
     case WaQuestions.DocumentPicker:
       return info ? (
         <a
@@ -483,7 +572,7 @@ export const getCellData = (info: unknown, question: WaFlowQuestion) => {
         ""
       );
     case WaQuestions.DatePicker:
-      return info ? dayjs(info as string | number | Date).format("DD-MM-YYYY") : "";
+      return info ? dayjs(info as string | number | Date).format("DD MMM YYYY") : "";
     case WaQuestions.TextArea:
     case WaQuestions.PhotoPicker:
       return <WaHoverCardComponent content={info as ReactNode} type={question.metaType} />;

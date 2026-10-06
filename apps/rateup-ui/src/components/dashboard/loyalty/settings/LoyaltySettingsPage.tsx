@@ -327,6 +327,27 @@ export function LoyaltySettingsPage() {
             />
           </Field>
 
+          {/* Hidden until WooCommerce and HubSpot launch — uncomment to show.
+          <Field orientation="horizontal" className="rounded-lg border border-border p-3">
+            <FieldContent>
+              <FieldLabel htmlFor={`${uid}-woo`} className="text-sm font-medium">
+                {t("WooCommerce orders earn {points}", { points: pointsName })}
+              </FieldLabel>
+              <FieldDescription className="text-xs">
+                {t(
+                  "Earned when an order is marked Completed, and taken back if it is refunded or cancelled.",
+                )}
+              </FieldDescription>
+            </FieldContent>
+            <Switch
+              id={`${uid}-woo`}
+              checked={program.enableWooOrderPoints ?? false}
+              onCheckedChange={(on) => toggle({ enableWooOrderPoints: on })}
+              disabled={update.isPending}
+            />
+          </Field>
+          */}
+
           <div className="rounded-lg border border-border p-3">
             <p className="text-sm font-medium text-foreground">{t("POS and API access")}</p>
             <p className="mb-3 text-xs text-muted-foreground">

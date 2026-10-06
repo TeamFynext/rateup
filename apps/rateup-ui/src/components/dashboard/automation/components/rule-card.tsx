@@ -17,6 +17,8 @@ import { Switch } from "@/components/ui/switch.tsx";
 import { ShopifyEvents } from "@/types/enums.ts";
 import type { Rule } from "@/types/rule.ts";
 
+import { getTriggerEventLabel } from "./schema.ts";
+
 /**
  * "₹12,400 from 9 orders · 30 days" under an abandoned-checkout rule. Every card reads the
  * same cached report, so a page of rules makes one request; without access to it, nothing
@@ -96,7 +98,7 @@ export function RuleCard({ item, onToggleActive, onDelete }: Readonly<RuleCardPr
     <ActionCard
       title={item.name}
       titleTooltip={item.name}
-      subtitle={item.triggerEvent}
+      subtitle={getTriggerEventLabel(item.triggerEvent)}
       actions={menu}
       content={
         <div className="flex flex-col gap-2">

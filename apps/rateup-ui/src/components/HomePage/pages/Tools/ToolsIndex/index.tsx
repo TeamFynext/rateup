@@ -1,8 +1,24 @@
+import {
+  IconBrandWhatsapp,
+  IconCalculator,
+  IconMessage2Star,
+  IconQrcode,
+  IconTruckReturn,
+  type Icon,
+} from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 
 import { TOOLS, TOOL_CATEGORIES, toolPath } from "@/config/tools.ts";
 
 import { ToolContainer, ToolCta } from "../shared/ToolSections.tsx";
+
+// Kept out of `config/tools.ts`, which the tool routes' `head` reads from the client entry.
+const TOOL_ICONS: Record<string, Icon> = {
+  "whatsapp-link-generator": IconBrandWhatsapp,
+  "whatsapp-qr-code-generator": IconQrcode,
+  "rto-loss-calculator": IconTruckReturn,
+  "nps-survey-templates": IconMessage2Star,
+};
 
 const PROMISES = [
   {
@@ -38,7 +54,7 @@ export default function ToolsIndex() {
 
               <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {tools.map((tool) => {
-                  const Icon = tool.icon;
+                  const Icon = TOOL_ICONS[tool.slug] ?? IconCalculator;
                   return (
                     <Link
                       key={tool.slug}

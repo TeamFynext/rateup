@@ -24,13 +24,9 @@ export type WaSettings = {
   webhookPassword: string;
   appId: string;
   type: WaConfigType;
-  fbPageId: string;
-  fbUserName: string;
-  ibaId: string;
-  pageAccessToken: string;
-  igUserName: string;
+  // Messenger/Instagram are no longer on a WhatsApp channel: see MetaChannel
+  // (`@/backend/meta/metaChannels.api`).
   phoneDisplayName: string;
-  igDisplayName: string;
   assets: MetaLoginAssets[];
   conversionsApiDatasetId?: string;
   conversionData?: { event_name?: string; currency?: string };

@@ -16,6 +16,7 @@ const PLATFORM_COMPONENT_SUPPORT: Record<string, AutomationPlatform[]> = {
   pauseNode: [AutomationPlatform.WHATSAPP, AutomationPlatform.INSTAGRAM],
   startNode: [AutomationPlatform.WHATSAPP, AutomationPlatform.INSTAGRAM],
   assignNode: [AutomationPlatform.WHATSAPP, AutomationPlatform.INSTAGRAM],
+  textInputNode: [AutomationPlatform.WHATSAPP, AutomationPlatform.INSTAGRAM],
 
   // WhatsApp only
   buttonNode: [AutomationPlatform.WHATSAPP],
@@ -28,7 +29,6 @@ const PLATFORM_COMPONENT_SUPPORT: Record<string, AutomationPlatform[]> = {
   contactsNode: [AutomationPlatform.WHATSAPP],
   flowNode: [AutomationPlatform.WHATSAPP],
   leadgenNode: [AutomationPlatform.WHATSAPP],
-  textInputNode: [AutomationPlatform.WHATSAPP],
 
   // Instagram specific
   instagramStoryReplyNode: [AutomationPlatform.INSTAGRAM],
@@ -36,6 +36,7 @@ const PLATFORM_COMPONENT_SUPPORT: Record<string, AutomationPlatform[]> = {
   instagramProductTemplateNode: [AutomationPlatform.INSTAGRAM],
   instagramQuickReplyNode: [AutomationPlatform.INSTAGRAM],
   instagramIceBreakerNode: [AutomationPlatform.INSTAGRAM],
+  instagramFollowCheckNode: [AutomationPlatform.INSTAGRAM],
 };
 
 export function isComponentSupportedOnPlatform(

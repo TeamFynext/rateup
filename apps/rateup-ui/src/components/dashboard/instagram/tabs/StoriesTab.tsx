@@ -29,7 +29,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty.tsx";
 
-export function StoriesTab() {
+export function StoriesTab({ ibaId }: Readonly<{ ibaId: string }>) {
   const { data: rules = [] } = useRules();
   const updateMutation = useUpdateRuleMutation();
   const deleteMutation = useDeleteRuleMutation();
@@ -38,9 +38,12 @@ export function StoriesTab() {
   const storyMentionRules = useMemo(
     () =>
       rules.filter(
-        (r) => r.platform === "INSTAGRAM" && r.triggerEvent === "INSTAGRAM_STORY_MENTION",
+        (r) =>
+          r.platform === "INSTAGRAM" &&
+          r.triggerEvent === "INSTAGRAM_STORY_MENTION" &&
+          r.whatsappSettingsPhoneIds?.includes(ibaId),
       ),
-    [rules],
+    [rules, ibaId],
   );
 
   return (
@@ -62,7 +65,11 @@ export function StoriesTab() {
               <Link
                 to="/dashboard/automation/$automationId"
                 params={{ automationId: "new" }}
-                search={{ platform: "INSTAGRAM", triggerEvent: "INSTAGRAM_STORY_MENTION" }}
+                search={{
+                  platform: "INSTAGRAM",
+                  triggerEvent: "INSTAGRAM_STORY_MENTION",
+                  channel: ibaId,
+                }}
               />
             }
           >
@@ -92,7 +99,11 @@ export function StoriesTab() {
                   <Link
                     to="/dashboard/automation/$automationId"
                     params={{ automationId: "new" }}
-                    search={{ platform: "INSTAGRAM", triggerEvent: "INSTAGRAM_STORY_MENTION" }}
+                    search={{
+                      platform: "INSTAGRAM",
+                      triggerEvent: "INSTAGRAM_STORY_MENTION",
+                      channel: ibaId,
+                    }}
                   />
                 }
               >

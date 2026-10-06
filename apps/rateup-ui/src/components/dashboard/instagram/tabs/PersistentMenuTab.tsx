@@ -44,14 +44,14 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import type { DraftMenuItem } from "./shared.tsx";
 
 export function PersistentMenuTab({
-  waSettingId,
+  channelId,
   businessName,
-}: Readonly<{ waSettingId: string; businessName: string }>) {
+}: Readonly<{ channelId: string; businessName: string }>) {
   const uid = useId();
-  const { data } = useInstagramProfile(waSettingId);
-  const setMutation = useSetInstagramPersistentMenuMutation(waSettingId);
-  const syncMutation = useSyncInstagramPersistentMenuMutation(waSettingId);
-  const deleteMutation = useDeleteInstagramPersistentMenuMutation(waSettingId);
+  const { data } = useInstagramProfile(channelId);
+  const setMutation = useSetInstagramPersistentMenuMutation(channelId);
+  const syncMutation = useSyncInstagramPersistentMenuMutation(channelId);
+  const deleteMutation = useDeleteInstagramPersistentMenuMutation(channelId);
   const locale = "default";
   const [items, setItems] = useState<DraftMenuItem[]>([]);
   const { t } = useTranslation();

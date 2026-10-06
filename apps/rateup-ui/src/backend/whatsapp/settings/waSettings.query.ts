@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { channelKeys } from "@/backend/channels/channels.query";
 import { userKeys } from "@/backend/user/user.keys";
 import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
 import { getApiErrorMessage } from "@/utils/apiError";
@@ -53,6 +54,7 @@ export const useCreateWaSettingsMutation = () => {
     mutationFn: createWaSettings,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: whatsappKeys.settings() });
+      queryClient.invalidateQueries({ queryKey: channelKeys.all() });
       toast.success("Updated Successfully");
     },
     onError: (error) => {
@@ -69,6 +71,7 @@ export const useUpsertWaSettingsMutation = () => {
     mutationFn: upsertWaSettings,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: whatsappKeys.settings() });
+      queryClient.invalidateQueries({ queryKey: channelKeys.all() });
       queryClient.invalidateQueries({ queryKey: userKeys.info() });
       toast.success("Updated Successfully");
     },
@@ -86,6 +89,7 @@ export const useUpdateUserAccessToken = () => {
     mutationFn: (data: { code: string; waSettingId: string }) => updateUserAccessToken(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: whatsappKeys.settings() });
+      queryClient.invalidateQueries({ queryKey: channelKeys.all() });
       toast.success("Updated Successfully");
     },
     onError: (error) => {
@@ -102,6 +106,7 @@ export const useUpdateWaSettingsMutation = (settingId: string) => {
     mutationFn: (data: UpdateWaSettingsInput) => updateWaSettingsById(settingId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: whatsappKeys.settings() });
+      queryClient.invalidateQueries({ queryKey: channelKeys.all() });
       toast.success("Updated Successfully");
     },
     onError: (error) => {
@@ -118,6 +123,7 @@ export const useDeleteWaSettingsMutation = () => {
     mutationFn: deleteWaSettings,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: whatsappKeys.settings() });
+      qc.invalidateQueries({ queryKey: channelKeys.all() });
       toast.success("Deleted Successfully");
     },
     onError: (error) => {
@@ -133,6 +139,7 @@ export const useRegisterBusinessClientMutation = (completionFunction: () => void
     onSuccess: () => {
       completionFunction?.();
       qc.invalidateQueries({ queryKey: whatsappKeys.settings() });
+      qc.invalidateQueries({ queryKey: channelKeys.all() });
     },
     onError: (error) => {
       completionFunction?.();
@@ -147,6 +154,7 @@ export const useDeregisterBusinessClientMutation = () => {
     mutationFn: deRegisterBusinessClient,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: whatsappKeys.settings() });
+      qc.invalidateQueries({ queryKey: channelKeys.all() });
     },
     onError: (error) => {
       toast.error(error?.message || "Error deregistering business client!");
@@ -375,6 +383,7 @@ export const useSyncDatasetsMutation = (waSettingsId: string) => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: whatsappKeys.metaAssets(waSettingsId) });
       qc.invalidateQueries({ queryKey: whatsappKeys.settings() });
+      qc.invalidateQueries({ queryKey: channelKeys.all() });
       toast.success("Successfully synced datasets");
     },
     onError: (error) => {

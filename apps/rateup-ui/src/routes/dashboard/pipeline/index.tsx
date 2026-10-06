@@ -1,20 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { z } from "zod/v4";
 
 import { PipelinePage } from "@/components/pipeline/PipelinePage.tsx";
+import { optionalString } from "@/utils/search.ts";
 
 /**
  * Only the pipeline id is URL state — it names which board you are looking at,
  * which is the one thing worth sharing or bookmarking. Tabs, facets and the open
  * lead are working state and live in `usePipelineStore` instead.
  */
-const pipelineSearchSchema = z.object({
-  p: z.string().optional(),
+export interface PipelineSearch {
+  p?: string;
   /** A card's share id, from `/pl/<id>`; resolved and dropped on arrival. */
-  lead: z.string().optional(),
-});
-
-export type PipelineSearch = z.infer<typeof pipelineSearchSchema>;
+  lead?: string;
+}
 
 /**
  * No org guard here: the pipeline is a normal customer feature, so access is the
@@ -22,6 +20,9 @@ export type PipelineSearch = z.infer<typeof pipelineSearchSchema>;
  * every pipeline route.
  */
 export const Route = createFileRoute("/dashboard/pipeline/")({
-  validateSearch: (search) => pipelineSearchSchema.parse(search),
+  validateSearch: (search: Record<string, unknown>): PipelineSearch => ({
+    p: optionalString(search.p),
+    lead: optionalString(search.lead),
+  }),
   component: PipelinePage,
 });

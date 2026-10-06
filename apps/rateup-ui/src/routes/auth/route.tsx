@@ -1,5 +1,7 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 
+import { AppProviders } from "@/components/AppProviders";
+import { loadAppRuntime } from "@/lib/appRuntime";
 import { noindexHead } from "@/lib/metadata.ts";
 
 import appCss from "@/styles/app.css?url";
@@ -12,7 +14,12 @@ import appCss from "@/styles/app.css?url";
  * query string and nothing to rank for.
  */
 export const Route = createFileRoute("/auth")({
-  component: () => <Outlet />,
+  beforeLoad: loadAppRuntime,
+  component: () => (
+    <AppProviders>
+      <Outlet />
+    </AppProviders>
+  ),
   head: () => ({
     ...noindexHead(undefined, { follow: false }),
     links: [{ rel: "stylesheet", href: appCss }],

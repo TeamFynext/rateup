@@ -9,6 +9,7 @@ import dayjs from "dayjs";
 import { useContext } from "react";
 
 import type { TeamWiseResponses } from "@/backend/surveys/response/response.api";
+import { NPS_COLORS, SENTIMENT } from "@/components/common/sentimentScale.ts";
 import type { QuestionType2, WaFlowFormElementType } from "@/types/enums.ts";
 import {
   PageType,
@@ -303,49 +304,49 @@ export function getResponseArrayByQuestionType(questionType: AnyQuestionType): A
   switch (questionType) {
     case QuestionType.Rating: {
       return [
-        { value: 1, color: "#dc2626" },
-        { value: 2, color: "#f97316" },
-        { value: 3, color: "#f59e0b" },
-        { value: 4, color: "#84cc16" },
-        { value: 5, color: "#22c55e" },
+        { value: 1, color: SENTIMENT.worst },
+        { value: 2, color: SENTIMENT.poor },
+        { value: 3, color: SENTIMENT.neutral },
+        { value: 4, color: SENTIMENT.good },
+        { value: 5, color: SENTIMENT.best },
       ];
     }
     case QuestionType.Opinion:
     case WaQuestions.Opinion: {
       return [
-        { value: 1, color: "#dc2626" },
-        { value: 2, color: "#ef4444" },
-        { value: 3, color: "#f97316" },
-        { value: 4, color: "#fb923c" },
-        { value: 5, color: "#f59e0b" },
-        { value: 6, color: "#fbbf24" },
-        { value: 7, color: "#a3e635" },
-        { value: 8, color: "#84cc16" },
-        { value: 9, color: "#4ade80" },
-        { value: 10, color: "#22c55e" },
+        { value: 1, color: SENTIMENT.worst },
+        { value: 2, color: SENTIMENT.worst },
+        { value: 3, color: SENTIMENT.poor },
+        { value: 4, color: SENTIMENT.poor },
+        { value: 5, color: SENTIMENT.neutral },
+        { value: 6, color: SENTIMENT.neutral },
+        { value: 7, color: SENTIMENT.good },
+        { value: 8, color: SENTIMENT.good },
+        { value: 9, color: SENTIMENT.best },
+        { value: 10, color: SENTIMENT.best },
       ];
     }
     case QuestionType.Smiley: {
       return [
         {
           value: SmileyResponse.VerySad,
-          color: "#dc2626",
+          color: SENTIMENT.worst,
           Icon: IconMoodAngry,
         },
-        { value: SmileyResponse.Sad, color: "#f97316", Icon: IconMoodSad },
+        { value: SmileyResponse.Sad, color: SENTIMENT.poor, Icon: IconMoodSad },
         {
           value: SmileyResponse.Neutral,
-          color: "#f59e0b",
+          color: SENTIMENT.neutral,
           Icon: IconMoodEmpty,
         },
         {
           value: SmileyResponse.Happy,
-          color: "#84cc16",
+          color: SENTIMENT.good,
           Icon: IconMoodHappy,
         },
         {
           value: SmileyResponse.VeryHappy,
-          color: "#22c55e",
+          color: SENTIMENT.best,
           Icon: IconMoodCrazyHappy,
         },
       ];
@@ -353,22 +354,22 @@ export function getResponseArrayByQuestionType(questionType: AnyQuestionType): A
     case QuestionType.YN:
     case WaQuestions.YN: {
       return [
-        { value: YNResponse.No, color: "#dc2626" },
-        { value: YNResponse.Yes, color: "#22c55e" },
+        { value: YNResponse.No, color: SENTIMENT.worst },
+        { value: YNResponse.Yes, color: SENTIMENT.best },
       ];
     }
     case QuestionType.LD:
     case WaQuestions.LD: {
       return [
-        { value: LDResponse.Dislike, color: "#dc2626" },
-        { value: LDResponse.Like, color: "#22c55e" },
+        { value: LDResponse.Dislike, color: SENTIMENT.worst },
+        { value: LDResponse.Like, color: SENTIMENT.best },
       ];
     }
     case QuestionType.CustomNPS: {
       return [
-        { value: NPSWeightage.DETRACTOR, color: "#dc2626" },
-        { value: NPSWeightage.PASSIVE, color: "#f59e0b" },
-        { value: NPSWeightage.PROMOTER, color: "#22c55e" },
+        { value: NPSWeightage.DETRACTOR, color: SENTIMENT.worst },
+        { value: NPSWeightage.PASSIVE, color: NPS_COLORS.passive },
+        { value: NPSWeightage.PROMOTER, color: SENTIMENT.best },
       ];
     }
     default: {
@@ -389,62 +390,62 @@ export function getResponseArrayByQuestionTypeV2(questionType: AnyQuestionType):
   switch (questionType) {
     case WaQuestions.Rating: {
       return [
-        { value: 1, color: "#dc2626" },
-        { value: 2, color: "#f97316" },
-        { value: 3, color: "#f59e0b" },
-        { value: 4, color: "#84cc16" },
-        { value: 5, color: "#22c55e" },
+        { value: 1, color: SENTIMENT.worst },
+        { value: 2, color: SENTIMENT.poor },
+        { value: 3, color: SENTIMENT.neutral },
+        { value: 4, color: SENTIMENT.good },
+        { value: 5, color: SENTIMENT.best },
       ];
     }
     case WaQuestions.Opinion: {
       return [
-        { value: 1, color: "#dc2626" },
-        { value: 2, color: "#ef4444" },
-        { value: 3, color: "#f97316" },
-        { value: 4, color: "#fb923c" },
-        { value: 5, color: "#f59e0b" },
-        { value: 6, color: "#fbbf24" },
-        { value: 7, color: "#a3e635" },
-        { value: 8, color: "#84cc16" },
-        { value: 9, color: "#4ade80" },
-        { value: 10, color: "#22c55e" },
+        { value: 1, color: SENTIMENT.worst },
+        { value: 2, color: SENTIMENT.worst },
+        { value: 3, color: SENTIMENT.poor },
+        { value: 4, color: SENTIMENT.poor },
+        { value: 5, color: SENTIMENT.neutral },
+        { value: 6, color: SENTIMENT.neutral },
+        { value: 7, color: SENTIMENT.good },
+        { value: 8, color: SENTIMENT.good },
+        { value: 9, color: SENTIMENT.best },
+        { value: 10, color: SENTIMENT.best },
       ];
     }
     case WaQuestions.Smiley: {
       return [
         {
           value: SmileyResponse2.VerySad,
-          color: "#dc2626",
+          color: SENTIMENT.worst,
           Icon: IconMoodAngry,
         },
-        { value: SmileyResponse2.Sad, color: "#f97316", Icon: IconMoodSad },
+        { value: SmileyResponse2.Sad, color: SENTIMENT.poor, Icon: IconMoodSad },
         {
           value: SmileyResponse2.Neutral,
-          color: "#f59e0b",
+          color: SENTIMENT.neutral,
           Icon: IconMoodEmpty,
         },
         {
           value: SmileyResponse2.Happy,
-          color: "#84cc16",
+          color: SENTIMENT.good,
           Icon: IconMoodHappy,
         },
         {
           value: SmileyResponse2.VeryHappy,
-          color: "#22c55e",
+          color: SENTIMENT.best,
           Icon: IconMoodCrazyHappy,
         },
       ];
     }
     case WaQuestions.YN: {
       return [
-        { value: YNResponse.No, color: "#dc2626" },
-        { value: YNResponse.Yes, color: "#22c55e" },
+        { value: YNResponse.No, color: SENTIMENT.worst },
+        { value: YNResponse.Yes, color: SENTIMENT.best },
       ];
     }
     case WaQuestions.LD: {
       return [
-        { value: LDResponse2.Dislike, color: "#dc2626" },
-        { value: LDResponse2.Like, color: "#22c55e" },
+        { value: LDResponse2.Dislike, color: SENTIMENT.worst },
+        { value: LDResponse2.Like, color: SENTIMENT.best },
       ];
     }
     default: {

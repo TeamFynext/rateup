@@ -9,9 +9,18 @@ import {
   IconNavigationFilled,
 } from "@tabler/icons-react";
 import { useContext } from "react";
+import { useTranslation } from "react-i18next";
 
 import { useHappyIndex } from "@/backend/surveys/response/response.query";
-import { Card } from "@/components/ui/card.tsx";
+import { NPS_COLORS, SCALE_5, SENTIMENT } from "@/components/common/sentimentScale.ts";
+import { DotBadge } from "@/components/dashboard/analytics/kit/StatusBadges.tsx";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card.tsx";
 import { Progress } from "@/components/ui/progress.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import SurveyContext from "@/context/SurveyContext.ts";
@@ -41,7 +50,7 @@ const HappinessRing = ({
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="#F1F3F5"
+          className="stroke-muted"
           strokeWidth={thickness}
         />
         <circle
@@ -61,7 +70,17 @@ const HappinessRing = ({
   );
 };
 
+/** The happiness index (0–10) bands, worst first; each pairs a label with its scale colour. */
+const INDEX_BANDS = [
+  { min: 9, label: "Very Happy", color: SENTIMENT.best, dot: "bg-chart-1" },
+  { min: 7, label: "Happy", color: SENTIMENT.good, dot: "bg-chart-3" },
+  { min: 5, label: "Neutral", color: SENTIMENT.neutral, dot: "bg-muted-foreground/50" },
+  { min: 3, label: "Unhappy", color: SENTIMENT.poor, dot: "bg-chart-5" },
+  { min: -Infinity, label: "Very Unhappy", color: SENTIMENT.worst, dot: "bg-destructive" },
+] as const;
+
 const HappyIndex = ({ surveyId }: { surveyId: string }) => {
+  const { t } = useTranslation();
   const { filterTeams } = useContext(SurveyContext);
   const { data, isLoading } = useHappyIndex(surveyId, filterTeams);
   const h_index = Number(((data?.happinessIndex ?? 0) / 10).toFixed(1));
@@ -70,167 +89,142 @@ const HappyIndex = ({ surveyId }: { surveyId: string }) => {
 
   const moodList = [
     {
-      label: "Very Happy",
+      label: t("Very Happy"),
       value: data.veryHappy ?? 0,
       percentage: data.veryHappyPercentage ?? 0,
       icon: IconMoodHappy,
-      color: "#00BF83",
+      color: SCALE_5[4],
     },
     {
-      label: "Happy",
+      label: t("Happy"),
       value: data.happy ?? 0,
       percentage: data.happyPercentage ?? 0,
       icon: IconMoodSmile,
-      color: "#66BF00",
+      color: SCALE_5[3],
     },
     {
-      label: "Neutral",
+      label: t("Neutral"),
       value: data.neutral ?? 0,
       percentage: data.neutralPercentage ?? 0,
       icon: IconMoodNeutral,
-      color: "#FFC107",
+      color: SCALE_5[2],
     },
     {
-      label: "Unhappy",
+      label: t("Unhappy"),
       value: data.sad ?? 0,
       percentage: data.sadPercentage ?? 0,
       icon: IconMoodSad,
-      color: "#FF8B07",
+      color: SCALE_5[1],
     },
     {
-      label: "Very Unhappy",
+      label: t("Very Unhappy"),
       value: data.verySad ?? 0,
       percentage: data.verySadPercentage ?? 0,
       icon: IconMoodCry,
-      color: "#FF6161",
+      color: SCALE_5[0],
     },
   ];
 
   const npsList = [
     {
-      label: "Promoters",
+      label: t("Promoters"),
       percentage: data.promoterPercentage ?? 0,
       value: data.promoters ?? 0,
-      color: "#00BF83",
+      color: NPS_COLORS.promoter,
       icon: IconMoodHappy,
-      bg: "#00BF831F",
     },
     {
-      label: "Passives",
+      label: t("Passives"),
       percentage: data.passivePercentage ?? 0,
       value: data.passives ?? 0,
-      color: "#FFC107",
+      color: NPS_COLORS.passive,
       icon: IconMoodEmpty,
-      bg: "#FFC1071F",
     },
     {
-      label: "Detractors",
+      label: t("Detractors"),
       percentage: data.detractorPercentage ?? 0,
       value: data.detractors ?? 0,
-      color: "#FF6161",
+      color: NPS_COLORS.detractor,
       icon: IconMoodAngry,
-      bg: "#FF61611F",
     },
   ];
 
-  let happinessIndexStatus, happyIndexStatusBg;
-
-  if (h_index >= 9) {
-    happinessIndexStatus = "Very Happy";
-    happyIndexStatusBg = "#00BF83";
-  } else if (h_index >= 7) {
-    happinessIndexStatus = "Happy";
-    happyIndexStatusBg = "#66BF00";
-  } else if (h_index >= 5) {
-    happinessIndexStatus = "Neutral";
-    happyIndexStatusBg = "#FFC107";
-  } else if (h_index >= 3) {
-    happinessIndexStatus = "Unhappy";
-    happyIndexStatusBg = "#FF8B07";
-  } else {
-    happinessIndexStatus = "Very Unhappy";
-    happyIndexStatusBg = "#FF6161";
-  }
+  const band = INDEX_BANDS.find((b) => h_index >= b.min) ?? INDEX_BANDS[INDEX_BANDS.length - 1];
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-      {/* Happiness Index - 60% */}
-      <Card className="col-span-1 p-4 lg:col-span-3">
-        <h4 className="text-lg font-semibold">Happiness Index</h4>
-        <div className="flex flex-col gap-4 items-center px-12 py-4 md:flex-row lg:flex-row">
-          <HappinessRing percentage={Number(data.happinessIndex ?? 0)} color={happyIndexStatusBg}>
-            <div className="text-center flex flex-col justify-between items-center gap-2">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
+      <Card className="lg:col-span-3">
+        <CardHeader>
+          <CardTitle className="text-base">{t("Happiness Index")}</CardTitle>
+          <CardDescription>{t("How respondents felt, from their scale answers.")}</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center gap-6 md:flex-row">
+          <HappinessRing percentage={Number(data.happinessIndex ?? 0)} color={band.color}>
+            <div className="flex flex-col items-center gap-2 text-center">
               <div>
-                <div className="text-4xl font-bold">
-                  {(Number(data?.happinessIndex ?? 0) / 10).toFixed(1)}
+                <div className="font-display text-4xl font-bold tabular-nums text-foreground">
+                  {h_index.toFixed(1)}
                 </div>
-                <span className="text-xs text-muted-foreground">Out of 10</span>
+                <span className="text-xs text-muted-foreground">{t("Out of 10")}</span>
               </div>
-              <div
-                style={{ backgroundColor: happyIndexStatusBg }}
-                className="text-white p-1 text-xs rounded-sm flex justify-center items-center"
-              >
-                {happinessIndexStatus}
-              </div>
+              <DotBadge dotClassName={band.dot} label={t(band.label)} />
             </div>
           </HappinessRing>
-          <div className="flex flex-col gap-4 w-full">
-            {moodList?.map(({ label, value, percentage, icon: Icon, color }) => (
-              <div key={label} className="flex items-center gap-2 w-full">
-                <div className="bg-[#004F981F] rounded-full p-0.5">
-                  <Icon color={"#004F98"} size={45} />
+          <div className="flex w-full flex-col gap-4">
+            {moodList.map(({ label, value, percentage, icon: Icon, color }) => (
+              <div key={label} className="flex w-full items-center gap-3">
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                  <Icon className="size-5 text-primary" aria-hidden />
                 </div>
-                <div className="flex w-full flex-col justify-center gap-2 items-start">
-                  <div className="flex w-full justify-between">
-                    <span className="text-xs font-bold text-[#343A40]">{label}</span>
-                    <div className="flex items-center justify-center gap-1">
-                      <span className="text-xs text-[#7A8289]">({value ?? 0})</span>
-                      <div className="bg-[#004F98] max-w-10 px-3 py-0.5 rounded-full flex items-center justify-center">
-                        <span className="text-xs text-white">{Math.round(percentage)}%</span>
-                      </div>
-                    </div>
+                <div className="flex w-full flex-col gap-1.5">
+                  <div className="flex w-full items-baseline justify-between gap-2 text-xs">
+                    <span className="font-medium text-foreground">{label}</span>
+                    <span className="tabular-nums text-muted-foreground">
+                      {value}
+                      <span className="ml-2 font-medium text-foreground">
+                        {Math.round(percentage)}%
+                      </span>
+                    </span>
                   </div>
-                  <div className="flex items-center gap-2 w-full">
-                    <Progress
-                      value={percentage}
-                      style={{ "--mood-color": color } as React.CSSProperties}
-                      className="flex-1 [&_[data-slot=progress-indicator]]:bg-[var(--mood-color)]"
-                    />
-                  </div>
+                  <Progress
+                    value={percentage}
+                    style={{ "--mood-color": color } as React.CSSProperties}
+                    className="flex-1 [&_[data-slot=progress-indicator]]:bg-[var(--mood-color)]"
+                  />
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </CardContent>
       </Card>
 
-      {/* NPS Overview  */}
-      <Card className="col-span-1 p-4 lg:col-span-2">
-        <h4 className="text-lg font-semibold">NPS Overview</h4>
-        <div className="flex flex-col items-center justify-center mt-4 gap-4">
+      <Card className="lg:col-span-2">
+        <CardHeader>
+          <CardTitle className="text-base">{t("NPS Overview")}</CardTitle>
+          <CardDescription>{t("Promoters minus detractors, from −100 to +100.")}</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center gap-6">
           <NPSGaugeWithNeedle
             nps={data.nps}
             promoters={data.promoters}
             passives={data.passives}
             detractors={data.detractors}
           />
-          <div className="flex justify-around w-full mt-4">
-            {npsList?.map(({ label, percentage, value, color, icon: Icon, bg }) => (
-              <div key={label} className="flex flex-col items-center">
-                <div className="rounded-full" style={{ backgroundColor: bg }}>
-                  <Icon color={color} width={25} height={25} />
-                </div>
-                <div className="text-xs font-medium">{label}</div>
-                <div className="font-bold text-3xl" style={{ color }}>
+          <div className="grid w-full grid-cols-3 gap-2">
+            {npsList.map(({ label, percentage, value, color, icon: Icon }) => (
+              <div key={label} className="flex flex-col items-center gap-1 text-center">
+                <Icon className="size-5" style={{ color }} aria-hidden />
+                <div className="text-xs font-medium text-muted-foreground">{label}</div>
+                <div className="text-2xl font-semibold tabular-nums text-foreground">
                   {percentage}%
                 </div>
-                <div className="bg-[#F5F5F5] px-2 py-0.5 text-[#7A8289] text-xs rounded-full font-medium">
-                  {value} Responses
+                <div className="text-xs tabular-nums text-muted-foreground">
+                  {t("{count, plural, one {# response} other {# responses}}", { count: value })}
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </CardContent>
       </Card>
     </div>
   );
@@ -249,7 +243,9 @@ const NPSGaugeWithNeedle = ({
   passives: number;
   detractors: number;
 }) => {
-  const total = promoters + passives + detractors;
+  const { t } = useTranslation();
+  // No NPS answers yet: draw an empty track rather than NaN arcs.
+  const total = promoters + passives + detractors || 1;
 
   const promoterPercent = (promoters / total) * 100;
   const passivePercent = (passives / total) * 100;
@@ -292,48 +288,49 @@ const NPSGaugeWithNeedle = ({
     <div className="flex flex-col items-center justify-center">
       <svg width="220" height="140" viewBox="0 0 220 160">
         {/* Background track */}
-        <path d="M 20 110 A 90 90 0 0 1 200 110" fill="none" stroke="#f3f4f6" strokeWidth="20" />
+        <path
+          d="M 20 110 A 90 90 0 0 1 200 110"
+          fill="none"
+          className="stroke-muted"
+          strokeWidth="20"
+        />
 
-        {/* Promoters */}
-        {getArc(currentStartAngle, detractorAngle, 90, "#FF6161")}
+        {getArc(currentStartAngle, detractorAngle, 90, NPS_COLORS.detractor)}
         {(() => (currentStartAngle += detractorAngle))()}
 
-        {/* Passives */}
-        {getArc(currentStartAngle, passiveAngle, 90, "#FFC107")}
+        {getArc(currentStartAngle, passiveAngle, 90, NPS_COLORS.passive)}
         {(() => (currentStartAngle += passiveAngle))()}
 
-        {/* Detractors */}
-        {getArc(currentStartAngle, promoterAngle, 90, "#00BF83")}
+        {getArc(currentStartAngle, promoterAngle, 90, NPS_COLORS.promoter)}
 
         {/* Needle */}
         <g transform={`rotate(${rotation}, 110, 110)`}>
           <foreignObject x="100" y="45" width="30" height="60">
-            <IconNavigationFilled color="#343A40" size={30} style={{ transform: "rotate(0deg)" }} />
+            <IconNavigationFilled size={30} className="text-foreground" />
           </foreignObject>
         </g>
 
-        {/* Center Circle */}
-        <circle cx="110" cy="110" r="30" fill="#F5F5F5" />
-        <text x="110" y="118" textAnchor="middle" fontSize="24" fontWeight="bold" fill="#343A40">
+        <circle cx="110" cy="110" r="30" className="fill-muted" />
+        <text
+          x="110"
+          y="118"
+          textAnchor="middle"
+          fontSize="24"
+          fontWeight="bold"
+          className="fill-foreground"
+        >
           {(nps >= 0 ? `+${nps}` : nps) ?? 0}
         </text>
       </svg>
 
-      {/* Label below */}
-      <div className="-mt-2 text-center">
-        <span
-          className={`text-xs text-white py-1 px-3 rounded-sm font-medium ${
-            nps >= 50
-              ? "bg-[#00BF83]"
-              : nps >= 30
-                ? "bg-[#00BF83]"
-                : nps >= 0
-                  ? "bg-[#FFC107]"
-                  : "bg-[#FF6161]"
-          }`}
-        >
-          {nps >= 50 ? "Excellent" : nps >= 30 ? "Great" : nps >= 0 ? "Okay" : "Poor"}
-        </span>
+      <div className="-mt-2">
+        {nps >= 30 ? (
+          <DotBadge dotClassName="bg-chart-1" label={nps >= 50 ? t("Excellent") : t("Great")} />
+        ) : nps >= 0 ? (
+          <DotBadge dotClassName="bg-chart-5" label={t("Okay")} />
+        ) : (
+          <DotBadge dotClassName="bg-destructive" label={t("Poor")} />
+        )}
       </div>
     </div>
   );
@@ -343,8 +340,8 @@ const HappyIndexSkeleton = () => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
       {/* Happiness Index Skeleton */}
-      <Card className="col-span-1 rounded-md border border-[#E2E5ED] p-4 shadow-sm lg:col-span-3">
-        <h4 className="text-lg font-semibold">Happiness Index</h4>
+      <Card className="p-4 lg:col-span-3">
+        <Skeleton className="h-6 w-40" />
         <div className="flex gap-4 items-center px-12 py-4">
           <Skeleton className="size-[230px] rounded-full" />
           <div className="flex flex-col gap-4 w-full">
@@ -362,8 +359,8 @@ const HappyIndexSkeleton = () => {
       </Card>
 
       {/* NPS Overview Skeleton */}
-      <Card className="col-span-1 rounded-md border border-[#E2E5ED] p-4 shadow-sm lg:col-span-2">
-        <h4 className="text-lg font-semibold">NPS Overview</h4>
+      <Card className="p-4 lg:col-span-2">
+        <Skeleton className="h-6 w-32" />
         <div className="flex flex-col items-center justify-center mt-4 gap-4">
           <Skeleton className="h-[140px] w-[220px]" />
           <div className="flex justify-around w-full mt-4 gap-2">

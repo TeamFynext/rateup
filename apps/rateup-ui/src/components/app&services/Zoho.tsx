@@ -1,6 +1,7 @@
 import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
 import { INTEGRATIONS_CONFIG } from "@/components/dashboard/settings/integrations/integrations.config.ts";
 import { IntegrationShell } from "@/components/dashboard/settings/integrations/IntegrationShell.tsx";
+import { SyncActivityPanel } from "@/components/dashboard/settings/integrations/SyncActivityPanel.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import { IntegratedApps } from "@/types/enums";
 
@@ -34,10 +35,14 @@ export function Zoho() {
       detail={connectedTo || undefined}
     >
       <ZohoAuthentication integration={integration} />
-      <ZohoTriggerList integration={integration} refetch={refetch} isLoading={isRefetching} />
+      {/* Only once connected: it loads Bigin pipelines and users, which fail without a connection. */}
+      {integration && (
+        <ZohoTriggerList integration={integration} refetch={refetch} isLoading={isRefetching} />
+      )}
       {products?.crm && <ZohoLeadsTable integration={integration} />}
       {products?.crm && <ZohoContactsTable integration={integration} />}
       {products?.bigin && <BiginContactsTable integration={integration} />}
+      {integration && <SyncActivityPanel integration={IntegratedApps.zoho} />}
     </IntegrationShell>
   );
 }

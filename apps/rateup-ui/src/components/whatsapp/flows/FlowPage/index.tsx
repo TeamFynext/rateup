@@ -253,6 +253,7 @@ function FlowPage() {
             >
               <FlowPageHeader
                 name={flow.name}
+                status={flow.status}
                 tab={tab}
                 setTabState={setTab}
                 phonePreview={

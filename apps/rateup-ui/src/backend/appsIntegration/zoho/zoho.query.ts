@@ -9,7 +9,6 @@ import {
   getZohoUsers,
   syncZohoContacts,
   syncZohoLeads,
-  unsubscribeZoho,
 } from "./zoho.api";
 
 export function useZohoContacts(orgId?: string, product: "crm" | "bigin" = "crm") {
@@ -56,13 +55,5 @@ export function useZohoPipelines(product: string) {
 export function useSyncZohoLeadsMutation() {
   return useMutation({
     mutationFn: syncZohoLeads,
-  });
-}
-
-export function useUnsubscribeZoho() {
-  return useMutation({
-    mutationFn: async (orgId: string) => {
-      return await unsubscribeZoho(orgId);
-    },
   });
 }

@@ -15,6 +15,8 @@ import { fromDateKey, toDateKey } from "@/utils/dateTime.ts";
 
 import type { CouponFormValues, CouponValues } from "../schemas.ts";
 import { ShopifyDiscountCard } from "../ShopifyDiscountCard.tsx";
+// Hidden until WooCommerce and HubSpot launch — uncomment to show.
+// import { WooDiscountCard } from "../WooDiscountCard.tsx";
 import { FormSection, NumberField, TextField, TierRestriction } from "./fields.tsx";
 
 type CouponForm = UseFormReturn<CouponFormValues, unknown, CouponValues>;
@@ -26,6 +28,7 @@ export function CouponFields({
   const { t } = useTranslation();
   const { control, setValue } = form;
   const shopifyEnabled = useWatch({ control, name: "shopifyDiscountEnabled" });
+  const wooEnabled = useWatch({ control, name: "wooDiscountEnabled" });
   const validFrom = fromDateKey(useWatch({ control, name: "validFrom" }));
 
   const discountTypes = [
@@ -38,14 +41,27 @@ export function CouponFields({
       {/* First, because it decides whether there is one code to type in at all. */}
       <ShopifyDiscountCard
         enabled={!!shopifyEnabled}
-        onEnabledChange={(checked) =>
-          setValue("shopifyDiscountEnabled", checked, { shouldDirty: true })
-        }
+        onEnabledChange={(checked) => {
+          setValue("shopifyDiscountEnabled", checked, { shouldDirty: true });
+          // One store syncs a reward: a redemption holds one store discount.
+          if (checked) setValue("wooDiscountEnabled", false, { shouldDirty: true });
+        }}
         supported
         inheritsExpiryFrom={t("the coupon's end date")}
       />
+      {/* Hidden until WooCommerce and HubSpot launch — uncomment to show.
+      <WooDiscountCard
+        enabled={!!wooEnabled}
+        onEnabledChange={(checked) => {
+          setValue("wooDiscountEnabled", checked, { shouldDirty: true });
+          if (checked) setValue("shopifyDiscountEnabled", false, { shouldDirty: true });
+        }}
+        supported
+        inheritsExpiryFrom={t("the coupon's end date")}
+      />
+      */}
 
-      {!shopifyEnabled && (
+      {!shopifyEnabled && !wooEnabled && (
         <TextField
           control={control}
           name="couponCode"

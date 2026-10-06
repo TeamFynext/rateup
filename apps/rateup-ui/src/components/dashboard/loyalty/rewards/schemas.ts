@@ -19,6 +19,9 @@ export const pointRewardSchema = z.object({
   shopifyDiscountEnabled: z.boolean().optional(),
   /** Days the Shopify code stays valid from issue. Blank = no expiry. */
   shopifyValidForDays: z.coerce.number().int().min(1).optional(),
+  /** The same pair for a connected WooCommerce store; one store syncs a reward at a time. */
+  wooDiscountEnabled: z.boolean().optional(),
+  wooValidForDays: z.coerce.number().int().min(1).optional(),
 });
 
 const couponBaseSchema = z.object({
@@ -50,10 +53,11 @@ const couponBaseSchema = z.object({
    * in Valid To, and the Shopify code is built to end with it.
    */
   shopifyDiscountEnabled: z.boolean().optional(),
+  wooDiscountEnabled: z.boolean().optional(),
 });
 
 export const couponSchema = couponBaseSchema.superRefine((value, ctx) => {
-  if (!value.shopifyDiscountEnabled && !value.couponCode?.trim()) {
+  if (!value.shopifyDiscountEnabled && !value.wooDiscountEnabled && !value.couponCode?.trim()) {
     ctx.addIssue({
       code: "custom",
       path: ["couponCode"],

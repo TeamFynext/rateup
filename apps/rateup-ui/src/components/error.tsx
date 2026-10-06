@@ -1,6 +1,8 @@
+import type { ErrorComponentProps } from "@tanstack/react-router";
+
 import CommonError from "@/components/404/common-error.tsx";
 
-const ErrorPage = (props: { error?: Error; reset?: () => void }) => {
+const ErrorPage = (props: ErrorComponentProps) => {
   return <CommonError {...props} className={"h-screen"} />;
 };
 

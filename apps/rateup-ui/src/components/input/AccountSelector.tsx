@@ -2,7 +2,7 @@ import { IconX } from "@tabler/icons-react";
 import { useId, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
-import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import { useChannels } from "@/backend/channels/channels.query";
 import { MessagePlatform } from "@/types/enums.ts";
 
 import { Button } from "../ui/button.tsx";
@@ -48,11 +48,12 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
     disabled = false,
   } = props;
   const { value, multiple = false } = props;
-  const { data, isPending, isError } = useWaSettings();
+  // Every platform's channels come from the one registry list.
+  const { data: channels, isPending, isError } = useChannels();
 
   const { t: translations } = useTranslation();
   let accountOptions: { value: string; label: string; status?: string }[] = getChannelOptions(
-    data,
+    channels,
     {
       platform: platform ?? undefined,
       usePhoneNumber,

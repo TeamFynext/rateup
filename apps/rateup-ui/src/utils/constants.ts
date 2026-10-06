@@ -330,6 +330,21 @@ export const WHATSAPP_TEMPLATE_LANGUAGE = [
   { label: "Zulu", value: "zu" },
 ];
 
+/**
+ * WooCommerce order statuses an automation rule can fire on. The value is WooCommerce's own
+ * status slug, which is what the API matches.
+ */
+export const wooEventData = [
+  { label: "Order processing (paid)", value: "processing" },
+  { label: "Order completed", value: "completed" },
+  { label: "Order on hold", value: "on-hold" },
+  { label: "Order cancelled", value: "cancelled" },
+  { label: "Order refunded", value: "refunded" },
+  { label: "Payment failed", value: "failed" },
+] as const;
+
+export type WooEvent = (typeof wooEventData)[number]["value"];
+
 export const shopifyEventData = [
   { label: "On Orders create", value: ShopifyEvents.ORDERS_CREATE },
   { label: "On Orders fulfilled", value: ShopifyEvents.ORDERS_FULFILLED },
@@ -396,6 +411,14 @@ export const rateupLogo = `${imagesPath}/rateup.png`;
 export const rateupLogoWhite = `${imagesPath}/rateup-white.png`;
 export const rateupLogoOg = `${imagesPath}/rateup-og.png`;
 
+/* On-page copies of the lockup, cropped to the mark and sized for the screen (480px WebP, from
+   the bucket PNGs). The bucket files stay the source for og:image and email, which need them. */
+export const rateupLockup = `${imagesPath}/brand/rateup-lockup.webp`;
+export const rateupLockupWhite = `${imagesPath}/brand/rateup-lockup-white.webp`;
+/* The footer shows the lockup up to 770px wide, which the 480px file blurs at 2x; this one is
+   1600px, same crop. */
+export const rateupLockupWhiteLarge = `${imagesPath}/brand/rateup-lockup-white-lg.webp`;
+
 /* The 90-second product film behind the homepage's click-to-play facade. Self-hosted
    rather than embedded so the band carries no third-party player or cookies. */
 export const rateupProductVideo = `${videosPath}/homepage/rateup_product.mp4`;
@@ -415,8 +438,10 @@ export const rateupIconBw = `${imagesPath}/bw-logo.png`;
    navy footer it disappears, so that surface takes `metaLockupWhite` instead. The colour
    file carries the mark's gradient and is ~370KB against the white one's 3KB, which is why
    the light-ground call sites are the only ones that pay for it. */
-export const metaLockup = `${imagesPath}/landing/meta/Meta_lockup_positive%20primary_RGB.svg`;
-export const metaLockupWhite = `${imagesPath}/landing/meta/Meta_lockup_negative%20primary_white_RGB.svg`;
+/* Rasterised from Meta's lockup SVGs, which embed a bitmap and weigh 365 KB each; the mark is
+   cropped out of their clear space and shown no taller than 14px. */
+export const metaLockup = `${imagesPath}/brand/meta-lockup.webp`;
+export const metaLockupWhite = `${imagesPath}/brand/meta-lockup-white.webp`;
 
 export const MAX_DESCRIPTION_COUNT = 300;
 export const MAX_METADATA_COUNT = 20;

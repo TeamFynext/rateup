@@ -1,9 +1,9 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { z } from "zod";
 
-import { ONBOARDING_STEPS } from "@/backend/loyalty/onboarding.api";
+import { ONBOARDING_STEPS, type OnboardingStep } from "@/backend/loyalty/onboardingSteps";
 import { LOYALTY_PATHS } from "@/components/dashboard/loyalty/paths.ts";
 import { ProgramPage } from "@/components/dashboard/loyalty/program/ProgramPage.tsx";
+import { oneOf } from "@/utils/search.ts";
 
 // `?section=` opens one section's editor; without it the page is the three summary cards.
 // A search param rather than a child route so the sidebar's Program entry stays active
@@ -11,14 +11,12 @@ import { ProgramPage } from "@/components/dashboard/loyalty/program/ProgramPage.
 //
 // The enum stays the wizard's full step list, `messages` included, even though Program has
 // no messages card any more: the wizard still walks that step, and keeping it here is what
-// lets the redirect below recognise an old link rather than `.catch(undefined)` silently
-// dropping it to the summary.
-const searchSchema = z.object({
-  section: z.enum(ONBOARDING_STEPS).optional().catch(undefined),
-});
-
+// lets the redirect below recognise an old link rather than silently dropping it to the
+// summary.
 export const Route = createFileRoute("/dashboard/loyalty/program/")({
-  validateSearch: searchSchema,
+  validateSearch: (search: Record<string, unknown>): { section?: OnboardingStep } => ({
+    section: oneOf(ONBOARDING_STEPS, search.section),
+  }),
   beforeLoad: ({ search }) => {
     // Program used to carry a Messages section that showed the same keyword replies and
     // notifications as Loyalty → Messages. Bookmarks and older in-app links still point

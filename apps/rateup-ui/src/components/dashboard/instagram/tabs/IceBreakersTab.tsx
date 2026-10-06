@@ -37,14 +37,14 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import type { DraftIceBreaker } from "./shared.tsx";
 
 export function IceBreakersTab({
-  waSettingId,
+  channelId,
   businessName,
-}: Readonly<{ waSettingId: string; businessName: string }>) {
+}: Readonly<{ channelId: string; businessName: string }>) {
   const uid = useId();
-  const { data } = useInstagramProfile(waSettingId);
-  const setMutation = useSetInstagramIceBreakersMutation(waSettingId);
-  const syncMutation = useSyncInstagramIceBreakersMutation(waSettingId);
-  const deleteMutation = useDeleteInstagramIceBreakersMutation(waSettingId);
+  const { data } = useInstagramProfile(channelId);
+  const setMutation = useSetInstagramIceBreakersMutation(channelId);
+  const syncMutation = useSyncInstagramIceBreakersMutation(channelId);
+  const deleteMutation = useDeleteInstagramIceBreakersMutation(channelId);
   const [items, setItems] = useState<DraftIceBreaker[]>([]);
   const { t } = useTranslation();
 

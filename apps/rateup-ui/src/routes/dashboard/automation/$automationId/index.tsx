@@ -29,6 +29,7 @@ function Page() {
       initialTriggerEvent={
         typeof searchParams.triggerEvent === "string" ? searchParams.triggerEvent : undefined
       }
+      initialChannelId={typeof searchParams.channel === "string" ? searchParams.channel : undefined}
     />
   );
 }

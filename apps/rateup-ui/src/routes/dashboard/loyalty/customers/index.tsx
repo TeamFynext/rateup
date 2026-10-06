@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { CustomerPage } from "@/components/dashboard/loyalty/customers/CustomerPage.tsx";
-import { customersSearchSchema } from "@/components/dashboard/loyalty/customers/customers.search.ts";
+import { validateCustomersSearch } from "@/components/dashboard/loyalty/customers/customers.search.ts";
 
 export const Route = createFileRoute("/dashboard/loyalty/customers/")({
-  validateSearch: customersSearchSchema,
+  validateSearch: validateCustomersSearch,
   component: RouteComponent,
 });
 

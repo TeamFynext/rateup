@@ -1,4 +1,4 @@
-import { IconCopy, IconDots, IconTrash } from "@tabler/icons-react";
+import { IconCopy, IconDots, IconTrash, IconUsersGroup } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import type { SubmitEvent } from "react";
 import { useState } from "react";
@@ -12,7 +12,6 @@ import {
   useDeprecateFlowMutation,
 } from "@/backend/whatsapp/flow/flow.query";
 import { ActionCard } from "@/components/common/action-card.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Dialog,
@@ -43,8 +42,7 @@ import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 
 import { isFlowType } from "../CreateFlowWizard/createFlowWizard.steps.ts";
 import { useFlowPurposeCopy } from "../flowPurposeCopy.ts";
-
-import styles from "./FlowCard.module.css";
+import WaFlowStatusBadge from "../WaTemplateStatusBadge.tsx";
 
 interface FlowCardProps {
   name: string;
@@ -56,6 +54,8 @@ interface FlowCardProps {
   /** As chosen at creation; a Loyalty feedback flow is labelled as such on the card. */
   categories?: string[];
   responseCount?: number;
+  /** Teams the flow is shared with. */
+  teamIds?: string[];
 }
 
 function FlowCard({
@@ -67,6 +67,7 @@ function FlowCard({
   version,
   categories = [],
   responseCount = 0,
+  teamIds = [],
 }: Readonly<FlowCardProps>) {
   const navigate = useNavigate();
   const confirm = useConfirm();
@@ -96,6 +97,13 @@ function FlowCard({
     ? LOYALTY_FEEDBACK_FLOW_CATEGORY
     : categories.find(isFlowType);
   const category = purpose ? purposeCopy[purpose].label : translations("Flow");
+  const teamNames = teamIds
+    .map((id) => teamsData?.find((team) => team.id === id)?.name)
+    .filter(Boolean);
+  const teamLabel =
+    teamNames.length > 2
+      ? translations("{count, plural, one {# team} other {# teams}}", { count: teamNames.length })
+      : teamNames.join(", ");
 
   const closeCloneDialog = () => {
     setCloneDialogOpened(false);
@@ -252,20 +260,31 @@ function FlowCard({
         subtitle={category}
         actions={menu}
         content={
-          <p className="mt-2 text-sm font-semibold text-muted-foreground">
-            {responseCount} responses
-          </p>
+          <div className="flex flex-col gap-1">
+            <p className="flex items-baseline gap-1.5">
+              <span className="text-2xl font-semibold tabular-nums text-foreground">
+                {responseCount.toLocaleString()}
+              </span>
+              <span className="text-sm text-muted-foreground">
+                {translations("{count, plural, one {response} other {responses}}", {
+                  count: responseCount,
+                })}
+              </span>
+            </p>
+            {teamLabel && (
+              <p className="flex items-center gap-1 truncate text-xs text-muted-foreground">
+                <IconUsersGroup className="size-3.5 shrink-0" aria-hidden />
+                <span className="truncate">{teamLabel}</span>
+              </p>
+            )}
+          </div>
         }
-        footerLeft={
-          <Badge variant="secondary" className={styles[`${status.toLowerCase()}-badge`]}>
-            {status === WaFlowStatus.PUBLISHED ? "Active" : status}
-          </Badge>
-        }
+        footerLeft={<WaFlowStatusBadge status={status} />}
         createdAt={createdAt}
         onClick={() =>
           navigate({
             to: `/dashboard/whatsapp/flows/v${version}/${dbFlowId}${
-              status === WaFlowStatus.PUBLISHED ? "?tab=Result" : ""
+              status === WaFlowStatus.PUBLISHED ? "?tab=Responses" : ""
             }`,
           })
         }

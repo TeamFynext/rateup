@@ -225,8 +225,10 @@ export function loyaltyMenuRule(input: {
       shopifyEvent: undefined,
       businessHours: { enabled: false, businessHoursId: undefined },
       shopifyProductIds: [],
+      wooProductIds: [],
       instagramScope: "ALL",
       instagramPostIds: [],
+      instagramPublicReplies: [],
     },
   };
 }
