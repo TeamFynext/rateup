@@ -1,6 +1,6 @@
 import type { RequestPayload } from "@/types/api.ts";
 import type { IntegratedApps } from "@/types/enums.ts";
-import type { AmeliaCredential, petpoojaCredential } from "@/types/global";
+import type { PetpoojaOrderEvent, petpoojaCredential } from "@/types/global";
 
 import { axiosClient } from "../apiClient";
 
@@ -18,7 +18,7 @@ export const getIntegrationByType = async (type: IntegratedApps) => {
 export interface integrationSchemaProps {
   id?: string;
   /** Zapier creates with no credential — the server mints the API key. */
-  credential: AmeliaCredential | petpoojaCredential | Record<string, never>;
+  credential: petpoojaCredential | Record<string, never>;
   name: string;
 }
 
@@ -43,36 +43,38 @@ export const deleteIntegration = async (type: IntegratedApps) => {
   return response.data;
 };
 
-export const getWaPaymentConfigurations = async (whatsappSettingsId?: string) => {
-  const response = await axiosClient.get(`${ROUTE_URL}wa_payment_configurations`, {
-    params: whatsappSettingsId ? { whatsappSettingsId } : undefined,
-  });
-  return response.data;
-};
-export const getWaPaymentConfigurationByName = async ({
-  configuration_name,
-}: {
-  configuration_name?: string;
-}) => {
-  const response = await axiosClient.post(
-    `${ROUTE_URL}wa_payment_configuration/${configuration_name}`,
-    {},
-  );
-  return response.data;
-};
+/** One payment gateway linked to the WhatsApp Business account in WhatsApp Manager. */
+export interface WaPaymentConfiguration {
+  configuration_name: string;
+  provider_name?: string;
+  status?: string;
+  /** Both arrive as code objects carrying a human-readable description. */
+  purpose_code?: { code?: string; description?: string };
+  merchant_category_code?: { code?: string; description?: string };
+  oauth_url?: string;
+  /** Unix seconds when `oauth_url` stops working. */
+  expiration?: number;
+}
 
-export const createWaPaymentConfiguration = async (data: RequestPayload) => {
-  const response = await axiosClient.post(`${ROUTE_URL}wa_payment_configuration`, data);
-  return response.data;
-};
-export const deleteWaPaymentConfiguration = async (name: string) => {
-  const response = await axiosClient.delete(`${ROUTE_URL}wa_payment_configuration/${name}`);
-  return response.data;
+export interface WaPaymentConfigurationsView {
+  /** The WhatsApp number whose account was read. */
+  phone: string | null;
+  configurations: WaPaymentConfiguration[];
+  /** Set when Meta could not be read and the list is the last one saved. */
+  syncError?: string;
+}
+
+/** Syncs the default number's payment configurations from Meta and returns them. */
+export const getWaPaymentConfigurations = async () => {
+  const response = await axiosClient.get(`${ROUTE_URL}wa_payment_configurations`);
+  return response.data as WaPaymentConfigurationsView;
 };
 
 export const regenerateWaPaymentConfigurationOauth = async (name: string) => {
-  const response = await axiosClient.get(`${ROUTE_URL}regenerate_wa_payment_config_oauth/${name}`);
-  return response.data;
+  const response = await axiosClient.get(
+    `${ROUTE_URL}regenerate_wa_payment_config_oauth/${encodeURIComponent(name)}`,
+  );
+  return response.data as { oauth_url?: string; expiration?: number };
 };
 
 /** An installed app integration row. */
@@ -213,6 +215,42 @@ export async function finishOAuthConnect(name: string, data: { code: string; sta
   };
 }
 
+/** Merged into the stored credential on the server; `orderEvent: null` clears it. */
+export async function savePetpoojaSettings(data: {
+  restaurantId?: string;
+  orderEvent?: PetpoojaOrderEvent | null;
+}) {
+  return (await axiosClient.put(`${ROUTE_URL}petpooja/settings`, data)).data as { success: true };
+}
+
+/** The org's own order webhook URL, issued on first ask; `rotate` replaces it. */
+export async function getPetpoojaWebhookUrl(rotate = false) {
+  return (await axiosClient.post(`${ROUTE_URL}petpooja/webhook-url`, { rotate })).data as {
+    url: string;
+  };
+}
+
 export async function deleteZapierTriggerHook(data: RequestPayload) {
   return (await axiosClient.delete(`${ROUTE_URL}zapier-hook`, { data })).data;
 }
+
+export interface AmeliaConnectFields {
+  /** The WordPress site; the API works out Amelia's API address from it. */
+  baseUrl: string;
+  /** Blank keeps the saved key. */
+  apiKey: string;
+  serviceId: number;
+}
+
+/**
+ * Saves Amelia through the shared pasted-key connect, which first runs a slot
+ * search with the details and refuses them if Amelia does.
+ */
+export const connectAmelia = async (fields: AmeliaConnectFields) => {
+  const response = await axiosClient.post(`${ROUTE_URL}amelia/connect`, {
+    baseUrl: fields.baseUrl,
+    apiKey: fields.apiKey,
+    serviceId: String(fields.serviceId),
+  });
+  return response.data as { baseUrl: string; serviceId: number };
+};

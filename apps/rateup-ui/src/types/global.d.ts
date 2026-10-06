@@ -1174,14 +1174,18 @@ export type GoogleSheetIntegration = Integration & {
   credential: GoogleSheetCredential;
 };
 
+/** The message Petpooja orders send: a template, as a team, optionally after a delay. */
+export interface PetpoojaOrderEvent {
+  waTemplateId: string;
+  teamId: string;
+  scheduleLater: boolean;
+  /** Minutes; 0 sends at once. */
+  timeDelay: number;
+}
+
 export interface petpoojaCredential {
   restaurantId: string;
-  orderEvent?: {
-    waTemplateId: string;
-    teamId: string;
-    scheduleLater: boolean;
-    sendAfter: string;
-  };
+  orderEvent?: PetpoojaOrderEvent;
   history?: {
     id: string;
     name: string;
@@ -1206,10 +1210,12 @@ export type ShopifyIntegration = Integration & {
   credential: ShopifyCredential;
 };
 
+/** Amelia's credential as the API returns it: the key itself never leaves the server. */
 export interface AmeliaCredential {
-  apiKey: string;
+  /** Amelia's API address (`…/admin-ajax.php?action=wpamelia_api&call=/api/v1`). */
   baseUrl: string;
   serviceId: number;
+  hasApiKey: boolean;
 }
 
 export type AmeliaIntegration = integration & {

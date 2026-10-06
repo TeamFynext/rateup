@@ -1,6 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IconTrash } from "@tabler/icons-react";
-import type { UseMutationResult } from "@tanstack/react-query";
+import { IconRefresh, IconTrash } from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useId, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -9,12 +8,12 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import type { AppIntegration } from "@/backend/appsIntegration/integration.api";
-import type { updateIntegrationSchema } from "@/backend/appsIntegration/integration.api";
 import {
-  useCreateIntegrationMutation,
   useDeleteIntegrationMutation,
   useIntegrationByType,
-  useUpdateIntegrationMutation,
+  usePetpoojaWebhookUrl,
+  useRotatePetpoojaWebhookUrlMutation,
+  useSavePetpoojaSettingsMutation,
 } from "@/backend/appsIntegration/integration.query";
 import { IntegrationFormCard } from "@/components/dashboard/settings/integrations/IntegrationFormCard.tsx";
 import { INTEGRATIONS_CONFIG } from "@/components/dashboard/settings/integrations/integrations.config.ts";
@@ -36,11 +35,8 @@ import { Field, FieldDescription, FieldError, FieldLabel } from "../ui/field";
 import { Input } from "../ui/input";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group";
 
-const PETPOOJA_WEBHOOK_ENDPOINT = `${import.meta.env.VITE_API_URL}/api/public/integrations/petpooja`;
-
 export function PetpoojaIntegration() {
   const { data: integration } = useIntegrationByType(IntegratedApps.petpooja);
-  const updateIntegration = useUpdateIntegrationMutation(IntegratedApps.petpooja);
 
   const config = INTEGRATIONS_CONFIG.petpooja;
 
@@ -53,8 +49,8 @@ export function PetpoojaIntegration() {
     >
       <IntegrationSection label="Setup">
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <PetpoojaConfig integration={integration} updateIntegration={updateIntegration} />
-          <WaTemplateSendSettings integration={integration} updateIntegration={updateIntegration} />
+          <PetpoojaConfig integration={integration} />
+          <WaTemplateSendSettings integration={integration} />
         </div>
       </IntegrationSection>
 
@@ -65,35 +61,33 @@ export function PetpoojaIntegration() {
   );
 }
 
-function PetpoojaConfig({
-  integration,
-  updateIntegration,
-}: {
-  integration: AppIntegration;
-  updateIntegration: UseMutationResult<unknown, Error, updateIntegrationSchema, unknown>;
-}) {
+function PetpoojaConfig({ integration }: { integration: AppIntegration }) {
   const uid = useId();
   const [restaurantId, setRestaurantId] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const createIntegration = useCreateIntegrationMutation(IntegratedApps.petpooja);
+  const saveSettings = useSavePetpoojaSettingsMutation();
   const deleteIntegration = useDeleteIntegrationMutation(IntegratedApps.petpooja);
+  // Each org has its own order URL, with a token in it; the old shared one no longer sends.
+  const webhook = usePetpoojaWebhookUrl(Boolean(integration));
+  const rotateUrl = useRotatePetpoojaWebhookUrlMutation();
   const confirm = useConfirm();
   const handleConfig = () => {
     if (!restaurantId.trim().length) {
       setError("Restaurant Id is required");
       return;
     }
-    if (integration) {
-      toast.loading("Updating configuration", {
-        id: "integration-update",
-      });
-      updateIntegration.mutate({
-        credential: { ...integration.credential, restaurantId },
-      });
-    } else
-      createIntegration.mutate({
-        credential: { restaurantId },
-      });
+    saveSettings.mutate({ restaurantId });
+  };
+
+  const handleRotate = async () => {
+    const shouldRotate = await confirm({
+      title: "Create a new webhook URL?",
+      description:
+        "The current URL stops working at once. Paste the new one into Petpooja, or orders stop sending messages.",
+      confirmText: "Create new URL",
+      cancelText: "Cancel",
+    });
+    if (shouldRotate) rotateUrl.mutate();
   };
 
   const handleDeleteConfig = async () => {
@@ -119,7 +113,7 @@ function PetpoojaConfig({
       description="Your Petpooja restaurant, and the address Petpooja should send orders to."
       actions={
         <>
-          <Button onClick={handleConfig} loading={createIntegration.isPending}>
+          <Button onClick={handleConfig} loading={saveSettings.isPending}>
             {"Save changes"}
           </Button>
           <Button variant="ghost" onClick={handleDeleteConfig} disabled={!integration}>
@@ -149,25 +143,33 @@ function PetpoojaConfig({
         <Field>
           <FieldLabel htmlFor={`${uid}-webhook`}>Webhook URL</FieldLabel>
           <InputGroup>
-            <InputGroupInput id={`${uid}-webhook`} readOnly value={PETPOOJA_WEBHOOK_ENDPOINT} />
+            <InputGroupInput
+              id={`${uid}-webhook`}
+              readOnly
+              value={webhook.data?.url ?? ""}
+              placeholder={webhook.isLoading ? "Loading…" : ""}
+            />
             <InputGroupAddon align="inline-end">
-              <ApiCopyButton value={PETPOOJA_WEBHOOK_ENDPOINT} />
+              <ApiCopyButton value={webhook.data?.url ?? ""} />
             </InputGroupAddon>
           </InputGroup>
-          <FieldDescription>Paste this into Petpooja to start receiving orders.</FieldDescription>
+          <FieldDescription>
+            Paste this into Petpooja to start receiving orders. It is private to your workspace:
+            anyone with it can trigger your order message.
+          </FieldDescription>
+          <div>
+            <Button variant="ghost" onClick={handleRotate} loading={rotateUrl.isPending}>
+              <IconRefresh data-icon="inline-start" />
+              Create new URL
+            </Button>
+          </div>
         </Field>
       )}
     </IntegrationFormCard>
   );
 }
 
-function WaTemplateSendSettings({
-  integration,
-  updateIntegration,
-}: {
-  integration: AppIntegration;
-  updateIntegration: UseMutationResult<unknown, Error, updateIntegrationSchema, unknown>;
-}) {
+function WaTemplateSendSettings({ integration }: { integration: AppIntegration }) {
   const uid = useId();
   const { t: translations } = useTranslation();
   const schema = z.object({
@@ -189,15 +191,14 @@ function WaTemplateSendSettings({
     },
   });
 
+  const saveSettings = useSavePetpoojaSettingsMutation();
+
   const handleSave = form.handleSubmit((values) => {
     toast.loading("Updating settings", {
       id: "integration-update",
     });
-    updateIntegration.mutate({
-      credential: {
-        ...integration.credential,
-        orderEvent: values,
-      },
+    saveSettings.mutate({
+      orderEvent: { ...values, scheduleLater: values.timeDelay > 0 },
     });
   });
 
@@ -209,13 +210,8 @@ function WaTemplateSendSettings({
     toast.loading("Updating settings", {
       id: "integration-update",
     });
-    updateIntegration.mutate(
-      {
-        credential: {
-          ...integration.credential,
-          orderEvent: undefined,
-        },
-      },
+    saveSettings.mutate(
+      { orderEvent: null },
       {
         onSuccess: () => {
           form.reset();
@@ -279,6 +275,8 @@ function WaTemplateSendSettings({
               id={`${uid}-field`}
               {...field}
               type="number"
+              min={0}
+              onChange={(e) => field.onChange(Number(e.target.value))}
               aria-invalid={Boolean(fieldState.error)}
             />
             {fieldState.error?.message && <FieldError>{fieldState.error.message}</FieldError>}

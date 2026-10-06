@@ -3,13 +3,13 @@ import { toast } from "sonner";
 
 import { integrationKeys } from "@/backend/campaign/campaign.keys";
 import { IntegratedApps } from "@/types/enums.ts";
+import { getApiErrorMessage } from "@/utils/apiError";
 
 import type { integrationSchemaProps, updateIntegrationSchema } from "./integration.api";
 import {
+  connectAmelia,
   createIntegration,
-  createWaPaymentConfiguration,
   deleteIntegration,
-  deleteWaPaymentConfiguration,
   deleteZapierTriggerHook,
   finishOAuthConnect,
   getAllIntegrations,
@@ -17,9 +17,10 @@ import {
   getIntegrationByType,
   getIntegrationStatuses,
   getOAuthAuthorizeUrl,
-  getWaPaymentConfigurationByName,
+  getPetpoojaWebhookUrl,
   getWaPaymentConfigurations,
   regenerateWaPaymentConfigurationOauth,
+  savePetpoojaSettings,
   updateIntegration,
 } from "./integration.api";
 
@@ -30,80 +31,26 @@ export const useIntegrationByType = (type: IntegratedApps) => {
   });
 };
 
-export const useWaPaymentConfigurations = (whatsappSettingsId?: string) => {
-  return useQuery({
-    queryKey: ["waPaymentConfigurations", whatsappSettingsId],
-    queryFn: () => getWaPaymentConfigurations(whatsappSettingsId),
-    enabled: !!whatsappSettingsId,
-  });
-};
+const waPaymentKey = ["waPaymentConfigurations"] as const;
 
-export const useGetWaPaymentConfigurationByNameMutation = (type: IntegratedApps) => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: getWaPaymentConfigurationByName,
-    onSuccess: () => {
-      toast.success("Payment configuration found", {
-        id: "waPaymentConfiguration-get-by-name",
-      });
-      queryClient.invalidateQueries({ queryKey: integrationKeys.byType(type) });
-    },
-    onError: (error) => {
-      toast.error(error?.message || `Error getting waPaymentConfiguration`, {
-        id: "waPaymentConfiguration-get-by-name",
-      });
-    },
+/** The WhatsApp Payment page's list, synced from Meta each time it is fetched. */
+export const useWaPaymentConfigurations = () =>
+  useQuery({
+    queryKey: waPaymentKey,
+    queryFn: getWaPaymentConfigurations,
   });
-};
 
-export const useCreateWaPaymentConfigurationMutation = (type: IntegratedApps) => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: createWaPaymentConfiguration,
-    onSuccess: () => {
-      toast.success("Payment configuration created", {
-        id: "waPaymentConfigurations-create",
-      });
-      queryClient.invalidateQueries({ queryKey: integrationKeys.byType(type) });
-    },
-    onError: (error) => {
-      toast.error(error?.message || `Error creating waPaymentConfigurations`, {
-        id: "waPaymentConfigurations-create",
-      });
-    },
-  });
-};
-export const useRegenerateWaPaymentConfigurationOauthMutation = (type: IntegratedApps) => {
+export const useRegenerateWaPaymentConfigurationOauthMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: regenerateWaPaymentConfigurationOauth,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: integrationKeys.byType(type) });
-      toast.success("Payment configuration updated", {
-        id: "waPaymentConfigurations-oauth",
-      });
+      queryClient.invalidateQueries({ queryKey: waPaymentKey });
+      toast.success("New verification link created", { id: "waPaymentConfigurations-oauth" });
     },
     onError: (error) => {
-      toast.error(error?.message || `Error creating waPaymentConfigurations oauth link`, {
+      toast.error(getApiErrorMessage(error, "Could not create a verification link"), {
         id: "waPaymentConfigurations-oauth",
-      });
-    },
-  });
-};
-export const useDeleteWaPaymentConfigurationMutation = (type: IntegratedApps) => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: deleteWaPaymentConfiguration,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: integrationKeys.byType(type) });
-
-      toast.success("Payment configuration created", {
-        id: "waPaymentConfigurations-delete",
-      });
-    },
-    onError: (error) => {
-      toast.error(error?.message || `Error creating waPaymentConfigurations`, {
-        id: "waPaymentConfigurations-delete",
       });
     },
   });
@@ -226,6 +173,64 @@ export const useFinishOAuthConnect = (name: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: integrationKeys.byType(name) });
       queryClient.invalidateQueries({ queryKey: ["integrationStatuses"] });
+    },
+  });
+};
+
+export const useSavePetpoojaSettingsMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: savePetpoojaSettings,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: integrationKeys.byType(IntegratedApps.petpooja) });
+      toast.success("Petpooja settings saved", { id: "integration-update" });
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Could not save Petpooja settings"), {
+        id: "integration-update",
+      });
+    },
+  });
+};
+
+const petpoojaWebhookKey = ["petpooja", "webhook-url"] as const;
+
+/** The org's Petpooja order URL; fetched only once the integration exists. */
+export const usePetpoojaWebhookUrl = (enabled: boolean) =>
+  useQuery({
+    queryKey: petpoojaWebhookKey,
+    queryFn: () => getPetpoojaWebhookUrl(),
+    enabled,
+    staleTime: Infinity,
+  });
+
+export const useRotatePetpoojaWebhookUrlMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => getPetpoojaWebhookUrl(true),
+    onSuccess: (data) => {
+      queryClient.setQueryData(petpoojaWebhookKey, data);
+      toast.success("New webhook URL created. Paste it into Petpooja.", { id: "petpooja-url" });
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Could not create a new URL"), { id: "petpooja-url" });
+    },
+  });
+};
+
+export const useConnectAmeliaMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: connectAmelia,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: integrationKeys.byType(IntegratedApps.amelia) });
+      queryClient.invalidateQueries({ queryKey: ["integrationStatuses"] });
+      toast.success("Amelia connected", { id: "integration-update" });
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Could not connect Amelia"), {
+        id: "integration-update",
+      });
     },
   });
 };
