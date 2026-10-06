@@ -45,7 +45,10 @@ const WaTemplateSelector = ({
   const uid = useId();
   const { t: translations } = useTranslation();
   const { data: allTemplates, isLoading } = useWaTemplates(templateType);
-  const templates = teamId ? useTemplatesAvailableForTeam(teamId) : allTemplates;
+  // Called on every render, team or not: calling it only once a team is picked
+  // changes the hook order mid-life, and React then crashes the page.
+  const teamTemplates = useTemplatesAvailableForTeam(teamId ?? "");
+  const templates = teamId ? teamTemplates : allTemplates;
 
   const templatesData = useMemo(
     () =>
