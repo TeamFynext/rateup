@@ -160,6 +160,8 @@ export interface UserProfileData {
   name?: string | null;
   profilePhoto?: string | null;
   hasPassword?: boolean;
+  gender?: "MALE" | "FEMALE" | "OTHER" | null;
+  phone?: string | null;
 }
 
 export const useUserProfile = () =>
@@ -171,8 +173,16 @@ export const useUserProfile = () =>
     },
   });
 
-/** Name only: the API keeps the stored title and phone when they are not sent. */
-export const updateProfileName = (name: string) => axios.put("/api/user/update-profile", { name });
+/**
+ * Renames the user. Title and phone are resent from the stored profile: the endpoint
+ * overwrites both, and older API builds reject the request without them.
+ */
+export const updateProfileName = (name: string, profile?: UserProfileData) =>
+  axios.put("/api/user/update-profile", {
+    name,
+    title: profile?.gender ?? undefined,
+    phone: profile?.phone ?? "",
+  });
 
 export const updateProfilePhoto = (profilePhoto: string) =>
   axios.put("/api/user/update-profile-photo", { profilePhoto });

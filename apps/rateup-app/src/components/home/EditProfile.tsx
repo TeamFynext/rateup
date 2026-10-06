@@ -5,7 +5,7 @@ import { Camera } from "lucide-react-native";
 import React, { useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 
-import { serverMessage, updateProfileName, updateProfilePhoto } from "@/api/api";
+import { serverMessage, updateProfileName, updateProfilePhoto, useUserProfile } from "@/api/api";
 import Image from "@/components/common/Image";
 import { Toast } from "@/components/common/Notice";
 import {
@@ -34,6 +34,7 @@ export default function EditProfile({
 }: Readonly<{ name: string; profilePhoto?: string | null }>) {
   const { t } = useTheme();
   const queryClient = useQueryClient();
+  const { data: profile } = useUserProfile();
   const [name, setName] = useState(savedName);
   const [submitted, setSubmitted] = useState(false);
 
@@ -58,7 +59,7 @@ export default function EditProfile({
   });
 
   const rename = useMutation({
-    mutationFn: updateProfileName,
+    mutationFn: (newName: string) => updateProfileName(newName, profile),
     onSuccess: () => {
       refreshUser();
       Toast.show({ type: "success", text1: "Name updated" });
@@ -184,7 +185,7 @@ export default function EditProfile({
               : null
           }
         />
-        <CashierButton label="Save" onPress={save} loading={rename.isPending} />
+        <CashierButton label="Save" onPress={save} loading={rename.isPending} disabled={!profile} />
       </Card>
     </ScrollView>
   );
