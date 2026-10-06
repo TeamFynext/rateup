@@ -67,10 +67,12 @@ const deleteUserSchema = z.object({
   password: z.string().optional(),
 });
 
+// Title and phone are optional so a client editing only the name (the mobile app) does
+// not have to resend them; an empty title would not fit the Gender enum anyway.
 const updateProfileSchema = z.object({
-  title: z.string(),
+  title: z.string().optional(),
   name: z.string(),
-  phone: z.string(),
+  phone: z.string().optional(),
 });
 
 /** The locales the clients ship translations for; anything else is rejected. */

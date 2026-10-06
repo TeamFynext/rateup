@@ -62,7 +62,8 @@ vi.mock("../../org/org.services.js", () => ({ pauseOrg: vi.fn() }));
 import prisma from "../../../utils/prisma.js";
 import { checkAndExecuteRuleByTriggerEvent } from "../../whatsapp/automatedReply/wa_automatedReply.utils.js";
 import { ShopifyEvents } from "../../../types/enums.js";
-import { handleWebhook, type ShopifyWebhookJobData } from "./shopify.service.js";
+import { handleWebhook } from "./shopify.inbound.js";
+import type { ShopifyWebhookJobData } from "./shopify.types.js";
 import { defaultWebhookHandlers } from "./shopify.handler.js";
 import { ShopifyOrderWebhookTopicEventMap } from "./shopify.util.js";
 

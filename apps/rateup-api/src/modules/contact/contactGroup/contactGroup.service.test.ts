@@ -25,9 +25,8 @@ vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));
 
-vi.mock("../../integrations/external/zapier/zapier.service.js", () => ({
-  addZapierTriggerToQueue: vi.fn(),
-  ZapierTriggers: { CONTACT_ADDED_TO_GROUP: "contact_added_to_group" },
+vi.mock("../../integrations/events/emitIntegrationEvent.js", () => ({
+  emitIntegrationEvent: vi.fn(),
 }));
 
 vi.mock("../../../../generated/prisma/client.js", () => ({
@@ -35,7 +34,7 @@ vi.mock("../../../../generated/prisma/client.js", () => ({
 }));
 
 import prisma from "../../../utils/prisma.js";
-import { addZapierTriggerToQueue } from "../../integrations/external/zapier/zapier.service.js";
+import { emitIntegrationEvent } from "../../integrations/events/emitIntegrationEvent.js";
 import {
   addExistingContactsToGroup,
   addExistingContactsToMultipleGroups,
@@ -345,12 +344,12 @@ describe("addNewContactsToGroup", () => {
 
     await addNewContactsToGroup("g1", [{ name: "Ann", phone: "919876543210" }] as any, ORG);
 
-    expect(addZapierTriggerToQueue).toHaveBeenCalledTimes(1);
-    expect(addZapierTriggerToQueue).toHaveBeenCalledWith(
-      "contact_added_to_group",
-      { contact_added_to_group: { contactId: "c1", contactGroupId: "g1" } },
-      ORG,
-    );
+    expect(emitIntegrationEvent).toHaveBeenCalledTimes(1);
+    expect(emitIntegrationEvent).toHaveBeenCalledWith(ORG, {
+      type: "contact_group.members_added",
+      contactGroupId: "g1",
+      contactIds: ["c1"],
+    });
   });
 
   test("reports how many it added and how many phones were not real", async () => {
@@ -409,7 +408,7 @@ describe("addExistingContactsToGroup", () => {
 
     await addExistingContactsToGroup("g1", ["c1"], false, ORG);
 
-    expect((addZapierTriggerToQueue as Mock).mock.calls[0][2]).toBe(ORG);
+    expect((emitIntegrationEvent as Mock).mock.calls[0][0]).toBe(ORG);
   });
 });
 

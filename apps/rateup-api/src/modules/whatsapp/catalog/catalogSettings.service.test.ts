@@ -35,7 +35,7 @@ vi.mock("../whatsappSurvey/wasurvey.utils.js", () => ({
   createListMessage: vi.fn(),
   createTextMessage: vi.fn(),
 }));
-vi.mock("../../integrations/shopify/shopify.service.js", () => ({
+vi.mock("../../integrations/shopify/shopify.catalog.js", () => ({
   buildShopifyCartUrl: vi.fn(),
   createShopifyDraftOrder: vi.fn(),
 }));

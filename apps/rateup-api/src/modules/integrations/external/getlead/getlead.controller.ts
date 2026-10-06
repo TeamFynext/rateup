@@ -1,56 +1,21 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 
-import { recordAuditEvent } from "../../../../utils/auditLog.js";
 import { log } from "../../../../utils/logger.js";
-import {
-  connectGetLead,
-  getCachedGetLeadMeta,
-  getGetLeadIntegration,
-  getGetLeadSettings,
-  GetLeadConnectionError,
-  saveGetLeadSettings,
-} from "./getlead.service.js";
+import { IntegrationConnectError } from "../../shared/oauthConnectError.js";
+import { getCachedGetLeadMeta } from "./getlead.connect.js";
+import { getGetLeadIntegration } from "./getlead.credential.js";
+import { getGetLeadSettings, saveGetLeadSettings } from "./getlead.settings.js";
 import { getGetLeadCredential } from "./getlead.types.js";
 import { maskGetLeadApiKey } from "./getlead.utils.js";
-import type {
-  GetLeadConnectBody,
-  GetLeadMetaQuery,
-  GetLeadSettingsBody,
-} from "./getlead.schema.js";
+import type { GetLeadMetaQuery, GetLeadSettingsBody } from "./getlead.schema.js";
 
-/** Turns a GetLeadConnectionError into its own status; anything else is a 500. */
+/** Turns an IntegrationConnectError into its own status; anything else is a 500. */
 function replyWithError(reply: FastifyReply, error: unknown, context: string) {
-  if (error instanceof GetLeadConnectionError) {
-    return reply.code(error.status).send({ error: error.message });
+  if (error instanceof IntegrationConnectError) {
+    return reply.code(error.statusCode).send({ error: error.message });
   }
   log.error("%s: %s", context, error);
   return reply.code(500).send({ error: "Something went wrong" });
-}
-
-/**
- * Saves a pasted API key after proving it works.
- *
- * Deliberately not the generic `POST /integrations`: that stores whatever it is
- * given, so a typo would only surface later as leads quietly failing to sync.
- */
-export async function connectGetLeadHandler(
-  request: FastifyRequest<{ Body: GetLeadConnectBody }>,
-  reply: FastifyReply,
-) {
-  try {
-    const { orgId } = request.user;
-    const { apiKey, baseUrl } = request.body;
-    const result = await connectGetLead(orgId, apiKey, baseUrl);
-
-    // Recorded by hand because this route is on the audit hook's skip list: the
-    // generic hook logs `request.body`, and the body is a live API key. Only the
-    // fact of the connection is written, never the credential.
-    await recordAuditEvent(request, "GetLead connected");
-
-    return reply.code(200).send(result);
-  } catch (error) {
-    return replyWithError(reply, error, "Error connecting GetLead");
-  }
 }
 
 /** Reference data for the settings screen: sources, statuses, purposes. */

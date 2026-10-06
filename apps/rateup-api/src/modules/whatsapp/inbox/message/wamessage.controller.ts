@@ -64,6 +64,7 @@ import {
 } from "./wamessage.utils.js";
 import { getTemplateByNameAndOrgId } from "../../messageTemplates/wa_templates.service.js";
 import { log } from "../../../../utils/logger.js";
+import { emitIntegrationEvent } from "../../../integrations/events/emitIntegrationEvent.js";
 import { HttpError } from "../../../../utils/http.js";
 import { normalizeSourceIdentifier } from "../../../../utils/channelIdentifier.js";
 import {
@@ -87,10 +88,6 @@ import {
   WaReceiveMessageBody,
   WaSendMessageBody,
 } from "../../../../types/whatsapp.types.js";
-import {
-  addZapierTriggerToQueue,
-  ZapierTriggers,
-} from "../../../integrations/external/zapier/zapier.service.js";
 import {
   checkIfFirstSendMessageInConversation,
   checkIfFirstUserSendMessageInConversation,
@@ -396,19 +393,10 @@ export async function handleWaMessages(
       }
     }
     if (type === "receive")
-      await addZapierTriggerToQueue(
-        ZapierTriggers.NEW_MESSAGE,
-        {
-          [ZapierTriggers.NEW_MESSAGE]: {
-            messageBody,
-            messageId,
-            sourcePlatform,
-            sourceIdentifier,
-            from,
-          },
-        },
-        orgId,
-      );
+      await emitIntegrationEvent(orgId, {
+        type: "message.received",
+        message: { messageBody, messageId, sourcePlatform, sourceIdentifier, from },
+      });
     // Meta hands the thread to whichever app sends, so any message RateUp
     // sends takes it off Meta AI — a staff reply, but equally an automation,
     // campaign, template, flow or API send. Marking only staff replies left

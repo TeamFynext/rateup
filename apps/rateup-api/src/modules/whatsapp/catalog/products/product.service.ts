@@ -3,7 +3,7 @@ import { log } from "../../../../utils/logger.js";
 import { getWaSettings } from "../../settings/wa_settings.service.js";
 import { callMetaApi } from "../../wa_axios.js";
 import { getWaCatalog } from "../catalog.service.js";
-import { getShopifyInfo } from "../../../integrations/shopify/shopify.service.js";
+import { getShopifyInfo } from "../../../integrations/shopify/shopify.credential.js";
 import shopify from "../../../integrations/shopify/shopify.config.js";
 import { getActiveShopifySession } from "../../../integrations/shopify/shopify.session.js";
 import { Prisma } from "../../../../../generated/prisma/client.js";

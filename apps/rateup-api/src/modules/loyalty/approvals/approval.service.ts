@@ -6,7 +6,7 @@ import {
   CancelRequestInput,
 } from "./approval.schema.js";
 import { Prisma } from "../../../../generated/prisma/client.js";
-import { syncRedemptionToShopify } from "../../integrations/shopify/shopifyDiscount.service.js";
+import { syncRedemptionDiscount } from "../../integrations/commerce/discounts.js";
 
 /** Every approver is handed the row with its account (and contact/tier) already joined. */
 const approvalWithAccount = {
@@ -473,9 +473,9 @@ async function approveRedemption(approval: ApprovalWithAccount, data: ApproveReq
   // Outside the transaction on purpose: this is an HTTP call to Shopify, and making one
   // while holding a Postgres connection is how a slow shop turns into pool exhaustion.
   // The approval is already committed, so a failure here only leaves the code cashier-only
-  // (recorded on the redemption as `shopifyDiscountError`).
+  // (recorded on the redemption as `storeDiscountError`).
   if (approval.redemptionId) {
-    await syncRedemptionToShopify(approval.redemptionId);
+    await syncRedemptionDiscount(approval.redemptionId);
   }
 
   return approved;

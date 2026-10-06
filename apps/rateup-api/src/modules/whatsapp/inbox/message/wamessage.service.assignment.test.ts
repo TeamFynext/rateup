@@ -60,9 +60,9 @@ vi.mock("../../../org/org.services.js", () => ({
 }));
 vi.mock("../../../team/team.service.js", () => ({ getTeamIdsByUserId: vi.fn(async () => []) }));
 vi.mock("../../../notification/notify.js", () => ({ notify: vi.fn() }));
-vi.mock("../../../integrations/external/zapier/zapier.service.js", () => ({
-  addZapierTriggerToQueue: vi.fn(),
-  ZapierTriggers: { CONTACT_ASSIGN: "CONTACT_ASSIGN" },
+vi.mock("../../../integrations/events/emitIntegrationEvent.js", () => ({
+  emitIntegrationEvent: vi.fn(),
+  emitSurveyResponseSubmitted: vi.fn(),
 }));
 vi.mock("@faker-js/faker", () => ({ faker: {} }));
 vi.mock("../../../contact/conversation/conversation.service.js", () => ({
@@ -96,7 +96,7 @@ vi.mock("../../../../../generated/prisma/client.js", () => ({
 import prisma from "../../../../utils/prisma.js";
 import { updateContactById } from "../../../contact/contact.service.js";
 import { notify } from "../../../notification/notify.js";
-import { addZapierTriggerToQueue } from "../../../integrations/external/zapier/zapier.service.js";
+import { emitIntegrationEvent } from "../../../integrations/events/emitIntegrationEvent.js";
 import {
   getConversationById,
   getLastCreatedConversationForContact,
@@ -156,7 +156,7 @@ const openConversationMock = openConversationForContact as unknown as Mock;
 const updateAssigneesMock = updateConversationAssignees as unknown as Mock;
 const setInboxStatusMock = setInboxStatus as unknown as Mock;
 const notifyMock = notify as unknown as Mock;
-const zapierMock = addZapierTriggerToQueue as unknown as Mock;
+const emitMock = emitIntegrationEvent as unknown as Mock;
 const resolveActorMock = resolveInboxActor as unknown as Mock;
 
 const CONTACT = { id: "contact-1", orgId: "org-1", name: "Ada" };
@@ -512,18 +512,18 @@ describe("assignWaMessageToUser - telling people about it", () => {
     );
   });
 
-  test("raises the Zapier assignment trigger for the org", async () => {
+  test("announces the newly assigned people to the integrations", async () => {
     await assignWaMessageToUser(
       { contactId: "contact-1", assignees: [assignee("user-9")] } as any,
       "org-1",
       "user-1",
     );
 
-    expect(zapierMock).toHaveBeenCalledWith(
-      "CONTACT_ASSIGN",
-      { CONTACT_ASSIGN: { contact: CONTACT, newAssignees: [assignee("user-9")] } },
-      "org-1",
-    );
+    expect(emitMock).toHaveBeenCalledWith("org-1", {
+      type: "contact.assigned",
+      contact: CONTACT,
+      assignees: [assignee("user-9")],
+    });
   });
 });
 

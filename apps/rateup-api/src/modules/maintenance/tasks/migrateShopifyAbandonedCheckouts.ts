@@ -7,7 +7,7 @@ import { getActiveShopifySession } from "../../integrations/shopify/shopify.sess
 import {
   getManagableWebhooks,
   registerShopifyWebhook,
-} from "../../integrations/shopify/shopify.service.js";
+} from "../../integrations/shopify/shopify.webhooks.js";
 import {
   DEFAULT_ABANDONED_DELAY_MINUTES,
   MAX_ABANDONED_DELAY_MINUTES,

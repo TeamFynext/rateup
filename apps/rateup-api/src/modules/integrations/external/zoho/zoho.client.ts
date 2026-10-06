@@ -169,12 +169,15 @@ export async function registerZohoWebhook({
   product,
   events,
   zohoWebhookSecret,
+  notifyUrl,
 }: {
   accessToken: string;
   apiDomain: string;
   product: "crm" | "bigin";
   events: string[];
   zohoWebhookSecret: string;
+  /** Where Zoho delivers: the integration's address on the shared receiver. */
+  notifyUrl: string;
 }) {
   const client = createZohoAxios(accessToken, apiDomain);
   const apiPath = getZohoApiPath(product);
@@ -185,7 +188,7 @@ export async function registerZohoWebhook({
       {
         channel_id: channelId,
         events,
-        notify_url: `${process.env.API_URL}/api/integration/external/zoho/webhooks/${product}`,
+        notify_url: notifyUrl,
         channel_expiry: formatZohoDateTime(expiryDate),
         token: zohoWebhookSecret,
         operation: "subscribe",

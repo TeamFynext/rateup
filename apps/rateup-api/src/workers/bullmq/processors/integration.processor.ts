@@ -1,7 +1,7 @@
 import { Worker } from "bullmq";
 import baseRedis from "../../../utils/redisConnection.js";
 import { log } from "../../../utils/logger.js";
-import { processIntegration } from "../../../modules/integrations/external/integrationDispatch.js";
+import { processIntegrationJob } from "../../../modules/integrations/external/integrationDispatch.js";
 
 const workerConnection = baseRedis.duplicate();
 
@@ -19,7 +19,7 @@ export const integrationWorker = new Worker(
     // honour a 429. Providers that enqueue without those options keep exactly
     // one attempt, as before; the only change for them is that a failure is now
     // recorded as a failed job instead of being lost to a log line.
-    await processIntegration(job);
+    await processIntegrationJob(job);
     log.debug("Integration queue processing completed successfully");
   },
   {

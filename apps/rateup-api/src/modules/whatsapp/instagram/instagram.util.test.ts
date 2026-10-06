@@ -41,6 +41,14 @@ describe("getInstagramWebhookEvent - the events it recognises", () => {
     expect(event).toBe(InstagramEvent.REFERRAL);
   });
 
+  test("classifies an ig.me link opening an existing thread as a referral", () => {
+    const event = getInstagramWebhookEvent(
+      messaging({ referral: { ref: "summer_sale", source: "SHORTLINKS", type: "OPEN_THREAD" } }),
+    );
+
+    expect(event).toBe(InstagramEvent.REFERRAL);
+  });
+
   test("classifies a story mention by its attachment type", () => {
     const event = getInstagramWebhookEvent(
       messaging({

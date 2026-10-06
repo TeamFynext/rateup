@@ -8,7 +8,7 @@ vi.mock("../wa_axios.js", () => ({
   callMetaApi: vi.fn(),
   GraphApiError: class GraphApiError extends Error {},
 }));
-vi.mock("../settings/wa_settings.service.js", () => ({ getWaSettingsByPageId: vi.fn() }));
+vi.mock("../metaChannel/metaChannel.service.js", () => ({ getMessengerChannel: vi.fn() }));
 vi.mock("../inbox/message/wamessage.service.js", () => ({
   updateWaMessageByMessageId: vi.fn(),
 }));
@@ -19,7 +19,7 @@ vi.mock("../../../utils/logger.js", () => ({
 
 import prisma from "../../../utils/prisma.js";
 import { callMetaApi } from "../wa_axios.js";
-import { getWaSettingsByPageId } from "../settings/wa_settings.service.js";
+import { getMessengerChannel } from "../metaChannel/metaChannel.service.js";
 import { updateWaMessageByMessageId } from "../inbox/message/wamessage.service.js";
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
@@ -38,7 +38,7 @@ type Mock = ReturnType<typeof vi.fn>;
 const db = (prisma as unknown as { waMessage: { findMany: Mock; findFirst: Mock; update: Mock } })
   .waMessage;
 const callMetaApiMock = callMetaApi as unknown as Mock;
-const getSettingsMock = getWaSettingsByPageId as unknown as Mock;
+const getSettingsMock = getMessengerChannel as unknown as Mock;
 const updateByMessageIdMock = updateWaMessageByMessageId as unknown as Mock;
 const handleWaMessagesMock = handleWaMessages as unknown as Mock;
 
@@ -46,8 +46,11 @@ const PAGE_ID = "page-1";
 const PSID = "psid-1";
 const ORG_ID = "org-1";
 
+/** The Messenger channel row: for Messenger the account is the Page itself. */
 const SETTINGS = {
   orgId: ORG_ID,
+  platform: "FACEBOOK",
+  accountId: PAGE_ID,
   fbPageId: PAGE_ID,
   pageAccessToken: "page-token-abc",
 };

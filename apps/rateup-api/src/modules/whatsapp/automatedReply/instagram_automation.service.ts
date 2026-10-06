@@ -7,12 +7,14 @@
 import { log } from "../../../utils/logger.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
 import prisma from "../../../utils/prisma.js";
+import type { Prisma } from "../../../../generated/prisma/client.js";
 import {
   createOrUpdateInstagramAutomationMessage,
   logInstagramAutomationAction,
 } from "./instagram_automatedReply.service.js";
 import { parseToWhatsAppFormat } from "../whatsappSurvey/wasurvey.utils.js";
 import {
+  doesUserFollowInstagramAccount,
   sendInstagramGenericTemplate,
   sendInstagramQuickReply,
   sendInstagramTextMessage,
@@ -22,8 +24,10 @@ import {
 } from "../instagram/instagram_messaging.service.js";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload.js";
 import type {
+  AutomationEdge,
   AutomationNode,
   InstagramQuickReplyOption,
+  InstagramTemplateButton,
   InstagramTemplateElement,
 } from "../whatsappSurvey/node-types.js";
 
@@ -39,7 +43,8 @@ export type InstagramNodeType =
   | "instagramGenericTemplateNode"
   | "instagramStoryReplyNode"
   | "instagramProductTemplateNode"
-  | "instagramIceBreakerNode";
+  | "instagramIceBreakerNode"
+  | "instagramFollowCheckNode";
 
 /** Nodes on an Instagram automation graph are the shared node shape, narrowed by `type`. */
 type InstagramNode = AutomationNode;
@@ -54,6 +59,96 @@ function nodeNumber(value: unknown): number {
 }
 function nodeArray<T>(value: unknown): T[] {
   return Array.isArray(value) ? (value as T[]) : [];
+}
+
+/** Nodes that stop the flow until the user answers; handleInstagramUserResponse resumes it. */
+const WAITS_FOR_REPLY = new Set([
+  "instagramQuickReplyNode",
+  "instagramGenericTemplateNode",
+  "textInputNode",
+]);
+
+/** Meta lets the business message a user only within 24h of their last message. */
+const REPLY_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+/** Kept in the tracking row's `response` column. */
+interface InstagramFlowProgress {
+  /** When the flow stopped at `currentNode` to wait; absent when it is not waiting. */
+  waitingAt?: string;
+  /** textInputNode answers, by the node's variableName. */
+  answers?: Record<string, string>;
+}
+
+function readProgress(value: unknown): InstagramFlowProgress {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as InstagramFlowProgress)
+    : {};
+}
+
+// Button ids double as the edge sourceHandle; the fallbacks mirror node.tsx in rateup-ui,
+// which names the handle of a choice saved without an id.
+function quickReplyHandle(option: InstagramQuickReplyOption, index: number): string {
+  return option.id || option.payload || `qr_${index}`;
+}
+function templateButtonHandle(button: InstagramTemplateButton, card: number, index: number) {
+  return button.id || button.payload || `btn_${card}_${index}`;
+}
+
+/** The tappable choices of a waiting node, as handle id + the title the user sees. */
+function nodeChoices(node: InstagramNode): { handle: string; title: string }[] {
+  if (node.type === "instagramQuickReplyNode") {
+    const options = nodeArray<InstagramQuickReplyOption>(
+      node.data?.quick_replies ?? node.data?.quickReplies,
+    );
+    return options.map((qr, i) => ({ handle: quickReplyHandle(qr, i), title: qr.title ?? "" }));
+  }
+  if (node.type === "instagramGenericTemplateNode") {
+    return nodeArray<InstagramTemplateElement>(node.data?.elements).flatMap((el, ci) =>
+      (el.buttons ?? []).flatMap((btn, bi) =>
+        btn.type === "postback"
+          ? [{ handle: templateButtonHandle(btn, ci, bi), title: btn.title }]
+          : [],
+      ),
+    );
+  }
+  return [];
+}
+
+/**
+ * The branch a reply takes out of a choice node. A tapped button must match its own
+ * handle: any other payload (a stale button, the persistent menu) is not an answer here.
+ * Typed text counts when it equals a choice's title, else it takes the unlabelled branch.
+ */
+function pickReplyBranch(
+  node: InstagramNode,
+  edges: AutomationEdge[],
+  message: string,
+  buttonPayload?: string,
+): AutomationEdge[] {
+  if (buttonPayload) return edges.filter((edge) => edge.sourceHandle === buttonPayload);
+  const typed = message.trim().toLowerCase();
+  const choice = nodeChoices(node).find((c) => c.title.trim().toLowerCase() === typed);
+  if (choice) return edges.filter((edge) => edge.sourceHandle === choice.handle);
+  return edges.filter((edge) => !edge.sourceHandle);
+}
+
+async function waitForInstagramReply(automationMessageId: string, nodeId: string) {
+  const row = await prisma.waAutomatedReplyMessage.findUnique({
+    where: { id: automationMessageId },
+    select: { response: true },
+  });
+  const progress: InstagramFlowProgress = {
+    ...readProgress(row?.response),
+    waitingAt: new Date().toISOString(),
+  };
+  await prisma.waAutomatedReplyMessage.update({
+    where: { id: automationMessageId },
+    data: {
+      currentNode: nodeId,
+      status: "inProgress",
+      response: progress as Prisma.InputJsonValue,
+    },
+  });
 }
 
 export interface InstagramAutomation {
@@ -269,14 +364,33 @@ export async function processNextInstagramNode(
         messageSent = false;
         break;
 
+      case "instagramFollowCheckNode":
+        await followInstagramFollowBranch(
+          node,
+          igsId,
+          automation,
+          orgId,
+          automationMessageId,
+          ibaId,
+          remainingCommentId,
+        );
+        return;
+
       case "pauseNode":
         await handleInstagramPauseNode(node, igsId, orgId, automation, automationMessageId, ibaId);
         return; // Pause node returns early
 
-      case "textInputNode":
-        // Wait for user input - don't process next node
-        log.info(`[Instagram Automation] Waiting for text input at node ${nodeId}`);
-        return;
+      case "textInputNode": {
+        const question = parseToWhatsAppFormat(nodeString(node.data?.question) ?? "");
+        if (question && remainingCommentId) {
+          await sendInstagramPrivateReply(remainingCommentId, question, ibaId, orgId, igsId);
+        } else if (question) {
+          await sendInstagramTextMessage(igsId, question, orgId, ibaId);
+        }
+        remainingCommentId = undefined;
+        messageSent = Boolean(question);
+        break;
+      }
 
       default:
         log.warn(`[Instagram Automation] Unknown node type: ${node.type} at node ${nodeId}`);
@@ -296,15 +410,13 @@ export async function processNextInstagramNode(
       },
     });
 
-    // Determine if we should continue to the next node
-    const requiresUserInput = [
-      "instagramQuickReplyNode",
-      "instagramGenericTemplateNode",
-      "textInputNode",
-    ].includes(node.type);
-
-    // Find and process next nodes
     const nextEdges = automation.matchData.json.edges.filter((edge) => edge.source === nodeId);
+
+    // A choice with nowhere to go has nothing to wait for; a question still records its answer.
+    if (WAITS_FOR_REPLY.has(node.type) && (nextEdges.length > 0 || node.type === "textInputNode")) {
+      await waitForInstagramReply(automationMessageId, nodeId);
+      return;
+    }
 
     if (nextEdges && nextEdges.length > 0) {
       for (const nextEdge of nextEdges) {
@@ -313,18 +425,15 @@ export async function processNextInstagramNode(
           data: { currentNode: nextEdge.target },
         });
 
-        // Only continue if node doesn't require user input
-        if (!requiresUserInput) {
-          await processNextInstagramNode(
-            igsId,
-            automation,
-            nextEdge.target,
-            orgId,
-            automationMessageId,
-            ibaId,
-            remainingCommentId,
-          );
-        }
+        await processNextInstagramNode(
+          igsId,
+          automation,
+          nextEdge.target,
+          orgId,
+          automationMessageId,
+          ibaId,
+          remainingCommentId,
+        );
       }
     } else {
       // No next node, mark as completed
@@ -340,6 +449,58 @@ export async function processNextInstagramNode(
     // As in startInstagramAutomationFlow: not thrown, but recorded so the flow that
     // stopped here can be found later.
     await markInstagramAutomationStopped(igsId, automation.id, error);
+  }
+}
+
+/** Branch handles of instagramFollowCheckNode; mirror node.tsx in rateup-ui. */
+const FOLLOWING_HANDLE = "following";
+const NOT_FOLLOWING_HANDLE = "notFollowing";
+
+async function followInstagramFollowBranch(
+  node: InstagramNode,
+  igsId: string,
+  automation: InstagramAutomation,
+  orgId: string,
+  automationMessageId: string,
+  ibaId: string,
+  commentId?: string,
+): Promise<void> {
+  const follows = await doesUserFollowInstagramAccount(igsId, ibaId);
+  const handle = follows ? FOLLOWING_HANDLE : NOT_FOLLOWING_HANDLE;
+
+  await logInstagramAutomationAction({
+    igsId,
+    nodeId: node.id,
+    automationId: automation.id,
+    orgId,
+    response: { action: "follow_checked", follows },
+  });
+
+  const branch = (automation.matchData.json?.edges ?? []).filter(
+    (edge) => edge.source === node.id && edge.sourceHandle === handle,
+  );
+  if (branch.length === 0) {
+    await prisma.waAutomatedReplyMessage.updateMany({
+      where: { phone: igsId, waAutomatedReplyId: automation.id },
+      data: { status: "completed" },
+    });
+    return;
+  }
+
+  for (const edge of branch) {
+    await prisma.waAutomatedReplyMessage.updateMany({
+      where: { phone: igsId, waAutomatedReplyId: automation.id },
+      data: { currentNode: edge.target },
+    });
+    await processNextInstagramNode(
+      igsId,
+      automation,
+      edge.target,
+      orgId,
+      automationMessageId,
+      ibaId,
+      commentId,
+    );
   }
 }
 
@@ -400,12 +561,11 @@ async function handleInstagramGenericTemplateNode(
   ibaId: string,
 ): Promise<void> {
   try {
-    const elements = nodeArray<InstagramTemplateElement>(node.data?.elements).map((el) => ({
+    const elements = nodeArray<InstagramTemplateElement>(node.data?.elements).map((el, ci) => ({
       ...el,
-      buttons: (el.buttons ?? []).map((btn) => ({
+      buttons: (el.buttons ?? []).map((btn, bi) => ({
         ...btn,
-        // Use the button's id as the payload so it matches the edge sourceHandle
-        payload: btn.type === "postback" ? btn.id || btn.payload || btn.title : btn.payload,
+        payload: btn.type === "postback" ? templateButtonHandle(btn, ci, bi) : btn.payload,
       })),
     }));
 
@@ -435,10 +595,9 @@ async function handleInstagramQuickReplyNode(
   try {
     const text = parseToWhatsAppFormat(nodeString(node.data?.text) ?? "") || "Choose an option:";
     const rawQuickReplies = node.data?.quick_replies ?? node.data?.quickReplies;
-    const quickReplies = nodeArray<InstagramQuickReplyOption>(rawQuickReplies).map((qr) => ({
+    const quickReplies = nodeArray<InstagramQuickReplyOption>(rawQuickReplies).map((qr, i) => ({
       ...qr,
-      // Use the reply's id as the payload so it matches the edge sourceHandle
-      payload: qr.id || qr.payload || qr.title,
+      payload: quickReplyHandle(qr, i),
     }));
 
     if (quickReplies.length === 0) {
@@ -549,7 +708,8 @@ async function handleInstagramPauseNode(
 }
 
 /**
- * Handle user response to Instagram automation
+ * Continues the flow a user is waiting in, if their message answers it. Returns true when
+ * the message was consumed, so the caller skips the keyword rules for it.
  */
 export async function handleInstagramUserResponse(
   igsId: string,
@@ -559,8 +719,7 @@ export async function handleInstagramUserResponse(
   buttonPayload?: string,
 ): Promise<boolean> {
   try {
-    // Find the most recent active automation for this user
-    const recentAutomation = await prisma.waAutomatedReplyMessage.findFirst({
+    const rows = await prisma.waAutomatedReplyMessage.findMany({
       where: {
         phone: igsId,
         orgId,
@@ -572,32 +731,40 @@ export async function handleInstagramUserResponse(
       include: {
         waAutomatedReply: true,
       },
-      orderBy: {
-        createdAt: "desc",
-      },
     });
 
-    if (!recentAutomation || !recentAutomation.waAutomatedReply) {
-      return false; // No active automation found
+    const now = Date.now();
+    const waiting = rows
+      .map((row) => ({ row, waitingAt: Date.parse(readProgress(row.response).waitingAt ?? "") }))
+      .filter(({ waitingAt }) => now - waitingAt < REPLY_WINDOW_MS)
+      .sort((a, b) => b.waitingAt - a.waitingAt)[0]?.row;
+
+    if (!waiting?.waAutomatedReply || !waiting.currentNode) {
+      return false;
     }
 
-    const automation = recentAutomation.waAutomatedReply as InstagramAutomation;
-    const currentNodeId = recentAutomation.currentNode;
-
-    if (!currentNodeId) {
-      return false; // No current node tracked for this automation
-    }
-
-    // Find the current node
+    const automation = waiting.waAutomatedReply as unknown as InstagramAutomation;
+    const currentNodeId = waiting.currentNode;
     const currentNode = automation.matchData?.json?.nodes?.find(
       (node) => node.id === currentNodeId,
     );
 
-    if (!currentNode) {
+    if (!currentNode || !WAITS_FOR_REPLY.has(currentNode.type)) {
       return false;
     }
 
-    // Log the user response
+    const edges = (automation.matchData?.json?.edges ?? []).filter(
+      (edge) => edge.source === currentNodeId,
+    );
+    const isQuestion = currentNode.type === "textInputNode";
+    const nextEdges = isQuestion
+      ? edges
+      : pickReplyBranch(currentNode, edges, message, buttonPayload);
+
+    if (!isQuestion && nextEdges.length === 0) {
+      return false;
+    }
+
     await logInstagramAutomationAction({
       igsId,
       nodeId: currentNodeId,
@@ -611,61 +778,30 @@ export async function handleInstagramUserResponse(
       },
     });
 
-    // Handle different node types that expect user input
-    if (currentNode.type === "textInputNode") {
-      // Save the user input (you might want to store this in a variable)
-      const variableName = currentNode.data?.variableName;
+    // Dropping waitingAt first means a second message cannot answer the same step twice.
+    const { answers } = readProgress(waiting.response);
+    const variableName = isQuestion ? nodeString(currentNode.data?.variableName) : undefined;
+    const progress: InstagramFlowProgress = {
+      answers: variableName ? { ...answers, [variableName]: message } : answers,
+    };
+    await prisma.waAutomatedReplyMessage.update({
+      where: { id: waiting.id },
+      data: {
+        response: progress as Prisma.InputJsonValue,
+        ...(nextEdges.length === 0 && { status: "completed" }),
+      },
+    });
 
-      log.info(
-        `[Instagram Automation] Received text input "${message}" for variable "${variableName}"`,
-      );
+    for (const nextEdge of nextEdges) {
+      await prisma.waAutomatedReplyMessage.update({
+        where: { id: waiting.id },
+        data: { currentNode: nextEdge.target },
+      });
 
-      // Continue to next node
-      await processNextInstagramNode(
-        igsId,
-        automation,
-        currentNodeId,
-        orgId,
-        recentAutomation.id,
-        ibaId,
-      );
-
-      return true;
+      await processNextInstagramNode(igsId, automation, nextEdge.target, orgId, waiting.id, ibaId);
     }
 
-    if (
-      currentNode.type === "instagramQuickReplyNode" ||
-      currentNode.type === "instagramGenericTemplateNode"
-    ) {
-      // Find the next node based on the button clicked
-      const nextEdges = automation.matchData?.json?.edges?.filter(
-        (edge) =>
-          edge.source === currentNodeId &&
-          (edge.sourceHandle === buttonPayload || !edge.sourceHandle),
-      );
-
-      if (nextEdges && nextEdges.length > 0) {
-        for (const nextEdge of nextEdges) {
-          await prisma.waAutomatedReplyMessage.updateMany({
-            where: { phone: igsId, waAutomatedReplyId: automation.id },
-            data: { currentNode: nextEdge.target },
-          });
-
-          await processNextInstagramNode(
-            igsId,
-            automation,
-            nextEdge.target,
-            orgId,
-            recentAutomation.id,
-            ibaId,
-          );
-        }
-
-        return true;
-      }
-    }
-
-    return false;
+    return true;
   } catch (error) {
     log.error({ err: error }, `[Instagram Automation] Error handling user response`);
     return false;

@@ -44,38 +44,9 @@ const updateWaSettingsInputSchema = z.object({
   phoneId: z.string().optional(),
   appId: z.string().optional(),
   webhookPassword: z.string().optional().nullable(),
-  fbPageId: z.string().optional().nullable(),
-  pageAccessToken: z.string().optional().nullable(),
-  ibaId: z.string().optional().nullable(),
-  igUserName: z.string().optional().nullable(),
-  igDisplayName: z.string().optional().nullable(),
-  instagramIceBreakers: z
-    .array(
-      z.object({
-        question: z.string(),
-        payload: z.string(),
-      }),
-    )
-    .optional()
-    .nullable(),
-  instagramPersistentMenu: z
-    .array(
-      z.object({
-        locale: z.string(),
-        call_to_actions: z.array(
-          z.object({
-            type: z.enum(["postback", "web_url"]),
-            title: z.string(),
-            payload: z.string().optional(),
-            url: z.string().optional(),
-          }),
-        ),
-      }),
-    )
-    .optional()
-    .nullable(),
+  // Messenger/Instagram fields are gone: those channels live on MetaChannel
+  // (/api/meta/channels) and are no longer written through a WhatsApp channel.
   phoneDisplayName: z.string().optional().nullable(),
-  fbUserName: z.string().optional().nullable(),
   conversionsApiDatasetId: z.string().optional().nullable(),
   conversionData: z
     .object({

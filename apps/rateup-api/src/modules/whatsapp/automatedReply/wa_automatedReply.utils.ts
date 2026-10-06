@@ -11,6 +11,7 @@ import { assignChat } from "../whatsappSurvey/wasurvey.utils.js";
 import { log } from "../../../utils/logger.js";
 import { generateLocalMessageId } from "../../../utils/messageId.js";
 import prisma from "../../../utils/prisma.js";
+import { readWaPaymentConfigurations } from "../../integrations/wapayment/wapayment.types.js";
 import redisConnection from "../../../utils/redisConnection.js";
 import { templateData } from "../messageTemplates/wa_templates.service.js";
 import { logAutomationAction } from "../whatsappSurvey/automation-logger.utils.js";
@@ -39,24 +40,23 @@ import {
   resolvePipelineForContact,
   setContactStage,
 } from "../../pipeline/pipelineLead/lead.service.js";
-import { sendInstagramTextMessage } from "../instagram/instagram_messaging.service.js";
+import {
+  replyToInstagramComment,
+  sendInstagramPrivateReply,
+  sendInstagramTextMessage,
+} from "../instagram/instagram_messaging.service.js";
 import {
   startInstagramAutomationFlow,
   type InstagramAutomation,
 } from "./instagram_automation.service.js";
 import { getInstagramAutomatedReplyById } from "./instagram_automatedReply.service.js";
 import { ShopifyBody } from "../../integrations/shopify/shopify.types.js";
-import {
-  resolveShopifyPathValue,
-  getShopifyProductImage,
-} from "../../integrations/shopify/shopify.service.js";
+import { resolveWooPathValue } from "../../integrations/woocommerce/woocommerce.mapping.js";
+import { resolveShopifyPathValue } from "../../integrations/shopify/shopify.mapping.js";
+import { getShopifyProductImage } from "../../integrations/shopify/shopify.catalog.js";
 import axios from "axios";
-import { integrationTriggerQueue } from "../../../workers/bullmq/queues/index.js";
 import { triggerConversionsApiForContact } from "../../integrations/meta/conversions.service.js";
-import {
-  updateZohoLeadQueue,
-  ZohoTriggers,
-} from "../../integrations/external/zoho/zoho.service.js";
+import { emitIntegrationEvent } from "../../integrations/events/emitIntegrationEvent.js";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.extend(isSameOrAfter);
@@ -170,10 +170,6 @@ export function generateOrderReferenceId() {
   return referenceId;
 }
 
-interface WaPaymentCredentialEntry {
-  configuration_name: string;
-}
-
 export async function sendPaymentInitTemplate(
   orgId: string,
   phoneNo: string,
@@ -195,13 +191,12 @@ export async function sendPaymentInitTemplate(
     },
   });
 
-  if (!config) throw new Error("Config not found");
-  if (!config.credential) throw new Error("Config not found");
-  // `credential` is a Json column; for the "waPayment" integration it's
-  // always an array of Razorpay configuration entries (see
-  // integrations.service.ts / integrations.schema.ts's waPaymentCreateSchema),
-  // which the Json type itself doesn't model.
-  const credential = config.credential as unknown as WaPaymentCredentialEntry[];
+  // The list synced from Meta on the WhatsApp Payment settings page; the first
+  // configuration is the one sent, as a Razorpay gateway.
+  const credential = readWaPaymentConfigurations(config?.credential);
+  if (credential.length === 0) {
+    throw new Error("No WhatsApp payment configuration; fetch them on the WhatsApp Payment page");
+  }
   const t = {
     messaging_product: "whatsapp",
     recipient_type: "individual",
@@ -392,10 +387,15 @@ export interface RuleWithConditions {
     };
     shopifyEvent?: ShopifyEvents;
     shopifyProductIds?: string[];
+    wooEvent?: string;
+    wooProductIds?: string[];
     abandonedCheckoutDelayMinutes?: number;
     requireMarketingConsent?: boolean;
     instagramScope?: "ALL" | "SPECIFIC";
     instagramPostIds?: string[];
+    instagramPublicReplies?: string[];
+    instagramCommentSource?: "ALL" | "POSTS" | "LIVE";
+    instagramRef?: string;
   } | null;
   groups: Array<{
     id: string;
@@ -646,7 +646,58 @@ export interface RuleExecutionContext {
   shopifyEvent?: ShopifyEvents;
   shopifyProductIds?: string[];
   shopifyBody?: ShopifyBody;
+  /** The WooCommerce order status that fired a `WOOCOMMERCE_EVENT` rule, e.g. "completed". */
+  wooEvent?: string;
+  wooProductIds?: string[];
+  /** The WooCommerce order payload, for template variables. */
+  wooBody?: Record<string, unknown>;
   instagramMediaId?: string;
+  /**
+   * Set for INSTAGRAM_COMMENT. A commenter who has never messaged the business can only
+   * be reached by a private reply to this comment, and Meta allows one per comment.
+   */
+  instagramCommentId?: string;
+  /** The comment was made on a live video rather than a post or reel. */
+  instagramLiveComment?: boolean;
+  /** The ?ref= of the ig.me link that opened the thread, for INSTAGRAM_REFERRAL. */
+  instagramRef?: string;
+}
+
+/** Posts one of the rule's public replies under the comment; never fails the rule. */
+async function replyToCommentInPublic(rule: RuleWithConditions, context: RuleExecutionContext) {
+  const replies = rule.options?.instagramPublicReplies ?? [];
+  if (!replies.length || !context.instagramCommentId || !context.phoneNumberId) return;
+
+  const text = replies[Math.floor(Math.random() * replies.length)];
+  try {
+    await replyToInstagramComment(context.instagramCommentId, text, context.phoneNumberId);
+  } catch (error) {
+    log.error(
+      { err: error, ruleId: rule.id, commentId: context.instagramCommentId },
+      "Could not post the public reply to an Instagram comment",
+    );
+  }
+}
+
+/** The comment to privately reply to, once: later sends in the same run go as plain DMs. */
+function takeInstagramCommentId(context: RuleExecutionContext): string | undefined {
+  const commentId = context.instagramCommentId;
+  context.instagramCommentId = undefined;
+  return commentId;
+}
+
+async function sendInstagramRuleText(
+  context: RuleExecutionContext,
+  igsId: string,
+  ibaId: string,
+  text: string,
+) {
+  const commentId = takeInstagramCommentId(context);
+  if (commentId) {
+    await sendInstagramPrivateReply(commentId, text, ibaId, context.orgId, igsId);
+  } else {
+    await sendInstagramTextMessage(igsId, text, context.orgId, ibaId);
+  }
 }
 
 /**
@@ -734,6 +785,12 @@ export async function checkAndExecuteRuleByTriggerEvent(
   }
 
   const typedRules = rules as RuleWithConditions[];
+  // A link rule naming this exact ref beats one that answers every link.
+  if (triggerEvent === TriggerEvent.INSTAGRAM_REFERRAL) {
+    typedRules.sort(
+      (a, b) => Number(!!b.options?.instagramRef) - Number(!!a.options?.instagramRef),
+    );
+  }
 
   // Helper to determine if a rule has any business hour configuration
   const hasBusinessHours = (rule: RuleWithConditions): boolean => {
@@ -775,19 +832,30 @@ export async function checkAndExecuteRuleByTriggerEvent(
       ) {
         continue;
       }
+      if (
+        triggerEvent === TriggerEvent.WOOCOMMERCE_EVENT &&
+        rule.options?.wooEvent !== context.wooEvent
+      ) {
+        continue;
+      }
 
       // Filter by product IDs if configured
-      if (triggerEvent === TriggerEvent.SHOPIFY_EVENT) {
-        const configuredProductIds = [...(rule.options?.shopifyProductIds ?? [])].map((id) =>
-          String(id),
-        );
+      if (
+        triggerEvent === TriggerEvent.SHOPIFY_EVENT ||
+        triggerEvent === TriggerEvent.WOOCOMMERCE_EVENT
+      ) {
+        const isWoo = triggerEvent === TriggerEvent.WOOCOMMERCE_EVENT;
+        const configuredProductIds = [
+          ...((isWoo ? rule.options?.wooProductIds : rule.options?.shopifyProductIds) ?? []),
+        ].map((id) => String(id));
+        const orderProductIds = isWoo ? context.wooProductIds : context.shopifyProductIds;
 
         if (!configuredProductIds.length) {
           // No product-specific filter configured
-        } else if (!context.shopifyProductIds?.length) {
+        } else if (!orderProductIds?.length) {
           continue;
         } else {
-          const hasProduct = context.shopifyProductIds.some((id) =>
+          const hasProduct = orderProductIds.some((id) =>
             configuredProductIds.includes(String(id)),
           );
           if (!hasProduct) continue;
@@ -796,6 +864,10 @@ export async function checkAndExecuteRuleByTriggerEvent(
 
       // Instagram comment: filter by post scope, then check comment text against conditions
       if (triggerEvent === TriggerEvent.INSTAGRAM_COMMENT) {
+        const source = rule.options?.instagramCommentSource ?? "ALL";
+        if (source !== "ALL" && source !== (context.instagramLiveComment ? "LIVE" : "POSTS")) {
+          continue;
+        }
         const scope = rule.options?.instagramScope ?? "ALL";
         if (scope === "SPECIFIC") {
           const configuredPostIds = rule.options?.instagramPostIds ?? [];
@@ -809,6 +881,9 @@ export async function checkAndExecuteRuleByTriggerEvent(
         if (!isMatch) continue;
       } else if (triggerEvent === TriggerEvent.INSTAGRAM_STORY_MENTION) {
         // Story mentions always match — no post filtering or message checks
+      } else if (triggerEvent === TriggerEvent.INSTAGRAM_REFERRAL) {
+        const wanted = rule.options?.instagramRef?.toLowerCase();
+        if (wanted && wanted !== context.instagramRef?.toLowerCase()) continue;
       } else {
         const isMatch = await validateRuleConditions(rule, messageText, orgId, phoneText);
         if (!isMatch) continue;
@@ -820,6 +895,10 @@ export async function checkAndExecuteRuleByTriggerEvent(
       );
 
       const executedActions = await executeRuleActions(rule, context);
+
+      if (triggerEvent === TriggerEvent.INSTAGRAM_COMMENT) {
+        await replyToCommentInPublic(rule, context);
+      }
 
       if (rule.options?.sendOncePerDay && phoneText) {
         await redisConnection.set(
@@ -1289,38 +1368,13 @@ async function executeAssignLifecycleAction(
 
   if (!lifecycle) return true;
 
-  const integrationIds = updatedContact.integrationIds as {
-    zoho?: {
-      contact?: {
-        id: string;
-      };
-      lead?: {
-        id: string;
-      };
-    };
-  };
-
-  // Update Zoho Lead
-  if (integrationIds?.zoho?.lead?.id) {
-    await updateZohoLeadQueue(updatedContact.orgId, integrationIds.zoho.lead.id, {
-      Lead_Status: lifecycle.name,
-    });
-  }
-
-  // Trigger Zoho automation / deal sync
-  await integrationTriggerQueue.add("zoho-bigin-deal-update", {
-    integrationName: "zoho",
-    triggerKey: ZohoTriggers.BIGIN_DEAL_CREATE,
-    orgId: updatedContact.orgId,
-    data: {
-      name: updatedContact.name,
-      source: updatedContact.source,
-      email: updatedContact.email,
-      phone: updatedContact.phone,
-      notes: updatedContact.notes,
-      lifecycleId,
-    },
-    rateupContactId: updatedContact.id,
+  // Every connected CRM hears about it the way it hears about any lifecycle
+  // change — Zoho through the org's status mapping, rather than the lifecycle's
+  // name pushed straight into `Lead_Status`.
+  await emitIntegrationEvent(updatedContact.orgId, {
+    type: "contact.updated",
+    contact: updatedContact,
+    changed: ["lifecycle"],
   });
 
   // Trigger Conversions API if applicable
@@ -1357,12 +1411,7 @@ async function executeSendMessageAction(
 
   if (context.platform === "INSTAGRAM" || context.platform === "FACEBOOK") {
     if (!context.phoneNumberId) return false;
-    await sendInstagramTextMessage(
-      context.phone,
-      messageText,
-      context.orgId,
-      context.phoneNumberId,
-    );
+    await sendInstagramRuleText(context, context.phone, context.phoneNumberId, messageText);
   } else {
     await sendTextMessage({ phone: context.phone, orgId: context.orgId }, null, messageText);
   }
@@ -1372,12 +1421,7 @@ async function executeSendMessageAction(
 
 async function executeSendWebSurveyAction(
   surveyTeamMapId: string,
-  context: {
-    orgId: string;
-    phone?: string | null;
-    phoneNumberId?: string;
-    platform?: string;
-  },
+  context: RuleExecutionContext,
 ): Promise<boolean> {
   if (!context.phone || !context.orgId || !surveyTeamMapId) return false;
 
@@ -1410,12 +1454,7 @@ async function executeSendWebSurveyAction(
 
   if (context.platform === "INSTAGRAM" || context.platform === "FACEBOOK") {
     if (!context.phoneNumberId) return false;
-    await sendInstagramTextMessage(
-      context.phone,
-      messageText,
-      context.orgId,
-      context.phoneNumberId,
-    );
+    await sendInstagramRuleText(context, context.phone, context.phoneNumberId, messageText);
   } else {
     await sendTextMessage({ phone: context.phone, orgId: context.orgId }, null, messageText);
   }
@@ -1461,18 +1500,22 @@ async function executeSendTemplateAction(
     ? await getContactByPhoneNumberAndOrgId(context.phone, context.orgId)
     : null;
 
-  const parameterData = buildTemplateParameterData(
-    variableMapping,
-    context.shopifyBody,
-    contactData,
-  );
+  // A WooCommerce rule maps its variables against the Woo order; everything else
+  // keeps resolving against Shopify's payload, as it always has.
+  const resolveOrderPath = context.wooBody
+    ? (path: string) => resolveWooPathValue(context.wooBody, path)
+    : (path: string) => resolveShopifyPathValue(context.shopifyBody, path);
+
+  const parameterData = buildTemplateParameterData(variableMapping, resolveOrderPath, contactData);
 
   if (useProductImageAsHeader) {
     const productId =
       context.shopifyBody?.line_items?.[0]?.product_id ?? context.shopifyProductIds?.[0];
-    const imageUrl = productId
-      ? await getShopifyProductImage(context.orgId, String(productId))
-      : null;
+    const imageUrl = context.wooBody
+      ? wooLineItemImage(context.wooBody)
+      : productId
+        ? await getShopifyProductImage(context.orgId, String(productId))
+        : null;
     if (imageUrl) {
       parameterData.push({
         type: "header",
@@ -1487,7 +1530,7 @@ async function executeSendTemplateAction(
   }
 
   const buttonVariable = buttonUrlVariable
-    ? String(resolveVariablePath(buttonUrlVariable, context.shopifyBody, contactData) ?? "")
+    ? String(resolveVariablePath(buttonUrlVariable, resolveOrderPath, contactData) ?? "")
     : undefined;
 
   const result = await sendTemplateToUserCore(
@@ -1512,9 +1555,16 @@ async function executeSendTemplateAction(
   return { success: true };
 }
 
+/** The first line item's image, which WooCommerce includes on each order line. */
+function wooLineItemImage(wooBody: Record<string, unknown>): string | null {
+  const items = (wooBody as { line_items?: Array<{ image?: { src?: unknown } }> }).line_items;
+  const src = items?.[0]?.image?.src;
+  return typeof src === "string" && src ? src : null;
+}
+
 function resolveVariablePath(
   path: string,
-  shopifyBody?: ShopifyBody,
+  resolveOrderPath: (path: string) => string,
   contactData?: {
     name?: string | null;
     email?: string | null;
@@ -1534,13 +1584,13 @@ function resolveVariablePath(
     }
     return "";
   }
-  // Shopify / generic dot-path resolution
-  return resolveShopifyPathValue(shopifyBody, path);
+  // The store order: Shopify's or WooCommerce's, as the caller decided.
+  return resolveOrderPath(path);
 }
 
 function buildTemplateParameterData(
   variableMapping: { templateParamIndex: number; shopifyPath: string }[] = [],
-  shopifyBody?: ShopifyBody,
+  resolveOrderPath: (path: string) => string,
   contactData?: {
     name?: string | null;
     email?: string | null;
@@ -1559,7 +1609,9 @@ function buildTemplateParameterData(
   const bodyParameters: Array<{ type: string; text: string }> = [];
   for (let i = 0; i <= maxIndex; i++) {
     const mapping = sortedMappings.find((m) => m.templateParamIndex === i);
-    const text = mapping ? resolveVariablePath(mapping.shopifyPath, shopifyBody, contactData) : "";
+    const text = mapping
+      ? resolveVariablePath(mapping.shopifyPath, resolveOrderPath, contactData)
+      : "";
 
     bodyParameters.push({ type: "text", text });
   }
@@ -1642,6 +1694,7 @@ async function executeTriggerChatbotAction(
         automation as unknown as InstagramAutomation,
         context.orgId,
         context.phoneNumberId,
+        takeInstagramCommentId(context),
       );
       return true;
     }

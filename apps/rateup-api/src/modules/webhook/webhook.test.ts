@@ -2,7 +2,15 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("../../utils/prisma.js", () => ({
   default: {
-    webhook: { upsert: vi.fn(), findUnique: vi.fn(), delete: vi.fn(), deleteMany: vi.fn() },
+    webhook: {
+      upsert: vi.fn(),
+      findUnique: vi.fn(),
+      delete: vi.fn(),
+      deleteMany: vi.fn(),
+      updateMany: vi.fn(),
+    },
+    whatsappSettings: { findUnique: vi.fn() },
+    org: { findUnique: vi.fn() },
   },
 }));
 
@@ -20,10 +28,16 @@ import prisma from "../../utils/prisma.js";
 import { lookup } from "node:dns/promises";
 import { log } from "../../utils/logger.js";
 import { outgoingWebhookQueue } from "../../workers/bullmq/queues/index.js";
+import { createHmac } from "node:crypto";
+import { UnrecoverableError } from "bullmq";
 import {
   deleteWebhook,
+  deliverOutgoingWebhook,
+  enqueueSurveyResponseWebhook,
   enqueueWebhookDispatch,
   getWebhook,
+  getWebhookSigningSecret,
+  rotateWebhookSecret,
   upsertWebhook,
   verifyWebhookUrl,
 } from "./webhook.service.js";
@@ -31,13 +45,19 @@ import {
   deleteWebhookHandler,
   getWebhookHandler,
   saveWebhookHandler,
+  updateWebhookEventsHandler,
 } from "./webhook.controller.js";
 import { webhookRoutes } from "./webhook.route.js";
-import { saveWebhookSchema, WEBHOOK_EVENTS } from "./webhook.schema.js";
+import { saveWebhookSchema, updateWebhookEventsSchema, WEBHOOK_EVENTS } from "./webhook.schema.js";
+import { toWebhookPayload } from "./webhook.payloads.js";
+import { webhookProvider } from "./webhook.provider.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
-const db = prisma as unknown as { webhook: Record<string, Mock> };
+const db = prisma as unknown as Record<
+  "webhook" | "whatsappSettings" | "org",
+  Record<string, Mock>
+>;
 const dns = lookup as unknown as Mock;
 
 const ORG = "11111111-1111-1111-1111-111111111111";
@@ -257,7 +277,13 @@ describe("saveWebhookHandler", () => {
     expect(db.webhook.upsert).toHaveBeenCalledWith({
       where: { orgId: ORG },
       update: { url: body.url, events: body.events },
-      create: { orgId: ORG, url: body.url, events: body.events },
+      create: {
+        orgId: ORG,
+        url: body.url,
+        events: body.events,
+        secret: expect.stringMatching(/^whsec_/),
+      },
+      omit: { secret: true },
     });
   });
 
@@ -329,8 +355,11 @@ describe("saveWebhookSchema", () => {
     ).toBe(false);
   });
 
-  test("the enum is the set the platform actually emits", () => {
-    expect(WEBHOOK_EVENTS).toEqual(["message_status"]);
+  test("the enum is the status callback plus every event the provider forwards", () => {
+    expect(WEBHOOK_EVENTS[0]).toBe("message_status");
+    expect([...webhookProvider.events].sort()).toEqual(
+      WEBHOOK_EVENTS.filter((e) => e !== "message_status").sort(),
+    );
   });
 
   test("rejects an empty event list, which would subscribe to nothing", () => {
@@ -355,7 +384,10 @@ describe("getWebhookHandler", () => {
   test("reads by the session org", async () => {
     await getWebhookHandler({ user: { orgId: ORG } } as never, reply());
 
-    expect(db.webhook.findUnique).toHaveBeenCalledWith({ where: { orgId: ORG } });
+    expect(db.webhook.findUnique).toHaveBeenCalledWith({
+      where: { orgId: ORG },
+      omit: { secret: true },
+    });
   });
 
   test("sends null rather than undefined when none is configured", async () => {
@@ -470,14 +502,17 @@ describe("the service writers", () => {
     expect(arg.update).not.toHaveProperty("orgId");
   });
 
-  test("stores only a url and an event list", async () => {
+  test("stores a url, an event list and a new signing secret", async () => {
     await upsertWebhook(ORG, "https://x.test", ["message_status"]);
 
     expect(Object.keys(db.webhook.upsert.mock.calls[0][0].create)).toEqual([
       "orgId",
       "url",
       "events",
+      "secret",
     ]);
+    // A re-save keeps the secret the receiver already verifies with.
+    expect(db.webhook.upsert.mock.calls[0][0].update).not.toHaveProperty("secret");
   });
 
   test("the verify token is not persisted", async () => {
@@ -492,10 +527,13 @@ describe("the service writers", () => {
     expect(JSON.stringify(db.webhook.upsert.mock.calls[0][0])).not.toContain(TOKEN);
   });
 
-  test("getWebhook reads by orgId", async () => {
+  test("getWebhook reads by orgId, never returning the secret", async () => {
     await getWebhook(ORG);
 
-    expect(db.webhook.findUnique).toHaveBeenCalledWith({ where: { orgId: ORG } });
+    expect(db.webhook.findUnique).toHaveBeenCalledWith({
+      where: { orgId: ORG },
+      omit: { secret: true },
+    });
   });
 });
 
@@ -507,14 +545,18 @@ describe("webhookRoutes", () => {
   function fakeServer() {
     const routes: any[] = [];
     const hooks: any[] = [];
+    const add = (method: string) =>
+      vi.fn((url, opts, handler) => routes.push({ method, url, opts, handler }));
     const srv: any = {
       addHook: vi.fn((name, fn) => hooks.push({ name, fn })),
-      get: vi.fn((url, opts, handler) => routes.push({ method: "GET", url, opts, handler })),
-      post: vi.fn((url, opts, handler) => routes.push({ method: "POST", url, opts, handler })),
-      delete: vi.fn((url, opts, handler) => routes.push({ method: "DELETE", url, opts, handler })),
+      get: add("GET"),
+      post: add("POST"),
+      patch: add("PATCH"),
+      delete: add("DELETE"),
     };
     return { srv, routes, hooks };
   }
+  const route = (routes: any[], key: string) => routes.find((r) => `${r.method} ${r.url}` === key);
 
   test("declares session access for the tree", async () => {
     const { srv, hooks } = fakeServer();
@@ -527,31 +569,274 @@ describe("webhookRoutes", () => {
     expect(probe.config).toEqual({ access: "session" });
   });
 
-  test("registers three routes, all on the collection path", async () => {
+  test("registers the webhook, its events and its secret", async () => {
     const { srv, routes } = fakeServer();
 
     await webhookRoutes(srv);
 
-    expect(routes.map((r) => `${r.method} ${r.url}`)).toEqual(["POST /", "GET /", "DELETE /"]);
+    expect(routes.map((r) => `${r.method} ${r.url}`).sort()).toEqual([
+      "DELETE /",
+      "GET /",
+      "GET /secret",
+      "PATCH /events",
+      "POST /",
+      "POST /secret/rotate",
+    ]);
   });
 
-  test("only the save route validates a body", async () => {
+  test("the save and the events change validate their bodies", async () => {
     const { srv, routes } = fakeServer();
 
     await webhookRoutes(srv);
 
-    expect(routes[0].opts.schema.body).toBe(saveWebhookSchema);
-    expect(routes[1].handler).toBe(getWebhookHandler);
-    expect(routes[2].opts.schema).toBeUndefined();
+    expect(route(routes, "POST /").opts.schema.body).toBe(saveWebhookSchema);
+    expect(route(routes, "PATCH /events").opts.schema.body).toBe(updateWebhookEventsSchema);
+    expect(route(routes, "GET /").handler).toBe(getWebhookHandler);
+    expect(route(routes, "DELETE /").opts.schema).toBeUndefined();
   });
 
-  test("the two writers need webhooks.manage and the read webhooks.read", async () => {
+  test("only the plain read is webhooks.read; the secret needs webhooks.manage", async () => {
     const { srv, routes } = fakeServer();
 
     await webhookRoutes(srv);
 
-    expect(routes[0].opts.config.permission).toBe("webhooks.manage");
-    expect(routes[2].opts.config.permission).toBe("webhooks.manage");
-    expect(routes[1].opts.config.permission).toBe("webhooks.read");
+    expect(route(routes, "GET /").opts.config.permission).toBe("webhooks.read");
+    for (const key of [
+      "POST /",
+      "DELETE /",
+      "PATCH /events",
+      "GET /secret",
+      "POST /secret/rotate",
+    ]) {
+      expect(route(routes, key).opts.config.permission).toBe("webhooks.manage");
+    }
+  });
+});
+
+// ===========================================================================
+// Events and the signing secret
+// ===========================================================================
+
+describe("updateWebhookEventsHandler", () => {
+  test("changes the events without a new challenge", async () => {
+    db.webhook.updateMany.mockResolvedValue({ count: 1 });
+    db.webhook.findUnique.mockResolvedValue({ id: "w-1", events: ["contact.created"] });
+    const rep = reply();
+
+    await updateWebhookEventsHandler(
+      { user: { orgId: ORG }, body: { events: ["contact.created"] } } as never,
+      rep,
+    );
+
+    expect(db.webhook.updateMany).toHaveBeenCalledWith({
+      where: { orgId: ORG },
+      data: { events: ["contact.created"] },
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(answer(rep).body.events).toEqual(["contact.created"]);
+  });
+
+  test("answers 404 when no webhook is set up", async () => {
+    db.webhook.updateMany.mockResolvedValue({ count: 0 });
+    const rep = reply();
+
+    await updateWebhookEventsHandler(
+      { user: { orgId: ORG }, body: { events: ["contact.created"] } } as never,
+      rep,
+    );
+
+    expect(answer(rep).code).toBe(404);
+  });
+});
+
+describe("the signing secret", () => {
+  test("a webhook saved before signing gets one on first use, without overwriting a racer's", async () => {
+    db.webhook.findUnique
+      .mockResolvedValueOnce({ secret: null })
+      .mockResolvedValueOnce({ secret: "whsec_racer" });
+    db.webhook.updateMany.mockResolvedValue({ count: 0 });
+
+    await expect(getWebhookSigningSecret(ORG)).resolves.toBe("whsec_racer");
+    expect(db.webhook.updateMany).toHaveBeenCalledWith({
+      where: { orgId: ORG, secret: null },
+      data: { secret: expect.stringMatching(/^whsec_/) },
+    });
+  });
+
+  test("rotating hands back the new secret, or null with no webhook", async () => {
+    db.webhook.updateMany.mockResolvedValueOnce({ count: 1 });
+    await expect(rotateWebhookSecret(ORG)).resolves.toMatch(/^whsec_/);
+
+    db.webhook.updateMany.mockResolvedValueOnce({ count: 0 });
+    await expect(rotateWebhookSecret(ORG)).resolves.toBeNull();
+  });
+});
+
+// ===========================================================================
+// deliverOutgoingWebhook
+// ===========================================================================
+
+describe("deliverOutgoingWebhook", () => {
+  const SECRET = "whsec_test";
+  const delivered = () => fetchMock.mock.calls[0][1];
+
+  beforeEach(() => {
+    fetchMock.mockResolvedValue({ ok: true, status: 200 });
+    db.webhook.findUnique.mockImplementation(async ({ select }: any) =>
+      select?.secret
+        ? { secret: SECRET }
+        : { url: "https://hooks.example.test/rateup", events: ["contact.created"] },
+    );
+  });
+
+  test("posts the event signed with the org's secret", async () => {
+    await deliverOutgoingWebhook(
+      { orgId: ORG, event: "contact.created", payload: { contact: { id: "c1" } } },
+      "job-7",
+    );
+
+    const init = delivered();
+    expect(init.body).toBe(JSON.stringify({ event: "contact.created", contact: { id: "c1" } }));
+    expect(init.headers["X-Rateup-Signature"]).toBe(
+      createHmac("sha256", SECRET).update(init.body).digest("base64"),
+    );
+    expect(init.headers["X-Webhook-Id"]).toBe("job-7");
+    expect(init.redirect).toBe("manual");
+  });
+
+  test("sends nothing for an event the org has since unsubscribed from", async () => {
+    await deliverOutgoingWebhook({ orgId: ORG, event: "contact.deleted", payload: {} }, "job-1");
+
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  test("a status callback finds the org through the sending number", async () => {
+    db.whatsappSettings.findUnique.mockResolvedValue({ orgId: ORG });
+    db.webhook.findUnique.mockImplementation(async ({ select }: any) =>
+      select?.secret
+        ? { secret: SECRET }
+        : { url: "https://hooks.example.test/rateup", events: ["message_status"] },
+    );
+
+    await deliverOutgoingWebhook(
+      { phoneId: "phone-1", event: "message_status", payload: { status: "read" } },
+      "job-2",
+    );
+
+    expect(db.whatsappSettings.findUnique).toHaveBeenCalledWith({
+      where: { phoneId: "phone-1" },
+      select: { orgId: true },
+    });
+    expect(JSON.parse(delivered().body)).toEqual({ event: "message_status", status: "read" });
+  });
+
+  test("refuses, without retrying, a URL that now resolves to a private address", async () => {
+    dns.mockResolvedValue([{ address: "10.0.0.5", family: 4 }]);
+
+    await expect(
+      deliverOutgoingWebhook({ orgId: ORG, event: "contact.created", payload: {} }, "job-3"),
+    ).rejects.toBeInstanceOf(UnrecoverableError);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  test("a failed POST is thrown for the queue to retry", async () => {
+    fetchMock.mockResolvedValue({ ok: false, status: 503 });
+
+    await expect(
+      deliverOutgoingWebhook({ orgId: ORG, event: "contact.created", payload: {} }, "job-4"),
+    ).rejects.not.toBeInstanceOf(UnrecoverableError);
+  });
+
+  test("a survey response is signed with the survey secret and a 4xx is not retried", async () => {
+    db.org.findUnique.mockResolvedValue({ ownerId: "owner-1" });
+    fetchMock.mockResolvedValue({ ok: false, status: 400 });
+
+    await expect(
+      deliverOutgoingWebhook(
+        {
+          kind: "survey",
+          orgId: ORG,
+          endpoint: "https://survey.example.test/hook",
+          payload: { surveyId: "s1" },
+        },
+        "job-5",
+      ),
+    ).rejects.toBeInstanceOf(UnrecoverableError);
+
+    expect(String(fetchMock.mock.calls[0][0])).toBe("https://survey.example.test/hook");
+    expect(delivered().body).toBe(JSON.stringify({ surveyId: "s1" }));
+    expect(delivered().headers["X-Rateup-Signature"]).toBeTruthy();
+  });
+
+  test("the survey webhook is queued, not sent inline", async () => {
+    await enqueueSurveyResponseWebhook(ORG, "https://survey.example.test/hook", { a: 1 });
+
+    expect((outgoingWebhookQueue.add as unknown as Mock).mock.calls[0].slice(0, 2)).toEqual([
+      "survey-response",
+      {
+        kind: "survey",
+        orgId: ORG,
+        endpoint: "https://survey.example.test/hook",
+        payload: { a: 1 },
+      },
+    ]);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+// ===========================================================================
+// The public payloads
+// ===========================================================================
+
+describe("toWebhookPayload", () => {
+  test("a contact carries only its public fields", () => {
+    const delivery = toWebhookPayload({
+      type: "contact.created",
+      contact: {
+        id: "c1",
+        orgId: ORG,
+        name: "Ann",
+        phone: "919000000001",
+        integrationIds: { zoho: { contact: { id: "z1" } } },
+        notes: "internal",
+      },
+    });
+
+    expect(delivery).toEqual({
+      event: "contact.created",
+      payload: {
+        contact: {
+          id: "c1",
+          name: "Ann",
+          phone: "919000000001",
+          email: null,
+          source: null,
+          lifecycleId: null,
+        },
+      },
+    });
+  });
+
+  test("a lead resync moved nothing and is not reported", () => {
+    const lead = { id: "l1", contactId: "c1", name: "Ann", email: null, phone: null, source: "X" };
+    const stage = {
+      id: "s1",
+      name: "Won",
+      status: "WON",
+      pipelineId: "p1",
+      pipelineName: "Sales",
+      pipelineType: "LEADS",
+    };
+
+    expect(
+      toWebhookPayload({
+        type: "lead.stage_changed",
+        lead,
+        stage,
+        contact: null,
+        origin: "rateup",
+        resync: true,
+      }),
+    ).toBeNull();
   });
 });

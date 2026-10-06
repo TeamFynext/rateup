@@ -66,9 +66,9 @@ import {
   upsertWaSettings,
 } from "./wa_settings.service.js";
 import { getOrgIdAndRole } from "../../user/user.service.js";
+import { recordAuditEvent } from "../../../utils/auditLog.js";
 import { callMetaApi, GraphApiError } from "../wa_axios.js";
 import {
-  describeChannelUpsert,
   createWaSettingsHandler,
   deleteWaSettingsHandler,
   getContactTagHandler,
@@ -87,7 +87,6 @@ import {
   updateConversationalAutomationHandler,
   updateDisplayNameHandler,
   updateWaSettingsByIdHandler,
-  updateWaSettingsHandler,
   upsertWaSettingsHandler,
 } from "./wa_settings.controller.js";
 
@@ -107,6 +106,7 @@ const m = {
   getMetaAssets: getMetaAssets as unknown as Mock,
   getMetaDatasetsFromWa: getMetaDatasetsFromWa as unknown as Mock,
   getOrgIdAndRole: getOrgIdAndRole as unknown as Mock,
+  recordAuditEvent: recordAuditEvent as unknown as Mock,
   getWaSettings: getWaSettings as unknown as Mock,
   getWaSettingsById: getWaSettingsById as unknown as Mock,
   reRegisterPhoneNumber: reRegisterPhoneNumber as unknown as Mock,
@@ -233,6 +233,28 @@ describe("the settings write paths", () => {
 
     expect(rep.code).toHaveBeenCalledWith(500);
   });
+
+  test("records a first-time upsert as a channel add", async () => {
+    m.getWaSettings.mockResolvedValue(null);
+    const req = request({ body: { phoneId: PHONE_ID } });
+
+    await upsertWaSettingsHandler(req, reply());
+
+    expect(m.recordAuditEvent).toHaveBeenCalledTimes(1);
+    expect(m.recordAuditEvent).toHaveBeenCalledWith(req, "Channel added", {
+      phoneId: PHONE_ID,
+      phone: undefined,
+    });
+  });
+
+  test("records an upsert of an existing number as a channel update", async () => {
+    const req = request({ body: { phoneId: PHONE_ID } });
+
+    await upsertWaSettingsHandler(req, reply());
+
+    expect(m.recordAuditEvent).toHaveBeenCalledTimes(1);
+    expect(m.recordAuditEvent.mock.calls[0][1]).toBe("Channel updated");
+  });
 });
 
 describe("getWaSettingsHandler", () => {
@@ -276,6 +298,37 @@ describe("getWaSettingsHandler", () => {
     expect(JSON.stringify(sent(rep))).not.toContain("page-token");
   });
 
+  // Messenger/Instagram moved to MetaChannel; the stale copies on the WhatsApp row
+  // must not reach the client as if they were current.
+  test("strips the legacy Page and Instagram columns from every channel", async () => {
+    m.getAccessibleWaSettings.mockResolvedValue([
+      settingsRow({
+        fbPageId: "page-1",
+        ibaId: "iba-1",
+        fbUserName: "The Shop",
+        igUserName: "the_shop",
+        igDisplayName: "The Shop IG",
+        instagramIceBreakers: [{ question: "q", payload: "p" }],
+        instagramPersistentMenu: [{ locale: "default", call_to_actions: [] }],
+      }),
+    ]);
+    const rep = reply();
+
+    await getWaSettingsHandler(request(), rep);
+
+    for (const key of [
+      "fbPageId",
+      "ibaId",
+      "fbUserName",
+      "igUserName",
+      "igDisplayName",
+      "instagramIceBreakers",
+      "instagramPersistentMenu",
+    ]) {
+      expect(sent(rep)[0]).not.toHaveProperty(key);
+    }
+  });
+
   test("still sends the fields the channel pickers need", async () => {
     const rep = reply();
 
@@ -286,81 +339,32 @@ describe("getWaSettingsHandler", () => {
 });
 
 describe("updateWaSettingsByIdHandler", () => {
-  test("subscribes a newly connected page and records its display names", async () => {
-    m.callMetaApi
-      // subscribePageToApp lives in this same file and calls Meta first.
-      .mockResolvedValueOnce({ data: { success: true } })
-      .mockResolvedValueOnce({ data: { username: "the_shop" } })
-      .mockResolvedValueOnce({ data: { name: "The Shop" } });
-    const body: any = { fbPageId: "page-1", ibaId: "iba-1", pageAccessToken: "page-token" };
+  // Pages are connected through /api/meta/channels now; this route only writes the
+  // WhatsApp channel's own fields and never talks to Meta.
+  test("writes the body as sent without calling Meta", async () => {
+    const body = { appId: "app-2", phoneDisplayName: "The Shop" };
+    const rep = reply();
+
+    await updateWaSettingsByIdHandler(
+      request({ params: { whatsappSettingsId: SETTINGS_ID }, body }),
+      rep,
+    );
+
+    expect(m.callMetaApi).not.toHaveBeenCalled();
+    expect(m.updateWaSettingsById).toHaveBeenCalledWith(SETTINGS_ID, ORG_A, body);
+    expect(rep.code).toHaveBeenCalledWith(200);
+  });
+
+  test("leaves the page fields of a channel with a legacy page untouched", async () => {
+    m.getWaSettingsById.mockResolvedValue(settingsRow({ fbPageId: "page-1" }));
+    const body: any = { appId: "x" };
 
     await updateWaSettingsByIdHandler(
       request({ params: { whatsappSettingsId: SETTINGS_ID }, body }),
       reply(),
     );
 
-    expect(m.callMetaApi.mock.calls[0][0]).toContain("/page-1/subscribed_apps");
-    expect(body.igUserName).toBe("the_shop");
-    expect(body.fbUserName).toBe("The Shop");
-  });
-
-  test("passes every token as an auth header, never in a query string", async () => {
-    await updateWaSettingsByIdHandler(
-      request({
-        params: { whatsappSettingsId: SETTINGS_ID },
-        body: { fbPageId: "page-1", ibaId: "iba-1", pageAccessToken: "page-token" },
-      }),
-      reply(),
-    );
-
-    for (const [url] of m.callMetaApi.mock.calls) {
-      expect(url).not.toContain("access_token=");
-    }
-    const tokens = m.callMetaApi.mock.calls.map((c) => c[2]);
-    expect(tokens).toEqual(["page-token", "plain-token", "plain-token"]);
-  });
-
-  test("falls back to the stored page token when the client sends none", async () => {
-    m.getWaSettingsById.mockResolvedValue(settingsRow({ pageAccessToken: "stored-page-token" }));
-
-    await updateWaSettingsByIdHandler(
-      request({
-        params: { whatsappSettingsId: SETTINGS_ID },
-        body: { fbPageId: "page-1", ibaId: "iba-1" },
-      }),
-      reply(),
-    );
-
-    expect(m.callMetaApi.mock.calls[0][2]).toBe("stored-page-token");
-  });
-
-  test("clears every page field when the page is disconnected", async () => {
-    m.getWaSettingsById.mockResolvedValue(settingsRow({ fbPageId: "page-1" }));
-    const body: any = {};
-
-    await updateWaSettingsByIdHandler(
-      request({ params: { whatsappSettingsId: SETTINGS_ID }, body }),
-      reply(),
-    );
-
-    expect(body).toMatchObject({
-      fbPageId: null,
-      ibaId: null,
-      pageAccessToken: null,
-      igUserName: null,
-      igDisplayName: null,
-      fbUserName: null,
-    });
-  });
-
-  test("leaves an unchanged page alone", async () => {
-    m.getWaSettingsById.mockResolvedValue(settingsRow({ fbPageId: "page-1" }));
-
-    await updateWaSettingsByIdHandler(
-      request({ params: { whatsappSettingsId: SETTINGS_ID }, body: { fbPageId: "page-1" } }),
-      reply(),
-    );
-
+    expect(body).toEqual({ appId: "x" });
     expect(m.callMetaApi).not.toHaveBeenCalled();
   });
 
@@ -384,7 +388,7 @@ describe("updateWaSettingsByIdHandler", () => {
     await updateWaSettingsByIdHandler(
       request({
         params: { whatsappSettingsId: SETTINGS_ID },
-        body: { fbPageId: null, appId: "taken-over" },
+        body: { appId: "taken-over" },
       }),
       rep,
     );
@@ -468,6 +472,22 @@ describe("the Meta sync handlers", () => {
       "messages",
       "message_reads",
     ]);
+  });
+
+  // The channel row's own pageAccessToken is a legacy Messenger copy; the token of the
+  // page picked for lead ads comes in the body.
+  test("subscribes with the page token from the request, not the channel row", async () => {
+    m.getMetaAssets.mockResolvedValue({ pages: [{ id: "page-1", subscribedFields: [] }] });
+
+    await subscribeFieldstoPageHandler(
+      request({
+        params: { whatsappSettingsId: SETTINGS_ID },
+        body: { fbPageId: "page-1", pageAccessToken: "picked-page-token", fields: ["leadgen"] },
+      }),
+      reply(),
+    );
+
+    expect(m.subscribeFieldtoPage).toHaveBeenCalledWith("page-1", "picked-page-token", ["leadgen"]);
   });
 
   test("answers 404 when subscribing a page that has not been synced yet", async () => {
@@ -731,45 +751,5 @@ describe("the display name handlers", () => {
     await syncDisplayNameHandler(request({ params: { phoneId: PHONE_ID } }), rep);
 
     expect(rep.code).toHaveBeenCalledWith(500);
-  });
-});
-
-describe("describeChannelUpsert", () => {
-  const channel = { fbPageId: "page-1", fbUserName: "Page One", ibaId: "iba-1", igUserName: "ig" };
-
-  test("a first-time upsert is a channel add", () => {
-    expect(describeChannelUpsert(null, channel)).toEqual([{ action: "Channel added" }]);
-  });
-
-  test("names the Facebook page that was connected", () => {
-    const events = describeChannelUpsert({ fbPageId: null, ibaId: null }, channel);
-
-    expect(events.map((e) => e.action)).toEqual([
-      "Facebook page connected",
-      "Instagram account connected",
-    ]);
-    expect(events[0].details).toEqual({ fbPageId: "page-1", fbUserName: "Page One" });
-  });
-
-  test("reports both assets when disconnecting a page also drops its Instagram account", () => {
-    const events = describeChannelUpsert(channel, { fbPageId: null, ibaId: null });
-
-    expect(events.map((e) => e.action)).toEqual([
-      "Facebook page disconnected",
-      "Instagram account disconnected",
-    ]);
-  });
-
-  test("treats an empty string the same as no asset", () => {
-    const events = describeChannelUpsert(
-      { fbPageId: null, ibaId: null },
-      { fbPageId: "", ibaId: "" },
-    );
-
-    expect(events).toEqual([{ action: "Channel updated" }]);
-  });
-
-  test("falls back to a plain update when no asset changed", () => {
-    expect(describeChannelUpsert(channel, channel)).toEqual([{ action: "Channel updated" }]);
   });
 });

@@ -4,11 +4,10 @@ vi.mock("../wa_axios.js", () => ({
   callMetaApi: vi.fn(),
   GraphApiError: class GraphApiError extends Error {},
 }));
-vi.mock("../settings/wa_settings.service.js", () => ({
-  getWaSettingsByIbaId: vi.fn(),
-  getWaSettings: vi.fn(),
-  getWaSettingsByPageId: vi.fn(),
-  updateWaSettingsById: vi.fn(),
+vi.mock("../metaChannel/metaChannel.service.js", () => ({
+  getInstagramChannel: vi.fn(),
+  getMessengerChannel: vi.fn(),
+  updateMetaChannelById: vi.fn(),
 }));
 vi.mock("../whatsappSurvey/wasurvey.auth.js", () => ({
   assertWithinConversationLimit: vi.fn(),
@@ -24,18 +23,20 @@ vi.mock("../../../utils/logger.js", () => ({
 }));
 
 import { callMetaApi } from "../wa_axios.js";
-import { getWaSettingsByIbaId, updateWaSettingsById } from "../settings/wa_settings.service.js";
+import { getInstagramChannel, updateMetaChannelById } from "../metaChannel/metaChannel.service.js";
 import { assertWithinConversationLimit } from "../whatsappSurvey/wasurvey.auth.js";
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
 import {
   deleteInstagramIceBreakers,
   deleteInstagramPersistentMenu,
+  doesUserFollowInstagramAccount,
   getInstagramIceBreakers,
   getInstagramMediaPermalink,
   getInstagramMediaPosts,
   getInstagramPersistentMenu,
   getInstagramStories,
+  replyToInstagramComment,
   sendInstagramFile,
   sendInstagramGenericTemplate,
   sendInstagramImage,
@@ -52,8 +53,8 @@ import {
 type Mock = ReturnType<typeof vi.fn>;
 
 const callMetaApiMock = callMetaApi as unknown as Mock;
-const getSettingsMock = getWaSettingsByIbaId as unknown as Mock;
-const updateSettingsMock = updateWaSettingsById as unknown as Mock;
+const getSettingsMock = getInstagramChannel as unknown as Mock;
+const updateSettingsMock = updateMetaChannelById as unknown as Mock;
 const assertLimitMock = assertWithinConversationLimit as unknown as Mock;
 const handleWaMessagesMock = handleWaMessages as unknown as Mock;
 
@@ -64,7 +65,8 @@ const ORG_ID = "org-1";
 const SETTINGS: {
   id: string;
   orgId: string;
-  ibaId: string;
+  platform: string;
+  accountId: string;
   fbPageId: string;
   pageAccessToken: string;
   instagramIceBreakers: unknown;
@@ -72,7 +74,8 @@ const SETTINGS: {
 } = {
   id: "settings-1",
   orgId: ORG_ID,
-  ibaId: IBA_ID,
+  platform: "INSTAGRAM",
+  accountId: IBA_ID,
   fbPageId: "page-1",
   pageAccessToken: "page-token-abc",
   instagramIceBreakers: null,
@@ -201,6 +204,13 @@ describe("sendInstagramTextMessage", () => {
       "conversation limit reached",
     );
     expect(callMetaApiMock).not.toHaveBeenCalled();
+  });
+
+  // The org scopes the lookup, so a send never goes out on another org's account.
+  test("looks the account up within the sending org", async () => {
+    await sendInstagramTextMessage(IGS_ID, "hello", ORG_ID, IBA_ID);
+
+    expect(getSettingsMock).toHaveBeenCalledWith(IBA_ID, ORG_ID);
   });
 
   test("refuses when the account is not connected", async () => {
@@ -632,5 +642,48 @@ describe("reading the account's own posts and stories", () => {
     await expect(getInstagramMediaPosts(IBA_ID)).rejects.toThrow(
       `No Instagram settings found for ibaId ${IBA_ID}`,
     );
+  });
+});
+
+describe("replyToInstagramComment", () => {
+  test("posts the reply under the comment with the page token", async () => {
+    callMetaApiMock.mockResolvedValue({ data: { id: "reply-1" } });
+
+    await expect(replyToInstagramComment("comment-1", "Check your DMs", IBA_ID)).resolves.toEqual({
+      id: "reply-1",
+    });
+    expect(lastCall()).toMatchObject({
+      url: "/comment-1/replies",
+      method: "POST",
+      token: "page-token-abc",
+      body: { message: "Check your DMs" },
+    });
+  });
+
+  test("refuses an account with no page token", async () => {
+    getSettingsMock.mockResolvedValue({ ...SETTINGS, pageAccessToken: null });
+
+    await expect(replyToInstagramComment("comment-1", "Hi", IBA_ID)).rejects.toThrow();
+    expect(callMetaApiMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("doesUserFollowInstagramAccount", () => {
+  test("reads the follow flag from the user's profile", async () => {
+    callMetaApiMock.mockResolvedValue({ data: { is_user_follow_business: true } });
+
+    await expect(doesUserFollowInstagramAccount(IGS_ID, IBA_ID)).resolves.toBe(true);
+    expect(lastCall()).toMatchObject({
+      url: `/${IGS_ID}?fields=is_user_follow_business`,
+      method: "GET",
+      token: "page-token-abc",
+    });
+  });
+
+  // Meta refuses the profile read until the user has messaged the business.
+  test("treats a refused profile read as not following", async () => {
+    callMetaApiMock.mockRejectedValue(new Error("User consent is required"));
+
+    await expect(doesUserFollowInstagramAccount(IGS_ID, IBA_ID)).resolves.toBe(false);
   });
 });

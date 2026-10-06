@@ -105,6 +105,15 @@ export async function getWaSettingsHandler(req: FastifyRequest, res: FastifyRepl
       encryption: _encryption,
       accessToken: _accessToken,
       pageAccessToken: _pageAccessToken,
+      // Legacy Messenger/Instagram columns, copied to MetaChannel and no longer kept
+      // current; /api/meta/channels is the source for those channels.
+      fbPageId: _fbPageId,
+      ibaId: _ibaId,
+      fbUserName: _fbUserName,
+      igUserName: _igUserName,
+      igDisplayName: _igDisplayName,
+      instagramIceBreakers: _instagramIceBreakers,
+      instagramPersistentMenu: _instagramPersistentMenu,
       ...safe
     } = data;
     return { ...safe, encryption: undefined };
@@ -129,62 +138,6 @@ export async function updateWaSettingsHandler(
   return res.status(200).send(waSettings);
 }
 
-/** The Meta assets a channel row carries, as far as team activity cares. */
-interface ChannelAssets {
-  fbPageId?: string | null;
-  fbUserName?: string | null;
-  ibaId?: string | null;
-  igUserName?: string | null;
-}
-
-/**
- * Turn one upsert into the team-activity events it actually represents. The route is the
- * same whether the caller added a channel, connected a Facebook page or dropped an
- * Instagram account, so only a before/after comparison can tell those apart. Disconnecting
- * a page clears the linked Instagram account too, which is why this returns a list.
- */
-export function describeChannelUpsert(
-  before: ChannelAssets | null,
-  after: ChannelAssets | null,
-): { action: string; details?: Record<string, unknown> }[] {
-  if (!before) return [{ action: "Channel added" }];
-
-  const events: { action: string; details?: Record<string, unknown> }[] = [];
-  // The client clears an asset by sending "", the column stores null: same state, so
-  // compare on presence rather than raw value.
-  const asset = (value?: string | null) => value || null;
-
-  if (asset(before.fbPageId) !== asset(after?.fbPageId)) {
-    events.push(
-      after?.fbPageId
-        ? {
-            action: "Facebook page connected",
-            details: { fbPageId: after.fbPageId, fbUserName: after.fbUserName },
-          }
-        : {
-            action: "Facebook page disconnected",
-            details: { fbPageId: before.fbPageId, fbUserName: before.fbUserName },
-          },
-    );
-  }
-
-  if (asset(before.ibaId) !== asset(after?.ibaId)) {
-    events.push(
-      after?.ibaId
-        ? {
-            action: "Instagram account connected",
-            details: { ibaId: after.ibaId, igUserName: after.igUserName },
-          }
-        : {
-            action: "Instagram account disconnected",
-            details: { ibaId: before.ibaId, igUserName: before.igUserName },
-          },
-    );
-  }
-
-  return events.length ? events : [{ action: "Channel updated" }];
-}
-
 export async function upsertWaSettingsHandler(
   req: FastifyRequest<{ Body: updateWaSettingsInput & { encryption?: WaEncryptionKeys } }>,
   res: FastifyReply,
@@ -199,13 +152,10 @@ export async function upsertWaSettingsHandler(
     }
     const existing = await getWaSettings(org.orgId, req.body.phoneId);
     const waSettings = await upsertWaSettings(org.orgId, req.body.phoneId, req.body);
-    for (const event of describeChannelUpsert(existing, waSettings)) {
-      await recordAuditEvent(req, event.action, {
-        phoneId: waSettings?.phoneId,
-        phone: waSettings?.phone,
-        ...event.details,
-      });
-    }
+    await recordAuditEvent(req, existing ? "Channel updated" : "Channel added", {
+      phoneId: waSettings?.phoneId,
+      phone: waSettings?.phone,
+    });
     return res.status(200).send(waSettings);
   } catch (e) {
     log.error({ err: e }, "Error while upserting WhatsApp settings");
@@ -217,18 +167,6 @@ export async function upsertWaSettingsHandler(
       message: e instanceof Error ? e.message : "Something went wrong",
     });
   }
-}
-
-export async function subscribePageToApp(
-  pageId: string,
-  pageAccessToken: string,
-  fields: string[],
-) {
-  await callMetaApi(
-    `/${pageId}/subscribed_apps?subscribed_fields=${fields.join(",")}`,
-    "POST",
-    pageAccessToken,
-  );
 }
 
 export async function updateWaSettingsByIdHandler(
@@ -245,45 +183,6 @@ export async function updateWaSettingsByIdHandler(
     const settings = await getWaSettingsById(whatsappSettingsId, orgId);
     if (!settings) {
       return reply.code(404).send({ message: "WhatsApp settings not found" });
-    }
-    if (request.body.fbPageId?.length && settings.fbPageId !== request.body.fbPageId) {
-      // Falls back to the stored token: the dashboard no longer receives
-      // pageAccessToken in the channel list (13.2), so it cannot send one back for
-      // a page it did not just pick.
-      const pageAccessToken = request.body.pageAccessToken ?? settings.pageAccessToken;
-      if (!pageAccessToken) {
-        return reply
-          .code(400)
-          .send({ message: "pageAccessToken is required to connect a Facebook page" });
-      }
-      request.body.pageAccessToken = pageAccessToken;
-      await subscribePageToApp(request.body.fbPageId, pageAccessToken, [
-        "messages",
-        "message_reads",
-        "message_reactions",
-      ]);
-      if (request.body.ibaId) {
-        const igData = await callMetaApi(
-          `/${request.body.ibaId}?fields=username`,
-          "GET",
-          settings.accessToken,
-        );
-        request.body.igUserName = igData.data.username;
-      }
-      const fbData = await callMetaApi(
-        `/${request.body.fbPageId}?fields=name`,
-        "GET",
-        settings.accessToken,
-      );
-      request.body.fbUserName = fbData.data.name;
-    }
-    if (!request.body.fbPageId?.length && settings.fbPageId?.length) {
-      request.body.fbPageId = null;
-      request.body.ibaId = null;
-      request.body.pageAccessToken = null;
-      request.body.igUserName = null;
-      request.body.igDisplayName = null;
-      request.body.fbUserName = null;
     }
     await updateWaSettingsById(whatsappSettingsId, orgId, request.body);
     reply.code(200).send();
@@ -371,10 +270,9 @@ export async function syncLeadgenFormsHandler(
     const settings = await requireOwnedChannel(whatsappSettingsId, orgId, reply);
     if (!settings) return;
 
-    const pageAccessToken = settings.pageAccessToken ?? request.body.pageAccessToken;
-    if (!pageAccessToken) {
-      return reply.code(400).send({ message: "This channel has no Facebook page connected" });
-    }
+    // The token of the page picked from this channel's synced pages (lead ads), not a
+    // Messenger connection: those live on MetaChannel.
+    const { pageAccessToken } = request.body;
 
     const forms = await getLeadgenFormsFromWa(fbPageId, pageAccessToken);
     const data = forms.map((form) => ({ ...form, pageId: fbPageId }));
@@ -402,10 +300,9 @@ export async function syncLeadgenFormQuestionsHandler(
     const settings = await requireOwnedChannel(whatsappSettingsId, orgId, reply);
     if (!settings) return;
 
-    const pageAccessToken = settings.pageAccessToken ?? request.body.pageAccessToken;
-    if (!pageAccessToken) {
-      return reply.code(400).send({ message: "This channel has no Facebook page connected" });
-    }
+    // The token of the page picked from this channel's synced pages (lead ads), not a
+    // Messenger connection: those live on MetaChannel.
+    const { pageAccessToken } = request.body;
 
     const data = await getLeadgenFormQuestionsFromWa(fbPageId, formId, pageAccessToken);
     const assets = await getMetaAssets(whatsappSettingsId, orgId);
@@ -489,10 +386,9 @@ export async function subscribeFieldstoPageHandler(
     const settings = await requireOwnedChannel(whatsappSettingsId, orgId, reply);
     if (!settings) return;
 
-    const pageAccessToken = settings.pageAccessToken ?? request.body.pageAccessToken;
-    if (!pageAccessToken) {
-      return reply.code(400).send({ message: "This channel has no Facebook page connected" });
-    }
+    // The token of the page picked from this channel's synced pages (lead ads), not a
+    // Messenger connection: those live on MetaChannel.
+    const { pageAccessToken } = request.body;
 
     const data = await subscribeFieldtoPage(fbPageId, pageAccessToken, fields);
     if (data.success) {

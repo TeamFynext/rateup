@@ -59,7 +59,7 @@ export enum shopifyRecurringChargeStatus {
 
 // BUG (fixed): this map's keys used to be lowercase ("pending", "active", ...)
 // but the only value ever indexed into it — the GraphQL `AppSubscription.status`
-// field read from Shopify's Admin API in shopify.service.ts's
+// field read from Shopify's Admin API in shopify.billing.ts's
 // `activateSubscriptionThroughShopify` — is one of Shopify's real
 // AppSubscriptionStatus enum values, which are UPPERCASE ("ACTIVE", "PENDING",
 // etc, matching `shopifyRecurringChargeStatus` above). The lowercase keys meant
@@ -221,3 +221,7 @@ export function toShopifyProvinceCode(
   if (INDIA_CODES.has(trimmed.toUpperCase())) return trimmed.toUpperCase();
   return INDIA_PROVINCE_CODES[trimmed.toLowerCase().replace(/[^a-z]/g, "")];
 }
+
+/** Whether an org's loyalty programme awards points on Shopify orders. */
+export const shopifyLoyaltyEnabled = (program: Record<string, unknown>) =>
+  Boolean(program.enableShopifyOrderPoints);

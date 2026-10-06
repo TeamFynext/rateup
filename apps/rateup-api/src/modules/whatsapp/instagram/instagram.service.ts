@@ -1,5 +1,4 @@
 import { callMetaApi } from "../wa_axios.js";
-import { getWaSettingsByIbaId, getWaSettingsById } from "../settings/wa_settings.service.js";
 import { log } from "../../../utils/logger.js";
 import { updateWaMessageByMessageId } from "../inbox/message/wamessage.service.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
@@ -8,13 +7,15 @@ import { getInstagramMediaPermalink } from "./instagram_messaging.service.js";
 import { InstagramEvent } from "../../../types/enums.js";
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 import { checkAndExecuteRuleByTriggerEvent } from "../automatedReply/wa_automatedReply.utils.js";
+import { handleInstagramUserResponse } from "../automatedReply/instagram_automation.service.js";
+import { getInstagramChannel } from "../metaChannel/metaChannel.service.js";
 
 export async function getIgUserDetailsFromMeta(igsId: string, ibaId: string) {
-  const waSettings = await getWaSettingsByIbaId(ibaId);
-  if (!waSettings) {
+  const channel = await getInstagramChannel(ibaId);
+  if (!channel) {
     throw new Error(`No Instagram settings found for ibaId ${ibaId}`);
   }
-  const { pageAccessToken } = waSettings;
+  const { pageAccessToken } = channel;
   const url = `/${igsId}?fields=name,username,profile_pic,follower_count,is_verified_user,is_user_follow_business,is_business_follow_user`;
   const res = await callMetaApi(url, "GET", pageAccessToken);
   // trace, not info: this is the customer's whole Instagram profile.
@@ -39,7 +40,7 @@ export async function handleInstagramWebhook(
   for (const entry of data.entry) {
     let waSettings;
     try {
-      waSettings = await getWaSettingsByIbaId(entry.id);
+      waSettings = await getInstagramChannel(entry.id);
     } catch (error) {
       log.error({ err: error, ibaId: entry.id }, "[Instagram] Failed to load settings for account");
       failed++;
@@ -50,13 +51,7 @@ export async function handleInstagramWebhook(
       log.trace("No instagram settings found for instagram business account id: %s", entry.id);
       continue;
     }
-    const { orgId, ibaId } = waSettings;
-    if (!ibaId) {
-      // Guaranteed non-null in practice: waSettings was just looked up BY ibaId, but
-      // the column itself is nullable, so this narrows the type for everything below.
-      log.trace("Instagram settings for account %s have no ibaId configured", entry.id);
-      continue;
-    }
+    const { orgId, accountId: ibaId } = waSettings;
     const settings = { orgId, ibaId };
 
     // Handle comment/live_comment change events
@@ -202,6 +197,8 @@ export async function handleInstagramComment(
       message: text || "",
       phone: igsId,
       instagramMediaId: comment.media?.id,
+      instagramCommentId: commentId,
+      instagramLiveComment: event === InstagramEvent.LIVE_COMMENT,
       platform: "INSTAGRAM",
     });
   } catch (error) {
@@ -248,6 +245,27 @@ async function handleInstagramStoryMentionRule(
   }
 }
 
+/** Runs the "ig.me link opened" rules for a ref; true when one of them ran. */
+async function runInstagramLinkRules(
+  ref: string,
+  igsId: string,
+  waSettings: { orgId: string; ibaId: string },
+): Promise<boolean> {
+  try {
+    const result = await checkAndExecuteRuleByTriggerEvent("INSTAGRAM_REFERRAL", {
+      orgId: waSettings.orgId,
+      phoneNumberId: waSettings.ibaId,
+      phone: igsId,
+      instagramRef: ref,
+      platform: "INSTAGRAM",
+    });
+    return Boolean(result);
+  } catch (error) {
+    log.error({ err: error, ref }, "[Instagram] Error in link rule execution");
+    return false;
+  }
+}
+
 export async function handleInstagramMessages(
   data: InstagramWebhookBody,
   waSettings: { orgId: string; ibaId: string },
@@ -282,6 +300,20 @@ export async function handleInstagramMessages(
     log.error({ err: error }, "[Instagram] Error storing message");
     throw error;
   }
+
+  // A first message sent from an ig.me link carries its ref; the link's own rule wins.
+  const linkRef = message.referral && "ref" in message.referral ? message.referral.ref : undefined;
+  if (linkRef && (await runInstagramLinkRules(linkRef, sender.id, waSettings))) return;
+
+  // An answer to a running flow belongs to that flow, not to the keyword rules.
+  const answeredFlow = await handleInstagramUserResponse(
+    sender.id,
+    message.text || "",
+    orgId,
+    ibaId,
+    message.quick_reply?.payload,
+  );
+  if (answeredFlow) return;
 
   try {
     await checkAndExecuteRuleByTriggerEvent("MESSAGE_RECEIVED", {
@@ -337,6 +369,22 @@ export async function handleInstagramPostback(
       `ig_postback_${timestamp}`,
     );
 
+    // A new conversation opened from an ig.me link, started by tapping an ice breaker,
+    // carries the link's ref on the postback. The link's own rule wins, as it does for a
+    // first message sent from a link.
+    const linkRef =
+      postback.referral && "ref" in postback.referral ? postback.referral.ref : undefined;
+    if (linkRef && (await runInstagramLinkRules(linkRef, sender.id, waSettings))) return;
+
+    const answeredFlow = await handleInstagramUserResponse(
+      sender.id,
+      postback.title ?? "",
+      orgId,
+      ibaId,
+      postback.payload,
+    );
+    if (answeredFlow) return;
+
     await checkAndExecuteRuleByTriggerEvent("MESSAGE_RECEIVED", {
       orgId,
       phoneNumberId: ibaId,
@@ -358,7 +406,8 @@ export async function handleInstagramReferral(
   const { orgId, ibaId } = waSettings;
   const messaging = data.entry[0].messaging[0];
   const { sender, timestamp } = messaging;
-  const referral = messaging.message?.referral || messaging.postback?.referral;
+  const referral =
+    messaging.referral || messaging.message?.referral || messaging.postback?.referral;
 
   if (!referral) {
     log.warn("No referral payload in Instagram event");
@@ -393,6 +442,11 @@ export async function handleInstagramReferral(
       `ig_referral_${timestamp}`,
     );
 
+    const ref = "ref" in referral ? referral.ref : undefined;
+    if (ref && (await runInstagramLinkRules(ref, sender.id, waSettings))) return;
+
+    // Keyword rules on the ref text were the only way to answer a link before the
+    // INSTAGRAM_REFERRAL trigger; rules written that way keep working.
     await checkAndExecuteRuleByTriggerEvent("MESSAGE_RECEIVED", {
       orgId,
       phoneNumberId: ibaId,
@@ -441,32 +495,4 @@ export async function handleInstagramMessageReaction(
     undefined,
     reaction?.mid,
   );
-}
-
-interface MetaFbPage {
-  id: string;
-  name: string;
-  access_token: string;
-  instagram_business_account?: { id: string };
-}
-
-export async function getFbPages(settingsId: string, orgId: string) {
-  const waSettings = await getWaSettingsById(settingsId, orgId);
-  if (!waSettings) {
-    throw new Error(`No WhatsApp settings found for id ${settingsId}`);
-  }
-  const { accessToken } = waSettings;
-  const res = await callMetaApi(
-    `/me/accounts?fields=id,name,access_token,instagram_business_account`,
-    "GET",
-    accessToken,
-  );
-  return (res.data.data as MetaFbPage[])
-    .filter((i) => Boolean(i.instagram_business_account?.id))
-    .map((i) => ({
-      fbPageId: i.id,
-      ibaId: i.instagram_business_account!.id,
-      pageAccessToken: i.access_token,
-      fbPageName: i.name,
-    }));
 }

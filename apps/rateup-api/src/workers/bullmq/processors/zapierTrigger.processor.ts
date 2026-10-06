@@ -1,22 +1,22 @@
-// Ported from message-dispatcher/src/index.ts.
+// Drains the old `zapierTriggerQueue`. Zapier triggers now go through the
+// integration provider (`external/zapier/zapier.deliver.ts`), one job per hook on
+// `integrationTriggerQueue`; this worker only hands over jobs a previous deploy
+// left here. Remove it, and the queue, once that queue is empty in production.
 //
-// Delivers a trigger to every Zapier hook subscribed to it. The job *name* is the
-// trigger key (new_contact_create, contact_updated, …), not the payload.
+// The job *name* is the trigger key (new_contact_create, contact_updated, …).
 import { Job, Worker } from "bullmq";
 
 import { log } from "../../shared/logger.js";
 import baseRedis from "../../../utils/redisConnection.js";
-import { notifyZapier } from "../../shared/modules/integration/zapier/zapier.service.js";
-import { ZapierTriggers } from "../../shared/types/enum.js";
+import { drainLegacyZapierJob } from "../../../modules/integrations/external/zapier/zapier.deliver.js";
 
 const workerConnection = baseRedis.duplicate();
 
 export const zapierTriggerWorker = new Worker(
   "zapierTriggerQueue",
-  async (job: Job) => {
-    log.trace("zapierTriggerQueue job data => %o", job.data);
+  async (job: Job<{ orgId: string; data: unknown }>) => {
     const { orgId, data } = job.data;
-    await notifyZapier(job.name as ZapierTriggers, data, orgId);
+    await drainLegacyZapierJob(job.name, data, orgId);
   },
   {
     connection: workerConnection,

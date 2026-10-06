@@ -120,13 +120,14 @@ const setTeamChannelsSchema = z.object({
   channelIds: z.array(z.string()).default([]),
 });
 
+/** One granted channel, of any platform — a `Channel` row. */
 const teamChannelItemSchema = z.object({
   id: z.string(),
-  phone: z.string().nullable().optional(),
-  phoneId: z.string().nullable().optional(),
-  ibaId: z.string().nullable().optional(),
-  fbPageId: z.string().nullable().optional(),
-  phoneDisplayName: z.string().nullable().optional(),
+  platform: z.string(),
+  accountId: z.string(),
+  address: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  username: z.string().nullable().optional(),
   status: z.string().optional(),
 });
 

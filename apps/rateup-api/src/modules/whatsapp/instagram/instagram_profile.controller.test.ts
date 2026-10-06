@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
-vi.mock("../settings/wa_settings.service.js", () => ({
-  getWaSettingsByIbaId: vi.fn(),
-  getWaSettingsById: vi.fn(),
-  updateWaSettingsById: vi.fn(),
+vi.mock("../metaChannel/metaChannel.service.js", () => ({
+  getInstagramChannel: vi.fn(),
+  getMetaChannelById: vi.fn(),
+  updateMetaChannelById: vi.fn(),
 }));
 vi.mock("./instagram_messaging.service.js", () => ({
   deleteInstagramIceBreakers: vi.fn(),
@@ -20,10 +20,10 @@ vi.mock("../../../utils/logger.js", () => ({
 }));
 
 import {
-  getWaSettingsByIbaId,
-  getWaSettingsById,
-  updateWaSettingsById,
-} from "../settings/wa_settings.service.js";
+  getInstagramChannel,
+  getMetaChannelById,
+  updateMetaChannelById,
+} from "../metaChannel/metaChannel.service.js";
 import {
   deleteInstagramIceBreakers,
   deleteInstagramPersistentMenu,
@@ -54,17 +54,17 @@ const m = {
   getIceBreakers: getInstagramIceBreakers as unknown as Mock,
   getMedia: getInstagramMediaPosts as unknown as Mock,
   getMenu: getInstagramPersistentMenu as unknown as Mock,
-  getSettingsByIbaId: getWaSettingsByIbaId as unknown as Mock,
-  getSettingsById: getWaSettingsById as unknown as Mock,
+  getSettingsByIbaId: getInstagramChannel as unknown as Mock,
+  getSettingsById: getMetaChannelById as unknown as Mock,
   getStories: getInstagramStories as unknown as Mock,
   setIceBreakers: setInstagramIceBreakers as unknown as Mock,
   setMenu: setInstagramPersistentMenu as unknown as Mock,
-  updateSettings: updateWaSettingsById as unknown as Mock,
+  updateSettings: updateMetaChannelById as unknown as Mock,
 };
 
 const ORG_A = "org-a";
 const ORG_B = "org-b";
-const SETTINGS_ID = "settings-1";
+const CHANNEL_ID = "channel-1";
 const IBA_ID = "iba-1";
 
 const ICE_BREAKERS = [{ question: "Opening hours?", payload: "HOURS" }];
@@ -72,9 +72,11 @@ const MENU = [{ locale: "default", call_to_actions: [{ type: "postback", title: 
 
 function settings(overrides: Record<string, unknown> = {}): any {
   return {
-    id: SETTINGS_ID,
+    id: CHANNEL_ID,
     orgId: ORG_A,
-    ibaId: IBA_ID,
+    platform: "INSTAGRAM",
+    accountId: IBA_ID,
+    fbPageId: "page-1",
     instagramIceBreakers: ICE_BREAKERS,
     instagramPersistentMenu: MENU,
     ...overrides,
@@ -84,7 +86,7 @@ function settings(overrides: Record<string, unknown> = {}): any {
 function request(overrides: Record<string, unknown> = {}): any {
   return {
     user: { orgId: ORG_A, userId: "user-1" },
-    params: { whatsappSettingsId: SETTINGS_ID },
+    params: { channelId: CHANNEL_ID },
     body: {},
     ...overrides,
   };
@@ -126,6 +128,13 @@ describe("getInstagramProfileHandler", () => {
       success: true,
       data: { iceBreakers: ICE_BREAKERS, persistentMenu: MENU },
     });
+  });
+
+  // The route param is a MetaChannel id, looked up within the caller's org.
+  test("resolves the Instagram channel from the channelId param within the caller's org", async () => {
+    await getInstagramProfileHandler(request(), reply());
+
+    expect(m.getSettingsById).toHaveBeenCalledWith(CHANNEL_ID, ORG_A);
   });
 
   test("unwraps a bare array just as happily as a wrapped one", async () => {
@@ -175,14 +184,16 @@ describe("getInstagramProfileHandler", () => {
     expect(rep.code).toHaveBeenCalledWith(500);
   });
 
-  test("reports an unconnected Instagram account as a 409, with the reason", async () => {
-    m.getSettingsById.mockResolvedValue(settings({ ibaId: null }));
+  // A Messenger channel id reaches this route too; it has no Instagram profile to read.
+  test("reports a channel that is not an Instagram one as a 409, with the reason", async () => {
+    m.getSettingsById.mockResolvedValue(settings({ platform: "FACEBOOK", accountId: "page-1" }));
     const rep = reply();
 
     await getInstagramProfileHandler(request(), rep);
 
     expect(rep.code).toHaveBeenCalledWith(409);
     expect(sent(rep).message).toBe("Instagram account is not connected for this channel");
+    expect(m.getIceBreakers).not.toHaveBeenCalled();
   });
 
   test("still reports a genuine failure as a 500", async () => {
@@ -202,7 +213,7 @@ describe("setInstagramIceBreakersHandler", () => {
 
     await setInstagramIceBreakersHandler(request({ body: { iceBreakers: ICE_BREAKERS } }), rep);
 
-    expect(m.updateSettings).toHaveBeenCalledWith(SETTINGS_ID, ORG_A, {
+    expect(m.updateSettings).toHaveBeenCalledWith(CHANNEL_ID, ORG_A, {
       instagramIceBreakers: ICE_BREAKERS,
     });
     expect(m.setIceBreakers).not.toHaveBeenCalled();
@@ -334,7 +345,7 @@ describe("the persistent menu handlers", () => {
 
     await setInstagramPersistentMenuHandler(request({ body: { persistentMenu: MENU } }), rep);
 
-    expect(m.updateSettings).toHaveBeenCalledWith(SETTINGS_ID, ORG_A, {
+    expect(m.updateSettings).toHaveBeenCalledWith(CHANNEL_ID, ORG_A, {
       instagramPersistentMenu: MENU,
     });
     expect(m.setMenu).not.toHaveBeenCalled();
@@ -450,7 +461,7 @@ describe("reading the account's own posts and stories", () => {
 
     await getInstagramMediaHandler(request({ params: { ibaId: IBA_ID } }), rep);
 
-    expect(m.getSettingsByIbaId).toHaveBeenCalledWith(IBA_ID);
+    expect(m.getSettingsByIbaId).toHaveBeenCalledWith(IBA_ID, ORG_A);
     expect(m.getMedia).toHaveBeenCalledWith(IBA_ID);
     expect(sent(rep)).toEqual({ success: true, data: [{ id: "media-1" }] });
   });

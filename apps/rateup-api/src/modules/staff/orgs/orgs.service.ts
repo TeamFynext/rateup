@@ -1,3 +1,4 @@
+import { PlatformType } from "../../../../generated/prisma/enums.js";
 import type { Prisma } from "../../../../generated/prisma/client.js";
 import { isRoleKey, legacyRoleToKey, ROLES } from "../../../authz/roles.js";
 import { log } from "../../../utils/logger.js";
@@ -453,29 +454,50 @@ export async function getOrgUsage(orgId: string, days: UsageDays = 30, now = new
   };
 }
 
-/** Connected channels, with no token, secret or key in the selection. */
+/**
+ * Connected channels of every platform, one per `Channel` row, with no token, secret or key in
+ * the selection. Kept in the console's row shape: WhatsApp numbers carry their settings
+ * (`type` Automated/Manual), every other platform's `type` is its platform.
+ */
 export async function getOrgChannels(orgId: string) {
   await assertOrgExists(orgId);
-  return prisma.whatsappSettings.findMany({
+  const channels = await prisma.channel.findMany({
     where: { orgId },
-    orderBy: { createdAt: "asc" },
+    orderBy: [{ platform: "asc" }, { createdAt: "asc" }],
     select: {
       id: true,
-      type: true,
+      platform: true,
+      accountId: true,
+      address: true,
+      name: true,
+      username: true,
       status: true,
-      phone: true,
-      phoneDisplayName: true,
-      phoneId: true,
-      wabaId: true,
-      fbPageId: true,
-      fbUserName: true,
-      ibaId: true,
-      igUserName: true,
-      igDisplayName: true,
-      messagesPerSecond: true,
-      paymentMethod: true,
       createdAt: true,
+      whatsapp: {
+        select: { type: true, wabaId: true, messagesPerSecond: true, paymentMethod: true },
+      },
     },
+  });
+  return channels.map(({ whatsapp, platform, accountId, address, name, username, ...channel }) => {
+    const instagram = platform === PlatformType.INSTAGRAM;
+    const facebook = platform === PlatformType.FACEBOOK;
+    return {
+      ...channel,
+      platform,
+      accountId,
+      type: whatsapp?.type ?? platform,
+      phone: whatsapp ? address : null,
+      phoneDisplayName: whatsapp ? name : null,
+      phoneId: whatsapp ? accountId : null,
+      wabaId: whatsapp?.wabaId ?? null,
+      messagesPerSecond: whatsapp?.messagesPerSecond ?? null,
+      paymentMethod: whatsapp?.paymentMethod ?? null,
+      fbPageId: facebook ? accountId : null,
+      fbUserName: facebook ? name : null,
+      ibaId: instagram ? accountId : null,
+      igUserName: instagram ? username : null,
+      igDisplayName: instagram ? name : null,
+    };
   });
 }
 

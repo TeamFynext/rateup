@@ -3,7 +3,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { recordAuditEvent } from "../../../../utils/auditLog.js";
 import { log } from "../../../../utils/logger.js";
 import { applyGetLeadInbound, unwrapGetLeadDelivery } from "./getlead.inbound.js";
-import { getGetLeadIntegration } from "./getlead.service.js";
+import { getGetLeadIntegration } from "./getlead.credential.js";
 import { getGetLeadCredential } from "./getlead.types.js";
 import {
   describeGetLeadInbound,

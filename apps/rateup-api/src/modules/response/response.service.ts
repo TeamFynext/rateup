@@ -9,10 +9,8 @@ import {
 import { CreateResponseInput, GenerateBodyInput, ResponseFilterQuery } from "./response.schema.js";
 import {
   ChoiceTypeQuestions,
-  IntegratedApps,
   LDResponse,
   NPSWeightage,
-  PageType,
   QuestionType,
   QuestionType2,
   ResponseSummaryType,
@@ -24,8 +22,6 @@ import {
   YNResponse,
 } from "../../types/enums.js";
 import dayjs from "dayjs";
-import { saveSheetIdToSurvey } from "../survey/survey.service.js";
-import { google } from "googleapis";
 import { write, type CellValue } from "hucre";
 import utc from "dayjs/plugin/utc.js";
 import timezone from "dayjs/plugin/timezone.js";
@@ -35,16 +31,11 @@ import { log } from "../../utils/logger.js";
 import { FastifyRequest } from "fastify";
 import { getTextSummaryByAI } from "./responseSummary.ai.js";
 import {
-  getIntegrationByName,
-  initializeAuthClient,
-  updateIntegrationByName,
-} from "../integrations/integrations.service.js";
-import {
   addNewContactsToGroup,
   createContactGroup,
   getContactGroupByNameAndTeam,
 } from "../contact/contactGroup/contactGroup.service.js";
-import { sendWebhook } from "../../utils/webhook.js";
+import { enqueueSurveyResponseWebhook } from "../webhook/webhook.service.js";
 import { getFileUrlFromKey } from "../../utils/upload/s3Upload.js";
 import {
   barGraphQuestions,
@@ -56,23 +47,19 @@ import {
   SmileyResponseMap,
   YNResponseMap,
 } from "../../utils/enumMap.js";
-import { getFlowBySurveyId } from "../whatsapp/flows/flow.service.js";
 import { Prisma } from "../../../generated/prisma/client.js";
 import { notificationQueue } from "../../workers/bullmq/queues/index.js";
 import { ContactGroupType } from "../contact/contactGroup/contactGroup.schema.js";
-
-/**
- * One row handed to google-spreadsheet's addRow/addRows, keyed by column header.
- * The library writes each value into a cell, so only cell-shaped scalars belong here.
- */
-type SheetRow = Record<string, string | number | boolean | Date>;
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
 // QuestionResponse["response"] only declares keys for QuestionTypes that store an answer
 // under their own type (some, like PCQ/MCQGrid, don't), so this is a dynamic lookup.
-function getAnswerValue(response: QuestionResponse["response"], type: QuestionType): unknown {
+export function getAnswerValue(
+  response: QuestionResponse["response"],
+  type: QuestionType,
+): unknown {
   return (response as Record<string, unknown>)[type];
 }
 
@@ -969,500 +956,8 @@ export const generateResponse = async (body: GenerateBodyInput) => {
   return data;
 };
 
-// Improved syncResponseToGoogleSheet for better performance with large datasets
-export async function syncResponseToGoogleSheet(surveyId: string, orgId: string) {
-  const { GoogleSpreadsheet } = await import("google-spreadsheet");
-  const survey = await prisma.survey.findUnique({
-    where: { id: surveyId },
-    select: {
-      spreadSheetId: true,
-      teams: { select: { team: { select: { id: true, name: true } } } },
-      title: true,
-      languages: true,
-      questions: true,
-      type: true,
-    },
-  });
-  if (!survey) throw new Error(`Could not find survey with id ${surveyId}`);
-  const authClient = await initializeAuthClient();
-  const tokenFromIntgration = (await getIntegrationByName(
-    orgId,
-    IntegratedApps.googlesheet,
-  )) as unknown as GoogleSheetIntegration;
-  authClient.credentials.refresh_token = tokenFromIntgration.credential?.refreshToken;
-  const drive = google.drive({ version: "v3", auth: authClient });
-  const isDocExist = survey?.spreadSheetId
-    ? await checkFileExistInDrive(survey?.spreadSheetId, drive)
-    : false;
-  let doc =
-    isDocExist && survey.spreadSheetId
-      ? new GoogleSpreadsheet(survey.spreadSheetId, authClient)
-      : null;
-  if (!doc) {
-    const driveFolderId = await getDriveFolderId(orgId, authClient, drive, tokenFromIntgration);
-    const existingFiles = await drive.files.list({
-      q: `mimeType = 'application/vnd.google-apps.spreadsheet' and name = '${survey.title}' and '${driveFolderId}' in parents`,
-      fields: "nextPageToken, files(id, name)",
-      spaces: "drive",
-    });
-    const existingFile = existingFiles.data.files?.[0];
-    if (existingFile?.id) {
-      doc = new GoogleSpreadsheet(existingFile.id, authClient);
-    } else {
-      doc = await GoogleSpreadsheet.createNewSpreadsheetDocument(authClient, {
-        title: survey.title,
-      });
-      let fileId = doc.spreadsheetId;
-      const file = await drive.files.get({
-        fileId: fileId,
-        fields: "parents",
-      });
-      const previousParents = (file.data.parents ?? []).join(",");
-      await drive.files.update({
-        fileId: fileId,
-        removeParents: previousParents,
-        addParents: driveFolderId,
-        fields: "id, parents",
-      });
-    }
-    await saveSheetIdToSurvey(doc.spreadsheetId, surveyId);
-  }
-  await doc.loadInfo();
-
-  const BATCH_SIZE = 8000; // Tune this based on memory and Google API limits
-  let flow = await getFlowBySurveyId(surveyId, orgId);
-  const filteredSecondArray = flow?.json?.screens?.flatMap(
-    (screen) => screen?.layout?.children?.filter((child) => child?.type !== "Footer" && child.name),
-    // The sheet's leading/trailing columns (created-at, respondent, tag, team) are pushed in
-    // below as plain header strings rather than flow elements.
-  ) as Array<WaFlowForm | string>;
-  const checkVersion = flow ? flow.version === 1 : true;
-
-  if (checkVersion) {
-    const languages = survey?.languages;
-    let questions = survey?.questions as unknown as Array<Question>;
-    // Precompute question titles for each language
-    const languageQuestionTitles: Record<string, string[]> = {};
-    for (const lang of languages) {
-      let questionTitles: string[] = [];
-      questions.map((q: Question, index: number) => {
-        if ([QuestionType.InfoMessage, ...Object.values(PageType)].includes(q.type)) return false;
-        let qsTitle = q?.title[lang] || q?.description[lang] || q?.label?.[lang] || "";
-        const qstnTitle = index + 1 + "_" + getContent(qsTitle)?.trim();
-        if ([QuestionType.Contact, QuestionType.Email, QuestionType.Phone].includes(q.type))
-          Object.entries(q.features?.[lang] ?? {}).map(([key, value]) =>
-            typeof value === "object" &&
-            value !== null &&
-            "isEnabled" in value &&
-            (value as { isEnabled: boolean }).isEnabled
-              ? questionTitles.push((qstnTitle + ":" + key).trim())
-              : null,
-          );
-        else if (q.type === QuestionType.Testimonial) {
-          questionTitles.push((qstnTitle + ":name").trim());
-          questionTitles.push((qstnTitle + ":testimonial").trim());
-          Object.entries(q.features?.[lang] ?? {}).map(([key, value]) =>
-            value ? questionTitles.push((qstnTitle + ":" + key).trim()) : null,
-          );
-        } else if (q.type === QuestionType.MCQGrid) {
-          const subQs: string[] | undefined = q.features?.[lang]?.questions;
-          subQs?.map((qstn) => questionTitles.push((qstnTitle + ":" + qstn).trim()));
-        } else if (q.type === QuestionType.MultiTextInput) {
-          const fields: { fieldKey?: string }[] | undefined = q.features?.[lang]?.fields;
-          fields?.map((field) => questionTitles.push((qstnTitle + ":" + field?.fieldKey).trim()));
-        } else questionTitles.push(qstnTitle);
-      });
-      languageQuestionTitles[lang] = questionTitles;
-    }
-
-    // For each language, process responses in batches
-    for (const lang of languages) {
-      const additionalColumns = ["Team", "Respondent's Mobile Number", "Tags"];
-      const headerRow = ["Created At", ...languageQuestionTitles[lang], ...additionalColumns];
-      const totalColumnCount = headerRow.length;
-      let sheet =
-        (await doc.sheetsByTitle[lang]) ??
-        (await doc.addSheet({
-          title: lang,
-          headerValues: headerRow,
-          gridProperties: totalColumnCount > 26 ? { columnCount: totalColumnCount } : undefined,
-        }));
-      const initialRowCount = await sheet.rowCount;
-      if (totalColumnCount > sheet.columnCount)
-        await sheet.resize({
-          columnCount: totalColumnCount,
-          rowCount: initialRowCount,
-        });
-      await sheet.setHeaderRow(headerRow);
-      await sheet.saveUpdatedCells();
-      await sheet.clearRows();
-
-      // Get all teamIds for this survey
-      const teamIds = survey.teams.map((t) => t.team.id);
-
-      // Count total responses for this language
-      const totalCount = await prisma.surveyResponse.count({
-        where: {
-          surveyTeamMap: { surveyId, teamId: { in: teamIds } },
-          language: lang,
-        },
-      });
-
-      // Process in batches
-      for (let skip = 0; skip < totalCount; skip += BATCH_SIZE) {
-        const responses = await prisma.surveyResponse.findMany({
-          where: {
-            surveyTeamMap: { surveyId, teamId: { in: teamIds } },
-            language: lang,
-          },
-          include: {
-            surveyTeamMap: {
-              select: {
-                team: { select: { name: true } },
-              },
-            },
-            Contact: { select: { phone: true } },
-          },
-          orderBy: { createdAt: "asc" },
-          skip,
-          take: BATCH_SIZE,
-        });
-
-        // Prepare rows for this batch
-        const responseForSheet = [];
-        for (const response of responses) {
-          const resObj: SheetRow = {
-            Team: response.surveyTeamMap.team.name,
-            "Created At": dayjs(response.createdAt).format("DD-MM-YYYY HH:mm"),
-          };
-          for (let i = 0; i < questions.length; i++) {
-            const q = questions[i];
-            if ([QuestionType.InfoMessage, ...Object.values(PageType)].includes(q.type)) continue;
-            let qsTitle = q?.title[lang] || q?.description[lang] || q?.label?.[lang] || "";
-            const qstnTitle = i + 1 + "_" + getContent(qsTitle)?.trim();
-            const res = response.responses.find((r) => r.questionId === q.id);
-            if (res) {
-              const answerValue = getAnswerValue(res.response, res.type);
-              if ([QuestionType.Contact, QuestionType.Email, QuestionType.Phone].includes(q.type))
-                Object.entries(answerValue as Record<string, unknown>).map(
-                  ([key, value]) => (resObj[(qstnTitle + ":" + key).trim()] = toCell(value)),
-                );
-              else if (q.type === QuestionType.Testimonial)
-                Object.entries(answerValue as Record<string, unknown>).map(
-                  ([key, value]) =>
-                    (resObj[(qstnTitle + ":" + key).trim()] =
-                      key == "photo"
-                        ? `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${value}`
-                        : toCell(value)),
-                );
-              else if (q.type === QuestionType.MCQGrid)
-                Object.entries(answerValue as Record<string, Choice>).map(
-                  ([key, value]) => (resObj[(qstnTitle + ":" + key).trim()] = value?.value),
-                );
-              else if (q.type === QuestionType.MultiTextInput)
-                Object.entries(answerValue as Record<string, unknown>).map(
-                  ([key, value]) => (resObj[(qstnTitle + ":" + key).trim()] = toCell(value)),
-                );
-              else resObj[qstnTitle] = getFormattedResponse(answerValue, q, lang);
-            }
-          }
-          resObj["Respondent's Mobile Number"] = toCell(response?.Contact?.phone);
-          resObj["Tag"] = toCell(response?.tag);
-          responseForSheet.push(resObj);
-        }
-        // Add batch of rows
-        if (responseForSheet.length > 0) {
-          await sheet.addRows(responseForSheet);
-        }
-      }
-    }
-  } else {
-    // WaFlow version 2
-    // Prepare header
-    const responsesCount = await prisma.surveyResponse.count({
-      where: { surveyTeamMap: { surveyId } },
-    });
-    const headerArray = filteredSecondArray.map((question) =>
-      typeof question === "string"
-        ? question
-        : markdownToPlainText(question?.header || question?.label || ""),
-    );
-    const createdAt = "Created At";
-    const responseTag = "Tag";
-    let whatsappRespondentNumber = "Respondent's Mobile Number";
-    let teamTag = "Team";
-    headerArray.unshift(createdAt);
-    filteredSecondArray.unshift(createdAt);
-    headerArray.push(whatsappRespondentNumber);
-    filteredSecondArray.push(whatsappRespondentNumber);
-    headerArray.push(responseTag);
-    filteredSecondArray.push(responseTag);
-    headerArray.push(teamTag);
-    filteredSecondArray.push(teamTag);
-
-    const totalColumnCount = filteredSecondArray.length;
-    let lang = "en";
-    let sheet =
-      doc.sheetsByTitle[lang] ??
-      (await doc.addSheet({
-        title: lang,
-        headerValues: headerArray,
-        gridProperties: totalColumnCount > 26 ? { columnCount: totalColumnCount } : undefined,
-      }));
-    const initialRowCount = sheet.rowCount;
-    if (totalColumnCount > sheet.columnCount)
-      await sheet.resize({
-        columnCount: totalColumnCount,
-        rowCount: initialRowCount,
-      });
-    await sheet.setHeaderRow(headerArray);
-    await sheet.clearRows();
-
-    // Process in batches
-    for (let skip = 0; skip < responsesCount; skip += BATCH_SIZE) {
-      const responses = await prisma.surveyResponse.findMany({
-        where: { surveyTeamMap: { surveyId } },
-        include: {
-          Contact: { select: { phone: true } },
-          surveyTeamMap: {
-            select: {
-              teamId: true,
-            },
-          },
-        },
-        orderBy: { createdAt: "asc" },
-        skip,
-        take: BATCH_SIZE,
-      });
-
-      const bodyArray: string[][] = [];
-      for (const response of responses) {
-        const row: string[] = [];
-        filteredSecondArray.forEach((question) => {
-          const questionId = typeof question === "string" ? undefined : question.id;
-          const responseObj = response.responses.find(
-            (answerObj: { questionId: string }) => answerObj.questionId === questionId,
-          );
-          let responseValue: string;
-          if (responseObj) {
-            responseValue = getCellData(
-              responseObj.response,
-              question as { type?: QuestionType; metaType?: WaQuestions },
-            );
-          } else if (question === createdAt) {
-            const createdAtFormatted = dayjs(response.createdAt).format("DD-MM-YYYY HH:mm");
-            responseValue = createdAtFormatted;
-          } else if (question === whatsappRespondentNumber) {
-            responseValue = response?.Contact?.phone || "";
-          } else if (question === responseTag) {
-            responseValue = response.tag || "";
-          } else if (question === teamTag) {
-            // Try to get team name from survey.teams
-            let teamName = "";
-            if (response?.surveyTeamMapId && survey.teams) {
-              const found = survey.teams.find((t) => t.team.id === response?.surveyTeamMap?.teamId);
-              teamName = found?.team?.name || "";
-            }
-            responseValue = teamName;
-          } else {
-            responseValue = "";
-          }
-          row.push(responseValue);
-        });
-        bodyArray.push(row);
-      }
-      if (bodyArray.length > 0) {
-        await sheet.addRows(bodyArray);
-      }
-    }
-    await sheet.saveUpdatedCells();
-  }
-  const sheetToRemove = doc.sheetsByTitle["Sheet1"];
-  if (sheetToRemove) sheetToRemove.delete();
-  return survey;
-}
-
-export async function getDriveFolderId(
-  orgId: string,
-  authClient: Awaited<ReturnType<typeof initializeAuthClient>>,
-  drive: ReturnType<typeof google.drive>,
-  token: GoogleSheetIntegration,
-) {
-  let { driveFolderId } = token?.credential || {};
-
-  const isFolderExist = driveFolderId ? await checkFileExistInDrive(driveFolderId, drive) : null;
-  if (!isFolderExist) {
-    const folderName = "RateUp";
-    const fileMetadata = {
-      name: folderName,
-      mimeType: "application/vnd.google-apps.folder",
-    };
-    const folderList = await drive.files.list({
-      q: `mimeType = 'application/vnd.google-apps.folder' and name = '${folderName}'`,
-      fields: "nextPageToken, files(id, name)",
-      spaces: "drive",
-    });
-    if (folderList.data.files?.length) {
-      driveFolderId = folderList.data.files[0].id;
-    } else {
-      const file = await drive.files.create({
-        requestBody: fileMetadata,
-        fields: "id",
-      });
-      driveFolderId = file.data.id;
-    }
-    await updateIntegrationByName(orgId, IntegratedApps.googlesheet, {
-      credential: { ...token?.credential, driveFolderId },
-    });
-  }
-  if (!driveFolderId) throw new Error("Could not resolve a Google Drive folder id");
-  return driveFolderId;
-}
-
-async function checkFileExistInDrive(fileId: string, drive: ReturnType<typeof google.drive>) {
-  try {
-    await drive.files.get({ fileId });
-    return true;
-  } catch (e) {
-    console.log(e);
-    const statusText =
-      e && typeof e === "object" && "response" in e
-        ? (e.response as { statusText?: string } | undefined)?.statusText
-        : undefined;
-    if (statusText === "Not Found") return false;
-  }
-}
-interface IsheetResponse {
-  surveyTeamMapId: string;
-  responses: QuestionResponse[];
-  language: string;
-  createdAt: Date;
-  respondent?: string | null | false;
-  tag?: string | null;
-}
-export async function saveResponseToGoogleSheet(responseData: IsheetResponse) {
-  try {
-    const { GoogleSpreadsheet } = await import("google-spreadsheet");
-    const { respondent, tag, ...response } = responseData;
-    const surveyTeamMap = await prisma.surveyTeamMap.findUnique({
-      where: {
-        id: response.surveyTeamMapId,
-      },
-      select: {
-        survey: {
-          select: {
-            spreadSheetId: true,
-            questions: true,
-            id: true,
-          },
-        },
-        team: {
-          select: {
-            name: true,
-            orgId: true,
-          },
-        },
-      },
-    });
-    if (!surveyTeamMap) return;
-    const {
-      survey: { spreadSheetId, questions, id: surveyId },
-      team,
-    } = surveyTeamMap;
-    if (spreadSheetId) {
-      const authClient = await initializeAuthClient();
-      const token = (await getIntegrationByName(
-        team.orgId,
-        IntegratedApps.googlesheet,
-      )) as unknown as GoogleSheetIntegration;
-      authClient.credentials.refresh_token = token?.credential?.refreshToken;
-      const doc = new GoogleSpreadsheet(spreadSheetId, authClient);
-      await doc.loadInfo();
-      let sheet = await doc.sheetsByTitle[response.language];
-      const resObj: SheetRow = {
-        Team: team.name,
-        team: team.name, // for old synced response
-      };
-      resObj["Created At"] = dayjs(response.createdAt).format("DD-MM-YYYY HH:mm");
-
-      let flow = await getFlowBySurveyId(surveyId, team.orgId);
-      const filteredSecondArray = flow?.json?.screens?.flatMap((screen) =>
-        screen?.layout?.children?.filter((child) => child?.type !== "Footer" && child.name),
-      ) as unknown as Question2[];
-      const checkVersion = flow ? flow.version === 1 : true;
-      response.responses.map((res: QuestionResponse) => {
-        if (checkVersion) {
-          let QIndex;
-          let qstn = (questions as unknown as Question[]).find((q: Question, index: number) => {
-            if (q.id === res.questionId) {
-              QIndex = index + 1;
-              return q;
-            }
-          });
-          if (!qstn) return;
-          let qsTitle =
-            qstn?.title[response.language] ||
-            qstn?.description[response.language] ||
-            qstn?.label?.[response.language] ||
-            "";
-          let qstnTitle = QIndex + "_" + getContent(qsTitle).trim();
-          const answerValue = getAnswerValue(res.response, res.type);
-          if ([QuestionType.Contact, QuestionType.Email, QuestionType.Phone].includes(qstn.type))
-            Object.entries(answerValue as Record<string, unknown>).map(
-              ([key, value]) => (resObj[(qstnTitle + ":" + key).trim()] = toCell(value)),
-            );
-          else if (qstn.type === QuestionType.Testimonial)
-            Object.entries(answerValue as Record<string, unknown>).map(
-              ([key, value]) =>
-                (resObj[(qstnTitle + ":" + key).trim()] =
-                  key == "photo"
-                    ? `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${value}`
-                    : toCell(value)),
-            );
-          else if (qstn.type === QuestionType.MCQGrid)
-            Object.entries(answerValue as Record<string, Choice>).map(
-              ([key, value]) => (resObj[(qstnTitle + ":" + key).trim()] = value?.value),
-            );
-          else if (qstn.type === QuestionType.MultiTextInput)
-            Object.entries(answerValue as Record<string, unknown>).map(
-              ([key, value]) => (resObj[(qstnTitle + ":" + key).trim()] = toCell(value)),
-            );
-          else resObj[qstnTitle] = getFormattedResponse(answerValue, qstn, response.language);
-        } else {
-          const questionId = res.questionId;
-          let question = filteredSecondArray.find(
-            (q) => q.id === questionId,
-          ) as unknown as Question2;
-          let qstnTitle = markdownToPlainText(question?.header || question?.label || "");
-          const responseObj = response.responses.find(
-            (answerObj) => answerObj.questionId === questionId,
-          );
-          let responseValue: string;
-          if (responseObj) {
-            responseValue = getCellData(
-              responseObj.response,
-              question as { type?: QuestionType; metaType?: WaQuestions },
-            );
-          } else {
-            responseValue = "";
-          }
-          resObj[qstnTitle] = responseValue;
-        }
-      });
-      resObj["Respondent's Mobile Number"] = toCell(respondent);
-      resObj["Tag"] = toCell(tag);
-      resObj["tag"] = toCell(tag); // for old synced response
-      await sheet.addRow(resObj);
-    }
-    return spreadSheetId;
-  } catch (error) {
-    console.error(error);
-    return null;
-  }
-}
-
 /** Coerces one exported answer (or sub-answer) to the string a spreadsheet cell holds. */
-function toCell(value: unknown): string {
+export function toCell(value: unknown): string {
   if (value === null || value === undefined) return "";
   if (Array.isArray(value)) return value.map(toCell).join(", ");
   if (typeof value === "object") {
@@ -1728,7 +1223,7 @@ export async function sendResponseToWebhook(
     return;
   }
   const endpoint = responseObj.surveyTeamMap.survey.responseWebhookEndpoint;
-  if (!endpoint) return;
+  if (!endpoint?.startsWith("https://")) return;
   const questionMap = responseObj.surveyTeamMap.survey.questions.reduce<Record<string, string>>(
     (map, { id, title, description, label }) => {
       map[id] =
@@ -1754,7 +1249,8 @@ export async function sendResponseToWebhook(
     teamId: responseObj.surveyTeamMap.team.id,
     surveyId: responseObj.surveyTeamMap.surveyId,
   };
-  await sendWebhook(endpoint, payload, orgId);
+  // Queued, so its retries no longer hold the respondent's request open.
+  await enqueueSurveyResponseWebhook(orgId, endpoint, payload);
 }
 
 export function markdownToPlainText(markdown: string) {
@@ -1767,7 +1263,7 @@ export function markdownToPlainText(markdown: string) {
 
 // Called with heterogeneous question shapes (web Question, WaFlow Question2, flow form
 // elements) across different export paths, so the shape here is intentionally permissive.
-const getCellData = (
+export const getCellData = (
   response: unknown,
   question: {
     type?: QuestionType | WaQuestions | WaFlowFormElementType;

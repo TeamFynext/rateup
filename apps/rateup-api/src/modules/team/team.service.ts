@@ -1,3 +1,4 @@
+import { getOrgChannelIds } from "../channel/channel.service.js";
 import prisma from "../../utils/prisma.js";
 import { assertSeatAvailable } from "./team.limits.js";
 import { createUser, getUserRecipeName } from "../user/user.service.js";
@@ -976,11 +977,11 @@ export async function addMembersToTeamsMail(
 
 const teamChannelSelect = {
   id: true,
-  phone: true,
-  phoneId: true,
-  ibaId: true,
-  fbPageId: true,
-  phoneDisplayName: true,
+  platform: true,
+  accountId: true,
+  address: true,
+  name: true,
+  username: true,
   status: true,
 } as const;
 
@@ -993,7 +994,7 @@ export async function getTeamChannels(teamId: string) {
     where: { id: teamId },
     select: {
       allChannels: true,
-      channelAccess: {
+      channelGrants: {
         select: { channel: { select: teamChannelSelect } },
         orderBy: { createdAt: "asc" },
       },
@@ -1003,7 +1004,7 @@ export async function getTeamChannels(teamId: string) {
   if (!team) return { allChannels: true, channels: [] };
   return {
     allChannels: team.allChannels,
-    channels: team.allChannels ? [] : team.channelAccess.map((grant) => grant.channel),
+    channels: team.allChannels ? [] : team.channelGrants.map((grant) => grant.channel),
   };
 }
 
@@ -1011,30 +1012,24 @@ export async function getTeamChannels(teamId: string) {
  * Replaces the team's channel grant.
  *
  * Setting `allChannels` also clears any explicit grants, so the two representations can never
- * disagree — a later read of `channelAccess` is meaningless while the flag is on.
- * `channelIds` are scoped to the team's own org so a caller cannot grant another tenant's channel.
+ * disagree — a later read of `channelGrants` is meaningless while the flag is on.
+ * `channelIds` are Channel ids of any platform, scoped to the team's own org so a caller cannot
+ * grant another tenant's channel.
  */
 export async function setTeamChannels(teamId: string, input: SetTeamChannelsInput) {
   const team = await prisma.team.findUnique({ where: { id: teamId }, select: { orgId: true } });
   if (!team) throw new Error("Team not found");
 
-  const channelIds = input.allChannels
-    ? []
-    : (
-        await prisma.whatsappSettings.findMany({
-          where: { orgId: team.orgId, id: { in: input.channelIds } },
-          select: { id: true },
-        })
-      ).map((channel) => channel.id);
+  const channelIds = input.allChannels ? [] : await getOrgChannelIds(team.orgId, input.channelIds);
 
   // Replace the whole grant set atomically. Scoped to this team's rows only, so two admins
   // editing different teams never contend.
   await prisma.$transaction([
     prisma.team.update({ where: { id: teamId }, data: { allChannels: input.allChannels } }),
-    prisma.teamWhatsappChannel.deleteMany({
+    prisma.teamChannel.deleteMany({
       where: { teamId, ...(channelIds.length > 0 && { channelId: { notIn: channelIds } }) },
     }),
-    prisma.teamWhatsappChannel.createMany({
+    prisma.teamChannel.createMany({
       data: channelIds.map((channelId) => ({ teamId, channelId })),
       skipDuplicates: true,
     }),

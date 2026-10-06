@@ -1,30 +1,30 @@
 import { AttributionQuery, registerWebhookbyTopicInput, ShopParamInput } from "./shopify.schema.js";
 import { getShopifyAttribution } from "./shopify.attribution.service.js";
+import { connectShopify, getShopifyAuthUrl, handleShopifyAuthCallback } from "./shopify.connect.js";
 import {
-  deleteAllWebhooks,
+  claimUnownedShopifyIntegration,
   deleteShopifyIntegrationByShop,
-  deleteWebhookById,
-  getManagableWebhooks,
-  getShopifyAuthUrl,
   getShopifyInfo,
   getShopifyIntegrationByShop,
-  handleShopifyAuthCallback,
+  updateShopifyIntegrationByOrgId,
+} from "./shopify.credential.js";
+import { createShopifyFulfillment, getFulfillmentOrders } from "./shopify.fulfillment.js";
+import {
+  deleteAllWebhooks,
+  deleteWebhookById,
+  getManagableWebhooks,
   registerShopifyWebhook,
   registerWebhookByTopic,
-  updateShopifyIntegrationByOrgId,
-  claimUnownedShopifyIntegration,
-  getFulfillmentOrders,
-  createShopifyFulfillment,
-} from "./shopify.service.js";
+} from "./shopify.webhooks.js";
 import { FastifyReply, FastifyRequest } from "fastify";
 import shopify from "./shopify.config.js";
-import { getActiveShopifySession, saveShopifySession, toStoredSession } from "./shopify.session.js";
+import { getActiveShopifySession } from "./shopify.session.js";
 import { HttpResponseError, type GraphQLClientResponse } from "@shopify/shopify-api";
 
 import webhookHandlers from "./shopify.handler.js";
 import { FRONTEND_URL } from "../../../utils/constants/constants.js";
 import { log } from "../../../utils/logger.js";
-import { createIntegration, updateIntegrationByName } from "../integrations.service.js";
+import { updateIntegrationByName } from "../integrations.service.js";
 import { IntegratedApps } from "../../../types/enums.js";
 import { errorMessage } from "../../../utils/commonUtils.js";
 
@@ -60,29 +60,8 @@ export async function getShopifyAuthCallbackHandler(
   reply: FastifyReply,
 ) {
   try {
-    const callbackResponse = await handleShopifyAuthCallback(request, reply);
-    const session = callbackResponse.session;
-    // A freshly connected shop has no surveys configured yet.
-    const shopifySurveys: ShopifySurvey[] = [];
-    const data = {
-      name: IntegratedApps.shopify,
-      credential: {
-        session: toStoredSession(session),
-        isWebhookRegistered: false,
-        shopifySurveys,
-      },
-    };
-    const integrationbyshop = await getShopifyIntegrationByShop(session.shop);
-    if (integrationbyshop && integrationbyshop?.orgId) {
-      await updateShopifyIntegrationByOrgId(integrationbyshop?.orgId, {
-        credential: data.credential,
-        active: true,
-      });
-      // The credential update above never touches the session; only this does.
-      await saveShopifySession(integrationbyshop.id, session);
-    } else await createIntegration(data);
-    // app/uninstalled and app/subscriptions_update are app-level subscriptions
-    // in shopify.app.toml, so nothing is registered per shop here.
+    const { session } = await handleShopifyAuthCallback(request, reply);
+    await connectShopify(session);
     reply.redirect(`${FRONTEND_URL}/auth/shopify?shop=${session.shop}`);
   } catch (e) {
     console.error(e);

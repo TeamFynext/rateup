@@ -1,4 +1,5 @@
 import prisma from "../../../utils/prisma.js";
+import { PlatformType } from "../../../../generated/prisma/enums.js";
 import type { Actor } from "../../../authz/actor.js";
 import { channelIdentifierSpellings } from "../../../utils/channelIdentifier.js";
 
@@ -6,7 +7,7 @@ import { channelIdentifierSpellings } from "../../../utils/channelIdentifier.js"
  * Team-scoped channel visibility.
  *
  * A team either reaches every channel in the org (`Team.allChannels`, the default) or only the
- * channels explicitly linked through `Team.whatsappChannels`. A user's scope is the *union* across
+ * channels explicitly granted through `Team.channelGrants` — any platform, one `Channel` row each. A user's scope is the *union* across
  * every team they belong to — there is no "acting as team" concept in this product, so belonging to
  * a team can only ever widen access, never narrow it.
  *
@@ -52,15 +53,16 @@ async function computeScope(actor: Actor): Promise<ChannelScope> {
 
   const teams = await prisma.team.findMany({
     where: { orgId: actor.orgId, id: { in: [...actor.scope.teamIds] } },
-    select: { allChannels: true, channelAccess: { select: { channelId: true } } },
+    select: { allChannels: true, channelGrants: { select: { channelId: true } } },
   });
 
   // Any unscoped team widens the union to everything.
   if (teams.some((team) => team.allChannels)) return SCOPE_ALL;
 
+  // Channel ids, whatever the platform.
   const ids = new Set<string>();
   for (const team of teams) {
-    for (const grant of team.channelAccess) ids.add(grant.channelId);
+    for (const grant of team.channelGrants) ids.add(grant.channelId);
   }
   return { all: false, ids };
 }
@@ -69,9 +71,9 @@ async function computeScope(actor: Actor): Promise<ChannelScope> {
  * The scope expressed as `WaMessage.sourceIdentifier` values, for querying conversations.
  *
  * That column holds a heterogeneous union — the WA display phone (both `+`-prefixed and stripped,
- * depending on whether the row came from the webhook or the send queue), the Instagram `ibaId`, and
- * the Facebook `fbPageId`. It never holds `WhatsappSettings.id`, so the scope's ids have to be
- * resolved to identifiers before they are any use here.
+ * depending on whether the row came from the webhook or the send queue; `Channel.address`), and
+ * the Instagram account or Facebook Page id (`Channel.accountId`). It never holds a channel row id,
+ * so the scope's ids have to be resolved to identifiers before they are any use here.
  *
  * `identifiers` is empty only when the team is scoped to zero channels — callers must treat that as
  * "match nothing", not as "no filter".
@@ -82,23 +84,24 @@ export async function getScopedSourceIdentifiers(
   const scope = await getChannelScope(actor);
   if (scope.all) return { all: true, identifiers: [] };
 
-  const channels = await prisma.whatsappSettings.findMany({
+  const channels = await prisma.channel.findMany({
     where: { orgId: actor.orgId, id: { in: Array.from(scope.ids) } },
-    select: { phone: true, ibaId: true, fbPageId: true },
+    select: { platform: true, accountId: true, address: true },
   });
 
-  // Every spelling of the number, not just the two this used to list. `phone` is a
-  // display string (`+9655-033-4145`) while messages hold several spellings of
-  // that same number, and the missing ones were not matched — so an agent scoped
-  // to a channel silently lost whole stretches of their own inbox. Instagram and
-  // Facebook ids are opaque and contribute only themselves.
+  // Every spelling of a WhatsApp number, not just the two this used to list. `address` is
+  // a display string (`+9655-033-4145`) while messages hold several spellings of that same
+  // number, and the missing ones were not matched — so an agent scoped to a channel
+  // silently lost whole stretches of their own inbox. Other platforms' ids are opaque and
+  // contribute only themselves.
   const identifiers = new Set<string>();
   for (const channel of channels) {
-    for (const spelling of channelIdentifierSpellings(channel.phone)) {
-      identifiers.add(spelling);
-    }
-    for (const value of [channel.ibaId, channel.fbPageId]) {
-      if (value) identifiers.add(value);
+    if (channel.platform === PlatformType.WHATSAPP) {
+      for (const spelling of channelIdentifierSpellings(channel.address)) {
+        identifiers.add(spelling);
+      }
+    } else if (channel.accountId) {
+      identifiers.add(channel.accountId);
     }
   }
   return { all: false, identifiers: Array.from(identifiers) };

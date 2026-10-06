@@ -25,7 +25,7 @@ import {
 import { createNativePaymentMessage } from "../whatsappSurvey/wasurvey.utils.js";
 import { generateOrderReferenceId } from "../automatedReply/wa_automatedReply.utils.js";
 import { sendMessage } from "../whatsappSurvey/wasurvey.service.js";
-import { buildShopifyCartUrl } from "../../integrations/shopify/shopify.service.js";
+import { buildShopifyCartUrl } from "../../integrations/shopify/shopify.catalog.js";
 import { sendAddressFlowToCustomer } from "./catalogSettings.service.js";
 
 /**

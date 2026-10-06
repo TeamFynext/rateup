@@ -17,7 +17,7 @@ vi.mock("../../settings/wa_settings.service.js", () => ({
 }));
 vi.mock("../../wa_axios.js", () => ({ callMetaApi: vi.fn() }));
 vi.mock("../catalog.service.js", () => ({ getWaCatalog: vi.fn() }));
-vi.mock("../../../integrations/shopify/shopify.service.js", () => ({ getShopifyInfo: vi.fn() }));
+vi.mock("../../../integrations/shopify/shopify.credential.js", () => ({ getShopifyInfo: vi.fn() }));
 vi.mock("../../../integrations/shopify/shopify.config.js", () => ({
   default: { clients: { Graphql: vi.fn() } },
 }));

@@ -27,7 +27,27 @@ vi.mock("./getlead.client.js", () => ({
   createGetLeadNote: (...a: unknown[]) => client.createGetLeadNote(...a),
 }));
 
-const { processGetLead, GetLeadTriggers } = await import("./getlead.service.js");
+const { processGetLeadJob } = await import("./getlead.push.js");
+const { GetLeadTriggers } = await import("./getlead.types.js");
+
+/** A queued job, the way the dispatcher hands one to the provider. */
+function processGetLead(
+  integration: never,
+  triggerKey: string,
+  data: never,
+  orgId: string,
+  rateupContactId?: string,
+  rateupLeadId?: string,
+) {
+  return processGetLeadJob(integration, {
+    integrationName: "getlead",
+    triggerKey,
+    data,
+    orgId,
+    rateupContactId,
+    rateupLeadId,
+  });
+}
 
 const PHONE_STORED = "919876543210";
 const PHONE_E164 = "+919876543210";

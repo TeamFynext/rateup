@@ -4,11 +4,10 @@ vi.mock("../wa_axios.js", () => ({
   callMetaApi: vi.fn(),
   GraphApiError: class GraphApiError extends Error {},
 }));
-vi.mock("../settings/wa_settings.service.js", () => ({
-  getWaSettingsByIbaId: vi.fn(),
-  getWaSettingsById: vi.fn(),
-  getWaSettings: vi.fn(),
-  getWaSettingsByPageId: vi.fn(),
+vi.mock("../metaChannel/metaChannel.service.js", () => ({
+  getInstagramChannel: vi.fn(),
+  getMessengerChannel: vi.fn(),
+  updateMetaChannelById: vi.fn(),
 }));
 vi.mock("../inbox/message/wamessage.service.js", () => ({
   updateWaMessageByMessageId: vi.fn(),
@@ -17,19 +16,22 @@ vi.mock("../inbox/message/wamessage.controller.js", () => ({ handleWaMessages: v
 vi.mock("../automatedReply/wa_automatedReply.utils.js", () => ({
   checkAndExecuteRuleByTriggerEvent: vi.fn(),
 }));
+vi.mock("../automatedReply/instagram_automation.service.js", () => ({
+  handleInstagramUserResponse: vi.fn(),
+}));
 vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), fatal: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));
 
 import { callMetaApi } from "../wa_axios.js";
-import { getWaSettingsByIbaId, getWaSettingsById } from "../settings/wa_settings.service.js";
+import { getInstagramChannel } from "../metaChannel/metaChannel.service.js";
 import { updateWaMessageByMessageId } from "../inbox/message/wamessage.service.js";
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 import { checkAndExecuteRuleByTriggerEvent } from "../automatedReply/wa_automatedReply.utils.js";
+import { handleInstagramUserResponse } from "../automatedReply/instagram_automation.service.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
 import { InstagramEvent } from "../../../types/enums.js";
 import {
-  getFbPages,
   getIgUserDetailsFromMeta,
   handleInstagramComment,
   handleInstagramMessageReaction,
@@ -43,17 +45,28 @@ import {
 type Mock = ReturnType<typeof vi.fn>;
 
 const callMetaApiMock = callMetaApi as unknown as Mock;
-const getSettingsByIbaIdMock = getWaSettingsByIbaId as unknown as Mock;
-const getSettingsByIdMock = getWaSettingsById as unknown as Mock;
+const getSettingsByIbaIdMock = getInstagramChannel as unknown as Mock;
 const updateByMessageIdMock = updateWaMessageByMessageId as unknown as Mock;
 const handleWaMessagesMock = handleWaMessages as unknown as Mock;
 const runRuleMock = checkAndExecuteRuleByTriggerEvent as unknown as Mock;
+const answerFlowMock = handleInstagramUserResponse as unknown as Mock;
 
 const IBA_ID = "iba-1";
 const IGS_ID = "igs-1";
 const ORG_ID = "org-1";
 
-const SETTINGS = { orgId: ORG_ID, ibaId: IBA_ID, pageAccessToken: "page-token-abc" };
+/** The Instagram channel row getInstagramChannel hands back. */
+const CHANNEL = {
+  id: "channel-1",
+  orgId: ORG_ID,
+  platform: "INSTAGRAM",
+  accountId: IBA_ID,
+  fbPageId: "page-1",
+  pageAccessToken: "page-token-abc",
+};
+
+/** What the webhook passes on to each event handler. */
+const SETTINGS = { orgId: ORG_ID, ibaId: IBA_ID };
 
 /** One entry in the `messaging` array Meta posts to the Instagram webhook. */
 function messaging(overrides: Record<string, unknown> = {}): any {
@@ -79,10 +92,10 @@ function waMessageCall(index = 0) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  getSettingsByIbaIdMock.mockResolvedValue(SETTINGS);
-  getSettingsByIdMock.mockResolvedValue({ accessToken: "user-token-abc" });
+  getSettingsByIbaIdMock.mockResolvedValue(CHANNEL);
   handleWaMessagesMock.mockResolvedValue(undefined);
   runRuleMock.mockResolvedValue(undefined);
+  answerFlowMock.mockResolvedValue(false);
   updateByMessageIdMock.mockResolvedValue(null);
   callMetaApiMock.mockResolvedValue({ data: { data: [] } });
 });
@@ -283,6 +296,14 @@ describe("handleInstagramWebhook - a batch carrying more than one event", () => 
     expect(waMessageCall(1).messageId).toBe("mid-2");
   });
 
+  test("looks the channel up by the entry's account id and records the message under it", async () => {
+    await handleInstagramWebhook(webhook(messaging({ message: { mid: "mid-1", text: "hi" } })));
+
+    expect(getSettingsByIbaIdMock).toHaveBeenCalledWith(IBA_ID);
+    expect(waMessageCall().orgId).toBe(ORG_ID);
+    expect(waMessageCall().sourceIdentifier).toBe(IBA_ID);
+  });
+
   test("handles a read receipt and a message in the same batch as two events", async () => {
     await expect(
       handleInstagramWebhook(
@@ -298,7 +319,7 @@ describe("handleInstagramWebhook - a batch carrying more than one event", () => 
   });
 
   test("carries on to the next entry when one account lookup fails", async () => {
-    getSettingsByIbaIdMock.mockRejectedValueOnce(new Error("db down")).mockResolvedValue(SETTINGS);
+    getSettingsByIbaIdMock.mockRejectedValueOnce(new Error("db down")).mockResolvedValue(CHANNEL);
 
     const body: any = {
       object: "instagram",
@@ -369,6 +390,46 @@ describe("handleInstagramMessages", () => {
     await handleInstagramMessages(webhook(messaging({ message: { mid: "mid-1" } })), SETTINGS);
 
     expect(runRuleMock.mock.calls[0][1].message).toBe("");
+  });
+
+  test("offers the message and any tapped quick reply to the flow the user is in", async () => {
+    await handleInstagramMessages(
+      webhook(
+        messaging({ message: { mid: "mid-1", text: "Yes", quick_reply: { payload: "opt-yes" } } }),
+      ),
+      SETTINGS,
+    );
+
+    expect(answerFlowMock).toHaveBeenCalledWith(IGS_ID, "Yes", ORG_ID, IBA_ID, "opt-yes");
+  });
+
+  test("lets the link's own rule answer a first message sent from an ig.me link", async () => {
+    runRuleMock.mockResolvedValueOnce({ rule: {}, executedActions: [] });
+
+    await handleInstagramMessages(
+      webhook(
+        messaging({
+          message: { mid: "mid-1", text: "Hi!", referral: { ref: "promo", source: "SHORTLINKS" } },
+        }),
+      ),
+      SETTINGS,
+    );
+
+    expect(runRuleMock).toHaveBeenCalledOnce();
+    expect(runRuleMock.mock.calls[0][0]).toBe("INSTAGRAM_REFERRAL");
+    expect(answerFlowMock).not.toHaveBeenCalled();
+  });
+
+  test("leaves the reply rules out when a flow took the message as its answer", async () => {
+    answerFlowMock.mockResolvedValue(true);
+
+    await handleInstagramMessages(
+      webhook(messaging({ message: { mid: "mid-1", text: "a@b.com" } })),
+      SETTINGS,
+    );
+
+    expect(handleWaMessagesMock).toHaveBeenCalled();
+    expect(runRuleMock).not.toHaveBeenCalled();
   });
 
   test("skips an echo of a message the business itself sent", async () => {
@@ -451,7 +512,7 @@ describe("handleInstagramComment", () => {
     expect(waMessageCall().body.timestamp).toBe(1_700_000_000_000);
   });
 
-  test("runs the comment rules against the post the comment is on", async () => {
+  test("runs the comment rules against the post and comment it came from", async () => {
     await handleInstagramComment(comment(), InstagramEvent.COMMENT, SETTINGS);
 
     expect(runRuleMock.mock.calls[0]).toEqual([
@@ -462,9 +523,17 @@ describe("handleInstagramComment", () => {
         message: "how much?",
         phone: IGS_ID,
         instagramMediaId: "media-1",
+        instagramCommentId: "comment-1",
+        instagramLiveComment: false,
         platform: "INSTAGRAM",
       },
     ]);
+  });
+
+  test("marks a comment on a live video as live", async () => {
+    await handleInstagramComment(comment(), InstagramEvent.LIVE_COMMENT, SETTINGS);
+
+    expect(runRuleMock.mock.calls[0][1].instagramLiveComment).toBe(true);
   });
 
   test("still runs the rules when storing the comment failed", async () => {
@@ -508,6 +577,64 @@ describe("handleInstagramPostback", () => {
     expect(runRuleMock.mock.calls[0][1].message).toBe("TRACK");
   });
 
+  test("hands a tapped card button to the flow before the rules", async () => {
+    answerFlowMock.mockResolvedValue(true);
+
+    await handleInstagramPostback(
+      webhook(messaging({ postback: { title: "Buy", payload: "btn_0_0" } })),
+      SETTINGS,
+    );
+
+    expect(answerFlowMock).toHaveBeenCalledWith(IGS_ID, "Buy", ORG_ID, IBA_ID, "btn_0_0");
+    expect(runRuleMock).not.toHaveBeenCalled();
+  });
+
+  // A new conversation opened from an ig.me link, started by tapping an ice breaker.
+  test("lets the link's own rule answer an ice breaker tapped from an ig.me link", async () => {
+    runRuleMock.mockResolvedValueOnce({ rule: {}, executedActions: [] });
+
+    await handleInstagramPostback(
+      webhook(
+        messaging({
+          postback: {
+            title: "How are you?",
+            payload: "ICEBREAKER_1",
+            referral: { ref: "summer_sale", source: "SHORTLINKS", type: "OPEN_THREAD" },
+          },
+        }),
+      ),
+      SETTINGS,
+    );
+
+    expect(runRuleMock).toHaveBeenCalledOnce();
+    expect(runRuleMock.mock.calls[0][0]).toBe("INSTAGRAM_REFERRAL");
+    expect(runRuleMock.mock.calls[0][1]).toMatchObject({ instagramRef: "summer_sale" });
+    expect(answerFlowMock).not.toHaveBeenCalled();
+  });
+
+  test("falls back to the flow and reply rules when no link rule answers the ref", async () => {
+    runRuleMock.mockResolvedValueOnce(undefined);
+
+    await handleInstagramPostback(
+      webhook(
+        messaging({
+          postback: {
+            title: "How are you?",
+            payload: "ICEBREAKER_1",
+            referral: { ref: "unknown_ref", source: "SHORTLINKS", type: "OPEN_THREAD" },
+          },
+        }),
+      ),
+      SETTINGS,
+    );
+
+    expect(runRuleMock.mock.calls.map((call) => call[0])).toEqual([
+      "INSTAGRAM_REFERRAL",
+      "MESSAGE_RECEIVED",
+    ]);
+    expect(answerFlowMock).toHaveBeenCalled();
+  });
+
   test("ignores a postback with no payload", async () => {
     await handleInstagramPostback(webhook(messaging({ postback: { title: "Track" } })), SETTINGS);
 
@@ -540,7 +667,7 @@ describe("handleInstagramPostback", () => {
 });
 
 describe("handleInstagramReferral", () => {
-  test("stores an ad referral and matches the rules on its ref", async () => {
+  test("stores a referral and runs the link rules on its ref", async () => {
     await handleInstagramReferral(
       webhook(messaging({ message: { mid: "mid-1", referral: { ref: "promo", source: "ADS" } } })),
       SETTINGS,
@@ -548,15 +675,47 @@ describe("handleInstagramReferral", () => {
 
     expect(waMessageCall().body).toMatchObject({ type: "referral" });
     expect(waMessageCall().messageId).toBe("ig_referral_1700000000000");
-    expect(runRuleMock.mock.calls[0][1].message).toBe("promo");
+    expect(runRuleMock.mock.calls[0]).toEqual([
+      "INSTAGRAM_REFERRAL",
+      {
+        orgId: ORG_ID,
+        phoneNumberId: IBA_ID,
+        phone: IGS_ID,
+        instagramRef: "promo",
+        platform: "INSTAGRAM",
+      },
+    ]);
   });
 
-  test("matches the rules on the product id for a shop referral", async () => {
+  test("falls back to keyword rules on the ref when no link rule answered", async () => {
+    await handleInstagramReferral(
+      webhook(messaging({ message: { mid: "mid-1", referral: { ref: "promo", source: "ADS" } } })),
+      SETTINGS,
+    );
+
+    expect(runRuleMock.mock.calls[1][0]).toBe("MESSAGE_RECEIVED");
+    expect(runRuleMock.mock.calls[1][1].message).toBe("promo");
+  });
+
+  test("leaves the keyword rules out once a link rule answered", async () => {
+    runRuleMock.mockResolvedValueOnce({ rule: {}, executedActions: [] });
+
+    await handleInstagramReferral(
+      webhook(messaging({ referral: { ref: "summer_sale", source: "SHORTLINKS" } })),
+      SETTINGS,
+    );
+
+    expect(runRuleMock).toHaveBeenCalledOnce();
+    expect(runRuleMock.mock.calls[0][1].instagramRef).toBe("summer_sale");
+  });
+
+  test("matches the keyword rules on the product id for a shop referral", async () => {
     await handleInstagramReferral(
       webhook(messaging({ message: { mid: "mid-1", referral: { product: { id: "sku-1" } } } })),
       SETTINGS,
     );
 
+    expect(runRuleMock).toHaveBeenCalledOnce();
     expect(runRuleMock.mock.calls[0][1].message).toBe("sku-1");
   });
 
@@ -589,7 +748,8 @@ describe("handleInstagramReferral", () => {
     );
 
     expect(JSON.stringify(waMessageCall().body)).not.toContain("Is this still available?");
-    expect(runRuleMock.mock.calls[0][1].message).toBe("promo");
+    const keywordCall = runRuleMock.mock.calls.find(([event]) => event === "MESSAGE_RECEIVED");
+    expect(keywordCall?.[1].message).toBe("promo");
   });
 });
 
@@ -659,72 +819,5 @@ describe("handleInstagramMessageReaction", () => {
     );
 
     expect(waMessageCall().from).toBe(IBA_ID);
-  });
-});
-
-describe("getFbPages", () => {
-  test("reports each connected page with its Instagram account and token", async () => {
-    callMetaApiMock.mockResolvedValue({
-      data: {
-        data: [
-          {
-            id: "page-1",
-            name: "The Shop",
-            access_token: "page-token-1",
-            instagram_business_account: { id: "iba-1" },
-          },
-        ],
-      },
-    });
-
-    await expect(getFbPages("settings-1", ORG_ID)).resolves.toEqual([
-      {
-        fbPageId: "page-1",
-        ibaId: "iba-1",
-        pageAccessToken: "page-token-1",
-        fbPageName: "The Shop",
-      },
-    ]);
-  });
-
-  test("reports nothing for an account with no pages", async () => {
-    callMetaApiMock.mockResolvedValue({ data: { data: [] } });
-
-    await expect(getFbPages("settings-1", ORG_ID)).resolves.toEqual([]);
-  });
-
-  test("skips a page with no Instagram account and returns the rest", async () => {
-    callMetaApiMock.mockResolvedValue({
-      data: {
-        data: [
-          {
-            id: "page-1",
-            name: "Connected",
-            access_token: "t1",
-            instagram_business_account: { id: "iba-1" },
-          },
-          { id: "page-2", name: "Not connected", access_token: "t2" },
-        ],
-      },
-    });
-
-    await expect(getFbPages("settings-1", ORG_ID)).resolves.toEqual([
-      {
-        fbPageId: "page-1",
-        ibaId: "iba-1",
-        pageAccessToken: "t1",
-        fbPageName: "Connected",
-      },
-    ]);
-  });
-
-  test("passes the user access token as the auth header, not in the query string", async () => {
-    await getFbPages("settings-1", ORG_ID);
-
-    const [url, , token] = callMetaApiMock.mock.calls[0];
-    // `access_token` still appears as a requested FIELD name; what must be gone is
-    // the `access_token=` query parameter carrying the token itself.
-    expect(url).not.toContain("access_token=");
-    expect(token).toBe("user-token-abc");
   });
 });

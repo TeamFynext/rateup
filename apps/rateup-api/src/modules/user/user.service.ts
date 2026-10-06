@@ -379,7 +379,7 @@ export async function updateUserProfile(
   const result = await prisma.user.update({
     where: { id: userId },
     data: {
-      gender: title as Gender,
+      gender: title ? (title as Gender) : undefined,
       name,
       phone,
     },
@@ -396,7 +396,7 @@ export async function updateUserProfileById({
   const result = await prisma.user.update({
     where: { id: userId },
     data: {
-      gender: title as Gender,
+      gender: title ? (title as Gender) : undefined,
       name,
       phone,
     },

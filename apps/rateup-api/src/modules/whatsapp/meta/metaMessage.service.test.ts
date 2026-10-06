@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const callMetaApi = vi.fn();
 const handleWaMessages = vi.fn();
@@ -6,8 +6,8 @@ const getWaMessageByMessageId = vi.fn();
 const assertWithinConversationLimit = vi.fn();
 const getWaSettings = vi.fn();
 const getWaSendingSettings = vi.fn();
-const getWaSettingsByIbaId = vi.fn();
-const getWaSettingsByPageId = vi.fn();
+const getInstagramChannel = vi.fn();
+const getMessengerChannel = vi.fn();
 const enqueueWaMessageRecord = vi.fn();
 
 vi.mock("../wa_axios.js", async () => {
@@ -28,8 +28,10 @@ vi.mock("../../../workers/bullmq/queues/whatsapp.queue.js", () => ({ enqueueWaMe
 vi.mock("../settings/wa_settings.service.js", () => ({
   getWaSettings,
   getWaSendingSettings,
-  getWaSettingsByIbaId,
-  getWaSettingsByPageId,
+}));
+vi.mock("../metaChannel/metaChannel.service.js", () => ({
+  getInstagramChannel,
+  getMessengerChannel,
 }));
 
 const { sendMetaMessage, metaErrorMessage } = await import("./metaMessage.service.js");
@@ -47,8 +49,8 @@ beforeEach(() => {
     phone: "+919",
   });
   getWaSettings.mockResolvedValue({ accessToken: "wa-token", phoneId: "phone-1", phone: "+919" });
-  getWaSettingsByIbaId.mockResolvedValue({ pageAccessToken: "ig-token" });
-  getWaSettingsByPageId.mockResolvedValue({ pageAccessToken: "fb-token" });
+  getInstagramChannel.mockResolvedValue({ pageAccessToken: "ig-token" });
+  getMessengerChannel.mockResolvedValue({ pageAccessToken: "fb-token" });
   callMetaApi.mockResolvedValue({ data: { messages: [{ id: "wamid.1" }] } });
   getWaMessageByMessageId.mockResolvedValue(null);
   enqueueWaMessageRecord.mockResolvedValue({ id: "record:wamid.1" });
@@ -156,6 +158,8 @@ describe("sendMetaMessage", () => {
     } as never);
 
     expect(result).toEqual({ ok: true, messageId: "ig.1" });
+    // Scoped to the sending org, so a send never goes out on another org's account.
+    expect(getInstagramChannel).toHaveBeenCalledWith("iba-1", ORG);
     const [path, method, token, , config] = callMetaApi.mock.calls[0];
     expect([path, method, token]).toEqual(["/me/messages", "POST", "ig-token"]);
     expect(config).toEqual({});

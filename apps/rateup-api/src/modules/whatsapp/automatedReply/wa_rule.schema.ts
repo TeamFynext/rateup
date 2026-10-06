@@ -12,6 +12,7 @@ import {
   RulePlatform,
   TriggerEvent,
 } from "../../../../generated/prisma/enums.js";
+import { WOO_TRIGGER_STATUSES } from "../../integrations/woocommerce/woocommerce.mapping.js";
 
 /** Topics that only feed stored state; a rule cannot be triggered by them. */
 const NON_TRIGGER_EVENTS = new Set<string>([
@@ -57,6 +58,9 @@ export const ruleOptionsSchema = z.object({
     .optional(),
   // Shopify-specific options
   shopifyProductIds: z.array(z.string()).optional(),
+  // WooCommerce-specific options
+  wooEvent: z.enum(WOO_TRIGGER_STATUSES).optional(),
+  wooProductIds: z.array(z.string()).optional(),
   // Abandoned checkouts: how long a checkout sits untouched before this rule reminds, and
   // whether to message only buyers who accepted marketing at checkout.
   abandonedCheckoutDelayMinutes: z
@@ -69,6 +73,18 @@ export const ruleOptionsSchema = z.object({
   // Instagram-specific options
   instagramScope: z.enum(["ALL", "SPECIFIC"]).optional(),
   instagramPostIds: z.array(z.string()).optional(),
+  // Unset means both, which is how comment rules behaved before live comments were split out.
+  instagramCommentSource: z.enum(["ALL", "POSTS", "LIVE"]).optional(),
+  // The ?ref= of an ig.me link; unset matches every link. Meta allows these characters.
+  // Meta's own limit for an ig.me ref.
+  instagramRef: z
+    .string()
+    .trim()
+    .max(2083)
+    .regex(/^[A-Za-z0-9_=-]*$/, "Use letters, numbers, - _ and = only")
+    .optional(),
+  // Posted under the comment, one picked at random; 2200 is Instagram's comment limit.
+  instagramPublicReplies: z.array(z.string().trim().min(1).max(2200)).max(10).optional(),
 });
 
 const createRuleBaseSchema = z.object({
@@ -91,6 +107,13 @@ export const createRuleSchema = createRuleBaseSchema.superRefine((data, ctx) => 
       message: "Select a Shopify event",
     });
   }
+  if (data.triggerEvent === "WOOCOMMERCE_EVENT" && !data.options?.wooEvent) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["options", "wooEvent"],
+      message: "Select a WooCommerce order status",
+    });
+  }
 });
 
 export type CreateRuleInput = z.infer<typeof createRuleSchema>;
@@ -101,6 +124,13 @@ export const updateRuleSchema = createRuleBaseSchema.partial().superRefine((data
       code: "custom",
       path: ["options", "shopifyEvent"],
       message: "Select a Shopify event",
+    });
+  }
+  if (data.triggerEvent === "WOOCOMMERCE_EVENT" && !data.options?.wooEvent) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["options", "wooEvent"],
+      message: "Select a WooCommerce order status",
     });
   }
 });

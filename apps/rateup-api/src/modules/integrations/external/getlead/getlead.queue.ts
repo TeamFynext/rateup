@@ -1,6 +1,6 @@
 import { integrationTriggerQueue } from "../../../../workers/bullmq/queues/index.js";
 import { IntegratedApps } from "../../../../types/enums.js";
-import type { GetLeadTriggers } from "./getlead.service.js";
+import type { GetLeadTriggers } from "./getlead.types.js";
 import type { GetLeadSource } from "./getlead.utils.js";
 
 /**

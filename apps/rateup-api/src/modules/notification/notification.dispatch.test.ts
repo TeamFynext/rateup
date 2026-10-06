@@ -4,7 +4,7 @@ vi.mock("../../utils/prisma.js", () => ({
   default: {
     orgMember: { findMany: vi.fn() },
     teamMember: { findMany: vi.fn() },
-    whatsappSettings: { findMany: vi.fn() },
+    channel: { findFirst: vi.fn(), findMany: vi.fn() },
     expoPushToken: { findMany: vi.fn() },
   },
 }));
@@ -22,7 +22,7 @@ import { dispatchNotification } from "./notification.dispatch.js";
 const db = prisma as unknown as {
   orgMember: { findMany: ReturnType<typeof vi.fn> };
   teamMember: { findMany: ReturnType<typeof vi.fn> };
-  whatsappSettings: { findMany: ReturnType<typeof vi.fn> };
+  channel: { findFirst: ReturnType<typeof vi.fn>; findMany: ReturnType<typeof vi.fn> };
   expoPushToken: { findMany: ReturnType<typeof vi.fn> };
 };
 
@@ -64,7 +64,8 @@ beforeEach(() => {
   db.expoPushToken.findMany.mockImplementation(async ({ where }) =>
     (where.userId.in as string[]).map((id) => ({ expoToken: `token-${id}` })),
   );
-  db.whatsappSettings.findMany.mockResolvedValue([]);
+  db.channel.findMany.mockResolvedValue([]);
+  db.channel.findFirst.mockResolvedValue(null);
 });
 
 const contact = { contactId: "c-1", contactName: "Ann" };
@@ -177,10 +178,8 @@ describe("dispatchNotification", () => {
   });
 
   test("the unassigned queue skips assigned-only members and members outside the channel", async () => {
-    db.whatsappSettings.findMany.mockResolvedValue([
-      { id: "ch-1", phone: "+91 98765 43210", ibaId: null, fbPageId: null },
-      { id: "ch-2", phone: null, ibaId: "iba-2", fbPageId: null },
-    ]);
+    // An Instagram or Messenger identifier resolves to its own channel row.
+    db.channel.findFirst.mockResolvedValue({ id: "ch-2" });
     db.orgMember.findMany.mockResolvedValue([member("u-1"), member("u-2"), member("u-3")]);
     actors.set("u-1", actor("u-1", ["inbox.read"], { all: false, teamIds: ["t-1"] }));
     actors.set("u-2", actor("u-2", ["inbox.read"], { inbox: "assigned_only", all: false }));
@@ -200,6 +199,48 @@ describe("dispatchNotification", () => {
     expect(jobs.find((j) => j.pushNotificationData)!.pushNotificationData!.expoTokens).toEqual([
       "token-u-1",
     ]);
+    expect(db.channel.findFirst.mock.calls[0][0].where).toEqual({
+      orgId: "org-1",
+      accountId: "iba-2",
+      platform: { not: "WHATSAPP" },
+    });
+    // Found by account id, so the WhatsApp numbers are never read.
+    expect(db.channel.findMany).not.toHaveBeenCalled();
+  });
+
+  test("a WhatsApp number with no Meta channel resolves through the org's numbers", async () => {
+    db.channel.findMany.mockResolvedValue([
+      { id: "ch-1", address: "+91 98765 43210" },
+      { id: "ch-2", address: "+1 555 0100" },
+    ]);
+    db.orgMember.findMany.mockResolvedValue([member("u-1"), member("u-3")]);
+    actors.set("u-1", actor("u-1", ["inbox.read"], { all: false, teamIds: ["t-1"] }));
+    actors.set("u-3", actor("u-3", ["inbox.read"], { all: false, teamIds: ["t-3"] }));
+    vi.mocked(getChannelScope).mockImplementation(async (a) =>
+      a.userId === "u-1" ? { all: false, ids: new Set(["ch-1"]) } : { all: false, ids: new Set() },
+    );
+
+    const jobs = await dispatchNotification({
+      event: "inbox.message.unassigned",
+      orgId: "org-1",
+      audience: { kind: "inboxQueue", sourceIdentifier: "919876543210" },
+      data: contact,
+    });
+
+    expect(jobs.find((j) => j.pushNotificationData)!.pushNotificationData!.expoTokens).toEqual([
+      "token-u-1",
+    ]);
+    // The other platforms are tried first, by account id, and miss.
+    expect(db.channel.findFirst.mock.calls[0][0].where).toEqual({
+      orgId: "org-1",
+      accountId: "919876543210",
+      platform: { not: "WHATSAPP" },
+    });
+    // Then the org's WhatsApp numbers, matched by any spelling of their address.
+    expect(db.channel.findMany.mock.calls[0][0]).toEqual({
+      where: { orgId: "org-1", platform: "WHATSAPP" },
+      select: { id: true, address: true },
+    });
   });
 
   test("a team audience reads the team's members", async () => {

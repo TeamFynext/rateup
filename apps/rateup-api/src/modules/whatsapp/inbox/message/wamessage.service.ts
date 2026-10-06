@@ -16,13 +16,9 @@ import {
   WaMessageAssignBody,
 } from "./wamessage.schema.js";
 import { log } from "../../../../utils/logger.js";
+import { emitIntegrationEvent } from "../../../integrations/events/emitIntegrationEvent.js";
 import { callMetaApi } from "../../wa_axios.js";
-import {
-  getWaSettings,
-  getWaSettingsByIbaId,
-  getWaSettingsByPageId,
-  getWaSettingsByPhone,
-} from "../../settings/wa_settings.service.js";
+import { getWaSettings, getWaSettingsByPhone } from "../../settings/wa_settings.service.js";
 import { getScopedSourceIdentifiers } from "../../settings/wa_channel_access.js";
 import type { Actor } from "../../../../authz/actor.js";
 import axios from "axios";
@@ -56,10 +52,6 @@ import { getInboxCountsFromConversations } from "../inboxStats/inboxStats.servic
 import { getTeamIdsByUserId } from "../../../team/team.service.js";
 import { UserAvailabilityStatus } from "../../../user/user.schema.js";
 import { notify } from "../../../notification/notify.js";
-import {
-  addZapierTriggerToQueue,
-  ZapierTriggers,
-} from "../../../integrations/external/zapier/zapier.service.js";
 import { faker } from "@faker-js/faker";
 import {
   getConversationById,
@@ -83,6 +75,7 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 import type { ByContactIdParams } from "../../../contact/contact.schema.js";
 import { channelDigits, channelIdentifierSpellings } from "../../../../utils/channelIdentifier.js";
 import { dateFilterFor } from "../../../apiAnalytics/apianalytics.service.js";
+import { getInstagramChannel, getMessengerChannel } from "../../metaChannel/metaChannel.service.js";
 
 /**
  * One row of the raw inbox-list query. The projection is built by hand in SQL and spread
@@ -1534,17 +1527,13 @@ export async function assignWaMessageToUser(
       actorUserId: userId,
     });
 
-    //Change zapier schema
-    await addZapierTriggerToQueue(
-      ZapierTriggers.CONTACT_ASSIGN,
-      {
-        [ZapierTriggers.CONTACT_ASSIGN]: {
-          contact: updatedContact,
-          newAssignees: newUsers,
-        },
-      },
-      orgId,
-    );
+    if (newUsers.length) {
+      await emitIntegrationEvent(orgId, {
+        type: "contact.assigned",
+        contact: updatedContact,
+        assignees: newUsers,
+      });
+    }
     // The ticket is part of the result: assigning a contact whose last ticket was
     // closed opens a successor above, and the caller has no other way to learn
     // which ticket the assignment actually landed on.
@@ -2021,8 +2010,8 @@ async function sendReadReceipt(contactId: string) {
   // nothing but `recipient` and `sender_action`.
   const isInstagram = latest.sourcePlatform === PlatformType.INSTAGRAM;
   const settings = isInstagram
-    ? await getWaSettingsByIbaId(latest.sourceIdentifier)
-    : await getWaSettingsByPageId(latest.sourceIdentifier);
+    ? await getInstagramChannel(latest.sourceIdentifier, orgId)
+    : await getMessengerChannel(latest.sourceIdentifier, orgId);
   const accessToken = settings?.pageAccessToken;
   // Instagram threads key off the IGSID, Messenger off the page-scoped id.
   const recipientId = isInstagram ? latest.contact?.igsId : latest.contact?.psid;

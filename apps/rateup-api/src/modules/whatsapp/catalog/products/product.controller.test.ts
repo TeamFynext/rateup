@@ -11,7 +11,7 @@ vi.mock("./product.service.js", () => ({
   updateCatalogProducts: vi.fn(),
 }));
 
-vi.mock("../../../integrations/shopify/shopify.service.js", () => ({
+vi.mock("../../../integrations/shopify/shopify.catalog.js", () => ({
   createShopifyProduct: vi.fn(),
 }));
 
@@ -31,7 +31,7 @@ import {
   syncShopifyProductsToCatalog,
   updateCatalogProducts,
 } from "./product.service.js";
-import { createShopifyProduct } from "../../../integrations/shopify/shopify.service.js";
+import { createShopifyProduct } from "../../../integrations/shopify/shopify.catalog.js";
 import { getWaCatalog } from "../catalog.service.js";
 import { log } from "../../../../utils/logger.js";
 import {

@@ -1,3 +1,4 @@
+import { emitSurveyResponseSubmitted } from "../../integrations/events/emitIntegrationEvent.js";
 import {
   PlatformType,
   Prisma,
@@ -34,18 +35,12 @@ import { getQuestionsBySurveyId } from "../../question/question.service.js";
 import { CreateResponseInput } from "../../response/response.schema.js";
 import {
   createResponse,
-  saveResponseToGoogleSheet,
   sendResponseToWebhook,
   updateResponse,
 } from "../../response/response.service.js";
 import { updateCompletedSurvey } from "../../survey/survey.service.js";
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
-import {
-  getWaSendingSettings,
-  getWaSettings,
-  getWaSettingsByIbaId,
-  getWaSettingsByPageId,
-} from "../settings/wa_settings.service.js";
+import { getWaSendingSettings, getWaSettings } from "../settings/wa_settings.service.js";
 import { GraphApiError, callMetaApi } from "../wa_axios.js";
 import { graphApiErrorDetail } from "../../../utils/graphError.js";
 
@@ -59,14 +54,11 @@ import { logAutomationAction } from "./automation-logger.utils.js";
 import { processNextNode } from "./wasurvey.controller.js";
 import { LeadgenNodeData } from "./node-types.js";
 import { hasFeature } from "../../subscription/subscription.service.js";
-import {
-  addZapierTriggerToQueue,
-  ZapierTriggers,
-} from "../../integrations/external/zapier/zapier.service.js";
 import { producer } from "../../../plugins/kafka.js";
 import { assertWithinConversationLimit } from "./wasurvey.auth.js";
 import type { sendPaymentInitTemplate } from "../automatedReply/wa_automatedReply.utils.js";
 import { channelDigits } from "../../../utils/channelIdentifier.js";
+import { getInstagramChannel, getMessengerChannel } from "../metaChannel/metaChannel.service.js";
 
 export async function sendMessage(
   orgId: string,
@@ -105,26 +97,26 @@ export async function sendMessage(
     if (!whatsappSettingsPhoneId) {
       throw new Error("whatsappSettingsPhoneId is required for Instagram messages");
     }
-    waSettings = await getWaSettingsByIbaId(whatsappSettingsPhoneId);
-    if (!waSettings) {
+    const channel = await getInstagramChannel(whatsappSettingsPhoneId, orgId);
+    if (!channel) {
       throw new Error(`Instagram account is not configured for id: ${whatsappSettingsPhoneId}`);
     }
     to = (messageData as IgSendMessageBody).recipient.id;
     configId = "me";
-    accessToken = waSettings.pageAccessToken ?? undefined;
-    sourceIdentifier = waSettings.ibaId ?? undefined;
+    accessToken = channel.pageAccessToken;
+    sourceIdentifier = channel.accountId;
   } else if (platform === PlatformType.FACEBOOK) {
     if (!whatsappSettingsPhoneId) {
       throw new Error("whatsappSettingsPhoneId is required for Facebook messages");
     }
-    waSettings = await getWaSettingsByPageId(whatsappSettingsPhoneId);
-    if (!waSettings) {
+    const channel = await getMessengerChannel(whatsappSettingsPhoneId, orgId);
+    if (!channel) {
       throw new Error(`Facebook page is not configured for page ID: ${whatsappSettingsPhoneId}`);
     }
     to = (messageData as FbSendMessageBody).recipient.id;
     configId = "me";
-    accessToken = waSettings.pageAccessToken ?? undefined;
-    sourceIdentifier = waSettings.fbPageId ?? undefined;
+    accessToken = channel.pageAccessToken;
+    sourceIdentifier = channel.fbPageId;
   } else if (platform !== PlatformType.WEBCHAT) {
     // Not `getWaSettings`: an unnamed number must not fall back to the org's
     // oldest channel. Replying on a number the customer never wrote to has no
@@ -560,17 +552,7 @@ export interface SaveResponsesContext {
 async function publishSavedResponse(
   res: Awaited<ReturnType<typeof createResponse>>,
   session: SaveResponsesContext,
-  anonymous: boolean,
 ) {
-  const { surveyTeamMapId, responses, language, createdAt, Contact, tag } = res;
-  await saveResponseToGoogleSheet({
-    surveyTeamMapId,
-    responses,
-    language,
-    createdAt,
-    respondent: !anonymous && Contact?.phone,
-    tag,
-  });
   await sendResponseToWebhook(res, session.orgId);
   if (session.surveyTeamMapId) {
     await updateCompletedSurvey(session.surveyTeamMapId);
@@ -591,10 +573,9 @@ async function publishSavedResponse(
 
     await updateCampaignStats(session.campaignParticipantId);
   }
-  addZapierTriggerToQueue(
-    ZapierTriggers.RESPONSE_SUBMITTED,
-    { [ZapierTriggers.RESPONSE_SUBMITTED]: res },
-    res.surveyTeamMap.team.orgId,
+  // Best effort: the response is filed whether or not this lands.
+  await emitSurveyResponseSubmitted(res.surveyTeamMap.team.orgId, res).catch((err) =>
+    log.error({ err, responseId: res.id }, "Failed to announce the survey response"),
   );
 }
 
@@ -686,7 +667,7 @@ export async function saveResponses(session: SaveResponsesContext) {
   // the whole request, so none of it is allowed to hold the caller. Each is
   // logged on failure rather than surfaced: the respondent has already been told
   // their answers were saved, which is true.
-  void publishSavedResponse(res, session, anonymous).catch((e) =>
+  void publishSavedResponse(res, session).catch((e) =>
     log.error({ err: e, responseId: res.id }, "Post-save fan-out failed"),
   );
 

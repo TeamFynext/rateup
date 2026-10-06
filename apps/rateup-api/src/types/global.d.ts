@@ -25,7 +25,7 @@ import { RouteShorthandOptionsWithHandler } from "fastify";
 import type { StoredShopifySession } from "../modules/integrations/shopify/shopify.session.js";
 import type { ThreadNote } from "../modules/whatsapp/inbox/note/note.service.js";
 import z from "zod";
-import { ZapierTriggers } from "../modules/integrations/external/zapier/zapier.service.js";
+import { ZapierTriggers } from "../modules/integrations/external/zapier/zapier.types.js";
 
 type GoogleReview = {
   minRating?: number;
@@ -209,7 +209,8 @@ declare global {
   interface GoogleSheetCredential {
     accessToken: string;
     refreshToken: string;
-    expiryDate: string;
+    /** Epoch ms of the access token's expiry, as Google reported it at connect. */
+    expiryDate?: number;
     scopes: string[];
     userEmail: string | null;
     driveFolderId?: string | null;
@@ -229,18 +230,17 @@ declare global {
 
   interface petPoojaCredential {
     restaurantId: string;
+    /** The token in the org's own order webhook URL (`petpooja.ts`). */
+    inbound?: { token: string };
     orderEvent: {
       waTemplateId: string;
       teamId: string;
-      scheduleLater: boolean;
-      timeDelay: number;
     };
     history?: {
       id: string;
       name: string;
       phone: string;
       status: string;
-      scheduledAt?: Date;
       createdAt: Date;
     }[];
   }
@@ -254,10 +254,6 @@ declare global {
     baseUrl: string;
     serviceId: number;
   }
-
-  export type AmeliaIntegration = integration & {
-    credential: AmeliaCredential;
-  };
 
   export interface ShopifySurvey {
     waTemplateId?: string;
@@ -281,7 +277,7 @@ declare global {
 
   interface ScheduleObj {
     // Assigned by callers via crypto.randomUUID() to correlate a schedule with
-    // its BullMQ job and its own history entries (see shopify.service.ts).
+    // its BullMQ job and its own history entries (see commerce/surveys.ts).
     scheduleId?: string;
     createdAt: Date;
     // Persisted as an explicit `null` (not omitted) in the credential JSON blob
@@ -1010,6 +1006,12 @@ declare global {
             };
             read?: {
               mid: string;
+            };
+            /** Opening an existing thread from an ig.me link (the messaging_referral field). */
+            referral?: {
+              ref?: string;
+              source?: string;
+              type?: string;
             };
           },
         ];

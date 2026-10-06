@@ -1,3 +1,5 @@
+import type { ShopifyEvents } from "../../../types/enums.js";
+
 export interface ShopifyBody {
   id: number;
   admin_graphql_api_id: string;
@@ -224,6 +226,14 @@ export interface ShopifyGraphqlNode {
 export interface ShopifyGraphqlEdge {
   node?: ShopifyGraphqlNode;
   [field: string]: unknown;
+}
+
+/** A delivery as `shopify.handler.ts` queues it on `webhookQueue`, for `handleWebhook`. */
+export interface ShopifyWebhookJobData {
+  topic: ShopifyEvents;
+  webhookId: string;
+  body: ShopifyWebhookBody;
+  shop: string;
 }
 
 /**

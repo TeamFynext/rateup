@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
   lookupContactByPhone,
@@ -28,9 +29,15 @@ import {
   AssignRewardInput,
   SearchQueryInput,
   ContactSearchQueryInput,
+  ExportQueryInput,
 } from "./account.schema.js";
 import { getLoyaltyProgramByOrg } from "../program/program.service.js";
-import { toCsv } from "../../../utils/spreadsheet.js";
+import {
+  type ExportColumn,
+  getSpreadsheetContentType,
+  getSpreadsheetFilename,
+  writeTabularExport,
+} from "../../../utils/spreadsheet.js";
 import { computeQualifyingSpend } from "../tiers/qualifyingSpend.js";
 import { normalisePhone } from "../util.js";
 import { parseCardCode } from "./cardCode.js";
@@ -516,8 +523,20 @@ export async function awardPointsHandler(
   }
 }
 
+type ExportedCustomer = Awaited<ReturnType<typeof getCustomerAccountsForExport>>[number];
+
+const CUSTOMER_EXPORT_COLUMNS: Array<ExportColumn<ExportedCustomer>> = [
+  { header: "Name", width: 25, value: (customer) => customer.contact?.name || "" },
+  { header: "Phone", width: 20, value: (customer) => customer.contact?.phone || "" },
+  { header: "Email", width: 30, value: (customer) => customer.contact?.email || "" },
+  { header: "Tier", width: 15, value: (customer) => customer.currentTier?.name || "N/A" },
+  { header: "Points", width: 12, value: (customer) => customer.currentPoints },
+  { header: "Lifetime Points", width: 15, value: (customer) => customer.lifetimePoints },
+  { header: "Referral Code", width: 20, value: (customer) => customer.referralCode },
+];
+
 export async function exportCustomerAccountsHandler(
-  request: FastifyRequest<{ Querystring: { format?: "csv" | "excel" } }>,
+  request: FastifyRequest<{ Querystring: ExportQueryInput }>,
   reply: FastifyReply,
 ) {
   try {
@@ -526,76 +545,23 @@ export async function exportCustomerAccountsHandler(
       return reply.code(404).send({ error: "Loyalty program not found" });
     }
 
+    const { format } = request.query;
     const customers = await getCustomerAccountsForExport(program.id);
 
-    if (request.query.format === "excel") {
-      const ExcelJS = (await import("exceljs")).default;
-      const workbook = new ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet("Customers");
+    const buffer = await writeTabularExport(
+      "Customers",
+      CUSTOMER_EXPORT_COLUMNS,
+      customers,
+      format,
+    );
 
-      worksheet.columns = [
-        { header: "Name", key: "name", width: 25 },
-        { header: "Phone", key: "phone", width: 20 },
-        { header: "Email", key: "email", width: 30 },
-        { header: "Tier", key: "tier", width: 15 },
-        { header: "Points", key: "points", width: 12 },
-        { header: "Lifetime Points", key: "lifetimePoints", width: 15 },
-        { header: "Referral Code", key: "referralCode", width: 20 },
-      ];
-
-      worksheet.getRow(1).font = { bold: true };
-
-      customers.forEach((customer) => {
-        worksheet.addRow({
-          name: customer.contact?.name || "",
-          phone: customer.contact?.phone || "",
-          email: customer.contact?.email || "",
-          tier: customer.currentTier?.name || "N/A",
-          points: customer.currentPoints,
-          lifetimePoints: customer.lifetimePoints,
-          referralCode: customer.referralCode,
-        });
-      });
-
-      reply.header(
-        "Content-Type",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      );
-      reply.header(
+    return reply
+      .header("Content-Type", getSpreadsheetContentType(format))
+      .header(
         "Content-Disposition",
-        `attachment; filename="customers-${new Date().toISOString()}.xlsx"`,
-      );
-
-      const buffer = await workbook.xlsx.writeBuffer();
-      return reply.send(buffer);
-    } else {
-      // CSV
-      const rows = [
-        ["Name", "Phone", "Email", "Tier", "Points", "Lifetime Points", "Referral Code"],
-      ];
-
-      customers.forEach((customer) => {
-        rows.push([
-          customer.contact?.name || "",
-          customer.contact?.phone || "",
-          customer.contact?.email || "",
-          customer.currentTier?.name || "N/A",
-          customer.currentPoints.toString(),
-          customer.lifetimePoints.toString(),
-          customer.referralCode,
-        ]);
-      });
-
-      const csv = toCsv(rows);
-
-      reply.header("Content-Type", "text/csv");
-      reply.header(
-        "Content-Disposition",
-        `attachment; filename="customers-${new Date().toISOString()}.csv"`,
-      );
-
-      return reply.send(csv);
-    }
+        `attachment; filename="${getSpreadsheetFilename(`customers-${dayjs().format("YYYY-MM-DD")}`, format)}"`,
+      )
+      .send(buffer);
   } catch (e) {
     log.error(e);
     reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });

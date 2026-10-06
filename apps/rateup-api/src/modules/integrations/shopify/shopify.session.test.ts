@@ -22,6 +22,7 @@ import { HttpResponseError, Session } from "@shopify/shopify-api";
 import prisma from "../../../utils/prisma.js";
 import {
   getActiveShopifySession,
+  refreshShopifyCredential,
   ShopifyReauthRequiredError,
   type StoredShopifySession,
   toStoredSession,
@@ -209,5 +210,57 @@ describe("getActiveShopifySession", () => {
 
     expect(auth.refreshToken).not.toHaveBeenCalled();
     expect(session.accessToken).toBe("shpat_new");
+  });
+});
+
+describe("refreshShopifyCredential", () => {
+  test("leaves a merely expired access token for the next API call to renew", async () => {
+    // The sweep runs every 45 minutes; renewing an idle shop's hour-long token
+    // here would exchange every shop's tokens around the clock.
+    const idle = stored({ expires: new Date(Date.now() - HOUR).toISOString() });
+
+    await refreshShopifyCredential(holder(idle));
+
+    expect(auth.refreshToken).not.toHaveBeenCalled();
+    expect(redis.set).not.toHaveBeenCalled();
+  });
+
+  test("renews a refresh token that is about to lapse", async () => {
+    const aging = stored({ refreshTokenExpires: new Date(Date.now() + 3 * DAY).toISOString() });
+    db.integration.findUnique.mockResolvedValue({ credential: { session: aging } });
+    auth.refreshToken.mockResolvedValue({ session: renewedSession() });
+
+    await refreshShopifyCredential(holder(aging));
+
+    expect(auth.refreshToken).toHaveBeenCalledWith({ shop: SHOP, refreshToken: "shprt_current" });
+  });
+
+  test("cycles a legacy non-expiring token", async () => {
+    const legacy = stored({
+      expires: undefined,
+      refreshToken: undefined,
+      refreshTokenExpires: undefined,
+    });
+    db.integration.findUnique.mockResolvedValue({ credential: { session: legacy } });
+    auth.migrateToExpiringToken.mockResolvedValue({ session: renewedSession() });
+
+    await refreshShopifyCredential(holder(legacy));
+
+    expect(auth.migrateToExpiringToken).toHaveBeenCalled();
+  });
+
+  test("throws when the refresh token is rejected, so the sweep records the failure", async () => {
+    const aging = stored({
+      expires: new Date(Date.now() - HOUR).toISOString(),
+      refreshTokenExpires: new Date(Date.now() + 3 * DAY).toISOString(),
+    });
+    db.integration.findUnique.mockResolvedValue({ credential: { session: aging } });
+    auth.refreshToken.mockRejectedValue(
+      new HttpResponseError({ message: "401", code: 401, statusText: "Unauthorized" }),
+    );
+
+    await expect(refreshShopifyCredential(holder(aging))).rejects.toBeInstanceOf(
+      ShopifyReauthRequiredError,
+    );
   });
 });

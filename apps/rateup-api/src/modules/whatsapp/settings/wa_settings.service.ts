@@ -3,6 +3,8 @@ import { aes_decrypt, aes_encrypt } from "../../../../utils/encryption/encryptio
 import prisma from "../../../utils/prisma.js";
 import { getPhoneDetails, registerPhoneNumber } from "../auth/wa_auth.service.js";
 import { WaConfigType, WhatsappSettingsStatus } from "../../../types/enums.js";
+import { PlatformType } from "../../../../generated/prisma/enums.js";
+import crypto from "node:crypto";
 import { log } from "../../../utils/logger.js";
 import {
   BusinessProfileInput,
@@ -12,7 +14,6 @@ import {
   updateWaSettingsInput,
 } from "./wa_settings.schema.js";
 import { callMetaApi } from "../wa_axios.js";
-import { subscribePageToApp } from "./wa_settings.controller.js";
 import { getChannelScope } from "./wa_channel_access.js";
 import type { Actor } from "../../../authz/actor.js";
 import { channelDigits } from "../../../utils/channelIdentifier.js";
@@ -63,19 +64,95 @@ export async function createWaSettings(
 
   const encryptedToken = aes_encrypt(accessToken, getEncryptionKey());
 
-  return await prisma.whatsappSettings.create({
-    data: {
-      orgId,
-      ...data,
-      encryption,
-      instagramIceBreakers,
-      instagramPersistentMenu,
-      conversionData,
-      accessToken: encryptedToken.encryptedData,
-      accessToken_iv: encryptedToken.iv,
-      pageAccessToken: data.pageAccessToken ? encryptInlineToken(data.pageAccessToken) : undefined,
-    },
-  });
+  // The number's registry row and its settings are written together, sharing one id. A
+  // batch rather than an interactive transaction: those time out behind PgBouncer (P2028).
+  const id = data.channelId ?? crypto.randomUUID();
+  const [, settings] = await prisma.$transaction([
+    prisma.channel.create({
+      data: {
+        id,
+        orgId,
+        platform: PlatformType.WHATSAPP,
+        ...whatsappChannelFields({ id, ...data }),
+      },
+    }),
+    prisma.whatsappSettings.create({
+      data: {
+        id,
+        orgId,
+        ...data,
+        channelId: id,
+        encryption,
+        instagramIceBreakers,
+        instagramPersistentMenu,
+        conversionData,
+        accessToken: encryptedToken.encryptedData,
+        accessToken_iv: encryptedToken.iv,
+        pageAccessToken: data.pageAccessToken
+          ? encryptInlineToken(data.pageAccessToken)
+          : undefined,
+      },
+    }),
+  ]);
+  return settings;
+}
+
+/** What a WhatsApp number's registry row says about it, read off its settings. */
+function whatsappChannelFields(
+  settings: Partial<Pick<WhatsappSettings, "phoneId" | "phone" | "phoneDisplayName" | "status">> &
+    Pick<WhatsappSettings, "id">,
+) {
+  return {
+    // A manually configured number may have no phone id yet; its own id stands in.
+    accountId: settings.phoneId || settings.id,
+    address: settings.phone ?? null,
+    name: settings.phoneDisplayName ?? null,
+    ...(settings.status && { status: settings.status }),
+  };
+}
+
+/** A column update given as a plain value, or undefined for an operation or no change. */
+function plainValue(value: unknown): string | null | undefined {
+  return typeof value === "string" || value === null ? value : undefined;
+}
+
+/** The registry-relevant fields an update sets to a plain value; anything else is kept. */
+function registryFieldsOf(data: Prisma.WhatsappSettingsUncheckedUpdateInput) {
+  const fields: {
+    phoneId?: string | null;
+    phone?: string | null;
+    phoneDisplayName?: string | null;
+    status?: string;
+  } = {};
+  const phoneId = plainValue(data.phoneId);
+  if (phoneId !== undefined) fields.phoneId = phoneId;
+  const phone = plainValue(data.phone);
+  if (phone !== undefined) fields.phone = phone;
+  const phoneDisplayName = plainValue(data.phoneDisplayName);
+  if (phoneDisplayName !== undefined) fields.phoneDisplayName = phoneDisplayName;
+  const status = plainValue(data.status);
+  if (status) fields.status = status;
+  return fields;
+}
+
+/**
+ * Updates a number's settings and its registry row together, so the two can never drift:
+ * the row is computed from the current settings plus this update, and both writes go in one
+ * batch transaction (not an interactive one, which times out behind PgBouncer — P2028).
+ */
+async function updateSettingsWithChannel(
+  where: Prisma.WhatsappSettingsWhereUniqueInput,
+  data: Prisma.WhatsappSettingsUncheckedUpdateInput,
+) {
+  const current = await prisma.whatsappSettings.findUniqueOrThrow({ where });
+  const [settings] = await prisma.$transaction([
+    prisma.whatsappSettings.update({ where, data }),
+    prisma.channel.update({
+      where: { id: current.channelId },
+      data: whatsappChannelFields({ ...current, ...registryFieldsOf(data) }),
+    }),
+  ]);
+  return settings;
 }
 
 /**
@@ -178,7 +255,8 @@ export async function getAccessibleWaSettings(actor: Actor) {
   if (scope.all === true) return await getAllWaSettings(orgId);
 
   const res = await prisma.whatsappSettings.findMany({
-    where: { orgId, id: { in: Array.from(scope.ids) } },
+    // Scope ids are Channel ids; a number is reached through its registry row.
+    where: { orgId, channelId: { in: Array.from(scope.ids) } },
     orderBy: { createdAt: "asc" },
   });
 
@@ -210,32 +288,6 @@ export async function getWaSettingsByPhoneId(phoneId: string) {
   return res ? getWaSettingsWithAccessTokenDecrypted(res) : null;
 }
 
-export async function getWaSettingsByIbaId(ibaId: string) {
-  const res = await prisma.whatsappSettings.findFirst({
-    where: {
-      ibaId,
-    },
-    orderBy: {
-      createdAt: "asc",
-    },
-  });
-  if (!res) return null;
-  return getWaSettingsWithAccessTokenDecrypted(res);
-}
-
-export async function getWaSettingsByPageId(pageId: string) {
-  const res = await prisma.whatsappSettings.findFirst({
-    where: {
-      fbPageId: pageId,
-    },
-    orderBy: {
-      createdAt: "asc",
-    },
-  });
-  if (!res) return null;
-  return getWaSettingsWithAccessTokenDecrypted(res);
-}
-
 /**
  * Encrypts a token that has no IV column of its own, storing the IV inline as
  * `<iv>:<ciphertext>`.
@@ -252,7 +304,7 @@ export function encryptInlineToken(value: string): string {
   return `${iv}:${encryptedData}`;
 }
 
-function decryptInlineToken(value: string | null): string | null {
+export function decryptInlineToken(value: string | null): string | null {
   if (!value) return value;
   const match = INLINE_IV_PATTERN.exec(value);
   // Not in the encrypted form — a row written before 13.5. Returned verbatim so
@@ -309,15 +361,7 @@ export async function updateWaSettings(
   if (data.pageAccessToken) {
     dataToBeUpdated.pageAccessToken = encryptInlineToken(data.pageAccessToken);
   }
-  return await prisma.whatsappSettings.update({
-    where: {
-      orgId,
-      phoneId,
-    },
-    data: {
-      ...dataToBeUpdated,
-    },
-  });
+  return updateSettingsWithChannel({ orgId, phoneId }, dataToBeUpdated);
 }
 
 /**
@@ -356,8 +400,6 @@ export async function updateWaSettingsById(
   const dataToBeUpdated: Prisma.WhatsappSettingsUncheckedUpdateInput = {
     ...data,
     encryption,
-    instagramIceBreakers: jsonOrDbNull(data.instagramIceBreakers),
-    instagramPersistentMenu: jsonOrDbNull(data.instagramPersistentMenu),
     conversionData: jsonOrDbNull(data.conversionData),
   };
   if (data.accessToken) {
@@ -365,17 +407,8 @@ export async function updateWaSettingsById(
     dataToBeUpdated.accessToken = encryptedToken.encryptedData;
     dataToBeUpdated.accessToken_iv = encryptedToken.iv;
   }
-  if (data.pageAccessToken) {
-    dataToBeUpdated.pageAccessToken = encryptInlineToken(data.pageAccessToken);
-  }
 
-  return await prisma.whatsappSettings.update({
-    where: {
-      id: whatsappSettingsId,
-      orgId,
-    },
-    data: dataToBeUpdated,
-  });
+  return updateSettingsWithChannel({ id: whatsappSettingsId, orgId }, dataToBeUpdated);
 }
 export async function upsertWaSettings(
   orgId: string,
@@ -390,46 +423,6 @@ export async function upsertWaSettings(
   });
 
   if (existingSettings) {
-    if (data.fbPageId?.length) {
-      const { accessToken, pageAccessToken: storedPageToken } =
-        getWaSettingsWithAccessTokenDecrypted(existingSettings);
-      // The dashboard no longer receives pageAccessToken in the channel list (13.2), so a
-      // save that keeps the connected page can't send it back — fall back to the stored
-      // one. Switching to a different page still needs that page's own token.
-      const pageAccessToken =
-        data.pageAccessToken ??
-        (data.fbPageId === existingSettings.fbPageId ? storedPageToken : null);
-      if (!pageAccessToken) {
-        throw new Error("pageAccessToken is required to connect a Facebook page");
-      }
-      await subscribePageToApp(data.fbPageId, pageAccessToken, [
-        "messages",
-        "message_reads",
-        "message_reactions",
-      ]);
-      if (data.ibaId) {
-        const igData = await callMetaApi(`/${data.ibaId}?fields=username`, "GET", accessToken);
-        data.igUserName = igData.data.username;
-      } else if ((data.ibaId === null || data.ibaId === "") && existingSettings.ibaId) {
-        // Disconnecting Instagram alone: the Page (and Messenger on it) stays connected.
-        data.ibaId = null;
-        data.igUserName = null;
-        data.igDisplayName = null;
-      }
-      const fbData = await callMetaApi(`/${data.fbPageId}?fields=name`, "GET", accessToken);
-      data.fbUserName = fbData.data.name;
-    }
-    // Only an explicit empty fbPageId disconnects the Page. Leaving the field out of a
-    // partial update must not silently drop the Messenger and Instagram connections.
-    // Instagram hangs off the Page, so it goes with it.
-    if ((data.fbPageId === null || data.fbPageId === "") && existingSettings.fbPageId?.length) {
-      data.fbPageId = null;
-      data.ibaId = null;
-      data.pageAccessToken = null;
-      data.igUserName = null;
-      data.igDisplayName = null;
-      data.fbUserName = null;
-    }
     return await updateWaSettings(orgId, phoneId, data);
   } else {
     // Only a genuine "first connection" reaches this branch, and unlike an update, creating a
@@ -446,14 +439,17 @@ export async function upsertWaSettings(
   }
 }
 
+/**
+ * Disconnects a number by deleting its registry row; the settings, and everything that
+ * cascades from them, go with it.
+ */
 export async function deleteWaSettings(orgId: string, phoneId: string) {
   log.trace("Deleting WhatsApp settings for orgId: %s", orgId);
-  return await prisma.whatsappSettings.delete({
-    where: {
-      orgId: orgId,
-      phoneId: phoneId,
-    },
+  const settings = await prisma.whatsappSettings.findUniqueOrThrow({
+    where: { orgId, phoneId },
   });
+  await prisma.channel.delete({ where: { id: settings.channelId } });
+  return settings;
 }
 
 export async function getContactTag(orgId: string) {
@@ -1101,18 +1097,22 @@ export async function getWaSettingsByPhone(phone: string) {
 }
 
 export async function updateWaSettingsStatus(phoneId: string, status: WhatsappSettingsStatus) {
-  return await prisma.whatsappSettings.update({
-    where: { phoneId },
-    data: { status },
-  });
+  return updateSettingsWithChannel({ phoneId }, { status });
 }
 
 export async function updateWaSettingsStatusByWabaId(
   wabaId: string,
   status: WhatsappSettingsStatus,
 ) {
-  return await prisma.whatsappSettings.updateMany({
-    where: { wabaId },
-    data: { status },
-  });
+  const [updated] = await prisma.$transaction([
+    prisma.whatsappSettings.updateMany({
+      where: { wabaId },
+      data: { status },
+    }),
+    prisma.channel.updateMany({
+      where: { whatsapp: { wabaId } },
+      data: { status },
+    }),
+  ]);
+  return updated;
 }

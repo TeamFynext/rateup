@@ -1,5 +1,6 @@
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { log } from "../../../utils/logger.js";
+import { emitIntegrationEvent } from "../../integrations/events/emitIntegrationEvent.js";
 import prisma from "../../../utils/prisma.js";
 import { ContactGroupNotFoundError } from "./contactGroup.errors.js";
 export { ContactGroupNotFoundError };
@@ -21,10 +22,6 @@ import { ContactGroupType } from "../../../../generated/prisma/client.js";
 import { WHATSAPP_CONTACT_CHANNEL, whatsappContactWhere } from "../contact.channel.js";
 import { buildContactListWhere } from "../contact.listQuery.js";
 import type { PaginationQuery as ContactListQuery } from "../contact.schema.js";
-import {
-  addZapierTriggerToQueue,
-  ZapierTriggers,
-} from "../../integrations/external/zapier/zapier.service.js";
 
 export async function getContactGroupById(contactGroupId: string, orgId: string) {
   const contactGroup = await prisma.contactGroup.findFirst({
@@ -299,6 +296,20 @@ export async function getContactsByContactGroupIdWithPagination(
   };
 }
 
+/** Tells the integrations (Zapier's "added to group" trigger) who joined the group. */
+async function announceNewMembers(
+  orgId: string,
+  contactGroupId: string,
+  newMembers: { contactId: string }[],
+) {
+  if (!newMembers.length) return;
+  await emitIntegrationEvent(orgId, {
+    type: "contact_group.members_added",
+    contactGroupId,
+    contactIds: newMembers.map((member) => member.contactId),
+  });
+}
+
 function chunkArray<T>(array: T[], chunkSize: number): T[][] {
   const chunks: T[][] = [];
   for (let i = 0; i < array.length; i += chunkSize) {
@@ -341,13 +352,7 @@ export async function addNewContactsToGroup(
       contactGroupId,
     })),
   });
-  for (const contact of newMembers) {
-    await addZapierTriggerToQueue(
-      ZapierTriggers.CONTACT_ADDED_TO_GROUP,
-      { [ZapierTriggers.CONTACT_ADDED_TO_GROUP]: contact },
-      orgId,
-    );
-  }
+  await announceNewMembers(orgId, contactGroupId, newMembers);
 
   return { added: newMembers.length, invalidPhones };
 }
@@ -374,13 +379,7 @@ export async function addExistingContactsToGroup(
       contactGroupId,
     })),
   });
-  for (const contact of newMembers) {
-    await addZapierTriggerToQueue(
-      ZapierTriggers.CONTACT_ADDED_TO_GROUP,
-      { [ZapierTriggers.CONTACT_ADDED_TO_GROUP]: contact },
-      orgId,
-    );
-  }
+  await announceNewMembers(orgId, contactGroupId, newMembers);
 
   return { added: newMembers.length, skipped: contactIds.length - owned.length };
 }
@@ -444,13 +443,7 @@ export async function addExistingContactsToMultipleGroups(
           contactGroupId,
         })),
       });
-      for (const contact of newMembers) {
-        await addZapierTriggerToQueue(
-          ZapierTriggers.CONTACT_ADDED_TO_GROUP,
-          { [ZapierTriggers.CONTACT_ADDED_TO_GROUP]: contact },
-          orgId,
-        );
-      }
+      await announceNewMembers(orgId, contactGroupId, newMembers);
       return newMembers;
     }),
   );

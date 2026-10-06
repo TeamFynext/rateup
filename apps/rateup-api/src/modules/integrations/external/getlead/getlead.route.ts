@@ -2,7 +2,6 @@ import { FastifyInstance } from "fastify";
 
 import { checkSession } from "../../../../utils/checkSession.js";
 import {
-  connectGetLeadHandler,
   getGetLeadMetaHandler,
   getGetLeadSettingsHandler,
   getGetLeadStatusHandler,
@@ -13,36 +12,25 @@ import {
   issueGetLeadWebhookHandler,
 } from "./getlead.webhook.controller.js";
 import {
-  getleadConnectSchema,
   getleadMetaQuerySchema,
   getleadSettingsSchema,
-  type GetLeadConnectBody,
   type GetLeadMetaQuery,
   type GetLeadSettingsBody,
 } from "./getlead.schema.js";
 import { declareAccess } from "../../../../authz/registry.js";
 
 /**
- * Only what the generic integration CRUD cannot do.
+ * Only what the shared integration routes cannot do.
  *
- * Connect/disconnect and reading the row already exist as
- * `POST|DELETE|GET /integrations`; GetLead needs no OAuth callback, so there is
- * no `/auth`.
+ * Connecting is the shared pasted-key connect (`POST /integrations/getlead/connect`,
+ * through the provider's `apiKey`); disconnecting and reading the row are the
+ * generic `DELETE|GET /integrations/getlead`.
  *
  * The two `/webhook` routes here only *issue* the inbound credentials. The
  * receiver they point at is public, and lives in `getlead.public.route.ts`.
  */
 export async function getleadRoutes(server: FastifyInstance) {
   declareAccess(server, { access: "session" });
-  server.post<{ Body: GetLeadConnectBody }>(
-    "/connect",
-    {
-      preHandler: checkSession,
-      schema: { body: getleadConnectSchema },
-    },
-    connectGetLeadHandler,
-  );
-
   server.get<{ Querystring: GetLeadMetaQuery }>(
     "/meta",
     {

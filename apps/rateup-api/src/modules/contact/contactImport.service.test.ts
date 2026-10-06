@@ -33,53 +33,30 @@ vi.mock("../../workers/bullmq/queues/index.js", () => ({
   contactImportRowsKey: (jobId: string) => `contactImport:${jobId}:rows`,
   EMPTY_IMPORT_PROGRESS: { processed: 0, created: 0, updated: 0, skipped: 0, addedToGroup: 0 },
   enqueueContactImport: vi.fn(),
-  integrationTriggerQueue: { addBulk: vi.fn() },
-  zapierTriggerQueue: { addBulk: vi.fn() },
 }));
 
 vi.mock("./contact.service.js", () => ({ getCustomFields: vi.fn() }));
 
-vi.mock("../integrations/external/zapier/zapier.service.js", () => ({
-  ZapierTriggers: {
-    CONTACT_CREATE: "new_contact_create",
-    CONTACT_UPDATED: "contact_updated",
-    CONTACT_ADDED_TO_GROUP: "contact_added_to_group",
-  },
+const events = vi.hoisted(() => ({ wanted: new Set<string>() }));
+vi.mock("../integrations/events/integrationEvent.fanout.js", () => ({
+  subscribedEventTypes: vi.fn(async () => events.wanted),
 }));
-
-vi.mock("../integrations/external/zoho/zoho.service.js", () => ({
-  pushCrmLeadStatus: vi.fn(),
-  ZohoTriggers: {
-    CONTACT_CREATE: "contact_created",
-    CONTACT_UPDATE: "contact_updated",
-    BIGIN_CONTACT_CREATE: "bigin_contact_created",
-    BIGIN_CONTACT_UPDATE: "bigin_contact_updated",
-    BIGIN_DEAL_CREATE: "bigin_deal_created",
-    LEAD_CREATE: "lead_created",
-  },
+vi.mock("../integrations/events/emitIntegrationEvent.js", () => ({
+  emitIntegrationEvents: vi.fn(),
 }));
 
 vi.mock("../integrations/meta/conversions.service.js", () => ({
   triggerConversionsApiForContact: vi.fn(() => Promise.resolve()),
 }));
 
-vi.mock("../integrations/external/zoho/zoho.utils.js", () => ({
-  buildZohoContactPayload: vi.fn((c: any) => ({ Last_Name: c.name })),
-  buildZohoLeadPayload: vi.fn((c: any) => ({ Last_Name: c.name })),
-}));
-
 import { UnrecoverableError } from "bullmq";
 import prisma from "../../utils/prisma.js";
 import redis from "../../utils/redisConnection.js";
 import { readSpreadsheetObjects, readSpreadsheetRows } from "../../utils/spreadsheet.js";
-import {
-  contactImportQueue,
-  enqueueContactImport,
-  integrationTriggerQueue,
-  zapierTriggerQueue,
-} from "../../workers/bullmq/queues/index.js";
+import { contactImportQueue, enqueueContactImport } from "../../workers/bullmq/queues/index.js";
 import { getCustomFields } from "./contact.service.js";
-import { pushCrmLeadStatus } from "../integrations/external/zoho/zoho.service.js";
+import { emitIntegrationEvents } from "../integrations/events/emitIntegrationEvent.js";
+import { subscribedEventTypes } from "../integrations/events/integrationEvent.fanout.js";
 import { triggerConversionsApiForContact } from "../integrations/meta/conversions.service.js";
 import {
   CONTACT_IMPORT_ROW_LIMIT,
@@ -101,20 +78,18 @@ beforeEach(() => {
     data.map((row: any) => ({ id: `id-${row.phone}`, ...row })),
   );
   db.contactGroupMap.createManyAndReturn.mockImplementation(({ data }: any) => data);
-  db.integration.findMany.mockResolvedValue([]);
+  events.wanted = new Set();
 });
 
-/** Integrations the org has connected, each subscribed to the given triggers. */
-function connected(...integrations: { name: string; active?: boolean; triggers: string[] }[]) {
-  db.integration.findMany.mockResolvedValue(
-    integrations.map(({ name, active = true, triggers }) => ({
-      name,
-      active,
-      credential: {
-        triggerSubscriptions: triggers.map((t) => ({ subscribed_field: t, active: true })),
-      },
-    })),
-  );
+/** The integration events some provider of the org is waiting for. */
+function wanted(...types: string[]) {
+  events.wanted = new Set(types);
+}
+
+/** The events the batch emitted, in order. */
+function emitted(): any[] {
+  const calls = (emitIntegrationEvents as Mock).mock.calls;
+  return calls.length ? calls[0][1] : [];
 }
 
 function file(mimetype = "text/csv") {
@@ -340,22 +315,10 @@ describe("importContactBatch", () => {
     expect(res).toEqual({ created: 0, updated: 2, skipped: 0, addedToGroup: 0 });
   });
 
-  test("sends main's update events for every upserted row, new ones included", async () => {
-    connected(
-      { name: "zapier", triggers: ["contact_updated", "new_contact_create"] },
-      {
-        name: "zoho",
-        triggers: ["contact_created", "contact_updated", "bigin_contact_updated", "lead_created"],
-      },
-    );
+  test("an upsert announces every row as updated, new ones included", async () => {
+    wanted("contact.created", "contact.updated");
     db.contact.findMany.mockResolvedValue([
-      {
-        id: "c-ann",
-        phone: "9190001",
-        name: "Ann",
-        source: "whatsapp",
-        integrationIds: { zoho: { contact: { id: "z-ann" } }, bigin: { contact: { id: "b-ann" } } },
-      },
+      { id: "c-ann", phone: "9190001", name: "Ann", source: "whatsapp" },
     ]);
 
     await importContactBatch(jobData({ updateExisting: true }), [
@@ -363,49 +326,24 @@ describe("importContactBatch", () => {
       ["Bob", "9190002", [""]],
     ]);
 
-    const zapier = (zapierTriggerQueue.addBulk as Mock).mock.calls[0][0];
-    // No "new contact" event in update mode, as on main.
-    expect(zapier.map((j: any) => j.name)).toEqual(["contact_updated", "contact_updated"]);
-    expect(zapier[0].data.data.contact_updated).toEqual({
-      name: "Ann New",
-      phone: "9190001",
-      source: "CSV IMPORT",
-      customFields: [{ id: "f-tier", value: "Gold" }],
+    // No "created" in update mode, as on main.
+    expect(emitted().map((e) => e.type)).toEqual(["contact.updated", "contact.updated"]);
+    expect(emitted()[0]).toMatchObject({
+      contact: { id: "c-ann", name: "Ann New" },
+      changed: ["details"],
     });
-    const zoho = (integrationTriggerQueue.addBulk as Mock).mock.calls[0][0];
-    expect(zoho.map((j: any) => j.name)).toEqual([
-      "zoho-contact-update",
-      "zoho-bigin-contact-update",
-      "zoho-contact-update",
-      "zoho-bigin-contact-update",
-    ]);
-    expect(zoho[0].data.data).toMatchObject({ zohoContactId: "z-ann" });
-    expect(zoho[1].data.data).toMatchObject({ biginContactId: "b-ann" });
+    expect(emitIntegrationEvents).toHaveBeenCalledWith(ORG, expect.any(Array));
   });
 
-  test("a contact with a lifecycle gets main's lead status, deal and conversions calls", async () => {
-    connected({ name: "zoho", triggers: ["bigin_deal_created"] });
-    db.lifecycle.findUnique.mockResolvedValue({ name: "Customer" });
+  test("a contact with a lifecycle says so, and is told to the Conversions API", async () => {
+    wanted("contact.updated");
     db.contact.findMany.mockResolvedValue([
-      {
-        id: "c-ann",
-        phone: "9190001",
-        name: "Ann",
-        lifecycleId: "lc-1",
-        integrationIds: { zoho: { lead: { id: "lead-1" } } },
-      },
+      { id: "c-ann", phone: "9190001", name: "Ann", lifecycleId: "lc-1" },
     ]);
 
     await importContactBatch(jobData({ updateExisting: true }), [["Ann New", "9190001", [""]]]);
 
-    expect(pushCrmLeadStatus).toHaveBeenCalledWith(
-      ORG,
-      "lead-1",
-      { lifecycleId: "lc-1", lifecycleName: "Customer" },
-      expect.any(Object),
-    );
-    const zoho = (integrationTriggerQueue.addBulk as Mock).mock.calls[0][0];
-    expect(zoho.map((j: any) => j.name)).toEqual(["zoho-bigin-deal-update"]);
+    expect(emitted()[0].changed).toEqual(["details", "lifecycle"]);
     expect(triggerConversionsApiForContact).toHaveBeenCalledWith(
       expect.objectContaining({ id: "c-ann", name: "Ann New" }),
       "lc-1",
@@ -413,13 +351,12 @@ describe("importContactBatch", () => {
   });
 
   test("left-alone contacts send nothing when update is off", async () => {
-    connected({ name: "zapier", triggers: ["contact_updated", "new_contact_create"] });
+    wanted("contact.created", "contact.updated");
     db.contact.findMany.mockResolvedValue([{ id: "c-ann", phone: "9190001", name: "Ann" }]);
 
     await importContactBatch(jobData(), [["Ann New", "9190001", ["Gold"]]]);
 
-    expect(zapierTriggerQueue.addBulk).not.toHaveBeenCalled();
-    expect(pushCrmLeadStatus).not.toHaveBeenCalled();
+    expect(emitted()).toEqual([]);
   });
 
   test("adds every row to the group, new or existing", async () => {
@@ -440,218 +377,69 @@ describe("importContactBatch", () => {
     expect(res.addedToGroup).toBe(2);
   });
 
-  test("fires the subscribed Zapier and Zoho events in bulk", async () => {
-    connected(
-      { name: "zapier", triggers: ["new_contact_create"] },
-      {
-        name: "zoho",
-        triggers: ["contact_created", "bigin_contact_created", "lead_created"],
-      },
-    );
+  test("announces each created contact, in one bulk emit", async () => {
+    wanted("contact.created");
 
-    await importContactBatch(jobData(), [["Ann", "9190001", [""]]]);
+    await importContactBatch(jobData(), [
+      ["Ann", "9190001", [""]],
+      ["Bob", "9190002", [""]],
+    ]);
 
-    const zapier = (zapierTriggerQueue.addBulk as Mock).mock.calls[0][0];
-    expect(zapier).toHaveLength(1);
-    expect(zapier[0].name).toBe("new_contact_create");
-    const zoho = (integrationTriggerQueue.addBulk as Mock).mock.calls[0][0];
-    expect(zoho.map((j: any) => j.name)).toEqual([
-      "zoho-contact-create",
-      "zoho-bigin-contact-create",
-      "zoho-lead-create",
+    expect(emitIntegrationEvents).toHaveBeenCalledTimes(1);
+    expect(emitted().map((e) => [e.type, e.contact.phone])).toEqual([
+      ["contact.created", "9190001"],
+      ["contact.created", "9190002"],
     ]);
   });
 
-  // Every job used to be queued regardless: four per contact, and Zoho logs each one it
-  // receives at info even when the trigger is off.
-  test("queues nothing for an org with neither integration", async () => {
-    await importContactBatch(jobData({ contactGroupId: "g1" }), [["Ann", "9190001", [""]]]);
+  test("announces the group's new members as one event per group", async () => {
+    wanted("contact_group.members_added");
 
-    expect(db.integration.findMany).toHaveBeenCalledTimes(1);
-    expect(zapierTriggerQueue.addBulk).not.toHaveBeenCalled();
-    expect(integrationTriggerQueue.addBulk).not.toHaveBeenCalled();
-  });
-
-  test("queues only the triggers a subscription is waiting for", async () => {
-    connected(
-      { name: "zapier", triggers: ["contact_added_to_group"] },
-      { name: "zoho", triggers: ["lead_created"] },
-    );
-
-    await importContactBatch(jobData({ contactGroupId: "g1" }), [["Ann", "9190001", [""]]]);
-
-    const zapier = (zapierTriggerQueue.addBulk as Mock).mock.calls[0][0];
-    expect(zapier.map((j: any) => j.name)).toEqual(["contact_added_to_group"]);
-    const zoho = (integrationTriggerQueue.addBulk as Mock).mock.calls[0][0];
-    expect(zoho.map((j: any) => j.name)).toEqual(["zoho-lead-create"]);
-  });
-
-  test("an inactive Zoho integration gets nothing, as processIntegration would drop it", async () => {
-    connected({ name: "zoho", active: false, triggers: ["contact_created"] });
-
-    await importContactBatch(jobData(), [["Ann", "9190001", [""]]]);
-
-    expect(integrationTriggerQueue.addBulk).not.toHaveBeenCalled();
-  });
-
-  test("a subscription that was switched off does not count", async () => {
-    db.integration.findMany.mockResolvedValue([
-      {
-        name: "zapier",
-        active: true,
-        credential: {
-          triggerSubscriptions: [{ subscribed_field: "new_contact_create", active: false }],
-        },
-      },
+    await importContactBatch(jobData({ contactGroupId: "g1" }), [
+      ["Ann", "9190001", [""]],
+      ["Bob", "9190002", [""]],
     ]);
 
-    await importContactBatch(jobData(), [["Ann", "9190001", [""]]]);
-
-    expect(zapierTriggerQueue.addBulk).not.toHaveBeenCalled();
+    expect(emitted()).toEqual([
+      {
+        type: "contact_group.members_added",
+        contactGroupId: "g1",
+        contactIds: ["id-9190001", "id-9190002"],
+      },
+    ]);
   });
 
-  test("skips the integration lookup when the batch changed nothing", async () => {
+  // Every event used to be queued regardless, thousands per import, and dropped on arrival.
+  test("queues only the events a provider of the org is waiting for", async () => {
+    wanted("contact_group.members_added");
+
+    await importContactBatch(jobData({ contactGroupId: "g1" }), [["Ann", "9190001", [""]]]);
+
+    expect(subscribedEventTypes).toHaveBeenCalledWith(ORG);
+    expect(emitted().map((e) => e.type)).toEqual(["contact_group.members_added"]);
+  });
+
+  test("queues nothing for an org nobody is listening for", async () => {
+    await importContactBatch(jobData({ contactGroupId: "g1" }), [["Ann", "9190001", [""]]]);
+
+    expect(emitted()).toEqual([]);
+  });
+
+  test("skips the subscription lookup when the batch changed nothing", async () => {
     db.contact.findMany.mockResolvedValue([{ id: "c-ann", phone: "9190001", name: "Ann" }]);
 
     await importContactBatch(jobData(), [["Ann", "9190001", [""]]]);
 
-    expect(db.integration.findMany).not.toHaveBeenCalled();
+    expect(subscribedEventTypes).not.toHaveBeenCalled();
   });
 
   test("announces nothing when the transaction rolls back", async () => {
+    wanted("contact.created");
     db.$transaction.mockRejectedValueOnce(new Error("deadlock"));
 
     await expect(importContactBatch(jobData(), [["Ann", "9190001", [""]]])).rejects.toThrow(
       "deadlock",
     );
-    expect(zapierTriggerQueue.addBulk).not.toHaveBeenCalled();
-    expect(integrationTriggerQueue.addBulk).not.toHaveBeenCalled();
-  });
-});
-
-// ===========================================================================
-// runContactImport — batching and resuming
-// ===========================================================================
-
-function job(over: Record<string, unknown> = {}) {
-  return {
-    id: "contact-import-1",
-    data: jobData({ fieldIds: [] }),
-    progress: 0,
-    updateProgress: vi.fn(),
-    ...over,
-  } as any;
-}
-
-function rowsInRedis(count: number) {
-  const rows = Array.from({ length: count }, (_, i) => [`N${i}`, `91900${i}`, []]);
-  (redis.get as Mock).mockResolvedValue(JSON.stringify(rows));
-}
-
-describe("runContactImport", () => {
-  test("writes a thousand rows per batch and saves progress after each", async () => {
-    rowsInRedis(2500);
-    const j = job();
-
-    const res = await runContactImport(j);
-
-    expect(db.$transaction).toHaveBeenCalledTimes(3);
-    expect(j.updateProgress.mock.calls.map((c: any) => c[0].processed)).toEqual([1000, 2000, 2500]);
-    expect(res).toMatchObject({ processed: 2500, created: 2500 });
-    expect(redis.del).toHaveBeenCalledWith("contactImport:contact-import-1:rows");
-  });
-
-  test("a retry resumes after the last batch that committed", async () => {
-    rowsInRedis(2500);
-    const j = job({
-      progress: { processed: 2000, created: 2000, updated: 0, skipped: 0, addedToGroup: 0 },
-    });
-
-    const res = await runContactImport(j);
-
-    expect(db.$transaction).toHaveBeenCalledTimes(1);
-    expect(db.contact.createManyAndReturn.mock.calls[0][0].data).toHaveLength(500);
-    expect(res).toMatchObject({ processed: 2500, created: 2500 });
-  });
-
-  test("keeps the rows for the next attempt when a batch fails", async () => {
-    rowsInRedis(10);
-    db.$transaction.mockRejectedValueOnce(new Error("connection reset"));
-
-    await expect(runContactImport(job())).rejects.toThrow("connection reset");
-    expect(redis.del).not.toHaveBeenCalled();
-  });
-
-  test("gives up without retrying when the rows have expired", async () => {
-    (redis.get as Mock).mockResolvedValue(null);
-
-    await expect(runContactImport(job())).rejects.toBeInstanceOf(UnrecoverableError);
-  });
-});
-
-// ===========================================================================
-// getContactImportStatus
-// ===========================================================================
-
-describe("getContactImportStatus", () => {
-  function stored(state: string, over: Record<string, unknown> = {}) {
-    (contactImportQueue.getJob as Mock).mockResolvedValue({
-      data: jobData({ total: 21000, rejected: [], rejectedCount: 3, duplicateCount: 1 }),
-      progress: 0,
-      getState: vi.fn().mockResolvedValue(state),
-      ...over,
-    });
-  }
-
-  test("hides another org's import", async () => {
-    stored("active");
-
-    expect(await getContactImportStatus("contact-import-1", "org-other")).toBeNull();
-  });
-
-  test("hides an import that no longer exists", async () => {
-    (contactImportQueue.getJob as Mock).mockResolvedValue(undefined);
-
-    expect(await getContactImportStatus("contact-import-1", ORG)).toBeNull();
-  });
-
-  test("a waiting job with nothing written is queued", async () => {
-    stored("waiting");
-
-    expect(await getContactImportStatus("contact-import-1", ORG)).toMatchObject({
-      state: "queued",
-      processed: 0,
-      total: 21000,
-      rejectedCount: 3,
-    });
-  });
-
-  test("a job waiting to retry after writing rows still reads as running", async () => {
-    stored("delayed", {
-      progress: { processed: 4000, created: 4000, updated: 0, skipped: 0, addedToGroup: 0 },
-    });
-
-    expect(await getContactImportStatus("contact-import-1", ORG)).toMatchObject({
-      state: "running",
-      processed: 4000,
-    });
-  });
-
-  test("a finished job reports its result", async () => {
-    stored("completed", {
-      returnvalue: { processed: 21000, created: 20000, updated: 0, skipped: 1000, addedToGroup: 0 },
-    });
-
-    expect(await getContactImportStatus("contact-import-1", ORG)).toMatchObject({
-      state: "completed",
-      created: 20000,
-      skipped: 1000,
-    });
-  });
-
-  test("a job out of attempts is failed", async () => {
-    stored("failed");
-
-    expect((await getContactImportStatus("contact-import-1", ORG))?.state).toBe("failed");
+    expect(emitIntegrationEvents).not.toHaveBeenCalled();
   });
 });

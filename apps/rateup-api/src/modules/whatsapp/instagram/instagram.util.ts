@@ -89,6 +89,10 @@ export function getInstagramWebhookEvent(
       return InstagramEvent.MESSAGE;
     }
 
+    if (data.referral) {
+      return InstagramEvent.REFERRAL;
+    }
+
     if (data.reaction) {
       return InstagramEvent.MESSAGE_REACTION;
     }

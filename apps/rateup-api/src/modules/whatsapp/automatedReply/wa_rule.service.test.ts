@@ -262,7 +262,7 @@ describe("createRule - keyword uniqueness", () => {
     expect(db.ruleMessageBodyLock.findFirst).not.toHaveBeenCalled();
   });
 
-  test.each([["INSTAGRAM_COMMENT"], ["INSTAGRAM_STORY_MENTION"]])(
+  test.each([["INSTAGRAM_COMMENT"], ["INSTAGRAM_STORY_MENTION"], ["INSTAGRAM_REFERRAL"]])(
     "skips keyword locking entirely for a %s rule",
     async (triggerEvent) => {
       await createRule(ruleInput({ triggerEvent }));
@@ -392,7 +392,7 @@ describe("updateRule", () => {
     await expect(updateRule("rule-1", { groups } as any)).resolves.toBeDefined();
   });
 
-  test.each([["INSTAGRAM_COMMENT"], ["INSTAGRAM_STORY_MENTION"]])(
+  test.each([["INSTAGRAM_COMMENT"], ["INSTAGRAM_STORY_MENTION"], ["INSTAGRAM_REFERRAL"]])(
     "skips keyword locking when the rule becomes a %s rule",
     async (triggerEvent) => {
       const groups = [

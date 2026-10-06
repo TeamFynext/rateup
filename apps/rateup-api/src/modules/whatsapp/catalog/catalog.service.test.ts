@@ -55,7 +55,7 @@ vi.mock("../automatedReply/wa_automatedReply.utils.js", () => ({
   generateOrderReferenceId: vi.fn(() => "ord-1"),
 }));
 vi.mock("../whatsappSurvey/wasurvey.service.js", () => ({ sendMessage: vi.fn() }));
-vi.mock("../../integrations/shopify/shopify.service.js", () => ({
+vi.mock("../../integrations/shopify/shopify.catalog.js", () => ({
   buildShopifyCartUrl: vi.fn(),
 }));
 vi.mock("./catalogSettings.service.js", () => ({ sendAddressFlowToCustomer: vi.fn() }));

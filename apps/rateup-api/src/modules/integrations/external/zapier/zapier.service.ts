@@ -1,27 +1,7 @@
-import { zapierTriggerQueue } from "../../../../workers/bullmq/queues/index.js";
 import prisma from "../../../../utils/prisma.js";
 import { WaMessageAssignStatus } from "../../../../types/enums.js";
-
-export enum ZapierTriggers {
-  CONTACT_CREATE = "new_contact_create",
-  CONTACT_ASSIGN = "new_contact_assignee",
-  NEW_MESSAGE = "new_message_received",
-  CONVERSATION_CLOSED = "conversation_closed",
-  CONTACT_UPDATED = "contact_updated",
-  CONTACT_LIFECYCLE_UPDATED = "contact_lifecycle_updated",
-  /**
-   * A contact's lead moved to a different pipeline column — the board's
-   * counterpart to {@link ZapierTriggers.CONTACT_LIFECYCLE_UPDATED}.
-   *
-   * Added beside it rather than replacing it: the lifecycle trigger is a live
-   * external contract, and every Zap already built on it keeps firing unchanged.
-   */
-  CONTACT_STAGE_UPDATED = "contact_stage_updated",
-  CONTACT_ADDED_TO_GROUP = "contact_added_to_group",
-  RESPONSE_SUBMITTED = "response_submitted",
-  CONTACT_DELETED = "contact_deleted",
-  NEW_TEAM_MEMBER_CREATED = "new_staff_joined_to_team",
-}
+import { emitIntegrationEvent } from "../../events/emitIntegrationEvent.js";
+import { ZapierTriggers } from "./zapier.types.js";
 
 export async function getSampleDataForTrigger(
   triggerKey: ZapierTriggers,
@@ -334,13 +314,6 @@ export async function getSampleDataForTrigger(
   return data;
 }
 
-// `data` genuinely varies by trigger (contact rows, message rows, response
-// rows, ...) — this just forwards it into the BullMQ job payload, it's never
-// inspected here, so `unknown` is accurate rather than a cop-out.
-export async function addZapierTriggerToQueue(name: ZapierTriggers, data: unknown, orgId: string) {
-  await zapierTriggerQueue.add(name, { data, orgId });
-}
-
 export async function deleteContactByPhoneNumberAndOrgId(orgId: string, phone: string) {
   const contact = await prisma.contact.delete({
     where: {
@@ -350,11 +323,7 @@ export async function deleteContactByPhoneNumberAndOrgId(orgId: string, phone: s
       },
     },
   });
-  await addZapierTriggerToQueue(
-    ZapierTriggers.CONTACT_DELETED,
-    { [ZapierTriggers.CONTACT_DELETED]: contact },
-    contact.orgId,
-  );
+  await emitIntegrationEvent(contact.orgId, { type: "contact.deleted", contact });
   return contact;
 }
 

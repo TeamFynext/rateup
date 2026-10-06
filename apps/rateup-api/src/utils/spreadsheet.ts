@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { parseCsv, parseCsvObjects } from "hucre/csv";
-import { read, readXlsxObjects, readOdsObjects } from "hucre";
-import type { CellValue } from "hucre";
+import { read, readXlsxObjects, readOdsObjects, write } from "hucre";
+import type { CellValue, CsvWriteOptions } from "hucre";
 
 export const ODS_MIMETYPE = "application/vnd.oasis.opendocument.spreadsheet";
 export const CSV_MIMETYPES = ["text/csv", "application/vnd.ms-excel"];
@@ -17,11 +17,64 @@ export const spreadsheetExportContentTypes: Record<SpreadsheetExportFormat, stri
   ods: ODS_MIMETYPE,
 };
 
-export function getSpreadsheetContentType(format: SpreadsheetExportFormat): string {
-  return spreadsheetExportContentTypes[format];
+/** The spreadsheet formats plus CSV, for exports that also offer a plain-text file. */
+export const tabularExportFormats = ["csv", ...spreadsheetExportFormats] as const;
+export type TabularExportFormat = (typeof tabularExportFormats)[number];
+export const tabularExportFormatSchema = z.enum(tabularExportFormats);
+
+const tabularExportContentTypes: Record<TabularExportFormat, string> = {
+  ...spreadsheetExportContentTypes,
+  csv: "text/csv; charset=utf-8",
+};
+
+/**
+ * hucre's CSV output, readied for a file people open in Excel: the BOM makes it read
+ * the file as UTF-8, and a cell starting with = + - @ is quoted so it stays text.
+ */
+const csvExportOptions: CsvWriteOptions = { bom: true, escapeFormulae: true };
+
+/** One column of an export: its heading, and how to read its cell off an item. */
+export interface ExportColumn<T> {
+  header: string;
+  /** Width in characters; kept by XLSX, dropped by CSV and ODS. */
+  width?: number;
+  value: (item: T) => CellValue;
 }
 
-export function getSpreadsheetFilename(basename: string, format: SpreadsheetExportFormat): string {
+/**
+ * A one-sheet export in any {@link TabularExportFormat}, from a single column list.
+ *
+ * The sheet goes to hucre as `rows` with the header row included, not as
+ * `columns` + `data`: hucre 1.1.0's text writers read only `rows`, so the object form
+ * comes out as an empty CSV.
+ */
+export function writeTabularExport<T>(
+  name: string,
+  columns: ReadonlyArray<ExportColumn<T>>,
+  items: readonly T[],
+  format: TabularExportFormat,
+): Promise<Uint8Array> {
+  return write({
+    sheets: [
+      {
+        name,
+        columns: columns.map(({ header, width }) => ({ header, width })),
+        rows: [
+          columns.map((column) => column.header),
+          ...items.map((item) => columns.map((column) => column.value(item))),
+        ],
+      },
+    ],
+    format,
+    csv: csvExportOptions,
+  });
+}
+
+export function getSpreadsheetContentType(format: TabularExportFormat): string {
+  return tabularExportContentTypes[format];
+}
+
+export function getSpreadsheetFilename(basename: string, format: TabularExportFormat): string {
   return `${basename}.${format}`;
 }
 
