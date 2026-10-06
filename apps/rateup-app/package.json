@@ -1,6 +1,6 @@
 {
   "name": "rateup",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
@@ -59,6 +59,7 @@
     "expo-status-bar": "~57.0.1",
     "expo-symbols": "~57.0.3",
     "expo-system-ui": "~57.0.4",
+    "expo-updates": "~57.0.24",
     "immer": "^11.1.11",
     "libphonenumber-js": "^1.12.40",
     "lodash": "^4.17.23",

@@ -2,7 +2,7 @@
   "expo": {
     "name": "RateUp",
     "slug": "rateup",
-    "version": "1.2.5",
+    "version": "1.2.6",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "rateup",
@@ -127,6 +127,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/62982a5a-c2c6-4de4-931a-6af66d273ba8"
     },
     "extra": {
       "router": {
