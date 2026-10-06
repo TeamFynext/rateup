@@ -13,8 +13,9 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import React, { useState } from "react";
-import type { UseFormReturn } from "react-hook-form";
+import type { FieldErrors, UseFormReturn } from "react-hook-form";
 import { Controller, FormProvider, useFieldArray, useWatch } from "react-hook-form";
+import { toast } from "sonner";
 
 import { getProductsFromShopify } from "@/backend/appsIntegration/shopify/shopify.api";
 import { getWooProducts } from "@/backend/appsIntegration/woocommerce/woocommerce.api";
@@ -65,6 +66,31 @@ interface RuleBuilderFormProps {
 }
 
 type Section = "trigger" | "conditions" | "actions" | "options";
+
+/** The first error message anywhere in a nested react-hook-form error tree, with its path. */
+function firstError(
+  errors: unknown,
+  path: string[] = [],
+): { path: string[]; message: string } | null {
+  if (!errors || typeof errors !== "object") return null;
+  const message = (errors as { message?: unknown }).message;
+  if (typeof message === "string" && message) return { path, message };
+  for (const [key, value] of Object.entries(errors)) {
+    if (key === "ref" || key === "type" || key === "message") continue;
+    const found = firstError(value, [...path, key]);
+    if (found) return found;
+  }
+  return null;
+}
+
+/** Which step of the builder shows the field a form path points at. */
+function sectionFor(path: string[]): Section {
+  const [root] = path;
+  if (root === "groups") return "conditions";
+  if (root === "actions") return "actions";
+  if (root === "options") return path[1] === "instagramPublicReplies" ? "actions" : "options";
+  return "trigger";
+}
 
 const SECTION_META: Record<Section, { icon: React.ElementType; label: string; color: string }> = {
   trigger: { icon: IconBolt, label: "When", color: "text-amber-500" },
@@ -208,13 +234,22 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
 
   const sections: Section[] = ["trigger", "conditions", "actions", "options"];
 
+  // Without this a field the builder doesn't render an error for (or one in a collapsed
+  // step) failed validation silently: Save did nothing and said nothing.
+  const onInvalid = (errors: FieldErrors<CreateRuleInput>) => {
+    const found = firstError(errors);
+    console.warn("Automation rule failed validation", errors);
+    toast.error(found?.message ?? "Some fields need attention before saving");
+    if (found) setActiveSection(sectionFor(found.path));
+  };
+
   const toggleSection = (section: Section) => {
     setActiveSection((prev) => (prev === section ? prev : section));
   };
 
   return (
     <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5">
+      <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="flex flex-col gap-5">
         {/* ── Top bar: Platform + Name ── */}
         <div className={cn("rounded-2xl border bg-card p-5 shadow-sm", pColor.glow)}>
           <FieldGroup>
@@ -492,6 +527,9 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                             <Field data-invalid={fieldState.invalid}>
                               <ActionList />
                               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                              {/* Replying under the comment is something the rule does, so it
+                                  sits with the actions, not with the conditions. */}
+                              {isInstagramCommentTrigger && <InstagramPublicReplies />}
                             </Field>
                           )}
                         />
@@ -945,8 +983,6 @@ const ConditionsPanel: React.FC<{
             )}
           </div>
         )}
-
-        {isInstagramCommentTrigger && <InstagramPublicReplies />}
       </div>
     )}
 

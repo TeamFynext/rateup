@@ -40,6 +40,16 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-10-06-ig-me-link-stats-qr",
+    title: "See how often your ig.me links are opened",
+    summary:
+      "Each ig.me link now shows its opens and the people behind them, and downloads as a QR code for packaging, posters and in-store signs.",
+    publishedAt: "2026-10-06",
+    kinds: ["improvement"],
+    area: "Instagram",
+    link: { to: "/dashboard/instagram" },
+  },
+  {
     id: "2026-10-05-instagram-messenger-standalone",
     title: "Connect Instagram or Messenger on their own",
     summary:

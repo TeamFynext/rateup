@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate, useRouter } from "@tanstack/react-router";
-import React, { useEffect } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
 
 import {
@@ -52,14 +52,86 @@ const defaultValues = {
   },
 } satisfies Partial<CreateRuleValues>;
 
+type SavedRule = NonNullable<ReturnType<typeof useRuleById>["data"]>;
+
+/**
+ * The form's starting values: a saved rule as the form models it, or a new rule's defaults.
+ *
+ * The form is created from these rather than created empty and `reset()` to the rule once it
+ * loads. That order rendered the new-rule default condition block first; its fields registered,
+ * then outlived the reset as a hidden `{ conditions: [{}] }` group. A rule saved without
+ * conditions (Instagram comment, story mention, Shopify…) then failed validation on that
+ * invisible block, and Update did nothing.
+ */
+function toFormValues(
+  rule: SavedRule | undefined,
+  initial: Pick<
+    WhatsappAutomationRuleBuilderProps,
+    "initialPlatform" | "initialTriggerEvent" | "initialChannelId"
+  >,
+): CreateRuleInput {
+  if (!rule) {
+    return {
+      ...defaultValues,
+      ...(initial.initialPlatform && { platform: initial.initialPlatform }),
+      ...(initial.initialTriggerEvent && { triggerEvent: initial.initialTriggerEvent }),
+      ...(initial.initialChannelId && { whatsappSettingsPhoneIds: [initial.initialChannelId] }),
+    };
+  }
+  return {
+    ...defaultValues,
+    ...rule,
+    whatsappSettingsPhoneIds: rule.whatsappSettingsPhoneIds || [],
+    groups: rule.groups || [],
+    // The API models "no value" as `null`; the form schema models it as an empty value.
+    actions: (rule.actions || []).map((action) =>
+      action.value === null ? { ...action, value: "" } : action,
+    ),
+    // Saved options only hold what was set; the defaults fill in options added since.
+    options: { ...defaultValues.options, ...rule.options },
+  };
+}
+
 const WhatsappAutomationRuleBuilder: React.FC<WhatsappAutomationRuleBuilderProps> = ({
   ruleId,
   initialPlatform,
   initialTriggerEvent,
   initialChannelId,
 }) => {
-  const isEditMode = ruleId && ruleId !== "new";
-  const { data: ruleData, isLoading: isRuleLoading } = useRuleById(isEditMode ? ruleId : "");
+  const isEditMode = Boolean(ruleId && ruleId !== "new");
+  const { data: ruleData, isLoading: isRuleLoading } = useRuleById(
+    isEditMode ? (ruleId ?? "") : "",
+  );
+
+  if (isEditMode && (isRuleLoading || !ruleData)) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Spinner className="size-5 text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <RuleEditor
+      // A different rule is a different form, never a reset of this one.
+      key={ruleData?.id ?? "new"}
+      ruleId={isEditMode ? ruleId : undefined}
+      ruleData={isEditMode ? ruleData : undefined}
+      initialValues={toFormValues(isEditMode ? ruleData : undefined, {
+        initialPlatform,
+        initialTriggerEvent,
+        initialChannelId,
+      })}
+    />
+  );
+};
+
+const RuleEditor: React.FC<{
+  ruleId: string | undefined;
+  ruleData: SavedRule | undefined;
+  initialValues: CreateRuleInput;
+}> = ({ ruleId, ruleData, initialValues }) => {
+  const isEditMode = Boolean(ruleId);
   const navigate = useNavigate();
   const { history } = useRouter();
   const createMutation = useCreateRuleMutation();
@@ -67,12 +139,7 @@ const WhatsappAutomationRuleBuilder: React.FC<WhatsappAutomationRuleBuilderProps
 
   const form = useForm<CreateRuleInput, unknown, CreateRuleValues>({
     resolver: zodResolver(createRuleSchema),
-    defaultValues: {
-      ...defaultValues,
-      ...(initialPlatform && { platform: initialPlatform }),
-      ...(initialTriggerEvent && { triggerEvent: initialTriggerEvent }),
-      ...(initialChannelId && { whatsappSettingsPhoneIds: [initialChannelId] }),
-    },
+    defaultValues: initialValues,
   });
 
   // Use saved data for Share functionality
@@ -87,24 +154,8 @@ const WhatsappAutomationRuleBuilder: React.FC<WhatsappAutomationRuleBuilderProps
   const savedPlatform = ruleData?.platform ?? "WHATSAPP";
   const showShareTab = savedTriggerEvent === "MESSAGE_RECEIVED" && hasKeywords;
 
-  useEffect(() => {
-    if (ruleData) {
-      form.reset({
-        ...defaultValues,
-        ...ruleData,
-        whatsappSettingsPhoneIds: ruleData.whatsappSettingsPhoneIds || [],
-        groups: ruleData.groups || [],
-        // The API models "no value" as `null`; the form schema models it as an empty value.
-        actions: (ruleData.actions || []).map((action) =>
-          action.value === null ? { ...action, value: "" } : action,
-        ),
-        options: ruleData.options || defaultValues.options,
-      });
-    }
-  }, [ruleData, form]);
-
   const onSubmit = (data: CreateRuleValues) => {
-    if (isEditMode) {
+    if (ruleId) {
       updateMutation.mutate(
         { id: ruleId, ...data },
         {
@@ -128,14 +179,6 @@ const WhatsappAutomationRuleBuilder: React.FC<WhatsappAutomationRuleBuilderProps
   };
 
   const isPending = createMutation.isPending || updateMutation.isPending;
-
-  if (isEditMode && isRuleLoading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <Spinner className="size-5 text-muted-foreground" />
-      </div>
-    );
-  }
 
   let buttonText = "Create Automation";
   if (isPending) {

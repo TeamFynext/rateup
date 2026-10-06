@@ -102,3 +102,18 @@ export async function getInstagramStoriesList(ibaId: string) {
     data: InstagramStoryItem[];
   };
 }
+
+/** How often one ig.me link's ref was opened; mirrors the API's InstagramLinkStats. */
+export interface InstagramLinkStats {
+  ref: string;
+  opens: number;
+  people: number;
+  lastOpenedAt: string;
+}
+
+export async function getInstagramLinkStats(ibaId: string) {
+  return (await axiosClient.get(`${base}/links/${ibaId}/stats`)).data as {
+    success: boolean;
+    data: InstagramLinkStats[];
+  };
+}

@@ -1,14 +1,24 @@
-import { IconCheck, IconCopy, IconLink, IconPlus, IconTrash } from "@tabler/icons-react";
+import {
+  IconCheck,
+  IconCopy,
+  IconInfoCircle,
+  IconLink,
+  IconPlus,
+  IconQrcode,
+  IconTrash,
+} from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { useInstagramLinkStats } from "@/backend/whatsapp/instagram-profile/instagramProfile.query";
 import {
   useDeleteRuleMutation,
   useRules,
   useUpdateRuleMutation,
 } from "@/backend/whatsapp/rule/rule.query";
 import { igMeLink } from "@/components/dashboard/instagram/igMeLink.ts";
+import { downloadIgMeQr } from "@/components/dashboard/instagram/igMeQr.ts";
 import { IgMeLinkPhone } from "@/components/dashboard/instagram/instagram-preview.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -49,6 +59,39 @@ function CopyLinkButton({ link }: Readonly<{ link: string }>) {
   );
 }
 
+function QrButton({ link, name }: Readonly<{ link: string; name: string }>) {
+  const { t } = useTranslation();
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      disabled={!link}
+      onClick={() => void downloadIgMeQr(link, name)}
+    >
+      <IconQrcode className="mr-1.5 size-4" />
+      {t("QR code")}
+    </Button>
+  );
+}
+
+/** "12 opens · 9 people", or nothing while the link has none. */
+function LinkStats({ opens, people }: Readonly<{ opens: number; people: number }>) {
+  const { t } = useTranslation();
+  if (!opens) return <span className="text-xs text-muted-foreground">{t("No opens yet")}</span>;
+  return (
+    <span className="text-xs text-muted-foreground tabular-nums">
+      {t(
+        "{opens, plural, one {# open} other {# opens}} · {people, plural, one {# person} other {# people}}",
+        {
+          opens,
+          people,
+        },
+      )}
+    </span>
+  );
+}
+
 /** ig.me links for one account: each is an "ig.me Link Opened" rule naming a ref. */
 export function IgMeLinksTab({
   ibaId,
@@ -56,6 +99,7 @@ export function IgMeLinksTab({
   displayName,
 }: Readonly<{ ibaId: string; username?: string | null; displayName?: string | null }>) {
   const { data: rules = [] } = useRules();
+  const { data: stats } = useInstagramLinkStats(ibaId);
   const updateMutation = useUpdateRuleMutation();
   const deleteMutation = useDeleteRuleMutation();
   const confirm = useConfirm();
@@ -122,6 +166,15 @@ export function IgMeLinksTab({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* When Meta tells us a link was opened, and so when its automation can run. */}
+        <div className="flex gap-2 rounded-xl border bg-muted/30 p-3 text-xs text-muted-foreground">
+          <IconInfoCircle className="mt-0.5 size-4 shrink-0" />
+          <p>
+            {t(
+              "Someone already chatting with you starts the automation the moment they open the link. Someone new starts it with their first message, or by tapping an ice breaker. ig.me links open in the Instagram app, not on Instagram on the web.",
+            )}
+          </p>
+        </div>
         {profileLink && (
           <div className="flex flex-wrap items-center gap-3 rounded-xl border bg-muted/30 p-3">
             <div className="min-w-0 flex-1">
@@ -129,6 +182,7 @@ export function IgMeLinksTab({
               <p className="truncate font-mono text-sm">{profileLink}</p>
             </div>
             <CopyLinkButton link={profileLink} />
+            <QrButton link={profileLink} name={username ?? "profile"} />
           </div>
         )}
 
@@ -166,6 +220,7 @@ export function IgMeLinksTab({
             {linkRules.map((rule) => {
               const ref = rule.options?.instagramRef;
               const link = igMeLink(username, ref);
+              const linkStats = ref ? stats?.get(ref.toLowerCase()) : undefined;
               return (
                 <li key={rule.id} className="flex flex-wrap items-center gap-3 p-3">
                   <div className="min-w-0 flex-1">
@@ -182,8 +237,12 @@ export function IgMeLinksTab({
                       </span>
                       {!ref && <Badge variant="secondary">{t("Any link")}</Badge>}
                     </div>
+                    {ref && (
+                      <LinkStats opens={linkStats?.opens ?? 0} people={linkStats?.people ?? 0} />
+                    )}
                   </div>
                   <CopyLinkButton link={link} />
+                  <QrButton link={link} name={ref || rule.name} />
                   <Switch
                     aria-label={t("Active")}
                     checked={rule.isActive}

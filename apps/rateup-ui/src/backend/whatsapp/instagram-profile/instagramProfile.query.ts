@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import {
   deleteInstagramIceBreakers,
   deleteInstagramPersistentMenu,
+  getInstagramLinkStats,
   getInstagramMediaPosts,
   getInstagramProfile,
   getInstagramStoriesList,
@@ -129,3 +130,13 @@ export const useDeleteInstagramPersistentMenuMutation = (channelId?: string) => 
     },
   });
 };
+
+/** Opens per ig.me ref for one account, keyed by ref. */
+export const useInstagramLinkStats = (ibaId?: string) =>
+  useQuery({
+    queryKey: ["instagramLinkStats", ibaId],
+    queryFn: () => getInstagramLinkStats(ibaId ?? ""),
+    enabled: Boolean(ibaId),
+    select: (res) => new Map(res.data.map((stats) => [stats.ref.toLowerCase(), stats])),
+    staleTime: 60 * 1000,
+  });
