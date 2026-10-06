@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { shopifyPublicRoutes } from "./shopify/shopify.public.route.js";
 import { getleadPublicRoutes } from "./external/getlead/getlead.public.route.js";
-import { petPoojaWebhookHandler } from "./integrations.controller.js";
+import { legacyPetpoojaWebhookHandler } from "./petpooja/petpooja.js";
 import { inboundWebhookRoutes } from "./shared/inboundWebhook.js";
 import { wooCommercePublicRoutes } from "./woocommerce/woocommerce.route.js";
 import { hubSpotPublicRoutes } from "./hubspot/hubspot.route.js";
@@ -13,7 +13,9 @@ export async function integrationPublicRoutes(server: FastifyInstance) {
   // session. Authenticated by the token in the path and an HMAC over the body.
   server.register(getleadPublicRoutes, { prefix: "/getlead" });
 
-  server.post("/petpooja", petPoojaWebhookHandler);
+  // The old shared Petpooja address: answers, never sends. Each org now has its own
+  // URL on the shared receiver below (petpooja.ts).
+  server.post("/petpooja", legacyPetpoojaWebhookHandler);
 
   // The shared receiver for every provider built on the registry.
   server.register(inboundWebhookRoutes, { prefix: "/webhooks" });

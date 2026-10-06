@@ -24,7 +24,7 @@ import { WaFlow } from "../../../../generated/prisma/client.js";
 import { UpdateFlowInput } from "./flow.schema.js";
 import FormData from "form-data";
 import { log } from "../../../utils/logger.js";
-import { LogicAction, QuestionType, WaFlowStatus } from "../../../types/enums.js";
+import { IntegratedApps, LogicAction, QuestionType, WaFlowStatus } from "../../../types/enums.js";
 import { FlowLogicJump } from "../../../types/global.js";
 import { getGoogleUrlBySurveyTeamMapId, getSurveyById } from "../../survey/survey.service.js";
 import {
@@ -41,10 +41,7 @@ import { unusableRequest } from "./flow.errors.js";
 import { createCTAButtonMessage, parseMessage } from "../whatsappSurvey/wasurvey.utils.js";
 import { getShortUrlId, shortIdUniqueConstraintErrHandler } from "../../../utils/commonUtils.js";
 import { WaMessageBody } from "../../../types/whatsapp.types.js";
-import {
-  getIntegrationByName,
-  getWaAmeliaTimeSlot,
-} from "../../integrations/integrations.service.js";
+import { getAmeliaSlots } from "../../integrations/amelia/amelia.js";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc.js";
 import timezone from "dayjs/plugin/timezone.js";
@@ -959,32 +956,21 @@ export const handleDecryptedFlowRequest = async (
       if (data?.component_action === "update_date") {
         if (!data?.date) return noSlot;
 
+        // Amelia is the only booking app a date question can ask for slots.
         const question = questions.find((data) => data.type === QuestionType.Date);
-        if (!question?.waAppName) return noSlot;
+        if (question?.waAppName !== IntegratedApps.amelia) return noSlot;
 
-        const integration = (await getIntegrationByName(
+        const times = await getAmeliaSlots(
           run.orgId,
-          question.waAppName,
-        )) as unknown as AmeliaIntegration | null;
-        if (!integration) return noSlot;
-
-        const response = await getWaAmeliaTimeSlot({
-          url: integration.credential.baseUrl,
-          acessToken: integration.credential.apiKey,
-          serviceId: integration.credential.serviceId,
-          method: "get",
-          startDateTime: dayjs(Number(data?.date)).tz("Asia/Kolkata").format("YYYY-MM-DD"),
-        });
-        const slots = transformSlots(
           dayjs(Number(data?.date)).tz("Asia/Kolkata").format("YYYY-MM-DD"),
-          response,
         );
+        if (times.length === 0) return noSlot;
 
         return {
           version,
           screen,
           data: {
-            available_slots: slots,
+            available_slots: times.map((time) => ({ id: time, title: time })),
           },
         };
       }
@@ -1129,25 +1115,6 @@ export const handleDecryptedFlowRequest = async (
     throw error;
   }
 };
-interface Slot {
-  id: string;
-  title: string;
-}
-
-function transformSlots(
-  date: string,
-  response: Awaited<ReturnType<typeof getWaAmeliaTimeSlot>>,
-): Slot[] {
-  const slots = response?.data?.slots?.[date];
-  if (!slots) {
-    return [{ id: "1", title: "no slot" }];
-  }
-
-  return Object.keys(slots).map((time) => ({
-    id: time,
-    title: time,
-  }));
-}
 /** The survey mapping plus the survey and flow config a run needs. */
 export async function getSurveyTeamMapWithFlow(surveyTeamMapId: string) {
   return await prisma.surveyTeamMap.findFirst({

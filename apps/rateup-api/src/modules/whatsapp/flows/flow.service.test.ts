@@ -68,9 +68,8 @@ vi.mock("../../../utils/commonUtils.js", () => ({
   getShortUrlId: vi.fn(() => "short-1"),
   shortIdUniqueConstraintErrHandler: vi.fn((fn) => fn()),
 }));
-vi.mock("../../integrations/integrations.service.js", () => ({
-  getIntegrationByName: vi.fn(),
-  getWaAmeliaTimeSlot: vi.fn(),
+vi.mock("../../integrations/amelia/amelia.js", () => ({
+  getAmeliaSlots: vi.fn(),
 }));
 vi.mock("../../team/team.service.js", () => ({ getTeamIdsByUserId: vi.fn() }));
 vi.mock("../whatsappSurvey/wasurvey.controller.js", () => ({ processNextNode: vi.fn() }));

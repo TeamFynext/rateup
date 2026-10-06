@@ -6,17 +6,11 @@ vi.mock("../../utils/logger.js", () => ({
 
 vi.mock("./integrations.service.js", () => ({
   createIntegration: vi.fn(),
-  createWaPaymentConfigurations: vi.fn(),
   deleteIntegrationByName: vi.fn(),
-  deleteWaPaymentConfiguration: vi.fn(),
   deleteZapierTriggerHooks: vi.fn(),
   getAllIntegrations: vi.fn(),
   getAllIntegrationsByOrgId: vi.fn(),
   getIntegrationByName: vi.fn(),
-  getIntegrationByPetPoojaRestaurantId: vi.fn(),
-  getRegenerateWaPaymentConfigOauth: vi.fn(),
-  getWaPaymentConfigByName: vi.fn(),
-  getWaPaymentConfigurations: vi.fn(),
   updateIntegrationByName: vi.fn(),
 }));
 
@@ -25,7 +19,6 @@ vi.mock("./shopify/shopify.route.js", () => ({ shopifyRoutes: vi.fn() }));
 vi.mock("../../utils/auditLog.js", () => ({ recordAuditEvent: vi.fn() }));
 vi.mock("./providers/registry.js", () => ({ getIntegrationProvider: vi.fn() }));
 
-import { log } from "../../utils/logger.js";
 import { recordAuditEvent } from "../../utils/auditLog.js";
 import * as service from "./integrations.service.js";
 import { getIntegrationProvider } from "./providers/registry.js";
@@ -33,16 +26,15 @@ import { IntegrationConnectError } from "./shared/oauthConnectError.js";
 import {
   connectWithApiKeyHandler,
   createIntegrationHandler,
-  createWaPaymentConfigurationsHandler,
   deleteIntegrationByNameHandler,
   deleteZapierTriggerHookHandler,
   getAllIntegrationsByOrgHandler,
   getIntegrationStatusesHandler,
-  petPoojaWebhookHandler,
   updateIntegrationByNameHandler,
 } from "./integrations.controller.js";
 import { integrationsRoutes } from "./integrations.route.js";
 import { integrationPublicRoutes } from "./integration.public.route.js";
+import { legacyPetpoojaWebhookHandler } from "./petpooja/petpooja.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
@@ -68,8 +60,6 @@ beforeEach(() => {
   svc.updateIntegrationByName.mockResolvedValue({ id: "int-1" });
   svc.deleteIntegrationByName.mockResolvedValue({ id: "int-1" });
   svc.deleteZapierTriggerHooks.mockResolvedValue(undefined);
-  svc.getIntegrationByPetPoojaRestaurantId.mockResolvedValue(null);
-  svc.createWaPaymentConfigurations.mockResolvedValue(true);
 });
 
 // ===========================================================================
@@ -189,26 +179,6 @@ describe("the write handlers", () => {
     );
     expect(svc.deleteIntegrationByName).toHaveBeenCalledWith("googlesheet", ORG);
   });
-
-  test("a successful payment-config create answers 201 with a message", async () => {
-    const rep = reply();
-
-    await createWaPaymentConfigurationsHandler({ user: { orgId: ORG }, body: {} } as never, rep);
-
-    expect(answer(rep)).toEqual({ code: 201, body: { message: "Payment configuration created" } });
-  });
-
-  test("a refused payment-config create answers 400 with a message", async () => {
-    svc.createWaPaymentConfigurations.mockResolvedValueOnce(false);
-    const rep = reply();
-
-    await createWaPaymentConfigurationsHandler({ user: { orgId: ORG }, body: {} } as never, rep);
-
-    expect(answer(rep)).toEqual({
-      code: 400,
-      body: { message: "Error in creating whatsapp payment" },
-    });
-  });
 });
 
 // ===========================================================================
@@ -271,138 +241,6 @@ describe("connectWithApiKeyHandler", () => {
     await connectWithApiKeyHandler(request("getlead", { apiKey: "ik_good" }), rep);
 
     expect(answer(rep)).toEqual({ code: 500, body: { error: "Something went wrong" } });
-  });
-});
-
-// ===========================================================================
-// petPoojaWebhookHandler
-// ===========================================================================
-
-describe("petPoojaWebhookHandler", () => {
-  const body = () => ({
-    properties: {
-      Restaurant: { restID: "rest-1" },
-      Customer: { phone: "9876543210", name: "Ann" },
-    },
-  });
-
-  const integration = {
-    id: "int-1",
-    orgId: ORG,
-    credential: { restaurantId: "rest-1", orderEvent: { waTemplateId: "t-1", teamId: "team-1" } },
-  };
-
-  test("answers 200 for a configured restaurant", async () => {
-    svc.getIntegrationByPetPoojaRestaurantId.mockResolvedValueOnce(integration);
-    const spy = vi.spyOn(console, "log").mockImplementation(() => {});
-    const rep = reply();
-
-    await petPoojaWebhookHandler({ body: body() } as never, rep);
-
-    expect(answer(rep).code).toBe(200);
-    spy.mockRestore();
-  });
-
-  // NOTE: the send is commented out at integrations.controller.ts:276, so a
-  // configured order event acknowledges the webhook and does nothing. The cron
-  // that drains scheduled sends reads a history no live path ever writes.
-  test("sends no message and writes no history for a configured order event", async () => {
-    svc.getIntegrationByPetPoojaRestaurantId.mockResolvedValueOnce(integration);
-    const spy = vi.spyOn(console, "log").mockImplementation(() => {});
-
-    await petPoojaWebhookHandler({ body: body() } as never, reply());
-
-    expect(svc.updateIntegrationByName).not.toHaveBeenCalled();
-    spy.mockRestore();
-  });
-
-  // NOTE: no signature, no shared secret, no allowlist. The restaurant id in
-  // the body is the only thing selecting which org's integration is read.
-  test("takes the restaurant id from the body with nothing to authenticate it", async () => {
-    svc.getIntegrationByPetPoojaRestaurantId.mockResolvedValueOnce(integration);
-    const spy = vi.spyOn(console, "log").mockImplementation(() => {});
-    const req: any = { body: body(), headers: {} };
-
-    await petPoojaWebhookHandler(req, reply());
-
-    expect(svc.getIntegrationByPetPoojaRestaurantId).toHaveBeenCalledWith("rest-1");
-    spy.mockRestore();
-  });
-
-  test("prints the whole webhook body, customer details included, to stdout", async () => {
-    svc.getIntegrationByPetPoojaRestaurantId.mockResolvedValueOnce(integration);
-    const spy = vi.spyOn(console, "log").mockImplementation(() => {});
-    const b = body();
-
-    await petPoojaWebhookHandler({ body: b } as never, reply());
-
-    expect(spy).toHaveBeenCalledWith("request.body petpooja", b);
-    spy.mockRestore();
-  });
-
-  test("403s an unusable phone number", async () => {
-    svc.getIntegrationByPetPoojaRestaurantId.mockResolvedValueOnce(integration);
-    const spy = vi.spyOn(console, "log").mockImplementation(() => {});
-    const rep = reply();
-
-    await petPoojaWebhookHandler(
-      {
-        body: { properties: { Restaurant: { restID: "rest-1" }, Customer: { phone: "12" } } },
-      } as never,
-      rep,
-    );
-
-    expect(answer(rep).code).toBe(403);
-    spy.mockRestore();
-  });
-
-  // NOTE: parsePhoneNumber throws on input it cannot parse at all, rather than
-  // returning something whose isValid() is false — so the 403 branch is only
-  // reached for well-formed-but-invalid numbers.
-  test("500s rather than 403s on a phone it cannot parse", async () => {
-    svc.getIntegrationByPetPoojaRestaurantId.mockResolvedValueOnce(integration);
-    const rep = reply();
-
-    await petPoojaWebhookHandler(
-      {
-        body: { properties: { Restaurant: { restID: "r" }, Customer: { phone: "not a phone" } } },
-      } as never,
-      rep,
-    );
-
-    expect(answer(rep).code).toBe(500);
-    expect(log.error).toHaveBeenCalled();
-  });
-
-  test("500s on a payload missing the expected envelope", async () => {
-    const rep = reply();
-
-    await petPoojaWebhookHandler({ body: {} } as never, rep);
-
-    expect(answer(rep).code).toBe(500);
-  });
-
-  test("404s a restaurant with no integration", async () => {
-    svc.getIntegrationByPetPoojaRestaurantId.mockResolvedValueOnce(null);
-    const spy = vi.spyOn(console, "log").mockImplementation(() => {});
-    const rep = reply();
-
-    await petPoojaWebhookHandler({ body: body() } as never, rep);
-
-    expect(answer(rep)).toEqual({ code: 404, body: "No Integration found" });
-    spy.mockRestore();
-  });
-
-  // NOTE: the lookup and the phone parse both run before the 404, so an
-  // unknown restaurant id still costs a database read.
-  test("reads the database before deciding the restaurant is unknown", async () => {
-    svc.getIntegrationByPetPoojaRestaurantId.mockResolvedValueOnce(null);
-    const spy = vi.spyOn(console, "log").mockImplementation(() => {});
-
-    await petPoojaWebhookHandler({ body: body() } as never, reply());
-
-    expect(svc.getIntegrationByPetPoojaRestaurantId).toHaveBeenCalledOnce();
-    spy.mockRestore();
   });
 });
 
@@ -476,7 +314,7 @@ describe("route registration", () => {
 
     await integrationsRoutes(srv);
 
-    for (const url of ["/", "/:name", "/:name/oauth/callback", "/wa_payment_configuration"]) {
+    for (const url of ["/", "/:name", "/:name/oauth/callback"]) {
       const r = routes.find((x) => x.url === url && x.method !== "GET");
       expect(r, url).toBeDefined();
       // The module default applies at registration time, so replay the hook on the route.
@@ -515,7 +353,8 @@ describe("route registration", () => {
     expect(hook.handler).toBe(deleteZapierTriggerHookHandler);
   });
 
-  test("the public tree registers the petpooja webhook with no hook or schema", async () => {
+  // The legacy shared address: answers, never sends (petpooja.ts).
+  test("the public tree registers the legacy petpooja webhook with no hook or schema", async () => {
     const { srv, routes, hooks } = server();
 
     await integrationPublicRoutes(srv);
@@ -524,6 +363,6 @@ describe("route registration", () => {
     const petpooja = routes.find((r) => r.url === "/petpooja");
     expect(petpooja.method).toBe("POST");
     // registered as post(url, handler) — the second argument is the handler.
-    expect(petpooja.opts).toBe(petPoojaWebhookHandler);
+    expect(petpooja.opts).toBe(legacyPetpoojaWebhookHandler);
   });
 });
