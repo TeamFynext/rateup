@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 
 import { PlatformType } from "../../../../generated/prisma/enums.js";
 import { log } from "../../../utils/logger.js";
+import { getInstagramLinkStats } from "./instagram_links.service.js";
 import {
   getInstagramChannel,
   getMetaChannelById,
@@ -400,5 +401,25 @@ export async function getInstagramStoriesHandler(
   } catch (error) {
     log.error({ err: error }, "[Instagram Profile] Error fetching stories");
     return reply.code(500).send({ success: false, message: "Failed to fetch Instagram stories" });
+  }
+}
+
+/** Opens per ig.me ref for one of the org's Instagram accounts. */
+export async function getInstagramLinkStatsHandler(
+  request: FastifyRequest<{ Params: { ibaId: string } }>,
+  reply: FastifyReply,
+) {
+  const { orgId } = request.user;
+  const { ibaId } = request.params;
+  // The account must be this org's: message rows carry no org of their own.
+  const settings = await resolveInstagramSettingsByIbaId(ibaId, orgId);
+  if (!settings) {
+    return reply.code(404).send({ success: false, message: "Instagram account not found" });
+  }
+  try {
+    return reply.code(200).send({ success: true, data: await getInstagramLinkStats(ibaId) });
+  } catch (error) {
+    log.error({ err: error, ibaId }, "[Instagram Profile] Error reading ig.me link stats");
+    return reply.code(500).send({ success: false, message: "Failed to read link stats" });
   }
 }

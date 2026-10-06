@@ -589,6 +589,52 @@ describe("handleInstagramPostback", () => {
     expect(runRuleMock).not.toHaveBeenCalled();
   });
 
+  // A new conversation opened from an ig.me link, started by tapping an ice breaker.
+  test("lets the link's own rule answer an ice breaker tapped from an ig.me link", async () => {
+    runRuleMock.mockResolvedValueOnce({ rule: {}, executedActions: [] });
+
+    await handleInstagramPostback(
+      webhook(
+        messaging({
+          postback: {
+            title: "How are you?",
+            payload: "ICEBREAKER_1",
+            referral: { ref: "summer_sale", source: "SHORTLINKS", type: "OPEN_THREAD" },
+          },
+        }),
+      ),
+      SETTINGS,
+    );
+
+    expect(runRuleMock).toHaveBeenCalledOnce();
+    expect(runRuleMock.mock.calls[0][0]).toBe("INSTAGRAM_REFERRAL");
+    expect(runRuleMock.mock.calls[0][1]).toMatchObject({ instagramRef: "summer_sale" });
+    expect(answerFlowMock).not.toHaveBeenCalled();
+  });
+
+  test("falls back to the flow and reply rules when no link rule answers the ref", async () => {
+    runRuleMock.mockResolvedValueOnce(undefined);
+
+    await handleInstagramPostback(
+      webhook(
+        messaging({
+          postback: {
+            title: "How are you?",
+            payload: "ICEBREAKER_1",
+            referral: { ref: "unknown_ref", source: "SHORTLINKS", type: "OPEN_THREAD" },
+          },
+        }),
+      ),
+      SETTINGS,
+    );
+
+    expect(runRuleMock.mock.calls.map((call) => call[0])).toEqual([
+      "INSTAGRAM_REFERRAL",
+      "MESSAGE_RECEIVED",
+    ]);
+    expect(answerFlowMock).toHaveBeenCalled();
+  });
+
   test("ignores a postback with no payload", async () => {
     await handleInstagramPostback(webhook(messaging({ postback: { title: "Track" } })), SETTINGS);
 

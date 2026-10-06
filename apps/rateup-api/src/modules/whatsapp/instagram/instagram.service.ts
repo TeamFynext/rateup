@@ -369,6 +369,13 @@ export async function handleInstagramPostback(
       `ig_postback_${timestamp}`,
     );
 
+    // A new conversation opened from an ig.me link, started by tapping an ice breaker,
+    // carries the link's ref on the postback. The link's own rule wins, as it does for a
+    // first message sent from a link.
+    const linkRef =
+      postback.referral && "ref" in postback.referral ? postback.referral.ref : undefined;
+    if (linkRef && (await runInstagramLinkRules(linkRef, sender.id, waSettings))) return;
+
     const answeredFlow = await handleInstagramUserResponse(
       sender.id,
       postback.title ?? "",

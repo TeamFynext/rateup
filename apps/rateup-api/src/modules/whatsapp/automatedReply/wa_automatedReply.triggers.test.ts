@@ -647,6 +647,42 @@ describe("checkAndExecuteRuleByTriggerEvent - Instagram events", () => {
     expect(replies).toContain(text);
   });
 
+  // The DM spends the comment on its private reply; the public reply must still get it.
+  test("posts the public reply after a DM has used the comment for its private reply", async () => {
+    db.rule.findMany.mockResolvedValue([
+      rule({
+        triggerEvent: TriggerEvent.INSTAGRAM_COMMENT,
+        platform: "INSTAGRAM",
+        options: { instagramPublicReplies: ["Sent you a DM 📩"] },
+        actions: [{ id: "a1", type: "SEND_MESSAGE", value: "hi" }],
+      }),
+    ]);
+
+    await checkAndExecuteRuleByTriggerEvent(
+      TriggerEvent.INSTAGRAM_COMMENT,
+      context({
+        platform: "INSTAGRAM",
+        phone: "igs-1",
+        phoneNumberId: "iba-1",
+        instagramMediaId: "media-1",
+        instagramCommentId: "comment-1",
+      }),
+    );
+
+    expect(sendInstagramPrivateReply).toHaveBeenCalledExactlyOnceWith(
+      "comment-1",
+      "hi",
+      "iba-1",
+      "org-1",
+      "igs-1",
+    );
+    expect(replyToInstagramComment).toHaveBeenCalledExactlyOnceWith(
+      "comment-1",
+      "Sent you a DM 📩",
+      "iba-1",
+    );
+  });
+
   test("posts no public reply when the rule has none", async () => {
     db.rule.findMany.mockResolvedValue([commentRule()]);
 

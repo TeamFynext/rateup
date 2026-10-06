@@ -3,6 +3,7 @@ import { FastifyInstance } from "fastify";
 import {
   deleteInstagramIceBreakersHandler,
   deleteInstagramPersistentMenuHandler,
+  getInstagramLinkStatsHandler,
   getInstagramMediaHandler,
   getInstagramProfileHandler,
   getInstagramStoriesHandler,
@@ -25,5 +26,6 @@ export async function instagramProfileRoutes(server: FastifyInstance) {
   server.delete("/:channelId/persistent-menu", deleteInstagramPersistentMenuHandler);
 
   server.get("/media/:ibaId", getInstagramMediaHandler);
+  server.get("/links/:ibaId/stats", getInstagramLinkStatsHandler);
   server.get("/stories/:ibaId", getInstagramStoriesHandler);
 }
