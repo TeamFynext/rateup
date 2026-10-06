@@ -92,7 +92,7 @@ export interface AppIntegration {
     session?: { shop?: string };
     accessToken?: string;
     restaurantId?: string;
-    orderEvent?: Record<string, unknown>;
+    orderEvent?: PetpoojaOrderEvent;
     history?: Array<{
       phone?: string;
       name?: string;

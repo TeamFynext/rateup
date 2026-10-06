@@ -1174,13 +1174,10 @@ export type GoogleSheetIntegration = Integration & {
   credential: GoogleSheetCredential;
 };
 
-/** The message Petpooja orders send: a template, as a team, optionally after a delay. */
+/** The message Petpooja orders send at once: a template, as a team. */
 export interface PetpoojaOrderEvent {
   waTemplateId: string;
   teamId: string;
-  scheduleLater: boolean;
-  /** Minutes; 0 sends at once. */
-  timeDelay: number;
 }
 
 export interface petpoojaCredential {
@@ -1191,7 +1188,6 @@ export interface petpoojaCredential {
     name: string;
     phone: string;
     status: string;
-    scheduledAt?: Date;
     createdAt: Date;
   }[];
 }

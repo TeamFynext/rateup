@@ -170,24 +170,16 @@ function PetpoojaConfig({ integration }: { integration: AppIntegration }) {
 }
 
 function WaTemplateSendSettings({ integration }: { integration: AppIntegration }) {
-  const uid = useId();
   const { t: translations } = useTranslation();
   const schema = z.object({
     teamId: z.string().trim().min(1, "Team is required"),
     waTemplateId: z.string().trim().min(1, "WhatsApp Template is requied"),
-    timeDelay: z
-      .number()
-      .refine(
-        (value) => !(value !== 0 && value < 60),
-        "Minimum time delay should be 60. You can set to 0 if not needed",
-      ),
   });
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: {
       teamId: "",
       waTemplateId: "",
-      timeDelay: 0,
     },
   });
 
@@ -198,12 +190,13 @@ function WaTemplateSendSettings({ integration }: { integration: AppIntegration }
       id: "integration-update",
     });
     saveSettings.mutate({
-      orderEvent: { ...values, scheduleLater: values.timeDelay > 0 },
+      orderEvent: values,
     });
   });
 
   useEffect(() => {
-    if (integration?.credential?.orderEvent) form.reset({ ...integration?.credential?.orderEvent });
+    const saved = integration?.credential?.orderEvent;
+    if (saved) form.reset({ teamId: saved.teamId, waTemplateId: saved.waTemplateId });
   }, [integration]);
 
   const handleDelete = () => {
@@ -223,7 +216,7 @@ function WaTemplateSendSettings({ integration }: { integration: AppIntegration }
   return (
     <IntegrationFormCard
       title="Order message"
-      description="What RateUp sends a customer after an order lands, and how long it waits."
+      description="What RateUp sends a customer as soon as an order lands."
       actions={
         <>
           <Button onClick={handleSave} disabled={!integration}>
@@ -263,26 +256,6 @@ function WaTemplateSendSettings({ integration }: { integration: AppIntegration }
           />
         )}
       />
-      <Controller
-        name="timeDelay"
-        control={form.control}
-        render={({ field, fieldState }) => (
-          <Field>
-            <FieldLabel htmlFor={`${uid}-field`}>
-              {translations("Time Delay (in minutes)")}
-            </FieldLabel>
-            <Input
-              id={`${uid}-field`}
-              {...field}
-              type="number"
-              min={0}
-              onChange={(e) => field.onChange(Number(e.target.value))}
-              aria-invalid={Boolean(fieldState.error)}
-            />
-            {fieldState.error?.message && <FieldError>{fieldState.error.message}</FieldError>}
-          </Field>
-        )}
-      />
     </IntegrationFormCard>
   );
 }
@@ -294,9 +267,6 @@ function WaTemplateSentHistory({ integration }: { integration: AppIntegration })
         phone: hist.phone,
         name: hist.name,
         status: hist.status,
-        scheduledAt: hist.scheduledAt
-          ? formatIsoDateStringWithTime(hist.scheduledAt)
-          : formatIsoDateStringWithTime(hist.createdAt),
         createdAt: formatIsoDateStringWithTime(hist.createdAt),
       }))
     : [];
@@ -318,11 +288,6 @@ function WaTemplateSentHistory({ integration }: { integration: AppIntegration })
       id: "status",
       header: createSortableHeader("Status"),
       cell: ({ row }) => row.original.status,
-    },
-    {
-      id: "scheduledAt",
-      header: createSortableHeader("Scheduled At"),
-      cell: ({ row }) => row.original.scheduledAt,
     },
     {
       id: "createdAt",
