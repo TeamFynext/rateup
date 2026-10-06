@@ -1,9 +1,7 @@
 import { FastifyInstance } from "fastify";
 import {
   createIntegrationHandler,
-  createWaPaymentConfigurationsHandler,
   deleteIntegrationByNameHandler,
-  deleteWaPaymentConfigurationHandler,
   deleteZapierTriggerHookHandler,
   connectWithApiKeyHandler,
   finishOAuthConnectHandler,
@@ -11,9 +9,6 @@ import {
   getIntegrationActivityHandler,
   getOAuthAuthorizeUrlHandler,
   getIntegrationByNameHandler,
-  getRegenerateWaPaymentConfigOauthHandler,
-  getWaPaymentConfigByNameHandler,
-  getWaPaymentConfigurationsHandler,
   updateIntegrationByNameHandler,
 } from "./integrations.controller.js";
 import { getIntegrationStatusesHandler } from "./integrations.controller.js";
@@ -21,7 +16,6 @@ import {
   byNameSchema,
   integrationSchema,
   updateIntgrationSchema,
-  waPaymentCreateSchema,
   deleteZapierHookSchema,
   apiKeyConnectSchema,
   oauthAuthorizeQuerySchema,
@@ -37,6 +31,8 @@ import {
 import { shopifyRoutes } from "./shopify/shopify.route.js";
 import { wooCommerceRoutes } from "./woocommerce/woocommerce.route.js";
 import { hubSpotRoutes } from "./hubspot/hubspot.route.js";
+import { petpoojaRoutes } from "./petpooja/petpooja.js";
+import { waPaymentRoutes } from "./wapayment/wapayment.route.js";
 import { declareAccess } from "../../authz/registry.js";
 
 export async function integrationsRoutes(server: FastifyInstance) {
@@ -45,6 +41,9 @@ export async function integrationsRoutes(server: FastifyInstance) {
   server.register(shopifyRoutes, { prefix: "/shopify" });
   server.register(wooCommerceRoutes, { prefix: "/woocommerce" });
   server.register(hubSpotRoutes, { prefix: "/hubspot" });
+  server.register(petpoojaRoutes, { prefix: "/petpooja" });
+  // No prefix: the WhatsApp payment paths predate the provider folders.
+  server.register(waPaymentRoutes);
 
   server.get("/", {}, getAllIntegrationsByOrgHandler);
   server.get(
@@ -116,45 +115,6 @@ export async function integrationsRoutes(server: FastifyInstance) {
     deleteIntegrationByNameHandler,
   );
 
-  server.get("/wa_payment_configurations", getWaPaymentConfigurationsHandler);
-  server.get(
-    "/regenerate_wa_payment_config_oauth/:name",
-    {
-      config: { permission: "integrations.manage" },
-      schema: {
-        params: byNameSchema,
-      },
-    },
-    getRegenerateWaPaymentConfigOauthHandler,
-  );
-  server.post(
-    "/wa_payment_configuration/:name",
-    {
-      schema: {
-        params: byNameSchema,
-      },
-    },
-    getWaPaymentConfigByNameHandler,
-  );
-
-  server.post(
-    "/wa_payment_configuration",
-    {
-      schema: {
-        body: waPaymentCreateSchema,
-      },
-    },
-    createWaPaymentConfigurationsHandler,
-  );
-  server.delete(
-    "/wa_payment_configuration/:name",
-    {
-      schema: {
-        params: byNameSchema,
-      },
-    },
-    deleteWaPaymentConfigurationHandler,
-  );
   server.delete<{ Body: DeleteZapierHookInput }>(
     "/zapier-hook",
     {

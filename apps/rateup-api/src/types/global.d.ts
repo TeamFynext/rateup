@@ -230,18 +230,17 @@ declare global {
 
   interface petPoojaCredential {
     restaurantId: string;
+    /** The token in the org's own order webhook URL (`petpooja.ts`). */
+    inbound?: { token: string };
     orderEvent: {
       waTemplateId: string;
       teamId: string;
-      scheduleLater: boolean;
-      timeDelay: number;
     };
     history?: {
       id: string;
       name: string;
       phone: string;
       status: string;
-      scheduledAt?: Date;
       createdAt: Date;
     }[];
   }
@@ -255,10 +254,6 @@ declare global {
     baseUrl: string;
     serviceId: number;
   }
-
-  export type AmeliaIntegration = integration & {
-    credential: AmeliaCredential;
-  };
 
   export interface ShopifySurvey {
     waTemplateId?: string;

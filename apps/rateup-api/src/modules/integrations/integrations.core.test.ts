@@ -32,29 +32,18 @@ vi.mock("../apiAccessToken/apiAccessToken.service.js", () => ({
 
 vi.mock("axios", () => ({ default: { delete: vi.fn(), get: vi.fn(), post: vi.fn() } }));
 
-vi.mock("../whatsapp/wa_axios.js", () => ({ callMetaApi: vi.fn() }));
-vi.mock("../whatsapp/settings/wa_settings.service.js", () => ({
-  getWaSettings: vi.fn(),
-  getWaSettingsById: vi.fn(),
-}));
 vi.mock("./shopify/shopify.messages.js", () => ({ sendWhatsAppTemplateToCustomer: vi.fn() }));
-vi.mock("./integration_axios.js", () => ({ callWaAmeliaApi: vi.fn() }));
 
 import axios from "axios";
 import prisma from "../../utils/prisma.js";
-import { log } from "../../utils/logger.js";
 import { generateApiKey } from "../apiAccessToken/apiAccessToken.service.js";
-import { callMetaApi } from "../whatsapp/wa_axios.js";
-import { getWaSettings } from "../whatsapp/settings/wa_settings.service.js";
 import { sendWhatsAppTemplateToCustomer } from "./shopify/shopify.messages.js";
 import {
   createIntegration,
   deleteIntegrationByName,
-  deleteWaPaymentConfiguration,
   deleteZapierTriggerHooks,
   getAllIntegrationsByOrgId,
   getIntegrationByName,
-  getIntegrationByPetPoojaRestaurantId,
   updateIntegrationByName,
 } from "./integrations.service.js";
 import { updateIntgrationSchema } from "./integrations.schema.js";
@@ -84,8 +73,6 @@ beforeEach(() => {
     key: "plain-api-key",
     hash: "bcrypt-hash",
   });
-  (callMetaApi as unknown as Mock).mockResolvedValue({ status: 200, data: { data: [] } });
-  (getWaSettings as unknown as Mock).mockResolvedValue({ wabaId: "waba-1", accessToken: "tok" });
   (sendWhatsAppTemplateToCustomer as unknown as Mock).mockResolvedValue({ status: true });
   (axios.delete as unknown as Mock).mockResolvedValue({ status: 200 });
 });
@@ -113,18 +100,6 @@ describe("the integration readers", () => {
     const service = await import("./integrations.service.js");
 
     expect(service).not.toHaveProperty("getAllIntegrations");
-  });
-
-  // NOTE: the PetPooja lookup matches on a restaurant id inside the credential
-  // JSON across every org's rows. That is intentional for a webhook with no
-  // org context, but it means one org's restaurant id selects a row regardless
-  // of ownership.
-  test("the petpooja lookup searches every org's credentials", async () => {
-    await getIntegrationByPetPoojaRestaurantId("rest-1");
-
-    expect(db.integration.findFirst.mock.calls[0][0]).toEqual({
-      where: { credential: { path: ["restaurantId"], equals: "rest-1" } },
-    });
   });
 });
 
@@ -427,49 +402,5 @@ describe("deleteZapierTriggerHooks", () => {
     ).resolves.toBeUndefined();
     expect(axios.delete).not.toHaveBeenCalled();
     expect(db.integration.update).not.toHaveBeenCalled();
-  });
-});
-
-// ===========================================================================
-// deleteWaPaymentConfiguration
-// ===========================================================================
-
-describe("deleteWaPaymentConfiguration", () => {
-  beforeEach(() => {
-    db.integration.findUnique.mockResolvedValue({
-      id: "int-1",
-      orgId: ORG,
-      name: "waPayment",
-      credential: [],
-    });
-  });
-
-  test("asks Meta to delete the named configuration", async () => {
-    await deleteWaPaymentConfiguration(ORG, "cfg-1");
-
-    expect(callMetaApi).toHaveBeenCalledWith("/waba-1/payment_configuration", "DELETE", "tok", {
-      configuration_name: "cfg-1",
-    });
-  });
-
-  // NOTE: the function resolves the same way whether Meta accepted the delete
-  // or refused it — the handler answers 204 either way.
-  test("resolves silently when Meta refuses", async () => {
-    (callMetaApi as unknown as Mock).mockResolvedValueOnce({
-      status: 400,
-      data: { error: { message: "cannot delete" } },
-    });
-
-    await expect(deleteWaPaymentConfiguration(ORG, "cfg-1")).resolves.toBeUndefined();
-    expect(log.error).not.toHaveBeenCalled();
-  });
-
-  test("refuses when the org has no payment configuration stored", async () => {
-    db.integration.findUnique.mockResolvedValue(null);
-
-    await expect(deleteWaPaymentConfiguration(ORG, "cfg-1")).rejects.toThrow(
-      "No Configurations Found",
-    );
-    expect(callMetaApi).not.toHaveBeenCalled();
   });
 });

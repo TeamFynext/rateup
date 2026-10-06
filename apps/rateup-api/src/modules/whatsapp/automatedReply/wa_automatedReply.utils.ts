@@ -11,6 +11,7 @@ import { assignChat } from "../whatsappSurvey/wasurvey.utils.js";
 import { log } from "../../../utils/logger.js";
 import { generateLocalMessageId } from "../../../utils/messageId.js";
 import prisma from "../../../utils/prisma.js";
+import { readWaPaymentConfigurations } from "../../integrations/wapayment/wapayment.types.js";
 import redisConnection from "../../../utils/redisConnection.js";
 import { templateData } from "../messageTemplates/wa_templates.service.js";
 import { logAutomationAction } from "../whatsappSurvey/automation-logger.utils.js";
@@ -169,10 +170,6 @@ export function generateOrderReferenceId() {
   return referenceId;
 }
 
-interface WaPaymentCredentialEntry {
-  configuration_name: string;
-}
-
 export async function sendPaymentInitTemplate(
   orgId: string,
   phoneNo: string,
@@ -194,13 +191,12 @@ export async function sendPaymentInitTemplate(
     },
   });
 
-  if (!config) throw new Error("Config not found");
-  if (!config.credential) throw new Error("Config not found");
-  // `credential` is a Json column; for the "waPayment" integration it's
-  // always an array of Razorpay configuration entries (see
-  // integrations.service.ts / integrations.schema.ts's waPaymentCreateSchema),
-  // which the Json type itself doesn't model.
-  const credential = config.credential as unknown as WaPaymentCredentialEntry[];
+  // The list synced from Meta on the WhatsApp Payment settings page; the first
+  // configuration is the one sent, as a Razorpay gateway.
+  const credential = readWaPaymentConfigurations(config?.credential);
+  if (credential.length === 0) {
+    throw new Error("No WhatsApp payment configuration; fetch them on the WhatsApp Payment page");
+  }
   const t = {
     messaging_product: "whatsapp",
     recipient_type: "individual",
