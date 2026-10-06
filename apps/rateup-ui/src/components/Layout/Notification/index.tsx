@@ -17,6 +17,7 @@ import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet.tsx";
 
+import { railBadgeClass, railBadgeCount, railButtonClass } from "../Navbar/rail-styles.ts";
 import NotificationList from "./NotificationList.tsx";
 
 const NotificationBellIcon = (props: ComponentProps<typeof IconBell>) => {
@@ -94,19 +95,19 @@ const NotificationBellIcon = (props: ComponentProps<typeof IconBell>) => {
           size="icon-sm"
           aria-label={t("Open notifications")}
           onClick={() => void handleOpen()}
-          variant="secondary"
-          className="h-8 w-8"
+          variant="ghost"
+          className={railButtonClass}
         >
           <IconBell className="size-5" strokeWidth={1.8} {...props} />
         </Button>
 
         {isLoadingCount && (
-          <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-destructive animate-pulse" />
+          <span className="pointer-events-none absolute top-0.5 right-0.5 size-2 rounded-full bg-destructive ring-2 ring-sidebar animate-pulse" />
         )}
 
         {isFetched && Boolean(unread) && (
-          <span className="absolute -top-2 -right-2 inline-flex min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-medium text-destructive-foreground text-white">
-            {Number(unread) > 99 ? "99+" : unread}
+          <span aria-hidden className={railBadgeClass}>
+            {railBadgeCount(Number(unread))}
           </span>
         )}
       </div>

@@ -17,6 +17,7 @@ import {
 import type { Announcement, AnnouncementKind } from "@/config/announcements";
 import { cn } from "@/lib/utils.ts";
 
+import { railBadgeClass, railBadgeCount, railButtonClass } from "../rail-styles.ts";
 import { useAnnouncements } from "./use-announcements.ts";
 
 /**
@@ -159,9 +160,9 @@ export default function WhatsNewButton() {
         <PopoverTrigger
           render={
             <Button
-              variant="secondary"
+              variant="ghost"
               size="icon-sm"
-              className="h-8 w-8"
+              className={railButtonClass}
               aria-label={translations("What's new")}
             />
           }
@@ -170,11 +171,8 @@ export default function WhatsNewButton() {
         </PopoverTrigger>
 
         {unreadCount > 0 && (
-          <span
-            aria-hidden
-            className="pointer-events-none absolute -top-2 -right-2 inline-flex min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-medium text-white"
-          >
-            {unreadCount > 9 ? "9+" : unreadCount}
+          <span aria-hidden className={railBadgeClass}>
+            {railBadgeCount(unreadCount)}
           </span>
         )}
       </div>

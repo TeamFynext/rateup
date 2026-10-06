@@ -1,18 +1,25 @@
 import {
   IconActivity,
+  IconBook,
   IconCircle,
   IconCircleX,
+  IconDeviceDesktop,
+  IconExternalLink,
   IconLogout,
+  IconMoon,
   IconSelector,
+  IconSun,
 } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import type { JSX } from "react";
 import { startTransition, useCallback, useMemo, useOptimistic } from "react";
+import { useTranslation } from "react-i18next";
 
 import type { IUserInfoApiResponse } from "@/backend/user/user.api";
 import { UserAvailabilityStatus, UserPresenceMode } from "@/backend/user/user.api";
 import { userKeys } from "@/backend/user/user.keys";
 import { useUpdateUserAvailabilityStatus } from "@/backend/user/user.query";
+import { useTheme } from "@/components/theme/theme-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import {
   DropdownMenu,
@@ -21,6 +28,8 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuPortal,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
@@ -33,7 +42,20 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar.tsx";
+import { docsPath } from "@/utils/constants.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
+
+type ThemeChoice = "light" | "dark" | "system";
+
+const isThemeChoice = (value: unknown): value is ThemeChoice =>
+  value === "light" || value === "dark" || value === "system";
+
+/** Switches theme, cross-fading where the browser supports view transitions. */
+function switchTheme(setTheme: (theme: ThemeChoice) => void, theme: ThemeChoice) {
+  const apply = () => setTheme(theme);
+  if (document.startViewTransition) document.startViewTransition(apply);
+  else apply();
+}
 
 // Status options
 const statusOptions: {
@@ -91,6 +113,8 @@ interface NavUserProps {
 
 export function NavUser({ user }: Readonly<NavUserProps>) {
   const { isMobile } = useSidebar();
+  const { t: translations } = useTranslation();
+  const { theme, setTheme } = useTheme();
   const [optimisticUser, addOptimisticUser] = useOptimistic<
     IUserInfoApiResponse["data"],
     {
@@ -232,6 +256,46 @@ export function NavUser({ user }: Readonly<NavUserProps>) {
               </DropdownMenuSub>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
+            {/* Set-and-forget preferences live here rather than in the icon rail, which
+                keeps its footer for what carries an unread count. */}
+            <DropdownMenuGroup>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <IconSun className="dark:hidden" />
+                  <IconMoon className="hidden dark:block" />
+                  {translations("Theme")}
+                </DropdownMenuSubTrigger>
+                <DropdownMenuPortal>
+                  <DropdownMenuSubContent>
+                    <DropdownMenuRadioGroup
+                      value={theme}
+                      onValueChange={(value) => {
+                        if (isThemeChoice(value)) switchTheme(setTheme, value);
+                      }}
+                    >
+                      <DropdownMenuRadioItem value="light">
+                        <IconSun />
+                        {translations("Light")}
+                      </DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="dark">
+                        <IconMoon />
+                        {translations("Dark")}
+                      </DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="system">
+                        <IconDeviceDesktop />
+                        {translations("System")}
+                      </DropdownMenuRadioItem>
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuSubContent>
+                </DropdownMenuPortal>
+              </DropdownMenuSub>
+              <DropdownMenuItem render={<a href={docsPath} target="_blank" rel="noreferrer" />}>
+                <IconBook />
+                {translations("Help & docs")}
+                <IconExternalLink className="ml-auto text-muted-foreground" />
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
             {/* <DropdownMenuGroup>
               <Link to="/pricing">
                 <DropdownMenuItem>
@@ -260,12 +324,13 @@ export function NavUser({ user }: Readonly<NavUserProps>) {
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator /> */}
-            <Link to="/logout">
-              <DropdownMenuItem>
-                <IconLogout />
-                Log out
-              </DropdownMenuItem>
-            </Link>
+            {/* The item renders as the link itself. Wrapped in a <Link>, the anchor was a
+                separate tab stop the menu focused on open, so Enter right after opening the
+                menu logged the user out. */}
+            <DropdownMenuItem render={<Link to="/logout" />}>
+              <IconLogout />
+              {translations("Log out")}
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
