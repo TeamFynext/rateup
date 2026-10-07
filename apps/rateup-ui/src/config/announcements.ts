@@ -40,6 +40,26 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-10-07-whatsapp-call-log",
+    title: "Call log and call analytics",
+    summary:
+      "WhatsApp → Calls lists every voice call with its outcome, length and agent, and shows your answer rate, missed calls and busiest hours.",
+    publishedAt: "2026-10-07",
+    kinds: ["new"],
+    area: "Inbox",
+    link: { to: "/dashboard/whatsapp/calls", label: "Open calls" },
+  },
+  {
+    id: "2026-10-07-whatsapp-voice-calls",
+    title: "Take WhatsApp voice calls in the inbox",
+    summary:
+      "Customers can now call your WhatsApp number and you answer right in your browser, or call them from a chat once they allow it. Turn it on per number in the Calling tab under Settings → Channels.",
+    publishedAt: "2026-10-07",
+    kinds: ["new"],
+    area: "Inbox",
+    link: { to: "/dashboard/settings/channels/whatsapp", label: "Set up calling" },
+  },
+  {
     id: "2026-10-06-ig-me-link-stats-qr",
     title: "See how often your ig.me links are opened",
     summary:

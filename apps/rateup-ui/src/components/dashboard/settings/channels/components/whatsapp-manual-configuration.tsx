@@ -1,25 +1,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IconTrash } from "@tabler/icons-react";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import z from "zod";
 
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
-import {
-  useDeleteWaSettingsMutation,
-  useUpsertWaSettingsMutation,
-} from "@/backend/whatsapp/settings/waSettings.query";
+import { useUpsertWaSettingsMutation } from "@/backend/whatsapp/settings/waSettings.query";
 import { Button } from "@/components/ui/button.tsx";
-import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card.tsx";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
-
-import { WaBusinessProfileForm } from "./wa-business-profile-form.tsx";
-import { WaChannelNameForm } from "./wa-channel-name-form.tsx";
-import { WaDisplayNamePanel } from "./wa-display-name-panel.tsx";
 
 type WaSetting = WaSettings[number];
 
@@ -41,7 +31,11 @@ const defaultFormValues: WaManualConfigFormValues = {
   phoneDisplayName: "",
 };
 
-export function WhatsAppManualConfiguration({
+/**
+ * The IDs and token behind a manually configured number: blank to add one, filled to edit
+ * one. Disconnecting lives on the account row, beside the automated accounts' own.
+ */
+export function WaManualCredentialsForm({
   waSettings,
   onCancel,
   onSaved,
@@ -76,7 +70,6 @@ export function WhatsAppManualConfiguration({
   }, [waSettings?.id]);
 
   const upsertMutation = useUpsertWaSettingsMutation();
-  const deleteMutation = useDeleteWaSettingsMutation();
 
   const handleSubmit = (values: WaManualConfigFormValues) => {
     let payload: Record<string, unknown> = { ...values };
@@ -87,8 +80,6 @@ export function WhatsAppManualConfiguration({
     if (waSettings) delete payload.phoneDisplayName;
     upsertMutation.mutate(payload, { onSuccess: () => onSaved?.() });
   };
-
-  const handleDelete = () => deleteMutation.mutate(waSettings?.phoneId ?? "");
 
   const credentialsForm = (
     <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col gap-4">
@@ -200,14 +191,9 @@ export function WhatsAppManualConfiguration({
         )}
       />
 
-      <div className="flex justify-between pt-2">
-        {waSettings ? (
-          <Button type="button" variant="destructive" onClick={handleDelete}>
-            <IconTrash size={18} className="mr-2" />
-            {translations("Delete Configuration")}
-          </Button>
-        ) : (
-          <Button type="button" variant="outline" onClick={onCancel} disabled={!onCancel}>
+      <div className="flex justify-end gap-2 pt-2">
+        {onCancel && (
+          <Button type="button" variant="outline" onClick={onCancel}>
             {translations("Cancel")}
           </Button>
         )}
@@ -218,64 +204,5 @@ export function WhatsAppManualConfiguration({
     </form>
   );
 
-  // A channel that does not exist yet has nothing at Meta to show, so it stays a plain form.
-  if (!waSettings?.id) {
-    return (
-      <Card className="border-border/80">
-        <CardHeader>
-          <CardDescription>
-            {translations("Configure this WhatsApp Business Account manually.")}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>{credentialsForm}</CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card className="border-border/80">
-      <CardHeader>
-        <CardDescription>
-          {waSettings.phone || translations("Configure this WhatsApp Business Account manually.")}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {/* Same three tabs as a connected account, so both configuration modes read alike. */}
-        <Tabs key={waSettings.id} defaultValue="channel">
-          <TabsList>
-            <TabsTrigger value="channel">{translations("Channel")}</TabsTrigger>
-            <TabsTrigger value="display-name">{translations("Display name")}</TabsTrigger>
-            <TabsTrigger value="profile">{translations("Profile")}</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="channel" className="mt-4 flex flex-col gap-6">
-            {/* Renaming saves on its own, without resubmitting the credentials below. */}
-            <WaChannelNameForm
-              settingId={waSettings.id}
-              channelName={waSettings.phoneDisplayName}
-            />
-            <div className="border-t pt-4">{credentialsForm}</div>
-          </TabsContent>
-
-          <TabsContent value="display-name" className="mt-4">
-            <p className="mb-4 text-xs text-muted-foreground">
-              {translations(
-                "Shown to customers in WhatsApp. Changes go to Meta for review and apply once approved.",
-              )}
-            </p>
-            <WaDisplayNamePanel phoneId={waSettings.phoneId} />
-          </TabsContent>
-
-          <TabsContent value="profile" className="mt-4">
-            <p className="mb-4 text-xs text-muted-foreground">
-              {translations(
-                "The photo and details customers see when they open your business in WhatsApp.",
-              )}
-            </p>
-            <WaBusinessProfileForm phoneId={waSettings.phoneId} />
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
-  );
+  return credentialsForm;
 }

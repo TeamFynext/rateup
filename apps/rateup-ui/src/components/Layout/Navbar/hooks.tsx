@@ -47,6 +47,7 @@ import {
   IconUsers,
   IconWaveSine,
   IconWebhook,
+  IconPhone,
 } from "@tabler/icons-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -622,7 +623,8 @@ export function useNavMain({
       ...(hasTeamFeature(TeamFeature.Flows) ||
       hasTeamFeature(TeamFeature.Chatbots) ||
       hasTeamFeature(TeamFeature.Templates) ||
-      hasTeamFeature(TeamFeature.Automation)
+      hasTeamFeature(TeamFeature.Automation) ||
+      can("inbox.read")
         ? [
             {
               title: t("WhatsApp"),
@@ -633,7 +635,9 @@ export function useNavMain({
                   ? "/dashboard/whatsapp/flowbots"
                   : hasTeamFeature(TeamFeature.Flows)
                     ? "/dashboard/whatsapp/flows"
-                    : "/dashboard/whatsapp/conversational-components",
+                    : hasTeamFeature(TeamFeature.Automation)
+                      ? "/dashboard/whatsapp/conversational-components"
+                      : "/dashboard/whatsapp/calls",
               icon: IconBrandWhatsapp,
               items: [
                 ...(hasTeamFeature(TeamFeature.Templates)
@@ -668,6 +672,9 @@ export function useNavMain({
                   url: "/dashboard/whatsapp/conversational-components",
                   icon: IconMessage,
                 },
+                ...(can("inbox.read")
+                  ? [{ title: t("Calls"), url: "/dashboard/whatsapp/calls", icon: IconPhone }]
+                  : []),
               ],
             },
           ]

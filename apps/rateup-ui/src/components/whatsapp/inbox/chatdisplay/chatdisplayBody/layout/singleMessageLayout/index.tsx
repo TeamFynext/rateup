@@ -7,6 +7,9 @@ import {
   IconCircleCheck,
   IconClock,
   IconCopy,
+  IconPhoneIncoming,
+  IconPhoneOutgoing,
+  IconPhoneX,
   IconRobot,
   IconShieldOff,
   IconSparkles,
@@ -17,6 +20,7 @@ import type { EmojiClickData } from "emoji-picker-react";
 import React, { useState } from "react";
 import { toast } from "sonner";
 
+import type { CallLogEntry } from "@/backend/whatsapp/calling/calling.api";
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useSendNewWaMessage } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { Badge } from "@/components/ui/badge.tsx";
@@ -146,6 +150,14 @@ function getInternalStatus(assignStatus?: string): { icon: React.ReactNode; labe
   return null;
 }
 
+/** A voice call's thread entry: which way it went, and whether anyone talked. */
+function getCallIcon(call: CallLogEntry): React.ReactNode {
+  if (call.status !== "COMPLETED" && call.status !== "ACCEPTED") {
+    return <IconPhoneX className="text-destructive" />;
+  }
+  return call.direction === "BUSINESS_INITIATED" ? <IconPhoneOutgoing /> : <IconPhoneIncoming />;
+}
+
 export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
   const { exchangeProcess, messageObject, reaction } = props;
   const { user } = useUser();
@@ -261,7 +273,8 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
   // Assign / close / spam events: a single centered badge rather than a full-width
   // separator, so status changes read as inline events in the timeline.
   if (exchangeProcess === "internal") {
-    const status = getInternalStatus(assignStatus);
+    const call = messageObject?.messageBody?.internal?.call;
+    const status = call ? { icon: getCallIcon(call) } : getInternalStatus(assignStatus);
     return (
       <Message align="center">
         <MessageContent className="w-auto">
