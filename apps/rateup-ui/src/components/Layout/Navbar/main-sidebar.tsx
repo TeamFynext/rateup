@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from "react";
 
 import { RouteAccessGuard } from "@/components/common/RouteAccessGuard.tsx";
 import { PlanBanner } from "@/components/Layout/PlanBanner.tsx";
+import CallManager from "@/components/whatsapp/calling/CallManager.tsx";
 import { CustomFieldsProvider } from "@/context/CustomFieldsContext.tsx";
 import { LifecycleContext } from "@/context/LifecycleContext.ts";
 import { TeamFeaturesProvider } from "@/context/TeamFeaturesContext.tsx";
@@ -55,6 +56,7 @@ export default function MainSidebar({ children, welcomeMessage = false }: MainSi
   return (
     <>
       <WebSocketHandler />
+      <CallManager />
 
       <TeamFeaturesProvider>
         <PhonePreviewProvider>

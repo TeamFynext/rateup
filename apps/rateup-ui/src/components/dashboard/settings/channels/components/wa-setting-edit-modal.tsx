@@ -13,6 +13,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 
 import { WaBusinessProfileForm } from "./wa-business-profile-form.tsx";
+import { WaCallingPanel } from "./wa-calling-panel.tsx";
 import { WaChannelNameForm } from "./wa-channel-name-form.tsx";
 import { WaDisplayNamePanel } from "./wa-display-name-panel.tsx";
 
@@ -45,6 +46,7 @@ export const WaSettingEditModal = ({
             <TabsTrigger value="channel">{translations("Channel")}</TabsTrigger>
             <TabsTrigger value="display-name">{translations("Display name")}</TabsTrigger>
             <TabsTrigger value="profile">{translations("Profile")}</TabsTrigger>
+            <TabsTrigger value="calling">{translations("Calling")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="channel" className="mt-4">
@@ -67,6 +69,10 @@ export const WaSettingEditModal = ({
               )}
             </p>
             <WaBusinessProfileForm phoneId={waSetting.phoneId} enabled={opened} />
+          </TabsContent>
+
+          <TabsContent value="calling" className="mt-4">
+            <WaCallingPanel phoneId={waSetting.phoneId} enabled={opened} />
           </TabsContent>
         </Tabs>
 

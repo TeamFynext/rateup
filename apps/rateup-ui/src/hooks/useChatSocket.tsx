@@ -8,12 +8,14 @@ import { toast } from "sonner";
 import type { LiveNotification } from "@/backend/notification/notification.api";
 import { notificationKeys } from "@/backend/notification/notification.keys";
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "@/backend/org/ws/org.ws.api";
+import type { CallWsEvent } from "@/backend/whatsapp/calling/calling.api";
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import {
   isNotificationEvent,
   notificationMessage,
 } from "@/components/dashboard/settings/notifications/notificationCopy.ts";
 import { getBrowserId } from "@/lib/browserId.ts";
+import { receiveCallEvent } from "@/store/call.store.ts";
 import {
   resolveIncomingRowKey,
   useChatContactCountStore,
@@ -23,6 +25,9 @@ import {
 import { WaMessageAssignStatus } from "@/types/enums.ts";
 import { claimAcrossTabs } from "@/utils/crossTabClaim";
 import { showDesktopNotification } from "@/utils/desktopNotifications";
+
+/** Fired on `window` each time the inbox socket (re)connects. */
+export const WS_REOPENED_EVENT = "rateup:ws-reopened";
 
 export const useChatSocket = () => {
   const socketRef = useRef<WebSocket | null>(null);
@@ -54,6 +59,9 @@ export const useChatSocket = () => {
       // afternoon and realtime never came back until a reload.
       ws.onopen = () => {
         retryCountRef.current = 0;
+        // Anything pushed while the socket was down is gone; listeners that cannot afford
+        // to miss an event (a ringing call) re-read their state when this fires.
+        window.dispatchEvent(new Event(WS_REOPENED_EVENT));
       };
 
       ws.onmessage = async (event) => {
@@ -226,6 +234,12 @@ export const useChatSocket = () => {
               }));
             }
             break;
+          case "call":
+            if (data?.call) {
+              receiveCallEvent(data.call, queryClient);
+              if (data.call.event === "incoming") notifyIncomingCall(data.call, tRef.current);
+            }
+            break;
           case "notification":
             if (data?.notification) {
               handleLiveNotification(data.notification, {
@@ -241,10 +255,12 @@ export const useChatSocket = () => {
       };
 
       ws.onclose = () => {
-        if (closedByUser || retryCountRef.current >= 5) return;
+        // Never gives up: a socket that stopped retrying left the inbox — and incoming
+        // calls — silent until a reload. The back-off caps at 15 s instead.
+        if (closedByUser) return;
         retryCountRef.current += 1;
         // Back off rather than hammering a server that is still coming up.
-        const delay = Math.min(1000 * 2 ** (retryCountRef.current - 1), 15_000);
+        const delay = Math.min(1000 * 2 ** Math.min(retryCountRef.current - 1, 4), 15_000);
         retryTimer = setTimeout(connect, delay);
       };
     };
@@ -345,3 +361,22 @@ function conversationClocksFor(message: {
     lastReceivedMessageTimeStamp: message.waCreatedAt,
   };
 }
+
+/** A system notification for a ringing call, once across this browser's tabs. */
+function notifyIncomingCall(event: CallWsEvent, t: TFunction) {
+  void claimAcrossTabs(`call:${event.call.id}`).then((claimed) => {
+    if (!claimed) return;
+    showDesktopNotification({
+      title: t("Incoming WhatsApp call"),
+      body: event.call.contactName ?? `+${event.call.customerWaId}`,
+      tag: `call:${event.call.id}`,
+      // The ringtone is the call's only sound.
+      silent: true,
+    });
+  });
+}
+
+// The socket handler and the media singletons are captured once per page: a hot update
+// left them running the old code (the old ring kept playing after an edit). Any change
+// here reloads the page instead.
+import.meta.hot?.accept(() => window.location.reload());

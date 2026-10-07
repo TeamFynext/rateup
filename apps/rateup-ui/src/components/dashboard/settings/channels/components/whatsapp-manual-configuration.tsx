@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.t
 import { Textarea } from "@/components/ui/textarea.tsx";
 
 import { WaBusinessProfileForm } from "./wa-business-profile-form.tsx";
+import { WaCallingPanel } from "./wa-calling-panel.tsx";
 import { WaChannelNameForm } from "./wa-channel-name-form.tsx";
 import { WaDisplayNamePanel } from "./wa-display-name-panel.tsx";
 
@@ -240,12 +241,13 @@ export function WhatsAppManualConfiguration({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {/* Same three tabs as a connected account, so both configuration modes read alike. */}
+        {/* Same tabs as a connected account, so both configuration modes read alike. */}
         <Tabs key={waSettings.id} defaultValue="channel">
           <TabsList>
             <TabsTrigger value="channel">{translations("Channel")}</TabsTrigger>
             <TabsTrigger value="display-name">{translations("Display name")}</TabsTrigger>
             <TabsTrigger value="profile">{translations("Profile")}</TabsTrigger>
+            <TabsTrigger value="calling">{translations("Calling")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="channel" className="mt-4 flex flex-col gap-6">
@@ -273,6 +275,10 @@ export function WhatsAppManualConfiguration({
               )}
             </p>
             <WaBusinessProfileForm phoneId={waSettings.phoneId} />
+          </TabsContent>
+
+          <TabsContent value="calling" className="mt-4">
+            <WaCallingPanel phoneId={waSettings.phoneId} />
           </TabsContent>
         </Tabs>
       </CardContent>

@@ -3,6 +3,7 @@ import {
   IconCornerUpLeft,
   IconExternalLink,
   IconList,
+  IconPhone,
 } from "@tabler/icons-react";
 
 import { whatsappToHTML } from "@/components/RichTextEditor/wa-editor/format.tsx";
@@ -43,6 +44,13 @@ export default function WaInboxInteractiveComponents(props: Readonly<Props>) {
             __html: whatsappToHTML(props?.interactiveBody?.footer?.text),
           }}
         />
+      )}
+      {props?.interactiveBody?.type === "call_permission_request" && (
+        // What the customer sees under the message; it is theirs to press, not ours.
+        <Button variant="secondary" className="w-full gap-1.5 text-xs" disabled>
+          <IconPhone size={16} />
+          <span>Call permission request</span>
+        </Button>
       )}
       {props?.interactiveBody?.action?.buttons?.map((button) => (
         <Button

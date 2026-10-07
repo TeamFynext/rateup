@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
+import CallContactButton from "@/components/whatsapp/calling/CallContactButton.tsx";
 import { cn } from "@/lib/utils.ts";
 import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
 import { useContactsStore } from "@/store/inbox.store.ts";
@@ -223,6 +224,7 @@ export default function WaInboxChatDisplayHeader({
             {status.label}
           </span>
 
+          {platform === MessagePlatform.WHATSAPP && <CallContactButton contact={contact} />}
           <CloseTicketMenu contact={contact} />
           {onToggleContextPanel && (
             <CustomTooltip
