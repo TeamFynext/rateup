@@ -1,4 +1,5 @@
 import { FastifyRequest, FastifyReply } from "fastify";
+import { handleCallsWebhook } from "../calling/calling.service.js";
 import {
   WA_SUBSCRIBE_STATUS,
   WaParsedMessage,
@@ -223,6 +224,10 @@ export async function whatsappEventHandler(request: FastifyRequest, reply: Fasti
 
       case WaEvent.MessagingHandovers:
         await handleMessagingHandoversEvent(body);
+        break;
+
+      case WaEvent.Calls:
+        await handleCallsWebhook(body);
         break;
 
       default:

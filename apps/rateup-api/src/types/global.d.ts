@@ -1628,7 +1628,7 @@ export interface FlowLogicJump {
 }
 
 export interface orgWsMessage {
-  type: "inbox" | "inbox_note" | "message_deleted" | "meta_agent_thread" | "notification";
+  type: "inbox" | "inbox_note" | "message_deleted" | "meta_agent_thread" | "notification" | "call";
   inbox?: {
     /** Contact plus the ticket the message landed on — the inbox list is keyed by ticket. */
     contact: Contact & { conversationId?: string | null; conversationStatus?: string | null };
@@ -1640,6 +1640,8 @@ export interface orgWsMessage {
     conversationId: string;
     message: ThreadNote;
   };
+  /** A WhatsApp voice call rang, changed state, got its SDP answer, or ended. */
+  call?: import("../modules/whatsapp/calling/calling.types.js").CallWsEvent;
   /** A message the customer revoked. The row still exists; only its rendering changes. */
   message_deleted?: {
     /** WhatsApp message id (wamid) of the revoked message. */
