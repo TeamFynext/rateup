@@ -135,7 +135,8 @@ export type ParsedWaMessageContent =
     }
   | WaSendMessageBody["contacts"]
   | WaSendMessageBody["location"]
-  | OrderContent;
+  | OrderContent
+  | CallPermissionReplyContent;
 
 export interface ParsedWaMessageReturn {
   timeStamp: string;
@@ -342,6 +343,18 @@ export function parseWaMessage(message: Partial<WaGetMessagesBody>): ParsedWaMes
             case "nfm_reply":
               messageContent = inbound.interactive!.nfm_reply.name;
               break;
+            case "call_permission_reply": {
+              const reply = inbound.interactive!.call_permission_reply;
+              messageType = "call_permission_reply";
+              messageContent = {
+                accepted: reply?.response === "accept",
+                permanent: Boolean(reply?.is_permanent),
+                expiresAt: reply?.expiration_timestamp
+                  ? new Date(Number(reply.expiration_timestamp) * 1000).toISOString()
+                  : null,
+              };
+              break;
+            }
           }
           break;
         case "reaction":
@@ -422,6 +435,11 @@ export function returnMessageContentBasedOnParsedMessage(
     return typeof parsedMessage.messageContent === "string" ? parsedMessage.messageContent : "";
   } else if (parsedMessage.messageType === "interactive") {
     return "Interactive Message";
+  } else if (parsedMessage.messageType === "call_permission_reply") {
+    return isCallPermissionReply(parsedMessage.messageContent) &&
+      parsedMessage.messageContent.accepted
+      ? "Allowed calls"
+      : "Declined calls";
   } else if (parsedMessage.messageType === "reaction") {
     return exchangeProcess === "send"
       ? parsedMessage.messageContent === "love"
@@ -565,3 +583,14 @@ export const compareInboxRowTimes =
     if (!a.time || !b.time) return (b.time ? 1 : 0) - (a.time ? 1 : 0);
     return filterKey.includes("sortBy:oldest") ? a.time - b.time : b.time - a.time;
   };
+
+/** The parsed form of a customer's answer to a call permission request. */
+export interface CallPermissionReplyContent {
+  accepted: boolean;
+  permanent: boolean;
+  expiresAt: string | null;
+}
+
+export function isCallPermissionReply(content: unknown): content is CallPermissionReplyContent {
+  return typeof content === "object" && content !== null && "accepted" in content;
+}

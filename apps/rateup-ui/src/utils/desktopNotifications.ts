@@ -13,6 +13,8 @@ export function showDesktopNotification(options: {
   body: string;
   /** Replaces an earlier notification with the same tag instead of stacking a second one. */
   tag?: string;
+  /** No system sound — for events that play their own (an incoming call rings). */
+  silent?: boolean;
   onClick?: () => void;
 }): boolean {
   if (desktopPermission() !== "granted") return false;
@@ -20,6 +22,7 @@ export function showDesktopNotification(options: {
     const notification = new Notification(options.title, {
       body: options.body,
       tag: options.tag,
+      silent: options.silent ?? false,
       icon: "/favicon.png",
     });
     notification.onclick = () => {

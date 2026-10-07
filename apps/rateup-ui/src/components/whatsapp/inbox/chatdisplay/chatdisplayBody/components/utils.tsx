@@ -1,4 +1,11 @@
-import { IconBan, IconBrandWhatsapp, IconClock, IconExternalLink } from "@tabler/icons-react";
+import {
+  IconBan,
+  IconBrandWhatsapp,
+  IconClock,
+  IconExternalLink,
+  IconPhoneCheck,
+  IconPhoneX,
+} from "@tabler/icons-react";
 import { Image } from "@unpic/react";
 import { useTranslation } from "react-i18next";
 
@@ -25,7 +32,7 @@ import type {
 } from "@/types/global";
 import { formatDate, formatToCustomTime } from "@/utils/dateTime.ts";
 import type { ParsedWaMessageContent } from "@/utils/whatsapp/inbox.ts";
-import { parseWaMessage } from "@/utils/whatsapp/inbox.ts";
+import { isCallPermissionReply, parseWaMessage } from "@/utils/whatsapp/inbox.ts";
 
 import type { PendingMessage } from "../../pendingMessages.ts";
 import { reactionEmojiMap } from "../layout/singleMessageLayout/index.tsx";
@@ -123,6 +130,30 @@ const asOrder = (content: ParsedWaMessageContent): OrderContent => {
   };
 };
 
+/** The customer's answer to "may we call you?". */
+const CallPermissionReply = ({ content }: { content: ParsedWaMessageContent }) => {
+  const { t: translations } = useTranslation();
+  if (!isCallPermissionReply(content)) return null;
+  if (!content.accepted) {
+    return (
+      <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+        <IconPhoneX className="size-4 shrink-0" aria-hidden="true" />
+        {translations("Declined calls from your business")}
+      </span>
+    );
+  }
+  return (
+    <span className="flex items-center gap-1.5 text-sm text-foreground">
+      <IconPhoneCheck className="size-4 shrink-0 text-primary" aria-hidden="true" />
+      {content.permanent || !content.expiresAt
+        ? translations("Allowed calls from your business")
+        : translations("Allowed calls from your business until {date}", {
+            date: formatDate(content.expiresAt),
+          })}
+    </span>
+  );
+};
+
 export const SingleMessage = ({ message }: { message: WaGetMessagesBody }) => {
   const { t: translations } = useTranslation();
   const { messageContent, messageType, template, interactive, timeStamp } = parseWaMessage(message);
@@ -159,6 +190,8 @@ export const SingleMessage = ({ message }: { message: WaGetMessagesBody }) => {
       return <WaInboxAttachments messageContent={asAttachments(messageContent)} />;
     case "order":
       return <WaInboxOrder messageContent={asOrder(messageContent)} timestamp={timeStamp} />;
+    case "call_permission_reply":
+      return <CallPermissionReply content={messageContent} />;
     default:
       return (
         <span className="text-xs text-destructive font-medium">
