@@ -63,6 +63,42 @@ export const callSettingsSchema = z.object({
     .optional(),
 });
 
+/** An IANA zone the database can bucket by; anything else would be a SQL error. */
+const timeZone = z.string().refine((tz) => {
+  try {
+    new Intl.DateTimeFormat("en", { timeZone: tz });
+    return true;
+  } catch {
+    return false;
+  }
+}, "Unknown time zone");
+
+const range = {
+  from: z.coerce.date(),
+  to: z.coerce.date(),
+  phoneId: z.string().min(1).optional(),
+};
+
+export const callLogQuerySchema = z
+  .object({
+    ...range,
+    direction: z.enum(["USER_INITIATED", "BUSINESS_INITIATED"]).optional(),
+    outcome: z.enum(["answered", "missed", "declined", "failed"]).optional(),
+    agentId: z.uuid().optional(),
+    search: z.string().max(100).optional(),
+    cursor: z.string().max(200).optional(),
+    limit: z.coerce.number().int().min(1).max(100).optional(),
+  })
+  .refine((q) => q.from <= q.to, "from must be before to");
+
+export const callAnalyticsQuerySchema = z
+  .object({ ...range, tz: timeZone })
+  .refine((q) => q.from <= q.to, "from must be before to")
+  // A year of days is plenty, and keeps the zero-filled daily series bounded.
+  .refine((q) => q.to.getTime() - q.from.getTime() <= 366 * 86_400_000, "Range is too long");
+
+export type CallLogQuery = z.infer<typeof callLogQuerySchema>;
+export type CallAnalyticsQuery = z.infer<typeof callAnalyticsQuerySchema>;
 export type CallIdParams = z.infer<typeof callIdParamsSchema>;
 export type AcceptCallInput = z.infer<typeof acceptCallSchema>;
 export type StartCallInput = z.infer<typeof startCallSchema>;

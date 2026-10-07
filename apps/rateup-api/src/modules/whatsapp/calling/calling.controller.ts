@@ -14,8 +14,11 @@ import {
   terminateCall,
   updateCallSettings,
 } from "./calling.service.js";
+import { getCallAnalytics, getCallLog } from "./calling.history.js";
 import type {
   AcceptCallInput,
+  CallAnalyticsQuery,
+  CallLogQuery,
   CallIdParams,
   CallPermissionQuery,
   CallSettingsInput,
@@ -139,4 +142,18 @@ export async function heartbeatCallHandler(
 ) {
   await heartbeatCall(request.actor!, request.params.callId);
   reply.code(204).send();
+}
+
+export async function getCallLogHandler(
+  request: FastifyRequest<{ Querystring: CallLogQuery }>,
+  reply: FastifyReply,
+) {
+  reply.send(await getCallLog(request.actor!, request.query));
+}
+
+export async function getCallAnalyticsHandler(
+  request: FastifyRequest<{ Querystring: CallAnalyticsQuery }>,
+  reply: FastifyReply,
+) {
+  reply.send(await getCallAnalytics(request.actor!, request.query));
 }

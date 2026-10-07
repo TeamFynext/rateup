@@ -2,6 +2,8 @@ import type { FastifyInstance } from "fastify";
 import { declareAccess } from "../../../authz/registry.js";
 import {
   acceptCallHandler,
+  getCallAnalyticsHandler,
+  getCallLogHandler,
   getCallOfferHandler,
   getCallPermissionHandler,
   getCallSettingsHandler,
@@ -15,6 +17,8 @@ import {
 } from "./calling.controller.js";
 import {
   acceptCallSchema,
+  callAnalyticsQuerySchema,
+  callLogQuerySchema,
   callIdParamsSchema,
   callPermissionQuerySchema,
   callSettingsParamsSchema,
@@ -28,6 +32,18 @@ export async function waCallingRoutes(server: FastifyInstance) {
   declareAccess(server, { read: "inbox.reply", write: "inbox.reply" });
 
   server.get("/ringing", listRingingCallsHandler);
+
+  // WhatsApp → Calls. Reading past calls is reading the inbox; the numbers are analytics.
+  server.get(
+    "/log",
+    { schema: { querystring: callLogQuerySchema }, config: { permission: "inbox.read" } },
+    getCallLogHandler,
+  );
+  server.get(
+    "/analytics",
+    { schema: { querystring: callAnalyticsQuerySchema }, config: { permission: "analytics.read" } },
+    getCallAnalyticsHandler,
+  );
   server.get("/:callId/offer", { schema: { params: callIdParamsSchema } }, getCallOfferHandler);
   server.post(
     "/:callId/accept",
