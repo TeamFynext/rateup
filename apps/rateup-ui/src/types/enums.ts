@@ -219,14 +219,16 @@ export enum CampaignStatus {
   DEQUEUING = "DEQUEUING",
   DRAFT = "DRAFT",
   FAILED = "FAILED",
-  /// Stopped by the platform because the account cannot send — the
-  /// conversation allowance is spent, or Meta rejected the payment method. The
+  /// Stopped by the platform because the account cannot send — campaign
+  /// credits are spent, or Meta rejected the payment method. The
   /// cause is on `Campaign.pauseReason`; unsent recipients stay PENDING.
   PAUSED = "PAUSED",
 }
 
 /** Why a campaign is PAUSED. Mirrors `CampaignPauseReason` in the API. */
 export enum CampaignPauseReason {
+  CAMPAIGN_CREDIT_LIMIT = "CAMPAIGN_CREDIT_LIMIT",
+  /** Written before campaign credits; still on old rows. */
   CONVERSATION_LIMIT = "CONVERSATION_LIMIT",
   PAYMENT_METHOD = "PAYMENT_METHOD",
 }
@@ -306,7 +308,8 @@ export enum SubscriptionFeaturePathName {
   Encryption = "webSurvey.encryption",
   HTMLCodePage = "webSurvey.htmlCodePage",
   Whatsapp = "whatsapp",
-  WhatsAppConversation = "whatsapp.conversation",
+  WhatsAppActiveContacts = "whatsapp.activeContacts",
+  WhatsAppCampaignCredits = "whatsapp.campaignCredits",
   // Tier gates, split out of `whatsapp.active` so the inbox can stay on for every
   // tier while these are Starter-and-above. Mirrors rateup-api/src/types/enums.ts.
   WhatsappCampaign = "whatsapp.campaign",

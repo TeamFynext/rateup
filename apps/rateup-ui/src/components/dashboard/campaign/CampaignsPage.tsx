@@ -7,7 +7,7 @@ import { useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useCampaignData } from "@/backend/campaign/campaign.query";
-import { useConversationLimit } from "@/backend/stats/stats.query";
+import { useSubscriptionUsage } from "@/backend/subscription/subscription.query";
 import UnauthorizedPage from "@/components/404/UnAuthorizedError.tsx";
 import InfoButton from "@/components/Button/InfoButton.tsx";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
@@ -65,7 +65,8 @@ export function CampaignsPage({
   const dripQuery = useCampaignData(CampaignType.DRIP);
 
   const activeQuery = activeTab === CampaignType.WHATSAPP ? whatsappQuery : dripQuery;
-  const conversations = useConversationLimit();
+  const { data: usage } = useSubscriptionUsage();
+  const credits = usage?.campaignCredits;
 
   const { data, isPending, isError, error, refetch } = activeQuery;
 
@@ -87,10 +88,9 @@ export function CampaignsPage({
   const summaryLine = [
     t("{count} campaigns", { count: campaigns.length }),
     draftCount > 0 ? t("{count} drafts", { count: draftCount }) : null,
-    conversations.hasLimit
-      ? t("{count} conversations left {period}", {
-          count: Math.max(conversations.limit - conversations.used, 0).toLocaleString(),
-          period: conversations.isAnnual ? t("this year") : t("this month"),
+    credits?.metered
+      ? t("{count} campaign credits left", {
+          count: (credits.remaining ?? 0).toLocaleString(),
         })
       : null,
   ]

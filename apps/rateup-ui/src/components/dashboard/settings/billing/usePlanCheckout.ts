@@ -6,10 +6,10 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { subscriptionKeys } from "@/backend/campaign/campaign.keys";
-import type { ConversationAddonOrder, ICreateCheckoutType } from "@/backend/payment/payment.api";
+import type { AddonKind, AddonOrder, ICreateCheckoutType } from "@/backend/payment/payment.api";
 import {
   useCreateCheckoutSession,
-  useCreateConversationAddonOrder,
+  useCreateAddonOrder,
   useUserOrgOrders,
 } from "@/backend/payment/payment.query";
 import { useUser } from "@/context/UserContext.tsx";
@@ -52,7 +52,7 @@ export function usePlanCheckout({ onSettled }: { onSettled: () => void }) {
   const [subscriptionOrder, setSubscriptionOrder] = useState<PaymentOrder | null>(null);
 
   const createCheckout = useCreateCheckoutSession(setIsStartingCheckout, setSubscriptionOrder);
-  const createAddonOrder = useCreateConversationAddonOrder();
+  const createAddonOrder = useCreateAddonOrder();
 
   /**
    * Razorpay confirms over webhooks that land a beat after the modal closes, so poll briefly
@@ -67,8 +67,9 @@ export function usePlanCheckout({ onSettled }: { onSettled: () => void }) {
       }
       await new Promise((resolve) => setTimeout(resolve, CONFIRMATION_POLL_INTERVAL_MS));
     }
-    // A pack lands as a SubscriptionAddon row, so the allowance has to be re-read too.
-    queryClient.invalidateQueries({ queryKey: subscriptionKeys.conversationAddon() });
+    // A pack lands as a SubscriptionAddon row, so the offers and meters have to be re-read too.
+    queryClient.invalidateQueries({ queryKey: subscriptionKeys.addons() });
+    queryClient.invalidateQueries({ queryKey: subscriptionKeys.usage() });
     onSettled();
   }
 
@@ -119,7 +120,7 @@ export function usePlanCheckout({ onSettled }: { onSettled: () => void }) {
    * `notes.rateupOrderId` is what the `payment.captured` webhook reads back to credit the
    * packs, so it has to match what the API stamped on the order.
    */
-  async function openAddonCheckout(addonOrder: ConversationAddonOrder) {
+  async function openAddonCheckout(addonOrder: AddonOrder) {
     const loaded = await loadScript(RAZORPAY_SCRIPT);
     if (!loaded) {
       setIsProcessing(false);
@@ -182,18 +183,21 @@ export function usePlanCheckout({ onSettled }: { onSettled: () => void }) {
   }
 
   /**
-   * Buys conversation packs — a one-off top-up, so Razorpay opens against an order, not a
-   * subscription. Whether the org may buy at all is the API's call.
+   * Buys packs — a one-off top-up, so Razorpay opens against an order, not a subscription.
+   * Whether the org may buy at all is the API's call.
    */
-  function startPackCheckout(quantity: number) {
+  function startPackCheckout(kind: AddonKind, quantity: number) {
     setIsProcessing(true);
-    createAddonOrder.mutate(quantity, {
-      onSuccess: (addonOrder) => void openAddonCheckout(addonOrder),
-      onError: (error) => {
-        setIsProcessing(false);
-        toast.error(getApiErrorMessage(error, translations("Could not start the purchase")));
+    createAddonOrder.mutate(
+      { kind, quantity },
+      {
+        onSuccess: (addonOrder) => void openAddonCheckout(addonOrder),
+        onError: (error) => {
+          setIsProcessing(false);
+          toast.error(getApiErrorMessage(error, translations("Could not start the purchase")));
+        },
       },
-    });
+    );
   }
 
   return { startPlanCheckout, startPackCheckout, isProcessing, isStartingCheckout };

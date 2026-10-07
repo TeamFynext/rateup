@@ -5,7 +5,7 @@ import { subscriptionKeys } from "@/backend/campaign/campaign.keys";
 import type { RequestPayload } from "@/types/api.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 
-import type { ICreateCheckoutType } from "./payment.api";
+import type { AddonKind, ICreateCheckoutType } from "./payment.api";
 import {
   cancelRazorpaySubscription,
   createCheckoutSession,
@@ -16,8 +16,8 @@ import {
   getAllPaymentOrders,
   changeSubscriptionPlan,
   getAllPaymentPlans,
-  createConversationAddonOrder,
-  getConversationAddonOffer,
+  createAddonOrder,
+  getAddonOffer,
   getOrgInvoices,
   getSubscriptionChangeOptions,
   getAllPaymentSubscription,
@@ -289,22 +289,25 @@ export const useUpdateSubscriptionOrder = (orderId: string) => {
   });
 };
 
-/** What the billing page needs to show — and possibly sell — conversation packs. */
-export function useConversationAddonOffer(enabled = true) {
+/** What the billing page needs to show — and possibly sell — one kind of pack. */
+export function useAddonOffer(kind: AddonKind, enabled = true) {
   return useQuery({
-    queryKey: subscriptionKeys.conversationAddon(),
-    queryFn: getConversationAddonOffer,
+    queryKey: subscriptionKeys.addon(kind),
+    queryFn: () => getAddonOffer(kind),
     enabled,
   });
 }
 
 /**
- * Buys conversation packs outright.
+ * Buys packs outright.
  *
  * The packs are not credited here — Razorpay confirms over `payment.captured`, and that
  * webhook is the only writer, so a customer who closes the tab mid-payment still gets
  * what they paid for. This only creates the order the checkout is opened against.
  */
-export function useCreateConversationAddonOrder() {
-  return useMutation({ mutationFn: createConversationAddonOrder });
+export function useCreateAddonOrder() {
+  return useMutation({
+    mutationFn: ({ kind, quantity }: { kind: AddonKind; quantity: number }) =>
+      createAddonOrder(kind, quantity),
+  });
 }

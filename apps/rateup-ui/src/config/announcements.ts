@@ -570,6 +570,16 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     link: { to: "/dashboard/pipeline", label: "Open the pipeline" },
   },
   {
+    id: "2026-10-06-active-contact-pricing",
+    title: "Plans now count active contacts",
+    summary:
+      "Plans are now sized by the contacts you talk to each month plus campaign credits, and contacts who only get broadcasts are free. Billing shows both meters, with packs for each.",
+    publishedAt: "2026-10-06",
+    kinds: ["new", "improvement"],
+    area: "Billing",
+    link: { to: "/dashboard/settings/billing", search: { tab: "usage" }, label: "See usage" },
+  },
+  {
     id: "2026-08-22-conversation-packs",
     title: "Buy conversation packs from Billing",
     summary:

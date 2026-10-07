@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
-import { campaignKeys } from "@/backend/campaign/campaign.keys";
+import { campaignKeys, subscriptionKeys } from "@/backend/campaign/campaign.keys";
 import type { CampaignParticipantStatus } from "@/types/enums.ts";
 import { CampaignStatus } from "@/types/enums.ts";
 import { getApiErrorData, getApiErrorMessage } from "@/utils/apiError.ts";
@@ -46,10 +47,10 @@ export const useCampaignDataByTeam = (teamId: string, enabled: boolean) => {
 };
 
 /**
- * What the selected send would cost against the conversation allowance.
+ * What the selected send would cost in campaign credits.
  *
  * Read while the send dialog is open so the warning tracks the statuses being picked.
- * Kept fresh rather than cached: the allowance moves as conversations happen, and a stale
+ * Kept fresh rather than cached: credits move as other campaigns send, and a stale
  * "45 left" is exactly the number someone would act on.
  */
 export const useCampaignSendPreflight = (
@@ -211,6 +212,7 @@ const SCHEDULED_CODES = ["MSG_SCHEDULED", "MSG_SCHEDULE_REQUESTED"];
 
 export const useSendCampaign = (campaignId: string, teamId: string) => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   return useMutation({
     mutationFn: ({ statuses, ...rest }: sendCampaignProps) =>
       sendCampaign(campaignId, { sendToStatuses: statuses, ...rest }),
@@ -242,9 +244,21 @@ export const useSendCampaign = (campaignId: string, teamId: string) => {
       );
     },
     onError: (error) => {
-      if (!(getApiErrorData(error)?.displayMessageInClient ?? false))
-        // The API's own sentence, not axios's "Request failed with status code 403" — a
-        // send refused for a spent conversation allowance has to say so.
+      const data = getApiErrorData(error);
+      if (data?.code === "CAMPAIGN_CREDITS_EXHAUSTED") {
+        queryClient.invalidateQueries({ queryKey: subscriptionKeys.usage() });
+        toast.error(getApiErrorMessage(error, "Your campaign credits are used up."), {
+          id: "campaign-start",
+          action: {
+            label: "Get credits",
+            onClick: () =>
+              void navigate({ to: "/dashboard/settings/billing", search: { tab: "usage" } }),
+          },
+        });
+        return;
+      }
+      if (!(data?.displayMessageInClient ?? false))
+        // The API's own sentence, not axios's "Request failed with status code 403".
         toast.error(getApiErrorMessage(error, "Error sending campaign"), {
           id: "campaign-start",
         });

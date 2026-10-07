@@ -1,4 +1,11 @@
 import type { RateupPaymentPlan } from "@/backend/payment/payment.api";
+import {
+  buildTiers,
+  formatCount,
+  isUnlimitedCount,
+  limitAnswer,
+  resolvePack,
+} from "@/components/HomePage/pages/Pricing/pricing.data.ts";
 
 // src/routes/(marketing)/_markdown/pricing.ts
 
@@ -7,6 +14,11 @@ function formatPrice(amount?: string | number, currency?: string, period?: strin
   if (!value) return "Custom Pricing";
 
   return `${currency || "INR"} ${(value / 100).toLocaleString()} / ${period || "plan"}`;
+}
+
+/** Enterprise meters are sized per contract, so the sentinel reads "Custom". */
+function meterCount(value: number | undefined) {
+  return isUnlimitedCount(value) ? "Custom" : formatCount(value ?? 0);
 }
 
 function getPlanHighlights(plan: RateupPaymentPlan) {
@@ -18,7 +30,10 @@ function getPlanHighlights(plan: RateupPaymentPlan) {
       ? `${features.team?.teamMember?.count?.max || 0} Users`
       : null,
     features.whatsapp?.active
-      ? `WhatsApp Messaging (${features.whatsapp?.count?.monthlyMessageLimit || 0} monthly messages)`
+      ? `${meterCount(features.whatsapp?.activeContacts?.count?.max)} active contacts / month`
+      : null,
+    features.whatsapp?.active
+      ? `${meterCount(features.whatsapp?.campaignCredits?.count?.max)} campaign messages / month`
       : null,
     features.whatsapp?.automation?.active
       ? `${features.whatsapp?.automation?.automationTrigger?.count?.max || 0} Automation Triggers`
@@ -30,15 +45,28 @@ function getPlanHighlights(plan: RateupPaymentPlan) {
       ? `Web Surveys (${features.webSurvey?.count?.monthlyResponseLimit || 0} monthly responses)`
       : null,
     features.loyalty?.active ? "WhatsApp Loyalty Program" : null,
-    features.ai?.active
-      ? `AI Tokens (${features.ai?.count?.promptTokens || 0} prompt tokens)`
-      : null,
+    features.ai?.active ? "Meta Business AI agent (billed by Meta)" : null,
   ].filter(Boolean);
 }
 
 export function buildPricingMarkdown(plans: RateupPaymentPlan[]) {
+  // Only the sold tiers, in ladder order; the catalog also holds legacy rows and packs.
+  const tierNames = new Set(buildTiers(plans).map((tier) => tier.planName));
+  const tiers = plans.filter((plan) => tierNames.has(plan.name));
+  const packs = {
+    contacts: resolvePack(plans, "contacts"),
+    credits: resolvePack(plans, "credits"),
+  };
+
   return `
 # RateUp Pricing
+
+## How RateUp pricing works
+
+- **0% markup on Meta fees.** Meta bills WhatsApp message fees and the Meta Business AI agent directly to your own Meta Business account. RateUp adds nothing on top.
+- **Pay only for the contacts you talk to.** Plans are sized by monthly active contacts: anyone who messages you, or whom you message one to one (inbox, automations, flows, loyalty, API), in a calendar month. Each contact counts once a month. Contacts who only receive broadcasts are free.
+- **Campaign credits.** One credit is one campaign message to one recipient, drip stages included. Each plan includes a monthly credit allowance.
+- **When you hit a limit.** ${limitAnswer(packs)}
 
 RateUp is an AI-powered customer engagement platform for WhatsApp marketing, omnichannel support, loyalty automation, customer retention, surveys, ticketing, and workflow automation.
 
@@ -68,7 +96,7 @@ Businesses use RateUp to:
 
 ## Available Pricing Plans
 
-${plans
+${tiers
   .map((plan) => {
     const payment = plan.paymentPlan;
     const description = Array.isArray(plan.description)

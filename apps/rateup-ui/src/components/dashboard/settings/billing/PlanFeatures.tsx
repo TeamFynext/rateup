@@ -16,7 +16,7 @@ import { Card } from "@/components/ui/card.tsx";
  * The other fallback is an Enterprise account contracted to a ceiling. Enterprise is
  * unlimited by default and its card copy says so, but a deal can cap an individual
  * account, and the send gate enforces that cap. Showing the tier's "Unlimited" line to a
- * customer whose messages stop at 200,000 would be telling them the opposite of what the
+ * customer capped at 200,000 active contacts would be telling them the opposite of what the
  * product does, so their own numbers are shown instead.
  */
 export function PlanFeatures({
@@ -70,7 +70,8 @@ function overstatesAllowance(bullets: string[], subscription?: Subscription): bo
 
   const features = subscription?.features;
   const caps = [
-    features?.whatsapp?.conversation?.count?.max,
+    features?.whatsapp?.activeContacts?.count?.max,
+    features?.whatsapp?.campaignCredits?.count?.max,
     features?.webSurvey?.count?.monthlyResponseLimit,
     features?.team?.count?.max,
     features?.team?.teamMember?.count?.max,
@@ -87,7 +88,8 @@ function derivedBullets(subscription?: Subscription): string[] {
   const bullets: string[] = [];
   const teams = features.team?.count?.max;
   const members = features.team?.teamMember?.count?.max;
-  const conversations = features.whatsapp?.conversation?.count?.max;
+  const contacts = features.whatsapp?.activeContacts?.count?.max;
+  const credits = features.whatsapp?.campaignCredits?.count?.max;
   const responses = features.webSurvey?.count?.monthlyResponseLimit;
 
   // A count at the sentinel is not a number to print: 10,000,000 teams reads as a bug.
@@ -96,11 +98,12 @@ function derivedBullets(subscription?: Subscription): string[] {
 
   if (teams) bullets.push(`${count(teams)} teams`);
   if (members) bullets.push(`${count(members)} users`);
-  if (conversations) bullets.push(`${count(conversations)} conversations / mo`);
+  if (contacts) bullets.push(`${count(contacts)} active contacts / mo`);
+  if (credits) bullets.push(`${count(credits)} campaign messages / mo`);
   if (responses) bullets.push(`${count(responses)} form submissions / mo`);
   if (features.whatsapp?.campaign?.active) bullets.push("Campaigns");
   if (features.loyalty?.active) bullets.push("Loyalty & referrals");
-  if (features.ai?.active) bullets.push("AI assistant");
+  if (features.ai?.active) bullets.push("Meta Business AI agent");
 
   return bullets;
 }

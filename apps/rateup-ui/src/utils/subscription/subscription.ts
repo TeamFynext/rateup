@@ -62,10 +62,8 @@ export function getSampleSubscriptionFeatures(count: number): SubscriptionFeatur
     },
     whatsapp: {
       active: true,
-      conversation: {
-        active: true,
-        count: { max: count },
-      },
+      activeContacts: { active: true, count: { max: count } },
+      campaignCredits: { active: true, count: { max: count } },
     },
     ai: {
       count: { completionTokens: 120000, promptTokens: 120000 },

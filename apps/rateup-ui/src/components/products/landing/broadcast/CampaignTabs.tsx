@@ -413,7 +413,7 @@ export default function CampaignTabs() {
           <Panel
             hidden={false}
             title="Recover what Meta holds back, pause before you overspend"
-            body="When Meta holds a marketing message back because the contact has had too many recently, automatic retries send it again once the cap lifts — on smart timing or once a day, up to three attempts, never in your quiet hours. If your conversation allowance runs out or Meta rejects your payment method, the campaign pauses itself; resume on the original schedule, now, or at a new time."
+            body="When Meta holds a marketing message back because the contact has had too many recently, automatic retries send it again once the cap lifts — on smart timing or once a day, up to three attempts, never in your quiet hours. If your campaign credits run out or Meta rejects your payment method, the campaign pauses itself; resume on the original schedule, now, or at a new time."
             tags={["Smart retries", "Quiet hours", "Auto-pause", "Resume options"]}
           >
             <MockCard>
@@ -441,7 +441,7 @@ export default function CampaignTabs() {
               </div>
               <div className="flex flex-col gap-2 rounded-lg border border-ru-amber-200 bg-ru-amber-50 p-3.5">
                 <span className="text-sm font-medium text-ru-amber-700">
-                  Paused · conversation allowance used up
+                  Paused · campaign credits used up
                 </span>
                 <div className="flex flex-wrap gap-2">
                   {["Keep original schedule", "Send now", "Pick a new time"].map((label) => (
@@ -467,7 +467,7 @@ export default function CampaignTabs() {
           <Panel
             hidden={false}
             title="Know what happened to every message"
-            body="See every recipient move from attempted to delivered, read and replied, with failures grouped by Meta's reason. Tick recipients by status and resend to them, download the delivery report as Excel or ODS, and get notified when the campaign completes. Before you send, RateUp checks the audience against your plan's conversation allowance and warns you how many might be missed."
+            body="See every recipient move from attempted to delivered, read and replied, with failures grouped by Meta's reason. Tick recipients by status and resend to them, download the delivery report as Excel or ODS, and get notified when the campaign completes. Before you send, RateUp checks the campaign against your campaign credits and warns you how many messages might be missed."
             tags={["Delivery funnel", "Failure reasons", "Resend by status", "Allowance check"]}
           >
             <MockCard>
@@ -531,7 +531,7 @@ export default function CampaignTabs() {
                     This campaign may not reach everyone
                   </span>
                   <span className="text-[13px] text-ru-n-500">
-                    Up to 1,180 recipients may be missed with this month's conversations left.
+                    Up to 1,180 messages may be missed with this month's campaign credits left.
                   </span>
                 </span>
               </div>

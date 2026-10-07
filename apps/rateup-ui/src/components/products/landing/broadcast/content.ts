@@ -27,7 +27,7 @@ export const BROADCAST_FAQS: readonly ProductFaqItem[] = [
   {
     question: "How many people can I broadcast to on WhatsApp?",
     answer:
-      "On the WhatsApp Business App a broadcast list stops at 256 contacts, and only people who saved your number receive it. On the official Business API through RateUp there's no recipient cap from us — you send to your whole list. Meta's messaging limits for your number and your plan's conversation allowance are the limits that apply.",
+      "On the WhatsApp Business App a broadcast list stops at 256 contacts, and only people who saved your number receive it. On the official Business API through RateUp there's no recipient cap from us — you send to your whole list. Meta's messaging limits for your number and your plan's campaign credits are the limits that apply.",
   },
   {
     question: "Will my number get banned for broadcasting?",
@@ -52,7 +52,7 @@ export const BROADCAST_FAQS: readonly ProductFaqItem[] = [
   {
     question: "Is there a per-message cost?",
     answer:
-      "Meta charges for template messages, priced by category — marketing, utility or authentication — and by the recipient's country. Separately, each RateUp plan includes a conversation allowance, and RateUp checks a campaign against it before you send. The pricing calculator gives you Meta's rates for your country.",
+      "Meta charges for template messages, priced by category — marketing, utility or authentication — and by the recipient's country. Separately, each RateUp plan includes monthly campaign credits — one per message to one recipient — and RateUp checks a campaign against them before you send. Contacts who only receive broadcasts don't count as active contacts. The pricing calculator gives you Meta's rates for your country.",
   },
   {
     question: "Can I send from more than one WhatsApp number?",

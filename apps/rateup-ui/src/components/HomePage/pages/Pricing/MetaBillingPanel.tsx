@@ -12,12 +12,12 @@ const POINTS = [
   },
   {
     title: "Billed direct by Meta",
-    body: "Conversation charges land on your own Meta Business account.",
+    body: "Message charges land on your own Meta Business account.",
     path: "M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11",
   },
   {
     title: "Meta rates, unchanged",
-    body: "You pay exactly Meta's published per-conversation price for your country.",
+    body: "You pay exactly Meta's published per-message price for your country.",
     path: "M4 20h16M6 16V9M11 16V5M16 16v-4",
   },
 ];
@@ -56,7 +56,7 @@ const StarMark = () => (
  *
  * The single most-asked billing question on a WhatsApp platform, answered on the pricing
  * page rather than in the FAQ: the subscription is the only thing RateUp charges, and the
- * conversation charges are Meta's, billed to the customer's own Meta account.
+ * message charges are Meta's, billed to the customer's own Meta account.
  */
 export const MetaBillingPanel = () => (
   <section className="mx-auto max-w-[1240px] px-8 pt-16">
@@ -73,7 +73,7 @@ export const MetaBillingPanel = () => (
             We add nothing on top of Meta&apos;s API charges.
           </h2>
           <p className="m-0 max-w-[56ch] text-lg leading-[1.6] text-white/70">
-            Your WhatsApp conversation charges are billed by Meta, to your own Meta account, at
+            Your WhatsApp message charges are billed by Meta, to your own Meta account, at
             Meta&apos;s published rates. RateUp takes no per-message cut, no markup and no minimum
             spend — your subscription is the only thing you pay us.
           </p>
