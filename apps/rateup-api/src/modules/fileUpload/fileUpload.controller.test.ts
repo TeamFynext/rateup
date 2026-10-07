@@ -27,6 +27,9 @@ vi.mock("@ffmpeg-installer/ffmpeg", () => ({ default: { path: "/usr/bin/ffmpeg" 
 
 vi.mock("fluent-ffmpeg", () => {
   const chain: any = {
+    videoCodec: vi.fn(() => chain),
+    audioChannels: vi.fn(() => chain),
+    audioFrequency: vi.fn(() => chain),
     audioCodec: vi.fn(() => chain),
     audioBitrate: vi.fn(() => chain),
     outputOptions: vi.fn(() => chain),
@@ -285,6 +288,102 @@ describe("uploadController — audio conversion", () => {
     expect(fspMock.readFile).toHaveBeenCalled();
     expect(fspMock.unlink).toHaveBeenCalled();
     expect(fsMock.readFileSync).toBeUndefined();
+  });
+});
+
+describe("uploadController — voice notes", () => {
+  function voice(mimetype = "audio/mp4", query: Record<string, string> = { voice: "1" }) {
+    const req = request(upload({ mimetype, filename: "voice-1.m4a" }));
+    req.query = query;
+    return req;
+  }
+
+  test("converts a recording to mono OGG/Opus and stores it as .ogg", async () => {
+    const rep = reply();
+
+    await uploadController(voice(), rep);
+
+    expect(chain.audioCodec).toHaveBeenCalledWith("libopus");
+    expect(chain.audioChannels).toHaveBeenCalledWith(1);
+    expect(chain.format).toHaveBeenCalledWith("ogg");
+    const params = s3.uploadFile.mock.calls[0][0];
+    expect(params.ContentType).toBe("audio/ogg");
+    expect(params.Key).toMatch(/-voice-1\.ogg$/);
+    expect(answer(rep).body.data.key).toBe(params.Key);
+  });
+
+  test("without ?voice=1 the recording stays an M4A, as before", async () => {
+    await uploadController(voice("audio/mp4", {}), reply());
+
+    expect(chain.audioChannels).not.toHaveBeenCalled();
+    expect(s3.uploadFile.mock.calls[0][0].ContentType).toBe("audio/mp4");
+  });
+
+  test("ignores ?voice=1 on a file that is not audio", async () => {
+    const req = request(upload());
+    req.query = { voice: "1" };
+
+    await uploadController(req, reply());
+
+    expect(ffmpeg).not.toHaveBeenCalled();
+    expect(s3.uploadFile.mock.calls[0][0].ContentType).toBe("image/png");
+  });
+
+  test("answers 500 and removes both temp files when the conversion fails", async () => {
+    chain.__shouldFail = true;
+    const rep = reply();
+
+    await uploadController(voice(), rep);
+
+    expect(answer(rep).code).toBe(500);
+    expect(s3.uploadFile).not.toHaveBeenCalled();
+    expect(fspMock.unlink).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("uploadController — video conversion", () => {
+  function video(mimetype: string, filename = "IMG_0001.MOV") {
+    return upload({ mimetype, filename });
+  }
+
+  test("re-encodes an iPhone .mov to H.264/AAC MP4 and stores it as one", async () => {
+    const rep = reply();
+
+    await uploadController(request(video("video/quicktime")), rep);
+
+    expect(chain.videoCodec).toHaveBeenCalledWith("libx264");
+    expect(chain.audioCodec).toHaveBeenCalledWith("aac");
+    expect(chain.format).toHaveBeenCalledWith("mp4");
+    const params = s3.uploadFile.mock.calls[0][0];
+    expect(params.ContentType).toBe("video/mp4");
+    // The key drops the underscore, as it does every character but letters, digits, dots and dashes.
+    expect(params.Key).toMatch(/-IMG0001\.mp4$/);
+    expect(params.Body).toEqual(Buffer.from("converted"));
+    expect(answer(rep).body.data.key).toBe(params.Key);
+  });
+
+  test("re-encodes an MP4 too, since it may hold HEVC that WhatsApp refuses", async () => {
+    await uploadController(request(video("video/mp4", "clip.mp4")), reply());
+
+    expect(chain.videoCodec).toHaveBeenCalledWith("libx264");
+    expect(s3.uploadFile.mock.calls[0][0].Key).toMatch(/-clip\.mp4$/);
+  });
+
+  test("answers 500 and removes both temp files when the transcode fails", async () => {
+    chain.__shouldFail = true;
+    const rep = reply();
+
+    await uploadController(request(video("video/quicktime")), rep);
+
+    expect(answer(rep)).toEqual({ code: 500, body: { message: "Something went wrong" } });
+    expect(s3.uploadFile).not.toHaveBeenCalled();
+    expect(fspMock.unlink).toHaveBeenCalledTimes(2);
+  });
+
+  test("leaves images untouched", async () => {
+    await uploadController(request(upload()), reply());
+
+    expect(ffmpeg).not.toHaveBeenCalled();
   });
 });
 

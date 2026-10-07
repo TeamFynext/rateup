@@ -407,6 +407,8 @@ export interface WaSendMessageBody {
   };
   audio?: {
     link: string;
+    /** Sent as a voice message; WhatsApp honours it for OGG/Opus only. */
+    voice?: boolean;
   };
   contacts?: {
     addresses?: {

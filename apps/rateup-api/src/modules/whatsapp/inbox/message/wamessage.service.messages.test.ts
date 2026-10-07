@@ -678,6 +678,21 @@ describe("sendMediaMessages", () => {
     expect(sendMessageMock).toHaveBeenCalledTimes(1);
   });
 
+  test("passes a voice note's flag to the audio builder", async () => {
+    await sendMediaMessages(
+      [{ type: "audio", url: "https://f/v.ogg", name: "voice", voice: true }],
+      "15550001",
+      "org-1",
+      "user-1",
+      PlatformType.WHATSAPP,
+      "",
+      "",
+      undefined,
+    );
+
+    expect((createAudioMessage as unknown as Mock).mock.calls[0][3]).toBe(true);
+  });
+
   test("captions only the last attachment so the text appears once", async () => {
     await sendMediaMessages(
       [
