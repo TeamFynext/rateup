@@ -8,6 +8,7 @@ import {
   getAllSubscriptions,
   getMessageStats,
   getSubscription,
+  getSubscriptionUsage,
   getUserSubscription,
   updateSubscription,
 } from "./subscription.api";
@@ -20,6 +21,33 @@ export const useSubscription = (enabled = true) =>
     staleTime: 0,
     gcTime: 1000 * 60 * 60 * 24,
   });
+/**
+ * The active-contact and campaign-credit meters. `enabled` lets app-wide callers (the
+ * sidebar) skip it; it refetches on focus because sends move it server-side.
+ */
+export const useSubscriptionUsage = (enabled = true) =>
+  useQuery({
+    queryKey: subscriptionKeys.usage(),
+    queryFn: getSubscriptionUsage,
+    enabled,
+    refetchOnWindowFocus: true,
+    staleTime: 30_000,
+  });
+
+/** Whether a new contact can be messaged this month; mirrors the API's 403 on outbound sends. */
+export const useActiveContactLimit = (enabled = true) => {
+  const { data } = useSubscriptionUsage(enabled);
+  const budget = data?.activeContacts;
+  const hasLimit = Boolean(budget?.metered && typeof budget.max === "number");
+  return {
+    isExceeded: Boolean(budget?.exhausted),
+    used: budget?.used ?? 0,
+    limit: budget?.max ?? 0,
+    remaining: budget?.remaining ?? 0,
+    hasLimit,
+  };
+};
+
 export const useSubscriptionByOrgId = (orgId: string) =>
   useQuery({
     queryKey: subscriptionKeys.byOrg(orgId),

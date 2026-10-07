@@ -3,13 +3,14 @@ import {
   IconCalendarDollar,
   IconExternalLink,
   IconMessageCircle,
+  IconSpeakerphone,
   IconSparkles,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
 
-import type { ConversationAddonOffer } from "@/backend/payment/payment.api";
-import type { UsageStats } from "@/backend/stats/stats.api";
+import type { SubscriptionUsage } from "@/backend/subscription/subscription.api";
+import { useSubscriptionUsage } from "@/backend/subscription/subscription.query";
 import { isUnlimitedCount } from "@/components/HomePage/pages/Pricing/pricing.data.ts";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Card } from "@/components/ui/card.tsx";
@@ -21,28 +22,22 @@ import type { BillingData } from "./useBillingData.ts";
 import { currencySymbol, formatAmount } from "./useBillingData.ts";
 
 /**
- * The three numbers a person opens this page to check: what plan they are on, what they owe
- * next, and how much of the allowance that costs money is left. Said once, here.
+ * The numbers a person opens this page to check: what plan they are on, what they owe next,
+ * and how much of the two monthly allowances is left. Said once, here.
  */
 export function BillingSummary({
   data,
-  stats,
   onJumpToUsage,
 }: Readonly<{
   data: BillingData;
-  stats: UsageStats | undefined;
   onJumpToUsage: () => void;
 }>) {
+  const { data: usage } = useSubscriptionUsage();
   return (
     <Card size="sm" className="gap-0 divide-y divide-border md:flex-row md:divide-x md:divide-y-0">
       <PlanCell data={data} />
       <ChargeCell data={data} />
-      <ConversationsCell
-        subscription={data.subscription}
-        stats={stats}
-        allowance={data.addonOffer?.allowance}
-        onClick={onJumpToUsage}
-      />
+      <AllowanceCells subscription={data.subscription} usage={usage} onClick={onJumpToUsage} />
     </Card>
   );
 }
@@ -247,42 +242,73 @@ function endedReason(data: BillingData, t: (key: string) => string) {
   return t("This subscription will not renew.");
 }
 
-/** The conversation meter: the one allowance that costs money when it runs out. */
-function ConversationsCell({
+function AllowanceCells({
   subscription,
-  stats,
-  allowance,
+  usage,
   onClick,
 }: Readonly<{
   subscription: BillingData["subscription"];
-  stats: UsageStats | undefined;
-  allowance?: ConversationAddonOffer["allowance"];
+  usage: SubscriptionUsage | undefined;
   onClick: () => void;
 }>) {
   const { t } = useTranslation();
 
   if (!subscription?.features?.whatsapp?.active) {
     return (
-      <Cell label={t("Conversations")} icon={<IconMessageCircle className="size-3.5" />}>
+      <Cell label={t("Active contacts")} icon={<IconMessageCircle className="size-3.5" />}>
         <p className="text-xl font-semibold leading-tight">{t("Not on this plan")}</p>
         <p className="text-sm text-muted-foreground">{t("WhatsApp is not part of your plan.")}</p>
       </Cell>
     );
   }
 
-  const isAnnual = Boolean(subscription?.isAnnualMessageLimit);
-  const used =
-    (isAnnual ? stats?.annualMeteredConversationsCount : stats?.monthlyMeteredConversationsCount) ??
-    0;
-  // `effectiveMax` is the plan's number plus packs still in date — what the send gate
-  // enforces. The ×12 mirrors the gate for an annual-limit org.
-  const monthlyMax =
-    allowance?.effectiveMax ?? subscription?.features?.whatsapp?.conversation?.count?.max ?? 0;
-  const max = (isAnnual ? monthlyMax * 12 : monthlyMax) || 0;
-  const unlimited = isUnlimitedCount(max);
+  const contacts = usage?.activeContacts;
+  const credits = usage?.campaignCredits;
+  const creditsLeft = credits?.remaining ?? 0;
+  const creditsMax = Math.max(credits?.planMax ?? 0, (credits?.planUsed ?? 0) + creditsLeft);
 
   return (
-    <Cell label={t("Conversations")} icon={<IconMessageCircle className="size-3.5" />}>
+    <>
+      <AllowanceCell
+        label={t("Active contacts")}
+        icon={<IconMessageCircle className="size-3.5" />}
+        metered={Boolean(contacts?.metered)}
+        used={contacts?.used ?? 0}
+        max={contacts?.max ?? 0}
+        onClick={onClick}
+      />
+      <AllowanceCell
+        label={t("Campaign credits")}
+        icon={<IconSpeakerphone className="size-3.5" />}
+        metered={Boolean(credits?.metered)}
+        used={credits?.metered ? creditsMax - creditsLeft : (credits?.planUsed ?? 0)}
+        max={creditsMax}
+        onClick={onClick}
+      />
+    </>
+  );
+}
+
+function AllowanceCell({
+  label,
+  icon,
+  metered,
+  used,
+  max,
+  onClick,
+}: Readonly<{
+  label: string;
+  icon: React.ReactNode;
+  metered: boolean;
+  used: number;
+  max: number;
+  onClick: () => void;
+}>) {
+  const { t } = useTranslation();
+  const capped = metered && max > 0 && !isUnlimitedCount(max);
+
+  return (
+    <Cell label={label} icon={icon}>
       <button
         type="button"
         onClick={onClick}
@@ -290,30 +316,29 @@ function ConversationsCell({
       >
         <p className="text-xl font-semibold leading-tight tabular-nums">
           {used.toLocaleString()}
-          {max > 0 && !unlimited && (
+          {capped && (
             <span className="text-sm font-normal text-muted-foreground">
-              {""}/ {max.toLocaleString()}
+              {" "}
+              / {max.toLocaleString()}
             </span>
           )}
         </p>
-        {max > 0 && !unlimited ? (
+        {capped ? (
           <>
             <Progress
               value={Math.min((used / max) * 100, 100)}
               className="mt-2 gap-0"
-              aria-label={t("Conversations used")}
+              aria-label={label}
             />
             <p className="mt-1.5 text-sm text-muted-foreground">
-              {used > max
-                ? `${(used - max).toLocaleString()} ${t("over your allowance")}`
-                : `${Math.max(max - used, 0).toLocaleString()} ${t("left")} · ${
-                    isAnnual ? t("this year") : t("this month")
-                  }`}
+              {t("{count} left · this month", {
+                count: Math.max(max - used, 0).toLocaleString(),
+              })}
             </p>
           </>
         ) : (
           <p className="mt-1.5 text-sm text-muted-foreground">
-            {unlimited ? t("Unlimited on your plan") : t("this month")}
+            {metered ? t("this month") : t("Unlimited on your plan")}
           </p>
         )}
       </button>

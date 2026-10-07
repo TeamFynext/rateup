@@ -44,9 +44,20 @@ describe("notification copy", () => {
       "/dashboard/inbox?tab=closed&contactId=c%201",
     );
     for (const path of ["https://evil.example", "//evil.example"]) {
-      expect(notificationPath("billing.conversation_limit", { path })).toBe(
+      expect(notificationPath("billing.active_contact_limit", { path })).toBe(
         "/dashboard/settings/billing",
       );
     }
+  });
+
+  test("both plan limits open billing, and the retired conversation limit still does", () => {
+    for (const event of [
+      "billing.active_contact_limit",
+      "billing.campaign_credit_limit",
+      "billing.conversation_limit",
+    ] as const) {
+      expect(notificationPath(event)).toBe("/dashboard/settings/billing");
+    }
+    expect(notificationMessage(t, "billing.campaign_credit_limit", { message: "Out" })).toBe("Out");
   });
 });

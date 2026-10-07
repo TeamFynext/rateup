@@ -11,7 +11,7 @@ export interface PaymentOrder {
   subExpiry?: string;
   amount?: number;
   currency?: string;
-  /** The catalog row behind the order. `ADDON` marks a one-off conversation-pack buy. */
+  /** The catalog row behind the order. `ADDON` marks a one-off pack buy. */
   planType?: string;
   /** The plan or pack name, as the catalog names it. */
   displayName?: string;

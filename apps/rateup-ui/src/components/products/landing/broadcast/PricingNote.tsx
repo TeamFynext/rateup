@@ -12,7 +12,8 @@ export default function PricingNote() {
             <p className="max-w-[66ch] text-[15.5px]/[1.6] text-ru-n-500">
               Meta prices template messages by category and by the recipient's country, so a
               marketing broadcast in India costs a different rate than one in the UAE. Your RateUp
-              plan sets the conversation allowance each campaign is checked against.
+              plan includes campaign credits — one per message to one recipient — and contacts who
+              only receive broadcasts never count as active contacts.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">

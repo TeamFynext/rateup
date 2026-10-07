@@ -37,25 +37,36 @@ export function CampaignPausedBanner({
   const { t } = useTranslation("campaign.details");
   if (status !== CampaignStatus.PAUSED) return null;
 
+  const isCreditLimit =
+    pauseReason === CampaignPauseReason.CAMPAIGN_CREDIT_LIMIT ||
+    pauseReason === CampaignPauseReason.CONVERSATION_LIMIT;
+
   const copy =
-    pauseReason === CampaignPauseReason.CONVERSATION_LIMIT
+    pauseReason === CampaignPauseReason.CAMPAIGN_CREDIT_LIMIT
       ? {
-          title: t("Campaign paused: conversation limit reached"),
+          title: t("Campaign paused: campaign credits used up"),
           body: t(
-            "Your plan's conversation allowance is used up, so sending stopped. Upgrade your plan or wait for the allowance to reset, then resume.",
+            "Your campaign credits are used up, so sending stopped. Buy a credit pack, upgrade your plan or wait for the monthly reset, then resume.",
           ),
         }
-      : pauseReason === CampaignPauseReason.PAYMENT_METHOD
+      : pauseReason === CampaignPauseReason.CONVERSATION_LIMIT
         ? {
-            title: t("Campaign paused: WhatsApp payment issue"),
+            title: t("Campaign paused: conversation limit reached"),
             body: t(
-              "Meta rejected the payment method on your WhatsApp Business account, so sending stopped. Add or fix the payment method in Meta's billing settings, then resume.",
+              "Your plan's conversation allowance is used up, so sending stopped. Upgrade your plan or wait for the allowance to reset, then resume.",
             ),
           }
-        : {
-            title: t("Campaign paused"),
-            body: errorMessage ?? t("Sending stopped because the account cannot send right now."),
-          };
+        : pauseReason === CampaignPauseReason.PAYMENT_METHOD
+          ? {
+              title: t("Campaign paused: WhatsApp payment issue"),
+              body: t(
+                "Meta rejected the payment method on your WhatsApp Business account, so sending stopped. Add or fix the payment method in Meta's billing settings, then resume.",
+              ),
+            }
+          : {
+              title: t("Campaign paused"),
+              body: errorMessage ?? t("Sending stopped because the account cannot send right now."),
+            };
 
   return (
     <Alert variant="destructive">
@@ -63,8 +74,7 @@ export function CampaignPausedBanner({
       <AlertTitle>{copy.title}</AlertTitle>
       <AlertDescription className="flex flex-col gap-3">
         <p>
-          {copy.body}
-          {""}
+          {copy.body}{" "}
           {pendingCount > 0
             ? t("{count} recipients have not been messaged yet and will be sent when you resume.", {
                 count: pendingCount.toLocaleString(),
@@ -72,14 +82,14 @@ export function CampaignPausedBanner({
             : null}
         </p>
         <div className="flex flex-wrap items-center gap-2">
-          {pauseReason === CampaignPauseReason.CONVERSATION_LIMIT ? (
+          {isCreditLimit ? (
             <Button
               size="sm"
               variant="destructive"
               nativeButton={false}
-              render={<Link to="/dashboard/settings/billing" />}
+              render={<Link to="/dashboard/settings/billing" search={{ tab: "usage" }} />}
             >
-              {t("Upgrade plan")}
+              {t("Get more credits")}
               <IconArrowUpRight className="size-3.5" aria-hidden />
             </Button>
           ) : null}

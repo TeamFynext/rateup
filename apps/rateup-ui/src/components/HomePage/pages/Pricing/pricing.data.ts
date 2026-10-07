@@ -113,11 +113,11 @@ export const CATALOG_TIER_ORDER = [
  * without an entry simply renders no tagline rather than breaking.
  */
 const TAGLINES: Record<string, string> = {
-  "FREE PLAN": "Test WhatsApp automation and campaigns end to end.",
-  "PLUS PLAN": "Real volume, plus loyalty and catalog sync.",
-  "PRO PLAN": "Scaling teams past their first 10,000 conversations.",
-  "MAX PLAN": "High-volume teams with AI in the loop.",
-  "ENTERPRISE PLAN": "Unlimited volume, contracted terms.",
+  "FREE PLAN": "Try the inbox, automations and campaigns end to end.",
+  "PLUS PLAN": "Small teams talking to customers every day.",
+  "PRO PLAN": "Growing teams running regular campaigns.",
+  "MAX PLAN": "High-volume support and marketing across teams.",
+  "ENTERPRISE PLAN": "Custom limits, contracted terms.",
 };
 
 export interface PricingTier {
@@ -255,6 +255,15 @@ export function buildComparison(tiers: PricingTier[]): ComparisonGroup[] {
     cells: tiers.map((tier) => formatCount(read(tier))),
   });
 
+  // Enterprise meters are sized per contract, so the sentinel reads "Custom", not "Unlimited".
+  const meterRow = (label: string, read: (tier: PricingTier) => number | null | undefined) => ({
+    label,
+    cells: tiers.map((tier) => {
+      const value = read(tier);
+      return isUnlimitedCount(value) ? "Custom" : formatCount(value);
+    }),
+  });
+
   const gateRow = (label: string, read: (tier: PricingTier) => boolean) => ({
     label,
     cells: tiers.map((tier) => read(tier) || null),
@@ -266,7 +275,8 @@ export function buildComparison(tiers: PricingTier[]): ComparisonGroup[] {
       rows: [
         limitRow("Teams", (t) => f(t)?.team?.count?.max),
         limitRow("Users", (t) => f(t)?.team?.teamMember?.count?.max),
-        limitRow("Conversations / month", (t) => f(t)?.whatsapp?.conversation?.count?.max),
+        meterRow("Active contacts / month", (t) => f(t)?.whatsapp?.activeContacts?.count?.max),
+        meterRow("Campaign messages / month", (t) => f(t)?.whatsapp?.campaignCredits?.count?.max),
         limitRow("Form submissions / month", (t) => f(t)?.webSurvey?.count?.monthlyResponseLimit),
       ],
     },
@@ -337,119 +347,139 @@ export function resolveDisplayPrice(tier: PricingTier, currency: PricingCurrency
   return tier.price;
 }
 
-/** The catalog name of the conversation top-up, matching the API's `CONVERSATION_ADDON`. */
-export const CONVERSATION_PACK_NAME = "CONVERSATION PACK";
+/** The two kinds of top-up a paid plan can buy. */
+export type PackKind = "contacts" | "credits";
+
+/** Catalog names of the add-on rows, matching `ADDONS` in the API's catalog.ts. */
+export const PACK_CATALOG_NAME: Record<PackKind, string> = {
+  contacts: "ACTIVE CONTACT PACK",
+  credits: "CAMPAIGN CREDIT PACK",
+};
 
 /**
  * How long one pack counts for. The API decides this for a real purchase
- * (`ConversationAddonOffer.validDays`); the public plans endpoint carries no such field,
- * so the marketing page states the catalog's standard term.
+ * (`AddonOffer.validDays`); the public plans endpoint carries no such field, so the
+ * marketing page states the catalog's standard terms.
  */
-export const CONVERSATION_PACK_DAYS = 30;
+export const PACK_DAYS: Record<PackKind, number> = { contacts: 30, credits: 90 };
 
-export interface ConversationPack {
-  /** Extra conversations one pack is worth. */
-  conversations: number;
+export interface AddonPack {
+  kind: PackKind;
+  /** Active contacts or campaign credits one pack adds. */
+  units: number;
+  days: number;
   inrPrice: number | null;
   usdPrice: number | null;
 }
 
 /**
- * The conversation pack as the catalog prices it, or null when it is not on sale.
- *
- * Deliberately read off the plans endpoint rather than written into the copy: the pack's
- * price is set in the catalog and changing it there must change what the page says, or
- * the FAQ ends up quoting a figure nobody is charged.
+ * A pack as the catalog prices it, or null when it is not on sale. Read off the plans
+ * endpoint rather than written into the copy, so a catalog price change reaches the page.
  */
-export function resolveConversationPack(
+export function resolvePack(
   plans: RateupPaymentPlan[] | undefined,
-): ConversationPack | null {
-  const pack = (plans ?? []).find((plan) => plan.name === CONVERSATION_PACK_NAME);
+  kind: PackKind,
+): AddonPack | null {
+  const pack = (plans ?? []).find((plan) => plan.name === PACK_CATALOG_NAME[kind]);
   if (!pack) return null;
 
-  const conversations = pack.features?.whatsapp?.conversation?.count?.max;
-  if (!conversations) return null;
+  const whatsapp = pack.features?.whatsapp;
+  const units =
+    kind === "contacts"
+      ? whatsapp?.activeContacts?.count?.max
+      : whatsapp?.campaignCredits?.count?.max;
+  if (!units) return null;
 
   return {
-    conversations,
+    kind,
+    units,
+    days: PACK_DAYS[kind],
     inrPrice: num(pack.monthlyPrice) ?? null,
     usdPrice: num(pack.usdMonthlyPrice) ?? null,
   };
 }
 
+/** The pack's list price in the currency on screen, or null when it is not priced in it. */
+export function packPrice(pack: AddonPack, currency: PricingCurrency) {
+  return currency === "USD" ? pack.usdPrice : pack.inrPrice;
+}
+
+function packPrices(pack: AddonPack) {
+  return [
+    pack.inrPrice === null ? null : formatPrice("INR", pack.inrPrice),
+    pack.usdPrice === null ? null : formatPrice("USD", pack.usdPrice),
+  ]
+    .filter(Boolean)
+    .join(" / ");
+}
+
 /**
- * The answer to "what if I run out of conversations?", built from the live catalog.
+ * The answer to "what happens when I hit a limit?", built from the live catalog.
  *
  * Shared by the rendered FAQ and the page's FAQ structured data, so a search engine can
  * never show an answer the page itself contradicts.
  */
-export function conversationPackAnswer(
-  pack: ConversationPack | null,
+export function limitAnswer(
+  packs: { contacts: AddonPack | null; credits: AddonPack | null },
   /**
-   * False in a sales-led region, where the page quotes no figure anywhere: an answer that
-   * costs the pack in dollars would be the one price that got through. The default is true
+   * False in a sales-led region, where the page quotes no figure anywhere. True by default
    * because the caller with no visitor to read — the route's JSON-LD — should keep it.
    */
   showPrice = true,
 ): string {
   const base =
-    "Your allowance is a monthly cap, not a hard ceiling on your account — you can top it " +
-    "up without moving up a tier.";
-  if (!pack) {
-    return `${base} Conversation packs add extra conversations for a month at a time, and stack, so you only pay for the headroom you actually need.`;
-  }
+    "Nothing already in progress is cut off. At the active contact limit you can keep " +
+    "messaging every contact who is already active this month and incoming messages always " +
+    "arrive; only starting with a new contact is blocked. When campaign credits run out, " +
+    "running campaigns pause and resume once you add credits.";
 
-  const conversations = pack.conversations.toLocaleString("en-US");
-  const price = !showPrice
-    ? ""
-    : [
-        pack.inrPrice === null ? null : formatPrice("INR", pack.inrPrice),
-        pack.usdPrice === null ? null : formatPrice("USD", pack.usdPrice),
-      ]
-        .filter(Boolean)
-        .join(" / ");
+  const offers = [
+    packs.contacts &&
+      `an active contact pack (${packs.contacts.units.toLocaleString("en-US")} contacts for ` +
+        `${packs.contacts.days} days${showPrice && packPrices(packs.contacts) ? `, ${packPrices(packs.contacts)}` : ""})`,
+    packs.credits &&
+      `a campaign credit pack (${packs.credits.units.toLocaleString("en-US")} credits for ` +
+        `${packs.credits.days} days${showPrice && packPrices(packs.credits) ? `, ${packPrices(packs.credits)}` : ""})`,
+  ].filter(Boolean);
+
+  const remedy = offers.length
+    ? `On a paid plan you can add ${offers.join(" or ")} — one-off charges that stack and ` +
+      "never renew — or move up a plan."
+    : "On a paid plan you can add one-off packs that stack and never renew, or move up a plan.";
 
   return (
-    `${base} A conversation pack adds ${conversations} extra conversations for ` +
-    `${CONVERSATION_PACK_DAYS} days` +
-    `${price ? ` and costs ${price}` : ""} — a one-off charge, not a subscription, so ` +
-    "nothing renews and there is nothing to cancel. Packs stack, so buy as many as you " +
-    "need. Packs top up a paid plan: on Free the better move is to upgrade, which raises " +
-    "every limit rather than conversations alone, and Enterprise is invoiced on the usage " +
-    "it actually runs, so it has no cap to top up."
+    `${base} ${remedy} On Free, upgrading is the way to raise a limit. Enterprise limits ` +
+    "are set in your contract."
   );
 }
 
-/** The pack's list price in the currency on screen, or null when it is not priced in it. */
-export function conversationPackPrice(pack: ConversationPack, currency: PricingCurrency) {
-  return currency === "USD" ? pack.usdPrice : pack.inrPrice;
-}
-
 /**
- * The conversations a tier includes each month, or null when it has no cap at all.
- *
- * Null is "nothing to top up" rather than "none included": Enterprise carries the
- * unlimited sentinel and is invoiced on the usage it actually runs.
+ * What a tier includes each month for one meter, or null when it has no cap at all.
+ * Null is "nothing to top up": Enterprise carries the sentinel and is sized per contract.
  */
-export function tierConversationAllowance(tier: PricingTier): number | null {
-  const max = tier.raw.features?.whatsapp?.conversation?.count?.max;
+export function tierAllowance(tier: PricingTier, kind: PackKind): number | null {
+  const whatsapp = tier.raw.features?.whatsapp;
+  const max =
+    kind === "contacts"
+      ? whatsapp?.activeContacts?.count?.max
+      : whatsapp?.campaignCredits?.count?.max;
   if (typeof max !== "number" || isUnlimitedCount(max)) return null;
   return max;
 }
 
 export interface TopUpEstimate {
-  /** Conversations beyond what the plan includes. */
+  /** Units beyond what the plan includes. */
   overage: number;
   /** Packs that cover the overage — the last one is only partly used. */
   packs: number;
-  /** Conversations those packs add. */
-  extraConversations: number;
+  /** Units those packs add. */
+  extraUnits: number;
   /** Plan allowance plus the packs. */
-  totalConversations: number;
+  totalUnits: number;
 }
 
 /**
- * How many packs a month of `expected` conversations needs on top of `included`.
+ * How many packs a month of `expected` contacts or messages needs on top of `included`.
  *
  * Packs are indivisible, so the count rounds up — half a pack of headroom is still a
  * whole pack to buy, and quoting a fractional cost would understate the charge.
@@ -457,21 +487,15 @@ export interface TopUpEstimate {
 export function estimateTopUp(
   included: number,
   expected: number,
-  conversationsPerPack: number,
+  unitsPerPack: number,
 ): TopUpEstimate {
   const overage = Math.max(0, Math.ceil(expected) - included);
-  const packs =
-    conversationsPerPack > 0 && overage > 0 ? Math.ceil(overage / conversationsPerPack) : 0;
-  const extraConversations = packs * conversationsPerPack;
-  return {
-    overage,
-    packs,
-    extraConversations,
-    totalConversations: included + extraConversations,
-  };
+  const packs = unitsPerPack > 0 && overage > 0 ? Math.ceil(overage / unitsPerPack) : 0;
+  const extraUnits = packs * unitsPerPack;
+  return { overage, packs, extraUnits, totalUnits: included + extraUnits };
 }
 
-/** A plan the credits calculator can price, reduced to what the advice needs. */
+/** A plan the pack calculator can price, reduced to what the advice needs. */
 export interface TopUpOption {
   planName: string;
   name: string;

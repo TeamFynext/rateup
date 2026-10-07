@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 
 import {
-  useConversationAddonOffer,
+  useAddonOffer,
   useOrgInvoices,
   useRateupPaymentsPlans,
   useUserOrgOrders,
@@ -91,10 +91,11 @@ export function useBillingData() {
     isRefetching: isRefetchingInvoices,
   } = useOrgInvoices();
   const { data: catalogPlans } = useRateupPaymentsPlans();
-  const { data: addonOffer, isPending: addonPending } = useConversationAddonOffer();
+  const contactPacks = useAddonOffer("active-contacts");
+  const creditPacks = useAddonOffer("campaign-credits");
 
   /**
-   * The order that *is* the subscription. Conversation packs carry no subscription and would
+   * The order that *is* the subscription. Packs carry no subscription and would
    * otherwise match an org whose `subscriptionRef` is undefined, pricing the plan from a pack.
    */
   const { activeOrder, latestOrder } = useMemo(() => {
@@ -124,7 +125,7 @@ export function useBillingData() {
   const isProcessingPlan = latestOrder?.subscriptionStatus === "pending";
 
   /**
-   * A tier sold by conversation rather than billed by a gateway — Enterprise today. Detected
+   * A tier sold by our team rather than billed by a gateway — Enterprise today. Detected
    * by the absence of a gateway plan, the rule the API uses (`GATEWAY_BILLED_PLAN`).
    */
   const isSalesLedPlan = useMemo(() => {
@@ -166,8 +167,8 @@ export function useBillingData() {
     invoices,
     invoicesPending,
     currentPlan,
-    addonOffer,
-    addonPending,
+    contactPacks: { offer: contactPacks.data, isPending: contactPacks.isPending },
+    creditPacks: { offer: creditPacks.data, isPending: creditPacks.isPending },
     activeOrder,
     latestOrder,
     cost,

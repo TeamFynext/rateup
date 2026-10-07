@@ -11,9 +11,9 @@ const META_CATEGORIES = [
 ] as const;
 
 const PLAN_POINTS = [
-  "Unlimited team seats",
+  "Broadcast-only contacts are free",
   "Templates, Flows, catalog and loyalty included",
-  "No per-message markup on Meta's fee",
+  "0% markup on Meta's fees",
 ] as const;
 
 export default function Pricing() {
@@ -66,8 +66,8 @@ export default function Pricing() {
               A plan that starts free
             </h3>
             <p className="mb-5 text-[14.5px]/[1.55] text-ru-n-500">
-              Conversations per month is the main limit — every seat, channel and product is
-              included at every tier. Move up a plan when your volume does.
+              Monthly active contacts are the main limit — you pay for the people you talk to one to
+              one, and every channel and product is included. Move up a plan when your volume does.
             </p>
             <ul className="mb-6 flex flex-col gap-2.5">
               {PLAN_POINTS.map((point) => (

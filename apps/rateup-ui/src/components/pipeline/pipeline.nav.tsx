@@ -98,8 +98,8 @@ export interface PipelineNavInput {
   currentUserId: string | undefined;
   setView: (patch: Partial<PipelineViewState>) => void;
   toggleFacet: <K extends FacetKey>(key: K, value: NonNullable<PipelineViewState[K]>) => void;
-  /** Drives the meter under the panel. Absent until the stats query resolves. */
-  conversationLimit?: { used: number; limit: number; hasLimit: boolean };
+  /** Drives the meter under the panel. Absent until the usage query resolves. */
+  activeContactLimit?: { used: number; limit: number; hasLimit: boolean };
 }
 
 /**
@@ -107,17 +107,17 @@ export interface PipelineNavInput {
  *
  * It reads as a fuel gauge — what is LEFT, emptying as the month runs on —
  * rather than as consumption filling up, because the number that decides
- * whether a broadcast can go out is the remainder. Absent when the plan has no
+ * whether a new lead can be messaged is the remainder. Absent when the plan has no
  * cap: an unlimited plan has nothing to meter.
  */
 export function buildPipelineNavProgress({
   t,
-  conversationLimit,
+  activeContactLimit,
 }: PipelineNavInput): NavProgress | undefined {
-  if (!conversationLimit?.hasLimit) return undefined;
-  const { used, limit } = conversationLimit;
+  if (!activeContactLimit?.hasLimit) return undefined;
+  const { used, limit } = activeContactLimit;
   return {
-    label: t("Conversations left"),
+    label: t("Active contacts left"),
     done: Math.max(0, limit - used),
     total: limit,
   };

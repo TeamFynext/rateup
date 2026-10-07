@@ -2,14 +2,15 @@ import { describe, expect, test, vi } from "vitest";
 
 import {
   adviseOnTopUp,
+  buildComparison,
   buildTiers,
   detectPricingCurrency,
-  conversationPackAnswer,
   estimateTopUp,
   isSalesLedRegion,
+  limitAnswer,
   resolveDisplayPrice,
   selectGatewayPlan,
-  tierConversationAllowance,
+  tierAllowance,
   tierRank,
 } from "@/components/HomePage/pages/Pricing/pricing.data.ts";
 
@@ -322,13 +323,13 @@ describe("which gateway plan a checkout is created from", () => {
   });
 });
 
-describe("conversation top-up estimate", () => {
+describe("pack top-up estimate", () => {
   test("rounds up to whole packs — half a pack of headroom is still a pack to buy", () => {
     expect(estimateTopUp(1000, 1500, 1000)).toEqual({
       overage: 500,
       packs: 1,
-      extraConversations: 1000,
-      totalConversations: 2000,
+      extraUnits: 1000,
+      totalUnits: 2000,
     });
   });
 
@@ -337,8 +338,8 @@ describe("conversation top-up estimate", () => {
     expect(estimateTopUp(1000, 400, 1000)).toEqual({
       overage: 0,
       packs: 0,
-      extraConversations: 0,
-      totalConversations: 1000,
+      extraUnits: 0,
+      totalUnits: 1000,
     });
   });
 
@@ -347,44 +348,87 @@ describe("conversation top-up estimate", () => {
   });
 
   test("quotes no packs when the catalog gives the pack no size", () => {
-    // Guards the division: a pack worth zero conversations would otherwise ask for
+    // Guards the division: a pack worth zero units would otherwise ask for
     // Infinity packs and render a nonsense total.
     expect(estimateTopUp(1000, 9000, 0).packs).toBe(0);
   });
 });
 
-describe("tierConversationAllowance", () => {
-  const tierFor = (max: number | undefined) =>
+describe("tierAllowance", () => {
+  const tierFor = (contacts: number | undefined, credits?: number) =>
     buildTiers([
       {
         id: "1",
         name: "PRO PLAN",
-        displayName: "Pro",
+        displayName: "Growth",
         description: [],
-        features: { whatsapp: { conversation: { count: { max } } } },
+        features: {
+          whatsapp: {
+            activeContacts: { count: { max: contacts } },
+            campaignCredits: { count: { max: credits } },
+          },
+        },
       },
     ] as unknown as Parameters<typeof buildTiers>[0])[0];
 
-  test("reads the plan's monthly conversation cap", () => {
-    expect(tierConversationAllowance(tierFor(10_000))).toBe(10_000);
+  test("reads each meter's monthly cap", () => {
+    expect(tierAllowance(tierFor(5_000, 50_000), "contacts")).toBe(5_000);
+    expect(tierAllowance(tierFor(5_000, 50_000), "credits")).toBe(50_000);
   });
 
   test("an unlimited tier has no cap to top up", () => {
     // Enterprise carries a large sentinel rather than null so the API's `used >= max`
     // comparisons keep working; here it has to read as "nothing to top up".
-    expect(tierConversationAllowance(tierFor(10_000_000))).toBeNull();
-    expect(tierConversationAllowance(tierFor(undefined))).toBeNull();
+    expect(tierAllowance(tierFor(10_000_000), "contacts")).toBeNull();
+    expect(tierAllowance(tierFor(undefined), "contacts")).toBeNull();
   });
 
   test("a large contracted ceiling is still a cap, not the sentinel", () => {
-    // An Enterprise account can be capped at a number this big, and the send gate stops
-    // there. Reading it as "unlimited" would advertise headroom the customer does not have.
-    expect(tierConversationAllowance(tierFor(1_000_000))).toBe(1_000_000);
+    expect(tierAllowance(tierFor(1_000_000), "contacts")).toBe(1_000_000);
+  });
+});
+
+describe("comparison rows for the two meters", () => {
+  const tiers = buildTiers([
+    {
+      id: "pro",
+      name: "PRO PLAN",
+      displayName: "Growth",
+      description: [],
+      features: {
+        whatsapp: {
+          activeContacts: { count: { max: 5_000 } },
+          campaignCredits: { count: { max: 50_000 } },
+        },
+      },
+    },
+    {
+      id: "ent",
+      name: "ENTERPRISE PLAN",
+      displayName: "Enterprise",
+      description: [],
+      features: {
+        whatsapp: {
+          activeContacts: { count: { max: 10_000_000 } },
+          campaignCredits: { count: { max: 10_000_000 } },
+        },
+      },
+    },
+  ] as unknown as Parameters<typeof buildTiers>[0]);
+
+  const row = (label: string) =>
+    buildComparison(tiers)
+      .flatMap((group) => group.rows)
+      .find((entry) => entry.label === label);
+
+  test("read the plan's own caps, and Custom for Enterprise", () => {
+    expect(row("Active contacts / month")?.cells).toEqual(["5,000", "Custom"]);
+    expect(row("Campaign messages / month")?.cells).toEqual(["50,000", "Custom"]);
   });
 });
 
 describe("when packs stop being the cheaper answer", () => {
-  // Plus 5k @ 25, Pro 25k @ 60, Max 100k @ 150 — a pack is 1k conversations.
+  // Plus 5k @ 25, Pro 25k @ 60, Max 100k @ 150 — a pack is 1k contacts.
   const options = [
     { planName: "PLUS PLAN", name: "Plus", included: 5_000, monthlyPrice: 25 },
     { planName: "PRO PLAN", name: "Pro", included: 25_000, monthlyPrice: 60 },
@@ -513,18 +557,24 @@ describe("isSalesLedRegion", () => {
   });
 });
 
-describe("conversationPackAnswer", () => {
-  const pack = { conversations: 1000, inrPrice: 2000, usdPrice: 25 };
+describe("limitAnswer", () => {
+  const contacts = {
+    kind: "contacts" as const,
+    units: 1000,
+    days: 30,
+    inrPrice: 999,
+    usdPrice: 19,
+  };
 
   test("quotes both list prices by default", () => {
-    expect(conversationPackAnswer(pack)).toContain("costs ₹2,000 / $25");
+    expect(limitAnswer({ contacts, credits: null })).toContain("₹999 / $19");
   });
 
   test("quotes no figure when prices are withheld", () => {
     // The FAQ is the last place a price could reach a sales-led region: the cards are
     // gone by then, so an unguarded answer here would be the one number that got through.
-    const answer = conversationPackAnswer(pack, false);
+    const answer = limitAnswer({ contacts, credits: null }, false);
     expect(answer).not.toMatch(/[₹$]/);
-    expect(answer).toContain("1,000 extra conversations");
+    expect(answer).toContain("1,000 contacts for 30 days");
   });
 });

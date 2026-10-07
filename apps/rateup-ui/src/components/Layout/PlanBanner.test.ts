@@ -10,7 +10,7 @@ describe("what the plan banner offers", () => {
     // Add-ons attach to a paid subscription. Offering one to a free plan sends the
     // customer down a dead end — upgrading is the only remedy they have.
     const standing = planBannerCopy("free", true, "", t);
-    const atLimit = planBannerCopy("limit", true, "conversations", t);
+    const atLimit = planBannerCopy("limit", true, "active contacts", t);
 
     expect(standing.message).not.toMatch(/add-on/i);
     expect(atLimit.message).not.toMatch(/add-on/i);
@@ -18,31 +18,31 @@ describe("what the plan banner offers", () => {
 
   test("points a free org at upgrading, in both states", () => {
     expect(planBannerCopy("free", true, "", t).cta).toBe("Upgrade");
-    expect(planBannerCopy("limit", true, "conversations", t).cta).toBe("Upgrade");
-    expect(planBannerCopy("limit", true, "conversations", t).message).toMatch(
+    expect(planBannerCopy("limit", true, "active contacts", t).cta).toBe("Upgrade");
+    expect(planBannerCopy("limit", true, "active contacts", t).message).toMatch(
       /Upgrade to keep going/,
     );
   });
 
   test("offers a paying org both an add-on and an upgrade", () => {
-    expect(planBannerCopy("paid", false, "conversations", t).message).toMatch(/add-on/i);
-    expect(planBannerCopy("limit", false, "conversations", t).message).toMatch(
+    expect(planBannerCopy("paid", false, "active contacts", t).message).toMatch(/add-on/i);
+    expect(planBannerCopy("limit", false, "active contacts", t).message).toMatch(
       /Upgrade or add an add-on/,
     );
   });
 
   test("names what actually ran out", () => {
-    const copy = planBannerCopy("limit", false, "conversations, form submissions", t);
+    const copy = planBannerCopy("limit", false, "active contacts, campaign credits", t);
 
-    expect(copy.message).toContain("conversations, form submissions");
+    expect(copy.message).toContain("active contacts, campaign credits");
     expect(copy.message).toContain("for this billing period.");
   });
 
   test("the running-low message names the allowance that is nearly gone", () => {
-    const copy = planBannerCopy("paid", false, "conversations", t);
+    const copy = planBannerCopy("paid", false, "active contacts", t);
 
     expect(copy.message).toBe(
-      "You are running low on conversations. Add an add-on or move up a plan for higher limits.",
+      "You are running low on active contacts. Add an add-on or move up a plan for higher limits.",
     );
   });
 });

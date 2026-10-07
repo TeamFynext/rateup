@@ -4,12 +4,12 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button.tsx";
-import { usePlanStatus } from "@/hooks/usePlanStatus";
+import { type PlanMeter, usePlanStatus } from "@/hooks/usePlanStatus";
 
 /**
  * Remembers a dismissal so an upsell does not reappear on every navigation. Scoped per
  * message kind: dismissing the free-plan nudge must not also silence a later "you have
- * run out of conversations", which is not an upsell but an outage the customer needs to
+ * run out of active contacts", which is not an upsell but an outage the customer needs to
  * know about.
  */
 const DISMISS_KEY = "rateup:plan-banner-dismissed";
@@ -23,6 +23,20 @@ function readDismissed(): string[] {
   }
 }
 
+/** Literal keys so the translation extractor sees each meter's name. */
+function meterLabel(entry: PlanMeter, t: (key: string) => string) {
+  switch (entry.key) {
+    case "activeContacts":
+      return t("active contacts");
+    case "campaignCredits":
+      return t("campaign credits");
+    case "formSubmissions":
+      return t("form submissions");
+    default:
+      return entry.label;
+  }
+}
+
 export type PlanBannerKind = "limit" | "free" | "paid";
 
 /**
@@ -32,37 +46,37 @@ export type PlanBannerKind = "limit" | "free" | "paid";
  * in the standing nudge and not when it runs out of an allowance. Upgrading is the only
  * remedy a free plan has, and naming one it cannot use would send it down a dead end.
  *
- * Pure and exported so the branching can be tested without rendering; `translate` is the
- * caller's i18n function.
+ * Pure and exported so the branching can be tested without rendering; `t` is the caller's
+ * i18n function, named so the extractor sees these keys.
  */
 export function planBannerCopy(
   kind: PlanBannerKind,
   isFreePlan: boolean,
   labels: string,
-  translate: (key: string) => string,
+  t: (key: string) => string,
 ): { message: string; cta: string } {
   if (kind === "limit") {
-    const spent = `${translate("You have used all your")} ${labels} ${translate("for this billing period.")}`;
+    const spent = `${t("You have used all your")} ${labels} ${t("for this billing period.")}`;
     return isFreePlan
-      ? { message: `${spent} ${translate("Upgrade to keep going.")}`, cta: translate("Upgrade") }
+      ? { message: `${spent} ${t("Upgrade to keep going.")}`, cta: t("Upgrade") }
       : {
-          message: `${spent} ${translate("Upgrade or add an add-on to keep going.")}`,
-          cta: translate("View plans"),
+          message: `${spent} ${t("Upgrade or add an add-on to keep going.")}`,
+          cta: t("View plans"),
         };
   }
 
   if (kind === "free") {
     return {
-      message: translate("You are on the Free plan. Upgrade for higher limits and more features."),
-      cta: translate("Upgrade"),
+      message: t("You are on the Free plan. Upgrade for higher limits and more features."),
+      cta: t("Upgrade"),
     };
   }
 
   // Only reached when something is genuinely close to running out — see `nearlySpent`.
   // Naming the allowance is what makes this actionable rather than a standing advert.
   return {
-    message: `${translate("You are running low on")} ${labels}. ${translate("Add an add-on or move up a plan for higher limits.")}`,
-    cta: translate("View plans"),
+    message: `${t("You are running low on")} ${labels}. ${t("Add an add-on or move up a plan for higher limits.")}`,
+    cta: t("View plans"),
   };
 }
 
@@ -101,7 +115,7 @@ export function PlanBanner() {
   }
 
   const labels = (kind === "limit" ? exhausted : nearlySpent)
-    .map((entry) => translations(entry.label))
+    .map((entry) => meterLabel(entry, translations))
     .join(", ");
   const { message, cta } = planBannerCopy(kind, isFreePlan, labels, translations);
 

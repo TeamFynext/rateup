@@ -26,8 +26,7 @@ import type { CampaignWizardStepProps } from "./step.types.ts";
  * Only failures a later attempt could clear are re-attempted: frequency caps,
  * transient errors, and a number that could not receive the message at the time
  * of the send. A template Meta rejected is never retried, because waiting
- * changes nothing and each attempt spends a conversation from the org's
- * allowance.
+ * changes nothing and each attempt spends a campaign credit.
  */
 export function RetryStep({ wizard, registerSubmit }: Readonly<CampaignWizardStepProps>) {
   const { t } = useTranslation("campaign.wizard");

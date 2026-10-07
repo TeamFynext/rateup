@@ -18,6 +18,7 @@ import {
   useSendCampaignTestMutation,
 } from "@/backend/campaign/campaign.query";
 import { useContacts } from "@/backend/campaign/contacts/contacts.query";
+import { CampaignCreditsCta } from "@/components/dashboard/campaign/CampaignCreditsCta.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
@@ -72,7 +73,7 @@ export function ReviewStep({ wizard, registerSubmit }: Readonly<CampaignWizardSt
   // gets the test. Cleared as soon as the number is edited by hand.
   const [testContact, setTestContact] = useState<{ name: string; phone: string } | null>(null);
   // A number the picker itself calls valid: the button is the only guard here,
-  // and a test send spends a conversation whether or not anyone receives it.
+  // and a test send costs a Meta message whether or not anyone receives it.
   const testPhoneIsValid = Boolean(testPhone) && isValidPhoneNumber(testPhone);
 
   // Review has no "Next"; the shell hides the button on the last step. Registered
@@ -96,10 +97,16 @@ export function ReviewStep({ wizard, registerSubmit }: Readonly<CampaignWizardSt
   const exhausted = preflight.data?.exhausted ?? false;
   const remaining = preflight.data?.remaining ?? 0;
   // What the launch actually spends. A drip sends its whole sequence to each
-  // recipient, so the allowance line has to count messages, not people — showing
+  // recipient, so the credit line has to count messages, not people — showing
   // the audience size there told a 3-stage drip to 50 people it cost 50.
   const messagesPerRecipient = preflight.data?.messagesPerRecipient ?? 1;
   const messages = recipients * messagesPerRecipient;
+  // Plan credits plus packs still held; `max` alone is the plan's share.
+  const creditTotal = Math.max(
+    preflight.data?.max ?? 0,
+    (preflight.data?.used ?? 0) + remaining,
+    1,
+  );
   const perDay = campaign.dailySendLimit ?? null;
 
   const startsAt = scheduled
@@ -285,7 +292,9 @@ export function ReviewStep({ wizard, registerSubmit }: Readonly<CampaignWizardSt
               <span className="bg-border h-px" aria-hidden />
               <div className="flex flex-col gap-1.5">
                 <div className="flex justify-between gap-3">
-                  <span className="text-muted-foreground">{t("Allowance after launch")}</span>
+                  <span className="text-muted-foreground">
+                    {t("Campaign credits after launch")}
+                  </span>
                   <span className="font-medium tabular-nums">
                     {t("{count} left", { count: Math.max(remaining - messages, 0) })}
                   </span>
@@ -295,24 +304,24 @@ export function ReviewStep({ wizard, registerSubmit }: Readonly<CampaignWizardSt
                   <span
                     className="bg-muted-foreground/60 block h-full"
                     style={{
-                      width: `${Math.min(((preflight.data.used ?? 0) / Math.max(preflight.data.max ?? 1, 1)) * 100, 100)}%`,
+                      width: `${Math.min(((creditTotal - remaining) / creditTotal) * 100, 100)}%`,
                     }}
                   />
                   <span
                     className="bg-primary block h-full"
                     style={{
-                      width: `${Math.min((messages / Math.max(preflight.data.max ?? 1, 1)) * 100, 100)}%`,
+                      width: `${Math.min((messages / creditTotal) * 100, 100)}%`,
                     }}
                   />
                 </span>
                 <span className="text-muted-foreground/70 text-[11.5px]">
                   {messagesPerRecipient > 1
-                    ? t("Uses {messages} of {remaining} remaining — {stages} stages each", {
+                    ? t("Uses {messages} of {remaining} credits left — {stages} stages each", {
                         messages: messages.toLocaleString(),
                         remaining: remaining.toLocaleString(),
                         stages: messagesPerRecipient,
                       })
-                    : t("Uses {recipients} of {remaining} remaining", {
+                    : t("Uses {recipients} of {remaining} credits left", {
                         recipients: recipients.toLocaleString(),
                         remaining: remaining.toLocaleString(),
                       })}
@@ -323,9 +332,12 @@ export function ReviewStep({ wizard, registerSubmit }: Readonly<CampaignWizardSt
         </div>
 
         {exhausted ? (
-          <div className="border-destructive/30 bg-destructive/10 text-destructive flex items-start gap-2 rounded-lg border px-3 py-2.5 text-[12.5px] leading-snug">
-            <IconAlertTriangle className="mt-px size-4 shrink-0" aria-hidden />
-            {t("Your conversation allowance is fully used, so nothing would be delivered.")}
+          <div className="border-destructive/30 bg-destructive/10 text-destructive flex flex-col items-start gap-2 rounded-lg border px-3 py-2.5 text-[12.5px] leading-snug">
+            <span className="flex items-start gap-2">
+              <IconAlertTriangle className="mt-px size-4 shrink-0" aria-hidden />
+              {t("Your campaign credits are used up, so nothing would be sent.")}
+            </span>
+            <CampaignCreditsCta />
           </div>
         ) : shortfall > 0 ? (
           <div className="text-secondary-foreground flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-[12.5px] leading-snug dark:border-amber-900/50 dark:bg-amber-950/30">
@@ -333,9 +345,12 @@ export function ReviewStep({ wizard, registerSubmit }: Readonly<CampaignWizardSt
               className="mt-px size-4 shrink-0 text-amber-700 dark:text-amber-500"
               aria-hidden
             />
-            {t("{shortfall} recipients are beyond your allowance and will not be reached.", {
-              shortfall,
-            })}
+            <span className="flex flex-col items-start gap-2">
+              {t("{shortfall} campaign messages are beyond your credits and will not be sent.", {
+                shortfall: shortfall.toLocaleString(),
+              })}
+              <CampaignCreditsCta />
+            </span>
           </div>
         ) : null}
 
@@ -433,7 +448,7 @@ export function ReviewStep({ wizard, registerSubmit }: Readonly<CampaignWizardSt
                   )
                 ) : null}
                 <FieldDescription>
-                  {t("Sends the real template. It counts towards your allowance.")}
+                  {t("Sends the real template. Meta charges for it like any other message.")}
                 </FieldDescription>
               </Field>
               <Button type="submit" disabled={!testPhoneIsValid || sendTest.isPending}>
