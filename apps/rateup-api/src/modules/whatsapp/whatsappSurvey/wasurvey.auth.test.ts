@@ -1,130 +1,119 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
-// The conversation-limit guard reads usage + subscription from prisma; mock it so
-// the tests are pure and never touch a database.
 vi.mock("../../../utils/prisma.js", () => ({
   default: {
+    $queryRaw: vi.fn(),
     usageStats: { findUnique: vi.fn() },
     subscription: { findUnique: vi.fn() },
-    // The gate reads the allowance through getConversationAllowance, which adds any
-    // conversation packs the org holds; no packs here.
     subscriptionAddon: { findMany: vi.fn(() => Promise.resolve([])) },
   },
 }));
 
-// The gate also refuses a suspended account; that lookup has its own tests in
-// modules/org/orgSuspension.test.ts.
+// The suspension lookup has its own tests in modules/org/orgSuspension.test.ts.
 vi.mock("../../org/orgSuspension.js", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../../org/orgSuspension.js")>();
   return { ...actual, isOrgSuspended: vi.fn() };
 });
+vi.mock("../../subscription/campaignCredits.js", () => ({ consumeCampaignCredit: vi.fn() }));
 
 import prisma from "../../../utils/prisma.js";
 import { isOrgSuspended } from "../../org/orgSuspension.js";
+import { currentPeriodStart } from "../../subscription/billingPeriod.js";
+import { consumeCampaignCredit } from "../../subscription/campaignCredits.js";
 import {
-  assertWithinConversationLimit,
-  checkConversationLimitAvailable,
-  ConversationLimitError,
+  ActiveContactLimitError,
+  assertCampaignCredit,
+  assertCanMessageContact,
+  CampaignCreditsExhaustedError,
   OrgSuspendedError,
 } from "./wasurvey.auth.js";
 
-const suspendedMock = isOrgSuspended as unknown as ReturnType<typeof vi.fn>;
+const queryRaw = vi.mocked(prisma.$queryRaw);
+const recipient = { platform: "WHATSAPP" as const, customerId: "919876543210" };
 
-const usageMock = prisma.usageStats.findUnique as unknown as ReturnType<typeof vi.fn>;
-const subMock = prisma.subscription.findUnique as unknown as ReturnType<typeof vi.fn>;
-
-function seed({
-  monthly = 0,
-  annual = 0,
-  max = 500,
-  isAnnual = false,
-}: {
-  monthly?: number;
-  annual?: number;
-  max?: number;
-  isAnnual?: boolean;
-}) {
-  // The guard reads the METERED counters (self-derived 24h windows). The inbox-ticket
-  // counters are seeded to deliberately conflicting values so a regression that reads
-  // them again fails loudly instead of coincidentally agreeing.
-  usageMock.mockResolvedValue({
-    monthlyMeteredConversationsCount: monthly,
-    annualMeteredConversationsCount: annual,
-    monthlyConversationsCount: 0,
-    annualConversationsCount: 0,
-  });
-  subMock.mockResolvedValue({
-    isAnnualMessageLimit: isAnnual,
-    features: { whatsapp: { conversation: { count: { max } } } },
-  });
+function seed({ used, max = 100 }: { used: number; max?: number }) {
+  vi.mocked(prisma.usageStats.findUnique).mockResolvedValue({
+    activeContactsCount: used,
+    activeContactsPeriodStart: currentPeriodStart(),
+  } as never);
+  vi.mocked(prisma.subscription.findUnique).mockResolvedValue({
+    features: { whatsapp: { activeContacts: { active: true, count: { max } } } },
+  } as never);
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
-  suspendedMock.mockResolvedValue(false);
+  queryRaw.mockReset();
+  vi.mocked(isOrgSuspended).mockResolvedValue(false);
 });
 
-describe("ConversationLimitError", () => {
-  test("carries a 403 status, its own name, and a default upgrade message", () => {
-    const err = new ConversationLimitError();
+describe("the limit errors", () => {
+  test("ActiveContactLimitError is a 403 the client can recognise", () => {
+    const err = new ActiveContactLimitError();
     expect(err).toBeInstanceOf(Error);
     expect(err.statusCode).toBe(403);
-    expect(err.name).toBe("ConversationLimitError");
-    expect(err.message).toMatch(/conversation limit reached/i);
-    expect(err.message).toMatch(/upgrade/i);
+    expect(err.code).toBe("ACTIVE_CONTACT_LIMIT_REACHED");
+    expect(err.name).toBe("ActiveContactLimitError");
+    expect(err.message).toMatch(/active contacts/i);
   });
 
-  test("accepts a custom message", () => {
-    expect(new ConversationLimitError("custom").message).toBe("custom");
-  });
-});
-
-describe("checkConversationLimitAvailable (monthly plan)", () => {
-  test("is within the allowance below the limit", async () => {
-    seed({ monthly: 200, max: 500 });
-    expect(await checkConversationLimitAvailable("org")).toBe(true);
+  test("CampaignCreditsExhaustedError is a 403 the client can recognise", () => {
+    const err = new CampaignCreditsExhaustedError();
+    expect(err.statusCode).toBe(403);
+    expect(err.code).toBe("CAMPAIGN_CREDITS_EXHAUSTED");
+    expect(err.message).toMatch(/campaign credits/i);
   });
 
-  test("is exceeded exactly at the limit (>= is the cutoff)", async () => {
-    seed({ monthly: 500, max: 500 });
-    expect(await checkConversationLimitAvailable("org")).toBe(false);
-  });
-
-  test("is exceeded above the limit", async () => {
-    seed({ monthly: 501, max: 500 });
-    expect(await checkConversationLimitAvailable("org")).toBe(false);
+  test("accept a custom message", () => {
+    expect(new ActiveContactLimitError("custom").message).toBe("custom");
   });
 });
 
-describe("checkConversationLimitAvailable (annual pooled plan)", () => {
-  test("pools at max * 12 and uses the annual counter", async () => {
-    // 5000 annual against a 500/mo plan → pool of 6000, still within.
-    seed({ annual: 5000, monthly: 999999, max: 500, isAnnual: true });
-    expect(await checkConversationLimitAvailable("org")).toBe(true);
+describe("assertCanMessageContact", () => {
+  test("allows any recipient under the allowance without looking them up", async () => {
+    seed({ used: 99 });
+    await expect(assertCanMessageContact("org", recipient)).resolves.toBeUndefined();
+    expect(queryRaw).not.toHaveBeenCalled();
   });
 
-  test("is exceeded once the annual pool is reached", async () => {
-    seed({ annual: 6000, max: 500, isAnnual: true });
-    expect(await checkConversationLimitAvailable("org")).toBe(false);
+  test("allows a contact already counted this month once the allowance is spent", async () => {
+    seed({ used: 100 });
+    queryRaw.mockResolvedValueOnce([{ hit: 1 }] as never);
+    await expect(assertCanMessageContact("org", recipient)).resolves.toBeUndefined();
   });
-});
 
-describe("assertWithinConversationLimit", () => {
-  test("resolves silently when within the allowance", async () => {
-    seed({ monthly: 10, max: 500 });
-    await expect(assertWithinConversationLimit("org")).resolves.toBeUndefined();
+  test("refuses a new contact once the allowance is spent", async () => {
+    seed({ used: 100 });
+    queryRaw.mockResolvedValueOnce([] as never);
+    await expect(assertCanMessageContact("org", recipient)).rejects.toBeInstanceOf(
+      ActiveContactLimitError,
+    );
   });
 
   test("refuses a suspended account before the allowance is even read", async () => {
-    seed({ monthly: 10, max: 500 });
-    suspendedMock.mockResolvedValue(true);
-    await expect(assertWithinConversationLimit("org")).rejects.toBeInstanceOf(OrgSuspendedError);
+    seed({ used: 0 });
+    vi.mocked(isOrgSuspended).mockResolvedValue(true);
+    await expect(assertCanMessageContact("org", recipient)).rejects.toBeInstanceOf(
+      OrgSuspendedError,
+    );
+    expect(prisma.usageStats.findUnique).not.toHaveBeenCalled();
+  });
+});
+
+describe("assertCampaignCredit", () => {
+  test("resolves when a credit was spent", async () => {
+    vi.mocked(consumeCampaignCredit).mockResolvedValue(true);
+    await expect(assertCampaignCredit("org")).resolves.toBeUndefined();
   });
 
-  test("throws ConversationLimitError when over the allowance", async () => {
-    seed({ monthly: 500, max: 500 });
-    await expect(assertWithinConversationLimit("org")).rejects.toBeInstanceOf(
-      ConversationLimitError,
-    );
+  test("throws CampaignCreditsExhaustedError when none is left", async () => {
+    vi.mocked(consumeCampaignCredit).mockResolvedValue(false);
+    await expect(assertCampaignCredit("org")).rejects.toBeInstanceOf(CampaignCreditsExhaustedError);
+  });
+
+  test("refuses a suspended account without spending a credit", async () => {
+    vi.mocked(isOrgSuspended).mockResolvedValue(true);
+    await expect(assertCampaignCredit("org")).rejects.toBeInstanceOf(OrgSuspendedError);
+    expect(consumeCampaignCredit).not.toHaveBeenCalled();
   });
 });

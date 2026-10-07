@@ -165,7 +165,7 @@ export const PARITY_TABLE: Site[] = [
     permission: "templates.sync",
   },
   {
-    site: "notification.service.ts notifyConversationLimitReached recipients",
+    site: "notification.service.ts notifyLimitReached recipients",
     roles: SA,
     permission: "notify.billing",
   },

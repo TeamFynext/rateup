@@ -190,6 +190,7 @@ model Org {
   surveyThemes            WebSurveyTheme[]
   UsageStats              UsageStats?
   meteredConversations    MeteredConversation[]
+  activeContacts          ActiveContact[]
   chatbot                 Chatbot[]
   Survey                  Survey[]
   WaAccountSettings       WaAccountSettings?
@@ -297,6 +298,18 @@ model UsageStats {
   /// cycle, so the limit notification fires once rather than on every subsequent
   /// over-limit message. Cleared by resetMonthlyCounts/resetAnnualCounts.
   conversationLimitNotifiedAt DateTime?
+
+  /// The plan meters. Each counter belongs to the calendar month (UTC) in its
+  /// `*PeriodStart`; a write in a new month restarts it at 1 instead of adding, so
+  /// nothing has to reset them.
+  activeContactsCount        Int       @default(0)
+  activeContactsPeriodStart  DateTime? @db.Date
+  campaignCreditsUsed        Int       @default(0)
+  campaignCreditsPeriodStart DateTime? @db.Date
+
+  /// The period whose limit alert has gone out, so each limit alerts once a month.
+  activeContactLimitNotifiedPeriod  DateTime? @db.Date
+  campaignCreditLimitNotifiedPeriod DateTime? @db.Date
 
   subscriptionStartDate DateTime?
   subscriptionEndDate   DateTime?
@@ -1650,24 +1663,63 @@ model NLP_Cache {
 /// subscription that pays for it: packs bill monthly and independently of the plan, and
 /// cancelling one has to be able to find the right Razorpay subscription to stop.
 model SubscriptionAddon {
-  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  org         Org        @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId       String     @db.Uuid
+  id             String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org            Org        @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId          String     @db.Uuid
   /// The ADDON tier bought, which is what says how many conversations a pack is worth.
-  addon       RateupPlan @relation("RateupPlanAddon", fields: [addonPlanId], references: [id])
-  addonPlanId String     @db.Uuid
+  addon          RateupPlan @relation("RateupPlanAddon", fields: [addonPlanId], references: [id])
+  addonPlanId    String     @db.Uuid
   /// How many packs this one purchase bought.
-  quantity    Int        @default(1)
+  quantity       Int        @default(1)
+  kind           AddonKind  @default(ACTIVE_CONTACTS)
+  /// Campaign credit packs are drawn down rather than counted per month: the credits
+  /// they hold and how many have been spent. Null on contact packs.
+  creditsGranted Int?
+  creditsUsed    Int        @default(0)
   /// The gateway payment that bought it; unique so a replayed webhook credits once.
-  paymentRef  String?    @unique
+  paymentRef     String?    @unique
   /// When the month this pack was bought for runs out. A pack is a one-off top-up, not a
   /// subscription, so nothing renews it — it simply stops counting on this date.
-  expiresAt   DateTime
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  expiresAt      DateTime
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
 
   /// Every allowance read is "this org's packs that have not run out yet".
   @@index([orgId, expiresAt])
+  @@index([orgId, kind, expiresAt])
+}
+
+enum AddonKind {
+  ACTIVE_CONTACTS
+  CAMPAIGN_CREDITS
+}
+
+/// One row per contact the org exchanged a non-broadcast message with in a calendar
+/// month: the unit plans are priced on. The unique key is what makes counting
+/// idempotent — only the insert that creates the row ticks the counter.
+model ActiveContact {
+  id            String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org           Org                 @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId         String              @db.Uuid
+  /// First day of the month (UTC).
+  periodStart   DateTime            @db.Date
+  /// `contactId`, or `platform:customerId` for a message with no contact row.
+  contactKey    String
+  contactId     String?             @db.Uuid
+  platform      PlatformType
+  /// The customer's channel id; digits only for WhatsApp.
+  customerId    String
+  firstActiveAt DateTime
+  reason        ActiveContactReason
+
+  @@unique([orgId, periodStart, contactKey])
+  @@index([orgId, periodStart, platform, customerId])
+  @@index([orgId, firstActiveAt])
+}
+
+enum ActiveContactReason {
+  INBOUND
+  OUTBOUND
 }
 
 model Subscription {

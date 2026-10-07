@@ -92,7 +92,7 @@ import { getFileUrlFromKey } from "../../../utils/upload/s3Upload.js";
 import { getFlowIdFromTemplateComponents } from "../messageTemplates/wa_templates.utils.js";
 import { getOrCreateContactByPhone, handleContactConsent } from "../../contact/contact.service.js";
 import { getOrgById } from "../../org/org.services.js";
-import { checkConversationLimitAvailable } from "./wasurvey.auth.js";
+import { canMessageContact } from "../../subscription/activeContacts.js";
 import { updateMonthlyStat } from "../../stats/stats.service.js";
 import { getLatestStatus } from "../../campaign/campaign.service.js";
 import {
@@ -1098,7 +1098,13 @@ export async function handleAutomatedReply(
 ) {
   if (!automatedReplyId) {
     // already handled on case manual trigger
-    if (!(await verifyAutomationTriggerLimit(orgId))) return;
+    if (
+      !(await verifyAutomationTriggerLimit(orgId, {
+        platform: PlatformType.WHATSAPP,
+        customerId: phone,
+      }))
+    )
+      return;
   }
 
   const phoneNumberId = (waMessage?.entry?.[0]?.changes?.[0]?.value as WaReceiveMessageBody)
@@ -1647,9 +1653,8 @@ async function handleStartSurvey({
     );
     return;
   }
-  const msgLimit = await checkConversationLimitAvailable(orgId);
-  if (!msgLimit) {
-    log.error({ orgId }, "You have reached the maximum monthly limit of messages.");
+  if (!(await canMessageContact(orgId, { platform: PlatformType.WHATSAPP, customerId: from }))) {
+    log.warn({ orgId }, "Flow not sent: active contact limit reached for a new contact");
     return;
   }
   updateVisitedSurvey(surveyTeamMap.id)

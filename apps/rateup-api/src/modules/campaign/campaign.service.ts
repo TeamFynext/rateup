@@ -13,7 +13,7 @@ import {
 import { pauseCampaignForAccountIssue } from "./campaignPause.service.js";
 import { log } from "../../utils/logger.js";
 import dayjs from "dayjs";
-import { checkConversationLimitAvailable } from "../whatsapp/whatsappSurvey/wasurvey.auth.js";
+import { getCampaignCreditBudget } from "../subscription/campaignCredits.js";
 import { getFlowBySurveyId } from "../whatsapp/flows/flow.service.js";
 import { SpreadsheetExportFormat } from "../../utils/spreadsheet.js";
 import { write } from "hucre";
@@ -461,8 +461,8 @@ export async function sendCampaign(
   sendToStatuses: CampaignParticipantStatus[],
   participantId?: string,
 ) {
-  // Pre-check the conversation limit once so an over-limit campaign fails cleanly
-  // instead of throwing on every recipient inside sendMessage.
+  // Pre-check the campaign credits once so a campaign with none left pauses cleanly
+  // instead of failing on every recipient in the dispatcher.
   const campaignOrg = await prisma.campaign.findUnique({
     where: { id: campaignId },
     select: { team: { select: { orgId: true } } },
@@ -471,11 +471,11 @@ export async function sendCampaign(
   if (!campaignOrgId) {
     throw new CampaignNotFoundError(`Campaign ${campaignId} not found`);
   }
-  if (!(await checkConversationLimitAvailable(campaignOrgId))) {
+  if ((await getCampaignCreditBudget(campaignOrgId)).exhausted) {
     // PAUSED, not FAILED: nothing is wrong with the campaign, and every recipient
-    // is still PENDING for when the allowance comes back.
-    await pauseCampaignForAccountIssue(campaignId, CampaignPauseReason.CONVERSATION_LIMIT);
-    log.warn({ campaignId, orgId: campaignOrgId }, "Campaign skipped — conversation limit reached");
+    // is still PENDING for when credits come back.
+    await pauseCampaignForAccountIssue(campaignId, CampaignPauseReason.CAMPAIGN_CREDIT_LIMIT);
+    log.warn({ campaignId, orgId: campaignOrgId }, "Campaign skipped — campaign credits used up");
     return;
   }
 

@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("../../prisma.js", () => ({
-  default: { subscription: { findUnique: vi.fn(), update: vi.fn() } },
+  default: {
+    subscription: { updateMany: vi.fn() },
+    orgMember: { findMany: vi.fn() },
+    org: { findUnique: vi.fn() },
+  },
 }));
 vi.mock("../../../workers/bullmq/queues/index.js", () => ({
   notificationQueue: { add: vi.fn() },
@@ -15,82 +19,118 @@ vi.mock("../react/templates.js", () => ({
 
 import prisma from "../../prisma.js";
 import { notificationQueue } from "../../../workers/bullmq/queues/index.js";
-import { sendUsageLimitMailAlert } from "./usageLimitAlert.js";
+import { recipientsWhere } from "../../../authz/recipients.js";
+import { renderUsageLimitEmail } from "../react/templates.js";
+import { sendFormResponseLimitAlert, sendUsageLimitMailAlert } from "./usageLimitAlert.js";
 
-function subscription(overrides: Record<string, unknown> = {}) {
-  return {
-    orgId: "org-1",
-    lastLimitAlertSentAt: null,
-    org: { owner: { email: "owner@test.example" } },
-    ...overrides,
-  };
+function members(...emails: (string | null)[]) {
+  return emails.map((email) => ({ user: email === null ? null : { email } }));
+}
+
+function queuedRecipients() {
+  return vi
+    .mocked(notificationQueue.add)
+    .mock.calls.map(([, job]) => (job as { emailData: { to: string } }).emailData.to);
 }
 
 describe("the usage-limit alert", () => {
   beforeEach(() => {
-    vi.mocked(prisma.subscription.findUnique)
+    vi.mocked(prisma.orgMember.findMany)
       .mockReset()
-      .mockResolvedValue(subscription() as never);
-    vi.mocked(prisma.subscription.update)
+      .mockResolvedValue(members("admin@test.example") as never);
+    vi.mocked(prisma.org.findUnique)
       .mockReset()
-      .mockResolvedValue({} as never);
+      .mockResolvedValue({ owner: { email: "owner@test.example" } } as never);
+    vi.mocked(prisma.subscription.updateMany).mockReset();
     vi.mocked(notificationQueue.add)
       .mockReset()
       .mockResolvedValue({} as never);
   });
 
-  test("queues the alert to the org's owner and stamps it as sent", async () => {
-    await sendUsageLimitMailAlert("org-1");
+  test("emails the owner and every member who can manage billing", async () => {
+    const result = await sendUsageLimitMailAlert("org-1", "activeContacts");
 
-    const [, job] = vi.mocked(notificationQueue.add).mock.calls[0] as [string, any];
-    expect(job.emailData.to).toBe("owner@test.example");
-    expect(prisma.subscription.update).toHaveBeenCalled();
+    expect(prisma.orgMember.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { orgId: "org-1", ...recipientsWhere("billing.manage") },
+      }),
+    );
+    expect(queuedRecipients().sort()).toEqual(["admin@test.example", "owner@test.example"]);
+    expect(result).toEqual({ sent: 2 });
   });
 
-  test("queues nothing when there is no owner email to send to", async () => {
-    // The bug this covers: `to` was read straight off the relation with nothing checking
-    // it, so an org whose owner could not be read queued an email addressed to
-    // `undefined`. SES refused it — "Missing required header 'To'" — and BullMQ retried
-    // that same undeliverable job five times with backoff.
-    vi.mocked(prisma.subscription.findUnique).mockResolvedValue(
-      subscription({ org: { owner: null } }) as never,
+  test("queues one job per recipient, mailing an owner who is also a member once", async () => {
+    vi.mocked(prisma.orgMember.findMany).mockResolvedValue(
+      members("owner@test.example", "admin@test.example", "admin@test.example", null) as never,
     );
 
-    await sendUsageLimitMailAlert("org-1");
+    await sendUsageLimitMailAlert("org-1", "campaignCredits");
+
+    expect(notificationQueue.add).toHaveBeenCalledTimes(2);
+    expect(queuedRecipients().sort()).toEqual(["admin@test.example", "owner@test.example"]);
+  });
+
+  test("renders the email for the limit that was reached", async () => {
+    await sendUsageLimitMailAlert("org-1", "campaignCredits");
+
+    expect(renderUsageLimitEmail).toHaveBeenCalledWith("campaignCredits");
+    const [, job] = vi.mocked(notificationQueue.add).mock.calls[0] as [string, any];
+    expect(job.emailData.subject).toMatch(/campaign credits/i);
+  });
+
+  test("queues nothing when there is nobody to send to", async () => {
+    // An undefined `to` is refused by SES and retried by BullMQ five times over.
+    vi.mocked(prisma.orgMember.findMany).mockResolvedValue([] as never);
+    vi.mocked(prisma.org.findUnique).mockResolvedValue({ owner: null } as never);
+
+    const result = await sendUsageLimitMailAlert("org-1", "activeContacts");
 
     expect(notificationQueue.add).not.toHaveBeenCalled();
+    expect(result).toEqual({ sent: 0 });
+  });
+});
+
+describe("the form-response alert", () => {
+  beforeEach(() => {
+    vi.mocked(prisma.orgMember.findMany)
+      .mockReset()
+      .mockResolvedValue([] as never);
+    vi.mocked(prisma.org.findUnique)
+      .mockReset()
+      .mockResolvedValue({ owner: { email: "owner@test.example" } } as never);
+    vi.mocked(prisma.subscription.updateMany).mockReset();
+    vi.mocked(notificationQueue.add)
+      .mockReset()
+      .mockResolvedValue({} as never);
   });
 
-  test("does not silence the org for a week over a mail it could not send", async () => {
-    // Stamping `lastLimitAlertSentAt` is what suppresses the next six days of alerts. Doing
-    // it for a send that never happened would cost the org the one warning it gets.
-    vi.mocked(prisma.subscription.findUnique).mockResolvedValue(
-      subscription({ org: { owner: null } }) as never,
-    );
+  test("sends when it claims the week", async () => {
+    vi.mocked(prisma.subscription.updateMany).mockResolvedValue({ count: 1 } as never);
 
-    await sendUsageLimitMailAlert("org-1");
+    await sendFormResponseLimitAlert("org-1");
 
-    expect(prisma.subscription.update).not.toHaveBeenCalled();
+    expect(renderUsageLimitEmail).toHaveBeenCalledWith("formResponses");
+    expect(notificationQueue.add).toHaveBeenCalledTimes(1);
   });
 
   test("stays quiet when one went out inside the last week", async () => {
-    vi.mocked(prisma.subscription.findUnique).mockResolvedValue(
-      subscription({ lastLimitAlertSentAt: new Date() }) as never,
-    );
+    vi.mocked(prisma.subscription.updateMany).mockResolvedValue({ count: 0 } as never);
 
-    await sendUsageLimitMailAlert("org-1");
+    const result = await sendFormResponseLimitAlert("org-1");
 
     expect(notificationQueue.add).not.toHaveBeenCalled();
+    expect(result).toEqual({ sent: 0 });
   });
 
-  test("sends again once the week has passed", async () => {
-    const eightDaysAgo = new Date(Date.now() - 8 * 24 * 60 * 60 * 1000);
-    vi.mocked(prisma.subscription.findUnique).mockResolvedValue(
-      subscription({ lastLimitAlertSentAt: eightDaysAgo }) as never,
-    );
+  test("only claims a subscription not stamped within the last seven days", async () => {
+    vi.mocked(prisma.subscription.updateMany).mockResolvedValue({ count: 0 } as never);
+    const before = Date.now();
 
-    await sendUsageLimitMailAlert("org-1");
+    await sendFormResponseLimitAlert("org-1");
 
-    expect(notificationQueue.add).toHaveBeenCalledTimes(1);
+    const { where } = vi.mocked(prisma.subscription.updateMany).mock.calls[0][0] as any;
+    const cutoff = where.OR[1].lastLimitAlertSentAt.lt.getTime();
+    expect(before - cutoff).toBeGreaterThanOrEqual(7 * 24 * 60 * 60 * 1000 - 1000);
+    expect(where.OR[0]).toEqual({ lastLimitAlertSentAt: null });
   });
 });

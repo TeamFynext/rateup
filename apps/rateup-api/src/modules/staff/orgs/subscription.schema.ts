@@ -30,7 +30,8 @@ export const subscriptionFeaturesSchema = z.object({
   }),
   whatsapp: z.object({
     active: z.boolean(),
-    conversation: z.object({ active: z.boolean(), count: countOf }),
+    activeContacts: z.object({ active: z.boolean(), count: countOf }),
+    campaignCredits: z.object({ active: z.boolean(), count: countOf }),
     campaign: active.optional(),
     loyalty: active.optional(),
     referrals: active.optional(),
@@ -66,8 +67,9 @@ export const featureOverrideSchema = z.object({
 export type FeatureOverrideInput = z.infer<typeof featureOverrideSchema>;
 
 export const addonGrantSchema = z.object({
+  kind: z.enum(["ACTIVE_CONTACTS", "CAMPAIGN_CREDITS"]).default("ACTIVE_CONTACTS"),
   quantity: z.number().int().min(1).max(20),
-  /** Defaults to the month a bought pack lasts. */
+  /** Defaults to how long a bought pack of that kind lasts. */
   expiresAt: futureDate.optional(),
   reason: reasonSchema,
 });

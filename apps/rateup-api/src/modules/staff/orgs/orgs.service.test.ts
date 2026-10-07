@@ -12,7 +12,7 @@ vi.mock("../../../utils/prisma.js", () => ({ default: db }));
 import { asPhoneDigits, asUuid } from "../staff.schema.js";
 import { orgListQuerySchema, orgUsageQuerySchema } from "./orgs.schema.js";
 import {
-  dailyConversations,
+  dailyUsage,
   getOrgMembers,
   listOrgs,
   orgListWhere,
@@ -118,15 +118,24 @@ describe("listOrgs", () => {
     owner: { id: "u1", name: "Ann", email: "ann@acme.test" },
     Subscription: {
       expiresAt: new Date("2026-12-01"),
-      features: { whatsapp: { conversation: { count: { max: 1000 } } } },
-      isAnnualMessageLimit: true,
+      features: {
+        whatsapp: {
+          activeContacts: { count: { max: 1000 } },
+          campaignCredits: { count: { max: 10_000 } },
+        },
+      },
       basePlan: { id: "p1", name: "GROWTH", displayName: "Growth", price: 2999 },
     },
-    UsageStats: { monthlyMeteredConversationsCount: 40, annualMeteredConversationsCount: 900 },
+    UsageStats: {
+      activeContactsCount: 40,
+      activeContactsPeriodStart: new Date("2026-09-01T00:00:00Z"),
+      campaignCreditsUsed: 900,
+      campaignCreditsPeriodStart: new Date("2026-09-01T00:00:00Z"),
+    },
     _count: { members: 3 },
   };
 
-  test("pages, and reads usage in the plan's own period", async () => {
+  test("pages, and reads this month's meters against the plan's ceilings", async () => {
     db.org.findMany.mockResolvedValue([record]);
     db.org.count.mockResolvedValue(31);
     db.$queryRaw.mockResolvedValue([{ orgId: ORG_ID, last: new Date("2026-09-20") }]);
@@ -141,22 +150,47 @@ describe("listOrgs", () => {
       plan: { id: "p1", name: "Growth", paid: true },
       status: "active",
       members: 3,
-      // Annual allowance: a year of usage against twelve months of the monthly cap.
-      conversations: { used: 900, max: 12_000 },
+      activeContacts: { used: 40, max: 1000 },
+      campaignCredits: { used: 900, max: 10_000 },
       lastActiveAt: new Date("2026-09-20"),
     });
   });
 
   test("an unmetered plan has no ceiling rather than a zero one", async () => {
     db.org.findMany.mockResolvedValue([
+      { ...record, Subscription: { ...record.Subscription, features: {} } },
+    ]);
+    db.org.count.mockResolvedValue(1);
+    const page = await listOrgs(orgListQuerySchema.parse({}), NOW);
+    expect(page.data[0].activeContacts).toEqual({ used: 40, max: null });
+    expect(page.data[0].campaignCredits).toEqual({ used: 900, max: null });
+  });
+
+  test("a counter left over from last month reads as nothing used", async () => {
+    db.org.findMany.mockResolvedValue([
       {
         ...record,
-        Subscription: { ...record.Subscription, features: {}, isAnnualMessageLimit: false },
+        UsageStats: {
+          ...record.UsageStats,
+          activeContactsPeriodStart: new Date("2026-08-01T00:00:00Z"),
+          campaignCreditsPeriodStart: null,
+        },
       },
     ]);
     db.org.count.mockResolvedValue(1);
     const page = await listOrgs(orgListQuerySchema.parse({}), NOW);
-    expect(page.data[0].conversations).toEqual({ used: 40, max: null });
+    expect(page.data[0].activeContacts.used).toBe(0);
+    expect(page.data[0].campaignCredits.used).toBe(0);
+  });
+
+  test("sorts by this month's active contacts", async () => {
+    db.org.findMany.mockResolvedValue([]);
+    db.org.count.mockResolvedValue(0);
+    await listOrgs(orgListQuerySchema.parse({ sort: "activeContacts", order: "desc" }), NOW);
+    expect(db.org.findMany.mock.calls[0][0].orderBy).toEqual([
+      { UsageStats: { activeContactsCount: "desc" } },
+      { id: "asc" },
+    ]);
   });
 });
 
@@ -208,22 +242,26 @@ describe("usage days", () => {
   });
 });
 
-describe("dailyConversations", () => {
+describe("dailyUsage", () => {
   test.each([
     [30, "2026-08-24"],
     [90, "2026-06-25"],
   ])("%i days are zero-filled, oldest first, ending today (UTC)", async (days, first) => {
-    db.$queryRaw.mockResolvedValue([
-      { day: "2026-09-22", count: 4 },
-      { day: first, count: 2 },
-    ]);
+    db.$queryRaw
+      .mockResolvedValueOnce([
+        { day: "2026-09-22", count: 4 },
+        { day: first, count: 2 },
+      ])
+      .mockResolvedValueOnce([{ day: "2026-09-22", count: 70 }]);
 
-    const series = await dailyConversations(ORG_ID, days, NOW);
+    const series = await dailyUsage(ORG_ID, days, NOW);
 
     expect(series).toHaveLength(days);
-    expect(series[0]).toEqual({ date: first, conversations: 2 });
-    expect(series.at(-1)).toEqual({ date: "2026-09-22", conversations: 4 });
-    expect(series.slice(1, -1).every((d) => d.conversations === 0)).toBe(true);
+    expect(series[0]).toEqual({ date: first, activeContacts: 2, campaignCredits: 0 });
+    expect(series.at(-1)).toEqual({ date: "2026-09-22", activeContacts: 4, campaignCredits: 70 });
+    expect(
+      series.slice(1, -1).every((d) => d.activeContacts === 0 && d.campaignCredits === 0),
+    ).toBe(true);
     // The lower bound passed to the query is midnight UTC of the first day.
     expect(db.$queryRaw.mock.calls[0]).toContainEqual(new Date(`${first}T00:00:00Z`));
   });

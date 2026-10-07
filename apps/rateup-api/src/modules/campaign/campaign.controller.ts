@@ -42,7 +42,7 @@ import {
 import { CampaignSendTrigger } from "../../../generated/prisma/enums.js";
 import { upsertCampaignRetryPolicy } from "./campaignRetry.service.js";
 import { clearCampaignPause } from "./campaignPause.service.js";
-import { checkConversationLimitAvailable } from "../whatsapp/whatsappSurvey/wasurvey.auth.js";
+import { getCampaignCreditBudget } from "../subscription/campaignCredits.js";
 import { log } from "../../utils/logger.js";
 import {
   getSpreadsheetContentType,
@@ -361,18 +361,19 @@ export async function sendCampaignHandler(
         campaign.status !== CampaignStatus.ACTIVE &&
         campaign.status !== CampaignStatus.PAUSED;
 
-      // A drip resumes without a preflight, so an allowance that is still spent
-      // has to be caught here — otherwise the cron's next tick pauses it again
-      // and the resume looks like it did nothing.
+      // A drip resumes without a preflight, so credits that are still spent have to be
+      // caught here — otherwise the cron's next tick pauses it again and the resume
+      // looks like it did nothing.
       if (
         status === CampaignStatus.ACTIVE &&
         campaign.status === CampaignStatus.PAUSED &&
-        !(await checkConversationLimitAvailable(orgId))
+        (await getCampaignCreditBudget(orgId)).exhausted
       ) {
         return reply.status(403).send({
           message:
-            "Your plan's conversation allowance is still used up, so this campaign cannot resume yet.",
-          code: "CONVERSATION_LIMIT_REACHED",
+            "Your campaign credits are still used up, so this campaign cannot resume yet. " +
+            "Upgrade or add a credit pack to keep sending.",
+          code: "CAMPAIGN_CREDITS_EXHAUSTED",
         });
       }
 
@@ -432,8 +433,8 @@ export async function sendCampaignHandler(
       });
     }
 
-    // Only the case where nothing at all could be delivered is refused. A campaign that
-    // merely outruns the allowance still goes — the dialog has already said where it will
+    // Only the case where nothing at all could be sent is refused. A campaign that
+    // merely outruns the credits still goes — the dialog has already said where it will
     // stop, and sending to as many people as the plan covers is a reasonable choice. But
     // starting one with nothing left only produces a queue of messages that each fail in
     // the dispatcher, a campaign stuck in QUEUING, and no explanation anywhere the sender
@@ -441,9 +442,9 @@ export async function sendCampaignHandler(
     if (preflight.exhausted) {
       return reply.status(403).send({
         message:
-          `You have used all ${preflight.max?.toLocaleString()} conversations on your plan ` +
-          `${preflight.isAnnual ? "this year" : "this month"}, so this campaign cannot be sent yet.`,
-        code: "CONVERSATION_LIMIT_REACHED",
+          "You have used all your campaign credits this month, so this campaign cannot be " +
+          "sent yet. Upgrade or add a credit pack to keep sending.",
+        code: "CAMPAIGN_CREDITS_EXHAUSTED",
       });
     }
 

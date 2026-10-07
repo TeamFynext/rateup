@@ -58,7 +58,7 @@ function subscription(overrides: Record<string, unknown> = {}) {
     id: "sub-1",
     expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     features: {
-      whatsapp: { active: true, conversation: { active: true } },
+      whatsapp: { active: true, campaign: { active: true } },
       team: { active: true },
     },
     ...overrides,
@@ -117,7 +117,7 @@ describe("getVerifySubscriptionHandler", () => {
   test("resolves a nested feature path", async () => {
     const reply = makeReply();
 
-    await getVerifySubscriptionHandler(["whatsapp.conversation"] as any)(makeRequest(), reply);
+    await getVerifySubscriptionHandler(["whatsapp.campaign"] as any)(makeRequest(), reply);
 
     expect(reply.code).not.toHaveBeenCalled();
   });

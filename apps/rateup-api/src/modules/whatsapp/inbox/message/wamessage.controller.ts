@@ -98,6 +98,7 @@ import {
   updateConversation,
 } from "../../../contact/conversation/conversation.service.js";
 import { recordMessageInWindow } from "../../metering/meteredConversation.service.js";
+import { recordActiveContact } from "../../../subscription/activeContacts.js";
 import { WaMessageClosedStatus } from "../../constants.js";
 import { getFacebookUserDetailsFromMeta } from "../../facebook/facebook.service.js";
 import { notifyInboundMessage } from "./inboundNotify.js";
@@ -307,15 +308,28 @@ export async function handleWaMessages(
     // Enforcement blocks outbound sends instead (see wasurvey.auth.ts) — silently
     // dropping what a customer said is worse than an overage.
     const parsedTimeStamp = new Date(waTimeStamp);
+    const messageAt = Number.isNaN(parsedTimeStamp.getTime()) ? new Date() : parsedTimeStamp;
     const meteredWindow = await recordMessageInWindow({
       orgId,
       platform: sourcePlatform,
       channelId: sourceIdentifier,
       customerId: from,
       contactId: contact.id,
-      at: Number.isNaN(parsedTimeStamp.getTime()) ? new Date() : parsedTimeStamp,
+      at: messageAt,
       direction: type,
     });
+    // A rejected send never reached the contact, so it does not make them active.
+    if (!failed) {
+      await recordActiveContact({
+        orgId,
+        platform: sourcePlatform,
+        customerId: from,
+        contactId: contact.id,
+        at: messageAt,
+        direction: type,
+        isBroadcast: Boolean(campaign?.participantId) || messageType === "CAMPAIGN",
+      });
+    }
 
     // Add new message to DB
     const waMessage = await addNewWaMessage(

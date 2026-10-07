@@ -213,8 +213,8 @@ describe("fireFeedbackRequest — delivery", () => {
   });
 
   test("a thrown send is FAILED with the error's message", async () => {
-    vi.mocked(sendLoyalty).mockRejectedValue(new Error("conversation limit reached"));
+    vi.mocked(sendLoyalty).mockRejectedValue(new Error("active contact limit reached"));
     await expect(fireFeedbackRequest("req-1")).resolves.toBe("failed");
-    expect(lastUpdate().failReason).toBe("conversation limit reached");
+    expect(lastUpdate().failReason).toBe("active contact limit reached");
   });
 });

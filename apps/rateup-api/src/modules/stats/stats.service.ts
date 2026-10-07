@@ -2,8 +2,6 @@ import dayjs from "dayjs";
 import { SubscriptionFeaturePathName } from "../../types/enums.js";
 import prisma from "../../utils/prisma.js";
 import { log } from "../../utils/logger.js";
-import { notifyConversationLimitReached } from "../notification/notification.service.js";
-import { getConversationAllowance } from "../subscription/addons.js";
 
 export async function updateMonthlyStat(stat: string, orgId: string) {
   try {
@@ -58,13 +56,12 @@ export async function incrementConversationCount(orgId: string) {
   }
 }
 
-/// Increments the org's **metered conversation** usage by one. Called from
-/// recordMessageInWindow at the single moment a new 24h window opens — never on the
-/// subsequent messages or status webhooks that fold into an existing window. This is
-/// the counter `whatsapp.conversation.count.max` is enforced against.
+/// Increments the org's metered conversation count by one, for analytics and Meta
+/// pricing reports. Plans are priced on active contacts and campaign credits now, so
+/// nothing enforces or alerts on this counter.
 export async function incrementMeteredConversationCount(orgId: string) {
   try {
-    const usage = await prisma.usageStats.upsert({
+    await prisma.usageStats.upsert({
       where: { orgId },
       update: {
         monthlyMeteredConversationsCount: { increment: 1 },
@@ -72,62 +69,8 @@ export async function incrementMeteredConversationCount(orgId: string) {
       },
       create: { orgId, monthlyMeteredConversationsCount: 1, annualMeteredConversationsCount: 1 },
     });
-    await maybeNotifyConversationLimitReached(orgId, usage);
   } catch (error) {
     log.error(error, "Failed to increment metered conversation usage count");
-  }
-}
-
-// Fires a one-time system notification the first time the org's metered conversation
-// counter reaches its allowance in the current cycle.
-//
-// Uses `>=` guarded by a persisted `conversationLimitNotifiedAt` rather than the
-// `=== effectiveMax` this used to do. Increments are not serialized, so two concurrent
-// windows opening at max-1 could step the counter straight to max+1 and the equality
-// never held — the org silently never got told it hit its limit. The timestamp both
-// makes `>=` fire once and survives process restarts; the resets clear it so the next
-// cycle can notify again. Best-effort: any failure here must never affect the (already
-// committed) usage increment.
-async function maybeNotifyConversationLimitReached(
-  orgId: string,
-  usage: {
-    monthlyMeteredConversationsCount: number;
-    annualMeteredConversationsCount: number;
-    conversationLimitNotifiedAt: Date | null;
-  },
-) {
-  try {
-    if (usage.conversationLimitNotifiedAt) return;
-
-    const subscription = await prisma.subscription.findUnique({ where: { orgId } });
-    // Packs count towards the allowance, so an org that bought headroom is not told it
-    // has run out at the plan's number.
-    const { effectiveMax: max } = await getConversationAllowance(orgId);
-    // No cap means nothing to warn about. Enterprise is invoiced on actual usage, so
-    // "you have reached your conversation limit — upgrade your plan" is both untrue and
-    // useless there: there is no higher tier to move to.
-    if (!max) return;
-
-    const isAnnual = subscription?.isAnnualMessageLimit;
-    const effectiveMax = isAnnual ? max * 12 : max;
-    const used = isAnnual
-      ? usage.annualMeteredConversationsCount
-      : usage.monthlyMeteredConversationsCount;
-
-    if (used < effectiveMax) return;
-
-    // Claim the notification before sending it. updateMany with the null guard is a
-    // conditional write: concurrent increments that both cleared the `>=` check race
-    // here instead, and only the one that flips the column actually notifies.
-    const claimed = await prisma.usageStats.updateMany({
-      where: { orgId, conversationLimitNotifiedAt: null },
-      data: { conversationLimitNotifiedAt: new Date() },
-    });
-    if (claimed.count === 0) return;
-
-    await notifyConversationLimitReached(orgId);
-  } catch (error) {
-    log.error(error, "Failed to evaluate conversation-limit notification");
   }
 }
 

@@ -19,7 +19,7 @@ export const ORG_STATUSES = [
 ] as const;
 export type OrgStatusFilter = (typeof ORG_STATUSES)[number];
 
-export const ORG_SORTS = ["created", "name", "expires", "conversations"] as const;
+export const ORG_SORTS = ["created", "name", "expires", "activeContacts"] as const;
 
 export const orgListQuerySchema = pageQuerySchema.extend({
   q: searchTextSchema,

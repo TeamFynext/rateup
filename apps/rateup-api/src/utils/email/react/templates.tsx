@@ -38,7 +38,7 @@ import SubscriptionPurchasedEmail, {
 } from "../../../emails/subscription-purchased.js";
 import SurveyResponseEmail, { type SurveyResponseAnswer } from "../../../emails/survey-response.js";
 import TeamInviteEmail, { type TeamInviteEmailProps } from "../../../emails/team-invite.js";
-import UsageLimitEmail from "../../../emails/usage-limit.js";
+import UsageLimitEmail, { type UsageLimitKind } from "../../../emails/usage-limit.js";
 import VerifyEmail, { type VerifyEmailProps } from "../../../emails/verify-email.js";
 import WeeklyReportEmail, { type WeeklyReportEmailProps } from "../../../emails/weekly-report.js";
 import WeeklyStatsEmail, { type WeeklyStatsRow } from "../../../emails/weekly-stats.js";
@@ -152,8 +152,10 @@ export function renderPaymentFailedEmail(isRenewal = false) {
   return renderEmail(<PaymentFailedEmail isRenewal={isRenewal} billingLink={billingPage} />);
 }
 
-export function renderUsageLimitEmail() {
-  return renderEmail(<UsageLimitEmail statsLink={statsPage} billingLink={billingPage} />);
+export function renderUsageLimitEmail(limit: UsageLimitKind) {
+  return renderEmail(
+    <UsageLimitEmail limit={limit} statsLink={statsPage} billingLink={billingPage} />,
+  );
 }
 
 export function renderSubscriptionExpiryEmail(props: {

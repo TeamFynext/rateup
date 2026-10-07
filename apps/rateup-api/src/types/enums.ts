@@ -239,7 +239,7 @@ export enum CampaignStatus {
   /// campaign as sending through a retry window that is usually hours long.
   RETRYING = "RETRYING",
   /// Stopped by the platform because the *account* cannot send — the
-  /// conversation allowance is spent, or Meta rejected the payment method.
+  /// campaign credits are spent, or Meta rejected the payment method.
   /// Every remaining recipient is left PENDING, not FAILED, so sending again
   /// once the cause is fixed picks up where it stopped. The cause is on
   /// `pauseReason`; distinct from INACTIVE (owner paused) and FAILED (the
@@ -249,7 +249,9 @@ export enum CampaignStatus {
 
 /// Why a campaign is PAUSED. Stored on `Campaign.pauseReason`.
 export enum CampaignPauseReason {
-  /// The org's conversation allowance for the cycle is used up.
+  /// The org's campaign credits for the month, packs included, are used up.
+  CAMPAIGN_CREDIT_LIMIT = "CAMPAIGN_CREDIT_LIMIT",
+  /// Retired with conversation pricing; still on campaigns paused before it.
   CONVERSATION_LIMIT = "CONVERSATION_LIMIT",
   /// Meta 131042: no payment method, credit line over limit, or a billing
   /// setting missing on the WhatsApp Business account.
@@ -301,7 +303,6 @@ export enum SubscriptionFeaturePathName {
   GoogleReview = "webSurvey.googleReview",
   Encryption = "webSurvey.encryption",
   Whatsapp = "whatsapp",
-  WhatsAppConversation = "whatsapp.conversation",
   // Tier gates. These live UNDER `whatsapp` rather than being their own top-level
   // keys because they are WhatsApp-platform capabilities — but they are separate
   // from `whatsapp.active`, which every tier keeps for inbox access. Splitting them

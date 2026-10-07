@@ -42,7 +42,7 @@ const request = {
   body: {},
 } as unknown as FastifyRequest;
 
-function features(conversations: number) {
+function features(allowance: number) {
   return {
     team: { active: true, count: { max: 5 }, teamMember: { active: true, count: { max: 10 } } },
     webSurvey: {
@@ -52,9 +52,13 @@ function features(conversations: number) {
       emailNotification: { active: true },
       htmlCodePage: { active: true },
       webhook: { active: true },
-      count: { monthlyResponseLimit: conversations },
+      count: { monthlyResponseLimit: allowance },
     },
-    whatsapp: { active: true, conversation: { active: true, count: { max: conversations } } },
+    whatsapp: {
+      active: true,
+      activeContacts: { active: true, count: { max: allowance } },
+      campaignCredits: { active: true, count: { max: allowance } },
+    },
     ai: { active: false, count: { completionTokens: 0, promptTokens: 0 } },
   };
 }
@@ -97,7 +101,7 @@ describe("changeOrgPlan", () => {
 
     const upsert = db.subscription.upsert.mock.calls[0][0];
     expect(upsert.update.basePlanId).toBe(PLAN_ID);
-    expect(upsert.update.features.whatsapp.conversation.count.max).toBe(20000);
+    expect(upsert.update.features.whatsapp.activeContacts.count.max).toBe(20000);
     expect(upsert.update.expiresAt).toEqual(LATER);
     const audit = db.staffAuditLog.create.mock.calls[0][0].data;
     expect(audit).toMatchObject({
@@ -121,12 +125,12 @@ describe("changeOrgPlan", () => {
 
     await changeOrgPlan(request, ORG_ID, { ...input, preserveContractedCaps: true });
     expect(
-      db.subscription.upsert.mock.calls[0][0].update.features.whatsapp.conversation.count.max,
+      db.subscription.upsert.mock.calls[0][0].update.features.whatsapp.activeContacts.count.max,
     ).toBe(80000);
 
     await changeOrgPlan(request, ORG_ID, { ...input, preserveContractedCaps: false });
     expect(
-      db.subscription.upsert.mock.calls[1][0].update.features.whatsapp.conversation.count.max,
+      db.subscription.upsert.mock.calls[1][0].update.features.whatsapp.activeContacts.count.max,
     ).toBe(UNLIMITED_COUNT);
   });
 
@@ -168,32 +172,72 @@ describe("overrideOrgFeatures", () => {
     });
     const saved = db.subscription.update.mock.calls[0][0].data.features;
     expect(saved.legacyFlag).toEqual({ on: true });
-    expect(saved.whatsapp.conversation.count.max).toBe(250);
+    expect(saved.whatsapp.activeContacts.count.max).toBe(250);
   });
 });
 
 describe("add-on packs", () => {
+  function packEcho() {
+    db.subscriptionAddon.create.mockImplementation(({ data }) =>
+      Promise.resolve({
+        id: "pack-1",
+        kind: data.kind,
+        quantity: data.quantity,
+        expiresAt: data.expiresAt,
+      }),
+    );
+  }
+
   test("a granted pack carries its audit row's id instead of a payment", async () => {
     db.rateupPlan.findFirst.mockResolvedValue({ id: "addon-plan" });
     db.org.findUnique.mockResolvedValue(orgWith(features(5000)));
-    db.subscriptionAddon.create.mockImplementation(({ data }) =>
-      Promise.resolve({ id: "pack-1", quantity: data.quantity, expiresAt: data.expiresAt }),
+    packEcho();
+
+    await grantAddonPacks(
+      request,
+      ORG_ID,
+      { kind: "ACTIVE_CONTACTS", quantity: 2, reason: "Outage credit" },
+      NOW,
     );
 
-    await grantAddonPacks(request, ORG_ID, { quantity: 2, reason: "Outage credit" }, NOW);
-
+    expect(db.rateupPlan.findFirst.mock.calls[0][0].where.name).toBe("ACTIVE CONTACT PACK");
     const pack = db.subscriptionAddon.create.mock.calls[0][0].data;
     const audit = db.staffAuditLog.create.mock.calls[0][0].data;
     expect(pack.paymentRef).toBe(`staff:${audit.id}`);
+    expect(pack).toMatchObject({ kind: "ACTIVE_CONTACTS", creditsGranted: null });
     expect(pack.expiresAt).toEqual(new Date("2026-10-22T10:00:00Z"));
-    expect(audit.after.conversations).toBe(10000);
+    expect(audit.after.units).toBe(2_000);
+  });
+
+  test("a granted credit pack carries its credits and lasts 90 days", async () => {
+    db.rateupPlan.findFirst.mockResolvedValue({ id: "credit-plan" });
+    db.org.findUnique.mockResolvedValue(orgWith(features(5000)));
+    packEcho();
+
+    await grantAddonPacks(
+      request,
+      ORG_ID,
+      { kind: "CAMPAIGN_CREDITS", quantity: 3, reason: "Outage credit" },
+      NOW,
+    );
+
+    expect(db.rateupPlan.findFirst.mock.calls[0][0].where.name).toBe("CAMPAIGN CREDIT PACK");
+    const pack = db.subscriptionAddon.create.mock.calls[0][0].data;
+    expect(pack).toMatchObject({ kind: "CAMPAIGN_CREDITS", creditsGranted: 30_000 });
+    expect(pack.expiresAt).toEqual(new Date("2026-12-21T10:00:00Z"));
+    expect(db.staffAuditLog.create.mock.calls[0][0].data.after.units).toBe(30_000);
   });
 
   test("refused on an uncapped plan, where it would count for nothing", async () => {
     db.rateupPlan.findFirst.mockResolvedValue({ id: "addon-plan" });
     db.org.findUnique.mockResolvedValue(orgWith(features(UNLIMITED_COUNT)));
     await expect(
-      grantAddonPacks(request, ORG_ID, { quantity: 1, reason: "Outage credit" }, NOW),
+      grantAddonPacks(
+        request,
+        ORG_ID,
+        { kind: "ACTIVE_CONTACTS", quantity: 1, reason: "Outage credit" },
+        NOW,
+      ),
     ).rejects.toMatchObject({ code: "ADDON_NOT_APPLICABLE" });
     expect(db.subscriptionAddon.create).not.toHaveBeenCalled();
   });

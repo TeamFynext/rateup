@@ -4,7 +4,7 @@ import { log } from "../../logger.js";
 import { CampaignParticipantStatus, WaTemplateCategory } from "../../types/enum.js";
 import { createTemplateMessage } from "../../../../modules/whatsapp/whatsappSurvey/wasurvey.utils.js";
 import { sendMetaMessage } from "../../../../modules/whatsapp/meta/metaMessage.service.js";
-import { ConversationLimitError } from "../../../../modules/whatsapp/whatsappSurvey/wasurvey.auth.js";
+import { CampaignCreditsExhaustedError } from "../../../../modules/whatsapp/whatsappSurvey/wasurvey.auth.js";
 import { PlatformType } from "../../../../../generated/prisma/enums.js";
 import { buildTemplateComponents } from "../../../../modules/whatsapp/messageTemplates/templateComponents.js";
 import { signFlowToken } from "../../../../modules/whatsapp/flows/flowToken.js";
@@ -294,7 +294,7 @@ async function sendTemplateMessage(
   // Sends and records in one call — including recording a rejection, which is
   // what the failure bookkeeping below reacts to.
   //
-  // sendMetaMessage enforces the org's conversation allowance and signals a breach by
+  // sendMetaMessage spends a campaign credit per attempt and signals none left by
   // throwing. That is deliberately caught rather than propagated: this runs inside a
   // BullMQ job, and a quota breach is not transient — rethrowing would retry the job on
   // a condition that cannot resolve until the org upgrades or the cycle resets. It is
@@ -325,15 +325,15 @@ async function sendTemplateMessage(
       templateData,
     },
   }).catch((error: unknown) => {
-    if (error instanceof ConversationLimitError) return null;
+    if (error instanceof CampaignCreditsExhaustedError) return null;
     throw error;
   });
 
   if (data === null) {
-    log.warn({ orgId, campaignId }, "Campaign send blocked — conversation limit reached");
+    log.warn({ orgId, campaignId }, "Campaign send blocked — campaign credits used up");
     // Meta was never called, so there is nothing to record — not even the usage
     // counter below.
-    await pauseCampaignForAccountIssue(campaignId, CampaignPauseReason.CONVERSATION_LIMIT);
+    await pauseCampaignForAccountIssue(campaignId, CampaignPauseReason.CAMPAIGN_CREDIT_LIMIT);
     return { ok: false, paused: true };
   }
 

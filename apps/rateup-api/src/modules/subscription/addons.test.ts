@@ -4,20 +4,25 @@ vi.mock("../../utils/prisma.js", () => ({
   default: {
     subscription: { findUnique: vi.fn() },
     subscriptionAddon: { findMany: vi.fn() },
-    rateupPlan: { findFirst: vi.fn() },
   },
 }));
 
 import prisma from "../../utils/prisma.js";
-import { getAddonEligibility, getConversationAllowance } from "./addons.js";
-import { CONVERSATION_ADDON } from "./catalog.js";
+import {
+  addonExpiryFrom,
+  getActiveContactAllowance,
+  getAddonEligibility,
+  getCampaignPackCreditsRemaining,
+  planMeterMax,
+} from "./addons.js";
+import { ADDONS } from "./catalog.js";
 import { UNLIMITED_COUNT } from "./subscription.data.js";
 
 function onPlan(max: number | undefined) {
   vi.mocked(prisma.subscription.findUnique).mockResolvedValue(
     max === undefined
       ? ({ features: {} } as never)
-      : ({ features: { whatsapp: { conversation: { count: { max } } } } } as never),
+      : ({ features: { whatsapp: { activeContacts: { count: { max } } } } } as never),
   );
 }
 
@@ -29,7 +34,9 @@ function withPacks(...quantities: number[]) {
   );
 }
 
-describe("the conversation allowance an org actually has", () => {
+const CONTACTS_PER_PACK = ADDONS.ACTIVE_CONTACTS.units;
+
+describe("the active-contact allowance an org actually has", () => {
   beforeEach(() => {
     vi.mocked(prisma.subscription.findUnique).mockReset();
     vi.mocked(prisma.subscriptionAddon.findMany)
@@ -40,29 +47,29 @@ describe("the conversation allowance an org actually has", () => {
   test("is the plan's allowance when no packs are held", async () => {
     onPlan(5_000);
 
-    expect(await getConversationAllowance("org-1")).toEqual({
+    expect(await getActiveContactAllowance("org-1")).toEqual({
       planMax: 5_000,
-      addonConversations: 0,
+      addonContacts: 0,
       effectiveMax: 5_000,
     });
   });
 
-  test("adds a pack's conversations to the plan's", async () => {
+  test("adds a pack's contacts to the plan's", async () => {
     onPlan(5_000);
     withPacks(1);
 
-    const allowance = await getConversationAllowance("org-1");
+    const allowance = await getActiveContactAllowance("org-1");
 
-    expect(allowance.addonConversations).toBe(CONVERSATION_ADDON.conversations);
-    expect(allowance.effectiveMax).toBe(5_000 + CONVERSATION_ADDON.conversations);
+    expect(allowance.addonContacts).toBe(CONTACTS_PER_PACK);
+    expect(allowance.effectiveMax).toBe(5_000 + CONTACTS_PER_PACK);
   });
 
   test("stacks packs, so buying three trebles the extra headroom", async () => {
     onPlan(5_000);
     withPacks(3);
 
-    expect((await getConversationAllowance("org-1")).effectiveMax).toBe(
-      5_000 + 3 * CONVERSATION_ADDON.conversations,
+    expect((await getActiveContactAllowance("org-1")).effectiveMax).toBe(
+      5_000 + 3 * CONTACTS_PER_PACK,
     );
   });
 
@@ -72,8 +79,8 @@ describe("the conversation allowance an org actually has", () => {
     onPlan(5_000);
     withPacks(2, 1);
 
-    expect((await getConversationAllowance("org-1")).effectiveMax).toBe(
-      5_000 + 3 * CONVERSATION_ADDON.conversations,
+    expect((await getActiveContactAllowance("org-1")).effectiveMax).toBe(
+      5_000 + 3 * CONTACTS_PER_PACK,
     );
   });
 
@@ -82,13 +89,13 @@ describe("the conversation allowance an org actually has", () => {
     onPlan(UNLIMITED_COUNT);
     withPacks(5);
 
-    expect(await getConversationAllowance("org-1")).toMatchObject({ effectiveMax: undefined });
+    expect(await getActiveContactAllowance("org-1")).toMatchObject({ effectiveMax: undefined });
   });
 
   test("reports no cap when the plan states no allowance", async () => {
     onPlan(undefined);
 
-    expect(await getConversationAllowance("org-1")).toMatchObject({ effectiveMax: undefined });
+    expect(await getActiveContactAllowance("org-1")).toMatchObject({ effectiveMax: undefined });
   });
 
   test("only counts packs that have not run out", async () => {
@@ -97,12 +104,14 @@ describe("the conversation allowance an org actually has", () => {
     onPlan(5_000);
     withPacks(1);
 
-    await getConversationAllowance("org-1");
+    await getActiveContactAllowance("org-1");
 
     const where = vi.mocked(prisma.subscriptionAddon.findMany).mock.calls[0]?.[0]?.where as {
+      kind: string;
       expiresAt: { gt: Date };
     };
     expect(where.expiresAt.gt.getTime()).toBeGreaterThan(Date.now() - 5_000);
+    expect(where.kind).toBe("ACTIVE_CONTACTS");
   });
 
   test("does not look up packs for a plan that is not metered", async () => {
@@ -110,13 +119,73 @@ describe("the conversation allowance an org actually has", () => {
     // second query to reach the same answer.
     onPlan(UNLIMITED_COUNT);
 
-    await getConversationAllowance("org-1");
+    await getActiveContactAllowance("org-1");
 
     expect(prisma.subscriptionAddon.findMany).not.toHaveBeenCalled();
   });
 });
 
-describe("who may buy conversation packs", () => {
+describe("campaign pack credits", () => {
+  beforeEach(() => {
+    vi.mocked(prisma.subscriptionAddon.findMany).mockReset();
+  });
+
+  test("sums what each in-date credit pack has left", async () => {
+    vi.mocked(prisma.subscriptionAddon.findMany).mockResolvedValue([
+      { quantity: 1, expiresAt: A_WEEK_OUT, creditsGranted: 10_000, creditsUsed: 5_800 },
+      { quantity: 1, expiresAt: A_WEEK_OUT, creditsGranted: 10_000, creditsUsed: 0 },
+    ] as never);
+
+    expect(await getCampaignPackCreditsRemaining("org-1")).toBe(14_200);
+    const where = vi.mocked(prisma.subscriptionAddon.findMany).mock.calls[0]?.[0]?.where as {
+      kind: string;
+    };
+    expect(where.kind).toBe("CAMPAIGN_CREDITS");
+  });
+
+  test("never counts an overspent or ungranted pack as negative", async () => {
+    vi.mocked(prisma.subscriptionAddon.findMany).mockResolvedValue([
+      { quantity: 1, expiresAt: A_WEEK_OUT, creditsGranted: 100, creditsUsed: 101 },
+      { quantity: 1, expiresAt: A_WEEK_OUT, creditsGranted: null, creditsUsed: 0 },
+    ] as never);
+
+    expect(await getCampaignPackCreditsRemaining("org-1")).toBe(0);
+  });
+});
+
+describe("pack lifetimes and plan meters", () => {
+  test("a contact pack lasts 30 days and a credit pack 90", () => {
+    const bought = new Date("2026-10-06T12:00:00Z");
+    const days = (to: Date) => Math.round((to.getTime() - bought.getTime()) / 86_400_000);
+
+    expect(days(addonExpiryFrom("ACTIVE_CONTACTS", bought))).toBe(30);
+    expect(days(addonExpiryFrom("CAMPAIGN_CREDITS", bought))).toBe(90);
+  });
+
+  test("reads each meter's own allowance from the features blob", () => {
+    const features = {
+      whatsapp: {
+        activeContacts: { count: { max: 1_000 } },
+        campaignCredits: { count: { max: 10_000 } },
+      },
+    };
+    expect(planMeterMax(features, "ACTIVE_CONTACTS")).toBe(1_000);
+    expect(planMeterMax(features, "CAMPAIGN_CREDITS")).toBe(10_000);
+  });
+
+  test.each([
+    ["absent", {}],
+    ["zero", { whatsapp: { campaignCredits: { count: { max: 0 } } } }],
+    [
+      "the unlimited sentinel",
+      { whatsapp: { campaignCredits: { count: { max: UNLIMITED_COUNT } } } },
+    ],
+  ])("treats an %s allowance as not metered", (_label, features) => {
+    expect(planMeterMax(features, "CAMPAIGN_CREDITS")).toBeUndefined();
+  });
+});
+
+describe("who may buy packs", () => {
   const PAID = {
     name: "PRO PLAN",
     displayName: "Pro",
@@ -142,9 +211,6 @@ describe("who may buy conversation packs", () => {
 
   beforeEach(() => {
     vi.mocked(prisma.subscription.findUnique).mockReset();
-    vi.mocked(prisma.rateupPlan.findFirst)
-      .mockReset()
-      .mockResolvedValue({ id: "addon-plan" } as never);
     vi.mocked(prisma.subscriptionAddon.findMany)
       .mockReset()
       .mockResolvedValue([] as never);
@@ -153,13 +219,16 @@ describe("who may buy conversation packs", () => {
   test("a paid, gateway-billed plan may", async () => {
     onBasePlan(PAID);
 
-    expect(await getAddonEligibility("org-1")).toMatchObject({ eligible: true, reason: null });
+    expect(await getAddonEligibility("org-1", "ACTIVE_CONTACTS")).toMatchObject({
+      eligible: true,
+      reason: null,
+    });
   });
 
   test("Enterprise may not — its allowance is uncapped and invoiced on real usage", async () => {
     onBasePlan(SALES_LED);
 
-    const { eligible, reason } = await getAddonEligibility("org-1");
+    const { eligible, reason } = await getAddonEligibility("org-1", "ACTIVE_CONTACTS");
 
     expect(eligible).toBe(false);
     expect(reason).toMatch(/Enterprise/);
@@ -171,13 +240,13 @@ describe("who may buy conversation packs", () => {
     // at the number the contract set.
     vi.mocked(prisma.subscription.findUnique).mockResolvedValue({
       basePlan: SALES_LED,
-      features: { whatsapp: { conversation: { count: { max: 200_000 } } } },
+      features: { whatsapp: { activeContacts: { count: { max: 200_000 } } } },
     } as never);
 
-    const { eligible, reason } = await getAddonEligibility("org-1");
+    const { eligible, reason } = await getAddonEligibility("org-1", "ACTIVE_CONTACTS");
 
     expect(eligible).toBe(false);
-    expect(reason).toContain("200,000 conversations a month");
+    expect(reason).toContain("200,000 active contacts a month");
     expect(reason).not.toMatch(/no allowance to top up/);
   });
 
@@ -192,13 +261,19 @@ describe("who may buy conversation packs", () => {
       { quantity: 1, expiresAt: soon },
     ] as never);
 
-    expect(await getAddonEligibility("org-1")).toMatchObject({ packs: 2, activeUntil: later });
+    expect(await getAddonEligibility("org-1", "ACTIVE_CONTACTS")).toMatchObject({
+      packs: 2,
+      activeUntil: later,
+    });
   });
 
   test("holds nothing, and no date, when every pack has lapsed", async () => {
     onBasePlan(PAID);
 
-    expect(await getAddonEligibility("org-1")).toMatchObject({ packs: 0, activeUntil: null });
+    expect(await getAddonEligibility("org-1", "ACTIVE_CONTACTS")).toMatchObject({
+      packs: 0,
+      activeUntil: null,
+    });
   });
 
   test("Free may not — there is no subscription for a pack to bill alongside", async () => {
@@ -211,7 +286,7 @@ describe("who may buy conversation packs", () => {
       stripeId: null,
     });
 
-    const { eligible, reason } = await getAddonEligibility("org-1");
+    const { eligible, reason } = await getAddonEligibility("org-1", "ACTIVE_CONTACTS");
 
     expect(eligible).toBe(false);
     expect(reason).toMatch(/Upgrading/i);
@@ -220,7 +295,9 @@ describe("who may buy conversation packs", () => {
   test("an org with no subscription at all may not", async () => {
     onBasePlan(null);
 
-    expect(await getAddonEligibility("org-1")).toMatchObject({ eligible: false });
+    expect(await getAddonEligibility("org-1", "ACTIVE_CONTACTS")).toMatchObject({
+      eligible: false,
+    });
   });
 
   test("reports the packs already held, even when no more may be bought", async () => {
@@ -231,13 +308,23 @@ describe("who may buy conversation packs", () => {
       { quantity: 1, expiresAt: A_WEEK_OUT },
     ] as never);
 
-    expect(await getAddonEligibility("org-1")).toMatchObject({ eligible: false, packs: 3 });
+    expect(await getAddonEligibility("org-1", "ACTIVE_CONTACTS")).toMatchObject({
+      eligible: false,
+      packs: 3,
+    });
   });
 
-  test("holds no packs when the add-on is not in the catalog yet", async () => {
+  test("describes the kind of pack asked about", async () => {
     onBasePlan(PAID);
-    vi.mocked(prisma.rateupPlan.findFirst).mockResolvedValue(null as never);
 
-    expect(await getAddonEligibility("org-1")).toMatchObject({ packs: 0 });
+    expect(await getAddonEligibility("org-1", "CAMPAIGN_CREDITS")).toMatchObject({
+      kind: "CAMPAIGN_CREDITS",
+      unitsPerPack: 10_000,
+      validDays: 90,
+    });
+    const where = vi.mocked(prisma.subscriptionAddon.findMany).mock.calls[0]?.[0]?.where as {
+      kind: string;
+    };
+    expect(where.kind).toBe("CAMPAIGN_CREDITS");
   });
 });

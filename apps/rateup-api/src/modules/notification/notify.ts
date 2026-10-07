@@ -36,7 +36,8 @@ export interface NotificationDataByEvent {
   "whatsapp.template_status": { templateId: string; templateName: string; status: string };
   "whatsapp.account_restricted": { channelName: string };
   "integration.error": { integration: string; error: string; contactName?: string };
-  "billing.conversation_limit": { message: string };
+  "billing.active_contact_limit": { message: string };
+  "billing.campaign_credit_limit": { message: string };
 }
 
 /**

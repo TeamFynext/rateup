@@ -17,7 +17,7 @@ vi.mock("./notify.js", () => ({ notify: vi.fn() }));
 import prisma from "../../utils/prisma.js";
 import { sendUsageLimitMailAlert } from "../../utils/email/payments/usageLimitAlert.js";
 import { notify } from "./notify.js";
-import { notifyConversationLimitReached } from "./notification.service.js";
+import { notifyLimitReached } from "./notification.service.js";
 
 const subscriptionMock = prisma.subscription.findUnique as unknown as ReturnType<typeof vi.fn>;
 const notifyMock = notify as unknown as ReturnType<typeof vi.fn>;
@@ -46,37 +46,43 @@ beforeEach(() => {
   subscriptionMock.mockResolvedValue(PAID);
 });
 
-describe("notifyConversationLimitReached", () => {
-  test("goes to everyone who receives billing alerts, with an upgrade message", async () => {
-    await notifyConversationLimitReached("org-1");
+describe("notifyLimitReached", () => {
+  test.each([
+    ["activeContacts", "billing.active_contact_limit", /contact pack/i],
+    ["campaignCredits", "billing.campaign_credit_limit", /credit pack/i],
+  ] as const)(
+    "%s goes to everyone who receives billing alerts, with an upgrade message",
+    async (limit, event, pack) => {
+      await notifyLimitReached("org-1", limit);
 
-    expect(notifyMock).toHaveBeenCalledTimes(1);
-    const input = notifyMock.mock.calls[0][0];
-    expect(input.event).toBe("billing.conversation_limit");
-    expect(input.orgId).toBe("org-1");
-    expect(input.audience).toEqual({ kind: "permitted" });
-    expect(input.data.message).toMatch(/upgrade your plan/i);
-  });
+      expect(notifyMock).toHaveBeenCalledTimes(1);
+      const input = notifyMock.mock.calls[0][0];
+      expect(input.event).toBe(event);
+      expect(input.orgId).toBe("org-1");
+      expect(input.audience).toEqual({ kind: "permitted" });
+      expect(input.data.message).toMatch(/upgrade/i);
+      expect(input.data.message).toMatch(pack);
+    },
+  );
 
   test("a contracted account is pointed at us, not at an upgrade that does not exist", async () => {
-    // Enterprise is unlimited until a deal caps it. Reaching that cap is real — the send
-    // gate stops there — but there is no higher tier to buy, so the copy has to differ.
+    // Enterprise has no higher tier to buy, so the copy has to differ.
     subscriptionMock.mockResolvedValue(SALES_LED);
 
-    await notifyConversationLimitReached("org-1");
+    await notifyLimitReached("org-1", "activeContacts");
 
     const message = notifyMock.mock.calls[0][0].data.message;
-    expect(message).toMatch(/limit set on your agreement/i);
+    expect(message).toMatch(/set on your agreement/i);
     expect(message).not.toMatch(/upgrade/i);
   });
 
-  test("mails the owner whatever the notification settings say", async () => {
-    await notifyConversationLimitReached("org-1");
-    expect(sendUsageLimitMailAlert).toHaveBeenCalledWith("org-1");
+  test("mails the owner and admins whatever the notification settings say", async () => {
+    await notifyLimitReached("org-1", "campaignCredits");
+    expect(sendUsageLimitMailAlert).toHaveBeenCalledWith("org-1", "campaignCredits");
   });
 
   test("is best-effort: swallows errors instead of throwing", async () => {
     subscriptionMock.mockRejectedValue(new Error("db down"));
-    await expect(notifyConversationLimitReached("org-1")).resolves.toBeUndefined();
+    await expect(notifyLimitReached("org-1", "activeContacts")).resolves.toBeUndefined();
   });
 });
