@@ -5,8 +5,11 @@ import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
 import { getOrgInvoices } from "../../payment/payment.service.js";
 import { getMessageStatsByOrgId } from "../../subscription/subscription.service.js";
-import { getConversationBudget } from "../../subscription/conversationBudget.js";
-import { checkPlanLimit, planAllowance, PLAN_LIMITS } from "../../subscription/planLimits.js";
+import { getActiveContactBudget } from "../../subscription/activeContacts.js";
+import { planMeterMax } from "../../subscription/addons.js";
+import { currentPeriodStart, isSamePeriod } from "../../subscription/billingPeriod.js";
+import { getCampaignCreditBudget } from "../../subscription/campaignCredits.js";
+import { checkPlanLimit } from "../../subscription/planLimits.js";
 import { StaffHttpError } from "../staff.errors.js";
 import { channelsMatchingDigits, lastActiveByOrg } from "../staff.lookup.js";
 import { asPhoneDigits, asUuid, pageArgs, type Page } from "../staff.schema.js";
@@ -100,8 +103,8 @@ function orgListOrder(
       return [{ name: order }, { id: "asc" }];
     case "expires":
       return [{ Subscription: { expiresAt: order } }, { id: "asc" }];
-    case "conversations":
-      return [{ UsageStats: { monthlyMeteredConversationsCount: order } }, { id: "asc" }];
+    case "activeContacts":
+      return [{ UsageStats: { activeContactsCount: order } }, { id: "asc" }];
     default:
       return [{ createdAt: order }, { id: "asc" }];
   }
@@ -120,12 +123,16 @@ const orgRowSelect = {
     select: {
       expiresAt: true,
       features: true,
-      isAnnualMessageLimit: true,
       basePlan: { select: { id: true, name: true, displayName: true, price: true } },
     },
   },
   UsageStats: {
-    select: { monthlyMeteredConversationsCount: true, annualMeteredConversationsCount: true },
+    select: {
+      activeContactsCount: true,
+      activeContactsPeriodStart: true,
+      campaignCreditsUsed: true,
+      campaignCreditsPeriodStart: true,
+    },
   },
   _count: { select: { members: true } },
 } satisfies Prisma.OrgSelect;
@@ -147,19 +154,24 @@ export interface OrgRow {
   expiresAt: Date | null;
   members: number;
   /**
-   * This period's metered conversations against the plan's own ceiling. Packs are left
-   * out here (one query per row); the org's usage tab shows the full budget.
+   * This month's meters against the plan's own ceilings. Packs are left out here (one
+   * query per row); the org's usage tab shows the full budget.
    */
-  conversations: { used: number; max: number | null };
+  activeContacts: { used: number; max: number | null };
+  campaignCredits: { used: number; max: number | null };
   lastActiveAt: Date | null;
 }
 
 function toOrgRow(org: OrgRowRecord, lastActive: Date | undefined, now: Date): OrgRow {
   const subscription = org.Subscription;
   const plan = subscription?.basePlan;
-  const annual = Boolean(subscription?.isAnnualMessageLimit);
-  const monthlyMax = subscription
-    ? planAllowance(subscription.features, PLAN_LIMITS.conversations.path)
+  const period = currentPeriodStart(now);
+  const usage = org.UsageStats;
+  const contactsMax = subscription
+    ? planMeterMax(subscription.features, "ACTIVE_CONTACTS")
+    : undefined;
+  const creditsMax = subscription
+    ? planMeterMax(subscription.features, "CAMPAIGN_CREDITS")
     : undefined;
   return {
     id: org.id,
@@ -176,12 +188,17 @@ function toOrgRow(org: OrgRowRecord, lastActive: Date | undefined, now: Date): O
     status: subscriptionStatus(subscription, now),
     expiresAt: subscription?.expiresAt ?? null,
     members: org._count.members,
-    conversations: {
-      used:
-        (annual
-          ? org.UsageStats?.annualMeteredConversationsCount
-          : org.UsageStats?.monthlyMeteredConversationsCount) ?? 0,
-      max: monthlyMax === undefined ? null : annual ? monthlyMax * 12 : monthlyMax,
+    activeContacts: {
+      used: isSamePeriod(usage?.activeContactsPeriodStart, period)
+        ? (usage?.activeContactsCount ?? 0)
+        : 0,
+      max: contactsMax ?? null,
+    },
+    campaignCredits: {
+      used: isSamePeriod(usage?.campaignCreditsPeriodStart, period)
+        ? (usage?.campaignCreditsUsed ?? 0)
+        : 0,
+      max: creditsMax ?? null,
     },
     lastActiveAt: lastActive ?? null,
   };
@@ -274,7 +291,6 @@ export async function getOrgSummary(orgId: string, now = new Date()) {
           startedAt: subscription.createdAt,
           renewedAt: subscription.renewedAt,
           expiresAt: subscription.expiresAt,
-          annualAllowance: subscription.isAnnualMessageLimit,
           gatewayRef: subscription.subscriptionRef,
           limitAlertSentAt: subscription.lastLimitAlertSentAt,
         }
@@ -374,63 +390,86 @@ export async function getOrgMembers(orgId: string) {
   };
 }
 
-export type DailyConversations = { date: string; conversations: number }[];
+export type DailyUsage = { date: string; activeContacts: number; campaignCredits: number }[];
 
-/** Metered conversations opened per UTC day over the last `days` days, today included. */
-export async function dailyConversations(
+/**
+ * Per UTC day over the last `days` days, today included: contacts that became active that
+ * day, and campaign messages attempted (one credit each).
+ */
+export async function dailyUsage(
   orgId: string,
   days: number,
   now = new Date(),
-): Promise<DailyConversations> {
+): Promise<DailyUsage> {
   const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
   const start = new Date(today - (days - 1) * DAY_MS);
-  // "openedAt" is a timestamp without time zone holding UTC, so date_trunc buckets by UTC day.
-  const rows = await prisma.$queryRaw<{ day: string; count: number }[]>`
-    SELECT to_char(date_trunc('day', "openedAt"), 'YYYY-MM-DD') AS day, COUNT(*)::int AS count
-    FROM "MeteredConversation"
-    WHERE "orgId" = ${orgId}::uuid AND "openedAt" >= ${start}
-    GROUP BY 1`;
-  const counts = new Map(rows.map((row) => [row.day, Number(row.count)]));
+  const [contacts, credits] = await Promise.all([
+    prisma.$queryRaw<{ day: string; count: number }[]>`
+      SELECT to_char(date_trunc('day', "firstActiveAt"), 'YYYY-MM-DD') AS day, COUNT(*)::int AS count
+      FROM "ActiveContact"
+      WHERE "orgId" = ${orgId}::uuid AND "firstActiveAt" >= ${start}
+      GROUP BY 1`,
+    prisma.$queryRaw<{ day: string; count: number }[]>`
+      SELECT to_char(date_trunc('day', w."createdAt"), 'YYYY-MM-DD') AS day, COUNT(*)::int AS count
+      FROM "WaMessageCampaginParticipantMap" m
+      JOIN "WaMessage" w ON w."id" = m."waMessageId"
+      JOIN "Contact" c ON c."id" = w."contactId"
+      WHERE c."orgId" = ${orgId}::uuid AND w."createdAt" >= ${start}
+      GROUP BY 1`,
+  ]);
+  const contactCounts = new Map(contacts.map((row) => [row.day, Number(row.count)]));
+  const creditCounts = new Map(credits.map((row) => [row.day, Number(row.count)]));
   return Array.from({ length: days }, (_, i) => {
     const date = new Date(start.getTime() + i * DAY_MS).toISOString().slice(0, 10);
-    return { date, conversations: counts.get(date) ?? 0 };
+    return {
+      date,
+      activeContacts: contactCounts.get(date) ?? 0,
+      campaignCredits: creditCounts.get(date) ?? 0,
+    };
   });
 }
 
-/** The four plan limits as the gates see them, plus the raw counters behind them. */
+/** The plan limits as the gates see them, plus the raw counters behind them. */
 export async function getOrgUsage(orgId: string, days: UsageDays = 30, now = new Date()) {
   await assertOrgExists(orgId);
-  const [teams, users, conversations, formResponses, budget, usage, packs, daily] =
+  const [teams, users, formResponses, activeContacts, campaignCredits, usage, packs, daily] =
     await Promise.all([
       checkPlanLimit(orgId, "teams"),
       checkPlanLimit(orgId, "users"),
-      checkPlanLimit(orgId, "conversations"),
       checkPlanLimit(orgId, "formResponses"),
-      getConversationBudget(orgId),
+      getActiveContactBudget(orgId),
+      getCampaignCreditBudget(orgId),
       prisma.usageStats.findUnique({ where: { orgId } }),
       prisma.subscriptionAddon.findMany({
         where: { orgId, expiresAt: { gt: new Date() } },
         orderBy: { expiresAt: "asc" },
         select: {
           id: true,
+          kind: true,
           quantity: true,
+          creditsGranted: true,
+          creditsUsed: true,
           expiresAt: true,
           createdAt: true,
           paymentRef: true,
           addon: { select: { name: true, displayName: true } },
         },
       }),
-      dailyConversations(orgId, days, now),
+      dailyUsage(orgId, days, now),
     ]);
 
   return {
-    limits: { teams, users, conversations, formResponses },
-    conversationPeriod: budget.isAnnual ? "annual" : "monthly",
+    limits: { teams, users, formResponses },
+    activeContacts,
+    campaignCredits,
     daily,
     packs: packs.map((pack) => ({
       id: pack.id,
+      kind: pack.kind,
       name: pack.addon.displayName ?? pack.addon.name,
       quantity: pack.quantity,
+      creditsGranted: pack.creditsGranted,
+      creditsUsed: pack.creditsUsed,
       expiresAt: pack.expiresAt,
       boughtAt: pack.createdAt,
       paymentRef: pack.paymentRef,

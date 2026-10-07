@@ -2,7 +2,11 @@ import type { TaskRunner } from "./task.js";
 import { migrateShopifyAbandonedCheckouts } from "./tasks/migrateShopifyAbandonedCheckouts.js";
 import { purgeOrphanedCampaignJobs } from "./tasks/purgeOrphanedCampaignJobs.js";
 import { restoreSentCampaignsFromDraft } from "./tasks/restoreSentCampaignsFromDraft.js";
-import { seedConversationAddon } from "./tasks/seedConversationAddon.js";
+import {
+  migrateActiveContactPricing,
+  repriceSubscriptions,
+} from "./tasks/migrateActiveContactPricing.js";
+import { seedAddons } from "./tasks/seedAddons.js";
 import { seedPlans } from "./tasks/seedPlans.js";
 
 export interface TaskDefinition {
@@ -51,14 +55,36 @@ export const MAINTENANCE_TASKS: TaskDefinition[] = [
     run: seedPlans,
   },
   {
-    id: "seed-conversation-addon",
-    title: "Seed the conversation pack",
+    id: "seed-addons",
+    title: "Seed the add-on packs",
     description:
-      "Creates the add-on that sells 5,000 extra conversations for one month " +
-      "(₹1,200 / $19). Packs are bought outright and stack; nothing renews them. Also " +
-      "unlinks the gateway plans from when packs were a subscription. Idempotent.",
+      "Creates the active contact pack (1,000 contacts for 30 days, ₹999 / $19) and the " +
+      "campaign credit pack (10,000 credits for 90 days, ₹499 / $10), renaming the old " +
+      "conversation pack into the contact pack so packs already sold keep counting. Packs " +
+      "are bought outright and stack; nothing renews them. Idempotent.",
     destructive: true,
-    run: seedConversationAddon,
+    run: seedAddons,
+  },
+  {
+    id: "migrate-active-contact-pricing",
+    title: "Move orgs to active-contact pricing",
+    description:
+      "Run after Seed the plan catalog and Seed the add-on packs. Replaces each org's " +
+      "conversation allowance with its tier's active-contact and campaign-credit allowances, " +
+      "and backfills this month's active contacts and campaign sends so the new limits apply " +
+      "immediately. Lists contracted Enterprise orgs, whose caps staff set by hand. Idempotent.",
+    destructive: false,
+    run: migrateActiveContactPricing,
+  },
+  {
+    id: "reprice-subscriptions",
+    title: "Move subscriptions to the new prices",
+    description:
+      "Moves every live Razorpay and Stripe subscription onto its tier's new price from its " +
+      "next billing cycle, keeping currency and cadence. Shopify orgs are listed: they keep " +
+      "the old price until they approve a new charge. Writes to the payment gateways.",
+    destructive: true,
+    run: repriceSubscriptions,
   },
   {
     id: "purge-orphaned-campaign-jobs",

@@ -5,6 +5,7 @@ vi.mock("./subscription.controller.js", () => ({
   getMessageStatsHandler: vi.fn(),
   getSubscriptionHandler: vi.fn(),
   getUserSubscriptionHandler: vi.fn(),
+  getUsageHandler: vi.fn(),
   updateSubscriptionHandler: vi.fn(),
 }));
 vi.mock("../../utils/auth.js", () => ({ assertRootOrg: vi.fn() }));

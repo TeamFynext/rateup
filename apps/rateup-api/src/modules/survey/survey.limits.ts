@@ -4,7 +4,7 @@ import prisma from "../../utils/prisma.js";
 import { ResponsePlatform } from "../../../generated/prisma/client.js";
 import { SubscriptionFeaturePathName } from "../../types/enums.js";
 import { checkPlanLimit } from "../subscription/planLimits.js";
-import { sendUsageLimitMailAlert } from "../../utils/email/payments/usageLimitAlert.js";
+import { sendFormResponseLimitAlert } from "../../utils/email/payments/usageLimitAlert.js";
 
 /**
  * Where the web-form allowance lives in a stored features blob.
@@ -68,12 +68,12 @@ export const FORM_CLOSED_REASON = "form_closed";
  * Tells the org's owner they have run out, at most once a week.
  *
  * Fired from the respondent's request, which is the only signal there is — nothing else
- * runs when a form is refused. `sendUsageLimitMailAlert` carries the weekly guard, so a
+ * runs when a form is refused. `sendFormResponseLimitAlert` carries the weekly guard, so a
  * form that keeps being loaded after the limit does not keep mailing.
  */
 export async function alertResponseLimitReached(orgId: string) {
   try {
-    await sendUsageLimitMailAlert(orgId);
+    await sendFormResponseLimitAlert(orgId);
   } catch {
     // Best-effort: a mail failure must not turn into a 500 for the respondent.
   }

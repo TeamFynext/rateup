@@ -45,9 +45,7 @@ vi.mock("../../utils/logger.js", () => ({
 // A pause is exercised in campaignPause.service.test.ts; here only whether the
 // handler clears it, and whether a drip may resume.
 vi.mock("./campaignPause.service.js", () => ({ clearCampaignPause: vi.fn() }));
-vi.mock("../whatsapp/whatsappSurvey/wasurvey.auth.js", () => ({
-  checkConversationLimitAvailable: vi.fn(async () => true),
-}));
+vi.mock("../subscription/campaignCredits.js", () => ({ getCampaignCreditBudget: vi.fn() }));
 
 import { sendCampaignInputSchema } from "./campaign.schema.js";
 import {
@@ -70,7 +68,7 @@ import {
 } from "./campaignSend.service.js";
 import { upsertCampaignRetryPolicy } from "./campaignRetry.service.js";
 import { clearCampaignPause } from "./campaignPause.service.js";
-import { checkConversationLimitAvailable } from "../whatsapp/whatsappSurvey/wasurvey.auth.js";
+import { getCampaignCreditBudget } from "../subscription/campaignCredits.js";
 import {
   getCampaignsByOrgId,
   getCampaignsByTeamId,
@@ -95,7 +93,7 @@ type Mock = ReturnType<typeof vi.fn>;
 
 const m = {
   clearPause: clearCampaignPause as unknown as Mock,
-  limitAvailable: checkConversationLimitAvailable as unknown as Mock,
+  creditBudget: getCampaignCreditBudget as unknown as Mock,
   create: createCampaign as unknown as Mock,
   delete: deleteCampaign as unknown as Mock,
   dequeue: deleteCampaignParticipantsByCampaignId as unknown as Mock,
@@ -150,8 +148,8 @@ function sent(rep: any, index = 0) {
 }
 
 beforeEach(() => {
-  m.limitAvailable.mockResolvedValue(true);
   vi.clearAllMocks();
+  m.creditBudget.mockResolvedValue({ metered: true, exhausted: false });
   m.create.mockResolvedValue({ id: CAMPAIGN_ID });
   m.update.mockResolvedValue({ id: CAMPAIGN_ID });
   m.delete.mockResolvedValue({ id: CAMPAIGN_ID });
@@ -175,7 +173,6 @@ beforeEach(() => {
     max: 5000,
     used: 10,
     remaining: 4990,
-    isAnnual: false,
     exhausted: false,
     shortfall: 0,
   });
@@ -487,7 +484,7 @@ describe("sendCampaignHandler", () => {
     expect(sent(rep).code).toBe("MSG_SCHEDULED");
   });
 
-  test("refuses to resume a paused drip while the allowance is still spent", async () => {
+  test("refuses to resume a paused drip while campaign credits are still spent", async () => {
     m.byId.mockResolvedValue({
       id: CAMPAIGN_ID,
       status: CampaignStatus.PAUSED,
@@ -495,7 +492,7 @@ describe("sendCampaignHandler", () => {
       type: CampaignType.DRIP,
       dripStages: [{ id: "stage-1" }],
     });
-    m.limitAvailable.mockResolvedValue(false);
+    m.creditBudget.mockResolvedValue({ metered: true, exhausted: true });
     const rep = reply();
 
     await sendCampaignHandler(
@@ -504,7 +501,7 @@ describe("sendCampaignHandler", () => {
     );
 
     expect(rep.status).toHaveBeenCalledWith(403);
-    expect(sent(rep).code).toBe("CONVERSATION_LIMIT_REACHED");
+    expect(sent(rep).code).toBe("CAMPAIGN_CREDITS_EXHAUSTED");
     expect(m.update).not.toHaveBeenCalled();
   });
 
@@ -555,7 +552,6 @@ describe("sendCampaignHandler", () => {
     m.preflight.mockResolvedValue({
       recipients: 0,
       metered: false,
-      isAnnual: false,
       exhausted: false,
       shortfall: 0,
     });
@@ -692,7 +688,7 @@ describe("sendCampaignHandler", () => {
     expect(sent(rep).code).toBe("ENQUEUE_REQUEST_ACCEPTED");
   });
 
-  test("refuses a send when the allowance is already spent", async () => {
+  test("refuses a send when campaign credits are already spent", async () => {
     // A campaign started with nothing left only produces a queue of messages that each
     // fail in the dispatcher, and a campaign stuck in QUEUING with no explanation.
     m.preflight.mockResolvedValue({
@@ -701,7 +697,6 @@ describe("sendCampaignHandler", () => {
       max: 5_000,
       used: 5_000,
       remaining: 0,
-      isAnnual: false,
       exhausted: true,
       shortfall: 50,
     });
@@ -710,12 +705,12 @@ describe("sendCampaignHandler", () => {
     await sendCampaignHandler(request({ body: sendBody() }), rep);
 
     expect(rep.status).toHaveBeenCalledWith(403);
-    expect(sent(rep).code).toBe("CONVERSATION_LIMIT_REACHED");
-    expect(sent(rep).message).toContain("5,000 conversations");
+    expect(sent(rep).code).toBe("CAMPAIGN_CREDITS_EXHAUSTED");
+    expect(sent(rep).message).toMatch(/credit pack/);
     expect(m.enqueue).not.toHaveBeenCalled();
   });
 
-  test("still sends a campaign that merely outruns the allowance", async () => {
+  test("still sends a campaign that merely outruns the credits", async () => {
     // 50 people, 45 left: the dialog has already said where it stops, and sending to as
     // many as the plan covers is the customer's call to make.
     m.preflight.mockResolvedValue({
@@ -724,7 +719,6 @@ describe("sendCampaignHandler", () => {
       max: 5_000,
       used: 4_955,
       remaining: 45,
-      isAnnual: false,
       exhausted: false,
       shortfall: 5,
     });

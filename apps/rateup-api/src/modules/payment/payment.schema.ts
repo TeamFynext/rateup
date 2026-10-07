@@ -110,8 +110,14 @@ export const changePlanSchema = z.object({
 
 export type ChangePlanInput = z.infer<typeof changePlanSchema>;
 
-/** How many conversation packs one order buys. The service caps it too. */
-export const conversationAddonOrderSchema = z.object({
+/** How many packs one order buys. The service caps it too. */
+export const addonOrderSchema = z.object({
   quantity: z.number().int().positive().max(20).default(1),
 });
-export type ConversationAddonOrderInput = z.infer<typeof conversationAddonOrderSchema>;
+export type AddonOrderInput = z.infer<typeof addonOrderSchema>;
+
+/** The URL spelling of each pack kind. */
+export const addonKindParamsSchema = z.object({
+  kind: z.enum(["active-contacts", "campaign-credits"]),
+});
+export type AddonKindParams = z.infer<typeof addonKindParamsSchema>;

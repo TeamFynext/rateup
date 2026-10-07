@@ -1,7 +1,7 @@
 import { LoyaltyEventType } from "../../../types/enums.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
-import { getConversationBudget } from "../../subscription/conversationBudget.js";
+import { getActiveContactBudget } from "../../subscription/activeContacts.js";
 import {
   checkBirthdayEventTriggers,
   checkInactivityEventTriggers,
@@ -50,19 +50,18 @@ async function guarded(name: string, run: () => Promise<unknown>): Promise<void>
 /**
  * Whether the org can afford to fan a reminder out, and to how many.
  *
- * No loyalty send path checked this before. It did not matter much for a notification sent
- * one-per-transaction, but a reminder sweep addresses the whole member base at once and
- * could spend a month's conversation allowance in a single tick. Unmetered plans and orgs
- * with no bookkeeping are treated as "within limit", matching `getConversationBudget`.
+ * A reminder sweep addresses the whole member base at once, and each member not yet
+ * messaged this month becomes a new active contact, so one tick could spend the month's
+ * allowance. Unmetered plans are treated as "within limit", matching the send gate.
  */
 export async function reminderSendBudget(orgId: string): Promise<number | null> {
   try {
-    const budget = await getConversationBudget(orgId);
+    const budget = await getActiveContactBudget(orgId);
     if (!budget.metered || budget.remaining === undefined) return null;
     return budget.remaining;
   } catch (error) {
     // Bookkeeping the customer cannot fix must not silence their programme.
-    log.warn({ err: error, orgId }, "Could not read conversation budget for reminders");
+    log.warn({ err: error, orgId }, "Could not read the active contact budget for reminders");
     return null;
   }
 }

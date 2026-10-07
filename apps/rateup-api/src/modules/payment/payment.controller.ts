@@ -5,7 +5,7 @@ import {
   changeSubscriptionPlan,
   cancelRazorpaySubscription,
   createCheckoutSession,
-  createConversationAddonOrder,
+  createAddonOrder,
   createRateUpPlan,
   deletePaymentPlan,
   deleteRateUpPlan,
@@ -14,7 +14,7 @@ import {
   getAllPaymentPlans,
   getAllPaymentSubscriptions,
   getAllRateupPaymentPlans,
-  getConversationAddonOffer,
+  getAddonOffer,
   getOrgInvoices,
   getSubscriptionChangeOptions,
   isSubscriptionStatusEvent,
@@ -36,7 +36,9 @@ import {
   UpdatePlanInput,
   updateRateUpPlanInput,
   type UpdateOrderStatusInput,
+  type AddonKindParams,
 } from "./payment.schema.js";
+import type { AddonKind } from "../subscription/addons.js";
 import Session from "supertokens-node/recipe/session/index.js";
 import { validateWebhookSignature } from "razorpay/dist/utils/razorpay-utils.js";
 import { createHash } from "node:crypto";
@@ -419,23 +421,33 @@ export async function updateSubscriptionOrderHandler(
   }
 }
 
-export async function getConversationAddonOfferHandler(
-  request: FastifyRequest,
+const ADDON_KIND_BY_PARAM = {
+  "active-contacts": "ACTIVE_CONTACTS",
+  "campaign-credits": "CAMPAIGN_CREDITS",
+} as const satisfies Record<AddonKindParams["kind"], AddonKind>;
+
+// `/conversation-addon` predates kinds; it sells active contact packs.
+function addonKindFrom(params: Partial<AddonKindParams> | undefined): AddonKind {
+  return params?.kind ? ADDON_KIND_BY_PARAM[params.kind] : "ACTIVE_CONTACTS";
+}
+
+export async function getAddonOfferHandler(
+  request: FastifyRequest<{ Params: Partial<AddonKindParams> }>,
   reply: FastifyReply,
 ) {
   try {
     const session = await Session.getSession(request, reply);
     const orgId = session.getAccessTokenPayload().orgId;
 
-    reply.code(200).send(await getConversationAddonOffer(orgId));
+    reply.code(200).send(await getAddonOffer(orgId, addonKindFrom(request.params)));
   } catch (error) {
-    log.error({ err: error }, "Failed to read the conversation add-on offer");
+    log.error({ err: error }, "Failed to read the add-on offer");
     reply.code(500).send("Failed");
   }
 }
 
-export async function createConversationAddonOrderHandler(
-  request: FastifyRequest<{ Body: { quantity?: number } }>,
+export async function createAddonOrderHandler(
+  request: FastifyRequest<{ Params: Partial<AddonKindParams>; Body: { quantity?: number } }>,
   reply: FastifyReply,
 ) {
   try {
@@ -445,12 +457,17 @@ export async function createConversationAddonOrderHandler(
     reply
       .code(201)
       .send(
-        await createConversationAddonOrder(session.getUserId(), orgId, request.body?.quantity ?? 1),
+        await createAddonOrder(
+          session.getUserId(),
+          orgId,
+          addonKindFrom(request.params),
+          request.body?.quantity ?? 1,
+        ),
       );
   } catch (error) {
     // A refused purchase is a rule, not a fault — a Free or Enterprise org needs to hear
     // why rather than a generic failure.
-    log.error({ err: error }, "Failed to create a conversation add-on order");
+    log.error({ err: error }, "Failed to create an add-on order");
     reply.code(400).send({ message: error instanceof Error ? error.message : "Failed" });
   }
 }

@@ -469,7 +469,10 @@ declare global {
       };
     };
     [sfpn.Whatsapp]: subscriptionActiveField & {
-      conversation: subscriptionWithActiveAndCount;
+      /** Distinct contacts messaged in a calendar month, broadcasts excluded. */
+      activeContacts: subscriptionWithActiveAndCount;
+      /** Campaign sends a month: one credit per attempted message to one recipient. */
+      campaignCredits: subscriptionWithActiveAndCount;
       // Tier gates, optional for backward-compat with subscriptions stored before
       // they existed. Readers must treat "absent" deliberately — see canAccess.
       campaign?: subscriptionActiveField;

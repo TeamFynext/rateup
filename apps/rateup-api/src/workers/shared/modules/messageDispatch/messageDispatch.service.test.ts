@@ -14,8 +14,8 @@ vi.mock("../../../../modules/whatsapp/meta/metaMessage.service.js", () => ({
   sendMetaMessage: vi.fn(),
 }));
 vi.mock("../../../../modules/whatsapp/whatsappSurvey/wasurvey.auth.js", () => {
-  class ConversationLimitError extends Error {}
-  return { ConversationLimitError };
+  class CampaignCreditsExhaustedError extends Error {}
+  return { CampaignCreditsExhaustedError };
 });
 vi.mock("../../../../modules/whatsapp/messageTemplates/templateComponents.js", () => ({
   buildTemplateComponents: vi.fn(async () => []),
@@ -37,7 +37,7 @@ vi.mock("../../../../modules/campaign/campaignPause.service.js", () => ({
 
 import dbPool from "../../../../utils/db.js";
 import { sendMetaMessage } from "../../../../modules/whatsapp/meta/metaMessage.service.js";
-import { ConversationLimitError } from "../../../../modules/whatsapp/whatsappSurvey/wasurvey.auth.js";
+import { CampaignCreditsExhaustedError } from "../../../../modules/whatsapp/whatsappSurvey/wasurvey.auth.js";
 import { updateCampaignParticipant, updateCampaignStats } from "../../campaign.js";
 import {
   isCampaignSendPaused,
@@ -79,12 +79,12 @@ describe("processParticipant — account-wide failures pause the campaign", () =
     paused.mockResolvedValue(false);
   });
 
-  test("pauses on the conversation limit and leaves the recipient untouched", async () => {
-    send.mockRejectedValue(new ConversationLimitError("limit"));
+  test("pauses when campaign credits run out and leaves the recipient untouched", async () => {
+    send.mockRejectedValue(new CampaignCreditsExhaustedError("limit"));
 
     await expect(processParticipant(participant)).resolves.toEqual({ ok: false, paused: true });
 
-    expect(pause).toHaveBeenCalledWith(CAMPAIGN_ID, CampaignPauseReason.CONVERSATION_LIMIT);
+    expect(pause).toHaveBeenCalledWith(CAMPAIGN_ID, CampaignPauseReason.CAMPAIGN_CREDIT_LIMIT);
     expect(updateCampaignParticipant).not.toHaveBeenCalled();
     expect(updateCampaignStats).not.toHaveBeenCalled();
     // Meta was never called, so not even the usage counter moves.

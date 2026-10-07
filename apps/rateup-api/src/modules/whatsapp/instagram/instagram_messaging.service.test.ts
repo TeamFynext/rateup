@@ -10,7 +10,8 @@ vi.mock("../metaChannel/metaChannel.service.js", () => ({
   updateMetaChannelById: vi.fn(),
 }));
 vi.mock("../whatsappSurvey/wasurvey.auth.js", () => ({
-  assertWithinConversationLimit: vi.fn(),
+  assertCanMessageContact: vi.fn(),
+  assertCampaignCredit: vi.fn(),
 }));
 // Every send files itself in the inbox; the real one talks to the database.
 vi.mock("../inbox/message/wamessage.controller.js", () => ({ handleWaMessages: vi.fn() }));
@@ -24,7 +25,7 @@ vi.mock("../../../utils/logger.js", () => ({
 
 import { callMetaApi } from "../wa_axios.js";
 import { getInstagramChannel, updateMetaChannelById } from "../metaChannel/metaChannel.service.js";
-import { assertWithinConversationLimit } from "../whatsappSurvey/wasurvey.auth.js";
+import { assertCanMessageContact } from "../whatsappSurvey/wasurvey.auth.js";
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
 import {
@@ -55,7 +56,7 @@ type Mock = ReturnType<typeof vi.fn>;
 const callMetaApiMock = callMetaApi as unknown as Mock;
 const getSettingsMock = getInstagramChannel as unknown as Mock;
 const updateSettingsMock = updateMetaChannelById as unknown as Mock;
-const assertLimitMock = assertWithinConversationLimit as unknown as Mock;
+const assertLimitMock = assertCanMessageContact as unknown as Mock;
 const handleWaMessagesMock = handleWaMessages as unknown as Mock;
 
 const IBA_ID = "iba-1";
@@ -191,17 +192,20 @@ describe("sendInstagramTextMessage", () => {
     });
   });
 
-  test("checks the org's conversation limit before sending", async () => {
+  test("checks the org's active-contact allowance for this recipient before sending", async () => {
     await sendInstagramTextMessage(IGS_ID, "hello", ORG_ID, IBA_ID);
 
-    expect(assertLimitMock).toHaveBeenCalledWith(ORG_ID);
+    expect(assertLimitMock).toHaveBeenCalledWith(ORG_ID, {
+      platform: PlatformType.INSTAGRAM,
+      customerId: IGS_ID,
+    });
   });
 
-  test("does not send when the org is over its conversation limit", async () => {
-    assertLimitMock.mockRejectedValue(new Error("conversation limit reached"));
+  test("does not send when the recipient would be a new contact past the allowance", async () => {
+    assertLimitMock.mockRejectedValue(new Error("active contact limit reached"));
 
     await expect(sendInstagramTextMessage(IGS_ID, "hello", ORG_ID, IBA_ID)).rejects.toThrow(
-      "conversation limit reached",
+      "active contact limit reached",
     );
     expect(callMetaApiMock).not.toHaveBeenCalled();
   });
@@ -230,7 +234,7 @@ describe("sendInstagramTextMessage", () => {
   });
 });
 
-describe("the conversation limit, across every kind of message", () => {
+describe("the active-contact limit, across every kind of message", () => {
   test.each([
     ["a video", () => sendInstagramVideo(IGS_ID, "https://cdn/v.mp4", ORG_ID, IBA_ID)],
     ["a file", () => sendInstagramFile(IGS_ID, "https://cdn/f.pdf", ORG_ID, IBA_ID)],
@@ -257,10 +261,10 @@ describe("the conversation limit, across every kind of message", () => {
     ],
     ["an image", () => sendInstagramImage(IGS_ID, "https://cdn/i.jpg", ORG_ID, IBA_ID)],
     ["a text message", () => sendInstagramTextMessage(IGS_ID, "hi", ORG_ID, IBA_ID)],
-  ])("checks the conversation limit before sending %s", async (_label, send) => {
+  ])("checks the active-contact limit before sending %s", async (_label, send) => {
     await send();
 
-    expect(assertLimitMock).toHaveBeenCalledWith(ORG_ID);
+    expect(assertLimitMock.mock.calls[0][0]).toBe(ORG_ID);
     expect(callMetaApiMock).toHaveBeenCalled();
   });
 
@@ -272,16 +276,16 @@ describe("the conversation limit, across every kind of message", () => {
       () => sendInstagramPrivateReply("comment-1", "hi", IBA_ID, ORG_ID),
     ],
   ])("sends nothing when the org is over its limit, for %s", async (_label, send) => {
-    assertLimitMock.mockRejectedValue(new Error("Conversation limit reached"));
+    assertLimitMock.mockRejectedValue(new Error("Active contact limit reached"));
 
-    await expect(send()).rejects.toThrow("Conversation limit reached");
+    await expect(send()).rejects.toThrow("Active contact limit reached");
     expect(callMetaApiMock).not.toHaveBeenCalled();
   });
 
   test("requires an org for an image, like every other sender", async () => {
     await sendInstagramImage(IGS_ID, "https://cdn/i.jpg", ORG_ID, IBA_ID);
 
-    expect(assertLimitMock).toHaveBeenCalledWith(ORG_ID);
+    expect(assertLimitMock).toHaveBeenCalledWith(ORG_ID, expect.anything());
   });
 });
 
@@ -297,10 +301,10 @@ describe("sendInstagramImage", () => {
     });
   });
 
-  test("checks the conversation limit", async () => {
+  test("checks the active-contact limit", async () => {
     await sendInstagramImage(IGS_ID, "https://cdn/i.jpg", ORG_ID, IBA_ID);
 
-    expect(assertLimitMock).toHaveBeenCalledWith(ORG_ID);
+    expect(assertLimitMock).toHaveBeenCalledWith(ORG_ID, expect.anything());
   });
 
   test("sends a caption as a second message, which is all Instagram allows", async () => {

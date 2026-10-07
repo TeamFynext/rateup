@@ -1,4 +1,4 @@
-import { getConversationBudget } from "../subscription/conversationBudget.js";
+import { getCampaignCreditBudget } from "../subscription/campaignCredits.js";
 import {
   getCampaignMessagesPerRecipient,
   getCampaignParticipantCountByIds,
@@ -10,37 +10,29 @@ export interface CampaignSendPreflight {
   /** Participants this send would go out to. */
   recipients: number;
   /**
-   * Messages per recipient — a drip's stage count, 1 for a broadcast. The
-   * allowance is spent per message, so a 3-stage drip to 50 people is 150.
+   * Messages per recipient — a drip's stage count, 1 for a broadcast. A credit is spent
+   * per message, so a 3-stage drip to 50 people is 150.
    */
   messagesPerRecipient: number;
-  /** False when the plan is not metered — nothing to warn about. */
+  /** False when the plan does not cap campaign sends — nothing to warn about. */
   metered: boolean;
-  /** The conversation allowance and what is left of it, when metered. */
+  /** The plan's monthly credits and how many are spent, when metered. */
   max?: number;
   used?: number;
+  /** Unspent credits in packs. */
+  packRemaining?: number;
+  /** Plan credits left plus pack credits. */
   remaining?: number;
-  isAnnual: boolean;
-  /** True when the allowance is already spent: nothing would be delivered. */
+  /** True when no credit is left: nothing would be sent. */
   exhausted: boolean;
-  /** Recipients beyond what the allowance covers. Zero when the campaign fits. */
+  /** Messages beyond what the credits cover. Zero when the campaign fits. */
   shortfall: number;
 }
 
 /**
- * What a campaign would cost against the conversation allowance, before it is started.
- *
- * A campaign that outruns the allowance used to fail one message at a time, deep in the
- * dispatcher: the sender saw "Campaign send blocked — conversation limit reached" in a
- * worker log, and the customer saw some recipients get the message and the rest silently
- * not. Telling them up front is the whole point — 50 recipients against 45 conversations
- * is a decision to make before sending, not a partial send to discover afterwards.
- *
- * `shortfall` is an UPPER BOUND on what would be lost, and deliberately so. Conversations
- * are 24h windows, not messages: a recipient the org is already in an open window with
- * costs nothing extra, so a campaign of 50 may spend anywhere from 0 to 50. Overstating
- * the risk is the safe direction for a warning — understating it would let someone start
- * a send that then stops halfway.
+ * What a campaign would cost in campaign credits, before it is started, so a send that
+ * would stop partway is a decision made up front rather than discovered afterwards. Every
+ * attempted message spends a credit, so the shortfall is exact.
  */
 export async function getCampaignSendPreflight(
   campaignId: string,
@@ -62,25 +54,16 @@ export async function getCampaignSendPreflight(
     participantIds?.length
       ? getCampaignParticipantCountByIds(campaignId, orgId, participantIds)
       : getCampaignParticipantCountByStatuses(campaignId, orgId, sendToStatuses),
-    getConversationBudget(orgId),
+    getCampaignCreditBudget(orgId),
     getCampaignMessagesPerRecipient(campaignId),
   ]);
 
-  // A drip sends its whole sequence to each recipient, so the cost is the
-  // audience times the stages. Counting the audience alone told someone with 60
-  // conversations left that a 3-stage drip to 50 people fit — it needs 150, and
-  // the send would have stopped two thirds of the way through the first stage.
+  // A drip sends its whole sequence to each recipient, so the cost is the audience times
+  // the stages.
   const messages = recipients * messagesPerRecipient;
 
   if (!budget.metered) {
-    return {
-      recipients,
-      messagesPerRecipient,
-      metered: false,
-      isAnnual: budget.isAnnual,
-      exhausted: false,
-      shortfall: 0,
-    };
+    return { recipients, messagesPerRecipient, metered: false, exhausted: false, shortfall: 0 };
   }
 
   const remaining = budget.remaining ?? 0;
@@ -89,11 +72,11 @@ export async function getCampaignSendPreflight(
     recipients,
     messagesPerRecipient,
     metered: true,
-    max: budget.max,
-    used: budget.used,
+    max: budget.planMax,
+    used: budget.planUsed,
+    packRemaining: budget.packRemaining,
     remaining,
-    isAnnual: budget.isAnnual,
-    exhausted: remaining === 0,
+    exhausted: budget.exhausted,
     shortfall: Math.max(messages - remaining, 0),
   };
 }

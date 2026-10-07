@@ -22,12 +22,8 @@ import { getRecurringCharge } from "../integrations/shopify/shopify.billing.js";
 import { getShopifyInfo } from "../integrations/shopify/shopify.credential.js";
 import prisma from "../../utils/prisma.js";
 import { notificationQueue } from "../../workers/bullmq/queues/index.js";
-import {
-  addonExpiryFrom,
-  getAddonEligibility,
-  getConversationAllowance,
-} from "../subscription/addons.js";
-import { CONVERSATION_ADDON } from "../subscription/catalog.js";
+import { type AddonKind, addonExpiryFrom, getAddonEligibility } from "../subscription/addons.js";
+import { ADDONS, type AddonSpec } from "../subscription/catalog.js";
 
 const credentials = Buffer.from(
   `${process.env.RAZORPAY_API_KEY}:${process.env.RAZORPAY_API_SECRET}`,
@@ -49,15 +45,15 @@ export enum PaymentPlanType {
 
 //.......create a checkout session............
 export async function createCheckoutSession(userId: string, data: CreateCheckoutInput) {
-  // This endpoint creates recurring subscriptions. A pack is a one-off month-long
-  // top-up bought through createConversationAddonOrder, so it must not be sold here —
+  // This endpoint creates recurring subscriptions. A pack is a one-off top-up bought
+  // through createAddonOrder, so it must not be sold here —
   // doing so would sign the customer up to a pack that renews forever.
   const target = await prisma.rateupPlan.findUnique({
     where: { id: data.rateupPlanId },
     select: { planType: true },
   });
   if (target?.planType === PaymentPlanType.ADDON) {
-    throw new Error("Conversation packs are a one-off purchase, not a subscription.");
+    throw new Error("Packs are a one-off purchase, not a subscription.");
   }
 
   const requestBody = {
@@ -595,8 +591,8 @@ export async function updateSubscription(payload: RazorpaySubscriptionChargedPay
 
     // Packs are bought outright for a month, not subscribed to, so no pack should ever
     // arrive on this webhook. If one does, the alternative — falling through — would swap
-    // the customer's tier for a conversation pack, downgrading a Max subscriber to 5,000
-    // conversations for paying us more money. Refuse loudly instead.
+    // the customer's tier for a pack, downgrading a subscriber for paying us more money.
+    // Refuse loudly instead.
     if (rateupPlan.planType === PaymentPlanType.ADDON) {
       throw new Error(
         `Subscription ${id} is on add-on plan ${rateupPlan.name}; add-ons are one-off purchases.`,
@@ -1029,7 +1025,7 @@ export async function verifyPayment(data: RazorpayPaymentWebhookData, event: str
           paymentId: payment.id,
         },
       });
-      await creditConversationPacks(rateupOrderId, id, notes);
+      await creditAddonPacks(rateupOrderId, id, notes);
     }
     return { success: true, data: payment };
   } catch (error) {
@@ -1487,31 +1483,37 @@ export async function updateOrder(orderId: string, status: OrderStatus, orgId: s
   });
 }
 
+/** The ADDON row a kind of pack is sold as. */
+function findAddonPlan(kind: AddonKind) {
+  return prisma.rateupPlan.findFirst({ where: { name: ADDONS[kind].name } });
+}
+
+/** Which kind of pack an ADDON row sells, by its catalog name. */
+export function addonKindForPlanName(name: string | null | undefined): AddonKind | undefined {
+  return (Object.values(ADDONS) as AddonSpec[]).find((spec) => spec.name === name)?.kind;
+}
+
 /**
- * What the billing page needs to show, and possibly sell, conversation packs.
+ * What the billing page needs to show, and possibly sell, one kind of pack.
  *
  * The pack is priced in whatever currency the org's plan already bills in — a customer
- * paying dollars is not asked for rupees for the same account — which is the same rule
- * {@link changeSubscriptionPlan} uses when re-pricing a tier. The price comes straight
- * off the catalog row rather than a gateway plan, because a one-off charge names its own
- * amount at the moment the order is created.
+ * paying dollars is not asked for rupees for the same account. The price comes straight
+ * off the catalog row, because a one-off charge names its own amount when it is created.
  */
-export async function getConversationAddonOffer(orgId: string) {
-  const [eligibility, allowance, addon, currency] = await Promise.all([
-    getAddonEligibility(orgId),
-    getConversationAllowance(orgId),
-    prisma.rateupPlan.findFirst({ where: { name: CONVERSATION_ADDON.name } }),
+export async function getAddonOffer(orgId: string, kind: AddonKind) {
+  const [eligibility, addon, currency] = await Promise.all([
+    getAddonEligibility(orgId, kind),
+    findAddonPlan(kind),
     orgBillingCurrency(orgId),
   ]);
 
-  if (!addon) return { available: false as const, ...eligibility, allowance };
+  if (!addon) return { available: false as const, ...eligibility };
 
   const price = currency === "USD" ? addon.usdMonthlyPrice : addon.monthlyPrice;
 
   return {
     available: true as const,
     ...eligibility,
-    allowance,
     currency,
     // Null when the catalog prices the pack in only one currency; the card explains
     // rather than opening a checkout that could not name an amount.
@@ -1535,33 +1537,32 @@ async function orgBillingCurrency(orgId: string): Promise<"INR" | "USD"> {
 }
 
 /**
- * Creates the one-off Razorpay order that buys `quantity` conversation packs.
+ * Creates the one-off Razorpay order that buys `quantity` packs of one kind.
  *
- * A pack is charged once and counts for a month, so this is a plain order rather than a
- * subscription — nothing renews, and there is correspondingly nothing to cancel. The
- * packs are *not* credited here: Razorpay confirms over `payment.captured`, and that
+ * The packs are *not* credited here: Razorpay confirms over `payment.captured`, and that
  * webhook is the only writer, so a customer who closes the tab mid-payment still gets
  * what they paid for and one who never pays gets nothing.
  */
-export async function createConversationAddonOrder(
+export async function createAddonOrder(
   userId: string,
   orgId: string,
+  kind: AddonKind,
   quantity: number,
 ) {
   const packs = Math.min(Math.max(1, Math.trunc(quantity)), MAX_PACKS_PER_ORDER);
 
-  const eligibility = await getAddonEligibility(orgId);
+  const eligibility = await getAddonEligibility(orgId, kind);
   if (!eligibility.eligible) {
-    throw new Error(eligibility.reason ?? "This plan cannot buy conversation packs.");
+    throw new Error(eligibility.reason ?? "This plan cannot buy packs.");
   }
 
-  const addon = await prisma.rateupPlan.findFirst({ where: { name: CONVERSATION_ADDON.name } });
-  if (!addon) throw new Error("Conversation packs are not available yet.");
+  const addon = await findAddonPlan(kind);
+  if (!addon) throw new Error(`${ADDONS[kind].displayName}s are not available yet.`);
 
   const currency = await orgBillingCurrency(orgId);
   const unitPrice = currency === "USD" ? addon.usdMonthlyPrice : addon.monthlyPrice;
   if (!unitPrice) {
-    throw new Error(`Conversation packs are not priced in ${currency} yet.`);
+    throw new Error(`${ADDONS[kind].displayName}s are not priced in ${currency} yet.`);
   }
 
   const order = await prisma.order.create({
@@ -1586,6 +1587,7 @@ export async function createConversationAddonOrder(
           rateupPlanId: addon.id,
           orgId,
           addonQuantity: String(packs),
+          addonKind: kind,
         },
       },
       { headers: { Authorization: `Basic ${credentials}` } },
@@ -1602,6 +1604,7 @@ export async function createConversationAddonOrder(
       amount: Number(unitPrice) * packs,
       currency,
       quantity: packs,
+      kind,
       planName: addon.displayName ?? addon.name,
       rateupPlanId: addon.id,
     };
@@ -1616,14 +1619,11 @@ export async function createConversationAddonOrder(
 /**
  * Credits the packs a captured payment bought, if it bought any.
  *
- * Only add-on orders write a row here; a plan payment falls straight through. The pack
- * dates from the moment it is paid for and lapses on its own {@link ADDON_VALID_DAYS}
- * later — nothing renews it and nothing needs cancelling.
- *
- * `paymentRef` is unique, so a webhook Razorpay retries credits the customer once rather
- * than handing them a second month of headroom for free.
+ * Only add-on orders write a row here; a plan payment falls straight through. The kind is
+ * read off the ADDON row, not the notes, so an order created before kinds existed still
+ * credits contact packs. `paymentRef` is unique, so a retried webhook credits once.
  */
-async function creditConversationPacks(
+async function creditAddonPacks(
   rateupOrderId: string,
   paymentRef: string,
   notes: RazorpayPaymentWebhookData["notes"],
@@ -1635,6 +1635,7 @@ async function creditConversationPacks(
   const addonPlan = order?.RateupPlan;
   if (!addonPlan || addonPlan.planType !== PaymentPlanType.ADDON) return;
 
+  const kind = addonKindForPlanName(addonPlan.name) ?? "ACTIVE_CONTACTS";
   const orgId = order.orgId ?? notes?.orgId;
   if (!orgId) {
     throw new Error(`Add-on order ${rateupOrderId} has no org to credit`);
@@ -1651,14 +1652,16 @@ async function creditConversationPacks(
       orgId,
       addonPlanId: addonPlan.id,
       quantity,
+      kind,
+      creditsGranted: kind === "CAMPAIGN_CREDITS" ? quantity * ADDONS[kind].units : null,
       paymentRef,
-      expiresAt: addonExpiryFrom(now),
+      expiresAt: addonExpiryFrom(kind, now),
     },
   });
 
   log.info(
-    { orgId, addon: addonPlan.name, quantity, expiresAt: addon.expiresAt },
-    "Credited conversation packs",
+    { orgId, addon: addonPlan.name, kind, quantity, expiresAt: addon.expiresAt },
+    "Credited add-on packs",
   );
 }
 
@@ -2005,4 +2008,58 @@ export async function sweepMissedPayments(): Promise<PaymentSweepResult> {
 
   log.info({ scanned: orgIds.length, repaired, failed }, "Payment sweep complete");
   return { scanned: orgIds.length, repaired, failed };
+}
+
+/**
+ * Moves a Razorpay subscription onto its tier's current gateway plan from the next cycle,
+ * keeping its currency and cadence. Used when the catalog is repriced: the tier row now
+ * links new plans, and every live subscription still bills the old ones.
+ */
+export async function repriceRazorpaySubscription(subscriptionRef: string, rateupPlanId: string) {
+  const [order, target] = await Promise.all([
+    prisma.order.findFirst({
+      where: { subscriptionId: subscriptionRef },
+      select: { planId: true },
+    }),
+    prisma.rateupPlan.findUnique({
+      where: { id: rateupPlanId },
+      include: {
+        monthlyPaymentPlan: true,
+        yearlyPaymentPlan: true,
+        usdMonthlyPaymentPlan: true,
+        usdYearlyPaymentPlan: true,
+      },
+    }),
+  ]);
+  if (!target) throw new Error(`Rateup plan ${rateupPlanId} not found`);
+
+  const live = await axios.get(`https://api.razorpay.com/v1/subscriptions/${subscriptionRef}`, {
+    headers: { Authorization: `Basic ${credentials}` },
+  });
+  const currentPlanId: string | undefined = live.data?.plan_id ?? order?.planId ?? undefined;
+  const current = currentPlanId
+    ? await prisma.paymentPlans.findFirst({ where: { planId: currentPlanId } })
+    : null;
+  const yearly = current?.period === "yearly";
+  const usd = current?.currency === "USD";
+  const next = usd
+    ? yearly
+      ? target.usdYearlyPaymentPlan
+      : target.usdMonthlyPaymentPlan
+    : yearly
+      ? target.yearlyPaymentPlan
+      : target.monthlyPaymentPlan;
+  if (!next) {
+    throw new Error(
+      `${target.displayName} has no ${yearly ? "yearly" : "monthly"} ${usd ? "USD" : "INR"} plan`,
+    );
+  }
+  if (next.planId === currentPlanId) return { changed: false, planId: next.planId };
+
+  await axios.patch(
+    `https://api.razorpay.com/v1/subscriptions/${subscriptionRef}`,
+    { plan_id: next.planId, schedule_change_at: "cycle_end", customer_notify: 1 },
+    { headers: { Authorization: `Basic ${credentials}`, "Content-Type": "application/json" } },
+  );
+  return { changed: true, planId: next.planId, from: currentPlanId };
 }

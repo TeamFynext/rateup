@@ -8,39 +8,69 @@ import {
   Paragraph,
 } from "../utils/email/react/components.js";
 
+export type UsageLimitKind = "activeContacts" | "campaignCredits" | "formResponses";
+
 export interface UsageLimitEmailProps {
+  limit: UsageLimitKind;
   statsLink: string;
   billingLink: string;
 }
 
-export function UsageLimitEmail({ statsLink, billingLink }: UsageLimitEmailProps) {
+const COPY: Record<
+  UsageLimitKind,
+  { preview: string; title: string; body: string; impact: string }
+> = {
+  activeContacts: {
+    preview: "You've reached this month's active contacts",
+    title: "You've reached your monthly active contacts",
+    body: "Your organisation has messaged every contact its RateUp plan includes this month.",
+    impact:
+      "You can keep messaging contacts you've already talked to this month. Messages to new " +
+      "contacts won't send until next month, or until you add a contact pack or upgrade. " +
+      "Customers can still message you.",
+  },
+  campaignCredits: {
+    preview: "You've used all of this month's campaign credits",
+    title: "You've used all your campaign credits",
+    body: "Your organisation has sent every campaign message its RateUp plan includes this month.",
+    impact:
+      "Running campaigns are paused and new ones can't start until next month, or until you " +
+      "add a campaign credit pack or upgrade. Inbox replies and automations keep working.",
+  },
+  formResponses: {
+    preview: "Your forms have reached this month's response limit",
+    title: "You've hit your form response limit",
+    body: "Your organisation has collected every form response its RateUp plan includes this month.",
+    impact:
+      "New responses may not be recorded until next month or until you move to a larger " +
+      "plan. Feedback that arrives in the meantime can't be recovered later.",
+  },
+};
+
+export function UsageLimitEmail({ limit, statsLink, billingLink }: UsageLimitEmailProps) {
+  const copy = COPY[limit];
   return (
     <EmailLayout
-      preview="You've used everything in your RateUp plan this period"
+      preview={copy.preview}
       note={
         <Muted>
-          Hitting the limit usually means the surveys are working. If you&apos;re not sure which
-          plan fits, check your usage first — it shows where the volume is coming from.
+          Not sure which plan fits? Check your usage first — it shows where the volume is coming
+          from.
         </Muted>
       }
     >
       <Section className="mb-8">
-        <Display>You&apos;ve hit your plan limit</Display>
-        <Paragraph>
-          Your organisation has used everything included in its RateUp plan for this billing period.
-        </Paragraph>
+        <Display>{copy.title}</Display>
+        <Paragraph>{copy.body}</Paragraph>
       </Section>
 
       <Callout tone="warning">
-        <Text className="font-14 text-warning m-0">
-          New responses may not be recorded until the period resets or you move to a larger plan.
-          Feedback that arrives in the meantime can&apos;t be recovered later.
-        </Text>
+        <Text className="font-14 text-warning m-0">{copy.impact}</Text>
       </Callout>
 
       <Section className="pt-9">
         <ButtonPair
-          primary={{ href: billingLink, label: "Upgrade plan" }}
+          primary={{ href: billingLink, label: "Upgrade or add a pack" }}
           secondary={{ href: statsLink, label: "View usage" }}
         />
       </Section>
@@ -49,6 +79,7 @@ export function UsageLimitEmail({ statsLink, billingLink }: UsageLimitEmailProps
 }
 
 UsageLimitEmail.PreviewProps = {
+  limit: "activeContacts",
   statsLink: "https://rateup.app/dashboard/settings/billing",
   billingLink: "https://rateup.app/dashboard/settings/billing",
 } satisfies UsageLimitEmailProps;

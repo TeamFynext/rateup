@@ -3,9 +3,9 @@ import type { FastifyRequest } from "fastify";
 import merge from "lodash/merge.js";
 import type { Prisma } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
-import { addonExpiryFrom } from "../../subscription/addons.js";
-import { CONVERSATION_ADDON } from "../../subscription/catalog.js";
-import { hasContractedCap, isUnlimitedAllowance } from "../../subscription/subscription.data.js";
+import { addonExpiryFrom, planMeterMax } from "../../subscription/addons.js";
+import { ADDONS } from "../../subscription/catalog.js";
+import { hasContractedCap } from "../../subscription/subscription.data.js";
 import { applyPlanToOrg } from "../../subscription/subscription.service.js";
 import { StaffHttpError } from "../staff.errors.js";
 import { recordStaffAction } from "../staffAudit.js";
@@ -184,43 +184,45 @@ export async function grantAddonPacks(
   input: AddonGrantInput,
   now = new Date(),
 ) {
+  const spec = ADDONS[input.kind];
   const addonPlan = await prisma.rateupPlan.findFirst({
-    where: { name: CONVERSATION_ADDON.name, planType: "ADDON" },
+    where: { name: spec.name, planType: "ADDON" },
     select: { id: true },
   });
   if (!addonPlan) {
-    throw new StaffHttpError(409, "ADDON_MISSING", "The conversation pack is not in the catalog.");
+    throw new StaffHttpError(
+      409,
+      "ADDON_MISSING",
+      `The ${spec.displayName} is not in the catalog.`,
+    );
   }
 
   return prisma.$transaction(async (tx) => {
     const org = await loadOrg(tx, orgId);
     if (!org.Subscription) throw noSubscription();
-    const planMax = (
-      org.Subscription.features as {
-        whatsapp?: { conversation?: { count?: { max?: number } } };
-      } | null
-    )?.whatsapp?.conversation?.count?.max;
-    // Packs only raise a metered allowance (see getConversationAllowance); on an uncapped
-    // plan the pack would be recorded and count for nothing.
-    if (planMax === undefined || planMax <= 0 || isUnlimitedAllowance(planMax)) {
+    // Packs only raise a metered allowance; on an uncapped plan the pack would be
+    // recorded and count for nothing.
+    if (planMeterMax(org.Subscription.features, input.kind) === undefined) {
       throw new StaffHttpError(
         422,
         "ADDON_NOT_APPLICABLE",
-        "This plan's conversations are not metered, so a pack would add nothing.",
+        "This plan does not cap what this pack adds, so it would add nothing.",
       );
     }
 
     const auditId = randomUUID();
-    const expiresAt = input.expiresAt ?? addonExpiryFrom(now);
+    const expiresAt = input.expiresAt ?? addonExpiryFrom(input.kind, now);
     const pack = await tx.subscriptionAddon.create({
       data: {
         orgId,
         addonPlanId: addonPlan.id,
+        kind: input.kind,
         quantity: input.quantity,
+        creditsGranted: input.kind === "CAMPAIGN_CREDITS" ? input.quantity * spec.units : null,
         paymentRef: `${STAFF_REF_PREFIX}${auditId}`,
         expiresAt,
       },
-      select: { id: true, quantity: true, expiresAt: true },
+      select: { id: true, kind: true, quantity: true, expiresAt: true },
     });
     await recordStaffAction(tx, request, {
       id: auditId,
@@ -228,10 +230,7 @@ export async function grantAddonPacks(
       targetOrgId: org.id,
       targetOrgName: org.name,
       reason: input.reason,
-      after: {
-        ...pack,
-        conversations: pack.quantity * CONVERSATION_ADDON.conversations,
-      },
+      after: { ...pack, units: pack.quantity * spec.units },
     });
     return pack;
   });

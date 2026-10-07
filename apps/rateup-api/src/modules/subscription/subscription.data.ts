@@ -18,10 +18,8 @@ function getSampleSubscriptionFeatures(count: number): SubscriptionFeatures {
     },
     whatsapp: {
       active: true,
-      conversation: {
-        active: true,
-        count: { max: 1000 },
-      },
+      activeContacts: { active: true, count: { max: 1000 } },
+      campaignCredits: { active: true, count: { max: 5000 } },
     },
     ai: {
       count: { completionTokens: 12000, promptTokens: 120000 },
@@ -56,14 +54,10 @@ export function getFreeSubscriptionFeatures(
     },
     whatsapp: {
       active: true,
-      conversation: {
-        active: true,
-        count: { max: 100 },
-      },
-      // Campaigns are open on Free. They are not free to run: a campaign spends the same
-      // 100 metered conversations Free already allows, and the send gate stops there, so
-      // the allowance is the throttle rather than the gate. Keeping the feature shut
-      // meant a free account could never see the thing it would be upgrading for.
+      activeContacts: { active: true, count: { max: 100 } },
+      // Campaigns are open on Free so a free account can see what it would upgrade for;
+      // the credit allowance is the throttle rather than the gate.
+      campaignCredits: { active: true, count: { max: 500 } },
       campaign: { active: true },
       loyalty: { active: false },
       referrals: { active: false },
@@ -82,31 +76,24 @@ export const FreePlanSubscriptionFeatures = getFreeSubscriptionFeatures();
 
 /**
  * The paid tiers. Every tier gets the full inbox, automations, templates, flows,
- * chatbots and campaigns; they differ by count limits plus two capability gates:
+ * chatbots, campaigns, loyalty and the Meta Business Agent; they differ only by counts.
  *
- *   - loyalty / referrals / catalog sync    — Plus and above
- *   - the Meta Business Agent (`ai.active`) — Max only
- *
- * `whatsapp.conversation.count.max` is the monthly allowance of METERED 24h
- * conversation windows (see MeteredConversation), not a message count. Rateup does
- * not resell messages: Meta bills the customer's own WABA for delivery, and this
- * allowance only determines which tier an org needs.
- *
- * AI token counts are display/bookkeeping only — Meta bills Business Agent usage
- * directly, so nothing enforces them.
+ * Rateup does not resell messages or AI: Meta bills the customer's own WABA for both, so
+ * the allowances here (active contacts, campaign credits) only decide which tier an org
+ * needs. AI token counts are bookkeeping; nothing enforces them.
  */
 function getPaidSubscriptionFeatures({
   teams,
   users,
-  conversations,
+  activeContacts,
+  campaignCredits,
   formSubmissions,
-  ai,
 }: {
   teams: number;
   users: number;
-  conversations: number;
+  activeContacts: number;
+  campaignCredits: number;
   formSubmissions: number;
-  ai: boolean;
 }): SubscriptionFeatures {
   return {
     team: {
@@ -125,28 +112,20 @@ function getPaidSubscriptionFeatures({
     },
     whatsapp: {
       active: true,
-      conversation: { active: true, count: { max: conversations } },
+      activeContacts: { active: true, count: { max: activeContacts } },
+      campaignCredits: { active: true, count: { max: campaignCredits } },
       campaign: { active: true },
       loyalty: { active: true },
       referrals: { active: true },
       catalog: { active: true },
     },
-    ai: { count: { completionTokens: 0, promptTokens: 0 }, active: ai },
+    ai: { count: { completionTokens: 0, promptTokens: 0 }, active: true },
   };
 }
 
 /**
- * The paid ladder: Plus → Pro → Max.
- *
- * The tiers differ only in counts, with one exception — the Meta Business Agent is a Max
- * feature, so `ai` is false below it. Pro exists to bridge what would otherwise be a jump
- * from 5,000 conversations straight to 50,000; the middle rung is what makes an upgrade
- * cheaper than stacking add-ons once an org passes roughly 20,000.
- *
- * Conversations and form submissions carry the same number on every paid tier — the
- * catalog sells them as one figure, so they move together. Free is the exception in the
- * other direction: it stays at 100 of each rather than halving with the rest, because the
- * point of the free tier is to be enough to evaluate the product.
+ * The paid ladder: Starter (PLUS) → Growth (PRO) → Scale (MAX). Each step is about 5x
+ * the allowance for about 3x the price, so upgrading beats stacking packs.
  */
 export function getPlusSubscriptionFeatures(
   overrides?: Partial<SubscriptionFeatures>,
@@ -154,10 +133,10 @@ export function getPlusSubscriptionFeatures(
   return {
     ...getPaidSubscriptionFeatures({
       teams: 2,
-      users: 10,
-      conversations: 5_000,
+      users: 5,
+      activeContacts: 1_000,
+      campaignCredits: 10_000,
       formSubmissions: 5_000,
-      ai: false,
     }),
     ...overrides,
   };
@@ -169,10 +148,10 @@ export function getProSubscriptionFeatures(
   return {
     ...getPaidSubscriptionFeatures({
       teams: 5,
-      users: 30,
-      conversations: 20_000,
+      users: 15,
+      activeContacts: 5_000,
+      campaignCredits: 50_000,
       formSubmissions: 20_000,
-      ai: false,
     }),
     ...overrides,
   };
@@ -183,11 +162,11 @@ export function getMaxSubscriptionFeatures(
 ): SubscriptionFeatures {
   return {
     ...getPaidSubscriptionFeatures({
-      teams: 10,
-      users: 100,
-      conversations: 50_000,
+      teams: 15,
+      users: 50,
+      activeContacts: 25_000,
+      campaignCredits: 250_000,
       formSubmissions: 50_000,
-      ai: true,
     }),
     ...overrides,
   };
@@ -225,9 +204,9 @@ export function getEnterpriseSubscriptionFeatures(
     ...getPaidSubscriptionFeatures({
       teams: UNLIMITED_COUNT,
       users: UNLIMITED_COUNT,
-      conversations: UNLIMITED_COUNT,
+      activeContacts: UNLIMITED_COUNT,
+      campaignCredits: UNLIMITED_COUNT,
       formSubmissions: UNLIMITED_COUNT,
-      ai: true,
     }),
     ...overrides,
   };
@@ -241,7 +220,8 @@ export function getEnterpriseSubscriptionFeatures(
  * is an explicit decision here, not something silently treated as contractable.
  */
 const CONTRACTABLE_ALLOWANCES = [
-  ["whatsapp", "conversation", "count", "max"],
+  ["whatsapp", "activeContacts", "count", "max"],
+  ["whatsapp", "campaignCredits", "count", "max"],
   ["webSurvey", "count", "monthlyResponseLimit"],
   ["team", "count", "max"],
   ["team", "teamMember", "count", "max"],

@@ -2,7 +2,7 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 
 import prisma from "../../utils/prisma.js";
 import { getNestedProperty } from "../../utils/misc/obj.utils.js";
-import { getConversationBudget } from "./conversationBudget.js";
+import { getActiveContactBudget } from "./activeContacts.js";
 import { isUnlimitedAllowance } from "./subscription.data.js";
 import { getSubscription } from "./subscription.service.js";
 
@@ -23,8 +23,8 @@ export function planAllowance(features: unknown, path: string): number | undefin
 /**
  * Every count a plan can cap, in one place.
  *
- * Four, and only four: teams, users, conversations and monthly form responses. They are
- * what the plans actually sell, and every one of them is a number on the pricing page.
+ * Teams, users, active contacts and monthly form responses. They are what the plans
+ * actually sell, and every one of them is a number on the pricing page.
  *
  * There used to be five more — campaigns, automated replies, Flows, templates and loyalty
  * registrations — each with its own hand-written gate, all reading a `whatsapp.count.max`
@@ -50,8 +50,7 @@ export interface PlanLimitDefinition {
   used: (orgId: string) => Promise<number>;
   /**
    * Overrides how the ceiling is derived, for a limit whose stored number is not the
-   * whole answer. Conversations are the only one today: bought packs raise it and an
-   * annual plan pools twelve months of it.
+   * whole answer. Active contacts are the only one today: contact packs raise it.
    */
   ceiling?: (orgId: string) => Promise<number | undefined>;
 }
@@ -106,15 +105,14 @@ export const PLAN_LIMITS = {
     used: seatsInUse,
   },
   /**
-   * The metered 24h conversation windows. The only limit whose ceiling is not simply the
-   * stored number: `getConversationBudget` adds packs the org has bought and multiplies
-   * out an annual pool, and the send gate has always measured against that.
+   * Contacts messaged this month. The ceiling includes contact packs, so it is not simply
+   * the stored number.
    */
-  conversations: {
-    path: "whatsapp.conversation.count.max",
-    noun: { one: "conversation", many: "conversations" },
-    used: async (orgId) => (await getConversationBudget(orgId)).used,
-    ceiling: async (orgId) => (await getConversationBudget(orgId)).max,
+  activeContacts: {
+    path: "whatsapp.activeContacts.count.max",
+    noun: { one: "active contact", many: "active contacts" },
+    used: async (orgId) => (await getActiveContactBudget(orgId)).used,
+    ceiling: async (orgId) => (await getActiveContactBudget(orgId)).max,
   },
   formResponses: {
     path: "webSurvey.count.monthlyResponseLimit",

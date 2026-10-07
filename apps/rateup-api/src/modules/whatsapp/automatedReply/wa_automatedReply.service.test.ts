@@ -17,16 +17,14 @@ vi.mock("../../../utils/prisma.js", () => ({
 }));
 
 vi.mock("../../subscription/subscription.service.js", () => ({ getSubscription: vi.fn() }));
-vi.mock("../whatsappSurvey/wasurvey.auth.js", () => ({
-  checkConversationLimitAvailable: vi.fn(),
-}));
+vi.mock("../../subscription/activeContacts.js", () => ({ canMessageContact: vi.fn() }));
 vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));
 
 import prisma from "../../../utils/prisma.js";
 import { getSubscription } from "../../subscription/subscription.service.js";
-import { checkConversationLimitAvailable } from "../whatsappSurvey/wasurvey.auth.js";
+import { canMessageContact } from "../../subscription/activeContacts.js";
 import { log } from "../../../utils/logger.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
 import {
@@ -57,7 +55,7 @@ const db = prisma as unknown as {
 };
 
 const getSubscriptionMock = getSubscription as unknown as Mock;
-const checkConversationLimitMock = checkConversationLimitAvailable as unknown as Mock;
+const canMessageContactMock = canMessageContact as unknown as Mock;
 
 const AUTOMATION = { id: "auto-1", name: "Greeting", orgId: "org-1" };
 
@@ -72,7 +70,7 @@ beforeEach(() => {
   db.waAutomatedReplyMessage.findMany.mockResolvedValue([]);
   db.usageStats.update.mockResolvedValue({});
   getSubscriptionMock.mockResolvedValue({ features: { whatsapp: { active: true } } });
-  checkConversationLimitMock.mockResolvedValue(true);
+  canMessageContactMock.mockResolvedValue(true);
 });
 
 describe("getAutomatedRepliesMessagId", () => {
@@ -344,19 +342,18 @@ describe("verifyAutomationTriggerLimit", () => {
     expect(log.error).toHaveBeenCalled();
   });
 
-  // The limit enforced is the conversation allowance the plans actually define
-  // (whatsapp.conversation.count.max), checked via checkConversationLimitAvailable —
-  // which answers true while the org is still within it.
-  test("blocks an org that has used up its conversation allowance", async () => {
-    checkConversationLimitMock.mockResolvedValue(false);
+  test("blocks a send to a new contact once the active-contact allowance is spent", async () => {
+    canMessageContactMock.mockResolvedValue(false);
 
     await expect(verifyAutomationTriggerLimit("org-1")).resolves.toBe(false);
   });
 
-  test("checks the allowance for the org it was handed", async () => {
-    await verifyAutomationTriggerLimit("org-7");
+  test("checks the allowance for the org and recipient it was handed", async () => {
+    const recipient = { platform: PlatformType.WHATSAPP, customerId: "919876543210" };
 
-    expect(checkConversationLimitMock).toHaveBeenCalledWith("org-7");
+    await verifyAutomationTriggerLimit("org-7", recipient);
+
+    expect(canMessageContactMock).toHaveBeenCalledWith("org-7", recipient);
   });
 
   test("does not bother checking the allowance once WhatsApp is switched off", async () => {
@@ -364,7 +361,7 @@ describe("verifyAutomationTriggerLimit", () => {
 
     await verifyAutomationTriggerLimit("org-1");
 
-    expect(checkConversationLimitMock).not.toHaveBeenCalled();
+    expect(canMessageContactMock).not.toHaveBeenCalled();
   });
 
   // Previously this crashed with a TypeError reading `.features` off a null subscription;

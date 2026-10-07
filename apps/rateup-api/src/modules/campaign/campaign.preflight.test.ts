@@ -5,26 +5,31 @@ vi.mock("./campaign.service.js", () => ({
   getCampaignParticipantCountByIds: vi.fn(),
   getCampaignMessagesPerRecipient: vi.fn(),
 }));
-vi.mock("../subscription/conversationBudget.js", () => ({ getConversationBudget: vi.fn() }));
+vi.mock("../subscription/campaignCredits.js", () => ({ getCampaignCreditBudget: vi.fn() }));
 
 import {
   getCampaignMessagesPerRecipient,
   getCampaignParticipantCountByIds,
   getCampaignParticipantCountByStatuses,
 } from "./campaign.service.js";
-import { getConversationBudget } from "../subscription/conversationBudget.js";
+import { getCampaignCreditBudget } from "../subscription/campaignCredits.js";
 import { getCampaignSendPreflight } from "./campaign.preflight.js";
 import { CampaignParticipantStatus } from "../../types/enums.js";
 
 const STATUSES = [CampaignParticipantStatus.PENDING];
 
-function budget(max: number, used: number, isAnnual = false) {
-  vi.mocked(getConversationBudget).mockResolvedValue({
+const PERIOD = new Date("2026-10-01T00:00:00Z");
+
+function budget(planMax: number, planUsed: number, packRemaining = 0) {
+  const remaining = Math.max(planMax - planUsed, 0) + packRemaining;
+  vi.mocked(getCampaignCreditBudget).mockResolvedValue({
     metered: true,
-    max,
-    used,
-    remaining: Math.max(max - used, 0),
-    isAnnual,
+    period: PERIOD,
+    planMax,
+    planUsed,
+    packRemaining,
+    remaining,
+    exhausted: remaining <= 0,
   });
 }
 
@@ -32,7 +37,7 @@ describe("what a campaign would cost before it is sent", () => {
   beforeEach(() => {
     vi.mocked(getCampaignParticipantCountByStatuses).mockReset().mockResolvedValue(50);
     vi.mocked(getCampaignParticipantCountByIds).mockReset().mockResolvedValue(1);
-    vi.mocked(getConversationBudget).mockReset();
+    vi.mocked(getCampaignCreditBudget).mockReset();
     // A broadcast unless a test says otherwise: one message per recipient.
     vi.mocked(getCampaignMessagesPerRecipient).mockReset().mockResolvedValue(1);
   });
@@ -61,8 +66,7 @@ describe("what a campaign would cost before it is sent", () => {
   });
 
   test("names the shortfall when the campaign outruns what is left", async () => {
-    // The case worth warning about: 50 people, 45 conversations. Before this, the sender
-    // learned about it as five messages that silently failed in a worker.
+    // The case worth warning about: 50 people, 45 credits.
     budget(5_000, 4_955);
 
     const preflight = await getCampaignSendPreflight("c1", "org-1", STATUSES);
@@ -82,7 +86,7 @@ describe("what a campaign would cost before it is sent", () => {
     });
   });
 
-  test("flags an allowance that is already spent", async () => {
+  test("flags credits that are already spent", async () => {
     budget(5_000, 5_000);
 
     expect(await getCampaignSendPreflight("c1", "org-1", STATUSES)).toMatchObject({
@@ -92,7 +96,7 @@ describe("what a campaign would cost before it is sent", () => {
     });
   });
 
-  test("treats an over-spent allowance as empty rather than negative", async () => {
+  test("treats over-spent plan credits as empty rather than negative", async () => {
     budget(5_000, 5_200);
 
     const preflight = await getCampaignSendPreflight("c1", "org-1", STATUSES);
@@ -103,10 +107,12 @@ describe("what a campaign would cost before it is sent", () => {
 
   test("warns about nothing on an uncapped plan", async () => {
     // Enterprise without a contracted ceiling: there is no number to run out of.
-    vi.mocked(getConversationBudget).mockResolvedValue({
+    vi.mocked(getCampaignCreditBudget).mockResolvedValue({
       metered: false,
-      used: 0,
-      isAnnual: false,
+      period: PERIOD,
+      planUsed: 0,
+      packRemaining: 0,
+      exhausted: false,
     });
 
     expect(await getCampaignSendPreflight("c1", "org-1", STATUSES)).toMatchObject({
@@ -117,15 +123,16 @@ describe("what a campaign would cost before it is sent", () => {
     });
   });
 
-  test("measures an annual allowance against the annual counter", async () => {
-    // The budget has already multiplied out the twelve months; the preflight must not do
-    // it a second time.
-    budget(60_000, 59_970, true);
+  test("counts pack credits once the plan's are spent", async () => {
+    budget(10_000, 10_000, 30);
 
     expect(await getCampaignSendPreflight("c1", "org-1", STATUSES)).toMatchObject({
+      max: 10_000,
+      used: 10_000,
+      packRemaining: 30,
       remaining: 30,
+      exhausted: false,
       shortfall: 20,
-      isAnnual: true,
     });
   });
 });
@@ -134,7 +141,7 @@ describe("a resend that names its recipients", () => {
   beforeEach(() => {
     vi.mocked(getCampaignParticipantCountByStatuses).mockReset().mockResolvedValue(0);
     vi.mocked(getCampaignParticipantCountByIds).mockReset().mockResolvedValue(1);
-    vi.mocked(getConversationBudget).mockReset();
+    vi.mocked(getCampaignCreditBudget).mockReset();
     budget(5_000, 0);
   });
 

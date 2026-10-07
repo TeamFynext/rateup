@@ -276,10 +276,10 @@ describe("whatsappChannel.send", () => {
       error: "No credentials",
     });
 
-    (sendMetaMessage as Mock).mockRejectedValue(new Error("Conversation limit reached"));
+    (sendMetaMessage as Mock).mockRejectedValue(new Error("Active contact limit reached"));
     expect((await planAndSend(ctx(), wordsOnly)).result).toEqual({
       ok: false,
-      error: "Conversation limit reached",
+      error: "Active contact limit reached",
     });
   });
 

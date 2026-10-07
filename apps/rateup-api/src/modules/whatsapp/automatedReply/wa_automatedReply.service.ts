@@ -3,7 +3,7 @@ import prisma from "../../../utils/prisma.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
 import { CreateAutomatedReplySchema } from "./wa_automatedReply.schema.js";
 import { getSubscription } from "../../subscription/subscription.service.js";
-import { checkConversationLimitAvailable } from "../whatsappSurvey/wasurvey.auth.js";
+import { canMessageContact, type Recipient } from "../../subscription/activeContacts.js";
 import { log } from "../../../utils/logger.js";
 
 export async function getAutomatedRepliesMessagId(id: string, orgId: string) {
@@ -167,14 +167,13 @@ export async function getAutomatedRepliesByKeyWeords(orgId: string, keyword: str
   });
 }
 
-export async function verifyAutomationTriggerLimit(orgId: string) {
+export async function verifyAutomationTriggerLimit(orgId: string, recipient?: Recipient) {
   const subscription = await getSubscription(orgId);
   if (!subscription?.features?.whatsapp?.active) {
     log.error("Whatsapp is inactive. Aborting automation check...");
     return false;
   }
-  // The plans define an allowance on whatsapp.conversation.count.max (500 free /
-  // 1000 sample), not on the automation count, so that is the limit enforced here.
-  // checkConversationLimitAvailable answers true while the org is still within it.
-  return await checkConversationLimitAvailable(orgId);
+  // Plans cap active contacts, not automation runs. A reply to someone who just wrote in
+  // is always allowed, because their message already made them active.
+  return await canMessageContact(orgId, recipient);
 }

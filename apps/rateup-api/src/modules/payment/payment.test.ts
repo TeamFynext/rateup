@@ -1266,7 +1266,7 @@ describe("a pack arriving on the subscription webhook", () => {
     service = await vi.importActual<typeof import("./payment.service.js")>("./payment.service.js");
   });
 
-  const PACK = { id: "addon-1", name: "CONVERSATION PACK", planType: "ADDON", features: {} };
+  const PACK = { id: "addon-1", name: "ACTIVE CONTACT PACK", planType: "ADDON", features: {} };
 
   function charged() {
     return {
@@ -1299,7 +1299,7 @@ describe("a pack arriving on the subscription webhook", () => {
   test("is refused rather than replacing the customer's plan", async () => {
     // Packs are bought outright now, so nothing should ever arrive here on an add-on
     // plan. The bug this guards is what the alternative would be: falling through to the
-    // base-plan write, swapping a Max subscriber's tier for a 5,000-conversation pack.
+    // base-plan write, swapping a subscriber's tier for a pack.
     const result = await service.updateSubscription(charged());
 
     expect(result.success).toBe(false);
@@ -1381,7 +1381,7 @@ describe("the internal alert on a subscription charge", () => {
   });
 });
 
-describe("buying conversation packs outright", () => {
+describe("buying packs outright", () => {
   const axiosPost = vi.spyOn(axios, "post");
   let service: typeof import("./payment.service.js");
   beforeAll(async () => {
@@ -1390,10 +1390,10 @@ describe("buying conversation packs outright", () => {
 
   const PACK = {
     id: "addon-1",
-    name: "CONVERSATION PACK",
-    displayName: "Conversation pack",
+    name: "ACTIVE CONTACT PACK",
+    displayName: "Active contact pack",
     planType: "ADDON",
-    monthlyPrice: 1_200,
+    monthlyPrice: 999,
     usdMonthlyPrice: 19,
   };
 
@@ -1445,7 +1445,7 @@ describe("buying conversation packs outright", () => {
   test("creates a one-off order, not a subscription", async () => {
     onPaidPlan();
 
-    const result = await service.createConversationAddonOrder("user-1", "org-1", 2);
+    const result = await service.createAddonOrder("user-1", "org-1", "ACTIVE_CONTACTS", 2);
 
     expect(axiosPost.mock.calls[0]?.[0]).toBe("https://api.razorpay.com/v1/orders");
     expect(result.gatewayOrderId).toBe("order_rzp");
@@ -1454,14 +1454,28 @@ describe("buying conversation packs outright", () => {
   test("charges for every pack asked for", async () => {
     onPaidPlan();
 
-    const result = await service.createConversationAddonOrder("user-1", "org-1", 3);
+    const result = await service.createAddonOrder("user-1", "org-1", "ACTIVE_CONTACTS", 3);
 
     // Minor units at the gateway, major units back to the caller.
     expect(axiosPost.mock.calls[0]?.[1]).toMatchObject({
-      amount: 3 * 1_200 * 100,
+      amount: 3 * 999 * 100,
       currency: "INR",
     });
-    expect(result.amount).toBe(3 * 1_200);
+    expect(result.amount).toBe(3 * 999);
+  });
+
+  test("sells the pack row for the kind asked for, and tags the order with it", async () => {
+    onPaidPlan();
+
+    const result = await service.createAddonOrder("user-1", "org-1", "CAMPAIGN_CREDITS", 1);
+
+    expect(prisma.rateupPlan.findFirst).toHaveBeenCalledWith({
+      where: { name: "CAMPAIGN CREDIT PACK" },
+    });
+    expect(axiosPost.mock.calls[0]?.[1]).toMatchObject({
+      notes: { addonKind: "CAMPAIGN_CREDITS" },
+    });
+    expect(result.kind).toBe("CAMPAIGN_CREDITS");
   });
 
   test("refuses a plan that may not buy packs, before charging anything", async () => {
@@ -1477,7 +1491,7 @@ describe("buying conversation packs outright", () => {
       },
     } as never);
 
-    await expect(service.createConversationAddonOrder("user-1", "org-1", 1)).rejects.toThrow(
+    await expect(service.createAddonOrder("user-1", "org-1", "ACTIVE_CONTACTS", 1)).rejects.toThrow(
       /Upgrading/,
     );
     expect(axiosPost).not.toHaveBeenCalled();
@@ -1487,7 +1501,7 @@ describe("buying conversation packs outright", () => {
   test("caps one order rather than billing an unbounded amount", async () => {
     onPaidPlan();
 
-    const result = await service.createConversationAddonOrder("user-1", "org-1", 5_000);
+    const result = await service.createAddonOrder("user-1", "org-1", "ACTIVE_CONTACTS", 5_000);
 
     expect(result.quantity).toBe(service.MAX_PACKS_PER_ORDER);
   });
@@ -1496,7 +1510,9 @@ describe("buying conversation packs outright", () => {
     onPaidPlan();
     axiosPost.mockRejectedValue(new Error("razorpay down"));
 
-    await expect(service.createConversationAddonOrder("user-1", "org-1", 1)).rejects.toThrow();
+    await expect(
+      service.createAddonOrder("user-1", "org-1", "ACTIVE_CONTACTS", 1),
+    ).rejects.toThrow();
     expect(prisma.order.delete).toHaveBeenCalledWith({ where: { id: "order-1" } });
   });
 });
@@ -1534,12 +1550,22 @@ describe("crediting packs when the payment lands", () => {
       .mockResolvedValue({} as never);
   });
 
-  function onAddonOrder() {
+  function onAddonOrder(name = "ACTIVE CONTACT PACK") {
     vi.mocked(prisma.order.findUnique).mockResolvedValue({
       orgId: "org-1",
-      RateupPlan: { id: "addon-1", name: "CONVERSATION PACK", planType: "ADDON" },
+      RateupPlan: { id: "addon-1", name, planType: "ADDON" },
     } as never);
   }
+
+  function credited() {
+    return (
+      vi.mocked(prisma.subscriptionAddon.create).mock.calls[0][0] as unknown as {
+        data: { kind: string; quantity: number; creditsGranted: number | null; expiresAt: Date };
+      }
+    ).data;
+  }
+
+  const daysOut = (date: Date) => Math.round((date.getTime() - Date.now()) / 86_400_000);
 
   test("credits the packs the order bought", async () => {
     onAddonOrder();
@@ -1556,21 +1582,37 @@ describe("crediting packs when the payment lands", () => {
     expect(call.data.paymentRef).toBe("pay_1");
   });
 
-  test("dates the pack a month out, so it lapses on its own", async () => {
+  test("dates a contact pack a month out, so it lapses on its own", async () => {
     onAddonOrder();
 
     await service.verifyPayment(captured({ rateupOrderId: "order-1" }), "payment.captured");
 
-    const call = vi.mocked(prisma.subscriptionAddon.create).mock.calls[0]?.[0] as {
-      data: { expiresAt: Date };
-    };
-    const days = (call.data.expiresAt.getTime() - Date.now()) / 86_400_000;
-    expect(Math.round(days)).toBe(30);
+    expect(credited()).toMatchObject({ kind: "ACTIVE_CONTACTS", creditsGranted: null });
+    expect(daysOut(credited().expiresAt)).toBe(30);
+  });
+
+  test("grants a credit pack's credits and dates it 90 days out", async () => {
+    onAddonOrder("CAMPAIGN CREDIT PACK");
+
+    await service.verifyPayment(
+      captured({ rateupOrderId: "order-1", addonQuantity: "2" }),
+      "payment.captured",
+    );
+
+    expect(credited()).toMatchObject({ kind: "CAMPAIGN_CREDITS", creditsGranted: 20_000 });
+    expect(daysOut(credited().expiresAt)).toBe(90);
+  });
+
+  test("credits an order placed before the pack was renamed as contacts", async () => {
+    onAddonOrder("CONVERSATION PACK");
+
+    await service.verifyPayment(captured({ rateupOrderId: "order-1" }), "payment.captured");
+
+    expect(credited().kind).toBe("ACTIVE_CONTACTS");
   });
 
   test("credits a retried webhook only once", async () => {
-    // Razorpay retries a delivery it did not get a 200 for. Crediting again would hand
-    // the customer a second month of headroom for free.
+    // Razorpay retries a delivery it did not get a 200 for.
     onAddonOrder();
     vi.mocked(prisma.subscriptionAddon.findUnique).mockResolvedValue({ id: "existing" } as never);
 

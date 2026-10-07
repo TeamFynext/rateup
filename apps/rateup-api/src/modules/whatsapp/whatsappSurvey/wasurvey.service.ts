@@ -55,7 +55,7 @@ import { processNextNode } from "./wasurvey.controller.js";
 import { LeadgenNodeData } from "./node-types.js";
 import { hasFeature } from "../../subscription/subscription.service.js";
 import { producer } from "../../../plugins/kafka.js";
-import { assertWithinConversationLimit } from "./wasurvey.auth.js";
+import { assertCanMessageContact } from "./wasurvey.auth.js";
 import type { sendPaymentInitTemplate } from "../automatedReply/wa_automatedReply.utils.js";
 import { channelDigits } from "../../../utils/channelIdentifier.js";
 import { getInstagramChannel, getMessengerChannel } from "../metaChannel/metaChannel.service.js";
@@ -80,14 +80,9 @@ export async function sendMessage(
   isAutomated?: boolean,
   externalApi?: boolean,
   // System/transactional sends (OTP, payment, ticket notifications) pass true to
-  // bypass the conversation limit. All normal business outbound is gated.
-  skipConversationLimit = false,
+  // bypass the active-contact limit. All normal business outbound is gated.
+  skipActiveContactLimit = false,
 ) {
-  // Freeze all outbound (WhatsApp/Instagram/Facebook/Webchat) once the org is over
-  // its conversation limit. Inbound is never gated — this is the outbound path only.
-  if (!skipConversationLimit) {
-    await assertWithinConversationLimit(orgId);
-  }
   let waSettings: Omit<WhatsappSettings, "accessToken_iv"> | null = null;
   let to: string;
   let configId: string | undefined;
@@ -140,6 +135,11 @@ export async function sendMessage(
     sourceIdentifier = channelDigits(waSettings.phone) || undefined;
   } else {
     to = (messageData as WaSendMessageBody).to;
+  }
+  // Gated once the recipient is known: past the allowance, contacts already counted this
+  // month can still be messaged, new ones cannot.
+  if (!skipActiveContactLimit) {
+    await assertCanMessageContact(orgId, { platform, customerId: to });
   }
   let messageUrl = "messages";
   if (category === WaTemplateCategory.MARKETING) {
@@ -719,8 +719,8 @@ export async function sendTextMessage(
   title: string | null,
   description = "",
   // System/transactional callers (e.g. ticket notifications) pass true to bypass
-  // the conversation limit; normal business text sends stay gated.
-  skipConversationLimit = false,
+  // the active-contact limit; normal business text sends stay gated.
+  skipActiveContactLimit = false,
 ) {
   const messageData = createTextMessage(to.phone, title, description);
   await sendMessage(
@@ -735,7 +735,7 @@ export async function sendTextMessage(
     "AUTOMATED",
     true,
     false,
-    skipConversationLimit,
+    skipActiveContactLimit,
   );
 }
 export const handleMessageStatusUpdate = async (
