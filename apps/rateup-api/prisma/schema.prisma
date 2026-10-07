@@ -158,6 +158,7 @@ model Org {
   owner                    User     @relation(fields: [ownerId], references: [id])
   ownerId                  String   @db.Uuid
   logo                     String?
+  waCalls                  WaCall[]
   phone                    String?
   address                  String?
   encryptionKeys           Json? //{privateKey:string,publicKey:string}
@@ -1146,6 +1147,7 @@ model Contact {
 
   org                          Org                       @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId                        String                    @db.Uuid
+  waCalls                      WaCall[]
   responses                    SurveyResponse[]
   contactGroups                ContactGroupMap[]
   campaignParticipants         CampaignParticipant[]
@@ -4061,4 +4063,63 @@ model StaffAuditLog {
   @@index([targetOrgId, createdAt])
   @@index([staffUserId, createdAt])
   @@index([createdAt])
+}
+
+/// Who placed a WhatsApp voice call: the customer, or an agent from the inbox.
+enum WaCallDirection {
+  USER_INITIATED
+  BUSINESS_INITIATED
+}
+
+enum WaCallStatus {
+  /// Offered and not yet answered (inbound), or dialled and ringing (outbound).
+  RINGING
+  /// An agent answered, or the customer picked up an outbound call. Media is flowing.
+  ACCEPTED
+  /// Declined by the agent (inbound) or by the customer (outbound).
+  REJECTED
+  /// Connected and then hung up by either side.
+  COMPLETED
+  /// Never connected: nobody answered before Meta gave up on it.
+  MISSED
+  /// Meta ended the call with an error.
+  FAILED
+}
+
+/// One WhatsApp Cloud API voice call (field `calls` on the webhook). Signalling only —
+/// the audio runs over WebRTC between the agent's browser and Meta and never touches us.
+/// The thread shows each finished call as an `internal` WaMessage carrying `call`; that
+/// row's id is kept here so a late terminate webhook updates rather than duplicates it.
+model WaCall {
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org             Org             @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId           String          @db.Uuid
+  /// Meta's call id (`wacid.…`). Every webhook and action names the call by it.
+  waCallId        String          @unique
+  /// The business phone number id the call is on.
+  phoneId         String
+  direction       WaCallDirection
+  status          WaCallStatus    @default(RINGING)
+  /// The customer's WhatsApp id (digits).
+  customerWaId    String
+  contact         Contact?        @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  contactId       String?         @db.Uuid
+  conversationId  String?         @db.Uuid
+  /// The agent who dialled an outbound call.
+  initiatedById   String?         @db.Uuid
+  /// The agent whose browser holds the call's media.
+  answeredById    String?         @db.Uuid
+  answeredAt      DateTime?
+  endedAt         DateTime?
+  /// Meta's own `duration` off the terminate webhook, in seconds.
+  durationSeconds Int?
+  errorCode       String?
+  errorMessage    String?
+  /// The thread entry written for this call, once it ended.
+  logMessageId    String?         @db.Uuid
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @default(now()) @updatedAt
+
+  @@index([orgId, createdAt])
+  @@index([contactId, createdAt])
 }

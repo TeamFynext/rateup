@@ -181,9 +181,14 @@ export async function sendViaWstoOrgHandler(
   orgId: string,
   message: orgWsMessage,
   roleFilter?: string,
+  /** Only these users' sockets. Omitted means every socket the filter admits. */
+  userIds?: string[],
 ) {
   try {
-    await publisher.publish(WS_CHANNEL, JSON.stringify({ orgId, data: message, roleFilter }));
+    await publisher.publish(
+      WS_CHANNEL,
+      JSON.stringify({ orgId, data: message, roleFilter, ...(userIds && { userIds }) }),
+    );
   } catch (err) {
     log.error("Error publishing message to org %s: %s", orgId, err);
   }

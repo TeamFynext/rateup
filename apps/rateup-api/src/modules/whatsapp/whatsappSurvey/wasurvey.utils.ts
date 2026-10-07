@@ -54,6 +54,11 @@ export function getEventType(data: WaMessageBody) {
     if (data.entry[0].changes[0].field === WaEvent.MessagingHandovers) {
       return WaEvent.MessagingHandovers;
     }
+    // A `calls` change can carry `statuses` (outbound ringing/accepted), which the
+    // message-status branch below would otherwise claim.
+    if (data.entry[0].changes[0].field === WaEvent.Calls) {
+      return WaEvent.Calls;
+    }
     if (data.entry[0].changes[0].field === WaEvent.TemplateStatusChange) {
       return WaEvent.TemplateStatusChange;
     } else if (data.entry[0].changes[0].field === WaEvent.ACCOUNT_UPDATE) {
@@ -714,6 +719,10 @@ export function parseMessage(data: WaMessageBody): WaParsedMessage {
       }
       if (message.interactive.type === "nfm_reply") {
         flowResponse = JSON.parse(message.interactive.nfm_reply["response_json"]);
+        subtype = message.interactive.type;
+      } else if (message.interactive.type === "call_permission_reply") {
+        // The customer's answer to a call permission request carries no words to match
+        // keyword automations against; the thread renders it from the stored payload.
         subtype = message.interactive.type;
       } else {
         body = message.interactive[message.interactive.type].title;

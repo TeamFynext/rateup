@@ -111,7 +111,15 @@ export interface WaReceiveMessageBody {
         body: string;
       };
       interactive?: {
-        type: "list_reply" | "button_reply" | "nfm_reply";
+        type: "list_reply" | "button_reply" | "nfm_reply" | "call_permission_reply";
+        /** The customer's answer to a call permission request. */
+        call_permission_reply?: {
+          response: "accept" | "reject";
+          is_permanent?: boolean;
+          /** Unix seconds; absent when the grant is permanent. */
+          expiration_timestamp?: string;
+          response_source?: "user_action" | "automatic";
+        };
         list_reply: {
           id: string;
           title: string;
@@ -337,6 +345,10 @@ export interface WaInternalMessageBody {
     id: string;
     name: string;
   }[];
+  /** The finished sentence the thread shows (see createInternalWaMessage). */
+  summary?: string;
+  /** Present on a voice call's thread entry. */
+  call?: import("../modules/whatsapp/calling/calling.types.js").CallLogEntry;
 }
 
 export interface WaSendMessageBody {
@@ -374,7 +386,8 @@ export interface WaSendMessageBody {
       | "product"
       | "product_list"
       | "order_details"
-      | "order_status";
+      | "order_status"
+      | "call_permission_request";
     action?: WaInteractiveMessageAction;
     body?: {
       text: string; // max 1024 chars

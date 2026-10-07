@@ -12,6 +12,7 @@ import { waInboxRoutes } from "./inbox/wainbox.routes.js";
 import { waAuthRoutes } from "./auth/wa_auth.route.js";
 import { handleWhatsappError } from "./wa_error_handler.js";
 import { waCatalogRoutes } from "./catalog/catalog.route.js";
+import { waCallingRoutes } from "./calling/calling.route.js";
 
 export async function whatsappRoutes(server: FastifyInstance) {
   server.setErrorHandler(handleWhatsappError);
@@ -32,4 +33,5 @@ export async function whatsappRoutes(server: FastifyInstance) {
   });
   server.register(waInboxRoutes, { prefix: "/inbox" });
   server.register(waCatalogRoutes, { prefix: "/catalog" });
+  server.register(waCallingRoutes, { prefix: "/calls" });
 }
