@@ -14,6 +14,7 @@ import { setupAndroidNotificationChannel } from "@/utils/notification";
 import { configurePlaybackAudioMode } from "@/utils/audio";
 import { Colors } from "@/constants/colors";
 import { NoticeHost } from "@/components/common/Notice";
+import { ShareIntentProvider } from "expo-share-intent";
 import {
   Figtree_300Light,
   Figtree_800ExtraBold,
@@ -122,15 +123,19 @@ export default function LayoutWrapper() {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <SafeAreaProvider>
-        <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
-          <RootLayout />
-          {/* Sibling of the navigator so notices sit above every screen, and
-              box-none inside so it never intercepts a touch. */}
-          <NoticeHost />
-        </KeyboardProvider>
-      </SafeAreaProvider>
-    </QueryClientProvider>
+    // Outermost, as expo-share-intent requires: it holds photos and videos shared in
+    // from another app until the protected layout routes them to "Send to".
+    <ShareIntentProvider>
+      <QueryClientProvider client={queryClient}>
+        <SafeAreaProvider>
+          <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
+            <RootLayout />
+            {/* Sibling of the navigator so notices sit above every screen, and
+                box-none inside so it never intercepts a touch. */}
+            <NoticeHost />
+          </KeyboardProvider>
+        </SafeAreaProvider>
+      </QueryClientProvider>
+    </ShareIntentProvider>
   );
 }

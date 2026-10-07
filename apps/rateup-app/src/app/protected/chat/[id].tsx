@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { View, useColorScheme } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useLocalSearchParams } from "expo-router";
-import dayjs from "dayjs";
 import ChatHeader from "@/components/chatDisplay/ChatHeader";
 import ChatFooter from "@/components/chatDisplay/ChatFooter";
 import ChatBody from "@/components/chatDisplay/ChatBody";
@@ -16,21 +15,15 @@ import { useContactById } from "@/api/inbox/contacts/contacts.query";
 import { useContactsStore } from "@/store/inboxStore";
 import { loadContactFromDB } from "@/utils/sqlite";
 import { Colors } from "@/constants/colors";
+import { isSessionWindowOpen } from "@/utils/sessionWindow";
 
 /**
- * `/api/contact/:id` and the cached row both return a bare Contact, which
- * carries no session flag. Derive it from the 24h WhatsApp reply window, the
- * same way the inbox does.
- *
- * Safe to run against cached data: the window is computed from the contact's
- * last inbound timestamp, and a stale timestamp can only make the window look
- * *more* expired, never less. The worst case is the template-only footer for a
- * moment, never a free-form composer on a closed session.
+ * `/api/contact/:id` and the cached row both return a bare Contact, which carries no
+ * session flag. Derived from the 24h reply window, the same way the inbox does; at worst
+ * the template-only footer shows for a moment, never a free-form composer on a closed
+ * session.
  */
-function deriveSessionActive(contact: { lastReceivedMessageTimeStamp?: string | null }) {
-  if (!contact?.lastReceivedMessageTimeStamp) return false;
-  return dayjs(contact.lastReceivedMessageTimeStamp).add(24, "hour").diff(dayjs(), "minute") > 0;
-}
+const deriveSessionActive = isSessionWindowOpen;
 
 const ChatDisplay = () => {
   const params = useLocalSearchParams();

@@ -14,13 +14,26 @@ import Image from "@/components/common/Image";
 import { Colors } from "@/constants/colors";
 import { useForm } from "react-hook-form";
 import * as DocumentPicker from "expo-document-picker";
+import * as ImagePicker from "expo-image-picker";
 import { useMediaStore, useSessionActiveStore, useVoiceRecordStore } from "@/utils/store";
 import { useCreatePrivateMessage, useSendNewWaMessage } from "@/api/inbox/messages/message.query";
-import { uploadFile } from "@/utils/fileUpload";
+import { deleteUploadedFiles, uploadFile } from "@/utils/fileUpload";
+import {
+  attachmentSizeError,
+  attachmentTypeError,
+  galleryAssetKind,
+  galleryAssetName,
+  resolveMimeType,
+  type PickedFile,
+} from "@/utils/attachments";
 import { useMessagesStore, useContactsStore } from "@/store/inboxStore";
 import VoiceRecorder from "./VoiceRecorder";
+import MediaPreviewModal from "./MediaPreviewModal";
+import { prepareSharedFile, useSharedFilesStore } from "@/utils/sharedFiles";
 import {
+  Camera,
   ImageIcon,
+  Images,
   VideoIcon,
   MusicIcon,
   File,
@@ -64,6 +77,53 @@ type FormValues = {
   location: any | null;
 };
 
+const UPLOAD_CONCURRENCY = 3;
+
+const GALLERY_OPTIONS: ImagePicker.ImagePickerOptions = {
+  mediaTypes: ["images", "videos"],
+  allowsMultipleSelection: true,
+  selectionLimit: 10,
+  orderedSelection: true,
+  // Below 1, photos are re-encoded to JPEG: iOS HEIC photos become sendable and most
+  // fit WhatsApp's 5 MB image limit.
+  quality: 0.8,
+  // iOS hands over the most compatible form of each asset: JPEG for HEIC, H.264 for HEVC video.
+  preferredAssetRepresentationMode:
+    ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Compatible,
+  // iOS: photos kept only in iCloud are downloaded instead of failing to load.
+  shouldDownloadFromNetwork: true,
+  // iOS: videos are re-encoded on the phone to 720p H.264 MP4, the format WhatsApp takes,
+  // and small enough to upload. Passthrough would hand over the original 4K/HEVC `.mov`.
+  // Android has no such option; the API converts whatever video it is sent.
+  videoExportPreset: ImagePicker.VideoExportPreset.H264_1280x720,
+};
+
+const CAMERA_OPTIONS: ImagePicker.ImagePickerOptions = {
+  mediaTypes: ["images", "videos"],
+  quality: 0.8,
+};
+
+function galleryAssetToFile(asset: ImagePicker.ImagePickerAsset): PickedFile {
+  const kind = galleryAssetKind(asset);
+  const name = galleryAssetName(asset, kind);
+  return {
+    uri: asset.uri,
+    name,
+    mimeType: resolveMimeType(name, asset.mimeType),
+    size: asset.fileSize,
+    kind,
+  };
+}
+
+/** Runs `task` over `items`, at most `limit` at a time. */
+async function forEachLimited<T>(items: T[], limit: number, task: (item: T) => Promise<void>) {
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) await task(items[next++]);
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+}
+
 /** A `/` at the start of a word, and what has been typed after it. */
 const QUICK_REPLY_TRIGGER = /(?:^|\s)\/([^\s/]*)$/;
 
@@ -88,7 +148,7 @@ const MessageSendPanel = ({
   // addressed to. Reading it from the store meant a reply typed in one chat
   // could be delivered to whoever the store still pointed at.
   const selectedContactId = contactId;
-  const { media, resetMedia, addMedia, removeMedia } = useMediaStore();
+  const { media, resetMedia, addMedia, replaceMedia, removeMedia, discardMedia } = useMediaStore();
   const { audioUrl, setAudioUrl } = useVoiceRecordStore();
   const { body, setBody } = useMessageBodyStore();
   const sendnewWaMessage = useSendNewWaMessage(
@@ -161,6 +221,9 @@ const MessageSendPanel = ({
   const [templateOptionsVisible, setTemplateOptionsVisible] = useState(false);
   const [templateModalVisible, setTemplateModalVisible] = useState(false);
   const [mediaPanelVisible, setMediaPanelVisible] = useState(false);
+  const [preview, setPreview] = useState({ visible: false, index: 0 });
+  // Where each attachment is on the device, so the preview shows it while it uploads.
+  const [localUris, setLocalUris] = useState<Record<string, string>>({});
   const [isPrivate, setIsPrivate] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const noteTheme = getInboxRowTheme(isDark).note;
@@ -256,61 +319,188 @@ const MessageSendPanel = ({
     }
   };
 
-  const pickMedia = async (type: "image" | "video" | "audio" | "document") => {
-    try {
-      const res = await DocumentPicker.getDocumentAsync({
-        type:
-          type === "image"
-            ? "image/*"
-            : type === "video"
-              ? "video/*"
-              : type === "audio"
-                ? "audio/*"
-                : "*/*",
-        multiple: true,
-        copyToCacheDirectory: false,
-      });
+  // Picked files are checked against the platform's size limits, then uploaded a few at a
+  // time. Each shows as a placeholder in the order picked until its upload finishes.
+  // Photos and videos open the preview, as in WhatsApp, on the first of the new files.
+  const attachFiles = async (files: PickedFile[], { showPreview = false } = {}) => {
+    setMediaPanelVisible(false);
+    const accepted = files.filter((file) => {
+      const error = attachmentTypeError(file) ?? attachmentSizeError(file, file.kind, platform);
+      if (error) Toast.error(error);
+      return !error;
+    });
+    if (!accepted.length) return;
 
-      // Handle cancelation
-      if (res?.canceled || !res?.assets?.length) return;
+    const firstNewIndex = useMediaStore.getState().media.length;
+    const pending = accepted.map((file, i) => {
+      const tempKey = `${file.name}-${Date.now()}-${i}`;
+      addMedia({ key: tempKey, type: file.kind, name: file.name, url: "", uploading: true });
+      return { file, tempKey };
+    });
+    setLocalUris((prev) => ({
+      ...prev,
+      ...Object.fromEntries(pending.map(({ file, tempKey }) => [tempKey, file.uri])),
+    }));
+    if (showPreview) setPreview({ visible: true, index: firstNewIndex });
 
-      for (const file of res.assets) {
-        const tempKey = `${file.name}-${Date.now()}`;
-        addMedia({
-          key: tempKey,
-          type,
+    await forEachLimited(pending, UPLOAD_CONCURRENCY, async ({ file, tempKey }) => {
+      try {
+        const key = await uploadFile({
+          uri: file.uri,
           name: file.name,
-          url: null as any,
-          uploading: true,
-        } as any);
-
-        try {
-          const uploadable = {
-            uri: file.uri,
-            name: file.name,
-            type: file.mimeType || "application/octet-stream",
-          };
-
-          const key = await uploadFile(uploadable as any);
-          const cloudUrl = `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${key}`;
-          removeMedia(tempKey);
-          addMedia({
-            key,
-            type,
-            name: file.name,
-            url: cloudUrl,
-            uploading: false,
-          } as any);
-        } catch {
-          removeMedia(tempKey);
+          type: file.mimeType,
+        } as unknown as globalThis.File);
+        // Removed while it uploaded (🗑, ✕, back, or the chat was left): nothing will
+        // ever send it, so it comes straight back out of storage.
+        if (!useMediaStore.getState().media.some((m) => m.key === tempKey)) {
+          void deleteUploadedFiles({ fileKeyArray: [{ Key: key }] });
+          return;
         }
+        setLocalUris((prev) => ({ ...prev, [key]: file.uri }));
+        replaceMedia(tempKey, {
+          key,
+          type: file.kind,
+          name: file.name,
+          url: `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${key}`,
+          uploading: false,
+        });
+      } catch (err) {
+        // Nothing was stored, so the placeholder is dropped without a delete request.
+        useMediaStore.setState((s) => ({ media: s.media.filter((m) => m.key !== tempKey) }));
+        // `uploadFile` rethrows the API's message, e.g. "Unsupported file type."
+        const reason = typeof err === "string" && err ? ` ${err}` : " Try again.";
+        Toast.error(`"${file.name}" could not be uploaded.${reason}`);
       }
+    });
+  };
 
-      togglePanel();
+  // Photos and videos come from the system photo picker, as in WhatsApp: the Photos
+  // library on iOS, the Android Photo Picker on Android. Neither needs a permission.
+  const pickFromGallery = async () => {
+    try {
+      const res = await ImagePicker.launchImageLibraryAsync(GALLERY_OPTIONS);
+      if (res.canceled || !res.assets?.length) return;
+      await attachFiles(res.assets.map(galleryAssetToFile), { showPreview: true });
     } catch (err) {
-      console.error("expo-document-picker error:", err);
+      console.error("image picker error:", err);
+      Toast.error("Could not open your photos.");
     }
   };
+
+  const takeWithCamera = async () => {
+    try {
+      const permission = await ImagePicker.requestCameraPermissionsAsync();
+      if (!permission.granted) {
+        Toast.info("Allow camera access in Settings to take a photo or video.");
+        return;
+      }
+      const res = await ImagePicker.launchCameraAsync(CAMERA_OPTIONS);
+      if (res.canceled || !res.assets?.length) return;
+      await attachFiles(res.assets.map(galleryAssetToFile), { showPreview: true });
+    } catch (err) {
+      console.error("camera error:", err);
+      Toast.error("Could not open the camera.");
+    }
+  };
+
+  const pickDocument = async (kind: "audio" | "document") => {
+    try {
+      const res = await DocumentPicker.getDocumentAsync({
+        type: kind === "audio" ? "audio/*" : "*/*",
+        multiple: true,
+        // Android hands back `content://` uris, which can't be uploaded reliably; the
+        // cached copy is a plain file on both platforms.
+        copyToCacheDirectory: true,
+      });
+      if (res.canceled || !res.assets?.length) return;
+      await attachFiles(
+        res.assets.map((file) => ({
+          uri: file.uri,
+          name: file.name,
+          mimeType: resolveMimeType(file.name, file.mimeType),
+          size: file.size,
+          kind,
+        })),
+      );
+    } catch (err) {
+      console.error("expo-document-picker error:", err);
+      Toast.error("Could not open your files.");
+    }
+  };
+
+  // Photos and videos shared in from another app, through "Send to", attach once the
+  // composer for their chat is on screen, and open the preview for a caption. Keyed on
+  // the share too, so sharing into the chat already open still attaches.
+  const sharedAt = useSharedFilesStore((s) =>
+    s.pending?.contactId === contactId ? s.pending.at : null,
+  );
+  useEffect(() => {
+    const shared = useSharedFilesStore.getState().take(contactId);
+    if (!shared.length) return;
+    (async () => {
+      const prepared = await Promise.all(
+        shared.map((file) =>
+          prepareSharedFile(file).catch((err) => {
+            console.error("shared file error:", err);
+            Toast.error(`"${file.fileName}" could not be attached.`);
+            return null;
+          }),
+        ),
+      );
+      await attachFiles(
+        prepared.filter((f): f is PickedFile => !!f),
+        { showPreview: true },
+      );
+    })();
+    // Once per share: `attachFiles` is redeclared every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contactId, sharedAt]);
+
+  // The preview's ✕ and the back button drop everything attached, as WhatsApp's do, and
+  // delete the uploads from storage. Ones still uploading are deleted as they finish.
+  const discardAttachments = () => {
+    setPreview((p) => ({ ...p, visible: false }));
+    discardMedia();
+  };
+
+  // The draft store outlives this chat, so leaving it with files attached would carry
+  // them into the next chat opened and leave them in storage. Leaving discards them.
+  useEffect(() => () => useMediaStore.getState().discardMedia(), []);
+
+  const attachmentActions = [
+    {
+      key: "gallery",
+      label: "Gallery",
+      Icon: Images,
+      onPress: pickFromGallery,
+      bg: isDark ? "#1a2a3a" : "#EBF3FB",
+      color: isDark ? "#60aee8" : "#185FA5",
+    },
+    {
+      key: "camera",
+      label: "Camera",
+      Icon: Camera,
+      onPress: takeWithCamera,
+      bg: isDark ? "#1e1a33" : "#EEEDFE",
+      color: isDark ? "#9f94e8" : "#534AB7",
+    },
+    {
+      key: "document",
+      label: "Doc",
+      Icon: File,
+      onPress: () => pickDocument("document"),
+      bg: isDark ? "#2a2210" : "#FAEEDA",
+      color: isDark ? "#e8a030" : "#854F0B",
+    },
+    {
+      key: "audio",
+      label: "Audio",
+      Icon: MusicIcon,
+      onPress: () => pickDocument("audio"),
+      bg: isDark ? "#122210" : "#EAF3DE",
+      color: isDark ? "#7ac44d" : "#3B6D11",
+    },
+  ];
 
   const handleSendPrivateMessage = handleSubmit((values) => {
     const text = values.text.body ?? "";
@@ -369,13 +559,25 @@ const MessageSendPanel = ({
     mention.reset();
   });
 
-  const handleSend = handleSubmit((values) => {
+  const handleSend = handleSubmit((formValues) => {
+    // Settled here rather than by the media effect, which runs only when attachments
+    // change: a caption typed after attaching went up as `media`, and the API sends a
+    // `media` message without its text. `text` with attachments is a captioned send.
+    const values: FormValues =
+      formValues.type === "text" || formValues.type === "media"
+        ? {
+            ...formValues,
+            type: formValues.media.length && !formValues.text.body?.trim() ? "media" : "text",
+          }
+        : formValues;
     if (!values.text.body && !values.media.length) return;
 
     // Optimistic UI update
     if (selectedContactId) {
       const contactId = selectedContactId as string;
       const id = Date.now().toString();
+      // The placeholder shows the first attachment, under its own kind, until the stored copy arrives.
+      const first = values.media?.[0];
       const mockedMessage = {
         id,
         messageId: id,
@@ -384,11 +586,15 @@ const MessageSendPanel = ({
         messageBody: {
           exchangeProcess: "send",
           send: {
-            type: values.media?.length ? "image" : "text",
+            type: first ? first.type : "text",
             text: values.text,
-            image: values.media?.length
-              ? { link: values.media[0].uri, caption: values.text?.body }
-              : undefined,
+            ...(first && {
+              [first.type]: {
+                link: first.url,
+                caption: values.text?.body,
+                ...(first.type === "document" && { filename: first.name }),
+              },
+            }),
           },
         },
         sender: { name: "You" },
@@ -482,13 +688,25 @@ const MessageSendPanel = ({
                         <Text className="text-[10px] text-gray-500 mt-1">Uploading...</Text>
                       </View>
                     ) : item.type === "image" ? (
-                      <Image
-                        source={{ uri: item.url }}
-                        className="w-full h-full rounded-xl"
-                        contentFit="cover"
-                        recyclingKey={item.url}
-                        onError={() => {}}
-                      />
+                      <Pressable
+                        className="w-full h-full"
+                        onPress={() =>
+                          setPreview({
+                            visible: true,
+                            index: media.findIndex((m) => m.key === item.key),
+                          })
+                        }
+                        accessibilityRole="button"
+                        accessibilityLabel={`Preview ${item.name}`}
+                      >
+                        <Image
+                          source={{ uri: item.url }}
+                          className="w-full h-full rounded-xl"
+                          contentFit="cover"
+                          recyclingKey={item.url}
+                          onError={() => {}}
+                        />
+                      </Pressable>
                     ) : (
                       <View className="w-full h-full rounded-xl bg-gray-200 items-center justify-center">
                         {item.type !== "image" && (
@@ -506,6 +724,23 @@ const MessageSendPanel = ({
               })}
             </View>
           )}
+
+          <MediaPreviewModal
+            visible={preview.visible}
+            items={media}
+            index={preview.index}
+            onIndexChange={(index) => setPreview((p) => ({ ...p, index }))}
+            localUriFor={(key) => localUris[key]}
+            caption={textBody ?? ""}
+            onChangeCaption={(text) => setValue("text.body", text, { shouldDirty: true })}
+            onRemove={removeMedia}
+            onAddMore={pickFromGallery}
+            onSend={() => {
+              setPreview((p) => ({ ...p, visible: false }));
+              handleSend();
+            }}
+            onDiscard={discardAttachments}
+          />
 
           {mediaPanelVisible && (
             <View className="px-3.5 pt-3 pb-1">
@@ -564,39 +799,12 @@ const MessageSendPanel = ({
 
               {/* Icon grid */}
               <View className="flex-row justify-between">
-                {[
-                  {
-                    type: "image" as const,
-                    label: "Image",
-                    Icon: ImageIcon,
-                    bg: isDark ? "#1a2a3a" : "#EBF3FB",
-                    color: isDark ? "#60aee8" : "#185FA5",
-                  },
-                  {
-                    type: "video" as const,
-                    label: "Video",
-                    Icon: VideoIcon,
-                    bg: isDark ? "#1e1a33" : "#EEEDFE",
-                    color: isDark ? "#9f94e8" : "#534AB7",
-                  },
-                  {
-                    type: "document" as const,
-                    label: "Doc",
-                    Icon: File,
-                    bg: isDark ? "#2a2210" : "#FAEEDA",
-                    color: isDark ? "#e8a030" : "#854F0B",
-                  },
-                  {
-                    type: "audio" as const,
-                    label: "Audio",
-                    Icon: MusicIcon,
-                    bg: isDark ? "#122210" : "#EAF3DE",
-                    color: isDark ? "#7ac44d" : "#3B6D11",
-                  },
-                ].map(({ type, label, Icon, bg, color }) => (
+                {attachmentActions.map(({ key, label, Icon, onPress, bg, color }) => (
                   <Pressable
-                    key={type}
-                    onPress={() => pickMedia(type)}
+                    key={key}
+                    onPress={onPress}
+                    accessibilityRole="button"
+                    accessibilityLabel={label}
                     className="flex-1 mx-1 items-center gap-1.5 py-2.5 rounded-xl border-[0.5px]"
                     style={{
                       backgroundColor: isDark ? Colors.dark.surface : Colors.light.card,
