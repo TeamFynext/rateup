@@ -40,6 +40,16 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-10-07-whatsapp-call-log",
+    title: "Call log and call analytics",
+    summary:
+      "WhatsApp → Calls lists every voice call with its outcome, length and agent, and shows your answer rate, missed calls and busiest hours.",
+    publishedAt: "2026-10-07",
+    kinds: ["new"],
+    area: "Inbox",
+    link: { to: "/dashboard/whatsapp/calls", label: "Open calls" },
+  },
+  {
     id: "2026-10-07-whatsapp-voice-calls",
     title: "Take WhatsApp voice calls in the inbox",
     summary:

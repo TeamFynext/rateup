@@ -153,4 +153,82 @@ export const callKeys = {
   permission: (phoneId: string, contactId: string) =>
     ["wa-call-permission", phoneId, contactId] as const,
   settings: (phoneId: string) => ["wa-call-settings", phoneId] as const,
+  log: (filters: object) => ["wa-call-log", filters] as const,
+  analytics: (filters: object) => ["wa-call-analytics", filters] as const,
+};
+
+// ---------------------------------------------------------------------------------------
+// Call log & analytics (WhatsApp → Calls)
+// ---------------------------------------------------------------------------------------
+
+export type CallOutcome = "answered" | "missed" | "declined" | "failed";
+
+export interface CallLogRow extends CallDto {
+  contactPhone: string | null;
+  agentId: string | null;
+  agentName: string | null;
+  /** Seconds from the first ring to pickup. */
+  ringSeconds: number | null;
+}
+
+export interface CallLogFilters {
+  from: Date;
+  to: Date;
+  phoneId?: string;
+  direction?: CallDirection;
+  outcome?: CallOutcome;
+  search?: string;
+}
+
+export const getCallLog = async (filters: CallLogFilters, cursor?: string) => {
+  const res = await axiosClient.get(`${CallsUrl}/log`, {
+    params: {
+      ...filters,
+      from: filters.from.toISOString(),
+      to: filters.to.toISOString(),
+      search: filters.search || undefined,
+      cursor,
+      limit: 50,
+    },
+  });
+  return res.data as { items: CallLogRow[]; nextCursor: string | null };
+};
+
+export interface CallAnalytics {
+  totals: {
+    total: number;
+    inbound: number;
+    outbound: number;
+    answered: number;
+    missed: number;
+    declined: number;
+    failed: number;
+    answerRate: number | null;
+    avgDurationSeconds: number | null;
+    avgAnswerSeconds: number | null;
+    talkSeconds: number;
+    missedCalledBack: number;
+  };
+  daily: { date: string; answered: number; missed: number }[];
+  /** weekday 0 = Monday. */
+  hourly: { weekday: number; hour: number; calls: number }[];
+  agents: {
+    userId: string;
+    name: string | null;
+    calls: number;
+    talkSeconds: number;
+    avgDurationSeconds: number | null;
+  }[];
+}
+
+export const getCallAnalytics = async (filters: { from: Date; to: Date; phoneId?: string }) => {
+  const res = await axiosClient.get(`${CallsUrl}/analytics`, {
+    params: {
+      from: filters.from.toISOString(),
+      to: filters.to.toISOString(),
+      phoneId: filters.phoneId,
+      tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    },
+  });
+  return res.data as CallAnalytics;
 };
