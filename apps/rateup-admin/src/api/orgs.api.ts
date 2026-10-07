@@ -14,7 +14,7 @@ export const ORG_STATUSES = [
   "suspended",
 ] as const;
 export type OrgStatusFilter = (typeof ORG_STATUSES)[number];
-export const ORG_SORTS = ["created", "name", "expires", "conversations"] as const;
+export const ORG_SORTS = ["created", "name", "expires", "activeContacts"] as const;
 export type OrgSort = (typeof ORG_SORTS)[number];
 
 export type SubscriptionStatus = "active" | "expired" | "no_plan";
@@ -45,8 +45,9 @@ export interface OrgRow {
   status: SubscriptionStatus;
   expiresAt: IsoDate | null;
   members: number;
-  /** Against the plan's own ceiling; `max` null means not metered. */
-  conversations: { used: number; max: number | null };
+  /** This month's meters against the plan's own ceilings (packs excluded); `max` null means not metered. */
+  activeContacts: { used: number; max: number | null };
+  campaignCredits: { used: number; max: number | null };
   lastActiveAt: IsoDate | null;
 }
 
@@ -70,7 +71,6 @@ export interface OrgSummary extends OrgRow {
     startedAt: IsoDate;
     renewedAt: IsoDate | null;
     expiresAt: IsoDate;
-    annualAllowance: boolean;
     gatewayRef: string | null;
     limitAlertSentAt: IsoDate | null;
   } | null;
@@ -134,20 +134,50 @@ export interface PlanLimitStatus {
 
 export type UsageDays = 30 | 90;
 
+/** Mirrors the API's ActiveContactBudget; the cap fields are absent when not metered. */
+export interface ActiveContactBudget {
+  metered: boolean;
+  period: IsoDate;
+  used: number;
+  /** Plan plus in-date packs. */
+  max?: number;
+  planMax?: number;
+  addonContacts: number;
+  remaining?: number;
+  exhausted: boolean;
+}
+
+/** Mirrors the API's CampaignCreditBudget: plan credits are spent first, then packs. */
+export interface CampaignCreditBudget {
+  metered: boolean;
+  period: IsoDate;
+  planMax?: number;
+  planUsed: number;
+  packRemaining: number;
+  remaining?: number;
+  exhausted: boolean;
+}
+
+export type PackKind = "ACTIVE_CONTACTS" | "CAMPAIGN_CREDITS";
+
 export interface OrgUsage {
   /** One entry per UTC day, oldest first, zero-filled. */
-  daily: { date: string; conversations: number }[];
+  daily: { date: string; activeContacts: number; campaignCredits: number }[];
   limits: {
     teams: PlanLimitStatus;
     users: PlanLimitStatus;
-    conversations: PlanLimitStatus;
     formResponses: PlanLimitStatus;
   };
-  conversationPeriod: "monthly" | "annual";
+  activeContacts: ActiveContactBudget;
+  campaignCredits: CampaignCreditBudget;
   packs: {
     id: string;
+    kind: PackKind;
     name: string;
     quantity: number;
+    /** Campaign credit packs only. */
+    creditsGranted: number | null;
+    creditsUsed: number;
     expiresAt: IsoDate;
     boughtAt: IsoDate;
     paymentRef: string | null;
