@@ -4913,7 +4913,14 @@
     "Thu": "",
     "Tue": "",
     "Unknown agent": "",
-    "Wed": ""
+    "Wed": "",
+    "Add manually": "",
+    "Add a number manually": "",
+    "Use the IDs and a permanent access token from your own Meta app, when you can't connect through Facebook.": "",
+    "The Meta IDs and access token this number was added with. Saving replaces them.": "",
+    "Remove this number?": "",
+    "Remove manually configured WhatsApp number": "",
+    "Its IDs and access token are deleted from RateUp. Nothing changes on Meta's side.": ""
   },
   "campaign.card": {
     "{delivered}% delivered · {read}% read": "{delivered}% livré · {read}% lu",

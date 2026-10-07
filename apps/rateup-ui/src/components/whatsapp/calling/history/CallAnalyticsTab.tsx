@@ -1,5 +1,6 @@
 import { IconClock, IconPhone, IconPhoneCheck, IconPhoneX } from "@tabler/icons-react";
 import dayjs from "dayjs";
+import { Fragment } from "react";
 import { useTranslation } from "react-i18next";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
@@ -178,51 +179,46 @@ function HourHeatmap({ hourly }: Readonly<{ hourly: CallAnalytics["hourly"] }>) 
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[520px] border-separate border-spacing-0.5">
-        <thead>
-          <tr>
-            <th className="w-10" />
-            {Array.from({ length: 24 }, (_, hour) => (
-              <th key={hour} scope="col" className="text-[10px] font-normal text-muted-foreground">
-                {hour % 3 === 0 ? dayjs().hour(hour).format("hA").toLowerCase() : ""}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {WEEKDAYS.map((day, weekday) => (
-            <tr key={day}>
-              <th scope="row" className="pr-1 text-left text-xs font-normal text-muted-foreground">
-                {t(day)}
-              </th>
-              {Array.from({ length: 24 }, (_, hour) => {
-                const calls = counts.get(`${weekday}:${hour}`) ?? 0;
-                const label = t("{day} {hour}: {count} calls", {
-                  day: t(day),
-                  hour: hourLabel(hour),
-                  count: calls,
-                });
-                return (
-                  <td
-                    key={hour}
-                    title={label}
-                    aria-label={label}
-                    className="h-6 rounded-sm bg-muted"
-                    style={
-                      calls > 0
-                        ? {
-                            // Data-driven intensity: one hue, never below a visible floor.
-                            backgroundColor: `color-mix(in oklch, var(--chart-2) ${Math.round(20 + (calls / max) * 80)}%, transparent)`,
-                          }
-                        : undefined
-                    }
-                  />
-                );
-              })}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {/* A grid rather than a table: a table spreads its columns by content, and the
+          labelled hours came out wider than the rest. Every hour is its own fixed cell. */}
+      <div className="grid min-w-[520px] grid-cols-[2.5rem_repeat(24,minmax(0,1fr))] gap-0.5">
+        <span />
+        {Array.from({ length: 24 }, (_, hour) => (
+          <span key={hour} className="text-center text-[10px] text-muted-foreground">
+            {hour % 3 === 0 ? dayjs().hour(hour).format("hA").toLowerCase() : ""}
+          </span>
+        ))}
+        {WEEKDAYS.map((day, weekday) => (
+          <Fragment key={day}>
+            <span className="flex items-center text-xs text-muted-foreground">{t(day)}</span>
+            {Array.from({ length: 24 }, (_, hour) => {
+              const calls = counts.get(`${weekday}:${hour}`) ?? 0;
+              const label = t("{day} {hour}: {count} calls", {
+                day: t(day),
+                hour: hourLabel(hour),
+                count: calls,
+              });
+              return (
+                <span
+                  key={hour}
+                  role="img"
+                  title={label}
+                  aria-label={label}
+                  className="h-6 rounded-sm bg-muted"
+                  style={
+                    calls > 0
+                      ? {
+                          // Data-driven intensity: one hue, never below a visible floor.
+                          backgroundColor: `color-mix(in oklch, var(--chart-2) ${Math.round(25 + (calls / max) * 75)}%, transparent)`,
+                        }
+                      : undefined
+                  }
+                />
+              );
+            })}
+          </Fragment>
+        ))}
+      </div>
     </div>
   );
 }
