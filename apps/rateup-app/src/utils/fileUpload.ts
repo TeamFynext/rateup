@@ -24,10 +24,16 @@ export const deleteUploadedFiles = async (data: any) => {
   }
 };
 
+/**
+ * `voiceNote`: the API converts the recording to OGG/Opus, the format WhatsApp shows as a
+ * voice message rather than an audio file. Asked for in the query string, because the
+ * multipart fields after the file are not read before the file is.
+ */
 export const uploadFile = async (
   file: File,
   withThumbnails = false,
   data = { allowAll: false },
+  { voiceNote = false } = {},
 ): Promise<string> => {
   const formData = new FormData();
   formData.append("file", file);
@@ -35,7 +41,7 @@ export const uploadFile = async (
 
   try {
     const response = await axios.post(
-      `/api/public/upload/${withThumbnails ? "fileWithThumb" : "file"}`,
+      `/api/public/upload/${withThumbnails ? "fileWithThumb" : "file"}${voiceNote ? "?voice=1" : ""}`,
       formData,
       {
         headers: {

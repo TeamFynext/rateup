@@ -27,7 +27,7 @@ import {
   type PickedFile,
 } from "@/utils/attachments";
 import { useMessagesStore, useContactsStore } from "@/store/inboxStore";
-import VoiceRecorder from "./VoiceRecorder";
+import { VoiceNoteBar, VoiceNoteMic, useVoiceNote, type VoiceNoteFile } from "./VoiceNote";
 import MediaPreviewModal from "./MediaPreviewModal";
 import { prepareSharedFile, useSharedFilesStore } from "@/utils/sharedFiles";
 import {
@@ -559,20 +559,54 @@ const MessageSendPanel = ({
     mention.reset();
   });
 
-  const handleSend = handleSubmit((formValues) => {
-    // Settled here rather than by the media effect, which runs only when attachments
-    // change: a caption typed after attaching went up as `media`, and the API sends a
-    // `media` message without its text. `text` with attachments is a captioned send.
-    const values: FormValues =
-      formValues.type === "text" || formValues.type === "media"
-        ? {
-            ...formValues,
-            type: formValues.media.length && !formValues.text.body?.trim() ? "media" : "text",
-          }
-        : formValues;
-    if (!values.text.body && !values.media.length) return;
+  // A voice note goes out on its own, as in WhatsApp, leaving the draft alone. On WhatsApp
+  // it is converted to OGG/Opus and flagged, so the customer gets a voice message (mic,
+  // profile photo, transcript) rather than an audio file; Instagram and Messenger take
+  // the recording as it is.
+  const sendVoiceNote = async ({ uri }: VoiceNoteFile) => {
+    const asVoice = platform === MessagePlatform.WHATSAPP;
+    const name = `voice-${Date.now()}.m4a`;
+    let key: string;
+    try {
+      key = await uploadFile(
+        { uri, name, type: "audio/mp4" } as unknown as globalThis.File,
+        false,
+        undefined,
+        { voiceNote: asVoice },
+      );
+    } catch (err) {
+      Toast.error(
+        typeof err === "string" && err
+          ? `Voice note not sent. ${err}`
+          : "Voice note not sent. Check your connection and try again.",
+      );
+      throw err;
+    }
+    deliver({
+      ...initialMessgabody,
+      type: "media",
+      media: [
+        {
+          key,
+          type: "audio",
+          name: "Voice message",
+          url: `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${key}`,
+          ...(asVoice && { voice: true }),
+        },
+      ],
+    });
+  };
+  const voice = useVoiceNote({ onSend: sendVoiceNote });
+  // WhatsApp's rule: the mic stands where Send is until there is something to send.
+  const showMic =
+    !isPrivate &&
+    (voice.phase === "starting" ||
+      voice.phase === "holding" ||
+      (voice.phase === "idle" && !textBody?.trim() && media.length === 0));
 
-    // Optimistic UI update
+  // Shows the message in the thread straight away, then sends it. Shared by the composer
+  // and voice notes, which go out on their own without touching the draft.
+  const deliver = (values: FormValues) => {
     if (selectedContactId) {
       const contactId = selectedContactId as string;
       const id = Date.now().toString();
@@ -633,7 +667,22 @@ const MessageSendPanel = ({
     } else {
       sendnewWaMessage.mutate(values);
     }
+  };
 
+  const handleSend = handleSubmit((formValues) => {
+    // Settled here rather than by the media effect, which runs only when attachments
+    // change: a caption typed after attaching went up as `media`, and the API sends a
+    // `media` message without its text. `text` with attachments is a captioned send.
+    const values: FormValues =
+      formValues.type === "text" || formValues.type === "media"
+        ? {
+            ...formValues,
+            type: formValues.media.length && !formValues.text.body?.trim() ? "media" : "text",
+          }
+        : formValues;
+    if (!values.text.body && !values.media.length) return;
+
+    deliver(values);
     reset(initialMessgabody);
     resetMedia();
     setAudioUrl(null);
@@ -825,29 +874,6 @@ const MessageSendPanel = ({
                     </Text>
                   </Pressable>
                 ))}
-
-                {/* Voice cell */}
-                <View
-                  className="flex-1 mx-1 items-center gap-1.5 py-2.5 rounded-xl border-[0.5px]"
-                  style={{
-                    backgroundColor: isDark ? Colors.dark.surface : Colors.light.card,
-                    borderColor: isDark ? Colors.dark.borderLight : Colors.light.border,
-                  }}
-                >
-                  <VoiceRecorder
-                    compact
-                    isDark={isDark}
-                    onRecordingUpload={({ key, url, name }) =>
-                      addMedia({ key, url, name, type: "audio", uploading: false } as any)
-                    }
-                  />
-                  <Text
-                    className="text-[11px]"
-                    style={{ color: isDark ? Colors.dark.textMuted : Colors.light.textMuted }}
-                  >
-                    Voice
-                  </Text>
-                </View>
               </View>
             </View>
           )}
@@ -950,7 +976,7 @@ const MessageSendPanel = ({
                 gap: 10,
               }}
             >
-              {!isPrivate && (
+              {!isPrivate && voice.phase === "idle" && (
                 <Pressable onPress={togglePanel}>
                   <View
                     style={{
@@ -1083,93 +1109,111 @@ const MessageSendPanel = ({
                 </View>
               </Modal>
 
-              <View
-                style={{
-                  flex: 1,
-                  backgroundColor: isPrivate
-                    ? noteTheme.bg
-                    : isDark
-                      ? Colors.dark.inputBg
-                      : Colors.light.inputBg,
-                  borderRadius: 24,
-                  paddingVertical: 10,
-                  paddingHorizontal: 14,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 8,
-                  borderWidth: 1,
-                  borderColor: isPrivate
-                    ? noteTheme.border
-                    : isDark
-                      ? Colors.dark.inputBorder
-                      : Colors.light.border,
-                }}
-              >
-                <TextInput
-                  ref={mention.inputRef}
-                  style={{
-                    flex: 1,
-                    fontSize: 14,
-                    fontFamily: "InstrumentSans_400Regular",
-                    color: isDark ? "#fff" : Colors.light.textPrimary,
-                    padding: 0,
-                    maxHeight: 120,
-                  }}
-                  placeholder={
-                    selectedIndex === 0 ? "Type a message…" : "Add a note — only your team sees it"
-                  }
-                  placeholderTextColor={
-                    isDark ? Colors.dark.textPlaceholder : Colors.light.textPlaceholder
-                  }
-                  multiline
-                  value={textBody}
-                  onChangeText={mention.handleChangeText}
-                  onSelectionChange={mention.handleSelectionChange}
-                />
-                {!isPrivate && (
-                  <>
-                    <Pressable
-                      onPress={openQuickReplies}
-                      hitSlop={6}
-                      accessibilityRole="button"
-                      accessibilityLabel="Quick replies"
-                    >
-                      <Zap
-                        size={17}
-                        color={isDark ? Colors.dark.inactive : Colors.light.textPlaceholder}
-                      />
-                    </Pressable>
-                    <Pressable onPress={() => setMediaPanelVisible((prev) => !prev)}>
-                      <Paperclip
-                        size={17}
-                        color={isDark ? Colors.dark.inactive : Colors.light.textPlaceholder}
-                      />
-                    </Pressable>
-                  </>
-                )}
-              </View>
-
-              <Pressable
-                onPress={isPrivate ? handleSendPrivateMessage : handleSend}
-                disabled={isUploading}
-              >
+              {voice.phase !== "idle" && voice.phase !== "starting" ? (
+                <VoiceNoteBar voice={voice} isDark={isDark} />
+              ) : (
                 <View
                   style={{
-                    width: 42,
-                    height: 42,
-                    borderRadius: 21,
-                    backgroundColor: isPrivate ? Colors.accent.orange : Colors.brand.blue,
+                    flex: 1,
+                    backgroundColor: isPrivate
+                      ? noteTheme.bg
+                      : isDark
+                        ? Colors.dark.inputBg
+                        : Colors.light.inputBg,
+                    borderRadius: 24,
+                    paddingVertical: 10,
+                    paddingHorizontal: 14,
+                    flexDirection: "row",
                     alignItems: "center",
-                    justifyContent: "center",
+                    gap: 8,
+                    borderWidth: 1,
+                    borderColor: isPrivate
+                      ? noteTheme.border
+                      : isDark
+                        ? Colors.dark.inputBorder
+                        : Colors.light.border,
                   }}
                 >
-                  {isUploading ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <Send size={18} color="#fff" />
+                  <TextInput
+                    ref={mention.inputRef}
+                    style={{
+                      flex: 1,
+                      fontSize: 14,
+                      fontFamily: "InstrumentSans_400Regular",
+                      color: isDark ? "#fff" : Colors.light.textPrimary,
+                      padding: 0,
+                      maxHeight: 120,
+                    }}
+                    placeholder={
+                      selectedIndex === 0
+                        ? "Type a message…"
+                        : "Add a note — only your team sees it"
+                    }
+                    placeholderTextColor={
+                      isDark ? Colors.dark.textPlaceholder : Colors.light.textPlaceholder
+                    }
+                    multiline
+                    value={textBody}
+                    onChangeText={mention.handleChangeText}
+                    onSelectionChange={mention.handleSelectionChange}
+                  />
+                  {!isPrivate && (
+                    <>
+                      <Pressable
+                        onPress={openQuickReplies}
+                        hitSlop={6}
+                        accessibilityRole="button"
+                        accessibilityLabel="Quick replies"
+                      >
+                        <Zap
+                          size={17}
+                          color={isDark ? Colors.dark.inactive : Colors.light.textPlaceholder}
+                        />
+                      </Pressable>
+                      <Pressable onPress={() => setMediaPanelVisible((prev) => !prev)}>
+                        <Paperclip
+                          size={17}
+                          color={isDark ? Colors.dark.inactive : Colors.light.textPlaceholder}
+                        />
+                      </Pressable>
+                    </>
                   )}
                 </View>
-              </Pressable>
+              )}
+
+              {showMic ? (
+                <VoiceNoteMic voice={voice} />
+              ) : (
+                <Pressable
+                  onPress={
+                    voice.phase === "locked" || voice.phase === "review"
+                      ? voice.send
+                      : isPrivate
+                        ? handleSendPrivateMessage
+                        : handleSend
+                  }
+                  disabled={isUploading || voice.phase === "sending"}
+                  accessibilityRole="button"
+                  accessibilityLabel="Send"
+                >
+                  <View
+                    style={{
+                      width: 42,
+                      height: 42,
+                      borderRadius: 21,
+                      backgroundColor: isPrivate ? Colors.accent.orange : Colors.brand.blue,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {isUploading || voice.phase === "sending" ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      <Send size={18} color="#fff" />
+                    )}
+                  </View>
+                </Pressable>
+              )}
             </View>
           </View>
         </View>
