@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 
-import type { UsageStats } from "@/backend/stats/stats.api";
 import { useUsageStats } from "@/backend/stats/stats.query";
-import { useSubscription } from "@/backend/subscription/subscription.query";
+import type { SubscriptionUsage } from "@/backend/subscription/subscription.api";
+import { useSubscription, useSubscriptionUsage } from "@/backend/subscription/subscription.query";
 
 /** One plan allowance, and how much of it the org has spent. */
 export interface PlanMeter {
@@ -14,7 +14,7 @@ export interface PlanMeter {
   /**
    * Whether the allowance refills each billing period.
    *
-   * Consumption — conversations, form submissions, AI tokens — resets, so spending it all
+   * Consumption — active contacts, campaign credits, form submissions — resets, so spending it all
    * is an event: something stopped working and will start again next period. Structural
    * caps like teams and seats never reset. A free org sits at 1/1 teams from the moment
    * it creates its first one, which is a normal steady state, not an outage, and must not
@@ -73,34 +73,43 @@ function meter(
   return { key, label, used: used ?? 0, max, resetsEachPeriod };
 }
 
+/** Active contacts against plan + packs, as the server meters them. */
+function activeContactMeter(usage: SubscriptionUsage | undefined): PlanMeter | null {
+  const budget = usage?.activeContacts;
+  if (!budget?.metered) return null;
+  return meter("activeContacts", "active contacts", budget.used, budget.max, true);
+}
+
+/**
+ * Campaign credits, plan and packs pooled. The API reports what is left rather than one
+ * "used" figure across both, so `used` is derived from the pooled total.
+ */
+function campaignCreditMeter(usage: SubscriptionUsage | undefined): PlanMeter | null {
+  const budget = usage?.campaignCredits;
+  if (!budget?.metered) return null;
+  const remaining = budget.remaining ?? 0;
+  const max = Math.max(budget.planMax ?? 0, (budget.planUsed ?? 0) + remaining);
+  return meter("campaignCredits", "campaign credits", max - remaining, max, true);
+}
+
 /**
  * What the org's plan allows, what it has spent, and what it has run out of.
  *
- * Derived from the two queries the billing page already loads rather than a new endpoint,
- * so mounting this in the layout costs nothing extra — both are cached by react-query and
- * shared with the billing meters.
+ * Derived from the queries the billing page already loads, so mounting this in the layout
+ * costs nothing extra — they are cached by react-query and shared with the billing meters.
  */
 export function usePlanStatus(): PlanStatus {
   const { data: subscription, isPending: subscriptionPending } = useSubscription();
   const { data: stats, isPending: statsPending } = useUsageStats();
+  const { data: usage, isPending: usagePending } = useSubscriptionUsage();
 
   return useMemo(() => {
     const features = subscription?.features;
     const planName = subscription?.basePlan?.displayName || subscription?.basePlan?.name || "";
 
-    const isAnnual = Boolean(subscription?.isAnnualMessageLimit);
-    const conversationMax = features?.whatsapp?.conversation?.count?.max;
-
     const candidates = [
-      meter(
-        "conversations",
-        "conversations",
-        conversationUsage(stats, isAnnual),
-        // An annual allowance is the monthly number across the year — the same rule the
-        // server meters against.
-        conversationMax && isAnnual ? conversationMax * 12 : conversationMax,
-        true,
-      ),
+      activeContactMeter(usage),
+      campaignCreditMeter(usage),
       meter(
         "formSubmissions",
         "form submissions",
@@ -116,13 +125,12 @@ export function usePlanStatus(): PlanStatus {
         features?.team?.teamMember?.count?.max,
         false,
       ),
-      meter("ai", "AI tokens", aiTokensUsed(stats), aiAllowance(features), true),
     ].filter((entry): entry is PlanMeter => entry !== null);
 
     const metered = candidates.filter((entry) => entry.resetsEachPeriod);
 
     return {
-      isLoading: subscriptionPending || statsPending,
+      isLoading: subscriptionPending || statsPending || usagePending,
       isFreePlan: /free/i.test(subscription?.basePlan?.name ?? ""),
       planName,
       exhausted: metered.filter((entry) => entry.used >= entry.max),
@@ -130,28 +138,5 @@ export function usePlanStatus(): PlanStatus {
         (entry) => entry.used < entry.max && entry.used >= entry.max * NEARLY_SPENT,
       ),
     };
-  }, [subscription, stats, subscriptionPending, statsPending]);
-}
-
-/** AI tokens used, input and output together — see `aiAllowance`. */
-export function aiTokensUsed(stats: UsageStats | undefined) {
-  return (stats?.aiPromptTokensCount ?? 0) + (stats?.aiCompletionTokensCount ?? 0);
-}
-
-/** The metered 24h-window counters, which are what the plan allowance is enforced against. */
-function conversationUsage(stats: UsageStats | undefined, isAnnual: boolean) {
-  return isAnnual
-    ? stats?.annualMeteredConversationsCount
-    : stats?.monthlyMeteredConversationsCount;
-}
-
-/**
- * The AI allowance as one number. Plans store it as separate input (prompt) and
- * output (completion) budgets, but it is shown and enforced as a single pool —
- * the split means nothing to a customer and only let one half run out first.
- */
-export function aiAllowance(features: SubscriptionFeatures | undefined) {
-  const count = features?.ai?.count;
-  if (!count) return undefined;
-  return (count.promptTokens ?? 0) + (count.completionTokens ?? 0);
+  }, [subscription, stats, usage, subscriptionPending, statsPending, usagePending]);
 }

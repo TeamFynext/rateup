@@ -122,7 +122,7 @@ export function NotificationsPage() {
 
       <p className="text-sm text-muted-foreground">
         {t(
-          "Invitations, password and sign-in emails, payment receipts and plan expiry reminders are always sent. The account owner is also always emailed when the conversation limit is reached.",
+          "Invitations, password and sign-in emails, payment receipts and plan expiry reminders are always sent. The account owner and admins are also always emailed when a plan limit is reached.",
         )}
       </p>
     </PageShell>

@@ -29,7 +29,7 @@ import type { PaymentOrder } from "./types.ts";
  * invoices (complete, and downloadable); orders contribute only the attempts that never
  * became a charge.
  *
- * Conversation packs are the exception to all of that: a pack is a one-off charge with no
+ * Packs are the exception to all of that: a pack is a one-off charge with no
  * subscription and no Razorpay invoice behind it, so its order *is* the record — paid,
  * pending and failed alike — and it is listed on its own terms rather than as a failed
  * subscription attempt.
@@ -147,7 +147,7 @@ export function BillingHistory({
         period: null,
         reference: order.id,
         subscriptionId: undefined,
-        label: order.displayName ?? order.name ?? "Conversation packs",
+        label: order.displayName ?? order.name ?? "Add-on pack",
       }));
 
     return [...invoiceRows, ...attemptRows, ...addonRows].sort(

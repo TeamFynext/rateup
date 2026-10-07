@@ -962,9 +962,10 @@ declare global {
       };
     };
     [sfpn.Whatsapp]: subscriptionActiveField & {
-      conversation: subscriptionWithActiveAndCount;
-      /** Monthly send allowance, as the plans endpoint reports it. */
-      count?: { monthlyMessageLimit?: number };
+      /** Distinct contacts messaged outside campaigns, per calendar month. */
+      activeContacts: subscriptionWithActiveAndCount;
+      /** One credit per campaign message to one recipient, per calendar month. */
+      campaignCredits: subscriptionWithActiveAndCount;
       automation?: subscriptionActiveField & {
         automationTrigger?: subscriptionCountRestriction;
       };

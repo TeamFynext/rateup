@@ -1,49 +1,66 @@
 import type { RateupPaymentPlan } from "@/backend/payment/payment.api";
 
-import { conversationPackAnswer, resolveConversationPack } from "./pricing.data.ts";
+import { limitAnswer, resolvePack } from "./pricing.data.ts";
 
 export interface FaqEntry {
   question: string;
   answer: string | string[];
 }
 
+const LIMIT_QUESTION = "What happens when I hit a limit?";
+
 const faqs: FaqEntry[] = [
   {
-    question: "What counts as a conversation?",
-    answer: `One 24-hour messaging window with a customer on any connected channel. Every message
-        inside that window — in either direction — counts once.`,
+    question: "What is a monthly active contact?",
+    answer: `A contact you talk to one to one in a calendar month: anyone who messages you, or
+        whom you message from the inbox, an automation, a flow, loyalty or the API. Each
+        contact counts once a month, however many messages you exchange.`,
   },
   {
-    question: "What if I run out of conversations?",
+    question: "Do broadcasts count as active contacts?",
+    answer: `No. Contacts who only receive your campaigns and broadcasts are free — those messages
+        use campaign credits instead. If someone replies to a broadcast, they become an active
+        contact for that month.`,
+  },
+  {
+    question: "What are campaign credits?",
+    answer: `One credit is one campaign message to one recipient, drip stages included. Failed
+        sends and retries still use a credit. Your plan's credits refill every month, and
+        credit packs are used after them.`,
+  },
+  {
+    question: LIMIT_QUESTION,
     // Answer filled in from the catalog at render time — see buildFaqs below.
     answer: "",
   },
   {
     question: "Are WhatsApp message charges included?",
-    answer: `No. Meta bills your own WhatsApp Business account directly for message delivery. Your
-        Rateup subscription covers the platform; we do not resell or mark up Meta's charges.`,
+    answer: `No. Meta bills your own WhatsApp Business account directly for message fees and for
+        the Meta Business AI agent. RateUp adds 0% markup — your subscription covers the
+        platform only.`,
   },
   {
     question: "Can I try RateUp before paying?",
     answer: `Yes — the Free plan is free forever and needs no card. It covers the inbox,
-      automations, templates and chatbots, so you can run RateUp end to end before deciding
-      whether Plus or Pro is worth it. Upgrade whenever you are ready; you are billed
-      from the day you upgrade.`,
+      automations, templates, chatbots and campaigns, so you can run RateUp end to end before
+      deciding whether Starter or Growth is worth it. Upgrade whenever you are ready; you are
+      billed from the day you upgrade.`,
   },
   {
     question: "Which plan do you recommend for my business?",
     answer: [
-      `Free → test WhatsApp automation and campaigns end to end`,
-      `Plus → growing shops that need real volume, loyalty and catalog sync`,
-      `Pro → scaling teams past their first 10,000 conversations`,
-      `Max → high-volume teams that want the Meta Business Agent in the loop`,
-      `Enterprise → unlimited volume, contracted terms and a dedicated manager`,
+      `Free → try the inbox, automations and campaigns end to end`,
+      `Starter → small teams talking to customers every day, with loyalty and catalog sync`,
+      `Growth → growing teams running regular campaigns`,
+      `Scale → high-volume support and marketing across many teams`,
+      `Enterprise → custom limits, contracted terms and a dedicated manager`,
     ],
   },
   {
     question: "Can I switch between annual and monthly?",
-    answer: `Yes. Annual is the default and 20% cheaper. Move to monthly at renewal, or upgrade to
-        annual any time and we'll pro-rate the difference.`,
+    answer: `Yes. Annual is the default and gives you two months free. Move to monthly at renewal,
+        or upgrade to annual any time and we'll pro-rate the difference. Your monthly limits are
+        the same on either cadence.`,
   },
   {
     question: "What payment methods do you accept?",
@@ -54,14 +71,15 @@ const faqs: FaqEntry[] = [
 ];
 
 /**
- * The questions, with the conversation-pack answer priced from the live catalog.
+ * The questions, with the limit answer priced from the live catalog.
  *
  * Exported so the pricing route can build its FAQ structured data from exactly what the
  * page renders — a rich result that contradicts the page is worse than none at all.
  */
 export function buildFaqs(plans: RateupPaymentPlan[] | undefined, showPrices = true): FaqEntry[] {
-  const answer = conversationPackAnswer(resolveConversationPack(plans), showPrices);
-  return faqs.map((entry) =>
-    entry.question === "What if I run out of conversations?" ? { ...entry, answer } : entry,
+  const answer = limitAnswer(
+    { contacts: resolvePack(plans, "contacts"), credits: resolvePack(plans, "credits") },
+    showPrices,
   );
+  return faqs.map((entry) => (entry.question === LIMIT_QUESTION ? { ...entry, answer } : entry));
 }

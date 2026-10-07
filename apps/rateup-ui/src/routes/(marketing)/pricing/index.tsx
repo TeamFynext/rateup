@@ -13,7 +13,7 @@ import { createMarkdownMiddleware } from "../../../markdown/serveMarkdown";
  * The page's FAQ structured data, built from the very entries <Faq /> renders.
  *
  * Derived rather than duplicated: a search engine showing an answer that contradicts the
- * page is worse than having no rich result at all, and the conversation-pack answer
+ * page is worse than having no rich result at all, and the limit answer
  * carries a price that comes from the catalog and can change without this file being
  * touched.
  */

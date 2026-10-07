@@ -44,7 +44,9 @@ export const subscriptionKeys = {
   all: () => ["subscriptions"] as const,
   orgOrders: () => ["userOrgOrdersQuery"] as const,
   orgInvoices: () => ["userOrgInvoicesQuery"] as const,
-  conversationAddon: () => ["conversationAddon"] as const,
+  addons: () => ["addon"] as const,
+  addon: (kind: KeyPart) => ["addon", kind] as const,
+  usage: () => ["subscription-usage"] as const,
   onboardingChecklist: () => ["onboarding-checklist"] as const,
 } as const;
 

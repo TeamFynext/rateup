@@ -11,26 +11,42 @@ import {
 import { Slider } from "@/components/ui/slider.tsx";
 
 import {
+  type AddonPack,
   adviseOnTopUp,
   type BillingPeriod,
-  CONVERSATION_PACK_DAYS,
-  type ConversationPack,
-  conversationPackPrice,
   estimateTopUp,
   formatCount,
   formatPrice,
+  type PackKind,
+  packPrice,
   type PricingCurrency,
   type PricingTier,
   resolveDisplayPrice,
-  tierConversationAllowance,
+  tierAllowance,
   type TopUpOption,
 } from "./pricing.data.ts";
 
-/** The stepper offers no more than one purchase can hold — past this it is a sales conversation. */
+/** The stepper offers no more than one purchase can hold — past this it is a talk with sales. */
 const MAX_PACKS = 20;
 
+/** The words each pack kind is priced in. */
+const UNIT: Record<PackKind, { plural: string; expect: string; pack: string; step: number }> = {
+  contacts: {
+    plural: "active contacts",
+    expect: "Active contacts you expect",
+    pack: "Active contact pack",
+    step: 100,
+  },
+  credits: {
+    plural: "campaign messages",
+    expect: "Campaign messages you expect",
+    pack: "Campaign credit pack",
+    step: 1_000,
+  },
+};
+
 /**
- * A plan the calculator can top up: one that includes a countable number of conversations.
+ * A plan the calculator can top up: one with a countable allowance for the chosen meter.
  *
  * Free and Enterprise are deliberately absent rather than shown as refusals. A pack tops
  * up a paid plan with a cap, and the API's purchase endpoint enforces exactly that.
@@ -47,25 +63,29 @@ const chip = (active: boolean) =>
   }`;
 
 /**
- * "How much would the conversations I actually run cost?" — answered on the pricing page
- * instead of after signing up.
- *
- * Every figure comes off the plans endpoint: the plan allowances, the pack size and the
- * pack price in the currency on screen. The drawer quotes no total it cannot price, so a
- * catalog that stops pricing the pack in a currency makes the drawer say so rather than
- * invent a number.
+ * "What would my real volume cost?" for either meter — answered on the pricing page instead
+ * of after signing up. Every figure comes off the plans endpoint, and the drawer quotes no
+ * total it cannot price.
  */
-export function ConversationCreditsDrawer({
+export function PackCalculator({
   tiers,
-  pack,
+  packs,
   currency,
   period,
+  initialKind,
 }: Readonly<{
   tiers: PricingTier[];
-  pack: ConversationPack;
+  packs: { contacts: AddonPack | null; credits: AddonPack | null };
   currency: PricingCurrency;
   period: BillingPeriod;
+  /** Which meter the drawer opens on. */
+  initialKind?: PackKind;
 }>) {
+  const kinds = (["contacts", "credits"] as const).filter((kind) => packs[kind]);
+  const [chosenKind, setChosenKind] = useState<PackKind | null>(initialKind ?? null);
+  const kind = chosenKind && packs[chosenKind] ? chosenKind : kinds[0];
+  const pack = kind ? packs[kind] : null;
+
   const plans = useMemo<TopUpPlan[]>(
     () =>
       tiers
@@ -76,12 +96,12 @@ export function ConversationCreditsDrawer({
             tier,
             planName: tier.planName,
             name: tier.name,
-            included: tierConversationAllowance(tier) ?? 0,
+            included: kind ? (tierAllowance(tier, kind) ?? 0) : 0,
             monthlyPrice: price ? (period === "yearly" ? price.yearly / 12 : price.monthly) : null,
           };
         })
         .filter((plan) => plan.included > 0),
-    [tiers, currency, period],
+    [tiers, currency, period, kind],
   );
 
   // The badged tier is the one most visitors land on, so it is the one to open against.
@@ -98,18 +118,19 @@ export function ConversationCreditsDrawer({
 
   // Nothing to calculate against — every tier on offer is either free, sales-led or
   // uncapped, none of which a pack tops up.
-  if (!selected) return null;
+  if (!selected || !pack || !kind) return null;
 
+  const unit = UNIT[kind];
   const included = selected.included;
-  const ceiling = included + MAX_PACKS * pack.conversations;
+  const ceiling = included + MAX_PACKS * pack.units;
   // Opens one pack past the allowance: the question the drawer answers is what the next
   // slice of headroom costs, so starting exactly on the cap would answer nothing.
-  const volume = Math.min(ceiling, Math.max(included, expected ?? included + pack.conversations));
+  const volume = Math.min(ceiling, Math.max(included, expected ?? included + pack.units));
 
-  const estimate = estimateTopUp(included, volume, pack.conversations);
-  const packPrice = conversationPackPrice(pack, currency);
+  const estimate = estimateTopUp(included, volume, pack.units);
+  const onePack = packPrice(pack, currency);
   const planPerMonth = selected.monthlyPrice;
-  const packTotal = packPrice === null ? null : packPrice * estimate.packs;
+  const packTotal = onePack === null ? null : onePack * estimate.packs;
 
   // Past a certain number of packs the top-up stops being the cheap answer, and saying so
   // is worth more than the extra packs: a customer who works that out after buying six of
@@ -123,8 +144,8 @@ export function ConversationCreditsDrawer({
       planPerMonth === null || packTotal === null ? null : planPerMonth + packTotal,
   });
 
-  const setPacks = (packs: number) =>
-    setExpected(included + Math.min(MAX_PACKS, Math.max(0, packs)) * pack.conversations);
+  const setPacks = (count: number) =>
+    setExpected(included + Math.min(MAX_PACKS, Math.max(0, count)) * pack.units);
 
   return (
     <Sheet>
@@ -132,21 +153,43 @@ export function ConversationCreditsDrawer({
           as something to open, not as a third thing to switch. */}
       <SheetTrigger className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-[#C9DAF0] bg-[#EDF3FB] px-[18px] py-[11px] text-[13px] font-bold text-primary transition-colors hover:bg-[#DFEAF7]">
         <IconCalculator size={16} />
-        Calculate extra credits
+        Calculate packs
       </SheetTrigger>
 
       <SheetContent className="w-full gap-0 overflow-y-auto bg-card p-0 text-foreground sm:max-w-md">
         <div className="border-b border-border px-6 pb-4 pt-5">
           <SheetTitle className="font-display pr-7 text-lg font-extrabold text-foreground">
-            Additional conversation credits
+            Pack calculator
           </SheetTitle>
           <SheetDescription className="mt-1 text-[13px] text-muted-foreground">
-            {formatCount(pack.conversations)} extra conversations per pack, good for{" "}
-            {CONVERSATION_PACK_DAYS} days. A one-off charge — nothing renews, and packs stack.
+            {unit.pack}: {formatCount(pack.units)} extra {unit.plural}, good for {pack.days} days. A
+            one-off charge — nothing renews, and packs stack.
           </SheetDescription>
         </div>
 
         <div className="flex flex-col gap-6 px-6 py-6">
+          {kinds.length > 1 && (
+            <div>
+              <p className="text-[13px] font-bold text-foreground">What runs out</p>
+              <div className="mt-2.5 flex flex-wrap gap-2">
+                {kinds.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => {
+                      setChosenKind(option);
+                      // The two meters count different things, so a volume does not carry over.
+                      setExpected(null);
+                    }}
+                    className={chip(option === kind)}
+                  >
+                    {option === "contacts" ? "Active contacts" : "Campaign messages"}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div>
             <p className="text-[13px] font-bold text-foreground">Your plan</p>
             <div className="mt-2.5 flex flex-wrap gap-2">
@@ -168,23 +211,23 @@ export function ConversationCreditsDrawer({
               ))}
             </div>
             <p className="mt-2 text-[13px] text-muted-foreground">
-              Includes {formatCount(included)} conversations a month.
+              Includes {formatCount(included)} {unit.plural} a month.
             </p>
           </div>
 
           <div>
             <div className="flex items-baseline justify-between">
-              <p className="text-[13px] font-bold text-foreground">Conversations you expect</p>
+              <p className="text-[13px] font-bold text-foreground">{unit.expect}</p>
               <span className="text-[15px] font-black tabular-nums text-primary">
                 {formatCount(volume)}
               </span>
             </div>
             <Slider
-              aria-label="Conversations you expect each month"
+              aria-label={`${unit.expect} each month`}
               className="mt-3"
               min={included}
               max={ceiling}
-              step={100}
+              step={unit.step}
               value={volume}
               onValueChange={(next) => setExpected(Array.isArray(next) ? next[0] : next)}
             />
@@ -237,7 +280,7 @@ export function ConversationCreditsDrawer({
                 {estimate.packs} {estimate.packs === 1 ? "pack" : "packs"} on {selected.name} comes
                 to {formatPrice(currency, Math.round((planPerMonth ?? 0) + (packTotal ?? 0)))} for
                 the month. {advice.option.name} includes {formatCount(advice.option.included)}{" "}
-                conversations for{" "}
+                {unit.plural} for{" "}
                 {`${formatPrice(currency, Math.round(advice.option.monthlyPrice ?? 0))}/mo`} — and
                 raises every other limit too. Packs are the cheaper answer for a one-off spike; if
                 this is your volume every month, moving up saves{" "}
@@ -262,10 +305,10 @@ export function ConversationCreditsDrawer({
                 That is past what packs are for
               </p>
               <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
-                {formatCount(volume)} conversations a month is more than any plan on this page
-                includes. Enterprise is invoiced on the volume you actually run, which at this scale
-                costs less than stacking {estimate.packs} packs every month — talk to us and we will
-                size it around your numbers.
+                {formatCount(volume)} {unit.plural} a month is more than any plan on this page
+                includes. Enterprise limits are sized to your contract, which at this scale costs
+                less than stacking {estimate.packs} packs every month — talk to us and we will size
+                it around your numbers.
               </p>
             </div>
           )}
@@ -281,10 +324,10 @@ export function ConversationCreditsDrawer({
             />
             <Row
               label={`${estimate.packs} ${estimate.packs === 1 ? "pack" : "packs"} · ${formatCount(
-                estimate.extraConversations,
-              )} conversations`}
+                estimate.extraUnits,
+              )} ${unit.plural}`}
               value={
-                packPrice === null
+                onePack === null
                   ? "Not priced in this currency"
                   : `${formatPrice(currency, packTotal ?? 0)} once`
               }
@@ -292,15 +335,15 @@ export function ConversationCreditsDrawer({
             <div className="mt-3 border-t border-border pt-3">
               <Row
                 strong
-                label={`Total for ${formatCount(estimate.totalConversations)} conversations`}
+                label={`Total for ${formatCount(estimate.totalUnits)} ${unit.plural}`}
                 value={
-                  planPerMonth === null || packPrice === null
+                  planPerMonth === null || onePack === null
                     ? "—"
                     : formatPrice(currency, Math.round(planPerMonth) + (packTotal ?? 0))
                 }
               />
               <p className="mt-1.5 text-[12px] text-muted-foreground">
-                {packPrice === null
+                {onePack === null
                   ? "Packs are not priced in this currency yet — switch currency or talk to us and we will sort it out."
                   : `First month, with the packs charged once. From then on it is ${
                       planPerMonth === null
@@ -312,10 +355,12 @@ export function ConversationCreditsDrawer({
           </div>
 
           <p className="text-[12px] leading-relaxed text-muted-foreground">
-            A conversation is one 24-hour window with a customer on any connected channel. Packs are
-            bought from Billing once you are on a paid plan, and lapse after{" "}
-            {CONVERSATION_PACK_DAYS} days rather than renewing. WhatsApp message charges are billed
-            to your own Meta account and are not included here.
+            {kind === "contacts"
+              ? "An active contact is anyone you talk to one to one in a month; broadcast-only contacts are free."
+              : "A campaign credit is one campaign message to one recipient; plan credits are used before packs."}{" "}
+            Packs are bought from Billing once you are on a paid plan, and lapse after {pack.days}{" "}
+            days rather than renewing. WhatsApp message fees are billed to your own Meta account and
+            are not included here.
           </p>
         </div>
       </SheetContent>

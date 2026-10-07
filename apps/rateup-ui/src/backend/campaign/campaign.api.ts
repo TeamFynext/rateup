@@ -90,18 +90,21 @@ export const getDripSchedule = async (campaignId: string) => {
   return res.data as DripSchedule;
 };
 
-/** What a campaign would cost against the org's conversation allowance, before sending. */
+/** What a campaign would cost in campaign credits, before sending. */
 export interface CampaignSendPreflight {
   recipients: number;
   /** Messages each recipient gets — a drip's stage count, 1 for a broadcast. */
   messagesPerRecipient: number;
   /** False when the plan is not metered — there is nothing to run out of. */
   metered: boolean;
+  /** The plan's monthly credits, packs excluded. */
   max?: number;
+  /** Plan credits used this month. */
   used?: number;
+  packRemaining?: number;
+  /** Plan credits left plus pack credits left. */
   remaining?: number;
-  isAnnual: boolean;
-  /** The allowance is already spent: the send would deliver nothing. */
+  /** Credits are already spent: the send would deliver nothing. */
   exhausted: boolean;
   /** Messages beyond what is left. An upper bound — see the API's campaign.preflight.ts. */
   shortfall: number;

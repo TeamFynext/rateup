@@ -20,7 +20,7 @@ import { toast } from "sonner";
 import { create } from "zustand";
 
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
-import { useConversationLimit } from "@/backend/stats/stats.query";
+import { useActiveContactLimit } from "@/backend/subscription/subscription.query";
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import {
@@ -113,12 +113,7 @@ export default function WaInboxChatDisplayFooter({
   const { t: translations } = useTranslation();
   const navigate = useNavigate();
   const { user } = useUser();
-  const {
-    isExceeded: conversationLimitReached,
-    used: conversationsUsed,
-    limit: conversationLimit,
-    isAnnual: isAnnualConversationLimit,
-  } = useConversationLimit();
+  const { isExceeded: activeContactsExhausted } = useActiveContactLimit();
   const { whatsappSettingsPhoneId } = usePhoneIdStore();
   const currentUser = contact.assignedUsers?.find((c) => c.id === user?.userId);
   const platform = getContactPlatform(contact);
@@ -190,12 +185,6 @@ export default function WaInboxChatDisplayFooter({
   const isOverCharLimit = charCount >= MESSAGE_CHAR_LIMIT;
 
   function handleSendMessage() {
-    if (conversationLimitReached) {
-      toast.error(
-        translations("Conversation limit reached. Upgrade your plan to send more messages."),
-      );
-      return;
-    }
     const currentType =
       media.length || body.media?.length
         ? body.text?.body === "" || parseToWhatsAppFormat(body.text?.body || "").trim().length === 0
@@ -489,31 +478,34 @@ export default function WaInboxChatDisplayFooter({
           )}
         </div>
 
-        {!isNoteMode && conversationLimitReached ? (
-          <Alert className="flex! flex-col items-center gap-2 border-amber-300 bg-amber-50 text-center dark:border-amber-900/50 dark:bg-amber-950/30">
-            <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400">
-              <IconExclamationCircle size={"1.1rem"} />
-              <AlertTitle className="text-sm font-medium">
-                {translations("Conversation limit reached")} ({conversationsUsed.toLocaleString()}/
-                {conversationLimit.toLocaleString()})
+        {/* Not a block: contacts already active this month can still be messaged, and the
+            server refuses a new one with its own message. */}
+        {!isNoteMode && activeContactsExhausted && (
+          <Alert className="flex! items-start gap-2 border-amber-300 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-950/30">
+            <IconExclamationCircle
+              size={"1.1rem"}
+              className="mt-0.5 shrink-0 text-amber-700 dark:text-amber-400"
+            />
+            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <AlertTitle className="text-sm font-medium text-amber-700 dark:text-amber-400">
+                {translations("Active contact limit reached")}
               </AlertTitle>
+              <AlertDescription className="text-xs">
+                {translations(
+                  "New contacts can't be messaged until next month. Contacts already active this month can still be messaged.",
+                )}
+              </AlertDescription>
             </div>
-            <AlertDescription className="max-w-md text-xs">
-              {isAnnualConversationLimit
-                ? translations(
-                    "You've used all conversations in your annual plan. Upgrade your plan to send more messages, or wait for it to reset.",
-                  )
-                : translations(
-                    "You've used all conversations for this month. Upgrade your plan to send more messages, or wait for your monthly limit to reset.",
-                  )}
-            </AlertDescription>
-            <Button size="sm" onClick={() => navigate({ to: "/dashboard/settings/billing" })}>
-              {translations("Upgrade Plan")}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate({ to: "/dashboard/settings/billing" })}
+            >
+              {translations("View plans")}
             </Button>
           </Alert>
-        ) : (
-          composer
         )}
+        {composer}
         <p className="hidden px-2 text-[11px] text-muted-foreground sm:block">
           {translations("Enter to send · Shift + Enter for a new line")}
         </p>

@@ -24,6 +24,9 @@ export const NOTIFICATION_EVENTS = [
   "whatsapp.template_status",
   "whatsapp.account_restricted",
   "integration.error",
+  "billing.active_contact_limit",
+  "billing.campaign_credit_limit",
+  /** Retired by the API; kept so historical bell rows still render. */
   "billing.conversation_limit",
 ] as const;
 export type NotificationEvent = (typeof NOTIFICATION_EVENTS)[number];
@@ -125,6 +128,10 @@ export function eventLabel(t: TFunction, event: NotificationEvent): string {
       return t("WhatsApp account restricted");
     case "integration.error":
       return t("Integration needs attention");
+    case "billing.active_contact_limit":
+      return t("Active contact limit reached");
+    case "billing.campaign_credit_limit":
+      return t("Campaign credits used up");
     case "billing.conversation_limit":
       return t("Conversation limit reached");
   }
@@ -146,6 +153,12 @@ export function eventDescription(t: TFunction, event: NotificationEvent): string
       return t("Meta finished reviewing a template.");
     case "integration.error":
       return t("Meta Conversions API failures and a Shopify store uninstalling RateUp.");
+    case "billing.active_contact_limit":
+      return t(
+        "New contacts can't be messaged until you add a contact pack, upgrade, or the month resets.",
+      );
+    case "billing.campaign_credit_limit":
+      return t("Campaigns pause until you add a credit pack, upgrade, or the month resets.");
     case "billing.conversation_limit":
       return t("Messages stop until the plan is upgraded or the limit resets.");
     default:
@@ -234,6 +247,10 @@ export function notificationMessage(
             integration: str(data.integration),
             error: str(data.error),
           });
+    case "billing.active_contact_limit":
+      return str(data.message, t("You've reached your active contact limit for this month."));
+    case "billing.campaign_credit_limit":
+      return str(data.message, t("Your campaign credits for this month are used up."));
     case "billing.conversation_limit":
       return str(data.message, t("You've reached your conversation limit."));
   }
@@ -276,6 +293,8 @@ export function notificationPath(event: NotificationEvent, data: NotificationDat
       return `/dashboard/inbox?tab=closed&contactId=${encodeURIComponent(contactId)}`;
     case "campaign.completed":
       return `/dashboard/campaign/${encodeURIComponent(str(data.campaignId))}`;
+    case "billing.active_contact_limit":
+    case "billing.campaign_credit_limit":
     case "billing.conversation_limit":
       return "/dashboard/settings/billing";
     default:

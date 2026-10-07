@@ -1,16 +1,19 @@
 import { IconRefresh } from "@tabler/icons-react";
+import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
 
-import type { ConversationAddonOffer } from "@/backend/payment/payment.api";
-import type { UsageStats } from "@/backend/stats/stats.api";
 import { useUsageStats } from "@/backend/stats/stats.query";
+import type {
+  ActiveContactBudget,
+  CampaignCreditBudget,
+} from "@/backend/subscription/subscription.api";
+import { useSubscriptionUsage } from "@/backend/subscription/subscription.query";
 import { isUnlimitedCount } from "@/components/HomePage/pages/Pricing/pricing.data.ts";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Progress } from "@/components/ui/progress.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { aiAllowance, aiTokensUsed } from "@/hooks/usePlanStatus.ts";
 
 /** One allowance: what it is, how much is gone, how much is left. Every meter uses this. */
 export function UsageMeter({
@@ -70,27 +73,26 @@ export function UsageMeter({
 }
 
 /**
- * Every allowance on the plan, as one flat list.
- *
- * The conversation meter comes first and carries the packs offer directly beneath it: the
- * meter that fills up and the control that fixes it are one unit, rather than two cards with
- * the rest of the usage between them.
+ * Every allowance on the plan, as one flat list. Each WhatsApp meter carries its packs offer
+ * directly beneath it: the meter that fills up and the control that fixes it are one unit.
  */
 export function UsageMeters({
   subscription,
-  allowance,
-  packs,
+  contactPacks,
+  creditPacks,
 }: Readonly<{
   subscription?: Subscription;
-  allowance?: ConversationAddonOffer["allowance"];
-  /** The conversation-packs card, rendered under the conversation meter. */
-  packs?: React.ReactNode;
+  contactPacks?: React.ReactNode;
+  creditPacks?: React.ReactNode;
 }>) {
   const { t } = useTranslation();
   const { data: stats, refetch, isFetching, isPending } = useUsageStats();
+  const usageQuery = useSubscriptionUsage();
+  const usage = usageQuery.data;
   const features = subscription?.features;
+  const resetsOn = usage?.resetsAt ? dayjs(usage.resetsAt).format("D MMM YYYY") : null;
 
-  if (isPending) {
+  if (isPending || usageQuery.isPending) {
     return (
       <Card>
         <CardContent className="space-y-4">
@@ -111,17 +113,32 @@ export function UsageMeters({
             {t("What your plan allows, and how much of it you have used.")}
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
-          <IconRefresh className={isFetching ? "size-4 animate-spin" : "size-4"} />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            refetch();
+            usageQuery.refetch();
+          }}
+          disabled={isFetching || usageQuery.isFetching}
+        >
+          <IconRefresh
+            className={isFetching || usageQuery.isFetching ? "size-4 animate-spin" : "size-4"}
+          />
           {t("Refresh")}
         </Button>
       </CardContent>
 
       <CardContent className="divide-y divide-border">
-        {features?.whatsapp?.active && (
-          <ConversationMeter subscription={subscription} stats={stats} allowance={allowance}>
-            {packs}
-          </ConversationMeter>
+        {features?.whatsapp?.active && usage && (
+          <>
+            <ActiveContactMeter budget={usage.activeContacts} resetsOn={resetsOn}>
+              {contactPacks}
+            </ActiveContactMeter>
+            <CampaignCreditMeter budget={usage.campaignCredits} resetsOn={resetsOn}>
+              {creditPacks}
+            </CampaignCreditMeter>
+          </>
         )}
 
         {features?.webSurvey?.active && (
@@ -145,11 +162,13 @@ export function UsageMeters({
         />
 
         {features?.ai?.active && (
+          // A count, not an allowance: Meta bills AI usage directly, so nothing caps it here.
           <UsageMeter
             label={t("AI tokens")}
-            used={aiTokensUsed(stats)}
-            max={aiAllowance(features)}
-            hint={t("Survey summaries and Meta AI replies share this allowance.")}
+            used={(stats?.aiPromptTokensCount ?? 0) + (stats?.aiCompletionTokensCount ?? 0)}
+            hint={t(
+              "Used by survey summaries and Meta AI replies. Shown for your information; it doesn't count against your plan.",
+            )}
           />
         )}
 
@@ -177,42 +196,79 @@ export function UsageMeters({
   );
 }
 
-function ConversationMeter({
-  subscription,
-  stats,
-  allowance,
+function ActiveContactMeter({
+  budget,
+  resetsOn,
   children,
 }: Readonly<{
-  subscription?: Subscription;
-  stats: UsageStats | undefined;
-  allowance?: ConversationAddonOffer["allowance"];
+  budget: ActiveContactBudget;
+  resetsOn: string | null;
   children?: React.ReactNode;
 }>) {
   const { t } = useTranslation();
-
-  const isAnnual = Boolean(subscription?.isAnnualMessageLimit);
-  // The METERED counters: self-derived 24h conversation windows, which is the unit the plan
-  // allowance is enforced against. The inbox-ticket counters are analytics only.
-  const used =
-    (isAnnual ? stats?.annualMeteredConversationsCount : stats?.monthlyMeteredConversationsCount) ??
-    0;
-  const monthlyMax =
-    allowance?.effectiveMax ?? subscription?.features?.whatsapp?.conversation?.count?.max ?? 0;
-  const max = (isAnnual ? monthlyMax * 12 : monthlyMax) || 0;
-  const addon = (allowance?.addonConversations ?? 0) * (isAnnual ? 12 : 1);
-  const planTotal = max - addon;
+  const addon = budget.addonContacts ?? 0;
+  const definition = t(
+    "Contacts you messaged or who messaged you this month. Broadcast-only contacts are free.",
+  );
 
   return (
     <UsageMeter
-      label={isAnnual ? t("WhatsApp conversations (year)") : t("WhatsApp conversations")}
+      label={t("Active contacts")}
+      used={budget.used}
+      max={budget.metered ? budget.max : undefined}
+      hint={
+        <>
+          {addon > 0
+            ? t("{plan} from your plan + {packs} from packs.", {
+                plan: (budget.planMax ?? 0).toLocaleString(),
+                packs: addon.toLocaleString(),
+              })
+            : definition}
+          {resetsOn && ` ${t("Resets {date}.", { date: resetsOn })}`}
+        </>
+      }
+    >
+      {children}
+    </UsageMeter>
+  );
+}
+
+/**
+ * Plan credits are spent before packs, so the bar is plan + packs held, and the hint splits
+ * what is left between the two.
+ */
+function CampaignCreditMeter({
+  budget,
+  resetsOn,
+  children,
+}: Readonly<{
+  budget: CampaignCreditBudget;
+  resetsOn: string | null;
+  children?: React.ReactNode;
+}>) {
+  const { t } = useTranslation();
+  const planMax = budget.planMax ?? 0;
+  const planUsed = budget.planUsed ?? 0;
+  const packRemaining = budget.packRemaining ?? 0;
+  const remaining = budget.remaining ?? 0;
+  const max = budget.metered ? Math.max(planMax, planUsed + remaining) : undefined;
+  const used = max === undefined ? planUsed : max - remaining;
+
+  return (
+    <UsageMeter
+      label={t("Campaign credits")}
       used={used}
       max={max}
       hint={
-        addon > 0
-          ? `${planTotal.toLocaleString()} ${t("from your plan")} + ${addon.toLocaleString()} ${t(
-              "from conversation packs",
-            )}`
-          : t("A conversation is a 24-hour window with one contact.")
+        <>
+          {packRemaining > 0
+            ? t("{plan} left from your plan + {packs} left in packs.", {
+                plan: Math.max(planMax - planUsed, 0).toLocaleString(),
+                packs: packRemaining.toLocaleString(),
+              })
+            : t("One credit per campaign message to one recipient.")}
+          {resetsOn && ` ${t("Plan credits reset {date}.", { date: resetsOn })}`}
+        </>
       }
     >
       {children}

@@ -8,9 +8,9 @@ import { BookDemoLink } from "@/components/RateupHomePage/helper/BookDemoLink";
 
 import PlanCardNew from "./Card/PlanCardNew.tsx";
 import { ComparisonTable } from "./ComparisonTable.tsx";
-import { ConversationCreditsDrawer } from "./ConversationCreditsDrawer.tsx";
 import { Faq } from "./FAQ.tsx";
 import { MetaBillingPanel } from "./MetaBillingPanel.tsx";
+import { PackCalculator } from "./PackCalculator.tsx";
 import {
   type BillingPeriod,
   buildTiers,
@@ -18,9 +18,9 @@ import {
   formatCount,
   isSalesLedRegion,
   type PricingTier,
-  tierRank,
-  resolveConversationPack,
+  resolvePack,
   selectGatewayPlan,
+  tierRank,
 } from "./pricing.data.ts";
 import { PricingCta } from "./PricingCta.tsx";
 import { useRouteAndCartStore } from "./store/RouteAndCartStore.ts";
@@ -38,6 +38,31 @@ const COMPACT_GRID_COLS: Record<number, string> = {
   3: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
   4: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4",
 };
+
+/** The two reasons the page leads with, ahead of any price. */
+const VALUE_POINTS = [
+  {
+    title: "0% markup on Meta fees",
+    body: "Meta bills message fees and its Business AI agent straight to your own account. We add nothing on top.",
+  },
+  {
+    title: "Pay only for the contacts you talk to",
+    body: "A contact counts once a month when you talk one to one. Broadcast-only contacts are free.",
+  },
+];
+
+const PACK_STRIPS = [
+  {
+    kind: "contacts" as const,
+    lead: "Talking to more people than your plan includes?",
+    unit: "active contacts",
+  },
+  {
+    kind: "credits" as const,
+    lead: "Sending more campaigns than your plan includes?",
+    unit: "campaign credits",
+  },
+];
 
 const toggleClass = (active: boolean) =>
   `flex h-8 cursor-pointer items-center gap-2 rounded-full border-none px-[18px] text-sm font-medium transition-colors duration-150 ${
@@ -83,9 +108,12 @@ const PricingSection = ({
 
   /** Cards, matrix and checkout links all come off the plans endpoint. */
   const tiers = useMemo(() => buildTiers(plans), [plans]);
-  // Null when the catalog is not selling a top-up, which is what hides the calculator:
-  // the page should never offer to price something that cannot be bought.
-  const conversationPack = useMemo(() => resolveConversationPack(plans), [plans]);
+  // Null when the catalog is not selling a pack, which hides its strip: the page should
+  // never offer to price something that cannot be bought.
+  const packs = useMemo(
+    () => ({ contacts: resolvePack(plans, "contacts"), credits: resolvePack(plans, "credits") }),
+    [plans],
+  );
 
   // The matrix still compares every tier; only the cards are narrowed to upgrades.
   // Set `currentPlanName` ONLY for a subscription that is actually billing: it hides
@@ -168,12 +196,23 @@ const PricingSection = ({
             Choose What You Need
           </h1>
           <p className="m-0 max-w-[56ch] text-lg leading-[1.6] text-muted-foreground">
-            Every plan includes the WhatsApp Business API, the omnichannel inbox, loyalty and
-            surveys.{" "}
+            Every plan includes the WhatsApp Business API, the omnichannel inbox and campaigns.{" "}
             {salesLedRegion
               ? "In your region we contract directly — talk to us and we'll size a plan to your volume."
               : "Start on the Free plan, upgrade when your volume does."}
           </p>
+          <ul className="m-0 mt-2 grid w-full max-w-[760px] list-none gap-3 p-0 text-left sm:grid-cols-2">
+            {VALUE_POINTS.map((point) => (
+              <li key={point.title} className={`rounded-2xl p-5 ${PricingSurface}`}>
+                <p className="font-display m-0 text-[17px] font-bold text-foreground">
+                  {point.title}
+                </p>
+                <p className="m-0 mt-1 text-sm leading-[1.55] text-muted-foreground">
+                  {point.body}
+                </p>
+              </li>
+            ))}
+          </ul>
         </div>
 
         <div
@@ -190,7 +229,7 @@ const PricingSection = ({
             >
               Annual
               <span className="rounded-4xl border border-amber-200 bg-amber-50 px-[7px] py-0.5 text-[11px] font-semibold text-amber-700">
-                Save 20%
+                2 months free
               </span>
             </button>
             <button
@@ -238,30 +277,38 @@ const PricingSection = ({
               You&apos;re on our highest plan.
             </h3>
             <p className="mx-auto mt-2 max-w-[420px] text-sm text-muted-foreground">
-              Need more teams, seats or conversations than Enterprise includes? Talk to us and
-              we&apos;ll size a contract around it.
+              Need more teams, seats or active contacts than your contract includes? Talk to us and
+              we&apos;ll resize it.
             </p>
           </div>
         )}
 
-        {/* Sits directly under the cards rather than in the FAQ: "what if I go over?" is
-            the question the allowance on every card provokes, and the drawer prices the
-            headroom at the visitor's currency and whichever cadence is selected. */}
-        {!compact && !salesLedRegion && conversationPack && (
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-muted p-[18px_24px] shadow-[inset_0_0_0_1px_rgba(27,32,39,0.1)] dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]">
-            <p className="m-0 flex-1 basis-[380px] text-sm leading-[1.55] text-muted-foreground">
-              Past your plan&apos;s conversation limit? Add{" "}
-              {formatCount(conversationPack.conversations)}-conversation credit packs — charged
-              once, never renewing.
-            </p>
-            <ConversationCreditsDrawer
-              tiers={tiers}
-              pack={conversationPack}
-              currency={currency}
-              period={period}
-            />
-          </div>
-        )}
+        {/* Directly under the cards rather than in the FAQ: "what if I go over?" is the
+            question the allowances on every card provoke. */}
+        {!compact &&
+          !salesLedRegion &&
+          PACK_STRIPS.filter((strip) => packs[strip.kind]).map((strip) => {
+            const pack = packs[strip.kind];
+            if (!pack) return null;
+            return (
+              <div
+                key={strip.kind}
+                className="mt-4 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-muted p-[18px_24px] shadow-[inset_0_0_0_1px_rgba(27,32,39,0.1)] dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]"
+              >
+                <p className="m-0 flex-1 basis-[380px] text-sm leading-[1.55] text-muted-foreground">
+                  {strip.lead} Add {formatCount(pack.units)} {strip.unit} for {pack.days} days —
+                  charged once, never renewing.
+                </p>
+                <PackCalculator
+                  tiers={tiers}
+                  packs={packs}
+                  currency={currency}
+                  period={period}
+                  initialKind={strip.kind}
+                />
+              </div>
+            );
+          })}
 
         {enterprise && (
           <div
@@ -275,7 +322,7 @@ const PricingSection = ({
                 Volume pricing and a dedicated account manager.
               </h3>
               <p className="m-0 text-sm leading-[1.55] text-muted-foreground">
-                For teams past the Max plan&apos;s limits or running multiple WhatsApp numbers
+                For teams past the Scale plan&apos;s limits or running multiple WhatsApp numbers
                 across brands.
               </p>
             </div>
@@ -315,9 +362,11 @@ const PricingSection = ({
           className="mt-4 max-w-[80ch] text-[13px] leading-[1.45] text-ru-n-400"
           hidden={onHighestTier || compact || salesLedRegion}
         >
-          Prices exclude applicable taxes. A conversation is one 24-hour window with a customer on
-          any connected channel. WhatsApp conversation charges are billed separately by Meta to your
-          own Meta Business account and are never marked up by RateUp.
+          Prices exclude applicable taxes. An active contact is anyone you message one to one, or
+          who messages you, in a calendar month — counted once however many messages you exchange;
+          contacts who only receive broadcasts are free. A campaign credit is one campaign message
+          to one recipient. Meta bills WhatsApp message fees and the Meta Business AI agent to your
+          own Meta Business account, and RateUp never marks them up.
         </p>
       </section>
 

@@ -3,9 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { useUsageStats } from "@/backend/stats/stats.query";
 import { BillingHistory } from "@/components/dashboard/settings/billing/BillingHistory.tsx";
-import { ConversationPacks } from "@/components/dashboard/settings/billing/ConversationPacks.tsx";
 import { PlanFeatures } from "@/components/dashboard/settings/billing/PlanFeatures.tsx";
 import { useRouteAndCartStore } from "@/components/HomePage/pages/Pricing/store/RouteAndCartStore.ts";
 import { Button } from "@/components/ui/button.tsx";
@@ -13,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.t
 import { useUser } from "@/context/UserContext.tsx";
 import { formatIsoDateString } from "@/utils/dateTime.ts";
 
+import { AddonPacks } from "./AddonPacks.tsx";
 import { BillingSummary } from "./BillingSummary.tsx";
 import { ChangePlanDialog } from "./ChangePlanDialog.tsx";
 import { CancelPlanDialog } from "./dialogs/CancelPlanDialog.tsx";
@@ -34,7 +33,6 @@ export function BillingPage({ tab }: Readonly<{ tab: BillingTab }>) {
   const navigate = useNavigate();
   const { user } = useUser();
   const data = useBillingData();
-  const { data: stats } = useUsageStats();
   const { cart, reset: resetCart } = useRouteAndCartStore();
 
   const [confirmOrderOpen, setConfirmOrderOpen] = useState(false);
@@ -56,6 +54,9 @@ export function BillingPage({ tab }: Readonly<{ tab: BillingTab }>) {
     if (cart.id) setConfirmOrderOpen(true);
   }, [cart.id]);
 
+  // Packs are paid-plan only; a free org's remedy is a plan.
+  const upgrade = data.state.isFreePlan ? () => setChoosePlanOpen(true) : undefined;
+
   function closeConfirmOrder() {
     setConfirmOrderOpen(false);
     resetCart();
@@ -76,7 +77,7 @@ export function BillingPage({ tab }: Readonly<{ tab: BillingTab }>) {
         </Button>
       </div>
 
-      <BillingSummary data={data} stats={stats} onJumpToUsage={() => setTab("usage")} />
+      <BillingSummary data={data} onJumpToUsage={() => setTab("usage")} />
 
       <Tabs value={tab} onValueChange={(value) => setTab(value as BillingTab)}>
         <TabsList>
@@ -110,14 +111,27 @@ export function BillingPage({ tab }: Readonly<{ tab: BillingTab }>) {
         <TabsContent value="usage">
           <UsageMeters
             subscription={data.subscription}
-            allowance={data.addonOffer?.allowance}
-            packs={
+            contactPacks={
               <div className="mt-3">
-                <ConversationPacks
-                  offer={data.addonOffer}
-                  isPending={data.addonPending}
+                <AddonPacks
+                  kind="active-contacts"
+                  offer={data.contactPacks.offer}
+                  isPending={data.contactPacks.isPending}
                   onBuy={checkout.startPackCheckout}
                   isPurchasing={checkout.isProcessing}
+                  onUpgrade={upgrade}
+                />
+              </div>
+            }
+            creditPacks={
+              <div className="mt-3">
+                <AddonPacks
+                  kind="campaign-credits"
+                  offer={data.creditPacks.offer}
+                  isPending={data.creditPacks.isPending}
+                  onBuy={checkout.startPackCheckout}
+                  isPurchasing={checkout.isProcessing}
+                  onUpgrade={upgrade}
                 />
               </div>
             }
@@ -145,7 +159,7 @@ export function BillingPage({ tab }: Readonly<{ tab: BillingTab }>) {
               planName: cart?.name,
               period: cart?.period,
               orgId: user?.orgId,
-              // Annual pooling is no longer offered at checkout; only an admin turns it on.
+              // Required by the checkout body; it no longer changes any limit.
               isAnnualMessageLimit: false,
             },
             { gateway: cart?.gateway, priceId: cart?.priceId },

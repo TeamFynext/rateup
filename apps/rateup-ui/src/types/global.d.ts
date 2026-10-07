@@ -1029,7 +1029,7 @@ export interface CampaignSend {
   startedAt: string | null;
   completedAt: string | null;
   totalTargeted: number;
-  /** Recipients dropped because the conversation allowance ran out. */
+  /** Recipients dropped because campaign credits ran out. */
   totalSkipped: number;
   totalSent: number;
   totalDelivered: number;
@@ -1091,7 +1091,7 @@ export interface CampaignAnalytics {
   activeFailed: number;
   /** Recipients not yet attempted or still awaiting an outcome. */
   activePending: number;
-  /** Recipients dropped by the conversation allowance across every attempt. */
+  /** Recipients dropped for lack of campaign credits across every attempt. */
   totalSkipped: number;
   attemptCount: number;
 }

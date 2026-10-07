@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useCampaignSendPreflight } from "@/backend/campaign/campaign.query";
+import { CampaignCreditsCta } from "@/components/dashboard/campaign/CampaignCreditsCta.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
@@ -96,6 +97,7 @@ export function ScheduleStep({ wizard, registerSubmit }: Readonly<CampaignWizard
 
   const shortfall = preflight.data?.metered ? preflight.data.shortfall : 0;
   const remaining = preflight.data?.remaining ?? 0;
+  const messages = recipients * (preflight.data?.messagesPerRecipient ?? 1);
 
   return (
     <div className="flex justify-center px-8 pt-8 pb-6">
@@ -275,21 +277,20 @@ export function ScheduleStep({ wizard, registerSubmit }: Readonly<CampaignWizard
                 ) : null}
                 <div className="flex flex-col gap-0.5 text-[13px] leading-snug">
                   <span className="text-foreground font-semibold">
-                    {t("This will use {recipients} of your {remaining} remaining conversations.", {
-                      recipients: recipients.toLocaleString(),
+                    {t("This will use {messages} of your {remaining} campaign credits left.", {
+                      messages: messages.toLocaleString(),
                       remaining: remaining.toLocaleString(),
                     })}
                   </span>
                   <span className="text-secondary-foreground">
                     {shortfall > 0
                       ? t(
-                          "{shortfall} recipients are beyond the allowance and will not receive it.",
-                          {
-                            shortfall,
-                          },
+                          "{shortfall} campaign messages are beyond your credits and will not be sent.",
+                          { shortfall: shortfall.toLocaleString() },
                         )
-                      : t("Retries of blocked messages don't count twice.")}
+                      : t("One credit per message to one recipient. Retries use a credit too.")}
                   </span>
+                  {shortfall > 0 ? <CampaignCreditsCta className="mt-1.5 self-start" /> : null}
                 </div>
               </div>
             ) : null}

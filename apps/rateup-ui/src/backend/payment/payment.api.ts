@@ -174,15 +174,17 @@ export async function updateSubscriptionOrder(orderId: string, data: RequestPayl
   return await axiosClient.put(`${PAYMENT_URL}order/${orderId}`, data);
 }
 
+/** URL segment of a pack kind on `/payment/subscriptions/addons/:kind`. */
+export type AddonKind = "active-contacts" | "campaign-credits";
+
 /**
- * The conversation add-on as it stands for this org: what it costs, how many packs are
- * still in date, and whether this plan is allowed to buy more.
- *
- * Eligibility is decided by the API and merely reflected here — the purchase endpoint
- * refuses a Free or Enterprise order regardless of what the page renders.
+ * One pack kind as it stands for this org: what it costs, how many packs are still in
+ * date, and whether this plan may buy more. The purchase endpoint refuses a Free or
+ * Enterprise order regardless of what the page renders.
  */
-export interface ConversationAddonOffer {
+export interface AddonOffer {
   available: boolean;
+  kind: "ACTIVE_CONTACTS" | "CAMPAIGN_CREDITS";
   eligible: boolean;
   /** Why not, in the customer's terms. Null when they can buy. */
   reason: string | null;
@@ -190,15 +192,10 @@ export interface ConversationAddonOffer {
   packs: number;
   /** ISO date the last of those packs lapses on, or null when none are held. */
   activeUntil: string | null;
-  conversationsPerPack: number;
+  unitsPerPack: number;
   /** How long one pack counts for. */
   validDays: number;
-  allowance: {
-    planMax?: number;
-    addonConversations: number;
-    effectiveMax?: number;
-  };
-  currency?: string;
+  currency?: "INR" | "USD";
   /** Price of one pack. Null when the catalog does not price it in this currency. */
   price?: number | null;
   rateupPlanId?: string;
@@ -208,22 +205,23 @@ export interface ConversationAddonOffer {
 }
 
 /** The one-off Razorpay order that buys packs, ready to hand to the checkout. */
-export interface ConversationAddonOrder {
+export interface AddonOrder {
   rateupOrderId: string;
   gatewayOrderId: string;
   amount: number;
   currency: string;
   quantity: number;
+  kind: AddonOffer["kind"];
   planName: string;
   rateupPlanId: string;
 }
 
-export async function getConversationAddonOffer() {
-  const res = await axiosClient.get(`${SUBSCRIPTION_URL}/conversation-addon`);
-  return res?.data as ConversationAddonOffer;
+export async function getAddonOffer(kind: AddonKind) {
+  const res = await axiosClient.get(`${SUBSCRIPTION_URL}/addons/${kind}`);
+  return res?.data as AddonOffer;
 }
 
-export async function createConversationAddonOrder(quantity: number) {
-  const res = await axiosClient.post(`${SUBSCRIPTION_URL}/conversation-addon`, { quantity });
-  return res?.data as ConversationAddonOrder;
+export async function createAddonOrder(kind: AddonKind, quantity: number) {
+  const res = await axiosClient.post(`${SUBSCRIPTION_URL}/addons/${kind}`, { quantity });
+  return res?.data as AddonOrder;
 }

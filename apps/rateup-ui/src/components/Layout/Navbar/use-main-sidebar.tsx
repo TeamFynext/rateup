@@ -13,8 +13,7 @@ import {
   usePipelineQuery,
   usePipelineStatsQuery,
 } from "@/backend/pipeline/pipeline.query.tsx";
-import { useConversationLimit } from "@/backend/stats/stats.query";
-import { useSubscription } from "@/backend/subscription/subscription.query";
+import { useActiveContactLimit, useSubscription } from "@/backend/subscription/subscription.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import type { IUserInfoApiResponse } from "@/backend/user/user.api";
 import { useUserInfo } from "@/backend/user/user.query";
@@ -136,7 +135,7 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
 
   // Gated on the pipeline for the same reason as the leads above: this query
   // refetches on every window focus, and only this panel shows the number.
-  const conversationLimit = useConversationLimit(Boolean(isPipeline));
+  const activeContactLimit = useActiveContactLimit(Boolean(isPipeline));
 
   // The board's own view state, so a sidebar row highlights what is on screen
   // and clicking one drives the same store the page reads.
@@ -153,7 +152,7 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
       currentUserId: resolvedUserData?.userId,
       setView: pipelineView.patch,
       toggleFacet: pipelineView.toggle,
-      conversationLimit,
+      activeContactLimit,
     }),
     [
       t,
@@ -163,7 +162,7 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
       pipelineView,
       activePipelineId,
       resolvedUserData?.userId,
-      conversationLimit,
+      activeContactLimit,
     ],
   );
 
