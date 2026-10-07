@@ -23,6 +23,7 @@ import {
   useMessagesStore,
 } from "@/store/inbox.store.ts";
 import { WaMessageAssignStatus } from "@/types/enums.ts";
+import { soundsPath } from "@/utils/constants.ts";
 import { claimAcrossTabs } from "@/utils/crossTabClaim";
 import { showDesktopNotification } from "@/utils/desktopNotifications";
 
@@ -282,7 +283,7 @@ export const useChatSocket = () => {
 };
 
 const playSound = () => {
-  new Audio("/sounds/noti.wav").play().catch((e) => {
+  new Audio(`${soundsPath}/noti.wav`).play().catch((e) => {
     console.warn("Audio playback failed:", e);
   });
 };

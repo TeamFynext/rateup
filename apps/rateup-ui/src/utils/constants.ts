@@ -8,6 +8,8 @@ import {
 } from "@/types/enums.ts";
 
 export const docsPath = "https://docs.rateup.app";
+/** App sounds (ringtone, notification chime), served from the CDN's `sounds/` folder. */
+export const soundsPath = `${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/sounds`;
 /**
  * Origin of the headless Ghost instance behind /blog. Posts come back with `url`/`canonical_url`
  * pointing at this host, which serves `Disallow: /` — emitting either as a canonical de-indexes

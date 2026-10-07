@@ -9,6 +9,8 @@
  * in React state: it is not serialisable, and nothing should re-render because it changed.
  */
 
+import { soundsPath } from "@/utils/constants.ts";
+
 const ICE_SERVERS: RTCIceServer[] = [{ urls: "stun:stun.l.google.com:19302" }];
 /** Gathering normally completes in well under a second; past this, send what we have. */
 const ICE_GATHER_TIMEOUT_MS = 3000;
@@ -117,10 +119,10 @@ export function closeCallMedia(): void {
 }
 
 /**
- * The ringtone file, served from `public/`. Swap the file to change the ringtone; no code
- * change needed.
+ * The ringtone, from the CDN's `sounds/` folder. Replace the file there to change it; no
+ * code change or deploy needed.
  */
-const RINGTONE_URL = "/sounds/ringtune.mp3";
+const RINGTONE_URL = `${soundsPath}/ringtune.mp3`;
 
 let ringtone: HTMLAudioElement | null = null;
 let ringing = false;
@@ -142,9 +144,10 @@ function ringtoneElement(): HTMLAudioElement | null {
 /**
  * Fetch the ringtone, revalidating with the server every time.
  *
- * A `public/` file keeps its URL when it is replaced, so `new Audio(url)` happily went on
- * playing the browser's cached copy of the old one. `no-cache` asks the server first (a
- * 304 when nothing changed, so it costs almost nothing) and the bytes play from memory.
+ * A file replaced on the CDN keeps its URL, so `new Audio(url)` happily went on playing
+ * the browser's cached copy of the old one. `no-cache` asks the CDN first (a 304 when
+ * nothing changed, so it costs almost nothing) and the bytes play from memory. The CDN
+ * sends `Access-Control-Allow-Origin: *`, which this cross-origin fetch needs.
  */
 function loadRingtone(audio: HTMLAudioElement): Promise<void> {
   loading ??= fetch(RINGTONE_URL, { cache: "no-cache" })
