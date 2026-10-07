@@ -39,7 +39,10 @@ interface SubscriptionFeatures {
     };
   };
   [SubscriptionFeaturePathName.Whatsapp]: subscriptionActiveField & {
-    conversation: subscriptionWithActiveAndCount;
+    /** Contacts messaged this month, broadcasts excluded. */
+    activeContacts: subscriptionWithActiveAndCount;
+    /** Campaign messages a month, one credit per attempted send. */
+    campaignCredits: subscriptionWithActiveAndCount;
     /**
      * The tier gates. Optional on purpose, matching the server: subscriptions stored
      * before these existed have no such key, so "absent" is a real state a reader has to
