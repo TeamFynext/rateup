@@ -3,7 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const callMetaApi = vi.fn();
 const handleWaMessages = vi.fn();
 const getWaMessageByMessageId = vi.fn();
-const assertWithinConversationLimit = vi.fn();
+const assertCanMessageContact = vi.fn();
+const assertCampaignCredit = vi.fn();
 const getWaSettings = vi.fn();
 const getWaSendingSettings = vi.fn();
 const getInstagramChannel = vi.fn();
@@ -23,7 +24,10 @@ vi.mock("../wa_axios.js", async () => {
 });
 vi.mock("../inbox/message/wamessage.controller.js", () => ({ handleWaMessages }));
 vi.mock("../inbox/message/wamessage.service.js", () => ({ getWaMessageByMessageId }));
-vi.mock("../whatsappSurvey/wasurvey.auth.js", () => ({ assertWithinConversationLimit }));
+vi.mock("../whatsappSurvey/wasurvey.auth.js", () => ({
+  assertCanMessageContact,
+  assertCampaignCredit,
+}));
 vi.mock("../../../workers/bullmq/queues/whatsapp.queue.js", () => ({ enqueueWaMessageRecord }));
 vi.mock("../settings/wa_settings.service.js", () => ({
   getWaSettings,
@@ -254,16 +258,32 @@ describe("sendMetaMessage", () => {
     });
   });
 
-  it("checks the conversation quota by default, and skips it only when opted out", async () => {
-    // Enforcement is on unless a caller opts out. The default used to be false — the
-    // opposite polarity to sendMessage's `skipConversationLimit` — which left campaign
-    // fan-out and ad-hoc sends through this path silently ungated.
+  it("checks the recipient against the active-contact allowance by default", async () => {
+    // On unless a caller opts out, so a new send path is never silently ungated.
     await send();
-    expect(assertWithinConversationLimit).toHaveBeenCalledWith(ORG);
+    expect(assertCanMessageContact).toHaveBeenCalledWith(ORG, {
+      platform: PlatformType.WHATSAPP,
+      customerId: "+100",
+    });
+    expect(assertCampaignCredit).not.toHaveBeenCalled();
 
-    vi.mocked(assertWithinConversationLimit).mockClear();
-    await send({ enforceConversationLimit: false });
-    expect(assertWithinConversationLimit).not.toHaveBeenCalled();
+    vi.mocked(assertCanMessageContact).mockClear();
+    await send({ enforcePlanLimits: false });
+    expect(assertCanMessageContact).not.toHaveBeenCalled();
+  });
+
+  it("spends a campaign credit for a campaign send instead of checking the contact", async () => {
+    await send({ campaign: { participantId: "p-1" }, messageType: "CAMPAIGN" });
+
+    expect(assertCampaignCredit).toHaveBeenCalledWith(ORG);
+    expect(assertCanMessageContact).not.toHaveBeenCalled();
+  });
+
+  it("sends nothing when the plan refuses", async () => {
+    assertCanMessageContact.mockRejectedValueOnce(new Error("limit"));
+
+    await expect(send()).rejects.toThrow("limit");
+    expect(callMetaApi).not.toHaveBeenCalled();
   });
 });
 

@@ -41,9 +41,7 @@ vi.mock("../../../generated/prisma/client.js", () => ({
   },
 }));
 vi.mock("../whatsapp/whatsappSurvey/wasurvey.controller.js", () => ({}));
-vi.mock("../whatsapp/whatsappSurvey/wasurvey.auth.js", () => ({
-  checkConversationLimitAvailable: vi.fn(),
-}));
+vi.mock("../subscription/campaignCredits.js", () => ({ getCampaignCreditBudget: vi.fn() }));
 vi.mock("../whatsapp/flows/flow.service.js", () => ({ getFlowBySurveyId: vi.fn() }));
 vi.mock("hucre", () => ({ write: vi.fn(async () => Buffer.from("workbook")) }));
 
@@ -80,7 +78,7 @@ vi.mock("../../utils/logger.js", () => ({
 }));
 
 import prisma from "../../utils/prisma.js";
-import { checkConversationLimitAvailable } from "../whatsapp/whatsappSurvey/wasurvey.auth.js";
+import { getCampaignCreditBudget } from "../subscription/campaignCredits.js";
 import { getFlowBySurveyId } from "../whatsapp/flows/flow.service.js";
 import {
   getCampaignCount,
@@ -148,7 +146,7 @@ const db = prisma as unknown as {
   campaignParticipantDripStage: { count: Mock; createMany: Mock };
   waFlow: { findFirst: Mock };
 };
-const limitExceededMock = checkConversationLimitAvailable as unknown as Mock;
+const creditBudgetMock = getCampaignCreditBudget as unknown as Mock;
 const getFlowBySurveyIdMock = getFlowBySurveyId as unknown as Mock;
 const getCampaignCountMock = getCampaignCount as unknown as Mock;
 const enqueueAdd = (waCampaignEnqueue as unknown as { add: Mock }).add;
@@ -198,7 +196,7 @@ beforeEach(() => {
   db.campaignParticipant.count.mockResolvedValue(0);
   db.campaignParticipantDripStage.count.mockResolvedValue(0);
   db.waFlow.findFirst.mockResolvedValue({ dbFlowId: "dbflow-1" });
-  limitExceededMock.mockResolvedValue(true);
+  creditBudgetMock.mockResolvedValue({ metered: true, exhausted: false });
   getCampaignCountMock.mockResolvedValue(0);
   getDelayedMock.mockResolvedValue([]);
   enqueueAdd.mockReturnValue(undefined);
@@ -628,14 +626,14 @@ describe("sendCampaign", () => {
     });
   });
 
-  test("pauses, rather than fails, when the org is over its conversation limit", async () => {
-    limitExceededMock.mockResolvedValue(false);
+  test("pauses, rather than fails, when the org has no campaign credits left", async () => {
+    creditBudgetMock.mockResolvedValue({ metered: true, exhausted: true });
 
     await sendCampaign(CAMPAIGN_ID, [CampaignParticipantStatus.PENDING]);
 
     expect(pauseCampaignForAccountIssue).toHaveBeenCalledWith(
       CAMPAIGN_ID,
-      CampaignPauseReason.CONVERSATION_LIMIT,
+      CampaignPauseReason.CAMPAIGN_CREDIT_LIMIT,
     );
     expect(db.campaign.update).not.toHaveBeenCalled();
     expect(enqueueAdd).not.toHaveBeenCalled();
@@ -651,7 +649,7 @@ describe("sendCampaign", () => {
   });
 
   test("treats a true answer from the limit check as permission to send", async () => {
-    limitExceededMock.mockResolvedValue(true);
+    creditBudgetMock.mockResolvedValue({ metered: true, exhausted: false });
 
     await sendCampaign(CAMPAIGN_ID, [CampaignParticipantStatus.PENDING]);
 

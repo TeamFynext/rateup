@@ -77,7 +77,7 @@ export async function sendInstagramPrivateReply(
       payload,
       messageType: "AUTOMATED",
       isAutomated: true,
-      enforceConversationLimit: true,
+      enforcePlanLimits: true,
     });
     if (!result.ok) throw new Error(result.error);
 
@@ -136,7 +136,7 @@ export async function sendInstagramTextMessage(
       payload,
       messageType: "AUTOMATED",
       isAutomated: true,
-      enforceConversationLimit: true,
+      enforcePlanLimits: true,
     });
     if (!result.ok) throw new Error(result.error);
 
@@ -194,7 +194,7 @@ export async function sendInstagramImage(
       payload,
       messageType: "AUTOMATED",
       isAutomated: true,
-      enforceConversationLimit: true,
+      enforcePlanLimits: true,
     });
     if (!result.ok) throw new Error(result.error);
 
@@ -287,7 +287,7 @@ export async function sendInstagramGenericTemplate(
       payload,
       messageType: "AUTOMATED",
       isAutomated: true,
-      enforceConversationLimit: true,
+      enforcePlanLimits: true,
     });
     if (!result.ok) throw new Error(result.error);
 
@@ -349,7 +349,7 @@ export async function sendInstagramQuickReply(
       payload,
       messageType: "AUTOMATED",
       isAutomated: true,
-      enforceConversationLimit: true,
+      enforcePlanLimits: true,
     });
     if (!result.ok) throw new Error(result.error);
 
@@ -407,7 +407,7 @@ export async function sendInstagramProductTemplate(
       payload,
       messageType: "AUTOMATED",
       isAutomated: true,
-      enforceConversationLimit: true,
+      enforcePlanLimits: true,
     });
     if (!result.ok) throw new Error(result.error);
 
@@ -464,7 +464,7 @@ export async function sendInstagramStoryReply(
       payload,
       messageType: "AUTOMATED",
       isAutomated: true,
-      enforceConversationLimit: true,
+      enforcePlanLimits: true,
     });
     if (!result.ok) throw new Error(result.error);
 
@@ -721,7 +721,7 @@ export async function sendInstagramVideo(
       payload,
       messageType: "AUTOMATED",
       isAutomated: true,
-      enforceConversationLimit: true,
+      enforcePlanLimits: true,
     });
     if (!result.ok) throw new Error(result.error);
 
@@ -775,7 +775,7 @@ export async function sendInstagramFile(
       payload,
       messageType: "AUTOMATED",
       isAutomated: true,
-      enforceConversationLimit: true,
+      enforcePlanLimits: true,
     });
     if (!result.ok) throw new Error(result.error);
 

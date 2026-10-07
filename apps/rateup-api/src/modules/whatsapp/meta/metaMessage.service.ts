@@ -6,7 +6,7 @@ import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 import { getWaMessageByMessageId } from "../inbox/message/wamessage.service.js";
 import { callMetaApi, GraphApiError } from "../wa_axios.js";
 import { enqueueWaMessageRecord } from "../../../workers/bullmq/queues/whatsapp.queue.js";
-import { assertWithinConversationLimit } from "../whatsappSurvey/wasurvey.auth.js";
+import { assertCampaignCredit, assertCanMessageContact } from "../whatsappSurvey/wasurvey.auth.js";
 import { getMetaChannel, type MetaChannelContext, type MetaCredentials } from "./metaChannels.js";
 
 /**
@@ -58,17 +58,10 @@ export interface MetaSendInput extends MetaChannelContext {
   credentials?: MetaCredentials;
 
   /**
-   * Check the org's conversation quota before sending. Off by default so this
-   * does not silently start gating paths that never gated (campaign sends);
-   * the inbox and Instagram paths that check today pass `true`.
+   * Enforce the plan before sending: a campaign send spends a campaign credit, anything
+   * else must not add a new active contact past the allowance. Defaults to true.
    */
-  /**
-   * Defaults to TRUE: an outbound send is gated by the org's conversation allowance
-   * unless a caller explicitly opts out. This used to default to false — the opposite
-   * polarity to sendMessage's `skipConversationLimit` — which meant campaign fan-out
-   * and ad-hoc sends through this path were silently ungated.
-   */
-  enforceConversationLimit?: boolean;
+  enforcePlanLimits?: boolean;
 }
 
 export interface MetaSendResult {
@@ -118,7 +111,7 @@ export async function sendMetaMessage(input: MetaSendInput): Promise<MetaSendRes
     isAutomated = false,
     externalApi = false,
     campaign,
-    enforceConversationLimit = true,
+    enforcePlanLimits = true,
   } = input;
 
   const channel = getMetaChannel(platform);
@@ -127,9 +120,13 @@ export async function sendMetaMessage(input: MetaSendInput): Promise<MetaSendRes
     return { ok: false, error: `No Meta channel for platform ${platform}` };
   }
 
-  // Throws ConversationLimitError, which callers turn into a 4xx. Deliberately
-  // not converted to a result: it is a quota decision, not a send outcome.
-  if (enforceConversationLimit) await assertWithinConversationLimit(orgId);
+  // Throws ActiveContactLimitError / CampaignCreditsExhaustedError, which callers turn
+  // into a 4xx or a campaign pause. Not converted to a result: it is a quota decision,
+  // not a send outcome.
+  if (enforcePlanLimits) {
+    if (campaign) await assertCampaignCredit(orgId);
+    else await assertCanMessageContact(orgId, to ? { platform, customerId: to } : undefined);
+  }
 
   const credentials = input.credentials ?? (await channel.resolveCredentials(input));
   if (!credentials) {

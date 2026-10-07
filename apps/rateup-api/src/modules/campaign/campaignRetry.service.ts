@@ -7,7 +7,7 @@ import {
   campaignRetryJobId,
 } from "../../workers/bullmq/queues/campaignRetry.queue.js";
 import { log } from "../../utils/logger.js";
-import { getConversationBudget } from "../subscription/conversationBudget.js";
+import { getCampaignCreditBudget } from "../subscription/campaignCredits.js";
 import { CampaignParticipantStatus, CampaignType } from "../../types/enums.js";
 import {
   CampaignRetryStrategy,
@@ -335,14 +335,14 @@ async function fireScheduledSend(send: {
   // "Send what fits, warn." Truncating is better than starting a send that fails
   // one message at a time deep in the dispatcher, which is the behaviour
   // campaign.preflight.ts already documents and avoids for manual sends.
-  const budget = await getConversationBudget(campaign.team.orgId);
+  const budget = await getCampaignCreditBudget(campaign.team.orgId);
   let targeted = cohort;
   let skipped = 0;
 
   if (budget.metered) {
     const remaining = budget.remaining ?? 0;
     if (remaining === 0) {
-      return cancel("Skipped — the org's conversation allowance is fully used.");
+      return cancel("Skipped — the org's campaign credits are used up.");
     }
     if (remaining < cohort.length) {
       skipped = cohort.length - remaining;

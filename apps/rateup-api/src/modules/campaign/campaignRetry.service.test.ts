@@ -17,7 +17,7 @@ vi.mock("../../utils/prisma.js", () => ({
 vi.mock("../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), warn: vi.fn(), trace: vi.fn() },
 }));
-vi.mock("../subscription/conversationBudget.js", () => ({ getConversationBudget: vi.fn() }));
+vi.mock("../subscription/campaignCredits.js", () => ({ getCampaignCreditBudget: vi.fn() }));
 vi.mock("./campaignSend.service.js", async () => ({
   CampaignSendInProgressError: (
     await vi.importActual<typeof import("./campaignSend.service.js")>("./campaignSend.service.js")
@@ -33,7 +33,7 @@ vi.mock("../../workers/bullmq/queues/campaignRetry.queue.js", () => ({
 }));
 
 import prisma from "../../utils/prisma.js";
-import { getConversationBudget } from "../subscription/conversationBudget.js";
+import { getCampaignCreditBudget } from "../subscription/campaignCredits.js";
 import { createCampaignSend } from "./campaignSend.service.js";
 import { enqueueCampaignMessage } from "./campaign.service.js";
 import { finishCampaignIfSettled } from "./campaignSettle.service.js";
@@ -64,7 +64,7 @@ const db = prisma as unknown as {
   };
   campaignParticipant: { count: Mock };
 };
-const budget = getConversationBudget as unknown as Mock;
+const budget = getCampaignCreditBudget as unknown as Mock;
 const createSend = createCampaignSend as unknown as Mock;
 const enqueue = enqueueCampaignMessage as unknown as Mock;
 const arm = armCampaignRetry as unknown as Mock;
@@ -387,7 +387,7 @@ describe("fireCampaignSendById", () => {
       dailySendLimit: null,
       team: { orgId: "org-1" },
     });
-    budget.mockResolvedValue({ metered: false, isAnnual: false });
+    budget.mockResolvedValue({ metered: false });
   });
 
   /** The claim query returns the row it won; the cohort query returns participants. */
@@ -422,7 +422,7 @@ describe("fireCampaignSendById", () => {
   });
 
   test("sends what fits and records what did not", async () => {
-    budget.mockResolvedValue({ metered: true, remaining: 2, isAnnual: false });
+    budget.mockResolvedValue({ metered: true, remaining: 2 });
     due([{ id: SEND_ID, campaignId: CAMPAIGN_ID, attemptNo: 1 }], ["p-1", "p-2", "p-3", "p-4"]);
 
     await expect(fireCampaignSendById(SEND_ID)).resolves.toBe("fired");
@@ -433,8 +433,8 @@ describe("fireCampaignSendById", () => {
     expect(enqueue.mock.calls[0][0].participantIds).toEqual(["p-1", "p-2"]);
   });
 
-  test("cancels outright when the allowance is fully spent", async () => {
-    budget.mockResolvedValue({ metered: true, remaining: 0, isAnnual: false });
+  test("cancels outright when campaign credits are fully spent", async () => {
+    budget.mockResolvedValue({ metered: true, remaining: 0 });
     due([{ id: SEND_ID, campaignId: CAMPAIGN_ID, attemptNo: 1 }], ["p-1"]);
 
     await expect(fireCampaignSendById(SEND_ID)).resolves.toBe("cancelled");

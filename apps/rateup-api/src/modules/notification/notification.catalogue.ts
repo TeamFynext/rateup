@@ -134,7 +134,13 @@ export const NOTIFICATION_EVENTS = {
     permission: "notify.integrations",
     feed: true,
   },
-  "billing.conversation_limit": {
+  "billing.active_contact_limit": {
+    category: "billing",
+    channels: { inApp: true, push: true, desktop: true },
+    permission: "notify.billing",
+    feed: true,
+  },
+  "billing.campaign_credit_limit": {
     category: "billing",
     channels: { inApp: true, push: true, desktop: true },
     permission: "notify.billing",

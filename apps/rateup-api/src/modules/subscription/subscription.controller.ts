@@ -1,3 +1,6 @@
+import { getActiveContactBudget } from "./activeContacts.js";
+import { nextPeriodStart } from "./billingPeriod.js";
+import { getCampaignCreditBudget } from "./campaignCredits.js";
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
   deleteSubscriptions,
@@ -12,6 +15,21 @@ import { getRateuplanById } from "../payment/payment.service.js";
 import dayjs from "dayjs";
 import { updateUsageStatsLastReset } from "../stats/stats.service.js";
 import { log } from "../../utils/logger.js";
+
+/** This month's meters for the caller's org: what the billing page and banner show. */
+export async function getUsageHandler(req: FastifyRequest, res: FastifyReply) {
+  const { orgId } = req.user;
+  const [activeContacts, campaignCredits] = await Promise.all([
+    getActiveContactBudget(orgId),
+    getCampaignCreditBudget(orgId),
+  ]);
+  return res.send({
+    period: activeContacts.period,
+    resetsAt: nextPeriodStart(),
+    activeContacts,
+    campaignCredits,
+  });
+}
 
 export async function getUserSubscriptionHandler(req: FastifyRequest, res: FastifyReply) {
   const { orgId } = req.user;

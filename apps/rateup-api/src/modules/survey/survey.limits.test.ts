@@ -9,11 +9,11 @@ vi.mock("../../utils/prisma.js", () => ({
 }));
 vi.mock("../subscription/subscription.service.js", () => ({ getSubscription: vi.fn() }));
 vi.mock("../../utils/email/payments/usageLimitAlert.js", () => ({
-  sendUsageLimitMailAlert: vi.fn(),
+  sendFormResponseLimitAlert: vi.fn(),
 }));
 
 import prisma from "../../utils/prisma.js";
-import { sendUsageLimitMailAlert } from "../../utils/email/payments/usageLimitAlert.js";
+import { sendFormResponseLimitAlert } from "../../utils/email/payments/usageLimitAlert.js";
 import { getSubscription } from "../subscription/subscription.service.js";
 import { UNLIMITED_COUNT } from "../subscription/subscription.data.js";
 import { verifySurveyMonthlyLimitRestriction } from "./survey.auth.js";
@@ -54,7 +54,7 @@ describe("the monthly form-response limit", () => {
       .mockReset()
       .mockResolvedValue({ features: features(100) } as never);
     vi.mocked(prisma.usageStats.findUnique).mockReset();
-    vi.mocked(sendUsageLimitMailAlert)
+    vi.mocked(sendFormResponseLimitAlert)
       .mockReset()
       .mockResolvedValue({} as never);
     usage(0);
@@ -73,13 +73,13 @@ describe("the monthly form-response limit", () => {
     expect(sent.body.reason).toBe("form_closed");
   });
 
-  test("mails the org owner, who is the only one who can act on it", async () => {
+  test("mails the people who can act on it, at most once a week", async () => {
     usage(100);
     const { reply } = replyStub();
 
     await verifySurveyMonthlyLimitRestriction({ params: { id: "map-1" } } as any, reply as never);
 
-    expect(sendUsageLimitMailAlert).toHaveBeenCalledWith("org-1");
+    expect(sendFormResponseLimitAlert).toHaveBeenCalledWith("org-1");
   });
 
   test("serves the form while there is room", async () => {

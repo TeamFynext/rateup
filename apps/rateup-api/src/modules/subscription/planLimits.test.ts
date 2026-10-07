@@ -9,11 +9,11 @@ vi.mock("../../utils/prisma.js", () => ({
     usageStats: { findUnique: vi.fn() },
   },
 }));
-vi.mock("./conversationBudget.js", () => ({ getConversationBudget: vi.fn() }));
+vi.mock("./activeContacts.js", () => ({ getActiveContactBudget: vi.fn() }));
 vi.mock("./subscription.service.js", () => ({ getSubscription: vi.fn() }));
 
 import prisma from "../../utils/prisma.js";
-import { getConversationBudget } from "./conversationBudget.js";
+import { getActiveContactBudget } from "./activeContacts.js";
 import { getSubscription } from "./subscription.service.js";
 import { UNLIMITED_COUNT } from "./subscription.data.js";
 import {
@@ -104,17 +104,20 @@ describe("checking one limit", () => {
   });
 
   test("takes the ceiling from the override where one exists", async () => {
-    // Conversations are the only limit whose stored number is not the whole answer: packs
-    // raise it and an annual plan pools twelve months of it.
-    vi.mocked(getConversationBudget).mockResolvedValue({
+    // Active contacts are the only limit whose stored number is not the whole answer:
+    // contact packs raise it.
+    vi.mocked(getActiveContactBudget).mockResolvedValue({
       metered: true,
+      period: new Date("2026-10-01T00:00:00Z"),
       max: 6_000,
+      planMax: 5_000,
+      addonContacts: 1_000,
       used: 6_000,
       remaining: 0,
-      isAnnual: false,
+      exhausted: true,
     });
 
-    expect(await checkPlanLimit("org-1", "conversations")).toMatchObject({
+    expect(await checkPlanLimit("org-1", "activeContacts")).toMatchObject({
       max: 6_000,
       used: 6_000,
       exceeded: true,
@@ -222,6 +225,6 @@ describe("the registry itself", () => {
     // live here reading a `whatsapp.count.max` no tier defines — they metered nothing, so
     // they were deleted rather than left looking enforced. Adding a row means adding a
     // number to the pricing page too.
-    expect(Object.keys(PLAN_LIMITS)).toEqual(["teams", "users", "conversations", "formResponses"]);
+    expect(Object.keys(PLAN_LIMITS)).toEqual(["teams", "users", "activeContacts", "formResponses"]);
   });
 });

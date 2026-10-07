@@ -4,6 +4,8 @@ import type { Actor } from "../../authz/actor.js";
 import { EmailParams, sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
 import { log } from "../../utils/logger.js";
 import { sendUsageLimitMailAlert } from "../../utils/email/payments/usageLimitAlert.js";
+import type { UsageLimitKind } from "../../emails/usage-limit.js";
+
 import prisma from "../../utils/prisma.js";
 import type { orgWsMessage } from "../../types/global.js";
 import { checkPushReceipts, sendPushNotification } from "../mobileNotification/mobile.service.js";
@@ -18,6 +20,9 @@ import {
 import { dispatchNotification } from "./notification.dispatch.js";
 import { eventToggle, mergeOverrides, preferencesFromRow } from "./notification.preferences.js";
 import { notify, type NotifyJobData } from "./notify.js";
+
+/** The plan meters that alert when spent. */
+export type MeterLimit = Exclude<UsageLimitKind, "formResponses">;
 
 const FEED_LIMIT = 100;
 
@@ -119,10 +124,37 @@ export async function createNotification(input: {
   });
 }
 
-// Notifies the org's owner + admins (the members who can upgrade) that the org
-// has reached its conversation limit. Fired once per cycle from the point the
-// counter crosses the limit; best-effort so it never blocks conversation counting.
-export async function notifyConversationLimitReached(orgId: string) {
+const LIMIT_EVENT = {
+  activeContacts: "billing.active_contact_limit",
+  campaignCredits: "billing.campaign_credit_limit",
+} as const;
+
+const LIMIT_MESSAGE: Record<MeterLimit, { upgrade: string; contract: string }> = {
+  activeContacts: {
+    upgrade:
+      "You've reached this month's active contacts. You can still message contacts you've " +
+      "already talked to; upgrade or add a contact pack to reach new ones.",
+    contract:
+      "You've reached the active contacts set on your agreement. Talk to us to raise it and " +
+      "reach new contacts this month.",
+  },
+  campaignCredits: {
+    upgrade:
+      "You've used this month's campaign credits, so campaigns are paused. Upgrade or add a " +
+      "credit pack to keep sending.",
+    contract:
+      "You've used the campaign credits set on your agreement, so campaigns are paused. Talk " +
+      "to us to raise it.",
+  },
+};
+
+/**
+ * Tells everyone who can act on it that an allowance is spent: an in-app/push notification
+ * to members with `notify.billing`, and an email to the owner and admins whatever their
+ * settings say, because messages stop going out. Called once per limit per period; never
+ * throws, so it cannot affect the metering that triggered it.
+ */
+export async function notifyLimitReached(orgId: string, limit: MeterLimit) {
   try {
     const subscription = await prisma.subscription.findUnique({
       where: { orgId },
@@ -138,27 +170,21 @@ export async function notifyConversationLimitReached(orgId: string) {
       },
     });
 
-    // A sales-led account only reaches a limit because a contract set one, and there is no
-    // tier above it to buy — "upgrade your plan" would send them looking for a button that
-    // does not exist. Everyone else can act on the message as written.
+    // A sales-led account has no tier above it to buy, so "upgrade" would be a dead end.
+    const copy = LIMIT_MESSAGE[limit];
     const message = isGatewayBilledPlan(subscription?.basePlan ?? null)
-      ? "You've reached your conversation limit. Upgrade your plan to keep sending messages."
-      : "You've reached the conversation limit set on your agreement. Talk to us to raise it " +
-        "and keep sending messages.";
+      ? copy.upgrade
+      : copy.contract;
 
     await notify({
-      event: "billing.conversation_limit",
+      event: LIMIT_EVENT[limit],
       orgId,
       audience: { kind: "permitted" },
       data: { message },
     });
-
-    // Hitting a limit stops messages going out, so the owner is mailed whatever their
-    // notification settings say. `sendUsageLimitMailAlert` carries its own once-a-week guard,
-    // so an org that bounces on and off its limit is not mailed repeatedly.
-    await sendUsageLimitMailAlert(orgId);
+    await sendUsageLimitMailAlert(orgId, limit);
   } catch (error) {
-    log.error(error, "Failed to send conversation-limit notification");
+    log.error({ err: error, orgId, limit }, "Failed to send the limit-reached notification");
   }
 }
 

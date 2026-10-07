@@ -177,7 +177,7 @@ describe("reconcileOrgPayments — one-off orders", () => {
 
   test("records a captured payment the webhook never delivered", async () => {
     vi.mocked(prisma.order.findMany).mockResolvedValue([
-      { id: "order-1", checkoutRefId: "order_rzp1", name: "Conversation pack" },
+      { id: "order-1", checkoutRefId: "order_rzp1", name: "Active contact pack" },
     ] as never);
     vi.mocked(axios.get).mockResolvedValue({
       data: {
@@ -217,7 +217,7 @@ describe("reconcileOrgPayments — one-off orders", () => {
 
   test("leaves an order with no captured payment alone", async () => {
     vi.mocked(prisma.order.findMany).mockResolvedValue([
-      { id: "order-1", checkoutRefId: "order_rzp1", name: "Conversation pack" },
+      { id: "order-1", checkoutRefId: "order_rzp1", name: "Active contact pack" },
     ] as never);
     // An abandoned checkout: writing FAILED over it would be worse than leaving it.
     vi.mocked(axios.get).mockResolvedValue({

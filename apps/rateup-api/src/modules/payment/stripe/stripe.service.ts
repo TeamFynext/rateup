@@ -527,3 +527,19 @@ export async function deleteStripeProduct(productId: string) {
     },
   });
 }
+
+/**
+ * Moves a Stripe subscription onto another price from its next invoice. No proration: the
+ * current period was paid at the old price and stays that way.
+ */
+export async function repriceStripeSubscription(subscriptionRef: string, priceId: string) {
+  const subscription = await stripe.subscriptions.retrieve(subscriptionRef);
+  const item = subscription.items.data[0];
+  if (!item) throw new Error(`Stripe subscription ${subscriptionRef} has no item to reprice`);
+  if (item.price.id === priceId) return { changed: false };
+  await stripe.subscriptions.update(subscriptionRef, {
+    items: [{ id: item.id, price: priceId }],
+    proration_behavior: "none",
+  });
+  return { changed: true };
+}

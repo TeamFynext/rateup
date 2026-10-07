@@ -16,10 +16,10 @@ import {
 describe("getFreeSubscriptionFeatures", () => {
   const free = getFreeSubscriptionFeatures() as any;
 
-  test("caps WhatsApp at 100 metered conversations and keeps the channel active", () => {
+  test("caps WhatsApp at 100 active contacts and 500 campaign credits a month", () => {
     expect(free.whatsapp.active).toBe(true);
-    expect(free.whatsapp.conversation.active).toBe(true);
-    expect(free.whatsapp.conversation.count.max).toBe(100);
+    expect(free.whatsapp.activeContacts).toEqual({ active: true, count: { max: 100 } });
+    expect(free.whatsapp.campaignCredits).toEqual({ active: true, count: { max: 500 } });
   });
 
   test("caps web surveys at 100 monthly responses, and not on how many forms exist", () => {
@@ -41,7 +41,7 @@ describe("getFreeSubscriptionFeatures", () => {
     expect("ticket" in free).toBe(false);
   });
 
-  test("keeps the Meta Business Agent switched off (it is a Pro-and-above feature)", () => {
+  test("keeps the Meta Business Agent switched off (it is a paid feature)", () => {
     expect(free.ai.active).toBe(false);
   });
 
@@ -58,12 +58,9 @@ describe("getFreeSubscriptionFeatures", () => {
     expect(free.whatsapp.catalog?.active).toBe(false);
   });
 
-  test("opens campaigns, which the conversation allowance throttles rather than the gate", () => {
-    // A campaign on Free spends the same 100 metered conversations Free already allows,
-    // and the send gate stops there — so the feature costs nothing to open, and a free
-    // account can see the thing it would be upgrading for.
+  test("opens campaigns, which the credit allowance throttles rather than the gate", () => {
     expect(free.whatsapp.campaign?.active).toBe(true);
-    expect(free.whatsapp.conversation.count.max).toBe(100);
+    expect(free.whatsapp.campaignCredits.count.max).toBe(500);
   });
 
   test("merges overrides over the defaults", () => {
@@ -72,7 +69,7 @@ describe("getFreeSubscriptionFeatures", () => {
     }) as any;
     expect(overridden.team.count.max).toBe(5);
     // untouched defaults survive
-    expect(overridden.whatsapp.conversation.count.max).toBe(100);
+    expect(overridden.whatsapp.activeContacts.count.max).toBe(100);
   });
 
   test("FreePlanSubscriptionFeatures is the memoised default", () => {
@@ -86,31 +83,22 @@ describe("paid tier presets", () => {
   const max = getMaxSubscriptionFeatures();
   const enterprise = getEnterpriseSubscriptionFeatures();
 
-  test("conversations and form submissions carry the same number on every tier", () => {
-    // The catalog sells them as one figure ("5,000 conversations / 5,000 form
-    // submissions"), so a tier whose two halves drift apart is advertising something it
-    // does not enforce.
-    for (const tier of [getFreeSubscriptionFeatures(), plus, pro, max, enterprise]) {
-      expect(tier.whatsapp.conversation.count.max).toBe(tier.webSurvey.count.monthlyResponseLimit);
-    }
-  });
-
-  test("Plus, Pro and Max carry the published limits", () => {
-    expect(plus.team.count.max).toBe(2);
-    expect(plus.team.teamMember.count.max).toBe(10);
-    expect(plus.whatsapp.conversation.count.max).toBe(5_000);
-    expect(plus.webSurvey.count.monthlyResponseLimit).toBe(5_000);
-
-    expect(pro.team.count.max).toBe(5);
-    expect(pro.team.teamMember.count.max).toBe(30);
-    expect(pro.whatsapp.conversation.count.max).toBe(20_000);
-    expect(pro.webSurvey.count.monthlyResponseLimit).toBe(20_000);
-
-    expect(max.team.count.max).toBe(10);
-    expect(max.team.teamMember.count.max).toBe(100);
-    expect(max.whatsapp.conversation.count.max).toBe(50_000);
-    expect(max.webSurvey.count.monthlyResponseLimit).toBe(50_000);
-  });
+  test.each([
+    // tier, active contacts, campaign credits, teams, users, form submissions
+    ["Free", getFreeSubscriptionFeatures(), 100, 500, 1, 1, 100],
+    ["Starter (PLUS)", plus, 1_000, 10_000, 2, 5, 5_000],
+    ["Growth (PRO)", pro, 5_000, 50_000, 5, 15, 20_000],
+    ["Scale (MAX)", max, 25_000, 250_000, 15, 50, 50_000],
+  ] as const)(
+    "%s carries the published limits",
+    (_label, tier, contacts, credits, teams, users, forms) => {
+      expect(tier.whatsapp.activeContacts.count.max).toBe(contacts);
+      expect(tier.whatsapp.campaignCredits.count.max).toBe(credits);
+      expect(tier.team.count.max).toBe(teams);
+      expect(tier.team.teamMember.count.max).toBe(users);
+      expect(tier.webSurvey.count.monthlyResponseLimit).toBe(forms);
+    },
+  );
 
   test("paid tiers stay below the unlimited sentinel", () => {
     // The trap this guards. `isUnlimitedAllowance` decides whether an allowance is
@@ -126,7 +114,8 @@ describe("paid tier presets", () => {
       ["Max", max],
     ] as const) {
       const counts = [
-        tier.whatsapp.conversation.count.max,
+        tier.whatsapp.activeContacts.count.max,
+        tier.whatsapp.campaignCredits.count.max,
         tier.webSurvey.count.monthlyResponseLimit,
         tier.team.count.max,
         tier.team.teamMember.count.max,
@@ -138,16 +127,21 @@ describe("paid tier presets", () => {
   });
 
   test("Enterprise is the only tier that reads as uncapped", () => {
-    expect(isUnlimitedAllowance(enterprise.whatsapp.conversation.count.max)).toBe(true);
-    expect(isUnlimitedAllowance(max.whatsapp.conversation.count.max)).toBe(false);
+    expect(isUnlimitedAllowance(enterprise.whatsapp.activeContacts.count.max)).toBe(true);
+    expect(isUnlimitedAllowance(enterprise.whatsapp.campaignCredits.count.max)).toBe(true);
+    expect(isUnlimitedAllowance(max.whatsapp.activeContacts.count.max)).toBe(false);
+    expect(isUnlimitedAllowance(max.whatsapp.campaignCredits.count.max)).toBe(false);
   });
 
   test("the ladder never steps backwards", () => {
     // The middle rung only works as an upsell if every count moves the same direction.
     const rungs = [plus, pro, max, enterprise];
     for (let i = 1; i < rungs.length; i++) {
-      expect(rungs[i].whatsapp.conversation.count.max).toBeGreaterThan(
-        rungs[i - 1].whatsapp.conversation.count.max,
+      expect(rungs[i].whatsapp.activeContacts.count.max).toBeGreaterThan(
+        rungs[i - 1].whatsapp.activeContacts.count.max,
+      );
+      expect(rungs[i].whatsapp.campaignCredits.count.max).toBeGreaterThan(
+        rungs[i - 1].whatsapp.campaignCredits.count.max,
       );
       expect(rungs[i].team.count.max).toBeGreaterThan(rungs[i - 1].team.count.max);
       expect(rungs[i].team.teamMember.count.max).toBeGreaterThan(
@@ -156,7 +150,7 @@ describe("paid tier presets", () => {
     }
   });
 
-  test("loyalty, referrals and catalog open from Plus", () => {
+  test("loyalty, referrals and catalog open on every paid tier", () => {
     for (const tier of [plus, pro, max, enterprise]) {
       expect(tier.whatsapp.loyalty?.active).toBe(true);
       expect(tier.whatsapp.referrals?.active).toBe(true);
@@ -170,12 +164,17 @@ describe("paid tier presets", () => {
     }
   });
 
-  test("the Meta Business Agent is Max and above only", () => {
+  test("the Meta Business Agent is on every paid tier and off on Free", () => {
     expect(getFreeSubscriptionFeatures().ai.active).toBe(false);
-    expect(plus.ai.active).toBe(false);
-    expect(pro.ai.active).toBe(false);
-    expect(max.ai.active).toBe(true);
-    expect(enterprise.ai.active).toBe(true);
+    for (const tier of [plus, pro, max, enterprise]) {
+      expect(tier.ai.active).toBe(true);
+    }
+  });
+
+  test("no tier carries the retired conversation allowance", () => {
+    for (const tier of [getFreeSubscriptionFeatures(), plus, pro, max, enterprise]) {
+      expect("conversation" in tier.whatsapp).toBe(false);
+    }
   });
 
   test("every tier keeps the inbox — whatsapp.active is never the tier lever", () => {
@@ -187,7 +186,8 @@ describe("paid tier presets", () => {
   test("Enterprise is effectively unlimited on every count", () => {
     expect(enterprise.team.count.max).toBe(UNLIMITED_COUNT);
     expect(enterprise.team.teamMember.count.max).toBe(UNLIMITED_COUNT);
-    expect(enterprise.whatsapp.conversation.count.max).toBe(UNLIMITED_COUNT);
+    expect(enterprise.whatsapp.activeContacts.count.max).toBe(UNLIMITED_COUNT);
+    expect(enterprise.whatsapp.campaignCredits.count.max).toBe(UNLIMITED_COUNT);
     expect(enterprise.webSurvey.count.monthlyResponseLimit).toBe(UNLIMITED_COUNT);
   });
 });
@@ -195,10 +195,10 @@ describe("paid tier presets", () => {
 describe("contracted caps", () => {
   const enterprise = getEnterpriseSubscriptionFeatures() as any;
 
-  /** An Enterprise account a deal has capped at 200,000 conversations a month. */
+  /** An Enterprise account a deal has capped at 200,000 active contacts a month. */
   function capped() {
     const stored = getEnterpriseSubscriptionFeatures() as any;
-    stored.whatsapp.conversation.count.max = 200_000;
+    stored.whatsapp.activeContacts.count.max = 200_000;
     return stored;
   }
 
@@ -208,7 +208,7 @@ describe("contracted caps", () => {
   });
 
   test("a metered tier is never treated as contracted", () => {
-    // Max stores 50,000 on both sides. Nothing there is an override, and treating it as
+    // Max stores 25,000 on both sides. Nothing there is an override, and treating it as
     // one would freeze the org at an old number the next time the tier's limits move.
     const maxTier = getMaxSubscriptionFeatures();
     expect(hasContractedCap(maxTier, getMaxSubscriptionFeatures())).toBe(false);
@@ -220,37 +220,50 @@ describe("contracted caps", () => {
 
     const merged = withContractedCaps(enterprise, stored) as any;
 
-    expect(merged.whatsapp.conversation.count.max).toBe(200_000);
+    expect(merged.whatsapp.activeContacts.count.max).toBe(200_000);
     // Every allowance the contract did not touch comes back from the tier...
     expect(merged.team.count.max).toBe(UNLIMITED_COUNT);
     expect(merged.webSurvey.count.monthlyResponseLimit).toBe(UNLIMITED_COUNT);
+    expect(merged.whatsapp.campaignCredits.count.max).toBe(UNLIMITED_COUNT);
     // ...as do the feature gates, so a refresh still repairs a drifted blob.
     expect(merged.whatsapp.campaign.active).toBe(true);
   });
 
   test("the merge does not mutate the tier definition", () => {
     withContractedCaps(enterprise, capped());
-    expect(getEnterpriseSubscriptionFeatures().whatsapp.conversation.count.max).toBe(
+    expect(getEnterpriseSubscriptionFeatures().whatsapp.activeContacts.count.max).toBe(
       UNLIMITED_COUNT,
     );
-    expect(enterprise.whatsapp.conversation.count.max).toBe(UNLIMITED_COUNT);
+    expect(enterprise.whatsapp.activeContacts.count.max).toBe(UNLIMITED_COUNT);
   });
 
   test("a capped Enterprise account is metered, which is the point of capping it", () => {
     const stored = capped();
-    expect(isUnlimitedAllowance(stored.whatsapp.conversation.count.max)).toBe(false);
+    expect(isUnlimitedAllowance(stored.whatsapp.activeContacts.count.max)).toBe(false);
     expect(
-      isUnlimitedAllowance(withContractedCaps(enterprise, stored).whatsapp.conversation.count.max),
+      isUnlimitedAllowance(
+        withContractedCaps(enterprise, stored).whatsapp.activeContacts.count.max,
+      ),
     ).toBe(false);
+  });
+
+  test("a contracted campaign-credit cap survives a re-apply too", () => {
+    const stored = getEnterpriseSubscriptionFeatures() as any;
+    stored.whatsapp.campaignCredits.count.max = 1_000_000;
+
+    expect(hasContractedCap(enterprise, stored)).toBe(true);
+    expect((withContractedCaps(enterprise, stored) as any).whatsapp.campaignCredits.count.max).toBe(
+      1_000_000,
+    );
   });
 
   test("a zero or sentinel stored value is not a cap", () => {
     // Zero already means "not metered" everywhere else; reading it as a contracted
     // ceiling of nothing would block every send on the account.
     const zeroed = getEnterpriseSubscriptionFeatures() as any;
-    zeroed.whatsapp.conversation.count.max = 0;
+    zeroed.whatsapp.activeContacts.count.max = 0;
     expect(hasContractedCap(enterprise, zeroed)).toBe(false);
-    expect((withContractedCaps(enterprise, zeroed) as any).whatsapp.conversation.count.max).toBe(
+    expect((withContractedCaps(enterprise, zeroed) as any).whatsapp.activeContacts.count.max).toBe(
       UNLIMITED_COUNT,
     );
   });

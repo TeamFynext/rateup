@@ -6,8 +6,8 @@
  * refused for the same reason, so carrying on only turns a whole audience into
  * FAILED rows one at a time.
  *
- * - The conversation allowance is spent. `sendMetaMessage` refuses before it
- *   calls Meta, with `ConversationLimitError`.
+ * - The campaign credits are spent. `sendMetaMessage` refuses before it
+ *   calls Meta, with `CampaignCreditsExhaustedError`.
  * - Meta rejects the payment method (131042): no credit line, a line over its
  *   limit, or billing settings missing on the WhatsApp Business account.
  *
@@ -60,6 +60,8 @@ const PAUSED_FLAG_TTL_SECONDS = 60 * 60 * 24 * 30;
  * anything that only reads `errorMessage`.
  */
 export const CAMPAIGN_PAUSE_MESSAGES: Record<CampaignPauseReason, string> = {
+  [CampaignPauseReason.CAMPAIGN_CREDIT_LIMIT]:
+    "Paused: your campaign credits are used up. Upgrade or add a credit pack, or wait for next month, then resume the campaign.",
   [CampaignPauseReason.CONVERSATION_LIMIT]:
     "Paused: your plan's conversation allowance is used up. Upgrade your plan or wait for it to reset, then resume the campaign.",
   [CampaignPauseReason.PAYMENT_METHOD]:

@@ -1,12 +1,16 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { GraphApiError } from "./wa_axios.js";
 import { log } from "../../utils/logger.js";
-import { ConversationLimitError } from "./whatsappSurvey/wasurvey.auth.js";
+import {
+  ActiveContactLimitError,
+  CampaignCreditsExhaustedError,
+} from "./whatsappSurvey/wasurvey.auth.js";
 
 export function handleWhatsappError(error: Error, request: FastifyRequest, reply: FastifyReply) {
-  if (error instanceof ConversationLimitError) {
+  if (error instanceof ActiveContactLimitError || error instanceof CampaignCreditsExhaustedError) {
     reply.status(403).send({
       message: error.message,
+      code: error.code,
       displayMessageInClient: true,
     });
   } else if (error instanceof GraphApiError) {

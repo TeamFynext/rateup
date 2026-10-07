@@ -50,26 +50,25 @@ export const CATALOG_TIERS: TierSpec[] = [
     features: getFreeSubscriptionFeatures(),
     description: [
       "1 team · 1 user",
-      "100 conversations / mo",
-      "100 form submissions / mo",
+      "100 active contacts / mo",
+      "500 campaign messages / mo",
       "WhatsApp · Instagram · Messenger inbox",
       "Automations, templates & chatbots",
-      "Campaigns",
       "Email support",
     ],
   },
   {
     name: "PLUS PLAN",
-    displayName: "Plus",
-    inrMonthly: 2_400,
-    inrYearly: 24_000,
-    usdMonthly: 30,
-    usdYearly: 300,
+    displayName: "Starter",
+    inrMonthly: 999,
+    inrYearly: 9_990,
+    usdMonthly: 19,
+    usdYearly: 190,
     features: getPlusSubscriptionFeatures(),
     description: [
-      "2 teams · 10 users",
-      "5,000 conversations / mo",
-      "5,000 form submissions / mo",
+      "2 teams · 5 users",
+      "1,000 active contacts / mo",
+      "10,000 campaign messages / mo",
       "Loyalty & referrals",
       "Shopify + WhatsApp catalog sync",
       "Email support",
@@ -77,35 +76,34 @@ export const CATALOG_TIERS: TierSpec[] = [
   },
   {
     name: "PRO PLAN",
-    displayName: "Pro",
+    displayName: "Growth",
     badge: "Most popular",
-    inrMonthly: 4_800,
-    inrYearly: 48_000,
-    usdMonthly: 60,
-    usdYearly: 600,
+    inrMonthly: 2_499,
+    inrYearly: 24_990,
+    usdMonthly: 59,
+    usdYearly: 590,
     features: getProSubscriptionFeatures(),
     description: [
-      "5 teams · 30 users",
-      "20,000 conversations / mo",
-      "20,000 form submissions / mo",
-      "Everything in Plus",
+      "5 teams · 15 users",
+      "5,000 active contacts / mo",
+      "50,000 campaign messages / mo",
+      "Everything in Starter",
       "Priority email support",
     ],
   },
   {
     name: "MAX PLAN",
-    displayName: "Max",
-    inrMonthly: 9_600,
-    inrYearly: 96_000,
-    usdMonthly: 120,
-    usdYearly: 1_200,
+    displayName: "Scale",
+    inrMonthly: 7_999,
+    inrYearly: 79_990,
+    usdMonthly: 149,
+    usdYearly: 1_490,
     features: getMaxSubscriptionFeatures(),
     description: [
-      "10 teams · 100 users",
-      "50,000 conversations / mo",
-      "50,000 form submissions / mo",
-      "Everything in Pro",
-      "Meta Business Agent (AI)",
+      "15 teams · 50 users",
+      "25,000 active contacts / mo",
+      "250,000 campaign messages / mo",
+      "Everything in Growth",
       "Phone support",
     ],
   },
@@ -120,38 +118,68 @@ export const CATALOG_TIERS: TierSpec[] = [
     features: getEnterpriseSubscriptionFeatures(),
     description: [
       "Unlimited teams & users",
-      "Unlimited conversations / mo",
-      "Unlimited form submissions / mo",
-      "Everything in Max",
+      "Custom active contacts / mo",
+      "Custom campaign messages / mo",
+      "Everything in Scale",
       "Dedicated account manager",
     ],
   },
 ];
 
+export type AddonKind = "ACTIVE_CONTACTS" | "CAMPAIGN_CREDITS";
+
+export interface AddonSpec {
+  kind: AddonKind;
+  /** The ADDON `RateupPlan.name` a purchase is recorded against. */
+  name: string;
+  displayName: string;
+  /** What one pack adds: active contacts for its month, or campaign credits to draw down. */
+  units: number;
+  validDays: number;
+  /** Charged once. Nothing renews a pack. */
+  inrMonthly: number;
+  usdMonthly: number;
+  description: string[];
+}
+
 /**
- * A pack of extra conversations, sold on top of a plan.
- *
- * Priced so stacking packs stays cheaper than the next tier until an org is most of the
- * way to that tier's allowance, at which point upgrading wins on price alone. Plus is
- * ₹2,400/mo for 5,000; one pack on top (₹3,600) buys 10,000 for less than Pro, but a
- * second lands on Pro's own ₹4,800 while still buying 5,000 fewer conversations.
- *
- * Add-ons attach to a paid subscription. A free org cannot buy one — there is no
- * subscription for the pack to sit alongside, and the upgrade is the cheaper answer
- * anyway.
+ * Top-ups sold on a paid plan. A contact pack costs what Starter charges per contact, so
+ * stacking them never beats upgrading; a credit pack costs what Growth charges per credit.
+ * Free cannot buy either — upgrading raises every limit for little more.
  */
-export const CONVERSATION_ADDON = {
-  name: "CONVERSATION PACK",
-  displayName: "Conversation pack",
-  /** Extra metered conversations one pack is worth, for the month it covers. */
-  conversations: 5_000,
-  /** Charged once, for one month. Nothing renews it. */
-  inrMonthly: 1_200,
-  usdMonthly: 19,
-  description: [
-    "5,000 extra conversations for one month",
-    "Stacks — buy as many packs as you need",
-    "One-off charge, no subscription",
-    "Runs out on its own after 30 days",
-  ],
-} as const;
+export const ADDONS: Record<AddonKind, AddonSpec> = {
+  ACTIVE_CONTACTS: {
+    kind: "ACTIVE_CONTACTS",
+    // Renamed in place from the conversation pack, so packs already sold keep counting.
+    name: "ACTIVE CONTACT PACK",
+    displayName: "Active contact pack",
+    units: 1_000,
+    validDays: 30,
+    inrMonthly: 999,
+    usdMonthly: 19,
+    description: [
+      "1,000 extra active contacts",
+      "Stacks — buy as many packs as you need",
+      "One-off charge, no subscription",
+      "Runs out on its own after 30 days",
+    ],
+  },
+  CAMPAIGN_CREDITS: {
+    kind: "CAMPAIGN_CREDITS",
+    name: "CAMPAIGN CREDIT PACK",
+    displayName: "Campaign credit pack",
+    units: 10_000,
+    validDays: 90,
+    inrMonthly: 499,
+    usdMonthly: 10,
+    description: [
+      "10,000 extra campaign messages",
+      "Used after your plan's monthly credits",
+      "One-off charge, no subscription",
+      "Unused credits last 90 days",
+    ],
+  },
+};
+
+/** The pack's name before active-contact pricing; the seed task renames it. */
+export const LEGACY_CONVERSATION_ADDON_NAME = "CONVERSATION PACK";

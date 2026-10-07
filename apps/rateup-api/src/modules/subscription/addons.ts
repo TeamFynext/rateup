@@ -1,80 +1,76 @@
 import prisma from "../../utils/prisma.js";
-import { CONVERSATION_ADDON } from "./catalog.js";
+import { ADDONS, type AddonKind } from "./catalog.js";
 import { isGatewayBilledPlan } from "./planBilling.js";
 import { isUnlimitedAllowance } from "./subscription.data.js";
 
-/** How long one purchased pack counts for. A pack is a month's top-up, bought once. */
-export const ADDON_VALID_DAYS = 30;
+export type { AddonKind } from "./catalog.js";
 
 /** When a pack bought now stops counting. */
-export function addonExpiryFrom(purchasedAt: Date): Date {
+export function addonExpiryFrom(kind: AddonKind, purchasedAt: Date): Date {
   const expiry = new Date(purchasedAt);
-  expiry.setDate(expiry.getDate() + ADDON_VALID_DAYS);
+  expiry.setUTCDate(expiry.getUTCDate() + ADDONS[kind].validDays);
   return expiry;
 }
 
-/** The org's packs that have not run out yet, newest first. */
-function activePacks(orgId: string, now: Date) {
+/** The org's packs of one kind that have not run out yet, longest-lived first. */
+function activePacks(orgId: string, kind: AddonKind, now: Date) {
   return prisma.subscriptionAddon.findMany({
-    where: { orgId, expiresAt: { gt: now }, addon: { name: CONVERSATION_ADDON.name } },
-    select: { quantity: true, expiresAt: true },
+    where: { orgId, kind, expiresAt: { gt: now } },
+    select: { quantity: true, expiresAt: true, creditsGranted: true, creditsUsed: true },
     orderBy: { expiresAt: "desc" },
   });
 }
 
+/** The allowance paths in the features blob, one per meter. */
+const FEATURE_PATH: Record<AddonKind, "activeContacts" | "campaignCredits"> = {
+  ACTIVE_CONTACTS: "activeContacts",
+  CAMPAIGN_CREDITS: "campaignCredits",
+};
+
+/** The plan's own monthly figure for a meter. Undefined when the plan does not cap it. */
+export function planMeterMax(features: unknown, kind: AddonKind): number | undefined {
+  const whatsapp = (features as { whatsapp?: Record<string, { count?: { max?: number } }> } | null)
+    ?.whatsapp;
+  const max = whatsapp?.[FEATURE_PATH[kind]]?.count?.max;
+  if (typeof max !== "number" || max <= 0 || isUnlimitedAllowance(max)) return undefined;
+  return max;
+}
+
 /**
- * The conversation allowance an org actually has: its plan's, plus any packs still in date.
- *
- * One place computes this, because three call sites depend on it agreeing — the send gate
- * that refuses a message, the alert that says the limit is reached, and the dashboard
- * banner. If they disagreed, a customer would be blocked while being told they had room,
- * or told they had run out while messages kept sending.
- *
- * A pack is a one-off top-up with its own end date rather than a subscription, so an
- * expired pack simply stops being counted — there is no cancellation to process, and
- * nothing renews it.
- *
- * An uncapped plan stays uncapped: adding packs to a sentinel would be meaningless, and
- * Enterprise is invoiced on real usage anyway.
+ * The active-contact allowance an org actually has: its plan's, plus contact packs still
+ * in date. `effectiveMax` undefined means the plan is not metered (uncapped Enterprise).
  */
-export async function getConversationAllowance(orgId: string): Promise<{
+export async function getActiveContactAllowance(orgId: string): Promise<{
   planMax: number | undefined;
-  addonConversations: number;
-  /** What to actually meter against. `undefined` means this plan is not metered. */
+  addonContacts: number;
   effectiveMax: number | undefined;
 }> {
   const subscription = await prisma.subscription.findUnique({
     where: { orgId },
     select: { features: true },
   });
+  const planMax = planMeterMax(subscription?.features, "ACTIVE_CONTACTS");
+  if (planMax === undefined) return { planMax, addonContacts: 0, effectiveMax: undefined };
 
-  const features = subscription?.features as {
-    whatsapp?: { conversation?: { count?: { max?: number } } };
-  } | null;
-  const planMax = features?.whatsapp?.conversation?.count?.max;
+  const packs = await activePacks(orgId, "ACTIVE_CONTACTS", new Date());
+  const addonContacts =
+    packs.reduce((total, pack) => total + pack.quantity, 0) * ADDONS.ACTIVE_CONTACTS.units;
 
-  if (planMax === undefined || planMax <= 0 || isUnlimitedAllowance(planMax)) {
-    return { planMax, addonConversations: 0, effectiveMax: undefined };
-  }
-
-  const addons = await activePacks(orgId, new Date());
-
-  const packs = addons.reduce((total, addon) => total + addon.quantity, 0);
-  const addonConversations = packs * CONVERSATION_ADDON.conversations;
-
-  return { planMax, addonConversations, effectiveMax: planMax + addonConversations };
+  return { planMax, addonContacts, effectiveMax: planMax + addonContacts };
 }
 
-/** The org's own conversation ceiling, when a contract set one. Undefined when uncapped. */
-function contractedConversationCap(features: unknown): number | undefined {
-  const shape = features as { whatsapp?: { conversation?: { count?: { max?: number } } } } | null;
-  const max = shape?.whatsapp?.conversation?.count?.max;
-  if (typeof max !== "number" || max <= 0 || isUnlimitedAllowance(max)) return undefined;
-  return max;
+/** Unspent credits across the org's in-date campaign credit packs. */
+export async function getCampaignPackCreditsRemaining(orgId: string): Promise<number> {
+  const packs = await activePacks(orgId, "CAMPAIGN_CREDITS", new Date());
+  return packs.reduce(
+    (total, pack) => total + Math.max((pack.creditsGranted ?? 0) - pack.creditsUsed, 0),
+    0,
+  );
 }
 
 export interface AddonEligibility {
-  /** Whether this org may buy conversation packs at all. */
+  kind: AddonKind;
+  /** Whether this org may buy this kind of pack at all. */
   eligible: boolean;
   /** Why not, in the customer's own terms. Null when they can buy. */
   reason: string | null;
@@ -82,27 +78,26 @@ export interface AddonEligibility {
   packs: number;
   /** When the longest-lived pack runs out, or null when none are held. */
   activeUntil: Date | null;
-  conversationsPerPack: number;
+  unitsPerPack: number;
   validDays: number;
 }
 
+const NOUN: Record<AddonKind, string> = {
+  ACTIVE_CONTACTS: "active contacts",
+  CAMPAIGN_CREDITS: "campaign messages",
+};
+
 /**
- * Whether an org can buy conversation packs, and how many are in date.
+ * Whether an org can buy a kind of pack, and how many are in date.
  *
- * A pack tops up an allowance that is actually metered, for one month. Two tiers are
- * excluded, for opposite reasons:
- *
- *   - **Free** is metered, but a pack is not the answer there: it costs a large fraction
- *     of a paid tier and buys only conversations, where upgrading raises every limit and
- *     opens the gated features too. Free customers are told to upgrade.
- *   - **Enterprise** is not metered at all — its allowance is a sentinel and it is
- *     invoiced on the usage it actually runs, so a pack would add nothing to an allowance
- *     that is already uncapped, and be charged for.
- *
- * Both fall out of the same rule the rest of the billing code uses: they are the tiers
- * that link no gateway plan, because neither is sold self-serve at a list price.
+ * Packs top up a paid, self-serve plan. Free is told to upgrade (it raises every limit for
+ * little more than a pack), and a sales-led account's ceiling is set by its contract.
+ * Both are the tiers that link no gateway plan.
  */
-export async function getAddonEligibility(orgId: string): Promise<AddonEligibility> {
+export async function getAddonEligibility(
+  orgId: string,
+  kind: AddonKind,
+): Promise<AddonEligibility> {
   const [subscription, held] = await Promise.all([
     prisma.subscription.findUnique({
       where: { orgId },
@@ -120,14 +115,15 @@ export async function getAddonEligibility(orgId: string): Promise<AddonEligibili
         },
       },
     }),
-    activePacks(orgId, new Date()),
+    activePacks(orgId, kind, new Date()),
   ]);
 
   const base = {
+    kind,
     packs: held.reduce((total, row) => total + row.quantity, 0),
     activeUntil: held[0]?.expiresAt ?? null,
-    conversationsPerPack: CONVERSATION_ADDON.conversations,
-    validDays: ADDON_VALID_DAYS,
+    unitsPerPack: ADDONS[kind].units,
+    validDays: ADDONS[kind].validDays,
   };
   const plan = subscription?.basePlan;
 
@@ -135,23 +131,23 @@ export async function getAddonEligibility(orgId: string): Promise<AddonEligibili
     return { ...base, eligible: false, reason: "This organisation has no plan to top up." };
   }
   if (!isGatewayBilledPlan(plan)) {
-    const isFree = plan.name === "FREE PLAN";
-    // A contracted account has a real ceiling, so "there is no allowance to top up" would
-    // be untrue — the allowance exists, it is just not one a self-serve pack can change.
-    const contractedMax = contractedConversationCap(subscription?.features);
-    const salesLedReason = contractedMax
-      ? `Your agreement includes ${contractedMax.toLocaleString()} conversations a month, ` +
-        "and that limit is set by contract rather than sold in packs. Talk to us to raise it."
-      : `${plan.displayName ?? plan.name} is invoiced on the usage you actually run, so ` +
-        "there is no allowance to top up. Talk to us if you need more headroom.";
-
+    if (plan.name === "FREE PLAN") {
+      return {
+        ...base,
+        eligible: false,
+        reason:
+          "Packs top up a paid plan. Upgrading raises every limit and costs little more than a pack.",
+      };
+    }
+    const contractedMax = planMeterMax(subscription?.features, kind);
     return {
       ...base,
       eligible: false,
-      reason: isFree
-        ? "Conversation packs top up a paid plan. Upgrading raises every limit, not just " +
-          "conversations, and costs little more than a pack."
-        : salesLedReason,
+      reason: contractedMax
+        ? `Your agreement includes ${contractedMax.toLocaleString()} ${NOUN[kind]} a month, ` +
+          "set by contract rather than sold in packs. Talk to us to raise it."
+        : `${plan.displayName ?? plan.name} has no ${NOUN[kind]} limit to top up. ` +
+          "Talk to us if you need anything changed.",
     };
   }
 

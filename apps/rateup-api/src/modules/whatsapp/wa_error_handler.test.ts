@@ -1,12 +1,14 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
-// wa_error_handler pulls in the ConversationLimitError module, whose import graph
-// touches prisma. Stub it so importing the handler never opens a connection.
+// The limit errors' module reaches prisma; stub it so importing never opens a connection.
 vi.mock("../../utils/prisma.js", () => ({ default: {} }));
 
 import { GraphApiError } from "./wa_axios.js";
 import { handleWhatsappError } from "./wa_error_handler.js";
-import { ConversationLimitError } from "./whatsappSurvey/wasurvey.auth.js";
+import {
+  ActiveContactLimitError,
+  CampaignCreditsExhaustedError,
+} from "./whatsappSurvey/wasurvey.auth.js";
 
 function makeReply() {
   const reply: any = {
@@ -24,15 +26,22 @@ beforeEach(() => {
 });
 
 describe("handleWhatsappError", () => {
-  test("maps ConversationLimitError to a 403 with a client-visible upgrade message", () => {
+  test.each([
+    ["ActiveContactLimitError", new ActiveContactLimitError(), "ACTIVE_CONTACT_LIMIT_REACHED"],
+    [
+      "CampaignCreditsExhaustedError",
+      new CampaignCreditsExhaustedError(),
+      "CAMPAIGN_CREDITS_EXHAUSTED",
+    ],
+  ])("maps %s to a 403 the client can show and recognise", (_label, err, code) => {
     const reply = makeReply();
-    const err = new ConversationLimitError();
 
     handleWhatsappError(err, request, reply);
 
     expect(reply.status).toHaveBeenCalledWith(403);
     expect(reply.send).toHaveBeenCalledWith({
       message: err.message,
+      code,
       displayMessageInClient: true,
     });
   });

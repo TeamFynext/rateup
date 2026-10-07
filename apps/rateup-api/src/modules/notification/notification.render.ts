@@ -133,8 +133,14 @@ const RENDERERS: Renderers = {
     path: "/dashboard/settings/integrations",
     action: "Open integrations",
   }),
-  "billing.conversation_limit": (d) => ({
-    title: "Conversation limit reached",
+  "billing.active_contact_limit": (d) => ({
+    title: "Active contact limit reached",
+    body: d.message,
+    path: "/dashboard/settings/billing",
+    action: "Open billing",
+  }),
+  "billing.campaign_credit_limit": (d) => ({
+    title: "Campaign credits used up",
     body: d.message,
     path: "/dashboard/settings/billing",
     action: "Open billing",

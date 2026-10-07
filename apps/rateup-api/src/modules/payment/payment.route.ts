@@ -2,8 +2,8 @@ import { FastifyInstance } from "fastify";
 import {
   cancelRazorpaySubscriptionHandler,
   changeSubscriptionPlanHandler,
-  createConversationAddonOrderHandler,
-  getConversationAddonOfferHandler,
+  createAddonOrderHandler,
+  getAddonOfferHandler,
   getSubscriptionChangeOptionsHandler,
   createCheckoutSessionHandler,
   createRateUpPlanHandler,
@@ -37,8 +37,10 @@ import {
   updateOrderStatusSchema,
   type OrderIdParamsInput,
   type UpdateOrderStatusInput,
-  conversationAddonOrderSchema,
-  type ConversationAddonOrderInput,
+  addonKindParamsSchema,
+  addonOrderSchema,
+  type AddonKindParams,
+  type AddonOrderInput,
 } from "./payment.schema.js";
 import { declareAccess } from "../../authz/registry.js";
 
@@ -127,20 +129,33 @@ export async function paymentRoutes(server: FastifyInstance) {
     getSubscriptionChangeOptionsHandler,
   );
 
-  server.get(
-    "/subscriptions/conversation-addon",
-    { config: { permission: "billing.read" } },
-    getConversationAddonOfferHandler,
+  server.get<{ Params: AddonKindParams }>(
+    "/subscriptions/addons/:kind",
+    { config: { permission: "billing.read" }, schema: { params: addonKindParamsSchema } },
+    getAddonOfferHandler,
   );
 
-  server.post<{ Body: ConversationAddonOrderInput }>(
-    "/subscriptions/conversation-addon",
+  server.post<{ Params: AddonKindParams; Body: AddonOrderInput }>(
+    "/subscriptions/addons/:kind",
     {
       config: { permission: "billing.manage" },
       // Same gate as changing the plan: it spends the org's money.
-      schema: { body: conversationAddonOrderSchema },
+      schema: { params: addonKindParamsSchema, body: addonOrderSchema },
     },
-    createConversationAddonOrderHandler,
+    createAddonOrderHandler,
+  );
+
+  // Kept for one release so a billing page loaded before the deploy can still buy.
+  server.get<{ Params: Partial<AddonKindParams> }>(
+    "/subscriptions/conversation-addon",
+    { config: { permission: "billing.read" } },
+    getAddonOfferHandler,
+  );
+
+  server.post<{ Params: Partial<AddonKindParams>; Body: AddonOrderInput }>(
+    "/subscriptions/conversation-addon",
+    { config: { permission: "billing.manage" }, schema: { body: addonOrderSchema } },
+    createAddonOrderHandler,
   );
 
   server.put<{ Body: ChangePlanInput }>(

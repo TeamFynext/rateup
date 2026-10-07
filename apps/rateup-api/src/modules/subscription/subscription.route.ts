@@ -4,6 +4,7 @@ import {
   getMessageStatsHandler,
   getSubscriptionHandler,
   getUserSubscriptionHandler,
+  getUsageHandler,
   updateSubscriptionHandler,
 } from "./subscription.controller.js";
 import { assertRootOrg } from "../../utils/auth.js";
@@ -17,6 +18,7 @@ export async function subscriptionRoutes(server: FastifyInstance) {
   // Every route but GET / answers for orgs other than the caller's (all of them, or the one in
   // the URL), so each of them is the root org's alone.
   server.get("/", getUserSubscriptionHandler);
+  server.get("/usage", getUsageHandler);
   server.get(
     "/all",
     {
