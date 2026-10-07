@@ -212,6 +212,8 @@ export enum WaEvent {
   MessagingHandovers = "messaging_handovers",
   ACCOUNT_UPDATE = "account_update",
   PhoneNumberNameUpdate = "phone_number_name_update",
+  /** Voice calls: connect / terminate events, and call statuses for outbound calls. */
+  Calls = "calls",
 }
 
 export enum WhatsappSettingsStatus {

@@ -10,6 +10,7 @@ import { reconcileScheduledFeedbackRequests } from "../../modules/loyalty/feedba
 import { reconcileCheckoutReminders } from "../../modules/integrations/shopify/shopify.checkouts.service.js";
 
 import * as abandonedCheckoutReminder from "./processors/abandonedCheckoutReminder.processor.js";
+import * as callWatchdog from "./processors/callWatchdog.processor.js";
 import * as campaignDequeue from "./processors/campaignDequeue.processor.js";
 import * as campaignEnqueue from "./processors/campaignEnqueue.processor.js";
 import * as campaignRetryFire from "./processors/campaignRetryFire.processor.js";
@@ -44,6 +45,7 @@ import * as zapierTrigger from "./processors/zapierTrigger.processor.js";
 // in-flight jobs on SIGTERM.
 const PROCESSOR_MODULES = [
   abandonedCheckoutReminder,
+  callWatchdog,
   campaignDequeue,
   campaignEnqueue,
   campaignRetryFire,
