@@ -1,9 +1,10 @@
-import { IconCheck, IconCopy } from "@tabler/icons-react";
+import { IconCheck, IconCopy, IconQrcode } from "@tabler/icons-react";
 import { useState } from "react";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 
 import { useChannels } from "@/backend/channels/channels.query";
 import { igMeLink } from "@/components/dashboard/instagram/igMeLink.ts";
+import { downloadIgMeQr } from "@/components/dashboard/instagram/igMeQr.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldDescription, FieldError, FieldTitle } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
@@ -82,7 +83,7 @@ export function InstagramLinkRef() {
               value={field.value ?? ""}
               onChange={field.onChange}
               placeholder="summer_sale"
-              maxLength={250}
+              maxLength={2083}
             />
             <FieldDescription>
               Becomes the link's <code>?ref=</code>. Leave it empty to answer every ig.me link, and
@@ -102,7 +103,21 @@ export function InstagramLinkRef() {
           {copied ? <IconCheck className="size-4" /> : <IconCopy className="size-4" />}
           <span className="sr-only">Copy link</span>
         </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          disabled={!link}
+          onClick={() => void downloadIgMeQr(link, ref || username || "link")}
+        >
+          <IconQrcode className="size-4" />
+          <span className="sr-only">Download QR code</span>
+        </Button>
       </div>
+      <p className="text-xs text-muted-foreground">
+        Someone already chatting with you starts this rule the moment they open the link. Someone
+        new starts it with their first message, or by tapping an ice breaker.
+      </p>
     </div>
   );
 }

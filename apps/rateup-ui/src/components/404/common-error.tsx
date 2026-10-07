@@ -1,10 +1,10 @@
-import * as Sentry from "@sentry/tanstackstart-react";
 import { IconAlertTriangle, IconRefresh } from "@tabler/icons-react";
 import { useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
 import { cx } from "class-variance-authority";
 import { useEffect } from "react";
 
 import { Button } from "@/components/ui/button.tsx";
+import { reportError } from "@/lib/errorReporting.ts";
 
 /**
  * Turns `/dashboard/settings/billing` into "your billing", and anything that isn't a
@@ -50,7 +50,7 @@ const CommonError = ({
   useEffect(() => {
     // Without the guard every mount of a boundary that rendered without an error — a
     // reset that re-throws nothing, for one — reported an empty exception to Sentry.
-    if (error) Sentry.captureException(error);
+    if (error) reportError(error);
   }, [error]);
 
   const handleRetry = () => {

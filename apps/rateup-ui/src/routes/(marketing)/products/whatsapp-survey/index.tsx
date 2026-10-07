@@ -14,7 +14,7 @@ import WhatsAppSurveyGrowth from "@/components/products/WhatsAppSurveyComponets/
 import WhatsAppSurveyHero from "@/components/products/WhatsAppSurveyComponets/shared/WhatsAppSurveyHero.tsx";
 import WhatsAppSurveyService from "@/components/products/WhatsAppSurveyComponets/shared/WhatsAppSurveyService.tsx";
 import WhatsAppSurveySteps from "@/components/products/WhatsAppSurveyComponets/shared/WhatsAppSurveySteps.tsx";
-import { faqs } from "@/components/products/WhatsAppSurveyComponets/WhatsAppSurveyConstants.tsx";
+import { faqs } from "@/components/products/WhatsAppSurveyComponets/whatsAppSurveyFaqs.ts";
 import { breadcrumbList, faqPage, graph, publisher, webPage } from "@/lib/jsonLd.ts";
 import { BASE_URL, buildPageHead } from "@/lib/metadata.ts";
 

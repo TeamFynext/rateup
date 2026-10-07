@@ -1,22 +1,24 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { z } from "zod";
 
 import { MessagesPage } from "@/components/dashboard/loyalty/messages/MessagesPage.tsx";
-import { MESSAGES_TABS } from "@/components/dashboard/loyalty/messages/messagesTabs.ts";
+import {
+  MESSAGES_TABS,
+  type MessagesTab,
+} from "@/components/dashboard/loyalty/messages/messagesTabs.ts";
 import { LOYALTY_PATHS } from "@/components/dashboard/loyalty/paths.ts";
+import { oneOf } from "@/utils/search.ts";
 
-// Messages — automatic messages, keyword replies and the template library, as tabs.
-const searchSchema = z.object({
-  tab: z.enum(MESSAGES_TABS).optional().catch(undefined),
-  // The page used to be one scroll with `?section=` anchors; old links still land.
-  section: z
-    .enum(["registration", "keywords", "notifications", "reminders"])
-    .optional()
-    .catch(undefined),
-});
+// The page used to be one scroll with `?section=` anchors; old links still land.
+const LEGACY_SECTIONS = ["registration", "keywords", "notifications", "reminders"] as const;
 
 export const Route = createFileRoute("/dashboard/loyalty/messages/")({
-  validateSearch: searchSchema,
+  // Messages — automatic messages, keyword replies and the template library, as tabs.
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { tab?: MessagesTab; section?: (typeof LEGACY_SECTIONS)[number] } => ({
+    tab: oneOf(MESSAGES_TABS, search.tab),
+    section: oneOf(LEGACY_SECTIONS, search.section),
+  }),
   beforeLoad: ({ search }) => {
     if (!search.section) return;
     if (search.section === "registration") {

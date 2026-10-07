@@ -5,7 +5,6 @@ import RoutePending from "./components/Loaders/RoutePending.tsx";
 import NotFoundPage from "./components/not-found.tsx";
 import { getQueryClient } from "./components/providers.tsx";
 import { routeTree } from "./routeTree.gen";
-import "./i18n.ts";
 
 export function getRouter() {
   const router = createRouter({

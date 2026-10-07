@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest";
 
 import type { FeedbackFlow, FeedbackTemplate } from "@/backend/loyalty/feedback.api.ts";
 
-import { feedbackSearchSchema, requestsQueryFor } from "./feedback.search.ts";
+import { validateFeedbackSearch, requestsQueryFor } from "./feedback.search.ts";
 import { canEnableFeedback, feedbackNavState, feedbackTone } from "./feedbackStatus.ts";
 import { isFeedbackTab } from "./feedbackTabs.ts";
 import { happyThresholdOptions, sendDelayOptions } from "./schemas.ts";
@@ -37,20 +37,20 @@ describe("isFeedbackTab", () => {
   });
 });
 
-describe("feedbackSearchSchema", () => {
+describe("validateFeedbackSearch", () => {
   test("defaults to page 1 with nothing else set", () => {
-    expect(feedbackSearchSchema.parse({})).toEqual({ page: 1 });
+    expect(validateFeedbackSearch({})).toEqual({ page: 1 });
   });
 
   test("bad values fall back rather than throw", () => {
     expect(
-      feedbackSearchSchema.parse({ tab: "nope", period: "7d", status: "LOST", page: "0" }),
+      validateFeedbackSearch({ tab: "nope", period: "7d", status: "LOST", page: "0" }),
     ).toEqual({ page: 1 });
   });
 
   test("coerces the page and keeps valid filters", () => {
     expect(
-      feedbackSearchSchema.parse({ tab: "results", period: "90d", status: "SENT", page: "3" }),
+      validateFeedbackSearch({ tab: "results", period: "90d", status: "SENT", page: "3" }),
     ).toEqual({ tab: "results", period: "90d", status: "SENT", page: 3 });
   });
 });

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { coercedString, oneOf } from "@/utils/search.ts";
 
 /**
  * The cashier's URL state, shared by the dashboard route and the standalone `/cashier`.
@@ -17,8 +17,11 @@ export const CASHIER_STEPS = [
 ] as const;
 export type CashierStep = (typeof CASHIER_STEPS)[number];
 
-export const cashierSearchSchema = z.object({
-  phone: z.coerce.string().optional().catch(undefined),
-  step: z.enum(CASHIER_STEPS).optional().catch(undefined),
-});
-export type CashierSearch = z.infer<typeof cashierSearchSchema>;
+export interface CashierSearch {
+  phone?: string;
+  step?: CashierStep;
+}
+
+export function validateCashierSearch(search: Record<string, unknown>): CashierSearch {
+  return { phone: coercedString(search.phone), step: oneOf(CASHIER_STEPS, search.step) };
+}

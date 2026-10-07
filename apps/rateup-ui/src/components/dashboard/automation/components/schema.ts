@@ -342,10 +342,11 @@ const ruleOptionsSchema = z.object({
   instagramPostIds: z.array(z.string()).default([]),
   instagramCommentSource: z.enum(["ALL", "POSTS", "LIVE"]).optional(),
   // Mirrors the API's check in wa_rule.schema.ts.
+  // Meta's own limit for an ig.me ref.
   instagramRef: z
     .string()
     .trim()
-    .max(250)
+    .max(2083)
     .regex(/^[A-Za-z0-9_=-]*$/, "Use letters, numbers, - _ and = only")
     .optional(),
   instagramPublicReplies: z

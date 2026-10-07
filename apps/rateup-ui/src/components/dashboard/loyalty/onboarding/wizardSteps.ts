@@ -8,11 +8,10 @@ import {
   type Icon,
 } from "@tabler/icons-react";
 
-import { ONBOARDING_STEPS } from "@/backend/loyalty/onboarding.api";
+import { WIZARD_STEP_IDS, type WizardStep } from "./wizardStepIds.ts";
 
-/** The five saveable steps, plus a final launch screen that only activates. */
-export const WIZARD_STEPS = [...ONBOARDING_STEPS, "launch"] as const;
-export type WizardStep = (typeof WIZARD_STEPS)[number];
+export const WIZARD_STEPS = WIZARD_STEP_IDS;
+export type { WizardStep };
 
 /** The three brand accents a step may wear. Mapped to classes in one place: `StepIconChip`. */
 export type StepTone = "blue" | "amber" | "green";

@@ -13,6 +13,10 @@ import {
   useEdgesState,
   useNodesState,
 } from "@xyflow/react";
+
+// Here rather than in the route files: a stylesheet imported by a route file lands in the CSS
+// every page loads.
+import "@xyflow/react/dist/style.css";
 import type { Node } from "@xyflow/react";
 import type { Connection, Edge, NodeChange, ReactFlowInstance } from "@xyflow/react";
 import type React from "react";

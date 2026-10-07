@@ -4,7 +4,6 @@ import {
   IconInbox,
   IconLayoutKanban,
   IconMessageCircle,
-  IconPlug,
   IconRobot,
   IconSpeakerphone,
 } from "@tabler/icons-react";
@@ -68,12 +67,6 @@ const components: {
     title: "Meta AI Agent",
     to: "/products/meta-ai-agent",
     description: "Meta's AI agent on your WhatsApp number.",
-  },
-  {
-    icon: <IconPlug className="size-6 text-ru-n-600" />,
-    title: "Integrations",
-    to: "/integrations",
-    description: "Shopify, WooCommerce, POS, CRM and 3,000+ apps via Zapier.",
   },
 ];
 interface DropDownNavItemsProps {

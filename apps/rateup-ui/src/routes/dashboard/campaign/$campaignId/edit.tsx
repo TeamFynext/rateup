@@ -4,7 +4,7 @@ import { CampaignWizard } from "@/components/dashboard/campaign/wizard/CampaignW
 import {
   isCampaignWizardStep,
   type CampaignWizardStep,
-} from "@/components/dashboard/campaign/wizard/useCampaignWizard.ts";
+} from "@/components/dashboard/campaign/wizard/wizardSteps.ts";
 
 export const Route = createFileRoute("/dashboard/campaign/$campaignId/edit")({
   // The step rides in the URL so browser back/forward and a refresh all land on
