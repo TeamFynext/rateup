@@ -16,7 +16,7 @@ import {
 import Image from "@/components/common/Image";
 import { Colors } from "@/constants/colors";
 import * as FileSystem from "expo-file-system/legacy";
-import Video from "react-native-video";
+import { VideoPlayback, VideoThumbnail } from "@/components/common/VideoPlayer";
 import { fromByteArray } from "base64-js";
 import { WaSendMessageBody } from "@/api/inbox/types";
 import { Buffer } from "buffer";
@@ -113,11 +113,17 @@ export function WaInboxVideo({ messageContent }: { messageContent: string }) {
   const [id, caption] = messageContent.split("_caption_");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const appFolderPath = `${FileSystem.documentDirectory ?? ""}wa_media`;
-  const downloadPath = `${appFolderPath}/${id}.mp4`;
+  // `id` is a WhatsApp media id on a received video, but the whole CloudFront URL on one we
+  // sent, which made the path `wa_media/http://…` and failed the existence check. Made
+  // file-safe the way the audio bubble does it.
+  const safeId = id.replace(/[^a-zA-Z0-9-]/g, "_");
+  const downloadPath = `${appFolderPath}/${safeId}.mp4`;
 
   const link = id.startsWith("http") ? id : null;
-  // Check if file already exists on mount
+  // Check if file already exists on mount. A video with a link plays from it and is never
+  // downloaded, so there is nothing on disk to look for.
   useEffect(() => {
+    if (link) return;
     const checkLocalFile = async () => {
       const appFolderExists = (await FileSystem.getInfoAsync(appFolderPath)).exists;
       if (!appFolderExists) {
@@ -130,8 +136,9 @@ export function WaInboxVideo({ messageContent }: { messageContent: string }) {
         setLocalPath(downloadPath);
       }
     };
-    checkLocalFile();
-  }, [appFolderPath, downloadPath]);
+    // A failed check only means the video is downloaded again on tap.
+    checkLocalFile().catch((err) => console.warn("Video cache check failed:", err));
+  }, [appFolderPath, downloadPath, link]);
 
   const handleDownload = async () => {
     // Recheck existence before downloading
@@ -180,13 +187,7 @@ export function WaInboxVideo({ messageContent }: { messageContent: string }) {
           onPress={openModal}
           className="relative w-64 h-64 self-center rounded-xl overflow-hidden shadow-md"
         >
-          <Video
-            source={{ uri: localPath ?? link! }}
-            controls={false}
-            paused={true}
-            style={{ width: "100%", height: "100%" }}
-            resizeMode="cover"
-          />
+          <VideoThumbnail uri={localPath ?? link!} style={{ width: "100%", height: "100%" }} />
           <View className="absolute top-0 left-0 right-0 bottom-0 flex justify-center items-center bg-black/30">
             <Text className="text-white text-4xl font-bold">▶</Text>
           </View>
@@ -232,13 +233,7 @@ export function WaInboxVideo({ messageContent }: { messageContent: string }) {
       >
         <View className="flex-1 bg-black">
           {/* Video */}
-          <Video
-            source={{ uri: localPath ?? link! }}
-            controls
-            paused={false}
-            style={{ width: "100%", height: "100%" }}
-            resizeMode="contain"
-          />
+          <VideoPlayback uri={localPath ?? link!} style={{ width: "100%", height: "100%" }} />
 
           {/* Close button ABOVE video */}
           <Pressable

@@ -2,8 +2,6 @@ import { useColorScheme } from "nativewind";
 import React from "react";
 import {
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -17,6 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft } from "lucide-react-native";
 
 import { getInboxRowTheme, type InboxRowTheme } from "@/constants/inboxDesign";
+import KeyboardAvoider from "@/components/common/KeyboardAvoider";
 
 /**
  * The cashier's primitives.
@@ -542,10 +541,8 @@ export function StepScroll({
   const { t } = useTheme();
   const insets = useSafeAreaInsets();
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
+    // The footer's safe-area padding goes behind the keyboard, so it sits right on it.
+    <KeyboardAvoider bottomInset={footer ? insets.bottom : 0}>
       <ScrollView
         contentContainerStyle={{
           padding: 16,
@@ -573,7 +570,7 @@ export function StepScroll({
           {footer}
         </View>
       ) : null}
-    </KeyboardAvoidingView>
+    </KeyboardAvoider>
   );
 }
 

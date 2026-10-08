@@ -3,7 +3,7 @@
     "name": "RateUp",
     "slug": "rateup",
     "version": "1.2.7",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "rateup",
     "userInterfaceStyle": "automatic",
@@ -66,19 +66,7 @@
         }
       ],
       "./plugins/withR8Optimize.js",
-      [
-        "react-native-video",
-        {
-          "enableNotificationControls": false,
-          "enableADSExtension": false,
-          "androidExtensions": {
-            "useExoplayerRtsp": false,
-            "useExoplayerSmoothStreaming": true,
-            "useExoplayerDash": true,
-            "useExoplayerHls": true
-          }
-        }
-      ],
+      "expo-video",
       ["expo-apple-authentication"],
       [
         "@react-native-google-signin/google-signin",
@@ -140,6 +128,12 @@
           "iosShareExtensionName": "RateUp Share",
           "androidIntentFilters": ["image/*", "video/*"],
           "androidMultiIntentFilters": ["image/*", "video/*"]
+        }
+      ],
+      [
+        "expo-screen-orientation",
+        {
+          "initialOrientation": "PORTRAIT_UP"
         }
       ]
     ],

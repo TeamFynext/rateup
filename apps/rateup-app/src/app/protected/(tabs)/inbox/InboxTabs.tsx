@@ -1,14 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  BackHandler,
-  View,
-  Text,
-  Platform,
-  KeyboardAvoidingView,
-  useColorScheme,
-  Pressable,
-  ScrollView,
-} from "react-native";
+import { BackHandler, View, Text, useColorScheme, Pressable, ScrollView } from "react-native";
 import { useContactCounts } from "@/api/inbox/contacts/contacts.query";
 import InboxButtons from "@/components/inbox/InboxButtons";
 import { useChatFilterStore, useSelectedTabStore } from "@/utils/store";
@@ -25,6 +16,7 @@ import { Colors } from "@/constants/colors";
 import { useAuth } from "@/context/AuthContext";
 import { useInboxSelectionStore } from "@/store/inboxSelectionStore";
 import BulkAssignSheet from "@/components/inbox/BulkAssignSheet";
+import KeyboardAvoider from "@/components/common/KeyboardAvoider";
 
 /**
  * The design's inbox segment (`RateUp Mobile Inbox.dc.html`, the `segments`
@@ -240,10 +232,7 @@ export default function InboxLayout() {
         backgroundColor: isDark ? Colors.dark.bg : Colors.light.bg,
       }}
     >
-      <KeyboardAvoidingView
-        className="flex-1"
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
+      <KeyboardAvoider>
         {/* The design's search view replaces the list screen rather than
             layering over it, so only one <Inbox> is ever mounted against the
             contacts store. */}
@@ -467,7 +456,7 @@ export default function InboxLayout() {
             </View>
           </>
         )}
-      </KeyboardAvoidingView>
+      </KeyboardAvoider>
       <BulkAssignSheet
         visible={bulkAssignOpen}
         onClose={() => setBulkAssignOpen(false)}

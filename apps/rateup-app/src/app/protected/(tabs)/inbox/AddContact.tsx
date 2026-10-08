@@ -5,8 +5,6 @@ import {
   TextInput,
   Pressable,
   FlatList,
-  KeyboardAvoidingView,
-  Platform,
   ActivityIndicator,
   useWindowDimensions,
   useColorScheme,
@@ -17,6 +15,7 @@ import { useRouter } from "expo-router";
 import { createContact } from "@/api/inbox/contacts/contacts.api";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@/constants/constants";
+import KeyboardAvoider from "@/components/common/KeyboardAvoider";
 
 export default function AddContactScreen() {
   const [name, setName] = useState("");
@@ -88,11 +87,7 @@ export default function AddContactScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-slate-950 py-4">
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
-        className="flex-grow px-4 bg-white dark:bg-slate-950"
-      >
+      <KeyboardAvoider className="flex-grow px-4 bg-white dark:bg-slate-950">
         <View className="flex-grow justify-between">
           {/* Form */}
           <View>
@@ -219,7 +214,7 @@ export default function AddContactScreen() {
             </Pressable>
           </View>
         </View>
-      </KeyboardAvoidingView>
+      </KeyboardAvoider>
     </SafeAreaView>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   TextInput,
@@ -28,7 +28,8 @@ import {
 } from "@/utils/attachments";
 import { useMessagesStore, useContactsStore } from "@/store/inboxStore";
 import { VoiceNoteBar, VoiceNoteMic, useVoiceNote, type VoiceNoteFile } from "./VoiceNote";
-import MediaPreviewModal from "./MediaPreviewModal";
+import { mediaPreviewActions, useMediaPreviewStore } from "@/utils/mediaPreview";
+import { router } from "expo-router";
 import { prepareSharedFile, useSharedFilesStore } from "@/utils/sharedFiles";
 import {
   Camera,
@@ -221,9 +222,14 @@ const MessageSendPanel = ({
   const [templateOptionsVisible, setTemplateOptionsVisible] = useState(false);
   const [templateModalVisible, setTemplateModalVisible] = useState(false);
   const [mediaPanelVisible, setMediaPanelVisible] = useState(false);
-  const [preview, setPreview] = useState({ visible: false, index: 0 });
-  // Where each attachment is on the device, so the preview shows it while it uploads.
-  const [localUris, setLocalUris] = useState<Record<string, string>>({});
+  const addLocalUris = useMediaPreviewStore((s) => s.addLocalUris);
+  // Opens the attachment preview on `index`, or just moves to it when already open
+  // (e.g. "+" in the preview added more).
+  const openPreview = (index: number) => {
+    const store = useMediaPreviewStore.getState();
+    store.setIndex(index);
+    if (!store.isOpen) router.push("/protected/chat/MediaPreview" as never);
+  };
   const [isPrivate, setIsPrivate] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const noteTheme = getInboxRowTheme(isDark).note;
@@ -337,11 +343,8 @@ const MessageSendPanel = ({
       addMedia({ key: tempKey, type: file.kind, name: file.name, url: "", uploading: true });
       return { file, tempKey };
     });
-    setLocalUris((prev) => ({
-      ...prev,
-      ...Object.fromEntries(pending.map(({ file, tempKey }) => [tempKey, file.uri])),
-    }));
-    if (showPreview) setPreview({ visible: true, index: firstNewIndex });
+    addLocalUris(Object.fromEntries(pending.map(({ file, tempKey }) => [tempKey, file.uri])));
+    if (showPreview) openPreview(firstNewIndex);
 
     await forEachLimited(pending, UPLOAD_CONCURRENCY, async ({ file, tempKey }) => {
       try {
@@ -356,7 +359,7 @@ const MessageSendPanel = ({
           void deleteUploadedFiles({ fileKeyArray: [{ Key: key }] });
           return;
         }
-        setLocalUris((prev) => ({ ...prev, [key]: file.uri }));
+        addLocalUris({ [key]: file.uri });
         replaceMedia(tempKey, {
           key,
           type: file.kind,
@@ -458,14 +461,30 @@ const MessageSendPanel = ({
 
   // The preview's ✕ and the back button drop everything attached, as WhatsApp's do, and
   // delete the uploads from storage. Ones still uploading are deleted as they finish.
-  const discardAttachments = () => {
-    setPreview((p) => ({ ...p, visible: false }));
-    discardMedia();
-  };
+  const discardAttachments = () => discardMedia();
 
   // The draft store outlives this chat, so leaving it with files attached would carry
   // them into the next chat opened and leave them in storage. Leaving discards them.
   useEffect(() => () => useMediaStore.getState().discardMedia(), []);
+
+  // What the preview screen calls back into. Refreshed every render, so it always
+  // reaches the current form and draft.
+  useLayoutEffect(() => {
+    mediaPreviewActions.current = {
+      send: () => handleSend(),
+      discard: discardAttachments,
+      addMore: pickFromGallery,
+      remove: removeMedia,
+      getCaption: () => form.getValues("text.body") ?? "",
+      setCaption: (text) => setValue("text.body", text, { shouldDirty: true }),
+    };
+  });
+  useEffect(
+    () => () => {
+      mediaPreviewActions.current = null;
+    },
+    [],
+  );
 
   const attachmentActions = [
     {
@@ -739,12 +758,7 @@ const MessageSendPanel = ({
                     ) : item.type === "image" ? (
                       <Pressable
                         className="w-full h-full"
-                        onPress={() =>
-                          setPreview({
-                            visible: true,
-                            index: media.findIndex((m) => m.key === item.key),
-                          })
-                        }
+                        onPress={() => openPreview(media.findIndex((m) => m.key === item.key))}
                         accessibilityRole="button"
                         accessibilityLabel={`Preview ${item.name}`}
                       >
@@ -773,23 +787,6 @@ const MessageSendPanel = ({
               })}
             </View>
           )}
-
-          <MediaPreviewModal
-            visible={preview.visible}
-            items={media}
-            index={preview.index}
-            onIndexChange={(index) => setPreview((p) => ({ ...p, index }))}
-            localUriFor={(key) => localUris[key]}
-            caption={textBody ?? ""}
-            onChangeCaption={(text) => setValue("text.body", text, { shouldDirty: true })}
-            onRemove={removeMedia}
-            onAddMore={pickFromGallery}
-            onSend={() => {
-              setPreview((p) => ({ ...p, visible: false }));
-              handleSend();
-            }}
-            onDiscard={discardAttachments}
-          />
 
           {mediaPanelVisible && (
             <View className="px-3.5 pt-3 pb-1">

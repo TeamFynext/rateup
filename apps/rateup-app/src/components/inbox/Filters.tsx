@@ -1,5 +1,5 @@
 import { useColorScheme } from "nativewind";
-import { View, Text, KeyboardAvoidingView, Pressable, Platform, ScrollView } from "react-native";
+import { View, Text, Pressable, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { useChatFilterStore, useSelectedTabStore } from "@/utils/store";
 import { useChatFilterData } from "@/api/inbox/contacts/contacts.query";
@@ -11,6 +11,7 @@ import { useLifeCyclesQuery } from "@/api/lifecycle/lifecycle.query";
 import { useWaSettings } from "@/api/whatsapp/template/whatsapp.query";
 import { WaMessageClosedStatus } from "@/constants/constants";
 import { Colors } from "@/constants/colors";
+import KeyboardAvoider from "@/components/common/KeyboardAvoider";
 
 const FiltersScreen = () => {
   const { colorScheme } = useColorScheme();
@@ -166,10 +167,7 @@ const FiltersScreen = () => {
 
   return (
     <View style={{ backgroundColor: bgColor }} className="flex-grow flex-1">
-      <KeyboardAvoidingView
-        className="flex-1"
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
+      <KeyboardAvoider>
         <View className="flex-1 justify-between px-4 pt-4">
           {/* Header */}
           <View className="flex-row justify-between items-center mb-6">
@@ -483,7 +481,7 @@ const FiltersScreen = () => {
             </Text>
           </Pressable>
         </View>
-      </KeyboardAvoidingView>
+      </KeyboardAvoider>
     </View>
   );
 };

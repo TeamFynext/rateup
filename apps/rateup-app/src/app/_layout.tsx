@@ -15,6 +15,7 @@ import { configurePlaybackAudioMode } from "@/utils/audio";
 import { Colors } from "@/constants/colors";
 import { NoticeHost } from "@/components/common/Notice";
 import { ShareIntentProvider } from "expo-share-intent";
+import { useOrientationLock } from "@/utils/useOrientationLock";
 import {
   Figtree_300Light,
   Figtree_800ExtraBold,
@@ -63,11 +64,10 @@ function RootLayout() {
   const isDark = colorScheme === "dark";
   return (
     <>
-      <StatusBar
-        barStyle={isDark ? "light-content" : "dark-content"}
-        backgroundColor={isDark ? Colors.dark.bg : "white"}
-        translucent
-      />
+      {/* Icon colour only. The app is edge-to-edge, so a status bar background or
+          `translucent` does nothing, and on Android 15+ they call APIs Play flags as
+          deprecated (`Window.setStatusBarColor`). Screens paint behind the bar. */}
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <Stack
         screenOptions={{
           headerShown: false,
@@ -86,6 +86,7 @@ function RootLayout() {
 
 export default function LayoutWrapper() {
   const { setColorScheme } = useColorScheme();
+  useOrientationLock();
   // Design System V2's split, the same one `rateup-ui/src/styles/foundation.css` sets:
   // Instrument Sans carries body and UI, Figtree the display sizes. Instrument Sans stops
   // at 700, which is why the two heaviest faces and the 300 label weight are Figtree's.

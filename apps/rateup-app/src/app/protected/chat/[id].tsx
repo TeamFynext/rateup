@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, useColorScheme } from "react-native";
-import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useLocalSearchParams } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ChatHeader from "@/components/chatDisplay/ChatHeader";
 import ChatFooter from "@/components/chatDisplay/ChatFooter";
 import ChatBody from "@/components/chatDisplay/ChatBody";
@@ -16,6 +16,7 @@ import { useContactsStore } from "@/store/inboxStore";
 import { loadContactFromDB } from "@/utils/sqlite";
 import { Colors } from "@/constants/colors";
 import { isSessionWindowOpen } from "@/utils/sessionWindow";
+import KeyboardAvoider from "@/components/common/KeyboardAvoider";
 
 /**
  * `/api/contact/:id` and the cached row both return a bare Contact, which carries no
@@ -27,6 +28,7 @@ const deriveSessionActive = isSessionWindowOpen;
 
 const ChatDisplay = () => {
   const params = useLocalSearchParams();
+  const insets = useSafeAreaInsets();
 
   // Pull all details from the global selected contact store instead of URL params
   const selectedContact = useSelectedContactStore((state) => state.selectedContact);
@@ -142,7 +144,9 @@ const ChatDisplay = () => {
         backgroundColor: isDark ? Colors.dark.bg : Colors.light.bg,
       }}
     >
-      <KeyboardAvoidingView behavior={"padding"} keyboardVerticalOffset={20} style={{ flex: 1 }}>
+      {/* The footer pads the bottom safe area; that padding goes behind the keyboard so
+          the composer sits right on it, as in WhatsApp, on every phone. */}
+      <KeyboardAvoider bottomInset={insets.bottom}>
         <ChatHeader
           id={id}
           name={name}
@@ -158,7 +162,7 @@ const ChatDisplay = () => {
         <ChatBody id={id} />
 
         <ChatFooter id={id} />
-      </KeyboardAvoidingView>
+      </KeyboardAvoider>
     </View>
   );
 };
