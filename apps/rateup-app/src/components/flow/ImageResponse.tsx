@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Modal, View, Pressable } from "react-native";
 import Image from "@/components/common/Image";
 import { X } from "lucide-react-native";
+import { useTheme } from "@/components/loyalty/cashier/ui";
 
 type ImageResponseProps = {
   info: string;
@@ -9,6 +10,7 @@ type ImageResponseProps = {
 };
 
 const ImageResponse = ({ info, onClose }: ImageResponseProps) => {
+  const { t } = useTheme();
   const [fullscreenVisible, setFullscreenVisible] = useState(false);
 
   const imageUrl = `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${info}`;
@@ -20,8 +22,19 @@ const ImageResponse = ({ info, onClose }: ImageResponseProps) => {
 
   return (
     <>
-      <Pressable onPress={() => setFullscreenVisible(true)} className="flex">
-        <Image source={{ uri: imageUrl }} className="h-48 w-48 rounded-lg" contentFit="cover" />
+      <Pressable
+        onPress={() => setFullscreenVisible(true)}
+        accessibilityRole="imagebutton"
+        accessibilityLabel="Open photo full screen"
+        style={{
+          alignSelf: "flex-start",
+          borderRadius: 12,
+          borderWidth: 1,
+          borderColor: t.border1,
+          overflow: "hidden",
+        }}
+      >
+        <Image source={{ uri: imageUrl }} style={{ width: 192, height: 192 }} contentFit="cover" />
       </Pressable>
 
       <Modal
@@ -33,7 +46,17 @@ const ImageResponse = ({ info, onClose }: ImageResponseProps) => {
           {/* Close Button */}
           <Pressable
             onPress={handleClose}
-            className="absolute top-5 right-5 bg-white/80 rounded-full p-2 z-10"
+            accessibilityRole="button"
+            accessibilityLabel="Close"
+            style={{
+              position: "absolute",
+              top: 20,
+              right: 20,
+              zIndex: 10,
+              padding: 8,
+              borderRadius: 999,
+              backgroundColor: "rgba(255,255,255,0.8)",
+            }}
           >
             <X size={20} color="black" />
           </Pressable>

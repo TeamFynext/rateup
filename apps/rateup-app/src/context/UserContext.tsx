@@ -182,6 +182,20 @@ const applyInboxUpdate = (inbox: orgWsMessage["inbox"] | undefined) => {
   messagesStore.mergeMessages(`${contactId}_all`, [message], false);
 };
 
+/**
+ * A note goes into the contact's cached threads and nowhere else: it is not
+ * customer traffic, so the row's preview, unread count and sort clock stay put.
+ */
+const applyInboxNote = (note: orgWsMessage["inbox_note"] | undefined) => {
+  if (!note?.contactId || !note.message) return;
+  const messagesStore = useMessagesStore.getState();
+  const prefix = `${note.contactId}_`;
+  const keys = new Set([`${prefix}all`]);
+  // Threads are also cached per channel, and every channel's thread shows notes.
+  for (const key of messagesStore.messagesByKey.keys()) if (key.startsWith(prefix)) keys.add(key);
+  for (const key of keys) messagesStore.mergeMessages(key, [note.message], false);
+};
+
 const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<any>(null);
   const [wsData, setWsData] = useState<orgWsMessage>({} as orgWsMessage);
@@ -245,6 +259,9 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
         }
         if (message?.type === "inbox") {
           applyInboxUpdate(message.inbox);
+        }
+        if (message?.type === "inbox_note") {
+          applyInboxNote(message.inbox_note);
         }
         setWsData(message);
       } catch (err) {

@@ -1,8 +1,5 @@
-import React from "react";
 import { Stack } from "expo-router";
 
-const WebFormLayout = () => {
+export default function FormsLayout() {
   return <Stack screenOptions={{ headerShown: false }} />;
-};
-
-export default WebFormLayout;
+}

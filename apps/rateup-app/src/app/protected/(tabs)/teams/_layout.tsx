@@ -1,8 +1,5 @@
-import React from "react";
 import { Stack } from "expo-router";
 
-const FlowLayout = () => {
+export default function TeamsLayout() {
   return <Stack screenOptions={{ headerShown: false }} />;
-};
-
-export default FlowLayout;
+}

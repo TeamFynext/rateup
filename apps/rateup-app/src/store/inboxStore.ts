@@ -855,6 +855,11 @@ export const useMessagesStore = create<MessagesStore>()(
             deleteMessageFromIDB(key, placeholderId);
           }
           const existingMsg = existing.get(id);
+          // A private note's placeholder shares its `messageId` with the stored row but
+          // not its row id, and SQLite keys on the row id — so it would outlive the swap.
+          if (existingMsg?.id && msg.id && existingMsg.id !== msg.id) {
+            deleteMessageFromIDB(key, existingMsg.id);
+          }
 
           if (existingMsg) {
             const merged = {

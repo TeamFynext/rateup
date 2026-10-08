@@ -7,6 +7,7 @@ import { Stack } from "expo-router";
 import { useColorScheme } from "react-native";
 import { useNotificationDeepLink } from "@/utils/useNotificationDeepLink";
 import { usePushTokenSync } from "@/utils/usePushTokenSync";
+import { useShareIntentRedirect } from "@/utils/useShareIntentRedirect";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ProtectedLayout() {
@@ -18,6 +19,9 @@ export default function ProtectedLayout() {
   // Re-registers the device token on every foreground, so a rotated token is
   // not left stale for the life of the session.
   usePushTokenSync();
+  // Here for the same reason as the notification deep link: something shared in while
+  // signed out waits until sign-in instead of opening a chat list.
+  useShareIntentRedirect();
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <AuthProvider>

@@ -1,279 +1,192 @@
-import { useColorScheme } from "nativewind";
+import { SmileIcon, StarIcon, TargetIcon, UsersIcon } from "lucide-react-native";
 import React, { useState } from "react";
-import { View, Text, Pressable, Dimensions, ScrollView } from "react-native";
-import { LineChart } from "react-native-gifted-charts";
+import { Dimensions, Text, View } from "react-native";
+import { BarChart } from "react-native-gifted-charts";
+
 import { useAllResponseNPSForGraph } from "@/api/response/response.query";
-import { AngryIcon, LaughIcon, MehIcon, StarIcon, TargetIcon } from "lucide-react-native";
+import SegmentedControl from "@/components/common/SegmentedControl";
+import { FONT, NUM, useTheme } from "@/components/loyalty/cashier/ui";
+import { CardSkeleton, SectionCard, Swatch } from "@/components/surveyResults/kit";
+import { getSentiment, npsColors } from "@/constants/sentimentScale";
+
+const PERIODS = [
+  { value: "hourly", label: "Hourly" },
+  { value: "daily", label: "Daily" },
+  { value: "weekly", label: "Weekly" },
+] as const;
+
+type Period = (typeof PERIODS)[number]["value"];
+
+type GraphPoint = {
+  date: string;
+  total: number;
+  promoters: number;
+  passives: number;
+  detractors: number;
+  happinessIndex: number;
+  npsScore: number;
+  avgNPSRating: number;
+};
+
+/** Page gutter, card padding and both y-axis label columns. */
+const CHART_CHROME = 32 + 32 + 2 * 34;
+
+const num = (n: unknown) => (typeof n === "number" ? n : Number(n) || 0);
 
 const HappinessJourney = ({ surveyId }: { surveyId: string }) => {
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
-
-  const [timePeriod, setTimePeriod] = useState<"hourly" | "daily" | "weekly">("daily");
-
-  const [selectedPoint, setSelectedPoint] = useState<any>(null);
-
+  const { t, isDark } = useTheme();
+  const colors = npsColors(getSentiment(isDark));
+  const [period, setPeriod] = useState<Period>("daily");
+  const [selected, setSelected] = useState<number | null>(null);
   const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const { data = [], isLoading } = useAllResponseNPSForGraph(period, userTimeZone, surveyId);
 
-  const screenWidth = Dimensions.get("window").width;
+  const points = data as GraphPoint[];
+  // Until a bar is tapped, the summary reads the latest period that had answers.
+  const latest = points.reduce((last, p, i) => (num(p.total) > 0 ? i : last), -1);
+  const focusIndex = selected ?? latest;
+  const point = focusIndex >= 0 ? points[focusIndex] : undefined;
 
-  const { data: graphResponse = [], isLoading } = useAllResponseNPSForGraph(
-    timePeriod,
-    userTimeZone,
-    surveyId,
-  );
+  const axisText = { fontFamily: FONT.regular, fontSize: 10, color: t.fg3 };
+  const stackData = points.map((p, index) => ({
+    label: p.date,
+    onPress: () => setSelected(index),
+    stacks: [
+      { value: num(p.detractors), color: colors.detractor },
+      { value: num(p.passives), color: colors.passive },
+      {
+        value: num(p.promoters),
+        color: colors.promoter,
+        borderTopLeftRadius: 3,
+        borderTopRightRadius: 3,
+      },
+    ],
+  }));
+  const lineData = points.map((p) => ({ value: num(p.happinessIndex) }));
 
-  const totalResponses = graphResponse
-    .map((item: any, index: number) => ({
-      value: Number(item.total) || 0,
-      label: item.date,
-      index,
-    }))
-    .filter((item: any) => !isNaN(item.value));
-
-  const happinessIndex = graphResponse
-    .map((item: any, index: number) => ({
-      value: Number(item.happinessIndex) || 0,
-      index,
-    }))
-    .filter((item: any) => !isNaN(item.value));
-
-  const getCurrentMonth = (): string[] => {
-    const monthNames = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-    ];
-
-    const now = new Date();
-
-    return [monthNames[now.getMonth()]];
-  };
-
-  const firstNonZeroIndex = totalResponses.findIndex((item: any) => item.value > 0);
-
-  const periods = ["hourly", "daily", "weekly"] as const;
+  const metrics = [
+    {
+      label: "NPS score",
+      Icon: TargetIcon,
+      value: point ? `${num(point.npsScore) > 0 ? "+" : ""}${num(point.npsScore).toFixed(1)}` : "—",
+    },
+    {
+      label: "Average NPS rating",
+      Icon: StarIcon,
+      value: point ? num(point.avgNPSRating).toFixed(1) : "—",
+    },
+    {
+      label: "Happiness index",
+      Icon: SmileIcon,
+      value: point ? num(point.happinessIndex).toFixed(1) : "—",
+    },
+    { label: "Total responses", Icon: UsersIcon, value: point ? String(num(point.total)) : "—" },
+  ];
+  const breakdown = [
+    { label: "Promoters", color: colors.promoter, value: point?.promoters },
+    { label: "Passives", color: colors.passive, value: point?.passives },
+    { label: "Detractors", color: colors.detractor, value: point?.detractors },
+  ];
 
   return (
-    <ScrollView
-      className="bg-white dark:bg-slate-950 p-4 rounded-2xl flex gap-8"
-      contentContainerStyle={{ paddingBottom: 10 }}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* Filters */}
-      <View className="flex-row items-center justify-between">
-        {periods.map((period) => (
-          <Pressable
-            key={period}
-            onPress={() => setTimePeriod(period)}
-            className={`px-4 py-1.5 rounded-full ${
-              timePeriod === period ? "bg-black dark:bg-white" : "bg-[#F5F5F5] dark:bg-slate-800"
-            }`}
-          >
-            <Text
-              className={`text-md px-2 py-1 font-semibold ${
-                timePeriod === period ? "text-white dark:text-black" : "text-black dark:text-white"
-              }`}
+    <SectionCard title="Happiness Journey" description="Answers per period, split by NPS group.">
+      <SegmentedControl
+        options={PERIODS}
+        value={period}
+        inset={0}
+        onChange={(p) => {
+          setPeriod(p);
+          setSelected(null);
+        }}
+      />
+
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+        <Swatch color={colors.promoter} label="Promoters" />
+        <Swatch color={colors.passive} label="Passives" />
+        <Swatch color={colors.detractor} label="Detractors" />
+        <Swatch color={t.fg1} label="Happiness index" />
+      </View>
+
+      {isLoading ? (
+        <CardSkeleton height={240} />
+      ) : (
+        <BarChart
+          stackData={stackData}
+          height={200}
+          width={Dimensions.get("window").width - CHART_CHROME}
+          barWidth={14}
+          spacing={22}
+          initialSpacing={10}
+          noOfSections={4}
+          yAxisThickness={0}
+          xAxisThickness={1}
+          xAxisColor={t.border1}
+          rulesType="solid"
+          rulesColor={t.rowDivider}
+          yAxisTextStyle={axisText}
+          xAxisLabelTextStyle={axisText}
+          labelWidth={44}
+          scrollToIndex={latest >= 0 ? latest : undefined}
+          showLine
+          lineData={lineData}
+          lineConfig={{
+            isSecondary: true,
+            color: t.fg1,
+            thickness: 2,
+            curved: true,
+            dataPointsColor: t.fg1,
+            dataPointsRadius: 3,
+            initialSpacing: 17,
+          }}
+          secondaryYAxis={{
+            maxValue: 10,
+            noOfSections: 4,
+            yAxisThickness: 0,
+            yAxisTextStyle: axisText,
+          }}
+        />
+      )}
+
+      <View style={{ gap: 4 }}>
+        <Text style={{ fontFamily: FONT.medium, fontSize: 12, color: t.fg3 }}>
+          {point ? point.date : "No answers in this range"}
+        </Text>
+        <View style={{ borderRadius: 12, borderWidth: 1, borderColor: t.border1 }}>
+          {metrics.map(({ label, Icon, value }, i) => (
+            <View
+              key={label}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 10,
+                paddingHorizontal: 12,
+                paddingVertical: 10,
+                borderTopWidth: i ? 1 : 0,
+                borderTopColor: t.rowDivider,
+              }}
             >
-              {period.charAt(0).toUpperCase() + period.slice(1)}
-            </Text>
-          </Pressable>
-        ))}
-
-        <View className="px-5 py-1.5 rounded-full bg-[#F5F5F5] dark:bg-slate-800">
-          <Text className="text-md font-semibold text-black dark:text-white py-1 px-2">
-            {getCurrentMonth()}
-          </Text>
+              <Icon size={16} color={t.fg3} />
+              <Text style={{ flex: 1, fontFamily: FONT.regular, fontSize: 13, color: t.fg2 }}>
+                {label}
+              </Text>
+              <Text style={{ fontFamily: FONT.semibold, fontSize: 14, color: t.fg1, ...NUM }}>
+                {value}
+              </Text>
+            </View>
+          ))}
+        </View>
+        <View style={{ flexDirection: "row", gap: 8, marginTop: 8 }}>
+          {breakdown.map(({ label, color, value }) => (
+            <View key={label} style={{ flex: 1, gap: 2 }}>
+              <Swatch color={color} label={label} />
+              <Text style={{ fontFamily: FONT.semibold, fontSize: 18, color: t.fg1, ...NUM }}>
+                {point ? num(value) : "—"}
+              </Text>
+            </View>
+          ))}
         </View>
       </View>
-
-      {/* Legend */}
-      <View className="flex-row justify-between mt-4 px-1">
-        <View className="flex-row items-center gap-1 justify-center">
-          <View className="w-2.5 h-2.5 rounded-full bg-blue-700" />
-
-          <Text className="text-md text-slate-500 dark:text-slate-400 font-semibold">
-            Responses
-          </Text>
-        </View>
-
-        <View className="flex-row items-center gap-1 justify-center">
-          <View className="w-2.5 h-2.5 rounded-full bg-green-600" />
-
-          <Text className="text-md text-slate-500 dark:text-slate-400 font-semibold">
-            Happiness Index
-          </Text>
-        </View>
-      </View>
-
-      {/* Chart */}
-      <View>
-        {isLoading ? (
-          <View
-            style={{
-              backgroundColor: isDark ? "#1e293b" : "#e2e8f0",
-              borderRadius: 8,
-              height: 240,
-              width: screenWidth,
-              padding: 3,
-            }}
-          />
-        ) : (
-          <LineChart
-            data={totalResponses}
-            secondaryData={happinessIndex}
-            scrollToIndex={firstNonZeroIndex}
-            scrollToEnd={false}
-            showScrollIndicator={true}
-            height={220}
-            width={screenWidth - 110}
-            spacing={30}
-            curved
-            initialSpacing={10}
-            isAnimated
-            yAxisTextStyle={{
-              color: isDark ? "#93C5FD" : "#1e3a8a",
-            }}
-            yAxisColor={isDark ? "#334155" : "#cbd5e1"}
-            yAxisThickness={1}
-            color="#1D4ED8"
-            thickness={2}
-            dataPointsHeight={6}
-            dataPointsWidth={6}
-            xAxisLabelTextStyle={{
-              color: isDark ? "#94A3B8" : "#94a3b8",
-              fontSize: 10,
-            }}
-            xAxisThickness={1}
-            rulesType="solid"
-            rulesColor={isDark ? "#334155" : "#e2e8f0"}
-            showVerticalLines={false}
-            showXAxisIndices={false}
-            secondaryYAxis={{
-              maxValue: 10,
-              yAxisColor: isDark ? "#334155" : "#cbd5e1",
-              yAxisTextStyle: {
-                color: "#16A34A",
-              },
-            }}
-            secondaryLineConfig={{
-              color: "#16A34A",
-              thickness: 2,
-            }}
-            onFocus={(params: any) => {
-              if (typeof params?.index === "number") {
-                const completeDataPoint = graphResponse[params.index];
-
-                setSelectedPoint(completeDataPoint);
-              }
-            }}
-            focusEnabled
-            showTextOnFocus
-          />
-        )}
-      </View>
-
-      {/* Stats */}
-      <View className="px-4 py-1 flex justify-center gap-3">
-        {/* NPS */}
-        <View className="flex-row justify-between items-center">
-          <View className="flex-row gap-2 items-center justify-between">
-            <View className="rounded-full p-1 bg-[#2B82DE1F]">
-              <TargetIcon color={"#2B82DE"} width={25} height={25} />
-            </View>
-
-            <Text className="text-rateUpTextGray dark:text-slate-300 font-semibold text-md">
-              NPS Score
-            </Text>
-          </View>
-
-          <Text className="text-[#00BF83] font-bold text-xl">
-            {selectedPoint
-              ? selectedPoint.npsScore > 0
-                ? `+${selectedPoint.npsScore.toFixed(1)}`
-                : selectedPoint.npsScore.toFixed(1)
-              : 0}
-          </Text>
-        </View>
-
-        {/* Avg NPS */}
-        <View className="flex-row justify-between items-center">
-          <View className="flex-row gap-2 items-center justify-between">
-            <View className="rounded-full p-1 bg-[#2B82DE1F]">
-              <StarIcon color={"#2B82DE"} width={25} height={25} />
-            </View>
-
-            <Text className="text-rateUpTextGray dark:text-slate-300 font-semibold text-md">
-              Average NPS Rating
-            </Text>
-          </View>
-
-          <Text className="text-[#00BF83] font-bold text-xl">
-            {selectedPoint ? selectedPoint.avgNPSRating.toFixed(1) : 0}
-          </Text>
-        </View>
-
-        {/* Promoters */}
-        <View className="flex-row justify-between items-center">
-          <View className="flex-row gap-2 items-center justify-between">
-            <View className="rounded-full p-1 bg-[#00BF831F]">
-              <LaughIcon color={"#00BF83"} width={25} height={25} />
-            </View>
-
-            <Text className="text-rateUpTextGray dark:text-slate-300 font-semibold text-md">
-              Promoters
-            </Text>
-          </View>
-
-          <Text className="text-[#00BF83] font-bold text-xl">
-            {selectedPoint ? selectedPoint.promoters : 0}
-          </Text>
-        </View>
-
-        {/* Passives */}
-        <View className="flex-row justify-between items-center">
-          <View className="flex-row gap-2 items-center justify-between">
-            <View className="rounded-full p-1 bg-[#FFC1071F]">
-              <MehIcon color={"#FFC107"} width={25} height={25} />
-            </View>
-
-            <Text className="text-rateUpTextGray dark:text-slate-300 font-semibold text-md">
-              Passives
-            </Text>
-          </View>
-
-          <Text className="text-[#FFC107] font-bold text-xl">
-            {selectedPoint ? selectedPoint.passives : 0}
-          </Text>
-        </View>
-
-        {/* Detractors */}
-        <View className="flex-row justify-between items-center">
-          <View className="flex-row gap-2 items-center justify-between">
-            <View className="rounded-full p-1 bg-[#FF61611F]">
-              <AngryIcon color={"#FF6161"} width={25} height={25} />
-            </View>
-
-            <Text className="text-rateUpTextGray dark:text-slate-300 font-semibold text-md">
-              Detractors
-            </Text>
-          </View>
-
-          <Text className="text-[#FF6161] font-bold text-xl">
-            {selectedPoint ? selectedPoint.detractors : 0}
-          </Text>
-        </View>
-      </View>
-    </ScrollView>
+    </SectionCard>
   );
 };
 

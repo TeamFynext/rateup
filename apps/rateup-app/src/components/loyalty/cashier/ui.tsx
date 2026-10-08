@@ -2,8 +2,6 @@ import { useColorScheme } from "nativewind";
 import React from "react";
 import {
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -17,6 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft } from "lucide-react-native";
 
 import { getInboxRowTheme, type InboxRowTheme } from "@/constants/inboxDesign";
+import KeyboardAvoider from "@/components/common/KeyboardAvoider";
 
 /**
  * The cashier's primitives.
@@ -90,9 +89,9 @@ export const LABEL: TextStyle = {
  * ground, which reads on screen as a button that simply is not there.
  *
  * The state form below is equivalent, immune to the interop, and the only way a pressable
- * in this folder should be styled.
+ * in this app should be styled.
  */
-function usePressed() {
+export function usePressed() {
   const [pressed, setPressed] = React.useState(false);
   return {
     pressed,
@@ -431,12 +430,20 @@ export function Field({
 interface CashierInputProps extends Omit<TextInputProps, "style"> {
   /** A leading symbol — the currency, on the amount field. */
   prefix?: string;
+  /** A trailing control, such as a show-password toggle. */
+  suffix?: React.ReactNode;
   /** Bigger type for the one number staff read aloud. */
   emphasis?: boolean;
   invalid?: boolean;
 }
 
-export function CashierInput({ prefix, emphasis, invalid, ...props }: Readonly<CashierInputProps>) {
+export function CashierInput({
+  prefix,
+  suffix,
+  emphasis,
+  invalid,
+  ...props
+}: Readonly<CashierInputProps>) {
   const { t } = useTheme();
   return (
     <View
@@ -469,6 +476,7 @@ export function CashierInput({ prefix, emphasis, invalid, ...props }: Readonly<C
           padding: 0,
         }}
       />
+      {suffix}
     </View>
   );
 }
@@ -533,10 +541,8 @@ export function StepScroll({
   const { t } = useTheme();
   const insets = useSafeAreaInsets();
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
+    // The footer's safe-area padding goes behind the keyboard, so it sits right on it.
+    <KeyboardAvoider bottomInset={footer ? insets.bottom : 0}>
       <ScrollView
         contentContainerStyle={{
           padding: 16,
@@ -564,7 +570,7 @@ export function StepScroll({
           {footer}
         </View>
       ) : null}
-    </KeyboardAvoidingView>
+    </KeyboardAvoider>
   );
 }
 

@@ -1,106 +1,51 @@
-import { useColorScheme } from "nativewind";
+import { MessageSquareText, Percent, Play, Users } from "lucide-react-native";
 import React, { useMemo } from "react";
+import { View } from "react-native";
+
 import { useResponseCount } from "@/api/response/response.query";
 import { useGetSurveyStats } from "@/api/survey/survey.query";
-import { Text, View } from "react-native";
+import { useTheme } from "@/components/loyalty/cashier/ui";
+import { StatTile } from "@/components/surveyResults/kit";
 
 const SurveyStatsWebForm = ({ surveyId }: { surveyId: string }) => {
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
-
+  const { t } = useTheme();
   const { data: responseCountData } = useResponseCount(surveyId);
-
-  const responseCount = useMemo(() => responseCountData?.all, [responseCountData]);
-
   const { data: surveyStats } = useGetSurveyStats(surveyId);
 
-  const { visited, started } = useMemo(() => {
-    let filteredStats = surveyStats ? [...surveyStats] : [];
+  const responseCount: number = responseCountData?.all ?? 0;
+  const { visited, started } = useMemo(
+    () =>
+      (surveyStats ?? []).reduce(
+        (acc: { visited: number; started: number }, curr: any) => {
+          acc.visited += curr?.visited ?? 0;
+          acc.started += curr?.started ?? 0;
+          return acc;
+        },
+        { visited: 0, started: 0 },
+      ),
+    [surveyStats],
+  );
 
-    return filteredStats?.reduce(
-      (acc, curr) => {
-        acc.visited += curr?.visited ?? 0;
-        acc.started += curr?.started ?? 0;
+  // More responses than visits means the visit counter missed some; a rate would be nonsense.
+  const rate =
+    responseCount > visited
+      ? "—"
+      : `${visited > 0 ? Number(((responseCount / visited) * 100).toFixed(1)) : 0}%`;
 
-        return acc;
-      },
-      { visited: 0, started: 0 },
-    );
-  }, [surveyStats]);
-
-  const { responseRatePercentage } = getResponseRateInfo(responseCount, visited);
-
-  const stats = [
-    {
-      title: "Total Visits",
-      value: visited ?? "NA",
-    },
-    {
-      title: "Started",
-      value: started ?? "NA",
-    },
-    {
-      title: "Total Responses",
-      value: responseCount ?? 0,
-    },
-    {
-      title: "Response Rate",
-      value: responseRatePercentage,
-    },
-  ];
+  const icon = (Icon: typeof Users) => <Icon size={14} color={t.fg4} />;
 
   return (
-    <View className="flex-row flex-wrap justify-between">
-      {stats.map(({ title, value }) => (
-        <View
-          key={title}
-          className="w-[48%] rounded-2xl p-4 mb-3 border"
-          style={{
-            backgroundColor: isDark ? "#0f172a" : "#FAFAFA",
-            borderColor: isDark ? "#1e293b" : "#E2E5ED",
-          }}
-        >
-          <View className="items-center justify-center">
-            <Text
-              className="text-4xl font-bold"
-              style={{
-                color: isDark ? "#60A5FA" : "#004F98",
-              }}
-            >
-              {value}
-            </Text>
-
-            <Text
-              className="text-sm mt-1"
-              style={{
-                color: isDark ? "#94A3B8" : "#7A8289",
-              }}
-            >
-              {title}
-            </Text>
-          </View>
-        </View>
-      ))}
+    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
+      <StatTile
+        label="Total responses"
+        value={responseCount.toLocaleString()}
+        icon={icon(MessageSquareText)}
+      />
+      <StatTile label="Started" value={started.toLocaleString()} icon={icon(Play)} />
+      <StatTile label="Total visits" value={visited.toLocaleString()} icon={icon(Users)} />
+      <StatTile label="Response rate" value={rate} icon={icon(Percent)} />
     </View>
   );
 };
 
 export default SurveyStatsWebForm;
-
-function getResponseRateInfo(responseCount: number, visited: number) {
-  if (responseCount > visited) {
-    return {
-      responseRate: "NA",
-      responseRatePercentage: "NA",
-    };
-  }
-
-  const rate = visited > 0 ? Number(((responseCount / visited) * 100).toFixed(1)) : 0;
-
-  const percentage = `${rate}%`;
-
-  return {
-    responseRate: rate,
-    responseRatePercentage: percentage,
-  };
-}

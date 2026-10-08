@@ -2,8 +2,8 @@
   "expo": {
     "name": "RateUp",
     "slug": "rateup",
-    "version": "1.2.4",
-    "orientation": "portrait",
+    "version": "1.2.7",
+    "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "rateup",
     "userInterfaceStyle": "automatic",
@@ -13,19 +13,7 @@
       "usesAppleSignIn": true,
       "bundleIdentifier": "com.rateupapp.rateup",
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "Allow RateUp to access microphone.",
-        "CFBundleURLTypes": [
-          {
-            "CFBundleURLSchemes": [
-              "com.googleusercontent.apps.42123891439-smrmrokcalpi6j7m1dg1ep23keh4829f"
-            ]
-          },
-          {
-            "CFBundleURLSchemes": [
-              "com.googleusercontent.apps.42123891439-smrmrokcalpi6j7m1dg1ep23keh4829f"
-            ]
-          }
-        ],
+        "NSMicrophoneUsageDescription": "Allow RateUp to use your microphone to record voice notes and videos for customer chats.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -36,6 +24,11 @@
         "android.permission.MODIFY_AUDIO_SETTINGS",
         "android.permission.FOREGROUND_SERVICE",
         "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+      ],
+      "blockedPermissions": [
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_MEDIA_VISUAL_USER_SELECTED"
       ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
@@ -52,6 +45,14 @@
     "plugins": [
       "expo-router",
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow RateUp to access your photos to send them in customer chats and to set your profile photo.",
+          "cameraPermission": "Allow RateUp to use your camera to scan customer loyalty cards and to take photos and videos to send in customer chats.",
+          "microphonePermission": "Allow RateUp to use your microphone to record voice notes and videos for customer chats."
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "ios": {
@@ -65,21 +66,14 @@
         }
       ],
       "./plugins/withR8Optimize.js",
+      "expo-video",
+      ["expo-apple-authentication"],
       [
-        "react-native-video",
+        "@react-native-google-signin/google-signin",
         {
-          "enableNotificationControls": false,
-          "enableADSExtension": false,
-          "androidExtensions": {
-            "useExoplayerRtsp": false,
-            "useExoplayerSmoothStreaming": true,
-            "useExoplayerDash": true,
-            "useExoplayerHls": true
-          }
+          "iosUrlScheme": "com.googleusercontent.apps.42123891439-smrmrokcalpi6j7m1dg1ep23keh4829f"
         }
       ],
-      ["expo-apple-authentication"],
-      "@react-native-google-signin/google-signin",
       [
         "expo-notifications",
         {
@@ -100,7 +94,7 @@
       [
         "expo-audio",
         {
-          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone.",
+          "microphonePermission": "Allow RateUp to use your microphone to record voice notes and videos for customer chats.",
           "enableBackgroundPlayback": false,
           "enableBackgroundRecording": false
         }
@@ -120,8 +114,26 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow $(PRODUCT_NAME) to scan customer loyalty cards.",
+          "cameraPermission": "Allow RateUp to use your camera to scan customer loyalty cards and to take photos and videos to send in customer chats.",
           "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-share-intent",
+        {
+          "iosActivationRules": {
+            "NSExtensionActivationSupportsImageWithMaxCount": 10,
+            "NSExtensionActivationSupportsMovieWithMaxCount": 10
+          },
+          "iosShareExtensionName": "RateUp Share",
+          "androidIntentFilters": ["image/*", "video/*"],
+          "androidMultiIntentFilters": ["image/*", "video/*"]
+        }
+      ],
+      [
+        "expo-screen-orientation",
+        {
+          "initialOrientation": "PORTRAIT_UP"
         }
       ]
     ],
@@ -129,7 +141,7 @@
       "typedRoutes": true
     },
     "runtimeVersion": {
-      "policy": "fingerprint"
+      "policy": "appVersion"
     },
     "updates": {
       "url": "https://u.expo.dev/62982a5a-c2c6-4de4-931a-6af66d273ba8"

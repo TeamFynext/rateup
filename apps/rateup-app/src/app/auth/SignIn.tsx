@@ -1,19 +1,12 @@
 import { Toast } from "@/components/common/Notice";
-import {
-  View,
-  Text,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-  TouchableWithoutFeedback,
-  Keyboard,
-} from "react-native";
+import { View, Text, ScrollView, TouchableWithoutFeedback, Keyboard } from "react-native";
 import React from "react";
 import SignInScreen from "@/components/signInScreen";
 import GoogleLogin from "@/components/googleSignInScreen";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppleLogin from "@/components/appleSignInScreen";
 import { StarMark } from "@/constants/imageExports";
+import KeyboardAvoider from "@/components/common/KeyboardAvoider";
 
 const SignIn = () => {
   const showError = (message: string) => {
@@ -26,11 +19,7 @@ const SignIn = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-black">
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
-      >
+      <KeyboardAvoider>
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <ScrollView
             contentContainerStyle={{
@@ -68,7 +57,7 @@ const SignIn = () => {
             </View>
           </ScrollView>
         </TouchableWithoutFeedback>
-      </KeyboardAvoidingView>
+      </KeyboardAvoider>
     </SafeAreaView>
   );
 };

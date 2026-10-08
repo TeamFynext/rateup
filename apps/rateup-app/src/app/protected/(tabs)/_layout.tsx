@@ -32,20 +32,17 @@ function ProtectedLayout() {
           </NativeTabs.Trigger>
         )}
 
-        {/* A form, which is literally what a WhatsApp Flow is: fields the customer fills
-            in without leaving the chat. `list.bullet.rectangle.portrait` is iOS 15, under
-            this build's 16.4 target (ios/Podfile), where an unrecognised symbol name draws
-            nothing at all. */}
-        <NativeTabs.Trigger name="flows">
+        {/* WA Flow and Web Forms share one tab: Android's bottom bar holds at most five
+            items, and a sixth throws. `list.bullet.rectangle.portrait` is iOS 15, under this
+            build's 16.4 target, where an unrecognised symbol name draws nothing at all. */}
+        <NativeTabs.Trigger name="forms">
           <NativeTabs.Trigger.Icon sf="list.bullet.rectangle.portrait" md="list_alt" />
-          <NativeTabs.Trigger.Label>WA Flow</NativeTabs.Trigger.Label>
+          <NativeTabs.Trigger.Label>Forms</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>
 
-        {/* Was a 2x2 grid, which reads as a dashboard rather than something anyone fills
-            in. `checklist` exists under the same name on both platforms. */}
-        <NativeTabs.Trigger name="webForms">
-          <NativeTabs.Trigger.Icon sf="checklist" md="checklist" />
-          <NativeTabs.Trigger.Label>Web Forms</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger name="teams">
+          <NativeTabs.Trigger.Icon sf="person.2.fill" md="groups" />
+          <NativeTabs.Trigger.Label>Teams</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>
 
         <NativeTabs.Trigger name="account">

@@ -25,6 +25,8 @@ import { useContactsStore, makeFilterKey, useMessagesStore } from "@/store/inbox
 import { useWaSettings } from "@/api/whatsapp/template/whatsapp.query";
 import { useQueryClient } from "@tanstack/react-query";
 import { getInboxRowTheme } from "@/constants/inboxDesign";
+import { useInboxSelectionStore } from "@/store/inboxSelectionStore";
+import { usePermissions } from "@/hooks/usePermissions";
 
 /** Gutter around the whole conversation list, on top of each row's own 16px. */
 const LIST_PADDING_X = 0;
@@ -164,6 +166,12 @@ export default function Inbox({
       : displayedContacts;
 
   const queryClient = useQueryClient();
+  const selectedIds = useInboxSelectionStore((s) => s.ids);
+  const toggleSelected = useInboxSelectionStore((s) => s.toggle);
+  const selectionMode = selectedIds.size > 0;
+  const { can } = usePermissions();
+  // Selecting exists for bulk assign, so someone who cannot assign never enters it.
+  const canSelect = can("inbox.assign");
   // Pull-to-refresh spins on its own flag rather than the query's `isRefetching`:
   // that one is also true for background refetches (a remount, a return to
   // focus), which would drop the spinner in unasked-for.
@@ -236,7 +244,14 @@ export default function Inbox({
         isFavorite={item.isFavorite}
         contactLabels={item.contactLabels}
         currentUserId={userId ?? currentUser?.userId}
+        selectionMode={selectionMode}
+        selected={selectedIds.has(item.id)}
+        onLongPress={canSelect ? () => toggleSelected(item.id) : undefined}
         onPress={() => {
+          if (selectionMode) {
+            toggleSelected(item.id);
+            return;
+          }
           setSelectedContact({
             ...item,
             sessionActive: isSessionActive,
@@ -291,6 +306,8 @@ export default function Inbox({
   return (
     <FlashList
       data={finalContacts as any[]}
+      // The rows read the selection through props; FlashList only re-renders on a change here.
+      extraData={selectedIds}
       keyExtractor={(item) => item.id}
       renderItem={renderItem as any}
       contentContainerStyle={{ paddingHorizontal: LIST_PADDING_X }}

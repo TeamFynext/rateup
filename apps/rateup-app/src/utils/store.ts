@@ -341,28 +341,56 @@ type WaMedia = {
   name: string;
   key: string;
   uploading?: boolean;
+  /**
+   * The file belongs to something saved (a quick reply), not to this draft, so
+   * removing it from the draft must not delete it from storage.
+   */
+  shared?: boolean;
 };
 
 interface MediaStore {
   media: WaMedia[];
   addMedia: (value: WaMedia) => void;
+  /** Swaps an entry for another in its place, so a finished upload keeps its spot. */
+  replaceMedia: (key: string, value: WaMedia) => void;
+  /** Drops one attachment and deletes its upload from storage. */
   removeMedia: (key: string) => void;
+  /** Drops every attachment in the draft and deletes their uploads, in one request. */
+  discardMedia: () => void;
+  /** Clears the draft without deleting anything: for after a send, when the files are in use. */
   resetMedia: () => void;
   selectedMedia: WaMedia | null;
   setSelectedMedia: (value: WaMedia | null) => void;
 }
 
+/**
+ * The storage keys behind attachments that are safe to delete. A quick reply's files
+ * belong to the quick reply. A file still uploading has nothing in storage under its
+ * placeholder key yet; its upload deletes the file itself when it finds the placeholder
+ * gone (see `attachFiles` in MessageSendPanel).
+ */
+function deletableKeys(entries: WaMedia[]) {
+  return entries.filter((m) => !m.shared && !m.uploading).map((m) => ({ Key: m.key }));
+}
+
 export const useMediaStore = create<MediaStore>((set) => ({
   media: [],
   addMedia: (value) => set((state) => ({ media: [...state.media, value] })),
+  replaceMedia: (key, value) =>
+    set((state) => ({ media: state.media.map((m) => (m.key === key ? value : m)) })),
   selectedMedia: null,
   setSelectedMedia: (value) => set(() => ({ selectedMedia: value })),
   removeMedia: async (key) => {
-    await deleteUploadedFiles({ fileKeyArray: [{ Key: key }] });
-    set((state) => {
-      const medias = state.media.filter((m) => m.key !== key);
-      return { media: medias };
-    });
+    const entry = useMediaStore.getState().media.find((m) => m.key === key);
+    set((state) => ({ media: state.media.filter((m) => m.key !== key) }));
+    const keys = deletableKeys(entry ? [entry] : []);
+    if (keys.length) await deleteUploadedFiles({ fileKeyArray: keys });
+  },
+  discardMedia: async () => {
+    const entries = useMediaStore.getState().media;
+    set({ media: [] });
+    const keys = deletableKeys(entries);
+    if (keys.length) await deleteUploadedFiles({ fileKeyArray: keys });
   },
   resetMedia: () => set(() => ({ media: [] })),
 }));

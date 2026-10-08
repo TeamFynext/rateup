@@ -5,8 +5,11 @@ import * as FileSystem from "expo-file-system/legacy";
 import requestStoragePermission from "@/utils/permission";
 import { Download, Eye, File } from "lucide-react-native";
 import * as IntentLauncher from "expo-intent-launcher";
+import { FONT, usePressed, useTheme } from "@/components/loyalty/cashier/ui";
 
 const DocumentResponse = ({ info }: { info: string }) => {
+  const { t } = useTheme();
+  const { pressed, pressHandlers } = usePressed();
   const [fileExists, setFileExists] = useState(false);
 
   const fileUrl = `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${info}`;
@@ -83,28 +86,41 @@ const DocumentResponse = ({ info }: { info: string }) => {
   return (
     <Pressable
       onPress={handlePress}
-      className="flex-row items-center bg-gray-100 border border-gray-200 rounded-xl px-3 py-2"
+      {...pressHandlers}
+      accessibilityRole="button"
+      accessibilityLabel={`${fileName}, tap to ${fileExists ? "open" : "download"}`}
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 10,
+        padding: 10,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: t.border1,
+        backgroundColor: pressed ? t.surface2 : t.surface,
+      }}
     >
-      {/* File icon box */}
-      <View className="bg-blue-100 rounded-lg p-2">
-        <File size={20} color="#3b82f6" />
+      <View
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 9,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: t.brandSoft,
+        }}
+      >
+        <File size={18} color={t.brand} />
       </View>
-
-      {/* Spacer box between icon and text */}
-      <View className="flex w-2" />
-
-      {/* File info */}
-      <View className="flex flex-col flex-1 max-w-[180px]">
-        <Text numberOfLines={1} className="text-sm font-medium text-gray-800">
+      <View style={{ flex: 1, gap: 2 }}>
+        <Text numberOfLines={1} style={{ fontFamily: FONT.medium, fontSize: 13, color: t.fg1 }}>
           {fileName}
         </Text>
-        <Text className="text-xs text-gray-500">Tap to {fileExists ? "preview" : "download"}</Text>
+        <Text style={{ fontFamily: FONT.regular, fontSize: 12, color: t.fg3 }}>
+          Tap to {fileExists ? "open" : "download"}
+        </Text>
       </View>
-
-      {/* Right action icon */}
-      <View className="flex">
-        {fileExists ? <Eye size={18} color="#10b981" /> : <Download size={18} color="#3b82f6" />}
-      </View>
+      {fileExists ? <Eye size={18} color={t.fg3} /> : <Download size={18} color={t.brand} />}
     </Pressable>
   );
 };

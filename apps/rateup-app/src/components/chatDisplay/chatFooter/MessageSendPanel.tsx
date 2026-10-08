@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   TextInput,
@@ -14,16 +14,48 @@ import Image from "@/components/common/Image";
 import { Colors } from "@/constants/colors";
 import { useForm } from "react-hook-form";
 import * as DocumentPicker from "expo-document-picker";
+import * as ImagePicker from "expo-image-picker";
 import { useMediaStore, useSessionActiveStore, useVoiceRecordStore } from "@/utils/store";
 import { useCreatePrivateMessage, useSendNewWaMessage } from "@/api/inbox/messages/message.query";
-import { uploadFile } from "@/utils/fileUpload";
+import { deleteUploadedFiles, uploadFile } from "@/utils/fileUpload";
+import {
+  attachmentSizeError,
+  attachmentTypeError,
+  galleryAssetKind,
+  galleryAssetName,
+  resolveMimeType,
+  type PickedFile,
+} from "@/utils/attachments";
 import { useMessagesStore, useContactsStore } from "@/store/inboxStore";
-import VoiceRecorder from "./VoiceRecorder";
-import { ImageIcon, VideoIcon, MusicIcon, File, Paperclip, Plus, Send } from "lucide-react-native"; // Import Lucide icons
+import { VoiceNoteBar, VoiceNoteMic, useVoiceNote, type VoiceNoteFile } from "./VoiceNote";
+import { mediaPreviewActions, useMediaPreviewStore } from "@/utils/mediaPreview";
+import { router } from "expo-router";
+import { prepareSharedFile, useSharedFilesStore } from "@/utils/sharedFiles";
+import {
+  Camera,
+  ImageIcon,
+  Images,
+  VideoIcon,
+  MusicIcon,
+  File,
+  Paperclip,
+  Plus,
+  Send,
+  StickyNote,
+  Zap,
+} from "lucide-react-native";
 import TemplateSending from "./TemplateSending";
 import MentionList from "./mention/MentionList";
+import QuickReplyList from "./quickReply/QuickReplyList";
+import { useQuickReplies } from "@/api/inbox/quickReplies/quickReplies.query";
+import type { QuickReply } from "@/api/inbox/quickReplies/quickReplies.api";
+import { quickReplyToWhatsAppText } from "@/utils/quickReplyText";
 import { useMention } from "./mention/useMention";
 import { generateInternalMessageId } from "@/utils/chatbox_utils";
+import { getInboxRowTheme } from "@/constants/inboxDesign";
+import { Toast } from "@/components/common/Notice";
+import { useAuth } from "@/context/AuthContext";
+import { useLoggedInUser } from "@/api/api";
 import { create } from "zustand";
 import Animated, {
   interpolate,
@@ -46,6 +78,56 @@ type FormValues = {
   location: any | null;
 };
 
+const UPLOAD_CONCURRENCY = 3;
+
+const GALLERY_OPTIONS: ImagePicker.ImagePickerOptions = {
+  mediaTypes: ["images", "videos"],
+  allowsMultipleSelection: true,
+  selectionLimit: 10,
+  orderedSelection: true,
+  // Below 1, photos are re-encoded to JPEG: iOS HEIC photos become sendable and most
+  // fit WhatsApp's 5 MB image limit.
+  quality: 0.8,
+  // iOS hands over the most compatible form of each asset: JPEG for HEIC, H.264 for HEVC video.
+  preferredAssetRepresentationMode:
+    ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Compatible,
+  // iOS: photos kept only in iCloud are downloaded instead of failing to load.
+  shouldDownloadFromNetwork: true,
+  // iOS: videos are re-encoded on the phone to 720p H.264 MP4, the format WhatsApp takes,
+  // and small enough to upload. Passthrough would hand over the original 4K/HEVC `.mov`.
+  // Android has no such option; the API converts whatever video it is sent.
+  videoExportPreset: ImagePicker.VideoExportPreset.H264_1280x720,
+};
+
+const CAMERA_OPTIONS: ImagePicker.ImagePickerOptions = {
+  mediaTypes: ["images", "videos"],
+  quality: 0.8,
+};
+
+function galleryAssetToFile(asset: ImagePicker.ImagePickerAsset): PickedFile {
+  const kind = galleryAssetKind(asset);
+  const name = galleryAssetName(asset, kind);
+  return {
+    uri: asset.uri,
+    name,
+    mimeType: resolveMimeType(name, asset.mimeType),
+    size: asset.fileSize,
+    kind,
+  };
+}
+
+/** Runs `task` over `items`, at most `limit` at a time. */
+async function forEachLimited<T>(items: T[], limit: number, task: (item: T) => Promise<void>) {
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) await task(items[next++]);
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+}
+
+/** A `/` at the start of a word, and what has been typed after it. */
+const QUICK_REPLY_TRIGGER = /(?:^|\s)\/([^\s/]*)$/;
+
 const MessageSendPanel = ({
   contactId,
   platform,
@@ -67,7 +149,7 @@ const MessageSendPanel = ({
   // addressed to. Reading it from the store meant a reply typed in one chat
   // could be delivered to whoever the store still pointed at.
   const selectedContactId = contactId;
-  const { media, resetMedia, addMedia, removeMedia } = useMediaStore();
+  const { media, resetMedia, addMedia, replaceMedia, removeMedia, discardMedia } = useMediaStore();
   const { audioUrl, setAudioUrl } = useVoiceRecordStore();
   const { body, setBody } = useMessageBodyStore();
   const sendnewWaMessage = useSendNewWaMessage(
@@ -77,6 +159,12 @@ const MessageSendPanel = ({
     platform as MessagePlatform,
   );
   const createPrivateMessage = useCreatePrivateMessage(selectedContactId);
+  const { userId } = useAuth();
+  const { data: me } = useLoggedInUser();
+  // The ticket this chat was opened on; without one the API files the note on the newest.
+  const conversationId = useContactsStore((state) =>
+    state.contactsById.get(contactId),
+  )?.conversationId;
   let { isSessionActive } = useSessionActiveStore();
   const form = useForm<FormValues>({
     defaultValues: {
@@ -134,15 +222,72 @@ const MessageSendPanel = ({
   const [templateOptionsVisible, setTemplateOptionsVisible] = useState(false);
   const [templateModalVisible, setTemplateModalVisible] = useState(false);
   const [mediaPanelVisible, setMediaPanelVisible] = useState(false);
+  const addLocalUris = useMediaPreviewStore((s) => s.addLocalUris);
+  // Opens the attachment preview on `index`, or just moves to it when already open
+  // (e.g. "+" in the preview added more).
+  const openPreview = (index: number) => {
+    const store = useMediaPreviewStore.getState();
+    store.setIndex(index);
+    if (!store.isOpen) router.push("/protected/chat/MediaPreview" as never);
+  };
   const [isPrivate, setIsPrivate] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const noteTheme = getInboxRowTheme(isDark).note;
 
-  // @-mentions of teammates, private note only.
+  // Mentioning a teammate means the words are for the team, so a reply being written
+  // becomes a note, text and all.
   const mention = useMention({
-    enabled: isPrivate,
+    enabled: true,
     text: textBody ?? "",
     setText: (value) => setValue("text.body", value, { shouldDirty: true }),
+    onPick: () => {
+      if (isPrivate) return;
+      switchMode(true, { carryText: true });
+      Toast.info("Mentioning a teammate turns this into an internal note.");
+    },
   });
+
+  // `/` at the start of a word opens the quick replies, as on the web.
+  const { data: quickReplies = [], isLoading: quickRepliesLoading } = useQuickReplies();
+  const quickReplyQuery = useMemo(() => {
+    if (mention.isOpen || isPrivate) return null;
+    const match = QUICK_REPLY_TRIGGER.exec((textBody ?? "").slice(0, mention.caret));
+    return match ? match[1].toLowerCase() : null;
+  }, [textBody, mention.caret, mention.isOpen, isPrivate]);
+  const matchingQuickReplies = useMemo(
+    () =>
+      quickReplyQuery === null
+        ? []
+        : quickReplies.filter(
+            (r) =>
+              !quickReplyQuery ||
+              (r.key ?? "").toLowerCase().includes(quickReplyQuery) ||
+              r.topic.toLowerCase().includes(quickReplyQuery),
+          ),
+    [quickReplies, quickReplyQuery],
+  );
+
+  function pickQuickReply(reply: QuickReply) {
+    const text = textBody ?? "";
+    const match = QUICK_REPLY_TRIGGER.exec(text.slice(0, mention.caret));
+    if (match) {
+      const start = mention.caret - match[1].length - 1;
+      mention.replaceRange(start, mention.caret, quickReplyToWhatsAppText(reply.text));
+    }
+    // `shared`: the files are the quick reply's, so dropping one from this draft keeps it.
+    const inDraft = new Set(media.map((m) => m.key));
+    for (const item of reply.media ?? []) {
+      if (!inDraft.has(item.key)) addMedia({ ...item, uploading: false, shared: true });
+    }
+  }
+
+  function openQuickReplies() {
+    const text = textBody ?? "";
+    const caret = Math.min(mention.caret, text.length);
+    const needsSpace = caret > 0 && !/\s/.test(text[caret - 1]);
+    mention.replaceRange(caret, caret, needsSpace ? " /" : "/");
+    mention.inputRef.current?.focus();
+  }
 
   //@ts-ignore
   const isUploading = media.some((m) => m.uploading);
@@ -157,109 +302,335 @@ const MessageSendPanel = ({
     setTemplateOptionsVisible(next);
   };
 
-  const pickMedia = async (type: "image" | "video" | "audio" | "document") => {
-    try {
-      const res = await DocumentPicker.getDocumentAsync({
-        type:
-          type === "image"
-            ? "image/*"
-            : type === "video"
-              ? "video/*"
-              : type === "audio"
-                ? "audio/*"
-                : "*/*",
-        multiple: true,
-        copyToCacheDirectory: false,
-      });
-
-      // Handle cancelation
-      if (res?.canceled || !res?.assets?.length) return;
-
-      for (const file of res.assets) {
-        const tempKey = `${file.name}-${Date.now()}`;
-        addMedia({
-          key: tempKey,
-          type,
-          name: file.name,
-          url: null as any,
-          uploading: true,
-        } as any);
-
-        try {
-          const uploadable = {
-            uri: file.uri,
-            name: file.name,
-            type: file.mimeType || "application/octet-stream",
-          };
-
-          const key = await uploadFile(uploadable as any);
-          const cloudUrl = `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${key}`;
-          removeMedia(tempKey);
-          addMedia({
-            key,
-            type,
-            name: file.name,
-            url: cloudUrl,
-            uploading: false,
-          } as any);
-        } catch {
-          removeMedia(tempKey);
-        }
-      }
-
-      togglePanel();
-    } catch (err) {
-      console.error("expo-document-picker error:", err);
+  // Everything that reaches the customer — templates, attachments, quick replies — is
+  // closed in Note mode, so nothing opened for a reply can be sent from a note.
+  // One input serves both modes, so each keeps its own text and nothing typed as a
+  // note is left in the box when switching back to a reply.
+  const drafts = useRef({ message: "", note: "" });
+  const switchMode = (note: boolean, { carryText = false } = {}) => {
+    if (note === isPrivate) return;
+    if (carryText) {
+      // The text in the box, and the mentions picked in it, move over with the mode.
+      drafts.current[isPrivate ? "note" : "message"] = "";
+    } else {
+      drafts.current[isPrivate ? "note" : "message"] = textBody ?? "";
+      setValue("text.body", drafts.current[note ? "note" : "message"]);
+      mention.reset();
+    }
+    setSelectedIndex(note ? 1 : 0);
+    setIsPrivate(note);
+    if (note) {
+      setMediaPanelVisible(false);
+      if (templateOptionsVisible) togglePanel();
     }
   };
 
+  // Picked files are checked against the platform's size limits, then uploaded a few at a
+  // time. Each shows as a placeholder in the order picked until its upload finishes.
+  // Photos and videos open the preview, as in WhatsApp, on the first of the new files.
+  const attachFiles = async (files: PickedFile[], { showPreview = false } = {}) => {
+    setMediaPanelVisible(false);
+    const accepted = files.filter((file) => {
+      const error = attachmentTypeError(file) ?? attachmentSizeError(file, file.kind, platform);
+      if (error) Toast.error(error);
+      return !error;
+    });
+    if (!accepted.length) return;
+
+    const firstNewIndex = useMediaStore.getState().media.length;
+    const pending = accepted.map((file, i) => {
+      const tempKey = `${file.name}-${Date.now()}-${i}`;
+      addMedia({ key: tempKey, type: file.kind, name: file.name, url: "", uploading: true });
+      return { file, tempKey };
+    });
+    addLocalUris(Object.fromEntries(pending.map(({ file, tempKey }) => [tempKey, file.uri])));
+    if (showPreview) openPreview(firstNewIndex);
+
+    await forEachLimited(pending, UPLOAD_CONCURRENCY, async ({ file, tempKey }) => {
+      try {
+        const key = await uploadFile({
+          uri: file.uri,
+          name: file.name,
+          type: file.mimeType,
+        } as unknown as globalThis.File);
+        // Removed while it uploaded (🗑, ✕, back, or the chat was left): nothing will
+        // ever send it, so it comes straight back out of storage.
+        if (!useMediaStore.getState().media.some((m) => m.key === tempKey)) {
+          void deleteUploadedFiles({ fileKeyArray: [{ Key: key }] });
+          return;
+        }
+        addLocalUris({ [key]: file.uri });
+        replaceMedia(tempKey, {
+          key,
+          type: file.kind,
+          name: file.name,
+          url: `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${key}`,
+          uploading: false,
+        });
+      } catch (err) {
+        // Nothing was stored, so the placeholder is dropped without a delete request.
+        useMediaStore.setState((s) => ({ media: s.media.filter((m) => m.key !== tempKey) }));
+        // `uploadFile` rethrows the API's message, e.g. "Unsupported file type."
+        const reason = typeof err === "string" && err ? ` ${err}` : " Try again.";
+        Toast.error(`"${file.name}" could not be uploaded.${reason}`);
+      }
+    });
+  };
+
+  // Photos and videos come from the system photo picker, as in WhatsApp: the Photos
+  // library on iOS, the Android Photo Picker on Android. Neither needs a permission.
+  const pickFromGallery = async () => {
+    try {
+      const res = await ImagePicker.launchImageLibraryAsync(GALLERY_OPTIONS);
+      if (res.canceled || !res.assets?.length) return;
+      await attachFiles(res.assets.map(galleryAssetToFile), { showPreview: true });
+    } catch (err) {
+      console.error("image picker error:", err);
+      Toast.error("Could not open your photos.");
+    }
+  };
+
+  const takeWithCamera = async () => {
+    try {
+      const permission = await ImagePicker.requestCameraPermissionsAsync();
+      if (!permission.granted) {
+        Toast.info("Allow camera access in Settings to take a photo or video.");
+        return;
+      }
+      const res = await ImagePicker.launchCameraAsync(CAMERA_OPTIONS);
+      if (res.canceled || !res.assets?.length) return;
+      await attachFiles(res.assets.map(galleryAssetToFile), { showPreview: true });
+    } catch (err) {
+      console.error("camera error:", err);
+      Toast.error("Could not open the camera.");
+    }
+  };
+
+  const pickDocument = async (kind: "audio" | "document") => {
+    try {
+      const res = await DocumentPicker.getDocumentAsync({
+        type: kind === "audio" ? "audio/*" : "*/*",
+        multiple: true,
+        // Android hands back `content://` uris, which can't be uploaded reliably; the
+        // cached copy is a plain file on both platforms.
+        copyToCacheDirectory: true,
+      });
+      if (res.canceled || !res.assets?.length) return;
+      await attachFiles(
+        res.assets.map((file) => ({
+          uri: file.uri,
+          name: file.name,
+          mimeType: resolveMimeType(file.name, file.mimeType),
+          size: file.size,
+          kind,
+        })),
+      );
+    } catch (err) {
+      console.error("expo-document-picker error:", err);
+      Toast.error("Could not open your files.");
+    }
+  };
+
+  // Photos and videos shared in from another app, through "Send to", attach once the
+  // composer for their chat is on screen, and open the preview for a caption. Keyed on
+  // the share too, so sharing into the chat already open still attaches.
+  const sharedAt = useSharedFilesStore((s) =>
+    s.pending?.contactId === contactId ? s.pending.at : null,
+  );
+  useEffect(() => {
+    const shared = useSharedFilesStore.getState().take(contactId);
+    if (!shared.length) return;
+    (async () => {
+      const prepared = await Promise.all(
+        shared.map((file) =>
+          prepareSharedFile(file).catch((err) => {
+            console.error("shared file error:", err);
+            Toast.error(`"${file.fileName}" could not be attached.`);
+            return null;
+          }),
+        ),
+      );
+      await attachFiles(
+        prepared.filter((f): f is PickedFile => !!f),
+        { showPreview: true },
+      );
+    })();
+    // Once per share: `attachFiles` is redeclared every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contactId, sharedAt]);
+
+  // The preview's ✕ and the back button drop everything attached, as WhatsApp's do, and
+  // delete the uploads from storage. Ones still uploading are deleted as they finish.
+  const discardAttachments = () => discardMedia();
+
+  // The draft store outlives this chat, so leaving it with files attached would carry
+  // them into the next chat opened and leave them in storage. Leaving discards them.
+  useEffect(() => () => useMediaStore.getState().discardMedia(), []);
+
+  // What the preview screen calls back into. Refreshed every render, so it always
+  // reaches the current form and draft.
+  useLayoutEffect(() => {
+    mediaPreviewActions.current = {
+      send: () => handleSend(),
+      discard: discardAttachments,
+      addMore: pickFromGallery,
+      remove: removeMedia,
+      getCaption: () => form.getValues("text.body") ?? "",
+      setCaption: (text) => setValue("text.body", text, { shouldDirty: true }),
+    };
+  });
+  useEffect(
+    () => () => {
+      mediaPreviewActions.current = null;
+    },
+    [],
+  );
+
+  const attachmentActions = [
+    {
+      key: "gallery",
+      label: "Gallery",
+      Icon: Images,
+      onPress: pickFromGallery,
+      bg: isDark ? "#1a2a3a" : "#EBF3FB",
+      color: isDark ? "#60aee8" : "#185FA5",
+    },
+    {
+      key: "camera",
+      label: "Camera",
+      Icon: Camera,
+      onPress: takeWithCamera,
+      bg: isDark ? "#1e1a33" : "#EEEDFE",
+      color: isDark ? "#9f94e8" : "#534AB7",
+    },
+    {
+      key: "document",
+      label: "Doc",
+      Icon: File,
+      onPress: () => pickDocument("document"),
+      bg: isDark ? "#2a2210" : "#FAEEDA",
+      color: isDark ? "#e8a030" : "#854F0B",
+    },
+    {
+      key: "audio",
+      label: "Audio",
+      Icon: MusicIcon,
+      onPress: () => pickDocument("audio"),
+      bg: isDark ? "#122210" : "#EAF3DE",
+      color: isDark ? "#7ac44d" : "#3B6D11",
+    },
+  ];
+
   const handleSendPrivateMessage = handleSubmit((values) => {
-    if (!values.text.body && !values.media.length) return;
+    const text = values.text.body ?? "";
+    // The API stores a note's text only.
+    if (!text.trim() || !selectedContactId) return;
+    const contactId = selectedContactId as string;
     const id = generateInternalMessageId();
     // Mentions go up as ids: the server matches those first and only falls back
     // to scanning `@name` out of the text, which misses names with spaces.
-    const mentionedUserIds = mention.getMentionedUserIds(values.text.body ?? "");
+    const mentionedUserIds = mention.getMentionedUserIds(text);
 
-    // Optimistic UI update
-    if (selectedContactId) {
-      const contactId = selectedContactId as string;
-      const mockedMessage = {
-        id,
-        messageId: id,
-        createdAt: new Date().toISOString(),
-        waCreatedAt: new Date().toISOString(),
-        messageBody: {
-          exchangeProcess: "privateNote",
-          privateNote: {
-            text: values.text,
-            media: values.media,
-          },
+    const authorName: string = me?.userName ?? "You";
+    const placeholder = {
+      id,
+      messageId: id,
+      kind: "NOTE",
+      createdAt: new Date().toISOString(),
+      waCreatedAt: new Date().toISOString(),
+      sourcePlatform: "INTERNAL",
+      sourceIdentifier: "internal",
+      sendBy: userId,
+      messageBody: {
+        exchangeProcess: "privateNote",
+        privateNote: {
+          text: { body: text },
+          triggeredByUser: userId ? { id: userId, name: authorName } : null,
         },
-        sender: { name: "You" },
-      };
-      useMessagesStore
-        .getState()
-        .addMessage(`${contactId}_${whatsappSettingsPhoneId}`, mockedMessage);
-      useMessagesStore.getState().addMessage(`${contactId}_all`, mockedMessage);
+      },
+      sender: { name: authorName },
+    };
+    const threadKeys = [`${contactId}_${whatsappSettingsPhoneId}`, `${contactId}_all`];
+    const messages = useMessagesStore.getState();
+    for (const key of threadKeys) messages.addMessage(key, placeholder);
 
-      createPrivateMessage.mutate({ ...values, messageId: id, mentionedUserIds });
-    } else {
-      createPrivateMessage.mutate({ ...values, messageId: id, mentionedUserIds });
-    }
+    createPrivateMessage.mutate(
+      {
+        type: "text",
+        text: { body: text },
+        messageId: id,
+        mentionedUserIds,
+        ...(conversationId && { conversationId }),
+      },
+      {
+        onError: () => {
+          const store = useMessagesStore.getState();
+          for (const key of threadKeys) store.removeMessage(key, id);
+          // Handed back only if nothing was typed since, so the text is never lost or clobbered.
+          if (!form.getValues("text.body")) setValue("text.body", text);
+          Toast.error("The note could not be saved. Try again.");
+        },
+      },
+    );
 
-    reset(initialMessgabody);
-    resetMedia();
-    setAudioUrl(null);
+    // Attachments and a voice note belong to the reply draft, so they stay.
+    setValue("text.body", "");
     mention.reset();
   });
 
-  const handleSend = handleSubmit((values) => {
-    if (!values.text.body && !values.media.length) return;
+  // A voice note goes out on its own, as in WhatsApp, leaving the draft alone. On WhatsApp
+  // it is converted to OGG/Opus and flagged, so the customer gets a voice message (mic,
+  // profile photo, transcript) rather than an audio file; Instagram and Messenger take
+  // the recording as it is.
+  const sendVoiceNote = async ({ uri }: VoiceNoteFile) => {
+    const asVoice = platform === MessagePlatform.WHATSAPP;
+    const name = `voice-${Date.now()}.m4a`;
+    let key: string;
+    try {
+      key = await uploadFile(
+        { uri, name, type: "audio/mp4" } as unknown as globalThis.File,
+        false,
+        undefined,
+        { voiceNote: asVoice },
+      );
+    } catch (err) {
+      Toast.error(
+        typeof err === "string" && err
+          ? `Voice note not sent. ${err}`
+          : "Voice note not sent. Check your connection and try again.",
+      );
+      throw err;
+    }
+    deliver({
+      ...initialMessgabody,
+      type: "media",
+      media: [
+        {
+          key,
+          type: "audio",
+          name: "Voice message",
+          url: `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${key}`,
+          ...(asVoice && { voice: true }),
+        },
+      ],
+    });
+  };
+  const voice = useVoiceNote({ onSend: sendVoiceNote });
+  // WhatsApp's rule: the mic stands where Send is until there is something to send.
+  const showMic =
+    !isPrivate &&
+    (voice.phase === "starting" ||
+      voice.phase === "holding" ||
+      (voice.phase === "idle" && !textBody?.trim() && media.length === 0));
 
-    // Optimistic UI update
+  // Shows the message in the thread straight away, then sends it. Shared by the composer
+  // and voice notes, which go out on their own without touching the draft.
+  const deliver = (values: FormValues) => {
     if (selectedContactId) {
       const contactId = selectedContactId as string;
       const id = Date.now().toString();
+      // The placeholder shows the first attachment, under its own kind, until the stored copy arrives.
+      const first = values.media?.[0];
       const mockedMessage = {
         id,
         messageId: id,
@@ -268,11 +639,15 @@ const MessageSendPanel = ({
         messageBody: {
           exchangeProcess: "send",
           send: {
-            type: values.media?.length ? "image" : "text",
+            type: first ? first.type : "text",
             text: values.text,
-            image: values.media?.length
-              ? { link: values.media[0].uri, caption: values.text?.body }
-              : undefined,
+            ...(first && {
+              [first.type]: {
+                link: first.url,
+                caption: values.text?.body,
+                ...(first.type === "document" && { filename: first.name }),
+              },
+            }),
           },
         },
         sender: { name: "You" },
@@ -311,7 +686,22 @@ const MessageSendPanel = ({
     } else {
       sendnewWaMessage.mutate(values);
     }
+  };
 
+  const handleSend = handleSubmit((formValues) => {
+    // Settled here rather than by the media effect, which runs only when attachments
+    // change: a caption typed after attaching went up as `media`, and the API sends a
+    // `media` message without its text. `text` with attachments is a captioned send.
+    const values: FormValues =
+      formValues.type === "text" || formValues.type === "media"
+        ? {
+            ...formValues,
+            type: formValues.media.length && !formValues.text.body?.trim() ? "media" : "text",
+          }
+        : formValues;
+    if (!values.text.body && !values.media.length) return;
+
+    deliver(values);
     reset(initialMessgabody);
     resetMedia();
     setAudioUrl(null);
@@ -332,7 +722,8 @@ const MessageSendPanel = ({
         borderTopColor: isDark ? Colors.dark.borderLight : Colors.light.border,
       }}
     >
-      {isSessionActive ? (
+      {/* A note never reaches the customer, so an expired window doesn't close it. */}
+      {isSessionActive || isPrivate ? (
         <View className="opacity-100" pointerEvents="auto">
           {media.length > 0 && (
             <View className="flex-row flex-wrap gap-2 mb-3 px-4 pt-3">
@@ -365,13 +756,20 @@ const MessageSendPanel = ({
                         <Text className="text-[10px] text-gray-500 mt-1">Uploading...</Text>
                       </View>
                     ) : item.type === "image" ? (
-                      <Image
-                        source={{ uri: item.url }}
-                        className="w-full h-full rounded-xl"
-                        contentFit="cover"
-                        recyclingKey={item.url}
-                        onError={() => {}}
-                      />
+                      <Pressable
+                        className="w-full h-full"
+                        onPress={() => openPreview(media.findIndex((m) => m.key === item.key))}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Preview ${item.name}`}
+                      >
+                        <Image
+                          source={{ uri: item.url }}
+                          className="w-full h-full rounded-xl"
+                          contentFit="cover"
+                          recyclingKey={item.url}
+                          onError={() => {}}
+                        />
+                      </Pressable>
                     ) : (
                       <View className="w-full h-full rounded-xl bg-gray-200 items-center justify-center">
                         {item.type !== "image" && (
@@ -447,39 +845,12 @@ const MessageSendPanel = ({
 
               {/* Icon grid */}
               <View className="flex-row justify-between">
-                {[
-                  {
-                    type: "image" as const,
-                    label: "Image",
-                    Icon: ImageIcon,
-                    bg: isDark ? "#1a2a3a" : "#EBF3FB",
-                    color: isDark ? "#60aee8" : "#185FA5",
-                  },
-                  {
-                    type: "video" as const,
-                    label: "Video",
-                    Icon: VideoIcon,
-                    bg: isDark ? "#1e1a33" : "#EEEDFE",
-                    color: isDark ? "#9f94e8" : "#534AB7",
-                  },
-                  {
-                    type: "document" as const,
-                    label: "Doc",
-                    Icon: File,
-                    bg: isDark ? "#2a2210" : "#FAEEDA",
-                    color: isDark ? "#e8a030" : "#854F0B",
-                  },
-                  {
-                    type: "audio" as const,
-                    label: "Audio",
-                    Icon: MusicIcon,
-                    bg: isDark ? "#122210" : "#EAF3DE",
-                    color: isDark ? "#7ac44d" : "#3B6D11",
-                  },
-                ].map(({ type, label, Icon, bg, color }) => (
+                {attachmentActions.map(({ key, label, Icon, onPress, bg, color }) => (
                   <Pressable
-                    key={type}
-                    onPress={() => pickMedia(type)}
+                    key={key}
+                    onPress={onPress}
+                    accessibilityRole="button"
+                    accessibilityLabel={label}
                     className="flex-1 mx-1 items-center gap-1.5 py-2.5 rounded-xl border-[0.5px]"
                     style={{
                       backgroundColor: isDark ? Colors.dark.surface : Colors.light.card,
@@ -500,29 +871,6 @@ const MessageSendPanel = ({
                     </Text>
                   </Pressable>
                 ))}
-
-                {/* Voice cell */}
-                <View
-                  className="flex-1 mx-1 items-center gap-1.5 py-2.5 rounded-xl border-[0.5px]"
-                  style={{
-                    backgroundColor: isDark ? Colors.dark.surface : Colors.light.card,
-                    borderColor: isDark ? Colors.dark.borderLight : Colors.light.border,
-                  }}
-                >
-                  <VoiceRecorder
-                    compact
-                    isDark={isDark}
-                    onRecordingUpload={({ key, url, name }) =>
-                      addMedia({ key, url, name, type: "audio", uploading: false } as any)
-                    }
-                  />
-                  <Text
-                    className="text-[11px]"
-                    style={{ color: isDark ? Colors.dark.textMuted : Colors.light.textMuted }}
-                  >
-                    Voice
-                  </Text>
-                </View>
               </View>
             </View>
           )}
@@ -530,6 +878,14 @@ const MessageSendPanel = ({
           <View>
             {/* Teammate picker for `@` — above the composer, so it never covers
                 what is being typed. */}
+            {quickReplyQuery !== null && (
+              <QuickReplyList
+                replies={matchingQuickReplies}
+                isLoading={quickRepliesLoading}
+                onSelect={pickQuickReply}
+                isDark={isDark}
+              />
+            )}
             {mention.isOpen && (
               <MentionList users={mention.suggestions} onSelect={mention.pick} isDark={isDark} />
             )}
@@ -545,10 +901,7 @@ const MessageSendPanel = ({
                 }}
               >
                 <Pressable
-                  onPress={() => {
-                    setSelectedIndex(0);
-                    setIsPrivate(false);
-                  }}
+                  onPress={() => switchMode(false)}
                   style={{
                     flex: 1,
                     alignItems: "center",
@@ -582,10 +935,7 @@ const MessageSendPanel = ({
                 </Pressable>
 
                 <Pressable
-                  onPress={() => {
-                    setSelectedIndex(1);
-                    setIsPrivate(true);
-                  }}
+                  onPress={() => switchMode(true)}
                   style={{
                     flex: 1,
                     alignItems: "center",
@@ -623,24 +973,26 @@ const MessageSendPanel = ({
                 gap: 10,
               }}
             >
-              <Pressable onPress={togglePanel}>
-                <View
-                  style={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: 19,
-                    backgroundColor: Colors.brand.blue,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Animated.View style={animatedPlusStyle}>
-                    <Plus size={18} color="#fff" />
-                  </Animated.View>
-                </View>
-              </Pressable>
+              {!isPrivate && voice.phase === "idle" && (
+                <Pressable onPress={togglePanel}>
+                  <View
+                    style={{
+                      width: 38,
+                      height: 38,
+                      borderRadius: 19,
+                      backgroundColor: Colors.brand.blue,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Animated.View style={animatedPlusStyle}>
+                      <Plus size={18} color="#fff" />
+                    </Animated.View>
+                  </View>
+                </Pressable>
+              )}
 
-              {templateOptionsVisible && (
+              {!isPrivate && templateOptionsVisible && (
                 <View
                   style={{
                     position: "absolute",
@@ -754,70 +1106,111 @@ const MessageSendPanel = ({
                 </View>
               </Modal>
 
-              <View
-                style={{
-                  flex: 1,
-                  backgroundColor: isDark ? Colors.dark.inputBg : Colors.light.inputBg,
-                  borderRadius: 24,
-                  paddingVertical: 10,
-                  paddingHorizontal: 14,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 8,
-                  borderWidth: 1,
-                  borderColor: isDark ? Colors.dark.inputBorder : Colors.light.border,
-                }}
-              >
-                <TextInput
-                  ref={mention.inputRef}
-                  style={{
-                    flex: 1,
-                    fontSize: 14,
-                    fontFamily: "InstrumentSans_400Regular",
-                    color: isDark ? "#fff" : Colors.light.textPrimary,
-                    padding: 0,
-                    maxHeight: 120,
-                  }}
-                  placeholder={selectedIndex === 0 ? "Type a message…" : "Add a note…"}
-                  placeholderTextColor={
-                    isDark ? Colors.dark.textPlaceholder : Colors.light.textPlaceholder
-                  }
-                  multiline
-                  value={textBody}
-                  onChangeText={mention.handleChangeText}
-                  onSelectionChange={mention.handleSelectionChange}
-                />
-                {!isPrivate && (
-                  <Pressable onPress={() => setMediaPanelVisible((prev) => !prev)}>
-                    <Paperclip
-                      size={17}
-                      color={isDark ? Colors.dark.inactive : Colors.light.textPlaceholder}
-                    />
-                  </Pressable>
-                )}
-              </View>
-
-              <Pressable
-                onPress={isPrivate ? handleSendPrivateMessage : handleSend}
-                disabled={isUploading}
-              >
+              {voice.phase !== "idle" && voice.phase !== "starting" ? (
+                <VoiceNoteBar voice={voice} isDark={isDark} />
+              ) : (
                 <View
                   style={{
-                    width: 42,
-                    height: 42,
-                    borderRadius: 21,
-                    backgroundColor: isPrivate ? Colors.accent.orange : Colors.brand.blue,
+                    flex: 1,
+                    backgroundColor: isPrivate
+                      ? noteTheme.bg
+                      : isDark
+                        ? Colors.dark.inputBg
+                        : Colors.light.inputBg,
+                    borderRadius: 24,
+                    paddingVertical: 10,
+                    paddingHorizontal: 14,
+                    flexDirection: "row",
                     alignItems: "center",
-                    justifyContent: "center",
+                    gap: 8,
+                    borderWidth: 1,
+                    borderColor: isPrivate
+                      ? noteTheme.border
+                      : isDark
+                        ? Colors.dark.inputBorder
+                        : Colors.light.border,
                   }}
                 >
-                  {isUploading ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <Send size={18} color="#fff" />
+                  <TextInput
+                    ref={mention.inputRef}
+                    style={{
+                      flex: 1,
+                      fontSize: 14,
+                      fontFamily: "InstrumentSans_400Regular",
+                      color: isDark ? "#fff" : Colors.light.textPrimary,
+                      padding: 0,
+                      maxHeight: 120,
+                    }}
+                    placeholder={
+                      selectedIndex === 0
+                        ? "Type a message…"
+                        : "Add a note — only your team sees it"
+                    }
+                    placeholderTextColor={
+                      isDark ? Colors.dark.textPlaceholder : Colors.light.textPlaceholder
+                    }
+                    multiline
+                    value={textBody}
+                    onChangeText={mention.handleChangeText}
+                    onSelectionChange={mention.handleSelectionChange}
+                  />
+                  {!isPrivate && (
+                    <>
+                      <Pressable
+                        onPress={openQuickReplies}
+                        hitSlop={6}
+                        accessibilityRole="button"
+                        accessibilityLabel="Quick replies"
+                      >
+                        <Zap
+                          size={17}
+                          color={isDark ? Colors.dark.inactive : Colors.light.textPlaceholder}
+                        />
+                      </Pressable>
+                      <Pressable onPress={() => setMediaPanelVisible((prev) => !prev)}>
+                        <Paperclip
+                          size={17}
+                          color={isDark ? Colors.dark.inactive : Colors.light.textPlaceholder}
+                        />
+                      </Pressable>
+                    </>
                   )}
                 </View>
-              </Pressable>
+              )}
+
+              {showMic ? (
+                <VoiceNoteMic voice={voice} />
+              ) : (
+                <Pressable
+                  onPress={
+                    voice.phase === "locked" || voice.phase === "review"
+                      ? voice.send
+                      : isPrivate
+                        ? handleSendPrivateMessage
+                        : handleSend
+                  }
+                  disabled={isUploading || voice.phase === "sending"}
+                  accessibilityRole="button"
+                  accessibilityLabel="Send"
+                >
+                  <View
+                    style={{
+                      width: 42,
+                      height: 42,
+                      borderRadius: 21,
+                      backgroundColor: isPrivate ? Colors.accent.orange : Colors.brand.blue,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {isUploading || voice.phase === "sending" ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      <Send size={18} color="#fff" />
+                    )}
+                  </View>
+                </Pressable>
+              )}
             </View>
           </View>
         </View>
@@ -990,21 +1383,19 @@ const MessageSendPanel = ({
           </View>
 
           <Pressable
-            disabled
+            onPress={() => switchMode(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Add a note"
             style={{
               width: 42,
               height: 42,
               borderRadius: 999,
-              backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
+              backgroundColor: Colors.accent.orange,
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <Send
-              size={18}
-              color={isDark ? Colors.dark.inactive : Colors.light.inactive}
-              style={{ marginLeft: 2 }}
-            />
+            <StickyNote size={18} color="#fff" />
           </Pressable>
         </View>
       )}

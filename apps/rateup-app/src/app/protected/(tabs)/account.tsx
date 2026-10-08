@@ -47,15 +47,15 @@ export default function AccountScreen() {
       return null;
     }
 
-    const { email, orgName, role, profilePhoto, orgPhone, userName, orgId, userId } = userData;
+    const { email, orgName, role, roleKey, profilePhoto, orgPhone, userName, orgId } = userData;
 
     return (
       <View className="flex-1 min-h-[70vh]">
         <AccountBar
           email={email}
-          userId={userId}
           orgName={orgName}
           role={role}
+          roleKey={roleKey}
           profilePhoto={profilePhoto}
           orgPhone={orgPhone}
           userName={userName}

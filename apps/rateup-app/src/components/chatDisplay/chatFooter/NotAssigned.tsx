@@ -1,9 +1,8 @@
 import { useLoggedInUser } from "@/api/api";
-import { useQueryClient } from "@tanstack/react-query";
 import { CircleUser } from "lucide-react-native";
 import { View, Text, Pressable, ActivityIndicator, useColorScheme } from "react-native";
 import { Colors } from "@/constants/colors";
-import { useAssignInboxToUser } from "@/api/inbox/messages/message.query";
+import { useAssignOwner } from "@/api/inbox/messages/message.query";
 import AssignToUser from "./AssignToUser";
 import { generateInternalMessageId } from "@/utils/chatbox_utils";
 import { useChatAssignStatusStore } from "@/utils/store";
@@ -15,40 +14,27 @@ const NotAssigned = ({ contactId }: { contactId: string }) => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const setWaAssignStatus = useChatAssignStatusStore((state) => state.setWaAssignStatus);
-  const queryClient = useQueryClient();
   const { data: userData, isLoading: loadingUser } = useLoggedInUser();
-  const assignMut = useAssignInboxToUser(contactId);
+  const assignMut = useAssignOwner();
   /** Waiting on the user query, or on the assign itself. */
   const busy = loadingUser || assignMut.isPending;
 
   const handleAssignToMe = async () => {
     const userId = userData?.userId;
-    const teamId = userData?.teams?.[0];
-
-    // The assign endpoint requires a teamId (`z.string()`, not optional), so a
-    // user with no team membership used to send `teamId: undefined` and get a
-    // silent 400 — and a missing `userData` threw on destructuring before the
-    // request was even made.
-    if (!userId || !teamId) {
+    if (!userId) {
       Toast.show({
         type: "error",
         text1: "Can't assign to you",
-        text2: !userId
-          ? "Your account details haven't loaded yet."
-          : "You're not a member of any team.",
+        text2: "Your account details haven't loaded yet.",
       });
       return;
     }
 
-    const id = generateInternalMessageId();
+    // The API picks the team: the chat's own when I am in it, not my first team.
     assignMut.mutate(
+      { messageId: generateInternalMessageId(), contactId, userId },
       {
-        messageId: id,
-        contactId,
-        assignees: [{ userId, teamId }],
-      },
-      {
-        onSuccess: () => {
+        onSuccess: (result) => {
           setWaAssignStatus("ASSIGNED");
 
           // The inbox list renders from the contacts store (and its SQLite
@@ -57,23 +43,14 @@ const NotAssigned = ({ contactId }: { contactId: string }) => {
           useContactsStore.getState().updateContactById(contactId, (c: any) => ({
             ...c,
             waMessageAssignStatus: "ASSIGNED",
-            assignedUsers: [{ id: userId, teamId, name: userData?.userName ?? "" }],
+            assignedUsers: (result?.assignees ?? []).map((a) => ({
+              id: a.userId,
+              teamId: a.teamId,
+              name: userData?.userName ?? "",
+            })),
           }));
-
-          queryClient.invalidateQueries({
-            queryKey: ["assigned-contact", contactId],
-          });
-          queryClient.invalidateQueries({
-            queryKey: ["wa-messages", contactId],
-          });
-          queryClient.invalidateQueries({ queryKey: ["contactCounts"] });
-          queryClient.invalidateQueries({
-            queryKey: ["assignedInboxUser", contactId],
-          });
-          queryClient.invalidateQueries({ queryKey: ["contacts", "filtered"] });
         },
         onError: (error: any) => {
-          // This used to fail silently, which is most of why it looked broken.
           Toast.show({
             type: "error",
             text1: "Could not assign",

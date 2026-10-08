@@ -2,7 +2,7 @@ import { useColorScheme } from "nativewind";
 import React, { memo, useMemo } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
-import { Image as ImageIcon, MessageCircle, Star, UserPlus } from "lucide-react-native";
+import { Check, Image as ImageIcon, MessageCircle, Star, UserPlus } from "lucide-react-native";
 import { ContactsWithLastMessage, WaMessageAssignStatus } from "@/api/inbox/types";
 import { namePreview } from "../../utils/chatbox_utils";
 import { MessagePlatform } from "@/constants/enums";
@@ -148,6 +148,10 @@ export type ChatBoxProps = ContactsWithLastMessage & {
   onAssignPress?: () => void;
   /** Highlights the row with the design's brand-soft fill. */
   selected?: boolean;
+  /** Long-press starts the inbox's multi-select. */
+  onLongPress?: () => void;
+  /** While selecting, every avatar shows a check circle, filled on the chosen rows. */
+  selectionMode?: boolean;
   /** Used to pick the warm "you" capsule for the assignee chip. */
   currentUserId?: string;
   /** Which of the org's numbers/accounts the ticket came in on — see `resolveChannel`. */
@@ -184,6 +188,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   onPress,
   onAssignPress,
   selected,
+  onLongPress,
+  selectionMode,
   currentUserId,
   channelLabel,
   channelConnected,
@@ -300,6 +306,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   return (
     <Pressable
       onPress={onPress}
+      onLongPress={onLongPress}
+      delayLongPress={300}
+      accessibilityState={selectionMode ? { selected: !!selected } : undefined}
       android_ripple={{ color: t.brandSoft }}
       style={{
         flexDirection: "row",
@@ -366,6 +375,25 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               }}
             >
               {channelIcon(platform, "#fff", 10)}
+            </View>
+          ) : null}
+          {selectionMode ? (
+            <View
+              style={{
+                position: "absolute",
+                right: -2,
+                bottom: -2,
+                width: 20,
+                height: 20,
+                borderRadius: 10,
+                backgroundColor: selected ? t.brand : t.surface,
+                borderWidth: 2,
+                borderColor: selected ? t.surface : t.fg4,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {selected ? <Check size={12} color={t.onAccent} strokeWidth={3} /> : null}
             </View>
           ) : null}
         </View>

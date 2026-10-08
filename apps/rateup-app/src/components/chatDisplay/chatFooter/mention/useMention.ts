@@ -14,12 +14,17 @@ export function useMention({
   enabled,
   text,
   setText,
+  onPick,
 }: {
-  /** Only the private note composes mentions; the message tab types normally. */
   enabled: boolean;
   text: string;
   setText: (value: string) => void;
+  /** Called after a teammate is inserted. */
+  onPick?: (user: MentionUser) => void;
 }) {
+  // Read through a ref: `pick` is memoised and would otherwise call a stale callback.
+  const onPickRef = useRef(onPick);
+  onPickRef.current = onPick;
   const { data: orgMembers } = useTeamsMembersOfOrg();
 
   const users = useMemo<MentionUser[]>(
@@ -93,6 +98,7 @@ export function useMention({
       setText(next);
       setCaret(position);
       setJustPicked(true);
+      onPickRef.current?.(user);
     },
     [caret, text, setText],
   );
@@ -104,6 +110,17 @@ export function useMention({
     }
     return Array.from(ids);
   }, []);
+
+  /** Replaces `text[start, end)` and puts the caret after the inserted value. */
+  const replaceRange = useCallback(
+    (start: number, end: number, value: string) => {
+      const position = start + value.length;
+      pendingCaretRef.current = position;
+      setText(text.slice(0, start) + value + text.slice(end));
+      setCaret(position);
+    },
+    [text, setText],
+  );
 
   /** Mentions belong to the note being composed — drop them once it is sent. */
   const reset = useCallback(() => {
@@ -121,6 +138,9 @@ export function useMention({
     inputRef,
     handleChangeText,
     handleSelectionChange,
+    /** Where the caret is, for other `/`-style triggers in the same input. */
+    caret,
+    replaceRange,
     pick,
     getMentionedUserIds,
     reset,
