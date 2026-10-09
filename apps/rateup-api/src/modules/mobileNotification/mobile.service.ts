@@ -3,7 +3,12 @@ import axios from "axios";
 import { log } from "../../utils/logger.js";
 import { isExpoPushToken } from "./mobile.schema.js";
 
-export async function addToken(expoToken: string, userId: string, orgId: string) {
+export async function addToken(
+  expoToken: string,
+  userId: string,
+  orgId: string,
+  platform?: "ios" | "android",
+) {
   if (!expoToken || !userId || !orgId) {
     throw new Error("Missing expoToken or userId or orgId");
   }
@@ -18,10 +23,12 @@ export async function addToken(expoToken: string, userId: string, orgId: string)
     },
     create: {
       expoToken,
+      platform,
       user: { connect: { id: userId } },
       org: { connect: { id: orgId } },
     },
-    update: {},
+    // Fills the platform in for a device registered before the app sent it.
+    update: platform ? { platform } : {},
   });
 }
 
@@ -116,11 +123,35 @@ async function pruneStaleTokens(stale: string[], reason: string) {
  * is reported later in a *receipt*, fetched by ticket id. The caller schedules
  * that second pass — see `checkPushReceipts`.
  */
+/**
+ * How a push is delivered, beyond its words. Everything here is optional and maps straight
+ * onto Expo's message fields; omitted means Expo's defaults (the default sound, the app's
+ * default Android channel, no expiry).
+ */
+export interface PushDelivery {
+  /** iOS: a sound file bundled in the app, e.g. `"wa_call_ringtone.wav"`. */
+  sound?: string;
+  /** Android: the notification channel, which decides the sound and heads-up behaviour. */
+  channelId?: string;
+  priority?: "default" | "normal" | "high";
+  /** Seconds Expo and the platforms keep trying before dropping the push. */
+  ttl?: number;
+  /** iOS 15+: `time-sensitive` breaks through Focus modes. */
+  interruptionLevel?: "active" | "critical" | "passive" | "time-sensitive";
+  /**
+   * Android: send `data` alone, with no title, body or sound. FCM then hands it to the app
+   * instead of drawing a notification — and wakes a closed app to run its background task,
+   * which is how a call rings full-screen on a locked phone. `title`/`body` are ignored.
+   */
+  dataOnly?: boolean;
+}
+
 export async function sendPushNotification(
   expoPushTokens: string[],
   title: string,
   body: string,
   data: Record<string, unknown> = {},
+  delivery: PushDelivery = {},
 ): Promise<Record<string, string>> {
   if (!Array.isArray(expoPushTokens) || expoPushTokens.length === 0) {
     log.warn("No Expo push tokens provided");
@@ -139,13 +170,12 @@ export async function sendPushNotification(
 
   for (let i = 0; i < validTokens.length; i += EXPO_BATCH_SIZE) {
     const batch = validTokens.slice(i, i + EXPO_BATCH_SIZE);
-    const messages = batch.map((token) => ({
-      to: token,
-      sound: "default",
-      title,
-      body,
-      data,
-    }));
+    const { dataOnly, ...fields } = delivery;
+    const messages = batch.map((token) =>
+      dataOnly
+        ? { to: token, data, ...fields }
+        : { to: token, sound: "default", title, body, data, ...fields },
+    );
 
     // No try/catch: a transport failure used to be swallowed with a
     // console.error, so no caller could tell a delivered push from an
@@ -242,4 +272,17 @@ export async function checkPushReceipts(tokensByTicketId: Record<string, string>
   }
 
   await pruneStaleTokens(stale, "receipt");
+}
+
+/** Register this device's PushKit token (iOS), so a call can ring it while the app is closed. */
+export async function addVoipToken(token: string, userId: string, orgId: string) {
+  return prisma.voipPushToken.upsert({
+    where: { token_userId_orgId: { token, userId, orgId } },
+    create: { token, userId, orgId },
+    update: {},
+  });
+}
+
+export async function deleteVoipToken(token: string, userId: string) {
+  return prisma.voipPushToken.deleteMany({ where: { token, userId } });
 }

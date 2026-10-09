@@ -49,6 +49,10 @@ vi.mock("../wa_axios.js", () => ({
   },
 }));
 vi.mock("../whatsappSurvey/wasurvey.service.js", () => ({ sendMessage: vi.fn() }));
+vi.mock("./calling.push.js", () => ({
+  pushIncomingCall: vi.fn(),
+  pushCallStoppedRinging: vi.fn(),
+}));
 vi.mock("../../../workers/bullmq/queues/callWatchdog.queue.js", () => ({
   armCallWatchdog: vi.fn(),
 }));
@@ -63,6 +67,7 @@ import { getChannelScope } from "../settings/wa_channel_access.js";
 import { getWaSettings, getWaSettingsByPhoneId } from "../settings/wa_settings.service.js";
 import { callMetaApi, GraphApiError } from "../wa_axios.js";
 import { armCallWatchdog } from "../../../workers/bullmq/queues/callWatchdog.queue.js";
+import { pushIncomingCall } from "./calling.push.js";
 import {
   acceptCall,
   callSummary,
@@ -201,6 +206,10 @@ describe("incoming call webhook", () => {
     expect(userIds).toEqual(["agent"]);
     expect(message.call?.event).toBe("incoming");
     expect(JSON.stringify(message)).not.toContain("v=0 offer");
+    // Phones in the background ring through push, for the same people the socket reached.
+    expect(pushIncomingCall).toHaveBeenCalledWith(
+      expect.objectContaining({ callId: CALL_ID, userIds: ["agent"], callerName: "Asha" }),
+    );
   });
 
   test("a redelivered connect does not ring twice", async () => {
@@ -394,6 +403,7 @@ describe("startCall", () => {
 
 describe("outbound answer", () => {
   test("relays the customer's SDP answer to the dialling agent only", async () => {
+    vi.mocked(redis.set).mockResolvedValue("OK" as never);
     vi.mocked(prisma.waCall.findUnique).mockResolvedValue(
       callRow({ direction: "BUSINESS_INITIATED", initiatedById: "agent" }) as never,
     );
@@ -417,6 +427,32 @@ describe("outbound answer", () => {
     const [, message, , userIds] = vi.mocked(sendViaWstoOrgHandler).mock.calls[0];
     expect(userIds).toEqual(["agent"]);
     expect(message.call).toMatchObject({ event: "answer", sdp: "v=0 answer" });
+  });
+
+  test("a redelivered connect does not relay the answer twice", async () => {
+    vi.mocked(prisma.waCall.findUnique).mockResolvedValue(
+      callRow({ direction: "BUSINESS_INITIATED", initiatedById: "agent" }) as never,
+    );
+    // The first delivery already claimed the relay.
+    vi.mocked(redis.set).mockResolvedValue(null as never);
+
+    await handleCallsWebhook(
+      callsWebhook({
+        calls: [
+          {
+            id: "wacid.ABC",
+            from: "916282034535",
+            to: "919800000000",
+            event: "connect",
+            direction: "BUSINESS_INITIATED",
+            timestamp: "1791367200",
+            session: { sdp_type: "answer", sdp: "v=0 answer" },
+          },
+        ],
+      }),
+    );
+
+    expect(sendViaWstoOrgHandler).not.toHaveBeenCalled();
   });
 });
 
