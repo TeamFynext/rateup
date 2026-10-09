@@ -8,7 +8,7 @@ import { randomUUID } from "node:crypto";
 import ffmpeg from "fluent-ffmpeg";
 import path from "node:path";
 import ffmpegInstaller from "@ffmpeg-installer/ffmpeg";
-import { validateFile } from "../../utils/upload/validate.js";
+import { normalizeMimeType, validateFile } from "../../utils/upload/validate.js";
 import { log } from "../../utils/logger.js";
 import type { PutObjectCommandInput } from "@aws-sdk/client-s3";
 
@@ -41,7 +41,7 @@ export async function uploadController(req: FastifyRequest, reply: FastifyReply)
     Bucket: bucket(),
     Key: uniqueFilename,
     Body: file,
-    ContentType: data.mimetype,
+    ContentType: mimetype,
   };
   let tempRawPath: string | undefined, tempOutputPath: string | undefined;
 
@@ -60,13 +60,13 @@ export async function uploadController(req: FastifyRequest, reply: FastifyReply)
 
       await pumpToFile(file, tempRawPath);
 
-      let mimetype: string;
-      if (data.mimetype === "audio/ogg") {
+      let outputType: string;
+      if (mimetype === "audio/ogg") {
         await convertToWhatsAppCompatibleOGG(tempRawPath, tempOutputPath);
-        mimetype = "audio/ogg";
+        outputType = "audio/ogg";
       } else {
         await convertToM4A(tempRawPath, tempOutputPath);
-        mimetype = "audio/mp4";
+        outputType = "audio/mp4";
       }
 
       const finalBuffer = await fsp.readFile(tempOutputPath);
@@ -74,7 +74,7 @@ export async function uploadController(req: FastifyRequest, reply: FastifyReply)
         Bucket: bucket(),
         Key: uniqueFilename,
         Body: finalBuffer,
-        ContentType: mimetype,
+        ContentType: outputType,
       };
     }
 
@@ -148,7 +148,8 @@ export async function uploadWithThumbnailsController(req: FastifyRequest, reply:
     data.file.resume();
     return reply.code(400).send({ message: validation.message });
   }
-  if (!THUMBNAILABLE.includes(data.mimetype)) {
+  const mimetype = normalizeMimeType(data.mimetype);
+  if (!THUMBNAILABLE.includes(mimetype)) {
     data.file.resume();
     return reply.code(400).send({ message: "This endpoint accepts images only." });
   }
@@ -162,7 +163,7 @@ export async function uploadWithThumbnailsController(req: FastifyRequest, reply:
       Bucket: bucket(),
       Key: uniqueFilename,
       Body: buffer,
-      ContentType: data.mimetype,
+      ContentType: mimetype,
     };
     const resizedImage = await sharp(buffer)
       .resize({

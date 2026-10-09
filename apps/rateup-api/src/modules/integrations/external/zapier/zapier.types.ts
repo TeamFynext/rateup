@@ -25,10 +25,13 @@ export enum ZapierTriggers {
 }
 
 /**
- * One REST-hook subscription inside the Zapier `Integration.credential`, as the
- * app's subscribe call stores it. Zapier turns a hook off by answering 410.
+ * One REST-hook subscription inside an automation platform's
+ * `Integration.credential`, as its subscribe call stores it. A platform turns a
+ * hook off by answering 410.
  */
 export interface ZapierTriggerSubscription {
+  /** Set on hooks subscribed since ids were added; Make unsubscribes by it, Zapier by URL. */
+  id?: string;
   hookUrl: string;
   subscribed_field: string;
   active: boolean;

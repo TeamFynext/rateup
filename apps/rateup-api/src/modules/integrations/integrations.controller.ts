@@ -9,6 +9,7 @@ import {
 import { log } from "../../utils/logger.js";
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
+  AutomationHookParams,
   ByNameParams,
   DeleteZapierHookInput,
   IntegrationSchema,
@@ -18,6 +19,8 @@ import {
   UpdateIntgrationInput,
 } from "./integrations.schema.js";
 import { IntegratedApps } from "../../types/enums.js";
+import { removeAutomationHookById } from "./automation/automation.hooks.js";
+import { isAutomationPlatform } from "./automation/automation.platforms.js";
 import { listIntegrationActivity } from "./external/integrationActivity.js";
 import { connectWithApiKey } from "./shared/apiKeyConnect.js";
 import { finishOAuthConnect, OAuthConnectError, startOAuthConnect } from "./shared/oauthConnect.js";
@@ -162,6 +165,24 @@ export async function deleteZapierTriggerHookHandler(
     log.error(e);
     reply.code(500).send(e);
   }
+}
+
+/**
+ * Removes one of an automation platform's hooks by id, from the dashboard. The
+ * platform is not told; its deliveries simply stop. Zapier's older hooks have no
+ * id and stay on `/zapier-hook`.
+ */
+export async function deleteAutomationHookHandler(
+  request: FastifyRequest<{ Params: AutomationHookParams }>,
+  reply: FastifyReply,
+) {
+  const { name, hookId } = request.params;
+  if (!isAutomationPlatform(name)) {
+    return reply.code(400).send({ error: `${name} has no hooks` });
+  }
+  const removed = await removeAutomationHookById(name, request.user.orgId, hookId);
+  if (!removed) return reply.code(404).send({ error: "Hook not found" });
+  return reply.send({ success: true });
 }
 
 /**

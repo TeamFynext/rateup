@@ -18,16 +18,22 @@ vi.mock("../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
 vi.mock("./shopify/shopify.route.js", () => ({ shopifyRoutes: vi.fn() }));
 vi.mock("../../utils/auditLog.js", () => ({ recordAuditEvent: vi.fn() }));
 vi.mock("./providers/registry.js", () => ({ getIntegrationProvider: vi.fn() }));
+vi.mock("./automation/automation.hooks.js", () => ({
+  addAutomationHook: vi.fn(),
+  removeAutomationHookById: vi.fn(),
+}));
 
 import { recordAuditEvent } from "../../utils/auditLog.js";
 import * as service from "./integrations.service.js";
 import { getIntegrationProvider } from "./providers/registry.js";
+import { removeAutomationHookById } from "./automation/automation.hooks.js";
 import { IntegrationConnectError } from "./shared/oauthConnectError.js";
 import {
   connectWithApiKeyHandler,
   createIntegrationHandler,
   deleteIntegrationByNameHandler,
   deleteZapierTriggerHookHandler,
+  deleteAutomationHookHandler,
   getAllIntegrationsByOrgHandler,
   getIntegrationStatusesHandler,
   updateIntegrationByNameHandler,
@@ -264,6 +270,37 @@ describe("deleteZapierTriggerHookHandler", () => {
     await deleteZapierTriggerHookHandler({ user: { orgId: ORG }, body: {} } as never, rep);
 
     expect(answer(rep).code).toBe(500);
+  });
+});
+
+// ===========================================================================
+// deleteAutomationHookHandler
+// ===========================================================================
+
+describe("deleteAutomationHookHandler", () => {
+  const removeHook = removeAutomationHookById as unknown as ReturnType<typeof vi.fn>;
+  const call = (name: string, rep = reply()) =>
+    deleteAutomationHookHandler(
+      { user: { orgId: ORG }, params: { name, hookId: "h-1" } } as never,
+      rep,
+    ).then(() => answer(rep));
+
+  test("removes the hook by id within the session's org", async () => {
+    removeHook.mockResolvedValueOnce(true);
+
+    expect((await call("make")).body).toEqual({ success: true });
+    expect(removeHook).toHaveBeenCalledWith("make", ORG, "h-1");
+  });
+
+  test("a hook that is not there is a 404", async () => {
+    removeHook.mockResolvedValueOnce(false);
+
+    expect((await call("make")).code).toBe(404);
+  });
+
+  test("an integration that is not an automation platform has no hooks", async () => {
+    expect((await call("hubspot")).code).toBe(400);
+    expect(removeHook).not.toHaveBeenCalled();
   });
 });
 

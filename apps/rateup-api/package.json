@@ -21,6 +21,7 @@
     "lint:fix": "oxlint --fix",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
+    "make:deploy": "node make-app/deploy.mjs",
     "test": "vitest --silent",
     "prepare": "husky",
     "postinstall": "prisma generate",

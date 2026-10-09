@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import { buildActor } from "../../../../authz/actor.js";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { log } from "../../../../utils/logger.js";
@@ -51,7 +53,8 @@ export async function zapierAuthenticationHandler(
     }
     const authHeader = request.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      log.error("No bearer token found in headers\n%o", request.headers);
+      // Never log the headers: they carry the API key.
+      log.warn({ url: request.url }, "Zapier request without a bearer token");
       reply.code(400).send({
         message: "Invalid request",
         error: "No bearer token found in headers",
@@ -60,7 +63,7 @@ export async function zapierAuthenticationHandler(
     }
     const apiKey = authHeader.split("Bearer ")[1];
     if (!apiKey) {
-      log.error("No API Key found in headers\n%o", request.headers);
+      log.warn({ url: request.url }, "Zapier request with an empty bearer token");
       reply.code(401).send({
         message: "Not authorized",
         error: "No API Key found in headers",
@@ -85,7 +88,7 @@ export async function zapierAuthenticationHandler(
     const isValid = await bcrypt.compare(apiKey, integration.credential?.accessToken);
 
     if (!isValid) {
-      log.error("Invalid access token\n%o", request.headers);
+      log.warn({ orgId }, "Zapier request with an invalid API key");
       reply.code(401).send({ message: "Not authorized", error: "Invalid access token" });
       return;
     }
@@ -160,6 +163,7 @@ export async function subscribeTriggerHandler(
       }
     } else {
       triggerSubscriptions.push({
+        id: randomUUID(),
         ...newTrigger,
         createdAt: hookReceivedAt,
         updatedAt: hookReceivedAt,
@@ -214,9 +218,10 @@ export async function updateContactLabelsByIdHandler(
   reply: FastifyReply,
 ) {
   try {
+    // The org is the one the API key was checked against; a body `orgId` is ignored.
     const contact = await updateContactLabelsById(
       request.body.contactId,
-      request.body.orgId,
+      request.user.orgId,
       request.body?.lifecycleId,
     );
     return reply.code(201).send({
@@ -248,13 +253,14 @@ export async function getSampleDataForTriggerHandler(
 
 export async function updateContactHandler(
   request: FastifyRequest<{
-    Body: { contactId: string; orgId: string; waMessageAssignStatus: WaMessageAssignStatus };
+    Body: { contactId: string; orgId?: string; waMessageAssignStatus: WaMessageAssignStatus };
   }>,
   reply: FastifyReply,
 ) {
   try {
-    const { contactId, orgId, ...rest } = request.body;
-    const data = await updateContactById(contactId, orgId, rest);
+    // The org is the one the API key was checked against; a body `orgId` is ignored.
+    const { contactId, orgId: _ignored, ...rest } = request.body;
+    const data = await updateContactById(contactId, request.user.orgId, rest);
     reply.send(data);
   } catch (e) {
     log.error(e);

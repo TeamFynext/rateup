@@ -49,7 +49,12 @@ import bcrypt from "bcrypt";
 import { getIntegrationByName, updateIntegrationByName } from "../../integrations.service.js";
 import { sendTextMessage } from "../../../whatsapp/whatsappSurvey/wasurvey.service.js";
 import { inviteTeamMember } from "../../../team/team.service.js";
-import { deleteContactById, getContactById } from "../../../contact/contact.service.js";
+import {
+  deleteContactById,
+  getContactById,
+  updateContactById,
+  updateContactLabelsById,
+} from "../../../contact/contact.service.js";
 import {
   deleteContactByPhoneNumberAndOrgId,
   getContactsByPhoneNumberAndOrgId,
@@ -63,6 +68,8 @@ import {
   inviteMemberHandler,
   sendTextMessageHandler,
   subscribeTriggerHandler,
+  updateContactHandler,
+  updateContactLabelsByIdHandler,
   zapierAuthenticationHandler,
 } from "./zapier.controller.js";
 import { zapierRoutes } from "./zapier.route.js";
@@ -159,7 +166,7 @@ describe("route registration", () => {
     // mounted where it should be.
     expect(
       srv.register.mock.calls.map(([, opts]: [unknown, { prefix: string }]) => opts.prefix),
-    ).toEqual(["/getlead", "/zapier", "/zoho"]);
+    ).toEqual(["/getlead", "/make", "/pabbly", "/zapier", "/zoho"]);
   });
 
   test("every route other than /auth carries a data-bearing handler", async () => {
@@ -282,17 +289,23 @@ describe("zapierAuthenticationHandler", () => {
     });
   });
 
-  test("logs the full header set, bearer token included, when the shape is wrong", async () => {
+  test("never logs the headers, which carry the API key", async () => {
     const { log } = await import("../../../../utils/logger.js");
+    (bcrypt.compare as unknown as Mock).mockResolvedValueOnce(false);
 
     await zapierAuthenticationHandler(
       req({ headers: { authorization: "Basic secret" } }) as never,
       reply(),
     );
+    await zapierAuthenticationHandler(req() as never, reply());
 
-    expect((log.error as unknown as Mock).mock.calls[0]).toContain(
-      "No bearer token found in headers\n%o",
+    const logged = JSON.stringify(
+      [log.error, log.warn, log.info, log.debug, log.trace].flatMap(
+        (fn) => (fn as unknown as Mock).mock.calls,
+      ),
     );
+    expect(logged).not.toContain("secret");
+    expect(logged).not.toContain("plain-api-key");
   });
 });
 
@@ -455,6 +468,47 @@ describe("the unauthenticated handlers take their org from the query string", ()
     const stored = (updateIntegrationByName as unknown as Mock).mock.calls[0][2].credential
       .triggerSubscriptions[0];
     expect(stored.active).toBe(true);
+  });
+});
+
+// ===========================================================================
+// Contact writes use the org the API key was checked against
+// ===========================================================================
+
+describe("contact writes ignore an orgId in the body", () => {
+  const KEY_ORG = "org-of-the-key";
+
+  test("contact-lifecycle updates within the key's org", async () => {
+    (updateContactLabelsById as unknown as Mock).mockResolvedValueOnce({
+      id: "c-1",
+      Lifecycle: { name: "Customer" },
+    });
+
+    await updateContactLabelsByIdHandler(
+      {
+        user: { orgId: KEY_ORG },
+        query: { orgId: KEY_ORG },
+        body: { contactId: "c-1", lifecycleId: "l-1", orgId: VICTIM_ORG },
+      } as never,
+      reply(),
+    );
+
+    expect(updateContactLabelsById).toHaveBeenCalledWith("c-1", KEY_ORG, "l-1");
+  });
+
+  test("contact update writes within the key's org, without the body orgId", async () => {
+    await updateContactHandler(
+      {
+        user: { orgId: KEY_ORG },
+        query: { orgId: KEY_ORG },
+        body: { contactId: "c-1", orgId: VICTIM_ORG, waMessageAssignStatus: "CLOSED" },
+      } as never,
+      reply(),
+    );
+
+    expect(updateContactById).toHaveBeenCalledWith("c-1", KEY_ORG, {
+      waMessageAssignStatus: "CLOSED",
+    });
   });
 });
 

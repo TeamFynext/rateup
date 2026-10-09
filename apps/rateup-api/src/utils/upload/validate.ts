@@ -8,6 +8,37 @@ export function getMultipartFieldValue(field: Multipart | Multipart[] | undefine
   return part?.type === "field" ? part.value : undefined;
 }
 
+/**
+ * Other names for the types below, as clients send them. iOS does not let an app choose the
+ * type of a file it uploads: React Native's networking replaces it with the type iOS
+ * derives from the extension, and iOS calls `.m4a` (every iPhone recording, and Voice
+ * Memos) `audio/x-m4a`. Refusing that refused every voice note sent from an iPhone.
+ */
+const MIME_ALIASES: Record<string, string> = {
+  "audio/x-m4a": "audio/mp4",
+  "audio/m4a": "audio/mp4",
+  "audio/mp4a-latm": "audio/mp4",
+  "audio/x-mp4": "audio/mp4",
+  "audio/mp3": "audio/mpeg",
+  "audio/x-mp3": "audio/mpeg",
+  "audio/mpeg3": "audio/mpeg",
+  "audio/x-mpeg": "audio/mpeg",
+  "audio/x-aac": "audio/aac",
+  "audio/aacp": "audio/aac",
+  "audio/opus": "audio/ogg",
+  "image/jpg": "image/jpeg",
+  "image/pjpeg": "image/jpeg",
+  "video/x-m4v": "video/mp4",
+  "video/mov": "video/quicktime",
+  "application/x-pdf": "application/pdf",
+};
+
+/** A client's MIME type in the spelling this module knows: lower case, no parameters, no alias. */
+export function normalizeMimeType(mimetype: string | undefined): string {
+  const type = (mimetype ?? "").split(";")[0].trim().toLowerCase();
+  return MIME_ALIASES[type] ?? type;
+}
+
 const mimeTypeMaxSizes: Record<string, number> = {
   // Audio
   "audio/aac": 16 * 1024 * 1024,
@@ -54,7 +85,8 @@ export function validateFile({
   if (allowAll) {
     return { valid: true };
   }
-  const maxSize = mimeTypeMaxSizes?.[data?.mimetype];
+  const mimetype = normalizeMimeType(data?.mimetype);
+  const maxSize = mimeTypeMaxSizes?.[mimetype];
   if (!maxSize) {
     return { valid: false, message: "Unsupported file type." };
   }
@@ -71,7 +103,7 @@ export function validateFile({
     };
   }
   const validKeys = Object.keys(mimeTypeMaxSizes);
-  if (!validKeys.includes(data?.mimetype) || data.type !== "file") {
+  if (!validKeys.includes(mimetype) || data.type !== "file") {
     return { valid: false, message: "This file type is not permitted." };
   }
   return { valid: true, maxSize };

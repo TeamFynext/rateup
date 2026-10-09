@@ -153,7 +153,7 @@ describe("deliverZapierHook", () => {
 
     await expect(
       deliverZapierHook(listening(), deliveryJob(), { finalAttempt: false }),
-    ).resolves.toBeUndefined();
+    ).resolves.toBe("skipped");
 
     expect(db.$executeRaw).toHaveBeenCalledTimes(1);
     // The hook that failed is the one named in the statement, not a neighbour by position.

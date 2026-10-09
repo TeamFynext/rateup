@@ -4,6 +4,12 @@ const byNameSchema = z.object({
   name: z.string(),
 });
 
+/** One hook of an automation platform (Make, …), removed from the dashboard. */
+const automationHookParamsSchema = z.object({
+  name: z.string(),
+  hookId: z.string().min(1),
+});
+
 const byIdSchema = z.object({
   id: z.string(),
 });
@@ -57,7 +63,10 @@ export type OAuthAuthorizeQuery = z.infer<typeof oauthAuthorizeQuerySchema>;
 export type OAuthCallbackInput = z.infer<typeof oauthCallbackSchema>;
 
 // Auto-exported after fastify-zod migration
+export type AutomationHookParams = z.infer<typeof automationHookParamsSchema>;
+
 export {
+  automationHookParamsSchema,
   byNameSchema,
   byIdSchema,
   integrationSchema,

@@ -3,6 +3,7 @@ import {
   createIntegrationHandler,
   deleteIntegrationByNameHandler,
   deleteZapierTriggerHookHandler,
+  deleteAutomationHookHandler,
   connectWithApiKeyHandler,
   finishOAuthConnectHandler,
   getAllIntegrationsByOrgHandler,
@@ -17,10 +18,12 @@ import {
   integrationSchema,
   updateIntgrationSchema,
   deleteZapierHookSchema,
+  automationHookParamsSchema,
   apiKeyConnectSchema,
   oauthAuthorizeQuerySchema,
   oauthCallbackSchema,
   type DeleteZapierHookInput,
+  type AutomationHookParams,
   type ApiKeyConnectInput,
   type OAuthAuthorizeQuery,
   type OAuthCallbackInput,
@@ -31,6 +34,7 @@ import {
 import { shopifyRoutes } from "./shopify/shopify.route.js";
 import { wooCommerceRoutes } from "./woocommerce/woocommerce.route.js";
 import { hubSpotRoutes } from "./hubspot/hubspot.route.js";
+import { pipedriveRoutes } from "./pipedrive/pipedrive.route.js";
 import { petpoojaRoutes } from "./petpooja/petpooja.js";
 import { waPaymentRoutes } from "./wapayment/wapayment.route.js";
 import { declareAccess } from "../../authz/registry.js";
@@ -41,6 +45,7 @@ export async function integrationsRoutes(server: FastifyInstance) {
   server.register(shopifyRoutes, { prefix: "/shopify" });
   server.register(wooCommerceRoutes, { prefix: "/woocommerce" });
   server.register(hubSpotRoutes, { prefix: "/hubspot" });
+  server.register(pipedriveRoutes, { prefix: "/pipedrive" });
   server.register(petpoojaRoutes, { prefix: "/petpooja" });
   // No prefix: the WhatsApp payment paths predate the provider folders.
   server.register(waPaymentRoutes);
@@ -123,5 +128,11 @@ export async function integrationsRoutes(server: FastifyInstance) {
       },
     },
     deleteZapierTriggerHookHandler,
+  );
+
+  server.delete<{ Params: AutomationHookParams }>(
+    "/:name/hooks/:hookId",
+    { schema: { params: automationHookParamsSchema } },
+    deleteAutomationHookHandler,
   );
 }

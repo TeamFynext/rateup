@@ -72,7 +72,8 @@ const contactSearchSchema = z
 const contactLabelSchema = z.object({
   contactId: z.string(),
   lifecycleId: z.string(),
-  orgId: z.string(),
+  // Sent by the published Zapier app; ignored — the org comes from the API key.
+  orgId: z.string().optional(),
 });
 
 export type TriggerSubscriptionBodySchema = z.infer<typeof triggerSubscriptionBodySchema>;

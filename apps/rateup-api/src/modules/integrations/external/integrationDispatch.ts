@@ -69,8 +69,9 @@ export async function processIntegration(job: Job<ProviderJobData>) {
   }
 
   const finalAttempt = job.attemptsMade + 1 >= (job.opts?.attempts ?? 1);
+  let result: void | "skipped";
   try {
-    await provider.processJob(integration, job.data, { finalAttempt });
+    result = await provider.processJob(integration, job.data, { finalAttempt });
   } catch (error) {
     // Counted once the job has run out of retries, so a GetLead 429 that its
     // backoff rides out is not reported as a failure.
@@ -81,5 +82,7 @@ export async function processIntegration(job: Job<ProviderJobData>) {
     }
     throw error;
   }
-  await markIntegrationHealthy(integration);
+  // A job that sent nothing says nothing about the connection: clearing the
+  // failure count here would hide the failure that switched its target off.
+  if (result !== "skipped") await markIntegrationHealthy(integration);
 }
