@@ -1,6 +1,12 @@
 import { FastifyInstance } from "fastify";
-import { addExpoToken, deleteToken, getExpoTokens } from "./mobile.controller.js";
-import { addExpoTokenSchema, deleteExpoTokenSchema } from "./mobile.schema.js";
+import {
+  addExpoToken,
+  addVoipTokenHandler,
+  deleteToken,
+  deleteVoipTokenHandler,
+  getExpoTokens,
+} from "./mobile.controller.js";
+import { addExpoTokenSchema, deleteExpoTokenSchema, voipTokenSchema } from "./mobile.schema.js";
 import { declareAccess } from "../../authz/registry.js";
 
 export async function mobileNotificationRoutes(server: FastifyInstance) {
@@ -27,4 +33,8 @@ export async function mobileNotificationRoutes(server: FastifyInstance) {
     },
     deleteToken,
   );
+
+  // iOS PushKit tokens, for ringing calls through CallKit while the app is closed.
+  server.post("/voip", { schema: { body: voipTokenSchema } }, addVoipTokenHandler);
+  server.delete("/voip", { schema: { body: voipTokenSchema } }, deleteVoipTokenHandler);
 }

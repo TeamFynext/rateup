@@ -24,6 +24,7 @@ import { callMetaApi, GraphApiError } from "../wa_axios.js";
 import { sendMessage } from "../whatsappSurvey/wasurvey.service.js";
 import { armCallWatchdog } from "../../../workers/bullmq/queues/callWatchdog.queue.js";
 import { holdsBrowserMedia, markCallAlive, terminateOnMeta } from "./calling.watchdog.js";
+import { pushCallStoppedRinging, pushIncomingCall } from "./calling.push.js";
 import type {
   CallDto,
   CallLogEntry,
@@ -46,6 +47,7 @@ export const NO_CALL_PERMISSION_CODE = 138006;
 
 const offerKey = (waCallId: string) => `wacall:offer:${waCallId}`;
 const audienceKey = (callId: string) => `wacall:audience:${callId}`;
+const answerRelayedKey = (callId: string) => `wacall:answered:${callId}`;
 
 // ---------------------------------------------------------------------------------------
 // Shared helpers
@@ -174,6 +176,14 @@ async function publish(call: CallWithContact, event: CallWsEvent["event"], userI
     "main",
     to,
   );
+  // A customer's call that has stopped ringing (answered, declined, given up) also clears
+  // the full-screen ring on phones woken by push, which have no socket to hear this on.
+  if (
+    call.direction === WaCallDirection.USER_INITIATED &&
+    (event === "ended" || (event === "updated" && call.status !== WaCallStatus.RINGING))
+  ) {
+    await pushCallStoppedRinging({ orgId: call.orgId, callId: call.id, userIds: to });
+  }
 }
 
 async function findCallForActor(actor: Actor, callId: string): Promise<CallWithContact> {
@@ -565,6 +575,14 @@ async function onIncomingCall(
     return;
   }
   await publish(call, "incoming", audience);
+  await pushIncomingCall({
+    orgId,
+    callId: call.id,
+    contactId: call.contactId,
+    callerName: call.contact?.name ?? `+${call.customerWaId}`,
+    handle: call.customerWaId,
+    userIds: audience,
+  });
 }
 
 /** The customer picked up an outbound call: hand their SDP answer to the dialling agent. */
@@ -574,6 +592,11 @@ async function onOutboundAnswered(event: CallWebhookCall) {
     include: withContact,
   });
   if (!call?.initiatedById || !event.session?.sdp) return;
+  // Relayed once. Meta can deliver the connect webhook more than once, and a second answer
+  // applied to a connection that already has one is an error the client treats as a
+  // failed call — the customer picked up and the line dropped.
+  const first = await redis.set(answerRelayedKey(call.id), "1", "EX", AUDIENCE_TTL_SECONDS, "NX");
+  if (first !== "OK") return;
   await sendViaWstoOrgHandler(
     call.orgId,
     { type: "call", call: { event: "answer", call: toDto(call), sdp: event.session.sdp } },
