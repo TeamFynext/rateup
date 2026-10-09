@@ -35,6 +35,7 @@ export async function uploadController(req: FastifyRequest, reply: FastifyReply)
     return reply.code(400).send({ message: validation.message });
   }
   const { filename, file } = data;
+  const mimetype = normalizeMimeType(data.mimetype);
   const uniqueFilename = objectKey(filename);
 
   let params: PutObjectCommandInput = {
@@ -46,11 +47,7 @@ export async function uploadController(req: FastifyRequest, reply: FastifyReply)
   let tempRawPath: string | undefined, tempOutputPath: string | undefined;
 
   try {
-    if (
-      data.mimetype === "audio/mp4" ||
-      data.mimetype === "audio/mpeg" ||
-      data.mimetype === "audio/ogg"
-    ) {
+    if (mimetype === "audio/mp4" || mimetype === "audio/mpeg" || mimetype === "audio/ogg") {
       const tmpDir = path.join(".", "tmp");
       if (!fs.existsSync(tmpDir)) {
         fs.mkdirSync(tmpDir, { recursive: true });
