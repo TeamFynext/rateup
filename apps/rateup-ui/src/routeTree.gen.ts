@@ -96,6 +96,7 @@ import { Route as marketingBlogSlugIndexRouteImport } from './routes/(marketing)
 import { Route as marketingBlogAuthorSitemapDotxmlRouteImport } from './routes/(marketing)/blog/author/sitemap[.]xml'
 import { Route as marketingBlogTagSitemapDotxmlRouteImport } from './routes/(marketing)/blog/tag/sitemap[.]xml'
 import { Route as marketingIntegrationsHubspotIndexRouteImport } from './routes/(marketing)/integrations/hubspot/index'
+import { Route as marketingIntegrationsPipedriveIndexRouteImport } from './routes/(marketing)/integrations/pipedrive/index'
 import { Route as marketingIntegrationsShopifyIndexRouteImport } from './routes/(marketing)/integrations/shopify/index'
 import { Route as marketingIntegrationsWoocommerceIndexRouteImport } from './routes/(marketing)/integrations/woocommerce/index'
 import { Route as marketingPricingShopifyIndexRouteImport } from './routes/(marketing)/pricing/shopify/index'
@@ -676,6 +677,12 @@ const marketingIntegrationsHubspotIndexRoute =
   marketingIntegrationsHubspotIndexRouteImport.update({
     id: '/integrations/hubspot/',
     path: '/integrations/hubspot/',
+    getParentRoute: () => marketingRouteRoute,
+  } as any)
+const marketingIntegrationsPipedriveIndexRoute =
+  marketingIntegrationsPipedriveIndexRouteImport.update({
+    id: '/integrations/pipedrive/',
+    path: '/integrations/pipedrive/',
     getParentRoute: () => marketingRouteRoute,
   } as any)
 const marketingIntegrationsShopifyIndexRoute =
@@ -1515,6 +1522,7 @@ export interface FileRoutesByFullPath {
   '/signup/success/': typeof authSignupSuccessIndexRoute
   '/blog/$slug/': typeof marketingBlogSlugIndexRoute
   '/integrations/hubspot/': typeof marketingIntegrationsHubspotIndexRoute
+  '/integrations/pipedrive/': typeof marketingIntegrationsPipedriveIndexRoute
   '/integrations/shopify/': typeof marketingIntegrationsShopifyIndexRoute
   '/integrations/woocommerce/': typeof marketingIntegrationsWoocommerceIndexRoute
   '/pricing/shopify/': typeof marketingPricingShopifyIndexRoute
@@ -1721,6 +1729,7 @@ export interface FileRoutesByTo {
   '/signup/success': typeof authSignupSuccessIndexRoute
   '/blog/$slug': typeof marketingBlogSlugIndexRoute
   '/integrations/hubspot': typeof marketingIntegrationsHubspotIndexRoute
+  '/integrations/pipedrive': typeof marketingIntegrationsPipedriveIndexRoute
   '/integrations/shopify': typeof marketingIntegrationsShopifyIndexRoute
   '/integrations/woocommerce': typeof marketingIntegrationsWoocommerceIndexRoute
   '/pricing/shopify': typeof marketingPricingShopifyIndexRoute
@@ -1936,6 +1945,7 @@ export interface FileRoutesById {
   '/(auth)/signup/success/': typeof authSignupSuccessIndexRoute
   '/(marketing)/blog/$slug/': typeof marketingBlogSlugIndexRoute
   '/(marketing)/integrations/hubspot/': typeof marketingIntegrationsHubspotIndexRoute
+  '/(marketing)/integrations/pipedrive/': typeof marketingIntegrationsPipedriveIndexRoute
   '/(marketing)/integrations/shopify/': typeof marketingIntegrationsShopifyIndexRoute
   '/(marketing)/integrations/woocommerce/': typeof marketingIntegrationsWoocommerceIndexRoute
   '/(marketing)/pricing/shopify/': typeof marketingPricingShopifyIndexRoute
@@ -2149,6 +2159,7 @@ export interface FileRouteTypes {
     | '/signup/success/'
     | '/blog/$slug/'
     | '/integrations/hubspot/'
+    | '/integrations/pipedrive/'
     | '/integrations/shopify/'
     | '/integrations/woocommerce/'
     | '/pricing/shopify/'
@@ -2355,6 +2366,7 @@ export interface FileRouteTypes {
     | '/signup/success'
     | '/blog/$slug'
     | '/integrations/hubspot'
+    | '/integrations/pipedrive'
     | '/integrations/shopify'
     | '/integrations/woocommerce'
     | '/pricing/shopify'
@@ -2569,6 +2581,7 @@ export interface FileRouteTypes {
     | '/(auth)/signup/success/'
     | '/(marketing)/blog/$slug/'
     | '/(marketing)/integrations/hubspot/'
+    | '/(marketing)/integrations/pipedrive/'
     | '/(marketing)/integrations/shopify/'
     | '/(marketing)/integrations/woocommerce/'
     | '/(marketing)/pricing/shopify/'
@@ -3316,6 +3329,13 @@ declare module '@tanstack/react-router' {
       path: '/integrations/hubspot'
       fullPath: '/integrations/hubspot/'
       preLoaderRoute: typeof marketingIntegrationsHubspotIndexRouteImport
+      parentRoute: typeof marketingRouteRoute
+    }
+    '/(marketing)/integrations/pipedrive/': {
+      id: '/(marketing)/integrations/pipedrive/'
+      path: '/integrations/pipedrive'
+      fullPath: '/integrations/pipedrive/'
+      preLoaderRoute: typeof marketingIntegrationsPipedriveIndexRouteImport
       parentRoute: typeof marketingRouteRoute
     }
     '/(marketing)/integrations/shopify/': {
@@ -4271,6 +4291,7 @@ interface marketingRouteRouteChildren {
   marketingTermsOfServiceIndexRoute: typeof marketingTermsOfServiceIndexRoute
   marketingToolsIndexRoute: typeof marketingToolsIndexRoute
   marketingIntegrationsHubspotIndexRoute: typeof marketingIntegrationsHubspotIndexRoute
+  marketingIntegrationsPipedriveIndexRoute: typeof marketingIntegrationsPipedriveIndexRoute
   marketingIntegrationsShopifyIndexRoute: typeof marketingIntegrationsShopifyIndexRoute
   marketingIntegrationsWoocommerceIndexRoute: typeof marketingIntegrationsWoocommerceIndexRoute
   marketingPricingShopifyIndexRoute: typeof marketingPricingShopifyIndexRoute
@@ -4315,6 +4336,8 @@ const marketingRouteRouteChildren: marketingRouteRouteChildren = {
   marketingToolsIndexRoute: marketingToolsIndexRoute,
   marketingIntegrationsHubspotIndexRoute:
     marketingIntegrationsHubspotIndexRoute,
+  marketingIntegrationsPipedriveIndexRoute:
+    marketingIntegrationsPipedriveIndexRoute,
   marketingIntegrationsShopifyIndexRoute:
     marketingIntegrationsShopifyIndexRoute,
   marketingIntegrationsWoocommerceIndexRoute:

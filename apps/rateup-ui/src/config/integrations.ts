@@ -41,13 +41,10 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
     slug: "woocommerce",
     name: "WooCommerce",
     role: "Orders & customers",
-    // Hidden until WooCommerce and HubSpot launch — uncomment to show. (the launch copy)
-    // description:
-    //   "Connect your store in a few clicks: WhatsApp messages on order status changes, loyalty points on completed orders, rewards as checkout coupons, and your catalog on WhatsApp.",
     description:
-      "Connect your WooCommerce store to sync orders and customers, trigger post-purchase feedback and award loyalty points on every paid order.",
+      "Connect your store in a few clicks: WhatsApp messages on order status changes, loyalty points on completed orders, rewards as checkout coupons, and your catalog on WhatsApp.",
     logo: `${imagesPath}/brand/partners/woo.webp`,
-    page: false,
+    page: true,
   },
   {
     slug: "petpooja",
@@ -75,6 +72,16 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
   //   description:
   //     "Contacts in step both ways, Leads board leads as HubSpot deals that move with them, and closed WhatsApp conversations and survey responses logged on the contact.",
   //   logo: `${imagesPath}/landing/logos/hubspot.png`,
+  //   page: true,
+  // },
+  // Hidden until Pipedrive launches — uncomment to show. (needs a Pipedrive logo on the image CDN first)
+  // {
+  //   slug: "pipedrive",
+  //   name: "Pipedrive",
+  //   role: "CRM sync",
+  //   description:
+  //     "Persons in step both ways, Leads board leads as Pipedrive deals that move, win and lose with them, and closed WhatsApp conversations logged on the person.",
+  //   logo: `${imagesPath}/landing/logos/pipedrive.png`,
   //   page: true,
   // },
   {

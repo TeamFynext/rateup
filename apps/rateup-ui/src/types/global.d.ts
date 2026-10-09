@@ -1276,6 +1276,8 @@ export type ZapierIntegration = Integration & {
   credential: {
     accessToken: string;
     triggerSubscriptions: {
+      /** Set on hooks subscribed since ids were added; Make's are removed by it. */
+      id?: string;
       hookUrl: string;
       subscribed_field: ZapierTriggers;
       active: boolean;

@@ -8,10 +8,9 @@
  * needs the number with its country code, and deleting a record on one side leaves the other.
  */
 
-export interface HubSpotFaq {
-  question: string;
-  answer: string;
-}
+import type { CrmFaq, CrmIntegrationContent } from "../crm/CrmIntegrationPage";
+
+export type HubSpotFaq = CrmFaq;
 
 export const HUBSPOT_FAQS: readonly HubSpotFaq[] = [
   {
@@ -96,3 +95,29 @@ export const HUBSPOT_FEATURES = [
     body: "Each sync has its own switch, so you decide what reaches HubSpot and what comes back.",
   },
 ] as const;
+
+/** Everything `/integrations/hubspot` shows, for the shared CRM page. */
+export const HUBSPOT_CONTENT: CrmIntegrationContent = {
+  crm: "HubSpot",
+  heroTitle: "Your WhatsApp contacts, leads and conversations in HubSpot",
+  heroBody:
+    "Keep contacts in step both ways, turn Leads board leads into HubSpot deals that move with them, and log closed conversations and survey responses on the contact.",
+  heroBadges: ["Connect in two clicks", "Two-way sync", "Works with HubSpot's free CRM"],
+  timeline: {
+    label: "HubSpot · Contact timeline",
+    title: "WhatsApp conversation #1042 closed",
+    meta: "Closed by Sam · Resolved · 6 messages",
+    lines: [
+      "Customer: Is the bulk order on track?",
+      "Sam: Yes, it ships tomorrow. You will get the tracking link here.",
+    ],
+    chips: ["Deal: Qualified", "Lead: In talks"],
+  },
+  setupSteps: HUBSPOT_SETUP_STEPS,
+  uninstall:
+    "To remove RateUp's access from HubSpot's side, uninstall it under Settings › Integrations › Connected apps in HubSpot.",
+  syncRows: HUBSPOT_SYNC_ROWS,
+  features: HUBSPOT_FEATURES,
+  faqs: HUBSPOT_FAQS,
+  closing: "Connect HubSpot to your WhatsApp inbox.",
+};

@@ -120,6 +120,52 @@ export function WooCommerceLogo({ className }: LogoProps) {
   );
 }
 
+/** Make's mark — three slanted bars in its purple-to-magenta — simplified and drawn inline. */
+export function MakeLogo({ className }: LogoProps) {
+  return (
+    <svg
+      viewBox="0 0 48 48"
+      role="img"
+      aria-label="Make"
+      className={cn("object-contain", className)}
+    >
+      <defs>
+        <linearGradient id="make-logo-gradient" x1="0" y1="1" x2="1" y2="0">
+          <stop offset="0" stopColor="#6D00CC" />
+          <stop offset="1" stopColor="#F024F6" />
+        </linearGradient>
+      </defs>
+      <g fill="url(#make-logo-gradient)">
+        <rect x="6" y="12" width="6" height="26" rx="2" transform="skewX(-12)" />
+        <rect x="21" y="10" width="6" height="28" rx="2" transform="skewX(-12)" />
+        <rect x="36" y="8" width="6" height="30" rx="2" transform="skewX(-12)" />
+      </g>
+    </svg>
+  );
+}
+
+/** Pabbly Connect's mark — a white "P" on its blue tile — simplified and drawn inline. */
+export function PabblyLogo({ className }: LogoProps) {
+  return (
+    <svg
+      viewBox="0 0 48 48"
+      role="img"
+      aria-label="Pabbly Connect"
+      className={cn("object-contain", className)}
+    >
+      <rect x="4" y="4" width="40" height="40" rx="10" fill="#1F5BFF" />
+      <path
+        d="M18 36V13h8.5a7.5 7.5 0 0 1 0 15H18"
+        fill="none"
+        stroke="#fff"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="4.5"
+      />
+    </svg>
+  );
+}
+
 /** HubSpot's orange sprocket, simplified and drawn inline like the WooCommerce mark. */
 export function HubSpotLogo({ className }: LogoProps) {
   return (
@@ -135,6 +181,22 @@ export function HubSpotLogo({ className }: LogoProps) {
       </g>
       <circle cx="29" cy="9" r="4" fill="#FF7A59" />
       <circle cx="9" cy="13" r="3.5" fill="#FF7A59" />
+    </svg>
+  );
+}
+
+/** Pipedrive's mark — a white "p" on its dark green tile — simplified and drawn inline. */
+export function PipedriveLogo({ className }: LogoProps) {
+  return (
+    <svg
+      viewBox="0 0 48 48"
+      role="img"
+      aria-label="Pipedrive"
+      className={cn("object-contain", className)}
+    >
+      <rect x="4" y="4" width="40" height="40" rx="10" fill="#017737" />
+      <circle cx="25" cy="21" r="7" fill="none" stroke="#fff" strokeWidth="4.5" />
+      <path d="M18 21v17" stroke="#fff" strokeLinecap="round" strokeWidth="4.5" />
     </svg>
   );
 }

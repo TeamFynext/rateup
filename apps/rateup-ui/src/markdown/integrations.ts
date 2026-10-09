@@ -1,17 +1,11 @@
-// Hidden until WooCommerce and HubSpot launch — uncomment to show. On launch, add "/integrations/woocommerce" to the list below and replace the
-// WooCommerce bullet with:
-// - **WooCommerce** — connect with your store address, no plugin. WhatsApp messages on order status
-//   changes (processing, completed, on hold, cancelled, refunded, failed), loyalty points on completed
-//   orders, rewards as one-use checkout coupons, new customers as contacts, and products in the
-//   WhatsApp catalog kept up to date. See /integrations/woocommerce
-//
-// Also on launch: add "/integrations/hubspot" to the list below, with the bullet:
-// - **HubSpot** — contacts synced both ways, Leads board leads as HubSpot deals with column-to-stage
-//   mapping both ways, and closed WhatsApp conversations and survey responses logged as notes on the
-//   contact. See /integrations/hubspot
-//
-// Markdown variant of /integrations and /integrations/shopify, served to clients that ask for
+// Markdown variant of /integrations, /integrations/shopify, /integrations/woocommerce,
+// /integrations/hubspot and /integrations/pipedrive, served to clients that ask for
 // `Accept: text/markdown` via `createMarkdownMiddleware`.
+//
+// Hidden until Pipedrive launches: add its bullet under Native connectors then —
+// "**Pipedrive** — persons synced both ways, Leads board leads as Pipedrive deals with
+// column-to-stage mapping and won/lost status both ways, and closed WhatsApp conversations and
+// survey responses logged as notes on the person. See /integrations/pipedrive"
 
 export const integrationsMarkdown = `# RateUp Integrations
 
@@ -25,9 +19,15 @@ anyone typing them in.
   Two-way order and customer sync, loyalty points on paid orders, abandoned-cart recovery,
   cash-on-delivery order confirmation, delivery-triggered post-purchase feedback, and Shopify order
   history alongside each conversation in the shared inbox. See /integrations/shopify
-- **WooCommerce** — order and customer sync, post-purchase feedback, loyalty points on paid orders
+- **WooCommerce** — connect with your store address, no plugin. WhatsApp messages on order status
+  changes (processing, completed, on hold, cancelled, refunded, failed), loyalty points on completed
+  orders, rewards as one-use checkout coupons, new customers as contacts, and products in the
+  WhatsApp catalog kept up to date. See /integrations/woocommerce
 - **Petpooja** — restaurant POS and billing; points earned and redeemed at the counter
 - **Zoho** — CRM contact, deal and conversation sync
+- **HubSpot** — contacts synced both ways, Leads board leads as HubSpot deals with column-to-stage
+  mapping both ways, and closed WhatsApp conversations and survey responses logged as notes on the
+  contact. See /integrations/hubspot
 - **Zapier** — triggers and actions across 3,000+ apps
 - **REST API and webhooks** — for anything without a native connector (https://docs.rateup.app)
 
