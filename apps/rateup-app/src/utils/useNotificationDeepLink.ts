@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import * as Notifications from "expo-notifications";
 import { router } from "expo-router";
+import { getRingingCalls } from "@/api/whatsapp/calling";
+import { syncRingingCalls } from "@/store/callStore";
 
 type NotificationPayload = {
   type?: string;
@@ -54,17 +56,29 @@ export function useNotificationDeepLink() {
       router.push(`/protected/chat/${contactId}` as never);
     };
 
+    // A call push opens the call screen, not the chat: fetch what is still ringing (the
+    // call may have been answered elsewhere or given up since) and let it take over.
+    const handle = (response: Notifications.NotificationResponse | null) => {
+      const data = response?.notification?.request?.content?.data as
+        | NotificationPayload
+        | undefined;
+      if (data?.type === "wa_call") {
+        getRingingCalls()
+          .then(syncRingingCalls)
+          .catch(() => undefined);
+        return;
+      }
+      const contactId = readPayload(response);
+      if (contactId) open(contactId);
+    };
+
     Notifications.getLastNotificationResponseAsync().then((response) => {
       if (cancelled || handledColdStart.current) return;
       handledColdStart.current = true;
-      const contactId = readPayload(response);
-      if (contactId) open(contactId);
+      handle(response);
     });
 
-    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
-      const contactId = readPayload(response);
-      if (contactId) open(contactId);
-    });
+    const subscription = Notifications.addNotificationResponseReceivedListener(handle);
 
     return () => {
       cancelled = true;

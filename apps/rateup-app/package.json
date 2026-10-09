@@ -2,7 +2,7 @@
   "name": "rateup",
   "version": "1.2.7",
   "private": true,
-  "main": "expo-router/entry",
+  "main": "index.ts",
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
@@ -22,6 +22,7 @@
     "brand:assets": "node scripts/generate-brand-assets.mjs"
   },
   "dependencies": {
+    "@config-plugins/react-native-webrtc": "^15.0.2",
     "@expo-google-fonts/figtree": "^0.4.1",
     "@expo-google-fonts/instrument-sans": "^0.4.2",
     "@expo/vector-icons": "^15.1.1",
@@ -62,6 +63,7 @@
     "expo-status-bar": "~57.0.1",
     "expo-symbols": "~57.0.3",
     "expo-system-ui": "~57.0.4",
+    "expo-task-manager": "~57.0.21",
     "expo-updates": "~57.0.24",
     "expo-video": "~57.0.5",
     "immer": "^11.1.11",
@@ -74,9 +76,11 @@
     "react-dom": "19.2.3",
     "react-hook-form": "^7.71.2",
     "react-native": "0.86.3",
+    "react-native-callkeep": "^4.3.16",
     "react-native-circular-progress": "^1.4.1",
     "react-native-edge-to-edge": "1.8.1",
     "react-native-gifted-charts": "^1.4.76",
+    "react-native-incall-manager": "^4.3.0",
     "react-native-keyboard-controller": "1.21.9",
     "react-native-linear-gradient": "^2.8.3",
     "react-native-pager-view": "8.0.2",
@@ -86,7 +90,9 @@
     "react-native-svg": "15.15.4",
     "react-native-svg-transformer": "^1.5.3",
     "react-native-tab-view": "^4.2.2",
+    "react-native-voip-push-notification": "^3.3.3",
     "react-native-web": "^0.21.2",
+    "react-native-webrtc": "^124.0.8",
     "react-native-worklets": "0.10.1",
     "supertokens-react-native": "^5.1.5",
     "tailwind-merge": "^3.5.0",
@@ -106,5 +112,8 @@
     "sharp": "^0.35.4",
     "typescript": "~6.0.3",
     "vitest": "^5.0.0"
+  },
+  "allowScripts": {
+    "unrs-resolver@1.12.2": true
   }
 }

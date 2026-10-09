@@ -11,6 +11,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { useChatAssignStatusStore, useSelectedContactStore } from "@/utils/store";
 import AssignToUser from "./chatFooter/AssignToUser";
+import CallContactButton from "@/components/calling/CallContactButton";
 import { useContactsStore, useMessagesStore } from "@/store/inboxStore";
 import {
   getInboxHeaderBg,
@@ -567,6 +568,13 @@ const ChatHeader = ({
             alignItems: "center",
           }}
         >
+          <CallContactButton
+            contactId={id}
+            name={name || null}
+            phone={phone ? String(phone) : null}
+            lastMessage={storedContact?.lastMessage ?? contact?.lastMessage}
+            color={t.fg3}
+          />
           {/* Design: 34x34 target, 19px star, `--warm-500` when starred and
               `--fg-4` when not. Hidden on rows that arrived without a ticket —
               the flag lives on the conversation, so there is nothing to set. */}
