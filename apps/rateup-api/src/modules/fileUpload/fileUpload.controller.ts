@@ -21,6 +21,15 @@ function objectKey(filename: string) {
   return `${Date.now()}-${randomUUID().slice(0, 8)}-${safeName}`;
 }
 
+/**
+ * Videos are re-encoded before storage. WhatsApp plays only H.264 video with AAC audio
+ * in an MP4, and phones hand over HEVC, `.mov` or 4K files that it refuses.
+ */
+const VIDEO_TYPES = ["video/mp4", "video/3gpp", "video/quicktime"];
+
+/** Recordings that `?voice=1` converts to a WhatsApp voice note. */
+const VOICE_NOTE_SOURCE_TYPES = ["audio/mp4", "audio/aac", "audio/mpeg", "audio/ogg"];
+
 /** The types the thumbnail endpoint can actually hand to sharp. */
 const THUMBNAILABLE = ["image/jpeg", "image/png", "image/webp"];
 
@@ -35,7 +44,17 @@ export async function uploadController(req: FastifyRequest, reply: FastifyReply)
     return reply.code(400).send({ message: validation.message });
   }
   const { filename, file } = data;
-  const uniqueFilename = objectKey(filename);
+  const isVideo = VIDEO_TYPES.includes(data.mimetype);
+  // `?voice=1`: a recording sent as a voice note, which WhatsApp shows as one only when
+  // it is OGG/Opus. The phone records AAC, so it is converted here.
+  const isVoiceNote =
+    (req.query as { voice?: string } | undefined)?.voice === "1" &&
+    VOICE_NOTE_SOURCE_TYPES.includes(data.mimetype);
+  // A re-encoded file takes the extension of what it became, so its key says so.
+  const extension = isVideo ? ".mp4" : isVoiceNote ? ".ogg" : null;
+  const uniqueFilename = objectKey(
+    extension ? filename.replace(/\.[^.]*$/, "") + extension : filename,
+  );
 
   let params: PutObjectCommandInput = {
     Bucket: bucket(),
@@ -46,7 +65,24 @@ export async function uploadController(req: FastifyRequest, reply: FastifyReply)
   let tempRawPath: string | undefined, tempOutputPath: string | undefined;
 
   try {
-    if (
+    if (isVoiceNote) {
+      const tmpDir = path.join(".", "tmp");
+      if (!fs.existsSync(tmpDir)) {
+        fs.mkdirSync(tmpDir, { recursive: true });
+      }
+      tempRawPath = path.join(tmpDir, `${randomUUID()}_${filename}`);
+      tempOutputPath = path.join(tmpDir, `${randomUUID()}_voice.ogg`);
+
+      await pumpToFile(file, tempRawPath);
+      await convertToVoiceNote(tempRawPath, tempOutputPath);
+
+      params = {
+        Bucket: bucket(),
+        Key: uniqueFilename,
+        Body: await fsp.readFile(tempOutputPath),
+        ContentType: "audio/ogg",
+      };
+    } else if (
       data.mimetype === "audio/mp4" ||
       data.mimetype === "audio/mpeg" ||
       data.mimetype === "audio/ogg"
@@ -75,6 +111,23 @@ export async function uploadController(req: FastifyRequest, reply: FastifyReply)
         Key: uniqueFilename,
         Body: finalBuffer,
         ContentType: mimetype,
+      };
+    } else if (isVideo) {
+      const tmpDir = path.join(".", "tmp");
+      if (!fs.existsSync(tmpDir)) {
+        fs.mkdirSync(tmpDir, { recursive: true });
+      }
+      tempRawPath = path.join(tmpDir, `${randomUUID()}_${filename}`);
+      tempOutputPath = path.join(tmpDir, `${randomUUID()}_output.mp4`);
+
+      await pumpToFile(file, tempRawPath);
+      await convertToWhatsAppCompatibleMP4(tempRawPath, tempOutputPath);
+
+      params = {
+        Bucket: bucket(),
+        Key: uniqueFilename,
+        Body: await fsp.readFile(tempOutputPath),
+        ContentType: "video/mp4",
       };
     }
 
@@ -135,6 +188,46 @@ function convertToWhatsAppCompatibleOGG(inputPath: string, outputPath: string): 
       .on("end", () => resolve())
       .on("error", reject)
       .save(outputPath);
+  });
+}
+
+/** WhatsApp's voice note format: Opus in an OGG container, mono, at speech bitrate. */
+function convertToVoiceNote(input: string, output: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    ffmpeg(input)
+      .audioCodec("libopus")
+      .audioChannels(1)
+      .audioFrequency(48000)
+      .audioBitrate("32k")
+      .format("ogg")
+      .on("end", () => resolve())
+      .on("error", reject)
+      .save(output);
+  });
+}
+
+/**
+ * H.264 (baseline-compatible yuv420p) with AAC audio, at most 1280px on the long side,
+ * with the index up front so it plays before it is fully downloaded.
+ */
+function convertToWhatsAppCompatibleMP4(input: string, output: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    ffmpeg(input)
+      .videoCodec("libx264")
+      .audioCodec("aac")
+      .audioBitrate("128k")
+      .outputOptions([
+        "-preset veryfast",
+        "-crf 26",
+        "-pix_fmt yuv420p",
+        // Fit inside 1280x1280 without upscaling; -2 keeps the other side even, as x264 needs.
+        "-vf scale='if(gte(iw,ih),min(1280,iw),-2)':'if(gte(iw,ih),-2,min(1280,ih))'",
+        "-movflags +faststart",
+      ])
+      .format("mp4")
+      .on("end", () => resolve())
+      .on("error", reject)
+      .save(output);
   });
 }
 
