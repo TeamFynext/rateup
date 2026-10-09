@@ -71,6 +71,9 @@ export const useCallStore = create<CallStore>()(() => ({
 const set = useCallStore.setState;
 const get = useCallStore.getState;
 
+/** Outbound calls whose SDP answer has been applied; see the `answer` event. */
+const answeredCalls = new Set<string>();
+
 /** A customer's SDP answer that beat our own `startCall` response back to the browser. */
 const earlyAnswers = new Map<string, string>();
 
@@ -172,8 +175,18 @@ export function receiveCallEvent(event: CallWsEvent, queryClient: QueryClient) {
 
     case "answer":
       if (!event.sdp) break;
+      // Applied once per call. A repeat must not drop a live call back to "Connecting…" —
+      // and phase cannot tell, since an ACCEPTED status can arrive before the answer does.
+      if (answeredCalls.has(call.id)) break;
       if (isActive && active) {
-        set({ active: { ...active, call, phase: "connecting" } });
+        answeredCalls.add(call.id);
+        set({
+          active: {
+            ...active,
+            call,
+            phase: active.phase === "connected" ? "connected" : "connecting",
+          },
+        });
         void applyAnswer(event.sdp).catch(() => void hangUp());
       } else if (active?.direction === "BUSINESS_INITIATED" && !active.call) {
         earlyAnswers.set(call.waCallId, event.sdp);
@@ -272,6 +285,7 @@ export async function dial(input: {
     const early = earlyAnswers.get(call.waCallId);
     if (early) {
       earlyAnswers.delete(call.waCallId);
+      answeredCalls.add(call.id);
       set({ active: { ...current, call, phase: "connecting" } });
       await applyAnswer(early);
     }
