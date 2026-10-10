@@ -15,8 +15,7 @@ import { fromDateKey, toDateKey } from "@/utils/dateTime.ts";
 
 import type { CouponFormValues, CouponValues } from "../schemas.ts";
 import { ShopifyDiscountCard } from "../ShopifyDiscountCard.tsx";
-// Hidden until WooCommerce and HubSpot launch — uncomment to show.
-// import { WooDiscountCard } from "../WooDiscountCard.tsx";
+import { WooDiscountCard } from "../WooDiscountCard.tsx";
 import { FormSection, NumberField, TextField, TierRestriction } from "./fields.tsx";
 
 type CouponForm = UseFormReturn<CouponFormValues, unknown, CouponValues>;
@@ -49,7 +48,6 @@ export function CouponFields({
         supported
         inheritsExpiryFrom={t("the coupon's end date")}
       />
-      {/* Hidden until WooCommerce and HubSpot launch — uncomment to show.
       <WooDiscountCard
         enabled={!!wooEnabled}
         onEnabledChange={(checked) => {
@@ -59,7 +57,6 @@ export function CouponFields({
         supported
         inheritsExpiryFrom={t("the coupon's end date")}
       />
-      */}
 
       {!shopifyEnabled && !wooEnabled && (
         <TextField

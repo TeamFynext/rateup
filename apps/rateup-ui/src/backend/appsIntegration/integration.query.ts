@@ -11,6 +11,7 @@ import {
   createIntegration,
   deleteIntegration,
   deleteZapierTriggerHook,
+  deleteAutomationHook,
   finishOAuthConnect,
   getAllIntegrations,
   getIntegrationActivity,
@@ -130,6 +131,20 @@ export const useDeleteZapierTriggerHook = () => {
     },
     onError: (error) => {
       toast.error(error?.message || "Failed");
+    },
+  });
+};
+
+/** Removes a Make (or other automation platform) hook from the dashboard. */
+export const useDeleteAutomationHook = (name: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (hookId: string) => deleteAutomationHook(name, hookId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: integrationKeys.byType(name) });
+    },
+    onError: (error: { response?: { data?: { error?: string } }; message?: string }) => {
+      toast.error(error?.response?.data?.error || error?.message || "Failed");
     },
   });
 };

@@ -327,7 +327,6 @@ export function LoyaltySettingsPage() {
             />
           </Field>
 
-          {/* Hidden until WooCommerce and HubSpot launch — uncomment to show.
           <Field orientation="horizontal" className="rounded-lg border border-border p-3">
             <FieldContent>
               <FieldLabel htmlFor={`${uid}-woo`} className="text-sm font-medium">
@@ -346,7 +345,6 @@ export function LoyaltySettingsPage() {
               disabled={update.isPending}
             />
           </Field>
-          */}
 
           <div className="rounded-lg border border-border p-3">
             <p className="text-sm font-medium text-foreground">{t("POS and API access")}</p>

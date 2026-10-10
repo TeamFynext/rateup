@@ -3,8 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useId, useEffect, useState } from "react";
 import { toast } from "sonner";
 
-// Hidden until WooCommerce and HubSpot launch — uncomment to show.
-// import { useWooStatus } from "@/backend/appsIntegration/woocommerce/woocommerce.query";
+import { useWooStatus } from "@/backend/appsIntegration/woocommerce/woocommerce.query";
 import type { WaCatalog } from "@/backend/whatsapp/catalog/catalog.api";
 import {
   useDeleteWaCatalog,
@@ -16,7 +15,7 @@ import {
   useSyncProductSets,
 } from "@/backend/whatsapp/catalog/productSet.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
-// import { WooCommerceLogo } from "@/components/integrations/logos.tsx";
+import { WooCommerceLogo } from "@/components/integrations/logos.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card";
@@ -243,8 +242,8 @@ const CatalogSettings = ({ catalogData }: { catalogData: WaCatalog }) => {
 const ProductManagementSection = ({ catalogData }: { catalogData: WaCatalog }) => {
   const catalogId = catalogData?.catalogId;
   const [shopifyImportOpened, { close: closeShopifyImport }] = useDisclosure(false);
-  // const [wooImportOpened, { open: openWooImport, close: closeWooImport }] = useDisclosure(false);
-  // const { data: wooStatus } = useWooStatus();
+  const [wooImportOpened, { open: openWooImport, close: closeWooImport }] = useDisclosure(false);
+  const { data: wooStatus } = useWooStatus();
 
   return (
     <div className="flex flex-col gap-2 mt-4">
@@ -278,8 +277,7 @@ const ProductManagementSection = ({ catalogData }: { catalogData: WaCatalog }) =
       </div>
       */}
 
-      {/* Hidden until WooCommerce and HubSpot launch — uncomment to show.
-      Shown only with a store connected; its products stay current through product.updated.
+      {/* Shown only with a store connected; its products stay current through product.updated. */}
       {wooStatus?.connected && (
         <div className="flex justify-between items-center gap-3 p-3 border border-border rounded-lg bg-muted">
           <div className="flex flex-col gap-1">
@@ -295,7 +293,6 @@ const ProductManagementSection = ({ catalogData }: { catalogData: WaCatalog }) =
           </Button>
         </div>
       )}
-      */}
 
       <ImportStoreProductsModal
         catalogId={catalogId}
@@ -303,12 +300,12 @@ const ProductManagementSection = ({ catalogData }: { catalogData: WaCatalog }) =
         opened={shopifyImportOpened}
         onClose={closeShopifyImport}
       />
-      {/* <ImportStoreProductsModal
+      <ImportStoreProductsModal
         catalogId={catalogId}
         source="woocommerce"
         opened={wooImportOpened}
         onClose={closeWooImport}
-      /> */}
+      />
     </div>
   );
 };

@@ -518,10 +518,13 @@ export enum IntegratedApps {
   waPayment = "waPayment",
   petpooja = "petpooja",
   zapier = "zapier",
+  make = "make",
+  pabbly = "pabbly",
   zoho = "zoho",
   getlead = "getlead",
   woocommerce = "woocommerce",
   hubspot = "hubspot",
+  pipedrive = "pipedrive",
 }
 export enum PhotoSource {
   cameraGallery = "camera_gallery",

@@ -84,12 +84,11 @@ const TRIGGER_EVENTS = [
     value: "SHOPIFY_EVENT",
     platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
   },
-  // Hidden until WooCommerce and HubSpot launch — uncomment to show.
-  // {
-  //   label: "WooCommerce Event",
-  //   value: "WOOCOMMERCE_EVENT",
-  //   platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
-  // },
+  {
+    label: "WooCommerce Event",
+    value: "WOOCOMMERCE_EVENT",
+    platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
+  },
   {
     label: "Instagram Comment (Private Reply)",
     value: "INSTAGRAM_COMMENT",

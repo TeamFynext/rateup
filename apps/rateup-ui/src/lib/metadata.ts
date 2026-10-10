@@ -342,10 +342,7 @@ const pageMetadata = {
     ogTitle: "WooCommerce WhatsApp Integration: Orders, Loyalty & Coupons",
     ogDescription:
       "Order status changes become WhatsApp messages; completed orders earn loyalty points and rewards work as WooCommerce coupons.",
-    // Hidden until WooCommerce and HubSpot launch — uncomment to show. (restore the sitemap entry, drop noindex)
-    // sitemap: { priority: "0.8", changefreq: "monthly" },
-    sitemap: false,
-    noindex: true,
+    sitemap: { priority: "0.8", changefreq: "monthly" },
   },
   "/integrations/hubspot": {
     title: "HubSpot WhatsApp Integration: Contacts, Deals & Conversations | RateUp",
@@ -354,10 +351,19 @@ const pageMetadata = {
     ogTitle: "HubSpot WhatsApp Integration: Contacts, Deals & Conversations",
     ogDescription:
       "Contacts in step both ways, leads as deals with stage mapping, and WhatsApp conversations on the HubSpot timeline.",
-    // Hidden until WooCommerce and HubSpot launch — uncomment to show. (restore the sitemap entry, drop noindex)
-    // sitemap: { priority: "0.8", changefreq: "monthly" },
-    sitemap: false,
+    sitemap: { priority: "0.8", changefreq: "monthly" },
+  },
+  // Hidden until Pipedrive launches: out of search and the sitemap. To show it, drop `noindex`
+  // and set `sitemap: { priority: "0.8", changefreq: "monthly" }`.
+  "/integrations/pipedrive": {
+    title: "Pipedrive WhatsApp Integration: Contacts, Deals & Conversations | RateUp",
+    description:
+      "Connect Pipedrive to WhatsApp. Two-way person sync, Leads board leads as Pipedrive deals that move, win and lose with them, and closed conversations and survey responses logged on the person.",
+    ogTitle: "Pipedrive WhatsApp Integration: Contacts, Deals & Conversations",
+    ogDescription:
+      "Persons in step both ways, leads as deals with stage mapping and won/lost status, and WhatsApp conversations as notes in Pipedrive.",
     noindex: true,
+    sitemap: false,
   },
 } as const satisfies Record<string, PageMetadata>;
 

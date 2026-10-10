@@ -52,17 +52,31 @@ const GetLeadPage = lazy(() =>
     default: m.GetLead,
   })),
 );
-// Hidden until WooCommerce and HubSpot launch — uncomment to show.
-// const WooCommercePage = lazy(() =>
-//   import("@/components/app&services/WooCommerce.tsx").then((m) => ({
-//     default: m.WooCommerce,
-//   })),
-// );
-// const HubSpotPage = lazy(() =>
-//   import("@/components/app&services/HubSpot.tsx").then((m) => ({
-//     default: m.HubSpot,
-//   })),
-// );
+const WooCommercePage = lazy(() =>
+  import("@/components/app&services/WooCommerce.tsx").then((m) => ({
+    default: m.WooCommerce,
+  })),
+);
+const MakePage = lazy(() =>
+  import("@/components/app&services/Make.tsx").then((m) => ({
+    default: m.Make,
+  })),
+);
+const PabblyPage = lazy(() =>
+  import("@/components/app&services/Pabbly.tsx").then((m) => ({
+    default: m.Pabbly,
+  })),
+);
+const PipedrivePage = lazy(() =>
+  import("@/components/app&services/Pipedrive.tsx").then((m) => ({
+    default: m.Pipedrive,
+  })),
+);
+const HubSpotPage = lazy(() =>
+  import("@/components/app&services/HubSpot.tsx").then((m) => ({
+    default: m.HubSpot,
+  })),
+);
 const ApiServicePage = lazy(() =>
   import("@/components/ExternalApi/ApiAccessKey.tsx").then((m) => ({
     default: m.default,
@@ -86,10 +100,13 @@ const INTEGRATION_PAGES: Record<string, React.ComponentType> = {
   waPayment: WaPaymentPage,
   petpooja: PetpoojaPage,
   zapier: ZapierPage,
+  make: MakePage,
+  pabbly: PabblyPage,
   zoho: ZohoPage,
   getlead: GetLeadPage,
-  // woocommerce: WooCommercePage,
-  // hubspot: HubSpotPage,
+  woocommerce: WooCommercePage,
+  hubspot: HubSpotPage,
+  pipedrive: PipedrivePage,
   apiservice: ApiServicePage,
   widget: WidgetPage,
   webhook: WebhookPage,

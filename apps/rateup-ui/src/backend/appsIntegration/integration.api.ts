@@ -234,6 +234,15 @@ export async function deleteZapierTriggerHook(data: RequestPayload) {
   return (await axiosClient.delete(`${ROUTE_URL}zapier-hook`, { data })).data;
 }
 
+/** Removes one hook of an automation platform (Make, …) by its id. */
+export async function deleteAutomationHook(name: string, hookId: string) {
+  return (
+    await axiosClient.delete(
+      `${ROUTE_URL}${encodeURIComponent(name)}/hooks/${encodeURIComponent(hookId)}`,
+    )
+  ).data as { success: true };
+}
+
 export interface AmeliaConnectFields {
   /** The WordPress site; the API works out Amelia's API address from it. */
   baseUrl: string;
