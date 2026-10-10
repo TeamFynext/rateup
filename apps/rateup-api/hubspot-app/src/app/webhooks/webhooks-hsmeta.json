@@ -1,0 +1,33 @@
+{
+  "uid": "rateup_hubspot_webhooks",
+  "type": "webhooks",
+  "config": {
+    "settings": {
+      "targetUrl": "https://c6dc08vk-3001.inc1.devtunnels.ms/api/public/integrations/hubspot/webhooks",
+      "maxConcurrentRequests": 10
+    },
+    "subscriptions": {
+      "legacyCrmObjects": [
+        { "subscriptionType": "contact.creation", "active": true },
+        { "subscriptionType": "contact.deletion", "active": true },
+        {
+          "subscriptionType": "contact.propertyChange",
+          "propertyName": "firstname",
+          "active": true
+        },
+        {
+          "subscriptionType": "contact.propertyChange",
+          "propertyName": "lastname",
+          "active": true
+        },
+        { "subscriptionType": "contact.propertyChange", "propertyName": "email", "active": true },
+        { "subscriptionType": "contact.propertyChange", "propertyName": "phone", "active": true },
+        { "subscriptionType": "deal.creation", "active": true },
+        { "subscriptionType": "deal.deletion", "active": true },
+        { "subscriptionType": "deal.propertyChange", "propertyName": "dealname", "active": true },
+        { "subscriptionType": "deal.propertyChange", "propertyName": "dealstage", "active": true },
+        { "subscriptionType": "deal.propertyChange", "propertyName": "pipeline", "active": true }
+      ]
+    }
+  }
+}

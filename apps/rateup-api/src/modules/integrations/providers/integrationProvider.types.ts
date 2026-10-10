@@ -73,12 +73,16 @@ export interface IntegrationProvider {
   orgSubscribedEvents?(orgId: string): Promise<readonly IntegrationEventType[]>;
   /** Translates an event into this provider's jobs and enqueues them. */
   handleEvent(event: IntegrationEvent, context: IntegrationEventContext): Promise<void>;
-  /** Runs one of the jobs `handleEvent` enqueued. Absent for providers that enqueue elsewhere. */
+  /**
+   * Runs one of the jobs `handleEvent` enqueued. Absent for providers that enqueue elsewhere.
+   * Resolves `"skipped"` when it sent nothing (the target was switched off meanwhile), so the
+   * run proves nothing about the connection and does not clear its failure count.
+   */
   processJob?(
     integration: Integration,
     job: ProviderJobData,
     context: ProviderJobRunContext,
-  ): Promise<void>;
+  ): Promise<void | "skipped">;
   /**
    * Provider → Rateup webhooks, delivered to the shared receiver at
    * `inboundWebhookUrl(name, integration.id)`. Verify the signature against the

@@ -8,7 +8,7 @@ import { randomUUID } from "node:crypto";
 import ffmpeg from "fluent-ffmpeg";
 import path from "node:path";
 import ffmpegInstaller from "@ffmpeg-installer/ffmpeg";
-import { validateFile } from "../../utils/upload/validate.js";
+import { normalizeMimeType, validateFile } from "../../utils/upload/validate.js";
 import { log } from "../../utils/logger.js";
 import type { PutObjectCommandInput } from "@aws-sdk/client-s3";
 
@@ -44,23 +44,25 @@ export async function uploadController(req: FastifyRequest, reply: FastifyReply)
     return reply.code(400).send({ message: validation.message });
   }
   const { filename, file } = data;
-  const isVideo = VIDEO_TYPES.includes(data.mimetype);
+  const mimetype = normalizeMimeType(data.mimetype);
+  const isVideo = VIDEO_TYPES.includes(mimetype);
   // `?voice=1`: a recording sent as a voice note, which WhatsApp shows as one only when
   // it is OGG/Opus. The phone records AAC, so it is converted here.
   const isVoiceNote =
     (req.query as { voice?: string } | undefined)?.voice === "1" &&
-    VOICE_NOTE_SOURCE_TYPES.includes(data.mimetype);
+    VOICE_NOTE_SOURCE_TYPES.includes(mimetype);
   // A re-encoded file takes the extension of what it became, so its key says so.
   const extension = isVideo ? ".mp4" : isVoiceNote ? ".ogg" : null;
   const uniqueFilename = objectKey(
     extension ? filename.replace(/\.[^.]*$/, "") + extension : filename,
   );
 
+
   let params: PutObjectCommandInput = {
     Bucket: bucket(),
     Key: uniqueFilename,
     Body: file,
-    ContentType: data.mimetype,
+    ContentType: mimetype,
   };
   let tempRawPath: string | undefined, tempOutputPath: string | undefined;
 
@@ -83,9 +85,9 @@ export async function uploadController(req: FastifyRequest, reply: FastifyReply)
         ContentType: "audio/ogg",
       };
     } else if (
-      data.mimetype === "audio/mp4" ||
-      data.mimetype === "audio/mpeg" ||
-      data.mimetype === "audio/ogg"
+      mimetype === "audio/mp4" ||
+      mimetype === "audio/mpeg" ||
+      mimetype === "audio/ogg"
     ) {
       const tmpDir = path.join(".", "tmp");
       if (!fs.existsSync(tmpDir)) {
@@ -96,13 +98,13 @@ export async function uploadController(req: FastifyRequest, reply: FastifyReply)
 
       await pumpToFile(file, tempRawPath);
 
-      let mimetype: string;
-      if (data.mimetype === "audio/ogg") {
+      let outputType: string;
+      if (mimetype === "audio/ogg") {
         await convertToWhatsAppCompatibleOGG(tempRawPath, tempOutputPath);
-        mimetype = "audio/ogg";
+        outputType = "audio/ogg";
       } else {
         await convertToM4A(tempRawPath, tempOutputPath);
-        mimetype = "audio/mp4";
+        outputType = "audio/mp4";
       }
 
       const finalBuffer = await fsp.readFile(tempOutputPath);
@@ -110,7 +112,7 @@ export async function uploadController(req: FastifyRequest, reply: FastifyReply)
         Bucket: bucket(),
         Key: uniqueFilename,
         Body: finalBuffer,
-        ContentType: mimetype,
+        ContentType: outputType,
       };
     } else if (isVideo) {
       const tmpDir = path.join(".", "tmp");
@@ -241,7 +243,8 @@ export async function uploadWithThumbnailsController(req: FastifyRequest, reply:
     data.file.resume();
     return reply.code(400).send({ message: validation.message });
   }
-  if (!THUMBNAILABLE.includes(data.mimetype)) {
+  const mimetype = normalizeMimeType(data.mimetype);
+  if (!THUMBNAILABLE.includes(mimetype)) {
     data.file.resume();
     return reply.code(400).send({ message: "This endpoint accepts images only." });
   }
@@ -255,7 +258,7 @@ export async function uploadWithThumbnailsController(req: FastifyRequest, reply:
       Bucket: bucket(),
       Key: uniqueFilename,
       Body: buffer,
-      ContentType: data.mimetype,
+      ContentType: mimetype,
     };
     const resizedImage = await sharp(buffer)
       .resize({

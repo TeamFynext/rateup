@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.hoisted(() => {
   process.env.GOOGLE_OAUTH_CLIENT_ID = "google-client-id";
@@ -30,7 +30,16 @@ vi.mock("../apiAccessToken/apiAccessToken.service.js", () => ({
   generateApiKey: vi.fn(async () => ({ key: "plain-api-key", hash: "bcrypt-hash" })),
 }));
 
-vi.mock("axios", () => ({ default: { delete: vi.fn(), get: vi.fn(), post: vi.fn() } }));
+// `create` because the provider registry, loaded on disconnect, reaches modules that
+// build an axios client when they load (utils/hubspot.ts via the Google Sheets sync).
+vi.mock("axios", () => ({
+  default: {
+    delete: vi.fn(),
+    get: vi.fn(),
+    post: vi.fn(),
+    create: vi.fn(() => ({ get: vi.fn(), post: vi.fn(), patch: vi.fn(), delete: vi.fn() })),
+  },
+}));
 
 vi.mock("./shopify/shopify.messages.js", () => ({ sendWhatsAppTemplateToCustomer: vi.fn() }));
 
@@ -285,6 +294,12 @@ describe("updateIntegrationByName", () => {
 // ===========================================================================
 
 describe("deleteIntegrationByName", () => {
+  // The provider registry is imported on first disconnect; load it up front so that
+  // import doesn't eat the first test's 5s timeout.
+  beforeAll(async () => {
+    await import("./providers/registry.js");
+  }, 60_000);
+
   test("is scoped to the org and name", async () => {
     await deleteIntegrationByName("amelia", ORG);
 

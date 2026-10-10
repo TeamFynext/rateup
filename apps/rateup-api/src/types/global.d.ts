@@ -305,6 +305,7 @@ declare global {
     credential: {
       accessToken: string;
       triggerSubscriptions: {
+        id?: string;
         hookUrl: string;
         subscribed_field: ZapierTriggers;
         active: boolean;
