@@ -12,7 +12,8 @@ vi.mock("../../integrations/shopify/shopify.catalog.js", () => ({
   captureShopifyOrderPayment: vi.fn(),
 }));
 
-import { parseToWhatsAppFormat } from "./wasurvey.utils.js";
+import { createAudioMessage, parseToWhatsAppFormat } from "./wasurvey.utils.js";
+import { PlatformType } from "../../../../generated/prisma/enums.js";
 
 describe("parseToWhatsAppFormat", () => {
   test("keeps a Shift+Enter line break as a newline", () => {
@@ -30,5 +31,22 @@ describe("parseToWhatsAppFormat", () => {
         ],
       }),
     ).toBe("Hi\nthere");
+  });
+});
+
+describe("createAudioMessage", () => {
+  test("marks a WhatsApp voice note so it shows as one", () => {
+    const body = createAudioMessage("15550001", "https://f/v.ogg", PlatformType.WHATSAPP, true);
+    expect(body).toMatchObject({ type: "audio", audio: { link: "https://f/v.ogg", voice: true } });
+  });
+
+  test("leaves a plain audio file unmarked", () => {
+    const body = createAudioMessage("15550001", "https://f/a.mp3", PlatformType.WHATSAPP);
+    expect((body as any).audio).toEqual({ link: "https://f/a.mp3" });
+  });
+
+  test("Instagram has no voice flag to set", () => {
+    const body = createAudioMessage("ig-1", "https://f/v.ogg", PlatformType.INSTAGRAM, true);
+    expect(JSON.stringify(body)).not.toContain("voice");
   });
 });

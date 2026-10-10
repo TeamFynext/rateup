@@ -1348,10 +1348,17 @@ export function createVideoMessage(
   };
 }
 
+/**
+ * `voice` sends a WhatsApp voice message rather than an audio file: shown with the mic and
+ * profile photo, auto-downloaded and transcribed. WhatsApp honours it only for OGG/Opus,
+ * which the upload endpoint produces for `?voice=1`, and ignores it for any other format.
+ * https://developers.facebook.com/documentation/business-messaging/whatsapp/messages/audio-messages
+ */
 export function createAudioMessage(
   to: string,
   link: string,
   platform: PlatformType,
+  voice = false,
 ): WaSendMessageBody | IgSendMessageBody | FbSendMessageBody {
   if (platform === PlatformType.INSTAGRAM) {
     return {
@@ -1394,6 +1401,7 @@ export function createAudioMessage(
     type: "audio",
     audio: {
       link,
+      ...(voice && { voice: true }),
     },
   };
 }

@@ -60,9 +60,11 @@ const mimeTypeMaxSizes: Record<string, number> = {
   "image/png": 5 * 1024 * 1024,
   // Sticker
   "image/webp": 500 * 1024,
-  // Video
+  // Video. Every video is re-encoded to H.264/AAC MP4 on upload, so an iPhone `.mov` is
+  // accepted here and leaves as an MP4.
   "video/3gpp": 16 * 1024 * 1024,
   "video/mp4": 16 * 1024 * 1024,
+  "video/quicktime": 16 * 1024 * 1024,
 };
 
 export function validateFile({
