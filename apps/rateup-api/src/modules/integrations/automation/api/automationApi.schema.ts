@@ -4,8 +4,8 @@ import { WaMessageAssignStatus } from "../../../../types/enums.js";
 import { contactCoreSchema } from "../../../contact/contact.schema.js";
 import { ZapierTriggers } from "../../external/zapier/zapier.types.js";
 
-// The RateUp apps on Make (make-app/) and Pabbly (pabbly-app/) are built on these shapes;
-// change them together.
+// Customers' Make scenarios and Pabbly workflows are built on these shapes;
+// changing one breaks them.
 
 /**
  * A phone with its country code. Scenarios map numbers as they find them
