@@ -179,6 +179,17 @@ const withHelperInProject = (config) =>
     for (const framework of ["CallKit.framework", "PushKit.framework"]) {
       if (!project.hasFile(framework)) project.addFramework(framework, { target: target.uuid });
     }
+    // With `useFrameworks: static`, RNCallKeep and RNVoipPushNotification are framework
+    // modules whose public headers import <React/...>, which the prebuilt React core does
+    // not expose as a module. Importing them from ${HELPER}.m then fails with
+    // "include of non-modular header inside framework module" unless the importer allows it.
+    const configurations = IOSConfig.XcodeUtils.getBuildConfigurationsForListId(
+      project,
+      target.target.buildConfigurationList,
+    );
+    for (const [, configuration] of configurations) {
+      configuration.buildSettings.CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = "YES";
+    }
     return config;
   });
 
