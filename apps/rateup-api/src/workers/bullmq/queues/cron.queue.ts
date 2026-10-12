@@ -58,6 +58,9 @@ export const SCHEDULED_JOBS = [
   // "has expired" before anything is taken away.
   { id: "subscriptionExpiryAlerts", pattern: "30 3 * * *" }, // Every day at 3:30 AM
   { id: "downgradeExpiredSubscriptions", pattern: "0 4 * * *" }, // Every day at 4:00 AM
+  // RateUp's onboarding emails to its own new customers. Hourly; each run only sends
+  // inside the 10:00-19:00 window (customerComms/audience.ts).
+  { id: "customerOnboardingDrip", pattern: "5 * * * *", tz: "Etc/UTC" },
   // Staff console sessions that ended over 30 days ago.
   { id: "staffSessionPurge", pattern: "45 3 * * *" },
   // TODO: re-enable once the report is working again.

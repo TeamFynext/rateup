@@ -1444,6 +1444,7 @@ declare global {
 
     type PWaMessageBody = WaInboxMessageBody;
     type PWaTemplateWithTypesData = WaTemplateWithTypes["data"];
+    type PBroadcastAudience = import("../modules/customerComms/audience.js").BroadcastAudience;
     // The column stores the filled-in component ARRAY of the template that was sent —
     // `messageBody.template.components` verbatim.
     type PWaTemplateComponentParams = import("./whatsapp.types.js").OutgoingTemplateComponent[];

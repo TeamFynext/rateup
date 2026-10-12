@@ -15,6 +15,7 @@ import * as campaignDequeue from "./processors/campaignDequeue.processor.js";
 import * as campaignEnqueue from "./processors/campaignEnqueue.processor.js";
 import * as campaignRetryFire from "./processors/campaignRetryFire.processor.js";
 import * as contactImport from "./processors/contactImport.processor.js";
+import * as customerComms from "./processors/customerComms.processor.js";
 import * as integration from "./processors/integration.processor.js";
 import * as loyaltyFeedback from "./processors/loyaltyFeedback.processor.js";
 import * as notification from "./processors/notification.processor.js";
@@ -50,6 +51,7 @@ const PROCESSOR_MODULES = [
   campaignEnqueue,
   campaignRetryFire,
   contactImport,
+  customerComms,
   integration,
   loyaltyFeedback,
   notification,

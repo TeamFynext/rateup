@@ -28,6 +28,11 @@ export interface EmailParams {
   // at all — the email is still sent with an empty body (see email.service.ts).
   html: string | undefined;
   attachments?: [{ filename: string; path: string }];
+  /** Defaults to hello@rateup.app. */
+  from?: string;
+  replyTo?: string;
+  /** Marketing mail carries List-Unsubscribe / List-Unsubscribe-Post here. */
+  headers?: Record<string, string>;
 }
 
 /**
@@ -44,7 +49,7 @@ export interface EmailParams {
 const emailDisabled = () => process.env.DISABLE_EMAIL === "true";
 
 export const sendAWSEmail = async (emailParams: EmailParams): Promise<boolean> => {
-  const { to, subject, text, html, attachments } = emailParams;
+  const { to, subject, text, html, attachments, replyTo, headers } = emailParams;
 
   if (emailDisabled()) {
     // True, not false: the caller reads false as "SES rejected it" and throws to
@@ -54,7 +59,7 @@ export const sendAWSEmail = async (emailParams: EmailParams): Promise<boolean> =
   }
 
   try {
-    const from = "RateUp.app <hello@rateup.app>"; // replace with your verified email address
+    const from = emailParams.from ?? "RateUp.app <hello@rateup.app>";
 
     await transporter.sendMail({
       from,
@@ -63,6 +68,8 @@ export const sendAWSEmail = async (emailParams: EmailParams): Promise<boolean> =
       text,
       html,
       attachments,
+      replyTo,
+      headers,
     });
 
     log.debug("Email sent successfully to %s", to);

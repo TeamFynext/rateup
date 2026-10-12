@@ -25,6 +25,8 @@ declare module "fastify" {
      * other guard of the staff plugin still runs. See STAFF_PUBLIC_ROUTES in staff.plugin.ts.
      */
     staffPublic?: boolean;
+    /** A staff POST that changes nothing (a preview), so it gets no fallback audit row. */
+    staffReadOnly?: boolean;
   }
 
   interface FastifyRequest {

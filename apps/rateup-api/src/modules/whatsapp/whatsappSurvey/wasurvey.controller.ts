@@ -143,6 +143,7 @@ import { enqueueWebhookDispatch } from "../../webhook/webhook.service.js";
 import { sendViaWstoOrgHandler } from "../../org/ws/org.ws.controller.js";
 import { channelDigits } from "../../../utils/channelIdentifier.js";
 import { notify } from "../../notification/notify.js";
+import { handleSenderOrgStop } from "../../customerComms/whatsapp.js";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -783,6 +784,11 @@ async function whatsappMessageHandler(
     userName,
     (waMessage.entry[0].changes[0].value as WaReceiveMessageBody)?.messages?.[0]?.id,
   );
+  try {
+    await handleSenderOrgStop(orgId, from, parsedMessage);
+  } catch (e) {
+    log.error({ err: e }, "Error handling a customer-comms stop reply");
+  }
   if (options.storeOnly) {
     // A survey flow Meta AI sent: the answers are data, not a reply, so they
     // are saved even though nothing else runs for this thread.
