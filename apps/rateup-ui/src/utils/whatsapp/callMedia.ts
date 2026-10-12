@@ -102,6 +102,11 @@ export async function createOffer(onState: (state: MediaState) => void): Promise
 
 export async function applyAnswer(answerSdp: string): Promise<void> {
   if (!peer) throw new Error("No call is being dialled");
+  // Only a connection still waiting for its answer can take one. A second copy of the same
+  // answer (a redelivered webhook, a reconnecting socket) arrives once the connection is
+  // already "stable"; applying it throws, and that error used to hang the call up the
+  // moment the customer picked up.
+  if (peer.signalingState !== "have-local-offer") return;
   await peer.setRemoteDescription({ type: "answer", sdp: answerSdp });
 }
 

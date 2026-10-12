@@ -1,5 +1,4 @@
-import { IconCloudDownload, IconCloudUpload, IconLoader2 } from "@tabler/icons-react";
-import type { ReactNode } from "react";
+import { IconCloudDownload, IconCloudUpload } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import type {
@@ -7,9 +6,8 @@ import type {
   HubSpotBulkRun,
 } from "@/backend/appsIntegration/hubspot/hubspot.api";
 import { useStartHubSpotBulk } from "@/backend/appsIntegration/hubspot/hubspot.query";
+import { BulkSyncRow } from "@/components/dashboard/settings/integrations/BulkSyncRow.tsx";
 import { IntegrationFormCard } from "@/components/dashboard/settings/integrations/IntegrationFormCard.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { formatToRelativeTime } from "@/utils/dateTime.ts";
 
 /**
  * The first-time sync: pulling HubSpot's contacts in, and sending RateUp's existing
@@ -20,6 +18,8 @@ export function HubSpotBulkSync({
   runs,
 }: Readonly<{ runs: Record<HubSpotBulkKind, HubSpotBulkRun | null> }>) {
   const { t } = useTranslation();
+  const startImport = useStartHubSpotBulk("import");
+  const startExport = useStartHubSpotBulk("export");
 
   return (
     <IntegrationFormCard
@@ -29,9 +29,9 @@ export function HubSpotBulkSync({
       )}
     >
       <div className="flex flex-col gap-3">
-        <BulkRow
-          kind="import"
+        <BulkSyncRow
           run={runs.import}
+          start={startImport}
           icon={<IconCloudDownload data-icon="inline-start" />}
           title={t("Import contacts from HubSpot")}
           description={t(
@@ -39,9 +39,9 @@ export function HubSpotBulkSync({
           )}
           action={t("Import")}
         />
-        <BulkRow
-          kind="export"
+        <BulkSyncRow
           run={runs.export}
+          start={startExport}
           icon={<IconCloudUpload data-icon="inline-start" />}
           title={t("Send existing contacts to HubSpot")}
           description={t(
@@ -51,91 +51,5 @@ export function HubSpotBulkSync({
         />
       </div>
     </IntegrationFormCard>
-  );
-}
-
-function BulkRow({
-  kind,
-  run,
-  icon,
-  title,
-  description,
-  action,
-}: Readonly<{
-  kind: HubSpotBulkKind;
-  run: HubSpotBulkRun | null;
-  icon: ReactNode;
-  title: string;
-  description: string;
-  action: string;
-}>) {
-  const { t } = useTranslation();
-  const start = useStartHubSpotBulk(kind);
-  const running = run?.status === "running";
-
-  return (
-    <div className="flex flex-col gap-2 rounded-lg border border-border p-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-      <div className="flex min-w-0 flex-col gap-1">
-        <p className="text-sm font-medium">{title}</p>
-        <p className="text-xs text-muted-foreground">{description}</p>
-        {run && <RunSummary run={run} />}
-      </div>
-      <Button
-        variant="outline"
-        className="w-fit shrink-0"
-        loading={start.isPending}
-        disabled={running}
-        onClick={() => start.mutate()}
-      >
-        {running ? <IconLoader2 className="animate-spin" data-icon="inline-start" /> : icon}
-        {running ? t("Running…") : action}
-      </Button>
-    </div>
-  );
-}
-
-function RunSummary({ run }: Readonly<{ run: HubSpotBulkRun }>) {
-  const { t } = useTranslation();
-  const counts = t("{linked} linked, {created} created, {skipped} skipped, {failed} failed", {
-    linked: run.linked,
-    created: run.created,
-    skipped: run.skipped,
-    failed: run.failed,
-  });
-  const deals = run.deals
-    ? t("Deals: {created} created, {skipped} skipped, {failed} failed", run.deals)
-    : null;
-
-  if (run.status === "running") {
-    return (
-      <p className="text-xs text-muted-foreground">
-        {t("Running: {counts}", { counts })}
-        {deals && ` · ${deals}`}
-      </p>
-    );
-  }
-  if (run.status === "failed") {
-    return (
-      <p className="text-xs text-destructive">
-        {t("Stopped with an error {when}: {counts}", {
-          when: formatToRelativeTime(run.finishedAt ?? run.startedAt),
-          counts,
-        })}
-        {run.error && (
-          <code className="mt-1 block truncate font-mono" title={run.error}>
-            {run.error}
-          </code>
-        )}
-      </p>
-    );
-  }
-  return (
-    <p className="text-xs text-muted-foreground">
-      {t("Last run {when}: {counts}", {
-        when: formatToRelativeTime(run.finishedAt ?? run.startedAt),
-        counts,
-      })}
-      {deals && ` · ${deals}`}
-    </p>
   );
 }

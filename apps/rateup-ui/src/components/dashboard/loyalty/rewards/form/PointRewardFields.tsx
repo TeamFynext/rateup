@@ -18,8 +18,7 @@ import { RewardWorthLine } from "../../giveback/RewardWorthLine.tsx";
 import { useRewardEconomicsContext } from "../../giveback/useRewardEconomicsContext.ts";
 import type { PointRewardFormValues, PointRewardValues } from "../schemas.ts";
 import { ShopifyDiscountCard } from "../ShopifyDiscountCard.tsx";
-// Hidden until WooCommerce and HubSpot launch — uncomment to show.
-// import { WooDiscountCard } from "../WooDiscountCard.tsx";
+import { WooDiscountCard } from "../WooDiscountCard.tsx";
 import { FormSection, NumberField, RuleToggle, TextField, TierRestriction } from "./fields.tsx";
 
 type PointForm = UseFormReturn<PointRewardFormValues, unknown, PointRewardValues>;
@@ -44,8 +43,8 @@ export function PointRewardFields({
   const kind = useWatch({ control, name: "rewardType" });
   const shopifyEnabled = useWatch({ control, name: "shopifyDiscountEnabled" });
   const shopifyDays = useWatch({ control, name: "shopifyValidForDays" });
-  // const wooEnabled = useWatch({ control, name: "wooDiscountEnabled" });
-  // const wooDays = useWatch({ control, name: "wooValidForDays" });
+  const wooEnabled = useWatch({ control, name: "wooDiscountEnabled" });
+  const wooDays = useWatch({ control, name: "wooValidForDays" });
 
   const [spendOn, setSpendOn] = useState(() => !!getValues("minimumSpend"));
   const [timeOn, setTimeOn] = useState(
@@ -239,7 +238,6 @@ export function PointRewardFields({
           supported={kind === "fixed-discount" || kind === "percentage-discount"}
         />
 
-        {/* Hidden until WooCommerce and HubSpot launch — uncomment to show.
         <WooDiscountCard
           enabled={!!wooEnabled}
           onEnabledChange={(checked) => {
@@ -250,7 +248,6 @@ export function PointRewardFields({
           onValidForDaysChange={(days) => setValue("wooValidForDays", days, { shouldDirty: true })}
           supported={kind === "fixed-discount" || kind === "percentage-discount"}
         />
-        */}
 
         <Controller
           control={control}
