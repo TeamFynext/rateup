@@ -8,6 +8,7 @@ import { useColorScheme } from "react-native";
 import { useNotificationDeepLink } from "@/utils/useNotificationDeepLink";
 import { usePushTokenSync } from "@/utils/usePushTokenSync";
 import { useShareIntentRedirect } from "@/utils/useShareIntentRedirect";
+import CallScreen from "@/components/calling/CallScreen";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ProtectedLayout() {
@@ -28,6 +29,10 @@ export default function ProtectedLayout() {
         <UserProvider>
           <LifecycleContext value={lifecycles || []}>
             <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
+              {/* Before the screens: minimised, the call bar takes its own row at the top
+                  and pushes them down; full size, it is a modal above everything. Either
+                  way it lives outside the screens, so a call survives navigation. */}
+              <CallScreen />
               <Stack screenOptions={{ headerShown: false }} />
             </SafeAreaView>
           </LifecycleContext>

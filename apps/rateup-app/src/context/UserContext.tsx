@@ -10,6 +10,7 @@ import { useInboxCountStore } from "../store/inboxCountStore";
 import { useOpenChatStore } from "../utils/store";
 import { WaMessageAssignStatus } from "../api/inbox/types";
 import { queryClient } from "../config/queryClient";
+import { receiveCallEvent } from "@/store/callStore";
 
 /**
  * Refetch what a dropped socket may have left stale.
@@ -262,6 +263,9 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
         }
         if (message?.type === "inbox_note") {
           applyInboxNote(message.inbox_note);
+        }
+        if (message?.type === "call" && message.call) {
+          receiveCallEvent(message.call, queryClient);
         }
         setWsData(message);
       } catch (err) {
