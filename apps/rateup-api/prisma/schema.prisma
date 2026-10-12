@@ -220,6 +220,7 @@ model Org {
   businessHours           BusinessHour[]
   rules                   Rule[]
   shopifyCheckouts        ShopifyCheckout[]
+  shopifyWidgetStats      ShopifyWidgetStat[]
   ruleMessageBodyLocks    RuleMessageBodyLock[]
   waMessageOrgTeamMaps    WaMessageOrgTeamMap[]
   Webhook                 Webhook?
@@ -749,6 +750,21 @@ enum ShopifyCheckoutStatus {
   OPEN
   RECOVERED
   EXPIRED
+}
+
+/// Taps on the storefront WhatsApp button (extensions/whatsapp-widget), counted per org,
+/// UTC day and Shopify page type. `opens` is the bubble being tapped, `clicks` a shopper
+/// going on to WhatsApp.
+model ShopifyWidgetStat {
+  id       String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org      Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId    String   @db.Uuid
+  date     DateTime @db.Date
+  pageType String
+  opens    Int      @default(0)
+  clicks   Int      @default(0)
+
+  @@unique([orgId, date, pageType])
 }
 
 /// One abandoned-checkout rule's reminder for one checkout. The row is the send's claim:

@@ -1,0 +1,49 @@
+{%- comment -%}
+  RateUp WhatsApp chat button (app embed).
+
+  Settings come from the app-data metafield `rateup.widget`, written by
+  rateup-api whenever the merchant saves the widget in RateUp
+  (src/modules/integrations/shopify/shopify.widget.ts). Nothing is rendered,
+  and no asset is loaded, until that metafield exists and is enabled.
+
+  The file name is part of the theme editor deep link
+  (`activateAppId=<api key>/whatsapp-embed`), so don't rename it.
+{%- endcomment -%}
+
+{%- assign rateup_widget = app.metafields.rateup.widget.value -%}
+
+{%- if rateup_widget and rateup_widget.enabled -%}
+  <script type="application/json" id="rateup-wa-config">
+    {
+      "settings": {{ rateup_widget | json }},
+      "pageType": {{ request.page_type | json }},
+      "shop": {{ shop.permanent_domain | json }}
+      {%- if request.page_type == 'product' and product -%}
+        ,
+        "product": {
+          "title": {{ product.title | json }},
+          "url": {{ shop.url | append: product.url | json }}
+        }
+      {%- endif -%}
+    }
+  </script>
+  {{ 'rateup-whatsapp.css' | asset_url | stylesheet_tag }}
+  <script src="{{ 'rateup-whatsapp.js' | asset_url }}" defer></script>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "t:whatsapp_embed.name",
+  "target": "body",
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:whatsapp_embed.settings.header"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:whatsapp_embed.settings.info"
+    }
+  ]
+}
+{% endschema %}

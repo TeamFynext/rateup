@@ -1,0 +1,8 @@
+# Theme app extension: the floating WhatsApp button merchants switch on under
+# Theme editor → App embeds. Deployed with the app (`shopify app deploy`).
+# The widget's settings live in RateUp, not here: the API writes them to the
+# app-data metafield `rateup.widget`, which blocks/whatsapp-embed.liquid reads.
+
+name = "WhatsApp chat button"
+type = "theme"
+uid = "dc9e402a-b794-ae90-1769-45a13905b67fdb128e5b"

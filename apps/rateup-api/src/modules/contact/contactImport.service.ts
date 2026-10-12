@@ -59,6 +59,8 @@ export function normalizePhone(phone: string): string {
 
   // If it's in scientific notation (like "9.19877E+11")
   if (/e/i.test(phone)) {
+    // Left as it is, so the row is refused instead of imported with zeros for the lost digits.
+    if (isShortenedScientific(phone)) return phone.trim();
     const num = Number(phone);
     if (!isNaN(num)) {
       return num.toFixed(0); // no decimals
@@ -66,6 +68,19 @@ export function normalizePhone(phone: string): string {
   }
 
   return phone.toString().trim();
+}
+
+/**
+ * Whether a scientific-notation cell has fewer digits than the number it stands for.
+ *
+ * Excel shows a long number as 9.18883E+11 and saves that text to a CSV, so the last
+ * digits are gone from the file: expanding it gives 918883000000, a valid-looking number
+ * that belongs to someone else.
+ */
+export function isShortenedScientific(phone: string): boolean {
+  const match = /^\+?\d(?:\.(\d+))?e\+?(\d+)$/i.exec(phone.trim());
+  if (!match) return false;
+  return (match[1]?.length ?? 0) < Number(match[2]);
 }
 
 // Column order assumed when the uploaded file has no header row.
@@ -165,7 +180,11 @@ export async function startContactImport(
       if (rejected.length < REJECTED_ROWS_KEPT) {
         rejected.push({
           name: typeof nameValue === "string" && nameValue ? nameValue : "name is missing/invalid",
-          phone: phoneValue ? `${String(phoneValue)}: Invalid phone number` : "phone is missing",
+          phone: !phoneValue
+            ? "phone is missing"
+            : isShortenedScientific(rawPhone)
+              ? `${String(phoneValue)}: Excel shortened this number. Format the phone column as Number with 0 decimals (or as Text), then save the file again`
+              : `${String(phoneValue)}: Invalid phone number`,
         });
       }
       continue;
