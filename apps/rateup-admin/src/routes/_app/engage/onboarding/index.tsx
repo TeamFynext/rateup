@@ -1,6 +1,6 @@
-import { IconEye, IconSend } from "@tabler/icons-react";
+import { IconEye, IconPencil, IconSend } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -22,7 +22,7 @@ import { Switch } from "@/components/ui/switch";
 import { getApiErrorMessage } from "@/lib/apiError";
 import { formatNumber } from "@/lib/format";
 
-export const Route = createFileRoute("/_app/engage/onboarding")({
+export const Route = createFileRoute("/_app/engage/onboarding/")({
   component: OnboardingPage,
 });
 
@@ -62,13 +62,20 @@ function columns(actions: {
       header: "Step",
       primary: true,
       cell: (step) => (
-        <span className="block min-w-0">
-          <span className="block truncate font-medium">
-            <span className="text-muted-foreground tabular">Day {step.day} · </span>
-            {step.label}
+        <Link
+          to="/engage/onboarding/$key"
+          params={{ key: step.key }}
+          className="block min-w-0 hover:underline"
+        >
+          <span className="flex items-center gap-2 font-medium">
+            <span className="truncate">
+              <span className="text-muted-foreground tabular">Day {step.day} · </span>
+              {step.label}
+            </span>
+            {step.customized && <Pill tone="brand">Edited</Pill>}
           </span>
           <span className="block truncate text-xs text-muted-foreground">{step.subject}</span>
-        </span>
+        </Link>
       ),
     },
     {
@@ -143,6 +150,15 @@ function columns(actions: {
       align: "right",
       cell: (step) => (
         <span className="flex justify-end gap-1">
+          <Link
+            to="/engage/onboarding/$key"
+            params={{ key: step.key }}
+            aria-label={`Edit ${step.label}`}
+            title={`Edit ${step.label}`}
+            className="grid size-8 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+          >
+            <IconPencil className="size-4" />
+          </Link>
           <IconAction label={`Preview ${step.label}`} onClick={() => actions.preview(step)}>
             <IconEye className="size-4" />
           </IconAction>

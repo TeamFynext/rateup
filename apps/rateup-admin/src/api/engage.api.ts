@@ -12,6 +12,8 @@ export interface DripStep {
   day: number;
   label: string;
   subject: string;
+  /** Staff edited the wording; false means it is the catalogue's. */
+  customized: boolean;
   hasWhatsapp: boolean;
   whatsappTemplate: string | null;
   /** False for steps with no goal (welcome, check-in): no conversion to show. */
@@ -21,6 +23,39 @@ export interface DripStep {
   whatsapp: StatusCounts;
   orgsReached: number;
   orgsConverted: number;
+}
+
+/** An onboarding email's wording; `{name}` and `{org}` are filled per person. */
+export interface DripEmail {
+  subject: string;
+  preview: string;
+  title: string;
+  body: string;
+  /** `path` is a web-app path (/dashboard/…) or a full https link. */
+  cta?: { label: string; path: string };
+  highlights?: { title: string; description: string; path?: string }[];
+  /** A plain-text note from a person: no layout, no button or highlights. */
+  plain?: boolean;
+}
+
+export interface DripStepDetail {
+  key: string;
+  day: number;
+  label: string;
+  enabled: boolean;
+  email: DripEmail;
+  defaultEmail: DripEmail;
+  /** Null: this step sends no WhatsApp. */
+  whatsappTemplate: string | null;
+  defaultWhatsappTemplate: string | null;
+  customized: boolean;
+  editedAt: IsoDate | null;
+  editedBy: string | null;
+}
+
+export interface DripContent {
+  email: DripEmail;
+  whatsappTemplate: string | null;
 }
 
 export interface DripOverview {
@@ -99,6 +134,8 @@ export interface SenderTemplate {
   status: string | null;
   body: string;
   variables: number;
+  /** Has the "Stop updates" quick reply that opts a person out. */
+  stopButton: boolean;
 }
 
 export interface CustomerMessage {
@@ -134,6 +171,52 @@ export const dripPreviewQueryOptions = (key: string) =>
       (await api.get<{ data: EmailPreview }>(`/engage/drip/${key}/preview`)).data.data,
     staleTime: 5 * 60_000,
   });
+
+export const dripStepQueryOptions = (key: string) =>
+  queryOptions({
+    queryKey: [...KEY, "drip", key],
+    queryFn: async () => (await api.get<{ data: DripStepDetail }>(`/engage/drip/${key}`)).data.data,
+  });
+
+/** Renders unsaved wording; keyed on the serialised draft so each version is fetched once. */
+export const dripDraftPreviewQueryOptions = (key: string, draft: string) =>
+  queryOptions({
+    queryKey: [...KEY, "drip", key, "draft-preview", draft],
+    queryFn: async () =>
+      (
+        await api.post<{ data: EmailPreview }>(`/engage/drip/${key}/preview`, {
+          email: JSON.parse(draft) as DripEmail,
+        })
+      ).data.data,
+    staleTime: Infinity,
+    retry: false,
+  });
+
+function useDripContentMutation<TInput>(
+  key: string,
+  call: (input: TInput) => Promise<DripStepDetail>,
+) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: call,
+    onSuccess: (detail) => client.setQueryData(dripStepQueryOptions(key).queryKey, detail),
+    onSettled: () => client.invalidateQueries({ queryKey: [...KEY, "drip"] }),
+  });
+}
+
+export const useSaveDripContent = (key: string) =>
+  useDripContentMutation(
+    key,
+    async (content: DripContent) =>
+      (await api.put<{ data: DripStepDetail }>(`/engage/drip/${key}/content`, content)).data.data,
+  );
+
+export const useResetDripContent = (key: string) =>
+  useDripContentMutation<void>(
+    key,
+    async () =>
+      (await api.delete<{ data: DripStepDetail }>(`/engage/drip/${key}/content`)).data.data,
+  );
 
 export function useToggleDripStep() {
   const client = useQueryClient();

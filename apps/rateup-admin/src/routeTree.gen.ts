@@ -20,7 +20,6 @@ import { Route as AppBillingPlansRouteImport } from './routes/_app/billing/plans
 import { Route as AppBillingRazorpayRouteImport } from './routes/_app/billing/razorpay'
 import { Route as AppBillingStripeRouteImport } from './routes/_app/billing/stripe'
 import { Route as AppBillingSubscriptionsRouteImport } from './routes/_app/billing/subscriptions'
-import { Route as AppEngageOnboardingRouteImport } from './routes/_app/engage/onboarding'
 import { Route as AppOpsReferralsRouteImport } from './routes/_app/ops/referrals'
 import { Route as AppOpsShopifyRouteImport } from './routes/_app/ops/shopify'
 import { Route as AppOpsTestDataRouteImport } from './routes/_app/ops/test-data'
@@ -29,6 +28,8 @@ import { Route as AppOrgsIndexRouteImport } from './routes/_app/orgs/index'
 import { Route as AppOrgsOrgIdRouteImport } from './routes/_app/orgs/$orgId'
 import { Route as AppEngageBroadcastsIndexRouteImport } from './routes/_app/engage/broadcasts/index'
 import { Route as AppEngageBroadcastsBroadcastIdRouteImport } from './routes/_app/engage/broadcasts/$broadcastId'
+import { Route as AppEngageOnboardingIndexRouteImport } from './routes/_app/engage/onboarding/index'
+import { Route as AppEngageOnboardingKeyRouteImport } from './routes/_app/engage/onboarding/$key'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -84,11 +85,6 @@ const AppBillingSubscriptionsRoute = AppBillingSubscriptionsRouteImport.update({
   path: '/billing/subscriptions',
   getParentRoute: () => AppRoute,
 } as any)
-const AppEngageOnboardingRoute = AppEngageOnboardingRouteImport.update({
-  id: '/engage/onboarding',
-  path: '/engage/onboarding',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppOpsReferralsRoute = AppOpsReferralsRouteImport.update({
   id: '/ops/referrals',
   path: '/ops/referrals',
@@ -131,6 +127,17 @@ const AppEngageBroadcastsBroadcastIdRoute =
     path: '/engage/broadcasts/$broadcastId',
     getParentRoute: () => AppRoute,
   } as any)
+const AppEngageOnboardingIndexRoute =
+  AppEngageOnboardingIndexRouteImport.update({
+    id: '/engage/onboarding/',
+    path: '/engage/onboarding/',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppEngageOnboardingKeyRoute = AppEngageOnboardingKeyRouteImport.update({
+  id: '/engage/onboarding/$key',
+  path: '/engage/onboarding/$key',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
@@ -143,7 +150,6 @@ export interface FileRoutesByFullPath {
   '/billing/razorpay': typeof AppBillingRazorpayRoute
   '/billing/stripe': typeof AppBillingStripeRoute
   '/billing/subscriptions': typeof AppBillingSubscriptionsRoute
-  '/engage/onboarding': typeof AppEngageOnboardingRoute
   '/ops/referrals': typeof AppOpsReferralsRoute
   '/ops/shopify': typeof AppOpsShopifyRoute
   '/ops/test-data': typeof AppOpsTestDataRoute
@@ -151,7 +157,9 @@ export interface FileRoutesByFullPath {
   '/orgs/$orgId': typeof AppOrgsOrgIdRoute
   '/orgs/': typeof AppOrgsIndexRoute
   '/engage/broadcasts/$broadcastId': typeof AppEngageBroadcastsBroadcastIdRoute
+  '/engage/onboarding/$key': typeof AppEngageOnboardingKeyRoute
   '/engage/broadcasts/': typeof AppEngageBroadcastsIndexRoute
+  '/engage/onboarding/': typeof AppEngageOnboardingIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -163,7 +171,6 @@ export interface FileRoutesByTo {
   '/billing/razorpay': typeof AppBillingRazorpayRoute
   '/billing/stripe': typeof AppBillingStripeRoute
   '/billing/subscriptions': typeof AppBillingSubscriptionsRoute
-  '/engage/onboarding': typeof AppEngageOnboardingRoute
   '/ops/referrals': typeof AppOpsReferralsRoute
   '/ops/shopify': typeof AppOpsShopifyRoute
   '/ops/test-data': typeof AppOpsTestDataRoute
@@ -171,7 +178,9 @@ export interface FileRoutesByTo {
   '/orgs/$orgId': typeof AppOrgsOrgIdRoute
   '/orgs': typeof AppOrgsIndexRoute
   '/engage/broadcasts/$broadcastId': typeof AppEngageBroadcastsBroadcastIdRoute
+  '/engage/onboarding/$key': typeof AppEngageOnboardingKeyRoute
   '/engage/broadcasts': typeof AppEngageBroadcastsIndexRoute
+  '/engage/onboarding': typeof AppEngageOnboardingIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -186,7 +195,6 @@ export interface FileRoutesById {
   '/_app/billing/razorpay': typeof AppBillingRazorpayRoute
   '/_app/billing/stripe': typeof AppBillingStripeRoute
   '/_app/billing/subscriptions': typeof AppBillingSubscriptionsRoute
-  '/_app/engage/onboarding': typeof AppEngageOnboardingRoute
   '/_app/ops/referrals': typeof AppOpsReferralsRoute
   '/_app/ops/shopify': typeof AppOpsShopifyRoute
   '/_app/ops/test-data': typeof AppOpsTestDataRoute
@@ -194,7 +202,9 @@ export interface FileRoutesById {
   '/_app/orgs/$orgId': typeof AppOrgsOrgIdRoute
   '/_app/orgs/': typeof AppOrgsIndexRoute
   '/_app/engage/broadcasts/$broadcastId': typeof AppEngageBroadcastsBroadcastIdRoute
+  '/_app/engage/onboarding/$key': typeof AppEngageOnboardingKeyRoute
   '/_app/engage/broadcasts/': typeof AppEngageBroadcastsIndexRoute
+  '/_app/engage/onboarding/': typeof AppEngageOnboardingIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -209,7 +219,6 @@ export interface FileRouteTypes {
     | '/billing/razorpay'
     | '/billing/stripe'
     | '/billing/subscriptions'
-    | '/engage/onboarding'
     | '/ops/referrals'
     | '/ops/shopify'
     | '/ops/test-data'
@@ -217,7 +226,9 @@ export interface FileRouteTypes {
     | '/orgs/$orgId'
     | '/orgs/'
     | '/engage/broadcasts/$broadcastId'
+    | '/engage/onboarding/$key'
     | '/engage/broadcasts/'
+    | '/engage/onboarding/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -229,7 +240,6 @@ export interface FileRouteTypes {
     | '/billing/razorpay'
     | '/billing/stripe'
     | '/billing/subscriptions'
-    | '/engage/onboarding'
     | '/ops/referrals'
     | '/ops/shopify'
     | '/ops/test-data'
@@ -237,7 +247,9 @@ export interface FileRouteTypes {
     | '/orgs/$orgId'
     | '/orgs'
     | '/engage/broadcasts/$broadcastId'
+    | '/engage/onboarding/$key'
     | '/engage/broadcasts'
+    | '/engage/onboarding'
   id:
     | '__root__'
     | '/_app'
@@ -251,7 +263,6 @@ export interface FileRouteTypes {
     | '/_app/billing/razorpay'
     | '/_app/billing/stripe'
     | '/_app/billing/subscriptions'
-    | '/_app/engage/onboarding'
     | '/_app/ops/referrals'
     | '/_app/ops/shopify'
     | '/_app/ops/test-data'
@@ -259,7 +270,9 @@ export interface FileRouteTypes {
     | '/_app/orgs/$orgId'
     | '/_app/orgs/'
     | '/_app/engage/broadcasts/$broadcastId'
+    | '/_app/engage/onboarding/$key'
     | '/_app/engage/broadcasts/'
+    | '/_app/engage/onboarding/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -346,13 +359,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppBillingSubscriptionsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/engage/onboarding': {
-      id: '/_app/engage/onboarding'
-      path: '/engage/onboarding'
-      fullPath: '/engage/onboarding'
-      preLoaderRoute: typeof AppEngageOnboardingRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/ops/referrals': {
       id: '/_app/ops/referrals'
       path: '/ops/referrals'
@@ -409,6 +415,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEngageBroadcastsBroadcastIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/engage/onboarding/': {
+      id: '/_app/engage/onboarding/'
+      path: '/engage/onboarding'
+      fullPath: '/engage/onboarding/'
+      preLoaderRoute: typeof AppEngageOnboardingIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/engage/onboarding/$key': {
+      id: '/_app/engage/onboarding/$key'
+      path: '/engage/onboarding/$key'
+      fullPath: '/engage/onboarding/$key'
+      preLoaderRoute: typeof AppEngageOnboardingKeyRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
@@ -435,13 +455,14 @@ interface AppRouteChildren {
   AppBillingRazorpayRoute: typeof AppBillingRazorpayRoute
   AppBillingStripeRoute: typeof AppBillingStripeRoute
   AppBillingSubscriptionsRoute: typeof AppBillingSubscriptionsRoute
-  AppEngageOnboardingRoute: typeof AppEngageOnboardingRoute
   AppOpsReferralsRoute: typeof AppOpsReferralsRoute
   AppOpsShopifyRoute: typeof AppOpsShopifyRoute
   AppOpsTestDataRoute: typeof AppOpsTestDataRoute
   AppOpsUpdateCenterRoute: typeof AppOpsUpdateCenterRoute
   AppEngageBroadcastsBroadcastIdRoute: typeof AppEngageBroadcastsBroadcastIdRoute
+  AppEngageOnboardingKeyRoute: typeof AppEngageOnboardingKeyRoute
   AppEngageBroadcastsIndexRoute: typeof AppEngageBroadcastsIndexRoute
+  AppEngageOnboardingIndexRoute: typeof AppEngageOnboardingIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -454,13 +475,14 @@ const AppRouteChildren: AppRouteChildren = {
   AppBillingRazorpayRoute: AppBillingRazorpayRoute,
   AppBillingStripeRoute: AppBillingStripeRoute,
   AppBillingSubscriptionsRoute: AppBillingSubscriptionsRoute,
-  AppEngageOnboardingRoute: AppEngageOnboardingRoute,
   AppOpsReferralsRoute: AppOpsReferralsRoute,
   AppOpsShopifyRoute: AppOpsShopifyRoute,
   AppOpsTestDataRoute: AppOpsTestDataRoute,
   AppOpsUpdateCenterRoute: AppOpsUpdateCenterRoute,
   AppEngageBroadcastsBroadcastIdRoute: AppEngageBroadcastsBroadcastIdRoute,
+  AppEngageOnboardingKeyRoute: AppEngageOnboardingKeyRoute,
   AppEngageBroadcastsIndexRoute: AppEngageBroadcastsIndexRoute,
+  AppEngageOnboardingIndexRoute: AppEngageOnboardingIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
