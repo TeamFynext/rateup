@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { validateFile } from "./validate.js";
+import { normalizeMimeType, validateFile } from "./validate.js";
 
 const MB = 1024 * 1024;
 
@@ -136,6 +136,40 @@ describe("validateFile - the allowAll bypass", () => {
 
   test("checks normally when allowAll is not set", () => {
     expect(validateFile({ data: upload({ mimetype: "application/zip" }) })).toMatchObject({
+      valid: false,
+    });
+  });
+});
+
+describe("normalizeMimeType", () => {
+  test.each([
+    // What iOS sends for every iPhone recording and Voice Memo; React Native cannot override it.
+    ["audio/x-m4a", "audio/mp4"],
+    ["audio/mp4a-latm", "audio/mp4"],
+    ["audio/mp3", "audio/mpeg"],
+    ["image/jpg", "image/jpeg"],
+    ["video/x-m4v", "video/mp4"],
+    ["Audio/MP4; codecs=mp4a.40.2", "audio/mp4"],
+    ["image/png", "image/png"],
+  ])("reads %s as %s", (input, expected) => {
+    expect(normalizeMimeType(input)).toBe(expected);
+  });
+
+  test("an absent type stays empty", () => {
+    expect(normalizeMimeType(undefined)).toBe("");
+  });
+});
+
+describe("validateFile - other names for allowed types", () => {
+  test("accepts an iPhone recording, sent as audio/x-m4a", () => {
+    expect(validateFile({ data: upload({ mimetype: "audio/x-m4a", size: MB }) })).toMatchObject({
+      valid: true,
+      maxSize: 16 * MB,
+    });
+  });
+
+  test("still refuses a type with no alias", () => {
+    expect(validateFile({ data: upload({ mimetype: "audio/x-wav" }) })).toMatchObject({
       valid: false,
     });
   });

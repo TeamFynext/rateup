@@ -237,6 +237,34 @@ describe("processIntegrationJob", () => {
     expect(processZoho).not.toHaveBeenCalled();
   });
 
+  const failingZoho = { name: "zoho", active: true, id: "int-z", consecutiveFailures: 2 };
+  const zohoJob = {
+    name: "zoho-lead-create",
+    data: { integrationName: "zoho", triggerKey: "lead_created", orgId: ORG, data: {} },
+  } as any;
+
+  test("a job that ran clears the integration's failure count", async () => {
+    (db.integration as any).findUnique = vi.fn().mockResolvedValue(failingZoho);
+    (db.integration as any).update = vi.fn().mockResolvedValue({});
+    vi.spyOn(zohoProvider, "processJob").mockResolvedValue();
+
+    await processIntegrationJob(zohoJob);
+
+    expect(db.integration.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ consecutiveFailures: 0 }) }),
+    );
+  });
+
+  test("a job that skipped leaves the failure count, so the alert stays", async () => {
+    (db.integration as any).findUnique = vi.fn().mockResolvedValue(failingZoho);
+    (db.integration as any).update = vi.fn().mockResolvedValue({});
+    vi.spyOn(zohoProvider, "processJob").mockResolvedValue("skipped");
+
+    await processIntegrationJob(zohoJob);
+
+    expect(db.integration.update).not.toHaveBeenCalled();
+  });
+
   test("a job for a provider the registry does not know fails loudly", async () => {
     await expect(
       processIntegrationJob({

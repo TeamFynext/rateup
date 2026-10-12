@@ -29,6 +29,8 @@ const WaMedia = z.array(
     type: z.enum(["image", "audio", "video", "document"]),
     url: z.string(),
     name: z.string(),
+    /** An audio recorded as a voice note: WhatsApp shows it as one (mic, profile photo, transcript). */
+    voice: z.boolean().optional(),
   }),
 );
 

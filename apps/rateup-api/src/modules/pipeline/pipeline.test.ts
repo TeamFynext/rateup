@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("../../utils/prisma.js", () => ({
   default: {
@@ -54,16 +54,17 @@ vi.mock("../../utils/prisma.js", () => ({
 // Bigin, GetLead and Zapier jobs that come out the other end — the same ones the
 // service used to enqueue itself. The org is treated as having Zoho and GetLead
 // connected.
-vi.mock("../integrations/events/emitIntegrationEvent.js", async () => {
-  const { processIntegrationEvent } =
-    await import("../integrations/events/integrationEvent.fanout.js");
-  return {
-    INTEGRATION_EVENT_JOB: "integration-event",
-    emitIntegrationEvent: vi.fn((orgId: string, event: any) =>
-      processIntegrationEvent({ orgId, event }),
-    ),
-  };
-});
+// The fan-out is imported on first call, not in the factory: the registry it loads
+// reaches providers (hubspot.inbound) that import this mocked module, and importing
+// it while the factory is still running deadlocks the test file.
+vi.mock("../integrations/events/emitIntegrationEvent.js", () => ({
+  INTEGRATION_EVENT_JOB: "integration-event",
+  emitIntegrationEvent: vi.fn(async (orgId: string, event: any) => {
+    const { processIntegrationEvent } =
+      await import("../integrations/events/integrationEvent.fanout.js");
+    return processIntegrationEvent({ orgId, event });
+  }),
+}));
 
 vi.mock("../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
 
@@ -223,6 +224,12 @@ beforeEach(() => {
   db.integration.findMany.mockResolvedValue(CONNECTED_INTEGRATIONS);
   db.webhook.findUnique.mockResolvedValue(null);
 });
+
+// Load the fan-out and the provider registry behind it once, so the first test that
+// emits an event doesn't spend its 5s timeout importing every provider.
+beforeAll(async () => {
+  await import("../integrations/events/integrationEvent.fanout.js");
+}, 60_000);
 
 describe("pipeline access", () => {
   test("a member of one of the pipeline's teams has access", async () => {

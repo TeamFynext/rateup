@@ -445,12 +445,15 @@ export enum IntegratedApps {
   waPayment = "waPayment",
   petpooja = "petpooja",
   zapier = "zapier",
+  make = "make",
+  pabbly = "pabbly",
   zoho = "zoho",
   getlead = "getlead",
   // Registered ahead of their providers (integrations plan, Phases 1-3). The
   // statuses endpoint lists them as not connected until an org connects one.
   woocommerce = "woocommerce",
   hubspot = "hubspot",
+  pipedrive = "pipedrive",
   googlebusiness = "googlebusiness",
 }
 

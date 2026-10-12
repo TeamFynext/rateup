@@ -132,6 +132,7 @@ model User {
   WaMessage                   WaMessage[]
   waInboxAssign               WaInboxAssign[]
   expoPushTokens              ExpoPushToken[]
+  voipPushTokens              VoipPushToken[]
   // Add relation for WaAutomatedReply many-to-many
   UserAssignedCount           UserAssignedCount[]
   AuditLog                    AuditLog[]
@@ -205,6 +206,7 @@ model Org {
   whatsappQuickReplies    WhatsappQuickReply[]
   loyaltyApiSettings      LoyaltyApiSettings[]
   expoPushTokens          ExpoPushToken[]
+  voipPushTokens          VoipPushToken[]
   WhatsappSettings        WhatsappSettings[]
   Channel                 Channel[]
   metaBusinessAgents      MetaBusinessAgent[]
@@ -3147,6 +3149,10 @@ model ExpoPushToken {
   id        String   @id @default(uuid()) @db.Uuid
   expoToken String
   createdAt DateTime @default(now())
+  /// `ios` or `android`, as the app reports it. Null on rows registered by app versions
+  /// that predate it. A call rings differently per platform (a data push that wakes a
+  /// closed Android app, CallKit on iOS), so incoming-call pushes need to know.
+  platform  String?
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String @db.Uuid
@@ -4122,4 +4128,22 @@ model WaCall {
 
   @@index([orgId, createdAt])
   @@index([contactId, createdAt])
+}
+
+/// An iOS device's PushKit VoIP token. A VoIP push is the only thing that wakes a closed iOS
+/// app to ring a call through CallKit; it goes straight to APNs (Expo cannot send one), so the
+/// token is kept apart from the Expo push token for the same device.
+model VoipPushToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @db.Uuid
+  org    Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId  String @db.Uuid
+
+  @@unique([token, userId, orgId])
+  @@index([orgId, userId])
 }

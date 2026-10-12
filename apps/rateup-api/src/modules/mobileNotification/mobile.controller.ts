@@ -1,6 +1,12 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { addToken, deleteTokenByUserId, getTokensByUserId } from "./mobile.service.js";
-import { AddExpoTokenSchema, DeleteExpoTokenSchema } from "./mobile.schema.js";
+import {
+  addToken,
+  addVoipToken,
+  deleteTokenByUserId,
+  deleteVoipToken,
+  getTokensByUserId,
+} from "./mobile.service.js";
+import { AddExpoTokenSchema, DeleteExpoTokenSchema, VoipTokenSchema } from "./mobile.schema.js";
 import { log } from "../../utils/logger.js";
 
 export async function addExpoToken(
@@ -8,14 +14,14 @@ export async function addExpoToken(
   reply: FastifyReply,
 ) {
   const { userId, orgId } = request.user;
-  const { expoToken } = request.body;
+  const { expoToken, platform } = request.body;
 
   if (!userId) {
     reply.status(401).send({ error: "Missing user" });
     return;
   }
   try {
-    await addToken(expoToken, userId, orgId);
+    await addToken(expoToken, userId, orgId, platform);
     reply.status(201).send({ ok: "Token registered" });
   } catch (e) {
     log.error({ err: e, userId, orgId }, "Failed to register Expo token");
@@ -52,5 +58,41 @@ export async function deleteToken(
     reply.status(200).send({ ok: "Token deleted", token: token });
   } catch {
     reply.status(500).send({ error: "Failed to delete tokens" });
+  }
+}
+
+export async function addVoipTokenHandler(
+  request: FastifyRequest<{ Body: VoipTokenSchema }>,
+  reply: FastifyReply,
+) {
+  const { userId, orgId } = request.user;
+  if (!userId) {
+    reply.status(401).send({ error: "Missing user" });
+    return;
+  }
+  try {
+    await addVoipToken(request.body.token, userId, orgId);
+    reply.status(201).send({ ok: "VoIP token registered" });
+  } catch (e) {
+    log.error({ err: e, userId, orgId }, "Failed to register VoIP token");
+    reply.status(500).send({ error: "Failed to register token" });
+  }
+}
+
+export async function deleteVoipTokenHandler(
+  request: FastifyRequest<{ Body: VoipTokenSchema }>,
+  reply: FastifyReply,
+) {
+  const { userId } = request.user;
+  if (!userId) {
+    reply.status(401).send({ error: "Missing user" });
+    return;
+  }
+  try {
+    await deleteVoipToken(request.body.token, userId);
+    reply.status(204).send();
+  } catch (e) {
+    log.error({ err: e, userId }, "Failed to delete VoIP token");
+    reply.status(500).send({ error: "Failed to delete token" });
   }
 }

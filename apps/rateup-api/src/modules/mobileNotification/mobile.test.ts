@@ -540,10 +540,16 @@ describe("mobileNotificationRoutes", () => {
     expect(probe.config).toEqual({ access: "session" });
   });
 
-  test("registers three routes on the collection path", async () => {
+  test("registers the Expo token routes and the iOS VoIP token routes", async () => {
     const { routes } = await collect();
 
-    expect(routes.map((r) => `${r.method} ${r.url}`)).toEqual(["POST /", "GET /", "DELETE /"]);
+    expect(routes.map((r) => `${r.method} ${r.url}`)).toEqual([
+      "POST /",
+      "GET /",
+      "DELETE /",
+      "POST /voip",
+      "DELETE /voip",
+    ]);
   });
 
   test("both writers validate their body", async () => {

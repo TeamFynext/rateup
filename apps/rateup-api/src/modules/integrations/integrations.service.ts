@@ -3,7 +3,8 @@ import { encryptCredentialSecrets } from "./shared/credentialCrypto.js";
 import prisma from "../../utils/prisma.js";
 import { IntegrationSchema, UpdateIntgrationInput } from "./integrations.schema.js";
 import { log } from "../../utils/logger.js";
-import { generateApiKey } from "../apiAccessToken/apiAccessToken.service.js";
+import { generateAutomationKey } from "./automation/automation.keys.js";
+import { isAutomationPlatform } from "./automation/automation.platforms.js";
 import axios from "axios";
 
 export const getAllIntegrationsByOrgId = (orgId: string) => {
@@ -28,8 +29,9 @@ export const getIntegrationByName = async (orgId: string, name: string) => {
 
 export const createIntegration = async (data: IntegrationSchema, orgId?: string) => {
   let apikey;
-  if (data.name === IntegratedApps.zapier) {
-    const { key, hash } = await generateApiKey();
+  if (isAutomationPlatform(data.name)) {
+    if (!orgId) throw new Error(`Missing org to create the ${data.name} API key`);
+    const { key, hash } = await generateAutomationKey(data.name, orgId);
     data.credential = {
       ...data?.credential,
       accessToken: hash,
@@ -53,11 +55,11 @@ export const updateIntegrationByName = async (
   data: UpdateIntgrationInput,
 ) => {
   let apikey;
-  if (name === IntegratedApps.zapier && data.updateKey) {
+  if (isAutomationPlatform(name) && data.updateKey) {
     if (!data.credential) {
-      throw new Error("Missing credential to regenerate the zapier access token");
+      throw new Error(`Missing credential to regenerate the ${name} access token`);
     }
-    const { key, hash } = await generateApiKey();
+    const { key, hash } = await generateAutomationKey(name, orgId);
     data.credential.accessToken = hash;
     apikey = key;
   }

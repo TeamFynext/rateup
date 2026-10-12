@@ -9,6 +9,8 @@ export type Principal =
   | { kind: "user"; userId: string; orgId: string; roleKey: RoleKey }
   | { kind: "apiKey"; orgId: string; scopes: readonly Permission[] }
   | { kind: "zapier"; orgId: string; scopes: readonly Permission[] }
+  /** A no-code automation platform other than Zapier (Make, …), on its org-carrying key. */
+  | { kind: "automation"; platform: string; orgId: string; scopes: readonly Permission[] }
   | { kind: "widget"; orgId: string }
   | { kind: "publicFlow"; orgId: string };
 
@@ -20,6 +22,7 @@ export function permissionsFor(principal: Principal): ReadonlySet<Permission> {
       return ROLE_PERMISSIONS[principal.roleKey];
     case "apiKey":
     case "zapier":
+    case "automation":
       // An empty scope list is a token issued before scopes existed: full access, as before.
       return principal.scopes.length > 0 ? new Set(principal.scopes) : ALL_PERMISSIONS;
     case "widget":

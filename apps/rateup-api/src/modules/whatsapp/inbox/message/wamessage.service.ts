@@ -1888,6 +1888,7 @@ export interface WaMedia {
   type: "audio" | "image" | "document" | "video";
   url: string;
   name: string;
+  voice?: boolean;
 }
 
 export async function sendMediaMessages(
@@ -1919,7 +1920,7 @@ export async function sendMediaMessages(
         break;
       }
       case "audio": {
-        messageBody = createAudioMessage(to, item.url, platform);
+        messageBody = createAudioMessage(to, item.url, platform, item.voice);
         break;
       }
     }

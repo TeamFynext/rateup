@@ -18,6 +18,13 @@ const expoTokenField = z
 
 const addExpoTokenSchema = z.object({
   expoToken: expoTokenField,
+  /** Optional: app versions before calling did not send it. */
+  platform: z.enum(["ios", "android"]).optional(),
+});
+
+/** An APNs device token: hex, 64 characters today; bounded loosely in case Apple grows it. */
+const voipTokenSchema = z.object({
+  token: z.string().regex(/^[0-9a-fA-F]{32,200}$/, "Invalid VoIP token"),
 });
 
 const deleteExpoTokenSchema = z.object({
@@ -26,6 +33,7 @@ const deleteExpoTokenSchema = z.object({
 
 export type AddExpoTokenSchema = z.infer<typeof addExpoTokenSchema>;
 export type DeleteExpoTokenSchema = z.infer<typeof deleteExpoTokenSchema>;
+export type VoipTokenSchema = z.infer<typeof voipTokenSchema>;
 
 // Auto-exported after fastify-zod migration
-export { addExpoTokenSchema, deleteExpoTokenSchema };
+export { addExpoTokenSchema, deleteExpoTokenSchema, voipTokenSchema };
