@@ -50,6 +50,10 @@ CREATE TABLE "EmailSuppression" (
 CREATE TABLE "DripStepSetting" (
     "key" TEXT NOT NULL,
     "enabled" BOOLEAN NOT NULL DEFAULT true,
+    "email" JSONB,
+    "whatsapp" JSONB,
+    "editedAt" TIMESTAMP(3),
+    "editedBy" TEXT,
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "DripStepSetting_pkey" PRIMARY KEY ("key")
