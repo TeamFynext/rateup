@@ -1,7 +1,9 @@
+import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import SupportWidget from "@/components/app&services/support-widget.tsx";
 import TerminalBlock from "@/components/TerminalBlock.tsx";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
 import {
   Card,
   CardContent,
@@ -50,6 +52,20 @@ import SupportWidget from "@rateup/support-widget";
 
   return (
     <IntegrationShell icon={config.icon} name={config.name} own>
+      <Alert>
+        <AlertTitle>{t("Is your store on Shopify?")}</AlertTitle>
+        <AlertDescription>
+          {t("You don't need this package. Add a WhatsApp button to your store without code.")}{" "}
+          <Link
+            to="/dashboard/settings/integrations/$id"
+            params={{ id: "shopify" }}
+            className="font-medium underline"
+          >
+            {t("Open the Shopify integration")}
+          </Link>
+        </AlertDescription>
+      </Alert>
+
       <Card>
         <CardHeader>
           <CardTitle>{t("Install")}</CardTitle>

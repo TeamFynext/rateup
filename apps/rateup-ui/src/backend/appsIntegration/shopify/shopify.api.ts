@@ -54,6 +54,44 @@ export async function getShopifyAttribution(params: { from: string; to: string }
     .data as ShopifyAttribution;
 }
 
+/** Where the storefront WhatsApp button shows; mirrors SHOPIFY_WIDGET_PAGES in rateup-api. */
+export type ShopifyWidgetPage = "all" | "home" | "product" | "collection" | "cart";
+
+/** The storefront WhatsApp button's settings; mirrors shopifyWidgetSchema in rateup-api. */
+export interface ShopifyWidgetSettings {
+  enabled: boolean;
+  /** The WhatsApp channel shoppers are sent to. */
+  channelId: string | null;
+  buttonLabel: string;
+  greeting: string;
+  prefill: string;
+  productPrefill: string;
+  color: string;
+  position: "left" | "right";
+  offsetY: number;
+  showOn: ShopifyWidgetPage[];
+  hideOnMobile: boolean;
+}
+
+export interface ShopifyWidgetData {
+  settings: ShopifyWidgetSettings;
+  /** False until the widget has been saved once. */
+  configured: boolean;
+  shop: string;
+  /** Opens the theme editor with the app embed ready to switch on. */
+  themeEditorUrl: string | null;
+  stats: { days: number; opens: number; clicks: number };
+}
+
+export async function getShopifyWidget() {
+  return (await axiosClient.get(`${SHOPIFY_BASE_URL}/widget`)).data.data as ShopifyWidgetData;
+}
+
+export async function saveShopifyWidget(settings: ShopifyWidgetSettings) {
+  return (await axiosClient.put(`${SHOPIFY_BASE_URL}/widget`, settings)).data
+    .data as ShopifyWidgetSettings;
+}
+
 export async function getRegisteredWebhooks() {
   return (await axiosClient.get(`${SHOPIFY_BASE_URL}/registered-webhooks`)).data as ShopifyEvents[];
 }
