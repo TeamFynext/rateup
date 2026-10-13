@@ -15,6 +15,7 @@ import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import ShopifyResults from "@/components/shopify/ShopifyResults.tsx";
 import ShopifySchedules from "@/components/shopify/ShopifySchedules.tsx";
 import ShopifySettings from "@/components/shopify/ShopifySettings.tsx";
+import ShopifyWidget from "@/components/shopify/ShopifyWidget.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
@@ -116,6 +117,7 @@ export function Shopify() {
         <TabsList className="mb-4">
           <TabsTrigger value="results">{translations("Results")}</TabsTrigger>
           <TabsTrigger value="schedules">{translations("Schedules")}</TabsTrigger>
+          <TabsTrigger value="widget">{translations("WhatsApp widget")}</TabsTrigger>
           <TabsTrigger value="settings">{translations("Settings")}</TabsTrigger>
         </TabsList>
         <TabsContent value="results">
@@ -128,6 +130,9 @@ export function Shopify() {
             waTemplates={templates ?? []}
             teams={teams?.data ?? []}
           />
+        </TabsContent>
+        <TabsContent value="widget">
+          <ShopifyWidget />
         </TabsContent>
         <TabsContent value="settings">
           <ShopifySettings shopifyInfo={shopifyInfo} />
