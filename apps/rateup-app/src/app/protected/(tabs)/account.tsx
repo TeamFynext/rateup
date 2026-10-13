@@ -73,6 +73,10 @@ export default function AccountScreen() {
       <ScreenHeader title="Account Details" />
       <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}
+        // iOS draws the tab bar over the screen. A scroll view that is not the screen's
+        // first child gets no automatic inset for it, so the content ended underneath and
+        // Log Out could not be scrolled into reach.
+        contentInsetAdjustmentBehavior="always"
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

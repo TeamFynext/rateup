@@ -3,6 +3,7 @@ import { ActivityIndicator, Modal, Pressable, Text, TextInput, View } from "reac
 import { useColorScheme } from "nativewind";
 import { useQueryClient } from "@tanstack/react-query";
 import { Phone } from "lucide-react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import {
   callErrorCode,
@@ -12,6 +13,7 @@ import {
   requestCallPermission,
 } from "@/api/whatsapp/calling";
 import { useWaSettings } from "@/api/whatsapp/template/whatsapp.query";
+import KeyboardAvoider from "@/components/common/KeyboardAvoider";
 import { Toast } from "@/components/common/Notice";
 import { Colors } from "@/constants/colors";
 import { MessagePlatform } from "@/constants/enums";
@@ -192,6 +194,7 @@ function AskPermissionSheet({
     "We'd like to call you on WhatsApp to help with your request. Is that okay?",
   );
   const [sending, setSending] = useState(false);
+  const insets = useSafeAreaInsets();
   // Meta allows one request a day and two a week per customer; past that it says no.
   const limitReached = permission !== null && !permission.canRequest;
 
@@ -213,83 +216,88 @@ function AskPermissionSheet({
   };
 
   const surface = isDark ? Colors.dark.surface : Colors.light.card;
+  // The sheet sits on the screen's bottom edge, over the home indicator or navigation bar.
+  const bottomPadding = 20 + Math.max(insets.bottom, 12);
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable
-        onPress={onClose}
-        style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "flex-end" }}
-      >
-        {/* Swallows taps so pressing inside the sheet does not close it. */}
+      {/* The message field is at the bottom of the screen, where the keyboard opens. */}
+      <KeyboardAvoider bottomInset={insets.bottom}>
         <Pressable
-          onPress={() => undefined}
-          style={{
-            backgroundColor: surface,
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
-            padding: 20,
-            paddingBottom: 32,
-            gap: 12,
-          }}
+          onPress={onClose}
+          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "flex-end" }}
         >
-          <Text style={{ fontFamily: "Figtree_800ExtraBold", fontSize: 18, color: t.fg1 }}>
-            Ask to call this customer
-          </Text>
-          <Text style={{ fontFamily: "InstrumentSans_400Regular", fontSize: 14, color: t.fg3 }}>
-            {limitReached
-              ? "WhatsApp allows one call request a day and two a week per customer. You can ask again later."
-              : "WhatsApp needs the customer's permission before a business can call them. They'll get this message with an option to allow calls."}
-          </Text>
-          {!limitReached ? (
-            <TextInput
-              value={body}
-              onChangeText={setBody}
-              maxLength={1024}
-              multiline
-              accessibilityLabel="Message to the customer"
-              style={{
-                minHeight: 84,
-                borderWidth: 1,
-                borderColor: t.border1,
-                borderRadius: 12,
-                padding: 12,
-                textAlignVertical: "top",
-                fontFamily: "InstrumentSans_400Regular",
-                fontSize: 14,
-                color: t.fg1,
-              }}
-            />
-          ) : null}
-          <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 10 }}>
-            <Pressable onPress={onClose} style={{ paddingVertical: 10, paddingHorizontal: 16 }}>
-              <Text style={{ fontFamily: "Figtree_700Bold", fontSize: 14, color: t.fg3 }}>
-                {limitReached ? "Close" : "Cancel"}
-              </Text>
-            </Pressable>
+          {/* Swallows taps so pressing inside the sheet does not close it. */}
+          <Pressable
+            onPress={() => undefined}
+            style={{
+              backgroundColor: surface,
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              padding: 20,
+              paddingBottom: bottomPadding,
+              gap: 12,
+            }}
+          >
+            <Text style={{ fontFamily: "Figtree_800ExtraBold", fontSize: 18, color: t.fg1 }}>
+              Ask to call this customer
+            </Text>
+            <Text style={{ fontFamily: "InstrumentSans_400Regular", fontSize: 14, color: t.fg3 }}>
+              {limitReached
+                ? "WhatsApp allows one call request a day and two a week per customer. You can ask again later."
+                : "WhatsApp needs the customer's permission before a business can call them. They'll get this message with an option to allow calls."}
+            </Text>
             {!limitReached ? (
-              <Pressable
-                onPress={() => void send()}
-                disabled={sending || !body.trim()}
+              <TextInput
+                value={body}
+                onChangeText={setBody}
+                maxLength={1024}
+                multiline
+                accessibilityLabel="Message to the customer"
                 style={{
-                  paddingVertical: 10,
-                  paddingHorizontal: 18,
-                  borderRadius: 10,
-                  backgroundColor: Colors.brand.blue,
-                  opacity: sending || !body.trim() ? 0.6 : 1,
+                  minHeight: 84,
+                  borderWidth: 1,
+                  borderColor: t.border1,
+                  borderRadius: 12,
+                  padding: 12,
+                  textAlignVertical: "top",
+                  fontFamily: "InstrumentSans_400Regular",
+                  fontSize: 14,
+                  color: t.fg1,
                 }}
-              >
-                {sending ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Text style={{ fontFamily: "Figtree_700Bold", fontSize: 14, color: "#fff" }}>
-                    Send request
-                  </Text>
-                )}
-              </Pressable>
+              />
             ) : null}
-          </View>
+            <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 10 }}>
+              <Pressable onPress={onClose} style={{ paddingVertical: 10, paddingHorizontal: 16 }}>
+                <Text style={{ fontFamily: "Figtree_700Bold", fontSize: 14, color: t.fg3 }}>
+                  {limitReached ? "Close" : "Cancel"}
+                </Text>
+              </Pressable>
+              {!limitReached ? (
+                <Pressable
+                  onPress={() => void send()}
+                  disabled={sending || !body.trim()}
+                  style={{
+                    paddingVertical: 10,
+                    paddingHorizontal: 18,
+                    borderRadius: 10,
+                    backgroundColor: Colors.brand.blue,
+                    opacity: sending || !body.trim() ? 0.6 : 1,
+                  }}
+                >
+                  {sending ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={{ fontFamily: "Figtree_700Bold", fontSize: 14, color: "#fff" }}>
+                      Send request
+                    </Text>
+                  )}
+                </Pressable>
+              ) : null}
+            </View>
+          </Pressable>
         </Pressable>
-      </Pressable>
+      </KeyboardAvoider>
     </Modal>
   );
 }

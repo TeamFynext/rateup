@@ -14,6 +14,7 @@ import {
   useColorScheme,
 } from "react-native";
 import Image from "@/components/common/Image";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Colors } from "@/constants/colors";
 import * as FileSystem from "expo-file-system/legacy";
 import { VideoPlayback, VideoThumbnail } from "@/components/common/VideoPlayer";
@@ -57,6 +58,7 @@ export default function WaInboxText({
 
 export function WaInboxImage({ messageContent }: { messageContent: string }) {
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const insets = useSafeAreaInsets();
 
   // `?.` on the split made this destructure `undefined` when there is no content,
   // which throws rather than short-circuiting. Default to an empty string instead.
@@ -91,7 +93,7 @@ export function WaInboxImage({ messageContent }: { messageContent: string }) {
             onPress={closeModal}
             style={{
               position: "absolute",
-              top: 50,
+              top: insets.top + 10,
               right: 20,
               zIndex: 1000,
               padding: 10,
@@ -107,6 +109,7 @@ export function WaInboxImage({ messageContent }: { messageContent: string }) {
 
 export function WaInboxVideo({ messageContent }: { messageContent: string }) {
   const colorScheme = useColorScheme();
+  const insets = useSafeAreaInsets();
   const isDark = colorScheme === "dark";
   const { mutate, isPending, reset } = useGetMediaFile();
   const [localPath, setLocalPath] = useState<string | null>(null);
@@ -240,7 +243,7 @@ export function WaInboxVideo({ messageContent }: { messageContent: string }) {
             onPress={closeModal}
             style={{
               position: "absolute",
-              top: 50,
+              top: insets.top + 10,
               right: 20,
               zIndex: 1000,
               padding: 10,

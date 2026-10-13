@@ -58,6 +58,7 @@ const MoreOptions = ({
   const isDark = colorScheme === "dark";
   const router = useRouter();
   const modalWidth = screenWidth * 0.4;
+  const insets = useSafeAreaInsets();
   const waAssignStatus = useChatAssignStatusStore((state) => state.waAssignStatus);
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
@@ -66,7 +67,8 @@ const MoreOptions = ({
           style={{
             position: "absolute",
             right: 10,
-            top: 55,
+            // Below the status bar or notch, whose height differs on every phone.
+            top: insets.top + 40,
             borderRadius: 12,
             padding: 8,
             backgroundColor: isDark ? Colors.dark.surface : "#fff",

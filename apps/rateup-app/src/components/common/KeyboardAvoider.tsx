@@ -1,7 +1,11 @@
 import { cssInterop } from "nativewind";
-import { KeyboardAvoidingView } from "react-native-keyboard-controller";
-import { useCallback, useRef, useState } from "react";
-import { Platform } from "react-native";
+import {
+  KeyboardAvoidingView,
+  KeyboardControllerNative,
+  KeyboardEvents,
+} from "react-native-keyboard-controller";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Platform, findNodeHandle } from "react-native";
 import type { ComponentProps } from "react";
 import type { LayoutChangeEvent, View } from "react-native";
 
@@ -35,12 +39,14 @@ type Props = Omit<
  * notch height, which differs on every phone.
  *
  * So the view's real position on screen is measured instead of guessed, and the content's
- * bottom edge lands `gap` above the keyboard on any device. Android uses the library's
- * `automaticOffset` for that. iOS cannot: it reads the native view's frame at first
- * layout, when a screen being pushed is not in the window yet, so a view that starts
- * below the status bar (everything under the protected layout's top safe area) is taken
- * to start at 0 and stays short of the keyboard by that inset, hiding the composer.
- * There the position comes from the laid-out tree, which is right from the first layout.
+ * bottom edge lands `gap` above the keyboard on any device.
+ *
+ * The library's own `automaticOffset` is not used for that: it measures once, at first
+ * layout, when a screen being pushed may not be in the window yet. A view that starts
+ * below the status bar (everything under the protected layout's top safe area) is then
+ * taken to start at 0 and stays short of the keyboard by that inset, hiding the composer:
+ * every time on iOS, now and then on Android. Here the position is measured at layout
+ * and again each time the keyboard opens, by when the screen has long settled.
  */
 export default function KeyboardAvoider({
   bottomInset = 0,
@@ -50,27 +56,51 @@ export default function KeyboardAvoider({
   ...props
 }: Props) {
   const ref = useRef<View>(null);
-  // iOS only: how far below its parent-relative `y` the view really sits in the window.
+  const parentY = useRef(0);
+  // How far below its parent-relative `y` the view really sits in the window.
   const [windowOffset, setWindowOffset] = useState(0);
+
+  const measure = useCallback(() => {
+    const view = ref.current;
+    if (!view) return;
+
+    const apply = (y: number) => {
+      if (Number.isFinite(y)) setWindowOffset(y - parentY.current);
+    };
+
+    if (IS_IOS) {
+      // From the laid-out tree, so right even before the screen is attached.
+      view.measureInWindow((_x, y) => apply(y));
+      return;
+    }
+
+    // React Native's `measureInWindow` is unreliable on edge-to-edge Android, so this is
+    // the same native call `automaticOffset` makes.
+    const tag = findNodeHandle(view);
+    if (tag === null) return;
+    KeyboardControllerNative.viewPositionInWindow(tag)
+      .then((position) => apply(position.y))
+      .catch(() => {});
+  }, []);
 
   const handleLayout = useCallback(
     (e: LayoutChangeEvent) => {
       onLayout?.(e);
-      if (!IS_IOS) return;
-
-      const parentY = e.nativeEvent.layout.y;
-      ref.current?.measureInWindow((_x, y) => {
-        if (Number.isFinite(y)) setWindowOffset(y - parentY);
-      });
+      parentY.current = e.nativeEvent.layout.y;
+      measure();
     },
-    [onLayout],
+    [onLayout, measure],
   );
+
+  useEffect(() => {
+    const subscription = KeyboardEvents.addListener("keyboardWillShow", measure);
+    return () => subscription.remove();
+  }, [measure]);
 
   return (
     <KeyboardAvoidingView
       ref={ref}
       behavior="padding"
-      automaticOffset={!IS_IOS}
       keyboardVerticalOffset={gap - bottomInset + windowOffset}
       style={[{ flex: 1 }, style]}
       onLayout={handleLayout}
