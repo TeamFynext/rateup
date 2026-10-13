@@ -23,6 +23,7 @@ import {
 } from "./whatsapp.types.js";
 import { RouteShorthandOptionsWithHandler } from "fastify";
 import type { StoredShopifySession } from "../modules/integrations/shopify/shopify.session.js";
+import type { ShopifyWidgetSettings } from "../modules/integrations/shopify/shopify.schema.js";
 import type { ThreadNote } from "../modules/whatsapp/inbox/note/note.service.js";
 import z from "zod";
 import { ZapierTriggers } from "../modules/integrations/external/zapier/zapier.types.js";
@@ -222,6 +223,8 @@ declare global {
     session: StoredShopifySession;
     isWebhookRegistered: boolean;
     shopifySurveys: ShopifySurvey[];
+    /** The storefront WhatsApp button; unset until the merchant first saves it. */
+    widget?: ShopifyWidgetSettings;
   }
 
   type ShopifyIntegration = Integration & {
