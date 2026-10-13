@@ -11,8 +11,10 @@ import {
   getProductsFromShopify,
   getRegisteredWebhooks,
   getShopifyAttribution,
+  getShopifyWidget,
   registerShopifyWebhookbyTopic,
   registerShopifyWebhooks,
+  saveShopifyWidget,
   updateShopifySession,
 } from "./shopify.api";
 
@@ -35,6 +37,25 @@ export const useShopifyAttribution = (days: number) => {
     },
     placeholderData: keepPreviousData,
     staleTime: 60_000,
+  });
+};
+
+const shopifyWidgetKey = ["shopifyWidget"] as const;
+
+/** The storefront WhatsApp button: its settings, theme editor link and 30-day taps. */
+export const useShopifyWidget = () => {
+  return useQuery({
+    queryKey: shopifyWidgetKey,
+    queryFn: getShopifyWidget,
+  });
+};
+
+export const useSaveShopifyWidget = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: saveShopifyWidget,
+    // Also after a failure: the API can save the settings and still fail to reach the store.
+    onSettled: () => queryClient.invalidateQueries({ queryKey: shopifyWidgetKey }),
   });
 };
 

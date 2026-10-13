@@ -1,3 +1,4 @@
+import type { ShopifyWidgetSettings } from "@/backend/appsIntegration/shopify/shopify.api";
 import type { LoyaltyRewardValue } from "@/backend/loyalty/reward.api";
 import type { QuestionFormFeatures } from "@/backend/surveys/questions/questions.types.ts";
 import type { SurveyThemePage } from "@/backend/surveyTheme/surveyTheme.types";
@@ -1217,6 +1218,8 @@ export interface ShopifyCredential {
   session: Session;
   isWebhookRegistered: boolean;
   shopifySurveys: ShopifySurvey[];
+  /** The storefront WhatsApp button; unset until the merchant first saves it. */
+  widget?: ShopifyWidgetSettings;
 }
 
 export type ShopifyIntegration = Integration & {
