@@ -11,11 +11,14 @@ import {
   getFulfillmentOrdersHandler,
   createFulfillmentHandler,
   getAttributionHandler,
+  getWidgetHandler,
+  saveWidgetHandler,
 } from "./shopify.controller.js";
 import {
   attributionQuerySchema,
   byShopParamsSchema,
   registerWebhookbyTopicSchema,
+  shopifyWidgetSchema,
 } from "./shopify.schema.js";
 
 export async function shopifyRoutes(server: FastifyInstance) {
@@ -45,6 +48,18 @@ export async function shopifyRoutes(server: FastifyInstance) {
   );
 
   server.get("/registered-webhooks", getRegisteredWebhooksHandler);
+
+  // The storefront WhatsApp button (shopify.widget.ts).
+  server.get("/widget", getWidgetHandler);
+
+  server.put(
+    "/widget",
+    {
+      config: { permission: "integrations.shopify" },
+      schema: { body: shopifyWidgetSchema },
+    },
+    saveWidgetHandler,
+  );
 
   server.post(
     "/register-webhooks",

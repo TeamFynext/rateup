@@ -1,4 +1,16 @@
-import { AttributionQuery, registerWebhookbyTopicInput, ShopParamInput } from "./shopify.schema.js";
+import {
+  AttributionQuery,
+  registerWebhookbyTopicInput,
+  ShopifyWidgetEvent,
+  ShopifyWidgetSettings,
+  ShopParamInput,
+} from "./shopify.schema.js";
+import {
+  getWidgetSettings,
+  recordWidgetEvent,
+  saveWidgetSettings,
+  ShopifyWidgetError,
+} from "./shopify.widget.js";
 import { getShopifyAttribution } from "./shopify.attribution.service.js";
 import { connectShopify, getShopifyAuthUrl, handleShopifyAuthCallback } from "./shopify.connect.js";
 import {
@@ -225,6 +237,44 @@ export async function getAttributionHandler(
 ) {
   const { from, to } = request.query;
   reply.send({ data: await getShopifyAttribution(request.user.orgId, from, to) });
+}
+
+/** The storefront WhatsApp button's settings, with its theme editor link and 30-day taps. */
+export async function getWidgetHandler(request: FastifyRequest, reply: FastifyReply) {
+  try {
+    reply.send({ data: await getWidgetSettings(request.user.orgId) });
+  } catch (e) {
+    if (e instanceof ShopifyWidgetError) return reply.code(e.status).send({ message: e.message });
+    log.error({ err: e }, "Error reading the Shopify widget settings");
+    return reply.code(500).send({ error: errorMessage(e) });
+  }
+}
+
+export async function saveWidgetHandler(
+  request: FastifyRequest<{ Body: ShopifyWidgetSettings }>,
+  reply: FastifyReply,
+) {
+  try {
+    reply.send({ data: await saveWidgetSettings(request.user.orgId, request.body) });
+  } catch (e) {
+    if (e instanceof ShopifyWidgetError) return reply.code(e.status).send({ message: e.message });
+    log.error({ err: e }, "Error saving the Shopify widget settings");
+    return reply.code(500).send({ error: errorMessage(e) });
+  }
+}
+
+/** A tap on the storefront button. Answers without a body: `sendBeacon` ignores it. */
+export async function widgetEventHandler(
+  request: FastifyRequest<{ Body: ShopifyWidgetEvent }>,
+  reply: FastifyReply,
+) {
+  try {
+    const counted = await recordWidgetEvent(request.body);
+    return reply.code(counted ? 204 : 404).send();
+  } catch (e) {
+    log.error({ err: e }, "Error recording a Shopify widget event");
+    return reply.code(500).send();
+  }
 }
 
 export async function getProductsHandler(request: FastifyRequest, reply: FastifyReply) {

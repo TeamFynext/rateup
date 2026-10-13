@@ -199,6 +199,20 @@ describe("startContactImport", () => {
     expect(queued().rows.map((row: any) => row[1])).toEqual(["919876543210", "919876543211"]);
   });
 
+  test("refuses a number Excel shortened, instead of filling it with zeros", async () => {
+    sheet([
+      { name: "Ann", phone: "919876543210" },
+      { name: "Minu", phone: "9.18883E+11" },
+    ]);
+
+    await startContactImport(file(), { orgId: ORG, tags: [] });
+
+    expect(queued().rows.map((row: any) => row[1])).toEqual(["919876543210"]);
+    expect(queued().data.rejected).toEqual([
+      { name: "Minu", phone: expect.stringMatching(/^9\.18883E\+11: Excel shortened/) },
+    ]);
+  });
+
   test("queues the valid rows and carries the refused ones in the job", async () => {
     sheet([
       { name: "Ann", phone: "919876543210" },
