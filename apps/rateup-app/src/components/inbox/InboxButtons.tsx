@@ -1,7 +1,7 @@
 import { useColorScheme } from "nativewind";
 import { View, Pressable, Text } from "react-native";
 import { useRouter } from "expo-router";
-import { Filter, History } from "lucide-react-native";
+import { Filter, Phone } from "lucide-react-native";
 import { getInboxHeaderBg, getInboxRowTheme } from "@/constants/inboxDesign";
 import { usePermissions } from "@/hooks/usePermissions";
 
@@ -28,7 +28,7 @@ const InboxButtons = ({ activeFilterCount = 0 }: { activeFilterCount?: number })
           accessibilityLabel="Call history"
           style={actionStyle}
         >
-          <History size={20} color={t.fg2} />
+          <Phone size={20} color={t.fg2} />
         </Pressable>
       )}
       <Pressable
