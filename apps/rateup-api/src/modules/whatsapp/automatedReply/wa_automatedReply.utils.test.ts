@@ -41,9 +41,10 @@ vi.mock("../whatsappSurvey/wasurvey.controller.js", () => ({ processNextNode: vi
 vi.mock("../instagram/instagram_messaging.service.js", () => ({
   sendInstagramTextMessage: vi.fn(),
 }));
-vi.mock("./instagram_automation.service.js", () => ({ startInstagramAutomationFlow: vi.fn() }));
+vi.mock("./metaFlow.service.js", () => ({ startMetaFlow: vi.fn() }));
+vi.mock("../meta/sendApiMessages.js", () => ({ sendSendApiText: vi.fn() }));
 vi.mock("./instagram_automatedReply.service.js", () => ({
-  getInstagramAutomatedReplyById: vi.fn(),
+  getMetaAutomationById: vi.fn(),
 }));
 vi.mock("../../integrations/shopify/shopify.mapping.js", () => ({
   resolveShopifyPathValue: vi.fn(),

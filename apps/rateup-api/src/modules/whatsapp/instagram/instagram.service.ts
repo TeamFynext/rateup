@@ -7,7 +7,7 @@ import { getInstagramMediaPermalink } from "./instagram_messaging.service.js";
 import { InstagramEvent } from "../../../types/enums.js";
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 import { checkAndExecuteRuleByTriggerEvent } from "../automatedReply/wa_automatedReply.utils.js";
-import { handleInstagramUserResponse } from "../automatedReply/instagram_automation.service.js";
+import { handleMetaFlowUserResponse } from "../automatedReply/metaFlow.service.js";
 import { getInstagramChannel } from "../metaChannel/metaChannel.service.js";
 
 export async function getIgUserDetailsFromMeta(igsId: string, ibaId: string) {
@@ -306,11 +306,11 @@ export async function handleInstagramMessages(
   if (linkRef && (await runInstagramLinkRules(linkRef, sender.id, waSettings))) return;
 
   // An answer to a running flow belongs to that flow, not to the keyword rules.
-  const answeredFlow = await handleInstagramUserResponse(
+  const answeredFlow = await handleMetaFlowUserResponse(
     sender.id,
     message.text || "",
     orgId,
-    ibaId,
+    { platform: PlatformType.INSTAGRAM, accountId: ibaId },
     message.quick_reply?.payload,
   );
   if (answeredFlow) return;
@@ -376,11 +376,11 @@ export async function handleInstagramPostback(
       postback.referral && "ref" in postback.referral ? postback.referral.ref : undefined;
     if (linkRef && (await runInstagramLinkRules(linkRef, sender.id, waSettings))) return;
 
-    const answeredFlow = await handleInstagramUserResponse(
+    const answeredFlow = await handleMetaFlowUserResponse(
       sender.id,
       postback.title ?? "",
       orgId,
-      ibaId,
+      { platform: PlatformType.INSTAGRAM, accountId: ibaId },
       postback.payload,
     );
     if (answeredFlow) return;

@@ -47,6 +47,13 @@ export async function getAutomatedReplyById(id: string, orgId: string) {
   });
 }
 
+/** The client sends the platform lowercased; anything unrecognised is WhatsApp. */
+function automationPlatform(platform: string) {
+  if (platform === "instagram") return PlatformType.INSTAGRAM;
+  if (platform === "facebook") return PlatformType.FACEBOOK;
+  return PlatformType.WHATSAPP;
+}
+
 export async function createAutomatedReply(data: CreateAutomatedReplySchema, orgId: string) {
   const automatedReply = await prisma.waAutomatedReply.create({
     data: {
@@ -54,11 +61,7 @@ export async function createAutomatedReply(data: CreateAutomatedReplySchema, org
       name: data.name,
       matchData: data.matchData as WaAutomatedReplyMatchData,
       whatsappSettingsPhoneId: data.whatsappSettingsPhoneId,
-      platform: data.platform
-        ? data.platform === "instagram"
-          ? PlatformType.INSTAGRAM
-          : PlatformType.WHATSAPP
-        : PlatformType.WHATSAPP,
+      platform: data.platform ? automationPlatform(data.platform) : PlatformType.WHATSAPP,
     },
   });
   if (automatedReply)
@@ -127,11 +130,7 @@ export async function updateAutomatedReply(
       name: data.name,
       matchData: data?.matchData as WaAutomatedReplyMatchData | undefined,
       whatsappSettingsPhoneId: data?.whatsappSettingsPhoneId,
-      platform: data.platform
-        ? data.platform === "instagram"
-          ? PlatformType.INSTAGRAM
-          : PlatformType.WHATSAPP
-        : undefined,
+      platform: data.platform ? automationPlatform(data.platform) : undefined,
     },
   });
   return updatedAutomatedReply;

@@ -14,8 +14,8 @@ vi.mock("../../../utils/prisma.js", () => ({
 }));
 
 vi.mock("./instagram_automatedReply.service.js", () => ({
-  createOrUpdateInstagramAutomationMessage: vi.fn(),
-  logInstagramAutomationAction: vi.fn(),
+  createOrUpdateMetaFlowRun: vi.fn(),
+  logMetaFlowAction: vi.fn(),
   wasInstagramAutomationSentRecently: vi.fn(),
 }));
 
@@ -26,13 +26,25 @@ vi.mock("../whatsappSurvey/wasurvey.utils.js", () => ({
 
 vi.mock("../instagram/instagram_messaging.service.js", () => ({
   doesUserFollowInstagramAccount: vi.fn(),
-  sendInstagramGenericTemplate: vi.fn(),
-  sendInstagramImage: vi.fn(),
   sendInstagramPrivateReply: vi.fn(),
   sendInstagramProductTemplate: vi.fn(),
-  sendInstagramQuickReply: vi.fn(),
-  sendInstagramTextMessage: vi.fn(),
 }));
+
+vi.mock("../meta/sendApiMessages.js", () => ({
+  sendSendApiAudio: vi.fn(),
+  sendSendApiGenericTemplate: vi.fn(),
+  sendSendApiImage: vi.fn(),
+  sendSendApiQuickReply: vi.fn(),
+  sendSendApiText: vi.fn(),
+  sendSendApiVideo: vi.fn(),
+}));
+
+vi.mock("../../contact/contact.service.js", () => ({
+  getOrCreateContactByIgsId: vi.fn(),
+  getOrCreateContactByPsid: vi.fn(),
+}));
+
+vi.mock("./assignNode.service.js", () => ({ runAssignNode: vi.fn() }));
 
 vi.mock("../../../utils/upload/s3Upload.js", () => ({
   getFileUrlFromKey: vi.fn((key: string) => `https://cdn/${key}`),
@@ -44,26 +56,36 @@ vi.mock("../../../utils/logger.js", () => ({
 
 import prisma from "../../../utils/prisma.js";
 import {
-  createOrUpdateInstagramAutomationMessage,
-  logInstagramAutomationAction,
+  createOrUpdateMetaFlowRun,
+  logMetaFlowAction,
   wasInstagramAutomationSentRecently,
 } from "./instagram_automatedReply.service.js";
 import {
   doesUserFollowInstagramAccount,
-  sendInstagramGenericTemplate,
-  sendInstagramImage,
   sendInstagramPrivateReply,
   sendInstagramProductTemplate,
-  sendInstagramQuickReply,
-  sendInstagramTextMessage,
 } from "../instagram/instagram_messaging.service.js";
+import {
+  sendSendApiAudio,
+  sendSendApiGenericTemplate,
+  sendSendApiImage,
+  sendSendApiQuickReply,
+  sendSendApiText,
+  sendSendApiVideo,
+} from "../meta/sendApiMessages.js";
+import {
+  getOrCreateContactByIgsId,
+  getOrCreateContactByPsid,
+} from "../../contact/contact.service.js";
+import { runAssignNode } from "./assignNode.service.js";
 import { log } from "../../../utils/logger.js";
+import { parseToWhatsAppFormat } from "../whatsappSurvey/wasurvey.utils.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
 import {
-  handleInstagramUserResponse,
-  processNextInstagramNode,
-  startInstagramAutomationFlow,
-} from "./instagram_automation.service.js";
+  handleMetaFlowUserResponse,
+  processNextMetaFlowNode,
+  startMetaFlow,
+} from "./metaFlow.service.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
@@ -78,21 +100,27 @@ const db = prisma as unknown as {
 };
 
 const m = {
-  track: createOrUpdateInstagramAutomationMessage as unknown as Mock,
-  logAction: logInstagramAutomationAction as unknown as Mock,
+  track: createOrUpdateMetaFlowRun as unknown as Mock,
+  logAction: logMetaFlowAction as unknown as Mock,
   sentRecently: wasInstagramAutomationSentRecently as unknown as Mock,
-  sendText: sendInstagramTextMessage as unknown as Mock,
-  sendImage: sendInstagramImage as unknown as Mock,
-  sendQuickReply: sendInstagramQuickReply as unknown as Mock,
-  sendGeneric: sendInstagramGenericTemplate as unknown as Mock,
+  sendText: sendSendApiText as unknown as Mock,
+  sendImage: sendSendApiImage as unknown as Mock,
+  sendVideo: sendSendApiVideo as unknown as Mock,
+  sendAudio: sendSendApiAudio as unknown as Mock,
+  sendQuickReply: sendSendApiQuickReply as unknown as Mock,
+  sendGeneric: sendSendApiGenericTemplate as unknown as Mock,
   sendProduct: sendInstagramProductTemplate as unknown as Mock,
   sendPrivateReply: sendInstagramPrivateReply as unknown as Mock,
   follows: doesUserFollowInstagramAccount as unknown as Mock,
+  contactByIgsId: getOrCreateContactByIgsId as unknown as Mock,
+  contactByPsid: getOrCreateContactByPsid as unknown as Mock,
+  assign: runAssignNode as unknown as Mock,
 };
 
 const IGS_ID = "igs-1";
 const IBA_ID = "iba-1";
 const ORG_ID = "org-1";
+const IG = { platform: PlatformType.INSTAGRAM, accountId: IBA_ID } as const;
 
 /** Build an automation from a node list and the edges between them. */
 function flow(nodes: any[], edges: any[] = [], overrides: Record<string, unknown> = {}) {
@@ -115,7 +143,7 @@ const edge = (source: string, target: string, sourceHandle?: string) => ({
 });
 
 function run(automation: any, nodeId: string, commentId?: string) {
-  return processNextInstagramNode(IGS_ID, automation, nodeId, ORG_ID, "msg-1", IBA_ID, commentId);
+  return processNextMetaFlowNode(IGS_ID, automation, nodeId, ORG_ID, "msg-1", IG, commentId);
 }
 
 beforeEach(() => {
@@ -130,12 +158,12 @@ beforeEach(() => {
   m.sentRecently.mockResolvedValue(false);
 });
 
-describe("startInstagramAutomationFlow", () => {
+describe("startMetaFlow", () => {
   test("starts tracking the user at the flow's start node", async () => {
-    await startInstagramAutomationFlow(IGS_ID, flow([START]), ORG_ID, IBA_ID);
+    await startMetaFlow(IGS_ID, flow([START]), ORG_ID, IG);
 
     expect(m.track).toHaveBeenCalledWith({
-      igsId: IGS_ID,
+      recipientId: IGS_ID,
       automationId: "ig-auto-1",
       orgId: ORG_ID,
       currentNode: "start",
@@ -144,7 +172,7 @@ describe("startInstagramAutomationFlow", () => {
   });
 
   test("records that the automation started", async () => {
-    await startInstagramAutomationFlow(IGS_ID, flow([START]), ORG_ID, IBA_ID);
+    await startMetaFlow(IGS_ID, flow([START]), ORG_ID, IG);
 
     expect(m.logAction).toHaveBeenCalledWith(
       expect.objectContaining({ response: { action: "automation_started", startNode: "start" } }),
@@ -154,13 +182,13 @@ describe("startInstagramAutomationFlow", () => {
   test("runs straight on into the node after the start", async () => {
     const automation = flow([START, textNode("t1")], [edge("start", "t1")]);
 
-    await startInstagramAutomationFlow(IGS_ID, automation, ORG_ID, IBA_ID);
+    await startMetaFlow(IGS_ID, automation, ORG_ID, IG);
 
-    expect(m.sendText).toHaveBeenCalledWith(IGS_ID, "Hello there", ORG_ID, IBA_ID);
+    expect(m.sendText).toHaveBeenCalledWith(IG, IGS_ID, ORG_ID, "Hello there");
   });
 
   test("does nothing when the automation has no start node", async () => {
-    await startInstagramAutomationFlow(IGS_ID, flow([textNode("t1")]), ORG_ID, IBA_ID);
+    await startMetaFlow(IGS_ID, flow([textNode("t1")]), ORG_ID, IG);
 
     expect(m.track).not.toHaveBeenCalled();
     expect(log.error).toHaveBeenCalled();
@@ -172,12 +200,7 @@ describe("startInstagramAutomationFlow", () => {
   test("never consults the recent-send log", async () => {
     m.sentRecently.mockResolvedValue(true);
 
-    await startInstagramAutomationFlow(
-      IGS_ID,
-      flow([START], [], { sendOnceIn24Hours: true }),
-      ORG_ID,
-      IBA_ID,
-    );
+    await startMetaFlow(IGS_ID, flow([START], [], { sendOnceIn24Hours: true }), ORG_ID, IG);
 
     expect(m.sentRecently).not.toHaveBeenCalled();
     expect(m.track).toHaveBeenCalled();
@@ -191,9 +214,7 @@ describe("startInstagramAutomationFlow", () => {
     const automation = flow([START]);
     m.track.mockRejectedValue(new Error("db down"));
 
-    await expect(
-      startInstagramAutomationFlow(IGS_ID, automation, ORG_ID, IBA_ID),
-    ).resolves.toBeUndefined();
+    await expect(startMetaFlow(IGS_ID, automation, ORG_ID, IG)).resolves.toBeUndefined();
     expect(log.error).toHaveBeenCalled();
     expect(db.waAutomatedReplyMessage.updateMany).toHaveBeenCalledWith({
       where: { phone: IGS_ID, waAutomatedReplyId: automation.id },
@@ -206,13 +227,11 @@ describe("startInstagramAutomationFlow", () => {
     m.track.mockRejectedValue(new Error("db down"));
     db.waAutomatedReplyMessage.updateMany.mockRejectedValue(new Error("db still down"));
 
-    await expect(
-      startInstagramAutomationFlow(IGS_ID, flow([START]), ORG_ID, IBA_ID),
-    ).resolves.toBeUndefined();
+    await expect(startMetaFlow(IGS_ID, flow([START]), ORG_ID, IG)).resolves.toBeUndefined();
   });
 });
 
-describe("processNextInstagramNode - walking the flow", () => {
+describe("processNextMetaFlowNode - walking the flow", () => {
   test("does nothing without a node id", async () => {
     await run(flow([START]), "");
 
@@ -306,17 +325,17 @@ describe("processNextInstagramNode - walking the flow", () => {
   });
 });
 
-describe("processNextInstagramNode - sending each node type", () => {
+describe("processNextMetaFlowNode - sending each node type", () => {
   test("sends a text node's body", async () => {
     await run(flow([textNode("t1", "Welcome!")]), "t1");
 
-    expect(m.sendText).toHaveBeenCalledWith(IGS_ID, "Welcome!", ORG_ID, IBA_ID);
+    expect(m.sendText).toHaveBeenCalledWith(IG, IGS_ID, ORG_ID, "Welcome!");
   });
 
   test("falls back to a greeting when a text node has no body", async () => {
     await run(flow([{ id: "t1", type: "textNode", data: {} }]), "t1");
 
-    expect(m.sendText).toHaveBeenCalledWith(IGS_ID, "Hello!", ORG_ID, IBA_ID);
+    expect(m.sendText).toHaveBeenCalledWith(IG, IGS_ID, ORG_ID, "Hello!");
   });
 
   test("sends an image node through the CDN url", async () => {
@@ -324,7 +343,7 @@ describe("processNextInstagramNode - sending each node type", () => {
 
     await run(flow([node]), "i1");
 
-    expect(m.sendImage).toHaveBeenCalledWith(IGS_ID, "https://cdn/key-1", ORG_ID, IBA_ID, "Look");
+    expect(m.sendImage).toHaveBeenCalledWith(IG, IGS_ID, ORG_ID, "https://cdn/key-1", "Look");
   });
 
   test("skips an image node with no image", async () => {
@@ -343,13 +362,9 @@ describe("processNextInstagramNode - sending each node type", () => {
 
     await run(flow([node]), "q1");
 
-    expect(m.sendQuickReply).toHaveBeenCalledWith(
-      IGS_ID,
-      "Pick one",
-      [{ id: "opt-a", title: "A", payload: "opt-a" }],
-      ORG_ID,
-      IBA_ID,
-    );
+    expect(m.sendQuickReply).toHaveBeenCalledWith(IG, IGS_ID, ORG_ID, "Pick one", [
+      { id: "opt-a", title: "A", payload: "opt-a" },
+    ]);
   });
 
   test("sends plain text when a quick reply node has no options", async () => {
@@ -358,7 +373,7 @@ describe("processNextInstagramNode - sending each node type", () => {
     await run(flow([node]), "q1");
 
     expect(m.sendQuickReply).not.toHaveBeenCalled();
-    expect(m.sendText).toHaveBeenCalledWith(IGS_ID, "Pick one", ORG_ID, IBA_ID);
+    expect(m.sendText).toHaveBeenCalledWith(IG, IGS_ID, ORG_ID, "Pick one");
   });
 
   test("uses a template button's id as its payload so the branch can be matched", async () => {
@@ -372,7 +387,7 @@ describe("processNextInstagramNode - sending each node type", () => {
 
     await run(flow([node]), "g1");
 
-    expect(m.sendGeneric.mock.calls[0][1][0].buttons[0].payload).toBe("btn-a");
+    expect(m.sendGeneric.mock.calls[0][3][0].buttons[0].payload).toBe("btn-a");
   });
 
   test("skips a generic template node with no cards", async () => {
@@ -412,7 +427,7 @@ describe("processNextInstagramNode - sending each node type", () => {
   });
 });
 
-describe("processNextInstagramNode - replying to a comment", () => {
+describe("processNextMetaFlowNode - replying to a comment", () => {
   test("answers the comment privately rather than messaging the user", async () => {
     await run(flow([textNode("t1", "Thanks!")]), "t1", "comment-1");
 
@@ -429,7 +444,7 @@ describe("processNextInstagramNode - replying to a comment", () => {
     await run(automation, "t1", "comment-1");
 
     expect(m.sendPrivateReply).toHaveBeenCalledTimes(1);
-    expect(m.sendText).toHaveBeenCalledWith(IGS_ID, "Second", ORG_ID, IBA_ID);
+    expect(m.sendText).toHaveBeenCalledWith(IG, IGS_ID, ORG_ID, "Second");
   });
 
   // An image cannot be a private reply, so a text stand-in goes out first.
@@ -457,7 +472,7 @@ describe("processNextInstagramNode - replying to a comment", () => {
   });
 });
 
-describe("processNextInstagramNode - waiting for the user", () => {
+describe("processNextMetaFlowNode - waiting for the user", () => {
   /** The update that parks the flow, if one was made. */
   const parked = () =>
     db.waAutomatedReplyMessage.update.mock.calls.find(([arg]) => arg.data.response?.waitingAt)?.[0];
@@ -470,7 +485,7 @@ describe("processNextInstagramNode - waiting for the user", () => {
 
     await run(automation, "in1");
 
-    expect(m.sendText).toHaveBeenCalledExactlyOnceWith(IGS_ID, "Your email?", ORG_ID, IBA_ID);
+    expect(m.sendText).toHaveBeenCalledExactlyOnceWith(IG, IGS_ID, ORG_ID, "Your email?");
     expect(parked()).toMatchObject({ where: { id: "msg-1" }, data: { currentNode: "in1" } });
   });
 
@@ -507,7 +522,7 @@ describe("processNextInstagramNode - waiting for the user", () => {
     await run(automation, "q1");
 
     expect(parked()).toMatchObject({ data: { currentNode: "q1", status: "inProgress" } });
-    expect(m.sendText).not.toHaveBeenCalledWith(IGS_ID, "Hello there", ORG_ID, IBA_ID);
+    expect(m.sendText).not.toHaveBeenCalledWith(IG, IGS_ID, ORG_ID, "Hello there");
   });
 
   test("finishes rather than waits at a choice with no branches", async () => {
@@ -531,11 +546,11 @@ describe("processNextInstagramNode - waiting for the user", () => {
 
     await run(flow([node, textNode("t1")], [edge("q1", "t1", "qr_0")]), "q1");
 
-    expect(m.sendQuickReply.mock.calls[0][2][0].payload).toBe("qr_0");
+    expect(m.sendQuickReply.mock.calls[0][4][0].payload).toBe("qr_0");
   });
 });
 
-describe("processNextInstagramNode - follow check", () => {
+describe("processNextMetaFlowNode - follow check", () => {
   const followCheck = { id: "f1", type: "instagramFollowCheckNode", data: {} };
   const unlockFlow = flow(
     [followCheck, textNode("link", "Here's your link"), textNode("nudge", "Follow us first")],
@@ -548,7 +563,7 @@ describe("processNextInstagramNode - follow check", () => {
     await run(unlockFlow, "f1");
 
     expect(m.follows).toHaveBeenCalledWith(IGS_ID, IBA_ID);
-    expect(m.sendText).toHaveBeenCalledExactlyOnceWith(IGS_ID, "Here's your link", ORG_ID, IBA_ID);
+    expect(m.sendText).toHaveBeenCalledExactlyOnceWith(IG, IGS_ID, ORG_ID, "Here's your link");
   });
 
   test("nudges someone who does not follow yet", async () => {
@@ -556,7 +571,7 @@ describe("processNextInstagramNode - follow check", () => {
 
     await run(unlockFlow, "f1");
 
-    expect(m.sendText).toHaveBeenCalledExactlyOnceWith(IGS_ID, "Follow us first", ORG_ID, IBA_ID);
+    expect(m.sendText).toHaveBeenCalledExactlyOnceWith(IG, IGS_ID, ORG_ID, "Follow us first");
   });
 
   test("finishes the flow when the taken branch leads nowhere", async () => {
@@ -571,7 +586,7 @@ describe("processNextInstagramNode - follow check", () => {
   });
 });
 
-describe("processNextInstagramNode - pausing", () => {
+describe("processNextMetaFlowNode - pausing", () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
@@ -635,7 +650,7 @@ describe("processNextInstagramNode - pausing", () => {
   });
 });
 
-describe("handleInstagramUserResponse", () => {
+describe("handleMetaFlowUserResponse", () => {
   const recently = () => new Date(Date.now() - 60_000).toISOString();
 
   function waitingAt(
@@ -666,11 +681,11 @@ describe("handleInstagramUserResponse", () => {
   const yesNoEdges = [edge("q1", "yes", "opt-yes"), edge("q1", "no", "opt-no")];
 
   test("reports nothing to do when the user has no automation running", async () => {
-    await expect(handleInstagramUserResponse(IGS_ID, "hello", ORG_ID, IBA_ID)).resolves.toBe(false);
+    await expect(handleMetaFlowUserResponse(IGS_ID, "hello", ORG_ID, IG)).resolves.toBe(false);
   });
 
-  test("looks only at in-progress Instagram automations for this user", async () => {
-    await handleInstagramUserResponse(IGS_ID, "hello", ORG_ID, IBA_ID);
+  test("looks only at in-progress automations on this channel for this user", async () => {
+    await handleMetaFlowUserResponse(IGS_ID, "hello", ORG_ID, IG);
 
     expect(db.waAutomatedReplyMessage.findMany.mock.calls[0][0].where).toMatchObject({
       phone: IGS_ID,
@@ -683,7 +698,7 @@ describe("handleInstagramUserResponse", () => {
   test("reports nothing when the tracked node no longer exists in the flow", async () => {
     db.waAutomatedReplyMessage.findMany.mockResolvedValue([waitingAt("ghost", [START])]);
 
-    await expect(handleInstagramUserResponse(IGS_ID, "hello", ORG_ID, IBA_ID)).resolves.toBe(false);
+    await expect(handleMetaFlowUserResponse(IGS_ID, "hello", ORG_ID, IG)).resolves.toBe(false);
   });
 
   // Meta refuses to message a user 24h after their last message, so the wait has lapsed.
@@ -693,13 +708,13 @@ describe("handleInstagramUserResponse", () => {
       waitingAt("q1", yesNo, yesNoEdges, { waitingAt: stale }),
     ]);
 
-    await expect(handleInstagramUserResponse(IGS_ID, "Yes", ORG_ID, IBA_ID)).resolves.toBe(false);
+    await expect(handleMetaFlowUserResponse(IGS_ID, "Yes", ORG_ID, IG)).resolves.toBe(false);
   });
 
   test("ignores a flow that is not waiting", async () => {
     db.waAutomatedReplyMessage.findMany.mockResolvedValue([waitingAt("q1", yesNo, yesNoEdges, {})]);
 
-    await expect(handleInstagramUserResponse(IGS_ID, "Yes", ORG_ID, IBA_ID)).resolves.toBe(false);
+    await expect(handleMetaFlowUserResponse(IGS_ID, "Yes", ORG_ID, IG)).resolves.toBe(false);
   });
 
   test("answers the flow that most recently started waiting", async () => {
@@ -709,7 +724,7 @@ describe("handleInstagramUserResponse", () => {
     const newer = { ...waitingAt("q1", yesNo, yesNoEdges), id: "msg-2" };
     db.waAutomatedReplyMessage.findMany.mockResolvedValue([older, newer]);
 
-    await handleInstagramUserResponse(IGS_ID, "Yes", ORG_ID, IBA_ID, "opt-yes");
+    await handleMetaFlowUserResponse(IGS_ID, "Yes", ORG_ID, IG, "opt-yes");
 
     expect(db.waAutomatedReplyMessage.update.mock.calls[0][0].where).toEqual({ id: "msg-2" });
   });
@@ -719,7 +734,7 @@ describe("handleInstagramUserResponse", () => {
       waitingAt("in1", [{ id: "in1", type: "textInputNode", data: {} }]),
     ]);
 
-    await handleInstagramUserResponse(IGS_ID, "my answer", ORG_ID, IBA_ID);
+    await handleMetaFlowUserResponse(IGS_ID, "my answer", ORG_ID, IG);
 
     expect(m.logAction.mock.calls[0][0].response).toMatchObject({
       action: "user_response",
@@ -738,14 +753,12 @@ describe("handleInstagramUserResponse", () => {
       ),
     ]);
 
-    await expect(handleInstagramUserResponse(IGS_ID, "a@b.com", ORG_ID, IBA_ID)).resolves.toBe(
-      true,
-    );
+    await expect(handleMetaFlowUserResponse(IGS_ID, "a@b.com", ORG_ID, IG)).resolves.toBe(true);
 
     expect(db.waAutomatedReplyMessage.update.mock.calls[0][0].data.response).toEqual({
       answers: { name: "Ada", email: "a@b.com" },
     });
-    expect(m.sendText).toHaveBeenCalledWith(IGS_ID, "Hello there", ORG_ID, IBA_ID);
+    expect(m.sendText).toHaveBeenCalledWith(IG, IGS_ID, ORG_ID, "Hello there");
   });
 
   test("finishes the flow when the answered question is the last step", async () => {
@@ -753,9 +766,7 @@ describe("handleInstagramUserResponse", () => {
       waitingAt("in1", [{ id: "in1", type: "textInputNode", data: { variableName: "email" } }]),
     ]);
 
-    await expect(handleInstagramUserResponse(IGS_ID, "a@b.com", ORG_ID, IBA_ID)).resolves.toBe(
-      true,
-    );
+    await expect(handleMetaFlowUserResponse(IGS_ID, "a@b.com", ORG_ID, IG)).resolves.toBe(true);
 
     expect(db.waAutomatedReplyMessage.update.mock.calls[0][0].data).toMatchObject({
       status: "completed",
@@ -765,18 +776,18 @@ describe("handleInstagramUserResponse", () => {
   test("takes the branch matching the button the user tapped", async () => {
     db.waAutomatedReplyMessage.findMany.mockResolvedValue([waitingAt("q1", yesNo, yesNoEdges)]);
 
-    const result = await handleInstagramUserResponse(IGS_ID, "Yes", ORG_ID, IBA_ID, "opt-yes");
+    const result = await handleMetaFlowUserResponse(IGS_ID, "Yes", ORG_ID, IG, "opt-yes");
 
     expect(result).toBe(true);
-    expect(m.sendText).toHaveBeenCalledWith(IGS_ID, "You said yes", ORG_ID, IBA_ID);
-    expect(m.sendText).not.toHaveBeenCalledWith(IGS_ID, "You said no", ORG_ID, IBA_ID);
+    expect(m.sendText).toHaveBeenCalledWith(IG, IGS_ID, ORG_ID, "You said yes");
+    expect(m.sendText).not.toHaveBeenCalledWith(IG, IGS_ID, ORG_ID, "You said no");
   });
 
   test("treats typing a choice's title as tapping it", async () => {
     db.waAutomatedReplyMessage.findMany.mockResolvedValue([waitingAt("q1", yesNo, yesNoEdges)]);
 
-    await expect(handleInstagramUserResponse(IGS_ID, " no ", ORG_ID, IBA_ID)).resolves.toBe(true);
-    expect(m.sendText).toHaveBeenCalledWith(IGS_ID, "You said no", ORG_ID, IBA_ID);
+    await expect(handleMetaFlowUserResponse(IGS_ID, " no ", ORG_ID, IG)).resolves.toBe(true);
+    expect(m.sendText).toHaveBeenCalledWith(IG, IGS_ID, ORG_ID, "You said no");
   });
 
   test("takes the button branch of a generic template card", async () => {
@@ -789,10 +800,10 @@ describe("handleInstagramUserResponse", () => {
       waitingAt("g1", [card, textNode("t1", "Great")], [edge("g1", "t1", "btn_0_0")]),
     ]);
 
-    await expect(
-      handleInstagramUserResponse(IGS_ID, "Buy", ORG_ID, IBA_ID, "btn_0_0"),
-    ).resolves.toBe(true);
-    expect(m.sendText).toHaveBeenCalledWith(IGS_ID, "Great", ORG_ID, IBA_ID);
+    await expect(handleMetaFlowUserResponse(IGS_ID, "Buy", ORG_ID, IG, "btn_0_0")).resolves.toBe(
+      true,
+    );
+    expect(m.sendText).toHaveBeenCalledWith(IG, IGS_ID, ORG_ID, "Great");
   });
 
   // An edge with no sourceHandle is the catch-all branch out of a choice node.
@@ -801,9 +812,7 @@ describe("handleInstagramUserResponse", () => {
       waitingAt("q1", [quickReply, textNode("t1", "Anything")], [edge("q1", "t1")]),
     ]);
 
-    await expect(handleInstagramUserResponse(IGS_ID, "whatever", ORG_ID, IBA_ID)).resolves.toBe(
-      true,
-    );
+    await expect(handleMetaFlowUserResponse(IGS_ID, "whatever", ORG_ID, IG)).resolves.toBe(true);
   });
 
   // A stale button or a persistent-menu tap is not an answer to this question.
@@ -813,7 +822,7 @@ describe("handleInstagramUserResponse", () => {
     ]);
 
     await expect(
-      handleInstagramUserResponse(IGS_ID, "Menu", ORG_ID, IBA_ID, "MENU_PAYLOAD"),
+      handleMetaFlowUserResponse(IGS_ID, "Menu", ORG_ID, IG, "MENU_PAYLOAD"),
     ).resolves.toBe(false);
     expect(db.waAutomatedReplyMessage.update).not.toHaveBeenCalled();
   });
@@ -823,19 +832,170 @@ describe("handleInstagramUserResponse", () => {
       waitingAt("q1", yesNo, [edge("q1", "yes", "opt-yes")]),
     ]);
 
-    await expect(handleInstagramUserResponse(IGS_ID, "maybe", ORG_ID, IBA_ID)).resolves.toBe(false);
+    await expect(handleMetaFlowUserResponse(IGS_ID, "maybe", ORG_ID, IG)).resolves.toBe(false);
   });
 
   test("reports nothing for a node that was not waiting on the user", async () => {
     db.waAutomatedReplyMessage.findMany.mockResolvedValue([waitingAt("t1", [textNode("t1")])]);
 
-    await expect(handleInstagramUserResponse(IGS_ID, "hello", ORG_ID, IBA_ID)).resolves.toBe(false);
+    await expect(handleMetaFlowUserResponse(IGS_ID, "hello", ORG_ID, IG)).resolves.toBe(false);
   });
 
   test("reports nothing rather than throwing when the lookup fails", async () => {
     db.waAutomatedReplyMessage.findMany.mockRejectedValue(new Error("db down"));
 
-    await expect(handleInstagramUserResponse(IGS_ID, "hello", ORG_ID, IBA_ID)).resolves.toBe(false);
+    await expect(handleMetaFlowUserResponse(IGS_ID, "hello", ORG_ID, IG)).resolves.toBe(false);
     expect(log.error).toHaveBeenCalled();
+  });
+});
+
+describe("processNextMetaFlowNode - media and assignment", () => {
+  test("sends a video node with its caption", async () => {
+    const node = { id: "v1", type: "videoNode", data: { link: "vid-1", caption: "Watch" } };
+
+    await run(flow([node]), "v1");
+
+    expect(m.sendVideo).toHaveBeenCalledWith(IG, IGS_ID, ORG_ID, "https://cdn/vid-1", "Watch");
+  });
+
+  test("sends an audio node", async () => {
+    await run(flow([{ id: "a1", type: "audioNode", data: { link: "aud-1" } }]), "a1");
+
+    expect(m.sendAudio).toHaveBeenCalledWith(IG, IGS_ID, ORG_ID, "https://cdn/aud-1");
+  });
+
+  test("assigns the Instagram contact found by igsId", async () => {
+    m.contactByIgsId.mockResolvedValue({ contact: { id: "contact-1" } });
+    const data = { assign: { teamId: "team-1", choice: "all" } };
+
+    await run(flow([{ id: "as1", type: "assignNode", data }]), "as1");
+
+    expect(m.contactByIgsId).toHaveBeenCalledWith(IGS_ID, ORG_ID, undefined, true);
+    expect(m.assign).toHaveBeenCalledWith(data, "contact-1", ORG_ID, "ig-auto-1");
+  });
+});
+
+// A refused send (outside the 24-hour window, say) used to be logged and walked past.
+describe("processNextMetaFlowNode - a send Meta refuses", () => {
+  test("stops the flow at that step and marks it paused", async () => {
+    m.sendText.mockRejectedValueOnce(new Error("outside the messaging window"));
+    const automation = flow(
+      [textNode("t1", "First"), textNode("t2", "Second")],
+      [edge("t1", "t2")],
+    );
+
+    await expect(run(automation, "t1")).resolves.toBeUndefined();
+
+    expect(m.sendText).toHaveBeenCalledTimes(1);
+    expect(db.waAutomatedReplyMessage.updateMany).toHaveBeenCalledWith({
+      where: { phone: IGS_ID, waAutomatedReplyId: automation.id },
+      data: { status: "paused" },
+    });
+  });
+});
+
+describe("Messenger flows", () => {
+  const PSID = "psid-1";
+  const MESSENGER = { platform: PlatformType.FACEBOOK, accountId: "page-1" } as const;
+  const runMessenger = (automation: any, nodeId: string, commentId?: string) =>
+    processNextMetaFlowNode(PSID, automation, nodeId, ORG_ID, "msg-1", MESSENGER, commentId);
+
+  test("sends text, quick replies and cards on the Messenger channel", async () => {
+    const quickReply = {
+      id: "q1",
+      type: "instagramQuickReplyNode",
+      data: { text: "Pick", quick_replies: [{ id: "a", title: "A" }] },
+    };
+    const card = {
+      id: "g1",
+      type: "instagramGenericTemplateNode",
+      data: { elements: [{ title: "Card" }] },
+    };
+
+    await runMessenger(flow([textNode("t1", "Hi")]), "t1");
+    await runMessenger(flow([quickReply]), "q1");
+    await runMessenger(flow([card]), "g1");
+
+    expect(m.sendText).toHaveBeenCalledWith(MESSENGER, PSID, ORG_ID, "Hi");
+    expect(m.sendQuickReply.mock.calls[0][0]).toBe(MESSENGER);
+    expect(m.sendGeneric.mock.calls[0][0]).toBe(MESSENGER);
+  });
+
+  test.each([
+    ["a follow check", { id: "n1", type: "instagramFollowCheckNode", data: {} }],
+    [
+      "a product template",
+      { id: "n1", type: "instagramProductTemplateNode", data: { productIds: ["p"] } },
+    ],
+  ])("skips %s and carries on", async (_name, node) => {
+    await runMessenger(flow([node, textNode("t1", "Next")], [edge("n1", "t1")]), "n1");
+
+    expect(m.follows).not.toHaveBeenCalled();
+    expect(m.sendProduct).not.toHaveBeenCalled();
+    expect(m.sendText).toHaveBeenCalledWith(MESSENGER, PSID, ORG_ID, "Next");
+  });
+
+  test("never sends a private reply, even if handed a comment id", async () => {
+    await runMessenger(flow([textNode("t1", "Hi")]), "t1", "comment-1");
+
+    expect(m.sendPrivateReply).not.toHaveBeenCalled();
+    expect(m.sendText).toHaveBeenCalledWith(MESSENGER, PSID, ORG_ID, "Hi");
+  });
+
+  test("assigns the contact found by psid", async () => {
+    m.contactByPsid.mockResolvedValue({ contact: { id: "contact-2" } });
+
+    await runMessenger(flow([{ id: "as1", type: "assignNode", data: {} }]), "as1");
+
+    expect(m.contactByPsid).toHaveBeenCalledWith(PSID, ORG_ID, undefined, true);
+    expect(m.contactByIgsId).not.toHaveBeenCalled();
+    expect(m.assign).toHaveBeenCalledWith({}, "contact-2", ORG_ID, "ig-auto-1");
+  });
+
+  test("resumes only Messenger flows", async () => {
+    await handleMetaFlowUserResponse(PSID, "hello", ORG_ID, MESSENGER);
+
+    expect(db.waAutomatedReplyMessage.findMany.mock.calls[0][0].where).toMatchObject({
+      phone: PSID,
+      waAutomatedReply: { platform: PlatformType.FACEBOOK },
+    });
+  });
+});
+
+// The builder saves bodies, questions and captions as rich-text documents. They used to be
+// read only when they were plain strings, so a text node sent "Hello!" and a question
+// node sent nothing.
+describe("processNextMetaFlowNode - rich-text fields", () => {
+  const doc = { type: "doc", content: [{ type: "paragraph" }] };
+  const parse = parseToWhatsAppFormat as unknown as Mock;
+
+  beforeEach(() => {
+    parse.mockImplementation((value: unknown) =>
+      typeof value === "string" ? value : "From the document",
+    );
+  });
+
+  test("sends a text node's rich-text body", async () => {
+    await run(flow([{ id: "t1", type: "textNode", data: { body: doc } }]), "t1");
+
+    expect(m.sendText).toHaveBeenCalledWith(IG, IGS_ID, ORG_ID, "From the document");
+  });
+
+  test("asks a question saved as rich text", async () => {
+    await run(flow([{ id: "in1", type: "textInputNode", data: { question: doc } }]), "in1");
+
+    expect(m.sendText).toHaveBeenCalledWith(IG, IGS_ID, ORG_ID, "From the document");
+  });
+
+  test("sends an image's rich-text caption", async () => {
+    await run(flow([{ id: "i1", type: "imageNode", data: { link: "k", caption: doc } }]), "i1");
+
+    expect(m.sendImage).toHaveBeenCalledWith(
+      IG,
+      IGS_ID,
+      ORG_ID,
+      "https://cdn/k",
+      "From the document",
+    );
   });
 });

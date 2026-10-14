@@ -87,6 +87,47 @@ export const ruleOptionsSchema = z.object({
   instagramPublicReplies: z.array(z.string().trim().min(1).max(2200)).max(10).optional(),
 });
 
+/** Triggers Messenger has no equivalent for. */
+const INSTAGRAM_ONLY_TRIGGERS = new Set<string>([
+  TriggerEvent.INSTAGRAM_COMMENT,
+  TriggerEvent.INSTAGRAM_STORY_MENTION,
+  TriggerEvent.INSTAGRAM_REFERRAL,
+]);
+/** Actions that send WhatsApp-only message types. */
+const WHATSAPP_ONLY_ACTIONS = new Set<string>([ActionType.SEND_TEMPLATE, ActionType.SEND_FLOW]);
+
+/**
+ * A Facebook (Messenger) rule may not use Instagram's triggers or WhatsApp's template and
+ * flow sends: neither can ever run on a Page. Only checked when the body names the
+ * platform, which an update that leaves the platform alone does not.
+ */
+function refineMessengerRule(
+  data: {
+    platform?: string;
+    triggerEvent?: string;
+    actions?: Array<{ type: string }>;
+  },
+  ctx: z.RefinementCtx,
+) {
+  if (data.platform !== RulePlatform.FACEBOOK) return;
+  if (data.triggerEvent && INSTAGRAM_ONLY_TRIGGERS.has(data.triggerEvent)) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["triggerEvent"],
+      message: "This trigger is only available for Instagram",
+    });
+  }
+  data.actions?.forEach((action, index) => {
+    if (WHATSAPP_ONLY_ACTIONS.has(action.type)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["actions", index, "type"],
+        message: "Templates and flows can only be sent on WhatsApp",
+      });
+    }
+  });
+}
+
 const createRuleBaseSchema = z.object({
   platform: z.enum(RulePlatform).default("WHATSAPP"),
   whatsappSettingsPhoneIds: z.array(z.string()).min(1),
@@ -100,6 +141,7 @@ const createRuleBaseSchema = z.object({
 });
 
 export const createRuleSchema = createRuleBaseSchema.superRefine((data, ctx) => {
+  refineMessengerRule(data, ctx);
   if (data.triggerEvent === "SHOPIFY_EVENT" && !data.options?.shopifyEvent) {
     ctx.addIssue({
       code: "custom",
@@ -119,6 +161,7 @@ export const createRuleSchema = createRuleBaseSchema.superRefine((data, ctx) => 
 export type CreateRuleInput = z.infer<typeof createRuleSchema>;
 
 export const updateRuleSchema = createRuleBaseSchema.partial().superRefine((data, ctx) => {
+  refineMessengerRule(data, ctx);
   if (data.triggerEvent === "SHOPIFY_EVENT" && !data.options?.shopifyEvent) {
     ctx.addIssue({
       code: "custom",

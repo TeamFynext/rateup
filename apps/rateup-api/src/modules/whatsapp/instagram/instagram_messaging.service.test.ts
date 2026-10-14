@@ -221,8 +221,9 @@ describe("sendInstagramTextMessage", () => {
     getSettingsMock.mockResolvedValue(null);
 
     await expect(sendInstagramTextMessage(IGS_ID, "hello", ORG_ID, IBA_ID)).rejects.toThrow(
-      `No Instagram settings found for organization ${ORG_ID}`,
+      `No INSTAGRAM credentials configured for org ${ORG_ID}`,
     );
+    expect(callMetaApiMock).not.toHaveBeenCalled();
   });
 
   test("passes a Meta failure on to the caller", async () => {
