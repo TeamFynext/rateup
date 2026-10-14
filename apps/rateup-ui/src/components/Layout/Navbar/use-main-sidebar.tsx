@@ -113,7 +113,8 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
       pathname?.includes("/dashboard/meta-agent") ||
       pathname?.includes("/dashboard/whatsapp/flows/v2/") ||
       pathname?.includes("/dashboard/whatsapp/flowbots/") ||
-      pathname?.includes("/dashboard/instagram/flowbots/");
+      pathname?.includes("/dashboard/instagram/flowbots/") ||
+      pathname?.includes("/dashboard/messenger/flowbots/");
 
   // Only the inbox's Channel filter needs these, and the query is shared and
   // cached forever — so it costs nothing on the pages that already fetched it.

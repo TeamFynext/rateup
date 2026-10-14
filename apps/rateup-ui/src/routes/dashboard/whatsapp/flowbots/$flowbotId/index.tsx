@@ -3,10 +3,12 @@ import { useState } from "react";
 
 import { useWaAutomatedReplyById } from "@/backend/whatsapp/automated-reply/automatedReply.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import { TriggerSetupPrompt } from "@/components/dashboard/chatbots/TriggerSetupPrompt.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import FlowEditor from "@/components/whatsapp/automation/components/flow-editor.tsx";
+import { AutomationPlatform } from "@/types/platform.ts";
 
 import { AutomatedReplyForm } from "../../../../../components/dashboard/whatsapp/flowbots/create.tsx";
 
@@ -48,7 +50,8 @@ function FlowbotId() {
     );
 
   return (
-    <div className="h-full">
+    <div className="relative h-full">
+      <TriggerSetupPrompt platform={AutomationPlatform.WHATSAPP} />
       <FlowEditor data={data} refetch={refetch} onOpenSettings={() => setSettingsOpen(true)} />
 
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
@@ -57,7 +60,7 @@ function FlowbotId() {
             <DialogTitle>Automation settings</DialogTitle>
           </DialogHeader>
           <ScrollArea className="max-h-[calc(90vh-88px)] px-6 pb-6">
-            <AutomatedReplyForm initialValues={data} editMode />
+            <AutomatedReplyForm initialValues={data} />
           </ScrollArea>
         </DialogContent>
       </Dialog>

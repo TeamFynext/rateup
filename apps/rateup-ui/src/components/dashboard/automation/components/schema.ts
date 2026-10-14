@@ -40,7 +40,7 @@ export const CONDITION_OPERATORS = [
 export const PLATFORMS = [
   { label: "WhatsApp", value: "WHATSAPP" },
   { label: "Instagram", value: "INSTAGRAM" },
-  { label: "Facebook", value: "FACEBOOK" },
+  { label: "Messenger", value: "FACEBOOK" },
 ] as const;
 
 export type Platform = (typeof PLATFORMS)[number]["value"];

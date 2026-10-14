@@ -113,7 +113,7 @@ export const NODE_LABELS: Record<string, string> = {
   assignNode: "Assign Chat",
   leadgenNode: "Lead Ad",
 
-  instagramGenericTemplateNode: "Generic Template",
+  instagramGenericTemplateNode: "Cards",
   instagramQuickReplyNode: "Quick Reply",
   instagramStoryReplyNode: "Story Reply",
   instagramProductTemplateNode: "Product Template",

@@ -17,7 +17,7 @@ import { Switch } from "@/components/ui/switch.tsx";
 import { ShopifyEvents } from "@/types/enums.ts";
 import type { Rule } from "@/types/rule.ts";
 
-import { getTriggerEventLabel } from "./schema.ts";
+import { getTriggerEventLabel, PLATFORMS } from "./schema.ts";
 
 /**
  * "₹12,400 from 9 orders · 30 days" under an abandoned-checkout rule. Every card reads the
@@ -117,7 +117,7 @@ export function RuleCard({ item, onToggleActive, onDelete }: Readonly<RuleCardPr
                     : "bg-ru-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-200"
               }
             >
-              {item.platform}
+              {PLATFORMS.find((option) => option.value === item.platform)?.label ?? item.platform}
             </Badge>
             {/* Stopped on the wrapper, not the switch: Base UI renders the hidden input as a
               sibling of the switch and re-dispatches a bubbling click on it, so the card's

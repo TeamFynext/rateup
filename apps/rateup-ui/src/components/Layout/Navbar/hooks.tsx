@@ -6,6 +6,7 @@ import {
   IconBolt,
   IconBrandFacebook,
   IconBrandInstagram,
+  IconBrandMessenger,
   IconBrandWhatsapp,
   IconBrowser,
   IconBuildingStore,
@@ -686,6 +687,11 @@ export function useNavMain({
               title: t("Instagram"),
               url: "/dashboard/instagram",
               icon: IconBrandInstagram,
+            },
+            {
+              title: t("Messenger"),
+              url: "/dashboard/messenger",
+              icon: IconBrandMessenger,
             },
           ]
         : []),

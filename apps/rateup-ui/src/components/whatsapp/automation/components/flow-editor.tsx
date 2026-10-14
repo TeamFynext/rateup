@@ -25,8 +25,14 @@ import { toast } from "sonner";
 import { useSessionContext } from "supertokens-auth-react/recipe/session";
 
 import { useUpdateWaAutomatedReplyMutation } from "@/backend/whatsapp/automated-reply/automatedReply.query";
+import { automationKeys } from "@/backend/whatsapp/automation.keys";
+import {
+  metaAutomationKey,
+  useUpdateMetaAutomationMutation,
+} from "@/backend/whatsapp/instagram-automation/instagramAutomation.query";
 import { PhonePreviewButton } from "@/components/ui/phone-preview.tsx";
 import type { WaAutomatedReply } from "@/types/global";
+import { AutomationPlatform, automationPlatformOf } from "@/types/platform.ts";
 
 import { validateNodeData } from "../types/node-types.ts";
 import type { TypedNode } from "../types/node-types.ts";
@@ -84,7 +90,15 @@ function FlowEditorContent({
   const isMountedRef = useRef(true);
   const isInitialLoadRef = useRef(true);
   const qc = useQueryClient();
-  const updateWaAutomatedReplyMutation = useUpdateWaAutomatedReplyMutation();
+  const platform = automationPlatformOf(waAutomationData?.platform);
+  const metaPlatform = platform === AutomationPlatform.WHATSAPP ? null : platform;
+  // Each platform saves through its own route: the WhatsApp one is gated on the WhatsApp
+  // subscription, so an Instagram or Messenger flow must not go through it.
+  const updateWaMutation = useUpdateWaAutomatedReplyMutation();
+  const updateMetaMutation = useUpdateMetaAutomationMutation(
+    metaPlatform ?? AutomationPlatform.INSTAGRAM,
+  );
+  const updateWaAutomatedReplyMutation = metaPlatform ? updateMetaMutation : updateWaMutation;
 
   // Initialize history manager
   const historyManagerRef = useRef(new HistoryManager());
@@ -130,7 +144,9 @@ function FlowEditorContent({
         {
           onSettled: () => {
             qc.setQueryData(
-              ["waAutomatedReply", { waAutomatedReplyId: waAutomationData.id }],
+              metaPlatform
+                ? metaAutomationKey(metaPlatform, waAutomationData.id)
+                : automationKeys.waAutomatedReply({ waAutomatedReplyId: waAutomationData.id }),
               (oldData: WaAutomatedReply | undefined) => ({
                 ...oldData,
                 matchData: {
@@ -524,14 +540,11 @@ function FlowEditorContent({
             />
           </Panel>
           <Panel position="top-right">
-            <PhonePreviewButton
-              platform={waAutomationData.platform === "instagram" ? "instagram" : "whatsapp"}
-              label="Preview"
-            >
+            <PhonePreviewButton platform={platform} label="Preview">
               <FlowbotPreviewPlayground
                 nodes={asTypedNodes(nodes)}
                 edges={edges}
-                platform={waAutomationData.platform === "instagram" ? "instagram" : "whatsapp"}
+                platform={platform}
               />
             </PhonePreviewButton>
           </Panel>
@@ -545,7 +558,7 @@ function FlowEditorContent({
           onClose={closeEditor}
         />
       ) : (
-        <ComponentSidebar platform={waAutomationData.platform || "whatsapp"} />
+        <ComponentSidebar platform={platform} />
       )}
     </div>
   );
