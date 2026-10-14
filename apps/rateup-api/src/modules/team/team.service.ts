@@ -616,6 +616,7 @@ export async function getUsersNotInTeam(teamId: string, orgId: string) {
     FROM "User" u
     INNER JOIN "OrgMember" om ON om."userId" = u.id
     WHERE om."orgId" = $1
+      AND u.active = true
       AND u.id NOT IN (
         SELECT "userId"
         FROM "TeamMember"
