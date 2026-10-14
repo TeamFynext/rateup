@@ -518,6 +518,13 @@ export function useNavMain({
                   url: "/dashboard/analytics?tab=logs",
                   icon: IconLogs,
                 },
+                {
+                  title: t("Calls"),
+                  url: "/dashboard/analytics/calls",
+                  icon: IconPhone,
+                  // Sits under the prefix Conversations claims for its drill-downs.
+                  ownsPaths: ["/dashboard/analytics/calls"],
+                },
               ],
             },
           ]
@@ -623,8 +630,7 @@ export function useNavMain({
       ...(hasTeamFeature(TeamFeature.Flows) ||
       hasTeamFeature(TeamFeature.Chatbots) ||
       hasTeamFeature(TeamFeature.Templates) ||
-      hasTeamFeature(TeamFeature.Automation) ||
-      can("inbox.read")
+      hasTeamFeature(TeamFeature.Automation)
         ? [
             {
               title: t("WhatsApp"),
@@ -635,9 +641,7 @@ export function useNavMain({
                   ? "/dashboard/whatsapp/flowbots"
                   : hasTeamFeature(TeamFeature.Flows)
                     ? "/dashboard/whatsapp/flows"
-                    : hasTeamFeature(TeamFeature.Automation)
-                      ? "/dashboard/whatsapp/conversational-components"
-                      : "/dashboard/whatsapp/calls",
+                    : "/dashboard/whatsapp/conversational-components",
               icon: IconBrandWhatsapp,
               items: [
                 ...(hasTeamFeature(TeamFeature.Templates)
@@ -672,9 +676,6 @@ export function useNavMain({
                   url: "/dashboard/whatsapp/conversational-components",
                   icon: IconMessage,
                 },
-                ...(can("inbox.read")
-                  ? [{ title: t("Calls"), url: "/dashboard/whatsapp/calls", icon: IconPhone }]
-                  : []),
               ],
             },
           ]

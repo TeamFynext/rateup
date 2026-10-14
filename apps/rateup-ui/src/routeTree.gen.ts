@@ -134,6 +134,7 @@ import { Route as AuthShopifyOauth2callbackIndexRouteImport } from './routes/aut
 import { Route as AuthShopifyRetryIndexRouteImport } from './routes/auth/shopify/retry/index'
 import { Route as DashboardAnalyticsStaffidIndexRouteImport } from './routes/dashboard/analytics/$staffid/index'
 import { Route as DashboardAnalyticsAuditLogIndexRouteImport } from './routes/dashboard/analytics/audit-log/index'
+import { Route as DashboardAnalyticsCallsIndexRouteImport } from './routes/dashboard/analytics/calls/index'
 import { Route as DashboardAutomationAutomationIdIndexRouteImport } from './routes/dashboard/automation/$automationId/index'
 import { Route as DashboardCampaignCampaignIdIndexRouteImport } from './routes/dashboard/campaign/$campaignId/index'
 import { Route as DashboardCampaignCampaignIdEditRouteImport } from './routes/dashboard/campaign/$campaignId/edit'
@@ -904,6 +905,12 @@ const DashboardAnalyticsAuditLogIndexRoute =
     path: '/analytics/audit-log/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
+const DashboardAnalyticsCallsIndexRoute =
+  DashboardAnalyticsCallsIndexRouteImport.update({
+    id: '/analytics/calls/',
+    path: '/analytics/calls/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
 const DashboardAutomationAutomationIdIndexRoute =
   DashboardAutomationAutomationIdIndexRouteImport.update({
     id: '/automation/$automationId/',
@@ -1560,6 +1567,7 @@ export interface FileRoutesByFullPath {
   '/auth/shopify/retry/': typeof AuthShopifyRetryIndexRoute
   '/dashboard/analytics/$staffid/': typeof DashboardAnalyticsStaffidIndexRoute
   '/dashboard/analytics/audit-log/': typeof DashboardAnalyticsAuditLogIndexRoute
+  '/dashboard/analytics/calls/': typeof DashboardAnalyticsCallsIndexRoute
   '/dashboard/automation/$automationId/': typeof DashboardAutomationAutomationIdIndexRoute
   '/dashboard/campaign/$campaignId/': typeof DashboardCampaignCampaignIdIndexRoute
   '/dashboard/commerce/catalogs/': typeof DashboardCommerceCatalogsIndexRoute
@@ -1767,6 +1775,7 @@ export interface FileRoutesByTo {
   '/auth/shopify/retry': typeof AuthShopifyRetryIndexRoute
   '/dashboard/analytics/$staffid': typeof DashboardAnalyticsStaffidIndexRoute
   '/dashboard/analytics/audit-log': typeof DashboardAnalyticsAuditLogIndexRoute
+  '/dashboard/analytics/calls': typeof DashboardAnalyticsCallsIndexRoute
   '/dashboard/automation/$automationId': typeof DashboardAutomationAutomationIdIndexRoute
   '/dashboard/campaign/$campaignId': typeof DashboardCampaignCampaignIdIndexRoute
   '/dashboard/commerce/catalogs': typeof DashboardCommerceCatalogsIndexRoute
@@ -1983,6 +1992,7 @@ export interface FileRoutesById {
   '/auth/shopify/retry/': typeof AuthShopifyRetryIndexRoute
   '/dashboard/analytics/$staffid/': typeof DashboardAnalyticsStaffidIndexRoute
   '/dashboard/analytics/audit-log/': typeof DashboardAnalyticsAuditLogIndexRoute
+  '/dashboard/analytics/calls/': typeof DashboardAnalyticsCallsIndexRoute
   '/dashboard/automation/$automationId/': typeof DashboardAutomationAutomationIdIndexRoute
   '/dashboard/campaign/$campaignId/': typeof DashboardCampaignCampaignIdIndexRoute
   '/dashboard/commerce/catalogs/': typeof DashboardCommerceCatalogsIndexRoute
@@ -2197,6 +2207,7 @@ export interface FileRouteTypes {
     | '/auth/shopify/retry/'
     | '/dashboard/analytics/$staffid/'
     | '/dashboard/analytics/audit-log/'
+    | '/dashboard/analytics/calls/'
     | '/dashboard/automation/$automationId/'
     | '/dashboard/campaign/$campaignId/'
     | '/dashboard/commerce/catalogs/'
@@ -2404,6 +2415,7 @@ export interface FileRouteTypes {
     | '/auth/shopify/retry'
     | '/dashboard/analytics/$staffid'
     | '/dashboard/analytics/audit-log'
+    | '/dashboard/analytics/calls'
     | '/dashboard/automation/$automationId'
     | '/dashboard/campaign/$campaignId'
     | '/dashboard/commerce/catalogs'
@@ -2619,6 +2631,7 @@ export interface FileRouteTypes {
     | '/auth/shopify/retry/'
     | '/dashboard/analytics/$staffid/'
     | '/dashboard/analytics/audit-log/'
+    | '/dashboard/analytics/calls/'
     | '/dashboard/automation/$automationId/'
     | '/dashboard/campaign/$campaignId/'
     | '/dashboard/commerce/catalogs/'
@@ -3595,6 +3608,13 @@ declare module '@tanstack/react-router' {
       path: '/analytics/audit-log'
       fullPath: '/dashboard/analytics/audit-log/'
       preLoaderRoute: typeof DashboardAnalyticsAuditLogIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/analytics/calls/': {
+      id: '/dashboard/analytics/calls/'
+      path: '/analytics/calls'
+      fullPath: '/dashboard/analytics/calls/'
+      preLoaderRoute: typeof DashboardAnalyticsCallsIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/automation/$automationId/': {
@@ -4637,6 +4657,7 @@ interface DashboardRouteRouteChildren {
   DashboardSettingsMembersRolesRoute: typeof DashboardSettingsMembersRolesRoute
   DashboardAnalyticsStaffidIndexRoute: typeof DashboardAnalyticsStaffidIndexRoute
   DashboardAnalyticsAuditLogIndexRoute: typeof DashboardAnalyticsAuditLogIndexRoute
+  DashboardAnalyticsCallsIndexRoute: typeof DashboardAnalyticsCallsIndexRoute
   DashboardAutomationAutomationIdIndexRoute: typeof DashboardAutomationAutomationIdIndexRoute
   DashboardCampaignCampaignIdIndexRoute: typeof DashboardCampaignCampaignIdIndexRoute
   DashboardContactsCustomFieldsIndexRoute: typeof DashboardContactsCustomFieldsIndexRoute
@@ -4709,6 +4730,7 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardSettingsMembersRolesRoute: DashboardSettingsMembersRolesRoute,
   DashboardAnalyticsStaffidIndexRoute: DashboardAnalyticsStaffidIndexRoute,
   DashboardAnalyticsAuditLogIndexRoute: DashboardAnalyticsAuditLogIndexRoute,
+  DashboardAnalyticsCallsIndexRoute: DashboardAnalyticsCallsIndexRoute,
   DashboardAutomationAutomationIdIndexRoute:
     DashboardAutomationAutomationIdIndexRoute,
   DashboardCampaignCampaignIdIndexRoute: DashboardCampaignCampaignIdIndexRoute,

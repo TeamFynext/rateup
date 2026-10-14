@@ -1,7 +1,14 @@
-import { IconMessage, IconPhoneIncoming, IconPhoneOutgoing, IconSearch } from "@tabler/icons-react";
+import {
+  IconArrowDownLeft,
+  IconArrowUpRight,
+  IconMessage,
+  IconPhoneOutgoing,
+  IconSearch,
+  IconUser,
+} from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import dayjs from "dayjs";
-import { useDeferredValue, useState } from "react";
+import { type ReactNode, useDeferredValue, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type {
@@ -13,24 +20,20 @@ import type {
 import { useCallLog } from "@/backend/whatsapp/calling/calling.query";
 import { formatDuration } from "@/components/dashboard/analytics/kit/format.ts";
 import { DotBadge } from "@/components/dashboard/analytics/kit/StatusBadges.tsx";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table.tsx";
+import { getInitials } from "@/components/ui/utils.ts";
 import { cn } from "@/lib/utils";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
+import { formatCallDuration } from "@/utils/whatsapp/callFormat.ts";
 
 import type { CallsScope } from "./CallsPage.tsx";
 import { FilterSelect } from "./FilterSelect.tsx";
+import { useNow } from "./useNow.ts";
 
 const ALL = "all";
 
@@ -135,25 +138,11 @@ export default function CallLogTab({ scope }: Readonly<{ scope: CallsScope }>) {
         </Empty>
       ) : (
         <div className={cn("transition-opacity", isStale && "opacity-60")} aria-busy={isStale}>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="pl-4">{t("When")}</TableHead>
-                <TableHead>{t("Customer")}</TableHead>
-                <TableHead>{t("Outcome")}</TableHead>
-                <TableHead className="text-right">{t("Duration")}</TableHead>
-                <TableHead className="hidden md:table-cell">{t("Agent")}</TableHead>
-                <TableHead className="pr-4 text-right">
-                  <span className="sr-only">{t("Actions")}</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rows.map((row) => (
-                <CallRow key={row.id} row={row} />
-              ))}
-            </TableBody>
-          </Table>
+          <ul className="flex flex-col gap-2 p-3">
+            {rows.map((row) => (
+              <CallRow key={row.id} row={row} />
+            ))}
+          </ul>
           {query.hasNextPage && (
             <div className="flex justify-center border-t border-border p-3">
               <Button
@@ -172,54 +161,137 @@ export default function CallLogTab({ scope }: Readonly<{ scope: CallsScope }>) {
   );
 }
 
+/** Who was on one end of the call: an avatar, a name, and a line under it. */
+function Party({
+  name,
+  title,
+  detail,
+}: Readonly<{ name: string | null; title: string; detail?: ReactNode }>) {
+  const initials = getInitials(name);
+  return (
+    <div className="flex min-w-0 flex-1 basis-44 items-center gap-2.5">
+      <Avatar>
+        <AvatarFallback className="text-xs font-medium">
+          {initials || <IconUser className="size-4" aria-hidden="true" />}
+        </AvatarFallback>
+      </Avatar>
+      <div className="flex min-w-0 flex-col items-start gap-0.5">
+        <span
+          className={cn(
+            "max-w-full truncate text-sm font-semibold",
+            name === null ? "text-muted-foreground" : "text-foreground",
+          )}
+        >
+          {title}
+        </span>
+        {detail}
+      </div>
+    </div>
+  );
+}
+
+function DirectionChip({
+  outbound,
+  unanswered,
+}: Readonly<{ outbound: boolean; unanswered: boolean }>) {
+  const { t } = useTranslation();
+  const Icon = outbound ? IconArrowUpRight : IconArrowDownLeft;
+  const label = outbound ? t("Outgoing") : t("Incoming");
+  return (
+    <span
+      role="img"
+      aria-label={label}
+      title={label}
+      className={cn(
+        "flex size-6 shrink-0 items-center justify-center rounded-md",
+        unanswered
+          ? "bg-destructive/10 text-destructive"
+          : outbound
+            ? "bg-green-600/10 text-green-700 dark:text-green-500"
+            : "bg-amber-500/15 text-amber-700 dark:text-amber-400",
+      )}
+    >
+      <Icon className="size-4" aria-hidden="true" />
+    </span>
+  );
+}
+
 function CallRow({ row }: Readonly<{ row: CallLogRow }>) {
   const { t } = useTranslation();
   const outbound = row.direction === "BUSINESS_INITIATED";
-  const DirectionIcon = outbound ? IconPhoneOutgoing : IconPhoneIncoming;
   const unanswered = isUnanswered(row);
+  const live = row.status === "RINGING" || row.status === "ACCEPTED";
+  const now = useNow(live);
   const at = dayjs(row.createdAt);
+  const phone = `+${row.customerWaId}`;
+
+  // A call still on the line counts up: talk time once answered, ring time before that.
+  const liveSince = new Date(
+    row.status === "ACCEPTED" ? (row.answeredAt ?? row.createdAt) : row.createdAt,
+  ).getTime();
+  const duration = live
+    ? formatCallDuration((now - liveSince) / 1000)
+    : row.durationSeconds
+      ? formatDuration(row.durationSeconds)
+      : "—";
+  // A call back is placed from the chat, where the call-permission and 24-hour rules
+  // already apply.
+  const actionLabel = unanswered ? t("Call back") : t("Open chat");
+  const ActionIcon = unanswered ? IconPhoneOutgoing : IconMessage;
 
   return (
-    <TableRow className={cn(unanswered && "bg-destructive/5 dark:bg-destructive/10")}>
-      <TableCell className="pl-4 whitespace-nowrap">
-        <div className="flex items-center gap-2">
-          <DirectionIcon
-            className={cn(
-              "size-4 shrink-0",
-              unanswered ? "text-destructive" : "text-muted-foreground",
-            )}
-            aria-label={outbound ? t("Outgoing") : t("Incoming")}
-          />
-          <div className="flex flex-col">
-            <span className="text-sm text-foreground">{at.format("D MMM, h:mm A")}</span>
-            <span className="text-xs text-muted-foreground">{at.fromNow()}</span>
-          </div>
-        </div>
-      </TableCell>
-      <TableCell>
-        <div className="flex min-w-0 flex-col">
-          <span className="truncate text-sm font-medium text-foreground">
-            {row.contactName || `+${row.customerWaId}`}
-          </span>
-          {row.contactName && (
-            <span className="text-xs text-muted-foreground">+{row.customerWaId}</span>
+    <li
+      className={cn(
+        "flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg bg-muted/50 px-3 py-2.5",
+        unanswered && "bg-destructive/5 dark:bg-destructive/10",
+      )}
+    >
+      <div className="flex w-20 shrink-0 flex-col">
+        <span className="flex items-center gap-1.5 text-sm tabular-nums text-foreground">
+          {at.format("h:mm A")}
+          {live && (
+            <span
+              role="img"
+              aria-label={t("In progress")}
+              className="size-1.5 animate-pulse rounded-full bg-green-600 dark:bg-green-500"
+            />
           )}
-        </div>
-      </TableCell>
-      <TableCell>
-        <OutcomeBadge status={row.status} />
-      </TableCell>
-      <TableCell className="text-right text-sm tabular-nums text-foreground">
-        {row.durationSeconds ? formatDuration(row.durationSeconds) : "—"}
-      </TableCell>
-      <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
-        {row.agentName ?? "—"}
-      </TableCell>
-      <TableCell className="pr-4 text-right">
+        </span>
+        <span className="text-xs text-muted-foreground">{at.format("D MMM")}</span>
+      </div>
+
+      <Party
+        name={row.agentName}
+        title={row.agentName ?? t("No agent")}
+        detail={<OutcomeBadge status={row.status} />}
+      />
+      <Party
+        name={row.contactName}
+        title={row.contactName || phone}
+        detail={
+          row.contactName && (
+            <span className="text-xs tabular-nums text-muted-foreground">{phone}</span>
+          )
+        }
+      />
+
+      <DirectionChip outbound={outbound} unanswered={unanswered} />
+
+      <div className="ml-auto flex items-center gap-2 rounded-lg border border-border bg-background py-1 pr-1 pl-3">
+        <span
+          className={cn(
+            "min-w-12 text-sm tabular-nums",
+            live ? "font-medium text-foreground" : "text-muted-foreground",
+          )}
+        >
+          {duration}
+        </span>
         {row.contactId && (
           <Button
-            variant={unanswered ? "outline" : "ghost"}
-            size="sm"
+            variant="outline"
+            size="icon-sm"
+            aria-label={actionLabel}
+            title={actionLabel}
             render={
               <Link
                 to="/dashboard/inbox"
@@ -227,13 +299,10 @@ function CallRow({ row }: Readonly<{ row: CallLogRow }>) {
               />
             }
           >
-            <IconMessage aria-hidden="true" />
-            {/* A call back is placed from the chat, where the call-permission and
-                24-hour rules already apply. */}
-            {unanswered ? t("Call back") : t("Open chat")}
+            <ActionIcon aria-hidden="true" />
           </Button>
         )}
-      </TableCell>
-    </TableRow>
+      </div>
+    </li>
   );
 }

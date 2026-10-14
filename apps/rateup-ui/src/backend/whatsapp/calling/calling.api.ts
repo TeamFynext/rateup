@@ -153,12 +153,15 @@ export const callKeys = {
   permission: (phoneId: string, contactId: string) =>
     ["wa-call-permission", phoneId, contactId] as const,
   settings: (phoneId: string) => ["wa-call-settings", phoneId] as const,
+  /** Every call-log read, live strip included — what a call event invalidates. */
+  logs: ["wa-call-log"] as const,
   log: (filters: object) => ["wa-call-log", filters] as const,
+  live: (phoneId?: string) => ["wa-call-log", "live", phoneId ?? null] as const,
   analytics: (filters: object) => ["wa-call-analytics", filters] as const,
 };
 
 // ---------------------------------------------------------------------------------------
-// Call log & analytics (WhatsApp → Calls)
+// Call log & analytics (Analytics → Calls)
 // ---------------------------------------------------------------------------------------
 
 export type CallOutcome = "answered" | "missed" | "declined" | "failed";
@@ -180,7 +183,7 @@ export interface CallLogFilters {
   search?: string;
 }
 
-export const getCallLog = async (filters: CallLogFilters, cursor?: string) => {
+export const getCallLog = async (filters: CallLogFilters, cursor?: string, limit = 50) => {
   const res = await axiosClient.get(`${CallsUrl}/log`, {
     params: {
       ...filters,
@@ -188,7 +191,7 @@ export const getCallLog = async (filters: CallLogFilters, cursor?: string) => {
       to: filters.to.toISOString(),
       search: filters.search || undefined,
       cursor,
-      limit: 50,
+      limit,
     },
   });
   return res.data as { items: CallLogRow[]; nextCursor: string | null };

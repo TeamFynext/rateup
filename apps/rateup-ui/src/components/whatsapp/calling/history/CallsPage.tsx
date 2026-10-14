@@ -13,8 +13,9 @@ import type { AnalyticsDateRange } from "@/types/api.ts";
 import CallAnalyticsTab from "./CallAnalyticsTab.tsx";
 import CallLogTab from "./CallLogTab.tsx";
 import { FilterSelect } from "./FilterSelect.tsx";
+import LiveCallsStrip from "./LiveCallsStrip.tsx";
 
-const route = getRouteApi("/dashboard/whatsapp/calls/");
+const route = getRouteApi("/dashboard/analytics/calls/");
 
 /** What both tabs are narrowed by. */
 export interface CallsScope {
@@ -25,7 +26,7 @@ export interface CallsScope {
 
 const ALL = "all";
 
-/** WhatsApp → Calls: every voice call, and how calling is going. */
+/** Analytics → Calls: every voice call, and how calling is going. */
 export default function CallsPage() {
   const { t } = useTranslation();
   const { tab } = route.useSearch();
@@ -59,6 +60,8 @@ export default function CallsPage() {
           "Every WhatsApp voice call your team took or made, and how calling is going.",
         )}
       />
+
+      <LiveCallsStrip phoneId={phoneId === ALL ? undefined : phoneId} />
 
       <Tabs
         value={current}

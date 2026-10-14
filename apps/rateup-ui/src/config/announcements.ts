@@ -40,14 +40,24 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-10-14-live-calls-strip",
+    title: "Calls moved to Analytics, with a live view",
+    summary:
+      "Calls has moved from WhatsApp to Analytics. It now shows who is on a call, who is waiting and for how long, and what was missed in the last hour.",
+    publishedAt: "2026-10-14",
+    kinds: ["improvement"],
+    area: "Analytics",
+    link: { to: "/dashboard/analytics/calls", label: "Open calls" },
+  },
+  {
     id: "2026-10-07-whatsapp-call-log",
     title: "Call log and call analytics",
     summary:
-      "WhatsApp → Calls lists every voice call with its outcome, length and agent, and shows your answer rate, missed calls and busiest hours.",
+      "Analytics → Calls lists every voice call with its outcome, length and agent, and shows your answer rate, missed calls and busiest hours.",
     publishedAt: "2026-10-07",
     kinds: ["new"],
     area: "Inbox",
-    link: { to: "/dashboard/whatsapp/calls", label: "Open calls" },
+    link: { to: "/dashboard/analytics/calls", label: "Open calls" },
   },
   {
     id: "2026-10-07-whatsapp-voice-calls",
