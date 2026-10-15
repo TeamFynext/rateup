@@ -16,8 +16,8 @@ vi.mock("../inbox/message/wamessage.controller.js", () => ({ handleWaMessages: v
 vi.mock("../automatedReply/wa_automatedReply.utils.js", () => ({
   checkAndExecuteRuleByTriggerEvent: vi.fn(),
 }));
-vi.mock("../automatedReply/instagram_automation.service.js", () => ({
-  handleInstagramUserResponse: vi.fn(),
+vi.mock("../automatedReply/metaFlow.service.js", () => ({
+  handleMetaFlowUserResponse: vi.fn(),
 }));
 vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), fatal: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
@@ -28,7 +28,7 @@ import { getInstagramChannel } from "../metaChannel/metaChannel.service.js";
 import { updateWaMessageByMessageId } from "../inbox/message/wamessage.service.js";
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 import { checkAndExecuteRuleByTriggerEvent } from "../automatedReply/wa_automatedReply.utils.js";
-import { handleInstagramUserResponse } from "../automatedReply/instagram_automation.service.js";
+import { handleMetaFlowUserResponse } from "../automatedReply/metaFlow.service.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
 import { InstagramEvent } from "../../../types/enums.js";
 import {
@@ -49,7 +49,7 @@ const getSettingsByIbaIdMock = getInstagramChannel as unknown as Mock;
 const updateByMessageIdMock = updateWaMessageByMessageId as unknown as Mock;
 const handleWaMessagesMock = handleWaMessages as unknown as Mock;
 const runRuleMock = checkAndExecuteRuleByTriggerEvent as unknown as Mock;
-const answerFlowMock = handleInstagramUserResponse as unknown as Mock;
+const answerFlowMock = handleMetaFlowUserResponse as unknown as Mock;
 
 const IBA_ID = "iba-1";
 const IGS_ID = "igs-1";
@@ -400,7 +400,13 @@ describe("handleInstagramMessages", () => {
       SETTINGS,
     );
 
-    expect(answerFlowMock).toHaveBeenCalledWith(IGS_ID, "Yes", ORG_ID, IBA_ID, "opt-yes");
+    expect(answerFlowMock).toHaveBeenCalledWith(
+      IGS_ID,
+      "Yes",
+      ORG_ID,
+      { platform: PlatformType.INSTAGRAM, accountId: IBA_ID },
+      "opt-yes",
+    );
   });
 
   test("lets the link's own rule answer a first message sent from an ig.me link", async () => {
@@ -585,7 +591,13 @@ describe("handleInstagramPostback", () => {
       SETTINGS,
     );
 
-    expect(answerFlowMock).toHaveBeenCalledWith(IGS_ID, "Buy", ORG_ID, IBA_ID, "btn_0_0");
+    expect(answerFlowMock).toHaveBeenCalledWith(
+      IGS_ID,
+      "Buy",
+      ORG_ID,
+      { platform: PlatformType.INSTAGRAM, accountId: IBA_ID },
+      "btn_0_0",
+    );
     expect(runRuleMock).not.toHaveBeenCalled();
   });
 

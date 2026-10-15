@@ -38,6 +38,11 @@ import { CAMPAIGN_TEST_FLOW_TOKEN, signFlowToken, verifyFlowToken } from "./flow
 import { appendFlowResponses, clearFlowResponses, getFlowResponses } from "./flowState.js";
 import { onFeedbackFlowCompleted } from "../../loyalty/feedback/feedback.completion.js";
 import { unusableRequest } from "./flow.errors.js";
+import {
+  describeFlowValidationErrors,
+  FlowValidationError,
+  type WaFlowValidationError,
+} from "./flowValidation.js";
 import { createCTAButtonMessage, parseMessage } from "../whatsappSurvey/wasurvey.utils.js";
 import { getShortUrlId, shortIdUniqueConstraintErrHandler } from "../../../utils/commonUtils.js";
 import { WaMessageBody } from "../../../types/whatsapp.types.js";
@@ -316,6 +321,10 @@ export async function syncLocalFlowToWhatsapp(orgId: string, dbFlowId: string) {
     jsonWithTitle as WaFlowJson,
     flow.whatsappSettingsId,
   );
+  const validationErrors: WaFlowValidationError[] = response?.validation_errors ?? [];
+  if (validationErrors.length > 0) {
+    throw new FlowValidationError(describeFlowValidationErrors(jsonWithTitle, validationErrors));
+  }
   await publishFlowInWa(orgId, flow.flowId, flow.whatsappSettingsId);
 
   log.trace({ message: "Flow synced to whatsapp", response });

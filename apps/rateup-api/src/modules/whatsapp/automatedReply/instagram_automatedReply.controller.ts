@@ -1,273 +1,233 @@
 /**
- * Instagram Automated Reply Controller
- * HTTP handlers for Instagram automation endpoints
- * Isolated from WhatsApp to prevent cross-platform interference
+ * HTTP handlers for the Meta chatbot flows. The same handlers serve Instagram
+ * (`/instagram-automation`) and Messenger (`/messenger-automation`); each route
+ * registration builds its own set bound to one platform.
  */
 
 import { FastifyReply, FastifyRequest } from "fastify";
 import { log } from "../../../utils/logger.js";
+import { PlatformType } from "../../../../generated/prisma/enums.js";
 import {
-  getInstagramAutomatedRepliesByOrgId,
-  getInstagramAutomatedReplyById,
-  createInstagramAutomatedReply,
-  updateInstagramAutomatedReply,
-  deleteInstagramAutomatedReply,
+  getMetaAutomationsByOrgId,
+  getMetaAutomationById,
+  createMetaAutomation,
+  updateMetaAutomation,
+  deleteMetaAutomation,
+  cloneMetaAutomation,
+  type MetaAutomationPlatform,
 } from "./instagram_automatedReply.service.js";
-import { startInstagramAutomationFlow } from "./instagram_automation.service.js";
+import { startMetaFlow, type MetaFlowAutomation } from "./metaFlow.service.js";
+import type { InitiateMetaAutomationBody } from "./instagram_automatedReply.schema.js";
 
-/**
- * Get all Instagram automations for an organization
- */
-export async function getInstagramAutomationsHandler(request: FastifyRequest, reply: FastifyReply) {
-  try {
-    const { orgId } = request.user;
+const LABELS: Record<MetaAutomationPlatform, { name: string; log: string }> = {
+  [PlatformType.INSTAGRAM]: {
+    name: "Instagram automation",
+    log: "[Instagram Automation Controller]",
+  },
+  [PlatformType.FACEBOOK]: {
+    name: "Messenger automation",
+    log: "[Messenger Automation Controller]",
+  },
+};
 
-    const automations = await getInstagramAutomatedRepliesByOrgId(orgId);
-
-    reply.code(200).send({
-      success: true,
-      data: automations,
-    });
-  } catch (error) {
-    log.error({ err: error }, `[Instagram Automation Controller] Error getting automations`);
-    reply.code(500).send({
-      success: false,
-      error: "Failed to fetch Instagram automations",
-    });
-  }
+interface AutomationBody {
+  name: string;
+  matchData: WaAutomatedReplyMatchData;
+  whatsappSettingsPhoneId?: string;
 }
 
-/**
- * Get Instagram automation by ID
- */
-export async function getInstagramAutomationByIdHandler(
-  request: FastifyRequest<{ Params: { id: string } }>,
-  reply: FastifyReply,
-) {
-  try {
-    const { orgId } = request.user;
-    const { id } = request.params;
+export function metaAutomationHandlers(platform: MetaAutomationPlatform) {
+  const { name, log: prefix } = LABELS[platform];
+  const notFound = (reply: FastifyReply) =>
+    reply.code(404).send({ success: false, error: `${name} not found` });
 
-    const automation = await getInstagramAutomatedReplyById(id);
+  /** Get all automations for an organization */
+  async function list(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const { orgId } = request.user;
 
-    if (!automation) {
-      return reply.code(404).send({
+      const automations = await getMetaAutomationsByOrgId(orgId, platform);
+
+      reply.code(200).send({
+        success: true,
+        data: automations,
+      });
+    } catch (error) {
+      log.error({ err: error }, `${prefix} Error getting automations`);
+      reply.code(500).send({
         success: false,
-        error: "Instagram automation not found",
+        error: `Failed to fetch ${name}s`,
       });
     }
-
-    // Verify ownership
-    if (automation.orgId == null || automation.orgId !== orgId) {
-      return reply.code(403).send({
-        success: false,
-        error: "Unauthorized access to this automation",
-      });
-    }
-
-    reply.code(200).send({
-      success: true,
-      data: automation,
-    });
-  } catch (error) {
-    log.error({ err: error }, `[Instagram Automation Controller] Error getting automation`);
-    reply.code(500).send({
-      success: false,
-      error: "Failed to fetch Instagram automation",
-    });
   }
-}
 
-/**
- * Create a new Instagram automation
- */
-export async function createInstagramAutomationHandler(
-  request: FastifyRequest<{
-    Body: {
-      name: string;
-      matchData: WaAutomatedReplyMatchData;
-      whatsappSettingsPhoneId?: string;
-    };
-  }>,
-  reply: FastifyReply,
-) {
-  try {
-    const { orgId } = request.user;
-    const body = request.body;
+  /** Get an automation by ID */
+  async function getById(request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
+    try {
+      const { orgId } = request.user;
+      const { id } = request.params;
 
-    const automation = await createInstagramAutomatedReply({
-      orgId,
-      name: body.name,
-      matchData: body.matchData,
-      whatsappSettingsPhoneId: body.whatsappSettingsPhoneId,
-    });
+      // Scoped to the caller's org: another org's id reads as not found.
+      const automation = await getMetaAutomationById(id, orgId, platform);
+      if (!automation) return notFound(reply);
 
-    log.info(`[Instagram Automation Controller] Created automation ${automation.id}`);
-
-    reply.code(201).send({
-      success: true,
-      data: automation,
-    });
-  } catch (error) {
-    log.error({ err: error }, `[Instagram Automation Controller] Error creating automation`);
-    reply.code(500).send({
-      success: false,
-      error: "Failed to create Instagram automation",
-    });
+      reply.code(200).send({
+        success: true,
+        data: automation,
+      });
+    } catch (error) {
+      log.error({ err: error }, `${prefix} Error getting automation`);
+      reply.code(500).send({
+        success: false,
+        error: `Failed to fetch ${name}`,
+      });
+    }
   }
-}
 
-/**
- * Update an Instagram automation
- */
-export async function updateInstagramAutomationHandler(
-  request: FastifyRequest<{
-    Params: { id: string };
-    Body: {
-      name?: string;
-      matchData?: WaAutomatedReplyMatchData;
-      whatsappSettingsPhoneId?: string;
-    };
-  }>,
-  reply: FastifyReply,
-) {
-  try {
-    const { orgId } = request.user;
-    const { id } = request.params;
-    const body = request.body;
+  /** Create a new automation */
+  async function create(request: FastifyRequest<{ Body: AutomationBody }>, reply: FastifyReply) {
+    try {
+      const { orgId } = request.user;
+      const body = request.body;
 
-    // Verify automation exists and belongs to org
-    const existing = await getInstagramAutomatedReplyById(id);
-    if (!existing) {
-      return reply.code(404).send({
+      const automation = await createMetaAutomation(platform, {
+        orgId,
+        name: body.name,
+        matchData: body.matchData,
+        whatsappSettingsPhoneId: body.whatsappSettingsPhoneId,
+      });
+
+      log.info(`${prefix} Created automation ${automation.id}`);
+
+      reply.code(201).send({
+        success: true,
+        data: automation,
+      });
+    } catch (error) {
+      log.error({ err: error }, `${prefix} Error creating automation`);
+      reply.code(500).send({
         success: false,
-        error: "Instagram automation not found",
+        error: `Failed to create ${name}`,
       });
     }
-
-    if (existing.orgId !== orgId) {
-      return reply.code(403).send({
-        success: false,
-        error: "Unauthorized access to this automation",
-      });
-    }
-
-    const automation = await updateInstagramAutomatedReply(id, body);
-
-    log.info(`[Instagram Automation Controller] Updated automation ${id}`);
-
-    reply.code(200).send({
-      success: true,
-      data: automation,
-    });
-  } catch (error) {
-    log.error({ err: error }, `[Instagram Automation Controller] Error updating automation`);
-    reply.code(500).send({
-      success: false,
-      error: "Failed to update Instagram automation",
-    });
   }
-}
 
-/**
- * Delete an Instagram automation
- */
-export async function deleteInstagramAutomationHandler(
-  request: FastifyRequest<{ Params: { id: string } }>,
-  reply: FastifyReply,
-) {
-  try {
-    const { orgId } = request.user;
-    const { id } = request.params;
+  /** Update an automation */
+  async function update(
+    request: FastifyRequest<{ Params: { id: string }; Body: Partial<AutomationBody> }>,
+    reply: FastifyReply,
+  ) {
+    try {
+      const { orgId } = request.user;
+      const { id } = request.params;
 
-    // Verify automation exists and belongs to org
-    const existing = await getInstagramAutomatedReplyById(id);
-    if (!existing) {
-      return reply.code(404).send({
+      const existing = await getMetaAutomationById(id, orgId, platform);
+      if (!existing) return notFound(reply);
+
+      const automation = await updateMetaAutomation(id, orgId, platform, request.body);
+
+      log.info(`${prefix} Updated automation ${id}`);
+
+      reply.code(200).send({
+        success: true,
+        data: automation,
+      });
+    } catch (error) {
+      log.error({ err: error }, `${prefix} Error updating automation`);
+      reply.code(500).send({
         success: false,
-        error: "Instagram automation not found",
+        error: `Failed to update ${name}`,
       });
     }
-
-    if (existing.orgId !== orgId) {
-      return reply.code(403).send({
-        success: false,
-        error: "Unauthorized access to this automation",
-      });
-    }
-
-    await deleteInstagramAutomatedReply(id);
-
-    log.info(`[Instagram Automation Controller] Deleted automation ${id}`);
-
-    reply.code(200).send({
-      success: true,
-      message: "Instagram automation deleted successfully",
-    });
-  } catch (error) {
-    log.error({ err: error }, `[Instagram Automation Controller] Error deleting automation`);
-    reply.code(500).send({
-      success: false,
-      error: "Failed to delete Instagram automation",
-    });
   }
-}
 
-/**
- * Manually trigger an Instagram automation for a specific user
- */
-export async function initiateInstagramAutomationHandler(
-  request: FastifyRequest<{
-    Params: { id: string };
-    Body: {
-      igsId: string; // Instagram Scoped ID
-      ibaId: string; // Instagram Business Account ID
-    };
-  }>,
-  reply: FastifyReply,
-) {
-  try {
-    const { orgId } = request.user;
-    const { id } = request.params;
-    const { igsId, ibaId } = request.body;
+  /** Delete an automation */
+  async function remove(request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
+    try {
+      const { orgId } = request.user;
+      const { id } = request.params;
 
-    // Get automation
-    const automation = await getInstagramAutomatedReplyById(id);
-    if (!automation) {
-      return reply.code(404).send({
+      const existing = await getMetaAutomationById(id, orgId, platform);
+      if (!existing) return notFound(reply);
+
+      await deleteMetaAutomation(id, orgId, platform);
+
+      log.info(`${prefix} Deleted automation ${id}`);
+
+      reply.code(200).send({
+        success: true,
+        message: `${name} deleted successfully`,
+      });
+    } catch (error) {
+      log.error({ err: error }, `${prefix} Error deleting automation`);
+      reply.code(500).send({
         success: false,
-        error: "Instagram automation not found",
+        error: `Failed to delete ${name}`,
       });
     }
-
-    if (automation.orgId == null || automation.orgId !== orgId) {
-      return reply.code(403).send({
-        success: false,
-        error: "Unauthorized access to this automation",
-      });
-    }
-
-    // Start the automation flow
-    await startInstagramAutomationFlow(
-      igsId,
-      { ...automation, orgId: automation.orgId },
-      orgId,
-      ibaId,
-    );
-
-    log.info(
-      `[Instagram Automation Controller] Manually triggered automation ${id} for igsId ${igsId}`,
-    );
-
-    reply.code(200).send({
-      success: true,
-      message: "Instagram automation initiated successfully",
-    });
-  } catch (error) {
-    log.error({ err: error }, `[Instagram Automation Controller] Error initiating automation`);
-    reply.code(500).send({
-      success: false,
-      error: "Failed to initiate Instagram automation",
-    });
   }
+
+  /** Manually start an automation for one recipient */
+  async function initiate(
+    request: FastifyRequest<{ Params: { id: string }; Body: InitiateMetaAutomationBody }>,
+    reply: FastifyReply,
+  ) {
+    try {
+      const { orgId } = request.user;
+      const { id } = request.params;
+      const { recipientId, accountId } = request.body;
+
+      const automation = await getMetaAutomationById(id, orgId, platform);
+      if (!automation?.orgId) return notFound(reply);
+
+      await startMetaFlow(
+        recipientId,
+        // The stored matchData is typed loosely on the Prisma model; this reader
+        // knows the row is a Meta flow graph.
+        { ...automation, orgId: automation.orgId } as unknown as MetaFlowAutomation,
+        orgId,
+        { platform, accountId },
+      );
+
+      log.info(`${prefix} Manually triggered automation ${id} for ${recipientId}`);
+
+      reply.code(200).send({
+        success: true,
+        message: `${name} initiated successfully`,
+      });
+    } catch (error) {
+      log.error({ err: error }, `${prefix} Error initiating automation`);
+      reply.code(500).send({
+        success: false,
+        error: `Failed to initiate ${name}`,
+      });
+    }
+  }
+
+  /** Copy an automation within the org */
+  async function clone(
+    request: FastifyRequest<{ Params: { id: string }; Body: { name?: string } }>,
+    reply: FastifyReply,
+  ) {
+    try {
+      const { orgId } = request.user;
+      const { id } = request.params;
+
+      const automation = await cloneMetaAutomation(id, orgId, platform, request.body?.name);
+      if (!automation) return notFound(reply);
+
+      reply.code(201).send({
+        success: true,
+        data: automation,
+      });
+    } catch (error) {
+      log.error({ err: error }, `${prefix} Error cloning automation`);
+      reply.code(500).send({
+        success: false,
+        error: `Failed to clone ${name}`,
+      });
+    }
+  }
+
+  return { list, getById, create, update, remove, initiate, clone };
 }

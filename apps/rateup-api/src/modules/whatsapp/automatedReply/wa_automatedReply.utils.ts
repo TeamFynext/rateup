@@ -18,6 +18,7 @@ import { logAutomationAction } from "../whatsappSurvey/automation-logger.utils.j
 import {
   getContactByPhoneNumberAndOrgId,
   getOrCreateContactByPhone,
+  getOrCreateContactByPsid,
   updateContactById,
 } from "../../contact/contact.service.js";
 import dayjs from "dayjs";
@@ -32,7 +33,7 @@ import { sendTextMessage } from "../whatsappSurvey/wasurvey.service.js";
 import { sendTemplateToUserCore } from "../messageTemplates/wa_templates.controller.js";
 import { sendFlow } from "../flows/flow.service.js";
 import { processNextNode } from "../whatsappSurvey/wasurvey.controller.js";
-import { TriggerEvent } from "../../../../generated/prisma/enums.js";
+import { PlatformType, TriggerEvent } from "../../../../generated/prisma/enums.js";
 import type { LeadChannel, LeadSource } from "../../../../generated/prisma/client.js";
 import {
   getContactStage,
@@ -45,11 +46,9 @@ import {
   sendInstagramPrivateReply,
   sendInstagramTextMessage,
 } from "../instagram/instagram_messaging.service.js";
-import {
-  startInstagramAutomationFlow,
-  type InstagramAutomation,
-} from "./instagram_automation.service.js";
-import { getInstagramAutomatedReplyById } from "./instagram_automatedReply.service.js";
+import { startMetaFlow, type MetaFlowAutomation } from "./metaFlow.service.js";
+import { sendSendApiText } from "../meta/sendApiMessages.js";
+import { getMetaAutomationById } from "./instagram_automatedReply.service.js";
 import { ShopifyBody } from "../../integrations/shopify/shopify.types.js";
 import { resolveWooPathValue } from "../../integrations/woocommerce/woocommerce.mapping.js";
 import { resolveShopifyPathValue } from "../../integrations/shopify/shopify.mapping.js";
@@ -274,6 +273,35 @@ export enum ReplyComponentType {
 }
 
 /**
+ * How a rule finds the contact it is about. Messenger contacts have no phone, only the
+ * page-scoped `psid` the event carries; WhatsApp contacts are keyed by phone, and
+ * Instagram contacts carry their igsId in `phone` as well as `igsId`. `recipient` is
+ * `context.phone`, which holds whichever of those the platform uses.
+ */
+function ruleContactWhere(platform: string | null | undefined, recipient: string, orgId: string) {
+  return platform === "FACEBOOK" ? { psid: recipient, orgId } : { phone: recipient, orgId };
+}
+
+function ruleContactUnique(platform: string | null | undefined, recipient: string, orgId: string) {
+  return platform === "FACEBOOK"
+    ? { contact_psid_org_id_unique: { psid: recipient, orgId } }
+    : { contact_phone_org_id_unique: { phone: recipient, orgId } };
+}
+
+/** The contact a rule's conditions read, with the groups and labels they check. */
+export async function findRuleContact(
+  platform: string | null | undefined,
+  recipient: string,
+  orgId: string,
+) {
+  if (platform !== "FACEBOOK") return getContactByPhoneNumberAndOrgId(recipient, orgId);
+  return prisma.contact.findFirst({
+    where: ruleContactWhere(platform, recipient, orgId),
+    include: { customFields: true, contactGroups: true, ContactLabelMap: true },
+  });
+}
+
+/**
  * Validates contact-based filter conditions
  */
 async function validateContactFilters(
@@ -426,6 +454,7 @@ async function validateRuleCondition(
   message: string,
   orgId: string,
   phone: string,
+  platform?: string | null,
 ): Promise<boolean> {
   const { field, operator, value } = condition;
 
@@ -463,7 +492,7 @@ async function validateRuleCondition(
     }
 
     case "CONTACT_EMAIL": {
-      const contact = await getContactByPhoneNumberAndOrgId(phone, orgId);
+      const contact = await findRuleContact(platform, phone, orgId);
       if (!contact?.email) return false;
 
       const email = contact.email.toLowerCase();
@@ -483,7 +512,7 @@ async function validateRuleCondition(
 
     case "CONTACT_GROUP": {
       if (!value) return false;
-      const contact = await getContactByPhoneNumberAndOrgId(phone, orgId);
+      const contact = await findRuleContact(platform, phone, orgId);
       if (!contact) return false;
 
       const contactGroups = contact?.contactGroups?.map((g) => g.contactGroupId) || [];
@@ -492,7 +521,7 @@ async function validateRuleCondition(
 
     case "CONTACT_LABEL": {
       if (!value) return false;
-      const contact = await getContactByPhoneNumberAndOrgId(phone, orgId);
+      const contact = await findRuleContact(platform, phone, orgId);
       if (!contact) return false;
 
       const contactLabels = contact?.ContactLabelMap?.map((l) => l.labelId) || [];
@@ -501,7 +530,7 @@ async function validateRuleCondition(
 
     case "CONTACT_LIFECYCLE": {
       if (!value) return false;
-      const contact = await getContactByPhoneNumberAndOrgId(phone, orgId);
+      const contact = await findRuleContact(platform, phone, orgId);
       if (!contact) return false;
 
       return contact.lifecycleId === value;
@@ -517,7 +546,7 @@ async function validateRuleCondition(
      */
     case "CONTACT_STAGE": {
       if (!value) return false;
-      const contact = await getContactByPhoneNumberAndOrgId(phone, orgId);
+      const contact = await findRuleContact(platform, phone, orgId);
       if (!contact) return false;
 
       const stage = await getContactStage(contact.id, orgId);
@@ -537,19 +566,20 @@ async function validateConditionGroup(
   message: string,
   orgId: string,
   phone: string,
+  platform?: string | null,
 ): Promise<boolean> {
   const { operator, conditions } = group;
 
   if (operator === "AND") {
     for (const condition of conditions) {
-      const isValid = await validateRuleCondition(condition, message, orgId, phone);
+      const isValid = await validateRuleCondition(condition, message, orgId, phone, platform);
       if (!isValid) return false;
     }
     return true;
   } else {
     // OR operator
     for (const condition of conditions) {
-      const isValid = await validateRuleCondition(condition, message, orgId, phone);
+      const isValid = await validateRuleCondition(condition, message, orgId, phone, platform);
       if (isValid) return true;
     }
     return false;
@@ -610,14 +640,14 @@ export async function validateRuleConditions(
 
   if (operator === "AND") {
     for (const group of groups) {
-      const isValid = await validateConditionGroup(group, message, orgId, phone);
+      const isValid = await validateConditionGroup(group, message, orgId, phone, rule.platform);
       if (!isValid) return false;
     }
     return true;
   } else {
     // OR operator
     for (const group of groups) {
-      const isValid = await validateConditionGroup(group, message, orgId, phone);
+      const isValid = await validateConditionGroup(group, message, orgId, phone, rule.platform);
       if (isValid) return true;
     }
     return false;
@@ -686,17 +716,30 @@ function takeInstagramCommentId(context: RuleExecutionContext): string | undefin
   return commentId;
 }
 
-async function sendInstagramRuleText(
+/**
+ * Sends a rule's text on Instagram or Messenger. `recipient` is the igsId or psid and
+ * `accountId` the IBA id or Page id. Only Instagram can answer a comment privately.
+ */
+async function sendMetaRuleText(
   context: RuleExecutionContext,
-  igsId: string,
-  ibaId: string,
+  recipient: string,
+  accountId: string,
   text: string,
 ) {
+  if (context.platform === "FACEBOOK") {
+    await sendSendApiText(
+      { platform: PlatformType.FACEBOOK, accountId },
+      recipient,
+      context.orgId,
+      text,
+    );
+    return;
+  }
   const commentId = takeInstagramCommentId(context);
   if (commentId) {
-    await sendInstagramPrivateReply(commentId, text, ibaId, context.orgId, igsId);
+    await sendInstagramPrivateReply(commentId, text, accountId, context.orgId, recipient);
   } else {
-    await sendInstagramTextMessage(igsId, text, context.orgId, ibaId);
+    await sendInstagramTextMessage(recipient, text, context.orgId, accountId);
   }
 }
 
@@ -716,6 +759,18 @@ async function sendInstagramRuleText(
  * contact with no channel at all (a fresh import), where narrowing would only
  * stop rules that legitimately fire today.
  */
+/**
+ * Who a contact event's rules act on, as the rule context's `phone`. Messenger contacts
+ * have no phone: their rules run on the psid, as the inbound handler passes it. Instagram
+ * contacts keep their igsId in `phone`, so that needs nothing here.
+ */
+export function ruleRecipient(
+  contact: { phone?: string | null; psid?: string | null },
+  platform: string,
+): string | null | undefined {
+  return platform === "FACEBOOK" ? (contact.psid ?? contact.phone) : contact.phone;
+}
+
 export async function resolveContactChannel(contact: {
   id?: string | null;
   igsId?: string | null;
@@ -723,7 +778,12 @@ export async function resolveContactChannel(contact: {
 }): Promise<{ platform: "WHATSAPP" | "INSTAGRAM" | "FACEBOOK" | "ALL"; phoneNumberId?: string }> {
   if (contact.id) {
     const latest = await prisma.waMessage.findFirst({
-      where: { contactId: contact.id, sourcePlatform: { not: null } },
+      // Channels only: closing or assigning a chat writes an INTERNAL activity note just
+      // before its rules run, and reading that lost the account id the rules need.
+      where: {
+        contactId: contact.id,
+        sourcePlatform: { in: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"] },
+      },
       orderBy: { waCreatedAt: "desc" },
       select: { sourcePlatform: true, sourceIdentifier: true },
     });
@@ -1106,12 +1166,9 @@ async function executeCloseTicketAction(
 ): Promise<boolean> {
   if (!context.orgId || !context.phone) return false;
 
-  // Find the contact by phone/orgId (fetch all needed fields at once)
+  // Find the contact (fetch all needed fields at once)
   const contact = await prisma.contact.findFirst({
-    where: {
-      phone: context.phone,
-      orgId: context.orgId,
-    },
+    where: ruleContactWhere(context.platform, context.phone, context.orgId),
   });
   if (!contact) return false;
 
@@ -1144,10 +1201,7 @@ export async function executeAttachLabelAction(
 ): Promise<boolean> {
   if (!context.orgId || !context.phone || !labelId) return false;
   const contact = await prisma.contact.findFirst({
-    where: {
-      orgId: context.orgId,
-      phone: context.phone,
-    },
+    where: ruleContactWhere(context.platform, context.phone, context.orgId),
     select: {
       id: true,
     },
@@ -1174,13 +1228,23 @@ export async function executeAttachLabelAction(
   return true;
 }
 
+/**
+ * The contact an assignment is for, created if new. A Messenger contact is created by
+ * psid: creating it by phone would give the same person a second, phone-keyed contact.
+ */
+function getOrCreateRuleContact(platform: string | undefined, recipient: string, orgId: string) {
+  return platform === "FACEBOOK"
+    ? getOrCreateContactByPsid(recipient, orgId)
+    : getOrCreateContactByPhone(recipient, orgId);
+}
+
 async function executeAssignUserAction(
   userId: string,
   context: RuleExecutionContext,
 ): Promise<boolean> {
   if (!context.phone || !userId || !context.orgId) return false;
 
-  const contact = await getOrCreateContactByPhone(context.phone, context.orgId);
+  const contact = await getOrCreateRuleContact(context.platform, context.phone, context.orgId);
   if (!contact) return false;
 
   const teams = await getTeamIdsByUserId(userId);
@@ -1205,7 +1269,7 @@ export async function executeAssignTeamAction(
 ): Promise<boolean> {
   if (!context.phone || !teamId || !context.orgId) return false;
 
-  const contact = await getOrCreateContactByPhone(context.phone, context.orgId);
+  const contact = await getOrCreateRuleContact(context.platform, context.phone, context.orgId);
   if (!contact) return false;
 
   const users = await getUserIdsByTeamId(teamId);
@@ -1260,7 +1324,7 @@ export async function executeAssignStageAction(
   }
 
   const contact = await prisma.contact.findUnique({
-    where: { contact_phone_org_id_unique: { phone: context.phone, orgId: context.orgId } },
+    where: ruleContactUnique(context.platform, context.phone, context.orgId),
     select: { id: true },
   });
   if (!contact) return false;
@@ -1337,12 +1401,7 @@ async function executeAssignLifecycleAction(
   if (!context.phone || !context.orgId || !lifecycleId) return false;
 
   const updatedContact = await prisma.contact.update({
-    where: {
-      contact_phone_org_id_unique: {
-        phone: context.phone,
-        orgId: context.orgId,
-      },
-    },
+    where: ruleContactUnique(context.platform, context.phone, context.orgId),
     data: { lifecycleId },
     select: {
       id: true,
@@ -1411,7 +1470,7 @@ async function executeSendMessageAction(
 
   if (context.platform === "INSTAGRAM" || context.platform === "FACEBOOK") {
     if (!context.phoneNumberId) return false;
-    await sendInstagramRuleText(context, context.phone, context.phoneNumberId, messageText);
+    await sendMetaRuleText(context, context.phone, context.phoneNumberId, messageText);
   } else {
     await sendTextMessage({ phone: context.phone, orgId: context.orgId }, null, messageText);
   }
@@ -1454,7 +1513,7 @@ async function executeSendWebSurveyAction(
 
   if (context.platform === "INSTAGRAM" || context.platform === "FACEBOOK") {
     if (!context.phoneNumberId) return false;
-    await sendInstagramRuleText(context, context.phone, context.phoneNumberId, messageText);
+    await sendMetaRuleText(context, context.phone, context.phoneNumberId, messageText);
   } else {
     await sendTextMessage({ phone: context.phone, orgId: context.orgId }, null, messageText);
   }
@@ -1681,23 +1740,28 @@ async function executeTriggerChatbotAction(
   if (!context.phone || !chatbotId || !context.orgId) return false;
 
   if (context.platform === "INSTAGRAM" || context.platform === "FACEBOOK") {
-    const automation = await getInstagramAutomatedReplyById(chatbotId);
-    if (automation) {
-      if (!context.phoneNumberId) {
-        log.error("No Instagram business account id in context for chatbot %s", chatbotId);
-        return false;
-      }
-      await startInstagramAutomationFlow(
-        context.phone,
-        // The stored matchData is typed loosely on the Prisma model; this reader
-        // knows the row is an Instagram automation graph.
-        automation as unknown as InstagramAutomation,
-        context.orgId,
-        context.phoneNumberId,
-        takeInstagramCommentId(context),
-      );
-      return true;
+    const platform =
+      context.platform === "FACEBOOK" ? PlatformType.FACEBOOK : PlatformType.INSTAGRAM;
+    // Scoped to the rule's platform, so a Facebook rule can only start a Messenger
+    // chatbot and an Instagram rule an Instagram one.
+    const automation = await getMetaAutomationById(chatbotId, context.orgId, platform);
+    if (!automation) {
+      log.warn({ chatbotId, platform }, "Rule names a chatbot that is not on its platform");
+      return false;
     }
+    if (!context.phoneNumberId) {
+      log.error("No %s account id in context for chatbot %s", platform, chatbotId);
+      return false;
+    }
+    await startMetaFlow(
+      context.phone,
+      // The stored matchData is typed loosely on the Prisma model; this reader
+      // knows the row is a Meta flow graph.
+      automation as unknown as MetaFlowAutomation,
+      context.orgId,
+      { platform, accountId: context.phoneNumberId },
+      takeInstagramCommentId(context),
+    );
     return true;
   }
 

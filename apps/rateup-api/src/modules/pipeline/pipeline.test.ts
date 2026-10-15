@@ -80,6 +80,8 @@ vi.mock("../../workers/bullmq/queues/index.js", () => ({
 vi.mock("../whatsapp/automatedReply/wa_automatedReply.utils.js", () => ({
   checkAndExecuteRuleByTriggerEvent: vi.fn(),
   resolveContactChannel: vi.fn().mockResolvedValue({ platform: "whatsapp" }),
+  ruleRecipient: (contact: { phone?: string | null; psid?: string | null }, platform: string) =>
+    platform === "FACEBOOK" ? (contact.psid ?? contact.phone) : contact.phone,
 }));
 vi.mock("../integrations/external/zapier/zapier.deliver.js", () => ({
   queueZapierTrigger: vi.fn(),

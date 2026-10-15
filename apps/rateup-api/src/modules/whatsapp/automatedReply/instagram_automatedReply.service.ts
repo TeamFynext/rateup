@@ -1,23 +1,31 @@
 /**
- * Instagram Automated Reply Service
- * Handles CRUD operations for Instagram automations
- * Completely isolated from WhatsApp automation to prevent cross-platform interference
+ * CRUD for the chatbot flows that run over Meta's Send API: Instagram and Messenger.
+ * Both live in WaAutomatedReply, told apart by `platform`; every query here is scoped to
+ * one platform so an Instagram id can never load, change or delete a Messenger flow, or
+ * the reverse. WhatsApp flows are handled by wa_automatedReply.service.ts.
  */
 
 import { Prisma } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
 import { PlatformType, WaAutomationProgressStatus } from "../../../../generated/prisma/enums.js";
+import type { MetaFlowChannel } from "../meta/sendApiMessages.js";
+
+export type MetaAutomationPlatform = MetaFlowChannel["platform"];
+
+function logPrefix(platform: MetaAutomationPlatform) {
+  return platform === PlatformType.FACEBOOK ? "[Messenger Automation]" : "[Instagram Automation]";
+}
 
 /**
- * Get all Instagram automated replies for an organization
+ * Get all of an organization's automations on one platform
  */
-export async function getInstagramAutomatedRepliesByOrgId(orgId: string) {
+export async function getMetaAutomationsByOrgId(orgId: string, platform: MetaAutomationPlatform) {
   try {
     return await prisma.waAutomatedReply.findMany({
       where: {
         orgId,
-        platform: PlatformType.INSTAGRAM,
+        platform,
       },
       orderBy: {
         createdAt: "desc",
@@ -26,66 +34,76 @@ export async function getInstagramAutomatedRepliesByOrgId(orgId: string) {
   } catch (error) {
     log.error(
       { err: error },
-      `[Instagram Automation] Error fetching automations for orgId ${orgId}`,
+      `${logPrefix(platform)} Error fetching automations for orgId ${orgId}`,
     );
     throw error;
   }
 }
 
 /**
- * Get Instagram automated reply by ID
+ * Get one automation, only if it belongs to the org and is on the platform
  */
-export async function getInstagramAutomatedReplyById(id: string) {
+export async function getMetaAutomationById(
+  id: string,
+  orgId: string,
+  platform: MetaAutomationPlatform,
+) {
   try {
     return await prisma.waAutomatedReply.findFirst({
       where: {
         id,
-        platform: PlatformType.INSTAGRAM,
+        orgId,
+        platform,
       },
     });
   } catch (error) {
-    log.error({ err: error }, `[Instagram Automation] Error fetching automation ${id}`);
+    log.error({ err: error }, `${logPrefix(platform)} Error fetching automation ${id}`);
     throw error;
   }
 }
 
 /**
- * Create a new Instagram automated reply
+ * Create a new automation on a platform
  */
-export async function createInstagramAutomatedReply(data: {
-  orgId: string;
-  name: string;
-  matchData: WaAutomatedReplyMatchData;
-  whatsappSettingsPhoneId?: string;
-}) {
+export async function createMetaAutomation(
+  platform: MetaAutomationPlatform,
+  data: {
+    orgId: string;
+    name: string;
+    matchData: WaAutomatedReplyMatchData;
+    whatsappSettingsPhoneId?: string;
+  },
+) {
   try {
     const automation = await prisma.waAutomatedReply.create({
       data: {
         orgId: data.orgId,
         name: data.name,
         matchData: data.matchData,
-        platform: PlatformType.INSTAGRAM,
+        platform,
         whatsappSettingsPhoneId: data.whatsappSettingsPhoneId,
       },
     });
 
-    log.info(`[Instagram Automation] Created automation ${automation.id} for orgId ${data.orgId}`);
+    log.info(`${logPrefix(platform)} Created automation ${automation.id} for orgId ${data.orgId}`);
 
     return automation;
   } catch (error) {
     log.error(
       { err: error },
-      `[Instagram Automation] Error creating automation for orgId ${data.orgId}`,
+      `${logPrefix(platform)} Error creating automation for orgId ${data.orgId}`,
     );
     throw error;
   }
 }
 
 /**
- * Update an Instagram automated reply
+ * Update an automation
  */
-export async function updateInstagramAutomatedReply(
+export async function updateMetaAutomation(
   id: string,
+  orgId: string,
+  platform: MetaAutomationPlatform,
   data: {
     name?: string;
     matchData?: WaAutomatedReplyMatchData;
@@ -96,7 +114,8 @@ export async function updateInstagramAutomatedReply(
     const automation = await prisma.waAutomatedReply.update({
       where: {
         id,
-        platform: PlatformType.INSTAGRAM,
+        orgId,
+        platform,
       },
       data: {
         name: data.name,
@@ -105,19 +124,51 @@ export async function updateInstagramAutomatedReply(
       },
     });
 
-    log.info(`[Instagram Automation] Updated automation ${id}`);
+    log.info(`${logPrefix(platform)} Updated automation ${id}`);
 
     return automation;
   } catch (error) {
-    log.error({ err: error }, `[Instagram Automation] Error updating automation ${id}`);
+    log.error({ err: error }, `${logPrefix(platform)} Error updating automation ${id}`);
     throw error;
   }
 }
 
 /**
- * Delete an Instagram automated reply
+ * Copy an automation, graph and all, as a new one on the same platform. Run history is
+ * not copied. Returns null when the org has no such automation on the platform.
  */
-export async function deleteInstagramAutomatedReply(id: string) {
+export async function cloneMetaAutomation(
+  id: string,
+  orgId: string,
+  platform: MetaAutomationPlatform,
+  name?: string,
+) {
+  const source = await getMetaAutomationById(id, orgId, platform);
+  if (!source) return null;
+
+  const automation = await prisma.waAutomatedReply.create({
+    data: {
+      orgId,
+      name: name || `${source.name} Copy`,
+      matchData: source.matchData,
+      platform,
+      whatsappSettingsPhoneId: source.whatsappSettingsPhoneId,
+    },
+  });
+
+  log.info(`${logPrefix(platform)} Cloned automation ${id} as ${automation.id}`);
+
+  return automation;
+}
+
+/**
+ * Delete an automation and its run history
+ */
+export async function deleteMetaAutomation(
+  id: string,
+  orgId: string,
+  platform: MetaAutomationPlatform,
+) {
   try {
     // Both in one transaction, as deleteRule does: otherwise a failure on the second
     // statement leaves the automation alive with its history already gone.
@@ -129,16 +180,17 @@ export async function deleteInstagramAutomatedReply(id: string) {
       await tx.waAutomatedReply.delete({
         where: {
           id,
-          platform: PlatformType.INSTAGRAM,
+          orgId,
+          platform,
         },
       });
     });
 
-    log.info(`[Instagram Automation] Deleted automation ${id}`);
+    log.info(`${logPrefix(platform)} Deleted automation ${id}`);
 
     return { success: true };
   } catch (error) {
-    log.error({ err: error }, `[Instagram Automation] Error deleting automation ${id}`);
+    log.error({ err: error }, `${logPrefix(platform)} Error deleting automation ${id}`);
     throw error;
   }
 }
@@ -181,10 +233,11 @@ export async function findRecentInstagramAutomation(
 }
 
 /**
- * Log Instagram automation action
+ * Log a flow action
  */
-export async function logInstagramAutomationAction(params: {
-  igsId: string;
+export async function logMetaFlowAction(params: {
+  /** igsId on Instagram, psid on Messenger. */
+  recipientId: string;
   nodeId: string;
   automationId: string;
   orgId: string;
@@ -193,24 +246,27 @@ export async function logInstagramAutomationAction(params: {
   try {
     // Log to console instead of database as waAutomatedReplyActionLog table doesn't exist
     log.info(
-      { response: params.response },
-      `[Instagram Automation] Action logged - Node: ${params.nodeId}, Automation: ${params.automationId}`,
+      { response: params.response, recipientId: params.recipientId },
+      `[Meta Automation] Action logged - Node: ${params.nodeId}, Automation: ${params.automationId}`,
     );
     return { nodeId: params.nodeId, response: params.response };
   } catch (error) {
     log.error(
       { err: error },
-      `[Instagram Automation] Error logging action for automation ${params.automationId}`,
+      `[Meta Automation] Error logging action for automation ${params.automationId}`,
     );
     return null;
   }
 }
 
 /**
- * Create or update Instagram automation message tracking
+ * Create or restart the tracking row for one recipient's run of a flow. The row is
+ * keyed by recipient + automation; ids are page- or account-scoped, so no channel
+ * column is needed.
  */
-export async function createOrUpdateInstagramAutomationMessage(params: {
-  igsId: string;
+export async function createOrUpdateMetaFlowRun(params: {
+  /** igsId on Instagram, psid on Messenger. Stored in the `phone` column. */
+  recipientId: string;
   automationId: string;
   orgId: string;
   currentNode: string;
@@ -220,7 +276,7 @@ export async function createOrUpdateInstagramAutomationMessage(params: {
     // Check if automation message already exists
     const existing = await prisma.waAutomatedReplyMessage.findFirst({
       where: {
-        phone: params.igsId,
+        phone: params.recipientId,
         waAutomatedReplyId: params.automationId,
         orgId: params.orgId,
       },
@@ -229,17 +285,19 @@ export async function createOrUpdateInstagramAutomationMessage(params: {
     const statusValue = params.status || WaAutomationProgressStatus.inProgress;
 
     if (existing) {
+      // A re-run starts clean: the last run's answers and wait marker must not leak in.
       return await prisma.waAutomatedReplyMessage.update({
         where: { id: existing.id },
         data: {
           currentNode: params.currentNode,
           status: statusValue,
+          response: Prisma.DbNull,
         },
       });
     } else {
       return await prisma.waAutomatedReplyMessage.create({
         data: {
-          phone: params.igsId,
+          phone: params.recipientId,
           waAutomatedReplyId: params.automationId,
           orgId: params.orgId,
           currentNode: params.currentNode,
@@ -248,7 +306,7 @@ export async function createOrUpdateInstagramAutomationMessage(params: {
       });
     }
   } catch (error) {
-    log.error({ err: error }, `[Instagram Automation] Error creating/updating automation message`);
+    log.error({ err: error }, `[Meta Automation] Error creating/updating automation message`);
     throw error;
   }
 }
