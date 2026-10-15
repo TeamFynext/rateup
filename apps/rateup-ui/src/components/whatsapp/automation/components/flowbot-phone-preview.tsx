@@ -227,6 +227,21 @@ function InstagramDmHeader() {
   );
 }
 
+function MessengerHeader() {
+  return (
+    <div className="flex shrink-0 items-center gap-2 border-b px-3 py-2">
+      <div className="size-5 rounded-full bg-linear-to-br from-blue-500 to-violet-500 dark:from-blue-400 dark:to-violet-400" />
+      <span className="text-xs font-semibold">Messenger</span>
+    </div>
+  );
+}
+
+const PREVIEW_HEADERS = {
+  whatsapp: WhatsAppChatHeader,
+  instagram: InstagramDmHeader,
+  facebook: MessengerHeader,
+};
+
 interface NodeOption {
   id: string;
   label: string;
@@ -271,6 +286,17 @@ function getNodeOptions(node: TypedNode | null | undefined): NodeOption[] {
       label: r.title ?? `Option ${i + 1}`,
     }));
   }
+  // Cards: only postback buttons answer the bot; link buttons leave the chat. The id
+  // fallback mirrors the branch handle node.tsx gives a button saved without one.
+  if (Array.isArray(data.elements) && data.elements.length > 0) {
+    return data.elements.flatMap((card, cIdx: number) =>
+      (card.buttons ?? []).flatMap((b, bIdx: number) =>
+        b.type === "postback"
+          ? [{ id: b.id ?? b.payload ?? `btn_${cIdx}_${bIdx}`, label: b.title ?? "" }]
+          : [],
+      ),
+    );
+  }
   return [];
 }
 
@@ -295,7 +321,7 @@ export function FlowbotPreviewPlayground({
 }: Readonly<{
   nodes: TypedNode[];
   edges: Edge[];
-  platform?: "whatsapp" | "instagram";
+  platform?: keyof typeof PREVIEW_HEADERS;
 }>) {
   const { t } = useTranslation();
 
@@ -422,7 +448,7 @@ export function FlowbotPreviewPlayground({
     setHistory([]);
   }
 
-  const Header = platform === "instagram" ? InstagramDmHeader : WhatsAppChatHeader;
+  const Header = PREVIEW_HEADERS[platform];
   const waitingNode = waitingNodeId
     ? (nodesById.get(waitingNodeId) as TypedNode | undefined)
     : null;

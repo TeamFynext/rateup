@@ -1,5 +1,6 @@
 import {
   IconBrandInstagram,
+  IconBrandMessenger,
   IconBrandWhatsapp,
   IconCopy,
   IconDots,
@@ -16,7 +17,10 @@ import {
   useDeleteWaAutomatedReplyMutation,
   useUpdateWaAutomatedReplyMutation,
 } from "@/backend/whatsapp/automated-reply/automatedReply.query";
-import { useDeleteInstagramAutomationMutation } from "@/backend/whatsapp/instagram-automation/instagramAutomation.query";
+import {
+  useCloneMetaAutomationMutation,
+  useDeleteMetaAutomationMutation,
+} from "@/backend/whatsapp/instagram-automation/instagramAutomation.query";
 import { ActionCard } from "@/components/common/action-card.tsx";
 import { CardGrid } from "@/components/common/generic-card.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
@@ -31,6 +35,27 @@ import {
 import { Input } from "@/components/ui/input.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import type { WaAutomatedReply } from "@/types/global";
+import { AutomationPlatform, automationPlatformOf } from "@/types/platform.ts";
+
+const PLATFORM_BADGES = {
+  [AutomationPlatform.WHATSAPP]: {
+    icon: IconBrandWhatsapp,
+    label: "WhatsApp",
+    className:
+      "border-green-500 bg-green-50 text-green-600 dark:bg-green-950/20 dark:text-green-400",
+  },
+  [AutomationPlatform.INSTAGRAM]: {
+    icon: IconBrandInstagram,
+    label: "Instagram",
+    className:
+      "border-purple-500 bg-purple-50 text-purple-600 dark:bg-purple-950/20 dark:text-purple-400",
+  },
+  [AutomationPlatform.FACEBOOK]: {
+    icon: IconBrandMessenger,
+    label: "Messenger",
+    className: "border-blue-500 bg-blue-50 text-blue-600 dark:bg-blue-950/20 dark:text-blue-400",
+  },
+};
 
 interface WaAutomationCardsProps {
   data: WaAutomatedReply[];
@@ -62,29 +87,13 @@ function AutomationCard({ automation, detailsBasePath }: Readonly<WaAutomationCa
 
   const matchData = automation.matchData?.json;
   const nodeCount = matchData?.edges?.length || 0;
-  const platform = automation.platform || "whatsapp";
-  const isInstagram = platform === "instagram";
+  const badge = PLATFORM_BADGES[automationPlatformOf(automation.platform)];
+  const BadgeIcon = badge.icon;
 
   const platformBadge = (
-    <Badge
-      variant="outline"
-      className={
-        isInstagram
-          ? "border-purple-500 bg-purple-50 text-purple-600 dark:bg-purple-950/20 dark:text-purple-400"
-          : "border-green-500 bg-green-50 text-green-600 dark:bg-green-950/20 dark:text-green-400"
-      }
-    >
-      {isInstagram ? (
-        <>
-          <IconBrandInstagram className="mr-1 size-3" />
-          Instagram
-        </>
-      ) : (
-        <>
-          <IconBrandWhatsapp className="mr-1 size-3" />
-          WhatsApp
-        </>
-      )}
+    <Badge variant="outline" className={badge.className}>
+      <BadgeIcon className="mr-1 size-3" />
+      {badge.label}
     </Badge>
   );
 
@@ -133,12 +142,18 @@ function AutomationActions({ automationId, automationName, platform }: Automatio
   const deleteWaMutation = useDeleteWaAutomatedReplyMutation();
   const cloneWaMutation = useCloneWaAutomatedReplyMutation();
   const updateWaMutation = useUpdateWaAutomatedReplyMutation();
-  const deleteIgMutation = useDeleteInstagramAutomationMutation();
+  const metaPlatform = automationPlatformOf(platform);
+  // Hooks run unconditionally; a WhatsApp card never calls these two.
+  const metaHookPlatform =
+    metaPlatform === AutomationPlatform.WHATSAPP ? AutomationPlatform.INSTAGRAM : metaPlatform;
+  const deleteMetaMutation = useDeleteMetaAutomationMutation(metaHookPlatform);
+  const cloneMetaMutation = useCloneMetaAutomationMutation(metaHookPlatform);
   const { t: translations } = useTranslation();
   const confirm = useConfirm();
 
-  const isInstagram = platform === "instagram";
-  const isClonePending = cloneWaMutation.isPending || updateWaMutation.isPending;
+  const isWhatsApp = metaPlatform === AutomationPlatform.WHATSAPP;
+  const isClonePending =
+    cloneWaMutation.isPending || updateWaMutation.isPending || cloneMetaMutation.isPending;
 
   function handleOpenCloneDialog() {
     if (isClonePending) return;
@@ -152,19 +167,15 @@ function AutomationActions({ automationId, automationName, platform }: Automatio
     if (isClonePending) return;
     const trimmedName = cloneName.trim();
     if (!trimmedName) return;
-    cloneWaMutation.mutate(
-      { automationId, name: trimmedName },
-      {
-        onSuccess: (clonedAutomation) => {
-          if (!clonedAutomation?.id) {
-            setCloneDialogOpened(false);
-            return;
-          }
-          setCloneDialogOpened(false);
-          setCloneName("");
-        },
-      },
-    );
+    const onCloned = () => {
+      setCloneDialogOpened(false);
+      setCloneName("");
+    };
+    if (isWhatsApp) {
+      cloneWaMutation.mutate({ automationId, name: trimmedName }, { onSuccess: onCloned });
+    } else {
+      cloneMetaMutation.mutate({ automationId, name: trimmedName }, { onSuccess: onCloned });
+    }
   }
 
   async function handleDelete() {
@@ -177,10 +188,10 @@ function AutomationActions({ automationId, automationName, platform }: Automatio
 
     if (!shouldDelete) return;
 
-    if (isInstagram) {
-      deleteIgMutation.mutate(automationId);
-    } else {
+    if (isWhatsApp) {
       deleteWaMutation.mutate(automationId);
+    } else {
+      deleteMetaMutation.mutate(automationId);
     }
   }
 
@@ -210,19 +221,17 @@ function AutomationActions({ automationId, automationName, platform }: Automatio
             e.stopPropagation();
           }}
         >
-          {isInstagram ? null : (
-            <DropdownMenuItem
-              disabled={isClonePending}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleOpenCloneDialog();
-              }}
-            >
-              <IconCopy className="mr-2 size-3.5" />
-              {isClonePending ? translations("Cloning...") : translations("Clone")}
-            </DropdownMenuItem>
-          )}
+          <DropdownMenuItem
+            disabled={isClonePending}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleOpenCloneDialog();
+            }}
+          >
+            <IconCopy className="mr-2 size-3.5" />
+            {isClonePending ? translations("Cloning...") : translations("Clone")}
+          </DropdownMenuItem>
 
           <DropdownMenuItem
             className="text-destructive"

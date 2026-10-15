@@ -69,6 +69,7 @@ import { Route as DashboardContactsIndexRouteImport } from './routes/dashboard/c
 import { Route as DashboardInboxIndexRouteImport } from './routes/dashboard/inbox/index'
 import { Route as DashboardInstagramIndexRouteImport } from './routes/dashboard/instagram/index'
 import { Route as DashboardLinkPagesIndexRouteImport } from './routes/dashboard/link-pages/index'
+import { Route as DashboardMessengerIndexRouteImport } from './routes/dashboard/messenger/index'
 import { Route as DashboardMetaAgentIndexRouteImport } from './routes/dashboard/meta-agent/index'
 import { Route as DashboardMetaAgentConnectorsRouteImport } from './routes/dashboard/meta-agent/connectors'
 import { Route as DashboardMetaAgentInsightsRouteImport } from './routes/dashboard/meta-agent/insights'
@@ -167,6 +168,7 @@ import { Route as DashboardLoyaltyRewardsIndexRouteImport } from './routes/dashb
 import { Route as DashboardLoyaltySettingsIndexRouteImport } from './routes/dashboard/loyalty/settings/index'
 import { Route as DashboardLoyaltyTemplatesIndexRouteImport } from './routes/dashboard/loyalty/templates/index'
 import { Route as DashboardLoyaltyTransactionsIndexRouteImport } from './routes/dashboard/loyalty/transactions/index'
+import { Route as DashboardMessengerFlowbotsFlowbotIdRouteImport } from './routes/dashboard/messenger/flowbots/$flowbotId'
 import { Route as DashboardQrCodesShortUrlIdIndexRouteImport } from './routes/dashboard/qr-codes/$shortUrlId/index'
 import { Route as DashboardQrCreatorShortUrlIdIndexRouteImport } from './routes/dashboard/qrCreator/$shortUrlId/index'
 import { Route as DashboardQuickAccessLinksShortUrlIdIndexRouteImport } from './routes/dashboard/quickAccessLinks/$shortUrlId/index'
@@ -526,6 +528,11 @@ const DashboardInstagramIndexRoute = DashboardInstagramIndexRouteImport.update({
 const DashboardLinkPagesIndexRoute = DashboardLinkPagesIndexRouteImport.update({
   id: '/link-pages/',
   path: '/link-pages/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardMessengerIndexRoute = DashboardMessengerIndexRouteImport.update({
+  id: '/messenger/',
+  path: '/messenger/',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
 const DashboardMetaAgentIndexRoute = DashboardMetaAgentIndexRouteImport.update({
@@ -1103,6 +1110,12 @@ const DashboardLoyaltyTransactionsIndexRoute =
     path: '/transactions/',
     getParentRoute: () => DashboardLoyaltyRouteRoute,
   } as any)
+const DashboardMessengerFlowbotsFlowbotIdRoute =
+  DashboardMessengerFlowbotsFlowbotIdRouteImport.update({
+    id: '/messenger/flowbots/$flowbotId',
+    path: '/messenger/flowbots/$flowbotId',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
 const DashboardQrCodesShortUrlIdIndexRoute =
   DashboardQrCodesShortUrlIdIndexRouteImport.update({
     id: '/qr-codes/$shortUrlId/',
@@ -1506,6 +1519,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/inbox/': typeof DashboardInboxIndexRoute
   '/dashboard/instagram/': typeof DashboardInstagramIndexRoute
   '/dashboard/link-pages/': typeof DashboardLinkPagesIndexRoute
+  '/dashboard/messenger/': typeof DashboardMessengerIndexRoute
   '/dashboard/meta-agent/': typeof DashboardMetaAgentIndexRoute
   '/dashboard/pipeline/': typeof DashboardPipelineIndexRoute
   '/dashboard/qr-codes/': typeof DashboardQrCodesIndexRoute
@@ -1520,6 +1534,7 @@ export interface FileRoutesByFullPath {
   '/blog/tag/sitemap.xml': typeof marketingBlogTagSitemapDotxmlRoute
   '/dashboard/campaign/$campaignId/edit': typeof DashboardCampaignCampaignIdEditRoute
   '/dashboard/instagram/flowbots/$flowbotId': typeof DashboardInstagramFlowbotsFlowbotIdRoute
+  '/dashboard/messenger/flowbots/$flowbotId': typeof DashboardMessengerFlowbotsFlowbotIdRoute
   '/dashboard/settings/members/$memberId': typeof DashboardSettingsMembersMemberIdRoute
   '/dashboard/settings/members/roles': typeof DashboardSettingsMembersRolesRoute
   '/login/complete-login/': typeof authLoginCompleteLoginIndexRoute
@@ -1714,6 +1729,7 @@ export interface FileRoutesByTo {
   '/dashboard/inbox': typeof DashboardInboxIndexRoute
   '/dashboard/instagram': typeof DashboardInstagramIndexRoute
   '/dashboard/link-pages': typeof DashboardLinkPagesIndexRoute
+  '/dashboard/messenger': typeof DashboardMessengerIndexRoute
   '/dashboard/meta-agent': typeof DashboardMetaAgentIndexRoute
   '/dashboard/pipeline': typeof DashboardPipelineIndexRoute
   '/dashboard/qr-codes': typeof DashboardQrCodesIndexRoute
@@ -1728,6 +1744,7 @@ export interface FileRoutesByTo {
   '/blog/tag/sitemap.xml': typeof marketingBlogTagSitemapDotxmlRoute
   '/dashboard/campaign/$campaignId/edit': typeof DashboardCampaignCampaignIdEditRoute
   '/dashboard/instagram/flowbots/$flowbotId': typeof DashboardInstagramFlowbotsFlowbotIdRoute
+  '/dashboard/messenger/flowbots/$flowbotId': typeof DashboardMessengerFlowbotsFlowbotIdRoute
   '/dashboard/settings/members/$memberId': typeof DashboardSettingsMembersMemberIdRoute
   '/dashboard/settings/members/roles': typeof DashboardSettingsMembersRolesRoute
   '/login/complete-login': typeof authLoginCompleteLoginIndexRoute
@@ -1931,6 +1948,7 @@ export interface FileRoutesById {
   '/dashboard/inbox/': typeof DashboardInboxIndexRoute
   '/dashboard/instagram/': typeof DashboardInstagramIndexRoute
   '/dashboard/link-pages/': typeof DashboardLinkPagesIndexRoute
+  '/dashboard/messenger/': typeof DashboardMessengerIndexRoute
   '/dashboard/meta-agent/': typeof DashboardMetaAgentIndexRoute
   '/dashboard/pipeline/': typeof DashboardPipelineIndexRoute
   '/dashboard/qr-codes/': typeof DashboardQrCodesIndexRoute
@@ -1945,6 +1963,7 @@ export interface FileRoutesById {
   '/(marketing)/blog/tag/sitemap.xml': typeof marketingBlogTagSitemapDotxmlRoute
   '/dashboard/campaign/$campaignId/edit': typeof DashboardCampaignCampaignIdEditRoute
   '/dashboard/instagram/flowbots/$flowbotId': typeof DashboardInstagramFlowbotsFlowbotIdRoute
+  '/dashboard/messenger/flowbots/$flowbotId': typeof DashboardMessengerFlowbotsFlowbotIdRoute
   '/dashboard/settings/members/$memberId': typeof DashboardSettingsMembersMemberIdRoute
   '/dashboard/settings/members/roles': typeof DashboardSettingsMembersRolesRoute
   '/(auth)/login/complete-login/': typeof authLoginCompleteLoginIndexRoute
@@ -2146,6 +2165,7 @@ export interface FileRouteTypes {
     | '/dashboard/inbox/'
     | '/dashboard/instagram/'
     | '/dashboard/link-pages/'
+    | '/dashboard/messenger/'
     | '/dashboard/meta-agent/'
     | '/dashboard/pipeline/'
     | '/dashboard/qr-codes/'
@@ -2160,6 +2180,7 @@ export interface FileRouteTypes {
     | '/blog/tag/sitemap.xml'
     | '/dashboard/campaign/$campaignId/edit'
     | '/dashboard/instagram/flowbots/$flowbotId'
+    | '/dashboard/messenger/flowbots/$flowbotId'
     | '/dashboard/settings/members/$memberId'
     | '/dashboard/settings/members/roles'
     | '/login/complete-login/'
@@ -2354,6 +2375,7 @@ export interface FileRouteTypes {
     | '/dashboard/inbox'
     | '/dashboard/instagram'
     | '/dashboard/link-pages'
+    | '/dashboard/messenger'
     | '/dashboard/meta-agent'
     | '/dashboard/pipeline'
     | '/dashboard/qr-codes'
@@ -2368,6 +2390,7 @@ export interface FileRouteTypes {
     | '/blog/tag/sitemap.xml'
     | '/dashboard/campaign/$campaignId/edit'
     | '/dashboard/instagram/flowbots/$flowbotId'
+    | '/dashboard/messenger/flowbots/$flowbotId'
     | '/dashboard/settings/members/$memberId'
     | '/dashboard/settings/members/roles'
     | '/login/complete-login'
@@ -2570,6 +2593,7 @@ export interface FileRouteTypes {
     | '/dashboard/inbox/'
     | '/dashboard/instagram/'
     | '/dashboard/link-pages/'
+    | '/dashboard/messenger/'
     | '/dashboard/meta-agent/'
     | '/dashboard/pipeline/'
     | '/dashboard/qr-codes/'
@@ -2584,6 +2608,7 @@ export interface FileRouteTypes {
     | '/(marketing)/blog/tag/sitemap.xml'
     | '/dashboard/campaign/$campaignId/edit'
     | '/dashboard/instagram/flowbots/$flowbotId'
+    | '/dashboard/messenger/flowbots/$flowbotId'
     | '/dashboard/settings/members/$memberId'
     | '/dashboard/settings/members/roles'
     | '/(auth)/login/complete-login/'
@@ -3153,6 +3178,13 @@ declare module '@tanstack/react-router' {
       path: '/link-pages'
       fullPath: '/dashboard/link-pages/'
       preLoaderRoute: typeof DashboardLinkPagesIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/messenger/': {
+      id: '/dashboard/messenger/'
+      path: '/messenger'
+      fullPath: '/dashboard/messenger/'
+      preLoaderRoute: typeof DashboardMessengerIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/meta-agent/': {
@@ -3840,6 +3872,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/loyalty/transactions/'
       preLoaderRoute: typeof DashboardLoyaltyTransactionsIndexRouteImport
       parentRoute: typeof DashboardLoyaltyRouteRoute
+    }
+    '/dashboard/messenger/flowbots/$flowbotId': {
+      id: '/dashboard/messenger/flowbots/$flowbotId'
+      path: '/messenger/flowbots/$flowbotId'
+      fullPath: '/dashboard/messenger/flowbots/$flowbotId'
+      preLoaderRoute: typeof DashboardMessengerFlowbotsFlowbotIdRouteImport
+      parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/qr-codes/$shortUrlId/': {
       id: '/dashboard/qr-codes/$shortUrlId/'
@@ -4642,6 +4681,7 @@ interface DashboardRouteRouteChildren {
   DashboardInboxIndexRoute: typeof DashboardInboxIndexRoute
   DashboardInstagramIndexRoute: typeof DashboardInstagramIndexRoute
   DashboardLinkPagesIndexRoute: typeof DashboardLinkPagesIndexRoute
+  DashboardMessengerIndexRoute: typeof DashboardMessengerIndexRoute
   DashboardPipelineIndexRoute: typeof DashboardPipelineIndexRoute
   DashboardQrCodesIndexRoute: typeof DashboardQrCodesIndexRoute
   DashboardQrCreatorIndexRoute: typeof DashboardQrCreatorIndexRoute
@@ -4653,6 +4693,7 @@ interface DashboardRouteRouteChildren {
   DashboardWhatsappIndexRoute: typeof DashboardWhatsappIndexRoute
   DashboardCampaignCampaignIdEditRoute: typeof DashboardCampaignCampaignIdEditRoute
   DashboardInstagramFlowbotsFlowbotIdRoute: typeof DashboardInstagramFlowbotsFlowbotIdRoute
+  DashboardMessengerFlowbotsFlowbotIdRoute: typeof DashboardMessengerFlowbotsFlowbotIdRoute
   DashboardSettingsMembersMemberIdRoute: typeof DashboardSettingsMembersMemberIdRoute
   DashboardSettingsMembersRolesRoute: typeof DashboardSettingsMembersRolesRoute
   DashboardAnalyticsStaffidIndexRoute: typeof DashboardAnalyticsStaffidIndexRoute
@@ -4714,6 +4755,7 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardInboxIndexRoute: DashboardInboxIndexRoute,
   DashboardInstagramIndexRoute: DashboardInstagramIndexRoute,
   DashboardLinkPagesIndexRoute: DashboardLinkPagesIndexRoute,
+  DashboardMessengerIndexRoute: DashboardMessengerIndexRoute,
   DashboardPipelineIndexRoute: DashboardPipelineIndexRoute,
   DashboardQrCodesIndexRoute: DashboardQrCodesIndexRoute,
   DashboardQrCreatorIndexRoute: DashboardQrCreatorIndexRoute,
@@ -4726,6 +4768,8 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardCampaignCampaignIdEditRoute: DashboardCampaignCampaignIdEditRoute,
   DashboardInstagramFlowbotsFlowbotIdRoute:
     DashboardInstagramFlowbotsFlowbotIdRoute,
+  DashboardMessengerFlowbotsFlowbotIdRoute:
+    DashboardMessengerFlowbotsFlowbotIdRoute,
   DashboardSettingsMembersMemberIdRoute: DashboardSettingsMembersMemberIdRoute,
   DashboardSettingsMembersRolesRoute: DashboardSettingsMembersRolesRoute,
   DashboardAnalyticsStaffidIndexRoute: DashboardAnalyticsStaffidIndexRoute,
