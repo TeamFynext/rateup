@@ -40,6 +40,7 @@ import {
 } from "./flow.schema.js";
 import { createSurveyFromFlow } from "./flow.utils.js";
 import { metaCategoriesFor } from "./flowCategories.js";
+import { FlowValidationError } from "./flowValidation.js";
 import {
   buildFeedbackFlowJson,
   buildFeedbackTemplateMessage,
@@ -425,8 +426,19 @@ export async function saveFlowJsonToWhatsappHandler(
 
     res.status(200).send();
   } catch (error) {
+    // An unfinished element is the user's to fix, so it is a 400 that names it.
+    if (error instanceof FlowValidationError) {
+      log.info(
+        { dbFlowId: req.params.dbFlowId, errors: error.errors },
+        "Flow JSON failed validation",
+      );
+      return res.status(400).send({ message: error.message, errors: error.errors });
+    }
     log.error({ err: error }, "Error saving flow json to whatsapp");
-    res.status(500).send(error instanceof Error ? error.message : "Unknown error");
+    if (error instanceof GraphApiError) {
+      return res.status(400).send({ message: getGraphApiErrorMessage(error) });
+    }
+    res.status(500).send({ message: error instanceof Error ? error.message : "Unknown error" });
   }
 }
 
