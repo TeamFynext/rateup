@@ -11,6 +11,52 @@ import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 import { getFacebookWebhookEvent } from "./facebook.util.js";
 import prisma from "../../../utils/prisma.js";
 import { getMessengerChannel } from "../metaChannel/metaChannel.service.js";
+import { checkAndExecuteRuleByTriggerEvent } from "../automatedReply/wa_automatedReply.utils.js";
+import { handleMetaFlowUserResponse } from "../automatedReply/metaFlow.service.js";
+
+/**
+ * What an inbound Messenger message does once it is stored: an answer to a running
+ * chatbot belongs to that chatbot, and anything else goes to the Page's rules. Mirrors
+ * the Instagram handlers. Errors are logged, not thrown: the message is already saved.
+ */
+async function continueFlowOrRunRules(params: {
+  psid: string;
+  orgId: string;
+  fbPageId: string | null | undefined;
+  /** What the user typed or the title of what they tapped. */
+  text: string;
+  /** The tapped quick reply's or button's payload, when there was one. */
+  buttonPayload?: string;
+  /** What keyword rules match against; defaults to `text`. */
+  ruleMessage?: string;
+}) {
+  const { psid, orgId, fbPageId, text, buttonPayload, ruleMessage = text } = params;
+  if (!fbPageId) {
+    log.warn({ orgId }, "[Facebook] Messenger channel has no page id; skipping flows and rules");
+    return;
+  }
+
+  try {
+    const answeredFlow = await handleMetaFlowUserResponse(
+      psid,
+      text,
+      orgId,
+      { platform: PlatformType.FACEBOOK, accountId: fbPageId },
+      buttonPayload,
+    );
+    if (answeredFlow) return;
+
+    await checkAndExecuteRuleByTriggerEvent("MESSAGE_RECEIVED", {
+      orgId,
+      platform: "FACEBOOK",
+      phoneNumberId: fbPageId,
+      phone: psid,
+      message: ruleMessage,
+    });
+  } catch (error) {
+    log.error({ err: error, senderId: psid }, "[Facebook] Error running flows and rules");
+  }
+}
 
 export async function getFacebookUserDetailsFromMeta(userId: string, pageId: string) {
   try {
@@ -215,7 +261,17 @@ export async function handleFacebookMessages(
       },
       `[Facebook] Error handling message from user ${sender.id}`,
     );
+    // Not stored, so not answered either: a flow or rule replying to a message the
+    // inbox never shows would leave the agent looking at half a conversation.
+    return;
   }
+
+  await continueFlowOrRunRules({
+    psid: sender.id,
+    orgId,
+    fbPageId,
+    text: message?.text ?? "",
+  });
 }
 
 export async function handleFacebookMessageDelivered(data: FacebookWebhookBody) {
@@ -365,7 +421,18 @@ export async function handleFacebookPostback(
     );
   } catch (error) {
     log.error({ err: error, senderId: sender.id }, "[Facebook] Error handling postback");
+    return;
   }
+
+  // As on Instagram, rules see the button's payload; a flow matches either.
+  await continueFlowOrRunRules({
+    psid: sender.id,
+    orgId,
+    fbPageId,
+    text: postback.title ?? "",
+    buttonPayload: postback.payload,
+    ruleMessage: postback.payload,
+  });
 }
 
 export async function handleFacebookQuickReply(
@@ -415,5 +482,15 @@ export async function handleFacebookQuickReply(
     );
   } catch (error) {
     log.error({ err: error }, `[Facebook] Error handling quick_reply from user ${sender.id}`);
+    return;
   }
+
+  // Messenger sends a quick-reply tap as its own event, so it needs the same hand-off.
+  await continueFlowOrRunRules({
+    psid: sender.id,
+    orgId,
+    fbPageId,
+    text: message.text ?? "",
+    buttonPayload: message.quick_reply.payload,
+  });
 }

@@ -1,73 +1,83 @@
 /**
- * Instagram Automation Routes
- * HTTP endpoints for managing Instagram automations
+ * Routes for the Meta chatbot flows. Registered twice in wa_routes.ts: once at
+ * `/instagram-automation` for Instagram and once at `/messenger-automation` for
+ * Facebook Messenger.
  */
 
 import { FastifyInstance } from "fastify";
-import {
-  getInstagramAutomationsHandler,
-  getInstagramAutomationByIdHandler,
-  createInstagramAutomationHandler,
-  updateInstagramAutomationHandler,
-  deleteInstagramAutomationHandler,
-  initiateInstagramAutomationHandler,
-} from "./instagram_automatedReply.controller.js";
+import { metaAutomationHandlers } from "./instagram_automatedReply.controller.js";
 import {
   instagramAutomationIdParamSchema,
   createInstagramAutomationBodySchema,
   updateInstagramAutomationBodySchema,
-  initiateInstagramAutomationBodySchema,
+  initiateMetaAutomationBodySchema,
+  cloneMetaAutomationBodySchema,
 } from "./instagram_automatedReply.schema.js";
 import { declareAccess } from "../../../authz/registry.js";
+import type { MetaAutomationPlatform } from "./instagram_automatedReply.service.js";
 
-export async function instagramAutomationRoutes(server: FastifyInstance) {
-  // Add authentication check to all routes
-  declareAccess(server, { access: "session" });
+export async function metaAutomationRoutes(
+  server: FastifyInstance,
+  { platform }: { platform: MetaAutomationPlatform },
+) {
+  // Same permissions as the WhatsApp flowbot routes.
+  declareAccess(server, { read: "automation.read", write: "automation.manage" });
 
-  // Get all Instagram automations for the organization
+  const handlers = metaAutomationHandlers(platform);
+
+  // Get all automations for the organization
   server.get("/", {
-    handler: getInstagramAutomationsHandler,
+    handler: handlers.list,
   });
 
-  // Get specific Instagram automation by ID
+  // Get a specific automation by ID
   server.get("/:id", {
     schema: {
       params: instagramAutomationIdParamSchema,
     },
-    handler: getInstagramAutomationByIdHandler,
+    handler: handlers.getById,
   });
 
-  // Create a new Instagram automation
+  // Create a new automation
   server.post("/", {
     schema: {
       body: createInstagramAutomationBodySchema,
     },
-    handler: createInstagramAutomationHandler,
+    handler: handlers.create,
   });
 
-  // Update an existing Instagram automation
+  // Update an existing automation
   server.put("/:id", {
     schema: {
       params: instagramAutomationIdParamSchema,
       body: updateInstagramAutomationBodySchema,
     },
-    handler: updateInstagramAutomationHandler,
+    handler: handlers.update,
   });
 
-  // Delete an Instagram automation
+  // Delete an automation
   server.delete("/:id", {
     schema: {
       params: instagramAutomationIdParamSchema,
     },
-    handler: deleteInstagramAutomationHandler,
+    handler: handlers.remove,
   });
 
-  // Manually trigger an Instagram automation for a specific user
+  // Copy an automation, graph and all
+  server.post("/:id/clone", {
+    schema: {
+      params: instagramAutomationIdParamSchema,
+      body: cloneMetaAutomationBodySchema,
+    },
+    handler: handlers.clone,
+  });
+
+  // Manually trigger an automation for a specific user
   server.post("/:id/initiate", {
     schema: {
       params: instagramAutomationIdParamSchema,
-      body: initiateInstagramAutomationBodySchema,
+      body: initiateMetaAutomationBodySchema,
     },
-    handler: initiateInstagramAutomationHandler,
+    handler: handlers.initiate,
   });
 }

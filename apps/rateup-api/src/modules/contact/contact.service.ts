@@ -30,10 +30,11 @@ import {
   resolveInboxActor,
 } from "./conversation/conversation.service.js";
 import type { InboxActor } from "./conversation/conversation.schema.js";
-import { WaMessageAssignStatusTab, WaMessageClosedStatus } from "../whatsapp/constants.js";
+import { WaMessageClosedStatus } from "../whatsapp/constants.js";
 import {
   checkAndExecuteRuleByTriggerEvent,
   resolveContactChannel,
+  ruleRecipient,
 } from "../whatsapp/automatedReply/wa_automatedReply.utils.js";
 import { emitIntegrationEvent } from "../integrations/events/emitIntegrationEvent.js";
 import {
@@ -104,12 +105,13 @@ export async function createContact(
     await assignWaMessageToUser({ assignees, contactId: user.id }, user.orgId, userId);
   }
   if (options.quiet) return user;
+  // A contact created here has no thread yet, so this resolves off its own
+  // identifiers and stays "ALL" for a plain phone import.
+  const createdChannel = await resolveContactChannel(user);
   await checkAndExecuteRuleByTriggerEvent("CONTACT_CREATED", {
     orgId: user?.orgId,
-    phone: contact?.phone,
-    // A contact created here has no thread yet, so this resolves off its own
-    // identifiers and stays "ALL" for a plain phone import.
-    ...(await resolveContactChannel(user)),
+    phone: ruleRecipient({ phone: contact?.phone, psid: user.psid }, createdChannel.platform),
+    ...createdChannel,
   });
   let lifecycleName;
   if (user.lifecycleId) {
@@ -501,6 +503,21 @@ export async function deleteContactById(contactId: string, orgId: string) {
   return user;
 }
 
+/**
+ * The statuses that run "chat closed" rules. The inbox's Close button stores RESOLVED and
+ * its "close as unresolved" UNRESOLVED; with only CLOSED here, closing from the inbox never
+ * ran them. Spam is left out: a spammer is not sent a closing message.
+ */
+const CHAT_CLOSED_STATUSES: readonly string[] = [
+  WaMessageAssignStatus.CLOSED,
+  WaMessageAssignStatus.RESOLVED,
+  WaMessageAssignStatus.UNRESOLVED,
+];
+
+function firesChatClosed(status: string): boolean {
+  return CHAT_CLOSED_STATUSES.includes(status);
+}
+
 //used in zapier controller also
 export async function updateContactById(
   contactId: string,
@@ -695,7 +712,7 @@ export async function updateContactById(
   // WhatsApp rule firing on an Instagram chat would try to WhatsApp-message an
   // IGSID and fail.
   const triggerEvent =
-    contact.waMessageAssignStatus === WaMessageAssignStatusTab.Closed
+    contact.waMessageAssignStatus && firesChatClosed(contact.waMessageAssignStatus)
       ? "CHAT_CLOSED"
       : contact.waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED
         ? "CHAT_ASSIGNED"
@@ -706,7 +723,7 @@ export async function updateContactById(
     const channel = await resolveContactChannel(updatedContact);
     checkAndExecuteRuleByTriggerEvent(triggerEvent, {
       orgId: updatedContact?.orgId,
-      phone: updatedContact.phone,
+      phone: ruleRecipient(updatedContact, channel.platform),
       ...channel,
     });
   }
@@ -1245,6 +1262,8 @@ export async function bulkUpdateWaMessageAssignStatus(
     select: {
       id: true,
       phone: true,
+      igsId: true,
+      psid: true,
       name: true,
       orgId: true,
       waMessageAssignStatus: true,
@@ -1345,17 +1364,16 @@ export async function bulkUpdateWaMessageAssignStatus(
 
   await Promise.all(
     contacts.map(async (contact) => {
-      const bulkTriggerEvent =
-        waMessageAssignStatus === WaMessageAssignStatusTab.Closed
-          ? "CHAT_CLOSED"
-          : waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED
-            ? "CHAT_ASSIGNED"
-            : null;
+      const bulkTriggerEvent = firesChatClosed(waMessageAssignStatus)
+        ? "CHAT_CLOSED"
+        : waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED
+          ? "CHAT_ASSIGNED"
+          : null;
       if (bulkTriggerEvent) {
         const channel = await resolveContactChannel(contact);
         checkAndExecuteRuleByTriggerEvent(bulkTriggerEvent, {
           orgId: contact.orgId,
-          phone: contact.phone,
+          phone: ruleRecipient(contact, channel.platform),
           ...channel,
         });
       }

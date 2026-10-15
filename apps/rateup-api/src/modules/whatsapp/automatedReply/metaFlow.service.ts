@@ -1,7 +1,10 @@
 /**
- * Instagram Automation Execution Service
- * Handles the execution of Instagram automation flows
- * Completely isolated from WhatsApp to prevent cross-platform interference
+ * Runs chatbot flows over Meta's Send API: Instagram DMs and Facebook Messenger.
+ *
+ * Both surfaces take the same message payloads, so one engine serves them; the channel a
+ * run goes out on is passed in as a `MetaFlowChannel`. Nodes that only exist on Instagram
+ * (product template, follow check, comment private replies) are skipped on Messenger.
+ * WhatsApp flows have their own engine in whatsappSurvey/wasurvey.controller.ts.
  */
 
 import { log } from "../../../utils/logger.js";
@@ -9,21 +12,32 @@ import { PlatformType } from "../../../../generated/prisma/enums.js";
 import prisma from "../../../utils/prisma.js";
 import type { Prisma } from "../../../../generated/prisma/client.js";
 import {
-  createOrUpdateInstagramAutomationMessage,
-  logInstagramAutomationAction,
+  createOrUpdateMetaFlowRun,
+  logMetaFlowAction,
 } from "./instagram_automatedReply.service.js";
 import { parseToWhatsAppFormat } from "../whatsappSurvey/wasurvey.utils.js";
 import {
   doesUserFollowInstagramAccount,
-  sendInstagramGenericTemplate,
-  sendInstagramQuickReply,
-  sendInstagramTextMessage,
-  sendInstagramImage,
-  sendInstagramProductTemplate,
   sendInstagramPrivateReply,
+  sendInstagramProductTemplate,
 } from "../instagram/instagram_messaging.service.js";
+import {
+  sendSendApiAudio,
+  sendSendApiGenericTemplate,
+  sendSendApiImage,
+  sendSendApiQuickReply,
+  sendSendApiText,
+  sendSendApiVideo,
+  type MetaFlowChannel,
+} from "../meta/sendApiMessages.js";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload.js";
+import {
+  getOrCreateContactByIgsId,
+  getOrCreateContactByPsid,
+} from "../../contact/contact.service.js";
+import { runAssignNode } from "./assignNode.service.js";
 import type {
+  AssignNodeData,
   AutomationEdge,
   AutomationNode,
   InstagramQuickReplyOption,
@@ -31,28 +45,27 @@ import type {
   InstagramTemplateElement,
 } from "../whatsappSurvey/node-types.js";
 
-// Type definitions for Instagram automation nodes
-export type InstagramNodeType =
-  | "startNode"
-  | "endNode"
-  | "textNode"
-  | "imageNode"
-  | "pauseNode"
-  | "textInputNode"
-  | "instagramQuickReplyNode"
-  | "instagramGenericTemplateNode"
-  | "instagramStoryReplyNode"
-  | "instagramProductTemplateNode"
-  | "instagramIceBreakerNode"
-  | "instagramFollowCheckNode";
+export type { MetaFlowChannel } from "../meta/sendApiMessages.js";
 
-/** Nodes on an Instagram automation graph are the shared node shape, narrowed by `type`. */
-type InstagramNode = AutomationNode;
+/** Nodes on a Meta flow graph are the shared node shape, narrowed by `type`. */
+type MetaFlowNode = AutomationNode;
 
 // A node's `data` is a free-form JSON blob written by the flow builder; these read one
 // field out of it without pretending the whole blob has a fixed shape.
 function nodeString(value: unknown): string | undefined {
   return typeof value === "string" && value.length > 0 ? value : undefined;
+}
+/**
+ * A message field as the text that goes out. The flow builder saves bodies, questions and
+ * captions as rich-text documents and quick-reply text as a plain string; both come out
+ * here as a string, empty when the field is missing.
+ */
+function nodeText(value: unknown): string {
+  if (typeof value === "string") return parseToWhatsAppFormat(value);
+  if (value && typeof value === "object") {
+    return parseToWhatsAppFormat(value as Parameters<typeof parseToWhatsAppFormat>[0]);
+  }
+  return "";
 }
 function nodeNumber(value: unknown): number {
   return typeof value === "number" ? value : 0;
@@ -61,7 +74,7 @@ function nodeArray<T>(value: unknown): T[] {
   return Array.isArray(value) ? (value as T[]) : [];
 }
 
-/** Nodes that stop the flow until the user answers; handleInstagramUserResponse resumes it. */
+/** Nodes that stop the flow until the user answers; handleMetaFlowUserResponse resumes it. */
 const WAITS_FOR_REPLY = new Set([
   "instagramQuickReplyNode",
   "instagramGenericTemplateNode",
@@ -71,17 +84,27 @@ const WAITS_FOR_REPLY = new Set([
 /** Meta lets the business message a user only within 24h of their last message. */
 const REPLY_WINDOW_MS = 24 * 60 * 60 * 1000;
 
+function logPrefix(channel: MetaFlowChannel) {
+  return channel.platform === PlatformType.FACEBOOK
+    ? "[Messenger Automation]"
+    : "[Instagram Automation]";
+}
+
+function isInstagram(channel: MetaFlowChannel) {
+  return channel.platform === PlatformType.INSTAGRAM;
+}
+
 /** Kept in the tracking row's `response` column. */
-interface InstagramFlowProgress {
+interface MetaFlowProgress {
   /** When the flow stopped at `currentNode` to wait; absent when it is not waiting. */
   waitingAt?: string;
   /** textInputNode answers, by the node's variableName. */
   answers?: Record<string, string>;
 }
 
-function readProgress(value: unknown): InstagramFlowProgress {
+function readProgress(value: unknown): MetaFlowProgress {
   return value && typeof value === "object" && !Array.isArray(value)
-    ? (value as InstagramFlowProgress)
+    ? (value as MetaFlowProgress)
     : {};
 }
 
@@ -95,7 +118,7 @@ function templateButtonHandle(button: InstagramTemplateButton, card: number, ind
 }
 
 /** The tappable choices of a waiting node, as handle id + the title the user sees. */
-function nodeChoices(node: InstagramNode): { handle: string; title: string }[] {
+function nodeChoices(node: MetaFlowNode): { handle: string; title: string }[] {
   if (node.type === "instagramQuickReplyNode") {
     const options = nodeArray<InstagramQuickReplyOption>(
       node.data?.quick_replies ?? node.data?.quickReplies,
@@ -120,7 +143,7 @@ function nodeChoices(node: InstagramNode): { handle: string; title: string }[] {
  * Typed text counts when it equals a choice's title, else it takes the unlabelled branch.
  */
 function pickReplyBranch(
-  node: InstagramNode,
+  node: MetaFlowNode,
   edges: AutomationEdge[],
   message: string,
   buttonPayload?: string,
@@ -132,12 +155,12 @@ function pickReplyBranch(
   return edges.filter((edge) => !edge.sourceHandle);
 }
 
-async function waitForInstagramReply(automationMessageId: string, nodeId: string) {
+async function waitForReply(automationMessageId: string, nodeId: string) {
   const row = await prisma.waAutomatedReplyMessage.findUnique({
     where: { id: automationMessageId },
     select: { response: true },
   });
-  const progress: InstagramFlowProgress = {
+  const progress: MetaFlowProgress = {
     ...readProgress(row?.response),
     waitingAt: new Date().toISOString(),
   };
@@ -151,7 +174,7 @@ async function waitForInstagramReply(automationMessageId: string, nodeId: string
   });
 }
 
-export interface InstagramAutomation {
+export interface MetaFlowAutomation {
   id: string;
   orgId: string;
   name: string;
@@ -160,29 +183,31 @@ export interface InstagramAutomation {
 }
 
 /**
- * Start an Instagram automation flow from the beginning
+ * Start a flow from the beginning. `recipientId` is the igsId on Instagram and the psid
+ * on Messenger; `commentId` (Instagram only) makes the first message a private reply.
  */
-export async function startInstagramAutomationFlow(
-  igsId: string,
-  automation: InstagramAutomation,
+export async function startMetaFlow(
+  recipientId: string,
+  automation: MetaFlowAutomation,
   orgId: string,
-  ibaId: string,
+  channel: MetaFlowChannel,
   commentId?: string,
 ): Promise<void> {
+  const prefix = logPrefix(channel);
   try {
-    log.info(`[Instagram Automation] Starting flow ${automation.id} for igsId ${igsId}`);
+    log.info(`${prefix} Starting flow ${automation.id} for ${recipientId}`);
 
     // Find the start node
     const startNode = automation.matchData?.json?.nodes?.find((node) => node.type === "startNode");
 
     if (!startNode) {
-      log.error(`[Instagram Automation] No start node found in automation ${automation.id}`);
+      log.error(`${prefix} No start node found in automation ${automation.id}`);
       return;
     }
 
     // Create automation message tracking
-    const automationMessage = await createOrUpdateInstagramAutomationMessage({
-      igsId,
+    const automationMessage = await createOrUpdateMetaFlowRun({
+      recipientId,
       automationId: automation.id,
       orgId,
       currentNode: startNode.id,
@@ -190,8 +215,8 @@ export async function startInstagramAutomationFlow(
     });
 
     // Log the action
-    await logInstagramAutomationAction({
-      igsId,
+    await logMetaFlowAction({
+      recipientId,
       nodeId: startNode.id,
       automationId: automation.id,
       orgId,
@@ -202,21 +227,21 @@ export async function startInstagramAutomationFlow(
     });
 
     // Process the next node after start
-    await processNextInstagramNode(
-      igsId,
+    await processNextMetaFlowNode(
+      recipientId,
       automation,
       startNode.id,
       orgId,
       automationMessage.id,
-      ibaId,
+      channel,
       commentId,
     );
   } catch (error) {
-    log.error({ err: error }, `[Instagram Automation] Error starting flow ${automation.id}`);
+    log.error({ err: error }, `${prefix} Error starting flow ${automation.id}`);
     // Still not thrown — a broken flow must not take down the webhook that triggered it —
     // but the tracking row is marked so a half-run flow is queryable rather than
     // indistinguishable from a completed one.
-    await markInstagramAutomationStopped(igsId, automation.id, error);
+    await markMetaFlowStopped(recipientId, automation.id, error);
   }
 }
 
@@ -225,39 +250,40 @@ export async function startInstagramAutomationFlow(
  * not mask the original error, so it is logged and swallowed. updateMany is used because
  * the tracking row may not exist yet if the flow failed before creating it.
  *
- * `paused` is the marker: WaAutomationProgressStatus has no `failed` value, so a crash
- * shares a status with a deliberate wait for user input. Distinguish the two by the
- * accompanying error log, not by the row alone.
+ * `paused` is the marker: WaAutomationProgressStatus has no `failed` value, so a crash —
+ * or a message Meta refused, such as one outside the 24-hour window — shares a status
+ * with a deliberate pause. Distinguish the two by the accompanying error log.
  */
-async function markInstagramAutomationStopped(igsId: string, automationId: string, cause: unknown) {
+async function markMetaFlowStopped(recipientId: string, automationId: string, cause: unknown) {
   try {
     await prisma.waAutomatedReplyMessage.updateMany({
-      where: { phone: igsId, waAutomatedReplyId: automationId },
+      where: { phone: recipientId, waAutomatedReplyId: automationId },
       data: { status: "paused" },
     });
   } catch (markError) {
     log.error(
       { err: markError, cause },
-      `[Instagram Automation] Could not mark automation ${automationId} stopped`,
+      `[Meta Automation] Could not mark automation ${automationId} stopped`,
     );
   }
 }
 
 /**
- * Process the next node in an Instagram automation flow
+ * Process the next node in a flow
  */
-export async function processNextInstagramNode(
-  igsId: string,
-  automation: InstagramAutomation,
+export async function processNextMetaFlowNode(
+  recipientId: string,
+  automation: MetaFlowAutomation,
   nodeId: string,
   orgId: string,
   automationMessageId: string,
-  ibaId: string,
+  channel: MetaFlowChannel,
   commentId?: string,
 ): Promise<void> {
+  const prefix = logPrefix(channel);
   try {
     if (!nodeId || !automation?.matchData?.json?.nodes) {
-      log.error("[Instagram Automation] Invalid node ID or automation data");
+      log.error(`${prefix} Invalid node ID or automation data`);
       return;
     }
 
@@ -265,11 +291,11 @@ export async function processNextInstagramNode(
     const node = automation.matchData.json.nodes.find((n) => n.id === nodeId);
 
     if (!node) {
-      log.error(`[Instagram Automation] Node ${nodeId} not found in automation ${automation.id}`);
+      log.error(`${prefix} Node ${nodeId} not found in automation ${automation.id}`);
       return;
     }
 
-    log.info(`[Instagram Automation] Processing node ${nodeId} (${node.type}) for igsId ${igsId}`);
+    log.info(`${prefix} Processing node ${nodeId} (${node.type}) for ${recipientId}`);
 
     // Skip processing for special nodes
     if (["endNode", "startNode"].includes(node.type)) {
@@ -279,113 +305,137 @@ export async function processNextInstagramNode(
       if (nextEdges && nextEdges.length > 0) {
         for (const nextEdge of nextEdges) {
           await prisma.waAutomatedReplyMessage.updateMany({
-            where: { phone: igsId, waAutomatedReplyId: automation.id },
+            where: { phone: recipientId, waAutomatedReplyId: automation.id },
             data: { currentNode: nextEdge.target },
           });
 
-          await processNextInstagramNode(
-            igsId,
+          await processNextMetaFlowNode(
+            recipientId,
             automation,
             nextEdge.target,
             orgId,
             automationMessageId,
-            ibaId,
+            channel,
             commentId,
           );
         }
       } else if (node.type === "endNode") {
         // Mark as completed
         await prisma.waAutomatedReplyMessage.updateMany({
-          where: { phone: igsId, waAutomatedReplyId: automation.id },
+          where: { phone: recipientId, waAutomatedReplyId: automation.id },
           data: { status: "completed" },
         });
 
-        log.info(`[Instagram Automation] Completed automation ${automation.id} for igsId ${igsId}`);
+        log.info(`${prefix} Completed automation ${automation.id} for ${recipientId}`);
       }
 
       return;
     }
 
-    // Process different Instagram node types
+    // Only Instagram can answer a comment privately; Messenger flows never carry one.
+    let remainingCommentId = isInstagram(channel) ? commentId : undefined;
     let messageSent = false;
-    // After using commentId for the first message, clear it so subsequent nodes use igsId
-    let remainingCommentId = commentId;
 
     switch (node.type) {
       case "textNode":
-        await handleInstagramTextNode(node, igsId, orgId, ibaId, remainingCommentId);
+        await handleTextNode(node, recipientId, orgId, channel, remainingCommentId);
         remainingCommentId = undefined;
         messageSent = true;
         break;
 
       case "imageNode":
-        // Images cannot be sent as private replies; send a text private reply first if commentId present
+      case "videoNode":
+      case "audioNode": {
+        // Media cannot be sent as a private reply; send a text private reply first.
         if (remainingCommentId) {
-          const rawText =
-            nodeString(node.data?.caption) ??
-            nodeString(node.data?.body) ??
-            nodeString(node.data?.text) ??
-            "";
-          const fallbackText = parseToWhatsAppFormat(rawText) || "Thanks for your comment!";
-          await sendInstagramPrivateReply(remainingCommentId, fallbackText, ibaId, orgId, igsId);
+          const fallbackText =
+            nodeText(node.data?.caption) ||
+            nodeText(node.data?.body) ||
+            nodeText(node.data?.text) ||
+            "Thanks for your comment!";
+          await sendInstagramPrivateReply(
+            remainingCommentId,
+            fallbackText,
+            channel.accountId,
+            orgId,
+            recipientId,
+          );
           remainingCommentId = undefined;
         }
-        await handleInstagramImageNode(node, igsId, orgId, ibaId);
-        messageSent = true;
+        messageSent = await handleMediaNode(node, recipientId, orgId, channel);
         break;
+      }
 
       case "instagramGenericTemplateNode":
-        await handleInstagramGenericTemplateNode(node, igsId, orgId, ibaId);
+        await handleGenericTemplateNode(node, recipientId, orgId, channel);
         remainingCommentId = undefined;
         messageSent = true;
         break;
 
       case "instagramQuickReplyNode":
-        await handleInstagramQuickReplyNode(node, igsId, orgId, ibaId);
+        await handleQuickReplyNode(node, recipientId, orgId, channel);
         remainingCommentId = undefined;
         messageSent = true;
         break;
 
       case "instagramProductTemplateNode":
-        await handleInstagramProductTemplateNode(node, igsId, orgId, ibaId);
+        if (!isInstagram(channel)) {
+          log.warn(`${prefix} Skipping Instagram-only product template node ${nodeId}`);
+          break;
+        }
+        await handleProductTemplateNode(node, recipientId, orgId, channel);
         remainingCommentId = undefined;
         messageSent = true;
         break;
 
       case "instagramStoryReplyNode":
         // Story replies are handled differently - they respond to story mentions
-        log.info(`[Instagram Automation] Story reply node ${nodeId} - waiting for story mention`);
+        log.info(`${prefix} Story reply node ${nodeId} - waiting for story mention`);
         messageSent = false;
         break;
 
       case "instagramIceBreakerNode":
         // Ice breakers are set at profile level, not sent as messages
-        log.info(`[Instagram Automation] Ice breakers node ${nodeId} - configuration node`);
+        log.info(`${prefix} Ice breakers node ${nodeId} - configuration node`);
         messageSent = false;
         break;
 
       case "instagramFollowCheckNode":
+        if (!isInstagram(channel)) {
+          log.warn(`${prefix} Skipping Instagram-only follow check node ${nodeId}`);
+          break;
+        }
         await followInstagramFollowBranch(
           node,
-          igsId,
+          recipientId,
           automation,
           orgId,
           automationMessageId,
-          ibaId,
+          channel,
           remainingCommentId,
         );
         return;
 
+      case "assignNode":
+        await handleAssignNode(node, recipientId, orgId, channel, automation.id);
+        break;
+
       case "pauseNode":
-        await handleInstagramPauseNode(node, igsId, orgId, automation, automationMessageId, ibaId);
+        await handlePauseNode(node, recipientId, orgId, automation, automationMessageId, channel);
         return; // Pause node returns early
 
       case "textInputNode": {
-        const question = parseToWhatsAppFormat(nodeString(node.data?.question) ?? "");
+        const question = nodeText(node.data?.question);
         if (question && remainingCommentId) {
-          await sendInstagramPrivateReply(remainingCommentId, question, ibaId, orgId, igsId);
+          await sendInstagramPrivateReply(
+            remainingCommentId,
+            question,
+            channel.accountId,
+            orgId,
+            recipientId,
+          );
         } else if (question) {
-          await sendInstagramTextMessage(igsId, question, orgId, ibaId);
+          await sendSendApiText(channel, recipientId, orgId, question);
         }
         remainingCommentId = undefined;
         messageSent = Boolean(question);
@@ -393,13 +443,13 @@ export async function processNextInstagramNode(
       }
 
       default:
-        log.warn(`[Instagram Automation] Unknown node type: ${node.type} at node ${nodeId}`);
+        log.warn(`${prefix} Unknown node type: ${node.type} at node ${nodeId}`);
         break;
     }
 
     // Log the node execution
-    await logInstagramAutomationAction({
-      igsId,
+    await logMetaFlowAction({
+      recipientId,
       nodeId: node.id,
       automationId: automation.id,
       orgId,
@@ -414,41 +464,42 @@ export async function processNextInstagramNode(
 
     // A choice with nowhere to go has nothing to wait for; a question still records its answer.
     if (WAITS_FOR_REPLY.has(node.type) && (nextEdges.length > 0 || node.type === "textInputNode")) {
-      await waitForInstagramReply(automationMessageId, nodeId);
+      await waitForReply(automationMessageId, nodeId);
       return;
     }
 
     if (nextEdges && nextEdges.length > 0) {
       for (const nextEdge of nextEdges) {
         await prisma.waAutomatedReplyMessage.updateMany({
-          where: { phone: igsId, waAutomatedReplyId: automation.id },
+          where: { phone: recipientId, waAutomatedReplyId: automation.id },
           data: { currentNode: nextEdge.target },
         });
 
-        await processNextInstagramNode(
-          igsId,
+        await processNextMetaFlowNode(
+          recipientId,
           automation,
           nextEdge.target,
           orgId,
           automationMessageId,
-          ibaId,
+          channel,
           remainingCommentId,
         );
       }
     } else {
       // No next node, mark as completed
       await prisma.waAutomatedReplyMessage.updateMany({
-        where: { phone: igsId, waAutomatedReplyId: automation.id },
+        where: { phone: recipientId, waAutomatedReplyId: automation.id },
         data: { status: "completed" },
       });
 
-      log.info(`[Instagram Automation] Completed automation ${automation.id} for igsId ${igsId}`);
+      log.info(`${prefix} Completed automation ${automation.id} for ${recipientId}`);
     }
   } catch (error) {
-    log.error({ err: error }, `[Instagram Automation] Error processing node ${nodeId}`);
-    // As in startInstagramAutomationFlow: not thrown, but recorded so the flow that
-    // stopped here can be found later.
-    await markInstagramAutomationStopped(igsId, automation.id, error);
+    // A send Meta refused lands here too, so the flow stops at the step that failed
+    // instead of walking on with nothing delivered. Not thrown, but recorded so the
+    // flow that stopped here can be found later.
+    log.error({ err: error }, `${prefix} Error processing node ${nodeId}`);
+    await markMetaFlowStopped(recipientId, automation.id, error);
   }
 }
 
@@ -457,19 +508,19 @@ const FOLLOWING_HANDLE = "following";
 const NOT_FOLLOWING_HANDLE = "notFollowing";
 
 async function followInstagramFollowBranch(
-  node: InstagramNode,
-  igsId: string,
-  automation: InstagramAutomation,
+  node: MetaFlowNode,
+  recipientId: string,
+  automation: MetaFlowAutomation,
   orgId: string,
   automationMessageId: string,
-  ibaId: string,
+  channel: MetaFlowChannel,
   commentId?: string,
 ): Promise<void> {
-  const follows = await doesUserFollowInstagramAccount(igsId, ibaId);
+  const follows = await doesUserFollowInstagramAccount(recipientId, channel.accountId);
   const handle = follows ? FOLLOWING_HANDLE : NOT_FOLLOWING_HANDLE;
 
-  await logInstagramAutomationAction({
-    igsId,
+  await logMetaFlowAction({
+    recipientId,
     nodeId: node.id,
     automationId: automation.id,
     orgId,
@@ -481,7 +532,7 @@ async function followInstagramFollowBranch(
   );
   if (branch.length === 0) {
     await prisma.waAutomatedReplyMessage.updateMany({
-      where: { phone: igsId, waAutomatedReplyId: automation.id },
+      where: { phone: recipientId, waAutomatedReplyId: automation.id },
       data: { status: "completed" },
     });
     return;
@@ -489,169 +540,160 @@ async function followInstagramFollowBranch(
 
   for (const edge of branch) {
     await prisma.waAutomatedReplyMessage.updateMany({
-      where: { phone: igsId, waAutomatedReplyId: automation.id },
+      where: { phone: recipientId, waAutomatedReplyId: automation.id },
       data: { currentNode: edge.target },
     });
-    await processNextInstagramNode(
-      igsId,
+    await processNextMetaFlowNode(
+      recipientId,
       automation,
       edge.target,
       orgId,
       automationMessageId,
-      ibaId,
+      channel,
       commentId,
     );
   }
 }
 
-/**
- * Handle Instagram text node
- */
-async function handleInstagramTextNode(
-  node: InstagramNode,
-  igsId: string,
+// The node handlers below let a failed send throw: processNextMetaFlowNode's catch stops
+// the flow there. A node with nothing to send is skipped with a warning instead.
+
+async function handleTextNode(
+  node: MetaFlowNode,
+  recipientId: string,
   orgId: string,
-  ibaId: string,
+  channel: MetaFlowChannel,
   commentId?: string,
 ): Promise<void> {
-  try {
-    const rawText = nodeString(node.data?.body) ?? nodeString(node.data?.text) ?? "Hello!";
-    const text = parseToWhatsAppFormat(rawText) || "Hello!";
-    if (commentId) {
-      await sendInstagramPrivateReply(commentId, text, ibaId, orgId, igsId);
-    } else {
-      await sendInstagramTextMessage(igsId, text, orgId, ibaId);
-    }
-  } catch (error) {
-    log.error({ err: error }, `[Instagram Automation] Error handling text node ${node.id}`);
+  const text = nodeText(node.data?.body) || nodeText(node.data?.text) || "Hello!";
+  if (commentId) {
+    await sendInstagramPrivateReply(commentId, text, channel.accountId, orgId, recipientId);
+  } else {
+    await sendSendApiText(channel, recipientId, orgId, text);
   }
 }
 
-/**
- * Handle Instagram image node
- */
-async function handleInstagramImageNode(
-  node: InstagramNode,
-  igsId: string,
+/** imageNode, videoNode or audioNode. Returns whether anything was sent. */
+async function handleMediaNode(
+  node: MetaFlowNode,
+  recipientId: string,
   orgId: string,
-  ibaId: string,
+  channel: MetaFlowChannel,
+): Promise<boolean> {
+  const mediaKey = nodeString(node.data?.link) ?? nodeString(node.data?.url);
+  const caption = nodeText(node.data?.caption);
+
+  if (!mediaKey) {
+    log.warn(`${logPrefix(channel)} ${node.type} ${node.id} has no media URL`);
+    return false;
+  }
+
+  const url = getFileUrlFromKey(mediaKey);
+  if (node.type === "audioNode") {
+    await sendSendApiAudio(channel, recipientId, orgId, url);
+  } else if (node.type === "videoNode") {
+    await sendSendApiVideo(channel, recipientId, orgId, url, caption);
+  } else {
+    await sendSendApiImage(channel, recipientId, orgId, url, caption);
+  }
+  return true;
+}
+
+async function handleGenericTemplateNode(
+  node: MetaFlowNode,
+  recipientId: string,
+  orgId: string,
+  channel: MetaFlowChannel,
 ): Promise<void> {
-  try {
-    const imageUrl = nodeString(node.data?.link) ?? nodeString(node.data?.url);
-    const caption = parseToWhatsAppFormat(nodeString(node.data?.caption) ?? "") || "";
+  const elements = nodeArray<InstagramTemplateElement>(node.data?.elements).map((el, ci) => ({
+    ...el,
+    buttons: (el.buttons ?? []).map((btn, bi) => ({
+      ...btn,
+      payload: btn.type === "postback" ? templateButtonHandle(btn, ci, bi) : btn.payload,
+    })),
+  }));
 
-    if (!imageUrl) {
-      log.warn(`[Instagram Automation] Image node ${node.id} has no image URL`);
-      return;
-    }
-
-    await sendInstagramImage(igsId, getFileUrlFromKey(imageUrl), orgId, ibaId, caption);
-  } catch (error) {
-    log.error({ err: error }, `[Instagram Automation] Error handling image node ${node.id}`);
+  if (elements.length === 0) {
+    log.warn(`${logPrefix(channel)} Generic template node ${node.id} has no elements`);
+    return;
   }
+
+  await sendSendApiGenericTemplate(channel, recipientId, orgId, elements);
 }
 
-/**
- * Handle Instagram generic template node (carousel with buttons)
- */
-async function handleInstagramGenericTemplateNode(
-  node: InstagramNode,
-  igsId: string,
+async function handleQuickReplyNode(
+  node: MetaFlowNode,
+  recipientId: string,
   orgId: string,
-  ibaId: string,
+  channel: MetaFlowChannel,
 ): Promise<void> {
-  try {
-    const elements = nodeArray<InstagramTemplateElement>(node.data?.elements).map((el, ci) => ({
-      ...el,
-      buttons: (el.buttons ?? []).map((btn, bi) => ({
-        ...btn,
-        payload: btn.type === "postback" ? templateButtonHandle(btn, ci, bi) : btn.payload,
-      })),
-    }));
+  const text = nodeText(node.data?.text) || "Choose an option:";
+  const rawQuickReplies = node.data?.quick_replies ?? node.data?.quickReplies;
+  const quickReplies = nodeArray<InstagramQuickReplyOption>(rawQuickReplies).map((qr, i) => ({
+    ...qr,
+    payload: quickReplyHandle(qr, i),
+  }));
 
-    if (elements.length === 0) {
-      log.warn(`[Instagram Automation] Generic template node ${node.id} has no elements`);
-      return;
-    }
-
-    await sendInstagramGenericTemplate(igsId, elements, orgId, ibaId);
-  } catch (error) {
-    log.error(
-      { err: error },
-      `[Instagram Automation] Error handling generic template node ${node.id}`,
-    );
+  if (quickReplies.length === 0) {
+    log.warn(`${logPrefix(channel)} Quick reply node ${node.id} has no quick replies`);
+    // Send text only
+    await sendSendApiText(channel, recipientId, orgId, text);
+    return;
   }
+
+  await sendSendApiQuickReply(channel, recipientId, orgId, text, quickReplies);
 }
 
-/**
- * Handle Instagram quick reply node
- */
-async function handleInstagramQuickReplyNode(
-  node: InstagramNode,
-  igsId: string,
+async function handleProductTemplateNode(
+  node: MetaFlowNode,
+  recipientId: string,
   orgId: string,
-  ibaId: string,
+  channel: MetaFlowChannel,
 ): Promise<void> {
-  try {
-    const text = parseToWhatsAppFormat(nodeString(node.data?.text) ?? "") || "Choose an option:";
-    const rawQuickReplies = node.data?.quick_replies ?? node.data?.quickReplies;
-    const quickReplies = nodeArray<InstagramQuickReplyOption>(rawQuickReplies).map((qr, i) => ({
-      ...qr,
-      payload: quickReplyHandle(qr, i),
-    }));
+  const productId = nodeString((node.data?.product as { id?: unknown } | undefined)?.id);
+  const declaredIds = nodeArray<string>(node.data?.productIds);
+  const productIds: string[] = declaredIds.length ? declaredIds : productId ? [productId] : [];
 
-    if (quickReplies.length === 0) {
-      log.warn(`[Instagram Automation] Quick reply node ${node.id} has no quick replies`);
-      // Send text only
-      await sendInstagramTextMessage(igsId, text, orgId, ibaId);
-      return;
-    }
-
-    await sendInstagramQuickReply(igsId, text, quickReplies, orgId, ibaId);
-  } catch (error) {
-    log.error({ err: error }, `[Instagram Automation] Error handling quick reply node ${node.id}`);
+  if (productIds.length === 0) {
+    log.warn(`${logPrefix(channel)} Product template node ${node.id} has no product IDs`);
+    return;
   }
+
+  await sendInstagramProductTemplate(recipientId, productIds, orgId, channel.accountId);
 }
 
-/**
- * Handle Instagram product template node
- */
-async function handleInstagramProductTemplateNode(
-  node: InstagramNode,
-  igsId: string,
+/** Assigns the conversation, finding the contact by the id this channel knows them by. */
+async function handleAssignNode(
+  node: MetaFlowNode,
+  recipientId: string,
   orgId: string,
-  ibaId: string,
+  channel: MetaFlowChannel,
+  automationId: string,
 ): Promise<void> {
-  try {
-    const productId = nodeString((node.data?.product as { id?: unknown } | undefined)?.id);
-    const declaredIds = nodeArray<string>(node.data?.productIds);
-    const productIds: string[] = declaredIds.length ? declaredIds : productId ? [productId] : [];
-
-    if (productIds.length === 0) {
-      log.warn(`[Instagram Automation] Product template node ${node.id} has no product IDs`);
-      return;
-    }
-
-    await sendInstagramProductTemplate(igsId, productIds, orgId, ibaId);
-  } catch (error) {
-    log.error(
-      { err: error },
-      `[Instagram Automation] Error handling product template node ${node.id}`,
-    );
+  const contactResult = isInstagram(channel)
+    ? await getOrCreateContactByIgsId(recipientId, orgId, undefined, true)
+    : await getOrCreateContactByPsid(recipientId, orgId, undefined, true);
+  if (!contactResult?.contact) {
+    log.error(`${logPrefix(channel)} No contact for ${recipientId} at assign node ${node.id}`);
+    return;
   }
+  await runAssignNode(
+    node.data as unknown as AssignNodeData | undefined,
+    contactResult.contact.id,
+    orgId,
+    automationId,
+  );
 }
 
-/**
- * Handle Instagram pause node
- */
-async function handleInstagramPauseNode(
-  node: InstagramNode,
-  igsId: string,
+async function handlePauseNode(
+  node: MetaFlowNode,
+  recipientId: string,
   orgId: string,
-  automation: InstagramAutomation,
+  automation: MetaFlowAutomation,
   automationMessageId: string,
-  ibaId: string,
+  channel: MetaFlowChannel,
 ): Promise<void> {
+  const prefix = logPrefix(channel);
   try {
     const duration = nodeNumber(node.data?.duration);
     const unit = nodeString(node.data?.unit) ?? "seconds";
@@ -661,7 +703,7 @@ async function handleInstagramPauseNode(
     else if (unit === "minutes") ms = duration * 60 * 1000;
     else if (unit === "hours") ms = duration * 60 * 60 * 1000;
 
-    log.info(`[Instagram Automation] Pausing automation ${automation.id} for ${duration} ${unit}`);
+    log.info(`${prefix} Pausing automation ${automation.id} for ${duration} ${unit}`);
 
     // Update status to paused
     await prisma.waAutomatedReplyMessage.update({
@@ -673,7 +715,7 @@ async function handleInstagramPauseNode(
     // In production, you might want to use a job queue like BullMQ
     setTimeout(async () => {
       try {
-        log.info(`[Instagram Automation] Resuming automation ${automation.id} after pause`);
+        log.info(`${prefix} Resuming automation ${automation.id} after pause`);
 
         // Update status back to inProgress
         await prisma.waAutomatedReplyMessage.update({
@@ -688,22 +730,22 @@ async function handleInstagramPauseNode(
 
         if (nextEdges && nextEdges.length > 0) {
           for (const nextEdge of nextEdges) {
-            await processNextInstagramNode(
-              igsId,
+            await processNextMetaFlowNode(
+              recipientId,
               automation,
               nextEdge.target,
               orgId,
               automationMessageId,
-              ibaId,
+              channel,
             );
           }
         }
       } catch (error) {
-        log.error({ err: error }, `[Instagram Automation] Error resuming after pause`);
+        log.error({ err: error }, `${prefix} Error resuming after pause`);
       }
     }, ms);
   } catch (error) {
-    log.error({ err: error }, `[Instagram Automation] Error handling pause node ${node.id}`);
+    log.error({ err: error }, `${prefix} Error handling pause node ${node.id}`);
   }
 }
 
@@ -711,21 +753,21 @@ async function handleInstagramPauseNode(
  * Continues the flow a user is waiting in, if their message answers it. Returns true when
  * the message was consumed, so the caller skips the keyword rules for it.
  */
-export async function handleInstagramUserResponse(
-  igsId: string,
+export async function handleMetaFlowUserResponse(
+  recipientId: string,
   message: string,
   orgId: string,
-  ibaId: string,
+  channel: MetaFlowChannel,
   buttonPayload?: string,
 ): Promise<boolean> {
   try {
     const rows = await prisma.waAutomatedReplyMessage.findMany({
       where: {
-        phone: igsId,
+        phone: recipientId,
         orgId,
         status: "inProgress",
         waAutomatedReply: {
-          platform: PlatformType.INSTAGRAM,
+          platform: channel.platform,
         },
       },
       include: {
@@ -743,7 +785,7 @@ export async function handleInstagramUserResponse(
       return false;
     }
 
-    const automation = waiting.waAutomatedReply as unknown as InstagramAutomation;
+    const automation = waiting.waAutomatedReply as unknown as MetaFlowAutomation;
     const currentNodeId = waiting.currentNode;
     const currentNode = automation.matchData?.json?.nodes?.find(
       (node) => node.id === currentNodeId,
@@ -765,8 +807,8 @@ export async function handleInstagramUserResponse(
       return false;
     }
 
-    await logInstagramAutomationAction({
-      igsId,
+    await logMetaFlowAction({
+      recipientId,
       nodeId: currentNodeId,
       automationId: automation.id,
       orgId,
@@ -781,7 +823,7 @@ export async function handleInstagramUserResponse(
     // Dropping waitingAt first means a second message cannot answer the same step twice.
     const { answers } = readProgress(waiting.response);
     const variableName = isQuestion ? nodeString(currentNode.data?.variableName) : undefined;
-    const progress: InstagramFlowProgress = {
+    const progress: MetaFlowProgress = {
       answers: variableName ? { ...answers, [variableName]: message } : answers,
     };
     await prisma.waAutomatedReplyMessage.update({
@@ -798,12 +840,19 @@ export async function handleInstagramUserResponse(
         data: { currentNode: nextEdge.target },
       });
 
-      await processNextInstagramNode(igsId, automation, nextEdge.target, orgId, waiting.id, ibaId);
+      await processNextMetaFlowNode(
+        recipientId,
+        automation,
+        nextEdge.target,
+        orgId,
+        waiting.id,
+        channel,
+      );
     }
 
     return true;
   } catch (error) {
-    log.error({ err: error }, `[Instagram Automation] Error handling user response`);
+    log.error({ err: error }, `${logPrefix(channel)} Error handling user response`);
     return false;
   }
 }

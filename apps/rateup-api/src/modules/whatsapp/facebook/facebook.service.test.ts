@@ -13,6 +13,12 @@ vi.mock("../inbox/message/wamessage.service.js", () => ({
   updateWaMessageByMessageId: vi.fn(),
 }));
 vi.mock("../inbox/message/wamessage.controller.js", () => ({ handleWaMessages: vi.fn() }));
+vi.mock("../automatedReply/wa_automatedReply.utils.js", () => ({
+  checkAndExecuteRuleByTriggerEvent: vi.fn(),
+}));
+vi.mock("../automatedReply/metaFlow.service.js", () => ({
+  handleMetaFlowUserResponse: vi.fn(),
+}));
 vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));
@@ -23,6 +29,8 @@ import { getMessengerChannel } from "../metaChannel/metaChannel.service.js";
 import { updateWaMessageByMessageId } from "../inbox/message/wamessage.service.js";
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
+import { checkAndExecuteRuleByTriggerEvent } from "../automatedReply/wa_automatedReply.utils.js";
+import { handleMetaFlowUserResponse } from "../automatedReply/metaFlow.service.js";
 import {
   getFacebookUserDetailsFromMeta,
   handleFacebookMessageDelivered,
@@ -701,5 +709,102 @@ describe("handleFacebookQuickReply", () => {
 
     await expect(handleFacebookQuickReply(body, SETTINGS)).resolves.toBeUndefined();
     expect(handleWaMessagesMock).not.toHaveBeenCalled();
+  });
+});
+
+// An inbound Messenger message used to stop at the inbox; now it can answer a running
+// chatbot or fire the Page's rules, in that order, as Instagram does.
+describe("chatbots and rules on an inbound Messenger message", () => {
+  const answerFlowMock = handleMetaFlowUserResponse as unknown as Mock;
+  const runRulesMock = checkAndExecuteRuleByTriggerEvent as unknown as Mock;
+  const MESSENGER = { platform: PlatformType.FACEBOOK, accountId: PAGE_ID };
+
+  beforeEach(() => {
+    answerFlowMock.mockResolvedValue(false);
+    runRulesMock.mockResolvedValue(undefined);
+  });
+
+  test("offers a typed message to the waiting chatbot, then to the rules", async () => {
+    await handleFacebookMessages(
+      webhook(messaging({ message: { mid: "mid-1", text: "hello" } })),
+      SETTINGS,
+    );
+
+    expect(answerFlowMock).toHaveBeenCalledWith(PSID, "hello", ORG_ID, MESSENGER, undefined);
+    expect(runRulesMock).toHaveBeenCalledWith("MESSAGE_RECEIVED", {
+      orgId: ORG_ID,
+      platform: "FACEBOOK",
+      phoneNumberId: PAGE_ID,
+      phone: PSID,
+      message: "hello",
+    });
+  });
+
+  test("leaves the rules alone when the message answered a chatbot", async () => {
+    answerFlowMock.mockResolvedValue(true);
+
+    await handleFacebookMessages(
+      webhook(messaging({ message: { mid: "mid-1", text: "a@b.com" } })),
+      SETTINGS,
+    );
+
+    expect(runRulesMock).not.toHaveBeenCalled();
+  });
+
+  test("passes a quick reply's payload so the chatbot takes that branch", async () => {
+    await handleFacebookQuickReply(
+      webhook(
+        messaging({ message: { mid: "mid-1", text: "Yes", quick_reply: { payload: "opt-yes" } } }),
+      ),
+      SETTINGS,
+    );
+
+    expect(answerFlowMock).toHaveBeenCalledWith(PSID, "Yes", ORG_ID, MESSENGER, "opt-yes");
+    expect(runRulesMock.mock.calls[0][1].message).toBe("Yes");
+  });
+
+  test("passes a button's title and payload, and gives the rules the payload", async () => {
+    await handleFacebookPostback(
+      webhook(messaging({ postback: { title: "Buy", payload: "btn_0_0" } })),
+      SETTINGS,
+    );
+
+    expect(answerFlowMock).toHaveBeenCalledWith(PSID, "Buy", ORG_ID, MESSENGER, "btn_0_0");
+    expect(runRulesMock.mock.calls[0][1].message).toBe("btn_0_0");
+  });
+
+  test.each([
+    [
+      "message",
+      () =>
+        handleFacebookMessages(webhook(messaging({ message: { mid: "m", text: "hi" } })), SETTINGS),
+    ],
+    [
+      "quick reply",
+      () =>
+        handleFacebookQuickReply(
+          webhook(messaging({ message: { mid: "m", text: "hi", quick_reply: { payload: "p" } } })),
+          SETTINGS,
+        ),
+    ],
+    [
+      "postback",
+      () => handleFacebookPostback(webhook(messaging({ postback: { payload: "p" } })), SETTINGS),
+    ],
+  ])("does neither when the %s could not be stored", async (_label, handle) => {
+    handleWaMessagesMock.mockRejectedValue(new Error("write failed"));
+
+    await handle();
+
+    expect(answerFlowMock).not.toHaveBeenCalled();
+    expect(runRulesMock).not.toHaveBeenCalled();
+  });
+
+  test("does not let a rule failure escape the handler", async () => {
+    runRulesMock.mockRejectedValue(new Error("rule blew up"));
+
+    await expect(
+      handleFacebookMessages(webhook(messaging({ message: { mid: "m", text: "hi" } })), SETTINGS),
+    ).resolves.toBeUndefined();
   });
 });

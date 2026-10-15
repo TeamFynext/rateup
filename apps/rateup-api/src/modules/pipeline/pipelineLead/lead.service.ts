@@ -731,15 +731,17 @@ async function fireStageUpdatedRules(lead: { contactId: string | null; stageId: 
       where: { id: lead.contactId },
       select: { id: true, orgId: true, phone: true, igsId: true, psid: true },
     });
-    if (!contact?.phone) return;
+    if (!contact?.phone && !contact?.psid) return;
 
-    const { checkAndExecuteRuleByTriggerEvent, resolveContactChannel } =
+    const { checkAndExecuteRuleByTriggerEvent, resolveContactChannel, ruleRecipient } =
       await import("../../whatsapp/automatedReply/wa_automatedReply.utils.js");
 
     const channel = await resolveContactChannel(contact);
+    const recipient = ruleRecipient(contact, channel.platform);
+    if (!recipient) return;
     await checkAndExecuteRuleByTriggerEvent("STAGE_UPDATED", {
       orgId: contact.orgId,
-      phone: contact.phone,
+      phone: recipient,
       ...channel,
     });
   } catch (error) {
