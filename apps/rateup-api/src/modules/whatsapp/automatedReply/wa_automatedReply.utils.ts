@@ -759,6 +759,18 @@ async function sendMetaRuleText(
  * contact with no channel at all (a fresh import), where narrowing would only
  * stop rules that legitimately fire today.
  */
+/**
+ * Who a contact event's rules act on, as the rule context's `phone`. Messenger contacts
+ * have no phone: their rules run on the psid, as the inbound handler passes it. Instagram
+ * contacts keep their igsId in `phone`, so that needs nothing here.
+ */
+export function ruleRecipient(
+  contact: { phone?: string | null; psid?: string | null },
+  platform: string,
+): string | null | undefined {
+  return platform === "FACEBOOK" ? (contact.psid ?? contact.phone) : contact.phone;
+}
+
 export async function resolveContactChannel(contact: {
   id?: string | null;
   igsId?: string | null;
@@ -766,7 +778,12 @@ export async function resolveContactChannel(contact: {
 }): Promise<{ platform: "WHATSAPP" | "INSTAGRAM" | "FACEBOOK" | "ALL"; phoneNumberId?: string }> {
   if (contact.id) {
     const latest = await prisma.waMessage.findFirst({
-      where: { contactId: contact.id, sourcePlatform: { not: null } },
+      // Channels only: closing or assigning a chat writes an INTERNAL activity note just
+      // before its rules run, and reading that lost the account id the rules need.
+      where: {
+        contactId: contact.id,
+        sourcePlatform: { in: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"] },
+      },
       orderBy: { waCreatedAt: "desc" },
       select: { sourcePlatform: true, sourceIdentifier: true },
     });

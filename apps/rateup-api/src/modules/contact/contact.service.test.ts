@@ -97,6 +97,8 @@ vi.mock("./conversation/conversation.service.js", () => ({
 vi.mock("../whatsapp/automatedReply/wa_automatedReply.utils.js", () => ({
   checkAndExecuteRuleByTriggerEvent: vi.fn(),
   resolveContactChannel: vi.fn(async () => ({ platform: "ALL" })),
+  ruleRecipient: (contact: { phone?: string | null; psid?: string | null }, platform: string) =>
+    platform === "FACEBOOK" ? (contact.psid ?? contact.phone) : contact.phone,
 }));
 
 vi.mock("../../workers/bullmq/queues/index.js", () => ({
@@ -1269,8 +1271,12 @@ describe("updateContactById", () => {
     expect(incrementInboxStat).toHaveBeenCalledWith(ORG, "totalCount", 1);
   });
 
+  // The inbox's Close button stores RESOLVED and "close as unresolved" UNRESOLVED; both
+  // are a close as far as "chat closed" rules go.
   test.each([
     [WaMessageAssignStatus.CLOSED, "CHAT_CLOSED"],
+    [WaMessageAssignStatus.RESOLVED, "CHAT_CLOSED"],
+    [WaMessageAssignStatus.UNRESOLVED, "CHAT_CLOSED"],
     [WaMessageAssignStatus.ASSIGNED, "CHAT_ASSIGNED"],
   ])("a %s update runs the %s automation", async (status, event) => {
     db.contact.update.mockResolvedValue(updated({ waMessageAssignStatus: status }));
@@ -1312,6 +1318,35 @@ describe("updateContactById", () => {
       phone: "919000000001",
       platform: "INSTAGRAM",
       phoneNumberId: "iba-1",
+    });
+  });
+
+  // A Messenger contact has no phone; with it, the rule had nobody to act on and a
+  // chatbot set to start on close never did.
+  test("closing a Messenger chat runs its rules on the contact's psid", async () => {
+    db.contact.update.mockResolvedValue(
+      updated({ waMessageAssignStatus: WaMessageAssignStatus.CLOSED, phone: null, psid: "psid-1" }),
+    );
+    const { checkAndExecuteRuleByTriggerEvent, resolveContactChannel } =
+      await import("../whatsapp/automatedReply/wa_automatedReply.utils.js");
+    (resolveContactChannel as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      platform: "FACEBOOK",
+      phoneNumberId: "page-1",
+    });
+
+    await updateContactById(
+      "c1",
+      ORG,
+      { waMessageAssignStatus: WaMessageAssignStatus.CLOSED } as any,
+      USER,
+      existing,
+    );
+
+    expect(checkAndExecuteRuleByTriggerEvent).toHaveBeenCalledWith("CHAT_CLOSED", {
+      orgId: ORG,
+      phone: "psid-1",
+      platform: "FACEBOOK",
+      phoneNumberId: "page-1",
     });
   });
 

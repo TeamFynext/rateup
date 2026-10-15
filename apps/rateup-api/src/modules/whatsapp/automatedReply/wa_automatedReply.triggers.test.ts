@@ -73,6 +73,7 @@ import { TriggerEvent } from "../../../../generated/prisma/enums.js";
 import {
   checkAndExecuteRuleByTriggerEvent,
   resolveContactChannel,
+  ruleRecipient,
 } from "./wa_automatedReply.utils.js";
 import {
   replyToInstagramComment,
@@ -849,6 +850,16 @@ describe("resolveContactChannel", () => {
     expect(db.waMessage.findFirst.mock.calls[0][0].orderBy).toEqual({ waCreatedAt: "desc" });
   });
 
+  // Closing or assigning a chat writes an INTERNAL activity note just before its rules
+  // run; read as the newest message, it hid the Page id and a chatbot could not start.
+  test("skips activity notes and reads only channel messages", async () => {
+    await resolveContactChannel({ id: "c1" });
+
+    expect(db.waMessage.findFirst.mock.calls[0][0].where.sourcePlatform).toEqual({
+      in: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
+    });
+  });
+
   test.each([
     ["igsId", { id: "c1", igsId: "igsid-1" }, "INSTAGRAM"],
     ["psid", { id: "c1", psid: "psid-1" }, "FACEBOOK"],
@@ -860,6 +871,25 @@ describe("resolveContactChannel", () => {
   // legitimately fire today.
   test("stays open for a contact with no channel", async () => {
     await expect(resolveContactChannel({ id: "c1" })).resolves.toEqual({ platform: "ALL" });
+  });
+});
+
+// Closing, assigning or moving a Messenger chat runs rules on the psid: the contact has no
+// phone, and the rule actions look Messenger contacts up by psid.
+describe("ruleRecipient", () => {
+  test("a Messenger contact is reached by its psid", () => {
+    expect(ruleRecipient({ phone: null, psid: "psid-1" }, "FACEBOOK")).toBe("psid-1");
+  });
+
+  test("Instagram and WhatsApp contacts are reached by phone, where Instagram keeps the igsId", () => {
+    expect(ruleRecipient({ phone: "igsid-1", psid: null }, "INSTAGRAM")).toBe("igsid-1");
+    expect(ruleRecipient({ phone: "919800000000", psid: "psid-1" }, "WHATSAPP")).toBe(
+      "919800000000",
+    );
+  });
+
+  test("a Messenger contact with no psid falls back to its phone", () => {
+    expect(ruleRecipient({ phone: "919800000000" }, "FACEBOOK")).toBe("919800000000");
   });
 });
 
