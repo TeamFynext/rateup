@@ -63,33 +63,33 @@ export const templateSchema = z
     footer: z.string().trim().max(60),
     language: z.string(),
     code_expiration_minutes: z.number().optional(),
-    header: z.union([
-      z.null(),
-      z.string().trim().min(1),
-      z.instanceof(File).check((ctx) => {
-        const maxSize = mimeTypeMaxSizes?.[ctx.value?.type];
-        if (!ACCEPTED_MIME_TYPES.includes(ctx.value.type)) {
-          ctx.issues.push({
-            input: "",
-            code: "invalid_type",
-            expected: "custom",
-            message: `File must be one of [${ACCEPTED_MIME_TYPES.join(
-              ", ",
-            )}] but was ${ctx.value.type}`,
-          });
-        }
-        if (maxSize && ctx.value.size > maxSize) {
-          ctx.issues.push({
-            input: "",
-            code: "too_big",
-            message: `File size for ${ctx.value.type} must not exceed ${Math.round(maxSize / 1024 / 1024)} MB`,
-            maximum: maxSize,
-            inclusive: true,
-            origin: "file",
-          });
-        }
-      }),
-    ]),
+    // The File checks sit after the union, not inside it: when every union branch fails,
+    // the form reports the first branch's error ("expected null, received File") and the
+    // file-type message is lost.
+    header: z.union([z.null(), z.string().trim().min(1), z.instanceof(File)]).check((ctx) => {
+      if (!(ctx.value instanceof File)) return;
+      const maxSize = mimeTypeMaxSizes?.[ctx.value?.type];
+      if (!ACCEPTED_MIME_TYPES.includes(ctx.value.type)) {
+        ctx.issues.push({
+          input: "",
+          code: "invalid_type",
+          expected: "custom",
+          message: `File must be one of [${ACCEPTED_MIME_TYPES.join(
+            ", ",
+          )}] but was ${ctx.value.type}`,
+        });
+      }
+      if (maxSize && ctx.value.size > maxSize) {
+        ctx.issues.push({
+          input: "",
+          code: "too_big",
+          message: `File size for ${ctx.value.type} must not exceed ${Math.round(maxSize / 1024 / 1024)} MB`,
+          maximum: maxSize,
+          inclusive: true,
+          origin: "file",
+        });
+      }
+    }),
     format: z.string(),
     category: z.string(),
     buttons: z
@@ -136,28 +136,26 @@ export const templateSchema = z
       .array(
         z.object({
           body: z.string().trim().min(1).max(1024),
-          header: z.union([
-            z.null(),
-            z.string().trim().min(1),
-            z.instanceof(File).check((ctx) => {
-              if (!allowedMimesforMediaCarousel.includes(ctx.value.type)) {
-                ctx.issues.push({
-                  input: ctx.value,
-                  code: "custom",
-                  message: `File must be one of [${allowedMimesforMediaCarousel.join(
-                    ", ",
-                  )}] but was ${ctx.value.type}`,
-                });
-              }
-              if (ctx.value.size > FILE_SIZE * MB_BYTES) {
-                ctx.issues.push({
-                  input: ctx.value,
-                  code: "custom",
-                  message: `The file must not be larger than ${FILE_SIZE} MB`,
-                });
-              }
-            }),
-          ]),
+          // File checks after the union, as for the template header above.
+          header: z.union([z.null(), z.string().trim().min(1), z.instanceof(File)]).check((ctx) => {
+            if (!(ctx.value instanceof File)) return;
+            if (!allowedMimesforMediaCarousel.includes(ctx.value.type)) {
+              ctx.issues.push({
+                input: ctx.value,
+                code: "custom",
+                message: `File must be one of [${allowedMimesforMediaCarousel.join(
+                  ", ",
+                )}] but was ${ctx.value.type}`,
+              });
+            }
+            if (ctx.value.size > FILE_SIZE * MB_BYTES) {
+              ctx.issues.push({
+                input: ctx.value,
+                code: "custom",
+                message: `The file must not be larger than ${FILE_SIZE} MB`,
+              });
+            }
+          }),
           format: z.string(),
           example: z.array(z.string().trim()).optional(),
           buttons: z
@@ -467,25 +465,28 @@ export const templateSchema = z
           card.format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE &&
           cardHeaerTypeNotString
         ) {
-          const msg =
-            !imageType.includes((card.header as File)?.type) &&
-            `Incorrect Type use only ${imageType?.join(",")}`;
-          issues.push({
-            path: ["mediaCarousel", index],
-            code: "custom",
-            message: msg || "",
-            input: "",
-          });
-        } else if (format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO && cardHeaerTypeNotString) {
-          const msg =
-            !videoType.includes((card.header as File)?.type) &&
-            `Incorrect Type use only ${videoType?.join(",")}`;
-          issues.push({
-            path: ["mediaCarousel", index],
-            code: "custom",
-            message: msg || "",
-            input: "",
-          });
+          // Only push on a real mismatch: an issue with an empty message still fails the
+          // parse, and zod shows it as a bare "Invalid input".
+          if (!imageType.includes((card.header as File)?.type)) {
+            issues.push({
+              path: ["mediaCarousel", index],
+              code: "custom",
+              message: `Incorrect Type use only ${imageType.join(",")}`,
+              input: "",
+            });
+          }
+        } else if (
+          card.format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO &&
+          cardHeaerTypeNotString
+        ) {
+          if (!videoType.includes((card.header as File)?.type)) {
+            issues.push({
+              path: ["mediaCarousel", index],
+              code: "custom",
+              message: `Incorrect Type use only ${videoType.join(",")}`,
+              input: "",
+            });
+          }
         } else if (!card.buttons.length) {
           issues.push({
             path: ["mediaCarousel", index],
