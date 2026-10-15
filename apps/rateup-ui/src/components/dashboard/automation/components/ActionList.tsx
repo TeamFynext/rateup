@@ -11,7 +11,10 @@ import { useAllSurveysSummary } from "@/backend/surveys/surveys.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { useAllWaAutomatedReplies } from "@/backend/whatsapp/automated-reply/automatedReply.query";
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
-import { useAllInstagramAutomations } from "@/backend/whatsapp/instagram-automation/instagramAutomation.query";
+import {
+  useAllInstagramAutomations,
+  useAllMessengerAutomations,
+} from "@/backend/whatsapp/instagram-automation/instagramAutomation.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import { findLeadsPipeline } from "@/components/pipeline/pipelineTypes.ts";
 import VariableMapping from "@/components/shopify/VariableMapping.tsx";
@@ -45,6 +48,7 @@ const ActionValueInput = ({
   const { control } = useFormContext<CreateRuleInput>();
   const { data: waData } = useAllWaAutomatedReplies();
   const { data: igData } = useAllInstagramAutomations();
+  const { data: messengerData } = useAllMessengerAutomations();
   const { data: labelsData } = useContactLabels();
   const { data: lifecyclesData } = useLifeCyclesQuery();
   const { data: pipelinesData = [] } = usePipelinesQuery();
@@ -59,16 +63,15 @@ const ActionValueInput = ({
 
   const platform = useWatch({ control, name: "platform" }) as Platform;
 
+  // A rule can only start a chatbot on its own platform; the API refuses any other.
   const filteredAutomations = useMemo(() => {
-    if (platform === "INSTAGRAM" || platform === "FACEBOOK") {
-      return [...(igData || [])].sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      );
-    }
-    return [...(waData || [])].sort(
+    let automations = waData;
+    if (platform === "INSTAGRAM") automations = igData;
+    if (platform === "FACEBOOK") automations = messengerData;
+    return [...(automations || [])].sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
-  }, [waData, igData, platform]);
+  }, [waData, igData, messengerData, platform]);
 
   const webSurveyOptions = useMemo(() => {
     if (!surveysSummary?.surveys?.length) return [];

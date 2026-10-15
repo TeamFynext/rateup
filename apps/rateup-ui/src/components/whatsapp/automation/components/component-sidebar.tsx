@@ -71,11 +71,12 @@ const categories = [
     ],
   },
   {
-    name: "Instagram Templates",
+    // Instagram and Messenger message types; WhatsApp sees none of them.
+    name: "Templates",
     items: [
       {
         id: "instagramGenericTemplateNode",
-        label: "Generic Template",
+        label: "Cards",
         icon: <IconLayout size={16} />,
       },
       {

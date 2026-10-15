@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { surveyKeys } from "@/backend/surveys/survey.keys";
 import type { NewPendingMessage } from "@/store/pendingMessages.ts";
 import { usePendingSend } from "@/store/pendingMessages.ts";
+import { getApiErrorData, getApiErrorMessage } from "@/utils/apiError.ts";
 
 import type { cloneFlowsProps, createFlowInput } from "./flow.api";
 import {
@@ -297,5 +298,25 @@ export const usePushToWaMutation = () => {
       toast.success("Flow saved to WhatsApp successfully");
       qc.invalidateQueries({ queryKey: ["flow", "db", dbFlowId] });
     },
+    // The builder saves unfinished elements on purpose, so this is where the user
+    // finds out what WhatsApp still needs filled in.
+    onError: (error) => {
+      const errors = getApiErrorData(error)?.errors ?? [];
+      const shown = errors.slice(0, MAX_LISTED_FLOW_ERRORS);
+      const more = errors.length - shown.length;
+      toast.error(getApiErrorMessage(error, "Couldn't save the flow to WhatsApp"), {
+        id: "flow-push-to-wa",
+        description:
+          shown.length > 1
+            ? [...shown.map((line) => `• ${line}`), ...(more > 0 ? [`and ${more} more`] : [])].join(
+                "\n",
+              )
+            : undefined,
+        classNames: { description: "whitespace-pre-line" },
+        duration: 15000,
+      });
+    },
   });
 };
+
+const MAX_LISTED_FLOW_ERRORS = 5;

@@ -1,14 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import CallsPage from "@/components/whatsapp/calling/history/CallsPage.tsx";
-
+// Calls moved under Analytics; old links and bookmarks land on the page that replaced it.
 export const Route = createFileRoute("/dashboard/whatsapp/calls/")({
-  validateSearch: (search: Record<string, unknown>): { tab?: "log" | "analytics" } => ({
+  validateSearch: (search: Record<string, unknown>): { tab?: "analytics" } => ({
     tab: search.tab === "analytics" ? "analytics" : undefined,
   }),
-  component: RouteComponent,
+  beforeLoad: ({ search }) => {
+    throw redirect({ to: "/dashboard/analytics/calls", search, replace: true });
+  },
 });
-
-function RouteComponent() {
-  return <CallsPage />;
-}

@@ -28,6 +28,8 @@ const PROTECTED_ROUTE_FEATURE_MAP: Array<[string, TeamFeature]> = [
   ["/dashboard/whatsapp/flows", TeamFeature.Flows],
   ["/dashboard/whatsapp/flowbots", TeamFeature.Chatbots],
   ["/dashboard/instagram/flowbots", TeamFeature.Chatbots],
+  // The whole Messenger section is chatbots, list page included.
+  ["/dashboard/messenger", TeamFeature.Chatbots],
   ["/dashboard/whatsapp/templates", TeamFeature.Templates],
   ["/dashboard/meta-agent", TeamFeature.AiChatbot],
   ["/dashboard/qr-codes", TeamFeature.QrStudio],

@@ -4,6 +4,7 @@ import { create } from "zustand";
 import {
   acceptCall,
   type CallDto,
+  callKeys,
   type CallWsEvent,
   getCallOffer,
   heartbeatCall,
@@ -149,6 +150,9 @@ export function receiveCallEvent(event: CallWsEvent, queryClient: QueryClient) {
   const { call } = event;
   const { ringing, active } = get();
   const isActive = active?.call?.id === call.id;
+
+  // Analytics → Calls shows calls as they ring, connect and end. `answer` carries only SDP.
+  if (event.event !== "answer") void queryClient.invalidateQueries({ queryKey: callKeys.logs });
 
   switch (event.event) {
     case "incoming":
