@@ -69,6 +69,7 @@ import {
   updateFlowMetaDataInWa,
 } from "./flow.service.js";
 import { createSurveyFromFlow } from "./flow.utils.js";
+import { FlowValidationError } from "./flowValidation.js";
 import { createSurvey, deleteSurveyById } from "../../survey/survey.service.js";
 import { callMetaApi, GraphApiError } from "../wa_axios.js";
 import { getWaSettings } from "../settings/wa_settings.service.js";
@@ -418,7 +419,38 @@ describe("saveFlowJsonToWhatsappHandler", () => {
     await saveFlowJsonToWhatsappHandler(request(), rep);
 
     expect(rep.status).toHaveBeenCalledWith(500);
-    expect(rep.send).toHaveBeenCalledWith("meta rejected the asset");
+    expect(rep.send).toHaveBeenCalledWith({ message: "meta rejected the asset" });
+  });
+
+  test("answers 400 with each validation error when Meta rejects the flow JSON", async () => {
+    m.syncLocalFlowToWhatsapp.mockRejectedValue(
+      new FlowValidationError(['Screen 1 › "Rating": Required property is missing.']),
+    );
+    const rep = reply();
+
+    await saveFlowJsonToWhatsappHandler(request(), rep);
+
+    expect(rep.status).toHaveBeenCalledWith(400);
+    expect(rep.send).toHaveBeenCalledWith({
+      message:
+        'Fix this before saving to WhatsApp: Screen 1 › "Rating": Required property is missing.',
+      errors: ['Screen 1 › "Rating": Required property is missing.'],
+    });
+  });
+
+  test("answers 400 with Meta's message when the publish is refused", async () => {
+    m.syncLocalFlowToWhatsapp.mockRejectedValue(new GraphApiError("boom" as any));
+    m.getGraphApiErrorMessage.mockReturnValue(
+      "You need to verify that the flow has valid Flow JSON",
+    );
+    const rep = reply();
+
+    await saveFlowJsonToWhatsappHandler(request(), rep);
+
+    expect(rep.status).toHaveBeenCalledWith(400);
+    expect(rep.send).toHaveBeenCalledWith({
+      message: "You need to verify that the flow has valid Flow JSON",
+    });
   });
 });
 
