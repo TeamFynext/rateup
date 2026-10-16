@@ -36,8 +36,9 @@ export const SCHEDULED_JOBS = [
   // and `shopifyTokenRenewal`; `syncJobSchedulers` removes their stale schedulers.
   { id: "integrationCredentialRefresh", pattern: "*/45 * * * *", tz: "Etc/UTC" },
   { id: "midnightStatsReset", pattern: "30 0 * * *" },
-  // Expired partner-API replay records. They hold nothing but a stored response and are
-  // only useful for 24 hours; the durable idempotency guarantee is the ledger's own key.
+  // Expired partner-API replay records (only useful for 24 hours; the durable idempotency
+  // guarantee is the ledger's own key), usage-log rows past 30 days, and keys a week past
+  // their expiry.
   { id: "externalIdempotencySweep", pattern: "15 3 * * *" },
   // One hourly sweep for every scheduled loyalty reminder, replacing four daily jobs that
   // pinned no timezone and so fired at this container's midnight. Each occasion asks

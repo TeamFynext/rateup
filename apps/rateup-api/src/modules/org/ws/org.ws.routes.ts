@@ -40,7 +40,7 @@ export async function orgWsRoutes(server: FastifyInstance) {
   // token in the query string rather than a dashboard session — see checkWidgetToken.
   server.get<{
     Params: { afterAuthId: string };
-    Querystring: { role?: string; orgId?: string; accessToken?: string; contactId?: string };
+    Querystring: { role?: string; accessToken?: string; contactId?: string };
   }>(
     "/:afterAuthId/widget",
     {

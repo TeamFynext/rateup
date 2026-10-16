@@ -187,7 +187,7 @@ model Org {
   WaFlow                  WaFlow[]
   contacts                Contact[]
   linktree                Linktree[]
-  ApiAccessToken          ApiAccessToken?
+  ApiAccessToken          ApiAccessToken[]
   externalIdempotency     ExternalIdempotencyRecord[]
   surveyThemes            WebSurveyTheme[]
   UsageStats              UsageStats?
@@ -2226,16 +2226,64 @@ model WaAutomatedReplyMessage {
   org                Org               @relation(fields: [orgId], references: [id], onDelete: Cascade)
 }
 
+/// A partner API key. An org may hold several (one per integration), each with its own
+/// scopes, so one can be rotated or revoked without breaking the others.
 model ApiAccessToken {
-  orgId String @unique @db.Uuid
+  id    String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId String @db.Uuid
   org   Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
-  // hashed key
-  accessToken String
-  createdAt   DateTime @default(now())
+  /// What the console calls it, e.g. "Shopify POS".
+  name          String    @default("Default key")
+  /// Legacy bcrypt hash. Only keys minted before SHA-256 have one, and only until their
+  /// first use re-hashes them (apiAccessToken.service.ts); once no row has it, drop it.
+  accessToken   String?
+  /// SHA-256 (hex) of the whole key. A key is 256 random bits, so a fast hash is as safe
+  /// as bcrypt here and costs microseconds instead of a libuv thread per request.
+  tokenHash     String?   @unique
+  /// Enough of the key to recognise it in the console (`rk_live_AbCd`), never to use it.
+  displayPrefix String?
+  /// `live` or `test`. A test key cannot reach routes that spend money (`config.paid`).
+  mode          String    @default("live")
+  /// Which partner API the key opens: `v1` (`/api/external/v1/:orgId`, unprefixed keys,
+  /// every key minted before v2) or `v2` (`/api/external/v2`, `rk_` keys). A key works on
+  /// its own version only, and rotation keeps it.
+  version       String    @default("v1")
+  createdAt     DateTime  @default(now())
+  /// Written at most every few minutes per key (see `touchLastUsed`).
+  lastUsedAt    DateTime?
+  /// Refused from this moment. Set by the owner, or by a rotation's grace period.
+  expiresAt     DateTime?
+  /// Set when a rotation replaced this key; `expiresAt` is then the grace period's end, not
+  /// an expiry the owner chose, and the key cannot be rotated again.
+  rotatedAt     DateTime?
+  /// User id of whoever minted it; no FK, so a departed member leaves the key in place.
+  createdById   String?   @db.Uuid
   /// Permission keys (src/authz/permissions.ts) the key may exercise. Empty means every one,
   /// which is what every key issued before scopes existed has.
-  scopes      String[] @default([])
+  scopes        String[]  @default([])
+
+  requestLogs ApiRequestLog[]
+
+  @@index([orgId])
+}
+
+/// One partner API call, for the per-key usage view. Written in batches off the request
+/// path (apiUsage.ts) and swept after 30 days.
+model ApiRequestLog {
+  id        BigInt          @id @default(autoincrement())
+  orgId     String          @db.Uuid
+  keyId     String?         @db.Uuid
+  key       ApiAccessToken? @relation(fields: [keyId], references: [id], onDelete: SetNull)
+  method    String
+  /// The route pattern (`/contacts/:contactId`), never the raw URL, which can carry PII.
+  route     String
+  status    Int
+  latencyMs Int
+  createdAt DateTime        @default(now())
+
+  @@index([orgId, createdAt])
+  @@index([keyId, createdAt])
 }
 
 /// Rows a one-off data migration set aside before dropping their table, so the change can

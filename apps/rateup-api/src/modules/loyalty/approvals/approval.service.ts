@@ -32,6 +32,7 @@ import prisma from "../../../utils/prisma.js";
 import { sendLoyaltyEvent } from "../messaging/send.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
 import { notify } from "../../notification/notify.js";
+import { announceLoyaltyTransactions } from "../loyalty.webhooks.js";
 
 /**
  * Create a new approval request
@@ -478,14 +479,26 @@ async function approveRedemption(approval: ApprovalWithAccount, data: ApproveReq
     await syncRedemptionDiscount(approval.redemptionId);
   }
 
+  announceApprovedTransaction(approval, approved.transaction);
   return approved;
+}
+
+/** The ledger row an approval wrote, to the org's webhook — called once its transaction committed. */
+function announceApprovedTransaction(
+  approval: ApprovalWithAccount,
+  transaction: Parameters<typeof announceLoyaltyTransactions>[1][number],
+) {
+  void announceLoyaltyTransactions(approval.account?.contact?.orgId, [transaction], {
+    phone: approval.account?.contact?.phone ?? null,
+    cardCode: approval.account?.cardCode ?? null,
+  });
 }
 
 /**
  * Approve a points adjustment (add or deduct)
  */
 async function approvePointsAdjustment(approval: ApprovalWithAccount, data: ApproveRequestInput) {
-  return await prisma.$transaction(async (tx) => {
+  const approved = await prisma.$transaction(async (tx) => {
     const customer = await tx.customerLoyaltyAccount.findUnique({
       where: { id: approval.accountId },
     });
@@ -585,6 +598,9 @@ async function approvePointsAdjustment(approval: ApprovalWithAccount, data: Appr
 
     return updatedApproval;
   });
+
+  announceApprovedTransaction(approval, approved.transaction);
+  return approved;
 }
 
 /**

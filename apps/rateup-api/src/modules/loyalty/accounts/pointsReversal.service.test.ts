@@ -11,11 +11,13 @@ vi.mock("../../../utils/prisma.js", () => ({
 
 vi.mock("../earningRulesEngine.js", () => ({ checkAndUpgradeTier: vi.fn() }));
 vi.mock("../messaging/send.js", () => ({ sendLoyaltyEvent: vi.fn() }));
+vi.mock("../loyalty.webhooks.js", () => ({ announceLoyaltyTransactions: vi.fn() }));
 
 import prisma from "../../../utils/prisma.js";
 import { checkAndUpgradeTier } from "../earningRulesEngine.js";
 import { sendLoyaltyEvent } from "../messaging/send.js";
 import { reversePurchasePoints } from "./pointsReversal.service.js";
+import { announceLoyaltyTransactions } from "../loyalty.webhooks.js";
 
 /** The `sendLoyaltyEvent` call made for `event`: org, recipient, data and options. */
 function sentEvent(event: string) {
@@ -187,5 +189,49 @@ describe("reversePurchasePoints", () => {
     expect(db.customerLoyaltyAccount.update.mock.calls[0][0].data.totalSpend).toEqual({
       decrement: 5000,
     });
+  });
+});
+
+describe("reversePurchasePoints — webhook", () => {
+  const announce = announceLoyaltyTransactions as unknown as Mock;
+
+  test("announces the reversal row only after its transaction has committed", async () => {
+    const order: string[] = [];
+    db.$transaction.mockImplementation(async (fn: (tx: unknown) => unknown) => {
+      const result = await fn(db);
+      order.push("commit");
+      return result;
+    });
+    announce.mockImplementation(() => {
+      order.push("announce");
+      return Promise.resolve(1);
+    });
+
+    const res = await reversePurchasePoints(input({ orgId: "org-1" }));
+
+    expect(order).toEqual(["commit", "announce"]);
+    expect(announce).toHaveBeenCalledWith("org-1", [{ id: "txn-reversal" }]);
+    // The row is for the webhook only; the caller's result shape is unchanged.
+    expect(res).not.toHaveProperty("ledgerRow");
+  });
+
+  test("announces nothing when the transaction rolls back", async () => {
+    db.$transaction.mockRejectedValue(new Error("deadlock"));
+
+    await expect(reversePurchasePoints(input())).rejects.toThrow("deadlock");
+    expect(announce).not.toHaveBeenCalled();
+  });
+
+  test("announces nothing for a replayed reversal", async () => {
+    db.loyaltyTransaction.findUnique.mockResolvedValue({ id: "txn-reversal" });
+
+    await reversePurchasePoints(input());
+    expect(announce).not.toHaveBeenCalled();
+  });
+
+  test("a webhook that never settles does not hold the reversal up", async () => {
+    announce.mockReturnValue(new Promise(() => {}));
+
+    await expect(reversePurchasePoints(input())).resolves.toMatchObject({ status: "reversed" });
   });
 });

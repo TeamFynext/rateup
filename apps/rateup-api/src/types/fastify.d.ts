@@ -25,6 +25,11 @@ declare module "fastify" {
      * other guard of the staff plugin still runs. See STAFF_PUBLIC_ROUTES in staff.plugin.ts.
      */
     staffPublic?: boolean;
+    /**
+     * Partner API only. The route spends money per call (a WhatsApp template or campaign
+     * send), so a `rk_test_` key may not reach it. See src/external/shared/scopes.ts.
+     */
+    paid?: boolean;
   }
 
   interface FastifyRequest {

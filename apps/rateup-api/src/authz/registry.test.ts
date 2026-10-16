@@ -51,6 +51,28 @@ describe("classifyRoute", () => {
     expect(r.config.access).toBe("token");
   });
 
+  test("the v2 token API, which names no org in its URL, is tagged token too", () => {
+    for (const r of [
+      route("/api/external/v2/contacts"),
+      route("/api/external/v2/loyalty/members/:ref"),
+    ]) {
+      expect(classifyRoute(r)).toBe("tagged");
+      expect(r.config.access).toBe("token");
+    }
+  });
+
+  test("the partner spec's own public declaration wins over the v2 prefix", () => {
+    const r = route("/api/external/v2/openapi.json", { access: "public" });
+    expect(classifyRoute(r)).toBe("declared");
+    expect(r.config.access).toBe("public");
+  });
+
+  test("a look-alike prefix is not the external API", () => {
+    const r = route("/api/external/v20/contacts");
+    expect(classifyRoute(r)).toBe("undeclared");
+    expect(r.config.access).toBeUndefined();
+  });
+
   test("anything else under /api with no declaration is undeclared and left alone", () => {
     const r = route("/api/wa/settings", {}, "PUT");
     expect(classifyRoute(r)).toBe("undeclared");

@@ -10,7 +10,13 @@ const db = vi.hoisted(() => ({
   staffUser: { findUnique: vi.fn(), update: vi.fn() },
   staffAuditLog: { create: vi.fn(), update: vi.fn() },
 }));
-const redis = vi.hoisted(() => ({ incr: vi.fn(), expire: vi.fn() }));
+// rateLimit runs INCR+EXPIRE as one EVAL; route it through `incr` so the cases below can
+// keep steering the count (or the outage) with `redis.incr`.
+const redis = vi.hoisted(() => {
+  const r = { incr: vi.fn(), expire: vi.fn(), eval: vi.fn() };
+  r.eval.mockImplementation((_script: string, _n: number, key: string) => r.incr(key));
+  return r;
+});
 
 vi.mock("../../utils/prisma.js", () => ({ default: db }));
 vi.mock("../../utils/redisConnection.js", () => ({ default: redis }));

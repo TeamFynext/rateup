@@ -2,13 +2,25 @@ import prisma from "../../utils/prisma.js";
 import type { IntegrationEventType } from "../integrations/events/integrationEvent.types.js";
 import type { IntegrationProvider } from "../integrations/providers/integrationProvider.types.js";
 import { toWebhookPayload } from "./webhook.payloads.js";
-import { WEBHOOK_EVENTS } from "./webhook.schema.js";
+import {
+  ENVELOPE_WEBHOOK_EVENTS,
+  WEBHOOK_EVENTS,
+  type EnvelopeWebhookEventName,
+} from "./webhook.schema.js";
 import { enqueueOrgWebhookDispatch } from "./webhook.service.js";
 
-/** Every webhook event that is an integration event — all but the WhatsApp status callback. */
+/**
+ * Every webhook event that is an integration event — all but the WhatsApp status
+ * callback and the envelope events, which `webhook.events.ts` emits directly.
+ */
 const EVENTS = WEBHOOK_EVENTS.filter(
-  (event): event is Exclude<(typeof WEBHOOK_EVENTS)[number], "message_status"> =>
-    event !== "message_status",
+  (
+    event,
+  ): event is Exclude<
+    (typeof WEBHOOK_EVENTS)[number],
+    "message_status" | EnvelopeWebhookEventName
+  > =>
+    event !== "message_status" && !(ENVELOPE_WEBHOOK_EVENTS as readonly string[]).includes(event),
 ) satisfies readonly IntegrationEventType[];
 
 /**

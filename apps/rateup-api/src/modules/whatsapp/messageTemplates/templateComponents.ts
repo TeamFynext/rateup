@@ -8,6 +8,7 @@ import prisma from "../../../utils/prisma.js";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload.js";
 import { generateOrderReferenceId } from "../automatedReply/wa_automatedReply.utils.js";
 import { getConnectedWaCatalog } from "../catalog/catalog.service.js";
+import { TemplateSendError } from "./templateSendError.js";
 
 /**
  * Fills a template's component parameters for one recipient.
@@ -126,7 +127,10 @@ export async function buildTemplateComponents({
             getFileUrlFromKey(defaultValues.image.link),
           );
         } else {
-          throw new Error("Image not found in template. Please upload an image and try again");
+          throw new TemplateSendError(
+            "header_media_missing",
+            "Image not found in template. Please upload an image and try again",
+          );
         }
         break;
 
@@ -138,7 +142,10 @@ export async function buildTemplateComponents({
             defaultValues?.document?.filename,
           );
         } else {
-          throw new Error("File not found in template. Please upload a document and try again");
+          throw new TemplateSendError(
+            "header_media_missing",
+            "File not found in template. Please upload a document and try again",
+          );
         }
         break;
       case WaTemplateSupportedFormats.VIDEO:
@@ -148,7 +155,10 @@ export async function buildTemplateComponents({
             getFileUrlFromKey(defaultValues.video.link),
           );
         } else {
-          throw new Error("Video not found in template. Please upload a video and try again");
+          throw new TemplateSendError(
+            "header_media_missing",
+            "Video not found in template. Please upload a video and try again",
+          );
         }
         break;
       case WaTemplateSupportedFormats.PRODUCT:
@@ -159,7 +169,10 @@ export async function buildTemplateComponents({
             defaultValues?.catalog?.catalogId,
             whatsappSettingsPhoneId,
           );
-          throw Error("The selected catalog not linked to the selected whatsapp account");
+          throw new TemplateSendError(
+            "catalog_not_linked",
+            "The selected catalog not linked to the selected whatsapp account",
+          );
         }
         components.push({
           type: WaTemplateComponentType.HEADER,
@@ -476,7 +489,10 @@ export async function buildTemplateComponents({
               defaultValues?.catalog?.catalogId,
               whatsappSettingsPhoneId,
             );
-            throw Error("The selected catalog not linked to the selected whatsapp account");
+            throw new TemplateSendError(
+              "catalog_not_linked",
+              "The selected catalog not linked to the selected whatsapp account",
+            );
           }
           let cards = await Promise.all(
             item?.cards?.map(async (card: any, index: number) => {

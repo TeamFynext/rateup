@@ -37,8 +37,11 @@ import {
   enqueueWebhookDispatch,
   getWebhook,
   getWebhookSigningSecret,
+  rateupSignatureHeader,
   rotateWebhookSecret,
+  signWebhookPayload,
   upsertWebhook,
+  verifyRateupSignature,
   verifyWebhookUrl,
 } from "./webhook.service.js";
 import {
@@ -48,7 +51,12 @@ import {
   updateWebhookEventsHandler,
 } from "./webhook.controller.js";
 import { webhookRoutes } from "./webhook.route.js";
-import { saveWebhookSchema, updateWebhookEventsSchema, WEBHOOK_EVENTS } from "./webhook.schema.js";
+import {
+  ENVELOPE_WEBHOOK_EVENTS,
+  saveWebhookSchema,
+  updateWebhookEventsSchema,
+  WEBHOOK_EVENTS,
+} from "./webhook.schema.js";
 import { toWebhookPayload } from "./webhook.payloads.js";
 import { webhookProvider } from "./webhook.provider.js";
 
@@ -355,11 +363,30 @@ describe("saveWebhookSchema", () => {
     ).toBe(false);
   });
 
-  test("the enum is the status callback plus every event the provider forwards", () => {
+  test("the enum is the status callback, every event the provider forwards, and the envelope events", () => {
     expect(WEBHOOK_EVENTS[0]).toBe("message_status");
     expect([...webhookProvider.events].sort()).toEqual(
-      WEBHOOK_EVENTS.filter((e) => e !== "message_status").sort(),
+      WEBHOOK_EVENTS.filter(
+        (e) =>
+          e !== "message_status" && !(ENVELOPE_WEBHOOK_EVENTS as readonly string[]).includes(e),
+      ).sort(),
     );
+  });
+
+  test("accepts the envelope event names", () => {
+    expect(
+      saveWebhookSchema.safeParse({
+        url: "https://x.test",
+        events: [
+          "message.status",
+          "survey.response.created",
+          "loyalty.points.earned",
+          "loyalty.points.redeemed",
+          "loyalty.points.adjusted",
+        ],
+        verifyToken: TOKEN,
+      }).success,
+    ).toBe(true);
   });
 
   test("rejects an empty event list, which would subscribe to nothing", () => {
@@ -704,6 +731,94 @@ describe("deliverOutgoingWebhook", () => {
     expect(init.redirect).toBe("manual");
   });
 
+  test("carries X-Rateup-Timestamp and an X-Rateup-Signature-256 over `${t}.${body}`", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2025-10-16T10:40:00.500Z"));
+    try {
+      await deliverOutgoingWebhook(
+        { orgId: ORG, event: "contact.created", payload: { contact: { id: "c1" } } },
+        "job-8",
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+
+    const { headers, body } = delivered();
+    expect(headers["X-Rateup-Timestamp"]).toBe("1760611200");
+    expect(headers["X-Rateup-Signature-256"]).toBe(
+      `t=1760611200,v1=${createHmac("sha256", SECRET).update(`1760611200.${body}`).digest("hex")}`,
+    );
+    expect(headers["X-Rateup-Triggered-At"]).toBe("2025-10-16T10:40:00.500Z");
+    expect(
+      verifyRateupSignature(SECRET, headers["X-Rateup-Signature-256"], body, { now: 1760611230 }),
+    ).toBe(true);
+  });
+
+  test("each attempt is signed with its own send time", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      vi.setSystemTime(new Date("2025-10-16T10:40:00Z"));
+      await deliverOutgoingWebhook({ orgId: ORG, event: "contact.created", payload: {} }, "job-9");
+      vi.setSystemTime(new Date("2025-10-16T10:45:00Z"));
+      await deliverOutgoingWebhook({ orgId: ORG, event: "contact.created", payload: {} }, "job-9");
+    } finally {
+      vi.useRealTimers();
+    }
+
+    const [first, second] = fetchMock.mock.calls.map((c) => c[1].headers);
+    expect(first["X-Rateup-Timestamp"]).toBe("1760611200");
+    expect(second["X-Rateup-Timestamp"]).toBe("1760611500");
+    expect(second["X-Rateup-Signature-256"]).toMatch(/^t=1760611500,v1=[0-9a-f]{64}$/);
+    expect(second["X-Webhook-Id"]).toBe(first["X-Webhook-Id"]);
+  });
+
+  test("posts an envelope event as the envelope itself, signed the same way", async () => {
+    db.webhook.findUnique.mockImplementation(async ({ select }: any) =>
+      select?.secret
+        ? { secret: SECRET }
+        : { url: "https://hooks.example.test/rateup", events: ["loyalty.points.earned"] },
+    );
+    const envelope = {
+      id: "6f1c1f9e-1111-4111-8111-111111111111",
+      type: "loyalty.points.earned" as const,
+      createdAt: "2026-10-16T10:00:00.000Z",
+      orgId: ORG,
+      data: { transactionId: "txn-1", points: 50 },
+    };
+
+    await deliverOutgoingWebhook(
+      { kind: "envelope", orgId: ORG, event: envelope.type, envelope },
+      envelope.id,
+    );
+
+    const init = delivered();
+    expect(init.body).toBe(JSON.stringify(envelope));
+    expect(init.headers["X-Rateup-Signature"]).toBe(
+      createHmac("sha256", SECRET).update(init.body).digest("base64"),
+    );
+    expect(init.headers["X-Webhook-Id"]).toBe(envelope.id);
+  });
+
+  test("drops an envelope event the org is no longer subscribed to", async () => {
+    await deliverOutgoingWebhook(
+      {
+        kind: "envelope",
+        orgId: ORG,
+        event: "message.status",
+        envelope: {
+          id: "e-1",
+          type: "message.status",
+          createdAt: "2026-10-16T10:00:00.000Z",
+          orgId: ORG,
+          data: {},
+        },
+      },
+      "e-1",
+    );
+
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   test("sends nothing for an event the org has since unsubscribed from", async () => {
     await deliverOutgoingWebhook({ orgId: ORG, event: "contact.deleted", payload: {} }, "job-1");
 
@@ -766,6 +881,7 @@ describe("deliverOutgoingWebhook", () => {
     expect(String(fetchMock.mock.calls[0][0])).toBe("https://survey.example.test/hook");
     expect(delivered().body).toBe(JSON.stringify({ surveyId: "s1" }));
     expect(delivered().headers["X-Rateup-Signature"]).toBeTruthy();
+    expect(delivered().headers["X-Rateup-Signature-256"]).toMatch(/^t=\d+,v1=[0-9a-f]{64}$/);
   });
 
   test("the survey webhook is queued, not sent inline", async () => {
@@ -781,6 +897,78 @@ describe("deliverOutgoingWebhook", () => {
       },
     ]);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+// ===========================================================================
+// X-Rateup-Signature-256
+// ===========================================================================
+
+describe("X-Rateup-Signature-256", () => {
+  // The known vector the docs quote (rateup-docs settings/integrations.mdx).
+  const SECRET = "whsec_rateup_test_secret";
+  const T = 1760611200;
+  const BODY = '{"event":"contact.created","contact":{"id":"c1"}}';
+  const HEX = "024c81925f62daf179ed8b8b5df3058888d43b371b0304522bf376f05c98aa6b";
+  const HEADER = `t=${T},v1=${HEX}`;
+
+  test("matches the known vector", () => {
+    expect(signWebhookPayload(SECRET, T, BODY)).toBe(HEX);
+    expect(rateupSignatureHeader(SECRET, T, BODY)).toBe(HEADER);
+  });
+
+  test("the secret is the whole whsec_ string as the key, not its decoded bytes", () => {
+    expect(signWebhookPayload(SECRET.slice("whsec_".length), T, BODY)).not.toBe(HEX);
+  });
+
+  test("verify accepts a valid signature, as a string or a Buffer", () => {
+    expect(verifyRateupSignature(SECRET, HEADER, BODY, { now: T })).toBe(true);
+    expect(verifyRateupSignature(SECRET, HEADER, Buffer.from(BODY), { now: T + 299 })).toBe(true);
+    expect(
+      verifyRateupSignature(SECRET, ` t=${T} , v1=${HEX.toUpperCase()} `, BODY, { now: T }),
+    ).toBe(true);
+  });
+
+  test("verify accepts any matching v1 among several", () => {
+    const header = `t=${T},v1=${"0".repeat(64)},v1=${HEX}`;
+    expect(verifyRateupSignature(SECRET, header, BODY, { now: T })).toBe(true);
+  });
+
+  test("verify rejects a tampered body", () => {
+    expect(verifyRateupSignature(SECRET, HEADER, BODY.replace("c1", "c2"), { now: T })).toBe(false);
+    expect(verifyRateupSignature(SECRET, HEADER, `${BODY} `, { now: T })).toBe(false);
+  });
+
+  test("verify rejects the wrong secret", () => {
+    expect(verifyRateupSignature("whsec_other", HEADER, BODY, { now: T })).toBe(false);
+    expect(verifyRateupSignature("", HEADER, BODY, { now: T })).toBe(false);
+  });
+
+  test("verify rejects a timestamp outside the tolerance, either way", () => {
+    expect(verifyRateupSignature(SECRET, HEADER, BODY, { now: T + 301 })).toBe(false);
+    expect(verifyRateupSignature(SECRET, HEADER, BODY, { now: T - 301 })).toBe(false);
+    expect(
+      verifyRateupSignature(SECRET, HEADER, BODY, { now: T + 600, toleranceSeconds: 900 }),
+    ).toBe(true);
+  });
+
+  test("verify rejects a re-timestamped header (the timestamp is signed)", () => {
+    const header = `t=${T + 60},v1=${HEX}`;
+    expect(verifyRateupSignature(SECRET, header, BODY, { now: T + 60 })).toBe(false);
+  });
+
+  test.each([
+    ["missing", undefined],
+    ["empty", ""],
+    ["no timestamp", `v1=${HEX}`],
+    ["no signature", `t=${T}`],
+    ["non-numeric timestamp", `t=abc,v1=${HEX}`],
+    ["short signature", `t=${T},v1=${HEX.slice(0, 63)}`],
+    ["non-hex signature", `t=${T},v1=${"z".repeat(64)}`],
+    ["legacy base64 value", Buffer.from(HEX, "hex").toString("base64")],
+    ["other scheme only", `t=${T},v0=${HEX}`],
+  ])("verify rejects a malformed header (%s)", (_name, header) => {
+    expect(verifyRateupSignature(SECRET, header, BODY, { now: T })).toBe(false);
   });
 });
 

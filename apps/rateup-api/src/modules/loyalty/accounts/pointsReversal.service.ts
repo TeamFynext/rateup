@@ -4,6 +4,7 @@ import { log } from "../../../utils/logger.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
 import { checkAndUpgradeTier } from "../earningRulesEngine.js";
 import { sendLoyaltyEvent } from "../messaging/send.js";
+import { announceLoyaltyTransactions } from "../loyalty.webhooks.js";
 
 /**
  * Taking back the points an order earned, when that order stops being a sale.
@@ -174,10 +175,14 @@ export async function reversePurchasePoints(input: ReversePurchaseInput): Promis
       balanceAfter: account.currentPoints,
       transactionId: row.id,
       totalSpendAfter: Number(account.totalSpend),
+      ledgerRow: row,
     };
   });
 
   if (outcome.status !== "reversed") return outcome;
+
+  // Committed. With no `orgId` the announcer finds it from the programme.
+  void announceLoyaltyTransactions(input.orgId, [outcome.ledgerRow]);
 
   // Outside the transaction, like `awardPoints`: neither of these should be able to roll
   // the reversal back.
@@ -215,6 +220,6 @@ export async function reversePurchasePoints(input: ReversePurchaseInput): Promis
     }
   }
 
-  const { totalSpendAfter: _ignored, ...result } = outcome;
+  const { totalSpendAfter: _ignored, ledgerRow: _row, ...result } = outcome;
   return result;
 }

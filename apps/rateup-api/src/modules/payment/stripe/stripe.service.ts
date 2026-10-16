@@ -1,3 +1,4 @@
+import { bustSubscriptionGate } from "../../subscription/subscription.service.js";
 import {
   OrderStatus,
   PaymentStatus,
@@ -178,6 +179,7 @@ export async function createStripePayment(invoiceData: StripeInvoiceData) {
           lastLimitAlertSentAt: null,
         },
       });
+      void bustSubscriptionGate(updatedOrder.orgId);
 
       console.log("Sending stripe subscription summary email....");
 
@@ -236,6 +238,7 @@ export async function createStripePayment(invoiceData: StripeInvoiceData) {
         basePlan: true,
       },
     });
+    void bustSubscriptionGate(updatedSubscription.orgId);
 
     if (invoiceData.customer_email) {
       const msg = {

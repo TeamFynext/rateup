@@ -8,8 +8,8 @@ import baseRedis from "../../../utils/redisConnection.js";
 import { userStatusQueue } from "../../../workers/bullmq/queues/index.js";
 import { WebSocket } from "@fastify/websocket";
 import { getSessionWithoutRequestResponse } from "supertokens-node/recipe/session/index.js";
-import { verifyApiAccessToken } from "../../apiAccessToken/apiAccessToken.service.js";
-import { getOrgById } from "../org.services.js";
+import { authenticateWidgetKey } from "../../apiAccessToken/apiAccessToken.auth.js";
+import { scopesAllowWidget, WIDGET_KEY_REFUSED } from "../../../authz/apiKeyFeatures.js";
 import { Role } from "../../../../generated/prisma/client.js";
 // Constants for delays
 const ONLINE_DEBOUNCE_MS = 2000;
@@ -199,37 +199,37 @@ export async function orgWsAuthCheckHandler(_request: FastifyRequest, reply: Fas
 }
 
 /**
- * Auth for the embedded support widget's socket. `verifyApiAccessTokenHook` reads the
+ * Auth for the embedded support widget's socket. `verifyWidgetTokenHook` reads the
  * Authorization header, which a browser `new WebSocket(...)` cannot set — there is no API for
- * it — so the widget's org id and api access token arrive as query parameters instead. The
+ * it — so the widget's key arrives as a query parameter instead, and names the org itself. The
  * token is public by design: it ships inside the widget bundle on the customer's page, so it
- * proves only which org the socket belongs to, never who the visitor is. Everything that
+ * proves only which org the socket belongs to, never who the visitor is, and only a key that
+ * is full access or carries the `widget` feature is taken. Everything that
  * follows treats it that way; `contactId` scoping is what keeps one visitor out of another's
  * conversation.
  */
 export const checkWidgetToken = async (
-  request: FastifyRequest<{ Querystring: { orgId?: string; accessToken?: string } }>,
+  request: FastifyRequest<{ Querystring: { accessToken?: string } }>,
   reply: FastifyReply,
 ) => {
-  const { orgId, accessToken } = request.query ?? {};
+  const { accessToken } = request.query ?? {};
 
-  if (!orgId || !accessToken) {
-    reply.code(401).send({ message: "Not authorized" });
-    return;
-  }
-
+  let orgId: string;
   try {
-    const org = await getOrgById(orgId);
-    if (!org) {
-      reply.code(404).send({ message: "Not found" });
-      return;
-    }
-    if (!(await verifyApiAccessToken(orgId, accessToken))) {
+    const grant = await authenticateWidgetKey(accessToken);
+    if (!grant) {
       reply.code(401).send({ message: "Not authorized" });
       return;
     }
+    orgId = grant.orgId;
+    // Only a full-access key or one with the Webchat widget feature: the token is public, so
+    // a key limited to other features (contacts, campaigns…) must not be usable from a page.
+    if (!scopesAllowWidget(grant.scopes)) {
+      reply.code(403).send({ message: "Forbidden", error: WIDGET_KEY_REFUSED });
+      return;
+    }
   } catch (err) {
-    log.error({ err, orgId }, "Could not verify the widget socket token");
+    log.error({ err }, "Could not verify the widget socket token");
     reply.code(401).send({ message: "Not authorized" });
     return;
   }

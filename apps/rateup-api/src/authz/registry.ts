@@ -37,7 +37,7 @@ export function classifyRoute(route: RouteOptions): "declared" | "tagged" | "und
     config.access = "public";
     return "tagged";
   }
-  if (url.startsWith("/api/external/v1/")) {
+  if (url.startsWith("/api/external/v1/") || url.startsWith("/api/external/v2/")) {
     config.access = "token";
     return "tagged";
   }

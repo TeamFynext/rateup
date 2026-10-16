@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { QuestionType, ResponseSummaryType, SurveyType } from "../../types/enums.js";
+import { QuestionType, ResponseSummaryType } from "../../types/enums.js";
 import { ResponsePlatform } from "../../../generated/prisma/client.js";
 import { spreadsheetExportFormatSchema } from "../../utils/spreadsheet.js";
 
@@ -61,18 +61,8 @@ const getResponsesParamsSchema = z.object({
   surveyTeamMapId: z.string().optional(),
   surveyId: z.uuid(),
 });
-const getResponsesBySurveyParamsSchema = z.object({
-  orgId: z.uuid().optional(),
-  surveyId: z.uuid().optional(),
-});
 const getResponsesBodySchema = z.object({
   surveyId: z.string().optional(),
-});
-
-const getSurveyListResponseSchema = z.object({
-  id: z.string().optional(),
-  title: z.string().optional(),
-  type: z.enum(SurveyType),
 });
 
 const idInputParamsSchema = z.object({
@@ -149,7 +139,5 @@ export {
   getResponsesBodySchema,
   generateXlsxSchema,
   summarizeSchema,
-  getResponsesBySurveyParamsSchema,
-  getSurveyListResponseSchema,
   responseFilterQuery,
 };

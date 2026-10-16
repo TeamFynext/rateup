@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("./redisConnection.js", () => ({
-  default: { incr: vi.fn(), expire: vi.fn() },
+  default: { eval: vi.fn() },
 }));
 vi.mock("./logger.js", () => ({
   log: { error: vi.fn(), fatal: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
@@ -12,7 +12,9 @@ import { rateLimit } from "./rateLimit.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
-const redis = connection as unknown as { incr: Mock; expire: Mock };
+const redis = connection as unknown as { eval: Mock };
+/** The bucket each check counted against, in order. */
+const buckets = () => redis.eval.mock.calls.map((c) => c[2]);
 
 function request(ip = "203.0.113.4"): any {
   return { ip };
@@ -27,35 +29,39 @@ const limiter = rateLimit({ max: 3, windowSeconds: 60, key: "demo" });
 
 beforeEach(() => {
   vi.clearAllMocks();
-  redis.incr.mockResolvedValue(1);
-  redis.expire.mockResolvedValue(1);
+  redis.eval.mockResolvedValue(1);
 });
 
 describe("rateLimit", () => {
   test("counts each request against the caller's own address", async () => {
     await limiter(request("198.51.100.7"), reply());
 
-    expect(redis.incr).toHaveBeenCalledWith("ratelimit:demo:198.51.100.7");
+    expect(buckets()).toEqual(["ratelimit:demo:198.51.100.7"]);
   });
 
-  test("starts the window on the first request of the window", async () => {
+  test("increments and starts the window in one round trip", async () => {
     await limiter(request(), reply());
 
-    expect(redis.expire).toHaveBeenCalledWith("ratelimit:demo:203.0.113.4", 60);
+    expect(redis.eval).toHaveBeenCalledTimes(1);
+    expect(redis.eval).toHaveBeenCalledWith(
+      expect.any(String),
+      1,
+      "ratelimit:demo:203.0.113.4",
+      60,
+    );
   });
 
   // A later request must not push the expiry out, or a caller sending steadily
   // would hold the key alive forever and never see the window reset.
-  test("does not extend the window on later requests", async () => {
-    redis.incr.mockResolvedValue(2);
-
+  test("the script sets the expiry only on the window's first request", async () => {
     await limiter(request(), reply());
 
-    expect(redis.expire).not.toHaveBeenCalled();
+    const script = redis.eval.mock.calls[0][0] as string;
+    expect(script).toMatch(/if count == 1 then redis\.call\("EXPIRE"/);
   });
 
   test("lets a request through while the caller is under the limit", async () => {
-    redis.incr.mockResolvedValue(3);
+    redis.eval.mockResolvedValue(3);
     const rep = reply();
 
     await limiter(request(), rep);
@@ -64,7 +70,7 @@ describe("rateLimit", () => {
   });
 
   test("answers 429 once the caller is over the limit", async () => {
-    redis.incr.mockResolvedValue(4);
+    redis.eval.mockResolvedValue(4);
     const rep = reply();
 
     await limiter(request(), rep);
@@ -77,17 +83,14 @@ describe("rateLimit", () => {
     await limiter(request("198.51.100.7"), reply());
     await limiter(request("203.0.113.4"), reply());
 
-    expect(redis.incr.mock.calls.map((c) => c[0])).toEqual([
-      "ratelimit:demo:198.51.100.7",
-      "ratelimit:demo:203.0.113.4",
-    ]);
+    expect(buckets()).toEqual(["ratelimit:demo:198.51.100.7", "ratelimit:demo:203.0.113.4"]);
   });
 
   // A limiter that rejects everything when its own backing store is down turns a
   // Redis outage into an outage of every public form — worse than what it defends
   // against.
   test("lets the request through when Redis cannot be reached", async () => {
-    redis.incr.mockRejectedValue(new Error("redis is down"));
+    redis.eval.mockRejectedValue(new Error("redis is down"));
     const rep = reply();
 
     await limiter(request(), rep);
@@ -101,7 +104,7 @@ describe("rateLimit", () => {
   test("buckets a caller with no resolvable address together", async () => {
     await limiter({ ip: undefined } as any, reply());
 
-    expect(redis.incr).toHaveBeenCalledWith("ratelimit:demo:unknown");
+    expect(buckets()).toContain("ratelimit:demo:unknown");
   });
 });
 
@@ -116,7 +119,7 @@ describe("rateLimit — keyed on something other than the address", () => {
   test("buckets on the derived key", async () => {
     await byOrg({ ip: "198.51.100.7", body: { orgId: "org-1" } }, reply());
 
-    expect(redis.incr).toHaveBeenCalledWith("ratelimit:signupOrg:org-1");
+    expect(buckets()).toContain("ratelimit:signupOrg:org-1");
   });
 
   test("skips the limiter entirely when the key cannot be derived", async () => {
@@ -124,7 +127,7 @@ describe("rateLimit — keyed on something other than the address", () => {
 
     await byOrg({ ip: "198.51.100.7", body: {} }, rep);
 
-    expect(redis.incr).not.toHaveBeenCalled();
+    expect(redis.eval).not.toHaveBeenCalled();
     expect(rep.status).not.toHaveBeenCalled();
   });
 });
@@ -137,7 +140,7 @@ describe("rateLimit — when Redis is down", () => {
   });
 
   test("a fail-closed limiter refuses with a 503 instead of letting the burst through", async () => {
-    redis.incr.mockRejectedValue(new Error("redis is down"));
+    redis.eval.mockRejectedValue(new Error("redis is down"));
     const rep = reply();
 
     await closed(request(), rep);
@@ -148,7 +151,7 @@ describe("rateLimit — when Redis is down", () => {
 
   test("the emergency override turns a fail-closed limiter back into fail-open", async () => {
     process.env.RATE_LIMIT_FAIL_CLOSED_DISABLED = "true";
-    redis.incr.mockRejectedValue(new Error("redis is down"));
+    redis.eval.mockRejectedValue(new Error("redis is down"));
     const rep = reply();
 
     await closed(request(), rep);
