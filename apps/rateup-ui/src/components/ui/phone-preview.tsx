@@ -31,9 +31,6 @@ export type PhonePlatform = "instagram" | "whatsapp" | "facebook";
 interface PhonePreviewState {
   open: boolean;
   screen: "home" | PhonePlatform;
-  appContent: ReactNode | null;
-  /** Page-owned controls shown above the phone, e.g. which channel to preview. */
-  toolbar: ReactNode | null;
   platform: PhonePlatform | null;
   openPreview: (platform: PhonePlatform, content: ReactNode, toolbar?: ReactNode) => void;
   closePreview: () => void;
@@ -42,17 +39,29 @@ interface PhonePreviewState {
   updateContent: (content: ReactNode, toolbar?: ReactNode) => void;
 }
 
+interface PhonePreviewContent {
+  appContent: ReactNode | null;
+  /** Page-owned controls shown above the phone, e.g. which channel to preview. */
+  toolbar: ReactNode | null;
+}
+
 const PhonePreviewContext = createContext<PhonePreviewState>({
   open: false,
   screen: "home",
-  appContent: null,
-  toolbar: null,
   platform: null,
   openPreview: () => {},
   closePreview: () => {},
   goHome: () => {},
   openApp: () => {},
   updateContent: () => {},
+});
+
+// The content lives in its own context, read only by the panel. The page that owns a preview
+// pushes new content on every render it makes, so if pushing re-rendered that page through the
+// shared context, it would build fresh elements and push again — an endless update loop.
+const PhonePreviewContentContext = createContext<PhonePreviewContent>({
+  appContent: null,
+  toolbar: null,
 });
 
 // ---------------------------------------------------------------------------
@@ -110,8 +119,6 @@ export function PhonePreviewProvider({ children }: Readonly<{ children: ReactNod
     () => ({
       open,
       screen,
-      appContent,
-      toolbar,
       platform,
       openPreview,
       closePreview,
@@ -119,25 +126,24 @@ export function PhonePreviewProvider({ children }: Readonly<{ children: ReactNod
       openApp,
       updateContent,
     }),
-    [
-      open,
-      screen,
-      appContent,
-      toolbar,
-      platform,
-      openPreview,
-      closePreview,
-      goHome,
-      openApp,
-      updateContent,
-    ],
+    [open, screen, platform, openPreview, closePreview, goHome, openApp, updateContent],
   );
 
-  return <PhonePreviewContext value={value}>{children}</PhonePreviewContext>;
+  const content = useMemo(() => ({ appContent, toolbar }), [appContent, toolbar]);
+
+  return (
+    <PhonePreviewContext value={value}>
+      <PhonePreviewContentContext value={content}>{children}</PhonePreviewContentContext>
+    </PhonePreviewContext>
+  );
 }
 
 export function usePhonePreview() {
   return useContext(PhonePreviewContext);
+}
+
+function usePhonePreviewContent() {
+  return useContext(PhonePreviewContentContext);
 }
 
 // ---------------------------------------------------------------------------
@@ -145,7 +151,8 @@ export function usePhonePreview() {
 // ---------------------------------------------------------------------------
 
 export function PhonePreviewPanel() {
-  const { open, closePreview, toolbar } = usePhonePreview();
+  const { open, closePreview } = usePhonePreview();
+  const { toolbar } = usePhonePreviewContent();
   const { t } = useTranslation();
 
   return (
@@ -282,7 +289,8 @@ const APP_META: Record<
 };
 
 function PhoneSimulator() {
-  const { screen, appContent, platform, goHome, openApp } = usePhonePreview();
+  const { screen, platform, goHome, openApp } = usePhonePreview();
+  const { appContent } = usePhonePreviewContent();
 
   return (
     <PhoneFrame>

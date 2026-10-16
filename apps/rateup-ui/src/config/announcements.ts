@@ -77,6 +77,8 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     kinds: ["new", "improvement"],
     area: "Automation",
     link: { to: "/dashboard/automation", label: "Open automations" },
+  },
+  {
     id: "2026-10-16-webhook-settings-redesign",
     title: "A clearer webhook settings page",
     summary:
