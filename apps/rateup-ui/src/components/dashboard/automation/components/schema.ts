@@ -543,7 +543,9 @@ export const DEFAULT_RULE_VALUES = {
       conditions: [{ field: "MESSAGE_BODY", operator: "CONTAINS", value: "" }],
     },
   ],
-  actions: [{ type: "TRIGGER_CHATBOT", value: "" }],
+  // Empty, not a placeholder: an unfinished one-channel action (a chatbot) blocked every other
+  // channel on the trigger step. The actions step asks for one before it continues.
+  actions: [],
   options: {
     sendOncePerDay: false,
     businessHours: {

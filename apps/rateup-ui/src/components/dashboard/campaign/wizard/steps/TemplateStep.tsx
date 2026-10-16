@@ -28,7 +28,7 @@ import useTemplatesAvailableForTeam from "@/hooks/team.tsx";
 import { cn } from "@/lib/utils";
 import { WaTemplateCategory } from "@/types/enums.ts";
 
-import { CampaignTemplatePreview } from "../CampaignTemplatePreview.tsx";
+import { CampaignPreviewButton } from "../CampaignTemplatePreview.tsx";
 import { useTemplateVariables } from "../useTemplateVariables.ts";
 import type { CampaignWizardStepProps } from "./step.types.ts";
 
@@ -246,22 +246,19 @@ function BroadcastTemplateStep({ wizard, registerSubmit }: Readonly<CampaignWiza
         </div>
       </div>
 
-      {/* ── The phone ──────────────────────────────────────────────────────── */}
-      {/* p-0.5: the preview card's hairline is a `ring`, painted outside its box,
-          so a scroller flush against it clips the border away on every side. */}
-      <div className="shrink-0 overflow-y-auto p-0.5">
-        <CampaignTemplatePreview
-          template={selected?.data}
-          businessName={campaign?.teamName}
-          sampleValues={sampleValues}
-        />
-      </div>
+      <CampaignPreviewButton
+        template={selected?.data}
+        businessName={campaign?.teamName}
+        sampleValues={sampleValues}
+      />
 
       {/* ── Mapping and details ────────────────────────────────────────────── */}
-      {/* Same again: `Card` carries `ring-1`, which this scroller would clip. */}
+      {/* Same again: `Card` carries `ring-1`, which this scroller would clip. Each card is
+          `shrink-0`: a `Card` is `overflow-hidden`, so in this column it would otherwise shrink
+          to fit and clip its own rows instead of letting the column scroll. */}
       <div className="flex min-w-0 flex-1 flex-col gap-3.5 overflow-y-auto p-0.5">
         {placeholders.length > 0 ? (
-          <Card data-size="sm">
+          <Card data-size="sm" className="shrink-0">
             <CardContent className="flex flex-col gap-3.5">
               <div className="flex flex-col gap-0.5">
                 <span className="font-display text-[15px] font-semibold">
@@ -348,7 +345,7 @@ function BroadcastTemplateStep({ wizard, registerSubmit }: Readonly<CampaignWiza
         ) : null}
 
         {selected ? (
-          <Card data-size="sm">
+          <Card data-size="sm" className="shrink-0">
             <CardContent className="flex flex-col gap-3">
               <span className="font-display text-[15px] font-semibold">
                 {t("Template details")}
@@ -463,7 +460,7 @@ function DripStagesStep({ wizard, registerSubmit }: Readonly<CampaignWizardStepP
         </div>
 
         {fields.map((field, index) => (
-          <Card key={field.id} data-size="sm">
+          <Card key={field.id} data-size="sm" className="shrink-0">
             <CardContent className="flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground inline-flex items-center gap-1.5 text-[12.5px] font-semibold">
@@ -562,12 +559,10 @@ function DripStagesStep({ wizard, registerSubmit }: Readonly<CampaignWizardStepP
         </div>
       </div>
 
-      <div className="shrink-0 overflow-y-auto p-0.5">
-        <CampaignTemplatePreview
-          template={selectedForPreview?.data}
-          businessName={campaign?.teamName}
-        />
-      </div>
+      <CampaignPreviewButton
+        template={selectedForPreview?.data}
+        businessName={campaign?.teamName}
+      />
     </div>
   );
 }

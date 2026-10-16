@@ -1,7 +1,32 @@
+import {
+  IconAt,
+  IconBolt,
+  IconBrandInstagram,
+  IconBrandMessenger,
+  IconBrandWhatsapp,
+  IconCircleCheck,
+  IconLayoutKanban,
+  IconLink,
+  IconMessageCircle,
+  IconMessageDots,
+  IconRefresh,
+  IconShoppingBag,
+  IconShoppingCart,
+  IconUserPlus,
+  IconUserShare,
+} from "@tabler/icons-react";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 
 import { PLAIN_TRIGGERS } from "@/components/dashboard/automation/rule-sentence.ts";
-import { Field, FieldDescription, FieldError, FieldTitle } from "@/components/ui/field.tsx";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  FieldTitle,
+} from "@/components/ui/field.tsx";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import {
   Select,
   SelectContent,
@@ -21,8 +46,28 @@ import {
   triggerChannelProblem,
 } from "../schema.ts";
 import { AccountPicker, useRuleAccounts } from "./AccountPicker.tsx";
+import { WizardSection } from "./WizardSection.tsx";
 
-const LABEL = "text-[13px] font-medium text-foreground/80";
+const CHANNEL_ICON: Record<Platform, typeof IconBolt> = {
+  WHATSAPP: IconBrandWhatsapp,
+  INSTAGRAM: IconBrandInstagram,
+  FACEBOOK: IconBrandMessenger,
+};
+
+/** What each event card shows besides its name. */
+const EVENT_META: Record<string, { icon: typeof IconBolt; hint: string }> = {
+  MESSAGE_RECEIVED: { icon: IconMessageCircle, hint: "Reply to keywords, or to any message." },
+  CONTACT_CREATED: { icon: IconUserPlus, hint: "Welcome someone the first time they write." },
+  CHAT_CLOSED: { icon: IconCircleCheck, hint: "Follow up once your team closes a chat." },
+  CHAT_ASSIGNED: { icon: IconUserShare, hint: "Tell the customer who is helping them." },
+  STAGE_UPDATED: { icon: IconLayoutKanban, hint: "React when a lead moves on your board." },
+  LIFECYCLE_UPDATED: { icon: IconRefresh, hint: "Use lead stages for new automations." },
+  SHOPIFY_EVENT: { icon: IconShoppingCart, hint: "Orders, payments, refunds and lost checkouts." },
+  WOOCOMMERCE_EVENT: { icon: IconShoppingBag, hint: "Message the buyer as their order moves." },
+  INSTAGRAM_COMMENT: { icon: IconMessageDots, hint: "Reply privately to comments on your posts." },
+  INSTAGRAM_STORY_MENTION: { icon: IconAt, hint: "Thank people who tag you in their story." },
+  INSTAGRAM_REFERRAL: { icon: IconLink, hint: "Greet people who arrive from a link you shared." },
+};
 
 const EMPTY_KEYWORD_GROUP: CreateRuleInput["groups"] = [
   { operator: "AND", conditions: [{ field: "MESSAGE_BODY", operator: "CONTAINS", value: "" }] },
@@ -99,13 +144,16 @@ export function TriggerStep() {
   };
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <span className={LABEL}>Channels</span>
+    <div className="flex flex-col gap-8">
+      <WizardSection
+        title="Channels"
+        hint={dimmed ?? "One automation can listen on several channels and reply on each."}
+      >
         <div className="flex flex-wrap gap-2" role="group" aria-label="Channels">
           {PLATFORMS.map((option) => {
             const on = platforms.includes(option.value);
             const reason = blockedBy(option.value);
+            const Icon = CHANNEL_ICON[option.value];
             return (
               <button
                 key={option.value}
@@ -115,7 +163,7 @@ export function TriggerStep() {
                 title={reason ?? undefined}
                 onClick={() => toggleChannel(option.value)}
                 className={cn(
-                  "h-9 rounded-full border px-4 text-sm font-medium transition-colors outline-none",
+                  "inline-flex h-9 items-center gap-2 rounded-full border pr-4 pl-3 text-sm font-medium transition-colors outline-none",
                   "focus-visible:ring-ring focus-visible:ring-2 disabled:cursor-not-allowed",
                   on
                     ? "border-primary bg-primary/10 text-primary"
@@ -123,40 +171,49 @@ export function TriggerStep() {
                   reason && "opacity-50",
                 )}
               >
+                <Icon className="size-4" aria-hidden />
                 {option.label}
               </button>
             );
           })}
         </div>
-        <span className="text-muted-foreground text-xs">
-          {dimmed ?? "One automation can listen on several channels and reply on each."}
-        </span>
-      </div>
+      </WizardSection>
 
       <Controller
         control={form.control}
         name="triggerEvent"
         render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldTitle className={LABEL}>Event</FieldTitle>
-            <Select
+          <WizardSection title="Event">
+            <RadioGroup
               value={field.value}
-              onValueChange={(value) => value && changeEvent(value)}
-              items={events}
+              onValueChange={(value) => typeof value === "string" && changeEvent(value)}
+              className="grid gap-2 sm:grid-cols-2"
+              aria-invalid={fieldState.invalid}
             >
-              <SelectTrigger className="w-full" aria-invalid={fieldState.invalid}>
-                <SelectValue placeholder="Pick what starts it" />
-              </SelectTrigger>
-              <SelectContent>
-                {events.map((event) => (
-                  <SelectItem key={event.value} value={event.value}>
-                    {event.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              {events.map((event) => {
+                const meta = EVENT_META[event.value];
+                const Icon = meta?.icon ?? IconBolt;
+                const id = `trigger-event-${event.value}`;
+                return (
+                  <FieldLabel key={event.value} htmlFor={id}>
+                    <Field orientation="horizontal" className="items-start gap-3">
+                      <span className="bg-muted text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-lg">
+                        <Icon className="size-4" aria-hidden />
+                      </span>
+                      <FieldContent>
+                        <FieldTitle>{event.label}</FieldTitle>
+                        {meta?.hint && (
+                          <FieldDescription className="text-xs">{meta.hint}</FieldDescription>
+                        )}
+                      </FieldContent>
+                      <RadioGroupItem id={id} value={event.value} className="mt-0.5" />
+                    </Field>
+                  </FieldLabel>
+                );
+              })}
+            </RadioGroup>
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-          </Field>
+          </WizardSection>
         )}
       />
 
@@ -166,7 +223,7 @@ export function TriggerStep() {
           name="options.shopifyEvent"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldTitle className={LABEL}>Which Shopify event</FieldTitle>
+              <FieldTitle>Which Shopify event</FieldTitle>
               <Select onValueChange={field.onChange} value={field.value} items={shopifyEventData}>
                 <SelectTrigger className="w-full" aria-invalid={fieldState.invalid}>
                   <SelectValue placeholder="Pick a Shopify event" />
@@ -191,7 +248,7 @@ export function TriggerStep() {
           name="options.wooEvent"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldTitle className={LABEL}>Order status</FieldTitle>
+              <FieldTitle>Order status</FieldTitle>
               <Select onValueChange={field.onChange} value={field.value} items={wooEventData}>
                 <SelectTrigger className="w-full" aria-invalid={fieldState.invalid}>
                   <SelectValue placeholder="Pick an order status" />
@@ -217,14 +274,13 @@ export function TriggerStep() {
         control={form.control}
         name="whatsappSettingsPhoneIds"
         render={({ field }) => (
-          <div className="flex flex-col gap-2">
-            <span className={LABEL}>{sendsOnly ? "Send from" : "Listen on"}</span>
+          <WizardSection title={sendsOnly ? "Send from" : "Listen on"}>
             <AccountPicker
               platforms={platforms}
               value={field.value ?? []}
               onChange={field.onChange}
             />
-          </div>
+          </WizardSection>
         )}
       />
     </div>

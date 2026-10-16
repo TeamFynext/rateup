@@ -1,4 +1,4 @@
-import { IconCircleCheckFilled } from "@tabler/icons-react";
+import { IconCircleCheckFilled, IconPlus } from "@tabler/icons-react";
 import { useState } from "react";
 
 import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
@@ -40,6 +40,8 @@ export function TemplateGallery({
   onPick,
   limit,
   filterable = false,
+  onScratch,
+  wide = false,
 }: Readonly<{
   selectedId?: string;
   onPick: (template: AutomationTemplate) => void;
@@ -47,6 +49,10 @@ export function TemplateGallery({
   limit?: number;
   /** Category chips above the grid. */
   filterable?: boolean;
+  /** Leads the grid with a "Start from scratch" card, so it is seen without scrolling. */
+  onScratch?: () => void;
+  /** Up to three columns, as the space allows, for a surface with the room. */
+  wide?: boolean;
 }>) {
   const isMissing = useMissingRequirements();
   const [category, setCategory] = useState<TemplateCategory | "all">("all");
@@ -63,7 +69,7 @@ export function TemplateGallery({
   ];
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className={cn("flex flex-col gap-4", wide && "@container")}>
       {filterable && (
         <div className="flex flex-wrap gap-2" role="group" aria-label="Filter templates">
           {chips.map((chip) => {
@@ -96,7 +102,32 @@ export function TemplateGallery({
           })}
         </div>
       )}
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div
+        className={cn(
+          "grid gap-3",
+          // Sized by the space the grid gets, not the window: the device preview panel can
+          // take 360px of it.
+          wide ? "@xl:grid-cols-2 @3xl:grid-cols-3" : "sm:grid-cols-2",
+        )}
+      >
+        {onScratch && (
+          <button
+            type="button"
+            onClick={onScratch}
+            className={cn(
+              "border-border flex flex-col gap-1.5 rounded-xl border border-dashed p-4 text-left transition-colors",
+              "hover:bg-muted/50 focus-visible:ring-ring outline-none focus-visible:ring-2",
+            )}
+          >
+            <span className="flex items-center gap-2">
+              <IconPlus className="text-primary size-4" aria-hidden />
+              <span className="font-display text-[14.5px] font-semibold">Start from scratch</span>
+            </span>
+            <span className="text-muted-foreground text-[13px] leading-normal text-pretty">
+              Build it yourself: pick the trigger, conditions and actions step by step.
+            </span>
+          </button>
+        )}
         {templates.map((template) => {
           const selected = template.id === selectedId;
           const missing = isMissing(template.requires);

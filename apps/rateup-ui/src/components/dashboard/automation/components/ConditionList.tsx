@@ -19,9 +19,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { useLifecycleContext } from "@/context/LifecycleContext.ts";
 
+import { MatchSentence } from "./MatchSentence.tsx";
 import type { ConditionField, CreateRuleInput } from "./schema.ts";
 import { CONDITION_OPERATORS, getConditionFields } from "./schema.ts";
 
@@ -376,20 +376,8 @@ const ConditionList: React.FC<ConditionListProps> = ({
 
   return (
     <div className="space-y-3">
-      {/* Match all/any toggle for this condition block */}
       {fields.length > 1 && (
-        <Tabs
-          defaultValue="AND"
-          value={groupOperator}
-          onValueChange={(e) => {
-            onOperatorChange(e as "AND" | "OR");
-          }}
-        >
-          <TabsList>
-            <TabsTrigger value="AND">Match all</TabsTrigger>
-            <TabsTrigger value="OR">Match any</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <MatchSentence value={groupOperator} onChange={onOperatorChange} noun="conditions" />
       )}
 
       {/* Condition Rows */}
@@ -406,7 +394,7 @@ const ConditionList: React.FC<ConditionListProps> = ({
       <Button
         type="button"
         variant="outline"
-        className="w-full border-2 border-dashed border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 bg-ru-blue-50 dark:bg-blue-950/20 hover:bg-ru-blue-100 dark:hover:bg-blue-900/30"
+        size="sm"
         onClick={() => {
           const defaultField =
             getConditionFields().length > 0 ? getConditionFields()[0].value : "CONTACT_EMAIL";

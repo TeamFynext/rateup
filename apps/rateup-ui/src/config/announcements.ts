@@ -40,6 +40,25 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-10-16-campaign-device-preview",
+    title: "Campaign preview moves to the side panel",
+    summary:
+      "When you pick a template for a campaign, the phone preview now opens in the panel on the right, with a Preview button in the header to show or hide it.",
+    publishedAt: "2026-10-16",
+    kinds: ["improvement"],
+    area: "Campaigns",
+  },
+  {
+    id: "2026-10-16-automation-builder-refresh",
+    title: "A clearer automation builder",
+    summary:
+      "Pick what starts an automation from cards, add actions from a menu, and keep a live phone preview open beside every step.",
+    publishedAt: "2026-10-16",
+    kinds: ["improvement"],
+    area: "Automation",
+    link: { to: "/dashboard/automation", label: "Open automations" },
+  },
+  {
     id: "2026-10-16-automation-multi-channel",
     title: "One automation for all your channels",
     summary:

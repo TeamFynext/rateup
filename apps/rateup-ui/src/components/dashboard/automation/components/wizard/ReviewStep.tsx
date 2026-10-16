@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input.tsx";
 import RuleOptions from "../RuleOptions.tsx";
 import type { CreateRuleInput } from "../schema.ts";
 import { RuleSentenceText } from "./RuleSentenceText.tsx";
+import { WizardSection } from "./WizardSection.tsx";
 
 export function ReviewStep({
   sentence,
@@ -15,13 +16,13 @@ export function ReviewStep({
   const { control } = useFormContext<CreateRuleInput>();
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <Controller
         control={control}
         name="name"
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldTitle className="text-foreground/80 text-[13px] font-medium">Name</FieldTitle>
+            <FieldTitle>Name</FieldTitle>
             <Input
               placeholder="e.g. Refund requests"
               {...field}
@@ -36,10 +37,9 @@ export function ReviewStep({
         <RuleSentenceText parts={sentence} onEdit={onEdit} className="text-base leading-[1.8]" />
       </div>
 
-      <div className="flex flex-col gap-2">
-        <span className="text-foreground/80 text-[13px] font-medium">Limits</span>
+      <WizardSection title="Limits">
         <RuleOptions />
-      </div>
+      </WizardSection>
     </div>
   );
 }

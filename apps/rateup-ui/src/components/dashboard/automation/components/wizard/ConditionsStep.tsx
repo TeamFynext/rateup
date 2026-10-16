@@ -1,4 +1,4 @@
-import { IconLoader2, IconPlus, IconRefresh, IconTrash } from "@tabler/icons-react";
+import { IconInfoCircle, IconLoader2, IconPlus, IconRefresh, IconTrash } from "@tabler/icons-react";
 import React, { useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { Controller, useFieldArray, useFormContext, useWatch } from "react-hook-form";
@@ -9,6 +9,7 @@ import {
   useInstagramMediaPosts,
   useInstagramStories,
 } from "@/backend/whatsapp/instagram-profile/instagramProfile.query";
+import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import {
@@ -27,12 +28,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { cn } from "@/lib/utils.ts";
 import { ShopifyEvents } from "@/types/enums.ts";
 
 import ConditionList from "../ConditionList.tsx";
 import { InstagramCommentSource, InstagramLinkRef } from "../InstagramTriggerOptions.tsx";
+import { MatchSentence } from "../MatchSentence.tsx";
 import type { CreateRuleInput, CreateRuleValues } from "../schema.ts";
 import { INSTAGRAM_SCOPE_OPTIONS } from "../schema.ts";
 
@@ -144,7 +145,7 @@ const DelayField: React.FC<{
 const AbandonedCheckoutOptions: React.FC<{
   form: UseFormReturn<CreateRuleInput, unknown, CreateRuleValues>;
 }> = ({ form }) => (
-  <div className="rounded-xl border p-4 bg-muted/20 space-y-4">
+  <div className="bg-card ring-foreground/10 rounded-xl p-4 ring-1 space-y-4">
     <Controller
       control={form.control}
       name="options.abandonedCheckoutDelayMinutes"
@@ -237,33 +238,36 @@ const ConditionsPanel: React.FC<{
 }) => (
   <div className="space-y-4">
     {groupFields.length > 1 && (
-      <div className="flex justify-end">
-        <Tabs
-          defaultValue={form.getValues("operator") ?? "AND"}
-          onValueChange={(e) => form.setValue("operator", e)}
-        >
-          <TabsList>
-            <TabsTrigger value="AND">Match all</TabsTrigger>
-            <TabsTrigger value="OR">Match any</TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
+      <Controller
+        control={form.control}
+        name="operator"
+        render={({ field }) => (
+          <MatchSentence
+            value={field.value === "OR" ? "OR" : "AND"}
+            onChange={field.onChange}
+            noun="groups"
+          />
+        )}
+      />
     )}
 
     {/* Instagram-specific */}
     {isInstagramTrigger && (
       <div className="space-y-4">
-        <div className="rounded-lg border border-dashed p-3.5 text-sm text-muted-foreground">
-          {isInstagramCommentTrigger
-            ? "Runs when someone comments on your post, reel, or ad. The first message your actions send arrives as a private reply to that comment."
-            : "Triggers when someone mentions your account in their Instagram Story."}
-        </div>
+        <Alert>
+          <IconInfoCircle />
+          <AlertDescription>
+            {isInstagramCommentTrigger
+              ? "Runs when someone comments on your post, reel, or ad. The first message your actions send arrives as a private reply to that comment."
+              : "Triggers when someone mentions your account in their Instagram Story."}
+          </AlertDescription>
+        </Alert>
 
         {isInstagramCommentTrigger && <InstagramCommentSource />}
 
         {isInstagramCommentTrigger && instagramCommentSource !== "LIVE" && (
-          <div className="rounded-xl border p-4 bg-muted/20 space-y-3">
-            <span className="text-sm font-semibold block">Apply to</span>
+          <div className="bg-card ring-foreground/10 rounded-xl p-4 ring-1 space-y-3">
+            <span className="block text-sm font-medium">Apply to</span>
             <Controller
               control={form.control}
               name="options.instagramScope"
@@ -333,10 +337,13 @@ const ConditionsPanel: React.FC<{
 
     {isInstagramReferralTrigger && (
       <div className="space-y-4">
-        <div className="rounded-lg border border-dashed p-3.5 text-sm text-muted-foreground">
-          Runs when someone opens a chat with you from this ig.me link — share it in your bio,
-          stories or anywhere online.
-        </div>
+        <Alert>
+          <IconInfoCircle />
+          <AlertDescription>
+            Runs when someone opens a chat with you from this ig.me link — share it in your bio,
+            stories or anywhere online.
+          </AlertDescription>
+        </Alert>
         <InstagramLinkRef />
       </div>
     )}
@@ -344,16 +351,19 @@ const ConditionsPanel: React.FC<{
     {/* Shopify-specific */}
     {isShopifyTrigger && (
       <div className="space-y-4">
-        <div className="rounded-lg border border-dashed p-3.5 text-sm text-muted-foreground">
-          Shopify rules use the selected Shopify event as the trigger condition.
-        </div>
+        <Alert>
+          <IconInfoCircle />
+          <AlertDescription>
+            Shopify rules use the selected Shopify event as the trigger condition.
+          </AlertDescription>
+        </Alert>
 
         {shopifyEvent === ShopifyEvents.ABANDONED_CHECKOUTS && (
           <AbandonedCheckoutOptions form={form} />
         )}
 
-        <div className="rounded-xl border p-4 bg-muted/20 space-y-3">
-          <span className="text-sm font-semibold block">Product Filter (optional)</span>
+        <div className="bg-card ring-foreground/10 rounded-xl p-4 ring-1 space-y-3">
+          <span className="block text-sm font-medium">Only for these products (optional)</span>
           <p className="text-xs text-muted-foreground">
             {shopifyEvent === ShopifyEvents.ABANDONED_CHECKOUTS
               ? "The rule triggers if the cart contains any selected product."
@@ -374,7 +384,7 @@ const ConditionsPanel: React.FC<{
                       items={productData}
                     >
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select Product" />
+                        <SelectValue placeholder="Pick a product" />
                       </SelectTrigger>
                       <SelectContent>
                         {productData.map((prod) => (
@@ -439,13 +449,16 @@ const ConditionsPanel: React.FC<{
     {/* WooCommerce-specific */}
     {isWooTrigger && (
       <div className="space-y-4">
-        <div className="rounded-lg border border-dashed p-3.5 text-sm text-muted-foreground">
-          WooCommerce rules fire when an order reaches the selected status. The message goes to the
-          phone number on the order.
-        </div>
+        <Alert>
+          <IconInfoCircle />
+          <AlertDescription>
+            WooCommerce rules fire when an order reaches the selected status. The message goes to
+            the phone number on the order.
+          </AlertDescription>
+        </Alert>
 
-        <div className="rounded-xl border p-4 bg-muted/20 space-y-3">
-          <span className="text-sm font-semibold block">Product Filter (optional)</span>
+        <div className="bg-card ring-foreground/10 rounded-xl p-4 ring-1 space-y-3">
+          <span className="block text-sm font-medium">Only for these products (optional)</span>
           <p className="text-xs text-muted-foreground">
             The rule triggers if the order contains any selected product.
           </p>
@@ -464,7 +477,7 @@ const ConditionsPanel: React.FC<{
                       items={wooProductData}
                     >
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select Product" />
+                        <SelectValue placeholder="Pick a product" />
                       </SelectTrigger>
                       <SelectContent>
                         {wooProductData.map((prod) => (
@@ -532,15 +545,16 @@ const ConditionsPanel: React.FC<{
       !isShopifyTrigger &&
       !isWooTrigger &&
       groupFields.map((group, groupIndex: number) => (
-        <div key={group.id} className="rounded-xl border p-4 bg-muted/20">
+        <div key={group.id} className="bg-card ring-foreground/10 rounded-xl p-4 ring-1">
           <div className="flex items-center justify-between mb-3 pb-3 border-b">
-            <span className="text-sm font-semibold">Block {groupIndex + 1}</span>
+            <span className="text-sm font-medium">Group {groupIndex + 1}</span>
             <Button
               type="button"
               variant="ghost"
               size="sm"
               onClick={() => removeGroup(groupIndex)}
               disabled={triggerEvent === "MESSAGE_RECEIVED" && groupFields.length === 1}
+              aria-label={`Delete group ${groupIndex + 1}`}
               className="h-7 text-muted-foreground hover:text-destructive"
             >
               <IconTrash className="w-3.5 h-3.5" />
@@ -574,7 +588,7 @@ const ConditionsPanel: React.FC<{
         }}
       >
         <IconPlus className="w-4 h-4 mr-2" />
-        Add condition block
+        Add condition group
       </Button>
     )}
   </div>

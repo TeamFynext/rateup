@@ -1,8 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { IconArrowLeft } from "@tabler/icons-react";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
-import React from "react";
-import { useForm, useWatch } from "react-hook-form";
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
 
 import {
   useCreateRuleMutation,
@@ -16,7 +16,8 @@ import { findAutomationTemplate, templateFormValues } from "../automation-templa
 import RuleBuilderForm from "./RuleBuilderForm.tsx";
 import RuleShare from "./RuleShare.tsx";
 import type { CreateRuleInput, CreateRuleValues, Platform } from "./schema.ts";
-import { createRuleSchema, DEFAULT_RULE_VALUES } from "./schema.ts";
+import { asPlatform, createRuleSchema, DEFAULT_RULE_VALUES } from "./schema.ts";
+import { AutomationPreviewButton } from "./wizard/AutomationPreview.tsx";
 
 interface WhatsappAutomationRuleBuilderProps {
   ruleId?: string;
@@ -134,7 +135,10 @@ const RuleEditor: React.FC<{
     mode: "onTouched",
   });
 
-  const ruleName = useWatch({ control: form.control, name: "name" });
+  const rule = form.watch();
+  // One platform switch, two places: the device preview's toolbar and the Share tab.
+  const [platform, setPlatform] = useState<Platform>();
+  const ruleName = rule.name;
 
   // Use saved data for Share functionality
   const savedTriggerEvent = ruleData?.triggerEvent;
@@ -145,7 +149,10 @@ const RuleEditor: React.FC<{
     g.conditions.some((c) => c.field === "MESSAGE_BODY" && c.value),
   );
 
-  const savedPlatform = ruleData?.platform ?? "WHATSAPP";
+  // A rule saved before multi-channel rules names only its one platform.
+  const savedPlatforms = ruleData?.platforms?.length
+    ? ruleData.platforms
+    : [ruleData?.platform ?? "WHATSAPP"];
   const showShareTab = savedTriggerEvent === "MESSAGE_RECEIVED" && hasKeywords;
 
   const onSubmit = (data: CreateRuleValues) => {
@@ -193,12 +200,15 @@ const RuleEditor: React.FC<{
             {ruleName || (isEditMode ? "Untitled automation" : "New automation")}
           </span>
         </div>
-        {showShareTab && (
-          <TabsList>
-            <TabsTrigger value="builder">Builder</TabsTrigger>
-            <TabsTrigger value="share">Share</TabsTrigger>
-          </TabsList>
-        )}
+        <div className="flex shrink-0 items-center gap-3">
+          {showShareTab && (
+            <TabsList>
+              <TabsTrigger value="builder">Builder</TabsTrigger>
+              <TabsTrigger value="share">Share</TabsTrigger>
+            </TabsList>
+          )}
+          <AutomationPreviewButton rule={rule} picked={platform} onPick={setPlatform} />
+        </div>
       </header>
 
       <TabsContent value="builder" className="flex min-h-0 flex-col">
@@ -218,7 +228,9 @@ const RuleEditor: React.FC<{
           <RuleShare
             groups={savedGroups || []}
             channels={savedChannels || []}
-            platform={savedPlatform}
+            platforms={savedPlatforms}
+            platform={platform}
+            onPlatformChange={(value) => setPlatform(asPlatform(value))}
           />
         </div>
       </TabsContent>

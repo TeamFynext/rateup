@@ -1,7 +1,25 @@
 import type { DropResult } from "@hello-pangea/dnd";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
-import { IconChevronDown, IconGripVertical, IconPlus, IconTrash } from "@tabler/icons-react";
-import React, { useMemo, useState } from "react";
+import {
+  IconChevronDown,
+  IconCircleCheck,
+  IconClipboardList,
+  IconGripVertical,
+  IconInfoCircle,
+  IconLayoutKanban,
+  IconMessage,
+  IconPlus,
+  IconRefresh,
+  IconRobot,
+  IconSitemap,
+  IconTag,
+  IconTemplate,
+  IconTrash,
+  IconUser,
+  IconUsersGroup,
+  IconWebhook,
+} from "@tabler/icons-react";
+import React, { Fragment, useMemo, useState } from "react";
 import type { ControllerRenderProps } from "react-hook-form";
 import { Controller, useFieldArray, useFormContext, useWatch } from "react-hook-form";
 
@@ -21,8 +39,19 @@ import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import { MessageBodyEditor } from "@/components/dashboard/loyalty/messages/MessageBodyEditor.tsx";
 import { findLeadsPipeline } from "@/components/pipeline/pipelineTypes.ts";
 import VariableMapping from "@/components/shopify/VariableMapping.tsx";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu.tsx";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty.tsx";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
@@ -556,21 +585,58 @@ const ExternalApiExample = () => {
 
   return (
     actions?.some((data) => data.type === "CALL_EXTERNAL_API") && (
-      <div className="text-xs text-muted-foreground bg-muted/50 rounded p-2 border mt-1">
-        <strong>Example API request:</strong>
-        <pre className="whitespace-pre-wrap mt-1">
-          {`POST {url}
+      <Alert>
+        <IconInfoCircle />
+        <AlertTitle>Example API request</AlertTitle>
+        <AlertDescription>
+          <pre className="mt-1 text-xs whitespace-pre-wrap">
+            {`POST {url}
 Content-Type: application/json
 
 {
   "user": "1234567890",
   "action": "Approve"
 }`}
-        </pre>
-      </div>
+          </pre>
+        </AlertDescription>
+      </Alert>
     )
   );
 };
+
+/** How each action reads in the "Add action" menu, and the icon its card carries. */
+const ACTION_META: Record<string, { icon: typeof IconMessage; label: string }> = {
+  SEND_MESSAGE: { icon: IconMessage, label: "Send a message" },
+  SEND_TEMPLATE: { icon: IconTemplate, label: "Send a template" },
+  SEND_FLOW: { icon: IconSitemap, label: "Send a flow" },
+  SEND_WEB_SURVEY: { icon: IconClipboardList, label: "Send a web survey" },
+  TRIGGER_CHATBOT: { icon: IconRobot, label: "Start a chatbot" },
+  ASSIGN_TEAM: { icon: IconUsersGroup, label: "Assign to a team" },
+  ASSIGN_USER: { icon: IconUser, label: "Assign to a teammate" },
+  ATTACH_LABEL: { icon: IconTag, label: "Add a label" },
+  ASSIGN_STAGE: { icon: IconLayoutKanban, label: "Move to a lead stage" },
+  ASSIGN_LIFECYCLE: { icon: IconRefresh, label: "Set lifecycle (legacy)" },
+  CLOSE_TICKET: { icon: IconCircleCheck, label: "Close the chat" },
+  CALL_EXTERNAL_API: { icon: IconWebhook, label: "Call an external API" },
+};
+
+const ACTION_GROUPS: readonly { label: string; types: readonly string[] }[] = [
+  {
+    label: "Reply to the customer",
+    types: ["SEND_MESSAGE", "SEND_TEMPLATE", "SEND_FLOW", "SEND_WEB_SURVEY", "TRIGGER_CHATBOT"],
+  },
+  {
+    label: "Behind the scenes",
+    types: [
+      "ASSIGN_TEAM",
+      "ASSIGN_USER",
+      "ATTACH_LABEL",
+      "ASSIGN_STAGE",
+      "CLOSE_TICKET",
+      "CALL_EXTERNAL_API",
+    ],
+  },
+];
 
 const LAST = "last";
 
@@ -584,7 +650,6 @@ const ActionList: React.FC<{
 }> = ({ describe }) => {
   const {
     control,
-    setValue,
     formState: { errors },
   } = useFormContext<CreateRuleInput>();
   const { fields, append, remove, move } = useFieldArray({
@@ -592,6 +657,12 @@ const ActionList: React.FC<{
     name: "actions",
   });
   const platforms = (useWatch({ control, name: "platforms" }) ?? []).map(asPlatform);
+  const actions = useWatch({ control, name: "actions" });
+  const available = getActionTypesForPlatforms(platforms);
+  const menuGroups = ACTION_GROUPS.map((group) => ({
+    label: group.label,
+    items: available.filter((option) => group.types.includes(option.value)),
+  })).filter((group) => group.items.length > 0);
   // The first unfinished action is the one worth opening; a template leaves several unfinished.
   // "last" opens whichever row was just appended, whose id only exists once it renders.
   const [open, setOpen] = useState<string | undefined>(
@@ -604,12 +675,26 @@ const ActionList: React.FC<{
     move(result.source.index, result.destination.index);
   };
 
+  const addAction = (type: string) => {
+    append(
+      type === "SEND_TEMPLATE"
+        ? { type, value: { templateId: "", variableMapping: [] } }
+        : { type, value: "" },
+    );
+    setOpen(LAST);
+  };
+
   return (
-    <div className="space-y-3">
+    <div className="flex flex-col gap-3">
       {fields.length === 0 && (
-        <div className="text-muted-foreground text-sm italic p-4 text-center bg-muted/50 rounded-lg border border-dashed">
-          No actions added.
-        </div>
+        <Empty className="border p-6">
+          <EmptyHeader>
+            <EmptyTitle>No actions yet</EmptyTitle>
+            <EmptyDescription>
+              Add what the automation should do, like sending a message or assigning the chat.
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       )}
       <ExternalApiExample />
       <DragDropContext onDragEnd={onDragEnd}>
@@ -623,6 +708,7 @@ const ActionList: React.FC<{
               {fields.map((field, index) => {
                 const isOpen = field.id === openId;
                 const summary = describe(index);
+                const ActionIcon = ACTION_META[actions?.[index]?.type ?? ""]?.icon ?? IconMessage;
                 return (
                   <Draggable key={field.id} draggableId={field.id} index={index}>
                     {(draggable, snapshot) => (
@@ -642,6 +728,12 @@ const ActionList: React.FC<{
                             className="text-muted-foreground hover:bg-muted flex size-8 shrink-0 cursor-grab items-center justify-center rounded-md"
                           >
                             <IconGripVertical className="size-4" />
+                          </span>
+                          <span className="text-muted-foreground w-4 shrink-0 text-center text-xs font-medium tabular-nums">
+                            {index + 1}
+                          </span>
+                          <span className="bg-muted text-muted-foreground flex size-7 shrink-0 items-center justify-center rounded-md">
+                            <ActionIcon className="size-4" aria-hidden />
                           </span>
                           <button
                             type="button"
@@ -680,56 +772,10 @@ const ActionList: React.FC<{
                         </div>
 
                         {isOpen && (
-                          <div className="flex flex-col gap-3 px-4 pt-1 pb-4 sm:pl-11.5">
-                            <Controller
-                              control={control}
-                              name={`actions.${index}.type`}
-                              render={({ field: typeField, fieldState }) => {
-                                // Per row: the legacy Assign Lifecycle entry is offered only to
-                                // the action already using it.
-                                const filteredActionTypes = getActionTypesForPlatforms(
-                                  platforms,
-                                  typeof typeField.value === "string" ? typeField.value : undefined,
-                                );
-                                return (
-                                  <Field data-invalid={fieldState.invalid}>
-                                    <Select
-                                      onValueChange={(val) => {
-                                        typeField.onChange(val);
-                                        if (val === "SEND_TEMPLATE") {
-                                          setValue(`actions.${index}.value`, {
-                                            templateId: "",
-                                            variableMapping: [],
-                                          });
-                                          return;
-                                        }
-                                        setValue(`actions.${index}.value`, "");
-                                      }}
-                                      value={typeField.value}
-                                      items={filteredActionTypes}
-                                    >
-                                      <SelectTrigger
-                                        className="w-full"
-                                        aria-invalid={fieldState.invalid}
-                                      >
-                                        <SelectValue placeholder="Action Type" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {filteredActionTypes.map((opt) => (
-                                          <SelectItem key={opt.value} value={opt.value}>
-                                            {opt.label}
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                    {fieldState.invalid && (
-                                      <FieldError errors={[fieldState.error]} />
-                                    )}
-                                  </Field>
-                                );
-                              }}
-                            />
-
+                          <div className="flex flex-col gap-3 px-4 pt-1 pb-4 sm:pl-[4.75rem]">
+                            {errors.actions?.[index]?.type && (
+                              <FieldError errors={[errors.actions[index].type]} />
+                            )}
                             <Controller
                               control={control}
                               name={`actions.${index}.value`}
@@ -753,20 +799,38 @@ const ActionList: React.FC<{
         </Droppable>
       </DragDropContext>
 
-      <Button
-        type="button"
-        variant="outline"
-        className="mt-3"
-        onClick={() => {
-          append({ type: "SEND_MESSAGE", value: "" });
-          setOpen(LAST);
-        }}
-      >
-        <IconPlus className="size-4" /> Add action
-      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={<Button type="button" variant="outline" className="self-start" />}
+        >
+          <IconPlus className="size-4" />
+          Add action
+          <IconChevronDown className="text-muted-foreground size-4" aria-hidden />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-60">
+          {menuGroups.map((group, groupIndex) => (
+            <Fragment key={group.label}>
+              {groupIndex > 0 && <DropdownMenuSeparator />}
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>{group.label}</DropdownMenuLabel>
+                {group.items.map((option) => {
+                  const meta = ACTION_META[option.value];
+                  const Icon = meta?.icon ?? IconMessage;
+                  return (
+                    <DropdownMenuItem key={option.value} onClick={() => addAction(option.value)}>
+                      <Icon className="size-4" aria-hidden />
+                      {meta?.label ?? option.label}
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuGroup>
+            </Fragment>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       {errors.actions?.root?.message && (
-        <p className="text-sm font-medium text-destructive mt-2">{errors.actions?.root?.message}</p>
+        <p className="text-sm font-medium text-destructive">{errors.actions?.root?.message}</p>
       )}
     </div>
   );

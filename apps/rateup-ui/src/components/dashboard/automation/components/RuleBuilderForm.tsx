@@ -4,6 +4,7 @@ import type { FieldErrors, UseFormReturn } from "react-hook-form";
 import { Controller, FormProvider } from "react-hook-form";
 import { toast } from "sonner";
 
+import { PAGE_TITLE } from "@/components/common/page-heading.tsx";
 import type { AutomationTemplate } from "@/components/dashboard/automation/automation-templates.ts";
 import { templateFormValues } from "@/components/dashboard/automation/automation-templates.ts";
 import type { WizardStep } from "@/components/dashboard/automation/rule-sentence.ts";
@@ -18,7 +19,6 @@ import { InstagramPublicReplies } from "./InstagramPublicReplies.tsx";
 import type { CreateRuleInput, CreateRuleValues } from "./schema.ts";
 import { PLATFORMS } from "./schema.ts";
 import { useRuleAccounts } from "./wizard/AccountPicker.tsx";
-import { AutomationPreview } from "./wizard/AutomationPreview.tsx";
 import { ConditionsStep } from "./wizard/ConditionsStep.tsx";
 import { ReviewStep } from "./wizard/ReviewStep.tsx";
 import { blockerFor, STEP_FIELDS, stepFor } from "./wizard/step-blockers.ts";
@@ -218,28 +218,26 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
         <div className="flex min-h-0 flex-1">
           {/* min-h-0 is what lets this scroll instead of pushing the footer off. */}
           <div ref={bodyRef} className="min-h-0 min-w-0 flex-1 overflow-y-auto">
-            <div className="flex w-full max-w-160 flex-col gap-6 px-8 pt-9 pb-8 lg:px-12">
+            <div
+              className={cn(
+                "mx-auto flex w-full flex-col gap-8 px-8 pt-9 pb-8 lg:px-12",
+                // The template grid takes three columns; the form steps read better narrow.
+                step === "template" ? "max-w-240" : "max-w-160",
+              )}
+            >
               <header className="flex flex-col gap-1.5">
-                <h1 className="font-display text-[22px] font-bold tracking-tight">
-                  {heading.title}
-                </h1>
+                <h1 className={PAGE_TITLE}>{heading.title}</h1>
                 <p className="text-muted-foreground text-sm text-pretty">{heading.description}</p>
               </header>
 
               {step === "template" && (
-                <>
-                  <TemplateGallery selectedId={templateId} onPick={pickTemplate} filterable />
-                  <div>
-                    <Button
-                      type="button"
-                      variant="link"
-                      className="px-0"
-                      onClick={startFromScratch}
-                    >
-                      Or start from scratch
-                    </Button>
-                  </div>
-                </>
+                <TemplateGallery
+                  selectedId={templateId}
+                  onPick={pickTemplate}
+                  onScratch={startFromScratch}
+                  filterable
+                  wide
+                />
               )}
 
               {step === "trigger" && <TriggerStep />}
@@ -272,15 +270,6 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
               {step === "review" && <ReviewStep sentence={sentence} onEdit={goTo} />}
             </div>
           </div>
-
-          <aside className="bg-muted/60 border-border hidden w-100 shrink-0 overflow-y-auto border-l px-8 py-9 lg:block">
-            <AutomationPreview
-              rule={rule}
-              sentence={sentence}
-              lookup={lookup}
-              showSentence={step !== "review"}
-            />
-          </aside>
         </div>
 
         <footer className="border-border bg-card flex h-17 shrink-0 items-center gap-3 border-t px-8">

@@ -6,10 +6,14 @@ import {
   IconExternalLink,
   IconPhoto,
 } from "@tabler/icons-react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
+import { PhonePreviewButton, usePhonePreview } from "@/components/ui/phone-preview.tsx";
 import { cn } from "@/lib/utils";
 import type { WaTemplateFetchBody } from "@/types/global";
+
+import { CampaignWizardHeaderAction } from "./CampaignWizardShell.tsx";
 
 /** The body text with `{n}` swapped for what each variable resolves to. */
 function fillPlaceholders(text: string, sample: Record<string, string>): string {
@@ -21,83 +25,79 @@ function componentOfType(template: WaTemplateFetchBody, type: string) {
 }
 
 /**
- * A template rendered inside a phone, as the recipient will see it.
+ * The Template step's Preview button: opens the template in the device preview panel, and
+ * opens it on arrival. The panel belongs to the step, so it closes when the step is left —
+ * otherwise it would keep showing the template over the Audience or Schedule step.
+ */
+export function CampaignPreviewButton(props: Readonly<CampaignPreviewScreenProps>) {
+  const { closePreview } = usePhonePreview();
+  useEffect(() => closePreview, [closePreview]);
+
+  return (
+    <CampaignWizardHeaderAction>
+      <PhonePreviewButton platform="whatsapp" defaultOpen>
+        <CampaignPreviewScreen {...props} />
+      </PhonePreviewButton>
+    </CampaignWizardHeaderAction>
+  );
+}
+
+interface CampaignPreviewScreenProps {
+  template: WaTemplateFetchBody | null | undefined;
+  businessName?: string;
+  /** Resolved variable values, keyed by placeholder number. */
+  sampleValues?: Record<string, string>;
+}
+
+/**
+ * A template as the recipient will see it: WhatsApp's chat screen, drawn inside the device
+ * preview's phone.
  *
  * Send-agnostic, unlike `WaInboxTemplatePreviewNew`, which takes a send mutation
  * and reads the selected phone id from a store — neither of which exists while a
- * campaign is being composed. Campaign creation has never had a preview at all;
- * a template was picked from a dropdown by name, and whether the header was an
- * image or the buttons were right was discovered after sending.
+ * campaign is being composed.
  *
  * The chat chrome uses WhatsApp's own colours rather than the app palette, and
  * is fixed in both themes: this is a picture of another product, and it does not
  * change when the dashboard around it does.
  */
-export function CampaignTemplatePreview({
+function CampaignPreviewScreen({
   template,
   businessName,
-  contactName,
   sampleValues = {},
-}: Readonly<{
-  template: WaTemplateFetchBody | null | undefined;
-  businessName?: string;
-  contactName?: string;
-  /** Resolved variable values, keyed by placeholder number. */
-  sampleValues?: Record<string, string>;
-}>) {
+}: Readonly<CampaignPreviewScreenProps>) {
   const { t } = useTranslation("campaign.wizard");
-
-  if (!template) {
-    return (
-      <div className="bg-muted ring-foreground/10 flex flex-col items-center gap-2.5 rounded-xl p-4 ring-1">
-        <span className="text-muted-foreground w-full text-xs font-medium">
-          {t("Live preview")}
-        </span>
-        <div className="border-border text-muted-foreground flex h-140 w-75 items-center justify-center rounded-[22px] border border-dashed px-8 text-center text-[13px]">
-          {t("Pick a template to see how it will look.")}
-        </div>
-      </div>
-    );
-  }
-
   const initials = (businessName ?? "RU").slice(0, 2).toUpperCase();
 
   return (
-    <div className="bg-muted ring-foreground/10 flex flex-col items-center gap-2.5 rounded-xl p-4 ring-1">
-      <span className="text-muted-foreground w-full text-xs font-medium">
-        {contactName
-          ? t("Live preview · as {name} will see it", { name: contactName })
-          : t("Live preview")}
-      </span>
-
-      {/* The handset. A fixed 300×560 frame, because the point of the preview is
-          that it is the shape the message actually arrives in. */}
-      <div className="flex h-140 w-75 flex-col rounded-[22px] bg-[#1B2027] p-2 shadow-md">
-        <div className="flex flex-1 flex-col overflow-hidden rounded-2xl bg-[#F7F8FA]">
-          <div className="flex h-14 shrink-0 items-center gap-2.5 border-b border-[#E4E7EC] bg-white px-3">
-            <IconChevronLeft className="size-4.5 text-[#1B2027]" aria-hidden />
-            <span className="font-display flex size-8 items-center justify-center rounded-full bg-[#25D366] text-xs font-bold text-white">
-              {initials}
-            </span>
-            <div className="flex min-w-0 flex-1 flex-col">
-              <span className="flex items-center gap-1 text-[13px] font-semibold text-[#1B2027]">
-                <span className="truncate">{businessName ?? t("Your business")}</span>
-                <IconBadge className="size-3.5 shrink-0 text-[#25D366]" aria-hidden />
-              </span>
-              <span className="text-[10.5px] text-[#6B7480]">{t("Business account")}</span>
-            </div>
-            <IconDotsVertical className="size-4 text-[#434A55]" aria-hidden />
-          </div>
-
-          <div className="flex flex-1 flex-col gap-1.5 overflow-y-auto px-2.5 py-3">
-            <span className="self-center rounded-md bg-white px-2 py-0.5 text-[10px] text-[#6B7480] shadow-sm">
-              {t("Today")}
-            </span>
-
-            <WaTemplateBubble template={template} sampleValues={sampleValues} />
-          </div>
+    <div className="flex min-h-0 flex-1 flex-col bg-[#F7F8FA]">
+      <div className="flex h-14 shrink-0 items-center gap-2.5 border-b border-[#E4E7EC] bg-white px-3">
+        <IconChevronLeft className="size-4.5 text-[#1B2027]" aria-hidden />
+        <span className="font-display flex size-8 items-center justify-center rounded-full bg-[#25D366] text-xs font-bold text-white">
+          {initials}
+        </span>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <span className="flex items-center gap-1 text-[13px] font-semibold text-[#1B2027]">
+            <span className="truncate">{businessName ?? t("Your business")}</span>
+            <IconBadge className="size-3.5 shrink-0 text-[#25D366]" aria-hidden />
+          </span>
+          <span className="text-[10.5px] text-[#6B7480]">{t("Business account")}</span>
         </div>
+        <IconDotsVertical className="size-4 text-[#434A55]" aria-hidden />
       </div>
+
+      {template ? (
+        <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto px-2.5 py-3">
+          <span className="self-center rounded-md bg-white px-2 py-0.5 text-[10px] text-[#6B7480] shadow-sm">
+            {t("Today")}
+          </span>
+          <WaTemplateBubble template={template} sampleValues={sampleValues} />
+        </div>
+      ) : (
+        <div className="flex flex-1 items-center justify-center px-8 text-center text-[13px] text-[#6B7480]">
+          {t("Pick a template to see how it will look.")}
+        </div>
+      )}
     </div>
   );
 }

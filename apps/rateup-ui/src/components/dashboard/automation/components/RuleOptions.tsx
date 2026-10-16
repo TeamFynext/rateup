@@ -2,9 +2,9 @@ import React from "react";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 
 import { useGetAllBusinessHours } from "@/backend/org/business-hours/business-hours.query";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
 import {
   Field,
+  FieldContent,
   FieldDescription,
   FieldError,
   FieldLabel,
@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
+import { Switch } from "@/components/ui/switch.tsx";
 
 import type { CreateRuleInput } from "./schema.ts";
 
@@ -30,96 +31,77 @@ const RuleOptions: React.FC = () => {
   });
 
   return (
-    <div className="space-y-2">
-      {/* Send Only Once Per Day */}
+    <div className="bg-card ring-foreground/10 divide-y rounded-xl ring-1">
       <Controller
         control={control}
         name="options.sendOncePerDay"
         render={({ field, fieldState }) => (
-          <Field
-            orientation="horizontal"
-            data-invalid={fieldState.invalid}
-            className="flex items-start gap-3 p-3 rounded-lg hover:bg-accent/50 transition-colors cursor-pointer"
-          >
-            <Checkbox
-              checked={field.value}
-              onCheckedChange={field.onChange}
-              id="send-once-per-day"
-              aria-invalid={fieldState.invalid}
-            />
-            <div className="flex-1">
-              <FieldLabel htmlFor="send-once-per-day" className="cursor-pointer font-medium">
-                Send only once per day per contact
-              </FieldLabel>
-              <FieldDescription className="text-xs mt-0.5">
-                Prevents duplicate messages to the same contact within 24 hours. (only available for
-                chatbot action)
+          <Field orientation="horizontal" data-invalid={fieldState.invalid} className="px-4 py-3">
+            <FieldContent>
+              <FieldLabel htmlFor="send-once-per-day">Run once a day per contact</FieldLabel>
+              <FieldDescription className="text-xs">
+                Skips anyone this automation already ran for in the last 24 hours.
               </FieldDescription>
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-            </div>
+            </FieldContent>
+            <Switch
+              id="send-once-per-day"
+              checked={Boolean(field.value)}
+              onCheckedChange={(checked) => field.onChange(checked)}
+              aria-invalid={fieldState.invalid}
+            />
           </Field>
         )}
       />
 
-      {/* Business Hours */}
       <Controller
         control={control}
         name="options.businessHours.enabled"
         render={({ field, fieldState }) => (
-          <div className="space-y-3">
-            <Field
-              orientation="horizontal"
-              data-invalid={fieldState.invalid}
-              className="flex items-start gap-3 p-3 rounded-lg hover:bg-accent/50 transition-colors cursor-pointer"
-            >
-              <Checkbox
-                checked={field.value}
-                onCheckedChange={field.onChange}
-                id="business-hours"
-                aria-invalid={fieldState.invalid}
-              />
-              <div className="flex-1">
-                <FieldLabel htmlFor="business-hours" className="cursor-pointer font-medium">
-                  Only during business hours
-                </FieldLabel>
-                <FieldDescription className="text-xs mt-0.5">
-                  Rule will only trigger during your configured business hours
+          <div className="flex flex-col gap-3 px-4 py-3">
+            <Field orientation="horizontal" data-invalid={fieldState.invalid}>
+              <FieldContent>
+                <FieldLabel htmlFor="business-hours">Only during business hours</FieldLabel>
+                <FieldDescription className="text-xs">
+                  Outside the hours you pick, the automation does not run.
                 </FieldDescription>
                 {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-              </div>
+              </FieldContent>
+              <Switch
+                id="business-hours"
+                checked={Boolean(field.value)}
+                onCheckedChange={(checked) => field.onChange(checked)}
+                aria-invalid={fieldState.invalid}
+              />
             </Field>
 
             {businessHoursEnabled && (
-              <div className="ml-9">
-                <Controller
-                  control={control}
-                  name="options.businessHours.businessHoursId"
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <FieldTitle className="text-xs font-semibold mb-2">
-                        Select Business Hours
-                      </FieldTitle>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value || ""}
-                        items={businessHours?.map((bh) => ({ value: bh.id, label: bh.name })) ?? []}
-                      >
-                        <SelectTrigger aria-invalid={fieldState.invalid}>
-                          <SelectValue placeholder="Select business hours" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {businessHours?.map((bh) => (
-                            <SelectItem key={bh.id} value={bh.id}>
-                              {bh.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                    </Field>
-                  )}
-                />
-              </div>
+              <Controller
+                control={control}
+                name="options.businessHours.businessHoursId"
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldTitle>Business hours</FieldTitle>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value || ""}
+                      items={businessHours?.map((bh) => ({ value: bh.id, label: bh.name })) ?? []}
+                    >
+                      <SelectTrigger className="w-full" aria-invalid={fieldState.invalid}>
+                        <SelectValue placeholder="Pick business hours" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {businessHours?.map((bh) => (
+                          <SelectItem key={bh.id} value={bh.id}>
+                            {bh.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  </Field>
+                )}
+              />
             )}
           </div>
         )}
