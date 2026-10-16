@@ -291,7 +291,9 @@ describe("the key WooCommerce sends back", () => {
       expect.anything(),
       { notifyAfter: 1 },
     );
-    expect(savedCredential()?.webhooks).toEqual([]);
+    // The connect saved no webhooks, and nothing registered since, so none are stored.
+    const stored = savedCredential() ?? db.upsert.mock.calls[0][0].create.credential;
+    expect(stored.webhooks).toEqual([]);
   });
 });
 
@@ -334,6 +336,36 @@ describe("keeping webhooks registered", () => {
     expect(refs.find((ref) => ref.topic === "order.updated")?.id).not.toBe(2);
     expect(store.webhooks.has(2)).toBe(false);
     expect(refs).toHaveLength(WOO_TOPICS.length);
+    expect(savedCredential()?.webhooks).toEqual(refs);
+  });
+
+  test("writes nothing when every webhook is still healthy", async () => {
+    const refs = WOO_TOPICS.map((topic, i) => ({ topic, id: i + 1 }));
+    for (const ref of refs) {
+      store.webhooks.set(ref.id, { ...ref, status: "active", delivery_url: DELIVERY_URL });
+    }
+
+    await syncWooWebhooks(integration(refs));
+
+    expect(db.update).not.toHaveBeenCalled();
+  });
+
+  test("the scheduled sweep brings back a webhook WooCommerce disabled", async () => {
+    const refs = WOO_TOPICS.map((topic, i) => ({ topic, id: i + 1 }));
+    for (const ref of refs) {
+      store.webhooks.set(ref.id, { ...ref, status: "active", delivery_url: DELIVERY_URL });
+    }
+    store.webhooks.set(2, { ...refs[1], status: "disabled", delivery_url: DELIVERY_URL });
+
+    const { wooCommerceProvider } = await import("./woocommerce.provider.js");
+    await wooCommerceProvider.refreshCredential?.(integration(refs));
+
+    const replaced = savedCredential()?.webhooks.find((ref) => ref.topic === refs[1].topic);
+    expect(replaced?.id).not.toBe(2);
+    expect(store.webhooks.get(replaced!.id)).toMatchObject({
+      status: "active",
+      delivery_url: DELIVERY_URL,
+    });
   });
 });
 

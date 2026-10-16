@@ -243,10 +243,20 @@ export async function syncWooWebhooks(integration: Integration): Promise<WooWebh
       kept.push({ topic, id: created.id });
     }
   } finally {
-    await prisma.integration.update({
-      where: { id: integration.id },
-      data: { credential: { ...credential, webhooks: kept } },
-    });
+    // Usually nothing changed (the scheduled sweep runs every 45 minutes); not
+    // writing then keeps it from racing a settings change made meanwhile.
+    const unchanged =
+      kept.length === credential.webhooks.length &&
+      kept.every(
+        (ref, i) =>
+          ref.topic === credential.webhooks[i].topic && ref.id === credential.webhooks[i].id,
+      );
+    if (!unchanged) {
+      await prisma.integration.update({
+        where: { id: integration.id },
+        data: { credential: { ...credential, webhooks: kept } },
+      });
+    }
   }
 
   return kept;

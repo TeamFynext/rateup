@@ -71,7 +71,9 @@ describe("a reward as a WooCommerce coupon", () => {
         description: "Loyalty reward: 10% off (RU-ABCDEFGHJK)",
         discount_type: "percent",
         amount: "10.00",
-        date_expires_gmt: "2026-10-28T10:00:00",
+        // `date_expires` with a zone: WooCommerce drops `date_expires_gmt` on write,
+        // and reads a zoneless `date_expires` in the store's timezone.
+        date_expires: "2026-10-28T10:00:00Z",
         individual_use: true,
         usage_limit: 1,
         usage_limit_per_user: 1,
@@ -90,7 +92,7 @@ describe("a reward as a WooCommerce coupon", () => {
         discount_type: "fixed_cart",
         amount: "150.00",
         minimum_amount: "999.50",
-        date_expires_gmt: null,
+        date_expires: null,
       },
     });
   });
@@ -165,7 +167,7 @@ describe("deactivating the coupon", () => {
   test("expires it now, which keeps it in the merchant's coupon list", async () => {
     await expect(deactivateWooDiscountCode("org-1", "4321")).resolves.toBe(true);
     expect(store.put).toHaveBeenCalledWith("/coupons/4321", {
-      date_expires_gmt: expect.stringMatching(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d$/),
+      date_expires: expect.stringMatching(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/),
     });
   });
 

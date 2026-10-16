@@ -62,13 +62,22 @@ const REVERSAL: Partial<
   refunded: { source: "order_refunded", word: "refunded" },
 };
 
+/**
+ * The queue's job id for one order event. BullMQ 6 rejects a custom id
+ * containing ":" (unless it splits into exactly three parts), so the separator
+ * is "-" and any ":" in the parts goes too: a WooCommerce store id is a URL
+ * (`https://…`, maybe with a port). A Shopify shop domain has none, so its ids
+ * are unchanged.
+ */
+export const commerceLoyaltyJobId = (
+  data: Pick<CommerceLoyaltyJobData, "storeId" | "eventKey" | "orderId">,
+) => `loyalty-${data.storeId}-${data.eventKey}-${data.orderId}`.replaceAll(":", "-");
+
 export async function enqueueCommerceOrderLoyalty(data: CommerceLoyaltyJobData) {
   // Still the queue Shopify's worker has always drained: renaming it would strand
   // any job retrying at the moment of the deploy.
   await shopifyLoyaltyQueue.add("order-loyalty", data, {
-    // BullMQ 6 rejects a custom id containing ":" (unless it splits into exactly
-    // three parts), so the separator is "-".
-    jobId: `loyalty-${data.storeId}-${data.eventKey}-${data.orderId}`,
+    jobId: commerceLoyaltyJobId(data),
     attempts: 5,
     backoff: { type: "exponential", delay: 10_000 },
     removeOnComplete: { count: 5000 },
