@@ -1096,3 +1096,25 @@ describe("Facebook (Messenger) rules", () => {
     expect(db.contact.findFirst).not.toHaveBeenCalled();
   });
 });
+
+// An org with several WhatsApp numbers refuses a send that does not name one, so the
+// reply has to go out on the number the customer wrote to.
+describe("checkAndExecuteRuleByTriggerEvent - which WhatsApp number replies", () => {
+  test("sends the rule's text from the number the message arrived on", async () => {
+    const { sendTextMessage } = await import("../whatsappSurvey/wasurvey.service.js");
+    db.rule.findMany.mockResolvedValue([
+      rule({ actions: [{ id: "a1", type: "SEND_MESSAGE", value: "welcome" }] }),
+    ]);
+
+    await checkAndExecuteRuleByTriggerEvent(
+      TriggerEvent.CHAT_CLOSED,
+      context({ phoneNumberId: "259643180556398" }),
+    );
+
+    expect(sendTextMessage).toHaveBeenCalledWith(
+      { phone: "15550001", orgId: "org-1", whatsappSettingsPhoneId: "259643180556398" },
+      null,
+      "welcome",
+    );
+  });
+});
