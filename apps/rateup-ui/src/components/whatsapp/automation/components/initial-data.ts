@@ -8,7 +8,7 @@ export const initialNodes: Node[] = [
     position: { x: 250, y: 50 },
     data: {
       label: "Start",
-      startMessage: "Welcome to the WhatsApp automation flow!",
+      startMessage: "Welcome to the automation flow!",
     },
   },
 ];

@@ -132,10 +132,11 @@ const ImportContactsDialog = ({
     const formData = new FormData();
     formData.append("update", updateExisting ? "true" : "false");
     formData.append("hasHeaderRow", hasHeaderRow ? "true" : "false");
-    formData.append("file", csvfile);
     fields.forEach((item, index) => {
       formData.append(`tags[${index}]`, item.slug);
     });
+    // Last: the API reads the upload with `request.file()`, which only sees fields sent before it.
+    formData.append("file", csvfile);
     importCSVContactMutation.mutate(formData, {
       onSettled: () => {
         setCsvfile(null);

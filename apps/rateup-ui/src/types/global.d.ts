@@ -374,7 +374,7 @@ export interface WaAutomatedReply {
   createdAt: Date;
   matchData: WaAutomatedReplyMatchData;
   commands: Array<string>;
-  platform?: string; // "whatsapp" | "instagram"
+  platform?: string; // "whatsapp" | "instagram" | "facebook" (the API value, lowercased)
   whatsappSettingsPhoneId: string;
 }
 

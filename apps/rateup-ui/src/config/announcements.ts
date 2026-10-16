@@ -48,6 +48,24 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     kinds: ["improvement"],
     area: "Automation",
     link: { to: "/dashboard/automation", label: "Open automations" },
+    id: "2026-10-14-chatbot-examples",
+    title: "Start a chatbot from a ready-made example",
+    summary:
+      "Creating a chatbot now lets you pick WhatsApp, Instagram or Messenger and start from an example for welcomes, FAQs, leads, bookings and more, previewed before you create it.",
+    publishedAt: "2026-10-14",
+    kinds: ["new", "improvement"],
+    area: "Chatbots",
+    link: { to: "/dashboard/whatsapp/flowbots" },
+  },
+  {
+    id: "2026-10-14-messenger-chatbots",
+    title: "Chatbots for Facebook Messenger",
+    summary:
+      "Build chatbots for your Facebook Page in the same editor you use for WhatsApp and Instagram, and start them from an automation rule when someone messages your Page.",
+    publishedAt: "2026-10-14",
+    kinds: ["new"],
+    area: "Messenger",
+    link: { to: "/dashboard/messenger" },
   },
   {
     id: "2026-10-14-live-calls-strip",

@@ -23,6 +23,8 @@ export interface ApiErrorData {
   reason?: AccessDenialReason;
   /** The subscription gates that were closed, for a "subscription" denial. */
   missingFeatures?: string[];
+  /** One readable line per problem, when a request failed validation (e.g. a flow pushed to WhatsApp). */
+  errors?: string[];
 }
 
 /** Axios-shaped rejection, as much of it as this app actually reads. */

@@ -3,81 +3,157 @@ import { toast } from "sonner";
 
 import { automationKeys } from "@/backend/whatsapp/automation.keys";
 import type { RequestPayload, RequestPayloadFields } from "@/types/api.ts";
+import { AutomationPlatform } from "@/types/platform.ts";
 
 import {
-  createInstagramAutomation,
-  deleteInstagramAutomation,
-  getAllInstagramAutomations,
-  getInstagramAutomationById,
-  initiateInstagramAutomation,
-  updateInstagramAutomation,
+  cloneMetaAutomation,
+  createMetaAutomation,
+  deleteMetaAutomation,
+  getAllMetaAutomations,
+  getMetaAutomationById,
+  initiateMetaAutomation,
+  updateMetaAutomation,
+  type MetaAutomationPlatform,
 } from "./instagramAutomation.api";
 
-export const useAllInstagramAutomations = () =>
+/**
+ * Instagram and Messenger chatbots share one API shape, so the hooks take the platform.
+ * The Instagram- and Messenger-named hooks below are the same hooks with it filled in.
+ */
+
+const LABEL: Record<MetaAutomationPlatform, string> = {
+  [AutomationPlatform.INSTAGRAM]: "Instagram Automation",
+  [AutomationPlatform.FACEBOOK]: "Messenger Automation",
+};
+
+export function metaAutomationListKey(platform: MetaAutomationPlatform) {
+  return platform === AutomationPlatform.FACEBOOK
+    ? automationKeys.allMessengerAutomations()
+    : automationKeys.allInstagramAutomations();
+}
+
+export function metaAutomationKey(platform: MetaAutomationPlatform, automationId: string) {
+  return platform === AutomationPlatform.FACEBOOK
+    ? automationKeys.messengerAutomation({ automationId })
+    : automationKeys.instagramAutomation({ automationId });
+}
+
+export const useAllMetaAutomations = (platform: MetaAutomationPlatform) =>
   useQuery({
-    queryKey: ["allInstagramAutomations"],
+    queryKey: metaAutomationListKey(platform),
     queryFn: async () => {
-      const response = await getAllInstagramAutomations();
+      const response = await getAllMetaAutomations(platform);
       return response.data;
     },
   });
 
-export const useInstagramAutomationById = (automationId: string) =>
+export const useMetaAutomationById = (platform: MetaAutomationPlatform, automationId: string) =>
   useQuery({
-    queryKey: automationKeys.instagramAutomation({ automationId }),
+    queryKey: metaAutomationKey(platform, automationId),
     queryFn: async () => {
-      const response = await getInstagramAutomationById(automationId);
+      const response = await getMetaAutomationById(platform, automationId);
       return response.data;
     },
     enabled: !!automationId,
   });
 
-export const useCreateInstagramAutomationMutation = () => {
+export const useCreateMetaAutomationMutation = (platform: MetaAutomationPlatform) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: RequestPayload) => createInstagramAutomation(data),
+    mutationFn: (data: RequestPayload) => createMetaAutomation(platform, data),
     onSuccess: (_response) => {
-      qc.invalidateQueries({ queryKey: ["allInstagramAutomations"] });
-      toast.success("Instagram Automation created");
+      qc.invalidateQueries({ queryKey: metaAutomationListKey(platform) });
+      toast.success(`${LABEL[platform]} created`);
     },
     onError: (error) => {
-      toast.error(error?.message || "Error Creating Instagram Automation");
+      toast.error(error?.message || `Error Creating ${LABEL[platform]}`);
     },
   });
 };
 
-export const useDeleteInstagramAutomationMutation = () => {
+export const useDeleteMetaAutomationMutation = (platform: MetaAutomationPlatform) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (automationId: string) => deleteInstagramAutomation(automationId),
+    mutationFn: (automationId: string) => deleteMetaAutomation(platform, automationId),
     onSuccess: (_res) => {
-      qc.invalidateQueries({ queryKey: ["allInstagramAutomations"] });
-      toast.success("Instagram Automation deleted");
+      qc.invalidateQueries({ queryKey: metaAutomationListKey(platform) });
+      toast.success(`${LABEL[platform]} deleted`);
     },
     onError: (error) => {
-      toast.error(error?.message || "Error Deleting Instagram Automation");
+      toast.error(error?.message || `Error Deleting ${LABEL[platform]}`);
     },
   });
 };
 
-export const useUpdateInstagramAutomationMutation = () => {
+export const useUpdateMetaAutomationMutation = (platform: MetaAutomationPlatform) => {
   return useMutation({
     mutationFn: ({ id, ...data }: { id: string } & RequestPayloadFields) =>
-      updateInstagramAutomation(id, data),
+      updateMetaAutomation(platform, id, data),
     onError: (error) => {
-      toast.error(error?.message || "Error Updating Instagram Automation");
+      toast.error(error?.message || `Error Updating ${LABEL[platform]}`);
     },
   });
 };
 
-export const useInitiateInstagramAutomationMutation = (automationId: string) => {
+export const useCloneMetaAutomationMutation = (platform: MetaAutomationPlatform) => {
+  const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ igsId }: { igsId: string }) => initiateInstagramAutomation(automationId, igsId),
+    mutationFn: ({ automationId, name }: { automationId: string; name: string }) =>
+      cloneMetaAutomation(platform, automationId, name),
     onSuccess: (_res) => {
-      toast.success("Instagram Automation initiated Successfully");
+      qc.invalidateQueries({ queryKey: metaAutomationListKey(platform) });
+      toast.success(`${LABEL[platform]} cloned`);
     },
     onError: (error) => {
-      toast.error(error?.message || "Error initiating Instagram Automation");
+      toast.error(error?.message || `Error cloning ${LABEL[platform]}`);
     },
   });
 };
+
+export const useInitiateMetaAutomationMutation = (
+  platform: MetaAutomationPlatform,
+  automationId: string,
+) => {
+  return useMutation({
+    mutationFn: ({ recipientId, accountId }: { recipientId: string; accountId: string }) =>
+      initiateMetaAutomation(platform, automationId, recipientId, accountId),
+    onSuccess: (_res) => {
+      toast.success(`${LABEL[platform]} initiated Successfully`);
+    },
+    onError: (error) => {
+      toast.error(error?.message || `Error initiating ${LABEL[platform]}`);
+    },
+  });
+};
+
+// ─── Instagram ────────────────────────────────────────────────────────────────
+
+export const useAllInstagramAutomations = () => useAllMetaAutomations(AutomationPlatform.INSTAGRAM);
+
+export const useInstagramAutomationById = (automationId: string) =>
+  useMetaAutomationById(AutomationPlatform.INSTAGRAM, automationId);
+
+export const useCreateInstagramAutomationMutation = () =>
+  useCreateMetaAutomationMutation(AutomationPlatform.INSTAGRAM);
+
+export const useDeleteInstagramAutomationMutation = () =>
+  useDeleteMetaAutomationMutation(AutomationPlatform.INSTAGRAM);
+
+export const useUpdateInstagramAutomationMutation = () =>
+  useUpdateMetaAutomationMutation(AutomationPlatform.INSTAGRAM);
+
+// ─── Messenger ────────────────────────────────────────────────────────────────
+
+export const useAllMessengerAutomations = () => useAllMetaAutomations(AutomationPlatform.FACEBOOK);
+
+export const useMessengerAutomationById = (automationId: string) =>
+  useMetaAutomationById(AutomationPlatform.FACEBOOK, automationId);
+
+export const useCreateMessengerAutomationMutation = () =>
+  useCreateMetaAutomationMutation(AutomationPlatform.FACEBOOK);
+
+export const useDeleteMessengerAutomationMutation = () =>
+  useDeleteMetaAutomationMutation(AutomationPlatform.FACEBOOK);
+
+export const useUpdateMessengerAutomationMutation = () =>
+  useUpdateMetaAutomationMutation(AutomationPlatform.FACEBOOK);
