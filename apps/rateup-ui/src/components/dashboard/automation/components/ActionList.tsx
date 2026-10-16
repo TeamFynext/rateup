@@ -1,5 +1,25 @@
-import { IconPlus, IconTrash } from "@tabler/icons-react";
-import React, { useMemo } from "react";
+import type { DropResult } from "@hello-pangea/dnd";
+import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
+import {
+  IconChevronDown,
+  IconCircleCheck,
+  IconClipboardList,
+  IconGripVertical,
+  IconInfoCircle,
+  IconLayoutKanban,
+  IconMessage,
+  IconPlus,
+  IconRefresh,
+  IconRobot,
+  IconSitemap,
+  IconTag,
+  IconTemplate,
+  IconTrash,
+  IconUser,
+  IconUsersGroup,
+  IconWebhook,
+} from "@tabler/icons-react";
+import React, { Fragment, useMemo, useState } from "react";
 import type { ControllerRenderProps } from "react-hook-form";
 import { Controller, useFieldArray, useFormContext, useWatch } from "react-hook-form";
 
@@ -16,10 +36,22 @@ import {
   useAllMessengerAutomations,
 } from "@/backend/whatsapp/instagram-automation/instagramAutomation.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
+import { MessageBodyEditor } from "@/components/dashboard/loyalty/messages/MessageBodyEditor.tsx";
 import { findLeadsPipeline } from "@/components/pipeline/pipelineTypes.ts";
 import VariableMapping from "@/components/shopify/VariableMapping.tsx";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu.tsx";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty.tsx";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
@@ -31,11 +63,12 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
+import { cn } from "@/lib/utils.ts";
 import { WaTemplateComponentTypeUpperCase } from "@/types/enums.ts";
 import { WaMessageAssignStatus } from "@/types/enums.ts";
 
 import type { ActionType, CreateRuleInput, Platform } from "./schema.ts";
-import { getActionTypesForPlatform } from "./schema.ts";
+import { asPlatform, getActionTypesForPlatforms } from "./schema.ts";
 
 // ActionValueInput now always uses shadcn Field and FieldError, and expects valueField and fieldState from Controller
 const ActionValueInput = ({
@@ -62,6 +95,7 @@ const ActionValueInput = ({
   const { data: templatesData, isLoading: isTemplatesLoading } = useWaTemplates();
 
   const platform = useWatch({ control, name: "platform" }) as Platform;
+  const platforms = useWatch({ control, name: "platforms" }) ?? [];
 
   // A rule can only start a chatbot on its own platform; the API refuses any other.
   const filteredAutomations = useMemo(() => {
@@ -121,13 +155,27 @@ const ActionValueInput = ({
 
   // All fields are wrapped in Field for shadcn consistency
   if (actionType === "SEND_MESSAGE") {
+    const onWhatsApp = platforms.includes("WHATSAPP");
     return (
-      <Input
-        placeholder="Message text"
-        {...valueField}
-        value={textValue}
-        className="w-full bg-background"
-      />
+      <div className="flex w-full flex-col gap-1.5">
+        <MessageBodyEditor
+          id={`action-${index}-message`}
+          name={valueField.name}
+          value={textValue}
+          onChange={valueField.onChange}
+          onBlur={valueField.onBlur}
+          rows={4}
+          placeholder="Write the reply your customer will get"
+          formatting={onWhatsApp}
+          formattingHint
+        />
+        {onWhatsApp && platforms.length > 1 && (
+          <p className="text-muted-foreground text-xs">
+            Bold, italic and other formatting show on WhatsApp. Instagram and Messenger get the same
+            words as plain text.
+          </p>
+        )}
+      </div>
     );
   }
   if (actionType === "ATTACH_LABEL") {
@@ -537,133 +585,252 @@ const ExternalApiExample = () => {
 
   return (
     actions?.some((data) => data.type === "CALL_EXTERNAL_API") && (
-      <div className="text-xs text-muted-foreground bg-muted/50 rounded p-2 border mt-1">
-        <strong>Example API request:</strong>
-        <pre className="whitespace-pre-wrap mt-1">
-          {`POST {url}
+      <Alert>
+        <IconInfoCircle />
+        <AlertTitle>Example API request</AlertTitle>
+        <AlertDescription>
+          <pre className="mt-1 text-xs whitespace-pre-wrap">
+            {`POST {url}
 Content-Type: application/json
 
 {
   "user": "1234567890",
   "action": "Approve"
 }`}
-        </pre>
-      </div>
+          </pre>
+        </AlertDescription>
+      </Alert>
     )
   );
 };
 
-const ActionList: React.FC = () => {
+/** How each action reads in the "Add action" menu, and the icon its card carries. */
+const ACTION_META: Record<string, { icon: typeof IconMessage; label: string }> = {
+  SEND_MESSAGE: { icon: IconMessage, label: "Send a message" },
+  SEND_TEMPLATE: { icon: IconTemplate, label: "Send a template" },
+  SEND_FLOW: { icon: IconSitemap, label: "Send a flow" },
+  SEND_WEB_SURVEY: { icon: IconClipboardList, label: "Send a web survey" },
+  TRIGGER_CHATBOT: { icon: IconRobot, label: "Start a chatbot" },
+  ASSIGN_TEAM: { icon: IconUsersGroup, label: "Assign to a team" },
+  ASSIGN_USER: { icon: IconUser, label: "Assign to a teammate" },
+  ATTACH_LABEL: { icon: IconTag, label: "Add a label" },
+  ASSIGN_STAGE: { icon: IconLayoutKanban, label: "Move to a lead stage" },
+  ASSIGN_LIFECYCLE: { icon: IconRefresh, label: "Set lifecycle (legacy)" },
+  CLOSE_TICKET: { icon: IconCircleCheck, label: "Close the chat" },
+  CALL_EXTERNAL_API: { icon: IconWebhook, label: "Call an external API" },
+};
+
+const ACTION_GROUPS: readonly { label: string; types: readonly string[] }[] = [
+  {
+    label: "Reply to the customer",
+    types: ["SEND_MESSAGE", "SEND_TEMPLATE", "SEND_FLOW", "SEND_WEB_SURVEY", "TRIGGER_CHATBOT"],
+  },
+  {
+    label: "Behind the scenes",
+    types: [
+      "ASSIGN_TEAM",
+      "ASSIGN_USER",
+      "ATTACH_LABEL",
+      "ASSIGN_STAGE",
+      "CLOSE_TICKET",
+      "CALL_EXTERNAL_API",
+    ],
+  },
+];
+
+const LAST = "last";
+
+/**
+ * The rule's actions as cards in run order: one open for editing, the rest folded to a line that
+ * says what they will do. `describe` turns an action into that line; it comes from the rule
+ * sentence, so the cards and the sentence never word an action differently.
+ */
+const ActionList: React.FC<{
+  describe: (index: number) => { text: string; complete: boolean };
+}> = ({ describe }) => {
   const {
     control,
-    setValue,
     formState: { errors },
   } = useFormContext<CreateRuleInput>();
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, move } = useFieldArray({
     control,
     name: "actions",
   });
-  const platform = useWatch({ control, name: "platform" }) as Platform;
+  const platforms = (useWatch({ control, name: "platforms" }) ?? []).map(asPlatform);
+  const actions = useWatch({ control, name: "actions" });
+  const available = getActionTypesForPlatforms(platforms);
+  const menuGroups = ACTION_GROUPS.map((group) => ({
+    label: group.label,
+    items: available.filter((option) => group.types.includes(option.value)),
+  })).filter((group) => group.items.length > 0);
+  // The first unfinished action is the one worth opening; a template leaves several unfinished.
+  // "last" opens whichever row was just appended, whose id only exists once it renders.
+  const [open, setOpen] = useState<string | undefined>(
+    () => fields.find((_, index) => !describe(index).complete)?.id ?? fields[fields.length - 1]?.id,
+  );
+  const openId = open === LAST ? fields[fields.length - 1]?.id : open;
+
+  const onDragEnd = (result: DropResult) => {
+    if (!result.destination || result.destination.index === result.source.index) return;
+    move(result.source.index, result.destination.index);
+  };
+
+  const addAction = (type: string) => {
+    append(
+      type === "SEND_TEMPLATE"
+        ? { type, value: { templateId: "", variableMapping: [] } }
+        : { type, value: "" },
+    );
+    setOpen(LAST);
+  };
 
   return (
-    <div className="space-y-3">
+    <div className="flex flex-col gap-3">
       {fields.length === 0 && (
-        <div className="text-muted-foreground text-sm italic p-4 text-center bg-muted/50 rounded-lg border border-dashed">
-          No actions added.
-        </div>
+        <Empty className="border p-6">
+          <EmptyHeader>
+            <EmptyTitle>No actions yet</EmptyTitle>
+            <EmptyDescription>
+              Add what the automation should do, like sending a message or assigning the chat.
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       )}
       <ExternalApiExample />
-      {fields.map((field, index) => (
-        <div
-          key={field.id}
-          // Top-aligned, not centred: an action whose value needs more than one
-          // control (a template's variable mapping, a lifecycle plus its board)
-          // otherwise leaves the type select floating in the middle of the row.
-          // Single-control rows are unaffected — they are one line tall either way.
-          className="flex gap-3 items-start p-4 bg-white dark:bg-card rounded-lg border border-border"
+      <DragDropContext onDragEnd={onDragEnd}>
+        <Droppable droppableId="rule-actions">
+          {(droppable) => (
+            <ol
+              ref={droppable.innerRef}
+              {...droppable.droppableProps}
+              className="m-0 flex list-none flex-col gap-2.5 p-0"
+            >
+              {fields.map((field, index) => {
+                const isOpen = field.id === openId;
+                const summary = describe(index);
+                const ActionIcon = ACTION_META[actions?.[index]?.type ?? ""]?.icon ?? IconMessage;
+                return (
+                  <Draggable key={field.id} draggableId={field.id} index={index}>
+                    {(draggable, snapshot) => (
+                      <li
+                        ref={draggable.innerRef}
+                        {...draggable.draggableProps}
+                        className={cn(
+                          "bg-card ring-foreground/10 rounded-xl ring-1",
+                          isOpen && "ring-primary/40 ring-[1.5px]",
+                          snapshot.isDragging && "shadow-lg",
+                        )}
+                      >
+                        <div className="flex items-center gap-2 py-2 pr-2 pl-1.5">
+                          <span
+                            {...draggable.dragHandleProps}
+                            aria-label={`Reorder action ${index + 1}`}
+                            className="text-muted-foreground hover:bg-muted flex size-8 shrink-0 cursor-grab items-center justify-center rounded-md"
+                          >
+                            <IconGripVertical className="size-4" />
+                          </span>
+                          <span className="text-muted-foreground w-4 shrink-0 text-center text-xs font-medium tabular-nums">
+                            {index + 1}
+                          </span>
+                          <span className="bg-muted text-muted-foreground flex size-7 shrink-0 items-center justify-center rounded-md">
+                            <ActionIcon className="size-4" aria-hidden />
+                          </span>
+                          <button
+                            type="button"
+                            aria-expanded={isOpen}
+                            onClick={() => setOpen(isOpen ? undefined : field.id)}
+                            className="flex min-w-0 flex-1 items-center gap-2 rounded-md py-1 text-left text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          >
+                            <span
+                              className={cn(
+                                "truncate first-letter:uppercase",
+                                summary.complete
+                                  ? "text-foreground"
+                                  : "text-muted-foreground italic",
+                              )}
+                            >
+                              {summary.text}
+                            </span>
+                            <IconChevronDown
+                              className={cn(
+                                "text-muted-foreground ml-auto size-4 shrink-0 transition-transform",
+                                isOpen && "rotate-180",
+                              )}
+                              aria-hidden
+                            />
+                          </button>
+                          <Button
+                            aria-label={`Delete action ${index + 1}`}
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={() => remove(index)}
+                            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                          >
+                            <IconTrash className="size-4" />
+                          </Button>
+                        </div>
+
+                        {isOpen && (
+                          <div className="flex flex-col gap-3 px-4 pt-1 pb-4 sm:pl-[4.75rem]">
+                            {errors.actions?.[index]?.type && (
+                              <FieldError errors={[errors.actions[index].type]} />
+                            )}
+                            <Controller
+                              control={control}
+                              name={`actions.${index}.value`}
+                              render={({ field: valueField, fieldState }) => (
+                                <Field data-invalid={fieldState.invalid}>
+                                  <ActionValueInput index={index} valueField={valueField} />
+                                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                                </Field>
+                              )}
+                            />
+                          </div>
+                        )}
+                      </li>
+                    )}
+                  </Draggable>
+                );
+              })}
+              {droppable.placeholder}
+            </ol>
+          )}
+        </Droppable>
+      </DragDropContext>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={<Button type="button" variant="outline" className="self-start" />}
         >
-          <Controller
-            control={control}
-            name={`actions.${index}.type`}
-            render={({ field, fieldState }) => {
-              // Computed per row, not once for the list: the legacy Assign
-              // Lifecycle entry is offered only to the action already using it.
-              const filteredActionTypes = getActionTypesForPlatform(
-                platform ?? "WHATSAPP",
-                typeof field.value === "string" ? field.value : undefined,
-              );
-
-              return (
-                <Field className="flex-1" data-invalid={fieldState.invalid}>
-                  <Select
-                    onValueChange={(val) => {
-                      field.onChange(val);
-                      if (val === "SEND_TEMPLATE") {
-                        setValue(`actions.${index}.value`, {
-                          templateId: "",
-                          variableMapping: [],
-                        });
-                        return;
-                      }
-                      setValue(`actions.${index}.value`, "");
-                    }}
-                    defaultValue={field.value}
-                    value={field.value}
-                    items={filteredActionTypes}
-                  >
-                    <SelectTrigger className="w-full" aria-invalid={fieldState.invalid}>
-                      <SelectValue placeholder="Action Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {filteredActionTypes.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                </Field>
-              );
-            }}
-          />
-
-          <Controller
-            control={control}
-            name={`actions.${index}.value`}
-            render={({ field: valueField, fieldState }) => (
-              <Field className="flex-1" data-invalid={fieldState.invalid}>
-                <ActionValueInput index={index} valueField={valueField} />
-                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-              </Field>
-            )}
-          />
-
-          <Button
-            aria-label="Delete Action"
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={() => remove(index)}
-            title="Delete Action"
-            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-10 w-10"
-          >
-            <IconTrash className="w-4 h-4" />
-          </Button>
-        </div>
-      ))}
-
-      <Button
-        type="button"
-        variant="outline"
-        className="w-full border-2 border-dashed border-green-300 dark:border-green-700 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/20 hover:bg-green-100 dark:hover:bg-green-900/30"
-        onClick={() => append({ type: "TRIGGER_CHATBOT", value: "" })}
-      >
-        <IconPlus className="w-4 h-4 mr-2" /> Add action
-      </Button>
+          <IconPlus className="size-4" />
+          Add action
+          <IconChevronDown className="text-muted-foreground size-4" aria-hidden />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-60">
+          {menuGroups.map((group, groupIndex) => (
+            <Fragment key={group.label}>
+              {groupIndex > 0 && <DropdownMenuSeparator />}
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>{group.label}</DropdownMenuLabel>
+                {group.items.map((option) => {
+                  const meta = ACTION_META[option.value];
+                  const Icon = meta?.icon ?? IconMessage;
+                  return (
+                    <DropdownMenuItem key={option.value} onClick={() => addAction(option.value)}>
+                      <Icon className="size-4" aria-hidden />
+                      {meta?.label ?? option.label}
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuGroup>
+            </Fragment>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       {errors.actions?.root?.message && (
-        <p className="text-sm font-medium text-destructive mt-2">{errors.actions?.root?.message}</p>
+        <p className="text-sm font-medium text-destructive">{errors.actions?.root?.message}</p>
       )}
     </div>
   );

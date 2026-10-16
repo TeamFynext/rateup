@@ -20,6 +20,7 @@ import {
   ListPageSortDropdown,
 } from "@/components/common/list-page-layout.tsx";
 import { CardView } from "@/components/dashboard/automation/components/card-view.tsx";
+import { TemplateGallery } from "@/components/dashboard/automation/components/wizard/TemplateGallery.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   DropdownMenu,
@@ -79,6 +80,7 @@ export function AutomationPage() {
   };
 
   const isEmpty = !isLoading && !isError && filteredData.length === 0;
+  const hasNoRules = !isLoading && !isError && data.length === 0;
 
   return (
     <ListPage>
@@ -167,21 +169,47 @@ export function AutomationPage() {
           />
         </ListPageHeaderSection>
       </ListPageHeader>
-      <ListPageContent
-        isLoading={isLoading}
-        isError={isError}
-        isEmpty={isEmpty}
-        emptyTitle="No Automation Yet"
-        emptyDescription="You haven't created any automation yet. Get started by creating your first automation."
-        onRetry={refetch}
-      >
-        <CardView
-          data={filteredData}
-          viewMode={viewMode}
-          onToggleActive={handleToggleActive}
-          onDelete={handleDelete}
-        />
-      </ListPageContent>
+      {hasNoRules ? (
+        <section className="mx-auto flex w-full max-w-3xl flex-col gap-4 py-6">
+          <div className="flex flex-col gap-1">
+            <h2 className="font-display text-lg font-semibold">Start with a template</h2>
+            <p className="text-muted-foreground text-sm">
+              Each one sets up the trigger and actions for you. You pick the team, label or message.
+            </p>
+          </div>
+          <TemplateGallery
+            limit={4}
+            onPick={(template) =>
+              navigate({
+                to: "/dashboard/automation/$automationId",
+                params: { automationId: "new" },
+                search: { template: template.id },
+              })
+            }
+          />
+          <div>
+            <Button variant="link" className="px-0" onClick={handleCreate}>
+              See all templates, or start from scratch
+            </Button>
+          </div>
+        </section>
+      ) : (
+        <ListPageContent
+          isLoading={isLoading}
+          isError={isError}
+          isEmpty={isEmpty}
+          emptyTitle="No Automation Yet"
+          emptyDescription="You haven't created any automation yet. Get started by creating your first automation."
+          onRetry={refetch}
+        >
+          <CardView
+            data={filteredData}
+            viewMode={viewMode}
+            onToggleActive={handleToggleActive}
+            onDelete={handleDelete}
+          />
+        </ListPageContent>
+      )}
     </ListPage>
   );
 }

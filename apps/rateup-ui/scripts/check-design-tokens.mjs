@@ -59,6 +59,7 @@ const FIXED_PALETTE = [
   "src/components/whatsapp/automation/components/flowbot-phone-preview.tsx",
   "src/components/whatsapp/flows/FlowShare/index.tsx",
   "src/components/dashboard/campaign/wizard/CampaignTemplatePreview.tsx",
+  "src/components/dashboard/automation/components/wizard/AutomationPreview.tsx",
   "src/components/dashboard/instagram/instagram-preview.tsx",
   "src/components/dashboard/loyalty/poster/QrPoster.tsx",
   "src/components/dashboard/loyalty/poster/Brochure.tsx",

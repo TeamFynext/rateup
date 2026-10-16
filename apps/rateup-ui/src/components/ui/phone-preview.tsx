@@ -12,6 +12,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useEffectEvent,
   useMemo,
   useState,
 } from "react";
@@ -31,18 +32,21 @@ interface PhonePreviewState {
   open: boolean;
   screen: "home" | PhonePlatform;
   appContent: ReactNode | null;
+  /** Page-owned controls shown above the phone, e.g. which channel to preview. */
+  toolbar: ReactNode | null;
   platform: PhonePlatform | null;
-  openPreview: (platform: PhonePlatform, content: ReactNode) => void;
+  openPreview: (platform: PhonePlatform, content: ReactNode, toolbar?: ReactNode) => void;
   closePreview: () => void;
   goHome: () => void;
   openApp: (platform: PhonePlatform) => void;
-  updateContent: (content: ReactNode) => void;
+  updateContent: (content: ReactNode, toolbar?: ReactNode) => void;
 }
 
 const PhonePreviewContext = createContext<PhonePreviewState>({
   open: false,
   screen: "home",
   appContent: null,
+  toolbar: null,
   platform: null,
   openPreview: () => {},
   closePreview: () => {},
@@ -59,21 +63,28 @@ export function PhonePreviewProvider({ children }: Readonly<{ children: ReactNod
   const [open, setOpen] = useState(false);
   const [screen, setScreen] = useState<"home" | PhonePlatform>("home");
   const [appContent, setAppContent] = useState<ReactNode | null>(null);
+  const [toolbar, setToolbar] = useState<ReactNode | null>(null);
   const [platform, setPlatform] = useState<PhonePlatform | null>(null);
 
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
-  // The preview content belongs to the page that opened it, so drop it on navigation.
-  useEffect(() => {
+  // The preview content belongs to the page that opened it, so drop it on navigation. This runs
+  // during render, not in an effect: a parent's effect runs after its children's, so an effect
+  // here would close a preview the new page had just opened on mount.
+  const [shownPathname, setShownPathname] = useState(pathname);
+  if (pathname !== shownPathname) {
+    setShownPathname(pathname);
     setOpen(false);
     setAppContent(null);
+    setToolbar(null);
     setPlatform(null);
     setScreen("home");
-  }, [pathname]);
+  }
 
-  const openPreview = useCallback((p: PhonePlatform, content: ReactNode) => {
+  const openPreview = useCallback((p: PhonePlatform, content: ReactNode, bar?: ReactNode) => {
     setPlatform(p);
     setAppContent(content);
+    setToolbar(bar ?? null);
     setScreen(p);
     setOpen(true);
   }, []);
@@ -90,8 +101,9 @@ export function PhonePreviewProvider({ children }: Readonly<{ children: ReactNod
     [platform],
   );
 
-  const updateContent = useCallback((content: ReactNode) => {
+  const updateContent = useCallback((content: ReactNode, bar?: ReactNode) => {
     setAppContent(content);
+    setToolbar(bar ?? null);
   }, []);
 
   const value = useMemo(
@@ -99,6 +111,7 @@ export function PhonePreviewProvider({ children }: Readonly<{ children: ReactNod
       open,
       screen,
       appContent,
+      toolbar,
       platform,
       openPreview,
       closePreview,
@@ -106,7 +119,18 @@ export function PhonePreviewProvider({ children }: Readonly<{ children: ReactNod
       openApp,
       updateContent,
     }),
-    [open, screen, appContent, platform, openPreview, closePreview, goHome, openApp, updateContent],
+    [
+      open,
+      screen,
+      appContent,
+      toolbar,
+      platform,
+      openPreview,
+      closePreview,
+      goHome,
+      openApp,
+      updateContent,
+    ],
   );
 
   return <PhonePreviewContext value={value}>{children}</PhonePreviewContext>;
@@ -121,7 +145,7 @@ export function usePhonePreview() {
 // ---------------------------------------------------------------------------
 
 export function PhonePreviewPanel() {
-  const { open, closePreview } = usePhonePreview();
+  const { open, closePreview, toolbar } = usePhonePreview();
   const { t } = useTranslation();
 
   return (
@@ -148,7 +172,8 @@ export function PhonePreviewPanel() {
             <IconX className="size-4" />
           </Button>
         </div>
-        <div className="flex flex-1 items-start justify-center overflow-y-auto p-4">
+        <div className="flex flex-1 flex-col items-center gap-4 overflow-y-auto p-4">
+          {open && toolbar}
           {open && <PhoneSimulator />}
         </div>
       </div>
@@ -164,10 +189,16 @@ export function PhonePreviewButton({
   children,
   platform,
   label,
+  toolbar,
+  defaultOpen = false,
 }: Readonly<{
   children: ReactNode;
   platform: PhonePlatform;
   label?: string;
+  /** Shown in the panel above the phone while this preview is open. */
+  toolbar?: ReactNode;
+  /** Open the preview when the button mounts. Closing it afterwards is left to the user. */
+  defaultOpen?: boolean;
 }>) {
   const {
     open,
@@ -179,11 +210,16 @@ export function PhonePreviewButton({
   const { t } = useTranslation();
   const isActive = open && activePlatform === platform;
 
+  const openOnMount = useEffectEvent(() => {
+    if (defaultOpen) openPreview(platform, children, toolbar);
+  });
+  useEffect(() => openOnMount(), []);
+
   useEffect(() => {
     if (isActive) {
-      updateContent(children);
+      updateContent(children, toolbar);
     }
-  }, [children, isActive, updateContent]);
+  }, [children, toolbar, isActive, updateContent]);
 
   return (
     <Button
@@ -194,7 +230,7 @@ export function PhonePreviewButton({
         if (isActive) {
           closePreview();
         } else {
-          openPreview(platform, children);
+          openPreview(platform, children, toolbar);
         }
       }}
     >

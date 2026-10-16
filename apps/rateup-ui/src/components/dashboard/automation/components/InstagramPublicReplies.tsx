@@ -23,7 +23,10 @@ export function InstagramPublicReplies() {
           field.onChange(replies.map((reply, i) => (i === index ? text : reply)));
 
         return (
-          <Field data-invalid={fieldState.invalid} className="rounded-xl border bg-muted/20 p-4">
+          <Field
+            data-invalid={fieldState.invalid}
+            className="bg-card ring-foreground/10 rounded-xl p-4 ring-1"
+          >
             <FieldTitle>Reply in public (optional)</FieldTitle>
             <FieldDescription>
               Posted under the comment so others see you answered. One is picked at random each

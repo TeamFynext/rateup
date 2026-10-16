@@ -45,6 +45,10 @@ export const PLATFORMS = [
 
 export type Platform = (typeof PLATFORMS)[number]["value"];
 
+/** A rule's platform, narrowed from the form's string; WhatsApp when unset. */
+export const asPlatform = (value: string | undefined): Platform =>
+  PLATFORMS.find((option) => option.value === value)?.value ?? "WHATSAPP";
+
 // Single source of truth for trigger events
 const TRIGGER_EVENTS = [
   {
@@ -114,9 +118,29 @@ const TRIGGER_EVENTS = [
  * same rule as {@link getActionTypesForPlatform}.
  */
 export function getTriggerEventsForPlatform(platform: Platform, current?: string) {
+  return getTriggerEventsForPlatforms([platform], current);
+}
+
+/** Store events message the buyer from one account; mirrors rateup-api's wa_rule.schema.ts. */
+const SINGLE_CHANNEL_TRIGGERS = new Set<string>(["SHOPIFY_EVENT", "WOOCOMMERCE_EVENT"]);
+/** A chatbot belongs to one platform, so starting one needs a single channel. */
+const SINGLE_CHANNEL_ACTIONS = new Set<string>(["TRIGGER_CHATBOT"]);
+
+/** Whether every one of `platforms` can run `item`, and a multi-channel rule may use it. */
+function runsOnAll(
+  item: { value: string; platforms: readonly string[] },
+  platforms: readonly string[],
+  singleChannelOnly: ReadonlySet<string>,
+) {
+  if (platforms.length > 1 && singleChannelOnly.has(item.value)) return false;
+  return platforms.every((platform) => item.platforms.includes(platform));
+}
+
+/** The trigger events every one of a rule's channels can fire. */
+export function getTriggerEventsForPlatforms(platforms: readonly Platform[], current?: string) {
   return TRIGGER_EVENTS.filter(
     (e) =>
-      (e.platforms as readonly string[]).includes(platform) &&
+      runsOnAll(e, platforms, SINGLE_CHANNEL_TRIGGERS) &&
       (!("legacy" in e && e.legacy) || e.value === current),
   );
 }
@@ -211,11 +235,47 @@ export const ACTION_TYPES = [
  * saved untouched, while nothing new can be authored against it.
  */
 export function getActionTypesForPlatform(platform: Platform, current?: string) {
+  return getActionTypesForPlatforms([platform], current);
+}
+
+/** The action types every one of a rule's channels can run. */
+export function getActionTypesForPlatforms(platforms: readonly Platform[], current?: string) {
   return ACTION_TYPES.filter(
     (a) =>
-      (a.platforms as readonly string[]).includes(platform) &&
+      runsOnAll(a, platforms, SINGLE_CHANNEL_ACTIONS) &&
       (!("legacy" in a && a.legacy) || a.value === current),
   );
+}
+
+const PLATFORM_LABEL = (platform: string) =>
+  PLATFORMS.find((option) => option.value === platform)?.label ?? platform;
+
+/** Why an action cannot run on these channels, or null when it can. */
+export function actionChannelProblem(type: string, platforms: readonly string[]): string | null {
+  const action = ACTION_TYPES.find((option) => option.value === type);
+  if (!action) return null;
+  if (platforms.length > 1 && SINGLE_CHANNEL_ACTIONS.has(type)) {
+    return `“${action.label}” runs on one channel. Remove it, or pick a single channel`;
+  }
+  const missing = platforms.filter(
+    (platform) => !(action.platforms as readonly string[]).includes(platform),
+  );
+  if (!missing.length) return null;
+  return `“${action.label}” can't run on ${missing.map(PLATFORM_LABEL).join(" or ")}`;
+}
+
+/** Why a trigger cannot fire on these channels, or null when it can. */
+export function triggerChannelProblem(value: string, platforms: readonly string[]): string | null {
+  const event = TRIGGER_EVENTS.find((option) => option.value === value);
+  if (!event) return null;
+  if (platforms.length > 1 && SINGLE_CHANNEL_TRIGGERS.has(value)) {
+    return "Store events send from one channel. Pick a single channel";
+  }
+  const missing = platforms.filter(
+    (platform) => !(event.platforms as readonly string[]).includes(platform),
+  );
+  if (!missing.length) return null;
+  return `This event doesn't happen on ${missing.map(PLATFORM_LABEL).join(" or ")}`;
 }
 
 // Single source of truth for group operators
@@ -356,7 +416,9 @@ const ruleOptionsSchema = z.object({
 });
 
 const createRuleBaseSchema = z.object({
+  /** The first of `platforms`; the code that only needs one channel reads it. */
   platform: z.enum(optionValues(PLATFORMS)).default("WHATSAPP"),
+  platforms: z.array(z.enum(optionValues(PLATFORMS))).min(1, "Pick at least one channel"),
   whatsappSettingsPhoneIds: z.array(z.string()).min(1, "Select at least one account"),
   name: z.string().min(1, "Name is required"),
   operator: z.enum(optionValues(GROUP_OPERATORS)).default("AND"),
@@ -399,6 +461,16 @@ const createRuleBaseSchema = z.object({
 });
 
 export const createRuleSchema = createRuleBaseSchema.superRefine((data, ctx) => {
+  const triggerProblem = triggerChannelProblem(data.triggerEvent, data.platforms);
+  if (triggerProblem) {
+    ctx.addIssue({ code: "custom", path: ["triggerEvent"], message: triggerProblem });
+  }
+  data.actions.forEach((action, index) => {
+    const problem = actionChannelProblem(action.type, data.platforms);
+    if (problem)
+      ctx.addIssue({ code: "custom", path: ["actions", index, "type"], message: problem });
+  });
+
   if (data.triggerEvent === "MESSAGE_RECEIVED") {
     if (data.groups.length === 0 || !data.groups.some((group) => group.conditions.length > 0)) {
       ctx.addIssue({
@@ -455,3 +527,35 @@ export type TriggerEvent = z.infer<typeof createRuleSchema>["triggerEvent"];
 export type ConditionField = z.infer<typeof ruleConditionSchema>["field"];
 export type ConditionOperator = z.infer<typeof ruleConditionSchema>["operator"];
 export type ActionType = z.infer<typeof ruleActionSchema>["type"];
+
+/** A new rule before anything is picked; saved rules and templates are merged over it. */
+export const DEFAULT_RULE_VALUES = {
+  platform: "WHATSAPP",
+  platforms: ["WHATSAPP"],
+  whatsappSettingsPhoneIds: [],
+  name: "",
+  triggerEvent: "MESSAGE_RECEIVED",
+  operator: "AND",
+  isActive: true,
+  groups: [
+    {
+      operator: "AND",
+      conditions: [{ field: "MESSAGE_BODY", operator: "CONTAINS", value: "" }],
+    },
+  ],
+  // Empty, not a placeholder: an unfinished one-channel action (a chatbot) blocked every other
+  // channel on the trigger step. The actions step asks for one before it continues.
+  actions: [],
+  options: {
+    sendOncePerDay: false,
+    businessHours: {
+      enabled: false,
+      businessHoursId: undefined,
+    },
+    instagramScope: "ALL",
+    instagramPostIds: [],
+    instagramPublicReplies: [],
+    shopifyProductIds: [],
+    wooProductIds: [],
+  },
+} satisfies Partial<CreateRuleValues>;

@@ -36,6 +36,10 @@ interface MessageBodyEditorProps {
   invalid?: boolean;
   /** Insertable tokens for this message. Omitted where the message takes none. */
   variables?: readonly LoyaltyMessageVariable[];
+  /** False where no channel the message goes to renders WhatsApp's markers. */
+  formatting?: boolean;
+  /** Spells out the markers under the box, for authors who type them rather than click. */
+  formattingHint?: boolean;
 }
 
 /** WhatsApp's markers. Monospace is the odd one out: three backticks, not one character. */
@@ -56,6 +60,8 @@ export function MessageBodyEditor({
   placeholder,
   invalid,
   variables,
+  formatting = true,
+  formattingHint = false,
 }: Readonly<MessageBodyEditorProps>) {
   const { t } = useTranslation();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -103,8 +109,8 @@ export function MessageBodyEditor({
     <div className="flex flex-col">
       <div className="flex flex-wrap items-center gap-1 rounded-t-md border border-b-0 border-input p-1.5">
         <PopoverEmojiPicker onEmojiClick={insert} />
-        <Separator orientation="vertical" className="h-5" />
-        {FORMAT_MARKERS.map(({ key, marker, label, icon: Icon }) => (
+        {formatting && <Separator orientation="vertical" className="h-5" />}
+        {(formatting ? FORMAT_MARKERS : []).map(({ key, marker, label, icon: Icon }) => (
           <CustomTooltip
             key={key}
             trigger={
@@ -175,6 +181,26 @@ export function MessageBodyEditor({
         onChange={(event) => onChange(event.target.value)}
         onBlur={onBlur}
       />
+
+      {formatting && formattingHint && (
+        <p className="text-muted-foreground mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+          <span>{t("Select text and use the buttons above, or type")}</span>
+          {FORMAT_HINTS.map((hint) => (
+            <span key={hint.typed} className="inline-flex items-center gap-1">
+              <code className="bg-muted rounded px-1 font-mono text-[11px]">{hint.typed}</code>
+              <span aria-hidden>→</span>
+              {hint.shown}
+            </span>
+          ))}
+        </p>
+      )}
     </div>
   );
 }
+
+const FORMAT_HINTS = [
+  { typed: "*bold*", shown: <strong className="text-foreground">bold</strong> },
+  { typed: "_italic_", shown: <em className="text-foreground">italic</em> },
+  { typed: "~strike~", shown: <del className="text-foreground">strike</del> },
+  { typed: "```mono```", shown: <code className="text-foreground font-mono">mono</code> },
+];

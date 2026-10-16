@@ -9,6 +9,7 @@ import type { GetLabelsRes } from "@/backend/lifecycle/lifecycle.types";
 import { useGetAllBusinessHours } from "@/backend/org/business-hours/business-hours.query";
 import { StageSelector } from "@/components/pipeline/shared/StageSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Field, FieldError } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import {
@@ -18,9 +19,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { useLifecycleContext } from "@/context/LifecycleContext.ts";
 
+import { MatchSentence } from "./MatchSentence.tsx";
 import type { ConditionField, CreateRuleInput } from "./schema.ts";
 import { CONDITION_OPERATORS, getConditionFields } from "./schema.ts";
 
@@ -185,48 +186,28 @@ const ConditionValueInput = ({
     );
   }
 
-  // For MESSAGE_BODY, provide option for wildcard (*) or custom keyword
+  // "*" is the API's wildcard: the rule answers every message.
   if (fieldType === "MESSAGE_BODY") {
-    // Determine select value
-    let selectValue = "custom";
-    if (valueField.value === "*") {
-      selectValue = "*";
-    } else if (valueField.value === "lead") {
-      selectValue = "lead";
-    }
-
+    const everyMessage = valueField.value === "*";
     return (
-      <div className="flex gap-4 space-y-1">
-        <Select
-          onValueChange={(val) => {
-            if (val === "custom") {
-              valueField.onChange("");
-            } else {
-              valueField.onChange(val);
-            }
-          }}
-          value={selectValue}
-          items={[
-            { value: "*", label: "All Messages" },
-            { value: "custom", label: "Custom keyword" },
-          ]}
-        >
-          <SelectTrigger className="w-full bg-background">
-            <SelectValue placeholder="Select or enter keyword" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="*">All Messages</SelectItem>
-            <SelectItem value="custom">Custom keyword</SelectItem>
-          </SelectContent>
-        </Select>
-        {valueField.value !== "*" && valueField.value !== "lead" && (
+      <div className="flex flex-col gap-2">
+        {!everyMessage && (
           <Input
-            placeholder="Enter keyword"
+            placeholder="Type a word or phrase, e.g. refund"
             value={value}
             onChange={valueField.onChange}
-            className="w-full bg-background"
+            onBlur={valueField.onBlur}
+            ref={valueField.ref}
+            className="bg-background h-10 w-full"
           />
         )}
+        <label className="text-muted-foreground flex w-fit cursor-pointer items-center gap-2 text-[13px]">
+          <Checkbox
+            checked={everyMessage}
+            onCheckedChange={(checked) => valueField.onChange(checked ? "*" : "")}
+          />
+          Reply to every message
+        </label>
       </div>
     );
   }
@@ -273,110 +254,95 @@ const ConditionRow = ({
   }, [fieldType]);
 
   return (
-    <div className="flex gap-3 items-center p-4 bg-white dark:bg-card rounded-lg border border-border">
+    <div className="bg-card ring-foreground/10 flex flex-col gap-2.5 rounded-xl p-3 ring-1">
+      <div className="flex items-center gap-2">
+        <Controller
+          control={control}
+          name={fieldPath(`${namePrefix}.${index}.field`)}
+          render={({ field, fieldState }) => {
+            const fields = getConditionFields(field.value as string).filter(
+              (opt) => !allowedFields || allowedFields.includes(opt.value),
+            );
+            return (
+              <Field className="min-w-0 flex-1 sm:max-w-56" data-invalid={fieldState.invalid}>
+                <Select
+                  onValueChange={(val) => {
+                    field.onChange(val);
+                    setValue(fieldPath(`${namePrefix}.${index}.value`), "");
+                    if (val !== "MESSAGE_BODY" && val !== "CONTACT_EMAIL") {
+                      setValue(fieldPath(`${namePrefix}.${index}.operator`), "EQUALS");
+                    }
+                  }}
+                  value={field.value as string}
+                  items={fields}
+                >
+                  <SelectTrigger className="w-full" aria-invalid={fieldState.invalid}>
+                    <SelectValue placeholder="Field" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {fields.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              </Field>
+            );
+          }}
+        />
+
+        {shouldShowOperator && (
+          <Controller
+            control={control}
+            name={fieldPath(`${namePrefix}.${index}.operator`)}
+            render={({ field, fieldState }) => (
+              <Field className="w-36 shrink-0" data-invalid={fieldState.invalid}>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value as string}
+                  items={availableOperators}
+                >
+                  <SelectTrigger className="w-full" aria-invalid={fieldState.invalid}>
+                    <SelectValue placeholder="Operator" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableOperators.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              </Field>
+            )}
+          />
+        )}
+
+        <Button
+          aria-label="Delete condition"
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          onClick={() => remove(index)}
+          className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 ml-auto shrink-0"
+        >
+          <IconTrash className="size-4" />
+        </Button>
+      </div>
+
       <Controller
         control={control}
-        name={fieldPath(`${namePrefix}.${index}.field`)}
-        render={({ field, fieldState }) => (
-          <Field className="flex-1" data-invalid={fieldState.invalid}>
-            <Select
-              onValueChange={(val) => {
-                field.onChange(val);
-                setValue(fieldPath(`${namePrefix}.${index}.value`), "");
-                if (val !== "MESSAGE_BODY" && val !== "CONTACT_EMAIL") {
-                  setValue(fieldPath(`${namePrefix}.${index}.operator`), "EQUALS");
-                }
-              }}
-              defaultValue={field.value as string}
-              value={field.value as string}
-              items={
-                allowedFields
-                  ? getConditionFields(field.value as string).filter((opt) =>
-                      allowedFields.includes(opt.value),
-                    )
-                  : getConditionFields(field.value as string)
-              }
-            >
-              <SelectTrigger className="w-full" aria-invalid={fieldState.invalid}>
-                <SelectValue placeholder="Field" />
-              </SelectTrigger>
-              <SelectContent>
-                {(allowedFields
-                  ? getConditionFields(field.value as string).filter((opt) =>
-                      allowedFields.includes(opt.value),
-                    )
-                  : getConditionFields(field.value as string)
-                ).map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        name={fieldPath(`${namePrefix}.${index}.value`)}
+        render={({ field: valueField, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <ConditionValueInput index={index} valueField={valueField} namePrefix={namePrefix} />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
         )}
       />
-
-      {shouldShowOperator && (
-        <Controller
-          control={control}
-          name={fieldPath(`${namePrefix}.${index}.operator`)}
-          render={({ field, fieldState }) => (
-            <Field className="w-[140px]" data-invalid={fieldState.invalid}>
-              <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value as string}
-                value={field.value as string}
-                items={availableOperators}
-              >
-                <SelectTrigger className="w-full" aria-invalid={fieldState.invalid}>
-                  <SelectValue placeholder="Operator" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableOperators.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-            </Field>
-          )}
-        />
-      )}
-
-      <div className="flex-1">
-        <Controller
-          control={control}
-          name={fieldPath(`${namePrefix}.${index}.value`)}
-          render={({ field: valueField, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <div className="w-full">
-                <ConditionValueInput
-                  index={index}
-                  valueField={valueField}
-                  namePrefix={namePrefix}
-                />
-              </div>
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-            </Field>
-          )}
-        />
-      </div>
-
-      <Button
-        aria-label="Delete Condition"
-        type="button"
-        variant="ghost"
-        size="icon"
-        onClick={() => remove(index)}
-        title="Delete Condition"
-        className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-10 w-10"
-      >
-        <IconTrash className="w-4 h-4" />
-      </Button>
     </div>
   );
 };
@@ -410,20 +376,8 @@ const ConditionList: React.FC<ConditionListProps> = ({
 
   return (
     <div className="space-y-3">
-      {/* Match all/any toggle for this condition block */}
       {fields.length > 1 && (
-        <Tabs
-          defaultValue="AND"
-          value={groupOperator}
-          onValueChange={(e) => {
-            onOperatorChange(e as "AND" | "OR");
-          }}
-        >
-          <TabsList>
-            <TabsTrigger value="AND">Match all</TabsTrigger>
-            <TabsTrigger value="OR">Match any</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <MatchSentence value={groupOperator} onChange={onOperatorChange} noun="conditions" />
       )}
 
       {/* Condition Rows */}
@@ -440,7 +394,7 @@ const ConditionList: React.FC<ConditionListProps> = ({
       <Button
         type="button"
         variant="outline"
-        className="w-full border-2 border-dashed border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 bg-ru-blue-50 dark:bg-blue-950/20 hover:bg-ru-blue-100 dark:hover:bg-blue-900/30"
+        size="sm"
         onClick={() => {
           const defaultField =
             getConditionFields().length > 0 ? getConditionFields()[0].value : "CONTACT_EMAIL";

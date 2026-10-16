@@ -23,7 +23,7 @@ export function InstagramCommentSource() {
       name="options.instagramCommentSource"
       render={({ field }) => (
         <div className="space-y-2">
-          <span className="block text-sm font-semibold">Comments on</span>
+          <span className="block text-sm font-medium">Comments on</span>
           <div className="grid grid-cols-3 gap-2">
             {INSTAGRAM_COMMENT_SOURCES.map((option) => (
               <button
@@ -72,7 +72,7 @@ export function InstagramLinkRef() {
   };
 
   return (
-    <div className="space-y-3 rounded-xl border bg-muted/20 p-4">
+    <div className="space-y-3 bg-card ring-foreground/10 rounded-xl p-4 ring-1">
       <Controller
         control={control}
         name="options.instagramRef"

@@ -111,6 +111,10 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
       // header over their own scroller.
       pathname?.includes("/dashboard/setup") ||
       pathname?.includes("/dashboard/meta-agent") ||
+      // The automation builder and campaign wizard: a full-bleed 56px bar that must
+      // line up with the device preview panel's header beside it.
+      /^\/dashboard\/automation\/[^/]+/.test(pathname ?? "") ||
+      /^\/dashboard\/campaign\/(new|[^/]+\/edit)/.test(pathname ?? "") ||
       pathname?.includes("/dashboard/whatsapp/flows/v2/") ||
       pathname?.includes("/dashboard/whatsapp/flowbots/") ||
       pathname?.includes("/dashboard/instagram/flowbots/") ||

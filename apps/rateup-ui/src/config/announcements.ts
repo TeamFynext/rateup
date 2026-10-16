@@ -40,6 +40,43 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-10-16-campaign-device-preview",
+    title: "Campaign preview moves to the side panel",
+    summary:
+      "When you pick a template for a campaign, the phone preview now opens in the panel on the right, with a Preview button in the header to show or hide it.",
+    publishedAt: "2026-10-16",
+    kinds: ["improvement"],
+    area: "Campaigns",
+  },
+  {
+    id: "2026-10-16-automation-builder-refresh",
+    title: "A clearer automation builder",
+    summary:
+      "Pick what starts an automation from cards, add actions from a menu, and keep a live phone preview open beside every step.",
+    publishedAt: "2026-10-16",
+    kinds: ["improvement"],
+    area: "Automation",
+    link: { to: "/dashboard/automation", label: "Open automations" },
+  },
+  {
+    id: "2026-10-16-automation-multi-channel",
+    title: "One automation for all your channels",
+    summary:
+      "An automation can now run on WhatsApp, Instagram and Messenger at once, replying to each customer on the channel they wrote from.",
+    publishedAt: "2026-10-16",
+    kinds: ["new"],
+    area: "Automation",
+    link: { to: "/dashboard/automation", label: "Open automations" },
+  },
+  {
+    id: "2026-10-16-automation-templates",
+    title: "Start an automation from a template",
+    summary:
+      "Pick a ready-made automation like a keyword auto-reply or an order confirmation, and watch a live preview of what your customer will see as you set it up.",
+    publishedAt: "2026-10-16",
+    kinds: ["new", "improvement"],
+    area: "Automation",
+    link: { to: "/dashboard/automation", label: "Open automations" },
     id: "2026-10-16-webhook-settings-redesign",
     title: "A clearer webhook settings page",
     summary:
@@ -73,7 +110,7 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     id: "2026-10-14-automation-wizard",
     title: "Automations are built step by step",
     summary:
-      "Creating an automation now walks you through it one step at a time: basics, when, if, then, and a review before you save.",
+      "Creating an automation now walks you through it one step at a time, with a review before you save.",
     publishedAt: "2026-10-14",
     kinds: ["improvement"],
     area: "Automation",
