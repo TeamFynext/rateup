@@ -20,7 +20,7 @@ side holds the actions.
 | ↕️ | **Switch to compact list** / **Switch to detailed list** | Toggle between full rows and one-line rows |
 | 🔍 | **Search** | Find tickets by contact name or phone number |
 | ✅ | **Select Chats** | Turn on selection mode for bulk actions |
-| ⬇️ | **Download Chats** | Export conversation history |
+| ⬇️ | **Download chats** | Export conversation history to Excel |
 | 🔄 | **Refresh** | Reload the list |
 | 👤➕ | **New Contact** | Add a WhatsApp contact and start a conversation |
 
@@ -164,7 +164,7 @@ you switch views.
 | **Closed** | ✅ | — | ✅ |
 | **Spam** | — | — | ✅ |
 
-**Delete** is only shown to **Admins** and **Super Admins**.
+**Delete** is only shown to members with the **Delete conversations** ability — by default Owners, Admins and Managers.
 
 ---
 
@@ -206,19 +206,23 @@ those tickets one at a time from the chat header. See
 Enter selection mode and tick the tickets.
 </Step>
 <Step>
-Click **Assign selected chats** (the person icon). A dialog opens: *"Assign N Chats"*.
+Click **Assign selected chats** (the person icon). A dialog opens: *"Assign N chats"*.
 </Step>
 <Step>
-Pick a team under **Select Team**, then a person under **Select Member**. Each member shows
-whether they are online.
+Search in **Search people or teams**, then click **Assign to me**, a person, or a team under
+**Auto-assign in a team**.
 </Step>
 <Step>
-Click **Assign Chats**. Or skip the pickers and click **Assign To Me** to take them all yourself.
+A progress bar — *"Assigning chats…"* with a running count — shows while the tickets are assigned.
+The dialog closes when it is done.
 </Step>
 </Steps>
 
-Bulk assignment **replaces** whoever was assigned before. Each ticket ends up with exactly the one
-person you picked. Like bulk close, it acts on each selected customer's most recent ticket.
+Picking a person gives them every selected ticket. Picking a **team** spreads the tickets across its
+members, turn by turn, preferring those who are online.
+
+Bulk assignment **replaces** whoever was assigned before. Like bulk close, it acts on each selected
+customer's most recent ticket.
 
 [Assignment in detail →](/inbox/asigning-conversation)
 
@@ -226,7 +230,7 @@ person you picked. Like bulk close, it acts on each selected customer's most rec
 
 ## Delete Many Tickets at Once
 
-Admins and Super Admins can permanently delete tickets and every message in them.
+Members with the **Delete conversations** ability can permanently delete tickets and every message in them.
 
 <Steps>
 <Step>
@@ -257,32 +261,34 @@ To delete a single ticket, see
 
 ## Exporting
 
-Click the **download** icon to open **Export Whatsapp chats**.
+Click the **download** icon (**Download chats**) to open **Export conversations** — *"An Excel file
+of every message in the date range, from all channels."*
 
 <Steps>
 <Step>
-Choose how to bound the dates: **Between**, **Before**, **After** or **On**.
+Under **Date range**, choose **Between**, **On**, **Before** or **After**.
 </Step>
 <Step>
-Pick the date — or, for **Between**, a **from** and a **to** date. **Export** stays disabled until
-the date is filled in.
+Pick the date — or, for **Between**, a **From** and a **To** date. **Export to Excel** stays
+disabled until the date is filled in.
 </Step>
 <Step>
 Optionally tick:
 
-- **Replies Only** — export only the messages your **customers** sent, leaving out everything
-  your team and your automations sent
-- **Inclusive** — include the chosen day itself (offered for **Before** and **After**; **Between**
-  always includes both end dates)
+- **Include that day** — include the chosen day itself (offered for **Before** and **After**;
+  **Between** always includes both end dates)
+- **Only messages from customers** — leave out everything your team and your automations sent
 </Step>
 <Step>
-Click **Export**. A *"Exporting chats..."* notice shows while the file is prepared.
+Click **Export to Excel**. An *"Exporting chats..."* notice shows while the file is prepared, and
+`conversations-<date>.xlsx` downloads.
 </Step>
 </Steps>
 
-Each row of the file is one message, with its **date**, the customer's **phone** and **name**, and
-the text in a **received** or **sent** column. A template you sent is listed by its **template
-name**.
+Each row of the file is one message, with its **Date**, the customer's number (**From**), their
+**Name**, and the **Message** — the text sent or received, or the template name for a template.
+
+Exporting needs the **Export chats and logs** ability.
 
 <Callout type="warn">
   The export covers **every conversation in your organisation** within the dates you pick. The view

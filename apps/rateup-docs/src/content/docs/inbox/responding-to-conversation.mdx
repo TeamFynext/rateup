@@ -123,7 +123,10 @@ Two ways to insert one:
 | **Button** | Click the **lightning** icon next to the character counter |
 | **Keyboard** | Type `/` in the message box to open the list, and keep typing to filter |
 
-Pick a reply and it is inserted into the composer, where you can edit it before sending.
+Pick a reply and its text is inserted into the composer, where you can edit it before sending. A
+quick reply with a **paperclip** also carries images, voice notes or videos: they are added to your
+message as attachments. Remove any you do not need before sending — that does not change the saved
+quick reply.
 
 Quick replies are created under [Inbox Settings](/inbox/inbox-settings).
 
@@ -213,25 +216,79 @@ found"*. Automation needs an open 24-hour window, so it is not offered once the 
 
 ---
 
+## When Meta AI Is Answering
+
+If you use the [Meta AI agent](/meta-agent), a pill beside the customer's name in the chat header
+shows who is answering them. Click it for the details.
+
+| Pill | Means |
+|------|-------|
+| **Meta AI** | *"Meta AI is replying"* — it answers this customer. Replying here takes the conversation over |
+| **Staff** | *"Handed over to staff"* — Meta AI has stopped answering, and stays silent until the conversation is handed back |
+| **AI agent** | Meta AI has replied to this customer, but no handover has been seen yet |
+
+The popover also says why and when the conversation last changed hands, for example:
+
+| Reason | What happened |
+|--------|---------------|
+| *The customer asked for a person* | Meta AI handed over at the customer's request |
+| *A teammate replied from the inbox* | Someone on your team sent a reply |
+| *An automation sent a message* / *A campaign message was sent* / *A message was sent through the API* | RateUp sent something on its own |
+| *Handed back to Meta AI* | Someone clicked **Hand back to Meta AI** |
+| *Handed back when the ticket closed* | The ticket was closed or resolved |
+
+<Callout type="warn">
+  **Any message RateUp sends takes the conversation off Meta AI** — your reply, but also an
+  automation, a campaign or an API send. WhatsApp gives the conversation to whoever sends. Check the
+  pill before a campaign goes to customers Meta AI is still helping.
+</Callout>
+
+### Hand a conversation back to Meta AI
+
+<Steps>
+<Step>
+Click the **Staff** or **AI agent** pill in the chat header.
+</Step>
+<Step>
+Click **Hand back to Meta AI**. The pill turns to **Meta AI**.
+</Step>
+</Steps>
+
+Closing or resolving the ticket hands it back on its own. That is controlled by **Hand back to Meta
+AI when a ticket is closed** in the agent's [Go live](/meta-agent/settings) settings — on by default.
+A contact marked as spam is never handed back.
+
+If the customer's WhatsApp number cannot be matched to one of your connected numbers, the popover
+says so, and the conversation can only be handed back from **Meta AI Agent → Test**
+([Hand a Conversation Back to Meta AI](/meta-agent/operate#hand-a-conversation-back-to-meta-ai)).
+
+---
+
 ## When You Cannot Reply
 
-The composer is replaced by a banner in four situations:
+In these situations the composer is replaced by a banner, or limited to private notes:
 
 | Situation | What you see | How to continue |
 |-----------|--------------|-----------------|
-| **Unassigned ticket** | *"This conversation is new and unassigned."* with **Assign to me** | Take the ticket, or use **Assign** to give it to someone |
-| **Closed ticket** | *"This chat has been closed by … at …. Assign it to start the conversation again."* | Click **Assign to me**, or **Reopen** in the header |
+| **Unassigned ticket** | *"This conversation is new and unassigned."* with **Assign to me** | Take the ticket, or use **Assign to…** to give it to someone |
+| **Closed ticket** | *"This chat has been closed by … at …"* and whether the 24-hour window is still open | Click **New conversation**, **Assign to…**, or **Reopen** in the header |
+| **Assigned to someone else** | *"This chat is not assigned to you"* | Ask the owner, or reassign it to yourself from **Assignment** in the details panel |
 | **Blocked contact** | *"This contact has been blocked by you."* | Click **Unblock contact** |
 | **Contact flagged as spam** | *"This contact is marked as spam."* | Click **Not spam** in the banner |
-| **WhatsApp 24-hour window expired** | Only a pulsing **+** button | **+ → Send WhatsApp Template** |
-| **Instagram / Messenger window expired** | No composer at all | Wait for the customer to write again |
-| **Conversation limit reached** | *"Conversation limit reached (used/limit)"* with **Upgrade Plan** | Upgrade the plan, or wait for the reset |
+| **WhatsApp 24-hour window expired** | A pulsing **+** button above a composer that only writes private notes | **+ → Send WhatsApp Template** |
+| **Instagram / Messenger window expired** | A composer that only writes private notes | Wait for the customer to write again |
 
-<Callout type="warn">
-  Once a WhatsApp window expires, the **Private Note** tab goes too. The whole composer is replaced
-  by the template button, so you cannot leave an internal note on that ticket until the customer
-  writes again. Write handover notes before the window closes.
-</Callout>
+
+Once a WhatsApp window expires, the **Message** tab disappears but **Private Note** stays, so you
+can still leave a handover note on the ticket.
+
+### When your plan's active contacts run out
+
+If your plan's monthly active contacts are used up, an amber notice sits above the composer:
+**Active contact limit reached** — *"New contacts can't be messaged until next month. Contacts
+already active this month can still be messaged."* It does not lock the composer. You can keep
+replying to customers you have already messaged this month; a message to a new one is refused with
+an error. **View plans** opens [Billing](/settings/billing).
 
 ---
 
@@ -253,8 +310,9 @@ WhatsApp — not RateUp — restricts when you may send free-form messages.
 ### Outside the window
 
 - Free-form messaging is disabled
-- The composer shrinks to a single **+** button with a pulsing green dot. It opens a menu with just
+- A **+** button with a pulsing green dot appears above the composer. It opens a menu with just
   **Send WhatsApp Template**
+- The composer switches to **Private Note**, so you can still write to your team
 - Only **approved templates** can be sent
 - Once the customer replies to your template, a **new 24-hour window** opens and normal replying
   resumes
@@ -359,6 +417,10 @@ does not touch the 24-hour window.
 Either you are over the 1024-character limit, or the ticket is unassigned, closed or outside the
 24-hour window. The banner above the composer tells you which.
 </Accordion>
+<Accordion title="Can I call the customer instead?">
+On WhatsApp, yes — once calling is turned on for your number and the customer has allowed calls.
+Use the **phone** icon in the chat header. See [WhatsApp Voice Calls](/inbox/whatsapp-calls).
+</Accordion>
 <Accordion title="Can I edit or delete a message I already sent?">
 Not from RateUp — sent messages are part of the record here. Send a correction as a follow-up
 message. If you delete the message from the WhatsApp Business app instead, RateUp marks it as
@@ -389,5 +451,7 @@ Yes, and you should. Each ticket has its own thread and the customer sees one co
 
 - [Sending Templates](/inbox/send-templates)
 - [Private Notes & @Mentions](/inbox/private-notes)
+- [WhatsApp Voice Calls](/inbox/whatsapp-calls)
 - [Closing & Reopening](/inbox/conversation-lifecycle)
 - [Inbox Settings](/inbox/inbox-settings) — where quick replies are created
+- [Meta AI Agent → Go live](/meta-agent/settings) — the inbox handover setting

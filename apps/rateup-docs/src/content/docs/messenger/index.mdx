@@ -1,0 +1,94 @@
+---
+title: "Messenger Overview"
+description: Connect a Facebook Page on its own and run chatbots that answer the messages people send it.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ScreenShot from "@/components/Screenshot";
+
+**Messenger** holds the chatbots that answer messages sent to your Facebook Page — *"Chatbots that
+answer messages sent to your Facebook Page."* Messenger conversations land in the [Inbox](/inbox)
+like any other channel, and a Page connects on its own: no WhatsApp number is needed.
+
+<ScreenShot src="/docs/screenshots/messenger/overview.png" alt="Messenger page with a Facebook Page connected and no chatbots yet: Create Chatbot, search, sort and the starter examples" />
+
+---
+
+## What You Can Set Up
+
+<Cards>
+  <Card
+    title="Messenger Chatbots"
+    href="/messenger/chatbots"
+    description="Build a chatbot from an example or a blank canvas, and start it from an automation rule."
+  />
+  <Card
+    title="Automation"
+    href="/automation"
+    description="The rules that start a Messenger chatbot when someone messages your Page."
+  />
+</Cards>
+
+**Messenger** appears in the sidebar under **Instagram** for anyone whose team has access to
+chatbots. It has no ice breakers, persistent menu or links of its own — those are Instagram-only.
+
+---
+
+## Connect a Facebook Page
+
+Until a Page is connected, the page shows *"Connect a Facebook Page"* — *"Messenger chatbots run on
+a connected Facebook Page. Connect one to get started."* — with a **Connect Facebook Page** button.
+
+<Steps>
+<Step>
+Click **Connect Facebook Page**, or open **Settings → Channels** and click **Connect** on **Facebook
+Messenger**.
+</Step>
+<Step>
+Click **Continue with Facebook** and log in. Meta asks only for Messenger permissions.
+</Step>
+<Step>
+In **Choose Facebook Pages**, tick the Pages you want — *"Each Page becomes its own Messenger
+channel."* A Page already linked to another RateUp organisation is marked *"Connected to another
+organization"* and cannot be picked.
+</Step>
+<Step>
+Click **Connect**. The Pages appear under **Facebook Messenger connections**.
+</Step>
+</Steps>
+
+You can connect as many Pages as you like. If the list is empty — *"No Facebook Pages were shared.
+Log in again and choose at least one."* — Meta was not given access to any Page during login.
+
+<Callout type="warn">
+  Disconnecting a Page stops its conversations reaching the Inbox — *"Messenger conversations from
+  this Page will stop arriving in the inbox."* Chatbots and rules built for it stop answering too.
+</Callout>
+
+---
+
+## Where Conversations Go
+
+Every message to a connected Page becomes a ticket in the [Inbox](/inbox), with a Messenger badge.
+A chatbot's messages are already in the thread when an agent picks it up.
+
+---
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| *"Connect a Facebook Page"* although you connected one | The Page is not listed under **Facebook Messenger** — an Instagram account is a separate channel | Connect the Page under **Settings → Channels → Facebook Messenger** |
+| A Page is missing from **Choose Facebook Pages** | It was not shared with RateUp during login | Log in again and pick it |
+| A Page is greyed out in **Choose Facebook Pages** | *"Connected to another organization"* | Disconnect it there first |
+| **Messenger** is not in the sidebar | Your team has no access to chatbots | Ask an admin to give your team access to chatbots |
+
+---
+
+## Related Pages
+
+- [Messenger Chatbots](/messenger/chatbots)
+- [Channels](/settings/channels) — connecting and disconnecting Pages
+- [Instagram](/instagram)
+- [Automation](/automation)
+- [Inbox](/inbox)

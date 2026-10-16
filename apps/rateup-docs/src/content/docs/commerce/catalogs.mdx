@@ -1,79 +1,152 @@
 ---
 title: "Catalogs"
-description: Manage the products customers can buy in WhatsApp, and keep them in sync.
+description: Connect a WhatsApp catalog to your number, manage its products and collections, and keep them in sync with Meta.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
-**Catalogs** is the product side of Commerce: what customers see when they browse your store in
-WhatsApp.
+**Catalogs** is the product side of Commerce: *"Manage products and collections synced to WhatsApp &
+Instagram."* It is also where a catalog is connected to a WhatsApp number — the old **WhatsApp →
+Catalog** page now redirects here.
 
 <ScreenShot src="/docs/screenshots/commerce/catalogs.png" alt="Products in the connected catalog" />
 
 ---
 
-## Products
+## Pick the Store and Catalog
 
-Each product shows its image, title, brand or category, price, and a stock badge:
+Two switchers sit at the top of the page:
+
+| Switcher | Picks |
+|----------|-------|
+| **Select store** | The WhatsApp number whose commerce you are viewing |
+| **Select catalog** | Which of your Meta catalogs to show. The one linked to the selected number is marked **Connected** |
+
+The page opens on the number's connected catalog. Changing the store switches back to that store's
+own catalog.
+
+The page has three tabs: **Products · N**, **Collections · N** and **Settings**.
+
+---
+
+## Connect a Catalog to Your WhatsApp Account
+
+A catalog has to be linked to the WhatsApp Business Account (WABA) behind your number before
+customers can browse it in chat or automations can use it.
+
+<ScreenShot src="/docs/screenshots/commerce/catalog-settings.png" alt="A catalog's Settings tab: WhatsApp Business Account, Shopify checkout automation and Danger zone" />
+
+<Steps>
+<Step>
+Make sure the number is connected under [Channels](/settings/channels).
+</Step>
+<Step>
+Open **Commerce → Catalogs**, choose the number in **Select store** and the catalog in **Select
+catalog**.
+</Step>
+<Step>
+Open the **Settings** tab. Leave **SMB (Coexistence Account)** off for a normal Cloud API number; turn
+it on for a number shared with the WhatsApp Business app.
+</Step>
+<Step>
+Choose the account under **Connected WhatsApp Business Account ID**. *"Selecting an account connects
+the catalog immediately"* — confirm **Connect** in the dialog.
+</Step>
+</Steps>
+
+| Mode | What connecting does |
+|------|----------------------|
+| **SMB (Coexistence Account)** off | *"Normal Account — will also update in Meta"* |
+| **SMB (Coexistence Account)** on | *"DB only, no Meta update"* — RateUp records the link without changing it at Meta |
+
+**Disconnect WhatsApp Business Account** undoes the link. *"The catalog in automation on the connected
+account won't work"* afterwards.
+
+---
+
+## Manage Products
+
+Each product shows its image, title, brand, price and a stock badge:
 
 | Badge | Meaning |
 |-------|---------|
 | **Active** | In stock and buyable |
 | **Out of stock** | Visible but cannot be ordered |
 
-Use the row menu on any product to manage or delete it.
+**Add Product** opens the product form; click a product to edit it, or use its menu to delete it.
 
 <Callout type="warn">
-  Deleting a product removes it from the catalog customers browse. Existing orders that contain it
-  are unaffected.
+  Deleting a product *"removes the product from your Meta catalog and cannot be undone."* Existing
+  orders that contain it are unaffected.
 </Callout>
+
+Only product (commerce) catalogs can be managed here. A hotel or other catalog type shows
+*"Unsupported catalog type"*.
 
 ---
 
-## Syncing
+## Sync With Meta
 
-Products come from the WhatsApp catalog connected to your account. Click **Sync** to pull the
-latest state.
+Products live in your Meta catalog and are pulled into RateUp on sync.
 
 <Steps>
 <Step>
-Make the change in your product source — your WhatsApp catalog or connected store.
+Make the change in your product source — Meta Commerce Manager or your connected store.
 </Step>
 <Step>
-Return to **Commerce → Catalogs** and click **Sync**.
+Return to **Commerce → Catalogs** and click **Sync with Meta**.
 </Step>
 <Step>
-You will see *"Products synced"* when it completes.
+You will see *"Syncing with Meta…"* and then *"Products synced"*.
 </Step>
 </Steps>
 
 Sync when a price changes, stock runs out, or a product is added — the catalog customers see is
-whatever was last synced.
+whatever was last synced. The **Collections** tab has its own **Sync collections** button.
 
 ---
 
 ## Collections
 
 Collections group products so customers can browse by theme rather than scrolling everything —
-"New arrivals", "Under ₹500", seasonal ranges.
+"New arrivals", "Under ₹500", seasonal ranges. They are created in Meta and pulled in with **Sync
+collections**.
 
-Manage them from the collections area of the Catalogs page.
+---
+
+## Send a Shopify Checkout Link Automatically
+
+The Settings tab's **Shopify checkout automation** card offers **Auto-generate
+Shopify checkout link** — *"Automatically send a Shopify checkout link when a customer sends a cart."*
+Turn it on and write the **Checkout message**, with `{link}` where the URL should go.
+
+---
+
+## Delete a Catalog
+
+The **Danger zone** card's **Delete Catalog** is permanent. It removes *"All products,
+orders, product sets, and automation links tied to this catalog"*. Any automation using it stops
+working.
 
 ---
 
 ## Troubleshooting
 
-| Symptom | Likely cause |
-|---------|--------------|
-| "No catalog connected" | No WhatsApp catalog is linked — connect one in [WhatsApp Catalog](/whatsapp/catalogs) |
-| A product is missing | It has not been synced, or it is not published in the source catalog |
-| Sync failed | The connection to the catalog has expired; reconnect the account |
-| Price is wrong in chat | The customer is seeing a cached catalog; sync and ask them to reopen it |
+| Symptom | Likely cause | Fix |
+|---------|--------------|-----|
+| *"No catalog connected"* | The selected number has no linked catalog | Pick a catalog in **Select catalog** and connect it from **Settings** |
+| No **Select catalog** switcher at all | RateUp has no catalogs from your Meta business | Create the catalog in Meta Commerce Manager first |
+| *"No products yet"* | The catalog is empty or was never synced | **Sync with Meta**, or **Add Product** |
+| A product is missing | It has not been synced, or it is not published in the source catalog | **Sync with Meta** |
+| *"Sync failed"* | The connection to Meta has expired | Reconnect the number under [Channels](/settings/channels) |
+| Price is wrong in chat | The customer is seeing a cached catalog | Sync, and ask them to reopen it |
 
 ---
 
 ## Related Pages
 
-- [WhatsApp Catalog](/whatsapp/catalogs) — connecting the catalog
 - [Orders](/commerce/orders)
+- [Payments](/commerce/payments)
+- [Checkout Settings](/commerce/checkout-settings)
+- [Channels](/settings/channels) — connecting the WhatsApp number

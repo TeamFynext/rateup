@@ -8,6 +8,9 @@ import ScreenShot from "@/components/Screenshot";
 **Forecast** answers one question: how much is likely to land, and when. It groups your open leads
 by their **expected close** month and weights each one by the win probability of the stage it is in.
 
+The **Forecast** tab exists on Leads boards only. Support, Projects and Custom boards have no win
+probabilities to weight by, so the tab is hidden there — see [Board Types](/pipeline/board-types).
+
 <ScreenShot src="/docs/screenshots/pipelines/pipelines-forcast.png" alt="The Forecast view, with every open lead in the Unscheduled column" />
 
 ---
@@ -38,8 +41,12 @@ being dropped from the view.
   is not measuring your pipeline — it is measuring the part of it somebody remembered to date.
 </Callout>
 
-Set a date from the lead drawer's **Expected close** field — see
-[Working a Lead](/pipeline/leads#details).
+<Callout type="warn">
+  The lead window shows **Expected close** but cannot change it: on a Leads board there is no date
+  picker for it anywhere in the dashboard. The way to set it is the **Expected close** column of a
+  spreadsheet [import](/pipeline/import-export), which only applies to the new cards that import
+  creates. Leads added by hand or by a rule stay **Unscheduled**.
+</Callout>
 
 ---
 

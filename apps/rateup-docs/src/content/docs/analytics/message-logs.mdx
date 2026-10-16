@@ -1,16 +1,17 @@
 ---
 title: "Message Logs"
-description: Every individual message, searchable, filterable and exportable.
+description: Every WhatsApp message sent from Campaigns, the Inbox, templates and the API — searchable, filterable and exportable, with the error behind each failure.
 ---
 
+import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
-Where [Message Analytics](/analytics/message-analytics) gives you the totals, **Message Logs**
-gives you the individual messages behind them.
+Where [Messages](/analytics/message-analytics) gives you the totals, **Message logs** gives you the
+individual messages behind them. Open it from **Analytics → Logs**; it is the first of the two tabs.
 
 This is the view you open when someone says "the customer says they never got it".
 
-<ScreenShot src="/docs/screenshots/analytics/message-logs.png" alt="Message Logs" />
+<ScreenShot src="/docs/screenshots/analytics/message-logs.png" alt="Message logs with status and source filters and failed rows showing their error" />
 
 ---
 
@@ -18,32 +19,50 @@ This is the view you open when someone says "the customer says they never got it
 
 | Column | Contains |
 |--------|----------|
-| **Timestamp** | When the message was sent |
+| **Time** | When the message was sent, e.g. `9 Oct 2026, 4:12 PM` |
 | **Phone** | The recipient |
-| **Message** | The content |
+| **Status** | **Sent**, **Delivered**, **Read**, **Failed** or **Pending** |
+| **Source** | **Campaign**, **Template**, **Inbox** or **External API** |
 | **Type** | What kind of message it was |
-| **Source** | Campaign, template, external API |
-| **Status** | Sent, delivered, read or failed |
+| **Message** | A preview of the content |
+| **Error** | On a failed message, WhatsApp's reason. Click it to see the full error |
+
+Rows come 25 to a page, newest first.
 
 ---
 
-## Finding a Message
+## Find a Message
 
 | Tool | Use |
 |------|-----|
-| **Search** | Search by phone number or message content |
-| **Status filter** | Narrow to failures, or to read messages |
-| **Source filter** | Isolate campaign sends from conversation messages |
-| **Date range** | Restrict to the period in question |
+| **Search phone or message** | Matches the phone number or the message text |
+| **Status** | **All statuses**, **Sent**, **Delivered**, **Read** or **Failed** |
+| **Source** | **All sources**, **Campaign**, **Template** or **External API** |
+| **Date range** and **Team** | From the filter bar at the top of Analytics |
 
-The fastest route for a delivery complaint: search the phone number, set status to **Failed**, and
-look at the timestamp.
+With nothing matching, it reads *"No messages match — Try a longer date range, another team, or
+clear the filters."*
+
+<Steps>
+<Step>
+Set the date range to cover when the message should have gone out.
+</Step>
+<Step>
+Search the customer's phone number.
+</Step>
+<Step>
+Set the status to **Failed**. Click the text in the **Error** column to read why WhatsApp refused it.
+</Step>
+</Steps>
 
 ---
 
-## Exporting
+## Export the Log
 
-**Export** produces the filtered log as a file.
+Click **Export Excel** on the card. A *"Exporting message logs…"* notice shows while the file is
+prepared. The export follows the search, filters and date range you have set.
+
+**Export Excel** needs the **Export chats and logs** ability.
 
 <Callout type="warn">
   Message logs contain customer phone numbers and message content. Treat an export as personal data
@@ -56,15 +75,15 @@ look at the timestamp.
 
 | Question | How |
 |----------|-----|
-| "Did this customer get our message?" | Search their number, check status |
-| "Why did this campaign underperform?" | Filter source = Campaign, status = Failed |
-| "Are our templates being read?" | Filter source = Template, compare delivered vs read |
-| "What did our API send last night?" | Filter source = External API, set the date range |
+| "Did this customer get our message?" | Search their number, check **Status** |
+| "Why did this campaign underperform?" | Source **Campaign**, status **Failed**, read the **Error** column |
+| "Are our templates being read?" | Source **Template**, compare **Delivered** with **Read** |
+| "What did our API send last night?" | Source **External API**, set the date range |
 
 ---
 
 ## Related Pages
 
-- [Message Analytics](/analytics/message-analytics)
-- [Campaigns](/campaign)
+- [Messages](/analytics/message-analytics)
+- [Team Activity](/analytics/team-activity) — the other Logs tab
 - [Integrations](/settings/integrations) — the message status webhook

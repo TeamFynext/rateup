@@ -95,8 +95,10 @@ Export your contacts, or build a sheet with **name** and **phone** columns.
 Add a column for each custom field, headed with its **Field ID** exactly.
 </Step>
 <Step>
-Import it with **Update the existing data while importing** on, and the fields ticked under
-**Custom Fields**. Blank cells leave existing values alone.
+Import it with **Update contacts that already exist** on, and the fields ticked under
+**Custom fields**. A row with no custom-field values leaves the contact's fields alone, but a row
+with **any** value replaces **all** of that contact's custom-field values — blank cells and fields
+the file has no column for are cleared. Include every field you want to keep.
 </Step>
 </Steps>
 

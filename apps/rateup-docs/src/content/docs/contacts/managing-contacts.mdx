@@ -1,6 +1,6 @@
 ---
 title: "Managing Contacts"
-description: Add, find, view, edit, message, import, export and delete the people in your database — one at a time or in bulk.
+description: Add, find, view, edit, import, export and delete the people in your database — one at a time or in bulk.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
@@ -85,20 +85,19 @@ The toolbar holds one search box and three filters. They combine, so *Label: VIP
 Click **Add Contact**.
 </Step>
 <Step>
-Fill in **Full Name** and **Phone Number** — both are required, and the phone number must be valid
-with its country code. *"Invalid phone number"* means it is not.
+Under **Contact details**, fill in **Full Name** and **Phone Number** — both are required, and the
+phone number must be valid with its country code. *"Name cannot be blank"*, *"Phone Number cannot
+be blank"* and *"Invalid phone number"* tell you which is missing.
 </Step>
 <Step>
 Optionally add:
 
-- **Email**
-- **Labels** — pick any number
-- **Lead stage** — puts them straight onto your [pipeline](/pipeline) board (shown only if your board
-  has columns)
-- **Assignee** — the team members responsible for them
-- **Group** — any number of [groups](/contacts/groups)
-- **notes**
-- A value for each [custom field](/contacts/custom-fields)
+| Section | Fields |
+|---------|--------|
+| **Contact details** | **Email**, **Date of Birth**, **External ID**, **Address** |
+| **Assignment** | **Labels**; **Lead stage**, which puts them straight onto your [pipeline](/pipeline) board (shown only if your board has columns); **Assignee**, the team members responsible for them; and **Group**, any number of [groups](/contacts/groups) |
+| **Custom fields** | A value for each [custom field](/contacts/custom-fields). Email and number fields are checked |
+| **notes** | Free text |
 </Step>
 <Step>
 Click **Save**. If something is wrong, a *"Fix the following before saving:"* list tells you what.
@@ -123,51 +122,36 @@ Every row has a **⋮** menu at the end:
 |--------|--------------|
 | **View Details** | Opens the contact's details — the same as clicking their name |
 | **Edit** | Opens **Edit Contact** with every field from [Add a Contact](#add-a-contact) |
-| **Send Message** | Sends a quick text message without leaving the page — see below |
 | **Open in Inbox** | Jumps to this contact's conversation in the [Inbox](/inbox) |
 | **Delete contact** | Deletes them — see [Deleting Contacts](#deleting-contacts) |
+
+To message a contact, open their conversation with **Open in Inbox** and reply there — or send a
+[template](/inbox/send-templates) if they have not written in the last 24 hours.
 
 ### View a contact's details
 
 Click a contact's **name** (or **⋮ → View Details**) to open everything RateUp knows about them in
 one place.
 
+The header shows their name and phone, with badges for source, inbox status, lifecycle, **No
+consent**, **Blocked** and **Spam** where they apply. Beneath it, four figures: **Conversations**,
+**Last received**, **Campaigns**, and **Points** for a loyalty member or **Added** for anyone else.
+
 | Section | Contains |
 |---------|----------|
-| **Header** | Name and phone, with badges for source, inbox status, lifecycle, **No consent**, **Blocked** and **Spam** where they apply |
-| **Contact** | Phone, Email, WhatsApp name, Location, Date of birth, Consent, Added, External ID |
-| **Activity** | Last received, Last sent, Assigned to, Lead stage, Lead owner, and how many campaigns they have been in |
-| **Labels** | Their labels, or *"No labels"* |
+| **Contact** | Phone, Email, Address, WhatsApp name, Location, Date of birth, Consent, Added, External ID |
+| **Activity** | Last received, Last sent, Assigned to, Lead stage and Lead owner |
+| **Labels** | Their labels |
 | **Custom fields** | Every custom field with a value — hidden fields are left out |
-| **Loyalty** | Programme, Tier, Points (available and lifetime) and Referral code — only for loyalty members |
-| **Groups** | Every group they are in. Click **✕** to remove them from one, or **Add to group** to add them to another |
-| **Notes** | Free-text notes about the customer. Click the pencil to edit, then **Save** |
+| **Loyalty** | Program, Tier, Points and Referral code — only for loyalty members |
+| **Groups** | Every group they are in. Remove them from one, or **Add to group** to add them to another |
+| **Notes** | Free-text notes. Click **Edit notes**, then **Save** |
+| **Conversations** | Their five most recent conversations, with ticket number, subject or message count, and status |
 
-Rows with nothing to show are left out, so a sparse contact gets a short dialog. Hover a phone
-number, email, ID or referral code to reveal a **copy** button.
+Rows with nothing to show are left out. Hover a phone number, email, ID or referral code to reveal
+a **copy** button.
 
-**Send Message** at the bottom of the dialog opens the quick-message box.
-
-### Send a quick message
-
-<Steps>
-<Step>
-Choose **⋮ → Send Message**, or **Send Message** in the details dialog.
-</Step>
-<Step>
-Pick the channel under **Select Channel** — **WhatsApp** or **Instagram** — and the **Account** to send
-from.
-</Step>
-<Step>
-Type the **Message** and send it.
-</Step>
-</Steps>
-
-<Callout type="warn">
-  This sends free text, which WhatsApp and Instagram only accept within 24 hours of the customer's
-  last message. For anyone who has not written recently, it will fail — send a
-  [template](/inbox/send-templates) from the Inbox instead.
-</Callout>
+The footer has **Close**, **Edit**, and **View in inbox**, which opens their conversation.
 
 ---
 
@@ -190,62 +174,105 @@ page first.
 
 ## Import Contacts From a File
 
-<ScreenShot src="/docs/screenshots/contacts/import.png" alt="Importing contacts" />
+An import runs in the background: the file is checked as soon as you upload it, then the contacts
+are written by a background job while the dialog shows its progress. You can close the dialog and
+carry on working.
+
+<ScreenShot src="/docs/screenshots/contacts/import.png" alt="Import contacts dialog before a file is chosen" />
 
 <Steps>
 <Step>
-Click **Import**. The **Import Contacts** dialog opens.
+Click **Import**. The **Import contacts** dialog opens.
 </Step>
 <Step>
-Click **Download Demo Csv File** and lay your data out the same way. The file needs a **name** and a
-**phone** column.
+Lay your file out with a **name** column (*"Required."*) and a **phone** column (*"Required, with
+the country code, e.g. 919876543210."*). **CSV template** downloads an example to start from.
 </Step>
 <Step>
-Under **Custom Fields**, tick the custom fields your file contains. Each one's column must be headed
-with that field's **Field ID** — shown on the [Custom Fields](/contacts/custom-fields) page.
+Under **Custom fields**, *"Tick the ones your file has a column for."* Every custom field starts
+ticked — untick the ones your file does not have. Each column must be headed with that field's
+**Field ID**, shown on the [Custom Fields](/contacts/custom-fields) page.
 </Step>
 <Step>
 Set the two switches:
 
-- **Update the existing data while importing** — see below
-- **First row contains column headers (name, phone, ...)** — on by default. Turn it off for a file
-  with no header row. The columns must then run **name**, **phone**, then the ticked custom fields in
-  order
+| Switch | Default | Effect |
+|--------|---------|--------|
+| **Update contacts that already exist** | Off | See [Existing contacts](#existing-contacts) |
+| **First row contains column headers (name, phone, ...)** | On | Turn off for a file with no header row. The columns must then run **name**, **phone**, then the ticked custom fields in order |
 </Step>
 <Step>
-Choose the file — **CSV**, **XLSX** or **ODS** — and click **Import**.
+Choose the **File** — *"CSV, XLSX or ODS."* — and click **Import**.
 </Step>
 </Steps>
 
-Imported contacts get the source **Imported**.
+### Follow the import
+
+| The dialog shows | Means |
+|------------------|-------|
+| *"Waiting to start…"* | The file passed its checks and is queued |
+| *"Importing N of N contacts…"* with a progress bar | Contacts are being written, a thousand at a time |
+| **Import finished** with a summary | Done — see below |
+| **The import stopped before it finished** | *"N of N rows were saved before it stopped. Import the file again to add the rest. Contacts already saved are skipped."* |
+
+*"You can close this window. The import keeps running and tells you when it is done."* If you do, a
+toast reports the result — *"Contact import finished: N added, N updated, N already in your list."*
+
+The summary counts:
+
+| Row | Counts |
+|-----|--------|
+| **Added** | New contacts created, with the source **Imported** |
+| **Updated** | Existing contacts the file changed |
+| **Already in your list, left unchanged** | Existing contacts skipped because updating was off |
+| **Repeated in the file, imported once** | Phone numbers listed more than once. The last row for a number wins |
+| **Rejected** | Rows that could not be imported — **View rejected rows** lists them |
 
 ### Existing contacts
 
 A phone number can only belong to one contact, so an import never creates duplicates:
 
-| Update the existing data while importing | A phone number already in your contacts is… |
-|----------------------------------|-------------------------------------|
-| **Off** (default) | Skipped — the existing contact is left exactly as it is |
-| **On** | Updated with the file's **name** and any custom-field values it has |
+| Update contacts that already exist | A phone number already in your contacts is… |
+|------------------------------------|---------------------------------------------|
+| **Off** (default) | Left exactly as it is |
+| **On** | Updated: its **name** is replaced with the file's, and its source becomes **Imported** |
 
-A blank custom-field cell never overwrites a value that is already there.
+<Callout type="warn">
+  With updating on, a contact whose row has **any** custom-field value has **all** of its existing
+  custom-field values replaced by the file's — including fields the file has no column for, which
+  are cleared. A row with no custom-field values leaves the contact's fields alone. Export first if
+  you are not sure what the file holds.
+</Callout>
 
 ### Rows that are rejected
 
 A row is rejected if its **name** is missing or its **phone number** is missing or invalid. The rest
-still import, and a **Failed contact import** list shows each rejected row with the reason — for
-example *"phone is missing"* or *"…: Invalid phone number"*.
+still import, and **View rejected rows** opens a **Failed contact import** list with each rejected
+row and the reason — for example *"phone is missing"* or *"…: Invalid phone number"*.
+
+If no row in the file is usable, nothing is queued and the list opens straight away.
 
 <Callout type="info">
-  Phone numbers must include the **country code** — `447700900123`, not `07700900123`. Numbers
-  spreadsheets have turned into scientific notation (`4.477E+11`) are converted back for you.
+  Phone numbers must include the **country code** — `447700900123`, not `07700900123`. If Excel has
+  shortened a long number to scientific notation (`9.18883E+11`) and dropped its last digits, the row
+  is rejected with *"Excel shortened this number. Format the phone column as Number with 0 decimals
+  (or as Text), then save the file again"* rather than imported with the wrong number.
 </Callout>
+
+### Limits
+
+| Limit | Value |
+|-------|-------|
+| File types | `.csv`, `.xlsx`, `.ods` — anything else is refused with *"Please upload a valid CSV, XLSX, or ODS file."* |
+| File size | 10 MB |
+| Rows per file | 100,000 — a larger file is refused with *"The file has N rows. Import up to 100,000 at a time — split it into smaller files."* |
+| Empty file | Refused with *"The file contained no contacts."* |
 
 ### What an import can set
 
 An import sets **name**, **phone** and **custom fields** only. Email, labels, groups and stages are
 not read from the file — apply them afterwards with [bulk actions](#bulk-actions). To import straight
-into a group, import from the group's **Add Members** dialog instead — see
+into a group, use **Import** on the group's own page instead — see
 [Groups](/contacts/groups#add-members).
 
 <Callout type="warn">

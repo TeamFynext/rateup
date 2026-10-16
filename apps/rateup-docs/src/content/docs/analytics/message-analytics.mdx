@@ -1,44 +1,65 @@
 ---
-title: "Message Analytics"
-description: Delivery health — how many messages were sent, delivered, read, and how many failed.
+title: "Messages"
+description: Whether your outbound WhatsApp messages are delivered — totals, the daily trend, each team, and each template.
 ---
 
 import ScreenShot from "@/components/Screenshot";
 
-**Message Analytics** is about delivery, not conversation. It answers one question: are your
-messages actually reaching people?
+**Messages** is about delivery, not conversation. It answers one question: are your outbound
+WhatsApp messages reaching people — by template and team?
 
-<ScreenShot src="/docs/screenshots/analytics/message-analytics.png" alt="WhatsApp message analytics" />
-
----
-
-## The Metrics
-
-| Metric | Meaning |
-|--------|---------|
-| **Total Messages Sent** | Everything dispatched in the period |
-| **Successful Delivery** | Messages that reached the recipient |
-| **Failed Messages** | Messages that did not |
-| **Avg Delivery Time** | How long delivery took on average |
-
-Alongside these, the standard message states:
-
-**Sent → Delivered → Read**
+<ScreenShot src="/docs/screenshots/analytics/message-analytics.png" alt="Messages analytics for the last 30 days: delivery tiles, delivery trend, teams and templates" />
 
 ---
 
-## Filtering by Source
+## The Delivery Tiles
 
-Messages are grouped by where they originated:
+| Tile | Meaning |
+|------|---------|
+| **Messages sent** | Outbound WhatsApp messages in the range, with the change *"vs previous period"* |
+| **Delivered** | Share that reached the customer's phone, with the count underneath. **Nothing sent** when there is nothing to measure |
+| **Failed** | Messages WhatsApp did not deliver, with their share of sent |
+| **Avg delivery time** | How long delivery took on average. Under a second shows as `<1s` |
 
-| Source | Sent by |
+---
+
+## Narrow by Where Messages Came From
+
+The **Channel type** filter in the bar at the top decides which messages count:
+
+| Option | Counts |
+|--------|--------|
+| **Campaign & Inbox** | Messages sent from [campaigns](/campaign) and from the Inbox |
+| **External** | Messages your own systems sent through the [External API](/external-api) |
+| **All** | Both |
+
+This split matters. Campaign failures and API failures have completely different causes.
+
+---
+
+## The Charts and Tables
+
+| Card | Shows |
+|------|-------|
+| **Delivery trend** | Delivered against failed, per day — or per hour for **Today** and **Yesterday** |
+| **Teams** | Messages each team sent, with *"N% delivered"*. Always shows **every** team, whatever the team filter says, because it is the comparison between them |
+| **Templates** | Delivery for each WhatsApp template sent in the range |
+
+The **Templates** card opens with a box per category — **Marketing**, **Utility**,
+**Authentication** — giving each one's count and its share of template messages. The table below
+has:
+
+| Column | Meaning |
 |--------|---------|
-| **Campaign** | A bulk campaign send |
-| **Template** | A template sent from a conversation |
-| **External API** | Your own integration — see [External API](/external-api) |
-| **All Sources** | Everything together |
+| **Template** | The template's name. A red **Failing** badge marks one with a failure rate of 20% or more |
+| **Category** | Marketing, Utility or Authentication |
+| **Sent** | How many went out |
+| **Delivered** | Delivery rate |
+| **Failed** | Failure rate |
+| **Avg delivery** | Average time to deliver |
+| **Last used** | When it was last sent, e.g. *"2 hours ago"* |
 
-This split matters. Campaign failures and conversation failures have completely different causes.
+With nothing sent, the card reads *"No templates sent in this range"*.
 
 ---
 
@@ -52,19 +73,14 @@ This split matters. Campaign failures and conversation failures have completely 
 | Outside the 24-hour window with a free-form message | Use a template |
 | Rate or quality limits on the account | Reduce volume, improve message relevance |
 
+To see the actual error on a failed message, open [Message logs](/analytics/message-logs) and
+filter by **Failed**.
+
 <Callout type="warn">
-  A rising failure rate on campaigns is an early warning about list quality. Repeatedly messaging
-  people who do not want it damages your WhatsApp account's quality rating, which is much harder to
-  repair than a bad campaign.
+  A template marked **Failing** on campaign sends is an early warning about list quality.
+  Repeatedly messaging people who do not want it damages your WhatsApp account's quality rating,
+  which is much harder to repair than a bad campaign.
 </Callout>
-
----
-
-## Delivered Is Not Read
-
-Delivery only means the message reached the device. **Read** is the number that indicates
-attention, and the gap between the two is the honest measure of whether your messages are worth
-sending.
 
 ---
 

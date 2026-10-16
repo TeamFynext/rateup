@@ -5,9 +5,11 @@ description: What a rule does when it fires — assign, label, reply, close or c
 
 import ScreenShot from "@/components/Screenshot";
 
-**Actions** are the `THEN` part of a rule. One rule can perform several, in order.
+**Actions** are the `THEN` part of a rule, set on the builder's **Then** step — *"Then do this"*.
+One rule can perform several, in order: add each with **Add action**. A rule needs at least one, and
+the same action with the same value twice is rejected — *"Duplicate actions are not allowed"*.
 
-<ScreenShot src="/docs/screenshots/automation/actions.png" alt="Choosing actions" />
+<ScreenShot src="/docs/screenshots/automation/actions.png" alt="Then step of a Shopify Orders paid rule: Send Template with variable mapping, then Assign Team" />
 
 ---
 
@@ -17,7 +19,7 @@ import ScreenShot from "@/components/Screenshot";
 |--------|------|
 | **Assign User** | Gives the ticket to a specific person |
 | **Assign Team** | Gives it to a team — anyone in it can pick it up |
-| **Close Chat** | Closes the ticket |
+| **Close Chat** | Closes the ticket with the status you pick — **Resolved**, **Closed** or **Unresolved**. **Spam** flags the contact as spam instead, which moves them to the [Spam](/inbox/inboxview/spam) tab |
 
 Prefer **Assign Team** over **Assign User** in automation. Team routing keeps working when someone
 is on leave; individual routing quietly piles up in an absent person's queue.
@@ -29,15 +31,15 @@ is on leave; individual routing quietly piles up in an absent person's queue.
 | Action | Does |
 |--------|------|
 | **Attach Label** | Adds a label to the contact |
-| **Assign Stage** | Puts the contact on a column of your [pipeline](/pipeline) board, opening a lead if they are not on it yet |
-| **Assign Lifecycle (legacy)** | Moves the contact to a lifecycle stage. Superseded by **Assign Stage** |
+| **Assign Lead Stage** | Puts the contact on a column of your [pipeline](/pipeline) board, opening a lead if they are not on it yet |
+| **Assign Lifecycle (legacy)** | Moves the contact to a lifecycle stage. Superseded by **Assign Lead Stage** |
 
 These make later filtering and reporting possible. A rule that labels every refund enquiry costs
 nothing and makes "how many refund requests last month?" answerable.
 
 <Callout type="info">
   **Assign Lifecycle (legacy)** is offered only on a rule that already uses it, so existing rules
-  keep running and can still be saved. New rules get **Assign Stage** instead — see
+  keep running and can still be saved. New rules get **Assign Lead Stage** instead — see
   [Leads that open themselves](/pipeline/automatic-leads).
 </Callout>
 
@@ -48,10 +50,22 @@ nothing and makes "how many refund requests last month?" answerable.
 | Action | Sends |
 |--------|-------|
 | **Send Message** | A plain message |
-| **Send Template** | An approved [template](/whatsapp/templates) |
-| **Send Flow** | A [WhatsApp flow](/whatsapp/flows) |
+| **Send Template** | An approved [template](/whatsapp/templates) — WhatsApp rules only |
+| **Send Flow** | A [WhatsApp flow](/whatsapp/flows) — WhatsApp rules only |
 | **Send Web Survey** | A [web form](/web-forms) |
-| **Trigger Chatbot** | Hands the conversation to a [chatbot](/whatsapp/chatbots) |
+| **Trigger Chatbot** | Hands the conversation to a [chatbot](/whatsapp/chatbots) built for the rule's platform |
+
+### Fill a Template From the Event
+
+Once you pick a template, **Variable Mapping** lists its variables. Map each one to a field — a
+Shopify field on a Shopify rule (*"Map your WhatsApp template variables to Shopify data."*), a
+WooCommerce order field on a WooCommerce rule, or a contact field otherwise. Anything left unmapped
+falls back to the template's sample value.
+
+| Option | Shown when | Does |
+|--------|------------|------|
+| **Button "…" link ending** | The template has a URL button with a variable | Fills the `{{1}}` at the end of the button's address |
+| **Use Shopify product image as header** | A Shopify or WooCommerce rule, and a template with an image header | Swaps the template's header image for the ordered product's image |
 
 <Callout type="warn">
   Outside WhatsApp's 24-hour window, only **Send Template** will actually deliver. A **Send
@@ -65,7 +79,10 @@ nothing and makes "how many refund requests last month?" answerable.
 
 | Action | Does |
 |--------|------|
-| **Call External API** | Sends the event to a URL you control |
+| **Call External API** | Sends a `POST` with a JSON body to a full URL you enter |
+
+The builder shows an example request under the action. A value that is not a full URL is rejected:
+*"Enter a valid full URL (e.g. https://example.com/webhook)"*.
 
 Use this to notify your own systems — create a record in your CRM, trigger a fulfilment job, post
 to a team channel.
@@ -97,7 +114,9 @@ Actions run in order, so a single rule can do a complete piece of work:
 
 ## Related Pages
 
+- [Creating a Rule](/automation/creating-a-rule)
 - [Triggers](/automation/triggers)
 - [Conditions](/automation/conditions)
+- [Abandoned-Cart Reminders](/automation/abandoned-cart-reminders)
 - [Integrations](/settings/integrations)
 - [Leads that open themselves](/pipeline/automatic-leads)

@@ -4,6 +4,7 @@
     "account",
     "users",
     "teams",
+    "notifications",
     "channels",
     "integrations",
     "security",

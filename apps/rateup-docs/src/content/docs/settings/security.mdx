@@ -16,18 +16,21 @@ import ScreenShot from "@/components/Screenshot";
 
 <Steps>
 <Step>
-Enter your **current password**.
+Under **Password**, click **Change password** to open the form.
 </Step>
 <Step>
-Enter your **new password**. It must be at least **8 characters** and include **1 uppercase letter,
+Enter your **Current Password**.
+</Step>
+<Step>
+Enter your **New Password**. It must be at least **8 characters** and include **1 uppercase letter,
 1 lowercase letter, 1 number and 1 special character** — the same rules as
 [registration](/getting-started/register).
 </Step>
 <Step>
-**Confirm** the new password — the two must match.
+Enter it again in **Confirm New Password** — the two must match, or you see *"Passwords do not match"*.
 </Step>
 <Step>
-Click **Change Password**. You will see *"Password Changed Successfully"*.
+Click **Update Password**. You will see *"Password Changed Successfully"*.
 </Step>
 </Steps>
 
@@ -42,7 +45,10 @@ Two actions live here. Both are permanent.
 
 ### Delete Account
 
-Permanently deletes **your own user account**.
+Permanently deletes **your own user account** — it removes your login, and your team keeps working.
+
+To confirm, enter your current password in the **Delete Account?** dialog. If you sign in with
+Google and have no RateUp password, type `DELETE ACCOUNT` instead.
 
 - Your access ends immediately
 - You are removed from every team
@@ -54,6 +60,9 @@ Permanently deletes **your own user account**.
 </Callout>
 
 ### Delete Organization
+
+Only shown to people whose role can delete the organisation. To confirm, type
+`DELETE ORGANIZATION` in the dialog.
 
 Permanently deletes **the entire organisation** and everything in it:
 

@@ -22,7 +22,7 @@ It is the default view when you enter the Inbox, and the one managers live in.
 - Unassigned rows with a message in the last 24 hours are highlighted: cream background, **amber
   left edge** and a filled **Unassigned** badge. Older unassigned rows are not highlighted — only
   their **New** pill gives them away
-- The assignee's avatar sits on the right; `+2` means several people are assigned
+- The owner's avatar sits on the right. A `+2` only appears on older tickets that were assigned to several people
 
 ---
 
@@ -42,9 +42,9 @@ It is the default view when you enter the Inbox, and the one managers live in.
 
 | Where | What it shows |
 |-------|---------------|
-| Conversation row | Assignee avatar, `+N` for extras — hover for the full list |
+| Conversation row | The owner's avatar — hover for the name |
 | Chat header | Status pill: **Assigned** or **New** |
-| Ticket Details panel | Assignee name, their team, and a **Change** action |
+| Ticket Details panel | The owner's name and team — click it to reassign |
 
 ---
 
@@ -58,17 +58,17 @@ Open the ticket.
 Click the **panel icon** at the far right of the chat header to open **Ticket Details**.
 </Step>
 <Step>
-Under **Assignment**, click **Change**.
+Under **Assignment**, click the owner's name — or press **A**.
 </Step>
 <Step>
-Pick another team or team member. The ticket is reassigned instantly and a system note records it.
+Pick another person, or a team under **Auto-assign in a team**. The ticket is reassigned instantly and a system note records it.
 </Step>
 </Steps>
 
 <Callout type="info">
-  **Assign entire team** assigns every member of the team individually, so the ticket lands in all
-  of their **Mine** views. Assigning one person puts it in exactly one **Mine** view.
-  [How team assignment works →](/inbox/asigning-conversation#assigning-a-whole-team)
+  A ticket has one owner. Picking a team hands it to **one** member of that team, turn by turn, so it
+  lands in exactly one **Mine** view.
+  [How team assignment works →](/inbox/asigning-conversation#let-a-team-pick-whose-turn-it-is)
 </Callout>
 
 ---
@@ -86,11 +86,11 @@ Pick another team or team member. The ticket is reassigned instantly and a syste
 
 | Role | In the Open view |
 |------|------------------|
-| **Super Admin** | Sees every open ticket, on every channel |
-| **Admin** | Sees open tickets on the channels their teams grant |
-| **Staff** | The same channel scope, minus any assigned tickets their organisation hides from them |
+| **Owner**, **Admin** | Sees every open ticket, on every channel |
+| **Manager** | Sees open tickets on the channels their teams grant |
+| **Staff**, **Agent** | The same channel scope, minus any assigned tickets their organisation hides from them |
 
-Responding and reassigning are not role-gated — anyone who can see an open ticket can work on it.
+Anyone who can see an open ticket can reply to it and reassign it, except a **Viewer**, who can only read.
 
 ---
 

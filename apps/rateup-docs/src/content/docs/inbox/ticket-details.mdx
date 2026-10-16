@@ -13,9 +13,7 @@ Open it with the **panel icon** at the far right of the chat header (**Toggle de
 it with the chevron in the panel's own header. On a wide screen it sits beside the conversation. On
 a narrower one it opens over it.
 
-<ScreenShot src="/docs/screenshots/inbox/ticket-details-full.png" alt="The Ticket Details panel" />
-
-{/* TODO: re-capture — the panel now runs Assignment, Title & Description, Lead stage, Conversation Tags, Contact Labels, Contact, Ticket Info, then the spam and delete buttons */}
+<ScreenShot src="/docs/screenshots/inbox/ticket-details-full.png" alt="The Ticket Details panel for an assigned WhatsApp ticket" />
 
 From top to bottom:
 
@@ -28,7 +26,7 @@ From top to bottom:
 | [Contact Labels](#contact-labels) | The contact |
 | [Contact](#contact) | The contact |
 | [Ticket Info](#ticket-info) | The ticket |
-| [Mark contact as spam / Delete conversation](#spam-and-delete) | The contact / the ticket |
+| [Spam, Block and Delete](#spam-block-and-delete) | The contact / the ticket |
 
 ---
 
@@ -44,20 +42,20 @@ From top to bottom:
 
 ## Assignment
 
-Shows the first assignee and their team, with `+N` if there are more, or **Unassigned**.
+Shows the owner and their team, or **Unassigned**.
 
 <Steps>
 <Step>
-Click **Change**.
+Click the owner (or **Unassigned**) — or press **A** anywhere in the ticket.
 </Step>
 <Step>
-Open the **Assign** picker, expand a team, and tick people — or use **Assign entire team**.
-Online / offline status is shown next to each person.
-</Step>
-<Step>
-Click **Done** to collapse the section.
+Search in **Search people or teams**, then click a person, **Assign to me**, **Unassign**, or a team
+under **Auto-assign in a team** to hand the ticket to whichever member's turn it is.
 </Step>
 </Steps>
+
+The change saves at once and replaces the previous owner. Without the **Assign conversations**
+ability the owner is shown but cannot be clicked.
 
 [Full assignment guide →](/inbox/asigning-conversation)
 
@@ -132,7 +130,7 @@ Tags on **this ticket only** — *Bug Report*, *Escalated*, *Refund*.
 Click **+ Add**.
 </Step>
 <Step>
-Tick the tags that apply; untick to remove. Or click the **✕** on a tag chip.
+Type in **Search tags** and click a tag to add it. Click the **✕** on a tag chip to remove it.
 </Step>
 </Steps>
 
@@ -150,9 +148,12 @@ Colour-coded labels on the **customer** — VIP, wholesale, churn risk.
 Click **+ Add**.
 </Step>
 <Step>
-Tick the labels to apply; untick to remove. Or click the **✕** on a label chip.
+Type in **Search labels** and click a label to add it. Click the **✕** on a label chip to remove it.
 </Step>
 </Steps>
+
+With no labels yet, the picker reads *"No contact labels yet."* Labels are created under
+[Contacts → Labels](/contacts/labels).
 
 Labels show on every conversation row for that customer, and filter the Inbox from the sidebar's
 **Contact Labels** section.
@@ -161,15 +162,12 @@ Labels show on every conversation row for that customer, and filter the Inbox fr
 
 ## Contact
 
-| Field | Notes |
-|-------|-------|
-| **Name** | Click the **pencil** (**Edit name**), type, then **Save** |
-| **Phone** | The customer's number |
-| **Customer since** | Month and year the contact was created |
-| **Consent** | **Given** or **Not given** |
+The customer's avatar with a dot in their channel's colour, their name, phone number and **Customer
+since** — the month and year the contact was created. A shield beside the name shows **Consent
+given** (ticked) or **No consent** (crossed).
 
-Renaming here updates the contact everywhere in RateUp — campaigns, contact lists and every one of
-their tickets. For other fields, open the contact under [Contacts](/contacts/managing-contacts).
+Click **View contact** to open the contact's details. Edits saved there — name, phone, email —
+update the contact everywhere in RateUp, including this ticket and the conversation list.
 
 <Callout type="warn">
   **Consent** controls whether this customer may receive template messages. A contact without
@@ -194,17 +192,20 @@ since written to a different number of yours.
 
 ---
 
-## Spam and Delete
+## Spam, Block and Delete
 
-Two buttons at the foot of the panel.
+Up to three buttons sit at the foot of the panel.
 
-**Mark contact as spam** — the same action as **Close → Mark contact as spam**. It flags the
-**contact**, closes their open tickets and moves them into the **Spam** tab. If the contact is
-already flagged, the button reads **Not spam** and takes them back out.
-[More about spam →](/inbox/inboxview/spam)
+**Spam** — the same action as **Close → Mark contact as spam**. It flags the **contact**, closes
+their open tickets and moves them into the **Spam** tab. If the contact is already flagged, the
+button reads **Not spam** and takes them back out. [More about spam →](/inbox/inboxview/spam)
 
-**Delete conversation** — **admins only**. Permanently deletes this ticket and every message in it,
-after a confirmation. The contact and their other tickets are untouched.
+**Block** — blocks the customer on WhatsApp after a confirmation: *"They will not be able to message
+you, and you will not be able to message them."* It only appears inside the customer's 24-hour
+window, because WhatsApp only accepts a block then, and not on a contact who is already blocked.
+
+**Delete** — **admins only**. Permanently deletes this ticket and every message in it, after a
+confirmation. The contact and their other tickets are untouched.
 [More about deleting →](/inbox/conversation-lifecycle#deleting-a-conversation)
 
 ---

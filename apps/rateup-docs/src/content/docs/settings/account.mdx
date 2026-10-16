@@ -18,9 +18,11 @@ organisation.
 | Field | Notes |
 |-------|-------|
 | **Profile photo** | JPG, PNG or GIF, max 2 MB |
-| **Full name** | Shown on your messages and internal notes — cannot be blank |
-| **Email address** | Your login address |
-| **Phone** | Must be a valid number for its country |
+| **Title** | **Mr**, **Mrs** or **Mx** — required |
+| **Full Name** | Shown on your messages and internal notes — cannot be blank |
+| **Email Address** | Your login address — read-only |
+| **Phone Number** | Must be a valid number for its country |
+| **Role** | Your role in the organisation — read-only; an admin changes it under [Users](/settings/users) |
 | **Member since** | When you joined, read-only |
 
 <Steps>
@@ -31,7 +33,7 @@ Click **Edit Profile**.
 Update the fields you need.
 </Step>
 <Step>
-Click **Save**. Your name updates everywhere it appears, including past messages.
+Click **Save Changes**. Your name updates everywhere it appears, including past messages.
 </Step>
 </Steps>
 
@@ -53,16 +55,21 @@ The same applies to the organisation logo, which is uploaded separately.
 
 ## Business Information
 
-The organisation's own details, shared by everyone:
+The organisation's own details, shared by everyone. Only people whose role can change organisation
+settings see **Edit** on this card; everyone else sees the details read-only.
 
 | Field | Used for |
 |-------|----------|
-| **Business name** | Displayed across RateUp and in customer-facing pages |
-| **Business email** | The organisation's contact address |
-| **Business phone** | The organisation's contact number |
+| **Logo** | Uploaded with **Upload Logo** — JPG, PNG or GIF, max 2 MB |
+| **Business Name** | Displayed across RateUp and in customer-facing pages |
 | **Industry** | Categorises your organisation |
-| **Address** | Your full business address |
+| **Website** | The business's website |
+| **Business Phone** | The organisation's contact number |
+| **Business Email** | The organisation's contact address — optional |
 | **Location** | Where the business operates |
+| **Address** | Your full business address |
+
+Click **Save Changes** in the dialog to apply them.
 
 <Callout type="warn">
   These fields appear on customer-facing surfaces such as survey pages and loyalty registration.
@@ -71,10 +78,41 @@ The organisation's own details, shared by everyone:
 
 ---
 
-## Language Preferences
+## Language
 
-Set the language RateUp uses for your account. This changes the interface for you only; it does not
-change the language of messages sent to customers.
+Choose the language RateUp uses under **Language**. It is saved to your account and used wherever
+you sign in. It changes the interface for you only; it does not change the language of messages
+sent to customers.
+
+---
+
+## Set Your Business Hours
+
+**Business hours** at the bottom of the page records when a person answers. Outside these hours your
+auto-replies take over — automation rules can check a schedule and hold replies until someone is
+around.
+
+<Steps>
+<Step>
+Click **Set up business hours**. The first schedule is named **Main hours** and starts from a
+standard week, Monday to Friday, 9:00–17:30.
+</Step>
+<Step>
+Change the days and times that do not fit. Use **Add a break** for a gap in the day, and
+**Apply to weekdays** or **Apply to all days** to copy one day's hours across.
+</Step>
+<Step>
+Check the time zone, then click **Save changes**.
+</Step>
+</Steps>
+
+Add more schedules with **Add schedule**. Each card shows whether you
+are **Open now** or **Closed now** and which automation rules use it.
+
+| Rule | Detail |
+|------|--------|
+| Who can edit | The same people who can edit Business Information |
+| Deleting a schedule | Any automation rule using it stops checking hours. The last remaining schedule cannot be deleted |
 
 ---
 
@@ -82,3 +120,4 @@ change the language of messages sent to customers.
 
 - [Security](/settings/security) — password and account deletion
 - [Users](/settings/users) — managing other people
+- [Automation](/automation) — rules that check business hours

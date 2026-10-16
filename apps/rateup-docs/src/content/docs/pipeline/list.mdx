@@ -10,16 +10,18 @@ It is the view to use when you are tidying up rather than working one deal.
 
 <ScreenShot src="/docs/screenshots/pipelines/pipelines-lists.png" alt="The List view, grouped by stage" />
 
+{/* TODO(shot): re-capture — /dashboard/pipeline List tab. pipelines-lists.png still shows a team name under each row's assignees (removed) and a header without Export/Import */}
+
 ---
 
 ## The Columns
 
 | Column | Shows |
 |--------|-------|
-| **Lead** | Avatar, name, and the company or **Direct customer** |
-| **Lead stage** | The column it sits in. A lost lead reads *"{`{stage}`} (lost)"* |
-| **Status** | **Open**, **Won** or **Lost**, tinted to match the board's bands |
-| **Assignees** | Up to two avatars, then the name or **{`{n}`} assignees**, with the team under it |
+| **Lead** | Avatar, name, and the company or **Direct customer**. Headed **Ticket**, **Task** or **Card** on other board types |
+| **Lead stage** | The column it sits in. A lost lead reads *"{`{stage}`} (lost)"*. Headed **Stage** on other board types |
+| **Status** | **Open**, **Won** or **Lost**, tinted to match the board's bands — or the board type's own closing words |
+| **Assignees** | Up to two avatars, then the name or **{`{n}`} assignees** |
 | **Next activity** | What is due. Red when overdue, amber when **None scheduled**, an em dash on a closed lead |
 | **In stage** | Days in the current column, or **{`{n}`}d idle** in red on a stalled lead |
 | **Age** | Days since the lead was created |
@@ -59,6 +61,7 @@ and a bar appears at the bottom of the screen.
 |---------|------|
 | **→ {`{stage}`}** | Moves every selected lead to that column. The first three columns are offered |
 | An assignee button | Assigns every selected lead to that person. The first three members are offered |
+| **Delete** | Deletes every selected lead after a confirmation. Only shown to people whose role can **Delete boards or move them between teams** — Owners and Admins by default |
 | **✕** | Clears the selection |
 
 <Callout type="warn">
@@ -69,14 +72,20 @@ and a bar appears at the bottom of the screen.
 
 Assigning in bulk **replaces** the assignees on each selected lead rather than adding to them.
 
+<Callout type="warn">
+  A bulk delete takes every selected lead's notes, tasks and history with it, and cannot be undone.
+  For leads that were real but did not work out, close them as lost instead, so they still count in
+  your [insights](/pipeline/insights).
+</Callout>
+
 ---
 
 ## Troubleshooting
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| *No leads match these filters.* | A sidebar facet or the search box is narrowing everything out | Clear the active sidebar row, or empty **Search leads** |
-| A stage heading you expected is missing | Grouping hides stages with no leads | Turn **Group by stage** off to see the flat list |
+| *No leads match these filters.* | A sidebar facet or the search box is narrowing everything out | Click **Clear filters** under the header, or empty **Search leads** |
+| A stage heading you expected is missing | Grouping hides stages with no leads | Turn **Group by lead stage** off to see the flat list |
 | The bulk bar does not offer the column you want | Only the first three columns are offered | Drag on the [Board](/pipeline/board), or open each lead |
 | The header tick selected fewer leads than the count above the table | It takes the loaded rows, not the whole board | **Load more** until everything is in, then tick again |
 

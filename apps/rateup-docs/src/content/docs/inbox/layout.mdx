@@ -107,10 +107,12 @@ history.
 |---------|--------------|
 | **Customer name and sub-line** | Name, then the platform and the customer's phone number — *"WhatsApp · +44 7700 900123"* |
 | **DND badge** | The contact has not consented to template messages |
+| **Meta AI / Staff / AI agent pill** | Who is answering this customer when the Meta AI agent is set up — see [When Meta AI Is Answering](/inbox/responding-to-conversation#when-meta-ai-is-answering) |
 | **★ Star** | Add or remove this ticket from **Favourites** |
 | **@** | Clear your mention on this ticket (only shown when you have one) |
 | **Countdown** | Time left in WhatsApp's 24-hour reply window |
 | **Status pill** | New, Assigned or Closed |
+| **📞 Phone** | **Call on WhatsApp** — WhatsApp tickets only. See [WhatsApp Voice Calls](/inbox/whatsapp-calls) |
 | **Close / Reopen** | End the ticket, or start a successor once it is closed |
 | **Not spam** | Replaces Close / Reopen when the contact is flagged as spam |
 | **⋮** | Contact actions — and, for admins, **Delete conversation** — on a closed or spam ticket, where the **Close** menu would otherwise host them |
@@ -137,6 +139,7 @@ and result, and click any of them to jump straight there.
   **Campaign**, in a lighter bubble
 - **Internal notes** appear centred in amber, with a padlock and the author's name
 - **System notes** record assignments, closures, reopenings and spam flags
+- **Voice calls** appear as centred entries with a phone icon — *"Missed voice call"*, *"Incoming voice call · 2m 14s"*
 - Delivery ticks show **Sent → Delivered → Read**
 - Each message has a **Copy** button, and customer messages can be reacted to with an emoji
 - A message deleted on WhatsApp keeps its place, shown as *"This message was deleted"*
@@ -150,7 +153,8 @@ sit the quick-replies button and the character counter.
 
 <Callout type="info">
   The composer is replaced by a banner when you cannot reply — because the ticket is unassigned,
-  closed, the contact is blocked or flagged as spam, or you are outside WhatsApp's 24-hour window.
+  assigned to someone else, closed, or the contact is blocked or flagged as spam. Outside the 24-hour
+  window it only writes private notes.
 </Callout>
 
 [Replying in detail →](/inbox/responding-to-conversation)
@@ -161,20 +165,19 @@ sit the quick-replies button and the character counter.
 
 Open it with the panel icon at the far right of the chat header.
 
-<ScreenShot src="/docs/screenshots/inbox/ticket-details-full.png" alt="The Ticket Details panel" />
+<ScreenShot src="/docs/screenshots/inbox/ticket-details-full.png" alt="The Ticket Details panel for an assigned WhatsApp ticket" />
 
 It contains, top to bottom:
 
 - **Ticket #number** and a **copy link** button
-- **Assignment** — the owner and team, with **Change**
+- **Assignment** — the owner and team; click it, or press **A**, to reassign
 - **Title & Description** — editable with the pencil icon
 - **Lead stage** — where the customer sits on your pipeline board
 - **Conversation Tags** — tags on this ticket
 - **Contact Labels** — labels on the customer
-- **Contact** — name (editable), phone, customer since, consent
+- **Contact** — name, phone, customer since, consent, and **View contact**
 - **Ticket Info** — channel, account, created date, close result
-- **Mark contact as spam** — or **Not spam**, if they are already flagged
-- **Delete conversation** — admins only
+- **Spam** (or **Not spam**), **Block** inside the 24-hour window, and **Delete** for admins
 
 [Ticket Details in full →](/inbox/ticket-details)
 

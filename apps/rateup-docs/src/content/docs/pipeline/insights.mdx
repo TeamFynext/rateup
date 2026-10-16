@@ -12,6 +12,8 @@ counted on the server over the **whole board**: the sidebar's facets and the sea
 
 <ScreenShot src="/docs/screenshots/pipelines/pipelines-insights.png" alt="Insights: the four figures, the conversion funnel and where leads stall" />
 
+{/* TODO(shot): re-capture — /dashboard/pipeline Insights tab on the Leads board. Content unchanged, but the header in the shot has no Export/Import */}
+
 ---
 
 ## The Four Figures
@@ -26,7 +28,14 @@ counted on the server over the **whole board**: the sidebar's facets and the sea
 **Average time to win** is deliberately end-to-end rather than time-in-stage: it says how long a sale
 takes, not how slow the board is. With nothing won yet it reads **Nothing won yet**.
 
-If **Flag stalled leads** is off for the board, the stalled card says **Rotting checks are off**
+On Support, Projects and Custom boards the same figures read **Open on board**, **Completion rate**
+(using the board's own closing words, e.g. *"4 Resolved · 1 Closed"*), **Average time to finish** and
+**Stalled**, and the funnel panel is called **By stage**. **Leads by source** is not shown there, and
+the assignee table's **Won** and **Win rate** columns read the board's word (**Resolved** or **Done**)
+and **Completion**. See
+[Board Types](/pipeline/board-types).
+
+If **Flag stalled cards** is off for the board, the stalled card says **Rotting checks are off**
 rather than reporting a zero it cannot stand behind.
 
 ---
@@ -61,7 +70,7 @@ Stages with no rotting window are left out entirely: nothing there can be late. 
 
 ## Leads by Source
 
-Every source in use, ranked, with a bar scaled against the largest. This counts every lead on the
+Leads boards only. Every source in use, ranked, with a bar scaled against the largest. This counts every lead on the
 board, closed ones included — it answers where your leads come from, not which ones are still live.
 
 A loud source is not the same as a good one: read it against **Assignee performance** and the

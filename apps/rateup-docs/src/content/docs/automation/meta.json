@@ -1,3 +1,3 @@
 {
-  "pages": ["index", "triggers", "conditions", "actions"]
+  "pages": ["index", "creating-a-rule", "triggers", "conditions", "actions", "abandoned-cart-reminders"]
 }

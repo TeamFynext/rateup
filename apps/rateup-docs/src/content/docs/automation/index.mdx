@@ -1,6 +1,6 @@
 ---
 title: "Automation Overview"
-description: Build When → If → Then rules that react to messages, comments and contact changes automatically.
+description: Build When → If → Then rules that react to messages, comments, contact changes and store events automatically.
 ---
 
 import ScreenShot from "@/components/Screenshot";
@@ -14,11 +14,11 @@ conditions are met, and does something about it — no agent involved.
 
 ## How a Rule Reads
 
-Every rule has the same three-part shape:
+Every rule has the same three-part shape, and the builder walks you through it in that order:
 
 ```
 WHEN   something happens          (the trigger)
-IF     these conditions hold      (optional filters)
+IF     these conditions hold      (filters — required for Message Received)
 THEN   do this                    (one or more actions)
 ```
 
@@ -27,11 +27,19 @@ For example:
 > **When** a message is received · **if** the body contains "refund" · **then** assign the Billing
 > team and attach the *Refund* label.
 
+Each rule belongs to one platform — **WhatsApp**, **Instagram** or **Messenger** — and runs on the
+accounts you pick for it.
+
 <Cards>
+  <Card
+    title="Creating a Rule"
+    href="/automation/creating-a-rule"
+    description="The step-by-step builder: Basics, When, If, Then and Review."
+  />
   <Card
     title="Triggers"
     href="/automation/triggers"
-    description="The events that start a rule — messages, comments, contact changes and more."
+    description="The events that start a rule — messages, contact changes, store events, Instagram."
   />
   <Card
     title="Conditions"
@@ -43,24 +51,41 @@ For example:
     href="/automation/actions"
     description="What the rule does — assign, label, reply, close, call an API."
   />
+  <Card
+    title="Abandoned-Cart Reminders"
+    href="/automation/abandoned-cart-reminders"
+    description="Remind Shopify shoppers who left a checkout, and see the revenue it brings back."
+  />
 </Cards>
 
 ---
 
-## Creating a Rule
+## The Automations List
 
-1. Click **Create Automation**
-2. Name it — a rule left as *"Untitled rule"* is impossible to maintain later
-3. Pick the **account** it applies to
-4. Choose the **trigger**, add **conditions**, add **actions**
-5. Save, then set it **Enabled**
+**Automation** in the sidebar opens every rule your organisation has.
+
+| Control | Does |
+|---------|------|
+| **Create Automation** | Opens the builder for a new rule |
+| **Search...** | Filters by rule name |
+| **Filter** | **All**, **Active** or **Inactive** |
+| **Grid** / **List** | Cards, or a table with **Name**, **Operator**, **Conditions**, **Actions**, **Status** and **Created** |
+| Sort | **Newest**, **Oldest**, **Name (A-Z)**, **Name (Z-A)** |
+
+Each card shows the rule's name, its trigger, a platform badge and an **Active** / **Inactive**
+switch. A Shopify **On abandoned checkouts** rule also shows what it recovered in the last 30 days —
+see [Abandoned-Cart Reminders](/automation/abandoned-cart-reminders).
+
+With no rules yet, the page reads *"No Automation Yet"*.
 
 ---
 
-## Enabled and Disabled
+## Turn a Rule Off Without Losing It
 
-Every rule has a toggle. **Disabled** is the safe way to stop a rule without losing its
-configuration — use it while investigating, rather than deleting.
+Flip the switch on the rule's card. An **Inactive** rule keeps its whole configuration and simply
+stops firing — use it while investigating, rather than deleting.
+
+To remove a rule for good, use the card's menu and confirm **Delete Rule**.
 
 <Callout type="warn">
   Automations act on live customer conversations. Test a new rule with a narrow condition first —
@@ -74,14 +99,16 @@ configuration — use it while investigating, rather than deleting.
 | Tool | Use when |
 |------|----------|
 | **Automation rules** | Something happens and you want a reaction — routing, labelling, replying |
-| [Chatbots](/whatsapp/chatbots) | You want a full back-and-forth conversation |
+| [Chatbots](/whatsapp/chatbots) | You want a full back-and-forth conversation (a rule starts it) |
 | [Inbox auto-close](/inbox/inbox-settings) | You want idle tickets closed on a timer |
-| [Instagram automations](/instagram/automations) | You are reacting to comments and story mentions |
+| [Comments & Story Mentions](/instagram/automations) | You are reacting to comments and story mentions |
 
 ---
 
 ## Related Pages
 
+- [Creating a Rule](/automation/creating-a-rule)
 - [Triggers](/automation/triggers)
 - [Conditions](/automation/conditions)
 - [Actions](/automation/actions)
+- [Abandoned-Cart Reminders](/automation/abandoned-cart-reminders)

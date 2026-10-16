@@ -16,11 +16,17 @@ the board yet, one opens there. If they already have one, it moves.
   them ever creates a duplicate card.
 </Callout>
 
+<Callout type="warn">
+  Every route on this page writes to your **Leads** board, and only that board. Support, Projects
+  and Custom boards are never filled automatically: their cards are added by hand or by
+  [import](/pipeline/import-export). See [Board Types](/pipeline/board-types).
+</Callout>
+
 ---
 
 ## An Automation Rule
 
-The **Assign Stage** action in the [automation](/automation) builder is the main one. It is
+The **Assign Lead Stage** action in the [automation](/automation) builder is the main one. It is
 available on WhatsApp, Instagram and Facebook rules.
 
 <Steps>
@@ -29,7 +35,7 @@ Build the rule as usual — see [Triggers](/automation/triggers) and
 [Conditions](/automation/conditions).
 </Step>
 <Step>
-Add an **Assign Stage** action and pick the column from the list of your board's stages.
+Add an **Assign Lead Stage** action and pick the column from the list of your board's stages.
 </Step>
 <Step>
 Save. From then on, a contact meeting the rule lands on that column.
@@ -45,8 +51,8 @@ produces a **WhatsApp enquiry**.
   organisation has no board.
 </Callout>
 
-**Assign Lifecycle** is the older action this replaced. It is still offered on rules that already
-use it, so nothing you built stops running, but new rules should use **Assign Stage**. See
+**Assign Lifecycle (legacy)** is the older action this replaced. It is still offered on rules that already
+use it, so nothing you built stops running, but new rules should use **Assign Lead Stage**. See
 [Actions](/automation/actions).
 
 ---
@@ -99,19 +105,21 @@ many statuses are still unmapped, and **Save Mapping & Sync** applies it.
 Once mapped, a lead moving in Bigin moves the matching card on your board, and vice versa. An
 inbound change is applied without echoing back, so the two do not fight each other.
 
+HubSpot, Pipedrive and GetLead connections can move leads on the board the same way, through their
+own stage mappings. See [Integrations](/settings/integrations).
+
 ---
 
 ## What Does Not Happen Automatically
 
-A lead that arrives by any of these routes has **no team and no assignees**. Assigning a stage names
-a board, not the people on it.
+A lead that arrives by any of these routes has **no assignees**. Assigning a stage names a board,
+not the people on it.
 
 | Not automatic | Do it yourself |
 |---------------|----------------|
-| Putting the lead on a team | From the lead drawer |
-| Assigning it to someone | On the card, or in bulk from the [List](/pipeline/list) |
-| Scheduling a next activity | From the lead drawer. This is what stops it stalling |
-| Setting an expected close date | From the drawer, or it sits in the forecast's **Unscheduled** column |
+| Assigning it to someone | In the lead window, or in bulk from the [List](/pipeline/list) |
+| Scheduling a next activity | In the lead window. This is what stops it stalling |
+| Setting an expected close date | Not possible from the dashboard for an existing lead, so it sits in the forecast's **Unscheduled** column — see [Forecast](/pipeline/forecast#the-unscheduled-column) |
 
 <Callout type="warn">
   A rule that files leads onto the board and nothing else produces a growing column of unassigned

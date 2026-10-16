@@ -1,15 +1,16 @@
 ---
-title: "QR Creator"
-description: Generate branded QR codes, redirect them after printing, and track scans.
+title: "QR Codes"
+description: Create a QR code, design it, redirect it after printing, and see how often it is scanned.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
-**QR Creator** generates QR codes that you control after they are printed. The code stays the same;
-where it sends people does not have to.
+A **QR code** in RateUp is printed once and pointed wherever you like. The code holds a short
+RateUp link rather than your page's address, so changing the destination later never means
+reprinting.
 
-<ScreenShot src="/docs/screenshots/qr-studio/qr-list.png" alt="Your generated QR codes" />
+<ScreenShot src="/docs/screenshots/qr-studio/qr-codes-list.png" alt="QR codes list with search, sort and code tiles" />
 
 ---
 
@@ -17,90 +18,121 @@ where it sends people does not have to.
 
 <Steps>
 <Step>
-Go to **QR Studio → QR Creator** and click **Create QR**.
+Go to **QR & Links → QR codes** and click **Create QR code**. With no codes yet, the button sits
+in the middle of the page under *"No QR codes yet"*.
 </Step>
 <Step>
-Enter a **QR name**.
-
-It must be at least three characters, alphanumeric, and start with a letter. This name is for you —
-customers never see it — so make it findable later: *table-tent-cafe-2026* beats *qr1*.
+Enter a **Name**. Only you see it, so name it by where it will be printed:
+*Table tent, spring menu* beats *qr1*. Up to 200 characters.
 </Step>
 <Step>
-Enter the **URL** the code should open.
-
-Any valid URL works: a survey, a catalog, an access link, your website.
+Enter **Where it points**: the page people land on when they scan. It has to be a full link
+starting with `https://` (or `http://`), up to 2,048 characters.
 </Step>
 <Step>
-Click **Create**. The code is generated and appears in your list.
+Click **Create QR code**. The code's own page opens, ready to design.
 </Step>
 </Steps>
 
 ---
 
-## Design the Code
+## The List
 
-Open a QR from the list and switch to **Editor Mode** to style it — colours, patterns and shape —
-so it matches your brand instead of looking like a default black square.
+Each tile shows the code, its name, the site it sends people to (*To example.com*), how many times
+it has been scanned, and a copy button for its short link. Click the thumbnail or the name to open
+it.
 
-<ScreenShot src="/docs/screenshots/qr-studio/qr-editor.png" alt="Editing and tracking a QR code" />
+| Control | Does |
+|---------|------|
+| **Search QR codes** | Filters the tiles by name. *"Nothing matches that search"* offers **Clear search** |
+| Sort menu | **Newest**, **Oldest**, **Name (A-Z)**, **Name (Z-A)** |
+| **⋯ → Rename** | Changes the name. The code and its destination stay the same |
+| **⋯ → Delete** | Deletes the code after a confirmation |
 
 <Callout type="warn">
-  Keep contrast high and do not over-style. A beautiful QR that phones cannot read is worse than a
-  plain one — always test-scan before printing, ideally from a phone that is not yours.
+  Deleting a QR code breaks every printed copy of it, and its scan count goes too. The confirmation
+  says so: *"Printed copies of this code will stop working."* If a code is out in the world, point
+  it at a new page instead of deleting it.
 </Callout>
 
 ---
 
 ## Change Where It Points
 
-The **destination URL** is editable at any time. The printed code keeps working; the next scan
-goes to the new address.
+Open the code. The page heading shows its name and *"Scanned {`{n}`} times"*, with **Rename** beside
+it.
 
-This is the whole reason to use QR Creator rather than a static generator:
+<ScreenShot src="/docs/screenshots/qr-studio/qr-code-detail.png" alt="A QR code detail page: where it points, short link, style gallery and preview with PNG, Print and Copy link" />
+
+| Field | Use |
+|-------|-----|
+| **Where it points** | Edit the link; **Save** appears once you change it. *"Codes already printed follow the new link."* |
+| **Short link** | What the code itself contains. Copy it to share where a QR code cannot go |
+
+This is the whole reason to use RateUp's codes rather than a static generator:
 
 - Redirect a seasonal campaign without reprinting
 - Point last year's table tents at this year's survey
-- Fix a URL that turned out to be wrong
+- Fix a link that turned out to be wrong
 
 ---
 
-## Sharing the Code
+## Design the Code
 
-| Control | Use |
-|---------|-----|
-| **QR URL** | Copy the short link behind the code, to send digitally |
-| **Copy URL** | Copies it to your clipboard |
-| **Download** | Save the image for print or design work |
+The **Design** section sets what the printed code looks like. The preview on the right is exactly
+what downloads and prints.
 
----
+| Part | Options |
+|------|---------|
+| **Style** | A starting colour pair: **Classic**, **Navy**, **Blue**, **Green**, **Warm** or **No background** |
+| **Colours** | **Code** and **Background** colours, and **Transparent background** for placing the code on your own artwork |
+| **Logo** | On by default with the RateUp logo. **Upload yours** takes PNG, JPG or SVG (a square image works best), with a **Size** slider and a **Shape** of **Square**, **Rounded** or **Circle**. Switch it off for a plain code |
 
-## Tracking Scans
+Changes stay on screen until you click **Save design**; the button reads **Design saved** once
+there is nothing left to save.
 
-The **Statistics** section shows **Total Scans** for the code.
-
-Use it to compare placements: the same campaign on a receipt versus a table tent versus a poster
-tells you where your customers actually are.
-
----
-
-## Renaming and Managing
-
-Use **Rename QR** to change the name — this does not affect the code or its destination. Search
-and sort in the list page header when your library grows.
+<Callout type="warn">
+  The designer warns you about colours phones struggle with: *"A light code on a dark background
+  won't scan on every phone"* and *"These colours are too close."* Take the warning seriously, and
+  test-scan the printed code from a phone that is not yours before you print a batch.
+</Callout>
 
 ---
 
-## Best Practices
+## Download, Print or Copy
 
-- Name codes by placement, not by campaign — placements outlive campaigns
-- Test-scan every code before it goes to print
-- Point QR codes at an [access link](/qr-studio/access-links) when the destination may need to
-  become several destinations
-- Leave quiet space around the code; QR readers need the margin
+| Button | Does |
+|--------|------|
+| **PNG** | Downloads the code as an image, named after the code |
+| **Print** | Prints the code about 6 cm across, big enough to scan from arm's length on a counter |
+| **Copy link** | Copies the link the code contains |
+
+---
+
+## How Scans Are Counted
+
+A scan counts when someone opens the code itself. The printed code carries a marker that the copied
+short link does not, so sharing the short link in a message never inflates the scan count. Every
+scan counts, including repeat scans from the same phone.
+
+Compare codes by placement: the same campaign on a receipt, a table tent and a poster tells you
+where your customers actually are.
+
+---
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| *Enter a full link starting with https://* | The destination is missing its `https://`, or is not a link | Paste the whole address from your browser's address bar |
+| *This QR code doesn't exist* | It was deleted, or belongs to another organisation | Go back to **QR codes** |
+| The scan count did not go up when you opened the short link | Only scans of the code count | Scan the code with a phone camera |
+| Phones will not read the printed code | Low contrast, a light code on a dark background, or a logo set too large | Pick **Classic**, shrink the logo, and test again |
 
 ---
 
 ## Related Pages
 
-- [Access Links](/qr-studio/access-links)
+- [Link Pages](/qr-studio/access-links): point a code at several destinations
+- [QR & Links Overview](/qr-studio)
 - [Share Your Survey](/web-forms/sharing)
