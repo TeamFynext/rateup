@@ -1,133 +1,165 @@
 ---
-title: "Cashier Portal"
-description: The in-store tool for finding a customer, issuing points and confirming redemptions.
+title: "Cashier"
+description: The counter-side screen for finding or registering a customer, adding a purchase, redeeming rewards and checking codes.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
-The **Cashier Portal** is the counter-side view of the loyalty programme. It is deliberately
-simple — staff need to find a customer and act in seconds, with a queue behind them.
+**Cashier** (`/dashboard/loyalty/cashier`) is the counter-side view of the programme. Staff search a
+customer, act, and move on to the next one — every action ends on a receipt that says what changed
+and whether the customer was told on WhatsApp.
 
-<ScreenShot src="/docs/screenshots/loyalty/cashier-portal.png" alt="The Cashier Portal" />
+<ScreenShot src="/docs/screenshots/loyalty/cashier.png" alt="Cashier with a member open: balances and the Add purchase, Redeem a reward, Coupon code and Grant a gift actions" />
 
 ---
 
-## Finding a Customer
+## Find a Customer
 
-Search by **name or phone number**. Open the result to see their record.
+Type in **Name or phone number**. Pick the customer to open them, or tap a name under **Recent** to
+serve someone again.
 
 | Shown | Meaning |
 |-------|---------|
-| **Current Tier** | Their tier |
-| **Available Points** | What they can spend now |
-| **Lifetime Points** | Total ever earned |
-| **Joined** | When they enrolled |
-| **Referral Code** | Copyable, with a link |
+| **Available** | Points they can spend now |
+| **Lifetime** | Every point they have ever earned |
+| **Can redeem now** | How many rewards their balance covers |
+| **To** the next tier | How far they are from moving up |
+| **Total spend** | What they have spent with you |
+| **Last visits** | Their latest visits, with **Full history** for the rest |
+
+Their referral code is shown too, with **Copy code** and **Copy referral link**.
 
 ---
 
-## Issuing Points
+## Add a Purchase
 
 <Steps>
 <Step>
-Find the customer.
+Open the customer and click **Add purchase**.
 </Step>
 <Step>
-Click **Issue Points** and **enter the amount**.
+Enter *"What did they spend?"*. The form shows an estimate of the points — the base rate, any
+earning rule that applies, and the tier multiplier — and what their balance becomes.
 </Step>
 <Step>
-Add a note in **Add any notes…** — this becomes the description in
-[Transactions](/loyalty/transactions), so make it useful.
+Add a **Note (optional)**, such as the bill number.
 </Step>
 <Step>
-Confirm. Depending on your settings this may go to [Approvals](/loyalty/approvals) first.
+Click **Give** with the number of points. The receipt shows the balance before and after, any tier
+change, and whether the WhatsApp message was sent.
 </Step>
 </Steps>
-
----
-
-## Redeeming a Reward
-
-<Steps>
-<Step>
-Open **Available Rewards for Customer** — this lists only what they can actually afford.
-</Step>
-<Step>
-Choose the reward and **Claim Reward**.
-</Step>
-<Step>
-Hand over the gift, or apply the discount.
-</Step>
-<Step>
-Confirm the redemption so the points are deducted.
-</Step>
-</Steps>
-
-<Callout type="warn">
-  Confirm **after** the customer has what they came for, not before. Confirming first and then
-  discovering the item is out of stock leaves them with neither the reward nor their points.
-</Callout>
-
----
-
-## Coupon Codes
-
-For a customer presenting a coupon:
-
-<Steps>
-<Step>
-**Enter coupon code**.
-</Step>
-<Step>
-Apply the discount.
-</Step>
-<Step>
-**Mark as Used** so the code cannot be reused.
-</Step>
-</Steps>
-
----
-
-## Granting a Reward Directly
-
-**Assign Reward** or **Grant reward** gives a reward without the customer spending points — for
-service recovery, or a goodwill gesture.
 
 <Callout type="info">
-  A granted reward after something went wrong is worth far more than the points it costs you.
-  Give staff explicit permission to use this and a clear limit.
+  Made a mistake? **Undo** on the receipt does not reverse the purchase on the spot — it sends a
+  correction to [Activity](/loyalty/activity) › Pending for approval (*"Sent to Activity › Pending
+  for approval"*).
 </Callout>
 
 ---
 
-## Registering a New Customer
+## Redeem a Reward
 
-Staff can enrol customers at the counter. The customer can also register themselves via the
-**Customer Registration page link** from [Commands](/loyalty/commands) — a QR code at the till is
-the usual way to share it.
+<Steps>
+<Step>
+Open the customer and click **Redeem a reward**. Each reward shows its cost and what it leaves, or
+how many points short they are.
+</Step>
+<Step>
+Click **Redeem** on the one they want.
+</Step>
+<Step>
+Hand it over. The customer gets a code on WhatsApp.
+</Step>
+</Steps>
+
+If a reward needs approval, the receipt says *"This reward needs approval before it can be handed
+over — it is waiting in Activity."*
+
+A reward the customer was given but has not used yet appears on their record as **Waiting**, with
+**Mark as used**.
+
+---
+
+## Check a Coupon Code
+
+<Steps>
+<Step>
+Click **Coupon code** — at the top of the Cashier, or on an open customer.
+</Step>
+<Step>
+Type the **Code** from the customer's WhatsApp message and click **Check code**.
+</Step>
+<Step>
+If it is valid, click **Mark as used** so the code cannot be used again.
+</Step>
+</Steps>
+
+| Message | Meaning |
+|---------|---------|
+| *"No redemption with that code."* | The code does not exist |
+| *"Already used."* | Someone marked it used before |
+| *"Waiting for approval in Activity."* | Approve it in [Activity](/loyalty/activity) first |
+
+---
+
+## Grant a Gift
+
+**Grant a gift** gives a free gift without the customer spending points — for service recovery, a
+birthday, a goodwill gesture. Pick the gift, add a **Note (optional)**, and click **Give**. Free gifts
+are set up on [Rewards](/loyalty/rewards); with none, the form says so.
+
+---
+
+## Register a Customer
+
+<Steps>
+<Step>
+Search their number. If nobody has it, click **Register** with the number — or click **Add
+customer** › **New**.
+</Step>
+<Step>
+Fill in the **Phone number** and **Name**. **Date of birth (optional)**, **Gender (optional)** and
+**Referral code (optional)** can be added too.
+</Step>
+<Step>
+Click **Register**. They get the joining bonus and a WhatsApp welcome.
+</Step>
+</Steps>
+
+To enrol someone already in your contacts, click **Add customer** › **From Contacts**, search, and
+click **Add**. Existing members are marked **Member**.
 
 <Callout type="info">
-  Self-registration is better wherever possible: fewer typos, and the customer's own consent, given
-  by them.
+  Self-registration from the counter QR is better wherever possible: fewer typos, and the customer's
+  own consent. Print it from [Materials](/loyalty/materials).
 </Callout>
 
 ---
 
-## Training Staff
+## Run It on a Staff Device
 
-Cover these five things and nothing else:
+**Open full screen for staff** opens the same screen at `/cashier`, without the dashboard around it.
+It stays signed in on that device until someone clicks **Sign out**.
 
-1. Search by phone number — it is more reliable than by name
-2. Always note *why* when issuing points
-3. Confirm redemption only after handing over
-4. Mark coupon codes used, every time
-5. When unsure, issue nothing and ask — corrections are visible and awkward
+---
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| *"WhatsApp is not connected"* banner | No WhatsApp number | Points still work; connect a number so customers are told |
+| Receipt says *"Not sent — the program is not live"* | The programme is paused | Resume it in [Settings](/loyalty/settings) |
+| Receipt says *"Not sent — no approved template, and they have not messaged you today"* | Outside the 24-hour window and no approved template | Check the message on [Messages](/loyalty/messages) |
+| *"The program is not live, so nobody can join yet."* | Paused or not activated | Activate or resume it in [Settings](/loyalty/settings) |
+| *"This number is already a member."* | They registered before | Open the existing member |
 
 ---
 
 ## Related Pages
 
 - [Rewards](/loyalty/rewards)
-- [Approvals](/loyalty/approvals)
-- [Transactions](/loyalty/transactions)
+- [Activity](/loyalty/activity) — approving corrections and redemptions
+- [Customers](/loyalty/customers)
+- [Materials](/loyalty/materials) — the counter QR card

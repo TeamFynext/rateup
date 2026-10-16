@@ -1,50 +1,73 @@
 ---
-title: "Team Performance"
-description: The same performance picture, grouped by team rather than by individual.
+title: "Conversations → Teams"
+description: Conversations, response times and load per team, with a page per team listing what each member handled.
 ---
 
+import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
-**Team Performance** aggregates the agent metrics by team. It is the view for deciding where to
-put people, rather than how any one person is doing.
+The **Teams** tab of **Conversations** groups the numbers by team. It is the view for deciding
+where to put people, rather than how any one person is doing.
 
-<ScreenShot src="/docs/screenshots/analytics/team-performance.png" alt="Team Performance" />
+<ScreenShot src="/docs/screenshots/analytics/team-performance.png" alt="Conversations analytics on the Teams tab with the teams table" />
 
 ---
 
-## The Metrics
+## The Teams Table
+
+Headed **Teams** — *"Conversations assigned to each team in this range"*. Sort by any column, or use
+**Search by name**.
 
 | Column | Meaning |
 |--------|---------|
-| **Team** | The team |
-| **Members** | How many people are in it |
-| **Conversations** | Tickets the team handled |
-| **Avg Response** | The team's average time to reply |
-| **Resolution Rate** | Share closed with a resolved outcome |
+| **Team** | The team, with its colour |
+| **Members** | How many people are in it, with *"N online"* underneath |
+| **Messages sent** | Messages the team sent in the range |
+| **Active conversations** | Tickets currently assigned to the team |
+| **Avg first response** | The team's average time to a first reply |
+
+With no teams yet, it reads *"No teams yet — Create a team in Settings to see its numbers here."*
 
 ---
 
-## Load per Head
+## Open a Team's Page
 
-The number that matters is rarely the raw total — it is conversations divided by members.
+<Steps>
+<Step>
+Click a team's row, or its name.
+</Step>
+<Step>
+The team's page opens with *"N members · N online"* under its name. The back arrow returns to
+**Teams**.
+</Step>
+<Step>
+Pick a range — **Today** to **Last 60 Days**. Like an agent's page, it has its own range.
+</Step>
+</Steps>
 
-A team of eight handling 400 conversations is doing half the work per person of a team of three
-handling 300. The totals hide it; the ratio does not.
+The tiles show **Members** (with how many are online), **Active chats** (*"Being handled now"*),
+**Avg first response** and **Resolution rate**, with changes *"vs last week"*.
+
+The **Members** table lists what each member handled in the range: **Agent**, **Status**,
+**Messages**, **Avg first response** and **Active chats**. Click a member to open their
+[agent page](/analytics/agent-performance#open-an-agents-page).
+
+**PDF report** downloads the page as `rateup-team-<name>-<date>.pdf`.
 
 ---
 
-## What This View Answers
+## Look at Load per Head
+
+The number that matters is rarely the raw total — it is the work divided by **Members**.
+
+A team of eight with 40 **Active conversations** is carrying half the load per person of a team of
+three with 30. The totals hide it; the ratio does not.
 
 | Question | How to read it |
 |----------|----------------|
-| Which team is stretched? | High conversations per member, rising response time |
+| Which team is stretched? | Many active conversations per member, rising response time |
 | Where should the next hire go? | The team whose response time degrades as volume grows |
-| Is routing working? | A team with very low volume may not be receiving what it should |
-| Which team needs process help? | Reasonable volume, poor resolution rate |
-
----
-
-## Before Drawing Conclusions
+| Is routing working? | A team with very few conversations may not be receiving what it should |
 
 <Callout type="warn">
   Teams handle different work. A billing team's conversations are longer and slower than a
@@ -56,6 +79,6 @@ handling 300. The totals hide it; the ratio does not.
 
 ## Related Pages
 
-- [Agent Performance](/analytics/agent-performance)
+- [Conversations → Agents](/analytics/agent-performance)
 - [Teams](/settings/teams) — how teams are defined
 - [Sidebar Filters](/inbox/inbox-filter)

@@ -1,135 +1,140 @@
 ---
 title: "Settings"
-description: Program name, currencies, point expiry, approvals, birthday reminders and the danger zone.
+description: Pause or resume the programme, the join link, approvals, the sending number and channels, store and POS integrations, point expiry and the danger zone.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
-Loyalty **Settings** holds the programme-wide configuration — the decisions that apply to every
-member.
+Loyalty **Settings** (`/dashboard/loyalty/settings`) holds the decisions that apply to the whole
+programme: *"the join link, approvals, integrations, expiry and the danger zone."* Names and
+branding are in [Program](/loyalty/program) › Profile, the points name under Earning, and the
+messages on [Messages](/loyalty/messages).
 
-<ScreenShot src="/docs/screenshots/loyalty/settings.png" alt="Loyalty settings" />
+<ScreenShot src="/docs/screenshots/loyalty/settings.png" alt="Loyalty Settings: Program card with Pause earning, Joining links and poster, Approvals and Integrations" />
 
 ---
 
-## Basic Settings
+## Pause or Resume the Programme
 
-| Setting | Purpose |
-|---------|---------|
-| **Program Name** | What customers see the programme called. Required |
-| **Points Currency** | What you call your points — *Stars*, *Coins*, *Points*. Required |
-| **Money Currency** | The currency spend is measured in. Required |
-| **Default Country** | Default for phone numbers at registration. Required |
-| **Program Status** | **Program Active** enables or disables the whole programme |
+The **Program** card says where the programme stands:
+
+| State | Meaning |
+|-------|---------|
+| **On** | Points are earned on every purchase and messages send |
+| **Paused** | *"Every balance is kept, earning is stopped, nothing sends."* |
+| **Not activated yet** | Setup is not finished — **Continue setup** |
+
+**Pause earning** asks *"Pause the program?"* — *"Earning stops and nothing sends. Every balance is
+kept, and staff can still redeem rewards at the counter."* **Resume earning** turns it back on.
+
+---
+
+## Share the Join Link
+
+The **Joining** card holds the ways customers sign up.
+
+| Control | What it gives you |
+|---------|-------------------|
+| **Copy registration link** | The web join page |
+| **Copy WhatsApp join link** | A link that opens WhatsApp with your join keyword ready to send |
+| **Plain QR** | The join QR on its own |
+| **QR poster** › **Download poster** | *"Your logo, colour and join code on one printable card."* — **Edit the card in Materials** |
+
+The keyword and the welcome are the **Joining the program** reply — **Edit it in Messages**. The
+WhatsApp link and QR need a connected number: *"Connect a WhatsApp number to get your join QR."*
+
+---
+
+## Decide Whether Corrections Need Approval
+
+**Auto-approve staff adjustments** — *"On: a correction posts at once. Off: it waits under Activity ›
+Pending for someone to approve."* See [Activity](/loyalty/activity).
+
+---
+
+## Choose the Sending Number and Channels
+
+Under **Integrations**:
+
+| Setting | What it does |
+|---------|--------------|
+| **WhatsApp Business** | *"Connected. Pick which number the program sends from."* — pick the number. **Manage channels** opens [Settings → Channels](/settings/channels) |
+| **Send WhatsApp notifications** | *"The master switch. Which messages send is decided on Messages."* |
+| **Send as a plain message inside the 24-hour window** | When a customer has messaged you in the last 24 hours, the message goes as a normal chat message — free, and it works before Meta approves the template. *"Templates with buttons are always sent as templates."* |
+| **Channels** | Shown only when more than one channel can send. Members hear from you on the channel they chose; *"If it cannot reach them, the next one on this list is tried."* Keep at least one on |
+| **Email notifications** | *"Program notices by email."* |
 
 <Callout type="info">
-  Name your points something of your own. *"You have 340 Beans"* is memorable in a way
-  *"340 points"* never is — and it makes the programme feel like yours rather than software.
+  The number you pick here is the one notifications and reminders send from. The keyword-menu
+  chatbot picks its own **WhatsApp account** on [Messages](/loyalty/messages) › Chatbot.
 </Callout>
 
 ---
 
-## Points Expiration
+## Earn Points on Online Orders
 
-| Setting | Purpose |
-|---------|---------|
-| **Enable Expiration** | Turns expiry on |
-| **Expiration Period** | How long points last before expiring. Required when expiry is on |
+| Setting | What it does |
+|---------|--------------|
+| **Shopify orders earn points** | *"Online orders follow the same earning rules as the counter."* |
+| **WooCommerce orders earn points** | *"Earned when an order is marked Completed, and taken back if it is refunded or cancelled."* |
 
-Expiry limits your liability and creates urgency. It also, done badly, destroys goodwill.
-
-<Callout type="warn">
-  If you enable expiry, enable the [reminder notifications](/loyalty/notifications) at the same
-  time. Expiring points silently is the most damaging thing a loyalty programme can do to a
-  customer who was saving.
-</Callout>
-
-Give people a realistic window. A period shorter than a typical purchase cycle means points expire
-before anyone could reasonably spend them.
+The store must be connected first in [Settings → Integrations](/settings/integrations).
 
 ---
 
-## Approvals
+## Award Points From a Till or POS
 
-**Auto-approve Adjustments** decides whether staff adjustments take effect immediately or wait for
-review in [Approvals](/loyalty/approvals).
-
-Leave it **off** unless your team is small and trusted.
-
----
-
-## Birthday Reminders
-
-**Enable Birthday Reminders** sends a message on each member's birthday. Pair it with a
-**Birthday Gift** reward so the message arrives with something attached.
-
-Requires a **date of birth** on the member record — collect it during registration.
+**POS and API access** — *"For a till or ordering system that awards points directly."* — uses your
+organisation's API keys, the same ones listed under [Settings → Integrations](/settings/integrations).
+Create a separate key for each system so you can rotate or revoke one without breaking the others.
+See [External API](/external-api) for how to call it.
 
 ---
 
-## Notifications
-
-The notification switches live here too — see [Notifications](/loyalty/notifications) for what each
-one does and how often to send.
-
----
-
-## Danger Zone
-
-Two irreversible actions.
-
-### Reset Points
-
-Sets every member's balance to zero.
-
-<Callout type="warn">
-  This wipes points your customers earned and expect to spend. There is almost no situation where
-  this is the right answer to a live programme — export
-  [transactions](/loyalty/transactions) first if you proceed.
-</Callout>
-
-### Delete Program
-
-Removes the loyalty programme and all its data — members, balances, transactions and rewards.
-**Remove all data** does exactly what it says.
-
-<Callout type="warn">
-  Permanent and irreversible. Export member and transaction data before doing this.
-</Callout>
-
----
-
-## Launch Checklist
+## Set Points to Expire
 
 <Steps>
 <Step>
-Program name, points currency, money currency and default country set.
+Under **Points Expiration**, switch on **Enable Expiration**.
 </Step>
 <Step>
-[Earning rules and tiers](/loyalty/earning-rules) configured and modelled.
+Pick the **Expiration Period**: **3 months**, **6 months**, **12 months** or **24 months**.
 </Step>
 <Step>
-At least one **cheap, reachable** [reward](/loyalty/rewards) available.
-</Step>
-<Step>
-[Notifications](/loyalty/notifications) enabled, with approved templates selected.
-</Step>
-<Step>
-[Commands](/loyalty/commands) configured so customers can self-serve.
-</Step>
-<Step>
-Staff trained on the [cashier portal](/loyalty/cashier-portal).
-</Step>
-<Step>
-**Program Active** switched on.
+Click **Save Changes**.
 </Step>
 </Steps>
+
+The card shows how many points are currently unspent, and what they are worth if every one is
+redeemed.
+
+<Callout type="warn">
+  Switch on the **Points expiring** reminder on [Reminders](/loyalty/reminders) at the same time.
+  Expiring points without a warning is the most damaging thing a loyalty programme can do to a
+  customer who was saving. Give a period longer than your customers' usual gap between visits.
+</Callout>
+
+---
+
+## The Danger Zone
+
+| Action | Effect |
+|--------|--------|
+| **Reset Points** | *"Reset every balance to zero?"* — *"All points are removed from every member. This cannot be undone."* |
+| **Delete Program** | *"This is permanent. Every member, balance, rule and reward is removed."* Type the programme's name to confirm. Only shown to people allowed to manage the programme |
+
+<Callout type="warn">
+  Neither can be undone. To stop the programme without losing anything, **Pause earning** instead —
+  *"Pausing keeps every balance intact and simply stops earning."*
+</Callout>
 
 ---
 
 ## Related Pages
 
-- [Earning Rules & Tiers](/loyalty/earning-rules)
-- [Notifications](/loyalty/notifications)
-- [Approvals](/loyalty/approvals)
+- [Program](/loyalty/program) — names, branding and the points name
+- [Messages](/loyalty/messages)
+- [Reminders](/loyalty/reminders) — the expiry warning
+- [Settings → Channels](/settings/channels)
+- [Settings → Integrations](/settings/integrations) — Shopify, WooCommerce and API keys

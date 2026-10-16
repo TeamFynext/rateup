@@ -7,7 +7,9 @@ import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
 Stages are the columns of your board, and they are the board's own — a stage exists on one pipeline
-and nowhere else. Manage them under **Lead stages**, at the top of **Pipeline settings**.
+and nowhere else. Manage them under **Lead stages**, at the top of **Pipeline settings**. On
+Support, Projects and Custom boards the section is called **Stages**, the button **Add stage**, and
+there is no **Probability** column.
 
 <ScreenShot src="/docs/screenshots/pipelines/pipelines-stages.png" alt="The lead stages table in pipeline settings" />
 
@@ -38,8 +40,9 @@ fields save when you click away from them; the colour and status selects save im
 
 ## What a New Board Starts With
 
-Creating a pipeline gives you seven columns and five lost reasons. All of them are editable, and
-none of them are special.
+Creating a Leads pipeline gives you seven columns and five lost reasons. All of them are editable,
+and none of them are special. The other board types start with their own columns — see
+[Board Types](/pipeline/board-types#the-four-types).
 
 | Stage | Status | Probability | Rotting after |
 |-------|--------|-------------|---------------|
@@ -85,6 +88,12 @@ number on the left is the column's position, left to right on the board.
 Deleting asks where the leads in it should go: **Move its leads to** a column you pick. Nothing is
 deleted with the stage, and the leads keep their notes, timelines and assignees — they simply land
 somewhere else.
+
+<Callout type="warn">
+  With Zoho or GetLead connected, the dialog warns *"{`{crm}`} will not be updated"*. Leads moved out
+  of a deleted column keep the status they already had in the CRM. Move each lead again on the board
+  to sync it, or update it in the CRM directly.
+</Callout>
 
 ---
 

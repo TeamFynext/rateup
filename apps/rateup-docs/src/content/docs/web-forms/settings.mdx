@@ -1,11 +1,10 @@
 ---
 title: "Settings"
-description: Publishing, scheduling, access control, languages, kiosk mode, notifications and the response webhook.
+description: Publishing, scheduling, access control, languages, kiosk mode and the response webhook.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
-import ImagePlaceholder from "@/components/ImagePlaceholder";
 
 Everything about how a form **behaves**, as opposed to how it looks.
 
@@ -89,31 +88,23 @@ person seeing the previous person's answers.
 
 ---
 
-## Notifications
+## Send Responses to Your Own System
 
-**Enable Email Notification** sends an alert to a **notification email** when responses arrive.
-
-Point it at a shared mailbox rather than an individual — a survey alerting one person who then goes
-on holiday is a form nobody is reading.
-
----
-
-## Webhook
-
-A **webhook** posts each response to a URL you control, the moment it is submitted. Use it to push
-responses into your own database, CRM or fulfilment system without polling.
+A **webhook** posts each response to a URL you control as soon as it is submitted. Use it to push
+responses into your own database, CRM or fulfilment system without polling. It sits in the
+**Webhooks** card of this Settings tab and needs the Webhook feature on your plan.
 
 This webhook is configured **per form**, and the same mechanism serves
 [WhatsApp flows](/whatsapp/flows).
 
 <Callout type="info">
-  This is not the same webhook as the one under
-  [Settings → Integrations](/settings/integrations) — that one is organisation-wide and reports
-  **WhatsApp message delivery status**. This one carries **form responses**, and unlike that one it
-  is signed and retried.
+  This is not the same webhook as the one under [Settings → Integrations](/settings/integrations) —
+  that one is organisation-wide, reports events such as message delivery status, and has its own
+  signing secret. This one carries **form responses** and is signed with the **Client Secret**
+  shown in this card, which is the same for every form in your organisation.
 </Callout>
 
-### Setting it up
+### Set it up
 
 <Steps>
 <Step>
@@ -126,20 +117,16 @@ https://example.com/webhook-endpoint
 Plain HTTP endpoints are skipped entirely — nothing is ever sent to them.
 </Step>
 <Step>
-Enter the URL under **Webhook** in this Settings tab and **Save changes**.
+Enter the URL under **Enter webhook url endpoint for response** and click **Save Changes**. An
+address that is not a valid URL is refused with *"Invalid Url, eg: https://example.com/your-endpoint"*.
 </Step>
 <Step>
-Note the **client secret**. It signs every request, and you need it to verify what arrives.
+Once a URL is saved, a **Client Secret** field appears above it. Copy it — it signs every request,
+and you need it to verify what arrives.
 </Step>
 </Steps>
 
-<ImagePlaceholder
-  file="web-forms/webhook-settings.png"
-  shot="The Webhook section of a survey's Settings tab, showing the endpoint URL field and the client secret."
-  caption="Registering a response webhook."
-/>
-
-{/* TODO: capture the survey webhook settings */}
+<ScreenShot src="/docs/screenshots/web-forms/webhook-settings.png" alt="Webhooks card with the Client Secret and the endpoint URL" />
 
 ### Payload
 
@@ -172,37 +159,53 @@ Note the **client secret**. It signs every request, and you need it to verify wh
 
 | Header | Contains |
 |--------|----------|
-| `X-Rateup-Signature` | HMAC-SHA256 of the payload, base64-encoded |
-| `X-Rateup-Triggered-At` | Trigger time, ISO 8601 |
-| `X-Webhook-Id` | A UUID identifying this delivery |
+| `Content-Type` | `application/json` |
+| `X-Rateup-Timestamp` | When this attempt was sent, Unix seconds |
+| `X-Rateup-Signature-256` | `t=<Unix seconds>,v1=<hex HMAC-SHA256 of "<t>.<raw body>">`, keyed with the client secret |
+| `X-Rateup-Signature` | HMAC-SHA256 of the request body, base64-encoded (deprecated — no timestamp) |
+| `X-Rateup-Triggered-At` | When this attempt was sent, ISO 8601 |
+| `X-Webhook-Id` | An id for this delivery — the **same on every retry** of it |
 
-### Verifying the signature
+### Verify the signature
 
-Compute an HMAC-SHA256 of the JSON payload with your client secret, base64-encode it, and compare
-against `X-Rateup-Signature`.
+Prefer `X-Rateup-Signature-256`: it signs a timestamp too, so a captured delivery cannot be
+replayed. It is checked exactly like the organisation webhook's — see
+[Settings → Integrations → Verify the signature](/settings/integrations#verify-the-signature) — with
+the **Client Secret** as the key.
+
+For the older header, compute an HMAC-SHA256 of the **raw request body** with your client secret, base64-encode it, and
+compare it with `X-Rateup-Signature`.
 
 ```javascript
 import crypto from "crypto";
 
-function verifySignature(payload, signature, secret) {
-  const hmac = crypto.createHmac("sha256", secret);
-  hmac.update(JSON.stringify(payload));
-  return signature === hmac.digest("base64");
+// rawBody: the request body exactly as received, before JSON parsing
+function verifySignature(rawBody, signature, secret) {
+  const expected = crypto.createHmac("sha256", secret).update(rawBody).digest("base64");
+  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
 }
 ```
+
+Hash the bytes you received rather than re-serialising the parsed JSON — a re-serialised body can
+differ in spacing or key order and never match.
 
 <Callout type="warn">
   Verify **before** acting on the payload. Your endpoint URL is not a secret, and an unverified
   handler processes whatever anyone posts to it.
 </Callout>
 
-### Retries
+### Delivery and retries
 
-| Your response | What happens |
+Responses are queued and delivered in the background, so a slow endpoint never holds up the
+respondent.
+
+| Your endpoint | What happens |
 |---------------|--------------|
-| **2xx** | Delivered; done |
-| **5xx** | Retried, up to **3 attempts**, with exponential backoff |
-| **4xx** | **No retry** — the response is abandoned immediately |
+| Answers **2xx** | Delivered; done |
+| Answers **5xx**, or does not answer within 15 seconds | Retried, up to **3 attempts** in all, with exponential backoff |
+| Answers **4xx** | **No retry** — the response is abandoned immediately |
+| Answers with a redirect (**3xx**) | Not followed, and not retried |
+| Resolves to a private or internal address | Refused, and not retried |
 
 <Callout type="warn">
   A 4xx is read as "your endpoint rejected this deliberately" and the event is dropped for good. If
@@ -210,10 +213,11 @@ function verifySignature(payload, signature, secret) {
   retried. Returning 400 loses the response permanently.
 </Callout>
 
-### Idempotency
+### Make your handler idempotent
 
-Because retries exist, the same event can arrive twice. Record the `X-Webhook-Id` of every delivery
-you process and skip ids you have already seen.
+Because retries exist, the same response can arrive twice. Record the `X-Webhook-Id` of every
+delivery you process and skip ids you have already seen — a retry carries the same id as the
+original.
 
 Acknowledge with a 2xx as soon as you have the payload, then process it asynchronously.
 
@@ -222,10 +226,12 @@ Acknowledge with a 2xx as soon as you have the payload, then process it asynchro
 | Symptom | Cause | Fix |
 |---------|-------|-----|
 | Nothing ever arrives | Endpoint is HTTP, not HTTPS | Non-HTTPS endpoints are skipped |
-| Nothing ever arrives | Webhook not saved on this form | Re-check this Settings tab |
-| Signature never matches | Wrong secret, or the payload was altered before hashing | Hash the raw JSON with the registered client secret |
+| Nothing ever arrives | Webhook not saved on this form, or the plan lacks the Webhook feature | Re-check this Settings tab |
+| Nothing ever arrives | The URL redirects, or resolves to a private address | Use the final public HTTPS address |
+| Signature never matches | Wrong secret, or the body was re-serialised before hashing | Hash the raw body with the **Client Secret** from this card |
 | One failure and it never returns | Your handler returned a 4xx | Return 5xx for transient failures |
 | Duplicate records | No idempotency | Deduplicate on `X-Webhook-Id` |
+
 
 ---
 
@@ -245,4 +251,4 @@ Acknowledge with a 2xx as soon as you have the payload, then process it asynchro
 - [Sharing](/web-forms/sharing)
 - [Results](/web-forms/results)
 - [Design](/web-forms/design)
-- [Integrations](/settings/integrations) — the separate WhatsApp message status webhook
+- [Integrations](/settings/integrations) — the separate organisation-wide webhook

@@ -1,66 +1,115 @@
 ---
 title: "Channels"
-description: Connect the WhatsApp, Instagram and Facebook accounts your customers message you on, and manage each number's name, display name and business profile.
+description: Connect WhatsApp numbers, Facebook Pages and Instagram accounts — together or on their own — and manage each number's name, profile, calling and credentials.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
-import ImagePlaceholder from "@/components/ImagePlaceholder";
 
 **Channels** is where your messaging accounts are connected. Everything else in RateUp — the Inbox,
 Commerce, Campaigns, Loyalty notifications — depends on at least one channel being live here.
 
-<ScreenShot src="/docs/screenshots/settings/channels.png" alt="Connected channels" />
+Open it from **Settings → Channels**. You need a role that can **connect, remove and configure
+channels**; without it the menu item is hidden.
+
+<ScreenShot src="/docs/screenshots/settings/channels.png" alt="Channels page with WhatsApp Business, Facebook Messenger and Instagram Messaging rows" />
 
 ---
 
 ## Supported Channels
 
-| Channel | What connects |
-|---------|---------------|
-| **WhatsApp** | A WhatsApp Business account and its phone numbers |
-| **Instagram** | An Instagram professional account |
-| **Facebook** | A Facebook page |
+| Channel | What connects | Opens |
+|---------|---------------|-------|
+| **WhatsApp Business** | WhatsApp Business phone numbers | `/dashboard/settings/channels/whatsapp` |
+| **Facebook Messenger** | Facebook Pages | `/dashboard/settings/channels/facebook` |
+| **Instagram Messaging** | Instagram professional accounts | `/dashboard/settings/channels/instagram` |
 
-Each channel lists its connected **accounts** and **pages**, so you can see at a glance what is
-live.
+The three are independent. You can run RateUp on Instagram or Messenger alone, with no WhatsApp
+number at all — any one channel is enough to get going, and every conversation lands in the same
+inbox whichever channel it came in on.
+
+Each row shows **N connected** once something is live, and its button reads **Connect** or
+**Configure**.
 
 ---
 
 ## Multiple Accounts
 
-You can connect more than one account per channel — several WhatsApp numbers, for example, one per
-brand or region.
+Every number, Page and account is its own channel, so you can connect as many as you like — several
+WhatsApp numbers, one per brand or region, or a dozen Facebook Pages.
 
 In the Inbox, each ticket shows which account the customer wrote to, so agents always know which
 identity they are replying as.
 
 ---
 
+## Connect Facebook Messenger or Instagram
+
+Messenger and Instagram each have their own login, so connecting one asks Meta only for that
+platform's permissions.
+
+<Steps>
+  <Step>Open **Facebook Messenger** or **Instagram Messaging** and click **Continue with Facebook**.</Step>
+  <Step>In Meta's window, choose the Pages — for Instagram, the Page each Instagram account is linked to — and finish the login.</Step>
+  <Step>In **Choose Facebook Pages** (or **Choose Instagram accounts**), tick what you want. Everything you just picked in Meta starts ticked.</Step>
+  <Step>Click **Connect** (or **Connect N**).</Step>
+</Steps>
+
+In the picker:
+
+| Shown | Meaning |
+|-------|---------|
+| **Connected to another organization** | Greyed out — that Page or account is already a channel in a different RateUp organisation |
+| **Already connected — reconnects it** | It is already one of your channels; connecting it again reconnects it |
+| **Linked to …** | Instagram only — the Facebook Page the account belongs to |
+
+Each connected Page or account then appears as its own row with **Connected** and a **Disconnect**
+button. Disconnecting one stops its conversations arriving in the inbox; other channels are not
+affected.
+
+<Callout type="info">
+  If the picker says *"No Instagram professional accounts were shared"*, log in again and choose the
+  Facebook Page each Instagram account is linked to — Meta shares the account through its Page.
+</Callout>
+
+---
+
+## Connect a WhatsApp Number
+
+The WhatsApp page lists every connected number under **Connected accounts**, each with a badge
+saying how it was added:
+
+| Badge | How it was added |
+|-------|------------------|
+| **Automated** | Through **Continue with Facebook** (Meta's own sign-up flow, which supplies the credentials) |
+| **Manual** | Through **Add manually**, with IDs and an access token from your own Meta app |
+
+Each row shows the number's **Business ID**, **Phone ID** and **App ID**, an **Edit channel** button,
+and **Disconnect**.
+
+Use **Continue with Facebook** wherever you can. **Add manually** is for when you cannot connect
+through Facebook — see [Add a Number Manually](#add-a-number-manually).
+
+---
+
 ## Edit a WhatsApp Number
 
-A connected number has three separate things you can change, and they are deliberately kept apart —
-one is yours, two belong to Meta.
+Click **Edit channel** on a number. The dialog keeps apart the things that are yours and the things
+that belong to Meta:
 
 | Tab | What it changes | Where it lives |
 |-----|-----------------|----------------|
-| **Channel** | The name you use for the number inside RateUp, plus its credentials | RateUp only |
+| **Channel** | The name you use for the number inside RateUp | RateUp only |
 | **Display name** | The business name customers see in WhatsApp | Meta — needs review |
 | **Profile** | Photo, about line, description, category and contact details | Meta — applies immediately |
+| **Calling** | Whether customers can call the number, and when | Meta — applies immediately |
+| **Credentials** | The WABA ID, Phone ID, App ID, webhook password and access token | RateUp — **Manual** numbers only |
 
-Open them from the pencil (**Edit channel**) on a number under **Automated**. A number configured
-under **Manual** carries the same three tabs on its own card.
-
-<ImagePlaceholder
-  file="settings/channel-edit-tabs.png"
-  shot="The Edit channel dialog for a connected WhatsApp number, open on the Channel tab, with all three tabs (Channel, Display name, Profile) visible."
-  caption="Editing a connected number."
-/>
-
-{/* TODO: capture the Edit channel dialog */}
+<ScreenShot src="/docs/screenshots/settings/channel-edit-tabs.png" alt="Edit channel dialog on the Channel tab, showing all five tabs" />
 
 <Callout type="warn">
-  Only a super admin can change a channel. Other roles can see the tabs but the save is refused.
+  Changing a channel needs the **Connect, remove and configure channels** permission on your role.
+  Without it the save is refused.
 </Callout>
 
 ---
@@ -127,13 +176,7 @@ as they are saved.
   <Step>Click **Save profile**.</Step>
 </Steps>
 
-<ImagePlaceholder
-  file="settings/channel-profile-tab.png"
-  shot="The Profile tab of the Edit channel dialog, showing the round photo with the Change photo button and the About, Description, Email, Category, Address and Website fields."
-  caption="The business profile customers see in WhatsApp."
-/>
-
-{/* TODO: capture the Profile tab */}
+<ScreenShot src="/docs/screenshots/settings/channel-profile-tab.png" alt="Profile tab of the Edit channel dialog with the photo and business details" />
 
 | Field | Shown as | Limit |
 |-------|----------|-------|
@@ -152,18 +195,65 @@ as they are saved.
 
 ---
 
-## Connect a Number Manually
+## Set Up WhatsApp Calling
 
-Most accounts connect through the **Automated** tab, where Meta's own login flow supplies the
-credentials. **Manual** is for numbers whose credentials you hold yourself — WABA ID, Phone ID,
-App ID, webhook password and access token.
+Customers can call your WhatsApp number, and agents answer in the Inbox, in their browser. Calling
+is switched on per number, and the settings are held by Meta — the tab always shows what WhatsApp is
+enforcing.
 
-A manually configured number gets the same **Channel**, **Display name** and **Profile** tabs once
-it exists. Its credentials sit under the channel name on the **Channel** tab, saved with **Save
-Changes**; **Delete Configuration** removes the number.
+<Steps>
+  <Step>Click **Edit channel** on the number and open the **Calling** tab.</Step>
+  <Step>Turn on **Voice calls**.</Step>
+  <Step>Choose the options below, then click **Save**. You will see *"Calling settings saved"*.</Step>
+</Steps>
 
-The two modes are exclusive: a number onboarded automatically cannot be edited as a manual one until
-it is de-registered, and vice versa.
+| Setting | What it does |
+|---------|--------------|
+| **Voice calls** | Customers can call this number on WhatsApp, and agents answer from the inbox. The other settings only apply while this is on |
+| **Call button in chat** | Shows the call icon at the top of the customer's chat with you |
+| **Callback requests** | When a customer calls and nobody answers, asks them whether you may call them back |
+| **Calling hours** | Outside these hours customers cannot call; they see when you are open |
+
+With **Calling hours** on, set a **Time zone** (for example `Asia/Kolkata`) and, for each day,
+switch it on and give the opening and closing times — or leave it **Closed**. A number with no
+hours yet starts from Monday to Friday, 09:00–18:00.
+
+<Callout type="warn">
+  WhatsApp calling needs a messaging limit of at least 2,000 customers a day, and works only on a
+  number that runs purely on the Cloud API — **not on a number shared with the WhatsApp Business app
+  (coexistence)**. If the number does not qualify, or Meta cannot be reached, the tab shows **Could
+  not load calling settings** with Meta's reason instead of the switches. All of WhatsApp's calling
+  rules are listed in [WhatsApp's Calling Limits](/inbox/whatsapp-calls#whatsapps-calling-limits).
+</Callout>
+
+Answered and missed calls are listed under **Analytics → Calls** — see [Analytics](/analytics).
+
+---
+
+## Add a Number Manually
+
+**Add manually** is for a number whose credentials you hold yourself, from your own Meta app — use it
+when you cannot connect through Facebook.
+
+<Steps>
+  <Step>On the WhatsApp page, click **Add manually**.</Step>
+  <Step>In **Add a number manually**, give it a **Channel name** (optional — your own label).</Step>
+  <Step>Fill in **WABA ID**, **Phone ID**, **App ID**, **Webhook Password** and **Access Token**. All five are required; use a permanent access token.</Step>
+  <Step>Click **Save Changes**.</Step>
+</Steps>
+
+The number then appears in the list with a **Manual** badge, and **Edit channel** gives it the same
+**Channel**, **Display name**, **Profile** and **Calling** tabs as any other number, plus
+**Credentials**. Saving on **Credentials** replaces the IDs and token it was added with.
+
+### Disconnect a Number
+
+**Disconnect** on a number's row does different things depending on how it was added:
+
+| Number | What **Disconnect** does |
+|--------|--------------------------|
+| **Automated** | De-registers the WhatsApp Business account, after a confirmation |
+| **Manual** | Asks **Remove this number?** — its IDs and access token are deleted from RateUp, and nothing changes on Meta's side |
 
 ---
 
@@ -174,8 +264,9 @@ it is de-registered, and vice versa.
 | [Inbox](/inbox) | Any channel |
 | [Campaigns](/campaign) | WhatsApp |
 | [Commerce](/commerce) | WhatsApp + a catalog |
-| [Loyalty notifications](/loyalty/notifications) | WhatsApp |
+| [Loyalty messages](/loyalty/messages) | WhatsApp |
 | [Instagram automations](/instagram) | Instagram |
+| [Messenger chatbots](/messenger) | A Facebook Page |
 
 <Callout type="warn">
   Disconnecting a channel stops message delivery for everything built on it. Existing conversations
@@ -190,7 +281,10 @@ it is de-registered, and vice versa.
 |---------|---------------|
 | Messages stopped arriving | The channel's connection may have expired — reconnect it |
 | "WhatsApp settings not found" elsewhere in RateUp | No WhatsApp account is connected |
-| An Instagram account will not connect | It must be a professional account linked to a Facebook page |
+| An Instagram account will not connect | It must be a professional account linked to a Facebook Page — choose that Page in Meta's login |
+| A Page or account is greyed out in the picker | It is connected to another RateUp organisation; disconnect it there first |
+| "This channel is not set up yet. Contact support." | The Messenger or Instagram login is not configured for your workspace |
+| The **Calling** tab shows **Could not load calling settings** | The number does not meet WhatsApp's calling requirements, or its access token has expired |
 | Replies fail on one number only | Check that specific account's status, not the channel as a whole |
 | The approved display name still is not showing | Re-register the number — approval alone does not apply it |
 | "Nothing to update — WhatsApp does not accept an empty profile field" | Every profile field was blank; fill in at least one |

@@ -149,6 +149,22 @@ comparison — the same components the [web-form results](/web-forms/results) us
 
 ---
 
+## Fix What WhatsApp Rejects
+
+The editor lets you save an unfinished element on purpose, so **Save to WhatsApp** is where you find
+out what WhatsApp still needs. If the flow is not valid, nothing is pushed and an error stays on
+screen for about fifteen seconds:
+
+| Problems | The message |
+|----------|-------------|
+| One | *"Fix this before saving to WhatsApp: …"* followed by the problem |
+| Several | *"Fix N issues before saving to WhatsApp"*, with up to five listed and *"and N more"* |
+
+Each problem names the screen and the element as you see them in the editor — for example
+*Screen 2 "Feedback": A dropdown has no label.* Fix those, then click **Save to WhatsApp** again.
+
+---
+
 ## Older Flows Open a Different Editor
 
 Flows created before the current builder open the previous editor: the screens list with a detailed
@@ -164,6 +180,7 @@ Both push to WhatsApp the same way.
 | Symptom | Cause | Fix |
 |---------|-------|-----|
 | Customers see the old version | Edits saved in RateUp but never pushed | **Save to WhatsApp** |
+| *"Fix this before saving to WhatsApp"* | An element is missing something WhatsApp requires | Fix the named screen and element — see [above](#fix-what-whatsapp-rejects) |
 | *"Screen title is required"* | Empty title on a new screen | Name the screen |
 | *"Please select a screen first"* | Adding an element with no screen selected | Select a screen on the left |
 | A logic jump never fires | The condition cannot match the answer type | Re-check operator and value |

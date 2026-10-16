@@ -1,77 +1,110 @@
 ---
 title: "Overview"
-description: Conversation volume, response times, resolution rate and channel mix at a glance.
+description: The daily health check — what is waiting right now, conversation and delivery tiles, the daily charts and where to look first.
 ---
 
 import ScreenShot from "@/components/Screenshot";
 
-The **Overview** tab is the daily health check: how much is coming in, how fast it is being
-answered, and how much of it is getting finished.
+**Overview** is the first view in Analytics: how your conversations and WhatsApp messages are
+doing, and what needs your attention first.
+
+<ScreenShot src="/docs/screenshots/analytics/overview.png" alt="Analytics Overview with the Right now card, conversation tiles and WhatsApp delivery tiles" />
 
 ---
 
-## Quick Stats
+## See What Is Waiting Right Now
 
-<ScreenShot src="/docs/screenshots/analytics/quick-stats.png" alt="Quick Stats" />
+The **Right now** card at the top carries a pulsing **Live** badge and the note *"Not affected by
+the date range"*. Its counts are as of this moment:
 
-| Stat | Meaning |
+| Count | Meaning |
+|-------|---------|
+| **Unassigned** | Tickets nobody owns yet. Always counts every team — with a team picked, it says **All teams** underneath |
+| **In progress** | Tickets that have an owner and are still open |
+| **Agents online** | Members online now, out of everyone, e.g. `4 / 9` |
+| **Resolved to date** | Tickets resolved so far, with the change in resolved rate against last week in points |
+
+The team filter narrows **In progress**, **Agents online** and **Resolved to date**.
+
+---
+
+## Read the Conversation Tiles
+
+The **Conversations** tiles cover the range you picked. Each shows its change *"vs previous
+period"* — the same length of time just before your range — coloured green when the move is good
+news.
+
+| Tile | Meaning |
 |------|---------|
-| **New Conversations** | Tickets opened in the period |
-| **Active Chats** | Conversations currently live |
-| **Agents Online** | Team members available right now |
-| **Avg Response Time** | How long customers wait for a first reply |
-| **Resolution Rate** | Share of conversations that reached a resolved outcome |
+| **Conversations** | Tickets in the range |
+| **First response** | Average time to the first reply of any kind — *"Any reply, including automations"* |
+| **Agent response** | Average time to the first reply from a person — *"First reply from a person"* |
+| **Resolution rate** | Share of tickets that reached a resolved outcome. Its change is in points |
+
+<Callout type="info">
+  **First response** and **Agent response** differ whenever chatbots or automations answer first.
+  A fast **First response** with a slow **Agent response** means customers get an instant
+  automated reply and then wait for a person.
+</Callout>
+
+A tile with no replies to measure reads **No replies yet**.
 
 ---
 
-## Conversation Trends
+## Read the Delivery Tiles
 
-A chart of conversation volume over the period. Use it to find your peaks — the days and weeks when
-demand spikes — and to check that staffing follows them.
-
----
-
-## Response Time Pattern
-
-Average response time across the hours of the day.
-
-This is the most operationally useful chart in Analytics: it shows exactly when customers wait
-longest, which is usually a rota problem rather than a performance problem.
+The **WhatsApp delivery** tiles are the same four that open [Messages](/analytics/message-analytics):
+**Messages sent**, **Delivered** (as a percentage, with the count underneath), **Failed** (with its
+share of sent) and **Avg delivery time**. They follow the **Channel type** filter.
 
 ---
 
-## Channel Distribution
+## The Charts
 
-Where conversations come from — WhatsApp, Instagram, and any other connected channel.
+| Chart | Shows |
+|-------|-------|
+| **Resolved per day** | Tickets closed or resolved each day |
+| **Open conversations** | Tickets still waiting on a resolution at the end of each day |
+| **Response time** | Average first response, by the day the ticket started — or by hour for **Today** and **Yesterday** |
+| **Delivery trend** | Outbound WhatsApp messages per day (or per hour), delivered against failed |
 
-Use it to decide where to invest. A channel producing a tenth of your volume rarely deserves half
-your attention.
+Use **Response time** to find the hours or days when customers wait longest. That is usually a rota
+problem rather than a performance problem.
 
 ---
 
-## Resolved Conversation Stats
+## Find Where to Look First
 
-How conversations ended, drawn from the outcome chosen when each ticket was closed.
+**Needs attention**, at the foot of the page, picks out the worst of the range:
+
+| List | What it picks | Click a row to open |
+|------|---------------|---------------------|
+| **Slowest first response** | The three agents with the slowest average first response | That agent's page |
+| **Highest template failure rate** | The three templates with the highest failure rate, among templates sent at least 20 times | [Messages](/analytics/message-analytics) |
+
+When nothing qualifies, it reads *"Nothing stands out"*.
+
+---
+
+## Read the Overview Well
+
+| Pattern | Likely meaning |
+|---------|----------------|
+| Rising **Conversations**, steady **Agent response** | The team is keeping up |
+| Steady volume, rising **Agent response** | A staffing or process problem |
+| **Unassigned** climbing during the day | Nobody is picking up new tickets — check **Agents online** |
+| High **Resolution rate**, rising **Open conversations** | Tickets are arriving faster than they are finished |
 
 <Callout type="warn">
-  These numbers are only as honest as your closing habits. If agents close everything as
-  **Resolved** regardless of what happened, this chart tells you nothing. See
+  **Resolution rate** is only as honest as your closing habits. If agents close everything as
+  **Resolved** regardless of what happened, it tells you nothing. See
   [Closing & Reopening](/inbox/conversation-lifecycle).
 </Callout>
 
 ---
 
-## Reading the Overview Well
-
-- **Rising volume with a stable response time** is a team keeping up
-- **Stable volume with a rising response time** is a staffing or process problem
-- **A high resolution rate with a rising reopen count** usually means tickets are being closed too
-  early
-- Check the response-time pattern before adding people — the fix is often the rota
-
----
-
 ## Related Pages
 
-- [Agent Performance](/analytics/agent-performance)
-- [Message Analytics](/analytics/message-analytics)
+- [Conversations → Agents](/analytics/agent-performance)
+- [Messages](/analytics/message-analytics)
+- [Analytics Overview](/analytics) — the filter bar and PDF reports

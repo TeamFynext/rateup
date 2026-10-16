@@ -1,70 +1,101 @@
 ---
-title: "Agent Performance"
-description: Per-agent conversation volume, response times and resolution rates.
+title: "Conversations → Agents"
+description: What each agent handled, how fast they reply, and a page per agent with transfers and recent conversations.
 ---
 
+import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
-**Agent Performance** breaks the numbers down by person.
+**Conversations** shows how fast each agent and team replies, and how much they handle. Its
+**Agents** tab, the default, breaks the numbers down by person.
 
-<ScreenShot src="/docs/screenshots/analytics/agent-performance.png" alt="Agent Performance metrics" />
+<ScreenShot src="/docs/screenshots/analytics/agent-performance.png" alt="Conversations analytics on the Agents tab with the agents table" />
 
 ---
 
-## The Metrics
+## The Agents Table
 
-The table is headed **Agent Performance Metrics** — *"Detailed performance breakdown for each team
-member"*.
+Headed **Agents** — *"What each agent handled in this range"*. Click a column heading to sort by it,
+and use **Search by name** to find someone.
 
 | Column | Meaning |
 |--------|---------|
-| **Agent** | The team member |
-| **Status** | Whether they are online now |
-| **Messages** | Messages they sent in the period |
-| **Avg Response Time** | Their average time to reply |
-| **Active Chats** | Conversations they currently have open |
-| **Resolved** | Tickets they closed with a resolved outcome |
+| **Agent** | Name and email |
+| **Status** | **Online**, **Busy**, **Away** or **Offline** right now |
+| **Messages** | Messages they sent in the range, with the change against last week |
+| **Avg first response** | Their average time to a first reply, with *"N% faster than last week"* or *"N% slower than last week"*. **No replies yet** if they have not replied |
+| **Active** | Tickets currently assigned to them |
+| **Resolved** | Tickets they closed in the range |
+
+The team filter narrows the table to one team's members. With nobody to show, it reads *"No agents
+to show"*.
+
+Below the table sit two cards shared with the **Teams** tab: **Response time** (the same chart as on
+[Overview](/analytics/overview)) and **Channels** — *"Conversations started on each connected
+number or account"*, with each number's count and share.
 
 ---
 
-## Filtering
+## Open an Agent's Page
 
-Filter by **team** to compare like with like, and change the date range to match the period you
-care about. If no agents match, the table shows *"No staff found"*.
+<Steps>
+<Step>
+Click an agent's row, or their name.
+</Step>
+<Step>
+The agent's page opens with their avatar, status and email. The back arrow returns to **Agents**.
+</Step>
+<Step>
+Pick a range — **Today**, **Last 7 Days**, **Last 14 Days**, **Last 30 Days** or **Last 60
+Days**. This page has its own range; it does not use the filter bar's.
+</Step>
+</Steps>
+
+| Tile | Meaning |
+|------|---------|
+| **Messages handled** | Messages they sent |
+| **Avg response time** | Their average reply time |
+| **Resolution rate** | Share of their tickets resolved |
+| **First response** | *"Average time to first reply"* |
+| **Chats transferred** | Tickets they *"Handed to other agents"* |
+| **Chats received** | Tickets *"Handed over by other agents"* |
+
+The changes on these tiles always compare the last 7 days with the 7 before, whatever range you
+pick, so they say *"vs last week"*.
+
+Under the tiles, **Messages handled per day** charts the replies they sent each day, and **Recent
+conversations** lists the last tickets they worked on with the **Customer**, **Duration**, **Last
+response** and **Status**.
+
+**PDF report** downloads the page as `rateup-agent-<name>-<date>.pdf`.
+
+The agents in **Needs attention → Slowest first response** on Overview open this same page.
 
 ---
 
-## Using This Fairly
-
-Agent metrics are easy to misread. A few cautions worth holding onto:
+## Use the Numbers Fairly
 
 <Callout type="warn">
-  **Volume is not productivity.** An agent handling complex escalations will show fewer
-  conversations and slower response times than one answering "what are your hours?" all day.
+  **Volume is not productivity.** An agent handling complex escalations will show fewer messages
+  and slower replies than one answering "what are your hours?" all day.
 </Callout>
-
-- **Compare within a role**, not across the whole organisation
-- **Response time depends on shift** — someone covering quiet hours looks fast for reasons that
-  have nothing to do with them
-- **Resolution rate depends on closing habits** — an agent who closes honestly will look worse
-  than one who marks everything resolved
-- Use the numbers to start a conversation, not to end one
-
----
-
-## What to Actually Look For
 
 | Pattern | Likely meaning |
 |---------|----------------|
 | One agent far slower than peers on the same shift | Workload, tooling or training |
-| Everyone slower at the same hours | A rota gap — see [Response Time Pattern](/analytics/overview) |
-| High volume, low resolution rate | Tickets are being touched but not finished |
-| Low volume, high resolution rate | Possibly cherry-picking easy tickets |
+| Everyone slower at the same hours | A rota gap — see **Response time** |
+| Many **Chats transferred** | Tickets reaching them that belong elsewhere — check routing |
+| High **Active**, low **Resolved** | Tickets are being touched but not finished |
+
+- Compare people within a role, not across the whole organisation
+- Response time depends on shift: someone covering quiet hours looks fast for reasons that have
+  nothing to do with them
+- Use the numbers to start a conversation, not to end one
 
 ---
 
 ## Related Pages
 
-- [Team Performance](/analytics/team-performance)
-- [Team Activity](/analytics/team-activity)
+- [Conversations → Teams](/analytics/team-performance)
 - [Overview](/analytics/overview)
+- [Assignment & Reassignment](/inbox/asigning-conversation)

@@ -1,12 +1,14 @@
 {
   "pages": [
     "index",
+    "board-types",
     "board",
     "leads",
     "list",
     "forecast",
     "insights",
     "stages",
+    "import-export",
     "automatic-leads",
     "settings"
   ]

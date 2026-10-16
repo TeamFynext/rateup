@@ -1,91 +1,107 @@
 ---
 title: "Teams"
-description: Group members into teams, control which features each team can use, and route work by team.
+description: Group members into teams, decide which channels each team sees, and route work by team.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
-**Teams** organises members into groups and controls what each group can reach. It is the main tool
-for routing work and for limiting access without editing every user one by one.
+**Teams** groups people so work can be routed to a group rather than to individuals. A person's
+[role](/settings/users#the-six-roles) decides *what* they may do; their teams decide *where* — which
+conversations, campaigns and channels are theirs.
 
-<ScreenShot src="/docs/screenshots/settings/teams.png" alt="Team Management" />
+<ScreenShot src="/docs/screenshots/settings/team-page.png" alt="A team page on the Members tab with Add existing user and Invite new user" />
 
 ---
 
-## Creating a Team
+## Who Can Do What
+
+| Task | Ability needed | Roles by default |
+|------|---------------|------------------|
+| Open **Teams** and see who is in a team | *See teams* | Everyone |
+| Add and remove people, edit a team's **Details** | *Add and remove team members* | Manager, Admin, Owner |
+| Create or delete a team, set **Channel Access** | *Create, edit and delete teams* | Admin, Owner |
+
+**Team Management** at `/dashboard/settings/team` lists the teams you belong to, each with its
+colour, code and member count. Click a card to open the team's page.
+
+---
+
+## Create a Team
 
 <Steps>
 <Step>
+Click **Create Team**. You only see it if you can create teams.
+</Step>
+<Step>
+Enter a **Team Name** of at least three characters.
+</Step>
+<Step>
+Enter a **Team Code** — at least two characters, letters, numbers and hyphens only, no spaces. Type a
+space and the form suggests a hyphenated version.
+</Step>
+<Step>
+Pick a **Team Color**, or type a hex value such as `#5A8CC6`. It marks the team across the dashboard.
+</Step>
+<Step>
 Click **Create Team**.
-</Step>
-<Step>
-Enter a **team name**. Spaces are not allowed — use a single word or hyphenate.
-</Step>
-<Step>
-Pick a **team colour**. It identifies the team at a glance across the dashboard.
-</Step>
-<Step>
-Set **feature access** for the team — see below.
-</Step>
-<Step>
-Click **Create**.
 </Step>
 </Steps>
 
-Each team gets a **team code**, used when referring to the team elsewhere in RateUp.
+If your plan's team allowance is used up, creation is refused with *"You have reached the maximum
+limit of N teams."*
 
 ---
 
-## Feature Access
+## Add People to a Team
 
-This is the important part. Each team is granted or denied access to RateUp's features:
+Open the team. The **Members** tab lists everyone in it with their **Role** and the date they
+**Joined**, plus anyone invited but not yet joined.
 
-| Feature | Controls |
-|---------|----------|
-| **Inbox** | The shared conversation inbox |
-| **Analytics** | Reports and performance data |
-| **Contacts** | The contact database |
-| **Campaigns** | Bulk template sends |
-| **Flows** | WhatsApp flows |
-| **Chatbots** | Automated chat bots |
-| **Templates** | WhatsApp message templates |
-| **Automation** | Automation rules |
-| **Loyalty** | The loyalty programme |
-| **Web Forms** | Surveys and forms |
-| **Pipeline** | The lead [pipeline](/pipeline) board |
-| **QR Studio** | QR codes and access links |
-| **Apps & Services** | Integrations |
-| **Settings** | Organisation settings |
+<Steps>
+<Step>
+To add someone who already has an account, click **Add existing user** and click **Add** next to
+them. *"All users are already in this team"* means there is nobody left to add.
+</Step>
+<Step>
+To bring in someone new, click **Invite new user**, enter their **Name**, **Email** and **Role**, and
+click **Send invite**. *"They will join this team as soon as they accept."*
+</Step>
+</Steps>
 
-Use **Enable All** or **Disable All** to set the whole list quickly, then adjust.
+To take someone out, use **Remove Member** on their row and confirm. Removing someone from a team
+does not remove them from the organisation — that happens in [Members](/settings/users#pause-or-remove-someone).
+
+You can also set a person's teams from their own page in [Members](/settings/users#open-a-members-page).
+A person can belong to several teams.
 
 <Callout type="info">
-  Feature access decides what appears in the sidebar. A member of a team without **Loyalty** simply
-  does not see Loyalty — it is hidden, not greyed out.
+  Owners and Admins reach every team whether or not they are in it. Team membership matters for
+  Managers, Staff, Agents and Viewers — it is what limits them to their own teams' work.
 </Callout>
 
 ---
 
-## Channel Access
+## Choose Which Channels a Team Sees
 
-Under **Feature Access**, on the same tab, sits **Channel Access** — *"Choose which channels this
-team can see."* It decides which of your WhatsApp numbers, Instagram accounts and Facebook pages the
-team's conversations come from.
+The **Channels** tab holds **Channel Access**: *"Choose which channels this team can see. Changes
+save on their own. Org owners always see every channel."* It decides which of your WhatsApp numbers,
+Instagram accounts, Facebook pages and webchat channels the team's conversations come from.
 
 <Steps>
 <Step>
-Open the team and go to **Feature Access**.
+Open the team and go to the **Channels** tab.
 </Step>
 <Step>
-Leave **All channels** on to give the team everything — including any channel you connect in future.
+Leave **All channels** on to give the team everything — *"Includes any channel connected in the
+future."*
 </Step>
 <Step>
-Or switch **All channels** off, then turn on the individual channels this team should see. Each is
+Or switch **All channels** off and turn on the individual channels this team should see. Each is
 labelled with its name and a platform badge.
 </Step>
 <Step>
-Click **Save Changes**.
+Wait for **Saved** to appear. There is no Save button.
 </Step>
 </Steps>
 
@@ -95,34 +111,35 @@ Click **Save Changes**.
   channels** back on.
 </Callout>
 
-### How the scope is worked out
+### How the Scope Is Worked Out
 
 | Situation | What the person sees |
 |-----------|---------------------|
+| Owner or Admin | Every channel, always |
 | In several teams | The **union** of every team's channels — being in a team can only widen access |
 | In one team with **All channels** on | Every channel |
 | In no team at all | Every channel — scoping is opt-in per team |
-| Organisation owner | Every channel, always |
 
 <Callout type="info">
-  Channel access controls what the dashboard **shows**. It is not an API permission boundary: the
-  [External API](/external-api) key is organisation-wide and is not scoped by team.
+  Channel access controls what the dashboard **shows**. It is not an API permission boundary: API
+  keys are organisation-wide and are not limited by team or channel. A key can, however, be limited
+  to selected features — see [Keys and Access](/external-api#keys-and-access).
 </Callout>
 
-Saving a channel selection takes effect straight away. Adding or removing a **member** can take up
-to a minute to change what they see — if a new team member still has the old view, wait, then
-refresh.
+A channel change takes effect straight away. Adding or removing a **member** can take up to a minute
+to change what they see — if a new team member still has the old view, wait, then refresh.
 
 [Connecting channels →](/settings/channels) · [Filtering by channel in the Inbox →](/inbox/inbox-filter)
 
 ---
 
-## Members
+## Edit or Delete a Team
 
-Add members to a team from the team's detail page, or assign a team when
-[creating a user](/settings/users).
+The **Details** tab, under **Team Settings**, lets you change the **Team Name**, **Team Code**,
+**Team Color** and **Google review link**, then **Save Changes**.
 
-A person can belong to more than one team, and sees the combined access of all of them.
+Below it, people who can delete teams see **Delete Team**. Confirm in the dialog — *"This action
+cannot be undone."*
 
 ---
 
@@ -145,13 +162,15 @@ Teams are how work is routed without naming individuals:
 | **By language or region** | You serve several markets |
 | **By shift** | You run extended hours |
 
-Avoid one team per person — that is what user permissions are for, and it makes routing brittle.
+Avoid one team per person — routing becomes brittle. What a person may do is set by their
+[role](/settings/users#the-six-roles), and [fine-tuning](/settings/users#fine-tune-one-persons-abilities)
+covers the exceptions.
 
 ---
 
 ## Related Pages
 
-- [Users](/settings/users)
+- [Members & Roles](/settings/users)
 - [Channels](/settings/channels)
 - [Assignment & Reassignment](/inbox/asigning-conversation)
 - [Sidebar Filters](/inbox/inbox-filter)

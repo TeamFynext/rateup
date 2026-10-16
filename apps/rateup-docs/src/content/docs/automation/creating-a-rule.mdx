@@ -1,0 +1,135 @@
+---
+title: "Creating a Rule"
+description: The step-by-step automation builder — Basics, When, If, Then and Review — and sharing a keyword rule as a link.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ScreenShot from "@/components/Screenshot";
+
+Since October 2026 an automation is built one step at a time. A step rail across the top reads
+**Basics → When → If → Then → Review**, and each step has to pass its own checks before **Next**
+takes you on.
+
+<ScreenShot src="/docs/screenshots/automation/rule-wizard.png" alt="The automation builder on the If step with one Message Body condition" />
+
+---
+
+## Build a Rule Step by Step
+
+<Steps>
+<Step>
+Go to **Automation** and click **Create Automation**. The header reads **Automations / New
+automation** until you give it a name.
+</Step>
+<Step>
+**Basics — *Name and channels*.** Pick the **Platform** (**WhatsApp**, **Instagram** or
+**Messenger**), type a **Rule Name** and choose one or more **Channels** — the numbers, Instagram
+accounts or Pages the rule runs on.
+</Step>
+<Step>
+**When — *When should this run?*** Choose the **Trigger Event**. A **Shopify Event** asks for the
+**Shopify Trigger Condition**, and a **WooCommerce Event** for the **WooCommerce order status**. See
+[Triggers](/automation/triggers).
+</Step>
+<Step>
+**If — *Only if…*.** Add the conditions that must match. What appears here depends on the trigger:
+condition blocks for messages and contacts, post pickers for Instagram comments, a product filter and
+reminder timing for Shopify. See [Conditions](/automation/conditions).
+</Step>
+<Step>
+**Then — *Then do this*.** Add actions with **Add action**. They run in the order listed. See
+[Actions](/automation/actions).
+</Step>
+<Step>
+**Review — *Review and save*.** Read the one-line summary — *"Welcome — when message received, if
+1 condition match, then 2 actions"* — set any limits, and click **Create Automation**.
+</Step>
+</Steps>
+
+After the first save you land on the saved rule. A new rule is saved switched on.
+
+---
+
+## What Each Step Checks
+
+**Next** validates only the step you are on. If something is wrong, the field is marked and a toast
+names the first problem.
+
+| Step | Blocks you when |
+|------|-----------------|
+| **Basics** | *"Name is required"*, or *"Select at least one account"* |
+| **When** | *"Select a Shopify event"* or *"Select a WooCommerce order status"* for those triggers |
+| **If** | *"At least one condition is required for Message Received trigger"*, *"Duplicate conditions are not allowed"*, *"Add at least one post ID"* for specific Instagram posts |
+| **Then** | *"At least one action is required"*, *"Duplicate actions are not allowed"*, an empty value, or an invalid URL for **Call External API** |
+
+Changing the **Platform** on the Basics step resets the channels, the trigger, the conditions and any
+Shopify, WooCommerce or Instagram settings — pick the platform first.
+
+<Callout type="info">
+  Pressing **Enter** in a text field moves to the next step rather than saving, so a half-built rule
+  is never saved by accident.
+</Callout>
+
+---
+
+## Set Limits on the Review Step
+
+| Option | Effect |
+|--------|--------|
+| **Send only once per day per contact** | *"Prevents duplicate messages to the same contact within 24 hours."* The app notes it applies only to the chatbot action |
+| **Only during business hours** | The rule fires only inside the hours you pick under **Select Business Hours** |
+
+Business hours are the schedules defined on [Settings → Account](/settings/account).
+
+---
+
+## Edit a Saved Rule
+
+Click a rule's card to open it. On a saved rule every step is unlocked, so you can jump straight to
+the one you want from the step rail, and **Update Automation** is available on every step — you do
+not have to walk to Review again.
+
+If a save fails validation, the builder jumps to the step holding the problem and shows the message.
+
+---
+
+## Share a Keyword Rule as a Link
+
+A saved **Message Received** rule with at least one keyword gets a second tab in its header:
+**Builder** and **Share**.
+
+<Steps>
+<Step>
+Open the **Share** tab.
+</Step>
+<Step>
+Choose the account under **Select Account** and the keyword under **Select Keyword**.
+</Step>
+<Step>
+Copy the **Share Link**. Opening it starts a chat with the keyword already typed — a `wa.me` link on
+WhatsApp, an `m.me` link on Messenger, an Instagram link on Instagram.
+</Step>
+</Steps>
+
+Put the link on a poster, in a bio or behind a QR code, and the customer only has to press send for
+the rule to fire.
+
+---
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| **Next** does nothing but show a toast | The current step has an error | Read the toast; the field is marked in red |
+| No **Share** tab | The rule is unsaved, not **Message Received**, or has no keyword | Save it with a **Message Body** keyword |
+| Channels emptied themselves | You changed the **Platform** | Pick the platform first, then the channels |
+| The rule never fires | It is **Inactive**, or the conditions cannot match | Check the switch on its card, then the **If** step |
+
+---
+
+## Related Pages
+
+- [Automation Overview](/automation)
+- [Triggers](/automation/triggers)
+- [Conditions](/automation/conditions)
+- [Actions](/automation/actions)

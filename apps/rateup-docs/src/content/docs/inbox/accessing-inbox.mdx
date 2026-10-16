@@ -16,13 +16,13 @@ what has to be connected, and what each role is allowed to see.
 
 You need:
 
-- A RateUp account in a team with the **Inbox** feature — Admins and Super Admins always have it
+- A RateUp account in a team with the **Inbox** feature — Owners and Admins always have it
 - At least one connected channel — a **WhatsApp Business** number or an **Instagram** account
 - Membership of at least one **team**, if your organisation routes tickets by team
 
 <Callout type="warn">
   If the Inbox is missing from your sidebar, it is almost always one of two things: none of your
-  teams has the **Inbox** feature, or no channel has been connected yet. Ask a Super Admin to check
+  teams has the **Inbox** feature, or no channel has been connected yet. Ask an Owner or Admin to check
   both under [Teams](/settings/teams) and [Channels](/settings/channels).
 </Callout>
 
@@ -55,40 +55,49 @@ new messages arrive.
 
 ## Who Can Access the Inbox
 
-RateUp has three roles, set per user under [Users](/settings/users):
+RateUp has six roles, set per member under [Settings → Members](/settings/users):
 
-| Role | What they see |
-|------|---------------|
-| **Super Admin** | Every ticket on every channel — channel scoping does not apply to them |
-| **Admin** | Tickets on the channels their teams grant |
-| **Staff** | The same channel scope, and less of the assigned work (see below) |
+| Role | Inbox reach |
+|------|-------------|
+| **Owner** | Every ticket on every channel |
+| **Admin** | Every ticket on every channel |
+| **Manager** | Tickets on the channels their teams reach; also blocks, marks spam, deletes and exports |
+| **Staff** | Tickets on the channels their teams reach |
+| **Agent** | Tickets on the channels their teams reach — replies and assigns |
+| **Viewer** | Read-only: sees their teams' tickets but cannot reply |
 
 Two things narrow this further:
 
-- **Channel access comes from teams.** A user's channels are the union of those granted to the
-  teams they belong to. A user in **no** team is not restricted — they see every channel. See
+- **Channel access comes from teams.** A member's channels are the union of those granted to the
+  teams they belong to. A member in **no** team is not restricted — they see every channel. See
   [Teams](/settings/teams).
-- **The Inbox itself comes from teams too.** A Staff user sees it only if one of their teams has the
-  **Inbox** feature under [Feature Access](/settings/teams#feature-access).
+- **The Inbox itself comes from teams too.** A team-scoped member sees it only if one of their
+  teams has the **Inbox** feature under [Feature Access](/settings/teams#feature-access).
 
 <Callout type="info">
-  Whether **Staff** see tickets assigned to other people is an organisation-level setting, not a
-  per-user one. It has three states — everyone, team members only, or admins only — and under
-  *admins only* a Staff user sees none of the assigned tickets in shared views.
+  Whether members see tickets assigned to other people is an organisation-level setting. Under its
+  strictest state a member sees only the tickets assigned to them, and only the calls they took or
+  placed.
 </Callout>
 
 ---
 
 ## What Your Role Controls
 
-Inside a ticket you can see, most actions — replying, assigning, closing, reopening, spam, blocking,
-exporting — are open to everyone. A few are fixed by role:
+What you can do inside a ticket comes from your role's abilities. Any of them can also be added or
+taken away for one person on their page under [Members](/settings/users).
 
-| Action | Who |
-|--------|-----|
-| **Delete conversation**, singly or in bulk | Admins and Super Admins |
-| Inbox Settings — tags, labels, quick replies, auto-close | Anyone who can open **Inbox → Settings**; see [Inbox Settings](/inbox/inbox-settings) |
-| Channels, teams and who sees what | Configured under [Teams](/settings/teams) and [Channels](/settings/channels), not in the Inbox |
+| Ability | Lets you | Roles that have it |
+|---------|----------|--------------------|
+| **See conversations** | Open the Inbox and read tickets | All six |
+| **Reply and send messages** | Reply, write notes, and take or place [WhatsApp calls](/inbox/whatsapp-calls) | All but Viewer |
+| **Assign conversations** | Change a ticket's owner | All but Viewer |
+| **Block, mark spam, edit conversations** | Block a contact, flag spam | Owner, Admin, Manager |
+| **Delete conversations** | Delete a ticket, singly or in bulk | Owner, Admin, Manager |
+| **Export chats and logs** | Export chats and message logs | Owner, Admin, Manager |
+
+Channels and teams are configured under [Teams](/settings/teams) and
+[Channels](/settings/channels), not in the Inbox.
 
 ---
 
@@ -96,11 +105,11 @@ exporting — are open to everyone. A few are fixed by role:
 
 | Symptom | Likely cause | What to do |
 |---------|--------------|------------|
-| Inbox is missing from the sidebar | None of your teams has the **Inbox** feature | Ask a Super Admin to turn it on under [Teams](/settings/teams) |
+| Inbox is missing from the sidebar | None of your teams has the **Inbox** feature | Ask an Owner or Admin to turn it on under [Teams](/settings/teams) |
 | Inbox opens but is empty | No channel connected, or no tickets match your permissions | Check the **All** view; ask an admin to confirm the channel is live |
 | You can read but not reply | The ticket is unassigned, or closed | Assign it to yourself, or reopen it |
 | You cannot see a colleague's ticket | It belongs to a team you are not in | Ask an admin to assign it to you or your team |
-| **Delete conversation** is missing | You are Staff | Ask an Admin or Super Admin |
+| **Delete** is missing | Your role lacks **Delete conversations** | Ask an Owner or Admin |
 | **New** is empty but customers are waiting | **New** only holds unassigned tickets from the last 24 hours | Check **Open** for older unassigned tickets |
 
 ---

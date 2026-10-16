@@ -1,26 +1,37 @@
 ---
-title: "UI Skills"
-description: Carousels, buttons, lists, location requests and Flows the agent can answer with instead of plain text.
+title: "Rich Replies"
+description: Carousels, buttons, lists, locations, web-survey links and Flows the agent can send instead of plain text.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
+import ScreenShot from "@/components/Screenshot";
 
-A **UI skill** lets the agent answer with something tappable rather than a paragraph. You pick the
-component and describe the moment the agent should reach for it.
+**Rich replies** let the agent answer with something tappable rather than a paragraph. Each one is a
+**UI skill**: you pick the component and describe the moment the agent should reach for it. The step
+is optional — the agent answers in plain text without any.
+
+<ScreenShot src="/docs/screenshots/meta-agent/rich-replies.png" alt="Add UI skill dialog: Call-to-action link with a web survey and team picked, title and wording drafted" />
 
 ---
 
-## Add a UI Skill
+## Add a Rich Reply
 
 <Steps>
   <Step>Click **Add UI skill**.</Step>
-  <Step>Under **Component type**, choose a component.</Step>
-  <Step>Fill in **When to send it** — the moment this component fits.</Step>
-  <Step>Click **Create UI skill**.</Step>
+  <Step>Give it a **Title** — lowercase letters, numbers and hyphens, like `book-a-table`.</Step>
+  <Step>Under **Component type**, choose a component. Its description appears under the field.</Step>
+  <Step>Fill in **When to send it** — the moment this component fits, up to 4,096 characters.</Step>
+  <Step>Leave **Status** on to use it straight away, then click **Create UI skill**.</Step>
 </Steps>
 
-**Edit UI skill** reopens one, and each can be switched off with **Disable** without deleting it —
-the row then reads **Disabled**.
+Each card in the list has a switch that reads **Enabled** or **Disabled**. A disabled rich reply
+stays configured but unused — the way to pause one without losing it.
+
+<Callout type="info">
+  The component type, and the Flow of a **WhatsApp Flow** reply, are fixed once the rich reply
+  exists. **Edit UI skill** only changes the title, the wording and the status — to change the
+  component or the Flow, delete it and create it again.
+</Callout>
 
 ---
 
@@ -29,6 +40,7 @@ the row then reads **Disabled**.
 | Component | What the customer sees |
 |-----------|------------------------|
 | **Call-to-action link** | A single message with one prominent link button |
+| **Reply buttons** | Up to three tappable reply buttons under the message |
 | **Interactive list** | A tappable list of options in a bottom sheet |
 | **Carousel with links** | A swipeable card set where each card links out to your site |
 | **Carousel with quick replies** | A swipeable card set where each card offers tappable replies |
@@ -37,18 +49,35 @@ the row then reads **Disabled**.
 | **Image** | Sends an image alongside the reply |
 | **WhatsApp Flow** | Opens one of your published Flows |
 
-A WhatsApp Flow UI skill asks you to **Select a published flow** — only published
-[Flows](/whatsapp/flows) can be chosen, so publish it first.
+A **WhatsApp Flow** reply asks you to **Select a published flow** — only published
+[Flows](/whatsapp/flows) can be chosen, so publish it first. The card then shows the Flow's name.
 
-<Callout type="info">
-  A UI skill is an option, not a script. The agent decides whether the moment matches your
-  description, so write **When to send it** as narrowly as you can.
+---
+
+## Send a Web Survey as a Button
+
+A new **Call-to-action link** offers a **Web survey (optional)** picker, listing every web survey
+that has a team with a share link.
+
+<Steps>
+  <Step>Choose the survey under **Web survey (optional)**.</Step>
+  <Step>Choose the **Team** whose link to send. A survey shared with a single team picks it for you.</Step>
+  <Step>Review the drafted **Title** and **When to send it** — it names the survey, sets the button label to *"Open form"* and pastes the link. Rewrite *when* to suit what the survey is for.</Step>
+</Steps>
+
+The link is the same for every customer, as when a rule sends it. If no survey appears, create a
+[web form](/web-forms/creating-a-form) and [share it](/web-forms/sharing) with a team first.
+
+<Callout type="warn">
+  WhatsApp only opens public `https` links. If **When to send it** contains an `http` link, a
+  `localhost` address or a private network address, the dialog warns *"WhatsApp can't open … so the
+  button will be left out of the message"* — and the customer gets the text without the button.
 </Callout>
 
 ---
 
 ## Related Pages
 
-- [Skills](/meta-agent/skills)
-- [Flows](/whatsapp/flows) — building the Flows a UI skill can open
-- [Meta AI Agent](/meta-agent)
+- [Skills](/meta-agent/skills) — plain-language instructions
+- [Flows](/whatsapp/flows) — building the Flows a rich reply can open
+- [Sharing a web form](/web-forms/sharing) — the team links a survey button uses

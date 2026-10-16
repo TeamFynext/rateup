@@ -1,37 +1,28 @@
 ---
 title: "Triggers"
-description: The events that start an automation rule.
+description: The events that start an automation rule, and which platforms offer each one.
 ---
 
 import ScreenShot from "@/components/Screenshot";
 
-A **trigger** is the event that starts a rule. Every automation has exactly one.
+A **trigger** is the event that starts a rule. Every automation has exactly one, chosen on the
+builder's **When** step as the **Trigger Event**.
 
-<ScreenShot src="/docs/screenshots/automation/trigger-select.png" alt="Choosing a trigger" />
-
----
-
-## Message Triggers
-
-| Trigger | Fires when |
-|---------|-----------|
-| **Message Received** | A customer sends a message |
-
-Message triggers apply to a channel — **WhatsApp**, **Instagram** or **Facebook** — and can be
-narrowed to **All Messages** or a **custom keyword**.
-
-This is the workhorse trigger. Most routing and auto-reply rules start here.
+<ScreenShot src="/docs/screenshots/automation/trigger-select.png" alt="The When step with the Trigger Event list open for a WhatsApp rule" />
 
 ---
 
-## Conversation Triggers
+## Message and Conversation Triggers
 
-| Trigger | Fires when |
-|---------|-----------|
-| **Chat Assigned** | A ticket is given an owner |
-| **Chat Closed** | A ticket is closed |
+| Trigger | Fires when | Platforms |
+|---------|-----------|-----------|
+| **Message Received** | A customer sends a message | WhatsApp, Instagram, Messenger |
+| **Chat Assigned** | A ticket is given an owner | WhatsApp, Instagram, Messenger |
+| **Chat Closed** | A ticket is closed | WhatsApp, Instagram, Messenger |
 
-Use **Chat Closed** for follow-ups — a satisfaction survey sent after resolution, for example.
+**Message Received** is the workhorse, and the one trigger that **requires a condition** — at
+minimum a **Message Body** of **All Messages** or a keyword. Use **Chat Closed** for follow-ups, such
+as a satisfaction survey after resolution.
 
 ---
 
@@ -40,37 +31,57 @@ Use **Chat Closed** for follow-ups — a satisfaction survey sent after resoluti
 | Trigger | Fires when |
 |---------|-----------|
 | **Contact Created** | A new contact is added |
-| **Lifecycle Updated** | A contact's lifecycle stage changes |
+| **Lead Stage Updated** | A contact moves to another stage of a [pipeline](/pipeline) |
+| **Lifecycle Updated (legacy)** | A contact's lifecycle stage changes — shown only on rules that already use it |
 
-These are the hooks for onboarding sequences: welcome a new contact, or react when someone becomes
-a customer.
+---
+
+## Store Triggers
+
+| Trigger | Then pick | Fires when |
+|---------|-----------|-----------|
+| **Shopify Event** | **Shopify Trigger Condition** | The chosen event happens in your connected Shopify store |
+| **WooCommerce Event** | **WooCommerce order status** | An order reaches the chosen status. The message goes to the phone number on the order |
+
+Shopify events on offer:
+
+| Event | Fires on |
+|-------|----------|
+| **On Orders create** | A new order |
+| **On Orders paid** | Payment captured |
+| **On Orders fulfilled** | The whole order fulfilled |
+| **On orders partially fulfilled** | Part of the order fulfilled |
+| **On Orders cancelled** | An order cancelled |
+| **On fulfilled orders cancelled** | A fulfilment cancelled |
+| **On Draft Orders created** | A draft order created |
+| **On refund issued** | A refund |
+| **On store credit issued** | The part of a refund paid out as store credit |
+| **On abandoned checkouts** | A checkout left untouched — see [Abandoned-Cart Reminders](/automation/abandoned-cart-reminders) |
+
+WooCommerce statuses: **Order processing (paid)**, **Order completed**, **Order on hold**, **Order
+cancelled**, **Order refunded**, **Payment failed**.
+
+Both store triggers take an optional **Product Filter** on the **If** step: the rule fires only if
+the order (or cart) contains any selected product.
 
 ---
 
 ## Instagram Triggers
 
-| Trigger | Fires when |
-|---------|-----------|
-| **Instagram Comment (Private Reply)** | Someone comments on a post |
-| **Instagram Story Mention** | Someone mentions you in a story |
-
-Comment triggers can apply to **all posts** or **specific posts** — use specific posts when a
-single campaign has its own reply.
-
----
-
-## Shopify Triggers
+Offered only on an **Instagram** rule.
 
 | Trigger | Fires when |
 |---------|-----------|
-| **Shopify Event** | A selected event occurs in your connected Shopify store |
+| **Instagram Comment (Private Reply)** | Someone comments on your post, reel, ad or live video. The first message the rule sends arrives as a private reply to the comment |
+| **Instagram Story Mention** | Someone mentions your account in their story |
+| **ig.me Link Opened** | Someone opens a chat from an ig.me link you name on the **If** step |
 
-Pick the event, and optionally a **specific product**, so the rule only fires for the items you
-care about.
+See [Comments & Story Mentions](/instagram/automations) for comment sources, specific posts and public
+replies.
 
 ---
 
-## Choosing the Right Trigger
+## Choose the Right Trigger
 
 <Callout type="info">
   Pick the **narrowest trigger that covers your case**. A rule triggered on every message and then
@@ -82,14 +93,17 @@ care about.
 |-------------|---------|
 | Route incoming questions | Message Received |
 | Follow up after resolution | Chat Closed |
-| Chase a stalled conversation | Elapsed Time |
 | Welcome a new contact | Contact Created |
-| React to social activity | Instagram Comment / Story Mention |
-| React to a purchase | Shopify Event |
+| React when a lead moves on | Lead Stage Updated |
+| React to social activity | Instagram Comment / Story Mention / ig.me Link Opened |
+| Confirm or update an order | Shopify Event / WooCommerce Event |
+| Win back an abandoned cart | Shopify Event → **On abandoned checkouts** |
 
 ---
 
 ## Related Pages
 
+- [Creating a Rule](/automation/creating-a-rule)
 - [Conditions](/automation/conditions)
 - [Actions](/automation/actions)
+- [Abandoned-Cart Reminders](/automation/abandoned-cart-reminders)

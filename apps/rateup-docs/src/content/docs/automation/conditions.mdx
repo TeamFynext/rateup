@@ -5,37 +5,26 @@ description: Narrow a trigger down so the rule fires only when it should.
 
 import ScreenShot from "@/components/Screenshot";
 
-**Conditions** are the `IF` part of a rule. They are optional — a rule with none fires on every
-occurrence of its trigger.
+**Conditions** are the `IF` part of a rule, set on the builder's **If** step — *"Only if…"*. A
+**Message Received** rule needs at least one; for the other triggers they are optional, and a rule
+with none fires on every occurrence of its trigger.
 
-<ScreenShot src="/docs/screenshots/automation/conditions.png" alt="Building conditions" />
+<ScreenShot src="/docs/screenshots/automation/conditions.png" alt="Two condition blocks with the Match all / Match any switch" />
 
 ---
 
 ## What You Can Test
 
-| Field | Checks |
-|-------|--------|
-| **Message Body** | The text of the message |
-| **Message Direction** | Whether it came in or went out |
-| **Thread Subject** | The ticket's title |
-| **Contact Email** | The contact's email address |
-| **Contact Label** | Labels on the contact |
-| **Contact Group** | Groups the contact belongs to |
-| **Contact Lifecycle** | The contact's lifecycle stage |
+| Field | Checks | Operators |
+|-------|--------|-----------|
+| **Message Body** | The text of the message — **All Messages**, or a **Custom keyword** | Contains, Equals, Starts With, Ends With |
+| **Contact Email** | The contact's email address | Contains, Equals, Starts With, Ends With |
+| **Contact Group** | A group the contact belongs to | Equals |
+| **Contact Label** | A label on the contact | Equals |
+| **Lead Stage** | The contact's stage on a [pipeline](/pipeline) | Equals |
+| **Contact Lifecycle (legacy)** | The contact's lifecycle stage — shown only on conditions that already use it | Equals |
 
----
-
-## Operators
-
-| Operator | True when |
-|----------|-----------|
-| **Equals** | The value matches exactly |
-| **Contains** | The value appears anywhere |
-| **Starts With** | The value begins with it |
-| **Ends With** | The value ends with it |
-| **Greater Than** | Numerically larger |
-| **Less Than** | Numerically smaller |
+An **Instagram Comment** rule can test only **Message Body** — the comment text.
 
 <Callout type="info">
   **Contains** is the right default for message text. **Equals** on a message body almost never
@@ -44,33 +33,51 @@ occurrence of its trigger.
 
 ---
 
-## Match All vs Match Any
+## Combine Conditions in Blocks
 
-| Setting | Meaning |
-|---------|---------|
-| **Match all** | Every condition must be true (AND) |
-| **Match any** | At least one must be true (OR) |
+Conditions live in numbered blocks — **Block 1**, **Block 2** — added with **Add condition block**.
 
-**Match any** is how you catch the several ways people phrase the same thing —
-*refund*, *money back*, *return*.
+| Where | Setting | Meaning |
+|-------|---------|---------|
+| Inside a block | **Match all** | Every condition in the block must be true (AND) |
+| Inside a block | **Match any** | At least one must be true (OR) |
+| Between blocks (two or more) | **Match all** / **Match any** | Whether every block, or any one, must pass |
 
-**Match all** is how you narrow — a message containing "refund" **and** a contact labelled *VIP*.
+**Match any** is how you catch the several ways people phrase the same thing — *refund*, *money
+back*, *return*. **Match all** is how you narrow — a message containing "refund" **and** a contact
+labelled *VIP*.
+
+The same condition twice in one block is rejected: *"Duplicate conditions are not allowed"*. On a
+**Message Received** rule the last block cannot be deleted.
 
 ---
 
-## Writing Conditions That Actually Fire
+## Conditions for Other Triggers
+
+Some triggers replace the blocks with their own settings on the **If** step:
+
+| Trigger | The If step shows |
+|---------|-------------------|
+| **Shopify Event** | **Product Filter (optional)** — and, for **On abandoned checkouts**, **Send after** and **Only buyers who accepted marketing** ([details](/automation/abandoned-cart-reminders)) |
+| **WooCommerce Event** | **Product Filter (optional)** |
+| **Instagram Comment** | The comment source, **Apply to** **All posts** or **Specific posts**, plus Message Body blocks |
+| **Instagram Story Mention** | **Apply to** all or specific stories |
+| **ig.me Link Opened** | The **Link name** |
+
+---
+
+## Write Conditions That Actually Fire
 
 - **Test lowercase and common misspellings** — customers do not proofread
 - **Prefer a few broad keywords over many exact ones**
 - **Watch for accidental matches** — a rule on "no" will fire constantly
-- **Check the direction** if a rule is looping; an outgoing message can re-trigger a badly scoped
-  rule
-
+- **Use All Messages deliberately** — combined with a reply action it answers every single message
 
 ---
 
 ## Related Pages
 
+- [Creating a Rule](/automation/creating-a-rule)
 - [Triggers](/automation/triggers)
 - [Actions](/automation/actions)
-- [Labels](/contacts/labels) and [Lifecycle](/contacts/lifecycle) — the contact fields you can test
+- [Labels](/contacts/labels) and [Groups](/contacts/groups) — the contact fields you can test

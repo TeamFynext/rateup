@@ -8,14 +8,15 @@ import ScreenShot from "@/components/Screenshot";
 Three tabs cover what came back: **Responses** for individual submissions, **Analytics** for the
 picture across all of them, and **Team Analytics** to compare the same results between teams.
 
-<ScreenShot src="/docs/screenshots/web-forms/results.png" alt="Survey analytics" />
+<ScreenShot src="/docs/screenshots/web-forms/results.png" alt="A form's Analytics tab: stat cards, the Happiness Index card and the NPS Overview gauge" />
 
 ---
 
 ## Responses
 
-Every individual submission, with its answers, timestamp and any
-[URL tags](/web-forms/sharing) it carried.
+Every individual submission, with its answers, timestamp and any [URL tags](/web-forms/sharing) it
+carried. Search it, narrow it with the column filters and the date-range picker, and **Refresh** to
+pull in new submissions.
 
 Read these when you need the detail: a specific complaint, a lead's contact details, the wording
 someone used.
@@ -24,17 +25,40 @@ someone used.
 
 ## Analytics
 
+*"No data to analyse yet"* shows until the first response arrives — *"Charts appear here once the
+first responses come in."*
+
+### The headline numbers
+
+| Card | Counts |
+|------|--------|
+| **Total Responses** | Completed submissions |
+| **Started** | Visitors who began answering |
+| **Total Visits** | How many times the form was opened |
+| **Google Review Redirects** | Respondents sent on to a review page — see [Automations](/web-forms/automations) |
+| **Response Rate** | Responses as a share of visits, with a band: **Great** (70% or more), **Good** (50%+), **Low** (30%+) or **Too Low** |
+
 ### Happiness Index
 
-An overall satisfaction score across responses, from **Poor** through **Okay**, **Good**,
-**Great** and **Excellent**.
+*"How respondents felt, from their scale answers."* A score **Out of 10**, labelled by band:
 
-### NPS breakdown
+| Score | Label |
+|-------|-------|
+| 9 to 10 | **Very Happy** |
+| 7 to under 9 | **Happy** |
+| 5 to under 7 | **Neutral** |
+| 3 to under 5 | **Unhappy** |
+| Under 3 | **Very Unhappy** |
 
-Net Promoter Score responses split three ways:
+Below the score, the same five moods show how many responses fell into each.
 
-| Group | Score | Meaning |
-|-------|-------|---------|
+### NPS Overview
+
+*"Promoters minus detractors, from −100 to +100."* A gauge shows the score, labelled **Excellent**
+(50 or more), **Great** (30+), **Okay** (0+) or **Poor** (below 0), with the three groups beneath:
+
+| Group | Score given | Meaning |
+|-------|-------------|---------|
 | **Promoters** | 9–10 | Will recommend you |
 | **Passives** | 7–8 | Satisfied but not enthusiastic |
 | **Detractors** | 0–6 | Unhappy, and may say so |
@@ -45,21 +69,30 @@ Net Promoter Score responses split three ways:
   [logic jump](/web-forms/logic-and-variables) to ask them specifically.
 </Callout>
 
-### Per-question charts
+### Question breakdown
 
-Each question gets its own visualisation — distributions for choice and rating questions, response
-listings for free text.
+*"How each answer was distributed."* Every question gets its own chart — vote counts for choice and
+rating questions, with the **Most voted** answer marked, and response listings for free text.
 
----
-
-## Team Analytics
-
-The same result set, compared **between teams** — useful when several branches or departments run the
-same form and you need to know which is ahead.
+**Export to PDF** saves the Analytics tab as a report.
 
 ---
 
-## AI Summaries
+## Compare Teams
+
+**Team Analytics** shows the same result set **between teams** — useful when several branches or
+departments run the same form and you need to know which is ahead.
+
+| Chart | Shows |
+|-------|-------|
+| **Team Response Activity** | How many responses each team collected |
+| **Team Question Activity** | Answers to each question, team by team — as a **Bar**, **Pie** or **Radar** chart |
+
+*"No responses found for comparison"* means the selected teams have nothing to compare yet.
+
+---
+
+## Summarise Long Answers with AI
 
 | Feature | Produces |
 |---------|----------|
@@ -76,13 +109,22 @@ This is most valuable on free text, where hundreds of paragraphs are otherwise u
 
 ---
 
-## Exporting
+## Export Responses
 
-| Format | Use |
-|--------|-----|
-| **Excel / CSV** | Analysis elsewhere |
-| **Export to PDF** | A shareable report |
-| **Google Sheet** | Live sync to a spreadsheet |
+**Export** on the Responses tab offers:
+
+| Menu item | Gives you |
+|-----------|-----------|
+| **Download as Excel** | The responses as `.xlsx`, with the columns currently shown |
+| **Download as OpenDocument (ODS)** | The same, as `.ods` |
+| **Sync with Google Sheet** | Creates a spreadsheet in a **RateUp** folder in your connected Google Drive, with one tab per language (one tab for a WhatsApp Flow form), and fills it with every response. After that, each new response is added as a row as it arrives |
+| **Resync with Google Sheet** | Shown once a sheet exists. Rewrites the whole sheet from the current responses, after a confirmation |
+
+Once a form is synced, its **Sheet Url** appears under **GoogleSheet** in the form's
+[Settings](/web-forms/settings). Google Sheets must be connected under
+[Integrations](/settings/integrations) first.
+
+**Export** is not offered on an encrypted form.
 
 <Callout type="warn">
   Exports contain whatever respondents told you, including contact details. Treat them as personal
@@ -110,5 +152,6 @@ A survey nobody acts on trains customers not to answer the next one.
 ## Related Pages
 
 - [Automations](/web-forms/automations) — review routing and following up
+- [Settings](/web-forms/settings) — the response webhook and Google Sheet link
 - [Testimonials](/testimonials)
 - [Sharing](/web-forms/sharing)

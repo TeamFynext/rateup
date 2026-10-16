@@ -1,16 +1,23 @@
 {
   "pages": [
     "index",
+    "onboarding",
     "dashboard",
-    "earning-rules",
-    "rewards",
-    "customers",
-    "transactions",
-    "approvals",
     "cashier-portal",
-    "commands",
-    "notifications",
-    "templates",
-    "settings"
+    "customers",
+    "program",
+    "rewards",
+    "activity",
+    "messages",
+    "reminders",
+    "feedback",
+    "materials",
+    "settings",
+    "!earning-rules",
+    "!transactions",
+    "!approvals",
+    "!commands",
+    "!notifications",
+    "!templates"
   ]
 }

@@ -11,7 +11,7 @@ sent to. Every group belongs to a **team**.
 
 <ScreenShot src="/docs/screenshots/contacts/groups.png" alt="Contact groups" />
 
-Each group is a card showing its icon, name, member count, owning team and creation date. Click a
+Each group is a card showing its icon, name, how many members it has, owning team and creation date. Click a
 card to open the group. Use **Search contact groups...** to find one once you have several.
 
 ---
@@ -43,21 +43,18 @@ To rename a group, change its team or icon, open the card's **⋮** menu and cho
 
 ## Inside a Group
 
-<ScreenShot
-  src="/docs/screenshots/contacts/contact_groups_page.png"
-  alt="An open group"
-/>
+<ScreenShot src="/docs/screenshots/contacts/group-page.png" alt="A contact group page with two members selected and the Remove from group bar" />
 
-The top of the page shows the group's icon, name, **Team** and **Total Members**.
+The top of the page shows the group's icon, its name, how many members it has and the owning team.
 
 | Control | What it does |
 |---------|--------------|
-| **Pencil** next to the name | Rename in place — **Enter** or ✓ saves, **Esc** or ✕ cancels |
-| **Icon** | Click to change or remove the group's icon |
-| **Back to Groups** | Return to the list |
+| **Groups** | Return to the list |
+| **Icon** | Click to open **Group icon** — **Upload new icon** (a square image, at least 200×200 pixels) or **Remove icon** |
+| **Rename** | Edit the name in place — **Enter** or ✓ saves, **Esc** or ✕ cancels |
 | **Delete Group** | Delete the group — see below |
 
-Below sits the **Group Members** table. Search it with **Search by name or phone...**.
+Below sits the members table. Search it with **Search by name or phone...**.
 
 ---
 
@@ -67,32 +64,40 @@ There are three ways to put people in a group:
 
 | From | How |
 |------|-----|
-| **The group page** | **Add Members** — pick existing contacts, add a new one, or import a file |
+| **The group page** | **Add existing**, **New contact** or **Import** |
 | **Contacts list** | Tick contacts → **Add to Group** |
 | **A contact's details** | **Groups → Add to group**, or the **Group** field when adding or editing a contact |
 
 ### From the group page
 
+| Button | What it does |
+|--------|--------------|
+| **Add existing** | Opens **Add existing contacts** — *"Tick the contacts to add to"* the group |
+| **New contact** | Opens **Add Contact**. The contact you create lands in the group |
+| **Import** | Imports a file — *"Each row becomes a contact in this group."* |
+
 <Steps>
 <Step>
-Click **Add Members**.
+Click **Add existing**.
 </Step>
 <Step>
-Under **Choose**, pick **Add Existing Contacts** or **Add New Contact**.
+Find people with **Search Contact**, or narrow the list with the group picker (to pull members of
+other groups) and the label, stage, source and custom-field filters. Current members are shown
+ticked and locked.
 </Step>
 <Step>
-**Add Existing Contacts** — search with **Search Contact**, or narrow with **Filter contacts** to
-pull people from other groups. Tick the ones you want, or **Select All**, then click **Add Member**.
-Contacts already in the group cannot be ticked again.
+Tick the contacts you want — or **Select all on this page** — and click **Add N contacts**.
 
-**Add New Contact** — choose **Manual** to type one person in, or **Import CSV/XLSX** to upload a
-file. Everyone created or imported this way lands in the group.
+While a search or filter is active, **Add all matching** adds every contact that matches, across
+all pages. Anyone already in the group is skipped.
 </Step>
 </Steps>
 
-Importing here works like the main [contact import](/contacts/managing-contacts#import-contacts-from-a-file)
-— same demo file, same **Update the existing data while importing** and header-row switches — but
-every contact in the file is also added to this group.
+Importing into a group works like the main
+[contact import](/contacts/managing-contacts#import-contacts-from-a-file) — same columns, same
+**Update contacts that already exist** and header-row switches, same background progress — but every
+valid row in the file is also added to this group, whether the contact was created, updated or left
+as it was. The summary adds an **Added to this group** count.
 
 ---
 
@@ -100,15 +105,15 @@ every contact in the file is also added to this group.
 
 <Steps>
 <Step>
-Tick members in the **Group Members** table.
+Tick members in the members table.
 </Step>
 <Step>
-Click **Remove (N)**. **Clear** unticks them instead.
+Click **Remove from group**. **Clear selection** unticks them instead.
 </Step>
 </Steps>
 
 You can also remove one person from a group in their [contact details](/contacts/managing-contacts#view-a-contacts-details)
-— click **✕** next to the group.
+— in the **Groups** section.
 
 Removing someone from a group does not delete the contact — it only takes them off that list.
 
@@ -116,10 +121,12 @@ Removing someone from a group does not delete the contact — it only takes them
 
 ## Delete a Group
 
-Use **Delete Group** on the group page, or **⋮ → Delete Group** on its card, and confirm.
+Use **Delete Group** on the group page, or **⋮ → Delete Group** on its card, and confirm *"Are you
+sure you want to delete this group?"*
 
 Deleting a group removes the list only. Its members stay in your contacts, in their other groups,
 with everything else about them intact.
+
 
 ---
 

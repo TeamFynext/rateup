@@ -1,6 +1,6 @@
 ---
 title: "Meta AI Agent"
-description: Meta's Business Agent, configured from RateUp — what it knows, what it can do, who it answers and how you test it.
+description: Meta's Business Agent, set up from RateUp — a guided path from connecting with Meta to going live, then insights once it is answering.
 ---
 
 import ScreenShot from "@/components/Screenshot";
@@ -9,28 +9,50 @@ The **Meta AI Agent** answers your customers on WhatsApp using Meta's own Busine
 Meta, not in RateUp — you configure what it knows, what it may do and who it is allowed to talk to,
 and Meta does the answering.
 
-Each area is its own page in the sidebar under **Meta AI Agent**, and every page works against one
-WhatsApp number, chosen from the **Select WhatsApp number** picker at the top.
+The section opens on a **setup guide** that walks you through it in order. In the sidebar, every
+step is its own row under **Meta AI Agent**, grouped as **Get started**, **Teach your agent**, **Go
+further** and **Test and go live**, with a tick on each finished step and an **Agent setup** meter
+at the foot of the panel.
 
-<ScreenShot src="/docs/screenshots/meta-agent/overview.png" alt="The Meta AI Agent Overview page" />
+<ScreenShot src="/docs/screenshots/meta-agent/setup-guide.png" alt="Meta AI Agent setup guide for a live agent, with the sidebar steps and Agent setup meter" />
 
 <Callout type="info">
-  The section only appears if your plan includes the AI chatbot feature. Until a number is
-  onboarded, the header shows **Not onboarded** and the other pages have nothing to configure.
+  The section only appears if your team has the AI chatbot feature. It also needs a connected
+  WhatsApp number — without one, every page shows **Connect WhatsApp first**.
 </Callout>
 
 ---
 
-## The Order to Do It In
+## Which Number You Are Configuring
+
+Every page works against one WhatsApp number. With a single number connected, the header simply
+names it; with several, pick one from the **Select WhatsApp number** picker in the header. The
+choice sticks as you move between pages.
+
+Next to the title, a badge says where that number's agent stands:
+
+| Badge | Meaning |
+|-------|---------|
+| **Not set up** | No agent has been created at Meta for this number yet |
+| **Off** | The agent exists but **Agent is on** is switched off, so it answers nobody |
+| **Live** | The agent exists and is answering customers |
+
+---
+
+## The Steps
+
+The order below is the sidebar's order. Each step page has a **Back** button and a **Continue to …**
+button, so you can walk them in sequence; each page still saves on its own.
 
 <Cards>
-  <Card title="Overview" href="/meta-agent/overview" description="Check eligibility and onboard the number. Everything else needs this first." />
-  <Card title="Knowledge" href="/meta-agent/knowledge" description="Business info, FAQs, files and websites the agent draws answers from." />
-  <Card title="Skills" href="/meta-agent/skills" description="Named blocks of instructions, and when to apply them." />
-  <Card title="UI Skills" href="/meta-agent/ui-skills" description="Carousels, buttons, lists and Flows the agent can reply with." />
-  <Card title="Connectors" href="/meta-agent/connectors" description="External APIs and the tools on them the agent can call for live data." />
-  <Card title="Settings" href="/meta-agent/settings" description="Rollout, human handoff, follow-ups and audience targeting." />
-  <Card title="Operate" href="/meta-agent/operate" description="Test messages, business events, thread control and evaluations." />
+  <Card title="Setup guide" href="/meta-agent/overview" description="Check the number with Meta and create the agent. Everything else needs this first." />
+  <Card title="Knowledge" href="/meta-agent/knowledge" description="Business info, FAQs, files and websites the agent answers from." />
+  <Card title="Skills" href="/meta-agent/skills" description="Plain-language instructions, and when to apply them." />
+  <Card title="Rich replies" href="/meta-agent/ui-skills" description="Carousels, buttons, lists and Flows the agent can reply with. Optional." />
+  <Card title="Connectors" href="/meta-agent/connectors" description="The one-click RateUp connector, and your own APIs for live data. Optional." />
+  <Card title="Test" href="/meta-agent/operate" description="Chat with the agent, send business events, hand threads back and run evaluations." />
+  <Card title="Go live" href="/meta-agent/settings" description="Switch it on, choose who it answers, set the handoff and cap its usage." />
+  <Card title="Insights" href="/meta-agent/insights" description="Conversations handled, handoffs waiting, tool performance and turn-by-turn traces." />
 </Cards>
 
 ---
@@ -38,5 +60,6 @@ WhatsApp number, chosen from the **Select WhatsApp number** picker at the top.
 ## Related Pages
 
 - [Channels](/settings/channels) — the WhatsApp number the agent runs on
+- [Inbox](/inbox) — where conversations the agent hands over land
 - [Chatbots](/whatsapp/chatbots) — RateUp's own rule-based bots
-- [Flows](/whatsapp/flows) — published Flows a UI skill can open
+- [Flows](/whatsapp/flows) — published Flows a rich reply can open

@@ -1,8 +1,9 @@
 ---
 title: "WhatsApp Settings"
-description: Your WhatsApp Business account configuration — numbers, profile and account health.
+description: Your WhatsApp Business account configuration — numbers, profile, voice calling and account health.
 ---
 
+import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
 **WhatsApp Settings** is the configuration of the WhatsApp Business account itself, as opposed to
@@ -41,6 +42,47 @@ than clearing them.
 
 ---
 
+## Let Customers Call Your Number
+
+Since October 2026 customers can make WhatsApp voice calls to your number, and agents answer them in
+the browser from the [Inbox](/inbox). Calling is switched on per number, on the **Calling** tab of the
+number's edit dialog under [Channels](/settings/channels).
+
+<ScreenShot src="/docs/screenshots/whatsapp/calling-tab.png" alt="Calling tab of a WhatsApp number with voice calls, callback requests and calling hours on" />
+
+<Steps>
+<Step>
+Go to **Settings → Channels → WhatsApp** and edit the number.
+</Step>
+<Step>
+Open the **Calling** tab and turn on **Voice calls**.
+</Step>
+<Step>
+Choose the options below, then click **Save**. You will see *"Calling settings saved"*.
+</Step>
+</Steps>
+
+| Setting | Effect |
+|---------|--------|
+| **Voice calls** | *"Customers can call this number on WhatsApp, and agents answer from the inbox in their browser."* The others are greyed out until it is on |
+| **Call button in chat** | Shows the call icon at the top of the customer's chat with you |
+| **Callback requests** | When a customer calls and nobody answers, WhatsApp asks them whether you may call back |
+| **Calling hours** | Outside these hours customers cannot call; they see when you are open. Set a **Time zone** (for example `Asia/Kolkata`) and the hours for each day — a new schedule starts at Monday–Friday, 09:00–18:00 |
+
+These settings are held by WhatsApp, not by RateUp, so the tab always shows what WhatsApp is
+enforcing for the number.
+
+<Callout type="info">
+  If the tab shows *"Could not load calling settings"*, the number is usually not eligible:
+  WhatsApp calling needs a messaging limit of at least 2,000 customers a day, and does not work on
+  a number shared with the WhatsApp Business app (coexistence). The full list is in
+  [WhatsApp's Calling Limits](/inbox/whatsapp-calls#whatsapps-calling-limits).
+</Callout>
+
+Every call — answered, missed, its length and the agent — is listed under [Analytics → Calls](/analytics/calls).
+
+---
+
 ## Account Health
 
 WhatsApp scores business accounts on quality, based on how recipients respond to your messages.
@@ -62,6 +104,6 @@ the first visible symptom.
 
 ## Related Pages
 
-- [Channels](/settings/channels) — connecting accounts, and each number's name, display name and profile
+- [Channels](/settings/channels) — connecting accounts, and each number's name, display name, profile and calling
 - [Templates](/whatsapp/templates)
 - [Message Analytics](/analytics/message-analytics)

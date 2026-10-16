@@ -6,9 +6,10 @@ description: Send an approved WhatsApp template to many contacts at once — as 
 import ScreenShot from "@/components/Screenshot";
 
 A **campaign** sends an approved [template](/whatsapp/templates) to a set of contacts. It is how
-you start conversations at scale rather than one at a time.
+you start conversations at scale rather than one at a time. Campaigns are open on every plan,
+including Free.
 
-<ScreenShot src="/docs/screenshots/campaign/list.png" alt="Your campaigns" />
+<ScreenShot src="/docs/screenshots/campaign/list.png" alt="Broadcast campaign cards: a draft with Continue setup and completed campaigns with delivery and read rates" />
 
 ---
 
@@ -16,11 +17,52 @@ you start conversations at scale rather than one at a time.
 
 | Type | Sends |
 |------|-------|
-| **Broadcast** | One message to everyone, once |
-| **Drip** | A sequence over time, paced by a daily send limit |
+| **Broadcast** | *"One template to everyone, once."* You can pace it with a daily send limit and have Meta's blocks retried automatically |
+| **Drip** | *"A sequence of messages spread over days."* Each **stage** is a template sent once, a set delay after the contact joins the campaign |
 
-Broadcasts suit announcements and offers. Drips suit onboarding sequences and gradual re-engagement
-— and they are gentler on your account's quality rating.
+Broadcasts suit announcements and offers. Drips suit onboarding sequences and gradual re-engagement.
+The type is chosen when you create the campaign and cannot be changed afterwards — create a new
+campaign to switch.
+
+---
+
+## The Campaigns List
+
+**Campaign** in the sidebar opens the list. Broadcasts and drips sit on separate **Broadcast** and
+**Drip** tabs.
+
+| Control | What it does |
+|---------|--------------|
+| **Create Campaign** | Opens the [creation wizard](/campaign/creating-a-campaign) |
+| **Search campaigns...** | Find a campaign by name |
+| Sort | Order the cards, newest first by default |
+| **Filters** | Narrow by **Team** and **Status**, then **Apply** — **Reset** clears both |
+
+The line under the title counts your campaigns and drafts and, on a metered plan, shows how many
+**campaign credits** you have left.
+
+Each campaign is a card. A **Draft** card shows **Continue setup** and reopens the wizard where you
+left off; any other card opens the [campaign page](/campaign/campaign-details). A campaign that has
+gone out shows *"N% delivered · N% read"*; one that has not shows *"Not sent yet"*.
+
+---
+
+## Campaign Statuses
+
+| Status | Meaning |
+|--------|---------|
+| **Draft** | Being set up in the wizard. Nothing has been sent |
+| **Scheduled** | Launched with a future send time, and waiting for it |
+| **Sending** | Messages are going out. Has a moving dot |
+| **Retrying** | The first send has finished and an automatic retry is booked for later. Nothing is going out in the meantime |
+| **Pausing** | You pressed **Pause** and the queue is being emptied |
+| **Paused** (amber) | You paused it. Recipients not yet messaged are waiting for you to resume |
+| **Paused** (red) | RateUp paused it because your account could not send — see [auto-pause](/campaign/pausing-and-retrying#when-rateup-pauses-a-campaign) |
+| **Completed** | Sending is finished. Delivery and read receipts keep arriving afterwards |
+| **Failed** | The campaign stopped on an error. Hover the badge to see why |
+
+The **Status** filter uses the same labels, so **Sending** also catches a campaign that is still
+being queued, and **Paused** catches both kinds.
 
 ---
 
@@ -30,28 +72,19 @@ Broadcasts suit announcements and offers. Drips suit onboarding sequences and gr
   <Card
     title="Creating a Campaign"
     href="/campaign/creating-a-campaign"
-    description="Choosing a template, building the audience, and sending or scheduling."
+    description="The six-step wizard: basics, template, audience, schedule, retries and review."
   />
   <Card
     title="Campaign Details"
     href="/campaign/campaign-details"
-    description="Participants, delivery reports, drip controls and exports."
+    description="Overview, Participants and Analytics tabs, exports, editing and deleting."
+  />
+  <Card
+    title="Pausing, Resuming & Retrying"
+    href="/campaign/pausing-and-retrying"
+    description="Stopping a send, picking it back up, auto-pause, and re-sending to failed recipients."
   />
 </Cards>
-
----
-
-## Campaign Statuses
-
-| Status | Meaning |
-|--------|---------|
-| **Draft** | Being built, not sent |
-| **Scheduled** | Queued for a future time |
-| **Active** | Currently sending |
-| **Completed** | Finished |
-| **Inactive** | Paused or stopped |
-
-Filter the list by status, or search by name.
 
 ---
 
@@ -63,12 +96,12 @@ Filter the list by status, or search by name.
   may send afterwards — a cost that outlasts the campaign by months.
 </Callout>
 
-Check all four:
-
-1. The **template is approved** — unapproved templates cannot send
-2. The audience has given **consent**
-3. The list is **segmented** — relevance is what stops people blocking you
-4. The variables are mapped correctly — test on yourself first
+| Check | Why |
+|-------|-----|
+| The template is **approved** | Only approved templates are listed in the wizard |
+| The audience has given **consent** | Leave **Only send to contacts who opted in** switched on |
+| The list is **segmented** | Relevance is what stops people blocking you |
+| The variables map to the right fields | Use **Send test to me** on the Review step first |
 
 ---
 
@@ -76,4 +109,5 @@ Check all four:
 
 - [Templates](/whatsapp/templates) — what campaigns send
 - [Groups](/contacts/groups) — building an audience
+- [Billing](/settings/billing) — campaign credits
 - [Message Analytics](/analytics/message-analytics) — how the send performed

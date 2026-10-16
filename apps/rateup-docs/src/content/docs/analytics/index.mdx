@@ -1,90 +1,103 @@
 ---
 title: "Analytics Overview"
-description: Six views into how your team, your messages and your channels are performing.
+description: Five views into how your team, your messages and your WhatsApp calls are doing — one filter bar, live counts and PDF reports.
 ---
-
-import ScreenShot from "@/components/Screenshot";
 
 **Analytics** turns your conversation history into numbers you can act on: how fast your team
-replies, how many conversations resolve, and whether your messages are actually being delivered.
-
-<ScreenShot src="/docs/screenshots/analytics/overview.png" alt="The Analytics Overview" />
+replies, how many conversations resolve, whether your WhatsApp messages are delivered, and how
+your voice calls are going.
 
 ---
 
-## The Six Tabs
+## The Five Views
+
+The **Analytics** sidebar entry opens on **Overview**. Its sub-items are the five views:
 
 <Cards>
   <Card
     title="Overview"
     href="/analytics/overview"
-    description="Conversation volume, active chats, agents online and resolution rate."
+    description="Right now, conversation and delivery tiles, the daily charts and what needs attention."
   />
   <Card
-    title="Agent Performance"
+    title="Conversations → Agents"
     href="/analytics/agent-performance"
-    description="Per-agent response times, conversations handled and resolution rates."
+    description="What each agent handled, how fast they reply, and a page per agent."
   />
   <Card
-    title="Team Performance"
+    title="Conversations → Teams"
     href="/analytics/team-performance"
-    description="The same picture, grouped by team."
+    description="The same picture per team, with a page per team."
   />
   <Card
-    title="Message Analytics"
+    title="Messages"
     href="/analytics/message-analytics"
-    description="Delivery health — sent, delivered, read and failed."
+    description="Delivery of your outbound WhatsApp messages, by team and by template."
   />
   <Card
-    title="Message Logs"
+    title="Logs → Message logs"
     href="/analytics/message-logs"
-    description="Every individual message, searchable and exportable."
+    description="Every WhatsApp message sent, searchable and exportable."
   />
   <Card
-    title="Team Activity"
+    title="Logs → Team activity"
     href="/analytics/team-activity"
-    description="Who is online and what the team is doing right now."
+    description="What your team created, changed or deleted, and when."
+  />
+  <Card
+    title="Calls"
+    href="/analytics/calls"
+    description="Live calls, the call log, and answer rate, missed calls and busiest hours."
   />
 </Cards>
 
+**Conversations** and **Logs** each have two tabs. The section had six separate tabs before: links
+and bookmarks to the old tabs still work and open the view that replaced them.
+
 ---
 
-## Date Ranges
+## The Filter Bar
 
-Every tab shares the same period selector:
+Overview, Conversations, Messages and Logs share one filter bar. The range and team you pick stay
+put as you move between those four views.
 
-- **Today**
-- **Last 7 Days**
-- **Last 14 Days**
-- **Last 30 Days**
-- **Last 60 Days**
+| Control | What it does | Shown on |
+|---------|--------------|----------|
+| **Date range** | **Today**, **Yesterday**, **Last 7 Days** (the default), **Last 30 Days** or **Custom Range** — a two-month calendar | Every view |
+| **Team** | One team, or every team | Every view except **Logs → Team activity** |
+| **Channel type** | **Campaign & Inbox**, **External** (your [API](/external-api) sends) or **All** | Overview and Messages |
+| **Refresh** | Fetches fresh numbers. The figures are cached for about a minute, so use it when you need the latest | Every view |
+| **PDF report** | Downloads a PDF of the current view, named like `rateup-overview-2026-10-09.pdf`. It reads *"Preparing report…"* while it is built | Every view except Logs |
+
+A control a view cannot use is hidden rather than shown and ignored. **Calls** has its own range
+and number filters, because it reads your call records rather than your conversations.
 
 <Callout type="info">
-  Comparisons only mean something over equal periods. A "bad week" against a month-long average is
-  a reporting artefact, not a problem.
+  Comparisons only mean something over equal periods. Every tile that shows a change compares the
+  range you picked with the same length of time just before it — *"vs previous period"*.
 </Callout>
-
----
-
-## Exporting
-
-Most tabs support **Export**, producing a PDF of the current view. Tabs that do not will tell you
-*"Export not supported for this tab"*.
-
-[Message Logs](/analytics/message-logs) exports raw data rather than a report.
 
 ---
 
 ## Who Can See Analytics
 
-Analytics requires the **Analytics** feature on your team, plus the *"Access reports and data
-insights"* permission on your user.
+The **Analytics** sidebar entry appears only when your team has the **Analytics** feature. Inside
+it, your role decides what loads:
 
-Without both, the section does not appear in the sidebar.
+| Ability | Lets you see |
+|---------|--------------|
+| **See analytics** | Overview, Conversations, Messages, Message logs, and the **Analytics** tab under Calls |
+| **See the audit log** | **Logs → Team activity** |
+| **See conversations** | The **Call log** under Calls |
+| **Export chats and logs** | **Export Excel** on Message logs |
+
+Abilities come from a member's role, and can be added or removed per person — see
+[Members & Roles](/settings/users).
 
 ---
 
 ## Related Pages
 
 - [Teams](/settings/teams) — enabling the Analytics feature
-- [Users](/settings/users) — the reports permission
+- [Members & Roles](/settings/users) — roles and abilities
+- [WhatsApp Voice Calls](/inbox/whatsapp-calls) — taking the calls that **Calls** reports on

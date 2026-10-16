@@ -6,6 +6,7 @@
     "team-performance",
     "message-analytics",
     "message-logs",
-    "team-activity"
+    "team-activity",
+    "calls"
   ]
 }
