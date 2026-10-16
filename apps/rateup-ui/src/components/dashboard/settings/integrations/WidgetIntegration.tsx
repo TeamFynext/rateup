@@ -1,9 +1,20 @@
+import { IconAlertTriangle, IconKey } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { useApiKeys, useCreateApiKey } from "@/backend/apiKeys/apiKeys.query.ts";
 import SupportWidget from "@/components/app&services/support-widget.tsx";
+import { RevealApiKeyDialog, type RevealedKey } from "@/components/ExternalApi/ApiKeyDialogs.tsx";
+import {
+  isWidgetOnlyKey,
+  maskedKeyPrefix,
+  WIDGET_KEY_FEATURES,
+  WIDGET_KEY_NAME,
+} from "@/components/ExternalApi/apiKeyFormat.ts";
 import TerminalBlock from "@/components/TerminalBlock.tsx";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import {
   Card,
   CardContent,
@@ -11,6 +22,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
+import { usePermissions } from "@/hooks/usePermission.ts";
 
 import { INTEGRATIONS_CONFIG } from "./integrations.config.ts";
 import { IntegrationShell } from "./IntegrationShell.tsx";
@@ -23,7 +35,6 @@ const EXAMPLE_ICEBREAKERS = [
 ];
 
 const PROPS: readonly { name: string; type: string; required: boolean }[] = [
-  { name: "orgId", type: "string", required: true },
   { name: "token", type: "string", required: true },
   { name: "whatsappNumber", type: "string", required: false },
   { name: "companyName", type: "string", required: false },
@@ -32,16 +43,93 @@ const PROPS: readonly { name: string; type: string; required: boolean }[] = [
   { name: "icebreakers", type: "string[]", required: false },
 ];
 
+/**
+ * Step 2: the widget's key. It ships in the customer's page source, so it should be a key that
+ * can only run the widget (the `widget` feature) — a full-access key there opens the whole
+ * partner API to anyone who views the source. Creates a v2 key named "Webchat widget"; the
+ * widget only takes v2 (`rk_`) keys, since those name their own org.
+ */
+function WidgetKeyStep({ onCreated }: Readonly<{ onCreated: (apiKey: string) => void }>) {
+  const { t } = useTranslation();
+  const permissions = usePermissions();
+  const canManage = permissions.can("api_tokens.manage");
+  const keys = useApiKeys(permissions.can("api_tokens.read"));
+  const create = useCreateApiKey();
+  const [revealed, setRevealed] = useState<RevealedKey | null>(null);
+  const widgetKeys = (keys.data ?? []).filter(isWidgetOnlyKey);
+
+  function createWidgetKey() {
+    create.mutate(
+      { name: WIDGET_KEY_NAME, features: WIDGET_KEY_FEATURES, version: "v2" },
+      {
+        onSuccess: (issued) => {
+          setRevealed(issued);
+          onCreated(issued.apiKey);
+        },
+      },
+    );
+  }
+
+  return (
+    <div className="flex min-w-0 flex-col gap-2">
+      <p className="font-medium">{t("Create a widget key")}</p>
+      <p className="text-sm text-muted-foreground">
+        {t(
+          "The key sits in your page's source, where anyone can copy it. Use a key that can only run the widget, never a full-access key.",
+        )}
+      </p>
+      {widgetKeys.length > 0 && (
+        <p className="text-sm text-muted-foreground">
+          {t("Your widget keys: {keys}", {
+            keys: widgetKeys
+              .map((key) => `${key.name} (${maskedKeyPrefix(key.displayPrefix)})`)
+              .join(", "),
+          })}
+        </p>
+      )}
+      {canManage ? (
+        <div>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            loading={create.isPending}
+            onClick={createWidgetKey}
+          >
+            <IconKey data-icon="inline-start" />
+            {t("Create widget key")}
+          </Button>
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          {t("Ask an admin with the API keys permission to create one.")}
+        </p>
+      )}
+      <Alert>
+        <IconAlertTriangle />
+        <AlertTitle>{t("Already using a key with more access?")}</AlertTitle>
+        <AlertDescription>
+          {t(
+            "It keeps working, but anyone can copy it from your page and call your API with it. Put a widget key in the snippet, then revoke the old key or limit it on Settings › Integrations › API Service.",
+          )}
+        </AlertDescription>
+      </Alert>
+      <RevealApiKeyDialog revealed={revealed} onClose={() => setRevealed(null)} />
+    </div>
+  );
+}
+
 export default function WidgetIntegration() {
   const { t } = useTranslation();
   const config = INTEGRATIONS_CONFIG.widget;
+  /* The key created on this page, shown in the snippet so it can be pasted as is. */
+  const [widgetKey, setWidgetKey] = useState<string | null>(null);
 
   const codeExample = `
 import SupportWidget from "@rateup/support-widget";
 
 <SupportWidget
-  orgId="YOUR_ORG_ID"
-  token="YOUR_API_TOKEN"
+  token="${widgetKey ?? "YOUR_WIDGET_KEY"}"
   whatsappNumber="+1234567890" // optional
   companyName="Your Company" // optional
   backendUrl="https://your-backend.com" // optional
@@ -70,12 +158,12 @@ import SupportWidget from "@rateup/support-widget";
         <CardHeader>
           <CardTitle>{t("Install")}</CardTitle>
           <CardDescription>
-            {t("Four steps, in order — the snippet needs the two values from the middle two.")}
+            {t("Three steps, in order — the snippet needs the key from step 2.")}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Numbered because installing genuinely is a sequence: the snippet in step 4 cannot
-              be pasted until steps 2 and 3 have produced the orgId and the token. */}
+          {/* Numbered because installing genuinely is a sequence: the snippet in step 3 cannot
+              be pasted until step 2 has produced the widget key, which also names the org. */}
           <ol className="flex flex-col gap-6">
             <li className="grid grid-cols-[1.5rem_1fr] gap-x-3">
               <span className="font-mono text-sm text-muted-foreground tabular-nums">1</span>
@@ -86,26 +174,10 @@ import SupportWidget from "@rateup/support-widget";
             </li>
             <li className="grid grid-cols-[1.5rem_1fr] gap-x-3">
               <span className="font-mono text-sm text-muted-foreground tabular-nums">2</span>
-              <div className="flex min-w-0 flex-col gap-1">
-                <p className="font-medium">
-                  {t("Copy your")} <code className="font-mono">orgId</code>
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {t("It is on Settings › Integrations › Zapier.")}
-                </p>
-              </div>
+              <WidgetKeyStep onCreated={setWidgetKey} />
             </li>
             <li className="grid grid-cols-[1.5rem_1fr] gap-x-3">
               <span className="font-mono text-sm text-muted-foreground tabular-nums">3</span>
-              <div className="flex min-w-0 flex-col gap-1">
-                <p className="font-medium">{t("Create an API token")}</p>
-                <p className="text-sm text-muted-foreground">
-                  {t("Generate one on Settings › Integrations › API Service.")}
-                </p>
-              </div>
-            </li>
-            <li className="grid grid-cols-[1.5rem_1fr] gap-x-3">
-              <span className="font-mono text-sm text-muted-foreground tabular-nums">4</span>
               <div className="flex min-w-0 flex-col gap-2">
                 <p className="font-medium">{t("Render the widget")}</p>
                 <TerminalBlock code={codeExample} />
@@ -152,8 +224,7 @@ import SupportWidget from "@rateup/support-widget";
         </CardHeader>
         <CardContent className="flex justify-center">
           <SupportWidget
-            orgId={import.meta.env.VITE_ROOT_ORG}
-            token={import.meta.env.VITE_ROOT_TOKEN}
+            token={import.meta.env.VITE_SUPPORT_WIDGET_KEY}
             icebreakers={EXAMPLE_ICEBREAKERS}
           />
         </CardContent>

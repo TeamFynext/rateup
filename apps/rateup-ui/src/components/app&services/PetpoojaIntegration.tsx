@@ -21,7 +21,7 @@ import {
   IntegrationSection,
   IntegrationShell,
 } from "@/components/dashboard/settings/integrations/IntegrationShell.tsx";
-import { ApiCopyButton } from "@/components/ExternalApi/ApiAccessKey.tsx";
+import { ApiCopyButton } from "@/components/ExternalApi/ApiCopyButton.tsx";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import WaTemplateSelector from "@/components/input/WaTemplateSelector.tsx";
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";

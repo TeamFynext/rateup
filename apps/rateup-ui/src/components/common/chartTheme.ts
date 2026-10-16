@@ -41,3 +41,19 @@ export const deliveryConfig = (labels: { delivered: string; failed: string }): C
   deliveredMessages: { label: labels.delivered, color: "var(--chart-2)" },
   failedMessages: { label: labels.failed, color: "var(--destructive)" },
 });
+
+/**
+ * API requests by outcome, stacked per day. Like delivery, these are states rather than
+ * identities: success takes the single-series blue, a client error the theme's amber
+ * (`--chart-5`, the warning hue) and a server error `destructive`. The legend and the
+ * tooltip name every segment, so the amber/red pair never carries meaning by hue alone.
+ */
+export const requestOutcomeConfig = (labels: {
+  ok: string;
+  clientErrors: string;
+  serverErrors: string;
+}): ChartConfig => ({
+  ok: { label: labels.ok, color: "var(--chart-2)" },
+  clientErrors: { label: labels.clientErrors, color: "var(--chart-5)" },
+  serverErrors: { label: labels.serverErrors, color: "var(--destructive)" },
+});

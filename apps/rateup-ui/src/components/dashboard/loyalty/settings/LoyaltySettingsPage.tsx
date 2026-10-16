@@ -16,7 +16,7 @@ import {
 } from "@/backend/loyalty/program.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { PageHeading } from "@/components/common/page-heading.tsx";
-import ApiAccessKeyPage from "@/components/ExternalApi/ApiAccessKey.tsx";
+import { ApiKeysCard } from "@/components/ExternalApi/ApiKeysCard.tsx";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import { DangerZone } from "@/components/loyalty/settings/DangerZone.tsx";
 import { PointsExpirationSettings } from "@/components/loyalty/settings/PointsExpirationSettings.tsx";
@@ -346,15 +346,13 @@ export function LoyaltySettingsPage() {
             />
           </Field>
 
-          <div className="rounded-lg border border-border p-3">
-            <p className="text-sm font-medium text-foreground">{t("POS and API access")}</p>
-            <p className="mb-3 text-xs text-muted-foreground">
-              {t("For a till or ordering system that awards {points} directly.", {
-                points: pointsName,
-              })}
-            </p>
-            <ApiAccessKeyPage />
-          </div>
+          <ApiKeysCard
+            size="sm"
+            title={t("POS and API access")}
+            description={t("For a till or ordering system that awards {points} directly.", {
+              points: pointsName,
+            })}
+          />
         </CardContent>
       </Card>
 

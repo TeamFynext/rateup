@@ -15,7 +15,7 @@ import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import { IntegrationFormCard } from "@/components/dashboard/settings/integrations/IntegrationFormCard.tsx";
 import { INTEGRATIONS_CONFIG } from "@/components/dashboard/settings/integrations/integrations.config.ts";
 import { IntegrationShell } from "@/components/dashboard/settings/integrations/IntegrationShell.tsx";
-import { ApiCopyButton } from "@/components/ExternalApi/ApiAccessKey.tsx";
+import { ApiCopyButton } from "@/components/ExternalApi/ApiCopyButton.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {

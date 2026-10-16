@@ -13,8 +13,7 @@ import styles from "@/styles/commonCssModules/homepagecss.module.css";
 const loadSupportWidget = () => import("@/components/app&services/support-widget.tsx");
 const SupportWidget = lazy(loadSupportWidget);
 
-const SUPPORT_ORG = import.meta.env.VITE_ROOT_ORG || "";
-const SUPPORT_TOKEN = import.meta.env.VITE_ROOT_TOKEN || "";
+const SUPPORT_TOKEN = import.meta.env.VITE_SUPPORT_WIDGET_KEY || "";
 
 /**
  * Openers for RateUp's own site. The widget's built-in defaults are written for the shops that
@@ -40,7 +39,7 @@ function SupportCorner() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    if (!SUPPORT_ORG || !SUPPORT_TOKEN || sessionStorage.getItem(AUTO_OPENED_KEY)) return;
+    if (!SUPPORT_TOKEN || sessionStorage.getItem(AUTO_OPENED_KEY)) return;
 
     let idle = 0;
     const prefetch = () => {
@@ -63,7 +62,7 @@ function SupportCorner() {
     };
   }, []);
 
-  if (!SUPPORT_ORG || !SUPPORT_TOKEN) return null;
+  if (!SUPPORT_TOKEN) return null;
 
   const launcher = (
     <SupportLauncher
@@ -78,12 +77,7 @@ function SupportCorner() {
 
   return (
     <Suspense fallback={launcher}>
-      <SupportWidget
-        orgId={SUPPORT_ORG}
-        token={SUPPORT_TOKEN}
-        icebreakers={RATEUP_ICEBREAKERS}
-        defaultOpen
-      />
+      <SupportWidget token={SUPPORT_TOKEN} icebreakers={RATEUP_ICEBREAKERS} defaultOpen />
     </Suspense>
   );
 }

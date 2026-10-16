@@ -1,4 +1,4 @@
-import { PERMISSIONS, type Permission } from "./permissions.ts";
+import { MEMBER_PERMISSIONS, type Permission } from "./permissions.ts";
 
 /**
  * The six system roles. Mirrors `rateup-api/src/authz/roles.ts`; the API's bundles are
@@ -85,9 +85,10 @@ const MANAGER = union(
     "notify.integrations",
   ),
 );
-const OWNER: ReadonlySet<Permission> = new Set(PERMISSIONS);
+// Every member permission; the key-only ones (widget.connect) belong to no role.
+const OWNER: ReadonlySet<Permission> = new Set(MEMBER_PERMISSIONS);
 const ADMIN: ReadonlySet<Permission> = new Set(
-  PERMISSIONS.filter((p) => p !== "org.delete" && p !== "org.transfer_ownership"),
+  MEMBER_PERMISSIONS.filter((p) => p !== "org.delete" && p !== "org.transfer_ownership"),
 );
 const VIEWER: ReadonlySet<Permission> = new Set([...STAFF].filter((p) => p.endsWith(".read")));
 
