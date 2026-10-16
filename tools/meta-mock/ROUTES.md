@@ -9,7 +9,7 @@ Every request is answered. These are the ones answered with **Meta's own example
 | [WhatsApp Cloud API](https://www.postman.com/meta/whatsapp-business-platform/collection/wlk6lh4/whatsapp-cloud-api) | 52 | 13 | 4 |
 | [Instagram API](https://www.postman.com/meta/instagram/collection/23987686-9386f468-7714-490f-9bfc-9442db5c8f00) | 16 | 11 | 18 |
 
-## Stateful (22)
+## Stateful (26)
 
 These run **ahead of** the fixtures, because a canned example cannot model created-then-listed-then-published-then-deleted. Everything here is WhatsApp: nothing Instagram is stateful yet, so an ice-breakers write followed by a read returns the collection's example rather than what was just written. Source: `src/graph-routes.mjs`.
 
@@ -31,6 +31,10 @@ These run **ahead of** the fixtures, because a canned example cannot model creat
 | DELETE | `/{wabaId}/message_templates` | always |
 | POST | `/{templateId}` | conditional |
 | POST | `/{phoneId}/{endpoint}` | always |
+| POST | `/{phoneId}/calls` | always |
+| GET | `/{phoneId}/call_permissions` | always |
+| GET | `/{phoneId}/settings` | always |
+| POST | `/{phoneId}/settings` | always |
 | POST | `/{appId}/uploads` | always |
 | POST | `/upload:{sessionId}` | always |
 | GET | `/{phoneId}/whatsapp_business_encryption` | always |

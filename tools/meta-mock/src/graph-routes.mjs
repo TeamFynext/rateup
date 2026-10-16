@@ -39,6 +39,8 @@ function mintMessageId(recipientId) {
 
 export function createGraphRoutes({ state, mintId, publicUrl, onMessageSent }) {
   const { flows, templates } = state;
+  /** Per-number calling settings. Not in `state`: nothing outside these rules reads them. */
+  const callSettings = new Map();
 
   return [
     /* ---- flows ---- */
@@ -253,6 +255,60 @@ export function createGraphRoutes({ state, mintId, publicUrl, onMessageSent }) {
           contacts: [{ input: recipientId, wa_id: recipientId }],
           messages: [{ id: messageId }],
         };
+      },
+    },
+
+    /* ---- voice calls (Calling API) ----
+     *
+     * Signalling only: a `connect` mints a call id the app stores and later
+     * matches webhooks against, and every other action is acknowledged. There is
+     * no media server behind this, so a call dialled against the mock never
+     * connects — the point is that the app's bookkeeping runs. Without a rule
+     * here the fallback answers `{ success: true }` with no `calls[0].id`, and a
+     * dial fails with "returned no call id".
+     */
+    {
+      method: "POST",
+      match: /^\/(?<phoneId>\d+)\/calls$/,
+      handle: ({ body }) => {
+        if (body?.action === "connect") {
+          return {
+            messaging_product: "whatsapp",
+            calls: [{ id: `wacid.Test${randomBytes(12).toString("hex").toUpperCase()}` }],
+          };
+        }
+        return { messaging_product: "whatsapp", success: true };
+      },
+    },
+    {
+      method: "GET",
+      match: /^\/(?<phoneId>\d+)\/call_permissions$/,
+      handle: () => ({
+        messaging_product: "whatsapp",
+        permission: { status: "temporary", expiration_time: Math.floor(Date.now() / 1000) + 604800 },
+        actions: [
+          { action_name: "send_call_permission_request", can_perform_action: true, limits: [] },
+          { action_name: "start_call", can_perform_action: true, limits: [] },
+        ],
+      }),
+    },
+    {
+      method: "GET",
+      match: /^\/(?<phoneId>\d+)\/settings$/,
+      handle: ({ params }) => ({
+        calling: callSettings.get(params.phoneId) ?? { status: "DISABLED" },
+      }),
+    },
+    {
+      method: "POST",
+      match: /^\/(?<phoneId>\d+)\/settings$/,
+      handle: ({ params, body }) => {
+        // Meta merges: a field left out keeps its current value.
+        callSettings.set(params.phoneId, {
+          ...(callSettings.get(params.phoneId) ?? {}),
+          ...(body?.calling ?? {}),
+        });
+        return { success: true };
       },
     },
 
