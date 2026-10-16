@@ -30,6 +30,9 @@ function Page() {
         typeof searchParams.triggerEvent === "string" ? searchParams.triggerEvent : undefined
       }
       initialChannelId={typeof searchParams.channel === "string" ? searchParams.channel : undefined}
+      initialTemplateId={
+        typeof searchParams.template === "string" ? searchParams.template : undefined
+      }
     />
   );
 }

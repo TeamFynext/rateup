@@ -40,14 +40,36 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-10-16-automation-multi-channel",
+    title: "One automation for all your channels",
+    summary:
+      "An automation can now run on WhatsApp, Instagram and Messenger at once, replying to each customer on the channel they wrote from.",
+    publishedAt: "2026-10-16",
+    kinds: ["new"],
+    area: "Automation",
+    link: { to: "/dashboard/automation", label: "Open automations" },
+  },
+  {
+    id: "2026-10-16-automation-templates",
+    title: "Start an automation from a template",
+    summary:
+      "Pick a ready-made automation like a keyword auto-reply or an order confirmation, and watch a live preview of what your customer will see as you set it up.",
+    publishedAt: "2026-10-16",
+    kinds: ["new", "improvement"],
+    area: "Automation",
+    link: { to: "/dashboard/automation", label: "Open automations" },
+  },
+  {
     id: "2026-10-14-automation-wizard",
     title: "Automations are built step by step",
     summary:
-      "Creating an automation now walks you through it one step at a time: basics, when, if, then, and a review before you save.",
+      "Creating an automation now walks you through it one step at a time, with a review before you save.",
     publishedAt: "2026-10-14",
     kinds: ["improvement"],
     area: "Automation",
     link: { to: "/dashboard/automation", label: "Open automations" },
+  },
+  {
     id: "2026-10-14-chatbot-examples",
     title: "Start a chatbot from a ready-made example",
     summary:

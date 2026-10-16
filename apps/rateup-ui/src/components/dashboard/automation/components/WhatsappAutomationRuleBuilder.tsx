@@ -12,10 +12,11 @@ import {
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 
+import { findAutomationTemplate, templateFormValues } from "../automation-templates.ts";
 import RuleBuilderForm from "./RuleBuilderForm.tsx";
 import RuleShare from "./RuleShare.tsx";
 import type { CreateRuleInput, CreateRuleValues, Platform } from "./schema.ts";
-import { createRuleSchema } from "./schema.ts";
+import { createRuleSchema, DEFAULT_RULE_VALUES } from "./schema.ts";
 
 interface WhatsappAutomationRuleBuilderProps {
   ruleId?: string;
@@ -23,35 +24,9 @@ interface WhatsappAutomationRuleBuilderProps {
   initialTriggerEvent?: string;
   /** Preselects the channel when a rule is started from that channel's own page. */
   initialChannelId?: string;
+  /** An `AUTOMATION_TEMPLATES` id, picked before the wizard opened. */
+  initialTemplateId?: string;
 }
-
-const defaultValues = {
-  platform: "WHATSAPP",
-  whatsappSettingsPhoneIds: [],
-  name: "",
-  triggerEvent: "MESSAGE_RECEIVED",
-  operator: "AND",
-  isActive: true,
-  groups: [
-    {
-      operator: "AND",
-      conditions: [{ field: "MESSAGE_BODY", operator: "CONTAINS", value: "" }],
-    },
-  ],
-  actions: [{ type: "TRIGGER_CHATBOT", value: "" }],
-  options: {
-    sendOncePerDay: false,
-    businessHours: {
-      enabled: false,
-      businessHoursId: undefined,
-    },
-    instagramScope: "ALL",
-    instagramPostIds: [],
-    instagramPublicReplies: [],
-    shopifyProductIds: [],
-    wooProductIds: [],
-  },
-} satisfies Partial<CreateRuleValues>;
 
 type SavedRule = NonNullable<ReturnType<typeof useRuleById>["data"]>;
 
@@ -73,23 +48,28 @@ function toFormValues(
 ): CreateRuleInput {
   if (!rule) {
     return {
-      ...defaultValues,
-      ...(initial.initialPlatform && { platform: initial.initialPlatform }),
+      ...DEFAULT_RULE_VALUES,
+      ...(initial.initialPlatform && {
+        platform: initial.initialPlatform,
+        platforms: [initial.initialPlatform],
+      }),
       ...(initial.initialTriggerEvent && { triggerEvent: initial.initialTriggerEvent }),
       ...(initial.initialChannelId && { whatsappSettingsPhoneIds: [initial.initialChannelId] }),
     };
   }
   return {
-    ...defaultValues,
+    ...DEFAULT_RULE_VALUES,
     ...rule,
     whatsappSettingsPhoneIds: rule.whatsappSettingsPhoneIds || [],
+    // A rule saved before multi-channel rules names only its one platform.
+    platforms: rule.platforms?.length ? rule.platforms : [rule.platform],
     groups: rule.groups || [],
     // The API models "no value" as `null`; the form schema models it as an empty value.
     actions: (rule.actions || []).map((action) =>
       action.value === null ? { ...action, value: "" } : action,
     ),
     // Saved options only hold what was set; the defaults fill in options added since.
-    options: { ...defaultValues.options, ...rule.options },
+    options: { ...DEFAULT_RULE_VALUES.options, ...rule.options },
   };
 }
 
@@ -98,6 +78,7 @@ const WhatsappAutomationRuleBuilder: React.FC<WhatsappAutomationRuleBuilderProps
   initialPlatform,
   initialTriggerEvent,
   initialChannelId,
+  initialTemplateId,
 }) => {
   const isEditMode = Boolean(ruleId && ruleId !== "new");
   const { data: ruleData, isLoading: isRuleLoading } = useRuleById(
@@ -112,17 +93,24 @@ const WhatsappAutomationRuleBuilder: React.FC<WhatsappAutomationRuleBuilderProps
     );
   }
 
+  const newRuleValues = toFormValues(undefined, {
+    initialPlatform,
+    initialTriggerEvent,
+    initialChannelId,
+  });
+  const template = isEditMode ? undefined : findAutomationTemplate(initialTemplateId);
+
   return (
     <RuleEditor
       // A different rule is a different form, never a reset of this one.
       key={ruleData?.id ?? "new"}
       ruleId={isEditMode ? ruleId : undefined}
       ruleData={isEditMode ? ruleData : undefined}
-      initialValues={toFormValues(isEditMode ? ruleData : undefined, {
-        initialPlatform,
-        initialTriggerEvent,
-        initialChannelId,
-      })}
+      initialValues={
+        isEditMode ? toFormValues(ruleData, {}) : templateFormValues(template, newRuleValues)
+      }
+      baseValues={newRuleValues}
+      initialTemplateId={template?.id}
     />
   );
 };
@@ -131,7 +119,9 @@ const RuleEditor: React.FC<{
   ruleId: string | undefined;
   ruleData: SavedRule | undefined;
   initialValues: CreateRuleInput;
-}> = ({ ruleId, ruleData, initialValues }) => {
+  baseValues: CreateRuleInput;
+  initialTemplateId: string | undefined;
+}> = ({ ruleId, ruleData, initialValues, baseValues, initialTemplateId }) => {
   const isEditMode = Boolean(ruleId);
   const navigate = useNavigate();
   const { history } = useRouter();
@@ -141,6 +131,7 @@ const RuleEditor: React.FC<{
   const form = useForm<CreateRuleInput, unknown, CreateRuleValues>({
     resolver: zodResolver(createRuleSchema),
     defaultValues: initialValues,
+    mode: "onTouched",
   });
 
   const ruleName = useWatch({ control: form.control, name: "name" });
@@ -183,13 +174,6 @@ const RuleEditor: React.FC<{
 
   const isPending = createMutation.isPending || updateMutation.isPending;
 
-  let buttonText = "Create Automation";
-  if (isPending) {
-    buttonText = "Saving";
-  } else if (isEditMode) {
-    buttonText = "Update Automation";
-  }
-
   return (
     // The chrome the campaign wizard uses: a 56px breadcrumb bar over the wizard itself.
     <Tabs defaultValue="builder" className="bg-background h-full min-h-0 gap-0">
@@ -223,8 +207,9 @@ const RuleEditor: React.FC<{
           onSubmit={onSubmit}
           onCancel={() => history.back()}
           isPending={isPending}
-          buttonText={buttonText}
           isEdit={isEditMode}
+          initialTemplateId={initialTemplateId}
+          baseValues={baseValues}
         />
       </TabsContent>
 

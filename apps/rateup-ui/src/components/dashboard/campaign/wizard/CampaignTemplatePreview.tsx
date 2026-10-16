@@ -60,10 +60,6 @@ export function CampaignTemplatePreview({
     );
   }
 
-  const header = componentOfType(template, "HEADER");
-  const body = componentOfType(template, "BODY");
-  const footer = componentOfType(template, "FOOTER");
-  const buttons = componentOfType(template, "BUTTONS")?.buttons ?? [];
   const initials = (businessName ?? "RU").slice(0, 2).toUpperCase();
 
   return (
@@ -98,55 +94,73 @@ export function CampaignTemplatePreview({
               {t("Today")}
             </span>
 
-            <div className="flex w-62.5 flex-col overflow-hidden rounded-[10px] bg-white shadow-sm">
-              {header?.format && header.format !== "TEXT" ? (
-                <span className="m-1 flex h-26 flex-col items-center justify-center gap-1 rounded-lg bg-[#FEECCB] text-[#AE5D07]">
-                  <IconPhoto className="size-5" aria-hidden />
-                  <span className="text-[10px] font-medium">{header.format}</span>
-                </span>
-              ) : null}
-
-              {header?.format === "TEXT" && header.text ? (
-                <div className="px-2.5 pt-1.5 text-[12.5px] font-semibold text-[#1B2027]">
-                  {fillPlaceholders(header.text, sampleValues)}
-                </div>
-              ) : null}
-
-              {body?.text ? (
-                <div className="px-2.5 pt-1.5 pb-1 text-[12.5px] leading-snug whitespace-pre-line text-[#1B2027]">
-                  {fillPlaceholders(body.text, sampleValues)}
-                </div>
-              ) : null}
-
-              {footer?.text ? (
-                <div className="px-2.5 pb-1 text-[11px] text-[#6B7480]">{footer.text}</div>
-              ) : null}
-
-              <div className="flex items-center justify-end gap-1 px-2 pb-1.5">
-                <span className="text-[10px] text-[#6B7480]">
-                  {new Date().toLocaleTimeString(undefined, {
-                    hour: "numeric",
-                    minute: "2-digit",
-                  })}
-                </span>
-                <IconChecks className="size-3.5 text-[#53BDEB]" aria-hidden />
-              </div>
-
-              {buttons.map((button, index) => (
-                <div
-                  key={`${button.type}-${index}`}
-                  className={cn(
-                    "flex h-9 items-center justify-center gap-1.5 border-t border-[#E4E7EC] text-[13px] font-medium text-[#027EB5]",
-                  )}
-                >
-                  <IconExternalLink className="size-3.5" aria-hidden />
-                  {button.text}
-                </div>
-              ))}
-            </div>
+            <WaTemplateBubble template={template} sampleValues={sampleValues} />
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+/** One template message as WhatsApp draws it, variables filled from `sampleValues`. */
+export function WaTemplateBubble({
+  template,
+  sampleValues = {},
+}: Readonly<{
+  template: WaTemplateFetchBody;
+  sampleValues?: Record<string, string>;
+}>) {
+  const header = componentOfType(template, "HEADER");
+  const body = componentOfType(template, "BODY");
+  const footer = componentOfType(template, "FOOTER");
+  const buttons = componentOfType(template, "BUTTONS")?.buttons ?? [];
+
+  return (
+    <div className="flex w-62.5 flex-col overflow-hidden rounded-[10px] bg-white shadow-sm">
+      {header?.format && header.format !== "TEXT" ? (
+        <span className="m-1 flex h-26 flex-col items-center justify-center gap-1 rounded-lg bg-[#FEECCB] text-[#AE5D07]">
+          <IconPhoto className="size-5" aria-hidden />
+          <span className="text-[10px] font-medium">{header.format}</span>
+        </span>
+      ) : null}
+
+      {header?.format === "TEXT" && header.text ? (
+        <div className="px-2.5 pt-1.5 text-[12.5px] font-semibold text-[#1B2027]">
+          {fillPlaceholders(header.text, sampleValues)}
+        </div>
+      ) : null}
+
+      {body?.text ? (
+        <div className="px-2.5 pt-1.5 pb-1 text-[12.5px] leading-snug whitespace-pre-line text-[#1B2027]">
+          {fillPlaceholders(body.text, sampleValues)}
+        </div>
+      ) : null}
+
+      {footer?.text ? (
+        <div className="px-2.5 pb-1 text-[11px] text-[#6B7480]">{footer.text}</div>
+      ) : null}
+
+      <div className="flex items-center justify-end gap-1 px-2 pb-1.5">
+        <span className="text-[10px] text-[#6B7480]">
+          {new Date().toLocaleTimeString(undefined, {
+            hour: "numeric",
+            minute: "2-digit",
+          })}
+        </span>
+        <IconChecks className="size-3.5 text-[#53BDEB]" aria-hidden />
+      </div>
+
+      {buttons.map((button, index) => (
+        <div
+          key={`${button.type}-${index}`}
+          className={cn(
+            "flex h-9 items-center justify-center gap-1.5 border-t border-[#E4E7EC] text-[13px] font-medium text-[#027EB5]",
+          )}
+        >
+          <IconExternalLink className="size-3.5" aria-hidden />
+          {button.text}
+        </div>
+      ))}
     </div>
   );
 }

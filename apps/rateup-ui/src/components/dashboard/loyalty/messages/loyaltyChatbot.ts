@@ -206,6 +206,7 @@ export function loyaltyMenuRule(input: {
 }): CreateRule {
   return {
     platform: "WHATSAPP",
+    platforms: ["WHATSAPP"],
     whatsappSettingsPhoneIds: input.whatsappSettingsPhoneIds,
     name: input.name,
     operator: "AND",
