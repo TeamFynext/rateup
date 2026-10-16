@@ -29,7 +29,7 @@ const WidgetPhoneInput = lazy(loadPhoneInput);
 interface SupportWidgetProps {
   whatsappNumber?: string;
   companyName?: string;
-  orgId: string;
+  /** A widget key (`rk_…`). It names the org, so there is no org id to pass. */
   token: string;
   backendUrl?: string;
   webhookUrl?: string;
@@ -236,7 +236,6 @@ function messageTime(message: Message) {
 export default function SupportWidget({
   whatsappNumber = import.meta.env.VITE_SUPPORT_WHATSAPP,
   companyName = "Team RateUp",
-  orgId,
   token,
   backendUrl,
   webhookUrl,
@@ -271,15 +270,14 @@ export default function SupportWidget({
   const ref = useClickOutside<HTMLDivElement>(() => setIsOpen(false));
   const API_URL = backendUrl || import.meta.env.VITE_API_URL;
   /* `/:afterAuthId/widget`, not `/:afterAuthId/ws/:orgId` — the latter matched no route at all,
-     so this socket never opened and the panel only ever caught up on reload. The org id and
-     token ride the query string because a browser WebSocket cannot send an Authorization
-     header, and `contactId` narrows the org-wide feed to this visitor's own thread. */
+     so this socket never opened and the panel only ever caught up on reload. The token rides
+     the query string because a browser WebSocket cannot send an Authorization header, and `contactId` narrows the org-wide feed to this visitor's
+     own thread. */
   const socketUrl =
-    contactId && orgId && token
+    contactId && token
       ? webhookUrl ||
-        `${WS_BASE}/${browserId}/widget?role=fab&orgId=${encodeURIComponent(orgId)}&accessToken=${encodeURIComponent(token)}&contactId=${encodeURIComponent(contactId)}`
+        `${WS_BASE}/${browserId}/widget?role=fab&accessToken=${encodeURIComponent(token)}&contactId=${encodeURIComponent(contactId)}`
       : null;
-  const queryParams = orgId ? `?orgId=${orgId}` : "";
   const waHref = `https://wa.me/${(whatsappNumber || "").replace(/\D/g, "")}?text=${encodeURIComponent(
     "Hi, I need help with support",
   )}`;
@@ -294,7 +292,7 @@ export default function SupportWidget({
 
   const handleEmailSubmit = emailForm.handleSubmit(async (values) => {
     try {
-      await postJson(`${API_URL}/api/support/email${queryParams}`, values, token);
+      await postJson(`${API_URL}/api/support/email`, values, token);
       setEmailSent(true);
       emailForm.reset();
     } catch (error) {
@@ -369,13 +367,13 @@ export default function SupportWidget({
     contactIdRef.current = storedContactId;
     setContactId(storedContactId);
 
-    fetch(`${API_URL}/api/support/contact/${storedContactId}${queryParams}`, {
+    fetch(`${API_URL}/api/support/contact/${storedContactId}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((response) => response.json())
       .then((json) => setMessages((prev) => mergeMessages(prev, Array.isArray(json) ? json : [])))
       .catch((error) => console.error("Could not load the support history", error));
-  }, [token, API_URL, orgId]);
+  }, [token, API_URL]);
 
   useEffect(() => {
     if (isOpen) setBotTime((prev) => prev || timeLabel(new Date()));
@@ -455,7 +453,7 @@ export default function SupportWidget({
       ],
     };
 
-    await postJson(`${API_URL}/api/support${queryParams}`, messageBody, token);
+    await postJson(`${API_URL}/api/support`, messageBody, token);
   };
 
   const handleContactSubmit = form.handleSubmit(async (formValues) => {
@@ -468,9 +466,7 @@ export default function SupportWidget({
 
     try {
       /* The route replies with the bare contact id as text/plain. */
-      const newContactId = String(
-        await postJson(`${API_URL}/api/support/contact${queryParams}`, values, token),
-      );
+      const newContactId = String(await postJson(`${API_URL}/api/support/contact`, values, token));
 
       localStorage.setItem("support_contact_id", newContactId);
       localStorage.setItem("support_contact_name", values.phone);
@@ -550,7 +546,7 @@ export default function SupportWidget({
     return sendMessage(body);
   };
 
-  if (!orgId || !token) return null;
+  if (!token) return null;
 
   if (!isOpen) return <SupportLauncher onOpen={() => setIsOpen(true)} />;
 
