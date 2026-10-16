@@ -7,21 +7,24 @@ import { externalContactGroupRoutes } from "./contact-groups/contact-group.exter
 import { externalTeamRoutes } from "./teams/team.external.route.js";
 import { externalCampaignRoutes } from "./campaigns/campaign.external.route.js";
 import { externalWaTemplateRoutes } from "./wa-templates/wa_templates.external.route.js";
-import { externalLoyaltyRoutes } from "./loyalty/loyalty.external.route.js";
+// Loyalty's wire shapes are the same on both versions, so v1 mounts v2's module.
+import { externalLoyaltyRoutes } from "../v2/loyalty/loyalty.route.js";
 import { assertApiAccessToken } from "../../modules/apiAccessToken/apiAccessToken.auth.js";
-import { isOrgSuspended, ORG_SUSPENDED_MESSAGE } from "../../modules/org/orgSuspension.js";
 import { Role } from "../../../generated/prisma/client.js";
-import { rateLimit } from "../../utils/rateLimit.js";
-import { ExternalApiError, externalErrorHandler } from "./errors.js";
+import { ExternalApiError } from "../shared/errors.js";
+import { registerPartnerHooks } from "../shared/partnerHooks.js";
 
+export const EXTERNAL_V1_PREFIX = "/api/external/v1/:orgId";
+
+/**
+ * Partner API v1, kept for integrations built against it: the org is in the URL and the
+ * routes answer in their original shapes. Security fixes apply here as on v2 (org scoping,
+ * enforced key scopes); new work goes to v2. Only v1 keys are accepted.
+ */
 export async function externalV1Routes(server: FastifyInstance) {
   const OrgIdParamsSchema = z.object({
     orgId: z.string(),
   });
-
-  // Fastify error handlers are per-encapsulation-context, so this one registration covers
-  // every module below and leaves the root SuperTokens handler in charge everywhere else.
-  server.setErrorHandler(externalErrorHandler);
 
   server.addHook("onRoute", (routeOptions) => {
     if (!routeOptions.schema) {
@@ -37,48 +40,19 @@ export async function externalV1Routes(server: FastifyInstance) {
     }
   });
 
-  /**
-   * Ahead of the token hook on purpose. Verifying a key is a bcrypt compare, which is
-   * deliberately expensive; with the org id sitting in the URL, an unauthenticated caller
-   * could otherwise spend our CPU at will just by guessing tokens.
-   */
-  server.addHook(
-    "preHandler",
-    rateLimit({
-      max: 300,
-      windowSeconds: 60,
-      key: "externalV1Ip",
-      throwOnLimit: (kind) =>
-        kind === "rate_limited"
-          ? new ExternalApiError(429, "rate_limited", "Too many requests")
-          : new ExternalApiError(503, "internal_error", "Temporarily unavailable"),
-    }),
-  );
-
-  server.addHook("preHandler", async (request) => {
-    const orgId = (request.params as { orgId?: string } | undefined)?.orgId;
-    if (!orgId) {
-      throw new ExternalApiError(404, "org_not_found", "Not found");
-    }
-
-    request.orgId = orgId;
-
-    if (request.user) {
-      request.user.orgId = orgId;
-    } else {
-      // Seeded so anything reading `request.user.orgId` before the token check runs sees
-      // the path org; assertApiAccessToken replaces this object wholesale (with the
-      // role) a line below.
+  registerPartnerHooks(server, {
+    prefix: EXTERNAL_V1_PREFIX,
+    authenticate: async (request) => {
+      const orgId = (request.params as { orgId?: string } | undefined)?.orgId;
+      if (!orgId) {
+        throw new ExternalApiError(404, "org_not_found", "Not found");
+      }
+      // Seeded so anything reading `request.user.orgId` before the key check sees the path
+      // org; assertApiAccessToken replaces it once the key verifies.
+      request.orgId = orgId;
       request.user = { orgId, role: Role.SUPER_ADMIN };
-    }
-
-    await assertApiAccessToken(request);
-
-    // A suspended account's API key stops working too; otherwise an integration would keep
-    // running everything the console just switched off.
-    if (await isOrgSuspended(orgId)) {
-      throw new ExternalApiError(403, "org_suspended", ORG_SUSPENDED_MESSAGE);
-    }
+      return assertApiAccessToken(request, { version: "v1" });
+    },
   });
 
   server.register(externalSurveyRoutes, { prefix: "/surveys" });

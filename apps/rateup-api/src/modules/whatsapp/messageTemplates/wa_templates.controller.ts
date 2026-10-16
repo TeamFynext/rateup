@@ -29,7 +29,6 @@ import {
   getUnregisteredTemplates,
   registerTemplatesInDb,
   saveTemplate,
-  sendTemplateToPhone,
   TemplateFlowChannelError,
   syncTemplates,
   updateTemplate,
@@ -41,7 +40,7 @@ import { generateTemplate, getFlowIdFromTemplateComponents } from "./wa_template
 import { getFlowWithSurveyTeamMapIds } from "../flows/flow.service.js";
 import { signFlowToken } from "../flows/flowToken.js";
 import { buildTemplateComponents } from "./templateComponents.js";
-import prisma from "../../../utils/prisma.js";
+import { TemplateSendError } from "./templateSendError.js";
 import { GraphApiError } from "../wa_axios.js";
 import { getGraphApiErrorMessage, handleWhatsappError } from "../wa_error_handler.js";
 import { updateMonthlyStat } from "../../stats/stats.service.js";
@@ -54,7 +53,6 @@ import {
   type WaTemplateComponent,
 } from "../../../types/whatsapp.types.js";
 import { validateFile } from "../../../utils/upload/validate.js";
-import { SendTemplateToContacts } from "../../../external/v1/wa-templates/wa_templates.external.schema.js";
 
 function getErrorResponseData(e: unknown): unknown {
   return e && typeof e === "object" && "response" in e
@@ -420,8 +418,8 @@ export async function sendTemplateToUserCore(
 ): Promise<
   // The timeDelay branch returns the raw createWaMessageSchedule() row (its own
   // `status`/`id` fields, not this boolean/message shape) — callers that pass
-  // timeDelay already special-case that (see wa_templates.external.controller.ts).
-  | { status: boolean; message: string; id?: string }
+  // timeDelay already special-case that (see external/v2/wa-templates/waTemplates.controller.ts).
+  | { status: boolean; message: string; id?: string; error?: WaGraphApiErrorDetail }
   | Awaited<ReturnType<typeof createWaMessageSchedule>>
 > {
   let dbTemplateResult: templateData | null;
@@ -452,17 +450,17 @@ export async function sendTemplateToUserCore(
   if (containsFlowButton) {
     const flowId = getFlowIdFromTemplateComponents(data.components);
     if (!flowId) {
-      throw new Error("Flow id not found in template");
+      throw new TemplateSendError("flow_not_found", "Flow id not found in template");
     }
 
     const dbFlow = await getFlowWithSurveyTeamMapIds(orgId, flowId);
     if (!dbFlow) {
-      throw new Error("Flow not found in db");
+      throw new TemplateSendError("flow_not_found", "Flow not found in db");
     }
 
     surveyTeamMapId = dbFlow?.survey?.teams.find((t) => t.teamId === teamId)?.id;
     if (!surveyTeamMapId) {
-      throw new Error("Team not found in survey");
+      throw new TemplateSendError("flow_team_not_linked", "Team not found in survey");
     }
   }
 
@@ -618,108 +616,5 @@ export async function sendTemplateToUserHandler(
     } else {
       reply.code(500).send("Error sending template to contacts");
     }
-  }
-}
-
-export async function sendTemplatesToContactsHandler(
-  req: FastifyRequest<{
-    Body: SendTemplateToContacts;
-    Params: ByTemplateIdParamsSchema;
-  }>,
-  res: FastifyReply,
-) {
-  try {
-    const { templateId } = req.params;
-    const orgId = req.user.orgId;
-    const userId = req.userId;
-    const dbTemplate = await getTemplateByIdAndOrgId(templateId, orgId);
-    if (!dbTemplate) {
-      return res.code(404).send({ message: "Template not found" });
-    }
-    const contacts = await prisma.contact.findMany({
-      where: {
-        id: {
-          in: req.body.contactIds,
-        },
-        orgId,
-      },
-      select: {
-        id: true,
-        phone: true,
-      },
-    });
-
-    let sent = 0;
-    const failed: string[] = [];
-    for (const contact of contacts) {
-      if (!contact.phone) continue;
-      try {
-        await sendTemplateToPhone({
-          orgId,
-          phone: contact.phone,
-          dbTemplate,
-          teamId: req.body.teamId,
-          header: req.body.header,
-          userId,
-        });
-        sent++;
-      } catch (error) {
-        log.error({ err: error, contactId: contact.id }, "Error sending template to contact");
-        failed.push(contact.id);
-      }
-    }
-
-    const skipped = req.body.contactIds.length - contacts.length;
-    return res.code(200).send({ sent, failed, skipped });
-  } catch (error) {
-    log.error({ err: error }, "Error sending template to contacts");
-    res.code(500).send({ message: error instanceof Error ? error.message : "Unknown error" });
-  }
-}
-
-const getLatestStatus = (statusObjInput: unknown) => {
-  // WaMessage.stats is a free-form Json? column (see prisma schema default value) —
-  // no generated type describes its shape, so it's read via a documented cast.
-  const statusObj = statusObjInput as {
-    read?: unknown;
-    delivered?: unknown;
-    failed?: unknown;
-    sent?: unknown;
-  } | null;
-  if (statusObj?.failed) return "failed";
-  if (statusObj?.read) return "read";
-  if (statusObj?.delivered) return "delivered";
-  if (statusObj?.sent) return "sent";
-  return "pending";
-};
-export async function getMessageStatusByIdHandler(
-  request: FastifyRequest<{
-    Params: { messageId: string };
-  }>,
-  reply: FastifyReply,
-) {
-  try {
-    const { messageId } = request.params;
-    const { orgId } = request.user;
-    const messageStatus = await prisma.waMessage.findFirst({
-      where: { messageId, orgId },
-      select: {
-        messageId: true,
-        stats: true,
-        errorMessage: true,
-      },
-    });
-    if (!messageStatus) return reply.code(404).send({ message: "Message not found" });
-    let status = getLatestStatus(messageStatus.stats);
-    let response = {
-      messageId: messageStatus.messageId,
-      status,
-      ...(status === "failed" ? { errorMessage: messageStatus.errorMessage } : {}),
-    };
-
-    reply.code(200).send(response);
-  } catch (error) {
-    log.error({ err: error }, "Error getting message status by id");
-    reply.code(500).send(error);
   }
 }

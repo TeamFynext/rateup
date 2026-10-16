@@ -8,6 +8,7 @@ import {
 } from "../../../types/enums.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
+import { bustLoyaltyProgramSummary } from "../program/program.service.js";
 import type { WaTemplateButton } from "../../../types/whatsapp.types.js";
 import { LoyaltyRewardType } from "../../../types/loyalty.js";
 import { calculateGiveback, givebackBand } from "../giveback.js";
@@ -251,7 +252,7 @@ export async function applyProfileStep(orgId: string, input: ProfileStepInput) {
     // The wizard no longer asks what kind of business this is, so the starter pack is
     // read off the org's industry — the same guess `GET /presets` makes.
     const presetKey = input.presetKey ?? (await getOnboardingPresets(orgId)).suggestedPresetKey;
-    return await prisma.loyaltyProgram.create({
+    const created = await prisma.loyaltyProgram.create({
       // A brand-new programme has nothing stored to preserve, so absent means zero here.
       data: {
         signupBonus: 0,
@@ -265,14 +266,18 @@ export async function applyProfileStep(orgId: string, input: ProfileStepInput) {
         onboardingPresetKey: presetKey,
       },
     });
+    void bustLoyaltyProgramSummary(orgId);
+    return created;
   }
 
   // Re-running the profile on a live programme must not take it off the air, so `status`
   // is deliberately absent from the update — only `activate` and the settings page move it.
-  return await prisma.loyaltyProgram.update({
+  const updated = await prisma.loyaltyProgram.update({
     where: { id: existing.id },
     data: shared,
   });
+  void bustLoyaltyProgramSummary(orgId);
+  return updated;
 }
 
 /* ── step: earning ──────────────────────────────────────────────────────────── */
@@ -364,6 +369,7 @@ export async function applyEarningStep(orgId: string, input: EarningStepInput) {
       },
     });
   });
+  void bustLoyaltyProgramSummary(orgId);
 
   return await prisma.loyaltyEarningRule.findMany({
     where: { programId: program.id },
@@ -498,6 +504,7 @@ export async function applyTiersStep(orgId: string, input: TiersStepInput) {
       }
     }
   });
+  void bustLoyaltyProgramSummary(orgId);
 
   const tiers = await prisma.loyaltyTier.findMany({
     where: { programId: program.id },
@@ -630,6 +637,7 @@ export async function applyRewardsStep(orgId: string, input: RewardsStepInput) {
       data: { onboardingStep: "rewards", ...bonusFieldsOf(input) },
     });
   });
+  void bustLoyaltyProgramSummary(orgId);
 
   return await prisma.loyaltyReward.findMany({
     where: { programId: program.id, rewardType: { not: LoyaltyRewardType.REVIEW } },
@@ -943,6 +951,7 @@ export async function activateProgram(orgId: string) {
     where: { id: program.id },
     data: { status: ACTIVE, onboardingCompletedAt: new Date() },
   });
+  void bustLoyaltyProgramSummary(orgId);
 
   return { program: activated, warnings };
 }

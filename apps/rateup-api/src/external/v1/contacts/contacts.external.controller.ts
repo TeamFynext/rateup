@@ -8,6 +8,7 @@ import {
   updateContactByIdHandler,
 } from "../../../modules/contact/contact.controller.js";
 import { ExtCreateContactSchema } from "../contact-groups/contact.external.schema.js";
+import { findForeignContactRef } from "./contactRefs.js";
 
 // The external create route accepts one contact or a batch and stamps `source` before
 // delegating to the internal handler, which owns the actual create logic.
@@ -21,6 +22,11 @@ export async function createContactsExternalController(
   }>,
   reply: FastifyReply,
 ) {
+  const contacts = Array.isArray(request.body) ? request.body : [request.body];
+  const foreignRef = await findForeignContactRef(request.user.orgId, contacts);
+  // The create handlers' own 400 shape (`{ error }`), as for an invalid phone.
+  if (foreignRef) return reply.code(400).send({ error: foreignRef });
+
   if (Array.isArray(request.body)) {
     request.body.forEach((contact) => {
       contact.source = "external";
@@ -56,6 +62,9 @@ export async function updateContactByIdExternalController(
   request: Parameters<typeof updateContactByIdHandler>[0],
   reply: FastifyReply,
 ) {
+  const foreignRef = await findForeignContactRef(request.user.orgId, [request.body]);
+  // The update handler's own 400 shape (`{ error }`).
+  if (foreignRef) return reply.code(400).send({ error: foreignRef });
   return updateContactByIdHandler(request, reply);
 }
 

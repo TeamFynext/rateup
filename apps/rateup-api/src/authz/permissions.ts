@@ -68,6 +68,7 @@ export const PERMISSIONS = [
   "org.transfer_ownership",
   "notify.billing",
   "notify.integrations",
+  "widget.connect",
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
@@ -75,10 +76,24 @@ export type Permission = (typeof PERMISSIONS)[number];
 export const ALL_PERMISSIONS: ReadonlySet<Permission> = new Set(PERMISSIONS);
 
 /**
+ * Permissions only an API key holds. `widget.connect` lets the embedded support widget open
+ * its socket and post to `/api/support/*`; it means nothing for a signed-in member, so no role
+ * bundles it and no member can be granted it (overrides.ts drops it).
+ */
+export const KEY_ONLY_PERMISSIONS: ReadonlySet<Permission> = new Set<Permission>([
+  "widget.connect",
+]);
+
+/** Everything a dashboard member can hold: the catalogue less the key-only permissions. */
+export const MEMBER_PERMISSIONS: ReadonlySet<Permission> = new Set(
+  PERMISSIONS.filter((p) => !KEY_ONLY_PERMISSIONS.has(p)),
+);
+
+/**
  * Bumped whenever the catalogue or a role's bundle changes, so a client holding a stale
  * mirror can tell and fall back to deriving permissions from the role key.
  */
-export const PERMISSIONS_VERSION = 1;
+export const PERMISSIONS_VERSION = 2;
 
 export function isPermission(value: string): value is Permission {
   return (ALL_PERMISSIONS as ReadonlySet<string>).has(value);

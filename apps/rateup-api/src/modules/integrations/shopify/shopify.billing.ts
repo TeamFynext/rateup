@@ -16,7 +16,7 @@ import {
   RateupPlan,
   SubscriptionStatus,
 } from "../../../../generated/prisma/client.js";
-import { getSubscription } from "../../subscription/subscription.service.js";
+import { bustSubscriptionGate, getSubscription } from "../../subscription/subscription.service.js";
 import dayjs from "dayjs";
 import { createEmailBodySubscriptionActivated } from "../../../utils/email/payments/subscriptionActivated.js";
 import { getShopifyIntegrationByShop } from "./shopify.credential.js";
@@ -247,6 +247,7 @@ async function activateSubscriptionThroughShopify(
       lastLimitAlertSentAt: null,
     },
   });
+  if (integration?.orgId) void bustSubscriptionGate(integration.orgId);
 
   const updatedOrder = await prisma.order.update({
     where: {

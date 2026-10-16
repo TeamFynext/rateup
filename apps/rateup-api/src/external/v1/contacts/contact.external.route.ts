@@ -13,8 +13,11 @@ import {
 } from "../../../modules/contact/contact.schema.js";
 import { createContactSchema } from "../contact-groups/contact.external.schema.js";
 import z from "zod";
+import { declareExternalScopes } from "../../shared/scopes.js";
 
 export async function externalContactRoutes(server: FastifyInstance) {
+  declareExternalScopes(server, { read: "contacts.read", write: "contacts.manage" });
+
   server.post(
     "/",
     {

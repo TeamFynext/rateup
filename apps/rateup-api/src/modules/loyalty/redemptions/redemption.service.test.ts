@@ -26,11 +26,13 @@ vi.mock("../redemptionValidator.js", () => ({
 }));
 
 vi.mock("../messaging/send.js", () => ({ sendLoyaltyEvent: vi.fn() }));
+vi.mock("../loyalty.webhooks.js", () => ({ announceLoyaltyTransactions: vi.fn() }));
 
 import prisma from "../../../utils/prisma.js";
 import { validateRedemption } from "../redemptionValidator.js";
 import { sendLoyaltyEvent } from "../messaging/send.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
+import { announceLoyaltyTransactions } from "../loyalty.webhooks.js";
 import {
   applyRedemption,
   getRedemptionsByCustomer,
@@ -822,5 +824,51 @@ describe("getTransactionsForExport", () => {
     db.loyaltyTransaction.findMany.mockResolvedValue([{ id: "txn-1" }]);
 
     await expect(getTransactionsForExport(PROGRAM, {})).resolves.toHaveLength(1);
+  });
+});
+
+// ===========================================================================
+// The org webhook (loyalty.points.redeemed)
+// ===========================================================================
+
+describe("redeemReward — webhook", () => {
+  const announce = announceLoyaltyTransactions as unknown as Mock;
+
+  test("announces the ledger row after the transaction commits", async () => {
+    const order: string[] = [];
+    db.$transaction.mockImplementation(async (fn: (tx: unknown) => unknown) => {
+      const result = await fn(db);
+      order.push("commit");
+      return result;
+    });
+    announce.mockImplementation(() => {
+      order.push("announce");
+      return Promise.resolve(1);
+    });
+
+    await redeemReward(PROGRAM, input);
+
+    expect(order).toEqual(["commit", "announce"]);
+    expect(announce).toHaveBeenCalledWith(ORG, [{ id: "txn-1" }], {
+      phone: "919000000001",
+      cardCode: null,
+    });
+  });
+
+  test("announces nothing when the deduction rolls back", async () => {
+    db.customerLoyaltyAccount.update.mockRejectedValue(notFound());
+
+    await expect(redeemReward(PROGRAM, input)).rejects.toThrow();
+    expect(announce).not.toHaveBeenCalled();
+  });
+
+  test("a coupon held for approval hands over no ledger row", async () => {
+    db.loyaltyReward.findFirst.mockResolvedValue(
+      reward({ redemptionRules: { approval_rules: { requires_approval: true } } }),
+    );
+
+    await redeemReward(PROGRAM, input);
+
+    expect(announce).toHaveBeenCalledWith(ORG, [null], expect.anything());
   });
 });

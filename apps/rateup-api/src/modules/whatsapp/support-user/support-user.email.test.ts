@@ -18,6 +18,7 @@ import { sendSupportEmail } from "./support-user.service.js";
 import { sendSupportEmailHandler } from "./support-user.controller.js";
 import { supportEmailSchema } from "./support-user.schema.js";
 import { supportUserWebhookRoutes } from "./suport-user.webhook.route.js";
+import { verifyWidgetTokenHook } from "../../apiAccessToken/apiAccessToken.auth.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
@@ -151,6 +152,25 @@ describe("the /email route", () => {
     expect(emailRoute).toBeDefined();
     expect(emailRoute[1].preHandler).toHaveLength(2);
     expect(emailRoute[1].schema.body).toBe(supportEmailSchema);
+  });
+});
+
+describe("the widget routes", () => {
+  test("every /api/support route takes only a full-access or widget key", async () => {
+    const server: any = { post: vi.fn(), get: vi.fn(), addHook: vi.fn() };
+
+    await supportUserWebhookRoutes(server);
+
+    const registered = [...server.post.mock.calls, ...server.get.mock.calls];
+    expect(registered.map((call: any[]) => call[0]).sort()).toEqual([
+      "/",
+      "/contact",
+      "/contact/:contactId",
+      "/email",
+    ]);
+    for (const [, opts] of registered) {
+      expect([opts.preHandler].flat()).toContain(verifyWidgetTokenHook);
+    }
   });
 });
 

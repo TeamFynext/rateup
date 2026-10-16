@@ -19,11 +19,9 @@ import {
   generateResponse,
   getAllResponses,
   getResponseAnalyticsForGraph,
-  getResponseBySurveyById,
   getResponseCountForCamparison,
   getResponses,
   getResponseSummary,
-  getSurveyList,
   getSurveyResponseBySurveyId,
   getSurveyResponseCount,
   resetResponsesStats,
@@ -82,34 +80,6 @@ export async function getAllResponsesHandler(
   }
 }
 //to get response of survey by id for external api
-export async function getResponsesBySurveyIdHandler(
-  req: FastifyRequest<{
-    Params: GetResponsesParams;
-  }>,
-  res: FastifyReply,
-) {
-  try {
-    const { surveyId } = req.params;
-    const response = await getResponseBySurveyById(surveyId);
-    res.send(response);
-  } catch (error) {
-    log.error("error while geResponsesBySurveyId");
-    res.code(500).send(error);
-  }
-}
-
-//to get survey lisit for external api
-export async function getSurveyListHandler(req: FastifyRequest, res: FastifyReply) {
-  try {
-    const { orgId } = req.user;
-    const response = await getSurveyList(orgId);
-    res.send(response);
-  } catch (error) {
-    log.error("error while getSurveyListHandler");
-    res.code(500).send(error);
-  }
-}
-
 export async function downloadExcelResponseHandler(
   request: FastifyRequest<{
     Body: generateXlsxBody;

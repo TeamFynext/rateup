@@ -1,3 +1,4 @@
+import { bustSubscriptionGate } from "../subscription/subscription.service.js";
 import {
   OrderStatus,
   PaymentPlanStatus,
@@ -611,6 +612,7 @@ export async function updateSubscription(payload: RazorpaySubscriptionChargedPay
         isAnnualMessageLimit: notes?.isAnnualMessageLimit === "1",
       },
     });
+    if (notes?.orgId) void bustSubscriptionGate(notes.orgId);
 
     // Read before the update: `subscription.charged` fires on every cycle, and the order
     // is only not COMPLETE on the first one. That also makes a webhook redelivery silent,
@@ -974,6 +976,7 @@ export async function applySubscriptionUpdate(payload: RazorpaySubscriptionWebho
           lastLimitAlertSentAt: null,
         },
       });
+      void bustSubscriptionGate(order.orgId);
     }
 
     return { success: true, data: order };

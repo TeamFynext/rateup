@@ -8,6 +8,7 @@ import { sendLoyaltyEvent } from "../messaging/send.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
 import { ASSIGNMENT_ONLY_REWARD_TYPES } from "../../../types/loyalty.js";
 import { syncRedemptionDiscount } from "../../integrations/commerce/discounts.js";
+import { announceLoyaltyTransactions, type LoyaltyLedgerRow } from "../loyalty.webhooks.js";
 
 /**
  * A transaction client — what `prisma.$transaction(async (tx) => …)` hands the
@@ -49,6 +50,14 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
   if (!customer) {
     throw new LoyaltyError("MEMBER_NOT_FOUND", "Customer account not found");
   }
+
+  // Each branch below calls this with the ledger row its transaction wrote, once that
+  // transaction has returned. A row held for approval moved no points and is skipped.
+  const announce = (row: LoyaltyLedgerRow | null | undefined) =>
+    void announceLoyaltyTransactions(customer.contact?.orgId, [row], {
+      phone: customer.contact?.phone ?? null,
+      cardCode: customer.cardCode ?? null,
+    });
 
   const reward = await prisma.loyaltyReward.findFirst({
     where: { id: data.rewardId, programId },
@@ -93,7 +102,7 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
 
     const instantRedemptionCode = await generateRedemptionCode();
 
-    const { redemption, balanceAfter } = await prisma.$transaction(async (tx) => {
+    const { redemption, balanceAfter, ledgerRow } = await prisma.$transaction(async (tx) => {
       const account = await moveBalance(
         tx,
         customer.id,
@@ -139,8 +148,9 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
 
       await burnStock(tx, reward);
 
-      return { redemption: created, balanceAfter: account.currentPoints };
+      return { redemption: created, balanceAfter: account.currentPoints, ledgerRow: transaction };
     });
+    announce(ledgerRow);
 
     // Mirror the code into the store before the customer is told about it, so a message that
     // quotes the code is only sent once the code actually works at checkout. A no-op unless
@@ -192,7 +202,7 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
 
     const status = requiresApproval ? "PENDING" : "APPROVED";
 
-    const { redemption } = await prisma.$transaction(async (tx) => {
+    const { redemption, ledgerRow } = await prisma.$transaction(async (tx) => {
       let transaction = null;
       let balance = customer.currentPoints;
 
@@ -242,8 +252,9 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
         await burnStock(tx, reward);
       }
 
-      return { redemption: created, balanceAfter: balance };
+      return { redemption: created, balanceAfter: balance, ledgerRow: transaction };
     });
+    announce(ledgerRow);
 
     // Only an approved redemption has actually cost the customer anything; creating the
     // discount for one still awaiting approval would put a live code in the shop that the
@@ -298,7 +309,7 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
 
   const status = requiresApproval ? "PENDING" : "APPROVED";
 
-  const { redemption } = await prisma.$transaction(async (tx) => {
+  const { redemption, ledgerRow } = await prisma.$transaction(async (tx) => {
     await tx.customerReward.upsert({
       where: {
         rewardId_accountId: {
@@ -389,8 +400,9 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
       await burnStock(tx, reward);
     }
 
-    return { redemption: created, balanceAfter: balance };
+    return { redemption: created, balanceAfter: balance, ledgerRow: transaction };
   });
+  announce(ledgerRow);
 
   const storeDiscount = requiresApproval
     ? { discountUrl: undefined }

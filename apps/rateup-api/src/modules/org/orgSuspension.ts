@@ -15,6 +15,9 @@ import { log } from "../../utils/logger.js";
 const CACHE_SECONDS = 60;
 const cacheKey = (orgId: string) => `org:suspended:${orgId}`;
 
+/** Exported so a hot path can read it in the same round trip as its own keys. */
+export const suspensionCacheKey = cacheKey;
+
 /** The message the customer sees. Says who to talk to, and never why. */
 export const ORG_SUSPENDED_MESSAGE =
   "This account is suspended. Please contact RateUp support to restore it.";

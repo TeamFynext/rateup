@@ -45,7 +45,7 @@
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
-    "@scalar/fastify-api-reference": "^1.72.1",
+    "@scalar/fastify-api-reference": "^1.74.0",
     "@shopify/shopify-api": "^15.0.0",
     "axios": "^1.20.0",
     "bcrypt": "^6.0.0",

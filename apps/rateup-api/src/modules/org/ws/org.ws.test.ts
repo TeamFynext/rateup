@@ -43,9 +43,8 @@ vi.mock("../../../authz/actor.js", () => ({
   loadActor: vi.fn().mockResolvedValue(null),
 }));
 vi.mock("../../apiAccessToken/apiAccessToken.service.js", () => ({
-  verifyApiAccessToken: vi.fn(),
+  authenticateApiAccessToken: vi.fn(),
 }));
-vi.mock("../org.services.js", () => ({ getOrgById: vi.fn() }));
 
 import { getSessionWithoutRequestResponse } from "supertokens-node/recipe/session/index.js";
 import { userStatusQueue } from "../../../workers/bullmq/queues/index.js";
@@ -59,8 +58,7 @@ import {
   sendViaWstoOrgHandler,
   WS_CHANNEL,
 } from "./org.ws.controller.js";
-import { verifyApiAccessToken } from "../../apiAccessToken/apiAccessToken.service.js";
-import { getOrgById } from "../org.services.js";
+import { authenticateApiAccessToken } from "../../apiAccessToken/apiAccessToken.service.js";
 import { orgWsRoutes } from "./org.ws.routes.js";
 import { afterAuthIdParamsSchema } from "./org.ws.schema.js";
 
@@ -560,25 +558,25 @@ describe("orgWsRoutes", () => {
 });
 
 describe("checkWidgetToken", () => {
-  const verify = verifyApiAccessToken as unknown as Mock;
-  const findOrg = getOrgById as unknown as Mock;
+  const verify = authenticateApiAccessToken as unknown as Mock;
+  const grant = (scopes: string[] = []) => ({ keyId: "k", orgId: OWN_ORG, scopes });
+  const KEY = "rk_live_tok";
 
   function widgetReq(query: Record<string, string | undefined>) {
     return { query } as any;
   }
 
   beforeEach(() => {
-    findOrg.mockResolvedValue({ id: OWN_ORG });
-    verify.mockResolvedValue(true);
+    verify.mockResolvedValue(grant());
   });
 
-  test("resolves the org onto the request for a valid token", async () => {
-    const request = widgetReq({ orgId: OWN_ORG, accessToken: "tok" });
+  test("takes the org from the key", async () => {
+    const request = widgetReq({ accessToken: KEY });
     const rep = reply();
 
     await checkWidgetToken(request, rep);
 
-    expect(verify).toHaveBeenCalledWith(OWN_ORG, "tok");
+    expect(verify).toHaveBeenCalledWith(null, KEY);
     expect(request.user.orgId).toBe(OWN_ORG);
     expect(rep.code).not.toHaveBeenCalled();
   });
@@ -586,23 +584,50 @@ describe("checkWidgetToken", () => {
   test("refuses a request with no token", async () => {
     const rep = reply();
 
-    await checkWidgetToken(widgetReq({ orgId: OWN_ORG }), rep);
+    await checkWidgetToken(widgetReq({}), rep);
 
     expect(rep.code).toHaveBeenCalledWith(401);
     expect(verify).not.toHaveBeenCalled();
   });
 
-  test("refuses a request with no orgId", async () => {
+  test("refuses an older (non-rk_) key without looking it up", async () => {
     const rep = reply();
 
     await checkWidgetToken(widgetReq({ accessToken: "tok" }), rep);
 
     expect(rep.code).toHaveBeenCalledWith(401);
+    expect(verify).not.toHaveBeenCalled();
   });
 
-  test("refuses a token that does not belong to the org", async () => {
-    verify.mockResolvedValue(false);
-    const request = widgetReq({ orgId: OWN_ORG, accessToken: "wrong" });
+  test("accepts a key with the Webchat widget feature", async () => {
+    verify.mockResolvedValue(grant(["widget.connect"]));
+    const request = widgetReq({ accessToken: KEY });
+    const rep = reply();
+
+    await checkWidgetToken(request, rep);
+
+    expect(rep.code).not.toHaveBeenCalled();
+    expect(request.principal).toEqual({ kind: "widget", orgId: OWN_ORG });
+  });
+
+  test("refuses 403 a key limited to other features", async () => {
+    verify.mockResolvedValue(grant(["contacts.read", "contacts.manage"]));
+    const request = widgetReq({ accessToken: KEY });
+    const rep = reply();
+
+    await checkWidgetToken(request, rep);
+
+    expect(rep.code).toHaveBeenCalledWith(403);
+    expect(rep.send).toHaveBeenCalledWith({
+      message: "Forbidden",
+      error: expect.stringContaining("Webchat widget feature"),
+    });
+    expect(request.user).toBeUndefined();
+  });
+
+  test("refuses an rk_ key that matches no key", async () => {
+    verify.mockResolvedValue(null);
+    const request = widgetReq({ accessToken: "rk_live_wrong" });
     const rep = reply();
 
     await checkWidgetToken(request, rep);
@@ -611,21 +636,11 @@ describe("checkWidgetToken", () => {
     expect(request.user).toBeUndefined();
   });
 
-  test("answers 404 for an org that does not exist", async () => {
-    findOrg.mockResolvedValue(null);
-    const rep = reply();
-
-    await checkWidgetToken(widgetReq({ orgId: "nope", accessToken: "tok" }), rep);
-
-    expect(rep.code).toHaveBeenCalledWith(404);
-    expect(verify).not.toHaveBeenCalled();
-  });
-
   test("answers 401 rather than throwing when the lookup fails", async () => {
-    findOrg.mockRejectedValue(new Error("db down"));
+    verify.mockRejectedValue(new Error("db down"));
     const rep = reply();
 
-    await checkWidgetToken(widgetReq({ orgId: OWN_ORG, accessToken: "tok" }), rep);
+    await checkWidgetToken(widgetReq({ accessToken: KEY }), rep);
 
     expect(rep.code).toHaveBeenCalledWith(401);
   });

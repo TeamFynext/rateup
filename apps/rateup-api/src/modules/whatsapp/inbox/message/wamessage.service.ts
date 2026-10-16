@@ -2303,6 +2303,8 @@ export async function getChatByContactId(
       where: {
         contactId,
         sourcePlatform: "WEBCHAT",
+        // The widget's key names the org; a contact id from another org must read nothing.
+        contact: { orgId: req.user.orgId },
       },
       orderBy: {
         waCreatedAt: "asc",

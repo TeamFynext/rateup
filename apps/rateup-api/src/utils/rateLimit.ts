@@ -43,6 +43,17 @@ function failClosedDisabled(): boolean {
   return process.env.RATE_LIMIT_FAIL_CLOSED_DISABLED === "true";
 }
 
+/**
+ * One round trip per check. Only the first request in a window sets the expiry, so the
+ * window starts when its first request arrives and is not extended by later ones; doing it
+ * in a script also closes the gap where a crash between INCR and EXPIRE left a counter that
+ * never expired. Redis caches the script by hash after the first EVAL.
+ */
+const INCR_WITH_WINDOW = `
+local count = redis.call("INCR", KEYS[1])
+if count == 1 then redis.call("EXPIRE", KEYS[1], ARGV[1]) end
+return count`;
+
 export function rateLimit<R extends FastifyRequest = FastifyRequest>({
   max,
   windowSeconds,
@@ -58,10 +69,7 @@ export function rateLimit<R extends FastifyRequest = FastifyRequest>({
 
     let count: number;
     try {
-      count = await connection.incr(bucket);
-      // Only the first request in a window sets the expiry, so the window starts
-      // when the window's first request arrives and is not extended by later ones.
-      if (count === 1) await connection.expire(bucket, windowSeconds);
+      count = Number(await connection.eval(INCR_WITH_WINDOW, 1, bucket, windowSeconds));
     } catch (error) {
       if (failClosed && !failClosedDisabled()) {
         log.error({ err: error, bucket }, "Rate limit check failed; refusing the request");

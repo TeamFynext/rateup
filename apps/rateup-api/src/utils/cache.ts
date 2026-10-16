@@ -141,3 +141,18 @@ export function cacheKeyFor(
   const digest = createHash("sha1").update(canonical).digest("hex");
   return `${namespace}:${orgId}:${endpoint}:${digest}`;
 }
+
+/**
+ * Drops entries ahead of their TTL. Only for the few caches whose source is written in a
+ * handful of known places (the external API's subscription and programme gates); the
+ * aggregates above stay TTL-only for the reasons given at the top of this file. Fails open
+ * like the rest: a failed delete leaves the entry to expire.
+ */
+export async function bustCache(...keys: string[]): Promise<void> {
+  if (keys.length === 0 || !redisReady()) return;
+  try {
+    await connection.del(...keys);
+  } catch (error) {
+    log.warn({ err: error, keys }, "Cache bust failed; the entry will expire on its own");
+  }
+}

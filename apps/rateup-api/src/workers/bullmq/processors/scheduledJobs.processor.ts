@@ -7,7 +7,9 @@
 import { Job, Worker } from "bullmq";
 
 import { log } from "../../../utils/logger.js";
-import { sweepExpiredIdempotencyRecords } from "../../../external/v1/idempotency.js";
+import { sweepExpiredIdempotencyRecords } from "../../../external/shared/idempotency.js";
+import { sweepOldApiUsage } from "../../../modules/apiAccessToken/apiUsage.js";
+import { sweepExpiredApiKeys } from "../../../modules/apiAccessToken/apiAccessToken.service.js";
 import baseRedis from "../../../utils/redisConnection.js";
 import { resetAnnualCounts, resetMonthlyCounts } from "../../../modules/stats/stats.service.js";
 import {
@@ -94,6 +96,14 @@ const HANDLERS: Record<ScheduledJobId, () => Promise<void>> = {
     await safeRun("sweepExpiredIdempotencyRecords", async () => {
       const removed = await sweepExpiredIdempotencyRecords();
       log.info({ removed }, "Swept expired external idempotency records");
+    });
+    await safeRun("sweepOldApiUsage", async () => {
+      const removed = await sweepOldApiUsage();
+      log.info({ removed }, "Swept old partner API usage rows");
+    });
+    await safeRun("sweepExpiredApiKeys", async () => {
+      const removed = await sweepExpiredApiKeys();
+      log.info({ removed }, "Swept long-expired partner API keys");
     });
   },
 

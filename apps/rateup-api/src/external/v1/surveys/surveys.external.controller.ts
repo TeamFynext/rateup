@@ -1,19 +1,31 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import {
-  getResponsesBySurveyIdHandler,
-  getSurveyListHandler,
-} from "../../../modules/response/response.controller.js";
+
+import { log } from "../../../utils/logger.js";
+import { getResponsesBySurveyId, getSurveyList } from "./surveys.external.service.js";
+import type { GetResponsesBySurveyParams } from "./surveys.external.schema.js";
 
 export async function getSurveyResponsesExternalController(
-  request: Parameters<typeof getResponsesBySurveyIdHandler>[0],
-  reply: FastifyReply,
+  req: FastifyRequest<{ Params: GetResponsesBySurveyParams }>,
+  res: FastifyReply,
 ) {
-  return getResponsesBySurveyIdHandler(request, reply);
+  try {
+    const { surveyId } = req.params;
+    // The route path always carries one; the optional schema is v1's original.
+    if (!surveyId) return res.send([]);
+    const response = await getResponsesBySurveyId(surveyId, req.user.orgId);
+    return res.send(response);
+  } catch (error) {
+    log.error({ err: error }, "error while geResponsesBySurveyId");
+    return res.code(500).send(error);
+  }
 }
 
-export async function getSurveyListExternalController(
-  request: Parameters<typeof getSurveyListHandler>[0],
-  reply: FastifyReply,
-) {
-  return getSurveyListHandler(request, reply);
+export async function getSurveyListExternalController(req: FastifyRequest, res: FastifyReply) {
+  try {
+    const response = await getSurveyList(req.user.orgId);
+    return res.send(response);
+  } catch (error) {
+    log.error({ err: error }, "error while getSurveyListHandler");
+    return res.code(500).send(error);
+  }
 }

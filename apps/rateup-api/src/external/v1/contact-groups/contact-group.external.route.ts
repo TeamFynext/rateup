@@ -1,3 +1,4 @@
+import z from "zod";
 import { FastifyInstance } from "fastify";
 import {
   createContactGroupInputSchema,
@@ -21,7 +22,22 @@ import {
 } from "./contact-groups.external.controller.js";
 import { contactResponseSchema } from "./contact.external.schema.js";
 
+/**
+ * The shared group schema is the dashboard's input shape, and does not describe a stored row:
+ * `icon` is nullable in the table and `createdAt` comes back from Prisma as a Date. The
+ * serializer refused both, so any org with an icon-less group got a 500 from every list and
+ * create here. Widening only those two keeps v1's wire output otherwise unchanged (a Date is
+ * sent as its ISO string).
+ */
+const groupResponseSchema = contactGroupResponseSchema.extend({
+  icon: z.string().nullable().optional(),
+  createdAt: z.union([z.date(), z.string()]),
+});
+import { declareExternalScopes } from "../../shared/scopes.js";
+
 export async function externalContactGroupRoutes(server: FastifyInstance) {
+  declareExternalScopes(server, { read: "contacts.read", write: "contacts.manage" });
+
   server.post(
     "/",
     {
@@ -31,7 +47,7 @@ export async function externalContactGroupRoutes(server: FastifyInstance) {
         summary: "Create a contact group",
         tags: ["Contacts/Groups"],
         response: {
-          200: contactGroupResponseSchema,
+          200: groupResponseSchema,
         },
       },
     },
@@ -47,7 +63,7 @@ export async function externalContactGroupRoutes(server: FastifyInstance) {
         summary: "Get all contact groups",
         tags: ["Contacts/Groups"],
         response: {
-          200: contactGroupResponseSchema.array(),
+          200: groupResponseSchema.array(),
         },
       },
     },
