@@ -77,6 +77,34 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     kinds: ["new", "improvement"],
     area: "Automation",
     link: { to: "/dashboard/automation", label: "Open automations" },
+    id: "2026-10-16-webhook-settings-redesign",
+    title: "A clearer webhook settings page",
+    summary:
+      "Pick webhook events by group and save them together, and see how to verify each delivery's signature, with ready-to-copy Node.js and Python code.",
+    publishedAt: "2026-10-16",
+    kinds: ["improvement"],
+    area: "Integrations",
+    link: { to: "/dashboard/settings/integrations/webhook", label: "Open webhook settings" },
+  },
+  {
+    id: "2026-10-16-webchat-widget-key",
+    title: "A dedicated key for your webchat widget",
+    summary:
+      "You can now give the webchat widget a key that can only run the widget, so the key in your page's source opens nothing else. Create one from the Widget integration.",
+    publishedAt: "2026-10-16",
+    kinds: ["new"],
+    area: "API",
+    link: { to: "/dashboard/settings/integrations/widget", label: "Open the widget setup" },
+  },
+  {
+    id: "2026-10-16-multiple-api-keys",
+    title: "Multiple API keys, with usage",
+    summary:
+      "You can now create a separate API key for each integration, limit what it can do, and rotate it without downtime. A usage chart shows each key's requests and errors.",
+    publishedAt: "2026-10-16",
+    kinds: ["new"],
+    area: "API",
+    link: { to: "/dashboard/settings/integrations/apiservice", label: "Open API keys" },
   },
   {
     id: "2026-10-14-automation-wizard",

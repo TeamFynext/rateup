@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { getApiErrorMessage } from "@/utils/apiError.ts";
+
 import type { SaveWebhookInput, WebhookEvent } from "./webhook.api";
 import {
   deleteWebhook,
@@ -28,8 +30,9 @@ export const useSaveWebhookMutation = () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       toast.success("Webhook saved");
     },
+    // The API says why: a failed URL check reads "Webhook URL challenge verification failed".
     onError: (error) => {
-      toast.error(error?.message || "Failed to save webhook");
+      toast.error(getApiErrorMessage(error, "Failed to save webhook"));
     },
   });
 };
@@ -40,9 +43,10 @@ export const useUpdateWebhookEventsMutation = () => {
     mutationFn: (events: WebhookEvent[]) => updateWebhookEvents(events),
     onSuccess: (saved) => {
       queryClient.setQueryData(QUERY_KEY, saved);
+      toast.success("Events saved");
     },
-    onError: () => {
-      toast.error("Failed to update webhook events");
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Failed to update webhook events"));
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
   });

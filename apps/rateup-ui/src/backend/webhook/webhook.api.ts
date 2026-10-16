@@ -17,6 +17,12 @@ export const WEBHOOK_EVENTS = [
   "lead.stage_changed",
   "survey.response_submitted",
   "team.member_joined",
+  "message.status",
+  "survey.response.created",
+  "flow.response.created",
+  "loyalty.points.earned",
+  "loyalty.points.redeemed",
+  "loyalty.points.adjusted",
 ] as const;
 
 export type WebhookEvent = (typeof WEBHOOK_EVENTS)[number];
@@ -59,7 +65,7 @@ export const deleteWebhook = async () => {
   return res.data;
 };
 
-/** The secret deliveries are signed with (`X-Rateup-Signature`). Needs `webhooks.manage`. */
+/** The secret deliveries are signed with (`X-Rateup-Signature-256`, legacy `X-Rateup-Signature`). Needs `webhooks.manage`. */
 export const getWebhookSecret = async () => {
   const res = await axiosClient.get(`${WEBHOOK_URL}/secret`);
   return res.data as { secret: string };

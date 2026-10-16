@@ -1,7 +1,7 @@
 import { useId } from "react";
 import { useTranslation } from "react-i18next";
 
-import { ApiCopyButton } from "@/components/ExternalApi/ApiAccessKey.tsx";
+import { ApiCopyButton } from "@/components/ExternalApi/ApiCopyButton.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
