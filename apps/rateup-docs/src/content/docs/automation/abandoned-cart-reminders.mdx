@@ -11,7 +11,7 @@ checkouts**. You choose how long a checkout sits untouched before the WhatsApp m
 RateUp stops the reminder the moment the order comes through. The **Results** tab on the Shopify
 integration then shows the orders and revenue those reminders recovered.
 
-<ScreenShot src="/docs/screenshots/automation/abandoned-cart-rule.png" alt="If step of an abandoned-checkout rule: Send after, marketing-only checkbox and Product Filter" />
+<ScreenShot src="/docs/screenshots/automation/abandoned-cart-rule.png" alt="The Conditions step of an abandoned-checkout rule: Send after, Only buyers who accepted marketing, and Only for these products (optional)" />
 
 ---
 
@@ -29,28 +29,28 @@ integration then shows the orders and revenue those reminders recovered.
 
 <Steps>
 <Step>
-Go to **Automation** and click **Create Automation**. On **Basics**, keep **WhatsApp**, name the rule
-— *"Cart reminder – 1 hour"* — and pick the number it sends from.
+Go to **Automation** and click **Create Automation**. On **Template**, pick **Abandoned cart
+reminder** (marked **Needs Shopify**), or **Start from scratch**.
 </Step>
 <Step>
-On **When**, choose **Shopify Event**, then **On abandoned checkouts** as the **Shopify Trigger
-Condition**.
+On **Trigger**, keep **WhatsApp** under **Channels**, choose the **Shopify Event** event and
+**On abandoned checkouts** under **Which Shopify event**, then tick the number under **Send from**.
 </Step>
 <Step>
-On **If**, set **Send after** — **30 minutes**, **1 hour**, **3 hours**, **12 hours**, **1 day**,
+On **Conditions**, set **Send after** — **30 minutes**, **1 hour**, **3 hours**, **12 hours**, **1 day**,
 **3 days**, **7 days**, or **Custom…** for any number of minutes, hours or days. Leave **Only buyers
 who accepted marketing** ticked.
 </Step>
 <Step>
-Optionally narrow it with **Product Filter** — *"The rule triggers if the cart contains any selected
-product."* Click **Add product**, and the refresh button if a new product is missing.
+Optionally narrow it under **Only for these products (optional)** — *"The rule triggers if the
+cart contains any selected product."* Click **Add product**, and the refresh button if a new product is missing.
 </Step>
 <Step>
-On **Then**, add **Send Template**, pick your template and map its variables. Map the link to
+On **Actions**, add **Send Template**, pick your template and map its variables. Map the link to
 **Checkout Recovery Link** — see [Track the Link](#track-the-link) below.
 </Step>
 <Step>
-Review and click **Create Automation**.
+On **Review**, name the rule — *"Cart reminder – 1 hour"* — and click **Activate automation**.
 </Step>
 </Steps>
 
@@ -68,7 +68,7 @@ the app suggests *1 hour, 1 day and 3 days*. Each rule reminds each checkout at 
 | The clock | **Send after** counts from the buyer's **last change** to the checkout. Editing the cart pushes a waiting reminder back, so nobody is messaged mid-checkout |
 | Limits | Between **15 minutes** and **7 days**. A custom value outside that is rejected — *"Send after at least 15 minutes"* / *"Send after 7 days at most"* |
 | The order comes through | Every waiting reminder for that checkout is cancelled |
-| The cart changes | A reminder whose **Product Filter** no longer matches the cart is cancelled |
+| The cart changes | A reminder whose product filter no longer matches the cart is cancelled |
 | Shopify drops the checkout | Its reminders are cancelled |
 | Already sent | An updated checkout is never reminded twice by the same rule |
 | **Only during business hours** | A reminder due outside the hours is pushed back in 30-minute steps until they open |

@@ -1,16 +1,16 @@
 ---
 title: "Creating a Rule"
-description: The step-by-step automation builder — Basics, When, If, Then and Review — and sharing a keyword rule as a link.
+description: The step-by-step automation builder — Template, Trigger, Conditions, Actions and Review — the phone preview, and sharing a keyword rule as a link.
 ---
 
-import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
+import { Step, Steps } from "fumadocs-ui/components/steps";
 
-Since October 2026 an automation is built one step at a time. A step rail across the top reads
-**Basics → When → If → Then → Review**, and each step has to pass its own checks before **Next**
-takes you on.
+An automation is built one step at a time. A step rail across the top reads
+**Template → Trigger → Conditions → Actions → Review**, and **Continue** stays disabled until the
+step you are on is complete — the reason is written next to it.
 
-<ScreenShot src="/docs/screenshots/automation/rule-wizard.png" alt="The automation builder on the If step with one Message Body condition" />
+<ScreenShot src="/docs/screenshots/automation/rule-wizard.png" alt="The automation builder on the Conditions step of a keyword rule, with the Device Preview showing the Instagram conversation" />
 
 ---
 
@@ -22,48 +22,84 @@ Go to **Automation** and click **Create Automation**. The header reads **Automat
 automation** until you give it a name.
 </Step>
 <Step>
-**Basics — *Name and channels*.** Pick the **Platform** (**WhatsApp**, **Instagram** or
-**Messenger**), type a **Rule Name** and choose one or more **Channels** — the numbers, Instagram
-accounts or Pages the rule runs on.
+**Template — *"Start from a template"*.** Pick the closest template, or click **Start from
+scratch**. Filter the gallery by **Auto-replies**, **Routing**, **Pipeline**, **Labels**, **Store
+orders** or **Instagram**. A template fills in the trigger, conditions and actions; you still pick
+the team, label or WhatsApp template it should use. Some are marked **Needs Shopify**, **Needs
+WooCommerce** or **Needs Instagram**.
+
+<ScreenShot src="/docs/screenshots/automation/template-gallery.png" alt="The Template step: category filters, Start from scratch and the template cards" />
 </Step>
 <Step>
-**When — *When should this run?*** Choose the **Trigger Event**. A **Shopify Event** asks for the
-**Shopify Trigger Condition**, and a **WooCommerce Event** for the **WooCommerce order status**. See
+**Trigger — *"What starts it?"*** Under **Channels**, switch on every platform the rule should run
+on — **WhatsApp**, **Instagram** and **Messenger** can all be on at once. Choose the **Event**, then
+tick the accounts under **Listen on** (or **Send from**, for events that only send). A **Shopify
+Event** asks **Which Shopify event**, and a **WooCommerce Event** asks for the **Order status**. See
 [Triggers](/automation/triggers).
 </Step>
 <Step>
-**If — *Only if…*.** Add the conditions that must match. What appears here depends on the trigger:
-condition blocks for messages and contacts, post pickers for Instagram comments, a product filter and
-reminder timing for Shopify. See [Conditions](/automation/conditions).
+**Conditions.** Add what must match. The heading follows the trigger — *"Which messages should it
+reply to?"* for **Message Received**, *"Which comments should it answer?"* for Instagram comments,
+*"Only when…"* otherwise. See [Conditions](/automation/conditions).
 </Step>
 <Step>
-**Then — *Then do this*.** Add actions with **Add action**. They run in the order listed. See
+**Actions — *"What should it do?"*** Add actions; they run in order, top to bottom. See
 [Actions](/automation/actions).
 </Step>
 <Step>
-**Review — *Review and save*.** Read the one-line summary — *"Welcome — when message received, if
-1 condition match, then 2 actions"* — set any limits, and click **Create Automation**.
+**Review — *"Review and switch it on"*.** Give the rule a **Name**, read the sentence that describes
+it — click any coloured part to jump back and change it — set any **Limits**, and click **Activate
+automation**.
 </Step>
 </Steps>
 
-After the first save you land on the saved rule. A new rule is saved switched on.
+Opening the builder from a template card on the Automation page skips the Template step and starts
+on **Trigger**. A new rule is saved switched on.
+
+---
+
+## One Rule on Several Channels
+
+A rule can listen on WhatsApp, Instagram and Messenger at the same time and reply on each. Switch
+the platforms on under **Channels**, then tick at least one account for each.
+
+| What you see | Meaning |
+|--------------|---------|
+| A channel chip is dimmed | The chosen event or one of the actions does not run on that platform. Hover it for the reason |
+| You cannot switch the last channel off | A rule needs at least one channel |
+| Accounts disappear when you switch a channel off | That platform's accounts are removed from the rule |
+| *"Tick a … account, or turn … off"* | A channel is on with no account ticked for it |
+
+---
+
+## Watch It in the Phone Preview
+
+The **Preview** button in the header opens the **Device Preview** panel on the right; it opens
+by itself when the builder loads. It plays the rule as the customer will see it: what they send, then what
+comes back. Actions the customer never sees — labels, assignments, webhooks — are listed under the
+conversation.
+
+When a rule runs on more than one channel, a switch above the phone picks which app it shows. The
+same switch drives the **Share** tab, so the phone and the share link always show the same
+platform.
 
 ---
 
 ## What Each Step Checks
 
-**Next** validates only the step you are on. If something is wrong, the field is marked and a toast
-names the first problem.
+**Continue** checks only the step you are on. While it is disabled, the reason sits next to it:
 
 | Step | Blocks you when |
 |------|-----------------|
-| **Basics** | *"Name is required"*, or *"Select at least one account"* |
-| **When** | *"Select a Shopify event"* or *"Select a WooCommerce order status"* for those triggers |
-| **If** | *"At least one condition is required for Message Received trigger"*, *"Duplicate conditions are not allowed"*, *"Add at least one post ID"* for specific Instagram posts |
-| **Then** | *"At least one action is required"*, *"Duplicate actions are not allowed"*, an empty value, or an invalid URL for **Call External API** |
+| **Template** | *"Pick a template, or start from scratch"* |
+| **Trigger** | *"Tick at least one account to continue"*, *"Pick a Shopify event to continue"*, *"Pick an order status to continue"*, or a channel with no account |
+| **Conditions** | *"Add at least one condition — without one it would answer every message"*, *"Remove the repeated condition"*, *"Fill in every condition"*, *"Pick at least one post"* |
+| **Actions** | *"Add at least one action"*, *"Two actions are the same — remove one"*, or *"Finish the “…” action"* |
+| **Review** | *"Give it a name to switch it on"*, or *"Pick which business hours"* |
 
-Changing the **Platform** on the Basics step resets the channels, the trigger, the conditions and any
-Shopify, WooCommerce or Instagram settings — pick the platform first.
+Changing the **Event** clears the settings that belonged to the old one — Shopify and WooCommerce
+events and products, Instagram post choices and the ig.me link name — so a hidden value is never
+saved.
 
 <Callout type="info">
   Pressing **Enter** in a text field moves to the next step rather than saving, so a half-built rule
@@ -76,8 +112,8 @@ Shopify, WooCommerce or Instagram settings — pick the platform first.
 
 | Option | Effect |
 |--------|--------|
-| **Send only once per day per contact** | *"Prevents duplicate messages to the same contact within 24 hours."* The app notes it applies only to the chatbot action |
-| **Only during business hours** | The rule fires only inside the hours you pick under **Select Business Hours** |
+| **Run once a day per contact** | *"Skips anyone this automation already ran for in the last 24 hours."* |
+| **Only during business hours** | The rule fires only inside the hours you pick under **Business hours** |
 
 Business hours are the schedules defined on [Settings → Account](/settings/account).
 
@@ -85,9 +121,9 @@ Business hours are the schedules defined on [Settings → Account](/settings/acc
 
 ## Edit a Saved Rule
 
-Click a rule's card to open it. On a saved rule every step is unlocked, so you can jump straight to
-the one you want from the step rail, and **Update Automation** is available on every step — you do
-not have to walk to Review again.
+Click a rule's card to open it. A saved rule opens on **Trigger** with every step unlocked, so you
+can jump straight to the one you want from the step rail, and **Save changes** is available on every
+step — you do not have to walk to Review again.
 
 If a save fails validation, the builder jumps to the step holding the problem and shows the message.
 
@@ -100,19 +136,27 @@ A saved **Message Received** rule with at least one keyword gets a second tab in
 
 <Steps>
 <Step>
-Open the **Share** tab.
+Open the **Share** tab and pick the **Keyword**.
 </Step>
 <Step>
-Choose the account under **Select Account** and the keyword under **Select Keyword**.
+If the rule runs on more than one channel, pick the platform tab — **WhatsApp**, **Instagram** or
+**Messenger**. Each has its own **Account**, **Share Link** and QR code.
 </Step>
 <Step>
-Copy the **Share Link**. Opening it starts a chat with the keyword already typed — a `wa.me` link on
-WhatsApp, an `m.me` link on Messenger, an Instagram link on Instagram.
+Copy the **Share Link**, or download the QR code.
 </Step>
 </Steps>
 
-Put the link on a poster, in a bio or behind a QR code, and the customer only has to press send for
-the rule to fire.
+| Platform | Link | What the customer does |
+|----------|------|------------------------|
+| **WhatsApp** | `wa.me/<number>?text=<keyword>` | Presses send — the keyword is already typed |
+| **Instagram** | `ig.me/m/<username>` | Types the keyword themselves |
+| **Messenger** | `m.me/<page id>` | Types the keyword themselves |
+
+<Callout type="warn">
+  Instagram and Messenger links cannot pre-fill a message: they only open the chat. Print the
+  keyword next to the link or QR code — *"Send REFUND to start"* — or the rule never fires.
+</Callout>
 
 ---
 
@@ -120,10 +164,11 @@ the rule to fire.
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| **Next** does nothing but show a toast | The current step has an error | Read the toast; the field is marked in red |
+| **Continue** is disabled | The current step is incomplete | Read the message next to the button |
 | No **Share** tab | The rule is unsaved, not **Message Received**, or has no keyword | Save it with a **Message Body** keyword |
-| Channels emptied themselves | You changed the **Platform** | Pick the platform first, then the channels |
-| The rule never fires | It is **Inactive**, or the conditions cannot match | Check the switch on its card, then the **If** step |
+| A channel chip cannot be switched on | The event or an action does not run on that platform | Hover the chip for the reason |
+| Instagram or Messenger link opens an empty chat | Those apps cannot pre-fill text | Tell customers which keyword to send |
+| The rule never fires | It is **Inactive**, or the conditions cannot match | Check the switch on its card, then the **Conditions** step |
 
 ---
 

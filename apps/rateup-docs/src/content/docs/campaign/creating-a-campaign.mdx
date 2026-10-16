@@ -62,8 +62,15 @@ Click **Next** to create the draft.
 ### Template
 
 **For a broadcast**, pick one template under **Choose a template**. Search with **Search
-templates**, or narrow the list to **All**, **Marketing** or **Utility**. The right-hand panel shows
-**Template details** and a **Live preview** of the message.
+templates**, or narrow the list to **All**, **Marketing** or **Utility**. Beside the list sit
+**Variable mapping** and **Template details**.
+
+The message itself is shown in the **Device Preview** panel on the right, which opens by itself on
+this step: the template as the recipient will see it in WhatsApp, with the variables filled in. The
+**Preview** button in the header hides and shows it. The panel closes when you move on to
+**Audience**.
+
+<ScreenShot src="/docs/screenshots/campaign/template-step.png" alt="The campaign Template step: template list, Variable mapping and Template details, with the template shown in the Device Preview phone" />
 
 Under **Variable mapping**, every placeholder in the template body — `{{1}}`, `{{2}}` — must be
 mapped to **Contact name** or one of your [custom fields](/contacts/custom-fields). Until they are,
@@ -71,7 +78,8 @@ mapped to **Contact name** or one of your [custom fields](/contacts/custom-field
 
 **For a drip**, *"Build the sequence"*: each **Stage** has a template, a delay in **minutes**,
 **hours** or **days**, and a time of day. *"Each stage sends once, the given delay after the contact
-joins."* Use **Add stage** for more and **Remove stage** to drop one. Every stage needs a template.
+joins."* Use **Add stage** for more and **Remove stage** to drop one. Every stage needs a template. The
+**Device Preview** panel shows the first stage's template.
 </Step>
 <Step>
 ### Audience

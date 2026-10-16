@@ -1,6 +1,6 @@
 ---
 title: "Automation Overview"
-description: Build When → If → Then rules that react to messages, comments, contact changes and store events automatically.
+description: Build rules — from a template or from scratch — that react to messages, comments, contact changes and store events on WhatsApp, Instagram and Messenger.
 ---
 
 import ScreenShot from "@/components/Screenshot";
@@ -27,14 +27,15 @@ For example:
 > **When** a message is received · **if** the body contains "refund" · **then** assign the Billing
 > team and attach the *Refund* label.
 
-Each rule belongs to one platform — **WhatsApp**, **Instagram** or **Messenger** — and runs on the
-accounts you pick for it.
+A rule runs on one or more platforms — **WhatsApp**, **Instagram** and **Messenger** — and on the
+accounts you pick for each. The builder asks in the order **Trigger → Conditions → Actions**, after
+an optional starting **Template**.
 
 <Cards>
   <Card
     title="Creating a Rule"
     href="/automation/creating-a-rule"
-    description="The step-by-step builder: Basics, When, If, Then and Review."
+    description="The step-by-step builder: Template, Trigger, Conditions, Actions and Review."
   />
   <Card
     title="Triggers"
@@ -76,7 +77,9 @@ Each card shows the rule's name, its trigger, a platform badge and an **Active**
 switch. A Shopify **On abandoned checkouts** rule also shows what it recovered in the last 30 days —
 see [Abandoned-Cart Reminders](/automation/abandoned-cart-reminders).
 
-With no rules yet, the page reads *"No Automation Yet"*.
+With no rules yet, the page shows *"Start with a template"* — four templates to pick from, and
+**See all templates, or start from scratch** for the rest. Picking one opens the builder on its
+**Trigger** step with the template filled in.
 
 ---
 

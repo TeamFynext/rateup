@@ -5,26 +5,36 @@ description: Narrow a trigger down so the rule fires only when it should.
 
 import ScreenShot from "@/components/Screenshot";
 
-**Conditions** are the `IF` part of a rule, set on the builder's **If** step — *"Only if…"*. A
-**Message Received** rule needs at least one; for the other triggers they are optional, and a rule
-with none fires on every occurrence of its trigger.
+**Conditions** decide which occurrences of the trigger the rule acts on. They are set on the
+builder's **Conditions** step, whose heading follows the trigger:
 
-<ScreenShot src="/docs/screenshots/automation/conditions.png" alt="Two condition blocks with the Match all / Match any switch" />
+| Trigger | Heading | Under it |
+|---------|---------|----------|
+| **Message Received** | *"Which messages should it reply to?"* | *"Without a condition it would answer every message — even “thanks”."* |
+| **Instagram Comment (Private Reply)** | *"Which comments should it answer?"* | *"Add keywords, or leave it empty to answer every comment."* |
+| Every other trigger | *"Only when…"* | *"Narrow it down, or continue to run it every time."* |
+
+A **Message Received** rule needs at least one condition. For the other triggers they are
+optional, and a rule with none fires on every occurrence of its trigger.
+
+<ScreenShot src="/docs/screenshots/automation/conditions.png" alt="The Conditions step: Group 1 with two Message Body conditions and the Run when any of these conditions match sentence" />
 
 ---
 
 ## What You Can Test
 
-| Field | Checks | Operators |
-|-------|--------|-----------|
-| **Message Body** | The text of the message — **All Messages**, or a **Custom keyword** | Contains, Equals, Starts With, Ends With |
-| **Contact Email** | The contact's email address | Contains, Equals, Starts With, Ends With |
-| **Contact Group** | A group the contact belongs to | Equals |
-| **Contact Label** | A label on the contact | Equals |
-| **Lead Stage** | The contact's stage on a [pipeline](/pipeline) | Equals |
-| **Contact Lifecycle (legacy)** | The contact's lifecycle stage — shown only on conditions that already use it | Equals |
+Each condition is one row: a field, an operator and a value.
 
-An **Instagram Comment** rule can test only **Message Body** — the comment text.
+| Field | Checks | Operators | Value |
+|-------|--------|-----------|-------|
+| **Message Body** | The text of the message | Contains, Equals, Starts With, Ends With | A word or phrase — *"Type a word or phrase, e.g. refund"* — or tick **Reply to every message** |
+| **Contact Email** | The contact's email address | Contains, Equals, Starts With, Ends With | Free text |
+| **Contact Group** | A group the contact belongs to | Equals | **Select group** |
+| **Contact Label** | A label on the contact | Equals | **Select label** |
+| **Lead Stage** | The contact's stage on a [pipeline](/pipeline) | Equals | **Select stage** |
+| **Contact Lifecycle (legacy)** | The contact's lifecycle stage — listed only on a condition that already uses it | Equals | **Select lifecycle** |
+
+An **Instagram Comment (Private Reply)** rule can test only **Message Body** — the comment text.
 
 <Callout type="info">
   **Contains** is the right default for message text. **Equals** on a message body almost never
@@ -33,36 +43,75 @@ An **Instagram Comment** rule can test only **Message Body** — the comment tex
 
 ---
 
-## Combine Conditions in Blocks
+## Combine Conditions in Groups
 
-Conditions live in numbered blocks — **Block 1**, **Block 2** — added with **Add condition block**.
+Conditions live in numbered groups — **Group 1**, **Group 2** — each with its own **Add
+condition** button. **Add condition group** adds another group.
 
-| Where | Setting | Meaning |
-|-------|---------|---------|
-| Inside a block | **Match all** | Every condition in the block must be true (AND) |
-| Inside a block | **Match any** | At least one must be true (OR) |
-| Between blocks (two or more) | **Match all** / **Match any** | Whether every block, or any one, must pass |
+| Where | Appears when | Reads | Meaning |
+|-------|--------------|-------|---------|
+| Inside a group | The group has two or more conditions | *"Run when **all** of these conditions match"* | Every condition in the group must be true (AND) |
+| Inside a group | — | *"Run when **any** of these conditions match"* | At least one must be true (OR) |
+| Above the groups | There are two or more groups | *"Run when **all** / **any** of these groups match"* | Whether every group, or any one, must pass |
 
-**Match any** is how you catch the several ways people phrase the same thing — *refund*, *money
-back*, *return*. **Match all** is how you narrow — a message containing "refund" **and** a contact
-labelled *VIP*.
+**any** is how you catch the several ways people phrase the same thing — *refund*, *money back*,
+*return*. **all** is how you narrow — a message containing "refund" **and** a contact labelled
+*VIP*.
 
-The same condition twice in one block is rejected: *"Duplicate conditions are not allowed"*. On a
-**Message Received** rule the last block cannot be deleted.
+On a **Message Received** rule the last group cannot be deleted.
+
+### What Stops You Continuing
+
+| Message next to **Continue** | Cause |
+|------------------------------|-------|
+| *"Add at least one condition — without one it would answer every message"* | A **Message Received** rule has no condition |
+| *"Remove the repeated condition"* | The same field, operator and value appear twice in one group |
+| *"Fill in every condition"* | A row has no value |
+| *"Pick at least one post"* | **Specific posts** is chosen on a comment rule but no post is picked |
 
 ---
 
 ## Conditions for Other Triggers
 
-Some triggers replace the blocks with their own settings on the **If** step:
+Some triggers replace the groups with their own settings, or add settings above them:
 
-| Trigger | The If step shows |
-|---------|-------------------|
-| **Shopify Event** | **Product Filter (optional)** — and, for **On abandoned checkouts**, **Send after** and **Only buyers who accepted marketing** ([details](/automation/abandoned-cart-reminders)) |
-| **WooCommerce Event** | **Product Filter (optional)** |
-| **Instagram Comment** | The comment source, **Apply to** **All posts** or **Specific posts**, plus Message Body blocks |
-| **Instagram Story Mention** | **Apply to** all or specific stories |
-| **ig.me Link Opened** | The **Link name** |
+| Trigger | The Conditions step shows |
+|---------|---------------------------|
+| **Shopify Event** | **Only for these products (optional)** — and, for **On abandoned checkouts**, **Send after** and **Only buyers who accepted marketing**. No condition groups |
+| **WooCommerce Event** | **Only for these products (optional)**. No condition groups |
+| **Instagram Comment (Private Reply)** | **Comments on** — **Posts & reels**, **Live videos** or **Both** — then **Apply to** **All posts** or **Specific posts**, then Message Body groups |
+| **Instagram Story Mention** | A note only — nothing to set |
+| **ig.me Link Opened** | The **Link name**, with the finished link, a copy button and a QR download |
+
+### Narrow a Store Rule to Certain Products
+
+Click **Add product** and pick from **Product 1**, **Product 2** and so on; the refresh button
+reloads the list from your store. The rule fires if the order — or, for abandoned checkouts, the
+cart — contains **any** selected product. Leave the list empty to fire on every order.
+
+### Abandoned-Checkout Options
+
+| Option | Choices | Default |
+|--------|---------|---------|
+| **Send after** | **30 minutes**, **1 hour**, **3 hours**, **12 hours**, **1 day**, **3 days**, **7 days**, or **Custom…** in minutes, hours or days | **1 hour** |
+| **Only buyers who accepted marketing** | On or off | On |
+
+*"Anywhere from 15 minutes to 7 days, counted from the buyer's last change to the checkout."*
+Nothing is sent if they complete the order first. See
+[Abandoned-Cart Reminders](/automation/abandoned-cart-reminders).
+
+### Pick Which Posts a Comment Rule Answers
+
+Choose **Specific posts**, then pick under **Select posts / reels**. The list loads from the
+Instagram account ticked on the **Trigger** step. **Live videos** hides **Apply to** — a live video
+is never in the post list. See [Comments & Story Mentions](/instagram/automations).
+
+### Name an ig.me Link
+
+The **Link name** becomes the link's `?ref=`. Use letters, numbers, `-`, `_` and `=` only. Leave it
+empty to answer every ig.me link, and ads that open the chat with a ref. The link appears once an
+Instagram account is ticked — *"Pick an Instagram account to see the link"*. See
+[Ice Breakers, Menu & Links](/instagram/entry-points).
 
 ---
 
@@ -71,7 +120,8 @@ Some triggers replace the blocks with their own settings on the **If** step:
 - **Test lowercase and common misspellings** — customers do not proofread
 - **Prefer a few broad keywords over many exact ones**
 - **Watch for accidental matches** — a rule on "no" will fire constantly
-- **Use All Messages deliberately** — combined with a reply action it answers every single message
+- **Use Reply to every message deliberately** — combined with a reply action it answers every single
+  message
 
 ---
 

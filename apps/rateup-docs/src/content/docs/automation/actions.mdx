@@ -1,113 +1,174 @@
 ---
 title: "Actions"
-description: What a rule does when it fires — assign, label, reply, close or call your own systems.
+description: What a rule does when it fires — reply, assign, label, close or call your own systems — and which channels each action runs on.
 ---
 
 import ScreenShot from "@/components/Screenshot";
 
-**Actions** are the `THEN` part of a rule, set on the builder's **Then** step — *"Then do this"*.
-One rule can perform several, in order: add each with **Add action**. A rule needs at least one, and
-the same action with the same value twice is rejected — *"Duplicate actions are not allowed"*.
+**Actions** are what a rule does when it fires. They are set on the builder's **Actions** step —
+*"What should it do?"* — and *"Actions run in order, top to bottom."* A rule needs at least one.
 
-<ScreenShot src="/docs/screenshots/automation/actions.png" alt="Then step of a Shopify Orders paid rule: Send Template with variable mapping, then Assign Team" />
-
----
-
-## Routing Actions
-
-| Action | Does |
-|--------|------|
-| **Assign User** | Gives the ticket to a specific person |
-| **Assign Team** | Gives it to a team — anyone in it can pick it up |
-| **Close Chat** | Closes the ticket with the status you pick — **Resolved**, **Closed** or **Unresolved**. **Spam** flags the contact as spam instead, which moves them to the [Spam](/inbox/inboxview/spam) tab |
-
-Prefer **Assign Team** over **Assign User** in automation. Team routing keeps working when someone
-is on leave; individual routing quietly piles up in an absent person's queue.
+<ScreenShot src="/docs/screenshots/automation/actions.png" alt="The Actions step with three numbered action cards: assign to a team, reply, and label" />
 
 ---
 
-## Tagging Actions
+## Add and Order Actions
 
-| Action | Does |
-|--------|------|
-| **Attach Label** | Adds a label to the contact |
-| **Assign Lead Stage** | Puts the contact on a column of your [pipeline](/pipeline) board, opening a lead if they are not on it yet |
-| **Assign Lifecycle (legacy)** | Moves the contact to a lifecycle stage. Superseded by **Assign Lead Stage** |
+<Steps>
+<Step>
+Click **Add action** and pick from the menu. Actions are grouped under **Reply to the customer** and
+**Behind the scenes**.
+</Step>
+<Step>
+Fill in the card that opens — a team, a label, a template.
+</Step>
+<Step>
+Drag a card by its handle to change the order. Click a folded card to open it again.
+</Step>
+</Steps>
 
-These make later filtering and reporting possible. A rule that labels every refund enquiry costs
-nothing and makes "how many refund requests last month?" answerable.
+Each folded card reads as a line of the rule — *assign to Support*, *label it “VIP”*. An unfinished
+one reads in grey italics, such as *assign to a team …*.
 
-<Callout type="info">
-  **Assign Lifecycle (legacy)** is offered only on a rule that already uses it, so existing rules
-  keep running and can still be saved. New rules get **Assign Lead Stage** instead — see
-  [Leads that open themselves](/pipeline/automatic-leads).
-</Callout>
+| Message next to **Continue** | Cause |
+|------------------------------|-------|
+| *"Add at least one action"* | The rule has no actions — the list shows **No actions yet** |
+| *"Two actions are the same — remove one"* | The same action with the same value is on the rule twice |
+| *"Finish the “…” action"* | A card is missing its value |
 
 ---
 
-## Messaging Actions
+## Actions and Channels
+
+The **Add action** menu offers only the actions every switched-on channel can run.
+
+| Action | Name in messages | Channels |
+|--------|------------------|----------|
+| **Send a message** | Send Message | WhatsApp, Instagram, Messenger |
+| **Send a template** | Send Template | WhatsApp only |
+| **Send a flow** | Send Flow | WhatsApp only |
+| **Send a web survey** | Send Web Survey | WhatsApp, Instagram, Messenger |
+| **Start a chatbot** | Trigger Chatbot | Any one channel — not on a rule with two or more |
+| **Assign to a team** | Assign Team | WhatsApp, Instagram, Messenger |
+| **Assign to a teammate** | Assign User | WhatsApp, Instagram, Messenger |
+| **Add a label** | Attach Label | WhatsApp, Instagram, Messenger |
+| **Move to a lead stage** | Assign Lead Stage | WhatsApp, Instagram, Messenger |
+| **Close the chat** | Close Chat | WhatsApp, Instagram, Messenger |
+| **Call an external API** | Call External API | WhatsApp, Instagram, Messenger |
+
+Adding an action also limits the channels. With **Send a template** on the rule, the
+**Instagram** and **Messenger** chips on the **Trigger** step are dimmed with *"“Send Template”
+can't run on Instagram or Messenger"*. With **Start a chatbot** on it, every other chip is dimmed
+with *"“Trigger Chatbot” runs on one channel. Remove it, or pick a single channel"*. Remove the
+action to free the channel.
+
+---
+
+## Reply to the Customer
 
 | Action | Sends |
 |--------|-------|
-| **Send Message** | A plain message |
-| **Send Template** | An approved [template](/whatsapp/templates) — WhatsApp rules only |
-| **Send Flow** | A [WhatsApp flow](/whatsapp/flows) — WhatsApp rules only |
-| **Send Web Survey** | A [web form](/web-forms) |
-| **Trigger Chatbot** | Hands the conversation to a [chatbot](/whatsapp/chatbots) built for the rule's platform |
+| **Send a message** | A plain message — *"Write the reply your customer will get"* |
+| **Send a template** | An approved [template](/whatsapp/templates) |
+| **Send a flow** | A [WhatsApp flow](/whatsapp/flows) |
+| **Send a web survey** | A [web form](/web-forms), listed as *form name (team name)* |
+| **Start a chatbot** | Hands the conversation to a chatbot built for the rule's channel — a [WhatsApp](/whatsapp/chatbots), [Instagram](/instagram/chatbots) or [Messenger](/messenger/chatbots) chatbot |
+
+Bold, italic and other formatting in **Send a message** work on WhatsApp. On a rule that also runs
+on Instagram or Messenger, *"Instagram and Messenger get the same words as plain text."*
 
 ### Fill a Template From the Event
 
-Once you pick a template, **Variable Mapping** lists its variables. Map each one to a field — a
-Shopify field on a Shopify rule (*"Map your WhatsApp template variables to Shopify data."*), a
-WooCommerce order field on a WooCommerce rule, or a contact field otherwise. Anything left unmapped
-falls back to the template's sample value.
+Once you pick a template, **Variable Mapping** lists its variables — **Variable `{{1}}`**, with the
+template's sample value beside it. Map each one to a field:
+
+| Rule | Prompt | Pick from |
+|------|--------|-----------|
+| Shopify | *"Map your WhatsApp template variables to Shopify data."* | **Select Shopify Field** |
+| WooCommerce | *"Map your WhatsApp template variables to WooCommerce order data."* | **Select WooCommerce Field** |
+| Any other | *"Map your WhatsApp template variables to contact fields."* | **Select Contact Field** |
+
+Anything left unmapped falls back to the template's sample value.
 
 | Option | Shown when | Does |
 |--------|------------|------|
-| **Button "…" link ending** | The template has a URL button with a variable | Fills the `{{1}}` at the end of the button's address |
+| **Button “…” link ending** | The template has a URL button with a variable | Fills the `{{1}}` at the end of the button's address. Left empty, it uses the template's sample value |
 | **Use Shopify product image as header** | A Shopify or WooCommerce rule, and a template with an image header | Swaps the template's header image for the ordered product's image |
 
+On a Shopify rule, pick **Checkout Recovery Link — button code** for the button to send a tracked
+cart link — see [Abandoned-Cart Reminders](/automation/abandoned-cart-reminders).
+
 <Callout type="warn">
-  Outside WhatsApp's 24-hour window, only **Send Template** will actually deliver. A **Send
-  Message** action on a stale conversation fails silently — check
+  Outside WhatsApp's 24-hour window, only **Send a template** will actually deliver. A **Send a
+  message** action on a stale conversation fails silently — check
   [Message Analytics](/analytics/message-analytics) if replies are not arriving.
 </Callout>
 
+### Reply in Public to an Instagram Comment
+
+On an **Instagram Comment (Private Reply)** rule, the Actions step also shows **Reply in public
+(optional)**: *"Posted under the comment so others see you answered. One is picked at random each
+time, so add a few."* Click **Add a public reply**, then **Add a variation** — up to 10, each up to
+2,200 characters. See [Comments & Story Mentions](/instagram/automations).
+
 ---
 
-## Integration Actions
+## Behind the Scenes
 
 | Action | Does |
 |--------|------|
-| **Call External API** | Sends a `POST` with a JSON body to a full URL you enter |
+| **Assign to a team** | Gives the ticket to a team — anyone in it can pick it up |
+| **Assign to a teammate** | Gives it to a specific person |
+| **Add a label** | Adds a label to the contact |
+| **Move to a lead stage** | Puts the contact on a column of your Leads [pipeline](/pipeline) board, opening a lead if they are not on it yet. A **Won** or **Lost** column is marked *· closes as won* / *· closes as lost* |
+| **Close the chat** | Closes the ticket as **Resolved**, **Closed** or **Unresolved**. **Spam** flags the contact as spam instead, which moves them to the [Spam](/inbox/inboxview/spam) tab |
+| **Call an external API** | Sends a `POST` with a JSON body to a full URL you enter |
 
-The builder shows an example request under the action. A value that is not a full URL is rejected:
-*"Enter a valid full URL (e.g. https://example.com/webhook)"*.
+Prefer **Assign to a team** over **Assign to a teammate** in automation. Team routing keeps working
+when someone is on leave; individual routing quietly piles up in an absent person's queue.
 
-Use this to notify your own systems — create a record in your CRM, trigger a fulfilment job, post
-to a team channel.
+Labels and lead stages make later filtering and reporting possible. A rule that labels every
+refund enquiry costs nothing and makes "how many refund requests last month?" answerable.
 
-See [Integrations](/settings/integrations) for webhook setup and payloads.
+**Move to a lead stage** needs a pipeline: without one the card reads *"No pipeline columns yet —
+create a pipeline before using this action."*
+
+<Callout type="info">
+  **Set lifecycle (legacy)** — *Assign Lifecycle (legacy)* — is kept only on rules that already use
+  it, so they keep running and can still be saved. It is not in the **Add action** menu; new rules
+  use **Move to a lead stage** — see [Leads that open themselves](/pipeline/automatic-leads).
+</Callout>
+
+### Call Your Own Systems
+
+With **Call an external API** on the rule, an **Example API request** box shows the shape of the
+call. A value that is not a full URL is rejected: *"Enter a valid full URL (e.g.
+https://example.com/webhook)"*.
+
+Use it to notify your own systems — create a record in your CRM, trigger a fulfilment job, post to
+a team channel. See [Integrations](/settings/integrations) for webhook setup and payloads.
 
 ---
 
-## Combining Actions
+## Combine Actions
 
-Actions run in order, so a single rule can do a complete piece of work:
+Actions run in order, so a single rule can do a complete piece of work. The **Review** step reads it
+back as one sentence:
 
-> **When** a message is received · **if** the body contains "refund" ·
-> **then** attach the *Refund* label → assign the Billing team → send the acknowledgement template
+> When a customer messages you and it mentions “refund”, label it “Refund”, assign to Billing and
+> send the refund_received template.
 
 ---
 
-## Keeping Automations Safe
+## Keep Automations Safe
 
 - **Start narrow.** One keyword, one account, then widen.
 - **Avoid loops.** A rule that sends a message on message-received can re-trigger itself if the
-  direction is not filtered.
+  conditions are too broad.
 - **Do not auto-close on a customer message.** Closing what someone just wrote in about is the
   fastest way to lose them.
-- **Name your rules properly.** *"Untitled rule"* is unmaintainable six months later.
+- **Name your rules properly.** The **Name** on the Review step is all you see on the rule card six
+  months later.
 - **Review quarterly.** Rules outlive the campaigns that justified them.
 
 ---

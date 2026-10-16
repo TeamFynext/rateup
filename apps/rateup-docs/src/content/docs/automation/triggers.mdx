@@ -1,83 +1,155 @@
 ---
 title: "Triggers"
-description: The events that start an automation rule, and which platforms offer each one.
+description: The events that start an automation rule, which channels each one runs on, and which ones need a single channel.
 ---
 
 import ScreenShot from "@/components/Screenshot";
+import { Step, Steps } from "fumadocs-ui/components/steps";
 
 A **trigger** is the event that starts a rule. Every automation has exactly one, chosen on the
-builder's **When** step as the **Trigger Event**.
+builder's **Trigger** step — *"What starts it?"* — under **Event**. The same step sets the
+**Channels** the rule runs on and the accounts it uses.
 
-<ScreenShot src="/docs/screenshots/automation/trigger-select.png" alt="The When step with the Trigger Event list open for a WhatsApp rule" />
+<ScreenShot src="/docs/screenshots/automation/trigger-select.png" alt="The Trigger step with WhatsApp, Instagram and Messenger switched on, the Event cards and the Listen on accounts" />
+
+---
+
+## Pick the Trigger on the Trigger Step
+
+<Steps>
+<Step>
+Under **Channels**, switch on every platform the rule should run on — **WhatsApp**, **Instagram**,
+**Messenger**.
+</Step>
+<Step>
+Under **Event**, pick a card. Each card names the event in plain words and carries a one-line hint.
+</Step>
+<Step>
+For a store event, pick **Which Shopify event** or the **Order status**.
+</Step>
+<Step>
+Tick the accounts under **Listen on** — or **Send from**, for the store events, which only send.
+</Step>
+</Steps>
+
+The **Event** list shows only the events that every switched-on channel can fire. Switch on
+WhatsApp and Instagram together and the Instagram-only and store events drop out of the list.
 
 ---
 
 ## Message and Conversation Triggers
 
-| Trigger | Fires when | Platforms |
-|---------|-----------|-----------|
-| **Message Received** | A customer sends a message | WhatsApp, Instagram, Messenger |
-| **Chat Assigned** | A ticket is given an owner | WhatsApp, Instagram, Messenger |
-| **Chat Closed** | A ticket is closed | WhatsApp, Instagram, Messenger |
+| On the rule card | In the builder | Hint | Channels |
+|------------------|----------------|------|----------|
+| **Message Received** | **A customer messages you** | *"Reply to keywords, or to any message."* | WhatsApp, Instagram, Messenger |
+| **Chat Assigned** | **A chat is assigned** | *"Tell the customer who is helping them."* | WhatsApp, Instagram, Messenger |
+| **Chat Closed** | **A chat is closed** | *"Follow up once your team closes a chat."* | WhatsApp, Instagram, Messenger |
 
-**Message Received** is the workhorse, and the one trigger that **requires a condition** — at
-minimum a **Message Body** of **All Messages** or a keyword. Use **Chat Closed** for follow-ups, such
-as a satisfaction survey after resolution.
+**Message Received** is the workhorse, and the one trigger that **requires a condition** — a
+**Message Body** keyword, or **Reply to every message** ticked. See
+[Conditions](/automation/conditions). Use **Chat Closed** for follow-ups, such as a satisfaction
+survey after resolution.
 
 ---
 
 ## Contact Triggers
 
-| Trigger | Fires when |
-|---------|-----------|
-| **Contact Created** | A new contact is added |
-| **Lead Stage Updated** | A contact moves to another stage of a [pipeline](/pipeline) |
-| **Lifecycle Updated (legacy)** | A contact's lifecycle stage changes — shown only on rules that already use it |
+| On the rule card | In the builder | Hint | Channels |
+|------------------|----------------|------|----------|
+| **Contact Created** | **A new contact is created** | *"Welcome someone the first time they write."* | WhatsApp, Instagram, Messenger |
+| **Lead Stage Updated** | **A lead moves to a new stage** | *"React when a lead moves on your board."* | WhatsApp, Instagram, Messenger |
+| **Lifecycle Updated (legacy)** | **A contact's lifecycle changes (legacy)** | *"Use lead stages for new automations."* | WhatsApp, Instagram, Messenger |
+
+**Lifecycle Updated (legacy)** is listed only on a rule that already uses it. New rules use **Lead
+Stage Updated**, which fires when a contact moves to another stage of a [pipeline](/pipeline).
 
 ---
 
 ## Store Triggers
 
-| Trigger | Then pick | Fires when |
-|---------|-----------|-----------|
-| **Shopify Event** | **Shopify Trigger Condition** | The chosen event happens in your connected Shopify store |
-| **WooCommerce Event** | **WooCommerce order status** | An order reaches the chosen status. The message goes to the phone number on the order |
+| On the rule card | In the builder | Then pick | Fires when |
+|------------------|----------------|-----------|-----------|
+| **Shopify Event** | **Something happens on Shopify** | **Which Shopify event** | The chosen event happens in your connected Shopify store |
+| **WooCommerce Event** | **A WooCommerce order changes status** | **Order status** | An order reaches the chosen status. *"The message goes to the phone number on the order."* |
 
-Shopify events on offer:
+Store events message the buyer from one account, so they need a **single channel**. With two or
+more channels switched on they are missing from the **Event** list; with a store event chosen, the
+other channel chips are dimmed with *"Store events send from one channel. Pick a single channel"*.
+The account list is headed **Send from** rather than **Listen on**.
+
+Shopify events under **Which Shopify event**:
 
 | Event | Fires on |
 |-------|----------|
 | **On Orders create** | A new order |
-| **On Orders paid** | Payment captured |
 | **On Orders fulfilled** | The whole order fulfilled |
-| **On orders partially fulfilled** | Part of the order fulfilled |
+| **On Orders paid** | Payment captured |
 | **On Orders cancelled** | An order cancelled |
-| **On fulfilled orders cancelled** | A fulfilment cancelled |
 | **On Draft Orders created** | A draft order created |
+| **On orders partially fulfilled** | Part of the order fulfilled |
+| **On fulfilled orders cancelled** | A fulfilment cancelled |
+| **On abandoned checkouts** | A checkout left untouched — see [Abandoned-Cart Reminders](/automation/abandoned-cart-reminders) |
 | **On refund issued** | A refund |
 | **On store credit issued** | The part of a refund paid out as store credit |
-| **On abandoned checkouts** | A checkout left untouched — see [Abandoned-Cart Reminders](/automation/abandoned-cart-reminders) |
 
-WooCommerce statuses: **Order processing (paid)**, **Order completed**, **Order on hold**, **Order
-cancelled**, **Order refunded**, **Payment failed**.
+WooCommerce statuses under **Order status**: **Order processing (paid)**, **Order completed**,
+**Order on hold**, **Order cancelled**, **Order refunded**, **Payment failed**.
 
-Both store triggers take an optional **Product Filter** on the **If** step: the rule fires only if
-the order (or cart) contains any selected product.
+Both store triggers take an optional **Only for these products (optional)** list on the
+**Conditions** step: the rule fires only if the order (or, for abandoned checkouts, the cart)
+contains any selected product.
+
+<Callout type="info">
+  **Continue** stays disabled until the event is complete: *"Pick a Shopify event to continue"* or
+  *"Pick an order status to continue"*.
+</Callout>
 
 ---
 
 ## Instagram Triggers
 
-Offered only on an **Instagram** rule.
+Listed only when **Instagram** is the rule's one channel.
 
-| Trigger | Fires when |
-|---------|-----------|
-| **Instagram Comment (Private Reply)** | Someone comments on your post, reel, ad or live video. The first message the rule sends arrives as a private reply to the comment |
-| **Instagram Story Mention** | Someone mentions your account in their story |
-| **ig.me Link Opened** | Someone opens a chat from an ig.me link you name on the **If** step |
+| On the rule card | In the builder | Hint |
+|------------------|----------------|------|
+| **Instagram Comment (Private Reply)** | **Someone comments on your post** | *"Reply privately to comments on your posts."* |
+| **Instagram Story Mention** | **Someone mentions you in a story** | *"Thank people who tag you in their story."* |
+| **ig.me Link Opened** | **Someone opens your ig.me link** | *"Greet people who arrive from a link you shared."* |
 
-See [Comments & Story Mentions](/instagram/automations) for comment sources, specific posts and public
+- **Instagram Comment (Private Reply)** fires on comments on your posts, reels, ads or live videos.
+  The first message the rule sends arrives as a private reply to the comment. Which comments it
+  answers, and any public reply, are set on the next steps.
+- **Instagram Story Mention** fires when someone mentions your account in their story.
+- **ig.me Link Opened** fires when someone opens a chat from an ig.me link. You name the link on
+  the **Conditions** step.
+
+With an Instagram trigger chosen, the **WhatsApp** and **Messenger** chips are dimmed with *"This
+event doesn't happen on WhatsApp"* (or Messenger). See
+[Comments & Story Mentions](/instagram/automations) for comment sources, specific posts and public
 replies.
+
+---
+
+## Why a Channel Chip Is Dimmed
+
+A chip you cannot switch on is dimmed, and its reason shows under the chips and when you hover it.
+
+| Reason shown | Cause | Fix |
+|--------------|-------|-----|
+| *"This event doesn't happen on …"* | An Instagram-only event is chosen | Pick another event, or keep the rule on Instagram |
+| *"Store events send from one channel. Pick a single channel"* | A Shopify or WooCommerce event is chosen | Make a separate rule per channel |
+| *"“Send Template” can't run on …"* | An action only runs on WhatsApp | Remove the action — see [Actions](/automation/actions) |
+| *"“Trigger Chatbot” runs on one channel. Remove it, or pick a single channel"* | A chatbot action is on the rule | Remove it, or keep one channel |
+
+The last channel that is on cannot be switched off — a rule needs at least one. Switching a channel
+off removes its accounts from the rule.
+
+<Callout type="warn">
+  Changing the **Event** clears what belonged to the old one — the Shopify event and products, the
+  WooCommerce status and products, the Instagram post choices and the ig.me link name — and, for
+  every event except **Message Received** and Instagram comments, removes the condition groups.
+  Check the **Conditions** step again after switching events.
+</Callout>
 
 ---
 
@@ -101,9 +173,20 @@ replies.
 
 ---
 
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| An event is missing from the **Event** list | Not every switched-on channel can fire it, or it is a store event on a multi-channel rule | Switch the other channels off |
+| **Continue** says *"Tick a … account, or turn … off"* | A channel is on with no account ticked | Tick an account for it, or switch it off |
+| **Continue** says *"Tick at least one account to continue"* | No account is ticked | Tick one under **Listen on** or **Send from** |
+
+---
+
 ## Related Pages
 
 - [Creating a Rule](/automation/creating-a-rule)
 - [Conditions](/automation/conditions)
 - [Actions](/automation/actions)
 - [Abandoned-Cart Reminders](/automation/abandoned-cart-reminders)
+- [Comments & Story Mentions](/instagram/automations)
