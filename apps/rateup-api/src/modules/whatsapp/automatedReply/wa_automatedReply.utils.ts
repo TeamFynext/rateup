@@ -1462,6 +1462,18 @@ async function executeAssignLifecycleAction(
   return true;
 }
 
+/**
+ * Where a rule's WhatsApp text goes: the contact, from the number the event arrived on.
+ * Without the number an org with several connected refuses the send.
+ */
+function waReplyTarget(phone: string, context: RuleExecutionContext) {
+  return {
+    phone,
+    orgId: context.orgId,
+    whatsappSettingsPhoneId: context.phoneNumberId,
+  };
+}
+
 async function executeSendMessageAction(
   messageText: string,
   context: RuleExecutionContext,
@@ -1472,7 +1484,7 @@ async function executeSendMessageAction(
     if (!context.phoneNumberId) return false;
     await sendMetaRuleText(context, context.phone, context.phoneNumberId, messageText);
   } else {
-    await sendTextMessage({ phone: context.phone, orgId: context.orgId }, null, messageText);
+    await sendTextMessage(waReplyTarget(context.phone, context), null, messageText);
   }
 
   return true;
@@ -1515,7 +1527,7 @@ async function executeSendWebSurveyAction(
     if (!context.phoneNumberId) return false;
     await sendMetaRuleText(context, context.phone, context.phoneNumberId, messageText);
   } else {
-    await sendTextMessage({ phone: context.phone, orgId: context.orgId }, null, messageText);
+    await sendTextMessage(waReplyTarget(context.phone, context), null, messageText);
   }
 
   return true;

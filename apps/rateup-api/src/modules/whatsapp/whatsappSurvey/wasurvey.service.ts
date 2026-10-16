@@ -715,7 +715,9 @@ async function updateDripCampaignStats(id: string) {
 }
 
 export async function sendTextMessage(
-  to: { phone: string; orgId: string },
+  // `whatsappSettingsPhoneId` names the number to send from. An org with several numbers
+  // refuses a send without one rather than guess (see `getWaSendingSettings`).
+  to: { phone: string; orgId: string; whatsappSettingsPhoneId?: string },
   title: string | null,
   description = "",
   // System/transactional callers (e.g. ticket notifications) pass true to bypass
@@ -728,7 +730,7 @@ export async function sendTextMessage(
     messageData,
     undefined,
     undefined,
-    undefined,
+    to.whatsappSettingsPhoneId,
     undefined,
     undefined,
     undefined,
