@@ -403,6 +403,8 @@ export interface RuleWithConditions {
   id: string;
   name: string;
   platform: "WHATSAPP" | "INSTAGRAM" | "FACEBOOK";
+  /** Empty only on a row written before multi-channel rules; `platform` stands in then. */
+  platforms: Array<"WHATSAPP" | "INSTAGRAM" | "FACEBOOK">;
   operator: "AND" | "OR";
   isActive: boolean;
   triggerEvent: string;
@@ -433,9 +435,10 @@ export interface RuleWithConditions {
       field: string;
       operator: string;
       value: string | null;
-      messageBodyLock?: {
-        businessHour: automationProps["businessHour"];
-      };
+      /** One per channel, all carrying the rule's business hours. */
+      messageBodyLocks?: Array<{
+        businessHour: automationProps["businessHour"] | null;
+      }>;
     }>;
   }>;
   actions: Array<{
@@ -462,9 +465,10 @@ async function validateRuleCondition(
     case "MESSAGE_BODY": {
       if (!value) return false;
 
-      // Check business hours if messageBodyLock exists
-      if (condition.messageBodyLock?.businessHour) {
-        const isWithinBusinessHours = validateTimeWindow(condition.messageBodyLock.businessHour);
+      // Check business hours if the keyword was locked to them
+      const lockedHours = condition.messageBodyLocks?.[0]?.businessHour;
+      if (lockedHours) {
+        const isWithinBusinessHours = validateTimeWindow(lockedHours);
         if (!isWithinBusinessHours) return false;
       }
 
@@ -586,10 +590,22 @@ async function validateConditionGroup(
   }
 }
 
+/**
+ * The channel a rule acts on for an event: the event's own, when the rule runs there. An event
+ * that could not name its channel (a contact with no conversation yet) uses the rule's first.
+ */
+export function actingPlatform(
+  rule: Pick<RuleWithConditions, "platform" | "platforms">,
+  eventPlatform?: string,
+): "WHATSAPP" | "INSTAGRAM" | "FACEBOOK" {
+  const platforms = rule.platforms?.length ? rule.platforms : [rule.platform ?? "WHATSAPP"];
+  return platforms.find((platform) => platform === eventPlatform) ?? platforms[0];
+}
+
 const RULE_INCLUDE = {
   groups: {
     include: {
-      conditions: { include: { messageBodyLock: { include: { businessHour: true } } } },
+      conditions: { include: { messageBodyLocks: { include: { businessHour: true } } } },
     },
   },
   actions: true,
@@ -607,6 +623,7 @@ export async function validateRuleConditions(
   message: string,
   orgId: string,
   phone: string,
+  platform: string = actingPlatform(rule),
 ): Promise<boolean> {
   if (!rule.isActive) return false;
 
@@ -640,14 +657,14 @@ export async function validateRuleConditions(
 
   if (operator === "AND") {
     for (const group of groups) {
-      const isValid = await validateConditionGroup(group, message, orgId, phone, rule.platform);
+      const isValid = await validateConditionGroup(group, message, orgId, phone, platform);
       if (!isValid) return false;
     }
     return true;
   } else {
     // OR operator
     for (const group of groups) {
-      const isValid = await validateConditionGroup(group, message, orgId, phone, rule.platform);
+      const isValid = await validateConditionGroup(group, message, orgId, phone, platform);
       if (isValid) return true;
     }
     return false;
@@ -717,15 +734,29 @@ function takeInstagramCommentId(context: RuleExecutionContext): string | undefin
 }
 
 /**
+ * Removes WhatsApp's `*bold*`, `_italic_`, `~strike~` and ```` ```mono``` ```` markers, which
+ * Instagram and Messenger would show literally. A marker only counts at a word's edge, as
+ * WhatsApp reads it, so `snake_case_name` and URLs survive. Mirrored in rateup-ui's
+ * `automation/whatsapp-formatting.ts` for the preview.
+ */
+export function stripWhatsAppFormatting(text: string): string {
+  return text
+    .replace(/```([\s\S]+?)```/g, "$1")
+    .replace(/(^|[\s([{"'])([*_~])(?=\S)([^\n]*?\S)\2(?=$|[\s.,!?:;)\]}"'])/gm, "$1$3");
+}
+
+/**
  * Sends a rule's text on Instagram or Messenger. `recipient` is the igsId or psid and
- * `accountId` the IBA id or Page id. Only Instagram can answer a comment privately.
+ * `accountId` the IBA id or Page id. Only Instagram can answer a comment privately. One reply
+ * is written for every channel a rule runs on, so WhatsApp's formatting is dropped here.
  */
 async function sendMetaRuleText(
   context: RuleExecutionContext,
   recipient: string,
   accountId: string,
-  text: string,
+  formattedText: string,
 ) {
+  const text = stripWhatsAppFormatting(formattedText);
   if (context.platform === "FACEBOOK") {
     await sendSendApiText(
       { platform: PlatformType.FACEBOOK, accountId },
@@ -829,7 +860,8 @@ export async function checkAndExecuteRuleByTriggerEvent(
       orgId,
       isActive: true,
       triggerEvent,
-      ...(context.platform !== "ALL" && { platform: context.platform }),
+      ...(context.platform &&
+        context.platform !== "ALL" && { platforms: { has: context.platform } }),
       ...(phoneNumberId && {
         whatsappSettingsPhoneIds: {
           has: phoneNumberId,
@@ -856,7 +888,7 @@ export async function checkAndExecuteRuleByTriggerEvent(
   const hasBusinessHours = (rule: RuleWithConditions): boolean => {
     if (rule.options?.businessHours?.enabled) return true;
     return rule.groups?.some((group) =>
-      group.conditions?.some((cond) => cond.messageBodyLock?.businessHour),
+      group.conditions?.some((cond) => cond.messageBodyLocks?.[0]?.businessHour),
     );
   };
 
@@ -937,7 +969,13 @@ export async function checkAndExecuteRuleByTriggerEvent(
           }
         }
         // Check comment text against rule conditions (message body, etc.)
-        const isMatch = await validateRuleConditions(rule, messageText, orgId, phoneText);
+        const isMatch = await validateRuleConditions(
+          rule,
+          messageText,
+          orgId,
+          phoneText,
+          actingPlatform(rule, context.platform),
+        );
         if (!isMatch) continue;
       } else if (triggerEvent === TriggerEvent.INSTAGRAM_STORY_MENTION) {
         // Story mentions always match — no post filtering or message checks
@@ -945,7 +983,13 @@ export async function checkAndExecuteRuleByTriggerEvent(
         const wanted = rule.options?.instagramRef?.toLowerCase();
         if (wanted && wanted !== context.instagramRef?.toLowerCase()) continue;
       } else {
-        const isMatch = await validateRuleConditions(rule, messageText, orgId, phoneText);
+        const isMatch = await validateRuleConditions(
+          rule,
+          messageText,
+          orgId,
+          phoneText,
+          actingPlatform(rule, context.platform),
+        );
         if (!isMatch) continue;
       }
 
@@ -1049,7 +1093,10 @@ export async function executeScheduledRule(
   if (await isOutsideRuleBusinessHours(rule)) return { status: "outside_business_hours" };
 
   const phone = context.phone ?? "";
-  if (!(await validateRuleConditions(rule, context.message ?? "", context.orgId, phone))) {
+  const platform = actingPlatform(rule, context.platform);
+  if (
+    !(await validateRuleConditions(rule, context.message ?? "", context.orgId, phone, platform))
+  ) {
     return { status: "conditions_not_met" };
   }
   const executedActions = await executeRuleActions(rule, context);
@@ -1075,8 +1122,7 @@ async function executeRuleActions(
   context: RuleExecutionContext,
 ): Promise<ActionResult[]> {
   const results: ActionResult[] = [];
-  const platform = rule.platform ?? "WHATSAPP";
-  const actionContext = { ...context, platform };
+  const actionContext = { ...context, platform: actingPlatform(rule, context.platform) };
 
   for (const action of rule.actions) {
     try {

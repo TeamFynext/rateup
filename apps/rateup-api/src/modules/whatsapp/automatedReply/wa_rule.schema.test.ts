@@ -60,3 +60,51 @@ describe("other platforms are unaffected", () => {
     ).toBe(true);
   });
 });
+
+describe("rules on several channels", () => {
+  const multi = { ...base, platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"] };
+
+  test("accept a shared trigger with actions every channel can run", () => {
+    expect(
+      createRuleSchema.safeParse({
+        ...multi,
+        triggerEvent: "CONTACT_CREATED",
+        actions: [
+          { type: "SEND_MESSAGE", value: "Welcome!" },
+          { type: "ATTACH_LABEL", value: "label-1" },
+        ],
+      }).success,
+    ).toBe(true);
+  });
+
+  test.each(["INSTAGRAM_COMMENT", "SHOPIFY_EVENT", "WOOCOMMERCE_EVENT"])(
+    "reject the single-channel trigger %s",
+    (triggerEvent) => {
+      const result = createRuleSchema.safeParse({
+        ...multi,
+        triggerEvent,
+        options: { shopifyEvent: "ORDERS_CREATE", wooEvent: "completed" },
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error?.issues[0].path).toEqual(["triggerEvent"]);
+    },
+  );
+
+  test.each(["SEND_TEMPLATE", "TRIGGER_CHATBOT"])("reject the action %s", (type) => {
+    const result = createRuleSchema.safeParse({ ...multi, actions: [{ type, value: "x" }] });
+
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].path).toEqual(["actions", 0, "type"]);
+  });
+
+  test("let a WhatsApp-only list keep templates", () => {
+    expect(
+      createRuleSchema.safeParse({
+        ...base,
+        platforms: ["WHATSAPP"],
+        actions: [{ type: "SEND_TEMPLATE", value: "t" }],
+      }).success,
+    ).toBe(true);
+  });
+});

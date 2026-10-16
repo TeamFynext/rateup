@@ -76,6 +76,7 @@ import {
   generateInternalMessageId,
   generateOrderReferenceId,
   readAssignStageValue,
+  stripWhatsAppFormatting,
   validateAutomationMatchCondition,
   validateRuleConditions,
   validateTimeWindow,
@@ -638,7 +639,7 @@ describe("validateRuleConditions - matching on the message", () => {
         field: "MESSAGE_BODY",
         operator: "CONTAINS",
         value: "price",
-        messageBodyLock: { businessHour: openAllDay("tuesday") },
+        messageBodyLocks: [{ businessHour: openAllDay("tuesday") }],
       }),
       "what is the price?",
       "org-1",
@@ -896,5 +897,18 @@ describe("executeScheduledRule - a scheduled template send", () => {
       status: "inactive",
     });
     expect(sendTemplateToUserCore).not.toHaveBeenCalled();
+  });
+});
+
+describe("stripWhatsAppFormatting", () => {
+  test("drops each marker and keeps the words", () => {
+    expect(stripWhatsAppFormatting("*Sale* ends _today_, ~was~ now ```CODE10```.")).toBe(
+      "Sale ends today, was now CODE10.",
+    );
+  });
+
+  test("leaves markers inside words and links alone", () => {
+    const text = "See https://example.com/a_b_c and order_id 2*3*4";
+    expect(stripWhatsAppFormatting(text)).toBe(text);
   });
 });
