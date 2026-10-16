@@ -5,7 +5,7 @@ import type {
   IntegrationProvider,
   ProviderJobData,
 } from "../providers/integrationProvider.types.js";
-import { removeWooWebhooks } from "./woocommerce.connect.js";
+import { removeWooWebhooks, syncWooWebhooks } from "./woocommerce.connect.js";
 import { handleWooInbound, type WooJobData } from "./woocommerce.inbound.js";
 import { readWooCredential } from "./woocommerce.types.js";
 
@@ -64,6 +64,13 @@ export const wooCommerceProvider: IntegrationProvider = {
   handleEvent: async () => {},
   handleInbound: handleWooInbound,
   processJob: processWooJob,
+  // The keys never expire; the scheduled sweep is for the webhooks. WooCommerce
+  // disables one after five failed deliveries (an API outage is enough) and
+  // never turns it back on, so the sweep replaces any that are disabled, paused
+  // or gone. A store that stops answering fails here, which the health alert shows.
+  refreshCredential: async (integration) => {
+    await syncWooWebhooks(integration);
+  },
   disconnect: async (integration) => {
     const credential = readWooCredential(integration.credential);
     if (credential) await removeWooWebhooks(credential);

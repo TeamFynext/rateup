@@ -28,8 +28,12 @@ const START_SLACK_MS = 60_000;
 
 const decimal = (amount: number) => amount.toFixed(2);
 
-/** `2026-09-28T10:00:00` — UTC without the zone, which `date_expires_gmt` expects. */
-const asWooGmt = (date: Date) => date.toISOString().slice(0, 19);
+/**
+ * `2026-09-28T10:00:00Z`, for `date_expires`. WooCommerce ignores
+ * `date_expires_gmt` on write (the coupon is saved with no expiry), and reads
+ * a `date_expires` without a zone in the store's timezone; the `Z` keeps it UTC.
+ */
+const asWooUtc = (date: Date) => `${date.toISOString().slice(0, 19)}Z`;
 
 /**
  * The store-neutral input as a WooCommerce coupon, or a reason it cannot be one.
@@ -60,7 +64,7 @@ export function toWooCoupon(
             discount_type: "percent",
             amount: decimal(Math.min(Math.max(input.value.percentage, 0), 100)),
           }),
-      date_expires_gmt: input.endsAt ? asWooGmt(input.endsAt) : null,
+      date_expires: input.endsAt ? asWooUtc(input.endsAt) : null,
       ...(input.minimumSpend ? { minimum_amount: decimal(input.minimumSpend) } : {}),
       individual_use: !combines,
       // One redemption, one use: without these the code becomes a public coupon
@@ -127,7 +131,7 @@ export async function deactivateWooDiscountCode(
   try {
     const client = await wooClientFor(orgId);
     if (!client) return false;
-    await updateWooCoupon(client, discountId, { date_expires_gmt: asWooGmt(new Date()) });
+    await updateWooCoupon(client, discountId, { date_expires: asWooUtc(new Date()) });
     return true;
   } catch (error) {
     log.error({ err: error, orgId, discountId }, "WooCommerce coupon deactivate failed");
