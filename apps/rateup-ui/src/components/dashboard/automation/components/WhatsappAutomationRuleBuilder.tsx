@@ -1,7 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigate, useRouter } from "@tanstack/react-router";
+import { IconArrowLeft } from "@tabler/icons-react";
+import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import React from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 
 import {
   useCreateRuleMutation,
@@ -142,6 +143,8 @@ const RuleEditor: React.FC<{
     defaultValues: initialValues,
   });
 
+  const ruleName = useWatch({ control: form.control, name: "name" });
+
   // Use saved data for Share functionality
   const savedTriggerEvent = ruleData?.triggerEvent;
   const savedGroups = ruleData?.groups;
@@ -188,30 +191,51 @@ const RuleEditor: React.FC<{
   }
 
   return (
-    <Tabs defaultValue="builder" className="max-w-4xl mx-auto relative h-full">
-      <div className="flex items-center justify-between mb-6">
-        <TabsList>
-          <TabsTrigger value="builder">Builder</TabsTrigger>
-          {showShareTab && <TabsTrigger value="share">Share</TabsTrigger>}
-        </TabsList>
-      </div>
+    // The chrome the campaign wizard uses: a 56px breadcrumb bar over the wizard itself.
+    <Tabs defaultValue="builder" className="bg-background h-full min-h-0 gap-0">
+      <header className="border-border bg-card flex h-14 shrink-0 items-center justify-between gap-4 border-b px-8">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <Link
+            to="/dashboard/automation"
+            className="text-muted-foreground hover:text-foreground inline-flex shrink-0 items-center gap-1 text-[13px]"
+          >
+            <IconArrowLeft className="size-3.5" aria-hidden />
+            Automations
+          </Link>
+          <span className="text-muted-foreground/50" aria-hidden>
+            /
+          </span>
+          <span className="font-display truncate text-[15px] font-semibold">
+            {ruleName || (isEditMode ? "Untitled automation" : "New automation")}
+          </span>
+        </div>
+        {showShareTab && (
+          <TabsList>
+            <TabsTrigger value="builder">Builder</TabsTrigger>
+            <TabsTrigger value="share">Share</TabsTrigger>
+          </TabsList>
+        )}
+      </header>
 
-      <TabsContent value="builder" className="mt-0">
+      <TabsContent value="builder" className="flex min-h-0 flex-col">
         <RuleBuilderForm
           form={form}
           onSubmit={onSubmit}
           onCancel={() => history.back()}
           isPending={isPending}
           buttonText={buttonText}
+          isEdit={isEditMode}
         />
       </TabsContent>
 
-      <TabsContent value="share">
-        <RuleShare
-          groups={savedGroups || []}
-          channels={savedChannels || []}
-          platform={savedPlatform}
-        />
+      <TabsContent value="share" className="min-h-0 overflow-y-auto px-8 py-8">
+        <div className="mx-auto max-w-3xl">
+          <RuleShare
+            groups={savedGroups || []}
+            channels={savedChannels || []}
+            platform={savedPlatform}
+          />
+        </div>
       </TabsContent>
     </Tabs>
   );
