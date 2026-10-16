@@ -1,19 +1,13 @@
 import {
   IconArrowRight,
-  IconBolt,
-  IconChevronDown,
-  IconCircleCheck,
   IconDeviceFloppy,
-  IconFilter,
   IconLoader2,
-  IconPlayerPlay,
   IconPlus,
   IconRefresh,
-  IconSettings,
   IconTrash,
 } from "@tabler/icons-react";
-import React, { useState } from "react";
-import type { FieldErrors, UseFormReturn } from "react-hook-form";
+import React, { useRef, useState } from "react";
+import type { FieldErrors, FieldPath, UseFormReturn } from "react-hook-form";
 import { Controller, FormProvider, useFieldArray, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -24,7 +18,6 @@ import {
   useInstagramStories,
 } from "@/backend/whatsapp/instagram-profile/instagramProfile.query";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import {
@@ -44,6 +37,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
+import { Stepper } from "@/components/ui/stepper.tsx";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { cn } from "@/lib/utils.ts";
 import { ShopifyEvents } from "@/types/enums.ts";
@@ -63,9 +57,33 @@ interface RuleBuilderFormProps {
   onCancel: () => void;
   isPending: boolean;
   buttonText: string;
+  /** A saved rule: every step is reachable from the start and each one offers Save. */
+  isEdit: boolean;
 }
 
-type Section = "trigger" | "conditions" | "actions" | "options";
+type Step = "basics" | "trigger" | "conditions" | "actions" | "options";
+
+const STEPS: readonly Step[] = ["basics", "trigger", "conditions", "actions", "options"];
+
+/** The fields each step owns: what Next validates, and where a failed save sends you. */
+const STEP_FIELDS: Record<Step, readonly FieldPath<CreateRuleInput>[]> = {
+  basics: ["platform", "name", "whatsappSettingsPhoneIds"],
+  trigger: ["triggerEvent", "options.shopifyEvent", "options.wooEvent"],
+  conditions: [
+    "operator",
+    "groups",
+    "options.shopifyProductIds",
+    "options.wooProductIds",
+    "options.abandonedCheckoutDelayMinutes",
+    "options.requireMarketingConsent",
+    "options.instagramScope",
+    "options.instagramPostIds",
+    "options.instagramCommentSource",
+    "options.instagramRef",
+  ],
+  actions: ["actions", "options.instagramPublicReplies"],
+  options: ["options.sendOncePerDay", "options.businessHours"],
+};
 
 /** The first error message anywhere in a nested react-hook-form error tree, with its path. */
 function firstError(
@@ -83,20 +101,48 @@ function firstError(
   return null;
 }
 
-/** Which step of the builder shows the field a form path points at. */
-function sectionFor(path: string[]): Section {
-  const [root] = path;
-  if (root === "groups") return "conditions";
-  if (root === "actions") return "actions";
-  if (root === "options") return path[1] === "instagramPublicReplies" ? "actions" : "options";
-  return "trigger";
+/** Which step of the wizard shows the field a form path points at. */
+function stepFor(path: string[]): Step {
+  const name = path.join(".");
+  return (
+    STEPS.find((step) =>
+      STEP_FIELDS[step].some((field) => name === field || name.startsWith(`${field}.`)),
+    ) ?? "options"
+  );
 }
 
-const SECTION_META: Record<Section, { icon: React.ElementType; label: string; color: string }> = {
-  trigger: { icon: IconBolt, label: "When", color: "text-amber-500" },
-  conditions: { icon: IconFilter, label: "If", color: "text-violet-500" },
-  actions: { icon: IconPlayerPlay, label: "Then", color: "text-emerald-500" },
-  options: { icon: IconSettings, label: "Options", color: "text-sky-500" },
+const STEP_META: Record<
+  Step,
+  { label: string; title: string; description: string; wide?: boolean }
+> = {
+  basics: {
+    label: "Basics",
+    title: "Name and channels",
+    description: "Pick the platform, name the automation and choose the accounts it runs on.",
+  },
+  trigger: {
+    label: "When",
+    title: "When should this run?",
+    description: "The event that starts the automation.",
+  },
+  conditions: {
+    wide: true,
+    label: "If",
+    title: "Only if…",
+    description: "Narrow it down. The automation runs only when these match.",
+  },
+  actions: {
+    wide: true,
+    label: "Then",
+    title: "Then do this",
+    description: "What happens when the automation runs, in order.",
+  },
+  options: {
+    wide: true,
+    label: "Review",
+    title: "Review and save",
+    description: "Check the summary and set any limits before saving.",
+  },
 };
 
 const platformColor: Record<Platform, { pill: string; activePill: string; glow: string }> = {
@@ -126,8 +172,13 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
   onCancel,
   isPending,
   buttonText,
+  isEdit,
 }) => {
-  const [activeSection, setActiveSection] = useState<Section>("trigger");
+  const [step, setStep] = useState<Step>("basics");
+  // How far the wizard has been walked. A new rule unlocks one step at a time, as each
+  // passes its own validation; a saved rule was valid when it was saved, so all are open.
+  const [furthest, setFurthest] = useState(isEdit ? STEPS.length - 1 : 0);
+  const bodyRef = useRef<HTMLDivElement>(null);
 
   const {
     fields: groupFields,
@@ -232,334 +283,317 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
   const conditionCount = groups?.reduce((sum, g) => sum + (g.conditions?.length ?? 0), 0) ?? 0;
   const actionCount = actions?.length ?? 0;
 
-  const sections: Section[] = ["trigger", "conditions", "actions", "options"];
+  const stepIndex = STEPS.indexOf(step);
+  const isLastStep = stepIndex === STEPS.length - 1;
+  // A new rule is saved from the last step only; a saved one from wherever the edit was made.
+  const canSave = isEdit || isLastStep;
+  const meta = STEP_META[step];
 
-  // Without this a field the builder doesn't render an error for (or one in a collapsed
+  const goTo = (next: Step) => {
+    setStep(next);
+    setFurthest((prev) => Math.max(prev, STEPS.indexOf(next)));
+    bodyRef.current?.scrollTo({ top: 0 });
+  };
+
+  const goNext = async () => {
+    const next = STEPS[stepIndex + 1];
+    if (!next) return;
+    const valid = await form.trigger([...STEP_FIELDS[step]], { shouldFocus: true });
+    if (!valid) {
+      // Some of a step's errors sit on a field with no error slot of its own (an empty
+      // condition list), so say it here as well as inline.
+      const failed = STEP_FIELDS[step]
+        .map((field) => form.getFieldState(field).error)
+        .find(Boolean);
+      toast.error(firstError(failed)?.message ?? "Some fields need attention before continuing");
+      return;
+    }
+    goTo(next);
+  };
+
+  const goBack = () => {
+    const previous = STEPS[stepIndex - 1];
+    if (previous) goTo(previous);
+  };
+
+  // Without this a field the builder doesn't render an error for (or one on another
   // step) failed validation silently: Save did nothing and said nothing.
   const onInvalid = (errors: FieldErrors<CreateRuleInput>) => {
     const found = firstError(errors);
     console.warn("Automation rule failed validation", errors);
     toast.error(found?.message ?? "Some fields need attention before saving");
-    if (found) setActiveSection(sectionFor(found.path));
+    if (found) goTo(stepFor(found.path));
   };
 
-  const toggleSection = (section: Section) => {
-    setActiveSection((prev) => (prev === section ? prev : section));
-  };
+  const save = form.handleSubmit(onSubmit, onInvalid);
 
   return (
     <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="flex flex-col gap-5">
-        {/* ── Top bar: Platform + Name ── */}
-        <div className={cn("rounded-2xl border bg-card p-5 shadow-sm", pColor.glow)}>
-          <FieldGroup>
-            {/* Platform pills + Rule name side by side */}
-            <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-4 items-end">
-              <Controller
-                control={form.control}
-                name="platform"
-                render={({ field }) => (
-                  <Field>
-                    <FieldTitle className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
-                      Platform
-                    </FieldTitle>
-                    <div className="inline-flex gap-1 rounded-lg bg-muted/50 p-1">
-                      {PLATFORMS.map((p) => (
-                        <button
-                          key={p.value}
-                          type="button"
-                          onClick={() => {
-                            if (field.value === p.value) return;
-                            field.onChange(p.value);
-                            form.setValue("whatsappSettingsPhoneIds", []);
-                            const firstEvent = getTriggerEventsForPlatform(p.value)[0];
-                            form.setValue("triggerEvent", firstEvent?.value ?? "MESSAGE_RECEIVED");
-                            form.setValue("groups", [
-                              {
-                                operator: "AND",
-                                conditions: [
+      <form
+        onSubmit={(event) => {
+          if (canSave) {
+            void save(event);
+            return;
+          }
+          // Enter in a text field mid-wizard moves on; it must not save a half-built rule.
+          event.preventDefault();
+          void goNext();
+        }}
+        className="flex min-h-0 flex-1 flex-col"
+      >
+        {/* The same chrome as the campaign wizard: a 60px step rail and a 64px action
+            footer around one scrolling body. */}
+        <div className="border-border bg-card flex h-15 shrink-0 items-center border-b px-8">
+          <Stepper
+            steps={STEPS.map((id, index) => ({
+              id,
+              label: STEP_META[id].label,
+              complete: isEdit || index < furthest,
+              enabled: index <= furthest,
+            }))}
+            currentStep={step}
+            onStepChange={(id) => {
+              const target = STEPS.find((candidate) => candidate === id);
+              if (target) goTo(target);
+            }}
+          />
+        </div>
+
+        {/* min-h-0 is what lets this scroll instead of pushing the footer off. */}
+        <div ref={bodyRef} className="min-h-0 flex-1 overflow-y-auto">
+          <div className="flex justify-center px-8 pt-8 pb-6">
+            <div
+              className={cn("flex w-full flex-col gap-6", meta.wide ? "max-w-3xl" : "max-w-160")}
+            >
+              <header className="flex flex-col gap-1">
+                <h1 className="font-display text-xl font-bold tracking-tight">{meta.title}</h1>
+                <p className="text-muted-foreground text-[13px]">{meta.description}</p>
+              </header>
+
+              {step === "basics" && (
+                <FieldGroup>
+                  <Controller
+                    control={form.control}
+                    name="platform"
+                    render={({ field }) => (
+                      <Field>
+                        <FieldTitle className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                          Platform
+                        </FieldTitle>
+                        <div className="inline-flex w-fit gap-1 rounded-lg bg-muted/50 p-1">
+                          {PLATFORMS.map((p) => (
+                            <button
+                              key={p.value}
+                              type="button"
+                              onClick={() => {
+                                if (field.value === p.value) return;
+                                field.onChange(p.value);
+                                form.setValue("whatsappSettingsPhoneIds", []);
+                                const firstEvent = getTriggerEventsForPlatform(p.value)[0];
+                                form.setValue(
+                                  "triggerEvent",
+                                  firstEvent?.value ?? "MESSAGE_RECEIVED",
+                                );
+                                form.setValue("groups", [
                                   {
-                                    field: "MESSAGE_BODY",
-                                    operator: "CONTAINS",
-                                    value: "",
+                                    operator: "AND",
+                                    conditions: [
+                                      {
+                                        field: "MESSAGE_BODY",
+                                        operator: "CONTAINS",
+                                        value: "",
+                                      },
+                                    ],
                                   },
-                                ],
-                              },
-                            ]);
-                            form.setValue("options.shopifyEvent", undefined);
-                            form.setValue("options.shopifyProductIds", []);
-                            form.setValue("options.wooEvent", undefined);
-                            form.setValue("options.wooProductIds", []);
-                            form.setValue("options.instagramScope", "ALL");
-                            form.setValue("options.instagramPostIds", []);
-                          }}
-                          className={cn(
-                            "rounded-md px-3.5 py-1.5 text-sm font-medium transition-all",
-                            field.value === p.value
-                              ? platformColor[p.value as Platform].activePill
-                              : cn(
-                                  "text-muted-foreground",
-                                  platformColor[p.value as Platform].pill,
-                                ),
-                          )}
-                        >
-                          {p.label}
-                        </button>
-                      ))}
-                    </div>
-                  </Field>
-                )}
-              />
-
-              <Controller
-                control={form.control}
-                name="name"
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldTitle className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
-                      Rule Name
-                    </FieldTitle>
-                    <Input
-                      placeholder="e.g., Welcome message for new customers"
-                      className="h-9"
-                      {...field}
-                      aria-invalid={fieldState.invalid}
-                    />
-                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                  </Field>
-                )}
-              />
-            </div>
-          </FieldGroup>
-
-          {/* Channel selector */}
-          <div className="mt-4">
-            <Controller
-              control={form.control}
-              name="whatsappSettingsPhoneIds"
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldTitle className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
-                    Channels
-                  </FieldTitle>
-                  <AccountSelector
-                    multiple
-                    value={field.value}
-                    onChange={field.onChange}
-                    platform={platform}
+                                ]);
+                                form.setValue("options.shopifyEvent", undefined);
+                                form.setValue("options.shopifyProductIds", []);
+                                form.setValue("options.wooEvent", undefined);
+                                form.setValue("options.wooProductIds", []);
+                                form.setValue("options.instagramScope", "ALL");
+                                form.setValue("options.instagramPostIds", []);
+                              }}
+                              className={cn(
+                                "rounded-md px-3.5 py-1.5 text-sm font-medium transition-all",
+                                field.value === p.value
+                                  ? platformColor[p.value as Platform].activePill
+                                  : cn(
+                                      "text-muted-foreground",
+                                      platformColor[p.value as Platform].pill,
+                                    ),
+                              )}
+                            >
+                              {p.label}
+                            </button>
+                          ))}
+                        </div>
+                      </Field>
+                    )}
                   />
-                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                </Field>
+
+                  <Controller
+                    control={form.control}
+                    name="name"
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldTitle className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                          Rule Name
+                        </FieldTitle>
+                        <Input
+                          placeholder="e.g., Welcome message for new customers"
+                          className="h-9"
+                          {...field}
+                          aria-invalid={fieldState.invalid}
+                        />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
+
+                  <Controller
+                    control={form.control}
+                    name="whatsappSettingsPhoneIds"
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldTitle className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                          Channels
+                        </FieldTitle>
+                        <AccountSelector
+                          multiple
+                          value={field.value}
+                          onChange={field.onChange}
+                          platform={platform}
+                        />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
+                </FieldGroup>
               )}
-            />
-          </div>
-        </div>
 
-        {/* ── Flow visualization ── */}
-        <div className="flex items-center justify-center gap-1 py-1">
-          {sections.map((s, i) => {
-            const meta = SECTION_META[s];
-            const Icon = meta.icon;
-            const isActive = activeSection === s;
-            const isDone =
-              (s === "trigger" && !!triggerEvent) ||
-              (s === "conditions" && conditionCount > 0) ||
-              (s === "actions" && actionCount > 0) ||
-              s === "options";
-            return (
-              <React.Fragment key={s}>
-                {i > 0 && (
-                  <IconArrowRight className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
-                )}
-                <button
-                  type="button"
-                  onClick={() => toggleSection(s)}
-                  className={cn(
-                    "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all",
-                    isActive
-                      ? "bg-foreground text-background shadow-sm"
-                      : isDone
-                        ? "bg-muted text-foreground hover:bg-muted/80"
-                        : "text-muted-foreground hover:bg-muted/50",
+              {step === "trigger" && (
+                <TriggerPanel
+                  form={form}
+                  filteredTriggerEvents={filteredTriggerEvents}
+                  isShopifyTrigger={isShopifyTrigger}
+                  isWooTrigger={isWooTrigger}
+                />
+              )}
+
+              {step === "conditions" && (
+                <ConditionsPanel
+                  form={form}
+                  groupFields={groupFields}
+                  appendGroup={appendGroup}
+                  removeGroup={removeGroup}
+                  triggerEvent={triggerEvent}
+                  isMessageReceivedTrigger={isMessageReceivedTrigger}
+                  isShopifyTrigger={isShopifyTrigger}
+                  isInstagramTrigger={isInstagramTrigger}
+                  isInstagramCommentTrigger={isInstagramCommentTrigger}
+                  isInstagramStoryTrigger={isInstagramStoryTrigger}
+                  isInstagramReferralTrigger={isInstagramReferralTrigger}
+                  instagramCommentSource={instagramCommentSource}
+                  shopifyEvent={shopifyEvent}
+                  shopifyProductIds={shopifyProductIds}
+                  instagramScope={instagramScope}
+                  activeIbaId={activeIbaId}
+                  mediaOptions={mediaOptions}
+                  mediaLoading={mediaLoading}
+                  storiesLoading={storiesLoading}
+                  productData={productData}
+                  loadingProducts={loadingProducts}
+                  loadShopifyProducts={loadShopifyProducts}
+                  isWooTrigger={isWooTrigger}
+                  wooProductIds={wooProductIds}
+                  wooProductData={wooProductData}
+                  loadingWooProducts={loadingWooProducts}
+                  loadWooProducts={loadWooProducts}
+                  pColor={pColor}
+                />
+              )}
+
+              {step === "actions" && (
+                <Controller
+                  control={form.control}
+                  name="actions"
+                  render={({ fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <ActionList />
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      {/* Replying under the comment is something the rule does, so it
+                        sits with the actions, not with the conditions. */}
+                      {isInstagramCommentTrigger && <InstagramPublicReplies />}
+                    </Field>
                   )}
-                >
-                  <Icon className={cn("w-3.5 h-3.5", isActive ? "text-background" : meta.color)} />
-                  {meta.label}
-                  {isDone && !isActive && <IconCircleCheck className="w-3 h-3 text-emerald-500" />}
-                </button>
-              </React.Fragment>
-            );
-          })}
-        </div>
+                />
+              )}
 
-        {/* ── Live summary sentence ── */}
-        {(triggerLabel || conditionCount > 0 || actionCount > 0) && (
-          <div className="rounded-xl bg-muted/40 border border-dashed px-4 py-3 text-sm text-muted-foreground leading-relaxed">
-            <span className="font-medium text-foreground">{ruleName || "Untitled rule"}</span>
-            {triggerLabel && (
-              <>
-                {""}— <span className="text-amber-600 dark:text-amber-400 font-medium">when</span>
-                {""}
-                <span className="italic">{triggerLabel.toLowerCase()}</span>
-              </>
-            )}
-            {conditionCount > 0 && (
-              <>
-                , <span className="text-violet-600 dark:text-violet-400 font-medium">if</span>
-                {""}
-                {conditionCount} condition{conditionCount !== 1 ? "s" : ""} match
-              </>
-            )}
-            {actionCount > 0 && (
-              <>
-                , <span className="text-emerald-600 dark:text-emerald-400 font-medium">then</span>
-                {""}
-                {actionCount} action{actionCount !== 1 ? "s" : ""}
-              </>
-            )}
-          </div>
-        )}
-
-        {/* ── Panels ── */}
-        <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
-          {sections.map((s, i) => {
-            const meta = SECTION_META[s];
-            const Icon = meta.icon;
-            const isOpen = activeSection === s;
-
-            return (
-              <div key={s} className={cn(i > 0 && "border-t")}>
-                {/* Section header */}
-                <button
-                  type="button"
-                  onClick={() => toggleSection(s)}
-                  className={cn(
-                    "flex w-full items-center gap-3 px-5 py-4 text-left transition-colors",
-                    isOpen ? "bg-muted/30" : "hover:bg-muted/20",
-                  )}
-                >
-                  <div
-                    className={cn(
-                      "flex h-8 w-8 items-center justify-center rounded-lg",
-                      isOpen ? "bg-foreground/10" : "bg-muted",
+              {step === "options" && (
+                <div className="space-y-5">
+                  {/* ── Summary sentence ── */}
+                  <div className="rounded-xl bg-muted/40 border border-dashed px-4 py-3 text-sm text-muted-foreground leading-relaxed">
+                    <span className="font-medium text-foreground">
+                      {ruleName || "Untitled rule"}
+                    </span>
+                    {triggerLabel && (
+                      <>
+                        {" — "}
+                        <span className="text-amber-600 dark:text-amber-400 font-medium">
+                          when
+                        </span>{" "}
+                        <span className="italic">{triggerLabel.toLowerCase()}</span>
+                      </>
                     )}
-                  >
-                    <Icon className={cn("w-4 h-4", meta.color)} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-sm font-semibold">{meta.label}</span>
-                    {s === "trigger" && triggerLabel && !isOpen && (
-                      <span className="ml-2 text-xs text-muted-foreground">{triggerLabel}</span>
+                    {conditionCount > 0 && (
+                      <>
+                        ,{" "}
+                        <span className="text-violet-600 dark:text-violet-400 font-medium">if</span>{" "}
+                        {conditionCount} condition{conditionCount !== 1 ? "s" : ""} match
+                      </>
                     )}
-                    {s === "conditions" && conditionCount > 0 && !isOpen && (
-                      <Badge variant="secondary" className="ml-2 text-[10px]">
-                        {conditionCount}
-                      </Badge>
-                    )}
-                    {s === "actions" && actionCount > 0 && !isOpen && (
-                      <Badge variant="secondary" className="ml-2 text-[10px]">
-                        {actionCount}
-                      </Badge>
+                    {actionCount > 0 && (
+                      <>
+                        ,{" "}
+                        <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                          then
+                        </span>{" "}
+                        {actionCount} action{actionCount !== 1 ? "s" : ""}
+                      </>
                     )}
                   </div>
-                  <IconChevronDown
-                    className={cn(
-                      "w-4 h-4 text-muted-foreground transition-transform",
-                      isOpen && "rotate-180",
-                    )}
-                  />
-                </button>
-
-                {/* Section content */}
-                <div
-                  className={cn(
-                    "grid transition-all duration-200",
-                    isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
-                  )}
-                >
-                  <div className="overflow-hidden">
-                    <div className="px-5 pb-5 pt-1">
-                      {s === "trigger" && (
-                        <TriggerPanel
-                          form={form}
-                          filteredTriggerEvents={filteredTriggerEvents}
-                          isShopifyTrigger={isShopifyTrigger}
-                          isWooTrigger={isWooTrigger}
-                        />
-                      )}
-                      {s === "conditions" && (
-                        <ConditionsPanel
-                          form={form}
-                          groupFields={groupFields}
-                          appendGroup={appendGroup}
-                          removeGroup={removeGroup}
-                          triggerEvent={triggerEvent}
-                          isMessageReceivedTrigger={isMessageReceivedTrigger}
-                          isShopifyTrigger={isShopifyTrigger}
-                          isInstagramTrigger={isInstagramTrigger}
-                          isInstagramCommentTrigger={isInstagramCommentTrigger}
-                          isInstagramStoryTrigger={isInstagramStoryTrigger}
-                          isInstagramReferralTrigger={isInstagramReferralTrigger}
-                          instagramCommentSource={instagramCommentSource}
-                          shopifyEvent={shopifyEvent}
-                          shopifyProductIds={shopifyProductIds}
-                          instagramScope={instagramScope}
-                          activeIbaId={activeIbaId}
-                          mediaOptions={mediaOptions}
-                          mediaLoading={mediaLoading}
-                          storiesLoading={storiesLoading}
-                          productData={productData}
-                          loadingProducts={loadingProducts}
-                          loadShopifyProducts={loadShopifyProducts}
-                          isWooTrigger={isWooTrigger}
-                          wooProductIds={wooProductIds}
-                          wooProductData={wooProductData}
-                          loadingWooProducts={loadingWooProducts}
-                          loadWooProducts={loadWooProducts}
-                          pColor={pColor}
-                        />
-                      )}
-                      {s === "actions" && (
-                        <Controller
-                          control={form.control}
-                          name="actions"
-                          render={({ fieldState }) => (
-                            <Field data-invalid={fieldState.invalid}>
-                              <ActionList />
-                              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                              {/* Replying under the comment is something the rule does, so it
-                                  sits with the actions, not with the conditions. */}
-                              {isInstagramCommentTrigger && <InstagramPublicReplies />}
-                            </Field>
-                          )}
-                        />
-                      )}
-                      {s === "options" && <RuleOptions />}
-                    </div>
-                  </div>
+                  <RuleOptions />
                 </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* ── Sticky footer ── */}
-        <div className="sticky bottom-0 z-20">
-          <div className="rounded-2xl border bg-card/95 backdrop-blur-sm px-5 py-3.5 shadow-lg flex items-center justify-between gap-4">
-            <p className="text-xs text-muted-foreground hidden sm:block">
-              Rule will be active immediately after saving
-            </p>
-            <div className="flex gap-2 ml-auto">
-              <Button type="button" variant="ghost" onClick={onCancel} className="h-9">
-                Cancel
-              </Button>
-              <Button type="submit" loading={isPending} className="h-9 min-w-32">
-                <IconDeviceFloppy className="w-4 h-4 mr-2" />
-                {buttonText}
-              </Button>
+              )}
             </div>
           </div>
         </div>
+
+        <footer className="border-border bg-card flex h-16 shrink-0 items-center justify-end gap-2 border-t px-8">
+          <Button type="button" variant="ghost" onClick={onCancel} className="mr-auto">
+            Cancel
+          </Button>
+          <Button type="button" variant="ghost" onClick={goBack} disabled={stepIndex === 0}>
+            Back
+          </Button>
+          {!isLastStep && (
+            <Button
+              key="next"
+              type="button"
+              variant={isEdit ? "ghost" : "default"}
+              onClick={() => void goNext()}
+            >
+              Next
+              <IconArrowRight className="size-4" aria-hidden />
+            </Button>
+          )}
+          {canSave && (
+            <Button key="save" type="submit" loading={isPending}>
+              <IconDeviceFloppy className="size-4" aria-hidden />
+              {buttonText}
+            </Button>
+          )}
+        </footer>
       </form>
     </FormProvider>
   );

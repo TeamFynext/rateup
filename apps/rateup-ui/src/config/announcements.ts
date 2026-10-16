@@ -40,6 +40,14 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-10-14-automation-wizard",
+    title: "Automations are built step by step",
+    summary:
+      "Creating an automation now walks you through it one step at a time: basics, when, if, then, and a review before you save.",
+    publishedAt: "2026-10-14",
+    kinds: ["improvement"],
+    area: "Automation",
+    link: { to: "/dashboard/automation", label: "Open automations" },
     id: "2026-10-14-chatbot-examples",
     title: "Start a chatbot from a ready-made example",
     summary:
