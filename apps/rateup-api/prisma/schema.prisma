@@ -693,11 +693,14 @@ model Rule {
   orgId String @db.Uuid
 
   name                     String
-  platform                 RulePlatform @default(WHATSAPP)
-  operator                 RuleOperator @default(AND) // AND / OR
-  isActive                 Boolean      @default(true)
+  /// The first of `platforms`, kept for clients that predate multi-channel rules.
+  platform                 RulePlatform   @default(WHATSAPP)
+  /// Every channel the rule runs on, as its accounts' platforms. Matching reads this.
+  platforms                RulePlatform[] @default([])
+  operator                 RuleOperator   @default(AND) // AND / OR
+  isActive                 Boolean        @default(true)
   triggerEvent             TriggerEvent
-  whatsappSettingsPhoneIds String[]     @default([]) //for multiple whatsapp integration
+  whatsappSettingsPhoneIds String[]       @default([]) //for multiple whatsapp integration
   /// [PWaRuleOptions]
   options                  Json? // Stores sendOncePerDay and businessHours configuration
 
@@ -834,10 +837,11 @@ model RuleCondition {
   group   RuleConditionGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
   groupId String             @db.Uuid
 
-  field           ConditionField
-  operator        ConditionOperator
-  value           String? // 'order', '@gmail.com', 'yes', etc.
-  messageBodyLock RuleMessageBodyLock?
+  field            ConditionField
+  operator         ConditionOperator
+  value            String? // 'order', '@gmail.com', 'yes', etc.
+  /// One per platform the rule runs on, so a keyword is claimed on each of its channels.
+  messageBodyLocks RuleMessageBodyLock[]
 }
 
 enum ConditionField {
@@ -2199,9 +2203,10 @@ model RuleMessageBodyLock {
   businessHour    BusinessHour? @relation(fields: [businessHourId], references: [id], onDelete: Cascade)
   orgId           String        @db.Uuid
   org             Org           @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  ruleConditionId String        @unique @db.Uuid
+  ruleConditionId String        @db.Uuid
   ruleCondition   RuleCondition @relation(fields: [ruleConditionId], references: [id], onDelete: Cascade)
 
+  @@unique([ruleConditionId, platform])
   @@unique([orgId, messageBody, platform, businessHourId], name: "rule_message_body_org_platform_businessHour_unique")
 }
 

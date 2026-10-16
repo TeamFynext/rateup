@@ -106,6 +106,7 @@ export async function migrateShopifyAbandonedCheckouts({
           orgId,
           name: step.name,
           triggerEvent: TriggerEvent.SHOPIFY_EVENT,
+          platforms: ["WHATSAPP"],
           whatsappSettingsPhoneIds: template?.whatsappSettingsPhoneId
             ? [template.whatsappSettingsPhoneId]
             : [],

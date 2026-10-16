@@ -176,14 +176,14 @@ describe("checkAndExecuteRuleByTriggerEvent - finding candidate rules", () => {
       orgId: "org-1",
       isActive: true,
       triggerEvent: TriggerEvent.CHAT_CLOSED,
-      platform: "WHATSAPP",
+      platforms: { has: "WHATSAPP" },
     });
   });
 
   test("does not narrow by platform when asked for all of them", async () => {
     await checkAndExecuteRuleByTriggerEvent(TriggerEvent.CHAT_CLOSED, context({ platform: "ALL" }));
 
-    expect(db.rule.findMany.mock.calls[0][0].where).not.toHaveProperty("platform");
+    expect(db.rule.findMany.mock.calls[0][0].where).not.toHaveProperty("platforms");
   });
 
   test("narrows to rules attached to the receiving number", async () => {
@@ -1116,5 +1116,57 @@ describe("checkAndExecuteRuleByTriggerEvent - which WhatsApp number replies", ()
       null,
       "welcome",
     );
+  });
+});
+
+// One welcome rule on WhatsApp and Messenger answers each customer where they wrote.
+describe("checkAndExecuteRuleByTriggerEvent - a rule on several channels", () => {
+  const welcome = () =>
+    rule({
+      platform: "WHATSAPP",
+      platforms: ["WHATSAPP", "FACEBOOK"],
+      actions: [{ id: "a1", type: "SEND_MESSAGE", value: "Welcome!" }],
+    });
+
+  test("replies on Messenger to a Messenger event", async () => {
+    db.rule.findMany.mockResolvedValue([welcome()]);
+
+    await checkAndExecuteRuleByTriggerEvent(
+      TriggerEvent.CHAT_CLOSED,
+      context({ platform: "FACEBOOK", phone: "psid-1", phoneNumberId: "page-1" }),
+    );
+
+    expect(sendSendApiText).toHaveBeenCalledWith(
+      { platform: "FACEBOOK", accountId: "page-1" },
+      "psid-1",
+      "org-1",
+      "Welcome!",
+    );
+  });
+
+  test("sends Messenger the words without WhatsApp's formatting markers", async () => {
+    db.rule.findMany.mockResolvedValue([
+      rule({
+        platforms: ["WHATSAPP", "FACEBOOK"],
+        actions: [{ id: "a1", type: "SEND_MESSAGE", value: "*Welcome!* Use code _HELLO_" }],
+      }),
+    ]);
+
+    await checkAndExecuteRuleByTriggerEvent(
+      TriggerEvent.CHAT_CLOSED,
+      context({ platform: "FACEBOOK", phone: "psid-1", phoneNumberId: "page-1" }),
+    );
+
+    expect((sendSendApiText as Mock).mock.calls[0][3]).toBe("Welcome! Use code HELLO");
+  });
+
+  test("replies on WhatsApp to a WhatsApp event", async () => {
+    const { sendTextMessage } = await import("../whatsappSurvey/wasurvey.service.js");
+    db.rule.findMany.mockResolvedValue([welcome()]);
+
+    await checkAndExecuteRuleByTriggerEvent(TriggerEvent.CHAT_CLOSED, context());
+
+    expect(sendTextMessage).toHaveBeenCalled();
+    expect(sendSendApiText).not.toHaveBeenCalled();
   });
 });
