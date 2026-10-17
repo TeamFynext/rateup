@@ -7,12 +7,18 @@ import { isRequestSignatureValid } from "../encryption/wa_encryption.utils.js";
 type SignatureMode = "off" | "log" | "enforce";
 
 /**
- * `log` until production logs show real deliveries passing: enforcing against the wrong
- * app secret would drop every inbound message without a visible error.
+ * `enforce` unless told otherwise: an unsigned or mis-signed delivery is answered 401
+ * and never processed. Anyone who knows the URL could otherwise inject inbound
+ * messages, statuses and account events.
+ *
+ * `log` (process, but warn) and `off` stay available as a rollback: enforcing against
+ * the wrong app secret refuses every real delivery. Meta retries a 401 for a while, so
+ * switching back to `log` recovers what was refused in the meantime. Anything other
+ * than `log` or `off` — including a typo — enforces.
  */
 function signatureMode(): SignatureMode {
-  const mode = process.env.META_WEBHOOK_SIGNATURES;
-  return mode === "off" || mode === "enforce" ? mode : "log";
+  const mode = process.env.META_WEBHOOK_SIGNATURES?.trim().toLowerCase();
+  return mode === "off" || mode === "log" ? mode : "enforce";
 }
 
 /** The raw body the signature is computed over; a re-serialized one would not match. */

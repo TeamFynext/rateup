@@ -1,8 +1,8 @@
 // Ported from message-dispatcher/src/index.ts.
 //
 // Fan-out step: turns one send session into one waMessageQueue job per
-// participant. The access token is decrypted once for the whole batch rather
-// than per message, and the ids of the jobs it creates are recorded in
+// participant. Jobs carry no access token — the dispatcher resolves it by phone
+// id — and the ids of the jobs it creates are recorded in
 // `campaignSend:<sendId>:jobs` so the message processor can tell when *that
 // attempt* has drained — which is what closes the send and schedules the next
 // retry.
@@ -140,11 +140,11 @@ export const campaignEnqueueWorker = new Worker(
         participants[0].teamId,
       );
 
-      // Decrypt the access token once for all participants
-      const decryptedToken = await decryptAccessToken(
-        participants[0].accessToken,
-        participants[0].accessToken_iv,
-      );
+      // Decrypted only to fail fast, with a reason the sender can act on, when
+      // the team has no usable WhatsApp credentials. The token itself is not
+      // passed on: it used to be copied into every job's data in Redis. The
+      // dispatcher resolves it by phone id instead.
+      await decryptAccessToken(participants[0].accessToken, participants[0].accessToken_iv);
 
       // Recorded before the fan-out, not after: once jobs are in the queue the
       // completion handler can fire at any moment, and it must not find the send
@@ -157,7 +157,6 @@ export const campaignEnqueueWorker = new Worker(
         campaignId,
         campaignSendId,
         scheduledAt,
-        accessToken: decryptedToken,
         surveyTeamMapId,
         connection: baseRedis,
         dailySendLimit,

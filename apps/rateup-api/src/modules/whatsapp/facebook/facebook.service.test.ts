@@ -423,6 +423,22 @@ describe("handleFacebookMessages", () => {
       handleFacebookMessages(webhook(messaging({ message: { mid: "mid-1" } })), SETTINGS),
     ).resolves.toBeUndefined();
   });
+
+  test("answers nothing when a racing delivery already stored the mid", async () => {
+    const event = () => webhook(messaging({ message: { mid: "mid-1", text: "hi" } }));
+
+    handleWaMessagesMock.mockResolvedValue({ id: "row-1" });
+    await handleFacebookMessages(event(), SETTINGS);
+    expect(handleMetaFlowUserResponse).toHaveBeenCalledTimes(1);
+
+    // Both deliveries passed the read; the unique index let the other one store.
+    vi.clearAllMocks();
+    handleWaMessagesMock.mockResolvedValue(null);
+    await handleFacebookMessages(event(), SETTINGS);
+
+    expect(handleMetaFlowUserResponse).not.toHaveBeenCalled();
+    expect(checkAndExecuteRuleByTriggerEvent).not.toHaveBeenCalled();
+  });
 });
 
 describe("handleFacebookMessageDelivered", () => {
@@ -613,10 +629,10 @@ describe("handleFacebookPostback", () => {
     });
   });
 
-  test("invents a message id from the timestamp, since a postback has no mid", async () => {
+  test("invents a message id from the sender and timestamp, since a postback has no mid", async () => {
     await handleFacebookPostback(postbackEvent(), SETTINGS);
 
-    expect(waMessageCall().messageId).toBe("postback_1700000000000");
+    expect(waMessageCall().messageId).toBe("postback_psid-1_1700000000000");
   });
 
   test("ignores a postback with no payload", async () => {

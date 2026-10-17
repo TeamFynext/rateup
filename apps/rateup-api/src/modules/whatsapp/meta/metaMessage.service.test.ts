@@ -10,6 +10,8 @@ const getWaSendingSettings = vi.fn();
 const getInstagramChannel = vi.fn();
 const getMessengerChannel = vi.fn();
 const enqueueWaMessageRecord = vi.fn();
+const getSentMessageId = vi.fn();
+const markMessageSent = vi.fn();
 
 vi.mock("../wa_axios.js", async () => {
   class GraphApiError extends Error {
@@ -29,6 +31,7 @@ vi.mock("../whatsappSurvey/wasurvey.auth.js", () => ({
   assertCampaignCredit,
 }));
 vi.mock("../../../workers/bullmq/queues/whatsapp.queue.js", () => ({ enqueueWaMessageRecord }));
+vi.mock("./sendIdempotency.js", () => ({ getSentMessageId, markMessageSent }));
 vi.mock("../settings/wa_settings.service.js", () => ({
   getWaSettings,
   getWaSendingSettings,
@@ -58,6 +61,8 @@ beforeEach(() => {
   callMetaApi.mockResolvedValue({ data: { messages: [{ id: "wamid.1" }] } });
   getWaMessageByMessageId.mockResolvedValue(null);
   enqueueWaMessageRecord.mockResolvedValue({ id: "record:wamid.1" });
+  getSentMessageId.mockResolvedValue(null);
+  markMessageSent.mockResolvedValue(undefined);
 });
 
 afterEach(() => {
@@ -284,6 +289,67 @@ describe("sendMetaMessage", () => {
 
     await expect(send()).rejects.toThrow("limit");
     expect(callMetaApi).not.toHaveBeenCalled();
+  });
+});
+
+describe("sendMetaMessage — idempotency key", () => {
+  const campaignSend = (over = {}) =>
+    send({
+      campaign: { participantId: "p-1", campaignSendId: "s-1" },
+      messageType: "CAMPAIGN",
+      idempotencyKey: "job-1",
+      ...over,
+    });
+
+  it("marks the key as soon as Meta accepts, before recording", async () => {
+    await campaignSend();
+
+    expect(markMessageSent).toHaveBeenCalledWith("job-1", "wamid.1");
+    expect(markMessageSent.mock.invocationCallOrder[0]).toBeLessThan(
+      handleWaMessages.mock.invocationCallOrder[0],
+    );
+  });
+
+  // A stalled job rerun by BullMQ after Meta accepted its message.
+  it("does not call Graph again when the key is already marked", async () => {
+    getSentMessageId.mockResolvedValue("wamid.earlier");
+
+    const result = await campaignSend();
+
+    expect(result).toEqual({ ok: true, messageId: "wamid.earlier", replayed: true });
+    expect(callMetaApi).not.toHaveBeenCalled();
+    // Paid for on the first run; a rerun spends nothing.
+    expect(assertCampaignCredit).not.toHaveBeenCalled();
+    expect(markMessageSent).not.toHaveBeenCalled();
+    // The first run died before storing it, so this one does.
+    expect(handleWaMessages).toHaveBeenCalledTimes(1);
+    expect(handleWaMessages.mock.calls[0][7]).toBe("wamid.earlier");
+    expect(handleWaMessages.mock.calls[0][9]).toBe(false);
+  });
+
+  it("does not record twice when the first run already stored the message", async () => {
+    getSentMessageId.mockResolvedValue("wamid.earlier");
+    getWaMessageByMessageId.mockResolvedValue({ id: "row-1" });
+
+    await campaignSend();
+
+    expect(callMetaApi).not.toHaveBeenCalled();
+    expect(handleWaMessages).not.toHaveBeenCalled();
+  });
+
+  it("does not mark a rejected send", async () => {
+    callMetaApi.mockRejectedValue(new GraphApiError({ code: 131026 } as never));
+
+    await campaignSend();
+
+    expect(markMessageSent).not.toHaveBeenCalled();
+  });
+
+  it("leaves sends without a key alone", async () => {
+    await send();
+
+    expect(getSentMessageId).not.toHaveBeenCalled();
+    expect(markMessageSent).not.toHaveBeenCalled();
   });
 });
 

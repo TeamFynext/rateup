@@ -742,6 +742,8 @@ declare global {
     error_subcode?: number;
     error_data?: { details?: string };
     fbtrace_id?: string;
+    /** HTTP status of the failed response; ours, not Meta's (see `graphApiErrorDetail`). */
+    httpStatus?: number;
     [key: string]: unknown;
   }
 

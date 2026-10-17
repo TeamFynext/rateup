@@ -176,7 +176,7 @@ export async function handleInstagramComment(
       },
     };
 
-    await handleWaMessages(
+    const stored = await handleWaMessages(
       "receive",
       commentBody,
       igsId,
@@ -186,6 +186,8 @@ export async function handleInstagramComment(
       undefined,
       `ig_comment_${commentId}`,
     );
+    // A redelivered comment: the first copy already ran the comment rules.
+    if (stored === null) return;
   } catch (error) {
     log.error({ err: error }, `[Instagram] Error storing comment ${commentId}`);
   }
@@ -220,7 +222,7 @@ async function handleInstagramStoryMentionRule(
   if (message.is_echo) return;
 
   // Handle message storage
-  await handleWaMessages(
+  const stored = await handleWaMessages(
     "receive",
     messaging,
     sender.id,
@@ -230,6 +232,8 @@ async function handleInstagramStoryMentionRule(
     undefined,
     mid,
   );
+  // Already stored by an earlier delivery, which ran the rules.
+  if (stored === null) return;
   try {
     const storyAttachment = messaging.message?.attachments?.find((a) => a.type === "story_mention");
     await checkAndExecuteRuleByTriggerEvent("INSTAGRAM_STORY_MENTION", {
@@ -285,8 +289,9 @@ export async function handleInstagramMessages(
   // It used to sit outside the try, so a failed write escaped the handler and —
   // before 12.2 — abandoned the rest of the batch. It is rethrown so the webhook
   // still counts the event as failed and Meta retries.
+  let stored;
   try {
-    await handleWaMessages(
+    stored = await handleWaMessages(
       "receive",
       data.entry[0].messaging[0],
       sender.id,
@@ -300,6 +305,8 @@ export async function handleInstagramMessages(
     log.error({ err: error }, "[Instagram] Error storing message");
     throw error;
   }
+  // A redelivery of a message already stored — and already answered.
+  if (stored === null) return;
 
   // A first message sent from an ig.me link carries its ref; the link's own rule wins.
   const linkRef = message.referral && "ref" in message.referral ? message.referral.ref : undefined;
@@ -358,7 +365,10 @@ export async function handleInstagramPostback(
       sender,
     };
 
-    await handleWaMessages(
+    // No mid of its own, so one is made up. It carries the sender because message
+    // ids are unique across every org, and a bare timestamp let two people tapping
+    // in the same millisecond collide. A real redelivery repeats both.
+    const stored = await handleWaMessages(
       "receive",
       messageBody,
       sender.id,
@@ -366,8 +376,9 @@ export async function handleInstagramPostback(
       PlatformType.INSTAGRAM,
       ibaId,
       undefined,
-      `ig_postback_${timestamp}`,
+      `ig_postback_${sender.id}_${timestamp}`,
     );
+    if (stored === null) return;
 
     // A new conversation opened from an ig.me link, started by tapping an ice breaker,
     // carries the link's ref on the postback. The link's own rule wins, as it does for a
@@ -431,7 +442,8 @@ export async function handleInstagramReferral(
       sender,
     };
 
-    await handleWaMessages(
+    // Made-up id, scoped to the sender for the same reason as the postback's.
+    const stored = await handleWaMessages(
       "receive",
       messageBody,
       sender.id,
@@ -439,8 +451,9 @@ export async function handleInstagramReferral(
       PlatformType.INSTAGRAM,
       ibaId,
       undefined,
-      `ig_referral_${timestamp}`,
+      `ig_referral_${sender.id}_${timestamp}`,
     );
+    if (stored === null) return;
 
     const ref = "ref" in referral ? referral.ref : undefined;
     if (ref && (await runInstagramLinkRules(ref, sender.id, waSettings))) return;
@@ -483,8 +496,12 @@ export async function handleInstagramMessageReaction(
   waSettings: { orgId: string; ibaId: string },
 ) {
   const messaginObj = data.entry[0].messaging[0];
-  const { sender, reaction } = messaginObj;
+  const { sender, timestamp } = messaginObj;
   const { orgId, ibaId } = waSettings;
+  // `reaction.mid` is the message reacted *to*, which is already stored under
+  // that id — used as this row's id it now collides, and the reaction would be
+  // dropped as a redelivery. The inbox pairs a reaction with its message through
+  // the body's `reaction.mid`, so the row gets an id of its own.
   await handleWaMessages(
     "receive",
     messaginObj,
@@ -493,6 +510,6 @@ export async function handleInstagramMessageReaction(
     PlatformType.INSTAGRAM,
     ibaId,
     undefined,
-    reaction?.mid,
+    `ig_reaction_${sender.id}_${timestamp}`,
   );
 }

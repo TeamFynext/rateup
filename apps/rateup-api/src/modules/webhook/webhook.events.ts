@@ -88,6 +88,47 @@ export function invalidateWebhookSubscriptions(orgId?: string) {
   else cache.clear();
 }
 
+/**
+ * Which org a WhatsApp number belongs to, cached like the subscriptions. A number
+ * moving between orgs is rare enough that the same TTL is plenty; a number we do
+ * not know is cached too (as `null`), since receipts for it keep coming.
+ */
+const phoneOrgCache = new Map<string, { orgId: string | null; expiresAt: number }>();
+
+async function orgIdForPhoneId(phoneId: string): Promise<string | null> {
+  const hit = phoneOrgCache.get(phoneId);
+  if (hit && hit.expiresAt > Date.now()) return hit.orgId;
+  const row = await prisma.whatsappSettings.findUnique({
+    where: { phoneId },
+    select: { orgId: true },
+  });
+  if (phoneOrgCache.size >= MAX_CACHED_ORGS) {
+    const oldest = phoneOrgCache.keys().next().value;
+    if (oldest !== undefined) phoneOrgCache.delete(oldest);
+  }
+  const orgId = row?.orgId ?? null;
+  phoneOrgCache.set(phoneId, { orgId, expiresAt: Date.now() + SUBSCRIPTION_TTL_MS });
+  return orgId;
+}
+
+/**
+ * Whether the org behind a WhatsApp number subscribes to `event` — the check
+ * `enqueueWebhookDispatch` callers make before queueing, so an org without a
+ * webhook costs no job. Delivery still re-reads the row, so this only has to be
+ * right enough to skip the obvious no-ops; when the lookup itself fails it says
+ * yes and lets delivery decide, since a missing webhook is worse than an extra job.
+ */
+export async function phoneSubscribesTo(phoneId: string, event: string): Promise<boolean> {
+  try {
+    const orgId = await orgIdForPhoneId(phoneId);
+    if (!orgId) return false;
+    return (await getSubscribedEvents(orgId)).has(event);
+  } catch (err) {
+    log.warn({ err, phoneId, event }, "Webhook subscription lookup failed; queueing anyway");
+    return true;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Emitting
 // ---------------------------------------------------------------------------

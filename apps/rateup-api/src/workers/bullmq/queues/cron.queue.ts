@@ -36,6 +36,10 @@ export const SCHEDULED_JOBS = [
   // and `shopifyTokenRenewal`; `syncJobSchedulers` removes their stale schedulers.
   { id: "integrationCredentialRefresh", pattern: "*/45 * * * *", tz: "Etc/UTC" },
   { id: "midnightStatsReset", pattern: "30 0 * * *" },
+  // Applies the per-org usage counters buffered in Redis (`usage:<orgId>`) to
+  // `UsageStats`, one UPDATE per org. Six-field cron: every ten seconds. See
+  // workers/shared/usageCounter.ts.
+  { id: "usageFlush", pattern: "*/10 * * * * *", tz: "Etc/UTC" },
   // Expired partner-API replay records (only useful for 24 hours; the durable idempotency
   // guarantee is the ledger's own key), usage-log rows past 30 days, and keys a week past
   // their expiry.

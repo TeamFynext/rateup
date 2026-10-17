@@ -14,11 +14,11 @@
 One repo, three long-running processes, deployed as three Railway services off the same
 build:
 
-| Service  | Entry                         | Runs                                   | Replicas              |
-| -------- | ----------------------------- | -------------------------------------- | --------------------- |
-| `api`    | `src/index.ts`                | HTTP routes, WebSocket, Kafka producer | scale freely          |
-| `bullmq` | `src/workers/bullmq/index.ts` | Queue consumers + wall-clock schedule  | scale freely          |
-| `kafka`  | `src/workers/kafka/index.ts`  | Stream consumers (`status-events`)     | up to partition count |
+| Service  | Entry                         | Runs                                              | Replicas              |
+| -------- | ----------------------------- | ------------------------------------------------- | --------------------- |
+| `api`    | `src/index.ts`                | HTTP routes, WebSocket, Kafka producer            | scale freely          |
+| `bullmq` | `src/workers/bullmq/index.ts` | Queue consumers + wall-clock schedule             | scale freely          |
+| `kafka`  | `src/workers/kafka/index.ts`  | Stream consumers (`status-events`, `wa-webhooks`) | up to partition count |
 
 All three scale horizontally. The `bullmq` service used to be pinned to one replica
 because its cron ran as in-process timers with no lock; the schedule now lives in Redis as
@@ -64,8 +64,31 @@ Rules to keep in mind when adding code:
   (`processors/scheduledJobs.processor.ts`). The handler map is typed against the
   definition list, so forgetting either half is a compile error. `syncJobSchedulers()`
   registers them on boot and removes schedulers whose definition is gone.
+- The WhatsApp webhook POST does no work in the API: it verifies the signature, publishes
+  the delivery to `wa-webhooks` and only then answers 200 (`wasurvey.ingress.ts`). The
+  kafka service processes it (`consumers/waWebhook.consumer.ts` → `wasurvey.webhook.ts`).
+  New webhook handling goes in `wasurvey.webhook.ts`, not in the route.
 - Railway config-as-code lives in `railway.api.json`, `railway.bullmq.json`,
   `railway.kafka.json`; set each service's config path in its Railway settings.
+
+### Worker capacity, health and metrics
+
+- **Concurrency pairs with the pool.** Every process opens two `pg` pools of
+  `DB_POOL_MAX` (default 10) — Prisma's adapter pool and the raw pool in
+  `src/utils/db.ts`. `WA_MESSAGE_CONCURRENCY` (default 50) is how many campaign
+  sends one bullmq process holds in flight; keep it within a small multiple of
+  `DB_POOL_MAX` and raise them together. The total to budget against Postgres'
+  `max_connections` (or PgBouncer's pool) is `DB_POOL_MAX × 2 × replicas` per service.
+- **Usage counters are buffered.** `UsageStats.messagesCount` is incremented in Redis
+  (`HINCRBY usage:<orgId>`, `workers/shared/usageCounter.ts`) and applied by the
+  `usageFlush` scheduled job every 10 s, so it lags by up to ~10 s. Only buffer a
+  counter nothing enforces — `campaignCreditsUsed` and the active-contact meter must
+  stay conditional UPDATEs.
+- **Health and metrics.** The bullmq and kafka services serve `/health` (Redis ping /
+  consumer connected) and `/metrics` (prom-client: queue depth, failures, consumer lag,
+  Meta errors, send latency, process metrics) on `PORT` via
+  `workers/shared/healthServer.ts`; Railway's `healthcheckPath` points at `/health`.
+  The api serves `/api/health/metrics` only when `METRICS_TOKEN` is set.
 
 ## Campaign send sessions
 

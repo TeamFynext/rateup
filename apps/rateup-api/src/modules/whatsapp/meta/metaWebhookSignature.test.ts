@@ -80,9 +80,41 @@ describe("verifyMetaWebhookSignature - enforce", () => {
   });
 });
 
-// The default, so switching it on cannot silently drop real traffic signed with a
-// secret this deployment does not have.
-describe("verifyMetaWebhookSignature - log (default)", () => {
+describe("verifyMetaWebhookSignature - default", () => {
+  test.each([
+    ["unset", undefined],
+    ["empty", ""],
+    ["a typo", "enforced"],
+  ])("enforces when the mode is %s", async (_name, mode) => {
+    if (mode !== undefined) process.env.META_WEBHOOK_SIGNATURES = mode;
+    const { server, handler } = await webhookServer();
+
+    const unsigned = await deliver(server);
+    const signed = await deliver(server, sign(BODY));
+
+    expect(unsigned.statusCode).toBe(401);
+    expect(signed.statusCode).toBe(200);
+    expect(handler).toHaveBeenCalledOnce();
+  });
+
+  test("refuses everything when the app secret is missing", async () => {
+    delete process.env.waclient_secret;
+    const { server, handler } = await webhookServer();
+
+    const res = await deliver(server, sign(BODY));
+
+    expect(res.statusCode).toBe(401);
+    expect(handler).not.toHaveBeenCalled();
+  });
+});
+
+// The rollback: deliveries signed with a secret this deployment does not have
+// still get processed, with a warning to go and find out why.
+describe("verifyMetaWebhookSignature - log", () => {
+  beforeEach(() => {
+    process.env.META_WEBHOOK_SIGNATURES = "log";
+  });
+
   test("still processes an unsigned delivery, but reports it", async () => {
     const { server, handler } = await webhookServer();
 

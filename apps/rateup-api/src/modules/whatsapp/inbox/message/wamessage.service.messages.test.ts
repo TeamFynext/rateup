@@ -226,6 +226,88 @@ describe("addNewWaMessage", () => {
     expect(db.$transaction).toHaveBeenCalledWith(["create-promise", "conv-update-promise"]);
   });
 
+  test("returns null for a message id that is already stored", async () => {
+    // What Postgres says, through the pg adapter, when the unique index refuses
+    // the second copy of a redelivered webhook.
+    db.$transaction.mockRejectedValue(
+      Object.assign(new Error("Unique constraint failed"), {
+        code: "P2002",
+        meta: {
+          driverAdapterError: { cause: { constraint: { index: "WaMessage_messageId_key" } } },
+        },
+      }),
+    );
+
+    const stored = await addNewWaMessage(
+      { exchangeProcess: "receive" } as any,
+      "contact-1",
+      WA_CREATED_AT,
+      PlatformType.WHATSAPP,
+      "phone-1",
+      "conv-1",
+      undefined,
+      "wamid-1",
+    );
+
+    expect(stored).toBeNull();
+  });
+
+  test("returns null for an already-stored id outside a conversation too", async () => {
+    db.waMessage.create.mockRejectedValue(Object.assign(new Error("unique"), { code: "P2002" }));
+
+    await expect(
+      addNewWaMessage(
+        { exchangeProcess: "receive" } as any,
+        "contact-1",
+        WA_CREATED_AT,
+        PlatformType.WHATSAPP,
+        "phone-1",
+        undefined,
+        undefined,
+        "wamid-1",
+      ),
+    ).resolves.toBeNull();
+  });
+
+  test("rethrows any other failure", async () => {
+    const timeout = Object.assign(new Error("pool timeout"), { code: "P2028" });
+    db.$transaction.mockRejectedValue(timeout);
+
+    await expect(
+      addNewWaMessage(
+        { exchangeProcess: "receive" } as any,
+        "contact-1",
+        WA_CREATED_AT,
+        PlatformType.WHATSAPP,
+        "phone-1",
+        "conv-1",
+        undefined,
+        "wamid-1",
+      ),
+    ).rejects.toBe(timeout);
+  });
+
+  test("rethrows a unique violation on some other constraint", async () => {
+    const other = Object.assign(new Error("unique"), {
+      code: "P2002",
+      meta: { target: ["waMessageId"] },
+    });
+    db.$transaction.mockRejectedValue(other);
+
+    await expect(
+      addNewWaMessage(
+        { exchangeProcess: "send" } as any,
+        "contact-1",
+        WA_CREATED_AT,
+        PlatformType.WHATSAPP,
+        "phone-1",
+        "conv-1",
+        undefined,
+        "wamid-1",
+      ),
+    ).rejects.toBe(other);
+  });
+
   test("leaves conversation metrics alone for an internal note", async () => {
     await addNewWaMessage(
       { exchangeProcess: "internal" } as any,

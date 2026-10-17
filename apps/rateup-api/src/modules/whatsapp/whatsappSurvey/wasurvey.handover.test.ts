@@ -14,7 +14,7 @@ vi.mock("../../metaAgent/metaAgent.threadOwner.js", async (importOriginal) => ({
   setMetaAgentThreadOwner,
 }));
 
-const { whatsappEventHandler } = await import("./wasurvey.controller.js");
+const { processWhatsappWebhook } = await import("./wasurvey.webhook.js");
 
 const PHONE_ID = "259643180556398";
 const CUSTOMER = "919188346187";
@@ -45,11 +45,6 @@ function handoverWebhook(detail: Record<string, unknown>) {
   };
 }
 
-const reply = () => {
-  const r = { code: vi.fn(() => r), send: vi.fn(() => r) };
-  return r;
-};
-
 beforeEach(() => {
   vi.clearAllMocks();
   getWaSettingsByPhoneId.mockResolvedValue({ orgId: "org-1", phoneId: PHONE_ID });
@@ -68,8 +63,8 @@ describe("messaging_handovers webhooks", () => {
       },
     });
 
-    // @ts-expect-error — a webhook request is only ever read for `body` here.
-    await whatsappEventHandler(webhook, reply());
+    // @ts-expect-error — a hand-built body, looser than the WaMessageBody tuple types.
+    await processWhatsappWebhook(webhook.body);
 
     expect(getWaSettingsByPhoneId).toHaveBeenCalledWith(PHONE_ID);
     expect(setMetaAgentThreadOwner).toHaveBeenCalledWith({
@@ -88,7 +83,7 @@ describe("messaging_handovers webhooks", () => {
     });
 
     // @ts-expect-error — see above.
-    await whatsappEventHandler(webhook, reply());
+    await processWhatsappWebhook(webhook.body);
 
     expect(setMetaAgentThreadOwner).toHaveBeenCalledWith(
       expect.objectContaining({ owner: "AI", reason: null }),
@@ -99,7 +94,7 @@ describe("messaging_handovers webhooks", () => {
     const webhook = handoverWebhook({ type: "something_new", something_new: {} });
 
     // @ts-expect-error — see above.
-    await whatsappEventHandler(webhook, reply());
+    await processWhatsappWebhook(webhook.body);
 
     expect(setMetaAgentThreadOwner).not.toHaveBeenCalled();
   });

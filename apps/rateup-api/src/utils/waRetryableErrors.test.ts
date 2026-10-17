@@ -90,6 +90,18 @@ describe("classifyWaFailure", () => {
   it("does not treat a 4xx as transient", () => {
     expect(classifyWaFailure(undefined, 400)).toBe(WaFailureClass.PERMANENT);
   });
+
+  it("treats a codeless 429 as a transient throttle", () => {
+    expect(classifyWaFailure(undefined, 429)).toBe(WaFailureClass.TRANSIENT);
+    expect(classifyWaFailure(null, 429)).toBe(WaFailureClass.TRANSIENT);
+  });
+
+  it("leaves the documented codes alone whatever the status", () => {
+    expect(classifyWaFailure(131026, 429)).toBe(WaFailureClass.PERMANENT);
+    expect(classifyWaFailure(131047, 500)).toBe(WaFailureClass.RETRY_LATER);
+    expect(classifyWaFailure(131000)).toBe(WaFailureClass.TRANSIENT);
+    expect(classifyWaFailure(999999)).toBe(WaFailureClass.PERMANENT);
+  });
 });
 
 describe("isRetryable", () => {

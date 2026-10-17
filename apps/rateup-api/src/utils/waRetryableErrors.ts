@@ -289,6 +289,11 @@ function specFor(code: number | null | undefined, httpStatus?: number): WaErrorS
   if (typeof httpStatus === "number" && httpStatus >= 500 && httpStatus <= 599) {
     return spec(TRANSIENT, OTHER, "Meta API temporarily unavailable");
   }
+  // A throttle, whether or not Meta (or the edge in front of it) said which one.
+  // An empty-bodied 429 has no code to look up and used to read as UNKNOWN.
+  if (httpStatus === 429) {
+    return spec(TRANSIENT, LIMITED_BY_META, "Meta API rate limit reached");
+  }
   return UNKNOWN_SPEC;
 }
 
