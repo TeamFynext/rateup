@@ -60,7 +60,8 @@ function toContactCustomFieldValueInput(
 }
 
 export async function createContact(
-  contact: ContactCore & { orgId: string },
+  /** `consent`: for callers that know the person's answer, such as a store's checkout opt-in. */
+  contact: ContactCore & { orgId: string; consent?: boolean },
   userId?: string,
   /** `quiet`: a bulk import — skip the automation rule, Zap and CRM pushes that fire per contact. */
   options: { quiet?: boolean } = {},

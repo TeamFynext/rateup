@@ -270,8 +270,17 @@ describe("POST widget/event", () => {
       credential: { path: ["session", "shop"], equals: SHOP },
     });
     const upsert = db.shopifyWidgetStat.upsert.mock.calls[0][0];
-    expect(upsert.where.orgId_date_pageType).toMatchObject({ orgId: ORG, pageType: "product" });
-    expect(upsert.create).toMatchObject({ orgId: ORG, pageType: "product", clicks: 1 });
+    expect(upsert.where.orgId_date_pageType_provider).toMatchObject({
+      orgId: ORG,
+      pageType: "product",
+      provider: "shopify",
+    });
+    expect(upsert.create).toMatchObject({
+      orgId: ORG,
+      pageType: "product",
+      provider: "shopify",
+      clicks: 1,
+    });
     expect(upsert.update).toEqual({ clicks: { increment: 1 } });
   });
 
