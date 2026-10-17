@@ -3,15 +3,24 @@ import { formatNumber } from "@/lib/format";
 
 type Partial2 = Partial<SubscriptionFeatures> | null | undefined;
 
-/** The four counted allowances, in the order the Usage tab shows them. */
+/** The counted allowances, in the order the Usage tab shows them. */
 export const LIMITS = [
   {
-    key: "conversations",
-    label: "Conversations",
+    key: "activeContacts",
+    label: "Active contacts",
     hint: "a month",
-    get: (f: Partial2) => f?.whatsapp?.conversation?.count?.max,
+    get: (f: Partial2) => f?.whatsapp?.activeContacts?.count?.max,
     set: (f: SubscriptionFeatures, value: number) => {
-      f.whatsapp.conversation.count.max = value;
+      f.whatsapp.activeContacts.count.max = value;
+    },
+  },
+  {
+    key: "campaignCredits",
+    label: "Campaign credits",
+    hint: "a month",
+    get: (f: Partial2) => f?.whatsapp?.campaignCredits?.count?.max,
+    set: (f: SubscriptionFeatures, value: number) => {
+      f.whatsapp.campaignCredits.count.max = value;
     },
   },
   {
@@ -130,9 +139,13 @@ export function completeFeatures(stored: Partial2): SubscriptionFeatures {
     },
     whatsapp: {
       active: f.whatsapp?.active ?? false,
-      conversation: {
-        active: f.whatsapp?.conversation?.active ?? false,
-        count: max(f.whatsapp?.conversation?.count?.max),
+      activeContacts: {
+        active: f.whatsapp?.activeContacts?.active ?? false,
+        count: max(f.whatsapp?.activeContacts?.count?.max),
+      },
+      campaignCredits: {
+        active: f.whatsapp?.campaignCredits?.active ?? false,
+        count: max(f.whatsapp?.campaignCredits?.count?.max),
       },
       campaign: on(f.whatsapp?.campaign?.active),
       loyalty: on(f.whatsapp?.loyalty?.active),

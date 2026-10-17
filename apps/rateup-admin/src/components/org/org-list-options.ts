@@ -26,7 +26,7 @@ export const ORG_SORT_OPTIONS = {
   oldest: { label: "Oldest first", sort: "created", order: "asc" },
   name: { label: "Name A–Z", sort: "name", order: "asc" },
   expiring: { label: "Expiring first", sort: "expires", order: "asc" },
-  usage: { label: "Most conversations", sort: "conversations", order: "desc" },
+  usage: { label: "Most active contacts", sort: "activeContacts", order: "desc" },
 } as const satisfies Record<
   string,
   { label: string; sort: OrgListParams["sort"]; order: "asc" | "desc" }

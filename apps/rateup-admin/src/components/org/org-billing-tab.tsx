@@ -21,6 +21,7 @@ import { EmptyState, ErrorState, ListSkeleton } from "@/components/ds/query-stat
 import { ResponsiveTable, type Column } from "@/components/ds/responsive-table";
 import type { OrgAction } from "@/components/org/actions/org-action-dialogs";
 import { FeaturesSummary } from "@/components/org/features-summary";
+import { packAllowance } from "@/components/org/packs";
 import { Button } from "@/components/ui/button";
 import { formatDate, formatMoney, formatRelative, isEffectivelyNever } from "@/lib/format";
 
@@ -247,7 +248,7 @@ function PacksPanel({ orgId, onAction }: { orgId: string; onAction: (action: Org
           </Button>
         }
       >
-        Conversation packs
+        Packs
       </SectionHeading>
       {query.isPending ? (
         <ListSkeleton rows={2} />
@@ -269,6 +270,7 @@ function PacksPanel({ orgId, onAction }: { orgId: string; onAction: (action: Org
                       {granted ? "Granted" : "Paid"}
                     </Pill>
                   </p>
+                  <p className="text-xs text-muted-foreground">{packAllowance(pack)}</p>
                   <p className="text-xs text-muted-foreground">
                     {formatDate(pack.boughtAt)} → runs out {formatDate(pack.expiresAt)}
                   </p>
