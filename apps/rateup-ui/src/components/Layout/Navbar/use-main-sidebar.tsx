@@ -31,6 +31,7 @@ import type { PipelineNavInput } from "@/components/pipeline/pipeline.nav.tsx";
 import { findLeadsPipeline } from "@/components/pipeline/pipelineTypes.ts";
 import { useUser } from "@/context/UserContext.tsx";
 import useLocalStorage from "@/hooks/localStorage.tsx";
+import { useOrgModules } from "@/hooks/useOrgModules.ts";
 import i18n from "@/i18n.ts";
 import { useChatContactCountStore } from "@/store/inbox.store.ts";
 import { useMetaAgentChannelStore } from "@/store/metaAgent.store.ts";
@@ -204,6 +205,7 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
   const setupDismissed = resolvedUserData?.onboardingChecklistCompleted ?? true;
   const { data: checklist } = useChecklist(!setupDismissed);
 
+  const { isOn: isModuleOn } = useOrgModules();
   const setupNav = useMemo<SetupNavInput>(
     () => ({
       t,
@@ -213,7 +215,7 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
       // writes as soon as it sees a channel linked.
       connected: { whatsapp: Boolean(resolvedUserData?.hasWhatsAppSettings) },
       hasLoyaltyFeature: sub
-        ? Boolean(hasFeature(sub, SubscriptionFeaturePathName.Whatsapp))
+        ? Boolean(hasFeature(sub, SubscriptionFeaturePathName.Whatsapp)) && isModuleOn("loyalty")
         : null,
       activeStep: isSetup && typeof search?.step === "string" ? search.step : undefined,
     }),
@@ -223,6 +225,7 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
       setupDismissed,
       resolvedUserData?.hasWhatsAppSettings,
       sub,
+      isModuleOn,
       isSetup,
       search?.step,
     ],

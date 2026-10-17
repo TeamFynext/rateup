@@ -27,6 +27,7 @@ import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 import type { OptimisticMessage } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter/index.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import { useOrgModules } from "@/hooks/useOrgModules.ts";
 import { cn } from "@/lib/utils.ts";
 import { useInboxViewStore } from "@/store/inbox-view.store.ts";
 import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
@@ -115,6 +116,7 @@ export default function WaInboxChatSelectCard({
     "Unknown";
 
   const compact = useInboxViewStore((s) => s.compact);
+  const showStage = useOrgModules().isOn("pipeline");
 
   const status = deriveStatus(contact);
   const isClosed = isTicketClosed(contact);
@@ -488,7 +490,7 @@ export default function WaInboxChatSelectCard({
               the same screen was the confusing part. Falls back to the lifecycle
               for contacts with no lead, so a row never loses its chip before the
               board reaches it. */}
-          {contact?.stageName ? (
+          {contact?.stageName && showStage ? (
             <span className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold bg-muted text-muted-foreground">
               <StageDot color={contact.stageColor ?? null} className="size-1.5" />
               {contact.stageName}

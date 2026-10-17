@@ -1,5 +1,6 @@
 import type { RequestPayload } from "@/types/api.ts";
 import type { WaAssignedChatPermission } from "@/types/enums.ts";
+import type { OrgModule } from "@/utils/modules.ts";
 
 /**
  * The setup wizard's per-step completion flags. Mirrors the API's
@@ -7,6 +8,7 @@ import type { WaAssignedChatPermission } from "@/types/enums.ts";
  */
 /** Steps the org has waved off, keyed the same way the checklist is. */
 export interface OnboardingChecklistSkips {
+  features?: boolean;
   instagram?: boolean;
   messenger?: boolean;
   invite?: boolean;
@@ -17,6 +19,7 @@ export interface OnboardingChecklistSkips {
 }
 
 export interface OnboardingChecklist {
+  features?: boolean;
   api?: boolean;
   verify?: boolean;
   payment?: boolean;
@@ -131,6 +134,13 @@ export interface IUpdateOrgDetails {
 }
 export const updateOrgDetails = (data: Partial<IUpdateOrgDetails>) =>
   axiosClient.put("/org/update-details", data);
+
+export async function updateOrgModules(hiddenModules: readonly OrgModule[]) {
+  const res = await axiosClient.put<{ data: { hiddenModules: OrgModule[] } }>("/org/modules", {
+    hiddenModules,
+  });
+  return res.data.data.hiddenModules;
+}
 
 /** An organisation row as the admin org list returns it. */
 export type AdminOrg = Org & {

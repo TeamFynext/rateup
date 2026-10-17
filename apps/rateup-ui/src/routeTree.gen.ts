@@ -66,6 +66,7 @@ import { Route as DashboardCampaignIndexRouteImport } from './routes/dashboard/c
 import { Route as DashboardCampaignNewRouteImport } from './routes/dashboard/campaign/new'
 import { Route as DashboardCommerceIndexRouteImport } from './routes/dashboard/commerce/index'
 import { Route as DashboardContactsIndexRouteImport } from './routes/dashboard/contacts/index'
+import { Route as DashboardFeaturesIndexRouteImport } from './routes/dashboard/features/index'
 import { Route as DashboardInboxIndexRouteImport } from './routes/dashboard/inbox/index'
 import { Route as DashboardInstagramIndexRouteImport } from './routes/dashboard/instagram/index'
 import { Route as DashboardLinkPagesIndexRouteImport } from './routes/dashboard/link-pages/index'
@@ -85,6 +86,7 @@ import { Route as DashboardQrCreatorIndexRouteImport } from './routes/dashboard/
 import { Route as DashboardQuickAccessLinksIndexRouteImport } from './routes/dashboard/quickAccessLinks/index'
 import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/settings/index'
 import { Route as DashboardSetupIndexRouteImport } from './routes/dashboard/setup/index'
+import { Route as DashboardSetupFeaturesRouteImport } from './routes/dashboard/setup/features'
 import { Route as DashboardSurveysIndexRouteImport } from './routes/dashboard/surveys/index'
 import { Route as DashboardTestimonialIndexRouteImport } from './routes/dashboard/testimonial/index'
 import { Route as DashboardWhatsappIndexRouteImport } from './routes/dashboard/whatsapp/index'
@@ -175,6 +177,7 @@ import { Route as DashboardQuickAccessLinksShortUrlIdIndexRouteImport } from './
 import { Route as DashboardSettingsAccountIndexRouteImport } from './routes/dashboard/settings/account/index'
 import { Route as DashboardSettingsBillingIndexRouteImport } from './routes/dashboard/settings/billing/index'
 import { Route as DashboardSettingsChannelsIndexRouteImport } from './routes/dashboard/settings/channels/index'
+import { Route as DashboardSettingsFeaturesIndexRouteImport } from './routes/dashboard/settings/features/index'
 import { Route as DashboardSettingsIntegrationsIndexRouteImport } from './routes/dashboard/settings/integrations/index'
 import { Route as DashboardSettingsMembersIndexRouteImport } from './routes/dashboard/settings/members/index'
 import { Route as DashboardSettingsMembersMemberIdRouteImport } from './routes/dashboard/settings/members/$memberId'
@@ -515,6 +518,11 @@ const DashboardContactsIndexRoute = DashboardContactsIndexRouteImport.update({
   path: '/contacts/',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const DashboardFeaturesIndexRoute = DashboardFeaturesIndexRouteImport.update({
+  id: '/features/',
+  path: '/features/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const DashboardInboxIndexRoute = DashboardInboxIndexRouteImport.update({
   id: '/inbox/',
   path: '/inbox/',
@@ -617,6 +625,11 @@ const DashboardSettingsIndexRoute = DashboardSettingsIndexRouteImport.update({
 const DashboardSetupIndexRoute = DashboardSetupIndexRouteImport.update({
   id: '/setup/',
   path: '/setup/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardSetupFeaturesRoute = DashboardSetupFeaturesRouteImport.update({
+  id: '/setup/features',
+  path: '/setup/features',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
 const DashboardSurveysIndexRoute = DashboardSurveysIndexRouteImport.update({
@@ -1152,6 +1165,12 @@ const DashboardSettingsChannelsIndexRoute =
     path: '/settings/channels/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
+const DashboardSettingsFeaturesIndexRoute =
+  DashboardSettingsFeaturesIndexRouteImport.update({
+    id: '/settings/features/',
+    path: '/settings/features/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
 const DashboardSettingsIntegrationsIndexRoute =
   DashboardSettingsIntegrationsIndexRouteImport.update({
     id: '/settings/integrations/',
@@ -1482,6 +1501,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/meta-agent/settings': typeof DashboardMetaAgentSettingsRoute
   '/dashboard/meta-agent/skills': typeof DashboardMetaAgentSkillsRoute
   '/dashboard/meta-agent/ui-skills': typeof DashboardMetaAgentUiSkillsRoute
+  '/dashboard/setup/features': typeof DashboardSetupFeaturesRoute
   '/invite/': typeof authInviteIndexRoute
   '/login/': typeof authLoginIndexRoute
   '/logout/': typeof authLogoutIndexRoute
@@ -1516,6 +1536,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/campaign/': typeof DashboardCampaignIndexRoute
   '/dashboard/commerce/': typeof DashboardCommerceIndexRoute
   '/dashboard/contacts/': typeof DashboardContactsIndexRoute
+  '/dashboard/features/': typeof DashboardFeaturesIndexRoute
   '/dashboard/inbox/': typeof DashboardInboxIndexRoute
   '/dashboard/instagram/': typeof DashboardInstagramIndexRoute
   '/dashboard/link-pages/': typeof DashboardLinkPagesIndexRoute
@@ -1619,6 +1640,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings/account/': typeof DashboardSettingsAccountIndexRoute
   '/dashboard/settings/billing/': typeof DashboardSettingsBillingIndexRoute
   '/dashboard/settings/channels/': typeof DashboardSettingsChannelsIndexRoute
+  '/dashboard/settings/features/': typeof DashboardSettingsFeaturesIndexRoute
   '/dashboard/settings/integrations/': typeof DashboardSettingsIntegrationsIndexRoute
   '/dashboard/settings/members/': typeof DashboardSettingsMembersIndexRoute
   '/dashboard/settings/notifications/': typeof DashboardSettingsNotificationsIndexRoute
@@ -1692,6 +1714,7 @@ export interface FileRoutesByTo {
   '/dashboard/meta-agent/settings': typeof DashboardMetaAgentSettingsRoute
   '/dashboard/meta-agent/skills': typeof DashboardMetaAgentSkillsRoute
   '/dashboard/meta-agent/ui-skills': typeof DashboardMetaAgentUiSkillsRoute
+  '/dashboard/setup/features': typeof DashboardSetupFeaturesRoute
   '/invite': typeof authInviteIndexRoute
   '/login': typeof authLoginIndexRoute
   '/logout': typeof authLogoutIndexRoute
@@ -1726,6 +1749,7 @@ export interface FileRoutesByTo {
   '/dashboard/campaign': typeof DashboardCampaignIndexRoute
   '/dashboard/commerce': typeof DashboardCommerceIndexRoute
   '/dashboard/contacts': typeof DashboardContactsIndexRoute
+  '/dashboard/features': typeof DashboardFeaturesIndexRoute
   '/dashboard/inbox': typeof DashboardInboxIndexRoute
   '/dashboard/instagram': typeof DashboardInstagramIndexRoute
   '/dashboard/link-pages': typeof DashboardLinkPagesIndexRoute
@@ -1829,6 +1853,7 @@ export interface FileRoutesByTo {
   '/dashboard/settings/account': typeof DashboardSettingsAccountIndexRoute
   '/dashboard/settings/billing': typeof DashboardSettingsBillingIndexRoute
   '/dashboard/settings/channels': typeof DashboardSettingsChannelsIndexRoute
+  '/dashboard/settings/features': typeof DashboardSettingsFeaturesIndexRoute
   '/dashboard/settings/integrations': typeof DashboardSettingsIntegrationsIndexRoute
   '/dashboard/settings/members': typeof DashboardSettingsMembersIndexRoute
   '/dashboard/settings/notifications': typeof DashboardSettingsNotificationsIndexRoute
@@ -1911,6 +1936,7 @@ export interface FileRoutesById {
   '/dashboard/meta-agent/settings': typeof DashboardMetaAgentSettingsRoute
   '/dashboard/meta-agent/skills': typeof DashboardMetaAgentSkillsRoute
   '/dashboard/meta-agent/ui-skills': typeof DashboardMetaAgentUiSkillsRoute
+  '/dashboard/setup/features': typeof DashboardSetupFeaturesRoute
   '/(auth)/invite/': typeof authInviteIndexRoute
   '/(auth)/login/': typeof authLoginIndexRoute
   '/(auth)/logout/': typeof authLogoutIndexRoute
@@ -1945,6 +1971,7 @@ export interface FileRoutesById {
   '/dashboard/campaign/': typeof DashboardCampaignIndexRoute
   '/dashboard/commerce/': typeof DashboardCommerceIndexRoute
   '/dashboard/contacts/': typeof DashboardContactsIndexRoute
+  '/dashboard/features/': typeof DashboardFeaturesIndexRoute
   '/dashboard/inbox/': typeof DashboardInboxIndexRoute
   '/dashboard/instagram/': typeof DashboardInstagramIndexRoute
   '/dashboard/link-pages/': typeof DashboardLinkPagesIndexRoute
@@ -2048,6 +2075,7 @@ export interface FileRoutesById {
   '/dashboard/settings/account/': typeof DashboardSettingsAccountIndexRoute
   '/dashboard/settings/billing/': typeof DashboardSettingsBillingIndexRoute
   '/dashboard/settings/channels/': typeof DashboardSettingsChannelsIndexRoute
+  '/dashboard/settings/features/': typeof DashboardSettingsFeaturesIndexRoute
   '/dashboard/settings/integrations/': typeof DashboardSettingsIntegrationsIndexRoute
   '/dashboard/settings/members/': typeof DashboardSettingsMembersIndexRoute
   '/dashboard/settings/notifications/': typeof DashboardSettingsNotificationsIndexRoute
@@ -2128,6 +2156,7 @@ export interface FileRouteTypes {
     | '/dashboard/meta-agent/settings'
     | '/dashboard/meta-agent/skills'
     | '/dashboard/meta-agent/ui-skills'
+    | '/dashboard/setup/features'
     | '/invite/'
     | '/login/'
     | '/logout/'
@@ -2162,6 +2191,7 @@ export interface FileRouteTypes {
     | '/dashboard/campaign/'
     | '/dashboard/commerce/'
     | '/dashboard/contacts/'
+    | '/dashboard/features/'
     | '/dashboard/inbox/'
     | '/dashboard/instagram/'
     | '/dashboard/link-pages/'
@@ -2265,6 +2295,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings/account/'
     | '/dashboard/settings/billing/'
     | '/dashboard/settings/channels/'
+    | '/dashboard/settings/features/'
     | '/dashboard/settings/integrations/'
     | '/dashboard/settings/members/'
     | '/dashboard/settings/notifications/'
@@ -2338,6 +2369,7 @@ export interface FileRouteTypes {
     | '/dashboard/meta-agent/settings'
     | '/dashboard/meta-agent/skills'
     | '/dashboard/meta-agent/ui-skills'
+    | '/dashboard/setup/features'
     | '/invite'
     | '/login'
     | '/logout'
@@ -2372,6 +2404,7 @@ export interface FileRouteTypes {
     | '/dashboard/campaign'
     | '/dashboard/commerce'
     | '/dashboard/contacts'
+    | '/dashboard/features'
     | '/dashboard/inbox'
     | '/dashboard/instagram'
     | '/dashboard/link-pages'
@@ -2475,6 +2508,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings/account'
     | '/dashboard/settings/billing'
     | '/dashboard/settings/channels'
+    | '/dashboard/settings/features'
     | '/dashboard/settings/integrations'
     | '/dashboard/settings/members'
     | '/dashboard/settings/notifications'
@@ -2556,6 +2590,7 @@ export interface FileRouteTypes {
     | '/dashboard/meta-agent/settings'
     | '/dashboard/meta-agent/skills'
     | '/dashboard/meta-agent/ui-skills'
+    | '/dashboard/setup/features'
     | '/(auth)/invite/'
     | '/(auth)/login/'
     | '/(auth)/logout/'
@@ -2590,6 +2625,7 @@ export interface FileRouteTypes {
     | '/dashboard/campaign/'
     | '/dashboard/commerce/'
     | '/dashboard/contacts/'
+    | '/dashboard/features/'
     | '/dashboard/inbox/'
     | '/dashboard/instagram/'
     | '/dashboard/link-pages/'
@@ -2693,6 +2729,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings/account/'
     | '/dashboard/settings/billing/'
     | '/dashboard/settings/channels/'
+    | '/dashboard/settings/features/'
     | '/dashboard/settings/integrations/'
     | '/dashboard/settings/members/'
     | '/dashboard/settings/notifications/'
@@ -3159,6 +3196,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardContactsIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/features/': {
+      id: '/dashboard/features/'
+      path: '/features'
+      fullPath: '/dashboard/features/'
+      preLoaderRoute: typeof DashboardFeaturesIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/inbox/': {
       id: '/dashboard/inbox/'
       path: '/inbox'
@@ -3290,6 +3334,13 @@ declare module '@tanstack/react-router' {
       path: '/setup'
       fullPath: '/dashboard/setup/'
       preLoaderRoute: typeof DashboardSetupIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/setup/features': {
+      id: '/dashboard/setup/features'
+      path: '/setup/features'
+      fullPath: '/dashboard/setup/features'
+      preLoaderRoute: typeof DashboardSetupFeaturesRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/surveys/': {
@@ -3920,6 +3971,13 @@ declare module '@tanstack/react-router' {
       path: '/settings/channels'
       fullPath: '/dashboard/settings/channels/'
       preLoaderRoute: typeof DashboardSettingsChannelsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/settings/features/': {
+      id: '/dashboard/settings/features/'
+      path: '/settings/features'
+      fullPath: '/dashboard/settings/features/'
+      preLoaderRoute: typeof DashboardSettingsFeaturesIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/settings/integrations/': {
@@ -4674,10 +4732,12 @@ interface DashboardRouteRouteChildren {
   DashboardMetaAgentRouteRoute: typeof DashboardMetaAgentRouteRouteWithChildren
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardCampaignNewRoute: typeof DashboardCampaignNewRoute
+  DashboardSetupFeaturesRoute: typeof DashboardSetupFeaturesRoute
   DashboardAnalyticsIndexRoute: typeof DashboardAnalyticsIndexRoute
   DashboardAutomationIndexRoute: typeof DashboardAutomationIndexRoute
   DashboardCampaignIndexRoute: typeof DashboardCampaignIndexRoute
   DashboardContactsIndexRoute: typeof DashboardContactsIndexRoute
+  DashboardFeaturesIndexRoute: typeof DashboardFeaturesIndexRoute
   DashboardInboxIndexRoute: typeof DashboardInboxIndexRoute
   DashboardInstagramIndexRoute: typeof DashboardInstagramIndexRoute
   DashboardLinkPagesIndexRoute: typeof DashboardLinkPagesIndexRoute
@@ -4712,6 +4772,7 @@ interface DashboardRouteRouteChildren {
   DashboardSettingsAccountIndexRoute: typeof DashboardSettingsAccountIndexRoute
   DashboardSettingsBillingIndexRoute: typeof DashboardSettingsBillingIndexRoute
   DashboardSettingsChannelsIndexRoute: typeof DashboardSettingsChannelsIndexRoute
+  DashboardSettingsFeaturesIndexRoute: typeof DashboardSettingsFeaturesIndexRoute
   DashboardSettingsIntegrationsIndexRoute: typeof DashboardSettingsIntegrationsIndexRoute
   DashboardSettingsMembersIndexRoute: typeof DashboardSettingsMembersIndexRoute
   DashboardSettingsNotificationsIndexRoute: typeof DashboardSettingsNotificationsIndexRoute
@@ -4748,10 +4809,12 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardMetaAgentRouteRoute: DashboardMetaAgentRouteRouteWithChildren,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardCampaignNewRoute: DashboardCampaignNewRoute,
+  DashboardSetupFeaturesRoute: DashboardSetupFeaturesRoute,
   DashboardAnalyticsIndexRoute: DashboardAnalyticsIndexRoute,
   DashboardAutomationIndexRoute: DashboardAutomationIndexRoute,
   DashboardCampaignIndexRoute: DashboardCampaignIndexRoute,
   DashboardContactsIndexRoute: DashboardContactsIndexRoute,
+  DashboardFeaturesIndexRoute: DashboardFeaturesIndexRoute,
   DashboardInboxIndexRoute: DashboardInboxIndexRoute,
   DashboardInstagramIndexRoute: DashboardInstagramIndexRoute,
   DashboardLinkPagesIndexRoute: DashboardLinkPagesIndexRoute,
@@ -4793,6 +4856,7 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardSettingsAccountIndexRoute: DashboardSettingsAccountIndexRoute,
   DashboardSettingsBillingIndexRoute: DashboardSettingsBillingIndexRoute,
   DashboardSettingsChannelsIndexRoute: DashboardSettingsChannelsIndexRoute,
+  DashboardSettingsFeaturesIndexRoute: DashboardSettingsFeaturesIndexRoute,
   DashboardSettingsIntegrationsIndexRoute:
     DashboardSettingsIntegrationsIndexRoute,
   DashboardSettingsMembersIndexRoute: DashboardSettingsMembersIndexRoute,

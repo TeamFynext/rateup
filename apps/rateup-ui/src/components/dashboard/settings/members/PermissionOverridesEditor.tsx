@@ -10,6 +10,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible.tsx";
+import { useOrgModules } from "@/hooks/useOrgModules.ts";
 import { cn } from "@/lib/utils.ts";
 import {
   PERMISSION_GROUPS,
@@ -48,6 +49,17 @@ export function PermissionOverridesEditor({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const base = ROLE_PERMISSIONS[roleKey];
+  const { hiddenPermissionGroups } = useOrgModules();
+  // Overrides on a hidden feature stay saved: they are kept through Reset and sent back on save.
+  const offScreen = useMemo(
+    () =>
+      new Set<Permission>(
+        PERMISSION_GROUPS.filter((group) => hiddenPermissionGroups.has(group.key)).flatMap(
+          (group) => group.permissions,
+        ),
+      ),
+    [hiddenPermissionGroups],
+  );
   const [open, setOpen] = useState(grants.length > 0 || denies.length > 0);
   const [draftGrants, setDraftGrants] = useState<Set<Permission>>(new Set());
   const [draftDenies, setDraftDenies] = useState<Set<Permission>>(new Set());
@@ -81,7 +93,7 @@ export function PermissionOverridesEditor({
   };
 
   const savedCount = grants.length + denies.length;
-  const draftCount = draftGrants.size + draftDenies.size;
+  const draftCount = [...draftGrants, ...draftDenies].filter((p) => !offScreen.has(p)).length;
   const dirty = useMemo(() => {
     const same = (a: ReadonlySet<string>, b: readonly string[]) =>
       a.size === b.length && b.every((p) => a.has(p));
@@ -132,60 +144,64 @@ export function PermissionOverridesEditor({
         </p>
 
         <div className="flex flex-col gap-3">
-          {PERMISSION_GROUPS.map((group) => {
-            const visible = group.permissions.filter((p) => !HIDDEN.has(p));
-            if (visible.length === 0) return null;
-            return (
-              <fieldset key={group.key} className="flex flex-col gap-1.5">
-                <legend className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                  {t(group.label)}
-                </legend>
-                {visible.map((p) => {
-                  const fromRole = base.has(p);
-                  const checked = effective(p);
-                  const changed = fromRole ? draftDenies.has(p) : draftGrants.has(p);
-                  const cannotAdd = !fromRole && !editorPermissions.has(p);
-                  const id = `override-${p}`;
-                  return (
-                    <label
-                      key={p}
-                      htmlFor={id}
-                      className={cn(
-                        "flex items-center gap-2.5 text-sm",
-                        (disabled || cannotAdd) && "opacity-70",
-                      )}
-                    >
-                      <Checkbox
-                        id={id}
-                        checked={checked}
-                        disabled={disabled || cannotAdd}
-                        onCheckedChange={() => toggle(p)}
-                      />
-                      <span className="min-w-0 flex-1 truncate">{t(PERMISSION_LABELS[p])}</span>
-                      {changed && (
-                        <span
-                          className={cn(
-                            "text-[11px]",
-                            fromRole ? "text-destructive" : "text-primary",
-                          )}
-                        >
-                          {fromRole ? t("Removed") : t("Added")}
-                        </span>
-                      )}
-                      {!changed && fromRole && (
-                        <span className="text-[11px] text-muted-foreground">{t("From role")}</span>
-                      )}
-                      {cannotAdd && !changed && (
-                        <span className="text-[11px] text-muted-foreground">
-                          {t("Not yours to give")}
-                        </span>
-                      )}
-                    </label>
-                  );
-                })}
-              </fieldset>
-            );
-          })}
+          {PERMISSION_GROUPS.filter((group) => !hiddenPermissionGroups.has(group.key)).map(
+            (group) => {
+              const visible = group.permissions.filter((p) => !HIDDEN.has(p));
+              if (visible.length === 0) return null;
+              return (
+                <fieldset key={group.key} className="flex flex-col gap-1.5">
+                  <legend className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    {t(group.label)}
+                  </legend>
+                  {visible.map((p) => {
+                    const fromRole = base.has(p);
+                    const checked = effective(p);
+                    const changed = fromRole ? draftDenies.has(p) : draftGrants.has(p);
+                    const cannotAdd = !fromRole && !editorPermissions.has(p);
+                    const id = `override-${p}`;
+                    return (
+                      <label
+                        key={p}
+                        htmlFor={id}
+                        className={cn(
+                          "flex items-center gap-2.5 text-sm",
+                          (disabled || cannotAdd) && "opacity-70",
+                        )}
+                      >
+                        <Checkbox
+                          id={id}
+                          checked={checked}
+                          disabled={disabled || cannotAdd}
+                          onCheckedChange={() => toggle(p)}
+                        />
+                        <span className="min-w-0 flex-1 truncate">{t(PERMISSION_LABELS[p])}</span>
+                        {changed && (
+                          <span
+                            className={cn(
+                              "text-[11px]",
+                              fromRole ? "text-destructive" : "text-primary",
+                            )}
+                          >
+                            {fromRole ? t("Removed") : t("Added")}
+                          </span>
+                        )}
+                        {!changed && fromRole && (
+                          <span className="text-[11px] text-muted-foreground">
+                            {t("From role")}
+                          </span>
+                        )}
+                        {cannotAdd && !changed && (
+                          <span className="text-[11px] text-muted-foreground">
+                            {t("Not yours to give")}
+                          </span>
+                        )}
+                      </label>
+                    );
+                  })}
+                </fieldset>
+              );
+            },
+          )}
         </div>
 
         {!disabled && (
@@ -196,8 +212,8 @@ export function PermissionOverridesEditor({
               size="sm"
               disabled={draftCount === 0 || saving}
               onClick={() => {
-                setDraftGrants(new Set());
-                setDraftDenies(new Set());
+                setDraftGrants((prev) => new Set([...prev].filter((p) => offScreen.has(p))));
+                setDraftDenies((prev) => new Set([...prev].filter((p) => offScreen.has(p))));
               }}
             >
               <IconRotate className="size-4" aria-hidden="true" />

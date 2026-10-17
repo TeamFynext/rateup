@@ -54,12 +54,14 @@ import {
 } from "@/components/ui/sidebar.tsx";
 import { useTeamFeatures } from "@/context/TeamFeaturesContext.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import { useOrgModules } from "@/hooks/useOrgModules.ts";
 import { usePermissions } from "@/hooks/usePermission.ts";
 import { cn } from "@/lib/utils.ts";
 import { useChatFilterStore } from "@/store/chat-filter.store.ts";
 import { useChatContactCountStore } from "@/store/inbox.store.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
+import FeaturesButton, { FEATURES_PATH } from "./FeaturesButton.tsx";
 import { useNavMain } from "./hooks.tsx";
 import { NavUser } from "./user-nav.tsx";
 import WhatsNewButton from "./whats-new/WhatsNewButton.tsx";
@@ -630,7 +632,7 @@ export default function AppSidebar({
   loyaltyNav?: LoyaltyNavInput;
   metaAgentNav: MetaAgentNavInput;
 }>) {
-  const hiddenModules = import.meta.env.VITE_HIDDEN_MODULES?.split(",") || [];
+  const { isOn: isModuleOn } = useOrgModules();
 
   const pathname = useRouterState({
     select: (s) => s.location.pathname,
@@ -677,7 +679,7 @@ export default function AppSidebar({
     staff,
     teams,
     chatFilterStore,
-    hiddenModules,
+    isModuleOn,
     handleFilter,
     allowedFeatures,
     can,
@@ -690,6 +692,8 @@ export default function AppSidebar({
   });
 
   const [activeItem, setActiveItem] = useState(navMain[0]);
+  // The Features page sits in the rail's footer, outside every section, so no panel belongs to it.
+  const onFeaturesPage = pathname.startsWith(FEATURES_PATH);
   const lastActiveTitleRef = useRef(activeItem?.title);
   const hasShownExpiredSubscriptionToast = useRef(false);
 
@@ -820,7 +824,7 @@ export default function AppSidebar({
                         setOpen(true);
                         if (!allow) e.preventDefault();
                       }}
-                      isActive={activeItem?.title === item.title}
+                      isActive={!onFeaturesPage && activeItem?.title === item.title}
                       aria-label={item.title}
                       render={item.url && item.url !== "#" ? <Link to={item.url} /> : undefined}
                     >
@@ -839,11 +843,12 @@ export default function AppSidebar({
         <SidebarFooter className="items-center gap-1.5 border-t border-sidebar-border pt-3">
           <WhatsNewButton />
           <NotificationBellIcon />
+          <FeaturesButton />
           <NavUser user={userData?.data} />
         </SidebarFooter>
       </Sidebar>
       {/* Expanded nav panel */}
-      {activeItem?.items && activeItem.items.length > 0 && (
+      {!onFeaturesPage && activeItem?.items && activeItem.items.length > 0 && (
         <Sidebar className="w-56 border-r relative hidden md:flex" collapsible="icon">
           <SidebarHeader className="h-14 justify-center border-b bg-background p-0 px-3 group-data-[collapsible=icon]:px-2">
             <div className="flex w-full items-center justify-between group-data-[collapsible=icon]:justify-center">

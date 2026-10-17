@@ -84,6 +84,7 @@ import type { ChatFilterStore } from "@/store/chat-filter.store.ts";
 import type { ChatContactCountStore } from "@/store/inbox.store.ts";
 import { MessagePlatform, TeamFeature } from "@/types/enums.ts";
 import type { Permission } from "@/utils/authz/permissions.ts";
+import type { OrgModule } from "@/utils/modules.ts";
 
 type NavIcon = React.ComponentType<{ size?: number | string; className?: string }>;
 
@@ -192,7 +193,8 @@ interface NavMainInput {
   staff: Array<{ id: string; name?: string }>;
   teams: Array<{ id: string; name?: string; color?: string }>;
   chatFilterStore: ChatFilterStore;
-  hiddenModules: string[];
+  /** Whether the org shows a feature area (`useOrgModules`). */
+  isModuleOn: (module: OrgModule) => boolean;
   handleFilter: (label: string, value: string) => void;
   allowedFeatures: AllowedFeatures;
   /** `usePermissions().can`; what the signed-in user may do. */
@@ -214,7 +216,7 @@ export function useNavMain({
   staff,
   teams,
   chatFilterStore,
-  hiddenModules,
+  isModuleOn,
   handleFilter,
   allowedFeatures,
   can,
@@ -530,7 +532,7 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(hasTeamFeature(TeamFeature.Pipeline)
+      ...(hasTeamFeature(TeamFeature.Pipeline) && isModuleOn("pipeline")
         ? [
             {
               title: t("Pipeline"),
@@ -561,7 +563,7 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(hasTeamFeature(TeamFeature.AiChatbot)
+      ...(hasTeamFeature(TeamFeature.AiChatbot) && isModuleOn("ai_agent")
         ? [
             {
               title: "Meta AI Agent",
@@ -575,7 +577,7 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(hasTeamFeature(TeamFeature.Loyalty)
+      ...(hasTeamFeature(TeamFeature.Loyalty) && isModuleOn("loyalty")
         ? [
             {
               title: t("Loyalty"),
@@ -586,7 +588,7 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(true
+      ...(isModuleOn("commerce")
         ? [
             {
               title: t("Commerce"),
@@ -695,7 +697,7 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(hasTeamFeature(TeamFeature.WebForms)
+      ...(hasTeamFeature(TeamFeature.WebForms) && isModuleOn("web_forms")
         ? [
             {
               title: t("Web Forms"),
@@ -704,7 +706,7 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(hasTeamFeature(TeamFeature.QrStudio)
+      ...(hasTeamFeature(TeamFeature.QrStudio) && isModuleOn("qr_links")
         ? [
             {
               title: t("QR & Links"),
@@ -873,7 +875,7 @@ export function useNavMain({
     conversationTags,
     handleFilter,
     hasTeamFeature,
-    hiddenModules,
+    isModuleOn,
     lifecycles,
     pipelineNav,
     setupNav,

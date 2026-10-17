@@ -26,6 +26,7 @@ import { BookDemoLink } from "@/components/RateupHomePage/helper/BookDemoLink.ts
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { useOrgModules } from "@/hooks/useOrgModules.ts";
 import { SubscriptionFeaturePathName } from "@/types/enums.ts";
 import { rateupIcon } from "@/utils/constants";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
@@ -75,8 +76,9 @@ export function RateUpOnboarding({ step }: Readonly<{ step?: string }>) {
     [channels, isLoading],
   );
   const isSubReady = !isSubLoading && sub;
+  const { isOn: isModuleOn } = useOrgModules();
   const hasLoyaltyFeature = isSubReady
-    ? hasFeature(sub, SubscriptionFeaturePathName.Whatsapp)
+    ? hasFeature(sub, SubscriptionFeaturePathName.Whatsapp) && isModuleOn("loyalty")
     : null;
 
   const {
@@ -246,6 +248,11 @@ export function RateUpOnboarding({ step }: Readonly<{ step?: string }>) {
   };
 
   const groups: { id: TaskGroup; title: string; hint: string; required?: boolean }[] = [
+    {
+      id: "features",
+      title: translations("Start with your features"),
+      hint: translations("Keep your menu to what your team actually uses"),
+    },
     {
       id: "channels",
       title: translations("Connect a channel"),

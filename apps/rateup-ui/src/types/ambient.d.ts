@@ -548,6 +548,8 @@ declare global {
     showLifecycle: boolean;
     isConversionApiActive: boolean;
     onboardingChecklistCompleted: boolean;
+    /** Feature areas the org hides from navigation (`src/utils/modules.ts`). Absent from an older API. */
+    hiddenModules?: string[];
     /** System role and its permissions (rateup-api/src/authz). Absent from an older API. */
     roleKey?: string;
     permissions?: string[];

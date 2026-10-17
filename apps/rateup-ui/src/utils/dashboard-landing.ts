@@ -50,7 +50,10 @@ export async function redirectToDashboardLanding({ context }: { context: RouterC
 
   if (!permissions.has("inbox.read")) {
     throw redirect({
-      to: getDashboardLandingTarget(allowedFeaturesFromPermissions(permissions)),
+      to: getDashboardLandingTarget(
+        allowedFeaturesFromPermissions(permissions),
+        user.hiddenModules,
+      ),
       replace: true,
     });
   }
