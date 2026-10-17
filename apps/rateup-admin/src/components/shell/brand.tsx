@@ -75,9 +75,13 @@ const APP_ENV = import.meta.env.VITE_APP_ENV ?? import.meta.env.MODE;
 const SHORT_ENV: Record<string, string> = { development: "dev", production: "prod" };
 const ENV_LABEL = SHORT_ENV[APP_ENV] ?? APP_ENV;
 
-/** Which deployment this is; red in production, where a mistake reaches customers. */
+/**
+ * Which deployment this is; red in production, where a mistake reaches customers. Also says
+ * when the console is signed in as a fake staff user (VITE_STAFF_MOCK).
+ */
 export function EnvPill({ className }: { className?: string }) {
   const isProd = APP_ENV === "production";
+  const suffix = isStaffMock ? " · mock" : "";
   return (
     <span
       className={cn(
@@ -86,7 +90,8 @@ export function EnvPill({ className }: { className?: string }) {
         className,
       )}
     >
-      {isStaffMock ? `${ENV_LABEL} · mock` : ENV_LABEL}
+      {ENV_LABEL}
+      {suffix}
     </span>
   );
 }

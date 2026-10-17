@@ -168,7 +168,11 @@ function DeleteDialog({
       title={`Delete ${org.name}`}
       description="This cannot be undone."
       submitLabel="Delete for good"
-      canSubmit={!billing && !stepUp && confirm.trim() === org.name.trim()}
+      blocked={
+        (stepUp && "Sign in with Google again first") ||
+        (billing && "Cancel the gateway subscription first") ||
+        (confirm.trim() !== org.name.trim() && `Type "${org.name.trim()}" to confirm`)
+      }
       pending={mutation.isPending}
       error={stepUp ? null : mutation.error}
       onSubmit={(reason) =>

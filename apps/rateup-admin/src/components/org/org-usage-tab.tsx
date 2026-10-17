@@ -13,7 +13,9 @@ import { ErrorState, PanelSkeleton } from "@/components/ds/query-states";
 import { StatFigure } from "@/components/ds/stat-figure";
 import { UsageMeter } from "@/components/ds/usage-meter";
 import { OrgTemplateMessages } from "@/components/org/org-template-messages";
+import { packAllowance } from "@/components/org/packs";
 import { formatCompact, formatDate, formatNumber, formatRelative } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 export function OrgUsageTab({ orgId }: { orgId: string }) {
   const [days, setDays] = useState<UsageDays>(30);
@@ -45,9 +47,9 @@ export function OrgUsageTab({ orgId }: { orgId: string }) {
             />
           }
         >
-          Conversations per day
+          Per day
         </SectionHeading>
-        <ConversationTrend daily={query.data.daily} fetching={query.isPlaceholderData} />
+        <DailyTrend daily={query.data.daily} fetching={query.isPlaceholderData} />
       </Panel>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
@@ -63,15 +65,18 @@ export function OrgUsageTab({ orgId }: { orgId: string }) {
           >
             Counters
           </SectionHeading>
+          <p className="-mt-3 text-xs text-muted-foreground">
+            Analytics only. Plans are limited by active contacts and campaign credits.
+          </p>
           {counters ? (
             <div className="grid grid-cols-2 gap-x-6 gap-y-7 sm:grid-cols-3">
               <StatFigure
                 value={formatCompact(counters.meteredConversationsThisMonth)}
-                label="Metered conversations, month"
+                label="Meta conversations, month"
               />
               <StatFigure
                 value={formatCompact(counters.meteredConversationsThisYear)}
-                label="Metered conversations, year"
+                label="Meta conversations, year"
               />
               <StatFigure
                 value={formatCompact(counters.inboxConversationsThisMonth)}
@@ -104,7 +109,7 @@ export function OrgUsageTab({ orgId }: { orgId: string }) {
         </Panel>
 
         <Panel className="flex flex-col gap-6">
-          <SectionHeading>Conversation packs</SectionHeading>
+          <SectionHeading>Packs</SectionHeading>
           {packs.length === 0 ? (
             <p className="text-sm text-muted-foreground">No packs in date.</p>
           ) : (
@@ -113,6 +118,7 @@ export function OrgUsageTab({ orgId }: { orgId: string }) {
                 <li key={pack.id} className="flex items-center gap-3 py-3 first:pt-0">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{pack.name}</p>
+                    <p className="text-xs text-muted-foreground">{packAllowance(pack)}</p>
                     <p className="text-xs text-muted-foreground">
                       Bought {formatDate(pack.boughtAt)} · runs out {formatDate(pack.expiresAt)}
                     </p>
@@ -130,16 +136,28 @@ export function OrgUsageTab({ orgId }: { orgId: string }) {
   );
 }
 
-/** The four plan limits as meters; shared with the org overview. */
+/** The plan's meters and limits; shared with the org overview. */
 export function UsageMeters({ usage, className }: { usage: OrgUsage; className?: string }) {
-  const { limits, packs, conversationPeriod } = usage;
-  const period = conversationPeriod === "annual" ? "this year" : "this month";
+  const { limits, activeContacts: contacts, campaignCredits: credits } = usage;
   return (
-    <div className={className ?? "grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"}>
+    <div className={className ?? "grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"}>
       <UsageMeter
-        label="Conversations"
-        {...limits.conversations}
-        hint={`${period}${packs.length ? ", packs included" : ""}`}
+        label="Active contacts"
+        metered={contacts.metered}
+        used={contacts.used}
+        max={contacts.max}
+        remaining={contacts.remaining}
+        exceeded={contacts.exhausted}
+        hint={`this month${contacts.addonContacts ? `, ${formatNumber(contacts.addonContacts)} from packs` : ""}`}
+      />
+      <UsageMeter
+        label="Campaign credits"
+        metered={credits.metered}
+        used={credits.planUsed}
+        max={credits.planMax}
+        remaining={credits.remaining}
+        exceeded={credits.exhausted}
+        hint={`plan credits this month${credits.packRemaining ? `, ${formatNumber(credits.packRemaining)} left in packs` : ""}`}
       />
       <UsageMeter label="Users" {...limits.users} hint="seats, invites included" />
       <UsageMeter label="Teams" {...limits.teams} />
@@ -148,23 +166,38 @@ export function UsageMeters({ usage, className }: { usage: OrgUsage; className?:
   );
 }
 
-function ConversationTrend({ daily, fetching }: { daily: OrgUsage["daily"]; fetching: boolean }) {
-  const total = daily.reduce((sum, day) => sum + day.conversations, 0);
-  const busiest = daily.reduce((best, day) => Math.max(best, day.conversations), 0);
+const SERIES = [
+  { key: "activeContacts", label: "New active contacts", total: "contacts became active" },
+  { key: "campaignCredits", label: "Campaign credits", total: "campaign credits used" },
+] as const;
+
+function DailyTrend({ daily, fetching }: { daily: OrgUsage["daily"]; fetching: boolean }) {
   return (
-    <div className={fetching ? "opacity-60 transition-opacity" : "transition-opacity"}>
-      <BlockChart
-        showValues={daily.length <= 31}
-        data={daily.map((day, index) => ({
-          label: dayjs(day.date).format("D MMM"),
-          value: day.conversations,
-          partial: index === daily.length - 1,
-        }))}
-      />
-      <p className="mt-4 text-xs text-muted-foreground">
-        {formatNumber(total)} metered conversations over {daily.length} days · busiest day{" "}
-        {formatNumber(busiest)} · today is still counting
-      </p>
+    <div className={cn("flex flex-col gap-8 transition-opacity", fetching && "opacity-60")}>
+      {SERIES.map((series) => {
+        const total = daily.reduce((sum, day) => sum + day[series.key], 0);
+        const busiest = daily.reduce((best, day) => Math.max(best, day[series.key]), 0);
+        return (
+          <div key={series.key} className="flex flex-col gap-3">
+            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+              {series.label}
+            </p>
+            <BlockChart
+              height={132}
+              showValues={daily.length <= 31}
+              data={daily.map((day, index) => ({
+                label: dayjs(day.date).format("D MMM"),
+                value: day[series.key],
+                partial: index === daily.length - 1,
+              }))}
+            />
+            <p className="text-xs text-muted-foreground">
+              {formatNumber(total)} {series.total} over {daily.length} days · busiest day{" "}
+              {formatNumber(busiest)} · today is still counting
+            </p>
+          </div>
+        );
+      })}
     </div>
   );
 }

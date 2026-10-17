@@ -228,6 +228,10 @@ function statusOf(row: OrgRow): { label: string; dot: string } | null {
   return null;
 }
 
+function activeContactsLine({ used, max }: OrgRow["activeContacts"]) {
+  return `${formatNumber(used)}${max === null ? "" : ` of ${formatNumber(max)}`} active contacts`;
+}
+
 function DirectoryRow({
   row,
   active,
@@ -273,7 +277,9 @@ function DirectoryRow({
         <span className={cn("block truncate text-sm", active ? "font-semibold" : "font-medium")}>
           {row.name}
         </span>
-        <span className="block truncate text-xs text-muted-foreground">{row.owner.email}</span>
+        <span className="block truncate text-xs text-muted-foreground">
+          {search.sort === "usage" ? activeContactsLine(row.activeContacts) : row.owner.email}
+        </span>
       </span>
       {row.plan?.paid && <PlanPill plan={row.plan} />}
     </Link>

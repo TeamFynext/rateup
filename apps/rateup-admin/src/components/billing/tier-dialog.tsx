@@ -150,7 +150,6 @@ export function TierDialog({ plan, onClose }: { plan?: RateupPlan; onClose: () =
     });
 
   const mutation = plan ? update : create;
-  const ready = draft.name.trim().length > 0 && draft.displayName.trim().length > 0;
 
   return (
     <ActionDialog
@@ -164,7 +163,10 @@ export function TierDialog({ plan, onClose }: { plan?: RateupPlan; onClose: () =
           : "A tier customers can be put on, or an add-on pack they can buy."
       }
       submitLabel={plan ? "Save plan" : "Create plan"}
-      canSubmit={ready}
+      blocked={
+        (!draft.name.trim() && "Enter an internal name") ||
+        (!draft.displayName.trim() && "Enter a display name")
+      }
       pending={mutation.isPending}
       error={mutation.error}
       onSubmit={(reason) => {

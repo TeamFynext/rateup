@@ -34,7 +34,7 @@ export function ActionDialog({
   submitLabel,
   destructive = false,
   wide = false,
-  canSubmit = true,
+  blocked,
   pending,
   error,
   onSubmit,
@@ -51,8 +51,12 @@ export function ActionDialog({
   submitLabel: string;
   destructive?: boolean;
   wide?: boolean;
-  /** False while the fields above the reason are incomplete. */
-  canSubmit?: boolean;
+  /**
+   * While the fields above the reason are incomplete: what is still missing, shown beside
+   * the disabled submit button (`"Choose a plan"`, `"Name needs at least 2 characters"`).
+   * Falsy once they are complete. The reason field adds its own message.
+   */
+  blocked?: string | false | null;
   pending: boolean;
   error: unknown;
   /** For a dialog whose text is itself the content, such as a note. */
@@ -66,7 +70,15 @@ export function ActionDialog({
   const [reason, setReason] = useState(initialReason);
   const reasonId = useId();
   const trimmed = reason.trim();
-  const ready = canSubmit && (!requireReason || trimmed.length >= MIN_REASON) && !pending;
+  const reasonShort = requireReason && trimmed.length < MIN_REASON;
+  const hint =
+    blocked ||
+    (reasonShort
+      ? trimmed.length === 0
+        ? `${reasonLabel} is required, at least ${MIN_REASON} characters`
+        : `${reasonLabel} needs at least ${MIN_REASON} characters (${trimmed.length}/${MIN_REASON})`
+      : null);
+  const ready = !hint && !pending;
 
   return (
     <Dialog
@@ -108,9 +120,6 @@ export function ActionDialog({
                   maxLength={500}
                   className="min-h-20 rounded-xl"
                 />
-                {trimmed.length > 0 && trimmed.length < MIN_REASON && (
-                  <p className="text-xs text-muted-foreground">A few more words, please.</p>
-                )}
               </div>
             ) : null}
             {error != null && (
@@ -139,6 +148,15 @@ export function ActionDialog({
               {pending && <Spinner />}
               {submitLabel}
             </Button>
+            {/* Last in the DOM so the column-reverse phone layout puts it above the buttons. */}
+            {hint && !pending && (
+              <p
+                aria-live="polite"
+                className="text-xs text-negative sm:order-first sm:mr-auto sm:self-center"
+              >
+                {hint}
+              </p>
+            )}
           </DialogFooter>
         </form>
       </DialogContent>

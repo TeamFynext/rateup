@@ -18,7 +18,6 @@ export function AddReferralDialog({ onClose }: { onClose: () => void }) {
   const [email, setEmail] = useState("");
   const nameId = useId();
   const emailId = useId();
-  const ready = name.trim().length > 0 && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim());
   return (
     <ActionDialog
       open
@@ -26,7 +25,11 @@ export function AddReferralDialog({ onClose }: { onClose: () => void }) {
       title="Add a referral partner"
       description="A code is made from the name; their link is shown on the list once created."
       submitLabel="Add partner"
-      canSubmit={ready}
+      blocked={
+        (!name.trim() && "Enter the partner's name") ||
+        (!email.trim() && "Enter their email") ||
+        (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim()) && "Enter a valid email")
+      }
       pending={mutation.isPending}
       error={mutation.error}
       onSubmit={(reason) =>
