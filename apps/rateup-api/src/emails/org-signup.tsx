@@ -13,22 +13,27 @@ export interface OrgSignupEmailProps {
   userName: string;
   userEmail: string;
   phone: string;
-  /** The onboarding questionnaire, all optional — it is a free-form Json column. */
-  services: string[];
+  goals: string[];
   industry?: string;
-  integration?: string;
+  integrations: string[];
+  location?: string;
+  website?: string;
+  teamSize?: string;
   adminLink: string;
 }
 
-/** Internal notification — a new organisation finished onboarding. */
+/** Internal notification — a new organisation signed up. */
 export function OrgSignupEmail({
   orgName,
   userName,
   userEmail,
   phone,
-  services,
+  goals,
   industry,
-  integration,
+  integrations,
+  location,
+  website,
+  teamSize,
   adminLink,
 }: OrgSignupEmailProps) {
   return (
@@ -36,14 +41,14 @@ export function OrgSignupEmail({
       preview={`${orgName} just signed up for RateUp`}
       footerNote={
         <Paragraph tight>
-          Sent automatically when an organisation completes onboarding. Replies to this address
-          aren&apos;t monitored.
+          Sent automatically when an organisation signs up. Replies to this address aren&apos;t
+          monitored.
         </Paragraph>
       }
     >
       <Section className="mb-9">
         <Display>New sign-up</Display>
-        <Paragraph>{orgName} finished onboarding.</Paragraph>
+        <Paragraph>{orgName} just created a RateUp account.</Paragraph>
       </Section>
 
       <Section className="mb-10">
@@ -59,12 +64,18 @@ export function OrgSignupEmail({
       </Section>
 
       <Section className="mb-10">
-        <Title>Onboarding questionnaire</Title>
+        <Title>Signup answers</Title>
         <SummaryRows
           rows={[
-            { label: "Services", value: services.length ? services.join(", ") : "Not answered" },
+            { label: "Goals", value: goals.length ? goals.join(", ") : "Not answered" },
             { label: "Industry", value: industry || "Not answered" },
-            { label: "Integration", value: integration || "No integration selected" },
+            {
+              label: "Integrations",
+              value: integrations.length ? integrations.join(", ") : "None selected",
+            },
+            { label: "Team size", value: teamSize || "Not answered" },
+            { label: "Location", value: location || "Not answered" },
+            { label: "Website", value: website || "Not given" },
           ]}
         />
       </Section>
@@ -76,12 +87,15 @@ export function OrgSignupEmail({
 
 OrgSignupEmail.PreviewProps = {
   orgName: "Coffee Bar",
-  userName: "Priya Menon",
-  userEmail: "priya@example.com",
-  phone: "+91 98765 43210",
-  services: ["Reviews", "Loyalty"],
+  userName: "Alex Morgan",
+  userEmail: "alex@example.com",
+  phone: "+1 555 0100",
+  goals: ["Reviews", "Loyalty"],
   industry: "Food & Beverage",
-  integration: "Shopify",
+  integrations: ["Shopify"],
+  location: "Springfield",
+  website: "https://example.com",
+  teamSize: "2-10",
   adminLink: "https://rateup.app/admin/orgs/org-1",
 } satisfies OrgSignupEmailProps;
 

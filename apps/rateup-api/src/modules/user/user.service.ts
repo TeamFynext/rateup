@@ -32,6 +32,8 @@ import { bustActorsForUser, loadActor } from "../../authz/actor.js";
 import { grantableRoles } from "../../authz/grant.js";
 import { PERMISSIONS_VERSION } from "../../authz/permissions.js";
 import { hiddenModulesForGoals } from "../org/modules.js";
+import { renderOrgSignupEmailBodies } from "../../utils/email/react/templates.js";
+import { notificationQueue } from "../../workers/bullmq/queues/index.js";
 
 async function createUser({ id, email, recipeName, prefLanguage }: CreateUserParams) {
   const user = await prisma.user.create({
@@ -168,6 +170,32 @@ export async function createUserSignup({
       } catch (err) {
         log.error({ err }, "Failed to increment referral signup_count");
       }
+    }
+
+    try {
+      const { html, text } = await renderOrgSignupEmailBodies({
+        orgId: org.id,
+        orgName,
+        userName: name,
+        userEmail: email,
+        phone: phoneNumber || phone || "Not given",
+        goals: goals ?? [],
+        industry,
+        integrations: integrationsSelected ?? [],
+        location,
+        website,
+        teamSize,
+      });
+      await notificationQueue.add("notification", {
+        emailData: {
+          to: process.env.ROOT_ORG_MAIL_ID ?? "hello@rateup.app",
+          subject: `New RateUp SignUp: ${orgName}`,
+          html,
+          text,
+        },
+      });
+    } catch (err) {
+      log.error({ err }, "Failed to enqueue new-signup alert");
     }
 
     const companyId = await createHubSpotCompany({

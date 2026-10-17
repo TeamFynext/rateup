@@ -41,9 +41,6 @@ import {
 import Session from "supertokens-node/recipe/session/index.js";
 import { log } from "../../utils/logger.js";
 import { getWebhookSecret } from "../../utils/webhook.js";
-import { getUserByEmail } from "../user/user.service.js";
-import { renderOrgSignupEmailBodies } from "../../utils/email/react/templates.js";
-import { notificationQueue } from "../../workers/bullmq/queues/index.js";
 import { errorMessage } from "../../utils/commonUtils.js";
 import { isRootOrg } from "../../utils/auth.js";
 import { setHiddenModules } from "./modules.js";
@@ -391,35 +388,9 @@ export async function completeOrgDetailsHandler(
     if (!userId || !email) {
       return reply.code(401).send({ error: "User not authenticated" });
     }
-    const user = await getUserByEmail(email);
     const orgData = await completeOrgDetails(userId, {
       onboarding: request.body.onboarding,
       onboardingCompleted: true,
-    });
-    // `onboarding` is a raw Json? column (see Org.onboarding in schema.prisma) with no
-    // static shape — the fields read below are the ones this handler itself just wrote
-    // via `request.body.onboarding: OnBoarding`, so this narrows a genuinely dynamic
-    // JSON blob to the shape this code knows it produced.
-    const tellUsMore = orgData.updatedOrg.onboarding as Partial<OnBoarding> | null | undefined;
-    const { html, text } = await renderOrgSignupEmailBodies({
-      orgId: orgData.updatedOrg.id,
-      orgName: orgData.updatedOrg.name,
-      userName: user?.name ?? "Unknown",
-      userEmail: user?.email ?? "Unknown",
-      phone: orgData?.updatedOrg?.phone ?? "Not given",
-      services: tellUsMore?.["services"] ?? [],
-      industry: tellUsMore?.["industry"],
-      integration: tellUsMore?.["integration"],
-    });
-
-    const emaildata = {
-      to: process.env.ROOT_ORG_MAIL_ID ?? "hello@rateup.app",
-      subject: `New RateUp SignUp: ${orgData.updatedOrg.name}`,
-      html,
-      text,
-    };
-    await notificationQueue.add("notification", {
-      emailData: emaildata,
     });
     reply.code(200).send(orgData);
   } catch (e) {
