@@ -135,7 +135,7 @@ export const MAINTENANCE_TASKS: TaskDefinition[] = [
       "For every org that has never chosen its features, keeps Loyalty, Commerce, Web " +
       "Forms, QR & Links and Meta AI Agent visible only where the org already has data in " +
       "them, and hides the rest from its navigation. Nothing is disabled — an admin turns a " +
-      "feature back on in Settings → Features. Orgs that have already chosen are skipped, so " +
+      "feature back on from Features in the menu. Orgs that have already chosen are skipped, so " +
       "it is safe to re-run.",
     destructive: false,
     run: backfillOrgModules,

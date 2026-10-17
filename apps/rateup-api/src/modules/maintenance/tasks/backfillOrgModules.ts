@@ -9,8 +9,8 @@ const orgIds = (rows: { orgId: string | null }[]) =>
 /**
  * Chooses the visible features for every org that has never chosen them: each feature the
  * org has data in stays, the rest are hidden. Pipeline always stays — every org has a Leads
- * board, so "has data" says nothing there. Only touches orgs with no `modulesChosenAt`, so
- * re-running never overrides an admin's choice.
+ * board, so "has data" says nothing there. Every org created since stamps `modulesChosenAt`,
+ * so only orgs that predate the feature are touched and a re-run never overrides a choice.
  */
 export async function backfillOrgModules({ apply, log }: TaskContext): Promise<TaskOutcome> {
   const orgs = await prisma.org.findMany({
@@ -18,30 +18,28 @@ export async function backfillOrgModules({ apply, log }: TaskContext): Promise<T
     select: { id: true, name: true },
   });
 
-  const [loyalty, webForms, catalogs, orders, shopify, qrCodes, linkPages, agents] =
-    await Promise.all([
-      prisma.loyaltyProgram.findMany({ select: { orgId: true } }),
-      prisma.survey.findMany({
-        where: { type: "web" },
-        select: { orgId: true },
-        distinct: ["orgId"],
-      }),
-      prisma.whatsappCatalog.findMany({ select: { orgId: true }, distinct: ["orgId"] }),
-      prisma.order.findMany({ select: { orgId: true }, distinct: ["orgId"] }),
-      prisma.integration.findMany({
-        where: { name: IntegratedApps.shopify, active: true },
-        select: { orgId: true },
-        distinct: ["orgId"],
-      }),
-      prisma.generateQr.findMany({ select: { ownerOrgId: true }, distinct: ["ownerOrgId"] }),
-      prisma.linktree.findMany({ select: { ownerOrgId: true }, distinct: ["ownerOrgId"] }),
-      prisma.metaBusinessAgent.findMany({ select: { orgId: true }, distinct: ["orgId"] }),
-    ]);
+  const [loyalty, webForms, catalogs, shopify, qrCodes, linkPages, agents] = await Promise.all([
+    prisma.loyaltyProgram.findMany({ select: { orgId: true } }),
+    prisma.survey.findMany({
+      where: { type: "web" },
+      select: { orgId: true },
+      distinct: ["orgId"],
+    }),
+    prisma.whatsappCatalog.findMany({ select: { orgId: true }, distinct: ["orgId"] }),
+    prisma.integration.findMany({
+      where: { name: IntegratedApps.shopify, active: true },
+      select: { orgId: true },
+      distinct: ["orgId"],
+    }),
+    prisma.generateQr.findMany({ select: { ownerOrgId: true }, distinct: ["ownerOrgId"] }),
+    prisma.linktree.findMany({ select: { ownerOrgId: true }, distinct: ["ownerOrgId"] }),
+    prisma.metaBusinessAgent.findMany({ select: { orgId: true }, distinct: ["orgId"] }),
+  ]);
 
   const inUse: Record<OrgModule, Set<string> | null> = {
     pipeline: null,
     loyalty: orgIds(loyalty),
-    commerce: new Set([...orgIds(catalogs), ...orgIds(orders), ...orgIds(shopify)]),
+    commerce: new Set([...orgIds(catalogs), ...orgIds(shopify)]),
     web_forms: orgIds(webForms),
     qr_links: new Set([...qrCodes, ...linkPages].map((row) => row.ownerOrgId)),
     ai_agent: orgIds(agents),

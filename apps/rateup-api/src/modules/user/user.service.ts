@@ -95,10 +95,9 @@ export async function createUserSignup({
             integrationsSelected: integrationsSelected?.length ? integrationsSelected : null,
             teamSize: teamSize || null,
           },
-          ...(goals?.length && {
-            hiddenModules: hiddenModulesForGoals(goals),
-            modulesChosenAt: new Date(),
-          }),
+          // No goals answered shows everything; either way the org has chosen.
+          hiddenModules: goals?.length ? hiddenModulesForGoals(goals) : [],
+          modulesChosenAt: new Date(),
           surveyThemes: {
             create: {
               name: "Default Theme",

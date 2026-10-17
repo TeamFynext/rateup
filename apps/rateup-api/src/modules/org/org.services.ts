@@ -28,6 +28,7 @@ export async function createOrg(input: CreateOrgInput) {
     data: {
       name: input.name,
       ownerId: input.owner,
+      modulesChosenAt: new Date(),
       surveyThemes: {
         create: {
           name: "Default Theme",

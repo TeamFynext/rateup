@@ -3,7 +3,7 @@ import prisma from "../../utils/prisma.js";
 /**
  * Product areas an org can switch off. Off only hides the area in the clients' navigation;
  * routes, crons and data keep working. Mirrored in rateup-ui `src/utils/modules.ts` and
- * rateup-app `src/utils/modules.ts`.
+ * rateup-app `src/hooks/useOrgModules.ts`.
  */
 export const ORG_MODULES = [
   "pipeline",
