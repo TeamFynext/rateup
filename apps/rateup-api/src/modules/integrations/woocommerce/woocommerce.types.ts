@@ -1,3 +1,4 @@
+import type { StoreWidgetSettings } from "../commerce/storeWidget.js";
 import type { WooAuthMode } from "./woocommerce.client.js";
 
 /**
@@ -50,7 +51,34 @@ export interface WooCredential {
   connectedAt: string;
   /** New customers become RateUp contacts. Off until the admin turns it on. */
   syncCustomers?: boolean;
+  /** The storefront WhatsApp button, shown by the RateUp plugin. Absent until first saved. */
+  widget?: StoreWidgetSettings;
+  /**
+   * Names this store in the button's tap reports. Random and public (it is in the
+   * storefront's HTML), so the page never carries RateUp's own ids.
+   */
+  widgetKey?: string;
+  /** Whether the last push reached the RateUp plugin; see woocommerce.plugin.ts. */
+  plugin?: { installed: boolean; checkedAt: string };
+  /** The WhatsApp opt-in box the RateUp plugin adds to checkout. Absent until first saved. */
+  checkoutOptIn?: WooCheckoutOptIn;
 }
+
+/**
+ * The checkout box. A tick is marketing consent; order updates go out either
+ * way, as on Shopify. The shopper's answer comes back on the order as
+ * `rateup_whatsapp_optin` (see woocommerce.optin.ts).
+ */
+export interface WooCheckoutOptIn {
+  enabled: boolean;
+  /** The text beside the box, in the merchant's words. */
+  label: string;
+}
+
+export const DEFAULT_CHECKOUT_OPT_IN: WooCheckoutOptIn = {
+  enabled: false,
+  label: "Send me offers on WhatsApp",
+};
 
 /** What WooCommerce POSTs to our callback once the admin approves the connection. */
 export interface WooAuthCallbackBody {

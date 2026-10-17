@@ -2,7 +2,15 @@ import prisma from "../../../utils/prisma.js";
 import connection from "../../../utils/redisConnection.js";
 import { log } from "../../../utils/logger.js";
 import { API_URL } from "../../../utils/constants/constants.js";
-import { IntegratedApps, WhatsappSettingsStatus } from "../../../types/enums.js";
+import { IntegratedApps } from "../../../types/enums.js";
+import {
+  buildStoreWidgetPayload,
+  countWidgetTap,
+  DEFAULT_WIDGET_SETTINGS,
+  resolveWidgetPhone,
+  widgetStats,
+  type StoreWidgetPayload,
+} from "../commerce/storeWidget.js";
 import shopify from "./shopify.config.js";
 import { getShopifyInfo } from "./shopify.credential.js";
 import { getActiveShopifySession } from "./shopify.session.js";
@@ -24,24 +32,12 @@ const METAFIELD_KEY = "widget";
 /** The app embed block's file name in extensions/whatsapp-widget/blocks. */
 const EMBED_HANDLE = "whatsapp-embed";
 export const WIDGET_EVENT_ROUTE = "/api/public/integrations/shopify/widget/event";
-const STATS_DAYS = 30;
 // Every tap names its shop; remember which org a shop belongs to (or that it
 // belongs to none) rather than search the credentials on each one.
 const SHOP_ORG_CACHE_SECONDS = 5 * 60;
 
-export const DEFAULT_WIDGET_SETTINGS: ShopifyWidgetSettings = {
-  enabled: false,
-  channelId: null,
-  buttonLabel: "Chat on WhatsApp",
-  greeting: "Hi! How can we help you?",
-  prefill: "Hi! I have a question.",
-  productPrefill: "Hi! I have a question about {product}: {url}",
-  color: "#25D366",
-  position: "right",
-  offsetY: 20,
-  showOn: ["all"],
-  hideOnMobile: false,
-};
+// The defaults and the payload are shared with WooCommerce's button (commerce/storeWidget.ts).
+export { DEFAULT_WIDGET_SETTINGS };
 
 /** A problem the merchant can fix, answered with `status` rather than a 500. */
 export class ShopifyWidgetError extends Error {
@@ -55,42 +51,13 @@ export class ShopifyWidgetError extends Error {
 }
 
 /** What the storefront script receives. Public: holds the number, never an internal id. */
-export interface ShopifyWidgetPayload extends Omit<ShopifyWidgetSettings, "channelId"> {
-  /** Digits only, as wa.me expects. Empty when the number is gone or disconnected. */
-  phone: string;
-  eventUrl: string;
-}
-
-/** The connected WhatsApp number behind a channel, digits only, or null. */
-async function resolveWidgetPhone(orgId: string, channelId: string | null) {
-  if (!channelId) return null;
-  const channel = await prisma.channel.findFirst({
-    where: { id: channelId, orgId, platform: "WHATSAPP" },
-    select: { status: true, whatsapp: { select: { phone: true, status: true } } },
-  });
-  if (
-    !channel?.whatsapp?.phone ||
-    channel.status !== WhatsappSettingsStatus.ACTIVE ||
-    channel.whatsapp.status !== WhatsappSettingsStatus.ACTIVE
-  ) {
-    return null;
-  }
-  return channel.whatsapp.phone.replace(/\D/g, "") || null;
-}
+export type ShopifyWidgetPayload = StoreWidgetPayload;
 
 export function buildWidgetPayload(
   settings: ShopifyWidgetSettings,
   phone: string | null,
 ): ShopifyWidgetPayload {
-  const { channelId: _internal, ...rest } = settings;
-  return {
-    ...rest,
-    // A number that has since been disconnected hides the button instead of
-    // sending shoppers to a chat nobody receives.
-    enabled: settings.enabled && !!phone,
-    phone: phone ?? "",
-    eventUrl: `${API_URL}${WIDGET_EVENT_ROUTE}`,
-  };
+  return buildStoreWidgetPayload(settings, phone, `${API_URL}${WIDGET_EVENT_ROUTE}`);
 }
 
 /**
@@ -146,12 +113,6 @@ export async function syncWidgetMetafield(integration: ShopifyIntegration) {
   }
 }
 
-/** UTC midnight `daysAgo` days back: the `date` a stat row is filed under. */
-function statDate(daysAgo = 0) {
-  const now = new Date();
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - daysAgo));
-}
-
 function themeEditorUrl(shop: string) {
   const apiKey = process.env.SHOPIFY_API_KEY;
   if (!apiKey) return null;
@@ -169,10 +130,6 @@ async function getConnectedShopify(orgId: string) {
 export async function getWidgetSettings(orgId: string) {
   const integration = await getConnectedShopify(orgId);
   const { shop } = integration.credential.session;
-  const totals = await prisma.shopifyWidgetStat.aggregate({
-    where: { orgId, date: { gte: statDate(STATS_DAYS - 1) } },
-    _sum: { opens: true, clicks: true },
-  });
   return {
     settings: { ...DEFAULT_WIDGET_SETTINGS, ...integration.credential.widget },
     /** False until the merchant has saved the widget once. */
@@ -180,11 +137,7 @@ export async function getWidgetSettings(orgId: string) {
     shop,
     /** Opens the theme editor with the app embed ready to switch on. */
     themeEditorUrl: themeEditorUrl(shop),
-    stats: {
-      days: STATS_DAYS,
-      opens: totals._sum.opens ?? 0,
-      clicks: totals._sum.clicks ?? 0,
-    },
+    stats: await widgetStats(orgId, "shopify"),
   };
 }
 
@@ -269,12 +222,6 @@ async function findWidgetOrg(shop: string) {
 export async function recordWidgetEvent({ shop, event, pageType }: ShopifyWidgetEvent) {
   const orgId = await findWidgetOrg(shop.toLowerCase());
   if (!orgId) return false;
-  const counter = event === "open" ? "opens" : "clicks";
-  const date = statDate();
-  await prisma.shopifyWidgetStat.upsert({
-    where: { orgId_date_pageType: { orgId, date, pageType } },
-    create: { orgId, date, pageType, [counter]: 1 },
-    update: { [counter]: { increment: 1 } },
-  });
+  await countWidgetTap(orgId, "shopify", event, pageType);
   return true;
 }

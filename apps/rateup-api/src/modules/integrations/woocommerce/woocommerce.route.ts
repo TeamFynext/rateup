@@ -13,11 +13,30 @@ import {
 } from "./woocommerce.connect.js";
 import type { WooAuthCallbackBody } from "./woocommerce.types.js";
 import { WooStoreUrlError } from "./woocommerce.url.js";
+import {
+  checkWooPlugin,
+  getWooWidget,
+  recordWooWidgetTap,
+  saveWooWidget,
+  WooWidgetError,
+  wooWidgetEventSchema,
+  type WooWidgetEvent,
+} from "./woocommerce.widget.js";
+import { shopifyWidgetSchema, type ShopifyWidgetSettings } from "../shopify/shopify.schema.js";
+import { rateLimit } from "../../../utils/rateLimit.js";
 
 const connectSchema = z.object({ storeUrl: z.string().min(1).max(500) });
 type ConnectBody = z.infer<typeof connectSchema>;
 
-const settingsSchema = z.object({ syncCustomers: z.boolean().optional() }).strict();
+const settingsSchema = z
+  .object({
+    syncCustomers: z.boolean().optional(),
+    checkoutOptIn: z
+      .object({ enabled: z.boolean(), label: z.string().trim().min(1).max(200) })
+      .strict()
+      .optional(),
+  })
+  .strict();
 type SettingsBody = z.infer<typeof settingsSchema>;
 
 const callbackSchema = z.object({
@@ -32,6 +51,9 @@ function sendError(reply: FastifyReply, error: unknown, what: string) {
   if (error instanceof WooStoreUrlError) return reply.code(400).send({ error: error.message });
   if (error instanceof WooConnectError) {
     return reply.code(error.statusCode).send({ error: error.message });
+  }
+  if (error instanceof WooWidgetError) {
+    return reply.code(error.status).send({ error: error.message });
   }
   log.error({ err: error }, "WooCommerce %s failed", what);
   return reply.code(500).send({ error: "Something went wrong" });
@@ -88,6 +110,36 @@ export async function wooCommerceRoutes(server: FastifyInstance) {
     }
   });
 
+  // The storefront WhatsApp button (woocommerce.widget.ts), shown by the RateUp plugin.
+  server.get("/widget", async (request, reply) => {
+    try {
+      return reply.send(await getWooWidget(request.user.orgId));
+    } catch (error) {
+      return sendError(reply, error, "widget read");
+    }
+  });
+
+  server.put<{ Body: ShopifyWidgetSettings }>(
+    "/widget",
+    { schema: { body: shopifyWidgetSchema } },
+    async (request, reply) => {
+      try {
+        return reply.send(await saveWooWidget(request.user.orgId, request.body));
+      } catch (error) {
+        return sendError(reply, error, "widget save");
+      }
+    },
+  );
+
+  // "Check again" once the merchant has installed the plugin.
+  server.post("/plugin/check", async (request, reply) => {
+    try {
+      return reply.send(await checkWooPlugin(request.user.orgId));
+    } catch (error) {
+      return sendError(reply, error, "plugin check");
+    }
+  });
+
   server.post("/webhooks/repair", async (request, reply) => {
     try {
       return reply.send(await repairWooWebhooks(request.user.orgId));
@@ -117,6 +169,26 @@ export async function wooCommercePublicRoutes(server: FastifyInstance) {
         return reply.send({ ok: true });
       } catch (error) {
         return sendError(reply, error, "connect callback");
+      }
+    },
+  );
+
+  // Taps on the plugin's WhatsApp button, sent by `sendBeacon` from the store's
+  // domain. The body is text/plain, so the browser sends no CORS preflight and
+  // reads no answer; nothing here is worth a CORS header. Answers without a body.
+  server.post<{ Body: WooWidgetEvent }>(
+    "/widget/event",
+    {
+      // Fail-open: counting a tap is never worth an error on a storefront.
+      preHandler: [rateLimit({ max: 60, windowSeconds: 60, key: "wooWidgetEvent" })],
+      schema: { body: wooWidgetEventSchema },
+    },
+    async (request, reply) => {
+      try {
+        return reply.code((await recordWooWidgetTap(request.body)) ? 204 : 404).send();
+      } catch (error) {
+        log.error({ err: error }, "Error recording a WooCommerce widget tap");
+        return reply.code(500).send();
       }
     },
   );

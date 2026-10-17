@@ -7,6 +7,11 @@ import type {
 } from "../providers/integrationProvider.types.js";
 import { removeWooWebhooks, syncWooWebhooks } from "./woocommerce.connect.js";
 import { handleWooInbound, type WooJobData } from "./woocommerce.inbound.js";
+import {
+  DISCONNECTED_PLUGIN_DATA,
+  pushWooPluginData,
+  syncWooPluginConnection,
+} from "./woocommerce.plugin.js";
 import { readWooCredential } from "./woocommerce.types.js";
 
 /**
@@ -23,11 +28,19 @@ async function processWooJob(integration: Integration, job: ProviderJobData) {
   switch (triggerKey) {
     case "order.created":
     case "order.updated": {
-      const [{ handleWooOrder }, { onOrderEvent }, { wooCommerceCommerce }] = await Promise.all([
+      const [
+        { handleWooOrderOptIn },
+        { handleWooOrder },
+        { onOrderEvent },
+        { wooCommerceCommerce },
+      ] = await Promise.all([
+        import("./woocommerce.optin.js"),
         import("./woocommerce.orders.js"),
         import("../commerce/orders.js"),
         import("./woocommerce.commerce.js"),
       ]);
+      // First, so the order's own messages reach a contact that already has its name.
+      await handleWooOrderOptIn(integration, data);
       await handleWooOrder(integration, data, { provider: wooCommerceCommerce, onOrderEvent });
       return;
     }
@@ -68,11 +81,17 @@ export const wooCommerceProvider: IntegrationProvider = {
   // disables one after five failed deliveries (an API outage is enough) and
   // never turns it back on, so the sweep replaces any that are disabled, paused
   // or gone. A store that stops answering fails here, which the health alert shows.
+  // It also brings the RateUp plugin up to date, for one installed after the connect.
   refreshCredential: async (integration) => {
     await syncWooWebhooks(integration);
+    await syncWooPluginConnection(integration);
   },
   disconnect: async (integration) => {
     const credential = readWooCredential(integration.credential);
-    if (credential) await removeWooWebhooks(credential);
+    if (!credential) return;
+    await removeWooWebhooks(credential);
+    // While the credential is still at hand (the integration row is deleted next),
+    // the plugin goes back to offering "Connect to RateUp".
+    await pushWooPluginData(credential, DISCONNECTED_PLUGIN_DATA);
   },
 };
