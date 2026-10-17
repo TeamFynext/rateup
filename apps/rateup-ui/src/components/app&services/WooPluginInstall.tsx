@@ -1,46 +1,58 @@
-import { IconDownload, IconExternalLink } from "@tabler/icons-react";
+import { IconExternalLink } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button.tsx";
 
-/** Built by rateup-wordpress/build.mjs --publish into public/downloads. */
-export const WOO_PLUGIN_DOWNLOAD_URL = "/downloads/rateup-for-woocommerce.zip";
+/**
+ * Whether RateUp for WooCommerce is listed on WordPress.org. It was submitted on
+ * 2026-10-17 and is in review; set this to true once it is approved and published,
+ * so merchants are sent to WordPress's plugin search instead of told to wait.
+ */
+export const WOO_PLUGIN_LISTED = false;
+
+/** As the plugin is named on WordPress.org. */
+const PLUGIN_NAME = "RateUp for WooCommerce";
 
 /**
- * How to install the RateUp for WooCommerce plugin: the zip, and the store's own
- * "Upload Plugin" screen, which RateUp can open directly since it knows the store's address.
+ * How to install the RateUp for WooCommerce plugin: from WordPress.org, through the store's
+ * own plugin search, which RateUp can open directly since it knows the store's address.
  */
 export function WooPluginInstall({ storeUrl }: Readonly<{ storeUrl: string }>) {
   const { t } = useTranslation();
 
+  if (!WOO_PLUGIN_LISTED) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        {t(
+          "The RateUp plugin is being reviewed by WordPress.org and will be available to install soon.",
+        )}
+      </p>
+    );
+  }
+
+  const search = new URLSearchParams({ s: PLUGIN_NAME, tab: "search", type: "term" });
   return (
     <div className="flex flex-col gap-3">
       <ol className="list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
-        <li>{t("Download the plugin.")}</li>
         <li>
-          {t("In WordPress, go to Plugins › Add New Plugin › Upload Plugin and choose the file.")}
+          {t("In WordPress, go to Plugins › Add New Plugin and search for “{name}”.", {
+            name: PLUGIN_NAME,
+          })}
         </li>
         <li>{t("Click Install Now, then Activate Plugin.")}</li>
       </ol>
-      <div className="flex flex-wrap gap-2">
+      <div>
         <Button
           variant="outline"
-          render={<a href={WOO_PLUGIN_DOWNLOAD_URL} download="rateup-for-woocommerce.zip" />}
-        >
-          <IconDownload data-icon="inline-start" />
-          {t("Download plugin")}
-        </Button>
-        <Button
-          variant="ghost"
           render={
             <a
-              href={`${storeUrl}/wp-admin/plugin-install.php?tab=upload`}
+              href={`${storeUrl}/wp-admin/plugin-install.php?${search}`}
               target="_blank"
               rel="noreferrer"
             />
           }
         >
-          {t("Open Upload Plugin")}
+          {t("Find it in WordPress")}
           <IconExternalLink data-icon="inline-end" />
         </Button>
       </div>
