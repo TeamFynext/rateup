@@ -558,6 +558,8 @@ export enum FacebookEvent {
   MESSAGE_REACTION = "MESSAGE_REACTION",
   POSTBACK = "POSTBACK",
   QUICK_REPLY = "QUICK_REPLY",
+  /** The person opened the thread from an m.me link (a standalone `referral` event). */
+  REFERRAL = "REFERRAL",
   // Declared but never returned by getFacebookWebhookEvent — opt-ins are not currently
   // subscribed to on the Meta app. Add a branch there if that changes.
   OPT_IN = "OPT_IN",
