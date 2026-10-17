@@ -42,6 +42,7 @@ import {
   actionChannelProblem,
   asPlatform,
   getTriggerEventsForPlatforms,
+  isCommentTrigger,
   PLATFORMS,
   triggerChannelProblem,
 } from "../schema.ts";
@@ -67,6 +68,11 @@ const EVENT_META: Record<string, { icon: typeof IconBolt; hint: string }> = {
   INSTAGRAM_COMMENT: { icon: IconMessageDots, hint: "Reply privately to comments on your posts." },
   INSTAGRAM_STORY_MENTION: { icon: IconAt, hint: "Thank people who tag you in their story." },
   INSTAGRAM_REFERRAL: { icon: IconLink, hint: "Greet people who arrive from a link you shared." },
+  MESSENGER_REFERRAL: { icon: IconLink, hint: "Greet people who open your Page from a link." },
+  FACEBOOK_COMMENT: {
+    icon: IconMessageDots,
+    hint: "Reply privately in Messenger to comments on your Page's posts.",
+  },
 };
 
 const EMPTY_KEYWORD_GROUP: CreateRuleInput["groups"] = [
@@ -135,10 +141,11 @@ export function TriggerStep() {
     }
     if (value !== "INSTAGRAM_COMMENT") form.setValue("options.instagramCommentSource", undefined);
     if (value !== "INSTAGRAM_REFERRAL") form.setValue("options.instagramRef", undefined);
+    if (value !== "MESSENGER_REFERRAL") form.setValue("options.messengerRef", undefined);
     const groups = form.getValues("groups");
     if (value === "MESSAGE_RECEIVED") {
       if (groups.length === 0) form.setValue("groups", EMPTY_KEYWORD_GROUP);
-    } else if (value !== "INSTAGRAM_COMMENT") {
+    } else if (!isCommentTrigger(value)) {
       form.setValue("groups", []);
     }
   };

@@ -34,8 +34,9 @@ import { ShopifyEvents } from "@/types/enums.ts";
 import ConditionList from "../ConditionList.tsx";
 import { InstagramCommentSource, InstagramLinkRef } from "../InstagramTriggerOptions.tsx";
 import { MatchSentence } from "../MatchSentence.tsx";
+import { MessengerLinkRef } from "../MessengerTriggerOptions.tsx";
 import type { CreateRuleInput, CreateRuleValues } from "../schema.ts";
-import { INSTAGRAM_SCOPE_OPTIONS } from "../schema.ts";
+import { INSTAGRAM_SCOPE_OPTIONS, isCommentTrigger } from "../schema.ts";
 
 const ABANDONED_DELAY_OPTIONS = [
   { value: "30", label: "30 minutes" },
@@ -191,6 +192,7 @@ const ConditionsPanel: React.FC<{
   isInstagramCommentTrigger: boolean;
   isInstagramStoryTrigger: boolean;
   isInstagramReferralTrigger: boolean;
+  isMessengerReferralTrigger: boolean;
   instagramCommentSource: string | undefined;
   shopifyEvent: string | undefined;
   shopifyProductIds: string[];
@@ -219,6 +221,7 @@ const ConditionsPanel: React.FC<{
   isInstagramCommentTrigger,
   isInstagramStoryTrigger,
   isInstagramReferralTrigger,
+  isMessengerReferralTrigger,
   instagramCommentSource,
   shopifyEvent,
   shopifyProductIds,
@@ -345,6 +348,30 @@ const ConditionsPanel: React.FC<{
           </AlertDescription>
         </Alert>
         <InstagramLinkRef />
+      </div>
+    )}
+
+    {triggerEvent === "FACEBOOK_COMMENT" && (
+      <Alert>
+        <IconInfoCircle />
+        <AlertDescription>
+          Runs when someone comments on one of your Page's posts. The first message your actions
+          send arrives as a private reply in Messenger; a comment only tells us who someone is once
+          that reply reaches them, so put label, assign and lifecycle actions after it.
+        </AlertDescription>
+      </Alert>
+    )}
+
+    {isMessengerReferralTrigger && (
+      <div className="space-y-4">
+        <Alert>
+          <IconInfoCircle />
+          <AlertDescription>
+            Runs when someone opens a Messenger chat with your Page from this m.me link — share it
+            on your website, in ads, emails or as a QR code.
+          </AlertDescription>
+        </Alert>
+        <MessengerLinkRef />
       </div>
     )}
 
@@ -542,6 +569,7 @@ const ConditionsPanel: React.FC<{
     {/* Standard condition blocks */}
     {!isInstagramStoryTrigger &&
       !isInstagramReferralTrigger &&
+      !isMessengerReferralTrigger &&
       !isShopifyTrigger &&
       !isWooTrigger &&
       groupFields.map((group, groupIndex: number) => (
@@ -566,31 +594,34 @@ const ConditionsPanel: React.FC<{
             onOperatorChange={(operator) =>
               form.setValue(`groups.${groupIndex}.operator`, operator)
             }
-            allowedFields={isInstagramCommentTrigger ? ["MESSAGE_BODY"] : undefined}
+            allowedFields={isCommentTrigger(triggerEvent) ? ["MESSAGE_BODY"] : undefined}
           />
         </div>
       ))}
 
-    {!isShopifyTrigger && !isInstagramStoryTrigger && !isInstagramReferralTrigger && (
-      <Button
-        type="button"
-        variant="outline"
-        className="w-full border-dashed"
-        onClick={() => {
-          const defaultField =
-            isMessageReceivedTrigger || isInstagramCommentTrigger
-              ? "MESSAGE_BODY"
-              : "CONTACT_EMAIL";
-          appendGroup({
-            operator: "AND",
-            conditions: [{ field: defaultField, operator: "CONTAINS", value: "" }],
-          });
-        }}
-      >
-        <IconPlus className="w-4 h-4 mr-2" />
-        Add condition group
-      </Button>
-    )}
+    {!isShopifyTrigger &&
+      !isInstagramStoryTrigger &&
+      !isInstagramReferralTrigger &&
+      !isMessengerReferralTrigger && (
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full border-dashed"
+          onClick={() => {
+            const defaultField =
+              isMessageReceivedTrigger || isCommentTrigger(triggerEvent)
+                ? "MESSAGE_BODY"
+                : "CONTACT_EMAIL";
+            appendGroup({
+              operator: "AND",
+              conditions: [{ field: defaultField, operator: "CONTAINS", value: "" }],
+            });
+          }}
+        >
+          <IconPlus className="w-4 h-4 mr-2" />
+          Add condition group
+        </Button>
+      )}
   </div>
 );
 
@@ -678,6 +709,7 @@ export function ConditionsStep() {
       isInstagramCommentTrigger={isInstagramCommentTrigger}
       isInstagramStoryTrigger={isInstagramStoryTrigger}
       isInstagramReferralTrigger={triggerEvent === "INSTAGRAM_REFERRAL"}
+      isMessengerReferralTrigger={triggerEvent === "MESSENGER_REFERRAL"}
       instagramCommentSource={instagramCommentSource}
       shopifyEvent={shopifyEvent}
       shopifyProductIds={shopifyProductIds}

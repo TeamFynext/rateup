@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils.ts";
 import type { WaTemplateFetchBody } from "@/types/global";
 
 import type { CreateRuleInput, Platform } from "../schema.ts";
-import { asPlatform, PLATFORMS } from "../schema.ts";
+import { asPlatform, isCommentTrigger, PLATFORMS } from "../schema.ts";
 import { useRuleSentence } from "./useRuleSentence.ts";
 
 /** Actions the customer never sees; the preview lists them under the conversation instead. */
@@ -54,12 +54,13 @@ const EVENT_NOTE: Record<string, string> = {
   LIFECYCLE_UPDATED: "Lifecycle changed",
   INSTAGRAM_STORY_MENTION: "Mentioned you in their story",
   INSTAGRAM_REFERRAL: "Opened your ig.me link",
+  MESSENGER_REFERRAL: "Opened your m.me link",
 };
 
 /** What the customer sends to set the rule off, read from its first keyword. */
 function customerMessage(rule: CreateRuleInput): string | null {
   if (rule.triggerEvent === "CONTACT_CREATED") return "Hi!";
-  if (rule.triggerEvent !== "MESSAGE_RECEIVED" && rule.triggerEvent !== "INSTAGRAM_COMMENT") {
+  if (rule.triggerEvent !== "MESSAGE_RECEIVED" && !isCommentTrigger(rule.triggerEvent)) {
     return null;
   }
   const keyword = rule.groups
@@ -214,13 +215,13 @@ function AutomationPreview({
 
       <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-3 py-3">
         {note && <Note>{note}</Note>}
-        {incoming && rule.triggerEvent === "INSTAGRAM_COMMENT" && (
+        {incoming && isCommentTrigger(rule.triggerEvent) && (
           <Note>Commented on your post: “{incoming}”</Note>
         )}
-        {incoming && rule.triggerEvent === "INSTAGRAM_COMMENT" && publicReply && (
+        {incoming && isCommentTrigger(rule.triggerEvent) && publicReply && (
           <Note>You replied under it: “{publicReply}”</Note>
         )}
-        {incoming && rule.triggerEvent !== "INSTAGRAM_COMMENT" && (
+        {incoming && !isCommentTrigger(rule.triggerEvent) && (
           <Bubble mine className={style.mine}>
             {incoming}
           </Bubble>

@@ -60,6 +60,10 @@ const IgCommentBubble = ({
   // needs the shortcode, so there is nothing to build from here. Comments stored
   // before that shipped carry no link and simply show none.
   const permalink = messageContent.permalink;
+  // Facebook Page comments use the same bubble; their link opens facebook.com.
+  const linkLabel = permalink?.includes("facebook.com")
+    ? translations("View this post on Facebook")
+    : translations("View this post on Instagram");
 
   return (
     <div className="flex flex-col gap-1">
@@ -70,10 +74,10 @@ const IgCommentBubble = ({
             href={permalink}
             target="_blank"
             rel="noreferrer noopener"
-            // The link opens instagram.com, so it says where it goes and carries
-            // its own label — the surrounding text is not read out with it.
-            aria-label={translations("View this post on Instagram")}
-            title={translations("View this post on Instagram")}
+            // The link says where it goes and carries its own label — the
+            // surrounding text is not read out with it.
+            aria-label={linkLabel}
+            title={linkLabel}
             className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
           >
             {translations("View post")}

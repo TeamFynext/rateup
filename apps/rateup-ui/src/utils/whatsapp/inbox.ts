@@ -266,6 +266,23 @@ export function parseWaMessage(message: Partial<WaGetMessagesBody>): ParsedWaMes
       } else if (receive.reaction && receive.reaction.action === "react") {
         messageContent = receive.reaction.emoji || receive.reaction.reaction;
         messageType = "reaction";
+      } else {
+        // Stored by the API as `{ type, … }` rather than a message: a tapped button
+        // (Get Started, a card button, a menu item) and an ig.me / m.me link visit.
+        const event = receive as unknown as {
+          type?: string;
+          title?: string;
+          payload?: string;
+          referral?: { ref?: string };
+        };
+        if (event.type === "postback" && (event.title || event.payload)) {
+          messageContent = event.title || event.payload || "";
+          messageType = "text";
+        } else if (event.type === "referral") {
+          const ref = event.referral?.ref;
+          messageContent = ref ? `Opened a link (ref: ${ref})` : "Opened a link";
+          messageType = "text";
+        }
       }
     }
   } else {
