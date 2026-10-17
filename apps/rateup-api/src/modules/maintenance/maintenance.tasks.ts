@@ -8,6 +8,7 @@ import {
 } from "./tasks/migrateActiveContactPricing.js";
 import { seedAddons } from "./tasks/seedAddons.js";
 import { seedPlans } from "./tasks/seedPlans.js";
+import { backfillOrgModules } from "./tasks/backfillOrgModules.js";
 
 export interface TaskDefinition {
   id: string;
@@ -126,6 +127,18 @@ export const MAINTENANCE_TASKS: TaskDefinition[] = [
       "it would create.",
     destructive: false,
     run: migrateShopifyAbandonedCheckouts,
+  },
+  {
+    id: "backfill-org-modules",
+    title: "Choose each org's visible features",
+    description:
+      "For every org that has never chosen its features, keeps Loyalty, Commerce, Web " +
+      "Forms, QR & Links and Meta AI Agent visible only where the org already has data in " +
+      "them, and hides the rest from its navigation. Nothing is disabled — an admin turns a " +
+      "feature back on in Settings → Features. Orgs that have already chosen are skipped, so " +
+      "it is safe to re-run.",
+    destructive: false,
+    run: backfillOrgModules,
   },
 ];
 

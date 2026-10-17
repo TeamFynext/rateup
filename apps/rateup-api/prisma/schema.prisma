@@ -175,6 +175,12 @@ model Org {
   onboardingChecklist          Json?
   onboardingChecklistCompleted Boolean @default(false)
 
+  /// Features (src/modules/org/modules.ts) the org has switched off: hidden from the nav,
+  /// never blocked in the API. Stored as what is off so a new feature shows for everyone.
+  hiddenModules   String[]  @default([])
+  /// Set once the list has been chosen — at signup, by an admin, or by the backfill task.
+  modulesChosenAt DateTime?
+
   deletionMailSent DateTime?
   addons           SubscriptionAddon[]
 

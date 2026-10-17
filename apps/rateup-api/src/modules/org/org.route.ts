@@ -20,6 +20,7 @@ import {
   transferOwnershipHandler,
   updateMemberPermissionsHandler,
   memberActivityHandler,
+  updateOrgModulesHandler,
 } from "./org.controller.js";
 import {
   createBusinessHourHandler,
@@ -52,9 +53,11 @@ import { declareAccess } from "../../authz/registry.js";
 import {
   memberActivityQuerySchema,
   memberPermissionsSchema,
+  orgModulesSchema,
   transferOwnershipSchema,
   type MemberActivityQuery,
   type MemberPermissionsInput,
+  type OrgModulesInput,
   type TransferOwnershipInput,
 } from "./org.schema.js";
 export async function orgRoutes(server: FastifyInstance) {
@@ -153,6 +156,11 @@ export async function orgRoutes(server: FastifyInstance) {
       },
     },
     updateOrgDetailsHandler,
+  );
+  server.put<{ Body: OrgModulesInput }>(
+    "/modules",
+    { config: { permission: "org.settings" }, schema: { body: orgModulesSchema } },
+    updateOrgModulesHandler,
   );
 
   server.post<{ Body: TransferOwnershipInput }>(

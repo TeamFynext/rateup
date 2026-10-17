@@ -31,6 +31,7 @@ import { Org, Team, TeamMember, User } from "../../../generated/prisma/client.js
 import { bustActorsForUser, loadActor } from "../../authz/actor.js";
 import { grantableRoles } from "../../authz/grant.js";
 import { PERMISSIONS_VERSION } from "../../authz/permissions.js";
+import { hiddenModulesForGoals } from "../org/modules.js";
 
 async function createUser({ id, email, recipeName, prefLanguage }: CreateUserParams) {
   const user = await prisma.user.create({
@@ -94,6 +95,10 @@ export async function createUserSignup({
             integrationsSelected: integrationsSelected?.length ? integrationsSelected : null,
             teamSize: teamSize || null,
           },
+          ...(goals?.length && {
+            hiddenModules: hiddenModulesForGoals(goals),
+            modulesChosenAt: new Date(),
+          }),
           surveyThemes: {
             create: {
               name: "Default Theme",
@@ -277,6 +282,7 @@ export async function getLoggedUserInfo(request: FastifyRequest, reply: FastifyR
       showLifecycle: true,
       isConversionApiActive: true,
       onboardingChecklistCompleted: true,
+      hiddenModules: true,
     },
   });
   return {
@@ -312,6 +318,7 @@ export async function getLoggedUserInfo(request: FastifyRequest, reply: FastifyR
     showLifecycle: orgData?.showLifecycle,
     isConversionApiActive: orgData?.isConversionApiActive,
     onboardingChecklistCompleted: orgData?.onboardingChecklistCompleted,
+    hiddenModules: orgData?.hiddenModules ?? [],
   };
 }
 

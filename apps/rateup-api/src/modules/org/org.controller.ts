@@ -4,6 +4,7 @@ import { assertCanGrantPermissions, canGrant } from "../../authz/grant.js";
 import { assertNotOwner, transferOwnership } from "../../authz/ownership.js";
 import { legacyRoleToKey, type LegacyRole } from "../../authz/roles.js";
 import type {
+  OrgModulesInput,
   MemberActivityQuery,
   MemberPermissionsInput,
   TransferOwnershipInput,
@@ -45,6 +46,7 @@ import { renderOrgSignupEmailBodies } from "../../utils/email/react/templates.js
 import { notificationQueue } from "../../workers/bullmq/queues/index.js";
 import { errorMessage } from "../../utils/commonUtils.js";
 import { isRootOrg } from "../../utils/auth.js";
+import { setHiddenModules } from "./modules.js";
 
 export async function createOrgHandler(
   request: FastifyRequest<{
@@ -484,4 +486,12 @@ export async function sendDeletionWarningHandler(
       error: "Failed to schedule deletion warning",
     });
   }
+}
+
+export async function updateOrgModulesHandler(
+  request: FastifyRequest<{ Body: OrgModulesInput }>,
+  reply: FastifyReply,
+) {
+  const hiddenModules = await setHiddenModules(request.user.orgId, request.body.hiddenModules);
+  reply.send({ success: true, data: { hiddenModules } });
 }

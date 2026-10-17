@@ -3,6 +3,7 @@ import { PERMISSIONS } from "../../authz/permissions.js";
 import { ROLE_KEYS } from "../../authz/roles.js";
 import { z } from "zod";
 import { WaAssignedChatPermission } from "../../types/enums.js";
+import { ORG_MODULES } from "./modules.js";
 
 const orgCore = {
   name: z
@@ -40,6 +41,11 @@ export const memberPermissionsSchema = z.object({
   denies: z.array(z.enum(PERMISSIONS)).default([]),
 });
 export type MemberPermissionsInput = z.infer<typeof memberPermissionsSchema>;
+
+export const orgModulesSchema = z.object({
+  hiddenModules: z.array(z.enum(ORG_MODULES)).max(ORG_MODULES.length),
+});
+export type OrgModulesInput = z.infer<typeof orgModulesSchema>;
 
 export const memberActivityQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
@@ -83,6 +89,7 @@ const updateOrgDetailsSchema = z.object({
   // absent: it is tracked on `LoyaltyProgram.onboardingStep` by the guided wizard.
   onboardingChecklist: z
     .object({
+      features: z.boolean().optional(),
       api: z.boolean().optional(),
       verify: z.boolean().optional(),
       payment: z.boolean().optional(),
@@ -101,6 +108,7 @@ const updateOrgDetailsSchema = z.object({
       // its own column: `onboardingChecklist` is already a JSON field.
       skipped: z
         .object({
+          features: z.boolean().optional(),
           instagram: z.boolean().optional(),
           messenger: z.boolean().optional(),
           invite: z.boolean().optional(),
