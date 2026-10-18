@@ -78,7 +78,7 @@ export const SWITCHES = [
   },
   {
     key: "catalog",
-    label: "Catalog sync",
+    label: "Commerce (shop & catalog)",
     get: (f: Partial2) => f?.whatsapp?.catalog?.active,
     set: (f: SubscriptionFeatures, on: boolean) => {
       f.whatsapp.catalog = { active: on };
