@@ -8,6 +8,7 @@ import {
 } from "./tasks/migrateActiveContactPricing.js";
 import { seedAddons } from "./tasks/seedAddons.js";
 import { seedPlans } from "./tasks/seedPlans.js";
+import { enableFreeCommerce } from "./tasks/enableFreeCommerce.js";
 import { backfillOrgModules } from "./tasks/backfillOrgModules.js";
 
 export interface TaskDefinition {
@@ -139,6 +140,15 @@ export const MAINTENANCE_TASKS: TaskDefinition[] = [
       "it is safe to re-run.",
     destructive: false,
     run: backfillOrgModules,
+  },
+  {
+    id: "enable-free-commerce",
+    title: "Open Commerce on the Free plan",
+    description:
+      "Turns the Commerce (shop) feature on for the Free plan and for every org already on it. " +
+      "New Free orgs get it automatically; this covers the ones created before. Safe to re-run.",
+    destructive: false,
+    run: enableFreeCommerce,
   },
 ];
 

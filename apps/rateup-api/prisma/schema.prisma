@@ -177,7 +177,8 @@ model Org {
 
   /// Features (src/modules/org/modules.ts) the org has switched off: hidden from the nav,
   /// never blocked in the API. Stored as what is off so a new feature shows for everyone.
-  hiddenModules   String[]  @default([])
+  hiddenModules   String[]   @default([])
+  shopStore       ShopStore?
   /// Set once the list has been chosen — at signup, by an admin, or by the backfill task.
   modulesChosenAt DateTime?
 
@@ -888,6 +889,8 @@ enum TriggerEvent {
   INSTAGRAM_STORY_MENTION
   /// Someone opened the DM thread from an ig.me link; options.instagramRef narrows it to one ?ref=.
   INSTAGRAM_REFERRAL
+  /// A RateUp shop order changed state; options.shopOrderStatus narrows it (paid, shipped, …).
+  SHOP_ORDER_EVENT
 }
 
 model RuleAction {
@@ -1243,11 +1246,17 @@ model Contact {
   leads                       Lead[]
   inboxMentions               InboxMention[]
   inboxNotes                  InboxNote[]
+  /// WhatsApp's Business-Scoped User ID. A customer who messages from a username can
+  /// arrive with this and no phone number.
+  bsuid                       String?
+  shopOrders                  ShopOrder[]
+  shopStockAlerts             ShopBackInStockRequest[]
 
   @@unique([external_id, orgId], name: "external_id_org_id_unique")
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
   @@unique([igsId, orgId], name: "contact_igsid_org_id_unique")
   @@unique([psid, orgId], name: "contact_psid_org_id_unique")
+  @@unique([bsuid, orgId], name: "contact_bsuid_org_id_unique")
   @@index([orgId])
   @@index([orgId, id])
   @@index([orgId, waMessageAssignStatus])
@@ -4223,4 +4232,531 @@ model VoipPushToken {
 
   @@unique([token, userId, orgId])
   @@index([orgId, userId])
+}
+
+// ─── Shop (social commerce) ──────────────────────────────────────────────────
+// A merchant's store as RateUp sees it. NATIVE stores keep products, stock and orders
+// here and publish to the Meta catalog; SHOPIFY/WOOCOMMERCE stores mirror products in and
+// write orders back. Money is Decimal(12,2) in the store's currency throughout.
+
+enum ShopSourceMode {
+  NATIVE
+  SHOPIFY
+  WOOCOMMERCE
+}
+
+enum ShopProductStatus {
+  ACTIVE
+  DRAFT
+  ARCHIVED
+}
+
+/// Where a product stands in the Meta catalog that feeds WhatsApp, Instagram and Facebook.
+enum ShopMetaSyncStatus {
+  NOT_SYNCED
+  SYNCING
+  LIVE
+  REJECTED
+  HIDDEN
+}
+
+enum ShopChannel {
+  WHATSAPP
+  INSTAGRAM
+  MESSENGER
+  STOREFRONT
+  MANUAL
+}
+
+/// DRAFT is a cart in checkout: priced, not yet placed. OPEN is placed (paid, or a cash
+/// order the customer confirmed).
+enum ShopOrderStatus {
+  DRAFT
+  OPEN
+  COMPLETED
+  CANCELLED
+}
+
+enum ShopCheckoutStage {
+  ADDRESS
+  DELIVERY
+  LOYALTY
+  PAYMENT
+  DONE
+}
+
+enum ShopPaymentStatus {
+  UNPAID
+  PENDING
+  PAID
+  PARTIALLY_REFUNDED
+  REFUNDED
+  FAILED
+  EXPIRED
+  COD_PENDING
+}
+
+enum ShopFulfillmentStatus {
+  UNFULFILLED
+  PACKED
+  SHIPPED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  FAILED_DELIVERY
+  RETURNED
+  CANCELLED
+}
+
+enum ShopDiscountType {
+  PERCENTAGE
+  FIXED
+  FREE_SHIPPING
+  BUY_X_GET_Y
+}
+
+enum ShopDiscountEligibility {
+  ANYONE
+  FIRST_ORDER
+  LOYALTY_MEMBERS
+}
+
+enum ShopReturnStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  RECEIVED
+  REFUNDED
+}
+
+model ShopStore {
+  id    String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org   Org            @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId String         @unique @db.Uuid
+  name  String
+  /// The storefront's public address, /s/<slug>.
+  slug  String         @unique
+  mode  ShopSourceMode @default(NATIVE)
+
+  currency         String   @default("USD")
+  /// Percent, e.g. 8.00. Null means no tax line.
+  taxRate          Decimal? @db.Decimal(5, 2)
+  pricesIncludeTax Boolean  @default(true)
+
+  description   String?
+  logoUrl       String?
+  /// The Meta catalog products publish to. Links to WhatsappCatalog.catalogId.
+  metaCatalogId String?
+
+  storefrontEnabled Boolean @default(false)
+  /// [PShopStorefrontTheme]
+  storefrontTheme   Json?
+
+  /// Checkout-in-chat switches, in the order they are asked.
+  askAddress        Boolean  @default(true)
+  askDelivery       Boolean  @default(true)
+  offerPoints       Boolean  @default(true)
+  allowCoupons      Boolean  @default(true)
+  /// Money one loyalty point is worth at checkout. Null: points cannot be spent on orders.
+  pointValue        Decimal? @db.Decimal(12, 4)
+  minPointsToRedeem Int      @default(100)
+  /// The most of an order's goods value points may pay for, in percent.
+  maxPointsPct      Int      @default(50)
+
+  codEnabled             Boolean  @default(false)
+  codConfirm             Boolean  @default(true)
+  codConfirmHours        Int      @default(24)
+  codPrepaidDiscountPct  Decimal? @db.Decimal(5, 2)
+  bankTransferEnabled    Boolean  @default(false)
+  /// [PShopBankDetails]
+  bankDetails            Json?
+  defaultPaymentProvider String?
+
+  paymentLinkTtlHours    Int     @default(24)
+  /// Minutes after checkout starts; one reminder per entry. Empty turns reminders off.
+  cartReminderMinutes    Int[]   @default([60, 1440])
+  cartReminderDiscountId String? @db.Uuid
+  /// [PShopNotifications] per order event: on/off and the WhatsApp template used outside the 24 h window.
+  notifications          Json?
+  lowStockThreshold      Int     @default(5)
+  orderNumberSeq         Int     @default(1000)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products      ShopProduct[]
+  collections   ShopCollection[]
+  shippingRates ShopShippingRate[]
+  orders        ShopOrder[]
+  discounts     ShopDiscount[]
+}
+
+model ShopShippingRate {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  store     ShopStore @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  storeId   String    @db.Uuid
+  zone      String    @default("Domestic")
+  /// ISO country codes this rate serves; empty serves every destination.
+  countries String[]  @default([])
+  name      String
+  minDays   Int?
+  maxDays   Int?
+  price     Decimal   @db.Decimal(12, 2)
+  freeOver  Decimal?  @db.Decimal(12, 2)
+  active    Boolean   @default(true)
+  position  Int       @default(0)
+  createdAt DateTime  @default(now())
+
+  @@index([storeId])
+}
+
+model ShopCollection {
+  id               String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  store            ShopStore     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  storeId          String        @db.Uuid
+  name             String
+  slug             String
+  description      String?
+  imageUrl         String?
+  position         Int           @default(0)
+  /// The Meta product set this collection is mirrored to.
+  metaProductSetId String?
+  products         ShopProduct[]
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@unique([storeId, slug])
+}
+
+model ShopProduct {
+  id          String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  store       ShopStore         @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  storeId     String            @db.Uuid
+  orgId       String            @db.Uuid
+  title       String
+  description String?
+  brand       String?
+  /// Google product category text, which Meta requires for some verticals.
+  category    String?
+  productUrl  String?
+  images      String[]          @default([])
+  status      ShopProductStatus @default(DRAFT)
+  /// [PShopProductOptions] e.g. [{ name: "Size", values: ["200 g", "400 g"] }]
+  options     Json?
+
+  showOnWhatsapp    Boolean @default(true)
+  showOnInstagram   Boolean @default(true)
+  showOnFacebook    Boolean @default(false)
+  showOnStorefront  Boolean @default(true)
+  /// Loyalty points multiplier on this product, 1 = normal earning.
+  loyaltyMultiplier Decimal @default(1) @db.Decimal(4, 2)
+
+  /// Set for products mirrored from a connected store ("shopify", "woocommerce").
+  externalSource String?
+  externalId     String?
+
+  metaSyncStatus ShopMetaSyncStatus @default(NOT_SYNCED)
+  metaSyncError  String?
+  metaSyncedAt   DateTime?
+
+  collections ShopCollection[]
+  variants    ShopVariant[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@unique([storeId, externalSource, externalId])
+  @@index([storeId, status])
+  @@index([orgId])
+}
+
+model ShopVariant {
+  id             String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  product        ShopProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId      String      @db.Uuid
+  storeId        String      @db.Uuid
+  /// "Default" for a product without options.
+  title          String      @default("Default")
+  /// [PShopVariantOptionValues] e.g. { "Size": "200 g" }
+  optionValues   Json?
+  sku            String?
+  /// The id Meta knows this variant by (content id). Unique per store.
+  retailerId     String
+  price          Decimal     @db.Decimal(12, 2)
+  compareAtPrice Decimal?    @db.Decimal(12, 2)
+  trackInventory Boolean     @default(true)
+  stock          Int         @default(0)
+  /// Overrides the store's low-stock threshold.
+  lowStockAt     Int?
+  allowBackorder Boolean     @default(false)
+  imageUrl       String?
+  weightGrams    Int?
+  externalId     String?
+  position       Int         @default(0)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  movements   ShopInventoryMovement[]
+  stockAlerts ShopBackInStockRequest[]
+  orderItems  ShopOrderItem[]
+
+  @@unique([storeId, retailerId])
+  @@index([productId])
+}
+
+model ShopInventoryMovement {
+  id        String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  variant   ShopVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  variantId String      @db.Uuid
+  delta     Int
+  /// ORDER, CANCEL, RETURN, ADJUSTMENT, SYNC
+  reason    String
+  orderId   String?     @db.Uuid
+  userId    String?     @db.Uuid
+  note      String?
+  createdAt DateTime    @default(now())
+
+  @@index([variantId, createdAt])
+}
+
+model ShopBackInStockRequest {
+  id         String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  variant    ShopVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  variantId  String      @db.Uuid
+  contact    Contact     @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  contactId  String      @db.Uuid
+  channel    ShopChannel @default(WHATSAPP)
+  notifiedAt DateTime?
+  createdAt  DateTime    @default(now())
+
+  @@unique([variantId, contactId])
+  @@index([variantId, notifiedAt])
+}
+
+model ShopOrder {
+  id      String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  store   ShopStore @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  storeId String    @db.Uuid
+  orgId   String    @db.Uuid
+  /// Shown to people as #<number>; per store.
+  number  Int
+
+  contact          Contact?    @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  contactId        String?     @db.Uuid
+  channel          ShopChannel
+  /// wa_cart, ig_dm, storefront, agent, ai_agent, ctwa — how the order started.
+  source           String?
+  /// The WhatsApp number (phoneId) or page the conversation runs on, for replies.
+  channelAccountId String?
+
+  status            ShopOrderStatus       @default(DRAFT)
+  checkoutStage     ShopCheckoutStage     @default(ADDRESS)
+  paymentStatus     ShopPaymentStatus     @default(UNPAID)
+  fulfillmentStatus ShopFulfillmentStatus @default(UNFULFILLED)
+  paymentMethod     String?
+
+  currency       String
+  subtotal       Decimal @default(0) @db.Decimal(12, 2)
+  discountTotal  Decimal @default(0) @db.Decimal(12, 2)
+  pointsDiscount Decimal @default(0) @db.Decimal(12, 2)
+  pointsRedeemed Int     @default(0)
+  shippingTotal  Decimal @default(0) @db.Decimal(12, 2)
+  taxTotal       Decimal @default(0) @db.Decimal(12, 2)
+  total          Decimal @default(0) @db.Decimal(12, 2)
+
+  discountCode String?
+  discountId   String? @db.Uuid
+
+  customerName    String?
+  customerPhone   String?
+  customerEmail   String?
+  /// [PShopAddress]
+  shippingAddress Json?
+  /// [PShopSelectedShipping]
+  shippingRate    Json?
+
+  /// Opens the hosted checkout page. Short-lived; rotated on each new payment link.
+  checkoutToken     String?   @unique
+  checkoutExpiresAt DateTime?
+  /// [PShopAttribution] ad / comment / campaign that started the conversation.
+  attribution       Json?
+  note              String?
+  staffNote         String?
+
+  /// A Shopify draft order or WooCommerce order this was written back to.
+  externalProvider String?
+  externalId       String?
+  /// The WaCatalogOrder this mirrors while the WhatsApp catalog flow dual-writes.
+  legacyWaOrderId  String? @unique @db.Uuid
+
+  reminderCount  Int       @default(0)
+  lastReminderAt DateTime?
+  placedAt       DateTime?
+  paidAt         DateTime?
+  confirmedAt    DateTime?
+  cancelledAt    DateTime?
+  cancelReason   String?
+  createdById    String?   @db.Uuid
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  items               ShopOrderItem[]
+  payments            ShopPayment[]
+  events              ShopOrderEvent[]
+  shipments           ShopShipment[]
+  returns             ShopReturn[]
+  discountRedemptions ShopDiscountRedemption[]
+
+  @@unique([storeId, number])
+  @@index([orgId, createdAt(sort: Desc)])
+  @@index([storeId, status, paymentStatus])
+  @@index([contactId])
+}
+
+model ShopOrderItem {
+  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  order        ShopOrder    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId      String       @db.Uuid
+  variant      ShopVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  variantId    String?      @db.Uuid
+  productId    String?      @db.Uuid
+  title        String
+  variantTitle String?
+  sku          String?
+  retailerId   String?
+  imageUrl     String?
+  unitPrice    Decimal      @db.Decimal(12, 2)
+  quantity     Int
+  lineTotal    Decimal      @db.Decimal(12, 2)
+
+  @@index([orderId])
+  @@index([variantId])
+}
+
+model ShopPayment {
+  id                String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  order             ShopOrder         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId           String            @db.Uuid
+  /// stripe, razorpay, wa_native, cod, bank, manual
+  provider          String
+  status            ShopPaymentStatus @default(PENDING)
+  amount            Decimal           @db.Decimal(12, 2)
+  currency          String
+  linkUrl           String?
+  /// The provider's id for the link or session, used to match its webhook.
+  providerRef       String?
+  providerPaymentId String?
+  refundedAmount    Decimal           @default(0) @db.Decimal(12, 2)
+  raw               Json?
+  expiresAt         DateTime?
+  paidAt            DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@unique([provider, providerRef])
+  @@index([orderId])
+}
+
+/// The order's timeline: everything the customer and staff did, in order.
+model ShopOrderEvent {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  order       ShopOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId     String    @db.Uuid
+  type        String
+  message     String
+  data        Json?
+  actorUserId String?   @db.Uuid
+  createdAt   DateTime  @default(now())
+
+  @@index([orderId, createdAt])
+}
+
+model ShopDiscount {
+  id      String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  store   ShopStore        @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  storeId String           @db.Uuid
+  /// Stored upper-case; matched case-insensitively.
+  code    String
+  title   String?
+  type    ShopDiscountType
+  /// Percent for PERCENTAGE, amount for FIXED, cap for FREE_SHIPPING (null = no cap).
+  value   Decimal?         @db.Decimal(12, 2)
+  buyQty  Int?
+  getQty  Int?
+
+  minSubtotal   Decimal? @db.Decimal(12, 2)
+  /// ALL, COLLECTIONS, PRODUCTS
+  appliesTo     String   @default("ALL")
+  collectionIds String[] @default([])
+  productIds    String[] @default([])
+
+  eligibility      ShopDiscountEligibility @default(ANYONE)
+  usageLimit       Int?
+  perCustomerLimit Int?
+  usedCount        Int                     @default(0)
+  startsAt         DateTime                @default(now())
+  endsAt           DateTime?
+  active           Boolean                 @default(true)
+  /// MANUAL, LOYALTY, CART_REMINDER, COD_PREPAID
+  source           String                  @default("MANUAL")
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+
+  redemptions ShopDiscountRedemption[]
+
+  @@unique([storeId, code])
+}
+
+model ShopDiscountRedemption {
+  id         String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  discount   ShopDiscount @relation(fields: [discountId], references: [id], onDelete: Cascade)
+  discountId String       @db.Uuid
+  order      ShopOrder    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId    String       @db.Uuid
+  contactId  String?      @db.Uuid
+  amount     Decimal      @db.Decimal(12, 2)
+  createdAt  DateTime     @default(now())
+
+  @@unique([discountId, orderId])
+  @@index([discountId, contactId])
+}
+
+model ShopShipment {
+  id             String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  order          ShopOrder             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId        String                @db.Uuid
+  /// manual, easypost, shopify
+  provider       String                @default("manual")
+  providerRef    String?
+  carrier        String?
+  service        String?
+  trackingNumber String?
+  trackingUrl    String?
+  labelUrl       String?
+  status         ShopFulfillmentStatus @default(SHIPPED)
+  cost           Decimal?              @db.Decimal(12, 2)
+  /// [PShopShipmentEvents]
+  events         Json?
+  shippedAt      DateTime?
+  deliveredAt    DateTime?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  @@index([orderId])
+  @@index([provider, providerRef])
+}
+
+model ShopReturn {
+  id           String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  order        ShopOrder        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId      String           @db.Uuid
+  status       ShopReturnStatus @default(REQUESTED)
+  reason       String
+  /// [PShopReturnItems] [{ orderItemId, quantity }]
+  items        Json
+  refundAmount Decimal?         @db.Decimal(12, 2)
+  restock      Boolean          @default(true)
+  note         String?
+  createdAt    DateTime         @default(now())
+  resolvedAt   DateTime?
+
+  @@index([orderId])
 }

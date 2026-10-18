@@ -61,7 +61,8 @@ export function getFreeSubscriptionFeatures(
       campaign: { active: true },
       loyalty: { active: false },
       referrals: { active: false },
-      catalog: { active: false },
+      // The shop (Commerce) is open on Free; selling is how a free account grows into a paid one.
+      catalog: { active: true },
     },
     ai: { count: { completionTokens: 0, promptTokens: 0 }, active: false },
   };

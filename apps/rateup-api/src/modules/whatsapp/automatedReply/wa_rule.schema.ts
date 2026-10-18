@@ -1,3 +1,4 @@
+import { SHOP_ORDER_EVENTS } from "../../commerce/shop/shopEvents.constants.js";
 import { z } from "zod";
 import { ShopifyEvents } from "../../../types/enums.js";
 import {
@@ -61,6 +62,9 @@ export const ruleOptionsSchema = z.object({
   // WooCommerce-specific options
   wooEvent: z.enum(WOO_TRIGGER_STATUSES).optional(),
   wooProductIds: z.array(z.string()).optional(),
+  // RateUp shop orders: which order event, optionally narrowed to products (ShopProduct ids).
+  shopOrderEvent: z.enum(SHOP_ORDER_EVENTS).optional(),
+  shopProductIds: z.array(z.string()).optional(),
   // Abandoned checkouts: how long a checkout sits untouched before this rule reminds, and
   // whether to message only buyers who accepted marketing at checkout.
   abandonedCheckoutDelayMinutes: z
@@ -196,6 +200,13 @@ export const createRuleSchema = createRuleBaseSchema.superRefine((data, ctx) => 
       message: "Select a WooCommerce order status",
     });
   }
+  if (data.triggerEvent === "SHOP_ORDER_EVENT" && !data.options?.shopOrderEvent) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["options", "shopOrderEvent"],
+      message: "Select an order event",
+    });
+  }
 });
 
 export type CreateRuleInput = z.infer<typeof createRuleSchema>;
@@ -214,6 +225,13 @@ export const updateRuleSchema = createRuleBaseSchema.partial().superRefine((data
       code: "custom",
       path: ["options", "wooEvent"],
       message: "Select a WooCommerce order status",
+    });
+  }
+  if (data.triggerEvent === "SHOP_ORDER_EVENT" && !data.options?.shopOrderEvent) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["options", "shopOrderEvent"],
+      message: "Select an order event",
     });
   }
 });

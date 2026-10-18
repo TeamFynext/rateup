@@ -1468,6 +1468,21 @@ declare global {
     type PWaCatalogShippingAddress = WaCatalogShippingAddress;
     type PWaCatalogOrderProduct = WaCatalogOrderProduct;
 
+    type PShopStorefrontTheme =
+      import("../modules/commerce/shop/shop.types.js").ShopStorefrontTheme;
+    type PShopBankDetails = import("../modules/commerce/shop/shop.types.js").ShopBankDetails;
+    type PShopProductOptions = import("../modules/commerce/shop/shop.types.js").ShopProductOption[];
+    type PShopVariantOptionValues =
+      import("../modules/commerce/shop/shop.types.js").ShopVariantOptionValues;
+    type PShopAddress = import("../modules/commerce/shop/shop.types.js").ShopAddress;
+    type PShopSelectedShipping =
+      import("../modules/commerce/shop/shop.types.js").ShopSelectedShipping;
+    type PShopAttribution = import("../modules/commerce/shop/shop.types.js").ShopAttribution;
+    type PShopShipmentEvents = import("../modules/commerce/shop/shop.types.js").ShopShipmentEvent[];
+    type PShopReturnItems = import("../modules/commerce/shop/shop.types.js").ShopReturnItem[];
+    type PShopNotifications =
+      import("../modules/commerce/shop/shop.types.js").ShopNotificationSettings;
+
     type PMetaAgentBusinessInfo =
       import("../modules/metaAgent/metaAgent.schema.js").BusinessInfoBody;
     /** Meta's FAQ metadata is a flat string map. */

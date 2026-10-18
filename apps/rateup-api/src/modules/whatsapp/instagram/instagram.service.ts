@@ -1,5 +1,6 @@
 import { callMetaApi } from "../wa_axios.js";
 import { log } from "../../../utils/logger.js";
+import prisma from "../../../utils/prisma.js";
 import { updateWaMessageByMessageId } from "../inbox/message/wamessage.service.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
 import { getInstagramWebhookEvent, resolveCommentTimestampMs } from "./instagram.util.js";
@@ -301,6 +302,10 @@ export async function handleInstagramMessages(
     throw error;
   }
 
+  if (message.quick_reply?.payload?.startsWith("shop_")) {
+    if (await handleInstagramShopReply(message.quick_reply.payload, sender.id, waSettings)) return;
+  }
+
   // A first message sent from an ig.me link carries its ref; the link's own rule wins.
   const linkRef = message.referral && "ref" in message.referral ? message.referral.ref : undefined;
   if (linkRef && (await runInstagramLinkRules(linkRef, sender.id, waSettings))) return;
@@ -325,6 +330,30 @@ export async function handleInstagramMessages(
     });
   } catch (error) {
     log.error({ err: error }, "[Instagram] Error in rule execution for message");
+  }
+}
+
+/** "Buy now" and checkout replies on a shop message (payloads starting `shop_`). */
+async function handleInstagramShopReply(
+  payload: string,
+  igsId: string,
+  waSettings: { orgId: string; ibaId: string },
+): Promise<boolean> {
+  try {
+    const contact = await prisma.contact.findUnique({
+      where: { contact_igsid_org_id_unique: { igsId, orgId: waSettings.orgId } },
+      select: { id: true },
+    });
+    const { handleShopReply } = await import("../../commerce/shop/checkout.service.js");
+    return await handleShopReply(payload, {
+      orgId: waSettings.orgId,
+      contactId: contact?.id ?? null,
+      channel: "INSTAGRAM",
+      channelAccountId: waSettings.ibaId,
+    });
+  } catch (error) {
+    log.error({ err: error }, "[Instagram] Error handling a shop reply");
+    return false;
   }
 }
 
@@ -368,6 +397,10 @@ export async function handleInstagramPostback(
       undefined,
       `ig_postback_${timestamp}`,
     );
+
+    if (postback.payload.startsWith("shop_")) {
+      if (await handleInstagramShopReply(postback.payload, sender.id, waSettings)) return;
+    }
 
     // A new conversation opened from an ig.me link, started by tapping an ice breaker,
     // carries the link's ref on the postback. The link's own rule wins, as it does for a

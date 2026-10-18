@@ -11,6 +11,9 @@ export const getAllIntegrationsByOrgId = (orgId: string) => {
   return prisma.integration.findMany({
     where: {
       orgId,
+      // Shop payment gateways hold a merchant's payment keys and are managed only through
+      // Commerce → Payments, which never returns them.
+      NOT: { name: { startsWith: "shop_" } },
     },
   });
 };

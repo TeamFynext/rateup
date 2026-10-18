@@ -787,10 +787,50 @@ async function whatsappMessageHandler(
     }
     return;
   }
+  // A click-to-WhatsApp ad opens a free 72-hour window; remember it so a sale in that window
+  // is credited to the ad.
+  const adReferral = (completeMessageObject as WaReceiveMessageBody)?.messages?.[0]?.referral;
+  if (adReferral?.source_type === "ad" && messageObj?.contactId) {
+    try {
+      const { rememberAdReferral } = await import("../../commerce/shop/attribution.js");
+      await rememberAdReferral(orgId, messageObj.contactId, adReferral);
+    } catch (e) {
+      log.error({ err: e }, "Could not record the ad referral");
+    }
+  }
+
   if (type === WaMessageTypes.order) {
     if (!messageObj) {
       log.error("handleWaMessages did not return a message; skipping catalog order handling");
       return;
+    }
+    const cart = (completeMessageObject as WaReceiveMessageBody).messages?.[0]?.order;
+    if (cart?.product_items?.length) {
+      try {
+        const { startCheckoutFromCart } = await import("../../commerce/shop/checkout.service.js");
+        const { adAttribution } = await import("../../commerce/shop/attribution.js");
+        const shopOrder = await startCheckoutFromCart(
+          {
+            orgId,
+            channel: "WHATSAPP",
+            channelAccountId: waSettings.phoneId,
+            contactId: messageObj.contactId,
+            phone: from,
+            name: userName,
+            attribution: messageObj.contactId
+              ? await adAttribution(orgId, messageObj.contactId)
+              : null,
+          },
+          cart.product_items.map((p) => ({
+            retailerId: p.product_retailer_id,
+            quantity: Number(p.quantity) || 1,
+          })),
+        );
+        // RateUp shop products check out through the shop; other carts keep the catalog flow.
+        if (shopOrder) return;
+      } catch (e) {
+        log.error({ err: e }, "Shop checkout from a WhatsApp cart failed; using the catalog flow");
+      }
     }
     await handleWaOrderfromCatalog(
       completeMessageObject as WaReceiveMessageBody,
@@ -798,6 +838,23 @@ async function whatsappMessageHandler(
       waSettings,
     );
     return;
+  }
+
+  // ── Shop checkout replies (ids "shop_…"): intercept before other handlers ─────
+  if (parsedMessage?.buttonId?.startsWith("shop_")) {
+    try {
+      const { handleShopReply } = await import("../../commerce/shop/checkout.service.js");
+      const handled = await handleShopReply(parsedMessage.buttonId, {
+        orgId,
+        contactId: messageObj?.contactId ?? null,
+        channel: "WHATSAPP",
+        channelAccountId: waSettings.phoneId,
+        phone: from,
+      });
+      if (handled) return;
+    } catch (e) {
+      log.error({ err: e }, "Error handling a shop reply");
+    }
   }
 
   // ── Delivery list reply: intercept before other handlers ─────────────────────
@@ -904,6 +961,14 @@ async function whatsappMessageHandler(
     // ── Check if this is a catalog address flow response ──────────────────────
     const addressData = flowResponseStrings(parsedMessage.flowResponse);
     const flowToken = addressData?.flow_token as string | undefined;
+    if (flowToken?.startsWith("shop:")) {
+      try {
+        const { handleShopAddressFlow } = await import("../../commerce/shop/checkout.service.js");
+        if (await handleShopAddressFlow(flowToken.slice(5), addressData)) return;
+      } catch (e) {
+        log.error({ err: e }, "Error handling a shop address form");
+      }
+    }
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (flowToken && uuidRegex.test(flowToken)) {
       try {

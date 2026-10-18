@@ -91,10 +91,12 @@ beforeEach(() => {
 // ===========================================================================
 
 describe("the integration readers", () => {
-  test("the per-org list is scoped to the org", async () => {
+  test("the per-org list is scoped to the org and leaves out shop payment gateways", async () => {
     await getAllIntegrationsByOrgId(ORG);
 
-    expect(db.integration.findMany).toHaveBeenCalledWith({ where: { orgId: ORG } });
+    expect(db.integration.findMany).toHaveBeenCalledWith({
+      where: { orgId: ORG, NOT: { name: { startsWith: "shop_" } } },
+    });
   });
 
   test("by-name is keyed on the org and name compound unique", async () => {

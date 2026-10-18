@@ -55,7 +55,10 @@ describe("getFreeSubscriptionFeatures", () => {
     expect(free.whatsapp.active).toBe(true);
     expect(free.whatsapp.loyalty?.active).toBe(false);
     expect(free.whatsapp.referrals?.active).toBe(false);
-    expect(free.whatsapp.catalog?.active).toBe(false);
+  });
+
+  test("opens the shop (Commerce)", () => {
+    expect(free.whatsapp.catalog?.active).toBe(true);
   });
 
   test("opens campaigns, which the credit allowance throttles rather than the gate", () => {

@@ -419,6 +419,8 @@ export interface RuleWithConditions {
     shopifyProductIds?: string[];
     wooEvent?: string;
     wooProductIds?: string[];
+    shopOrderEvent?: string;
+    shopProductIds?: string[];
     abandonedCheckoutDelayMinutes?: number;
     requireMarketingConsent?: boolean;
     instagramScope?: "ALL" | "SPECIFIC";
@@ -698,6 +700,10 @@ export interface RuleExecutionContext {
   wooProductIds?: string[];
   /** The WooCommerce order payload, for template variables. */
   wooBody?: Record<string, unknown>;
+  /** The shop order event that fired a `SHOP_ORDER_EVENT` rule, e.g. "shipped". */
+  shopOrderEvent?: string;
+  /** ShopProduct ids on the order. */
+  shopProductIds?: string[];
   instagramMediaId?: string;
   /**
    * Set for INSTAGRAM_COMMENT. A commenter who has never messaged the business can only
@@ -929,6 +935,11 @@ export async function checkAndExecuteRuleByTriggerEvent(
         rule.options?.wooEvent !== context.wooEvent
       ) {
         continue;
+      }
+      if (triggerEvent === TriggerEvent.SHOP_ORDER_EVENT) {
+        if (rule.options?.shopOrderEvent !== context.shopOrderEvent) continue;
+        const wanted = rule.options?.shopProductIds ?? [];
+        if (wanted.length && !context.shopProductIds?.some((id) => wanted.includes(id))) continue;
       }
 
       // Filter by product IDs if configured
