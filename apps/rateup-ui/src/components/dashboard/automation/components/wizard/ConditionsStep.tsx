@@ -31,6 +31,7 @@ import {
 import { cn } from "@/lib/utils.ts";
 import { ShopifyEvents } from "@/types/enums.ts";
 
+import { AdReferralOptions } from "../AdReferralOptions.tsx";
 import ConditionList from "../ConditionList.tsx";
 import { InstagramCommentSource, InstagramLinkRef } from "../InstagramTriggerOptions.tsx";
 import { MatchSentence } from "../MatchSentence.tsx";
@@ -191,6 +192,7 @@ const ConditionsPanel: React.FC<{
   isInstagramCommentTrigger: boolean;
   isInstagramStoryTrigger: boolean;
   isInstagramReferralTrigger: boolean;
+  isAdReferralTrigger: boolean;
   instagramCommentSource: string | undefined;
   shopifyEvent: string | undefined;
   shopifyProductIds: string[];
@@ -219,6 +221,7 @@ const ConditionsPanel: React.FC<{
   isInstagramCommentTrigger,
   isInstagramStoryTrigger,
   isInstagramReferralTrigger,
+  isAdReferralTrigger,
   instagramCommentSource,
   shopifyEvent,
   shopifyProductIds,
@@ -345,6 +348,19 @@ const ConditionsPanel: React.FC<{
           </AlertDescription>
         </Alert>
         <InstagramLinkRef />
+      </div>
+    )}
+
+    {isAdReferralTrigger && (
+      <div className="space-y-4">
+        <Alert>
+          <IconInfoCircle />
+          <AlertDescription>
+            Runs on the first message after someone taps a click-to-WhatsApp ad, before any keyword
+            rule. Add "Send products to buy" to show what the ad promoted.
+          </AlertDescription>
+        </Alert>
+        <AdReferralOptions />
       </div>
     )}
 
@@ -542,6 +558,7 @@ const ConditionsPanel: React.FC<{
     {/* Standard condition blocks */}
     {!isInstagramStoryTrigger &&
       !isInstagramReferralTrigger &&
+      !isAdReferralTrigger &&
       !isShopifyTrigger &&
       !isWooTrigger &&
       groupFields.map((group, groupIndex: number) => (
@@ -571,26 +588,29 @@ const ConditionsPanel: React.FC<{
         </div>
       ))}
 
-    {!isShopifyTrigger && !isInstagramStoryTrigger && !isInstagramReferralTrigger && (
-      <Button
-        type="button"
-        variant="outline"
-        className="w-full border-dashed"
-        onClick={() => {
-          const defaultField =
-            isMessageReceivedTrigger || isInstagramCommentTrigger
-              ? "MESSAGE_BODY"
-              : "CONTACT_EMAIL";
-          appendGroup({
-            operator: "AND",
-            conditions: [{ field: defaultField, operator: "CONTAINS", value: "" }],
-          });
-        }}
-      >
-        <IconPlus className="w-4 h-4 mr-2" />
-        Add condition group
-      </Button>
-    )}
+    {!isShopifyTrigger &&
+      !isInstagramStoryTrigger &&
+      !isInstagramReferralTrigger &&
+      !isAdReferralTrigger && (
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full border-dashed"
+          onClick={() => {
+            const defaultField =
+              isMessageReceivedTrigger || isInstagramCommentTrigger
+                ? "MESSAGE_BODY"
+                : "CONTACT_EMAIL";
+            appendGroup({
+              operator: "AND",
+              conditions: [{ field: defaultField, operator: "CONTAINS", value: "" }],
+            });
+          }}
+        >
+          <IconPlus className="w-4 h-4 mr-2" />
+          Add condition group
+        </Button>
+      )}
   </div>
 );
 
@@ -678,6 +698,7 @@ export function ConditionsStep() {
       isInstagramCommentTrigger={isInstagramCommentTrigger}
       isInstagramStoryTrigger={isInstagramStoryTrigger}
       isInstagramReferralTrigger={triggerEvent === "INSTAGRAM_REFERRAL"}
+      isAdReferralTrigger={triggerEvent === "WHATSAPP_AD_REFERRAL"}
       instagramCommentSource={instagramCommentSource}
       shopifyEvent={shopifyEvent}
       shopifyProductIds={shopifyProductIds}

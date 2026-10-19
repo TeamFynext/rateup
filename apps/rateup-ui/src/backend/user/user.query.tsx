@@ -53,7 +53,7 @@ export function useCreateUserMutation(setIsLoading: (loading: boolean) => void) 
       queryClient.invalidateQueries({ queryKey: userKeys.info() });
       queryClient.invalidateQueries({ queryKey: userKeys.profile() });
       navigate({
-        to: "/dashboard",
+        to: "/signup/business",
       });
     },
     onError: (error) => {
@@ -80,7 +80,7 @@ export function useCreateAppleUserMutation(setIsLoading: (loading: boolean) => v
       queryClient.invalidateQueries({ queryKey: userKeys.info() });
       queryClient.invalidateQueries({ queryKey: userKeys.profile() });
       navigate({
-        to: "/dashboard",
+        to: "/signup/business",
       });
     },
     onError: (error) => {

@@ -1,6 +1,11 @@
 import { IconAutomation, IconMessage2Code, IconPlus, IconWaveSine } from "@tabler/icons-react";
 import { useState } from "react";
 
+import {
+  InboxSellDialogs,
+  InboxSellMenuItems,
+  type SellDialog,
+} from "@/components/dashboard/commerce/inbox/InboxSellMenu.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   DropdownMenu,
@@ -25,6 +30,7 @@ export default function WaInboxFooterMenu(props: Props) {
   const [isModalOpened, setIsModalOpened] = useState(false);
   const [flowModalOpened, setFlowModalOpened] = useState(false);
   const [automationModalOpened, setAutomationModalOpened] = useState(false);
+  const [sellDialog, setSellDialog] = useState<SellDialog>(null);
 
   return (
     <>
@@ -84,6 +90,11 @@ export default function WaInboxFooterMenu(props: Props) {
               </span>
             )}
           </DropdownMenuItem>
+          <InboxSellMenuItems
+            contact={props.contact}
+            onOpen={setSellDialog}
+            sessionExpired={props.sessionExpired}
+          />
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -98,6 +109,12 @@ export default function WaInboxFooterMenu(props: Props) {
         contact={props.contact}
         opened={flowModalOpened}
         close={() => setFlowModalOpened(false)}
+      />
+      <InboxSellDialogs
+        contact={props.contact}
+        open={sellDialog}
+        onOpenChange={setSellDialog}
+        sessionExpired={props.sessionExpired}
       />
       <WaInboxAutomationDisplayModal
         sessionExpired={props.sessionExpired}

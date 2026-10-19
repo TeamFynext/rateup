@@ -163,6 +163,9 @@ export default function HomePageFooter() {
             <Link to="/products/pipeline" className={LINK}>
               Pipeline
             </Link>
+            <Link to="/products/social-commerce" className={LINK}>
+              Social Commerce
+            </Link>
             <Link to="/products/meta-ai-agent" className={LINK}>
               Meta AI Agent
             </Link>

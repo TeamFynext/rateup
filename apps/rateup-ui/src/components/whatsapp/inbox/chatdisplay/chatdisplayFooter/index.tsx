@@ -31,6 +31,7 @@ import {
   useUnBlockWhatsAppUser,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
+import { InboxSellButton } from "@/components/dashboard/commerce/inbox/InboxSellMenu.tsx";
 import { useVoiceRecordStore } from "@/components/input/VoiceRecorder.tsx";
 import {
   extractMentionUserIds,
@@ -66,6 +67,7 @@ import { generateInternalMessageId } from "../../util.tsx";
 import { isTicketClosed } from "../chatdisplayHeader/ticket.ts";
 import { type ComposerTab, useComposerTabStore } from "./composerTabStore.ts";
 import WaInboxFooterMenu from "./footerMenu/index.tsx";
+import WaInboxTemplateDisplayModal from "./templateDisplayModal/index.tsx";
 
 // Mirrors WaTextEditor's default CharacterCount limit so the footer count and the
 // editor's own hard limit stay in lock-step.
@@ -108,6 +110,7 @@ export default function WaInboxChatDisplayFooter({
 }>) {
   const { activeTab, setActiveTab } = useComposerTabStore();
   const [quickRepliesOpen, setQuickRepliesOpen] = useState(false);
+  const [templateOpen, setTemplateOpen] = useState(false);
 
   const submiRef = useRef<(() => void) | null>(null);
   const { t: translations } = useTranslation();
@@ -290,6 +293,19 @@ export default function WaInboxChatDisplayFooter({
       },
     }));
   }
+  /** A plain text reply sent without touching the draft, e.g. a storefront link from Sell. */
+  function sendPlainText(text: string) {
+    if (!whatsappSettingsPhoneId && platform !== MessagePlatform.WEBCHAT) {
+      toast.error("Select a account to send the message");
+      return;
+    }
+    sendnewWaMessage.mutate({
+      type: "text",
+      text: { body: text },
+      media: [],
+      pending: { kind: "message", body: { text } },
+    });
+  }
   function handleSendPrivateMessage() {
     const text = body.text?.body;
     if (!text || parseToWhatsAppFormat(text).trim().length === 0) return;
@@ -453,13 +469,25 @@ export default function WaInboxChatDisplayFooter({
           </Tabs>
 
           {isNoteMode ? (
-            <p className="hidden min-w-0 truncate text-xs text-amber-700 dark:text-amber-400 sm:block">
-              {switchedByMention
-                ? translations("Mentioning a teammate turns this into an internal note.")
-                : translations("Only your team sees notes.")}
-            </p>
+            <div className="flex min-w-0 items-center gap-1">
+              <p className="hidden min-w-0 truncate text-xs text-amber-700 dark:text-amber-400 sm:block">
+                {switchedByMention
+                  ? translations("Mentioning a teammate turns this into an internal note.")
+                  : translations("Only your team sees notes.")}
+              </p>
+              {isSessionExpired && (
+                <InboxSellButton
+                  contact={contact}
+                  sessionExpired
+                  onSendTemplate={
+                    platform === MessagePlatform.WHATSAPP ? () => setTemplateOpen(true) : undefined
+                  }
+                />
+              )}
+            </div>
           ) : (
             <div className="flex shrink-0 items-center gap-1">
+              <InboxSellButton contact={contact} onSendText={sendPlainText} />
               <CustomTooltip
                 trigger={
                   <Button
@@ -510,6 +538,14 @@ export default function WaInboxChatDisplayFooter({
           {translations("Enter to send · Shift + Enter for a new line")}
         </p>
       </div>
+      {isSessionExpired && platform === MessagePlatform.WHATSAPP && (
+        <WaInboxTemplateDisplayModal
+          sessionExpired
+          contact={contact}
+          opened={templateOpen}
+          onClose={() => setTemplateOpen(false)}
+        />
+      )}
     </div>
   );
 }

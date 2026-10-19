@@ -11,6 +11,7 @@ import {
   IconPlus,
   IconRefresh,
   IconRobot,
+  IconShoppingBag,
   IconSitemap,
   IconTag,
   IconTemplate,
@@ -69,6 +70,7 @@ import { WaMessageAssignStatus } from "@/types/enums.ts";
 
 import type { ActionType, CreateRuleInput, Platform } from "./schema.ts";
 import { asPlatform, getActionTypesForPlatforms } from "./schema.ts";
+import { ShopProductsActionInput } from "./ShopProductsAction.tsx";
 
 // ActionValueInput now always uses shadcn Field and FieldError, and expects valueField and fieldState from Controller
 const ActionValueInput = ({
@@ -399,6 +401,15 @@ const ActionValueInput = ({
       </div>
     );
   }
+  if (actionType === "SEND_SHOP_PRODUCTS") {
+    return (
+      <ShopProductsActionInput
+        value={valueField.value}
+        onChange={valueField.onChange}
+        onInstagram={platforms.includes("INSTAGRAM")}
+      />
+    );
+  }
   if (actionType === "CALL_EXTERNAL_API") {
     return (
       <Input
@@ -618,12 +629,20 @@ const ACTION_META: Record<string, { icon: typeof IconMessage; label: string }> =
   ASSIGN_LIFECYCLE: { icon: IconRefresh, label: "Set lifecycle (legacy)" },
   CLOSE_TICKET: { icon: IconCircleCheck, label: "Close the chat" },
   CALL_EXTERNAL_API: { icon: IconWebhook, label: "Call an external API" },
+  SEND_SHOP_PRODUCTS: { icon: IconShoppingBag, label: "Send products to buy" },
 };
 
 const ACTION_GROUPS: readonly { label: string; types: readonly string[] }[] = [
   {
     label: "Reply to the customer",
-    types: ["SEND_MESSAGE", "SEND_TEMPLATE", "SEND_FLOW", "SEND_WEB_SURVEY", "TRIGGER_CHATBOT"],
+    types: [
+      "SEND_MESSAGE",
+      "SEND_SHOP_PRODUCTS",
+      "SEND_TEMPLATE",
+      "SEND_FLOW",
+      "SEND_WEB_SURVEY",
+      "TRIGGER_CHATBOT",
+    ],
   },
   {
     label: "Behind the scenes",
@@ -679,7 +698,9 @@ const ActionList: React.FC<{
     append(
       type === "SEND_TEMPLATE"
         ? { type, value: { templateId: "", variableMapping: [] } }
-        : { type, value: "" },
+        : type === "SEND_SHOP_PRODUCTS"
+          ? { type, value: { productIds: [] } }
+          : { type, value: "" },
     );
     setOpen(LAST);
   };

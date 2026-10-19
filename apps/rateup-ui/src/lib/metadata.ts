@@ -121,6 +121,15 @@ const pageMetadata = {
       "Every enquiry becomes a lead with an owner, a next step and a stage — set right from the inbox.",
     sitemap: { priority: "0.8", changefreq: "monthly" },
   },
+  "/products/social-commerce": {
+    title: "Sell on WhatsApp, Instagram & Messenger | Social Commerce | RateUp",
+    description:
+      "Let customers buy and pay inside WhatsApp, Instagram and Messenger. Catalog sync, in-chat checkout, your own Stripe or Razorpay, one Orders list, shipping and loyalty points.",
+    ogTitle: "Social Commerce on WhatsApp, Instagram & Messenger",
+    ogDescription:
+      "Customers ask to buy in your DMs. Let them pay right there — into your own payment account.",
+    sitemap: { priority: "0.8", changefreq: "monthly" },
+  },
   "/products/meta-ai-agent": {
     title: "Meta AI Agent for WhatsApp Business | RateUp",
     description:

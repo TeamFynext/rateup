@@ -22,6 +22,7 @@ import { PanelCard } from "../shared/PanelCard";
 const GROUPS = [
   { id: "loyalty", label: "Loyalty" },
   { id: "crm", label: "CRM" },
+  { id: "commerce", label: "Shop" },
 ] as const;
 
 /**
@@ -74,7 +75,7 @@ export function RateupConnectorPanel({ waSettingsId }: Readonly<{ waSettingsId: 
     const ok = await confirm({
       title: "Remove the RateUp connector?",
       description:
-        "The agent will no longer be able to look up loyalty or update labels, stages and teams. Any skill that tells it to will stop working.",
+        "The agent will no longer be able to look up loyalty, sell from your shop, or update labels, stages and teams. Any skill that tells it to will stop working.",
       confirmText: "Remove",
     });
     if (ok) uninstall.mutate();
@@ -83,7 +84,7 @@ export function RateupConnectorPanel({ waSettingsId }: Readonly<{ waSettingsId: 
   return (
     <PanelCard
       title="RateUp connector"
-      description="Let the agent use your RateUp data with one click: a customer's loyalty points and rewards, and your labels, lead stages and teams. It only ever acts on the customer it is talking to, and never sends messages itself."
+      description="Let the agent use your RateUp data with one click: a customer's loyalty points and rewards, your products and their orders, and your labels, lead stages and teams. It only ever acts on the customer it is talking to, and never sends messages itself."
     >
       {isLoading ? (
         <Skeleton className="h-24 w-full" />

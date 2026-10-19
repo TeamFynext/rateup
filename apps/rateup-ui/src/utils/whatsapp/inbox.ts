@@ -8,6 +8,8 @@ import type { WaMessageAssignStatus } from "@/types/enums.ts";
 import { MessagePlatform, WaTemplateComponentTypeUpperCase } from "@/types/enums.ts";
 import type {
   IgReceiveMessageBody,
+  IgTemplateButton,
+  IgTemplateElement,
   IgSendMessageBody,
   WaReceiveMessageBody,
   WaSendMessageBody,
@@ -136,7 +138,20 @@ export type ParsedWaMessageContent =
   | WaSendMessageBody["contacts"]
   | WaSendMessageBody["location"]
   | OrderContent
-  | CallPermissionReplyContent;
+  | CallPermissionReplyContent
+  | IgTemplateContent;
+
+/** An Instagram/Messenger template we sent: product cards, or text with link buttons. */
+export interface IgTemplateContent {
+  templateType: string;
+  text?: string;
+  elements: IgTemplateElement[];
+  buttons: IgTemplateButton[];
+}
+
+export function isIgTemplateContent(content: ParsedWaMessageContent): content is IgTemplateContent {
+  return typeof content === "object" && content !== null && "templateType" in content;
+}
 
 export interface ParsedWaMessageReturn {
   timeStamp: string;
@@ -220,7 +235,16 @@ export function parseWaMessage(message: Partial<WaGetMessagesBody>): ParsedWaMes
       const { send } = messageBody as { send: IgSendMessageBody };
       const { message, sender_action, payload } = send;
       if (message) {
-        if (message.attachment) {
+        if (message.attachment?.type === "template") {
+          const payload = message.attachment.payload;
+          messageType = "ig_template";
+          messageContent = {
+            templateType: payload?.template_type ?? "generic",
+            text: payload?.text,
+            elements: payload?.elements ?? [],
+            buttons: payload?.buttons ?? [],
+          };
+        } else if (message.attachment) {
           messageContent =
             message.attachment.payload?.id ||
             message.attachment.payload?.url ||
@@ -453,6 +477,14 @@ export function returnMessageContentBasedOnParsedMessage(
       ? parsedMessage.messageContent.attachments
       : [];
     return attachments.at(-1)?.type ?? "Attachment";
+  } else if (parsedMessage.messageType === "ig_template") {
+    const content = isIgTemplateContent(parsedMessage.messageContent)
+      ? parsedMessage.messageContent
+      : null;
+    if (content?.text) return content.text;
+    return content?.elements.length === 1 && content.elements[0].title
+      ? content.elements[0].title
+      : "Products";
   } else if (parsedMessage.messageType === "ig_comment") {
     return isCommentContent(parsedMessage.messageContent)
       ? (parsedMessage.messageContent.text ?? "Comment")

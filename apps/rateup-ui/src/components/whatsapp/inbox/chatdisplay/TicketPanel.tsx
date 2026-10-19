@@ -55,6 +55,7 @@ import {
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import ChipAddPicker from "@/components/common/chip-add-picker.tsx";
 import { ContactDetailDialog } from "@/components/Contacts/ContactDetailedView.tsx";
+import { InboxOrdersPanel } from "@/components/dashboard/commerce/inbox/InboxOrdersPanel.tsx";
 import { resolveChannel } from "@/components/input/channelOptions.ts";
 import { findLeadsPipeline } from "@/components/pipeline/pipelineTypes.ts";
 import { Button } from "@/components/ui/button.tsx";
@@ -92,6 +93,7 @@ import {
 
 import { useDeleteTicket } from "../useDeleteTicket.ts";
 import { generateInternalMessageId } from "../util.tsx";
+import { AdReferralPanel } from "./AdReferralPanel.tsx";
 import type { OptimisticMessage } from "./chatdisplayFooter/index.tsx";
 import { deriveStatus, STATUS_PILL_BASE } from "./chatdisplayHeader/ticket.ts";
 
@@ -715,6 +717,11 @@ export default function TicketPanel({
           </div>
         </div>
       )}
+
+      {contact?.id && (
+        <AdReferralPanel contactId={contact.id} conversationId={contact.conversationId} />
+      )}
+      {contact?.id && <InboxOrdersPanel contactId={contact.id} />}
 
       {/* ---- Conversation Tags ----
            Ticket-grained, so they sit directly above the contact-grained labels

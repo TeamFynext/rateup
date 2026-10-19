@@ -4,6 +4,8 @@ type SignupRedirectArgs = Readonly<{
   hasUserData: boolean;
   missingOrgId: boolean;
   userInfoErrorMessage: string | null;
+  /** The owner skipped or left the business step that follows signup. */
+  profileIncomplete?: boolean;
 }>;
 
 type AssignedTeamWiseCount = Readonly<{
@@ -32,7 +34,11 @@ export const getSignupRedirect = ({
   hasUserData,
   missingOrgId,
   userInfoErrorMessage,
-}: SignupRedirectArgs): { to: "/signup"; search: { auth?: string } } | null => {
+  profileIncomplete,
+}: SignupRedirectArgs):
+  | { to: "/signup"; search: { auth?: string } }
+  | { to: "/signup/business" }
+  | null => {
   if (hasUserData && missingOrgId) {
     return { to: "/signup", search: { auth: "google" } };
   }
@@ -43,6 +49,10 @@ export const getSignupRedirect = ({
 
   if (userInfoErrorMessage === "User missing in Rateup") {
     return { to: "/signup", search: {} };
+  }
+
+  if (profileIncomplete) {
+    return { to: "/signup/business" };
   }
 
   return null;

@@ -103,6 +103,9 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
     hasUserData,
     missingOrgId,
     userInfoErrorMessage,
+    // Invited members join a finished org; only its owner is asked about the business.
+    profileIncomplete:
+      userQueryData?.data?.profileCompleted === false && userQueryData.data.roleKey === "OWNER",
   });
 
   const isInbox = pathname?.includes("/dashboard/inbox");

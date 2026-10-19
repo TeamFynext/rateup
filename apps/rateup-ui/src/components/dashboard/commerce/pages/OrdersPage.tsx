@@ -1,319 +1,651 @@
 import {
-  IconCash,
-  IconCheck,
-  IconChevronDown,
-  IconClock,
-  IconCreditCard,
-  IconDeviceMobile,
-  IconLoader2,
-  IconMessageCircle,
-  IconPackage,
-  IconSearch,
+  IconAlertCircle,
+  IconBrandWhatsapp,
+  IconBuildingStore,
+  IconCircleCheck,
+  IconFlask,
+  IconHistory,
+  IconInbox,
+  IconLink,
+  IconPlus,
+  IconUsersGroup,
 } from "@tabler/icons-react";
+import { useMutation } from "@tanstack/react-query";
+import { Link, useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
-import type { CommerceOrder, SpreadsheetFormat } from "@/backend/commerce/commerce.api";
 import {
-  useCommerceOrders,
-  useExportCommerceOrdersMutation,
-} from "@/backend/commerce/commerce.query";
-import OrderDetailsDialog from "@/components/dashboard/whatsapp/orders-and-payments/components/OrderDetailsDialog";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { ContactAvatar } from "@/components/ui/contact-avatar.tsx";
+  createShopTestOrder,
+  formatMoney,
+  setShopFulfillment,
+  type ShopChannel,
+  type ShopOrderRow,
+  type ShopOrderTab,
+  type ShopPaymentStatus,
+} from "@/backend/commerce/shop.api";
+import { useInvalidateShop, useShopOrders } from "@/backend/commerce/shop.query";
+import { ListPageSearchInput } from "@/components/common/list-page-layout.tsx";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Card } from "@/components/ui/card.tsx";
+import { Checkbox } from "@/components/ui/checkbox.tsx";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { useDebouncedValue } from "@/hooks/use-debounced-state.ts";
-import { cn } from "@/lib/utils";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog.tsx";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@/components/ui/empty.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table.tsx";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import { useDebounce } from "@/hooks/use-debounce.ts";
+import { usePermissions } from "@/hooks/usePermission.ts";
+import { getApiErrorMessage } from "@/utils/apiError.ts";
 
-import { useCommerce } from "../CommerceContext";
-import { CommerceDateFilter, CommerceExportButton } from "../CommerceFilters";
-import { CommerceShell } from "../CommerceShell";
-import { STAGE_META } from "../orderMeta";
-import { money } from "../utils";
+import { CreateOrderDialog } from "../shop/CreateOrderDialog.tsx";
+import { SaveSegmentDialog } from "../shop/SaveSegmentDialog.tsx";
+import {
+  channelLabel,
+  customerName,
+  fulfillmentBadge,
+  nextStepLabel,
+  paymentBadge,
+  settingsTab,
+  SHOP_PATHS,
+} from "../shop/shopMeta.ts";
+import { LinkField, ShopPage, ToneBadge } from "../shop/ShopUi.tsx";
+import { useLegacyCatalog } from "../shop/useLegacyCatalog";
 
-const STATUS_OPTIONS = [
-  { id: "PENDING_PAYMENT", label: "Pending", dot: "bg-amber-500" },
-  { id: "PENDING_CHECKOUT", label: "Confirmed", dot: "bg-primary" },
-  { id: "PENDING_DELIVERY", label: "Packed", dot: "bg-sky-500" },
-  { id: "PENDING_ADDRESS", label: "Shipped", dot: "bg-blue-500" },
-  { id: "COMPLETED", label: "Delivered", dot: "bg-emerald-500" },
-  { id: "CANCELLED", label: "Cancelled", dot: "bg-destructive" },
+const TABS: readonly ShopOrderTab[] = [
+  "all",
+  "needs_action",
+  "awaiting_payment",
+  "to_pack",
+  "shipped",
+  "delivered",
+  "returns",
+  "drafts",
+  "cancelled",
 ];
+const isTab = (value: unknown): value is ShopOrderTab => TABS.some((tab) => tab === value);
 
-const FILTERS = [
-  { id: "all", label: "All orders" },
-  { id: "PENDING_PAYMENT", label: "Pending" },
-  { id: "PENDING_DELIVERY", label: "To ship" },
-  { id: "PENDING_ADDRESS", label: "Shipped" },
-  { id: "COMPLETED", label: "Delivered" },
+const CHANNELS: readonly ShopChannel[] = [
+  "WHATSAPP",
+  "INSTAGRAM",
+  "MESSENGER",
+  "STOREFRONT",
+  "MANUAL",
 ];
+const PAYMENTS: readonly ShopPaymentStatus[] = [
+  "PAID",
+  "PENDING",
+  "UNPAID",
+  "COD_PENDING",
+  "REFUNDED",
+  "PARTIALLY_REFUNDED",
+  "EXPIRED",
+  "FAILED",
+];
+const ALL = "all";
+const PAGE_SIZE = 25;
 
-const PAGE_SIZE = 10;
+function when(t: (key: string, values?: Record<string, unknown>) => string, iso: string) {
+  const d = dayjs(iso);
+  if (d.isSame(dayjs(), "day")) return t("Today, {time}", { time: d.format("HH:mm") });
+  if (d.isSame(dayjs().subtract(1, "day"), "day"))
+    return t("Yesterday, {time}", { time: d.format("HH:mm") });
+  return d.format("MMM D, HH:mm");
+}
 
-function payMeta(method?: string | null) {
-  const m = (method ?? "").toLowerCase();
-  if (m.includes("upi")) return { icon: IconDeviceMobile, label: "UPI", cls: "text-foreground" };
-  if (m.includes("cod") || m.includes("cash"))
-    return { icon: IconCash, label: "COD", cls: "text-foreground" };
-  if (m.includes("whatsapp"))
-    return { icon: IconMessageCircle, label: "WhatsApp Pay", cls: "text-emerald-600" };
-  if (m.includes("razor") || m.includes("card"))
-    return { icon: IconCreditCard, label: method!, cls: "text-foreground" };
-  if (!method) return { icon: IconClock, label: "Pending", cls: "text-amber-600" };
-  return { icon: IconCreditCard, label: method, cls: "text-foreground" };
+function handle(row: ShopOrderRow): string {
+  if (row.channel === "INSTAGRAM" && row.contact?.whatsappUserName)
+    return `@${row.contact.whatsappUserName}`;
+  return row.customerPhone ?? row.contact?.phone ?? "";
 }
 
 export function OrdersPage() {
-  const { currencySymbol: sym, currentSetting, filter: baseFilter } = useCommerce();
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { can } = usePermissions();
+  const canManage = can("commerce.orders.manage");
+  const invalidate = useInvalidateShop();
 
-  const [page, setPage] = useState(0);
-  const [stage, setStage] = useState("all");
+  const [tab, setTab] = useState<ShopOrderTab>("all");
   const [search, setSearch] = useState("");
-  const [debouncedSearch] = useDebouncedValue(search, 400);
-  const [overrides, setOverrides] = useState<Record<string, string>>({});
-  const [selectedOrder, setSelectedOrder] = useState<CommerceOrder | null>(null);
-  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [channel, setChannel] = useState(ALL);
+  const [payment, setPayment] = useState(ALL);
+  const [page, setPage] = useState(0);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [creating, setCreating] = useState(false);
+  const [segmentOpen, setSegmentOpen] = useState(false);
+  const debouncedSearch = useDebounce(search, 300);
 
-  // Stage/search/date/channel are all applied server-side now, so any change
-  // invalidates the current page offset.
-  useEffect(() => {
-    setPage(0);
-  }, [stage, debouncedSearch, baseFilter]);
-
-  const queryFilter = {
-    ...baseFilter,
-    ...(stage !== "all" && { orderStage: stage }),
-    ...(debouncedSearch && { search: debouncedSearch }),
-  };
-
-  const { data: ordersData, isLoading } = useCommerceOrders({
-    ...queryFilter,
+  const { data, isPending, isError, error, refetch } = useShopOrders({
+    tab,
+    search: debouncedSearch || undefined,
+    channel: CHANNELS.find((c) => c === channel),
+    paymentStatus: PAYMENTS.find((p) => p === payment),
     page,
     limit: PAGE_SIZE,
   });
-  const exportOrders = useExportCommerceOrdersMutation();
 
-  const rows = ordersData?.data ?? [];
-  const totalCount = ordersData?.totalCount ?? 0;
-  const totalPages = Math.ceil(totalCount / PAGE_SIZE) || 1;
+  const resetPaging = () => {
+    setPage(0);
+    setSelected(new Set());
+  };
 
-  const handleExport = (format: SpreadsheetFormat) =>
-    exportOrders.mutate({ ...queryFilter, format });
+  const markPacked = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const results = await Promise.allSettled(ids.map((id) => setShopFulfillment(id, "PACKED")));
+      return results.filter((r) => r.status === "rejected").length;
+    },
+    onSuccess: (failed) => {
+      if (failed > 0) {
+        toast.warning(
+          t("{count, plural, one {# order} other {# orders}} could not be marked packed", {
+            count: failed,
+          }),
+        );
+      } else {
+        toast.success(t("Marked as packed"));
+      }
+      setSelected(new Set());
+      void invalidate();
+    },
+  });
+
+  const tabLabels: Record<ShopOrderTab, string> = {
+    all: t("All"),
+    needs_action: t("Needs action"),
+    awaiting_payment: t("Awaiting payment"),
+    to_pack: t("To pack"),
+    shipped: t("Shipped"),
+    delivered: t("Delivered"),
+    returns: t("Returns"),
+    drafts: t("Drafts"),
+    cancelled: t("Cancelled"),
+  };
+
+  const items = data?.items ?? [];
+  const showInvoice = items.some((o) => o.invoiceNumber);
+  const counts = data?.counts ?? {};
+  const total = data?.total ?? 0;
+  const from = total === 0 ? 0 : page * PAGE_SIZE + 1;
+  const to = Math.min(total, (page + 1) * PAGE_SIZE);
+  const allSelected = items.length > 0 && items.every((o) => selected.has(o.id));
+  const filtering = Boolean(debouncedSearch) || channel !== ALL || payment !== ALL || tab !== "all";
+
+  const { hasLegacy } = useLegacyCatalog();
 
   return (
-    <CommerceShell
-      title="Orders"
-      description="Track and fulfil orders placed through chat."
-      showCatalogSwitcher
+    <ShopPage
+      title={t("Orders")}
+      description={t(
+        "Every order from WhatsApp, Instagram, Messenger and your storefront, in one list.",
+      )}
+      wide
       actions={
         <>
-          <div className="relative hidden min-w-[200px] sm:block">
-            <IconSearch className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search orders…"
-              className="pl-8"
-            />
-          </div>
-          <CommerceDateFilter />
-          <CommerceExportButton
-            onExport={handleExport}
-            isPending={exportOrders.isPending}
-            disabled={totalCount === 0}
-          />
+          {hasLegacy && (
+            <Button variant="ghost" render={<Link to={SHOP_PATHS.catalogOrders} />}>
+              <IconHistory data-icon="inline-start" />
+              {t("WhatsApp catalog orders")}
+            </Button>
+          )}
+          {can("contacts.manage") && (
+            <Button variant="outline" onClick={() => setSegmentOpen(true)}>
+              <IconUsersGroup data-icon="inline-start" />
+              {t("Save shoppers as a group")}
+            </Button>
+          )}
+          {can("commerce.sell") && <TestOrderButton variant="outline" />}
+          {can("commerce.sell") && (
+            <Button onClick={() => setCreating(true)}>
+              <IconPlus data-icon="inline-start" />
+              {t("Create order")}
+            </Button>
+          )}
         </>
       }
     >
-      {!currentSetting ? (
-        <Card className="px-6 py-16 text-center text-sm text-muted-foreground">
-          No store connected.
-        </Card>
-      ) : (
-        <div className="flex flex-col gap-4">
-          {/* Filter pills */}
-          <div className="flex flex-wrap items-center gap-2">
-            {FILTERS.map((f) => {
-              const active = stage === f.id;
-              return (
-                <button
-                  key={f.id}
-                  type="button"
-                  onClick={() => setStage(f.id)}
-                  className={cn(
-                    "rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
-                    active
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "bg-card text-foreground hover:bg-accent",
-                  )}
-                >
-                  {f.label}
-                </button>
-              );
-            })}
-          </div>
-
-          <Card className="gap-0 py-0">
-            {/* column head */}
-            <div className="flex items-center gap-3.5 border-b px-5 py-3 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-              <span className="w-24 shrink-0">Order</span>
-              <span className="flex-1">Customer</span>
-              <span className="hidden w-[70px] shrink-0 text-center md:block">Items</span>
-              <span className="w-24 shrink-0 text-right">Total</span>
-              <span className="hidden w-[120px] shrink-0 lg:block">Payment</span>
-              <span className="w-[132px] shrink-0">Status</span>
-              <span className="hidden w-16 shrink-0 text-right sm:block">Date</span>
-              <span className="w-20 shrink-0 text-right">Action</span>
-            </div>
-
-            {isLoading ? (
-              <div className="flex justify-center py-14">
-                <IconLoader2 className="size-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : rows.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 py-14 text-center">
-                <IconPackage className="size-7 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">
-                  No orders match the current filters.
-                </p>
-              </div>
-            ) : (
-              rows.map((o) => {
-                const name = o.contact?.name || "Unknown";
-                const curStage = overrides[o.id] ?? o.orderStage ?? "DEFAULT";
-                const stageMeta = STAGE_META[curStage] ?? STAGE_META.DEFAULT;
-                const pm = payMeta(o.paymentMethod);
-                return (
-                  <div
-                    key={o.id}
-                    className="flex items-center gap-3.5 border-b px-5 py-3 last:border-b-0"
+      <Card className="gap-0 py-0">
+        <Tabs
+          value={tab}
+          onValueChange={(value) => {
+            if (isTab(value)) {
+              setTab(value);
+              resetPaging();
+            }
+          }}
+          className="border-b border-border px-4 pt-2"
+        >
+          <TabsList variant="line" className="h-auto flex-wrap justify-start">
+            {TABS.map((key) => (
+              <TabsTrigger key={key} value={key} className="flex-none">
+                {tabLabels[key]}
+                {key in counts && (
+                  <span
+                    className={
+                      key === "needs_action" && (counts[key] ?? 0) > 0
+                        ? "rounded-full bg-amber-50 px-1.5 text-xs text-amber-700 tabular-nums dark:bg-amber-950/40 dark:text-amber-500"
+                        : "text-xs text-muted-foreground tabular-nums"
+                    }
                   >
-                    <span className="w-24 shrink-0 truncate font-mono text-xs font-semibold text-primary">
-                      #{String(o.id).slice(-6)}
-                    </span>
-                    <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                      <ContactAvatar name={o.contact?.name} size="sm" />
-                      <span className="truncate text-sm text-foreground">{name}</span>
-                    </div>
-                    <span className="hidden w-[70px] shrink-0 text-center text-sm text-muted-foreground md:block">
-                      {o.itemCount} {o.itemCount === 1 ? "item" : "items"}
-                    </span>
-                    <span className="w-24 shrink-0 text-right text-sm font-semibold text-foreground">
-                      {money(o.total, sym)}
-                    </span>
-                    <span className="hidden w-[120px] shrink-0 lg:block">
-                      <span
-                        className={cn(
-                          "inline-flex items-center gap-1.5 text-xs font-medium",
-                          pm.cls,
-                        )}
-                      >
-                        <pm.icon className="size-3.5" />
-                        {pm.label}
-                      </span>
-                    </span>
-                    <span className="w-[132px] shrink-0">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          render={
-                            <button
-                              type="button"
-                              className={cn(
-                                "inline-flex cursor-pointer items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold",
-                                stageMeta.cls,
-                              )}
-                            />
-                          }
-                        >
-                          <span className="size-1.5 rounded-full bg-current" />
-                          {stageMeta.label}
-                          <IconChevronDown className="size-3" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="w-40">
-                          <DropdownMenuGroup>
-                            {STATUS_OPTIONS.map((st) => {
-                              const isCurrent = st.id === curStage;
-                              return (
-                                <DropdownMenuItem
-                                  key={st.id}
-                                  onClick={() =>
-                                    setOverrides((prev) => ({ ...prev, [o.id]: st.id }))
-                                  }
-                                >
-                                  <span className={cn("size-2 rounded-full", st.dot)} />
-                                  <span className="flex-1">{st.label}</span>
-                                  {isCurrent && <IconCheck className="size-3.5 text-primary" />}
-                                </DropdownMenuItem>
-                              );
-                            })}
-                          </DropdownMenuGroup>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </span>
-                    <span className="hidden w-16 shrink-0 text-right text-xs text-muted-foreground sm:block">
-                      {o.createdAt ? dayjs(o.createdAt).format("MMM D") : ""}
-                    </span>
-                    <span className="flex w-20 shrink-0 justify-end">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setSelectedOrder(o);
-                          setDetailsOpen(true);
-                        }}
-                      >
-                        Details
-                      </Button>
-                    </span>
-                  </div>
-                );
-              })
-            )}
-          </Card>
+                    {counts[key]}
+                  </span>
+                )}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
 
-          <OrderDetailsDialog
-            open={detailsOpen}
-            onOpenChange={setDetailsOpen}
-            order={selectedOrder}
+        <div className="flex flex-wrap items-center gap-2 px-4 py-3">
+          <ListPageSearchInput
+            className="min-w-56 flex-1"
+            value={search}
+            placeholder={t("Search order, name, phone or Instagram handle")}
+            onChange={(value) => {
+              setSearch(value);
+              resetPaging();
+            }}
           />
-
-          {/* pagination */}
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-muted-foreground">
-              {totalCount} order{totalCount !== 1 ? "s" : ""} total
-            </p>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => Math.max(p - 1, 0))}
-                disabled={page === 0 || isLoading}
-              >
-                Previous
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                Page {page + 1} of {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => (p < totalPages - 1 ? p + 1 : p))}
-                disabled={page >= totalPages - 1 || isLoading}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
+          <Select
+            value={channel}
+            onValueChange={(value) => {
+              setChannel(value ?? ALL);
+              resetPaging();
+            }}
+            items={[
+              { value: ALL, label: t("All channels") },
+              ...CHANNELS.map((c) => ({ value: c, label: channelLabel(t, c) })),
+            ]}
+          >
+            <SelectTrigger className="w-40" aria-label={t("Channel")}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>{t("All channels")}</SelectItem>
+              {CHANNELS.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {channelLabel(t, c)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={payment}
+            onValueChange={(value) => {
+              setPayment(value ?? ALL);
+              resetPaging();
+            }}
+            items={[
+              { value: ALL, label: t("All payments") },
+              ...PAYMENTS.map((p) => ({ value: p, label: paymentBadge(t, p).label })),
+            ]}
+          >
+            <SelectTrigger className="w-44" aria-label={t("Payment")}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>{t("All payments")}</SelectItem>
+              {PAYMENTS.map((p) => (
+                <SelectItem key={p} value={p}>
+                  {paymentBadge(t, p).label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-      )}
-    </CommerceShell>
+
+        {canManage && selected.size > 0 && (
+          <div className="mx-4 mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-primary/10 px-3 py-2">
+            <span className="text-sm font-semibold">
+              {t("{count, plural, one {# order selected} other {# orders selected}}", {
+                count: selected.size,
+              })}
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              loading={markPacked.isPending}
+              onClick={() => markPacked.mutate([...selected])}
+            >
+              {t("Mark packed")}
+            </Button>
+          </div>
+        )}
+
+        {isPending ? (
+          <div className="flex flex-col gap-2 px-4 pb-4">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
+        ) : isError ? (
+          <Empty>
+            <EmptyHeader>
+              <EmptyTitle>{t("Could not load orders")}</EmptyTitle>
+              <EmptyDescription>
+                {getApiErrorMessage(error, t("Please try again."))}
+              </EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              <Button variant="outline" onClick={() => void refetch()}>
+                {t("Retry")}
+              </Button>
+            </EmptyContent>
+          </Empty>
+        ) : items.length === 0 ? (
+          filtering ? (
+            <Empty>
+              <EmptyHeader>
+                <EmptyTitle>{t("No orders match")}</EmptyTitle>
+                <EmptyDescription>{t("Try another tab, search or filter.")}</EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          ) : (
+            <FirstOrderGuide canSell={can("commerce.sell")} />
+          )
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {canManage && (
+                  <TableHead className="w-10 pl-4">
+                    <Checkbox
+                      aria-label={t("Select all")}
+                      checked={allSelected}
+                      onCheckedChange={(checked) =>
+                        setSelected(checked ? new Set(items.map((o) => o.id)) : new Set())
+                      }
+                    />
+                  </TableHead>
+                )}
+                <TableHead className={canManage ? undefined : "pl-4"}>{t("Order")}</TableHead>
+                {showInvoice && <TableHead>{t("Invoice")}</TableHead>}
+                <TableHead>{t("Customer")}</TableHead>
+                <TableHead>{t("Channel")}</TableHead>
+                <TableHead>{t("Items")}</TableHead>
+                <TableHead>{t("Total")}</TableHead>
+                <TableHead>{t("Payment")}</TableHead>
+                <TableHead>{t("Fulfillment")}</TableHead>
+                <TableHead className="pr-4">{t("Next step")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {items.map((o) => {
+                const pay = paymentBadge(t, o.paymentStatus);
+                const ful = fulfillmentBadge(t, o);
+                const quantity = o.items.reduce((s, i) => s + i.quantity, 0);
+                const open = () =>
+                  void navigate({ to: SHOP_PATHS.order, params: { orderId: o.id } });
+                return (
+                  <TableRow
+                    key={o.id}
+                    className="cursor-pointer"
+                    data-state={selected.has(o.id) ? "selected" : undefined}
+                    onClick={open}
+                  >
+                    {canManage && (
+                      <TableCell className="pl-4" onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          aria-label={t("Select order #{number}", { number: o.number })}
+                          checked={selected.has(o.id)}
+                          onCheckedChange={(checked) =>
+                            setSelected((prev) => {
+                              const next = new Set(prev);
+                              if (checked) next.add(o.id);
+                              else next.delete(o.id);
+                              return next;
+                            })
+                          }
+                        />
+                      </TableCell>
+                    )}
+                    <TableCell className={canManage ? undefined : "pl-4"}>
+                      <Link
+                        to={SHOP_PATHS.order}
+                        params={{ orderId: o.id }}
+                        className="font-bold text-primary hover:underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        #{o.number}
+                      </Link>
+                      <div className="text-xs text-muted-foreground">
+                        {when(t, o.placedAt ?? o.createdAt)}
+                      </div>
+                    </TableCell>
+                    {showInvoice && (
+                      <TableCell className="text-muted-foreground tabular-nums">
+                        {o.invoiceNumber ?? "—"}
+                      </TableCell>
+                    )}
+                    <TableCell>
+                      <div className="font-semibold">
+                        {customerName(t, o.customerName ?? o.contact?.name)}
+                      </div>
+                      <div className="text-xs text-muted-foreground">{handle(o)}</div>
+                    </TableCell>
+                    <TableCell>{channelLabel(t, o.channel)}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {t("{count, plural, one {# item} other {# items}}", { count: quantity })}
+                    </TableCell>
+                    <TableCell className="font-semibold tabular-nums">
+                      {formatMoney(o.total, o.currency)}
+                    </TableCell>
+                    <TableCell>
+                      <span className="flex flex-wrap gap-1">
+                        <ToneBadge tone={pay.tone}>{pay.label}</ToneBadge>
+                        {o.reviewReason && <ToneBadge tone="warn">{t("Needs review")}</ToneBadge>}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <ToneBadge tone={ful.tone}>{ful.label}</ToneBadge>
+                    </TableCell>
+                    <TableCell className="pr-4 text-[13px] text-muted-foreground">
+                      {nextStepLabel(t, o.nextStep)}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        )}
+
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3 text-[13px] text-muted-foreground">
+          <span>{t("Showing {from}–{to} of {total}", { from, to, total })}</span>
+          <span className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={page === 0}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              {t("Previous")}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={to >= total}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              {t("Next")}
+            </Button>
+          </span>
+        </div>
+      </Card>
+
+      <CreateOrderDialog open={creating} onOpenChange={setCreating} />
+      <SaveSegmentDialog open={segmentOpen} onOpenChange={setSegmentOpen} />
+    </ShopPage>
+  );
+}
+
+/** The empty Orders list: the three ways a first order arrives, each with its next step. */
+function FirstOrderGuide({ canSell }: Readonly<{ canSell: boolean }>) {
+  const { t } = useTranslation();
+  const ways = [
+    {
+      icon: <IconBrandWhatsapp />,
+      title: t("A customer sends a cart"),
+      body: t(
+        "Shoppers browse your WhatsApp catalog, add products to a cart and send it to you in chat.",
+      ),
+      action: (
+        <Button size="sm" variant="outline" render={<Link to="/dashboard/inbox" />}>
+          <IconInbox data-icon="inline-start" />
+          {t("Open inbox")}
+        </Button>
+      ),
+    },
+    {
+      icon: <IconLink />,
+      title: t("You send a payment link"),
+      body: t(
+        "In any conversation, use Sell → Create order to build their cart and send a link to pay.",
+      ),
+      action: canSell ? <TestOrderButton variant="outline" size="sm" /> : null,
+    },
+    {
+      icon: <IconBuildingStore />,
+      title: t("Shoppers buy on your storefront"),
+      body: t("Your storefront is a shop page anyone can open from a link, a QR code or your bio."),
+      action: (
+        <Button size="sm" variant="outline" render={<Link {...settingsTab("store")} />}>
+          <IconBuildingStore data-icon="inline-start" />
+          {t("Storefront settings")}
+        </Button>
+      ),
+    },
+  ];
+  return (
+    <div className="flex flex-col gap-4 px-4 pt-2 pb-6">
+      <div className="flex flex-col gap-1">
+        <h2 className="font-display text-base font-bold tracking-tight">{t("No orders yet")}</h2>
+        <p className="text-sm text-muted-foreground">
+          {t("Orders reach this list in three ways. Try one to see how it works.")}
+        </p>
+      </div>
+      <ol className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        {ways.map((way) => (
+          <li
+            key={way.title}
+            className="flex flex-col items-start gap-2 rounded-lg border border-border p-4"
+          >
+            <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary [&_svg]:size-4">
+              {way.icon}
+            </span>
+            <span className="text-sm font-semibold">{way.title}</span>
+            <span className="flex-1 text-sm text-muted-foreground">{way.body}</span>
+            {way.action}
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+/** Makes a real draft order marked as a test, and hands back its checkout link to try. */
+function TestOrderButton({
+  variant,
+  size,
+}: Readonly<{ variant: "outline" | "default"; size?: "sm" }>) {
+  const { t } = useTranslation();
+  const invalidate = useInvalidateShop();
+  const [open, setOpen] = useState(false);
+  const create = useMutation({
+    mutationFn: () => createShopTestOrder(),
+    onSuccess: () => void invalidate(),
+    onSettled: () => setOpen(true),
+  });
+  const result = create.data;
+  return (
+    <>
+      <Button
+        variant={variant}
+        size={size}
+        loading={create.isPending}
+        onClick={() => create.mutate()}
+      >
+        <IconFlask data-icon="inline-start" />
+        {t("Create test order")}
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{t("Test order")}</DialogTitle>
+            <DialogDescription>
+              {t("Open the checkout link and go through it the way a customer would.")}
+            </DialogDescription>
+          </DialogHeader>
+          {result ? (
+            <div className="flex flex-col gap-3">
+              <Alert>
+                <IconCircleCheck className="text-green-600 dark:text-green-500" />
+                <AlertTitle>
+                  {t("Test order #{number} created", { number: result.number })}
+                </AlertTitle>
+                <AlertDescription>
+                  {t("It is a draft marked as a test, with one of your active products in it.")}
+                </AlertDescription>
+              </Alert>
+              <LinkField url={result.checkoutUrl} label={t("Checkout link")} />
+            </div>
+          ) : (
+            create.isError && (
+              <Alert variant="destructive">
+                <IconAlertCircle />
+                <AlertDescription className="flex flex-col items-start gap-2">
+                  <span>
+                    {getApiErrorMessage(create.error, t("Couldn't create the test order."))}
+                  </span>
+                  <Button size="sm" variant="outline" render={<Link to={SHOP_PATHS.newProduct} />}>
+                    <IconPlus data-icon="inline-start" />
+                    {t("Add a product")}
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )
+          )}
+          <DialogFooter>
+            {result && (
+              <Button
+                variant="outline"
+                render={<Link to={SHOP_PATHS.order} params={{ orderId: result.orderId }} />}
+              >
+                {t("Open order")}
+              </Button>
+            )}
+            <Button onClick={() => setOpen(false)}>{t("Done")}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

@@ -1,7 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import { PaymentsPage } from "@/components/dashboard/commerce/pages/PaymentsPage";
-
+// Payments and shipping now live in Commerce → Settings.
 export const Route = createFileRoute("/dashboard/commerce/payments/")({
-  component: PaymentsPage,
+  beforeLoad: () => {
+    throw redirect({
+      to: "/dashboard/commerce/settings",
+      search: { tab: "payments" },
+      replace: true,
+    });
+  },
 });

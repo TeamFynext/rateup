@@ -40,6 +40,136 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-10-19-checkout-in-your-store",
+    title: "Check out in Shopify or WooCommerce",
+    summary:
+      "If your products stay in sync with Shopify or WooCommerce, customers can now pay on that store's own checkout from your storefront, chat links and comment replies. Choose where customers pay in Commerce → Settings → Checkout.",
+    publishedAt: "2026-10-19",
+    kinds: ["new"],
+    area: "Commerce",
+    link: {
+      to: "/dashboard/commerce/settings",
+      search: { tab: "checkout" },
+      label: "Open Checkout settings",
+    },
+  },
+  {
+    id: "2026-10-18-verify-phone-on-whatsapp",
+    title: "Shoppers confirm their number on WhatsApp",
+    summary:
+      "Back-in-stock alerts and cash or bank-transfer orders from your storefront now start with a quick WhatsApp message from the shopper, so you only ever message numbers that asked to hear from you. Unpaid transfer orders are cancelled after 72 hours unless you change it in Getting paid.",
+    publishedAt: "2026-10-18",
+    kinds: ["improvement"],
+    area: "Commerce",
+    link: {
+      to: "/dashboard/commerce/settings",
+      search: { tab: "payments" },
+      label: "Open Getting paid",
+    },
+  },
+  {
+    id: "2026-10-18-order-invoices",
+    title: "PDF invoices for paid orders",
+    summary:
+      "Every paid order now has a numbered PDF invoice you can download or send from the order. Turn on automatic sending in Commerce → Settings → Getting paid and customers get it in the chat as soon as they pay.",
+    publishedAt: "2026-10-18",
+    kinds: ["new"],
+    area: "Commerce",
+    link: {
+      to: "/dashboard/commerce/settings",
+      search: { tab: "payments" },
+      label: "Open Getting paid",
+    },
+  },
+  {
+    id: "2026-10-18-chat-product-cards",
+    title: "Products you send now show in the chat",
+    summary:
+      "Product cards and checkout links you send on Instagram and Messenger, and products sent on WhatsApp, now appear in the conversation as the customer sees them.",
+    publishedAt: "2026-10-18",
+    kinds: ["fix"],
+    area: "Inbox",
+  },
+  {
+    id: "2026-10-18-ctwa-ad-orders",
+    title: "Turn ad clicks into orders",
+    summary:
+      "Sales from your click-to-WhatsApp ads are now credited to the ad, reported back to Meta, and shown per ad on Commerce → Overview. An automation can also send the products an ad promoted to everyone who taps it.",
+    publishedAt: "2026-10-18",
+    kinds: ["new"],
+    area: "Commerce",
+    link: { to: "/dashboard/commerce/overview", label: "Open Overview" },
+  },
+  {
+    id: "2026-10-18-message-cost-roi",
+    title: "See what your messages cost vs what they sell",
+    summary:
+      "Commerce → Overview now shows your estimated WhatsApp messaging cost next to the orders each campaign and automation brought in. Enter your own rates for a closer figure.",
+    publishedAt: "2026-10-18",
+    kinds: ["new"],
+    area: "Commerce",
+    link: { to: "/dashboard/commerce/overview", label: "Open Overview" },
+  },
+  {
+    id: "2026-10-18-storefront-seo",
+    title: "Every product has its own link",
+    summary:
+      "Each product on your storefront now has its own address that shows a photo and price when shared, and your storefront can now appear in search results.",
+    publishedAt: "2026-10-18",
+    kinds: ["improvement"],
+    area: "Commerce",
+  },
+  {
+    id: "2026-10-18-ig-comment-to-buy",
+    title: "Sell from Instagram comments",
+    summary:
+      "When someone comments a keyword on your post, reel or live, RateUp DMs them the product with a checkout link. Limited drops sell only as many as you set, first come.",
+    publishedAt: "2026-10-18",
+    kinds: ["new"],
+    area: "Instagram",
+    link: { to: "/dashboard/automation", label: "Open automations" },
+  },
+  {
+    id: "2026-10-18-bulk-edit-products",
+    title: "Edit many products at once",
+    summary:
+      "Select products to change their prices, stock or status together, or duplicate one to start a similar product. Importing from Meta now lets you pick which catalog to copy from.",
+    publishedAt: "2026-10-18",
+    kinds: ["improvement"],
+    area: "Commerce",
+    link: { to: "/dashboard/commerce/products", label: "Open products" },
+  },
+  {
+    id: "2026-10-18-import-products",
+    title: "Import products from Meta, Shopify or WooCommerce",
+    summary:
+      "Commerce → Products → Import brings in the products from your WhatsApp catalog, your Shopify or WooCommerce store, or a CSV file.",
+    publishedAt: "2026-10-18",
+    kinds: ["new"],
+    area: "Commerce",
+    link: { to: "/dashboard/commerce/products", label: "Import products" },
+  },
+  {
+    id: "2026-10-18-commerce-setup",
+    title: "Guided shop setup and simpler settings",
+    summary:
+      "A new Setup page in Commerce takes you from connecting WhatsApp to your first test order, one step at a time. Payments, delivery, checkout and store settings now sit together under Commerce → Settings.",
+    publishedAt: "2026-10-18",
+    kinds: ["new", "improvement"],
+    area: "Commerce",
+    link: { to: "/dashboard/commerce/setup", label: "Set up your shop" },
+  },
+  {
+    id: "2026-10-17-social-commerce",
+    title: "Sell in WhatsApp and Instagram chats",
+    summary:
+      "Add your products once in Commerce and they publish to WhatsApp, Instagram and your own storefront. Customers check out in the chat, and you manage orders, coupons, payments and shipping in one place.",
+    publishedAt: "2026-10-17",
+    kinds: ["new"],
+    area: "Commerce",
+    link: { to: "/dashboard/commerce/overview", label: "Open Commerce" },
+  },
+  {
     id: "2026-10-16-choose-your-features",
     title: "Choose the features you see",
     summary:

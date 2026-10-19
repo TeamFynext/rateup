@@ -10,6 +10,7 @@ import {
   IconPlugConnected,
   IconSpeakerphone,
   IconVolume,
+  IconShoppingBag,
 } from "@tabler/icons-react";
 import type { TFunction } from "i18next";
 import type { ComponentType, ReactNode } from "react";
@@ -58,6 +59,7 @@ const CATEGORY_ICONS: Record<NotificationCategory, ComponentType<{ className?: s
   pipelines: IconLayoutKanban,
   campaigns: IconSpeakerphone,
   loyalty: IconGift,
+  commerce: IconShoppingBag,
   channels: IconPlugConnected,
   billing: IconCreditCard,
 };

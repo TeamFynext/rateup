@@ -57,7 +57,7 @@ export const ORG_MODULE_INFO: readonly OrgModuleInfo[] = [
     icon: IconShoppingCartBolt,
     planGate: SubscriptionFeaturePathName.WhatsappCatalog,
     paths: ["/dashboard/commerce"],
-    permissionGroups: ["catalog"],
+    permissionGroups: ["catalog", "commerce"],
   },
   {
     key: "web_forms",

@@ -1,6 +1,7 @@
 import { IconBook, IconBuildingStore } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 
+import { BackLink } from "@/components/common/back-link.tsx";
 import {
   Select,
   SelectContent,
@@ -74,9 +75,11 @@ export function CommerceShell({
   actions,
   showStoreSwitcher = true,
   showCatalogSwitcher = false,
+  back,
   children,
 }: Readonly<{
   title: string;
+  back?: { to: string; search?: Record<string, unknown>; label: string };
   description?: string;
   actions?: ReactNode;
   showStoreSwitcher?: boolean;
@@ -86,7 +89,8 @@ export function CommerceShell({
   return (
     <div className="flex min-h-full flex-col">
       <div className="flex min-h-[60px] flex-wrap items-center justify-between gap-4 border-b bg-card px-6 py-3">
-        <div className="min-w-0">
+        <div className="flex min-w-0 flex-col gap-1">
+          {back && <BackLink to={back.to} search={back.search} label={back.label} />}
           <h1 className="text-lg font-bold tracking-tight text-foreground">{title}</h1>
           {description && <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>}
         </div>

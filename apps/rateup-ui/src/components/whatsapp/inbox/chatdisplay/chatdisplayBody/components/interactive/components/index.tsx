@@ -13,11 +13,22 @@ import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import type { WaSendMessageBody } from "@/types/global";
 
+import ChatProductList from "../../product/index.tsx";
+
 interface Props {
   interactiveBody: WaSendMessageBody["interactive"];
   messageContent: string;
 }
 export default function WaInboxInteractiveComponents(props: Readonly<Props>) {
+  const action = props?.interactiveBody?.action;
+  const productIds =
+    props?.interactiveBody?.type === "product" && action?.product_retailer_id
+      ? [action.product_retailer_id]
+      : props?.interactiveBody?.type === "product_list"
+        ? (action?.sections ?? []).flatMap(
+            (s) => s.product_items?.map((p) => p.product_retailer_id) ?? [],
+          )
+        : [];
   return (
     <>
       {props?.messageContent && (
@@ -45,6 +56,7 @@ export default function WaInboxInteractiveComponents(props: Readonly<Props>) {
           }}
         />
       )}
+      {productIds.length > 0 && <ChatProductList retailerIds={productIds} />}
       {props?.interactiveBody?.type === "call_permission_request" && (
         // What the customer sees under the message; it is theirs to press, not ours.
         <Button variant="secondary" className="w-full gap-1.5 text-xs" disabled>

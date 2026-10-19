@@ -394,6 +394,8 @@ interface WaSection {
     description?: string; // max 72 chars
     id: string;
   }>;
+  /** A product_list section lists catalog items instead of rows. */
+  product_items?: Array<{ product_retailer_id: string }>;
 }
 
 export interface WaReceiveMessageBody {
@@ -710,6 +712,9 @@ export interface WaSendMessageBody {
 }
 interface WaInteractiveMessageAction {
   name?: string;
+  catalog_id?: string;
+  /** A single-product message's catalog item. */
+  product_retailer_id?: string;
   button?: string; // max 20 chars
   sections?: Array<WaSection>;
   buttons?: Array<WaButton>;
@@ -828,6 +833,20 @@ export interface InstagramWebhookBody {
   ];
 }
 
+export interface IgTemplateButton {
+  type?: string;
+  title?: string;
+  url?: string;
+  payload?: string;
+}
+export interface IgTemplateElement {
+  /** A "product" template names catalog items by id only. */
+  id?: string;
+  title?: string;
+  subtitle?: string;
+  image_url?: string;
+  buttons?: IgTemplateButton[];
+}
 export interface IgSendMessageBody {
   recipient: {
     id: string;
@@ -836,7 +855,16 @@ export interface IgSendMessageBody {
     text?: string;
     attachment?: {
       type: string;
-      payload?: { id?: string; attachment_id?: string; url?: string };
+      payload?: {
+        id?: string;
+        attachment_id?: string;
+        url?: string;
+        /** Set when `type` is "template". */
+        template_type?: string;
+        text?: string;
+        elements?: IgTemplateElement[];
+        buttons?: IgTemplateButton[];
+      };
       is_reusable?: boolean;
     };
   };

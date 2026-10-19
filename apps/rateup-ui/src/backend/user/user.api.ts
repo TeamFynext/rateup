@@ -7,7 +7,8 @@ import { axiosClient } from "../apiClient";
 
 export interface ICreateGoogleUser {
   name: string;
-  orgName: string;
+  /** Asked on the business step after signup, so absent here. */
+  orgName?: string;
   /** Comes straight off the `authType` search param, which may repeat. */
   type: string | string[] | undefined;
   email?: string;

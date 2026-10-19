@@ -425,6 +425,37 @@ describe("comparison rows for the two meters", () => {
     expect(row("Active contacts / month")?.cells).toEqual(["5,000", "Custom"]);
     expect(row("Campaign messages / month")?.cells).toEqual(["50,000", "Custom"]);
   });
+
+  test("orders are capped on Free only; paid tiers read Unlimited", () => {
+    const withOrders = buildTiers([
+      {
+        id: "free",
+        name: "FREE PLAN",
+        displayName: "Free",
+        description: [],
+        features: { whatsapp: { shopOrders: { count: { max: 50 } } } },
+      },
+      {
+        id: "pro",
+        name: "PRO PLAN",
+        displayName: "Growth",
+        description: [],
+        features: { whatsapp: { shopOrders: { count: { max: 10_000_000 } } } },
+      },
+      // Seeded before the cap existed: nothing stored, nothing enforced.
+      {
+        id: "ent",
+        name: "ENTERPRISE PLAN",
+        displayName: "Enterprise",
+        description: [],
+        features: {},
+      },
+    ] as unknown as Parameters<typeof buildTiers>[0]);
+    const orders = buildComparison(withOrders)
+      .flatMap((group) => group.rows)
+      .find((entry) => entry.label === "Orders / month");
+    expect(orders?.cells).toEqual(["50", "Unlimited", "Unlimited"]);
+  });
 });
 
 describe("when packs stop being the cheaper answer", () => {

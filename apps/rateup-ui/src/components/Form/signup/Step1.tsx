@@ -35,10 +35,15 @@ export function Step1({
   formData,
   handleNext,
   authType,
+  submitLabel = "Continue",
+  submitting = false,
 }: {
   formData: SignupForm;
   handleNext: () => void;
   authType?: string | string[];
+  submitLabel?: string;
+  /** The caller's own request, started by `handleNext`, is still running. */
+  submitting?: boolean;
 }) {
   const values = formData.watch();
   const { errors } = formData.formState;
@@ -301,8 +306,12 @@ export function Step1({
         )}
       </div>
 
-      <Button onClick={handleClick} loading={loading} className={`mt-auto ${AUTH_CTA}`}>
-        {translations("Continue")}
+      <Button
+        onClick={handleClick}
+        loading={loading || submitting}
+        className={`mt-auto ${AUTH_CTA}`}
+      >
+        {translations(submitLabel)}
       </Button>
     </div>
   );

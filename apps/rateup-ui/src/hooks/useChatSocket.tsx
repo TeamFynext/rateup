@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import { shopKeys } from "@/backend/commerce/shop.query";
 import type { LiveNotification } from "@/backend/notification/notification.api";
 import { notificationKeys } from "@/backend/notification/notification.keys";
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "@/backend/org/ws/org.ws.api";
@@ -249,6 +250,9 @@ export const useChatSocket = () => {
                 queryClient,
               });
             }
+            break;
+          case "shop_order":
+            void queryClient.invalidateQueries({ queryKey: shopKeys.all });
             break;
           default:
             break;

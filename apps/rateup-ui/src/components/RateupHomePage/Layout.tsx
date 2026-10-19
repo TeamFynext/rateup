@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 
-import { AUTO_OPENED_KEY, SupportLauncher } from "@/components/app&services/support-launcher.tsx";
+import { NUDGED_KEY, SupportLauncher } from "@/components/app&services/support-launcher.tsx";
 import { fbConsent } from "@/utils/fbpixel.ts";
 import { setGAConsent } from "@/utils/gtag.ts";
 
@@ -21,56 +21,58 @@ const SUPPORT_TOKEN = import.meta.env.VITE_SUPPORT_WIDGET_KEY || "";
  * sizing up the product, so they ask about the product instead.
  */
 const RATEUP_ICEBREAKERS = [
-  "How does RateUp work with my store?",
+  "Can I sell without a website?",
+  "Does it work with my Shopify store?",
   "What does it cost?",
   "Can I book a demo?",
 ];
 
-/* The support panel opens itself shortly after the page settles, so a prospect is offered a
-   conversation without having to find the launcher. Only once a session. */
-const SUPPORT_AUTO_OPEN_MS = 5000;
+const SUPPORT_NUDGE = "Questions about selling on WhatsApp? Ask us here.";
 
 /**
- * Draws the widget's launcher without the widget, which is fetched on hover,
- * on click, or once the page is idle when the session's auto-open is still due — and mounted
- * already open, since both ways in mean the visitor is about to see the panel.
+ * The nudge waits until the visitor has scrolled past the first screen: an open panel or a
+ * bubble over the hero on a phone covers the one thing they came to read. Once a session.
+ */
+function useScrollNudge() {
+  const [nudging, setNudging] = useState(false);
+
+  useEffect(() => {
+    if (!SUPPORT_TOKEN || sessionStorage.getItem(NUDGED_KEY)) return;
+
+    const onScroll = () => {
+      if (window.scrollY < window.innerHeight * 0.9) return;
+      window.removeEventListener("scroll", onScroll);
+      sessionStorage.setItem(NUDGED_KEY, "true");
+      setNudging(true);
+      void loadSupportWidget();
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  return [nudging, () => setNudging(false)] as const;
+}
+
+/**
+ * Draws the widget's launcher without the widget, which is fetched on hover, on click, or
+ * when the nudge appears — and mounted already open, since each way in means the visitor is
+ * about to see the panel.
  */
 function SupportCorner() {
   const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    if (!SUPPORT_TOKEN || sessionStorage.getItem(AUTO_OPENED_KEY)) return;
-
-    let idle = 0;
-    const prefetch = () => {
-      if (typeof requestIdleCallback === "function") {
-        idle = requestIdleCallback(() => void loadSupportWidget(), { timeout: 2000 });
-      } else void loadSupportWidget();
-    };
-    if (document.readyState === "complete") prefetch();
-    else window.addEventListener("load", prefetch, { once: true });
-
-    const timer = setTimeout(() => {
-      sessionStorage.setItem(AUTO_OPENED_KEY, "true");
-      setMounted(true);
-    }, SUPPORT_AUTO_OPEN_MS);
-
-    return () => {
-      window.removeEventListener("load", prefetch);
-      if (idle) cancelIdleCallback(idle);
-      clearTimeout(timer);
-    };
-  }, []);
+  const [nudging, dismissNudge] = useScrollNudge();
 
   if (!SUPPORT_TOKEN) return null;
 
   const launcher = (
     <SupportLauncher
       onOpen={() => {
-        sessionStorage.setItem(AUTO_OPENED_KEY, "true");
+        dismissNudge();
         setMounted(true);
       }}
       onIntent={() => void loadSupportWidget()}
+      nudge={nudging ? SUPPORT_NUDGE : undefined}
+      onDismissNudge={dismissNudge}
     />
   );
   if (!mounted) return launcher;

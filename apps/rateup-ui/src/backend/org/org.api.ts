@@ -174,6 +174,20 @@ export async function completeOrgDetails(onboarding: RequestPayload) {
   });
 }
 
+/** The business step after signup; mirrors `businessProfileSchema` in rateup-api. */
+export interface BusinessProfileInput {
+  orgName: string;
+  phoneNumber?: string;
+  website?: string;
+  industry?: string;
+  teamSize?: string;
+  goals: string[];
+}
+
+export async function completeBusinessProfile(data: BusinessProfileInput) {
+  return (await axiosClient.put("/org/business-profile", data)).data;
+}
+
 /** Response of `GET /org/orgnameandphone`; each field is null when unset. */
 export interface OrgNameAndPhone {
   userPhone: string | null;

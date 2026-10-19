@@ -35,6 +35,10 @@ function getPlanHighlights(plan: RateupPaymentPlan) {
     features.whatsapp?.active
       ? `${meterCount(features.whatsapp?.campaignCredits?.count?.max)} campaign messages / month`
       : null,
+    features.whatsapp?.shopOrders?.count?.max &&
+    !isUnlimitedCount(features.whatsapp.shopOrders.count.max)
+      ? `${formatCount(features.whatsapp.shopOrders.count.max)} shop orders / month`
+      : null,
     features.whatsapp?.automation?.active
       ? `${features.whatsapp?.automation?.automationTrigger?.count?.max || 0} Automation Triggers`
       : null,

@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
 import type { CommerceFilter } from "@/backend/commerce/commerce.api";
+import { useShopStore } from "@/backend/commerce/shop.query";
 import type { getWaCatalogs } from "@/backend/whatsapp/catalog/catalog.api";
 import { useAllWaCatalogs, useConnectedWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
@@ -36,8 +37,21 @@ type CommerceContextValue = {
   filter: CommerceFilter;
 
   isShopifyConnected: boolean;
+  /** The shop's currency symbol, for the catalog screens that print bare amounts. */
   currencySymbol: string;
 };
+
+function currencySymbolFor(currency: string): string {
+  try {
+    return (
+      new Intl.NumberFormat(undefined, { style: "currency", currency })
+        .formatToParts(0)
+        .find((part) => part.type === "currency")?.value ?? currency
+    );
+  } catch {
+    return currency;
+  }
+}
 
 const CommerceContext = createContext<CommerceContextValue | null>(null);
 
@@ -45,6 +59,8 @@ export function CommerceProvider({ children }: Readonly<{ children: ReactNode }>
   const { data: waSettings, isLoading: isLoadingSettings } = useWaSettings();
   const { data: shopifyIntegration } = useIntegrationByType(IntegratedApps.shopify);
   const { data: catalogs } = useAllWaCatalogs();
+  const { data: store } = useShopStore();
+  const currency = store?.currency ?? "USD";
 
   const [selectedSettingId, setSelectedSettingId] = useState<string>("");
   const [selectedCatalogId, setSelectedCatalogId] = useState<string>("");
@@ -101,7 +117,7 @@ export function CommerceProvider({ children }: Readonly<{ children: ReactNode }>
       },
 
       isShopifyConnected: !!shopifyIntegration?.credential?.session?.shop,
-      currencySymbol: "₹",
+      currencySymbol: currencySymbolFor(currency),
     }),
     [
       waSettings,
@@ -114,6 +130,7 @@ export function CommerceProvider({ children }: Readonly<{ children: ReactNode }>
       connectedCatalogId,
       dateRange,
       shopifyIntegration,
+      currency,
     ],
   );
 

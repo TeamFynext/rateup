@@ -141,6 +141,15 @@ export function UsageMeters({
           </>
         )}
 
+        {features?.whatsapp?.catalog?.active && usage?.shopOrders && (
+          <UsageMeter
+            label={t("Shop orders")}
+            used={usage.shopOrders.used}
+            max={usage.shopOrders.max ?? undefined}
+            hint={t("Resets at the start of each month.")}
+          />
+        )}
+
         {features?.webSurvey?.active && (
           <UsageMeter
             label={t("Form submissions")}

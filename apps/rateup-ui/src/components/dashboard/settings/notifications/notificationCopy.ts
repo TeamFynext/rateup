@@ -21,11 +21,13 @@ export const NOTIFICATION_EVENTS = [
   "campaign.paused",
   "loyalty.approval_requested",
   "loyalty.feedback_negative",
+  "commerce.order_needs_review",
   "whatsapp.template_status",
   "whatsapp.account_restricted",
   "integration.error",
   "billing.active_contact_limit",
   "billing.campaign_credit_limit",
+  "billing.shop_order_limit",
   /** Retired by the API; kept so historical bell rows still render. */
   "billing.conversation_limit",
 ] as const;
@@ -36,6 +38,7 @@ export const NOTIFICATION_CATEGORIES = [
   "pipelines",
   "campaigns",
   "loyalty",
+  "commerce",
   "channels",
   "billing",
 ] as const;
@@ -85,6 +88,8 @@ export function categoryTitle(t: TFunction, category: NotificationCategory): str
       return t("Campaigns");
     case "loyalty":
       return t("Loyalty");
+    case "commerce":
+      return t("Commerce");
     case "channels":
       return t("Channels and integrations");
     case "billing":
@@ -122,6 +127,8 @@ export function eventLabel(t: TFunction, event: NotificationEvent): string {
       return t("Request waiting for my approval");
     case "loyalty.feedback_negative":
       return t("Unhappy customer feedback");
+    case "commerce.order_needs_review":
+      return t("Paid order needs review");
     case "whatsapp.template_status":
       return t("WhatsApp template approved or rejected");
     case "whatsapp.account_restricted":
@@ -132,6 +139,8 @@ export function eventLabel(t: TFunction, event: NotificationEvent): string {
       return t("Active contact limit reached");
     case "billing.campaign_credit_limit":
       return t("Campaign credits used up");
+    case "billing.shop_order_limit":
+      return t("Monthly shop orders");
     case "billing.conversation_limit":
       return t("Conversation limit reached");
   }
@@ -149,6 +158,10 @@ export function eventDescription(t: TFunction, event: NotificationEvent): string
     case "campaign.failed":
     case "campaign.paused":
       return t("For campaigns in your teams.");
+    case "commerce.order_needs_review":
+      return t(
+        "A customer paid, but stock, a coupon or their points ran out before the order went through.",
+      );
     case "whatsapp.template_status":
       return t("Meta finished reviewing a template.");
     case "integration.error":
@@ -159,6 +172,10 @@ export function eventDescription(t: TFunction, event: NotificationEvent): string
       );
     case "billing.campaign_credit_limit":
       return t("Campaigns pause until you add a credit pack, upgrade, or the month resets.");
+    case "billing.shop_order_limit":
+      return t(
+        "When most of the month's orders are taken, and when they run out. Customers are then asked to message you to order.",
+      );
     case "billing.conversation_limit":
       return t("Messages stop until the plan is upgraded or the limit resets.");
     default:
@@ -224,6 +241,11 @@ export function notificationMessage(
       return t("{customer} said their visit did not go well.", {
         customer: str(data.customerName, t("A customer")),
       });
+    case "commerce.order_needs_review":
+      return t("Order #{number} was paid but needs review: {reason}", {
+        number: str(data.orderNumber),
+        reason: str(data.reason),
+      });
     case "whatsapp.template_status":
       return data.status === "APPROVED"
         ? t("Meta approved the template “{template}”.", {
@@ -251,6 +273,8 @@ export function notificationMessage(
       return str(data.message, t("You've reached your active contact limit for this month."));
     case "billing.campaign_credit_limit":
       return str(data.message, t("Your campaign credits for this month are used up."));
+    case "billing.shop_order_limit":
+      return str(data.message, t("Your shop has reached this month's orders."));
     case "billing.conversation_limit":
       return str(data.message, t("You've reached your conversation limit."));
   }
@@ -295,6 +319,7 @@ export function notificationPath(event: NotificationEvent, data: NotificationDat
       return `/dashboard/campaign/${encodeURIComponent(str(data.campaignId))}`;
     case "billing.active_contact_limit":
     case "billing.campaign_credit_limit":
+    case "billing.shop_order_limit":
     case "billing.conversation_limit":
       return "/dashboard/settings/billing";
     default:
