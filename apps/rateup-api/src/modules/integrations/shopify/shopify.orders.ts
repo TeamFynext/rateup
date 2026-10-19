@@ -15,6 +15,11 @@ import {
 import { onOrderEvent } from "../commerce/orders.js";
 import { processOrderSurveySchedule, type OrderSurveyJobData } from "../commerce/surveys.js";
 import { shopifyCommerce } from "./shopify.commerce.js";
+import type {
+  StoreOrderUpdate,
+  StoreTotals,
+} from "../../commerce/shop/externalCheckout.service.js";
+import prisma from "../../../utils/prisma.js";
 import { ShopifyBody, type ShopifyWebhookJobData } from "./shopify.types.js";
 import { normalisePhone } from "../../loyalty/util.js";
 import { getShopifyIntegrationByShop } from "./shopify.credential.js";
@@ -167,9 +172,11 @@ export async function handleShopifyOrderEvents(webhook: ShopifyWebhookJobData) {
       ...(body.line_items?.map((product) => `gid://shopify/Product/${product.product_id}`) ?? []),
     );
   }
+  const orderId = body?.id != null ? String(body.id) : null;
+  await syncRateupCheckout(shopifyInfo.orgId, topic, body, orderId);
+
   // Everything after this point — loyalty, the order.* event, the survey and the
   // automation rules — is the commerce layer's, shared with every store.
-  const orderId = body?.id != null ? String(body.id) : null;
   const contactPhone = shopifyContactPhone(
     customerPhone,
     body?.billing_address?.country_code ||
@@ -193,11 +200,126 @@ export async function handleShopifyOrderEvents(webhook: ShopifyWebhookJobData) {
       discountCodes: extractDiscountCodes(body),
       deliveryId: webhookId,
       raw: body as unknown as Record<string, unknown>,
+      rateupWriteBack: isRateupWriteBack(body as { note_attributes?: unknown }),
     },
   );
 
   if (topic === ShopifyEvents.ORDERS_CREATE) {
     await markCheckoutRecovered(shopifyInfo.orgId, body);
+  }
+}
+
+const noteAttribute = (body: { note_attributes?: unknown }, name: string) => {
+  if (!Array.isArray(body.note_attributes)) return null;
+  const entry = (body.note_attributes as Array<{ name?: unknown; value?: unknown } | null>).find(
+    (a) => a?.name === name,
+  );
+  return typeof entry?.value === "string" ? entry.value : null;
+};
+
+/** The RateUp shop order a Shopify order came from, from the draft's attributes. */
+export const rateupOrderIdFromShopify = (body: { note_attributes?: unknown }) =>
+  noteAttribute(body, "rateup_order_id");
+
+/** An order RateUp took the payment for and copied in; its loyalty is earned in RateUp. */
+export const isRateupWriteBack = (body: { note_attributes?: unknown }) =>
+  noteAttribute(body, "rateup_writeback") === "1";
+
+/**
+ * Shopify's breakdown in the shop's currency. Line items and shipping are before discounts, and
+ * `total_discounts` counts shipping discounts too, which is how RateUp splits an order.
+ */
+export function shopifyTotals(body: Partial<ShopifyBody>): StoreTotals {
+  const n = (v: unknown) => Number(v) || 0;
+  const shipping = body.total_shipping_price_set;
+  return {
+    subtotal: n(body.total_line_items_price),
+    discountTotal: n(body.current_total_discounts ?? body.total_discounts),
+    shippingTotal: n(shipping?.shop_money?.amount),
+    taxTotal: n(body.current_total_tax ?? body.total_tax),
+    total: n(body.current_total_price ?? body.total_price),
+  };
+}
+
+/** The customer and address Shopify's checkout collected, as a RateUp order keeps them. */
+export function shopifyCustomer(
+  body: Partial<ShopifyBody>,
+): Pick<StoreOrderUpdate, "customer" | "address"> {
+  const a = body.shipping_address ?? body.billing_address;
+  const name =
+    [body.customer?.first_name, body.customer?.last_name].filter(Boolean).join(" ") ||
+    a?.name ||
+    null;
+  const phone = shopifyContactPhone(
+    body.customer?.phone || a?.phone || body.phone,
+    a?.country_code,
+  );
+  return {
+    customer: { name, email: body.email || body.contact_email || null, phone },
+    address: a?.address1
+      ? {
+          name: a.name || name || undefined,
+          line1: a.address1,
+          line2: a.address2 ?? undefined,
+          city: a.city,
+          region: a.province,
+          postalCode: a.zip,
+          country: a.country_code?.toUpperCase(),
+          phone: a.phone ?? undefined,
+        }
+      : null,
+  };
+}
+
+const SYNCED_TOPICS: Partial<Record<string, Partial<StoreOrderUpdate>>> = {
+  [ShopifyEvents.ORDERS_CREATE]: {},
+  [ShopifyEvents.ORDERS_PAID]: { status: "paid" },
+  [ShopifyEvents.ORDERS_CANCELLED]: { status: "cancelled" },
+  [ShopifyEvents.ORDERS_FULFILLED]: { fulfillment: "fulfilled" },
+  [ShopifyEvents.ORDERS_PARTIALLY_FULFILLED]: { fulfillment: "partial" },
+};
+
+/**
+ * An order RateUp created in Shopify (a store checkout, or a RateUp order written back): the
+ * RateUp order follows what happened to it there. Never blocks the rest.
+ */
+async function syncRateupCheckout(
+  orgId: string,
+  topic: string,
+  body: ShopifyBody,
+  orderId: string | null,
+) {
+  const step = SYNCED_TOPICS[topic];
+  if (!step) return;
+  const rateupOrderId = rateupOrderIdFromShopify(body as { note_attributes?: unknown });
+  if (!rateupOrderId) return;
+  try {
+    const { syncOrderFromStore } = await import("../../commerce/shop/externalCheckout.service.js");
+    await syncOrderFromStore("shopify", orgId, rateupOrderId, {
+      ...step,
+      externalOrderId: orderId,
+      externalName: body.name || null,
+      ...(step.status === "paid" && { totals: shopifyTotals(body) }),
+      ...shopifyCustomer(body),
+    });
+  } catch (err) {
+    log.warn({ err, rateupOrderId, topic }, "Could not update the RateUp order from Shopify");
+  }
+}
+
+/** A refund in Shopify on an order RateUp created there. Matched by the order's Shopify id. */
+async function syncRateupRefund(orgId: string, shopifyOrderId: string, refundedCents: number) {
+  try {
+    const rateup = await prisma.shopOrder.findFirst({
+      where: { orgId, externalProvider: "shopify", externalId: shopifyOrderId },
+      select: { id: true, total: true },
+    });
+    if (!rateup) return;
+    const { syncOrderFromStore } = await import("../../commerce/shop/externalCheckout.service.js");
+    const full = refundedCents >= Math.round(Number(rateup.total) * 100) - 1;
+    await syncOrderFromStore("shopify", orgId, rateup.id, { refund: full ? "full" : "partial" });
+  } catch (err) {
+    log.warn({ err, shopifyOrderId }, "Could not record a Shopify refund on the RateUp order");
   }
 }
 
@@ -277,6 +399,11 @@ export async function handleShopifyRefundEvent(webhook: ShopifyWebhookJobData) {
     log.trace(`No shopify session found`);
     return;
   }
+  await syncRateupRefund(
+    shopifyInfo.orgId,
+    String(body.order_id),
+    originalCents + storeCreditCents,
+  );
   if (!shopify) throw new Error("Shopify integration is not configured");
   const client = new shopify.clients.Graphql({
     session: await getActiveShopifySession(shopifyInfo),

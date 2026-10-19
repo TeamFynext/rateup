@@ -23,6 +23,7 @@ const ALWAYS_SHOWN_AT_SIGNUP: readonly OrgModule[] = ["pipeline"];
 const GOAL_MODULES: Record<string, OrgModule> = {
   "loyalty-program": "loyalty",
   "web-feedback-forms": "web_forms",
+  "sell-online": "commerce",
 };
 
 export function hiddenModulesForGoals(goals: readonly string[]): OrgModule[] {
@@ -32,6 +33,19 @@ export function hiddenModulesForGoals(goals: readonly string[]): OrgModule[] {
     if (module) wanted.add(module);
   }
   return ORG_MODULES.filter((module) => !wanted.has(module));
+}
+
+/** Shows one module without touching the others, e.g. when the org connects an online store. */
+export async function revealModule(orgId: string, module: OrgModule) {
+  const org = await prisma.org.findUnique({
+    where: { id: orgId },
+    select: { hiddenModules: true },
+  });
+  if (!org?.hiddenModules.includes(module)) return;
+  await prisma.org.update({
+    where: { id: orgId },
+    data: { hiddenModules: org.hiddenModules.filter((m) => m !== module) },
+  });
 }
 
 export async function setHiddenModules(orgId: string, hiddenModules: readonly OrgModule[]) {

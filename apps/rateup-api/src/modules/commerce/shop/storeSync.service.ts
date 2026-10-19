@@ -1,7 +1,10 @@
-import type { ShopStore } from "../../../../generated/prisma/client.js";
+import type { Prisma, ShopStore } from "../../../../generated/prisma/client.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
+import redis from "../../../utils/redisConnection.js";
+import { enqueueStoreMirror } from "../../../workers/bullmq/queues/shop.queue.js";
 import type { CatalogProductCoreInput } from "../../whatsapp/catalog/products/product.schema.js";
+import { inStoreCheckout } from "./checkoutVia.js";
 import { addOrderEvent } from "./orders.service.js";
 import { round2, toNumber } from "./pricing.js";
 import { ShopError } from "./shop.errors.js";
@@ -9,17 +12,23 @@ import type { ShopAddress } from "./shop.types.js";
 
 /**
  * Shopify and WooCommerce stores stay the source of truth for their products: they are
- * mirrored in here (so chat, the AI agent and the storefront can sell them) and paid orders
- * are written back. A mirrored variant keeps the store's own id as its Meta retailer id — the
- * id the store's Meta catalog already uses — so carts from that catalog map onto it.
+ * mirrored in here (so chat, the AI agent and the storefront can sell them) and RateUp-checkout
+ * orders are written back. A mirrored variant keeps the store's own id as its Meta retailer
+ * id — the id the store's Meta catalog already uses — so carts from that catalog map onto it.
  */
 
 /** No WaCatalogProduct row has this catalog id, so the fetchers return every product. */
 const NO_CATALOG = "__shop_mirror__";
 
-type Source = "shopify" | "woocommerce";
+export type StoreSource = "shopify" | "woocommerce";
 
-async function fetchItems(orgId: string, source: Source): Promise<CatalogProductCoreInput[]> {
+const sourceOf = (mode: ShopStore["mode"]): StoreSource | null =>
+  mode === "SHOPIFY" ? "shopify" : mode === "WOOCOMMERCE" ? "woocommerce" : null;
+
+export async function fetchStoreItems(
+  orgId: string,
+  source: StoreSource,
+): Promise<CatalogProductCoreInput[]> {
   if (source === "shopify") {
     const { getShopifyProductsForCatalog } =
       await import("../../whatsapp/catalog/products/product.service.js");
@@ -31,7 +40,7 @@ async function fetchItems(orgId: string, source: Source): Promise<CatalogProduct
 }
 
 /** "Linen throw - Sand" → base "Linen throw", variant "Sand". */
-function splitTitle(title: string, siblings: number) {
+export function splitTitle(title: string, siblings: number) {
   if (siblings < 2) return { base: title, variant: "Default" };
   const i = title.lastIndexOf(" - ");
   return i > 0
@@ -39,14 +48,30 @@ function splitTitle(title: string, siblings: number) {
     : { base: title, variant: title };
 }
 
-export async function mirrorConnectedStore(store: ShopStore) {
-  const source: Source | null =
-    store.mode === "SHOPIFY" ? "shopify" : store.mode === "WOOCOMMERCE" ? "woocommerce" : null;
-  if (!source) throw new ShopError("INVALID", "Connect Shopify or WooCommerce first");
-  const items = await fetchItems(store.orgId, source);
+/**
+ * The store's count when it keeps one; otherwise RateUp doesn't track it and the store's
+ * availability decides, so an untracked product never shows a made-up number.
+ */
+function stockOf(item: CatalogProductCoreInput & { inventory?: number }) {
+  if (typeof item.inventory === "number" && item.availability === "in stock")
+    return { trackInventory: true, stock: Math.max(0, item.inventory) };
+  if (item.availability === "in stock") return { trackInventory: false, stock: 0 };
+  return { trackInventory: true, stock: 0 };
+}
 
+export async function mirrorConnectedStore(store: ShopStore, fetched?: CatalogProductCoreInput[]) {
+  const source = sourceOf(store.mode);
+  if (!source) throw new ShopError("INVALID", "Connect Shopify or WooCommerce first");
+  const items = fetched ?? (await fetchStoreItems(store.orgId, source));
+
+  // Prices are copied as numbers, so one in another currency would sell at the wrong amount.
+  const currency = store.currency.toUpperCase();
+  const otherCurrency = items.filter(
+    (i) => i.currencyCode && i.currencyCode.toUpperCase() !== currency,
+  );
   const groups = new Map<string, CatalogProductCoreInput[]>();
   for (const item of items) {
+    if (otherCurrency.includes(item)) continue;
     const key = item.item_group_id || item.retailer_id;
     groups.set(key, [...(groups.get(key) ?? []), item]);
   }
@@ -73,6 +98,8 @@ export async function mirrorConnectedStore(store: ShopStore) {
       brand: first.brand ?? null,
       productUrl: first.link ?? null,
       images,
+      // Back in the store after it was gone.
+      ...(existing?.status === "ARCHIVED" && { status: "ACTIVE" as const }),
     };
     const product = existing
       ? await prisma.shopProduct.update({ where: { id: existing.id }, data: productData })
@@ -98,9 +125,7 @@ export async function mirrorConnectedStore(store: ShopStore) {
         title: splitTitle(item.title, group.length).variant.slice(0, 80),
         price,
         compareAtPrice: original > price ? round2(original) : null,
-        // The store keeps the real count; availability is all its catalog item tells us.
-        trackInventory: true,
-        stock: item.availability === "in stock" ? 999 : 0,
+        ...stockOf(item),
         allowBackorder: false,
         imageUrl: item.image?.[0]?.url ?? null,
         externalId: item.retailer_id,
@@ -113,73 +138,355 @@ export async function mirrorConnectedStore(store: ShopStore) {
       });
     }
   }
+
+  // Deleted or unpublished in the store: no longer sold here. Skipped when the store sent
+  // nothing at all, which is likelier a hiccup than a store emptied overnight.
+  let archived = 0;
+  if (items.length) {
+    ({ count: archived } = await prisma.shopProduct.updateMany({
+      where: {
+        storeId: store.id,
+        externalSource: source,
+        status: { not: "ARCHIVED" },
+        externalId: { notIn: [...groups.keys()] },
+      },
+      data: { status: "ARCHIVED" },
+    }));
+  }
+  await prisma.shopStore.update({ where: { id: store.id }, data: { mirroredAt: new Date() } });
+
+  const otherCurrencies = [...new Set(otherCurrency.map((i) => i.currencyCode!.toUpperCase()))];
   log.info(
-    { orgId: store.orgId, source, created, updated },
+    { orgId: store.orgId, source, created, updated, archived, skipped: otherCurrency.length },
     "Store products mirrored into the shop",
   );
-  return { source, created, updated, total: groups.size };
+  return {
+    source,
+    created,
+    updated,
+    archived,
+    total: groups.size,
+    skipped: otherCurrency.length
+      ? {
+          count: otherCurrency.length,
+          reason: `Priced in ${otherCurrencies.join(", ")}, but this shop sells in ${currency}`,
+        }
+      : null,
+  };
+}
+
+/** The background refresh: a store that stopped following or lost its connection is left alone. */
+export async function mirrorStoreById(storeId: string) {
+  const store = await prisma.shopStore.findUnique({ where: { id: storeId } });
+  const source = store && sourceOf(store.mode);
+  if (!store || !source) return null;
+  const connected = await prisma.integration.findFirst({
+    where: { orgId: store.orgId, name: source, active: true },
+    select: { id: true },
+  });
+  if (!connected) return null;
+  return mirrorConnectedStore(store);
+}
+
+/** A product webhook from the store: the shop following it copies its products in again soon. */
+export async function scheduleStoreMirror(orgId: string, source: StoreSource) {
+  const store = await prisma.shopStore.findUnique({
+    where: { orgId },
+    select: { id: true, mode: true },
+  });
+  if (!store || sourceOf(store.mode) !== source) return;
+  await enqueueStoreMirror(store.id);
+}
+
+/** Daily, for every shop that follows a store. */
+export async function mirrorFollowedStores() {
+  const stores = await prisma.shopStore.findMany({
+    where: { mode: { in: ["SHOPIFY", "WOOCOMMERCE"] } },
+    select: { id: true },
+  });
+  for (const store of stores) {
+    await mirrorStoreById(store.id).catch((err) =>
+      log.warn({ err, storeId: store.id }, "Daily store mirror failed"),
+    );
+  }
+  return { stores: stores.length };
 }
 
 /**
- * A paid order from a mirrored store goes back to it as a paid order, so the merchant
- * fulfils it where they fulfil everything else. Shopify answers with its own order
- * webhooks, which is how its loyalty and automations hear about the sale.
+ * Stops following Shopify or WooCommerce: the mirrored products become the shop's own (kept
+ * as they are, edited in RateUp from now on) and RateUp takes the payments again.
  */
-export async function writeBackPaidOrder(orderId: string) {
-  const order = await prisma.shopOrder.findUnique({
-    where: { id: orderId },
-    include: { store: true, items: { include: { variant: { include: { product: true } } } } },
+export async function stopFollowingStore(store: ShopStore) {
+  const source = sourceOf(store.mode);
+  if (!source) throw new ShopError("INVALID", "This shop doesn't follow another store");
+  return prisma.$transaction(async (tx) => {
+    const { count } = await tx.shopProduct.updateMany({
+      where: { storeId: store.id, externalSource: source },
+      data: { externalSource: null, externalId: null },
+    });
+    const updated = await tx.shopStore.update({
+      where: { id: store.id },
+      data: { mode: "NATIVE", checkoutVia: "RATEUP" },
+    });
+    return { store: updated, products: count };
   });
-  if (!order || order.externalId || order.store.mode !== "SHOPIFY") return null;
-  const mirrored = order.items.filter((i) => i.variant?.product.externalSource === "shopify");
-  if (!mirrored.length) return null;
+}
 
-  const { createShopifyDraftOrderWithAddress, captureShopifyOrderPayment } =
-    await import("../../integrations/shopify/shopify.catalog.js");
-  const address = (order.shippingAddress ?? {}) as ShopAddress;
-  const [first, ...rest] = (address.name ?? order.customerName ?? "").split(" ");
+// ─── Orders written back to the store ───────────────────────────────────────
+
+type WriteBackOrder = Prisma.ShopOrderGetPayload<{
+  include: { store: true; items: { include: { variant: { include: { product: true } } } } };
+}>;
+
+/** One write-back at a time per order: "placed" and "paid" can follow each other closely. */
+async function withWriteBackLock<T>(orderId: string, fn: () => Promise<T>) {
+  const key = `shop:writeback:${orderId}`;
+  const got = await redis.set(key, "1", "EX", 120, "NX").catch(() => "OK");
+  if (got !== "OK") return null;
   try {
-    const draft = await createShopifyDraftOrderWithAddress(
-      order.orgId,
-      mirrored.map((i) => ({
-        retailerId: i.retailerId ?? i.variant!.retailerId,
-        quantity: i.quantity,
-        title: i.title,
-        price: toNumber(i.unitPrice),
-      })),
-      {
-        first_name: first,
-        last_name: rest.join(" "),
-        address1: address.line1,
-        address2: address.line2,
-        city: address.city,
-        province: address.region,
-        zip: address.postalCode,
-        country_code: address.country,
-        phone: address.phone ?? order.customerPhone ?? undefined,
-      },
-      order.shippingRate
-        ? { name: order.shippingRate.name, charge: order.shippingRate.price }
-        : null,
-    );
-    if (!draft) return null;
-    const shopifyOrderId = await captureShopifyOrderPayment(order.orgId, String(draft.id));
+    return await fn();
+  } finally {
+    await redis.del(key).catch(() => {});
+  }
+}
+
+/**
+ * A RateUp-checkout order from a shop that follows a store goes into that store when it is
+ * placed, so the merchant fulfils it there: paid as paid, a cash or transfer order as awaiting
+ * payment and marked paid there once the money arrives. Store-checkout orders are already
+ * there. The store's own webhooks then raise its loyalty and automations; the
+ * `rateup_writeback` marker keeps its loyalty from earning a second time.
+ */
+export async function writeBackOrder(orderId: string, phase: "placed" | "paid") {
+  return withWriteBackLock(orderId, async () => {
+    const order = await prisma.shopOrder.findUnique({
+      where: { id: orderId },
+      include: { store: true, items: { include: { variant: { include: { product: true } } } } },
+    });
+    const source = order && sourceOf(order.store.mode);
+    if (!order || !source || inStoreCheckout(order.checkoutVia)) return null;
+    const paid = order.paymentStatus === "PAID";
+    if (order.externalId) {
+      if (!paid || order.externalPaidAt || order.externalProvider !== source) return null;
+      return markPaidInStore(order, source);
+    }
+    // An online payment places and pays in one go; it is written once, as paid.
+    const offline = order.paymentStatus === "COD_PENDING" || order.paymentMethod === "bank";
+    if (phase === "placed" && (paid || !offline)) return null;
+    return source === "shopify" ? writeBackToShopify(order, paid) : writeBackToWoo(order, paid);
+  });
+}
+
+async function markPaidInStore(order: WriteBackOrder, source: StoreSource) {
+  const label = source === "shopify" ? "Shopify" : "WooCommerce";
+  try {
+    if (source === "shopify") {
+      const { markShopifyOrderPaid } =
+        await import("../../integrations/shopify/shopify.shopOrders.js");
+      await markShopifyOrderPaid(order.orgId, order.externalId!);
+    } else {
+      const { markWooOrderPaid } =
+        await import("../../integrations/woocommerce/woocommerce.shopOrders.js");
+      await markWooOrderPaid(order.orgId, order.externalId!);
+    }
     await prisma.shopOrder.update({
       where: { id: order.id },
-      data: {
-        externalProvider: "shopify",
-        externalId: String(shopifyOrderId === true ? draft.id : shopifyOrderId),
-      },
+      data: { externalPaidAt: new Date() },
     });
-    await addOrderEvent(order.id, "external", "Sent to Shopify as a paid order");
-    return shopifyOrderId;
+    await addOrderEvent(order.id, "external", `Marked paid in ${label}`);
+    return order.externalId;
   } catch (err) {
-    log.warn({ err, orderId }, "Writing a shop order back to Shopify failed");
+    log.warn({ err, orderId: order.id }, "Marking a written-back order paid failed");
+    await addOrderEvent(
+      order.id,
+      "external_failed",
+      `Could not mark this order paid in ${label} — mark it paid there by hand`,
+    );
+    return null;
+  }
+}
+
+function addressParts(order: WriteBackOrder) {
+  const address = (order.shippingAddress ?? {}) as ShopAddress;
+  const [first, ...rest] = (address.name ?? order.customerName ?? "").split(" ");
+  return { address, first, last: rest.join(" ") };
+}
+
+/** Coupon and points together, as the stores take one order-level discount. */
+const discountOf = (order: WriteBackOrder) =>
+  round2(toNumber(order.discountTotal) + toNumber(order.pointsDiscount));
+
+const taxOnTop = (order: WriteBackOrder) =>
+  order.store.pricesIncludeTax ? 0 : toNumber(order.taxTotal);
+
+async function recordWriteBack(
+  order: WriteBackOrder,
+  source: StoreSource,
+  created: { id: string; name: string | null },
+  paid: boolean,
+) {
+  await prisma.shopOrder.update({
+    where: { id: order.id },
+    data: {
+      externalProvider: source,
+      externalId: created.id,
+      externalName: created.name,
+      ...(paid && { externalPaidAt: new Date() }),
+    },
+  });
+  const label = source === "shopify" ? "Shopify" : "WooCommerce";
+  await addOrderEvent(
+    order.id,
+    "external",
+    paid ? `Sent to ${label} as a paid order` : `Sent to ${label}, awaiting payment`,
+    { externalId: created.id },
+  );
+}
+
+async function writeBackToShopify(order: WriteBackOrder, paid: boolean) {
+  const mirrored = order.items.filter((i) => i.variant?.product.externalSource === "shopify");
+  if (!mirrored.length) return null;
+  const { createShopifyWriteBackOrder } =
+    await import("../../integrations/shopify/shopify.shopOrders.js");
+  const { address, first, last } = addressParts(order);
+  const shipping = order.shippingRate as { name?: string } | null;
+  try {
+    const created = await createShopifyWriteBackOrder(order.orgId, {
+      rateupOrderId: order.id,
+      orderNumber: order.number,
+      paid,
+      paymentMethod: order.paymentMethod ?? "online",
+      currency: order.currency,
+      lines: mirrored.map((i) => ({
+        retailerId: i.retailerId ?? i.variant!.retailerId,
+        title: i.title,
+        quantity: i.quantity,
+        unitPrice: toNumber(i.unitPrice),
+      })),
+      address: address.line1
+        ? {
+            first_name: first,
+            last_name: last,
+            address1: address.line1,
+            address2: address.line2,
+            city: address.city,
+            province: address.region,
+            zip: address.postalCode,
+            country_code: address.country,
+            phone: address.phone ?? order.customerPhone ?? undefined,
+          }
+        : null,
+      email: order.customerEmail,
+      phone: order.customerPhone ? `+${order.customerPhone.replace(/^\+/, "")}` : null,
+      shipping:
+        toNumber(order.shippingTotal) > 0 || shipping?.name
+          ? { name: shipping?.name ?? "Delivery", price: toNumber(order.shippingTotal) }
+          : null,
+      discount: discountOf(order),
+      taxOnTop: taxOnTop(order),
+    });
+    await recordWriteBack(order, "shopify", created, paid);
+    return created.id;
+  } catch (err) {
+    log.warn({ err, orderId: order.id }, "Writing a shop order back to Shopify failed");
     await addOrderEvent(
       order.id,
       "external_failed",
       "Could not create this order in Shopify — add it there by hand",
     );
     return null;
+  }
+}
+
+async function writeBackToWoo(order: WriteBackOrder, paid: boolean) {
+  const mirrored = order.items.filter((i) => i.variant?.product.externalSource === "woocommerce");
+  if (!mirrored.length) return null;
+  const { createWooWriteBackOrder } =
+    await import("../../integrations/woocommerce/woocommerce.shopOrders.js");
+  const { address, first, last } = addressParts(order);
+  const shipping = order.shippingRate as { name?: string } | null;
+  try {
+    const created = await createWooWriteBackOrder(order.orgId, {
+      rateupOrderId: order.id,
+      paid,
+      currency: order.currency,
+      paymentMethod: order.paymentMethod ?? "online",
+      lines: mirrored.map((i) => ({
+        productExternalId: i.variant!.product.externalId,
+        retailerId: i.retailerId ?? i.variant!.retailerId,
+        quantity: i.quantity,
+        total: toNumber(i.lineTotal),
+      })),
+      address: {
+        first_name: first,
+        last_name: last,
+        address_1: address.line1,
+        address_2: address.line2,
+        city: address.city,
+        state: address.region,
+        postcode: address.postalCode,
+        country: address.country,
+        phone: address.phone ?? order.customerPhone ?? undefined,
+      },
+      email: order.customerEmail,
+      shipping:
+        toNumber(order.shippingTotal) > 0 || shipping?.name
+          ? { name: shipping?.name ?? "Delivery", price: toNumber(order.shippingTotal) }
+          : null,
+      discount: discountOf(order),
+      tax: taxOnTop(order),
+    });
+    await recordWriteBack(
+      order,
+      "woocommerce",
+      { id: created.id, name: created.number ? `#${created.number}` : null },
+      paid,
+    );
+    return created.id;
+  } catch (err) {
+    log.warn({ err, orderId: order.id }, "Writing a shop order back to WooCommerce failed");
+    await addOrderEvent(
+      order.id,
+      "external_failed",
+      "Could not create this order in WooCommerce — add it there by hand",
+    );
+    return null;
+  }
+}
+
+/**
+ * Cancelled in RateUp: the store's copy goes too, so nobody ships it. An unpaid checkout draft
+ * in Shopify is deleted, since Shopify drafts never expire on their own. Best effort; a
+ * failure is left on the order for staff.
+ */
+export async function cancelInStore(orderId: string) {
+  const order = await prisma.shopOrder.findUnique({ where: { id: orderId } });
+  if (!order?.externalId || !order.externalProvider) return;
+  const provider = order.externalProvider as StoreSource;
+  const label = provider === "shopify" ? "Shopify" : "WooCommerce";
+  // A store-checkout order that never got paid is still the store's checkout draft.
+  const draft = inStoreCheckout(order.checkoutVia) && order.paymentStatus !== "PAID";
+  try {
+    if (provider === "shopify") {
+      const shop = await import("../../integrations/shopify/shopify.shopOrders.js");
+      if (draft) await shop.deleteShopifyDraftOrder(order.orgId, order.externalId);
+      else await shop.cancelShopifyOrder(order.orgId, order.externalId);
+    } else {
+      const { cancelWooOrder } =
+        await import("../../integrations/woocommerce/woocommerce.shopOrders.js");
+      await cancelWooOrder(order.orgId, order.externalId);
+    }
+    await addOrderEvent(
+      order.id,
+      "external",
+      draft ? `Checkout closed in ${label}` : `Cancelled in ${label} too`,
+    );
+  } catch (err) {
+    log.warn({ err, orderId }, "Cancelling a shop order in the store failed");
+    await addOrderEvent(
+      order.id,
+      "external_failed",
+      `Could not cancel this order in ${label} — cancel it there by hand`,
+    );
   }
 }

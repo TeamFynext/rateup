@@ -2,12 +2,18 @@ import { TriggerEvent } from "../../../../generated/prisma/enums.js";
 import { FRONTEND_URL } from "../../../utils/constants/constants.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
-import { disarmShopReminders } from "../../../workers/bullmq/queues/shop.queue.js";
+import {
+  disarmShopReminders,
+  enqueueAdConversion,
+  enqueueInvoice,
+} from "../../../workers/bullmq/queues/shop.queue.js";
 import type { OrderEventStatus } from "../../integrations/events/integrationEvent.types.js";
 import { notificationSetting, sendShopMessage, type ShopMessage } from "./notify.js";
+import { customerReachable } from "./phoneVerify.service.js";
 import { toNumber } from "./pricing.js";
 import type { ShopOrderEventType } from "./shopEvents.constants.js";
-import type { ShopNotificationEvent } from "./shop.types.js";
+import type { ShopAttribution, ShopNotificationEvent } from "./shop.types.js";
+import { inStoreCheckout } from "./checkoutVia.js";
 
 export type { ShopOrderEventType } from "./shopEvents.constants.js";
 
@@ -138,6 +144,16 @@ function platformOf(channel: LoadedOrder["channel"]) {
 }
 
 export async function notifyCustomer(o: LoadedOrder, type: ShopOrderEventType) {
+  if (!customerReachable(o)) {
+    await prisma.shopOrderEvent.create({
+      data: {
+        orderId: o.id,
+        type: "message_not_sent",
+        message: `Customer not messaged (${type.replace(/_/g, " ")}): the number isn't confirmed yet`,
+      },
+    });
+    return;
+  }
   const event = type === "cod_confirmed" ? "paid" : (type as ShopNotificationEvent);
   const setting = notificationSetting(o.store.notifications, event);
   const enabled =
@@ -196,13 +212,22 @@ export async function onShopOrderEvent(orderId: string, type: ShopOrderEventType
       await disarmShopReminders(o.id, "cart", 5);
       await disarmShopReminders(o.id, "payment", 3);
       await disarmShopReminders(o.id, "cod_expire", 1);
+      await disarmShopReminders(o.id, "bank_expire", 1);
     });
   }
-  if (type === "paid") {
+  if (type === "placed" || type === "paid") {
     await step("writeback", async () =>
-      (await import("./storeSync.service.js")).writeBackPaidOrder(o.id),
+      (await import("./storeSync.service.js")).writeBackOrder(o.id, type),
     );
+  }
+  if (type === "paid") {
     await step("loyalty", async () => (await import("./shopLoyalty.js")).earnForOrder(o.id));
+    if (o.store.invoiceAutoSend && !inStoreCheckout(o.checkoutVia)) {
+      await step("invoice", () => enqueueInvoice(o.id));
+    }
+    if ((o.attribution as ShopAttribution | null)?.kind === "ctwa_ad") {
+      await step("ad_conversion", () => enqueueAdConversion(o.id));
+    }
   }
   if (type === "placed" && o.paymentStatus === "COD_PENDING" && o.store.codConfirm) {
     await step("cod_expiry", async () => {
@@ -215,13 +240,25 @@ export async function onShopOrderEvent(orderId: string, type: ShopOrderEventType
       );
     });
   }
+  if (type === "placed" && o.paymentMethod === "bank" && o.paymentStatus !== "PAID") {
+    await step("bank_expiry", async () => {
+      const { armShopReminder } = await import("../../../workers/bullmq/queues/shop.queue.js");
+      await armShopReminder(
+        o.id,
+        "bank_expire",
+        0,
+        new Date(Date.now() + o.store.bankTransferHours * 3_600_000),
+      );
+    });
+  }
   if (type === "delivered") {
     await step("review", async () =>
       (await import("./recovery.service.js")).armReviewRequest(o.id),
     );
   }
 
-  const status = INTEGRATION_STATUS[type];
+  // A store checkout's own order webhook raises order.* for it.
+  const status = inStoreCheckout(o.checkoutVia) ? undefined : INTEGRATION_STATUS[type];
   if (status) {
     await step("integrations", async () => {
       const { emitIntegrationEvent } =
@@ -241,7 +278,9 @@ export async function onShopOrderEvent(orderId: string, type: ShopOrderEventType
     });
   }
 
+  // Automations message the customer too, so an unproven storefront number gets none.
   await step("automation", async () => {
+    if (!customerReachable(o)) return;
     const phone = o.customerPhone ?? o.contact?.phone ?? null;
     const { checkAndExecuteRuleByTriggerEvent } =
       await import("../../whatsapp/automatedReply/wa_automatedReply.utils.js");

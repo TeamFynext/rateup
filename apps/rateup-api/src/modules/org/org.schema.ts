@@ -148,3 +148,14 @@ export {
   updateOrgDetailsSchema,
   pauseOrgSchema,
 };
+
+/** The business step that follows signup (rateup-ui `/signup/business`). */
+export const businessProfileSchema = z.object({
+  orgName: z.string().trim().min(2).max(120),
+  phoneNumber: z.string().trim().max(32).optional(),
+  website: z.string().trim().max(300).optional(),
+  industry: z.string().trim().max(80).optional(),
+  teamSize: z.string().trim().max(20).optional(),
+  goals: z.array(z.string().max(60)).max(20).default([]),
+});
+export type BusinessProfileInput = z.infer<typeof businessProfileSchema>;

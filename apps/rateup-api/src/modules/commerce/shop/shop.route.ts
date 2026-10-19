@@ -2,6 +2,8 @@ import type { FastifyInstance, FastifyRequest } from "fastify";
 import type z from "zod";
 
 import { declareAccess } from "../../../authz/registry.js";
+import { SubscriptionFeaturePathName } from "../../../types/enums.js";
+import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
 import prisma from "../../../utils/prisma.js";
 import { sendProductsInChat } from "./chatProducts.service.js";
 import { createOrderFromInbox, sendCheckoutLink, sendPaymentLink } from "./checkout.service.js";
@@ -46,17 +48,20 @@ import {
 } from "./products.service.js";
 import { requestReturn, updateReturn } from "./returns.service.js";
 import {
+  bulkEditSchema,
   bulkStatusSchema,
   buyLabelSchema,
   cancelSchema,
   collectionSchema,
   createOrderSchema,
   csvImportSchema,
+  importFromSchema,
   discountSchema,
   easypostConnectSchema,
   fulfillmentSchema,
   idParams,
   markPaidSchema,
+  messageRatesSchema,
   orderListQuery,
   paymentConnectSchema,
   productListQuery,
@@ -65,10 +70,13 @@ import {
   quoteSchema,
   refundSchema,
   returnActionSchema,
+  returnRefundSchema,
   returnSchema,
   saveSegmentSchema,
   segmentCriteriaSchema,
   sendProductsSchema,
+  sendToMeSchema,
+  testOrderSchema,
   shipmentSchema,
   shippingRateSchema,
   staffNoteSchema,
@@ -77,8 +85,23 @@ import {
   webhookSecretSchema,
 } from "./shop.schema.js";
 import { actorId, h } from "./shop.http.js";
-import { getOverview } from "./shopAnalytics.service.js";
-import { mirrorConnectedStore } from "./storeSync.service.js";
+import { getMessageReport, setMessageRates } from "./messageCost.service.js";
+import { bulkEditVariants, duplicateProduct } from "./productBulk.service.js";
+import { getAdReport } from "./adReport.service.js";
+import { getOverview, setupChecklist } from "./shopAnalytics.service.js";
+import { importProducts, importSources } from "./productImport.service.js";
+import { mirrorConnectedStore, stopFollowingStore } from "./storeSync.service.js";
+import { inStoreCheckout, storeLabel } from "./checkoutVia.js";
+import { externalAdminUrl, storeConnected } from "./externalCheckout.service.js";
+import {
+  connectCatalog,
+  createTestOrder,
+  findCatalogs,
+  republishStore,
+  sendProductToMe,
+  whatsappStatus,
+} from "./setup.service.js";
+import { forgetPublicStorefront, getStorefront } from "./storefront.service.js";
 import { previewSegment, saveSegmentAsGroup } from "./segments.service.js";
 import {
   buyShippingLabel,
@@ -88,7 +111,9 @@ import {
   quoteShipping,
   shippingProviders,
 } from "./shipping.service.js";
+import { openInvoice, sendInvoice, viewInvoice } from "./invoice.service.js";
 import { ShopError } from "./shop.errors.js";
+import { assertCanTakeOrder } from "./orderAllowance.js";
 import {
   deleteShippingRate,
   getOrCreateStore,
@@ -106,25 +131,51 @@ type Id = z.infer<typeof idParams>;
 
 const store = (request: FastifyRequest) => getOrCreateStore(request.user.orgId);
 
+/** Shipped from the store it was paid in; RateUp follows that store's fulfilment webhooks. */
+function assertFulfilledHere(order: { checkoutVia: string }) {
+  if (inStoreCheckout(order.checkoutVia))
+    throw new ShopError(
+      "CONFLICT",
+      `This order was placed in ${storeLabel(order.checkoutVia)}. Fulfil it there and RateUp follows.`,
+    );
+}
+
 /** The merchant's shop: products, orders, coupons, payments and shipping. Mounted at /api/shop. */
 export async function shopRoutes(server: FastifyInstance) {
   declareAccess(server, { read: "commerce.read", write: "commerce.orders.manage" });
+  server.addHook(
+    "preHandler",
+    getVerifySubscriptionHandler([SubscriptionFeaturePathName.WhatsappCatalog]),
+  );
   const products = { config: { permission: "commerce.products.manage" as const } };
   const discounts = { config: { permission: "commerce.discounts.manage" as const } };
   const payments = { config: { permission: "commerce.payments.manage" as const } };
+  const sell = { config: { permission: "commerce.sell" as const } };
 
   // ─── Store ─────────────────────────────────────────────────────────────────
   server.get(
     "/store",
     h(async (request) => {
       const s = await store(request);
-      const [rates, catalogs, methods] = await Promise.all([
+      const [rates, catalogs, methods, whatsapp, linked, connected, ownHidden] = await Promise.all([
         listShippingRates(s.id),
         prisma.whatsappCatalog.findMany({
           where: { orgId: s.orgId },
           select: { catalogId: true, name: true },
         }),
         listPaymentMethods(s),
+        whatsappStatus(s.orgId),
+        prisma.integration.findMany({
+          where: { orgId: s.orgId, name: { in: ["shopify", "woocommerce"] }, active: true },
+          select: { name: true },
+        }),
+        storeConnected(s.orgId, s.mode),
+        // Made in RateUp, so they can't be paid for on the store's checkout and aren't shown.
+        inStoreCheckout(s.checkoutVia)
+          ? prisma.shopProduct.count({
+              where: { storeId: s.id, status: "ACTIVE", externalSource: null },
+            })
+          : 0,
       ]);
       return {
         ...s,
@@ -132,6 +183,12 @@ export async function shopRoutes(server: FastifyInstance) {
         shippingRates: rates,
         catalogs,
         payments: methods,
+        whatsapp,
+        // Whether the Shopify or WooCommerce store this shop follows is still connected.
+        externalStoreConnected: s.mode === "NATIVE" ? null : connected,
+        // Connected stores this shop could start following.
+        connectedStores: linked.map((l) => l.name),
+        ownProductsHidden: ownHidden,
       };
     }),
   );
@@ -142,14 +199,74 @@ export async function shopRoutes(server: FastifyInstance) {
       config: { permission: ["commerce.payments.manage", "commerce.storefront.manage"] },
     },
     h(async (request: Req<unknown, z.infer<typeof storeUpdateSchema>>) => {
-      const { notifications, storefrontTheme, bankDetails, ...rest } = request.body;
-      return updateStore(request.user.orgId, {
+      const { notifications, storefrontTheme, bankDetails, metaCatalogId, ...rest } = request.body;
+      // The route also lets storefront editors in; where the money goes is for payments managers.
+      if (rest.checkoutVia !== undefined && !request.actor?.can("commerce.payments.manage"))
+        throw new ShopError("FORBIDDEN", "Only people who manage payments can change the checkout");
+      const before = await store(request);
+      const updated = await updateStore(request.user.orgId, {
         ...rest,
         ...(notifications !== undefined ? { notifications } : {}),
         ...(storefrontTheme !== undefined ? { storefrontTheme: storefrontTheme ?? undefined } : {}),
         ...(bankDetails !== undefined ? { bankDetails: bankDetails ?? undefined } : {}),
+        ...(metaCatalogId === null ? { metaCatalogId: null } : {}),
       });
+      forgetPublicStorefront(before.slug, updated.slug);
+      // A new catalog is linked to WhatsApp and gets every product, old ones included.
+      if (metaCatalogId && metaCatalogId !== before.metaCatalogId) {
+        await connectCatalog(before, metaCatalogId);
+        return { ...updated, metaCatalogId };
+      }
+      return updated;
     }),
+  );
+
+  server.post(
+    "/store/stop-sync",
+    payments,
+    h(async (request) => {
+      // It changes where the money goes and turns the store's products into the shop's own.
+      if (!request.actor?.can("commerce.products.manage"))
+        throw new ShopError("FORBIDDEN", "Only people who manage products can stop syncing");
+      const before = await store(request);
+      const result = await stopFollowingStore(before);
+      forgetPublicStorefront(before.slug);
+      return result;
+    }),
+  );
+
+  // ─── Guided setup ──────────────────────────────────────────────────────────
+  server.get(
+    "/setup",
+    h(async (request) => setupChecklist(await store(request))),
+  );
+  server.post(
+    "/setup/find-catalogs",
+    payments,
+    h(async (request) => findCatalogs(await store(request))),
+  );
+  server.post(
+    "/setup/republish",
+    products,
+    h(async (request) => republishStore((await store(request)).id)),
+  );
+  server.post(
+    "/products/:id/send-to-me",
+    { schema: { params: idParams, body: sendToMeSchema }, ...sell },
+    h(async (request: Req<Id, z.infer<typeof sendToMeSchema>>) =>
+      sendProductToMe(await store(request), request.params.id, request.body.phone),
+    ),
+  );
+  server.post(
+    "/test-order",
+    { schema: { body: testOrderSchema }, ...sell },
+    h(async (request: Req<unknown, z.infer<typeof testOrderSchema>>) =>
+      createTestOrder(await store(request), { ...request.body, actorUserId: actorId(request) }),
+    ),
+  );
+  server.get(
+    "/storefront-preview",
+    h(async (request) => getStorefront((await store(request)).slug, { preview: true })),
   );
   server.post(
     "/shipping-rates",
@@ -185,6 +302,35 @@ export async function shopRoutes(server: FastifyInstance) {
       return getOverview(s, from, to);
     }),
   );
+  server.get(
+    "/message-cost",
+    h(async (request: Req<unknown, unknown, { from?: string; to?: string }>) => {
+      const s = await store(request);
+      const to = request.query.to ? new Date(request.query.to) : new Date();
+      const from = request.query.from
+        ? new Date(request.query.from)
+        : new Date(to.getTime() - 30 * 86_400_000);
+      return getMessageReport(s, from, to);
+    }),
+  );
+  server.get(
+    "/ad-report",
+    h(async (request: Req<unknown, unknown, { from?: string; to?: string }>) => {
+      const s = await store(request);
+      const to = request.query.to ? new Date(request.query.to) : new Date();
+      const from = request.query.from
+        ? new Date(request.query.from)
+        : new Date(to.getTime() - 30 * 86_400_000);
+      return getAdReport(s, from, to);
+    }),
+  );
+  server.put(
+    "/message-cost/rates",
+    { schema: { body: messageRatesSchema }, ...payments },
+    h(async (request: Req<unknown, z.infer<typeof messageRatesSchema>>) =>
+      setMessageRates(await store(request), request.body.rates),
+    ),
+  );
 
   // ─── Products ──────────────────────────────────────────────────────────────
   server.get(
@@ -192,6 +338,17 @@ export async function shopRoutes(server: FastifyInstance) {
     { schema: { querystring: productListQuery } },
     h(async (request: Req<unknown, unknown, z.infer<typeof productListQuery>>) =>
       listProducts((await store(request)).id, request.query),
+    ),
+  );
+  server.get(
+    "/products/import-sources",
+    h(async (request) => importSources(await store(request))),
+  );
+  server.post(
+    "/products/import-from",
+    { schema: { body: importFromSchema }, ...products },
+    h(async (request: Req<unknown, z.infer<typeof importFromSchema>>) =>
+      importProducts(await store(request), request.body, actorId(request) ?? undefined),
     ),
   );
   server.post(
@@ -230,6 +387,20 @@ export async function shopRoutes(server: FastifyInstance) {
       await bulkSetStatus((await store(request)).id, request.body.ids, request.body.status);
       return { ok: true };
     }),
+  );
+  server.post(
+    "/products/bulk-edit",
+    { schema: { body: bulkEditSchema }, ...products },
+    h(async (request: Req<unknown, z.infer<typeof bulkEditSchema>>) =>
+      bulkEditVariants(await store(request), request.body, actorId(request) ?? undefined),
+    ),
+  );
+  server.post(
+    "/products/:id/duplicate",
+    { schema: { params: idParams }, ...products },
+    h(async (request: Req<Id>) =>
+      duplicateProduct(await store(request), request.params.id, actorId(request) ?? undefined),
+    ),
   );
   server.get(
     "/products/:id",
@@ -305,7 +476,6 @@ export async function shopRoutes(server: FastifyInstance) {
       listOrders((await store(request)).id, request.query),
     ),
   );
-  const sell = { config: { permission: "commerce.sell" as const } };
   server.post(
     "/orders",
     { schema: { body: createOrderSchema }, ...sell },
@@ -324,7 +494,10 @@ export async function shopRoutes(server: FastifyInstance) {
       const order = await getOrder((await store(request)).id, request.params.id);
       return {
         ...order,
-        checkoutUrl: order.checkoutToken ? checkoutUrl(order.checkoutToken) : null,
+        // A store-checkout order's link too: RateUp's page sends the customer on to the store.
+        checkoutUrl:
+          order.checkoutToken && order.status === "DRAFT" ? checkoutUrl(order.checkoutToken) : null,
+        externalAdminUrl: await externalAdminUrl(order).catch(() => null),
       };
     }),
   );
@@ -332,7 +505,8 @@ export async function shopRoutes(server: FastifyInstance) {
     "/orders/:id/payment-link",
     { schema: { params: idParams }, ...sell },
     h(async (request: Req<Id>) => {
-      await getOrder((await store(request)).id, request.params.id);
+      const order = await getOrder((await store(request)).id, request.params.id);
+      if (order.status === "DRAFT") await assertCanTakeOrder(order, "staff");
       return sendPaymentLink(request.params.id, { actorUserId: actorId(request) ?? undefined });
     }),
   );
@@ -348,6 +522,7 @@ export async function shopRoutes(server: FastifyInstance) {
       });
       if (order.status !== "DRAFT")
         throw new ShopError("CONFLICT", "This order has already been placed");
+      await assertCanTakeOrder(order, "staff");
       return sendCheckoutLink(order);
     }),
   );
@@ -355,7 +530,7 @@ export async function shopRoutes(server: FastifyInstance) {
     "/orders/:id/fulfillment",
     { schema: { params: idParams, body: fulfillmentSchema } },
     h(async (request: Req<Id, z.infer<typeof fulfillmentSchema>>) => {
-      await getOrder((await store(request)).id, request.params.id);
+      assertFulfilledHere(await getOrder((await store(request)).id, request.params.id));
       return setFulfillmentStatus(
         request.params.id,
         request.body.status,
@@ -367,12 +542,14 @@ export async function shopRoutes(server: FastifyInstance) {
   server.post(
     "/orders/:id/shipments",
     { schema: { params: idParams, body: shipmentSchema } },
-    h(async (request: Req<Id, z.infer<typeof shipmentSchema>>) =>
-      createShipment((await store(request)).id, request.params.id, {
+    h(async (request: Req<Id, z.infer<typeof shipmentSchema>>) => {
+      const s = await store(request);
+      assertFulfilledHere(await getOrder(s.id, request.params.id));
+      return createShipment(s.id, request.params.id, {
         ...request.body,
         actorUserId: actorId(request),
-      }),
-    ),
+      });
+    }),
   );
   server.post(
     "/orders/:id/shipping-quote",
@@ -427,6 +604,30 @@ export async function shopRoutes(server: FastifyInstance) {
       return { ok: true };
     }),
   );
+  server.get(
+    "/orders/:id/invoice",
+    { schema: { params: idParams } },
+    h(async (request: Req<Id>) => {
+      await getOrder((await store(request)).id, request.params.id);
+      return viewInvoice(request.params.id);
+    }),
+  );
+  server.post(
+    "/orders/:id/invoice",
+    { schema: { params: idParams } },
+    h(async (request: Req<Id>) => {
+      await getOrder((await store(request)).id, request.params.id);
+      return openInvoice(request.params.id);
+    }),
+  );
+  server.post(
+    "/orders/:id/invoice/send",
+    { schema: { params: idParams }, ...sell },
+    h(async (request: Req<Id>) => {
+      await getOrder((await store(request)).id, request.params.id);
+      return sendInvoice(request.params.id, { force: true, actorUserId: actorId(request) });
+    }),
+  );
   server.put(
     "/orders/:id/note",
     { schema: { params: idParams, body: staffNoteSchema } },
@@ -448,6 +649,16 @@ export async function shopRoutes(server: FastifyInstance) {
     { schema: { params: idParams, body: returnActionSchema } },
     h(async (request: Req<Id, z.infer<typeof returnActionSchema>>) =>
       updateReturn((await store(request)).id, request.params.id, request.body.action, {
+        ...request.body,
+        actorUserId: actorId(request)!,
+      }),
+    ),
+  );
+  server.post(
+    "/returns/:id/refund",
+    { schema: { params: idParams, body: returnRefundSchema }, ...payments },
+    h(async (request: Req<Id, z.infer<typeof returnRefundSchema>>) =>
+      updateReturn((await store(request)).id, request.params.id, "refund", {
         ...request.body,
         actorUserId: actorId(request)!,
       }),

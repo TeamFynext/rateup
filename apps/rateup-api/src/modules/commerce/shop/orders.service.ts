@@ -1,23 +1,35 @@
 import { randomBytes } from "node:crypto";
 
-import type {
+import {
   Prisma,
-  ShopChannel,
-  ShopCheckoutStage,
-  ShopFulfillmentStatus,
-  ShopOrder,
-  ShopStore,
+  type ShopChannel,
+  type ShopCheckoutStage,
+  type ShopFulfillmentStatus,
+  type ShopOrder,
+  type ShopStore,
 } from "../../../../generated/prisma/client.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
-import { redeemDiscount, releaseDiscount, resolveDiscount } from "./discounts.service.js";
+import { redeemDiscount, releaseDiscount, resolveDiscount, ruleOf } from "./discounts.service.js";
 import { onShopOrderEvent, type ShopOrderEventType } from "./events.js";
 import { priceOrder, round2, shippingFor, toNumber, type PricedLine } from "./pricing.js";
 import { adjustStock, afterStockChange } from "./products.service.js";
 import { notFound, ShopError } from "./shop.errors.js";
-import { pointsOffer, refundSpentPoints, reverseEarnedPoints, spendPoints } from "./shopLoyalty.js";
+import { countsTowardOrders, orderAllowance, orderLimitError } from "./orderAllowance.js";
+import { countPlacedOrder } from "../../subscription/shopOrders.js";
+import { currentPeriodStart } from "../../subscription/billingPeriod.js";
+import { maybeNotifyOrderUsage } from "../../subscription/limitAlerts.js";
+import { shopProductsActionSchema } from "./commentToBuy.schema.js";
+import {
+  pointsOffer,
+  refundSpentPoints,
+  returnSpentPoints,
+  reverseEarnedPoints,
+  spendPoints,
+} from "./shopLoyalty.js";
 import type { ShopAddress, ShopAttribution, ShopSelectedShipping } from "./shop.types.js";
 import { getStoreById, nextOrderNumber, ratesForDestination } from "./store.service.js";
+import { fulfilledInStore, inStoreCheckout, paysInStore, storeLabel } from "./checkoutVia.js";
 
 export const orderDetailInclude = {
   items: { orderBy: { title: "asc" } },
@@ -89,9 +101,31 @@ async function resolveLines(storeId: string, items: CartLineInput[]) {
 }
 
 function stageAfterCreate(store: ShopStore): ShopCheckoutStage {
+  // The store's checkout asks for everything else; all that's left here is to pay there.
+  if (inStoreCheckout(store.checkoutVia)) return "PAYMENT";
   if (store.askAddress) return "ADDRESS";
   if (store.askDelivery) return "DELIVERY";
   return "PAYMENT";
+}
+
+/** Orders a customer starts in chat themselves, which an ad click names as their source. */
+const CHAT_SOURCES = new Set(["wa_cart", "wa_dm", "ig_dm", "messenger_dm"]);
+
+/**
+ * The ad a contact clicked in the attribution window, for orders whose caller named no other
+ * source (an agent's order, the AI agent's, a cart). Best effort: a lookup failure never
+ * stops the sale.
+ */
+async function fallbackAttribution(input: CreateDraftInput): Promise<ShopAttribution | null> {
+  if (input.attribution) return input.attribution;
+  if (!input.contactId) return null;
+  try {
+    const { adAttribution } = await import("./attribution.js");
+    return await adAttribution(input.store.orgId, input.contactId);
+  } catch (err) {
+    log.warn({ err, contactId: input.contactId }, "Could not look up the contact's ad click");
+    return null;
+  }
 }
 
 export async function createDraftOrder(input: CreateDraftInput) {
@@ -99,6 +133,11 @@ export async function createDraftOrder(input: CreateDraftInput) {
   const lines = await resolveLines(store.id, input.items);
   if (!lines.length)
     throw new ShopError("INVALID", "None of those products are for sale right now");
+  const attribution = await fallbackAttribution(input);
+  const source =
+    attribution?.kind === "ctwa_ad" && input.source && CHAT_SOURCES.has(input.source)
+      ? "ctwa_ad"
+      : input.source;
 
   const contact = input.contactId
     ? await prisma.contact.findUnique({
@@ -116,14 +155,15 @@ export async function createDraftOrder(input: CreateDraftInput) {
         number,
         contactId: input.contactId ?? null,
         channel: input.channel,
-        source: input.source ?? null,
+        source: source ?? null,
         channelAccountId: input.channelAccountId ?? null,
         currency: store.currency,
+        checkoutVia: store.checkoutVia,
         checkoutStage: stageAfterCreate(store),
         customerName: input.customer?.name ?? contact?.name ?? null,
         customerPhone: input.customer?.phone ?? contact?.phone ?? null,
         customerEmail: input.customer?.email ?? contact?.email ?? null,
-        attribution: input.attribution ?? undefined,
+        attribution: attribution ?? undefined,
         createdById: input.createdById ?? null,
         legacyWaOrderId: input.legacyWaOrderId ?? null,
         note: input.note ?? null,
@@ -215,46 +255,30 @@ export async function repriceOrder(orderId: string, patch: CheckoutPatch = {}) {
       ? patch.shippingAddress
       : (order.shippingAddress as ShopAddress | null);
 
-  // Shipping: an explicit pick, else the current pick re-quoted, else the only option.
-  let shipping: ShopSelectedShipping | null =
-    (order.shippingRate as ShopSelectedShipping | null) ?? null;
+  // Shipping: an explicit pick, else the current pick re-quoted, else the only option. A pick
+  // that no longer serves the address is dropped rather than kept at its old price.
   const rates = await ratesForDestination(store.id, address?.country);
-  const wantedRateId = patch.shippingRateId !== undefined ? patch.shippingRateId : shipping?.rateId;
-  if (wantedRateId) {
-    const rate = rates.find((r) => r.id === wantedRateId);
-    if (!rate && patch.shippingRateId)
-      throw new ShopError("INVALID", "That delivery option isn't available");
-    shipping = rate
-      ? {
-          rateId: rate.id,
-          name: rate.name,
-          price: shippingFor(
-            {
-              price: toNumber(rate.price),
-              freeOver: rate.freeOver === null ? null : toNumber(rate.freeOver),
-            },
-            subtotal,
-          ),
-          minDays: rate.minDays,
-          maxDays: rate.maxDays,
-        }
-      : null;
-  } else if (rates.length === 1 && !shipping) {
-    const rate = rates[0];
-    shipping = {
-      rateId: rate.id,
-      name: rate.name,
-      price: shippingFor(
-        {
-          price: toNumber(rate.price),
-          freeOver: rate.freeOver === null ? null : toNumber(rate.freeOver),
-        },
-        subtotal,
-      ),
-      minDays: rate.minDays,
-      maxDays: rate.maxDays,
-    };
-  }
+  const current = (order.shippingRate as ShopSelectedShipping | null) ?? null;
+  const wantedRateId = patch.shippingRateId !== undefined ? patch.shippingRateId : current?.rateId;
+  let rate = wantedRateId ? rates.find((r) => r.id === wantedRateId) : undefined;
+  if (!rate && patch.shippingRateId)
+    throw new ShopError("INVALID", "That delivery option isn't available");
+  if (!rate && rates.length === 1) rate = rates[0];
+  const shipping: ShopSelectedShipping | null = rate
+    ? {
+        rateId: rate.id,
+        name: rate.name,
+        price: shippingFor(
+          {
+            price: toNumber(rate.price),
+            freeOver: rate.freeOver === null ? null : toNumber(rate.freeOver),
+          },
+          subtotal,
+        ),
+        minDays: rate.minDays,
+        maxDays: rate.maxDays,
+      }
+    : null;
 
   // Discount
   let discountCode = patch.discountCode !== undefined ? patch.discountCode : order.discountCode;
@@ -290,6 +314,7 @@ export async function repriceOrder(orderId: string, patch: CheckoutPatch = {}) {
       store,
       order.contactId,
       goodsBase.subtotal - goodsBase.discountTotal,
+      order.reservedAt ? order.pointsRedeemed : 0,
     );
     if (offer && offer.points > 0) {
       pointsRedeemed = offer.points;
@@ -308,13 +333,22 @@ export async function repriceOrder(orderId: string, patch: CheckoutPatch = {}) {
     pricesIncludeTax: store.pricesIncludeTax,
   });
 
+  // The coupon or points this draft holds for its payment link no longer match it.
+  const newDiscountId = discount?.discount.id ?? null;
+  if (
+    order.reservedAt &&
+    (newDiscountId !== order.discountId || pointsRedeemed !== order.pointsRedeemed)
+  ) {
+    await releaseOrderBenefits(order.id);
+  }
+
   return prisma.shopOrder.update({
     where: { id: order.id },
     data: {
       shippingAddress: address ?? undefined,
-      shippingRate: shipping ?? undefined,
+      shippingRate: shipping ?? Prisma.DbNull,
       discountCode: discountCode ?? null,
-      discountId: discount?.discount.id ?? null,
+      discountId: newDiscountId,
       pointsRedeemed,
       customerName: patch.customer?.name ?? patch.shippingAddress?.name ?? order.customerName,
       customerEmail: patch.customer?.email ?? order.customerEmail,
@@ -324,6 +358,72 @@ export async function repriceOrder(orderId: string, patch: CheckoutPatch = {}) {
     },
     include: orderDetailInclude,
   });
+}
+
+/** An order's lines and saved coupon, priced the way `repriceOrder` prices them. */
+async function pricingContext(orderId: string) {
+  const order = await prisma.shopOrder.findUnique({
+    where: { id: orderId },
+    include: {
+      items: {
+        include: {
+          variant: { include: { product: { include: { collections: { select: { id: true } } } } } },
+        },
+      },
+    },
+  });
+  if (!order) throw notFound("Order");
+  const store = await getStoreById(order.storeId);
+  const lines: PricedLine[] = order.items.map((i) => ({
+    variantId: i.variantId,
+    productId: i.productId,
+    collectionIds: i.variant?.product.collections.map((c) => c.id) ?? [],
+    unitPrice: toNumber(i.unitPrice),
+    quantity: i.quantity,
+  }));
+  const discount = order.discountId
+    ? await prisma.shopDiscount.findUnique({ where: { id: order.discountId } })
+    : null;
+  return { order, store, lines, discount: discount ? ruleOf(discount) : null };
+}
+
+/**
+ * The points a customer may spend on an order, offered on the base `repriceOrder` spends them
+ * against — goods after the coupon — so the chat, the hosted page and the total agree.
+ */
+export async function pointsOfferForOrder(orderId: string) {
+  const { order, store, lines, discount } = await pricingContext(orderId);
+  const goods = priceOrder({ lines, discount });
+  return pointsOffer(
+    store,
+    order.contactId,
+    goods.subtotal - goods.discountTotal,
+    order.reservedAt ? order.pointsRedeemed : 0,
+  );
+}
+
+/**
+ * A cash order switched to paying online at `pct` off the goods: priced again so tax and the
+ * invoice match. Returns null when it was already switched or confirmed (a double tap).
+ */
+export async function applyPrepaidDiscount(orderId: string, pct: number) {
+  const { order, store, lines, discount } = await pricingContext(orderId);
+  const shipping = (order.shippingRate as ShopSelectedShipping | null)?.price ?? 0;
+  const totals = priceOrder({
+    lines,
+    discount,
+    extraDiscountPct: pct,
+    pointsValue: toNumber(order.pointsDiscount),
+    shipping,
+    taxRate: store.taxRate === null ? null : toNumber(store.taxRate),
+    pricesIncludeTax: store.pricesIncludeTax,
+  });
+  const { count } = await prisma.shopOrder.updateMany({
+    where: { id: orderId, paymentStatus: "COD_PENDING", confirmedAt: null },
+    data: { ...totals, paymentStatus: "PENDING", confirmedAt: new Date() },
+  });
+  if (!count) return null;
+  return { saved: round2(toNumber(order.total) - totals.total), order };
 }
 
 export async function addOrderEvent(
@@ -340,24 +440,230 @@ export async function addOrderEvent(
 }
 
 /**
- * Turns a draft into a real order: stock is taken, the coupon and points are spent. Paid and
- * cash orders both pass through here; the stock check is the moment a sold-out item is found.
+ * A store that charges for delivery (it asks for it and has active rates) takes no payment
+ * and places no order until a rate that serves the order's address is on it; otherwise the
+ * customer would get free delivery by picking nothing, or ship where the store doesn't.
+ */
+export async function assertDeliveryChosen(
+  order: Pick<ShopOrder, "storeId" | "shippingAddress" | "shippingRate">,
+  store: Pick<ShopStore, "askDelivery">,
+) {
+  if (!store.askDelivery) return;
+  const anyRate = await prisma.shopShippingRate.count({
+    where: { storeId: order.storeId, active: true },
+  });
+  if (!anyRate) return;
+  const country = (order.shippingAddress as ShopAddress | null)?.country;
+  const rates = await ratesForDestination(order.storeId, country);
+  if (!rates.length)
+    throw new ShopError(
+      "INVALID",
+      country ? `We don't deliver to ${countryName(country)}` : "Add a delivery address first",
+    );
+  const picked = (order.shippingRate as ShopSelectedShipping | null)?.rateId;
+  if (!picked || !rates.some((r) => r.id === picked))
+    throw new ShopError("INVALID", "Pick a delivery option first");
+}
+
+function countryName(code: string) {
+  try {
+    return new Intl.DisplayNames(["en"], { type: "region" }).of(code.toUpperCase()) ?? code;
+  } catch {
+    return code;
+  }
+}
+
+/** A draft past its checkout window can't be paid; its prices and holds are no longer kept. */
+export function assertCheckoutOpen(
+  order: Pick<ShopOrder, "status" | "checkoutExpiresAt">,
+  now = new Date(),
+) {
+  if (order.status === "DRAFT" && order.checkoutExpiresAt && order.checkoutExpiresAt < now)
+    throw new ShopError(
+      "CHECKOUT_EXPIRED",
+      "This checkout has expired. Message us and we'll start a fresh one.",
+    );
+}
+
+/**
+ * Brings a draft's lines up to the store's current prices before money is taken, so a draft
+ * kept from a sale or a typo can't be paid at that price later. A product taken off sale
+ * since stops it. Returns the totals before and after.
+ */
+export async function refreshDraftPrices(orderId: string) {
+  const order = await prisma.shopOrder.findUnique({
+    where: { id: orderId },
+    include: { items: { include: { variant: { include: { product: true } } } } },
+  });
+  if (!order) throw notFound("Order");
+  const before = toNumber(order.total);
+  if (order.status !== "DRAFT") return { before, after: before, changed: false };
+  const gone = order.items.find((i) => i.variant && i.variant.product.status !== "ACTIVE");
+  if (gone) throw new ShopError("OUT_OF_STOCK", `${gone.title} is no longer for sale`);
+  const stale = order.items.filter(
+    (i) => i.variant && toNumber(i.variant.price) !== toNumber(i.unitPrice),
+  );
+  if (!stale.length) return { before, after: before, changed: false };
+  await prisma.$transaction(
+    stale.map((i) => {
+      const unit = toNumber(i.variant!.price);
+      return prisma.shopOrderItem.update({
+        where: { id: i.id },
+        data: { unitPrice: unit, lineTotal: round2(unit * i.quantity) },
+      });
+    }),
+  );
+  const after = toNumber((await repriceOrder(orderId)).total);
+  await addOrderEvent(orderId, "repriced", "Prices updated to the store's current prices", {
+    before,
+    after,
+  });
+  return { before, after, changed: Math.abs(after - before) > 0.009 };
+}
+
+/**
+ * The checks every way of paying a draft runs first: still open, at today's prices. `strict`
+ * refuses when the total moved, so the customer sees the new amount before paying it.
+ */
+export async function prepareDraftForPayment(orderId: string, opts: { strict: boolean }) {
+  const order = await prisma.shopOrder.findUnique({ where: { id: orderId } });
+  if (!order) throw notFound("Order");
+  if (order.status !== "DRAFT") return { changed: false, before: 0, after: 0 };
+  assertCheckoutOpen(order);
+  const prices = await refreshDraftPrices(orderId);
+  if (prices.changed && opts.strict)
+    throw new ShopError(
+      "CONFLICT",
+      `Prices have changed since this order was started. The total is now ${order.currency} ${prices.after.toFixed(2)}; check it and pay again.`,
+    );
+  return prices;
+}
+
+/**
+ * Takes the coupon use and the points a draft spends while its payment link is open, so two
+ * drafts can't both pay with the last use of a code or the same balance. Released when the
+ * link lapses, the choices change, or the draft is cancelled; kept when the order is placed.
+ */
+export async function reserveOrderBenefits(orderId: string) {
+  await prisma.$transaction(async (tx) => {
+    const o = await tx.shopOrder.findUnique({ where: { id: orderId } });
+    if (!o || o.status !== "DRAFT" || o.reservedAt) return;
+    if (!o.discountId && !(o.pointsRedeemed > 0 && o.contactId)) return;
+    const reservedAt = new Date();
+    const { count } = await tx.shopOrder.updateMany({
+      where: { id: orderId, status: "DRAFT", reservedAt: null },
+      data: { reservedAt },
+    });
+    if (!count) return;
+    if (o.discountId) {
+      await redeemDiscount(tx, o.discountId, o.id, o.contactId, toNumber(o.discountTotal));
+    }
+    if (o.pointsRedeemed > 0 && o.contactId) {
+      await spendPoints(
+        tx,
+        o.orgId,
+        o.contactId,
+        o.id,
+        o.pointsRedeemed,
+        `hold-${reservedAt.getTime()}`,
+      );
+    }
+  });
+}
+
+/** Gives a draft's held coupon use and points back. Safe to call twice. */
+export async function releaseOrderBenefits(orderId: string) {
+  await prisma.$transaction(async (tx) => {
+    const { count } = await tx.shopOrder.updateMany({
+      where: { id: orderId, status: "DRAFT", reservedAt: { not: null } },
+      data: { reservedAt: null },
+    });
+    if (!count) return;
+    const o = await tx.shopOrder.findUniqueOrThrow({ where: { id: orderId } });
+    await releaseDiscount(tx, orderId);
+    await returnSpentPoints(tx, o.orgId, orderId, "Returned: checkout not completed");
+  });
+}
+
+/**
+ * Whether a comment-to-buy drop already placed its limit, for an order one of its claims
+ * started. Serialised with `claimDropUnit` by the same advisory lock.
+ */
+async function dropSoldOut(tx: Prisma.TransactionClient, orderId: string) {
+  const claim = await tx.shopDropClaim.findFirst({ where: { orderId }, select: { ruleId: true } });
+  if (!claim) return false;
+  const action = await tx.ruleAction.findFirst({
+    where: { ruleId: claim.ruleId, type: "SEND_SHOP_PRODUCTS" },
+    select: { value: true },
+  });
+  const limit = shopProductsActionSchema.safeParse(action?.value).data?.dropLimit;
+  if (!limit) return false;
+  await tx.$queryRaw`SELECT 1 FROM (SELECT pg_advisory_xact_lock(hashtext(${claim.ruleId}))) AS l`;
+  const [row] = await tx.$queryRaw<{ placed: bigint }[]>`
+    SELECT count(*)::bigint AS placed
+    FROM "ShopDropClaim" c JOIN "ShopOrder" o ON o.id = c."orderId"
+    WHERE c."ruleId" = ${claim.ruleId}::uuid AND o.id <> ${orderId}::uuid
+      AND o.status IN ('OPEN', 'COMPLETED')`;
+  return Number(row?.placed ?? 0) >= limit;
+}
+
+/**
+ * Turns a draft into a real order: stock is taken, the coupon and points are spent (or the
+ * hold on them kept). Unpaid placements (cash, bank) refuse when something ran out. A `paid`
+ * placement never refuses, since the money is already taken: what ran out is recorded on
+ * the order, with what the customer was given but not charged, and staff are told. The same
+ * holds for the plan's monthly orders: a paid placement past them is counted, never refused.
  */
 export async function placeOrder(
   orderId: string,
-  opts: { paymentMethod: string; codPending?: boolean; actorUserId?: string | null },
+  opts: {
+    paymentMethod: string;
+    codPending?: boolean;
+    actorUserId?: string | null;
+    paid?: boolean;
+  },
 ) {
+  const head = await prisma.shopOrder.findUnique({
+    where: { id: orderId },
+    select: { orgId: true, source: true, status: true },
+  });
+  if (!head) throw notFound("Order");
+  const allowance = head.status === "DRAFT" ? await orderAllowance(head) : null;
+  if (!opts.paid && allowance?.exceeded) throw orderLimitError("customer", allowance.max ?? 0);
+  if (!opts.paid) await prepareDraftForPayment(orderId, { strict: true });
+  let ordersThisMonth: number | null = null;
   const changed: {
     before: Parameters<typeof afterStockChange>[0];
     after: Parameters<typeof afterStockChange>[1];
   }[] = [];
+  const problems: string[] = [];
+  let owed = 0;
   const order = await prisma.$transaction(async (tx) => {
+    // Claimed first: the row lock makes a second caller (the payment webhook and the customer's
+    // return to the checkout page arrive together) wait here, then find nothing to claim.
+    const claim = await tx.shopOrder.updateMany({
+      where: { id: orderId, status: "DRAFT" },
+      data: { status: "OPEN" },
+    });
     const o = await tx.shopOrder.findUnique({ where: { id: orderId }, include: { items: true } });
     if (!o) throw notFound("Order");
-    if (o.status !== "DRAFT") return o;
+    if (!claim.count) return { ...o, alreadyPlaced: true as const };
+
+    if (countsTowardOrders(o)) {
+      ordersThisMonth = await countPlacedOrder(tx, o.orgId);
+      // Re-checked on the locked counter: two unpaid orders racing for the last slot.
+      if (!opts.paid && allowance?.max !== undefined && ordersThisMonth > allowance.max)
+        throw orderLimitError("customer", allowance.max);
+    }
+
+    if (await dropSoldOut(tx, o.id)) {
+      if (!opts.paid) throw new ShopError("OUT_OF_STOCK", "This drop has sold out");
+      problems.push("The drop it came from had already sold out");
+    }
 
     for (const item of o.items) {
-      if (!item.variantId) continue;
+      // An order checked out in Shopify or WooCommerce took stock there; the mirror follows.
+      if (!item.variantId || inStoreCheckout(o.checkoutVia)) continue;
       const v = await tx.shopVariant.findUnique({ where: { id: item.variantId } });
       if (v && v.trackInventory && !v.allowBackorder) {
         // Conditional, so two customers paying for the last one cannot both take it.
@@ -365,15 +671,23 @@ export async function placeOrder(
           where: { id: v.id, stock: { gte: item.quantity } },
           data: { stock: { decrement: item.quantity } },
         });
+        const label = `${item.title}${item.variantTitle ? ` (${item.variantTitle})` : ""}`;
         if (!count) {
           const left =
             (await tx.shopVariant.findUnique({ where: { id: v.id }, select: { stock: true } }))
               ?.stock ?? 0;
-          throw new ShopError(
-            "OUT_OF_STOCK",
-            left > 0
-              ? `Only ${left} of ${item.title}${item.variantTitle ? ` (${item.variantTitle})` : ""} left`
-              : `${item.title} just sold out`,
+          if (!opts.paid)
+            throw new ShopError(
+              "OUT_OF_STOCK",
+              left > 0 ? `Only ${left} of ${label} left` : `${item.title} just sold out`,
+            );
+          // Paid for: taken anyway, so the shortfall shows as negative stock to restock or refund.
+          await tx.shopVariant.update({
+            where: { id: v.id },
+            data: { stock: { decrement: item.quantity } },
+          });
+          problems.push(
+            `${label} was oversold: ${item.quantity} paid for, ${Math.max(left, 0)} in stock`,
           );
         }
         await tx.shopInventoryMovement.create({
@@ -385,11 +699,28 @@ export async function placeOrder(
       }
       changed.push(await adjustStock(tx, item.variantId, -item.quantity, "ORDER", { orderId }));
     }
-    if (o.discountId) {
-      await redeemDiscount(tx, o.discountId, o.id, o.contactId, toNumber(o.discountTotal));
+    // A held coupon and points were taken with the payment link; only unheld ones are spent here.
+    if (!o.reservedAt && o.discountId) {
+      try {
+        await redeemDiscount(tx, o.discountId, o.id, o.contactId, toNumber(o.discountTotal));
+      } catch (err) {
+        if (!opts.paid) throw err;
+        problems.push(
+          o.discountCode
+            ? `Coupon ${o.discountCode} was used up first`
+            : "The coupon was used up first",
+        );
+        owed += toNumber(o.discountTotal);
+      }
     }
-    if (o.pointsRedeemed > 0 && o.contactId) {
-      await spendPoints(tx, o.orgId, o.contactId, o.id, o.pointsRedeemed);
+    if (!o.reservedAt && o.pointsRedeemed > 0 && o.contactId) {
+      try {
+        await spendPoints(tx, o.orgId, o.contactId, o.id, o.pointsRedeemed);
+      } catch (err) {
+        if (!opts.paid) throw err;
+        problems.push(`The customer's ${o.pointsRedeemed} points were already spent`);
+        owed += toNumber(o.pointsDiscount);
+      }
     }
     const placed = await tx.shopOrder.update({
       where: { id: o.id },
@@ -399,6 +730,10 @@ export async function placeOrder(
         paymentMethod: opts.paymentMethod,
         paymentStatus: opts.codPending ? "COD_PENDING" : o.paymentStatus,
         checkoutStage: "DONE",
+        reservedAt: null,
+        ...(problems.length
+          ? { reviewReason: problems.join("; "), amountDue: owed > 0 ? round2(owed) : null }
+          : {}),
       },
       include: { items: true },
     });
@@ -410,14 +745,45 @@ export async function placeOrder(
       opts.actorUserId,
       tx,
     );
+    if (problems.length) {
+      await addOrderEvent(
+        o.id,
+        "needs_review",
+        `Paid, but needs review: ${problems.join("; ")}${owed > 0 ? ` (${o.currency} ${round2(owed).toFixed(2)} given but not covered)` : ""}`,
+        { problems, owed: round2(owed) },
+        undefined,
+        tx,
+      );
+    }
     return placed;
   });
+  if ("alreadyPlaced" in order) return order;
+  if (ordersThisMonth !== null)
+    await maybeNotifyOrderUsage(order.orgId, ordersThisMonth, allowance?.max, currentPeriodStart());
   for (const c of changed)
     await afterStockChange(c.before, c.after).catch((err) =>
       log.warn({ err }, "stock follow-up failed"),
     );
+  if (problems.length) await notifyNeedsReview(order, problems.join("; "));
   await onShopOrderEvent(order.id, "placed");
   return order;
+}
+
+async function notifyNeedsReview(
+  order: Pick<ShopOrder, "id" | "orgId" | "number">,
+  reason: string,
+) {
+  try {
+    const { notify } = await import("../../notification/notify.js");
+    await notify({
+      event: "commerce.order_needs_review",
+      orgId: order.orgId,
+      audience: { kind: "permitted" },
+      data: { orderId: order.id, orderNumber: order.number, reason },
+    });
+  } catch (err) {
+    log.warn({ err, orderId: order.id }, "Could not tell staff an order needs review");
+  }
 }
 
 /** Records a confirmed payment. Places the order first if it was still a draft. */
@@ -444,36 +810,19 @@ export async function markOrderPaid(
     return current;
   }
   if (current.status === "DRAFT") {
-    try {
-      await placeOrder(orderId, {
-        paymentMethod: payment.provider,
-        actorUserId: payment.actorUserId,
-      });
-    } catch (err) {
-      // Stock, the coupon or the points ran out between the payment page and the payment:
-      // the customer has paid, so the order stands and staff decide (backorder or refund).
-      const conflict = ["OUT_OF_STOCK", "DISCOUNT_INVALID", "CONFLICT"];
-      if (!(err instanceof ShopError && conflict.includes(err.code))) throw err;
-      await prisma.shopOrder.update({
-        where: { id: orderId },
-        data: {
-          status: "OPEN",
-          placedAt: new Date(),
-          checkoutStage: "DONE",
-          paymentMethod: payment.provider,
-        },
-      });
-      await addOrderEvent(
-        orderId,
-        "paid_with_conflict",
-        `${err.message} — paid anyway, please review`,
-      );
-    }
+    await placeOrder(orderId, {
+      paymentMethod: payment.provider,
+      actorUserId: payment.actorUserId,
+      paid: true,
+    });
   }
-  const order = await prisma.shopOrder.update({
-    where: { id: orderId },
+  // Conditional, so of two confirmations of the same payment only one sends "paid" on.
+  const { count } = await prisma.shopOrder.updateMany({
+    where: { id: orderId, paymentStatus: { not: "PAID" } },
     data: { paymentStatus: "PAID", paidAt: new Date(), paymentMethod: payment.provider },
   });
+  const order = await prisma.shopOrder.findUniqueOrThrow({ where: { id: orderId } });
+  if (!count) return order;
   await addOrderEvent(
     orderId,
     "paid",
@@ -489,10 +838,12 @@ export async function confirmCodOrder(orderId: string, actorUserId?: string | nu
   const order = await prisma.shopOrder.findUnique({ where: { id: orderId } });
   if (!order) throw notFound("Order");
   if (order.paymentStatus !== "COD_PENDING" || order.confirmedAt) return order;
-  const updated = await prisma.shopOrder.update({
-    where: { id: orderId },
+  const { count } = await prisma.shopOrder.updateMany({
+    where: { id: orderId, paymentStatus: "COD_PENDING", confirmedAt: null },
     data: { confirmedAt: new Date() },
   });
+  const updated = await prisma.shopOrder.findUniqueOrThrow({ where: { id: orderId } });
+  if (!count) return updated;
   await addOrderEvent(
     orderId,
     "cod_confirmed",
@@ -511,13 +862,27 @@ export async function markCodCollected(orderId: string, actorUserId?: string | n
 
 export async function cancelOrder(
   orderId: string,
-  opts: { reason: string; restock?: boolean; actorUserId?: string | null; notify?: boolean },
+  opts: {
+    reason: string;
+    restock?: boolean;
+    actorUserId?: string | null;
+    notify?: boolean;
+    /** The store cancelled it, so its copy there is already cancelled. */
+    fromStore?: boolean;
+  },
 ) {
   const changed: Awaited<ReturnType<typeof adjustStock>>[] = [];
+  let cancelledNow = false;
   const order = await prisma.$transaction(async (tx) => {
     const o = await tx.shopOrder.findUnique({ where: { id: orderId }, include: { items: true } });
     if (!o) throw notFound("Order");
     if (o.status === "CANCELLED") return o;
+    if (!opts.fromStore && o.status !== "DRAFT" && paysInStore(o))
+      throw new ShopError(
+        "CONFLICT",
+        `This order was placed in ${storeLabel(o.checkoutVia)}. Cancel it there and RateUp follows.`,
+      );
+    cancelledNow = true;
     if (o.fulfillmentStatus === "SHIPPED" || o.fulfillmentStatus === "DELIVERED")
       throw new ShopError("CONFLICT", "This order has shipped; start a return instead");
     const wasPlaced = o.status !== "DRAFT";
@@ -527,7 +892,9 @@ export async function cancelOrder(
           changed.push(await adjustStock(tx, item.variantId, item.quantity, "CANCEL", { orderId }));
       }
     }
-    if (wasPlaced) await releaseDiscount(tx, o.id);
+    if (wasPlaced || o.reservedAt) await releaseDiscount(tx, o.id);
+    // A cancelled order frees the drop unit its comment claimed.
+    await tx.shopDropClaim.deleteMany({ where: { orderId } });
     await tx.shopPayment.updateMany({
       where: { orderId, status: "PENDING" },
       data: { status: "EXPIRED" },
@@ -536,6 +903,7 @@ export async function cancelOrder(
       where: { id: o.id },
       data: {
         status: "CANCELLED",
+        reservedAt: null,
         cancelledAt: new Date(),
         cancelReason: opts.reason,
         fulfillmentStatus: "CANCELLED",
@@ -559,6 +927,12 @@ export async function cancelOrder(
     return cancelled;
   });
   for (const c of changed) await afterStockChange(c.before, c.after).catch(() => {});
+  if (cancelledNow && !opts.fromStore) {
+    const { cancelInStore } = await import("./storeSync.service.js");
+    await cancelInStore(order.id);
+  }
+  const { closeOpenLinks } = await import("./payments/payments.service.js");
+  await closeOpenLinks(order.orgId, order.id).catch(() => {});
   await refundSpentPoints(order.orgId, order.id).catch((err) =>
     log.warn({ err }, "points refund failed"),
   );
@@ -619,13 +993,24 @@ export type OrderTab =
   | "drafts"
   | "cancelled";
 
+/** Packed and shipped from RateUp; the rest are fulfilled in the Shopify or WooCommerce store. */
+const FULFILLED_HERE = {
+  checkoutVia: "RATEUP",
+  externalId: null,
+} satisfies Prisma.ShopOrderWhereInput;
+
 function tabWhere(tab: OrderTab): Prisma.ShopOrderWhereInput {
   switch (tab) {
     case "needs_action":
       return {
         OR: [
           { status: "OPEN", paymentStatus: "COD_PENDING", confirmedAt: null },
-          { status: "OPEN", paymentStatus: "PAID", fulfillmentStatus: "UNFULFILLED" },
+          {
+            status: "OPEN",
+            paymentStatus: "PAID",
+            fulfillmentStatus: "UNFULFILLED",
+            ...FULFILLED_HERE,
+          },
           { fulfillmentStatus: "FAILED_DELIVERY" },
           { returns: { some: { status: "REQUESTED" } } },
         ],
@@ -640,6 +1025,7 @@ function tabWhere(tab: OrderTab): Prisma.ShopOrderWhereInput {
       return {
         status: "OPEN",
         fulfillmentStatus: { in: ["UNFULFILLED", "PACKED"] },
+        ...FULFILLED_HERE,
         OR: [
           { paymentStatus: "PAID" },
           { paymentStatus: "COD_PENDING", confirmedAt: { not: null } },
@@ -734,7 +1120,7 @@ export async function listOrders(storeId: string, q: OrderListQuery) {
     ...TABS.map((t) => prisma.shopOrder.count({ where: { AND: [{ storeId }, tabWhere(t)] } })),
   ]);
   return {
-    items: items.map((o) => ({ ...o, nextStep: nextStep(o) })),
+    items: items.map(({ invoiceKey: _key, ...o }) => ({ ...o, nextStep: nextStep(o) })),
     total,
     page,
     limit,
@@ -746,10 +1132,32 @@ export async function listOrders(storeId: string, q: OrderListQuery) {
 export function nextStep(
   o: Pick<
     ShopOrder,
-    "status" | "paymentStatus" | "fulfillmentStatus" | "confirmedAt" | "checkoutStage"
+    | "status"
+    | "paymentStatus"
+    | "fulfillmentStatus"
+    | "confirmedAt"
+    | "checkoutStage"
+    | "checkoutVia"
+    | "externalProvider"
+    | "externalId"
   >,
 ): string {
   if (o.status === "CANCELLED") return "—";
+  const store =
+    o.externalProvider === "woocommerce" || o.checkoutVia === "WOOCOMMERCE"
+      ? "WooCommerce"
+      : "Shopify";
+  if (o.status === "DRAFT" && inStoreCheckout(o.checkoutVia))
+    return `Waiting for checkout in ${store}`;
+  if (o.status !== "DRAFT" && fulfilledInStore(o)) {
+    if (o.paymentStatus === "PENDING" || o.paymentStatus === "UNPAID") return "Waiting for payment";
+    if (o.paymentStatus === "COD_PENDING" && !o.confirmedAt)
+      return "Waiting for the customer to confirm";
+    if (o.fulfillmentStatus === "UNFULFILLED" || o.fulfillmentStatus === "PACKED")
+      return `Fulfil it in ${store}`;
+    if (o.fulfillmentStatus === "DELIVERED") return "Delivered";
+    return `Fulfilled in ${store}`;
+  }
   if (o.status === "DRAFT") {
     return {
       ADDRESS: "Waiting for the address",
@@ -789,8 +1197,10 @@ export async function getOrder(storeId: string, id: string) {
       ? import("./shopLoyalty.js").then((m) => m.memberFor(order.orgId, order.contactId))
       : null,
   ]);
+  const { invoiceKey, ...rest } = order;
   return {
-    ...order,
+    ...rest,
+    hasInvoice: Boolean(invoiceKey),
     nextStep: nextStep(order),
     customerStats: stats ? { orders: stats._count._all, spent: toNumber(stats._sum.total) } : null,
     loyalty: member
@@ -814,4 +1224,38 @@ export async function updateStaffNote(storeId: string, id: string, staffNote: st
     data: { staffNote },
   });
   if (!count) throw notFound("Order");
+}
+
+/** How long an expired draft is kept before it is cancelled, for staff to see or revive. */
+const EXPIRED_DRAFT_GRACE_MS = 3 * 24 * 3_600_000;
+
+/**
+ * Hourly: drafts past their checkout window give their held coupon uses and points back at
+ * once, and are cancelled a few days later (which also frees any drop unit they claimed).
+ */
+export async function sweepExpiredDrafts(now = new Date()) {
+  const held = await prisma.shopOrder.findMany({
+    where: { status: "DRAFT", reservedAt: { not: null }, checkoutExpiresAt: { lt: now } },
+    select: { id: true },
+    take: 500,
+  });
+  for (const o of held)
+    await releaseOrderBenefits(o.id).catch((err) =>
+      log.warn({ err, orderId: o.id }, "Could not release an expired draft's holds"),
+    );
+  // Store checkouts too: cancelling closes the store's unpaid draft or order, which neither
+  // Shopify nor WooCommerce does for an order RateUp created.
+  const stale = await prisma.shopOrder.findMany({
+    where: {
+      status: "DRAFT",
+      checkoutExpiresAt: { lt: new Date(now.getTime() - EXPIRED_DRAFT_GRACE_MS) },
+    },
+    select: { id: true },
+    take: 500,
+  });
+  for (const o of stale)
+    await cancelOrder(o.id, { reason: "Checkout expired", notify: false }).catch((err) =>
+      log.warn({ err, orderId: o.id }, "Could not cancel an expired draft"),
+    );
+  return { released: held.length, cancelled: stale.length };
 }

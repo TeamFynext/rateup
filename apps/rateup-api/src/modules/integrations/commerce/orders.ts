@@ -18,7 +18,7 @@ import { scheduleOrderSurvey } from "./surveys.js";
 export async function onOrderEvent(store: CommerceStore, order: CommerceOrder) {
   const { provider, storeId, orgId } = store;
 
-  if (order.orderId) {
+  if (order.orderId && !order.rateupWriteBack) {
     await enqueueCommerceOrderLoyalty({
       provider: provider.name,
       storeId,

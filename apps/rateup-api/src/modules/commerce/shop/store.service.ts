@@ -2,7 +2,9 @@ import { randomBytes } from "node:crypto";
 
 import type { Prisma, ShopStore } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
+import { assertCheckoutVia } from "./externalCheckout.service.js";
 import { notFound, ShopError } from "./shop.errors.js";
+import { getSubscriptionGate } from "../../subscription/subscription.service.js";
 
 export function slugify(input: string): string {
   return (
@@ -42,11 +44,8 @@ export async function getOrCreateStore(orgId: string): Promise<ShopStore> {
   ]);
   if (!org) throw notFound("Organisation");
 
-  const shopify = await prisma.integration.findFirst({
-    where: { orgId, name: { in: ["shopify", "woocommerce"] }, active: true },
-    select: { name: true },
-  });
-
+  // A shop starts with products of its own; following a connected store is the merchant's
+  // choice, made with "Keep in sync" in the import.
   try {
     return await prisma.shopStore.create({
       data: {
@@ -56,7 +55,6 @@ export async function getOrCreateStore(orgId: string): Promise<ShopStore> {
         logoUrl: org.logo,
         currency: program?.currencyCode ?? "USD",
         metaCatalogId: catalog?.catalogId ?? null,
-        mode: shopify?.name === "shopify" ? "SHOPIFY" : shopify ? "WOOCOMMERCE" : "NATIVE",
       },
     });
   } catch (err) {
@@ -83,6 +81,15 @@ export async function updateStore(orgId: string, data: Prisma.ShopStoreUpdateInp
     });
     if (taken) throw new ShopError("CONFLICT", "That storefront address is already taken");
     data.slug = slug;
+  }
+  if (typeof data.checkoutVia === "string") await assertCheckoutVia(store, data.checkoutVia);
+  const discountId = (data as { cartReminderDiscountId?: unknown }).cartReminderDiscountId;
+  if (typeof discountId === "string") {
+    const own = await prisma.shopDiscount.findFirst({
+      where: { id: discountId, storeId: store.id },
+      select: { id: true },
+    });
+    if (!own) throw new ShopError("INVALID", "That discount doesn't exist");
   }
   return prisma.shopStore.update({ where: { id: store.id }, data });
 }
@@ -135,4 +142,62 @@ export async function ratesForDestination(storeId: string, country?: string | nu
   });
   const code = country?.toUpperCase();
   return rates.filter((r) => r.countries.length === 0 || (code && r.countries.includes(code)));
+}
+
+/**
+ * Whether the org's plan includes Commerce (`whatsapp.catalog`). The session routes use the
+ * shared subscription guard; this is for the doors without a session — the storefront, chat
+ * carts and the AI agent's tools. An expired plan sells nothing new.
+ */
+export async function commerceEnabled(orgId: string): Promise<boolean> {
+  const gate = await getSubscriptionGate(orgId);
+  if (!gate) return false;
+  if (new Date(gate.expiresAt).getTime() < Date.now()) return false;
+  const features = gate.features as { whatsapp?: { catalog?: { active?: boolean } } } | null;
+  return features?.whatsapp?.catalog?.active === true;
+}
+
+export async function assertCommerceEnabled(orgId: string) {
+  if (!(await commerceEnabled(orgId)))
+    throw new ShopError("PLAN_REQUIRED", "This shop isn't taking orders right now");
+}
+
+/**
+ * A Shopify or WooCommerce store was connected: Commerce is shown (selling what is in that
+ * store is why they connected it). A shop already following that store (a reconnect) copies
+ * its products in again; any other shop is left as it is, and the Products page offers the
+ * import.
+ */
+export async function onOnlineStoreConnected(orgId: string, mode: "SHOPIFY" | "WOOCOMMERCE") {
+  const { revealModule } = await import("../../org/modules.js");
+  await revealModule(orgId, "commerce");
+  const store = await prisma.shopStore.findUnique({
+    where: { orgId },
+    select: { id: true, mode: true },
+  });
+  if (store?.mode === mode) {
+    const { enqueueStoreMirror } = await import("../../../workers/bullmq/queues/shop.queue.js");
+    await enqueueStoreMirror(store.id, 0);
+  }
+}
+
+/**
+ * The store a shop checks out in was disconnected: RateUp takes the payments again so carts
+ * aren't stranded, and staff are told, since RateUp checkout may still need a way to get paid.
+ */
+export async function onOnlineStoreDisconnected(orgId: string, mode: "SHOPIFY" | "WOOCOMMERCE") {
+  const store = await prisma.shopStore.findUnique({ where: { orgId } });
+  if (!store || store.checkoutVia !== mode) return;
+  await prisma.shopStore.update({ where: { id: store.id }, data: { checkoutVia: "RATEUP" } });
+  const label = mode === "SHOPIFY" ? "Shopify" : "WooCommerce";
+  const { notify } = await import("../../notification/notify.js");
+  await notify({
+    event: "integration.error",
+    orgId,
+    audience: { kind: "permitted" },
+    data: {
+      integration: label,
+      error: `${label} was disconnected, so customers now check out in RateUp. Make sure a way to get paid is set up in Commerce → Settings, or reconnect ${label}.`,
+    },
+  });
 }

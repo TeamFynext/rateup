@@ -8,6 +8,7 @@ import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templ
 import { sendMetaMessage } from "../../whatsapp/meta/metaMessage.service.js";
 import {
   createCTAButtonMessage,
+  createDocumentMessage,
   createListMessage,
   createReplyButtonsMessage,
   createTextMessage,
@@ -27,6 +28,9 @@ export interface ShopMessage {
   buttons?: { id: string; title: string }[];
   cta?: { label: string; url: string };
   list?: { button: string; rows: { id: string; title: string; description?: string }[] };
+  /** A file. WhatsApp sends it as a document with the text as caption; Instagram and
+   *  Messenger get the text with a link button to it, since Instagram takes no files. */
+  document?: { url: string; filename: string; label: string; linkUrl?: string };
   /** Body parameters for the event's WhatsApp template, in order. */
   templateParams?: string[];
 }
@@ -64,6 +68,15 @@ async function resolveRecipient(r: ShopRecipient) {
 }
 
 function whatsappPayload(to: string, m: ShopMessage): Record<string, unknown> {
+  if (m.document) {
+    return createDocumentMessage(
+      to,
+      m.document.url,
+      m.document.filename,
+      m.text,
+      PlatformType.WHATSAPP,
+    ) as unknown as Record<string, unknown>;
+  }
   if (m.list) {
     return createListMessage(
       to,
@@ -97,6 +110,12 @@ function whatsappPayload(to: string, m: ShopMessage): Record<string, unknown> {
 
 /** Instagram and Messenger share the Send API's shapes. */
 function metaDmPayload(recipientId: string, m: ShopMessage): Record<string, unknown> {
+  if (m.document) {
+    return metaDmPayload(recipientId, {
+      text: m.text,
+      cta: { label: m.document.label, url: m.document.linkUrl ?? m.document.url },
+    });
+  }
   if (m.cta) {
     return {
       recipient: { id: recipientId },

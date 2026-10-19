@@ -47,6 +47,79 @@ async function createUser({ id, email, recipeName, prefLanguage }: CreateUserPar
   return user;
 }
 
+/** Stands in until the owner names the business on the step after signup. */
+export function placeholderOrgName(userName: string) {
+  const first = userName.trim().split(/\s+/)[0];
+  return first ? `${first}'s business` : "My business";
+}
+
+interface SignupAnnouncement {
+  orgId: string;
+  orgName: string;
+  orgCreatedAt: Date;
+  userName: string;
+  userEmail: string;
+  userCreatedAt: Date;
+  phone?: string | null;
+  /** HubSpot's contact phone, which has only ever taken the `phone` field. */
+  contactPhone?: string | null;
+  goals?: string[];
+  industry?: string;
+  integrationsSelected?: string[];
+  location?: string;
+  website?: string;
+  teamSize?: string;
+}
+
+/**
+ * The internal new-signup email and the HubSpot company. Sent once the business has a real
+ * name: at signup for clients that still ask for it there, otherwise when the owner completes
+ * the business step.
+ */
+export async function announceSignup(a: SignupAnnouncement) {
+  try {
+    const { html, text } = await renderOrgSignupEmailBodies({
+      orgId: a.orgId,
+      orgName: a.orgName,
+      userName: a.userName,
+      userEmail: a.userEmail,
+      phone: a.phone || "Not given",
+      goals: a.goals ?? [],
+      industry: a.industry,
+      integrations: a.integrationsSelected ?? [],
+      location: a.location,
+      website: a.website,
+      teamSize: a.teamSize,
+    });
+    await notificationQueue.add("notification", {
+      emailData: {
+        to: process.env.ROOT_ORG_MAIL_ID ?? "hello@rateup.app",
+        subject: `New RateUp SignUp: ${a.orgName}`,
+        html,
+        text,
+      },
+    });
+  } catch (err) {
+    log.error({ err }, "Failed to enqueue new-signup alert");
+  }
+
+  const companyId = await createHubSpotCompany({
+    name: a.orgName,
+    joined_date: a.orgCreatedAt,
+    owner_email: a.userEmail,
+  });
+  await createHubSpotContact(
+    {
+      firstname: a.userName,
+      email: a.userEmail,
+      phone: a.contactPhone ?? undefined,
+      company: a.orgName,
+      joined_date: a.userCreatedAt,
+    },
+    companyId,
+  );
+}
+
 export async function createUserSignup({
   id,
   email,
@@ -86,8 +159,9 @@ export async function createUserSignup({
 
       org = await prisma.org.create({
         data: {
-          name: orgName,
+          name: orgName || placeholderOrgName(name),
           ownerId: newUser.id,
+          profileCompletedAt: orgName ? new Date() : null,
           phone: phoneNumber,
           onboarding: {
             industry: industry || null,
@@ -172,47 +246,24 @@ export async function createUserSignup({
       }
     }
 
-    try {
-      const { html, text } = await renderOrgSignupEmailBodies({
+    if (orgName) {
+      await announceSignup({
         orgId: org.id,
         orgName,
+        orgCreatedAt: org.createdAt,
         userName: name,
         userEmail: email,
-        phone: phoneNumber || phone || "Not given",
-        goals: goals ?? [],
+        userCreatedAt: newUser.createdAt,
+        phone: phoneNumber || phone,
+        contactPhone: phone,
+        goals,
         industry,
-        integrations: integrationsSelected ?? [],
+        integrationsSelected,
         location,
         website,
         teamSize,
       });
-      await notificationQueue.add("notification", {
-        emailData: {
-          to: process.env.ROOT_ORG_MAIL_ID ?? "hello@rateup.app",
-          subject: `New RateUp SignUp: ${orgName}`,
-          html,
-          text,
-        },
-      });
-    } catch (err) {
-      log.error({ err }, "Failed to enqueue new-signup alert");
     }
-
-    const companyId = await createHubSpotCompany({
-      name: orgName,
-      joined_date: org.createdAt,
-      owner_email: email,
-    });
-    await createHubSpotContact(
-      {
-        firstname: name,
-        email,
-        phone: phone ?? undefined,
-        company: orgName,
-        joined_date: newUser.createdAt,
-      },
-      companyId,
-    );
     return result;
   } catch (error) {
     // Rollback the transaction
@@ -298,6 +349,7 @@ export async function getLoggedUserInfo(request: FastifyRequest, reply: FastifyR
       encryptionKeys: true,
       isPaused: true,
       onboardingCompleted: true,
+      profileCompletedAt: true,
       onboarding: true,
       waAssignedChatPermission: true,
       WhatsappSettings: {
@@ -340,6 +392,7 @@ export async function getLoggedUserInfo(request: FastifyRequest, reply: FastifyR
       !!orgData?.WhatsappSettings?.[0]?.appId &&
       orgData?.WhatsappSettings?.[0]?.status !== "DISCONNECTED",
     onboardingCompleted: orgData?.onboardingCompleted,
+    profileCompleted: !!orgData?.profileCompletedAt,
     onboarding: orgData?.onboarding,
     presenceMode: profile?.presenceMode,
     showLifecycle: orgData?.showLifecycle,

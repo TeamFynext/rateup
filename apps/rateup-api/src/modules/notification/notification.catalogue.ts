@@ -8,6 +8,7 @@ export const NOTIFICATION_CATEGORIES = [
   "pipelines",
   "campaigns",
   "loyalty",
+  "commerce",
   "channels",
   "billing",
 ] as const;
@@ -116,6 +117,12 @@ export const NOTIFICATION_EVENTS = {
     permission: "loyalty.manage",
     feed: true,
   },
+  "commerce.order_needs_review": {
+    category: "commerce",
+    channels: { inApp: true, push: true, email: true, desktop: true },
+    permission: "commerce.orders.manage",
+    feed: true,
+  },
   "whatsapp.template_status": {
     category: "channels",
     channels: { inApp: true, push: false, email: true },
@@ -141,6 +148,12 @@ export const NOTIFICATION_EVENTS = {
     feed: true,
   },
   "billing.campaign_credit_limit": {
+    category: "billing",
+    channels: { inApp: true, push: true, desktop: true },
+    permission: "notify.billing",
+    feed: true,
+  },
+  "billing.shop_order_limit": {
     category: "billing",
     channels: { inApp: true, push: true, desktop: true },
     permission: "notify.billing",

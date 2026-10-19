@@ -88,6 +88,9 @@ test("next step names what an order waits on", () => {
     fulfillmentStatus: "UNFULFILLED",
     confirmedAt: null,
     checkoutStage: "DONE",
+    checkoutVia: "RATEUP",
+    externalProvider: null,
+    externalId: null,
   } as const;
   expect(nextStep(o)).toBe("Pack and ship");
   expect(nextStep({ ...o, paymentStatus: "COD_PENDING" })).toBe(
@@ -97,6 +100,28 @@ test("next step names what an order waits on", () => {
     "Waiting for the address",
   );
   expect(nextStep({ ...o, status: "CANCELLED" })).toBe("—");
+});
+
+test("orders the store handles point staff at the store", () => {
+  const o = {
+    status: "OPEN",
+    paymentStatus: "PAID",
+    fulfillmentStatus: "UNFULFILLED",
+    confirmedAt: null,
+    checkoutStage: "DONE",
+    checkoutVia: "SHOPIFY",
+    externalProvider: "shopify",
+    externalId: "5501",
+  } as const;
+  expect(nextStep({ ...o, status: "DRAFT", checkoutStage: "PAYMENT" })).toBe(
+    "Waiting for checkout in Shopify",
+  );
+  expect(nextStep(o)).toBe("Fulfil it in Shopify");
+  expect(nextStep({ ...o, fulfillmentStatus: "SHIPPED" })).toBe("Fulfilled in Shopify");
+  // A RateUp-checkout order written back to WooCommerce is fulfilled there too.
+  expect(
+    nextStep({ ...o, checkoutVia: "RATEUP", externalProvider: "woocommerce", externalId: "812" }),
+  ).toBe("Fulfil it in WooCommerce");
 });
 
 test("gateway amounts use minor units except zero-decimal currencies", () => {

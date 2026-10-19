@@ -7,12 +7,16 @@ import {
   enqueueBackInStock,
   type ShopReminderKind,
 } from "../../../workers/bullmq/queues/shop.queue.js";
+import { chatAttribution } from "./attribution.js";
 import { checkoutUrl, storefrontUrl } from "./events.js";
 import { notificationSetting, sendShopMessage } from "./notify.js";
 import { addOrderEvent, cancelOrder } from "./orders.service.js";
 import { refreshPendingPayment } from "./payments/payments.service.js";
 import { toNumber } from "./pricing.js";
+import { customerReachable, startPhoneVerification } from "./phoneVerify.service.js";
 import { ShopError } from "./shop.errors.js";
+import { commerceEnabled } from "./store.service.js";
+import { inStoreCheckout } from "./checkoutVia.js";
 
 /**
  * Everything that brings a customer back: cart and payment reminders, the cash-order
@@ -42,6 +46,19 @@ export async function fireShopReminder(orderId: string, kind: ShopReminderKind, 
     await cancelOrder(order.id, { reason: "Not confirmed in time" });
     return "cancelled";
   }
+
+  if (kind === "bank_expire") {
+    if (
+      order.paymentMethod !== "bank" ||
+      order.status !== "OPEN" ||
+      ["PAID", "PARTIALLY_REFUNDED", "REFUNDED"].includes(order.paymentStatus)
+    )
+      return "skipped";
+    await cancelOrder(order.id, { reason: "Transfer not received in time" });
+    return "cancelled";
+  }
+
+  if (!customerReachable(order)) return "skipped";
 
   if (kind === "review") {
     if (order.fulfillmentStatus !== "DELIVERED") return "skipped";
@@ -73,6 +90,13 @@ export async function fireShopReminder(orderId: string, kind: ShopReminderKind, 
   // Ask the gateway first: someone who paid a minute ago must not get "you forgot to pay".
   const state = await refreshPendingPayment(order);
   if (state === "paid") return "paid";
+  // An expired draft can't be paid any more, so nudging the customer to finish it only costs.
+  if (order.status === "DRAFT" && order.checkoutExpiresAt && order.checkoutExpiresAt < new Date())
+    return "expired";
+
+  // A store checkout's cart and payment follow-ups are the store's own.
+  if ((kind === "payment" || kind === "cart") && inStoreCheckout(order.checkoutVia))
+    return "skipped";
 
   if (kind === "payment") {
     const link = order.payments[0];
@@ -92,11 +116,13 @@ export async function fireShopReminder(orderId: string, kind: ShopReminderKind, 
   }
 
   // cart
-  if (order.status !== "DRAFT") return "skipped";
+  if (order.status !== "DRAFT" || !order.checkoutToken) return "skipped";
   const last = step === (order.store.cartReminderMinutes?.length ?? 1) - 1;
   const discount =
     last && order.store.cartReminderDiscountId
-      ? await prisma.shopDiscount.findUnique({ where: { id: order.store.cartReminderDiscountId } })
+      ? await prisma.shopDiscount.findFirst({
+          where: { id: order.store.cartReminderDiscountId, storeId: order.storeId },
+        })
       : null;
   const setting = notificationSetting(order.store.notifications, "cart_reminder");
   const outcome = await sendShopMessage(
@@ -107,7 +133,7 @@ export async function fireShopReminder(orderId: string, kind: ShopReminderKind, 
         (discount?.active
           ? ` Use code ${discount.code} at checkout for a little extra off.`
           : " They're still saved for you."),
-      cta: { label: "Finish checkout", url: checkoutUrl(order.checkoutToken!) },
+      cta: { label: "Finish checkout", url: checkoutUrl(order.checkoutToken) },
       templateParams: [order.customerName?.split(" ")[0] ?? "there", order.store.name],
     },
     setting.waTemplateId,
@@ -193,7 +219,7 @@ export async function runBackInStock(variantId: string) {
       { orgId: store.orgId, channel: r.channel, contactId: r.contactId },
       {
         text: `Good news — ${name} is back in stock at ${store.name}.`,
-        buttons: [{ id: `shop_buy:${variant.id}:1`, title: "Buy now" }],
+        buttons: [{ id: `shop_buy:${variant.id}:1:bis`, title: "Buy now" }],
         templateParams: [name, store.name],
       },
       setting.waTemplateId,
@@ -207,7 +233,33 @@ export async function runBackInStock(variantId: string) {
   return { sent, total: requests.length };
 }
 
-/** A customer asks to hear when a sold-out variant returns, from the storefront or chat. */
+/** Waiting requests one contact may hold at a store. */
+const MAX_WAITING_PER_CONTACT = 20;
+/** A number told about a restock is not signed up again (and told again) for this long. */
+const RENOTIFY_AFTER_MS = 7 * 86_400_000;
+
+async function waitableVariant(storeId: string, variantId: string, opts: { storefront?: boolean }) {
+  const variant = await prisma.shopVariant.findFirst({
+    where: {
+      id: variantId,
+      storeId,
+      product: { status: "ACTIVE", ...(opts.storefront ? { showOnStorefront: true } : {}) },
+    },
+    include: { product: { select: { orgId: true, title: true } } },
+  });
+  if (!variant) throw new ShopError("NOT_FOUND", "Product not found");
+  if (!variant.trackInventory || variant.stock > 0 || variant.allowBackorder)
+    throw new ShopError("INVALID", "This is in stock now");
+  return variant;
+}
+
+const variantName = (v: { title: string; product: { title: string } }) =>
+  v.product.title + (v.title !== "Default" ? ` (${v.title})` : "");
+
+/**
+ * A customer we can already reach asks to hear when a sold-out variant returns: from chat, the
+ * AI agent, or a storefront visitor once their number is proven on WhatsApp.
+ */
 export async function subscribeBackInStock(input: {
   storeId: string;
   variantId: string;
@@ -215,11 +267,7 @@ export async function subscribeBackInStock(input: {
   phone?: string | null;
   channel?: ShopChannel;
 }) {
-  const variant = await prisma.shopVariant.findFirst({
-    where: { id: input.variantId, storeId: input.storeId },
-    include: { product: { select: { orgId: true } } },
-  });
-  if (!variant) throw new ShopError("NOT_FOUND", "Product not found");
+  const variant = await waitableVariant(input.storeId, input.variantId, {});
   let contactId = input.contactId ?? null;
   if (!contactId) {
     const phone = input.phone ? parsePhoneforWa(input.phone.replace(/[^\d+]/g, "")) : null;
@@ -232,15 +280,67 @@ export async function subscribeBackInStock(input: {
     });
     contactId = contact.id;
   }
+  const name = variantName(variant);
+  const listed = {
+    ok: true as const,
+    message: `You're on the list. We'll message you here when ${name} is back.`,
+  };
+  const existing = await prisma.shopBackInStockRequest.findUnique({
+    where: { variantId_contactId: { variantId: variant.id, contactId } },
+  });
+  if (
+    existing &&
+    (!existing.notifiedAt || Date.now() - existing.notifiedAt.getTime() < RENOTIFY_AFTER_MS)
+  )
+    return listed;
+  if (!existing) {
+    const waiting = await prisma.shopBackInStockRequest.count({
+      where: { contactId, notifiedAt: null, variant: { storeId: input.storeId } },
+    });
+    if (waiting >= MAX_WAITING_PER_CONTACT)
+      throw new ShopError(
+        "LIMIT_REACHED",
+        `You're already waiting for ${waiting} products here. We'll tell you as they come back.`,
+      );
+  }
   await prisma.shopBackInStockRequest.upsert({
     where: { variantId_contactId: { variantId: variant.id, contactId } },
     create: { variantId: variant.id, contactId, channel: input.channel ?? "WHATSAPP" },
     update: { notifiedAt: null },
   });
-  return { ok: true };
+  return listed;
 }
 
-/** "Buy now" on a back-in-stock message: a one-item cart, then the usual chat checkout. */
+/**
+ * A storefront visitor asks to be told about a restock. Nothing is stored against a number
+ * until they send the code from their own WhatsApp; that message is also what lets the store
+ * answer them later.
+ */
+export async function requestBackInStockFromStorefront(
+  store: { id: string; orgId: string },
+  variantId: string,
+) {
+  const variant = await waitableVariant(store.id, variantId, { storefront: true });
+  return startPhoneVerification({
+    store,
+    purpose: "back_in_stock",
+    variantId: variant.id,
+    prompt: `Tell me when ${variantName(variant)} is back in stock.`,
+  });
+}
+
+const DM_SOURCE: Record<ShopChannel, string> = {
+  WHATSAPP: "wa_dm",
+  INSTAGRAM: "ig_dm",
+  MESSENGER: "messenger_dm",
+  STOREFRONT: "storefront",
+  MANUAL: "manual",
+};
+
+/**
+ * "Buy now" on a back-in-stock message or a product card: a one-item cart, then the usual chat
+ * checkout. A comment or ad that brought the customer names the source; otherwise the button does.
+ */
 export async function buyNowFromChat(
   variantId: string,
   quantity: number,
@@ -251,20 +351,43 @@ export async function buyNowFromChat(
     channelAccountId?: string | null;
     phone?: string | null;
   },
+  origin?: "back_in_stock",
 ) {
   const store = await prisma.shopStore.findUnique({ where: { orgId: from.orgId } });
-  if (!store) return false;
+  if (!store || !(await commerceEnabled(store.orgId))) return false;
+  const attribution = from.contactId ? await chatAttribution(from.orgId, from.contactId) : null;
+  const social = attribution?.kind === "ig_comment" || attribution?.kind === "ig_story";
   const { createDraftOrder } = await import("./orders.service.js");
   const { continueChatCheckout } = await import("./checkout.service.js");
   try {
+    // Tapping Buy now again picks the same checkout back up: a fresh draft per tap would arm
+    // a fresh set of paid reminders each time.
+    const open = from.contactId
+      ? await prisma.shopOrder.findFirst({
+          where: {
+            storeId: store.id,
+            contactId: from.contactId,
+            status: "DRAFT",
+            checkoutExpiresAt: { gt: new Date() },
+            items: { some: { variantId } },
+          },
+          orderBy: { createdAt: "desc" },
+          select: { id: true },
+        })
+      : null;
+    if (open) {
+      await continueChatCheckout(open.id);
+      return true;
+    }
     const order = await createDraftOrder({
       store,
       items: [{ variantId, quantity }],
       channel: from.channel,
-      source: "back_in_stock",
+      source: origin ?? (social ? attribution.kind : DM_SOURCE[from.channel]),
       contactId: from.contactId,
       channelAccountId: from.channelAccountId,
       customer: { phone: from.phone ?? null },
+      attribution,
     });
     await continueChatCheckout(order.id);
   } catch (err) {
@@ -277,10 +400,29 @@ export async function buyNowFromChat(
         contactId: from.contactId,
         phone: from.phone,
       },
-      {
-        text: `Sorry, that sold out again. Visit ${storefrontUrl(store.slug)} to see what's in stock.`,
-      },
+      { text: await buyNowFailure(err, variantId, store) },
     );
   }
   return true;
+}
+
+/** Tells the customer what actually went wrong, so "sold out" is only said when it is. */
+async function buyNowFailure(err: unknown, variantId: string, store: { slug: string }) {
+  const shop = storefrontUrl(store.slug);
+  const variant = await prisma.shopVariant.findUnique({
+    where: { id: variantId },
+    select: {
+      stock: true,
+      trackInventory: true,
+      allowBackorder: true,
+      product: { select: { status: true } },
+    },
+  });
+  if (!variant || variant.product.status !== "ACTIVE")
+    return `Sorry, that's no longer available. Visit ${shop} to see what else we have.`;
+  const soldOut =
+    (err instanceof ShopError && err.code === "OUT_OF_STOCK") ||
+    (variant.trackInventory && !variant.allowBackorder && variant.stock < 1);
+  if (soldOut) return `Sorry, that just sold out. Visit ${shop} to see what's in stock.`;
+  return "Sorry, checkout isn't available right now. Reply here and we'll help you order.";
 }

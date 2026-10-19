@@ -2,6 +2,14 @@ import z from "zod";
 
 const money = z.coerce.number().min(0).max(10_000_000);
 const optionalMoney = money.nullable().optional();
+/** Links shoppers and staff click, and images the server may fetch: http(s) only, never javascript: or data:. */
+export const webUrl = () =>
+  z
+    .string()
+    .trim()
+    .max(2048)
+    .url()
+    .refine((u) => /^https?:\/\//i.test(u), "Use a link starting with https://");
 
 export const idParams = z.object({ id: z.string().uuid() });
 
@@ -10,7 +18,7 @@ export const storeUpdateSchema = z
     name: z.string().trim().min(1).max(80),
     slug: z.string().trim().min(2).max(40),
     description: z.string().max(500).nullable(),
-    logoUrl: z.string().url().nullable(),
+    logoUrl: webUrl().nullable(),
     currency: z.string().trim().length(3).toUpperCase(),
     taxRate: z.coerce.number().min(0).max(50).nullable(),
     pricesIncludeTax: z.boolean(),
@@ -24,11 +32,11 @@ export const storeUpdateSchema = z
             eyebrow: z.string().max(40).optional(),
             title: z.string().max(80).optional(),
             subtitle: z.string().max(120).optional(),
-            imageUrl: z.string().url().optional(),
+            imageUrl: webUrl().optional(),
           })
           .nullable()
           .optional(),
-        instagramUrl: z.string().url().nullable().optional(),
+        instagramUrl: webUrl().nullable().optional(),
       })
       .nullable(),
     askAddress: z.boolean(),
@@ -43,6 +51,7 @@ export const storeUpdateSchema = z
     codConfirmHours: z.coerce.number().int().min(1).max(168),
     codPrepaidDiscountPct: z.coerce.number().min(0).max(50).nullable(),
     bankTransferEnabled: z.boolean(),
+    bankTransferHours: z.coerce.number().int().min(1).max(720),
     bankDetails: z
       .object({
         accountName: z.string().max(80).optional(),
@@ -53,10 +62,19 @@ export const storeUpdateSchema = z
       })
       .nullable(),
     defaultPaymentProvider: z.enum(["stripe", "razorpay"]).nullable(),
+    checkoutVia: z.enum(["RATEUP", "SHOPIFY", "WOOCOMMERCE"]),
     paymentLinkTtlHours: z.coerce.number().int().min(1).max(168),
     cartReminderMinutes: z.array(z.coerce.number().int().min(15).max(10_080)).max(3),
     cartReminderDiscountId: z.string().uuid().nullable(),
     lowStockThreshold: z.coerce.number().int().min(0).max(10_000),
+    invoiceAutoSend: z.boolean(),
+    invoicePrefix: z
+      .string()
+      .trim()
+      .max(12)
+      .regex(/^[A-Za-z0-9/_-]*$/, "Letters, numbers, - / _ only"),
+    taxId: z.string().trim().max(40).nullable(),
+    businessAddress: z.string().trim().max(400).nullable(),
     notifications: z.record(
       z.string(),
       z.object({ enabled: z.boolean().optional(), waTemplateId: z.string().nullable().optional() }),
@@ -88,7 +106,7 @@ const variantSchema = z.object({
   stock: z.coerce.number().int().min(0).max(10_000_000).optional(),
   lowStockAt: z.coerce.number().int().min(0).nullable().optional(),
   allowBackorder: z.boolean().optional(),
-  imageUrl: z.string().url().nullable().optional(),
+  imageUrl: webUrl().nullable().optional(),
   weightGrams: z.coerce.number().int().min(0).nullable().optional(),
 });
 
@@ -97,8 +115,8 @@ export const productSchema = z.object({
   description: z.string().max(5000).nullable().optional(),
   brand: z.string().max(100).nullable().optional(),
   category: z.string().max(250).nullable().optional(),
-  productUrl: z.string().url().nullable().optional(),
-  images: z.array(z.string().url()).max(10).optional(),
+  productUrl: webUrl().nullable().optional(),
+  images: z.array(webUrl()).max(10).optional(),
   status: z.enum(["ACTIVE", "DRAFT", "ARCHIVED"]).optional(),
   options: z
     .array(
@@ -125,6 +143,20 @@ export const productListQuery = z.object({
   collectionId: z.string().uuid().optional(),
   filter: z.enum(["low_stock", "sold_out", "sync_errors"]).optional(),
   channel: z.enum(["whatsapp", "instagram", "storefront"]).optional(),
+  /** Comma-separated catalog ids, for showing a sent WhatsApp product message. */
+  retailerIds: z
+    .string()
+    .max(2000)
+    .transform((v) =>
+      v
+        .split(",")
+        .map((id) => id.trim())
+        .filter(Boolean)
+        .slice(0, 30),
+    )
+    .optional(),
+  /** "1": only what can be sold now (a store-checkout shop's own products are left out). */
+  sellable: z.enum(["1"]).optional(),
   page: z.coerce.number().int().min(0).default(0),
   limit: z.coerce.number().int().min(1).max(100).default(25),
 });
@@ -132,6 +164,32 @@ export const productListQuery = z.object({
 export const bulkStatusSchema = z.object({
   ids: z.array(z.string().uuid()).min(1).max(200),
   status: z.enum(["ACTIVE", "DRAFT", "ARCHIVED"]),
+});
+
+export const bulkEditSchema = z.object({
+  variantIds: z.array(z.string().uuid()).min(1).max(1000),
+  price: z
+    .object({
+      mode: z.enum(["set", "percent", "amount"]),
+      value: z.number().min(-10_000_000).max(10_000_000),
+    })
+    .refine((p) => p.mode !== "set" || p.value >= 0, "Prices cannot be negative")
+    .refine((p) => p.mode !== "percent" || p.value >= -100, "Prices cannot drop by more than 100%")
+    .optional(),
+  compareAtPrice: z
+    .discriminatedUnion("mode", [
+      z.object({ mode: z.literal("set"), value: z.number().min(0).max(10_000_000) }),
+      z.object({ mode: z.literal("clear") }),
+    ])
+    .optional(),
+  stock: z
+    .object({
+      mode: z.enum(["set", "adjust"]),
+      value: z.number().int().min(-10_000_000).max(10_000_000),
+    })
+    .refine((s) => s.mode !== "set" || s.value >= 0, "Stock must be 0 or more")
+    .optional(),
+  status: z.enum(["ACTIVE", "DRAFT"]).optional(),
 });
 
 export const stockSchema = z.object({
@@ -142,11 +200,16 @@ export const stockSchema = z.object({
 export const collectionSchema = z.object({
   name: z.string().trim().min(1).max(60),
   description: z.string().max(300).nullable().optional(),
-  imageUrl: z.string().url().nullable().optional(),
+  imageUrl: webUrl().nullable().optional(),
   position: z.coerce.number().int().optional(),
 });
 
 export const csvImportSchema = z.object({ csv: z.string().min(1).max(5_000_000) });
+export const importFromSchema = z.object({
+  source: z.enum(["meta", "shopify", "woocommerce"]),
+  keepInSync: z.boolean().optional(),
+  catalogId: z.string().trim().min(1).max(64).optional(),
+});
 
 export const discountSchema = z.object({
   code: z.string().trim().min(3).max(32),
@@ -224,7 +287,7 @@ export const fulfillmentSchema = z.object({
 export const shipmentSchema = z.object({
   carrier: z.string().max(60).nullable().optional(),
   trackingNumber: z.string().max(80).nullable().optional(),
-  trackingUrl: z.string().url().nullable().optional(),
+  trackingUrl: webUrl().nullable().optional(),
 });
 
 export const cancelSchema = z.object({
@@ -289,9 +352,13 @@ export const returnSchema = z.object({
 });
 
 export const returnActionSchema = z.object({
-  action: z.enum(["approve", "reject", "receive", "refund"]),
-  refundAmount: z.coerce.number().positive().nullable().optional(),
+  action: z.enum(["approve", "reject", "receive"]),
   restock: z.boolean().optional(),
+  note: z.string().max(500).nullable().optional(),
+});
+
+export const returnRefundSchema = z.object({
+  refundAmount: z.coerce.number().positive().nullable().optional(),
   note: z.string().max(500).nullable().optional(),
 });
 
@@ -332,12 +399,11 @@ export const storefrontCheckoutSchema = z.object({
   customer: z
     .object({ phone: z.string().max(30).optional(), name: z.string().max(100).optional() })
     .optional(),
+  /** The bag's previous checkout, reused while it is still open for exactly these lines. */
+  reuseToken: z.string().max(64).optional(),
 });
 
-export const backInStockSchema = z.object({
-  variantId: z.string().uuid(),
-  phone: z.string().min(7).max(30),
-});
+export const backInStockSchema = z.object({ variantId: z.string().uuid() });
 
 export const webhookParams = z.object({ provider: z.string(), storeId: z.string().uuid() });
 export const storeIdParams = z.object({ storeId: z.string().uuid() });
@@ -356,4 +422,18 @@ export const saveSegmentSchema = z.object({
   name: z.string().trim().min(1).max(80),
   teamId: z.string().uuid(),
   criteria: segmentCriteriaSchema,
+});
+
+export const sendToMeSchema = z.object({ phone: z.string().trim().min(7).max(30) });
+
+export const testOrderSchema = z.object({
+  productId: z.string().uuid().nullable().optional(),
+  phone: z.string().trim().max(30).nullable().optional(),
+});
+
+const rate = z.number().min(0).max(10);
+export const messageRatesSchema = z.object({
+  rates: z
+    .object({ MARKETING: rate, UTILITY: rate, AUTHENTICATION: rate, SERVICE: rate })
+    .nullable(),
 });

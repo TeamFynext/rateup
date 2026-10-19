@@ -45,6 +45,8 @@ export interface CommerceOrder {
   deliveryId?: string;
   /** The store's payload, for template variables and automation rules. */
   raw: Record<string, unknown>;
+  /** A RateUp order copied into the store after RateUp took the payment; RateUp earns its points. */
+  rateupWriteBack?: boolean;
 }
 
 /** Which connected store an order came from. */

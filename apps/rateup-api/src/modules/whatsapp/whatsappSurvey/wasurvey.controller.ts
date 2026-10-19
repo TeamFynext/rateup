@@ -47,6 +47,7 @@ import {
   WaMessageBody,
   WaMessageTypes,
   WaReceiveMessageBody,
+  WaReferral,
   type OutgoingTemplateComponent,
   type WaSendMessageBody,
 } from "../../../types/whatsapp.types.js";
@@ -257,7 +258,12 @@ async function handleCapturedEvent(body: WaMessageBody) {
         )
         .map((status) =>
           safeAsyncOperation(
-            () => handlePaymentConfirmation(status.recipient_id, status.payment.reference_id),
+            () =>
+              handlePaymentConfirmation(
+                status.recipient_id,
+                status.payment.reference_id,
+                (change.value as WaReceiveMessageBody)?.metadata?.phone_number_id,
+              ),
             (error) =>
               log.error(
                 { err: error },
@@ -779,6 +785,20 @@ async function whatsappMessageHandler(
     userName,
     (waMessage.entry[0].changes[0].value as WaReceiveMessageBody)?.messages?.[0]?.id,
   );
+  // The click on a click-to-WhatsApp ad that opened this chat. Meta sends the referral only
+  // here, so it is kept even when Meta AI holds the thread.
+  const adReferral = (completeMessageObject as WaReceiveMessageBody)?.messages?.[0]?.referral;
+  if (adReferral && messageObj?.contactId) {
+    try {
+      const { rememberAdReferral } = await import("../../commerce/shop/attribution.js");
+      await rememberAdReferral(orgId, messageObj.contactId, adReferral, {
+        conversationId: messageObj.conversationId,
+        phoneId: waSettings.phoneId,
+      });
+    } catch (e) {
+      log.error({ err: e }, "Could not record the ad referral");
+    }
+  }
   if (options.storeOnly) {
     // A survey flow Meta AI sent: the answers are data, not a reply, so they
     // are saved even though nothing else runs for this thread.
@@ -787,16 +807,9 @@ async function whatsappMessageHandler(
     }
     return;
   }
-  // A click-to-WhatsApp ad opens a free 72-hour window; remember it so a sale in that window
-  // is credited to the ad.
-  const adReferral = (completeMessageObject as WaReceiveMessageBody)?.messages?.[0]?.referral;
-  if (adReferral?.source_type === "ad" && messageObj?.contactId) {
-    try {
-      const { rememberAdReferral } = await import("../../commerce/shop/attribution.js");
-      await rememberAdReferral(orgId, messageObj.contactId, adReferral);
-    } catch (e) {
-      log.error({ err: e }, "Could not record the ad referral");
-    }
+  // The ad's own rule answers the click, before any keyword rule.
+  if (adReferral && (await answerAdReferral(waSettings, from, adReferral))) {
+    return;
   }
 
   if (type === WaMessageTypes.order) {
@@ -808,7 +821,7 @@ async function whatsappMessageHandler(
     if (cart?.product_items?.length) {
       try {
         const { startCheckoutFromCart } = await import("../../commerce/shop/checkout.service.js");
-        const { adAttribution } = await import("../../commerce/shop/attribution.js");
+        const { chatAttribution } = await import("../../commerce/shop/attribution.js");
         const shopOrder = await startCheckoutFromCart(
           {
             orgId,
@@ -818,7 +831,7 @@ async function whatsappMessageHandler(
             phone: from,
             name: userName,
             attribution: messageObj.contactId
-              ? await adAttribution(orgId, messageObj.contactId)
+              ? await chatAttribution(orgId, messageObj.contactId)
               : null,
           },
           cart.product_items.map((p) => ({
@@ -854,6 +867,29 @@ async function whatsappMessageHandler(
       if (handled) return;
     } catch (e) {
       log.error({ err: e }, "Error handling a shop reply");
+    }
+  }
+
+  // ── A storefront shopper's confirmation code, from a prefilled wa.me link ────
+  const textBody = (completeMessageObject as WaReceiveMessageBody)?.messages?.[0]?.text?.body;
+  if (type === "text" && textBody?.toUpperCase().includes("RU-") && messageObj?.contactId) {
+    try {
+      const { confirmShopPhone, readVerifyCode } =
+        await import("../../commerce/shop/phoneVerify.service.js");
+      const code = readVerifyCode(textBody);
+      if (
+        code &&
+        (await confirmShopPhone({
+          orgId,
+          contactId: messageObj.contactId,
+          phone: from,
+          code,
+          channelAccountId: waSettings.phoneId,
+        }))
+      )
+        return;
+    } catch (e) {
+      log.error({ err: e }, "Error confirming a shop phone code");
     }
   }
 
@@ -1848,3 +1884,29 @@ const getStatusData = (info: {
   }
   return statusData;
 };
+
+/** Runs the "came from an ad" rules for a click; true when one of them answered it. */
+async function answerAdReferral(
+  waSettings: Omit<WhatsappSettings, "accessToken_iv">,
+  phone: string,
+  referral: WaReferral,
+): Promise<boolean> {
+  if (referral.source_type !== "ad" || !referral.source_id) return false;
+  try {
+    const result = await checkAndExecuteRuleByTriggerEvent("WHATSAPP_AD_REFERRAL", {
+      orgId: waSettings.orgId,
+      phoneNumberId: waSettings.phoneId ?? undefined,
+      phone,
+      adReferral: {
+        sourceId: referral.source_id,
+        headline: referral.headline,
+        sourceUrl: referral.source_url,
+      },
+      platform: "WHATSAPP",
+    });
+    return Boolean(result);
+  } catch (error) {
+    log.error({ err: error, adId: referral.source_id }, "Error running the ad referral rules");
+    return false;
+  }
+}

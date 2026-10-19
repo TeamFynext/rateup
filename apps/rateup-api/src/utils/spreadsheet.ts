@@ -82,7 +82,8 @@ export function toCsv(rows: Array<Array<string | number | null | undefined>>): s
   return rows.map((row) => row.map(csvCell).join(",")).join("\n");
 }
 
-function csvCell(value: string | number | null | undefined): string {
+/** One CSV cell, with a leading `= + - @` neutralised so a spreadsheet won't run it as a formula. */
+export function csvCell(value: string | number | null | undefined): string {
   if (value === null || value === undefined) return "";
 
   let text = String(value);

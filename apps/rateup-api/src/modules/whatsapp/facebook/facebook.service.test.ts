@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("../../../utils/prisma.js", () => ({
-  default: { waMessage: { findMany: vi.fn(), findFirst: vi.fn(), update: vi.fn() } },
+  default: {
+    waMessage: { findMany: vi.fn(), findFirst: vi.fn(), update: vi.fn() },
+    contact: { findUnique: vi.fn() },
+  },
   excludeFields: vi.fn(),
 }));
 vi.mock("../wa_axios.js", () => ({
@@ -19,6 +22,8 @@ vi.mock("../automatedReply/wa_automatedReply.utils.js", () => ({
 vi.mock("../automatedReply/metaFlow.service.js", () => ({
   handleMetaFlowUserResponse: vi.fn(),
 }));
+const shop = vi.hoisted(() => ({ handleShopReply: vi.fn() }));
+vi.mock("../../commerce/shop/checkout.service.js", () => shop);
 vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));
@@ -771,6 +776,26 @@ describe("chatbots and rules on an inbound Messenger message", () => {
 
     expect(answerFlowMock).toHaveBeenCalledWith(PSID, "Buy", ORG_ID, MESSENGER, "btn_0_0");
     expect(runRulesMock.mock.calls[0][1].message).toBe("btn_0_0");
+  });
+
+  test("hands a shop button to the checkout instead of the chatbot and rules", async () => {
+    const contactDb = (prisma as unknown as { contact: { findUnique: Mock } }).contact;
+    contactDb.findUnique.mockResolvedValue({ id: "contact-1" });
+    shop.handleShopReply.mockResolvedValue(true);
+
+    await handleFacebookPostback(
+      webhook(messaging({ postback: { title: "Buy now", payload: "shop_buy:var-1:1" } })),
+      SETTINGS,
+    );
+
+    expect(shop.handleShopReply).toHaveBeenCalledWith("shop_buy:var-1:1", {
+      orgId: ORG_ID,
+      contactId: "contact-1",
+      channel: "MESSENGER",
+      channelAccountId: PAGE_ID,
+    });
+    expect(answerFlowMock).not.toHaveBeenCalled();
+    expect(runRulesMock).not.toHaveBeenCalled();
   });
 
   test.each([

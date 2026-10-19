@@ -37,6 +37,13 @@ async function continueFlowOrRunRules(params: {
   }
 
   try {
+    if (
+      buttonPayload?.startsWith("shop_") &&
+      (await handleMessengerShopReply(buttonPayload, psid, orgId, fbPageId))
+    ) {
+      return;
+    }
+
     const answeredFlow = await handleMetaFlowUserResponse(
       psid,
       text,
@@ -56,6 +63,26 @@ async function continueFlowOrRunRules(params: {
   } catch (error) {
     log.error({ err: error, senderId: psid }, "[Facebook] Error running flows and rules");
   }
+}
+
+/** "Buy now" and checkout replies on a shop message (payloads starting `shop_`). */
+async function handleMessengerShopReply(
+  payload: string,
+  psid: string,
+  orgId: string,
+  fbPageId: string,
+): Promise<boolean> {
+  const contact = await prisma.contact.findUnique({
+    where: { contact_psid_org_id_unique: { psid, orgId } },
+    select: { id: true },
+  });
+  const { handleShopReply } = await import("../../commerce/shop/checkout.service.js");
+  return handleShopReply(payload, {
+    orgId,
+    contactId: contact?.id ?? null,
+    channel: "MESSENGER",
+    channelAccountId: fbPageId,
+  });
 }
 
 export async function getFacebookUserDetailsFromMeta(userId: string, pageId: string) {

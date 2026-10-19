@@ -1,11 +1,15 @@
 import { PlatformType, type ShopChannel } from "../../../../generated/prisma/client.js";
+import { sellableWhere } from "./checkoutVia.js";
+import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
 import { findOpenSession } from "../../loyalty/messaging/channels/whatsapp/session.js";
 import { parsePhoneforWa } from "../../loyalty/util.js";
 import { sendMetaMessage } from "../../whatsapp/meta/metaMessage.service.js";
-import { storefrontUrl } from "./events.js";
+
 import { toNumber } from "./pricing.js";
+import { storefrontProductUrl } from "./storefrontLinks.js";
 import { ShopError } from "./shop.errors.js";
+import { shopProductsActionSchema } from "./commentToBuy.schema.js";
 
 /**
  * Product cards in a conversation. WhatsApp shows catalog items natively (one product, or a
@@ -22,6 +26,8 @@ export async function sendProductsInChat(input: {
   text?: string;
   userId?: string;
   userName?: string;
+  /** An automation's send, which message reports count apart from agents' replies. */
+  automated?: boolean;
 }) {
   const store = await prisma.shopStore.findUnique({ where: { orgId: input.orgId } });
   if (!store) throw new ShopError("NOT_FOUND", "Set up your shop first");
@@ -31,7 +37,12 @@ export async function sendProductsInChat(input: {
   });
   if (!contact) throw new ShopError("NOT_FOUND", "Contact not found");
   const products = await prisma.shopProduct.findMany({
-    where: { id: { in: input.productIds }, storeId: store.id, status: "ACTIVE" },
+    where: {
+      id: { in: input.productIds },
+      storeId: store.id,
+      status: "ACTIVE",
+      ...sellableWhere(store),
+    },
     include: { variants: { orderBy: { position: "asc" } } },
   });
   if (!products.length) throw new ShopError("INVALID", "Those products aren't for sale");
@@ -42,7 +53,7 @@ export async function sendProductsInChat(input: {
     input.text?.trim() || (products.length === 1 ? products[0].title : "A few picks for you");
   const common = {
     orgId: input.orgId,
-    messageType: "INBOX" as const,
+    messageType: input.automated ? ("AUTOMATED" as const) : ("INBOX" as const),
     userId: input.userId,
     userName: input.userName,
   };
@@ -125,7 +136,7 @@ export async function sendProductsInChat(input: {
         soldOut
           ? {
               type: "web_url",
-              url: `${storefrontUrl(store.slug)}?product=${p.id}`,
+              url: storefrontProductUrl(store.slug, p),
               title: "Notify me",
             }
           : { type: "postback", title: "Buy now", payload: `shop_buy:${v.id}:1` },
@@ -133,7 +144,7 @@ export async function sendProductsInChat(input: {
           ? [
               {
                 type: "web_url",
-                url: `${storefrontUrl(store.slug)}?product=${p.id}`,
+                url: storefrontProductUrl(store.slug, p),
                 title: "See details",
               },
             ]
@@ -141,11 +152,23 @@ export async function sendProductsInChat(input: {
       ],
     };
   });
-  const result = await sendMetaMessage({
+  const meta = {
     ...common,
     platform: input.channel === "INSTAGRAM" ? PlatformType.INSTAGRAM : PlatformType.FACEBOOK,
     to: recipient,
     sourceIdentifier: input.channelAccountId ?? contact.lastMessageSourceIdentifier ?? undefined,
+  };
+  // A carousel has no text of its own, so the agent's note goes first as its own message.
+  const note = input.text?.trim();
+  if (note) {
+    const sent = await sendMetaMessage({
+      ...meta,
+      payload: { recipient: { id: recipient }, message: { text: note.slice(0, 1000) } },
+    });
+    if (!sent.ok) throw new ShopError("PAYMENT_FAILED", sent.error ?? "The message was refused");
+  }
+  const result = await sendMetaMessage({
+    ...meta,
     payload: {
       recipient: { id: recipient },
       message: {
@@ -155,4 +178,44 @@ export async function sendProductsInChat(input: {
   });
   if (!result.ok) throw new ShopError("PAYMENT_FAILED", result.error ?? "The message was refused");
   return { sent: elements.length, skipped: products.length - elements.length };
+}
+
+/**
+ * A rule's "send products" on WhatsApp: catalog cards into the chat the customer just wrote
+ * in, such as after clicking an ad. False, and logged, when the products can't go out.
+ */
+export async function sendRuleProductsOnWhatsApp(input: {
+  orgId: string;
+  ruleId: string;
+  value: unknown;
+  phone: string;
+  phoneId: string;
+}): Promise<boolean> {
+  const parsed = shopProductsActionSchema.safeParse(input.value);
+  if (!parsed.success) {
+    log.warn({ ruleId: input.ruleId }, "Send-products action has no valid products");
+    return false;
+  }
+  const contact = await prisma.contact.findUnique({
+    where: {
+      contact_phone_org_id_unique: { phone: input.phone.replace(/\D/g, ""), orgId: input.orgId },
+    },
+    select: { id: true },
+  });
+  if (!contact) return false;
+  try {
+    await sendProductsInChat({
+      orgId: input.orgId,
+      contactId: contact.id,
+      channel: "WHATSAPP",
+      channelAccountId: input.phoneId,
+      productIds: parsed.data.productIds,
+      text: parsed.data.message,
+      automated: true,
+    });
+    return true;
+  } catch (err) {
+    log.warn({ err, ruleId: input.ruleId }, "Could not send the rule's products on WhatsApp");
+    return false;
+  }
 }

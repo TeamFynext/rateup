@@ -1,4 +1,6 @@
 import type { ShopStore } from "../../../../generated/prisma/client.js";
+import { inStoreCheckout, storeLabel } from "./checkoutVia.js";
+import { storeConnected } from "./externalCheckout.service.js";
 import prisma from "../../../utils/prisma.js";
 import { listPaymentMethods } from "./payments/payments.service.js";
 import { nextStep } from "./orders.service.js";
@@ -61,6 +63,9 @@ export async function getOverview(store: ShopStore, from: Date, to: Date) {
           fulfillmentStatus: true,
           confirmedAt: true,
           checkoutStage: true,
+          checkoutVia: true,
+          externalProvider: true,
+          externalId: true,
           createdAt: true,
         },
       }),
@@ -203,33 +208,52 @@ async function needsAttention(store: ShopStore) {
 }
 
 export async function setupChecklist(store: ShopStore) {
-  const [products, rates, payments] = await Promise.all([
+  const inStore = inStoreCheckout(store.checkoutVia);
+  const [products, rates, payments, connected] = await Promise.all([
     prisma.shopProduct.count({ where: { storeId: store.id, status: "ACTIVE" } }),
     prisma.shopShippingRate.count({ where: { storeId: store.id, active: true } }),
     listPaymentMethods(store),
+    inStore ? storeConnected(store.orgId, store.checkoutVia) : false,
   ]);
+  const [wa, tested] = await Promise.all([
+    prisma.whatsappSettings.count({ where: { orgId: store.orgId, phoneId: { not: null } } }),
+    prisma.shopOrder.count({
+      where: {
+        storeId: store.id,
+        OR: [{ source: "test" }, { status: { in: ["OPEN", "COMPLETED"] } }],
+      },
+    }),
+  ]);
+  // In the order a merchant can do them; each one is something they set, never a default.
   const steps = [
-    { id: "catalog", label: "Connect a WhatsApp catalog", done: !!store.metaCatalogId },
+    { id: "whatsapp", label: "Connect WhatsApp", done: wa > 0 },
+    { id: "catalog", label: "Connect your Meta catalog", done: !!store.metaCatalogId },
     {
       id: "products",
-      label: products ? `${products} products added` : "Add products",
+      label: products ? `${products} products added` : "Add a product",
       done: products > 0,
     },
-    {
-      id: "payments",
-      label: "Take payments",
-      done:
-        payments.providers.some((p) => p.connected) ||
-        store.codEnabled ||
-        store.bankTransferEnabled,
-    },
-    { id: "shipping", label: "Set delivery rates", done: rates > 0 },
-    { id: "storefront", label: "Publish your storefront", done: store.storefrontEnabled },
-    {
-      id: "reminders",
-      label: "Turn on cart reminders",
-      done: store.cartReminderMinutes.length > 0,
-    },
+    // Paid in Shopify or WooCommerce: the store takes the money (and, for Shopify, the
+    // delivery), so RateUp's own payment methods and rates aren't asked for.
+    inStore
+      ? {
+          id: "checkout",
+          label: `Customers pay on your ${storeLabel(store.checkoutVia)} checkout`,
+          done: connected,
+        }
+      : {
+          id: "payments",
+          label: "Choose how you get paid",
+          done:
+            payments.providers.some((p) => p.connected) ||
+            store.codEnabled ||
+            store.bankTransferEnabled,
+        },
+    // WooCommerce's payment page has no delivery step, so its delivery comes from RateUp's rates.
+    ...(store.checkoutVia === "SHOPIFY"
+      ? []
+      : [{ id: "shipping", label: "Set a delivery rate", done: rates > 0 }]),
+    { id: "test_order", label: "Try a test order", done: tested > 0 },
   ];
   return { steps, done: steps.filter((s) => s.done).length, total: steps.length };
 }

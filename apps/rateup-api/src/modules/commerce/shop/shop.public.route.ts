@@ -4,15 +4,17 @@ import type z from "zod";
 
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
-import { rateLimit } from "../../../utils/rateLimit.js";
+import { clientIp, rateLimit } from "../../../utils/rateLimit.js";
 import {
   checkoutFromStorefront,
   getPublicCheckout,
   payPublicCheckout,
+  startPublicStoreCheckout,
   updatePublicCheckout,
 } from "./checkout.service.js";
+import { invoiceLinkForToken } from "./invoice.service.js";
 import { handlePaymentWebhook } from "./payments/payments.service.js";
-import { subscribeBackInStock } from "./recovery.service.js";
+import { requestBackInStockFromStorefront } from "./recovery.service.js";
 import { requestReturn } from "./returns.service.js";
 import {
   backInStockSchema,
@@ -29,7 +31,8 @@ import {
 import { ShopError } from "./shop.errors.js";
 import { h } from "./shop.http.js";
 import { handleEasypostWebhook } from "./shipping.service.js";
-import { getStorefront } from "./storefront.service.js";
+import { getPublicStorefront, listStorefrontPages } from "./storefront.service.js";
+import { commerceEnabled } from "./store.service.js";
 
 type Req<P = unknown, B = unknown, Q = unknown> = FastifyRequest<{
   Params: P;
@@ -51,17 +54,51 @@ export async function shopPublicRoutes(server: FastifyInstance) {
 
   const browse = { preHandler: rateLimit({ max: 600, windowSeconds: 60 * 60, key: "shopBrowse" }) };
   const act = { preHandler: rateLimit({ max: 120, windowSeconds: 60 * 60, key: "shopCheckout" }) };
+  // Each one can create an order in the merchant's Shopify or WooCommerce store.
+  const toStore = {
+    preHandler: rateLimit({ max: 20, windowSeconds: 60 * 60, key: "shopStoreCheckout" }),
+  };
+  // Guessing coupon codes: a few tries per checkout and per visitor, counted only when a
+  // request carries a code.
+  type CouponReq = FastifyRequest<{ Params: Token; Body: { discountCode?: string | null } }>;
+  const tryingCode = (request: CouponReq) => Boolean(request.body?.discountCode);
+  const couponTries = [
+    rateLimit<CouponReq>({
+      max: 10,
+      windowSeconds: 60 * 60,
+      key: "shopCouponToken",
+      keyFrom: (r) => (tryingCode(r) ? r.params.token : null),
+    }),
+    rateLimit<CouponReq>({
+      max: 30,
+      windowSeconds: 60 * 60,
+      key: "shopCouponIp",
+      keyFrom: (r) => (tryingCode(r) ? clientIp(r) : null),
+    }),
+  ];
+
+  // Read by rateup-ui's /s/sitemap.xml, which builds the product URLs from these titles.
+  server.get(
+    "/storefronts/sitemap",
+    browse,
+    h(async () => ({ stores: await listStorefrontPages() })),
+  );
 
   server.get<{ Params: Slug }>(
     "/storefront/:slug",
     { ...browse, schema: { params: slugParams } },
-    h(async (request: Req<Slug>) => getStorefront(request.params.slug)),
+    h(async (request: Req<Slug>) => getPublicStorefront(request.params.slug)),
   );
   server.post<{ Params: Slug; Body: z.infer<typeof storefrontCheckoutSchema> }>(
     "/storefront/:slug/checkout",
     { ...act, schema: { params: slugParams, body: storefrontCheckoutSchema } },
     h(async (request: Req<Slug, z.infer<typeof storefrontCheckoutSchema>>) =>
-      checkoutFromStorefront(request.params.slug, request.body.items, request.body.customer),
+      checkoutFromStorefront(
+        request.params.slug,
+        request.body.items,
+        request.body.customer,
+        request.body.reuseToken,
+      ),
     ),
   );
   server.post<{ Params: Slug; Body: z.infer<typeof backInStockSchema> }>(
@@ -69,12 +106,9 @@ export async function shopPublicRoutes(server: FastifyInstance) {
     { ...act, schema: { params: slugParams, body: backInStockSchema } },
     h(async (request: Req<Slug, z.infer<typeof backInStockSchema>>) => {
       const store = await prisma.shopStore.findUnique({ where: { slug: request.params.slug } });
-      if (!store) throw new ShopError("NOT_FOUND", "Shop not found");
-      return subscribeBackInStock({
-        storeId: store.id,
-        variantId: request.body.variantId,
-        phone: request.body.phone,
-      });
+      if (!store || !store.storefrontEnabled || !(await commerceEnabled(store.orgId)))
+        throw new ShopError("NOT_FOUND", "Shop not found");
+      return requestBackInStockFromStorefront(store, request.body.variantId);
     }),
   );
 
@@ -87,7 +121,10 @@ export async function shopPublicRoutes(server: FastifyInstance) {
   );
   server.patch<{ Params: Token; Body: z.infer<typeof publicCheckoutPatch> }>(
     "/checkout/:token",
-    { ...act, schema: { params: tokenParams, body: publicCheckoutPatch } },
+    {
+      preHandler: [act.preHandler, ...couponTries],
+      schema: { params: tokenParams, body: publicCheckoutPatch },
+    },
     h(async (request: Req<Token, z.infer<typeof publicCheckoutPatch>>) =>
       updatePublicCheckout(request.params.token, request.body),
     ),
@@ -98,6 +135,23 @@ export async function shopPublicRoutes(server: FastifyInstance) {
     h(async (request: Req<Token, z.infer<typeof publicPaySchema>>) =>
       payPublicCheckout(request.params.token, request.body.method),
     ),
+  );
+  server.post<{ Params: Token }>(
+    "/checkout/:token/store",
+    { ...toStore, schema: { params: tokenParams } },
+    h(async (request: Req<Token>) => startPublicStoreCheckout(request.params.token)),
+  );
+  server.get<{ Params: Token }>(
+    "/checkout/:token/invoice",
+    { ...browse, schema: { params: tokenParams } },
+    async (request: Req<Token>, reply) => {
+      try {
+        return reply.redirect(await invoiceLinkForToken(request.params.token), 302);
+      } catch (err) {
+        if (err instanceof ShopError) return reply.code(404).send({ error: err.message });
+        throw err;
+      }
+    },
   );
   server.post<{ Params: Token; Body: z.infer<typeof returnSchema> }>(
     "/checkout/:token/returns",

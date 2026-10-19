@@ -1,9 +1,13 @@
 import prisma from "../../../utils/prisma.js";
+import { sellableWhere } from "./checkoutVia.js";
 import { checkoutUrl } from "./events.js";
+import { checkoutLinkFor, storeChecksOut } from "./externalCheckout.service.js";
 import { createDraftOrder, repriceOrder } from "./orders.service.js";
 import { toNumber } from "./pricing.js";
 import { subscribeBackInStock } from "./recovery.service.js";
 import { ShopError } from "./shop.errors.js";
+import { assertCanTakeOrder } from "./orderAllowance.js";
+import { assertCommerceEnabled } from "./store.service.js";
 
 /**
  * What the Meta AI agent's shop tools answer. Shapes are flat and snake_case because a model
@@ -14,6 +18,7 @@ import { ShopError } from "./shop.errors.js";
 async function storeFor(orgId: string) {
   const store = await prisma.shopStore.findUnique({ where: { orgId } });
   if (!store) throw new ShopError("NOT_FOUND", "This business has no shop set up");
+  await assertCommerceEnabled(orgId);
   return store;
 }
 
@@ -29,6 +34,7 @@ export async function agentSearchProducts(orgId: string, q: string | undefined) 
       storeId: store.id,
       status: "ACTIVE",
       showOnWhatsapp: true,
+      ...sellableWhere(store),
       ...(words.length
         ? {
             OR: words.flatMap((w) => [
@@ -70,6 +76,7 @@ export async function agentStartCheckout(
   whatsappPhoneId: string | null,
 ) {
   const store = await storeFor(orgId);
+  await assertCanTakeOrder({ orgId, source: "ai_agent" });
   const digits = phone.replace(/\D/g, "");
   const contact = await prisma.contact.findUnique({
     where: { contact_phone_org_id_unique: { phone: digits, orgId } },
@@ -86,7 +93,9 @@ export async function agentStartCheckout(
   });
   let couponNote: string | null = null;
   let order = draft;
-  if (couponCode) {
+  if (couponCode && storeChecksOut(store)) {
+    couponNote = "Codes are entered on the checkout page.";
+  } else if (couponCode) {
     try {
       order = await repriceOrder(draft.id, { discountCode: couponCode });
     } catch (err) {
@@ -105,8 +114,10 @@ export async function agentStartCheckout(
     discount: toNumber(order.discountTotal),
     total_before_delivery: toNumber(order.total),
     coupon_problem: couponNote,
-    checkout_url: checkoutUrl(order.checkoutToken!),
-    note: "Delivery is chosen on the checkout page, so the final total may add delivery.",
+    checkout_url: await checkoutLinkFor(order.id),
+    note: storeChecksOut(store)
+      ? "Delivery, tax and any codes are added on the checkout page, so the final total may differ."
+      : "Delivery is chosen on the checkout page, so the final total may add delivery.",
   };
 }
 

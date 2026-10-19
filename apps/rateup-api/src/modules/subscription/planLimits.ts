@@ -3,6 +3,7 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 import prisma from "../../utils/prisma.js";
 import { getNestedProperty } from "../../utils/misc/obj.utils.js";
 import { getActiveContactBudget } from "./activeContacts.js";
+import { shopOrdersThisMonth } from "./shopOrders.js";
 import { isUnlimitedAllowance } from "./subscription.data.js";
 import { getSubscription } from "./subscription.service.js";
 
@@ -23,8 +24,8 @@ export function planAllowance(features: unknown, path: string): number | undefin
 /**
  * Every count a plan can cap, in one place.
  *
- * Teams, users, active contacts and monthly form responses. They are what the plans
- * actually sell, and every one of them is a number on the pricing page.
+ * Teams, users, active contacts, monthly form responses and monthly shop orders. They are
+ * what the plans actually sell, and every one of them is a number on the pricing page.
  *
  * There used to be five more — campaigns, automated replies, Flows, templates and loyalty
  * registrations — each with its own hand-written gate, all reading a `whatsapp.count.max`
@@ -124,6 +125,11 @@ export const PLAN_LIMITS = {
       });
       return usage?.monthlySurveyResponses ?? 0;
     },
+  },
+  orders: {
+    path: "whatsapp.shopOrders.count.max",
+    noun: { one: "order this month", many: "orders this month" },
+    used: shopOrdersThisMonth,
   },
 } as const satisfies Record<string, PlanLimitDefinition>;
 

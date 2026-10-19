@@ -3,7 +3,13 @@ import { log } from "../../../utils/logger.js";
 import redisConnection from "../../../utils/redisConnection.js";
 import type { CommerceOrder, CommerceStore } from "../commerce/commerce.types.js";
 import type { WooDeliveryJobData } from "./woocommerce.inbound.js";
-import { toCommerceOrder, type WooOrderPayload } from "./woocommerce.mapping.js";
+import {
+  rateupOrderIdOf,
+  toCommerceOrder,
+  wooCustomer,
+  wooTotals,
+  type WooOrderPayload,
+} from "./woocommerce.mapping.js";
 import { readWooCredential } from "./woocommerce.types.js";
 
 const STATUS_TTL_SECONDS = 180 * 24 * 60 * 60;
@@ -99,6 +105,7 @@ export async function handleWooOrder(
   if (!release) return;
 
   try {
+    await syncRateupCheckout(integration.orgId, payload, order);
     await commerce.onOrderEvent(
       {
         provider: commerce.provider,
@@ -111,5 +118,33 @@ export async function handleWooOrder(
   } catch (error) {
     await release();
     throw error;
+  }
+}
+
+/**
+ * An order RateUp created in WooCommerce (a store checkout, or a RateUp order written back):
+ * the RateUp order follows it. Paid is WooCommerce's own `date_paid`, since a cash order sits
+ * in "processing" unpaid; a failed payment is left alone, as the customer can retry on the
+ * same page. Never blocks the rest of the delivery.
+ */
+async function syncRateupCheckout(orgId: string, payload: WooOrderPayload, order: CommerceOrder) {
+  const rateupOrderId = rateupOrderIdOf(payload);
+  if (!rateupOrderId) return;
+  const settled = payload.status === "processing" || payload.status === "completed";
+  const paid = payload.date_paid !== undefined ? Boolean(payload.date_paid) : settled;
+  const status = payload.status === "cancelled" ? "cancelled" : paid && settled ? "paid" : null;
+  try {
+    const { syncOrderFromStore } = await import("../../commerce/shop/externalCheckout.service.js");
+    await syncOrderFromStore("woocommerce", orgId, rateupOrderId, {
+      status,
+      externalOrderId: order.orderId,
+      externalName: payload.number ? `#${payload.number}` : null,
+      ...(status === "paid" && { totals: wooTotals(payload) }),
+      fulfillment: payload.status === "completed" ? "fulfilled" : null,
+      refund: payload.status === "refunded" ? "full" : payload.refunds?.length ? "partial" : null,
+      ...wooCustomer(payload),
+    });
+  } catch (err) {
+    log.warn({ err, rateupOrderId }, "Could not update the RateUp order from WooCommerce");
   }
 }

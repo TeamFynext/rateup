@@ -108,3 +108,50 @@ describe("rules on several channels", () => {
     ).toBe(true);
   });
 });
+
+describe("comment-to-buy rules", () => {
+  const product = "11111111-1111-4111-8111-111111111111";
+  const sell = (platform: string, value: unknown) =>
+    createRuleSchema.safeParse({
+      ...base,
+      platform,
+      triggerEvent: "INSTAGRAM_COMMENT",
+      actions: [{ type: "SEND_SHOP_PRODUCTS", value }],
+    });
+
+  test("accept products and a drop size on Instagram", () => {
+    expect(sell("INSTAGRAM", { productIds: [product], dropLimit: 20 }).success).toBe(true);
+  });
+
+  test("need at least one product", () => {
+    const result = sell("INSTAGRAM", { productIds: [] });
+    expect(result.error?.issues[0].path).toEqual(["actions", 0, "value"]);
+  });
+
+  test("also go out on WhatsApp, but not Messenger", () => {
+    const products = [{ type: "SEND_SHOP_PRODUCTS", value: { productIds: [product] } }];
+    expect(createRuleSchema.safeParse({ ...base, actions: products }).success).toBe(true);
+    const result = createRuleSchema.safeParse({ ...base, platform: "FACEBOOK", actions: products });
+    expect(result.error?.issues[0].path).toEqual(["actions", 0, "type"]);
+  });
+});
+
+describe("came-from-an-ad rules", () => {
+  const adRule = (platform: string, options?: unknown) =>
+    createRuleSchema.safeParse({
+      ...base,
+      platform,
+      triggerEvent: "WHATSAPP_AD_REFERRAL",
+      options,
+    });
+
+  test("run on WhatsApp, narrowed to ads or words", () => {
+    expect(adRule("WHATSAPP", { adIds: ["120210000000001"], adMatch: "summer" }).success).toBe(
+      true,
+    );
+  });
+
+  test("are WhatsApp only", () => {
+    expect(adRule("INSTAGRAM").error?.issues[0].path).toEqual(["triggerEvent"]);
+  });
+});

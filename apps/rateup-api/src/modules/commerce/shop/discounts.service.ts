@@ -164,9 +164,16 @@ export function ruleOf(d: ShopDiscount): { rule: DiscountRule; scope: DiscountSc
 }
 
 /**
- * Looks a code up for a cart and says whether it applies. Messages are written for the
- * customer, since the hosted checkout and the chat show them as they are.
+ * A refused code. Shoppers all get the same message, so trying codes can't tell a real one
+ * from a made-up one; `reason` is the specific cause, for staff.
  */
+export class DiscountRefused extends ShopError {
+  constructor(readonly reason: string) {
+    super("DISCOUNT_INVALID", "That code can't be used");
+  }
+}
+
+/** Looks a code up for a cart and says whether it applies. */
 export async function resolveDiscount(
   storeId: string,
   rawCode: string,
@@ -175,14 +182,26 @@ export async function resolveDiscount(
 ) {
   const code = normaliseCode(rawCode);
   const d = await db.shopDiscount.findUnique({ where: { storeId_code: { storeId, code } } });
-  const invalid = (msg: string) => new ShopError("DISCOUNT_INVALID", msg);
+  const invalid = (reason: string) => new DiscountRefused(reason);
   if (!d) throw invalid("That code doesn't exist");
   const state = discountState(d);
   if (state === "OFF" || state === "ENDED") throw invalid("That code has expired");
   if (state === "SCHEDULED") throw invalid("That code isn't active yet");
-  if (state === "USED_UP") throw invalid("That code has been fully used");
+  if (state === "USED_UP") {
+    // The last use may be this order's own, held for its payment link or spent when placed.
+    const mine = ctx.orderId
+      ? await db.shopDiscountRedemption.findUnique({
+          where: { discountId_orderId: { discountId: d.id, orderId: ctx.orderId } },
+        })
+      : null;
+    if (!mine) throw invalid("That code has been fully used");
+  }
+  // Said plainly: the code works, the cart is just short of it.
   if (d.minSubtotal !== null && ctx.subtotal < toNumber(d.minSubtotal))
-    throw invalid(`That code needs an order of at least ${toNumber(d.minSubtotal).toFixed(2)}`);
+    throw new ShopError(
+      "DISCOUNT_INVALID",
+      `That code needs an order of at least ${toNumber(d.minSubtotal).toFixed(2)}`,
+    );
 
   if (d.eligibility !== "ANYONE" || d.perCustomerLimit !== null) {
     if (!ctx.contactId) throw invalid("Sign in through the chat to use that code");

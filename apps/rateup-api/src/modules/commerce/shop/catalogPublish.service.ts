@@ -1,9 +1,9 @@
-import { FRONTEND_URL } from "../../../utils/constants/constants.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
 import { sendProducts } from "../../whatsapp/catalog/products/product.service.js";
 import { CatalogProductTypes } from "../../whatsapp/catalog/products/product.schema.js";
 import { toNumber } from "./pricing.js";
+import { storefrontProductUrl } from "./storefrontLinks.js";
 
 /**
  * Publishes a product's variants to the store's Meta catalog — the one catalog WhatsApp,
@@ -35,9 +35,7 @@ export async function publishProductToMeta(productId: string, removedRetailerIds
   const onMeta =
     product.status === "ACTIVE" &&
     (product.showOnWhatsapp || product.showOnInstagram || product.showOnFacebook);
-  const link =
-    product.productUrl ||
-    `${FRONTEND_URL}/s/${store.slug}?product=${encodeURIComponent(product.id)}`;
+  const link = product.productUrl || storefrontProductUrl(store.slug, product);
   const image = product.images[0];
 
   const requests: { method: "UPDATE" | "DELETE"; data: Record<string, unknown> }[] = [];

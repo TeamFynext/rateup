@@ -270,6 +270,12 @@ describe("the order pipeline", () => {
     expect(runOrderAutomation).not.toHaveBeenCalled();
   });
 
+  test("a RateUp order copied into the store earns no points here; RateUp earned them", async () => {
+    await onOrderEvent(store(provider()), order({ rateupWriteBack: true }));
+    expect(shopifyLoyaltyQueue.add).not.toHaveBeenCalled();
+    expect(emitIntegrationEvent).toHaveBeenCalled();
+  });
+
   test("an order with no id cannot earn points, but is still news", async () => {
     await onOrderEvent(store(provider()), order({ orderId: null }));
 

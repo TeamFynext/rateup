@@ -49,9 +49,18 @@ async function processWooJob(integration: Integration, job: ProviderJobData) {
       await handleWooCustomer(integration, data);
       return;
     }
-    case "product.updated": {
-      const { handleWooProductUpdated } = await import("./woocommerce.products.js");
-      await handleWooProductUpdated(integration, data);
+    case "product.updated":
+    case "product.created":
+    case "product.deleted": {
+      if (triggerKey === "product.updated") {
+        const { handleWooProductUpdated } = await import("./woocommerce.products.js");
+        await handleWooProductUpdated(integration, data);
+      }
+      // A shop that follows this store copies its products in again shortly after.
+      if (integration.orgId) {
+        const { scheduleStoreMirror } = await import("../../commerce/shop/storeSync.service.js");
+        await scheduleStoreMirror(integration.orgId, "woocommerce");
+      }
       return;
     }
     default:

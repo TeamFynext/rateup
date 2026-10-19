@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { LogController } from "fastify";
 import { build } from "./app.js";
+import { trustProxyFromEnv } from "./utils/trustProxy.js";
 
 /**
  * API service entrypoint — HTTP only, safe to run at N replicas.
@@ -12,7 +13,7 @@ async function start() {
     // logger: true,
     logController: new LogController({ disableRequestLogging: true }),
     bodyLimit: 30971520,
-    trustProxy: true,
+    trustProxy: trustProxyFromEnv(),
     connectionTimeout: 60_000,
     keepAliveTimeout: 65_000,
     requestTimeout: 30_000,

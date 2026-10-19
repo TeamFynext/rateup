@@ -104,7 +104,7 @@ export async function createGoogleUserHandler(
     if (request?.body?.email) {
       userInfo.emails[0] = request.body.email;
     }
-    userInfo.phoneNumbers[0] = request?.body?.phoneNumber;
+    if (request.body.phoneNumber) userInfo.phoneNumbers[0] = request.body.phoneNumber;
   }
   const body = request.body;
 
@@ -181,7 +181,7 @@ export async function createAppleUserHandler(
     if (request?.body?.email) {
       userInfo.emails[0] = request.body.email;
     }
-    userInfo.phoneNumbers[0] = request?.body?.phoneNumber;
+    if (request.body.phoneNumber) userInfo.phoneNumbers[0] = request.body.phoneNumber;
   }
   const body = request.body;
 

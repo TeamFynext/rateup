@@ -1,6 +1,8 @@
 import { getActiveContactBudget } from "./activeContacts.js";
 import { nextPeriodStart } from "./billingPeriod.js";
 import { getCampaignCreditBudget } from "./campaignCredits.js";
+import { checkPlanLimit } from "./planLimits.js";
+import { shopOrdersThisMonth } from "./shopOrders.js";
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
   deleteSubscriptions,
@@ -19,15 +21,19 @@ import { log } from "../../utils/logger.js";
 /** This month's meters for the caller's org: what the billing page and banner show. */
 export async function getUsageHandler(req: FastifyRequest, res: FastifyReply) {
   const { orgId } = req.user;
-  const [activeContacts, campaignCredits] = await Promise.all([
+  const [activeContacts, campaignCredits, orders, ordersUsed] = await Promise.all([
     getActiveContactBudget(orgId),
     getCampaignCreditBudget(orgId),
+    checkPlanLimit(orgId, "orders"),
+    shopOrdersThisMonth(orgId),
   ]);
   return res.send({
     period: activeContacts.period,
     resetsAt: nextPeriodStart(),
     activeContacts,
     campaignCredits,
+    // Counted on every plan, so an unmetered plan still shows what it took.
+    shopOrders: { used: ordersUsed, max: orders.max ?? null },
   });
 }
 

@@ -1,12 +1,21 @@
 import type { ShopOrder, ShopStore } from "../../../../../generated/prisma/client.js";
+import { paysInStore, storeLabel } from "../checkoutVia.js";
 import { appConfig as config } from "../../../../config.js";
 import { log } from "../../../../utils/logger.js";
 import prisma from "../../../../utils/prisma.js";
 import { checkoutUrl } from "../events.js";
-import { addOrderEvent, markOrderPaid, newCheckoutToken } from "../orders.service.js";
+import {
+  addOrderEvent,
+  markOrderPaid,
+  newCheckoutToken,
+  prepareDraftForPayment,
+  releaseOrderBenefits,
+  reserveOrderBenefits,
+} from "../orders.service.js";
 import { onShopOrderEvent } from "../events.js";
 import { round2, toNumber } from "../pricing.js";
 import { notFound, ShopError } from "../shop.errors.js";
+import { assertCanTakeOrder } from "../orderAllowance.js";
 import type {
   PaymentAccountCredential,
   PaymentProvider,
@@ -14,6 +23,7 @@ import type {
 } from "./provider.types.js";
 import { razorpayProvider } from "./razorpay.provider.js";
 import { stripeProvider } from "./stripe.provider.js";
+import { inStoreCheckout } from "../checkoutVia.js";
 
 export const PAYMENT_PROVIDERS: readonly PaymentProvider[] = [stripeProvider, razorpayProvider];
 
@@ -61,6 +71,7 @@ export async function listPaymentMethods(store: ShopStore) {
       livemode: row?.active ? (cred.livemode ?? null) : null,
       webhookUrl: webhookUrl(p.id, store.id),
       webhookConfigured: !!cred.webhookSecret,
+      lastWebhookAt: row?.active ? (cred.lastWebhookAt ?? null) : null,
       isDefault: store.defaultPaymentProvider === p.id,
       lastError: row?.lastError ?? null,
     };
@@ -171,10 +182,51 @@ export async function pickProvider(store: ShopStore, wanted?: string | null) {
 }
 
 /**
- * Creates a fresh payment link for what the order costs now. Older pending links are expired
- * first, so a customer holding an old link (from before a coupon) cannot pay the old amount.
+ * Creates a fresh payment link for what the order costs now, and closes older pending links at
+ * the gateway so one from before a coupon cannot be paid. Closing is best effort; a payment that
+ * slips through on an old link is checked against the order's total in `applyState`.
  */
-export async function createPaymentLink(orderId: string, opts: { provider?: string | null } = {}) {
+async function closeLink(orgId: string, payment: { provider: string; providerRef: string | null }) {
+  if (!payment.providerRef || !PAYMENT_PROVIDERS.some((p) => p.id === payment.provider)) return;
+  const provider = getPaymentProvider(payment.provider);
+  const account = await getPaymentAccount(orgId, provider.id);
+  if (!account) return;
+  await provider
+    .expireLink(account.credential, payment.providerRef)
+    .catch((err) =>
+      log.warn({ err, providerRef: payment.providerRef }, "Could not close an older payment link"),
+    );
+}
+
+/** After a cancel: the links it expired are closed at the gateway too. */
+export async function closeOpenLinks(orgId: string, orderId: string) {
+  const links = await prisma.shopPayment.findMany({
+    where: { orderId, status: "EXPIRED", providerRef: { not: null }, paidAt: null },
+  });
+  await Promise.all(links.map((payment) => closeLink(orgId, payment)));
+}
+
+/**
+ * `acceptPriceChange`: the caller tells the customer the new total itself (the chat message
+ * that carries the link); otherwise a draft whose prices moved is refused so they see it first.
+ */
+export async function createPaymentLink(
+  orderId: string,
+  opts: { provider?: string | null; acceptPriceChange?: boolean } = {},
+) {
+  const draft = await prisma.shopOrder.findUnique({ where: { id: orderId } });
+  if (!draft) throw notFound("Order");
+  if (paysInStore(draft))
+    throw new ShopError(
+      "CONFLICT",
+      `This order is paid on your ${storeLabel(draft.checkoutVia)} checkout. Send its checkout link instead.`,
+    );
+  let priceChange: { before: number; after: number } | null = null;
+  if (draft.status === "DRAFT" && draft.paymentStatus !== "PAID") {
+    await assertCanTakeOrder(draft);
+    const prices = await prepareDraftForPayment(orderId, { strict: !opts.acceptPriceChange });
+    if (prices.changed) priceChange = { before: prices.before, after: prices.after };
+  }
   const order = await prisma.shopOrder.findUnique({
     where: { id: orderId },
     include: { store: true },
@@ -189,8 +241,11 @@ export async function createPaymentLink(orderId: string, opts: { provider?: stri
   if (!picked)
     throw new ShopError(
       "PAYMENT_UNAVAILABLE",
-      "Connect Stripe or Razorpay in Commerce → Payments to take payments online",
+      "Connect Stripe or Razorpay in Commerce → Settings → Getting paid to take payments online",
     );
+
+  // Held before the link exists, so a code's last use or a points balance can't back two links.
+  await reserveOrderBenefits(orderId);
 
   const token = order.checkoutToken ?? newCheckoutToken();
   const expiresAt = new Date(Date.now() + order.store.paymentLinkTtlHours * 3_600_000);
@@ -205,6 +260,11 @@ export async function createPaymentLink(orderId: string, opts: { provider?: stri
     cancelUrl: checkoutUrl(token),
     expiresAt,
   });
+
+  const older = await prisma.shopPayment.findMany({
+    where: { orderId, status: "PENDING", providerRef: { not: null } },
+  });
+  await Promise.all(older.map((payment) => closeLink(order.orgId, payment)));
 
   await prisma.$transaction(async (tx) => {
     await tx.shopPayment.updateMany({
@@ -245,44 +305,127 @@ export async function createPaymentLink(orderId: string, opts: { provider?: stri
     amount: total,
     currency: order.currency,
     expiresAt: link.expiresAt ?? expiresAt,
+    priceChange,
   };
 }
 
-async function applyState(state: ProviderPaymentState, providerId: PaymentProviderId) {
-  if (state.state === "refunded") {
+/**
+ * `reported` is what a webhook claimed. Any merchant can sign a webhook with their own secret,
+ * so the payment is looked up only within `storeId`, and a payment or refund is asked of the
+ * gateway with that store's keys rather than taken from the event.
+ */
+async function applyState(
+  reported: ProviderPaymentState,
+  provider: PaymentProvider,
+  credential: PaymentAccountCredential,
+  storeId: string,
+  fromWebhook: boolean,
+) {
+  if (reported.state === "refunded") {
     const payment = await prisma.shopPayment.findFirst({
-      where: { provider: providerId, providerPaymentId: state.paymentId },
+      where: { provider: provider.id, providerPaymentId: reported.paymentId, order: { storeId } },
     });
     if (!payment) return;
-    await recordRefund(payment.orderId, payment.id, state.amountRefunded, null, true);
+    const total =
+      (fromWebhook ? null : reported.amountRefunded) ??
+      (await provider.refundedTotal(credential, reported.paymentId));
+    await recordRefund(payment.orderId, payment.id, total, null, true);
     return;
   }
-  const payment = await prisma.shopPayment.findUnique({
-    where: { provider_providerRef: { provider: providerId, providerRef: state.providerRef } },
+  const payment = await prisma.shopPayment.findFirst({
+    where: { provider: provider.id, providerRef: reported.providerRef, order: { storeId } },
   });
   if (!payment) return;
+  const state =
+    fromWebhook && reported.state === "paid"
+      ? await provider.fetchState(credential, reported.providerRef)
+      : reported;
+
   if (state.state === "paid") {
-    if (payment.status === "PAID") return;
-    await prisma.shopPayment.update({
-      where: { id: payment.id },
+    if (
+      (state.currency && state.currency !== payment.currency.toUpperCase()) ||
+      (state.orderId && state.orderId !== payment.orderId)
+    ) {
+      log.warn(
+        { paymentId: payment.id, currency: state.currency, orderId: state.orderId },
+        "A gateway payment doesn't match the RateUp payment it names",
+      );
+      await addOrderEvent(
+        payment.orderId,
+        "payment_mismatch",
+        `A ${provider.label} payment arrived that doesn't match this order (${state.currency ?? "unknown currency"}) — check it in ${provider.label}`,
+        { providerRef: state.providerRef },
+      );
+      return;
+    }
+    // Claimed conditionally: the webhook and the customer's return to the checkout page
+    // usually report the same payment at the same moment.
+    const { count } = await prisma.shopPayment.updateMany({
+      where: { id: payment.id, status: { not: "PAID" } },
       data: { status: "PAID", paidAt: new Date(), providerPaymentId: state.paymentId },
     });
+    if (!count) return;
+
+    const order = await prisma.shopOrder.findUniqueOrThrow({ where: { id: payment.orderId } });
+    const paid = state.amount ?? toNumber(payment.amount);
+    const due = toNumber(order.total);
+    const label = `${payment.currency} ${paid.toFixed(2)}`;
+
+    if (order.paymentStatus === "PAID") {
+      await addOrderEvent(
+        order.id,
+        "duplicate_payment",
+        `A second payment of ${label} arrived for an order already paid — refund one of them`,
+        { paymentId: state.paymentId },
+      );
+      return;
+    }
+    // A link superseded by a newer one (or paid for less) does not settle the order on its own.
+    if (paid < due - 0.009) {
+      await addOrderEvent(
+        order.id,
+        "underpaid",
+        `Received ${label}, but the order now comes to ${order.currency} ${due.toFixed(2)} — collect the difference or mark it paid`,
+        { paymentId: state.paymentId },
+      );
+      return;
+    }
+    if (payment.status !== "PENDING") {
+      await addOrderEvent(
+        order.id,
+        "old_link_paid",
+        `Paid through an older payment link (${label})`,
+        { paymentId: state.paymentId },
+      );
+    }
+    if (paid > due + 0.009) {
+      await addOrderEvent(
+        order.id,
+        "overpaid",
+        `Received ${label} for an order of ${order.currency} ${due.toFixed(2)} — refund the difference`,
+        { paymentId: state.paymentId },
+      );
+    }
     await markOrderPaid(payment.orderId, {
-      provider: providerId,
+      provider: provider.id,
       paymentId: state.paymentId,
-      amount: state.amount ?? toNumber(payment.amount),
+      amount: paid,
     });
   } else if (state.state === "failed" || state.state === "expired") {
-    if (payment.status !== "PENDING") return;
-    await prisma.shopPayment.update({
-      where: { id: payment.id },
+    const { count } = await prisma.shopPayment.updateMany({
+      where: { id: payment.id, status: "PENDING" },
       data: { status: state.state === "failed" ? "FAILED" : "EXPIRED" },
     });
+    if (!count) return;
     await addOrderEvent(
       payment.orderId,
       `payment_${state.state}`,
       state.state === "failed" ? "Payment failed" : "Payment link expired",
     );
+    const open = await prisma.shopPayment.count({
+      where: { orderId: payment.orderId, status: "PENDING" },
+    });
+    if (!open) await releaseOrderBenefits(payment.orderId);
   }
 }
 
@@ -298,7 +441,15 @@ export async function handlePaymentWebhook(
   const account = await getPaymentAccount(store.orgId, provider.id);
   if (!account) throw new ShopError("PAYMENT_UNAVAILABLE", "Not connected");
   const state = provider.parseWebhook(account.credential, rawBody, headers);
-  if (state) await applyState(state, provider.id);
+  // Past the signature check, so the setup is proven whatever the event was. Hourly at most.
+  const last = account.credential.lastWebhookAt ? Date.parse(account.credential.lastWebhookAt) : 0;
+  if (Date.now() - last > 3_600_000) {
+    await prisma.integration.update({
+      where: { id: account.row.id },
+      data: { credential: { ...account.credential, lastWebhookAt: new Date().toISOString() } },
+    });
+  }
+  if (state) await applyState(state, provider, account.credential, store.id, true);
 }
 
 /**
@@ -309,6 +460,7 @@ export async function refreshPendingPayment(order: Pick<ShopOrder, "id" | "orgId
   const payment = await prisma.shopPayment.findFirst({
     where: { orderId: order.id, status: "PENDING", providerRef: { not: null } },
     orderBy: { createdAt: "desc" },
+    include: { order: { select: { storeId: true } } },
   });
   if (!payment || !PAYMENT_PROVIDERS.some((p) => p.id === payment.provider)) return null;
   const provider = getPaymentProvider(payment.provider);
@@ -316,7 +468,7 @@ export async function refreshPendingPayment(order: Pick<ShopOrder, "id" | "orgId
   if (!account) return null;
   try {
     const state = await provider.fetchState(account.credential, payment.providerRef!);
-    await applyState(state, provider.id);
+    await applyState(state, provider, account.credential, payment.order.storeId, false);
     return state.state;
   } catch (err) {
     log.warn({ err, orderId: order.id }, "Could not refresh a pending shop payment");
@@ -365,6 +517,11 @@ export async function refundOrder(
 ) {
   const order = await prisma.shopOrder.findUnique({ where: { id: orderId } });
   if (!order) throw notFound("Order");
+  if (inStoreCheckout(order.checkoutVia))
+    throw new ShopError(
+      "INVALID",
+      `This order was paid in ${order.checkoutVia === "SHOPIFY" ? "Shopify" : "WooCommerce"}; refund it there`,
+    );
   const payment = await prisma.shopPayment.findFirst({
     where: { orderId, status: { in: ["PAID", "PARTIALLY_REFUNDED"] } },
     orderBy: { paidAt: "desc" },
@@ -419,6 +576,18 @@ export async function refundOrder(
 export async function markPaidManually(orderId: string, method: string, actorUserId: string) {
   const order = await prisma.shopOrder.findUnique({ where: { id: orderId } });
   if (!order) throw notFound("Order");
+  if (paysInStore(order))
+    throw new ShopError(
+      "CONFLICT",
+      `This order is paid in ${storeLabel(order.checkoutVia)}. Mark it paid there and RateUp follows.`,
+    );
+  // A second PAID row would be the one a later refund picks, and it would be recorded as
+  // cash instead of going back through the gateway.
+  if (
+    order.status === "CANCELLED" ||
+    ["PAID", "PARTIALLY_REFUNDED", "REFUNDED"].includes(order.paymentStatus)
+  )
+    throw new ShopError("INVALID", "This order isn't waiting for payment");
   await prisma.shopPayment.create({
     data: {
       orderId,

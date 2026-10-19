@@ -57,8 +57,10 @@ describe("getFreeSubscriptionFeatures", () => {
     expect(free.whatsapp.referrals?.active).toBe(false);
   });
 
-  test("opens the shop (Commerce)", () => {
+  test("opens the shop (Commerce), capped at 50 orders a month", () => {
     expect(free.whatsapp.catalog?.active).toBe(true);
+    expect(free.whatsapp.shopOrders).toEqual({ active: true, count: { max: 50 } });
+    expect(isUnlimitedAllowance(free.whatsapp.shopOrders.count.max)).toBe(false);
   });
 
   test("opens campaigns, which the credit allowance throttles rather than the gate", () => {
@@ -150,6 +152,12 @@ describe("paid tier presets", () => {
       expect(rungs[i].team.teamMember.count.max).toBeGreaterThan(
         rungs[i - 1].team.teamMember.count.max,
       );
+    }
+  });
+
+  test("shop orders are unmetered on every paid tier", () => {
+    for (const tier of [plus, pro, max, enterprise]) {
+      expect(isUnlimitedAllowance(tier.whatsapp.shopOrders?.count.max)).toBe(true);
     }
   });
 

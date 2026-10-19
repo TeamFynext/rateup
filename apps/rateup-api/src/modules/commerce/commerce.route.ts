@@ -19,7 +19,7 @@ import {
 import { declareAccess } from "../../authz/registry.js";
 
 export async function commerceRoutes(server: FastifyInstance) {
-  declareAccess(server, { access: "session" });
+  declareAccess(server, { read: "commerce.read", write: "commerce.read" });
 
   server.get("/channels", getCommerceChannelsHandler);
 
@@ -45,14 +45,15 @@ export async function commerceRoutes(server: FastifyInstance) {
     getCommerceOrdersHandler,
   );
 
+  // Exports carry every buyer's name and phone, so they need more than the dashboards do.
   server.post(
     "/export/orders",
-    { schema: { body: exportOrdersSchema } },
+    { schema: { body: exportOrdersSchema }, config: { permission: "commerce.orders.manage" } },
     exportCommerceOrdersHandler,
   );
   server.post(
     "/export/overview",
-    { schema: { body: exportOverviewSchema } },
+    { schema: { body: exportOverviewSchema }, config: { permission: "commerce.orders.manage" } },
     exportCommerceOverviewHandler,
   );
 }

@@ -1,3 +1,6 @@
+import { timingSafeEqual } from "node:crypto";
+import { isIP } from "node:net";
+
 import { FastifyReply, FastifyRequest } from "fastify";
 import connection from "./redisConnection.js";
 import { log } from "./logger.js";
@@ -29,13 +32,32 @@ export interface RateLimitOptions<R extends FastifyRequest = FastifyRequest> {
   throwOnLimit?: (kind: "rate_limited" | "unavailable") => Error;
 }
 
+export const SSR_SECRET_HEADER = "x-rateup-ssr-secret";
+export const SSR_CLIENT_IP_HEADER = "x-rateup-client-ip";
+
 /**
- * The client address. Behind a proxy Fastify only trusts `x-forwarded-for` when
- * `trustProxy` is set, so `request.ip` is the right thing to read either way —
- * reading the header directly would let a caller pick their own bucket.
+ * The visitor rateup-ui's server is rendering a page for, when it proves it is that server.
+ * Without this every server-rendered page shares the UI server's one address, so a few
+ * hundred requests anywhere would exhaust the limit for every visitor.
  */
-function clientIp(request: FastifyRequest): string {
-  return request.ip || "unknown";
+function forwardedVisitorIp(request: FastifyRequest): string | null {
+  const secret = process.env.SSR_SHARED_SECRET;
+  if (!secret) return null;
+  const sent = request.headers?.[SSR_SECRET_HEADER];
+  const ip = request.headers?.[SSR_CLIENT_IP_HEADER];
+  if (typeof sent !== "string" || typeof ip !== "string" || !isIP(ip.trim())) return null;
+  const a = Buffer.from(sent);
+  const b = Buffer.from(secret);
+  return a.length === b.length && timingSafeEqual(a, b) ? ip.trim() : null;
+}
+
+/**
+ * The client address. `request.ip` honours `trustProxy` (`TRUST_PROXY_HOPS`), which trusts
+ * only the hops our proxies appended — reading the header directly would let a caller pick
+ * their own bucket.
+ */
+export function clientIp(request: FastifyRequest): string {
+  return forwardedVisitorIp(request) ?? (request.ip || "unknown");
 }
 
 /** Read at call time, not import time, so a test or a hot env change is seen. */

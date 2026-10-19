@@ -42,6 +42,8 @@ vi.mock("axios", () => ({
 }));
 
 vi.mock("./shopify/shopify.messages.js", () => ({ sendWhatsAppTemplateToCustomer: vi.fn() }));
+const shopStore = vi.hoisted(() => ({ onOnlineStoreDisconnected: vi.fn(async () => {}) }));
+vi.mock("../commerce/shop/store.service.js", () => shopStore);
 
 import axios from "axios";
 import prisma from "../../utils/prisma.js";
@@ -308,6 +310,15 @@ describe("deleteIntegrationByName", () => {
     expect(db.integration.delete.mock.calls[0][0].where).toEqual({
       orgid_integration_name_unique: { name: "amelia", orgId: ORG },
     });
+  });
+
+  test("disconnecting Shopify or WooCommerce moves a shop checking out there back to RateUp", async () => {
+    db.integration.findUnique.mockResolvedValue(null);
+    await deleteIntegrationByName("woocommerce", ORG);
+    expect(shopStore.onOnlineStoreDisconnected).toHaveBeenCalledWith(ORG, "WOOCOMMERCE");
+
+    await deleteIntegrationByName("amelia", ORG);
+    expect(shopStore.onOnlineStoreDisconnected).toHaveBeenCalledTimes(1);
   });
 
   test("propagates a missing-row failure rather than answering quietly", async () => {

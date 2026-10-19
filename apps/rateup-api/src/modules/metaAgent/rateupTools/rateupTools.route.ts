@@ -270,6 +270,10 @@ export async function rateupToolsRoutes(server: FastifyInstance) {
     PAYMENT_FAILED: "payment_failed",
     CHECKOUT_EXPIRED: "checkout_expired",
     CONFLICT: "conflict",
+    PLAN_REQUIRED: "subscription_required",
+    FORBIDDEN: "insufficient_scope",
+    LIMIT_REACHED: "rate_limited",
+    ORDER_LIMIT: "order_limit",
   };
   const shopError = (err: unknown): never => {
     if (err instanceof ShopError) {

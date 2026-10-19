@@ -31,6 +31,12 @@ export const SCHEDULED_JOBS = [
   { id: "shopifyCheckoutCleanup", pattern: "30 3 * * *", tz: "Etc/UTC" },
   // Subscribes connected shops to webhook topics added after they installed.
   { id: "shopifyWebhookSync", pattern: "15 4 * * *", tz: "Etc/UTC" },
+  // Shop drafts past their checkout window: their coupon and points holds go back at once,
+  // and drafts left days past it are cancelled.
+  { id: "shopExpiredDrafts", pattern: "20 * * * *", tz: "Etc/UTC" },
+  // Backstop for missed product webhooks: shops following Shopify or WooCommerce copy every
+  // product in again, and products gone from the store stop selling.
+  { id: "shopStoreMirror", pattern: "45 2 * * *", tz: "Etc/UTC" },
   // Every provider's `refreshCredential`: Zoho's token and webhook channels, and
   // Shopify's legacy-token cycle and lapsing refresh tokens. Replaces `zohoRefresh`
   // and `shopifyTokenRenewal`; `syncJobSchedulers` removes their stale schedulers.

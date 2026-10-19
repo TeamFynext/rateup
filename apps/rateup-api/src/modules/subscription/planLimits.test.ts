@@ -11,10 +11,12 @@ vi.mock("../../utils/prisma.js", () => ({
 }));
 vi.mock("./activeContacts.js", () => ({ getActiveContactBudget: vi.fn() }));
 vi.mock("./subscription.service.js", () => ({ getSubscription: vi.fn() }));
+vi.mock("./shopOrders.js", () => ({ shopOrdersThisMonth: vi.fn() }));
 
 import prisma from "../../utils/prisma.js";
 import { getActiveContactBudget } from "./activeContacts.js";
 import { getSubscription } from "./subscription.service.js";
+import { shopOrdersThisMonth } from "./shopOrders.js";
 import { UNLIMITED_COUNT } from "./subscription.data.js";
 import {
   assertPlanLimit,
@@ -220,11 +222,42 @@ describe("the registry itself", () => {
     }
   });
 
-  test("holds these four and nothing else", () => {
+  test("holds these five and nothing else", () => {
     // The registry is the list of what the plans actually sell. Five more limits used to
     // live here reading a `whatsapp.count.max` no tier defines — they metered nothing, so
     // they were deleted rather than left looking enforced. Adding a row means adding a
     // number to the pricing page too.
-    expect(Object.keys(PLAN_LIMITS)).toEqual(["teams", "users", "activeContacts", "formResponses"]);
+    expect(Object.keys(PLAN_LIMITS)).toEqual([
+      "teams",
+      "users",
+      "activeContacts",
+      "formResponses",
+      "orders",
+    ]);
+  });
+});
+
+describe("monthly shop orders", () => {
+  const withOrders = (max: number) => ({ whatsapp: { shopOrders: { count: { max } } } });
+
+  beforeEach(() => {
+    vi.mocked(shopOrdersThisMonth)
+      .mockReset()
+      .mockResolvedValue(50 as never);
+  });
+
+  test("Free's 50 are spent at the 50th order", async () => {
+    expect(await checkPlanLimit("org-1", "orders", withOrders(50))).toMatchObject({
+      metered: true,
+      used: 50,
+      exceeded: true,
+    });
+  });
+
+  test("a paid tier, or a subscription stored before the cap, is unmetered", async () => {
+    for (const features of [withOrders(UNLIMITED_COUNT), {}]) {
+      expect(await checkPlanLimit("org-1", "orders", features)).toMatchObject({ metered: false });
+    }
+    expect(shopOrdersThisMonth).not.toHaveBeenCalled();
   });
 });

@@ -103,6 +103,7 @@ export type ExternalErrorCode =
   | "invalid"
   | "conflict"
   | "payment_failed"
+  | "order_limit"
   // 429 / 5xx
   | "rate_limited"
   | "internal_error";

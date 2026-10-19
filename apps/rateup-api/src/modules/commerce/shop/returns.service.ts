@@ -82,37 +82,59 @@ export async function updateReturn(
   const step = next[action];
   if (!step.from.includes(ret.status))
     throw new ShopError("CONFLICT", `This return is ${ret.status.toLowerCase()}`);
+  const owed = ret.refundAmount === null ? null : toNumber(ret.refundAmount);
+  if (
+    action === "refund" &&
+    opts.refundAmount != null &&
+    owed !== null &&
+    opts.refundAmount > owed + 0.009
+  )
+    throw new ShopError("INVALID", `This return is for up to ${owed.toFixed(2)}`);
 
-  if (action === "receive" && (opts.restock ?? ret.restock)) {
-    for (const item of ret.items as ShopReturnItem[]) {
-      const line = ret.order.items.find((l) => l.id === item.orderItemId);
-      if (!line?.variantId) continue;
-      const moved = await prisma.$transaction((tx) =>
-        adjustStock(tx, line.variantId!, item.quantity, "RETURN", {
-          orderId: ret.orderId,
-          userId: opts.actorUserId,
-        }),
-      );
-      await afterStockChange(moved.before, moved.after);
-    }
-    await setFulfillmentStatus(ret.orderId, "RETURNED", opts.actorUserId).catch(() => {});
-  }
-  if (action === "refund") {
-    await refundOrder(
-      ret.orderId,
-      opts.refundAmount ?? (ret.refundAmount === null ? null : toNumber(ret.refundAmount)),
-      opts.actorUserId,
-    );
-  }
-  const updated = await prisma.shopReturn.update({
-    where: { id: returnId },
+  // Claimed before restocking or refunding, so two clicks (or two staff) can't do either twice.
+  const { count } = await prisma.shopReturn.updateMany({
+    where: { id: returnId, status: { in: step.from } },
     data: {
       status: step.to,
       note: opts.note ?? ret.note,
-      ...(opts.refundAmount != null ? { refundAmount: opts.refundAmount } : {}),
+      ...(action === "refund" && opts.refundAmount != null
+        ? { refundAmount: opts.refundAmount }
+        : {}),
       ...(step.to === "REFUNDED" || step.to === "REJECTED" ? { resolvedAt: new Date() } : {}),
     },
   });
+  if (!count) throw new ShopError("CONFLICT", "This return was just updated. Reload to see it.");
+
+  try {
+    if (action === "receive" && (opts.restock ?? ret.restock)) {
+      for (const item of ret.items as ShopReturnItem[]) {
+        const line = ret.order.items.find((l) => l.id === item.orderItemId);
+        if (!line?.variantId) continue;
+        const moved = await prisma.$transaction((tx) =>
+          adjustStock(tx, line.variantId!, item.quantity, "RETURN", {
+            orderId: ret.orderId,
+            userId: opts.actorUserId,
+          }),
+        );
+        await afterStockChange(moved.before, moved.after);
+      }
+      await setFulfillmentStatus(ret.orderId, "RETURNED", opts.actorUserId).catch(() => {});
+    }
+    if (action === "refund")
+      await refundOrder(ret.orderId, opts.refundAmount ?? owed, opts.actorUserId);
+  } catch (err) {
+    await prisma.shopReturn.update({
+      where: { id: returnId },
+      data: {
+        status: ret.status,
+        note: ret.note,
+        refundAmount: ret.refundAmount,
+        resolvedAt: null,
+      },
+    });
+    throw err;
+  }
+  const updated = await prisma.shopReturn.findUniqueOrThrow({ where: { id: returnId } });
   await addOrderEvent(
     ret.orderId,
     `return_${step.to.toLowerCase()}`,

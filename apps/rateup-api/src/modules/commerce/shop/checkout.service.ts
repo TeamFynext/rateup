@@ -1,18 +1,32 @@
 import type { ShopChannel, ShopOrder, ShopStore } from "../../../../generated/prisma/client.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
+import redis from "../../../utils/redisConnection.js";
 import { armShopReminder } from "../../../workers/bullmq/queues/shop.queue.js";
 import { sendAddressFlowToCustomer } from "../../whatsapp/catalog/catalogSettings.service.js";
+import { DiscountRefused } from "./discounts.service.js";
 import { checkoutUrl } from "./events.js";
+import { paysInStore, storeLabel } from "./checkoutVia.js";
+import {
+  alignDraftCheckout,
+  startStoreCheckout,
+  storeChecksOut,
+} from "./externalCheckout.service.js";
 import { sendShopMessage, type ShopMessage } from "./notify.js";
 import {
   addOrderEvent,
+  assertDeliveryChosen,
+  applyPrepaidDiscount,
   cancelOrder,
   confirmCodOrder,
   createDraftOrder,
+  assertCheckoutOpen,
   getOrderByToken,
+  markOrderPaid,
   orderDetailInclude,
   placeOrder,
+  pointsOfferForOrder,
+  prepareDraftForPayment,
   repriceOrder,
   type CartLineInput,
   type CheckoutPatch,
@@ -23,10 +37,15 @@ import {
   refreshPendingPayment,
 } from "./payments/payments.service.js";
 import { toNumber } from "./pricing.js";
+import {
+  assertOfflineOrderAllowed,
+  customerReachable,
+  startPhoneVerification,
+} from "./phoneVerify.service.js";
 import { ShopError } from "./shop.errors.js";
-import { pointsOffer } from "./shopLoyalty.js";
+import { assertCanTakeOrder, ORDER_LIMIT_MESSAGE, orderAllowance } from "./orderAllowance.js";
 import type { ShopAddress, ShopAttribution } from "./shop.types.js";
-import { getOrCreateStore, ratesForDestination } from "./store.service.js";
+import { commerceEnabled, getOrCreateStore, ratesForDestination } from "./store.service.js";
 
 /**
  * Checkout in two places that share one order:
@@ -67,9 +86,21 @@ function send(order: OrderForChat, message: ShopMessage) {
 
 /** Starts (or resumes) the checkout conversation for a draft order. */
 export async function continueChatCheckout(orderId: string) {
-  const order = await loadForChat(orderId);
-  if (order.status !== "DRAFT") return;
-  const { store } = order;
+  const loaded = await loadForChat(orderId);
+  if (loaded.status !== "DRAFT") return;
+  // Told now, in the chat, rather than after an address and a delivery choice.
+  if ((await orderAllowance(loaded)).exceeded) {
+    await addOrderEvent(orderId, "order_limit", "Not offered: the plan's monthly orders are used");
+    return send(loaded, { text: ORDER_LIMIT_MESSAGE });
+  }
+  return advanceChatCheckout(loaded);
+}
+
+async function advanceChatCheckout(loaded: OrderForChat): Promise<unknown> {
+  const orderId = loaded.id;
+  const { store } = loaded;
+  const order = await alignDraftCheckout(loaded, store);
+  if (paysInStore(order)) return sendStoreCheckoutLink(order);
 
   // Instagram and Messenger have no address form or native list: the hosted page does it all.
   if (order.channel !== "WHATSAPP") return sendCheckoutLink(order);
@@ -101,12 +132,23 @@ export async function continueChatCheckout(orderId: string) {
       return sendCheckoutLink(order);
     }
     await setStage(order.id, "DELIVERY");
-    return continueChatCheckout(orderId);
+    return advanceChatCheckout(await loadForChat(orderId));
   }
 
   if (order.checkoutStage === "DELIVERY") {
     const address = order.shippingAddress as ShopAddress | null;
     const rates = store.askDelivery ? await ratesForDestination(store.id, address?.country) : [];
+    if (store.askDelivery && !rates.length) {
+      try {
+        await assertDeliveryChosen(order, store);
+      } catch (error) {
+        if (!(error instanceof ShopError)) throw error;
+        await addOrderEvent(order.id, "undeliverable", error.message);
+        return send(order, {
+          text: `Sorry, we can't deliver order #${order.number} to that address (${error.message}). Reply here and our team will help.`,
+        });
+      }
+    }
     if (rates.length > 1 && !order.shippingRate) {
       const subtotal = toNumber(order.subtotal);
       await send(order, {
@@ -131,13 +173,11 @@ export async function continueChatCheckout(orderId: string) {
     }
     await repriceOrder(order.id, rates.length === 1 ? { shippingRateId: rates[0].id } : {});
     await setStage(order.id, "LOYALTY");
-    return continueChatCheckout(orderId);
+    return advanceChatCheckout(await loadForChat(orderId));
   }
 
   if (order.checkoutStage === "LOYALTY") {
-    const goods = toNumber(order.subtotal) - toNumber(order.discountTotal);
-    const offer =
-      order.pointsRedeemed > 0 ? null : await pointsOffer(store, order.contactId, goods);
+    const offer = order.pointsRedeemed > 0 ? null : await pointsOfferForOrder(order.id);
     await setStage(order.id, "PAYMENT");
     if (offer && offer.points > 0) {
       await send(order, {
@@ -149,7 +189,7 @@ export async function continueChatCheckout(orderId: string) {
       });
       return;
     }
-    return continueChatCheckout(orderId);
+    return advanceChatCheckout(await loadForChat(orderId));
   }
 
   if (order.checkoutStage === "PAYMENT") return askForPayment(order);
@@ -180,11 +220,31 @@ function summary(
   );
 }
 
+/**
+ * Nothing left to pay (a 100% coupon, points covering it all): placed and paid at once, since
+ * no gateway takes a zero amount.
+ */
+async function completeFreeOrder(orderId: string) {
+  const order = await prisma.shopOrder.findUniqueOrThrow({
+    where: { id: orderId },
+    include: { store: true },
+  });
+  if (order.status === "DRAFT") {
+    await assertCanTakeOrder(order);
+    await prepareDraftForPayment(orderId, { strict: true });
+    await assertDeliveryChosen(order, order.store);
+  }
+  await markOrderPaid(orderId, { provider: "free", amount: 0 });
+}
+
+const isFree = (order: Pick<ShopOrder, "total">) => toNumber(order.total) <= 0;
+
 async function askForPayment(order: OrderForChat) {
   const full = await prisma.shopOrder.findUniqueOrThrow({
     where: { id: order.id },
     include: { items: true },
   });
+  if (isFree(full)) return completeFreeOrder(order.id);
   const online = await pickProvider(order.store);
   const offline = [
     order.store.codEnabled && { id: `shop_pay:${order.id}:cod`, title: "Cash on delivery" },
@@ -217,22 +277,76 @@ export async function sendPaymentLink(
   orderId: string,
   opts: { provider?: string; actorUserId?: string } = {},
 ) {
-  const order = await loadForChat(orderId);
-  const link = await createPaymentLink(orderId, { provider: opts.provider });
+  const loaded = await loadForChat(orderId);
+  const order = await alignDraftCheckout(loaded, loaded.store);
+  // Paid on the store's own page: the link to resend is that checkout, never a second one.
+  if (paysInStore(order)) {
+    const outcome = await sendStoreCheckoutLink(order);
+    return {
+      url: checkoutUrl(order.checkoutToken!),
+      provider: null,
+      amount: toNumber(order.total),
+      currency: order.currency,
+      expiresAt: null,
+      delivered: outcome.sent,
+      deliveryError: outcome.sent ? null : outcome.reason,
+    };
+  }
+  if (isFree(order)) {
+    await completeFreeOrder(orderId);
+    return {
+      url: checkoutUrl(order.checkoutToken!),
+      provider: null,
+      amount: 0,
+      currency: order.currency,
+      expiresAt: null,
+      delivered: true,
+      deliveryError: null,
+    };
+  }
+  if (order.status === "DRAFT") await assertDeliveryChosen(order, order.store);
+  const link = await createPaymentLink(orderId, {
+    provider: opts.provider,
+    acceptPriceChange: true,
+  });
   const full = await prisma.shopOrder.findUniqueOrThrow({
     where: { id: orderId },
     include: { items: true },
   });
+  const moved = link.priceChange
+    ? `Prices have changed since this order was started, so the total is now ${money(order, link.priceChange.after)}.\n\n`
+    : "";
   const outcome = await send(order, {
-    text: `${summary(full)}\n\nPay securely by card or wallet. The link is valid for ${order.store.paymentLinkTtlHours} hours.`,
+    text: `${moved}${summary(full)}\n\nPay securely by card or wallet. The link is valid for ${order.store.paymentLinkTtlHours} hours.`,
     cta: { label: `Pay ${money(order, link.amount)}`, url: link.url },
   });
   await armPaymentReminders(order);
   return { ...link, delivered: outcome.sent, deliveryError: outcome.sent ? null : outcome.reason };
 }
 
+/**
+ * The store's own checkout (Shopify, WooCommerce). The link is RateUp's page, which creates
+ * the store's order only when opened. RateUp's cart reminders are not armed: the store
+ * follows up its own carts.
+ */
+async function sendStoreCheckoutLink(order: OrderForChat) {
+  const full = await prisma.shopOrder.findUniqueOrThrow({
+    where: { id: order.id },
+    include: { items: true },
+  });
+  const lines = full.items.map(
+    (i) => `• ${i.title}${i.variantTitle ? ` (${i.variantTitle})` : ""} ×${i.quantity}`,
+  );
+  return send(order, {
+    text: `Order #${order.number}\n${lines.join("\n")}\n\nAdd your delivery details and pay on our secure checkout page.`,
+    cta: { label: "Checkout", url: checkoutUrl(full.checkoutToken!) },
+  });
+}
+
 /** The hosted page: address, delivery, coupon, points and payment in one place. */
-export async function sendCheckoutLink(order: OrderForChat) {
+export async function sendCheckoutLink(loaded: OrderForChat) {
+  const order = await alignDraftCheckout(loaded, loaded.store);
+  if (paysInStore(order)) return sendStoreCheckoutLink(order);
   const token = order.checkoutToken!;
   const full = await prisma.shopOrder.findUniqueOrThrow({
     where: { id: order.id },
@@ -246,13 +360,41 @@ export async function sendCheckoutLink(order: OrderForChat) {
   return outcome;
 }
 
+const CART_REMINDER_WINDOW_SECONDS = 24 * 3600;
+
+/**
+ * One customer gets one run of cart reminders a day per store, whichever cart started it:
+ * several abandoned carts would otherwise each send their own paid templates. The same order
+ * may re-arm (every checkout message does).
+ */
+export async function claimCartReminders(order: ShopOrder) {
+  const who = order.contactId ?? order.customerPhone;
+  if (!who) return true;
+  const key = `shop:cartReminders:${order.storeId}:${who}`;
+  try {
+    const set = await redis.set(key, order.id, "EX", CART_REMINDER_WINDOW_SECONDS, "NX");
+    return set === "OK" || (await redis.get(key)) === order.id;
+  } catch (err) {
+    log.warn({ err, orderId: order.id }, "Cart reminder claim unavailable; arming anyway");
+    return true;
+  }
+}
+
+/**
+ * Arms the cart reminders still ahead of now. Every checkout message calls this, so a step
+ * whose time has passed is left alone: it has fired (or was due before the customer replied),
+ * and re-adding it would send it again at once.
+ */
 async function armCartReminders(order: ShopOrder & { store: ShopStore }) {
+  if (!(await claimCartReminders(order))) return;
   const steps = order.store.cartReminderMinutes ?? [];
   const start = order.createdAt.getTime();
+  const now = Date.now();
   await Promise.all(
-    steps.map((minutes, step) =>
-      armShopReminder(order.id, "cart", step, new Date(start + minutes * 60_000)),
-    ),
+    steps.flatMap((minutes, step) => {
+      const due = start + minutes * 60_000;
+      return due > now ? [armShopReminder(order.id, "cart", step, new Date(due))] : [];
+    }),
   );
 }
 
@@ -280,7 +422,7 @@ export interface InboundCustomer {
  */
 export async function startCheckoutFromCart(customer: InboundCustomer, items: CartLineInput[]) {
   const store = await prisma.shopStore.findUnique({ where: { orgId: customer.orgId } });
-  if (!store) return null;
+  if (!store || !(await commerceEnabled(store.orgId))) return null;
   const known = await prisma.shopVariant.count({
     where: {
       storeId: store.id,
@@ -339,18 +481,22 @@ export async function handleShopReply(
   },
 ) {
   if (!replyId.startsWith("shop_")) return false;
-  const [kind, orderId, arg] = replyId.split(":");
+  const [kind, orderId, arg, origin] = replyId.split(":");
   if (!orderId) return false;
   if (kind === "shop_buy") {
     const { buyNowFromChat } = await import("./recovery.service.js");
-    return buyNowFromChat(orderId, Number(arg) || 1, from);
+    return buyNowFromChat(
+      orderId,
+      Number(arg) || 1,
+      from,
+      origin === "bis" ? "back_in_stock" : undefined,
+    );
   }
+  // Only the customer an order belongs to can act on it; a reply id names the order, and
+  // without a known sender anyone could cancel or confirm any order by its id.
+  if (!from.contactId) return true;
   const order = await prisma.shopOrder.findFirst({
-    where: {
-      id: orderId,
-      orgId: from.orgId,
-      ...(from.contactId ? { contactId: from.contactId } : {}),
-    },
+    where: { id: orderId, orgId: from.orgId, contactId: from.contactId },
     include: { store: true },
   });
   if (!order) return true;
@@ -378,6 +524,7 @@ export async function handleShopReply(
       case "shop_pay": {
         if (order.status !== "DRAFT") return true;
         if (arg === "online") await sendPaymentLink(order.id);
+        if (arg !== "online") await assertDeliveryChosen(order, order.store);
         if (arg === "cod" && order.store.codEnabled) {
           await placeOrder(order.id, { paymentMethod: "cod", codPending: true });
         }
@@ -390,6 +537,19 @@ export async function handleShopReply(
         await confirmCodOrder(order.id);
         return true;
       case "shop_cod_cancel":
+        // The button stays in the chat forever; once the order is confirmed, paid or packed,
+        // cancelling it is the merchant's call, not an old message's.
+        if (
+          order.status !== "OPEN" ||
+          order.paymentStatus !== "COD_PENDING" ||
+          order.confirmedAt ||
+          order.fulfillmentStatus !== "UNFULFILLED"
+        ) {
+          await send(order, {
+            text: `Order #${order.number} can't be cancelled from here any more. Reply here and we'll help.`,
+          }).catch(() => {});
+          return true;
+        }
         await cancelOrder(order.id, { reason: "Customer cancelled the cash order" });
         return true;
       case "shop_cod_prepay": {
@@ -407,33 +567,24 @@ export async function handleShopReply(
         return false;
     }
   } catch (err) {
-    const message = err instanceof ShopError ? err.message : "Something went wrong with that step";
     log.warn({ err, replyId }, "Shop reply failed");
-    await send(order, { text: `${message}. Reply here and we'll sort it out.` }).catch(() => {});
+    const text =
+      err instanceof ShopError && err.code === "ORDER_LIMIT"
+        ? err.message
+        : `${err instanceof ShopError ? err.message : "Something went wrong with that step"}. Reply here and we'll sort it out.`;
+    await send(order, { text }).catch(() => {});
     return true;
   }
 }
 
-/**
- * The cash order becomes a prepaid one at a discount: a payment link for the lower amount.
- * The discount is stored on the order so the link and the invoice agree.
- */
+/** The cash order becomes a prepaid one at a discount, then gets a payment link for it. */
 async function convertCodToPrepaid(orderId: string, pct: number) {
-  const order = await prisma.shopOrder.findUniqueOrThrow({ where: { id: orderId } });
-  const off = Math.round(toNumber(order.total) * pct) / 100;
-  await prisma.shopOrder.update({
-    where: { id: orderId },
-    data: {
-      discountTotal: toNumber(order.discountTotal) + off,
-      total: toNumber(order.total) - off,
-      paymentStatus: "PENDING",
-      confirmedAt: new Date(),
-    },
-  });
+  const switched = await applyPrepaidDiscount(orderId, pct);
+  if (!switched) return;
   await addOrderEvent(
     orderId,
     "cod_prepaid",
-    `Switched to paying online for ${pct}% off (−${money(order, off)})`,
+    `Switched to paying online for ${pct}% off (−${money(switched.order, switched.saved)})`,
   );
   await sendPaymentLink(orderId);
 }
@@ -447,17 +598,14 @@ export async function getPublicCheckout(token: string, opts: { justPaid?: boolea
     order = await getOrderByToken(token);
   }
   const store = await prisma.shopStore.findUniqueOrThrow({ where: { id: order.storeId } });
+  order = await alignDraftCheckout(order, store);
+  const inStore = paysInStore(order);
   const address = order.shippingAddress as ShopAddress | null;
-  const [rates, online, offer] = await Promise.all([
+  const [rates, online, offer, anyRate] = await Promise.all([
     ratesForDestination(store.id, address?.country),
     pickProvider(store),
-    order.status === "DRAFT"
-      ? pointsOffer(
-          store,
-          order.contactId,
-          toNumber(order.subtotal) - toNumber(order.discountTotal) + toNumber(order.pointsDiscount),
-        )
-      : null,
+    order.status === "DRAFT" ? pointsOfferForOrder(order.id) : null,
+    prisma.shopShippingRate.count({ where: { storeId: store.id, active: true } }),
   ]);
   const subtotal = toNumber(order.subtotal);
   return {
@@ -466,8 +614,10 @@ export async function getPublicCheckout(token: string, opts: { justPaid?: boolea
       slug: store.slug,
       logoUrl: store.logoUrl,
       currency: store.currency,
-      allowCoupons: store.allowCoupons,
+      allowCoupons: store.allowCoupons && !inStore,
       askAddress: store.askAddress,
+      // Mirrors assertDeliveryChosen, so the page blocks payment the server would refuse.
+      chargesDelivery: store.askDelivery && anyRate > 0,
       storefrontEnabled: store.storefrontEnabled,
       pricesIncludeTax: store.pricesIncludeTax,
     },
@@ -485,12 +635,24 @@ export async function getPublicCheckout(token: string, opts: { justPaid?: boolea
       maxDays: r.maxDays,
       price: r.freeOver !== null && subtotal >= toNumber(r.freeOver) ? 0 : toNumber(r.price),
     })),
-    points: offer,
-    paymentOptions: {
-      online: online ? { provider: online.provider.id, label: online.provider.label } : null,
-      cod: store.codEnabled,
-      bank: store.bankTransferEnabled,
-    },
+    points: inStore ? null : offer,
+    paymentOptions: inStore
+      ? { online: null, cod: false, bank: false }
+      : {
+          online: online ? { provider: online.provider.id, label: online.provider.label } : null,
+          cod: store.codEnabled,
+          bank: store.bankTransferEnabled,
+        },
+    // Paid on the shop's own Shopify or WooCommerce checkout. WooCommerce's payment page asks
+    // for no address or delivery, so this page asks first (`collectsDetails`).
+    storeCheckout: inStore
+      ? {
+          provider: order.checkoutVia === "WOOCOMMERCE" ? "woocommerce" : "shopify",
+          label: storeLabel(order.checkoutVia),
+          url: order.externalCheckoutUrl,
+          collectsDetails: order.checkoutVia === "WOOCOMMERCE" && !order.externalCheckoutUrl,
+        }
+      : null,
   };
 }
 
@@ -543,6 +705,15 @@ export async function updatePublicCheckout(token: string, patch: CheckoutPatch) 
   const order = await getOrderByToken(token);
   if (order.status !== "DRAFT")
     throw new ShopError("CONFLICT", "This order has already been placed");
+  if (paysInStore(order)) {
+    if (order.externalCheckoutUrl)
+      throw new ShopError("CONFLICT", "This order is already at the shop's checkout");
+    if (patch.discountCode || patch.usePoints)
+      throw new ShopError(
+        "DISCOUNT_INVALID",
+        `Codes and points are used on the ${storeLabel(order.checkoutVia)} checkout page`,
+      );
+  }
   await repriceOrder(order.id, patch);
   if (patch.shippingAddress) {
     await prisma.shopOrder.update({ where: { id: order.id }, data: { checkoutStage: "PAYMENT" } });
@@ -557,36 +728,119 @@ export async function payPublicCheckout(token: string, method: "online" | "cod" 
   });
   if (!order) throw new ShopError("NOT_FOUND", "Checkout not found");
   if (order.paymentStatus === "PAID") return { status: "paid" as const };
+  if (paysInStore(order))
+    throw new ShopError(
+      "CONFLICT",
+      `This order is paid on the ${storeLabel(order.checkoutVia)} checkout page`,
+    );
   const address = order.shippingAddress as ShopAddress | null;
   if (order.store.askAddress && order.status === "DRAFT" && !address?.line1)
     throw new ShopError("INVALID", "Add a delivery address first");
+  if (order.status === "DRAFT") await assertDeliveryChosen(order, order.store);
+  if (method === "cod" && !order.store.codEnabled)
+    throw new ShopError("PAYMENT_UNAVAILABLE", "Cash on delivery isn't offered");
+  if (method === "bank" && !order.store.bankTransferEnabled)
+    throw new ShopError("PAYMENT_UNAVAILABLE", "Bank transfer isn't offered");
+  // A cash, transfer or free order proves nothing about the typed number, and placing one
+  // messages it: the shopper confirms on WhatsApp first, and the order is placed from there.
+  if (
+    order.status === "DRAFT" &&
+    !customerReachable(order) &&
+    (method !== "online" || isFree(order))
+  ) {
+    const check = await startPhoneVerification({
+      store: order.store,
+      purpose: "checkout",
+      orderId: order.id,
+      method,
+      prompt: `Confirm my order #${order.number}.`,
+    });
+    return { status: "verify" as const, ...check };
+  }
+  if (isFree(order)) {
+    await completeFreeOrder(order.id);
+    return { status: "paid" as const };
+  }
 
   if (method === "online") {
     const link = await createPaymentLink(order.id);
     return { status: "redirect" as const, url: link.url };
   }
+  await assertOfflineOrderAllowed(order.storeId, order.customerPhone);
   if (method === "cod") {
-    if (!order.store.codEnabled)
-      throw new ShopError("PAYMENT_UNAVAILABLE", "Cash on delivery isn't offered");
     await placeOrder(order.id, { paymentMethod: "cod", codPending: true });
     return { status: "placed" as const };
   }
-  if (!order.store.bankTransferEnabled)
-    throw new ShopError("PAYMENT_UNAVAILABLE", "Bank transfer isn't offered");
   await placeOrder(order.id, { paymentMethod: "bank" });
   return { status: "placed" as const, bank: order.store.bankDetails };
 }
 
+/**
+ * The customer continues to the shop's own checkout from RateUp's page. Creates the store's
+ * order on first use and returns the same page after that.
+ */
+export async function startPublicStoreCheckout(token: string) {
+  const order = await getOrderByToken(token);
+  const store = await prisma.shopStore.findUniqueOrThrow({ where: { id: order.storeId } });
+  const aligned = await alignDraftCheckout(order, store);
+  if (!paysInStore(aligned)) throw new ShopError("INVALID", "This order is paid on this page");
+  if (aligned.externalCheckoutUrl) return { url: aligned.externalCheckoutUrl };
+  if (aligned.status !== "DRAFT")
+    throw new ShopError("CONFLICT", "This order has already been placed");
+  assertCheckoutOpen(aligned);
+  await assertCanTakeOrder(aligned);
+  return { url: await startStoreCheckout(aligned.id) };
+}
+
 // ─── Storefront cart → checkout ──────────────────────────────────────────────
+
+/**
+ * The storefront's last checkout for this bag, when it is still an open draft of exactly
+ * these lines: going back and pressing Checkout again reuses it rather than starting another
+ * order (and, for a store checkout, another order in the store).
+ */
+async function reusableStorefrontDraft(
+  storeId: string,
+  token: string | undefined,
+  items: CartLineInput[],
+) {
+  if (!token) return null;
+  const order = await prisma.shopOrder.findUnique({
+    where: { checkoutToken: token },
+    include: { items: true },
+  });
+  if (
+    !order ||
+    order.storeId !== storeId ||
+    order.channel !== "STOREFRONT" ||
+    order.status !== "DRAFT" ||
+    order.paymentStatus === "PAID" ||
+    (order.checkoutExpiresAt && order.checkoutExpiresAt < new Date())
+  )
+    return null;
+  const wanted = new Map<string, number>();
+  for (const i of items) {
+    if (!i.variantId) return null;
+    wanted.set(i.variantId, (wanted.get(i.variantId) ?? 0) + Math.max(1, Math.floor(i.quantity)));
+  }
+  const same =
+    order.items.length === wanted.size &&
+    order.items.every((i) => i.variantId && wanted.get(i.variantId) === i.quantity);
+  return same ? order : null;
+}
 
 /** A storefront cart becomes a draft order; the browser is sent to its hosted checkout. */
 export async function checkoutFromStorefront(
   slug: string,
   items: CartLineInput[],
   customer?: { phone?: string; name?: string },
+  reuseToken?: string,
 ) {
   const store = await prisma.shopStore.findUnique({ where: { slug } });
-  if (!store || !store.storefrontEnabled) throw new ShopError("NOT_FOUND", "Shop not found");
+  if (!store || !store.storefrontEnabled || !(await commerceEnabled(store.orgId)))
+    throw new ShopError("NOT_FOUND", "Shop not found");
+  const reused = await reusableStorefrontDraft(store.id, reuseToken, items);
+  if (reused) return { token: reused.checkoutToken!, url: checkoutUrl(reused.checkoutToken!) };
   const order = await createDraftOrder({
     store,
     items,
@@ -610,16 +864,23 @@ export async function createOrderFromInbox(input: {
   send: "payment_link" | "checkout_link" | "none";
   actorUserId: string;
 }) {
+  await assertCanTakeOrder({ orgId: input.orgId, source: "agent" }, "staff");
   const store = await getOrCreateStore(input.orgId);
   const contact = await prisma.contact.findFirst({
     where: { id: input.contactId, orgId: input.orgId },
     select: { id: true, name: true, phone: true },
   });
   if (!contact) throw new ShopError("NOT_FOUND", "Contact not found");
-  if (input.send === "payment_link" && !(await pickProvider(store))) {
+  const external = storeChecksOut(store);
+  if (external && input.discountCode)
+    throw new ShopError(
+      "DISCOUNT_INVALID",
+      "This shop checks out in your online store, so coupons are entered on its checkout page",
+    );
+  if (!external && input.send === "payment_link" && !(await pickProvider(store))) {
     throw new ShopError(
       "PAYMENT_UNAVAILABLE",
-      "Connect Stripe or Razorpay in Commerce → Payments to send payment links, or send a checkout link instead",
+      "Connect Stripe or Razorpay in Commerce → Settings → Getting paid to send payment links, or send a checkout link instead",
     );
   }
   const draft = await createDraftOrder({
@@ -634,9 +895,19 @@ export async function createOrderFromInbox(input: {
   let order = await repriceOrder(draft.id, {
     ...(input.discountCode ? { discountCode: input.discountCode } : {}),
     ...(input.shippingRateId ? { shippingRateId: input.shippingRateId } : {}),
+  }).catch((err: unknown) => {
+    // Staff are told why a code was refused; shoppers only ever see the generic message.
+    if (err instanceof DiscountRefused) throw new ShopError("DISCOUNT_INVALID", err.reason);
+    throw err;
   });
   let delivery: { sent: boolean; url?: string } = { sent: false };
-  if (input.send === "payment_link") {
+  // The store's checkout page is where its payment happens, so both kinds of link send it,
+  // and the link staff copy is RateUp's page that leads there.
+  if (external) {
+    const outcome =
+      input.send === "none" ? { sent: false } : await sendCheckoutLink(await loadForChat(order.id));
+    delivery = { sent: outcome.sent, url: checkoutUrl(order.checkoutToken!) };
+  } else if (input.send === "payment_link") {
     const link = await sendPaymentLink(order.id, { actorUserId: input.actorUserId });
     delivery = { sent: link.delivered, url: link.url };
   } else if (input.send === "checkout_link") {

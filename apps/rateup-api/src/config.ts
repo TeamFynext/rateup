@@ -65,7 +65,7 @@ export const SuperTokensConfig: TypeInput = {
       signUpFeature: {
         formFields: [
           { id: "name" },
-          { id: "orgName" },
+          { id: "orgName", optional: true },
           { id: "phoneNumber", optional: true },
           { id: "planId", optional: true },
           { id: "location", optional: true },
@@ -140,7 +140,7 @@ export const SuperTokensConfig: TypeInput = {
               const { id, emails, loginMethods } = response.user;
               const email = emails[0];
 
-              if (name && orgName) {
+              if (name) {
                 const recipeName = getUserRecipeName(
                   loginMethods[0].recipeId,
                   loginMethods[0].thirdParty?.id,
@@ -153,7 +153,7 @@ export const SuperTokensConfig: TypeInput = {
                   id,
                   email,
                   name,
-                  orgName,
+                  orgName: orgName || undefined,
                   phoneNumber: phoneNumber ?? undefined,
                   recipeName,
                   planId: planId ?? undefined,

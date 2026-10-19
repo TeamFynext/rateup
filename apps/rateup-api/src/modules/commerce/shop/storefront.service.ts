@@ -1,6 +1,11 @@
+import { withCache } from "../../../utils/cache.js";
+import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
+import connection from "../../../utils/redisConnection.js";
+import { inStoreCheckout, sellableWhere } from "./checkoutVia.js";
 import { toNumber } from "./pricing.js";
 import { ShopError } from "./shop.errors.js";
+import { commerceEnabled } from "./store.service.js";
 
 /**
  * The public storefront at /s/<slug>: a link-in-bio shop. Read-only and unauthenticated, so
@@ -12,6 +17,7 @@ const publicVariant = (
   v: {
     id: string;
     title: string;
+    sku: string | null;
     optionValues: unknown;
     price: unknown;
     compareAtPrice: unknown;
@@ -27,6 +33,7 @@ const publicVariant = (
   return {
     id: v.id,
     title: v.title,
+    sku: v.sku,
     optionValues: v.optionValues ?? null,
     price: toNumber(v.price as number),
     compareAtPrice: v.compareAtPrice === null ? null : toNumber(v.compareAtPrice as number),
@@ -36,25 +43,63 @@ const publicVariant = (
   };
 };
 
-export async function getStorefront(slug: string) {
+/** `preview` lets the dashboard show the storefront before it is switched on. */
+const PUBLIC_STOREFRONT_TTL_SECONDS = 30;
+const publicStorefrontKey = (slug: string) => `storefront:public:${slug}`;
+
+/**
+ * The live storefront, cached for a few seconds: crawlers, link previews and shoppers ask
+ * for the same pages over and over, and each miss is several queries.
+ */
+export function getPublicStorefront(slug: string) {
+  return withCache(publicStorefrontKey(slug), PUBLIC_STOREFRONT_TTL_SECONDS, () =>
+    getStorefront(slug),
+  );
+}
+
+/** Drops the cached page so a merchant's own edit shows on their next look. */
+export function forgetPublicStorefront(...slugs: string[]) {
+  if (connection.status !== "ready" || !slugs.length) return;
+  connection.del(...new Set(slugs.map(publicStorefrontKey))).catch((error: unknown) => {
+    log.warn({ err: error }, "Could not clear the cached storefront");
+  });
+}
+
+export async function getStorefront(slug: string, opts: { preview?: boolean } = {}) {
   const store = await prisma.shopStore.findUnique({ where: { slug } });
-  if (!store || !store.storefrontEnabled) throw new ShopError("NOT_FOUND", "Shop not found");
+  if (
+    !store ||
+    (!opts.preview && (!store.storefrontEnabled || !(await commerceEnabled(store.orgId))))
+  )
+    throw new ShopError("NOT_FOUND", "Shop not found");
 
   const [collections, products, wa, org] = await Promise.all([
     prisma.shopCollection.findMany({
       where: {
         storeId: store.id,
-        products: { some: { status: "ACTIVE", showOnStorefront: true } },
+        products: {
+          some: {
+            storeId: store.id,
+            status: "ACTIVE",
+            showOnStorefront: true,
+            ...sellableWhere(store),
+          },
+        },
       },
       orderBy: [{ position: "asc" }, { name: "asc" }],
       select: { id: true, name: true, slug: true, imageUrl: true },
     }),
     prisma.shopProduct.findMany({
-      where: { storeId: store.id, status: "ACTIVE", showOnStorefront: true },
+      where: {
+        storeId: store.id,
+        status: "ACTIVE",
+        showOnStorefront: true,
+        ...sellableWhere(store),
+      },
       orderBy: { updatedAt: "desc" },
       include: {
         variants: { orderBy: { position: "asc" } },
-        collections: { select: { id: true } },
+        collections: { where: { storeId: store.id }, select: { id: true } },
       },
       take: 500,
     }),
@@ -67,19 +112,21 @@ export async function getStorefront(slug: string) {
   ]);
 
   const banner = store.storefrontTheme?.banner ?? null;
-  const discount = banner?.title
-    ? null
-    : await prisma.shopDiscount.findFirst({
-        where: {
-          storeId: store.id,
-          active: true,
-          source: "MANUAL",
-          eligibility: "ANYONE",
-          OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }],
-          startsAt: { lte: new Date() },
-        },
-        orderBy: { createdAt: "desc" },
-      });
+  // A RateUp code can't be entered on the store's own checkout, so it isn't advertised there.
+  const discount =
+    banner?.title || inStoreCheckout(store.checkoutVia)
+      ? null
+      : await prisma.shopDiscount.findFirst({
+          where: {
+            storeId: store.id,
+            active: true,
+            source: "MANUAL",
+            eligibility: "ANYONE",
+            OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }],
+            startsAt: { lte: new Date() },
+          },
+          orderBy: { createdAt: "desc" },
+        });
 
   return {
     store: {
@@ -111,4 +158,42 @@ export async function getStorefront(slug: string) {
       variants: p.variants.map((v) => publicVariant(v, store.lowStockThreshold)),
     })),
   };
+}
+
+/**
+ * Every live storefront and its products, for the storefront sitemap. Capped well inside the
+ * 50,000 URLs one sitemap file may hold.
+ */
+export async function listStorefrontPages() {
+  const stores = await prisma.shopStore.findMany({
+    where: { storefrontEnabled: true },
+    select: { id: true, orgId: true, slug: true, updatedAt: true, checkoutVia: true },
+    orderBy: { createdAt: "asc" },
+    take: 2000,
+  });
+  const live = (
+    await Promise.all(stores.map(async (s) => ((await commerceEnabled(s.orgId)) ? s : null)))
+  ).filter((s) => s !== null);
+  if (!live.length) return [];
+
+  const products = await prisma.shopProduct.findMany({
+    where: {
+      storeId: { in: live.map((s) => s.id) },
+      status: "ACTIVE",
+      showOnStorefront: true,
+    },
+    select: { id: true, storeId: true, title: true, updatedAt: true, externalSource: true },
+    orderBy: { updatedAt: "desc" },
+    take: 45_000,
+  });
+  return live.map((s) => {
+    const only = (sellableWhere(s) as { externalSource?: string }).externalSource;
+    return {
+      slug: s.slug,
+      updatedAt: s.updatedAt,
+      products: products
+        .filter((p) => p.storeId === s.id && (!only || p.externalSource === only))
+        .map((p) => ({ id: p.id, title: p.title, updatedAt: p.updatedAt })),
+    };
+  });
 }

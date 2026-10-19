@@ -6,7 +6,11 @@ import { log } from "../../../utils/logger.js";
 import { IntegratedApps } from "../../../types/enums.js";
 import { ShopifyOrderWebhookTopicEventMap } from "./shopify.util.js";
 import { API_URL } from "../../../utils/constants/constants.js";
-import { WEBHOOK_API_ROUTE, defaultWebhookHandlers } from "./shopify.handler.js";
+import {
+  OPTIONAL_WEBHOOK_TOPICS,
+  WEBHOOK_API_ROUTE,
+  defaultWebhookHandlers,
+} from "./shopify.handler.js";
 
 /**
  * Subscribes the shop to every per-shop topic it isn't subscribed to yet.
@@ -31,6 +35,10 @@ export async function registerShopifyWebhook(session: Session) {
         await deleteWebhookById(stale.id, client);
       }
     } catch (e) {
+      if (OPTIONAL_WEBHOOK_TOPICS.has(topic)) {
+        log.info({ err: e, topic, shop: session.shop }, "Optional Shopify topic not registered");
+        continue;
+      }
       errors.push(e instanceof Error ? e.message : String(e));
     }
   }

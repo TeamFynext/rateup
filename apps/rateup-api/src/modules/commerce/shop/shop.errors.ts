@@ -6,7 +6,11 @@ export type ShopErrorCode =
   | "PAYMENT_UNAVAILABLE"
   | "PAYMENT_FAILED"
   | "CHECKOUT_EXPIRED"
-  | "CONFLICT";
+  | "CONFLICT"
+  | "PLAN_REQUIRED"
+  | "FORBIDDEN"
+  | "LIMIT_REACHED"
+  | "ORDER_LIMIT";
 
 const STATUS: Record<ShopErrorCode, number> = {
   NOT_FOUND: 404,
@@ -17,6 +21,10 @@ const STATUS: Record<ShopErrorCode, number> = {
   PAYMENT_FAILED: 502,
   CHECKOUT_EXPIRED: 410,
   CONFLICT: 409,
+  PLAN_REQUIRED: 403,
+  FORBIDDEN: 403,
+  LIMIT_REACHED: 429,
+  ORDER_LIMIT: 403,
 };
 
 /** Thrown by shop services; the shop route plugins turn it into `{ code, message }`. */

@@ -48,6 +48,10 @@ export interface ShopAttribution {
   adTitle?: string;
   mediaId?: string;
   campaignId?: string;
+  /** Click-to-WhatsApp: the ad's link, the click id the Conversions API matches on, and when. */
+  sourceUrl?: string;
+  ctwaClid?: string;
+  clickedAt?: string;
   /** Opens a free 72-hour messaging window when it is a click-to-WhatsApp ad. */
   freeWindowUntil?: string;
   [field: string]: unknown;

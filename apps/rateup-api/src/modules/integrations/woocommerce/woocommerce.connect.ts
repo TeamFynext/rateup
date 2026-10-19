@@ -209,6 +209,11 @@ export async function completeWooConnect(body: WooAuthCallbackBody): Promise<voi
   // The RateUp plugin, when the store runs it, shows the connection in WordPress
   // admin. Optional, so this never fails the connect.
   await syncWooPluginConnection(integration);
+
+  const { onOnlineStoreConnected } = await import("../../commerce/shop/store.service.js");
+  await onOnlineStoreConnected(state.orgId, "WOOCOMMERCE").catch((err) =>
+    log.warn({ err, orgId: state.orgId }, "Could not show Commerce after connecting WooCommerce"),
+  );
 }
 
 /**

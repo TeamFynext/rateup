@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import { sellableWhere } from "./checkoutVia.js";
 
 import type {
   Prisma,
@@ -6,6 +7,7 @@ import type {
   ShopVariant,
 } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
+import { csvCell } from "../../../utils/spreadsheet.js";
 import { enqueueCatalogPublish } from "../../../workers/bullmq/queues/shop.queue.js";
 import { notFound, ShopError } from "./shop.errors.js";
 import type { ShopProductOption, ShopVariantOptionValues } from "./shop.types.js";
@@ -24,6 +26,8 @@ export interface VariantInput {
   allowBackorder?: boolean;
   imageUrl?: string | null;
   weightGrams?: number | null;
+  /** Set only by imports, so an item keeps the id its catalog or store already knows it by. */
+  retailerId?: string;
 }
 
 export interface ProductInput {
@@ -50,6 +54,8 @@ export interface ProductListQuery {
   collectionId?: string;
   filter?: "low_stock" | "sold_out" | "sync_errors";
   channel?: "whatsapp" | "instagram" | "storefront";
+  retailerIds?: string[];
+  sellable?: "1";
   page?: number;
   limit?: number;
 }
@@ -78,7 +84,8 @@ function variantData(v: VariantInput, position: number) {
     sku: v.sku?.trim() || null,
     price: v.price,
     compareAtPrice: v.compareAtPrice ?? null,
-    trackInventory: v.trackInventory ?? true,
+    // A product saved without a count is not "0 in stock": it is simply not counted.
+    trackInventory: v.trackInventory ?? (v.stock !== undefined && v.stock !== null),
     lowStockAt: v.lowStockAt ?? null,
     allowBackorder: v.allowBackorder ?? false,
     imageUrl: v.imageUrl ?? null,
@@ -100,8 +107,17 @@ function validate(input: ProductInput) {
 export async function listProducts(storeId: string, q: ProductListQuery) {
   const page = q.page ?? 0;
   const limit = Math.min(q.limit ?? 25, 100);
+  const sellable = q.sellable
+    ? sellableWhere(
+        await prisma.shopStore.findUniqueOrThrow({
+          where: { id: storeId },
+          select: { checkoutVia: true },
+        }),
+      )
+    : {};
   const where: Prisma.ShopProductWhereInput = {
     storeId,
+    ...sellable,
     status: q.status ?? { not: "ARCHIVED" },
     ...(q.search
       ? {
@@ -119,6 +135,9 @@ export async function listProducts(storeId: string, q: ProductListQuery) {
       ? { variants: { every: { trackInventory: true, stock: { lte: 0 } } } }
       : {}),
     ...(q.filter === "sync_errors" ? { metaSyncStatus: "REJECTED" } : {}),
+    ...(q.retailerIds?.length
+      ? { AND: [{ variants: { some: { retailerId: { in: q.retailerIds } } } }] }
+      : {}),
   };
 
   if (q.filter === "low_stock") {
@@ -196,18 +215,28 @@ export async function getProduct(storeId: string, id: string) {
   return product;
 }
 
+/** Collection ids come from the request; a connect by id alone would reach another store's. */
+async function assertOwnCollections(storeId: string, ids: string[] | undefined) {
+  const unique = [...new Set(ids ?? [])];
+  if (!unique.length) return;
+  const owned = await prisma.shopCollection.count({ where: { storeId, id: { in: unique } } });
+  if (owned !== unique.length)
+    throw new ShopError("INVALID", "One of those collections doesn't exist");
+}
+
 export async function createProduct(
   store: { id: string; orgId: string },
   input: ProductInput,
   userId?: string,
 ) {
   validate(input);
+  await assertOwnCollections(store.id, input.collectionIds);
   const variants = [];
   for (const [i, v] of input.variants.entries()) {
     variants.push({
       ...variantData(v, i),
       storeId: store.id,
-      retailerId: await retailerIdFor(store.id, v.sku),
+      retailerId: v.retailerId ?? (await retailerIdFor(store.id, v.sku)),
       stock: v.stock ?? 0,
     });
   }
@@ -260,6 +289,7 @@ async function recordInitialStock(variants: ShopVariant[], userId?: string) {
  */
 export async function updateProduct(storeId: string, id: string, input: ProductInput) {
   validate(input);
+  await assertOwnCollections(storeId, input.collectionIds);
   const existing = await getProduct(storeId, id);
   const keep = new Set(input.variants.map((v) => v.id).filter(Boolean) as string[]);
   const removed = existing.variants.filter((v) => !keep.has(v.id));
@@ -325,8 +355,13 @@ export async function archiveProduct(storeId: string, id: string) {
 }
 
 export async function bulkSetStatus(storeId: string, ids: string[], status: ShopProductStatus) {
-  await prisma.shopProduct.updateMany({ where: { storeId, id: { in: ids } }, data: { status } });
-  await Promise.all(ids.map((id) => enqueueCatalogPublish(id)));
+  const own = await prisma.shopProduct.findMany({
+    where: { storeId, id: { in: ids } },
+    select: { id: true },
+  });
+  const ownIds = own.map((p) => p.id);
+  await prisma.shopProduct.updateMany({ where: { storeId, id: { in: ownIds } }, data: { status } });
+  await Promise.all(ownIds.map((id) => enqueueCatalogPublish(id)));
 }
 
 // ─── Stock ───────────────────────────────────────────────────────────────────
@@ -449,11 +484,6 @@ const CSV_COLUMNS = [
   "Description",
 ] as const;
 
-function csvCell(value: unknown): string {
-  const s = value === null || value === undefined ? "" : String(value);
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-}
-
 export async function exportProductsCsv(storeId: string): Promise<string> {
   const products = await prisma.shopProduct.findMany({
     where: { storeId, status: { not: "ARCHIVED" } },
@@ -476,7 +506,7 @@ export async function exportProductsCsv(storeId: string): Promise<string> {
           v.imageUrl ?? p.images[0] ?? "",
           p.description,
         ]
-          .map(csvCell)
+          .map((cell) => csvCell(cell === null || cell === undefined ? cell : String(cell)))
           .join(","),
       );
     }
@@ -524,7 +554,11 @@ export async function importProductsCsv(
   text: string,
   userId?: string,
 ) {
-  const [header, ...rows] = parseCsv(text);
+  // Our export prefixes formula-like cells with ' so a spreadsheet shows them as text;
+  // reading our own file back takes the mark off again.
+  const [header, ...rows] = parseCsv(text).map((row) =>
+    row.map((cell) => (/^'[=+\-@\t\r]/.test(cell) ? cell.slice(1) : cell)),
+  );
   if (!header) throw new ShopError("INVALID", "The file is empty");
   const col = (name: (typeof CSV_COLUMNS)[number]) =>
     header.findIndex((h) => h.trim().toLowerCase() === name.toLowerCase());

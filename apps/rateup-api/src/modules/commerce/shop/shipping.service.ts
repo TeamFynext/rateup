@@ -139,7 +139,7 @@ export async function quoteShipping(storeId: string, orderId: string, parcel: Pa
   if (!order) throw notFound("Order");
   const account = await easypostAccount(order.orgId);
   if (!account?.credential.apiKey || !account.credential.fromAddress)
-    throw new ShopError("INVALID", "Connect EasyPost in Commerce → Payments & shipping first");
+    throw new ShopError("INVALID", "Connect EasyPost in Commerce → Settings → Delivery first");
   const to = order.shippingAddress as ShopAddress | null;
   if (!to?.line1) throw new ShopError("INVALID", "This order has no delivery address");
   const ounces = parcel.weightGrams / 28.3495;

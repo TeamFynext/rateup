@@ -23,4 +23,8 @@ describe("hiddenModulesForGoals", () => {
       "ai_agent",
     ]);
   });
+
+  test("the sell-online goal shows Commerce", () => {
+    expect(hiddenModulesForGoals(["sell-online"])).not.toContain("commerce");
+  });
 });

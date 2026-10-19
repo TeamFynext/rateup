@@ -1,3 +1,4 @@
+import { shopProductsActionSchema } from "../../commerce/shop/commentToBuy.schema.js";
 import { SHOP_ORDER_EVENTS } from "../../commerce/shop/shopEvents.constants.js";
 import { z } from "zod";
 import { ShopifyEvents } from "../../../types/enums.js";
@@ -24,6 +25,10 @@ const NON_TRIGGER_EVENTS = new Set<string>([
   ShopifyEvents.CHECKOUTS_DELETE,
   ShopifyEvents.CUSTOMERS_REDACT,
   ShopifyEvents.SHOP_REDACT,
+  ShopifyEvents.PRODUCTS_CREATE,
+  ShopifyEvents.PRODUCTS_UPDATE,
+  ShopifyEvents.PRODUCTS_DELETE,
+  ShopifyEvents.INVENTORY_LEVELS_UPDATE,
 ]);
 const SHOPIFY_TRIGGER_EVENTS = Object.values(ShopifyEvents).filter(
   (value) => !NON_TRIGGER_EVENTS.has(value),
@@ -89,6 +94,9 @@ export const ruleOptionsSchema = z.object({
     .optional(),
   // Posted under the comment, one picked at random; 2200 is Instagram's comment limit.
   instagramPublicReplies: z.array(z.string().trim().min(1).max(2200)).max(10).optional(),
+  // Click-to-WhatsApp: the ad ids a rule answers, or words in the ad's headline or link.
+  adIds: z.array(z.string().trim().min(1).max(64)).max(50).optional(),
+  adMatch: z.string().trim().max(200).optional(),
 });
 
 /** Triggers only Instagram has. */
@@ -97,9 +105,12 @@ const INSTAGRAM_ONLY_TRIGGERS = new Set<string>([
   TriggerEvent.INSTAGRAM_STORY_MENTION,
   TriggerEvent.INSTAGRAM_REFERRAL,
 ]);
+/** Triggers only WhatsApp has. */
+const WHATSAPP_ONLY_TRIGGERS = new Set<string>([TriggerEvent.WHATSAPP_AD_REFERRAL]);
 /** Store events message the buyer from one account, so they cannot span channels. */
 const SINGLE_CHANNEL_TRIGGERS = new Set<string>([
   ...INSTAGRAM_ONLY_TRIGGERS,
+  ...WHATSAPP_ONLY_TRIGGERS,
   TriggerEvent.SHOPIFY_EVENT,
   TriggerEvent.WOOCOMMERCE_EVENT,
 ]);
@@ -126,7 +137,7 @@ function refineRuleChannels(
     platform?: string;
     platforms?: string[];
     triggerEvent?: string;
-    actions?: Array<{ type: string }>;
+    actions?: Array<{ type: string; value?: unknown }>;
   },
   ctx: z.RefinementCtx,
 ) {
@@ -140,6 +151,14 @@ function refineRuleChannels(
         code: "custom",
         path: ["triggerEvent"],
         message: "This trigger is only available for Instagram",
+      });
+    }
+  } else if (data.triggerEvent && WHATSAPP_ONLY_TRIGGERS.has(data.triggerEvent)) {
+    if (platforms.some((platform) => platform !== RulePlatform.WHATSAPP)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["triggerEvent"],
+        message: "This trigger is only available for WhatsApp",
       });
     }
   } else if (multiChannel && data.triggerEvent && SINGLE_CHANNEL_TRIGGERS.has(data.triggerEvent)) {
@@ -160,6 +179,22 @@ function refineRuleChannels(
         path: ["actions", index, "type"],
         message: "Templates and flows can only be sent on WhatsApp",
       });
+    }
+    if (action.type === ActionType.SEND_SHOP_PRODUCTS) {
+      if (platforms.includes(RulePlatform.FACEBOOK)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["actions", index, "type"],
+          message: "Products can only be sent this way on WhatsApp and Instagram",
+        });
+      }
+      if (!shopProductsActionSchema.safeParse(action.value).success) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["actions", index, "value"],
+          message: "Pick at least one product, and a drop size of 1 or more",
+        });
+      }
     }
     if (multiChannel && action.type === ActionType.TRIGGER_CHATBOT) {
       ctx.addIssue({

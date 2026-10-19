@@ -21,6 +21,7 @@ import {
   updateMemberPermissionsHandler,
   memberActivityHandler,
   updateOrgModulesHandler,
+  completeBusinessProfileHandler,
 } from "./org.controller.js";
 import {
   createBusinessHourHandler,
@@ -54,10 +55,12 @@ import {
   memberActivityQuerySchema,
   memberPermissionsSchema,
   orgModulesSchema,
+  businessProfileSchema,
   transferOwnershipSchema,
   type MemberActivityQuery,
   type MemberPermissionsInput,
   type OrgModulesInput,
+  type BusinessProfileInput,
   type TransferOwnershipInput,
 } from "./org.schema.js";
 export async function orgRoutes(server: FastifyInstance) {
@@ -226,6 +229,11 @@ export async function orgRoutes(server: FastifyInstance) {
     getWebhookClientSecretHandler,
   );
 
+  server.put<{ Body: BusinessProfileInput }>(
+    "/business-profile",
+    { config: { permission: "org.settings" }, schema: { body: businessProfileSchema } },
+    completeBusinessProfileHandler,
+  );
   server.put(
     "/completeorgdetails",
     { config: { permission: "org.settings" } },

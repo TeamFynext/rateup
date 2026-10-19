@@ -22,7 +22,8 @@ const createUserSignupSchema = z.object({
   ...userCore,
   email: z.email(),
   name: z.string().min(1),
-  orgName: z.string().min(1),
+  /** Absent for signups that ask for the business on the step after; see `placeholderOrgName`. */
+  orgName: z.string().min(1).optional(),
   phone: z.string().optional(),
   phoneNumber: z.string().optional(),
   recipeName: z.enum(UserRecipes),
@@ -43,9 +44,9 @@ const pauseUserSchema = z.object({
 
 const createUserGoogleSchema = z.object({
   name: z.string().min(1),
-  orgName: z.string().min(1),
+  orgName: z.string().min(1).optional(),
   phone: z.string().optional(),
-  phoneNumber: z.string(),
+  phoneNumber: z.string().optional(),
   type: z.string(),
   email: z.string().optional(),
   goals: z.array(z.string()).optional(),

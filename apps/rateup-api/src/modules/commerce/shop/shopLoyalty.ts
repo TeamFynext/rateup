@@ -1,4 +1,5 @@
 import type { Prisma, ShopStore } from "../../../../generated/prisma/client.js";
+import { inStoreCheckout } from "./checkoutVia.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
 import { awardPoints } from "../../loyalty/accounts/account.service.js";
@@ -50,13 +51,20 @@ export function redeemablePoints(
   return { points, value: round2(points * value) };
 }
 
-export async function pointsOffer(store: ShopStore, contactId: string | null, goods: number) {
+/** `held`: points this order already holds for its payment link, still the member's to spend. */
+export async function pointsOffer(
+  store: ShopStore,
+  contactId: string | null,
+  goods: number,
+  held = 0,
+) {
   if (!store.offerPoints || !store.pointValue) return null;
   const member = await memberFor(store.orgId, contactId);
   if (!member) return null;
-  const { points, value } = redeemablePoints(store, member.account.currentPoints, goods);
+  const balance = member.account.currentPoints + held;
+  const { points, value } = redeemablePoints(store, balance, goods);
   return {
-    balance: member.account.currentPoints,
+    balance,
     tier: member.account.currentTier?.name ?? null,
     currencyName: member.program.currencyName,
     points,
@@ -71,13 +79,16 @@ export async function spendPoints(
   contactId: string,
   orderId: string,
   points: number,
+  /** A hold for a payment link gets its own key, so a released hold can be taken again. */
+  holdId?: string,
 ) {
   if (points <= 0) return;
   const member = await memberFor(orgId, contactId);
   if (!member) throw new ShopError("INVALID", "Points can only be used by loyalty members");
+  const key = holdId ? `${spendKey(orderId)}-${holdId}` : spendKey(orderId);
   const already = await tx.loyaltyTransaction.findUnique({
     where: {
-      programId_idempotencyKey: { programId: member.program.id, idempotencyKey: spendKey(orderId) },
+      programId_idempotencyKey: { programId: member.program.id, idempotencyKey: key },
     },
   });
   if (already) return;
@@ -99,51 +110,64 @@ export async function spendPoints(
       balanceAfter: currentPoints,
       source: "shop_order",
       referenceId: orderId,
-      idempotencyKey: spendKey(orderId),
+      idempotencyKey: key,
       description: "Spent at checkout",
+    },
+  });
+}
+
+/**
+ * Gives back whatever an order still holds of the points it spent: a cancelled order, or a
+ * payment-link hold being released. Netted over the order's spends and refunds under a lock
+ * on the account, so it can run again (another hold, a retry) without paying back twice.
+ */
+export async function returnSpentPoints(
+  tx: Prisma.TransactionClient,
+  orgId: string,
+  orderId: string,
+  description = "Returned: order cancelled",
+) {
+  const program = await tx.loyaltyProgram.findUnique({ where: { orgId }, select: { id: true } });
+  if (!program) return;
+  const where = {
+    programId: program.id,
+    referenceId: orderId,
+    source: "shop_order",
+    transactionType: { in: ["redeem", "refund"] },
+  };
+  const first = await tx.loyaltyTransaction.findFirst({ where, select: { accountId: true } });
+  if (!first) return;
+  await tx.$queryRaw`SELECT 1 FROM "CustomerLoyaltyAccount" WHERE id = ${first.accountId}::uuid FOR UPDATE`;
+  const rows = await tx.loyaltyTransaction.findMany({
+    where,
+    select: { points: true, transactionType: true },
+  });
+  const held = -rows.reduce((sum, r) => sum + r.points, 0);
+  if (held <= 0) return;
+  const refunds = rows.filter((r) => r.transactionType === "refund").length;
+  const account = await tx.customerLoyaltyAccount.update({
+    where: { id: first.accountId },
+    data: { currentPoints: { increment: held } },
+    select: { currentPoints: true },
+  });
+  await tx.loyaltyTransaction.create({
+    data: {
+      accountId: first.accountId,
+      programId: program.id,
+      transactionType: "refund",
+      points: held,
+      balanceAfter: account.currentPoints,
+      source: "shop_order",
+      referenceId: orderId,
+      idempotencyKey: refunds ? `${refundKey(orderId)}-${refunds + 1}` : refundKey(orderId),
+      description,
     },
   });
 }
 
 /** Gives back points an order spent, when it is cancelled before being fulfilled. */
 export async function refundSpentPoints(orgId: string, orderId: string) {
-  const program = await prisma.loyaltyProgram.findUnique({
-    where: { orgId },
-    select: { id: true },
-  });
-  if (!program) return;
-  await prisma.$transaction(async (tx) => {
-    const spent = await tx.loyaltyTransaction.findUnique({
-      where: {
-        programId_idempotencyKey: { programId: program.id, idempotencyKey: spendKey(orderId) },
-      },
-    });
-    if (!spent) return;
-    const done = await tx.loyaltyTransaction.findUnique({
-      where: {
-        programId_idempotencyKey: { programId: program.id, idempotencyKey: refundKey(orderId) },
-      },
-    });
-    if (done) return;
-    const account = await tx.customerLoyaltyAccount.update({
-      where: { id: spent.accountId },
-      data: { currentPoints: { increment: -spent.points } },
-      select: { currentPoints: true },
-    });
-    await tx.loyaltyTransaction.create({
-      data: {
-        accountId: spent.accountId,
-        programId: program.id,
-        transactionType: "refund",
-        points: -spent.points,
-        balanceAfter: account.currentPoints,
-        source: "shop_order",
-        referenceId: orderId,
-        idempotencyKey: refundKey(orderId),
-        description: "Returned: order cancelled",
-      },
-    });
-  });
+  await prisma.$transaction((tx) => returnSpentPoints(tx, orgId, orderId));
 }
 
 /** Earns on what the customer actually paid, scaled by each product's multiplier. */
@@ -153,8 +177,9 @@ export async function earnForOrder(orderId: string) {
     include: { items: { include: { variant: { include: { product: true } } } } },
   });
   if (!order?.contactId) return;
-  // Written back to Shopify: its order webhook earns the points, once.
-  if (order.externalProvider === "shopify") return;
+  // Paid in Shopify or WooCommerce: the store's order webhook earns the points. A RateUp
+  // order written back earns here; its echo from the store is marked and earns nothing.
+  if (inStoreCheckout(order.checkoutVia)) return;
   const member = await memberFor(order.orgId, order.contactId);
   if (!member) return;
 

@@ -763,6 +763,9 @@ export async function getShopifyProductsForCatalog(orgId: string, catalogId: str
         price: originalPrice,
         currencyCode,
         availability: v.availableForSale ? "in stock" : "out of stock",
+        // An untracked variant reports 0 while for sale, so only a positive count is a count.
+        ...(typeof v.inventoryQuantity === "number" &&
+          v.inventoryQuantity > 0 && { inventory: v.inventoryQuantity }),
         brand: product.vendor || product.title,
         sale_price: salePrice,
         item_group_id: productGroupId,

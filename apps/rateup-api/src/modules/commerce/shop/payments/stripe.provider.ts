@@ -35,6 +35,8 @@ function sessionState(session: Stripe.Checkout.Session): ProviderPaymentState {
         session.amount_total === null
           ? null
           : fromMinorUnits(session.amount_total, session.currency ?? "usd"),
+      currency: session.currency?.toUpperCase() ?? null,
+      orderId: session.metadata?.orderId ?? null,
     };
   }
   if (session.status === "expired") return { state: "expired", providerRef: session.id };
@@ -120,7 +122,12 @@ export const stripeProvider: PaymentProvider = {
     if (!credential.webhookSecret) return null;
     const signature = headers["stripe-signature"];
     if (typeof signature !== "string") throw new ShopError("INVALID", "Missing Stripe signature");
-    const event = Stripe.webhooks.constructEvent(rawBody, signature, credential.webhookSecret);
+    let event: Stripe.Event;
+    try {
+      event = Stripe.webhooks.constructEvent(rawBody, signature, credential.webhookSecret);
+    } catch {
+      throw new ShopError("INVALID", "Bad Stripe signature");
+    }
     switch (event.type) {
       case "checkout.session.completed":
       case "checkout.session.async_payment_succeeded":
@@ -141,6 +148,19 @@ export const stripeProvider: PaymentProvider = {
       default:
         return null;
     }
+  },
+
+  async expireLink(credential, providerRef) {
+    await client(credential).checkout.sessions.expire(providerRef);
+  },
+
+  async refundedTotal(credential, paymentId) {
+    const intent = await client(credential).paymentIntents.retrieve(paymentId, {
+      expand: ["latest_charge"],
+    });
+    const charge = intent.latest_charge;
+    if (!charge || typeof charge === "string") return 0;
+    return fromMinorUnits(charge.amount_refunded, charge.currency);
   },
 
   async refund(credential, paymentId, amount, currency) {

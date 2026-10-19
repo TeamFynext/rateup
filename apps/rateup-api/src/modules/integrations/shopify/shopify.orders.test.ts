@@ -81,6 +81,8 @@ vi.mock("../../loyalty/accounts/pointsReversal.service.js", () => ({
 }));
 vi.mock("../../loyalty/program/program.service.js", () => ({ getLoyaltyProgramByOrg: vi.fn() }));
 vi.mock("../../loyalty/redemptions/redemption.service.js", () => ({ applyRedemption: vi.fn() }));
+const shopSync = vi.hoisted(() => ({ syncOrderFromStore: vi.fn() }));
+vi.mock("../../commerce/shop/externalCheckout.service.js", () => shopSync);
 
 import prisma from "../../../utils/prisma.js";
 import { shopifySurveyQueue } from "../../../workers/bullmq/queues/index.js";
@@ -88,7 +90,12 @@ import { shopifyLoyaltyQueue } from "../../../workers/bullmq/queues/webhook.queu
 import { updateIntegrationByName } from "../integrations.service.js";
 import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller.js";
 import { checkAndExecuteRuleByTriggerEvent } from "../../whatsapp/automatedReply/wa_automatedReply.utils.js";
-import { handleShopifyOrderEvents, processShopifySurveySchedule } from "./shopify.orders.js";
+import {
+  handleShopifyOrderEvents,
+  processShopifySurveySchedule,
+  shopifyCustomer,
+  shopifyTotals,
+} from "./shopify.orders.js";
 import { ShopifyEvents } from "../../../types/enums.js";
 
 type Mock = ReturnType<typeof vi.fn>;
@@ -427,5 +434,101 @@ describe("sending a scheduled survey", () => {
     await processShopifySurveySchedule(job);
 
     expect(sendTemplateToUserCore).not.toHaveBeenCalled();
+  });
+});
+
+describe("an order RateUp sent to Shopify's checkout", () => {
+  const attrs = { note_attributes: [{ name: "rateup_order_id", value: "rateup-order-1" }] };
+
+  test("paid pays the RateUp order at Shopify's total, and Shopify's own handling goes on", async () => {
+    await handleShopifyOrderEvents(webhook({ ...attrs, name: "#1001" }));
+    expect(shopSync.syncOrderFromStore).toHaveBeenCalledWith(
+      "shopify",
+      ORG,
+      "rateup-order-1",
+      expect.objectContaining({
+        status: "paid",
+        externalOrderId: "5551",
+        externalName: "#1001",
+        totals: expect.objectContaining({ total: 4000 }),
+        customer: expect.objectContaining({ name: "Ann" }),
+      }),
+    );
+    expect(shopifyLoyaltyQueue.add).toHaveBeenCalled();
+  });
+
+  test("fulfilled in Shopify moves the RateUp order on", async () => {
+    await handleShopifyOrderEvents(webhook(attrs, ShopifyEvents.ORDERS_FULFILLED));
+    expect(shopSync.syncOrderFromStore.mock.calls[0][3]).toMatchObject({
+      fulfillment: "fulfilled",
+    });
+    expect(shopSync.syncOrderFromStore.mock.calls[0][3]).not.toHaveProperty("totals");
+  });
+
+  test("a RateUp order written back earns its points in RateUp, not again here", async () => {
+    await handleShopifyOrderEvents(
+      webhook({
+        note_attributes: [
+          { name: "rateup_order_id", value: "rateup-order-1" },
+          { name: "rateup_writeback", value: "1" },
+        ],
+      }),
+    );
+    expect(shopifyLoyaltyQueue.add).not.toHaveBeenCalled();
+  });
+
+  test("reads the customer and delivery address Shopify's checkout collected", () => {
+    expect(
+      shopifyCustomer({
+        email: "ann@example.com",
+        customer: { first_name: "Ann", last_name: "Lee", phone: "+12025550173" } as never,
+        shipping_address: {
+          name: "Ann Lee",
+          address1: "1 Main St",
+          city: "Springfield",
+          province: "IL",
+          zip: "62701",
+          country_code: "us",
+        } as never,
+      }),
+    ).toEqual({
+      customer: { name: "Ann Lee", email: "ann@example.com", phone: "12025550173" },
+      address: {
+        name: "Ann Lee",
+        line1: "1 Main St",
+        line2: undefined,
+        city: "Springfield",
+        region: "IL",
+        postalCode: "62701",
+        country: "US",
+        phone: undefined,
+      },
+    });
+  });
+
+  test("reads Shopify's breakdown: items and delivery before discounts, as RateUp splits it", () => {
+    expect(
+      shopifyTotals({
+        total_line_items_price: "60.00",
+        current_total_discounts: "6.00",
+        total_shipping_price_set: {
+          shop_money: { amount: "5.00", currency_code: "USD" },
+          presentment_money: { amount: "5.00", currency_code: "USD" },
+        },
+        current_total_tax: "5.90",
+        current_total_price: "64.90",
+      }),
+    ).toEqual({ subtotal: 60, discountTotal: 6, shippingTotal: 5, taxTotal: 5.9, total: 64.9 });
+  });
+
+  test("cancelled cancels it", async () => {
+    await handleShopifyOrderEvents(webhook(attrs, ShopifyEvents.ORDERS_CANCELLED));
+    expect(shopSync.syncOrderFromStore.mock.calls[0][3]).toMatchObject({ status: "cancelled" });
+  });
+
+  test("other topics, and orders RateUp didn't start, leave RateUp orders alone", async () => {
+    await handleShopifyOrderEvents(webhook(attrs, ShopifyEvents.FULFILLMENT_ORDERS_CANCELLED));
+    await handleShopifyOrderEvents(webhook());
+    expect(shopSync.syncOrderFromStore).not.toHaveBeenCalled();
   });
 });

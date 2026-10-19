@@ -103,6 +103,10 @@ export async function updateShopifyIntegrationByShopHandler(
     if (!claimed.count) {
       return reply.code(409).send({ message: "This store is already linked to an organisation" });
     }
+    const { onOnlineStoreConnected } = await import("../../commerce/shop/store.service.js");
+    await onOnlineStoreConnected(orgId, "SHOPIFY").catch((err) =>
+      console.error("Could not show Commerce after linking Shopify", err),
+    );
     reply.code(200).send({ message: "success" });
   } catch (e) {
     console.error(e);

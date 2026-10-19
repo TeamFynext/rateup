@@ -67,6 +67,21 @@ describe("priceOrder", () => {
   });
 });
 
+test("an extra percent comes off the goods after the coupon, not off shipping or tax", () => {
+  const r = priceOrder({
+    lines: [line(100, 1)],
+    discount: { rule: { type: "FIXED", value: 10 }, scope: ALL },
+    extraDiscountPct: 10,
+    shipping: 10,
+    taxRate: 10,
+    pricesIncludeTax: false,
+  });
+  // 100 − 10 coupon = 90, −10% = 81, + 10 shipping = 91, + 9.10 tax
+  expect(r.discountTotal).toBe(19);
+  expect(r.taxTotal).toBe(9.1);
+  expect(r.total).toBe(100.1);
+});
+
 describe("discountOnGoods", () => {
   test("a fixed discount never exceeds what it applies to", () => {
     expect(discountOnGoods([line(5, 1)], { type: "FIXED", value: 10 }, ALL)).toBe(5);

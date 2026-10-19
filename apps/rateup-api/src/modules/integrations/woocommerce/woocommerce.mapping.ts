@@ -6,6 +6,7 @@
  */
 import { parsePhoneNumberFromString, type CountryCode } from "libphonenumber-js";
 
+import type { StoreTotals } from "../../commerce/shop/externalCheckout.service.js";
 import type { CommerceOrder, CommerceOrderStatus } from "../commerce/commerce.types.js";
 import type { WooCredential } from "./woocommerce.types.js";
 
@@ -41,27 +42,40 @@ export const WOO_TRIGGER_STATUSES = [
 export type WooTriggerStatus = (typeof WOO_TRIGGER_STATUSES)[number];
 
 /** The parts of a WooCommerce order (REST v3) this integration reads. */
+interface WooAddressPayload {
+  first_name?: string;
+  last_name?: string;
+  address_1?: string;
+  address_2?: string;
+  city?: string;
+  state?: string;
+  postcode?: string;
+  phone?: string;
+  country?: string;
+}
+
 export interface WooOrderPayload {
   id?: number;
   number?: string;
   status?: string;
   currency?: string;
   total?: string;
+  /** Set once WooCommerce counts the order paid; a cash order has none until then. */
+  date_paid?: string | null;
+  discount_total?: string;
+  shipping_total?: string;
+  total_tax?: string;
   date_modified_gmt?: string;
   customer_id?: number;
-  billing?: {
-    first_name?: string;
-    last_name?: string;
-    email?: string;
-    phone?: string;
-    country?: string;
-  };
-  shipping?: { phone?: string; country?: string };
+  billing?: WooAddressPayload & { email?: string };
+  shipping?: WooAddressPayload;
+  refunds?: Array<{ id?: number; total?: string }>;
   line_items?: Array<{
     product_id?: number;
     variation_id?: number;
     name?: string;
     quantity?: number;
+    subtotal?: string;
     image?: { src?: string };
   }>;
   coupon_lines?: Array<{ code?: string }>;
@@ -133,6 +147,7 @@ export function toCommerceOrder(
       .filter((code): code is string => Boolean(code)),
     ...(deliveryId && { deliveryId }),
     raw: payload,
+    rateupWriteBack: isRateupWriteBack(payload),
   };
 }
 
@@ -221,5 +236,62 @@ export function toWooContact(
     name,
     phone: phone.slice(1),
     email: payload.email?.trim() || null,
+  };
+}
+
+/** Set on every order RateUp creates in WooCommerce; see `woocommerce.shopOrders.ts`. */
+export const RATEUP_ORDER_META = "rateup_order_id";
+/** Marks an order RateUp took the payment for and copied in, so its echo earns no points. */
+export const RATEUP_WRITEBACK_META = "rateup_writeback";
+
+const metaValue = (payload: object, key: string) => {
+  const meta = (payload as { meta_data?: unknown }).meta_data;
+  if (!Array.isArray(meta)) return null;
+  const entry = (meta as Array<{ key?: unknown; value?: unknown }>).find((m) => m?.key === key);
+  return typeof entry?.value === "string" ? entry.value : null;
+};
+
+export const isRateupWriteBack = (payload: object) =>
+  metaValue(payload, RATEUP_WRITEBACK_META) === "1";
+
+/** The RateUp order a WooCommerce order delivery belongs to, when RateUp created it. */
+export function rateupOrderIdOf(payload: object): string | null {
+  return metaValue(payload, RATEUP_ORDER_META);
+}
+
+/**
+ * WooCommerce keeps every amount but the total before tax (line subtotals before coupons too),
+ * so subtotal − discount + shipping + tax adds up to the total whatever the store's tax display.
+ */
+export function wooTotals(payload: WooOrderPayload): StoreTotals {
+  const n = (v: unknown) => Number(v) || 0;
+  return {
+    subtotal: (payload.line_items ?? []).reduce((sum, line) => sum + n(line.subtotal), 0),
+    discountTotal: n(payload.discount_total),
+    shippingTotal: n(payload.shipping_total),
+    taxTotal: n(payload.total_tax),
+    total: n(payload.total),
+  };
+}
+
+/** The customer and address WooCommerce holds for an order, as a RateUp order keeps them. */
+export function wooCustomer(payload: WooOrderPayload) {
+  const billing = payload.billing ?? {};
+  const ship = payload.shipping?.address_1 ? payload.shipping : billing;
+  const name = [billing.first_name, billing.last_name].filter(Boolean).join(" ") || null;
+  return {
+    customer: { name, email: billing.email?.trim() || null, phone: billing.phone || null },
+    address: ship.address_1
+      ? {
+          name: [ship.first_name, ship.last_name].filter(Boolean).join(" ") || name || undefined,
+          line1: ship.address_1,
+          line2: ship.address_2 || undefined,
+          city: ship.city,
+          region: ship.state,
+          postalCode: ship.postcode,
+          country: ship.country?.toUpperCase(),
+          phone: ship.phone || undefined,
+        }
+      : null,
   };
 }

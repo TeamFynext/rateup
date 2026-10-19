@@ -37,6 +37,8 @@ export interface PricingInput {
   discount?: { rule: DiscountRule; scope: DiscountScope } | null;
   /** Money value of the points the customer chose to spend, before capping. */
   pointsValue?: number;
+  /** Percent off the goods after the coupon, e.g. for paying online instead of cash. */
+  extraDiscountPct?: number;
   shipping?: number;
   /** Percent. */
   taxRate?: number | null;
@@ -105,6 +107,11 @@ export function priceOrder(input: PricingInput): PricingResult {
     }
   }
 
+  const afterCoupon = round2(subtotal - goodsDiscount);
+  const extraDiscount = round2(
+    (afterCoupon * Math.min(Math.max(input.extraDiscountPct ?? 0, 0), 100)) / 100,
+  );
+  goodsDiscount = round2(goodsDiscount + extraDiscount);
   const goodsAfterDiscount = round2(subtotal - goodsDiscount);
   const pointsDiscount = round2(Math.min(Math.max(input.pointsValue ?? 0, 0), goodsAfterDiscount));
   const taxable = round2(goodsAfterDiscount - pointsDiscount + shippingTotal - shippingDiscount);

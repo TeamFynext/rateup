@@ -150,6 +150,10 @@ export interface WaReceiveMessageBody {
         headline?: string;
         body?: string;
         ctwa_clid?: string;
+        media_type?: "image" | "video";
+        image_url?: string;
+        video_url?: string;
+        thumbnail_url?: string;
       };
       /**
        * Present when the WhatsApp user deleted a message they had sent (WhatsApp
@@ -714,3 +718,6 @@ export interface WaTemplateFetchBody {
   category: WaTemplateCategory;
   components: WaTemplateFetchComponents[];
 }
+
+/** The click-to-WhatsApp ad or post a first message came from. */
+export type WaReferral = NonNullable<WaReceiveMessageBody["messages"][number]["referral"]>;

@@ -55,6 +55,7 @@ import { resolveShopifyPathValue } from "../../integrations/shopify/shopify.mapp
 import { getShopifyProductImage } from "../../integrations/shopify/shopify.catalog.js";
 import axios from "axios";
 import { triggerConversionsApiForContact } from "../../integrations/meta/conversions.service.js";
+import { adRuleMatches, adRuleSpecificity, type AdReferralContext } from "./adReferralTrigger.js";
 import { emitIntegrationEvent } from "../../integrations/events/emitIntegrationEvent.js";
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -428,6 +429,8 @@ export interface RuleWithConditions {
     instagramPublicReplies?: string[];
     instagramCommentSource?: "ALL" | "POSTS" | "LIVE";
     instagramRef?: string;
+    adIds?: string[];
+    adMatch?: string;
   } | null;
   groups: Array<{
     id: string;
@@ -714,6 +717,8 @@ export interface RuleExecutionContext {
   instagramLiveComment?: boolean;
   /** The ?ref= of the ig.me link that opened the thread, for INSTAGRAM_REFERRAL. */
   instagramRef?: string;
+  /** The click-to-WhatsApp ad that opened the chat, for WHATSAPP_AD_REFERRAL. */
+  adReferral?: AdReferralContext;
 }
 
 /** Posts one of the rule's public replies under the comment; never fails the rule. */
@@ -889,6 +894,9 @@ export async function checkAndExecuteRuleByTriggerEvent(
       (a, b) => Number(!!b.options?.instagramRef) - Number(!!a.options?.instagramRef),
     );
   }
+  if (triggerEvent === TriggerEvent.WHATSAPP_AD_REFERRAL) {
+    typedRules.sort((a, b) => adRuleSpecificity(b.options) - adRuleSpecificity(a.options));
+  }
 
   // Helper to determine if a rule has any business hour configuration
   const hasBusinessHours = (rule: RuleWithConditions): boolean => {
@@ -993,6 +1001,8 @@ export async function checkAndExecuteRuleByTriggerEvent(
       } else if (triggerEvent === TriggerEvent.INSTAGRAM_REFERRAL) {
         const wanted = rule.options?.instagramRef?.toLowerCase();
         if (wanted && wanted !== context.instagramRef?.toLowerCase()) continue;
+      } else if (triggerEvent === TriggerEvent.WHATSAPP_AD_REFERRAL) {
+        if (!adRuleMatches(rule.options, context.adReferral)) continue;
       } else {
         const isMatch = await validateRuleConditions(
           rule,
@@ -1193,6 +1203,10 @@ async function executeRuleActions(
           success = await executeExternalApiAction(action.value as string, actionContext);
           break;
 
+        case "SEND_SHOP_PRODUCTS":
+          success = await executeSendShopProductsAction(rule, action.value, actionContext);
+          break;
+
         default:
           log.warn(`Unsupported action type: ${action.type}`);
       }
@@ -1217,6 +1231,41 @@ async function executeRuleActions(
 }
 
 // Action executor functions
+/**
+ * Products to buy. On WhatsApp they go as catalog cards into the chat the customer just
+ * opened; on Instagram, as comment-to-buy's private reply.
+ */
+async function executeSendShopProductsAction(
+  rule: RuleWithConditions,
+  value: unknown,
+  context: RuleExecutionContext,
+): Promise<boolean> {
+  if (!context.phone || !context.phoneNumberId) return false;
+  if (context.platform === "WHATSAPP") {
+    const { sendRuleProductsOnWhatsApp } =
+      await import("../../commerce/shop/chatProducts.service.js");
+    return sendRuleProductsOnWhatsApp({
+      orgId: context.orgId,
+      ruleId: rule.id,
+      value,
+      phone: context.phone,
+      phoneId: context.phoneNumberId,
+    });
+  }
+  if (context.platform !== "INSTAGRAM") return false;
+  const { runShopProductsAction } = await import("../../commerce/shop/commentToBuy.service.js");
+  return runShopProductsAction({
+    orgId: context.orgId,
+    ruleId: rule.id,
+    triggerEvent: rule.triggerEvent,
+    value,
+    accountId: context.phoneNumberId,
+    recipient: context.phone,
+    commentId: takeInstagramCommentId(context),
+    mediaId: context.instagramMediaId,
+  });
+}
+
 async function executeCloseTicketAction(
   status: WaMessageAssignStatus,
   context: RuleExecutionContext,

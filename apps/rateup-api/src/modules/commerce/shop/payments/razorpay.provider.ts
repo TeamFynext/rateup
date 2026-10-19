@@ -22,6 +22,7 @@ interface RazorpayLink {
   amount_paid?: number;
   currency?: string;
   payments?: { payment_id: string; status: string }[] | null;
+  notes?: { orderId?: string } | null;
 }
 
 function linkState(link: RazorpayLink): ProviderPaymentState {
@@ -32,6 +33,8 @@ function linkState(link: RazorpayLink): ProviderPaymentState {
       providerRef: link.id,
       paymentId: payment?.payment_id ?? null,
       amount: link.amount_paid ? fromMinorUnits(link.amount_paid, link.currency ?? "INR") : null,
+      currency: link.currency?.toUpperCase() ?? null,
+      orderId: link.notes?.orderId ?? null,
     };
   }
   if (link.status === "expired" || link.status === "cancelled")
@@ -110,14 +113,27 @@ export const razorpayProvider: PaymentProvider = {
       return { state: "expired", providerRef: body.payload.payment_link.entity.id };
     if (body.event === "refund.processed" && body.payload.refund) {
       const r = body.payload.refund.entity;
+      // The payload is this one refund; the running total is asked for in refundedTotal.
       return {
         state: "refunded",
         providerRef: null,
         paymentId: r.payment_id,
-        amountRefunded: fromMinorUnits(r.amount, r.currency),
+        amountRefunded: null,
       };
     }
     return null;
+  },
+
+  async expireLink(credential, providerRef) {
+    await client(credential).paymentLink.cancel(providerRef);
+  },
+
+  async refundedTotal(credential, paymentId) {
+    const payment = (await client(credential).payments.fetch(paymentId)) as unknown as {
+      amount_refunded?: number;
+      currency: string;
+    };
+    return fromMinorUnits(payment.amount_refunded ?? 0, payment.currency);
   },
 
   async refund(credential, paymentId, amount, currency) {

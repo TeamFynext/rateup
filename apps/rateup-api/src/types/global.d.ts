@@ -483,6 +483,8 @@ declare global {
       loyalty?: subscriptionActiveField;
       referrals?: subscriptionActiveField;
       catalog?: subscriptionActiveField;
+      /** Shop orders placed a month. Optional: subscriptions stored before it are unmetered. */
+      shopOrders?: subscriptionWithActiveAndCount;
     };
     [sfpn.AI]: subscriptionActiveField & {
       count: {
@@ -1471,6 +1473,7 @@ declare global {
     type PShopStorefrontTheme =
       import("../modules/commerce/shop/shop.types.js").ShopStorefrontTheme;
     type PShopBankDetails = import("../modules/commerce/shop/shop.types.js").ShopBankDetails;
+    type PShopMessageRates = import("../modules/commerce/shop/messageCost.js").MessageRates;
     type PShopProductOptions = import("../modules/commerce/shop/shop.types.js").ShopProductOption[];
     type PShopVariantOptionValues =
       import("../modules/commerce/shop/shop.types.js").ShopVariantOptionValues;
