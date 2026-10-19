@@ -3075,6 +3075,7 @@
     "Only members who have reached {name} can redeem these.": "केवल वे सदस्य जो {name} तक पहुंच चुके हैं, इन्हें भुना सकते हैं।",
     "Only messages from customers": "सिर्फ़ ग्राहकों के संदेश",
     "Only one authentication button allowed": "केवल एक प्रमाणीकरण बटन की अनुमति है",
+    "Only PNG or JPG images are supported": "केवल PNG या JPG इमेज समर्थित हैं",
     "Only one button is supported for this type of template. The button text is not editable.": "इस प्रकार के टेम्पलेट के लिए केवल एक बटन समर्थित है। बटन टेक्स्ट संपादन योग्य नहीं है.",
     "Only reaches customers who have messaged you in the last 24 hours.": "केवल उन ग्राहकों तक पहुंचता है जिन्होंने पिछले 24 घंटों में आपको संदेश भेजा है।",
     "Only required if this chatbot includes a lead automation step that sends messages via a specific WhatsApp number.": "केवल तभी आवश्यक है जब इस चैटबॉट में एक लीड ऑटोमेशन चरण शामिल हो जो एक विशिष्ट व्हाट्सएप नंबर के माध्यम से संदेश भेजता है।",

@@ -23,6 +23,10 @@ export const configSchema = z.object({
 
 const allowedMimesforMediaCarousel = ["image/png", "image/jpg", "image/jpeg", "video/mp4"];
 
+/** A file's type as a customer would name it: "image/avif" → "AVIF". */
+const fileKind = (file: File) =>
+  (file.type.split("/")[1] || file.name.split(".").pop() || "unknown").toUpperCase();
+
 const mimeTypeMaxSizes: Record<string, number> = {
   // Audio
   "audio/aac": 16 * 1024 * 1024,
@@ -74,16 +78,14 @@ export const templateSchema = z
           input: "",
           code: "invalid_type",
           expected: "custom",
-          message: `File must be one of [${ACCEPTED_MIME_TYPES.join(
-            ", ",
-          )}] but was ${ctx.value.type}`,
+          message: `${fileKind(ctx.value)} files aren't supported. Use a PNG or JPG image, an MP4 video or a PDF.`,
         });
       }
       if (maxSize && ctx.value.size > maxSize) {
         ctx.issues.push({
           input: "",
           code: "too_big",
-          message: `File size for ${ctx.value.type} must not exceed ${Math.round(maxSize / 1024 / 1024)} MB`,
+          message: `This file is too large. ${fileKind(ctx.value)} files can be up to ${Math.round(maxSize / 1024 / 1024)} MB.`,
           maximum: maxSize,
           inclusive: true,
           origin: "file",
@@ -135,7 +137,11 @@ export const templateSchema = z
     mediaCarousel: z
       .array(
         z.object({
-          body: z.string().trim().min(1).max(1024),
+          body: z
+            .string()
+            .trim()
+            .min(1, { message: "Card body is required" })
+            .max(1024, { message: "Card body can be at most 1024 characters" }),
           // File checks after the union, as for the template header above.
           header: z.union([z.null(), z.string().trim().min(1), z.instanceof(File)]).check((ctx) => {
             if (!(ctx.value instanceof File)) return;
@@ -143,16 +149,14 @@ export const templateSchema = z
               ctx.issues.push({
                 input: ctx.value,
                 code: "custom",
-                message: `File must be one of [${allowedMimesforMediaCarousel.join(
-                  ", ",
-                )}] but was ${ctx.value.type}`,
+                message: `${fileKind(ctx.value)} files aren't supported. Use a PNG or JPG image, or an MP4 video.`,
               });
             }
             if (ctx.value.size > FILE_SIZE * MB_BYTES) {
               ctx.issues.push({
                 input: ctx.value,
                 code: "custom",
-                message: `The file must not be larger than ${FILE_SIZE} MB`,
+                message: `This file is too large. Card files can be up to ${FILE_SIZE} MB.`,
               });
             }
           }),
@@ -161,16 +165,31 @@ export const templateSchema = z
           buttons: z
             .array(
               z.object({
-                text: z.string().max(25),
+                text: z
+                  .string()
+                  .trim()
+                  .min(1, { message: "Enter the button text" })
+                  .max(25, { message: "Button text can be at most 25 characters" }),
                 type: z.string(),
                 example: z.array(z.string().trim().min(1).max(2000)).optional(),
-                phone_number: z.string().max(25).refine(isValidPhoneNumber).optional(),
+                phone_number: z
+                  .string()
+                  .max(25)
+                  .refine(isValidPhoneNumber, {
+                    message: "Enter a valid phone number with country code",
+                  })
+                  .optional(),
                 // Trimmed before the URL check, as the deprecated `z.string().trim().url()` did.
-                url: z.string().trim().max(2000).pipe(z.url()).optional(),
+                url: z
+                  .string()
+                  .trim()
+                  .max(2000)
+                  .pipe(z.url({ message: "Enter a valid website URL" }))
+                  .optional(),
               }),
             )
-            .max(2)
-            .min(1),
+            .max(2, { message: "Each card can have at most 2 buttons" })
+            .min(1, { message: "Each card needs at least 1 button" }),
         }),
       )
       .optional(),
@@ -286,7 +305,7 @@ export const templateSchema = z
         issues.push({
           path: ["buttons", index, "text"],
           code: "custom",
-          message: "Button text is required",
+          message: "Enter the button text",
           input: values,
         });
       }
@@ -296,7 +315,7 @@ export const templateSchema = z
             issues.push({
               path: ["buttons", index, "url"],
               code: "custom",
-              message: "website url is required",
+              message: "Enter the website URL for this button",
               input: data.url,
             });
           } else {
@@ -324,7 +343,7 @@ export const templateSchema = z
                 issues.push({
                   path: ["buttons", index, "url"],
                   code: "custom",
-                  message: "Invalid website URL",
+                  message: "Enter a valid website URL, e.g. https://example.com",
                   input: data.url,
                 });
               }
@@ -336,7 +355,7 @@ export const templateSchema = z
                 issues.push({
                   path: ["buttons", index, "url"],
                   code: "custom",
-                  message: "Invalid website URL",
+                  message: "Enter a valid website URL, e.g. https://example.com",
                   input: data.url,
                 });
               }
@@ -358,7 +377,7 @@ export const templateSchema = z
             issues.push({
               input: data?.phone_number,
               code: "custom",
-              message: "Invalid phone number",
+              message: "Enter a valid phone number with country code",
               path: ["buttons", index, "phone_number"],
             });
           }
@@ -404,7 +423,7 @@ export const templateSchema = z
               input: "",
               path: ["buttons", index],
               code: "custom",
-              message: "product retailer id required",
+              message: "Choose a product for this button",
             });
           }
           break;
@@ -416,16 +435,18 @@ export const templateSchema = z
     const typeNotString = typeof value !== "string";
     if (format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE && typeNotString) {
       errorMessage =
-        !imageType.includes(value?.type ?? "") && `Incorrect Type use only ${imageType?.join(",")}`;
+        !imageType.includes(value?.type ?? "") &&
+        "The header is set to Image, so choose a PNG or JPG file.";
     } else if (format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO && typeNotString) {
       errorMessage =
-        !videoType.includes(value?.type ?? "") && `Incorrect Type use only ${videoType?.join(",")}`;
+        !videoType.includes(value?.type ?? "") &&
+        "The header is set to Video, so choose an MP4 file.";
     } else if (format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.DOCUMENT && typeNotString) {
       errorMessage =
         !documentType.includes(value?.type ?? "") &&
-        `Incorrect Type use only ${documentType?.join(",")}`;
+        "The header is set to Document, so choose a PDF, PNG, JPG or MP4 file.";
     } else if (format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT && !value) {
-      errorMessage = "Header Text Needed";
+      errorMessage = "Enter the header text.";
     }
     if (errorMessage)
       issues.push({
@@ -440,7 +461,7 @@ export const templateSchema = z
         issues.push({
           path: ["mediaCarousel"],
           code: "custom",
-          message: "Minimum 2 cards required",
+          message: "Add at least 2 cards to the carousel.",
           input: "",
         });
         return;
@@ -451,14 +472,14 @@ export const templateSchema = z
           issues.push({
             path: ["mediaCarousel", index],
             code: "custom",
-            message: "Every card should have body",
+            message: "Card body is required",
             input: "",
           });
         } else if (!card.header) {
           issues.push({
             path: ["mediaCarousel", index],
             code: "custom",
-            message: "Every card should have header",
+            message: "Choose an image or video for this card.",
             input: "",
           });
         } else if (
@@ -471,7 +492,7 @@ export const templateSchema = z
             issues.push({
               path: ["mediaCarousel", index],
               code: "custom",
-              message: `Incorrect Type use only ${imageType.join(",")}`,
+              message: "This card is set to Image, so choose a PNG or JPG file.",
               input: "",
             });
           }
@@ -483,7 +504,7 @@ export const templateSchema = z
             issues.push({
               path: ["mediaCarousel", index],
               code: "custom",
-              message: `Incorrect Type use only ${videoType.join(",")}`,
+              message: "This card is set to Video, so choose an MP4 file.",
               input: "",
             });
           }
@@ -491,7 +512,7 @@ export const templateSchema = z
           issues.push({
             path: ["mediaCarousel", index],
             code: "custom",
-            message: "Atleast 1 button required",
+            message: "Each card needs at least 1 button",
             input: "",
           });
         }
@@ -503,7 +524,7 @@ export const templateSchema = z
         issues.push({
           path: ["productCarousel"],
           code: "custom",
-          message: "Minimum 2 cards required",
+          message: "Add at least 2 cards to the carousel.",
           input: "",
         });
         return;
@@ -514,7 +535,7 @@ export const templateSchema = z
           issues.push({
             path: ["productCarousel", index],
             code: "custom",
-            message: "Every card should have same button action",
+            message: "Every card must use the same button action as card 1",
             input: "",
           });
           return;

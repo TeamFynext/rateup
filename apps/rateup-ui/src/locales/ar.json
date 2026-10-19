@@ -3075,6 +3075,7 @@
     "Only members who have reached {name} can redeem these.": "يمكن فقط للأعضاء الذين وصلوا إلى {name} استرداد هذه العناصر.",
     "Only messages from customers": "رسائل العملاء فقط",
     "Only one authentication button allowed": "يُسمح بزر مصادقة واحد فقط",
+    "Only PNG or JPG images are supported": "يتم دعم صور PNG أو JPG فقط",
     "Only one button is supported for this type of template. The button text is not editable.": "يتم دعم زر واحد فقط لهذا النوع من القوالب. نص الزر غير قابل للتحرير.",
     "Only reaches customers who have messaged you in the last 24 hours.": "لا يصل إلا إلى العملاء الذين راسلوك خلال الـ 24 ساعة الماضية.",
     "Only required if this chatbot includes a lead automation step that sends messages via a specific WhatsApp number.": "مطلوب فقط إذا كان برنامج الدردشة الآلي هذا يتضمن خطوة أتمتة تؤدي إلى إرسال الرسائل عبر رقم WhatsApp محدد.",
