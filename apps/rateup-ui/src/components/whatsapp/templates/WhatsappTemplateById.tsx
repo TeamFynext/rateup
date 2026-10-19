@@ -50,7 +50,11 @@ import CardCarousel, {
   ProductCardCarouselPreview,
 } from "@/components/whatsapp/templates/Details/CardCarousel.tsx";
 import { HeaderWithFormatting } from "@/components/whatsapp/templates/Details/HeaderWithFormating.tsx";
-import type { TemplateFormValues } from "@/components/whatsapp/templates/Details/template-form.ts";
+import {
+  firstErrorMessage,
+  friendlyWhatsAppError,
+  type TemplateFormValues,
+} from "@/components/whatsapp/templates/Details/template-form.ts";
 import { TextFormateToolBar } from "@/components/whatsapp/templates/Details/TextFormateToolBar.tsx";
 import TextWithFormatting from "@/components/whatsapp/templates/Details/TextWithFormating.tsx";
 import type { WaTemplateDefaultValues } from "@/components/whatsapp/templates/Schema/templateSchema.ts";
@@ -382,30 +386,21 @@ export function WhatsappTemplateById({
   );
   if (templateId && isPending) return <RateupLoader />;
 
-  /** First validation message from an RHF error tree, for the toast. */
-  function firstErrorMessage(errors: unknown): string | undefined {
-    if (!errors || typeof errors !== "object") return undefined;
-    for (const value of Object.values(errors as Record<string, unknown>)) {
-      const message = (value as { message?: unknown } | null)?.message;
-      if (typeof message === "string") return message;
-      if (value && typeof value === "object") {
-        const nested = firstErrorMessage(value);
-        if (nested) return nested;
-      }
-    }
-    return undefined;
-  }
-
   async function handleSubmit(saveAsDraft: boolean = false) {
     const isValid = await form.trigger();
     if (!isValid) {
-      toast.error(firstErrorMessage(form.formState.errors) ?? "Error in Template");
+      toast.error(
+        firstErrorMessage(form.formState.errors) ?? "Please check the template and try again.",
+      );
       return;
     }
     if (isOrderCreate) {
       const configIsValid = await configForm.trigger();
       if (!configIsValid) {
-        toast.error(firstErrorMessage(configForm.formState.errors) ?? "Error in Template");
+        toast.error(
+          firstErrorMessage(configForm.formState.errors) ??
+            "Please check the template and try again.",
+        );
         return;
       }
     }
@@ -560,12 +555,11 @@ export function WhatsappTemplateById({
     } catch (error) {
       if (saveAsDraft) setIsSubmittingDraft(false);
       else setIsSubmitting(false);
+      const apiMessage = typeof error === "string" ? error : getApiErrorMessage(error);
       toast.error(
-        typeof error === "string"
-          ? error
-          : typeof getApiErrorMessage(error) === "string"
-            ? getApiErrorMessage(error)
-            : "error in uploading",
+        typeof apiMessage === "string"
+          ? friendlyWhatsAppError(apiMessage)
+          : "Couldn't save the template. Please try again.",
       );
     }
   }

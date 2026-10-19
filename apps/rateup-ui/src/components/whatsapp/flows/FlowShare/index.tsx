@@ -347,12 +347,18 @@ export default function FlowShare({ flowName, flowDbId, survey, surveyId }: Flow
               <div className="flex gap-2">
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/png,image/jpeg"
                   className="hidden"
                   id="flow-image-upload"
                   onChange={async (e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
+                    // WhatsApp rejects any other format (WebP, SVG, GIF...) as a message header image.
+                    if (!["image/png", "image/jpeg"].includes(file.type)) {
+                      toast.error("Only PNG or JPG images are supported");
+                      e.target.value = "";
+                      return;
+                    }
 
                     try {
                       setImageUploading(true);

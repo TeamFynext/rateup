@@ -3201,6 +3201,7 @@
     "Only messages from customers": "رسائل العملاء فقط",
     "Only needed when the flow sends messages from a specific WhatsApp number.": "مطلوب فقط عندما يرسل التدفق رسائل من رقم WhatsApp محدد.",
     "Only one authentication button allowed": "يُسمح بزر مصادقة واحد فقط",
+    "Only PNG or JPG images are supported": "يتم دعم صور PNG أو JPG فقط",
     "Only one button is supported for this type of template. The button text is not editable.": "يتم دعم زر واحد فقط لهذا النوع من القوالب. نص الزر غير قابل للتحرير.",
     "Only people who can manage webhooks can see the secret.": "فقط الأشخاص الذين يمكنهم إدارة خطافات الويب يمكنهم رؤية السر.",
     "Only reaches customers who have messaged you in the last 24 hours.": "لا يصل إلا إلى العملاء الذين راسلوك خلال الـ 24 ساعة الماضية.",
