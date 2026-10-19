@@ -141,6 +141,11 @@ function FlowShareTemplateEditor({
   const max_mb = 1;
   const onImageUpload = (file: File) => {
     if (!file) return;
+    // WhatsApp rejects any other format (WebP, SVG, GIF...) as a message header image.
+    if (!["image/png", "image/jpeg"].includes(file.type)) {
+      toast.error(translations("Only PNG or JPG images are supported"));
+      return;
+    }
     if (file.size > max_mb * 1024 * 1024) {
       toast.error(`Max file size is ${max_mb} MB`);
       return;
@@ -177,7 +182,7 @@ function FlowShareTemplateEditor({
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/png,image/jpeg,image/svg+xml,image/webp"
+            accept="image/png,image/jpeg"
             className="hidden"
             onChange={(e) => {
               const file = e.target.files?.[0];

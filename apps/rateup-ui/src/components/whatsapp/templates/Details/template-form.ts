@@ -76,3 +76,42 @@ export const removeItem = (form: TemplateForm, p: string, index: number) =>
     p,
     readList(form, p).filter((_, i) => i !== index),
   );
+
+const CAROUSEL_FIELDS = new Set(["mediaCarousel", "productCarousel"]);
+
+/**
+ * First validation message in an RHF error tree, for the save toast. The toast is all the
+ * customer sees, so an error inside a carousel card names the card ("Card 2: …").
+ */
+export function firstErrorMessage(errors: unknown, trail: string[] = []): string | undefined {
+  if (!errors || typeof errors !== "object") return undefined;
+  for (const [key, value] of Object.entries(errors as Record<string, unknown>)) {
+    // RHF keeps the field's DOM element under `ref`; it holds no messages.
+    if (key === "ref") continue;
+    const message = (value as { message?: unknown } | null)?.message;
+    if (typeof message === "string" && message) {
+      const [field, cardIndex] = [...trail, key];
+      return field && CAROUSEL_FIELDS.has(field) && cardIndex && /^\d+$/.test(cardIndex)
+        ? `Card ${Number(cardIndex) + 1}: ${message}`
+        : message;
+    }
+    if (value && typeof value === "object") {
+      const nested = firstErrorMessage(value, [...trail, key]);
+      if (nested) return nested;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Rewrites WhatsApp's own rejection messages that customers can't act on. Anything not
+ * recognised is returned unchanged.
+ */
+export function friendlyWhatsAppError(message: string): string {
+  const missing = /Button at index (\d+) is missing expected field\(s\) \((.+?)\)/i.exec(message);
+  if (missing) {
+    const field = missing[2] === "text" ? "text" : missing[2]!.replace(/_/g, " ");
+    return `Button ${Number(missing[1]) + 1} has no ${field}. Fill it in and save again.`;
+  }
+  return message;
+}
