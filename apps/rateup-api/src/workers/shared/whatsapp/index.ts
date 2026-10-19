@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc.js";
 import { log } from "../logger.js";
-import { publisher } from "../ws.publisher.js";
+import { publisher, WS_CHANNEL } from "../ws.publisher.js";
 import prisma from "../../../utils/prisma.js";
 import dbPool from "../../../utils/db.js";
 import { Prisma } from "../../../../generated/prisma/client.js";
@@ -164,8 +164,6 @@ export interface EnqueueCampaignMessagesOptions {
    */
   campaignSendId: string;
   scheduledAt?: string | null;
-  /** Decrypted once for the whole batch by the caller. */
-  accessToken?: string;
   surveyTeamMapId?: string | null;
   connection?: any;
   /**
@@ -189,7 +187,6 @@ export async function enqueueCampaignMessages({
   campaignId,
   campaignSendId,
   scheduledAt,
-  accessToken,
   surveyTeamMapId,
   connection,
   dailySendLimit,
@@ -197,7 +194,6 @@ export async function enqueueCampaignMessages({
   if (!participants.length) {
     return;
   }
-  const campaignJobIds = [];
   // Calculate delay once if scheduledAt is provided
   const baseDelay = scheduledAt ? dayjs(scheduledAt).diff(dayjs(), "millisecond") : 0;
 
@@ -238,7 +234,8 @@ export async function enqueueCampaignMessages({
       orgId: participant.orgId,
       name: participant.name,
       customFields: participant.customFields,
-      accessToken,
+      // No access token: one copy per recipient sat in Redis for as long as the
+      // job did. The dispatcher resolves it by `phoneId` (`accessTokenCache.ts`).
       scheduledAt,
       campaignId,
       campaignSendId,
@@ -264,17 +261,22 @@ export async function enqueueCampaignMessages({
     },
   }));
 
+  // Keyed by send, not campaign, so "the queue has drained" is answerable per
+  // attempt — which is what closes a CampaignSend and schedules the next retry.
+  const jobsKey = campaignSendJobsKey(campaignSendId);
+
   // Add jobs in batches to prevent memory issues
   for (let i = 0; i < jobs.length; i += BATCH_SIZE) {
     const batch = jobs.slice(i, i + BATCH_SIZE);
-    await queue.addBulk(batch);
+    const batchIds = batch.map((job) => job.opts.jobId);
 
-    campaignJobIds.push(...batch.map((job) => job.opts.jobId));
-  }
-  if (campaignJobIds.length > 0) {
-    // Keyed by send, not campaign, so "the queue has drained" is answerable per
-    // attempt — which is what closes a CampaignSend and schedules the next retry.
-    await connection.sadd(campaignSendJobsKey(campaignSendId), ...campaignJobIds);
+    // Each chunk's ids go into the set *before* its jobs exist. This used to run
+    // once, after every chunk: an undelayed job could finish and SREM its id
+    // before the SADD put it there, so the set never emptied and the send never
+    // closed. If `addBulk` then throws, the ids it never created stay in the set;
+    // that is harmless, because the caller fails the send on the same error.
+    await connection.sadd(jobsKey, ...batchIds);
+    await queue.addBulk(batch);
   }
 
   log.info(
@@ -1018,6 +1020,20 @@ function isCampaignMessage(sourceMessage: string | null | undefined): boolean {
   return String(sourceMessage ?? "").toLowerCase() === "campaign";
 }
 
+/**
+ * Fan `message_status_update` payloads out to the API's sockets. Best-effort:
+ * the statuses are already committed, and failing the batch over a missed
+ * socket push would only get it redelivered.
+ */
+async function publishStatusUpdates(events: string[]): Promise<void> {
+  if (!events.length) return;
+  const results = await Promise.allSettled(
+    events.map((event) => publisher.publish(WS_CHANNEL, event)),
+  );
+  const failed = results.filter((r) => r.status === "rejected").length;
+  if (failed) log.warn(`Failed to publish ${failed}/${events.length} message status updates`);
+}
+
 export async function bulkUpdateStatuses(
   batch: {
     id: string;
@@ -1193,6 +1209,10 @@ export async function bulkUpdateStatuses(
   const dripCampaignStatsUpdates: any[] = [];
   // `message.status` for the org webhook, queued once the writes below have landed.
   const webhookEvents: WebhookEventInput[] = [];
+  // `message_status_update` payloads for the inbox, held for the same reason: a
+  // socket told of a status the transaction then rolled back would show the
+  // agent something the database never kept.
+  const wsEvents: string[] = [];
 
   const processedOffsets: string[] = [];
 
@@ -1250,8 +1270,7 @@ export async function bulkUpdateStatuses(
 
     const { stats, newStatus } = processStatusUpdates(msg.stats, redisData);
     if (messageInfo.contactOrgId) {
-      publisher.publish(
-        "ws:messages",
+      wsEvents.push(
         JSON.stringify({
           orgId: messageInfo.contactOrgId,
           data: {
@@ -1388,9 +1407,11 @@ export async function bulkUpdateStatuses(
     campaignSendStatsUpdates,
   );
 
-  // After the writes, so a receiver never hears of a status the database does not
-  // hold. Only orgs subscribed to `message.status` cost anything past a cache
-  // read, and this never throws into the batch.
+  // After the writes, so neither the inbox nor a receiver hears of a status the
+  // database does not hold — `executeBulkUpdates` throws on rollback, so a
+  // failed batch reaches neither line. Only orgs subscribed to `message.status`
+  // cost anything past a cache read, and neither call throws into the batch.
+  await publishStatusUpdates(wsEvents);
   await emitWebhookEvents(webhookEvents);
 
   return processedOffsets;

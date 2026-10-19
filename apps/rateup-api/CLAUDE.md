@@ -60,7 +60,7 @@ Three independent mechanisms — know which one a task belongs to:
 
 - **BullMQ queues** (`src/utils/redisConnection.ts`) — all `Queue` instances (WhatsApp campaigns, webhooks, notifications, Shopify, etc.) share one ioredis connection (default export). Workers live in `src/jobs/*.worker.ts` and are registered by importing them in `src/jobs/index.ts` (`registerWorkers`). Workers duplicate the base Redis connection. Producers enqueue by importing the relevant queue.
 - **Cron jobs** (`src/plugins/cron.ts`) — `fastify-cron` schedule; each `onTick` calls service functions wrapped in `safeRun()` so one failure doesn't abort the batch. Add recurring work here.
-- **Kafka** (`src/plugins/kafka.ts`) — a single producer is decorated onto the instance as `server.kafka.producer`; connection retries on startup and continues without Kafka if it can't connect.
+- **Kafka** (`src/plugins/kafka.ts`, config in `src/utils/kafka.ts`) — a single producer is decorated onto the instance as `server.kafka.producer`; connection retries on startup and continues without Kafka if it can't connect, then keeps reconnecting in the background. `/api/health` stays a plain liveness check (Railway's deploy healthcheck); `/api/health/ready` answers 503 while Kafka is unreachable. Topics (`status-events`, `wa-webhooks` and their `-dlq`s) are created at boot with 12 partitions; brokers come from `KAFKA_BROKERS` (comma-separated) or `KAFKA_URL`.
 
 ## Conventions & gotchas
 

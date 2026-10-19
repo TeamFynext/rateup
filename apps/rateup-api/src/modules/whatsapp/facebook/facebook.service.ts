@@ -243,7 +243,7 @@ export async function handleFacebookMessages(
   }
 
   try {
-    await handleWaMessages(
+    const stored = await handleWaMessages(
       "receive",
       messaging,
       sender.id,
@@ -253,6 +253,9 @@ export async function handleFacebookMessages(
       undefined,
       message?.mid,
     );
+    // Another delivery of this mid stored it between the check above and here,
+    // and answers it too.
+    if (stored === null) return;
   } catch (error) {
     log.error(
       {
@@ -409,7 +412,11 @@ export async function handleFacebookPostback(
       sender: sender,
     };
 
-    await handleWaMessages(
+    // A postback has no mid of its own. The sender is part of the id because the
+    // id is unique across every org: a timestamp alone let two people tapping in
+    // the same millisecond collide, and the second tap would be dropped as a
+    // redelivery. A real redelivery repeats both, so it still dedupes.
+    const stored = await handleWaMessages(
       "receive",
       messageBody,
       sender.id,
@@ -417,8 +424,9 @@ export async function handleFacebookPostback(
       PlatformType.FACEBOOK,
       sourceIdentifier,
       undefined,
-      `postback_${timestamp}`,
+      `postback_${sender.id}_${timestamp}`,
     );
+    if (stored === null) return;
   } catch (error) {
     log.error({ err: error, senderId: sender.id }, "[Facebook] Error handling postback");
     return;
@@ -470,7 +478,7 @@ export async function handleFacebookQuickReply(
       sender: sender,
     };
 
-    await handleWaMessages(
+    const stored = await handleWaMessages(
       "receive",
       messageBody,
       sender.id,
@@ -480,6 +488,8 @@ export async function handleFacebookQuickReply(
       undefined,
       message.mid,
     );
+    // A redelivered tap: the first copy already ran the flow or rules.
+    if (stored === null) return;
   } catch (error) {
     log.error({ err: error }, `[Facebook] Error handling quick_reply from user ${sender.id}`);
     return;

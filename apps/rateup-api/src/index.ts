@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { LogController } from "fastify";
 import { build } from "./app.js";
+import { initProcessMetrics } from "./utils/metrics.js";
 
 /**
  * API service entrypoint — HTTP only, safe to run at N replicas.
@@ -8,6 +9,8 @@ import { build } from "./app.js";
  * BullMQ consumers and cron jobs run in the worker service (src/worker.ts).
  */
 async function start() {
+  // Served at /api/health/metrics when METRICS_TOKEN is set.
+  initProcessMetrics("api");
   const server = await build({
     // logger: true,
     logController: new LogController({ disableRequestLogging: true }),

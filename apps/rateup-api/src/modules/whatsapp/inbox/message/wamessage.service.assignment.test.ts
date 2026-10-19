@@ -867,6 +867,28 @@ describe("createInternalWaMessage - system notes", () => {
     );
   });
 
+  test("keeps a second event that reuses the client's id, under a fresh id", async () => {
+    // A bulk assign hands every contact the same optimistic id; the unique
+    // messageId index refuses the second write, which is a distinct event.
+    db.waMessage.create
+      .mockRejectedValueOnce(Object.assign(new Error("unique"), { code: "P2002" }))
+      .mockResolvedValueOnce({ id: "row-2" });
+
+    const row = await createInternalWaMessage({
+      contactId: "contact-2",
+      waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
+      trigerredByUser: "user-1",
+      messageId: "client-id-1",
+    });
+
+    expect(row).toEqual({ id: "row-2" });
+    expect(db.waMessage.create).toHaveBeenCalledTimes(2);
+    expect(db.waMessage.create.mock.calls[0][0].data.messageId).toBe("client-id-1");
+    const retried = db.waMessage.create.mock.calls[1][0].data.messageId;
+    expect(retried).not.toBe("client-id-1");
+    expect(retried).toMatch(/^[0-9a-f-]{36}$/);
+  });
+
   test("files the note against the contact's latest ticket", async () => {
     await createInternalWaMessage({
       contactId: "contact-1",

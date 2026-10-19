@@ -103,7 +103,16 @@ import { WaMessageClosedStatus } from "../../constants.js";
 import { getFacebookUserDetailsFromMeta } from "../../facebook/facebook.service.js";
 import { notifyInboundMessage } from "./inboundNotify.js";
 import { assignConversationOwner } from "./assignOwner.service.js";
-//this function automates the process of adding wa contacts and the associated messages to db
+/**
+ * Stores one message, in either direction, on any channel — creating the
+ * contact and conversation it belongs to — and broadcasts it to the inbox.
+ *
+ * Resolves to null when a message with this `messageId` is already stored: the
+ * delivery is a duplicate and nothing after the insert ran. Callers that react
+ * to a message (rules, flows, loyalty, automated replies) must stop there, or a
+ * redelivered webhook runs them twice. Throws when the message could not be
+ * stored.
+ */
 export async function handleWaMessages(
   type: "send" | "receive",
   messageBody: WaMessagePayload,
@@ -358,6 +367,12 @@ export async function handleWaMessages(
           }
         : undefined,
     );
+
+    // Another delivery of this message got there first — a Meta retry, or the
+    // same webhook on another replica. It owns everything below (team map,
+    // events, notifications, the inbox broadcast), and the caller's automations
+    // too: null tells the caller not to run them a second time.
+    if (waMessage === null) return null;
 
     // A ticket with no subject is titled by the message that opened it — the
     // first message is the best one-line description of what it is about. The

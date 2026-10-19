@@ -2,12 +2,15 @@ import { PlatformType } from "../../../../generated/prisma/enums.js";
 import { WaTemplateCategory } from "../../../types/enums.js";
 import { graphApiErrorDetail } from "../../../utils/graphError.js";
 import { log } from "../../../utils/logger.js";
+import { metaSendDuration, metaSendErrors } from "../../../utils/metrics.js";
+import { classifyWaFailure } from "../../../utils/waRetryableErrors.js";
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 import { getWaMessageByMessageId } from "../inbox/message/wamessage.service.js";
 import { callMetaApi, GraphApiError } from "../wa_axios.js";
 import { enqueueWaMessageRecord } from "../../../workers/bullmq/queues/whatsapp.queue.js";
 import { assertCampaignCredit, assertCanMessageContact } from "../whatsappSurvey/wasurvey.auth.js";
 import { getMetaChannel, type MetaChannelContext, type MetaCredentials } from "./metaChannels.js";
+import { getSentMessageId, markMessageSent } from "./sendIdempotency.js";
 
 /**
  * The one way a message leaves this system for Meta.
@@ -51,9 +54,9 @@ export interface MetaSendInput extends MetaChannelContext {
   };
 
   /**
-   * Credentials already in hand. The campaign fan-out decrypts the org's access
-   * token once for a whole batch (see `campaignEnqueue.processor`), so making it
-   * re-resolve per message would undo that.
+   * Credentials already in hand. The campaign dispatcher keeps decrypted tokens
+   * in a short in-process cache (`workers/shared/accessTokenCache.ts`), so making
+   * it re-resolve per message would undo that.
    */
   credentials?: MetaCredentials;
 
@@ -62,12 +65,25 @@ export interface MetaSendInput extends MetaChannelContext {
    * else must not add a new active contact past the allowance. Defaults to true.
    */
   enforcePlanLimits?: boolean;
+
+  /**
+   * Makes the send at-most-once per key: once Meta has accepted a message under
+   * this key, a later call with it records that message (if it is not stored
+   * yet) instead of sending again. The campaign dispatcher passes its BullMQ job
+   * id, so a job that stalls after sending and is rerun does not deliver twice.
+   */
+  idempotencyKey?: string;
 }
 
 export interface MetaSendResult {
   ok: boolean;
   /** Meta's id for the message, when it accepted one. */
   messageId?: string;
+  /**
+   * Meta was not called: an earlier call with the same `idempotencyKey` had
+   * already sent this message. Nothing was spent this time.
+   */
+  replayed?: boolean;
   /** Human-readable reason, suitable for showing to an agent. */
   error?: string;
   detail?: WaGraphApiErrorDetail;
@@ -112,6 +128,7 @@ export async function sendMetaMessage(input: MetaSendInput): Promise<MetaSendRes
     externalApi = false,
     campaign,
     enforcePlanLimits = true,
+    idempotencyKey,
   } = input;
 
   const channel = getMetaChannel(platform);
@@ -120,10 +137,14 @@ export async function sendMetaMessage(input: MetaSendInput): Promise<MetaSendRes
     return { ok: false, error: `No Meta channel for platform ${platform}` };
   }
 
+  // Read before the plan check, which spends a campaign credit: a rerun of a
+  // message that already went out must not pay for it twice either.
+  const priorMessageId = idempotencyKey ? await getSentMessageId(idempotencyKey) : null;
+
   // Throws ActiveContactLimitError / CampaignCreditsExhaustedError, which callers turn
   // into a 4xx or a campaign pause. Not converted to a result: it is a quota decision,
   // not a send outcome.
-  if (enforcePlanLimits) {
+  if (enforcePlanLimits && !priorMessageId) {
     if (campaign) await assertCampaignCredit(orgId);
     else await assertCanMessageContact(orgId, to ? { platform, customerId: to } : undefined);
   }
@@ -213,9 +234,11 @@ export async function sendMetaMessage(input: MetaSendInput): Promise<MetaSendRes
     for (const delayMs of RECORD_RETRY_DELAYS_MS) {
       await new Promise((resolve) => setTimeout(resolve, delayMs));
       try {
-        // The first attempt may have written the row and failed afterwards.
+        // The first attempt may have written the row and failed afterwards. The
+        // read is an early exit; a racing store is caught by the unique
+        // `messageId` index, and `store()` then resolves to null — done either way.
         if (await getWaMessageByMessageId(messageId)) return;
-        await store();
+        if ((await store()) === null) return;
         log.warn({ orgId, platform, messageId }, "Message stored on retry");
         return;
       } catch (err) {
@@ -229,6 +252,22 @@ export async function sendMetaMessage(input: MetaSendInput): Promise<MetaSendRes
     );
   };
 
+  if (priorMessageId) {
+    // The earlier run may have died before, during or after storing it. Only the
+    // first of those leaves anything to do.
+    log.warn(
+      { orgId, platform, idempotencyKey, messageId: priorMessageId },
+      "Message already sent under this key; recording instead of sending again",
+    );
+    if (to && !(await getWaMessageByMessageId(priorMessageId))) {
+      await record(to, priorMessageId, false);
+    }
+    return { ok: true, messageId: priorMessageId, replayed: true };
+  }
+
+  // Times the Graph call alone; the store afterwards has its own latency story.
+  let endSendTimer: ((labels: { outcome: string }) => void) | undefined =
+    metaSendDuration.startTimer({ platform });
   try {
     const usesQueryToken = credentials.auth === "query";
     const response = await callMetaApi(
@@ -238,8 +277,13 @@ export async function sendMetaMessage(input: MetaSendInput): Promise<MetaSendRes
       payload,
       usesQueryToken ? { params: { access_token: credentials.accessToken } } : {},
     );
+    endSendTimer({ outcome: "ok" });
+    endSendTimer = undefined;
 
     const messageId = channel.extractMessageId(response.data);
+    // Before recording, which is the slow part and so the likeliest place for a
+    // stalled job to die.
+    if (idempotencyKey && messageId) await markMessageSent(idempotencyKey, messageId);
     const recipient = to || channel.extractRecipientId?.(response.data);
     if (recipient) {
       await record(recipient, messageId, false);
@@ -251,6 +295,12 @@ export async function sendMetaMessage(input: MetaSendInput): Promise<MetaSendRes
     return { ok: true, messageId };
   } catch (err) {
     const detail = graphApiErrorDetail(err);
+    endSendTimer?.({ outcome: "error" });
+    metaSendErrors.inc({
+      platform,
+      code: detail.code === undefined || detail.code === null ? "none" : String(detail.code),
+      class: classifyWaFailure(detail.code, detail.httpStatus),
+    });
     log.error(
       { err, orgId, platform, to },
       err instanceof GraphApiError ? "Meta rejected the message" : "Meta send failed",
