@@ -1,3 +1,4 @@
+import { postWebhook } from "./deliver.mjs";
 import { fixtures } from "./fixtures.mjs";
 
 /**
@@ -149,7 +150,7 @@ export function buildWebhook({ name, vars = {}, ...target }) {
  * > inbound message can trigger an automated reply, which is an outbound
  * > WhatsApp send — pointed at the real Graph host, that reaches a real phone.
  */
-export async function replayWebhook({ name, vars = {}, target, ...ids }) {
+export async function replayWebhook({ name, vars = {}, target, appSecret, ...ids }) {
   const payload = buildWebhook({ name, vars, ...ids });
   if (!payload) {
     return {
@@ -160,11 +161,7 @@ export async function replayWebhook({ name, vars = {}, target, ...ids }) {
   }
 
   try {
-    const response = await fetch(target, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    const response = await postWebhook(target, payload, appSecret);
     const text = await response.text().catch(() => "");
     return {
       ok: response.ok,

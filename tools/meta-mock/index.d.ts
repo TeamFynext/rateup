@@ -57,6 +57,8 @@ export interface MetaMockOptions {
   defaultApi?: "whatsapp" | "instagram";
   /** Where replayed webhooks and status callbacks are delivered. */
   webhookUrl?: string;
+  /** App secret webhooks are signed with (X-Hub-Signature-256). Unsigned when absent. */
+  appSecret?: string;
   verbose?: boolean;
   /** Deliver sent → delivered → read after each send. Off by default. */
   statusProgression?: boolean;
@@ -103,6 +105,8 @@ export interface MetaMock {
   readonly config: {
     statusProgression: boolean;
     webhookUrl: string;
+    /** Whether deliveries carry X-Hub-Signature-256. */
+    signsWebhooks: boolean;
     failureRate: number;
     statusJitter: number;
     /** The Graph error code every send is currently refused with, or null. */
@@ -163,7 +167,7 @@ export function listWebhooks(): Array<{
 export function apiOf(body: unknown): "whatsapp" | "instagram" | null;
 export function buildWebhook(request: WebhookRequest): unknown | null;
 export function replayWebhook(
-  request: WebhookRequest & { target: string },
+  request: WebhookRequest & { target: string; appSecret?: string },
 ): Promise<WebhookResult>;
 export function retarget(payload: unknown, ids: Omit<WebhookRequest, "name" | "vars">): unknown;
 export function matchFixture(

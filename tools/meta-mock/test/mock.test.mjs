@@ -412,6 +412,53 @@ test("a single status can be fired by hand", async () => {
   });
 });
 
+test("webhooks are signed with the app secret, the way Meta signs them", async () => {
+  const { createHmac } = await import("node:crypto");
+  const { createServer } = await import("node:http");
+  const received = [];
+  const sink = createServer((req, res) => {
+    let raw = "";
+    req.on("data", (chunk) => (raw += chunk));
+    req.on("end", () => {
+      received.push({ raw, signature: req.headers["x-hub-signature-256"] });
+      res.writeHead(200).end("{}");
+    });
+  });
+  await new Promise((resolve) => sink.listen(0, "127.0.0.1", resolve));
+  const sinkUrl = `http://127.0.0.1:${sink.address().port}/webhook`;
+  const sign = (raw) => `sha256=${createHmac("sha256", "s3cret").update(raw).digest("hex")}`;
+
+  try {
+    await withMock(
+      async (mock) => {
+        assert.equal(mock.config.signsWebhooks, true);
+        await mock.replayWebhook({ name: "Received Text Message", phoneNumberId: "222" });
+        await fetch(`${mock.url}/__stub/status`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ messageId: "wamid.ABC", recipientId: "91999", status: "read" }),
+        });
+      },
+      { webhookUrl: sinkUrl, appSecret: "s3cret" },
+    );
+    assert.equal(received.length, 2);
+    for (const { raw, signature } of received) assert.equal(signature, sign(raw));
+
+    // No secret, no header — the mock never invents one.
+    received.length = 0;
+    await withMock(
+      async (mock) => {
+        assert.equal(mock.config.signsWebhooks, false);
+        await mock.replayWebhook({ name: "Received Text Message" });
+      },
+      { webhookUrl: sinkUrl },
+    );
+    assert.equal(received[0].signature, undefined);
+  } finally {
+    await new Promise((resolve) => sink.close(resolve));
+  }
+});
+
 test("a replayed inbound message can carry the text a test chose", async () => {
   await withSink(async (sinkUrl, received) => {
     await withMock(

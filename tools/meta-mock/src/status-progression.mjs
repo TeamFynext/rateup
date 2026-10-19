@@ -1,3 +1,5 @@
+import { postWebhook } from "./deliver.mjs";
+
 /**
  * The statuses that follow a send.
  *
@@ -108,6 +110,7 @@ export function runStatusProgression({
   messageId,
   recipientId,
   target,
+  appSecret,
   identity,
   delays = {},
   jitter = 0,
@@ -129,11 +132,7 @@ export function runStatusProgression({
     });
 
     try {
-      const response = await fetch(target, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const response = await postWebhook(target, payload, appSecret);
       log(`status ${status} -> ${target} (${response.status})`);
     } catch (error) {
       log(`status ${status} could not reach ${target}: ${error.message}`);

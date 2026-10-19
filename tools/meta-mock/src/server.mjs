@@ -11,6 +11,7 @@ import {
 } from "./graph-errors.mjs";
 import { createGraphRoutes } from "./graph-routes.mjs";
 import { runStatusProgression, statusPayload } from "./status-progression.mjs";
+import { postWebhook } from "./deliver.mjs";
 import { listWebhooks, replayWebhook } from "./webhooks.mjs";
 
 /**
@@ -47,6 +48,13 @@ export function createMetaMock(options = {}) {
     options.webhookUrl ??
     process.env.META_MOCK_WEBHOOK_URL ??
     "http://localhost:3001/api/wa/webhook";
+
+  /**
+   * The app secret webhooks are signed with — the app's `waclient_secret`.
+   * rateup-api refuses unsigned deliveries unless META_WEBHOOK_SIGNATURES is
+   * `log` or `off`, so without this every callback is answered 401.
+   */
+  const appSecret = (options.appSecret ?? process.env.META_MOCK_APP_SECRET)?.trim() || undefined;
 
   /**
    * Deliver sent → delivered → read after each send.
@@ -144,6 +152,7 @@ export function createMetaMock(options = {}) {
         messageId,
         recipientId,
         target: webhookTarget,
+        appSecret,
         identity: { ...identity, phoneNumberId: identity.phoneNumberId || phoneNumberId },
         delays: statusDelays,
         jitter: statusJitter,
@@ -252,7 +261,7 @@ export function createMetaMock(options = {}) {
         });
         return true;
       }
-      const result = await replayWebhook({ target: webhookTarget, ...request });
+      const result = await replayWebhook({ target: webhookTarget, appSecret, ...request });
       send(res, result.ok ? 200 : 502, result);
       return true;
     }
@@ -270,11 +279,7 @@ export function createMetaMock(options = {}) {
 
       const payload = statusPayload({ ...identity, ...request });
       try {
-        const response = await fetch(webhookTarget, {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+        const response = await postWebhook(webhookTarget, payload, appSecret);
         send(res, response.ok ? 200 : 502, {
           ok: response.ok,
           status: response.status,
@@ -469,6 +474,7 @@ export function createMetaMock(options = {}) {
     config: {
       statusProgression,
       webhookUrl: webhookTarget,
+      signsWebhooks: Boolean(appSecret),
       failureRate,
       statusJitter,
       get sendError() {
@@ -499,7 +505,7 @@ export function createMetaMock(options = {}) {
       state.sendErrorRate = parseRate(rate);
       if (codes !== undefined) state.sendErrorCodes = parseErrorCodes(codes);
     },
-    replayWebhook: (request) => replayWebhook({ target: webhookTarget, ...request }),
+    replayWebhook: (request) => replayWebhook({ target: webhookTarget, appSecret, ...request }),
     webhooks: listWebhooks,
     fixtures,
     server,

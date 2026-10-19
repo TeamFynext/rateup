@@ -334,6 +334,7 @@ segment. Matching only one spelling leaves every Instagram path with an extra
 | `PORT` | `8081` |
 | `META_MOCK_HOST` | `127.0.0.1` |
 | `META_MOCK_WEBHOOK_URL` | `http://localhost:3001/api/wa/webhook` |
+| `META_MOCK_APP_SECRET` | unset; the app's `waclient_secret`. Webhooks are signed with `X-Hub-Signature-256` like Meta's — without it rateup-api refuses them 401 |
 | `META_MOCK_DEFAULT_API` | `whatsapp` — which API wins on shared endpoints |
 | `META_MOCK_STATUS_PROGRESSION` | unset; `1` fires sent → delivered → read after each send |
 | `META_MOCK_WABA_ID` | stamped onto status callbacks so the app resolves the tenant |
