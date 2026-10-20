@@ -48,6 +48,8 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     kinds: ["new"],
     area: "Settings",
     link: { to: "/dashboard/features", label: "Open Features" },
+  },
+  {
     id: "2026-10-17-messenger-welcome-menu",
     title: "Get Started button, ice breakers and menu for Messenger",
     summary:
