@@ -3,7 +3,7 @@ import { useId, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useGetWebhookClientSecret } from "@/backend/org/org.query";
-import { ApiCopyButton } from "@/components/ExternalApi/ApiAccessKey.tsx";
+import { ApiCopyButton } from "@/components/ExternalApi/ApiCopyButton.tsx";
 import PremiumFeature from "@/components/Premium/PremiumFeature.tsx";
 import type { SurveyUpdateMutation } from "@/components/Survey/Settings/updateSettings.ts";
 import { Button } from "@/components/ui/button.tsx";

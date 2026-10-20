@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigate, useRouter } from "@tanstack/react-router";
-import React from "react";
+import { IconArrowLeft } from "@tabler/icons-react";
+import { Link, useNavigate, useRouter } from "@tanstack/react-router";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 
 import {
@@ -11,10 +12,12 @@ import {
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 
+import { findAutomationTemplate, templateFormValues } from "../automation-templates.ts";
 import RuleBuilderForm from "./RuleBuilderForm.tsx";
 import RuleShare from "./RuleShare.tsx";
 import type { CreateRuleInput, CreateRuleValues, Platform } from "./schema.ts";
-import { createRuleSchema } from "./schema.ts";
+import { asPlatform, createRuleSchema, DEFAULT_RULE_VALUES } from "./schema.ts";
+import { AutomationPreviewButton } from "./wizard/AutomationPreview.tsx";
 
 interface WhatsappAutomationRuleBuilderProps {
   ruleId?: string;
@@ -22,35 +25,9 @@ interface WhatsappAutomationRuleBuilderProps {
   initialTriggerEvent?: string;
   /** Preselects the channel when a rule is started from that channel's own page. */
   initialChannelId?: string;
+  /** An `AUTOMATION_TEMPLATES` id, picked before the wizard opened. */
+  initialTemplateId?: string;
 }
-
-const defaultValues = {
-  platform: "WHATSAPP",
-  whatsappSettingsPhoneIds: [],
-  name: "",
-  triggerEvent: "MESSAGE_RECEIVED",
-  operator: "AND",
-  isActive: true,
-  groups: [
-    {
-      operator: "AND",
-      conditions: [{ field: "MESSAGE_BODY", operator: "CONTAINS", value: "" }],
-    },
-  ],
-  actions: [{ type: "TRIGGER_CHATBOT", value: "" }],
-  options: {
-    sendOncePerDay: false,
-    businessHours: {
-      enabled: false,
-      businessHoursId: undefined,
-    },
-    instagramScope: "ALL",
-    instagramPostIds: [],
-    instagramPublicReplies: [],
-    shopifyProductIds: [],
-    wooProductIds: [],
-  },
-} satisfies Partial<CreateRuleValues>;
 
 type SavedRule = NonNullable<ReturnType<typeof useRuleById>["data"]>;
 
@@ -72,23 +49,28 @@ function toFormValues(
 ): CreateRuleInput {
   if (!rule) {
     return {
-      ...defaultValues,
-      ...(initial.initialPlatform && { platform: initial.initialPlatform }),
+      ...DEFAULT_RULE_VALUES,
+      ...(initial.initialPlatform && {
+        platform: initial.initialPlatform,
+        platforms: [initial.initialPlatform],
+      }),
       ...(initial.initialTriggerEvent && { triggerEvent: initial.initialTriggerEvent }),
       ...(initial.initialChannelId && { whatsappSettingsPhoneIds: [initial.initialChannelId] }),
     };
   }
   return {
-    ...defaultValues,
+    ...DEFAULT_RULE_VALUES,
     ...rule,
     whatsappSettingsPhoneIds: rule.whatsappSettingsPhoneIds || [],
+    // A rule saved before multi-channel rules names only its one platform.
+    platforms: rule.platforms?.length ? rule.platforms : [rule.platform],
     groups: rule.groups || [],
     // The API models "no value" as `null`; the form schema models it as an empty value.
     actions: (rule.actions || []).map((action) =>
       action.value === null ? { ...action, value: "" } : action,
     ),
     // Saved options only hold what was set; the defaults fill in options added since.
-    options: { ...defaultValues.options, ...rule.options },
+    options: { ...DEFAULT_RULE_VALUES.options, ...rule.options },
   };
 }
 
@@ -97,6 +79,7 @@ const WhatsappAutomationRuleBuilder: React.FC<WhatsappAutomationRuleBuilderProps
   initialPlatform,
   initialTriggerEvent,
   initialChannelId,
+  initialTemplateId,
 }) => {
   const isEditMode = Boolean(ruleId && ruleId !== "new");
   const { data: ruleData, isLoading: isRuleLoading } = useRuleById(
@@ -111,17 +94,24 @@ const WhatsappAutomationRuleBuilder: React.FC<WhatsappAutomationRuleBuilderProps
     );
   }
 
+  const newRuleValues = toFormValues(undefined, {
+    initialPlatform,
+    initialTriggerEvent,
+    initialChannelId,
+  });
+  const template = isEditMode ? undefined : findAutomationTemplate(initialTemplateId);
+
   return (
     <RuleEditor
       // A different rule is a different form, never a reset of this one.
       key={ruleData?.id ?? "new"}
       ruleId={isEditMode ? ruleId : undefined}
       ruleData={isEditMode ? ruleData : undefined}
-      initialValues={toFormValues(isEditMode ? ruleData : undefined, {
-        initialPlatform,
-        initialTriggerEvent,
-        initialChannelId,
-      })}
+      initialValues={
+        isEditMode ? toFormValues(ruleData, {}) : templateFormValues(template, newRuleValues)
+      }
+      baseValues={newRuleValues}
+      initialTemplateId={template?.id}
     />
   );
 };
@@ -130,7 +120,9 @@ const RuleEditor: React.FC<{
   ruleId: string | undefined;
   ruleData: SavedRule | undefined;
   initialValues: CreateRuleInput;
-}> = ({ ruleId, ruleData, initialValues }) => {
+  baseValues: CreateRuleInput;
+  initialTemplateId: string | undefined;
+}> = ({ ruleId, ruleData, initialValues, baseValues, initialTemplateId }) => {
   const isEditMode = Boolean(ruleId);
   const navigate = useNavigate();
   const { history } = useRouter();
@@ -140,7 +132,13 @@ const RuleEditor: React.FC<{
   const form = useForm<CreateRuleInput, unknown, CreateRuleValues>({
     resolver: zodResolver(createRuleSchema),
     defaultValues: initialValues,
+    mode: "onTouched",
   });
+
+  const rule = form.watch();
+  // One platform switch, two places: the device preview's toolbar and the Share tab.
+  const [platform, setPlatform] = useState<Platform>();
+  const ruleName = rule.name;
 
   // Use saved data for Share functionality
   const savedTriggerEvent = ruleData?.triggerEvent;
@@ -151,7 +149,10 @@ const RuleEditor: React.FC<{
     g.conditions.some((c) => c.field === "MESSAGE_BODY" && c.value),
   );
 
-  const savedPlatform = ruleData?.platform ?? "WHATSAPP";
+  // A rule saved before multi-channel rules names only its one platform.
+  const savedPlatforms = ruleData?.platforms?.length
+    ? ruleData.platforms
+    : [ruleData?.platform ?? "WHATSAPP"];
   const showShareTab = savedTriggerEvent === "MESSAGE_RECEIVED" && hasKeywords;
 
   const onSubmit = (data: CreateRuleValues) => {
@@ -180,38 +181,58 @@ const RuleEditor: React.FC<{
 
   const isPending = createMutation.isPending || updateMutation.isPending;
 
-  let buttonText = "Create Automation";
-  if (isPending) {
-    buttonText = "Saving";
-  } else if (isEditMode) {
-    buttonText = "Update Automation";
-  }
-
   return (
-    <Tabs defaultValue="builder" className="max-w-4xl mx-auto relative h-full">
-      <div className="flex items-center justify-between mb-6">
-        <TabsList>
-          <TabsTrigger value="builder">Builder</TabsTrigger>
-          {showShareTab && <TabsTrigger value="share">Share</TabsTrigger>}
-        </TabsList>
-      </div>
+    // The chrome the campaign wizard uses: a 56px breadcrumb bar over the wizard itself.
+    <Tabs defaultValue="builder" className="bg-background h-full min-h-0 gap-0">
+      <header className="border-border bg-card flex h-14 shrink-0 items-center justify-between gap-4 border-b px-8">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <Link
+            to="/dashboard/automation"
+            className="text-muted-foreground hover:text-foreground inline-flex shrink-0 items-center gap-1 text-[13px]"
+          >
+            <IconArrowLeft className="size-3.5" aria-hidden />
+            Automations
+          </Link>
+          <span className="text-muted-foreground/50" aria-hidden>
+            /
+          </span>
+          <span className="font-display truncate text-[15px] font-semibold">
+            {ruleName || (isEditMode ? "Untitled automation" : "New automation")}
+          </span>
+        </div>
+        <div className="flex shrink-0 items-center gap-3">
+          {showShareTab && (
+            <TabsList>
+              <TabsTrigger value="builder">Builder</TabsTrigger>
+              <TabsTrigger value="share">Share</TabsTrigger>
+            </TabsList>
+          )}
+          <AutomationPreviewButton rule={rule} picked={platform} onPick={setPlatform} />
+        </div>
+      </header>
 
-      <TabsContent value="builder" className="mt-0">
+      <TabsContent value="builder" className="flex min-h-0 flex-col">
         <RuleBuilderForm
           form={form}
           onSubmit={onSubmit}
           onCancel={() => history.back()}
           isPending={isPending}
-          buttonText={buttonText}
+          isEdit={isEditMode}
+          initialTemplateId={initialTemplateId}
+          baseValues={baseValues}
         />
       </TabsContent>
 
-      <TabsContent value="share">
-        <RuleShare
-          groups={savedGroups || []}
-          channels={savedChannels || []}
-          platform={savedPlatform}
-        />
+      <TabsContent value="share" className="min-h-0 overflow-y-auto px-8 py-8">
+        <div className="mx-auto max-w-3xl">
+          <RuleShare
+            groups={savedGroups || []}
+            channels={savedChannels || []}
+            platforms={savedPlatforms}
+            platform={platform}
+            onPlatformChange={(value) => setPlatform(asPlatform(value))}
+          />
+        </div>
       </TabsContent>
     </Tabs>
   );

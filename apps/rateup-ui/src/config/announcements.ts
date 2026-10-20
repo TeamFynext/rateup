@@ -40,6 +40,115 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-10-17-messenger-welcome-menu",
+    title: "Get Started button, ice breakers and menu for Messenger",
+    summary:
+      "Set the greeting and Get Started button people see when they first message your Page, add tap-to-ask questions and an always-there menu, each starting the chatbot you choose.",
+    publishedAt: "2026-10-17",
+    kinds: ["new"],
+    area: "Messenger",
+    link: { to: "/dashboard/messenger", label: "Set it up" },
+  },
+  {
+    id: "2026-10-17-facebook-comment-replies",
+    title: "Reply to Facebook comments in Messenger",
+    summary:
+      "When someone comments on your Page's posts, send them a private Messenger reply or start a chatbot, and thank them publicly under the comment.",
+    publishedAt: "2026-10-17",
+    kinds: ["new"],
+    area: "Messenger",
+    link: { to: "/dashboard/messenger", label: "Set it up" },
+  },
+  {
+    id: "2026-10-17-messenger-m-me-links",
+    title: "m.me links start a Messenger automation",
+    summary:
+      "Share an m.me link or QR code on your website, ads or emails. When someone opens it, the chatbot or message you choose starts right away.",
+    publishedAt: "2026-10-17",
+    kinds: ["new"],
+    area: "Messenger",
+    link: { to: "/dashboard/messenger", label: "Create a link" },
+  },
+  {
+    id: "2026-10-16-campaign-device-preview",
+    title: "Campaign preview moves to the side panel",
+    summary:
+      "When you pick a template for a campaign, the phone preview now opens in the panel on the right, with a Preview button in the header to show or hide it.",
+    publishedAt: "2026-10-16",
+    kinds: ["improvement"],
+    area: "Campaigns",
+  },
+  {
+    id: "2026-10-16-automation-builder-refresh",
+    title: "A clearer automation builder",
+    summary:
+      "Pick what starts an automation from cards, add actions from a menu, and keep a live phone preview open beside every step.",
+    publishedAt: "2026-10-16",
+    kinds: ["improvement"],
+    area: "Automation",
+    link: { to: "/dashboard/automation", label: "Open automations" },
+  },
+  {
+    id: "2026-10-16-automation-multi-channel",
+    title: "One automation for all your channels",
+    summary:
+      "An automation can now run on WhatsApp, Instagram and Messenger at once, replying to each customer on the channel they wrote from.",
+    publishedAt: "2026-10-16",
+    kinds: ["new"],
+    area: "Automation",
+    link: { to: "/dashboard/automation", label: "Open automations" },
+  },
+  {
+    id: "2026-10-16-automation-templates",
+    title: "Start an automation from a template",
+    summary:
+      "Pick a ready-made automation like a keyword auto-reply or an order confirmation, and watch a live preview of what your customer will see as you set it up.",
+    publishedAt: "2026-10-16",
+    kinds: ["new", "improvement"],
+    area: "Automation",
+    link: { to: "/dashboard/automation", label: "Open automations" },
+  },
+  {
+    id: "2026-10-16-webhook-settings-redesign",
+    title: "A clearer webhook settings page",
+    summary:
+      "Pick webhook events by group and save them together, and see how to verify each delivery's signature, with ready-to-copy Node.js and Python code.",
+    publishedAt: "2026-10-16",
+    kinds: ["improvement"],
+    area: "Integrations",
+    link: { to: "/dashboard/settings/integrations/webhook", label: "Open webhook settings" },
+  },
+  {
+    id: "2026-10-16-webchat-widget-key",
+    title: "A dedicated key for your webchat widget",
+    summary:
+      "You can now give the webchat widget a key that can only run the widget, so the key in your page's source opens nothing else. Create one from the Widget integration.",
+    publishedAt: "2026-10-16",
+    kinds: ["new"],
+    area: "API",
+    link: { to: "/dashboard/settings/integrations/widget", label: "Open the widget setup" },
+  },
+  {
+    id: "2026-10-16-multiple-api-keys",
+    title: "Multiple API keys, with usage",
+    summary:
+      "You can now create a separate API key for each integration, limit what it can do, and rotate it without downtime. A usage chart shows each key's requests and errors.",
+    publishedAt: "2026-10-16",
+    kinds: ["new"],
+    area: "API",
+    link: { to: "/dashboard/settings/integrations/apiservice", label: "Open API keys" },
+  },
+  {
+    id: "2026-10-14-automation-wizard",
+    title: "Automations are built step by step",
+    summary:
+      "Creating an automation now walks you through it one step at a time, with a review before you save.",
+    publishedAt: "2026-10-14",
+    kinds: ["improvement"],
+    area: "Automation",
+    link: { to: "/dashboard/automation", label: "Open automations" },
+  },
+  {
     id: "2026-10-14-chatbot-examples",
     title: "Start a chatbot from a ready-made example",
     summary:

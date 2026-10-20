@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import { can, canAny, resolvePermissions, resolveRoleKey } from "./can.ts";
-import { PERMISSIONS } from "./permissions.ts";
+import { KEY_ONLY_PERMISSIONS, MEMBER_PERMISSIONS, PERMISSION_GROUPS } from "./permissions.ts";
 import { grantableRolesFor, ROLE_PERMISSIONS } from "./roles.ts";
 
 describe("resolvePermissions", () => {
@@ -52,7 +52,11 @@ describe("the mirror", () => {
     expect(subset(ROLE_PERMISSIONS.STAFF, ROLE_PERMISSIONS.MANAGER)).toBe(true);
     expect(subset(ROLE_PERMISSIONS.MANAGER, ROLE_PERMISSIONS.ADMIN)).toBe(true);
     expect(subset(ROLE_PERMISSIONS.ADMIN, ROLE_PERMISSIONS.OWNER)).toBe(true);
-    expect(ROLE_PERMISSIONS.OWNER.size).toBe(PERMISSIONS.length);
+    expect(ROLE_PERMISSIONS.OWNER.size).toBe(MEMBER_PERMISSIONS.length);
+    for (const p of KEY_ONLY_PERMISSIONS) {
+      expect(ROLE_PERMISSIONS.OWNER.has(p)).toBe(false);
+      expect(PERMISSION_GROUPS.some((g) => g.permissions.includes(p))).toBe(false);
+    }
   });
 
   test("grantable roles are those inside the actor's own bundle, never owner", () => {

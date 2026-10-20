@@ -50,6 +50,12 @@ interface RuleCardProps {
   onDelete: (e: MouseEvent<HTMLElement>) => void;
 }
 
+const PLATFORM_BADGE: Record<string, string> = {
+  WHATSAPP: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-200",
+  INSTAGRAM: "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-200",
+  FACEBOOK: "bg-ru-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-200",
+};
+
 export function RuleCard({ item, onToggleActive, onDelete }: Readonly<RuleCardProps>) {
   const menu = (
     <DropdownMenu>
@@ -107,18 +113,13 @@ export function RuleCard({ item, onToggleActive, onDelete }: Readonly<RuleCardPr
               <RecoveredRevenue ruleId={item.id} />
             )}
           <div className="flex items-center justify-between">
-            <Badge
-              variant="secondary"
-              className={
-                item.platform === "WHATSAPP"
-                  ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-200"
-                  : item.platform === "INSTAGRAM"
-                    ? "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-200"
-                    : "bg-ru-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-200"
-              }
-            >
-              {PLATFORMS.find((option) => option.value === item.platform)?.label ?? item.platform}
-            </Badge>
+            <div className="flex flex-wrap gap-1">
+              {(item.platforms?.length ? item.platforms : [item.platform]).map((platform) => (
+                <Badge key={platform} variant="secondary" className={PLATFORM_BADGE[platform]}>
+                  {PLATFORMS.find((option) => option.value === platform)?.label ?? platform}
+                </Badge>
+              ))}
+            </div>
             {/* Stopped on the wrapper, not the switch: Base UI renders the hidden input as a
               sibling of the switch and re-dispatches a bubbling click on it, so the card's
               onClick fired and navigated into the rule. */}

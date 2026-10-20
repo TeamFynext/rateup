@@ -69,12 +69,26 @@ export const PERMISSIONS = [
   "org.transfer_ownership",
   "notify.billing",
   "notify.integrations",
+  "widget.connect",
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
 
+/**
+ * Permissions only an API key holds (the Webchat widget feature). No role bundles them and
+ * they are left out of `PERMISSION_GROUPS`, so the roles matrix and overrides never show them.
+ */
+export const KEY_ONLY_PERMISSIONS: ReadonlySet<Permission> = new Set<Permission>([
+  "widget.connect",
+]);
+
+/** The catalogue less the key-only permissions: everything a member can hold. */
+export const MEMBER_PERMISSIONS: readonly Permission[] = PERMISSIONS.filter(
+  (p) => !KEY_ONLY_PERMISSIONS.has(p),
+);
+
 /** Must equal the API's `PERMISSIONS_VERSION`; a mismatch means this mirror is stale. */
-export const PERMISSIONS_VERSION = 1;
+export const PERMISSIONS_VERSION = 2;
 
 const ALL = new Set<string>(PERMISSIONS);
 
@@ -245,8 +259,8 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   "integrations.shopify": "Manage the Shopify connection",
   "webhooks.read": "See webhooks",
   "webhooks.manage": "Configure webhooks",
-  "api_tokens.read": "See whether an API key exists",
-  "api_tokens.manage": "Create and revoke API keys",
+  "api_tokens.read": "See API keys and their usage",
+  "api_tokens.manage": "Create, rotate and revoke API keys",
   "org.settings": "Edit organisation details and business hours",
   "org.webhook_secret": "See the webhook signing secret",
   "org.audit.read": "See the audit log",
@@ -256,4 +270,5 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   "org.delete": "Delete the organisation",
   "notify.billing": "Receive billing alerts",
   "notify.integrations": "Receive integration alerts",
+  "widget.connect": "Connect the webchat widget (API keys only)",
 };
