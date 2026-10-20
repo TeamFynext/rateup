@@ -2,13 +2,16 @@ import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 
 import { useSubscription } from "@/backend/subscription/subscription.query";
+import { ModuleOff } from "@/components/common/ModuleOff.tsx";
 import { PlanUpgradeRequired } from "@/components/common/plan-upgrade-required.tsx";
 import { useTeamFeatures } from "@/context/TeamFeaturesContext.tsx";
+import { useOrgModules } from "@/hooks/useOrgModules.ts";
 import {
   DASHBOARD_NO_PERMISSION_FALLBACK,
   getPlanGateForDashboardPath,
   getRequiredFeatureForDashboardPath,
 } from "@/utils/dashboard-feature-access.ts";
+import { getModuleForDashboardPath } from "@/utils/modules.ts";
 import { isPlanGateOpen } from "@/utils/subscription/subscription.ts";
 
 /**
@@ -24,6 +27,7 @@ import { isPlanGateOpen } from "@/utils/subscription/subscription.ts";
  * the Free plan needs the billing page, not their admin — so it renders
  * {@link PlanUpgradeRequired} in place of the page rather than redirecting. The server
  * still enforces the gate; this only replaces a broken page and a 403 with an answer.
+ * A feature the org has hidden comes first: its answer is "turn it on", whatever the plan.
  */
 export function RouteAccessGuard({ children }: Readonly<{ children: React.ReactNode }>) {
   const pathname = useRouterState({
@@ -32,6 +36,7 @@ export function RouteAccessGuard({ children }: Readonly<{ children: React.ReactN
   const navigate = useNavigate();
   const { allowedFeatures, isPending } = useTeamFeatures();
   const { data: subscription, isPending: subscriptionPending } = useSubscription();
+  const { isOn: isModuleOn } = useOrgModules();
 
   useEffect(() => {
     // null = bypass (super-admin), Set = restrict (member)
@@ -50,6 +55,11 @@ export function RouteAccessGuard({ children }: Readonly<{ children: React.ReactN
       });
     }
   }, [pathname, allowedFeatures, isPending]);
+
+  const module = getModuleForDashboardPath(pathname);
+  if (module && !isModuleOn(module.key)) {
+    return <ModuleOff module={module} />;
+  }
 
   const planGate = getPlanGateForDashboardPath(pathname);
   // Wait for the subscription before judging: rendering the upgrade screen against an

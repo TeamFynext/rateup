@@ -4,16 +4,20 @@ import { toast } from "sonner";
 import { IntegratedApps } from "@/types/enums.ts";
 
 import {
+  checkWooPlugin,
   getWooStatus,
+  getWooWidget,
   repairWooWebhooks,
+  saveWooWidget,
   startWooConnect,
   updateWooSettings,
   type WooSettings,
 } from "./woocommerce.api";
 
-/** Under `integrationKeys.byType("woocommerce")`, so a disconnect's invalidation reaches it. */
+/** Under `integrationKeys.byType("woocommerce")`, so a disconnect's invalidation reaches them. */
 const wooKeys = {
   status: () => ["integrations", IntegratedApps.woocommerce, "status"] as const,
+  widget: () => ["integrations", IntegratedApps.woocommerce, "widget"] as const,
 };
 
 type ApiError = { response?: { data?: { error?: string } }; message?: string };
@@ -44,7 +48,32 @@ export function useUpdateWooSettings() {
     onSuccess: (status) => queryClient.setQueryData(wooKeys.status(), status),
     onError: (error: ApiError) => {
       toast.error(messageOf(error, "Could not save the setting"), { id: "woo-settings" });
+      // The API saves the checkout opt-in even when the store can't be reached.
+      queryClient.invalidateQueries({ queryKey: wooKeys.status() });
     },
+  });
+}
+
+/** The storefront WhatsApp button: settings, whether the plugin answered, 30-day taps. */
+export function useWooWidget() {
+  return useQuery({ queryKey: wooKeys.widget(), queryFn: getWooWidget });
+}
+
+export function useSaveWooWidget() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: saveWooWidget,
+    // Also after a failure: the API saves the settings even when the store can't be reached.
+    onSettled: () => queryClient.invalidateQueries({ queryKey: wooKeys.widget() }),
+  });
+}
+
+/** "Check again": the caller says what happened, so this only refreshes the data. */
+export function useCheckWooPlugin() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: checkWooPlugin,
+    onSuccess: (widget) => queryClient.setQueryData(wooKeys.widget(), widget),
   });
 }
 

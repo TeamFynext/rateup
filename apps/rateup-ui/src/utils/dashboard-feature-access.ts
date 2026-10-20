@@ -1,4 +1,5 @@
 import { SubscriptionFeaturePathName, TeamFeature } from "@/types/enums.ts";
+import { getModuleForDashboardPath } from "@/utils/modules.ts";
 
 const DASHBOARD_LANDING_PRIORITY: Array<{ feature: TeamFeature; to: string }> = [
   { feature: TeamFeature.Inbox, to: "/dashboard/inbox?tab=open" },
@@ -41,9 +42,13 @@ const PROTECTED_ROUTE_FEATURE_MAP: Array<[string, TeamFeature]> = [
 
 export const DASHBOARD_NO_PERMISSION_FALLBACK = "/dashboard/settings";
 
-export function getDashboardLandingTarget(allowedFeatures: ReadonlySet<string>): string {
+export function getDashboardLandingTarget(
+  allowedFeatures: ReadonlySet<string>,
+  hiddenModules: readonly string[] = [],
+): string {
   for (const item of DASHBOARD_LANDING_PRIORITY) {
-    if (allowedFeatures.has(item.feature)) {
+    const module = getModuleForDashboardPath(item.to)?.key;
+    if (allowedFeatures.has(item.feature) && !(module && hiddenModules.includes(module))) {
       return item.to;
     }
   }

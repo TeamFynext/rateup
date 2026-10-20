@@ -32,6 +32,7 @@ export interface SetupNavInput {
 }
 
 const GROUP_LABEL: Record<TaskGroup, string> = {
+  features: "Features",
   channels: "Channels",
   whatsapp: "WhatsApp",
   optional: "Recommended",
@@ -77,7 +78,7 @@ export function buildSetupNavItems({
         isActive: task.id === activeStep,
       }));
 
-  return (["channels", "whatsapp", "optional"] as const)
+  return (["features", "channels", "whatsapp", "optional"] as const)
     .map((group) => ({ group: t(GROUP_LABEL[group]), items: rowsIn(group) }))
     .filter((section) => section.items.length > 0);
 }

@@ -40,6 +40,14 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-10-16-choose-your-features",
+    title: "Choose the features you see",
+    summary:
+      "See everything RateUp offers under Features in the menu. Admins can turn features like Loyalty, Commerce and QR & Links on or off to keep the menu to what your team uses.",
+    publishedAt: "2026-10-16",
+    kinds: ["new"],
+    area: "Settings",
+    link: { to: "/dashboard/features", label: "Open Features" },
     id: "2026-10-17-messenger-welcome-menu",
     title: "Get Started button, ice breakers and menu for Messenger",
     summary:

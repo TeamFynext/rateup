@@ -74,6 +74,7 @@ import AssigneePicker from "@/components/whatsapp/inbox/assign/AssigneePicker.ts
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useTeamFeatures } from "@/context/TeamFeaturesContext.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import { useOrgModules } from "@/hooks/useOrgModules.ts";
 import { cn } from "@/lib/utils.ts";
 import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
 import { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";
@@ -213,11 +214,13 @@ export default function TicketPanel({
   const { updateContactById, setSelectedContact } = useContactsStore();
   const messagesStore = useMessagesStore();
 
-  // The board replaces the lifecycle chips. Gated on the same check as the
-  // sidebar entry — the org's Pipeline feature — so the section is simply absent
-  // for orgs whose plan does not include it.
+  // The board replaces the lifecycle chips. Gated on the same checks as the
+  // sidebar entry, so the section is absent wherever Pipeline is.
   const { allowedFeatures } = useTeamFeatures();
-  const canSeePipeline = allowedFeatures === null || allowedFeatures.has(TeamFeature.Pipeline);
+  const { isOn: isModuleOn } = useOrgModules();
+  const canSeePipeline =
+    isModuleOn("pipeline") &&
+    (allowedFeatures === null || allowedFeatures.has(TeamFeature.Pipeline));
 
   const { data: pipelines = [] } = usePipelinesQuery(canSeePipeline);
   const { data: board } = usePipelineQuery(

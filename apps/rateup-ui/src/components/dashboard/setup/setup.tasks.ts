@@ -9,6 +9,7 @@ import {
   IconCreditCard,
   IconFileText,
   IconGift,
+  IconLayoutGrid,
   IconMessageCircle,
   IconMessageReply,
   IconRosetteDiscountCheck,
@@ -26,6 +27,7 @@ import type { RowTint } from "@/components/common/setup-row-card.tsx";
  * so any value already stored under them is left untouched.
  */
 export type CardId =
+  | "features"
   | "api"
   | "verify"
   | "payment"
@@ -44,7 +46,7 @@ export type ChecklistMap = Partial<Record<CardId, boolean>>;
  * The three bands the guide groups steps into; each renders its own heading.
  * "channels" is the required one — any single connected channel satisfies it.
  */
-export type TaskGroup = "channels" | "whatsapp" | "optional";
+export type TaskGroup = "features" | "channels" | "whatsapp" | "optional";
 
 /** Meta's billing hub — external, so it opens in a new tab rather than routing. */
 export const META_BILLING_URL =
@@ -59,6 +61,7 @@ export const SETUP_PATH = "/dashboard/setup";
  * the guide itself.
  */
 export const CARD_ROUTES = {
+  features: { to: "/dashboard/setup/features" },
   // Only reached once WhatsApp is connected, to manage it. The channel page is the
   // `$channel` route, so it needs params rather than a literal path.
   api: { to: "/dashboard/settings/channels/$channel", params: { channel: "whatsapp" } },
@@ -96,6 +99,7 @@ export interface TaskDef {
 }
 
 export const TASKS: readonly TaskDef[] = [
+  { id: "features", group: "features", icon: IconLayoutGrid, tint: "brand", mins: 1 },
   // Any one of the three channels gets an org going. Instagram and Messenger run
   // their own Facebook login, so neither waits on WhatsApp.
   { id: "api", group: "channels", icon: IconMessageCircle, tint: "accent", mins: 3 },
@@ -141,6 +145,14 @@ export interface CardCopy {
  */
 export function setupCopy(t: TFunction): Record<CardId, CardCopy> {
   return {
+    features: {
+      title: t("Choose the features you will use"),
+      desc: t(
+        "Pick what your business needs, such as loyalty, commerce or web forms. Only those show in your menu, and you can change it any time.",
+      ),
+      btnLabel: t("Choose features"),
+      navLabel: t("Choose features"),
+    },
     api: {
       title: t("Connect WhatsApp Business API"),
       desc: t(

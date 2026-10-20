@@ -1,8 +1,10 @@
+import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import { BackLink } from "@/components/common/back-link.tsx";
 import { RoleBadge } from "@/components/common/RoleBadge.tsx";
 import { Card } from "@/components/ui/card.tsx";
+import { useOrgModules } from "@/hooks/useOrgModules.ts";
 import { cn } from "@/lib/utils.ts";
 import { PERMISSION_GROUPS, PERMISSION_LABELS } from "@/utils/authz/permissions.ts";
 import { ROLE_META, ROLE_PERMISSIONS } from "@/utils/authz/roles.ts";
@@ -16,6 +18,7 @@ import { grantsAt, ROLE_LADDER } from "./roleDiff.ts";
  */
 export function RolesMatrixPage() {
   const { t } = useTranslation();
+  const { hiddenPermissionGroups } = useOrgModules();
 
   return (
     <div className="mx-auto flex w-full max-w-265 flex-col gap-4">
@@ -56,55 +59,60 @@ export function RolesMatrixPage() {
             </tr>
           </thead>
           <tbody>
-            {PERMISSION_GROUPS.map((group) => (
-              <>
-                <tr key={`${group.key}-head`}>
-                  <th
-                    scope="rowgroup"
-                    colSpan={ROLE_LADDER.length + 1}
-                    className="bg-muted/40 px-4 py-1.5 text-left text-xs font-medium text-foreground"
-                  >
-                    {t(group.label)}
-                  </th>
-                </tr>
-                {group.permissions
-                  .filter((permission) => !permission.startsWith("notify."))
-                  .map((permission) => {
-                    return (
-                      <tr key={permission} className="hover:bg-muted/30">
-                        <th
-                          scope="row"
-                          className="border-b border-border px-4 py-2 text-left font-normal text-foreground"
-                        >
-                          {t(PERMISSION_LABELS[permission])}
-                        </th>
-                        {ROLE_LADDER.map((key) => {
-                          const has = ROLE_PERMISSIONS[key].has(permission);
-                          const grants = grantsAt(permission, key);
-                          return (
-                            <td key={key} className="border-b border-border px-3 py-2 text-center">
-                              {has ? (
-                                <span
-                                  aria-label={grants ? t("Granted here") : t("Included")}
-                                  className={cn(
-                                    "inline-block size-2.5 rounded-full",
-                                    grants ? "bg-primary" : "bg-primary/25",
-                                  )}
-                                />
-                              ) : (
-                                <span
-                                  aria-label={t("Not included")}
-                                  className="inline-block size-2.5 rounded-full border border-border"
-                                />
-                              )}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    );
-                  })}
-              </>
-            ))}
+            {PERMISSION_GROUPS.filter((group) => !hiddenPermissionGroups.has(group.key)).map(
+              (group) => (
+                <>
+                  <tr key={`${group.key}-head`}>
+                    <th
+                      scope="rowgroup"
+                      colSpan={ROLE_LADDER.length + 1}
+                      className="bg-muted/40 px-4 py-1.5 text-left text-xs font-medium text-foreground"
+                    >
+                      {t(group.label)}
+                    </th>
+                  </tr>
+                  {group.permissions
+                    .filter((permission) => !permission.startsWith("notify."))
+                    .map((permission) => {
+                      return (
+                        <tr key={permission} className="hover:bg-muted/30">
+                          <th
+                            scope="row"
+                            className="border-b border-border px-4 py-2 text-left font-normal text-foreground"
+                          >
+                            {t(PERMISSION_LABELS[permission])}
+                          </th>
+                          {ROLE_LADDER.map((key) => {
+                            const has = ROLE_PERMISSIONS[key].has(permission);
+                            const grants = grantsAt(permission, key);
+                            return (
+                              <td
+                                key={key}
+                                className="border-b border-border px-3 py-2 text-center"
+                              >
+                                {has ? (
+                                  <span
+                                    aria-label={grants ? t("Granted here") : t("Included")}
+                                    className={cn(
+                                      "inline-block size-2.5 rounded-full",
+                                      grants ? "bg-primary" : "bg-primary/25",
+                                    )}
+                                  />
+                                ) : (
+                                  <span
+                                    aria-label={t("Not included")}
+                                    className="inline-block size-2.5 rounded-full border border-border"
+                                  />
+                                )}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      );
+                    })}
+                </>
+              ),
+            )}
           </tbody>
         </table>
       </Card>
@@ -114,6 +122,17 @@ export function RolesMatrixPage() {
           "A filled dot is where the ability enters the ladder; a faint dot means the role inherits it.",
         )}
       </p>
+      {hiddenPermissionGroups.size > 0 ? (
+        <p className="text-xs text-muted-foreground">
+          {t("Abilities for features your organization has turned off are hidden.")}{" "}
+          <Link
+            to="/dashboard/features"
+            className="text-primary underline-offset-4 hover:underline"
+          >
+            {t("Manage features")}
+          </Link>
+        </p>
+      ) : null}
     </div>
   );
 }

@@ -3,8 +3,10 @@ import { toast } from "sonner";
 
 import { subscriptionKeys } from "@/backend/campaign/campaign.keys";
 import { orgKeys, teamKeys } from "@/backend/org/org.keys";
+import { fetchUserInfo } from "@/backend/user/user.api";
 import { userKeys } from "@/backend/user/user.keys";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
+import type { OrgModule } from "@/utils/modules.ts";
 
 import type { IMemberPermissions, IUpdateLogo, IUpdateOrgDetails } from "./org.api";
 import {
@@ -22,6 +24,7 @@ import {
   updateMemberPermissions,
   updateOrgDetails,
   updateOrgLogo,
+  updateOrgModules,
   updateOrgPause,
   updateRole,
   transferOwnership,
@@ -232,3 +235,20 @@ export const useDeleteOrgByAdminMutation = () => {
     },
   });
 };
+
+/** Saves which features the org hides; the sidebar reads them from `/user/info`. */
+export function useUpdateOrgModules() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (hiddenModules: readonly OrgModule[]) => updateOrgModules(hiddenModules),
+    onSuccess: (hiddenModules) => {
+      queryClient.setQueryData<Awaited<ReturnType<typeof fetchUserInfo>>>(userKeys.info(), (old) =>
+        old && "data" in old ? { ...old, data: { ...old.data, hiddenModules } } : old,
+      );
+      void queryClient.invalidateQueries({ queryKey: userKeys.info() });
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Could not save your features"));
+    },
+  });
+}
