@@ -87,6 +87,7 @@ export interface MetaSendResult {
   /** Human-readable reason, suitable for showing to an agent. */
   error?: string;
   detail?: WaGraphApiErrorDetail;
+  recipientId?: string;
 }
 
 /**
