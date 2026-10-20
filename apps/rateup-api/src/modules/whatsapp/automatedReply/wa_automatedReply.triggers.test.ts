@@ -49,6 +49,7 @@ vi.mock("../instagram/instagram_messaging.service.js", () => ({
 }));
 vi.mock("./metaFlow.service.js", () => ({ startMetaFlow: vi.fn() }));
 vi.mock("../meta/sendApiMessages.js", () => ({ sendSendApiText: vi.fn() }));
+vi.mock("../facebook/facebook_comments.service.js", () => ({ replyToFacebookComment: vi.fn() }));
 vi.mock("./instagram_automatedReply.service.js", () => ({
   getMetaAutomationById: vi.fn(),
 }));
@@ -83,6 +84,7 @@ import {
 import { log } from "../../../utils/logger.js";
 import { startMetaFlow } from "./metaFlow.service.js";
 import { sendSendApiText } from "../meta/sendApiMessages.js";
+import { replyToFacebookComment } from "../facebook/facebook_comments.service.js";
 import {
   getContactByPhoneNumberAndOrgId,
   getOrCreateContactByPhone,
@@ -176,14 +178,14 @@ describe("checkAndExecuteRuleByTriggerEvent - finding candidate rules", () => {
       orgId: "org-1",
       isActive: true,
       triggerEvent: TriggerEvent.CHAT_CLOSED,
-      platform: "WHATSAPP",
+      platforms: { has: "WHATSAPP" },
     });
   });
 
   test("does not narrow by platform when asked for all of them", async () => {
     await checkAndExecuteRuleByTriggerEvent(TriggerEvent.CHAT_CLOSED, context({ platform: "ALL" }));
 
-    expect(db.rule.findMany.mock.calls[0][0].where).not.toHaveProperty("platform");
+    expect(db.rule.findMany.mock.calls[0][0].where).not.toHaveProperty("platforms");
   });
 
   test("narrows to rules attached to the receiving number", async () => {
@@ -1116,5 +1118,267 @@ describe("checkAndExecuteRuleByTriggerEvent - which WhatsApp number replies", ()
       null,
       "welcome",
     );
+  });
+});
+
+// One welcome rule on WhatsApp and Messenger answers each customer where they wrote.
+describe("checkAndExecuteRuleByTriggerEvent - a rule on several channels", () => {
+  const welcome = () =>
+    rule({
+      platform: "WHATSAPP",
+      platforms: ["WHATSAPP", "FACEBOOK"],
+      actions: [{ id: "a1", type: "SEND_MESSAGE", value: "Welcome!" }],
+    });
+
+  test("replies on Messenger to a Messenger event", async () => {
+    db.rule.findMany.mockResolvedValue([welcome()]);
+
+    await checkAndExecuteRuleByTriggerEvent(
+      TriggerEvent.CHAT_CLOSED,
+      context({ platform: "FACEBOOK", phone: "psid-1", phoneNumberId: "page-1" }),
+    );
+
+    expect(sendSendApiText).toHaveBeenCalledWith(
+      { platform: "FACEBOOK", accountId: "page-1" },
+      "psid-1",
+      "org-1",
+      "Welcome!",
+    );
+  });
+
+  test("sends Messenger the words without WhatsApp's formatting markers", async () => {
+    db.rule.findMany.mockResolvedValue([
+      rule({
+        platforms: ["WHATSAPP", "FACEBOOK"],
+        actions: [{ id: "a1", type: "SEND_MESSAGE", value: "*Welcome!* Use code _HELLO_" }],
+      }),
+    ]);
+
+    await checkAndExecuteRuleByTriggerEvent(
+      TriggerEvent.CHAT_CLOSED,
+      context({ platform: "FACEBOOK", phone: "psid-1", phoneNumberId: "page-1" }),
+    );
+
+    expect((sendSendApiText as Mock).mock.calls[0][3]).toBe("Welcome! Use code HELLO");
+  });
+
+  test("replies on WhatsApp to a WhatsApp event", async () => {
+    const { sendTextMessage } = await import("../whatsappSurvey/wasurvey.service.js");
+    db.rule.findMany.mockResolvedValue([welcome()]);
+
+    await checkAndExecuteRuleByTriggerEvent(TriggerEvent.CHAT_CLOSED, context());
+
+    expect(sendTextMessage).toHaveBeenCalled();
+    expect(sendSendApiText).not.toHaveBeenCalled();
+  });
+});
+
+describe("checkAndExecuteRuleByTriggerEvent - m.me links", () => {
+  const linkRule = (id: string, messengerRef?: string) =>
+    rule({
+      id,
+      name: id,
+      triggerEvent: TriggerEvent.MESSENGER_REFERRAL,
+      platform: "FACEBOOK",
+      options: messengerRef ? { messengerRef } : null,
+    });
+  const opened = (ref: string) => context({ platform: "FACEBOOK", messengerRef: ref });
+
+  test("answers the link whose ref the rule names, ignoring case", async () => {
+    db.rule.findMany.mockResolvedValue([linkRule("summer", "Summer_Sale")]);
+
+    const result = await checkAndExecuteRuleByTriggerEvent(
+      TriggerEvent.MESSENGER_REFERRAL,
+      opened("summer_sale"),
+    );
+
+    expect(result?.rule.id).toBe("summer");
+  });
+
+  test("stays quiet for a link with another ref", async () => {
+    db.rule.findMany.mockResolvedValue([linkRule("summer", "summer_sale")]);
+
+    await expect(
+      checkAndExecuteRuleByTriggerEvent(TriggerEvent.MESSENGER_REFERRAL, opened("winter")),
+    ).resolves.toBeUndefined();
+  });
+
+  test("lets a rule with no ref answer every link", async () => {
+    db.rule.findMany.mockResolvedValue([linkRule("any")]);
+
+    const result = await checkAndExecuteRuleByTriggerEvent(
+      TriggerEvent.MESSENGER_REFERRAL,
+      opened("winter"),
+    );
+
+    expect(result?.rule.id).toBe("any");
+  });
+
+  test("prefers the rule naming the ref over one that answers every link", async () => {
+    db.rule.findMany.mockResolvedValue([linkRule("any"), linkRule("summer", "summer_sale")]);
+
+    const result = await checkAndExecuteRuleByTriggerEvent(
+      TriggerEvent.MESSENGER_REFERRAL,
+      opened("summer_sale"),
+    );
+
+    expect(result?.rule.id).toBe("summer");
+  });
+
+  // The two link triggers keep their refs apart: an Instagram ref never narrows a Messenger rule.
+  test("ignores an Instagram ref on a Messenger link rule", async () => {
+    db.rule.findMany.mockResolvedValue([
+      rule({
+        id: "summer",
+        triggerEvent: TriggerEvent.MESSENGER_REFERRAL,
+        platform: "FACEBOOK",
+        options: { instagramRef: "summer_sale" },
+      }),
+    ]);
+
+    const result = await checkAndExecuteRuleByTriggerEvent(
+      TriggerEvent.MESSENGER_REFERRAL,
+      opened("winter"),
+    );
+
+    expect(result?.rule.id).toBe("summer");
+  });
+});
+
+// A Page comment names nobody the Page can message: the rule starts with no contact, its
+// first send is a private reply to the comment, and Meta's answer names the person.
+describe("Facebook comment rules", () => {
+  const commentRule = (actions: unknown[], options: Record<string, unknown> | null = null) =>
+    rule({
+      id: "comment-rule",
+      platform: "FACEBOOK",
+      triggerEvent: TriggerEvent.FACEBOOK_COMMENT,
+      groups: [],
+      actions,
+      options,
+    });
+  const onComment = () => ({
+    ...context({
+      platform: "FACEBOOK",
+      phone: undefined,
+      phoneNumberId: "page-1",
+      message: "price?",
+    }),
+    facebookComment: { commentId: "comment-1" } as { commentId: string; recipientId?: string },
+  });
+  /** Meta answering the private reply, as the real sender records it on the channel. */
+  const replyReaches = (psid = "psid-9") =>
+    (sendSendApiText as Mock).mockImplementation(async (channel) => {
+      if (channel.pendingComment && !channel.pendingComment.recipientId) {
+        channel.pendingComment.recipientId = psid;
+      }
+      return { message_id: "m" };
+    });
+
+  test("answers the comment with a private reply on the Page", async () => {
+    db.rule.findMany.mockResolvedValue([
+      commentRule([{ id: "a1", type: "SEND_MESSAGE", value: "Here is the price list" }]),
+    ]);
+    const ctx = onComment();
+
+    await checkAndExecuteRuleByTriggerEvent(TriggerEvent.FACEBOOK_COMMENT, ctx);
+
+    expect(sendSendApiText).toHaveBeenCalledWith(
+      { platform: "FACEBOOK", accountId: "page-1", pendingComment: ctx.facebookComment },
+      "fb_comment:comment-1",
+      "org-1",
+      "Here is the price list",
+    );
+  });
+
+  test("lets the caller see who the reply reached", async () => {
+    replyReaches();
+    db.rule.findMany.mockResolvedValue([
+      commentRule([{ id: "a1", type: "SEND_MESSAGE", value: "Hi" }]),
+    ]);
+    const ctx = onComment();
+
+    await checkAndExecuteRuleByTriggerEvent(TriggerEvent.FACEBOOK_COMMENT, ctx);
+
+    expect(ctx.facebookComment?.recipientId).toBe("psid-9");
+  });
+
+  test("sends what follows the reply to the person it reached", async () => {
+    replyReaches();
+    db.rule.findMany.mockResolvedValue([
+      commentRule([
+        { id: "a1", type: "SEND_MESSAGE", value: "First" },
+        { id: "a2", type: "SEND_MESSAGE", value: "Second" },
+      ]),
+    ]);
+
+    await checkAndExecuteRuleByTriggerEvent(TriggerEvent.FACEBOOK_COMMENT, onComment());
+
+    expect((sendSendApiText as Mock).mock.calls[1][1]).toBe("psid-9");
+  });
+
+  test("starts a chatbot whose first message is the private reply", async () => {
+    (getMetaAutomationById as Mock).mockResolvedValue({ id: "bot-1" });
+    db.rule.findMany.mockResolvedValue([
+      commentRule([{ id: "a1", type: "TRIGGER_CHATBOT", value: "bot-1" }]),
+    ]);
+    const ctx = onComment();
+
+    await checkAndExecuteRuleByTriggerEvent(TriggerEvent.FACEBOOK_COMMENT, ctx);
+
+    expect(startMetaFlow).toHaveBeenCalledWith(
+      "fb_comment:comment-1",
+      { id: "bot-1" },
+      "org-1",
+      { platform: "FACEBOOK", accountId: "page-1", pendingComment: ctx.facebookComment },
+      undefined,
+    );
+  });
+
+  test("posts one of the rule's public replies under the comment", async () => {
+    db.rule.findMany.mockResolvedValue([
+      commentRule([{ id: "a1", type: "SEND_MESSAGE", value: "Hi" }], {
+        instagramPublicReplies: ["Sent you a message 👋"],
+      }),
+    ]);
+
+    await checkAndExecuteRuleByTriggerEvent(TriggerEvent.FACEBOOK_COMMENT, onComment());
+
+    expect(replyToFacebookComment).toHaveBeenCalledWith(
+      "comment-1",
+      "Sent you a message 👋",
+      "page-1",
+      "org-1",
+    );
+  });
+
+  test("still answers privately when the public reply is refused", async () => {
+    (replyToFacebookComment as Mock).mockRejectedValue(new Error("needs pages_manage_engagement"));
+    db.rule.findMany.mockResolvedValue([
+      commentRule([{ id: "a1", type: "SEND_MESSAGE", value: "Hi" }], {
+        instagramPublicReplies: ["Check your inbox"],
+      }),
+    ]);
+
+    const result = await checkAndExecuteRuleByTriggerEvent(
+      TriggerEvent.FACEBOOK_COMMENT,
+      onComment(),
+    );
+
+    expect(result?.executedActions[0]).toMatchObject({ success: true });
+  });
+
+  test("never sends a comment rule's message without a comment to answer", async () => {
+    db.rule.findMany.mockResolvedValue([
+      commentRule([{ id: "a1", type: "SEND_MESSAGE", value: "Hi" }]),
+    ]);
+
+    const result = await checkAndExecuteRuleByTriggerEvent(
+      TriggerEvent.FACEBOOK_COMMENT,
+      context({ platform: "FACEBOOK", phone: undefined, phoneNumberId: "page-1", message: "x" }),
+    );
+
+    expect(sendSendApiText).not.toHaveBeenCalled();
+    expect(result?.executedActions[0]).toMatchObject({ success: false });
   });
 });

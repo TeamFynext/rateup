@@ -23,6 +23,7 @@ vi.mock("../flows/flow.route.js", () => ({ flowRoutes: vi.fn() }));
 vi.mock("../flows/flow.endpoint-routes.js", () => ({ flowEnpointRoutes: vi.fn() }));
 vi.mock("./wa_automatedReply.route.js", () => ({ waAutomatedReplyRoutes: vi.fn() }));
 vi.mock("../instagram/instagram_profile.route.js", () => ({ instagramProfileRoutes: vi.fn() }));
+vi.mock("../facebook/messenger_profile.route.js", () => ({ messengerProfileRoutes: vi.fn() }));
 vi.mock("../inbox/wainbox.routes.js", () => ({ waInboxRoutes: vi.fn() }));
 vi.mock("../auth/wa_auth.route.js", () => ({ waAuthRoutes: vi.fn() }));
 vi.mock("../wa_error_handler.js", () => ({ handleWhatsappError: vi.fn() }));

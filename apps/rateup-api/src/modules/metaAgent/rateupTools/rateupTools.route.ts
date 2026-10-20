@@ -4,12 +4,9 @@ import { z } from "zod";
 
 import { Role } from "../../../../generated/prisma/client.js";
 import { declareAccess } from "../../../authz/registry.js";
-import { ExternalApiError, externalErrorHandler } from "../../../external/v1/errors.js";
-import { loadProgram, requireLoyaltySubscription } from "../../../external/v1/loyalty/guards.js";
-import {
-  memberSummary,
-  rewardCatalogue,
-} from "../../../external/v1/loyalty/loyalty.external.controller.js";
+import { ExternalApiError, externalErrorHandler } from "../../../external/shared/errors.js";
+import { loadProgram, requireLoyaltySubscription } from "../../../external/v2/loyalty/guards.js";
+import { memberSummary, rewardCatalogue } from "../../../external/v2/loyalty/loyalty.controller.js";
 import prisma from "../../../utils/prisma.js";
 import { rateLimit } from "../../../utils/rateLimit.js";
 import { resolvePipelineForContact } from "../../pipeline/pipelineLead/lead.service.js";

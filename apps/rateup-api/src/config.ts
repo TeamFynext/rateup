@@ -379,23 +379,23 @@ export const SuperTokensConfig: TypeInput = {
 // Swagger tags
 
 const publicTags = [
-  { name: "Contacts", description: "Contact related endpoints" },
-  { name: "Contacts/Groups", description: "Contact Group related endpoints" },
-  { name: "Team", description: "Team related endpoints" },
-  { name: "Campaign", description: "Campaign related endpoints" },
-  {
-    name: "Campaign/Participants",
-    description: "Campaign Participants related endpoints",
-  },
+  { name: "Contacts", description: "Contacts, looked up by id or phone; bulk import up to 1000" },
+  { name: "Contacts/Groups", description: "Contact groups and their members" },
+  { name: "Teams", description: "Teams, for routing sends" },
+  { name: "Campaigns", description: "WhatsApp campaigns: create, send and read responses" },
+  { name: "Surveys", description: "Surveys and their responses" },
   {
     name: "WhatsApp/Template",
-    description: "WhatsApp Template related endpoints",
+    description:
+      "Send approved WhatsApp templates and read message status. Each send is a paid " +
+      "message, so send an Idempotency-Key with it: a retry then replays instead of sending twice.",
   },
   {
     name: "Loyalty",
     description:
       "Points, members, rewards and vouchers for a till or e-commerce integration. " +
-      "Members are named by phone number or card code; every write takes an Idempotency-Key.",
+      "Members are named by phone number or card code. Send an Idempotency-Key with every " +
+      "write, so a retried award or redemption is not applied twice.",
   },
 ];
 

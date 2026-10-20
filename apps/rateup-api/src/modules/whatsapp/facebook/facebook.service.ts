@@ -12,6 +12,8 @@ import { getFacebookWebhookEvent } from "./facebook.util.js";
 import prisma from "../../../utils/prisma.js";
 import { getMessengerChannel } from "../metaChannel/metaChannel.service.js";
 import { checkAndExecuteRuleByTriggerEvent } from "../automatedReply/wa_automatedReply.utils.js";
+import redisConnection from "../../../utils/redisConnection.js";
+import type { PendingComment } from "../meta/sendApiMessages.js";
 import { handleMetaFlowUserResponse } from "../automatedReply/metaFlow.service.js";
 
 /**
@@ -55,6 +57,31 @@ async function continueFlowOrRunRules(params: {
     });
   } catch (error) {
     log.error({ err: error, senderId: psid }, "[Facebook] Error running flows and rules");
+  }
+}
+
+/**
+ * Runs the "m.me link opened" rules for a ref; true when one of them ran. Mirrors
+ * runInstagramLinkRules: a rule naming this ref wins over one that answers every link.
+ */
+async function runMessengerLinkRules(
+  ref: string,
+  psid: string,
+  orgId: string,
+  fbPageId: string,
+): Promise<boolean> {
+  try {
+    const result = await checkAndExecuteRuleByTriggerEvent("MESSENGER_REFERRAL", {
+      orgId,
+      phoneNumberId: fbPageId,
+      phone: psid,
+      messengerRef: ref,
+      platform: "FACEBOOK",
+    });
+    return Boolean(result);
+  } catch (error) {
+    log.error({ err: error, ref }, "[Facebook] Error in m.me link rules");
+    return false;
   }
 }
 
@@ -122,6 +149,17 @@ export async function handleFacebookWebhook(
       continue;
     }
 
+    // Page feed changes: only new comments are acted on.
+    for (const change of entry.changes ?? []) {
+      try {
+        await handleFacebookComment(change, waSettings);
+        processed++;
+      } catch (error) {
+        log.error({ err: error, pageId }, "[Facebook] Failed to handle a feed change");
+        failed++;
+      }
+    }
+
     // Handle messaging events
     if (entry.messaging) {
       for (const messaging of entry.messaging) {
@@ -164,6 +202,10 @@ export async function handleFacebookWebhook(
 
             case FacebookEvent.QUICK_REPLY:
               await handleFacebookQuickReply(currentEventData, waSettings);
+              break;
+
+            case FacebookEvent.REFERRAL:
+              await handleFacebookReferral(currentEventData, waSettings);
               break;
 
             default:
@@ -405,6 +447,7 @@ export async function handleFacebookPostback(
       type: "postback",
       payload: postback.payload,
       title: postback.title,
+      referral: postback.referral,
       timestamp: timestamp,
       sender: sender,
     };
@@ -424,6 +467,13 @@ export async function handleFacebookPostback(
     return;
   }
 
+  // A first conversation opened from an m.me link carries the link's ref on the Get
+  // Started postback. The link's own rule wins, as it does on Instagram.
+  const linkRef = postback.referral?.ref;
+  if (linkRef && fbPageId && (await runMessengerLinkRules(linkRef, sender.id, orgId, fbPageId))) {
+    return;
+  }
+
   // As on Instagram, rules see the button's payload; a flow matches either.
   await continueFlowOrRunRules({
     psid: sender.id,
@@ -433,6 +483,65 @@ export async function handleFacebookPostback(
     buttonPayload: postback.payload,
     ruleMessage: postback.payload,
   });
+}
+
+/**
+ * Someone who has chatted with the Page before opened an m.me link. The visit is stored
+ * so the inbox shows where they came from, then the link's rules run. Without one, a
+ * keyword rule on the ref text answers it, as on Instagram.
+ */
+export async function handleFacebookReferral(
+  data: FacebookWebhookBody,
+  waSettings: FacebookPageSettings,
+) {
+  const { orgId, fbPageId } = waSettings;
+  const messaging = data.entry[0].messaging[0];
+  const { sender, referral, timestamp } = messaging;
+
+  if (!sender?.id || !referral) {
+    log.warn("[Facebook] Referral event with no sender or referral; skipping");
+    return;
+  }
+
+  // Meta can deliver the same event twice; the timestamp keys it like a postback.
+  const messageId = `fb_referral_${sender.id}_${timestamp}`;
+  try {
+    const existing = await prisma.waMessage.findFirst({
+      where: { messageId },
+      select: { id: true },
+    });
+    if (existing) return;
+
+    await handleWaMessages(
+      "receive",
+      { type: "referral", referral, timestamp, sender },
+      sender.id,
+      orgId,
+      PlatformType.FACEBOOK,
+      fbPageId ?? undefined,
+      undefined,
+      messageId,
+    );
+  } catch (error) {
+    log.error({ err: error, senderId: sender.id }, "[Facebook] Error storing referral");
+    return;
+  }
+
+  const ref = referral.ref;
+  if (!ref || !fbPageId) return;
+  if (await runMessengerLinkRules(ref, sender.id, orgId, fbPageId)) return;
+
+  try {
+    await checkAndExecuteRuleByTriggerEvent("MESSAGE_RECEIVED", {
+      orgId,
+      phoneNumberId: fbPageId,
+      phone: sender.id,
+      message: ref,
+      platform: "FACEBOOK",
+    });
+  } catch (error) {
+    log.error({ err: error, senderId: sender.id }, "[Facebook] Error running rules for a referral");
+  }
 }
 
 export async function handleFacebookQuickReply(
@@ -493,4 +602,88 @@ export async function handleFacebookQuickReply(
     text: message.text ?? "",
     buttonPayload: message.quick_reply.payload,
   });
+}
+
+/** How long a comment is remembered as handled: Meta allows a private reply for 7 days. */
+const COMMENT_SEEN_SECONDS = 7 * 24 * 60 * 60;
+
+/**
+ * Someone commented on a Page post. The Page's "Facebook comment" rules run with no
+ * contact: a comment does not carry the person's Messenger id. The first thing a rule
+ * sends is a private reply to the comment, and Meta's answer names them; only then is the
+ * comment filed in their conversation, as Instagram comments are. A comment no rule
+ * answered stays out of the inbox, since nobody could message that person.
+ */
+export async function handleFacebookComment(
+  change: FacebookFeedChange,
+  waSettings: FacebookPageSettings,
+) {
+  const { orgId, fbPageId } = waSettings;
+  const value = change.value;
+  if (change.field !== "feed" || value?.item !== "comment" || value.verb !== "add") return;
+  if (!value.comment_id || !fbPageId) return;
+  // The Page answering under its own post is not a customer, and answering it would loop.
+  if (value.from?.id === fbPageId) return;
+
+  const commentId = value.comment_id;
+  // Meta retries a batch it did not get a 2xx for; a comment is answered once.
+  const fresh = await redisConnection.set(
+    `fb_comment:${commentId}`,
+    "1",
+    "EX",
+    COMMENT_SEEN_SECONDS,
+    "NX",
+  );
+  if (!fresh) {
+    log.trace("[Facebook] Comment %s already handled", commentId);
+    return;
+  }
+
+  const comment: PendingComment = { commentId };
+  try {
+    await checkAndExecuteRuleByTriggerEvent("FACEBOOK_COMMENT", {
+      orgId,
+      platform: "FACEBOOK",
+      phoneNumberId: fbPageId,
+      message: value.message ?? "",
+      facebookComment: comment,
+      facebookPostId: value.post_id,
+    });
+  } catch (error) {
+    log.error({ err: error, commentId }, "[Facebook] Error running comment rules");
+  }
+
+  const psid = comment.recipientId;
+  if (!psid) return;
+
+  const timestamp = value.created_time ? value.created_time * 1000 : Date.now();
+  // The reply already went out and the comment is claimed, so a retry could not help.
+  try {
+    await handleWaMessages(
+      "receive",
+      {
+        sender: { id: psid },
+        recipient: { id: fbPageId },
+        timestamp,
+        message: {
+          mid: `fb_comment_${commentId}`,
+          text: value.message,
+          comment_id: commentId,
+          media_id: value.post_id,
+          media_permalink: value.post?.permalink_url,
+        },
+      },
+      psid,
+      orgId,
+      PlatformType.FACEBOOK,
+      fbPageId,
+      value.from?.name,
+      `fb_comment_${commentId}`,
+    );
+  } catch (error) {
+    log.error(
+      { err: error, commentId, psid },
+      "[Facebook] Answered a comment but could not file it",
+    );
+  }
 }

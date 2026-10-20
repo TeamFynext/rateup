@@ -124,8 +124,8 @@ export interface WooCouponInput {
   description: string;
   discount_type: "percent" | "fixed_cart";
   amount: string;
-  /** UTC, without a zone suffix — WooCommerce's `_gmt` format. */
-  date_expires_gmt: string | null;
+  /** UTC with a `Z` suffix; see `asWooUtc` in woocommerce.coupons.ts. */
+  date_expires: string | null;
   minimum_amount?: string;
   individual_use: boolean;
   usage_limit: number;

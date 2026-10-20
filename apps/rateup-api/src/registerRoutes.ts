@@ -33,6 +33,7 @@ import { statsRoutes } from "./modules/stats/stats.route.js";
 import { paymentStripeRoutes } from "./modules/payment/stripe/stripe.route.js";
 import { apiAccessTokenRoutes } from "./modules/apiAccessToken/apiAccessToken.route.js";
 import { externalV1Routes } from "./external/v1/index.js";
+import { externalV2Routes } from "./external/v2/index.js";
 import { orgWsRoutes } from "./modules/org/ws/org.ws.routes.js";
 import { stripePublicRoutes } from "./modules/payment/stripe/stripe.public.route.js";
 import { emailPublicRoutes } from "./modules/email/email.public.route.js";
@@ -124,6 +125,7 @@ const routeConfigs = [
   { plugin: orgWsRoutes, prefix: "/api/org/ws" },
   { plugin: apiAccessTokenRoutes, prefix: "/api/api-access-token" },
   { plugin: externalV1Routes, prefix: "/api/external/v1/:orgId" },
+  { plugin: externalV2Routes, prefix: "/api/external/v2" },
   { plugin: emailPublicRoutes, prefix: "/api/email" },
   { plugin: generateQrRoutes, prefix: "/api/generateQr" },
   { plugin: integrationsRoutes, prefix: "/api/integrations" },

@@ -57,6 +57,7 @@ vi.mock("./memberCard.service.js", () => ({
   })),
 }));
 // The scheduler opens a BullMQ queue at import time; awardPoints only needs its result.
+vi.mock("../loyalty.webhooks.js", () => ({ announceLoyaltyTransactions: vi.fn() }));
 vi.mock("../feedback/feedback.scheduler.js", () => ({
   scheduleFeedbackRequest: vi.fn(async () => ({ scheduled: false, reason: "no_setting" })),
 }));
@@ -74,6 +75,7 @@ function sentEvent(event: string) {
   return call && { orgId: call[0], to: call[2], data: call[3], options: call[4] };
 }
 import { scheduleFeedbackRequest } from "../feedback/feedback.scheduler.js";
+import { announceLoyaltyTransactions } from "../loyalty.webhooks.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
 import {
   assignRewardToCustomer,
@@ -1628,5 +1630,71 @@ describe("lookupContactByPhone", () => {
         where: { contactId: "contact-1", program: { orgId: ORG } },
       }),
     );
+  });
+});
+
+// ===========================================================================
+// awardPoints — the org webhook (loyalty.points.earned)
+// ===========================================================================
+
+describe("awardPoints — webhook", () => {
+  const announce = announceLoyaltyTransactions as unknown as Mock;
+  const member = {
+    id: "acct-1",
+    programId: PROGRAM,
+    cardCode: "K7Q2M9XR4",
+    contact: { id: "contact-1", name: "Ann", phone: "919000000001", orgId: ORG },
+    program: { id: PROGRAM, orgId: ORG },
+    currentTier: null,
+  };
+
+  beforeEach(() => {
+    db.customerLoyaltyAccount.findUnique.mockResolvedValue(member);
+    db.customerLoyaltyAccount.update.mockResolvedValue({
+      id: "acct-1",
+      currentPoints: 600,
+      totalSpend: 1000,
+    });
+    db.loyaltyTransaction.create.mockResolvedValue({ id: "txn-earn" });
+  });
+
+  test("announces the award once its transaction has committed", async () => {
+    const order: string[] = [];
+    db.$transaction.mockImplementation(async (fn: (tx: unknown) => unknown) => {
+      const result = await fn(db);
+      order.push("commit");
+      return result;
+    });
+    announce.mockImplementation(() => {
+      order.push("announce");
+      return Promise.resolve(1);
+    });
+
+    await awardPoints(PROGRAM, "contact-1", 500, {});
+
+    expect(order).toEqual(["commit", "announce"]);
+    expect(announce).toHaveBeenCalledWith(ORG, [{ id: "txn-earn" }], {
+      phone: "919000000001",
+      cardCode: "K7Q2M9XR4",
+    });
+  });
+
+  test("announces nothing when the award rolls back", async () => {
+    db.$transaction.mockRejectedValueOnce(new Error("deadlock"));
+
+    await expect(awardPoints(PROGRAM, "contact-1", 500, {})).rejects.toThrow("deadlock");
+    expect(announce).not.toHaveBeenCalled();
+  });
+
+  test("a replayed award is not announced again", async () => {
+    db.loyaltyTransaction.findUnique.mockResolvedValue({
+      id: "txn-earn",
+      points: 100,
+      balanceAfter: 600,
+      metadata: {},
+    });
+
+    await awardPoints(PROGRAM, "contact-1", 500, { idempotencyKey: "k-1" });
+    expect(announce).not.toHaveBeenCalled();
   });
 });

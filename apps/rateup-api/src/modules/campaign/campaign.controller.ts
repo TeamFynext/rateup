@@ -8,14 +8,24 @@ import {
   SendPreflightQuery,
   UpdateCampaignInput,
 } from "./campaign.schema.js";
-import { CampaignNotFoundError } from "./campaign.errors.js";
+import {
+  CampaignBusyError,
+  CampaignCreditsExhaustedError,
+  CampaignDequeueFailedError,
+  CampaignEnqueueFailedError,
+  CampaignIncompleteError,
+  CampaignNoRecipientsError,
+  CampaignNotFoundError,
+  CampaignStatusNotAllowedError,
+  CampaignStatusRequiredError,
+  DripResendUnsupportedError,
+} from "./campaign.errors.js";
 import { getCampaignSendPreflight } from "./campaign.preflight.js";
 import { getDripSchedule } from "./campaignDrip.service.js";
+import { launchCampaign } from "./campaignLaunch.service.js";
 import {
   createCampaign,
   deleteCampaign,
-  deleteCampaignParticipantsByCampaignId,
-  enqueueCampaignMessage,
   getCampaginStatsById,
   getCampaignById,
   getCampaignFilterForFlows,
@@ -26,23 +36,8 @@ import {
   updateCampaign,
 } from "./campaign.service.js";
 import { bySurveyIdSchema } from "../surveyTheme/surveyTheme.schema.js";
-import {
-  CampaignParticipantStatus,
-  CampaignStatus,
-  CampaignType,
-  SentCampaignEnum,
-} from "../../types/enums.js";
-import {
-  cancelCampaignSends,
-  CampaignSendInProgressError,
-  createCampaignSend,
-  failCampaignSend,
-  getLiveCampaignSend,
-} from "./campaignSend.service.js";
-import { CampaignSendTrigger } from "../../../generated/prisma/enums.js";
-import { upsertCampaignRetryPolicy } from "./campaignRetry.service.js";
-import { clearCampaignPause } from "./campaignPause.service.js";
-import { getCampaignCreditBudget } from "../subscription/campaignCredits.js";
+import { CampaignType, SentCampaignEnum } from "../../types/enums.js";
+import { CampaignSendInProgressError } from "./campaignSend.service.js";
 import { log } from "../../utils/logger.js";
 import {
   getSpreadsheetContentType,
@@ -198,81 +193,55 @@ export async function getDripScheduleHandler(
 }
 
 /**
- * Why this campaign cannot be launched, or null if it can.
- *
- * A draft is deliberately allowed to be saved half-finished — that is what makes
- * the wizard resumable — so the checks the create schema used to run on every
- * campaign live here now, on the one path where an incomplete campaign would
- * actually produce broken sends.
+ * Maps a refusal from `launchCampaign` to the reply this endpoint has always sent
+ * for it. Returns null for anything that is not a launch refusal.
  */
-async function findIncompleteLaunchReason(
-  campaignId: string,
-  orgId: string,
-): Promise<string | null> {
-  const campaign = await getCampaignById(campaignId, orgId);
-  if (!campaign) return null;
+function replyForLaunchError(reply: FastifyReply, error: unknown) {
+  const refuse = (status: number, code: string, message: string) =>
+    reply.status(status).send({ message, code });
 
-  if (campaign.type === CampaignType.DRIP) {
-    return campaign.dripStages?.length
-      ? null
-      : "Add at least one drip stage before launching this campaign.";
+  if (error instanceof CampaignBusyError) {
+    return refuse(400, "CAMPAIGN_ENQUEUE_DEQUEUE_IN_PROGRESS", error.message);
   }
-  return campaign.waTemplateId ? null : "Choose a template before launching this campaign.";
+  if (error instanceof CampaignStatusNotAllowedError) {
+    return refuse(400, "INVALID_CAMPAIGN_STATUS", error.message);
+  }
+  if (error instanceof CampaignStatusRequiredError) {
+    return refuse(400, "STATUS_REQUIRED", error.message);
+  }
+  if (error instanceof DripResendUnsupportedError) {
+    return refuse(400, "DRIP_RESEND_UNSUPPORTED", error.message);
+  }
+  if (error instanceof CampaignIncompleteError) {
+    return refuse(400, "CAMPAIGN_INCOMPLETE", error.message);
+  }
+  if (error instanceof CampaignNoRecipientsError) {
+    return refuse(400, "NO_PARTICIPANTS_FOR_CAMPAIGN", error.message);
+  }
+  if (error instanceof CampaignCreditsExhaustedError) {
+    return refuse(403, "CAMPAIGN_CREDITS_EXHAUSTED", error.message);
+  }
+  if (error instanceof CampaignSendInProgressError) {
+    return refuse(
+      409,
+      "CAMPAIGN_SEND_IN_PROGRESS",
+      "Another send for this campaign is already in progress.",
+    );
+  }
+  if (error instanceof CampaignDequeueFailedError) {
+    return refuse(502, "MSG_SCHEDULE_CANCEL_FAILED", error.message);
+  }
+  if (error instanceof CampaignEnqueueFailedError) {
+    return refuse(502, "ENQUEUE_FAILED", error.message);
+  }
+  return null;
 }
 
 /**
- * How long a send may sit in a live state before the in-progress guard stops
- * believing it. Generously longer than any fan-out takes, and far shorter than a
- * customer's patience with a campaign that cannot even be cancelled.
+ * Launch, stop, or flip a drip — the dashboard's adapter over `launchCampaign`
+ * (campaignLaunch.service.ts), which the partner API's send shares. Only the
+ * request parsing and the reply shapes live here.
  */
-const STALE_SEND_MS = 30 * 60 * 1000;
-
-/**
- * Open a send session, turning the database's "one live send per campaign" rule
- * into a 409 rather than an unhandled P2002.
- *
- * Returns null when it has already replied.
- */
-async function openCampaignSend(input: {
-  campaignId: string;
-  orgId: string;
-  reply: FastifyReply;
-  trigger: CampaignSendTrigger;
-  sendToStatuses: CampaignParticipantStatus[];
-  scheduledFor?: Date;
-}) {
-  const { campaignId, orgId, reply, trigger, sendToStatuses, scheduledFor } = input;
-  // A manual send takes the lane back from a pending automatic retry: the person
-  // clicking Send is a stronger signal than a schedule set days ago.
-  await cancelCampaignSends(campaignId, {
-    onlyScheduled: true,
-    note: "Superseded by a manual send.",
-  });
-
-  try {
-    return await createCampaignSend({
-      campaignId,
-      trigger,
-      targetStatuses: sendToStatuses,
-      scheduledFor: scheduledFor ?? null,
-    });
-  } catch (error) {
-    if (error instanceof CampaignSendInProgressError) {
-      reply.status(409).send({
-        message: "Another send for this campaign is already in progress.",
-        code: "CAMPAIGN_SEND_IN_PROGRESS",
-      });
-      return null;
-    }
-    // A campaign that could not open a send has failed, not been paused.
-    await updateCampaign(campaignId, orgId, {
-      status: CampaignStatus.FAILED,
-      errorMessage: "The send could not be started. Try sending it again.",
-    }).catch(() => {});
-    throw error;
-  }
-}
-
 export async function sendCampaignHandler(
   request: FastifyRequest<{
     Params: ByCampaignIdParams;
@@ -300,259 +269,57 @@ export async function sendCampaignHandler(
       return reply.status(404).send({ message: "Campaign not found", code: "CAMPAIGN_NOT_FOUND" });
     }
 
-    // A campaign whose fan-out job was lost (worker restart, Redis eviction)
-    // used to be stuck here forever: every further action was refused, including
-    // cancelling it. The live send's age is the escape — once it has sat past
-    // STALE_SEND_MS with nothing happening, the guard lets go.
-    const inProgressStatuses: string[] = [CampaignStatus.DEQUEUING, CampaignStatus.QUEUING];
-    if (inProgressStatuses.includes(campaign.status)) {
-      const live = await getLiveCampaignSend(campaignId);
-      const startedAt = live?.startedAt ?? live?.createdAt;
-      const stale = !live || (startedAt ? Date.now() - startedAt.getTime() > STALE_SEND_MS : true);
-      if (!stale) {
-        return reply.status(400).send({
-          message: `Campaign ${campaign.status} is in progress, so no action can be performed at this time.`,
-          code: "CAMPAIGN_ENQUEUE_DEQUEUE_IN_PROGRESS",
-        });
-      }
-      log.warn({ campaignId, campaignSendId: live?.id }, "Releasing a stale campaign send");
-      await cancelCampaignSends(campaignId, { note: "Abandoned — the send never completed." });
-    }
-
-    // Only the platform pauses a campaign this way, and only with a reason.
-    if (status === CampaignStatus.PAUSED) {
-      return reply.status(400).send({
-        message: "A campaign cannot be set to PAUSED directly. Stop it instead.",
-        code: "INVALID_CAMPAIGN_STATUS",
-      });
-    }
-
-    if (type === CampaignType.DRIP) {
-      if (!status) {
-        return reply.status(400).send({
-          message: "status is required to update a DRIP campaign",
-          code: "STATUS_REQUIRED",
-        });
-      }
-
-      // A drip has no re-send: the cron owns what goes out and when. This branch
-      // used to ignore a scoped request's `participantId`/`sendToStatuses` and
-      // fall through to the status update, so "Retry now" on one failed
-      // recipient retried nobody and reported success — while the `startedAt`
-      // reset below pushed every pending stage back by however long the campaign
-      // had been running. Refusing is the honest answer.
-      if (participantId || participantIds?.length) {
-        return reply.status(400).send({
-          message:
-            "A drip campaign cannot re-send to specific recipients. Its stages are sent by schedule.",
-          code: "DRIP_RESEND_UNSUPPORTED",
-        });
-      }
-
-      // `startedAt` is the drip clock: every stage is due at
-      // max(participantCreatedAt, startedAt) + delay. Stamping it on each call
-      // restarted the whole sequence, so only an actual start may set it — a
-      // pause must leave the campaign's place in the schedule alone.
-      //
-      // Resuming from PAUSED is not a start either: the platform stopped it
-      // mid-sequence, and restarting the clock would re-time every stage.
-      const isStarting =
-        status === CampaignStatus.ACTIVE &&
-        campaign.status !== CampaignStatus.ACTIVE &&
-        campaign.status !== CampaignStatus.PAUSED;
-
-      // A drip resumes without a preflight, so credits that are still spent have to be
-      // caught here — otherwise the cron's next tick pauses it again and the resume
-      // looks like it did nothing.
-      if (
-        status === CampaignStatus.ACTIVE &&
-        campaign.status === CampaignStatus.PAUSED &&
-        (await getCampaignCreditBudget(orgId)).exhausted
-      ) {
-        return reply.status(403).send({
-          message:
-            "Your campaign credits are still used up, so this campaign cannot resume yet. " +
-            "Upgrade or add a credit pack to keep sending.",
-          code: "CAMPAIGN_CREDITS_EXHAUSTED",
-        });
-      }
-
-      await updateCampaign(campaignId, orgId, {
-        status,
-        campaignSentAt: null,
-        scheduledStatuses: [],
-        ...(isStarting ? { startedAt: new Date() } : {}),
-      });
-      await clearCampaignPause(campaignId);
-      return reply.status(200).send({
-        message: `Campaign status updated to ${status}`,
-        code: "MSG_SCHEDULED",
-      });
-    }
-    if (status === CampaignStatus.INACTIVE) {
-      await updateCampaign(campaignId, orgId, {
-        status: CampaignStatus.DEQUEUING,
-        campaignSentAt: null,
-        scheduledStatuses: [],
-      });
-      await clearCampaignPause(campaignId);
-      const dequeue = await deleteCampaignParticipantsByCampaignId(campaignId);
-      if (!dequeue.status) {
-        return reply.status(502).send({
-          message: dequeue.message,
-          code: "MSG_SCHEDULE_CANCEL_FAILED",
-        });
-      }
-      return reply.status(200).send({
-        message: "Campaign schedule cancellation requested",
-        code: "MSG_SCHEDULE_CANCEL_REQUESTED",
-      });
-    }
-    // The completeness the create schema stops insisting on for a DRAFT is
-    // enforced here instead, at the one moment it actually matters.
-    const incomplete = await findIncompleteLaunchReason(campaignId, orgId);
-    if (incomplete) {
-      return reply.status(400).send({ message: incomplete, code: "CAMPAIGN_INCOMPLETE" });
-    }
-
-    // Saved before the send, so the policy is in place by the time the first
-    // attempt drains and asks whether to schedule a retry.
-    if (retryPolicy) {
-      await upsertCampaignRetryPolicy(campaignId, orgId, retryPolicy);
-    }
-
-    // Named recipients are counted as themselves; see `getCampaignSendPreflight`.
-    const cohort = participantId ? [participantId] : participantIds;
-    const preflight = await getCampaignSendPreflight(campaignId, orgId, sendToStatuses, cohort);
-    if (preflight.recipients === 0) {
-      return reply.status(400).send({
-        message: cohort?.length
-          ? `Those recipients are no longer on this campaign.`
-          : `No participants with the specified statuses to send the campaign to.`,
-        code: "NO_PARTICIPANTS_FOR_CAMPAIGN",
-      });
-    }
-
-    // Only the case where nothing at all could be sent is refused. A campaign that
-    // merely outruns the credits still goes — the dialog has already said where it will
-    // stop, and sending to as many people as the plan covers is a reasonable choice. But
-    // starting one with nothing left only produces a queue of messages that each fail in
-    // the dispatcher, a campaign stuck in QUEUING, and no explanation anywhere the sender
-    // would look.
-    if (preflight.exhausted) {
-      return reply.status(403).send({
-        message:
-          "You have used all your campaign credits this month, so this campaign cannot be " +
-          "sent yet. Upgrade or add a credit pack to keep sending.",
-        code: "CAMPAIGN_CREDITS_EXHAUSTED",
-      });
-    }
-
-    // Sending again is the resume: whatever paused it is no longer what it is doing.
-    await clearCampaignPause(campaignId);
-
-    // A per-day cap spreads participants over consecutive days. The dispatcher
-    // applies it when it fans the campaign out into per-participant jobs. A
-    // single-participant resend is never throttled, so it ignores the cap.
-    const scopedResend = Boolean(participantId || participantIds?.length);
-    const effectiveDailySendLimit = scopedResend ? undefined : (dailySendLimit ?? undefined);
-
-    if (campaignSentAt && sentCampaignChoice === SentCampaignEnum.LATER) {
-      await updateCampaign(campaignId, orgId, {
-        status: CampaignStatus.QUEUING,
-        campaignSentAt,
-        scheduledStatuses: [],
-        dailySendLimit: dailySendLimit ?? null,
-        // Whatever went wrong last time is no longer what this campaign is doing.
-        errorMessage: null,
-      });
-      const send = await openCampaignSend({
-        campaignId,
-        orgId,
-        reply,
-        trigger: CampaignSendTrigger.SCHEDULED,
-        sendToStatuses,
-        scheduledFor: new Date(campaignSentAt),
-      });
-      if (!send) return reply;
-
-      const scheduled = await enqueueCampaignMessage({
-        campaignId,
-        campaignSendId: send.id,
-        sendToStatuses,
-        scheduledAt: campaignSentAt,
-        dailySendLimit: effectiveDailySendLimit,
-      });
-      if (!scheduled.status) {
-        await failCampaignSend(send.id, "Could not be queued.");
-        return await reportEnqueueFailure(campaignId, orgId, reply, scheduled);
-      }
-      return reply.status(200).send({
-        message: "Campaign scheduling requested",
-        code: "MSG_SCHEDULE_REQUESTED",
-      });
-    }
-    await updateCampaign(campaignId, orgId, {
-      status: CampaignStatus.QUEUING,
-      campaignSentAt: null,
-      scheduledStatuses: [],
-      errorMessage: null,
-      // When the campaign first went out. The scheduled dispatcher has always
-      // recorded this and the send-now path never did, so a campaign sent from
-      // the button read "Sent — not yet" for the rest of its life:
-      // `campaignSentAt` is deliberately nulled here (nothing is pending any
-      // more) and nothing wrote the other half. `updateCampaign` only fills it
-      // while it is null, so a resend or a single-recipient retry still reports
-      // the first send rather than the latest one.
-      startedAt: new Date(),
-      ...(scopedResend ? {} : { dailySendLimit: dailySendLimit ?? null }),
-    });
-
-    const send = await openCampaignSend({
-      campaignId,
+    const result = await launchCampaign({
       orgId,
-      reply,
-      trigger: CampaignSendTrigger.MANUAL,
+      campaign: {
+        id: campaignId,
+        type: campaign.type,
+        status: campaign.status,
+        waTemplateId: campaign.waTemplateId,
+        dripStageCount: campaign.dripStages?.length ?? 0,
+      },
+      // The branch follows the type the client sends, as it always has here.
+      mode: type === CampaignType.DRIP ? "drip" : "broadcast",
+      status,
       sendToStatuses,
-    });
-    if (!send) return reply;
-
-    const enqueued = await enqueueCampaignMessage({
-      campaignId,
-      campaignSendId: send.id,
-      sendToStatuses,
+      scheduledAt:
+        campaignSentAt && sentCampaignChoice === SentCampaignEnum.LATER
+          ? campaignSentAt
+          : undefined,
+      dailySendLimit,
       participantId,
       participantIds,
-      dailySendLimit: effectiveDailySendLimit,
+      retryPolicy,
     });
-    if (!enqueued.status) {
-      await failCampaignSend(send.id, "Could not be queued.");
-      return await reportEnqueueFailure(campaignId, orgId, reply, enqueued);
-    }
-    return reply.status(200).send({
-      message: "Campaign enqueue request accepted. Processing will occur asynchronously.",
-      code: "ENQUEUE_REQUEST_ACCEPTED",
-    });
-  } catch (error) {
-    return replyForError(reply, error, "Error while handling sendCampaignHandler");
-  }
-}
 
-async function reportEnqueueFailure(
-  campaignId: string,
-  orgId: string,
-  reply: FastifyReply,
-  result: { status: boolean; message: string },
-) {
-  try {
-    await updateCampaign(campaignId, orgId, {
-      status: CampaignStatus.FAILED,
-      errorMessage: result.message,
-    });
+    switch (result.outcome) {
+      case "drip_status_set":
+        return reply.status(200).send({
+          message: `Campaign status updated to ${result.status}`,
+          code: "MSG_SCHEDULED",
+        });
+      case "stop_requested":
+        return reply.status(200).send({
+          message: "Campaign schedule cancellation requested",
+          code: "MSG_SCHEDULE_CANCEL_REQUESTED",
+        });
+      case "queued":
+        return result.scheduled
+          ? reply.status(200).send({
+              message: "Campaign scheduling requested",
+              code: "MSG_SCHEDULE_REQUESTED",
+            })
+          : reply.status(200).send({
+              message: "Campaign enqueue request accepted. Processing will occur asynchronously.",
+              code: "ENQUEUE_REQUEST_ACCEPTED",
+            });
+    }
   } catch (error) {
-    log.error({ err: error, campaignId }, "Could not roll a campaign back after a failed enqueue");
+    return (
+      replyForLaunchError(reply, error) ??
+      replyForError(reply, error, "Error while handling sendCampaignHandler")
+    );
   }
-  return reply.status(502).send({ message: result.message, code: "ENQUEUE_FAILED" });
 }
 
 export async function getCampaignFilterForFlowsHandler(

@@ -216,6 +216,9 @@ export async function sendMessage(
     return {
       status: false,
       message: errorMessage,
+      // Meta's code and subcode, for callers that must tell a rejected number from an
+      // outage (the partner API). Additive: callers reading only status/message are unchanged.
+      error: graphApiErrorDetail(e),
     };
   }
 }

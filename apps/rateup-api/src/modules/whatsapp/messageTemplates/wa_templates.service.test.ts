@@ -41,11 +41,9 @@ import prisma from "../../../utils/prisma.js";
 import { getWaSettings } from "../settings/wa_settings.service.js";
 import { callMetaApi } from "../wa_axios.js";
 import { generateTemplate, getFlowIdFromTemplateComponents } from "./wa_templates.utils.js";
-import { getFlowWithSurveyTeamMapIds, getWaSettingsForFlow } from "../flows/flow.service.js";
-import { sendMessage } from "../whatsappSurvey/wasurvey.service.js";
+import { getWaSettingsForFlow } from "../flows/flow.service.js";
 import { createTemplateMessage } from "../whatsappSurvey/wasurvey.utils.js";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload.js";
-import { verifyFlowToken } from "../flows/flowToken.js";
 import { TemplateType } from "../../../../generated/prisma/client.js";
 import {
   createTemplate,
@@ -62,7 +60,6 @@ import {
   getUnregisteredTemplates,
   registerTemplatesInDb,
   saveTemplate,
-  sendTemplateToPhone,
   syncTemplates,
   updateTemplate,
   updateTemplateInDb,
@@ -86,8 +83,6 @@ const getWaSettingsForFlowMock = getWaSettingsForFlow as unknown as Mock;
 const callMetaApiMock = callMetaApi as unknown as Mock;
 const generateTemplateMock = generateTemplate as unknown as Mock;
 const getFlowIdMock = getFlowIdFromTemplateComponents as unknown as Mock;
-const getFlowWithTeamsMock = getFlowWithSurveyTeamMapIds as unknown as Mock;
-const sendMessageMock = sendMessage as unknown as Mock;
 const createTemplateMessageMock = createTemplateMessage as unknown as Mock;
 const getFileUrlMock = getFileUrlFromKey as unknown as Mock;
 
@@ -763,144 +758,5 @@ describe("uploadFileToWaTemplate", () => {
 
     expect(callMetaApiMock.mock.calls[0][2]).toBe("token-abc");
     expect(callMetaApiMock.mock.calls[0][6].access_token).toBeUndefined();
-  });
-});
-
-describe("sendTemplateToPhone", () => {
-  function args(overrides: Record<string, unknown> = {}): any {
-    return {
-      orgId: ORG_A,
-      dbTemplate: row(),
-      phone: "15550001",
-      teamId: "team-1",
-      header: undefined,
-      userId: "user-1",
-      ...overrides,
-    };
-  }
-
-  test("sends the template under its own name and language", async () => {
-    await sendTemplateToPhone(args());
-
-    expect(createTemplateMessageMock.mock.calls[0]).toEqual([
-      "15550001",
-      { name: "order_update", language: { code: "en" }, components: [] },
-    ]);
-    expect(sendMessageMock).toHaveBeenCalled();
-  });
-
-  test("carries a header the caller supplied straight through", async () => {
-    const header: any = { type: "header", parameters: [{ type: "text", text: "x" }] };
-
-    await sendTemplateToPhone(args({ header }));
-
-    expect(createTemplateMessageMock.mock.calls[0][1].components).toEqual([header]);
-  });
-
-  test("marks the message as a template send on the caller's team", async () => {
-    await sendTemplateToPhone(args());
-
-    const call = sendMessageMock.mock.calls[0];
-    expect(call[7]).toBe("team-1");
-    expect(call[8]).toBe("TEMPLATE");
-  });
-
-  test("fills in the stored default image for an image template", async () => {
-    getFlowIdMock.mockReturnValue(undefined);
-    const dbTemplate = row({
-      defaultValues: { image: { link: "key/banner.png" } },
-      data: {
-        ...row().data,
-        components: [{ type: "HEADER", format: "IMAGE" }],
-      },
-    });
-
-    await sendTemplateToPhone(args({ dbTemplate }));
-
-    expect(createTemplateMessageMock.mock.calls[0][1].components[0]).toEqual({
-      type: "header",
-      parameters: [{ type: "image", image: { link: "https://cdn/key/banner.png" } }],
-    });
-  });
-
-  test("refuses an image template with no image to send", async () => {
-    const dbTemplate = row({
-      defaultValues: {},
-      data: { ...row().data, components: [{ type: "HEADER", format: "IMAGE" }] },
-    });
-
-    await expect(sendTemplateToPhone(args({ dbTemplate }))).rejects.toThrow(
-      "Image not found in template. Please upload an image and try again",
-    );
-  });
-
-  test("leaves a caller-supplied image alone rather than adding the default", async () => {
-    const dbTemplate = row({
-      defaultValues: { image: { link: "key/banner.png" } },
-      data: { ...row().data, components: [{ type: "HEADER", format: "IMAGE" }] },
-    });
-    const header: any = { type: "header", parameters: [{ type: "image", image: { link: "u" } }] };
-
-    await sendTemplateToPhone(args({ dbTemplate, header }));
-
-    expect(createTemplateMessageMock.mock.calls[0][1].components).toEqual([header]);
-    expect(getFileUrlMock).not.toHaveBeenCalled();
-  });
-
-  test("refuses a flow template whose flow is not in our database", async () => {
-    getFlowIdMock.mockReturnValue("flow-1");
-    getFlowWithTeamsMock.mockResolvedValue(null);
-
-    await expect(sendTemplateToPhone(args())).rejects.toThrow("Flow not found in db");
-  });
-
-  test("refuses a flow template sent with no team", async () => {
-    getFlowIdMock.mockReturnValue("flow-1");
-    getFlowWithTeamsMock.mockResolvedValue({ survey: { languages: ["en"], teams: [] } });
-
-    await expect(sendTemplateToPhone(args({ teamId: undefined }))).rejects.toThrow(
-      "Team id not found in request",
-    );
-  });
-
-  test("refuses a flow template whose survey the team cannot reach", async () => {
-    getFlowIdMock.mockReturnValue("flow-1");
-    getFlowWithTeamsMock.mockResolvedValue({
-      survey: { languages: ["en"], teams: [{ id: "stm-1", teamId: "another-team" }] },
-    });
-
-    await expect(sendTemplateToPhone(args())).rejects.toThrow("Team not found in survey");
-  });
-
-  // The token carries the run context (survey mapping, org, respondent) so the
-  // reply can be attributed — see flows/flowToken.ts.
-  test("signs the run context into the flow token", async () => {
-    getFlowIdMock.mockReturnValue("flow-1");
-    getFlowWithTeamsMock.mockResolvedValue({
-      survey: { languages: ["en"], teams: [{ id: "stm-1", teamId: "team-1" }] },
-    });
-
-    await sendTemplateToPhone(args());
-
-    const flowButton = createTemplateMessageMock.mock.calls[0][1].components.find(
-      (c: any) => c.sub_type === "flow",
-    );
-    const context = verifyFlowToken(flowButton.parameters[0].action.flow_token);
-    expect(context).toMatchObject({
-      surveyTeamMapId: "stm-1",
-      orgId: ORG_A,
-      phone: "15550001",
-      language: "en",
-    });
-  });
-
-  test("propagates a send failure", async () => {
-    getFlowIdMock.mockReturnValue("flow-1");
-    getFlowWithTeamsMock.mockResolvedValue({
-      survey: { languages: ["en"], teams: [{ id: "stm-1", teamId: "team-1" }] },
-    });
-    sendMessageMock.mockRejectedValue(new Error("graph is down"));
-
-    await expect(sendTemplateToPhone(args())).rejects.toThrow("graph is down");
   });
 });

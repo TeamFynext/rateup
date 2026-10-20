@@ -725,14 +725,17 @@ describe("getChatByContactId", () => {
     const res = makeRes();
 
     await getChatByContactId(
-      { params: { contactId: "contact-1" } } as unknown as FastifyRequest<{
+      {
+        params: { contactId: "contact-1" },
+        user: { orgId: "org-1" },
+      } as unknown as FastifyRequest<{
         Params: ByContactIdParams;
       }>,
       res as unknown as FastifyReply,
     );
 
     expect(db.waMessage.findMany).toHaveBeenCalledWith({
-      where: { contactId: "contact-1", sourcePlatform: "WEBCHAT" },
+      where: { contactId: "contact-1", sourcePlatform: "WEBCHAT", contact: { orgId: "org-1" } },
       orderBy: { waCreatedAt: "asc" },
     });
     expect(res.status).toHaveBeenCalledWith(200);
@@ -743,7 +746,10 @@ describe("getChatByContactId", () => {
     const res = makeRes();
 
     await getChatByContactId(
-      { params: { contactId: "contact-1" } } as unknown as FastifyRequest<{
+      {
+        params: { contactId: "contact-1" },
+        user: { orgId: "org-1" },
+      } as unknown as FastifyRequest<{
         Params: ByContactIdParams;
       }>,
       res as unknown as FastifyReply,

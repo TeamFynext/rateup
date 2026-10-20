@@ -36,6 +36,11 @@ import { Queue } from "bullmq";
 // share the key without importing this one; re-exported here because the send
 // and drain paths read it from beside `enqueueCampaignMessages`.
 import { campaignSendJobId, campaignSendJobsKey } from "../campaignSendKeys.js";
+import {
+  emitWebhookEvents,
+  type WebhookEventInput,
+} from "../../../modules/webhook/webhook.events.js";
+import { messageStatusWebhookEvents } from "./statusWebhook.js";
 
 export { campaignSendJobsKey };
 
@@ -1102,6 +1107,7 @@ export async function bulkUpdateStatuses(
             wm."sourceIdentifier",
             wm."sourceMessage",
             wm."meteredConversationId",
+            wm."messageBody"->'template'->>'name' AS "templateName",
             cp.id AS "participantId",
             cp."campaignId",
             cp.status AS "participantStatus",
@@ -1143,6 +1149,7 @@ export async function bulkUpdateStatuses(
       sourceIdentifier?: string;
       sourceMessage?: string | null;
       meteredConversationId?: string | null;
+      templateName?: string | null;
     }
   >();
   for (const row of messageData) {
@@ -1171,6 +1178,7 @@ export async function bulkUpdateStatuses(
         sourceIdentifier: row.sourceIdentifier,
         sourceMessage: row.sourceMessage,
         meteredConversationId: row.meteredConversationId,
+        templateName: row.templateName ?? null,
       });
     }
   }
@@ -1183,6 +1191,8 @@ export async function bulkUpdateStatuses(
   const pricingUpdates: any[] = [];
   const dripCampaignParticipantUpdates: any[] = [];
   const dripCampaignStatsUpdates: any[] = [];
+  // `message.status` for the org webhook, queued once the writes below have landed.
+  const webhookEvents: WebhookEventInput[] = [];
 
   const processedOffsets: string[] = [];
 
@@ -1205,6 +1215,9 @@ export async function bulkUpdateStatuses(
     ) {
       continue;
     }
+
+    // What Meta actually reported, before the backfill below infers the rest.
+    const reportedStatuses = new Set(Object.keys(agg.redisData));
 
     // Backfill logical prerequisite statuses
     const { redisData } = agg;
@@ -1260,6 +1273,22 @@ export async function bulkUpdateStatuses(
     // alone left real failures stored with a null reason. Fall through the
     // fields Meta actually populates before giving up.
     const errorMsg = lastErr?.[0] ? metaErrorMessage(lastErr[0]) : null;
+
+    webhookEvents.push(
+      ...messageStatusWebhookEvents({
+        orgId: contactOrgId,
+        messageId: externalMessageId,
+        reported: reportedStatuses,
+        newStatuses: diffStatusData,
+        recipientPhone: contactPhone,
+        channel: sourceIdentifier,
+        templateName: messageInfo.templateName,
+        sourceMessage: messageInfo.sourceMessage,
+        campaignId: campaignParticipant.campaignId,
+        error: lastErr?.[0] ?? null,
+        errorMessage: errorMsg,
+      }),
+    );
 
     if (campaignParticipant?.campaignParticipantDripStageId) {
       dripCampaignParticipantUpdates.push(
@@ -1358,6 +1387,11 @@ export async function bulkUpdateStatuses(
     pricingUpdates,
     campaignSendStatsUpdates,
   );
+
+  // After the writes, so a receiver never hears of a status the database does not
+  // hold. Only orgs subscribed to `message.status` cost anything past a cache
+  // read, and this never throws into the batch.
+  await emitWebhookEvents(webhookEvents);
 
   return processedOffsets;
 }

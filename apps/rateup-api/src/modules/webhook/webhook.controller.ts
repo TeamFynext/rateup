@@ -52,7 +52,7 @@ export async function updateWebhookEventsHandler(
   rep.send(webhook);
 }
 
-/** The signing secret, for the receiver to verify `X-Rateup-Signature` with. */
+/** The signing secret, for the receiver to verify `X-Rateup-Signature-256` (and the legacy `X-Rateup-Signature`) with. */
 export async function getWebhookSecretHandler(req: FastifyRequest, rep: FastifyReply) {
   const secret = await getWebhookSigningSecret(req.user.orgId);
   if (!secret) return rep.code(404).send({ message: "No webhook is set up" });

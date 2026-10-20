@@ -47,7 +47,8 @@ import {
   sendInstagramTextMessage,
 } from "../instagram/instagram_messaging.service.js";
 import { startMetaFlow, type MetaFlowAutomation } from "./metaFlow.service.js";
-import { sendSendApiText } from "../meta/sendApiMessages.js";
+import { sendSendApiText, type PendingComment } from "../meta/sendApiMessages.js";
+import { replyToFacebookComment } from "../facebook/facebook_comments.service.js";
 import { getMetaAutomationById } from "./instagram_automatedReply.service.js";
 import { ShopifyBody } from "../../integrations/shopify/shopify.types.js";
 import { resolveWooPathValue } from "../../integrations/woocommerce/woocommerce.mapping.js";
@@ -403,6 +404,8 @@ export interface RuleWithConditions {
   id: string;
   name: string;
   platform: "WHATSAPP" | "INSTAGRAM" | "FACEBOOK";
+  /** Empty only on a row written before multi-channel rules; `platform` stands in then. */
+  platforms: Array<"WHATSAPP" | "INSTAGRAM" | "FACEBOOK">;
   operator: "AND" | "OR";
   isActive: boolean;
   triggerEvent: string;
@@ -424,6 +427,7 @@ export interface RuleWithConditions {
     instagramPublicReplies?: string[];
     instagramCommentSource?: "ALL" | "POSTS" | "LIVE";
     instagramRef?: string;
+    messengerRef?: string;
   } | null;
   groups: Array<{
     id: string;
@@ -433,9 +437,10 @@ export interface RuleWithConditions {
       field: string;
       operator: string;
       value: string | null;
-      messageBodyLock?: {
-        businessHour: automationProps["businessHour"];
-      };
+      /** One per channel, all carrying the rule's business hours. */
+      messageBodyLocks?: Array<{
+        businessHour: automationProps["businessHour"] | null;
+      }>;
     }>;
   }>;
   actions: Array<{
@@ -462,9 +467,10 @@ async function validateRuleCondition(
     case "MESSAGE_BODY": {
       if (!value) return false;
 
-      // Check business hours if messageBodyLock exists
-      if (condition.messageBodyLock?.businessHour) {
-        const isWithinBusinessHours = validateTimeWindow(condition.messageBodyLock.businessHour);
+      // Check business hours if the keyword was locked to them
+      const lockedHours = condition.messageBodyLocks?.[0]?.businessHour;
+      if (lockedHours) {
+        const isWithinBusinessHours = validateTimeWindow(lockedHours);
         if (!isWithinBusinessHours) return false;
       }
 
@@ -586,10 +592,22 @@ async function validateConditionGroup(
   }
 }
 
+/**
+ * The channel a rule acts on for an event: the event's own, when the rule runs there. An event
+ * that could not name its channel (a contact with no conversation yet) uses the rule's first.
+ */
+export function actingPlatform(
+  rule: Pick<RuleWithConditions, "platform" | "platforms">,
+  eventPlatform?: string,
+): "WHATSAPP" | "INSTAGRAM" | "FACEBOOK" {
+  const platforms = rule.platforms?.length ? rule.platforms : [rule.platform ?? "WHATSAPP"];
+  return platforms.find((platform) => platform === eventPlatform) ?? platforms[0];
+}
+
 const RULE_INCLUDE = {
   groups: {
     include: {
-      conditions: { include: { messageBodyLock: { include: { businessHour: true } } } },
+      conditions: { include: { messageBodyLocks: { include: { businessHour: true } } } },
     },
   },
   actions: true,
@@ -607,6 +625,7 @@ export async function validateRuleConditions(
   message: string,
   orgId: string,
   phone: string,
+  platform: string = actingPlatform(rule),
 ): Promise<boolean> {
   if (!rule.isActive) return false;
 
@@ -640,14 +659,14 @@ export async function validateRuleConditions(
 
   if (operator === "AND") {
     for (const group of groups) {
-      const isValid = await validateConditionGroup(group, message, orgId, phone, rule.platform);
+      const isValid = await validateConditionGroup(group, message, orgId, phone, platform);
       if (!isValid) return false;
     }
     return true;
   } else {
     // OR operator
     for (const group of groups) {
-      const isValid = await validateConditionGroup(group, message, orgId, phone, rule.platform);
+      const isValid = await validateConditionGroup(group, message, orgId, phone, platform);
       if (isValid) return true;
     }
     return false;
@@ -691,6 +710,58 @@ export interface RuleExecutionContext {
   instagramLiveComment?: boolean;
   /** The ?ref= of the ig.me link that opened the thread, for INSTAGRAM_REFERRAL. */
   instagramRef?: string;
+  /** The ?ref= of the m.me link that opened the thread, for MESSENGER_REFERRAL. */
+  messengerRef?: string;
+  /**
+   * Set for FACEBOOK_COMMENT, which starts with `phone` unset: a Page comment does not name
+   * the person's Messenger id. The rule's first send is a private reply to the comment,
+   * which fills in `recipientId`; the caller reads it back to learn who was reached.
+   */
+  facebookComment?: PendingComment;
+  /** The post the comment is on, for FACEBOOK_COMMENT. */
+  facebookPostId?: string;
+}
+
+/** Who a Meta rule action sends to; see {@link metaRecipient}. */
+const FB_COMMENT_RECIPIENT_PREFIX = "fb_comment:";
+
+/**
+ * Who a Messenger or Instagram action sends to. A Facebook comment rule knows nobody until
+ * its first send reaches them, so until then this is a stand-in that a chatbot run is keyed
+ * by; the send itself goes to the comment.
+ */
+function metaRecipient(context: RuleExecutionContext): string | undefined {
+  if (context.phone) return context.phone;
+  const comment = context.facebookComment;
+  if (!comment) return undefined;
+  return comment.recipientId ?? `${FB_COMMENT_RECIPIENT_PREFIX}${comment.commentId}`;
+}
+
+/** After a send on a comment, the person it reached is who the rule's later actions act on. */
+function adoptCommentRecipient(context: RuleExecutionContext) {
+  const reached = context.facebookComment?.recipientId;
+  if (reached && !context.phone) context.phone = reached;
+}
+
+/** Posts one of the rule's public replies under a Page comment; never fails the rule. */
+async function replyToFacebookCommentInPublic(
+  rule: RuleWithConditions,
+  context: RuleExecutionContext,
+) {
+  // Shares Instagram's option: the editor and its limits are the same.
+  const replies = rule.options?.instagramPublicReplies ?? [];
+  const commentId = context.facebookComment?.commentId;
+  if (!replies.length || !commentId || !context.phoneNumberId) return;
+
+  const text = replies[Math.floor(Math.random() * replies.length)];
+  try {
+    await replyToFacebookComment(commentId, text, context.phoneNumberId, context.orgId);
+  } catch (error) {
+    log.error(
+      { err: error, ruleId: rule.id, commentId },
+      "Could not post the public reply to a Facebook comment",
+    );
+  }
 }
 
 /** Posts one of the rule's public replies under the comment; never fails the rule. */
@@ -717,22 +788,38 @@ function takeInstagramCommentId(context: RuleExecutionContext): string | undefin
 }
 
 /**
+ * Removes WhatsApp's `*bold*`, `_italic_`, `~strike~` and ```` ```mono``` ```` markers, which
+ * Instagram and Messenger would show literally. A marker only counts at a word's edge, as
+ * WhatsApp reads it, so `snake_case_name` and URLs survive. Mirrored in rateup-ui's
+ * `automation/whatsapp-formatting.ts` for the preview.
+ */
+export function stripWhatsAppFormatting(text: string): string {
+  return text
+    .replace(/```([\s\S]+?)```/g, "$1")
+    .replace(/(^|[\s([{"'])([*_~])(?=\S)([^\n]*?\S)\2(?=$|[\s.,!?:;)\]}"'])/gm, "$1$3");
+}
+
+/**
  * Sends a rule's text on Instagram or Messenger. `recipient` is the igsId or psid and
- * `accountId` the IBA id or Page id. Only Instagram can answer a comment privately.
+ * `accountId` the IBA id or Page id. Only Instagram can answer a comment privately. One reply
+ * is written for every channel a rule runs on, so WhatsApp's formatting is dropped here.
  */
 async function sendMetaRuleText(
   context: RuleExecutionContext,
   recipient: string,
   accountId: string,
-  text: string,
+  formattedText: string,
 ) {
+  const text = stripWhatsAppFormatting(formattedText);
   if (context.platform === "FACEBOOK") {
+    // On a comment rule the first send is the private reply; see facebookComment.
     await sendSendApiText(
-      { platform: PlatformType.FACEBOOK, accountId },
+      { platform: PlatformType.FACEBOOK, accountId, pendingComment: context.facebookComment },
       recipient,
       context.orgId,
       text,
     );
+    adoptCommentRecipient(context);
     return;
   }
   const commentId = takeInstagramCommentId(context);
@@ -829,7 +916,8 @@ export async function checkAndExecuteRuleByTriggerEvent(
       orgId,
       isActive: true,
       triggerEvent,
-      ...(context.platform !== "ALL" && { platform: context.platform }),
+      ...(context.platform &&
+        context.platform !== "ALL" && { platforms: { has: context.platform } }),
       ...(phoneNumberId && {
         whatsappSettingsPhoneIds: {
           has: phoneNumberId,
@@ -851,12 +939,17 @@ export async function checkAndExecuteRuleByTriggerEvent(
       (a, b) => Number(!!b.options?.instagramRef) - Number(!!a.options?.instagramRef),
     );
   }
+  if (triggerEvent === TriggerEvent.MESSENGER_REFERRAL) {
+    typedRules.sort(
+      (a, b) => Number(!!b.options?.messengerRef) - Number(!!a.options?.messengerRef),
+    );
+  }
 
   // Helper to determine if a rule has any business hour configuration
   const hasBusinessHours = (rule: RuleWithConditions): boolean => {
     if (rule.options?.businessHours?.enabled) return true;
     return rule.groups?.some((group) =>
-      group.conditions?.some((cond) => cond.messageBodyLock?.businessHour),
+      group.conditions?.some((cond) => cond.messageBodyLocks?.[0]?.businessHour),
     );
   };
 
@@ -937,15 +1030,30 @@ export async function checkAndExecuteRuleByTriggerEvent(
           }
         }
         // Check comment text against rule conditions (message body, etc.)
-        const isMatch = await validateRuleConditions(rule, messageText, orgId, phoneText);
+        const isMatch = await validateRuleConditions(
+          rule,
+          messageText,
+          orgId,
+          phoneText,
+          actingPlatform(rule, context.platform),
+        );
         if (!isMatch) continue;
       } else if (triggerEvent === TriggerEvent.INSTAGRAM_STORY_MENTION) {
         // Story mentions always match — no post filtering or message checks
       } else if (triggerEvent === TriggerEvent.INSTAGRAM_REFERRAL) {
         const wanted = rule.options?.instagramRef?.toLowerCase();
         if (wanted && wanted !== context.instagramRef?.toLowerCase()) continue;
+      } else if (triggerEvent === TriggerEvent.MESSENGER_REFERRAL) {
+        const wanted = rule.options?.messengerRef?.toLowerCase();
+        if (wanted && wanted !== context.messengerRef?.toLowerCase()) continue;
       } else {
-        const isMatch = await validateRuleConditions(rule, messageText, orgId, phoneText);
+        const isMatch = await validateRuleConditions(
+          rule,
+          messageText,
+          orgId,
+          phoneText,
+          actingPlatform(rule, context.platform),
+        );
         if (!isMatch) continue;
       }
 
@@ -958,6 +1066,9 @@ export async function checkAndExecuteRuleByTriggerEvent(
 
       if (triggerEvent === TriggerEvent.INSTAGRAM_COMMENT) {
         await replyToCommentInPublic(rule, context);
+      }
+      if (triggerEvent === TriggerEvent.FACEBOOK_COMMENT) {
+        await replyToFacebookCommentInPublic(rule, context);
       }
 
       if (rule.options?.sendOncePerDay && phoneText) {
@@ -1049,7 +1160,10 @@ export async function executeScheduledRule(
   if (await isOutsideRuleBusinessHours(rule)) return { status: "outside_business_hours" };
 
   const phone = context.phone ?? "";
-  if (!(await validateRuleConditions(rule, context.message ?? "", context.orgId, phone))) {
+  const platform = actingPlatform(rule, context.platform);
+  if (
+    !(await validateRuleConditions(rule, context.message ?? "", context.orgId, phone, platform))
+  ) {
     return { status: "conditions_not_met" };
   }
   const executedActions = await executeRuleActions(rule, context);
@@ -1075,8 +1189,7 @@ async function executeRuleActions(
   context: RuleExecutionContext,
 ): Promise<ActionResult[]> {
   const results: ActionResult[] = [];
-  const platform = rule.platform ?? "WHATSAPP";
-  const actionContext = { ...context, platform };
+  const actionContext = { ...context, platform: actingPlatform(rule, context.platform) };
 
   for (const action of rule.actions) {
     try {
@@ -1478,13 +1591,14 @@ async function executeSendMessageAction(
   messageText: string,
   context: RuleExecutionContext,
 ): Promise<boolean> {
-  if (!context.phone || !messageText || !context.orgId) return false;
+  const recipient = context.platform === "FACEBOOK" ? metaRecipient(context) : context.phone;
+  if (!recipient || !messageText || !context.orgId) return false;
 
   if (context.platform === "INSTAGRAM" || context.platform === "FACEBOOK") {
     if (!context.phoneNumberId) return false;
-    await sendMetaRuleText(context, context.phone, context.phoneNumberId, messageText);
+    await sendMetaRuleText(context, recipient, context.phoneNumberId, messageText);
   } else {
-    await sendTextMessage(waReplyTarget(context.phone, context), null, messageText);
+    await sendTextMessage(waReplyTarget(recipient, context), null, messageText);
   }
 
   return true;
@@ -1494,7 +1608,8 @@ async function executeSendWebSurveyAction(
   surveyTeamMapId: string,
   context: RuleExecutionContext,
 ): Promise<boolean> {
-  if (!context.phone || !context.orgId || !surveyTeamMapId) return false;
+  const recipient = context.platform === "FACEBOOK" ? metaRecipient(context) : context.phone;
+  if (!recipient || !context.orgId || !surveyTeamMapId) return false;
 
   const surveyTeamMap = await prisma.surveyTeamMap.findFirst({
     where: {
@@ -1525,9 +1640,9 @@ async function executeSendWebSurveyAction(
 
   if (context.platform === "INSTAGRAM" || context.platform === "FACEBOOK") {
     if (!context.phoneNumberId) return false;
-    await sendMetaRuleText(context, context.phone, context.phoneNumberId, messageText);
+    await sendMetaRuleText(context, recipient, context.phoneNumberId, messageText);
   } else {
-    await sendTextMessage(waReplyTarget(context.phone, context), null, messageText);
+    await sendTextMessage(waReplyTarget(recipient, context), null, messageText);
   }
 
   return true;
@@ -1749,7 +1864,8 @@ async function executeTriggerChatbotAction(
   chatbotId: string,
   context: RuleExecutionContext,
 ): Promise<boolean> {
-  if (!context.phone || !chatbotId || !context.orgId) return false;
+  const recipient = context.platform === "FACEBOOK" ? metaRecipient(context) : context.phone;
+  if (!recipient || !chatbotId || !context.orgId) return false;
 
   if (context.platform === "INSTAGRAM" || context.platform === "FACEBOOK") {
     const platform =
@@ -1766,14 +1882,16 @@ async function executeTriggerChatbotAction(
       return false;
     }
     await startMetaFlow(
-      context.phone,
+      recipient,
       // The stored matchData is typed loosely on the Prisma model; this reader
       // knows the row is a Meta flow graph.
       automation as unknown as MetaFlowAutomation,
       context.orgId,
-      { platform, accountId: context.phoneNumberId },
+      // On a Facebook comment the chatbot's first message is the private reply.
+      { platform, accountId: context.phoneNumberId, pendingComment: context.facebookComment },
       takeInstagramCommentId(context),
     );
+    adoptCommentRecipient(context);
     return true;
   }
 
@@ -1786,9 +1904,9 @@ async function executeTriggerChatbotAction(
 
   if (automation) {
     await startAutomationFlow(
-      context.phone,
+      recipient,
       automation,
-      { message: context.message || "", from: context.phone },
+      { message: context.message || "", from: recipient },
       context.orgId,
     );
     return true;

@@ -68,6 +68,11 @@ export interface MetaSendResult {
   ok: boolean;
   /** Meta's id for the message, when it accepted one. */
   messageId?: string;
+  /**
+   * Who it went to: `to`, or the id Meta named when the send was addressed some other way
+   * (a private reply to a comment is addressed to the comment).
+   */
+  recipientId?: string;
   /** Human-readable reason, suitable for showing to an agent. */
   error?: string;
   detail?: WaGraphApiErrorDetail;
@@ -248,7 +253,7 @@ export async function sendMetaMessage(input: MetaSendInput): Promise<MetaSendRes
       // failing the send for.
       log.warn({ orgId, platform, messageId }, "Sent a Meta message with no recipient to record");
     }
-    return { ok: true, messageId };
+    return { ok: true, messageId, recipientId: recipient };
   } catch (err) {
     const detail = graphApiErrorDetail(err);
     log.error(

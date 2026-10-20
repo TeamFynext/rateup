@@ -12,6 +12,7 @@ import { SubscriptionFeaturePathName } from "../../types/enums.js";
 import { getNestedProperty } from "../../utils/misc/obj.utils.js";
 import { GATEWAY_BILLED_PLAN } from "./planBilling.js";
 import { log } from "../../utils/logger.js";
+import { bustCache, withCache } from "../../utils/cache.js";
 import merge from "lodash/merge.js";
 
 /**
@@ -116,6 +117,7 @@ export async function createFreePlanSubscription(
       expiresAt: dayjs().add(100, "year").toDate(),
     },
   });
+  void bustSubscriptionGate(orgId);
 }
 
 /**
@@ -186,6 +188,7 @@ export async function downgradeExpiredSubscriptions() {
           subscriptionRef: null,
         },
       });
+      void bustSubscriptionGate(subscription.orgId);
       downgraded++;
       log.info(
         {
@@ -202,6 +205,29 @@ export async function downgradeExpiredSubscriptions() {
   }
 
   return { downgraded };
+}
+
+const SUBSCRIPTION_GATE_TTL_SECONDS = 30;
+const subscriptionGateKey = (orgId: string) => `subgate:${orgId}`;
+
+/**
+ * What a per-request plan gate needs — features and expiry — cached for half a minute. The
+ * partner API checks this on every call, and the full `getSubscription` read (plan, payment
+ * plans, catalog links) is far more than a yes/no needs. Writes that know the org call
+ * `bustSubscriptionGate`; the few that do not (a renewal keyed by Stripe ref, a plan-wide
+ * feature change) are covered by the TTL. `expiresAt` arrives as an ISO string on a hit.
+ */
+export async function getSubscriptionGate(orgId: string) {
+  return withCache(subscriptionGateKey(orgId), SUBSCRIPTION_GATE_TTL_SECONDS, () =>
+    prisma.subscription.findFirst({
+      where: { orgId },
+      select: { features: true, expiresAt: true },
+    }),
+  );
+}
+
+export async function bustSubscriptionGate(...orgIds: string[]) {
+  await bustCache(...orgIds.map(subscriptionGateKey));
 }
 
 export async function getSubscription(orgId: string) {
@@ -324,7 +350,7 @@ export async function getAllSubscriptions() {
 }
 
 export async function updateSubscription(orgId: string, updatedData: updateSubscriptionInput) {
-  return await prisma.subscription.update({
+  const updated = await prisma.subscription.update({
     where: {
       orgId,
     },
@@ -336,6 +362,8 @@ export async function updateSubscription(orgId: string, updatedData: updateSubsc
         : updatedData.isAnnualMessageLimit,
     },
   });
+  void bustSubscriptionGate(orgId);
+  return updated;
 }
 
 /**
@@ -355,7 +383,7 @@ export async function applyPlanToOrg(
     ? withContractedCaps(tierFeatures, options.currentFeatures)
     : tierFeatures;
 
-  return db.subscription.upsert({
+  const subscription = await db.subscription.upsert({
     where: { orgId },
     // An org that never got a subscription row (signup failed half-way) can still be fixed.
     create: { orgId, basePlanId: plan.id, features, expiresAt: options.expiresAt },
@@ -369,16 +397,20 @@ export async function applyPlanToOrg(
       isAnnualMessageLimit: false,
     },
   });
+  void bustSubscriptionGate(orgId);
+  return subscription;
 }
 
 export async function deleteSubscriptions(orgIds: Array<string>) {
-  return await prisma.subscription.deleteMany({
+  const deleted = await prisma.subscription.deleteMany({
     where: {
       orgId: {
         in: orgIds,
       },
     },
   });
+  void bustSubscriptionGate(...orgIds);
+  return deleted;
 }
 
 export async function hasFeature(orgId: string, featurePath: SubscriptionFeaturePathName) {

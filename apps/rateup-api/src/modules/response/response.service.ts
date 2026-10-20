@@ -36,6 +36,7 @@ import {
   getContactGroupByNameAndTeam,
 } from "../contact/contactGroup/contactGroup.service.js";
 import { enqueueSurveyResponseWebhook } from "../webhook/webhook.service.js";
+import { announceSurveyResponseCreated } from "./response.webhook.js";
 import { getFileUrlFromKey } from "../../utils/upload/s3Upload.js";
 import {
   barGraphQuestions,
@@ -179,79 +180,6 @@ export async function getAllResponses(
   });
   return responseData;
 }
-interface ResponseBySurveyRawRow {
-  id: string;
-  createdAt: Date;
-  responses: QuestionResponse[];
-  language: string;
-  tag: string | null;
-  surveyTeamMapId: string;
-  teamId: string;
-  questions: Question[];
-  phone: string | null;
-}
-
-export const getResponseBySurveyById = async (id: string) => {
-  const responses = await prisma.$queryRaw<ResponseBySurveyRawRow[]>`
-  SELECT sr.id, sr."createdAt",
-      sr.responses,
-      sr.language, sr.tag, sr."surveyTeamMapId", sr.language, s.questions, stm."teamId", co.phone
-  FROM "SurveyResponse" sr
-  INNER JOIN "SurveyTeamMap" stm ON sr."surveyTeamMapId" = stm.id
-  INNER JOIN "WaFlow" wf ON wf."surveyId" = ${id}::uuid
-  INNER JOIN "Survey" s ON s.id = stm."surveyId"
-  LEFT JOIN "Contact" co ON sr."contactId" = co.id
-  WHERE stm."surveyId" = ${id}::uuid`;
-
-  const responsesWithTitles = responses.map(
-    ({ id, createdAt, tag, phone, language, teamId, responses, questions }) => {
-      // Create a mapping of questionId to title for easier lookup
-      const questionMap = questions.reduce<Record<string, string | undefined>>(
-        (map, { id, title, description, label }) => {
-          map[id] =
-            Object.values(title)?.[0] ||
-            Object.values(description)?.[0] ||
-            Object.values(label ?? {})?.[0];
-          return map;
-        },
-        {},
-      );
-      // Map over each response to replace questionId with the corresponding title
-      const updatedResponses = responses.map(({ questionId, response = {}, ...rest }) => ({
-        ...rest,
-        response: Object.values(response)?.[0],
-        title: questionMap[questionId],
-      }));
-
-      // Return the updated response object
-      return {
-        id,
-        createdAt,
-        tag,
-        phone,
-        language,
-        teamId,
-        responses: updatedResponses,
-      };
-    },
-  );
-
-  return responsesWithTitles;
-};
-
-export const getSurveyList = async (orgId: string) => {
-  return prisma.survey.findMany({
-    where: {
-      orgId,
-    },
-    select: {
-      id: true,
-      title: true,
-      type: true,
-    },
-  });
-};
-
 export async function downloadExcelResponse(
   surveyId: string,
   allResponses: Awaited<ReturnType<typeof getAllResponses>>,
@@ -716,6 +644,9 @@ const responseWithRelations = {
           questions: true,
           responseWebhookEndpoint: true,
           title: true,
+          // For the org webhook: which kind of survey, and the WhatsApp Flow behind one.
+          type: true,
+          WaFlow: { select: { dbFlowId: true, flowId: true, name: true, categories: true } },
         },
       },
       team: {
@@ -835,6 +766,10 @@ export async function createResponse(
       surveyResponse.platform === "WHATSAPP" ? SubscriptionFeaturePathName.Whatsapp : "survey",
       surveyResponse.surveyTeamMap?.team.orgId,
     );
+    // Every creation path (web, WhatsApp survey, WhatsApp Flow) files through here, and
+    // only a fresh row reaches this line — the idempotent replays returned above. Not
+    // awaited: it only enqueues, and never rejects.
+    void announceSurveyResponseCreated(surveyResponse);
   }
 
   return surveyResponse;

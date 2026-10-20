@@ -34,6 +34,7 @@ import type { CommerceOrder, CommerceProvider, CommerceStore } from "./commerce.
 import { syncRedemptionDiscount } from "./discounts.js";
 import {
   commerceAwardKey,
+  commerceLoyaltyJobId,
   processCommerceOrderLoyalty,
   type CommerceLoyaltyJobData,
 } from "./loyalty.js";
@@ -219,7 +220,7 @@ describe("the order pipeline", () => {
     expect(shopifyLoyaltyQueue.add).toHaveBeenCalledWith(
       "order-loyalty",
       expect.objectContaining({ provider: "woocommerce", storeId: WOO, status: "paid" }),
-      expect.objectContaining({ jobId: `loyalty-${WOO}-completed-901` }),
+      expect.objectContaining({ jobId: "loyalty-https-//shop.example.com-completed-901" }),
     );
     expect(emitIntegrationEvent).toHaveBeenCalledWith(
       "org-1",
@@ -231,6 +232,28 @@ describe("the order pipeline", () => {
       expect.anything(),
       "919000000001",
     );
+  });
+
+  test("the loyalty job id is one BullMQ accepts, for a store URL too", async () => {
+    // The queue is mocked above, so check the id against BullMQ's own rule: a
+    // "Custom Id cannot contain :" throw here is what made every Woo order fail.
+    const { Job } = await vi.importActual<typeof import("bullmq")>("bullmq");
+    const queue = { name: "q", opts: {}, toKey: (key: string) => `bull:q:${key}`, keys: {} };
+    // The check `Queue.add` runs before writing to Redis; protected in BullMQ's types.
+    const validate = (jobId: string) =>
+      (
+        new Job(queue as never, "order-loyalty", {}, { jobId }) as unknown as {
+          validateOptions(jobData: unknown): void;
+        }
+      ).validateOptions({});
+
+    for (const storeId of [WOO, "https://shop.example.com:8443/store", "acme.myshopify.com"]) {
+      const jobId = commerceLoyaltyJobId({ storeId, eventKey: "completed", orderId: "901" });
+      expect(() => validate(jobId)).not.toThrow();
+    }
+    // Shopify's ids are unchanged, so a job retrying across the deploy still dedupes.
+    const shopify = { storeId: "acme.myshopify.com", eventKey: "orders/paid", orderId: "7" };
+    expect(commerceLoyaltyJobId(shopify)).toBe("loyalty-acme.myshopify.com-orders/paid-7");
   });
 
   test("no phone: loyalty and integrations still hear about it, WhatsApp paths do not", async () => {

@@ -11,13 +11,17 @@ vi.mock("../../../utils/prisma.js", () => {
       rule: { findMany: vi.fn(), findUnique: vi.fn(), findFirst: vi.fn() },
       ruleMessageBodyLock: { findFirst: vi.fn() },
       ruleAction: { findMany: vi.fn() },
+      channel: { findMany: vi.fn() },
       $transaction: vi.fn(async (cb: (client: unknown) => Promise<unknown>) => cb(tx)),
     },
     excludeFields: vi.fn(),
   };
 });
 
-vi.mock("../../../../generated/prisma/client.js", () => ({ Prisma: {} }));
+vi.mock("../../../../generated/prisma/client.js", () => ({
+  Prisma: {},
+  RulePlatform: { WHATSAPP: "WHATSAPP", INSTAGRAM: "INSTAGRAM", FACEBOOK: "FACEBOOK" },
+}));
 
 import prisma from "../../../utils/prisma.js";
 import {
@@ -40,6 +44,7 @@ const db = prisma as unknown as {
   rule: { findMany: Mock; findUnique: Mock; findFirst: Mock };
   ruleMessageBodyLock: { findFirst: Mock };
   ruleAction: { findMany: Mock };
+  channel: { findMany: Mock };
   $transaction: Mock;
 };
 const tx = db.__tx;
@@ -83,11 +88,13 @@ beforeEach(() => {
   db.rule.findUnique.mockResolvedValue(null);
   db.rule.findFirst.mockResolvedValue(null);
   db.ruleAction.findMany.mockResolvedValue([]);
+  db.channel.findMany.mockResolvedValue([]);
   tx.rule.create.mockResolvedValue(CREATED_RULE);
   tx.rule.update.mockResolvedValue(CREATED_RULE);
   tx.rule.delete.mockResolvedValue(CREATED_RULE);
   tx.rule.findUnique.mockResolvedValue({
     platform: "WHATSAPP",
+    platforms: ["WHATSAPP"],
     options: null,
     groups: [{ conditions: [{ id: "cond-1", field: "MESSAGE_BODY", value: "hello" }] }],
   });
@@ -277,6 +284,8 @@ describe("updateRule", () => {
   const existing: {
     orgId: string;
     platform: string;
+    platforms: string[];
+    whatsappSettingsPhoneIds: string[];
     triggerEvent: string;
     isActive: boolean;
     groups: { conditions: { field: string; value: string }[] }[];
@@ -284,6 +293,8 @@ describe("updateRule", () => {
   } = {
     orgId: "org-1",
     platform: "WHATSAPP",
+    platforms: ["WHATSAPP"],
+    whatsappSettingsPhoneIds: ["phone-1"],
     triggerEvent: "MESSAGE_RECEIVED",
     isActive: true,
     groups: [{ conditions: [{ field: "MESSAGE_BODY", value: "hello" }] }],
@@ -490,5 +501,44 @@ describe("getRulesByAutomationId", () => {
 
   test("returns an empty list when no rule uses that automation", async () => {
     await expect(getRulesByAutomationId("auto-1", "org-1")).resolves.toEqual([]);
+  });
+});
+
+describe("createRule - channels", () => {
+  test("runs on every platform its accounts belong to, and locks keywords on each", async () => {
+    db.channel.findMany.mockResolvedValue([{ platform: "FACEBOOK" }, { platform: "WHATSAPP" }]);
+    tx.rule.findUnique.mockResolvedValue({
+      platform: "WHATSAPP",
+      platforms: ["WHATSAPP", "FACEBOOK"],
+      options: null,
+      groups: [{ conditions: [{ id: "cond-1", field: "MESSAGE_BODY", value: "hello" }] }],
+    });
+
+    await createRule(
+      ruleInput({
+        platforms: ["WHATSAPP", "FACEBOOK"],
+        whatsappSettingsPhoneIds: ["phone-1", "page-1"],
+      }),
+    );
+
+    expect(tx.rule.create.mock.calls[0][0].data).toMatchObject({
+      platform: "WHATSAPP",
+      platforms: ["WHATSAPP", "FACEBOOK"],
+    });
+    const locks = tx.ruleMessageBodyLock.createMany.mock.calls[0][0].data;
+    expect(locks.map((lock: { platform: string }) => lock.platform)).toEqual([
+      "WHATSAPP",
+      "FACEBOOK",
+    ]);
+    expect(db.ruleMessageBodyLock.findFirst).toHaveBeenCalledTimes(2);
+  });
+
+  test("refuses accounts on a channel the rule was not checked for", async () => {
+    db.channel.findMany.mockResolvedValue([{ platform: "INSTAGRAM" }, { platform: "WHATSAPP" }]);
+
+    await expect(
+      createRule(ruleInput({ whatsappSettingsPhoneIds: ["phone-1", "iba-1"] })),
+    ).rejects.toThrow(/include Instagram/);
+    expect(tx.rule.create).not.toHaveBeenCalled();
   });
 });
