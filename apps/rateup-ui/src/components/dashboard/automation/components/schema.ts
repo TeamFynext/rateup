@@ -108,7 +108,27 @@ const TRIGGER_EVENTS = [
     value: "INSTAGRAM_REFERRAL",
     platforms: ["INSTAGRAM"],
   },
+  {
+    label: "m.me Link Opened",
+    value: "MESSENGER_REFERRAL",
+    platforms: ["FACEBOOK"],
+  },
+  {
+    label: "Facebook Page Comment",
+    value: "FACEBOOK_COMMENT",
+    platforms: ["FACEBOOK"],
+  },
 ] as const;
+
+/**
+ * Triggers fired by a comment on a post: answered by a private reply, matched on the
+ * comment's text, and able to reply in public under it.
+ */
+const COMMENT_TRIGGERS = new Set<string>(["INSTAGRAM_COMMENT", "FACEBOOK_COMMENT"]);
+
+export function isCommentTrigger(triggerEvent: string | undefined): boolean {
+  return triggerEvent !== undefined && COMMENT_TRIGGERS.has(triggerEvent);
+}
 
 /**
  * The trigger events offered for a platform.
@@ -403,6 +423,13 @@ const ruleOptionsSchema = z.object({
   // Mirrors the API's check in wa_rule.schema.ts.
   // Meta's own limit for an ig.me ref.
   instagramRef: z
+    .string()
+    .trim()
+    .max(2083)
+    .regex(/^[A-Za-z0-9_=-]*$/, "Use letters, numbers, - _ and = only")
+    .optional(),
+  // The ?ref= of an m.me link; mirrors the API's check in wa_rule.schema.ts.
+  messengerRef: z
     .string()
     .trim()
     .max(2083)

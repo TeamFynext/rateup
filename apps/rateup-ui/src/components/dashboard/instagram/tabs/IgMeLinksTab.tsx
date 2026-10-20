@@ -41,7 +41,8 @@ import { PhonePreviewButton } from "@/components/ui/phone-preview.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 
-function CopyLinkButton({ link }: Readonly<{ link: string }>) {
+/** Copies a link, confirming for a moment. Shared with the Messenger m.me links tab. */
+export function CopyLinkButton({ link }: Readonly<{ link: string }>) {
   const [copied, setCopied] = useState(false);
   const { t } = useTranslation();
 
@@ -59,7 +60,12 @@ function CopyLinkButton({ link }: Readonly<{ link: string }>) {
   );
 }
 
-function QrButton({ link, name }: Readonly<{ link: string; name: string }>) {
+/** Downloads the link as a QR code; `prefix` starts the file name. */
+export function QrButton({
+  link,
+  name,
+  prefix,
+}: Readonly<{ link: string; name: string; prefix?: string }>) {
   const { t } = useTranslation();
   return (
     <Button
@@ -67,7 +73,7 @@ function QrButton({ link, name }: Readonly<{ link: string; name: string }>) {
       variant="outline"
       size="sm"
       disabled={!link}
-      onClick={() => void downloadIgMeQr(link, name)}
+      onClick={() => void downloadIgMeQr(link, name, prefix)}
     >
       <IconQrcode className="mr-1.5 size-4" />
       {t("QR code")}

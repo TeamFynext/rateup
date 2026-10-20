@@ -8,6 +8,7 @@ import {
   getContactDisplayPhone,
   inboxRowSortTime,
   isMetaAiMessage,
+  parseWaMessage,
 } from "./inbox.ts";
 
 describe("getContactChannelSource", () => {
@@ -124,5 +125,42 @@ describe("inbox row sorting", () => {
     ];
     expect(sort(rows, "sortBy:newest")).toEqual(["late", "mid", "undated"]);
     expect(sort(rows, "sortBy:oldest")).toEqual(["mid", "late", "undated"]);
+  });
+});
+
+// Postbacks and link visits are stored as `{ type, … }`, not as a message; they used to show
+// as "No messages yet" in the thread.
+describe("parseWaMessage - Messenger and Instagram events", () => {
+  const received = (receive: Record<string, unknown>, platform = MessagePlatform.FACEBOOK) =>
+    parseWaMessage({
+      sourcePlatform: platform,
+      messageBody: { exchangeProcess: "receive", receive },
+    } as unknown as Parameters<typeof parseWaMessage>[0]);
+
+  it("shows a tapped button by its title", () => {
+    const parsed = received({ type: "postback", title: "Get Started", payload: "GET_STARTED" });
+
+    expect(parsed.messageType).toBe("text");
+    expect(parsed.messageContent).toBe("Get Started");
+  });
+
+  it("falls back to the payload for a button with no title", () => {
+    expect(received({ type: "postback", payload: "MENU_HOURS" }).messageContent).toBe("MENU_HOURS");
+  });
+
+  it.each([MessagePlatform.FACEBOOK, MessagePlatform.INSTAGRAM])(
+    "shows a %s link visit with its ref",
+    (platform) => {
+      const parsed = received({ type: "referral", referral: { ref: "summer_sale" } }, platform);
+
+      expect(parsed.messageType).toBe("text");
+      expect(parsed.messageContent).toBe("Opened a link (ref: summer_sale)");
+    },
+  );
+
+  it("shows a link visit with no ref", () => {
+    expect(received({ type: "referral", referral: { source: "SHORTLINK" } }).messageContent).toBe(
+      "Opened a link",
+    );
   });
 });

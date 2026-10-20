@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils.ts";
 import ActionList from "./ActionList.tsx";
 import { InstagramPublicReplies } from "./InstagramPublicReplies.tsx";
 import type { CreateRuleInput, CreateRuleValues } from "./schema.ts";
-import { PLATFORMS } from "./schema.ts";
+import { isCommentTrigger, PLATFORMS } from "./schema.ts";
 import { useRuleAccounts } from "./wizard/AccountPicker.tsx";
 import { ConditionsStep } from "./wizard/ConditionsStep.tsx";
 import { ReviewStep } from "./wizard/ReviewStep.tsx";
@@ -69,7 +69,7 @@ function stepHeading(step: WizardStep, triggerEvent: string, isEdit: boolean) {
           description: "Without a condition it would answer every message — even “thanks”.",
         };
       }
-      if (triggerEvent === "INSTAGRAM_COMMENT") {
+      if (isCommentTrigger(triggerEvent)) {
         return {
           title: "Which comments should it answer?",
           description: "Add keywords, or leave it empty to answer every comment.",
@@ -261,7 +261,7 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                       {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                       {/* Replying under the comment is something the rule does, so it sits
                           with the actions, not with the conditions. */}
-                      {rule.triggerEvent === "INSTAGRAM_COMMENT" && <InstagramPublicReplies />}
+                      {isCommentTrigger(rule.triggerEvent) && <InstagramPublicReplies />}
                     </Field>
                   )}
                 />

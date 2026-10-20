@@ -48,6 +48,34 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     kinds: ["new"],
     area: "Settings",
     link: { to: "/dashboard/features", label: "Open Features" },
+    id: "2026-10-17-messenger-welcome-menu",
+    title: "Get Started button, ice breakers and menu for Messenger",
+    summary:
+      "Set the greeting and Get Started button people see when they first message your Page, add tap-to-ask questions and an always-there menu, each starting the chatbot you choose.",
+    publishedAt: "2026-10-17",
+    kinds: ["new"],
+    area: "Messenger",
+    link: { to: "/dashboard/messenger", label: "Set it up" },
+  },
+  {
+    id: "2026-10-17-facebook-comment-replies",
+    title: "Reply to Facebook comments in Messenger",
+    summary:
+      "When someone comments on your Page's posts, send them a private Messenger reply or start a chatbot, and thank them publicly under the comment.",
+    publishedAt: "2026-10-17",
+    kinds: ["new"],
+    area: "Messenger",
+    link: { to: "/dashboard/messenger", label: "Set it up" },
+  },
+  {
+    id: "2026-10-17-messenger-m-me-links",
+    title: "m.me links start a Messenger automation",
+    summary:
+      "Share an m.me link or QR code on your website, ads or emails. When someone opens it, the chatbot or message you choose starts right away.",
+    publishedAt: "2026-10-17",
+    kinds: ["new"],
+    area: "Messenger",
+    link: { to: "/dashboard/messenger", label: "Create a link" },
   },
   {
     id: "2026-10-16-campaign-device-preview",

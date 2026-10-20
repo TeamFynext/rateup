@@ -1,4 +1,5 @@
 import type { CreateRuleInput } from "@/components/dashboard/automation/components/schema.ts";
+import { isCommentTrigger } from "@/components/dashboard/automation/components/schema.ts";
 import { stripWhatsAppFormatting } from "@/components/dashboard/automation/whatsapp-formatting.ts";
 import { ShopifyEvents } from "@/types/enums.ts";
 
@@ -42,6 +43,8 @@ export const PLAIN_TRIGGERS: Record<string, string> = {
   INSTAGRAM_COMMENT: "Someone comments on your post",
   INSTAGRAM_STORY_MENTION: "Someone mentions you in a story",
   INSTAGRAM_REFERRAL: "Someone opens your ig.me link",
+  MESSENGER_REFERRAL: "Someone opens your m.me link",
+  FACEBOOK_COMMENT: "Someone comments on your Page's post",
 };
 
 const SHOPIFY_PHRASES: Partial<Record<string, string>> = {
@@ -249,7 +252,7 @@ export function buildRuleSentence(rule: CreateRuleInput, names: NameLookup): Sen
   const conditions = conditionParts(rule, names);
   if (conditions.length) {
     const subject =
-      rule.triggerEvent === "MESSAGE_RECEIVED" || rule.triggerEvent === "INSTAGRAM_COMMENT"
+      rule.triggerEvent === "MESSAGE_RECEIVED" || isCommentTrigger(rule.triggerEvent)
         ? "and it"
         : "and the contact";
     parts.push(word(subject), ...conditions);
@@ -259,7 +262,7 @@ export function buildRuleSentence(rule: CreateRuleInput, names: NameLookup): Sen
 
   const actions = (rule.actions ?? []).map((action) => actionPart(action, names));
   const publicReplies = (rule.options?.instagramPublicReplies ?? []).filter((r) => r.trim());
-  if (rule.triggerEvent === "INSTAGRAM_COMMENT" && publicReplies[0]) {
+  if (isCommentTrigger(rule.triggerEvent) && publicReplies[0]) {
     actions.unshift({
       role: "action",
       text: `reply ${quote(clip(publicReplies[0], 24))} under it`,
