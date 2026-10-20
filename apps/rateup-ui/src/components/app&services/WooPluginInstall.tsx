@@ -4,18 +4,19 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button.tsx";
 
 /**
- * Whether RateUp for WooCommerce is listed on WordPress.org. It was submitted on
- * 2026-10-17 and is in review; set this to true once it is approved and published,
- * so merchants are sent to WordPress's plugin search instead of told to wait.
+ * Whether RateUp for WooCommerce is listed on WordPress.org: approved 2026-10-20. While
+ * false, the install cards say the plugin is in review instead of sending merchants to it.
  */
-export const WOO_PLUGIN_LISTED = false;
+export const WOO_PLUGIN_LISTED = true;
 
 /** As the plugin is named on WordPress.org. */
 const PLUGIN_NAME = "RateUp for WooCommerce";
+const PLUGIN_SLUG = "rateup-for-woocommerce";
 
 /**
- * How to install the RateUp for WooCommerce plugin: from WordPress.org, through the store's
- * own plugin search, which RateUp can open directly since it knows the store's address.
+ * How to install the RateUp for WooCommerce plugin from WordPress.org. The button opens the
+ * plugin's own page in the store's admin, with its Install Now button: looked up by slug, it
+ * works as soon as the plugin is published, while WordPress's search can take days to list it.
  */
 export function WooPluginInstall({ storeUrl }: Readonly<{ storeUrl: string }>) {
   const { t } = useTranslation();
@@ -30,7 +31,7 @@ export function WooPluginInstall({ storeUrl }: Readonly<{ storeUrl: string }>) {
     );
   }
 
-  const search = new URLSearchParams({ s: PLUGIN_NAME, tab: "search", type: "term" });
+  const details = new URLSearchParams({ tab: "plugin-information", plugin: PLUGIN_SLUG });
   return (
     <div className="flex flex-col gap-3">
       <ol className="list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
@@ -46,7 +47,7 @@ export function WooPluginInstall({ storeUrl }: Readonly<{ storeUrl: string }>) {
           variant="outline"
           render={
             <a
-              href={`${storeUrl}/wp-admin/plugin-install.php?${search}`}
+              href={`${storeUrl}/wp-admin/plugin-install.php?${details}`}
               target="_blank"
               rel="noreferrer"
             />
