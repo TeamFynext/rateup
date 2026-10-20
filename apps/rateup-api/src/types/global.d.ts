@@ -1126,18 +1126,55 @@ declare global {
 
               payload?: string;
 
-              referral?: {
-                ref?: string;
-
-                source?: string;
-
-                type?: string;
-              };
+              referral?: FacebookReferral;
             };
+
+            /** Sent on its own when someone who has chatted before opens an m.me link. */
+            referral?: FacebookReferral;
           },
         ];
+
+        /** Page feed events (comments, posts, reactions); see FacebookFeedChange. */
+        changes?: FacebookFeedChange[];
       },
     ];
+  }
+
+  /** One `feed` change on a Page. RateUp acts only on a new comment. */
+  interface FacebookFeedChange {
+    field: string; // "feed"
+
+    value?: {
+      item?: string; // "comment", "post", "reaction", …
+
+      verb?: string; // "add", "edited", "remove", …
+
+      comment_id?: string;
+
+      post_id?: string;
+
+      /** The comment being answered, when this comment is a reply in a thread. */
+      parent_id?: string;
+
+      message?: string;
+
+      /** Unix seconds. */
+      created_time?: number;
+
+      /** The commenter; `id` is not their Messenger id. The Page itself when it comments. */
+      from?: { id: string; name?: string };
+
+      post?: { id?: string; permalink_url?: string };
+    };
+  }
+
+  /** Where a Messenger thread was opened from: `ref` is an m.me link's ?ref=. */
+  interface FacebookReferral {
+    ref?: string;
+
+    source?: string; // "SHORTLINK" for m.me, "ADS", …
+
+    type?: string; // "OPEN_THREAD"
   }
 
   interface FbSendMessageBody {

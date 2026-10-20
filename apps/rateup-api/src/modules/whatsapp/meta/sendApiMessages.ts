@@ -20,6 +20,22 @@ export interface MetaFlowChannel {
   platform: typeof PlatformType.INSTAGRAM | typeof PlatformType.FACEBOOK;
   /** The IBA id for Instagram, the Page id for Messenger. */
   accountId: string;
+  /**
+   * Messenger only: a Page comment being answered. See {@link PendingComment}. Instagram
+   * passes its comment id separately, because a comment there already names the person.
+   */
+  pendingComment?: PendingComment;
+}
+
+/**
+ * A Facebook Page comment a rule or chatbot is answering. A Page comment names the person
+ * by an id that is not their Messenger id, so the first send goes out as a private reply to
+ * the comment and Meta's answer names them: `recipientId` is set then, and every later send
+ * on the same channel goes to it. Shared by reference, so the caller reads who was reached.
+ */
+export interface PendingComment {
+  commentId: string;
+  recipientId?: string;
 }
 
 export interface SendApiQuickReply {
@@ -52,17 +68,25 @@ async function send(
   orgId: string,
   message: Record<string, unknown>,
 ): Promise<{ message_id?: string }> {
+  const comment = channel.pendingComment;
+  const privateReply = Boolean(comment && !comment.recipientId);
+  const recipientId = comment?.recipientId ?? to;
   const result = await sendMetaMessage({
     platform: channel.platform,
     orgId,
-    to,
+    // A private reply is addressed to the comment; Meta's answer says who it reached.
+    to: privateReply ? undefined : recipientId,
     sourceIdentifier: channel.accountId,
-    payload: { recipient: { id: to }, message },
+    payload: {
+      recipient: privateReply ? { comment_id: comment!.commentId } : { id: recipientId },
+      message,
+    },
     messageType: "AUTOMATED",
     isAutomated: true,
     enforcePlanLimits: true,
   });
   if (!result.ok) throw new Error(result.error);
+  if (privateReply) comment!.recipientId = result.recipientId;
   return { message_id: result.messageId };
 }
 

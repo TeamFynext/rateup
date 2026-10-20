@@ -892,6 +892,10 @@ enum TriggerEvent {
   INSTAGRAM_STORY_MENTION
   /// Someone opened the DM thread from an ig.me link; options.instagramRef narrows it to one ?ref=.
   INSTAGRAM_REFERRAL
+  /// Someone opened the Messenger thread from an m.me link; options.messengerRef narrows it to one ?ref=.
+  MESSENGER_REFERRAL
+  /// Someone commented on a Facebook Page post; answered with a private reply on Messenger.
+  FACEBOOK_COMMENT
 }
 
 model RuleAction {

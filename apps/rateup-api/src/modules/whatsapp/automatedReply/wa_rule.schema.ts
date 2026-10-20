@@ -83,7 +83,15 @@ export const ruleOptionsSchema = z.object({
     .max(2083)
     .regex(/^[A-Za-z0-9_=-]*$/, "Use letters, numbers, - _ and = only")
     .optional(),
-  // Posted under the comment, one picked at random; 2200 is Instagram's comment limit.
+  // The ?ref= of an m.me link; unset matches every link. Same characters and limit as ig.me.
+  messengerRef: z
+    .string()
+    .trim()
+    .max(2083)
+    .regex(/^[A-Za-z0-9_=-]*$/, "Use letters, numbers, - _ and = only")
+    .optional(),
+  // Posted under the comment, one picked at random; 2200 is Instagram's comment limit, and
+  // well inside Facebook's. Facebook comment rules use the same list.
   instagramPublicReplies: z.array(z.string().trim().min(1).max(2200)).max(10).optional(),
 });
 
@@ -93,9 +101,15 @@ const INSTAGRAM_ONLY_TRIGGERS = new Set<string>([
   TriggerEvent.INSTAGRAM_STORY_MENTION,
   TriggerEvent.INSTAGRAM_REFERRAL,
 ]);
+/** Triggers only Messenger has. */
+const MESSENGER_ONLY_TRIGGERS = new Set<string>([
+  TriggerEvent.MESSENGER_REFERRAL,
+  TriggerEvent.FACEBOOK_COMMENT,
+]);
 /** Store events message the buyer from one account, so they cannot span channels. */
 const SINGLE_CHANNEL_TRIGGERS = new Set<string>([
   ...INSTAGRAM_ONLY_TRIGGERS,
+  ...MESSENGER_ONLY_TRIGGERS,
   TriggerEvent.SHOPIFY_EVENT,
   TriggerEvent.WOOCOMMERCE_EVENT,
 ]);
@@ -136,6 +150,14 @@ function refineRuleChannels(
         code: "custom",
         path: ["triggerEvent"],
         message: "This trigger is only available for Instagram",
+      });
+    }
+  } else if (data.triggerEvent && MESSENGER_ONLY_TRIGGERS.has(data.triggerEvent)) {
+    if (platforms.some((platform) => platform !== RulePlatform.FACEBOOK)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["triggerEvent"],
+        message: "This trigger is only available for Messenger",
       });
     }
   } else if (multiChannel && data.triggerEvent && SINGLE_CHANNEL_TRIGGERS.has(data.triggerEvent)) {

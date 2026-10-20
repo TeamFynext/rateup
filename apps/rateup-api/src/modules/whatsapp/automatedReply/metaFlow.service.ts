@@ -236,6 +236,14 @@ export async function startMetaFlow(
       channel,
       commentId,
     );
+
+    await adoptCommentRecipientRun(
+      automationMessage.id,
+      recipientId,
+      automation.id,
+      orgId,
+      channel,
+    );
   } catch (error) {
     log.error({ err: error }, `${prefix} Error starting flow ${automation.id}`);
     // Still not thrown — a broken flow must not take down the webhook that triggered it —
@@ -243,6 +251,29 @@ export async function startMetaFlow(
     // indistinguishable from a completed one.
     await markMetaFlowStopped(recipientId, automation.id, error);
   }
+}
+
+/**
+ * A flow started from a Facebook comment runs under a stand-in id until its first message,
+ * the private reply, names the person. The run is then filed under their Messenger id, so
+ * their reply finds it. Their earlier run of the same chatbot, if any, gives way.
+ */
+async function adoptCommentRecipientRun(
+  runId: string,
+  standIn: string,
+  automationId: string,
+  orgId: string,
+  channel: MetaFlowChannel,
+): Promise<void> {
+  const reached = channel.pendingComment?.recipientId;
+  if (!reached || reached === standIn) return;
+  await prisma.$transaction([
+    prisma.waAutomatedReplyMessage.deleteMany({
+      where: { phone: reached, waAutomatedReplyId: automationId, orgId, NOT: { id: runId } },
+    }),
+    prisma.waAutomatedReplyMessage.update({ where: { id: runId }, data: { phone: reached } }),
+  ]);
+  log.info(`${logPrefix(channel)} Run ${runId} now follows ${reached} after the comment reply`);
 }
 
 /**
@@ -347,19 +378,27 @@ export async function processNextMetaFlowNode(
       case "videoNode":
       case "audioNode": {
         // Media cannot be sent as a private reply; send a text private reply first.
-        if (remainingCommentId) {
+        const facebookCommentPending = Boolean(
+          channel.pendingComment && !channel.pendingComment.recipientId,
+        );
+        if (remainingCommentId || facebookCommentPending) {
           const fallbackText =
             nodeText(node.data?.caption) ||
             nodeText(node.data?.body) ||
             nodeText(node.data?.text) ||
             "Thanks for your comment!";
-          await sendInstagramPrivateReply(
-            remainingCommentId,
-            fallbackText,
-            channel.accountId,
-            orgId,
-            recipientId,
-          );
+          if (remainingCommentId) {
+            await sendInstagramPrivateReply(
+              remainingCommentId,
+              fallbackText,
+              channel.accountId,
+              orgId,
+              recipientId,
+            );
+          } else {
+            // The channel's pending comment makes this send the private reply.
+            await sendSendApiText(channel, recipientId, orgId, fallbackText);
+          }
           remainingCommentId = undefined;
         }
         messageSent = await handleMediaNode(node, recipientId, orgId, channel);

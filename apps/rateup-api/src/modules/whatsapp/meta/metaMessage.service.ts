@@ -292,7 +292,7 @@ export async function sendMetaMessage(input: MetaSendInput): Promise<MetaSendRes
       // failing the send for.
       log.warn({ orgId, platform, messageId }, "Sent a Meta message with no recipient to record");
     }
-    return { ok: true, messageId };
+    return { ok: true, messageId, recipientId: recipient };
   } catch (err) {
     const detail = graphApiErrorDetail(err);
     endSendTimer?.({ outcome: "error" });

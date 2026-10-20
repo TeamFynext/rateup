@@ -3,12 +3,14 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 vi.mock("../../../utils/prisma.js", () => ({
   default: {
     waAutomatedReplyMessage: {
+      deleteMany: vi.fn(),
       findFirst: vi.fn(),
       findMany: vi.fn(),
       findUnique: vi.fn(),
       update: vi.fn(),
       updateMany: vi.fn(),
     },
+    $transaction: vi.fn(async (ops: unknown[]) => Promise.all(ops)),
   },
   excludeFields: vi.fn(),
 }));
@@ -90,7 +92,9 @@ import {
 type Mock = ReturnType<typeof vi.fn>;
 
 const db = prisma as unknown as {
+  $transaction: Mock;
   waAutomatedReplyMessage: {
+    deleteMany: Mock;
     findFirst: Mock;
     findMany: Mock;
     findUnique: Mock;
@@ -996,6 +1000,97 @@ describe("processNextMetaFlowNode - rich-text fields", () => {
       ORG_ID,
       "https://cdn/k",
       "From the document",
+    );
+  });
+});
+
+// A chatbot started from a Facebook comment runs under a stand-in until its first message,
+// the private reply, names the person; then the run is filed under their Messenger id.
+describe("a Messenger chatbot started from a Page comment", () => {
+  const STAND_IN = "fb_comment:comment-1";
+  const onComment = () =>
+    ({
+      platform: PlatformType.FACEBOOK,
+      accountId: "page-1",
+      pendingComment: { commentId: "comment-1" },
+    }) as {
+      platform: "FACEBOOK";
+      accountId: string;
+      pendingComment: { commentId: string; recipientId?: string };
+    };
+  /** Meta answering the private reply, as the real sender records it on the channel. */
+  const replyReaches = (psid = "psid-9") =>
+    m.sendText.mockImplementation(async (channel: any) => {
+      if (channel.pendingComment && !channel.pendingComment.recipientId) {
+        channel.pendingComment.recipientId = psid;
+      }
+    });
+
+  // clearAllMocks keeps implementations; each test here decides whether the reply reaches.
+  beforeEach(() => {
+    m.sendText.mockResolvedValue({ message_id: "m" });
+  });
+
+  test("files the run under the person the reply reached", async () => {
+    replyReaches();
+    const automation = flow([START, textNode("t1", "Hi!")], [edge("start", "t1")]);
+
+    await startMetaFlow(STAND_IN, automation, ORG_ID, onComment());
+
+    expect(db.waAutomatedReplyMessage.update).toHaveBeenCalledWith({
+      where: { id: "msg-1" },
+      data: { phone: "psid-9" },
+    });
+  });
+
+  // Their reply must find this run, not one left over from an earlier visit.
+  test("clears that person's earlier run of the same chatbot", async () => {
+    replyReaches();
+    const automation = flow([START, textNode("t1")], [edge("start", "t1")]);
+
+    await startMetaFlow(STAND_IN, automation, ORG_ID, onComment());
+
+    expect(db.waAutomatedReplyMessage.deleteMany).toHaveBeenCalledWith({
+      where: {
+        phone: "psid-9",
+        waAutomatedReplyId: automation.id,
+        orgId: ORG_ID,
+        NOT: { id: "msg-1" },
+      },
+    });
+  });
+
+  test("leaves the run alone when the reply reached nobody", async () => {
+    const automation = flow([START, textNode("t1")], [edge("start", "t1")]);
+
+    await startMetaFlow(STAND_IN, automation, ORG_ID, onComment());
+
+    expect(db.waAutomatedReplyMessage.update).not.toHaveBeenCalledWith(
+      expect.objectContaining({ data: { phone: expect.anything() } }),
+    );
+  });
+
+  test("leaves an ordinary Messenger run alone", async () => {
+    const automation = flow([START, textNode("t1")], [edge("start", "t1")]);
+
+    await startMetaFlow("psid-1", automation, ORG_ID, {
+      platform: PlatformType.FACEBOOK,
+      accountId: "page-1",
+    });
+
+    expect(db.$transaction).not.toHaveBeenCalled();
+  });
+
+  // A private reply cannot carry media, as on Instagram.
+  test("answers the comment in text before media", async () => {
+    const node = { id: "i1", type: "imageNode", data: { link: "key-1", caption: "Our menu" } };
+    const channel = onComment();
+
+    await processNextMetaFlowNode(STAND_IN, flow([node]), "i1", ORG_ID, "msg-1", channel);
+
+    expect(m.sendText).toHaveBeenCalledWith(channel, STAND_IN, ORG_ID, "Our menu");
+    expect(m.sendText.mock.invocationCallOrder[0]).toBeLessThan(
+      m.sendImage.mock.invocationCallOrder[0],
     );
   });
 });
