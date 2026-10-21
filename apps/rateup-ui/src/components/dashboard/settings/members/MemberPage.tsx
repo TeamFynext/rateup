@@ -264,11 +264,13 @@ function MemberDetails({
 
   const remove = async () => {
     const ok = await confirm({
-      title: t("Remove {name}?", { name: member.name ?? member.email ?? "" }),
+      title: t("Remove {name} from this organisation?", {
+        name: member.name ?? member.email ?? "",
+      }),
       description: t(
-        "They lose access straight away. Their conversations and work stay with the organisation.",
+        "They lose access to this organisation straight away. Their conversations and work stay here, and their account stays if they belong to other organisations.",
       ),
-      confirmText: t("Remove"),
+      confirmText: t("Remove from organisation"),
       cancelText: t("Cancel"),
     });
     if (!ok) return;
@@ -276,7 +278,7 @@ function MemberDetails({
       { userId: member.id },
       {
         onSuccess: () => {
-          toast.success(t("Removed"));
+          toast.success(t("Removed from organisation"));
           close();
         },
         onError: (error) => toast.error(getApiErrorMessage(error, t("Could not remove them"))),
@@ -578,7 +580,9 @@ function MemberDetails({
                         {t("Remove from organisation")}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {t("They lose access straight away. This cannot be undone.")}
+                        {t(
+                          "They lose access to this organisation straight away. Their account is not deleted if they belong to other organisations.",
+                        )}
                       </p>
                     </div>
                     <Button

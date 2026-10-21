@@ -92,7 +92,11 @@ export function Shopify() {
             translations("Win back abandoned carts"),
           ]}
           action={
-            <Button onClick={() => window.open("https://apps.shopify.com/rateup", "_blank")}>
+            <Button
+              onClick={() =>
+                window.open("https://apps.shopify.com/rateup", "_blank", "noopener,noreferrer")
+              }
+            >
               {translations("Install on Shopify")}
               <IconExternalLink data-icon="inline-end" />
             </Button>

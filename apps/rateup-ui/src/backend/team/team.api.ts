@@ -76,8 +76,26 @@ export const resendInviteTeamMember = async (id: string) => {
   return Response?.data;
 };
 
+/** What `POST /team/complete-invite/:token` answers with once the invitation is accepted. */
+export interface CompleteInviteResponse {
+  message: string;
+  data: {
+    email: string;
+    name: string;
+    /** False when accepting created the account. */
+    isUser: boolean;
+    /** Always the login page; a new account's password link goes out by email instead. */
+    redirectLink: string;
+    /** Whether the email for a new account to choose its password went out. */
+    passwordSetupEmailSent: boolean;
+    team: { code: string; name: string } | null;
+    org: { name: string };
+  };
+}
+
+/** Rejects with HTTP 410 when the token is unknown, already used or expired. */
 export const completeInvite = (inviteToken: string) =>
-  axiosClient({
+  axiosClient<CompleteInviteResponse>({
     url: `/team/complete-invite/${inviteToken}`,
     method: "POST",
     timeout: 30000,

@@ -31,6 +31,11 @@ export interface InvitationRow {
   role?: string;
   status?: string;
   teams?: MemberTeam[];
+  /**
+   * When the emailed link stops working (ISO date). Null on rows issued before links expired;
+   * absent when the listing does not send it.
+   */
+  expiresAt?: string | null;
 }
 
 export interface TeamOption {

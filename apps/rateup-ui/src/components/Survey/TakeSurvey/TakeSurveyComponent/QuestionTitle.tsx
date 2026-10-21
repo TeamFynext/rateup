@@ -1,6 +1,7 @@
 import { useContext, useEffect } from "react";
 import type { CSSProperties } from "react";
 
+import { SafeHtml } from "@/components/common/SafeHtml.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
 
@@ -40,11 +41,7 @@ function QuestionTitle({
   }, [selectedQ]);
 
   return replacedTitle ? (
-    <div
-      style={themeStyles}
-      className={classes.questionRichText}
-      dangerouslySetInnerHTML={{ __html: replacedTitle }}
-    />
+    <SafeHtml html={replacedTitle} style={themeStyles} className={classes.questionRichText} />
   ) : (
     <p
       className={classes.questionTitle}

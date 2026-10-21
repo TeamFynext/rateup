@@ -153,6 +153,8 @@ export function userResendInviteTeamMutation() {
     mutationFn: (id: string) => resendInviteTeamMember(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: teamKeys.byUser() });
+      // A resend moves the expiry, so the members list must drop its "Expired" mark.
+      queryClient.invalidateQueries({ queryKey: orgKeys.teamsAll() });
       toast.success("Team Invitation Resend successfully.", {
         id: "load-data-invitaion",
       });

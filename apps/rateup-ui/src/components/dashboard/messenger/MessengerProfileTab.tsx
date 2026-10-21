@@ -42,6 +42,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
+import { useCan } from "@/hooks/usePermission.ts";
 
 import {
   draftMenuItem,
@@ -58,6 +59,7 @@ import {
 export function MessengerProfileTab({ channelId }: Readonly<{ channelId: string }>) {
   const { t } = useTranslation();
   const { data: profile, isPending, isError, error, refetch } = useMessengerProfile(channelId);
+  const canManage = useCan("channels.manage");
 
   if (isPending) {
     return (
@@ -92,19 +94,30 @@ export function MessengerProfileTab({ channelId }: Readonly<{ channelId: string 
           )}
         </AlertDescription>
       </Alert>
-      {/* Keyed by what is live, so a save or a reload starts each card from Meta's copy. */}
-      <GetStartedCard key={`gs-${profile.getStarted}`} channelId={channelId} profile={profile} />
-      <GreetingCard key={`gr-${profile.greeting}`} channelId={channelId} profile={profile} />
-      <IceBreakersCard
-        key={`ib-${JSON.stringify(profile.iceBreakers)}`}
-        channelId={channelId}
-        profile={profile}
-      />
-      <PersistentMenuCard
-        key={`pm-${profile.getStarted}-${JSON.stringify(profile.persistentMenu)}`}
-        channelId={channelId}
-        profile={profile}
-      />
+      {!canManage && (
+        <p className="text-sm text-muted-foreground">
+          {t(
+            "You can view these settings. Ask an admin for the manage channels permission to change them.",
+          )}
+        </p>
+      )}
+      {/* Saving needs `channels.manage` on the API; without it every control here is
+          disabled natively by the fieldset (`min-w-0` lets wide cards shrink to the page). */}
+      <fieldset disabled={!canManage} className="min-w-0 space-y-4">
+        {/* Keyed by what is live, so a save or a reload starts each card from Meta's copy. */}
+        <GetStartedCard key={`gs-${profile.getStarted}`} channelId={channelId} profile={profile} />
+        <GreetingCard key={`gr-${profile.greeting}`} channelId={channelId} profile={profile} />
+        <IceBreakersCard
+          key={`ib-${JSON.stringify(profile.iceBreakers)}`}
+          channelId={channelId}
+          profile={profile}
+        />
+        <PersistentMenuCard
+          key={`pm-${profile.getStarted}-${JSON.stringify(profile.persistentMenu)}`}
+          channelId={channelId}
+          profile={profile}
+        />
+      </fieldset>
     </div>
   );
 }
@@ -399,6 +412,7 @@ function IceBreakersCard({ channelId, profile }: Readonly<CardProps>) {
 
 function PersistentMenuCard({ channelId, profile }: Readonly<CardProps>) {
   const { t } = useTranslation();
+  const canManage = useCan("channels.manage");
   const uid = useId();
   const [items, setItems] = useState<DraftMenuItem[]>(() =>
     profile.persistentMenu.length ? profile.persistentMenu.map(draftMenuItem) : [draftMenuItem()],
@@ -462,6 +476,8 @@ function PersistentMenuCard({ channelId, profile }: Readonly<CardProps>) {
             <Field>
               <FieldLabel htmlFor={`${uid}-type-${index}`}>{t("Action")}</FieldLabel>
               <Select
+                // A fieldset does not reach Base UI's Select, so it is disabled explicitly.
+                disabled={!canManage}
                 value={item.type}
                 onValueChange={(v) => update(index, { type: v ?? "postback" })}
                 items={[

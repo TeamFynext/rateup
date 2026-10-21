@@ -4,6 +4,8 @@ import {
 } from "@sentry/tanstackstart-react";
 import { createMiddleware, createStart } from "@tanstack/react-start";
 
+import { isEmbeddablePath, withFrameDenyHeaders } from "@/lib/frameProtection.ts";
+
 const CANONICAL_HOST = "rateup.app";
 
 /**
@@ -49,9 +51,27 @@ const canonicalUrlMiddleware = createMiddleware({ type: "request" }).server(
   },
 );
 
+/**
+ * Anti-clickjacking headers (`frame-ancestors 'none'` + `X-Frame-Options: DENY`) on every
+ * response except the public survey / testimonial pages customers embed via iframe.
+ */
+const frameProtectionMiddleware = createMiddleware({ type: "request" }).server(
+  async ({ request, next }) => {
+    const result = await next();
+    if (isEmbeddablePath(new URL(request.url).pathname)) return result;
+    const response = withFrameDenyHeaders(result.response);
+    // Usually the headers are set in place; only an immutable response gets replaced.
+    return response === result.response ? result : { ...result, response };
+  },
+);
+
 export const startInstance = createStart(() => {
   return {
-    requestMiddleware: [canonicalUrlMiddleware, sentryGlobalRequestMiddleware],
+    requestMiddleware: [
+      canonicalUrlMiddleware,
+      frameProtectionMiddleware,
+      sentryGlobalRequestMiddleware,
+    ],
     functionMiddleware: [sentryGlobalFunctionMiddleware],
   };
 });

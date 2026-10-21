@@ -1,6 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -73,8 +72,11 @@ export function usePlanCheckout({ onSettled }: { onSettled: () => void }) {
     onSettled();
   }
 
-  /** Razorpay's subscription checkout, opened once the API has created the subscription. */
-  async function openSubscriptionCheckout(order: PaymentOrder, rateupPlanId: string) {
+  /**
+   * Razorpay's subscription checkout, opened once the API has created the subscription. The
+   * API stamps the subscription's notes itself, so the browser sends none.
+   */
+  async function openSubscriptionCheckout(order: PaymentOrder) {
     const loaded = await loadScript(RAZORPAY_SCRIPT);
     if (!loaded) {
       setIsProcessing(false);
@@ -93,13 +95,6 @@ export function usePlanCheckout({ onSettled }: { onSettled: () => void }) {
         void awaitConfirmation(order.id);
       },
       prefill: { name: user?.userName, email: user?.email, contact: user?.orgPhone },
-      notes: {
-        rateupOrderId: order.id,
-        rateupPlanId,
-        subId: order.subscriptionId,
-        orgId: user?.orgId,
-        subExpiry: dayjs.unix(Number(order.subExpiry)).format("YYYY-MM-DDTHH:mm:ss.sssZ"),
-      },
       theme: { color: BRAND_COLOR },
       modal: { ondismiss: () => setIsProcessing(false) },
     });
@@ -115,10 +110,8 @@ export function usePlanCheckout({ onSettled }: { onSettled: () => void }) {
   }
 
   /**
-   * Razorpay's one-off checkout, opened against `order_id`.
-   *
-   * `notes.rateupOrderId` is what the `payment.captured` webhook reads back to credit the
-   * packs, so it has to match what the API stamped on the order.
+   * Razorpay's one-off checkout, opened against `order_id`. No `notes` are passed: what the
+   * webhook credits comes from the order the API created and stamped, never from the browser.
    */
   async function openAddonCheckout(addonOrder: AddonOrder) {
     const loaded = await loadScript(RAZORPAY_SCRIPT);
@@ -141,12 +134,6 @@ export function usePlanCheckout({ onSettled }: { onSettled: () => void }) {
         void awaitConfirmation(addonOrder.rateupOrderId);
       },
       prefill: { name: user?.userName, email: user?.email, contact: user?.orgPhone },
-      notes: {
-        rateupOrderId: addonOrder.rateupOrderId,
-        rateupPlanId: addonOrder.rateupPlanId,
-        orgId: user?.orgId,
-        addonQuantity: String(addonOrder.quantity),
-      },
       theme: { color: BRAND_COLOR },
       modal: { ondismiss: () => setIsProcessing(false) },
     });
@@ -163,7 +150,7 @@ export function usePlanCheckout({ onSettled }: { onSettled: () => void }) {
   const [pendingPlanId, setPendingPlanId] = useState("");
   useEffect(() => {
     if (subscriptionOrder?.subscriptionId && pendingPlanId) {
-      void openSubscriptionCheckout(subscriptionOrder, pendingPlanId);
+      void openSubscriptionCheckout(subscriptionOrder);
       setSubscriptionOrder(null);
     }
   }, [subscriptionOrder, pendingPlanId]);

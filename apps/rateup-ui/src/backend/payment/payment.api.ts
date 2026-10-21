@@ -74,13 +74,14 @@ export async function updateRateupPaymentPlan(data: RequestPayload) {
 export async function deleteRateupPaymentPlan(id: string) {
   return await axiosClient.delete(`${PAYMENT_URL}rateup-plan/${id}`);
 }
+/**
+ * Body of `POST /payment/create-checkout-session`. The org comes from the session and the
+ * price from the plan on the server, so only the plan choice is sent.
+ */
 export interface ICreateCheckoutType {
-  planId: string | undefined;
-  planName: string | undefined;
+  rateupPlanId: string | undefined;
   period: string | undefined;
-  orgId: string | undefined;
-  isAnnualMessageLimit: boolean;
-  rateupPlanId?: string;
+  planId: string | undefined;
 }
 
 export async function createCheckoutSession(data: ICreateCheckoutType) {

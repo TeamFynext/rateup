@@ -9,7 +9,7 @@ export const getPhotosList = async ({
   searchQuery: string;
 }) => {
   const response = await axiosClient.get(
-    `${unsplash_URL}/photos?page=${pageParams}&query=${searchQuery}`,
+    `${unsplash_URL}/photos?page=${pageParams}&query=${encodeURIComponent(searchQuery)}`,
   );
   return response?.data;
 };

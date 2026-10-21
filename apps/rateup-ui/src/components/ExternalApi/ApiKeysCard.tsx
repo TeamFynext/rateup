@@ -211,7 +211,7 @@ export function ApiKeysCard({
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {key.scopes.length === 0
-                      ? t("Full access")
+                      ? t("Full access (legacy)")
                       : key.features.length === 0
                         ? t("Custom permissions")
                         : FEATURE_OPTIONS.filter((o) => key.features.includes(o.value))

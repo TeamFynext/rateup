@@ -99,7 +99,11 @@ export default function NotFoundPage() {
             onClick={() => {
               const phone = import.meta.env.VITE_SUPPORT_WHATSAPP;
               const message = encodeURIComponent("Hi, I need help with support");
-              window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+              window.open(
+                `https://wa.me/${phone}?text=${message}`,
+                "_blank",
+                "noopener,noreferrer",
+              );
             }}
             className={`${styles.btn} ${styles.btnGhost}`}
           >

@@ -1,5 +1,4 @@
 import { axiosClient } from "@/backend/apiClient";
-import type { RequestPayload } from "@/types/api.ts";
 import type { ShopifyEvents } from "@/types/enums.ts";
 
 /** A Shopify product, as the integration's product list returns it. */
@@ -96,8 +95,21 @@ export async function getRegisteredWebhooks() {
   return (await axiosClient.get(`${SHOPIFY_BASE_URL}/registered-webhooks`)).data as ShopifyEvents[];
 }
 
-export async function updateShopifySession({ shop, data }: { shop: string; data: RequestPayload }) {
-  return await axiosClient.put(`${SHOPIFY_BASE_URL}/session/${shop}`, data);
+/**
+ * Links an install to the signed-in org. `claimToken` is the single-use `claim` the API's
+ * OAuth callback put in its redirect; a 404 means the shop is unknown, already linked, or
+ * the token is bad or expired (the API does not say which).
+ */
+export async function updateShopifySession({
+  shop,
+  claimToken,
+}: {
+  shop: string;
+  claimToken: string;
+}) {
+  return await axiosClient.put(`${SHOPIFY_BASE_URL}/session/${encodeURIComponent(shop)}`, {
+    claimToken,
+  });
 }
 
 export async function registerShopifyWebhooks() {

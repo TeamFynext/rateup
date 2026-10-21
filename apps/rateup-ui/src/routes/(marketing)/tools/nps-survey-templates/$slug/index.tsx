@@ -4,6 +4,7 @@ import NpsTemplateDetail from "@/components/HomePage/pages/Tools/NpsSurveyTempla
 import ToolsShell from "@/components/HomePage/pages/Tools/shared/ToolsShell.tsx";
 import { getNpsTemplate } from "@/config/npsTemplates.ts";
 import { buildBreadcrumbJsonLd, TOOLS_SITE_URL, toolPath } from "@/config/tools.ts";
+import { serializeJsonLd } from "@/lib/metadata.ts";
 import { rateupLogoOg } from "@/utils/constants.ts";
 
 const SLUG = "nps-survey-templates";
@@ -46,7 +47,7 @@ export const Route = createFileRoute("/(marketing)/tools/nps-survey-templates/$s
       scripts: [
         {
           type: "application/ld+json",
-          children: JSON.stringify({
+          children: serializeJsonLd({
             "@context": "https://schema.org",
             "@graph": [
               {

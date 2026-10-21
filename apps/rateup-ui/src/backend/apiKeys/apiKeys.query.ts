@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import { asApiError, getApiErrorMessage } from "@/utils/apiError.ts";
 
+import { apiKeyGrantDenialMessage } from "./apiKeyErrors.ts";
 import {
   createApiKey,
   getApiUsage,
@@ -60,14 +61,15 @@ export function useCreateApiKey() {
     onSuccess: () => qc.invalidateQueries({ queryKey: apiKeyKeys.list() }),
     onError: (error) => {
       const message =
-        asApiError(error).response?.status === 409
+        apiKeyGrantDenialMessage(error, t) ??
+        (asApiError(error).response?.status === 409
           ? t(
               "This organisation has reached its limit of {max} API keys. Revoke one you no longer use.",
               {
                 max: MAX_API_KEYS,
               },
             )
-          : getApiErrorMessage(error, t("Could not create the API key"));
+          : getApiErrorMessage(error, t("Could not create the API key")));
       toast.error(message, { id: "api-key-create" });
     },
   });
@@ -83,7 +85,10 @@ export function useUpdateApiKey() {
       return qc.invalidateQueries({ queryKey: apiKeyKeys.list() });
     },
     onError: (error) => {
-      toast.error(getApiErrorMessage(error, t("Could not update the API key")), {
+      const message =
+        apiKeyGrantDenialMessage(error, t) ??
+        getApiErrorMessage(error, t("Could not update the API key"));
+      toast.error(message, {
         id: "api-key-update",
       });
     },
@@ -97,7 +102,10 @@ export function useRotateApiKey() {
     mutationFn: rotateApiKey,
     onSuccess: () => qc.invalidateQueries({ queryKey: apiKeyKeys.list() }),
     onError: (error) => {
-      toast.error(getApiErrorMessage(error, t("Could not rotate the API key")), {
+      const message =
+        apiKeyGrantDenialMessage(error, t) ??
+        getApiErrorMessage(error, t("Could not rotate the API key"));
+      toast.error(message, {
         id: "api-key-rotate",
       });
     },
