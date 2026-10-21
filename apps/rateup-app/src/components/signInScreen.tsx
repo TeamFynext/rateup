@@ -7,6 +7,7 @@ import ToggleSwitch from "toggle-switch-react-native";
 import { Eye, EyeClosed } from "lucide-react-native";
 import { useAuth } from "../context/AuthContext";
 import { syncPushToken } from "../utils/notification";
+import { logger } from "@/utils/logger";
 
 export default function SignInScreen({ setError }: { readonly setError: (msg: string) => void }) {
   const [email, setEmail] = useState("");
@@ -55,13 +56,13 @@ export default function SignInScreen({ setError }: { readonly setError: (msg: st
           setError("Notification setup failed. You may not receive alerts.");
         }
       } catch (tokenError) {
-        console.error("Error registering for push notifications:", tokenError);
+        logger.error("Error registering for push notifications:", tokenError);
         setError("Failed to enable notifications");
       }
 
       router.replace("/protected/inbox");
     } catch (err) {
-      console.error("Unexpected error during sign-in:", err);
+      logger.error("Unexpected error during sign-in:", err);
       setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);

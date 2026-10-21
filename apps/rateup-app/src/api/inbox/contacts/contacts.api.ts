@@ -1,6 +1,7 @@
 import axios from "@/config/axios";
 import { ICreateContact } from "../types";
 import { ContactsWithLastMessageResponse } from "../types";
+import { describeError, logger } from "@/utils/logger";
 
 export const createContact = async (data: ICreateContact) => {
   const response = await axios.post("/api/contact", data);
@@ -72,7 +73,7 @@ export const getFilteredContacts = async (filterData: string, page: number) => {
     );
     return response.data;
   } catch (error: any) {
-    console.error("Failed to fetch filtered contacts:", error?.response?.data || error.message);
+    logger.error("Failed to fetch filtered contacts:", describeError(error));
     throw new Error("Failed to load contacts.");
   }
 };

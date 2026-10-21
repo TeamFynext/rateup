@@ -8,6 +8,7 @@ import { loggedUserDetails } from "../api/api";
 import { useAuth } from "../context/AuthContext";
 import { syncPushToken } from "../utils/notification";
 import { FontAwesome } from "@expo/vector-icons";
+import { logger } from "@/utils/logger";
 
 const AppleLogin = ({ setError }: { setError: (msg: string) => void }) => {
   const router = useRouter();
@@ -46,13 +47,13 @@ const AppleLogin = ({ setError }: { setError: (msg: string) => void }) => {
           setError("Push notification setup failed. You may not receive alerts");
         }
       } catch (err) {
-        console.error("Push token error:", err);
+        logger.error("Push token error:", err);
         setError("Failed to enable push notifications");
       }
 
       router.replace("/protected/inbox");
     } catch (error) {
-      console.error("Apple login error:", error);
+      logger.error("Apple login error:", error);
       setError("Something went wrong.");
     } finally {
       setLoading(false);

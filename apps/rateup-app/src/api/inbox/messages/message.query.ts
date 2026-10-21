@@ -9,6 +9,7 @@ import {
   getWaChatMediaFile,
   sendNewWaMessage,
 } from "./message.api";
+import { logger } from "@/utils/logger";
 
 export const useGetMessagesByContactId = (contactId: string) => {
   return useInfiniteQuery({
@@ -44,7 +45,7 @@ export const useSendNewWaMessage = (
     // placeholder there, and by then the stored copy is on screen to replace it.
     onSettled: () => qc.invalidateQueries({ queryKey: ["wa-messages", contactId] }),
     onError: (error) => {
-      console.error("Error sending message", error);
+      logger.error("Error sending message", error);
     },
   });
 };
@@ -109,7 +110,7 @@ export function useCreatePrivateMessage(contactId: any) {
       qc.invalidateQueries({ queryKey: ["wa-messages", contactId] });
     },
     onError: (error) => {
-      console.error("Error sending message", error);
+      logger.error("Error sending message", error);
     },
   });
 }

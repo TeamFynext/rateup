@@ -37,6 +37,7 @@
         "backgroundColor": "#FFFFFF"
       },
       "package": "com.rateupapp.rateup",
+      "allowBackup": false,
       "googleServicesFile": "./google-services.json"
     },
     "web": {

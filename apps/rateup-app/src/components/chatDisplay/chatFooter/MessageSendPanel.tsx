@@ -64,6 +64,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { MessagePlatform } from "@/constants/enums";
+import { logger } from "@/utils/logger";
 
 type FormValues = {
   type: "text" | "media" | "contact" | "location";
@@ -385,7 +386,7 @@ const MessageSendPanel = ({
       if (res.canceled || !res.assets?.length) return;
       await attachFiles(res.assets.map(galleryAssetToFile), { showPreview: true });
     } catch (err) {
-      console.error("image picker error:", err);
+      logger.error("image picker error:", err);
       Toast.error("Could not open your photos.");
     }
   };
@@ -401,7 +402,7 @@ const MessageSendPanel = ({
       if (res.canceled || !res.assets?.length) return;
       await attachFiles(res.assets.map(galleryAssetToFile), { showPreview: true });
     } catch (err) {
-      console.error("camera error:", err);
+      logger.error("camera error:", err);
       Toast.error("Could not open the camera.");
     }
   };
@@ -426,7 +427,7 @@ const MessageSendPanel = ({
         })),
       );
     } catch (err) {
-      console.error("expo-document-picker error:", err);
+      logger.error("expo-document-picker error:", err);
       Toast.error("Could not open your files.");
     }
   };
@@ -444,7 +445,7 @@ const MessageSendPanel = ({
       const prepared = await Promise.all(
         shared.map((file) =>
           prepareSharedFile(file).catch((err) => {
-            console.error("shared file error:", err);
+            logger.error("shared file error:", err);
             Toast.error(`"${file.fileName}" could not be attached.`);
             return null;
           }),

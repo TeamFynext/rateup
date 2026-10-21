@@ -6,6 +6,7 @@ import requestStoragePermission from "@/utils/permission";
 import { Download, Eye, File } from "lucide-react-native";
 import * as IntentLauncher from "expo-intent-launcher";
 import { FONT, usePressed, useTheme } from "@/components/loyalty/cashier/ui";
+import { logger } from "@/utils/logger";
 
 const DocumentResponse = ({ info }: { info: string }) => {
   const { t } = useTheme();
@@ -75,7 +76,7 @@ const DocumentResponse = ({ info }: { info: string }) => {
         await Linking.openURL(localFilePath);
       }
     } catch (err) {
-      console.error("Error opening document:", err);
+      logger.error("Error opening document:", err);
       Toast.show({
         type: "error",
         text1: "Could not open the document.",
