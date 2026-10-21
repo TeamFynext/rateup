@@ -93,3 +93,19 @@ export function isPlanDenial(error: unknown): boolean {
   const reason = getAccessDenialReason(error);
   return reason === "subscription" || reason === "subscription_expired";
 }
+
+/**
+ * What the console says for a staff API refusal it knows by `code`, in its own words rather
+ * than the API's. Anything else reads as `getApiErrorMessage` would.
+ */
+const STAFF_ERROR_MESSAGES: Record<string, string> = {
+  // Also the answer for managing staff members (access.service), so it names no one action.
+  NOT_OWNER: "Only a staff owner can do this. Ask an owner to make the change.",
+  OWN_ACCOUNT:
+    "You belong to this account yourself, so you can't make this change. Ask another staff member to do it.",
+};
+
+export function getStaffErrorMessage(error: unknown, fallback = "Something went wrong"): string {
+  const code = getApiErrorData(error)?.code;
+  return (code && STAFF_ERROR_MESSAGES[code]) || getApiErrorMessage(error, fallback);
+}
