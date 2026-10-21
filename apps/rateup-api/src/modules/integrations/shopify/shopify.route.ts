@@ -18,6 +18,7 @@ import {
   attributionQuerySchema,
   byShopParamsSchema,
   registerWebhookbyTopicSchema,
+  shopifyClaimBodySchema,
   shopifyWidgetSchema,
 } from "./shopify.schema.js";
 
@@ -28,6 +29,7 @@ export async function shopifyRoutes(server: FastifyInstance) {
       config: { permission: "integrations.shopify" },
       schema: {
         params: byShopParamsSchema,
+        body: shopifyClaimBodySchema,
       },
     },
     updateShopifyIntegrationByShopHandler,

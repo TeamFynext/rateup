@@ -434,17 +434,29 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
   };
 }
 
+/**
+ * Takes one unit of a limited reward. The stock check the validator ran earlier was a read
+ * outside this transaction, so it is repeated here as part of the UPDATE: two customers
+ * racing for the last unit cannot both get it — the loser's transaction rolls back.
+ */
 async function burnStock(tx: Tx, reward: { id: string; stockQuantity: number | null }) {
   if (reward.stockQuantity === null) return;
 
-  await tx.loyaltyReward.update({
-    where: { id: reward.id },
-    data: {
-      stockRedeemed: {
-        increment: 1,
+  try {
+    await tx.loyaltyReward.update({
+      where: { id: reward.id, stockRedeemed: { lt: reward.stockQuantity } },
+      data: {
+        stockRedeemed: {
+          increment: 1,
+        },
       },
-    },
-  });
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+      throw new LoyaltyError("REWARD_OUT_OF_STOCK", "This reward is out of stock");
+    }
+    throw error;
+  }
 }
 
 function ownedByOrg(orgId: string) {

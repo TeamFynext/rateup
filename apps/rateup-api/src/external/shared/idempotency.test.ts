@@ -150,6 +150,43 @@ describe("a repeat", () => {
     });
   });
 
+  test("the same key and body on a different path param is a conflict, not a replay", async () => {
+    const issue = (rewardCode: string) =>
+      req({
+        url: `/loyalty/rewards/${rewardCode}/issue`,
+        routeOptions: { url: "/loyalty/rewards/:rewardCode/issue", config: {} },
+        params: { rewardCode },
+        body: { phone: "15550001111" },
+      });
+    await idempotencyPreHandler(issue("A"), reply().reply);
+    const first = db.externalIdempotencyRecord.create.mock.calls[0][0].data;
+
+    db.externalIdempotencyRecord.create.mockRejectedValue(conflict);
+    db.externalIdempotencyRecord.findUnique.mockResolvedValue({
+      state: "COMPLETED",
+      requestHash: first.requestHash,
+      responseStatus: 200,
+      responseBody: { issued: "A" },
+    });
+
+    // Same scope (method + pattern), same body, same key — only :rewardCode differs.
+    await expect(idempotencyPreHandler(issue("B"), reply().reply)).rejects.toMatchObject({
+      status: 409,
+      code: "idempotency_key_reused",
+    });
+    // And the identical request still replays.
+    const { reply: rep, sent } = reply();
+    await idempotencyPreHandler(issue("A"), rep);
+    expect(sent.body).toEqual({ issued: "A" });
+  });
+
+  test("the query string is part of the request too", async () => {
+    await idempotencyPreHandler(req({ query: { dryRun: "1" } }), reply().reply);
+    await idempotencyPreHandler(req({ query: { dryRun: "0" } }), reply().reply);
+    const [a, b] = db.externalIdempotencyRecord.create.mock.calls.map((c: any[]) => c[0].data);
+    expect(a.requestHash).not.toBe(b.requestHash);
+  });
+
   test("an identical write still running is told to wait", async () => {
     db.externalIdempotencyRecord.create.mockRejectedValue(conflict);
     db.externalIdempotencyRecord.findUnique.mockResolvedValue({

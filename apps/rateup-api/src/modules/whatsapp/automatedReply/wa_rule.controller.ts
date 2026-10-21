@@ -2,6 +2,15 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import * as RuleService from "./wa_rule.service.js";
 import { CreateRuleInput, UpdateRuleInput } from "./wa_rule.schema.js";
 import { PrismaClientKnownRequestError } from "../../../../generated/prisma/internal/prismaNamespace.js";
+import { PublicUrlError } from "../../../utils/ssrf.js";
+
+/** A CALL_EXTERNAL_API URL that does not resolve to a public address (see assertRuleActionUrls). */
+function refusedUrlReply(reply: FastifyReply, error: PublicUrlError, action: "create" | "update") {
+  return reply.status(400).send({
+    error: `Failed to ${action} rule`,
+    message: `The external API URL can't be used: ${error.message}. Use a public http(s) address.`,
+  });
+}
 
 // Create Rule
 export async function createRuleHandler(
@@ -13,6 +22,7 @@ export async function createRuleHandler(
     const rule = await RuleService.createRule({ ...req.body, orgId });
     reply.send(rule);
   } catch (error) {
+    if (error instanceof PublicUrlError) return refusedUrlReply(reply, error, "create");
     if (error instanceof PrismaClientKnownRequestError && error.code === "P2002") {
       return reply.status(400).send({
         error: "Failed to create rule",
@@ -70,9 +80,13 @@ export async function updateRuleHandler(
 ) {
   try {
     const { id } = req.params;
-    const rule = await RuleService.updateRule(id, req.body);
+    const rule = await RuleService.updateRule(id, req.user.orgId, req.body);
     reply.send(rule);
   } catch (error) {
+    if (error instanceof PublicUrlError) return refusedUrlReply(reply, error, "update");
+    if (error instanceof Error && error.message === "Rule not found") {
+      return reply.status(404).send({ error: "Rule not found" });
+    }
     req.log.error(error);
     reply.status(500).send({
       error: "Failed to update rule",
@@ -88,9 +102,12 @@ export async function deleteRuleHandler(
 ) {
   try {
     const { id } = req.params;
-    await RuleService.deleteRule(id);
+    await RuleService.deleteRule(id, req.user.orgId);
     reply.send({ success: true });
   } catch (error) {
+    if (error && typeof error === "object" && (error as { code?: string }).code === "P2025") {
+      return reply.status(404).send({ error: "Rule not found" });
+    }
     req.log.error(error);
     reply.status(500).send({
       error: "Failed to delete rule",

@@ -38,6 +38,7 @@ vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), fatal: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));
 
+import { Prisma } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
 import { aes_decrypt, aes_encrypt } from "../../../../utils/encryption/encryption.utils.js";
 import { getPhoneDetails, registerPhoneNumber } from "../auth/wa_auth.service.js";
@@ -470,6 +471,55 @@ describe("getWaSettingsWithAccessTokenDecrypted", () => {
 
     expect(result).not.toHaveProperty("accessToken_iv");
     expect(result.accessToken).toBe("plain-token");
+  });
+});
+
+// WEBH-8: the Flow key pair (private key + passphrase) is never stored in the clear.
+describe("the Flow encryption keys at rest", () => {
+  const KEYS = { publicKey: "PUB", privateKey: "PRIV", passphrase: "PASS" };
+  const SEALED = { v: 1, iv: "iv-hex", enc: "cipher-text" };
+
+  test("a new channel stores them sealed", async () => {
+    await createWaSettings(ORG_A, {
+      accessToken: "plain-token",
+      phoneId: PHONE_ID,
+      encryption: KEYS,
+    } as any);
+
+    expect(encryptMock).toHaveBeenCalledWith(JSON.stringify(KEYS), expect.anything());
+    expect(db.whatsappSettings.create.mock.calls[0][0].data.encryption).toEqual(SEALED);
+  });
+
+  test("a key rotation stores them sealed", async () => {
+    await updateWaSettings(ORG_A, PHONE_ID, { encryption: KEYS } as any);
+
+    expect(db.whatsappSettings.update.mock.calls[0][0].data.encryption).toEqual(SEALED);
+  });
+
+  test("an update by id stores them sealed", async () => {
+    await updateWaSettingsById(SETTINGS_ID, ORG_A, { encryption: KEYS } as any);
+
+    expect(db.whatsappSettings.update.mock.calls[0][0].data.encryption).toEqual(SEALED);
+  });
+
+  test("an already-sealed value is written back without re-encrypting it", async () => {
+    const stored = { v: 1, iv: "a".repeat(32), enc: "gcm1:00:11" };
+    await updateWaSettings(ORG_A, PHONE_ID, { encryption: stored } as any);
+
+    expect(encryptMock).not.toHaveBeenCalled();
+    expect(db.whatsappSettings.update.mock.calls[0][0].data.encryption).toEqual(stored);
+  });
+
+  test("an edit that does not touch the keys leaves the column alone", async () => {
+    await updateWaSettings(ORG_A, PHONE_ID, { phoneDisplayName: "Support" } as any);
+
+    expect(db.whatsappSettings.update.mock.calls[0][0].data.encryption).toBeUndefined();
+  });
+
+  test("an explicit null still clears the column", async () => {
+    await updateWaSettings(ORG_A, PHONE_ID, { encryption: null } as any);
+
+    expect(db.whatsappSettings.update.mock.calls[0][0].data.encryption).toBe(Prisma.DbNull);
   });
 });
 

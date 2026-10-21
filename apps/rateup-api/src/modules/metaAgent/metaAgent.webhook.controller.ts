@@ -56,10 +56,9 @@ export async function metaAgentWebhookEventHandler(req: FastifyRequest, reply: F
     const entries = body?.entry ?? [];
     for (const entry of entries) {
       for (const change of entry?.changes ?? []) {
-        log.info(
-          { field: change?.field, value: change?.value },
-          "Meta Business Agent change notification",
-        );
+        // The value carries conversation content; info logs only which field changed.
+        log.info({ field: change?.field }, "Meta Business Agent change notification");
+        log.debug({ field: change?.field, value: change?.value }, "Meta Business Agent change");
       }
     }
 

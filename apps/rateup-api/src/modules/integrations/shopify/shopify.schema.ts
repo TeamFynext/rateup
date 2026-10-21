@@ -8,6 +8,11 @@ const byShopParamsSchema = z.object({
   shop: z.string(),
 });
 
+/** The claim token the OAuth callback put in the redirect (shopify.claim.ts). */
+const shopifyClaimBodySchema = z.object({
+  claimToken: z.string().min(1).max(1024),
+});
+
 const registerWebhookbyTopicSchema = z.object({
   topic: z.enum(ShopifyEvents),
 });
@@ -101,6 +106,7 @@ export type ShopifyWidgetEvent = z.infer<typeof shopifyWidgetEventSchema>;
 export type IdParamInput = z.infer<typeof byIdParamsSchema>;
 export type AttributionQuery = z.infer<typeof attributionQuerySchema>;
 export type ShopParamInput = z.infer<typeof byShopParamsSchema>;
+export type ShopifyClaimBody = z.infer<typeof shopifyClaimBodySchema>;
 export type registerWebhookbyTopicInput = z.infer<typeof registerWebhookbyTopicSchema>;
 
 // Auto-exported after fastify-zod migration
@@ -108,6 +114,7 @@ export {
   attributionQuerySchema,
   byIdParamsSchema,
   byShopParamsSchema,
+  shopifyClaimBodySchema,
   registerWebhookbyTopicSchema,
   shopifyWidgetEventSchema,
   shopifyWidgetSchema,

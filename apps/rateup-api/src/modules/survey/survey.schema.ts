@@ -1,14 +1,12 @@
 import { z } from "zod";
 
-import { questionSchema } from "../question/question.schema.js";
-
 const surveyCore = {
   title: z.string({
     error: (issue) => (issue.input === undefined ? "Title is required" : "Title must be a string"),
   }),
   languages: z.array(z.string()),
   teamIds: z.array(
-    z.string({
+    z.uuid({
       error: (issue) => (issue.input === undefined ? "TeamId is required" : undefined),
     }),
   ),
@@ -76,35 +74,48 @@ const idParamsSchema = z.object({
   id: z.string(),
 });
 
+const uuidParamsSchema = z.object({
+  id: z.uuid(),
+});
+
 const cloneSurveySchema = z.object({
   teamIds: z.array(z.uuid()),
 });
 
+/**
+ * The public form's payload (`GET /api/public/survey/:id`). Attached as the route's 200
+ * schema, so any key not listed here is stripped on the way out even if the service starts
+ * returning more. Nested JSON (questions, themes, translations) is the survey author's
+ * content and passes through as-is.
+ */
 const getSurveyPublicResponseSchema = z.object({
   id: z.string(),
   surveyTeamMapId: z.string(),
   title: z.string(),
   languages: z.array(z.string()),
+  questions: z.array(z.unknown()),
   active: z.boolean(),
-  questions: z.array(questionSchema),
-  isProtected: z.boolean(),
   isPublished: z.boolean(),
+  isProtected: z.boolean(),
+  kioskMode: z.boolean(),
   uniqueDeviceResponse: z.boolean(),
   type: z.string(),
-  kioskMode: z.boolean(),
   getLocation: z.boolean(),
   welcomePageEnabled: z.boolean(),
-  orgLogo: z.string(),
   skipPreview: z.boolean(),
+  webSurveyAutoTransitionToNextQues: z.boolean(),
   isEncrypted: z.boolean(),
-  publicKey: z.string().optional(),
-  redirect: z
-    .object({
-      url: z.string().optional(),
-      time: z.string().optional(),
-      enable: z.boolean().default(false),
-    })
-    .optional(),
+  publicKey: z.string().nullable(),
+  redirect: z.unknown(),
+  uiTextTranslations: z.unknown(),
+  webSurveyPagesTheme: z.unknown(),
+  surveyPublishAt: z.date().nullable(),
+  surveyEndAt: z.date().nullable(),
+  webSurveyTheme: z.object({ id: z.string(), name: z.string(), theme: z.unknown() }).nullable(),
+  reviewPageLinks: z.unknown(),
+  orgLogo: z.string().nullable().optional(),
+  orgName: z.string().nullable().optional(),
+  message: z.literal("ALREADY_SUBMITTED").optional(),
 });
 
 const updateSurveyRequestSchema = z.object({
@@ -115,7 +126,7 @@ const updateSurveyRequestSchema = z.object({
     })
     .optional(),
   languages: z.array(z.string()).optional(),
-  teams: z.array(z.string()).optional(),
+  teams: z.array(z.uuid()).optional(),
   active: z.boolean().optional(),
   kioskMode: z.boolean().optional(),
   isPublished: z.boolean().optional(),
@@ -160,10 +171,13 @@ const updateLandingPageRequestSchema = z.object({
 });
 
 const updateSurveyPasswordRequestSchema = z.object({
-  password: z.string({
-    error: (issue) =>
-      issue.input === undefined ? "Password is required" : "Password must be a string",
-  }),
+  password: z
+    .string({
+      error: (issue) =>
+        issue.input === undefined ? "Password is required" : "Password must be a string",
+    })
+    // bcrypt reads only the first 72 bytes.
+    .max(72),
 });
 
 const updateGoogleLinkRequestSchema = z.object({
@@ -223,6 +237,7 @@ export {
   getSurveyPublicResponseSchema,
   updateSurveyPasswordRequestSchema,
   idParamsSchema,
+  uuidParamsSchema,
   cloneSurveySchema,
   updateGoogleLinkRequestSchema,
   deleteTeamSurveyRequestSchema,

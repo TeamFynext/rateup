@@ -12,7 +12,7 @@ import { createEmailBodySubscriptionActivated } from "../../../utils/email/payme
 import { paymentFailed } from "../../../utils/email/payments/paymentFailed.js";
 import { sendSubscriptionPurchasedAlert } from "../../../utils/email/payments/subscriptionPurchasedAlert.js";
 import prisma from "../../../utils/prisma.js";
-import type { CreateStripeCheckoutInput } from "./stripe.schema.js";
+import { log } from "../../../utils/logger.js";
 
 const STRIPE_API = "https://api.stripe.com/v1";
 import Stripe from "stripe";
@@ -79,19 +79,78 @@ interface StripePriceData {
   recurring?: { interval: string; interval_count: number } | null;
 }
 
-export async function createOrder(data: CreateStripeCheckoutInput, userId: string) {
+/** Thrown for a checkout the catalog does not sell; the controller answers 400. */
+export class UnsellableStripePriceError extends Error {}
+
+/**
+ * The tier a Stripe price sells, resolved through the catalog: `StripeProducts.priceId` →
+ * the RateupPlan linked to that product. A price no tier links, a retired product or an
+ * add-on tier is refused — the price is the one thing the client chooses, so everything
+ * else (plan, name, amount) must follow from it.
+ */
+export async function resolveStripePrice(priceId: string) {
+  const product = await prisma.stripeProducts.findFirst({
+    where: { priceId, status: { not: "INACTIVE" } },
+    include: { RateupPlan: true },
+  });
+  const tier = product?.RateupPlan;
+  if (!product || !tier || tier.planType === "ADDON") {
+    throw new UnsellableStripePriceError("This plan is not available for checkout.");
+  }
+  return { product, tier };
+}
+
+export async function createOrder(priceId: string, orgId: string, userId: string) {
+  const { product, tier } = await resolveStripePrice(priceId);
+
   const order = await prisma.order.create({
     data: {
-      name: data.planName,
+      name: tier.displayName ?? tier.name,
       createdById: userId,
-      orgId: data.orgId,
+      // Always the caller's org: `invoice.paid` later writes this org's subscription.
+      orgId,
       subscriptionStatus: SubscriptionStatus.none,
-      rateupPlanId: data?.rateupPlanId,
+      rateupPlanId: tier.id,
+      priceId: product.priceId,
+      amountMinor: Math.round(Number(product.amount) * 100),
+      currency: product.currency,
       status: OrderStatus.PENDING,
       paymentStatus: PaymentStatus.PENDING,
     },
   });
   return order;
+}
+
+/**
+ * Whether a first invoice actually paid for the tier its order names.
+ *
+ * The order's price must still be the one its tier links (orders created before the price
+ * was resolved server-side named their tier freely), and the invoice must have collected
+ * at least that price, in that currency.
+ */
+async function invoiceCoversOrder(orderId: string, invoiceData: StripeInvoiceData) {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: {
+      priceId: true,
+      amountMinor: true,
+      currency: true,
+      RateupPlan: {
+        select: { stripeProduct: { select: { priceId: true, amount: true, currency: true } } },
+      },
+    },
+  });
+  const product = order?.RateupPlan?.stripeProduct;
+  if (!order || !product || !order.priceId || product.priceId !== order.priceId) {
+    return false;
+  }
+
+  const expectedMinor = order.amountMinor ?? Math.round(Number(product.amount) * 100);
+  const expectedCurrency = (order.currency ?? product.currency).toLowerCase();
+  return (
+    invoiceData.currency?.toLowerCase() === expectedCurrency &&
+    invoiceData.amount_paid >= expectedMinor
+  );
 }
 
 export async function findOrderByCheckoutRef(checkoutRefId: string, orgId: string) {
@@ -131,6 +190,20 @@ export async function createStripePayment(invoiceData: StripeInvoiceData) {
     }
     if (invoiceData.status_transitions.paid_at == null) {
       throw new Error("Stripe invoice is missing status_transitions.paid_at");
+    }
+    if (!(await invoiceCoversOrder(orderId, invoiceData))) {
+      // Not a retryable fault: the money and the order disagree, and granting the order's
+      // tier would hand out a plan nobody paid for. Leave it for a human.
+      log.error(
+        {
+          orderId,
+          subscription,
+          amountPaid: invoiceData.amount_paid,
+          currency: invoiceData.currency,
+        },
+        "Stripe invoice does not cover its order's plan; subscription not updated",
+      );
+      return null;
     }
     let paymentIntentData = await getSinglePaymentIntent(payment_intent);
     let subscriptionData = await getSingleStripeSubscription(subscription);

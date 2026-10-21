@@ -4,6 +4,8 @@ vi.mock("../utils/prisma.js", () => ({
   default: {
     orgMember: { findUnique: vi.fn() },
     teamMember: { findMany: vi.fn() },
+    user: { findUnique: vi.fn() },
+    team: { findUnique: vi.fn() },
   },
 }));
 vi.mock("../utils/redisConnection.js", () => ({
@@ -13,9 +15,16 @@ vi.mock("../utils/logger.js", () => ({ log: { warn: vi.fn(), error: vi.fn() } })
 
 import prisma from "../utils/prisma.js";
 import redis from "../utils/redisConnection.js";
-import { buildActor, bustActor, bustActorsForOrg, inboxScopeFor, loadActor } from "./actor.js";
+import {
+  buildActor,
+  bustActor,
+  bustActorsForOrg,
+  inboxScopeFor,
+  isUserBlocked,
+  loadActor,
+} from "./actor.js";
 import { ROLE_PERMISSIONS } from "./roles.js";
-import { assertInScope, inScope, scopeWhere } from "./scope.js";
+import { assertInScope, inScope, scopeWhere, teamInScope } from "./scope.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 const db = prisma as unknown as { orgMember: { findUnique: Mock }; teamMember: { findMany: Mock } };
@@ -210,5 +219,68 @@ describe("cache busting", () => {
     await bustActorsForOrg("o1");
     expect(cache.scan).toHaveBeenCalledWith("0", "MATCH", "authz:*:o1", "COUNT", 200);
     expect(cache.del).toHaveBeenCalledWith("authz:a:o1", "authz:b:o1");
+  });
+});
+
+describe("isUserBlocked", () => {
+  const findUser = () => (prisma as unknown as { user: { findUnique: Mock } }).user.findUnique;
+
+  beforeEach(() => {
+    (redis.get as unknown as Mock).mockResolvedValue(null);
+  });
+
+  test("a paused user is blocked, and the answer is cached under the user's prefix", async () => {
+    findUser().mockResolvedValue({ active: true, isPaused: true });
+    await expect(isUserBlocked("u-1")).resolves.toBe(true);
+    expect(redis.set).toHaveBeenCalledWith("authz:u-1:status", "1", "EX", 60);
+  });
+
+  test("a deactivated user is blocked", async () => {
+    findUser().mockResolvedValue({ active: false, isPaused: false });
+    await expect(isUserBlocked("u-1")).resolves.toBe(true);
+  });
+
+  test("an active user, and one with no app row yet (mid sign-up), are not", async () => {
+    findUser().mockResolvedValueOnce({ active: true, isPaused: false });
+    await expect(isUserBlocked("u-1")).resolves.toBe(false);
+    findUser().mockResolvedValueOnce(null);
+    await expect(isUserBlocked("u-2")).resolves.toBe(false);
+  });
+
+  test("a cached answer skips Postgres", async () => {
+    (redis.get as unknown as Mock).mockResolvedValue("1");
+    await expect(isUserBlocked("u-1")).resolves.toBe(true);
+    expect(findUser()).not.toHaveBeenCalled();
+  });
+});
+
+describe("teamInScope", () => {
+  const findTeam = () => (prisma as unknown as { team: { findUnique: Mock } }).team.findUnique;
+  const owner = buildActor({ kind: "user", userId: "u", orgId: "org-a", roleKey: "OWNER" });
+  const staff = buildActor(
+    { kind: "user", userId: "u", orgId: "org-a", roleKey: "STAFF" },
+    { teamIds: ["t-1"] },
+  );
+
+  test("an org-wide actor is refused another org's team, which inScope alone admits", async () => {
+    findTeam().mockResolvedValue({ orgId: "org-b" });
+    expect(inScope(owner, "t-foreign")).toBe(true);
+    await expect(teamInScope(owner, "t-foreign")).resolves.toBe(false);
+  });
+
+  test("an org-wide actor reaches any team of its own org", async () => {
+    findTeam().mockResolvedValue({ orgId: "org-a" });
+    await expect(teamInScope(owner, "t-2")).resolves.toBe(true);
+  });
+
+  test("a team-scoped actor still needs the team in its scope", async () => {
+    findTeam().mockResolvedValue({ orgId: "org-a" });
+    await expect(teamInScope(staff, "t-1")).resolves.toBe(true);
+    await expect(teamInScope(staff, "t-2")).resolves.toBe(false);
+  });
+
+  test("an unknown team id is refused", async () => {
+    findTeam().mockResolvedValue(null);
+    await expect(teamInScope(owner, "nope")).resolves.toBe(false);
   });
 });

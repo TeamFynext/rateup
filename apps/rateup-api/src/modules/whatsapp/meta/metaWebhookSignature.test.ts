@@ -8,7 +8,11 @@ vi.mock("../../../utils/logger.js", () => ({
 }));
 
 import { log } from "../../../utils/logger.js";
-import { registerMetaWebhookRawBody, verifyMetaWebhookSignature } from "./metaWebhookSignature.js";
+import {
+  registerMetaWebhookRawBody,
+  signatureMode,
+  verifyMetaWebhookSignature,
+} from "./metaWebhookSignature.js";
 
 const APP_SECRET = "test-app-secret";
 const BODY = JSON.stringify({ object: "instagram", entry: [{ id: "iba-1" }] });
@@ -146,5 +150,27 @@ describe("verifyMetaWebhookSignature - off", () => {
 
     expect(handler).toHaveBeenCalledOnce();
     expect(log.warn).not.toHaveBeenCalled();
+  });
+});
+
+describe("signatureMode", () => {
+  test("off is honoured only in a development runtime", () => {
+    expect(signatureMode({ META_WEBHOOK_SIGNATURES: "off", NODE_ENV: "development" })).toBe("off");
+    expect(signatureMode({ META_WEBHOOK_SIGNATURES: "off", RAILWAY_ENVIRONMENT_NAME: "dev" })).toBe(
+      "off",
+    );
+  });
+
+  test("off enforces in production, where NODE_ENV is unset", () => {
+    expect(signatureMode({ META_WEBHOOK_SIGNATURES: "off" })).toBe("enforce");
+    expect(
+      signatureMode({ META_WEBHOOK_SIGNATURES: "off", RAILWAY_ENVIRONMENT_NAME: "production" }),
+    ).toBe("enforce");
+  });
+
+  test("log stays available as the rollback; anything else enforces", () => {
+    expect(signatureMode({ META_WEBHOOK_SIGNATURES: "log" })).toBe("log");
+    expect(signatureMode({ META_WEBHOOK_SIGNATURES: "of" })).toBe("enforce");
+    expect(signatureMode({})).toBe("enforce");
   });
 });

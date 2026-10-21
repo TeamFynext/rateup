@@ -26,7 +26,9 @@ import {
   addMembersToTeamsMail,
   getTeamChannels,
   setTeamChannels,
+  InvalidInviteError,
 } from "./team.service.js";
+import { ForbiddenError } from "../../authz/errors.js";
 import {
   CreateTeamInput,
   DeleteTeamInput,
@@ -39,7 +41,6 @@ import {
   SetTeamChannelsInput,
   tagQuerySchema,
 } from "./team.schema.js";
-import Session from "supertokens-node/recipe/session/index.js";
 import { log } from "../../utils/logger.js";
 import { emitIntegrationEvent } from "../integrations/events/emitIntegrationEvent.js";
 import { errorMessage } from "../../utils/commonUtils.js";
@@ -50,7 +51,8 @@ export async function createTeamHandler(
   }>,
   reply: FastifyReply,
 ) {
-  const body = request.body;
+  // The org and the creating member are the session's, whatever the body names.
+  const body = { ...request.body, orgId: request.user.orgId, userId: request.user.userId! };
   let team;
 
   try {
@@ -109,9 +111,9 @@ export async function deleteTeamByIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    const team = await deleteTeamById(request.params.id);
+    const team = await deleteTeamById(request.params.id, request.user.orgId);
     if (!team) {
-      reply.code(404);
+      reply.code(404).send({ message: "Team not found" });
     } else {
       reply.code(200).send("Deleted team.");
     }
@@ -152,6 +154,9 @@ export async function inviteMemberHandler(
 
     //TODO Auth
   } catch (e) {
+    if (e instanceof ForbiddenError) {
+      return reply.code(403).send({ success: false, ...e.toBody() });
+    }
     console.error(e);
     reply.code(500).send({ success: false, message: errorMessage(e) });
   }
@@ -164,9 +169,12 @@ export async function resendInviteMemberHandler(
   reply: FastifyReply,
 ) {
   try {
-    await resendInviteTeamMember(request.params.id);
+    await resendInviteTeamMember(request.params.id, request.user.orgId);
     return reply.code(200).send("invite resended");
   } catch (e) {
+    if (e instanceof InvalidInviteError) {
+      return reply.code(404).send({ success: false, message: "Invitation not found" });
+    }
     return reply.code(500).send({ success: false, message: errorMessage(e) });
   }
 }
@@ -189,10 +197,25 @@ export async function completeInviteHandler(
         team: invite.team,
       },
     });
-    reply.code(200).send({ message: "Invite Accepted successfully.", data: invite });
+    // Only what the invite page shows: no ids, and never a password or reset link.
+    reply.code(200).send({
+      message: "Invite Accepted successfully.",
+      data: {
+        email: invite.email,
+        name: invite.name,
+        isUser: invite.isUser,
+        redirectLink: invite.redirectLink,
+        passwordSetupEmailSent: invite.passwordSetupEmailSent,
+        team: invite.team,
+        org: invite.org,
+      },
+    });
   } catch (e) {
+    if (e instanceof InvalidInviteError) {
+      return reply.code(410).send({ message: e.message });
+    }
     log.error(e);
-    reply.code(500).send({ message: `Internal server error : ${e}` });
+    reply.code(500).send({ message: "The invitation could not be accepted." });
   }
 }
 
@@ -203,9 +226,9 @@ export async function deleteInviteHandler(
   reply: FastifyReply,
 ) {
   try {
-    const invite = await deleteMemberInvite(request.params.id);
+    const invite = await deleteMemberInvite(request.params.id, request.user.orgId);
     if (!invite) {
-      reply.code(404);
+      reply.code(404).send({ message: "Invitation not found" });
     } else {
       reply.code(200).send("Deleted team member invite.");
     }
@@ -224,7 +247,7 @@ export async function getTeamMembersHandler(
   reply: FastifyReply,
 ) {
   try {
-    const members = await getTeamMembers({ teamId: request.params.teamId });
+    const members = await getTeamMembers({ teamId: request.params.teamId }, request.user.orgId);
     if (!members || members.length === 0) {
       reply.code(200).send({ message: "No members found for this team" });
     } else {
@@ -260,10 +283,7 @@ export async function getTeamMembersFromInviteHandler(
   }>,
   reply: FastifyReply,
 ) {
-  let session = await Session.getSession(request, reply);
-
-  const accessTokenPayload = session.getAccessTokenPayload();
-  const orgId = accessTokenPayload.orgId;
+  const orgId = request.user.orgId;
   try {
     const data = await getTeamMembersAndFromInvitation(orgId, {
       teamId: request.params.teamId,
@@ -342,7 +362,7 @@ export async function addMembertoTeamsHandler(
       return;
     }
     const res = await addMemberToTeams(request.body.teamIds, request.params.id, user.orgId);
-    const team = await getTeamById(request.body.teamIds[0]);
+    const team = await getTeamById(request.body.teamIds[0], user.orgId);
     if (!team) {
       throw new Error("Team not found");
     }
@@ -364,7 +384,7 @@ export async function getTeamByIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    const team = await getTeamById(request.params.teamId);
+    const team = await getTeamById(request.params.teamId, request.user.orgId);
     if (!team) {
       reply.code(404).send({ message: "Team not found" });
       return;
@@ -395,7 +415,7 @@ export async function setTeamChannelsHandler(
   reply: FastifyReply,
 ) {
   try {
-    reply.send(await setTeamChannels(request.params.teamId, request.body));
+    reply.send(await setTeamChannels(request.params.teamId, request.body, request.user.orgId));
   } catch (e) {
     log.error({ err: e }, "Failed to set team channels");
     reply.code(500).send({ message: "Internal server error" });

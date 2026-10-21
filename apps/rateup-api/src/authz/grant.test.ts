@@ -2,7 +2,13 @@ import { describe, expect, test } from "vitest";
 
 import { buildActor } from "./actor.js";
 import { ForbiddenError } from "./errors.js";
-import { assertCanGrant, assertCanGrantPermissions, canGrant, grantableRoles } from "./grant.js";
+import {
+  assertCanGrant,
+  assertCanGrantKeyScopes,
+  assertCanGrantPermissions,
+  canGrant,
+  grantableRoles,
+} from "./grant.js";
 import type { RoleKey } from "./roles.js";
 
 const actorWith = (roleKey: RoleKey) =>
@@ -83,5 +89,35 @@ describe("assertCanGrantPermissions", () => {
     expect(() => assertCanGrantPermissions(actorWith("OWNER"), ["wizardry"])).toThrow(
       ForbiddenError,
     );
+  });
+});
+
+describe("assertCanGrantKeyScopes", () => {
+  test("an admin may put any partner feature on a key, the key-only widget one included", () => {
+    expect(() =>
+      assertCanGrantKeyScopes(actorWith("ADMIN"), ["contacts.manage", "widget.connect"]),
+    ).not.toThrow();
+  });
+
+  test("a legacy full-access key counts as every feature, which an admin holds", () => {
+    expect(() => assertCanGrantKeyScopes(actorWith("ADMIN"), [])).not.toThrow();
+  });
+
+  test("a permission the member lacks is refused by name", () => {
+    const actor = buildActor(
+      { kind: "user", userId: "u1", orgId: "o1", roleKey: "ADMIN" },
+      { denies: ["campaigns.send"] },
+    );
+    expect(() => assertCanGrantKeyScopes(actor, ["campaigns.send", "contacts.read"])).toThrow(
+      /campaigns\.send/,
+    );
+  });
+
+  test("a team-scoped member cannot mint an org-wide key, even holding the permissions", () => {
+    const manager = buildActor(
+      { kind: "user", userId: "u1", orgId: "o1", roleKey: "MANAGER" },
+      { grants: ["api_tokens.manage"] },
+    );
+    expect(() => assertCanGrantKeyScopes(manager, ["contacts.read"])).toThrow(ForbiddenError);
   });
 });

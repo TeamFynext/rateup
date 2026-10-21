@@ -24,7 +24,14 @@ vi.mock("../../utils/prisma.js", () => ({
     contactLabelMap: { createMany: vi.fn(), deleteMany: vi.fn() },
     contactGroupMap: { createMany: vi.fn(), deleteMany: vi.fn() },
     contactCustomFieldValue: { createMany: vi.fn(), deleteMany: vi.fn() },
-    contactCustomField: { findMany: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
+    contactCustomField: {
+      findMany: vi.fn(),
+      count: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    },
+    contactLabel: { count: vi.fn() },
     waInboxAssign: { createMany: vi.fn(), deleteMany: vi.fn() },
     lifecycle: { findFirst: vi.fn(), findUnique: vi.fn() },
     conversation: { findMany: vi.fn(), updateMany: vi.fn() },
@@ -183,6 +190,7 @@ type Mock = ReturnType<typeof vi.fn>;
 const db = prisma as unknown as {
   contact: Record<string, Mock>;
   contactLabelMap: Record<string, Mock>;
+  contactLabel: Record<string, Mock>;
   contactGroupMap: Record<string, Mock>;
   contactCustomFieldValue: Record<string, Mock>;
   contactCustomField: Record<string, Mock>;
@@ -259,6 +267,10 @@ beforeEach(() => {
   // mock is re-armed here so one test's leftovers cannot reach the next.
   db.$transaction.mockImplementation(runTransaction);
   db.$queryRaw.mockResolvedValue([]);
+  // Every lifecycle, label and custom field a test names is the org's own unless it says not.
+  db.lifecycle.findFirst.mockResolvedValue({ id: "lifecycle" });
+  db.contactLabel.count.mockImplementation(async (args: any) => args.where.id.in.length);
+  db.contactCustomField.count.mockImplementation(async (args: any) => args.where.id.in.length);
   db.contact.create.mockResolvedValue({ id: "c1", orgId: ORG, phone: "919000000001" });
   db.contact.createManyAndReturn.mockResolvedValue([]);
   db.contact.findFirst.mockResolvedValue(null);
@@ -1954,5 +1966,47 @@ describe("bulkUpdateWaMessageAssignStatus", () => {
     expect(
       await bulkUpdateWaMessageAssignStatus(["c1"], ORG, WaMessageAssignStatus.CLOSED, USER),
     ).toEqual([before]);
+  });
+});
+
+describe("a contact's references must be its org's own (PART-2 / MSG-13)", () => {
+  test("another org's lifecycle stage is refused on create, update and the lifecycle route", async () => {
+    db.lifecycle.findFirst.mockResolvedValue(null);
+
+    await expect(
+      createContact({ orgId: ORG, phone: "919000000001", lifecycleId: "lc-other" } as any),
+    ).rejects.toThrow("Lifecycle lc-other not found");
+    await expect(
+      updateContactById("c-1", ORG, { lifecycleId: "lc-other" } as any, undefined, {
+        id: "c-1",
+        orgId: ORG,
+      } as any),
+    ).rejects.toThrow("Lifecycle lc-other not found");
+    await expect(updateContactLabelsById("c-1", ORG, "lc-other")).rejects.toThrow();
+    expect(db.lifecycle.findFirst.mock.calls[0][0].where).toEqual({ id: "lc-other", orgId: ORG });
+    expect(db.contact.create).not.toHaveBeenCalled();
+    expect(db.contact.update).not.toHaveBeenCalled();
+  });
+
+  test("another org's labels or custom fields are refused before anything is written", async () => {
+    db.contactLabel.count.mockResolvedValueOnce(0);
+    await expect(
+      updateContactById("c-1", ORG, { labels: ["label-other"] } as any, undefined, {
+        id: "c-1",
+        orgId: ORG,
+      } as any),
+    ).rejects.toThrow("Label not found");
+
+    db.contactCustomField.count.mockResolvedValueOnce(0);
+    await expect(
+      updateContactById(
+        "c-1",
+        ORG,
+        { customFields: [{ id: "field-other", value: "x" }] } as any,
+        undefined,
+        { id: "c-1", orgId: ORG } as any,
+      ),
+    ).rejects.toThrow("Custom field not found");
+    expect(db.contactLabelMap.deleteMany).not.toHaveBeenCalled();
   });
 });

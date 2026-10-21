@@ -26,7 +26,7 @@ import { declareAccess } from "../../authz/registry.js";
 
 // Base route: /api/question/:surveyId
 export async function questionRoutes(server: FastifyInstance) {
-  declareAccess(server, { access: "session" });
+  declareAccess(server, { access: "session", write: "surveys.manage" });
   server.addHook("preHandler", verifySurveyAccess);
   server.register(fastifyMultipart, {
     limits: {

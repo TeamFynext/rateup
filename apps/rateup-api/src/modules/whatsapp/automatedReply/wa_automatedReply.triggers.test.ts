@@ -1063,6 +1063,8 @@ describe("Facebook (Messenger) rules", () => {
     expect(getOrCreateContactByPsid).toHaveBeenCalledWith("psid-1", "org-1");
     expect(getOrCreateContactByPhone).not.toHaveBeenCalled();
     expect((assignWaMessageToUser as Mock).mock.calls[0][0].contactId).toBe("contact-1");
+    // The assignee's team comes from the rule's org, never another org they belong to.
+    expect(getTeamIdsByUserId).toHaveBeenCalledWith("user-1", "org-1");
   });
 
   test("checks contact conditions against the psid contact", async () => {

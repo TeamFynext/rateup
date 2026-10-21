@@ -13,7 +13,7 @@ import {
 import { declareAccess } from "../../authz/registry.js";
 
 export async function linkRoutes(server: FastifyInstance) {
-  declareAccess(server, { access: "session" });
+  declareAccess(server, { access: "session", write: "surveys.manage" });
   server.addHook("onRoute", (routeOptions) => {
     const declared = Array.isArray(routeOptions.preHandler)
       ? routeOptions.preHandler

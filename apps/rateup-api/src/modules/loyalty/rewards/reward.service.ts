@@ -83,9 +83,11 @@ export async function getActiveLoyaltyRewards(programId: string) {
   });
 }
 
-export async function getLoyaltyRewardById(rewardId: string) {
-  return await prisma.loyaltyReward.findUnique({
-    where: { id: rewardId },
+// Every by-id read and write below is pinned to the caller's programme: a reward id from
+// another org's programme behaves exactly like one that does not exist.
+export async function getLoyaltyRewardById(rewardId: string, programId: string) {
+  return await prisma.loyaltyReward.findFirst({
+    where: { id: rewardId, programId },
     include: {
       redemptions: {
         take: 10,
@@ -95,14 +97,24 @@ export async function getLoyaltyRewardById(rewardId: string) {
   });
 }
 
-export async function updateLoyaltyReward(rewardId: string, data: LoyaltyRewardUpdateInput) {
+export async function updateLoyaltyReward(
+  rewardId: string,
+  programId: string,
+  data: LoyaltyRewardUpdateInput,
+) {
   return await prisma.loyaltyReward.update({
-    where: { id: rewardId },
+    where: { id: rewardId, programId },
     data,
   });
 }
 
-export async function deleteLoyaltyReward(rewardId: string) {
+export async function deleteLoyaltyReward(rewardId: string, programId: string) {
+  const owned = await prisma.loyaltyReward.findFirst({
+    where: { id: rewardId, programId },
+    select: { id: true },
+  });
+  if (!owned) throw new LoyaltyError("REWARD_NOT_FOUND", "Reward not found");
+
   // Check if there are pending redemptions
   const pendingRedemptions = await prisma.loyaltyRedemption.count({
     where: {
@@ -121,7 +133,7 @@ export async function deleteLoyaltyReward(rewardId: string) {
   }
 
   return await prisma.loyaltyReward.delete({
-    where: { id: rewardId },
+    where: { id: rewardId, programId },
   });
 }
 

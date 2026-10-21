@@ -415,6 +415,22 @@ describe("addExistingContactsToGroup", () => {
 describe("addExistingContactsToMultipleGroups", () => {
   beforeEach(() => {
     db.contactGroup.findMany.mockResolvedValue([{ id: "g1" }, { id: "g2" }]);
+    db.contact.findMany.mockResolvedValue([{ id: "c1" }]);
+  });
+
+  test("adds only the caller's own contacts, never another org's", async () => {
+    db.contactGroup.findMany.mockResolvedValue([{ id: "g1" }]);
+    db.contact.findMany.mockResolvedValue([{ id: "c1" }]);
+
+    await addExistingContactsToMultipleGroups(["c1", "c-other-org"], ["g1"], ORG);
+
+    expect(db.contact.findMany.mock.calls[0][0].where).toEqual({
+      id: { in: ["c1", "c-other-org"] },
+      orgId: ORG,
+    });
+    expect(db.contactGroupMap.createManyAndReturn.mock.calls[0][0].data).toEqual([
+      { contactId: "c1", contactGroupId: "g1" },
+    ]);
   });
 
   test("adds a contact to each requested group", async () => {

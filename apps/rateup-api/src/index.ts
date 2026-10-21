@@ -2,6 +2,7 @@ import "dotenv/config";
 import { LogController } from "fastify";
 import { build } from "./app.js";
 import { initProcessMetrics } from "./utils/metrics.js";
+import { trustProxySetting } from "./utils/http.js";
 
 /**
  * API service entrypoint — HTTP only, safe to run at N replicas.
@@ -15,7 +16,9 @@ async function start() {
     // logger: true,
     logController: new LogController({ disableRequestLogging: true }),
     bodyLimit: 30971520,
-    trustProxy: true,
+    // Cloudflare → Railway edge: trust that many hops (TRUST_PROXY_HOPS, default 2), never
+    // the whole X-Forwarded-For chain, whose left end the client writes.
+    trustProxy: trustProxySetting(),
     connectionTimeout: 60_000,
     keepAliveTimeout: 65_000,
     requestTimeout: 30_000,

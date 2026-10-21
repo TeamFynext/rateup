@@ -13,14 +13,11 @@ export async function createBusinessHourHandler(
   reply: FastifyReply,
 ) {
   const user = request.user;
-  const body = request.body;
+  const { name, timezone, channels, description, schedule } = request.body;
 
   try {
     const businessHour = await prisma.businessHour.create({
-      data: {
-        ...body,
-        orgId: user.orgId,
-      },
+      data: { name, timezone, channels, description, schedule, orgId: user.orgId },
     });
 
     return reply.code(201).send(businessHour);
@@ -98,9 +95,11 @@ export async function updateBusinessHourHandler(
       return reply.code(404).send({ message: "Business hour not found" });
     }
 
+    // Named fields only: the row's org and id are never the client's to set.
+    const { name, timezone, channels, description, schedule } = body;
     const updatedBusinessHour = await prisma.businessHour.update({
       where: { id },
-      data: body,
+      data: { name, timezone, channels, description, schedule },
     });
 
     return reply.send(updatedBusinessHour);

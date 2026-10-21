@@ -493,7 +493,7 @@ export async function filterChats(
     let teamIdsCache: string[] | null = null;
     const getTeamIdsLazy = async () => {
       if (!teamIdsCache) {
-        teamIdsCache = await getTeamIdsByUserId(userId);
+        teamIdsCache = await getTeamIdsByUserId(userId, orgId);
       }
       return teamIdsCache;
     };
@@ -1634,10 +1634,12 @@ export async function reopenConversation(
   };
 }
 
-export async function getAssignedUserForContact(contactId: string) {
+export async function getAssignedUserForContact(contactId: string, orgId: string) {
   return await prisma.waInboxAssign.findMany({
     where: {
       contactId,
+      // Assignee names are only the caller's to see for one of the caller's contacts.
+      contact: { orgId },
     },
     include: {
       assignedUser: {
@@ -1666,7 +1668,7 @@ export async function deleteAssignedUsersforContact(contactId: string) {
   });
 }
 export async function getContactsCountByInbox(orgId: string, userId: string, actor: Actor) {
-  const teamIds = await getTeamIdsByUserId(userId);
+  const teamIds = await getTeamIdsByUserId(userId, orgId);
   const stats = await getInboxCountsFromConversations(orgId);
   const count: {
     new_assigned_count: number;

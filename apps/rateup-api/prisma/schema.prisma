@@ -1039,22 +1039,27 @@ model TeamMember {
 }
 
 model Invitation {
-  id        String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email     String
-  name      String
-  type      InviteType
-  org       Org          @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId     String       @db.Uuid
-  team      Team?        @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId    String?      @db.Uuid
-  invitedBy String
-  createdAt DateTime     @default(now())
-  status    InviteStatus @default(PENDING)
+  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email          String
+  name           String
+  type           InviteType
+  org            Org          @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId          String       @db.Uuid
+  team           Team?        @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId         String?      @db.Uuid
+  invitedBy      String
+  createdAt      DateTime     @default(now())
+  status         InviteStatus @default(PENDING)
   /// The role the invitee gets on accept. NULL falls back to ADMIN.
-  role      Role?
+  role           Role?
   /// Every team the invitee joins on accept, teamId included. teamId stays the team the
   /// invitation is filed under; empty here means teamId alone.
-  teamIds   String[]     @default([]) @db.Uuid
+  teamIds        String[]     @default([]) @db.Uuid
+  /// SHA-256 (hex) of the token in the emailed invite link. The raw token is never stored;
+  /// NULL once the invitation is accepted, and on rows issued before tokens existed.
+  tokenHash      String?      @unique
+  /// When the emailed link stops working. A resend issues a new token and a new expiry.
+  tokenExpiresAt DateTime?
 
   @@unique([email, teamId], name: "team_id_email_unique")
 }
@@ -1925,6 +1930,23 @@ model Order {
   RateupPlan           RateupPlan?         @relation(fields: [rateupPlanId], references: [id])
   rateupPlanId         String?             @db.Uuid
   checkoutRefId        String?             @unique
+  /// What the gateway must collect for this order, in minor units, fixed by the server
+  /// when the order is created. Webhooks compare the captured amount against it.
+  amountMinor          Int?
+  currency             String?
+  /// How many packs an add-on order bought. Read by the payment webhook instead of the
+  /// payment's `notes`, which the browser's Checkout options can set.
+  addonQuantity        Int?
+}
+
+/// Razorpay webhook deliveries already acted on, keyed by `x-razorpay-event-id`, so a
+/// replayed or redelivered event is acknowledged without being applied twice.
+model RazorpayWebhookEvent {
+  eventId    String   @id
+  event      String
+  receivedAt DateTime @default(now())
+
+  @@index([receivedAt])
 }
 
 model Payments {

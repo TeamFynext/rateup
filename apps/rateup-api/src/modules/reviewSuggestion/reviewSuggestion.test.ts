@@ -10,6 +10,7 @@ vi.mock("../../utils/prisma.js", () => ({
       update: vi.fn(),
       delete: vi.fn(),
     },
+    team: { findUnique: vi.fn() },
   },
 }));
 
@@ -59,13 +60,18 @@ import {
 
 type Mock = ReturnType<typeof vi.fn>;
 
-const db = prisma as unknown as { reviewSuggestion: Record<string, Mock> };
+const db = prisma as unknown as {
+  reviewSuggestion: Record<string, Mock>;
+  team: { findUnique: Mock };
+};
 
 const USER = "11111111-1111-1111-1111-111111111111";
 const OWN_TEAM = "22222222-2222-2222-2222-222222222222";
+const ORG = "44444444-4444-4444-4444-444444444444";
+const VICTIM_ORG = "55555555-5555-5555-5555-555555555555";
 // An org-wide actor, and one that reaches OWN_TEAM only.
-const ALL_ACTOR = { scope: { all: true, teamIds: [] } } as any;
-const SCOPED_ACTOR = { scope: { all: false, teamIds: [OWN_TEAM] } } as any;
+const ALL_ACTOR = { orgId: ORG, scope: { all: true, teamIds: [] } } as any;
+const SCOPED_ACTOR = { orgId: ORG, scope: { all: false, teamIds: [OWN_TEAM] } } as any;
 const VICTIM_TEAM = "33333333-3333-3333-3333-333333333333";
 const VICTIM_REVIEW = "3f8a1e2c-5b7d-4c9e-8a1b-2d3e4f5a6b7c";
 const MAP = "7c6b5a4f-3e2d-4b1a-9c8d-7e6f5a4b3c2d";
@@ -91,6 +97,8 @@ beforeEach(() => {
   db.reviewSuggestion.createMany.mockResolvedValue({ count: 2 });
   db.reviewSuggestion.update.mockResolvedValue({ id: VICTIM_REVIEW });
   db.reviewSuggestion.delete.mockResolvedValue({ id: VICTIM_REVIEW });
+  // Every team belongs to the caller's org unless a test says otherwise.
+  db.team.findUnique.mockResolvedValue({ orgId: ORG });
   (getGoogleUrlBySurveyTeamMapId as unknown as Mock).mockResolvedValue("https://g.page/r/xyz");
 });
 
@@ -206,10 +214,29 @@ describe("reviewSuggestionRoutes", () => {
 // ===========================================================================
 
 describe("deleteReviewSuggestion", () => {
-  test("deletes by id alone", async () => {
-    await deleteReviewSuggestion(VICTIM_REVIEW);
+  test("deletes by id within the caller's org", async () => {
+    await deleteReviewSuggestion(VICTIM_REVIEW, ORG);
 
-    expect(db.reviewSuggestion.delete).toHaveBeenCalledWith({ where: { id: VICTIM_REVIEW } });
+    expect(db.reviewSuggestion.delete).toHaveBeenCalledWith({
+      where: { id: VICTIM_REVIEW, team: { orgId: ORG } },
+    });
+  });
+
+  test("refuses an org-wide actor whose org does not own the review's team", async () => {
+    db.reviewSuggestion.findUnique.mockResolvedValueOnce({
+      id: VICTIM_REVIEW,
+      teamId: VICTIM_TEAM,
+    });
+    db.team.findUnique.mockResolvedValueOnce({ orgId: VICTIM_ORG });
+    const rep = reply();
+
+    await deleteReviewSuggestionHandler(
+      { params: { reviewSuggestionId: VICTIM_REVIEW }, userId: USER, actor: ALL_ACTOR } as never,
+      rep,
+    );
+
+    expect(db.reviewSuggestion.delete).not.toHaveBeenCalled();
+    expect(answer(rep).code).toBe(403);
   });
 
   test("resolves the review's team and refuses a caller outside it", async () => {
@@ -290,21 +317,35 @@ describe("deleteReviewSuggestion", () => {
 // ===========================================================================
 
 describe("updateReviewSuggestion", () => {
-  test("selects the row by id alone and writes the body", async () => {
-    await updateReviewSuggestion(VICTIM_REVIEW, { review: "x", language: "English" });
+  test("selects the row by id within the caller's org and writes the body", async () => {
+    await updateReviewSuggestion(VICTIM_REVIEW, { review: "x", language: "English" }, ORG);
 
     expect(db.reviewSuggestion.update).toHaveBeenCalledWith({
-      where: { id: VICTIM_REVIEW },
+      where: { id: VICTIM_REVIEW, team: { orgId: ORG } },
       data: { review: "x", language: "English" },
     });
   });
 
+  test("an org-wide actor of another org is refused on update", async () => {
+    db.reviewSuggestion.findUnique.mockResolvedValueOnce({
+      id: VICTIM_REVIEW,
+      teamId: VICTIM_TEAM,
+    });
+    db.team.findUnique.mockResolvedValueOnce({ orgId: VICTIM_ORG });
+
+    await expect(hasAccessToReview(ALL_ACTOR, VICTIM_REVIEW)).resolves.toBe("forbidden");
+  });
+
   test("a teamId in the body does not reach the update", async () => {
-    await updateReviewSuggestion(VICTIM_REVIEW, {
-      review: "x",
-      language: "English",
-      teamId: OWN_TEAM,
-    } as never);
+    await updateReviewSuggestion(
+      VICTIM_REVIEW,
+      {
+        review: "x",
+        language: "English",
+        teamId: OWN_TEAM,
+      } as never,
+      ORG,
+    );
 
     expect(db.reviewSuggestion.update.mock.calls[0][0].data).toEqual({
       review: "x",

@@ -150,3 +150,16 @@ export function checkGoogleClaims(
     },
   };
 }
+
+/**
+ * When Google last authenticated the person, from the id_token's `auth_time`. Google only
+ * sends it when asked (`max_age`, which a step-up start sets), so a token without it is
+ * treated as stale — the epoch — and cannot satisfy step-up. Never later than `now`.
+ */
+export function googleAuthenticatedAt(claims: JWTPayload, now = new Date()): Date {
+  const authTime = claims.auth_time;
+  if (typeof authTime !== "number" || !Number.isFinite(authTime) || authTime <= 0) {
+    return new Date(0);
+  }
+  return new Date(Math.min(authTime * 1000, now.getTime()));
+}

@@ -24,6 +24,8 @@ vi.mock("./user.service.js", () => ({
   getLoggedUserInfo: vi.fn(),
   getLoggedUserProfile: vi.fn(),
   pauseUser: vi.fn(),
+  removeMemberFromOrg: vi.fn(),
+  revokeUserSessions: vi.fn(),
   updateUserActiveStatus: vi.fn(),
   updateUserAvailablityStatus: vi.fn(),
   updateUserPrefLanguage: vi.fn(),
@@ -49,6 +51,7 @@ vi.mock("../../utils/logger.js", () => ({
 }));
 
 import supertokens from "supertokens-node";
+import { revokeUserSessions } from "./user.service.js";
 import Session from "supertokens-node/recipe/session/index.js";
 import EmailPassword from "supertokens-node/recipe/emailpassword/index.js";
 import { changeUserPasswordHandler } from "./user.controller.js";
@@ -94,6 +97,7 @@ beforeEach(() => {
     getUserId: () => "user-1",
     getTenantId: () => "public",
     getRecipeUserId: () => RECIPE_USER_ID,
+    getHandle: () => "handle-current",
   });
   getUserMock.mockResolvedValue({ emails: ["owner@acme.com"], phoneNumbers: [] });
   verifyCredentialsMock.mockResolvedValue({ status: "OK" });
@@ -101,6 +105,12 @@ beforeEach(() => {
 });
 
 describe("changeUserPasswordHandler - success", () => {
+  test("ends every other session, keeping the one that made the change", async () => {
+    await changeUserPasswordHandler(makeRequest(), makeReply());
+
+    expect(revokeUserSessions).toHaveBeenCalledWith("user-1", "handle-current");
+  });
+
   test("checks the old password against the session's tenant and account email", async () => {
     await changeUserPasswordHandler(makeRequest(), makeReply());
 

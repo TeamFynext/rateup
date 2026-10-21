@@ -6,7 +6,7 @@ vi.mock("../../../utils/logger.js", () => ({
 
 process.env.FLOW_TOKEN_SECRET = "test-secret";
 
-const { signFlowToken, verifyFlowToken } = await import("./flowToken.js");
+const { flowTokenSecretProblem, signFlowToken, verifyFlowToken } = await import("./flowToken.js");
 
 const CONTEXT = {
   surveyTeamMapId: "stm-1",
@@ -106,5 +106,25 @@ describe("signFlowToken / verifyFlowToken", () => {
 
   test("returns null rather than throwing for a malformed payload", () => {
     expect(verifyFlowToken("v1.@@@notbase64json@@@.signature")).toBeNull();
+  });
+});
+
+describe("flowTokenSecretProblem", () => {
+  test("refuses the shipped placeholder everywhere", () => {
+    expect(flowTokenSecretProblem("change-me", { NODE_ENV: "development" })).toMatch(/placeholder/);
+    expect(flowTokenSecretProblem("change-me", {})).toMatch(/placeholder/);
+  });
+
+  test("refuses a short secret in production only", () => {
+    expect(flowTokenSecretProblem("short-secret", {})).toMatch(/at least/);
+    expect(flowTokenSecretProblem("short-secret", { NODE_ENV: "test" })).toBeNull();
+  });
+
+  test("accepts a long random secret", () => {
+    expect(flowTokenSecretProblem("c3VwZXItcmFuZG9tLXNlY3JldC12YWx1ZQ", {})).toBeNull();
+  });
+
+  test("refuses an unset secret", () => {
+    expect(flowTokenSecretProblem(undefined, { NODE_ENV: "test" })).toMatch(/must be set/);
   });
 });

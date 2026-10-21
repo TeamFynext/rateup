@@ -18,14 +18,17 @@ import { declareAccess } from "../../authz/registry.js";
 import { PERMISSIONS } from "../../authz/permissions.js";
 import { API_KEY_FEATURE_NAMES } from "../../authz/apiKeyFeatures.js";
 
-/** Permission keys the key may exercise; an empty list restores full access. */
-export const apiKeyScopesSchema = z.object({ scopes: z.array(z.enum(PERMISSIONS)) });
+/**
+ * Permission keys the key may exercise. At least one: an empty list would mean full access,
+ * which only keys minted before scopes existed still have.
+ */
+export const apiKeyScopesSchema = z.object({ scopes: z.array(z.enum(PERMISSIONS)).min(1) });
 export type ApiKeyScopesInput = z.infer<typeof apiKeyScopesSchema>;
 
 export const createApiKeySchema = z.object({
   name: z.string().trim().min(1).max(80),
-  /** Feature areas the key may use; empty (the default) is full access. */
-  features: z.array(z.enum(API_KEY_FEATURE_NAMES)).default([]),
+  /** Feature areas the key may use. A new key always names at least one. */
+  features: z.array(z.enum(API_KEY_FEATURE_NAMES)).min(1),
   mode: z.enum(["live", "test"]).default("live"),
   /** Which partner API the key opens. v1 keys are always live; `mode` is ignored for them. */
   version: z.enum(["v1", "v2"]).default("v2"),
@@ -36,6 +39,7 @@ export type CreateApiKeyBody = z.infer<typeof createApiKeySchema>;
 export const updateApiKeySchema = z
   .object({
     name: z.string().trim().min(1).max(80).optional(),
+    /** `[]` is accepted only for a legacy full-access key, and leaves it as it is. */
     features: z.array(z.enum(API_KEY_FEATURE_NAMES)).optional(),
     expiresAt: z.coerce.date().nullable().optional(),
   })

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { matchDataSchema } from "./wa_automatedReply.schema.js";
 
 // Param schemas
 export const instagramAutomationIdParamSchema = z.object({
@@ -8,13 +9,14 @@ export const instagramAutomationIdParamSchema = z.object({
 // Body schemas
 export const createInstagramAutomationBodySchema = z.object({
   name: z.string().min(1, "Name is required"),
-  matchData: z.any(),
+  // Same shape as WhatsApp automations: the Meta editors send { json, caseSensitive, … }.
+  matchData: matchDataSchema,
   whatsappSettingsPhoneId: z.string().nullish(),
 });
 
 export const updateInstagramAutomationBodySchema = z.object({
   name: z.string().min(1).optional(),
-  matchData: z.any().optional(),
+  matchData: matchDataSchema.optional(),
   whatsappSettingsPhoneId: z.string().nullish(),
 });
 

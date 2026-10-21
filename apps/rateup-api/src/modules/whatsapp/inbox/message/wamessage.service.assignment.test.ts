@@ -599,10 +599,10 @@ describe("assignment lookups", () => {
   test("lists who a contact is assigned to, with their names", async () => {
     db.waInboxAssign.findMany.mockResolvedValue([{ assignedUserId: "user-9" }]);
 
-    await getAssignedUserForContact("contact-1");
+    await getAssignedUserForContact("contact-1", "org-1");
 
     expect(db.waInboxAssign.findMany).toHaveBeenCalledWith({
-      where: { contactId: "contact-1" },
+      where: { contactId: "contact-1", contact: { orgId: "org-1" } },
       include: { assignedUser: { select: { name: true } } },
     });
   });

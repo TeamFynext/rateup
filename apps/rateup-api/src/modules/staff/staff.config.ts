@@ -32,8 +32,8 @@ export interface StaffConfig {
   /** Verify the Cloudflare Access JWT. Turning it off in production only logs a warning. */
   cfAccessEnforced: boolean;
   /**
-   * https API → Secure, `__Host-` prefixed, SameSite=None cookies (the console may be on
-   * another site). A plain-http localhost gets none of that; localhost ports are same-site.
+   * Secure, `__Host-` prefixed, SameSite=None cookies (the console may be on another site)
+   * everywhere but a plain-http API under NODE_ENV=development; localhost ports are same-site.
    */
   secureCookies: boolean;
   /**
@@ -46,8 +46,9 @@ export interface StaffConfig {
 export function staffConfig(): StaffConfig {
   const consoleOrigin = (process.env.STAFF_CONSOLE_ORIGIN ?? "").replace(/\/+$/, "");
   const apiOrigin = (process.env.STAFF_API_ORIGIN || process.env.API_URL || "").replace(/\/+$/, "");
+  const development = process.env.NODE_ENV === "development";
   return {
-    development: process.env.NODE_ENV === "development",
+    development,
     googleClientId: process.env.STAFF_GOOGLE_CLIENT_ID ?? "",
     googleClientSecret: process.env.STAFF_GOOGLE_CLIENT_SECRET ?? "",
     googleHd: (process.env.STAFF_GOOGLE_HD ?? "rateup.app").toLowerCase(),
@@ -57,7 +58,9 @@ export function staffConfig(): StaffConfig {
     cfAccessTeam: process.env.CF_ACCESS_TEAM ?? "",
     cfAccessAud: process.env.CF_ACCESS_AUD ?? "",
     cfAccessEnforced: process.env.STAFF_CF_ACCESS_ENFORCE !== "false",
-    secureCookies: apiOrigin.startsWith("https://"),
+    // Outside development always Secure, whatever API_URL says: a mistyped http:// origin
+    // must not quietly drop the flag (and the __Host- prefix) in production.
+    secureCookies: !development || apiOrigin.startsWith("https://"),
   };
 }
 

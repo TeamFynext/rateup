@@ -1,5 +1,9 @@
 import axios from "axios";
 import prisma from "../../../utils/prisma.js";
+import {
+  sanitizeSurveyQuestions,
+  sanitizeSurveyThemeJson,
+} from "../../../utils/survey/richText.js";
 import { getWaSettings, getWaSettingsById } from "../settings/wa_settings.service.js";
 import { callMetaApi } from "../wa_axios.js";
 import { graphUrl } from "../../../utils/meta.js";
@@ -184,7 +188,7 @@ export async function getFlowsFromDb(
   userId: string,
   whatsappSettingsId?: string | null,
 ) {
-  const teamIds = await getTeamIdsByUserId(userId);
+  const teamIds = await getTeamIdsByUserId(userId, orgId);
   const defaultWaSettings = whatsappSettingsId ? await getWaSettings(orgId) : null;
   const isDefaultChannel = defaultWaSettings?.id === whatsappSettingsId;
 
@@ -467,6 +471,9 @@ export async function cloneFlow(
   const updatedAt: Date | null = null;
   const clonedSurvey = {
     ...surveyWithoutId,
+    // Rows written before write-time sanitising (FE-1) are cleaned on the way into the copy.
+    questions: sanitizeSurveyQuestions(surveyWithoutId.questions, surveyWithoutId.type),
+    webSurveyPagesTheme: sanitizeSurveyThemeJson(surveyWithoutId.webSurveyPagesTheme),
     createdBy: userId,
     createdAt: new Date(),
     updatedAt,
@@ -1247,7 +1254,9 @@ async function surveyOfAgentFlowReply(orgId: string, waMessage: WaMessageBody) {
     where: { messageId: repliedTo, contact: { orgId } },
     select: { messageBody: true },
   });
-  type Sent = { interactive?: { action?: { parameters?: { flow_id?: string | number } } } };
+  interface Sent {
+    interactive?: { action?: { parameters?: { flow_id?: string | number } } };
+  }
   // Stored wrapped by direction, `{ send: {...} }`; a bare body is read as is.
   // Meta AI sends it as a `galaxy_message` interactive, flow_id in parameters.
   const stored = sent?.messageBody as { send?: Sent; receive?: Sent } & Sent;

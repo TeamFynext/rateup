@@ -20,6 +20,7 @@ vi.mock("../../../../generated/prisma/internal/prismaNamespace.js", () => ({
 }));
 
 import * as RuleService from "./wa_rule.service.js";
+import { PublicUrlError } from "../../../utils/ssrf.js";
 import { PrismaClientKnownRequestError } from "../../../../generated/prisma/internal/prismaNamespace.js";
 import {
   createRuleHandler,
@@ -240,7 +241,7 @@ describe("updateRuleHandler", () => {
       reply,
     );
 
-    expect(svc.updateRule).toHaveBeenCalledWith("rule-1", { name: "Renamed" });
+    expect(svc.updateRule).toHaveBeenCalledWith("rule-1", "org-1", { name: "Renamed" });
     expect(reply.payload).toBe(RULE);
   });
 
@@ -254,23 +255,22 @@ describe("updateRuleHandler", () => {
     expect(reply.payload).toMatchObject({ message: "Keyword 'hello' is already used" });
   });
 
-  test("surfaces a missing rule as a 500 rather than a 404", async () => {
+  test("a missing rule, or another org's, is a 404", async () => {
     svc.updateRule.mockRejectedValue(new Error("Rule not found"));
     const reply = makeReply();
 
     await updateRuleHandler(makeRequest({ params: { id: "missing" }, body: {} }), reply);
 
-    expect(reply.status).toHaveBeenCalledWith(500);
+    expect(reply.status).toHaveBeenCalledWith(404);
   });
 
-  // NOTE: nothing checks the rule belongs to the caller's org before updating it.
-  test("does not scope the update to the caller's org", async () => {
+  test("scopes the update to the caller's org", async () => {
     await updateRuleHandler(
       makeRequest({ params: { id: "rule-victim" }, body: { name: "hijacked" } }),
       makeReply(),
     );
 
-    expect(svc.updateRule).toHaveBeenCalledWith("rule-victim", { name: "hijacked" });
+    expect(svc.updateRule).toHaveBeenCalledWith("rule-victim", "org-1", { name: "hijacked" });
   });
 });
 
@@ -280,7 +280,7 @@ describe("deleteRuleHandler", () => {
 
     await deleteRuleHandler(makeRequest({ params: { id: "rule-1" } }), reply);
 
-    expect(svc.deleteRule).toHaveBeenCalledWith("rule-1");
+    expect(svc.deleteRule).toHaveBeenCalledWith("rule-1", "org-1");
     expect(reply.payload).toEqual({ success: true });
   });
 
@@ -294,11 +294,14 @@ describe("deleteRuleHandler", () => {
     expect(reply.payload).toMatchObject({ error: "Failed to delete rule" });
   });
 
-  // NOTE: same gap as update — the id alone decides what gets deleted.
-  test("does not scope the delete to the caller's org", async () => {
-    await deleteRuleHandler(makeRequest({ params: { id: "rule-victim" } }), makeReply());
+  test("scopes the delete to the caller's org; another org's rule is a 404", async () => {
+    svc.deleteRule.mockRejectedValue(Object.assign(new Error("No record"), { code: "P2025" }));
+    const reply = makeReply();
 
-    expect(svc.deleteRule).toHaveBeenCalledWith("rule-victim");
+    await deleteRuleHandler(makeRequest({ params: { id: "rule-victim" } }), reply);
+
+    expect(svc.deleteRule).toHaveBeenCalledWith("rule-victim", "org-1");
+    expect(reply.status).toHaveBeenCalledWith(404);
   });
 });
 
@@ -319,5 +322,29 @@ describe("getRulesByAutomationIdHandler", () => {
     await getRulesByAutomationIdHandler(makeRequest({ params: { automationId: "auto-1" } }), reply);
 
     expect(reply.status).toHaveBeenCalledWith(500);
+  });
+});
+
+describe("external API URL refused at save time", () => {
+  test("create answers 400 with the reason", async () => {
+    svc.createRule.mockRejectedValue(
+      new PublicUrlError("Refusing to fetch a private address: 127.0.0.1"),
+    );
+    const reply = makeReply();
+
+    await createRuleHandler(makeRequest(), reply);
+
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.payload.message).toContain("127.0.0.1");
+  });
+
+  test("update answers 400 with the reason", async () => {
+    svc.updateRule.mockRejectedValue(new PublicUrlError("Refusing to fetch an invalid URL"));
+    const reply = makeReply();
+
+    await updateRuleHandler(makeRequest({ params: { id: "rule-1" }, body: {} }), reply);
+
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.payload.error).toBe("Failed to update rule");
   });
 });

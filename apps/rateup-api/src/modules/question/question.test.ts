@@ -351,6 +351,51 @@ describe("updateQuestionsOnSurvey", () => {
       questions: [q("a", { foo: "x" }), q("b", { foo: "y" })],
     });
   });
+
+  // FE-1: every question write in the module funnels through here.
+  test("a web survey's rich-text titles are sanitised before they are stored", async () => {
+    db.survey.findUnique.mockResolvedValueOnce({ type: "web" });
+    await updateQuestionsOnSurvey(SURVEY, [
+      q("a", {
+        title: { English: '<p>Hi<img src=x onerror="alert(1)"></p>', Hindi: "<b>नमस्ते</b>" },
+        description: { English: "Tom & <Jerry>" },
+      }),
+      q("w", {
+        type: "Welcome",
+        titleText: "<h3>Welcome</h3><script>steal()</script>",
+        subtitleText: '<a href="javascript:alert(1)">x</a>',
+      }),
+    ] as never);
+
+    const [a, w] = db.survey.update.mock.calls[0][0].data.questions;
+    expect(a.title).toEqual({ English: '<p>Hi<img src="x"></p>', Hindi: "<b>नमस्ते</b>" });
+    expect(a.description).toEqual({ English: "Tom & <Jerry>" });
+    expect(w.titleText).toBe("<h3>Welcome</h3>");
+    expect(w.subtitleText).toBe('<a rel="noopener noreferrer">x</a>');
+  });
+
+  test("a WhatsApp survey's plain-text titles keep their characters", async () => {
+    db.survey.findUnique.mockResolvedValueOnce({ type: "whatsapp" });
+    await updateQuestionsOnSurvey(SURVEY, [
+      q("a", { title: { en: "Rate us <3 & tell us more" } }),
+      q("b", { title: { en: "<img src=x onerror=alert(1)>" } }),
+    ] as never);
+
+    const [a, b] = db.survey.update.mock.calls[0][0].data.questions;
+    expect(a.title.en).toBe("Rate us <3 & tell us more");
+    expect(b.title.en).toBe("&lt;img src=x onerror=alert(1)>");
+  });
+
+  test("the replace handler's arbitrary body is sanitised too", async () => {
+    db.survey.findUnique.mockResolvedValueOnce({ type: "web" });
+    const request: any = {
+      params: { surveyId: SURVEY },
+      body: { questions: [q("a", { title: { English: "<svg onload=alert(1)>x</svg>ok" } })] },
+    };
+    await replaceQuestionsHandler(request, reply());
+
+    expect(db.survey.update.mock.calls[0][0].data.questions[0].title).toEqual({ English: "ok" });
+  });
 });
 
 // ===========================================================================

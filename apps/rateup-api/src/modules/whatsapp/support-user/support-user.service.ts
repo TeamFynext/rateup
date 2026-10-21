@@ -3,18 +3,22 @@ import { PlatformType } from "../../../../generated/prisma/enums.js";
 import { getSupportUserWebhookEvent } from "./support-user.util.js";
 import { SupportUserEvent } from "../../../types/enums.js";
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
-import { getContactByIdForWebhook } from "../../contact/contact.service.js";
 import { WaMessageBody } from "../../../types/whatsapp.types.js";
 import prisma from "../../../utils/prisma.js";
 import { notificationQueue } from "../../../workers/bullmq/queues/index.js";
 import { renderSupportWidgetEmail } from "../../../utils/email/react/templates.js";
 import type { SupportEmailInput } from "./support-user.schema.js";
 
-export async function handleSupportUserWebhook(data: WaMessageBody) {
-  for (const entry of data.entry) {
-    const contact = await getContactByIdForWebhook(entry.id);
+/**
+ * `orgId` is the org the widget key belongs to, never anything in the body: the key is
+ * public (it ships in the customer's page), so a contact id from another org must not let
+ * that key write into the other org's inbox.
+ */
+export async function handleSupportUserWebhook(data: WaMessageBody, orgId: string) {
+  for (const entry of data.entry ?? []) {
+    const contact = await getWidgetContact(entry.id, orgId);
     if (!contact) {
-      log.trace("No contact found for instagram business account id: %s", entry.id);
+      log.warn({ orgId }, "Support widget message for a contact outside the key's org dropped");
       continue;
     }
     for (const messages of entry.changes) {
@@ -32,8 +36,16 @@ export async function handleSupportUserWebhook(data: WaMessageBody) {
   }
 }
 
+function getWidgetContact(contactId: unknown, orgId: string) {
+  if (typeof contactId !== "string" || !contactId) return null;
+  return prisma.contact.findFirst({
+    where: { id: contactId, orgId },
+    select: { orgId: true, other: true },
+  });
+}
+
 type SupportUserChangeValue = WaMessageBody["entry"][number]["changes"][number]["value"];
-type SupportUserContact = NonNullable<Awaited<ReturnType<typeof getContactByIdForWebhook>>>;
+type SupportUserContact = NonNullable<Awaited<ReturnType<typeof getWidgetContact>>>;
 
 export async function handleSupportUserMessages(
   data: SupportUserChangeValue,

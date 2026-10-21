@@ -467,14 +467,14 @@ export type ParameterNode = z.infer<typeof parameterNodeSchema>;
  * A JSON body field. Objects nest through `properties`, arrays describe their
  * element through `items` — so this has to be lazy to name itself.
  */
-export type BodyNode = {
+export interface BodyNode {
   type: "object" | "array" | "string" | "integer" | "number" | "boolean";
   description?: string;
   required?: string[];
   properties?: Record<string, BodyNode>;
   items?: BodyNode;
   binding?: z.infer<typeof parameterBindingSchema>;
-};
+}
 
 /**
  * Meta's reference types a child node as "a string representation of the

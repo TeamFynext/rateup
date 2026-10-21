@@ -1,4 +1,5 @@
 import prisma from "../../utils/prisma.js";
+import { sanitizeSurveyThemeJson } from "../../utils/survey/richText.js";
 import { Prisma } from "../../../generated/prisma/client.js";
 import { defaultTheme } from "./defaultTheme.js";
 
@@ -169,7 +170,7 @@ export async function updateSurveyThemeActiveSurveyThemeInDB(req: UpdateActiveTh
           orgId,
         },
         data: {
-          theme,
+          theme: sanitizeSurveyThemeJson(theme),
         },
       });
     }

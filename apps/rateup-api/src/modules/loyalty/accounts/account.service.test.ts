@@ -1388,6 +1388,13 @@ describe("assignRewardToCustomer", () => {
     );
   });
 
+  test("a member of another programme reads as not found, before any reward is issued", async () => {
+    await expect(
+      assignRewardToCustomer("acct-1", "rwd-1", undefined, "prog-other-org"),
+    ).rejects.toMatchObject({ code: "MEMBER_NOT_FOUND" });
+    expect(db.customerReward.create).not.toHaveBeenCalled();
+  });
+
   test("refuses when the reward does not exist", async () => {
     db.loyaltyReward.findFirst.mockResolvedValue(null);
 

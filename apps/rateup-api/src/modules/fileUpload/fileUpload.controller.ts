@@ -7,8 +7,16 @@ import fsp from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import ffmpeg from "fluent-ffmpeg";
 import path from "node:path";
+import { pipeline } from "node:stream/promises";
 import ffmpegInstaller from "@ffmpeg-installer/ffmpeg";
 import { normalizeMimeType, validateFile } from "../../utils/upload/validate.js";
+import {
+  matchesSignature,
+  peekStream,
+  SNIFF_BYTES,
+  UploadTooLargeError,
+} from "../../utils/upload/sniff.js";
+import { resolveUploadOwner, UploadOwnerError } from "./fileUpload.owner.js";
 import { log } from "../../utils/logger.js";
 import type { PutObjectCommandInput } from "@aws-sdk/client-s3";
 
@@ -16,9 +24,66 @@ ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
 const bucket = () => process?.env?.AWS_S3_BUCKET || "rateup-survey-uploads";
 
-function objectKey(filename: string) {
+/** `<orgId>/<time>-<rand>-<name>`: the org prefix is what scopes deletion. */
+function objectKey(orgId: string, filename: string) {
   const safeName = filename.replace(/[^a-zA-Z0-9-.]/g, "");
-  return `${Date.now()}-${randomUUID().slice(0, 8)}-${safeName}`;
+  return `${orgId}/${Date.now()}-${randomUUID().slice(0, 8)}-${safeName}`;
+}
+
+/** A temp path for ffmpeg: never derived from the client's filename (INJ-5). */
+function tempPath(tmpDir: string, extension: string) {
+  return path.join(tmpDir, `${randomUUID()}.${extension}`);
+}
+
+/**
+ * Transcodes run on the API replica, so they are bounded: at most this many at once per
+ * process, each killed after FFMPEG_TIMEOUT_SECONDS.
+ */
+const MAX_CONCURRENT_TRANSCODES = Number(process.env.UPLOAD_TRANSCODE_CONCURRENCY) || 2;
+const MAX_QUEUED_TRANSCODES = 20;
+const FFMPEG_TIMEOUT_SECONDS = 180;
+let activeTranscodes = 0;
+const transcodeWaiters: (() => void)[] = [];
+
+class TranscodeBusyError extends Error {
+  statusCode = 503;
+  constructor() {
+    super("The server is busy converting other files. Please try again shortly.");
+  }
+}
+
+async function withTranscodeSlot<T>(work: () => Promise<T>): Promise<T> {
+  if (activeTranscodes >= MAX_CONCURRENT_TRANSCODES) {
+    if (transcodeWaiters.length >= MAX_QUEUED_TRANSCODES) throw new TranscodeBusyError();
+    await new Promise<void>((resolve) => transcodeWaiters.push(resolve));
+  }
+  activeTranscodes++;
+  try {
+    return await work();
+  } finally {
+    activeTranscodes--;
+    transcodeWaiters.shift()?.();
+  }
+}
+
+/** Maps the errors an upload can end in to a reply, or returns false for a 500. */
+function replyForUploadError(reply: FastifyReply, err: unknown): boolean {
+  if (err instanceof UploadOwnerError) {
+    reply.code(err.statusCode).send({ message: err.message });
+    return true;
+  }
+  if (
+    err instanceof UploadTooLargeError ||
+    (err as { code?: string } | null)?.code === "FST_REQ_FILE_TOO_LARGE"
+  ) {
+    reply.code(413).send({ message: "File size exceeds the limit for this type." });
+    return true;
+  }
+  if (err instanceof TranscodeBusyError) {
+    reply.code(503).send({ message: err.message });
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -43,7 +108,7 @@ export async function uploadController(req: FastifyRequest, reply: FastifyReply)
     data.file.resume();
     return reply.code(400).send({ message: validation.message });
   }
-  const { filename, file } = data;
+  const { filename } = data;
   const mimetype = normalizeMimeType(data.mimetype);
   const isVideo = VIDEO_TYPES.includes(mimetype);
   // `?voice=1`: a recording sent as a voice note, which WhatsApp shows as one only when
@@ -53,30 +118,35 @@ export async function uploadController(req: FastifyRequest, reply: FastifyReply)
     VOICE_NOTE_SOURCE_TYPES.includes(mimetype);
   // A re-encoded file takes the extension of what it became, so its key says so.
   const extension = isVideo ? ".mp4" : isVoiceNote ? ".ogg" : null;
-  const uniqueFilename = objectKey(
-    extension ? filename.replace(/\.[^.]*$/, "") + extension : filename,
-  );
 
-
-  let params: PutObjectCommandInput = {
-    Bucket: bucket(),
-    Key: uniqueFilename,
-    Body: file,
-    ContentType: mimetype,
-  };
   let tempRawPath: string | undefined, tempOutputPath: string | undefined;
 
   try {
+    const owner = await resolveUploadOwner(req, reply, data);
+    const uniqueFilename = objectKey(
+      owner.orgId,
+      extension ? filename.replace(/\.[^.]*$/, "") + extension : filename,
+    );
+    const { head, stream: file } = await peekStream(data.file, SNIFF_BYTES, validation.maxSize);
+    if (!matchesSignature(mimetype, head)) {
+      data.file.resume();
+      return reply.code(400).send({ message: "File content does not match its type." });
+    }
+
+    let params: PutObjectCommandInput = {
+      Bucket: bucket(),
+      Key: uniqueFilename,
+      Body: file,
+      ContentType: mimetype,
+    };
+
     if (isVoiceNote) {
-      const tmpDir = path.join(".", "tmp");
-      if (!fs.existsSync(tmpDir)) {
-        fs.mkdirSync(tmpDir, { recursive: true });
-      }
-      tempRawPath = path.join(tmpDir, `${randomUUID()}_${filename}`);
-      tempOutputPath = path.join(tmpDir, `${randomUUID()}_voice.ogg`);
+      const tmpDir = ensureTmpDir();
+      tempRawPath = tempPath(tmpDir, "upload");
+      tempOutputPath = tempPath(tmpDir, "ogg");
 
       await pumpToFile(file, tempRawPath);
-      await convertToVoiceNote(tempRawPath, tempOutputPath);
+      await withTranscodeSlot(() => convertToVoiceNote(tempRawPath!, tempOutputPath!));
 
       params = {
         Bucket: bucket(),
@@ -84,26 +154,21 @@ export async function uploadController(req: FastifyRequest, reply: FastifyReply)
         Body: await fsp.readFile(tempOutputPath),
         ContentType: "audio/ogg",
       };
-    } else if (
-      mimetype === "audio/mp4" ||
-      mimetype === "audio/mpeg" ||
-      mimetype === "audio/ogg"
-    ) {
-      const tmpDir = path.join(".", "tmp");
-      if (!fs.existsSync(tmpDir)) {
-        fs.mkdirSync(tmpDir, { recursive: true });
-      }
-      tempRawPath = path.join(tmpDir, `${randomUUID()}_${filename}`);
-      tempOutputPath = path.join(tmpDir, `${randomUUID()}_output.m4a`);
+    } else if (mimetype === "audio/mp4" || mimetype === "audio/mpeg" || mimetype === "audio/ogg") {
+      const tmpDir = ensureTmpDir();
+      tempRawPath = tempPath(tmpDir, "upload");
+      tempOutputPath = tempPath(tmpDir, mimetype === "audio/ogg" ? "ogg" : "m4a");
 
       await pumpToFile(file, tempRawPath);
 
       let outputType: string;
       if (mimetype === "audio/ogg") {
-        await convertToWhatsAppCompatibleOGG(tempRawPath, tempOutputPath);
+        await withTranscodeSlot(() =>
+          convertToWhatsAppCompatibleOGG(tempRawPath!, tempOutputPath!),
+        );
         outputType = "audio/ogg";
       } else {
-        await convertToM4A(tempRawPath, tempOutputPath);
+        await withTranscodeSlot(() => convertToM4A(tempRawPath!, tempOutputPath!));
         outputType = "audio/mp4";
       }
 
@@ -115,15 +180,12 @@ export async function uploadController(req: FastifyRequest, reply: FastifyReply)
         ContentType: outputType,
       };
     } else if (isVideo) {
-      const tmpDir = path.join(".", "tmp");
-      if (!fs.existsSync(tmpDir)) {
-        fs.mkdirSync(tmpDir, { recursive: true });
-      }
-      tempRawPath = path.join(tmpDir, `${randomUUID()}_${filename}`);
-      tempOutputPath = path.join(tmpDir, `${randomUUID()}_output.mp4`);
+      const tmpDir = ensureTmpDir();
+      tempRawPath = tempPath(tmpDir, "upload");
+      tempOutputPath = tempPath(tmpDir, "mp4");
 
       await pumpToFile(file, tempRawPath);
-      await convertToWhatsAppCompatibleMP4(tempRawPath, tempOutputPath);
+      await withTranscodeSlot(() => convertToWhatsAppCompatibleMP4(tempRawPath!, tempOutputPath!));
 
       params = {
         Bucket: bucket(),
@@ -139,6 +201,7 @@ export async function uploadController(req: FastifyRequest, reply: FastifyReply)
       data: { fileUrl, key: uniqueFilename },
     });
   } catch (err) {
+    if (replyForUploadError(reply, err)) return;
     log.error({ err }, "File upload failed");
     reply.code(500).send({ message: "Something went wrong" });
   } finally {
@@ -147,6 +210,14 @@ export async function uploadController(req: FastifyRequest, reply: FastifyReply)
     // already gone cannot throw from a finally and mask the real error.
     await removeTempFiles(tempRawPath, tempOutputPath);
   }
+}
+
+function ensureTmpDir() {
+  const tmpDir = path.join(".", "tmp");
+  if (!fs.existsSync(tmpDir)) {
+    fs.mkdirSync(tmpDir, { recursive: true });
+  }
+  return tmpDir;
 }
 
 async function removeTempFiles(...paths: (string | undefined)[]) {
@@ -161,17 +232,12 @@ async function removeTempFiles(...paths: (string | undefined)[]) {
 }
 
 function pumpToFile(source: NodeJS.ReadableStream, filePath: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const dest = fs.createWriteStream(filePath);
-    source.pipe(dest);
-    dest.on("finish", resolve);
-    dest.on("error", reject);
-  });
+  return pipeline(source, fs.createWriteStream(filePath));
 }
 
 function convertToM4A(input: string, output: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    ffmpeg(input)
+    ffmpeg(input, { timeout: FFMPEG_TIMEOUT_SECONDS })
       .audioCodec("aac")
       .audioBitrate("64k")
       .outputOptions("-movflags +faststart")
@@ -183,7 +249,7 @@ function convertToM4A(input: string, output: string): Promise<void> {
 
 function convertToWhatsAppCompatibleOGG(inputPath: string, outputPath: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    ffmpeg(inputPath)
+    ffmpeg(inputPath, { timeout: FFMPEG_TIMEOUT_SECONDS })
       .audioCodec("libopus")
       .audioBitrate("64k")
       .format("ogg")
@@ -196,7 +262,7 @@ function convertToWhatsAppCompatibleOGG(inputPath: string, outputPath: string): 
 /** WhatsApp's voice note format: Opus in an OGG container, mono, at speech bitrate. */
 function convertToVoiceNote(input: string, output: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    ffmpeg(input)
+    ffmpeg(input, { timeout: FFMPEG_TIMEOUT_SECONDS })
       .audioCodec("libopus")
       .audioChannels(1)
       .audioFrequency(48000)
@@ -214,7 +280,7 @@ function convertToVoiceNote(input: string, output: string): Promise<void> {
  */
 function convertToWhatsAppCompatibleMP4(input: string, output: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    ffmpeg(input)
+    ffmpeg(input, { timeout: FFMPEG_TIMEOUT_SECONDS })
       .videoCodec("libx264")
       .audioCodec("aac")
       .audioBitrate("128k")
@@ -249,11 +315,19 @@ export async function uploadWithThumbnailsController(req: FastifyRequest, reply:
     return reply.code(400).send({ message: "This endpoint accepts images only." });
   }
   const { filename } = data;
-  const uniqueFilename = objectKey(filename);
-  const thumbnailFilename = "thumb300x200-" + uniqueFilename;
 
   try {
+    const owner = await resolveUploadOwner(req, reply, data);
     const buffer = await data.toBuffer();
+    if (validation.maxSize && buffer.length > validation.maxSize) {
+      throw new UploadTooLargeError();
+    }
+    if (!matchesSignature(mimetype, buffer.subarray(0, SNIFF_BYTES))) {
+      return reply.code(400).send({ message: "File content does not match its type." });
+    }
+    const uniqueFilename = objectKey(owner.orgId, filename);
+    // Same org prefix as the original, so deleting one is scoped like the other.
+    const thumbnailFilename = uniqueFilename.replace(/^([^/]+\/)/, "$1thumb300x200-");
     const params: PutObjectCommandInput = {
       Bucket: bucket(),
       Key: uniqueFilename,
@@ -291,20 +365,40 @@ export async function uploadWithThumbnailsController(req: FastifyRequest, reply:
       },
     });
   } catch (err) {
+    if (replyForUploadError(reply, err)) return;
     log.error({ err }, "File upload with thumbnail failed");
     reply.code(500).send({ message: "Something went wrong" });
   }
 }
 
+/**
+ * Deletes uploads of the caller's org. The route requires a session; a key is only
+ * deletable when it carries the `<orgId>/` prefix uploads have been given since
+ * 2026-10-20. Older, unprefixed keys have no recorded owner and are refused.
+ */
 export async function deleteUploadedFileController(
   req: FastifyRequest<{ Body: fileDeleteInput }>,
   reply: FastifyReply,
 ) {
   const { fileKeyArray } = req.body;
+  const orgId = req.actor?.orgId ?? req.user?.orgId;
+  if (!orgId) {
+    return reply.code(401).send({ message: "Not authorized" });
+  }
+  const prefix = `${orgId}/`;
+  const foreign = fileKeyArray.filter(
+    ({ Key }) => !Key.startsWith(prefix) || Key.length === prefix.length || Key.includes(".."),
+  );
+  if (foreign.length) {
+    return reply.code(403).send({
+      message: "Some files do not belong to your organisation.",
+      keys: foreign.map(({ Key }) => Key),
+    });
+  }
   const params = {
     Bucket: bucket(),
     Delete: {
-      Objects: fileKeyArray,
+      Objects: fileKeyArray.map(({ Key }) => ({ Key })),
     },
   };
   try {

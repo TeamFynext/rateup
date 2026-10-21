@@ -30,7 +30,7 @@ import {
   normalizePricingCategory,
   normalizePricingModel,
 } from "../../../modules/whatsapp/metering/pricing.utils.js";
-import crypto from "node:crypto";
+import { aes_decrypt } from "../../../../utils/encryption/encryption.utils.js";
 import { Queue } from "bullmq";
 // Defined in its own dependency-free module so `queues/campaign.queue.ts` can
 // share the key without importing this one; re-exported here because the send
@@ -94,8 +94,9 @@ export async function getCampaignById(campaignId: string) {
           WHERE cds."campaignId" = c.id
         ) as "dripStages"
       FROM "Campaign" c 
-      LEFT JOIN "WaTemplate" wt ON wt.id = c."waTemplateId" 
       LEFT JOIN "Team" t ON t.id = c."teamId"
+      -- Only the campaign's own org's template: a foreign waTemplateId reads as none.
+      LEFT JOIN "WaTemplate" wt ON wt.id = c."waTemplateId" AND wt."orgId" = t."orgId"
       LEFT JOIN "WaFlow" wf ON wf."dbFlowId" = NULLIF(c."flowId",'')::uuid 
       WHERE c.id = ${campaignId}::uuid
     `;
@@ -127,22 +128,11 @@ export function getFlowIdFromTemplateComponents(
 }
 
 /**
- * Decrypt AES-256-CBC encrypted data using key and IV
- * @param encryptedData Hex-encoded encrypted string
- * @param encryptionKey Encryption key
- * @param iv Hex-encoded initialization vector
- * @returns Decrypted string
+ * Token decryption is the shared helper, which reads both the AES-256-GCM tokens written
+ * since the encryption upgrade (`gcm1:<ct>:<tag>`) and legacy CBC ones. Re-exported under
+ * the name this module always exported it as.
  */
-export function aes_decrypt(
-  encryptedData: string,
-  encryptionKey: crypto.CipherKey,
-  iv: string,
-): string {
-  const decipher = crypto.createDecipheriv("aes-256-cbc", encryptionKey, Buffer.from(iv, "hex"));
-  let decrypted = decipher.update(encryptedData, "hex", "utf8");
-  decrypted += decipher.final("utf8");
-  return decrypted;
-}
+export { aes_decrypt };
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
@@ -353,11 +343,14 @@ export async function fetchCampaignParticipants(
   JOIN "CampaignParticipant" cp ON cpds."participantId" = cp.id
   JOIN "Contact" c ON cp."contactId" = c.id
   JOIN "Campaign" camp ON cp."campaignId" = camp.id
-  JOIN "WaTemplate" wt ON wt.id = $1
+  -- Tenancy comes from the campaign, never from the contact: credentials, template and
+  -- recipients must all be the campaign org's (see the WHERE below).
+  JOIN "Team" ct ON ct.id = camp."teamId"
+  JOIN "WaTemplate" wt ON wt.id = $1 AND wt."orgId" = ct."orgId"
   JOIN LATERAL (
       SELECT *
       FROM "WhatsappSettings" was
-      WHERE was."orgId" = c."orgId"
+      WHERE was."orgId" = ct."orgId"
         AND (
           wt."whatsappSettingsPhoneId" IS NULL
           OR was."phoneId" = wt."whatsappSettingsPhoneId"
@@ -371,6 +364,7 @@ export async function fetchCampaignParticipants(
   LEFT JOIN "ContactCustomField" ccf ON ccf.id = ccfv."fieldId"
   WHERE cpds."dripStageId" = $2
   AND camp.id = $3
+  AND c."orgId" = ct."orgId"
 `;
 
     const params: any[] = [dripStage.waTemplateId, dripStageId, campaignId];
@@ -452,11 +446,14 @@ export async function fetchCampaignParticipants(
   FROM "CampaignParticipant" cp
   JOIN "Contact" c ON cp."contactId" = c.id
   JOIN "Campaign" camp ON cp."campaignId" = camp.id
-  JOIN "WaTemplate" wt ON camp."waTemplateId" = wt.id
+  -- Tenancy comes from the campaign, never from the contact: credentials, template and
+  -- recipients must all be the campaign org's (see the WHERE below).
+  JOIN "Team" ct ON ct.id = camp."teamId"
+  JOIN "WaTemplate" wt ON camp."waTemplateId" = wt.id AND wt."orgId" = ct."orgId"
   JOIN LATERAL (
     SELECT *
     FROM "WhatsappSettings" was
-    WHERE was."orgId" = c."orgId"
+    WHERE was."orgId" = ct."orgId"
       AND (
         wt."whatsappSettingsPhoneId" IS NULL
         OR was."phoneId" = wt."whatsappSettingsPhoneId"
@@ -469,6 +466,7 @@ export async function fetchCampaignParticipants(
   LEFT JOIN "ContactCustomFieldValue" ccfv ON ccfv."contactId" = c.id
   LEFT JOIN "ContactCustomField" ccf ON ccf.id = ccfv."fieldId"
     WHERE cp."campaignId" = $1
+      AND c."orgId" = ct."orgId"
 `;
 
   const params: any[] = [campaignId];

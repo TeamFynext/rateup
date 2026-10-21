@@ -1,10 +1,9 @@
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
-import { lookup } from "node:dns/promises";
-import { isIP } from "node:net";
 import { UnrecoverableError } from "bullmq";
 import prisma from "../../utils/prisma.js";
 import { outgoingWebhookQueue } from "../../workers/bullmq/queues/index.js";
 import { log } from "../../utils/logger.js";
+import { assertPublicUrl } from "../../utils/ssrf.js";
 import { getWebhookSecret as getSurveyWebhookSecret } from "../../utils/webhook.js";
 import { decryptSecret, encryptSecret } from "../integrations/shared/credentialCrypto.js";
 import {
@@ -141,27 +140,9 @@ export async function deleteWebhook(orgId: string) {
   return result;
 }
 
-function isPrivateAddress(address: string): boolean {
-  if (isIP(address) === 6) {
-    const ip = address.toLowerCase();
-    if (ip === "::" || ip === "::1") return true;
-    // Unique-local (fc00::/7) and link-local (fe80::/10).
-    if (/^f[cd]/.test(ip) || /^fe[89ab]/.test(ip)) return true;
-    const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/.exec(ip);
-    return mapped ? isPrivateAddress(mapped[1]!) : false;
-  }
-  const [a, b] = address.split(".").map(Number);
-  if (a === undefined || b === undefined) return true;
-  if (a === 10 || a === 127 || a === 0) return true;
-  if (a === 172 && b >= 16 && b <= 31) return true;
-  if (a === 192 && b === 168) return true;
-  if (a === 169 && b === 254) return true;
-  if (a === 100 && b >= 64 && b <= 127) return true; // carrier-grade NAT
-  return a >= 224; // multicast and reserved
-}
-
 /**
- * Resolves the host and refuses anything that is not a public address.
+ * Resolves the host and refuses anything that is not a public address
+ * (`src/utils/ssrf.ts`, shared with every other customer-chosen URL).
  *
  * The verification fetch used to accept any well-formed https URL, so an
  * authenticated user could make the server issue a GET to a host of their
@@ -169,23 +150,7 @@ function isPrivateAddress(address: string): boolean {
  * timeout, separated "reachable and echoed" from "refused" from "hung", which is
  * enough to sweep internal hostnames and ports from the outside.
  */
-export async function assertPublicUrl(rawUrl: string) {
-  const url = new URL(rawUrl);
-  if (url.protocol !== "https:") {
-    throw new Error(`Refusing to fetch a non-https webhook URL: ${url.protocol}`);
-  }
-  const host = url.hostname.replace(/^\[|\]$/g, "");
-  const addresses = isIP(host) ? [{ address: host }] : await lookup(host, { all: true });
-  if (!addresses.length) {
-    throw new Error(`Webhook host did not resolve: ${host}`);
-  }
-  for (const { address } of addresses) {
-    if (isPrivateAddress(address)) {
-      throw new Error(`Refusing to fetch a private address: ${address}`);
-    }
-  }
-  return url;
-}
+export { assertPublicUrl };
 
 export async function verifyWebhookUrl(url: string, verifyToken: string): Promise<boolean> {
   try {

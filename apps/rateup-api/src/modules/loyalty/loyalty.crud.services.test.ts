@@ -331,23 +331,47 @@ describe("getLoyaltyTiers", () => {
 });
 
 describe("updateLoyaltyTier / deleteLoyaltyTier", () => {
-  test("an update is keyed on the tier id alone", async () => {
-    await updateLoyaltyTier("tier-1", { name: "Silver" } as any);
+  const OWN = { programId: PROGRAM, priority: 3 };
 
-    expect(db.loyaltyTier.update.mock.calls[0][0].where).toEqual({ id: "tier-1" });
+  test("an update is keyed on the tier id within the caller's programme", async () => {
+    await updateLoyaltyTier("tier-1", PROGRAM, { name: "Silver" } as any);
+
+    expect(db.loyaltyTier.update.mock.calls[0][0].where).toEqual({
+      id: "tier-1",
+      programId: PROGRAM,
+    });
+  });
+
+  test("another programme's tier is not found, and nothing is moved or deleted", async () => {
+    db.loyaltyTier.findFirst.mockResolvedValueOnce(null);
+
+    await expect(
+      deleteLoyaltyTier("tier-b", PROGRAM, { downgradeCustomers: true }),
+    ).rejects.toMatchObject({ code: "TIER_NOT_FOUND" });
+    expect(db.loyaltyTier.findFirst.mock.calls[0][0].where).toEqual({
+      id: "tier-b",
+      programId: PROGRAM,
+    });
+    expect(db.customerLoyaltyAccount.updateMany).not.toHaveBeenCalled();
+    expect(db.loyaltyTier.delete).not.toHaveBeenCalled();
   });
 
   test("deletes an empty tier outright", async () => {
-    await deleteLoyaltyTier("tier-1");
+    db.loyaltyTier.findFirst.mockResolvedValueOnce(OWN);
 
-    expect(db.loyaltyTier.delete).toHaveBeenCalledWith({ where: { id: "tier-1" } });
+    await deleteLoyaltyTier("tier-1", PROGRAM);
+
+    expect(db.loyaltyTier.delete).toHaveBeenCalledWith({
+      where: { id: "tier-1", programId: PROGRAM },
+    });
     expect(db.customerLoyaltyAccount.updateMany).not.toHaveBeenCalled();
   });
 
   test("refuses a populated tier until the caller confirms the downgrade", async () => {
+    db.loyaltyTier.findFirst.mockResolvedValueOnce(OWN);
     db.customerLoyaltyAccount.findMany.mockResolvedValue([{ id: "acct-1" }, { id: "acct-2" }]);
 
-    await expect(deleteLoyaltyTier("tier-1")).rejects.toMatchObject({
+    await expect(deleteLoyaltyTier("tier-1", PROGRAM)).rejects.toMatchObject({
       code: "TIER_HAS_CUSTOMERS",
       customerCount: 2,
     });
@@ -355,17 +379,18 @@ describe("updateLoyaltyTier / deleteLoyaltyTier", () => {
 
   test("moves the customers to the tier below before deleting", async () => {
     db.customerLoyaltyAccount.findMany.mockResolvedValue([{ id: "acct-1" }]);
-    db.loyaltyTier.findUnique.mockResolvedValue({ programId: PROGRAM, priority: 3 });
-    db.loyaltyTier.findFirst.mockResolvedValue({ id: "tier-below", priority: 2 });
+    db.loyaltyTier.findFirst
+      .mockResolvedValueOnce(OWN)
+      .mockResolvedValueOnce({ id: "tier-below", priority: 2 });
 
-    await deleteLoyaltyTier("tier-1", { downgradeCustomers: true });
+    await deleteLoyaltyTier("tier-1", PROGRAM, { downgradeCustomers: true });
 
-    expect(db.loyaltyTier.findFirst.mock.calls[0][0].where).toEqual({
+    expect(db.loyaltyTier.findFirst.mock.calls[1][0].where).toEqual({
       programId: PROGRAM,
       priority: { lt: 3 },
     });
     expect(db.customerLoyaltyAccount.updateMany).toHaveBeenCalledWith({
-      where: { currentTierId: "tier-1" },
+      where: { currentTierId: "tier-1", programId: PROGRAM },
       data: { currentTierId: "tier-below" },
     });
     expect(db.loyaltyTier.delete).toHaveBeenCalled();
@@ -373,30 +398,23 @@ describe("updateLoyaltyTier / deleteLoyaltyTier", () => {
 
   test("refuses when there is no tier below to move them to", async () => {
     db.customerLoyaltyAccount.findMany.mockResolvedValue([{ id: "acct-1" }]);
-    db.loyaltyTier.findUnique.mockResolvedValue({ programId: PROGRAM, priority: 0 });
-    db.loyaltyTier.findFirst.mockResolvedValue(null);
+    db.loyaltyTier.findFirst
+      .mockResolvedValueOnce({ programId: PROGRAM, priority: 0 })
+      .mockResolvedValueOnce(null);
 
-    await expect(deleteLoyaltyTier("tier-1", { downgradeCustomers: true })).rejects.toMatchObject({
+    await expect(
+      deleteLoyaltyTier("tier-1", PROGRAM, { downgradeCustomers: true }),
+    ).rejects.toMatchObject({
       code: "TIER_DOWNGRADE_TARGET_NOT_FOUND",
     });
     expect(db.loyaltyTier.delete).not.toHaveBeenCalled();
   });
 
-  test("refuses when the tier itself has vanished", async () => {
-    db.customerLoyaltyAccount.findMany.mockResolvedValue([{ id: "acct-1" }]);
-    db.loyaltyTier.findUnique.mockResolvedValue(null);
-
-    await expect(deleteLoyaltyTier("tier-1", { downgradeCustomers: true })).rejects.toThrow(
-      "Tier not found.",
-    );
-  });
-
   test("moves the customers and deletes the tier without a transaction", async () => {
     db.customerLoyaltyAccount.findMany.mockResolvedValue([{ id: "acct-1" }]);
-    db.loyaltyTier.findUnique.mockResolvedValue({ programId: PROGRAM, priority: 3 });
-    db.loyaltyTier.findFirst.mockResolvedValue({ id: "tier-below" });
+    db.loyaltyTier.findFirst.mockResolvedValueOnce(OWN).mockResolvedValueOnce({ id: "tier-below" });
 
-    await deleteLoyaltyTier("tier-1", { downgradeCustomers: true });
+    await deleteLoyaltyTier("tier-1", PROGRAM, { downgradeCustomers: true });
 
     expect(db.customerLoyaltyAccount.updateMany.mock.invocationCallOrder[0]).toBeLessThan(
       db.loyaltyTier.delete.mock.invocationCallOrder[0],
@@ -437,28 +455,45 @@ describe("rewards", () => {
     });
   });
 
-  test("a single reward comes back with its recent redemptions", async () => {
-    await getLoyaltyRewardById("rwd-1");
+  test("a single reward is read within the caller's programme", async () => {
+    await getLoyaltyRewardById("rwd-1", PROGRAM);
 
-    expect(db.loyaltyReward.findUnique.mock.calls[0][0].where).toEqual({ id: "rwd-1" });
+    expect(db.loyaltyReward.findFirst.mock.calls[0][0].where).toEqual({
+      id: "rwd-1",
+      programId: PROGRAM,
+    });
   });
 
-  test("an update is keyed on the reward id alone", async () => {
-    await updateLoyaltyReward("rwd-1", { pointsCost: 200 } as any);
+  test("an update is keyed on the reward id within the caller's programme", async () => {
+    await updateLoyaltyReward("rwd-1", PROGRAM, { pointsCost: 200 } as any);
 
-    expect(db.loyaltyReward.update.mock.calls[0][0].where).toEqual({ id: "rwd-1" });
+    expect(db.loyaltyReward.update.mock.calls[0][0].where).toEqual({
+      id: "rwd-1",
+      programId: PROGRAM,
+    });
+  });
+
+  test("another programme's reward is not found and not deleted", async () => {
+    db.loyaltyReward.findFirst.mockResolvedValueOnce(null);
+
+    await expect(deleteLoyaltyReward("rwd-b", PROGRAM)).rejects.toMatchObject({
+      code: "REWARD_NOT_FOUND",
+    });
+    expect(db.loyaltyReward.delete).not.toHaveBeenCalled();
   });
 
   test("refuses to delete a reward with live redemptions", async () => {
+    db.loyaltyReward.findFirst.mockResolvedValueOnce({ id: "rwd-1" });
     db.loyaltyRedemption.count.mockResolvedValue(3);
 
-    await expect(deleteLoyaltyReward("rwd-1")).rejects.toThrow(
+    await expect(deleteLoyaltyReward("rwd-1", PROGRAM)).rejects.toThrow(
       "Cannot delete reward with pending redemptions. Complete them first.",
     );
   });
 
   test("counts pending and approved redemptions as live", async () => {
-    await deleteLoyaltyReward("rwd-1");
+    db.loyaltyReward.findFirst.mockResolvedValueOnce({ id: "rwd-1" });
+    await deleteLoyaltyReward("rwd-1", PROGRAM);
 
     expect(db.loyaltyRedemption.count.mock.calls[0][0].where.status).toEqual({
       in: ["PENDING", "APPROVED"],
@@ -466,9 +501,12 @@ describe("rewards", () => {
   });
 
   test("deletes a reward nobody is holding", async () => {
-    await deleteLoyaltyReward("rwd-1");
+    db.loyaltyReward.findFirst.mockResolvedValueOnce({ id: "rwd-1" });
+    await deleteLoyaltyReward("rwd-1", PROGRAM);
 
-    expect(db.loyaltyReward.delete).toHaveBeenCalledWith({ where: { id: "rwd-1" } });
+    expect(db.loyaltyReward.delete).toHaveBeenCalledWith({
+      where: { id: "rwd-1", programId: PROGRAM },
+    });
   });
 
   test("stock can be moved by an arbitrary amount", async () => {

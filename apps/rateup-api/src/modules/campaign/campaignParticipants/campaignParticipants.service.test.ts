@@ -223,7 +223,7 @@ describe("createCampaignParticipantsFromGroup", () => {
       where: {
         contactGroupId: { in: ["another-orgs-group"] },
         contactGroup: { team: { orgId: ORG_A } },
-        contact: { psid: null, igsId: null },
+        contact: { psid: null, igsId: null, orgId: "org-a" },
       },
     });
   });

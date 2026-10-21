@@ -2,7 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { log } from "../../utils/logger.js";
 import { generateOTP } from "./email.util.js";
 import { GenerateOtpInput, SendEmailInput, validateOtpInput } from "./email.schema.js";
-import { sendEmailService, storeOtp, validateOtp } from "./email.service.js";
+import { isOrgMemberEmail, sendEmailService, storeOtp, validateOtp } from "./email.service.js";
 
 function reportFailure(reply: FastifyReply, error: unknown, context: string) {
   log.error({ err: error }, context);
@@ -14,6 +14,11 @@ export async function sendEmailHandler(
   reply: FastifyReply,
 ) {
   try {
+    if (!(await isOrgMemberEmail(request.user.orgId, request.body.toEmail))) {
+      return reply
+        .code(403)
+        .send({ error: "Email can only be sent to members of your organisation." });
+    }
     const res = await sendEmailService(request.body);
     reply.code(200).send(res);
   } catch (e) {
@@ -29,7 +34,12 @@ export async function sendOTPEmailHandler(
     const otp = generateOTP(6);
     const { userId, surveyId, data } = request.body;
     await storeOtp(otp, userId, surveyId);
-    const res = await sendEmailService(request.body, { ...data, otp });
+    // Always the OTP template: this route is public, so it must not render caller-chosen
+    // titles, bodies or buttons in a RateUp-branded mail.
+    const res = await sendEmailService(
+      { ...request.body, purpose: "SurveyEmailOTPQuestion" },
+      { surveyName: data?.surveyName, otp },
+    );
     reply.code(200).send(res);
   } catch (e) {
     reportFailure(reply, e, "Sending an OTP email failed");

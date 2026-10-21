@@ -77,9 +77,10 @@ export async function saveShopifySurveys(
   });
 }
 
-export async function deleteShopifyIntegrationByShop(shop: string) {
-  await prisma.integration.deleteMany({
+export async function deleteShopifyIntegrationByShop(shop: string, orgId: string) {
+  return await prisma.integration.deleteMany({
     where: {
+      orgId,
       credential: {
         path: ["session", "shop"],
         equals: shop,

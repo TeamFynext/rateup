@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { FastifyInstance, FastifyReply, FastifyRequest, RouteOptions } from "fastify";
+import type { FastifyReply, FastifyRequest, RouteOptions } from "fastify";
 import z, { ZodObject } from "zod";
 
 import { Prisma } from "../../../generated/prisma/client.js";
@@ -80,10 +80,20 @@ function canonicalise(value: unknown): string {
   return `{${entries.map(([k, v]) => `${JSON.stringify(k)}:${canonicalise(v)}`).join(",")}}`;
 }
 
-function hashBody(body: unknown): string {
-  return createHash("sha256")
-    .update(canonicalise(body ?? {}))
-    .digest("hex");
+const isEmpty = (value: unknown) =>
+  value == null || (typeof value === "object" && Object.keys(value).length === 0);
+
+/**
+ * What a key is bound to besides method and route pattern: the body, and the path params and
+ * query, so the same key and body sent to `/rewards/A/issue` and then `/rewards/B/issue` is a
+ * different request, not a replay of the first. A request with neither params nor query
+ * hashes its body alone, as before, so records written before params counted still match.
+ */
+function hashRequest(request: FastifyRequest): string {
+  const { body, params, query } = request;
+  const subject =
+    isEmpty(params) && isEmpty(query) ? (body ?? {}) : { body: body ?? {}, params, query };
+  return createHash("sha256").update(canonicalise(subject)).digest("hex");
 }
 
 /** The request's key, or undefined when it sent none. */
@@ -107,7 +117,7 @@ export async function idempotencyPreHandler(request: FastifyRequest, reply: Fast
   const key = readIdempotencyKey(request);
   if (!key) return;
   const scope = `${request.method} ${request.routeOptions?.url ?? request.url}`;
-  const requestHash = hashBody(request.body);
+  const requestHash = hashRequest(request);
 
   try {
     await prisma.externalIdempotencyRecord.create({

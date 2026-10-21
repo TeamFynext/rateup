@@ -1,4 +1,12 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
+
+// Hook URLs are resolved before every call (src/utils/ssrf.ts); keep that off the network.
+vi.mock("node:dns/promises", () => ({
+  lookup: vi.fn(async (host: string) => [
+    { address: host.includes("internal") ? "10.0.0.5" : "203.0.113.10", family: 4 },
+  ]),
+}));
+
 import Fastify, { type FastifyInstance } from "fastify";
 import { serializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
 
@@ -10,6 +18,7 @@ vi.mock("../../../../utils/prisma.js", () => ({
     integration: { findUnique: vi.fn() },
     org: { findUnique: vi.fn() },
     contact: { findMany: vi.fn() },
+    team: { findFirst: vi.fn() },
   },
 }));
 vi.mock("../automation.hooks.js", () => ({
@@ -66,6 +75,7 @@ const db = prisma as unknown as {
   integration: { findUnique: Mock };
   org: { findUnique: Mock };
   contact: { findMany: Mock };
+  team: { findFirst: Mock };
 };
 const m = (fn: unknown) => fn as Mock;
 
@@ -190,6 +200,25 @@ describe("one API, one key per platform", () => {
 });
 
 describe("instant-trigger hooks", () => {
+  test("a hook URL on a private address is refused and not stored", async () => {
+    const response = await call("POST", "/hooks", {
+      url: "https://metadata.internal/latest",
+      event: "new_contact_create",
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(addAutomationHook).not.toHaveBeenCalled();
+  });
+
+  test("a plain-http hook URL is refused by the schema", async () => {
+    const response = await call("POST", "/hooks", {
+      url: "http://hook.eu1.make.com/abc",
+      event: "new_contact_create",
+    });
+
+    expect(response.statusCode).toBe(400);
+  });
+
   test("attach stores the hook for the key's org and answers its id", async () => {
     m(addAutomationHook).mockResolvedValue({ id: "h-1", subscribed_field: "new_contact_create" });
 
@@ -332,6 +361,36 @@ describe("messages", () => {
       ],
       undefined,
     );
+  });
+
+  test("a teamId from another org is refused before anything is sent", async () => {
+    db.team.findFirst.mockResolvedValueOnce(null);
+
+    const response = await call("POST", "/messages/template", {
+      phone: "919876543210",
+      templateId: "tpl-1",
+      teamId: "team-of-another-org",
+    });
+
+    expect(response.statusCode).toBe(404);
+    expect(db.team.findFirst.mock.calls[0][0].where).toEqual({
+      id: "team-of-another-org",
+      orgId: ORG,
+    });
+    expect(sendTemplateToUserCore).not.toHaveBeenCalled();
+  });
+
+  test("a teamId of the key's org is passed on", async () => {
+    db.team.findFirst.mockResolvedValueOnce({ id: "team-1" });
+    m(sendTemplateToUserCore).mockResolvedValue({ status: true, id: "wamid.2" });
+
+    await call("POST", "/messages/template", {
+      phone: "919876543210",
+      templateId: "tpl-1",
+      teamId: "team-1",
+    });
+
+    expect(m(sendTemplateToUserCore).mock.calls[0][4]).toBe("team-1");
   });
 
   test("a refused template send is a 400 with the reason", async () => {

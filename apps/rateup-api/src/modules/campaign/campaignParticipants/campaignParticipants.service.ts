@@ -34,13 +34,15 @@ export async function createCampaignParticipantsFromGroup(
       },
       contactGroup: { team: { orgId } },
       // A group can hold contacts from any channel; only the WhatsApp ones are reachable by a
-      // campaign. With a filter, only the members it matches are taken.
+      // campaign. With a filter, only the members it matches are taken. Always the org's own
+      // contacts: a group row naming another org's contact must never become a recipient.
       contact: data.groupFilter
         ? {
             ...whatsappContactWhere,
             ...buildContactListWhere(orgId, data.groupFilter as PaginationQuery),
+            orgId,
           }
-        : whatsappContactWhere,
+        : { ...whatsappContactWhere, orgId },
     },
   });
 

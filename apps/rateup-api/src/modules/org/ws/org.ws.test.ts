@@ -41,6 +41,7 @@ vi.mock("../../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
 vi.mock("../../../authz/actor.js", () => ({
   buildActor: vi.fn(() => ({})),
   loadActor: vi.fn().mockResolvedValue(null),
+  isUserBlocked: vi.fn(async () => false),
 }));
 vi.mock("../../apiAccessToken/apiAccessToken.service.js", () => ({
   authenticateApiAccessToken: vi.fn(),
@@ -261,6 +262,51 @@ describe("handleWebSocketConnection", () => {
     broadcast(OWN_ORG, { type: "inbox", inbox: { contact: { id: "contact-1" } } });
 
     expect(dashboard.send).toHaveBeenCalledOnce();
+  });
+
+  test("a widget-key socket is forced onto `fab` even when it asks for nothing", async () => {
+    const widget = socket();
+    await handleWebSocketConnection(
+      widget,
+      req({
+        userId: undefined,
+        principal: { kind: "widget", orgId: OWN_ORG },
+        query: { contactId: "contact-1" },
+      }),
+    );
+
+    expect((widget as any).role).toBe("fab");
+    expect((widget as any).contactId).toBe("contact-1");
+    broadcast(OWN_ORG, { type: "inbox", inbox: { contact: { id: "contact-2" } } }, "main");
+    expect(widget.send).not.toHaveBeenCalled();
+    widget.fire("close");
+  });
+
+  test("a widget-key socket asking for `main` still gets `fab`", async () => {
+    const widget = socket();
+    await handleWebSocketConnection(
+      widget,
+      req({
+        userId: undefined,
+        principal: { kind: "widget", orgId: OWN_ORG },
+        query: { role: "main", contactId: "contact-1" },
+      }),
+    );
+
+    expect((widget as any).role).toBe("fab");
+    widget.fire("close");
+  });
+
+  test("a widget-key socket with no contactId is refused and closed", async () => {
+    const widget = socket();
+    await handleWebSocketConnection(
+      widget,
+      req({ userId: undefined, principal: { kind: "widget", orgId: OWN_ORG } }),
+    );
+
+    expect(widget.close).toHaveBeenCalled();
+    broadcast(OWN_ORG, { type: "inbox" }, "main");
+    expect(widget.send).toHaveBeenCalledTimes(1); // only the refusal
   });
 
   test("ignores a contactId on a dashboard socket", async () => {

@@ -1,5 +1,6 @@
 import fastifyCookie from "@fastify/cookie";
 import type { FastifyError, FastifyInstance, FastifyRequest } from "fastify";
+import { markStaffGuarded } from "../../authz/registry.js";
 import { log } from "../../utils/logger.js";
 import { rateLimit } from "../../utils/rateLimit.js";
 import prisma from "../../utils/prisma.js";
@@ -52,8 +53,11 @@ export async function staffPlugin(server: FastifyInstance) {
     return;
   }
   assertStaffConfig(config);
-  if (!config.cfAccessEnforced && process.env.NODE_ENV === "production") {
-    log.warn("staff console running WITHOUT Cloudflare Access (STAFF_CF_ACCESS_ENFORCE=false)");
+  // Keyed on "not development", not on NODE_ENV=production, which production never sets.
+  if (!config.cfAccessEnforced && !config.development) {
+    log.error(
+      "staff console running WITHOUT Cloudflare Access (STAFF_CF_ACCESS_ENFORCE=false): the Access JWT and its email binding are not checked",
+    );
   }
   if (config.development) {
     log.warn(
@@ -70,8 +74,10 @@ export async function registerStaffApi(
   options: { cfAccessKey?: Parameters<typeof cfAccessGuard>[1] } = {},
 ) {
   server.addHook("onRoute", (route) => {
-    // Forced, not defaulted: inside this plugin there is no other kind of route.
+    // Forced, not defaulted: inside this plugin there is no other kind of route. The mark is
+    // what the boot check (authz/registry.ts) wants before it accepts `access: "staff"`.
     route.config = { ...route.config, access: "staff" };
+    markStaffGuarded(route.config);
   });
 
   await server.register(fastifyCookie, { secret: config.cookieSecret });

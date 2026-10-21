@@ -2,6 +2,11 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import { legacyRoleToKey, ROLE_PERMISSIONS, type LegacyRole } from "../../authz/roles.js";
 
 vi.mock("./team.service.js", () => ({
+  InvalidInviteError: class InvalidInviteError extends Error {
+    constructor() {
+      super("This invitation is invalid or has expired.");
+    }
+  },
   addMemberToTeams: vi.fn(),
   addMembersToTeamsMail: vi.fn(),
   completeInvite: vi.fn(),
@@ -41,6 +46,7 @@ import {
   completeInvite,
   getTeamById,
   inviteTeamMember,
+  InvalidInviteError,
 } from "./team.service.js";
 import { log } from "../../utils/logger.js";
 import { emitIntegrationEvent } from "../integrations/events/emitIntegrationEvent.js";
@@ -56,13 +62,14 @@ const completeInviteMock = completeInvite as unknown as Mock;
 const emitMock = emitIntegrationEvent as unknown as Mock;
 
 const ACCEPTED_INVITE = {
-  id: "invite-token-1",
   email: "invitee@acme.com",
   name: "Invitee",
   orgId: "org-1",
   team: { code: "T1", name: "Support" },
+  org: { name: "Acme" },
   isUser: false,
-  redirectLink: "https://app.rateup.app/auth/reset-password?token=reset-1",
+  redirectLink: "https://app.rateup.app/login",
+  passwordSetupEmailSent: true,
 };
 
 function makeReply() {
@@ -97,7 +104,7 @@ describe("completeInviteHandler", () => {
     expect(completeInviteMock).toHaveBeenCalledWith("invite-token-1");
   });
 
-  test("returns the accepted invitation, including where to send the invitee next", async () => {
+  test("returns only what the invite page shows: no ids, no reset link", async () => {
     const reply = makeReply();
 
     await completeInviteHandler(makeRequest(), reply);
@@ -105,8 +112,27 @@ describe("completeInviteHandler", () => {
     expect(reply.code).toHaveBeenCalledWith(200);
     expect(reply.payload).toEqual({
       message: "Invite Accepted successfully.",
-      data: ACCEPTED_INVITE,
+      data: {
+        email: "invitee@acme.com",
+        name: "Invitee",
+        isUser: false,
+        redirectLink: "https://app.rateup.app/login",
+        passwordSetupEmailSent: true,
+        team: { code: "T1", name: "Support" },
+        org: { name: "Acme" },
+      },
     });
+    expect(reply.payload.data).not.toHaveProperty("orgId");
+  });
+
+  test("answers 410 for an unknown, used or expired token", async () => {
+    completeInviteMock.mockRejectedValue(new InvalidInviteError());
+    const reply = makeReply();
+
+    await completeInviteHandler(makeRequest("bad-token"), reply);
+
+    expect(reply.code).toHaveBeenCalledWith(410);
+    expect(reply.payload).toEqual({ message: "This invitation is invalid or has expired." });
   });
 
   test("tells the integrations (Zapier) that a team member joined the org", async () => {
@@ -123,16 +149,14 @@ describe("completeInviteHandler", () => {
     });
   });
 
-  test("returns 500 and logs when the invitation cannot be accepted", async () => {
-    completeInviteMock.mockRejectedValue(new Error("Invitation not found"));
+  test("returns 500 without the internal error text, and logs, when acceptance fails", async () => {
+    completeInviteMock.mockRejectedValue(new Error("db down"));
     const reply = makeReply();
 
     await completeInviteHandler(makeRequest("bad-token"), reply);
 
     expect(reply.code).toHaveBeenCalledWith(500);
-    expect(reply.payload).toEqual({
-      message: "Internal server error : Error: Invitation not found",
-    });
+    expect(reply.payload).toEqual({ message: "The invitation could not be accepted." });
     expect(log.error).toHaveBeenCalled();
   });
 

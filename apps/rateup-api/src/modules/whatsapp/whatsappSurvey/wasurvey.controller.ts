@@ -2,6 +2,7 @@
 // wasurvey.webhook.ts (from the kafka service). What stays here is the webhook
 // GET handshake and the automation engine those handlers — and other modules —
 // call into.
+import { timingSafeEqual } from "node:crypto";
 import { FastifyRequest, FastifyReply } from "fastify";
 import { WaParsedMessage, convertNodeToWhatsAppMessage } from "./wasurvey.utils.js";
 import { sendMessage } from "./wasurvey.service.js";
@@ -55,13 +56,22 @@ interface subscribeQuery {
   "hub.verify_token": string;
   "hub.challenge": string;
 }
+export function isVerifyTokenValid(
+  given: unknown,
+  expected: string | undefined = process.env.wa_webhook_password,
+): boolean {
+  if (!expected || typeof given !== "string") return false;
+  const a = Buffer.from(given);
+  const b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
 export async function webhookSubscribeHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const query = request.query as subscribeQuery;
-    if (
-      query["hub.mode"] === "subscribe" &&
-      query["hub.verify_token"] === process.env.wa_webhook_password
-    ) {
+    // An unset password must refuse: `undefined === undefined` used to let a request
+    // with no token at all complete the handshake.
+    if (query["hub.mode"] === "subscribe" && isVerifyTokenValid(query["hub.verify_token"])) {
       log.trace("Webhook subscription successful");
       reply.code(200).send(query["hub.challenge"]);
     } else {

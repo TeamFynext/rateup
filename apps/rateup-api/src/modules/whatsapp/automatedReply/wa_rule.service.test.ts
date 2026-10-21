@@ -25,6 +25,7 @@ vi.mock("../../../../generated/prisma/client.js", () => ({
 
 import prisma from "../../../utils/prisma.js";
 import {
+  assertRuleActionUrls,
   createRule,
   deleteRule,
   getAllRules,
@@ -302,17 +303,26 @@ describe("updateRule", () => {
   };
 
   beforeEach(() => {
-    db.rule.findUnique.mockResolvedValue(existing);
+    db.rule.findFirst.mockResolvedValue(existing);
+  });
+
+  test("looks the rule up within the caller's org and writes it there", async () => {
+    await updateRule("rule-1", "org-1", { name: "Renamed" } as any);
+
+    expect(db.rule.findFirst.mock.calls[0][0].where).toEqual({ id: "rule-1", orgId: "org-1" });
+    expect(tx.rule.update.mock.calls[0][0].where).toEqual({ id: "rule-1", orgId: "org-1" });
   });
 
   test("refuses to update a rule that does not exist", async () => {
-    db.rule.findUnique.mockResolvedValue(null);
+    db.rule.findFirst.mockResolvedValue(null);
 
-    await expect(updateRule("missing", { name: "New" } as any)).rejects.toThrow("Rule not found");
+    await expect(updateRule("missing", "org-1", { name: "New" } as any)).rejects.toThrow(
+      "Rule not found",
+    );
   });
 
   test("applies a plain field change", async () => {
-    await updateRule("rule-1", { name: "Renamed" } as any);
+    await updateRule("rule-1", "org-1", { name: "Renamed" } as any);
 
     expect(tx.rule.update.mock.calls[0][0].data).toMatchObject({ name: "Renamed" });
   });
@@ -325,7 +335,7 @@ describe("updateRule", () => {
       },
     ];
 
-    await updateRule("rule-1", { groups } as any);
+    await updateRule("rule-1", "org-1", { groups } as any);
 
     const data = tx.rule.update.mock.calls[0][0].data;
     expect(data.groups.deleteMany).toEqual({});
@@ -340,33 +350,33 @@ describe("updateRule", () => {
       },
     ];
 
-    await updateRule("rule-1", { groups } as any);
+    await updateRule("rule-1", "org-1", { groups } as any);
 
     expect(tx.ruleMessageBodyLock.deleteMany).toHaveBeenCalled();
     expect(tx.ruleMessageBodyLock.createMany).toHaveBeenCalled();
   });
 
   test("leaves groups and their reservations alone when none are supplied", async () => {
-    await updateRule("rule-1", { name: "Renamed" } as any);
+    await updateRule("rule-1", "org-1", { name: "Renamed" } as any);
 
     expect(tx.rule.update.mock.calls[0][0].data.groups).toBeUndefined();
     expect(tx.ruleMessageBodyLock.deleteMany).not.toHaveBeenCalled();
   });
 
   test("replaces the actions only when new ones are supplied", async () => {
-    await updateRule("rule-1", { actions: [{ type: "SEND_TEXT", value: "hi" }] } as any);
+    await updateRule("rule-1", "org-1", { actions: [{ type: "SEND_TEXT", value: "hi" }] } as any);
 
     expect(tx.rule.update.mock.calls[0][0].data.actions.deleteMany).toEqual({});
   });
 
   test("only touches options when they are explicitly given", async () => {
-    await updateRule("rule-1", { name: "Renamed" } as any);
+    await updateRule("rule-1", "org-1", { name: "Renamed" } as any);
     expect(tx.rule.update.mock.calls[0][0].data.options).toBeUndefined();
 
     vi.clearAllMocks();
-    db.rule.findUnique.mockResolvedValue(existing);
+    db.rule.findFirst.mockResolvedValue(existing);
     tx.rule.update.mockResolvedValue(CREATED_RULE);
-    await updateRule("rule-1", { options: null } as any);
+    await updateRule("rule-1", "org-1", { options: null } as any);
     expect(tx.rule.update.mock.calls[0][0].data).toHaveProperty("options", null);
   });
 
@@ -379,14 +389,16 @@ describe("updateRule", () => {
       },
     ];
 
-    await expect(updateRule("rule-1", { isActive: false, groups } as any)).resolves.toBeDefined();
+    await expect(
+      updateRule("rule-1", "org-1", { isActive: false, groups } as any),
+    ).resolves.toBeDefined();
   });
 
   test("re-checks the existing keywords when switching a rule back on", async () => {
-    db.rule.findUnique.mockResolvedValue({ ...existing, isActive: false });
+    db.rule.findFirst.mockResolvedValue({ ...existing, isActive: false });
     db.ruleMessageBodyLock.findFirst.mockResolvedValue(existingLock({ name: "Welcome" }));
 
-    await expect(updateRule("rule-1", { isActive: true } as any)).rejects.toThrow(
+    await expect(updateRule("rule-1", "org-1", { isActive: true } as any)).rejects.toThrow(
       /already used by another active automation/,
     );
   });
@@ -400,7 +412,7 @@ describe("updateRule", () => {
       },
     ];
 
-    await expect(updateRule("rule-1", { groups } as any)).resolves.toBeDefined();
+    await expect(updateRule("rule-1", "org-1", { groups } as any)).resolves.toBeDefined();
   });
 
   test.each([["INSTAGRAM_COMMENT"], ["INSTAGRAM_STORY_MENTION"], ["INSTAGRAM_REFERRAL"]])(
@@ -413,7 +425,7 @@ describe("updateRule", () => {
         },
       ];
 
-      await updateRule("rule-1", { triggerEvent, groups } as any);
+      await updateRule("rule-1", "org-1", { triggerEvent, groups } as any);
 
       expect(db.ruleMessageBodyLock.findFirst).not.toHaveBeenCalled();
       expect(tx.ruleMessageBodyLock.deleteMany).not.toHaveBeenCalled();
@@ -423,16 +435,16 @@ describe("updateRule", () => {
 
 describe("deleteRule", () => {
   test("releases the rule's keywords before deleting it", async () => {
-    await deleteRule("rule-1");
+    await deleteRule("rule-1", "org-1");
 
     expect(tx.ruleMessageBodyLock.deleteMany).toHaveBeenCalledWith({
       where: { ruleCondition: { group: { ruleId: "rule-1" } } },
     });
-    expect(tx.rule.delete).toHaveBeenCalledWith({ where: { id: "rule-1" } });
+    expect(tx.rule.delete).toHaveBeenCalledWith({ where: { id: "rule-1", orgId: "org-1" } });
   });
 
   test("does both in one transaction so a keyword is never orphaned", async () => {
-    await deleteRule("rule-1");
+    await deleteRule("rule-1", "org-1");
 
     expect(db.$transaction).toHaveBeenCalledTimes(1);
   });
@@ -540,5 +552,51 @@ describe("createRule - channels", () => {
       createRule(ruleInput({ whatsappSettingsPhoneIds: ["phone-1", "iba-1"] })),
     ).rejects.toThrow(/include Instagram/);
     expect(tx.rule.create).not.toHaveBeenCalled();
+  });
+});
+
+describe("assertRuleActionUrls - external API actions", () => {
+  test("accepts a public address, over http too", async () => {
+    await expect(
+      assertRuleActionUrls([{ type: "CALL_EXTERNAL_API", value: "http://8.8.8.8/hook" }]),
+    ).resolves.toBeUndefined();
+  });
+
+  test.each([
+    ["loopback", "http://127.0.0.1:8080/admin"],
+    ["the metadata address", "http://169.254.169.254/latest/meta-data"],
+    ["a private network", "https://10.0.0.5/hook"],
+    ["a non-http scheme", "file:///etc/passwd"],
+    ["embedded credentials", "https://user:pw@8.8.8.8/hook"],
+    ["something that is not a URL", "not a url"],
+  ])("refuses %s", async (_label, url) => {
+    await expect(
+      assertRuleActionUrls([{ type: "CALL_EXTERNAL_API", value: url }]),
+    ).rejects.toMatchObject({ name: "PublicUrlError" });
+  });
+
+  test("refuses a value that is not a string", async () => {
+    await expect(
+      assertRuleActionUrls([{ type: "CALL_EXTERNAL_API", value: { url: "http://8.8.8.8" } }]),
+    ).rejects.toMatchObject({ name: "PublicUrlError" });
+  });
+
+  test("leaves an empty URL and other action types alone", async () => {
+    await expect(
+      assertRuleActionUrls([
+        { type: "CALL_EXTERNAL_API", value: "" },
+        { type: "SEND_MESSAGE", value: "http://127.0.0.1" },
+      ]),
+    ).resolves.toBeUndefined();
+  });
+
+  test("createRule refuses an internal URL before touching the database", async () => {
+    await expect(
+      createRule({
+        ...ruleInput(),
+        actions: [{ type: "CALL_EXTERNAL_API", value: "http://127.0.0.1/x" }],
+      } as Parameters<typeof createRule>[0]),
+    ).rejects.toMatchObject({ name: "PublicUrlError" });
+    expect(db.$transaction).not.toHaveBeenCalled();
   });
 });

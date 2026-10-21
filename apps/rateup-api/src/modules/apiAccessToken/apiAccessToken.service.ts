@@ -4,6 +4,7 @@ import { createHash, randomBytes } from "node:crypto";
 import prisma from "../../utils/prisma.js";
 import redis from "../../utils/redisConnection.js";
 import { log } from "../../utils/logger.js";
+import { API_KEY_FEATURE_NAMES, permissionsForFeatures } from "../../authz/apiKeyFeatures.js";
 
 /**
  * Partner API keys.
@@ -260,6 +261,20 @@ export class ApiKeyNotRotatableError extends Error {
   }
 }
 
+/** Thrown when a change would turn a limited key into a full-access one. */
+export class ApiKeyScopesRequiredError extends Error {
+  constructor() {
+    super("A key must be limited to at least one feature");
+    this.name = "ApiKeyScopesRequiredError";
+  }
+}
+
+/**
+ * Checks the scopes a change would leave on a key before it is written. It receives the
+ * stored list (empty for a legacy full-access key) and throws to refuse.
+ */
+export type ApiKeyScopeGuard = (scopes: readonly string[]) => void;
+
 export class ApiKeyNotFoundError extends Error {
   constructor() {
     super("No such API key");
@@ -327,6 +342,12 @@ export async function updateApiKey(
   input: { name?: string; scopes?: string[]; expiresAt?: Date | null },
 ) {
   const existing = await findOwnKey(orgId, keyId);
+  if (input.scopes?.length === 0) {
+    // Empty means full access. A limited key is never widened to that; on a legacy
+    // full-access key it is what the console sends back unchanged, so it is a no-op.
+    if (existing.scopes.length > 0) throw new ApiKeyScopesRequiredError();
+    input = { ...input, scopes: undefined };
+  }
   const record = await prisma.apiAccessToken.update({
     where: { id: existing.id },
     data: {
@@ -357,9 +378,12 @@ export async function rotateApiKey(
   {
     graceHours = ROTATION_GRACE_HOURS,
     createdById,
-  }: { graceHours?: number; createdById?: string | null } = {},
+    guard,
+  }: { graceHours?: number; createdById?: string | null; guard?: ApiKeyScopeGuard } = {},
 ) {
   const existing = await findOwnKey(orgId, keyId);
+  // The replacement inherits the old key's scopes, so minting it is a grant of them.
+  guard?.(existing.scopes);
   // Rotating a key already rotated out, or one past its expiry, would mint a replacement
   // that inherits a grace-period end nobody chose. Rotate the key that replaced it instead.
   if (existing.rotatedAt) throw new ApiKeyNotRotatableError("This key was already replaced");
@@ -427,10 +451,19 @@ async function newestKey(orgId: string) {
   });
 }
 
-export async function createApiKey(orgId: string) {
+/**
+ * What the single-key console mints: every feature, named. It used to store an empty list
+ * (full access to the whole catalogue); new keys always name what they hold.
+ */
+export const LEGACY_CONSOLE_KEY_SCOPES = permissionsForFeatures(API_KEY_FEATURE_NAMES);
+
+export async function createApiKey(orgId: string, guard?: ApiKeyScopeGuard) {
   if (await newestKey(orgId)) throw new ApiKeyAlreadyExistsError();
+  guard?.(LEGACY_CONSOLE_KEY_SCOPES);
   // The single-key console predates v2; what it mints is for the API it documents.
-  return (await createApiKeyForOrg(orgId, { version: "v1" })).key;
+  return (
+    await createApiKeyForOrg(orgId, { version: "v1", scopes: [...LEGACY_CONSOLE_KEY_SCOPES] })
+  ).key;
 }
 
 /**
@@ -447,10 +480,15 @@ export async function getApiKeyCreatedAt(orgId: string) {
   return (await newestKey(orgId))?.createdAt;
 }
 
-export async function regenerateApiKey(orgId: string) {
+export async function regenerateApiKey(orgId: string, guard?: ApiKeyScopeGuard) {
   const current = await newestKey(orgId);
-  if (!current) return (await createApiKeyForOrg(orgId, { version: "v1" })).key;
-  return (await rotateApiKey(orgId, current.id)).key;
+  if (!current) {
+    guard?.(LEGACY_CONSOLE_KEY_SCOPES);
+    return (
+      await createApiKeyForOrg(orgId, { version: "v1", scopes: [...LEGACY_CONSOLE_KEY_SCOPES] })
+    ).key;
+  }
+  return (await rotateApiKey(orgId, current.id, { guard })).key;
 }
 
 export async function getApiKeyScopes(orgId: string): Promise<string[] | null> {

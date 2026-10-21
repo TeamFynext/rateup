@@ -4,6 +4,7 @@ import { assertCanGrantPermissions, canGrant } from "../../authz/grant.js";
 import { assertNotOwner, transferOwnership } from "../../authz/ownership.js";
 import { legacyRoleToKey, type LegacyRole } from "../../authz/roles.js";
 import type {
+  CompleteOrgDetailsInput,
   OrgModulesInput,
   MemberActivityQuery,
   MemberPermissionsInput,
@@ -11,7 +12,6 @@ import type {
 } from "./org.schema.js";
 import {
   completeOrgDetails,
-  createOrg,
   deleteOrg,
   getAllMembersWithTeams,
   getAllMembersWithTeamsAndInvitation,
@@ -31,7 +31,6 @@ import {
 } from "./org.services.js";
 import {
   ByOrgIdParams,
-  CreateOrgInput,
   IdParamInput,
   PauseOrgInput,
   UpdateLogoInput,
@@ -44,24 +43,6 @@ import { getWebhookSecret } from "../../utils/webhook.js";
 import { errorMessage } from "../../utils/commonUtils.js";
 import { isRootOrg } from "../../utils/auth.js";
 import { setHiddenModules } from "./modules.js";
-
-export async function createOrgHandler(
-  request: FastifyRequest<{
-    Body: CreateOrgInput;
-  }>,
-  reply: FastifyReply,
-) {
-  const body = request.body;
-  try {
-    const survey = await createOrg(body);
-    reply.code(201).send(survey);
-  } catch (e) {
-    // TODO
-    console.error(e);
-
-    reply.code(500).send({ error: errorMessage(e) });
-  }
-}
 
 export async function getAllTeamsAndMembers(request: FastifyRequest, reply: FastifyReply) {
   try {
@@ -367,18 +348,9 @@ export async function getWebhookClientSecretHandler(request: FastifyRequest, rep
   }
 }
 
-export interface OnBoarding {
-  services: string[];
-  industry: string;
-  template: string;
-  integration: string;
-  // Stored as-is into the `onboarding` Json column, which callers extend freely.
-  [field: string]: unknown;
-}
-
 export async function completeOrgDetailsHandler(
   request: FastifyRequest<{
-    Body: { onboarding?: OnBoarding };
+    Body: CompleteOrgDetailsInput;
   }>,
   reply: FastifyReply,
 ) {

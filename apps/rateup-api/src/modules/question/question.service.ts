@@ -3,6 +3,7 @@ import { parseCsvObjects } from "hucre/csv";
 import { readXlsxObjects, type CellValue } from "hucre";
 import { randomUUID } from "node:crypto";
 import prisma from "../../utils/prisma.js";
+import { sanitizeSurveyQuestions } from "../../utils/survey/richText.js";
 import { updateSurveyVariables } from "../survey/survey.service.js";
 import { CreateQuestionInput, UpdateQuestionInput } from "./question.schema.js";
 import { emailPattern, getQuestionsArrUpdatedGRTypeQuestion } from "./question.utils.js";
@@ -172,12 +173,18 @@ export async function updateQuestion(
  * @param questions
  */
 export async function updateQuestionsOnSurvey(surveyId: string, questions: Array<Question>) {
+  // Every question write in this module (create, update, reorder, delete, replace) lands
+  // here, so this is where org-authored rich text is sanitised before it is stored (FE-1).
+  const survey = await prisma.survey.findUnique({
+    where: { id: surveyId },
+    select: { type: true },
+  });
   await prisma.survey.update({
     where: {
       id: surveyId,
     },
     data: {
-      questions,
+      questions: sanitizeSurveyQuestions(questions, survey?.type),
     },
   });
 }

@@ -7,6 +7,7 @@ import {
   declareAccess,
   describeRoute,
   isMisplacedStaffRoute,
+  markStaffGuarded,
   registerAuthzRouteRegistry,
 } from "./registry.js";
 
@@ -180,10 +181,24 @@ describe("declareAccess", () => {
 
 describe("access: staff", () => {
   // It makes authorize() stand aside, so outside the staff plugin it would be an open door.
+  const staffRoute = (url: string) => {
+    const config = { access: "staff" };
+    markStaffGuarded(config);
+    return route(url, config);
+  };
+
   test("is only valid under /api/staff/", () => {
-    expect(isMisplacedStaffRoute(route("/api/staff/auth/me", { access: "staff" }))).toBe(false);
-    expect(isMisplacedStaffRoute(route("/api/org/all", { access: "staff" }))).toBe(true);
-    expect(isMisplacedStaffRoute(route("/api/staffing", { access: "staff" }))).toBe(true);
+    expect(isMisplacedStaffRoute(staffRoute("/api/staff/auth/me"))).toBe(false);
+    expect(isMisplacedStaffRoute(staffRoute("/api/org/all"))).toBe(true);
+    expect(isMisplacedStaffRoute(staffRoute("/api/staffing"))).toBe(true);
     expect(isMisplacedStaffRoute(route("/api/org/all", { access: "session" }))).toBe(false);
+  });
+
+  test("the prefix alone is not enough: the staff plugin must have registered the route", () => {
+    expect(isMisplacedStaffRoute(route("/api/staff/auth/me", { access: "staff" }))).toBe(true);
+    // Copying the config (as Fastify and the plugin's own hook do) keeps the mark.
+    expect(isMisplacedStaffRoute(route("/api/staff/x", { ...staffRoute("/x").config }))).toBe(
+      false,
+    );
   });
 });
