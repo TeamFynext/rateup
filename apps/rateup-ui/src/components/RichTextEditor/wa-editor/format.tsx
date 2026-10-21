@@ -4,6 +4,8 @@ import parse from "html-react-parser";
 import React from "react";
 import type { ReactNode } from "react";
 
+import type { TiptapNode } from "@/types/tiptapNode";
+
 /**
  * WhatsApp text-format helpers shared by every inlined WA editor and by the
  * message renderers. Kept separate so the parsing rules live in one place.
@@ -97,16 +99,8 @@ export function parseToWhatsAppFormat(editorContent: TiptapNode | string) {
 
   return (editorContent as TiptapNode).content?.map(parseNode).join("\n") ?? "";
 }
-/** A node of a Tiptap document, as the WhatsApp editor produces it. */
-export interface TiptapNode {
-  /** Optional so a `JSONContent` straight out of the editor satisfies this. */
-  type?: string;
-  content?: TiptapNode[];
-  marks?: { type: string }[];
-  text?: string;
-  /** Node attributes, e.g. a mention's label/id. */
-  attrs?: Record<string, string | number | boolean | null | undefined>;
-}
+// Defined in `@/types/tiptapNode` (so the store can use it); re-exported for the editor callers.
+export type { TiptapNode };
 
 export function parseFromWhatsAppFormat(text: string): {
   type: "doc";

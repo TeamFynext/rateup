@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
+import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
 import { useSurveyThemeData } from "@/context/SurveyThemeContext.tsx";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 import { asAnswerText } from "@/utils/response.ts";
@@ -25,6 +26,7 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
   const [isUploading, setIsUploading] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
+  const surveyTeamMapId = useSurveyContext()?.surveyTeamMapId;
   const surveyThemeObj = useSurveyThemeData();
   const pickedFileTextColor = surveyThemeObj?.surveyTheme?.title?.styles?.color;
   const { t: translations } = useTranslation();
@@ -33,7 +35,7 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
     const uploadAndUpdate = async () => {
       if (file) {
         setIsUploading(true);
-        const fileKey = await uploadFile(file);
+        const fileKey = await uploadFile(file, false, { surveyTeamMapId });
         setIsUploading(false);
         updateResponse(fileKey);
       }

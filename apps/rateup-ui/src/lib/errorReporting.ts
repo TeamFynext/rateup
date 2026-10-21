@@ -3,6 +3,18 @@ type Sentry = typeof import("./sentryBrowser.ts");
 const DSN =
   "https://45e833b32b687745181d312ce71aaa60@o4508794356432896.ingest.de.sentry.io/4511626235347024";
 
+/**
+ * Errors only, no personal data: no user/IP fields, no cookies, no bodies, and the OAuth/invite
+ * secrets that ride in query strings (`/auth/fb?code=`, `/invite?token=`, Shopify `hmac`/`state`)
+ * are dropped from collected URLs. Keep in sync with `instrument.server.mjs`.
+ */
+const DATA_COLLECTION = {
+  userInfo: false,
+  cookies: false,
+  httpBodies: [],
+  urlQueryParams: { deny: ["code", "token", "state", "hmac", "access_token", "id_token"] },
+} satisfies NonNullable<Parameters<Sentry["init"]>[0]>["dataCollection"];
+
 let sdk: Promise<Sentry> | undefined;
 const early: unknown[] = [];
 
@@ -15,7 +27,7 @@ function loadSentry() {
     // between would be reported twice.
     removeEventListener("error", bufferError);
     removeEventListener("unhandledrejection", bufferRejection);
-    Sentry.init({ dsn: DSN, dataCollection: {} });
+    Sentry.init({ dsn: DSN, dataCollection: DATA_COLLECTION });
     for (const error of early.splice(0)) Sentry.captureException(error);
     return Sentry;
   });

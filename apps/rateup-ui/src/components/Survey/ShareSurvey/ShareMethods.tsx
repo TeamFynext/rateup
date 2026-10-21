@@ -20,17 +20,25 @@ export function ShareMethods({ disableShare, shareUrl, survey }: ShareMethodsPro
   function shareButtonAction(btn: string) {
     switch (btn) {
       case "fb":
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`);
+        window.open(
+          `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`,
+          "_blank",
+          "noopener,noreferrer",
+        );
         break;
       case "mail":
         window.open(
           `mailto:?subject=Survey&body=Take a minute to complete the survey: \n ${survey?.title} \n${shareUrl} \n\n`,
+          "_blank",
+          "noopener,noreferrer",
         );
         break;
       case "whatsapp":
         const waShareUrl = encodeURIComponent(shareUrl);
         window.open(
           `https://web.whatsapp.com/send?text=Take a minute to complete the survey: \n${waShareUrl}`,
+          "_blank",
+          "noopener,noreferrer",
         );
         break;
       default:

@@ -329,7 +329,7 @@ function BadgeorTextorPreview({
         </span>
         <Button
           onClick={() => {
-            window.open(getFileUrlFromKey(response), "_blank");
+            window.open(getFileUrlFromKey(response), "_blank", "noopener,noreferrer");
           }}
           size="sm"
           className="h-7 px-2"

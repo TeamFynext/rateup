@@ -33,6 +33,7 @@ import { PhonePreviewButton } from "@/components/ui/phone-preview.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
+import { useCan } from "@/hooks/usePermission.ts";
 
 import type { DraftIceBreaker } from "./shared.tsx";
 
@@ -45,6 +46,7 @@ export function IceBreakersTab({
   const setMutation = useSetInstagramIceBreakersMutation(channelId);
   const syncMutation = useSyncInstagramIceBreakersMutation(channelId);
   const deleteMutation = useDeleteInstagramIceBreakersMutation(channelId);
+  const canManage = useCan("channels.manage");
   const [items, setItems] = useState<DraftIceBreaker[]>([]);
   const { t } = useTranslation();
 
@@ -95,119 +97,130 @@ export function IceBreakersTab({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {items.map((item, index) => (
-          <div
-            key={item.id}
-            className="group relative space-y-3 rounded-xl border bg-card p-4 transition-colors hover:border-primary/30"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-muted-foreground">
-                {t("Question {number}", { number: index + 1 })}
-              </span>
-              <Tooltip>
-                <TooltipTrigger
-                  render={
-                    <Button
-                      aria-label={t("Delete")}
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="size-8 text-muted-foreground hover:text-destructive"
-                      onClick={() => setItems(items.filter((_, i) => i !== index))}
-                    />
-                  }
+        {!canManage && (
+          <p className="text-sm text-muted-foreground">
+            {t(
+              "You can view these settings. Ask an admin for the manage channels permission to change them.",
+            )}
+          </p>
+        )}
+        {/* Writes need `channels.manage` on the API; without it the fieldset disables every
+            control natively. The phone preview in the header stays usable. */}
+        <fieldset disabled={!canManage} className="min-w-0 space-y-4">
+          {items.map((item, index) => (
+            <div
+              key={item.id}
+              className="group relative space-y-3 rounded-xl border bg-card p-4 transition-colors hover:border-primary/30"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-muted-foreground">
+                  {t("Question {number}", { number: index + 1 })}
+                </span>
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        aria-label={t("Delete")}
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="size-8 text-muted-foreground hover:text-destructive"
+                        onClick={() => setItems(items.filter((_, i) => i !== index))}
+                      />
+                    }
+                  >
+                    <IconTrash className="size-4" />
+                  </TooltipTrigger>
+                  <TooltipContent>{t("Remove question")}</TooltipContent>
+                </Tooltip>
+              </div>
+              <Field>
+                <FieldLabel
+                  htmlFor={`${uid}-field-${index}`}
+                  className="text-xs text-muted-foreground"
                 >
-                  <IconTrash className="size-4" />
-                </TooltipTrigger>
-                <TooltipContent>{t("Remove question")}</TooltipContent>
-              </Tooltip>
+                  {t("Question text")}
+                </FieldLabel>
+                <Input
+                  id={`${uid}-field-${index}`}
+                  value={item.question}
+                  placeholder={t("e.g. What are your business hours?")}
+                  onChange={(e) => {
+                    const next = [...items];
+                    next[index] = { ...next[index], question: e.target.value };
+                    setItems(next);
+                  }}
+                />
+              </Field>
+              <Field>
+                <FieldLabel
+                  htmlFor={`${uid}-field-2-${index}`}
+                  className="text-xs text-muted-foreground"
+                >
+                  {t("Payload")}
+                </FieldLabel>
+                <Textarea
+                  id={`${uid}-field-2-${index}`}
+                  value={item.payload}
+                  placeholder={t("Payload sent when this question is tapped")}
+                  rows={2}
+                  onChange={(e) => {
+                    const next = [...items];
+                    next[index] = { ...next[index], payload: e.target.value };
+                    setItems(next);
+                  }}
+                />
+              </Field>
             </div>
-            <Field>
-              <FieldLabel
-                htmlFor={`${uid}-field-${index}`}
-                className="text-xs text-muted-foreground"
-              >
-                {t("Question text")}
-              </FieldLabel>
-              <Input
-                id={`${uid}-field-${index}`}
-                value={item.question}
-                placeholder={t("e.g. What are your business hours?")}
-                onChange={(e) => {
-                  const next = [...items];
-                  next[index] = { ...next[index], question: e.target.value };
-                  setItems(next);
-                }}
-              />
-            </Field>
-            <Field>
-              <FieldLabel
-                htmlFor={`${uid}-field-2-${index}`}
-                className="text-xs text-muted-foreground"
-              >
-                {t("Payload")}
-              </FieldLabel>
-              <Textarea
-                id={`${uid}-field-2-${index}`}
-                value={item.payload}
-                placeholder={t("Payload sent when this question is tapped")}
-                rows={2}
-                onChange={(e) => {
-                  const next = [...items];
-                  next[index] = { ...next[index], payload: e.target.value };
-                  setItems(next);
-                }}
-              />
-            </Field>
+          ))}
+
+          <Separator />
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                setItems((c) => [...c, { id: crypto.randomUUID(), question: "", payload: "" }])
+              }
+              disabled={items.length >= 4}
+            >
+              <IconPlus className="mr-1.5 size-4" />
+              {t("Add question")}
+            </Button>
+            <div className="flex-1" />
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={() => deleteMutation.mutate()}
+              loading={deleteMutation.isPending}
+            >
+              <IconCloudOff className="mr-1.5 size-4" />
+              {t("Clear from Meta")}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => syncMutation.mutate()}
+              loading={syncMutation.isPending}
+            >
+              <IconCloudUpload className="mr-1.5 size-4" />
+              {t("Sync with Meta")}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              onClick={save}
+              disabled={!canSave || setMutation.isPending}
+            >
+              <IconSend className="mr-1.5 size-4" />
+              {t("Save")}
+            </Button>
           </div>
-        ))}
-
-        <Separator />
-
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              setItems((c) => [...c, { id: crypto.randomUUID(), question: "", payload: "" }])
-            }
-            disabled={items.length >= 4}
-          >
-            <IconPlus className="mr-1.5 size-4" />
-            {t("Add question")}
-          </Button>
-          <div className="flex-1" />
-          <Button
-            type="button"
-            variant="destructive"
-            size="sm"
-            onClick={() => deleteMutation.mutate()}
-            loading={deleteMutation.isPending}
-          >
-            <IconCloudOff className="mr-1.5 size-4" />
-            {t("Clear from Meta")}
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={() => syncMutation.mutate()}
-            loading={syncMutation.isPending}
-          >
-            <IconCloudUpload className="mr-1.5 size-4" />
-            {t("Sync with Meta")}
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            onClick={save}
-            disabled={!canSave || setMutation.isPending}
-          >
-            <IconSend className="mr-1.5 size-4" />
-            {t("Save")}
-          </Button>
-        </div>
+        </fieldset>
       </CardContent>
     </Card>
   );

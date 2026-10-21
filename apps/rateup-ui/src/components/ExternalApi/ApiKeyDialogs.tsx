@@ -105,7 +105,10 @@ function ApiKeyForm({
   const [name, setName] = useState(editing?.name ?? "");
   const [version, setVersion] = useState<ApiKeyVersion>(editing?.version ?? "v2");
   const [mode, setMode] = useState<ApiKeyMode>(editing?.mode ?? "live");
-  const [restricted, setRestricted] = useState((editing?.scopes.length ?? 0) > 0);
+  // Only a legacy key minted before scopes existed has an empty list (full access). Every
+  // new key, and every key already limited, names at least one feature.
+  const legacyFullAccess = editing !== undefined && editing.scopes.length === 0;
+  const [restricted, setRestricted] = useState(!legacyFullAccess);
   const [features, setFeatures] = useState<Set<ApiKeyFeature>>(
     () => new Set(editing && editing.scopes.length > 0 ? editing.features : []),
   );
@@ -126,11 +129,12 @@ function ApiKeyForm({
     event.preventDefault();
     setSubmitted(true);
     if (!name.trim() || (restricted && features.size === 0)) return;
-    const nextFeatures = restricted ? [...features] : [];
+    const nextFeatures = [...features];
 
     if (editing) {
       update.mutate(
-        { keyId: editing.id, name: name.trim(), features: nextFeatures },
+        // A legacy full-access key kept as it is sends no features, leaving its scopes alone.
+        { keyId: editing.id, name: name.trim(), ...(restricted ? { features: nextFeatures } : {}) },
         { onSuccess: onDone },
       );
       return;
@@ -241,6 +245,7 @@ function ApiKeyForm({
 
         <div className="flex flex-col gap-2">
           <ApiScopePicker
+            legacyFullAccess={legacyFullAccess}
             restricted={restricted}
             onRestrictedChange={setRestricted}
             features={features}

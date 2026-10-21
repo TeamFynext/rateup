@@ -240,7 +240,7 @@ export function RateUpOnboarding({ step }: Readonly<{ step?: string }>) {
     }
 
     if (id === "payment") {
-      window.open(META_BILLING_URL, "_blank");
+      window.open(META_BILLING_URL, "_blank", "noopener,noreferrer");
       return;
     }
 

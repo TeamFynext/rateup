@@ -3,8 +3,8 @@ import { useMemo } from "react";
 import { create } from "zustand";
 
 import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
-import type { TiptapNode } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import type { WaTemplateComponent, WaTemplateFetchBody } from "@/types/global";
+import type { TiptapNode } from "@/types/tiptapNode";
 
 /**
  * Messages the composer has handed to the API but that the thread has not read back

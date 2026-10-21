@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { IntegratedApps } from "@/types/enums.ts";
+import { safeHttpUrl } from "@/utils/safeRedirectUrl.ts";
 
 import {
   checkWooPlugin,
@@ -34,7 +35,12 @@ export function useWooStatus() {
 export function useStartWooConnect() {
   return useMutation({
     mutationFn: (storeUrl: string) => startWooConnect(storeUrl),
-    onSuccess: ({ url }) => window.location.assign(url),
+    onSuccess: ({ url }) => {
+      // The authorize URL is built from the merchant-typed store address; only follow http(s).
+      const target = safeHttpUrl(url);
+      if (target) window.location.assign(target);
+      else toast.error("Could not reach the store", { id: "woo-connect" });
+    },
     onError: (error: ApiError) => {
       toast.error(messageOf(error, "Could not reach the store"), { id: "woo-connect" });
     },

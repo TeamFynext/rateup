@@ -2,6 +2,7 @@ import { IconPencil } from "@tabler/icons-react";
 import type { CSSProperties } from "react";
 import { useState } from "react";
 
+import { SafeHtml } from "@/components/common/SafeHtml.tsx";
 import CustomTextEditor from "@/components/RichTextEditor/CustomTextEditor.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog.tsx";
@@ -18,7 +19,7 @@ const ThemeTitle = ({ value, onChange, styles }: ThemeTitleProps) => {
 
   return (
     <div className="flex items-center gap-2">
-      <div style={styles} dangerouslySetInnerHTML={{ __html: value }} />
+      <SafeHtml html={value} style={styles} />
       <Tooltip>
         <TooltipTrigger
           render={<Button variant="ghost" size="icon-sm" onClick={() => setOpen(true)} />}

@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
+import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
 import { cn } from "@/lib/utils";
-import { deleteUploadedFiles, getFileNameFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
+import { getFileNameFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
 import { asAnswerText } from "@/utils/response.ts";
 
 import { luminance } from "./isLightColor.ts";
@@ -23,7 +24,6 @@ interface FileInputFormProps {
 const FileInputForm = ({ isPreview }: FileInputFormProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [isRemoving, setIsRemoving] = useState(false);
   const [error, setError] = useState("");
   const [isDragActive, setIsDragActive] = useState(false);
   const { t: translations } = useTranslation();
@@ -34,6 +34,7 @@ const FileInputForm = ({ isPreview }: FileInputFormProps) => {
     luminance(themePrimaryColor) > 0.8 ? "var(--foreground)" : themePrimaryColor;
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
+  const surveyTeamMapId = useSurveyContext()?.surveyTeamMapId;
   const handleUploadedFiles = async () => {
     try {
       if (!file) return;
@@ -41,12 +42,9 @@ const FileInputForm = ({ isPreview }: FileInputFormProps) => {
       const prevResponse = asAnswerText(response);
       if (prevResponse) updateResponse(null);
       setIsUploading(true);
-      if (prevResponse.length) {
-        await deleteUploadedFiles({
-          fileKeyArray: [{ Key: prevResponse }],
-        });
-      }
-      const fileKey = await uploadFile(file, false, { allowAll: true });
+      // A replaced upload is only dropped from the answer: deleting needs a session, which
+      // a respondent on the public form does not have.
+      const fileKey = await uploadFile(file, false, { allowAll: true, surveyTeamMapId });
       updateResponse(fileKey);
       setIsUploading(false);
     } catch (e) {
@@ -61,14 +59,10 @@ const FileInputForm = ({ isPreview }: FileInputFormProps) => {
     handleUploadedFiles();
   }, [file]);
 
-  const handleRemoveFile = async (filekey: string) => {
-    setIsRemoving(true);
-    await deleteUploadedFiles({
-      fileKeyArray: [{ Key: filekey }],
-    });
+  // Only the answer forgets the key; deleting the object needs a session (see above).
+  const handleRemoveFile = () => {
     setFile(null);
     updateResponse(null);
-    setIsRemoving(false);
   };
 
   const validateAndSetFile = (selected: File) => {
@@ -143,19 +137,15 @@ const FileInputForm = ({ isPreview }: FileInputFormProps) => {
         <Card className="border p-4" style={{ borderColor: themePrimaryColor }}>
           <div className="flex items-center justify-between">
             <span>{file?.name || getFileNameFromKey(asAnswerText(response))}</span>
-            {isRemoving ? (
-              <Spinner className="size-4" />
-            ) : (
-              <Button
-                aria-label={translations("Remove")}
-                onClick={() => handleRemoveFile(asAnswerText(response))}
-                variant="secondary"
-                size="icon"
-                className="rounded-full"
-              >
-                <IconX stroke={1.5} />
-              </Button>
-            )}
+            <Button
+              aria-label={translations("Remove")}
+              onClick={handleRemoveFile}
+              variant="secondary"
+              size="icon"
+              className="rounded-full"
+            >
+              <IconX stroke={1.5} />
+            </Button>
           </div>
         </Card>
       ) : null}

@@ -45,11 +45,14 @@ export interface ApiKey {
   displayPrefix: string | null;
   mode: ApiKeyMode;
   version: ApiKeyVersion;
-  /** Permission keys the key may exercise. Empty means full access. */
+  /**
+   * Permission keys the key may exercise. Empty only on a legacy key minted before scopes
+   * existed, which has full access; the API no longer creates or narrows a key to empty.
+   */
   scopes: string[];
   /**
-   * The features those permissions fully cover (every feature for a full-access key). A key
-   * limited permission by permission before features existed can cover none.
+   * The features those permissions fully cover (every feature for a legacy full-access key).
+   * A key limited permission by permission before features existed can cover none.
    */
   features: ApiKeyFeature[];
   createdAt: string;
@@ -86,8 +89,8 @@ function toApiKey(record: ApiKeyRecord): ApiKey {
 
 export interface CreateApiKeyInput {
   name: string;
-  /** Empty or absent: full access. */
-  features?: ApiKeyFeature[];
+  /** At least one: the API refuses a new key with no features. */
+  features: ApiKeyFeature[];
   /** Ignored for v1, whose keys are always live. */
   mode?: ApiKeyMode;
   /** Defaults to v2 on the API. */
@@ -98,7 +101,10 @@ export interface CreateApiKeyInput {
 
 export interface UpdateApiKeyInput {
   name?: string;
-  /** Empty: full access. Absent: unchanged. */
+  /**
+   * Absent: unchanged. Empty is accepted only for a legacy full-access key, and leaves it as
+   * it is; a key already limited to features cannot be widened back to full access (400).
+   */
   features?: ApiKeyFeature[];
   expiresAt?: string | null;
 }

@@ -378,6 +378,21 @@ export function sitemapEntries(): { path: PagePath; entry: SitemapEntry }[] {
     .map(([path, page]) => ({ path, entry: page.sitemap as SitemapEntry }));
 }
 
+/**
+ * `JSON.stringify` for an inline `<script type="application/ld+json">`. The router writes
+ * `children` into the script verbatim, so a `</script>` (or `<!--`) inside a Ghost title or tag
+ * would end the element and start live markup. `<`, `>` and `&` become JSON unicode escapes —
+ * still the same JSON value to any parser — and U+2028/U+2029 are escaped for old JS engines.
+ */
+export function serializeJsonLd(value: unknown): string {
+  return JSON.stringify(value)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
+}
+
 function absolute(path: string) {
   return `${BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 }
@@ -424,7 +439,7 @@ export function buildPageHead(path: PagePath, extra?: { jsonLd?: JsonLdObject | 
     links: [{ rel: "canonical", href: canonicalUrl }],
     scripts: graphs.map((jsonLd) => ({
       type: "application/ld+json",
-      children: JSON.stringify(jsonLd),
+      children: serializeJsonLd(jsonLd),
     })),
   };
 }

@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 
+import { SafeHtml } from "@/components/common/SafeHtml.tsx";
 import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage/index.tsx";
 import type { SurveyThemePage } from "@/components/Survey/SurveyTheme/surveyThemeReducer.ts";
 import { Button } from "@/components/ui/button.tsx";
@@ -92,12 +93,7 @@ function WelcomePage({
             style={{ ...orgLogoStyles }}
           />
         )}
-        <div
-          dangerouslySetInnerHTML={{
-            __html: newTitle ?? "",
-          }}
-          style={{ color: titleStyles?.color }}
-        />
+        <SafeHtml html={newTitle} style={{ color: titleStyles?.color }} />
         <div
           style={{
             display: "flex",

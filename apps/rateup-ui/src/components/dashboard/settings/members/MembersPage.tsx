@@ -1,6 +1,5 @@
 import {
-  IconCheck,
-  IconCopy,
+  IconClockX,
   IconMail,
   IconChevronRight,
   IconSearch,
@@ -42,6 +41,7 @@ import { resolveRoleKey } from "@/utils/authz/can.ts";
 import { ROLE_META, type RoleKey } from "@/utils/authz/roles.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
+import { isInviteExpired } from "./inviteExpiry.ts";
 import { InviteMemberDialog } from "./InviteMemberDialog.tsx";
 import { ROLE_LADDER } from "./roleDiff.ts";
 import {
@@ -76,7 +76,6 @@ export function MembersPage() {
   const [teamFilter, setTeamFilter] = useState<string>("all");
   const [status, setStatus] = useState<StatusFilter>("all");
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const resend = userResendInviteTeamMutation();
   const revoke = useDeleteInviteMutation("");
@@ -118,14 +117,6 @@ export function MembersPage() {
 
   const unassignedCount = members.filter((member) => (member.teams?.length ?? 0) === 0).length;
   const pausedCount = members.filter((member) => member.isPaused).length;
-
-  const copyInvite = async (id: string) => {
-    await navigator.clipboard.writeText(
-      `${import.meta.env.VITE_FRONTEND_URL}/invite?type=team&token=${id}`,
-    );
-    setCopiedId(id);
-    setTimeout(() => setCopiedId((current) => (current === id ? null : current)), 1500);
-  };
 
   const canEdit = (member: MemberRow) =>
     member.id === currentUserId ||
@@ -325,64 +316,69 @@ export function MembersPage() {
                   </span>
                 </div>
               ))}
-              {visibleInvitations.map((invite) => (
-                <div
-                  key={invite.id}
-                  className="flex flex-col gap-3 py-3 opacity-90 sm:flex-row sm:items-center sm:gap-4"
-                >
-                  <Person name={invite.name} email={invite.email} invited />
-                  <span className="sm:w-32">
-                    <RoleBadge role={invite.role ?? "MEMBER"} size="sm" />
-                  </span>
-                  <span className="sm:w-24">
-                    <Badge variant="outline" className="gap-1">
-                      <IconMail className="size-3" aria-hidden="true" />
-                      {t("Invited")}
-                    </Badge>
-                  </span>
-                  <span className="sm:w-56">
-                    <TeamChips teams={invite.teams} />
-                  </span>
-                  <span className="flex gap-1 sm:w-24 sm:justify-end">
-                    {can("members.invite") && (
-                      <>
-                        <IconAction
-                          label={copiedId === invite.id ? t("Copied") : t("Copy invite link")}
-                          onClick={() => copyInvite(invite.id)}
-                        >
-                          {copiedId === invite.id ? (
-                            <IconCheck className="size-4 text-green-600" />
-                          ) : (
-                            <IconCopy className="size-4" />
-                          )}
-                        </IconAction>
-                        <IconAction
-                          label={t("Resend invite")}
-                          onClick={() =>
-                            resend.mutate(invite.id, {
-                              onSuccess: () => toast.success(t("Invite resent")),
-                              onError: () => toast.error(t("Could not resend the invite")),
-                            })
-                          }
-                        >
-                          <IconMail className="size-4" />
-                        </IconAction>
-                        <IconAction
-                          label={t("Revoke invite")}
-                          onClick={() =>
-                            revoke.mutate(invite.id, {
-                              onSuccess: () => toast.success(t("Invite revoked")),
-                              onError: () => toast.error(t("Could not revoke the invite")),
-                            })
-                          }
-                        >
-                          <IconTrash className="size-4 text-destructive" />
-                        </IconAction>
-                      </>
-                    )}
-                  </span>
-                </div>
-              ))}
+              {visibleInvitations.map((invite) => {
+                const expired = isInviteExpired(invite.expiresAt);
+                return (
+                  <div
+                    key={invite.id}
+                    className="flex flex-col gap-3 py-3 opacity-90 sm:flex-row sm:items-center sm:gap-4"
+                  >
+                    <Person name={invite.name} email={invite.email} invited />
+                    <span className="sm:w-32">
+                      <RoleBadge role={invite.role ?? "MEMBER"} size="sm" />
+                    </span>
+                    <span className="sm:w-24">
+                      {expired ? (
+                        <Badge variant="outline" className="gap-1 text-destructive">
+                          <IconClockX className="size-3" aria-hidden="true" />
+                          {t("Expired")}
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="gap-1">
+                          <IconMail className="size-3" aria-hidden="true" />
+                          {t("Invited")}
+                        </Badge>
+                      )}
+                    </span>
+                    <span className="sm:w-56">
+                      <TeamChips teams={invite.teams} />
+                    </span>
+                    <span className="flex gap-1 sm:w-24 sm:justify-end">
+                      {can("members.invite") && (
+                        <>
+                          {/* The invite link is emailed, never listed: resend issues a fresh one. */}
+                          <IconAction
+                            label={
+                              expired
+                                ? t("Invite expired — resend a fresh link")
+                                : t("Resend invite")
+                            }
+                            onClick={() =>
+                              resend.mutate(invite.id, {
+                                onSuccess: () => toast.success(t("Invite resent")),
+                                onError: () => toast.error(t("Could not resend the invite")),
+                              })
+                            }
+                          >
+                            <IconMail className="size-4" />
+                          </IconAction>
+                          <IconAction
+                            label={t("Revoke invite")}
+                            onClick={() =>
+                              revoke.mutate(invite.id, {
+                                onSuccess: () => toast.success(t("Invite revoked")),
+                                onError: () => toast.error(t("Could not revoke the invite")),
+                              })
+                            }
+                          >
+                            <IconTrash className="size-4 text-destructive" />
+                          </IconAction>
+                        </>
+                      )}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

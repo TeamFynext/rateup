@@ -2,6 +2,7 @@ import { IconChevronRight } from "@tabler/icons-react";
 import classNames from "classnames/bind";
 import { useState } from "react";
 
+import { SafeHtml } from "@/components/common/SafeHtml.tsx";
 import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage/index.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import type { SurveyTheme } from "@/context/SurveyThemeContext.tsx";
@@ -108,12 +109,7 @@ function LanguageSelectionPage({
 
         <div className={`flex flex-col gap-4 ${cx("header-radio-grp-start-btn-container")}`}>
           <div className={`flex flex-col gap-2 ${cx("header")}`}>
-            <div
-              dangerouslySetInnerHTML={{
-                __html: newTitle ?? "",
-              }}
-              style={{ color: titleStyles?.color }}
-            />
+            <SafeHtml html={newTitle} style={{ color: titleStyles?.color }} />
           </div>
 
           <div className={`flex ${cx("languages-list-radio-grp-container")}`}>
