@@ -1,12 +1,20 @@
 import { useSetUserPaused, type OrgMember } from "@/api/orgs.api";
 import { ActionDialog, done, Notice } from "@/components/ds/action-dialog";
 
+/** Stored before a step-up sign-in; the members tab takes it back and reopens the dialog. */
+export const PAUSE_RESUME_KIND = "pause-user";
+
 /** Pause or resume a person's account. Which one depends on where they are now. */
 export function MemberPauseDialog({
   user,
+  returnPath,
+  initialReason,
   onClose,
 }: {
   user: OrgMember["user"];
+  /** The page to come back to after a step-up sign-in. */
+  returnPath: string;
+  initialReason?: string;
   onClose: () => void;
 }) {
   const mutation = useSetUserPaused();
@@ -26,6 +34,8 @@ export function MemberPauseDialog({
       submitLabel={pausing ? "Pause account" : "Resume account"}
       pending={mutation.isPending}
       error={mutation.error}
+      initialReason={initialReason}
+      stepUp={{ path: returnPath, kind: PAUSE_RESUME_KIND, id: user.id }}
       onSubmit={(reason) =>
         mutation.mutate(
           { id: user.id, paused: pausing, reason },

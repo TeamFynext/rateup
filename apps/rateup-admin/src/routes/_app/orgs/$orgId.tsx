@@ -27,6 +27,11 @@ import { PageTabs } from "@/components/ds/page-tabs";
 import { PlanPill, Pill, SubscriptionPill } from "@/components/ds/pill";
 import { ErrorState } from "@/components/ds/query-states";
 import { OrgActionDialogs, type OrgAction } from "@/components/org/actions/org-action-dialogs";
+import {
+  ORG_ACTION_RESUME_KINDS,
+  orgActionFromIntent,
+  orgPagePath,
+} from "@/components/org/actions/org-action-resume";
 import { OrgManageMenu } from "@/components/org/actions/org-manage-menu";
 import { OrgActivityTab } from "@/components/org/org-activity-tab";
 import { OrgBillingTab } from "@/components/org/org-billing-tab";
@@ -39,6 +44,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getApiErrorData } from "@/lib/apiError";
 import { formatDate, formatRelative } from "@/lib/format";
+import { takeIntent } from "@/lib/resume";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/orgs/$orgId")({
@@ -70,7 +76,15 @@ function OrgDetail() {
   const navigate = useNavigate({ from: Route.fullPath });
   const query = useQuery(orgQueryOptions(orgId));
   const queryClient = useQueryClient();
-  const [action, setAction] = useState<OrgAction | null>(null);
+  // Back from a step-up sign-in: reopen the dialog that sent us there, as it was left.
+  const [resumed, setResumed] = useState(() =>
+    takeIntent(orgPagePath(orgId), ORG_ACTION_RESUME_KINDS),
+  );
+  const [action, setActionState] = useState<OrgAction | null>(() => orgActionFromIntent(resumed));
+  const setAction = (next: OrgAction | null) => {
+    setResumed(null);
+    setActionState(next);
+  };
   const openTab = (value: OrgTab) =>
     void navigate({
       search: (prev) => ({ ...prev, tab: value === "overview" ? undefined : value }),
@@ -181,7 +195,13 @@ function OrgDetail() {
         }))}
       />
 
-      <OrgActionDialogs orgId={org.id} org={org} action={action} onClose={() => setAction(null)} />
+      <OrgActionDialogs
+        orgId={org.id}
+        org={org}
+        action={action}
+        resumed={resumed}
+        onClose={() => setAction(null)}
+      />
     </div>
   );
 }

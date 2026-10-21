@@ -10,7 +10,8 @@ import { SectionHeading } from "@/components/ds/page-heading";
 import { Panel } from "@/components/ds/panel";
 import { Pill } from "@/components/ds/pill";
 import { EmptyState, ErrorState, PanelSkeleton } from "@/components/ds/query-states";
-import { MemberPauseDialog } from "@/components/org/member-pause-dialog";
+import { orgPagePath } from "@/components/org/actions/org-action-resume";
+import { MemberPauseDialog, PAUSE_RESUME_KIND } from "@/components/org/member-pause-dialog";
 import { groupByRole, ROLE_SUMMARIES } from "@/components/org/roles";
 import {
   DropdownMenu,
@@ -19,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { formatDate, formatRelative } from "@/lib/format";
+import { takeIntent } from "@/lib/resume";
 
 function MemberStatus({ member }: { member: OrgMember }) {
   if (!member.user.active) return <Pill tone="negative">Removed</Pill>;
@@ -90,12 +92,21 @@ export function OrgMembersTab({ orgId }: { orgId: string }) {
   const query = useQuery(orgMembersQueryOptions(orgId));
   const [role, setRole] = useState<string>(ALL);
   const [pausing, setPausing] = useState<OrgMember | null>(null);
+  // Back from a step-up sign-in: reopen the pause dialog for the same person.
+  const [resumed, setResumed] = useState(() => takeIntent(orgPagePath(orgId), PAUSE_RESUME_KIND));
 
   if (query.isPending) return <PanelSkeleton panels={2} />;
   if (query.isError) return <ErrorState error={query.error} onRetry={() => void query.refetch()} />;
 
   const { members, teams, invitations } = query.data;
   const groups = groupByRole(members);
+  // Their current state decides pause or resume, so the reopened dialog never acts on a stale one.
+  const target =
+    pausing ?? (resumed && members.find((member) => member.user.id === resumed.id)) ?? null;
+  const closePause = () => {
+    setPausing(null);
+    setResumed(null);
+  };
   const shown = role === ALL ? groups : groups.filter((group) => group.key === role);
 
   return (
@@ -187,7 +198,14 @@ export function OrgMembersTab({ orgId }: { orgId: string }) {
         </Panel>
       </div>
 
-      {pausing && <MemberPauseDialog user={pausing.user} onClose={() => setPausing(null)} />}
+      {target && (
+        <MemberPauseDialog
+          user={target.user}
+          returnPath={orgPagePath(orgId)}
+          initialReason={pausing ? undefined : resumed?.reason}
+          onClose={closePause}
+        />
+      )}
     </div>
   );
 }
