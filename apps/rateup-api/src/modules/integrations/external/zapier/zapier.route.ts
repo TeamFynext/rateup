@@ -14,8 +14,8 @@ import {
   updateContactHandler,
   updateContactLabelsByIdHandler,
   zapierAuthenticationHandler,
+  createContactHandler,
 } from "./zapier.controller.js";
-import { createContactHandler } from "../../../contact/contact.controller.js";
 import {
   contactLabelSchema,
   contactResponseSchema,
@@ -27,6 +27,8 @@ import {
   sendMessageSchema,
   successSchema,
   triggerSubscriptionBodySchema,
+  zapierCreateContactSchema,
+  zapierUpdateContactSchema,
 } from "./zapier.schema.js";
 import { declareAccess } from "../../../../authz/registry.js";
 
@@ -116,6 +118,7 @@ export async function zapierRoutes(server: FastifyInstance) {
     "/contact",
     {
       schema: {
+        body: zapierCreateContactSchema,
         response: {
           201: contactResponseSchema,
         },
@@ -127,6 +130,7 @@ export async function zapierRoutes(server: FastifyInstance) {
     "/contact",
     {
       schema: {
+        body: zapierUpdateContactSchema,
         response: {
           201: contactResponseSchema,
         },

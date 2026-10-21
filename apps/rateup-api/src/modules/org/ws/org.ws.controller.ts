@@ -1,4 +1,4 @@
-import { buildActor, loadActor } from "../../../authz/actor.js";
+import { buildActor, isUserBlocked, loadActor } from "../../../authz/actor.js";
 import { roleKeyToLegacy } from "../../../authz/roles.js";
 import { FastifyReply, FastifyRequest } from "fastify";
 import crypto from "node:crypto";
@@ -136,9 +136,21 @@ export async function handleWebSocketConnection(
   // no `role` at all, so it has to default to `main`, which is what the inbox broadcasts
   // target; the support widget sends `?role=fab`.
   const requestedSurface = request.query?.role;
-  const role =
-    requestedSurface && WS_CLIENT_SURFACES.has(requestedSurface) ? requestedSurface : "main";
   const userId = request.userId;
+  // Anything that is not a signed-in user (the widget's public key) is a `fab` socket bound to
+  // one contact, whatever it asks for: `main` hears the whole org's inbox.
+  const isUserPrincipal = !request.principal || request.principal.kind === "user";
+  const requestedContactId = request.query?.contactId;
+  if (!isUserPrincipal && !requestedContactId) {
+    connection.send(JSON.stringify({ error: "A contactId is required" }));
+    connection.close();
+    return;
+  }
+  const role = !isUserPrincipal
+    ? "fab"
+    : requestedSurface && WS_CLIENT_SURFACES.has(requestedSurface)
+      ? requestedSurface
+      : "main";
 
   if (!orgId || !browserId) {
     connection.send(JSON.stringify({ error: "Missing orgId or browserId" }));
@@ -156,7 +168,6 @@ export async function handleWebSocketConnection(
   connection.role = role;
   if (role === "main" && userId) connection.userId = userId;
   // Widget sockets name the conversation they are showing; see RoleTaggedSocket.
-  const requestedContactId = request.query?.contactId;
   if (role === "fab" && requestedContactId) connection.contactId = requestedContactId;
   activeConnections.get(orgId)!.set(socketKey, connection);
 
@@ -272,6 +283,10 @@ export const checkMobileId = async (
     log.error("No userId found in session\n%o", request.headers);
     // This branch used to send the 401 and then carry on to read the payload
     // and set request.user on a request it had already refused.
+    reply.code(401).send({ message: "Not authorized" });
+    return;
+  }
+  if (await isUserBlocked(userId)) {
     reply.code(401).send({ message: "Not authorized" });
     return;
   }

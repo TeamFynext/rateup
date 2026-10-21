@@ -9,17 +9,24 @@ import { scopeWhere } from "./scope.js";
  */
 export async function surveyInScope(surveyId: string, actor: Actor): Promise<boolean> {
   if (actor.scope.all) {
-    // Org-wide means the actor's own org, not every org. A survey with no org is
-    // not tenant data, so it stays reachable as before.
+    // Org-wide means the actor's own org, not every org. A survey whose `orgId` was never
+    // set (rows from before the column existed) belongs to the org of the teams it is
+    // shared with, never to whoever asks.
     const owned = await prisma.survey.findFirst({
-      where: { id: surveyId, OR: [{ orgId: actor.orgId }, { orgId: null }] },
+      where: {
+        id: surveyId,
+        OR: [
+          { orgId: actor.orgId },
+          { orgId: null, teams: { some: { team: { orgId: actor.orgId } } } },
+        ],
+      },
       select: { id: true },
     });
     return owned !== null;
   }
   if (actor.scope.teamIds.length === 0) return false;
   const match = await prisma.surveyTeamMap.findFirst({
-    where: { surveyId, ...scopeWhere(actor) },
+    where: { surveyId, team: { orgId: actor.orgId }, ...scopeWhere(actor) },
     select: { id: true },
   });
   return match !== null;

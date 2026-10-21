@@ -20,6 +20,7 @@ import {
 } from "./user.controller.js";
 import {
   updateProfileSchema,
+  type UpdateProfileSchema,
   updateUserLanguageSchema,
   updateProfilePhotoSchema,
   changeUserPasswordSchema,
@@ -67,10 +68,13 @@ export async function userRoutes(server: FastifyInstance) {
     },
     updateProfileHandler,
   );
-  server.put(
+  server.put<{ Body: UpdateProfileSchema; Params: IdParamInput }>(
     "/update-profile/:id",
     {
-      preHandler: [verifySession()],
+      // Editing someone else's profile: an org admin's job, and only for a member of the
+      // admin's own org (checked in the handler).
+      config: { permission: "members.manage" },
+      preHandler: [checkSession],
       schema: {
         params: idParamsSchema,
         body: updateProfileSchema,

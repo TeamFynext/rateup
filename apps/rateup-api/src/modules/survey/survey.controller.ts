@@ -27,6 +27,7 @@ import {
   getActiveSurveysSummmaryByUserId,
   createSurveyVariable,
   getSurveyVariables,
+  getPublicSurveyVariables,
   updateSurveyVariable,
   deleteSurveyVariable,
   getSurveyResponseCountForGraph,
@@ -51,7 +52,7 @@ import {
 import Session from "supertokens-node/recipe/session/index.js";
 import { Prisma } from "../../../generated/prisma/client.js";
 import { BySurveyTeamMapIdParams, ByTeamIdParams } from "../team/team.schema.js";
-import { getTeamIdsByUserId } from "../team/team.service.js";
+import { sessionTeamIds } from "./survey.teamScope.js";
 // import { createDefaultSurveyTheme } from "../surveyTheme/surveyTheme.service";
 import { SurveyType, WaFlowStatus } from "../../types/enums.js";
 import {
@@ -80,7 +81,7 @@ export async function createSurveyHandler(
     //creating a default survey theme once the survey is created
     if (typeof survey === "object" && survey !== null) {
       // await createDefaultSurveyTheme(survey.id);
-      reply.code(201).send(survey);
+      reply.code(201).send({ ...survey, password: undefined });
     } else {
       // Handle invalid survey format here
       reply.code(400).send({ error: "Invalid survey format." });
@@ -98,14 +99,14 @@ export async function getSurveyByIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    let session = await Session.getSession(request, reply);
-    const userId = session.getUserId();
-    const teamIds = await getTeamIdsByUserId(userId);
+    const teamIds = await sessionTeamIds(request);
     const survey = await getSurveyById(request.params.id, teamIds);
     if (!survey) {
       reply.code(404);
     } else {
-      reply.send(survey);
+      // The stored value is a bcrypt hash; the dashboard only needs to know one is set.
+      const { password, ...rest } = survey;
+      reply.send({ ...rest, hasPassword: !!password });
     }
   } catch {
     reply.code(500);
@@ -130,7 +131,7 @@ export async function getPublicSurveyByIdHandler(
         const ip = getIp(request);
         const surveyResponse = await getSurveyResponseByIp(survey.surveyTeamMapId, ip);
         if (surveyResponse) {
-          return reply.code(200).send({ ...survey, message: "ALREADY_SUBMITTED" });
+          return reply.code(200).send({ ...survey, message: "ALREADY_SUBMITTED" as const });
         }
       }
       reply.send(survey);
@@ -178,6 +179,9 @@ export async function cloneSurveyHandler(
   let survey;
   try {
     survey = await cloneSurvey(request.params.id, request.userId, teamIds);
+    if (typeof survey === "object" && survey) {
+      survey = { ...survey, password: undefined };
+    }
 
     // Check if the survey is an error message
     if (typeof survey === "string") {
@@ -200,7 +204,8 @@ export async function getSurveyByTeamHandler(
   reply: FastifyReply,
 ) {
   try {
-    const survey = await getSurveysByTeam(request.params.id);
+    if (!request.actor) return reply.code(403).send();
+    const survey = await getSurveysByTeam(request.params.id, request.actor);
     if (!survey) {
       reply.code(404);
     } else {
@@ -218,7 +223,11 @@ export async function getSurveyStatsBySurveyTeamMapIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    const survey = await getSurveyStatsBySurveyTeamMapId(request.params.surveyTeamMapId);
+    if (!request.actor) return reply.code(403).send();
+    const survey = await getSurveyStatsBySurveyTeamMapId(
+      request.params.surveyTeamMapId,
+      request.actor,
+    );
     if (!survey) {
       reply.code(404);
     } else {
@@ -236,17 +245,17 @@ export async function getSurveyStatsHandler(
   reply: FastifyReply,
 ) {
   try {
-    const teamIds = await getTeamIdsByUserId(request.userId);
+    const teamIds = await sessionTeamIds(request);
     const res = await getSurveyStats(request.params.surveyId, teamIds);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
-    reply.code(500).send(e);
+    reply.code(500).send({ message: "Something went wrong" });
   }
 }
 export async function getSurveysHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
-    const surveys = await getSurveysByUserId(request.userId, true, true);
+    const surveys = await getSurveysByUserId(request.userId, true, true, request.user.orgId);
     reply.send(surveys);
   } catch (e) {
     console.error(e);
@@ -257,7 +266,12 @@ export async function getSurveysHandler(request: FastifyRequest, reply: FastifyR
 export async function getSurveysWithQuestionsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const includeQuestions = true;
-    const surveys = await getSurveysByUserId(request.userId, includeQuestions);
+    const surveys = await getSurveysByUserId(
+      request.userId,
+      includeQuestions,
+      false,
+      request.user.orgId,
+    );
     reply.send(surveys);
   } catch (e) {
     console.error(e);
@@ -267,7 +281,7 @@ export async function getSurveysWithQuestionsHandler(request: FastifyRequest, re
 
 export async function getWebSurveysHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
-    const surveys = await getWebSurveysByUserId(request.userId);
+    const surveys = await getWebSurveysByUserId(request.userId, request.user.orgId);
     reply.send(surveys);
   } catch (e) {
     console.error(e);
@@ -278,7 +292,7 @@ export async function getWebSurveysHandler(request: FastifyRequest, reply: Fasti
 export async function getActiveSurveysSummaryHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const userId = request.userId;
-    const surveys = await getActiveSurveysSummmaryByUserId(userId);
+    const surveys = await getActiveSurveysSummmaryByUserId(userId, request.user.orgId);
     reply.send(surveys);
   } catch (e) {
     console.error(e);
@@ -289,7 +303,7 @@ export async function getActiveSurveysSummaryHandler(request: FastifyRequest, re
 export async function getSurveysSummaryHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const userId = request.userId;
-    const surveys = await getSurveysSummmaryByUserId(userId);
+    const surveys = await getSurveysSummmaryByUserId(userId, request.user.orgId);
     reply.send(surveys);
   } catch (e) {
     console.error(e);
@@ -314,7 +328,7 @@ export async function getSurveysLandingHandler(request: FastifyRequest, reply: F
 export async function getWhatsappSurveysHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     let type = "whatsapp";
-    const surveys = await getWhatsappSurveysByUserId(request.userId, type);
+    const surveys = await getWhatsappSurveysByUserId(request.userId, type, request.user.orgId);
     reply.send(surveys);
   } catch (e) {
     console.error(e);
@@ -477,8 +491,9 @@ export async function visitedSurveyHandler(
     } else {
       reply.code(200).send({ status: "success" });
     }
-  } catch (e) {
-    reply.code(500).send({ status: "error", message: e });
+  } catch (err) {
+    log.error({ err }, "Survey stats update failed");
+    reply.code(500).send({ status: "error", message: "Something went wrong" });
   }
 }
 
@@ -495,8 +510,9 @@ export async function startedSurveyHandler(
     } else {
       reply.code(200).send({ status: "success" });
     }
-  } catch (e) {
-    reply.code(500).send({ status: "error", message: e });
+  } catch (err) {
+    log.error({ err }, "Survey stats update failed");
+    reply.code(500).send({ status: "error", message: "Something went wrong" });
   }
 }
 
@@ -513,8 +529,9 @@ export async function completedSurveyHandler(
     } else {
       reply.code(200).send({ status: "success" });
     }
-  } catch (e) {
-    reply.code(500).send({ status: "error", message: e });
+  } catch (err) {
+    log.error({ err }, "Survey stats update failed");
+    reply.code(500).send({ status: "error", message: "Something went wrong" });
   }
 }
 
@@ -531,8 +548,9 @@ export async function reviewPageVisitedOnSurveyHandler(
     } else {
       reply.code(200).send({ status: "success" });
     }
-  } catch (e) {
-    reply.code(500).send({ status: "error", message: e });
+  } catch (err) {
+    log.error({ err }, "Survey stats update failed");
+    reply.code(500).send({ status: "error", message: "Something went wrong" });
   }
 }
 
@@ -581,6 +599,19 @@ export async function createSurveyVariableHandler(
     reply.code(500).send({
       error: (e instanceof Error ? e.message : undefined) || "Something Went Wrong! Try again.",
     });
+  }
+}
+
+export async function getPublicSurveyVariablesHandler(
+  request: FastifyRequest<{ Params: IdParamInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await getPublicSurveyVariables(request.params.id);
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send({ error: "Something Went Wrong! Try again." });
   }
 }
 
@@ -654,7 +685,7 @@ export async function getSurveyResponseCountForGraphHandler(
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
-    reply.code(500).send(e);
+    reply.code(500).send({ message: "Something went wrong" });
   }
 }
 
@@ -664,7 +695,7 @@ export async function getNPSGraphHandler(
 ) {
   try {
     const { userTimeZone, timePeriod, surveyId, teamMapIds } = request.query;
-    const teamIds = await getTeamIdsByUserId(request.userId);
+    const teamIds = await sessionTeamIds(request);
     const res = await getNPSResponsesForGraph(
       request.user.orgId,
       userTimeZone,
@@ -676,6 +707,6 @@ export async function getNPSGraphHandler(
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
-    reply.code(500).send(e);
+    reply.code(500).send({ message: "Something went wrong" });
   }
 }

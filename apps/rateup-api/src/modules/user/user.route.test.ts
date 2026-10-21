@@ -75,3 +75,12 @@ describe("platform-wide user routes", () => {
     expect(pause!.opts.preHandler).not.toContain(assertRootOrg);
   });
 });
+
+describe("editing another member's profile", () => {
+  test("PUT /update-profile/:id needs members.manage, not just a session", async () => {
+    const routes = await collectRoutes();
+    const route = routes.find((r) => r.method === "PUT" && r.url === "/update-profile/:id");
+    expect(route!.opts.config.permission).toBe("members.manage");
+    expect(route!.opts.preHandler).toEqual([checkSession]);
+  });
+});

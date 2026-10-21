@@ -18,8 +18,7 @@ import { Role } from "../../../generated/prisma/client.js";
 
 /**
  * Why a key was refused. Thrown by `assertApiAccessToken` so a caller can shape the reply
- * in its own error format; `verifyApiAccessTokenHook` catches it and answers in the shape
- * the support-user webhook has always used.
+ * in its own error format.
  */
 declare module "fastify" {
   interface FastifyRequest {
@@ -156,39 +155,11 @@ function stampKey(request: FastifyRequest, grant: ApiKeyGrant) {
   request.apiKey = { id: grant.keyId, mode: grant.mode, version: grant.version };
 }
 
-/**
- * Verifies that the api-access-key is valid & sets orgId on the request.user object.
- */
 /** Narrows an untyped `params`/`query` bag to "might carry an orgId". Used instead of a
  *  concrete route generic because this hook is mounted on routes with unrelated shapes
  *  (e.g. `/contact/:contactId`, which declares no querystring at all). */
 function mayCarryOrgId(value: unknown): value is Partial<ByOrgIdParams> {
   return typeof value === "object" && value !== null;
-}
-
-export const verifyApiAccessTokenHook = async (request: FastifyRequest, reply: FastifyReply) => {
-  try {
-    await assertApiAccessToken(request);
-  } catch (err) {
-    refuse(err, reply);
-  }
-};
-
-/** Answers a refused key in the shape the support-user webhook has always received. */
-function refuse(err: unknown, reply: FastifyReply) {
-  if (err instanceof ApiAuthError) {
-    // The partner API catches ApiAuthError itself and answers in its own envelope instead.
-    const message =
-      err.status === 404 ? "Not found" : err.status === 400 ? "Invalid request" : "Not authorized";
-    // A request with no orgId at all has never carried an `error` field — there is
-    // nothing to name. Keep that, so the webhook's callers see no change.
-    reply
-      .code(err.status)
-      .send(err.message === "Not found" ? { message } : { message, error: err.message });
-    return;
-  }
-  log.error({ err }, "Error checking session");
-  reply.code(401).send({ message: "Not authorized" });
 }
 
 /**

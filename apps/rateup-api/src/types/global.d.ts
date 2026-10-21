@@ -1302,6 +1302,15 @@ declare global {
     privateKey: string;
     passphrase: string;
   }
+  /**
+   * `WaEncryptionKeys` as stored in `WhatsappSettings.encryption`: AES-256-GCM encrypted JSON
+   * (WEBH-8). Read and written only through `whatsapp/encryption/flowKeysAtRest.ts`.
+   */
+  interface SealedWaEncryptionKeys {
+    v: 1;
+    iv: string;
+    enc: string;
+  }
 
   interface LoyaltyActionMessage {
     message: WaSendMessageBody;
@@ -1495,7 +1504,8 @@ declare global {
     type PWaFlowStartMessageConfig = WaFlowStartMessageConfig;
     // Keyed by screen id — see WaFlow.logicJumps in schema.prisma.
     type PWaFlowLogicJumps = Record<string, FlowLogicJump[]>;
-    type PWaEncryptionKeys = WaEncryptionKeys;
+    // New rows hold the sealed envelope; rows written before WEBH-8 still hold the plain keys.
+    type PWaEncryptionKeys = WaEncryptionKeys | SealedWaEncryptionKeys;
     // The stored copy of a catalog row's fields, as sent to Meta. Prices come back as
     // "10.00 USD" strings, so this is Partial rather than the strict input type.
     type PWaCatalogProductProps = Partial<CatalogProductCore>;
@@ -1516,27 +1526,27 @@ declare global {
     /** An OpenAPI-ish request spec Meta stores verbatim for a connector tool. */
     type PMetaAgentRequestDefinition =
       import("../modules/metaAgent/metaAgent.schema.js").RequestDefinition;
-    type PMetaAgentUserAuthInjectionConfig = {
+    interface PMetaAgentUserAuthInjectionConfig {
       location: "body" | "headers" | "path" | "query";
       field_name: string;
       prefix: string;
-    };
-    type PMetaAgentUserAuthActionConfig = {
+    }
+    interface PMetaAgentUserAuthActionConfig {
       user_action_tool_type: "auth" | "refresh";
       user_auth_token_path: string;
       refresh_token_path?: string;
       expires_at_path?: string;
       expires_at_type?: "absolute" | "relative_seconds";
-    };
+    }
     /** Meta's agent_budget list, as last read or saved. */
     type PMetaAgentBudgets = import("../modules/metaAgent/metaAgent.schema.js").AgentBudget[];
     /** Non-secret mTLS metadata Meta echoes back after a certificate upsert. */
-    type PMetaAgentMtlsConfig = {
+    interface PMetaAgentMtlsConfig {
       has_certificate: boolean;
       fingerprint?: string;
       expires_at?: number;
       subject?: string;
-    };
+    }
     /** `ApprovalRequest.requestData` — the fields specific to each request type. */
     type PApprovalRequestData = ApprovalRequestData;
     type PMetaConversionSettings = MetaConversionSettings;

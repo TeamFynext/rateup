@@ -27,12 +27,16 @@ import {
 import { defaultWebSurveyPagesTheme } from "../surveyTheme/defaultTheme.js";
 import { hasFeature } from "../subscription/subscription.service.js";
 import { updateQuestionsOnSurvey } from "../question/question.service.js";
+import { sanitizeSurveyQuestions, sanitizeSurveyThemeJson } from "../../utils/survey/richText.js";
 import { createStats } from "../stats/stats.service.js";
 import dayjs from "dayjs";
 import { Prisma } from "../../../generated/prisma/client.js";
 import timezone from "dayjs/plugin/timezone.js";
 import utc from "dayjs/plugin/utc.js";
 import { barGraphQuestions, barGraphQuestions2 } from "../../utils/enumMap.js";
+import bcrypt from "bcrypt";
+import type { Actor } from "../../authz/actor.js";
+import { inScope, scopeWhere } from "../../authz/scope.js";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -51,7 +55,10 @@ export async function createSurvey(
   const { templateId, selectedTheme, teamIds, ...input } = data;
 
   if (templateId) {
-    return cloneSurvey(templateId, createdBy, teamIds, true);
+    if (!(await isUsableTemplate(templateId, orgId))) {
+      return "Survey not found to duplicate";
+    }
+    return cloneSurvey(templateId, createdBy, teamIds, true, { notificationEmail });
   } else {
     const createRecord = async () => {
       const teamsToCreate = teamIds?.map((teamId) => {
@@ -113,11 +120,38 @@ export async function createSurvey(
   }
 }
 
+/**
+ * A survey a caller may start from: one of RateUp's templates (mapped to the
+ * SURVEY_TEMPLATES_TEAM_ID team) or a survey of the caller's own org.
+ */
+export async function isUsableTemplate(templateId: string, orgId: string | undefined) {
+  const templatesTeamId = process.env.SURVEY_TEMPLATES_TEAM_ID;
+  const sources: Prisma.SurveyWhereInput[] = [];
+  if (templatesTeamId) sources.push({ teams: { some: { teamId: templatesTeamId } } });
+  if (orgId) {
+    sources.push({ orgId });
+    sources.push({ orgId: null, teams: { some: { team: { orgId } } } });
+  }
+  if (!sources.length) return false;
+  const survey = await prisma.survey.findFirst({
+    where: { id: templateId, OR: sources },
+    select: { id: true },
+  });
+  return survey !== null;
+}
+
+/**
+ * Copies a survey into `teamIds`. The copy belongs to the org of those teams — never to
+ * the source's org — and leaves behind what is the source's own: its sheet, its AI
+ * summaries, and (from a template) its password, webhook, encryption key and inbox.
+ * Callers check that the caller may read the source and owns the teams.
+ */
 export async function cloneSurvey(
   surveyId: string,
   userId: string,
   teamIds: string[],
   fromTemplate: boolean = false,
+  options: { notificationEmail?: string } = {},
 ) {
   const survey = await prisma.survey.findUnique({
     where: {
@@ -126,7 +160,12 @@ export async function cloneSurvey(
   });
 
   if (survey) {
-    const { id: _id, ...surveyWithoutId } = survey;
+    const { id: _id, orgId: _sourceOrgId, ...surveyWithoutId } = survey;
+    const firstTeam = teamIds.length ? await getTeamById(teamIds[0]) : null;
+    if (teamIds.length && !firstTeam) {
+      throw new Error(`Team not found: ${teamIds[0]}`);
+    }
+    const orgId = firstTeam?.orgId ?? null;
 
     const existingSurveys = await prisma.survey.findMany({
       where: {
@@ -136,6 +175,7 @@ export async function cloneSurvey(
               startsWith: survey.title,
             },
           },
+          { orgId },
         ],
       },
       orderBy: {
@@ -168,6 +208,23 @@ export async function cloneSurvey(
     const clonedUpdatedAt: Date | null = null;
     const clonedSurvey = {
       ...surveyWithoutId,
+      // The source may be a template or a row written before write-time sanitising (FE-1).
+      questions: sanitizeSurveyQuestions(surveyWithoutId.questions, surveyWithoutId.type),
+      webSurveyPagesTheme: sanitizeSurveyThemeJson(surveyWithoutId.webSurveyPagesTheme),
+      orgId,
+      spreadSheetId: null,
+      aiResponseSummary: [],
+      ...(fromTemplate
+        ? {
+            password: null,
+            isProtected: false,
+            responseWebhookEndpoint: null,
+            publicKey: null,
+            isEncrypted: false,
+            notificationEmail: options.notificationEmail ?? "",
+            enableNotificationEmail: false,
+          }
+        : {}),
       createdBy: userId,
       createdAt: new Date(),
       updatedAt: clonedUpdatedAt,
@@ -190,12 +247,8 @@ export async function cloneSurvey(
     };
     const newClonedSurvey = await shortIdUniqueConstraintErrHandler(createClonedSurvey);
 
-    if (newClonedSurvey && teamIds.length > 0) {
-      const team = await getTeamById(teamIds[0]);
-      if (!team) {
-        throw new Error(`Team not found: ${teamIds[0]}`);
-      }
-      await createStats(team.orgId);
+    if (newClonedSurvey && firstTeam) {
+      await createStats(firstTeam.orgId);
     }
 
     return newClonedSurvey;
@@ -261,6 +314,73 @@ export async function getSurveyById(id: string, teamIds?: Array<string>) {
   //return survey;
 }
 
+/**
+ * What a respondent's browser gets. An allow-list, so a column added to Survey later stays
+ * private until someone decides otherwise: the password, the owner's notification inbox,
+ * the webhook URL, the Google Sheet id, the AI summaries of other people's answers,
+ * `createdBy` and `orgId` never leave the server. `publicKey` does, on purpose — it is the
+ * public half of the key the page encrypts answers with.
+ */
+export function toPublicSurvey<
+  S extends {
+    id: string;
+    title: string;
+    languages: string[];
+    questions: unknown[];
+    active: boolean;
+    isPublished: boolean;
+    isProtected: boolean;
+    kioskMode: boolean;
+    uniqueDeviceResponse: boolean;
+    type: string;
+    getLocation: boolean;
+    welcomePageEnabled: boolean;
+    skipPreview: boolean;
+    webSurveyAutoTransitionToNextQues: boolean;
+    isEncrypted: boolean;
+    publicKey: string | null;
+    redirect: unknown;
+    uiTextTranslations: unknown;
+    webSurveyPagesTheme: unknown;
+    surveyPublishAt: Date | null;
+    surveyEndAt: Date | null;
+    webSurveyTheme?: { id: string; name: string; theme: unknown } | null;
+  },
+  E extends Record<string, unknown>,
+>(survey: S, extra: E) {
+  return {
+    id: survey.id,
+    title: survey.title,
+    languages: survey.languages,
+    questions: survey.questions,
+    active: survey.active,
+    isPublished: survey.isPublished,
+    isProtected: survey.isProtected,
+    kioskMode: survey.kioskMode,
+    uniqueDeviceResponse: survey.uniqueDeviceResponse,
+    type: survey.type,
+    getLocation: survey.getLocation,
+    welcomePageEnabled: survey.welcomePageEnabled,
+    skipPreview: survey.skipPreview,
+    webSurveyAutoTransitionToNextQues: survey.webSurveyAutoTransitionToNextQues,
+    isEncrypted: survey.isEncrypted,
+    publicKey: survey.publicKey,
+    redirect: survey.redirect,
+    uiTextTranslations: survey.uiTextTranslations,
+    webSurveyPagesTheme: survey.webSurveyPagesTheme,
+    surveyPublishAt: survey.surveyPublishAt,
+    surveyEndAt: survey.surveyEndAt,
+    webSurveyTheme: survey.webSurveyTheme
+      ? {
+          id: survey.webSurveyTheme.id,
+          name: survey.webSurveyTheme.name,
+          theme: survey.webSurveyTheme.theme,
+        }
+      : null,
+    ...extra,
+  };
+}
+
 //-----------get public survey with org logo -------
 
 // This function returns survey from SurveyTeamMap Table, below argument id means SurveyTeamMap Table id
@@ -309,14 +429,11 @@ export async function getPublicSurveyById(id: string) {
     await updateQuestionsOnSurvey(surveyTeamMap.surveyId, questions);
   }
 
-  let publicSurvey = {
+  return toPublicSurvey(surveyTeamMap.survey, {
     surveyTeamMapId,
-    ...surveyTeamMap.survey,
     reviewPageLinks: surveyTeamMap.team.reviewPageLinks,
     ...orgLogo,
-  };
-
-  return publicSurvey;
+  });
 }
 
 export async function getPhoneBySurveyTeamMapId(id: string) {
@@ -371,12 +488,26 @@ export async function getSurveyBylandingId(landingid: string) {
 
 //------------get ALL Surveys list of a logged user (without qns)--------
 
+/**
+ * The user's teams, limited to the session's org when one is given. Without the org a
+ * member of two orgs saw both orgs' surveys from either session.
+ */
+async function memberTeamIds(userId: string, orgId?: string): Promise<string[]> {
+  if (!orgId) return await getTeamIdsByUserId(userId);
+  const rows = await prisma.teamMember.findMany({
+    where: { userId, team: { orgId } },
+    select: { teamId: true },
+  });
+  return rows.map(({ teamId }) => teamId);
+}
+
 export async function getSurveysByUserId(
   userId: string,
   includeQuestions: boolean = false,
   includeResponse: boolean = false,
+  orgId?: string,
 ) {
-  const teamIds: string[] = await getTeamIdsByUserId(userId);
+  const teamIds: string[] = await memberTeamIds(userId, orgId);
 
   const surveyRes = await prisma.survey.findMany({
     where: {
@@ -434,8 +565,8 @@ export async function getSurveysByUserId(
 }
 
 //------------get web survey list --------
-export async function getWebSurveysByUserId(userId: string) {
-  const teamIds = await getTeamIdsByUserId(userId);
+export async function getWebSurveysByUserId(userId: string, orgId?: string) {
+  const teamIds = await memberTeamIds(userId, orgId);
   const surveyTeamMaps = await prisma.surveyTeamMap.findMany({
     where: {
       teamId: {
@@ -457,8 +588,8 @@ export async function getWebSurveysByUserId(userId: string) {
 }
 
 //------------get whatsapp survey list --------
-export async function getWhatsappSurveysByUserId(userId: string, type: string) {
-  const teamIds: string[] = await getTeamIdsByUserId(userId);
+export async function getWhatsappSurveysByUserId(userId: string, type: string, orgId?: string) {
+  const teamIds: string[] = await memberTeamIds(userId, orgId);
 
   const surveyTeamMaps = await prisma.surveyTeamMap.findMany({
     where: {
@@ -490,10 +621,12 @@ export async function getSurveyLandingByUserId(userId: string) {
 }
 
 //------------get survey list  by team id --------
-export async function getSurveysByTeam(teamId: string) {
+export async function getSurveysByTeam(teamId: string, actor: Actor) {
+  if (!inScope(actor, teamId)) return [];
   const surveyTeamMaps = await prisma.surveyTeamMap.findMany({
     where: {
       teamId,
+      team: { orgId: actor.orgId },
     },
     include: {
       survey: true,
@@ -505,16 +638,24 @@ export async function getSurveysByTeam(teamId: string) {
       ...surveyTeamMap.survey,
       surveyTeamMapId: surveyTeamMap.id,
     };
-    return excludeFields(survey, ["questions", "password"]);
+    return excludeFields(survey, [
+      "questions",
+      "password",
+      "aiResponseSummary",
+      "responseWebhookEndpoint",
+      "spreadSheetId",
+    ]);
   });
 
   return surveysWithoutQuestions;
 }
 
-export async function getSurveyStatsBySurveyTeamMapId(surveyTeamMapId: string) {
-  const surveyStats = await prisma.surveyStats.findUnique({
+/** A form link's counters, when the link belongs to a team the actor can see. */
+export async function getSurveyStatsBySurveyTeamMapId(surveyTeamMapId: string, actor: Actor) {
+  const surveyStats = await prisma.surveyStats.findFirst({
     where: {
       surveyTeamMapId,
+      surveyTeamMap: { team: { orgId: actor.orgId }, ...scopeWhere(actor, "teamId") },
     },
   });
   return surveyStats;
@@ -552,8 +693,8 @@ export async function getSurveyByTeamMapId(surveyTeamMapId: string) {
 //------------SURVEY SUMMARY  ----
 //-----Returns summary(responses, stats) of active  and stopped surveys -- from ALL TEAMs in which the user is a member of
 
-export async function getActiveSurveysSummmaryByUserId(userId: string) {
-  const teamIds = await getTeamIdsByUserId(userId);
+export async function getActiveSurveysSummmaryByUserId(userId: string, orgId?: string) {
+  const teamIds = await memberTeamIds(userId, orgId);
   const allSurveys = await prisma.survey.count({
     where: {
       teams: {
@@ -645,8 +786,8 @@ export async function getActiveSurveysSummmaryByUserId(userId: string) {
 
 //get all ative and stopped survey summary
 
-export async function getSurveysSummmaryByUserId(userId: string) {
-  const teamIds = await getTeamIdsByUserId(userId);
+export async function getSurveysSummmaryByUserId(userId: string, orgId?: string) {
+  const teamIds = await memberTeamIds(userId, orgId);
 
   const allSurveys = await prisma.survey.findMany({
     where: {
@@ -926,7 +1067,10 @@ export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
       fetchedSurvey.questions,
       dataInput.languages,
     );
-    data.questions = questions;
+    data.questions = sanitizeSurveyQuestions(questions, fetchedSurvey.type);
+  }
+  if (data.webSurveyPagesTheme !== undefined) {
+    data.webSurveyPagesTheme = sanitizeSurveyThemeJson(data.webSurveyPagesTheme);
   }
 
   const survey = await prisma.survey.update({
@@ -1163,25 +1307,33 @@ export async function updateGoogleLink(id: string, data: UpdateGoogleLinkInput) 
   }
 }
 
+const BCRYPT_HASH = /^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/;
+const SURVEY_PASSWORD_ROUNDS = 10;
+
+export function isHashedSurveyPassword(value: string | null | undefined): value is string {
+  return !!value && BCRYPT_HASH.test(value);
+}
+
 export async function updateSurveyPassword(id: string, data: UpdateSurveyPassword) {
-  let isProtected = true;
-  let password = data.password;
   try {
+    let data_: { password: string; isProtected: boolean };
     if (data.password === "_remove_pwd") {
-      isProtected = false;
-      password = "";
+      data_ = { password: "", isProtected: false };
     } else {
-      isProtected = true;
-      // password = CryptoJS.AES.encrypt(password, secretPassphrase).toString();
+      // A client that still pre-fills the form from an old payload may send the stored
+      // hash back unchanged; hashing that would make the hash itself the password.
+      const current = await prisma.survey.findUnique({ where: { id }, select: { password: true } });
+      const password =
+        isHashedSurveyPassword(current?.password) && current.password === data.password
+          ? current.password
+          : await bcrypt.hash(data.password, SURVEY_PASSWORD_ROUNDS);
+      data_ = { password, isProtected: true };
     }
     const survey = await prisma.survey.update({
       where: {
         id,
       },
-      data: {
-        password,
-        isProtected,
-      },
+      data: data_,
     });
     return survey;
   } catch (error) {
@@ -1190,26 +1342,39 @@ export async function updateSurveyPassword(id: string, data: UpdateSurveyPasswor
   }
 }
 
+/**
+ * Checks a respondent's password. Passwords are stored as bcrypt hashes; a row still
+ * holding the plaintext written before hashing existed is accepted once more and
+ * re-hashed on that match.
+ */
 export async function verifySurveyPassword(id: string, data: UpdateSurveyPassword) {
-  let enteredPassword = data.password;
+  const enteredPassword = data.password;
   try {
     const survey = await prisma.survey.findUnique({
       where: { id },
+      select: { id: true, isProtected: true, password: true },
     });
     if (!survey) {
       throw new Error(`Survey not found`);
     }
-
-    // const decryptedPassword = CryptoJS.AES.decrypt(
-    //   survey.password,
-    //   secretPassphrase,
-    // ).toString(CryptoJS.enc.Utf8);
-
-    if (survey.isProtected && survey.password === enteredPassword) {
-      return "Access granted";
-    } else {
+    const stored = survey.password;
+    if (!survey.isProtected || !stored || !enteredPassword) {
       throw new Error(`Password Error`);
     }
+
+    if (isHashedSurveyPassword(stored)) {
+      if (await bcrypt.compare(enteredPassword, stored)) return "Access granted";
+      throw new Error(`Password Error`);
+    }
+
+    if (stored === enteredPassword) {
+      await prisma.survey.update({
+        where: { id: survey.id },
+        data: { password: await bcrypt.hash(enteredPassword, SURVEY_PASSWORD_ROUNDS) },
+      });
+      return "Access granted";
+    }
+    throw new Error(`Password Error`);
   } catch (error) {
     throw new Error(error instanceof Error ? error.message : String(error));
   }
@@ -1308,6 +1473,26 @@ export async function getSurveyVariables(surveyId: string) {
     },
   });
   return res;
+}
+
+/**
+ * The variables a respondent's page needs to render question titles: name, type and
+ * value only. Row ids stay private, they name the rows the dashboard edits.
+ */
+export async function getPublicSurveyVariables(surveyId: string) {
+  return await prisma.surveyVariables.findMany({
+    where: { surveyId },
+    select: { name: true, type: true, value: true },
+  });
+}
+
+/** The survey a variable belongs to, so its route can run the survey access check. */
+export async function getSurveyIdOfVariable(variableId: string) {
+  const variable = await prisma.surveyVariables.findUnique({
+    where: { id: variableId },
+    select: { surveyId: true },
+  });
+  return variable?.surveyId ?? null;
 }
 
 /**

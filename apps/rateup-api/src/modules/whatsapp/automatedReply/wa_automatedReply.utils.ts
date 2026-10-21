@@ -55,6 +55,7 @@ import { resolveWooPathValue } from "../../integrations/woocommerce/woocommerce.
 import { resolveShopifyPathValue } from "../../integrations/shopify/shopify.mapping.js";
 import { getShopifyProductImage } from "../../integrations/shopify/shopify.catalog.js";
 import axios from "axios";
+import { assertPublicUrl, publicAxiosOptions } from "../../../utils/ssrf.js";
 import { triggerConversionsApiForContact } from "../../integrations/meta/conversions.service.js";
 import { emitIntegrationEvent } from "../../integrations/events/emitIntegrationEvent.js";
 dayjs.extend(utc);
@@ -1360,7 +1361,7 @@ async function executeAssignUserAction(
   const contact = await getOrCreateRuleContact(context.platform, context.phone, context.orgId);
   if (!contact) return false;
 
-  const teams = await getTeamIdsByUserId(userId);
+  const teams = await getTeamIdsByUserId(userId, context.orgId);
   if (teams.length === 0) return false;
 
   await assignWaMessageToUser(
@@ -1915,6 +1916,8 @@ async function executeTriggerChatbotAction(
   return true;
 }
 
+const EXTERNAL_API_TIMEOUT_MS = 10_000;
+
 async function executeExternalApiAction(
   endpoint: string,
   context: {
@@ -1925,16 +1928,13 @@ async function executeExternalApiAction(
 ): Promise<boolean> {
   if (!endpoint) return false;
 
+  // The URL is the rule author's: it must resolve to a public address (checked
+  // again at connect time by the agents), and redirects are not followed.
   let parsedUrl: URL;
   try {
-    parsedUrl = new URL(endpoint);
-  } catch {
-    log.warn(`Invalid external API URL configured in rule action: ${endpoint}`);
-    return false;
-  }
-
-  if (!["http:", "https:"].includes(parsedUrl.protocol)) {
-    log.warn(`Unsupported protocol for external API URL: ${parsedUrl.protocol}`);
+    parsedUrl = await assertPublicUrl(endpoint, { allowHttp: true });
+  } catch (error) {
+    log.warn({ err: error }, "Refusing the external API URL configured in a rule action");
     return false;
   }
 
@@ -1951,6 +1951,7 @@ async function executeExternalApiAction(
 
   const config = {
     headers,
+    ...publicAxiosOptions(EXTERNAL_API_TIMEOUT_MS),
   };
 
   for (let attempt = 1; attempt <= 2; attempt++) {

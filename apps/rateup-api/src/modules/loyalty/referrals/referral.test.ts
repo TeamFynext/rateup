@@ -8,7 +8,7 @@ vi.mock("../../../utils/prisma.js", () => ({
       create: vi.fn(),
       update: vi.fn(),
     },
-    contact: { findUnique: vi.fn() },
+    contact: { findUnique: vi.fn(), findFirst: vi.fn() },
     loyaltyProgram: { findUnique: vi.fn() },
     loyaltyReferral: {
       create: vi.fn(),
@@ -109,7 +109,7 @@ beforeEach(() => {
   db.customerLoyaltyAccount.findUnique.mockResolvedValue(null);
   db.customerLoyaltyAccount.create.mockResolvedValue({ id: "acct-referee" });
   db.customerLoyaltyAccount.update.mockResolvedValue({});
-  db.contact.findUnique.mockResolvedValue({
+  db.contact.findFirst.mockResolvedValue({
     id: "contact-1",
     orgId: ORG,
     name: "Bobby",
@@ -138,13 +138,13 @@ describe("trackReferral — preconditions", () => {
   test("refuses a referral code that matches nothing in the program", async () => {
     (findAccountByReferralCode as Mock).mockResolvedValue(null);
 
-    await expect(trackReferral(PROGRAM, "NOPE", "contact-1")).rejects.toThrow(
+    await expect(trackReferral(PROGRAM, "NOPE", "contact-1", ORG)).rejects.toThrow(
       "Invalid referral code",
     );
   });
 
   test("looks the code up inside the program, ignoring case", async () => {
-    await trackReferral(PROGRAM, "ann-ab12", "contact-1");
+    await trackReferral(PROGRAM, "ann-ab12", "contact-1", ORG);
 
     expect(findAccountByReferralCode).toHaveBeenCalledWith(PROGRAM, "ann-ab12");
   });
@@ -152,23 +152,23 @@ describe("trackReferral — preconditions", () => {
   test("refuses a referee who already has an account", async () => {
     db.customerLoyaltyAccount.findUnique.mockResolvedValue({ id: "acct-existing" });
 
-    await expect(trackReferral(PROGRAM, "ANN-AB12", "contact-1")).rejects.toThrow(
+    await expect(trackReferral(PROGRAM, "ANN-AB12", "contact-1", ORG)).rejects.toThrow(
       "Customer already has an account",
     );
   });
 
   test("refuses a contact that does not exist", async () => {
-    db.contact.findUnique.mockResolvedValue(null);
+    db.contact.findFirst.mockResolvedValue(null);
 
-    await expect(trackReferral(PROGRAM, "ANN-AB12", "contact-1")).rejects.toThrow(
+    await expect(trackReferral(PROGRAM, "ANN-AB12", "contact-1", ORG)).rejects.toThrow(
       "Contact not found",
     );
   });
 
   test("refuses a contact with no phone number to enrol", async () => {
-    db.contact.findUnique.mockResolvedValue({ id: "contact-1", orgId: ORG, phone: null });
+    db.contact.findFirst.mockResolvedValue({ id: "contact-1", orgId: ORG, phone: null });
 
-    await expect(trackReferral(PROGRAM, "ANN-AB12", "contact-1")).rejects.toThrow(
+    await expect(trackReferral(PROGRAM, "ANN-AB12", "contact-1", ORG)).rejects.toThrow(
       "Contact has no phone number",
     );
   });
@@ -176,7 +176,7 @@ describe("trackReferral — preconditions", () => {
 
 describe("trackReferral — the account it opens", () => {
   test("opens the referee's account through createCustomerAccount", async () => {
-    await trackReferral(PROGRAM, "ANN-AB12", "contact-1");
+    await trackReferral(PROGRAM, "ANN-AB12", "contact-1", ORG);
 
     expect(createCustomerAccount).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -192,13 +192,13 @@ describe("trackReferral — the account it opens", () => {
   });
 
   test("passes the referrer's canonical code, so the bonuses and tier are applied", async () => {
-    await trackReferral(PROGRAM, "ann-ab12", "contact-1");
+    await trackReferral(PROGRAM, "ann-ab12", "contact-1", ORG);
 
     expect((createCustomerAccount as Mock).mock.calls[0][0].referCode).toBe("ANN-AB12");
   });
 
   test("carries the contact's details across", async () => {
-    db.contact.findUnique.mockResolvedValue({
+    db.contact.findFirst.mockResolvedValue({
       id: "contact-1",
       orgId: ORG,
       name: "Bobby",
@@ -207,7 +207,7 @@ describe("trackReferral — the account it opens", () => {
       dob: new Date("1990-05-04T00:00:00.000Z"),
     });
 
-    await trackReferral(PROGRAM, "ANN-AB12", "contact-1");
+    await trackReferral(PROGRAM, "ANN-AB12", "contact-1", ORG);
 
     expect((createCustomerAccount as Mock).mock.calls[0][0]).toMatchObject({
       email: "bob@example.com",
@@ -216,7 +216,7 @@ describe("trackReferral — the account it opens", () => {
   });
 
   test("records the referral as pending", async () => {
-    await trackReferral(PROGRAM, "ANN-AB12", "contact-1");
+    await trackReferral(PROGRAM, "ANN-AB12", "contact-1", ORG);
 
     expect(db.loyaltyReferral.create.mock.calls[0][0].data).toEqual({
       programId: PROGRAM,
@@ -228,7 +228,7 @@ describe("trackReferral — the account it opens", () => {
   });
 
   test("returns the referral and both accounts", async () => {
-    const res = await trackReferral(PROGRAM, "ANN-AB12", "contact-1");
+    const res = await trackReferral(PROGRAM, "ANN-AB12", "contact-1", ORG);
 
     expect(res).toEqual({
       referral: { id: "ref-1" },
@@ -242,7 +242,7 @@ describe("trackReferral — the account it opens", () => {
       program({ referralBonusType: "gift", referralRewardId: "rwd-1", referralBonus: 50 }),
     );
 
-    await trackReferral(PROGRAM, "ANN-AB12", "contact-1");
+    await trackReferral(PROGRAM, "ANN-AB12", "contact-1", ORG);
 
     expect(db.customerLoyaltyAccount.update).not.toHaveBeenCalled();
     expect(db.loyaltyTransaction.create).not.toHaveBeenCalled();
@@ -301,12 +301,26 @@ describe("completeReferral", () => {
   });
 });
 
+describe("trackReferral tenancy", () => {
+  test("looks the referee up among the caller's own contacts only", async () => {
+    db.contact.findFirst.mockResolvedValueOnce(null);
+
+    await expect(trackReferral(PROGRAM, "ANN-AB12", "contact-other-org", ORG)).rejects.toThrow(
+      "Contact not found",
+    );
+    expect(db.contact.findFirst.mock.calls[0][0].where).toEqual({
+      id: "contact-other-org",
+      orgId: ORG,
+    });
+  });
+});
+
 describe("the referral reads", () => {
-  test("a referrer's referrals are listed newest first, unscoped", async () => {
-    await getReferralsByReferrer("acct-other-org");
+  test("a referrer's referrals are listed newest first, within the caller's programme", async () => {
+    await getReferralsByReferrer("acct-other-org", PROGRAM);
 
     expect(db.loyaltyReferral.findMany.mock.calls[0][0]).toMatchObject({
-      where: { referrerAccountId: "acct-other-org" },
+      where: { referrerAccountId: "acct-other-org", programId: PROGRAM },
       orderBy: { createdAt: "desc" },
     });
   });
@@ -367,13 +381,16 @@ describe("the referral controller", () => {
     expect(answer(rep).code).toBe(200);
   });
 
-  test("listing a referrer's referrals resolves no program either", async () => {
+  test("listing a referrer's referrals is scoped to the caller's programme", async () => {
     const rep = reply();
 
     await getReferralsByReferrerHandler(request({ params: { referrerId: "acct-1" } }), rep);
 
-    expect(getLoyaltyProgramByOrg).not.toHaveBeenCalled();
-    expect(getReferralsByReferrer).toBeDefined();
+    expect(getLoyaltyProgramByOrg).toHaveBeenCalledWith(ORG);
+    expect(db.loyaltyReferral.findMany.mock.calls[0][0].where).toEqual({
+      referrerAccountId: "acct-1",
+      programId: PROGRAM,
+    });
     expect(answer(rep).code).toBe(200);
   });
 

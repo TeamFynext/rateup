@@ -43,6 +43,9 @@ vi.mock("../../../generated/prisma/client.js", () => ({
 vi.mock("../whatsapp/whatsappSurvey/wasurvey.controller.js", () => ({}));
 vi.mock("../subscription/campaignCredits.js", () => ({ getCampaignCreditBudget: vi.fn() }));
 vi.mock("../whatsapp/flows/flow.service.js", () => ({ getFlowBySurveyId: vi.fn() }));
+vi.mock("../whatsapp/messageTemplates/wa_templates.service.js", () => ({
+  getDbTemplate: vi.fn(),
+}));
 vi.mock("hucre", () => ({ write: vi.fn(async () => Buffer.from("workbook")) }));
 
 import { write } from "hucre";
@@ -80,6 +83,7 @@ vi.mock("../../utils/logger.js", () => ({
 import prisma from "../../utils/prisma.js";
 import { getCampaignCreditBudget } from "../subscription/campaignCredits.js";
 import { getFlowBySurveyId } from "../whatsapp/flows/flow.service.js";
+import { getDbTemplate } from "../whatsapp/messageTemplates/wa_templates.service.js";
 import {
   getCampaignCount,
   waCampaignDequeue,
@@ -177,6 +181,8 @@ function queryAt(index = 0) {
 }
 
 beforeEach(() => {
+  // Every template a test names is the caller's own unless a test says otherwise.
+  vi.mocked(getDbTemplate).mockImplementation(async (id: string) => ({ id }) as never);
   (createCampaignSend as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
     id: SEND_ID,
     attemptNo: 0,
@@ -322,6 +328,29 @@ describe("createCampaign", () => {
 
   beforeEach(() => {
     db.team.findFirst.mockResolvedValue({ id: "team-1" });
+  });
+
+  test("refuses a template, or a drip stage's template, the org does not own", async () => {
+    vi.mocked(getDbTemplate).mockImplementation(async (id: string) =>
+      id === "tpl-other-org" ? null : ({ id } as never),
+    );
+
+    await expect(
+      createCampaign({ ...input, waTemplateId: "tpl-other-org" }, ORG_A, ALL_ACTOR),
+    ).rejects.toThrow("Template not found");
+    await expect(
+      createCampaign(
+        { ...input, dripStages: [{ templateId: "tpl-other-org", delay: 1 }] },
+        ORG_A,
+        ALL_ACTOR,
+      ),
+    ).rejects.toThrow("Template not found");
+    await expect(
+      updateCampaign("camp-1", ORG_A, { waTemplateId: "tpl-other-org" } as any),
+    ).rejects.toThrow("Template not found");
+    expect(getDbTemplate).toHaveBeenCalledWith("tpl-other-org", ORG_A);
+    expect(db.campaign.create).not.toHaveBeenCalled();
+    expect(db.campaign.update).not.toHaveBeenCalled();
   });
 
   test("creates the campaign, its drip stages and its stats row", async () => {

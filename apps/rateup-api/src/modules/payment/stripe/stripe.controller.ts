@@ -14,6 +14,7 @@ import {
   StripeCheckoutSessionPayload,
   StripeInvoiceData,
   syncStripeProducts,
+  UnsellableStripePriceError,
   updateOrder,
   updateStripeProduct,
 } from "./stripe.service.js";
@@ -66,7 +67,17 @@ export async function createCheckoutSessionHandler(
   let userSession = await Session.getSession(request, reply);
   const userId = userSession.getUserId();
 
-  let newOrder = await createOrder(data, userId);
+  // Org from the session and tier from the price; the body's orgId/planName/rateupPlanId
+  // are ignored.
+  let newOrder;
+  try {
+    newOrder = await createOrder(data.priceId, request.user.orgId, userId);
+  } catch (e) {
+    if (e instanceof UnsellableStripePriceError) {
+      return reply.code(400).send({ message: e.message });
+    }
+    throw e;
+  }
 
   let session;
   try {

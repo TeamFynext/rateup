@@ -25,6 +25,7 @@ vi.mock("../../utils/prisma.js", () => ({
     order: {
       create: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
       delete: vi.fn(),
       findUnique: vi.fn(),
       findFirst: vi.fn(),
@@ -32,11 +33,13 @@ vi.mock("../../utils/prisma.js", () => ({
     },
     subscription: { update: vi.fn(), findUnique: vi.fn() },
     subscriptionAddon: { findUnique: vi.fn(), findMany: vi.fn(), create: vi.fn() },
-    payments: { create: vi.fn() },
+    payments: { create: vi.fn(), upsert: vi.fn() },
     rateupPlan: { findUnique: vi.fn(), findFirst: vi.fn(), findMany: vi.fn() },
     usageStats: { update: vi.fn() },
     paymentPlans: { findFirst: vi.fn(), create: vi.fn(), update: vi.fn() },
     user: { findUnique: vi.fn() },
+    razorpayWebhookEvent: { create: vi.fn(), deleteMany: vi.fn() },
+    stripeProducts: { findFirst: vi.fn() },
   },
 }));
 
@@ -85,6 +88,7 @@ vi.mock("./stripe/stripe.service.js", () => ({
   updateStripeProduct: vi.fn(),
   deleteOrder: vi.fn(),
   findOrderByCheckoutRef: vi.fn(),
+  UnsellableStripePriceError: class UnsellableStripePriceError extends Error {},
 }));
 
 vi.mock("supertokens-node/recipe/session/index.js", () => ({
@@ -93,11 +97,7 @@ vi.mock("supertokens-node/recipe/session/index.js", () => ({
 
 vi.mock("fastify-raw-body", () => ({ default: vi.fn() }));
 
-vi.mock("razorpay/dist/utils/razorpay-utils.js", () => ({
-  validateWebhookSignature: vi.fn(),
-}));
-
-import { validateWebhookSignature } from "razorpay/dist/utils/razorpay-utils.js";
+import { createHmac } from "node:crypto";
 
 vi.mock("../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
 vi.mock("../../utils/auth.js", () => ({ assertRootOrg: vi.fn() }));
@@ -114,7 +114,13 @@ import * as paymentService from "./payment.service.js";
 import * as stripeService from "./stripe/stripe.service.js";
 import { assertRootOrg } from "../../utils/auth.js";
 import { sendSubscriptionPurchasedAlert } from "../../utils/email/payments/subscriptionPurchasedAlert.js";
-import { updateSubscriptionOrderHandler, verificationHandler } from "./payment.controller.js";
+import {
+  createCheckoutSessionHandler as createRazorpayCheckoutHandler,
+  isValidRazorpaySignature,
+  updateSubscriptionOrderHandler,
+  verificationHandler,
+} from "./payment.controller.js";
+import { Prisma } from "../../../generated/prisma/client.js";
 import {
   createCheckoutSessionHandler,
   deleteStripeProductsHandler,
@@ -154,13 +160,7 @@ function answer(rep: any) {
 beforeEach(() => {
   vi.clearAllMocks();
   // clearAllMocks keeps implementations but drops queued values.
-  pay.updateOrder.mockResolvedValue({
-    id: VICTIM_ORDER,
-    orgId: ORG,
-    paymentStatus: "SUCCESS",
-    rateupPlanId: ENTERPRISE_PLAN,
-    subscriptionId: "sub_x",
-  });
+  pay.updateOrder.mockResolvedValue("updated");
   stripeSvc.createOrder.mockResolvedValue({ id: "order-1" });
   stripeSvc.updateOrder.mockResolvedValue(undefined);
   stripeSvc.getAllStripeSubscriptions.mockResolvedValue([]);
@@ -216,13 +216,7 @@ describe("updateSubscriptionOrderHandler", () => {
   });
 
   test("an unpaid order is refused rather than marked complete", async () => {
-    pay.updateOrder.mockResolvedValueOnce({
-      id: VICTIM_ORDER,
-      orgId: ORG,
-      paymentStatus: "PENDING",
-      rateupPlanId: ENTERPRISE_PLAN,
-      subscriptionId: "sub_x",
-    });
+    pay.updateOrder.mockResolvedValueOnce("unpaid");
     const rep = reply();
 
     await updateSubscriptionOrderHandler(req({ status: "COMPLETE" }), rep);
@@ -231,9 +225,7 @@ describe("updateSubscriptionOrderHandler", () => {
   });
 
   test("an order outside the caller's org answers 404", async () => {
-    pay.updateOrder.mockRejectedValueOnce(
-      Object.assign(new Error("Record to update not found."), { code: "P2025" }),
-    );
+    pay.updateOrder.mockResolvedValueOnce("not_found");
     const rep = reply();
 
     await updateSubscriptionOrderHandler(req({ status: "COMPLETE" }), rep);
@@ -245,23 +237,6 @@ describe("updateSubscriptionOrderHandler", () => {
     await updateSubscriptionOrderHandler(req({ status: "PENDING" }), reply());
 
     expect(pay.updateOrder).toHaveBeenCalledOnce();
-  });
-
-  test("the status comparison is exact", async () => {
-    // A lowercase "complete" is not COMPLETE, so the unpaid guard must not fire —
-    // otherwise the comparison has gone case-insensitive somewhere.
-    pay.updateOrder.mockResolvedValueOnce({
-      id: VICTIM_ORDER,
-      orgId: ORG,
-      paymentStatus: "PENDING",
-      rateupPlanId: ENTERPRISE_PLAN,
-      subscriptionId: "sub_x",
-    });
-    const rep = reply();
-
-    await updateSubscriptionOrderHandler(req({ status: "complete" }), rep);
-
-    expect(answer(rep).code).toBe(200);
   });
 
   test("answers 200 with no body on success", async () => {
@@ -451,7 +426,33 @@ describe("getSessionStatusHandler", () => {
 // ===========================================================================
 
 describe("createCheckoutSessionHandler (stripe)", () => {
-  const body = { priceId: "price_1", email: "buyer@example.test" };
+  const body = {
+    priceId: "price_1",
+    email: "buyer@example.test",
+    // What an older client still sends: none of it may reach the order.
+    orgId: "99999999-9999-9999-9999-999999999999",
+    rateupPlanId: ENTERPRISE_PLAN,
+    planName: "Enterprise",
+  };
+  const req = () => ({ body, user: { orgId: ORG } }) as never;
+
+  test("orders for the session's org and the price only, ignoring body org and plan", async () => {
+    await createCheckoutSessionHandler(req(), reply());
+
+    expect(stripeSvc.createOrder).toHaveBeenCalledWith("price_1", ORG, USER);
+  });
+
+  test("a price the catalog does not sell answers 400 and never reaches Stripe", async () => {
+    stripeSvc.createOrder.mockRejectedValueOnce(
+      new stripeService.UnsellableStripePriceError("This plan is not available for checkout."),
+    );
+    const rep = reply();
+
+    await createCheckoutSessionHandler(req(), rep);
+
+    expect(answer(rep).code).toBe(400);
+    expect(stripeStub.checkout.sessions.create).not.toHaveBeenCalled();
+  });
 
   test("creates the local order before calling Stripe", async () => {
     const order: string[] = [];
@@ -464,7 +465,7 @@ describe("createCheckoutSessionHandler (stripe)", () => {
       return { id: "cs_1", client_secret: "secret" };
     });
 
-    await createCheckoutSessionHandler({ body } as never, reply());
+    await createCheckoutSessionHandler(req(), reply());
 
     expect(order).toEqual(["order", "stripe"]);
   });
@@ -473,7 +474,7 @@ describe("createCheckoutSessionHandler (stripe)", () => {
     stripeStub.checkout.sessions.create.mockRejectedValueOnce(new Error("No such price"));
     const rep = reply();
 
-    await expect(createCheckoutSessionHandler({ body } as never, rep)).resolves.toBeDefined();
+    await expect(createCheckoutSessionHandler(req(), rep)).resolves.toBeDefined();
 
     expect(stripeSvc.createOrder).toHaveBeenCalledOnce();
     expect(stripeSvc.deleteOrder).toHaveBeenCalledWith("order-1");
@@ -486,13 +487,13 @@ describe("createCheckoutSessionHandler (stripe)", () => {
     stripeSvc.deleteOrder.mockRejectedValueOnce(new Error("db down"));
     const rep = reply();
 
-    await expect(createCheckoutSessionHandler({ body } as never, rep)).resolves.toBeDefined();
+    await expect(createCheckoutSessionHandler(req(), rep)).resolves.toBeDefined();
 
     expect(answer(rep).code).toBe(502);
   });
 
   test("carries the local order id into the Stripe metadata", async () => {
-    await createCheckoutSessionHandler({ body } as never, reply());
+    await createCheckoutSessionHandler(req(), reply());
 
     const arg = stripeStub.checkout.sessions.create.mock.calls[0][0];
     expect(arg.metadata).toEqual({ rateupOrderId: "order-1" });
@@ -500,13 +501,13 @@ describe("createCheckoutSessionHandler (stripe)", () => {
   });
 
   test("requests the ui_mode this API version documents", async () => {
-    await createCheckoutSessionHandler({ body } as never, reply());
+    await createCheckoutSessionHandler(req(), reply());
 
     expect(stripeStub.checkout.sessions.create.mock.calls[0][0].ui_mode).toBe("embedded_page");
   });
 
   test("takes the price and the customer email from the request body", async () => {
-    await createCheckoutSessionHandler({ body } as never, reply());
+    await createCheckoutSessionHandler(req(), reply());
 
     const arg = stripeStub.checkout.sessions.create.mock.calls[0][0];
     expect(arg.line_items[0].price).toBe("price_1");
@@ -726,16 +727,31 @@ describe("the Razorpay webhook handler", () => {
     return reply;
   }
 
-  function makeRequest(body: unknown, rawBody?: string) {
+  const sign = (raw: string, secret = "rzp_secret") =>
+    createHmac("sha256", secret).update(raw).digest("hex");
+
+  /** A delivery signed the way Razorpay signs: hex HMAC-SHA256 over the raw bytes. */
+  function makeRequest(body: unknown, rawBody?: string, headers: Record<string, string> = {}) {
     return {
-      headers: { "x-razorpay-signature": "sig" },
+      headers: {
+        "x-razorpay-signature": rawBody === undefined ? "sig" : sign(rawBody),
+        ...headers,
+      },
       body,
       rawBody,
     } as never;
   }
 
+  function delivery(body: Record<string, unknown>, headers: Record<string, string> = {}) {
+    return makeRequest(body, JSON.stringify(body), headers);
+  }
+
   beforeEach(() => {
     process.env.RAZORPAY_WEBHOOK_SECRET = "rzp_secret";
+    vi.mocked(prisma.razorpayWebhookEvent.create).mockResolvedValue({} as never);
+    vi.mocked(prisma.razorpayWebhookEvent.deleteMany).mockResolvedValue({ count: 1 } as never);
+    pay.updateSubscription.mockResolvedValue({ success: true });
+    pay.verifyPayment.mockResolvedValue({ success: true });
   });
 
   afterEach(() => {
@@ -744,34 +760,107 @@ describe("the Razorpay webhook handler", () => {
 
   test("verifies the signature against the raw bytes, not a re-serialization", async () => {
     // Razorpay signs what it sent. The parsed body round-trips to different bytes here
-    // (spacing), so passing JSON.stringify(request.body) would hash the wrong string.
-    vi.mocked(validateWebhookSignature).mockReturnValue(true);
-    const raw = '{ "event": "subscription.paused" }';
+    // (spacing), so a signature over JSON.stringify(request.body) must not be accepted.
+    const raw = '{ "event": "subscription.charged", "payload": {} }';
+    const reply = makeReply();
 
-    await verificationHandler(makeRequest({ event: "subscription.paused" }, raw), makeReply());
+    await verificationHandler(
+      makeRequest({ event: "subscription.charged", payload: {} }, raw),
+      reply,
+    );
 
-    expect(validateWebhookSignature).toHaveBeenCalledWith(raw, "sig", "rzp_secret");
+    expect(paymentService.updateSubscription).toHaveBeenCalled();
+    expect(reply.code).toHaveBeenCalledWith(201);
   });
 
   test("rejects a bad signature with a 400", async () => {
-    vi.mocked(validateWebhookSignature).mockReturnValue(false);
     const reply = makeReply();
-
     const body = { event: "subscription.charged" };
-    await verificationHandler(makeRequest(body, JSON.stringify(body)), reply);
+
+    await verificationHandler(
+      {
+        headers: { "x-razorpay-signature": sign(JSON.stringify(body), "wrong") },
+        body,
+        rawBody: JSON.stringify(body),
+      } as never,
+      reply,
+    );
 
     expect(reply.code).toHaveBeenCalledWith(400);
     expect(paymentService.updateSubscription).not.toHaveBeenCalled();
   });
 
+  test("rejects a missing or truncated signature without throwing", async () => {
+    const body = { event: "subscription.charged" };
+    const raw = JSON.stringify(body);
+
+    for (const signature of [undefined, sign(raw).slice(0, 10), `${sign(raw)}00`]) {
+      const reply = makeReply();
+      await verificationHandler(
+        { headers: { "x-razorpay-signature": signature }, body, rawBody: raw } as never,
+        reply,
+      );
+      expect(reply.code).toHaveBeenCalledWith(400);
+    }
+    expect(paymentService.updateSubscription).not.toHaveBeenCalled();
+  });
+
   test("fails loudly when the route did not supply a raw body", async () => {
-    vi.mocked(validateWebhookSignature).mockReturnValue(true);
     const reply = makeReply();
 
     await verificationHandler(makeRequest({ event: "subscription.charged" }), reply);
 
     expect(reply.code).toHaveBeenCalledWith(500);
-    expect(validateWebhookSignature).not.toHaveBeenCalled();
+    expect(paymentService.updateSubscription).not.toHaveBeenCalled();
+  });
+
+  test("records the event id and acts on the first delivery", async () => {
+    const body = { event: "subscription.charged", payload: { subscription: { entity: {} } } };
+
+    await verificationHandler(delivery(body, { "x-razorpay-event-id": "evt_1" }), makeReply());
+
+    expect(prisma.razorpayWebhookEvent.create).toHaveBeenCalledWith({
+      data: { eventId: "evt_1", event: "subscription.charged" },
+    });
+    expect(paymentService.updateSubscription).toHaveBeenCalledOnce();
+  });
+
+  test("acknowledges a replayed event id without acting on it again", async () => {
+    // A captured, validly signed delivery replayed later would otherwise reset the org's
+    // monthly counters (subscription.charged) or try to credit packs again.
+    vi.mocked(prisma.razorpayWebhookEvent.create).mockRejectedValueOnce(
+      new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
+        code: "P2002",
+        clientVersion: "x",
+      }),
+    );
+    const reply = makeReply();
+    const body = { event: "subscription.charged", payload: { subscription: { entity: {} } } };
+
+    await verificationHandler(delivery(body, { "x-razorpay-event-id": "evt_1" }), reply);
+
+    expect(reply.code).toHaveBeenCalledWith(200);
+    expect(reply.send).toHaveBeenCalledWith({ success: true, duplicate: true });
+    expect(paymentService.updateSubscription).not.toHaveBeenCalled();
+  });
+
+  test("frees the event id when handling fails, so Razorpay's retry is applied", async () => {
+    pay.updateSubscription.mockResolvedValueOnce({ success: false, error: "db down" });
+    const body = { event: "subscription.charged", payload: { subscription: { entity: {} } } };
+
+    await verificationHandler(delivery(body, { "x-razorpay-event-id": "evt_9" }), makeReply());
+
+    expect(prisma.razorpayWebhookEvent.deleteMany).toHaveBeenCalledWith({
+      where: { eventId: "evt_9" },
+    });
+  });
+
+  test("keeps the event id once the event was applied", async () => {
+    const body = { event: "subscription.charged", payload: { subscription: { entity: {} } } };
+
+    await verificationHandler(delivery(body, { "x-razorpay-event-id": "evt_2" }), makeReply());
+
+    expect(prisma.razorpayWebhookEvent.deleteMany).not.toHaveBeenCalled();
   });
 
   test.each([
@@ -782,11 +871,9 @@ describe("the Razorpay webhook handler", () => {
     ["subscription.cancelled"],
     ["subscription.completed"],
   ])("routes %s to the lifecycle recorder", async (event) => {
-    vi.mocked(validateWebhookSignature).mockReturnValue(true);
     const payload = { subscription: { entity: { id: "sub_1" } } };
-    const body = { event, payload };
 
-    await verificationHandler(makeRequest(body, JSON.stringify(body)), makeReply());
+    await verificationHandler(delivery({ event, payload }), makeReply());
 
     expect(paymentService.applySubscriptionStatusEvent).toHaveBeenCalledWith(event, payload);
   });
@@ -797,11 +884,10 @@ describe("the Razorpay webhook handler", () => {
     async (event) => {
       // Subscribed to on the dashboard but deliberately unmodelled — see the comment on
       // SUBSCRIPTION_STATUS_BY_EVENT. They must still 200 or Razorpay redelivers them.
-      vi.mocked(validateWebhookSignature).mockReturnValue(true);
       const reply = makeReply();
       const body = { event, payload: { subscription: { entity: { id: "sub_1" } } } };
 
-      await verificationHandler(makeRequest(body, JSON.stringify(body)), reply);
+      await verificationHandler(delivery(body), reply);
 
       expect(reply.code).toHaveBeenCalledWith(200);
       expect(reply.send).toHaveBeenCalledWith({ success: true, handled: false });
@@ -810,23 +896,33 @@ describe("the Razorpay webhook handler", () => {
   );
 
   test("routes subscription.updated to the plan-change handler", async () => {
-    vi.mocked(validateWebhookSignature).mockReturnValue(true);
     const payload = { subscription: { entity: { id: "sub_1", plan_id: "plan_2" } } };
-    const body = { event: "subscription.updated", payload };
 
-    await verificationHandler(makeRequest(body, JSON.stringify(body)), makeReply());
+    await verificationHandler(delivery({ event: "subscription.updated", payload }), makeReply());
 
     expect(paymentService.applySubscriptionUpdate).toHaveBeenCalledWith(payload);
   });
 
   test("routes subscription.charged to the subscription updater", async () => {
-    vi.mocked(validateWebhookSignature).mockReturnValue(true);
     const payload = { subscription: { entity: { id: "sub_1" } } };
 
-    const body = { event: "subscription.charged", payload };
-    await verificationHandler(makeRequest(body, JSON.stringify(body)), makeReply());
+    await verificationHandler(delivery({ event: "subscription.charged", payload }), makeReply());
 
     expect(paymentService.updateSubscription).toHaveBeenCalledWith(payload);
+  });
+});
+
+describe("isValidRazorpaySignature", () => {
+  test("accepts the hex HMAC of the exact bytes, and nothing else", () => {
+    const raw = '{"event":"payment.captured"}';
+    const good = createHmac("sha256", "s").update(raw).digest("hex");
+
+    expect(isValidRazorpaySignature(raw, good, "s")).toBe(true);
+    expect(isValidRazorpaySignature(Buffer.from(raw), good, "s")).toBe(true);
+    expect(isValidRazorpaySignature(raw, good.toUpperCase(), "s")).toBe(false);
+    expect(isValidRazorpaySignature(`${raw} `, good, "s")).toBe(false);
+    expect(isValidRazorpaySignature(raw, "", "s")).toBe(false);
+    expect(isValidRazorpaySignature(raw, undefined, "s")).toBe(false);
   });
 });
 
@@ -1523,24 +1619,29 @@ describe("crediting packs when the payment lands", () => {
     service = await vi.importActual<typeof import("./payment.service.js")>("./payment.service.js");
   });
 
-  function captured(notes: Record<string, string>) {
+  function captured(overrides: Record<string, unknown> = {}) {
     return {
       id: "pay_1",
-      amount: 240_000,
+      amount: 3 * 999 * 100,
       currency: "INR",
       method: "card",
       created_at: Math.floor(Date.now() / 1000),
-      notes,
+      order_id: "order_rzp",
+      notes: {},
+      ...overrides,
     };
   }
 
   beforeEach(() => {
-    vi.mocked(prisma.payments.create)
+    vi.mocked(prisma.payments.upsert)
       .mockReset()
       .mockResolvedValue({ id: "pay-row" } as never);
     vi.mocked(prisma.order.update)
       .mockReset()
       .mockResolvedValue({} as never);
+    vi.mocked(prisma.order.updateMany)
+      .mockReset()
+      .mockResolvedValue({ count: 1 } as never);
     vi.mocked(prisma.order.findUnique).mockReset();
     vi.mocked(prisma.subscriptionAddon.findUnique)
       .mockReset()
@@ -1550,54 +1651,143 @@ describe("crediting packs when the payment lands", () => {
       .mockResolvedValue({} as never);
   });
 
-  function onAddonOrder(name = "ACTIVE CONTACT PACK") {
+  function onAddonOrder(
+    name = "ACTIVE CONTACT PACK",
+    order: Record<string, unknown> = {
+      addonQuantity: 3,
+      amountMinor: 3 * 999 * 100,
+      currency: "INR",
+    },
+  ) {
     vi.mocked(prisma.order.findUnique).mockResolvedValue({
+      id: "order-1",
       orgId: "org-1",
-      RateupPlan: { id: "addon-1", name, planType: "ADDON" },
+      paymentStatus: "PENDING",
+      addonQuantity: null,
+      amountMinor: null,
+      currency: null,
+      ...order,
+      RateupPlan: {
+        id: "addon-1",
+        name,
+        planType: "ADDON",
+        monthlyPrice: 999,
+        usdMonthlyPrice: 19,
+      },
     } as never);
   }
 
   function credited() {
     return (
       vi.mocked(prisma.subscriptionAddon.create).mock.calls[0][0] as unknown as {
-        data: { kind: string; quantity: number; creditsGranted: number | null; expiresAt: Date };
+        data: {
+          orgId: string;
+          kind: string;
+          quantity: number;
+          creditsGranted: number | null;
+          expiresAt: Date;
+          paymentRef: string;
+        };
       }
     ).data;
   }
 
   const daysOut = (date: Date) => Math.round((date.getTime() - Date.now()) / 86_400_000);
 
-  test("credits the packs the order bought", async () => {
+  test("finds the order by the gateway order id Razorpay set, not by the notes", async () => {
     onAddonOrder();
 
     await service.verifyPayment(
-      captured({ rateupOrderId: "order-1", addonQuantity: "3" }),
+      captured({ notes: { rateupOrderId: "someone-elses-order" } }),
       "payment.captured",
     );
 
-    const call = vi.mocked(prisma.subscriptionAddon.create).mock.calls[0]?.[0] as {
-      data: { quantity: number; paymentRef: string; expiresAt: Date };
-    };
-    expect(call.data.quantity).toBe(3);
-    expect(call.data.paymentRef).toBe("pay_1");
+    expect(vi.mocked(prisma.order.findUnique).mock.calls[0][0].where).toEqual({
+      checkoutRefId: "order_rzp",
+    });
+    expect(prisma.order.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "order-1" } }),
+    );
+  });
+
+  test("credits the packs the order bought, whatever the payment notes claim", async () => {
+    // WEBH-2: the browser sets the payment's notes; one pack paid for must not become 1000.
+    onAddonOrder();
+
+    await service.verifyPayment(
+      captured({ notes: { rateupOrderId: "order-1", addonQuantity: "1000", orgId: "org-2" } }),
+      "payment.captured",
+    );
+
+    expect(credited()).toMatchObject({ quantity: 3, paymentRef: "pay_1", orgId: "org-1" });
+  });
+
+  test("refuses a capture whose amount is not the order's", async () => {
+    onAddonOrder();
+
+    const result = await service.verifyPayment(captured({ amount: 999 * 100 }), "payment.captured");
+
+    expect(result.success).toBe(false);
+    expect(prisma.payments.upsert).not.toHaveBeenCalled();
+    expect(prisma.subscriptionAddon.create).not.toHaveBeenCalled();
+  });
+
+  test("refuses a capture in another currency", async () => {
+    onAddonOrder();
+
+    const result = await service.verifyPayment(captured({ currency: "USD" }), "payment.captured");
+
+    expect(result.success).toBe(false);
+    expect(prisma.subscriptionAddon.create).not.toHaveBeenCalled();
+  });
+
+  test("an order from before quantities were stored is credited from the captured amount", async () => {
+    onAddonOrder("ACTIVE CONTACT PACK", {});
+
+    await service.verifyPayment(captured({ amount: 2 * 999 * 100 }), "payment.captured");
+
+    expect(credited().quantity).toBe(2);
+  });
+
+  test("an older order whose amount is no whole number of packs is refused", async () => {
+    onAddonOrder("ACTIVE CONTACT PACK", {});
+
+    const result = await service.verifyPayment(captured({ amount: 1_000 }), "payment.captured");
+
+    expect(result.success).toBe(false);
+    expect(prisma.subscriptionAddon.create).not.toHaveBeenCalled();
+  });
+
+  test("ignores a payment no order names, such as a subscription's", async () => {
+    vi.mocked(prisma.order.findUnique).mockResolvedValue(null as never);
+
+    const result = await service.verifyPayment(
+      captured({ order_id: "order_auto", notes: { rateupOrderId: "order-1" } }),
+      "payment.captured",
+    );
+
+    expect(result).toMatchObject({ success: true, handled: false });
+    expect(prisma.order.update).not.toHaveBeenCalled();
+    expect(prisma.payments.upsert).not.toHaveBeenCalled();
   });
 
   test("dates a contact pack a month out, so it lapses on its own", async () => {
     onAddonOrder();
 
-    await service.verifyPayment(captured({ rateupOrderId: "order-1" }), "payment.captured");
+    await service.verifyPayment(captured(), "payment.captured");
 
     expect(credited()).toMatchObject({ kind: "ACTIVE_CONTACTS", creditsGranted: null });
     expect(daysOut(credited().expiresAt)).toBe(30);
   });
 
   test("grants a credit pack's credits and dates it 90 days out", async () => {
-    onAddonOrder("CAMPAIGN CREDIT PACK");
+    onAddonOrder("CAMPAIGN CREDIT PACK", {
+      addonQuantity: 2,
+      amountMinor: 2 * 999 * 100,
+      currency: "INR",
+    });
 
-    await service.verifyPayment(
-      captured({ rateupOrderId: "order-1", addonQuantity: "2" }),
-      "payment.captured",
-    );
+    await service.verifyPayment(captured({ amount: 2 * 999 * 100 }), "payment.captured");
 
     expect(credited()).toMatchObject({ kind: "CAMPAIGN_CREDITS", creditsGranted: 20_000 });
     expect(daysOut(credited().expiresAt)).toBe(90);
@@ -1606,7 +1796,7 @@ describe("crediting packs when the payment lands", () => {
   test("credits an order placed before the pack was renamed as contacts", async () => {
     onAddonOrder("CONVERSATION PACK");
 
-    await service.verifyPayment(captured({ rateupOrderId: "order-1" }), "payment.captured");
+    await service.verifyPayment(captured(), "payment.captured");
 
     expect(credited().kind).toBe("ACTIVE_CONTACTS");
   });
@@ -1616,27 +1806,295 @@ describe("crediting packs when the payment lands", () => {
     onAddonOrder();
     vi.mocked(prisma.subscriptionAddon.findUnique).mockResolvedValue({ id: "existing" } as never);
 
-    await service.verifyPayment(captured({ rateupOrderId: "order-1" }), "payment.captured");
+    await service.verifyPayment(captured(), "payment.captured");
 
     expect(prisma.subscriptionAddon.create).not.toHaveBeenCalled();
   });
 
   test("credits nothing for an ordinary plan payment", async () => {
     vi.mocked(prisma.order.findUnique).mockResolvedValue({
+      id: "order-1",
       orgId: "org-1",
+      amountMinor: null,
+      currency: null,
+      addonQuantity: null,
       RateupPlan: { id: "pro", name: "PRO PLAN", planType: "BASE" },
     } as never);
 
-    await service.verifyPayment(captured({ rateupOrderId: "order-1" }), "payment.captured");
+    await service.verifyPayment(captured(), "payment.captured");
 
     expect(prisma.subscriptionAddon.create).not.toHaveBeenCalled();
   });
 
-  test("credits nothing when the payment failed", async () => {
+  test("a failed attempt records nothing and never overwrites a successful payment", async () => {
     onAddonOrder();
 
-    await service.verifyPayment(captured({ rateupOrderId: "order-1" }), "payment.failed");
+    await service.verifyPayment(captured(), "payment.failed");
 
     expect(prisma.subscriptionAddon.create).not.toHaveBeenCalled();
+    expect(prisma.payments.upsert).not.toHaveBeenCalled();
+    expect(prisma.order.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "order-1", paymentStatus: { not: "SUCCESS" } },
+      }),
+    );
+  });
+});
+
+describe("the Razorpay subscription checkout", () => {
+  const axiosPost = vi.spyOn(axios, "post");
+  let service: typeof import("./payment.service.js");
+  beforeAll(async () => {
+    service = await vi.importActual<typeof import("./payment.service.js")>("./payment.service.js");
+  });
+
+  const gw = (planId: string, period: string, amount: number, currency = "INR") => ({
+    id: `pp-${planId}`,
+    planId,
+    period,
+    amount,
+    currency,
+    status: "ACTIVE",
+  });
+  const PRO = {
+    id: "pro",
+    name: "PRO PLAN",
+    displayName: "Pro",
+    planType: "BASE",
+    paymentPlan: null,
+    monthlyPaymentPlan: gw("plan_pro_m", "monthly", 4000),
+    yearlyPaymentPlan: gw("plan_pro_y", "yearly", 40000),
+    usdMonthlyPaymentPlan: gw("plan_pro_usd_m", "monthly", 49, "USD"),
+    usdYearlyPaymentPlan: null,
+  };
+
+  beforeEach(() => {
+    vi.mocked(prisma.rateupPlan.findUnique)
+      .mockReset()
+      .mockResolvedValue(PRO as never);
+    vi.mocked(prisma.order.create)
+      .mockReset()
+      .mockImplementation((async (args: { data: object }) => ({
+        id: "o-1",
+        ...args.data,
+      })) as never);
+    axiosPost.mockReset().mockResolvedValue({ data: { id: "sub_new", current_end: 1 } });
+  });
+
+  const body = (over: Record<string, unknown> = {}) =>
+    ({ rateupPlanId: "pro", period: "monthly", planId: "plan_pro_m", ...over }) as never;
+
+  test("writes the session's org, not the body's, onto the order and the notes", async () => {
+    await service.createCheckoutSession("user-1", "org-me", body({ orgId: "org-victim" }));
+
+    const order = vi.mocked(prisma.order.create).mock.calls[0][0].data;
+    expect(order.orgId).toBe("org-me");
+    expect(axiosPost.mock.calls[0][1]).toMatchObject({ notes: { orgId: "org-me" } });
+  });
+
+  test("names the order after the tier, not the body's planName", async () => {
+    await service.createCheckoutSession("user-1", "org-me", body({ planName: "Enterprise" }));
+
+    expect(vi.mocked(prisma.order.create).mock.calls[0][0].data).toMatchObject({
+      name: "Pro",
+      rateupPlanId: "pro",
+      planId: "plan_pro_m",
+      amountMinor: 400_000,
+      currency: "INR",
+    });
+  });
+
+  test("honours a gateway plan the tier links, which is how the UI picks dollars", async () => {
+    await service.createCheckoutSession("user-1", "org-me", body({ planId: "plan_pro_usd_m" }));
+
+    expect(axiosPost.mock.calls[0][1]).toMatchObject({ plan_id: "plan_pro_usd_m" });
+  });
+
+  test("refuses a gateway plan the tier does not link", async () => {
+    // MSG-1: the cheapest (or an orphaned) gateway plan paired with an expensive tier.
+    await expect(
+      service.createCheckoutSession("user-1", "org-me", body({ planId: "plan_starter_m" })),
+    ).rejects.toThrow(/not available/);
+    expect(axiosPost).not.toHaveBeenCalled();
+    expect(prisma.order.create).not.toHaveBeenCalled();
+  });
+
+  test("refuses an unknown tier and a pack", async () => {
+    vi.mocked(prisma.rateupPlan.findUnique).mockResolvedValueOnce(null as never);
+    await expect(service.createCheckoutSession("u", "o", body())).rejects.toThrow();
+
+    vi.mocked(prisma.rateupPlan.findUnique).mockResolvedValueOnce({
+      ...PRO,
+      planType: "ADDON",
+    } as never);
+    await expect(service.createCheckoutSession("u", "o", body())).rejects.toThrow(/one-off/);
+    expect(axiosPost).not.toHaveBeenCalled();
+  });
+
+  test("refuses a retired gateway plan", async () => {
+    vi.mocked(prisma.rateupPlan.findUnique).mockResolvedValueOnce({
+      ...PRO,
+      monthlyPaymentPlan: { ...PRO.monthlyPaymentPlan, status: "INACTIVE" },
+    } as never);
+
+    await expect(service.createCheckoutSession("u", "o", body())).rejects.toThrow();
+  });
+
+  test("picks the tier's own plan for the period when the body names none", async () => {
+    await service.createCheckoutSession("u", "o", body({ planId: undefined, period: "yearly" }));
+
+    expect(axiosPost.mock.calls[0][1]).toMatchObject({ plan_id: "plan_pro_y", total_count: 100 });
+  });
+
+  test("the handler passes the session org", async () => {
+    pay.createCheckoutSession.mockResolvedValueOnce({ success: true });
+
+    await createRazorpayCheckoutHandler(
+      { body: { rateupPlanId: "pro", orgId: "org-victim" }, user: { orgId: ORG } } as never,
+      reply(),
+    );
+
+    expect(pay.createCheckoutSession).toHaveBeenCalledWith(USER, ORG, expect.anything());
+  });
+});
+
+describe("subscription.charged trusts only server-side links", () => {
+  let service: typeof import("./payment.service.js");
+  beforeAll(async () => {
+    service = await vi.importActual<typeof import("./payment.service.js")>("./payment.service.js");
+  });
+
+  const END = Math.floor(Date.now() / 1000) + 86_400;
+  const charged = (notes: Record<string, string> = {}) => ({
+    subscription: { entity: { id: "sub_1", plan_id: "plan_x", current_end: END, notes } },
+    payment: { entity: { id: "pay_9", amount: 400_000, currency: "INR", method: "card" } },
+  });
+
+  beforeEach(() => {
+    vi.mocked(prisma.paymentPlans.findFirst).mockReset();
+    vi.mocked(prisma.rateupPlan.findFirst).mockReset();
+    vi.mocked(prisma.rateupPlan.findUnique).mockReset();
+    vi.mocked(prisma.subscription.findUnique)
+      .mockReset()
+      .mockResolvedValue(null as never);
+    vi.mocked(prisma.subscription.update)
+      .mockReset()
+      .mockResolvedValue({} as never);
+    vi.mocked(prisma.order.update)
+      .mockReset()
+      .mockResolvedValue({ id: "order-1" } as never);
+    vi.mocked(prisma.usageStats.update)
+      .mockReset()
+      .mockResolvedValue({} as never);
+    vi.mocked(prisma.payments.upsert)
+      .mockReset()
+      .mockResolvedValue({ id: "pay-row" } as never);
+    vi.mocked(prisma.order.findUnique).mockReset();
+  });
+
+  test("an unlinked gateway plan does not fall back to notes.rateupPlanId", async () => {
+    vi.mocked(prisma.paymentPlans.findFirst).mockResolvedValue({ id: "pp-orphan" } as never);
+    vi.mocked(prisma.rateupPlan.findFirst).mockResolvedValue(null as never);
+    vi.mocked(prisma.rateupPlan.findUnique).mockResolvedValue({ id: "enterprise" } as never);
+
+    const result = await service.updateSubscription(charged({ rateupPlanId: "enterprise" }));
+
+    expect(result.success).toBe(false);
+    expect(prisma.rateupPlan.findUnique).not.toHaveBeenCalled();
+    expect(prisma.subscription.update).not.toHaveBeenCalled();
+  });
+
+  test("writes the subscription of the org on the order, not the one in the notes", async () => {
+    vi.mocked(prisma.paymentPlans.findFirst).mockResolvedValue({ id: "pp" } as never);
+    vi.mocked(prisma.rateupPlan.findFirst).mockResolvedValue({
+      id: "pro",
+      name: "PRO",
+      planType: "BASE",
+    } as never);
+    vi.mocked(prisma.order.findUnique).mockResolvedValue({
+      id: "order-1",
+      status: "PENDING",
+      orgId: "org-owner",
+      paymentId: null,
+    } as never);
+
+    await service.updateSubscription(charged({ orgId: "org-victim" }));
+
+    expect(vi.mocked(prisma.subscription.update).mock.calls[0][0].where).toEqual({
+      orgId: "org-owner",
+    });
+    expect(vi.mocked(prisma.usageStats.update).mock.calls[0][0].where).toEqual({
+      orgId: "org-owner",
+    });
+    // The authenticated charge is what marks the subscription order paid.
+    expect(prisma.order.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ paymentStatus: "SUCCESS", paymentId: "pay-row" }),
+      }),
+    );
+  });
+
+  test("a replay of a cycle already applied resets nothing", async () => {
+    vi.mocked(prisma.paymentPlans.findFirst).mockResolvedValue({ id: "pp" } as never);
+    vi.mocked(prisma.rateupPlan.findFirst).mockResolvedValue({
+      id: "pro",
+      name: "PRO",
+      planType: "BASE",
+    } as never);
+    vi.mocked(prisma.order.findUnique).mockResolvedValue({
+      id: "order-1",
+      status: "COMPLETE",
+      orgId: "org-owner",
+      paymentId: "pay-row",
+    } as never);
+    vi.mocked(prisma.subscription.findUnique).mockResolvedValue({
+      subscriptionRef: "sub_1",
+      basePlanId: "pro",
+      expiresAt: new Date(END * 1000),
+    } as never);
+
+    const result = await service.updateSubscription(charged());
+
+    expect(result).toMatchObject({ success: true, duplicate: true });
+    expect(prisma.subscription.update).not.toHaveBeenCalled();
+    expect(prisma.usageStats.update).not.toHaveBeenCalled();
+  });
+});
+
+describe("updateOrder", () => {
+  let service: typeof import("./payment.service.js");
+  beforeAll(async () => {
+    service = await vi.importActual<typeof import("./payment.service.js")>("./payment.service.js");
+  });
+
+  beforeEach(() => {
+    vi.mocked(prisma.order.updateMany).mockReset();
+    vi.mocked(prisma.order.findFirst).mockReset();
+  });
+
+  test("COMPLETE is written only where the order is paid, in the same UPDATE", async () => {
+    vi.mocked(prisma.order.updateMany).mockResolvedValue({ count: 0 } as never);
+    vi.mocked(prisma.order.findFirst).mockResolvedValue({ id: "o" } as never);
+
+    const outcome = await service.updateOrder("o", "COMPLETE", "org-1");
+
+    expect(outcome).toBe("unpaid");
+    expect(prisma.order.updateMany).toHaveBeenCalledWith({
+      where: { id: "o", orgId: "org-1", paymentStatus: "SUCCESS" },
+      data: { status: "COMPLETE" },
+    });
+  });
+
+  test("another org's order is not found", async () => {
+    vi.mocked(prisma.order.updateMany).mockResolvedValue({ count: 0 } as never);
+    vi.mocked(prisma.order.findFirst).mockResolvedValue(null as never);
+
+    expect(await service.updateOrder("o", "FAILED", "org-1")).toBe("not_found");
+  });
+
+  test("a paid order is updated", async () => {
+    vi.mocked(prisma.order.updateMany).mockResolvedValue({ count: 1 } as never);
+
+    expect(await service.updateOrder("o", "COMPLETE", "org-1")).toBe("updated");
   });
 });

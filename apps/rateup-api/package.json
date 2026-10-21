@@ -79,7 +79,7 @@
     "razorpay": "^2.9.8",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "react-email": "6.11.2",
+    "react-email": "6.11.3",
     "sharp": "^0.35.5",
     "stripe": "^22.6.2",
     "supertokens-node": "^24.0.3",
@@ -87,7 +87,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@react-email/ui": "6.11.2",
+    "@react-email/ui": "6.11.3",
     "@tsconfig/node24": "^24.0.5",
     "@types/bcrypt": "^6.0.0",
     "@types/fluent-ffmpeg": "^2.1.28",

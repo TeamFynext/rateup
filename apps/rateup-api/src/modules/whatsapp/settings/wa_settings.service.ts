@@ -17,6 +17,7 @@ import { callMetaApi } from "../wa_axios.js";
 import { getChannelScope } from "./wa_channel_access.js";
 import type { Actor } from "../../../authz/actor.js";
 import { channelDigits } from "../../../utils/channelIdentifier.js";
+import { sealFlowKeys } from "../encryption/flowKeysAtRest.js";
 
 /**
  * Reads the AES key used to encrypt WhatsApp access tokens at rest from the environment.
@@ -51,8 +52,13 @@ export async function createWaSettings(
   // Prisma's JSON-typed update/create input distinguishes "SQL NULL" (Prisma.DbNull) from a
   // literal JSON null (Prisma.JsonNull); a bare `null` is rejected by the generated types for
   // custom-typed (PrismaJson) JSON columns like `encryption`, so it has to be translated here.
+  // The Flow key pair is sealed (AES-256-GCM) before it is stored (WEBH-8).
   const encryption: Prisma.WhatsappSettingsUncheckedCreateInput["encryption"] =
-    data.encryption === null ? Prisma.DbNull : data.encryption;
+    data.encryption === null
+      ? Prisma.DbNull
+      : data.encryption === undefined
+        ? undefined
+        : sealFlowKeys(data.encryption);
   const instagramIceBreakers = jsonOrDbNull(data.instagramIceBreakers);
   const instagramPersistentMenu = jsonOrDbNull(data.instagramPersistentMenu);
   const conversionData = jsonOrDbNull(data.conversionData);
@@ -348,7 +354,12 @@ export async function updateWaSettings(
     ...data,
     // See the comment in createWaSettings: a bare `null` isn't valid for this custom-typed
     // JSON column in Prisma's update input, it has to be the DbNull sentinel.
-    encryption: data.encryption === null ? Prisma.DbNull : data.encryption,
+    encryption:
+      data.encryption === null
+        ? Prisma.DbNull
+        : data.encryption === undefined
+          ? undefined
+          : sealFlowKeys(data.encryption),
     instagramIceBreakers: jsonOrDbNull(data.instagramIceBreakers),
     instagramPersistentMenu: jsonOrDbNull(data.instagramPersistentMenu),
     conversionData: jsonOrDbNull(data.conversionData),
@@ -394,7 +405,7 @@ export async function updateWaSettingsById(
         "encryption keys must include publicKey, privateKey, and passphrase together",
       );
     }
-    encryption = data.encryption;
+    encryption = sealFlowKeys(data.encryption);
   }
 
   const dataToBeUpdated: Prisma.WhatsappSettingsUncheckedUpdateInput = {

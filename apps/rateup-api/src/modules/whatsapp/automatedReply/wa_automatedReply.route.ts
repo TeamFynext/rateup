@@ -28,10 +28,15 @@ import {
   updateRuleSchema,
   getRulesByAutomationIdQuerySchema,
 } from "./wa_rule.schema.js";
-import { byWaAutomatedReplyIdParams, cloneAutomatedReplyBody } from "./wa_automatedReply.schema.js";
+import {
+  byWaAutomatedReplyIdParams,
+  cloneAutomatedReplyBody,
+  createAutomatedReplySchema,
+  initiateAutomatedReplyBody,
+  updateAutomatedReplySchema,
+} from "./wa_automatedReply.schema.js";
 import type {
   ByWaAutomatedReplyIdParams,
-  CreateAutomatedReplySchema,
   InitiateAutomatedReplyBody,
 } from "./wa_automatedReply.schema.js";
 import { declareAccess } from "../../../authz/registry.js";
@@ -44,7 +49,7 @@ export async function waAutomatedReplyRoutes(fastify: FastifyInstance) {
   );
   fastify.get("/message/:id", getAutomatedRepliesMessagIdHandler);
   fastify.get("/", getAllAutomatedRepliesByOrgIdHandler);
-  fastify.post<{ Body: CreateAutomatedReplySchema }>("/", {}, createAutomatedReplyHandler);
+  fastify.post("/", { schema: { body: createAutomatedReplySchema } }, createAutomatedReplyHandler);
   fastify.post(
     "/clone/:waAutomatedReplyId",
     {
@@ -55,12 +60,25 @@ export async function waAutomatedReplyRoutes(fastify: FastifyInstance) {
     },
     cloneAutomatedReplyHandler,
   );
-  fastify.get("/:waAutomatedReplyId", getAutomatedRepliesByIdHandler);
-  fastify.put("/:waAutomatedReplyId", updateAutomatedReplyHandler);
-  fastify.delete("/:waAutomatedReplyId", deleteAutomatedReplyHandler);
+  fastify.get(
+    "/:waAutomatedReplyId",
+    { schema: { params: byWaAutomatedReplyIdParams } },
+    getAutomatedRepliesByIdHandler,
+  );
+  fastify.put(
+    "/:waAutomatedReplyId",
+    { schema: { params: byWaAutomatedReplyIdParams, body: updateAutomatedReplySchema } },
+    updateAutomatedReplyHandler,
+  );
+  fastify.delete(
+    "/:waAutomatedReplyId",
+    { schema: { params: byWaAutomatedReplyIdParams } },
+    deleteAutomatedReplyHandler,
+  );
   fastify.post<{ Params: ByWaAutomatedReplyIdParams; Body: InitiateAutomatedReplyBody }>(
     "/initiate/:waAutomatedReplyId",
     {
+      schema: { params: byWaAutomatedReplyIdParams, body: initiateAutomatedReplyBody },
       preHandler: verifyAutomationTriggerLimitHandler,
     },
     initiateAutomatedReplyByIdHandler,

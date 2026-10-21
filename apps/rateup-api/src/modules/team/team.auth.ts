@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { inScope } from "../../authz/scope.js";
+import { teamInScope } from "../../authz/scope.js";
 import { EditTeamInput, IdParamInput } from "./team.schema.js";
 import { enforcePlanLimit } from "../subscription/planLimits.js";
 
@@ -13,8 +13,10 @@ export async function verifyTeamAdminAccess(
   const teamId = request.params.id;
   const actor = request.actor;
 
-  // Managing a team takes the permission and, for a team-scoped role, membership of it.
-  const hasAccess = actor ? actor.can("teams.manage_members") && inScope(actor, teamId) : false;
+  // Managing a team takes the permission, a team of the caller's own org and, for a
+  // team-scoped role, membership of it.
+  const hasAccess =
+    actor && actor.can("teams.manage_members") ? await teamInScope(actor, teamId) : false;
 
   if (!hasAccess) {
     reply.code(403).send({ message: "You don't have team admin access" });
@@ -40,7 +42,28 @@ export async function verifyTeamAccess(
     reply.code(400).send({ message: "No teamId found in params or body" });
     return;
   }
-  const hasAccess = request.actor ? inScope(request.actor, teamId) : false;
+  // The team must be the caller's org's: inScope alone admits any id for an org-wide role.
+  const hasAccess = request.actor ? await teamInScope(request.actor, teamId) : false;
+  if (!hasAccess) {
+    reply.code(403).send({ message: "You don't have access to this team" });
+  }
+}
+
+/**
+ * The team named in the path (`:teamId` or `:id`) must be the caller's org's and inside
+ * their team scope. For routes whose permission is checked by the root hook but whose team
+ * id would otherwise reach the service unchecked.
+ */
+export async function verifyTeamParamInScope(
+  request: FastifyRequest<{ Params?: { teamId?: string; id?: string } & Record<string, unknown> }>,
+  reply: FastifyReply,
+) {
+  const teamId = request.params?.teamId ?? request.params?.id;
+  if (!teamId) {
+    reply.code(400).send({ message: "No team id in the path" });
+    return;
+  }
+  const hasAccess = request.actor ? await teamInScope(request.actor, teamId) : false;
   if (!hasAccess) {
     reply.code(403).send({ message: "You don't have access to this team" });
   }

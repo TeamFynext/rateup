@@ -140,9 +140,7 @@ export async function handleInstagramComment(
     return;
   }
 
-  log.info(
-    `[Instagram] Received ${event} from igsId ${igsId} (${from.username}): "${text}" (comment: ${commentId})`,
-  );
+  log.trace({ event, igsId, commentId }, "[Instagram] Comment event received");
 
   // Resolved once, here, rather than every time an agent opens the ticket: a
   // comment carries only the media's numeric id, and an instagram.com/p/ URL
@@ -354,7 +352,7 @@ export async function handleInstagramPostback(
   }
 
   try {
-    log.info(`[Instagram] Postback received from user ${sender.id}: ${postback.payload}`);
+    log.trace({ senderId: sender.id }, "[Instagram] Postback received");
 
     const messageBody = {
       type: "postback",
@@ -433,7 +431,7 @@ export async function handleInstagramReferral(
   }
 
   try {
-    log.info(`[Instagram] Referral received from user ${sender.id}: ${referralText}`);
+    log.trace({ senderId: sender.id }, "[Instagram] Referral received");
 
     const messageBody = {
       type: "referral",

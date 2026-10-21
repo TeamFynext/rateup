@@ -359,10 +359,10 @@ export async function registerTemplatesInDbHandler(
       return;
     }
     await registerTemplatesInDb(request.body, orgAndRole.orgId);
-    reply.code(200);
+    reply.code(200).send({ success: true });
   } catch (e) {
     log.error({ err: e }, "Error registering templates");
-    reply.code(500);
+    reply.code(500).send({ message: "Failed to register templates" });
   }
 }
 

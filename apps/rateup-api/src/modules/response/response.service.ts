@@ -690,24 +690,19 @@ export async function createResponse(
       throw new Error("ALREADY_RESPONDED");
     }
   }
-  const { phone, contactId: contact, ...rest } = input;
-  let contactId = contact;
-  if (phone) {
+  const { phone, contactId: requestedContactId, ...rest } = input;
+  // A contact is only ever attached from the survey's own org: a contact id (or phone)
+  // from anywhere else would put another org's customer in this survey's results.
+  let contactId: string | undefined;
+  if (phone || requestedContactId) {
     const surveyTeamMap = await prisma.surveyTeamMap.findFirst({
-      where: {
-        id: input.surveyTeamMapId,
-      },
-      include: {
-        team: {
-          select: {
-            orgId: true,
-          },
-        },
-      },
+      where: { id: input.surveyTeamMapId },
+      include: { team: { select: { orgId: true } } },
     });
-    const contact = surveyTeamMap
+    const orgId = surveyTeamMap?.team?.orgId;
+    const contact = orgId
       ? await prisma.contact.findFirst({
-          where: { phone: phone, orgId: surveyTeamMap.team.orgId },
+          where: phone ? { phone, orgId } : { id: requestedContactId, orgId },
           select: { id: true },
         })
       : null;
@@ -715,7 +710,8 @@ export async function createResponse(
       log.error({
         message: "no contact found",
         phone,
-        orgId: surveyTeamMap?.team?.orgId,
+        contactId: requestedContactId,
+        orgId,
       });
     contactId = contact?.id;
   }
@@ -985,8 +981,10 @@ export async function getResponseSummary(
   type: ResponseSummaryType,
   questionId: string,
   teamId?: string,
+  teamIds?: string[],
 ) {
-  const allResponses = await getAllResponses(surveyId);
+  // Only the answers of teams the caller can see go to the model.
+  const allResponses = await getAllResponses(surveyId, teamIds ?? []);
 
   const aiResponseSummary = await getAIResponseSummaryBySurveyId(surveyId, questionId);
 
@@ -1096,8 +1094,14 @@ export async function getResponseSummary(
   return true;
 }
 
-export async function exportContactResponseToContacts(surveyId: string, orgId: string) {
-  const allResponse = await getAllResponses(surveyId);
+export async function exportContactResponseToContacts(
+  surveyId: string,
+  orgId: string,
+  teamIds: string[],
+) {
+  // Only the caller's teams: a team-scoped member exports their own teams' respondents.
+  const allResponse = await getAllResponses(surveyId, teamIds);
+  if (!allResponse.length) return;
   const surveyTitle = allResponse[0].survey.title;
   const contactResponses = allResponse.map((r) => ({
     team: {
@@ -1154,7 +1158,7 @@ export async function sendResponseToWebhook(
   responseObj: Awaited<ReturnType<typeof createResponse>>,
   orgId: string,
 ) {
-  if (!hasFeature(orgId, SubscriptionFeaturePathName.Webhook)) {
+  if (!(await hasFeature(orgId, SubscriptionFeaturePathName.Webhook))) {
     return;
   }
   const endpoint = responseObj.surveyTeamMap.survey.responseWebhookEndpoint;
@@ -1273,14 +1277,63 @@ interface SurveyResponseRawRow {
   phone: string | null;
 }
 
-export async function getSurveyResponseBySurveyId(
-  surveyId: string,
-  teamIds: string[],
-  filter: ResponseFilterQuery,
-) {
+/** `%value%` for a LIKE, with the value's own wildcards matched literally. */
+function likeContains(value: string): string {
+  return `%${value.replace(/[\\%_]/g, (char) => `\\${char}`)}%`;
+}
+
+/** ISO bound for a `dateRange`/`createdAt` filter, or null when the input is not a date. */
+function dayBound(value: string, edge: "start" | "end", utcDay = false): string | null {
+  const parsed = utcDay ? dayjs.utc(value) : dayjs(value);
+  if (!parsed.isValid()) return null;
+  return (edge === "start" ? parsed.startOf("day") : parsed.endOf("day")).toISOString();
+}
+
+/** One question's answer filter, matched against any element of `sr.responses`. */
+function questionFilterSql(questionId: string, search: string): Prisma.Sql {
+  const rawSearch = (search || "").trim();
+  if (rawSearch.includes(",")) {
+    const values = Prisma.join(rawSearch.split(","));
+    return Prisma.sql`EXISTS (
+        SELECT 1
+        FROM jsonb_array_elements(to_jsonb(sr."responses")) AS responseobj
+        WHERE
+          responseobj->>'questionId' = ${questionId}
+          AND (
+            (s."type" = ${SurveyType.WaFlow} AND responseobj->>'response' IN (${values}))
+            OR
+            responseobj->'response'->>(responseobj->>'type') IN (${values})
+          )
+      )`;
+  }
+  const isDateSearch = /^\d{4}-\d{2}-\d{2}$/.test(rawSearch);
+  const waFlowMatch = isDateSearch
+    ? Prisma.sql`LEFT(responseobj->>'response', 10) = ${rawSearch}`
+    : Prisma.sql`cast(responseobj->'response' AS text) LIKE ${likeContains(rawSearch)}`;
+  const answerMatch = isDateSearch
+    ? Prisma.sql`LEFT(responseobj->'response'->>(responseobj->>'type'), 10) = ${rawSearch}`
+    : Prisma.sql`responseobj->'response'->>(responseobj->>'type') LIKE ${likeContains(rawSearch)}`;
+  return Prisma.sql`EXISTS (
+        SELECT 1
+        FROM jsonb_array_elements(to_jsonb(sr."responses")) AS responseobj
+        WHERE
+          responseobj->>'questionId' = ${questionId}
+          AND (
+            (s."type" = ${SurveyType.WaFlow} AND ${waFlowMatch})
+            OR
+            ${answerMatch}
+          )
+      )`;
+}
+
+/**
+ * The listing's filter as `AND …` fragments. Every value from the query string is a bound
+ * parameter; nothing request-derived becomes SQL text.
+ */
+export function buildResponseFilterSql(filter: ResponseFilterQuery): Prisma.Sql {
   const {
-    page,
-    limit,
+    page: _page,
+    limit: _limit,
     surveyTeamMapIds,
     language,
     tag,
@@ -1288,9 +1341,77 @@ export async function getSurveyResponseBySurveyId(
     dateRange,
     campaignIds,
     mobile,
-    desc = "true",
-    ...rest
+    desc: _desc,
+    createdAt: createdAtFilter,
+    ...questionFilters
   } = filter;
+
+  const clauses: Prisma.Sql[] = [];
+  if (surveyTeamMapIds?.length) {
+    clauses.push(
+      Prisma.sql`st.id IN (${Prisma.join(surveyTeamMapIds.map((id) => Prisma.sql`${id}::uuid`))})`,
+    );
+  }
+  if (tag?.length) {
+    clauses.push(Prisma.sql`LOWER(sr."tag") LIKE LOWER(${likeContains(tag)})`);
+  }
+  if (language?.length) {
+    clauses.push(Prisma.sql`sr."language" = ${language}`);
+  }
+  if (contactIds?.length) {
+    clauses.push(
+      Prisma.sql`sr."contactId" IN (${Prisma.join(contactIds.map((id) => Prisma.sql`${id}::uuid`))})`,
+    );
+  }
+  if (campaignIds?.length) {
+    clauses.push(Prisma.sql`EXISTS (
+      SELECT 1 FROM "CampaignParticipant" cp
+      WHERE cp."campaignId" IN (${Prisma.join(campaignIds.map((id) => Prisma.sql`${id}::uuid`))})
+      AND cp."contactId" = sr."contactId"
+    )`);
+  }
+  if (dateRange?.length) {
+    const [startDate, endDate] = dateRange.split(",");
+    const from = startDate ? dayBound(startDate, "start") : null;
+    const to = endDate ? dayBound(endDate, "end") : null;
+    if (from) clauses.push(Prisma.sql`sr."createdAt" >= ${from}::timestamp`);
+    if (to) clauses.push(Prisma.sql`sr."createdAt" <= ${to}::timestamp`);
+  }
+  if (mobile?.length) {
+    clauses.push(Prisma.sql`c."phone" LIKE ${likeContains(mobile)}`);
+  }
+  if (createdAtFilter?.length) {
+    const from = dayBound(createdAtFilter, "start", true);
+    const to = dayBound(createdAtFilter, "end", true);
+    if (from && to) {
+      clauses.push(
+        Prisma.sql`sr."createdAt" >= ${from}::timestamp AND sr."createdAt" <= ${to}::timestamp`,
+      );
+    }
+  }
+
+  const answerClauses = Object.entries(questionFilters)
+    .filter((entry): entry is [string, string] => typeof entry[1] === "string")
+    .map(([questionId, search]) => questionFilterSql(questionId, search));
+  if (answerClauses.length) {
+    clauses.push(Prisma.sql`EXISTS (
+        SELECT 1
+        FROM jsonb_array_elements(to_jsonb(sr."responses")) AS responseobj
+        WHERE
+          ${Prisma.join(answerClauses, " AND ")}
+      )`);
+  }
+
+  if (!clauses.length) return Prisma.empty;
+  return Prisma.sql`AND ${Prisma.join(clauses, " AND ")}`;
+}
+
+export async function getSurveyResponseBySurveyId(
+  surveyId: string,
+  teamIds: string[],
+  filter: ResponseFilterQuery,
+) {
+  const { page, limit, desc = "true" } = filter;
 
   let pagination = {
     skip: 0,
@@ -1302,119 +1423,6 @@ export async function getSurveyResponseBySurveyId(
       take: Number(limit),
     };
   }
-  let filterQuery = "";
-  if (surveyTeamMapIds?.length) {
-    const mapIds = surveyTeamMapIds
-      ?.split(",")
-      .map((c) => `'${c}'::uuid`)
-      .join(",");
-    filterQuery += ` AND st.id IN (${mapIds})`;
-  }
-  if (tag?.length) {
-    filterQuery += ` AND sr."tags" LIKE '%LOWER(${tag})%'`;
-  }
-  if (language?.length) {
-    filterQuery += ` AND sr."language" = '${language}'`;
-  }
-
-  if (contactIds?.length) {
-    const contacts = contactIds
-      .split(",")
-      .map((c) => `'${c}'::uuid`)
-      .join(",");
-    filterQuery += ` AND sr."contactId" IN (${contacts})`;
-  }
-
-  if (campaignIds?.length) {
-    const campaigns = campaignIds
-      .split(",")
-      .map((c) => `'${c}'::uuid`)
-      .join(",");
-    filterQuery += ` AND EXISTS (
-      SELECT 1 FROM "CampaignParticipant" cp
-      WHERE cp."campaignId" IN (${campaigns})
-      AND cp."contactId" = sr."contactId"
-    )`;
-  }
-
-  if (dateRange?.length) {
-    const [startDate, endDate] = dateRange?.split(",") || [];
-    if (startDate)
-      filterQuery += ` AND sr."createdAt" >= '${dayjs(startDate).startOf("day").toISOString()}'`;
-    if (endDate)
-      filterQuery += ` AND sr."createdAt" <= '${dayjs(endDate).endOf("day").toISOString()}'`;
-  }
-
-  if (mobile?.length) {
-    filterQuery += ` AND c."phone" LIKE '%${mobile}%'`;
-  }
-
-  if (Object.keys(rest)?.length) {
-    const { createdAt: createdAtFilter, ...responseFilters } = rest as Record<string, string>;
-
-    if (createdAtFilter?.length) {
-      const startDate = dayjs
-        .utc(createdAtFilter)
-        .startOf("day")
-        .toISOString()
-        .replaceAll("'", "''");
-      const endDate = dayjs.utc(createdAtFilter).endOf("day").toISOString().replaceAll("'", "''");
-      filterQuery += ` AND sr."createdAt" >= '${startDate}' AND sr."createdAt" <= '${endDate}'`;
-    }
-
-    let query: string[] = [];
-    Object.entries(responseFilters).forEach(([questionId, search]) => {
-      const rawSearch = (search || "").trim();
-      const isDateSearch = /^\d{4}-\d{2}-\d{2}$/.test(rawSearch);
-      let escapedSearch = rawSearch.replaceAll("'", "''");
-      const escapedQuestionId = questionId.replaceAll("'", "''");
-      if (escapedSearch.includes(",")) {
-        escapedSearch = escapedSearch
-          .split(",")
-          .map((i) => `'${i}'`)
-          .join(",");
-        query.push(`EXISTS (
-        SELECT 1
-        FROM jsonb_array_elements(to_jsonb(sr."responses")) AS responseobj
-        WHERE
-          responseobj->>'questionId' = '${escapedQuestionId}'
-          AND (
-            (s."type" = '${SurveyType.WaFlow}' AND responseobj->>'response' IN (${escapedSearch}))
-            OR
-            responseobj->'response'->>(responseobj->>'type') IN (${escapedSearch})
-          )
-      )`);
-      } else {
-        query.push(`EXISTS (
-        SELECT 1
-        FROM jsonb_array_elements(to_jsonb(sr."responses")) AS responseobj
-        WHERE
-          responseobj->>'questionId' = '${escapedQuestionId}'
-          AND (
-            (s."type" = '${SurveyType.WaFlow}' AND ${
-              isDateSearch
-                ? `LEFT(responseobj->>'response', 10) = '${escapedSearch}'`
-                : `cast(responseobj->'response' AS text) LIKE '%${escapedSearch}%'`
-            })
-            OR
-            ${
-              isDateSearch
-                ? `LEFT(responseobj->'response'->>(responseobj->>'type'), 10) = '${escapedSearch}'`
-                : `responseobj->'response'->>(responseobj->>'type') LIKE '%${escapedSearch}%'`
-            }
-          )
-      )`);
-      }
-    });
-    if (query.length) {
-      filterQuery += ` AND EXISTS (
-        SELECT 1
-        FROM jsonb_array_elements(to_jsonb(sr."responses")) AS responseobj
-        WHERE
-          ${query.join(` AND `)}
-      )`;
-    }
-  }
 
   const responses = await prisma.$queryRaw<
     SurveyResponseRawRow[]
@@ -1424,7 +1432,7 @@ export async function getSurveyResponseBySurveyId(
   LEFT JOIN "SurveyTeamMap" st on st.id = sr."surveyTeamMapId"
   LEFT JOIN "Survey" s ON s.id = st."surveyId"
   WHERE st."surveyId" = ${surveyId}::uuid AND st."teamId" = ANY(${teamIds}::uuid[])
-  ${filterQuery?.length ? Prisma.raw(filterQuery) : Prisma.empty}
+  ${buildResponseFilterSql(filter)}
   ORDER BY sr."createdAt" ${desc === "true" ? Prisma.sql`DESC` : Prisma.sql`ASC`}
   LIMIT ${pagination.take} OFFSET ${pagination.skip}
   ;`;

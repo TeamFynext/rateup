@@ -34,6 +34,19 @@ vi.mock("../integrations.service.js", () => ({
 
 vi.mock("../../org/org.services.js", () => ({ pauseOrg: vi.fn() }));
 
+const redis = vi.hoisted(() => {
+  const stub: Record<string, unknown> = {
+    set: vi.fn(async () => "OK"),
+    del: vi.fn(async () => 1),
+    on: vi.fn(),
+    subscribe: vi.fn(async () => undefined),
+    publish: vi.fn(async () => 0),
+  };
+  stub.duplicate = vi.fn(() => stub);
+  return stub as { set: ReturnType<typeof vi.fn>; del: ReturnType<typeof vi.fn> };
+});
+vi.mock("../../../utils/redisConnection.js", () => ({ default: redis }));
+
 vi.mock("./shopify.config.js", () => ({
   default: {
     config: { scopes: { equals: vi.fn(() => true) } },
@@ -116,7 +129,13 @@ import { handleShopifyOrderEvents } from "./shopify.orders.js";
 import { handleShopifyAppUnistalled } from "./shopify.inbound.js";
 import { registerShopifyWebhook, registerWebhookByTopic } from "./shopify.webhooks.js";
 import { resolveShopifyPathValue } from "./shopify.mapping.js";
-import { updateShopifyIntegrationByShopHandler } from "./shopify.controller.js";
+import {
+  deleteIntegrationByShopHandler,
+  getShopifyAuthCallbackHandler,
+  updateShopifyIntegrationByShopHandler,
+} from "./shopify.controller.js";
+import { mintShopifyClaimToken, verifyShopifyClaimToken } from "./shopify.claim.js";
+import shopifyConfig from "./shopify.config.js";
 import { enqueueCommerceOrderLoyalty as enqueueShopifyOrderLoyalty } from "../commerce/loyalty.js";
 import { checkAndExecuteRuleByTriggerEvent } from "../../whatsapp/automatedReply/wa_automatedReply.utils.js";
 import webhookHandlers, {
@@ -196,15 +215,22 @@ describe("updateShopifyIntegrationByShop", () => {
 });
 
 describe("updateShopifyIntegrationByShopHandler", () => {
-  test("claims a shop that no org owns yet", async () => {
-    (getIntegrationByName as unknown as Mock).mockResolvedValueOnce(null);
-    db.integration.updateMany.mockResolvedValueOnce({ count: 1 });
-    const rep = reply();
+  const NO_PENDING = { code: 404, body: { message: "No pending Shopify install for this store" } };
 
+  async function claim(body: { claimToken: string }, shop = SHOP) {
+    const rep = reply();
     await updateShopifyIntegrationByShopHandler(
-      { params: { shop: SHOP }, user: { orgId: ORG } } as never,
+      { params: { shop }, body, user: { orgId: ORG } } as never,
       rep,
     );
+    return rep;
+  }
+
+  test("claims a shop that no org owns yet, with the callback's token", async () => {
+    db.integration.updateMany.mockResolvedValueOnce({ count: 1 });
+    const claimToken = await mintShopifyClaimToken(SHOP);
+
+    const rep = await claim({ claimToken });
 
     expect(db.integration.updateMany.mock.calls[0][0]).toEqual({
       where: { credential: { path: ["session", "shop"], equals: SHOP }, orgId: null },
@@ -213,32 +239,54 @@ describe("updateShopifyIntegrationByShopHandler", () => {
     expect(answer(rep)).toEqual({ code: 200, body: { message: "success" } });
   });
 
-  test("refuses a shop another org already owns", async () => {
-    (getIntegrationByName as unknown as Mock).mockResolvedValueOnce(null);
+  test("the shop name alone no longer claims anything", async () => {
+    const rep = await claim({ claimToken: "forged.token" });
+
+    expect(db.integration.updateMany).not.toHaveBeenCalled();
+    expect(answer(rep)).toEqual(NO_PENDING);
+  });
+
+  test("a token minted for another shop does not claim this one", async () => {
+    const claimToken = await mintShopifyClaimToken("own-store.myshopify.com");
+
+    const rep = await claim({ claimToken });
+
+    expect(db.integration.updateMany).not.toHaveBeenCalled();
+    expect(answer(rep)).toEqual(NO_PENDING);
+  });
+
+  test("an expired token is refused", async () => {
+    const claimToken = await mintShopifyClaimToken(SHOP, Date.now() - 60 * 60 * 1000);
+
+    expect(verifyShopifyClaimToken(claimToken, SHOP)).toBeNull();
+    expect(answer(await claim({ claimToken }))).toEqual(NO_PENDING);
+  });
+
+  test("a token claims once", async () => {
+    const claimToken = await mintShopifyClaimToken(SHOP);
+    redis.del.mockResolvedValueOnce(1).mockResolvedValueOnce(0);
+
+    await claim({ claimToken });
+    const second = await claim({ claimToken });
+
+    expect(db.integration.updateMany).toHaveBeenCalledTimes(1);
+    expect(answer(second)).toEqual(NO_PENDING);
+  });
+
+  test("a shop another org already owns answers like an unknown one", async () => {
     db.integration.updateMany.mockResolvedValueOnce({ count: 0 });
-    const rep = reply();
+    const claimToken = await mintShopifyClaimToken(SHOP);
 
-    await updateShopifyIntegrationByShopHandler(
-      { params: { shop: SHOP }, user: { orgId: ORG } } as never,
-      rep,
-    );
-
-    expect(answer(rep)).toEqual({
-      code: 409,
-      body: { message: "This store is already linked to an organisation" },
-    });
+    expect(answer(await claim({ claimToken }))).toEqual(NO_PENDING);
   });
 
   test("does nothing when the caller's org already holds that shop", async () => {
     (getIntegrationByName as unknown as Mock).mockResolvedValueOnce({
       credential: { session: { shop: SHOP } },
     });
-    const rep = reply();
+    const claimToken = await mintShopifyClaimToken(SHOP);
 
-    await updateShopifyIntegrationByShopHandler(
-      { params: { shop: SHOP }, user: { orgId: ORG } } as never,
-      rep,
-    );
+    const rep = await claim({ claimToken });
 
     expect(db.integration.updateMany).not.toHaveBeenCalled();
     expect(answer(rep)).toEqual({ code: 200, body: "success" });
@@ -248,40 +296,51 @@ describe("updateShopifyIntegrationByShopHandler", () => {
     (getIntegrationByName as unknown as Mock).mockResolvedValueOnce({
       credential: { session: { shop: "own-store.myshopify.com" } },
     });
-    const rep = reply();
+    const claimToken = await mintShopifyClaimToken(SHOP);
 
-    await updateShopifyIntegrationByShopHandler(
-      { params: { shop: SHOP }, user: { orgId: ORG } } as never,
-      rep,
-    );
+    const rep = await claim({ claimToken });
 
     expect(deleteIntegrationByName).not.toHaveBeenCalled();
     expect(db.integration.updateMany).not.toHaveBeenCalled();
     expect(answer(rep).code).toBe(409);
   });
 
-  test("the claim itself carries the ownership condition, not a prior read", async () => {
-    (getIntegrationByName as unknown as Mock).mockResolvedValueOnce(null);
-    db.integration.updateMany.mockResolvedValueOnce({ count: 1 });
-
-    await updateShopifyIntegrationByShopHandler(
-      { params: { shop: SHOP }, user: { orgId: ORG } } as never,
-      reply(),
-    );
-
-    expect(db.integration.updateMany.mock.calls[0][0].where.orgId).toBeNull();
-  });
-
-  test("returns the bare error object when the write fails", async () => {
+  test("returns 500 when the write fails", async () => {
     db.integration.updateMany.mockRejectedValueOnce(new Error("db down"));
+    const claimToken = await mintShopifyClaimToken(SHOP);
+
+    expect(answer(await claim({ claimToken })).code).toBe(500);
+  });
+});
+
+describe("getShopifyAuthCallbackHandler", () => {
+  test("redirects to the frontend with a claim token for the shop", async () => {
+    (shopifyConfig!.auth.callback as unknown as Mock).mockResolvedValueOnce({
+      session: { shop: SHOP, id: "offline_" + SHOP, accessToken: "tok" },
+    });
     const rep = reply();
 
-    await updateShopifyIntegrationByShopHandler(
+    await getShopifyAuthCallbackHandler({ query: { shop: SHOP } } as never, rep);
+
+    const url = new URL(rep.redirect.mock.calls[0][0]);
+    expect(url.pathname).toBe("/auth/shopify");
+    expect(url.searchParams.get("shop")).toBe(SHOP);
+    expect(verifyShopifyClaimToken(url.searchParams.get("claim")!, SHOP)).not.toBeNull();
+  });
+});
+
+describe("deleteIntegrationByShopHandler", () => {
+  test("refuses a shop held by another org", async () => {
+    db.integration.findFirst.mockResolvedValueOnce({ orgId: "other-org", credential: {} });
+    const rep = reply();
+
+    await deleteIntegrationByShopHandler(
       { params: { shop: SHOP }, user: { orgId: ORG } } as never,
       rep,
     );
 
-    expect(answer(rep).code).toBe(500);
+    expect(db.integration.deleteMany).not.toHaveBeenCalled();
+    expect(answer(rep).code).toBe(404);
   });
 });
 
@@ -621,7 +680,7 @@ describe("resolveShopifyPathValue", () => {
 
   // NOTE: the resolved value is logged at info for every webhook variable, so
   // customer names, addresses and phone numbers land in the application log.
-  test("logs the resolved value at info", async () => {
+  test("never logs the resolved value, which is customer data", async () => {
     const { log } = await import("../../../utils/logger.js");
 
     resolveShopifyPathValue(
@@ -629,7 +688,8 @@ describe("resolveShopifyPathValue", () => {
       "billing_address.phone",
     );
 
-    expect((log.info as unknown as Mock).mock.calls[0][0]).toContain("919876543210");
+    const logged = JSON.stringify(Object.values(log).flatMap((fn) => (fn as Mock).mock.calls));
+    expect(logged).not.toContain("919876543210");
   });
 
   test("a lodash path can reach any field of the webhook body", () => {
@@ -818,5 +878,29 @@ describe("handleShopifyOrderEvents — which paths a missing phone stops", () =>
     expect(enqueueShopifyOrderLoyalty).toHaveBeenCalledWith(
       expect.objectContaining({ amount: 3200 }),
     );
+  });
+});
+
+describe("Shopify webhook shop binding", () => {
+  test("a body naming another shop than the header is dropped", async () => {
+    await customersRedactHandler(
+      "CUSTOMERS_REDACT",
+      SHOP,
+      JSON.stringify({ shop_domain: "other.myshopify.com", customer: { id: 1 } }),
+      "wh-x",
+    );
+
+    expect(webhookQueue.add).not.toHaveBeenCalled();
+  });
+
+  test("a body naming the same shop is queued", async () => {
+    await shopRedactRequestHandler(
+      "SHOP_REDACT",
+      SHOP,
+      JSON.stringify({ shop_domain: SHOP }),
+      "wh-y",
+    );
+
+    expect(webhookQueue.add).toHaveBeenCalledOnce();
   });
 });

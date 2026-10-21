@@ -12,7 +12,7 @@ vi.mock("../modules/org/orgSuspension.js", async (importOriginal) => {
 });
 vi.mock("./actor.js", async (importOriginal) => {
   const actual = await importOriginal<typeof import("./actor.js")>();
-  return { ...actual, loadActor: vi.fn() };
+  return { ...actual, loadActor: vi.fn(), isUserBlocked: vi.fn(async () => false) };
 });
 
 import Session from "supertokens-node/recipe/session/index.js";
@@ -20,7 +20,7 @@ import { auditLogHook } from "../utils/auditLog.js";
 import { log } from "../utils/logger.js";
 import { getOrgIdAndRole } from "../modules/user/user.service.js";
 import { isOrgSuspended } from "../modules/org/orgSuspension.js";
-import { buildActor, loadActor } from "./actor.js";
+import { buildActor, isUserBlocked, loadActor } from "./actor.js";
 import { attachSessionActor, authorize, isAuditOnly, routeModule } from "./authorize.js";
 import type { RoleKey } from "./roles.js";
 
@@ -37,6 +37,7 @@ function session(payload: Record<string, unknown> = PAYLOAD, userId = "user-1") 
     getUserId: () => userId,
     getAccessTokenPayload: () => payload,
     mergeIntoAccessTokenPayload: vi.fn(),
+    revokeSession: vi.fn(),
   };
 }
 
@@ -191,6 +192,19 @@ describe("authorize - permission routes", () => {
 });
 
 describe("attachSessionActor", () => {
+  test("refuses a paused or removed account and revokes the session", async () => {
+    const s = session();
+    getSession.mockResolvedValue(s);
+    (isUserBlocked as unknown as Mock).mockResolvedValueOnce(true);
+    const req = request({ access: "session" });
+    const rep = reply();
+    expect(await attachSessionActor(req, rep)).toBe(false);
+    expect(rep.statusCode).toBe(401);
+    expect(s.revokeSession).toHaveBeenCalled();
+    expect(loadActorMock).not.toHaveBeenCalled();
+    expect(req.actor).toBeUndefined();
+  });
+
   test("answers 401 when there is no usable session", async () => {
     getSession.mockRejectedValue(new Error("no session"));
     const rep = reply();

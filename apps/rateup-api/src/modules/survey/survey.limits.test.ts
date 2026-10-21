@@ -125,8 +125,9 @@ describe("the monthly form-response limit", () => {
       expect(sent.body.reason).toBe("form_closed");
     });
 
-    test("exempts WhatsApp, which is metered as conversations", async () => {
-      // Counting it here as well would take the same usage off the org twice.
+    test("a client-claimed WhatsApp platform no longer skips the allowance (SURV-10)", async () => {
+      // WhatsApp submissions never come through this public route; the body flag is the
+      // caller's word and used to let anyone flood a closed form.
       usage(100);
       const { reply, sent } = replyStub();
 
@@ -135,8 +136,7 @@ describe("the monthly form-response limit", () => {
         reply as never,
       );
 
-      expect(sent.code).toBeUndefined();
-      expect(prisma.surveyTeamMap.findUnique).not.toHaveBeenCalled();
+      expect(sent.code).toBe(403);
     });
 
     test("files the response when the org has no usage row to compare against", async () => {

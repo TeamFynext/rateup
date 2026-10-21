@@ -17,7 +17,7 @@ const phoneSchema = z
   .pipe(z.string().regex(/^\d{6,15}$/, "Phone must be digits with the country code"));
 
 export const automationHookBodySchema = z.object({
-  url: z.url().refine((u) => u.startsWith("https://"), { message: "Hook URL must use HTTPS" }),
+  url: z.url({ protocol: /^https$/, error: "Hook URL must use HTTPS" }).max(2048),
   event: z.enum(ZapierTriggers),
 });
 

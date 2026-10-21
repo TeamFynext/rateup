@@ -1,6 +1,7 @@
 import type { Actor } from "./actor.js";
 import { ForbiddenError } from "./errors.js";
-import { isPermission } from "./permissions.js";
+import { API_KEY_FEATURE_NAMES, permissionsForFeatures } from "./apiKeyFeatures.js";
+import { isPermission, KEY_ONLY_PERMISSIONS } from "./permissions.js";
 import { ROLE_KEYS, ROLE_PERMISSIONS, type RoleKey } from "./roles.js";
 
 function isSubset<T>(inner: ReadonlySet<T>, outer: ReadonlySet<T>): boolean {
@@ -53,6 +54,32 @@ export function assertCanGrant(actor: Actor, target: RoleKey): void {
         reason: "permission",
         permission: "members.manage_roles",
       },
+    );
+  }
+}
+
+/**
+ * What a member may put on an API key. A key is org-wide (principal.ts gives it team scope
+ * ALL), so a team-scoped member cannot mint or widen one at all; otherwise the key may carry
+ * only permissions the member holds, plus the key-only ones (`widget.connect`), which no role
+ * bundles. `scopes` is the stored list: empty is a legacy full-access key, whose reach is
+ * every partner API feature (keys open only token routes), so rotating one asks for those.
+ */
+export function assertCanGrantKeyScopes(actor: Actor, scopes: readonly string[]): void {
+  if (!actor.scope.all) {
+    throw new ForbiddenError(
+      "API keys reach every team; you can only manage keys for the teams you belong to.",
+      { reason: "scope", permission: "api_tokens.manage" },
+    );
+  }
+  const asked = scopes.length > 0 ? scopes : permissionsForFeatures(API_KEY_FEATURE_NAMES);
+  const beyond = asked.filter(
+    (p) => !isPermission(p) || (!KEY_ONLY_PERMISSIONS.has(p) && !actor.permissions.has(p)),
+  );
+  if (beyond.length > 0) {
+    throw new ForbiddenError(
+      `This key would hold ${beyond.join(", ")}, which you do not hold yourself.`,
+      { reason: "permission", permission: isPermission(beyond[0]) ? beyond[0] : undefined },
     );
   }
 }

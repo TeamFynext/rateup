@@ -1,12 +1,12 @@
 import { z } from "zod";
 
 const getUnsplashImageQueryStringSchema = z.object({
-  page: z.coerce.number().optional(),
-  query: z.string().trim().optional(),
-  limit: z.coerce.number().optional(),
+  page: z.coerce.number().int().min(0).max(1000).optional(),
+  query: z.string().trim().max(200).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
 });
 const triggerDownloadUnsplashImageSchema = z.object({
-  downloadLocation: z.string(),
+  downloadLocation: z.string().max(2048),
 });
 
 export type getUnsplashImageQueryString = z.infer<typeof getUnsplashImageQueryStringSchema>;

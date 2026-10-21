@@ -17,7 +17,8 @@ import { log } from "../../../utils/logger.js";
  * Shopify's connect flow starts in Shopify, not in RateUp: the merchant installs
  * the app, Shopify calls `/api/public/integrations/shopify/auth`, and the
  * callback saves the shop with no org. The merchant's RateUp login then claims
- * it (`PUT /integrations/shopify/session/:shop`). That is why Shopify keeps its
+ * it (`PUT /integrations/shopify/session/:shop`) with the single-use claim token
+ * the callback put in its redirect (`shopify.claim.ts`). That is why Shopify keeps its
  * own routes rather than the shared OAuth flow, which signs the org into the
  * state before the consent screen. Both URLs are registered with Shopify.
  */

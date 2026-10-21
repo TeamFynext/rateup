@@ -1,17 +1,24 @@
-import { FastifyInstance } from "fastify";
+import { FastifyInstance, FastifyRequest } from "fastify";
 import {
   completedSurveyHandler,
   fetchGoogleUrlBySurveyIdHandler,
   getPhoneFromSurveyTeamMapIdHandler,
   getPublicSurveyByIdHandler,
-  getSurveyVariablesHandler,
+  getPublicSurveyVariablesHandler,
   reviewPageVisitedOnSurveyHandler,
   startedSurveyHandler,
   verifySurveyPasswordHandler,
   visitedSurveyHandler,
 } from "./survey.controller.js";
 import { verifySurveyMonthlyLimitRestriction } from "./survey.auth.js";
-import { getSurveyByIdParamsSchema, idParamsSchema } from "./survey.schema.js";
+import {
+  getSurveyByIdParamsSchema,
+  getSurveyPublicResponseSchema,
+  idParamsSchema,
+  updateSurveyPasswordRequestSchema,
+  uuidParamsSchema,
+} from "./survey.schema.js";
+import { rateLimit } from "../../utils/rateLimit.js";
 import { bySurveyTeamMapIdParamsSchema } from "../team/team.schema.js";
 
 export async function surveyPublicRoutes(server: FastifyInstance) {
@@ -21,6 +28,7 @@ export async function surveyPublicRoutes(server: FastifyInstance) {
       preHandler: [verifySurveyMonthlyLimitRestriction],
       schema: {
         params: getSurveyByIdParamsSchema,
+        response: { 200: getSurveyPublicResponseSchema },
       },
     },
     getPublicSurveyByIdHandler,
@@ -30,8 +38,19 @@ export async function surveyPublicRoutes(server: FastifyInstance) {
   server.post(
     "/check-password/:id",
     {
+      // A survey password is short and guessable; this is what keeps it from being
+      // tried at line rate.
+      preHandler: [
+        rateLimit<FastifyRequest<{ Params: { id: string } }>>({
+          max: 20,
+          windowSeconds: 15 * 60,
+          key: "surveyPassword",
+          keyFrom: (request) => `${request.ip || "unknown"}:${request.params.id}`,
+        }),
+      ],
       schema: {
-        params: getSurveyByIdParamsSchema,
+        params: uuidParamsSchema,
+        body: updateSurveyPasswordRequestSchema,
       },
     },
     verifySurveyPasswordHandler,
@@ -94,6 +113,6 @@ export async function surveyPublicRoutes(server: FastifyInstance) {
         params: idParamsSchema,
       },
     },
-    getSurveyVariablesHandler,
+    getPublicSurveyVariablesHandler,
   );
 }

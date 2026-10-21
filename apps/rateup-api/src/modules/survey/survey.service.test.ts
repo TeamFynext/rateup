@@ -1,11 +1,14 @@
 import dayjs from "dayjs";
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import bcrypt from "bcrypt";
+import { getSurveyPublicResponseSchema } from "./survey.schema.js";
 
 vi.mock("../../utils/prisma.js", () => ({
   default: {
     survey: {
       create: vi.fn(),
       findUnique: vi.fn(),
+      findFirst: vi.fn(),
       findMany: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
@@ -18,7 +21,7 @@ vi.mock("../../utils/prisma.js", () => ({
       createMany: vi.fn(),
       delete: vi.fn(),
     },
-    surveyStats: { findUnique: vi.fn(), findMany: vi.fn(), upsert: vi.fn() },
+    surveyStats: { findUnique: vi.fn(), findFirst: vi.fn(), findMany: vi.fn(), upsert: vi.fn() },
     surveyVariables: {
       create: vi.fn(),
       createMany: vi.fn(),
@@ -138,6 +141,8 @@ import {
 } from "./survey.service.js";
 
 const db = prisma as unknown as Record<string, any>;
+const ORG_WIDE_ACTOR = { orgId: "org-1", scope: { all: true, teamIds: [] } } as any;
+const TEAM_ACTOR = { orgId: "org-1", scope: { all: false, teamIds: ["team-1"] } } as any;
 const getTeamByIdMock = getTeamById as unknown as ReturnType<typeof vi.fn>;
 const getTeamIdsMock = getTeamIdsByUserId as unknown as ReturnType<typeof vi.fn>;
 const hasFeatureMock = hasFeature as unknown as ReturnType<typeof vi.fn>;
@@ -228,6 +233,7 @@ describe("createSurvey", () => {
       title: "Category__Template Title",
       type: SurveyType.Web,
     });
+    db.survey.findFirst.mockResolvedValue({ id: "tpl-1" });
     db.survey.findMany.mockResolvedValue([]);
     db.survey.create.mockResolvedValue({ id: "clone-1", teams: [] });
     getTeamByIdMock.mockResolvedValue({ orgId: "org-1" });
@@ -240,6 +246,53 @@ describe("createSurvey", () => {
     // Template clones drop the "Category__" prefix instead of gaining a " Copy N" suffix.
     expect(db.survey.create.mock.calls[0][0].data.title).toBe("Template Title");
     expect(res).toMatchObject({ id: "clone-1" });
+  });
+
+  test("refuses a templateId that is neither a RateUp template nor the caller's own survey", async () => {
+    process.env.SURVEY_TEMPLATES_TEAM_ID = "templates-team";
+    db.survey.findFirst.mockResolvedValue(null);
+
+    const res = await createSurvey(
+      { title: "x", teamIds: ["team-1"], templateId: "victim-survey" } as any,
+      req,
+    );
+
+    expect(res).toBe("Survey not found to duplicate");
+    expect(db.survey.create).not.toHaveBeenCalled();
+    const where = db.survey.findFirst.mock.calls[0][0].where;
+    expect(where.id).toBe("victim-survey");
+    expect(where.OR).toContainEqual({ teams: { some: { teamId: "templates-team" } } });
+    expect(where.OR).toContainEqual({ orgId: req.user.orgId });
+    delete process.env.SURVEY_TEMPLATES_TEAM_ID;
+  });
+
+  test("a template clone belongs to the caller's org and drops the source's secrets", async () => {
+    db.survey.findFirst.mockResolvedValue({ id: "tpl-1" });
+    db.survey.findUnique.mockResolvedValue({
+      id: "tpl-1",
+      orgId: "victim-org",
+      title: "Cat__T",
+      type: SurveyType.Web,
+      password: "$2b$10$abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzA",
+      responseWebhookEndpoint: "https://victim.example/hook",
+      spreadSheetId: "sheet-1",
+      aiResponseSummary: [{ questionId: "q1" }],
+      notificationEmail: "owner@victim.example",
+    });
+    db.survey.findMany.mockResolvedValue([]);
+    db.survey.create.mockResolvedValue({ id: "clone-1", teams: [] });
+    getTeamByIdMock.mockResolvedValue({ orgId: "org-1" });
+
+    await createSurvey({ title: "x", teamIds: ["team-1"], templateId: "tpl-1" } as any, req);
+
+    const data = db.survey.create.mock.calls[0][0].data;
+    expect(data.orgId).toBe("org-1");
+    expect(data.password).toBeNull();
+    expect(data.isProtected).toBe(false);
+    expect(data.responseWebhookEndpoint).toBeNull();
+    expect(data.spreadSheetId).toBeNull();
+    expect(data.aiResponseSummary).toEqual([]);
+    expect(data.notificationEmail).toBe(req.user.email);
   });
 
   test("returns null when the create helper yields nothing", async () => {
@@ -278,6 +331,30 @@ describe("cloneSurvey", () => {
     await cloneSurvey("s1", "user-1", ["team-1"]);
 
     expect(db.survey.create.mock.calls[0][0].data.title).toBe("My Survey Copy 1");
+  });
+
+  // FE-1: a template, or a row stored before write-time sanitising, is cleaned in the copy.
+  test("the copy's rich-text titles and page-theme titles are sanitised", async () => {
+    db.survey.findUnique.mockResolvedValue({
+      id: "s1",
+      title: "My Survey",
+      type: SurveyType.Web,
+      questions: [
+        { id: "q1", type: "Text", title: { English: '<p onclick="x()">Hi</p>' } },
+        { id: "w", type: "Welcome", title: {}, titleText: "<script>x()</script><h3>Hey</h3>" },
+      ],
+      webSurveyPagesTheme: { welcomeTheme: { title: { title: "<img src=x onerror=y>" } } },
+    });
+    db.survey.findMany.mockResolvedValue([]);
+    db.survey.create.mockResolvedValue({ id: "clone-1", teams: [] });
+    getTeamByIdMock.mockResolvedValue({ orgId: "org-1" });
+
+    await cloneSurvey("s1", "user-1", ["team-1"]);
+
+    const data = db.survey.create.mock.calls[0][0].data;
+    expect(data.questions[0].title).toEqual({ English: "<p>Hi</p>" });
+    expect(data.questions[1].titleText).toBe("<h3>Hey</h3>");
+    expect(data.webSurveyPagesTheme.welcomeTheme.title.title).toBe('<img src="x">');
   });
 
   test("reassigns ownership, resets timestamps and mints fresh short urls", async () => {
@@ -435,6 +512,76 @@ describe("getPublicSurveyById", () => {
     });
   });
 
+  test("returns an allow-list: no password, inbox, webhook, sheet, AI summary or owner (SURV-2)", async () => {
+    db.surveyTeamMap.findUnique.mockResolvedValue({
+      ...surveyTeamMap,
+      survey: {
+        ...surveyTeamMap.survey,
+        password: "$2b$10$hash",
+        notificationEmail: "owner@org.example",
+        responseWebhookEndpoint: "https://hooks.example/x",
+        spreadSheetId: "sheet-1",
+        aiResponseSummary: [{ questionId: "q1", summary: "people said…" }],
+        createdBy: "user-1",
+        shareSettings: { s3Key: "k" },
+        publicKey: "-----BEGIN PUBLIC KEY-----",
+        webSurveyTheme: { id: "th", name: "Default", theme: {}, orgId: "org-1" },
+      },
+    });
+    db.team.findUnique.mockResolvedValue({ org: { logo: "logo.png", name: "Org" } });
+
+    const res = await getPublicSurveyById("map-1-full-id");
+
+    for (const key of [
+      "password",
+      "notificationEmail",
+      "responseWebhookEndpoint",
+      "spreadSheetId",
+      "aiResponseSummary",
+      "createdBy",
+      "orgId",
+      "shareSettings",
+    ]) {
+      expect(res).not.toHaveProperty(key);
+    }
+    expect(res.webSurveyTheme).toEqual({ id: "th", name: "Default", theme: {} });
+    // The page encrypts answers with it; it is the public half of the key pair.
+    expect(res.publicKey).toBe("-----BEGIN PUBLIC KEY-----");
+  });
+
+  test("the public response schema strips anything not on the allow-list", () => {
+    const out = getSurveyPublicResponseSchema.parse({
+      id: "s1",
+      surveyTeamMapId: "map-1",
+      title: "T",
+      languages: ["english"],
+      questions: [],
+      active: true,
+      isPublished: true,
+      isProtected: false,
+      kioskMode: false,
+      uniqueDeviceResponse: false,
+      type: "web",
+      getLocation: false,
+      welcomePageEnabled: true,
+      skipPreview: true,
+      webSurveyAutoTransitionToNextQues: true,
+      isEncrypted: false,
+      publicKey: null,
+      redirect: {},
+      uiTextTranslations: {},
+      webSurveyPagesTheme: {},
+      surveyPublishAt: null,
+      surveyEndAt: null,
+      webSurveyTheme: null,
+      reviewPageLinks: {},
+      password: "hunter2",
+      notificationEmail: "x@y",
+    });
+    expect(out).not.toHaveProperty("password");
+    expect(out).not.toHaveProperty("notificationEmail");
+  });
+
   test("throws when the mapping is unknown", async () => {
     db.surveyTeamMap.findUnique.mockResolvedValue(null);
     await expect(getPublicSurveyById("nope")).rejects.toThrow("Could not find survey with id nope");
@@ -571,9 +718,20 @@ describe("survey listing helpers", () => {
       { id: "map-1", survey: { id: "s1", questions: [], password: "pw", title: "T" } },
     ]);
 
-    const res = await getSurveysByTeam("team-1");
+    const res = await getSurveysByTeam("team-1", ORG_WIDE_ACTOR);
 
     expect(res).toEqual([{ id: "s1", title: "T", surveyTeamMapId: "map-1" }]);
+    expect(db.surveyTeamMap.findMany.mock.calls[0][0].where).toEqual({
+      teamId: "team-1",
+      team: { orgId: "org-1" },
+    });
+  });
+
+  test("getSurveysByTeam returns nothing for a team outside the actor's scope", async () => {
+    const res = await getSurveysByTeam("other-team", TEAM_ACTOR);
+
+    expect(res).toEqual([]);
+    expect(db.surveyTeamMap.findMany).not.toHaveBeenCalled();
   });
 
   test("getSurveyByTeamMapId returns the mapped survey", async () => {
@@ -583,12 +741,17 @@ describe("survey listing helpers", () => {
 });
 
 describe("survey stats lookups", () => {
-  test("getSurveyStatsBySurveyTeamMapId reads the unique stats row", async () => {
-    db.surveyStats.findUnique.mockResolvedValue({ visited: 5 });
+  test("getSurveyStatsBySurveyTeamMapId reads the stats row of a link in the actor's org", async () => {
+    db.surveyStats.findFirst.mockResolvedValue({ visited: 5 });
 
-    await expect(getSurveyStatsBySurveyTeamMapId("map-1")).resolves.toEqual({ visited: 5 });
-    expect(db.surveyStats.findUnique).toHaveBeenCalledWith({
-      where: { surveyTeamMapId: "map-1" },
+    await expect(getSurveyStatsBySurveyTeamMapId("map-1", TEAM_ACTOR)).resolves.toEqual({
+      visited: 5,
+    });
+    expect(db.surveyStats.findFirst).toHaveBeenCalledWith({
+      where: {
+        surveyTeamMapId: "map-1",
+        surveyTeamMap: { team: { orgId: "org-1" }, teamId: { in: ["team-1"] } },
+      },
     });
   });
 
@@ -1047,15 +1210,27 @@ describe("google link handling", () => {
 });
 
 describe("survey password", () => {
-  test("setting a password marks the survey protected", async () => {
+  test("setting a password stores a bcrypt hash and marks the survey protected", async () => {
+    db.survey.findUnique.mockResolvedValue({ password: "" });
     db.survey.update.mockResolvedValue({ id: "s1", isProtected: true });
 
     await updateSurveyPassword("s1", { password: "hunter2" } as any);
 
-    expect(db.survey.update).toHaveBeenCalledWith({
-      where: { id: "s1" },
-      data: { password: "hunter2", isProtected: true },
-    });
+    const { where, data } = db.survey.update.mock.calls[0][0];
+    expect(where).toEqual({ id: "s1" });
+    expect(data.isProtected).toBe(true);
+    expect(data.password).not.toBe("hunter2");
+    expect(await bcrypt.compare("hunter2", data.password)).toBe(true);
+  });
+
+  test("sending the stored hash back unchanged does not re-hash it", async () => {
+    const hash = await bcrypt.hash("hunter2", 4);
+    db.survey.findUnique.mockResolvedValue({ password: hash });
+    db.survey.update.mockResolvedValue({ id: "s1", isProtected: true });
+
+    await updateSurveyPassword("s1", { password: hash } as any);
+
+    expect(db.survey.update.mock.calls[0][0].data.password).toBe(hash);
   });
 
   test("the _remove_pwd sentinel clears the password and the protection flag", async () => {
@@ -1075,12 +1250,28 @@ describe("survey password", () => {
     await expect(updateSurveyPassword("s1", { password: "x" } as any)).rejects.toThrow("db down");
   });
 
-  test("verifySurveyPassword grants access on an exact match", async () => {
-    db.survey.findUnique.mockResolvedValue({ isProtected: true, password: "hunter2" });
+  test("verifySurveyPassword grants access when the password matches the stored hash", async () => {
+    const hash = await bcrypt.hash("hunter2", 4);
+    db.survey.findUnique.mockResolvedValue({ id: "s1", isProtected: true, password: hash });
 
     await expect(verifySurveyPassword("s1", { password: "hunter2" } as any)).resolves.toBe(
       "Access granted",
     );
+    await expect(verifySurveyPassword("s1", { password: "nope" } as any)).rejects.toThrow(
+      "Password Error",
+    );
+    expect(db.survey.update).not.toHaveBeenCalled();
+  });
+
+  test("a legacy plaintext password still matches once and is re-hashed", async () => {
+    db.survey.findUnique.mockResolvedValue({ id: "s1", isProtected: true, password: "hunter2" });
+    db.survey.update.mockResolvedValue({});
+
+    await expect(verifySurveyPassword("s1", { password: "hunter2" } as any)).resolves.toBe(
+      "Access granted",
+    );
+    const { data } = db.survey.update.mock.calls[0][0];
+    expect(await bcrypt.compare("hunter2", data.password)).toBe(true);
   });
 
   test("verifySurveyPassword rejects a wrong password", async () => {

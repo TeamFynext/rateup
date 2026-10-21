@@ -1,3 +1,4 @@
+import { LoyaltyError } from "../loyalty.errors.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("../../../utils/logger.js", () => ({
@@ -175,6 +176,39 @@ describe("createCustomerAccountHandler", () => {
 
     expect(answer(rep).code).toBe(201);
     expect((createCustomerAccount as Mock).mock.calls[0][2]).toBe("org-target");
+  });
+
+  test("the public handler never echoes the account or the org's contact row", async () => {
+    (createCustomerAccount as Mock).mockResolvedValue({
+      id: "acct-1",
+      contactId: "c-1",
+      contact: { email: "victim@example.test", address: "1 Main St", notes: "VIP" },
+    });
+    const rep = reply();
+
+    await createPublicCustomerAccountHandler({ body, params: {}, query: {} } as any, rep);
+
+    expect(answer(rep)).toEqual({ code: 201, body: { success: true } });
+  });
+
+  test("an existing member is answered exactly like a new one", async () => {
+    (createCustomerAccount as Mock).mockRejectedValue(
+      new LoyaltyError("MEMBER_EXISTS", "Customer account already exists"),
+    );
+    const rep = reply();
+
+    await createPublicCustomerAccountHandler({ body, params: {}, query: {} } as any, rep);
+
+    expect(answer(rep)).toEqual({ code: 201, body: { success: true } });
+  });
+
+  test("the public handler hides the service's error text", async () => {
+    (createCustomerAccount as Mock).mockRejectedValue(new Error("relation does not exist"));
+    const rep = reply();
+
+    await createPublicCustomerAccountHandler({ body, params: {}, query: {} } as any, rep);
+
+    expect(answer(rep)).toEqual({ code: 500, body: { error: "Could not complete the signup" } });
   });
 
   test("the public handler holds the bonuses and hands over a normalised phone; the staff handler does neither", async () => {
@@ -761,8 +795,26 @@ describe("awardPointsHandler", () => {
 });
 
 describe("assignRewardToCustomerHandler", () => {
-  test("assigns from the body, not from the path", async () => {
+  test("assigns the member in the path, within the caller's programme", async () => {
     (assignRewardToCustomer as Mock).mockResolvedValue({ id: "cr-1" });
+    const rep = reply();
+
+    await assignRewardToCustomerHandler(
+      request({ params: { customerId: "acct-in-path" }, body: { rewardId: "rwd-1" } }),
+      rep,
+    );
+
+    expect(getLoyaltyProgramByOrg).toHaveBeenCalledWith(ORG);
+    expect(assignRewardToCustomer).toHaveBeenCalledWith(
+      "acct-in-path",
+      "rwd-1",
+      undefined,
+      PROGRAM,
+    );
+    expect(answer(rep).code).toBe(201);
+  });
+
+  test("refuses a body customerId that differs from the path", async () => {
     const rep = reply();
 
     await assignRewardToCustomerHandler(
@@ -773,8 +825,22 @@ describe("assignRewardToCustomerHandler", () => {
       rep,
     );
 
-    expect(assignRewardToCustomer).toHaveBeenCalledWith("acct-in-body", "rwd-1", undefined);
-    expect(answer(rep).code).toBe(201);
+    expect(answer(rep).code).toBe(400);
+    expect(assignRewardToCustomer).not.toHaveBeenCalled();
+  });
+
+  test("another programme's member is a 404", async () => {
+    (assignRewardToCustomer as Mock).mockRejectedValue(
+      new LoyaltyError("MEMBER_NOT_FOUND", "Customer account not found"),
+    );
+    const rep = reply();
+
+    await assignRewardToCustomerHandler(
+      request({ params: { customerId: "acct-b" }, body: { rewardId: "rwd-1" } }),
+      rep,
+    );
+
+    expect(answer(rep).code).toBe(404);
   });
 
   test("reports an existing assignment as a 400", async () => {

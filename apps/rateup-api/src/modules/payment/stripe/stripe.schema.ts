@@ -2,22 +2,21 @@ import { PaymentPlanStatus } from "../../../../generated/prisma/client.js";
 
 import { z } from "zod";
 
+/**
+ * A Stripe subscription checkout. The price is the only choice that matters: the tier, its
+ * name and the org are resolved server-side (price → linked RateupPlan, org from the
+ * session). `orgId`, `planName` and `rateupPlanId` are accepted from older clients and
+ * ignored.
+ */
 const createStripeCheckoutSchema = z.object({
-  orgId: z.string({
-    error: (issue) => (issue.input === undefined ? "Org Id is required" : undefined),
-  }),
   priceId: z.string({
     error: (issue) => (issue.input === undefined ? "Price Id is required" : undefined),
   }),
-  planName: z.string({
-    error: (issue) => (issue.input === undefined ? "Plan name is required" : undefined),
-  }),
-  rateupPlanId: z.string({
-    error: (issue) => (issue.input === undefined ? "Rateup Plan Id is required" : undefined),
-  }),
-  email: z.email("Invalid email."),
+  email: z.email("Invalid email.").optional(),
+  orgId: z.string().optional(),
+  planName: z.string().optional(),
+  rateupPlanId: z.string().optional(),
 });
-
 const updateProductSchema = z.object({
   productId: z.string(),
   status: z.enum(PaymentPlanStatus).optional(),

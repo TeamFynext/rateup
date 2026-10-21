@@ -1175,6 +1175,12 @@ export async function assignRewardToCustomer(
   customerId: string,
   rewardId: string,
   _notes?: string,
+  /**
+   * The caller's programme, when a person (not a system job) is assigning. A member of any
+   * other programme is reported as not found, so one org cannot issue rewards — and the
+   * WhatsApp that announces them — to another org's members.
+   */
+  programId?: string,
 ) {
   // Check if customer exists
   const customer = await prisma.customerLoyaltyAccount.findUnique({
@@ -1182,7 +1188,7 @@ export async function assignRewardToCustomer(
     include: { contact: true },
   });
 
-  if (!customer) {
+  if (!customer || (programId !== undefined && customer.programId !== programId)) {
     throw new LoyaltyError("MEMBER_NOT_FOUND", "Customer account not found");
   }
 

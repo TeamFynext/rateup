@@ -20,9 +20,13 @@ import {
   messengerProfileParamsSchema,
 } from "./messenger_profile.schema.js";
 
-/** A Facebook Page's Messenger profile, by the Messenger channel's id. */
+/**
+ * A Facebook Page's Messenger profile, by the Messenger channel's id. Changing it rewrites what
+ * every visitor to the Page sees, so it is a channel setting: reading needs `channels.read`,
+ * any change `channels.manage`.
+ */
 export async function messengerProfileRoutes(server: FastifyInstance) {
-  declareAccess(server, { access: "session" });
+  declareAccess(server, { read: "channels.read", write: "channels.manage" });
 
   const params = messengerProfileParamsSchema;
 

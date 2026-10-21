@@ -443,7 +443,7 @@ export async function handleFacebookPostback(
   }
 
   try {
-    log.info(`[Facebook] Postback received from user ${sender.id}: ${postback.payload}`);
+    log.trace({ senderId: sender.id }, "[Facebook] Postback received");
 
     // Store postback as message
     const messageBody = {
@@ -576,7 +576,7 @@ export async function handleFacebookQuickReply(
     const payload = message.quick_reply.payload;
     const text = message.text || "";
 
-    log.info(`[Facebook] Quick reply from user ${sender.id}: ${payload}`);
+    log.trace({ senderId: sender.id }, "[Facebook] Quick reply received");
 
     // Store quick reply as message
     const messageBody = {

@@ -36,9 +36,10 @@ interface StoredTemplate {
   phoneId: string | null;
 }
 
-async function loadTemplate(waTemplateId: string): Promise<StoredTemplate | null> {
-  const row = await prisma.waTemplate.findUnique({
-    where: { id: waTemplateId },
+/** A template is only ever sent from the org that owns it, whatever id a reward stored. */
+async function loadTemplate(waTemplateId: string, orgId: string): Promise<StoredTemplate | null> {
+  const row = await prisma.waTemplate.findFirst({
+    where: { id: waTemplateId, orgId },
     select: { data: true, whatsappSettingsPhoneId: true },
   });
   if (!row) return null;
@@ -98,7 +99,7 @@ export const whatsappChannel: LoyaltyChannel = {
   async plan(ctx, message) {
     const phone = ctx.recipient.phone!;
     const artefact = message.artefacts?.WHATSAPP;
-    const template = artefact ? await loadTemplate(artefact.waTemplateId) : null;
+    const template = artefact ? await loadTemplate(artefact.waTemplateId, ctx.orgId) : null;
     const templateId = template ? artefact!.waTemplateId : null;
     const params = artefact?.params ?? [];
     const templateText = template ? renderTemplateAsText(template.components, params) : null;

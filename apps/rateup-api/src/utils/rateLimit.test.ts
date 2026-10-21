@@ -7,7 +7,9 @@ vi.mock("./logger.js", () => ({
   log: { error: vi.fn(), fatal: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));
 
+import Fastify from "fastify";
 import connection from "./redisConnection.js";
+import { trustProxySetting } from "./http.js";
 import { rateLimit } from "./rateLimit.js";
 
 type Mock = ReturnType<typeof vi.fn>;
@@ -105,6 +107,50 @@ describe("rateLimit", () => {
     await limiter({ ip: undefined } as any, reply());
 
     expect(buckets()).toContain("ratelimit:demo:unknown");
+  });
+});
+
+describe("rateLimit — the address behind the proxies", () => {
+  test("a spoofed X-Forwarded-For does not change the bucket", async () => {
+    // request.ip is already resolved under the hop count; the header itself is never read.
+    await limiter({ ip: "203.0.113.4", headers: {} } as any, reply());
+    await limiter(
+      { ip: "203.0.113.4", headers: { "x-forwarded-for": "10.0.0.1, 10.0.0.2" } } as any,
+      reply(),
+    );
+    await limiter(
+      { ip: "203.0.113.4", headers: { "x-forwarded-for": "198.51.100.99" } } as any,
+      reply(),
+    );
+
+    expect(new Set(buckets())).toEqual(new Set(["ratelimit:demo:203.0.113.4"]));
+  });
+
+  test("through a real server with the production hop count, spoofing XFF picks no new bucket", async () => {
+    const app = Fastify({ trustProxy: trustProxySetting(undefined) });
+    app.get("/", { preHandler: limiter }, async () => ({ ok: true }));
+    for (const spoof of ["", "10.0.0.1, ", "10.0.0.2, 10.0.0.3, "]) {
+      await app.inject({
+        method: "GET",
+        url: "/",
+        headers: { "x-forwarded-for": `${spoof}203.0.113.4, 172.68.1.1` },
+      });
+    }
+    await app.close();
+
+    expect(buckets()).toEqual(Array(3).fill("ratelimit:demo:203.0.113.4"));
+  });
+
+  test("Cloudflare's CF-Connecting-IP names the bucket when present", async () => {
+    await limiter(
+      {
+        ip: "172.68.1.1",
+        headers: { "cf-connecting-ip": "198.51.100.7", "x-forwarded-for": "10.0.0.1" },
+      } as any,
+      reply(),
+    );
+
+    expect(buckets()).toEqual(["ratelimit:demo:198.51.100.7"]);
   });
 });
 

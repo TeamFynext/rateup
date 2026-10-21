@@ -266,6 +266,8 @@ describe("registerBusinessClientHandler - saving the settings", () => {
 
     expect(m.updateSettings).toHaveBeenCalledWith("org-1", "phone-1", {
       accessToken: "token-abc",
+      // The key pair whose public half was just registered with Meta is stored too.
+      encryption: { publicKey: "public-key", privateKey: "private-key" },
       assets: {},
     });
     expect(m.createSettings).not.toHaveBeenCalled();
@@ -371,6 +373,8 @@ describe("registerBusinessClientHandler - picking the signed-up number", () => {
 
     expect(m.updateSettings).toHaveBeenCalledWith("org-1", "phone-1", {
       accessToken: "token-abc",
+      // The key pair whose public half was just registered with Meta is stored too.
+      encryption: { publicKey: "public-key", privateKey: "private-key" },
       assets: {},
     });
     expect(m.createSettings).not.toHaveBeenCalled();
@@ -460,6 +464,22 @@ describe("deRegisterBusinessClientHandler", () => {
 describe("getUserAccessTokenHanlder", () => {
   const request = () =>
     makeRequest({ body: { code: "code-1" }, params: { waSettingsId: "settings-1" } });
+
+  beforeEach(() => {
+    // The settings row is the caller's own unless a test says otherwise.
+    db.findFirst.mockResolvedValue({ id: "settings-1" });
+  });
+
+  test("another org's settings row is a 404, before Meta or the sync is touched", async () => {
+    db.findFirst.mockResolvedValue(null);
+    const reply = makeReply();
+
+    await getUserAccessTokenHanlder(request(), reply);
+
+    expect(db.findFirst.mock.calls[0][0].where).toMatchObject({ id: "settings-1" });
+    expect(reply.status).toHaveBeenCalledWith(404);
+    expect(m.getToken).not.toHaveBeenCalled();
+  });
 
   test("exchanges the code against the configured redirect uri", async () => {
     await getUserAccessTokenHanlder(request(), makeReply());

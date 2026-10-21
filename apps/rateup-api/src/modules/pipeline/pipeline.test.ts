@@ -39,7 +39,9 @@ vi.mock("../../utils/prisma.js", () => ({
     leadActivity: { create: vi.fn(), createMany: vi.fn() },
     leadNote: { findUniqueOrThrow: vi.fn(), update: vi.fn() },
     leadTask: { updateMany: vi.fn() },
-    contact: { findUnique: vi.fn(), findMany: vi.fn(), update: vi.fn() },
+    contact: { findUnique: vi.fn(), findFirst: vi.fn(), findMany: vi.fn(), update: vi.fn() },
+    pipelineLabel: { count: vi.fn() },
+    orgMember: { count: vi.fn() },
     teamMember: { findMany: vi.fn() },
     team: { findMany: vi.fn(), updateMany: vi.fn() },
     integration: { findMany: vi.fn() },
@@ -210,6 +212,17 @@ beforeEach(() => {
   db.pipelineStage.findFirstOrThrow.mockImplementation((...args: unknown[]) =>
     db.pipelineStage.findUniqueOrThrow(...args),
   );
+  // `createLead` reads its column scoped to the board it names; the column a test stubs
+  // is on that board, in ORG.
+  db.pipelineStage.findFirst.mockImplementation(async (...args: unknown[]) => {
+    const stage = await db.pipelineStage.findUniqueOrThrow(...args);
+    return stage ? { pipeline: { orgId: ORG }, ...stage } : stage;
+  });
+  // Every contact, label and assignee a test names is the board's own unless it says not.
+  db.pipeline.findFirst.mockResolvedValue({ id: PIPELINE, orgId: ORG });
+  db.contact.findFirst.mockResolvedValue({ id: CONTACT });
+  db.pipelineLabel.count.mockImplementation(async (args: any) => args.where.id.in.length);
+  db.orgMember.count.mockImplementation(async (args: any) => args.where.userId.in.length);
   db.leadActivity.createMany.mockResolvedValue({ count: 1 });
   db.leadActivity.create.mockResolvedValue({ id: "activity" });
   db.leadTask.updateMany.mockResolvedValue({ count: 0 });
@@ -666,7 +679,11 @@ describe("closing a lead", () => {
   });
 
   test("a win moves the lead onto the won column", async () => {
-    db.pipelineStage.findFirst.mockResolvedValue({ id: NEXT_STAGE });
+    db.pipelineStage.findFirst.mockResolvedValue({
+      id: NEXT_STAGE,
+      status: "OPEN",
+      pipeline: { orgId: ORG },
+    });
 
     await closeLead(LEAD, { status: "WON" }, USER);
 
@@ -680,7 +697,11 @@ describe("closing a lead", () => {
   // Lost is a column now, so a loss lands in it rather than leaving the lead
   // sitting in whatever open column it stalled in.
   test("a loss moves the lead onto the lost column and records the reason", async () => {
-    db.pipelineStage.findFirst.mockResolvedValue({ id: NEXT_STAGE });
+    db.pipelineStage.findFirst.mockResolvedValue({
+      id: NEXT_STAGE,
+      status: "OPEN",
+      pipeline: { orgId: ORG },
+    });
     db.pipelineLostReason.findUnique.mockResolvedValue({ label: "Price too high" });
 
     await closeLead(
@@ -702,7 +723,11 @@ describe("closing a lead", () => {
   // A drag names the exact column it landed on; only a button press has to fall
   // back to "the first column of that status".
   test("closes onto the column that was dropped on when one is named", async () => {
-    db.pipelineStage.findFirst.mockResolvedValue({ id: STAGE });
+    db.pipelineStage.findFirst.mockResolvedValue({
+      id: STAGE,
+      status: "OPEN",
+      pipeline: { orgId: ORG },
+    });
 
     await closeLead(LEAD, { status: "LOST", stageId: STAGE }, USER);
 
@@ -833,7 +858,11 @@ describe("a lead's owner", () => {
 describe("a rule opening a lead on a named pipeline", () => {
   beforeEach(() => {
     db.lead.findUnique.mockResolvedValue(null);
-    db.pipelineStage.findFirst.mockResolvedValue({ id: STAGE });
+    db.pipelineStage.findFirst.mockResolvedValue({
+      id: STAGE,
+      status: "OPEN",
+      pipeline: { orgId: ORG },
+    });
     db.pipelineStage.findUniqueOrThrow.mockResolvedValue({ status: "OPEN" });
     db.contact.findUnique.mockResolvedValue({ name: "Aditi", phone: "+91", email: null });
     db.lead.create.mockResolvedValue({ id: LEAD, labels: [], assignees: [], tasks: [] });
@@ -1093,7 +1122,11 @@ describe("the lead request schema", () => {
 
 describe("assigning a contact to a stage", () => {
   beforeEach(() => {
-    db.pipelineStage.findFirst.mockResolvedValue({ id: STAGE });
+    db.pipelineStage.findFirst.mockResolvedValue({
+      id: STAGE,
+      status: "OPEN",
+      pipeline: { orgId: ORG },
+    });
     db.pipelineStage.findUniqueOrThrow.mockResolvedValue({ name: "Qualified", status: "OPEN" });
     db.contact.findUnique.mockResolvedValue({ name: "Aditi", phone: "+91", email: null });
     db.lead.create.mockResolvedValue({ id: LEAD, labels: [], assignees: [], tasks: [] });
@@ -1368,7 +1401,11 @@ describe("telling the CRMs a lead changed column", () => {
   // Dropping a lead onto Won or Lost goes through `closeLead`, not `moveLead`.
   // It is still a stage change, and without this the deal stayed open in Bigin.
   test("closing a lead syncs the closing column too", async () => {
-    db.pipelineStage.findFirst.mockResolvedValue({ id: STAGE });
+    db.pipelineStage.findFirst.mockResolvedValue({
+      id: STAGE,
+      status: "OPEN",
+      pipeline: { orgId: ORG },
+    });
     db.leadTask.updateMany.mockResolvedValue({ count: 0 });
 
     await closeLead(LEAD, { status: "WON" }, "user-1");
@@ -1378,7 +1415,11 @@ describe("telling the CRMs a lead changed column", () => {
   });
 
   test("setContactStage carries the suppression through to the move", async () => {
-    db.pipelineStage.findFirst.mockResolvedValue({ id: STAGE });
+    db.pipelineStage.findFirst.mockResolvedValue({
+      id: STAGE,
+      status: "OPEN",
+      pipeline: { orgId: ORG },
+    });
     db.lead.findUnique.mockResolvedValue({ id: LEAD, stageId: "old-stage" });
 
     await setContactStage({
@@ -1495,7 +1536,11 @@ describe("assigning a stage to many contacts", () => {
 
   beforeEach(() => {
     db.pipeline.findFirst.mockResolvedValue({ id: PIPELINE });
-    db.pipelineStage.findFirst.mockResolvedValue({ id: STAGE });
+    db.pipelineStage.findFirst.mockResolvedValue({
+      id: STAGE,
+      status: "OPEN",
+      pipeline: { orgId: ORG },
+    });
     db.pipelineStage.findUniqueOrThrow.mockResolvedValue({ name: "Qualified", status: "OPEN" });
     db.contact.findUnique.mockResolvedValue({ name: "Aditi", phone: "+91", email: null });
     db.lead.create.mockResolvedValue({ id: LEAD, labels: [], assignees: [], tasks: [] });
@@ -1719,5 +1764,59 @@ describe("paging one board column", () => {
     const second = await listLeads({ ...query, cursor: first.nextCursor! }, USER);
 
     expect(second.items.map((lead: any) => lead.id)).toEqual([ID.c]);
+  });
+});
+
+describe("a lead's references must be its board's own (MSG-13)", () => {
+  const base = { pipelineId: PIPELINE, stageId: STAGE, name: "Walk-in", userId: USER } as any;
+
+  beforeEach(() => {
+    db.pipelineStage.findUniqueOrThrow.mockResolvedValue({ status: "OPEN" });
+    db.lead.create.mockResolvedValue({ id: LEAD, labels: [], assignees: [], tasks: [] });
+  });
+
+  test("a column from another board is refused", async () => {
+    db.pipelineStage.findFirst.mockResolvedValueOnce(null);
+
+    await expect(createLead({ ...base, stageId: "stage-other" })).rejects.toMatchObject({
+      field: "stageId",
+    });
+    expect(db.pipelineStage.findFirst.mock.calls[0][0].where).toEqual({
+      id: "stage-other",
+      pipelineId: PIPELINE,
+    });
+    expect(db.lead.create).not.toHaveBeenCalled();
+  });
+
+  test("another org's contact is refused", async () => {
+    db.contact.findFirst.mockResolvedValueOnce(null);
+
+    await expect(createLead({ ...base, contactId: "contact-other" })).rejects.toMatchObject({
+      field: "contactId",
+    });
+    expect(db.contact.findFirst.mock.calls[0][0].where).toEqual({
+      id: "contact-other",
+      orgId: ORG,
+    });
+  });
+
+  test("another board's label and a non-member assignee are refused", async () => {
+    db.pipelineLabel.count.mockResolvedValueOnce(0);
+    await expect(createLead({ ...base, labelIds: ["label-other"] })).rejects.toMatchObject({
+      field: "labelIds",
+    });
+
+    db.orgMember.count.mockResolvedValueOnce(0);
+    await expect(createLead({ ...base, assigneeIds: ["user-other"] })).rejects.toMatchObject({
+      field: "assigneeIds",
+    });
+    expect(db.lead.create).not.toHaveBeenCalled();
+  });
+
+  test("an update cannot bind a foreign contact, label or assignee", async () => {
+    db.contact.findFirst.mockResolvedValueOnce(null);
+
+    await expect(updateLead(LEAD, { contactId: "contact-other" } as any, USER)).rejects.toThrow();
+    expect(db.lead.update).not.toHaveBeenCalled();
   });
 });

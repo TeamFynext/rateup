@@ -14,7 +14,8 @@ vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));
 
-import { getWaSettings } from "../settings/wa_settings.service.js";
+import { getWaSettings, updateWaSettings } from "../settings/wa_settings.service.js";
+import { sealFlowKeys } from "./flowKeysAtRest.js";
 import { getFlowFromDb, handleDecryptedFlowRequest } from "../flows/flow.service.js";
 import { unusableRequest } from "../flows/flow.errors.js";
 import {
@@ -27,6 +28,7 @@ import {
 
 type Mock = ReturnType<typeof vi.fn>;
 const getWaSettingsMock = getWaSettings as unknown as Mock;
+const updateWaSettingsMock = updateWaSettings as unknown as Mock;
 const getFlowFromDbMock = getFlowFromDb as unknown as Mock;
 const handleDecryptedMock = handleDecryptedFlowRequest as unknown as Mock;
 
@@ -212,6 +214,40 @@ describe("handleFlowResponse", () => {
 
     expect(rep.status).toHaveBeenCalledWith(427);
     expect(getWaSettingsMock).not.toHaveBeenCalled();
+  });
+
+  // WEBH-8: new rows store the key pair sealed; legacy rows (above) are plain.
+  test("serves a row whose keys are stored sealed", async () => {
+    process.env.wa_access_token_encryption_key = "11".repeat(32);
+    getWaSettingsMock.mockResolvedValue({
+      orgId: "org-1",
+      phoneId: "phone-1",
+      accessToken: "token",
+      encryption: sealFlowKeys(keys),
+    });
+    const { body } = encryptedRequest({ action: "INIT", version: "3.0" });
+    const rep = reply();
+
+    await handleFlowResponse(request(body), rep);
+
+    expect(rep.status).not.toHaveBeenCalled();
+    expect(typeof rep.send.mock.calls[0][0]).toBe("string");
+  });
+
+  test("a sealed row that does not open under the configured key fails, without re-keying", async () => {
+    process.env.wa_access_token_encryption_key = "11".repeat(32);
+    const sealed = sealFlowKeys(keys);
+    process.env.wa_access_token_encryption_key = "22".repeat(32);
+    getWaSettingsMock.mockResolvedValue({
+      orgId: "org-1",
+      phoneId: "phone-1",
+      accessToken: "token",
+      encryption: sealed,
+    });
+    const { body } = encryptedRequest({ action: "INIT" });
+
+    await expect(handleFlowResponse(request(body), reply())).rejects.toThrow();
+    expect(updateWaSettingsMock).not.toHaveBeenCalled();
   });
 
   test("answers 421 when the request cannot be decrypted", async () => {

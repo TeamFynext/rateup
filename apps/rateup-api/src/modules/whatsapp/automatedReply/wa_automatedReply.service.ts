@@ -1,7 +1,10 @@
 // dayjs import removed (unused)
 import prisma from "../../../utils/prisma.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
-import { CreateAutomatedReplySchema } from "./wa_automatedReply.schema.js";
+import type {
+  CreateAutomatedReplySchema,
+  UpdateAutomatedReplySchema,
+} from "./wa_automatedReply.schema.js";
 import { getSubscription } from "../../subscription/subscription.service.js";
 import { canMessageContact, type Recipient } from "../../subscription/activeContacts.js";
 import { log } from "../../../utils/logger.js";
@@ -98,19 +101,10 @@ export async function cloneAutomatedReply(id: string, orgId: string, name?: stri
 }
 
 // Unlike createAutomatedReply, updates are genuinely partial (callers commonly rename or
-// re-platform an automation without resending matchData), so this intentionally doesn't
-// reuse CreateAutomatedReplySchema (whose name/matchData are required). matchData is
-// forwarded to Prisma's Json column as-is (its own generated update input types the field
-// `unknown`), so it's left untyped here rather than pinned to a shape this function never
-// inspects.
+// re-platform an automation without resending matchData).
 export async function updateAutomatedReply(
   id: string,
-  data: {
-    name?: string;
-    matchData?: unknown;
-    whatsappSettingsPhoneId?: string;
-    platform?: string;
-  },
+  data: UpdateAutomatedReplySchema,
   orgId: string,
 ) {
   const existing = await prisma.waAutomatedReply.findFirst({

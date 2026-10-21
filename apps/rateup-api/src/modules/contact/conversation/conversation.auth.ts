@@ -1,5 +1,5 @@
 import type { FastifyReply, FastifyRequest, RouteGenericInterface } from "fastify";
-import { inScope } from "../../../authz/scope.js";
+import { teamInScope } from "../../../authz/scope.js";
 import { analyticsTeamId } from "../../../utils/analyticsCache.js";
 
 /**
@@ -17,7 +17,8 @@ export async function verifyAnalyticsTeamScope<T extends RouteGenericInterface>(
   const query = request.query as { teamId?: string } | undefined;
   const teamId = analyticsTeamId(params?.teamId ?? query?.teamId);
   if (!teamId) return;
-  if (!request.actor || !inScope(request.actor, teamId)) {
+  // teamInScope, not inScope: the team must be the caller's org's, not just in scope.
+  if (!request.actor || !(await teamInScope(request.actor, teamId))) {
     reply.code(403).send({ message: "This team is outside your access.", reason: "scope" });
   }
 }

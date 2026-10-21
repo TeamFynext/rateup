@@ -2,6 +2,7 @@ import axios from "axios";
 
 import type { Integration } from "../../../../generated/prisma/client.js";
 import { log } from "../../../utils/logger.js";
+import { assertPublicUrl, publicAxiosOptions } from "../../../utils/ssrf.js";
 import prisma from "../../../utils/prisma.js";
 import { integrationTriggerQueue } from "../../../workers/bullmq/queues/index.js";
 import type {
@@ -92,7 +93,20 @@ export async function deliverAutomationHook(
   }
 
   try {
-    await axios.post(hookUrl, payload, { timeout: POST_TIMEOUT_MS });
+    // The hook URL came from the platform's subscribe call, i.e. from whoever
+    // holds the org's key; re-checked on every send since DNS can move.
+    await assertPublicUrl(hookUrl);
+  } catch (error) {
+    log.warn(
+      { integrationId: integration.id, trigger, err: error },
+      `Switching off a ${AUTOMATION_PLATFORM_LABELS[platform]} hook with a non-public URL`,
+    );
+    await deactivateAutomationHook(platform, job.orgId, hookUrl);
+    return "skipped";
+  }
+
+  try {
+    await axios.post(hookUrl, payload, publicAxiosOptions(POST_TIMEOUT_MS));
   } catch (error) {
     const status = axios.isAxiosError(error) ? error.response?.status : undefined;
     if (status === 410 || finalAttempt) {

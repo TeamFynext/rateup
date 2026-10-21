@@ -262,12 +262,46 @@ const templateTypeParamsSchema = z.object({
   templateType: z.enum(TemplateType).optional(),
 });
 
-const registerTemplatesInDbBodySchema = z.array(
-  z.object({
-    data: waTemplateSchema,
-    acceptButton: z.string().max(20),
-  }),
-);
+/**
+ * `POST /templates/register`: templates as `GET /templates/unregistered` returned them, i.e.
+ * Meta's own template objects, each with the button that counts as "accept". The object is
+ * stored as `WaTemplate.data`, so the fields the app reads are typed and bounded; the rest of
+ * Meta's template vocabulary (parameter_format, sub_category, …) is kept as Meta sent it.
+ */
+const metaTemplateComponentSchema = z.looseObject({
+  type: z.string().min(1).max(30),
+  format: z.string().max(30).optional(),
+  text: z.string().max(4096).optional(),
+  buttons: z
+    .array(
+      z.looseObject({
+        type: z.string().min(1).max(30),
+        text: z.string().max(100).optional(),
+        url: z.string().max(2000).optional(),
+        phone_number: z.string().max(30).optional(),
+      }),
+    )
+    .max(10)
+    .optional(),
+});
+
+const registerTemplatesInDbBodySchema = z
+  .array(
+    z.object({
+      data: z.looseObject({
+        id: z.string().min(1).max(100),
+        name: z.string().min(1).max(512),
+        language: z.string().min(1).max(20),
+        status: z.string().max(50),
+        category: z.string().max(50),
+        components: z.array(metaTemplateComponentSchema).max(20),
+        allow_category_change: z.boolean().nullish(),
+      }),
+      acceptButton: z.string().max(25).nullish(),
+    }),
+  )
+  .min(1)
+  .max(200);
 
 const waUserSendTemplateBodySchema = z.object({
   phone: z.string(),

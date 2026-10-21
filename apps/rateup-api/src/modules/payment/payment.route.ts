@@ -31,6 +31,7 @@ import {
   updateRateUpPlanSchema,
   updateRateUpPlanInput,
   UpdatePlanInput,
+  updatePlanSchema,
   changePlanSchema,
   type ChangePlanInput,
   orderIdParamsSchema,
@@ -103,6 +104,7 @@ export async function paymentRoutes(server: FastifyInstance) {
     "/updateplans",
     {
       preHandler: [assertRootOrg],
+      schema: { body: updatePlanSchema },
     },
     updatePaymentPlanHandler,
   );

@@ -25,7 +25,7 @@ const publicRouteOptions: CustomRouteShortHandOptions = {
 };
 
 export async function surveyThemeRoutes(server: FastifyInstance) {
-  declareAccess(server, { access: "session" });
+  declareAccess(server, { access: "session", write: "surveys.manage" });
   server.addHook("onRoute", (routeOptions) => {
     const declared = Array.isArray(routeOptions.preHandler)
       ? routeOptions.preHandler

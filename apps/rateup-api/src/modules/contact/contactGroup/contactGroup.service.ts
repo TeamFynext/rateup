@@ -433,12 +433,18 @@ export async function addExistingContactsToMultipleGroups(
     where: { id: { in: contactGroupIds }, team: { orgId } },
     select: { id: true },
   });
+  // Contacts too, not just groups: a foreign contact id in an own group is how another
+  // org's customers would end up in this org's campaigns.
+  const ownedContacts = await prisma.contact.findMany({
+    where: { id: { in: contactIds }, orgId },
+    select: { id: true },
+  });
 
   return await Promise.all(
     ownedGroups.map(async ({ id: contactGroupId }) => {
       const newMembers = await prisma.contactGroupMap.createManyAndReturn({
         skipDuplicates: true,
-        data: contactIds.map((contactId) => ({
+        data: ownedContacts.map(({ id: contactId }) => ({
           contactId,
           contactGroupId,
         })),

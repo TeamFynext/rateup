@@ -44,28 +44,95 @@ export enum PaymentPlanType {
   ADDON = "ADDON",
 }
 
-//.......create a checkout session............
-export async function createCheckoutSession(userId: string, data: CreateCheckoutInput) {
+/**
+ * The gateway plans a tier sells through, in the order a checkout without an explicit
+ * gateway plan should prefer them (rupees before dollars, then the legacy single link).
+ */
+function linkedGatewayPlans(tier: TierWithGatewayLinks) {
+  return [
+    tier.monthlyPaymentPlan,
+    tier.yearlyPaymentPlan,
+    tier.usdMonthlyPaymentPlan,
+    tier.usdYearlyPaymentPlan,
+    tier.paymentPlan,
+  ].filter((plan): plan is NonNullable<typeof plan> => Boolean(plan));
+}
+
+type TierWithGatewayLinks = NonNullable<Awaited<ReturnType<typeof findPlanWithGatewayLinks>>>;
+
+function findPlanWithGatewayLinks(rateupPlanId: string) {
+  return prisma.rateupPlan.findUnique({
+    where: { id: rateupPlanId },
+    include: {
+      paymentPlan: true,
+      monthlyPaymentPlan: true,
+      yearlyPaymentPlan: true,
+      usdMonthlyPaymentPlan: true,
+      usdYearlyPaymentPlan: true,
+    },
+  });
+}
+
+/**
+ * Picks the gateway plan a checkout charges, server-side.
+ *
+ * The tier is the customer's choice; the gateway plan, its price and its cadence are not.
+ * A `planId` from the body is honoured only when it is one of the plans this tier links
+ * (that is how the UI picks a currency), so a cheap or orphaned gateway plan can never be
+ * paired with an expensive tier. A retired (INACTIVE) plan is never sold.
+ */
+export async function resolveCheckoutPlan(
+  rateupPlanId: string,
+  period: string | undefined,
+  requestedPlanId: string | undefined,
+) {
+  const tier = await findPlanWithGatewayLinks(rateupPlanId);
+  if (!tier) throw new Error("This plan is not available for checkout.");
+
   // This endpoint creates recurring subscriptions. A pack is a one-off top-up bought
   // through createAddonOrder, so it must not be sold here —
   // doing so would sign the customer up to a pack that renews forever.
-  const target = await prisma.rateupPlan.findUnique({
-    where: { id: data.rateupPlanId },
-    select: { planType: true },
-  });
-  if (target?.planType === PaymentPlanType.ADDON) {
+  if (tier.planType === PaymentPlanType.ADDON) {
     throw new Error("Packs are a one-off purchase, not a subscription.");
   }
 
+  const sellable = linkedGatewayPlans(tier).filter(
+    (plan) => plan.status !== PaymentPlanStatus.INACTIVE,
+  );
+  const gatewayPlan = requestedPlanId
+    ? sellable.find((plan) => plan.planId === requestedPlanId)
+    : sellable.find((plan) => !period || plan.period === period);
+  if (!gatewayPlan) {
+    throw new Error("This plan is not available for checkout.");
+  }
+
+  return { tier, gatewayPlan };
+}
+
+//.......create a checkout session............
+export async function createCheckoutSession(
+  userId: string,
+  orgId: string,
+  data: CreateCheckoutInput,
+) {
+  // The org is the caller's, never the body's: the webhook that lands later writes the
+  // subscription of whichever org this order names.
+  const { tier, gatewayPlan } = await resolveCheckoutPlan(
+    data.rateupPlanId,
+    data.period,
+    data.planId,
+  );
+
   const requestBody = {
-    plan_id: data.planId,
-    total_count: data.period === "monthly" ? 1200 : 100,
+    plan_id: gatewayPlan.planId,
+    total_count: gatewayPlan.period === "monthly" ? 1200 : 100,
     quantity: 1,
     customer_notify: 1, //enable notifications
     notes: {
-      rateupPlanId: data.rateupPlanId,
-      orgId: data?.orgId,
-      isAnnualMessageLimit: data.isAnnualMessageLimit,
+      rateupPlanId: tier.id,
+      orgId,
+      // Kept on the notes for old readers; checkout no longer lets the client choose it.
+      isAnnualMessageLimit: false,
     },
   };
 
@@ -79,13 +146,15 @@ export async function createCheckoutSession(userId: string, data: CreateCheckout
     const subscriptionId = apiResponse?.data?.id;
     const order = await prisma.order.create({
       data: {
-        name: data.planName,
+        name: tier.displayName ?? tier.name,
         createdById: userId,
-        orgId: data.orgId,
-        planId: data.planId,
+        orgId,
+        planId: gatewayPlan.planId,
         subscriptionId,
-        rateupPlanId: data.rateupPlanId,
+        rateupPlanId: tier.id,
         subscriptionStatus: SubscriptionStatus.none,
+        amountMinor: Math.round(Number(gatewayPlan.amount) * 100),
+        currency: gatewayPlan.currency,
       },
     });
 
@@ -466,7 +535,18 @@ export interface RazorpaySubscriptionWebhookPayload {
 
 export interface RazorpaySubscriptionChargedPayload extends RazorpaySubscriptionWebhookPayload {
   // `amount` is in paise; `currency` is the ISO code Razorpay charged in.
-  payment?: { entity?: { email?: string; amount: number; currency?: string } };
+  payment?: {
+    entity?: {
+      id?: string;
+      email?: string;
+      contact?: string;
+      amount: number;
+      currency?: string;
+      method?: string;
+      description?: string;
+      created_at?: number;
+    };
+  };
 }
 
 export interface RazorpayPaymentWebhookData {
@@ -477,8 +557,16 @@ export interface RazorpayPaymentWebhookData {
   description?: string;
   email?: string;
   contact?: string;
-  /** Stamped when the order is created. An add-on order also carries what it bought. */
-  notes?: { rateupOrderId?: string; orgId?: string; addonQuantity?: string } | null;
+  /**
+   * The gateway order the payment settles — `Order.checkoutRefId`. The one field that ties
+   * a payment to our order: Razorpay sets it, and the customer cannot.
+   */
+  order_id?: string | null;
+  /**
+   * Whatever the browser's Checkout options carried. Client-controlled, so it is never
+   * read to decide which order was paid or how much it bought.
+   */
+  notes?: Record<string, unknown> | null;
   created_at: number;
 }
 
@@ -565,29 +653,35 @@ export async function resolveRateupPlanByGatewayPlanId(planId: string | undefine
         // stale `notes` stamped at checkout.
         { usdMonthlyPaymentPlanId: paymentPlan.id },
         { usdYearlyPaymentPlanId: paymentPlan.id },
+        // The single pre-cadence link, which subscriptions sold before it still renew on.
+        { paymentPlanId: paymentPlan.id },
       ],
     },
   });
 }
 
 //Webhook action On Subscription charged
-export async function updateSubscription(payload: RazorpaySubscriptionChargedPayload) {
+export async function updateSubscription(
+  payload: RazorpaySubscriptionChargedPayload,
+  /** Set by reconciliation, which already knows whose subscription it is replaying. */
+  expectedOrgId?: string,
+) {
   try {
     const { subscription, payment } = payload;
     const { id, notes, current_end, charge_at, plan_id } = subscription?.entity || {};
+    if (!id) {
+      throw new Error("Subscription webhook is missing subscription.entity.id");
+    }
     if (!current_end) {
       throw new Error("Subscription webhook is missing current_end");
     }
 
-    // `plan_id` first: `notes` are stamped at checkout and are stale after a plan change,
-    // so trusting them here would re-grant the old tier's features on every renewal.
-    const rateupPlan =
-      (await resolveRateupPlanByGatewayPlanId(plan_id)) ??
-      (notes?.rateupPlanId
-        ? await prisma.rateupPlan.findUnique({ where: { id: notes.rateupPlanId } })
-        : null);
+    // The tier comes from the gateway plan only. `notes` are stamped at checkout and go
+    // stale after a plan change; falling back to `notes.rateupPlanId` would also let a
+    // checkout on an unlinked gateway plan name any tier it liked.
+    const rateupPlan = await resolveRateupPlanByGatewayPlanId(plan_id);
     if (!rateupPlan) {
-      throw new Error(`Rateup plan not found for plan ${plan_id ?? notes?.rateupPlanId}`);
+      throw new Error(`No Rateup plan is linked to gateway plan ${plan_id}`);
     }
 
     // Packs are bought outright for a month, not subscribed to, so no pack should ever
@@ -600,8 +694,43 @@ export async function updateSubscription(payload: RazorpaySubscriptionChargedPay
       );
     }
 
+    // Read before the update: `subscription.charged` fires on every cycle, and the order
+    // is only not COMPLETE on the first one. That also makes a webhook redelivery silent,
+    // which `paid_count` on the entity would not.
+    const orderBeforeCharge = await prisma.order.findUnique({
+      where: { subscriptionId: id },
+      select: { id: true, status: true, orgId: true, paymentId: true },
+    });
+    const isFirstCharge = orderBeforeCharge?.status !== OrderStatus.COMPLETE;
+
+    // The order row is the server's record of who checked out; notes are only consulted
+    // for a subscription that predates its order.
+    const orgId = orderBeforeCharge?.orgId ?? expectedOrgId ?? notes?.orgId;
+    if (!orgId) {
+      throw new Error(`Subscription ${id} has no org to credit`);
+    }
+    if (expectedOrgId && orgId !== expectedOrgId) {
+      throw new Error(`Subscription ${id} does not belong to org ${expectedOrgId}`);
+    }
+
+    // A replayed charge for a cycle already recorded must not reset the org's monthly
+    // counters a second time.
+    const current = await prisma.subscription.findUnique({
+      where: { orgId },
+      select: { subscriptionRef: true, basePlanId: true, expiresAt: true },
+    });
+    if (
+      current?.subscriptionRef === id &&
+      current.basePlanId === rateupPlan.id &&
+      current.expiresAt &&
+      current.expiresAt.getTime() >= current_end * 1000
+    ) {
+      log.info({ subscriptionId: id, orgId }, "Subscription charge already applied; ignoring");
+      return { success: true, data: current, duplicate: true };
+    }
+
     const updatedSubscription = await prisma.subscription.update({
-      where: { orgId: notes?.orgId },
+      where: { orgId },
       data: {
         basePlanId: rateupPlan.id,
         features: rateupPlan.features ?? {},
@@ -612,29 +741,45 @@ export async function updateSubscription(payload: RazorpaySubscriptionChargedPay
         isAnnualMessageLimit: notes?.isAnnualMessageLimit === "1",
       },
     });
-    if (notes?.orgId) void bustSubscriptionGate(notes.orgId);
+    void bustSubscriptionGate(orgId);
 
-    // Read before the update: `subscription.charged` fires on every cycle, and the order
-    // is only not COMPLETE on the first one. That also makes a webhook redelivery silent,
-    // which `paid_count` on the entity would not.
-    const orderBeforeCharge = await prisma.order.findUnique({
-      where: { subscriptionId: id },
-      select: { status: true },
-    });
-    const isFirstCharge = orderBeforeCharge?.status !== OrderStatus.COMPLETE;
+    // The authenticated charge is what proves the subscription order was paid. The
+    // browser's payment notes used to say so on `payment.captured`; they no longer count.
+    let paymentRowId = orderBeforeCharge?.paymentId ?? undefined;
+    const paid = payment?.entity;
+    if (orderBeforeCharge && !paymentRowId && paid?.id) {
+      const row = await prisma.payments.upsert({
+        where: { rateupOrderId: orderBeforeCharge.id },
+        create: {
+          payId: paid.id,
+          amount: paid.amount,
+          currency: paid.currency ?? "",
+          method: paid.method ?? "",
+          description: paid.description ?? "",
+          customer_email: paid.email ?? "",
+          customer_phone: paid.contact ?? "",
+          rateupOrderId: orderBeforeCharge.id,
+          createdAt: paid.created_at ?? Math.floor(Date.now() / 1000),
+        },
+        update: {},
+      });
+      paymentRowId = row.id;
+    }
 
     const updatedOrder = await prisma.order.update({
       where: { subscriptionId: id },
       data: {
         status: OrderStatus.COMPLETE,
+        paymentStatus: PaymentStatus.SUCCESS,
         subscriptionStatus: SubscriptionStatus.active,
+        ...(paymentRowId ? { paymentId: paymentRowId } : {}),
         ...(!charge_at ? {} : { subscriptionChargeAt: new Date(charge_at * 1000) }),
       },
     });
 
     await prisma.usageStats.update({
       where: {
-        orgId: notes?.orgId,
+        orgId,
       },
       data: {
         subscriptionStartDate: new Date(),
@@ -681,7 +826,7 @@ export async function updateSubscription(payload: RazorpaySubscriptionChargedPay
 
       if (isFirstCharge) {
         await sendSubscriptionPurchasedAlert({
-          orgId: notes?.orgId,
+          orgId,
           customerEmail: payment?.entity?.email,
           planName: rateupPlan.displayName ?? rateupPlan.name,
           paid: payment?.entity
@@ -986,49 +1131,127 @@ export async function applySubscriptionUpdate(payload: RazorpaySubscriptionWebho
   }
 }
 
+/**
+ * How many packs a captured payment bought, from the server's own record of the order.
+ *
+ * New orders store it. An order created before `addonQuantity` existed is worked out from
+ * the amount Razorpay captured — which Razorpay holds to the order amount we set — divided
+ * by the pack's list price, and refused unless that is a whole number of packs.
+ */
+function packsPaidFor(
+  order: { addonQuantity: number | null },
+  plan: { monthlyPrice: number | null; usdMonthlyPrice: number | null },
+  amountMinor: number,
+  currency: string,
+) {
+  if (order.addonQuantity) return order.addonQuantity;
+
+  const unit = currency.toUpperCase() === "USD" ? plan.usdMonthlyPrice : plan.monthlyPrice;
+  const unitMinor = Math.round(Number(unit ?? 0) * 100);
+  if (unitMinor <= 0 || amountMinor % unitMinor !== 0) return null;
+  const packs = amountMinor / unitMinor;
+  return packs >= 1 && packs <= MAX_PACKS_PER_ORDER ? packs : null;
+}
+
 //Webhook action On Payment Captured  // PAYMENT Failed
 export async function verifyPayment(data: RazorpayPaymentWebhookData, event: string) {
   try {
-    const { id, amount, currency, method, description, email, contact, notes, created_at } = data;
-    const rateupOrderId = notes?.rateupOrderId;
-    if (!rateupOrderId) {
-      throw new Error("Payment webhook is missing notes.rateupOrderId");
-    }
-    const payment = await prisma.payments.create({
-      data: {
-        payId: id,
-        amount: amount,
-        currency: currency,
-        method: method,
-        description: description || "",
-        customer_email: email || "",
-        customer_phone: contact || "",
-        rateupOrderId,
-        createdAt: created_at,
-      },
-    });
+    const { id, amount, currency, method, description, email, contact, created_at, order_id } =
+      data;
 
-    let _updatedOrder;
+    // A subscription's payments settle on gateway orders Razorpay creates itself, which no
+    // Order row names; `subscription.charged` records those. Anything else unmatched is
+    // not ours to act on — and `notes.rateupOrderId`, set by the browser, is never used to
+    // pick an order.
+    const order = order_id
+      ? await prisma.order.findUnique({
+          where: { checkoutRefId: order_id },
+          select: {
+            id: true,
+            orgId: true,
+            paymentStatus: true,
+            amountMinor: true,
+            currency: true,
+            addonQuantity: true,
+            RateupPlan: {
+              select: {
+                id: true,
+                name: true,
+                planType: true,
+                monthlyPrice: true,
+                usdMonthlyPrice: true,
+              },
+            },
+          },
+        })
+      : null;
+    if (!order) {
+      log.info({ paymentId: id, order_id, event }, "Razorpay payment has no matching order");
+      return { success: true, data: null, handled: false };
+    }
+
     if (event === "payment.failed") {
-      _updatedOrder = await prisma.order.update({
-        where: { id: rateupOrderId },
+      // A failed attempt is not the order's last word: the customer can retry in the same
+      // checkout. Never overwrite a payment that already succeeded, and do not take the
+      // order's one Payments row for an attempt that moved no money.
+      await prisma.order.updateMany({
+        where: { id: order.id, paymentStatus: { not: PaymentStatus.SUCCESS } },
         data: {
           paymentStatus: PaymentStatus.FAILED,
           status: OrderStatus.FAILED,
           subscriptionStatus: SubscriptionStatus.halted,
         },
       });
-    } else {
-      _updatedOrder = await prisma.order.update({
-        where: { id: rateupOrderId },
-        data: {
-          paymentStatus: PaymentStatus.SUCCESS,
-          status: OrderStatus.PENDING,
-          subscriptionStatus: SubscriptionStatus.pending,
-          paymentId: payment.id,
-        },
-      });
-      await creditAddonPacks(rateupOrderId, id, notes);
+      return { success: true, data: null };
+    }
+
+    // The amount has to be what the server priced, in the currency it priced it in.
+    if (
+      order.amountMinor != null &&
+      (amount !== order.amountMinor ||
+        (order.currency ?? "").toUpperCase() !== (currency ?? "").toUpperCase())
+    ) {
+      throw new Error(
+        `Payment ${id} captured ${amount} ${currency} for order ${order.id}, which expects ${order.amountMinor} ${order.currency}`,
+      );
+    }
+
+    const addonPlan =
+      order.RateupPlan?.planType === PaymentPlanType.ADDON ? order.RateupPlan : undefined;
+    const packs = addonPlan ? packsPaidFor(order, addonPlan, amount, currency ?? "") : null;
+    if (addonPlan && !packs) {
+      throw new Error(`Payment ${id} of ${amount} ${currency} does not match a pack order`);
+    }
+
+    const paymentData = {
+      payId: id,
+      amount: amount,
+      currency: currency,
+      method: method,
+      description: description || "",
+      customer_email: email || "",
+      customer_phone: contact || "",
+      createdAt: created_at,
+    };
+    // An order made before failed attempts stopped writing here may already hold a row.
+    const payment = await prisma.payments.upsert({
+      where: { rateupOrderId: order.id },
+      create: { ...paymentData, rateupOrderId: order.id },
+      update: paymentData,
+    });
+
+    await prisma.order.update({
+      where: { id: order.id },
+      data: {
+        paymentStatus: PaymentStatus.SUCCESS,
+        status: OrderStatus.PENDING,
+        subscriptionStatus: SubscriptionStatus.pending,
+        paymentId: payment.id,
+      },
+    });
+
+    if (addonPlan && packs && order.orgId) {
+      await creditAddonPacks(order.orgId, addonPlan, id, packs);
     }
     return { success: true, data: payment };
   } catch (error) {
@@ -1291,16 +1514,27 @@ export async function getAllPaymentOrders() {
 
 //Get organization orders
 export async function getAllOrgOrders(orgId: string) {
+  // Prisma drops an `undefined` filter, which would turn both queries below org-wide.
+  if (!orgId) throw new Error("getAllOrgOrders requires an orgId");
+
   const fifteenMinutesAgo = new Date();
-  fifteenMinutesAgo.setMinutes(fifteenMinutesAgo.getMinutes() - 15); //cron
+  fifteenMinutesAgo.setMinutes(fifteenMinutesAgo.getMinutes() - 15);
 
   try {
+    // Expire this org's own abandoned checkouts so billing history does not show them
+    // as pending forever. Scoped to `orgId`: listing one org's orders must never write
+    // to another org's rows.
     await prisma.order.updateMany({
       where: {
+        orgId,
         paymentStatus: PaymentStatus.PENDING,
         createdAt: {
           lte: fifteenMinutesAgo,
         },
+        // One-off pack checkouts (Razorpay `order_…`) stay PENDING until a payment row
+        // exists: reconcileOneOffOrders / sweepMissedPayments only replay a missed capture
+        // for PENDING orders, so expiring them here would lose a pack the customer paid for.
+        NOT: { checkoutRefId: { startsWith: "order_" }, payment: { is: null } },
       },
       data: {
         status: OrderStatus.FAILED,
@@ -1476,14 +1710,31 @@ export async function getRateuplanById(id: string) {
   });
 }
 
-export async function updateOrder(orderId: string, status: OrderStatus, orgId: string) {
-  return await prisma.order.update({
+/**
+ * Sets an order's status from the billing page. COMPLETE is written only to an order that
+ * has been paid for — the check is part of the UPDATE, so nothing is written first and
+ * refused after.
+ */
+export async function updateOrder(
+  orderId: string,
+  status: OrderStatus,
+  orgId: string,
+): Promise<"updated" | "unpaid" | "not_found"> {
+  const { count } = await prisma.order.updateMany({
     where: {
       id: orderId,
       orgId,
+      ...(status === OrderStatus.COMPLETE ? { paymentStatus: PaymentStatus.SUCCESS } : {}),
     },
     data: { status },
   });
+  if (count > 0) return "updated";
+
+  const exists = await prisma.order.findFirst({
+    where: { id: orderId, orgId },
+    select: { id: true },
+  });
+  return exists ? "unpaid" : "not_found";
 }
 
 /** The ADDON row a kind of pack is sold as. */
@@ -1568,12 +1819,17 @@ export async function createAddonOrder(
     throw new Error(`${ADDONS[kind].displayName}s are not priced in ${currency} yet.`);
   }
 
+  const amountMinor = Math.round(Number(unitPrice) * packs * 100);
   const order = await prisma.order.create({
     data: {
       name: addon.displayName ?? addon.name,
       createdById: userId,
       orgId,
       rateupPlanId: addon.id,
+      // What the webhook credits and checks the capture against — never the payment notes.
+      addonQuantity: packs,
+      amountMinor,
+      currency,
     },
   });
 
@@ -1583,7 +1839,7 @@ export async function createAddonOrder(
     const response = await axios.post(
       "https://api.razorpay.com/v1/orders",
       {
-        amount: Math.round(Number(unitPrice) * packs * 100),
+        amount: amountMinor,
         currency,
         notes: {
           rateupOrderId: order.id,
@@ -1620,31 +1876,18 @@ export async function createAddonOrder(
 }
 
 /**
- * Credits the packs a captured payment bought, if it bought any.
+ * Credits the packs a captured payment bought.
  *
- * Only add-on orders write a row here; a plan payment falls straight through. The kind is
- * read off the ADDON row, not the notes, so an order created before kinds existed still
- * credits contact packs. `paymentRef` is unique, so a retried webhook credits once.
+ * The kind is read off the ADDON row and the count off the order, so neither depends on
+ * anything the browser sent. `paymentRef` is unique, so a retried webhook credits once.
  */
 async function creditAddonPacks(
-  rateupOrderId: string,
+  orgId: string,
+  addonPlan: { id: string; name: string },
   paymentRef: string,
-  notes: RazorpayPaymentWebhookData["notes"],
+  quantity: number,
 ) {
-  const order = await prisma.order.findUnique({
-    where: { id: rateupOrderId },
-    select: { orgId: true, RateupPlan: { select: { id: true, name: true, planType: true } } },
-  });
-  const addonPlan = order?.RateupPlan;
-  if (!addonPlan || addonPlan.planType !== PaymentPlanType.ADDON) return;
-
   const kind = addonKindForPlanName(addonPlan.name) ?? "ACTIVE_CONTACTS";
-  const orgId = order.orgId ?? notes?.orgId;
-  if (!orgId) {
-    throw new Error(`Add-on order ${rateupOrderId} has no org to credit`);
-  }
-
-  const quantity = Math.max(1, Math.trunc(Number(notes?.addonQuantity ?? 1)) || 1);
   const now = new Date();
 
   const existing = await prisma.subscriptionAddon.findUnique({ where: { paymentRef } });
@@ -1728,9 +1971,12 @@ async function fetchLatestSubscriptionPayment(subscriptionId: string) {
       headers: { Authorization: `Basic ${credentials}` },
     });
     return {
+      id: payment.data?.id as string | undefined,
       email: payment.data?.email as string | undefined,
       amount: payment.data?.amount as number,
       currency: payment.data?.currency as string | undefined,
+      method: payment.data?.method as string | undefined,
+      created_at: payment.data?.created_at as number | undefined,
     };
   } catch (error) {
     // Only the receipt email depends on this. Losing it must not block the entitlement
@@ -1779,10 +2025,13 @@ async function reconcileSubscription(orgId: string, actions: string[]) {
 
   if (missedCharge) {
     const payment = await fetchLatestSubscriptionPayment(subscriptionRef);
-    const result = await updateSubscription({
-      subscription: { entity: payloadEntity },
-      ...(payment ? { payment: { entity: payment } } : {}),
-    });
+    const result = await updateSubscription(
+      {
+        subscription: { entity: payloadEntity },
+        ...(payment ? { payment: { entity: payment } } : {}),
+      },
+      orgId,
+    );
     if (!result.success) {
       throw new Error(reconcileFailure(result, "Could not apply the missed subscription charge"));
     }
@@ -1842,16 +2091,10 @@ async function reconcileOneOffOrders(orgId: string, actions: string[]) {
       );
       if (!captured) continue;
 
+      // Razorpay's own listing for this order, so the payment's `order_id` is the one
+      // the order row names — the same key the webhook resolves by.
       const result = await verifyPayment(
-        {
-          ...captured,
-          // Same gap-filling as above: `notes` come from checkout and the order is known.
-          notes: {
-            ...captured.notes,
-            rateupOrderId: captured.notes?.rateupOrderId ?? order.id,
-            orgId: captured.notes?.orgId ?? orgId,
-          },
-        },
+        { ...captured, order_id: captured.order_id ?? order.checkoutRefId },
         "payment.captured",
       );
       if (!result.success) {

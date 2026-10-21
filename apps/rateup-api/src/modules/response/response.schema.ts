@@ -57,6 +57,21 @@ const createResponseInputSchema = z.object({
   idempotencyKey: z.string().optional(),
 });
 
+/**
+ * What an anonymous respondent may send to `POST /api/public/response`. Narrower than the
+ * internal input: the platform is the server's to decide (a client-chosen `WHATSAPP` used
+ * to skip the response allowance), `contactId`/`phone` would attach the answers to an
+ * arbitrary contact, and `idempotencyKey` is only honoured from the authenticated WhatsApp
+ * Flow path, where it is a signed flow token. Zod strips the dropped keys.
+ */
+const createPublicResponseInputSchema = createResponseInputSchema.omit({
+  platform: true,
+  contactId: true,
+  phone: true,
+  idempotencyKey: true,
+  deviceData: true,
+});
+
 const getResponsesParamsSchema = z.object({
   surveyTeamMapId: z.string().optional(),
   surveyId: z.uuid(),
@@ -106,20 +121,66 @@ const summarizeSchema = z.object({
   teamId: z.string().optional(),
 });
 
+/**
+ * Query keys the response listing understands by name. Every other key is a per-question
+ * answer filter: the key is the question id (a uuid for web surveys, the flow element name
+ * for v2 WhatsApp flows) and the value is the search text.
+ */
+export const RESPONSE_FILTER_RESERVED_KEYS = [
+  "page",
+  "limit",
+  "tag",
+  "language",
+  "surveyTeamMapIds",
+  "contactIds",
+  "dateRange",
+  "campaignIds",
+  "mobile",
+  "desc",
+  "createdAt",
+] as const;
+
+const QUESTION_FILTER_KEY = /^[\w.-]{1,200}$/;
+const FILTER_TEXT_MAX = 500;
+
+/** A comma-separated list of uuids, as the dashboard sends `filterTeams.join(",")`. */
+const uuidList = z
+  .string()
+  .max(20_000)
+  .transform((value) =>
+    value
+      .split(",")
+      .map((part) => part.trim())
+      .filter(Boolean),
+  )
+  .pipe(z.array(z.uuid()).max(500));
+
 const responseFilterQuery = z
   .object({
-    page: z.coerce.number().optional(),
-    limit: z.coerce.number().optional(),
-    tag: z.string().optional(),
-    language: z.string().optional(),
-    surveyTeamMapIds: z.string().optional(),
-    contactIds: z.string().optional(),
-    dateRange: z.string().optional(),
-    campaignIds: z.string().optional(),
+    page: z.coerce.number().int().min(0).optional(),
+    limit: z.coerce.number().int().min(1).max(1000).optional(),
+    tag: z.string().max(FILTER_TEXT_MAX).optional(),
+    language: z.string().max(FILTER_TEXT_MAX).optional(),
+    surveyTeamMapIds: uuidList.optional(),
+    contactIds: uuidList.optional(),
+    dateRange: z.string().max(200).optional(),
+    campaignIds: uuidList.optional(),
+    mobile: z.string().max(FILTER_TEXT_MAX).optional(),
+    desc: z.enum(["true", "false"]).optional(),
+    createdAt: z.string().max(100).optional(),
   })
-  .catchall(z.any());
+  .catchall(z.string().max(FILTER_TEXT_MAX))
+  .superRefine((query, ctx) => {
+    for (const key of Object.keys(query)) {
+      if ((RESPONSE_FILTER_RESERVED_KEYS as readonly string[]).includes(key)) continue;
+      if (!QUESTION_FILTER_KEY.test(key)) {
+        ctx.addIssue({ code: "custom", path: [key], message: "Unknown filter" });
+      }
+    }
+  });
 
 export type CreateResponseInput = z.infer<typeof createResponseInputSchema>;
+export type CreatePublicResponseInput = z.infer<typeof createPublicResponseInputSchema>;
 export type GetResponsesParams = z.infer<typeof getResponsesParamsSchema>;
 export type IdInputParams = z.infer<typeof idInputParamsSchema>;
 export type DeleteResponseParamsSchema = z.infer<typeof deleteResponseParamsSchema>;
@@ -132,6 +193,7 @@ export type ResponseFilterQuery = z.infer<typeof responseFilterQuery>;
 // Auto-exported after fastify-zod migration
 export {
   createResponseInputSchema,
+  createPublicResponseInputSchema,
   getResponsesParamsSchema,
   idInputParamsSchema,
   deleteResponseParamsSchema,

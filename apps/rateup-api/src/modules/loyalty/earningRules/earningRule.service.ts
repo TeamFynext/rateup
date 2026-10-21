@@ -48,9 +48,11 @@ export async function getActiveLoyaltyEarningRules(programId: string) {
   });
 }
 
-export async function getLoyaltyEarningRuleById(ruleId: string) {
-  return await prisma.loyaltyEarningRule.findUnique({
-    where: { id: ruleId },
+// Every by-id read and write below is pinned to the caller's programme: a rule id from
+// another org's programme behaves exactly like one that does not exist.
+export async function getLoyaltyEarningRuleById(ruleId: string, programId: string) {
+  return await prisma.loyaltyEarningRule.findFirst({
+    where: { id: ruleId, programId },
     include: {
       program: true,
     },
@@ -59,17 +61,18 @@ export async function getLoyaltyEarningRuleById(ruleId: string) {
 
 export async function updateLoyaltyEarningRule(
   ruleId: string,
+  programId: string,
   data: LoyaltyEarningRuleUpdateInput,
 ) {
   return await prisma.loyaltyEarningRule.update({
-    where: { id: ruleId },
+    where: { id: ruleId, programId },
     // The default rule is the base rate itself; a multiplier on it is the rate in disguise.
     data: data.isDefault ? { ...data, multiplier: 1 } : data,
   });
 }
 
-export async function deleteLoyaltyEarningRule(ruleId: string) {
+export async function deleteLoyaltyEarningRule(ruleId: string, programId: string) {
   return await prisma.loyaltyEarningRule.delete({
-    where: { id: ruleId },
+    where: { id: ruleId, programId },
   });
 }

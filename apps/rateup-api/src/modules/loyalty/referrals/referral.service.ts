@@ -5,6 +5,8 @@ export async function trackReferral(
   programId: string,
   referralCode: string,
   refereeContactId: string,
+  /** The caller's org: the referee must be one of its contacts, never another org's. */
+  orgId: string,
 ) {
   const referrer = await findAccountByReferralCode(programId, referralCode);
 
@@ -27,8 +29,8 @@ export async function trackReferral(
   }
 
   // Get contact info
-  const contact = await prisma.contact.findUnique({
-    where: { id: refereeContactId },
+  const contact = await prisma.contact.findFirst({
+    where: { id: refereeContactId, orgId },
   });
 
   if (!contact) {
@@ -98,9 +100,9 @@ export async function completeReferral(referralId: string, programId: string) {
   return referral;
 }
 
-export async function getReferralsByReferrer(referrerId: string) {
+export async function getReferralsByReferrer(referrerId: string, programId: string) {
   return await prisma.loyaltyReferral.findMany({
-    where: { referrerAccountId: referrerId },
+    where: { referrerAccountId: referrerId, programId },
     include: {
       refereeAccount: true,
     },

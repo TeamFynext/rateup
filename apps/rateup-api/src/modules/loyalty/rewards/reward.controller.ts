@@ -10,6 +10,12 @@ import {
 import { log } from "../../../utils/logger.js";
 import { LoyaltyRewardInput, LoyaltyRewardUpdateInput, RewardIdParam } from "./reward.schema.js";
 import { getLoyaltyProgramByOrg } from "../program/program.service.js";
+import { LoyaltyError } from "../loyalty.errors.js";
+
+/** Prisma's "no row matched" — here, an id outside the caller's programme. */
+function isRecordNotFound(e: unknown) {
+  return typeof e === "object" && e !== null && "code" in e && e.code === "P2025";
+}
 
 export async function createLoyaltyRewardHandler(
   request: FastifyRequest<{ Body: LoyaltyRewardInput }>,
@@ -56,7 +62,8 @@ export async function getLoyaltyRewardByIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    const result = await getLoyaltyRewardById(request.params.rewardId);
+    const program = await getLoyaltyProgramByOrg(request.user.orgId);
+    const result = program ? await getLoyaltyRewardById(request.params.rewardId, program.id) : null;
     if (!result) {
       return reply.code(404).send({ error: "Reward not found" });
     }
@@ -75,9 +82,16 @@ export async function updateLoyaltyRewardHandler(
   reply: FastifyReply,
 ) {
   try {
-    const result = await updateLoyaltyReward(request.params.rewardId, request.body);
+    const program = await getLoyaltyProgramByOrg(request.user.orgId);
+    if (!program) {
+      return reply.code(404).send({ error: "Reward not found" });
+    }
+    const result = await updateLoyaltyReward(request.params.rewardId, program.id, request.body);
     reply.code(200).send(result);
   } catch (e) {
+    if (isRecordNotFound(e)) {
+      return reply.code(404).send({ error: "Reward not found" });
+    }
     log.error(e);
     reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
@@ -88,9 +102,16 @@ export async function deleteLoyaltyRewardHandler(
   reply: FastifyReply,
 ) {
   try {
-    await deleteLoyaltyReward(request.params.rewardId);
+    const program = await getLoyaltyProgramByOrg(request.user.orgId);
+    if (!program) {
+      return reply.code(404).send({ error: "Reward not found" });
+    }
+    await deleteLoyaltyReward(request.params.rewardId, program.id);
     reply.code(204).send();
   } catch (e) {
+    if ((e instanceof LoyaltyError && e.code === "REWARD_NOT_FOUND") || isRecordNotFound(e)) {
+      return reply.code(404).send({ error: "Reward not found" });
+    }
     log.error(e);
     reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }

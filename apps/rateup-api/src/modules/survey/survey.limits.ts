@@ -1,7 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 
 import prisma from "../../utils/prisma.js";
-import { ResponsePlatform } from "../../../generated/prisma/client.js";
 import { SubscriptionFeaturePathName } from "../../types/enums.js";
 import { checkPlanLimit } from "../subscription/planLimits.js";
 import { sendFormResponseLimitAlert } from "../../utils/email/payments/usageLimitAlert.js";
@@ -97,17 +96,17 @@ export async function orgForSurveyLink(id: string): Promise<string | undefined> 
  * form opened before the limit was reached, a resubmitted tab, or a POST made directly
  * all arrive here.
  *
- * WhatsApp submissions are exempt: they are metered as conversations, and refusing them
- * here would take the same usage off an org twice.
+ * Only the public web form reaches this guard. WhatsApp submissions are filed by the
+ * webhook/flow path, which never passes through here (they are metered as conversations);
+ * the route used to trust a body `platform: "WHATSAPP"` to skip the check, which let any
+ * caller flood a closed form.
  */
 export async function enforceResponseLimit(
   request: FastifyRequest<{
-    Body: { surveyTeamMapId?: string; platform?: string };
+    Body: { surveyTeamMapId?: string };
   }>,
   reply: FastifyReply,
 ) {
-  if (request.body?.platform === ResponsePlatform.WHATSAPP) return;
-
   const surveyTeamMapId = request.body?.surveyTeamMapId;
   if (!surveyTeamMapId) return;
 

@@ -1,5 +1,7 @@
 import { hkdfSync } from "node:crypto";
 
+import { log } from "../../../utils/logger.js";
+
 /**
  * The one secret behind integration security, from `INTEGRATION_SECRET_KEY`: 32
  * random bytes, base64 (`openssl rand -base64 32`).
@@ -11,7 +13,7 @@ import { hkdfSync } from "node:crypto";
  * have to reconnect. Keep it in the secret store with the database credentials,
  * and never rotate it by simply replacing it.
  */
-export type IntegrationKeyPurpose = "credential-encryption" | "oauth-state";
+export type IntegrationKeyPurpose = "credential-encryption" | "oauth-state" | "shopify-claim";
 
 const cache = new Map<IntegrationKeyPurpose, Buffer>();
 
@@ -37,4 +39,15 @@ export function requireIntegrationKey(purpose: IntegrationKeyPurpose): Buffer {
   const key = getIntegrationKey(purpose);
   if (!key) throw new Error(`INTEGRATION_SECRET_KEY is not set; needed for ${purpose}`);
   return key;
+}
+
+// Once per process, when it boots (this module loads with the integration code in
+// every service). Not a boot failure: a deploy without the key keeps working, with
+// credentials stored in plaintext, until the key is set and the backfill
+// (`npm run integrations:encrypt-credentials`) has run.
+if (!process.env.INTEGRATION_SECRET_KEY && process.env.NODE_ENV !== "test") {
+  log.error(
+    "INTEGRATION_SECRET_KEY is not set: integration credentials (HubSpot, Zoho, Pipedrive, Shopify, …) " +
+      "are stored unencrypted and OAuth connect flows are disabled",
+  );
 }

@@ -286,13 +286,28 @@ describe("the tier controller", () => {
     expect(answer(rep2)).toEqual({ code: 200, body: [] });
   });
 
-  test("fetches a tier by the path id alone", async () => {
+  test("fetches a tier within the caller's programme", async () => {
     (getLoyaltyTierById as Mock).mockResolvedValue({ id: "tier-other" });
 
     await getLoyaltyTierByIdHandler(request({ params: { tierId: "tier-other" } }), reply());
 
-    expect(getLoyaltyProgramByOrg).not.toHaveBeenCalled();
-    expect(getLoyaltyTierById).toHaveBeenCalledWith("tier-other");
+    expect(getLoyaltyProgramByOrg).toHaveBeenCalledWith(ORG);
+    expect(getLoyaltyTierById).toHaveBeenCalledWith("tier-other", PROGRAM);
+  });
+
+  test("another programme's tier is a 404 on update and delete", async () => {
+    (updateLoyaltyTier as Mock).mockRejectedValue(Object.assign(new Error("x"), { code: "P2025" }));
+    (deleteLoyaltyTier as Mock).mockRejectedValue(
+      Object.assign(new Error("Tier not found."), { code: "TIER_NOT_FOUND" }),
+    );
+    const up = reply();
+    const del = reply();
+
+    await updateLoyaltyTierHandler(request({ params: { tierId: "tier-b" }, body: {} }), up);
+    await deleteLoyaltyTierHandler(request({ params: { tierId: "tier-b" }, query: {} }), del);
+
+    expect(answer(up).code).toBe(404);
+    expect(answer(del).code).toBe(404);
   });
 
   test("answers 404 for a tier that does not exist", async () => {
@@ -322,13 +337,13 @@ describe("the tier controller", () => {
       request({ params: { tierId: "tier-1" }, query: { downgradeCustomers: true } }),
       reply(),
     );
-    expect((deleteLoyaltyTier as Mock).mock.calls[0][1]).toEqual({ downgradeCustomers: true });
+    expect((deleteLoyaltyTier as Mock).mock.calls[0][2]).toEqual({ downgradeCustomers: true });
 
     await deleteLoyaltyTierHandler(
       request({ params: { tierId: "tier-1" }, query: { downgradeCustomers: "true" } }),
       reply(),
     );
-    expect((deleteLoyaltyTier as Mock).mock.calls[1][1]).toEqual({ downgradeCustomers: true });
+    expect((deleteLoyaltyTier as Mock).mock.calls[1][2]).toEqual({ downgradeCustomers: true });
   });
 
   test("treats any other value as no confirmation", async () => {
@@ -337,7 +352,7 @@ describe("the tier controller", () => {
       reply(),
     );
 
-    expect((deleteLoyaltyTier as Mock).mock.calls[0][1]).toEqual({ downgradeCustomers: false });
+    expect((deleteLoyaltyTier as Mock).mock.calls[0][2]).toEqual({ downgradeCustomers: false });
   });
 
   test("turns a populated tier into a 409 that names the count", async () => {
@@ -422,7 +437,7 @@ describe("the reward controller", () => {
     expect(getLoyaltyRewards).toHaveBeenCalled();
   });
 
-  test("fetches, updates and deletes a reward by the path id alone", async () => {
+  test("fetches, updates and deletes a reward within the caller's programme", async () => {
     (getLoyaltyRewardById as Mock).mockResolvedValue({ id: "rwd-other" });
 
     await getLoyaltyRewardByIdHandler(request({ params: { rewardId: "rwd-other" } }), reply());
@@ -432,10 +447,9 @@ describe("the reward controller", () => {
     );
     await deleteLoyaltyRewardHandler(request({ params: { rewardId: "rwd-other" } }), reply());
 
-    expect(getLoyaltyProgramByOrg).not.toHaveBeenCalled();
-    expect(getLoyaltyRewardById).toHaveBeenCalledWith("rwd-other");
-    expect(updateLoyaltyReward).toHaveBeenCalledWith("rwd-other", { pointsCost: 1 });
-    expect(deleteLoyaltyReward).toHaveBeenCalledWith("rwd-other");
+    expect(getLoyaltyRewardById).toHaveBeenCalledWith("rwd-other", PROGRAM);
+    expect(updateLoyaltyReward).toHaveBeenCalledWith("rwd-other", PROGRAM, { pointsCost: 1 });
+    expect(deleteLoyaltyReward).toHaveBeenCalledWith("rwd-other", PROGRAM);
   });
 
   test("answers 404 for a reward that does not exist", async () => {
@@ -494,7 +508,7 @@ describe("the earning rule controller", () => {
     expect(answer(rep)).toEqual({ code: 200, body: [] });
   });
 
-  test("fetches, updates and deletes a rule by the path id alone", async () => {
+  test("fetches, updates and deletes a rule within the caller's programme", async () => {
     (getLoyaltyEarningRuleById as Mock).mockResolvedValue({ id: "rule-other" });
 
     await getLoyaltyEarningRuleByIdHandler(request({ params: { ruleId: "rule-other" } }), reply());
@@ -504,9 +518,11 @@ describe("the earning rule controller", () => {
     );
     await deleteLoyaltyEarningRuleHandler(request({ params: { ruleId: "rule-other" } }), reply());
 
-    expect(getLoyaltyProgramByOrg).not.toHaveBeenCalled();
-    expect(updateLoyaltyEarningRule).toHaveBeenCalledWith("rule-other", { pointsPerUnit: 100 });
-    expect(deleteLoyaltyEarningRule).toHaveBeenCalledWith("rule-other");
+    expect(getLoyaltyEarningRuleById).toHaveBeenCalledWith("rule-other", PROGRAM);
+    expect(updateLoyaltyEarningRule).toHaveBeenCalledWith("rule-other", PROGRAM, {
+      pointsPerUnit: 100,
+    });
+    expect(deleteLoyaltyEarningRule).toHaveBeenCalledWith("rule-other", PROGRAM);
   });
 
   test("answers 404 for a rule that does not exist", async () => {

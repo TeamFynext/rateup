@@ -39,7 +39,16 @@ export function judgeSession(session: SessionWithStaff, now: Date): SessionRejec
 
 export async function createStaffSession(
   staffUserId: string,
-  meta: { ip?: string; userAgent?: string },
+  meta: {
+    ip?: string;
+    userAgent?: string;
+    /**
+     * When Google last checked the person's credentials (`googleAuthenticatedAt`), not when
+     * this session was minted: a sign-in Google waved through on its own live session proves
+     * nothing new, so it must not satisfy step-up.
+     */
+    authenticatedAt: Date;
+  },
   now = new Date(),
 ): Promise<{ token: string; session: StaffSession }> {
   const { token, tokenHash } = newSessionToken();
@@ -47,7 +56,7 @@ export async function createStaffSession(
     data: {
       tokenHash,
       staffUserId,
-      authenticatedAt: now,
+      authenticatedAt: meta.authenticatedAt.getTime() > now.getTime() ? now : meta.authenticatedAt,
       lastSeenAt: now,
       expiresAt: new Date(now.getTime() + SESSION_ABSOLUTE_MS),
       ip: meta.ip,
@@ -100,9 +109,10 @@ export async function revokeAllStaffSessions(staffUserId: string, now = new Date
 }
 
 /**
- * Step-up for destructive actions: refuse unless Google authenticated this person in the
- * last 15 minutes. The console answers REAUTH_REQUIRED by re-running Google sign-in with
- * `prompt=login`, which issues a fresh session.
+ * Step-up for destructive and privileged actions: refuse unless Google checked this person's
+ * credentials in the last 15 minutes (the id_token's `auth_time`, see createStaffSession).
+ * The console answers REAUTH_REQUIRED by re-running Google sign-in with `reauth=1`
+ * (`prompt=login`), which issues a fresh session.
  */
 export function assertRecentAuth(session: StaffSession | undefined, now = new Date()): void {
   if (!session || now.getTime() - session.authenticatedAt.getTime() > STEP_UP_MAX_AGE_MS) {

@@ -43,6 +43,7 @@ import { normalisePhone } from "../util.js";
 import { parseCardCode } from "./cardCode.js";
 import { sendMemberCard } from "./memberCard.service.js";
 import { effectiveBonuses } from "../program/bonuses.js";
+import { LoyaltyError } from "../loyalty.errors.js";
 
 export async function createPublicCustomerAccountHandler(
   request: FastifyRequest<{ Body: CustomerLoyaltyAccountInput }>,
@@ -72,19 +73,20 @@ export async function createPublicCustomerAccountHandler(
     }
     // A web signup earns its bonus points once the customer is seen on WhatsApp or at the
     // till — a bot that never shows up gets nothing.
-    const result = await createCustomerAccount(
-      { ...request.body, phone },
-      program.id,
-      orgId,
-      undefined,
-      {
-        holdBonuses: true,
-      },
-    );
-    reply.code(201).send(result);
+    await createCustomerAccount({ ...request.body, phone }, program.id, orgId, undefined, {
+      holdBonuses: true,
+    });
+    // Anyone can call this with any number, so the answer says nothing about the person:
+    // not the account, not the contact the org already holds for that phone.
+    reply.code(201).send({ success: true });
   } catch (e) {
+    // An existing member gets the same answer as a new one; a distinct error would turn
+    // the form into a membership lookup.
+    if (e instanceof LoyaltyError && e.code === "MEMBER_EXISTS") {
+      return reply.code(201).send({ success: true });
+    }
     log.error(e);
-    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
+    reply.code(500).send({ error: "Could not complete the signup" });
   }
 }
 
@@ -569,14 +571,23 @@ export async function exportCustomerAccountsHandler(
 }
 
 export async function assignRewardToCustomerHandler(
-  request: FastifyRequest<{ Body: AssignRewardInput }>,
+  request: FastifyRequest<{ Params: { customerId: string }; Body: AssignRewardInput }>,
   reply: FastifyReply,
 ) {
   try {
+    const customerId = request.params.customerId;
+    if (request.body.customerId && request.body.customerId !== customerId) {
+      return reply.code(400).send({ error: "customerId does not match the path" });
+    }
+    const program = await getLoyaltyProgramByOrg(request.user.orgId);
+    if (!program) {
+      return reply.code(404).send({ error: "Loyalty program not found" });
+    }
     const result = await assignRewardToCustomer(
-      request.body.customerId,
+      customerId,
       request.body.rewardId,
       request.body.notes,
+      program.id,
     );
 
     reply.code(201).send({
@@ -587,6 +598,12 @@ export async function assignRewardToCustomerHandler(
     log.error(e);
     if (e instanceof Error && e.message === "Reward is already assigned to this customer") {
       return reply.code(400).send({ error: e.message });
+    }
+    if (
+      e instanceof LoyaltyError &&
+      (e.code === "MEMBER_NOT_FOUND" || e.code === "REWARD_NOT_FOUND")
+    ) {
+      return reply.code(404).send({ error: e.message });
     }
     reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
