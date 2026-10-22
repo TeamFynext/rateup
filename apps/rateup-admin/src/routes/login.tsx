@@ -8,7 +8,6 @@ import { PAGE_TITLE } from "@/components/ds/page-heading";
 import { RateUpLogo } from "@/components/shell/brand";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { safeReturnTo } from "@/lib/returnTo";
 
 /**
  * Reasons the API's OIDC callback sends back as `?error=`. Every refusal reads the same, so
@@ -27,6 +26,11 @@ const loginSearchSchema = z.object({
   returnTo: z.string().optional(),
   error: z.string().optional(),
 });
+
+/** Only same-origin paths, so `?returnTo=` can't be turned into an open redirect. */
+function safeReturnTo(value: string | undefined) {
+  return value?.startsWith("/") && !value.startsWith("//") ? value : "/";
+}
 
 export const Route = createFileRoute("/login")({
   validateSearch: loginSearchSchema,

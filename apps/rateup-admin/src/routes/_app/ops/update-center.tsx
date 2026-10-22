@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useId, useState } from "react";
 
+import { isReauthRequired } from "@/api/client";
 import {
   maintenanceTasksQueryOptions,
   useApplyTask,
@@ -15,12 +16,13 @@ import { JsonBlock } from "@/components/ds/json-block";
 import { PageHeading } from "@/components/ds/page-heading";
 import { Pill } from "@/components/ds/pill";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/ds/query-states";
+import { StepUpPrompt } from "@/components/ds/step-up";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { getApiErrorMessage } from "@/lib/apiError";
-import { takeIntent } from "@/lib/resume";
+import { rememberIntent, takeIntent } from "@/lib/resume";
 
 const PAGE = "/ops/update-center";
 
@@ -151,6 +153,7 @@ function ApplyDialog({
   const apply = useApplyTask();
   const [confirm, setConfirm] = useState("");
   const confirmId = useId();
+  const stepUp = isReauthRequired(apply.error);
 
   return (
     <ActionDialog
@@ -160,10 +163,12 @@ function ApplyDialog({
       title={`Apply ${task.title}`}
       description={task.description}
       submitLabel="Apply for real"
-      blocked={confirm.trim() !== task.id && `Type "${task.id}" to confirm`}
+      blocked={
+        (stepUp && "Sign in with Google again first") ||
+        (confirm.trim() !== task.id && `Type "${task.id}" to confirm`)
+      }
       pending={apply.isPending}
-      error={apply.error}
-      stepUp={{ path: PAGE, kind: "apply", id: task.id }}
+      error={stepUp ? null : apply.error}
       onSubmit={(reason) =>
         apply.mutate(
           { taskId: task.id, confirm: confirm.trim(), reason },
@@ -171,26 +176,33 @@ function ApplyDialog({
         )
       }
     >
-      <>
-        {task.destructive && (
-          <Notice>This writes to the live database and is hard to undo. Preview it first.</Notice>
-        )}
-        <div className="flex flex-col gap-2">
-          <Label htmlFor={confirmId}>
-            Type <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">{task.id}</code>{" "}
-            to confirm
-          </Label>
-          <Input
-            id={confirmId}
-            autoFocus
-            autoComplete="off"
-            spellCheck={false}
-            value={confirm}
-            onChange={(event) => setConfirm(event.target.value)}
-            className="h-9 rounded-lg font-mono"
-          />
-        </div>
-      </>
+      {stepUp ? (
+        <StepUpPrompt
+          onBeforeLeave={() => rememberIntent({ path: PAGE, kind: "apply", id: task.id })}
+        />
+      ) : (
+        <>
+          {task.destructive && (
+            <Notice>This writes to the live database and is hard to undo. Preview it first.</Notice>
+          )}
+          <div className="flex flex-col gap-2">
+            <Label htmlFor={confirmId}>
+              Type{" "}
+              <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">{task.id}</code> to
+              confirm
+            </Label>
+            <Input
+              id={confirmId}
+              autoFocus
+              autoComplete="off"
+              spellCheck={false}
+              value={confirm}
+              onChange={(event) => setConfirm(event.target.value)}
+              className="h-9 rounded-lg font-mono"
+            />
+          </div>
+        </>
+      )}
     </ActionDialog>
   );
 }

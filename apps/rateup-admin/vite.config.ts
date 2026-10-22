@@ -3,16 +3,6 @@ import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import viteReact from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
-/**
- * The deployed console gets its headers (CSP with `frame-ancestors 'none'`, X-Frame-Options)
- * from `public/_headers` on Cloudflare Pages. Dev and `vite preview` mirror the anti-framing
- * pair so a local build behaves the same when embedded.
- */
-const FRAME_DENY_HEADERS = {
-  "Content-Security-Policy": "frame-ancestors 'none'",
-  "X-Frame-Options": "DENY",
-};
-
 export default defineConfig({
   resolve: {
     tsconfigPaths: true,
@@ -24,10 +14,6 @@ export default defineConfig({
   server: {
     port: 4000,
     strictPort: true,
-    headers: FRAME_DENY_HEADERS,
-  },
-  preview: {
-    headers: FRAME_DENY_HEADERS,
   },
   build: {
     rolldownOptions: {
