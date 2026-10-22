@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useId, useState } from "react";
 
+import { isReauthRequired } from "@/api/client";
 import {
   orgDeletionQueryOptions,
   useDeleteOrg,
@@ -12,11 +13,12 @@ import {
 import type { OrgSummary } from "@/api/orgs.api";
 import { ActionDialog, done, Notice } from "@/components/ds/action-dialog";
 import { ErrorState, PanelSkeleton } from "@/components/ds/query-states";
+import { StepUpPrompt } from "@/components/ds/step-up";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatNumber } from "@/lib/format";
-import { takeIntent } from "@/lib/resume";
+import { rememberIntent, takeIntent } from "@/lib/resume";
 
 /**
  * The irreversible end of an account: warn the owner, or delete it. Deleting needs a Google
@@ -155,6 +157,7 @@ function DeleteDialog({
   const navigate = useNavigate();
   const [confirm, setConfirm] = useState("");
   const confirmId = useId();
+  const stepUp = isReauthRequired(mutation.error);
   const billing = preview.liveSubscriptions.length > 0;
 
   return (
@@ -166,12 +169,12 @@ function DeleteDialog({
       description="This cannot be undone."
       submitLabel="Delete for good"
       blocked={
+        (stepUp && "Sign in with Google again first") ||
         (billing && "Cancel the gateway subscription first") ||
         (confirm.trim() !== org.name.trim() && `Type "${org.name.trim()}" to confirm`)
       }
       pending={mutation.isPending}
-      error={mutation.error}
-      stepUp={{ path, kind: "delete-org", id: org.id }}
+      error={stepUp ? null : mutation.error}
       onSubmit={(reason) =>
         mutation.mutate(
           { confirm: confirm.trim(), reason },
@@ -185,48 +188,54 @@ function DeleteDialog({
         )
       }
     >
-      <>
-        {billing && (
-          <Notice>
-            A payment gateway is still billing this organisation (
-            {preview.liveSubscriptions.map((sub) => sub.subscriptionId).join(", ")}). Cancel the
-            subscription first.
-          </Notice>
-        )}
-        <dl className="grid grid-cols-2 gap-3 rounded-lg bg-muted p-4 text-sm">
-          <div>
-            <dt className="text-xs text-muted-foreground">Members</dt>
-            <dd className="font-medium tabular">{formatNumber(preview.members)}</dd>
-          </div>
-          <div>
-            <dt className="text-xs text-muted-foreground">Teams</dt>
-            <dd className="font-medium tabular">{formatNumber(preview.teams)}</dd>
-          </div>
-        </dl>
-        <People
-          title="Accounts deleted"
-          hint="This is their only organisation; their sign-in goes too."
-          people={preview.usersDeleted}
+      {stepUp ? (
+        <StepUpPrompt
+          onBeforeLeave={() => rememberIntent({ path, kind: "delete-org", id: org.id })}
         />
-        <People
-          title="Accounts kept"
-          hint="They belong to another organisation, so only their membership here goes."
-          people={preview.usersKept}
-        />
-        <div className="flex flex-col gap-2">
-          <Label htmlFor={confirmId}>
-            Type <span className="font-semibold">{org.name}</span> to confirm
-          </Label>
-          <Input
-            id={confirmId}
-            autoComplete="off"
-            spellCheck={false}
-            value={confirm}
-            onChange={(event) => setConfirm(event.target.value)}
-            className="h-9 rounded-lg"
+      ) : (
+        <>
+          {billing && (
+            <Notice>
+              A payment gateway is still billing this organisation (
+              {preview.liveSubscriptions.map((sub) => sub.subscriptionId).join(", ")}). Cancel the
+              subscription first.
+            </Notice>
+          )}
+          <dl className="grid grid-cols-2 gap-3 rounded-lg bg-muted p-4 text-sm">
+            <div>
+              <dt className="text-xs text-muted-foreground">Members</dt>
+              <dd className="font-medium tabular">{formatNumber(preview.members)}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted-foreground">Teams</dt>
+              <dd className="font-medium tabular">{formatNumber(preview.teams)}</dd>
+            </div>
+          </dl>
+          <People
+            title="Accounts deleted"
+            hint="This is their only organisation; their sign-in goes too."
+            people={preview.usersDeleted}
           />
-        </div>
-      </>
+          <People
+            title="Accounts kept"
+            hint="They belong to another organisation, so only their membership here goes."
+            people={preview.usersKept}
+          />
+          <div className="flex flex-col gap-2">
+            <Label htmlFor={confirmId}>
+              Type <span className="font-semibold">{org.name}</span> to confirm
+            </Label>
+            <Input
+              id={confirmId}
+              autoComplete="off"
+              spellCheck={false}
+              value={confirm}
+              onChange={(event) => setConfirm(event.target.value)}
+              className="h-9 rounded-lg"
+            />
+          </div>
+        </>
+      )}
     </ActionDialog>
   );
 }

@@ -162,6 +162,7 @@ export function UsageMeters({ usage, className }: { usage: OrgUsage; className?:
       <UsageMeter label="Users" {...limits.users} hint="seats, invites included" />
       <UsageMeter label="Teams" {...limits.teams} />
       <UsageMeter label="Form responses" {...limits.formResponses} hint="this month" />
+      {limits.orders && <UsageMeter label="Shop orders" {...limits.orders} hint="this month" />}
     </div>
   );
 }

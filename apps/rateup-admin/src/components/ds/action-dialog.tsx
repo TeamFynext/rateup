@@ -2,8 +2,6 @@ import { IconAlertTriangle } from "@tabler/icons-react";
 import { useId, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
-import { isReauthRequired } from "@/api/client";
-import { StepUpPrompt } from "@/components/ds/step-up";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,8 +14,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
-import { getStaffErrorMessage } from "@/lib/apiError";
-import { rememberIntent, type ResumeIntent } from "@/lib/resume";
+import { getApiErrorMessage } from "@/lib/apiError";
 import { cn } from "@/lib/utils";
 
 /** The API refuses a reason shorter than this (staff/orgs/subscription.schema.ts). */
@@ -27,11 +24,6 @@ export const MIN_REASON = 5;
  * The frame of every change a staff member makes: what it does, the fields for it, and a
  * required reason that goes on the audit row. The form scrolls inside the dialog, so a
  * long one still fits a phone.
- *
- * Give it `stepUp` for an action the API guards with a fresh Google sign-in: a
- * REAUTH_REQUIRED answer then turns the fields into the sign-in prompt, and the page named
- * in `stepUp` reopens the dialog on return (with `draft` and the reason put back). The
- * staff member presses the button again; nothing is replayed for them.
  */
 export function ActionDialog({
   open,
@@ -50,7 +42,6 @@ export function ActionDialog({
   reasonPlaceholder = "Why, in a sentence. Kept in the audit log; the customer never sees it.",
   initialReason = "",
   requireReason = true,
-  stepUp,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -74,17 +65,13 @@ export function ActionDialog({
   initialReason?: string;
   /** False for a confirmation whose subject already says everything, such as deleting a note. */
   requireReason?: boolean;
-  /** What to reopen after a step-up sign-in; without it a REAUTH_REQUIRED shows as an error. */
-  stepUp?: Omit<ResumeIntent, "reason">;
   onSubmit: (reason: string) => void;
 }) {
   const [reason, setReason] = useState(initialReason);
   const reasonId = useId();
   const trimmed = reason.trim();
   const reasonShort = requireReason && trimmed.length < MIN_REASON;
-  const signInAgain = !!stepUp && isReauthRequired(error);
   const hint =
-    (signInAgain && "Sign in with Google again first") ||
     blocked ||
     (reasonShort
       ? trimmed.length === 0
@@ -121,11 +108,7 @@ export function ActionDialog({
           }}
         >
           <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-6 py-5">
-            {signInAgain && stepUp ? (
-              <StepUpPrompt onBeforeLeave={() => rememberIntent({ ...stepUp, reason: trimmed })} />
-            ) : (
-              children
-            )}
+            {children}
             {requireReason || initialReason ? (
               <div className="flex flex-col gap-2">
                 <Label htmlFor={reasonId}>{reasonLabel}</Label>
@@ -139,9 +122,9 @@ export function ActionDialog({
                 />
               </div>
             ) : null}
-            {error != null && !signInAgain && (
+            {error != null && (
               <p role="alert" className="rounded-lg bg-negative/10 px-4 py-3 text-sm text-negative">
-                {getStaffErrorMessage(error, "That didn't work.")}
+                {getApiErrorMessage(error, "That didn't work.")}
               </p>
             )}
           </div>

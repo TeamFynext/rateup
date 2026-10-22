@@ -1,61 +1,42 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
-import { rememberIntent, RESUME_MAX_AGE_MS, takeIntent } from "./resume";
+import { rememberIntent, takeIntent } from "./resume";
 
-const store = new Map<string, string>();
-const PAGE = "/orgs/org_1";
-
-beforeEach(() => {
-  store.clear();
-  vi.stubGlobal("sessionStorage", {
+function memoryStorage() {
+  const store = new Map<string, string>();
+  return {
     getItem: (key: string) => store.get(key) ?? null,
     setItem: (key: string, value: string) => void store.set(key, value),
     removeItem: (key: string) => void store.delete(key),
+  };
+}
+
+describe("resume after step-up", () => {
+  beforeEach(() => vi.stubGlobal("sessionStorage", memoryStorage()));
+
+  test("hands the intent back once, to the page that stored it", () => {
+    rememberIntent({ path: "/orgs/1", kind: "refund", id: "p1" });
+    expect(takeIntent("/orgs/1", "refund")).toEqual({ path: "/orgs/1", kind: "refund", id: "p1" });
+    expect(takeIntent("/orgs/1", "refund")).toBeNull();
   });
-});
 
-afterEach(() => {
-  vi.unstubAllGlobals();
-});
+  test("another page or action does not get it, and it is cleared", () => {
+    rememberIntent({ path: "/orgs/1", kind: "refund", id: "p1" });
+    expect(takeIntent("/orgs/2", "refund")).toBeNull();
+    expect(takeIntent("/orgs/1", "refund")).toBeNull();
+  });
 
-describe("takeIntent", () => {
-  it("gives back what was remembered, once", () => {
-    rememberIntent(
-      { path: PAGE, kind: "org-action:plan", id: "org_1", reason: "upgrade", draft: { a: 1 } },
-      1_000,
-    );
-    expect(takeIntent(PAGE, ["org-action:plan"], 2_000)).toEqual({
-      path: PAGE,
-      kind: "org-action:plan",
-      id: "org_1",
-      reason: "upgrade",
-      draft: { a: 1 },
+  test("blocked storage is not an error", () => {
+    vi.stubGlobal("sessionStorage", {
+      getItem: () => {
+        throw new Error("blocked");
+      },
+      setItem: () => {
+        throw new Error("blocked");
+      },
+      removeItem: () => {},
     });
-    expect(takeIntent(PAGE, "org-action:plan", 2_000)).toBeNull();
-  });
-
-  it("leaves another kind on the same page for the component that handles it", () => {
-    rememberIntent({ path: PAGE, kind: "delete-org", id: "org_1" }, 1_000);
-    expect(takeIntent(PAGE, ["org-action:plan", "org-action:suspend"], 2_000)).toBeNull();
-    expect(takeIntent(PAGE, "delete-org", 2_000)?.kind).toBe("delete-org");
-  });
-
-  it("drops an intent for another page", () => {
-    rememberIntent({ path: "/orgs/other", kind: "delete-org", id: "other" }, 1_000);
-    expect(takeIntent(PAGE, "delete-org", 2_000)).toBeNull();
-    expect(store.size).toBe(0);
-  });
-
-  it("drops an abandoned one", () => {
-    rememberIntent({ path: PAGE, kind: "delete-org", id: "org_1" }, 1_000);
-    expect(takeIntent(PAGE, "delete-org", 1_000 + RESUME_MAX_AGE_MS + 1)).toBeNull();
-    expect(store.size).toBe(0);
-  });
-
-  it("ignores garbage", () => {
-    store.set("rateup-admin:resume", "{not json");
-    expect(takeIntent(PAGE, "delete-org")).toBeNull();
-    store.set("rateup-admin:resume", JSON.stringify({ path: PAGE, kind: "delete-org" }));
-    expect(takeIntent(PAGE, "delete-org")).toBeNull();
+    expect(() => rememberIntent({ path: "/", kind: "x", id: "1" })).not.toThrow();
+    expect(takeIntent("/", "x")).toBeNull();
   });
 });

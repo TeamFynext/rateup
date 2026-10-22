@@ -36,20 +36,11 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { formatDate, formatNumber, isEffectivelyNever } from "@/lib/format";
-import type { ResumeIntent } from "@/lib/resume";
 import { cn } from "@/lib/utils";
 
 import { endOfDayIso, ExpiryField, isFutureDay, toDateInput } from "./expiry-field";
 import { completeFeatures, formatLimit, isUnlimited, LIMITS, SWITCHES } from "./features";
 import { FeaturesEditor } from "./features-editor";
-import {
-  expiryDraft,
-  grantPacksDraft,
-  orgActionStepUp,
-  planDraft,
-  readDraft,
-  readLimitsDraft,
-} from "./org-action-resume";
 
 export type OrgAction =
   | { kind: "plan" }
@@ -73,7 +64,6 @@ interface SuspensionProps {
   orgId: string;
   onClose: () => void;
   org: SuspensionTarget;
-  resumed: ResumeIntent | null;
 }
 
 /**
@@ -87,14 +77,11 @@ export function OrgActionDialogs({
   orgId,
   org,
   action,
-  resumed = null,
   onClose,
 }: {
   orgId: string;
   org: SuspensionTarget;
   action: OrgAction | null;
-  /** Back from a step-up sign-in: what the reopened dialog had in it. */
-  resumed?: ResumeIntent | null;
   onClose: () => void;
 }) {
   const needsSubscription = !!action && NEEDS_SUBSCRIPTION.has(action.kind);
@@ -102,7 +89,7 @@ export function OrgActionDialogs({
     ...orgSubscriptionQueryOptions(orgId),
     enabled: needsSubscription,
   });
-  const props = { orgId, onClose, resumed, subscription: subscription.data ?? null };
+  const props = { orgId, onClose, subscription: subscription.data ?? null };
   const loading = needsSubscription && subscription.isPending;
 
   return (
@@ -126,13 +113,11 @@ export function OrgActionDialogs({
       {!loading && action?.kind === "limits" && <EditLimitsDialog {...props} />}
       {!loading && action?.kind === "grant-packs" && <GrantPacksDialog {...props} />}
       {action?.kind === "revoke-pack" && (
-        <RevokePackDialog orgId={orgId} onClose={onClose} action={action} resumed={resumed} />
+        <RevokePackDialog orgId={orgId} onClose={onClose} action={action} />
       )}
-      {action?.kind === "suspend" && (
-        <SuspendDialog orgId={orgId} onClose={onClose} org={org} resumed={resumed} />
-      )}
+      {action?.kind === "suspend" && <SuspendDialog orgId={orgId} onClose={onClose} org={org} />}
       {action?.kind === "unsuspend" && (
-        <UnsuspendDialog orgId={orgId} onClose={onClose} org={org} resumed={resumed} />
+        <UnsuspendDialog orgId={orgId} onClose={onClose} org={org} />
       )}
       {action?.kind === "note" && (
         <NoteDialog
@@ -153,7 +138,6 @@ interface DialogProps {
   orgId: string;
   onClose: () => void;
   subscription: OrgSubscription | null;
-  resumed: ResumeIntent | null;
 }
 
 /** The default expiry to offer: what they have, or a month from now when that has passed. */
@@ -173,13 +157,12 @@ function GatewayNotice({ subscription }: { subscription: OrgSubscription | null 
   );
 }
 
-function ChangePlanDialog({ orgId, onClose, subscription, resumed }: DialogProps) {
+function ChangePlanDialog({ orgId, onClose, subscription }: DialogProps) {
   const plans = useQuery(planOptionsQueryOptions);
   const mutation = useChangePlan(orgId);
-  const [saved] = useState(() => readDraft(resumed, "plan", planDraft));
-  const [planId, setPlanId] = useState(saved?.planId ?? "");
-  const [expiry, setExpiry] = useState(() => saved?.expiry ?? initialExpiry(subscription));
-  const [keepCaps, setKeepCaps] = useState(saved?.keepCaps ?? true);
+  const [planId, setPlanId] = useState("");
+  const [expiry, setExpiry] = useState(() => initialExpiry(subscription));
+  const [keepCaps, setKeepCaps] = useState(true);
   const chosen = plans.data?.find((plan) => plan.id === planId);
   const planName = (id: string) => plans.data?.find((plan) => plan.id === id)?.name ?? "Choose";
 
@@ -196,8 +179,6 @@ function ChangePlanDialog({ orgId, onClose, subscription, resumed }: DialogProps
       }
       pending={mutation.isPending}
       error={mutation.error}
-      initialReason={resumed?.reason}
-      stepUp={orgActionStepUp(orgId, { kind: "plan" }, { planId, expiry, keepCaps })}
       onSubmit={(reason) =>
         mutation.mutate(
           {
@@ -286,7 +267,12 @@ function FeatureComparison({
       if (keepCaps && isUnlimited(next) && was !== undefined && !isUnlimited(was) && was > 0) {
         next = was;
       }
-      return { key: limit.key, label: limit.label, was: formatLimit(was), next: formatLimit(next) };
+      return {
+        key: limit.key,
+        label: limit.label,
+        was: formatLimit(was, limit),
+        next: formatLimit(next, limit),
+      };
     }),
     ...SWITCHES.map((gate) => ({
       key: gate.key,
@@ -325,11 +311,9 @@ function FeatureComparison({
   );
 }
 
-function ChangeExpiryDialog({ orgId, onClose, subscription, resumed }: DialogProps) {
+function ChangeExpiryDialog({ orgId, onClose, subscription }: DialogProps) {
   const mutation = useChangeExpiry(orgId);
-  const [expiry, setExpiry] = useState(
-    () => readDraft(resumed, "expiry", expiryDraft)?.expiry ?? initialExpiry(subscription),
-  );
+  const [expiry, setExpiry] = useState(() => initialExpiry(subscription));
   const current = subscription?.expiresAt;
 
   return (
@@ -351,8 +335,6 @@ function ChangeExpiryDialog({ orgId, onClose, subscription, resumed }: DialogPro
       }
       pending={mutation.isPending}
       error={mutation.error ?? (!subscription ? { message: "No subscription to change." } : null)}
-      initialReason={resumed?.reason}
-      stepUp={orgActionStepUp(orgId, { kind: "expiry" }, { expiry })}
       onSubmit={(reason) =>
         mutation.mutate(
           { expiresAt: endOfDayIso(expiry), reason },
@@ -366,11 +348,9 @@ function ChangeExpiryDialog({ orgId, onClose, subscription, resumed }: DialogPro
   );
 }
 
-function EditLimitsDialog({ orgId, onClose, subscription, resumed }: DialogProps) {
+function EditLimitsDialog({ orgId, onClose, subscription }: DialogProps) {
   const mutation = useOverrideFeatures(orgId);
-  const [draft, setDraft] = useState(() =>
-    completeFeatures(readLimitsDraft(resumed) ?? subscription?.features),
-  );
+  const [draft, setDraft] = useState(() => completeFeatures(subscription?.features));
   const planFeatures = subscription?.planFeatures ?? null;
   const update = (change: (features: SubscriptionFeatures) => void) =>
     setDraft((current) => {
@@ -390,8 +370,6 @@ function EditLimitsDialog({ orgId, onClose, subscription, resumed }: DialogProps
       blocked={!subscription && "No subscription to change"}
       pending={mutation.isPending}
       error={mutation.error ?? (!subscription ? { message: "No subscription to change." } : null)}
-      initialReason={resumed?.reason}
-      stepUp={orgActionStepUp(orgId, { kind: "limits" }, { features: draft })}
       onSubmit={(reason) =>
         mutation.mutate(
           { features: draft, reason },
@@ -415,11 +393,10 @@ function EditLimitsDialog({ orgId, onClose, subscription, resumed }: DialogProps
   );
 }
 
-function GrantPacksDialog({ orgId, onClose, subscription, resumed }: DialogProps) {
+function GrantPacksDialog({ orgId, onClose, subscription }: DialogProps) {
   const mutation = useGrantPacks(orgId);
-  const [saved] = useState(() => readDraft(resumed, "grant-packs", grantPacksDraft));
-  const [kind, setKind] = useState<PackKind>(saved?.kind ?? "ACTIVE_CONTACTS");
-  const [quantity, setQuantity] = useState(saved?.quantity ?? 1);
+  const [kind, setKind] = useState<PackKind>("ACTIVE_CONTACTS");
+  const [quantity, setQuantity] = useState(1);
   const pack = PACK_KINDS[kind];
   const whatsapp = subscription?.features?.whatsapp;
   const planMax = (
@@ -439,8 +416,6 @@ function GrantPacksDialog({ orgId, onClose, subscription, resumed }: DialogProps
       blocked={!metered && `This plan does not cap ${pack.unit}`}
       pending={mutation.isPending}
       error={mutation.error}
-      initialReason={resumed?.reason}
-      stepUp={orgActionStepUp(orgId, { kind: "grant-packs" }, { kind, quantity })}
       onSubmit={(reason) =>
         mutation.mutate(
           { kind, quantity, reason },
@@ -529,12 +504,10 @@ function RevokePackDialog({
   orgId,
   onClose,
   action,
-  resumed,
 }: {
   orgId: string;
   onClose: () => void;
   action: Extract<OrgAction, { kind: "revoke-pack" }>;
-  resumed: ResumeIntent | null;
 }) {
   const mutation = useRevokePack(orgId);
   return (
@@ -547,8 +520,6 @@ function RevokePackDialog({
       submitLabel="End pack"
       pending={mutation.isPending}
       error={mutation.error}
-      initialReason={resumed?.reason}
-      stepUp={orgActionStepUp(orgId, action)}
       onSubmit={(reason) =>
         mutation.mutate(
           { addonId: action.addonId, reason },
@@ -559,7 +530,7 @@ function RevokePackDialog({
   );
 }
 
-function SuspendDialog({ orgId, onClose, org, resumed }: SuspensionProps) {
+function SuspendDialog({ orgId, onClose, org }: SuspensionProps) {
   const mutation = useSuspendOrg(orgId);
   return (
     <ActionDialog
@@ -571,8 +542,6 @@ function SuspendDialog({ orgId, onClose, org, resumed }: SuspensionProps) {
       submitLabel="Suspend"
       pending={mutation.isPending}
       error={mutation.error}
-      initialReason={resumed?.reason}
-      stepUp={orgActionStepUp(orgId, { kind: "suspend" })}
       onSubmit={(reason) =>
         mutation.mutate({ reason }, { onSuccess: () => done("Organisation suspended.", onClose) })
       }
@@ -585,7 +554,7 @@ function SuspendDialog({ orgId, onClose, org, resumed }: SuspensionProps) {
   );
 }
 
-function UnsuspendDialog({ orgId, onClose, org, resumed }: SuspensionProps) {
+function UnsuspendDialog({ orgId, onClose, org }: SuspensionProps) {
   const mutation = useUnsuspendOrg(orgId);
   return (
     <ActionDialog
@@ -600,8 +569,6 @@ function UnsuspendDialog({ orgId, onClose, org, resumed }: SuspensionProps) {
       submitLabel="Restore access"
       pending={mutation.isPending}
       error={mutation.error}
-      initialReason={resumed?.reason}
-      stepUp={orgActionStepUp(orgId, { kind: "unsuspend" })}
       onSubmit={(reason) =>
         mutation.mutate({ reason }, { onSuccess: () => done("Access restored.", onClose) })
       }

@@ -1,21 +1,68 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, test } from "vitest";
 
-import { getStaffErrorMessage } from "./apiError";
+import {
+  asApiError,
+  getAccessDenialReason,
+  getApiErrorData,
+  getApiErrorMessage,
+  isPlanDenial,
+} from "./apiError";
 
-const refused = (status: number, data: unknown) => ({ response: { status, data } });
+const rejected = (status: number, data: unknown) => ({
+  message: "Request failed",
+  response: { status, data },
+});
 
-describe("getStaffErrorMessage", () => {
-  it("speaks for the staff guard codes", () => {
-    expect(getStaffErrorMessage(refused(403, { code: "NOT_OWNER", message: "api words" }))).toMatch(
-      /staff owner/,
+describe("getApiErrorMessage", () => {
+  test("prefers the API's message, then its error, then axios's own", () => {
+    expect(getApiErrorMessage(rejected(400, { message: "Reason too short" }))).toBe(
+      "Reason too short",
     );
-    expect(
-      getStaffErrorMessage(refused(403, { code: "OWN_ACCOUNT", message: "api words" })),
-    ).toMatch(/belong to this account yourself/);
+    expect(getApiErrorMessage(rejected(400, { error: "Bad request" }))).toBe("Bad request");
+    expect(getApiErrorMessage(rejected(500, {}))).toBe("Request failed");
   });
 
-  it("falls back to the API's message, then the fallback", () => {
-    expect(getStaffErrorMessage(refused(400, { code: "BAD", message: "Nope." }))).toBe("Nope.");
-    expect(getStaffErrorMessage({}, "That didn't work.")).toBe("That didn't work.");
+  test("a bare string body is the message", () => {
+    expect(getApiErrorMessage(rejected(502, "Bad gateway"))).toBe("Bad gateway");
+  });
+
+  test("anything that is not an error gets the fallback", () => {
+    expect(getApiErrorMessage(null)).toBe("Something went wrong");
+    expect(getApiErrorMessage("boom", "Try again")).toBe("Try again");
+  });
+});
+
+test("getApiErrorData only returns an object body", () => {
+  expect(getApiErrorData(rejected(400, { code: "REAUTH_REQUIRED" }))?.code).toBe("REAUTH_REQUIRED");
+  expect(getApiErrorData(rejected(400, "text"))).toBeUndefined();
+  expect(asApiError(undefined)).toEqual({});
+});
+
+describe("access denials", () => {
+  test("uses the API's own reason when it sends one", () => {
+    expect(getAccessDenialReason(rejected(403, { reason: "team" }))).toBe("team");
+  });
+
+  test("falls back to the message for older 403s", () => {
+    expect(getAccessDenialReason(rejected(403, { message: "Subscription expired" }))).toBe(
+      "subscription_expired",
+    );
+    expect(getAccessDenialReason(rejected(403, { message: "Upgrade your subscription" }))).toBe(
+      "subscription",
+    );
+    expect(
+      getAccessDenialReason(rejected(403, { message: "Feature not enabled for your team" })),
+    ).toBe("team");
+    expect(getAccessDenialReason(rejected(403, { message: "No" }))).toBe("unknown");
+  });
+
+  test("anything but a 403 is not an access refusal", () => {
+    expect(getAccessDenialReason(rejected(401, { reason: "team" }))).toBeNull();
+  });
+
+  test("plan denials are the subscription reasons only", () => {
+    expect(isPlanDenial(rejected(403, { reason: "subscription" }))).toBe(true);
+    expect(isPlanDenial(rejected(403, { reason: "subscription_expired" }))).toBe(true);
+    expect(isPlanDenial(rejected(403, { reason: "team" }))).toBe(false);
   });
 });
