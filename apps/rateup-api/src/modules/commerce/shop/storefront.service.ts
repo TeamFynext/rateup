@@ -3,6 +3,7 @@ import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
 import connection from "../../../utils/redisConnection.js";
 import { inStoreCheckout, sellableWhere } from "./checkoutVia.js";
+import { storeAcceptingOrders } from "./orderAllowance.js";
 import { toNumber } from "./pricing.js";
 import { ShopError } from "./shop.errors.js";
 import { commerceEnabled } from "./store.service.js";
@@ -73,7 +74,7 @@ export async function getStorefront(slug: string, opts: { preview?: boolean } = 
   )
     throw new ShopError("NOT_FOUND", "Shop not found");
 
-  const [collections, products, wa, org] = await Promise.all([
+  const [collections, products, wa, org, acceptingOrders] = await Promise.all([
     prisma.shopCollection.findMany({
       where: {
         storeId: store.id,
@@ -109,6 +110,7 @@ export async function getStorefront(slug: string, opts: { preview?: boolean } = 
       select: { phone: true },
     }),
     prisma.org.findUnique({ where: { id: store.orgId }, select: { name: true } }),
+    storeAcceptingOrders(store.orgId),
   ]);
 
   const banner = store.storefrontTheme?.banner ?? null;
@@ -138,6 +140,8 @@ export async function getStorefront(slug: string, opts: { preview?: boolean } = 
       theme: store.storefrontTheme ?? null,
       whatsappNumber: wa?.phone ? wa.phone.replace(/[^\d]/g, "") : null,
       instagramUrl: store.storefrontTheme?.instagramUrl ?? null,
+      // False once the plan's monthly orders are spent, so the bag says so before checkout.
+      acceptingOrders,
       highlight: discount
         ? {
             code: discount.code,

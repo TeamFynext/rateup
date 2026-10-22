@@ -81,7 +81,10 @@ vi.mock("../../loyalty/accounts/pointsReversal.service.js", () => ({
 }));
 vi.mock("../../loyalty/program/program.service.js", () => ({ getLoyaltyProgramByOrg: vi.fn() }));
 vi.mock("../../loyalty/redemptions/redemption.service.js", () => ({ applyRedemption: vi.fn() }));
-const shopSync = vi.hoisted(() => ({ syncOrderFromStore: vi.fn() }));
+const shopSync = vi.hoisted(() => ({
+  syncOrderFromStore: vi.fn(),
+  verifyStoreCheckout: vi.fn((_org: string, _id: string, sig: string | null) => sig === "good"),
+}));
 vi.mock("../../commerce/shop/externalCheckout.service.js", () => shopSync);
 
 import prisma from "../../../utils/prisma.js";
@@ -452,9 +455,20 @@ describe("an order RateUp sent to Shopify's checkout", () => {
         externalName: "#1001",
         totals: expect.objectContaining({ total: 4000 }),
         customer: expect.objectContaining({ name: "Ann" }),
+        signature: null,
+        lines: expect.any(Array),
       }),
     );
     expect(shopifyLoyaltyQueue.add).toHaveBeenCalled();
+  });
+
+  test("passes RateUp's signature on, so only a signed order can settle the RateUp one", async () => {
+    await handleShopifyOrderEvents(
+      webhook({
+        note_attributes: [...attrs.note_attributes, { name: "rateup_sig", value: "good" }],
+      }),
+    );
+    expect(shopSync.syncOrderFromStore.mock.calls[0][3]).toMatchObject({ signature: "good" });
   });
 
   test("fulfilled in Shopify moves the RateUp order on", async () => {

@@ -37,3 +37,8 @@ export async function assertCanTakeOrder(
   const status = await orderAllowance(order);
   if (status.exceeded) throw orderLimitError(audience, status.max ?? 0);
 }
+
+/** False once the plan's monthly orders are spent, so a storefront can stop taking carts. */
+export async function storeAcceptingOrders(orgId: string): Promise<boolean> {
+  return !(await orderAllowance({ orgId, source: "storefront" })).exceeded;
+}

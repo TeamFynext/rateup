@@ -59,8 +59,9 @@ async function resolveRecipient(r: ShopRecipient) {
         select: { phone: true, igsId: true, psid: true, lastMessageSourceIdentifier: true },
       })
     : null;
+  // The contact's own number wins: an order's phone can be typed by whoever holds its link.
   return {
-    phone: r.phone ?? contact?.phone ?? null,
+    phone: contact?.phone ?? r.phone ?? null,
     igsId: contact?.igsId ?? null,
     psid: contact?.psid ?? null,
     lastSource: contact?.lastMessageSourceIdentifier ?? null,

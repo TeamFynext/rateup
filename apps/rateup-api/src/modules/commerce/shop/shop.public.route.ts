@@ -54,6 +54,27 @@ export async function shopPublicRoutes(server: FastifyInstance) {
 
   const browse = { preHandler: rateLimit({ max: 600, windowSeconds: 60 * 60, key: "shopBrowse" }) };
   const act = { preHandler: rateLimit({ max: 120, windowSeconds: 60 * 60, key: "shopCheckout" }) };
+  // The checkout saves as the shopper types, so its edits are counted per checkout; the IP
+  // ceiling is generous because a carrier's NAT puts many shoppers behind one address.
+  const editing = [
+    rateLimit<FastifyRequest<{ Params: Token }>>({
+      max: 300,
+      windowSeconds: 60 * 60,
+      key: "shopCheckoutEdit",
+      keyFrom: (r) => r.params.token,
+    }),
+    rateLimit({ max: 2000, windowSeconds: 60 * 60, key: "shopCheckoutEditIp" }),
+  ];
+  // Read again while the page waits on a payment or a WhatsApp confirmation: same split.
+  const reading = [
+    rateLimit<FastifyRequest<{ Params: Token }>>({
+      max: 600,
+      windowSeconds: 60 * 60,
+      key: "shopCheckoutRead",
+      keyFrom: (r) => r.params.token,
+    }),
+    rateLimit({ max: 3000, windowSeconds: 60 * 60, key: "shopCheckoutReadIp" }),
+  ];
   // Each one can create an order in the merchant's Shopify or WooCommerce store.
   const toStore = {
     preHandler: rateLimit({ max: 20, windowSeconds: 60 * 60, key: "shopStoreCheckout" }),
@@ -108,13 +129,13 @@ export async function shopPublicRoutes(server: FastifyInstance) {
       const store = await prisma.shopStore.findUnique({ where: { slug: request.params.slug } });
       if (!store || !store.storefrontEnabled || !(await commerceEnabled(store.orgId)))
         throw new ShopError("NOT_FOUND", "Shop not found");
-      return requestBackInStockFromStorefront(store, request.body.variantId);
+      return requestBackInStockFromStorefront(store, request.body.variantId, request.ip);
     }),
   );
 
   server.get<{ Params: Token; Querystring: z.infer<typeof publicCheckoutQuery> }>(
     "/checkout/:token",
-    { ...browse, schema: { params: tokenParams, querystring: publicCheckoutQuery } },
+    { preHandler: reading, schema: { params: tokenParams, querystring: publicCheckoutQuery } },
     h(async (request: Req<Token, unknown, z.infer<typeof publicCheckoutQuery>>) =>
       getPublicCheckout(request.params.token, { justPaid: request.query.paid === "1" }),
     ),
@@ -122,7 +143,7 @@ export async function shopPublicRoutes(server: FastifyInstance) {
   server.patch<{ Params: Token; Body: z.infer<typeof publicCheckoutPatch> }>(
     "/checkout/:token",
     {
-      preHandler: [act.preHandler, ...couponTries],
+      preHandler: [...editing, ...couponTries],
       schema: { params: tokenParams, body: publicCheckoutPatch },
     },
     h(async (request: Req<Token, z.infer<typeof publicCheckoutPatch>>) =>
@@ -133,7 +154,7 @@ export async function shopPublicRoutes(server: FastifyInstance) {
     "/checkout/:token/pay",
     { ...act, schema: { params: tokenParams, body: publicPaySchema } },
     h(async (request: Req<Token, z.infer<typeof publicPaySchema>>) =>
-      payPublicCheckout(request.params.token, request.body.method),
+      payPublicCheckout(request.params.token, request.body.method, request.ip),
     ),
   );
   server.post<{ Params: Token }>(

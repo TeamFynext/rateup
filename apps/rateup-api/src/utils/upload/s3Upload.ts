@@ -8,6 +8,8 @@ import {
 import { Upload } from "@aws-sdk/lib-storage";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
+import { log } from "../logger.js";
+
 export const s3 =
   process.env.AWS_S3_ACCESS_KEY_ID && process.env.AWS_S3_SECRET_KEY
     ? new S3Client({
@@ -68,12 +70,19 @@ export const getFileUrlFromKey = (key: string, s3Upload = true) => {
 };
 
 /**
- * Bucket for files that must never have a public URL (invoices with customer addresses).
- * Falls back to the main bucket, whose objects CloudFront may serve to anyone holding the key,
- * so set it to a bucket CloudFront does not front.
+ * Bucket for files that must never have a public URL (invoices with customer addresses), one
+ * CloudFront does not front. Production refuses to fall back to the public bucket; elsewhere
+ * the fallback keeps local setups working.
  */
-export const privateBucket = () =>
-  process.env.AWS_S3_PRIVATE_BUCKET || process.env.AWS_S3_BUCKET || "rateup-survey-uploads";
+export function privateBucket() {
+  const bucket = process.env.AWS_S3_PRIVATE_BUCKET;
+  if (bucket) return bucket;
+  if (process.env.NODE_ENV === "production") {
+    log.error("AWS_S3_PRIVATE_BUCKET is not set; refusing to store private files publicly");
+    throw new Error("AWS_S3_PRIVATE_BUCKET must be set in production");
+  }
+  return process.env.AWS_S3_BUCKET || "rateup-survey-uploads";
+}
 
 /** A link to a private object that stops working after `expiresIn` seconds (at most 7 days). */
 export function signedFileUrl(

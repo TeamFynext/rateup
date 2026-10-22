@@ -10,6 +10,7 @@ vi.mock("../../subscription/limitAlerts.js", () => ({ maybeNotifyOrderUsage: vi.
 const db = vi.hoisted(() => {
   const db = {
     shopOrder: {
+      findFirst: vi.fn(),
       findUnique: vi.fn(),
       findUniqueOrThrow: vi.fn(),
       findMany: vi.fn(),
@@ -18,6 +19,7 @@ const db = vi.hoisted(() => {
     },
     shopOrderItem: { update: vi.fn() },
     shopVariant: {
+      findMany: vi.fn(),
       findUnique: vi.fn(),
       findUniqueOrThrow: vi.fn(),
       updateMany: vi.fn(),
@@ -70,6 +72,8 @@ vi.mock("./store.service.js", () => ({
 
 const {
   assertCheckoutOpen,
+  cancelOrder,
+  createDraftOrder,
   markOrderPaid,
   placeOrder,
   refreshDraftPrices,
@@ -211,7 +215,7 @@ describe("placing an order the customer has paid for", () => {
       }),
     );
     expect(db.shopOrder.updateMany).toHaveBeenLastCalledWith({
-      where: { id: "o1", paymentStatus: { not: "PAID" } },
+      where: { id: "o1", paymentStatus: { not: "PAID" }, status: { not: "CANCELLED" } },
       data: expect.objectContaining({ paymentStatus: "PAID" }),
     });
   });
@@ -283,7 +287,7 @@ describe("placing an unpaid order (cash, bank)", () => {
 
     await expect(placeOrder("o1", { paymentMethod: "bank" })).rejects.toMatchObject({
       code: "CONFLICT",
-      message: expect.stringContaining("USD 24.00"),
+      message: expect.stringContaining("$24.00"),
     });
     expect(db.shopOrderItem.update).toHaveBeenCalledWith({
       where: { id: "i1" },
@@ -377,6 +381,109 @@ describe("the expired-drafts sweep", () => {
       }),
     );
     expect(db.shopDropClaim.deleteMany).toHaveBeenCalledWith({ where: { orderId: "stale" } });
+    expect(events.onShopOrderEvent).not.toHaveBeenCalled();
+  });
+});
+
+describe("an anonymous checkout", () => {
+  test("holds no coupon use for its payment link", async () => {
+    db.shopOrder.findUnique.mockResolvedValue(draft({ contactId: null, pointsRedeemed: 0 }));
+    await reserveOrderBenefits("o1");
+    expect(db.shopOrder.updateMany).not.toHaveBeenCalled();
+    expect(discounts.redeemDiscount).not.toHaveBeenCalled();
+  });
+});
+
+describe("a sold-out item", () => {
+  const soldOut = {
+    id: "v1",
+    productId: "p1",
+    retailerId: null,
+    title: "Default",
+    trackInventory: true,
+    allowBackorder: false,
+    stock: 0,
+    price: "10.00",
+    product: { title: "Mug", status: "ACTIVE", images: [], collections: [] },
+  };
+
+  test("can't be put in a new order", async () => {
+    db.shopVariant.findMany.mockResolvedValue([soldOut]);
+    await expect(
+      createDraftOrder({
+        store: { id: "s1", orgId: "org", checkoutVia: "RATEUP" } as never,
+        items: [{ variantId: "v1", quantity: 1 }],
+        channel: "WHATSAPP",
+      }),
+    ).rejects.toMatchObject({ code: "OUT_OF_STOCK", message: "Mug is sold out" });
+    expect(db.$transaction).not.toHaveBeenCalled();
+  });
+
+  test("stops a draft from being paid", async () => {
+    db.shopOrder.findUnique.mockResolvedValue(
+      draft({
+        items: [
+          {
+            id: "i1",
+            title: "Mug",
+            variantTitle: "Blue",
+            quantity: 3,
+            unitPrice: "10.00",
+            variant: { ...soldOut, stock: 2 },
+          },
+        ],
+      }),
+    );
+    await expect(refreshDraftPrices("o1")).rejects.toMatchObject({
+      code: "OUT_OF_STOCK",
+      message: "Only 2 of Mug (Blue) left",
+    });
+  });
+
+  test("is still sold through a store's own checkout, which takes its stock", async () => {
+    db.shopVariant.findMany.mockResolvedValue([soldOut]);
+    db.$transaction.mockResolvedValueOnce({ id: "o1" });
+    await createDraftOrder({
+      store: { id: "s1", orgId: "org", checkoutVia: "SHOPIFY" } as never,
+      items: [{ variantId: "v1", quantity: 1 }],
+      channel: "WHATSAPP",
+    }).catch(() => {}); // the draft's repricing isn't mocked here; only the refusal matters
+    expect(db.$transaction).toHaveBeenCalled();
+  });
+});
+
+describe("a payment racing a cancel", () => {
+  test("lands on the cancelled order as paid-after-cancel, with no paid follow-ups", async () => {
+    db.shopOrder.findUnique.mockResolvedValue(draft({ status: "OPEN" }));
+    db.shopOrder.updateMany.mockResolvedValue({ count: 0 });
+    db.shopOrder.findUniqueOrThrow.mockResolvedValue(
+      draft({ status: "CANCELLED", paymentStatus: "EXPIRED" }),
+    );
+    await markOrderPaid("o1", { provider: "stripe", paymentId: "pi_1" });
+    expect(db.shopOrder.updateMany).toHaveBeenCalledWith({
+      where: { id: "o1", paymentStatus: { not: "PAID" }, status: { not: "CANCELLED" } },
+      data: expect.objectContaining({ paymentStatus: "PAID" }),
+    });
+    expect(db.shopOrderEvent.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ type: "paid_after_cancel" }),
+    });
+    expect(notifier.notify).toHaveBeenCalledWith(
+      expect.objectContaining({ event: "commerce.order_needs_review" }),
+    );
+    expect(events.onShopOrderEvent).not.toHaveBeenCalled();
+  });
+});
+
+describe("a conditional cancel", () => {
+  test("does nothing when the order changed first (a cash order confirmed at its deadline)", async () => {
+    db.shopOrder.findFirst.mockResolvedValue(null);
+    db.shopOrder.findUniqueOrThrow.mockResolvedValue(draft({ status: "OPEN" }));
+    await cancelOrder("o1", {
+      reason: "Not confirmed in time",
+      onlyIf: { paymentStatus: "COD_PENDING", confirmedAt: null },
+    });
+    expect(db.$queryRaw).toHaveBeenCalled();
+    expect(db.shopOrder.update).not.toHaveBeenCalled();
     expect(events.onShopOrderEvent).not.toHaveBeenCalled();
   });
 });

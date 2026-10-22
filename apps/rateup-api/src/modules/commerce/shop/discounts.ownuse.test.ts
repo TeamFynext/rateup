@@ -2,7 +2,7 @@ import { describe, expect, test, vi } from "vitest";
 
 vi.mock("../../../utils/prisma.js", () => ({ default: {} }));
 
-const { resolveDiscount } = await import("./discounts.service.js");
+const { redeemDiscount, resolveDiscount } = await import("./discounts.service.js");
 
 const usedUp = {
   id: "d1",
@@ -72,5 +72,62 @@ describe("what a shopper learns from a refused code", () => {
       lookup({ ...usedUp, usedCount: 0, eligibility: "LOYALTY_MEMBERS" }),
     ).catch((e) => e);
     expect(err.message).toBe("That code can't be used");
+  });
+});
+
+describe("redeeming a code, under a lock on it", () => {
+  function tx(
+    discount: Record<string, unknown>,
+    counts: { redemptions?: number; orders?: number },
+  ) {
+    return {
+      $queryRaw: vi.fn(),
+      shopDiscount: {
+        findUniqueOrThrow: vi.fn(async () => ({
+          ...usedUp,
+          usedCount: 0,
+          storeId: "s1",
+          ...discount,
+        })),
+        updateMany: vi.fn(async () => ({ count: 1 })),
+      },
+      shopDiscountRedemption: {
+        findUnique: vi.fn(async () => null),
+        count: vi.fn(async () => counts.redemptions ?? 0),
+        create: vi.fn(),
+      },
+      shopOrder: { count: vi.fn(async () => counts.orders ?? 0) },
+    };
+  }
+
+  test("re-checks once per customer against a use committed since the reprice", async () => {
+    const db = tx({ perCustomerLimit: 1 }, { redemptions: 1 });
+    await expect(redeemDiscount(db as never, "d1", "o2", "c1", 5)).rejects.toMatchObject({
+      reason: "You've already used that code",
+    });
+    expect(db.$queryRaw).toHaveBeenCalled();
+    expect(db.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
+      db.shopDiscount.findUniqueOrThrow.mock.invocationCallOrder[0],
+    );
+    expect(db.shopDiscountRedemption.create).not.toHaveBeenCalled();
+  });
+
+  test("re-checks a first-order code, counting this customer's other hold of it", async () => {
+    const placed = tx({ eligibility: "FIRST_ORDER" }, { orders: 1 });
+    await expect(redeemDiscount(placed as never, "d1", "o2", "c1", 5)).rejects.toMatchObject({
+      reason: "That code is for first orders only",
+    });
+    const held = tx({ eligibility: "FIRST_ORDER" }, { redemptions: 1 });
+    await expect(redeemDiscount(held as never, "d1", "o2", "c1", 5)).rejects.toMatchObject({
+      reason: "That code is for first orders only",
+    });
+  });
+
+  test("records an eligible use", async () => {
+    const db = tx({ eligibility: "FIRST_ORDER", perCustomerLimit: 1 }, {});
+    await redeemDiscount(db as never, "d1", "o2", "c1", 5);
+    expect(db.shopDiscountRedemption.create).toHaveBeenCalledWith({
+      data: { discountId: "d1", orderId: "o2", contactId: "c1", amount: 5 },
+    });
   });
 });

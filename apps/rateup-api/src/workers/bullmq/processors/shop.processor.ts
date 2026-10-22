@@ -1,5 +1,6 @@
 // Shop background work: Meta catalog publishing, order reminders, back-in-stock fan-out,
-// ad-attributed sales reported to Meta, invoices, and copying in a followed store's products.
+// ad-attributed sales reported to Meta, invoices, copying in a followed store's products and
+// writing RateUp orders back to it.
 // Each handler re-reads its rows, so a job that fires late or twice does the right thing.
 import { Job, Worker } from "bullmq";
 
@@ -13,7 +14,10 @@ import {
 } from "../../../modules/commerce/shop/recovery.service.js";
 import { reportAdPurchase } from "../../../modules/commerce/shop/adConversion.service.js";
 import { sendInvoice } from "../../../modules/commerce/shop/invoice.service.js";
-import { mirrorStoreById } from "../../../modules/commerce/shop/storeSync.service.js";
+import {
+  mirrorStoreById,
+  writeBackOrder,
+} from "../../../modules/commerce/shop/storeSync.service.js";
 
 const workerConnection = baseRedis.duplicate();
 
@@ -23,7 +27,8 @@ type AnyShopJob =
   | Job<ShopJobData["backInStock"], unknown, "backInStock">
   | Job<ShopJobData["adConversion"], unknown, "adConversion">
   | Job<ShopJobData["invoice"], unknown, "invoice">
-  | Job<ShopJobData["storeMirror"], unknown, "storeMirror">;
+  | Job<ShopJobData["storeMirror"], unknown, "storeMirror">
+  | Job<ShopJobData["writeBack"], unknown, "writeBack">;
 
 export const shopWorker = new Worker(
   "shop",
@@ -41,6 +46,10 @@ export const shopWorker = new Worker(
         return sendInvoice(job.data.orderId);
       case "storeMirror":
         return mirrorStoreById(job.data.storeId);
+      case "writeBack":
+        return writeBackOrder(job.data.orderId, job.data.phase, {
+          lastAttempt: job.attemptsMade + 1 >= (job.opts.attempts ?? 1),
+        });
     }
   },
   { connection: workerConnection, concurrency: 10 },

@@ -14,6 +14,8 @@ vi.mock("../../../utils/cache.js", () => ({ withCache: vi.fn() }));
 vi.mock("../../../utils/redisConnection.js", () => ({ default: { status: "ready" } }));
 vi.mock("../../../utils/logger.js", () => ({ log: { warn: vi.fn() } }));
 vi.mock("./store.service.js", () => ({ commerceEnabled: vi.fn(async () => true) }));
+const allowance = vi.hoisted(() => ({ storeAcceptingOrders: vi.fn(async () => true) }));
+vi.mock("./orderAllowance.js", () => allowance);
 
 const { getStorefront } = await import("./storefront.service.js");
 
@@ -73,5 +75,15 @@ describe("what the storefront sells while checkout is in the store", () => {
     db.shopStore.findUnique.mockResolvedValue(store);
     await getStorefront("fern");
     expect(db.shopProduct.findMany.mock.calls[0][0].where).not.toHaveProperty("externalSource");
+  });
+});
+
+describe("the storefront's order allowance", () => {
+  test("tells the shop page when the plan's monthly orders are spent", async () => {
+    db.shopStore.findUnique.mockResolvedValue(store);
+    allowance.storeAcceptingOrders.mockResolvedValueOnce(false);
+    const { store: shown } = await getStorefront("fern");
+    expect(allowance.storeAcceptingOrders).toHaveBeenCalledWith("org");
+    expect(shown.acceptingOrders).toBe(false);
   });
 });

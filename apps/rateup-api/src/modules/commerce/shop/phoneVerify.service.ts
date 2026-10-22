@@ -3,14 +3,22 @@ import { randomInt } from "node:crypto";
 import type { ShopOrder, ShopStore } from "../../../../generated/prisma/client.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
+import redis from "../../../utils/redisConnection.js";
 import { sendShopMessage } from "./notify.js";
 import { ShopError } from "./shop.errors.js";
 
-const VERIFY_MINUTES = 30;
+const VERIFY_MINUTES = 15;
+/**
+ * Most codes are sent within a minute or never: only codes this recent count against the
+ * store's capacity, so abandoned ones stop holding it long before they expire.
+ */
+const CAPACITY_WINDOW_MINUTES = 5;
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const CODE_PATTERN = /\bRU-([A-HJ-NP-Z2-9]{6})\b/i;
 /** Live, unconfirmed codes a store may have at once: bounds what a script can make it hold. */
 const MAX_PENDING_PER_STORE = 300;
+/** Codes one visitor (by IP) may start at a store per VERIFY_MINUTES, so a few can't fill it. */
+const MAX_PER_IP = 5;
 /** Unpaid cash or transfer orders one number may hold at a store. */
 export const MAX_OPEN_OFFLINE_ORDERS = 3;
 
@@ -68,6 +76,8 @@ export async function startPhoneVerification(input: {
   variantId?: string;
   orderId?: string;
   method?: "online" | "cod" | "bank";
+  /** The visitor's IP, for the per-visitor cap. */
+  ip?: string | null;
 }): Promise<PhoneVerificationLink> {
   const number = await storeWhatsappNumber(input.store.orgId);
   if (!number)
@@ -88,8 +98,18 @@ export async function startPhoneVerification(input: {
     if (live) return link(number, input.prompt, live.code, live.expiresAt);
   }
 
+  if (input.ip && !(await underIpCap(input.store.id, input.ip)))
+    throw new ShopError(
+      "LIMIT_REACHED",
+      "Too many confirmation codes from here. Try again in a few minutes.",
+    );
   const pending = await prisma.shopPhoneVerification.count({
-    where: { storeId: input.store.id, confirmedAt: null, expiresAt: { gt: now } },
+    where: {
+      storeId: input.store.id,
+      confirmedAt: null,
+      expiresAt: { gt: now },
+      createdAt: { gt: new Date(now.getTime() - CAPACITY_WINDOW_MINUTES * 60_000) },
+    },
   });
   if (pending >= MAX_PENDING_PER_STORE)
     throw new ShopError(
@@ -118,6 +138,19 @@ export async function startPhoneVerification(input: {
     }
   }
   throw new ShopError("CONFLICT", "Couldn't start the confirmation. Try again.");
+}
+
+/** Fails open when Redis is down: the store-wide cap still bounds the damage. */
+async function underIpCap(storeId: string, ip: string) {
+  const key = `shop:verify:${storeId}:${ip}`;
+  try {
+    const count = await redis.incr(key);
+    if (count === 1) await redis.expire(key, VERIFY_MINUTES * 60);
+    return count <= MAX_PER_IP;
+  } catch (err) {
+    log.warn({ err, storeId }, "Phone-check IP cap unavailable");
+    return true;
+  }
 }
 
 /**

@@ -1000,7 +1000,8 @@ async function whatsappMessageHandler(
     if (flowToken?.startsWith("shop:")) {
       try {
         const { handleShopAddressFlow } = await import("../../commerce/shop/checkout.service.js");
-        if (await handleShopAddressFlow(flowToken.slice(5), addressData)) return;
+        const shopper = { orgId, contactId: messageObj?.contactId ?? null };
+        if (await handleShopAddressFlow(flowToken.slice(5), addressData, shopper)) return;
       } catch (e) {
         log.error({ err: e }, "Error handling a shop address form");
       }

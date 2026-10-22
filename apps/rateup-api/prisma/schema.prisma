@@ -4608,6 +4608,7 @@ model ShopDropClaim {
   createdAt DateTime @default(now())
 
   @@unique([ruleId, recipient])
+  @@index([orderId])
 }
 
 model ShopOrder {

@@ -58,3 +58,26 @@ describe("guessing coupon codes on the hosted checkout", () => {
     await app.close();
   });
 });
+
+describe("saving and reading the hosted checkout", () => {
+  test("is counted per checkout, under a wider per-visitor ceiling", async () => {
+    const app = Fastify();
+    app.setValidatorCompiler(validatorCompiler);
+    app.setSerializerCompiler(serializerCompiler);
+    await app.register(shopPublicRoutes);
+    await app.ready();
+
+    const request = { params: { token: "tok-1234567890" }, body: {}, ip: "1.2.3.4" };
+    for (const [perToken, perIp] of [
+      ["shopCheckoutEdit", "shopCheckoutEditIp"],
+      ["shopCheckoutRead", "shopCheckoutReadIp"],
+    ]) {
+      const byToken = limiters.find((l) => l.key === perToken)!;
+      const byIp = limiters.find((l) => l.key === perIp)!;
+      expect(byToken.keyFrom!(request)).toBe("tok-1234567890");
+      expect(byIp.keyFrom).toBeUndefined();
+      expect(byIp.max).toBeGreaterThan(byToken.max);
+    }
+    await app.close();
+  });
+});

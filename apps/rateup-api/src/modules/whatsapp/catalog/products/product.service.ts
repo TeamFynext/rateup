@@ -7,7 +7,7 @@ import { getShopifyInfo } from "../../../integrations/shopify/shopify.credential
 import shopify from "../../../integrations/shopify/shopify.config.js";
 import { getActiveShopifySession } from "../../../integrations/shopify/shopify.session.js";
 import { Prisma } from "../../../../../generated/prisma/client.js";
-import type { GraphQLClientResponse } from "@shopify/shopify-api";
+import type { GraphqlClient, GraphQLClientResponse } from "@shopify/shopify-api";
 import {
   catalogHotel,
   catalogHotelRoom,
@@ -638,7 +638,78 @@ interface ShopifyProductNode {
   onlineStoreUrl?: string | null;
   /** `media` aliased; non-image media come back as empty nodes. */
   images: { edges: { node: { image?: { url: string } | null } }[] };
-  variants: { edges: { node: ShopifyProductVariantNode }[] };
+  variants: {
+    edges: { node: ShopifyProductVariantNode }[];
+    pageInfo?: { hasNextPage: boolean; endCursor: string | null };
+  };
+}
+
+interface ShopifyMoreVariantsData {
+  product: { variants: ShopifyProductNode["variants"] } | null;
+}
+
+const VARIANT_FIELDS = `id sku price compareAtPrice availableForSale inventoryQuantity title`;
+
+/**
+ * Every published (ACTIVE) product with all its variants: a draft or archived product is not
+ * for sale, and a product with more than 100 variants is paged for the rest.
+ */
+async function fetchActiveShopifyProducts(client: GraphqlClient) {
+  let hasNextPage = true;
+  let cursor: string | null = null;
+  const products: ShopifyProductNode[] = [];
+  while (hasNextPage) {
+    const data: GraphQLClientResponse<ShopifyProductsPageData> = await client.request(
+      `query getFullProducts($cursor: String) {
+        products(first: 50, after: $cursor, query: "status:active") {
+          edges {
+            node {
+              id
+              title
+              description
+              vendor
+              handle
+              onlineStoreUrl
+              images: media(first: 10) {
+                edges { node { ... on MediaImage { image { url } } } }
+              }
+              variants(first: 100) {
+                edges { node { ${VARIANT_FIELDS} } }
+                pageInfo { hasNextPage endCursor }
+              }
+            }
+          }
+          pageInfo { hasNextPage endCursor }
+        }
+      }`,
+      { variables: { cursor } },
+    );
+    if (!data.data) throw new Error("Shopify products query returned no data");
+    hasNextPage = data.data.products.pageInfo.hasNextPage;
+    cursor = data.data.products.pageInfo.endCursor;
+    products.push(...data.data.products.edges.map((e) => e.node));
+  }
+  for (const product of products) {
+    let page = product.variants.pageInfo;
+    while (page?.hasNextPage) {
+      const more: GraphQLClientResponse<ShopifyMoreVariantsData> = await client.request(
+        `query moreVariants($id: ID!, $cursor: String) {
+          product(id: $id) {
+            variants(first: 100, after: $cursor) {
+              edges { node { ${VARIANT_FIELDS} } }
+              pageInfo { hasNextPage endCursor }
+            }
+          }
+        }`,
+        { variables: { id: product.id, cursor: page.endCursor } },
+      );
+      const variants = more.data?.product?.variants;
+      if (!variants) break;
+      product.variants.edges.push(...variants.edges);
+      page = variants.pageInfo;
+    }
+  }
+  return products;
 }
 
 interface ShopifyProductsPageData {
@@ -661,7 +732,11 @@ function shopifyProductImages(product: ShopifyProductNode) {
 
 // Fetches all Shopify products, maps them to catalogProductCore format,
 // and filters out any variants already imported into this catalog.
-export async function getShopifyProductsForCatalog(orgId: string, catalogId: string) {
+export async function getShopifyProductsForCatalog(
+  orgId: string,
+  catalogId: string,
+  opts: { requireImage?: boolean } = {},
+) {
   const shopifyInfo = await getShopifyInfo(orgId);
   if (!shopifyInfo?.credential?.session) {
     throw new Error("No Shopify integration found for this org");
@@ -676,54 +751,7 @@ export async function getShopifyProductsForCatalog(orgId: string, catalogId: str
   const currencyCode: string = shopData.data?.shop?.currencyCode ?? "USD";
   const shopDomain: string = session.shop;
 
-  // Paginate through all Shopify products
-  let hasNextPage = true;
-  let cursor: string | null = null;
-  const allProducts: ShopifyProductNode[] = [];
-
-  while (hasNextPage) {
-    const data: GraphQLClientResponse<ShopifyProductsPageData> = await client.request(
-      `query getFullProducts($cursor: String) {
-        products(first: 50, after: $cursor) {
-          edges {
-            node {
-              id
-              title
-              description
-              vendor
-              handle
-              onlineStoreUrl
-              images: media(first: 10) {
-                edges { node { ... on MediaImage { image { url } } } }
-              }
-              variants(first: 100) {
-                edges {
-                  node {
-                    id
-                    sku
-                    price
-                    compareAtPrice
-                    availableForSale
-                    inventoryQuantity
-                    title
-                  }
-                }
-              }
-            }
-          }
-          pageInfo {
-            hasNextPage
-            endCursor
-          }
-        }
-      }`,
-      { variables: { cursor } },
-    );
-    if (!data.data) throw new Error("Shopify products query returned no data");
-    hasNextPage = data.data.products.pageInfo.hasNextPage;
-    cursor = data.data.products.pageInfo.endCursor;
-    allProducts.push(...data.data.products.edges.map((e) => e.node));
-  }
+  const allProducts = await fetchActiveShopifyProducts(client);
 
   // Get already-imported retailer_ids for this catalog
   const existing = await prisma.waCatalogProduct.findMany({
@@ -736,7 +764,8 @@ export async function getShopifyProductsForCatalog(orgId: string, catalogId: str
   const catalogItems: CatalogProductCoreInput[] = [];
   for (const product of allProducts) {
     const images = shopifyProductImages(product);
-    if (images.length === 0) continue; // Meta requires at least one image
+    // Meta requires an image; the shop mirror (requireImage: false) sells without one.
+    if (images.length === 0 && (opts.requireImage ?? true)) continue;
 
     const productLink: string =
       product.onlineStoreUrl ?? `https://${shopDomain}/products/${product.handle}`;
@@ -796,49 +825,7 @@ export async function syncShopifyProductsToCatalog(
   const currencyCode: string = shopData.data?.shop?.currencyCode ?? "USD";
   const shopDomain: string = session.shop;
 
-  // Paginate through all Shopify products
-  let hasNextPage = true;
-  let cursor: string | null = null;
-  const allProducts: ShopifyProductNode[] = [];
-
-  while (hasNextPage) {
-    const data: GraphQLClientResponse<ShopifyProductsPageData> = await client.request(
-      `query getFullProducts($cursor: String) {
-        products(first: 50, after: $cursor) {
-          edges {
-            node {
-              id
-              title
-              description
-              vendor
-              handle
-              onlineStoreUrl
-              images: media(first: 10) {
-                edges { node { ... on MediaImage { image { url } } } }
-              }
-              variants(first: 100) {
-                edges {
-                  node {
-                    id
-                    price
-                    compareAtPrice
-                    availableForSale
-                    title
-                  }
-                }
-              }
-            }
-          }
-          pageInfo { hasNextPage endCursor }
-        }
-      }`,
-      { variables: { cursor } },
-    );
-    if (!data.data) throw new Error("Shopify products query returned no data");
-    hasNextPage = data.data.products.pageInfo.hasNextPage;
-    cursor = data.data.products.pageInfo.endCursor;
-    allProducts.push(...data.data.products.edges.map((e) => e.node));
-  }
+  const allProducts = await fetchActiveShopifyProducts(client);
 
   // Build a map: numericVariantId → { variant, product }
   const variantMap = new Map<

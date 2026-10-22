@@ -5,6 +5,7 @@ import { checkoutLinkFor, storeChecksOut } from "./externalCheckout.service.js";
 import { createDraftOrder, repriceOrder } from "./orders.service.js";
 import { toNumber } from "./pricing.js";
 import { subscribeBackInStock } from "./recovery.service.js";
+import { formatMoney } from "./money.js";
 import { ShopError } from "./shop.errors.js";
 import { assertCanTakeOrder } from "./orderAllowance.js";
 import { assertCommerceEnabled } from "./store.service.js";
@@ -128,7 +129,12 @@ export async function agentOrderStatus(orgId: string, phone: string) {
     where: {
       storeId: store.id,
       status: { in: ["OPEN", "COMPLETED", "CANCELLED"] },
-      OR: [{ customerPhone: digits }, { contact: { phone: digits } }],
+      // A typed-in storefront number proves nothing; the chatter's own contact, or a number
+      // its owner confirmed, does.
+      OR: [
+        { contact: { phone: digits } },
+        { customerPhone: digits, phoneVerifiedAt: { not: null } },
+      ],
     },
     include: { items: true, shipments: { orderBy: { createdAt: "desc" }, take: 1 } },
     orderBy: { createdAt: "desc" },
@@ -141,7 +147,7 @@ export async function agentOrderStatus(orgId: string, phone: string) {
       items: o.items.map(
         (i) => `${i.quantity} × ${i.title}${i.variantTitle ? ` (${i.variantTitle})` : ""}`,
       ),
-      total: `${o.currency} ${toNumber(o.total).toFixed(2)}`,
+      total: formatMoney(toNumber(o.total), o.currency),
       payment: o.paymentStatus.toLowerCase().replace(/_/g, " "),
       delivery:
         o.status === "CANCELLED"

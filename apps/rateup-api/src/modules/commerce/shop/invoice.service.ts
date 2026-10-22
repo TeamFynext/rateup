@@ -3,6 +3,7 @@ import { inStoreCheckout, storeLabel } from "./checkoutVia.js";
 
 import sharp from "sharp";
 
+import type { Prisma } from "../../../../generated/prisma/client.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
 import { fetchPublicBytes } from "../../../utils/publicFetch.js";
@@ -14,34 +15,126 @@ import { ShopError } from "./shop.errors.js";
 /** Payment states an order has an invoice in: it was paid, even if money went back since. */
 const INVOICEABLE = new Set(["PAID", "PARTIALLY_REFUNDED", "REFUNDED"]);
 
+type InvoiceSnapshot = Pick<InvoiceData, "store" | "order">;
+
+const SNAPSHOT_EVENT = "invoice_numbered";
+/** Numbers an edited prefix already used ("INV-1" + "0012" vs "INV-" + "10012") are skipped. */
+const MAX_SKIPS = 50;
+
+function snapshotOf(
+  order: Prisma.ShopOrderGetPayload<{ include: { store: true; items: true } }>,
+): InvoiceSnapshot {
+  const { store } = order;
+  return {
+    store: {
+      name: store.name,
+      businessAddress: store.businessAddress,
+      taxId: store.taxId,
+      taxRate: store.taxRate === null ? null : String(store.taxRate),
+      pricesIncludeTax: store.pricesIncludeTax,
+    },
+    order: {
+      number: order.number,
+      currency: order.currency,
+      customerName: order.customerName,
+      customerPhone: order.customerPhone,
+      customerEmail: order.customerEmail,
+      shippingAddress: order.shippingAddress,
+      shippingRate: order.shippingRate,
+      paymentMethod: order.paymentMethod,
+      paymentStatus: order.paymentStatus,
+      paidAt: order.paidAt,
+      subtotal: String(order.subtotal),
+      discountTotal: String(order.discountTotal),
+      discountCode: order.discountCode,
+      pointsDiscount: String(order.pointsDiscount),
+      pointsRedeemed: order.pointsRedeemed,
+      shippingTotal: String(order.shippingTotal),
+      taxTotal: String(order.taxTotal),
+      total: String(order.total),
+      items: [...order.items]
+        .sort((a, b) => a.title.localeCompare(b.title))
+        .map((i) => ({
+          title: i.title,
+          variantTitle: i.variantTitle,
+          sku: i.sku,
+          unitPrice: String(i.unitPrice),
+          quantity: i.quantity,
+          lineTotal: String(i.lineTotal),
+        })),
+    },
+  };
+}
+
 /**
- * Gives the order its invoice number, once. The row lock makes two racing callers agree on
- * one number for the order; the store's atomic increment keeps numbers unique across orders,
- * and a rolled-back transaction gives its number back, so the sequence has no gaps.
+ * Gives the order its invoice number, once, and records what the invoice says alongside it, so
+ * a PDF drawn later (after a failed upload, say) matches the number rather than today's order.
+ * The row lock makes two racing callers agree on one number for the order; the store's atomic
+ * increment keeps numbers unique across orders, and a rolled-back transaction gives its
+ * number back.
  */
 export async function issueInvoiceNumber(orderId: string) {
   return prisma.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT id FROM "ShopOrder" WHERE id = ${orderId}::uuid FOR UPDATE`;
     const order = await tx.shopOrder.findUniqueOrThrow({
       where: { id: orderId },
-      select: { storeId: true, invoiceNumber: true, invoiceIssuedAt: true },
+      include: { store: true, items: true },
     });
     if (order.invoiceNumber && order.invoiceIssuedAt) {
       return { number: order.invoiceNumber, issuedAt: order.invoiceIssuedAt };
     }
-    const store = await tx.shopStore.update({
-      where: { id: order.storeId },
-      data: { invoiceNumberSeq: { increment: 1 } },
-      select: { invoiceNumberSeq: true, invoicePrefix: true },
-    });
-    const number = formatInvoiceNumber(store.invoicePrefix, store.invoiceNumberSeq);
+    let number = "";
+    for (let skip = 0; ; skip++) {
+      const store = await tx.shopStore.update({
+        where: { id: order.storeId },
+        data: { invoiceNumberSeq: { increment: 1 } },
+        select: { invoiceNumberSeq: true, invoicePrefix: true },
+      });
+      number = formatInvoiceNumber(store.invoicePrefix, store.invoiceNumberSeq);
+      const taken = await tx.shopOrder.findFirst({
+        where: { storeId: order.storeId, invoiceNumber: number },
+        select: { id: true },
+      });
+      if (!taken) break;
+      if (skip >= MAX_SKIPS) throw new ShopError("CONFLICT", "Change the invoice prefix and retry");
+    }
     const issuedAt = new Date();
     await tx.shopOrder.update({
       where: { id: orderId },
       data: { invoiceNumber: number, invoiceIssuedAt: issuedAt },
     });
+    await tx.shopOrderEvent.create({
+      data: {
+        orderId,
+        type: SNAPSHOT_EVENT,
+        message: `Invoice number ${number} assigned`,
+        data: snapshotOf(order) as unknown as Prisma.InputJsonValue,
+      },
+    });
     return { number, issuedAt };
   });
+}
+
+/** What the invoice was numbered with; orders numbered before snapshots fall back to live data. */
+async function invoiceContent(
+  orderId: string,
+): Promise<InvoiceSnapshot & { logoUrl: string | null }> {
+  const order = await prisma.shopOrder.findUniqueOrThrow({
+    where: { id: orderId },
+    include: { store: true, items: { orderBy: { title: "asc" } } },
+  });
+  const saved = await prisma.shopOrderEvent.findFirst({
+    where: { orderId, type: SNAPSHOT_EVENT },
+    orderBy: { createdAt: "asc" },
+    select: { data: true },
+  });
+  const snap = saved?.data as unknown as InvoiceSnapshot | null | undefined;
+  if (!snap?.order) return { ...snapshotOf(order), logoUrl: order.store.logoUrl };
+  return {
+    store: snap.store,
+    order: { ...snap.order, paidAt: snap.order.paidAt ? new Date(snap.order.paidAt) : null },
+    logoUrl: order.store.logoUrl,
+  };
 }
 
 /**
@@ -52,7 +145,8 @@ export async function issueInvoiceNumber(orderId: string) {
 async function fetchLogo(url: string | null): Promise<InvoiceData["logo"]> {
   if (!url) return null;
   try {
-    const png = await sharp(await fetchPublicBytes(url))
+    // A small file can still decode to a huge bitmap; refuse anything past ~25 MP.
+    const png = await sharp(await fetchPublicBytes(url), { limitInputPixels: 25_000_000 })
       .resize(160, 160, { fit: "inside", withoutEnlargement: true })
       .png()
       .toBuffer();
@@ -77,7 +171,13 @@ export const INVOICE_VIEW_SECONDS = 10 * 60;
 export async function ensureInvoice(orderId: string) {
   const existing = await prisma.shopOrder.findUnique({
     where: { id: orderId },
-    select: { invoiceNumber: true, invoiceKey: true, paymentStatus: true, checkoutVia: true },
+    select: {
+      orgId: true,
+      invoiceNumber: true,
+      invoiceKey: true,
+      paymentStatus: true,
+      checkoutVia: true,
+    },
   });
   if (!existing) throw new ShopError("NOT_FOUND", "Order not found");
   if (existing.invoiceNumber && existing.invoiceKey) {
@@ -94,18 +194,15 @@ export async function ensureInvoice(orderId: string) {
   }
 
   const { number, issuedAt } = await issueInvoiceNumber(orderId);
-  const order = await prisma.shopOrder.findUniqueOrThrow({
-    where: { id: orderId },
-    include: { store: true, items: { orderBy: { title: "asc" } } },
-  });
+  const content = await invoiceContent(orderId);
   const pdf = await buildInvoicePdf({
     number,
     issuedAt,
-    store: order.store,
-    logo: await fetchLogo(order.store.logoUrl),
-    order,
+    store: content.store,
+    logo: await fetchLogo(content.logoUrl),
+    order: content.order,
   });
-  const key = `shop-invoices/${order.orgId}/${randomUUID()}/${fileName(number)}`;
+  const key = `shop-invoices/${existing.orgId}/${randomUUID()}/${fileName(number)}`;
   await uploadFile({
     Bucket: privateBucket(),
     Key: key,

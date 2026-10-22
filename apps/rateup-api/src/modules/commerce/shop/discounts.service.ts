@@ -8,6 +8,7 @@ import type {
 } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
 import type { DiscountRule, DiscountScope } from "./pricing.js";
+import { formatMoney } from "./money.js";
 import { toNumber } from "./pricing.js";
 import { notFound, ShopError } from "./shop.errors.js";
 
@@ -177,7 +178,7 @@ export class DiscountRefused extends ShopError {
 export async function resolveDiscount(
   storeId: string,
   rawCode: string,
-  ctx: { subtotal: number; contactId?: string | null; orderId?: string },
+  ctx: { subtotal: number; contactId?: string | null; orderId?: string; currency?: string },
   db: Prisma.TransactionClient | typeof prisma = prisma,
 ) {
   const code = normaliseCode(rawCode);
@@ -200,7 +201,7 @@ export async function resolveDiscount(
   if (d.minSubtotal !== null && ctx.subtotal < toNumber(d.minSubtotal))
     throw new ShopError(
       "DISCOUNT_INVALID",
-      `That code needs an order of at least ${toNumber(d.minSubtotal).toFixed(2)}`,
+      `That code needs an order of at least ${ctx.currency ? formatMoney(toNumber(d.minSubtotal), ctx.currency) : toNumber(d.minSubtotal).toFixed(2)}`,
     );
 
   if (d.eligibility !== "ANYONE" || d.perCustomerLimit !== null) {
@@ -236,7 +237,11 @@ export async function resolveDiscount(
   return { discount: d, ...ruleOf(d) };
 }
 
-/** Records the use when an order is placed. Counted inside the order's transaction. */
+/**
+ * Records the use when an order is placed or its payment link holds it. The discount row is
+ * locked first, so the per-customer and first-order rules checked at reprice are re-checked
+ * here against uses another order of the same customer committed meanwhile.
+ */
 export async function redeemDiscount(
   tx: Prisma.TransactionClient,
   discountId: string,
@@ -248,8 +253,35 @@ export async function redeemDiscount(
     where: { discountId_orderId: { discountId, orderId } },
   });
   if (already) return;
-  // Conditional, so the last use of a limited code goes to one order only.
+  await tx.$queryRaw`SELECT 1 FROM "ShopDiscount" WHERE id = ${discountId}::uuid FOR UPDATE`;
   const discount = await tx.shopDiscount.findUniqueOrThrow({ where: { id: discountId } });
+  if (discount.eligibility !== "ANYONE" || discount.perCustomerLimit !== null) {
+    if (!contactId) throw new DiscountRefused("This code needs a known customer");
+    if (discount.perCustomerLimit !== null) {
+      const used = await tx.shopDiscountRedemption.count({
+        where: { discountId, contactId, NOT: { orderId } },
+      });
+      if (used >= discount.perCustomerLimit)
+        throw new DiscountRefused("You've already used that code");
+    }
+    if (discount.eligibility === "FIRST_ORDER") {
+      const previous = await tx.shopOrder.count({
+        where: {
+          storeId: discount.storeId,
+          contactId,
+          status: { in: ["OPEN", "COMPLETED"] },
+          NOT: { id: orderId },
+        },
+      });
+      // A first-order code held by another of this customer's drafts counts as used too.
+      const heldElsewhere = await tx.shopDiscountRedemption.count({
+        where: { discountId, contactId, NOT: { orderId } },
+      });
+      if (previous || heldElsewhere)
+        throw new DiscountRefused("That code is for first orders only");
+    }
+  }
+  // Conditional, so the last use of a limited code goes to one order only.
   const { count } = await tx.shopDiscount.updateMany({
     where: {
       id: discountId,

@@ -122,7 +122,18 @@ describe("the monthly order cap", () => {
     await expect(placeOrder("o1", { paymentMethod: "bank" })).rejects.toMatchObject({
       code: "ORDER_LIMIT",
     });
-    expect(db.shopOrder.update).not.toHaveBeenCalled();
+    // Thrown inside the transaction, so the placement is rolled back; nothing follows it.
+    const events = await import("./events.js");
+    expect(events.onShopOrderEvent).not.toHaveBeenCalled();
+  });
+
+  test("counts last in the transaction, so the org's usage row is locked only until commit", async () => {
+    limits.checkPlanLimit.mockResolvedValue(allowance(10));
+    counted(11);
+    await placeOrder("o1", { paymentMethod: "stripe", paid: true });
+    const counter = db.$queryRaw.mock.invocationCallOrder.at(-1)!;
+    expect(counter).toBeGreaterThan(db.shopOrder.update.mock.invocationCallOrder.at(-1)!);
+    expect(counter).toBeGreaterThan(db.shopOrderEvent.create.mock.invocationCallOrder.at(-1)!);
   });
 
   test("counts an order once: a second placement finds it placed and counts nothing", async () => {

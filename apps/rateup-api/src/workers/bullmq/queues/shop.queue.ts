@@ -4,7 +4,7 @@ import connection from "../../../utils/redisConnection.js";
 /**
  * Background work for shops: publishing products to the Meta catalog, timed reminders on an
  * order (cart, payment, cash-on-delivery confirmation), back-in-stock fan-out, reporting
- * ad-attributed sales to Meta and sending invoices.
+ * ad-attributed sales to Meta, sending invoices and writing orders back to a followed store.
  *
  * Rows stay the source of truth. A reminder job only says "look at this order now"; the
  * handler re-reads the order and does nothing if it was paid or cancelled meanwhile.
@@ -20,7 +20,13 @@ export interface ShopJobData {
   adConversion: { orderId: string };
   invoice: { orderId: string };
   storeMirror: { storeId: string };
+  writeBack: { orderId: string; phase: StoreWriteBackPhase };
 }
+
+export type StoreWriteBackPhase = "placed" | "paid";
+
+/** Five tries over about an hour: a store API that is down for a while still gets the order. */
+export const WRITE_BACK_ATTEMPTS = 5;
 
 // No ':' — BullMQ rejects a custom job id containing its own key separator.
 const publishJobId = (productId: string) => `shop-publish-${productId}`;
@@ -96,11 +102,34 @@ export async function disarmShopReminders(orderId: string, kind: ShopReminderKin
   );
 }
 
+/**
+ * One fan-out per variant at a time: the fixed id folds overlapping restocks into one job, and
+ * is freed on completion or failure so the next restock queues again. The worker claims each
+ * subscriber row before sending, so even overlapping jobs message a person once.
+ */
 export async function enqueueBackInStock(variantId: string) {
   await shopQueue.add(
     "backInStock",
     { variantId },
-    { jobId: `shop-bis-${variantId}-${Date.now()}`, removeOnComplete: true, removeOnFail: 100 },
+    { jobId: `shop-bis-${variantId}`, removeOnComplete: true, removeOnFail: true },
+  );
+}
+
+/**
+ * Copies a RateUp order into the store it follows. Keyed by order and phase, so a replayed
+ * event queues it once; retried with backoff because the store's API can be briefly down.
+ */
+export async function enqueueStoreWriteBack(orderId: string, phase: StoreWriteBackPhase) {
+  await shopQueue.add(
+    "writeBack",
+    { orderId, phase },
+    {
+      jobId: `shop-writeback-${orderId}-${phase}`,
+      attempts: WRITE_BACK_ATTEMPTS,
+      backoff: { type: "exponential", delay: 60_000 },
+      removeOnComplete: true,
+      removeOnFail: 100,
+    },
   );
 }
 

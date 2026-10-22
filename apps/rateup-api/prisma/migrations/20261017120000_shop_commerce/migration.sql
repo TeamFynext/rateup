@@ -472,9 +472,6 @@ CREATE INDEX "ShopReturn_orderId_idx" ON "ShopReturn"("orderId");
 -- CreateIndex
 CREATE INDEX "_ShopCollectionToShopProduct_B_index" ON "_ShopCollectionToShopProduct"("B");
 
--- CreateIndex
-CREATE UNIQUE INDEX "Contact_bsuid_orgId_key" ON "Contact"("bsuid", "orgId");
-
 -- AddForeignKey
 ALTER TABLE "ShopStore" ADD CONSTRAINT "ShopStore_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Org"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 

@@ -6,6 +6,7 @@ const db = vi.hoisted(() => ({
   integration: { findFirst: vi.fn() },
   shopPayment: { count: vi.fn() },
   shopOrderEvent: { count: vi.fn() },
+  shopOrderItem: { findMany: vi.fn() },
   shopOrder: {
     findUnique: vi.fn(),
     findUniqueOrThrow: vi.fn(),
@@ -58,6 +59,7 @@ const {
   assertCheckoutVia,
   checkoutLinkFor,
   externalAdminUrl,
+  signStoreCheckout,
   startStoreCheckout,
   syncOrderFromStore,
 } = await import("./externalCheckout.service.js");
@@ -192,7 +194,11 @@ describe("sending a cart to the store's checkout", () => {
     const [orgId, lines, opts] = shopify.createShopifyCheckoutDraft.mock.calls[0];
     expect(orgId).toBe("org-1");
     expect(lines).toEqual([{ retailerId: "wc_11", quantity: 2, title: "Linen throw" }]);
-    expect(opts.attributes).toEqual({ rateup_order_id: ORDER_ID, rateup_source: "storefront" });
+    expect(opts.attributes).toEqual({
+      rateup_order_id: ORDER_ID,
+      rateup_sig: signStoreCheckout("org-1", ORDER_ID),
+      rateup_source: "storefront",
+    });
     expect(opts.phone).toBe("+15550100");
     expect(db.shopOrder.updateMany).toHaveBeenCalledWith({
       where: { id: ORDER_ID, externalCheckoutUrl: null },
@@ -357,6 +363,9 @@ describe("opening the order in the store's admin", () => {
 describe("the store reporting back", () => {
   const external = {
     id: ORDER_ID,
+    orgId: "org-1",
+    total: "40.00",
+    externalId: "draft-9001",
     status: "DRAFT",
     paymentStatus: "UNPAID",
     fulfillmentStatus: "UNFULFILLED",
@@ -374,6 +383,7 @@ describe("the store reporting back", () => {
     taxTotal: 4,
     total: 49.5,
   };
+  const signature = signStoreCheckout("org-1", ORDER_ID);
 
   test("paid places and pays the RateUp order at what the store charged", async () => {
     db.shopOrder.findFirst.mockResolvedValue(external);
@@ -381,6 +391,7 @@ describe("the store reporting back", () => {
       status: "paid",
       externalOrderId: "5550001",
       totals,
+      signature,
     });
     expect(db.shopOrder.findFirst).toHaveBeenCalledWith({
       where: { id: ORDER_ID, orgId: "org-1", externalProvider: "shopify" },
@@ -400,6 +411,7 @@ describe("the store reporting back", () => {
     db.shopOrder.findFirst.mockResolvedValue({ ...external, customerPhone: "15550100" });
     const address = { name: "Sam Rivera", line1: "1 Main St", city: "Springfield", country: "US" };
     await syncOrderFromStore("shopify", "org-1", ORDER_ID, {
+      signature,
       externalName: "#1001",
       customer: { name: "Sam Rivera", email: "sam@example.com", phone: "+15550199" },
       address,
@@ -416,18 +428,20 @@ describe("the store reporting back", () => {
     expect(orders.markOrderPaid).not.toHaveBeenCalled();
   });
 
-  test("keeps RateUp's estimate when the store sends no usable total", async () => {
+  test("a payment the store sends no usable total for is left for staff", async () => {
     db.shopOrder.findFirst.mockResolvedValue(external);
     await syncOrderFromStore("woocommerce", "org-1", ORDER_ID, {
       status: "paid",
       externalOrderId: "77",
       totals: { ...totals, total: 0 },
     });
-    expect(db.shopOrder.update).toHaveBeenCalledWith({
-      where: { id: ORDER_ID },
-      data: { externalId: "77" },
-    });
-    expect((orders.markOrderPaid.mock.calls[0] as unknown[])[1]).not.toHaveProperty("amount");
+    expect(db.shopOrder.update).not.toHaveBeenCalled();
+    expect(orders.markOrderPaid).not.toHaveBeenCalled();
+    expect(orders.addOrderEvent).toHaveBeenCalledWith(
+      ORDER_ID,
+      "needs_review",
+      expect.stringContaining("no total"),
+    );
   });
 
   test("a replayed paid webhook changes nothing", async () => {
@@ -453,7 +467,7 @@ describe("the store reporting back", () => {
       status: "OPEN",
       paymentStatus: "PAID",
     });
-    await syncOrderFromStore("shopify", "org-1", ORDER_ID, { fulfillment: "fulfilled" });
+    await syncOrderFromStore("shopify", "org-1", ORDER_ID, { fulfillment: "fulfilled", signature });
     expect(orders.setFulfillmentStatus).toHaveBeenCalledWith(
       ORDER_ID,
       "SHIPPED",
@@ -469,7 +483,7 @@ describe("the store reporting back", () => {
       paymentStatus: "PAID",
     });
     db.shopOrder.updateMany.mockResolvedValue({ count: 1 });
-    await syncOrderFromStore("shopify", "org-1", ORDER_ID, { refund: "partial" });
+    await syncOrderFromStore("shopify", "org-1", ORDER_ID, { refund: "partial", signature });
     expect(db.shopOrder.updateMany).toHaveBeenCalledWith({
       where: { id: ORDER_ID, paymentStatus: { notIn: ["PARTIALLY_REFUNDED", "REFUNDED"] } },
       data: { paymentStatus: "PARTIALLY_REFUNDED" },
@@ -479,7 +493,7 @@ describe("the store reporting back", () => {
   test("a written-back order's refund in the store tells staff RateUp holds the money, once", async () => {
     const written = { ...external, status: "OPEN", paymentStatus: "PAID", checkoutVia: "RATEUP" };
     db.shopOrder.findFirst.mockResolvedValue(written);
-    await syncOrderFromStore("shopify", "org-1", ORDER_ID, { refund: "full" });
+    await syncOrderFromStore("shopify", "org-1", ORDER_ID, { refund: "full", signature });
     expect(db.shopOrder.updateMany).not.toHaveBeenCalled();
     expect(orders.addOrderEvent).toHaveBeenCalledWith(
       ORDER_ID,
@@ -487,7 +501,7 @@ describe("the store reporting back", () => {
       expect.stringContaining("RateUp took the payment"),
     );
     db.shopOrderEvent.count.mockResolvedValue(1);
-    await syncOrderFromStore("shopify", "org-1", ORDER_ID, { refund: "full" });
+    await syncOrderFromStore("shopify", "org-1", ORDER_ID, { refund: "full", signature });
     expect(orders.addOrderEvent).toHaveBeenCalledTimes(1);
   });
 
@@ -519,5 +533,68 @@ describe("the store reporting back", () => {
       syncOrderFromStore("shopify", "org-1", ORDER_ID, { status: "paid" }),
     ).resolves.toBeNull();
     expect(orders.markOrderPaid).not.toHaveBeenCalled();
+  });
+
+  test("a Shopify order tagged with a RateUp order id but not signed for it changes nothing", async () => {
+    db.shopOrder.findFirst.mockResolvedValue(external);
+    await expect(
+      syncOrderFromStore("shopify", "org-1", ORDER_ID, {
+        status: "cancelled",
+        externalOrderId: "666",
+        totals,
+        signature: signStoreCheckout("org-2", ORDER_ID),
+      }),
+    ).resolves.toBeNull();
+    expect(orders.cancelOrder).not.toHaveBeenCalled();
+    expect(db.shopOrder.update).not.toHaveBeenCalled();
+  });
+
+  test("a written-back order is recognised by the store id RateUp recorded", async () => {
+    db.shopOrder.findFirst.mockResolvedValue({ ...external, status: "OPEN", externalId: "777" });
+    await syncOrderFromStore("shopify", "org-1", ORDER_ID, {
+      fulfillment: "fulfilled",
+      externalOrderId: "777",
+    });
+    expect(orders.setFulfillmentStatus).toHaveBeenCalled();
+  });
+
+  test("a signed checkout paid for less than the order is not marked paid nor repriced", async () => {
+    db.shopOrder.findFirst.mockResolvedValue(external);
+    await syncOrderFromStore("shopify", "org-1", ORDER_ID, {
+      status: "paid",
+      externalOrderId: "5550001",
+      totals: { ...totals, total: 5 },
+      signature,
+    });
+    expect(orders.markOrderPaid).not.toHaveBeenCalled();
+    expect(db.shopOrder.update).not.toHaveBeenCalled();
+    expect(orders.addOrderEvent).toHaveBeenCalledWith(
+      ORDER_ID,
+      "needs_review",
+      expect.stringContaining("less than this order"),
+    );
+  });
+
+  test("a paid store order with other items is not taken as this order's payment", async () => {
+    db.shopOrder.findFirst.mockResolvedValue(external);
+    db.shopOrderItem.findMany.mockResolvedValue([{ retailerId: "4401", sku: null, quantity: 2 }]);
+    await syncOrderFromStore("shopify", "org-1", ORDER_ID, {
+      status: "paid",
+      externalOrderId: "5550001",
+      totals,
+      signature,
+      lines: [{ variantId: "4401", sku: null, quantity: 1 }],
+    });
+    expect(orders.markOrderPaid).not.toHaveBeenCalled();
+
+    db.shopOrderItem.findMany.mockResolvedValue([{ retailerId: "4401", sku: null, quantity: 2 }]);
+    await syncOrderFromStore("shopify", "org-1", ORDER_ID, {
+      status: "paid",
+      externalOrderId: "5550001",
+      totals,
+      signature,
+      lines: [{ variantId: "4401", sku: null, quantity: 2 }],
+    });
+    expect(orders.markOrderPaid).toHaveBeenCalledTimes(1);
   });
 });

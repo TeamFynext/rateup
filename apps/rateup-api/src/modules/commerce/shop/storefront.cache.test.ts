@@ -8,6 +8,7 @@ vi.mock("../../../utils/redisConnection.js", () => ({ default: redis }));
 vi.mock("../../../utils/logger.js", () => ({ log: { warn: vi.fn() } }));
 vi.mock("../../../utils/prisma.js", () => ({ default: {} }));
 vi.mock("./store.service.js", () => ({ commerceEnabled: vi.fn() }));
+vi.mock("./orderAllowance.js", () => ({ storeAcceptingOrders: vi.fn() }));
 
 const { forgetPublicStorefront, getPublicStorefront } = await import("./storefront.service.js");
 

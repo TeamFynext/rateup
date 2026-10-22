@@ -13,6 +13,7 @@ import {
   reserveOrderBenefits,
 } from "../orders.service.js";
 import { onShopOrderEvent } from "../events.js";
+import { formatMoney } from "../money.js";
 import { round2, toNumber } from "../pricing.js";
 import { notFound, ShopError } from "../shop.errors.js";
 import { assertCanTakeOrder } from "../orderAllowance.js";
@@ -243,6 +244,12 @@ export async function createPaymentLink(
       "PAYMENT_UNAVAILABLE",
       "Connect Stripe or Razorpay in Commerce → Settings → Getting paid to take payments online",
     );
+  // A test order's link reaches whoever it is shared with; only a test-mode gateway may take it.
+  if (order.source === "test" && picked.credential.livemode !== false)
+    throw new ShopError(
+      "CONFLICT",
+      "Test orders can only be paid with a gateway in test mode. Switch to test keys to try a payment.",
+    );
 
   // Held before the link exists, so a code's last use or a points balance can't back two links.
   await reserveOrderBenefits(orderId);
@@ -257,7 +264,7 @@ export async function createPaymentLink(
     currency: order.currency,
     customer: { name: order.customerName, email: order.customerEmail, phone: order.customerPhone },
     returnUrl: `${checkoutUrl(token)}?paid=1`,
-    cancelUrl: checkoutUrl(token),
+    cancelUrl: `${checkoutUrl(token)}?payment=cancelled`,
     expiresAt,
   });
 
@@ -297,7 +304,7 @@ export async function createPaymentLink(
   await addOrderEvent(
     orderId,
     "payment_link",
-    `Payment link created · ${picked.provider.label} · ${order.currency} ${total.toFixed(2)}`,
+    `Payment link created · ${picked.provider.label} · ${formatMoney(total, order.currency)}`,
   );
   return {
     url: link.url,
@@ -329,7 +336,7 @@ async function applyState(
     const total =
       (fromWebhook ? null : reported.amountRefunded) ??
       (await provider.refundedTotal(credential, reported.paymentId));
-    await recordRefund(payment.orderId, payment.id, total, null, true);
+    await recordRefund(payment.orderId, payment.id, { total }, null);
     return;
   }
   const payment = await prisma.shopPayment.findFirst({
@@ -361,15 +368,33 @@ async function applyState(
     // Claimed conditionally: the webhook and the customer's return to the checkout page
     // usually report the same payment at the same moment.
     const { count } = await prisma.shopPayment.updateMany({
-      where: { id: payment.id, status: { not: "PAID" } },
+      where: { id: payment.id, status: { in: ["PENDING", "EXPIRED", "FAILED"] } },
       data: { status: "PAID", paidAt: new Date(), providerPaymentId: state.paymentId },
     });
-    if (!count) return;
 
     const order = await prisma.shopOrder.findUniqueOrThrow({ where: { id: payment.orderId } });
     const paid = state.amount ?? toNumber(payment.amount);
     const due = toNumber(order.total);
-    const label = `${payment.currency} ${paid.toFixed(2)}`;
+
+    if (!count) {
+      // Claimed before, but the order may never have been settled (a crash between the two
+      // writes). A retried webhook or a refresh settles it; markOrderPaid is idempotent.
+      const claimed = await prisma.shopPayment.findUnique({ where: { id: payment.id } });
+      if (
+        claimed?.status === "PAID" &&
+        order.status !== "CANCELLED" &&
+        !SETTLED.includes(order.paymentStatus) &&
+        paid >= due - 0.009
+      ) {
+        await markOrderPaid(payment.orderId, {
+          provider: provider.id,
+          paymentId: claimed.providerPaymentId ?? state.paymentId,
+          amount: paid,
+        });
+      }
+      return;
+    }
+    const label = formatMoney(paid, payment.currency);
 
     if (order.paymentStatus === "PAID") {
       await addOrderEvent(
@@ -385,7 +410,7 @@ async function applyState(
       await addOrderEvent(
         order.id,
         "underpaid",
-        `Received ${label}, but the order now comes to ${order.currency} ${due.toFixed(2)} — collect the difference or mark it paid`,
+        `Received ${label}, but the order now comes to ${formatMoney(due, order.currency)} — collect the difference or mark it paid`,
         { paymentId: state.paymentId },
       );
       return;
@@ -402,7 +427,7 @@ async function applyState(
       await addOrderEvent(
         order.id,
         "overpaid",
-        `Received ${label} for an order of ${order.currency} ${due.toFixed(2)} — refund the difference`,
+        `Received ${label} for an order of ${formatMoney(due, order.currency)} — refund the difference`,
         { paymentId: state.paymentId },
       );
     }
@@ -452,13 +477,26 @@ export async function handlePaymentWebhook(
   if (state) await applyState(state, provider, account.credential, store.id, true);
 }
 
+const SETTLED: ShopOrder["paymentStatus"][] = ["PAID", "PARTIALLY_REFUNDED", "REFUNDED"];
+
 /**
  * Asks the gateway directly. Used when the customer comes back to the checkout page, and by
- * the reminder sweep before nudging someone who may in fact have paid.
+ * the reminder sweep before nudging someone who may in fact have paid. A payment already
+ * recorded PAID whose order was never settled is picked up too, so this also repairs it.
  */
 export async function refreshPendingPayment(order: Pick<ShopOrder, "id" | "orgId">) {
   const payment = await prisma.shopPayment.findFirst({
-    where: { orderId: order.id, status: "PENDING", providerRef: { not: null } },
+    where: {
+      orderId: order.id,
+      providerRef: { not: null },
+      OR: [
+        { status: "PENDING" },
+        {
+          status: "PAID",
+          order: { status: { not: "CANCELLED" }, paymentStatus: { notIn: SETTLED } },
+        },
+      ],
+    },
     orderBy: { createdAt: "desc" },
     include: { order: { select: { storeId: true } } },
   });
@@ -476,29 +514,51 @@ export async function refreshPendingPayment(order: Pick<ShopOrder, "id" | "orgId
   }
 }
 
+/**
+ * `total` is the payment's refunded total as the gateway reports it, applied only if it moves
+ * the recorded total up; `add` is a refund recorded by hand, refused if it would pass the
+ * amount paid. Both are conditional writes, so concurrent refunds can't overwrite each other.
+ */
 async function recordRefund(
   orderId: string,
   paymentId: string,
-  amount: number,
+  refund: { total: number } | { add: number },
   actorUserId: string | null,
-  fromWebhook: boolean,
 ) {
+  const before = await prisma.shopPayment.findUniqueOrThrow({ where: { id: paymentId } });
+  const previous = toNumber(before.refundedAmount);
+  if ("total" in refund) {
+    const { count } = await prisma.shopPayment.updateMany({
+      where: { id: paymentId, refundedAmount: { lt: refund.total } },
+      data: { refundedAmount: refund.total },
+    });
+    if (!count) return;
+  } else {
+    const { count } = await prisma.shopPayment.updateMany({
+      where: {
+        id: paymentId,
+        refundedAmount: { lte: round2(toNumber(before.amount) - refund.add + 0.009) },
+      },
+      data: { refundedAmount: { increment: refund.add } },
+    });
+    if (!count) throw new ShopError("CONFLICT", "That would refund more than was paid");
+  }
   const payment = await prisma.shopPayment.findUniqueOrThrow({ where: { id: paymentId } });
-  const refunded = fromWebhook ? amount : round2(toNumber(payment.refundedAmount) + amount);
-  if (fromWebhook && refunded <= toNumber(payment.refundedAmount)) return;
+  const refunded = toNumber(payment.refundedAmount);
   const full = refunded >= toNumber(payment.amount) - 0.009;
   await prisma.shopPayment.update({
     where: { id: paymentId },
-    data: { refundedAmount: refunded, status: full ? "REFUNDED" : "PARTIALLY_REFUNDED" },
+    data: { status: full ? "REFUNDED" : "PARTIALLY_REFUNDED" },
   });
   await prisma.shopOrder.update({
     where: { id: orderId },
     data: { paymentStatus: full ? "REFUNDED" : "PARTIALLY_REFUNDED" },
   });
+  const amount = "add" in refund ? refund.add : round2(refund.total - previous);
   await addOrderEvent(
     orderId,
     "refunded",
-    `Refunded ${payment.currency} ${(fromWebhook ? refunded - toNumber(payment.refundedAmount) : amount).toFixed(2)}${full ? " (full)" : ""}`,
+    `Refunded ${formatMoney(amount, payment.currency)}${full ? " (full)" : ""}`,
     undefined,
     actorUserId,
   );
@@ -534,7 +594,10 @@ export async function refundOrder(
   const already = payment ? toNumber(payment.refundedAmount) : 0;
   const value = round2(amount ?? paid - already);
   if (!(value > 0) || value > paid - already + 0.009)
-    throw new ShopError("INVALID", `You can refund up to ${(paid - already).toFixed(2)}`);
+    throw new ShopError(
+      "INVALID",
+      `You can refund up to ${formatMoney(round2(paid - already), payment?.currency ?? order.currency)}`,
+    );
 
   if (
     payment &&
@@ -553,7 +616,16 @@ export async function refundOrder(
         err instanceof Error ? err.message : "The refund was refused",
       );
     }
-    await recordRefund(orderId, payment.id, value, actorUserId, false);
+    // The gateway's own total, so a refund webhook arriving first is not counted twice.
+    const total = await provider
+      .refundedTotal(account.credential, payment.providerPaymentId)
+      .catch(() => 0);
+    await recordRefund(
+      orderId,
+      payment.id,
+      { total: Math.max(total, round2(already + value)) },
+      actorUserId,
+    );
     return;
   }
   // Paid outside a gateway (cash, bank transfer, manual): record it.
@@ -569,7 +641,7 @@ export async function refundOrder(
         paidAt: order.paidAt ?? new Date(),
       },
     }));
-  await recordRefund(orderId, manual.id, value, actorUserId, false);
+  await recordRefund(orderId, manual.id, { add: value }, actorUserId);
 }
 
 /** Staff marking an order paid by hand (cash in the shop, a bank transfer that arrived). */
@@ -588,6 +660,8 @@ export async function markPaidManually(orderId: string, method: string, actorUse
     ["PAID", "PARTIALLY_REFUNDED", "REFUNDED"].includes(order.paymentStatus)
   )
     throw new ShopError("INVALID", "This order isn't waiting for payment");
+  if (order.source === "test")
+    throw new ShopError("CONFLICT", "Test orders are for trying checkout and can't be marked paid");
   await prisma.shopPayment.create({
     data: {
       orderId,

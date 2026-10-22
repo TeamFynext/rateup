@@ -1,3 +1,5 @@
+import { createHmac, timingSafeEqual } from "node:crypto";
+
 import type {
   ShopCheckoutVia,
   ShopOrder,
@@ -108,6 +110,23 @@ export async function alignDraftCheckout<T extends ShopOrder>(order: T, store: S
   return { ...order, checkoutVia: store.checkoutVia };
 }
 
+/**
+ * Shopify copies a draft's custom attributes onto the order it becomes, but a shopper can also
+ * set note attributes on any cart. The signature proves the `rateup_order_id` was put there by
+ * RateUp, for this org. Signed with the flow-token secret under its own prefix.
+ */
+export function signStoreCheckout(orgId: string, orderId: string): string {
+  const secret = process.env.FLOW_TOKEN_SECRET;
+  if (!secret) throw new Error("FLOW_TOKEN_SECRET environment variable must be set");
+  return createHmac("sha256", secret).update(`sco:${orgId}:${orderId}`).digest("base64url");
+}
+
+export function verifyStoreCheckout(orgId: string, orderId: string, sig: string | null) {
+  if (!sig) return false;
+  const expected = signStoreCheckout(orgId, orderId);
+  return sig.length === expected.length && timingSafeEqual(Buffer.from(sig), Buffer.from(expected));
+}
+
 const LOCK_SECONDS = 30;
 const lockKey = (orderId: string) => `shop:storeCheckout:${orderId}`;
 
@@ -214,7 +233,11 @@ async function createInStore(
           title: i.title,
         })),
         {
-          attributes: { rateup_order_id: order.id, rateup_source: source },
+          attributes: {
+            rateup_order_id: order.id,
+            rateup_sig: signStoreCheckout(order.orgId, order.id),
+            rateup_source: source,
+          },
           tags: ["rateup", `rateup-${source}`],
           note: `RateUp order #${order.number} · ${channelLabel(order.channel)}`,
           email: order.customerEmail,
@@ -370,6 +393,46 @@ export interface StoreOrderUpdate {
   address?: ShopAddress | null;
   fulfillment?: "fulfilled" | "partial" | null;
   refund?: "full" | "partial" | null;
+  /** `rateup_sig` from the store order. Required (Shopify) before a store checkout is paid. */
+  signature?: string | null;
+  /** The store order's lines, matched against RateUp's before a store checkout is paid. */
+  lines?: { variantId?: string | null; sku?: string | null; quantity: number }[] | null;
+}
+
+type PaidCheck = { ok: true } | { ok: false; why: string };
+
+/**
+ * A paid store order only settles a RateUp store checkout when it is that checkout: signed by
+ * RateUp, carrying the same items, and paid in full. Anything else is left for staff, so a
+ * cheaper cart tagged with a RateUp order id can't mark it paid or lower its totals.
+ */
+async function checkStorePayment(
+  provider: Provider,
+  order: ShopOrder,
+  update: StoreOrderUpdate,
+  totals: StoreTotals | null,
+): Promise<PaidCheck> {
+  if (!totals) return { ok: false, why: "the store sent no total" };
+  if (totals.total < toNumber(order.total) - 0.009)
+    return { ok: false, why: `the store charged ${totals.total.toFixed(2)}, less than this order` };
+  if (update.lines) {
+    const items = await prisma.shopOrderItem.findMany({
+      where: { orderId: order.id },
+      select: { retailerId: true, sku: true, quantity: true },
+    });
+    const left = update.lines.map((l) => ({ ...l }));
+    for (const item of items) {
+      const line = left.find(
+        (l) =>
+          l.quantity >= item.quantity &&
+          ((!!item.retailerId && (l.variantId === item.retailerId || l.sku === item.retailerId)) ||
+            (!!item.sku && l.sku === item.sku)),
+      );
+      if (!line) return { ok: false, why: "its items don't match this order" };
+      line.quantity -= item.quantity;
+    }
+  }
+  return { ok: true };
 }
 
 /**
@@ -391,6 +454,19 @@ export async function syncOrderFromStore(
   if (!order) return null;
   const label = provider === "shopify" ? "Shopify" : "WooCommerce";
   const storeCheckout = inStoreCheckout(order.checkoutVia);
+  // Any Shopify cart can carry a `rateup_order_id` note attribute; only RateUp's signature, or
+  // the store order id RateUp recorded, ties the webhook to this order.
+  if (
+    provider === "shopify" &&
+    !verifyStoreCheckout(orgId, order.id, update.signature ?? null) &&
+    !(update.externalOrderId && update.externalOrderId === order.externalId)
+  ) {
+    log.warn(
+      { orderId: order.id, externalOrderId: update.externalOrderId },
+      "Ignored a Shopify order that names a RateUp order it wasn't created for",
+    );
+    return null;
+  }
 
   const missing = {
     ...(update.externalName && update.externalName !== order.externalName
@@ -428,6 +504,18 @@ export async function syncOrderFromStore(
   if (update.status === "paid" && order.paymentStatus !== "PAID") {
     if (storeCheckout) {
       const totals = cleanTotals(update.totals);
+      const check = await checkStorePayment(provider, order, update, totals);
+      if (!check.ok) {
+        log.warn(
+          { orderId: order.id, provider, externalOrderId: update.externalOrderId, why: check.why },
+          "Ignored a store payment that does not match the RateUp checkout",
+        );
+        await addEventOnce(
+          order.id,
+          `A ${label} order${update.externalName ? ` ${update.externalName}` : ""} was paid for this order, but ${check.why}. Check it in ${label} before marking this order paid.`,
+        );
+        return prisma.shopOrder.findUnique({ where: { id: order.id } });
+      }
       await prisma.shopOrder.update({
         where: { id: order.id },
         data: {

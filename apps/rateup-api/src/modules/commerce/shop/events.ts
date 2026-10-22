@@ -6,9 +6,11 @@ import {
   disarmShopReminders,
   enqueueAdConversion,
   enqueueInvoice,
+  enqueueStoreWriteBack,
 } from "../../../workers/bullmq/queues/shop.queue.js";
 import type { OrderEventStatus } from "../../integrations/events/integrationEvent.types.js";
 import { notificationSetting, sendShopMessage, type ShopMessage } from "./notify.js";
+import { formatMoney } from "./money.js";
 import { customerReachable } from "./phoneVerify.service.js";
 import { toNumber } from "./pricing.js";
 import type { ShopOrderEventType } from "./shopEvents.constants.js";
@@ -46,7 +48,7 @@ function loadOrder(orderId: string) {
   });
 }
 
-const money = (o: LoadedOrder, n: unknown) => `${o.currency} ${toNumber(n as number).toFixed(2)}`;
+const money = (o: LoadedOrder, n: unknown) => formatMoney(toNumber(n as number), o.currency);
 const first = (name: string | null) => (name ? name.split(" ")[0] : "there");
 
 /** What the customer is told for each event. Null means nothing is sent. */
@@ -216,9 +218,11 @@ export async function onShopOrderEvent(orderId: string, type: ShopOrderEventType
     });
   }
   if (type === "placed" || type === "paid") {
-    await step("writeback", async () =>
-      (await import("./storeSync.service.js")).writeBackOrder(o.id, type),
-    );
+    if (
+      !inStoreCheckout(o.checkoutVia) &&
+      (o.store.mode === "SHOPIFY" || o.store.mode === "WOOCOMMERCE")
+    )
+      await step("writeback", () => enqueueStoreWriteBack(o.id, type));
   }
   if (type === "paid") {
     await step("loyalty", async () => (await import("./shopLoyalty.js")).earnForOrder(o.id));
@@ -257,8 +261,9 @@ export async function onShopOrderEvent(orderId: string, type: ShopOrderEventType
     );
   }
 
-  // A store checkout's own order webhook raises order.* for it.
-  const status = inStoreCheckout(o.checkoutVia) ? undefined : INTEGRATION_STATUS[type];
+  // Raised here for every RateUp order, store checkouts too: the store's echo of an order
+  // RateUp created raises nothing (integrations/commerce/orders.ts).
+  const status = INTEGRATION_STATUS[type];
   if (status) {
     await step("integrations", async () => {
       const { emitIntegrationEvent } =

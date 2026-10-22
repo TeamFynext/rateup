@@ -57,7 +57,6 @@ export async function uploadController(req: FastifyRequest, reply: FastifyReply)
     extension ? filename.replace(/\.[^.]*$/, "") + extension : filename,
   );
 
-
   let params: PutObjectCommandInput = {
     Bucket: bucket(),
     Key: uniqueFilename,
@@ -84,11 +83,7 @@ export async function uploadController(req: FastifyRequest, reply: FastifyReply)
         Body: await fsp.readFile(tempOutputPath),
         ContentType: "audio/ogg",
       };
-    } else if (
-      mimetype === "audio/mp4" ||
-      mimetype === "audio/mpeg" ||
-      mimetype === "audio/ogg"
-    ) {
+    } else if (mimetype === "audio/mp4" || mimetype === "audio/mpeg" || mimetype === "audio/ogg") {
       const tmpDir = path.join(".", "tmp");
       if (!fs.existsSync(tmpDir)) {
         fs.mkdirSync(tmpDir, { recursive: true });

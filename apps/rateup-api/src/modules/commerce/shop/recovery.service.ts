@@ -43,8 +43,12 @@ export async function fireShopReminder(orderId: string, kind: ShopReminderKind, 
   if (kind === "cod_expire") {
     if (order.paymentStatus !== "COD_PENDING" || order.confirmedAt || order.status === "CANCELLED")
       return "skipped";
-    await cancelOrder(order.id, { reason: "Not confirmed in time" });
-    return "cancelled";
+    // Re-checked under the row lock: a confirm landing as the deadline fires must win.
+    const after = await cancelOrder(order.id, {
+      reason: "Not confirmed in time",
+      onlyIf: { paymentStatus: "COD_PENDING", confirmedAt: null, status: "OPEN" },
+    });
+    return after.status === "CANCELLED" ? "cancelled" : "skipped";
   }
 
   if (kind === "bank_expire") {
@@ -54,8 +58,14 @@ export async function fireShopReminder(orderId: string, kind: ShopReminderKind, 
       ["PAID", "PARTIALLY_REFUNDED", "REFUNDED"].includes(order.paymentStatus)
     )
       return "skipped";
-    await cancelOrder(order.id, { reason: "Transfer not received in time" });
-    return "cancelled";
+    const after = await cancelOrder(order.id, {
+      reason: "Transfer not received in time",
+      onlyIf: {
+        status: "OPEN",
+        paymentStatus: { notIn: ["PAID", "PARTIALLY_REFUNDED", "REFUNDED"] },
+      },
+    });
+    return after.status === "CANCELLED" ? "cancelled" : "skipped";
   }
 
   if (!customerReachable(order)) return "skipped";
@@ -214,6 +224,12 @@ export async function runBackInStock(variantId: string) {
   });
   let sent = 0;
   for (const r of requests) {
+    // Claimed before sending, so a second job running over the same rows skips this one.
+    const { count } = await prisma.shopBackInStockRequest.updateMany({
+      where: { id: r.id, notifiedAt: null },
+      data: { notifiedAt: new Date() },
+    });
+    if (!count) continue;
     const name = product.title + (variant.title !== "Default" ? ` (${variant.title})` : "");
     const outcome = await sendShopMessage(
       { orgId: store.orgId, channel: r.channel, contactId: r.contactId },
@@ -224,10 +240,6 @@ export async function runBackInStock(variantId: string) {
       },
       setting.waTemplateId,
     );
-    await prisma.shopBackInStockRequest.update({
-      where: { id: r.id },
-      data: { notifiedAt: new Date() },
-    });
     if (outcome.sent) sent++;
   }
   return { sent, total: requests.length };
@@ -319,10 +331,12 @@ export async function subscribeBackInStock(input: {
 export async function requestBackInStockFromStorefront(
   store: { id: string; orgId: string },
   variantId: string,
+  ip?: string | null,
 ) {
   const variant = await waitableVariant(store.id, variantId, { storefront: true });
   return startPhoneVerification({
     store,
+    ip,
     purpose: "back_in_stock",
     variantId: variant.id,
     prompt: `Tell me when ${variantName(variant)} is back in stock.`,

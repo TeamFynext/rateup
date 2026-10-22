@@ -32,7 +32,7 @@ export async function fetchStoreItems(
   if (source === "shopify") {
     const { getShopifyProductsForCatalog } =
       await import("../../whatsapp/catalog/products/product.service.js");
-    return getShopifyProductsForCatalog(orgId, NO_CATALOG);
+    return getShopifyProductsForCatalog(orgId, NO_CATALOG, { requireImage: false });
   }
   const { getWooProductsForCatalog } =
     await import("../../integrations/woocommerce/woocommerce.products.js");
@@ -100,6 +100,8 @@ export async function mirrorConnectedStore(store: ShopStore, fetched?: CatalogPr
       images,
       // Back in the store after it was gone.
       ...(existing?.status === "ARCHIVED" && { status: "ACTIVE" as const }),
+      // Meta's catalog refuses a product without an image; it is sold in the shop only.
+      metaSyncStatus: images.length ? ("LIVE" as const) : ("HIDDEN" as const),
     };
     const product = existing
       ? await prisma.shopProduct.update({ where: { id: existing.id }, data: productData })
@@ -111,7 +113,6 @@ export async function mirrorConnectedStore(store: ShopStore, fetched?: CatalogPr
             status: "ACTIVE",
             externalSource: source,
             externalId: groupId,
-            metaSyncStatus: "LIVE",
           },
         });
     if (existing) updated++;
@@ -137,6 +138,11 @@ export async function mirrorConnectedStore(store: ShopStore, fetched?: CatalogPr
         update: data,
       });
     }
+    if (existing)
+      await retireGoneVariants(
+        product.id,
+        group.map((i) => i.retailer_id),
+      );
   }
 
   // Deleted or unpublished in the store: no longer sold here. Skipped when the store sent
@@ -173,6 +179,19 @@ export async function mirrorConnectedStore(store: ShopStore, fetched?: CatalogPr
         }
       : null,
   };
+}
+
+/**
+ * Variants the store no longer has stop selling: removed outright when no order points at
+ * them, otherwise kept (for order history) at zero tracked stock.
+ */
+async function retireGoneVariants(productId: string, keep: string[]) {
+  const gone = { productId, retailerId: { notIn: keep } };
+  await prisma.shopVariant.deleteMany({ where: { ...gone, orderItems: { none: {} } } });
+  await prisma.shopVariant.updateMany({
+    where: gone,
+    data: { trackInventory: true, stock: 0, allowBackorder: false },
+  });
 }
 
 /** The background refresh: a store that stopped following or lost its connection is left alone. */
@@ -238,11 +257,11 @@ type WriteBackOrder = Prisma.ShopOrderGetPayload<{
   include: { store: true; items: { include: { variant: { include: { product: true } } } } };
 }>;
 
-/** One write-back at a time per order: "placed" and "paid" can follow each other closely. */
+/** Refused while another write-back of the order runs, so the job retries rather than drops. */
 async function withWriteBackLock<T>(orderId: string, fn: () => Promise<T>) {
   const key = `shop:writeback:${orderId}`;
   const got = await redis.set(key, "1", "EX", 120, "NX").catch(() => "OK");
-  if (got !== "OK") return null;
+  if (got !== "OK") throw new Error("Another write-back of this order is running");
   try {
     return await fn();
   } finally {
@@ -250,14 +269,22 @@ async function withWriteBackLock<T>(orderId: string, fn: () => Promise<T>) {
   }
 }
 
+interface WriteBackOpts {
+  lastAttempt?: boolean;
+}
+
 /**
  * A RateUp-checkout order from a shop that follows a store goes into that store when it is
  * placed, so the merchant fulfils it there: paid as paid, a cash or transfer order as awaiting
  * payment and marked paid there once the money arrives. Store-checkout orders are already
- * there. The store's own webhooks then raise its loyalty and automations; the
- * `rateup_writeback` marker keeps its loyalty from earning a second time.
+ * there. Runs as a retried job (`enqueueStoreWriteBack`): a failure throws, and staff are told
+ * to add the order by hand only once the last attempt fails.
  */
-export async function writeBackOrder(orderId: string, phase: "placed" | "paid") {
+export async function writeBackOrder(
+  orderId: string,
+  phase: "placed" | "paid",
+  opts: WriteBackOpts = {},
+) {
   return withWriteBackLock(orderId, async () => {
     const order = await prisma.shopOrder.findUnique({
       where: { id: orderId },
@@ -268,16 +295,24 @@ export async function writeBackOrder(orderId: string, phase: "placed" | "paid") 
     const paid = order.paymentStatus === "PAID";
     if (order.externalId) {
       if (!paid || order.externalPaidAt || order.externalProvider !== source) return null;
-      return markPaidInStore(order, source);
+      return markPaidInStore(order, source, opts);
     }
     // An online payment places and pays in one go; it is written once, as paid.
     const offline = order.paymentStatus === "COD_PENDING" || order.paymentMethod === "bank";
     if (phase === "placed" && (paid || !offline)) return null;
-    return source === "shopify" ? writeBackToShopify(order, paid) : writeBackToWoo(order, paid);
+    return source === "shopify"
+      ? writeBackToShopify(order, paid, opts)
+      : writeBackToWoo(order, paid, opts);
   });
 }
 
-async function markPaidInStore(order: WriteBackOrder, source: StoreSource) {
+async function failed(order: WriteBackOrder, opts: WriteBackOpts, message: string, err: unknown) {
+  log.warn({ err, orderId: order.id, lastAttempt: opts.lastAttempt }, message);
+  if (opts.lastAttempt ?? true) await addOrderEvent(order.id, "external_failed", message);
+  throw err;
+}
+
+async function markPaidInStore(order: WriteBackOrder, source: StoreSource, opts: WriteBackOpts) {
   const label = source === "shopify" ? "Shopify" : "WooCommerce";
   try {
     if (source === "shopify") {
@@ -289,21 +324,20 @@ async function markPaidInStore(order: WriteBackOrder, source: StoreSource) {
         await import("../../integrations/woocommerce/woocommerce.shopOrders.js");
       await markWooOrderPaid(order.orgId, order.externalId!);
     }
-    await prisma.shopOrder.update({
-      where: { id: order.id },
-      data: { externalPaidAt: new Date() },
-    });
-    await addOrderEvent(order.id, "external", `Marked paid in ${label}`);
-    return order.externalId;
   } catch (err) {
-    log.warn({ err, orderId: order.id }, "Marking a written-back order paid failed");
-    await addOrderEvent(
-      order.id,
-      "external_failed",
+    return failed(
+      order,
+      opts,
       `Could not mark this order paid in ${label} — mark it paid there by hand`,
+      err,
     );
-    return null;
   }
+  await prisma.shopOrder.update({
+    where: { id: order.id },
+    data: { externalPaidAt: new Date() },
+  });
+  await addOrderEvent(order.id, "external", `Marked paid in ${label}`);
+  return order.externalId;
 }
 
 function addressParts(order: WriteBackOrder) {
@@ -319,22 +353,43 @@ const discountOf = (order: WriteBackOrder) =>
 const taxOnTop = (order: WriteBackOrder) =>
   order.store.pricesIncludeTax ? 0 : toNumber(order.taxTotal);
 
+/**
+ * Saved with a few quick retries: the store order already exists, and a job retry after a
+ * lost record would create a second one in WooCommerce (Shopify's is found again).
+ */
 async function recordWriteBack(
   order: WriteBackOrder,
   source: StoreSource,
   created: { id: string; name: string | null },
   paid: boolean,
 ) {
-  await prisma.shopOrder.update({
-    where: { id: order.id },
-    data: {
-      externalProvider: source,
-      externalId: created.id,
-      externalName: created.name,
-      ...(paid && { externalPaidAt: new Date() }),
-    },
-  });
   const label = source === "shopify" ? "Shopify" : "WooCommerce";
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await prisma.shopOrder.update({
+        where: { id: order.id },
+        data: {
+          externalProvider: source,
+          externalId: created.id,
+          externalName: created.name,
+          ...(paid && { externalPaidAt: new Date() }),
+        },
+      });
+      break;
+    } catch (err) {
+      if (attempt < 3) {
+        await new Promise((r) => setTimeout(r, 200 * attempt));
+        continue;
+      }
+      log.error({ err, orderId: order.id, externalId: created.id }, "Write-back not recorded");
+      await addOrderEvent(
+        order.id,
+        "external_failed",
+        `Created in ${label} as ${created.name ?? created.id}, but RateUp could not link it — check it there`,
+      ).catch(() => {});
+      return;
+    }
+  }
   await addOrderEvent(
     order.id,
     "external",
@@ -343,70 +398,76 @@ async function recordWriteBack(
   );
 }
 
-async function writeBackToShopify(order: WriteBackOrder, paid: boolean) {
+async function writeBackToShopify(order: WriteBackOrder, paid: boolean, opts: WriteBackOpts) {
   const mirrored = order.items.filter((i) => i.variant?.product.externalSource === "shopify");
   if (!mirrored.length) return null;
-  const { createShopifyWriteBackOrder } =
-    await import("../../integrations/shopify/shopify.shopOrders.js");
+  const shop = await import("../../integrations/shopify/shopify.shopOrders.js");
+  const resume = await import("../../integrations/shopify/shopify.orders.js");
   const { address, first, last } = addressParts(order);
   const shipping = order.shippingRate as { name?: string } | null;
+  let created: { id: string; name: string | null };
   try {
-    const created = await createShopifyWriteBackOrder(order.orgId, {
-      rateupOrderId: order.id,
-      orderNumber: order.number,
-      paid,
-      paymentMethod: order.paymentMethod ?? "online",
-      currency: order.currency,
-      lines: mirrored.map((i) => ({
-        retailerId: i.retailerId ?? i.variant!.retailerId,
-        title: i.title,
-        quantity: i.quantity,
-        unitPrice: toNumber(i.unitPrice),
-      })),
-      address: address.line1
-        ? {
-            first_name: first,
-            last_name: last,
-            address1: address.line1,
-            address2: address.line2,
-            city: address.city,
-            province: address.region,
-            zip: address.postalCode,
-            country_code: address.country,
-            phone: address.phone ?? order.customerPhone ?? undefined,
-          }
-        : null,
-      email: order.customerEmail,
-      phone: order.customerPhone ? `+${order.customerPhone.replace(/^\+/, "")}` : null,
-      shipping:
-        toNumber(order.shippingTotal) > 0 || shipping?.name
-          ? { name: shipping?.name ?? "Delivery", price: toNumber(order.shippingTotal) }
+    const earlier = await resume.findShopifyWriteBack(order.orgId, order.id, order.createdAt);
+    if (earlier && "order" in earlier) created = earlier.order;
+    else if (earlier)
+      created = await resume.completeShopifyWriteBackDraft(order.orgId, earlier.draftId, paid);
+    else
+      created = await shop.createShopifyWriteBackOrder(order.orgId, {
+        rateupOrderId: order.id,
+        orderNumber: order.number,
+        paid,
+        paymentMethod: order.paymentMethod ?? "online",
+        currency: order.currency,
+        lines: mirrored.map((i) => ({
+          retailerId: i.retailerId ?? i.variant!.retailerId,
+          title: i.title,
+          quantity: i.quantity,
+          unitPrice: toNumber(i.unitPrice),
+        })),
+        address: address.line1
+          ? {
+              first_name: first,
+              last_name: last,
+              address1: address.line1,
+              address2: address.line2,
+              city: address.city,
+              province: address.region,
+              zip: address.postalCode,
+              country_code: address.country,
+              phone: address.phone ?? order.customerPhone ?? undefined,
+            }
           : null,
-      discount: discountOf(order),
-      taxOnTop: taxOnTop(order),
-    });
-    await recordWriteBack(order, "shopify", created, paid);
-    return created.id;
+        email: order.customerEmail,
+        phone: order.customerPhone ? `+${order.customerPhone.replace(/^\+/, "")}` : null,
+        shipping:
+          toNumber(order.shippingTotal) > 0 || shipping?.name
+            ? { name: shipping?.name ?? "Delivery", price: toNumber(order.shippingTotal) }
+            : null,
+        discount: discountOf(order),
+        taxOnTop: taxOnTop(order),
+      });
   } catch (err) {
-    log.warn({ err, orderId: order.id }, "Writing a shop order back to Shopify failed");
-    await addOrderEvent(
-      order.id,
-      "external_failed",
+    return failed(
+      order,
+      opts,
       "Could not create this order in Shopify — add it there by hand",
+      err,
     );
-    return null;
   }
+  await recordWriteBack(order, "shopify", created, paid);
+  return created.id;
 }
 
-async function writeBackToWoo(order: WriteBackOrder, paid: boolean) {
+async function writeBackToWoo(order: WriteBackOrder, paid: boolean, opts: WriteBackOpts) {
   const mirrored = order.items.filter((i) => i.variant?.product.externalSource === "woocommerce");
   if (!mirrored.length) return null;
   const { createWooWriteBackOrder } =
     await import("../../integrations/woocommerce/woocommerce.shopOrders.js");
   const { address, first, last } = addressParts(order);
   const shipping = order.shippingRate as { name?: string } | null;
+  let created: Awaited<ReturnType<typeof createWooWriteBackOrder>>;
   try {
-    const created = await createWooWriteBackOrder(order.orgId, {
+    created = await createWooWriteBackOrder(order.orgId, {
       rateupOrderId: order.id,
       paid,
       currency: order.currency,
@@ -436,22 +497,21 @@ async function writeBackToWoo(order: WriteBackOrder, paid: boolean) {
       discount: discountOf(order),
       tax: taxOnTop(order),
     });
-    await recordWriteBack(
-      order,
-      "woocommerce",
-      { id: created.id, name: created.number ? `#${created.number}` : null },
-      paid,
-    );
-    return created.id;
   } catch (err) {
-    log.warn({ err, orderId: order.id }, "Writing a shop order back to WooCommerce failed");
-    await addOrderEvent(
-      order.id,
-      "external_failed",
+    return failed(
+      order,
+      opts,
       "Could not create this order in WooCommerce — add it there by hand",
+      err,
     );
-    return null;
   }
+  await recordWriteBack(
+    order,
+    "woocommerce",
+    { id: created.id, name: created.number ? `#${created.number}` : null },
+    paid,
+  );
+  return created.id;
 }
 
 /**

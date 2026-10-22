@@ -19,12 +19,14 @@ const recovery = vi.hoisted(() => ({
   subscribeBackInStock: vi.fn(async () => ({ ok: true, message: "You're on the list." })),
 }));
 const checkout = vi.hoisted(() => ({ payPublicCheckout: vi.fn() }));
+const redis = vi.hoisted(() => ({ incr: vi.fn(), expire: vi.fn() }));
 
 vi.mock("../../../utils/prisma.js", () => ({ default: db }));
 vi.mock("../../../utils/logger.js", () => ({ log: { warn: vi.fn(), info: vi.fn() } }));
 vi.mock("./notify.js", () => notify);
 vi.mock("./recovery.service.js", () => recovery);
 vi.mock("./checkout.service.js", () => checkout);
+vi.mock("../../../utils/redisConnection.js", () => ({ default: redis }));
 
 const {
   assertOfflineOrderAllowed,
@@ -46,6 +48,8 @@ beforeEach(() => {
   db.shopPhoneVerification.create.mockResolvedValue({});
   db.shopPhoneVerification.updateMany.mockResolvedValue({ count: 1 });
   db.shopStore.findUnique.mockResolvedValue(store);
+  redis.incr.mockResolvedValue(1);
+  redis.expire.mockResolvedValue(1);
 });
 
 describe("who may be messaged", () => {
@@ -87,6 +91,39 @@ describe("starting a check", () => {
       startPhoneVerification({ store, purpose: "back_in_stock", prompt: "Hi" }),
     ).rejects.toMatchObject({ code: "LIMIT_REACHED" });
     expect(db.shopPhoneVerification.create).not.toHaveBeenCalled();
+  });
+
+  test("one visitor can't fill the store: codes are capped per IP", async () => {
+    redis.incr.mockResolvedValue(6);
+    await expect(
+      startPhoneVerification({ store, purpose: "back_in_stock", prompt: "Hi", ip: "203.0.113.9" }),
+    ).rejects.toMatchObject({ code: "LIMIT_REACHED" });
+    expect(redis.incr).toHaveBeenCalledWith("shop:verify:s1:203.0.113.9");
+    expect(db.shopPhoneVerification.create).not.toHaveBeenCalled();
+  });
+
+  test("the IP window starts with the first code", async () => {
+    await startPhoneVerification({
+      store,
+      purpose: "back_in_stock",
+      prompt: "Hi",
+      ip: "203.0.113.9",
+    });
+    expect(redis.expire).toHaveBeenCalledWith("shop:verify:s1:203.0.113.9", 15 * 60);
+  });
+
+  test("a Redis outage doesn't stop people confirming", async () => {
+    redis.incr.mockRejectedValue(new Error("down"));
+    await expect(
+      startPhoneVerification({ store, purpose: "back_in_stock", prompt: "Hi", ip: "203.0.113.9" }),
+    ).resolves.toBeTruthy();
+  });
+
+  test("only recent unconfirmed codes hold the store's capacity, and codes live 15 minutes", async () => {
+    const link = await startPhoneVerification({ store, purpose: "back_in_stock", prompt: "Hi" });
+    const where = db.shopPhoneVerification.count.mock.calls[0][0].where;
+    expect(Date.now() - where.createdAt.gt.getTime()).toBeLessThanOrEqual(5 * 60_000 + 1000);
+    expect(link.expiresAt.getTime() - Date.now()).toBeLessThanOrEqual(15 * 60_000 + 1000);
   });
 
   test("reuses the live code for the same order", async () => {

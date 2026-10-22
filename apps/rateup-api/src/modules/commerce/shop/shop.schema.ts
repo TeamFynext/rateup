@@ -1,5 +1,7 @@
 import z from "zod";
 
+import { isCurrencyCode } from "./money.js";
+
 const money = z.coerce.number().min(0).max(10_000_000);
 const optionalMoney = money.nullable().optional();
 /** Links shoppers and staff click, and images the server may fetch: http(s) only, never javascript: or data:. */
@@ -19,7 +21,11 @@ export const storeUpdateSchema = z
     slug: z.string().trim().min(2).max(40),
     description: z.string().max(500).nullable(),
     logoUrl: webUrl().nullable(),
-    currency: z.string().trim().length(3).toUpperCase(),
+    currency: z
+      .string()
+      .trim()
+      .toUpperCase()
+      .refine(isCurrencyCode, "Use a three-letter currency code, such as USD or EUR"),
     taxRate: z.coerce.number().min(0).max(50).nullable(),
     pricesIncludeTax: z.boolean(),
     metaCatalogId: z.string().nullable(),
@@ -353,6 +359,7 @@ export const returnSchema = z.object({
 
 export const returnActionSchema = z.object({
   action: z.enum(["approve", "reject", "receive"]),
+  /** Only read by "receive": put the items back in stock. Defaults to true. */
   restock: z.boolean().optional(),
   note: z.string().max(500).nullable().optional(),
 });

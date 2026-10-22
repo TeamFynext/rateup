@@ -108,7 +108,9 @@ describe("confirming a payment", () => {
     gateway.fetchState.mockResolvedValue(paidState());
     await refreshPendingPayment(ORDER);
     expect(db.shopPayment.updateMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: "p1", status: { not: "PAID" } } }),
+      expect.objectContaining({
+        where: { id: "p1", status: { in: ["PENDING", "EXPIRED", "FAILED"] } },
+      }),
     );
     expect(orders.markOrderPaid).toHaveBeenCalledTimes(1);
   });
@@ -195,6 +197,10 @@ describe("new payment links", () => {
     db.$transaction.mockResolvedValue(undefined);
     await createPaymentLink("o1");
     expect(gateway.expireLink).toHaveBeenCalledWith(account.credential, "cs_old");
+    expect(gateway.createLink.mock.calls[0][1]).toMatchObject({
+      returnUrl: "https://shop.test/c/tok?paid=1",
+      cancelUrl: "https://shop.test/c/tok?payment=cancelled",
+    });
   });
 
   test("bring a draft to today's prices and hold its coupon and points first", async () => {
@@ -275,9 +281,10 @@ describe("refunds", () => {
     );
     await handlePaymentWebhook("stripe", "s1", "{}", {});
     expect(gateway.refundedTotal).toHaveBeenCalledWith(account.credential, "pi_1");
-    expect(db.shopPayment.update).toHaveBeenCalledWith(
-      expect.objectContaining({ data: { refundedAmount: 60, status: "PARTIALLY_REFUNDED" } }),
-    );
+    expect(db.shopPayment.updateMany).toHaveBeenCalledWith({
+      where: { id: "p1", refundedAmount: { lt: 60 } },
+      data: { refundedAmount: 60 },
+    });
   });
 
   test("Razorpay's refund webhook leaves the total to be asked for", () => {
@@ -357,6 +364,8 @@ describe("webhooks only act on the store they were sent to", () => {
     });
     gateway.refundedTotal.mockResolvedValue(0);
     db.shopPayment.findUniqueOrThrow.mockResolvedValue(pendingPayment({ status: "PAID" }));
+    // Nothing refunded at the gateway does not move the recorded total.
+    db.shopPayment.updateMany.mockResolvedValue({ count: 0 });
     await handlePaymentWebhook("stripe", "s1", "{}", {});
     expect(db.shopPayment.findFirst).toHaveBeenCalledWith({
       where: { provider: "stripe", providerPaymentId: "pi_1", order: { storeId: "s1" } },
@@ -426,5 +435,170 @@ describe("a payment link for an order paid in the store", () => {
     await expect(createPaymentLink("o1")).rejects.toMatchObject({ code: "CONFLICT" });
     expect(orders.reserveOrderBenefits).not.toHaveBeenCalled();
     expect(gateway.createLink).not.toHaveBeenCalled();
+  });
+});
+
+describe("a payment recorded but never settled on the order", () => {
+  test("a retried webhook settles it", async () => {
+    db.shopStore.findUnique.mockResolvedValue({ id: "s1", orgId: "org" });
+    gateway.parseWebhook.mockReturnValue(paidState());
+    gateway.fetchState.mockResolvedValue(paidState());
+    db.shopPayment.updateMany.mockResolvedValue({ count: 0 });
+    db.shopPayment.findUnique.mockResolvedValue(
+      pendingPayment({ status: "PAID", providerPaymentId: "pi_1" }),
+    );
+    await handlePaymentWebhook("stripe", "s1", "{}", {});
+    expect(orders.markOrderPaid).toHaveBeenCalledWith(
+      "o1",
+      expect.objectContaining({ paymentId: "pi_1", amount: 100 }),
+    );
+    expect(orders.addOrderEvent).not.toHaveBeenCalled();
+  });
+
+  test("is left alone once the order is paid", async () => {
+    gateway.fetchState.mockResolvedValue(paidState());
+    db.shopPayment.updateMany.mockResolvedValue({ count: 0 });
+    db.shopPayment.findUnique.mockResolvedValue(pendingPayment({ status: "PAID" }));
+    db.shopOrder.findUniqueOrThrow.mockResolvedValue({
+      id: "o1",
+      status: "OPEN",
+      total: "100.00",
+      currency: "USD",
+      paymentStatus: "PAID",
+    });
+    await refreshPendingPayment(ORDER);
+    expect(orders.markOrderPaid).not.toHaveBeenCalled();
+  });
+
+  test("the refresh looks at it as well as pending links", async () => {
+    gateway.fetchState.mockResolvedValue(paidState());
+    await refreshPendingPayment(ORDER);
+    expect(db.shopPayment.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          OR: [
+            { status: "PENDING" },
+            expect.objectContaining({ status: "PAID", order: expect.anything() }),
+          ],
+        }),
+      }),
+    );
+  });
+});
+
+describe("a three-decimal currency", () => {
+  test("settles an order paid in full", async () => {
+    db.shopPayment.findFirst.mockResolvedValue(
+      pendingPayment({ amount: "12.34", currency: "KWD" }),
+    );
+    db.shopOrder.findUniqueOrThrow.mockResolvedValue({
+      id: "o1",
+      total: "12.34",
+      currency: "KWD",
+      paymentStatus: "PENDING",
+    });
+    const { fromMinorUnits } = await import("../money.js");
+    gateway.fetchState.mockResolvedValue(
+      paidState(fromMinorUnits(12340, "KWD"), { currency: "KWD" }),
+    );
+    await refreshPendingPayment(ORDER);
+    expect(orders.markOrderPaid).toHaveBeenCalledWith(
+      "o1",
+      expect.objectContaining({ amount: 12.34 }),
+    );
+  });
+
+  test("does not settle one paid a tenth of the price", async () => {
+    db.shopPayment.findFirst.mockResolvedValue(
+      pendingPayment({ amount: "12.34", currency: "KWD" }),
+    );
+    db.shopOrder.findUniqueOrThrow.mockResolvedValue({
+      id: "o1",
+      total: "12.34",
+      currency: "KWD",
+      paymentStatus: "PENDING",
+    });
+    gateway.fetchState.mockResolvedValue(paidState(1.234, { currency: "KWD" }));
+    await refreshPendingPayment(ORDER);
+    expect(orders.markOrderPaid).not.toHaveBeenCalled();
+    expect(orders.addOrderEvent).toHaveBeenCalledWith(
+      "o1",
+      "underpaid",
+      expect.any(String),
+      expect.anything(),
+    );
+  });
+});
+
+describe("setup test orders", () => {
+  const testOrder = {
+    id: "o1",
+    orgId: "org",
+    number: 1001,
+    total: "20.00",
+    currency: "USD",
+    status: "DRAFT",
+    paymentStatus: "UNPAID",
+    source: "test",
+    checkoutToken: "tok",
+    store: { orgId: "org", name: "Shop", paymentLinkTtlHours: 24 },
+  };
+
+  test("can't be paid through a live gateway", async () => {
+    db.shopOrder.findUnique.mockResolvedValue(testOrder);
+    db.integration.findUnique.mockResolvedValue({
+      ...account,
+      credential: { apiKey: "sk_live", livemode: true },
+    });
+    await expect(createPaymentLink("o1")).rejects.toMatchObject({ code: "CONFLICT" });
+    expect(gateway.createLink).not.toHaveBeenCalled();
+    expect(orders.reserveOrderBenefits).not.toHaveBeenCalled();
+  });
+
+  test("can be paid through a gateway in test mode", async () => {
+    db.shopOrder.findUnique.mockResolvedValue(testOrder);
+    db.integration.findUnique.mockResolvedValue({
+      ...account,
+      credential: { apiKey: "sk_test", livemode: false },
+    });
+    db.shopPayment.findMany.mockResolvedValue([]);
+    gateway.createLink.mockResolvedValue({ url: "https://pay", providerRef: "cs_new" });
+    db.$transaction.mockResolvedValue(undefined);
+    await expect(createPaymentLink("o1")).resolves.toMatchObject({ url: "https://pay" });
+  });
+
+  test("can't be marked paid by hand", async () => {
+    db.shopOrder.findUnique.mockResolvedValue(testOrder);
+    await expect(markPaidManually("o1", "cash", "u1")).rejects.toMatchObject({
+      code: "CONFLICT",
+    });
+    expect(db.shopPayment.create).not.toHaveBeenCalled();
+  });
+});
+
+describe("refunds recorded by hand", () => {
+  test("two at once can't refund more than was paid", async () => {
+    const { refundOrder } = await import("./payments.service.js");
+    db.shopOrder.findUnique.mockResolvedValue({
+      id: "o1",
+      total: "100.00",
+      currency: "USD",
+      checkoutVia: "RATEUP",
+      paymentStatus: "PAID",
+    });
+    db.shopPayment.findFirst.mockResolvedValue(
+      pendingPayment({ provider: "cash", status: "PAID", providerPaymentId: null }),
+    );
+    db.shopPayment.findUniqueOrThrow.mockResolvedValue(
+      pendingPayment({ provider: "cash", status: "PAID" }),
+    );
+    // The other refund landed between the check and this write.
+    db.shopPayment.updateMany.mockResolvedValue({ count: 0 });
+    await expect(refundOrder("o1", 60, "u1")).rejects.toMatchObject({ code: "CONFLICT" });
+    expect(db.shopPayment.updateMany).toHaveBeenCalledWith({
+      where: { id: "p1", refundedAmount: { lte: 40.01 } },
+      data: { refundedAmount: { increment: 60 } },
+    });
+    expect(db.shopOrder.update).not.toHaveBeenCalled();
   });
 });

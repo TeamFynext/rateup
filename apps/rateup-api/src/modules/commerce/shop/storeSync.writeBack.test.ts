@@ -4,7 +4,7 @@ const db = vi.hoisted(() => ({
   shopOrder: { findUnique: vi.fn(), update: vi.fn() },
   shopStore: { findUnique: vi.fn(), findMany: vi.fn(), update: vi.fn() },
   shopProduct: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn(), updateMany: vi.fn() },
-  shopVariant: { upsert: vi.fn() },
+  shopVariant: { upsert: vi.fn(), deleteMany: vi.fn(), updateMany: vi.fn() },
   integration: { findFirst: vi.fn() },
   $transaction: vi.fn(),
 }));
@@ -23,15 +23,22 @@ const shopify = vi.hoisted(() => ({
   deleteShopifyDraftOrder: vi.fn(),
 }));
 const fetchers = vi.hoisted(() => ({ getShopifyProductsForCatalog: vi.fn() }));
+const resume = vi.hoisted(() => ({
+  findShopifyWriteBack: vi.fn(),
+  completeShopifyWriteBackDraft: vi.fn(),
+}));
 
 vi.mock("../../../utils/prisma.js", () => ({ default: db }));
 vi.mock("../../../utils/redisConnection.js", () => ({ default: redis }));
-vi.mock("../../../utils/logger.js", () => ({ log: { warn: vi.fn(), info: vi.fn() } }));
+vi.mock("../../../utils/logger.js", () => ({
+  log: { warn: vi.fn(), info: vi.fn(), error: vi.fn() },
+}));
 vi.mock("../../../workers/bullmq/queues/shop.queue.js", () => queue);
 vi.mock("./orders.service.js", () => orders);
 vi.mock("../../integrations/woocommerce/woocommerce.shopOrders.js", () => woo);
 vi.mock("../../integrations/shopify/shopify.shopOrders.js", () => shopify);
 vi.mock("../../whatsapp/catalog/products/product.service.js", () => fetchers);
+vi.mock("../../integrations/shopify/shopify.orders.js", () => resume);
 
 const {
   cancelInStore,
@@ -99,6 +106,9 @@ beforeEach(() => {
   vi.clearAllMocks();
   redis.set.mockResolvedValue("OK");
   redis.del.mockResolvedValue(1);
+  resume.findShopifyWriteBack.mockResolvedValue(null);
+  orders.addOrderEvent.mockResolvedValue(undefined);
+  db.shopOrder.update.mockResolvedValue({});
 });
 
 describe("a RateUp-checkout order from a shop that follows WooCommerce", () => {
@@ -173,10 +183,13 @@ describe("a RateUp-checkout order from a shop that follows WooCommerce", () => {
     expect(woo.createWooWriteBackOrder).not.toHaveBeenCalled();
   });
 
-  test("a refusal is recorded for staff to add the order by hand", async () => {
+  test("a refusal throws so the job retries, and staff hear only after the last try", async () => {
     db.shopOrder.findUnique.mockResolvedValue(order());
-    woo.createWooWriteBackOrder.mockRejectedValue(new Error("401"));
-    await expect(writeBackOrder("o1", "paid")).resolves.toBeNull();
+    woo.createWooWriteBackOrder.mockRejectedValue(new Error("503"));
+    await expect(writeBackOrder("o1", "paid", { lastAttempt: false })).rejects.toThrow("503");
+    expect(orders.addOrderEvent).not.toHaveBeenCalled();
+
+    await expect(writeBackOrder("o1", "paid", { lastAttempt: true })).rejects.toThrow("503");
     expect(orders.addOrderEvent).toHaveBeenCalledWith(
       "o1",
       "external_failed",
@@ -185,10 +198,23 @@ describe("a RateUp-checkout order from a shop that follows WooCommerce", () => {
     expect(db.shopOrder.update).not.toHaveBeenCalled();
   });
 
-  test("two steps at once write it once", async () => {
+  test("a step that finds another running is retried, not dropped", async () => {
     redis.set.mockResolvedValueOnce(null);
-    await expect(writeBackOrder("o1", "paid")).resolves.toBeNull();
+    await expect(writeBackOrder("o1", "paid")).rejects.toThrow();
     expect(db.shopOrder.findUnique).not.toHaveBeenCalled();
+  });
+
+  test("a store order that was created but not linked is not created again by a retry", async () => {
+    db.shopOrder.findUnique.mockResolvedValue(order());
+    woo.createWooWriteBackOrder.mockResolvedValue({ id: "812", number: "1812" });
+    db.shopOrder.update.mockRejectedValue(new Error("db down"));
+    await expect(writeBackOrder("o1", "paid")).resolves.toBe("812");
+    expect(db.shopOrder.update).toHaveBeenCalledTimes(3);
+    expect(orders.addOrderEvent).toHaveBeenCalledWith(
+      "o1",
+      "external_failed",
+      expect.stringContaining("#1812"),
+    );
   });
 });
 
@@ -213,6 +239,27 @@ describe("a RateUp-checkout order from a shop that follows Shopify", () => {
       externalId: "5501",
       externalName: "#1001",
     });
+  });
+
+  test("a retry finishes the draft an earlier attempt left instead of creating another", async () => {
+    db.shopOrder.findUnique.mockResolvedValue(shopifyOrder({ createdAt: new Date() }));
+    resume.findShopifyWriteBack.mockResolvedValue({ draftId: "gid://shopify/DraftOrder/1" });
+    resume.completeShopifyWriteBackDraft.mockResolvedValue({ id: "5503", name: "#1003" });
+    await expect(writeBackOrder("o1", "paid")).resolves.toBe("5503");
+    expect(resume.completeShopifyWriteBackDraft).toHaveBeenCalledWith(
+      "org-1",
+      "gid://shopify/DraftOrder/1",
+      true,
+    );
+    expect(shopify.createShopifyWriteBackOrder).not.toHaveBeenCalled();
+  });
+
+  test("a retry links the Shopify order an earlier attempt created but didn't record", async () => {
+    db.shopOrder.findUnique.mockResolvedValue(shopifyOrder());
+    resume.findShopifyWriteBack.mockResolvedValue({ order: { id: "5504", name: "#1004" } });
+    await expect(writeBackOrder("o1", "paid")).resolves.toBe("5504");
+    expect(shopify.createShopifyWriteBackOrder).not.toHaveBeenCalled();
+    expect(db.shopOrder.update.mock.calls[0][0].data).toMatchObject({ externalId: "5504" });
   });
 
   test("tax already inside the prices isn't added again", async () => {
@@ -312,6 +359,46 @@ describe("copying a followed store's products in", () => {
     expect(db.shopStore.update).toHaveBeenCalledWith({
       where: { id: "s1" },
       data: { mirroredAt: expect.any(Date) },
+    });
+  });
+
+  test("asks Shopify for image-less products too", async () => {
+    fetchers.getShopifyProductsForCatalog.mockResolvedValue([item({})]);
+    await mirrorConnectedStore(store);
+    expect(fetchers.getShopifyProductsForCatalog).toHaveBeenCalledWith(
+      "org-1",
+      expect.any(String),
+      {
+        requireImage: false,
+      },
+    );
+  });
+
+  test("a product without an image is sold in the shop but kept off Meta", async () => {
+    fetchers.getShopifyProductsForCatalog.mockResolvedValue([item({ image: [] })]);
+    await mirrorConnectedStore(store);
+    expect(db.shopProduct.create.mock.calls[0][0].data).toMatchObject({
+      status: "ACTIVE",
+      images: [],
+      metaSyncStatus: "HIDDEN",
+    });
+  });
+
+  test("variants deleted in the store stop selling", async () => {
+    db.shopProduct.findUnique.mockResolvedValue({ id: "p1", status: "ACTIVE", variants: [] });
+    db.shopProduct.update.mockResolvedValue({ id: "p1" });
+    fetchers.getShopifyProductsForCatalog.mockResolvedValue([
+      item({}),
+      item({ retailer_id: "4402", title: "Linen throw - Sand" }),
+    ]);
+    await mirrorConnectedStore(store);
+    const gone = { productId: "p1", retailerId: { notIn: ["4401", "4402"] } };
+    expect(db.shopVariant.deleteMany).toHaveBeenCalledWith({
+      where: { ...gone, orderItems: { none: {} } },
+    });
+    expect(db.shopVariant.updateMany).toHaveBeenCalledWith({
+      where: gone,
+      data: { trackInventory: true, stock: 0, allowBackorder: false },
     });
   });
 

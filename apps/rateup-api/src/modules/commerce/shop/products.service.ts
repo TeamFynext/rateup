@@ -10,6 +10,7 @@ import prisma from "../../../utils/prisma.js";
 import { csvCell } from "../../../utils/spreadsheet.js";
 import { enqueueCatalogPublish } from "../../../workers/bullmq/queues/shop.queue.js";
 import { notFound, ShopError } from "./shop.errors.js";
+import { webUrl } from "./shop.schema.js";
 import type { ShopProductOption, ShopVariantOptionValues } from "./shop.types.js";
 import { slugify } from "./store.service.js";
 
@@ -404,9 +405,15 @@ export async function setStock(
     throw new ShopError("INVALID", "Stock must be 0 or more");
   const variant = await prisma.shopVariant.findFirst({ where: { id: variantId, storeId } });
   if (!variant) throw notFound("Variant");
-  const { before, after } = await prisma.$transaction((tx) =>
-    adjustStock(tx, variantId, stock - variant.stock, "ADJUSTMENT", { userId, note }),
-  );
+  // The delta is read under the row lock, so a sale between the read and the write isn't lost.
+  const { before, after } = await prisma.$transaction(async (tx) => {
+    const [row] = await tx.$queryRaw<{ stock: number }[]>`
+      SELECT stock FROM "ShopVariant" WHERE id = ${variantId}::uuid FOR UPDATE`;
+    return adjustStock(tx, variantId, stock - (row?.stock ?? variant.stock), "ADJUSTMENT", {
+      userId,
+      note,
+    });
+  });
   await afterStockChange(before, after);
   return after;
 }
@@ -605,6 +612,11 @@ export async function importProductsCsv(
           collections.push({ ...made, _count: { products: 0 } });
           collectionIds.push(made.id);
         }
+      }
+      for (const r of group) {
+        const image = get(r, "Image");
+        if (image && !webUrl().safeParse(image).success)
+          throw new ShopError("INVALID", `Image isn't a web link: ${image.slice(0, 80)}`);
       }
       const status = get(first, "Status").toUpperCase();
       await createProduct(

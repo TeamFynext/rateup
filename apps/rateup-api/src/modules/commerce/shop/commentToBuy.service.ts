@@ -10,6 +10,7 @@ import { rememberSocialSource } from "./attribution.js";
 import { shopProductsActionSchema } from "./commentToBuy.schema.js";
 import { storefrontUrl } from "./events.js";
 import { checkoutLinkFor } from "./externalCheckout.service.js";
+import { formatMoney } from "./money.js";
 import { toNumber } from "./pricing.js";
 import type { ShopAttribution } from "./shop.types.js";
 import { storefrontProductUrl } from "./storefrontLinks.js";
@@ -90,7 +91,7 @@ const sellable = (v: ProductWithVariants["variants"][number]) =>
 function priceLabel(store: ShopStore, p: ProductWithVariants) {
   const prices = p.variants.map((v) => toNumber(v.price));
   const from = Math.min(...prices);
-  const label = `${store.currency} ${from.toFixed(2)}`;
+  const label = formatMoney(from, store.currency);
   return prices.some((x) => x !== from) ? `from ${label}` : label;
 }
 
@@ -175,7 +176,7 @@ export async function runShopProductsAction(input: CommentToBuyInput): Promise<b
   const outro = link
     ? `${link.direct ? "Buy it here" : "Shop here"}: ${link.url}`
     : "Reply here and we'll help you order.";
-  const text = [intro, ...lines, outro].join("\n").slice(0, 1000);
+  const text = fitReply(intro, lines, outro);
   await reply(input, text);
 
   // A story mention is a DM, so the window is open and the cards can follow the text.
@@ -247,6 +248,22 @@ async function buyLink(
         : storefrontUrl(store.slug),
     direct: false,
   };
+}
+
+/** Meta's private-reply limit. */
+const REPLY_MAX = 1000;
+
+/**
+ * Fits the reply into Meta's limit without ever cutting the link: the intro is shortened,
+ * and product lines are dropped only if the lines and link alone are too long.
+ */
+export function fitReply(intro: string, lines: string[], outro: string) {
+  const kept = [...lines];
+  const join = (head: string) => [head, ...kept, outro].filter(Boolean).join("\n");
+  while (kept.length && join("").length > REPLY_MAX) kept.pop();
+  const room = REPLY_MAX - join("").length - 1;
+  if (intro.length <= room) return join(intro);
+  return join(room > 1 ? `${intro.slice(0, room - 1).trimEnd()}…` : "");
 }
 
 async function reply(input: CommentToBuyInput, text: string) {

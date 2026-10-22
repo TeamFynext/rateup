@@ -14,6 +14,7 @@ const db = vi.hoisted(() => ({
   shopPayment: { count: vi.fn(async () => 0) },
   shopShippingRate: { count: vi.fn(async () => 1) },
   contact: { findFirst: vi.fn() },
+  whatsappSettings: { findMany: vi.fn(async () => []) },
 }));
 const queue = vi.hoisted(() => ({ armShopReminder: vi.fn() }));
 const orders = vi.hoisted(() => ({
@@ -21,8 +22,8 @@ const orders = vi.hoisted(() => ({
   assertCheckoutOpen: vi.fn(),
   assertDeliveryChosen: vi.fn(),
   createDraftOrder: vi.fn(),
+  getOrder: vi.fn(async () => ({ id: "o1" })),
   getOrderByToken: vi.fn(),
-  orderDetailInclude: {},
   pointsOfferForOrder: vi.fn(async () => ({ points: 100 })),
   repriceOrder: vi.fn(),
 }));
@@ -232,6 +233,7 @@ describe("RateUp's page for a store-checkout order", () => {
     shippingTotal: 0,
     taxTotal: 0,
     shipments: [],
+    returns: [],
   };
 
   test("offers no RateUp payment, coupon or points, and names the store", async () => {

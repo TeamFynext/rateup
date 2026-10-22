@@ -95,7 +95,8 @@ vi.mock("./storefrontLinks.js", async (load) => {
   };
 });
 
-const { claimDropUnit, runShopProductsAction } = await import("./commentToBuy.service.js");
+const { claimDropUnit, fitReply, runShopProductsAction } =
+  await import("./commentToBuy.service.js");
 
 const store = {
   id: "store-1",
@@ -195,7 +196,7 @@ describe("a limited drop", () => {
     });
     expect(messaging.sendInstagramPrivateReply).toHaveBeenCalledExactlyOnceWith(
       "comment-1",
-      "Thanks for your comment! Here it is:\n• Mug · USD 18.00\nBuy it here: https://app.test/c/tok1",
+      "Thanks for your comment! Here it is:\n• Mug · $18.00\nBuy it here: https://app.test/c/tok1",
       "iba-1",
       "org-1",
       "igs-1",
@@ -309,12 +310,34 @@ describe("the reply", () => {
 
     expect(orders.createDraftOrder).not.toHaveBeenCalled();
     expect(messaging.sendInstagramPrivateReply.mock.calls[0][1]).toBe(
-      `Here you go!\n• Tee · from USD 18.00\nShop here: https://app.test/s/fern/p/tee-22222222`,
+      `Here you go!\n• Tee · from $18.00\nShop here: https://app.test/s/fern/p/tee-22222222`,
     );
   });
 
   test("sends nothing for an action without valid products", async () => {
     await expect(runShopProductsAction(input({ productIds: [] }))).resolves.toBe(false);
     expect(messaging.sendInstagramPrivateReply).not.toHaveBeenCalled();
+  });
+});
+
+describe("fitting the reply into Meta's limit", () => {
+  const link = "Buy it here: https://app.test/c/tok1";
+
+  test("a long intro is shortened, and the link always survives", () => {
+    const text = fitReply("x".repeat(1500), ["• Mug · $18.00"], link);
+    expect(text.length).toBeLessThanOrEqual(1000);
+    expect(text.endsWith(link)).toBe(true);
+    expect(text).toContain("• Mug · $18.00");
+  });
+
+  test("product lines are dropped before the link is", () => {
+    const lines = Array.from({ length: 5 }, (_, i) => `• ${"Long name ".repeat(30)}${i}`);
+    const text = fitReply("Hi!", lines, link);
+    expect(text.length).toBeLessThanOrEqual(1000);
+    expect(text.endsWith(link)).toBe(true);
+  });
+
+  test("a short reply is left as it is", () => {
+    expect(fitReply("Hi!", ["• Mug"], link)).toBe(`Hi!\n• Mug\n${link}`);
   });
 });

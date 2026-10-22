@@ -12,7 +12,7 @@ const { discountState, normaliseCode, ruleOf } = await import("./discounts.servi
 const { redeemablePoints } = await import("./shopLoyalty.js");
 const { parseCsv } = await import("./products.service.js");
 const { nextStep } = await import("./orders.service.js");
-const { toMinorUnits, fromMinorUnits } = await import("./payments/provider.types.js");
+const { toMinorUnits, fromMinorUnits } = await import("./money.js");
 const { slugify } = await import("./store.service.js");
 
 const discount = (over: Record<string, unknown> = {}) =>

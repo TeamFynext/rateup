@@ -12,6 +12,7 @@ import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
 import { redeemDiscount, releaseDiscount, resolveDiscount, ruleOf } from "./discounts.service.js";
 import { onShopOrderEvent, type ShopOrderEventType } from "./events.js";
+import { formatMoney } from "./money.js";
 import { priceOrder, round2, shippingFor, toNumber, type PricedLine } from "./pricing.js";
 import { adjustStock, afterStockChange } from "./products.service.js";
 import { notFound, ShopError } from "./shop.errors.js";
@@ -78,7 +79,8 @@ export const newCheckoutToken = () => randomBytes(18).toString("base64url");
  * Prices lines from the store's own variants. A cart from Meta carries prices too, but the
  * customer could have sent it hours ago at an old price — the store's price is what is charged.
  */
-async function resolveLines(storeId: string, items: CartLineInput[]) {
+async function resolveLines(store: ShopStore, items: CartLineInput[]) {
+  const storeId = store.id;
   const ids = items.map((i) => i.variantId).filter(Boolean) as string[];
   const retailerIds = items.map((i) => i.retailerId).filter(Boolean) as string[];
   const variants = await prisma.shopVariant.findMany({
@@ -97,7 +99,30 @@ async function resolveLines(storeId: string, items: CartLineInput[]) {
     const prev = merged.get(variant.id);
     merged.set(variant.id, { variant, quantity: (prev?.quantity ?? 0) + qty });
   }
-  return [...merged.values()];
+  const lines = [...merged.values()];
+  if (!inStoreCheckout(store.checkoutVia)) {
+    for (const { variant, quantity } of lines)
+      assertInStock(variant, quantity, variant.product.title, variant.title);
+  }
+  return lines;
+}
+
+/**
+ * Refuses a line the store can't fill. Stores that check out in Shopify or WooCommerce are
+ * skipped, as in `placeOrder`: the store's own checkout takes the stock.
+ */
+function assertInStock(
+  v: { trackInventory: boolean; allowBackorder: boolean; stock: number },
+  quantity: number,
+  title: string,
+  variantTitle: string | null,
+) {
+  if (!v.trackInventory || v.allowBackorder || v.stock >= quantity) return;
+  const label = `${title}${variantTitle && variantTitle !== "Default" ? ` (${variantTitle})` : ""}`;
+  throw new ShopError(
+    "OUT_OF_STOCK",
+    v.stock > 0 ? `Only ${v.stock} of ${label} left` : `${label} is sold out`,
+  );
 }
 
 function stageAfterCreate(store: ShopStore): ShopCheckoutStage {
@@ -130,7 +155,7 @@ async function fallbackAttribution(input: CreateDraftInput): Promise<ShopAttribu
 
 export async function createDraftOrder(input: CreateDraftInput) {
   const { store } = input;
-  const lines = await resolveLines(store.id, input.items);
+  const lines = await resolveLines(store, input.items);
   if (!lines.length)
     throw new ShopError("INVALID", "None of those products are for sale right now");
   const attribution = await fallbackAttribution(input);
@@ -291,6 +316,7 @@ export async function repriceOrder(orderId: string, patch: CheckoutPatch = {}) {
         subtotal,
         contactId: order.contactId,
         orderId: order.id,
+        currency: order.currency,
       });
       discountCode = discount.discount.code;
     } catch (err) {
@@ -426,6 +452,23 @@ export async function applyPrepaidDiscount(orderId: string, pct: number) {
   return { saved: round2(toNumber(order.total) - totals.total), order };
 }
 
+/** Undoes `applyPrepaidDiscount` when no payment link could be sent for it. */
+export async function revertPrepaidDiscount(original: ShopOrder) {
+  await prisma.shopOrder.updateMany({
+    where: { id: original.id, paymentStatus: "PENDING" },
+    data: {
+      subtotal: original.subtotal,
+      discountTotal: original.discountTotal,
+      pointsDiscount: original.pointsDiscount,
+      shippingTotal: original.shippingTotal,
+      taxTotal: original.taxTotal,
+      total: original.total,
+      paymentStatus: "COD_PENDING",
+      confirmedAt: original.confirmedAt,
+    },
+  });
+}
+
 export async function addOrderEvent(
   orderId: string,
   type: string,
@@ -500,6 +543,10 @@ export async function refreshDraftPrices(orderId: string) {
   if (order.status !== "DRAFT") return { before, after: before, changed: false };
   const gone = order.items.find((i) => i.variant && i.variant.product.status !== "ACTIVE");
   if (gone) throw new ShopError("OUT_OF_STOCK", `${gone.title} is no longer for sale`);
+  if (!inStoreCheckout(order.checkoutVia)) {
+    for (const i of order.items)
+      if (i.variant) assertInStock(i.variant, i.quantity, i.title, i.variantTitle);
+  }
   const stale = order.items.filter(
     (i) => i.variant && toNumber(i.variant.price) !== toNumber(i.unitPrice),
   );
@@ -534,7 +581,7 @@ export async function prepareDraftForPayment(orderId: string, opts: { strict: bo
   if (prices.changed && opts.strict)
     throw new ShopError(
       "CONFLICT",
-      `Prices have changed since this order was started. The total is now ${order.currency} ${prices.after.toFixed(2)}; check it and pay again.`,
+      `Prices have changed since this order was started. The total is now ${formatMoney(prices.after, order.currency)}; check it and pay again.`,
     );
   return prices;
 }
@@ -543,12 +590,14 @@ export async function prepareDraftForPayment(orderId: string, opts: { strict: bo
  * Takes the coupon use and the points a draft spends while its payment link is open, so two
  * drafts can't both pay with the last use of a code or the same balance. Released when the
  * link lapses, the choices change, or the draft is cancelled; kept when the order is placed.
+ * An anonymous checkout holds nothing, or anyone could tie up a limited code for the link's
+ * lifetime; its code is redeemed (or found used up) when the order is placed.
  */
 export async function reserveOrderBenefits(orderId: string) {
   await prisma.$transaction(async (tx) => {
     const o = await tx.shopOrder.findUnique({ where: { id: orderId } });
-    if (!o || o.status !== "DRAFT" || o.reservedAt) return;
-    if (!o.discountId && !(o.pointsRedeemed > 0 && o.contactId)) return;
+    if (!o || o.status !== "DRAFT" || o.reservedAt || !o.contactId) return;
+    if (!o.discountId && !(o.pointsRedeemed > 0)) return;
     const reservedAt = new Date();
     const { count } = await tx.shopOrder.updateMany({
       where: { id: orderId, status: "DRAFT", reservedAt: null },
@@ -649,13 +698,6 @@ export async function placeOrder(
     if (!o) throw notFound("Order");
     if (!claim.count) return { ...o, alreadyPlaced: true as const };
 
-    if (countsTowardOrders(o)) {
-      ordersThisMonth = await countPlacedOrder(tx, o.orgId);
-      // Re-checked on the locked counter: two unpaid orders racing for the last slot.
-      if (!opts.paid && allowance?.max !== undefined && ordersThisMonth > allowance.max)
-        throw orderLimitError("customer", allowance.max);
-    }
-
     if (await dropSoldOut(tx, o.id)) {
       if (!opts.paid) throw new ShopError("OUT_OF_STOCK", "This drop has sold out");
       problems.push("The drop it came from had already sold out");
@@ -749,11 +791,19 @@ export async function placeOrder(
       await addOrderEvent(
         o.id,
         "needs_review",
-        `Paid, but needs review: ${problems.join("; ")}${owed > 0 ? ` (${o.currency} ${round2(owed).toFixed(2)} given but not covered)` : ""}`,
+        `Paid, but needs review: ${problems.join("; ")}${owed > 0 ? ` (${formatMoney(round2(owed), o.currency)} given but not covered)` : ""}`,
         { problems, owed: round2(owed) },
         undefined,
         tx,
       );
+    }
+    // Last, so the org's UsageStats row (which every message send also updates) is locked
+    // only until commit. Re-checked on the locked counter: two unpaid orders racing for the
+    // last slot.
+    if (countsTowardOrders(o)) {
+      ordersThisMonth = await countPlacedOrder(tx, o.orgId);
+      if (!opts.paid && allowance?.max !== undefined && ordersThisMonth > allowance.max)
+        throw orderLimitError("customer", allowance.max);
     }
     return placed;
   });
@@ -799,16 +849,7 @@ export async function markOrderPaid(
   const current = await prisma.shopOrder.findUnique({ where: { id: orderId } });
   if (!current) throw notFound("Order");
   if (current.paymentStatus === "PAID") return current;
-  if (current.status === "CANCELLED") {
-    // Paid after it was cancelled (a slow payment page). Keep the money visible to staff.
-    await addOrderEvent(
-      orderId,
-      "paid_after_cancel",
-      "Payment arrived after the order was cancelled — refund or reopen it",
-      { provider: payment.provider },
-    );
-    return current;
-  }
+  if (current.status === "CANCELLED") return paidAfterCancel(current, payment.provider);
   if (current.status === "DRAFT") {
     await placeOrder(orderId, {
       paymentMethod: payment.provider,
@@ -816,21 +857,34 @@ export async function markOrderPaid(
       paid: true,
     });
   }
-  // Conditional, so of two confirmations of the same payment only one sends "paid" on.
+  // Conditional, so of two confirmations of the same payment only one sends "paid" on, and a
+  // cancel that landed since the check above is not overwritten.
   const { count } = await prisma.shopOrder.updateMany({
-    where: { id: orderId, paymentStatus: { not: "PAID" } },
+    where: { id: orderId, paymentStatus: { not: "PAID" }, status: { not: "CANCELLED" } },
     data: { paymentStatus: "PAID", paidAt: new Date(), paymentMethod: payment.provider },
   });
   const order = await prisma.shopOrder.findUniqueOrThrow({ where: { id: orderId } });
-  if (!count) return order;
+  if (!count) {
+    if (order.status === "CANCELLED" && order.paymentStatus !== "PAID")
+      return paidAfterCancel(order, payment.provider);
+    return order;
+  }
   await addOrderEvent(
     orderId,
     "paid",
-    `Paid ${order.currency} ${toNumber(payment.amount ?? order.total).toFixed(2)} · ${payment.provider}`,
+    `Paid ${formatMoney(toNumber(payment.amount ?? order.total), order.currency)} · ${payment.provider}`,
     { paymentId: payment.paymentId ?? null },
     payment.actorUserId,
   );
   await onShopOrderEvent(orderId, "paid");
+  return order;
+}
+
+/** Paid after it was cancelled (a slow payment page): kept visible to staff, nothing sent on. */
+async function paidAfterCancel(order: ShopOrder, provider: string) {
+  const reason = "Payment arrived after the order was cancelled — refund or reopen it";
+  await addOrderEvent(order.id, "paid_after_cancel", reason, { provider });
+  await notifyNeedsReview(order, reason);
   return order;
 }
 
@@ -869,11 +923,25 @@ export async function cancelOrder(
     notify?: boolean;
     /** The store cancelled it, so its copy there is already cancelled. */
     fromStore?: boolean;
+    /** Cancel only if the order still matches, checked under the row lock (a deadline racing a confirm). */
+    onlyIf?: Prisma.ShopOrderWhereInput;
   },
 ) {
   const changed: Awaited<ReturnType<typeof adjustStock>>[] = [];
   let cancelledNow = false;
+  let skipped = false;
   const order = await prisma.$transaction(async (tx) => {
+    if (opts.onlyIf) {
+      await tx.$queryRaw`SELECT 1 FROM "ShopOrder" WHERE id = ${orderId}::uuid FOR UPDATE`;
+      const still = await tx.shopOrder.findFirst({
+        where: { AND: [{ id: orderId }, opts.onlyIf] },
+        select: { id: true },
+      });
+      if (!still) {
+        skipped = true;
+        return tx.shopOrder.findUniqueOrThrow({ where: { id: orderId }, include: { items: true } });
+      }
+    }
     const o = await tx.shopOrder.findUnique({ where: { id: orderId }, include: { items: true } });
     if (!o) throw notFound("Order");
     if (o.status === "CANCELLED") return o;
@@ -926,6 +994,7 @@ export async function cancelOrder(
     );
     return cancelled;
   });
+  if (skipped) return order;
   for (const c of changed) await afterStockChange(c.before, c.after).catch(() => {});
   if (cancelledNow && !opts.fromStore) {
     const { cancelInStore } = await import("./storeSync.service.js");
@@ -1226,6 +1295,9 @@ export async function updateStaffNote(storeId: string, id: string, staffNote: st
   if (!count) throw notFound("Order");
 }
 
+/** The sweep's cancel reason; the checkout page reads it to say "expired" rather than "cancelled". */
+export const CHECKOUT_EXPIRED_REASON = "Checkout expired";
+
 /** How long an expired draft is kept before it is cancelled, for staff to see or revive. */
 const EXPIRED_DRAFT_GRACE_MS = 3 * 24 * 3_600_000;
 
@@ -1254,7 +1326,7 @@ export async function sweepExpiredDrafts(now = new Date()) {
     take: 500,
   });
   for (const o of stale)
-    await cancelOrder(o.id, { reason: "Checkout expired", notify: false }).catch((err) =>
+    await cancelOrder(o.id, { reason: CHECKOUT_EXPIRED_REASON, notify: false }).catch((err) =>
       log.warn({ err, orderId: o.id }, "Could not cancel an expired draft"),
     );
   return { released: held.length, cancelled: stale.length };

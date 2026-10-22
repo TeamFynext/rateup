@@ -91,29 +91,3 @@ export interface PaymentProvider {
     currency: string,
   ): Promise<{ refundId: string }>;
 }
-
-/** Currencies quoted in whole units by the gateways (no cents). */
-const ZERO_DECIMAL = new Set([
-  "BIF",
-  "CLP",
-  "DJF",
-  "GNF",
-  "JPY",
-  "KMF",
-  "KRW",
-  "MGA",
-  "PYG",
-  "RWF",
-  "UGX",
-  "VND",
-  "VUV",
-  "XAF",
-  "XOF",
-  "XPF",
-]);
-
-export const toMinorUnits = (amount: number, currency: string) =>
-  ZERO_DECIMAL.has(currency.toUpperCase()) ? Math.round(amount) : Math.round(amount * 100);
-
-export const fromMinorUnits = (amount: number, currency: string) =>
-  ZERO_DECIMAL.has(currency.toUpperCase()) ? amount : amount / 100;

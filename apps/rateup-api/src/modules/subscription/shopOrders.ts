@@ -7,7 +7,8 @@ import { currentPeriodStart, isSamePeriod, periodKey } from "./billingPeriod.js"
  *
  * Takes the placement's transaction so a placement refused after counting rolls the count
  * back with it; the upsert's row lock also serialises concurrent placements, so the total
- * each one sees is exact.
+ * each one sees is exact. Call it last in the transaction: every message send updates the
+ * same UsageStats row, and the lock is held until commit.
  */
 export async function countPlacedOrder(
   tx: Prisma.TransactionClient,

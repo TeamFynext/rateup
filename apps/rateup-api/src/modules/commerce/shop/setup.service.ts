@@ -13,6 +13,7 @@ import {
 import { sendMetaMessage } from "../../whatsapp/meta/metaMessage.service.js";
 import { checkoutUrl } from "./events.js";
 import { checkoutLinkFor } from "./externalCheckout.service.js";
+import { formatMoney } from "./money.js";
 import { createDraftOrder } from "./orders.service.js";
 import { toNumber } from "./pricing.js";
 import { ShopError } from "./shop.errors.js";
@@ -204,7 +205,7 @@ export async function sendProductToMe(
         type: "text",
         text: {
           preview_url: true,
-          body: `${product.title}${variant ? ` — ${store.currency} ${toNumber(variant.price).toFixed(2)}` : ""}\n${storefrontProductUrl(store.slug, product)}`,
+          body: `${product.title}${variant ? ` — ${formatMoney(toNumber(variant.price), store.currency)}` : ""}\n${storefrontProductUrl(store.slug, product)}`,
         },
       };
   const result = await sendMetaMessage({

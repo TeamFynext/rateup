@@ -1,8 +1,15 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const db = vi.hoisted(() => ({
-  shopVariant: { findFirst: vi.fn() },
-  shopBackInStockRequest: { findUnique: vi.fn(), count: vi.fn(), upsert: vi.fn() },
+  shopVariant: { findFirst: vi.fn(), findUnique: vi.fn() },
+  shopBackInStockRequest: {
+    findUnique: vi.fn(),
+    count: vi.fn(),
+    upsert: vi.fn(),
+    findMany: vi.fn(),
+    updateMany: vi.fn(),
+    update: vi.fn(),
+  },
   shopOrder: { findUnique: vi.fn() },
   contact: { upsert: vi.fn() },
 }));
@@ -22,11 +29,15 @@ vi.mock("./store.service.js", () => ({ commerceEnabled: vi.fn(async () => true) 
 vi.mock("./orders.service.js", () => orders);
 vi.mock("./checkout.service.js", () => ({ continueChatCheckout: vi.fn() }));
 vi.mock("./attribution.js", () => ({ chatAttribution: vi.fn() }));
-vi.mock("./notify.js", () => ({ notificationSetting: vi.fn(), sendShopMessage: vi.fn() }));
+const notify = vi.hoisted(() => ({
+  notificationSetting: vi.fn(() => ({ waTemplateId: null })),
+  sendShopMessage: vi.fn(async () => ({ sent: true })),
+}));
+vi.mock("./notify.js", () => notify);
 vi.mock("./payments/payments.service.js", () => ({ refreshPendingPayment: vi.fn() }));
 vi.mock("./phoneVerify.service.js", () => verify);
 
-const { fireShopReminder, requestBackInStockFromStorefront, subscribeBackInStock } =
+const { fireShopReminder, requestBackInStockFromStorefront, runBackInStock, subscribeBackInStock } =
   await import("./recovery.service.js");
 
 const soldOut = {
@@ -108,9 +119,14 @@ describe("an unpaid bank transfer", () => {
 
   test("is cancelled and restocked when the time runs out", async () => {
     db.shopOrder.findUnique.mockResolvedValue(order({}));
+    orders.cancelOrder.mockResolvedValueOnce({ status: "CANCELLED" });
     expect(await fireShopReminder("o1", "bank_expire", 0)).toBe("cancelled");
     expect(orders.cancelOrder).toHaveBeenCalledWith("o1", {
       reason: "Transfer not received in time",
+      onlyIf: {
+        status: "OPEN",
+        paymentStatus: { notIn: ["PAID", "PARTIALLY_REFUNDED", "REFUNDED"] },
+      },
     });
   });
 
@@ -118,6 +134,35 @@ describe("an unpaid bank transfer", () => {
     db.shopOrder.findUnique.mockResolvedValue(order({ paymentStatus: "PAID" }));
     expect(await fireShopReminder("o1", "bank_expire", 0)).toBe("skipped");
     expect(orders.cancelOrder).not.toHaveBeenCalled();
+  });
+});
+
+describe("an unconfirmed cash order", () => {
+  const cod = {
+    id: "o1",
+    paymentMethod: "cod",
+    status: "OPEN",
+    paymentStatus: "COD_PENDING",
+    confirmedAt: null,
+    store: {},
+    items: [],
+    payments: [],
+  };
+
+  test("is cancelled at the deadline only if still unconfirmed under the lock", async () => {
+    db.shopOrder.findUnique.mockResolvedValue(cod);
+    orders.cancelOrder.mockResolvedValueOnce({ status: "CANCELLED" });
+    expect(await fireShopReminder("o1", "cod_expire", 0)).toBe("cancelled");
+    expect(orders.cancelOrder).toHaveBeenCalledWith("o1", {
+      reason: "Not confirmed in time",
+      onlyIf: { paymentStatus: "COD_PENDING", confirmedAt: null, status: "OPEN" },
+    });
+  });
+
+  test("a confirm that lands as the deadline fires wins", async () => {
+    db.shopOrder.findUnique.mockResolvedValue(cod);
+    orders.cancelOrder.mockResolvedValueOnce({ status: "OPEN" });
+    expect(await fireShopReminder("o1", "cod_expire", 0)).toBe("skipped");
   });
 });
 
@@ -134,5 +179,47 @@ describe("reminders to a storefront number nobody proved", () => {
       payments: [],
     });
     expect(await fireShopReminder("o1", "cart", 0)).toBe("skipped");
+  });
+});
+
+describe("telling subscribers about a restock", () => {
+  const restocked = {
+    id: "v1",
+    title: "Large",
+    trackInventory: true,
+    stock: 3,
+    product: { status: "ACTIVE", title: "Mug", store: { orgId: "org", name: "Shop" } },
+  };
+  const rows = [
+    { id: "r1", channel: "WHATSAPP", contactId: "c1" },
+    { id: "r2", channel: "WHATSAPP", contactId: "c2" },
+  ];
+
+  test("claims each row before sending, so a row another job claimed is skipped", async () => {
+    db.shopVariant.findUnique.mockResolvedValue(restocked);
+    db.shopBackInStockRequest.findMany.mockResolvedValue(rows);
+    db.shopBackInStockRequest.updateMany
+      .mockResolvedValueOnce({ count: 1 })
+      .mockResolvedValueOnce({ count: 0 });
+    const result = await runBackInStock("v1");
+    expect(db.shopBackInStockRequest.updateMany).toHaveBeenCalledWith({
+      where: { id: "r1", notifiedAt: null },
+      data: { notifiedAt: expect.any(Date) },
+    });
+    expect(notify.sendShopMessage).toHaveBeenCalledTimes(1);
+    expect(result.sent).toBe(1);
+  });
+
+  test("two overlapping runs message each person once", async () => {
+    db.shopVariant.findUnique.mockResolvedValue(restocked);
+    db.shopBackInStockRequest.findMany.mockResolvedValue(rows);
+    const claimed = new Set<string>();
+    db.shopBackInStockRequest.updateMany.mockImplementation(async ({ where }) => {
+      if (claimed.has(where.id)) return { count: 0 };
+      claimed.add(where.id);
+      return { count: 1 };
+    });
+    await Promise.all([runBackInStock("v1"), runBackInStock("v1")]);
+    expect(notify.sendShopMessage).toHaveBeenCalledTimes(2);
   });
 });

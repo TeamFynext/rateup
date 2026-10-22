@@ -22,7 +22,7 @@ import type {
 import prisma from "../../../utils/prisma.js";
 import { ShopifyBody, type ShopifyWebhookJobData } from "./shopify.types.js";
 import { normalisePhone } from "../../loyalty/util.js";
-import { getShopifyIntegrationByShop } from "./shopify.credential.js";
+import { getShopifyInfo, getShopifyIntegrationByShop } from "./shopify.credential.js";
 
 /** Sends one scheduled survey; see `commerce/surveys.ts`. What the survey worker runs. */
 export async function processShopifySurveySchedule(jobData: OrderSurveyJobData) {
@@ -173,7 +173,7 @@ export async function handleShopifyOrderEvents(webhook: ShopifyWebhookJobData) {
     );
   }
   const orderId = body?.id != null ? String(body.id) : null;
-  await syncRateupCheckout(shopifyInfo.orgId, topic, body, orderId);
+  const rateupOrderId = await syncRateupCheckout(shopifyInfo.orgId, topic, body, orderId);
 
   // Everything after this point — loyalty, the order.* event, the survey and the
   // automation rules — is the commerce layer's, shared with every store.
@@ -201,6 +201,7 @@ export async function handleShopifyOrderEvents(webhook: ShopifyWebhookJobData) {
       deliveryId: webhookId,
       raw: body as unknown as Record<string, unknown>,
       rateupWriteBack: isRateupWriteBack(body as { note_attributes?: unknown }),
+      rateupOrderId,
     },
   );
 
@@ -281,31 +282,46 @@ const SYNCED_TOPICS: Partial<Record<string, Partial<StoreOrderUpdate>>> = {
 
 /**
  * An order RateUp created in Shopify (a store checkout, or a RateUp order written back): the
- * RateUp order follows what happened to it there. Never blocks the rest.
+ * RateUp order follows what happened to it there. Returns the RateUp order id when the order
+ * carries RateUp's signature for it. Never blocks the rest.
  */
 async function syncRateupCheckout(
   orgId: string,
   topic: string,
   body: ShopifyBody,
   orderId: string | null,
-) {
-  const step = SYNCED_TOPICS[topic];
-  if (!step) return;
+): Promise<string | null> {
   const rateupOrderId = rateupOrderIdFromShopify(body as { note_attributes?: unknown });
-  if (!rateupOrderId) return;
+  if (!rateupOrderId) return null;
+  const signature = noteAttribute(body as { note_attributes?: unknown }, "rateup_sig");
   try {
-    const { syncOrderFromStore } = await import("../../commerce/shop/externalCheckout.service.js");
-    await syncOrderFromStore("shopify", orgId, rateupOrderId, {
-      ...step,
-      externalOrderId: orderId,
-      externalName: body.name || null,
-      ...(step.status === "paid" && { totals: shopifyTotals(body) }),
-      ...shopifyCustomer(body),
-    });
+    const { syncOrderFromStore, verifyStoreCheckout } =
+      await import("../../commerce/shop/externalCheckout.service.js");
+    const signed = verifyStoreCheckout(orgId, rateupOrderId, signature) ? rateupOrderId : null;
+    const step = SYNCED_TOPICS[topic];
+    if (step)
+      await syncOrderFromStore("shopify", orgId, rateupOrderId, {
+        ...step,
+        externalOrderId: orderId,
+        externalName: body.name || null,
+        signature,
+        ...(step.status === "paid" && { totals: shopifyTotals(body), lines: shopifyLines(body) }),
+        ...shopifyCustomer(body),
+      });
+    return signed;
   } catch (err) {
     log.warn({ err, rateupOrderId, topic }, "Could not update the RateUp order from Shopify");
+    return null;
   }
 }
+
+/** The order's lines as RateUp matches them against its own items. */
+export const shopifyLines = (body: Partial<ShopifyBody>) =>
+  (body.line_items ?? []).map((l) => ({
+    variantId: l.variant_id != null ? String(l.variant_id) : null,
+    sku: l.sku || null,
+    quantity: Number(l.quantity) || 0,
+  }));
 
 /** A refund in Shopify on an order RateUp created there. Matched by the order's Shopify id. */
 async function syncRateupRefund(orgId: string, shopifyOrderId: string, refundedCents: number) {
@@ -498,4 +514,83 @@ export async function handleShopifyRefundEvent(webhook: ShopifyWebhookJobData) {
       platform: "WHATSAPP",
     });
   }
+}
+
+// ─── RateUp orders written back ─────────────────────────────────────────────
+
+interface WriteBackDraftsData {
+  draftOrders: {
+    nodes: {
+      id: string;
+      status: string;
+      customAttributes: { key: string; value: string | null }[];
+      order: { legacyResourceId: string; name: string } | null;
+    }[];
+  };
+}
+
+async function writeBackClient(orgId: string) {
+  const info = await getShopifyInfo(orgId);
+  if (!info || !info.active) throw new Error("Shopify is not connected");
+  if (!shopify) throw new Error("Shopify integration is not configured");
+  return new shopify.clients.Graphql({ session: await getActiveShopifySession(info) });
+}
+
+/**
+ * What an earlier write-back of this RateUp order left in Shopify: the order it became, or a
+ * draft whose completion failed. Lets a retried write-back finish that one instead of
+ * creating a second. Drafts carry the `rateup` tag and the `rateup_order_id` attribute.
+ */
+export async function findShopifyWriteBack(
+  orgId: string,
+  rateupOrderId: string,
+  since: Date,
+): Promise<{ order: { id: string; name: string | null } } | { draftId: string } | null> {
+  const client = await writeBackClient(orgId);
+  const res: GraphQLClientResponse<WriteBackDraftsData> = await client.request(
+    `query rateupWriteBacks($query: String!) {
+      draftOrders(first: 50, query: $query, sortKey: UPDATED_AT, reverse: true) {
+        nodes {
+          id
+          status
+          customAttributes { key value }
+          order { legacyResourceId name }
+        }
+      }
+    }`,
+    { variables: { query: `tag:rateup updated_at:>='${since.toISOString()}'` } },
+  );
+  const attr = (d: WriteBackDraftsData["draftOrders"]["nodes"][number], key: string) =>
+    d.customAttributes.find((a) => a.key === key)?.value ?? null;
+  const drafts = (res.data?.draftOrders.nodes ?? []).filter(
+    (d) => attr(d, "rateup_order_id") === rateupOrderId && attr(d, "rateup_writeback") === "1",
+  );
+  const done = drafts.find((d) => d.order);
+  if (done?.order) return { order: { id: done.order.legacyResourceId, name: done.order.name } };
+  const open = drafts.find((d) => d.status === "OPEN");
+  return open ? { draftId: open.id } : null;
+}
+
+export async function completeShopifyWriteBackDraft(orgId: string, draftId: string, paid: boolean) {
+  const client = await writeBackClient(orgId);
+  const res: GraphQLClientResponse<{
+    draftOrderComplete: {
+      draftOrder: { order: { legacyResourceId: string; name: string } | null } | null;
+      userErrors: { field?: string[] | null; message: string }[];
+    };
+  }> = await client.request(
+    `mutation complete($id: ID!, $pending: Boolean) {
+      draftOrderComplete(id: $id, paymentPending: $pending) {
+        draftOrder { order { legacyResourceId name } }
+        userErrors { field message }
+      }
+    }`,
+    { variables: { id: draftId, pending: !paid } },
+  );
+  const errors = res.data?.draftOrderComplete.userErrors ?? [];
+  if (errors.length)
+    throw new Error(`draftOrderComplete: ${errors.map((e) => e.message).join("; ")}`);
+  const order = res.data?.draftOrderComplete.draftOrder?.order;
+  if (!order) throw new Error("Shopify completed the draft order without an order");
+  return { id: order.legacyResourceId, name: order.name ?? null };
 }

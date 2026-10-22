@@ -20,6 +20,7 @@ const state = vi.hoisted(() => ({
   seq: 0,
   autoSend: true,
   logoUrl: null as string | null,
+  prefix: "INV-",
   locks: new Map<string, Promise<void>>(),
 }));
 
@@ -37,6 +38,12 @@ const db = vi.hoisted(() => {
     store: { name: "Fern", invoiceAutoSend: state.autoSend },
   });
   const shopOrder = {
+    findFirst: vi.fn(
+      async ({ where }: { where: { storeId: string; invoiceNumber: string } }) =>
+        [...state.orders.values()].find(
+          (o) => o.storeId === where.storeId && o.invoiceNumber === where.invoiceNumber,
+        ) ?? null,
+    ),
     findUnique: vi.fn(async ({ where }: { where: { id: string } }) => {
       const row = state.orders.get(where.id);
       return row ? select(row) : null;
@@ -72,19 +79,21 @@ const db = vi.hoisted(() => {
       },
     ),
   };
+  const shopOrderEvent = { create: vi.fn(), findFirst: vi.fn() };
   return {
     shopOrder,
-    shopOrderEvent: { create: vi.fn() },
+    shopOrderEvent,
     $transaction: vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => {
       const held: string[] = [];
       const releases: (() => void)[] = [];
       const tx = {
         shopOrder,
+        shopOrderEvent,
         shopStore: {
           update: vi.fn(async () => {
             await tick();
             state.seq += 1;
-            return { invoiceNumberSeq: state.seq, invoicePrefix: "INV-" };
+            return { invoiceNumberSeq: state.seq, invoicePrefix: state.prefix };
           }),
         },
         $queryRaw: vi.fn(async (_strings: TemplateStringsArray, id: string) => {
@@ -146,6 +155,8 @@ beforeEach(() => {
   state.seq = 0;
   state.autoSend = true;
   state.logoUrl = null;
+  state.prefix = "INV-";
+  db.shopOrderEvent.findFirst.mockResolvedValue(null);
   notify.sendShopMessage.mockResolvedValue({ sent: true, channel: "WHATSAPP" });
 });
 
@@ -165,6 +176,29 @@ describe("invoice numbers", () => {
     const all = [...perOrder.values()].map((s) => [...s][0]).sort();
     expect(all).toEqual(["INV-0001", "INV-0002", "INV-0003", "INV-0004"]);
     expect(state.seq).toBe(4);
+  });
+
+  test("a number an edited prefix already used is skipped, not a permanent failure", async () => {
+    state.orders.set("old", { ...paidOrder("old"), invoiceNumber: "INV-10001" });
+    state.orders.set("a", paidOrder("a"));
+    state.prefix = "INV-1";
+    state.seq = 0;
+    // "INV-1" + "0001" collides with the old "INV-" + "10001".
+    const { number } = await issueInvoiceNumber("a");
+    expect(number).toBe("INV-10002");
+  });
+
+  test("the invoice is drawn from what the order said when it was numbered", async () => {
+    state.orders.set("a", paidOrder("a"));
+    await issueInvoiceNumber("a");
+    const snapshot = db.shopOrderEvent.create.mock.calls[0][0].data;
+    expect(snapshot).toMatchObject({ type: "invoice_numbered" });
+    db.shopOrderEvent.findFirst.mockResolvedValue({
+      data: { ...snapshot.data, order: { ...snapshot.data.order, customerName: "Then" } },
+    });
+    const { buildInvoicePdf } = await import("./invoice.js");
+    await ensureInvoice("a");
+    expect(vi.mocked(buildInvoicePdf).mock.calls[0][0].order.customerName).toBe("Then");
   });
 
   test("an order paid on the Shopify checkout gets no second invoice from RateUp", async () => {

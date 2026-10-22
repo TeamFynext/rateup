@@ -17,6 +17,16 @@ describe("isPublicAddress", () => {
       "fd00::1",
       "::ffff:127.0.0.1",
       "::ffff:169.254.169.254",
+      "::ffff:7f00:1",
+      "::ffff:a9fe:a9fe",
+      "0:0:0:0:0:ffff:127.0.0.1",
+      "::127.0.0.1",
+      "::a9fe:a9fe",
+      "2002:7f00:1::",
+      "2002:a9fe:a9fe::1",
+      "2001:0:4136:e378:8000:63bf:3fff:fdd2",
+      "64:ff9b:1::a9fe:a9fe",
+      "fe80::1%eth0",
     ])
       expect(isPublicAddress(ip), ip).toBe(false);
   });
