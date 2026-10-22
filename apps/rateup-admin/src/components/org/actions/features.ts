@@ -48,6 +48,18 @@ export const LIMITS = [
       f.webSurvey.count.monthlyResponseLimit = value;
     },
   },
+  {
+    key: "orders",
+    label: "Shop orders",
+    hint: "a month",
+    // The API meters orders only above 0 (planLimits.ts), so absent and 0 both mean no cap.
+    unmeteredAtZero: true,
+    get: (f: Partial2) => f?.whatsapp?.shopOrders?.count?.max,
+    set: (f: SubscriptionFeatures, value: number) => {
+      if (value > 0) f.whatsapp.shopOrders = { active: true, count: { max: value } };
+      else delete f.whatsapp.shopOrders;
+    },
+  },
 ] as const;
 
 /** The switches a plan gates. Anything else in the blob is left as the tier set it. */
@@ -78,7 +90,7 @@ export const SWITCHES = [
   },
   {
     key: "catalog",
-    label: "Catalog sync",
+    label: "Commerce (shop & catalog)",
     get: (f: Partial2) => f?.whatsapp?.catalog?.active,
     set: (f: SubscriptionFeatures, on: boolean) => {
       f.whatsapp.catalog = { active: on };
@@ -104,7 +116,13 @@ export const SWITCHES = [
 
 export const isUnlimited = (value: number | undefined) => (value ?? 0) >= UNLIMITED_COUNT;
 
-export function formatLimit(value: number | undefined): string {
+export type Limit = (typeof LIMITS)[number];
+
+export const isUnmetered = (limit: Limit, value: number | undefined) =>
+  "unmeteredAtZero" in limit && !value;
+
+export function formatLimit(value: number | undefined, limit?: Limit): string {
+  if (limit && isUnmetered(limit, value)) return "Not metered";
   if (value === undefined) return "—";
   return isUnlimited(value) ? "Unlimited" : formatNumber(value);
 }
@@ -151,6 +169,15 @@ export function completeFeatures(stored: Partial2): SubscriptionFeatures {
       loyalty: on(f.whatsapp?.loyalty?.active),
       referrals: on(f.whatsapp?.referrals?.active),
       catalog: on(f.whatsapp?.catalog?.active),
+      // Absent stays absent: a blob stored before the cap must not be saved as "0 = unmetered".
+      ...(f.whatsapp?.shopOrders
+        ? {
+            shopOrders: {
+              active: f.whatsapp.shopOrders.active ?? true,
+              count: max(f.whatsapp.shopOrders.count?.max),
+            },
+          }
+        : {}),
     },
     ai: {
       active: f.ai?.active ?? false,

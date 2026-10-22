@@ -167,6 +167,7 @@ export interface OrgUsage {
     teams: PlanLimitStatus;
     users: PlanLimitStatus;
     formResponses: PlanLimitStatus;
+    orders?: PlanLimitStatus;
   };
   activeContacts: ActiveContactBudget;
   campaignCredits: CampaignCreditBudget;

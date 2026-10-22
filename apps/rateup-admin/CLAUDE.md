@@ -4,8 +4,9 @@ RateUp Admin, the staff console: a static Vite + React SPA (TanStack Router file
 Query, Tailwind 4, shadcn on Base UI) calling rateup-api's `/api/staff` directly
 (`VITE_API_URL`, like rateup-ui). Plan: `i-want-to-redesign-glittery-pony.md`.
 
-Commands: `npm run dev` (port 4000), `npm run typecheck`, `npm run lint`, `npm run build`,
-`npx oxfmt`. `VITE_STAFF_MOCK=true` in `.env.local` signs in as a fake staff user (dev only).
+Commands: `npm run dev` (port 4000), `npm run typecheck`, `npm run lint`, `npm test` (Vitest,
+pure `src/**/*.test.ts` modules only, node environment), `npm run build`, `npx oxfmt`.
+`VITE_STAFF_MOCK=true` in `.env.local` signs in as a fake staff user (dev only).
 
 ## Design language: RateUp Design System V2
 
