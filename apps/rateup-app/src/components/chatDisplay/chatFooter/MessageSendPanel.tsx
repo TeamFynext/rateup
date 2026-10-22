@@ -45,6 +45,8 @@ import {
   Zap,
 } from "lucide-react-native";
 import TemplateSending from "./TemplateSending";
+import ChatSellSheets, { type ChatSellSheet } from "@/components/shop/ChatSellSheets";
+import { chatChannelFor, useCommerceAccess } from "@/components/shop/chatSell";
 import MentionList from "./mention/MentionList";
 import QuickReplyList from "./quickReply/QuickReplyList";
 import { useQuickReplies } from "@/api/inbox/quickReplies/quickReplies.query";
@@ -53,6 +55,7 @@ import { quickReplyToWhatsAppText } from "@/utils/quickReplyText";
 import { useMention } from "./mention/useMention";
 import { generateInternalMessageId } from "@/utils/chatbox_utils";
 import { getInboxRowTheme } from "@/constants/inboxDesign";
+import { FONT } from "@/components/loyalty/cashier/ui";
 import { Toast } from "@/components/common/Notice";
 import { useAuth } from "@/context/AuthContext";
 import { useLoggedInUser } from "@/api/api";
@@ -300,6 +303,15 @@ const MessageSendPanel = ({
     });
 
     setTemplateOptionsVisible(next);
+  };
+
+  const { canSell } = useCommerceAccess();
+  const sellChannel = canSell ? chatChannelFor(platform) : null;
+  const [sellSheet, setSellSheet] = useState<ChatSellSheet>(null);
+  const openSellSheet = (sheet: Exclude<ChatSellSheet, null>) => {
+    rotateValue.value = withTiming(0, { duration: 200 });
+    setTemplateOptionsVisible(false);
+    setSellSheet(sheet);
   };
 
   // Everything that reaches the customer — templates, attachments, quick replies — is
@@ -1025,7 +1037,49 @@ const MessageSendPanel = ({
                       Send Template
                     </Text>
                   </Pressable>
+                  {sellChannel && (
+                    <>
+                      <Pressable
+                        style={{ paddingVertical: 4, paddingHorizontal: 12, marginTop: 6 }}
+                        onPress={() => openSellSheet("products")}
+                      >
+                        <Text
+                          style={{
+                            color: "#fff",
+                            fontSize: 13,
+                            fontFamily: FONT.semibold,
+                          }}
+                        >
+                          Send products
+                        </Text>
+                      </Pressable>
+                      <Pressable
+                        style={{ paddingVertical: 4, paddingHorizontal: 12, marginTop: 6 }}
+                        onPress={() => openSellSheet("order")}
+                      >
+                        <Text
+                          style={{
+                            color: "#fff",
+                            fontSize: 13,
+                            fontFamily: FONT.semibold,
+                          }}
+                        >
+                          Create order
+                        </Text>
+                      </Pressable>
+                    </>
+                  )}
                 </View>
+              )}
+
+              {sellChannel && (
+                <ChatSellSheets
+                  open={sellSheet}
+                  onClose={() => setSellSheet(null)}
+                  contactId={selectedContactId}
+                  channel={sellChannel}
+                  channelAccountId={whatsappSettingsPhoneId || null}
+                />
               )}
 
               <Modal

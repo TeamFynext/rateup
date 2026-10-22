@@ -37,7 +37,10 @@ export function parseWaMessage_(message: any): ParsedWaMessageReturn {
       const { send } = messageBody;
       const { message, sender_action, payload } = send;
       if (message) {
-        if (message.attachment) {
+        if (message.attachment?.type === "template") {
+          messageType = "text";
+          messageContent = igTemplateText(message.attachment.payload);
+        } else if (message.attachment) {
           messageContent =
             message.attachment.payload.id ||
             message.attachment.payload.url ||
@@ -261,4 +264,24 @@ export function returnMessageContentBasedOnParsedMessage(
   } else {
     return "Unsupported message type";
   }
+}
+
+/**
+ * A sent Instagram/Messenger template (product cards, or text with a link button) shown as
+ * plain text, since the thread has no card bubble for it.
+ */
+function igTemplateText(payload: {
+  template_type?: string;
+  text?: string;
+  elements?: { title?: string; subtitle?: string }[];
+  buttons?: { title?: string }[];
+}): string {
+  if (payload?.text) {
+    const labels = (payload.buttons ?? []).map((b) => b.title).filter(Boolean);
+    return labels.length ? `${payload.text}\n[${labels.join("] [")}]` : payload.text;
+  }
+  const items = (payload?.elements ?? [])
+    .map((e) => [e.title, e.subtitle].filter(Boolean).join(" · "))
+    .filter(Boolean);
+  return items.length ? items.map((i) => `🛍 ${i}`).join("\n") : "Products";
 }
