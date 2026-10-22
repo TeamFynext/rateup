@@ -49,6 +49,8 @@ vi.mock("axios", () => ({
 }));
 
 vi.mock("./shopify/shopify.messages.js", () => ({ sendWhatsAppTemplateToCustomer: vi.fn() }));
+const shopStore = vi.hoisted(() => ({ onOnlineStoreDisconnected: vi.fn(async () => {}) }));
+vi.mock("../commerce/shop/store.service.js", () => shopStore);
 
 import axios from "axios";
 import prisma from "../../utils/prisma.js";
@@ -98,10 +100,12 @@ beforeEach(() => {
 // ===========================================================================
 
 describe("the integration readers", () => {
-  test("the per-org list is scoped to the org", async () => {
+  test("the per-org list is scoped to the org and leaves out shop payment gateways", async () => {
     await getAllIntegrationsByOrgId(ORG);
 
-    expect(db.integration.findMany).toHaveBeenCalledWith({ where: { orgId: ORG } });
+    expect(db.integration.findMany).toHaveBeenCalledWith({
+      where: { orgId: ORG, NOT: { name: { startsWith: "shop_" } } },
+    });
   });
 
   test("by-name is keyed on the org and name compound unique", async () => {
@@ -313,6 +317,15 @@ describe("deleteIntegrationByName", () => {
     expect(db.integration.delete.mock.calls[0][0].where).toEqual({
       orgid_integration_name_unique: { name: "amelia", orgId: ORG },
     });
+  });
+
+  test("disconnecting Shopify or WooCommerce moves a shop checking out there back to RateUp", async () => {
+    db.integration.findUnique.mockResolvedValue(null);
+    await deleteIntegrationByName("woocommerce", ORG);
+    expect(shopStore.onOnlineStoreDisconnected).toHaveBeenCalledWith(ORG, "WOOCOMMERCE");
+
+    await deleteIntegrationByName("amelia", ORG);
+    expect(shopStore.onOnlineStoreDisconnected).toHaveBeenCalledTimes(1);
   });
 
   test("propagates a missing-row failure rather than answering quietly", async () => {

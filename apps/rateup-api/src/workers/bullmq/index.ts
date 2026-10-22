@@ -26,6 +26,7 @@ import * as outgoingWebhook from "./processors/outgoingWebhook.processor.js";
 import * as pausedAutomation from "./processors/pausedAutomation.processor.js";
 import * as scheduledJobs from "./processors/scheduledJobs.processor.js";
 import * as sendMessage from "./processors/sendMessage.processor.js";
+import * as shop from "./processors/shop.processor.js";
 import * as statusRetry from "./processors/statusRetry.processor.js";
 import * as userAvailability from "./processors/userAvailability.processor.js";
 import * as waMessage from "./processors/waMessage.processor.js";
@@ -63,6 +64,7 @@ const PROCESSOR_MODULES = [
   pausedAutomation,
   scheduledJobs,
   sendMessage,
+  shop,
   statusRetry,
   userAvailability,
   waMessage,

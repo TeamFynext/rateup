@@ -22,6 +22,8 @@ vi.mock("../../../utils/prisma.js", () => ({ default: { integration: { update: v
 vi.mock("../../whatsapp/automatedReply/wa_automatedReply.utils.js", () => ({
   checkAndExecuteRuleByTriggerEvent: vi.fn(),
 }));
+const shopSync = vi.hoisted(() => ({ syncOrderFromStore: vi.fn() }));
+vi.mock("../../commerce/shop/externalCheckout.service.js", () => shopSync);
 
 import type { CommerceOrder, CommerceStore } from "../commerce/commerce.types.js";
 import { wooCommerceCommerce } from "./woocommerce.commerce.js";
@@ -29,6 +31,7 @@ import {
   normaliseWooPhone,
   resolveWooPathValue,
   toCommerceOrder,
+  wooTotals,
   type WooOrderPayload,
 } from "./woocommerce.mapping.js";
 import { claimStatusChange, handleWooOrder } from "./woocommerce.orders.js";
@@ -84,7 +87,16 @@ describe("a WooCommerce order, in commerce terms", () => {
       discountCodes: ["RU-ABC123"],
       deliveryId: "d-1",
       raw: payload(),
+      rateupWriteBack: false,
     });
+  });
+
+  test("an order RateUp wrote back is marked, so its points are earned in RateUp only", () => {
+    const meta_data = [
+      { key: "rateup_order_id", value: "r-1" },
+      { key: "rateup_writeback", value: "1" },
+    ];
+    expect(toCommerceOrder(payload({ meta_data }), credential, "d-1")?.rateupWriteBack).toBe(true);
   });
 
   test.each([
@@ -226,5 +238,92 @@ describe("WooCommerce as a commerce store", () => {
     expect(wooCommerceCommerce.awardStatus).toBe("fulfilled");
     expect(wooCommerceCommerce.loyaltyEnabled({ enableShopifyOrderPoints: true })).toBe(false);
     expect(wooCommerceCommerce.loyaltyEnabled({ enableWooOrderPoints: true })).toBe(true);
+  });
+});
+
+describe("an order RateUp sent to WooCommerce", () => {
+  test("reads WooCommerce's breakdown, every part before tax so it adds up to the total", () => {
+    expect(
+      wooTotals({
+        line_items: [{ subtotal: "40.00" }, { subtotal: "20.00" }],
+        discount_total: "6.00",
+        shipping_total: "5.00",
+        total_tax: "5.90",
+        total: "64.90",
+      }),
+    ).toEqual({ subtotal: 60, discountTotal: 6, shippingTotal: 5, taxTotal: 5.9, total: 64.9 });
+  });
+
+  const integration = { id: "int-2", orgId: "org-1", active: true, credential } as never;
+
+  test("pays the RateUp order, then goes on as usual", async () => {
+    const onOrderEvent = vi.fn(async () => {});
+    const meta_data = [{ id: 1, key: "rateup_order_id", value: "rateup-order-1" }];
+    await handleWooOrder(
+      integration,
+      { deliveryId: "d-3", webhookId: "101", payload: payload({ id: 902, meta_data }) },
+      { provider: wooCommerceCommerce, onOrderEvent },
+    );
+    expect(shopSync.syncOrderFromStore).toHaveBeenCalledWith(
+      "woocommerce",
+      "org-1",
+      "rateup-order-1",
+      expect.objectContaining({
+        status: "paid",
+        externalOrderId: "902",
+        totals: expect.objectContaining({ total: 1250.5 }),
+        fulfillment: null,
+        refund: null,
+      }),
+    );
+    expect(onOrderEvent).toHaveBeenCalledTimes(1);
+  });
+
+  test("a cash order sitting in processing unpaid isn't taken for paid", async () => {
+    const meta_data = [{ key: "rateup_order_id", value: "rateup-order-3" }];
+    await handleWooOrder(
+      integration,
+      {
+        deliveryId: "d-905",
+        webhookId: "101",
+        payload: payload({ id: 905, date_paid: null, meta_data }),
+      },
+      { provider: wooCommerceCommerce, onOrderEvent: vi.fn(async () => {}) },
+    );
+    expect(shopSync.syncOrderFromStore.mock.calls[0][3]).toMatchObject({ status: null });
+  });
+
+  test("completed is fulfilled; refunded is a refund", async () => {
+    const meta_data = [{ key: "rateup_order_id", value: "rateup-order-4" }];
+    for (const [id, status] of [
+      [906, "completed"],
+      [907, "refunded"],
+    ] as const) {
+      await handleWooOrder(
+        integration,
+        { deliveryId: `d-${id}`, webhookId: "101", payload: payload({ id, status, meta_data }) },
+        { provider: wooCommerceCommerce, onOrderEvent: vi.fn(async () => {}) },
+      );
+    }
+    expect(shopSync.syncOrderFromStore.mock.calls[0][3]).toMatchObject({
+      fulfillment: "fulfilled",
+    });
+    expect(shopSync.syncOrderFromStore.mock.calls[1][3]).toMatchObject({ refund: "full" });
+  });
+
+  test("leaves the RateUp order waiting while pending or after a failed payment", async () => {
+    const meta_data = [{ key: "rateup_order_id", value: "rateup-order-2" }];
+    for (const [id, status] of [
+      [903, "pending"],
+      [904, "failed"],
+    ] as const) {
+      await handleWooOrder(
+        integration,
+        { deliveryId: `d-${id}`, webhookId: "101", payload: payload({ id, status, meta_data }) },
+        { provider: wooCommerceCommerce, onOrderEvent: vi.fn(async () => {}) },
+      );
+    }
+    for (const call of shopSync.syncOrderFromStore.mock.calls)
+      expect(call[3]).toMatchObject({ status: null });
   });
 });

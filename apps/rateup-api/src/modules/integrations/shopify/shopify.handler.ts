@@ -173,7 +173,41 @@ export const defaultWebhookHandlers: Record<string, WebhookHandler[]> = {
       callback: enqueueWebhookHandler,
     },
   ],
+  PRODUCTS_CREATE: [
+    {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: WEBHOOK_API_ROUTE,
+      callback: enqueueWebhookHandler,
+    },
+  ],
+  PRODUCTS_UPDATE: [
+    {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: WEBHOOK_API_ROUTE,
+      callback: enqueueWebhookHandler,
+    },
+  ],
+  PRODUCTS_DELETE: [
+    {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: WEBHOOK_API_ROUTE,
+      callback: enqueueWebhookHandler,
+    },
+  ],
+  INVENTORY_LEVELS_UPDATE: [
+    {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: WEBHOOK_API_ROUTE,
+      callback: enqueueWebhookHandler,
+    },
+  ],
 };
+
+/**
+ * Topics a shop may refuse until its merchant approves a newly added scope (read_inventory).
+ * Registering them is retried daily; a refusal must not fail the merchant's "register" press.
+ */
+export const OPTIONAL_WEBHOOK_TOPICS = new Set(["INVENTORY_LEVELS_UPDATE"]);
 
 /**
  * App-level topics. These are subscribed once for every shop through the

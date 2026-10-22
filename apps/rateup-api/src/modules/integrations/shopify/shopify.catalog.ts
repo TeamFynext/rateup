@@ -246,6 +246,78 @@ function toMailingAddress(address: ShopifyShippingAddressInput) {
   };
 }
 
+/** Products a checkout named that the store no longer sells (deleted, or a variant removed). */
+export class StoreItemsGone extends Error {
+  constructor(readonly titles: string[]) {
+    super(`Not in the store any more: ${titles.join(", ")}`);
+    this.name = "StoreItemsGone";
+  }
+}
+
+/**
+ * A draft order whose invoice page is where the customer pays, for a RateUp shop that checks
+ * out in Shopify. Every line must be a real variant: a custom line at RateUp's price would
+ * let a stale mirror undercharge. The attributes carry over to the order Shopify creates on
+ * payment, which is how its order webhooks find the RateUp order again.
+ */
+export async function createShopifyCheckoutDraft(
+  orgId: string,
+  lines: { retailerId: string; quantity: number; title?: string }[],
+  opts: {
+    attributes: Record<string, string>;
+    tags: string[];
+    note: string;
+    email?: string | null;
+    phone?: string | null;
+  },
+): Promise<{ id: string; invoiceUrl: string }> {
+  const shopifyInfo = await getShopifyInfo(orgId);
+  if (!shopifyInfo || !shopifyInfo.active) throw new Error("Shopify is not connected");
+  if (!shopify) throw new Error("Shopify integration is not configured");
+  const client = new shopify.clients.Graphql({
+    session: await getActiveShopifySession(shopifyInfo),
+  });
+  const variantMap = await resolveShopifyVariants(lines, client);
+  const missing = lines.filter((l) => !variantMap.has(l.retailerId));
+  if (missing.length) throw new StoreItemsGone(missing.map((l) => l.title ?? l.retailerId));
+  const response = await client.request<ShopifyDraftOrderCreateData>(
+    `mutation createDraftOrder($input: DraftOrderInput!) {
+      draftOrderCreate(input: $input) {
+        draftOrder {
+          legacyResourceId
+          invoiceUrl
+        }
+        userErrors {
+          field
+          message
+        }
+      }
+    }`,
+    {
+      variables: {
+        input: {
+          lineItems: lines.map((l) => ({
+            variantId: toGid("ProductVariant", variantMap.get(l.retailerId)!),
+            quantity: l.quantity,
+          })),
+          customAttributes: Object.entries(opts.attributes).map(([key, value]) => ({
+            key,
+            value,
+          })),
+          tags: opts.tags,
+          note: opts.note,
+          ...(opts.email && { email: opts.email }),
+          ...(opts.phone && { phone: opts.phone }),
+        },
+      },
+    },
+  );
+  throwOnUserErrors("draftOrderCreate", response.data?.draftOrderCreate.userErrors);
+  const draft = response.data?.draftOrderCreate.draftOrder;
+  if (!draft?.invoiceUrl) throw new Error("Shopify returned no checkout page for the draft order");
+  return { id: draft.legacyResourceId, invoiceUrl: draft.invoiceUrl };
+}
+
 // Create Shopify Draft Order with address + shipping line
 export async function createShopifyDraftOrderWithAddress(
   orgId: string,

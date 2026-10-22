@@ -1,5 +1,5 @@
 import { IntegratedApps } from "../../types/enums.js";
-import { encryptCredentialSecrets } from "./shared/credentialCrypto.js";
+import { encryptCredentialSecrets, restoreRedactedSecrets } from "./shared/credentialCrypto.js";
 import prisma from "../../utils/prisma.js";
 import { IntegrationSchema, UpdateIntgrationInput } from "./integrations.schema.js";
 import { log } from "../../utils/logger.js";
@@ -12,6 +12,9 @@ export const getAllIntegrationsByOrgId = (orgId: string) => {
   return prisma.integration.findMany({
     where: {
       orgId,
+      // Shop payment gateways hold a merchant's payment keys and are managed only through
+      // Commerce → Payments, which never returns them.
+      NOT: { name: { startsWith: "shop_" } },
     },
   });
 };
@@ -55,6 +58,13 @@ export const updateIntegrationByName = async (
   name: string,
   data: UpdateIntgrationInput,
 ) => {
+  if (data.credential) {
+    const stored = await prisma.integration.findUnique({
+      where: { orgid_integration_name_unique: { orgId, name } },
+      select: { credential: true },
+    });
+    data.credential = restoreRedactedSecrets(data.credential, stored?.credential);
+  }
   let apikey;
   if (isAutomationPlatform(name) && data.updateKey) {
     if (!data.credential) {
@@ -114,7 +124,15 @@ export async function deleteIntegrationByName(name: string, orgId: string) {
     }
   }
 
-  return prisma.integration.delete({ where });
+  const deleted = await prisma.integration.delete({ where });
+  if (name === "shopify" || name === "woocommerce") {
+    const { onOnlineStoreDisconnected } = await import("../commerce/shop/store.service.js");
+    await onOnlineStoreDisconnected(orgId, name === "shopify" ? "SHOPIFY" : "WOOCOMMERCE").catch(
+      (error) =>
+        log.warn({ err: error, orgId }, "Could not move the shop's checkout back to RateUp"),
+    );
+  }
+  return deleted;
 }
 
 export async function deleteZapierTriggerHooks(

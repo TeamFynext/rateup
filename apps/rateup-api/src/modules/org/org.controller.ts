@@ -4,6 +4,7 @@ import { assertCanGrantPermissions, canGrant } from "../../authz/grant.js";
 import { assertNotOwner, transferOwnership } from "../../authz/ownership.js";
 import { legacyRoleToKey, type LegacyRole } from "../../authz/roles.js";
 import type {
+  BusinessProfileInput,
   CompleteOrgDetailsInput,
   OrgModulesInput,
   MemberActivityQuery,
@@ -43,6 +44,7 @@ import { getWebhookSecret } from "../../utils/webhook.js";
 import { errorMessage } from "../../utils/commonUtils.js";
 import { isRootOrg } from "../../utils/auth.js";
 import { setHiddenModules } from "./modules.js";
+import { completeBusinessProfile } from "./businessProfile.service.js";
 
 export async function getAllTeamsAndMembers(request: FastifyRequest, reply: FastifyReply) {
   try {
@@ -437,4 +439,12 @@ export async function updateOrgModulesHandler(
 ) {
   const hiddenModules = await setHiddenModules(request.user.orgId, request.body.hiddenModules);
   reply.send({ success: true, data: { hiddenModules } });
+}
+
+export async function completeBusinessProfileHandler(
+  request: FastifyRequest<{ Body: BusinessProfileInput }>,
+  reply: FastifyReply,
+) {
+  const data = await completeBusinessProfile(request.user.orgId, request.body);
+  reply.send({ success: true, data });
 }

@@ -60,6 +60,7 @@ import {
   WaMessageBody,
   WaMessageTypes,
   WaReceiveMessageBody,
+  WaReferral,
 } from "../../../types/whatsapp.types.js";
 import type {
   WaAccountUpdate,
@@ -114,6 +115,7 @@ import { phoneSubscribesTo } from "../../webhook/webhook.events.js";
 import { sendViaWstoOrgHandler } from "../../org/ws/org.ws.controller.js";
 import { channelDigits } from "../../../utils/channelIdentifier.js";
 import { notify } from "../../notification/notify.js";
+import { checkAndExecuteRuleByTriggerEvent } from "../automatedReply/wa_automatedReply.utils.js";
 import {
   handleAutomatedReply,
   handleButtonClickInteraction,
@@ -575,7 +577,8 @@ async function handleMessageStatuses(body: WaMessageBody) {
 
       if (isPaymentStatus(status)) {
         await safeAsyncOperation(
-          () => handlePaymentConfirmation(status.recipient_id, status.payment.reference_id),
+          () =>
+            handlePaymentConfirmation(status.recipient_id, status.payment.reference_id, phoneId),
           (error) =>
             log.error(
               { err: error },
@@ -836,6 +839,20 @@ async function whatsappMessageHandler(
     log.debug("Duplicate delivery of %s; skipping its handlers", incomingMessageId);
     return;
   }
+  // The click on a click-to-WhatsApp ad that opened this chat. Meta sends the referral only
+  // here, so it is kept even when Meta AI holds the thread.
+  const adReferral = incomingMessage?.referral;
+  if (adReferral && messageObj?.contactId) {
+    try {
+      const { rememberAdReferral } = await import("../../commerce/shop/attribution.js");
+      await rememberAdReferral(orgId, messageObj.contactId, adReferral, {
+        conversationId: messageObj.conversationId,
+        phoneId: waSettings.phoneId,
+      });
+    } catch (e) {
+      log.error({ err: e }, "Could not record the ad referral");
+    }
+  }
   if (options.storeOnly) {
     // A survey flow Meta AI sent: the answers are data, not a reply, so they
     // are saved even though nothing else runs for this thread.
@@ -844,13 +861,86 @@ async function whatsappMessageHandler(
     }
     return;
   }
+  // The ad's own rule answers the click, before any keyword rule.
+  if (adReferral && (await answerAdReferral(waSettings, from, adReferral))) {
+    return;
+  }
+
   if (type === WaMessageTypes.order) {
+    const cart = (completeMessageObject as WaReceiveMessageBody).messages?.[0]?.order;
+    if (cart?.product_items?.length) {
+      try {
+        const { startCheckoutFromCart } = await import("../../commerce/shop/checkout.service.js");
+        const { chatAttribution } = await import("../../commerce/shop/attribution.js");
+        const shopOrder = await startCheckoutFromCart(
+          {
+            orgId,
+            channel: "WHATSAPP",
+            channelAccountId: waSettings.phoneId,
+            contactId: messageObj.contactId,
+            phone: from,
+            name: userName,
+            attribution: messageObj.contactId
+              ? await chatAttribution(orgId, messageObj.contactId)
+              : null,
+          },
+          cart.product_items.map((p) => ({
+            retailerId: p.product_retailer_id,
+            quantity: Number(p.quantity) || 1,
+          })),
+        );
+        // RateUp shop products check out through the shop; other carts keep the catalog flow.
+        if (shopOrder) return;
+      } catch (e) {
+        log.error({ err: e }, "Shop checkout from a WhatsApp cart failed; using the catalog flow");
+      }
+    }
     await handleWaOrderfromCatalog(
       completeMessageObject as WaReceiveMessageBody,
       messageObj,
       waSettings,
     );
     return;
+  }
+
+  // ── Shop checkout replies (ids "shop_…"): intercept before other handlers ─────
+  if (parsedMessage?.buttonId?.startsWith("shop_")) {
+    try {
+      const { handleShopReply } = await import("../../commerce/shop/checkout.service.js");
+      const handled = await handleShopReply(parsedMessage.buttonId, {
+        orgId,
+        contactId: messageObj?.contactId ?? null,
+        channel: "WHATSAPP",
+        channelAccountId: waSettings.phoneId,
+        phone: from,
+      });
+      if (handled) return;
+    } catch (e) {
+      log.error({ err: e }, "Error handling a shop reply");
+    }
+  }
+
+  // ── A storefront shopper's confirmation code, from a prefilled wa.me link ────
+  const textBody = (completeMessageObject as WaReceiveMessageBody)?.messages?.[0]?.text?.body;
+  if (type === "text" && textBody?.toUpperCase().includes("RU-") && messageObj?.contactId) {
+    try {
+      const { confirmShopPhone, readVerifyCode } =
+        await import("../../commerce/shop/phoneVerify.service.js");
+      const code = readVerifyCode(textBody);
+      if (
+        code &&
+        (await confirmShopPhone({
+          orgId,
+          contactId: messageObj.contactId,
+          phone: from,
+          code,
+          channelAccountId: waSettings.phoneId,
+        }))
+      )
+        return;
+    } catch (e) {
+      log.error({ err: e }, "Error confirming a shop phone code");
+    }
   }
 
   // ── Delivery list reply: intercept before other handlers ─────────────────────
@@ -957,6 +1047,15 @@ async function whatsappMessageHandler(
     // ── Check if this is a catalog address flow response ──────────────────────
     const addressData = flowResponseStrings(parsedMessage.flowResponse);
     const flowToken = addressData?.flow_token as string | undefined;
+    if (flowToken?.startsWith("shop:")) {
+      try {
+        const { handleShopAddressFlow } = await import("../../commerce/shop/checkout.service.js");
+        const shopper = { orgId, contactId: messageObj?.contactId ?? null };
+        if (await handleShopAddressFlow(flowToken.slice(5), addressData, shopper)) return;
+      } catch (e) {
+        log.error({ err: e }, "Error handling a shop address form");
+      }
+    }
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (flowToken && uuidRegex.test(flowToken)) {
       try {
@@ -1127,4 +1226,30 @@ async function handleStartSurvey({
       tag,
     },
   });
+}
+
+/** Runs the "came from an ad" rules for a click; true when one of them answered it. */
+async function answerAdReferral(
+  waSettings: Omit<WhatsappSettings, "accessToken_iv">,
+  phone: string,
+  referral: WaReferral,
+): Promise<boolean> {
+  if (referral.source_type !== "ad" || !referral.source_id) return false;
+  try {
+    const result = await checkAndExecuteRuleByTriggerEvent("WHATSAPP_AD_REFERRAL", {
+      orgId: waSettings.orgId,
+      phoneNumberId: waSettings.phoneId ?? undefined,
+      phone,
+      adReferral: {
+        sourceId: referral.source_id,
+        headline: referral.headline,
+        sourceUrl: referral.source_url,
+      },
+      platform: "WHATSAPP",
+    });
+    return Boolean(result);
+  } catch (error) {
+    log.error({ err: error, adId: referral.source_id }, "Error running the ad referral rules");
+    return false;
+  }
 }

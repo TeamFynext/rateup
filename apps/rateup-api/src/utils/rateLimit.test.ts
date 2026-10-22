@@ -205,3 +205,41 @@ describe("rateLimit — when Redis is down", () => {
     expect(rep.status).not.toHaveBeenCalled();
   });
 });
+
+describe("visitors forwarded by rateup-ui's server", () => {
+  const ssr = (headers: Record<string, string>): any => ({ ip: "10.0.0.9", headers });
+
+  beforeEach(() => vi.stubEnv("SSR_SHARED_SECRET", "s3cret-value"));
+  afterEach(() => vi.unstubAllEnvs());
+
+  test("each visitor gets their own bucket when the secret matches", async () => {
+    await limiter(
+      ssr({ "x-rateup-ssr-secret": "s3cret-value", "x-rateup-client-ip": "198.51.100.20" }),
+      reply(),
+    );
+
+    expect(buckets()).toEqual(["ratelimit:demo:198.51.100.20"]);
+  });
+
+  test("a wrong secret, a malformed address or no secret configured falls back to the caller", async () => {
+    await limiter(
+      ssr({ "x-rateup-ssr-secret": "guess-value!", "x-rateup-client-ip": "198.51.100.20" }),
+      reply(),
+    );
+    await limiter(
+      ssr({ "x-rateup-ssr-secret": "s3cret-value", "x-rateup-client-ip": "not-an-ip" }),
+      reply(),
+    );
+    vi.stubEnv("SSR_SHARED_SECRET", "");
+    await limiter(
+      ssr({ "x-rateup-ssr-secret": "", "x-rateup-client-ip": "198.51.100.20" }),
+      reply(),
+    );
+
+    expect(buckets()).toEqual([
+      "ratelimit:demo:10.0.0.9",
+      "ratelimit:demo:10.0.0.9",
+      "ratelimit:demo:10.0.0.9",
+    ]);
+  });
+});

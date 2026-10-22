@@ -483,6 +483,8 @@ declare global {
       loyalty?: subscriptionActiveField;
       referrals?: subscriptionActiveField;
       catalog?: subscriptionActiveField;
+      /** Shop orders placed a month. Optional: subscriptions stored before it are unmetered. */
+      shopOrders?: subscriptionWithActiveAndCount;
     };
     [sfpn.AI]: subscriptionActiveField & {
       count: {
@@ -1516,6 +1518,22 @@ declare global {
     type PWaCatalogDeliveryOption = WaCatalogSelectedDelivery;
     type PWaCatalogShippingAddress = WaCatalogShippingAddress;
     type PWaCatalogOrderProduct = WaCatalogOrderProduct;
+
+    type PShopStorefrontTheme =
+      import("../modules/commerce/shop/shop.types.js").ShopStorefrontTheme;
+    type PShopBankDetails = import("../modules/commerce/shop/shop.types.js").ShopBankDetails;
+    type PShopMessageRates = import("../modules/commerce/shop/messageCost.js").MessageRates;
+    type PShopProductOptions = import("../modules/commerce/shop/shop.types.js").ShopProductOption[];
+    type PShopVariantOptionValues =
+      import("../modules/commerce/shop/shop.types.js").ShopVariantOptionValues;
+    type PShopAddress = import("../modules/commerce/shop/shop.types.js").ShopAddress;
+    type PShopSelectedShipping =
+      import("../modules/commerce/shop/shop.types.js").ShopSelectedShipping;
+    type PShopAttribution = import("../modules/commerce/shop/shop.types.js").ShopAttribution;
+    type PShopShipmentEvents = import("../modules/commerce/shop/shop.types.js").ShopShipmentEvent[];
+    type PShopReturnItems = import("../modules/commerce/shop/shop.types.js").ShopReturnItem[];
+    type PShopNotifications =
+      import("../modules/commerce/shop/shop.types.js").ShopNotificationSettings;
 
     type PMetaAgentBusinessInfo =
       import("../modules/metaAgent/metaAgent.schema.js").BusinessInfoBody;

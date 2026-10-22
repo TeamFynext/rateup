@@ -4,13 +4,15 @@ import type { WooAuthMode } from "./woocommerce.client.js";
 /**
  * The webhooks RateUp keeps registered on a connected store. Orders drive
  * surveys and loyalty, customers become contacts, products keep the WhatsApp
- * catalog current.
+ * catalog and a shop that follows the store current.
  */
 export const WOO_TOPICS = [
   "order.created",
   "order.updated",
   "customer.created",
+  "product.created",
   "product.updated",
+  "product.deleted",
 ] as const;
 
 export type WooTopic = (typeof WOO_TOPICS)[number];

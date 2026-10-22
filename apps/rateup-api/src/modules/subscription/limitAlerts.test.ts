@@ -6,12 +6,18 @@ vi.mock("../../utils/prisma.js", () => ({
 vi.mock("../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), warn: vi.fn(), debug: vi.fn(), trace: vi.fn() },
 }));
-vi.mock("../notification/notification.service.js", () => ({ notifyLimitReached: vi.fn() }));
+vi.mock("../notification/notification.service.js", () => ({
+  notifyLimitReached: vi.fn(),
+  notifyOrderLimitNearing: vi.fn(),
+}));
 
 import prisma from "../../utils/prisma.js";
 import { log } from "../../utils/logger.js";
-import { notifyLimitReached } from "../notification/notification.service.js";
-import { maybeNotifyLimitReached } from "./limitAlerts.js";
+import {
+  notifyLimitReached,
+  notifyOrderLimitNearing,
+} from "../notification/notification.service.js";
+import { maybeNotifyLimitReached, maybeNotifyOrderUsage } from "./limitAlerts.js";
 
 const period = new Date("2026-10-01T00:00:00Z");
 const updateMany = vi.mocked(prisma.usageStats.updateMany);
@@ -24,6 +30,7 @@ describe("maybeNotifyLimitReached", () => {
   test.each([
     ["activeContacts", "activeContactLimitNotifiedPeriod"],
     ["campaignCredits", "campaignCreditLimitNotifiedPeriod"],
+    ["shopOrders", "shopOrderLimitNotifiedPeriod"],
   ] as const)("claims the %s period on its own column", async (limit, column) => {
     updateMany.mockResolvedValue({ count: 1 } as never);
 
@@ -51,5 +58,41 @@ describe("maybeNotifyLimitReached", () => {
       undefined,
     );
     expect(log.error).toHaveBeenCalled();
+  });
+});
+
+describe("maybeNotifyOrderUsage", () => {
+  test("stays quiet below 80% of the month's orders", async () => {
+    await maybeNotifyOrderUsage("org-1", 39, 50, period);
+    expect(updateMany).not.toHaveBeenCalled();
+  });
+
+  test("warns once at 80%, on its own column", async () => {
+    updateMany.mockResolvedValue({ count: 1 } as never);
+    await maybeNotifyOrderUsage("org-1", 40, 50, period);
+    expect(updateMany).toHaveBeenCalledWith({
+      where: {
+        orgId: "org-1",
+        OR: [{ shopOrderLimitWarnedPeriod: null }, { shopOrderLimitWarnedPeriod: { not: period } }],
+      },
+      data: { shopOrderLimitWarnedPeriod: period },
+    });
+    expect(notifyOrderLimitNearing).toHaveBeenCalledWith("org-1", 40, 50);
+
+    updateMany.mockResolvedValue({ count: 0 } as never);
+    await maybeNotifyOrderUsage("org-1", 41, 50, period);
+    expect(notifyOrderLimitNearing).toHaveBeenCalledTimes(1);
+  });
+
+  test("sends the limit alert at 100%", async () => {
+    updateMany.mockResolvedValue({ count: 1 } as never);
+    await maybeNotifyOrderUsage("org-1", 50, 50, period);
+    expect(notifyLimitReached).toHaveBeenCalledWith("org-1", "shopOrders");
+    expect(notifyOrderLimitNearing).not.toHaveBeenCalled();
+  });
+
+  test("does nothing for an unmetered plan", async () => {
+    await maybeNotifyOrderUsage("org-1", 5_000, undefined, period);
+    expect(updateMany).not.toHaveBeenCalled();
   });
 });

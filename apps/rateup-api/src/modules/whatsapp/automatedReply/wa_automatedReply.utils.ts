@@ -57,6 +57,7 @@ import { getShopifyProductImage } from "../../integrations/shopify/shopify.catal
 import axios from "axios";
 import { assertPublicUrl, publicAxiosOptions } from "../../../utils/ssrf.js";
 import { triggerConversionsApiForContact } from "../../integrations/meta/conversions.service.js";
+import { adRuleMatches, adRuleSpecificity, type AdReferralContext } from "./adReferralTrigger.js";
 import { emitIntegrationEvent } from "../../integrations/events/emitIntegrationEvent.js";
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -421,6 +422,8 @@ export interface RuleWithConditions {
     shopifyProductIds?: string[];
     wooEvent?: string;
     wooProductIds?: string[];
+    shopOrderEvent?: string;
+    shopProductIds?: string[];
     abandonedCheckoutDelayMinutes?: number;
     requireMarketingConsent?: boolean;
     instagramScope?: "ALL" | "SPECIFIC";
@@ -428,6 +431,8 @@ export interface RuleWithConditions {
     instagramPublicReplies?: string[];
     instagramCommentSource?: "ALL" | "POSTS" | "LIVE";
     instagramRef?: string;
+    adIds?: string[];
+    adMatch?: string;
     messengerRef?: string;
   } | null;
   groups: Array<{
@@ -701,6 +706,10 @@ export interface RuleExecutionContext {
   wooProductIds?: string[];
   /** The WooCommerce order payload, for template variables. */
   wooBody?: Record<string, unknown>;
+  /** The shop order event that fired a `SHOP_ORDER_EVENT` rule, e.g. "shipped". */
+  shopOrderEvent?: string;
+  /** ShopProduct ids on the order. */
+  shopProductIds?: string[];
   instagramMediaId?: string;
   /**
    * Set for INSTAGRAM_COMMENT. A commenter who has never messaged the business can only
@@ -711,6 +720,8 @@ export interface RuleExecutionContext {
   instagramLiveComment?: boolean;
   /** The ?ref= of the ig.me link that opened the thread, for INSTAGRAM_REFERRAL. */
   instagramRef?: string;
+  /** The click-to-WhatsApp ad that opened the chat, for WHATSAPP_AD_REFERRAL. */
+  adReferral?: AdReferralContext;
   /** The ?ref= of the m.me link that opened the thread, for MESSENGER_REFERRAL. */
   messengerRef?: string;
   /**
@@ -940,6 +951,9 @@ export async function checkAndExecuteRuleByTriggerEvent(
       (a, b) => Number(!!b.options?.instagramRef) - Number(!!a.options?.instagramRef),
     );
   }
+  if (triggerEvent === TriggerEvent.WHATSAPP_AD_REFERRAL) {
+    typedRules.sort((a, b) => adRuleSpecificity(b.options) - adRuleSpecificity(a.options));
+  }
   if (triggerEvent === TriggerEvent.MESSENGER_REFERRAL) {
     typedRules.sort(
       (a, b) => Number(!!b.options?.messengerRef) - Number(!!a.options?.messengerRef),
@@ -991,6 +1005,11 @@ export async function checkAndExecuteRuleByTriggerEvent(
         rule.options?.wooEvent !== context.wooEvent
       ) {
         continue;
+      }
+      if (triggerEvent === TriggerEvent.SHOP_ORDER_EVENT) {
+        if (rule.options?.shopOrderEvent !== context.shopOrderEvent) continue;
+        const wanted = rule.options?.shopProductIds ?? [];
+        if (wanted.length && !context.shopProductIds?.some((id) => wanted.includes(id))) continue;
       }
 
       // Filter by product IDs if configured
@@ -1044,6 +1063,8 @@ export async function checkAndExecuteRuleByTriggerEvent(
       } else if (triggerEvent === TriggerEvent.INSTAGRAM_REFERRAL) {
         const wanted = rule.options?.instagramRef?.toLowerCase();
         if (wanted && wanted !== context.instagramRef?.toLowerCase()) continue;
+      } else if (triggerEvent === TriggerEvent.WHATSAPP_AD_REFERRAL) {
+        if (!adRuleMatches(rule.options, context.adReferral)) continue;
       } else if (triggerEvent === TriggerEvent.MESSENGER_REFERRAL) {
         const wanted = rule.options?.messengerRef?.toLowerCase();
         if (wanted && wanted !== context.messengerRef?.toLowerCase()) continue;
@@ -1250,6 +1271,10 @@ async function executeRuleActions(
           success = await executeExternalApiAction(action.value as string, actionContext);
           break;
 
+        case "SEND_SHOP_PRODUCTS":
+          success = await executeSendShopProductsAction(rule, action.value, actionContext);
+          break;
+
         default:
           log.warn(`Unsupported action type: ${action.type}`);
       }
@@ -1274,6 +1299,41 @@ async function executeRuleActions(
 }
 
 // Action executor functions
+/**
+ * Products to buy. On WhatsApp they go as catalog cards into the chat the customer just
+ * opened; on Instagram, as comment-to-buy's private reply.
+ */
+async function executeSendShopProductsAction(
+  rule: RuleWithConditions,
+  value: unknown,
+  context: RuleExecutionContext,
+): Promise<boolean> {
+  if (!context.phone || !context.phoneNumberId) return false;
+  if (context.platform === "WHATSAPP") {
+    const { sendRuleProductsOnWhatsApp } =
+      await import("../../commerce/shop/chatProducts.service.js");
+    return sendRuleProductsOnWhatsApp({
+      orgId: context.orgId,
+      ruleId: rule.id,
+      value,
+      phone: context.phone,
+      phoneId: context.phoneNumberId,
+    });
+  }
+  if (context.platform !== "INSTAGRAM") return false;
+  const { runShopProductsAction } = await import("../../commerce/shop/commentToBuy.service.js");
+  return runShopProductsAction({
+    orgId: context.orgId,
+    ruleId: rule.id,
+    triggerEvent: rule.triggerEvent,
+    value,
+    accountId: context.phoneNumberId,
+    recipient: context.phone,
+    commentId: takeInstagramCommentId(context),
+    mediaId: context.instagramMediaId,
+  });
+}
+
 async function executeCloseTicketAction(
   status: WaMessageAssignStatus,
   context: RuleExecutionContext,

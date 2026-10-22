@@ -26,24 +26,28 @@ import { connectWithApiKey } from "./shared/apiKeyConnect.js";
 import { finishOAuthConnect, OAuthConnectError, startOAuthConnect } from "./shared/oauthConnect.js";
 import { IntegrationConnectError } from "./shared/oauthConnectError.js";
 import { recordAuditEvent } from "../../utils/auditLog.js";
+import { redactCredentialSecrets } from "./shared/credentialCrypto.js";
 
 /**
- * Strips secrets the UI never needs before an integration leaves the API: the
- * Shopify token pair (the refresh token mints new access tokens for 90 days),
- * and Amelia's API key, which the settings page only needs to know is saved.
+ * Every secret leaves the API as a placeholder, which `updateIntegrationByName` swaps
+ * back on save. Amelia's settings page reads `hasApiKey` instead.
  */
 function redactIntegration<T extends { name: string; credential: unknown } | null>(
   integration: T,
 ): T {
-  if (integration?.name === IntegratedApps.amelia) {
-    const { apiKey, ...credential } = (integration.credential ?? {}) as { apiKey?: string };
-    return { ...integration, credential: { ...credential, hasApiKey: Boolean(apiKey) } };
+  if (!integration) return integration;
+  const credential = redactCredentialSecrets(integration.credential);
+  if (integration.name === IntegratedApps.amelia) {
+    const { apiKey, ...rest } = (credential ?? {}) as { apiKey?: string };
+    return { ...integration, credential: { ...rest, hasApiKey: Boolean(apiKey) } };
   }
-  if (integration?.name !== IntegratedApps.shopify) return integration;
-  const credential = integration.credential as { session?: Record<string, unknown> } | null;
-  if (!credential?.session) return integration;
-  const { accessToken: _a, refreshToken: _r, ...session } = credential.session;
-  return { ...integration, credential: { ...credential, session } };
+  // The Shopify token pair goes entirely: only saveShopifySession ever writes the session.
+  const session = (credential as { session?: Record<string, unknown> } | null)?.session;
+  if (integration.name === IntegratedApps.shopify && session) {
+    const { accessToken: _a, refreshToken: _r, ...rest } = session;
+    return { ...integration, credential: { ...(credential as object), session: rest } };
+  }
+  return { ...integration, credential };
 }
 
 export const getAllIntegrationsByOrgHandler = async (
@@ -107,7 +111,7 @@ export const createIntegrationHandler = async (
   try {
     const { orgId } = request.user;
     const data = await createIntegration(request.body, orgId);
-    reply.send(data);
+    reply.send({ ...redactIntegration(data), apikey: data.apikey });
   } catch {
     log.error("Error creating integration by name");
     return reply.code(500).send({ error: "Something went wrong" });

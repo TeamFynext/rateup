@@ -42,6 +42,19 @@ import { declareAccess } from "../../authz/registry.js";
 export async function integrationsRoutes(server: FastifyInstance) {
   declareAccess(server, { read: "integrations.read", write: "integrations.manage" });
 
+  // Shop gateway and shipping keys are managed only through /api/shop, behind
+  // commerce.payments.manage; these generic routes would hand them to integrations.read.
+  server.addHook("preHandler", async (request, reply) => {
+    const params = request.params as { name?: unknown } | undefined;
+    // Only the create route names the integration in its body.
+    const creating =
+      request.method === "POST" && /\/integrations\/?$/.test(request.routeOptions.url ?? "");
+    const body = creating ? (request.body as { name?: unknown } | undefined) : undefined;
+    if (isShopIntegration(params?.name) || isShopIntegration(body?.name)) {
+      return reply.code(404).send({ error: "Not found" });
+    }
+  });
+
   server.register(shopifyRoutes, { prefix: "/shopify" });
   server.register(wooCommerceRoutes, { prefix: "/woocommerce" });
   server.register(hubSpotRoutes, { prefix: "/hubspot" });
@@ -136,3 +149,5 @@ export async function integrationsRoutes(server: FastifyInstance) {
     deleteAutomationHookHandler,
   );
 }
+
+const isShopIntegration = (name: unknown) => typeof name === "string" && name.startsWith("shop_");

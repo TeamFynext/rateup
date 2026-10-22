@@ -4,7 +4,10 @@ vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), warn: vi.fn(), debug: vi.fn(), trace: vi.fn() },
 }));
 vi.mock("../../../utils/prisma.js", () => ({
-  default: { loyaltyRedemption: { findUnique: vi.fn(), update: vi.fn() } },
+  default: {
+    loyaltyRedemption: { findUnique: vi.fn(), update: vi.fn() },
+    shopOrder: { findFirst: vi.fn() },
+  },
 }));
 vi.mock("../../../workers/bullmq/queues/webhook.queue.js", () => ({
   shopifyLoyaltyQueue: { add: vi.fn() },
@@ -268,6 +271,35 @@ describe("the order pipeline", () => {
     expect(emitIntegrationEvent).toHaveBeenCalled();
     expect(scheduleOrderSurvey).not.toHaveBeenCalled();
     expect(runOrderAutomation).not.toHaveBeenCalled();
+  });
+
+  test("a RateUp order copied into the store is RateUp's: no points, events or messages here", async () => {
+    const runOrderAutomation = vi.fn();
+    await onOrderEvent(store(provider({ runOrderAutomation })), order({ rateupWriteBack: true }));
+    expect(shopifyLoyaltyQueue.add).not.toHaveBeenCalled();
+    expect(emitIntegrationEvent).not.toHaveBeenCalled();
+    expect(scheduleOrderSurvey).not.toHaveBeenCalled();
+    expect(runOrderAutomation).not.toHaveBeenCalled();
+  });
+
+  test("a store checkout RateUp started earns its points here and nothing else", async () => {
+    const runOrderAutomation = vi.fn();
+    db.shopOrder.findFirst.mockResolvedValueOnce({ id: "rateup-1" });
+    await onOrderEvent(store(provider({ runOrderAutomation })), order());
+    expect(db.shopOrder.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { orgId: "org-1", externalProvider: "woocommerce", externalId: "901" },
+      }),
+    );
+    expect(shopifyLoyaltyQueue.add).toHaveBeenCalled();
+    expect(emitIntegrationEvent).not.toHaveBeenCalled();
+    expect(scheduleOrderSurvey).not.toHaveBeenCalled();
+    expect(runOrderAutomation).not.toHaveBeenCalled();
+  });
+
+  test("a signed RateUp checkout is recognised before its store id is recorded", async () => {
+    await onOrderEvent(store(provider()), { ...order(), rateupOrderId: "rateup-1" });
+    expect(emitIntegrationEvent).not.toHaveBeenCalled();
   });
 
   test("an order with no id cannot earn points, but is still news", async () => {

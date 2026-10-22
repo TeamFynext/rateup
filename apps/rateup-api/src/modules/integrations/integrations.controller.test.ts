@@ -328,14 +328,46 @@ describe("route registration", () => {
 
     await integrationsRoutes(srv);
 
-    expect(hooks).toHaveLength(1);
-    expect(hooks[0].name).toBe("onRoute");
+    expect(hooks.map((h) => h.name)).toEqual(["onRoute", "preHandler"]);
     const read: any = { method: "GET", url: "/x", config: {} };
     const write: any = { method: "POST", url: "/x", config: {} };
     hooks[0].fn(read);
     hooks[0].fn(write);
     expect(read.config).toEqual({ permission: "integrations.read", access: "session" });
     expect(write.config).toEqual({ permission: "integrations.manage", access: "session" });
+  });
+
+  test("shop gateway and shipping rows are not reachable through the generic routes", async () => {
+    const { srv, hooks } = server();
+
+    await integrationsRoutes(srv);
+
+    const guard = hooks.find((h) => h.name === "preHandler").fn;
+    const run = async (request: any) => {
+      const rep = reply();
+      await guard({ routeOptions: { url: "/api/integrations/:name" }, ...request }, rep);
+      return rep.code.mock.calls[0]?.[0];
+    };
+    for (const method of ["GET", "PUT", "DELETE"]) {
+      expect(await run({ method, params: { name: "shop_stripe" } }), method).toBe(404);
+    }
+    expect(await run({ method: "GET", params: { name: "shop_easypost" } })).toBe(404);
+    expect(
+      await run({
+        method: "POST",
+        routeOptions: { url: "/api/integrations/" },
+        body: { name: "shop_razorpay", credential: {} },
+      }),
+    ).toBe(404);
+    expect(await run({ method: "GET", params: { name: "hubspot" } })).toBeUndefined();
+    // Another route's body may carry an unrelated name.
+    expect(
+      await run({
+        method: "POST",
+        routeOptions: { url: "/api/integrations/shopify/x" },
+        body: { name: "shop_window" },
+      }),
+    ).toBeUndefined();
   });
 
   test("no longer registers a cross-org listing route", async () => {

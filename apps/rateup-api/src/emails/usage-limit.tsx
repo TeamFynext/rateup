@@ -8,7 +8,7 @@ import {
   Paragraph,
 } from "../utils/email/react/components.js";
 
-export type UsageLimitKind = "activeContacts" | "campaignCredits" | "formResponses";
+export type UsageLimitKind = "activeContacts" | "campaignCredits" | "formResponses" | "shopOrders";
 
 export interface UsageLimitEmailProps {
   limit: UsageLimitKind;
@@ -18,7 +18,7 @@ export interface UsageLimitEmailProps {
 
 const COPY: Record<
   UsageLimitKind,
-  { preview: string; title: string; body: string; impact: string }
+  { preview: string; title: string; body: string; impact: string; cta?: string }
 > = {
   activeContacts: {
     preview: "You've reached this month's active contacts",
@@ -45,6 +45,15 @@ const COPY: Record<
       "New responses may not be recorded until next month or until you move to a larger " +
       "plan. Feedback that arrives in the meantime can't be recovered later.",
   },
+  shopOrders: {
+    preview: "Your shop has taken this month's orders",
+    title: "You've reached this month's orders",
+    body: "Your shop has taken every order its RateUp plan includes this month.",
+    impact:
+      "Customers can't place new orders online until next month or until you upgrade. " +
+      "They're asked to message you instead, and orders already paid for still go through.",
+    cta: "Upgrade your plan",
+  },
 };
 
 export function UsageLimitEmail({ limit, statsLink, billingLink }: UsageLimitEmailProps) {
@@ -70,7 +79,7 @@ export function UsageLimitEmail({ limit, statsLink, billingLink }: UsageLimitEma
 
       <Section className="pt-9">
         <ButtonPair
-          primary={{ href: billingLink, label: "Upgrade or add a pack" }}
+          primary={{ href: billingLink, label: copy.cta ?? "Upgrade or add a pack" }}
           secondary={{ href: statsLink, label: "View usage" }}
         />
       </Section>

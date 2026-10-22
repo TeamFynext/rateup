@@ -9,6 +9,7 @@ const SUBJECT: Record<UsageLimitKind, string> = {
   activeContacts: "You've reached your monthly active contacts - Rateup.app",
   campaignCredits: "You've used all your campaign credits - Rateup.app",
   formResponses: "Your form response limit is reached - Rateup.app",
+  shopOrders: "Your shop has reached this month's orders - Rateup.app",
 };
 
 /**

@@ -33,6 +33,11 @@ vi.mock("../integrations.service.js", () => ({
 }));
 
 vi.mock("../../org/org.services.js", () => ({ pauseOrg: vi.fn() }));
+const shopStore = vi.hoisted(() => ({
+  onOnlineStoreConnected: vi.fn(async () => {}),
+  onOnlineStoreDisconnected: vi.fn(),
+}));
+vi.mock("../../commerce/shop/store.service.js", () => shopStore);
 
 const redis = vi.hoisted(() => {
   const stub: Record<string, unknown> = {
@@ -492,6 +497,22 @@ describe("registerShopifyWebhook", () => {
     expect(deleted).toEqual(["old"]);
   });
 
+  test("a shop that hasn't approved read_inventory yet still registers everything else", async () => {
+    const topics = Object.keys(defaultWebhookHandlers).filter(
+      (t) => t !== "INVENTORY_LEVELS_UPDATE",
+    );
+    const base = clientWith(topics.map((topic) => ({ id: topic, topic, uri: target() })));
+    const request = vi.fn(async (query: string, opts?: any) => {
+      if (query.includes("webhookSubscriptionCreate("))
+        throw new Error("Access denied for inventory_levels/update");
+      return base(query, opts);
+    });
+    await expect(run(request as never)).resolves.toEqual({
+      created: ["INVENTORY_LEVELS_UPDATE"],
+      deleted: [],
+    });
+  });
+
   test("leaves topics already at this address alone", async () => {
     const topics = Object.keys(defaultWebhookHandlers);
     const request = clientWith(topics.map((topic) => ({ id: topic, topic, uri: target() })));
@@ -519,6 +540,8 @@ describe("handleShopifyAppUnistalled", () => {
 
     expect(db.integration.updateMany.mock.calls[0][0].data).toEqual({ active: false });
     expect(pauseOrg).not.toHaveBeenCalled();
+    // A shop checking out in Shopify goes back to RateUp checkout rather than failing every cart.
+    expect(shopStore.onOnlineStoreDisconnected).toHaveBeenCalledWith(ORG, "SHOPIFY");
   });
 
   // NOTE: an org created by the Shopify install itself is paused outright when

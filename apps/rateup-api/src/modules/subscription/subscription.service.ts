@@ -11,6 +11,7 @@ import { createStats } from "../stats/stats.service.js";
 import { SubscriptionFeaturePathName } from "../../types/enums.js";
 import { getNestedProperty } from "../../utils/misc/obj.utils.js";
 import { GATEWAY_BILLED_PLAN } from "./planBilling.js";
+import { CATALOG_TIERS } from "./catalog.js";
 import { log } from "../../utils/logger.js";
 import { bustCache, withCache } from "../../utils/cache.js";
 import merge from "lodash/merge.js";
@@ -74,22 +75,13 @@ export async function createFreePlanSubscription(
       },
     });
 
-    let freePlanDescription = [
-      "1 team \u00b7 1 user",
-      "100 conversations / mo",
-      "100 form submissions / mo",
-      "WhatsApp \u00b7 Instagram \u00b7 Messenger inbox",
-      "Automations, templates & chatbots",
-      "Email support",
-    ];
-
     if (!rateupFreePlan) {
       rateupFreePlan = await pClient.rateupPlan.create({
         data: {
           name: "FREE PLAN",
           displayName: "FREE PLAN",
           planType: PaymentPlanType.BASE,
-          description: freePlanDescription,
+          description: CATALOG_TIERS.find((tier) => tier.name === "FREE PLAN")?.description ?? [],
           features: FreePlanSubscriptionFeatures,
         },
       });

@@ -17,7 +17,7 @@ vi.mock("./notify.js", () => ({ notify: vi.fn() }));
 import prisma from "../../utils/prisma.js";
 import { sendUsageLimitMailAlert } from "../../utils/email/payments/usageLimitAlert.js";
 import { notify } from "./notify.js";
-import { notifyLimitReached } from "./notification.service.js";
+import { notifyLimitReached, notifyOrderLimitNearing } from "./notification.service.js";
 
 const subscriptionMock = prisma.subscription.findUnique as unknown as ReturnType<typeof vi.fn>;
 const notifyMock = notify as unknown as ReturnType<typeof vi.fn>;
@@ -50,6 +50,7 @@ describe("notifyLimitReached", () => {
   test.each([
     ["activeContacts", "billing.active_contact_limit", /contact pack/i],
     ["campaignCredits", "billing.campaign_credit_limit", /credit pack/i],
+    ["shopOrders", "billing.shop_order_limit", /keep taking orders/i],
   ] as const)(
     "%s goes to everyone who receives billing alerts, with an upgrade message",
     async (limit, event, pack) => {
@@ -76,6 +77,14 @@ describe("notifyLimitReached", () => {
     expect(message).not.toMatch(/upgrade/i);
   });
 
+  test("Free links no gateway but can still upgrade, so it is told to", async () => {
+    subscriptionMock.mockResolvedValue({ basePlan: { ...SALES_LED.basePlan, name: "FREE PLAN" } });
+
+    await notifyLimitReached("org-1", "shopOrders");
+
+    expect(notifyMock.mock.calls[0][0].data.message).toMatch(/upgrade/i);
+  });
+
   test("mails the owner and admins whatever the notification settings say", async () => {
     await notifyLimitReached("org-1", "campaignCredits");
     expect(sendUsageLimitMailAlert).toHaveBeenCalledWith("org-1", "campaignCredits");
@@ -84,5 +93,19 @@ describe("notifyLimitReached", () => {
   test("is best-effort: swallows errors instead of throwing", async () => {
     subscriptionMock.mockRejectedValue(new Error("db down"));
     await expect(notifyLimitReached("org-1", "activeContacts")).resolves.toBeUndefined();
+  });
+});
+
+describe("notifyOrderLimitNearing", () => {
+  test("warns in the app with the numbers, and sends no email", async () => {
+    await notifyOrderLimitNearing("org-1", 40, 50);
+
+    const input = notifyMock.mock.calls[0][0];
+    expect(input.event).toBe("billing.shop_order_limit");
+    expect(input.data).toEqual({
+      message: expect.stringContaining("40 of its 50 orders"),
+      reached: false,
+    });
+    expect(sendUsageLimitMailAlert).not.toHaveBeenCalled();
   });
 });

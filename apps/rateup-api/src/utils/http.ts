@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { isIP } from "node:net";
 import { FastifyRequest } from "fastify";
 
@@ -28,6 +29,25 @@ export function trustProxySetting(
   return hops === 0 ? false : (_address, hop) => hop < hops;
 }
 
+export const SSR_SECRET_HEADER = "x-rateup-ssr-secret";
+export const SSR_CLIENT_IP_HEADER = "x-rateup-client-ip";
+
+/**
+ * The visitor rateup-ui's server is rendering a page for, when it proves it is that server.
+ * Without this every server-rendered page shares the UI server's one address, so a few
+ * hundred requests anywhere would exhaust the limit for every visitor.
+ */
+function forwardedVisitorIp(request: FastifyRequest): string | null {
+  const secret = process.env.SSR_SHARED_SECRET;
+  if (!secret) return null;
+  const sent = request.headers?.[SSR_SECRET_HEADER];
+  const ip = request.headers?.[SSR_CLIENT_IP_HEADER];
+  if (typeof sent !== "string" || typeof ip !== "string" || !isIP(ip.trim())) return null;
+  const a = Buffer.from(sent);
+  const b = Buffer.from(secret);
+  return a.length === b.length && timingSafeEqual(a, b) ? ip.trim() : null;
+}
+
 /**
  * The client's address, for rate limits, de-duplication and audit rows. Cloudflare sets
  * `CF-Connecting-IP` to the address that connected to it, replacing any value the client sent,
@@ -35,6 +55,8 @@ export function trustProxySetting(
  * the hop count above. Never the left-most `X-Forwarded-For` entry: the client writes that.
  */
 export function clientIp(request: FastifyRequest): string {
+  const visitor = forwardedVisitorIp(request);
+  if (visitor) return visitor;
   const raw = request.headers?.["cf-connecting-ip"];
   const cf = (Array.isArray(raw) ? raw[0] : raw)?.trim();
   if (cf && isIP(cf)) return cf;

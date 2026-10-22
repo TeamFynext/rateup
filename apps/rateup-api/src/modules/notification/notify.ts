@@ -33,11 +33,13 @@ export interface NotificationDataByEvent {
   "campaign.paused": CampaignRef & { reason: string };
   "loyalty.approval_requested": { approvalId: string; customerName: string; requestType: string };
   "loyalty.feedback_negative": { customerName: string; contactId?: string; rating?: number };
+  "commerce.order_needs_review": { orderId: string; orderNumber: number; reason: string };
   "whatsapp.template_status": { templateId: string; templateName: string; status: string };
   "whatsapp.account_restricted": { channelName: string };
   "integration.error": { integration: string; error: string; contactName?: string };
   "billing.active_contact_limit": { message: string };
   "billing.campaign_credit_limit": { message: string };
+  "billing.shop_order_limit": { message: string; reached?: boolean };
 }
 
 /**

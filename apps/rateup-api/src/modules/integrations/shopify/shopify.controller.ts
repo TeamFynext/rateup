@@ -119,6 +119,10 @@ export async function updateShopifyIntegrationByShopHandler(
     if (!(await consumeShopifyClaimToken(claim))) return reply.code(404).send(NO_PENDING_INSTALL);
     const claimed = await claimUnownedShopifyIntegration(shop, orgId);
     if (!claimed.count) return reply.code(404).send(NO_PENDING_INSTALL);
+    const { onOnlineStoreConnected } = await import("../../commerce/shop/store.service.js");
+    await onOnlineStoreConnected(orgId, "SHOPIFY").catch((err) =>
+      console.error("Could not show Commerce after linking Shopify", err),
+    );
     reply.code(200).send({ message: "success" });
   } catch (e) {
     console.error(e);

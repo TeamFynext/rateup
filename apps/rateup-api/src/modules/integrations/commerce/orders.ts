@@ -1,4 +1,5 @@
 import { log } from "../../../utils/logger.js";
+import prisma from "../../../utils/prisma.js";
 import { emitIntegrationEvent } from "../events/emitIntegrationEvent.js";
 import type { CommerceOrder, CommerceStore } from "./commerce.types.js";
 import { enqueueCommerceOrderLoyalty } from "./loyalty.js";
@@ -14,11 +15,20 @@ import { scheduleOrderSurvey } from "./surveys.js";
  * to integrations whether or not it carries a number. Both are queue writes,
  * so they cost the messaging paths nothing, and a throw further down can no
  * longer swallow them.
+ *
+ * An order RateUp created in the store (a store checkout or a written-back order) already
+ * messaged the customer, ran automations and raised `order.*` from RateUp's own order, so its
+ * echo here only earns a store checkout's loyalty.
  */
-export async function onOrderEvent(store: CommerceStore, order: CommerceOrder) {
+export async function onOrderEvent(
+  store: CommerceStore,
+  order: CommerceOrder & { rateupOrderId?: string | null },
+) {
   const { provider, storeId, orgId } = store;
+  const rateupOwned =
+    order.rateupWriteBack || !!order.rateupOrderId || (await createdByRateup(store, order));
 
-  if (order.orderId) {
+  if (order.orderId && !order.rateupWriteBack) {
     await enqueueCommerceOrderLoyalty({
       provider: provider.name,
       storeId,
@@ -32,6 +42,8 @@ export async function onOrderEvent(store: CommerceStore, order: CommerceOrder) {
       discountCodes: order.discountCodes,
     });
   }
+
+  if (rateupOwned) return;
 
   await emitIntegrationEvent(orgId, {
     type: `order.${order.status}`,
@@ -66,4 +78,23 @@ export async function onOrderEvent(store: CommerceStore, order: CommerceOrder) {
 
   await scheduleOrderSurvey(store, order, phone);
   await provider.runOrderAutomation?.(store, order, phone);
+}
+
+/** The store order is the copy of a RateUp order (matched by the id RateUp recorded for it). */
+async function createdByRateup(store: CommerceStore, order: CommerceOrder) {
+  if (!order.orderId) return false;
+  try {
+    const found = await prisma.shopOrder.findFirst({
+      where: {
+        orgId: store.orgId,
+        externalProvider: store.provider.name,
+        externalId: order.orderId,
+      },
+      select: { id: true },
+    });
+    return Boolean(found);
+  } catch (err) {
+    log.warn({ err, orderId: order.orderId }, "Could not check whether RateUp created this order");
+    return false;
+  }
 }

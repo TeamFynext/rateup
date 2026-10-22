@@ -95,6 +95,15 @@ export type ExternalErrorCode =
   | "campaign_incomplete"
   | "no_recipients"
   | "campaign_credits_exhausted"
+  /// The shop (commerce/shop): the ShopError code, lower-cased.
+  | "out_of_stock"
+  | "discount_invalid"
+  | "payment_unavailable"
+  | "checkout_expired"
+  | "invalid"
+  | "conflict"
+  | "payment_failed"
+  | "order_limit"
   // 429 / 5xx
   | "rate_limited"
   | "internal_error";

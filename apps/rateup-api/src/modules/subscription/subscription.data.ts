@@ -32,6 +32,9 @@ export const SampleSubscriptionFeatures = getSampleSubscriptionFeatures(10);
 // TODO: check if Math.infinity is a good idea or use null value for unlimited
 export const UnlimitedAccess = getSampleSubscriptionFeatures(10000);
 
+/** Shop orders a Free org can take in a calendar month; paid tiers are unmetered. */
+export const FREE_MONTHLY_ORDERS = 50;
+
 export function getFreeSubscriptionFeatures(
   overrides?: Partial<SubscriptionFeatures>,
 ): SubscriptionFeatures {
@@ -61,7 +64,9 @@ export function getFreeSubscriptionFeatures(
       campaign: { active: true },
       loyalty: { active: false },
       referrals: { active: false },
-      catalog: { active: false },
+      // The shop (Commerce) is open on Free; selling is how a free account grows into a paid one.
+      catalog: { active: true },
+      shopOrders: { active: true, count: { max: FREE_MONTHLY_ORDERS } },
     },
     ai: { count: { completionTokens: 0, promptTokens: 0 }, active: false },
   };
@@ -118,6 +123,7 @@ function getPaidSubscriptionFeatures({
       loyalty: { active: true },
       referrals: { active: true },
       catalog: { active: true },
+      shopOrders: { active: true, count: { max: UNLIMITED_COUNT } },
     },
     ai: { count: { completionTokens: 0, promptTokens: 0 }, active: true },
   };
@@ -222,6 +228,7 @@ export function getEnterpriseSubscriptionFeatures(
 const CONTRACTABLE_ALLOWANCES = [
   ["whatsapp", "activeContacts", "count", "max"],
   ["whatsapp", "campaignCredits", "count", "max"],
+  ["whatsapp", "shopOrders", "count", "max"],
   ["webSurvey", "count", "monthlyResponseLimit"],
   ["team", "count", "max"],
   ["team", "teamMember", "count", "max"],

@@ -32,6 +32,13 @@ export const PERMISSIONS = [
   "meta_agent.use",
   "meta_agent.manage",
   "catalog.manage",
+  "commerce.read",
+  "commerce.sell",
+  "commerce.orders.manage",
+  "commerce.products.manage",
+  "commerce.discounts.manage",
+  "commerce.payments.manage",
+  "commerce.storefront.manage",
   "pipelines.read",
   "pipelines.manage",
   "pipelines.admin",
@@ -93,7 +100,7 @@ export const MEMBER_PERMISSIONS: ReadonlySet<Permission> = new Set(
  * Bumped whenever the catalogue or a role's bundle changes, so a client holding a stale
  * mirror can tell and fall back to deriving permissions from the role key.
  */
-export const PERMISSIONS_VERSION = 2;
+export const PERMISSIONS_VERSION = 3;
 
 export function isPermission(value: string): value is Permission {
   return (ALL_PERMISSIONS as ReadonlySet<string>).has(value);

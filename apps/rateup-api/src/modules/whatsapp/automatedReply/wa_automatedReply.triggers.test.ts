@@ -48,6 +48,11 @@ vi.mock("../instagram/instagram_messaging.service.js", () => ({
   replyToInstagramComment: vi.fn(),
 }));
 vi.mock("./metaFlow.service.js", () => ({ startMetaFlow: vi.fn() }));
+vi.mock("../../commerce/shop/commentToBuy.service.js", () => ({
+  runShopProductsAction: vi.fn(async () => true),
+}));
+const chatProducts = vi.hoisted(() => ({ sendRuleProductsOnWhatsApp: vi.fn(async () => true) }));
+vi.mock("../../commerce/shop/chatProducts.service.js", () => chatProducts);
 vi.mock("../meta/sendApiMessages.js", () => ({ sendSendApiText: vi.fn() }));
 vi.mock("../facebook/facebook_comments.service.js", () => ({ replyToFacebookComment: vi.fn() }));
 vi.mock("./instagram_automatedReply.service.js", () => ({
@@ -93,6 +98,7 @@ import {
 import { getTeamIdsByUserId } from "../../team/team.service.js";
 import { assignWaMessageToUser } from "../inbox/message/wamessage.service.js";
 import { getMetaAutomationById } from "./instagram_automatedReply.service.js";
+import { runShopProductsAction } from "../../commerce/shop/commentToBuy.service.js";
 
 // No dayjs.extend here on purpose — see wa_automatedReply.utils.test.ts.
 type Mock = ReturnType<typeof vi.fn>;
@@ -948,6 +954,48 @@ describe("checkAndExecuteRuleByTriggerEvent - ig.me links", () => {
   });
 });
 
+describe("checkAndExecuteRuleByTriggerEvent - click-to-WhatsApp ads", () => {
+  const adRule = (id: string, options: Record<string, unknown> | null = null, actions = []) =>
+    rule({ id, name: id, triggerEvent: TriggerEvent.WHATSAPP_AD_REFERRAL, options, actions });
+  const clicked = (sourceId: string, headline = "Summer Sale") =>
+    context({ phoneNumberId: "phone-1", adReferral: { sourceId, headline } });
+
+  test("answers the ad a rule names before a rule for every ad", async () => {
+    db.rule.findMany.mockResolvedValue([adRule("any"), adRule("summer", { adIds: ["ad-1"] })]);
+    const result = await checkAndExecuteRuleByTriggerEvent(
+      TriggerEvent.WHATSAPP_AD_REFERRAL,
+      clicked("ad-1"),
+    );
+    expect(result?.rule.id).toBe("summer");
+  });
+
+  test("stays quiet for an ad no rule names", async () => {
+    db.rule.findMany.mockResolvedValue([adRule("winter", { adMatch: "winter" })]);
+    await expect(
+      checkAndExecuteRuleByTriggerEvent(TriggerEvent.WHATSAPP_AD_REFERRAL, clicked("ad-2")),
+    ).resolves.toBeUndefined();
+  });
+
+  test("sends the rule's products into the WhatsApp chat", async () => {
+    const value = { productIds: ["p1"], message: "Here's the sale" };
+    db.rule.findMany.mockResolvedValue([
+      adRule("sell", null, [{ id: "a1", type: "SEND_SHOP_PRODUCTS", value }] as never),
+    ]);
+    const result = await checkAndExecuteRuleByTriggerEvent(
+      TriggerEvent.WHATSAPP_AD_REFERRAL,
+      clicked("ad-1"),
+    );
+    expect(chatProducts.sendRuleProductsOnWhatsApp).toHaveBeenCalledWith({
+      orgId: "org-1",
+      ruleId: "sell",
+      value,
+      phone: "15550001",
+      phoneId: "phone-1",
+    });
+    expect(result?.executedActions).toEqual([{ actionId: "a1", success: true }]);
+  });
+});
+
 // Messenger contacts have no phone, only the psid the event carries, and the Messenger
 // actions used to run Instagram-only code.
 describe("Facebook (Messenger) rules", () => {
@@ -1172,6 +1220,78 @@ describe("checkAndExecuteRuleByTriggerEvent - a rule on several channels", () =>
 
     expect(sendTextMessage).toHaveBeenCalled();
     expect(sendSendApiText).not.toHaveBeenCalled();
+  });
+});
+
+describe("checkAndExecuteRuleByTriggerEvent - comment to buy", () => {
+  const sellRule = (keyword: string, actions: Array<Record<string, unknown>> = []) =>
+    rule({
+      id: "rule-sell",
+      triggerEvent: TriggerEvent.INSTAGRAM_COMMENT,
+      platform: "INSTAGRAM",
+      groups: [
+        {
+          id: "g",
+          operator: "AND",
+          conditions: [{ id: "c", field: "MESSAGE_BODY", operator: "CONTAINS", value: keyword }],
+        },
+      ],
+      actions: [
+        ...actions,
+        { id: "sell", type: "SEND_SHOP_PRODUCTS", value: { productIds: ["p1"] } },
+      ],
+    });
+  const comment = (message: string) =>
+    context({
+      platform: "INSTAGRAM",
+      phone: "igs-1",
+      phoneNumberId: "iba-1",
+      message,
+      instagramMediaId: "media-1",
+      instagramCommentId: "comment-1",
+    });
+
+  test("sends the products when the comment has the keyword", async () => {
+    db.rule.findMany.mockResolvedValue([sellRule("buy")]);
+
+    await checkAndExecuteRuleByTriggerEvent(
+      TriggerEvent.INSTAGRAM_COMMENT,
+      comment("I want to BUY"),
+    );
+
+    expect(runShopProductsAction).toHaveBeenCalledExactlyOnceWith({
+      orgId: "org-1",
+      ruleId: "rule-sell",
+      triggerEvent: TriggerEvent.INSTAGRAM_COMMENT,
+      value: { productIds: ["p1"] },
+      accountId: "iba-1",
+      recipient: "igs-1",
+      commentId: "comment-1",
+      mediaId: "media-1",
+    });
+  });
+
+  test("stays quiet on a comment without the keyword", async () => {
+    db.rule.findMany.mockResolvedValue([sellRule("buy")]);
+
+    await checkAndExecuteRuleByTriggerEvent(
+      TriggerEvent.INSTAGRAM_COMMENT,
+      comment("lovely photo"),
+    );
+
+    expect(runShopProductsAction).not.toHaveBeenCalled();
+  });
+
+  // Meta allows one private reply per comment: a text sent first spends it.
+  test("gets no comment to reply to once an earlier action has replied", async () => {
+    db.rule.findMany.mockResolvedValue([
+      sellRule("buy", [{ id: "a1", type: "SEND_MESSAGE", value: "Hi!" }]),
+    ]);
+
+    await checkAndExecuteRuleByTriggerEvent(TriggerEvent.INSTAGRAM_COMMENT, comment("buy"));
+
+    expect(sendInstagramPrivateReply).toHaveBeenCalledOnce();
+    expect((runShopProductsAction as Mock).mock.calls[0][0].commentId).toBeUndefined();
   });
 });
 

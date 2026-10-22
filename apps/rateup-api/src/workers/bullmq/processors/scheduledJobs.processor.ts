@@ -20,6 +20,8 @@ import { sendCampaignCronAction } from "../../../modules/campaign/campaign.servi
 import { syncShopifyWebhooks } from "../../../modules/integrations/shopify/shopify.webhooks.js";
 import { syncShopifyWidgets } from "../../../modules/integrations/shopify/shopify.widget.js";
 import { cleanupShopifyCheckouts } from "../../../modules/integrations/shopify/shopify.checkouts.service.js";
+import { sweepExpiredDrafts } from "../../../modules/commerce/shop/orders.service.js";
+import { mirrorFollowedStores } from "../../../modules/commerce/shop/storeSync.service.js";
 import { refreshIntegrationCredentials } from "../../../modules/integrations/shared/credentialRefresh.js";
 import {
   processDripCampaigns,
@@ -76,6 +78,12 @@ const HANDLERS: Record<ScheduledJobId, () => Promise<void>> = {
     await safeRun("cleanupShopifyCheckouts", cleanupShopifyCheckouts);
   },
 
+  shopExpiredDrafts: async () => {
+    await safeRun("sweepExpiredDrafts", () => sweepExpiredDrafts());
+  },
+  shopStoreMirror: async () => {
+    await safeRun("mirrorFollowedStores", mirrorFollowedStores);
+  },
   shopifyWebhookSync: async () => {
     await safeRun("syncShopifyWebhooks", syncShopifyWebhooks);
     await safeRun("syncShopifyWidgets", syncShopifyWidgets);

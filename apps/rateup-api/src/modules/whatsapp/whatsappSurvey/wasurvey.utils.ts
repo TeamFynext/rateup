@@ -628,9 +628,25 @@ export async function convertNodeToWhatsAppMessage(
       return null;
   }
 }
-export const handlePaymentConfirmation = async (phoneNo: string, refrenceId: string) => {
+export const handlePaymentConfirmation = async (
+  phoneNo: string,
+  refrenceId: string,
+  phoneNumberId: string | undefined,
+) => {
+  // Reference ids are chosen by whichever business sends the order_details, so another org's
+  // payment could carry this one's id: only the receiving number's org can be paid.
+  const settings = phoneNumberId
+    ? await prisma.whatsappSettings.findUnique({
+        where: { phoneId: phoneNumberId },
+        select: { orgId: true },
+      })
+    : null;
+  if (!settings) {
+    log.warn({ refrenceId, phoneNumberId }, "Payment for an unknown WhatsApp number; ignored");
+    return;
+  }
   const order = await prisma.waCatalogOrder.findFirst({
-    where: { transactionId: refrenceId },
+    where: { transactionId: refrenceId, catalog: { orgId: settings.orgId } },
     include: { catalog: true },
   });
 

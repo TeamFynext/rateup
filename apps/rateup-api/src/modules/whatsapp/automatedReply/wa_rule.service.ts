@@ -226,6 +226,7 @@ function triggerSkipsKeywordLock(triggerEvent: string) {
     triggerEvent === "INSTAGRAM_COMMENT" ||
     triggerEvent === "INSTAGRAM_STORY_MENTION" ||
     triggerEvent === "INSTAGRAM_REFERRAL" ||
+    triggerEvent === "WHATSAPP_AD_REFERRAL" ||
     triggerEvent === "MESSENGER_REFERRAL" ||
     triggerEvent === "FACEBOOK_COMMENT"
   );
