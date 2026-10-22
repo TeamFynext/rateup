@@ -135,7 +135,7 @@
     "{ms} ms": "{ms} ms",
     "{multiplier}x the base rate": "{multiplier}x der Basiszinssatz",
     "{name} — no logo yet, the poster uses your colour": "{name} – noch kein Logo, das Poster verwendet Ihre Farbe",
-    "{name} · served {count} customers this hour": "{name} · hat diese Stunde {count} Kunden bedient",
+    "{name} · served {count, plural, one {# customer} other {# customers}} this hour": "{name} · hat diese Stunde {count} Kunden bedient",
     "{name} (owner)": "{name} (Eigentümer)",
     "{name} +{total}": "{name} +{total}",
     "{name} added": "{name} hinzugefügt",

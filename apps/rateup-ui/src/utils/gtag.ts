@@ -24,6 +24,8 @@ export const setGAConsent = (consent: "granted" | "denied") => {
     globalThis.gtag("consent", "update", {
       ad_storage: consent,
       analytics_storage: consent,
+      ad_user_data: consent,
+      ad_personalization: consent,
     });
   } else {
     console.warn("gtag not loaded yet");

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { storefrontSitemap } from "@/components/shop-public/storefrontSeo.ts";
 
-export const Route = createFileRoute("/(public-facing)/s/sitemap.xml")({
+export const Route = createFileRoute("/(shop)/s/sitemap.xml")({
   server: {
     handlers: {
       GET: async () => {

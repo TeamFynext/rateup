@@ -15,8 +15,7 @@ import {
 
 /**
  * The plan catalogue, for an org that has no live subscription to switch: free, lapsed or
- * cancelled. An org with a live one changes tier through `ChangePlanDialog`, which offers
- * both directions and prorates.
+ * cancelled. An org with a live one changes tier through `ChangePlanDialog`.
  */
 export function ChoosePlanDialog({
   open,

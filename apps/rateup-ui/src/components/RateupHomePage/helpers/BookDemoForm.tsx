@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { isValidPhoneNumber } from "react-phone-number-input";
+import { useEffect, useState } from "react";
+import { type Country, isSupportedCountry, isValidPhoneNumber } from "react-phone-number-input";
 import { toast } from "sonner";
 
 import { useBookDemoMutation } from "@/backend/bookdemo/bookdemo.query";
@@ -36,6 +36,16 @@ const TIME_SLOTS = Array.from({ length: 21 }, (_, i) => {
 
 /** Sentinel for "no preference": Base UI's `Select` has no empty-string item, and the field is optional. */
 const ANY_TIME = "__any__";
+/** The visitor's country from their browser language (`en-GB` → GB), when it is one we can dial. */
+function visitorCountry(): Country | undefined {
+  try {
+    const region = new Intl.Locale(navigator.language).maximize().region;
+    return region && isSupportedCountry(region) ? region : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 const TIME_ITEMS = [{ value: ANY_TIME, label: "No preference" }, ...TIME_SLOTS];
 
 interface BookDemoFormProps {
@@ -64,6 +74,9 @@ export default function BookDemoForm({
     message: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  /* Read after mount: the server has no locale to read, and a guess there would mismatch. */
+  const [country, setCountry] = useState<Country | undefined>();
+  useEffect(() => setCountry(visitorCountry()), []);
 
   // Bookable window: today through a year out. Midnight-anchored so "today" itself stays pickable.
   const today = new Date();
@@ -208,8 +221,9 @@ export default function BookDemoForm({
               Phone
             </FieldLabel>
             <PhoneInput
+              key={country ?? "unknown"}
               id={`${idPrefix}-phone`}
-              defaultCountry="IN"
+              defaultCountry={country}
               international
               countryCallingCodeEditable={false}
               placeholder="Enter phone number"

@@ -1,11 +1,6 @@
 // Markdown variant of /integrations, /integrations/shopify, /integrations/woocommerce,
 // /integrations/hubspot and /integrations/pipedrive, served to clients that ask for
 // `Accept: text/markdown` via `createMarkdownMiddleware`.
-//
-// Hidden until Pipedrive launches: add its bullet under Native connectors then —
-// "**Pipedrive** — persons synced both ways, Leads board leads as Pipedrive deals with
-// column-to-stage mapping and won/lost status both ways, and closed WhatsApp conversations and
-// survey responses logged as notes on the person. See /integrations/pipedrive"
 
 export const integrationsMarkdown = `# RateUp Integrations
 
@@ -24,11 +19,21 @@ anyone typing them in.
   orders, rewards as one-use checkout coupons, new customers as contacts, and products in the
   WhatsApp catalog kept up to date. See /integrations/woocommerce
 - **Petpooja** — restaurant POS and billing; points earned and redeemed at the counter
-- **Zoho** — CRM contact, deal and conversation sync
+- **Zoho CRM and Bigin** — contacts and leads kept in step with the RateUp inbox
 - **HubSpot** — contacts synced both ways, Leads board leads as HubSpot deals with column-to-stage
   mapping both ways, and closed WhatsApp conversations and survey responses logged as notes on the
   contact. See /integrations/hubspot
-- **Zapier** — triggers and actions across 3,000+ apps
+- **Pipedrive** — persons synced both ways, Leads board leads as Pipedrive deals with
+  column-to-stage mapping and won/lost status both ways, and closed WhatsApp conversations logged
+  as notes on the person. See /integrations/pipedrive
+- **GetLead** — pipeline leads pushed into GetLead CRM
+- **Zapier, Make and Pabbly Connect** — start workflows from RateUp events and send WhatsApp
+  messages from them, across thousands of apps
+- **WhatsApp Payments** (India) — collect payment for orders inside the chat through the gateways
+  linked to your WhatsApp Business account
+- **Amelia** — free appointment times from your Amelia booking calendar offered inside a WhatsApp
+  flow
+- **Google Sheets** — every survey response added to its own spreadsheet as it arrives
 - **REST API and webhooks** — for anything without a native connector (https://docs.rateup.app)
 
 ## What the sync is for

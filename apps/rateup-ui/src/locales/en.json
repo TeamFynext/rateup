@@ -135,7 +135,7 @@
     "{ms} ms": "{ms} ms",
     "{multiplier}x the base rate": "{multiplier}x the base rate",
     "{name} — no logo yet, the poster uses your colour": "{name} — no logo yet, the poster uses your colour",
-    "{name} · served {count} customers this hour": "{name} · served {count} customers this hour",
+    "{name} · served {count, plural, one {# customer} other {# customers}} this hour": "{name} · served {count, plural, one {# customer} other {# customers}} this hour",
     "{name} (owner)": "{name} (owner)",
     "{name} +{total}": "{name} +{total}",
     "{name} added": "{name} added",

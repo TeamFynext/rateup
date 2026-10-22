@@ -212,7 +212,7 @@ export default function WaInboxChatDisplayFooter({
       return;
     }
     if (!whatsappSettingsPhoneId && platform !== MessagePlatform.WEBCHAT) {
-      toast.error("Select a account to send the message");
+      toast.error(translations("Select an account to send the message"));
       return;
     }
     const values = {
@@ -296,7 +296,7 @@ export default function WaInboxChatDisplayFooter({
   /** A plain text reply sent without touching the draft, e.g. a storefront link from Sell. */
   function sendPlainText(text: string) {
     if (!whatsappSettingsPhoneId && platform !== MessagePlatform.WEBCHAT) {
-      toast.error("Select a account to send the message");
+      toast.error(translations("Select an account to send the message"));
       return;
     }
     sendnewWaMessage.mutate({

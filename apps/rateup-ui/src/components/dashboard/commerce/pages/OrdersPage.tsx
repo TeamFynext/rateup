@@ -69,6 +69,7 @@ import { usePermissions } from "@/hooks/usePermission.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 
 import { CreateOrderDialog } from "../shop/CreateOrderDialog.tsx";
+import { OrderAllowanceNotice } from "../shop/OrderLimit.tsx";
 import { SaveSegmentDialog } from "../shop/SaveSegmentDialog.tsx";
 import {
   channelLabel,
@@ -209,7 +210,6 @@ export function OrdersPage() {
       description={t(
         "Every order from WhatsApp, Instagram, Messenger and your storefront, in one list.",
       )}
-      wide
       actions={
         <>
           {hasLegacy && (
@@ -218,7 +218,8 @@ export function OrdersPage() {
               {t("WhatsApp catalog orders")}
             </Button>
           )}
-          {can("contacts.manage") && (
+          {/* Saving needs contacts.manage; the preview behind it is an orders write. */}
+          {can("contacts.manage") && can("commerce.orders.manage") && (
             <Button variant="outline" onClick={() => setSegmentOpen(true)}>
               <IconUsersGroup data-icon="inline-start" />
               {t("Save shoppers as a group")}
@@ -234,6 +235,7 @@ export function OrdersPage() {
         </>
       }
     >
+      <OrderAllowanceNotice />
       <Card className="gap-0 py-0">
         <Tabs
           value={tab}
@@ -545,14 +547,14 @@ function FirstOrderGuide({ canSell }: Readonly<{ canSell: boolean }>) {
     },
   ];
   return (
-    <div className="flex flex-col gap-4 px-4 pt-2 pb-6">
-      <div className="flex flex-col gap-1">
-        <h2 className="font-display text-base font-bold tracking-tight">{t("No orders yet")}</h2>
-        <p className="text-sm text-muted-foreground">
+    <Empty className="gap-4 md:p-6">
+      <EmptyHeader>
+        <EmptyTitle>{t("No orders yet")}</EmptyTitle>
+        <EmptyDescription>
           {t("Orders reach this list in three ways. Try one to see how it works.")}
-        </p>
-      </div>
-      <ol className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        </EmptyDescription>
+      </EmptyHeader>
+      <ol className="grid w-full grid-cols-1 gap-3 text-left md:grid-cols-3">
         {ways.map((way) => (
           <li
             key={way.title}
@@ -567,7 +569,7 @@ function FirstOrderGuide({ canSell }: Readonly<{ canSell: boolean }>) {
           </li>
         ))}
       </ol>
-    </div>
+    </Empty>
   );
 }
 

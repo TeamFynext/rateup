@@ -11,7 +11,9 @@ import {
   IconSearch,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
+import type { TFunction } from "i18next";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import type { CommerceOrder, SpreadsheetFormat } from "@/backend/commerce/commerce.api";
 import {
@@ -41,39 +43,38 @@ import { STAGE_META } from "../orderMeta";
 import { settingsTab } from "../shop/shopMeta";
 import { money } from "../utils";
 
-const STATUS_OPTIONS = [
-  { id: "PENDING_PAYMENT", label: "Pending", dot: "bg-amber-500" },
-  { id: "PENDING_CHECKOUT", label: "Confirmed", dot: "bg-primary" },
-  { id: "PENDING_DELIVERY", label: "Packed", dot: "bg-sky-500" },
-  { id: "PENDING_ADDRESS", label: "Shipped", dot: "bg-blue-500" },
-  { id: "COMPLETED", label: "Delivered", dot: "bg-emerald-500" },
-  { id: "CANCELLED", label: "Cancelled", dot: "bg-destructive" },
+const statusOptions = (t: TFunction) => [
+  { id: "PENDING_PAYMENT", label: t("Pending"), dot: "bg-amber-500" },
+  { id: "PENDING_CHECKOUT", label: t("Confirmed"), dot: "bg-primary" },
+  { id: "PENDING_DELIVERY", label: t("Packed"), dot: "bg-sky-500" },
+  { id: "PENDING_ADDRESS", label: t("Shipped"), dot: "bg-blue-500" },
+  { id: "COMPLETED", label: t("Delivered"), dot: "bg-emerald-500" },
+  { id: "CANCELLED", label: t("Cancelled"), dot: "bg-destructive" },
 ];
 
-const FILTERS = [
-  { id: "all", label: "All orders" },
-  { id: "PENDING_PAYMENT", label: "Pending" },
-  { id: "PENDING_DELIVERY", label: "To ship" },
-  { id: "PENDING_ADDRESS", label: "Shipped" },
-  { id: "COMPLETED", label: "Delivered" },
+const filterOptions = (t: TFunction) => [
+  { id: "all", label: t("All orders") },
+  { id: "PENDING_PAYMENT", label: t("Pending") },
+  { id: "PENDING_DELIVERY", label: t("To ship") },
+  { id: "PENDING_ADDRESS", label: t("Shipped") },
+  { id: "COMPLETED", label: t("Delivered") },
 ];
 
 const PAGE_SIZE = 10;
 
-function payMeta(method?: string | null) {
-  const m = (method ?? "").toLowerCase();
+function payMeta(t: TFunction, method?: string | null) {
+  if (!method) return { icon: IconClock, label: t("Pending"), cls: "text-amber-600" };
+  const m = method.toLowerCase();
   if (m.includes("upi")) return { icon: IconDeviceMobile, label: "UPI", cls: "text-foreground" };
   if (m.includes("cod") || m.includes("cash"))
-    return { icon: IconCash, label: "COD", cls: "text-foreground" };
+    return { icon: IconCash, label: t("Cash on delivery"), cls: "text-foreground" };
   if (m.includes("whatsapp"))
-    return { icon: IconMessageCircle, label: "WhatsApp Pay", cls: "text-emerald-600" };
-  if (m.includes("razor") || m.includes("card"))
-    return { icon: IconCreditCard, label: method!, cls: "text-foreground" };
-  if (!method) return { icon: IconClock, label: "Pending", cls: "text-amber-600" };
+    return { icon: IconMessageCircle, label: t("WhatsApp Pay"), cls: "text-emerald-600" };
   return { icon: IconCreditCard, label: method, cls: "text-foreground" };
 }
 
 export function CatalogOrdersPage() {
+  const { t } = useTranslation();
   const { currencySymbol: sym, currentSetting, filter: baseFilter } = useCommerce();
 
   const [page, setPage] = useState(0);
@@ -113,9 +114,9 @@ export function CatalogOrdersPage() {
 
   return (
     <CommerceShell
-      title="WhatsApp catalog orders"
-      back={{ ...settingsTab("legacy"), label: "Settings" }}
-      description="Orders placed through the WhatsApp catalog cart checkout."
+      title={t("WhatsApp catalog orders")}
+      back={{ ...settingsTab("legacy"), label: t("Settings") }}
+      description={t("Orders placed through the WhatsApp catalog cart checkout.")}
       showCatalogSwitcher
       actions={
         <>
@@ -124,7 +125,7 @@ export function CatalogOrdersPage() {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search orders…"
+              placeholder={t("Search orders…")}
               className="pl-8"
             />
           </div>
@@ -141,13 +142,13 @@ export function CatalogOrdersPage() {
     >
       {!currentSetting ? (
         <Card className="px-6 py-16 text-center text-sm text-muted-foreground">
-          No store connected.
+          {t("No store connected.")}
         </Card>
       ) : (
         <div className="flex flex-col gap-4">
           {/* Filter pills */}
           <div className="flex flex-wrap items-center gap-2">
-            {FILTERS.map((f) => {
+            {filterOptions(t).map((f) => {
               const active = stage === f.id;
               return (
                 <button
@@ -170,14 +171,14 @@ export function CatalogOrdersPage() {
           <Card className="gap-0 py-0">
             {/* column head */}
             <div className="flex items-center gap-3.5 border-b px-5 py-3 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-              <span className="w-24 shrink-0">Order</span>
-              <span className="flex-1">Customer</span>
-              <span className="hidden w-[70px] shrink-0 text-center md:block">Items</span>
-              <span className="w-24 shrink-0 text-right">Total</span>
-              <span className="hidden w-[120px] shrink-0 lg:block">Payment</span>
-              <span className="w-[132px] shrink-0">Status</span>
-              <span className="hidden w-16 shrink-0 text-right sm:block">Date</span>
-              <span className="w-20 shrink-0 text-right">Action</span>
+              <span className="w-24 shrink-0">{t("Order")}</span>
+              <span className="flex-1">{t("Customer")}</span>
+              <span className="hidden w-[70px] shrink-0 text-center md:block">{t("Items")}</span>
+              <span className="w-24 shrink-0 text-right">{t("Total")}</span>
+              <span className="hidden w-[120px] shrink-0 lg:block">{t("Payment")}</span>
+              <span className="w-[132px] shrink-0">{t("Status")}</span>
+              <span className="hidden w-16 shrink-0 text-right sm:block">{t("Date")}</span>
+              <span className="w-20 shrink-0 text-right">{t("Action")}</span>
             </div>
 
             {isLoading ? (
@@ -188,15 +189,15 @@ export function CatalogOrdersPage() {
               <div className="flex flex-col items-center gap-2 py-14 text-center">
                 <IconPackage className="size-7 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">
-                  No orders match the current filters.
+                  {t("No orders match the current filters.")}
                 </p>
               </div>
             ) : (
               rows.map((o) => {
-                const name = o.contact?.name || "Unknown";
+                const name = o.contact?.name || t("Unknown");
                 const curStage = overrides[o.id] ?? o.orderStage ?? "DEFAULT";
                 const stageMeta = STAGE_META[curStage] ?? STAGE_META.DEFAULT;
-                const pm = payMeta(o.paymentMethod);
+                const pm = payMeta(t, o.paymentMethod);
                 return (
                   <div
                     key={o.id}
@@ -210,7 +211,7 @@ export function CatalogOrdersPage() {
                       <span className="truncate text-sm text-foreground">{name}</span>
                     </div>
                     <span className="hidden w-[70px] shrink-0 text-center text-sm text-muted-foreground md:block">
-                      {o.itemCount} {o.itemCount === 1 ? "item" : "items"}
+                      {t("{count, plural, one {# item} other {# items}}", { count: o.itemCount })}
                     </span>
                     <span className="w-24 shrink-0 text-right text-sm font-semibold text-foreground">
                       {money(o.total, sym)}
@@ -245,7 +246,7 @@ export function CatalogOrdersPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="start" className="w-40">
                           <DropdownMenuGroup>
-                            {STATUS_OPTIONS.map((st) => {
+                            {statusOptions(t).map((st) => {
                               const isCurrent = st.id === curStage;
                               return (
                                 <DropdownMenuItem
@@ -276,7 +277,7 @@ export function CatalogOrdersPage() {
                           setDetailsOpen(true);
                         }}
                       >
-                        Details
+                        {t("Details")}
                       </Button>
                     </span>
                   </div>
@@ -294,7 +295,7 @@ export function CatalogOrdersPage() {
           {/* pagination */}
           <div className="flex items-center justify-between">
             <p className="text-xs text-muted-foreground">
-              {totalCount} order{totalCount !== 1 ? "s" : ""} total
+              {t("{count, plural, one {# order} other {# orders}} total", { count: totalCount })}
             </p>
             <div className="flex items-center gap-2">
               <Button
@@ -303,10 +304,10 @@ export function CatalogOrdersPage() {
                 onClick={() => setPage((p) => Math.max(p - 1, 0))}
                 disabled={page === 0 || isLoading}
               >
-                Previous
+                {t("Previous")}
               </Button>
               <span className="text-sm text-muted-foreground">
-                Page {page + 1} of {totalPages}
+                {t("Page {page} of {total}", { page: page + 1, total: totalPages })}
               </span>
               <Button
                 variant="outline"
@@ -314,7 +315,7 @@ export function CatalogOrdersPage() {
                 onClick={() => setPage((p) => (p < totalPages - 1 ? p + 1 : p))}
                 disabled={page >= totalPages - 1 || isLoading}
               >
-                Next
+                {t("Next")}
               </Button>
             </div>
           </div>

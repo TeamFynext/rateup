@@ -1,5 +1,6 @@
 import { IconPlus, IconX } from "@tabler/icons-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { useShopProduct, useShopStore } from "@/backend/commerce/shop.query";
 import { ProductPicker } from "@/components/dashboard/commerce/inbox/ProductPicker.tsx";
@@ -27,16 +28,20 @@ export interface ShopProductsActionValue {
 
 export const MAX_ACTION_PRODUCTS = 10;
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
 export function asShopProductsValue(value: unknown): ShopProductsActionValue {
-  if (value && typeof value === "object" && "productIds" in value) {
-    const v = value as Partial<ShopProductsActionValue>;
-    return {
-      productIds: Array.isArray(v.productIds) ? v.productIds : [],
-      message: v.message,
-      dropLimit: v.dropLimit ?? null,
-    };
-  }
-  return { productIds: [] };
+  if (!isRecord(value) || !("productIds" in value)) return { productIds: [] };
+  const { productIds, message, dropLimit } = value;
+  return {
+    productIds: Array.isArray(productIds)
+      ? productIds.filter((id): id is string => typeof id === "string")
+      : [],
+    message: typeof message === "string" ? message : undefined,
+    dropLimit: typeof dropLimit === "number" ? dropLimit : null,
+  };
 }
 
 /**
@@ -54,6 +59,7 @@ export function ShopProductsActionInput({
   /** Only Instagram replies carry a link or sell a limited drop. */
   onInstagram: boolean;
 }>) {
+  const { t } = useTranslation();
   const current = asShopProductsValue(value);
   const [picking, setPicking] = useState(false);
   const { data: store } = useShopStore();
@@ -63,7 +69,7 @@ export function ShopProductsActionInput({
   return (
     <div className="flex w-full flex-col gap-4">
       <Field>
-        <FieldLabel>Products</FieldLabel>
+        <FieldLabel>{t("Products")}</FieldLabel>
         <div className="flex flex-wrap gap-2">
           {current.productIds.map((id) => (
             <ProductChip
@@ -75,33 +81,40 @@ export function ShopProductsActionInput({
           {current.productIds.length < MAX_ACTION_PRODUCTS && (
             <Button type="button" variant="outline" size="sm" onClick={() => setPicking(true)}>
               <IconPlus data-icon="inline-start" />
-              {current.productIds.length ? "Add products" : "Choose products"}
+              {current.productIds.length ? t("Add products") : t("Choose products")}
             </Button>
           )}
         </div>
         <FieldDescription>
           {onInstagram
-            ? "One product with one option gets a direct checkout link. More than that links to your storefront."
-            : "Sent as catalog cards the customer can add to a cart from. Products must be live in your WhatsApp catalog."}
+            ? t(
+                "One product with one option gets a direct checkout link. More than that links to your storefront.",
+              )
+            : t(
+                "Sent as catalog cards the customer can add to a cart from. Products must be live in your WhatsApp catalog.",
+              )}
         </FieldDescription>
       </Field>
 
       {onInstagram && store && !store.storefrontEnabled && current.productIds.length > 1 && (
         <Alert>
           <AlertDescription>
-            Turn on your storefront in Commerce → Settings, or the reply can only list these
-            products without a link.
+            {t(
+              "Turn on your storefront in Commerce → Settings, or the reply can only list these products without a link.",
+            )}
           </AlertDescription>
         </Alert>
       )}
 
       <Field>
-        <FieldLabel htmlFor="shop-products-message">Message (optional)</FieldLabel>
+        <FieldLabel htmlFor="shop-products-message">{t("Message (optional)")}</FieldLabel>
         <Textarea
           id="shop-products-message"
           rows={2}
           maxLength={600}
-          placeholder={onInstagram ? "Thanks for your comment! Here it is:" : "A few picks for you"}
+          placeholder={
+            onInstagram ? t("Thanks for your comment! Here it is.") : t("A few picks for you")
+          }
           value={current.message ?? ""}
           onChange={(e) => update({ message: e.target.value || undefined })}
           className="bg-background"
@@ -112,9 +125,11 @@ export function ShopProductsActionInput({
         <div className="flex flex-col gap-3 rounded-lg border border-border p-3">
           <label className="flex items-center justify-between gap-3">
             <span className="flex flex-col gap-0.5">
-              <span className="text-sm font-semibold">Limited drop</span>
+              <span className="text-sm font-semibold">{t("Limited drop")}</span>
               <span className="text-sm text-muted-foreground">
-                Sell only so many, one per person, first come. Later commenters hear it sold out.
+                {t(
+                  "Sell only so many, one per person, first come. Later commenters hear it sold out.",
+                )}
               </span>
             </span>
             <Switch
@@ -125,7 +140,7 @@ export function ShopProductsActionInput({
           {drop && (
             <Field orientation="horizontal" className="items-center">
               <FieldLabel htmlFor="shop-products-drop" className="shrink-0">
-                Units available
+                {t("Units available")}
               </FieldLabel>
               <Input
                 id="shop-products-drop"
@@ -158,9 +173,10 @@ export function ShopProductsActionInput({
 }
 
 function ProductChip({ id, onRemove }: Readonly<{ id: string; onRemove: () => void }>) {
+  const { t } = useTranslation();
   const { data, isPending, isError } = useShopProduct(id);
   if (isPending) return <Skeleton className="h-8 w-28 rounded-full" />;
-  const title = isError ? "Removed product" : (data?.title ?? id);
+  const title = isError ? t("Removed product") : (data?.title ?? id);
   return (
     <span className="inline-flex h-8 items-center gap-1 rounded-full border border-border bg-background pr-1 pl-3 text-sm">
       <span className="max-w-48 truncate">{title}</span>
@@ -168,7 +184,7 @@ function ProductChip({ id, onRemove }: Readonly<{ id: string; onRemove: () => vo
         type="button"
         variant="ghost"
         size="icon-xs"
-        aria-label={`Remove ${title}`}
+        aria-label={t("Remove {name}", { name: title })}
         onClick={onRemove}
       >
         <IconX />
@@ -188,6 +204,7 @@ function PickProductsDialog({
   onOpenChange: (open: boolean) => void;
   onDone: (productIds: string[]) => void;
 }>) {
+  const { t } = useTranslation();
   const [picked, setPicked] = useState<string[]>([...selected]);
   const full = picked.length >= MAX_ACTION_PRODUCTS;
 
@@ -201,8 +218,10 @@ function PickProductsDialog({
     >
       <DialogContent className="flex max-h-[85dvh] flex-col sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Choose products</DialogTitle>
-          <DialogDescription>Up to {MAX_ACTION_PRODUCTS} products per reply.</DialogDescription>
+          <DialogTitle>{t("Choose products")}</DialogTitle>
+          <DialogDescription>
+            {t("Up to {max} products per reply.", { max: MAX_ACTION_PRODUCTS })}
+          </DialogDescription>
         </DialogHeader>
         <ProductPicker
           mode="products"
@@ -219,10 +238,12 @@ function PickProductsDialog({
         />
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button type="button" onClick={() => onDone(picked)}>
-            {picked.length === 1 ? "Use 1 product" : `Use ${picked.length} products`}
+            {t("{count, plural, one {Use # product} other {Use # products}}", {
+              count: picked.length,
+            })}
           </Button>
         </DialogFooter>
       </DialogContent>

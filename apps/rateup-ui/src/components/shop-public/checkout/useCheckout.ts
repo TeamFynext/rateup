@@ -12,6 +12,9 @@ import { retryUnlessNotFound } from "@/utils/apiError.ts";
 export const publicCheckoutKey = (token: string) => ["public-checkout", token] as const;
 
 const TYPING_DELAY_MS = 700;
+/** How long, back from the gateway, the page waits for the payment before saying it hasn't seen it. */
+const PAYMENT_CHECKS = 6;
+const PAYMENT_CHECK_MS = 4000;
 
 /** Merges nested `customer` and `shippingAddress` so queued edits to different fields both land. */
 function mergePatch(a: PublicCheckoutPatch, b: PublicCheckoutPatch): PublicCheckoutPatch {
@@ -37,10 +40,16 @@ export function useCheckout(token: string, justPaid: boolean) {
     refetchOnWindowFocus: false,
     // Back from the gateway, the webhook can trail the redirect by a few seconds.
     refetchInterval: (q) =>
-      justPaid && q.state.data?.order.status === "DRAFT" && q.state.dataUpdateCount < 6
-        ? 4000
+      justPaid && q.state.data?.order.status === "DRAFT" && q.state.dataUpdateCount < PAYMENT_CHECKS
+        ? PAYMENT_CHECK_MS
         : false,
   });
+  const awaitingPayment =
+    justPaid && query.data?.order.status === "DRAFT" && !query.data.checkoutExpired;
+  // Reading dataUpdatedAt subscribes this hook to every refetch, even one with equal data.
+  const checks = query.dataUpdatedAt ? (queryClient.getQueryState(key)?.dataUpdateCount ?? 0) : 0;
+  const confirmingPayment = awaitingPayment && checks < PAYMENT_CHECKS;
+  const paymentNotSeen = awaitingPayment && !confirmingPayment;
 
   // Only the newest answer is applied, so a slow reply cannot undo a later edit.
   const latest = useRef(0);
@@ -94,5 +103,14 @@ export function useCheckout(token: string, justPaid: boolean) {
     [],
   );
 
-  return { query, saving: mutation.isPending, typingError, queue, send, flush };
+  return {
+    query,
+    saving: mutation.isPending,
+    typingError,
+    queue,
+    send,
+    flush,
+    confirmingPayment,
+    paymentNotSeen,
+  };
 }

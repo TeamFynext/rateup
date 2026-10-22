@@ -25,6 +25,7 @@ import {
   useShopProducts,
   useShopStore,
 } from "@/backend/commerce/shop.query";
+import { pressable } from "@/components/common/pressable.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
 import { DatePicker } from "@/components/ui/date-picker.tsx";
@@ -222,7 +223,6 @@ export function CouponsPage() {
       description={t(
         "Codes customers can use in chat checkout and on your storefront. Loyalty rewards and cart-reminder codes show up here too.",
       )}
-      wide
       actions={
         canEdit ? (
           <Button onClick={() => setEditing("new")}>
@@ -292,7 +292,9 @@ export function CouponsPage() {
                   <TableRow
                     key={d.id}
                     className={canEdit ? "cursor-pointer" : undefined}
-                    onClick={canEdit ? () => setEditing(d) : undefined}
+                    {...(canEdit
+                      ? pressable(() => setEditing(d), t("Edit {code}", { code: d.code }))
+                      : {})}
                   >
                     <TableCell className="pl-4">
                       <span className="rounded-md border border-dashed border-border bg-muted px-2 py-0.5 font-mono text-[13px] font-semibold">

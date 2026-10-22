@@ -230,7 +230,6 @@ export function ProductsPage() {
       description={t(
         "RateUp is your product source. Changes reach your WhatsApp catalog and Instagram shop within a minute.",
       )}
-      wide
       actions={
         canEdit ? (
           <>

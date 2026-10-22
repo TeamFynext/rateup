@@ -12,12 +12,12 @@ export default function Hero() {
   return (
     <NavyHero background={<HeroCanvas scene={checkoutRings} className="-z-10" />}>
       <h1 className={HERO_H1}>
-        Customers ask to buy in your DMs.{" "}
-        <span className="text-ru-blue-300">Let them pay right there.</span>
+        The simplest way to sell on{" "}
+        <span className="text-ru-blue-300">WhatsApp and Instagram.</span>
       </h1>
       <p className={`max-w-[44ch] ${HERO_SUB}`}>
-        Product cards, carts and checkout inside WhatsApp, Instagram and Messenger — paid into your
-        own Stripe or Razorpay account.
+        Product cards and carts inside WhatsApp, Instagram and Messenger, with a payment link that
+        pays into your own Stripe or Razorpay account.
       </p>
       <HeroActions />
     </NavyHero>

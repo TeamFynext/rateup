@@ -242,7 +242,7 @@ export function notificationMessage(
         customer: str(data.customerName, t("A customer")),
       });
     case "commerce.order_needs_review":
-      return t("Order #{number} was paid but needs review: {reason}", {
+      return t("Order #{number} was paid but needs review — {reason}", {
         number: str(data.orderNumber),
         reason: str(data.reason),
       });
@@ -260,7 +260,7 @@ export function notificationMessage(
       });
     case "integration.error":
       return data.contactName
-        ? t("{integration} failed for {contact}: {error}", {
+        ? t("{integration} failed for {contact} — {error}", {
             integration: str(data.integration, "Meta Conversions API"),
             contact,
             error: str(data.error),

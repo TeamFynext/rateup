@@ -10,7 +10,7 @@ interface StorefrontSearch {
   product?: string;
 }
 
-export const Route = createFileRoute("/(public-facing)/s/$slug/")({
+export const Route = createFileRoute("/(shop)/s/$slug/")({
   // Product links used to be ?product=<id>; they are in chats and catalogs already.
   validateSearch: (search: Record<string, unknown>): StorefrontSearch => ({
     product: typeof search.product === "string" && search.product ? search.product : undefined,

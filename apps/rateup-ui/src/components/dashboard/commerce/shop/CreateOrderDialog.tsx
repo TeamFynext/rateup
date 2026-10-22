@@ -37,6 +37,7 @@ import { getApiErrorMessage } from "@/utils/apiError.ts";
 
 import { type PickedLine, ProductPicker, variantName } from "../inbox/ProductPicker.tsx";
 import type { ChatShopChannel } from "../inbox/useInboxSelling.ts";
+import { isOrderLimitError, OrderLimitAlert } from "./OrderLimit.tsx";
 import { SHOP_PATHS } from "./shopMeta.ts";
 import { LinkField, SettingsTabLink } from "./ShopUi.tsx";
 
@@ -135,7 +136,6 @@ function CreateOrderBody({
 
   if (create.data) {
     const { order, delivery } = create.data;
-    const link = delivery.url ?? order.checkoutUrl;
     return (
       <>
         <div className="flex flex-col gap-3">
@@ -157,7 +157,7 @@ function CreateOrderBody({
                     )}
             </AlertDescription>
           </Alert>
-          {link && <LinkField url={link} label={t("Order link")} />}
+          <LinkField url={delivery.url} label={t("Order link")} />
         </div>
         <DialogFooter>
           <Button
@@ -204,10 +204,8 @@ function CreateOrderBody({
             t("They pay straight away; delivery details are asked in chat.")
           ) : (
             <>
-              {t("Connect Stripe or Razorpay in")}{" "}
-              <SettingsTabLink tab="payments">
-                {t("Commerce → Settings → Getting paid")}
-              </SettingsTabLink>
+              {t("Connect Stripe or Razorpay to send payment links.")}{" "}
+              <SettingsTabLink tab="payments">{t("Open Getting paid")}</SettingsTabLink>
             </>
           ),
           disabled: !hasProvider,
@@ -421,14 +419,16 @@ function CreateOrderBody({
         </div>
       </div>
 
-      {create.isError && (
+      {create.isError && isOrderLimitError(create.error) ? (
+        <OrderLimitAlert error={create.error} />
+      ) : create.isError ? (
         <Alert variant="destructive">
           <IconAlertCircle />
           <AlertDescription>
             {getApiErrorMessage(create.error, t("Couldn't create the order."))}
           </AlertDescription>
         </Alert>
-      )}
+      ) : null}
 
       <DialogFooter>
         <Button variant="outline" onClick={onClose}>

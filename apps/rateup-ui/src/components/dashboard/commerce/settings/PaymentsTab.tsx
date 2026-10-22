@@ -29,6 +29,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@/components/ui/empty.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
@@ -54,8 +61,10 @@ export function PaymentsTab({ store }: Readonly<{ store: ShopStore }>) {
   const canManage = useCan("commerce.payments.manage");
   const initial = paymentOptionsDraft(store);
   return (
-    <fieldset disabled={!canManage} className="flex min-w-0 flex-col gap-5">
-      <StoreCheckoutBanner store={store} area="payments" />
+    <div className="flex min-w-0 flex-col gap-5">
+      <fieldset disabled={!canManage} className="min-w-0">
+        <StoreCheckoutBanner store={store} area="payments" />
+      </fieldset>
       <ShopSection
         title={t("Online payments")}
         description={t(
@@ -64,22 +73,40 @@ export function PaymentsTab({ store }: Readonly<{ store: ShopStore }>) {
       >
         <GatewayCards store={store} />
       </ShopSection>
-      <PaymentOptionsForm key={JSON.stringify(initial)} initial={initial} canManage={canManage} />
-    </fieldset>
+      <fieldset disabled={!canManage} className="flex min-w-0 flex-col gap-5">
+        <PaymentOptionsForm key={JSON.stringify(initial)} initial={initial} canManage={canManage} />
+      </fieldset>
+    </div>
   );
 }
 
 /** Stripe and Razorpay side by side, plus WhatsApp Pay where Meta offers it. */
+/** Gates its own controls on payments permission; a failed load can still be retried by anyone. */
 export function GatewayCards({ store }: Readonly<{ store: ShopStore }>) {
   const { t } = useTranslation();
-  const { data: payments } = useShopPayments();
+  const canManage = useCan("commerce.payments.manage");
+  const { data: payments, isError, error, refetch, isRefetching } = useShopPayments();
   const [connecting, setConnecting] = useState<PaymentProviderId | null>(null);
 
+  if (isError && !payments)
+    return (
+      <Empty className="rounded-xl border border-dashed">
+        <EmptyHeader>
+          <EmptyTitle>{t("Payment providers could not be loaded")}</EmptyTitle>
+          <EmptyDescription>{getApiErrorMessage(error, t("Please try again."))}</EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent>
+          <Button variant="outline" size="sm" loading={isRefetching} onClick={() => void refetch()}>
+            {t("Try again")}
+          </Button>
+        </EmptyContent>
+      </Empty>
+    );
   if (!payments) return <Skeleton className="h-36 w-full rounded-xl" />;
   const wa = payments.whatsappPay;
 
   return (
-    <div className="flex flex-col gap-3">
+    <fieldset disabled={!canManage} className="flex min-w-0 flex-col gap-3">
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         {payments.providers.map((p) => (
           <GatewayCard key={p.id} provider={p} onConnect={() => setConnecting(p.id)} />
@@ -103,7 +130,7 @@ export function GatewayCards({ store }: Readonly<{ store: ShopStore }>) {
       {connecting && (
         <ConnectGatewayDialog provider={connecting} onClose={() => setConnecting(null)} />
       )}
-    </div>
+    </fieldset>
   );
 }
 
@@ -253,11 +280,11 @@ function RazorpayWebhookSetup({ provider }: Readonly<{ provider: ShopPaymentProv
             </span>
           </WebhookStep>
           <WebhookStep n={2}>
-            <span>{t("Add a new webhook and paste this URL:")}</span>
+            <span>{t("Add a new webhook and paste this URL.")}</span>
             <CopyField value={provider.webhookUrl} label={t("Copy webhook URL")} />
           </WebhookStep>
           <WebhookStep n={3}>
-            <span>{t("Tick these three events:")}</span>
+            <span>{t("Tick these three events.")}</span>
             <span className="flex flex-col gap-1.5">
               {RAZORPAY_EVENTS.map((event) => (
                 <CopyField key={event} value={event} label={t("Copy {event}", { event: event })} />
@@ -266,7 +293,7 @@ function RazorpayWebhookSetup({ provider }: Readonly<{ provider: ShopPaymentProv
           </WebhookStep>
           <WebhookStep n={4}>
             <span>
-              {t("Choose a secret in Razorpay, save the webhook, then paste the same secret here:")}
+              {t("Choose a secret in Razorpay, save the webhook, then paste the same secret here.")}
             </span>
             <span className="flex gap-2">
               <Input
@@ -458,7 +485,7 @@ function PaymentOptionsForm({
       <ShopSection
         title={t("Cash on delivery")}
         description={t(
-          "Fewer refused parcels: confirm every cash order on WhatsApp before you pack it.",
+          "Fewer refused parcels — confirm every cash order on WhatsApp before you pack it.",
         )}
         actions={
           <Switch

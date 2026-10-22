@@ -15,7 +15,14 @@ export const HERO_SUB =
 export function NavyHero({
   children,
   background = <HeroBackground className="-z-10" />,
-}: Readonly<{ children: ReactNode; background?: ReactNode }>) {
+  continued = false,
+}: Readonly<{
+  children: ReactNode;
+  background?: ReactNode;
+  /** The band carries on below, behind the top half of the homepage film, so it neither
+      fills the screen nor pads its own bottom. */
+  continued?: boolean;
+}>) {
   /* The negative top margin pulls the band up under the sticky nav — a floating pill in a
      header that paints no background of its own — so the navy runs to the top of the page and
      reads behind the pill. The padding-top adds that height back.
@@ -25,21 +32,28 @@ export function NavyHero({
      at 46px, then the `sm:h-12` logo at 48px) + the pill's two 1px borders = 80px, then 102px
      from `sm`. Revisit these two if the navbar's height changes. */
   return (
-    <section className="relative isolate -mt-20 flex min-h-[min(92svh,52rem)] flex-col justify-center overflow-hidden bg-[linear-gradient(160deg,var(--color-ru-blue-800)_0%,var(--color-ru-blue-900)_46%,var(--color-ru-blue-950)_100%)] px-5 pt-27 pb-20 sm:-mt-25.5 sm:pt-37.5 sm:pb-28">
+    <section
+      className={`relative isolate -mt-20 flex flex-col justify-center overflow-hidden bg-[linear-gradient(160deg,var(--color-ru-blue-800)_0%,var(--color-ru-blue-900)_46%,var(--color-ru-blue-950)_100%)] px-5 pt-27 sm:-mt-25.5 sm:pt-37.5 ${
+        continued ? "pb-10 sm:pb-14" : "min-h-[min(92svh,52rem)] pb-20 sm:pb-28"
+      }`}
+    >
       {background}
       <div className="mx-auto max-w-230 text-center">{children}</div>
     </section>
   );
 }
 
-/** The video pill with the demo and WhatsApp pair beneath it. */
-export function HeroActions() {
+/** The video pill with the demo and WhatsApp pair beneath it. The homepage drops the pill
+    because it shows the film in place under the hero. */
+export function HeroActions({ videoButton = true }: Readonly<{ videoButton?: boolean }>) {
   return (
     <>
-      <ProductVideoModal />
+      {videoButton && <ProductVideoModal />}
 
       {/* Equal widths, so the pair mirrors about the same centre line as the pill above. */}
-      <div className="mx-auto mt-5 grid w-full max-w-104 grid-cols-2 gap-3 sm:mt-6">
+      <div
+        className={`mx-auto grid w-full max-w-104 grid-cols-2 gap-3 ${videoButton ? "mt-5 sm:mt-6" : ""}`}
+      >
         <BookDemoCta
           onDark
           className="w-full justify-center rounded-full! px-0! max-sm:gap-1.5 max-sm:text-[15.5px]"

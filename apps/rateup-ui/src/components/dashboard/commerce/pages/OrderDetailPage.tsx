@@ -39,14 +39,13 @@ import {
   refundShopReturn,
   updateShopReturn,
   type ShippingQuote,
-  type ShopFulfillmentStatus,
+  type ShopSettableFulfillmentStatus,
   type ShopOrderDetail,
   type ShopReturn,
 } from "@/backend/commerce/shop.api";
 import {
   useInvalidateShop,
   useShopOrder,
-  useShopPayments,
   useShopShippingProviders,
 } from "@/backend/commerce/shop.query";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
@@ -79,14 +78,18 @@ import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
-import { getApiErrorMessage } from "@/utils/apiError.ts";
+import { getApiErrorData, getApiErrorMessage } from "@/utils/apiError.ts";
+import { copyToClipboard } from "@/utils/whatsappLink.ts";
 
+import { useOrderLimitToast } from "../shop/OrderLimit.tsx";
 import {
   channelLabel,
   customerName,
   fulfillmentBadge,
   fulfillmentStatusBadge,
+  isRefundAmountValid,
   nextStepLabel,
+  parseAmountInput,
   paymentBadge,
   SHOP_PATHS,
 } from "../shop/shopMeta.ts";
@@ -160,32 +163,49 @@ function OrderDetail({ order }: Readonly<{ order: ShopOrderDetail }>) {
   const paid = order.paymentStatus === "PAID" || order.paymentStatus === "PARTIALLY_REFUNDED";
   const [refundOpen, setRefundOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
-  const { data: payments } = useShopPayments();
-  const hasProvider = Boolean(payments?.providers.some((p) => p.connected));
   const openSettings = useOpenShopSettings();
+  const orderLimitToast = useOrderLimitToast();
 
   const sendLink = useOrderAction(
     () => sendShopPaymentLink(order.id),
     t("Payment link created"),
-    (result) => {
-      if (!result.delivered) {
-        void navigator.clipboard.writeText(result.url);
+    async (result) => {
+      if (result.delivered) return;
+      const reason = result.deliveryError ?? t("chat closed");
+      // Safari refuses a clipboard write that follows a request, so this can fail.
+      if (await copyToClipboard(result.url)) {
         toast.warning(
           t(
             "The link could not be sent in chat ({reason}). It is copied, so you can paste it to the customer.",
-            {
-              reason: result.deliveryError ?? t("chat closed"),
-            },
+            { reason },
           ),
         );
+        return;
       }
+      toast.warning(
+        t("The link could not be sent in chat ({reason}). Copy it and paste it to the customer.", {
+          reason,
+        }),
+        {
+          description: result.url,
+          duration: Infinity,
+          action: { label: t("Copy link"), onClick: () => void copyToClipboard(result.url) },
+        },
+      );
     },
-    (e) =>
-      hasProvider
-        ? toast.error(getApiErrorMessage(e, t("Could not send the payment link")))
-        : toast.error(t("Connect Stripe or Razorpay in Commerce → Settings → Getting paid"), {
+    (e) => {
+      if (orderLimitToast(e)) return;
+      if (getApiErrorData(e)?.code === "PAYMENT_UNAVAILABLE") {
+        toast.error(
+          getApiErrorMessage(e, t("Connect Stripe or Razorpay to take payments online")),
+          {
             action: { label: t("Open Getting paid"), onClick: () => openSettings("payments") },
-          }),
+          },
+        );
+        return;
+      }
+      toast.error(getApiErrorMessage(e, t("Could not send the payment link")));
+    },
   );
   const invalidateAll = useInvalidateShop();
   const confirmCod = useOrderAction(() => confirmShopCod(order.id), t("Cash order confirmed"));
@@ -239,8 +259,8 @@ function OrderDetail({ order }: Readonly<{ order: ShopOrderDetail }>) {
 
   const copyCheckout = async () => {
     if (!order.checkoutUrl) return;
-    await navigator.clipboard.writeText(order.checkoutUrl);
-    toast.success(t("Checkout link copied"));
+    if (await copyToClipboard(order.checkoutUrl)) toast.success(t("Checkout link copied"));
+    else toast.error(t("Could not copy"), { description: order.checkoutUrl });
   };
 
   const canSell = can("commerce.sell");
@@ -254,7 +274,6 @@ function OrderDetail({ order }: Readonly<{ order: ShopOrderDetail }>) {
     <ShopPage
       title={t("Order #{number}", { number: order.number })}
       back={{ to: SHOP_PATHS.orders, label: t("Orders") }}
-      wide
       badges={
         <>
           <ToneBadge tone={pay.tone}>{pay.label}</ToneBadge>
@@ -315,7 +334,9 @@ function OrderDetail({ order }: Readonly<{ order: ShopOrderDetail }>) {
               )}
               {order.externalAdminUrl && (
                 <DropdownMenuItem
-                  onClick={() => window.open(order.externalAdminUrl ?? "", "_blank", "noopener")}
+                  render={
+                    <a href={order.externalAdminUrl} target="_blank" rel="noopener noreferrer" />
+                  }
                 >
                   <IconExternalLink />
                   {t("Open in {store}", {
@@ -343,7 +364,13 @@ function OrderDetail({ order }: Readonly<{ order: ShopOrderDetail }>) {
               )}
               {order.checkoutUrl && order.status !== "DRAFT" && !invoiceable && (
                 <DropdownMenuItem
-                  onClick={() => window.open(`${order.checkoutUrl}/invoice`, "_blank", "noopener")}
+                  render={
+                    <a
+                      href={`${order.checkoutUrl}/invoice`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    />
+                  }
                 >
                   <IconFileInvoice />
                   {t("Open invoice")}
@@ -502,7 +529,7 @@ function ItemsSection({ order }: Readonly<{ order: ShopOrderDetail }>) {
   );
 }
 
-const QUICK_STATUSES: ShopFulfillmentStatus[] = [
+const QUICK_STATUSES: ShopSettableFulfillmentStatus[] = [
   "PACKED",
   "OUT_FOR_DELIVERY",
   "DELIVERED",
@@ -515,7 +542,7 @@ function FulfillmentSection({ order }: Readonly<{ order: ShopOrderDetail }>) {
   const { data: providers } = useShopShippingProviders();
   const easypost = providers?.easypost.connected ?? false;
   const setStatus = useMutation({
-    mutationFn: (status: ShopFulfillmentStatus) => setShopFulfillment(order.id, status),
+    mutationFn: (status: ShopSettableFulfillmentStatus) => setShopFulfillment(order.id, status),
     onSuccess: () => {
       toast.success(t("Order updated. The customer gets a message if that update is switched on."));
       void invalidate();
@@ -1018,7 +1045,8 @@ function ReturnsSection({
   const invalidate = useInvalidateShop();
   const [refundFor, setRefundFor] = useState<ShopReturn | null>(null);
   const [amount, setAmount] = useState("");
-  const [restock, setRestock] = useState(true);
+  const [keepInStock, setKeepInStock] = useState<Record<string, boolean>>({});
+  const restockFor = (id: string) => keepInStock[id] ?? true;
   const act = useMutation({
     mutationFn: (args: {
       id: string;
@@ -1037,6 +1065,9 @@ function ReturnsSection({
     onError: (e) => toast.error(getApiErrorMessage(e, t("Could not update the return"))),
   });
   const itemTitle = (id: string) => order.items.find((i) => i.id === id)?.title ?? t("Item");
+  const returnMax =
+    refundFor?.refundAmount != null ? toMoney(refundFor.refundAmount) : orderRefundable(order);
+  const returnAmountValid = isRefundAmountValid(amount, returnMax);
 
   return (
     <ShopSection title={t("Returns")}>
@@ -1077,14 +1108,27 @@ function ReturnsSection({
                     </>
                   )}
                   {r.status === "APPROVED" && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={act.isPending}
-                      onClick={() => act.mutate({ id: r.id, action: "receive" })}
-                    >
-                      {t("Mark received")}
-                    </Button>
+                    <>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={act.isPending}
+                        onClick={() =>
+                          act.mutate({ id: r.id, action: "receive", restock: restockFor(r.id) })
+                        }
+                      >
+                        {t("Mark received")}
+                      </Button>
+                      <Label className="flex items-center gap-2 text-xs font-normal">
+                        <Checkbox
+                          checked={restockFor(r.id)}
+                          onCheckedChange={(checked) =>
+                            setKeepInStock((prev) => ({ ...prev, [r.id]: checked }))
+                          }
+                        />
+                        {t("Put the items back in stock")}
+                      </Label>
+                    </>
                   )}
                   {(r.status === "APPROVED" || r.status === "RECEIVED") &&
                     can("commerce.payments.manage") && (
@@ -1106,11 +1150,15 @@ function ReturnsSection({
         })}
       </ul>
       <Dialog open={refundFor !== null} onOpenChange={(open) => !open && setRefundFor(null)}>
+        {/* Refunding a return never restocks; receiving it does. */}
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>{t("Refund this return")}</DialogTitle>
             <DialogDescription>
-              {t("Leave the amount empty to refund the returned items in full.")}
+              {t(
+                "Up to {amount} can be refunded. Leave the amount empty to refund the returned items in full.",
+                { amount: formatMoney(returnMax, order.currency) },
+              )}
             </DialogDescription>
           </DialogHeader>
           <Field>
@@ -1121,25 +1169,22 @@ function ReturnsSection({
               id="return-refund"
               inputMode="decimal"
               value={amount}
+              aria-invalid={!returnAmountValid}
               onChange={(e) => setAmount(e.target.value)}
             />
           </Field>
-          <Label className="flex items-center gap-2 font-normal">
-            <Checkbox checked={restock} onCheckedChange={setRestock} />
-            {t("Put the items back in stock")}
-          </Label>
           <DialogFooter>
             <Button
               loading={act.isPending}
-              onClick={() =>
-                refundFor &&
+              disabled={!returnAmountValid}
+              onClick={() => {
+                if (!refundFor || !returnAmountValid) return;
                 act.mutate({
                   id: refundFor.id,
                   action: "refund",
-                  refundAmount: amount.trim() ? Number(amount) : null,
-                  restock,
-                })
-              }
+                  refundAmount: parseAmountInput(amount),
+                });
+              }}
             >
               {t("Refund")}
             </Button>
@@ -1164,7 +1209,7 @@ function NoteSection({
     <ShopSection title={t("Staff note")} description={t("Only your team sees this.")}>
       {order.note && (
         <p className="mb-3 rounded-lg bg-muted p-3 text-sm">
-          <span className="font-semibold">{t("From the customer:")}</span> {order.note}
+          <span className="font-semibold">{t("From the customer")}</span> — {order.note}
         </p>
       )}
       <Textarea
@@ -1191,22 +1236,23 @@ function NoteSection({
   );
 }
 
+const orderRefundable = (order: ShopOrderDetail) =>
+  toMoney(order.total) - order.payments.reduce((s, p) => s + toMoney(p.refundedAmount), 0);
+
 function RefundDialog({
   order,
   open,
   onOpenChange,
 }: Readonly<{ order: ShopOrderDetail; open: boolean; onOpenChange: (open: boolean) => void }>) {
   const { t } = useTranslation();
-  const refundable =
-    toMoney(order.total) - order.payments.reduce((s, p) => s + toMoney(p.refundedAmount), 0);
+  const refundable = orderRefundable(order);
   const [amount, setAmount] = useState("");
   const refund = useOrderAction(
-    () => refundShopOrder(order.id, amount.trim() ? Number(amount) : null),
+    () => refundShopOrder(order.id, parseAmountInput(amount)),
     t("Refund started"),
     () => onOpenChange(false),
   );
-  const value = Number(amount);
-  const valid = amount.trim() === "" || (value > 0 && value <= refundable);
+  const valid = isRefundAmountValid(amount, refundable);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm">

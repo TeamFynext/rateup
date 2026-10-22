@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 
 import { SHOP_PATHS, type SettingsTab, type Tone } from "./shopMeta.ts";
 
-/** The page frame every shop screen shares: the commerce layout bleeds to the edge, so this pads it back. */
+/** The page frame every shop screen shares. */
 export function ShopPage({
   title,
   description,
@@ -25,7 +25,6 @@ export function ShopPage({
   back,
   badges,
   children,
-  wide,
 }: Readonly<{
   title: string;
   description?: ReactNode;
@@ -33,31 +32,28 @@ export function ShopPage({
   back?: { to: string; label: string };
   /** Status chips beside the title, for a detail page. */
   badges?: ReactNode;
-  wide?: boolean;
   children: ReactNode;
 }>) {
   return (
-    <div className="px-4 py-6 sm:px-6">
-      <div className={cn("mx-auto flex w-full flex-col gap-5", wide ? "max-w-300" : "max-w-265")}>
-        {back ? <BackLink to={back.to} label={back.label} /> : null}
-        <PageHeading
-          title={title}
-          description={
-            badges ? (
-              <span className="flex flex-wrap items-center gap-2">
-                {badges}
-                {description ? <span>{description}</span> : null}
-              </span>
-            ) : (
-              description
-            )
-          }
-          actions={
-            actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null
-          }
-        />
-        {children}
-      </div>
+    <div className="mx-auto flex w-full max-w-265 flex-col gap-5">
+      {back ? <BackLink to={back.to} label={back.label} /> : null}
+      <PageHeading
+        title={title}
+        description={
+          badges ? (
+            <span className="flex flex-wrap items-center gap-2">
+              {badges}
+              {description ? <span>{description}</span> : null}
+            </span>
+          ) : (
+            description
+          )
+        }
+        actions={
+          actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null
+        }
+      />
+      {children}
     </div>
   );
 }
@@ -117,10 +113,10 @@ export function syncExplanation(
       return t("Publishing to your Meta catalog. This usually takes under a minute.");
     case "REJECTED":
       return error
-        ? t("Rejected by Meta: {reason}", { reason: error })
+        ? t("Rejected by Meta — {reason}", { reason: error })
         : t("Rejected by Meta. Open the product to see why.");
     case "HIDDEN":
-      return t("Hidden from the catalog: it is off for this channel, a draft or sold out.");
+      return t("Hidden from the catalog because it is off for this channel, a draft or sold out.");
     case "NOT_SYNCED":
       return t(
         "Not on WhatsApp yet. Connect your Meta catalog in Commerce → Settings → Store, then publish again.",

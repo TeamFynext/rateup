@@ -119,22 +119,30 @@ export interface ResolvedBagLine extends BagLine {
   lineTotal: number;
 }
 
-/** Joins the bag to the live catalog; lines whose product left the shop or sold out are dropped. */
+/**
+ * Joins the bag to the live catalog. Lines whose product left the shop or sold out are left
+ * out and listed in `dropped`, so the shopper can be told.
+ */
 export function resolveBag(
   lines: readonly BagLine[],
   products: readonly StorefrontProduct[],
-): { lines: ResolvedBagLine[]; count: number; total: number } {
+): { lines: ResolvedBagLine[]; count: number; total: number; dropped: BagLine[] } {
   const resolved: ResolvedBagLine[] = [];
+  const dropped: BagLine[] = [];
   for (const line of lines) {
     const product = products.find((p) => p.id === line.productId);
     const variant = product?.variants.find((v) => v.id === line.variantId);
-    if (!product || !variant || variant.soldOut) continue;
+    if (!product || !variant || variant.soldOut) {
+      dropped.push(line);
+      continue;
+    }
     resolved.push({ ...line, product, variant, lineTotal: variant.price * line.quantity });
   }
   return {
     lines: resolved,
     count: resolved.reduce((sum, l) => sum + l.quantity, 0),
     total: resolved.reduce((sum, l) => sum + l.lineTotal, 0),
+    dropped,
   };
 }
 
@@ -156,6 +164,13 @@ export function whatsappOrderLink(
     const label = variantLabel(l.variant);
     return `• ${l.quantity} × ${l.product.title}${label ? ` (${label})` : ""}`;
   });
-  const text = [intro, "", ...items, "", totalLine].join("\n");
-  return `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(text)}`;
+  return whatsappLink(whatsappNumber, [intro, "", ...items, "", totalLine].join("\n"));
+}
+
+/** A wa.me chat with the shop, optionally with a message ready to send. */
+export function whatsappLink(whatsappNumber: string, text?: string): string {
+  const digits = whatsappNumber.replace(/\D/g, "");
+  return text
+    ? `https://wa.me/${digits}?text=${encodeURIComponent(text)}`
+    : `https://wa.me/${digits}`;
 }

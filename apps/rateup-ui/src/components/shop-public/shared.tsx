@@ -1,4 +1,4 @@
-import { IconBuildingStore, IconMinus, IconPlus } from "@tabler/icons-react";
+import { IconBrandWhatsapp, IconBuildingStore, IconMinus, IconPlus } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import { formatMoney } from "@/backend/commerce/shop.api";
@@ -11,6 +11,57 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty.tsx";
 import { cn } from "@/lib/utils.ts";
+
+import { whatsappLink } from "./catalog.ts";
+
+/** Widens a small control's tap area to 44px without changing how it looks. */
+export const TAP_AREA = "relative after:absolute after:-inset-1.5 after:content-['']";
+
+/**
+ * "Message the shop" on WhatsApp, wherever the copy tells the shopper to get in touch.
+ * Renders nothing when the shop has no WhatsApp number.
+ */
+export function MessageShopButton({
+  whatsappNumber,
+  text,
+  label,
+  variant = "outline",
+  className,
+}: Readonly<{
+  whatsappNumber: string | null | undefined;
+  /** Prefilled, so the shop knows which order or problem the message is about. */
+  text?: string;
+  label?: string;
+  variant?: "outline" | "default" | "ghost";
+  className?: string;
+}>) {
+  const { t } = useTranslation();
+  if (!whatsappNumber) return null;
+  return (
+    <Button
+      variant={variant}
+      className={cn("h-11 rounded-xl", className)}
+      render={<a href={whatsappLink(whatsappNumber, text)} target="_blank" rel="noreferrer" />}
+    >
+      <IconBrandWhatsapp />
+      {label ?? t("Message the shop")}
+    </Button>
+  );
+}
+
+/** Whether dark text reads better than white on this hex colour (WCAG relative luminance). */
+export function prefersDarkText(hex: string | null | undefined): boolean {
+  const match = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(hex?.trim() ?? "");
+  if (!match) return false;
+  const digits = match[1].length === 3 ? [...match[1]].map((c) => c + c).join("") : match[1];
+  const [r, g, b] = [0, 2, 4].map((i) => {
+    const c = Number.parseInt(digits.slice(i, i + 2), 16) / 255;
+    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  // The luminance where white and near-black text have equal contrast.
+  return luminance > 0.179;
+}
 
 export function StoreAvatar({
   name,
@@ -96,13 +147,15 @@ export function QuantityStepper({
 }>) {
   const { t } = useTranslation();
   const buttonSize = size === "sm" ? "icon-xs" : "icon-sm";
+  const tap =
+    size === "sm" ? "relative after:absolute after:-inset-2.5 after:content-['']" : TAP_AREA;
   return (
     <div className="inline-flex items-center gap-1 rounded-full border border-border p-0.5">
       <Button
         type="button"
         variant="ghost"
         size={buttonSize}
-        className="rounded-full"
+        className={cn("rounded-full", tap)}
         aria-label={t("Fewer {item}", { item: label })}
         disabled={value <= min}
         onClick={() => onChange(value - 1)}
@@ -119,7 +172,7 @@ export function QuantityStepper({
         type="button"
         variant="ghost"
         size={buttonSize}
-        className="rounded-full"
+        className={cn("rounded-full", tap)}
         aria-label={t("More {item}", { item: label })}
         disabled={value >= max}
         onClick={() => onChange(value + 1)}

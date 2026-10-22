@@ -356,10 +356,13 @@ function ProductsStep({ store, count }: Readonly<{ store: ShopStore; count: numb
     onSuccess: (res) => {
       toast.success(
         res.skipped.length
-          ? t("{created} products added, {skipped} rows skipped", {
-              created: res.created,
-              skipped: res.skipped.length,
-            })
+          ? t(
+              "{created, plural, one {# product added} other {# products added}}, {skipped, plural, one {# row skipped} other {# rows skipped}}",
+              {
+                created: res.created,
+                skipped: res.skipped.length,
+              },
+            )
           : t("{count, plural, one {# product added} other {# products added}}", {
               count: res.created,
             }),
@@ -372,11 +375,14 @@ function ProductsStep({ store, count }: Readonly<{ store: ShopStore; count: numb
     mutationFn: syncShopFromConnectedStore,
     onSuccess: (result) => {
       toast.success(
-        t("Synced {total} products: {created} new, {updated} updated", {
-          total: result.total,
-          created: result.created,
-          updated: result.updated,
-        }),
+        t(
+          "Synced {total, plural, one {# product} other {# products}} — {created} new, {updated} updated",
+          {
+            total: result.total,
+            created: result.created,
+            updated: result.updated,
+          },
+        ),
       );
       void invalidate();
     },
@@ -445,6 +451,7 @@ function ProductsStep({ store, count }: Readonly<{ store: ShopStore; count: numb
 
 function PaymentsStep({ store }: Readonly<{ store: ShopStore }>) {
   const { t } = useTranslation();
+  const canManage = useCan("commerce.payments.manage");
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm text-muted-foreground">
@@ -453,7 +460,9 @@ function PaymentsStep({ store }: Readonly<{ store: ShopStore }>) {
         )}
       </p>
       <GatewayCards store={store} />
-      <OfflinePaymentCards store={store} />
+      <fieldset disabled={!canManage} className="flex min-w-0 flex-col gap-4">
+        <OfflinePaymentCards store={store} />
+      </fieldset>
       <Link
         {...settingsTab("payments")}
         className="w-fit text-sm font-semibold text-primary hover:underline"

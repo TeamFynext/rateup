@@ -214,6 +214,30 @@ export function CheckIcon({ className = "size-4" }: Readonly<{ className?: strin
   );
 }
 
+const STAR = "M12 2.5l2.9 6 6.6.8-4.9 4.6 1.3 6.5L12 17.2l-5.9 3.2 1.3-6.5L2.5 9.3l6.6-.8z";
+
+/** The centred section label: a caption between two stars, with hairlines fading out. */
+export function StarLabel({
+  children,
+  className = "mb-5.5",
+}: Readonly<{ children: ReactNode; className?: string }>) {
+  return (
+    <p
+      className={`flex items-center justify-center gap-3 font-display text-[13px] font-bold tracking-[0.14em] text-ru-blue-600 uppercase sm:text-[14px] ${className}`}
+    >
+      <span className="h-px w-10 bg-linear-to-r from-transparent to-ru-blue-300 sm:w-16" />
+      <svg viewBox="0 0 24 24" className="size-4 fill-ru-star-top" aria-hidden="true">
+        <path d={STAR} />
+      </svg>
+      {children}
+      <svg viewBox="0 0 24 24" className="size-4 fill-ru-star-top" aria-hidden="true">
+        <path d={STAR} />
+      </svg>
+      <span className="h-px w-10 bg-linear-to-l from-transparent to-ru-blue-300 sm:w-16" />
+    </p>
+  );
+}
+
 /** The pill that labels each band — a bordered icon disc plus an uppercase caption. */
 export function Eyebrow({
   icon,

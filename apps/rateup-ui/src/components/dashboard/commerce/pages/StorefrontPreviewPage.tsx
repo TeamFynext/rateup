@@ -19,7 +19,7 @@ export function StorefrontPreviewPage() {
   const back = settingsTab("store");
 
   return (
-    <div className="mx-auto flex w-full max-w-265 flex-col gap-5 px-4 py-6 sm:px-6">
+    <div className="mx-auto flex w-full max-w-265 flex-col gap-5">
       <BackLink to={back.to} search={back.search} label={t("Settings")} />
       <PageHeading
         title={t("Storefront preview")}

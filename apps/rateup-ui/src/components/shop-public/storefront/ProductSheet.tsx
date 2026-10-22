@@ -116,7 +116,7 @@ function ProductDetail({
                     size="sm"
                     aria-pressed={selected}
                     className={cn(
-                      "rounded-full",
+                      "h-11 rounded-full px-4 sm:h-8",
                       !available && !selected && "text-muted-foreground line-through",
                     )}
                     onClick={() =>

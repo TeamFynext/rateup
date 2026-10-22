@@ -1,5 +1,6 @@
 import {
   IconAlertTriangle,
+  IconBrandWhatsapp,
   IconCheck,
   IconCircleCheckFilled,
   IconExternalLink,
@@ -13,6 +14,7 @@ import { useTranslation } from "react-i18next";
 
 import {
   formatMoney,
+  publicInvoiceUrl,
   type PublicCheckout,
   type ShopBankDetails,
   type ShopFulfillmentStatus,
@@ -24,6 +26,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { cn } from "@/lib/utils.ts";
 import { safeHref } from "@/utils/safeHref.ts";
 
+import { MessageShopButton } from "../shared.tsx";
 import { AddressBlock, CheckoutSection, OrderLines, OrderTotals } from "./OrderParts.tsx";
 import { ReturnDialog } from "./ReturnDialog.tsx";
 
@@ -43,7 +46,7 @@ const RETURNABLE: ShopFulfillmentStatus[] = ["SHIPPED", "OUT_FOR_DELIVERY", "DEL
 interface Props {
   token: string;
   checkout: PublicCheckout;
-  /** Only known right after a bank-transfer order is placed; the API does not repeat it. */
+  /** From the placing call, so they show before the page's own query has refetched. */
   bankDetails: ShopBankDetails | null;
 }
 
@@ -52,7 +55,9 @@ export function OrderStatusView({ token, checkout, bankDetails }: Readonly<Props
   const { order, store } = checkout;
   const [returnOpen, setReturnOpen] = useState(false);
   const [returnSent, setReturnSent] = useState(false);
+  const returnOpenAlready = returnSent || Boolean(order.returnRequested);
   const cancelled = order.status === "CANCELLED";
+  const awaitingConfirmation = !cancelled && Boolean(order.awaitingConfirmation);
   const step = STEP_INDEX[order.fulfillmentStatus];
   const steps = [t("Placed"), t("Packed"), t("Shipped"), t("Delivered")];
   const firstName = order.customerName?.split(" ")[0];
@@ -63,18 +68,22 @@ export function OrderStatusView({ token, checkout, bankDetails }: Readonly<Props
         <div className="flex flex-col items-center gap-2 py-2 text-center">
           {cancelled ? (
             <IconAlertTriangle className="size-10 text-destructive" />
+          ) : awaitingConfirmation ? (
+            <IconBrandWhatsapp className="size-10 text-amber-600 dark:text-amber-500" />
           ) : (
             <IconCircleCheckFilled className="size-10 text-green-600" />
           )}
           <h1 className="font-display text-xl font-extrabold">
             {cancelled
               ? t("Order #{number} was cancelled", { number: order.number })
-              : firstName
-                ? t("Thanks, {name}! Order #{number} is confirmed", {
-                    name: firstName,
-                    number: order.number,
-                  })
-                : t("Thanks! Order #{number} is confirmed", { number: order.number })}
+              : awaitingConfirmation
+                ? t("Order #{number} is placed. Confirm it on WhatsApp", { number: order.number })
+                : firstName
+                  ? t("Thanks, {name}! Order #{number} is confirmed", {
+                      name: firstName,
+                      number: order.number,
+                    })
+                  : t("Thanks! Order #{number} is confirmed", { number: order.number })}
           </h1>
           {order.placedAt && (
             <p className="text-sm text-muted-foreground">
@@ -82,6 +91,14 @@ export function OrderStatusView({ token, checkout, bankDetails }: Readonly<Props
             </p>
           )}
           <PaymentBadge status={order.paymentStatus} method={order.paymentMethod} />
+          {awaitingConfirmation && (
+            <p className="text-sm">
+              {t(
+                "{store} sent you a WhatsApp message. Tap Confirm order there and they'll start packing.",
+                { store: store.name },
+              )}
+            </p>
+          )}
         </div>
       </CheckoutSection>
 
@@ -178,12 +195,25 @@ export function OrderStatusView({ token, checkout, bankDetails }: Readonly<Props
       )}
 
       <div className="flex flex-wrap gap-2">
-        <Button variant="outline" render={<Link to="/c/$token/invoice" params={{ token }} />}>
-          <IconFileInvoice />
-          {t("View invoice")}
-        </Button>
-        {RETURNABLE.includes(order.fulfillmentStatus) && !returnSent && (
-          <Button variant="outline" onClick={() => setReturnOpen(true)}>
+        {checkout.invoiceAvailable && (
+          <Button
+            variant="outline"
+            className="h-11 rounded-xl"
+            render={<a href={publicInvoiceUrl(token)} target="_blank" rel="noreferrer" />}
+          >
+            <IconFileInvoice />
+            {t("Download invoice")}
+          </Button>
+        )}
+        <MessageShopButton
+          whatsappNumber={store.whatsappNumber}
+          text={t("Hi {store}, I have a question about my order #{number}.", {
+            store: store.name,
+            number: order.number,
+          })}
+        />
+        {RETURNABLE.includes(order.fulfillmentStatus) && !returnOpenAlready && (
+          <Button variant="outline" className="h-11 rounded-xl" onClick={() => setReturnOpen(true)}>
             <IconReceiptRefund />
             {t("Request a return")}
           </Button>
@@ -191,13 +221,14 @@ export function OrderStatusView({ token, checkout, bankDetails }: Readonly<Props
         {store.storefrontEnabled && (
           <Button
             variant="ghost"
+            className="h-11 rounded-xl"
             render={<Link to="/s/$slug" params={{ slug: store.slug }} search={{}} />}
           >
             {t("Back to the shop")}
           </Button>
         )}
       </div>
-      {returnSent && (
+      {returnOpenAlready && (
         <Alert>
           <IconCheck className="text-green-600" />
           <AlertTitle>{t("Return requested")}</AlertTitle>

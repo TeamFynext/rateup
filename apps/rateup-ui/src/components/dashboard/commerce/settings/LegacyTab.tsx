@@ -19,7 +19,7 @@ export function LegacyTab() {
       <ShopSection
         title={t("WhatsApp catalog tools")}
         description={t(
-          "From before Commerce had its own products: manage items straight in the Meta catalog and see orders sent from the catalog cart. New shops don't need these.",
+          "From before Commerce had its own products. Manage items straight in the Meta catalog and see orders sent from the catalog cart. New shops don't need these.",
         )}
       >
         <div className="flex flex-wrap gap-2">

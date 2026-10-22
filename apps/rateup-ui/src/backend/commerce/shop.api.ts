@@ -36,6 +36,11 @@ export type ShopFulfillmentStatus =
   | "FAILED_DELIVERY"
   | "RETURNED"
   | "CANCELLED";
+/** What staff may set; RETURNED and CANCELLED follow a return or a cancellation (fulfillmentSchema). */
+export type ShopSettableFulfillmentStatus = Exclude<
+  ShopFulfillmentStatus,
+  "RETURNED" | "CANCELLED"
+>;
 export type ShopDiscountType = "PERCENTAGE" | "FIXED" | "FREE_SHIPPING" | "BUY_X_GET_Y";
 export type ShopDiscountState = "ACTIVE" | "SCHEDULED" | "ENDS_SOON" | "ENDED" | "USED_UP" | "OFF";
 export type PaymentProviderId = "stripe" | "razorpay";
@@ -418,8 +423,8 @@ export interface ShopOrder {
   /** When the sale reached Meta's Conversions API as a Purchase for the ad click. */
   adConversionSentAt?: string | null;
   invoiceNumber: string | null;
-  /** Whether the PDF exists; its link is fetched on demand because it expires. */
-  hasInvoice: boolean;
+  /** Whether the PDF exists; its link is fetched on demand because it expires. Not in lists. */
+  hasInvoice?: boolean;
   invoiceIssuedAt: string | null;
   invoiceSentAt: string | null;
   /** Paid, but stock, a coupon or points ran out before it placed; staff should look. */
@@ -826,16 +831,18 @@ export const getShopOrders = (query: ShopOrderQuery) =>
   );
 export const getShopOrder = (id: string) => get<ShopOrderDetail>(`${BASE}/orders/${id}`);
 export const createShopOrder = (data: CreateShopOrderInput) =>
-  post<{ order: ShopOrderDetail; delivery: { sent: boolean; url?: string } }>(
-    `${BASE}/orders`,
-    data,
-  );
+  post<{
+    order: ShopOrderDetail;
+    /** `url` is the checkout link, whether or not it reached the chat. */
+    delivery: { sent: boolean; url: string };
+  }>(`${BASE}/orders`, data);
 export const sendShopPaymentLink = (id: string) =>
   post<PaymentLinkResult>(`${BASE}/orders/${id}/payment-link`);
-export const sendShopCheckoutLink = (id: string) =>
-  post<{ sent: boolean; reason?: string }>(`${BASE}/orders/${id}/checkout-link`);
-export const setShopFulfillment = (id: string, status: ShopFulfillmentStatus, note?: string) =>
-  post<ShopOrder>(`${BASE}/orders/${id}/fulfillment`, { status, note });
+export const setShopFulfillment = (
+  id: string,
+  status: ShopSettableFulfillmentStatus,
+  note?: string,
+) => post<ShopOrder>(`${BASE}/orders/${id}/fulfillment`, { status, note });
 export const addShopShipment = (
   id: string,
   data: { carrier?: string | null; trackingNumber?: string | null; trackingUrl?: string | null },
@@ -1000,6 +1007,8 @@ export interface Storefront {
     /** Digits only, for wa.me links. */
     whatsappNumber: string | null;
     instagramUrl: string | null;
+    /** False once the shop's plan has taken this month's orders. */
+    acceptingOrders?: boolean;
     highlight: {
       code: string;
       type: ShopDiscountType;
@@ -1056,6 +1065,10 @@ export interface PublicOrder {
   } | null;
   placedAt: string | null;
   paidAt: string | null;
+  /** A cash order the shopper still has to confirm on WhatsApp. */
+  awaitingConfirmation?: boolean;
+  /** A return the shopper asked for that the shop hasn't closed yet. */
+  returnRequested?: boolean;
 }
 
 export interface PublicCheckout {
@@ -1070,8 +1083,16 @@ export interface PublicCheckout {
     chargesDelivery?: boolean;
     storefrontEnabled: boolean;
     pricesIncludeTax: boolean;
+    /** Digits only, for wa.me links. */
+    whatsappNumber?: string | null;
+    /** False once the shop's plan has taken this month's orders. */
+    acceptingOrders?: boolean;
   };
   order: PublicOrder;
+  /** The draft passed its expiry, or was swept as abandoned. */
+  checkoutExpired?: boolean;
+  /** A real invoice PDF exists at `publicInvoiceUrl(token)`. */
+  invoiceAvailable?: boolean;
   /** Set while a bank-transfer order waits for the money. */
   bankDetails: ShopBankDetails | null;
   shippingRates: {
@@ -1167,6 +1188,9 @@ export const payPublicCheckout = (token: string, method: "online" | "cod" | "ban
 /** Creates the order in the shop's Shopify or WooCommerce store (once) and returns its page. */
 export const startPublicStoreCheckout = (token: string) =>
   post<{ url: string }>(`${PUBLIC}/checkout/${encodeURIComponent(token)}/store`);
+/** Redirects to the order's invoice PDF. */
+export const publicInvoiceUrl = (token: string) =>
+  `${import.meta.env.VITE_API_URL}/api${PUBLIC}/checkout/${encodeURIComponent(token)}/invoice`;
 export const requestPublicReturn = (
   token: string,
   data: {
@@ -1176,12 +1200,15 @@ export const requestPublicReturn = (
   },
 ) => post<{ ok: true }>(`${PUBLIC}/checkout/${encodeURIComponent(token)}/returns`, data);
 
-/** "$ 24.00"-style display that works for any ISO currency. */
-export function formatMoney(value: Money | null | undefined, currency: string, locale?: string) {
+/**
+ * "$24.00"-style display for any ISO currency, with the currency's own decimals. A fixed
+ * locale, because the public pages render on the server too and must hydrate identically.
+ */
+export function formatMoney(value: Money | null | undefined, currency: string, locale = "en") {
   try {
     return new Intl.NumberFormat(locale, { style: "currency", currency }).format(toMoney(value));
   } catch {
-    return `${currency} ${toMoney(value).toFixed(2)}`;
+    return `${currency} ${toMoney(value).toLocaleString("en", { maximumFractionDigits: 2 })}`;
   }
 }
 

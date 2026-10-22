@@ -23,6 +23,7 @@ const PROTECTED_ROUTE_FEATURE_MAP: Array<[string, TeamFeature]> = [
   ["/dashboard/contacts", TeamFeature.Contacts],
   ["/dashboard/campaign", TeamFeature.Campaigns],
   ["/dashboard/loyalty", TeamFeature.Loyalty],
+  ["/dashboard/commerce", TeamFeature.Commerce],
   ["/dashboard/pipeline", TeamFeature.Pipeline],
   ["/dashboard/surveys", TeamFeature.WebForms],
   ["/dashboard/automation", TeamFeature.Automation],

@@ -11,7 +11,7 @@ import { noindexHead } from "@/lib/metadata.ts";
  * routes so moving between /s/<slug> and /s/<slug>/p/<handle> only opens or closes the product
  * sheet: search, collection and scroll position survive.
  */
-export const Route = createFileRoute("/(public-facing)/s/$slug")({
+export const Route = createFileRoute("/(shop)/s/$slug")({
   loader: async ({ params }) => {
     // Imported here: route options land in the client entry, and the API client is axios.
     const { getStorefront } = await import("@/backend/commerce/shop.api");
@@ -36,7 +36,7 @@ function StorefrontRoute() {
   const navigate = Route.useNavigate();
   const { t } = useTranslation();
   const productMatch = useMatch({
-    from: "/(public-facing)/s/$slug/p/$handle",
+    from: "/(shop)/s/$slug/p/$handle",
     shouldThrow: false,
   });
 

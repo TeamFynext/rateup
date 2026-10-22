@@ -311,3 +311,20 @@ export function signedPercent(value: number, unit = "%"): string {
 export function customerName(t: TFunction, name: string | null | undefined): string {
   return name?.trim() || t("Unknown customer");
 }
+
+/**
+ * A typed money amount, accepting a comma or a dot as the decimal mark ("12,50" is 12.5).
+ * `null` when blank; NaN when it is not a plain number, so a caller never sends it as "full".
+ */
+export function parseAmountInput(raw: string): number | null {
+  const text = raw.trim();
+  if (text === "") return null;
+  if (!/^\d+([.,]\d{1,2})?$/.test(text)) return Number.NaN;
+  return Number(text.replace(",", "."));
+}
+
+/** Whether a typed partial refund can be sent: blank (meaning "all of it") or within `max`. */
+export function isRefundAmountValid(raw: string, max: number): boolean {
+  const value = parseAmountInput(raw);
+  return value === null || (value > 0 && value <= max + 0.009);
+}

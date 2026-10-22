@@ -135,7 +135,7 @@
     "{ms} ms": "{ms} ms",
     "{multiplier}x the base rate": "{multiplier}x le tarif de base",
     "{name} — no logo yet, the poster uses your colour": "{name} — pas encore de logo, l'affiche utilise votre couleur",
-    "{name} · served {count} customers this hour": "{name} · a servi {count} clients cette heure-ci",
+    "{name} · served {count, plural, one {# customer} other {# customers}} this hour": "{name} · a servi {count} clients cette heure-ci",
     "{name} (owner)": "{name} (propriétaire)",
     "{name} +{total}": "{name} +{total}",
     "{name} added": "{name} ajouté",

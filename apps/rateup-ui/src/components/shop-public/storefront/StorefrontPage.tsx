@@ -14,7 +14,7 @@ import { getApiErrorMessage } from "@/utils/apiError.ts";
 import { safeHref } from "@/utils/safeHref.ts";
 
 import { addToBag, matchesSearch, resolveBag, setBagQuantity } from "../catalog.ts";
-import { StoreAvatar } from "../shared.tsx";
+import { MessageShopButton, prefersDarkText, StoreAvatar } from "../shared.tsx";
 import { lastCheckout, rememberCheckout, useBag } from "../useBag.ts";
 import { BagBar } from "./BagBar.tsx";
 import { ProductCard } from "./ProductCard.tsx";
@@ -95,7 +95,7 @@ export function StorefrontPage({
                 variant={collectionId === c.id ? "default" : "outline"}
                 aria-pressed={collectionId === c.id}
                 className={cn(
-                  "h-8.5 shrink-0 rounded-full px-3.5 font-semibold",
+                  "h-11 shrink-0 rounded-full px-4 font-semibold sm:h-9",
                   collectionId === c.id && "bg-foreground text-background hover:bg-foreground/90",
                 )}
                 onClick={() => setCollectionId(c.id)}
@@ -115,6 +115,12 @@ export function StorefrontPage({
                 currency={store.currency}
                 href={productHref?.(product)}
                 inBag={bag.lines.some((l) => l.productId === product.id)}
+                bagQuantity={
+                  bag.lines.find((l) => l.variantId === product.variants[0]?.id)?.quantity ?? 0
+                }
+                onQuantity={(quantity) =>
+                  bag.update((lines) => setBagQuantity(lines, product.variants[0].id, quantity))
+                }
                 onOpen={() => onProductChange(product.id)}
                 onQuickAdd={() =>
                   bag.update((lines) =>
@@ -141,7 +147,20 @@ export function StorefrontPage({
           </Empty>
         )}
 
-        <p className="px-4 pt-10 text-center text-xs text-muted-foreground">
+        <footer className="mx-4 mt-10 flex flex-col items-center gap-3 border-t border-border pt-6 text-center">
+          <p className="text-sm text-muted-foreground">
+            {t(
+              "Orders are sold and sent by {store}. Your contact and delivery details go to {store} so they can fulfil your order.",
+              { store: store.name },
+            )}
+          </p>
+          <MessageShopButton
+            whatsappNumber={store.whatsappNumber}
+            text={t("Hi {store}, I have a question about your shop.", { store: store.name })}
+            label={t("Message {store}", { store: store.name })}
+          />
+        </footer>
+        <p className="px-4 pt-6 text-center text-xs text-muted-foreground">
           {t("Shop powered by")}{" "}
           <a
             href="https://rateup.app"
@@ -174,6 +193,12 @@ export function StorefrontPage({
         }
         onCheckout={() => (preview ? setPreviewCheckout(true) : checkout.mutate())}
         checkingOut={checkout.isPending}
+        acceptingOrders={store.acceptingOrders !== false}
+        droppedCount={resolved.dropped.length}
+        onClearDropped={() => {
+          const gone = new Set(resolved.dropped.map((l) => l.variantId));
+          bag.update((lines) => lines.filter((l) => !gone.has(l.variantId)));
+        }}
         checkoutError={
           previewCheckout
             ? t("This is a preview. Shoppers can check out once your storefront is on.")
@@ -197,11 +222,14 @@ function StoreHero({ storefront }: Readonly<{ storefront: Storefront }>) {
   const title = banner?.title || store.name;
   const subtitle = banner?.subtitle || store.description;
   const eyebrow = banner?.eyebrow || (title !== store.name ? store.name : undefined);
+  // A photo is darkened behind the text, so only a plain accent background can be light.
+  const dark = !banner?.imageUrl && prefersDarkText(store.theme?.accent);
 
   return (
     <header
       className={cn(
         "relative mx-4 mt-4 overflow-hidden rounded-2xl bg-ru-blue-900 text-white",
+        dark && "text-ru-blue-950",
         banner?.imageUrl && "flex min-h-52 flex-col justify-end sm:min-h-60",
       )}
       style={store.theme?.accent ? { backgroundColor: store.theme.accent } : undefined}
@@ -227,14 +255,23 @@ function StoreHero({ storefront }: Readonly<{ storefront: Storefront }>) {
           )}
           <div className="min-w-0">
             {eyebrow && (
-              <p className="text-[11px] font-bold tracking-[0.08em] text-white/70 uppercase">
+              <p
+                className={cn(
+                  "text-[11px] font-bold tracking-[0.08em] uppercase",
+                  dark ? "text-ru-blue-950/75" : "text-white/70",
+                )}
+              >
                 {eyebrow}
               </p>
             )}
             <h1 className="font-display text-2xl leading-tight font-extrabold">{title}</h1>
           </div>
         </div>
-        {subtitle && <p className="text-sm text-white/80">{subtitle}</p>}
+        {subtitle && (
+          <p className={cn("text-sm", dark ? "text-ru-blue-950/80" : "text-white/80")}>
+            {subtitle}
+          </p>
+        )}
         {(store.whatsappNumber || store.instagramUrl) && (
           <div className="flex flex-wrap gap-2">
             {store.whatsappNumber && (
@@ -242,7 +279,7 @@ function StoreHero({ storefront }: Readonly<{ storefront: Storefront }>) {
                 href={`https://wa.me/${store.whatsappNumber}`}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex h-9.5 items-center gap-1.5 rounded-full bg-wa-green px-4 text-sm font-bold text-ru-blue-950 transition-opacity hover:opacity-90"
+                className="inline-flex h-11 items-center gap-1.5 rounded-full bg-wa-green px-4 text-sm font-bold text-ru-blue-950 transition-opacity hover:opacity-90"
               >
                 <IconBrandWhatsapp className="size-4" />
                 {t("Chat with us")}
@@ -253,7 +290,12 @@ function StoreHero({ storefront }: Readonly<{ storefront: Storefront }>) {
                 href={safeHref(store.instagramUrl)}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex h-9.5 items-center gap-1.5 rounded-full border border-white/30 px-4 text-sm font-semibold transition-colors hover:bg-white/10"
+                className={cn(
+                  "inline-flex h-11 items-center gap-1.5 rounded-full border px-4 text-sm font-semibold transition-colors",
+                  dark
+                    ? "border-ru-blue-950/30 hover:bg-ru-blue-950/10"
+                    : "border-white/30 hover:bg-white/10",
+                )}
               >
                 <IconBrandInstagram className="size-4" />
                 {t("Instagram")}

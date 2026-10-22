@@ -99,7 +99,7 @@ export function ReturnDialog({ token, order, open, onOpenChange, onSent }: Reado
             value={reason}
             maxLength={300}
             onChange={(e) => setReason(e.target.value)}
-            placeholder={t("For example: wrong size, arrived damaged")}
+            placeholder={t("For example, wrong size or arrived damaged")}
           />
         </label>
 

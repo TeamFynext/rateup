@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { isValidPhoneNumber } from "react-phone-number-input";
@@ -19,6 +19,17 @@ import { SIGNUP_COPY, SignupProgress } from "./signup/SignupProgress.tsx";
 import { Step2 } from "./signup/Step2.tsx";
 import { Step3 } from "./signup/Step3.tsx";
 
+function pricingOrgName(stored: string | null): string | undefined {
+  if (!stored) return undefined;
+  try {
+    const parsed: unknown = JSON.parse(stored);
+    if (typeof parsed !== "object" || parsed === null || !("orgName" in parsed)) return undefined;
+    return typeof parsed.orgName === "string" && parsed.orgName ? parsed.orgName : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /**
  * Steps two and three of signup, asked once the account exists: the business, then what
  * RateUp should do first. Every new owner lands here, and the dashboard sends back an owner
@@ -35,8 +46,10 @@ export function BusinessProfileFlow() {
   // An older API omits the flag; only an explicit `false` has anything left to ask.
   const alreadyDone = !!user && user.profileCompleted !== false;
 
+  // Saving refetches the user, which flips `alreadyDone`; the success page must win that race.
+  const submitting = useRef(false);
   useEffect(() => {
-    if (alreadyDone) void navigate({ to: "/dashboard", replace: true });
+    if (alreadyDone && !submitting.current) void navigate({ to: "/dashboard", replace: true });
   }, [alreadyDone, navigate]);
 
   const schema = z.object({
@@ -66,13 +79,13 @@ export function BusinessProfileFlow() {
   });
 
   useEffect(() => {
-    const fromPricing = localStorage.getItem("newUserFromPricingPage");
-    const orgName = fromPricing ? JSON.parse(fromPricing)?.orgName : undefined;
-    if (typeof orgName === "string" && orgName) form.setValue("orgName", orgName);
+    const orgName = pricingOrgName(localStorage.getItem("newUserFromPricingPage"));
+    if (orgName) form.setValue("orgName", orgName);
   }, []);
 
   const handleSubmit = () => {
     const values = form.getValues();
+    submitting.current = true;
     completeProfile.mutate(
       {
         orgName: values.orgName.trim(),
@@ -88,6 +101,7 @@ export function BusinessProfileFlow() {
           void navigate({ to: "/signup/success" });
         },
         onError: (error) => {
+          submitting.current = false;
           toast.error(getApiErrorMessage(error, translations("Couldn't save. Try again.")));
         },
       },

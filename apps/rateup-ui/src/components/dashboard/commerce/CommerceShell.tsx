@@ -1,7 +1,9 @@
 import { IconBook, IconBuildingStore } from "@tabler/icons-react";
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 import { BackLink } from "@/components/common/back-link.tsx";
+import { PageHeading } from "@/components/common/page-heading.tsx";
 import {
   Select,
   SelectContent,
@@ -14,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { useCommerce } from "./CommerceContext";
 
 function StoreSwitcher() {
+  const { t } = useTranslation();
   const { waSettings, selectedSettingId, setSelectedSettingId } = useCommerce();
   if (waSettings.length === 0) return null;
 
@@ -23,17 +26,17 @@ function StoreSwitcher() {
       onValueChange={(value) => setSelectedSettingId(value ?? "")}
       items={waSettings.map((s) => ({
         value: s.id,
-        label: s.phoneDisplayName || s.phone || "Unknown",
+        label: s.phoneDisplayName || s.phone || t("Unknown"),
       }))}
     >
-      <SelectTrigger aria-label="Select store" className="w-[200px]">
+      <SelectTrigger aria-label={t("Select store")} className="w-[200px]">
         <IconBuildingStore className="size-4 text-muted-foreground" data-icon="inline-start" />
-        <SelectValue placeholder="Select store" />
+        <SelectValue placeholder={t("Select store")} />
       </SelectTrigger>
       <SelectContent>
         {waSettings.map((s) => (
           <SelectItem key={s.id} value={s.id}>
-            {s.phoneDisplayName || s.phone || "Unknown"}
+            {s.phoneDisplayName || s.phone || t("Unknown")}
           </SelectItem>
         ))}
       </SelectContent>
@@ -42,6 +45,7 @@ function StoreSwitcher() {
 }
 
 function CatalogSwitcher() {
+  const { t } = useTranslation();
   const { catalogs, catalogId, setCatalogId, connectedCatalogId } = useCommerce();
   if (catalogs.length === 0) return null;
 
@@ -51,16 +55,16 @@ function CatalogSwitcher() {
       onValueChange={(value) => setCatalogId(value ?? "")}
       items={catalogs.map((c) => ({ value: c.catalogId, label: c.name || c.catalogId }))}
     >
-      <SelectTrigger aria-label="Select catalog" className="w-[220px]">
+      <SelectTrigger aria-label={t("Select catalog")} className="w-[220px]">
         <IconBook className="size-4 text-muted-foreground" data-icon="inline-start" />
-        <SelectValue placeholder="Select catalog" />
+        <SelectValue placeholder={t("Select catalog")} />
       </SelectTrigger>
       <SelectContent>
         {catalogs.map((c) => (
           <SelectItem key={c.catalogId} value={c.catalogId}>
             {c.name || c.catalogId}
             {c.catalogId === connectedCatalogId && (
-              <span className="ml-2 text-xs text-muted-foreground">Connected</span>
+              <span className="ml-2 text-xs text-muted-foreground">{t("Connected")}</span>
             )}
           </SelectItem>
         ))}
@@ -87,24 +91,21 @@ export function CommerceShell({
   children: ReactNode;
 }>) {
   return (
-    <div className="flex min-h-full flex-col">
-      <div className="flex min-h-[60px] flex-wrap items-center justify-between gap-4 border-b bg-card px-6 py-3">
-        <div className="flex min-w-0 flex-col gap-1">
-          {back && <BackLink to={back.to} search={back.search} label={back.label} />}
-          <h1 className="text-lg font-bold tracking-tight text-foreground">{title}</h1>
-          {description && <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>}
-        </div>
-        <div className="flex flex-wrap items-center gap-2.5">
-          {showStoreSwitcher && <StoreSwitcher />}
-          {showCatalogSwitcher && <CatalogSwitcher />}
-          {actions}
-        </div>
-      </div>
-
-      <div className="flex-1 px-6 py-6">
-        <div className="mx-auto w-full max-w-[1180px] **:data-[slot=card]:border **:data-[slot=card]:border-border **:data-[slot=card]:bg-card **:data-[slot=card]:shadow-xs **:data-[slot=card]:ring-0">
-          {children}
-        </div>
+    <div className="mx-auto flex w-full max-w-265 flex-col gap-5">
+      {back && <BackLink to={back.to} search={back.search} label={back.label} />}
+      <PageHeading
+        title={title}
+        description={description}
+        actions={
+          <div className="flex flex-wrap items-center gap-2.5">
+            {showStoreSwitcher && <StoreSwitcher />}
+            {showCatalogSwitcher && <CatalogSwitcher />}
+            {actions}
+          </div>
+        }
+      />
+      <div className="**:data-[slot=card]:border **:data-[slot=card]:border-border **:data-[slot=card]:bg-card **:data-[slot=card]:shadow-xs **:data-[slot=card]:ring-0">
+        {children}
       </div>
     </div>
   );

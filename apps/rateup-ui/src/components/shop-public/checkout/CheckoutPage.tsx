@@ -1,15 +1,16 @@
-import { IconRefresh } from "@tabler/icons-react";
+import { IconClockExclamation, IconRefresh } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import type { ShopBankDetails } from "@/backend/commerce/shop.api";
+import type { PublicCheckout, ShopBankDetails } from "@/backend/commerce/shop.api";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { asApiError, getApiErrorMessage } from "@/utils/apiError.ts";
 
-import { ShopUnavailable } from "../shared.tsx";
+import { MessageShopButton, ShopUnavailable } from "../shared.tsx";
 import { clearBag } from "../useBag.ts";
 import { CheckoutForm } from "./CheckoutForm.tsx";
 import { CheckoutHeader } from "./OrderParts.tsx";
@@ -17,11 +18,24 @@ import { OrderStatusView } from "./OrderStatusView.tsx";
 import { StoreRedirect } from "./StoreHandoff.tsx";
 import { publicCheckoutKey, useCheckout } from "./useCheckout.ts";
 
-export function CheckoutPage({ token, justPaid }: Readonly<{ token: string; justPaid: boolean }>) {
+interface Props {
+  token: string;
+  justPaid: boolean;
+  /** Back from the gateway's cancel link. */
+  paymentCancelled?: boolean;
+}
+
+export function CheckoutPage({ token, justPaid, paymentCancelled }: Readonly<Props>) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const { query, saving, typingError, queue, send, flush } = useCheckout(token, justPaid);
+  const { query, saving, typingError, queue, send, flush, confirmingPayment, paymentNotSeen } =
+    useCheckout(token, justPaid);
   const [bankDetails, setBankDetails] = useState<ShopBankDetails | null>(null);
+  const storeName = query.data?.store.name;
+
+  useEffect(() => {
+    if (storeName) document.title = t("Checkout · {store}", { store: storeName });
+  }, [storeName, t]);
 
   if (query.isPending) {
     return (
@@ -64,6 +78,8 @@ export function CheckoutPage({ token, justPaid }: Readonly<{ token: string; just
   }
 
   const checkout = query.data;
+  if (checkout.checkoutExpired) return <ExpiredCheckout checkout={checkout} />;
+
   const placed = checkout.order.status !== "DRAFT";
   const leaving = () => {
     if (checkout.order.channel === "STOREFRONT") clearBag(checkout.store.slug);
@@ -71,6 +87,10 @@ export function CheckoutPage({ token, justPaid }: Readonly<{ token: string; just
   const store = checkout.storeCheckout;
   // Shopify takes it from here; WooCommerce needs the address and delivery picked here first.
   const handOff = !placed && store && !store.collectsDetails;
+  const askForHelp = t("Hi {store}, I tried to pay for order #{number} and need help.", {
+    store: checkout.store.name,
+    number: checkout.order.number,
+  });
 
   return (
     <div className="min-h-dvh bg-muted/40 text-foreground">
@@ -86,13 +106,46 @@ export function CheckoutPage({ token, justPaid }: Readonly<{ token: string; just
           <StoreRedirect token={token} label={store.label} onLeave={leaving} />
         ) : (
           <>
-            {justPaid && (
-              <Alert className="mb-3">
+            {confirmingPayment && (
+              <Alert className="mb-3" role="status">
                 <AlertTitle>{t("Confirming your payment")}</AlertTitle>
+                <AlertDescription>{t("This can take a few seconds.")}</AlertDescription>
+              </Alert>
+            )}
+            {paymentNotSeen && (
+              <Alert className="mb-3" role="status">
+                <IconClockExclamation />
+                <AlertTitle>{t("We haven't received your payment yet")}</AlertTitle>
+                <AlertDescription className="flex flex-col gap-3">
+                  <span>
+                    {t(
+                      "If money has left your account, don't pay again. Check again in a minute, or message {store} and they'll look into it.",
+                      { store: checkout.store.name },
+                    )}
+                  </span>
+                  <span className="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      className="h-11 rounded-xl"
+                      loading={query.isFetching}
+                      onClick={() => query.refetch()}
+                    >
+                      <IconRefresh />
+                      {t("Check again")}
+                    </Button>
+                    <MessageShopButton
+                      whatsappNumber={checkout.store.whatsappNumber}
+                      text={askForHelp}
+                    />
+                  </span>
+                </AlertDescription>
+              </Alert>
+            )}
+            {paymentCancelled && !justPaid && (
+              <Alert className="mb-3" role="status">
+                <AlertTitle>{t("Payment didn't go through")}</AlertTitle>
                 <AlertDescription>
-                  {t(
-                    "This can take a few seconds. If you closed the payment page early, you can pay again below.",
-                  )}
+                  {t("You left the payment page before paying. You can try again below.")}
                 </AlertDescription>
               </Alert>
             )}
@@ -105,6 +158,7 @@ export function CheckoutPage({ token, justPaid }: Readonly<{ token: string; just
               send={send}
               flush={flush}
               saving={saving}
+              payment={confirmingPayment ? "confirming" : paymentNotSeen ? "not_seen" : null}
               saveError={
                 typingError
                   ? getApiErrorMessage(typingError, t("Couldn't save your details. Try again."))
@@ -121,5 +175,46 @@ export function CheckoutPage({ token, justPaid }: Readonly<{ token: string; just
         )}
       </main>
     </div>
+  );
+}
+
+function ExpiredCheckout({ checkout }: Readonly<{ checkout: PublicCheckout }>) {
+  const { t } = useTranslation();
+  const { store, order } = checkout;
+  return (
+    <ShopUnavailable
+      title={t("This checkout link has expired")}
+      description={
+        store.whatsappNumber
+          ? t("Message {store} and they'll send you a new one.", { store: store.name })
+          : t("Ask {store} for a new link, or start again from their shop page.", {
+              store: store.name,
+            })
+      }
+    >
+      <div className="flex flex-col gap-2">
+        <MessageShopButton
+          whatsappNumber={store.whatsappNumber}
+          variant="default"
+          label={t("Message {store} on WhatsApp", { store: store.name })}
+          text={t(
+            "Hi {store}, my checkout link for order #{number} expired. Can you send a new one?",
+            {
+              store: store.name,
+              number: order.number,
+            },
+          )}
+        />
+        {store.storefrontEnabled && (
+          <Button
+            variant="outline"
+            className="h-11 rounded-xl"
+            render={<Link to="/s/$slug" params={{ slug: store.slug }} search={{}} />}
+          >
+            {t("Back to the shop")}
+          </Button>
+        )}
+      </div>
+    </ShopUnavailable>
   );
 }

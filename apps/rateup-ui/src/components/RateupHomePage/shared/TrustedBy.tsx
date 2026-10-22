@@ -2,80 +2,46 @@ import { Image } from "@unpic/react";
 
 import { imagesPath } from "@/utils/constants";
 
-import { CountUp, useReveal } from "./home-ui";
-
 const logos = Array.from({ length: 14 }, (_, i) => `${imagesPath}/homepage/CLIENTS/${i + 1}.png`);
 
-/**
- * Headline numbers. These are the figures the site already claimed — the design's comp
- * carried its own placeholders, so the labels follow the design and the values stay put.
- */
-const METRICS = [
-  { value: "100+", label: "Active clients" },
-  { value: "3×", label: "Engagement vs. email" },
-  { value: "+30%", label: "Retention lift", warm: true },
-  { value: "−65%", label: "Less manual effort" },
-];
+const HAIRLINE = "h-px w-10 flex-none sm:w-20";
 
 export default function TrustedBy() {
-  const [metricsRef, shown] = useReveal<HTMLDivElement>();
-
   return (
     <section id="trusted" className="bg-white">
-      <div className="mx-auto max-w-280 px-5 py-9 sm:py-14">
-        <p className="mx-auto mb-6 text-center font-display text-[clamp(1.25rem,2.4vw,1.6875rem)]/[1.35] font-medium tracking-[-0.02em] text-balance text-ru-n-600 sm:mb-8.5">
-          Trusted by <strong className="font-bold text-ru-n-700">100+ ecommerce brands</strong>{" "}
-          across <strong className="font-bold text-ru-n-700">30+ countries</strong>
+      <div className="mx-auto max-w-280 px-5 pt-8 pb-8 sm:pt-12 sm:pb-12">
+        <p className="mb-7 flex items-center justify-center gap-4 text-center font-display text-[clamp(1.0625rem,2vw,1.3125rem)]/[1.4] font-medium tracking-[-0.01em] text-ru-n-500 sm:mb-10 sm:gap-6">
+          <span className={`${HAIRLINE} bg-linear-to-r from-transparent to-ru-n-200`} />
+          <span className="text-balance">
+            Trusted by <strong className="font-bold text-ru-n-700">100+ brands</strong> in{" "}
+            <strong className="font-bold text-ru-n-700">10+ countries</strong>
+          </span>
+          <span className={`${HAIRLINE} bg-linear-to-l from-transparent to-ru-n-200`} />
         </p>
 
-        <div className="mb-8 overflow-hidden py-1 mask-[linear-gradient(90deg,transparent,#000_6%,#000_94%,transparent)] sm:mb-11">
+        <div className="overflow-hidden mask-[linear-gradient(90deg,transparent,#000_10%,#000_90%,transparent)]">
           {/* Two copies of the rail, so the -50% lap in `ru-marquee` is seamless. */}
-          <div className="flex w-max animate-ru-marquee items-stretch gap-3.5 pr-3.5 hover:paused motion-reduce:animate-none">
+          <ul className="flex w-max animate-ru-marquee list-none items-center p-0 hover:paused motion-reduce:animate-none">
             {[...logos, ...logos].map((logo, i) => (
-              <div
+              <li
                 key={i}
-                className="flex h-19.5 min-w-47.5 items-center justify-center rounded-xl border border-ru-n-200 bg-ru-n-50 px-6.5 transition-all hover:-translate-y-0.5 hover:border-ru-amber-700 hover:shadow-[0_6px_20px_rgba(0,0,0,0.06)]"
+                aria-hidden={i >= logos.length || undefined}
+                className="flex h-20 w-40 flex-none items-center justify-center px-3 sm:h-24 sm:w-52 sm:px-4"
               >
-                {/* 48px tall inside a 78px tile. The widest mark in the set is 2.05:1, so it
-                    renders 98px across — inside the tile's 138px content box, which is what
-                    keeps every card at its 190px minimum instead of stretching to fit. */}
+                {/* Tall because every PNG sits on an 800px canvas with wide margins. Lazy: 28 eager
+                    tags make React 19 preload every one and crowd out the hero. */}
                 <Image
                   src={logo}
-                  width={144}
-                  height={48}
+                  width={200}
+                  height={96}
                   alt=""
-                  /* 28 img tags (14 logos, twice, for the seamless marquee lap). Eager, React 19
-                     emits a preload link for every one of them and they crowd out the hero. */
                   loading="lazy"
                   decoding="async"
-                  className="h-12 w-auto object-contain opacity-55 grayscale transition-opacity hover:opacity-90"
+                  className="h-20 w-auto max-w-full object-contain opacity-75 grayscale transition duration-300 hover:opacity-100 hover:grayscale-0 sm:h-24"
                 />
-              </div>
+              </li>
             ))}
-          </div>
-        </div>
-
-        <div
-          ref={metricsRef}
-          className="grid grid-cols-[repeat(auto-fit,minmax(148px,1fr))] gap-px overflow-hidden rounded-2xl border border-ru-n-200 bg-ru-n-200"
-        >
-          {METRICS.map((m, i) => (
-            <div key={m.label} className="bg-white p-4.5 sm:p-6.5">
-              <div
-                style={{ animationDelay: `${i * 90}ms` }}
-                className={`motion-reduce:animate-none ${shown ? "animate-ru-rise" : "opacity-0"}`}
-              >
-                <div
-                  className={`font-display text-[clamp(1.875rem,4.2vw,2.75rem)]/none font-bold tracking-[-0.035em] ${
-                    m.warm ? "text-ru-amber-700" : "text-ru-n-700"
-                  }`}
-                >
-                  <CountUp value={m.value} />
-                </div>
-                <div className="mt-2 text-[14.5px] text-ru-n-500">{m.label}</div>
-              </div>
-            </div>
-          ))}
+          </ul>
         </div>
       </div>
     </section>

@@ -57,10 +57,19 @@ window.dataLayer = window.dataLayer || [];
    finishes loading is queued onto dataLayer instead of being dropped with a console warning
    (which is what setGAConsent did whenever it ran early). */
 window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+/* Consent must be decided before GTM and the pixel load: denied until the visitor accepts, and
+   a choice saved by the cookie banner (CookieConsent) is restored on every page load. */
+var rateupConsent = /(?:^|; )cookieConsent=true/.test(document.cookie) ? 'granted' : 'denied';
+gtag('consent', 'default', {
+  ad_storage: rateupConsent,
+  analytics_storage: rateupConsent,
+  ad_user_data: rateupConsent,
+  ad_personalization: rateupConsent
+});
 !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
 n.callMethod.apply(n,arguments):n.queue.push(arguments)};
 if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[]}(window,document);
-fbq('consent', 'revoke');
+fbq('consent', rateupConsent === 'granted' ? 'grant' : 'revoke');
 fbq('init', ${FB_PIXEL_ID});
 fbq('track', 'PageView');
 

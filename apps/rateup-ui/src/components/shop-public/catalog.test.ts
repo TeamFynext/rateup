@@ -105,6 +105,7 @@ describe("bag", () => {
     );
     expect(bag.count).toBe(2);
     expect(bag.total).toBe(48);
+    expect(bag.dropped.map((l) => l.variantId)).toEqual(["v1", "x"]);
   });
 
   it("lists items and quantities in the WhatsApp message", () => {

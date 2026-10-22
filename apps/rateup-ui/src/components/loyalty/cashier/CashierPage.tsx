@@ -699,10 +699,13 @@ export function CashierPage({ standalone = false }: Readonly<{ standalone?: bool
           description={
             lookup && step !== "search"
               ? served > 0
-                ? t("{name} · served {count} customers this hour", {
-                    name: lookup.customer.name,
-                    count: served,
-                  })
+                ? t(
+                    "{name} · served {count, plural, one {# customer} other {# customers}} this hour",
+                    {
+                      name: lookup.customer.name,
+                      count: served,
+                    },
+                  )
                 : lookup.customer.name
               : t("Search a customer, or register one on the spot")
           }

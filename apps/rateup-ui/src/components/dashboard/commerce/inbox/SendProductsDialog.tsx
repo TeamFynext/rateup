@@ -93,10 +93,13 @@ function SendProductsBody({
     onSuccess: ({ sent, skipped }) => {
       if (skipped) {
         toast.warning(
-          t("{sent, plural, one {# product sent} other {# products sent}}, {skipped} skipped", {
-            sent,
-            skipped,
-          }),
+          t(
+            "{sent, plural, one {# product sent} other {# products sent}}, {skipped, plural, one {# skipped} other {# skipped}}",
+            {
+              sent,
+              skipped,
+            },
+          ),
           {
             description: t("Skipped products aren't live in your WhatsApp catalog yet."),
             action: {

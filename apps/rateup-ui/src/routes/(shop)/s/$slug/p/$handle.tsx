@@ -6,7 +6,7 @@ import {
   resolveProductLink,
 } from "@/components/shop-public/storefrontSeo.ts";
 
-export const Route = createFileRoute("/(public-facing)/s/$slug/p/$handle")({
+export const Route = createFileRoute("/(shop)/s/$slug/p/$handle")({
   loader: async ({ params, parentMatchPromise }) => {
     const { storefront } = (await parentMatchPromise).loaderData ?? { storefront: null };
     if (!storefront) return { storefront: null, productId: undefined };

@@ -98,8 +98,8 @@ export default function Payments() {
               icon={
                 <path d="M20.5 12c0 4-3.8 7-8.5 7-1 0-2-.15-2.9-.4L4 20l1.3-3.6A6.9 6.9 0 0 1 3.5 12c0-4 3.8-7 8.5-7s8.5 3 8.5 7Z" />
               }
-              title="WhatsApp Pay, where available"
-              body="In the countries where Meta offers payments inside WhatsApp, customers can pay without leaving the chat."
+              title="The link arrives in the chat"
+              body="Customers get the payment link in the same WhatsApp, Instagram or Messenger conversation, and the order confirmation lands there too."
             />
             <MockCard
               className="min-w-0"

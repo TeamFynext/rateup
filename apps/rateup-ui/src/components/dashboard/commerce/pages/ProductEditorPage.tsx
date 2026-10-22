@@ -836,7 +836,7 @@ function VariantsSection({
       </ul>
       {errors && (
         <p className="px-6 pt-3 text-sm text-destructive">
-          {t("Check the highlighted fields: prices need a number, stock a whole number.")}
+          {t("Check the highlighted fields. Prices need a number, stock a whole number.")}
         </p>
       )}
       <p className="px-6 py-4 text-xs text-muted-foreground">
@@ -1141,7 +1141,7 @@ function LoyaltySection({ form }: Readonly<{ form: Form }>) {
         </span>
         <span className="text-xs text-muted-foreground">
           {t(
-            "Members earn this many times the usual points on this product: 1 is the usual amount, 2 gives ×2 points.",
+            "Members earn this many times the usual points on this product. 1 is the usual amount, 2 gives ×2 points.",
           )}
         </span>
         {error && <FieldError errors={[error]} />}

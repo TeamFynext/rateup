@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { cn } from "@/lib/utils.ts";
 
 import { priceRange, productBadge } from "../catalog.ts";
-import { PriceTag } from "../shared.tsx";
+import { PriceTag, QuantityStepper, TAP_AREA } from "../shared.tsx";
 
 interface Props {
   product: StorefrontProduct;
@@ -15,6 +15,9 @@ interface Props {
   /** The product's own URL; without it (the dashboard preview) the card only opens the sheet. */
   href?: string;
   inBag: boolean;
+  /** How many of a single-variant product are in the bag; it then shows a stepper. */
+  bagQuantity: number;
+  onQuantity: (quantity: number) => void;
   onOpen: () => void;
   /** Adds a single-variant product straight to the bag; anything with options opens the sheet. */
   onQuickAdd: () => void;
@@ -25,6 +28,8 @@ export function ProductCard({
   currency,
   href,
   inBag,
+  bagQuantity,
+  onQuantity,
   onOpen,
   onQuickAdd,
 }: Readonly<Props>) {
@@ -99,19 +104,30 @@ export function ProductCard({
             {t("From {price}", { price: formatMoney(min, currency) })}
           </span>
         )}
-        <Button
-          type="button"
-          size="sm"
-          variant={inBag && !soldOut ? "default" : "outline"}
-          className={cn(
-            "shrink-0 rounded-full px-3 font-bold",
-            !(inBag && !soldOut) && "border-primary text-primary",
-          )}
-          aria-label={actionLabel}
-          onClick={single && !soldOut ? onQuickAdd : onOpen}
-        >
-          {action}
-        </Button>
+        {single && !soldOut && bagQuantity > 0 ? (
+          <QuantityStepper
+            size="sm"
+            min={0}
+            value={bagQuantity}
+            label={product.title}
+            onChange={onQuantity}
+          />
+        ) : (
+          <Button
+            type="button"
+            size="sm"
+            variant={inBag && !soldOut ? "default" : "outline"}
+            className={cn(
+              "shrink-0 rounded-full px-3 font-bold",
+              TAP_AREA,
+              !(inBag && !soldOut) && "border-primary text-primary",
+            )}
+            aria-label={actionLabel}
+            onClick={single && !soldOut ? onQuickAdd : onOpen}
+          >
+            {action}
+          </Button>
+        )}
       </div>
     </article>
   );

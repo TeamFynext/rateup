@@ -5,6 +5,13 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button.tsx";
 import { cn } from "@/lib/utils.ts";
 
+const OPEN_EVENT = "rateup:cookie-settings";
+
+/** Reopens the banner so a visitor can change an earlier choice (footer, Privacy Policy). */
+export function openCookieSettings() {
+  globalThis.dispatchEvent(new Event(OPEN_EVENT));
+}
+
 export function CookieConsent({
   variant = "default",
   mode = false,
@@ -52,6 +59,15 @@ export function CookieConsent({
     } catch (error) {
       console.error("Error checking cookie consent:", error);
     }
+  }, []);
+
+  useEffect(() => {
+    const reopen = () => {
+      setHide(false);
+      requestAnimationFrame(() => setIsOpen(true));
+    };
+    globalThis.addEventListener(OPEN_EVENT, reopen);
+    return () => globalThis.removeEventListener(OPEN_EVENT, reopen);
   }, []);
 
   return variant === "default" ? (
@@ -114,10 +130,10 @@ export function CookieConsent({
         </div>
         <div className="p-3 -mt-2">
           <p className="text-xs sm:text-sm text-left text-muted-foreground">
-            We use cookies to improve your experience and analyze website traffic. Learn more in our
-            Cookie Policy.
-            <Link to="/privacy-policy" className="text-xs underline ml-1">
-              Learn more.
+            We use cookies to analyze website traffic and measure our ads. They stay off unless you
+            accept.
+            <Link to="/privacy-policy" hash="cookies" className="text-xs underline ml-1">
+              Learn more
             </Link>
           </p>
         </div>

@@ -58,9 +58,9 @@ const faqs: FaqEntry[] = [
   },
   {
     question: "Can I switch between annual and monthly?",
-    answer: `Yes. Annual is the default and gives you two months free. Move to monthly at renewal,
-        or upgrade to annual any time and we'll pro-rate the difference. Your monthly limits are
-        the same on either cadence.`,
+    answer: `Yes. Annual is the default and gives you two months free. You can switch either way
+        from Settings → Billing. Depending on your payment method, the change starts right away or
+        at your next renewal, and the new price applies from your next bill. Your monthly limits are the same on either cadence.`,
   },
   {
     question: "What payment methods do you accept?",

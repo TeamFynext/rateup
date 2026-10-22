@@ -14,7 +14,7 @@ export const COMMERCE_FEATURES = [
   "WhatsApp cart checkout in the chat: address form, delivery options, coupon, loyalty points and a payment link",
   "Hosted checkout page for Instagram, Messenger and a link-in-bio storefront",
   "Payments through your own Stripe or Razorpay account, with no commission on sales",
-  "WhatsApp Pay where Meta offers it, cash on delivery with WhatsApp confirmation, and bank transfer",
+  "Cash on delivery with WhatsApp confirmation and a discount for paying online instead, and bank transfer",
   "One Orders list across WhatsApp, Instagram, Messenger and the storefront, with fulfilment, tracking messages, refunds and returns",
   "EasyPost shipping labels and tracking",
   "Coupons: percent, fixed, free shipping, buy X get Y, first order and loyalty members only",
@@ -32,14 +32,14 @@ export const COMMERCE_FAQS: readonly ProductFaqItem[] = [
       "You do. Payments go through your own Stripe or Razorpay account, straight to you. RateUp never holds the funds and takes no commission on your sales — the only processing fees are your payment provider's.",
   },
   {
-    question: "Can customers pay inside WhatsApp?",
+    question: "How do customers pay from the chat?",
     answer:
-      "Where Meta offers WhatsApp Pay — today that's India, Brazil and Singapore — customers can pay without leaving the chat. Everywhere else they get a secure payment link from your Stripe or Razorpay account, and you can also accept cash on delivery or bank transfer.",
+      "Customers choose their items, address and delivery inside the chat, then pay through a secure link from your Stripe or Razorpay account. You can also accept cash on delivery, confirmed on WhatsApp, or bank transfer.",
   },
   {
     question: "Which countries does it work in?",
     answer:
-      "Anywhere you can use WhatsApp Business, Instagram or Messenger, and anywhere your Stripe or Razorpay account can take payments. Only WhatsApp Pay is limited to the countries where Meta offers it.",
+      "Anywhere you can use WhatsApp Business, Instagram or Messenger, and anywhere your Stripe or Razorpay account can take payments.",
   },
   {
     question: "We already sell on Shopify. Do we have to move our products?",

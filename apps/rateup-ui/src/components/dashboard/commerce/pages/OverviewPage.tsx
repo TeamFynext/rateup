@@ -38,6 +38,7 @@ import { CommerceDateFilter } from "../CommerceFilters";
 import { StoreDisconnectedAlert } from "../settings/StoreCheckoutNotice.tsx";
 import { AdReportSection } from "../shop/AdReportSection.tsx";
 import { MessageCostSection } from "../shop/MessageCostSection.tsx";
+import { OrderAllowanceNotice } from "../shop/OrderLimit.tsx";
 import {
   channelLabel,
   customerName,
@@ -75,6 +76,7 @@ export function OverviewPage() {
         </>
       }
     >
+      <OrderAllowanceNotice />
       {isPending ? (
         <OverviewSkeleton />
       ) : isError ? (
