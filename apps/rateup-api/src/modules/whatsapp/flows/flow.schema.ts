@@ -67,7 +67,14 @@ const updateFlowInput = z.object({
   json: z.any().optional(),
   map: z.any().optional(),
   logicJumps: z.any().optional(),
-  templateMessage: z.custom<WaFlowTemplateMessage>().optional(),
+  templateMessage: z
+    .custom<WaFlowTemplateMessage>()
+    // WhatsApp only takes PNG/JPEG header images and fails the send on anything else (WebP,
+    // SVG...). Keys without an extension pass; we can only judge the ones that carry one.
+    .refine((t) => !t?.headerImage || !/\.(?!(png|jpe?g)$)[a-z0-9]+$/i.test(t.headerImage), {
+      message: "Header image must be a PNG or JPG",
+    })
+    .optional(),
   startMessageConfig: z.custom<WaFlowStartMessageConfig>().optional(),
   pendingSave: z.boolean().optional(),
   anonymous: z.boolean().optional(),

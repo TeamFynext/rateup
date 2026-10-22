@@ -49,6 +49,10 @@ const db = prisma as unknown as {
 const ORG = "org-1";
 const TEAM = "team-1";
 
+/** The handler always passes the caller's org; ORG owns TEAM in these tests. */
+const setTeamChannelsForOrg = (teamId: string, input: Parameters<typeof setTeamChannels>[1]) =>
+  setTeamChannels(teamId, input, ORG);
+
 /** A Channel row as getTeamChannels selects it: a WhatsApp number by default. */
 function channel(overrides: Record<string, unknown> = {}) {
   return {
@@ -115,7 +119,7 @@ describe("setTeamChannels", () => {
       { id: "ig-chan-1" },
     ]);
 
-    await setTeamChannels(TEAM, {
+    await setTeamChannelsForOrg(TEAM, {
       allChannels: false,
       channelIds: ["wa-1", "page-chan-1", "ig-chan-1"],
     });
@@ -135,7 +139,7 @@ describe("setTeamChannels", () => {
   test("drops grants that are no longer listed, whatever their platform", async () => {
     db.channel.findMany.mockResolvedValue([{ id: "wa-1" }, { id: "page-chan-1" }]);
 
-    await setTeamChannels(TEAM, { allChannels: false, channelIds: ["wa-1", "page-chan-1"] });
+    await setTeamChannelsForOrg(TEAM, { allChannels: false, channelIds: ["wa-1", "page-chan-1"] });
 
     expect(db.teamChannel.deleteMany).toHaveBeenCalledTimes(1);
     expect(db.teamChannel.deleteMany).toHaveBeenCalledWith({
@@ -144,7 +148,7 @@ describe("setTeamChannels", () => {
   });
 
   test("resolves every id against the channel registry, within the team's own org", async () => {
-    await setTeamChannels(TEAM, { allChannels: false, channelIds: ["wa-1", "page-chan-1"] });
+    await setTeamChannelsForOrg(TEAM, { allChannels: false, channelIds: ["wa-1", "page-chan-1"] });
 
     expect(db.channel.findMany).toHaveBeenCalledTimes(1);
     expect(db.channel.findMany.mock.calls[0][0]).toEqual({
@@ -156,7 +160,10 @@ describe("setTeamChannels", () => {
   test("only the ids the registry confirms are granted", async () => {
     db.channel.findMany.mockResolvedValue([{ id: "ig-chan-1" }]);
 
-    await setTeamChannels(TEAM, { allChannels: false, channelIds: ["ig-chan-1", "elsewhere"] });
+    await setTeamChannelsForOrg(TEAM, {
+      allChannels: false,
+      channelIds: ["ig-chan-1", "elsewhere"],
+    });
 
     expect(db.teamChannel.createMany.mock.calls[0][0].data).toEqual([
       { teamId: TEAM, channelId: "ig-chan-1" },
@@ -167,14 +174,14 @@ describe("setTeamChannels", () => {
   });
 
   test("ids from another org grant nothing and clear every grant", async () => {
-    await setTeamChannels(TEAM, { allChannels: false, channelIds: ["someone-elses"] });
+    await setTeamChannelsForOrg(TEAM, { allChannels: false, channelIds: ["someone-elses"] });
 
     expect(db.teamChannel.createMany.mock.calls[0][0].data).toEqual([]);
     expect(db.teamChannel.deleteMany).toHaveBeenCalledWith({ where: { teamId: TEAM } });
   });
 
   test("allChannels clears every grant without reading any channel", async () => {
-    await setTeamChannels(TEAM, { allChannels: true, channelIds: ["wa-1", "page-chan-1"] });
+    await setTeamChannelsForOrg(TEAM, { allChannels: true, channelIds: ["wa-1", "page-chan-1"] });
 
     expect(db.channel.findMany).not.toHaveBeenCalled();
     expect(db.team.update).toHaveBeenCalledWith({
@@ -186,7 +193,7 @@ describe("setTeamChannels", () => {
   });
 
   test("writes the flag and the grants in one transaction", async () => {
-    await setTeamChannels(TEAM, { allChannels: false, channelIds: [] });
+    await setTeamChannelsForOrg(TEAM, { allChannels: false, channelIds: [] });
 
     expect(db.$transaction).toHaveBeenCalledTimes(1);
     expect(db.$transaction.mock.calls[0][0].map((write: { op: string }) => write.op)).toEqual([
@@ -197,7 +204,7 @@ describe("setTeamChannels", () => {
   });
 
   test("refreshes the org's cached channel scopes", async () => {
-    await setTeamChannels(TEAM, { allChannels: false, channelIds: [] });
+    await setTeamChannelsForOrg(TEAM, { allChannels: false, channelIds: [] });
 
     expect(invalidateChannelAccessCache).toHaveBeenCalledWith(ORG);
   });
@@ -209,16 +216,23 @@ describe("setTeamChannels", () => {
     );
 
     await expect(
-      setTeamChannels(TEAM, { allChannels: false, channelIds: ["wa-1"] }),
+      setTeamChannelsForOrg(TEAM, { allChannels: false, channelIds: ["wa-1"] }),
     ).resolves.toEqual({ allChannels: false, channels: [WA_CHANNEL] });
+  });
+
+  test("refuses another org's team as if it did not exist", async () => {
+    await expect(
+      setTeamChannels(TEAM, { allChannels: false, channelIds: [] }, "org-2"),
+    ).rejects.toThrow("Team not found");
+    expect(db.$transaction).not.toHaveBeenCalled();
   });
 
   test("refuses a team that does not exist", async () => {
     db.team.findUnique.mockResolvedValue(null);
 
-    await expect(setTeamChannels(TEAM, { allChannels: false, channelIds: [] })).rejects.toThrow(
-      "Team not found",
-    );
+    await expect(
+      setTeamChannelsForOrg(TEAM, { allChannels: false, channelIds: [] }),
+    ).rejects.toThrow("Team not found");
     expect(db.$transaction).not.toHaveBeenCalled();
   });
 });

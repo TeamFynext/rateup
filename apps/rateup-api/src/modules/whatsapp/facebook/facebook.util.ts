@@ -37,6 +37,12 @@ export function getFacebookWebhookEvent(
       return FacebookEvent.POSTBACK;
     }
 
+    // An m.me link opened in a thread that already exists. A first conversation carries
+    // the link's ref on the Get Started postback instead, handled above.
+    if (messagingObject.referral && !messagingObject.message) {
+      return FacebookEvent.REFERRAL;
+    }
+
     // General message check (catch-all for regular messages)
     if (messagingObject.message) {
       return FacebookEvent.MESSAGE;

@@ -101,3 +101,55 @@ describe("media", () => {
     expect(result.caption).toEqual({ sent: true });
   });
 });
+
+// A Page comment does not name the person's Messenger id, so the first send answers the
+// comment and Meta's reply names them; later sends on the same channel go to them.
+describe("answering a Facebook comment", () => {
+  const onComment = () => ({
+    ...MESSENGER,
+    pendingComment: { commentId: "comment-1" } as { commentId: string; recipientId?: string },
+  });
+
+  test("sends the first message as a private reply to the comment", async () => {
+    callMetaApiMock.mockResolvedValue({ data: { message_id: "mid-1", recipient_id: "psid-9" } });
+    const channel = onComment();
+
+    await sendSendApiText(channel, "fb_comment:comment-1", ORG_ID, "Here is the price list");
+
+    expect(callMetaApiMock.mock.calls[0][3]).toEqual({
+      recipient: { comment_id: "comment-1" },
+      message: { text: "Here is the price list" },
+    });
+    expect(channel.pendingComment.recipientId).toBe("psid-9");
+  });
+
+  test("files the reply under the person Meta named, not the stand-in", async () => {
+    callMetaApiMock.mockResolvedValue({ data: { message_id: "mid-1", recipient_id: "psid-9" } });
+
+    await sendSendApiText(onComment(), "fb_comment:comment-1", ORG_ID, "hi");
+
+    expect(handleWaMessagesMock.mock.calls[0][2]).toBe("psid-9");
+  });
+
+  test("sends everything after the reply to the person", async () => {
+    callMetaApiMock.mockResolvedValue({ data: { message_id: "mid-1", recipient_id: "psid-9" } });
+    const channel = onComment();
+
+    await sendSendApiText(channel, "fb_comment:comment-1", ORG_ID, "first");
+    await sendSendApiText(channel, "fb_comment:comment-1", ORG_ID, "second");
+
+    expect(callMetaApiMock).toHaveBeenCalledTimes(2);
+    expect(callMetaApiMock.mock.calls[1][3]).toEqual({
+      recipient: { id: "psid-9" },
+      message: { text: "second" },
+    });
+  });
+
+  test("leaves the comment unanswered when Meta refuses the reply", async () => {
+    callMetaApiMock.mockRejectedValue(new Error("comment is over 7 days old"));
+    const channel = onComment();
+
+    await expect(sendSendApiText(channel, "fb_comment:comment-1", ORG_ID, "hi")).rejects.toThrow();
+    expect(channel.pendingComment.recipientId).toBeUndefined();
+  });
+});

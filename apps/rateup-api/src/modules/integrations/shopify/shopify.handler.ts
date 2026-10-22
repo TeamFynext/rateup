@@ -4,8 +4,26 @@ import { log } from "../../../utils/logger.js";
 import { webhookQueue } from "../../../workers/bullmq/queues/index.js";
 import { updateShopifySessionScope } from "./shopify.session.js";
 
-//callbackhandlers only working if added in same file. find out why?
-async function draftOrderCreateHandler(
+/**
+ * The shop a signed body names, when its topic carries one: the app/uninstalled Shop
+ * resource (`myshopify_domain`) and the compliance topics (`shop_domain`). Order,
+ * checkout and refund bodies do not name the shop.
+ */
+function shopNamedInBody(body: Record<string, unknown>): string | undefined {
+  const named = body.myshopify_domain ?? body.shop_domain;
+  return typeof named === "string" ? named : undefined;
+}
+
+/**
+ * Queues the topic for `handleWebhook`, deduped on Shopify's webhook id.
+ *
+ * `X-Shopify-Shop-Domain` (our `shop`) sits outside the HMAC, which covers only the
+ * body. Where the body names its own shop the two must agree, so a captured signed
+ * body cannot be replayed with the header pointed at another shop. Topics whose body
+ * names no shop cannot be checked this way; there the webhook id dedup is what stops
+ * a replay of the same delivery.
+ */
+async function enqueueWebhookHandler(
   topic: string,
   shop: string,
   webhookRequestBody: string,
@@ -14,165 +32,34 @@ async function draftOrderCreateHandler(
   _context?: unknown,
 ) {
   log.info(`handling webhook ${topic} for ${shop} shop`);
-  const webhookRequestBodyJson = JSON.parse(webhookRequestBody);
-  const webhook = {
-    topic,
-    webhookId,
-    body: webhookRequestBodyJson,
-    shop,
-  };
+  const body = JSON.parse(webhookRequestBody) as Record<string, unknown>;
+  const named = shopNamedInBody(body);
+  if (named !== undefined && named.toLowerCase() !== shop.toLowerCase()) {
+    log.warn({ topic, shop, webhookId }, "Shopify webhook whose body names another shop dropped");
+    return;
+  }
+  const webhook = { topic, webhookId, body, shop };
   await webhookQueue.add("process-webhook", webhook, { jobId: webhookId });
 }
 
-export async function orderCreateHandler(
-  topic: string,
-  shop: string,
-  webhookRequestBody: string,
-  webhookId: string,
-  _apiVersion?: string,
-  _context?: unknown,
-) {
-  log.info(`handling webhook ${topic} for ${shop} shop`);
-  const webhookRequestBodyJson = JSON.parse(webhookRequestBody);
-  const webhook = {
-    topic,
-    webhookId,
-    body: webhookRequestBodyJson,
-    shop,
-  };
-  await webhookQueue.add("process-webhook", webhook, { jobId: webhookId });
-}
+// Each topic has a name of its own so the handler map reads as a catalogue; all of
+// them queue the same way. They live in this file because `webhooks.process` only
+// dispatches to callbacks registered from here.
+const draftOrderCreateHandler = enqueueWebhookHandler;
 
-export async function appUninstalledHandler(
-  topic: string,
-  shop: string,
-  webhookRequestBody: string,
-  webhookId: string,
-  _apiVersion?: string,
-  _context?: unknown,
-) {
-  log.info(`handling webhook ${topic} for ${shop} shop`);
-  const webhookRequestBodyJson = JSON.parse(webhookRequestBody);
-  const webhook = {
-    topic,
-    webhookId,
-    body: webhookRequestBodyJson,
-    shop,
-  };
-  await webhookQueue.add("process-webhook", webhook, { jobId: webhookId });
-}
+export const orderCreateHandler = enqueueWebhookHandler;
 
-export async function orderCancelledHandler(
-  topic: string,
-  shop: string,
-  webhookRequestBody: string,
-  webhookId: string,
-  _apiVersion?: string,
-  _context?: unknown,
-) {
-  log.info(`handling webhook ${topic} for ${shop} shop`);
-  const webhookRequestBodyJson = JSON.parse(webhookRequestBody);
-  const webhook = {
-    topic,
-    webhookId,
-    body: webhookRequestBodyJson,
-    shop,
-  };
-  await webhookQueue.add("process-webhook", webhook, { jobId: webhookId });
-}
+export const appUninstalledHandler = enqueueWebhookHandler;
 
-export async function orderFulFilledHandler(
-  topic: string,
-  shop: string,
-  webhookRequestBody: string,
-  webhookId: string,
-  _apiVersion?: string,
-  _context?: unknown,
-) {
-  log.info(`handling webhook ${topic} for ${shop} shop`);
-  const webhookRequestBodyJson = JSON.parse(webhookRequestBody);
-  const webhook = {
-    topic,
-    webhookId,
-    body: webhookRequestBodyJson,
-    shop,
-  };
-  await webhookQueue.add("process-webhook", webhook, { jobId: webhookId });
-}
+export const orderCancelledHandler = enqueueWebhookHandler;
 
-export async function orderPaidHandler(
-  topic: string,
-  shop: string,
-  webhookRequestBody: string,
-  webhookId: string,
-  _apiVersion?: string,
-  _context?: unknown,
-) {
-  log.info(`handling webhook ${topic} for ${shop} shop`);
-  const webhookRequestBodyJson = JSON.parse(webhookRequestBody);
-  const webhook = {
-    topic,
-    webhookId,
-    body: webhookRequestBodyJson,
-    shop,
-  };
-  await webhookQueue.add("process-webhook", webhook, { jobId: webhookId });
-}
-export async function orderPartiallyFulfilledHandler(
-  topic: string,
-  shop: string,
-  webhookRequestBody: string,
-  webhookId: string,
-  _apiVersion?: string,
-  _context?: unknown,
-) {
-  log.info(`handling webhook ${topic} for ${shop} shop`);
-  const webhookRequestBodyJson = JSON.parse(webhookRequestBody);
-  const webhook = {
-    topic,
-    webhookId,
-    body: webhookRequestBodyJson,
-    shop,
-  };
-  await webhookQueue.add("process-webhook", webhook, { jobId: webhookId });
-}
-export async function fulfillmentOrderCancelledHandler(
-  topic: string,
-  shop: string,
-  webhookRequestBody: string,
-  webhookId: string,
-  _apiVersion?: string,
-  _context?: unknown,
-) {
-  log.info(`handling webhook ${topic} for ${shop} shop`);
-  const webhookRequestBodyJson = JSON.parse(webhookRequestBody);
-  const webhook = {
-    topic,
-    webhookId,
-    body: webhookRequestBodyJson,
-    shop,
-  };
-  await webhookQueue.add("process-webhook", webhook, { jobId: webhookId });
-}
+export const orderFulFilledHandler = enqueueWebhookHandler;
 
-export async function refundCreateHandler(
-  topic: string,
-  shop: string,
-  webhookRequestBody: string,
-  webhookId: string,
-  _apiVersion?: string,
-  _context?: unknown,
-) {
-  log.info(`handling webhook ${topic} for ${shop} shop`);
-  const webhookRequestBodyJson = JSON.parse(webhookRequestBody);
-  const webhook = {
-    topic,
-    webhookId,
-    body: webhookRequestBodyJson,
-    shop,
-  };
-  await webhookQueue.add("process-webhook", webhook, { jobId: webhookId });
-}
+export const orderPaidHandler = enqueueWebhookHandler;
+export const orderPartiallyFulfilledHandler = enqueueWebhookHandler;
+export const fulfillmentOrderCancelledHandler = enqueueWebhookHandler;
+
+export const refundCreateHandler = enqueueWebhookHandler;
 
 export async function customersDataRequestHandler(
   topic: string,
@@ -185,42 +72,11 @@ export async function customersDataRequestHandler(
   log.info(`handling webhook ${topic} for ${shop} shop`);
 }
 
-/** Queues the topic for `handleWebhook`, deduped on Shopify's webhook id. */
-async function enqueueWebhookHandler(
-  topic: string,
-  shop: string,
-  webhookRequestBody: string,
-  webhookId: string,
-  _apiVersion?: string,
-  _context?: unknown,
-) {
-  log.info(`handling webhook ${topic} for ${shop} shop`);
-  const webhook = { topic, webhookId, body: JSON.parse(webhookRequestBody), shop };
-  await webhookQueue.add("process-webhook", webhook, { jobId: webhookId });
-}
-
 // The stored abandoned checkouts are this app's customer data to redact.
 export const customersRedactHandler = enqueueWebhookHandler;
 export const shopRedactRequestHandler = enqueueWebhookHandler;
 
-export async function appSubscriptionUpdateHandler(
-  topic: string,
-  shop: string,
-  webhookRequestBody: string,
-  webhookId: string,
-  _apiVersion?: string,
-  _context?: unknown,
-) {
-  log.info(`handling webhook ${topic} for ${shop} shop`);
-  const webhookRequestBodyJson = JSON.parse(webhookRequestBody);
-  const webhook = {
-    topic,
-    webhookId,
-    body: webhookRequestBodyJson,
-    shop,
-  };
-  await webhookQueue.add("process-webhook", webhook, { jobId: webhookId });
-}
+export const appSubscriptionUpdateHandler = enqueueWebhookHandler;
 
 export async function appScopesUpdateHandler(
   topic: string,

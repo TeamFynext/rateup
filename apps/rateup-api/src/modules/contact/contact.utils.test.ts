@@ -241,12 +241,26 @@ describe("handleSendTemplate", () => {
           ],
         },
       ],
+      // teamId, userId, timeDelay, isTemplateName, tag, buttonVariable
       undefined,
       undefined,
       undefined,
       undefined,
+      undefined,
+      undefined,
+      // quickReplyPayload
       undefined,
     );
+  });
+
+  test("passes quick-reply payloads in sendTemplateToUserCore's quickReplyPayload slot", async () => {
+    await handleSendTemplate("t1", ORG, "919000000001", ["Ann"], ["JOIN", "STOP"]);
+
+    const args = vi.mocked(sendTemplateToUserCore).mock.calls[0];
+    expect(args).toHaveLength(11);
+    // Not the buttonVariable slot (index 9), which feeds a URL button's suffix.
+    expect(args[9]).toBeUndefined();
+    expect(args[10]).toEqual(["JOIN", "STOP"]);
   });
 
   test("sends without consulting a per-message allowance", async () => {

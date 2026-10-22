@@ -595,7 +595,7 @@ function fakeServer() {
 }
 
 describe("route registration", () => {
-  test("the authenticated tree declares session access and nothing else", async () => {
+  test("reads need a session and writes surveys.manage (SURV-12)", async () => {
     const { srv, hooks, routes } = fakeServer();
 
     await testimonialCollectionRoutes(srv);
@@ -604,6 +604,9 @@ describe("route registration", () => {
     const probe: any = { method: "GET", url: "/x", config: {} };
     hooks[0].fn(probe);
     expect(probe.config).toEqual({ access: "session" });
+    const write: any = { method: "DELETE", url: "/x", config: {} };
+    hooks[0].fn(write);
+    expect(write.config).toEqual({ access: "session", permission: "surveys.manage" });
     for (const r of routes) {
       expect(r.opts?.preHandler).toBeUndefined();
     }

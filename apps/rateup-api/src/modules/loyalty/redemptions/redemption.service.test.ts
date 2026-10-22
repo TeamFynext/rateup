@@ -1,3 +1,4 @@
+import { Prisma } from "../../../../generated/prisma/client.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("../../../utils/prisma.js", () => {
@@ -303,6 +304,24 @@ describe("redeemReward — point rewards", () => {
     await redeemReward(PROGRAM, input);
     expect(db.loyaltyReward.update.mock.calls[0][0].data).toEqual({
       stockRedeemed: { increment: 1 },
+    });
+    // The stock check is part of the UPDATE, not only the earlier read.
+    expect(db.loyaltyReward.update.mock.calls[0][0].where).toEqual({
+      id: expect.any(String),
+      stockRedeemed: { lt: 10 },
+    });
+  });
+
+  test("losing the race for the last unit is out of stock, not a crash", async () => {
+    db.loyaltyReward.findFirst.mockResolvedValue(
+      reward({ rewardType: "point", rewardValue: { points: 300 }, stockQuantity: 10 }),
+    );
+    db.loyaltyReward.update.mockRejectedValueOnce(
+      new Prisma.PrismaClientKnownRequestError("No record", { code: "P2025", clientVersion: "x" }),
+    );
+
+    await expect(redeemReward(PROGRAM, input)).rejects.toMatchObject({
+      code: "REWARD_OUT_OF_STOCK",
     });
   });
 

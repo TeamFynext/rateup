@@ -23,6 +23,18 @@ vi.mock("../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));
 
+vi.mock("./fileUpload.owner.js", () => {
+  class UploadOwnerError extends Error {
+    constructor(
+      readonly statusCode: number,
+      message: string,
+    ) {
+      super(message);
+    }
+  }
+  return { UploadOwnerError, resolveUploadOwner: vi.fn() };
+});
+
 vi.mock("@ffmpeg-installer/ffmpeg", () => ({ default: { path: "/usr/bin/ffmpeg" } }));
 
 vi.mock("fluent-ffmpeg", () => {
@@ -55,7 +67,9 @@ import fs from "node:fs";
 import fsp from "node:fs/promises";
 import sharp from "sharp";
 import ffmpeg from "fluent-ffmpeg";
+import { Readable, Writable } from "node:stream";
 import { deleteFile, uploadFile } from "../../utils/upload/s3Upload.js";
+import { resolveUploadOwner, UploadOwnerError } from "./fileUpload.owner.js";
 import {
   deleteUploadedFileController,
   uploadController,
@@ -78,16 +92,37 @@ function answer(rep: any) {
   return { code: rep.code.mock.calls[0]?.[0], body: rep.send.mock.calls[0]?.[0] };
 }
 
+/** Leading bytes that pass the magic-byte check for each type the tests upload. */
+const SIGNATURE: Record<string, Buffer> = {
+  "image/png": Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]),
+  "image/jpeg": Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0, 0, 0]),
+  "application/pdf": Buffer.from("%PDF-1.7\n"),
+  "audio/mpeg": Buffer.from("ID3\u0004\u0000\u0000\u0000\u0000"),
+  "audio/ogg": Buffer.from("OggS\u0000\u0002\u0000\u0000"),
+  "audio/mp4": Buffer.from("\u0000\u0000\u0000\u0018ftypM4A \u0000\u0000"),
+  "video/mp4": Buffer.from("\u0000\u0000\u0000\u0018ftypisom\u0000\u0000"),
+  "video/quicktime": Buffer.from("\u0000\u0000\u0000\u0014ftypqt  \u0000\u0000"),
+};
+
+function fileStream(content: Buffer, truncated = false) {
+  const stream: any = Readable.from([content]);
+  stream.truncated = truncated;
+  vi.spyOn(stream, "resume");
+  return stream;
+}
+
 /// A @fastify/multipart file part, in the shape req.file() resolves to.
 function upload(over: Record<string, unknown> = {}) {
   const fields: Record<string, unknown> = (over.fields as any) ?? {};
+  const mimetype = (over.mimetype as string) ?? "image/png";
+  const content = (over.content as Buffer) ?? SIGNATURE[mimetype] ?? Buffer.from("raw");
   return {
     type: "file",
     filename: "photo.png",
-    mimetype: "image/png",
-    file: { resume: vi.fn(), truncated: false, pipe: vi.fn() },
+    mimetype,
+    file: fileStream(content),
     fields,
-    toBuffer: vi.fn(async () => Buffer.from("raw")),
+    toBuffer: vi.fn(async () => content),
     ...over,
   };
 }
@@ -103,16 +138,15 @@ beforeEach(() => {
   fsMock.existsSync.mockReturnValue(true);
   fspMock.readFile.mockResolvedValue(Buffer.from("converted"));
   fspMock.unlink.mockResolvedValue(undefined);
-  fsMock.createWriteStream.mockImplementation(() => {
-    const handlers: Record<string, any> = {};
-    return {
-      on: (event: string, cb: any) => {
-        handlers[event] = cb;
-        // The pipe below resolves the pump as soon as "finish" is registered.
-        if (event === "finish") setImmediate(cb);
-      },
-    };
-  });
+  fsMock.createWriteStream.mockImplementation(
+    () =>
+      new Writable({
+        write(_chunk, _encoding, callback) {
+          callback();
+        },
+      }),
+  );
+  (resolveUploadOwner as unknown as Mock).mockResolvedValue({ orgId: "org-1", anonymous: false });
   (sharp as unknown as Mock).mockReturnValue({
     resize: vi.fn().mockReturnThis(),
     webp: vi.fn().mockReturnThis(),
@@ -136,7 +170,7 @@ describe("uploadController — what it accepts", () => {
     expect(s3.uploadFile).toHaveBeenCalledTimes(1);
     const params = s3.uploadFile.mock.calls[0][0];
     expect(params.ContentType).toBe("image/png");
-    expect(params.Key).toMatch(/^\d+-[0-9a-f]{8}-photo\.png$/);
+    expect(params.Key).toMatch(/^org-1\/\d+-[0-9a-f]{8}-photo\.png$/);
     expect(answer(rep)).toEqual({
       code: 200,
       body: {
@@ -158,7 +192,7 @@ describe("uploadController — what it accepts", () => {
   });
 
   test("refuses a file the multipart limit already truncated", async () => {
-    const part = upload({ file: { resume: vi.fn(), truncated: true, pipe: vi.fn() } });
+    const part = upload({ file: fileStream(SIGNATURE["image/png"], true) });
     const rep = reply();
 
     await uploadController(request(part), rep);
@@ -211,7 +245,9 @@ describe("uploadController — what it accepts", () => {
 
     await uploadController(request(part), rep);
 
-    expect(s3.uploadFile.mock.calls[0][0].Key).toMatch(/^\d+-[0-9a-f]{8}-myphoto1\.\.etc\.png$/);
+    expect(s3.uploadFile.mock.calls[0][0].Key).toMatch(
+      /^org-1\/\d+-[0-9a-f]{8}-myphoto1\.\.etc\.png$/,
+    );
   });
 });
 
@@ -223,6 +259,18 @@ describe("uploadController — audio conversion", () => {
   function audio(mimetype: string) {
     return upload({ mimetype, filename: "note.ogg" });
   }
+
+  test("temp files are named by a uuid alone, never by the client's filename (INJ-5)", async () => {
+    await uploadController(
+      request(upload({ mimetype: "audio/mpeg", filename: "../../etc/passwd.mp3" })),
+      reply(),
+    );
+
+    const paths = fsMock.createWriteStream.mock.calls.map((c: any[]) => String(c[0]));
+    expect(paths).toHaveLength(1);
+    expect(paths[0]).toMatch(/tmp\/[0-9a-f-]{36}\.upload$/);
+    expect(paths[0]).not.toContain("passwd");
+  });
 
   test("transcodes mpeg to m4a and uploads the converted bytes", async () => {
     const rep = reply();
@@ -430,7 +478,7 @@ describe("uploadWithThumbnailsController", () => {
     const body = answer(rep).body;
     expect(body.data.fileUrl).toBe("https://cdn.test/photo.png");
     expect(body.data.fileThumbUrl).toBe("https://cdn.test/thumb.webp");
-    expect(body.data.thumbKey).toMatch(/^thumb300x200-\d+-[0-9a-f]{8}-photo\.png$/);
+    expect(body.data.thumbKey).toMatch(/^org-1\/thumb300x200-\d+-[0-9a-f]{8}-photo\.png$/);
   });
 
   test("resizes to fit inside the box rather than cropping", async () => {
@@ -518,46 +566,114 @@ describe("uploadWithThumbnailsController", () => {
 // ===========================================================================
 
 describe("deleteUploadedFileController", () => {
-  test("deletes the keys it was given from the bucket", async () => {
+  const session = (keys: string[]) =>
+    ({
+      body: { fileKeyArray: keys.map((Key) => ({ Key })) },
+      actor: { orgId: "org-1" },
+      user: { orgId: "org-1" },
+    }) as any;
+
+  test("deletes keys under the caller's org prefix", async () => {
     const rep = reply();
 
-    await deleteUploadedFileController(
-      { body: { fileKeyArray: [{ Key: "1700000000-photo.png" }] } } as any,
-      rep,
-    );
+    await deleteUploadedFileController(session(["org-1/1700000000-photo.png"]), rep);
 
     expect(s3.deleteFile).toHaveBeenCalledWith({
       Bucket: expect.any(String),
-      Delete: { Objects: [{ Key: "1700000000-photo.png" }] },
+      Delete: { Objects: [{ Key: "org-1/1700000000-photo.png" }] },
     });
     expect(answer(rep)).toEqual({ code: 200, body: { message: "File delete successfully" } });
   });
 
-  test("deletes any key it is handed, in bulk, with no ownership check", async () => {
+  test("refuses the whole batch when any key is outside the caller's org (SURV-1)", async () => {
     const rep = reply();
 
     await deleteUploadedFileController(
-      {
-        body: {
-          fileKeyArray: [
-            { Key: "1700000000-someone-elses-logo.png" },
-            { Key: "1700000001-another-orgs-contract.pdf" },
-          ],
-        },
-      } as any,
+      session(["org-1/mine.png", "org-2/1700000001-another-orgs-contract.pdf", "legacy.png"]),
       rep,
     );
 
-    expect(s3.deleteFile.mock.calls[0][0].Delete.Objects).toHaveLength(2);
-    expect(answer(rep).code).toBe(200);
+    expect(answer(rep).code).toBe(403);
+    expect(answer(rep).body.keys).toEqual([
+      "org-2/1700000001-another-orgs-contract.pdf",
+      "legacy.png",
+    ]);
+    expect(s3.deleteFile).not.toHaveBeenCalled();
+  });
+
+  test("a prefix look-alike or traversal is not the caller's", async () => {
+    const rep = reply();
+
+    await deleteUploadedFileController(session(["org-1-evil/x.png", "org-1/../org-2/x"]), rep);
+
+    expect(answer(rep).code).toBe(403);
+    expect(s3.deleteFile).not.toHaveBeenCalled();
+  });
+
+  test("answers 401 without a session org", async () => {
+    const rep = reply();
+
+    await deleteUploadedFileController({ body: { fileKeyArray: [{ Key: "k" }] } } as any, rep);
+
+    expect(answer(rep).code).toBe(401);
+    expect(s3.deleteFile).not.toHaveBeenCalled();
   });
 
   test("answers 500 with a message when the delete fails", async () => {
     s3.deleteFile.mockRejectedValue(new Error("AccessDenied"));
     const rep = reply();
 
-    await deleteUploadedFileController({ body: { fileKeyArray: [{ Key: "k" }] } } as any, rep);
+    await deleteUploadedFileController(session(["org-1/k"]), rep);
 
     expect(answer(rep)).toEqual({ code: 500, body: { message: "Something went wrong" } });
+  });
+});
+
+describe("upload ownership and content checks (SURV-11)", () => {
+  test("refuses an upload whose bytes are not the type it claims", async () => {
+    const rep = reply();
+
+    await uploadController(
+      request(upload({ mimetype: "image/png", content: Buffer.from("<html><script>") })),
+      rep,
+    );
+
+    expect(answer(rep)).toEqual({
+      code: 400,
+      body: { message: "File content does not match its type." },
+    });
+    expect(s3.uploadFile).not.toHaveBeenCalled();
+  });
+
+  test("enforces the per-type cap on the bytes actually sent, not the declared size", async () => {
+    const big = Buffer.concat([SIGNATURE["image/png"], Buffer.alloc(6 * 1024 * 1024)]);
+    const rep = reply();
+
+    await uploadController(request(upload({ content: big })), rep);
+
+    expect(answer(rep).code).toBe(413);
+  });
+
+  test("an anonymous upload that names no live form is refused with the owner's status", async () => {
+    (resolveUploadOwner as unknown as Mock).mockRejectedValueOnce(
+      new UploadOwnerError(401, "Sign in, or upload from a survey form."),
+    );
+    const rep = reply();
+
+    await uploadController(request(upload()), rep);
+
+    expect(answer(rep).code).toBe(401);
+    expect(s3.uploadFile).not.toHaveBeenCalled();
+  });
+
+  test("an anonymous respondent's upload is keyed under the form's org", async () => {
+    (resolveUploadOwner as unknown as Mock).mockResolvedValueOnce({
+      orgId: "form-org",
+      anonymous: true,
+    });
+
+    await uploadController(request(upload()), reply());
+
+    expect(s3.uploadFile.mock.calls[0][0].Key).toMatch(/^form-org\//);
   });
 });

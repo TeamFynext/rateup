@@ -3,7 +3,7 @@
   "type": "webhooks",
   "config": {
     "settings": {
-      "targetUrl": "https://c6dc08vk-3001.inc1.devtunnels.ms/api/public/integrations/hubspot/webhooks",
+      "targetUrl": "https://YOUR-DEV-TUNNEL.example/api/public/integrations/hubspot/webhooks",
       "maxConcurrentRequests": 10
     },
     "subscriptions": {

@@ -121,6 +121,23 @@ const updateOrgDetailsSchema = z.object({
     })
     .optional(),
 });
+/**
+ * `PUT /org/completeorgdetails`: the signup questionnaire, merged into the `Org.onboarding`
+ * JSON column. Keys not listed here are dropped, so a new questionnaire field must be added
+ * here too. `integration` is the list of channels picked (older clients sent one string).
+ */
+const completeOrgDetailsSchema = z.object({
+  onboarding: z
+    .object({
+      services: z.array(z.string().trim().max(100)).max(50).optional(),
+      industry: z.string().trim().max(200).optional(),
+      template: z.string().trim().max(200).optional(),
+      integration: z
+        .union([z.string().trim().max(200), z.array(z.string().trim().max(100)).max(50)])
+        .optional(),
+    })
+    .optional(),
+});
 const byOrgIdParams = z.object({
   orgId: z.string(),
 });
@@ -136,6 +153,7 @@ export type UpdateLogoInput = z.infer<typeof updateLogoSchema>;
 export type UpdateOrgDetailsInput = z.infer<typeof updateOrgDetailsSchema>;
 export type ByOrgIdParams = z.infer<typeof byOrgIdParams>;
 export type PauseOrgInput = z.infer<typeof pauseOrgSchema>;
+export type CompleteOrgDetailsInput = z.infer<typeof completeOrgDetailsSchema>;
 
 // Auto-exported after fastify-zod migration
 export {
@@ -147,6 +165,7 @@ export {
   byOrgIdParams,
   updateOrgDetailsSchema,
   pauseOrgSchema,
+  completeOrgDetailsSchema,
 };
 
 /** The business step that follows signup (rateup-ui `/signup/business`). */

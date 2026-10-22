@@ -1,6 +1,8 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 
 import { log } from "../../../../utils/logger.js";
+import prisma from "../../../../utils/prisma.js";
+import { assertPublicUrl } from "../../../../utils/ssrf.js";
 import { ContactNotFoundError } from "../../../contact/contact.errors.js";
 import {
   deleteContactById,
@@ -71,6 +73,12 @@ export async function automationAttachHookHandler(
   reply: FastifyReply,
 ) {
   const platform = platformOf(request);
+  try {
+    await assertPublicUrl(request.body.url);
+  } catch (error) {
+    log.warn({ err: error, orgId: request.user.orgId }, "Automation hook with a non-public URL");
+    return reply.code(400).send({ error: "Hook URL must be a public https address" });
+  }
   const hook = await addAutomationHook(platform, request.user.orgId, {
     hookUrl: request.body.url,
     trigger: request.body.event,
@@ -182,6 +190,11 @@ export async function automationSendTextHandler(
   }
 }
 
+async function teamInOrg(orgId: string, teamId: string) {
+  const team = await prisma.team.findFirst({ where: { id: teamId, orgId }, select: { id: true } });
+  return Boolean(team);
+}
+
 /** A template's body variables become its body parameters, in order. */
 export async function automationSendTemplateHandler(
   request: Req<{ Body: AutomationTemplateMessage }>,
@@ -189,6 +202,10 @@ export async function automationSendTemplateHandler(
 ) {
   const { phone, templateId, variables, teamId } = request.body;
   try {
+    // The team decides which survey a flow button opens; it must be this org's.
+    if (teamId && !(await teamInOrg(request.user.orgId, teamId))) {
+      return reply.code(404).send({ error: "No such team" });
+    }
     const components = variables.length
       ? [{ type: "body", parameters: variables.map((text) => ({ type: "text", text })) }]
       : [];

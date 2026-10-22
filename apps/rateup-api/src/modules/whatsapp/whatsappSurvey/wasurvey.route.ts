@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
-import { webhookSubscribeHandler, whatsappEventHandler } from "./wasurvey.controller.js";
+import { webhookSubscribeHandler } from "./wasurvey.controller.js";
+import { whatsappWebhookIngressHandler } from "./wasurvey.ingress.js";
 import {
   registerMetaWebhookRawBody,
   verifyMetaWebhookSignature,
@@ -15,6 +16,6 @@ export async function waWebhookRoutes(server: FastifyInstance) {
   server.post(
     "/",
     { config: { rawBody: true }, preHandler: verifyMetaWebhookSignature },
-    whatsappEventHandler,
+    whatsappWebhookIngressHandler,
   );
 }

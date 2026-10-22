@@ -3,7 +3,11 @@ import "dotenv/config";
 import { Worker } from "bullmq";
 
 import { log } from "../../utils/logger.js";
-import { connectKafkaProducer, producer } from "../../plugins/kafka.js";
+import { connectKafkaProducer, disconnectKafkaProducer } from "../../plugins/kafka.js";
+import baseRedis from "../../utils/redisConnection.js";
+import { initProcessMetrics, metricsRegistry } from "../../utils/metrics.js";
+import { startHealthServer } from "../shared/healthServer.js";
+import { bullmqHealthCheck, registerQueueMetrics } from "./metrics.js";
 import { syncJobSchedulers } from "./queues/cron.queue.js";
 import { reconcileScheduledCampaignSends } from "../../modules/campaign/campaignRetry.service.js";
 import { reconcileScheduledFeedbackRequests } from "../../modules/loyalty/feedback/feedback.scheduler.js";
@@ -23,16 +27,18 @@ import * as pausedAutomation from "./processors/pausedAutomation.processor.js";
 import * as scheduledJobs from "./processors/scheduledJobs.processor.js";
 import * as sendMessage from "./processors/sendMessage.processor.js";
 import * as shop from "./processors/shop.processor.js";
+import * as statusRetry from "./processors/statusRetry.processor.js";
 import * as userAvailability from "./processors/userAvailability.processor.js";
 import * as waMessage from "./processors/waMessage.processor.js";
 import * as waMessageRecord from "./processors/waMessageRecord.processor.js";
+import * as waWebhookRetry from "./processors/waWebhookRetry.processor.js";
 import * as webhook from "./processors/webhook.processor.js";
 import * as zapierTrigger from "./processors/zapierTrigger.processor.js";
 
 /**
  * BullMQ worker service entrypoint — queue consumers and the wall-clock schedule.
- * No HTTP server: nothing here serves a request, so the process is a plain Node
- * program that stays alive on its Redis connections.
+ * The only HTTP it serves is `/health` (Railway's healthcheck: process up and
+ * Redis answering) and `/metrics` (Prometheus), on `PORT`.
  *
  * Safe to run at any replica count: every consumer competes for jobs, and the
  * wall-clock schedule lives in Redis as BullMQ job schedulers (see
@@ -59,9 +65,11 @@ const PROCESSOR_MODULES = [
   scheduledJobs,
   sendMessage,
   shop,
+  statusRetry,
   userAvailability,
   waMessage,
   waMessageRecord,
+  waWebhookRetry,
   webhook,
   zapierTrigger,
 ];
@@ -77,12 +85,23 @@ function collectWorkers(): Worker[] {
 }
 
 async function start() {
-  // Scheduled actions reach into services that publish to Kafka, so the producer
-  // has to be connected here too.
-  await connectKafkaProducer();
-
   const workers = collectWorkers();
   log.info(`Registered ${workers.length} BullMQ workers`);
+
+  // First, so the healthcheck answers while the reconcilers below run.
+  initProcessMetrics("bullmq");
+  registerQueueMetrics(workers, baseRedis);
+  const healthServer = startHealthServer({
+    service: "bullmq",
+    defaultPort: 3002,
+    check: bullmqHealthCheck(baseRedis, workers),
+    registry: metricsRegistry,
+  });
+
+  // Scheduled actions reach into services that publish to Kafka, and the
+  // statusRetry processor re-publishes receipts, so the producer has to be
+  // connected here too.
+  await connectKafkaProducer();
 
   const { registered, removed } = await syncJobSchedulers();
   log.info(`Synced ${registered} job schedulers${removed ? ` (removed ${removed} stale)` : ""}`);
@@ -123,7 +142,8 @@ async function start() {
           worker.close().catch((err) => log.error(err, `Failed to close worker "${worker.name}"`)),
         ),
       );
-      await producer.disconnect();
+      await disconnectKafkaProducer();
+      healthServer.close();
       process.exit(0);
     } catch (err) {
       log.error(err, "Error during bullmq worker graceful shutdown");

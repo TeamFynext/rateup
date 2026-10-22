@@ -37,6 +37,7 @@ import type { ScheduledJobId } from "../queues/cron.queue.js";
 import { reevaluateRollingTiers } from "../../../modules/loyalty/tiers/tierReevaluation.service.js";
 import { settleSentCampaigns } from "../../../modules/campaign/campaignSettle.service.js";
 import { purgeStaffSessions } from "../../../modules/staff/staff.session.js";
+import { flushUsageCounters } from "../../shared/usageCounter.js";
 
 const workerConnection = baseRedis.duplicate();
 
@@ -97,6 +98,18 @@ const HANDLERS: Record<ScheduledJobId, () => Promise<void>> = {
     log.info("Running Every Day 12.30 AM --> Stats Reset");
     await safeRun("resetMonthlyCounts", resetMonthlyCounts);
     await safeRun("resetAnnualCounts", resetAnnualCounts);
+  },
+
+  usageFlush: async () => {
+    // Every ten seconds, so no info log per tick — only when something moved.
+    await safeRun("flushUsageCounters", async () => {
+      const result = await flushUsageCounters(baseRedis);
+      if (result.restored || result.dropped) {
+        log.warn(result, "Usage flush finished with failures");
+      } else if (result.applied) {
+        log.debug(result, "Usage flush applied");
+      }
+    });
   },
 
   externalIdempotencySweep: async () => {

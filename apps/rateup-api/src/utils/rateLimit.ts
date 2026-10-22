@@ -1,9 +1,7 @@
-import { timingSafeEqual } from "node:crypto";
-import { isIP } from "node:net";
-
 import { FastifyReply, FastifyRequest } from "fastify";
 import connection from "./redisConnection.js";
 import { log } from "./logger.js";
+import { clientIp } from "./http.js";
 
 export interface RateLimitOptions<R extends FastifyRequest = FastifyRequest> {
   /** How many requests one bucket may make inside the window. */
@@ -13,7 +11,9 @@ export interface RateLimitOptions<R extends FastifyRequest = FastifyRequest> {
   /** Distinguishes one limiter's counters from another's. */
   key: string;
   /**
-   * What a bucket is keyed on. Defaults to the client IP. Return null/undefined to skip
+   * What a bucket is keyed on. Defaults to the client IP (`clientIp`: Cloudflare's
+   * `CF-Connecting-IP`, else the address Fastify resolved under `TRUST_PROXY_HOPS` — never a
+   * client-written `X-Forwarded-For` entry). Return null/undefined to skip
    * this limiter for the request (e.g. a body without the field). Fastify validates the
    * body before preHandlers run, so `request.body` is safe to read here.
    */
@@ -30,34 +30,6 @@ export interface RateLimitOptions<R extends FastifyRequest = FastifyRequest> {
    * without it a 429 would arrive in a shape nothing else on that API uses.
    */
   throwOnLimit?: (kind: "rate_limited" | "unavailable") => Error;
-}
-
-export const SSR_SECRET_HEADER = "x-rateup-ssr-secret";
-export const SSR_CLIENT_IP_HEADER = "x-rateup-client-ip";
-
-/**
- * The visitor rateup-ui's server is rendering a page for, when it proves it is that server.
- * Without this every server-rendered page shares the UI server's one address, so a few
- * hundred requests anywhere would exhaust the limit for every visitor.
- */
-function forwardedVisitorIp(request: FastifyRequest): string | null {
-  const secret = process.env.SSR_SHARED_SECRET;
-  if (!secret) return null;
-  const sent = request.headers?.[SSR_SECRET_HEADER];
-  const ip = request.headers?.[SSR_CLIENT_IP_HEADER];
-  if (typeof sent !== "string" || typeof ip !== "string" || !isIP(ip.trim())) return null;
-  const a = Buffer.from(sent);
-  const b = Buffer.from(secret);
-  return a.length === b.length && timingSafeEqual(a, b) ? ip.trim() : null;
-}
-
-/**
- * The client address. `request.ip` honours `trustProxy` (`TRUST_PROXY_HOPS`), which trusts
- * only the hops our proxies appended — reading the header directly would let a caller pick
- * their own bucket.
- */
-export function clientIp(request: FastifyRequest): string {
-  return forwardedVisitorIp(request) ?? (request.ip || "unknown");
 }
 
 /** Read at call time, not import time, so a test or a hot env change is seen. */

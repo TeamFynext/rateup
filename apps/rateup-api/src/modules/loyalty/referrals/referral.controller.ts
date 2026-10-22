@@ -23,6 +23,7 @@ export async function trackReferralHandler(
       program.id,
       request.body.referralCode,
       request.body.refereeContactId,
+      request.user.orgId,
     );
 
     reply.code(201).send(result);
@@ -55,7 +56,11 @@ export async function getReferralsByReferrerHandler(
   reply: FastifyReply,
 ) {
   try {
-    const result = await getReferralsByReferrer(request.params.referrerId);
+    const program = await getLoyaltyProgramByOrg(request.user.orgId);
+    if (!program) {
+      return reply.code(404).send({ error: "Loyalty program not found" });
+    }
+    const result = await getReferralsByReferrer(request.params.referrerId, program.id);
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);

@@ -68,7 +68,9 @@ export function encryptSecret(plain: string): string {
   if (!key) {
     if (!warnedNoKey) {
       warnedNoKey = true;
-      log.warn("INTEGRATION_SECRET_KEY is not set; integration credentials are stored unencrypted");
+      log.error(
+        "INTEGRATION_SECRET_KEY is not set; integration credentials are stored unencrypted",
+      );
     }
     return plain;
   }

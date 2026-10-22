@@ -47,13 +47,15 @@ import {
   sendInstagramTextMessage,
 } from "../instagram/instagram_messaging.service.js";
 import { startMetaFlow, type MetaFlowAutomation } from "./metaFlow.service.js";
-import { sendSendApiText } from "../meta/sendApiMessages.js";
+import { sendSendApiText, type PendingComment } from "../meta/sendApiMessages.js";
+import { replyToFacebookComment } from "../facebook/facebook_comments.service.js";
 import { getMetaAutomationById } from "./instagram_automatedReply.service.js";
 import { ShopifyBody } from "../../integrations/shopify/shopify.types.js";
 import { resolveWooPathValue } from "../../integrations/woocommerce/woocommerce.mapping.js";
 import { resolveShopifyPathValue } from "../../integrations/shopify/shopify.mapping.js";
 import { getShopifyProductImage } from "../../integrations/shopify/shopify.catalog.js";
 import axios from "axios";
+import { assertPublicUrl, publicAxiosOptions } from "../../../utils/ssrf.js";
 import { triggerConversionsApiForContact } from "../../integrations/meta/conversions.service.js";
 import { adRuleMatches, adRuleSpecificity, type AdReferralContext } from "./adReferralTrigger.js";
 import { emitIntegrationEvent } from "../../integrations/events/emitIntegrationEvent.js";
@@ -431,6 +433,7 @@ export interface RuleWithConditions {
     instagramRef?: string;
     adIds?: string[];
     adMatch?: string;
+    messengerRef?: string;
   } | null;
   groups: Array<{
     id: string;
@@ -719,6 +722,58 @@ export interface RuleExecutionContext {
   instagramRef?: string;
   /** The click-to-WhatsApp ad that opened the chat, for WHATSAPP_AD_REFERRAL. */
   adReferral?: AdReferralContext;
+  /** The ?ref= of the m.me link that opened the thread, for MESSENGER_REFERRAL. */
+  messengerRef?: string;
+  /**
+   * Set for FACEBOOK_COMMENT, which starts with `phone` unset: a Page comment does not name
+   * the person's Messenger id. The rule's first send is a private reply to the comment,
+   * which fills in `recipientId`; the caller reads it back to learn who was reached.
+   */
+  facebookComment?: PendingComment;
+  /** The post the comment is on, for FACEBOOK_COMMENT. */
+  facebookPostId?: string;
+}
+
+/** Who a Meta rule action sends to; see {@link metaRecipient}. */
+const FB_COMMENT_RECIPIENT_PREFIX = "fb_comment:";
+
+/**
+ * Who a Messenger or Instagram action sends to. A Facebook comment rule knows nobody until
+ * its first send reaches them, so until then this is a stand-in that a chatbot run is keyed
+ * by; the send itself goes to the comment.
+ */
+function metaRecipient(context: RuleExecutionContext): string | undefined {
+  if (context.phone) return context.phone;
+  const comment = context.facebookComment;
+  if (!comment) return undefined;
+  return comment.recipientId ?? `${FB_COMMENT_RECIPIENT_PREFIX}${comment.commentId}`;
+}
+
+/** After a send on a comment, the person it reached is who the rule's later actions act on. */
+function adoptCommentRecipient(context: RuleExecutionContext) {
+  const reached = context.facebookComment?.recipientId;
+  if (reached && !context.phone) context.phone = reached;
+}
+
+/** Posts one of the rule's public replies under a Page comment; never fails the rule. */
+async function replyToFacebookCommentInPublic(
+  rule: RuleWithConditions,
+  context: RuleExecutionContext,
+) {
+  // Shares Instagram's option: the editor and its limits are the same.
+  const replies = rule.options?.instagramPublicReplies ?? [];
+  const commentId = context.facebookComment?.commentId;
+  if (!replies.length || !commentId || !context.phoneNumberId) return;
+
+  const text = replies[Math.floor(Math.random() * replies.length)];
+  try {
+    await replyToFacebookComment(commentId, text, context.phoneNumberId, context.orgId);
+  } catch (error) {
+    log.error(
+      { err: error, ruleId: rule.id, commentId },
+      "Could not post the public reply to a Facebook comment",
+    );
+  }
 }
 
 /** Posts one of the rule's public replies under the comment; never fails the rule. */
@@ -769,12 +824,14 @@ async function sendMetaRuleText(
 ) {
   const text = stripWhatsAppFormatting(formattedText);
   if (context.platform === "FACEBOOK") {
+    // On a comment rule the first send is the private reply; see facebookComment.
     await sendSendApiText(
-      { platform: PlatformType.FACEBOOK, accountId },
+      { platform: PlatformType.FACEBOOK, accountId, pendingComment: context.facebookComment },
       recipient,
       context.orgId,
       text,
     );
+    adoptCommentRecipient(context);
     return;
   }
   const commentId = takeInstagramCommentId(context);
@@ -897,6 +954,11 @@ export async function checkAndExecuteRuleByTriggerEvent(
   if (triggerEvent === TriggerEvent.WHATSAPP_AD_REFERRAL) {
     typedRules.sort((a, b) => adRuleSpecificity(b.options) - adRuleSpecificity(a.options));
   }
+  if (triggerEvent === TriggerEvent.MESSENGER_REFERRAL) {
+    typedRules.sort(
+      (a, b) => Number(!!b.options?.messengerRef) - Number(!!a.options?.messengerRef),
+    );
+  }
 
   // Helper to determine if a rule has any business hour configuration
   const hasBusinessHours = (rule: RuleWithConditions): boolean => {
@@ -1003,6 +1065,9 @@ export async function checkAndExecuteRuleByTriggerEvent(
         if (wanted && wanted !== context.instagramRef?.toLowerCase()) continue;
       } else if (triggerEvent === TriggerEvent.WHATSAPP_AD_REFERRAL) {
         if (!adRuleMatches(rule.options, context.adReferral)) continue;
+      } else if (triggerEvent === TriggerEvent.MESSENGER_REFERRAL) {
+        const wanted = rule.options?.messengerRef?.toLowerCase();
+        if (wanted && wanted !== context.messengerRef?.toLowerCase()) continue;
       } else {
         const isMatch = await validateRuleConditions(
           rule,
@@ -1023,6 +1088,9 @@ export async function checkAndExecuteRuleByTriggerEvent(
 
       if (triggerEvent === TriggerEvent.INSTAGRAM_COMMENT) {
         await replyToCommentInPublic(rule, context);
+      }
+      if (triggerEvent === TriggerEvent.FACEBOOK_COMMENT) {
+        await replyToFacebookCommentInPublic(rule, context);
       }
 
       if (rule.options?.sendOncePerDay && phoneText) {
@@ -1353,7 +1421,7 @@ async function executeAssignUserAction(
   const contact = await getOrCreateRuleContact(context.platform, context.phone, context.orgId);
   if (!contact) return false;
 
-  const teams = await getTeamIdsByUserId(userId);
+  const teams = await getTeamIdsByUserId(userId, context.orgId);
   if (teams.length === 0) return false;
 
   await assignWaMessageToUser(
@@ -1584,13 +1652,14 @@ async function executeSendMessageAction(
   messageText: string,
   context: RuleExecutionContext,
 ): Promise<boolean> {
-  if (!context.phone || !messageText || !context.orgId) return false;
+  const recipient = context.platform === "FACEBOOK" ? metaRecipient(context) : context.phone;
+  if (!recipient || !messageText || !context.orgId) return false;
 
   if (context.platform === "INSTAGRAM" || context.platform === "FACEBOOK") {
     if (!context.phoneNumberId) return false;
-    await sendMetaRuleText(context, context.phone, context.phoneNumberId, messageText);
+    await sendMetaRuleText(context, recipient, context.phoneNumberId, messageText);
   } else {
-    await sendTextMessage(waReplyTarget(context.phone, context), null, messageText);
+    await sendTextMessage(waReplyTarget(recipient, context), null, messageText);
   }
 
   return true;
@@ -1600,7 +1669,8 @@ async function executeSendWebSurveyAction(
   surveyTeamMapId: string,
   context: RuleExecutionContext,
 ): Promise<boolean> {
-  if (!context.phone || !context.orgId || !surveyTeamMapId) return false;
+  const recipient = context.platform === "FACEBOOK" ? metaRecipient(context) : context.phone;
+  if (!recipient || !context.orgId || !surveyTeamMapId) return false;
 
   const surveyTeamMap = await prisma.surveyTeamMap.findFirst({
     where: {
@@ -1631,9 +1701,9 @@ async function executeSendWebSurveyAction(
 
   if (context.platform === "INSTAGRAM" || context.platform === "FACEBOOK") {
     if (!context.phoneNumberId) return false;
-    await sendMetaRuleText(context, context.phone, context.phoneNumberId, messageText);
+    await sendMetaRuleText(context, recipient, context.phoneNumberId, messageText);
   } else {
-    await sendTextMessage(waReplyTarget(context.phone, context), null, messageText);
+    await sendTextMessage(waReplyTarget(recipient, context), null, messageText);
   }
 
   return true;
@@ -1855,7 +1925,8 @@ async function executeTriggerChatbotAction(
   chatbotId: string,
   context: RuleExecutionContext,
 ): Promise<boolean> {
-  if (!context.phone || !chatbotId || !context.orgId) return false;
+  const recipient = context.platform === "FACEBOOK" ? metaRecipient(context) : context.phone;
+  if (!recipient || !chatbotId || !context.orgId) return false;
 
   if (context.platform === "INSTAGRAM" || context.platform === "FACEBOOK") {
     const platform =
@@ -1872,14 +1943,16 @@ async function executeTriggerChatbotAction(
       return false;
     }
     await startMetaFlow(
-      context.phone,
+      recipient,
       // The stored matchData is typed loosely on the Prisma model; this reader
       // knows the row is a Meta flow graph.
       automation as unknown as MetaFlowAutomation,
       context.orgId,
-      { platform, accountId: context.phoneNumberId },
+      // On a Facebook comment the chatbot's first message is the private reply.
+      { platform, accountId: context.phoneNumberId, pendingComment: context.facebookComment },
       takeInstagramCommentId(context),
     );
+    adoptCommentRecipient(context);
     return true;
   }
 
@@ -1892,9 +1965,9 @@ async function executeTriggerChatbotAction(
 
   if (automation) {
     await startAutomationFlow(
-      context.phone,
+      recipient,
       automation,
-      { message: context.message || "", from: context.phone },
+      { message: context.message || "", from: recipient },
       context.orgId,
     );
     return true;
@@ -1902,6 +1975,8 @@ async function executeTriggerChatbotAction(
 
   return true;
 }
+
+const EXTERNAL_API_TIMEOUT_MS = 10_000;
 
 async function executeExternalApiAction(
   endpoint: string,
@@ -1913,16 +1988,13 @@ async function executeExternalApiAction(
 ): Promise<boolean> {
   if (!endpoint) return false;
 
+  // The URL is the rule author's: it must resolve to a public address (checked
+  // again at connect time by the agents), and redirects are not followed.
   let parsedUrl: URL;
   try {
-    parsedUrl = new URL(endpoint);
-  } catch {
-    log.warn(`Invalid external API URL configured in rule action: ${endpoint}`);
-    return false;
-  }
-
-  if (!["http:", "https:"].includes(parsedUrl.protocol)) {
-    log.warn(`Unsupported protocol for external API URL: ${parsedUrl.protocol}`);
+    parsedUrl = await assertPublicUrl(endpoint, { allowHttp: true });
+  } catch (error) {
+    log.warn({ err: error }, "Refusing the external API URL configured in a rule action");
     return false;
   }
 
@@ -1939,6 +2011,7 @@ async function executeExternalApiAction(
 
   const config = {
     headers,
+    ...publicAxiosOptions(EXTERNAL_API_TIMEOUT_MS),
   };
 
   for (let attempt = 1; attempt <= 2; attempt++) {

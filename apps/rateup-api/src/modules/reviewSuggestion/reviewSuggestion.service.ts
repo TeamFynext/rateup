@@ -58,13 +58,19 @@ export async function createReviewSuggestions(data: createReviewSuggestionsSchem
   });
 }
 
+/**
+ * Writes are bound to the caller's org as well as the id: the access check runs first, but
+ * the write itself must not be able to reach another org's row whatever led to it.
+ */
 export async function updateReviewSuggestion(
   reviewSuggestionId: string,
   data: updateReviewSuggestionSchema,
+  orgId: string,
 ) {
   return await prisma.reviewSuggestion.update({
     where: {
       id: reviewSuggestionId,
+      team: { orgId },
     },
     data: {
       review: data.review,
@@ -73,10 +79,11 @@ export async function updateReviewSuggestion(
   });
 }
 
-export async function deleteReviewSuggestion(reviewSuggestionId: string) {
+export async function deleteReviewSuggestion(reviewSuggestionId: string, orgId: string) {
   return await prisma.reviewSuggestion.delete({
     where: {
       id: reviewSuggestionId,
+      team: { orgId },
     },
   });
 }

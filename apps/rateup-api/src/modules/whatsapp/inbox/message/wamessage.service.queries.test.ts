@@ -624,6 +624,12 @@ describe("getContactsCountByInbox", () => {
     expect(result.new).not.toBe(result.newAssigned);
   });
 
+  test("looks up the caller's teams inside the session's org only", async () => {
+    await getContactsCountByInbox("org-1", "user-1", ALL_ACTOR);
+
+    expect(teamIdsMock).toHaveBeenCalledWith("user-1", "org-1");
+  });
+
   test("counts spam per contact, not per ticket", async () => {
     await getContactsCountByInbox("org-1", "user-1", ALL_ACTOR);
 

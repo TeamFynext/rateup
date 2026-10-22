@@ -10,6 +10,8 @@ import {
   getLoggedUserInfo,
   getLoggedUserProfile,
   pauseUser,
+  removeMemberFromOrg,
+  revokeUserSessions,
   updateUserActiveStatus,
   updateUserAvailablityStatus,
   updateUserPrefLanguage,
@@ -36,8 +38,8 @@ import { Prisma } from "../../../generated/prisma/client.js";
 import { log } from "../../utils/logger.js";
 import EmailPassword from "supertokens-node/recipe/emailpassword/index.js";
 import { IdParamInput } from "../survey/survey.schema.js";
-import { deleteSuperTokenUserForId, getUserInfo } from "../../utils/supertoken/supertoken.js";
 import { UserRecipes } from "../../types/enums.js";
+import { getUserInfo } from "../../utils/supertoken/supertoken.js";
 
 export async function getLoggedUserInfoHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
@@ -82,6 +84,30 @@ export async function getLoggedUserProfileHandler(request: FastifyRequest, reply
   }
 }
 
+function errorText(e: unknown) {
+  return e instanceof Error ? e.message : "Unknown error";
+}
+
+/**
+ * The address the new account is stored under. Taken from SuperTokens whenever the sign-in
+ * has one (Google, Apple, email-password), never from the body: the body let a caller
+ * register someone else's address and lock its owner out. Only a phone-only sign-in has no
+ * address of its own; it may name one, but not one any existing sign-in already uses.
+ */
+async function signupEmail(userId: string, requested: string | undefined): Promise<string> {
+  const authUser = await supertokens.getUser(userId);
+  if (!authUser) throw new Error("SuperTokens user not found");
+  const own = authUser.emails[0];
+  if (own) return own.trim().toLowerCase();
+
+  const email = requested?.trim().toLowerCase();
+  if (!email) throw new Error("An email address is required.");
+  if ((await getUserInfo(email)).length > 0) {
+    throw new Error("An account already uses this email address. Sign in with it instead.");
+  }
+  return email;
+}
+
 export async function createGoogleUserHandler(
   request: FastifyRequest<{
     Body: CreateUserGoogleSchema;
@@ -92,25 +118,17 @@ export async function createGoogleUserHandler(
   let userId = session.getUserId();
 
   let user;
-  let userInfo;
-  if (request?.body?.type === "google") {
-    userInfo = await supertokens.getUser(userId);
-  } else {
-    // userInfo = await PasswordLess.getUserById({ userId }); //STT
-    userInfo = await supertokens.getUser(userId);
-    if (!userInfo) {
-      throw new Error("SuperTokens user not found");
-    }
-    if (request?.body?.email) {
-      userInfo.emails[0] = request.body.email;
-    }
-    if (request.body.phoneNumber) userInfo.phoneNumbers[0] = request.body.phoneNumber;
+  let email: string;
+  try {
+    email = await signupEmail(userId, request.body?.email);
+  } catch (e) {
+    return reply.code(400).send({ success: false, message: errorText(e) });
   }
   const body = request.body;
 
   const payload = {
     id: userId,
-    email: userInfo?.emails?.[0] ?? "",
+    email,
     name: body.name ?? "",
     orgName: body.orgName ?? "",
     phoneNumber: body.phoneNumber ?? "",
@@ -169,25 +187,17 @@ export async function createAppleUserHandler(
   let userId = session.getUserId();
 
   let user;
-  let userInfo;
-  if (request?.body?.type === "apple") {
-    userInfo = await supertokens.getUser(userId);
-  } else {
-    // userInfo = await PasswordLess.getUserById({ userId }); //STT
-    userInfo = await supertokens.getUser(userId);
-    if (!userInfo) {
-      throw new Error("SuperTokens user not found");
-    }
-    if (request?.body?.email) {
-      userInfo.emails[0] = request.body.email;
-    }
-    if (request.body.phoneNumber) userInfo.phoneNumbers[0] = request.body.phoneNumber;
+  let email: string;
+  try {
+    email = await signupEmail(userId, request.body?.email);
+  } catch (e) {
+    return reply.code(400).send({ success: false, message: errorText(e) });
   }
   const body = request.body;
 
   const payload = {
     id: userId,
-    email: userInfo?.emails?.[0] ?? "",
+    email,
     name: body.name ?? "",
     orgName: body.orgName ?? "",
     phoneNumber: body.phoneNumber ?? "",
@@ -302,6 +312,9 @@ export async function changeUserPasswordHandler(
     return;
   }
 
+  // Every other session ends: a password change is often the response to a stolen one.
+  await revokeUserSessions(userId, session!.getHandle());
+
   let message = "Successfully updated password";
   reply.code(200).send({ success: true, message });
 }
@@ -339,8 +352,12 @@ export async function updateProfileByIdHandler(
   let user;
 
   try {
+    await assertMemberOfOrg(request.user.orgId, request.params.id);
     user = await updateUserProfileById({ ...body, userId: request.params.id });
   } catch (e) {
+    if (e instanceof ForbiddenError) {
+      return reply.code(403).send({ success: false, ...e.toBody() });
+    }
     console.error(e);
     reply
       .code(500)
@@ -455,9 +472,12 @@ export async function updateUserActiveStatusHandler(
     if (!isSelfDelete) {
       await assertMemberOfOrg(sessionUser.orgId, targetUserId);
       await assertNotOwner(sessionUser.orgId, targetUserId, "removed");
+      // An admin removes someone from this org only; the account goes with it only when
+      // this was their last org.
+      await removeMemberFromOrg(targetUserId, sessionUser.orgId);
+    } else {
+      await updateUserActiveStatus(request.params.userId);
     }
-
-    await updateUserActiveStatus(request.params.userId);
   } catch (e) {
     if (e instanceof ForbiddenError) {
       return reply.code(403).send({ success: false, ...e.toBody() });
@@ -516,7 +536,7 @@ export async function pauseUserHandler(
     const userId = request.params.id;
     await assertMemberOfOrg(request.user.orgId, userId);
     await assertNotOwner(request.user.orgId, userId, "paused");
-    const res = await pauseUser(userId, request.body);
+    const res = await pauseUser(userId, request.body, request.user.userId!);
     reply.code(200).send(res);
   } catch (e) {
     if (e instanceof ForbiddenError) {
@@ -524,21 +544,6 @@ export async function pauseUserHandler(
       return;
     }
     log.error(e);
-    reply.code(500).send(e);
-  }
-}
-
-export async function deleteUserFromSuperTokenHandler(
-  request: FastifyRequest<{ Body: userEmailCheckSchemaInput }>,
-  reply: FastifyReply,
-) {
-  try {
-    const userInfo = await getUserInfo(request.body.email);
-    if (!userInfo.length) reply.code(404).send("No user found");
-    const userId = userInfo[0].id;
-    await deleteSuperTokenUserForId(userId);
-    reply.code(200).send("Success");
-  } catch (e) {
     reply.code(500).send(e);
   }
 }

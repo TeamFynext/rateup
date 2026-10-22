@@ -1,9 +1,10 @@
-import type { PoolClient } from "pg";
-
 import { log } from "../../logger.js";
 import { CampaignParticipantStatus, WaTemplateCategory } from "../../types/enum.js";
 import { createTemplateMessage } from "../../../../modules/whatsapp/whatsappSurvey/wasurvey.utils.js";
-import { sendMetaMessage } from "../../../../modules/whatsapp/meta/metaMessage.service.js";
+import {
+  sendMetaMessage,
+  type MetaSendResult,
+} from "../../../../modules/whatsapp/meta/metaMessage.service.js";
 import { CampaignCreditsExhaustedError } from "../../../../modules/whatsapp/whatsappSurvey/wasurvey.auth.js";
 import { PlatformType } from "../../../../../generated/prisma/enums.js";
 import { buildTemplateComponents } from "../../../../modules/whatsapp/messageTemplates/templateComponents.js";
@@ -17,7 +18,11 @@ import {
 } from "../../campaign.js";
 import type { WaTemplateData, WaTemplateDefaultValues } from "../../types/dispatcher.types.js";
 import { classifyWaFailure, WaFailureClass } from "../../../../utils/waRetryableErrors.js";
+import { isSendOutcomeUnknown } from "../../../../utils/graphError.js";
+import { resolveCampaignAccessToken } from "../../accessTokenCache.js";
 import dbPool from "../../../../utils/db.js";
+import baseRedis from "../../../../utils/redisConnection.js";
+import { incrementUsage } from "../../usageCounter.js";
 import {
   isCampaignSendPaused,
   pauseCampaignForAccountIssue,
@@ -39,7 +44,11 @@ interface Participant {
   defaultValues: WaTemplateDefaultValues;
   dynamicTags: string[];
   surveyTeamMapId: string;
-  accessToken: string;
+  /**
+   * Only on jobs enqueued before tokens were taken out of job data, which may
+   * still be sitting delayed in Redis. New jobs resolve it by `phoneId`.
+   */
+  accessToken?: string;
   phoneId: string;
   contactId: string;
   campaignId: string;
@@ -67,14 +76,18 @@ interface Contact {
 }
 
 interface MessageOptions {
-  accessToken: string;
+  accessToken?: string;
   phoneId: string;
   contactId: string;
   campaignId: string;
   campaignSendId: string;
   phone: string;
   sourceIdentifier: string;
+  idempotencyKey?: string;
 }
+
+/** The same wording the fan-out uses when the team has no credentials at all. */
+const NO_CONNECTED_NUMBER = "This team has no connected WhatsApp number, so nothing could be sent.";
 
 /**
  * What happened to one message, in the only terms the job wrapper cares about.
@@ -103,6 +116,12 @@ export interface ProcessParticipantOptions {
    * count the same failure three times.
    */
   isFinalAttempt?: boolean;
+  /**
+   * The BullMQ job id. Makes the Graph call at-most-once per job, so a job that
+   * stalls after sending and is rerun records the message instead of sending it
+   * again (see `sendIdempotency.ts`).
+   */
+  idempotencyKey?: string;
 }
 
 export async function processParticipant(
@@ -154,6 +173,7 @@ export async function processParticipant(
         campaignSendId,
         phone,
         sourceIdentifier,
+        idempotencyKey: options.idempotencyKey,
       },
       dripStageId,
       dripCampaignParticipantId,
@@ -164,31 +184,22 @@ export async function processParticipant(
   }
 }
 
-export async function updateWaMonthlyStat(orgId: string, client: PoolClient) {
-  try {
-    /**
-     * `messagesCount` only — the monthly and annual message counters this used
-     * to touch (`monthlyMessagesCount`, `annualMessageCount`) are not columns
-     * on `UsageStats` and, going by the schema history, never came back after
-     * the counters were reorganised. Postgres rejected the whole statement with
-     * 42703, so every campaign send counted *nothing*: the increment that does
-     * exist was lost along with the two that do not.
-     *
-     * This mirrors the rest of rateup-api, which increments exactly this column
-     * for a WhatsApp send (`updateMonthlyStat` in `stats.service.ts`).
-     *
-     * If monthly or annual message caps are wanted, the columns need adding to
-     * `prisma/schema.prisma` first — `UsageStats` keeps monthly/annual pairs
-     * only for templates and conversations today.
-     */
-    return await client.query(
-      `UPDATE "UsageStats" SET "messagesCount" = "messagesCount" + 1 WHERE "orgId" = $1`,
-      [orgId],
-    );
-  } catch (error) {
-    log.error({ err: error }, "Error in updateWaMonthlyStat");
-    throw error;
-  }
+/**
+ * Counts one call to Meta against the org's `messagesCount` — every call,
+ * accepted or not, and once per attempt.
+ *
+ * Buffered in Redis and flushed by the `usageFlush` scheduled job (see
+ * `usageCounter.ts`) rather than written here: `UsageStats` is one row per org,
+ * and this used to be the first statement of the bookkeeping transaction below,
+ * so every concurrent send of a campaign queued on that row's lock until the
+ * previous send committed. Nothing enforces a limit against `messagesCount`, so
+ * the few seconds it now lags are invisible.
+ *
+ * Only `messagesCount`: the monthly and annual message counters this used to
+ * touch are not columns on `UsageStats` (see the schema history).
+ */
+async function countMetaCall(orgId: string) {
+  await incrementUsage(baseRedis, orgId, "messagesCount");
 }
 
 interface SendCampaignParams {
@@ -278,7 +289,14 @@ async function sendTemplateMessage(
   templateMessage: any,
   campaignParticipantId: string,
   templateData: WaTemplateData,
-  { accessToken, phoneId, campaignId, campaignSendId, sourceIdentifier }: MessageOptions,
+  {
+    accessToken: jobAccessToken,
+    phoneId,
+    campaignId,
+    campaignSendId,
+    sourceIdentifier,
+    idempotencyKey,
+  }: MessageOptions,
   isFinalAttempt: boolean,
   dripStageId?: string,
   dripCampaignParticipantId?: string,
@@ -300,34 +318,44 @@ async function sendTemplateMessage(
   // a condition that cannot resolve until the org upgrades or the cycle resets. It is
   // not booked as this recipient's failure either: every recipient after this one would
   // be refused the same way, so the campaign is paused and they all stay PENDING.
-  const data = await sendMetaMessage({
-    platform: PlatformType.WHATSAPP,
-    orgId,
-    to: templateMessage.to,
-    payload: templateMessage as unknown as Record<string, unknown>,
-    category,
-    teamId,
-    messageType: "CAMPAIGN",
-    // Decrypted once for the whole batch by the enqueue processor; resolving
-    // again here would be a query and a decrypt per message.
-    credentials: {
-      accessToken,
-      phoneId,
-      sourceIdentifier,
-      auth: "header",
-    },
-    campaign: {
-      participantId: campaignParticipantId,
-      // Despite the name, `handleWaMessages` files this against the per-stage
-      // participant row (`campaignParticipantDripStageId`), not the stage.
-      dripStageId: dripCampaignParticipantId ?? null,
-      campaignSendId,
-      templateData,
-    },
-  }).catch((error: unknown) => {
-    if (error instanceof CampaignCreditsExhaustedError) return null;
-    throw error;
-  });
+  //
+  // The token is no longer in the job (it sat in Redis once per recipient); it is
+  // resolved by phone id through a short in-process cache. A job enqueued before
+  // that change still carries one, and uses it.
+  const accessToken =
+    jobAccessToken || (phoneId ? await resolveCampaignAccessToken(orgId, phoneId) : null);
+  const data: MetaSendResult | null = !accessToken
+    ? { ok: false, error: NO_CONNECTED_NUMBER }
+    : await sendMetaMessage({
+        platform: PlatformType.WHATSAPP,
+        orgId,
+        to: templateMessage.to,
+        payload: templateMessage as unknown as Record<string, unknown>,
+        category,
+        teamId,
+        messageType: "CAMPAIGN",
+        credentials: {
+          accessToken,
+          phoneId,
+          sourceIdentifier,
+          auth: "header",
+        },
+        campaign: {
+          participantId: campaignParticipantId,
+          // Despite the name, `handleWaMessages` files this against the per-stage
+          // participant row (`campaignParticipantDripStageId`), not the stage.
+          dripStageId: dripCampaignParticipantId ?? null,
+          campaignSendId,
+          templateData,
+        },
+        idempotencyKey,
+      }).catch((error: unknown) => {
+        if (error instanceof CampaignCreditsExhaustedError) return null;
+        throw error;
+      });
+  // Whether this run actually reached Meta. Not when there was no token, and not
+  // when an earlier run of this job had already sent the message.
+  const calledMeta = Boolean(accessToken) && !data?.replayed;
 
   if (data === null) {
     log.warn({ orgId, campaignId }, "Campaign send blocked — campaign credits used up");
@@ -337,45 +365,45 @@ async function sendTemplateMessage(
     return { ok: false, paused: true };
   }
 
+  // Meta was called, so the usage counter ticks — whatever happens next. It never
+  // throws, so it cannot fail the bookkeeping below. Not for a run that never
+  // reached Meta (no token, or a replay of a send an earlier run made).
+  if (calledMeta) await countMetaCall(orgId);
+
   // An account-wide rejection from Meta. Same reasoning as the limit above, except
-  // Meta *was* called, so the usage counter still ticks.
+  // Meta *was* called, so the usage counter (above) still ticked.
   const pauseReason = data.ok ? null : pauseReasonForMetaError(data.detail?.code);
   if (pauseReason) {
-    // One statement, so no transaction and no held connection: the pause walks
-    // the queue, and holding a pooled connection open across that is how P2028
-    // started.
-    await dbPool.query(
-      `UPDATE "UsageStats" SET "messagesCount" = "messagesCount" + 1 WHERE "orgId" = $1`,
-      [orgId],
-    );
     await pauseCampaignForAccountIssue(campaignId, pauseReason);
     return { ok: false, paused: true };
   }
 
+  // An accepted send has nothing left to book here: its message row was written
+  // by `sendMetaMessage`, and the usage count is buffered. No connection taken.
+  if (data.ok) return { ok: true };
+
+  // A timed-out send may have been delivered, so it is never retried in the
+  // queue seconds later; it is booked as a failure the retry engine can weigh.
+  // Otherwise the HTTP status goes along with the code, so an HTML 502 or an
+  // empty 429 — no Graph code at all — reads as transient, not permanent.
+  const failureClass = isSendOutcomeUnknown(data.detail)
+    ? WaFailureClass.RETRY_LATER
+    : classifyWaFailure(data.detail?.code, data.detail?.httpStatus);
+
+  // Deferred while BullMQ still has attempts left. `countMetaCall` above is not
+  // deferred, deliberately: every call to Meta is a call to Meta, whether or not
+  // it succeeded.
+  if (!isFinalAttempt && failureClass === WaFailureClass.TRANSIENT) {
+    return { ok: false, failureClass };
+  }
+
   // The send already happened; this records its outcome atomically. Raw `pg`
-  // rather than `prisma.$transaction`: this runs at concurrency 250 and Prisma
-  // gave up waiting for a free connection with P2028, losing the bookkeeping for
-  // every send in a real campaign. See `src/utils/db.ts`.
+  // rather than `prisma.$transaction`: Prisma gave up waiting for a free
+  // connection with P2028 under campaign load, losing the bookkeeping for every
+  // send in a real campaign. See `src/utils/db.ts`.
   const client = await dbPool.connect();
   try {
     await client.query("BEGIN");
-
-    await updateWaMonthlyStat(orgId, client);
-
-    if (data.ok) {
-      await client.query("COMMIT");
-      return { ok: true };
-    }
-
-    const failureClass = classifyWaFailure(data.detail?.code);
-
-    // Deferred while BullMQ still has attempts left. `updateWaMonthlyStat` above
-    // is not deferred, deliberately: every call to Meta is a call to Meta,
-    // whether or not it succeeded.
-    if (!isFinalAttempt && failureClass === WaFailureClass.TRANSIENT) {
-      await client.query("COMMIT");
-      return { ok: false, failureClass };
-    }
 
     // Failure bookkeeping. These write to different tables, so they are
     // independent — but they share the one connection holding the transaction,

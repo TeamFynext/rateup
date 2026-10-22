@@ -1,7 +1,6 @@
 import { FastifyInstance } from "fastify";
 import {
   completeOrgDetailsHandler,
-  createOrgHandler,
   deleteOrgAdminHandler,
   deleteOrgHandler,
   getAllMembersWithTeamsAndInvitationHandler,
@@ -39,8 +38,7 @@ import { assertRootOrg } from "../../utils/auth.js";
 import {
   byOrgIdParams,
   ByOrgIdParams,
-  createOrgRequestSchema,
-  createOrgResponseSchema,
+  completeOrgDetailsSchema,
   IdParamInput,
   idParamRequestSchema,
   PauseOrgInput,
@@ -66,18 +64,8 @@ import {
 export async function orgRoutes(server: FastifyInstance) {
   declareAccess(server, { access: "session" });
 
-  server.post(
-    "/",
-    {
-      schema: {
-        body: createOrgRequestSchema,
-        response: {
-          201: createOrgResponseSchema,
-        },
-      },
-    },
-    createOrgHandler,
-  );
+  // No `POST /`: an org is created by sign-up, with its owner's membership, subscription and
+  // default team. The bare create took its owner from the body.
 
   server.get(
     "/",
@@ -236,7 +224,7 @@ export async function orgRoutes(server: FastifyInstance) {
   );
   server.put(
     "/completeorgdetails",
-    { config: { permission: "org.settings" } },
+    { config: { permission: "org.settings" }, schema: { body: completeOrgDetailsSchema } },
     completeOrgDetailsHandler,
   );
   server.get("/orgnameandphone", orgNameAndPhoneNumber);

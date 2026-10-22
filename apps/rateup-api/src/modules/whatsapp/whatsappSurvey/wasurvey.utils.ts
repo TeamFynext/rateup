@@ -44,7 +44,15 @@ export const ratingEmoji = "⭐️";
 
 export { isMetaAiOriginated } from "../../metaAgent/metaAgent.origin.js";
 
+/**
+ * What a delivery is, judged by its FIRST change only (and a status change by its
+ * first status). Callers with a whole delivery must narrow it first:
+ * `processWhatsappWebhook` (wasurvey.webhook.ts) asks once per change, and its
+ * status handler reads each status's own type.
+ */
 export function getEventType(data: WaMessageBody) {
+  // A delivery with no change in it is nothing to handle — not a TypeError.
+  if (!data?.entry?.[0]?.changes?.[0]) return null;
   if (data.object === "whatsapp_business_account") {
     // Checked first: a standby change nests its messages and statuses under
     // `value.standby`, so every branch below would read it as empty.
@@ -61,23 +69,29 @@ export function getEventType(data: WaMessageBody) {
     }
     if (data.entry[0].changes[0].field === WaEvent.TemplateStatusChange) {
       return WaEvent.TemplateStatusChange;
+    } else if (data.entry[0].changes[0].field === WaEvent.TemplateCategoryUpdate) {
+      // The dispatcher has handled this for a while, but nothing classified it,
+      // so every category change fell through as "no event".
+      return WaEvent.TemplateCategoryUpdate;
     } else if (data.entry[0].changes[0].field === WaEvent.ACCOUNT_UPDATE) {
       return WaEvent.ACCOUNT_UPDATE;
     } else if (data.entry[0].changes[0].field === WaEvent.PhoneNumberNameUpdate) {
       return WaEvent.PhoneNumberNameUpdate;
     } else if (
       data.entry[0].changes[0].field === WaEvent.Message &&
-      (data.entry[0].changes[0].value as WaReceiveMessageBody).messages?.length > 0
+      ((data.entry[0].changes[0].value as WaReceiveMessageBody | undefined)?.messages?.length ??
+        0) > 0
     ) {
       return WaEvent.Message;
     } else if (
       data.entry[0].changes[0].field === WaEvent.SMBMessageEchoes &&
-      (data as unknown as WaMessageEchoBody).entry[0].changes[0].value.message_echoes?.length > 0
+      ((data as unknown as WaMessageEchoBody).entry[0].changes[0].value?.message_echoes?.length ??
+        0) > 0
     ) {
       return WaEvent.SMBMessageEchoes;
     } else if (
-      (data.entry[0].changes[0].value as WaReceiveMessageBody).statuses?.[0]?.status ===
-        "captured" &&
+      (data.entry[0].changes[0].value as WaReceiveMessageBody | undefined)?.statuses?.[0]
+        ?.status === "captured" &&
       (data.entry[0].changes[0].value as WaReceiveMessageBody)?.statuses?.[0]?.payment?.transaction
         ?.status === "success" &&
       (data.entry[0].changes[0].value as WaReceiveMessageBody)?.statuses?.[0]?.type === "payment"
@@ -693,8 +707,10 @@ export const handlePaymentConfirmation = async (
 };
 export function getMessageObject(data: WaMessageBody) {
   if ((data.entry[0].changes[0].value as WaReceiveMessageBody).messages.length > 1) {
-    // TODO: Find out when this happens
-    throw new Error("This shouldn't have occured. Multiple messages not supported");
+    // Meta does batch messages. The webhook processor hands every message over
+    // in a body of its own (`singleMessageBody`, wasurvey.webhook.ts), so a body
+    // with more than one never reaches here from the webhook.
+    throw new Error("getMessageObject takes a body with exactly one message");
   }
   const message = (data.entry[0].changes[0].value as WaReceiveMessageBody).messages[0];
   const completeMessageObject = data.entry[0].changes[0].value;

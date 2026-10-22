@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { log } from "../../../utils/logger.js";
+import { isNonProductionRuntime } from "../../../utils/meta.js";
 
 /**
  * The `flow_token` is the only thing Meta echoes back to us on both the
@@ -67,12 +68,40 @@ export interface FlowContext {
   issuedAt: Date;
 }
 
+/** Values that ship in examples and must never sign a real token. */
+const PLACEHOLDER_SECRETS = new Set(["change-me", "changeme", "secret", "password", "test"]);
+const MIN_SECRET_LENGTH = 16;
+
+/**
+ * Why `value` cannot sign flow tokens, or null when it can. A placeholder is refused
+ * everywhere; the length floor applies outside development and tests, whose fixtures
+ * use short values.
+ */
+export function flowTokenSecretProblem(
+  value: string | undefined,
+  env: Record<string, string | undefined> = process.env,
+): string | null {
+  if (!value) return "FLOW_TOKEN_SECRET environment variable must be set";
+  if (PLACEHOLDER_SECRETS.has(value.trim().toLowerCase())) {
+    return "FLOW_TOKEN_SECRET is still the example placeholder; set a random value";
+  }
+  if (value.length < MIN_SECRET_LENGTH && !isNonProductionRuntime(env)) {
+    return `FLOW_TOKEN_SECRET must be at least ${MIN_SECRET_LENGTH} characters`;
+  }
+  return null;
+}
+
+// Loudly at boot (this module loads with the flow routes), not only at the first send.
+{
+  const problem = flowTokenSecretProblem(process.env.FLOW_TOKEN_SECRET);
+  if (problem) log.error(`${problem}; WhatsApp Flow tokens cannot be signed or verified`);
+}
+
 function secret() {
   const value = process.env.FLOW_TOKEN_SECRET;
-  if (!value) {
-    throw new Error("FLOW_TOKEN_SECRET environment variable must be set");
-  }
-  return value;
+  const problem = flowTokenSecretProblem(value);
+  if (problem) throw new Error(problem);
+  return value!;
 }
 
 function sign(body: string) {

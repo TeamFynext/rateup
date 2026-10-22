@@ -155,3 +155,63 @@ describe("came-from-an-ad rules", () => {
     expect(adRule("INSTAGRAM").error?.issues[0].path).toEqual(["triggerEvent"]);
   });
 });
+
+describe("m.me link rules", () => {
+  const link = { ...base, triggerEvent: "MESSENGER_REFERRAL" };
+
+  test("accept the link trigger on Messenger, with or without a ref", () => {
+    expect(createRuleSchema.safeParse({ ...link, platform: "FACEBOOK" }).success).toBe(true);
+    expect(
+      createRuleSchema.safeParse({
+        ...link,
+        platform: "FACEBOOK",
+        options: { messengerRef: "summer_sale" },
+      }).success,
+    ).toBe(true);
+  });
+
+  test.each(["WHATSAPP", "INSTAGRAM"])("reject the link trigger on %s", (platform) => {
+    const result = createRuleSchema.safeParse({ ...link, platform });
+
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].message).toBe("This trigger is only available for Messenger");
+  });
+
+  test("reject it on several channels at once", () => {
+    const result = createRuleSchema.safeParse({ ...link, platforms: ["FACEBOOK", "INSTAGRAM"] });
+
+    expect(result.success).toBe(false);
+  });
+
+  test("reject a ref with characters Meta does not allow", () => {
+    const result = createRuleSchema.safeParse({
+      ...link,
+      platform: "FACEBOOK",
+      options: { messengerRef: "summer sale!" },
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].path).toEqual(["options", "messengerRef"]);
+  });
+});
+
+describe("Facebook comment rules", () => {
+  const onComment = { ...base, triggerEvent: "FACEBOOK_COMMENT" };
+
+  test("accept the comment trigger on Messenger, with public replies", () => {
+    expect(
+      createRuleSchema.safeParse({
+        ...onComment,
+        platform: "FACEBOOK",
+        options: { instagramPublicReplies: ["Sent you a message!"] },
+      }).success,
+    ).toBe(true);
+  });
+
+  test.each(["WHATSAPP", "INSTAGRAM"])("reject it on %s", (platform) => {
+    const result = createRuleSchema.safeParse({ ...onComment, platform });
+
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].message).toBe("This trigger is only available for Messenger");
+  });
+});

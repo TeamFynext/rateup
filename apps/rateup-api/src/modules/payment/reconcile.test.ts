@@ -12,7 +12,7 @@ vi.mock("../../utils/prisma.js", () => ({
     order: { update: vi.fn(), findUnique: vi.fn(), findMany: vi.fn() },
     subscription: { update: vi.fn(), findUnique: vi.fn(), findMany: vi.fn() },
     subscriptionAddon: { findUnique: vi.fn(), create: vi.fn() },
-    payments: { create: vi.fn() },
+    payments: { create: vi.fn(), upsert: vi.fn() },
     rateupPlan: { findUnique: vi.fn(), findFirst: vi.fn() },
     paymentPlans: { findFirst: vi.fn() },
     usageStats: { update: vi.fn() },
@@ -195,9 +195,13 @@ describe("reconcileOrgPayments — one-off orders", () => {
         ],
       },
     } as never);
-    vi.mocked(prisma.payments.create).mockResolvedValue({ id: "p-1" } as never);
+    vi.mocked(prisma.payments.upsert).mockResolvedValue({ id: "p-1" } as never);
     vi.mocked(prisma.order.findUnique).mockResolvedValue({
+      id: "order-1",
       orgId: ORG,
+      addonQuantity: 2,
+      amountMinor: 100000,
+      currency: "INR",
       RateupPlan: { id: "addon-1", name: "PACK", planType: "ADDON" },
     } as never);
     vi.mocked(prisma.subscriptionAddon.findUnique).mockResolvedValue(null as never);
@@ -209,8 +213,11 @@ describe("reconcileOrgPayments — one-off orders", () => {
 
     expect(result.changed).toBe(true);
     // The captured payment, not the failed attempt beside it.
-    expect(prisma.payments.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ payId: "pay_ok" }) }),
+    expect(vi.mocked(prisma.order.findUnique).mock.calls[0][0].where).toEqual({
+      checkoutRefId: "order_rzp1",
+    });
+    expect(prisma.payments.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ create: expect.objectContaining({ payId: "pay_ok" }) }),
     );
     expect(prisma.subscriptionAddon.create).toHaveBeenCalled();
   });
@@ -227,7 +234,7 @@ describe("reconcileOrgPayments — one-off orders", () => {
     const result = await reconcileOrgPayments(ORG);
 
     expect(result.changed).toBe(false);
-    expect(prisma.payments.create).not.toHaveBeenCalled();
+    expect(prisma.payments.upsert).not.toHaveBeenCalled();
   });
 });
 

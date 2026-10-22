@@ -1,5 +1,6 @@
 import type { FastifyRequest } from "fastify";
 import { createRemoteJWKSet, jwtVerify, type JWTVerifyGetKey } from "jose";
+import { clientIp } from "../../utils/http.js";
 import { sessionCookieName, type StaffConfig } from "./staff.config.js";
 import { forbidden, StaffHttpError, unauthenticated } from "./staff.errors.js";
 import { findStaffSession, judgeSession, touchStaffSession } from "./staff.session.js";
@@ -15,9 +16,12 @@ function header(request: FastifyRequest, name: string): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
 
-/** The caller's address. The browser calls the API directly, and `trustProxy` is set. */
+/**
+ * The caller's address, for the sign-in limiter and audit rows. `clientIp` reads Cloudflare's
+ * `CF-Connecting-IP` or the hop-counted `request.ip`, never a client-written XFF entry.
+ */
 export function staffClientIp(request: FastifyRequest): string {
-  return request.ip || "unknown";
+  return clientIp(request);
 }
 
 const jwksByTeam = new Map<string, JWTVerifyGetKey>();

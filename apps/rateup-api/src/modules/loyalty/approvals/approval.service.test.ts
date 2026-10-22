@@ -11,10 +11,15 @@ vi.mock("../../../utils/prisma.js", () => ({
       updateMany: vi.fn(),
       count: vi.fn(),
     },
-    customerLoyaltyAccount: { findUnique: vi.fn(), update: vi.fn() },
+    customerLoyaltyAccount: { findUnique: vi.fn(), findFirst: vi.fn(), update: vi.fn() },
     loyaltyProgram: { findUnique: vi.fn() },
-    loyaltyRedemption: { findUnique: vi.fn(), update: vi.fn(), updateMany: vi.fn() },
-    loyaltyTransaction: { create: vi.fn() },
+    loyaltyRedemption: {
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+    },
+    loyaltyTransaction: { create: vi.fn(), findFirst: vi.fn() },
     $transaction: vi.fn(),
   },
 }));
@@ -147,6 +152,39 @@ beforeEach(() => {
 // ===========================================================================
 
 describe("createApprovalRequest", () => {
+  test("refuses an account outside the caller's programme before writing anything", async () => {
+    db.customerLoyaltyAccount.findFirst.mockResolvedValueOnce(null);
+
+    await expect(
+      createApprovalRequest(
+        { requestType: "POINTS_ADJUSTMENT", accountId: "acct-b", points: 50_000 } as any,
+        "prog-a",
+      ),
+    ).rejects.toMatchObject({ code: "MEMBER_NOT_FOUND" });
+    expect(db.customerLoyaltyAccount.findFirst.mock.calls[0][0].where).toEqual({
+      id: "acct-b",
+      programId: "prog-a",
+    });
+    expect(db.approvalRequest.create).not.toHaveBeenCalled();
+  });
+
+  test("refuses a redemption that is not the account's", async () => {
+    db.customerLoyaltyAccount.findFirst.mockResolvedValueOnce({ id: "acct-1" });
+    db.loyaltyRedemption.findFirst.mockResolvedValueOnce(null);
+
+    await expect(
+      createApprovalRequest(
+        {
+          requestType: "REWARD_REDEMPTION",
+          accountId: "acct-1",
+          redemptionId: "red-b",
+        } as any,
+        "prog-a",
+      ),
+    ).rejects.toThrow();
+    expect(db.approvalRequest.create).not.toHaveBeenCalled();
+  });
+
   test("defaults the requester type to CUSTOMER and the payload to an empty object", async () => {
     await createApprovalRequest({
       requestType: "POINTS_ADJUSTMENT",
@@ -285,6 +323,22 @@ describe("getApprovalRequestById", () => {
 // ===========================================================================
 
 describe("approveApprovalRequest — redemptions", () => {
+  test("the approval and the balance move only if still PENDING and still covered", async () => {
+    await approveApprovalRequest(
+      { approvalId: "apr-1", reviewerId: "u", reviewerName: "R" } as any,
+      PROGRAM,
+    );
+
+    expect(db.approvalRequest.update.mock.calls[0][0].where).toEqual({
+      id: "apr-1",
+      status: "PENDING",
+    });
+    expect(db.customerLoyaltyAccount.update.mock.calls[0][0].where).toEqual({
+      id: "acct-1",
+      currentPoints: { gte: 100 },
+    });
+  });
+
   const input = { approvalId: "apr-1", reviewerId: "user-1", reviewerName: "Reviewer" } as any;
 
   test("refuses a request that is not pending", async () => {

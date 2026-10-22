@@ -37,6 +37,7 @@ import prisma from "../../utils/prisma.js";
 import redis from "../../utils/redisConnection.js";
 import { log } from "../../utils/logger.js";
 import { generateRandomAlphaId } from "../../utils/misc/random.utils.js";
+import { buildActor } from "../../authz/actor.js";
 import {
   ApiKeyAlreadyExistsError,
   ApiKeyLimitError,
@@ -78,7 +79,6 @@ import {
 import {
   assertApiAccessToken,
   assertApiKeyV2,
-  verifyApiAccessTokenHook,
   verifyWidgetTokenHook,
 } from "./apiAccessToken.auth.js";
 import { getApiUsage } from "./apiUsage.js";
@@ -1221,159 +1221,6 @@ describe("assertApiKeyV2 → authenticateApiAccessToken", () => {
   });
 });
 
-describe("verifyApiAccessTokenHook", () => {
-  async function runHook(over: Record<string, unknown> = {}, valid = true) {
-    const { key } = mintApiKey();
-    if (valid) storeKey(key);
-    const request = hookReq({
-      params: { orgId: ORG },
-      headers: { authorization: `Bearer ${key}` },
-      ...over,
-    });
-    const rep = reply();
-    await verifyApiAccessTokenHook(request, rep);
-    return { request, rep, key };
-  }
-
-  test("a valid key puts the org on the request and sends nothing", async () => {
-    const { request, rep } = await runHook();
-
-    expect(request.user).toEqual({ orgId: ORG, role: "SUPER_ADMIN" });
-    expect(request.user).not.toHaveProperty("userId");
-    expect(rep.send).not.toHaveBeenCalled();
-  });
-
-  test("falls back to the query string when there is no orgId path param", async () => {
-    const { request, rep } = await runHook({ params: {}, query: { orgId: ORG } });
-
-    expect(request.user).toEqual({ orgId: ORG, role: "SUPER_ADMIN" });
-    expect(rep.send).not.toHaveBeenCalled();
-  });
-
-  test("no orgId anywhere answers 404 with no error field", async () => {
-    const rep = reply();
-
-    await verifyApiAccessTokenHook(hookReq(), rep);
-
-    expect(rep.code).toHaveBeenCalledWith(404);
-    expect(rep.send).toHaveBeenCalledWith({ message: "Not found" });
-  });
-
-  test("a missing Authorization header answers 400", async () => {
-    const rep = reply();
-
-    await verifyApiAccessTokenHook(hookReq({ params: { orgId: ORG } }), rep);
-
-    expect(rep.code).toHaveBeenCalledWith(400);
-    expect(rep.send).toHaveBeenCalledWith({
-      message: "Invalid request",
-      error: "No bearer token found in headers",
-    });
-  });
-
-  test("a non-bearer Authorization header answers 400 without touching the cache", async () => {
-    const rep = reply();
-
-    await verifyApiAccessTokenHook(
-      hookReq({ params: { orgId: ORG }, headers: { authorization: "Basic abc" } }),
-      rep,
-    );
-
-    expect(rep.code).toHaveBeenCalledWith(400);
-    expect(cache.mget).not.toHaveBeenCalled();
-    expect(db.apiAccessToken.findUnique).not.toHaveBeenCalled();
-  });
-
-  test("an empty bearer token answers 401 without a lookup", async () => {
-    const rep = reply();
-
-    await verifyApiAccessTokenHook(
-      hookReq({ params: { orgId: ORG }, headers: { authorization: "Bearer " } }),
-      rep,
-    );
-
-    expect(rep.code).toHaveBeenCalledWith(401);
-    expect(rep.send).toHaveBeenCalledWith({
-      message: "Not authorized",
-      error: "No access token found in headers",
-    });
-    expect(db.apiAccessToken.findUnique).not.toHaveBeenCalled();
-  });
-
-  test("an invalid key answers 401 and sets no identity", async () => {
-    const { request, rep } = await runHook({}, false);
-
-    expect(rep.code).toHaveBeenCalledWith(401);
-    expect(rep.send).toHaveBeenCalledWith({
-      message: "Not authorized",
-      error: "Invalid access token",
-    });
-    expect(request.user).toBeUndefined();
-    expect(request.apiKey).toBeUndefined();
-  });
-
-  test("a key for one org does not authenticate against another", async () => {
-    const { key } = mintApiKey();
-    storeKey(key, { orgId: ORG });
-    const request = hookReq({
-      params: { orgId: OTHER_ORG },
-      headers: { authorization: `Bearer ${key}` },
-    });
-    const rep = reply();
-
-    await verifyApiAccessTokenHook(request, rep);
-
-    expect(rep.code).toHaveBeenCalledWith(401);
-    expect(request.user).toBeUndefined();
-  });
-
-  test("an unexpected failure answers a plain 401, exactly once", async () => {
-    const { key } = mintApiKey();
-    db.apiAccessToken.findUnique.mockRejectedValueOnce(new Error("pg down"));
-    const rep = reply();
-
-    await verifyApiAccessTokenHook(
-      hookReq({ params: { orgId: ORG }, headers: { authorization: `Bearer ${key}` } }),
-      rep,
-    );
-
-    expect(rep.code.mock.calls).toEqual([[401]]);
-    expect(rep.send).toHaveBeenCalledWith({ message: "Not authorized" });
-  });
-
-  test("no refusal writes the request headers to the log", async () => {
-    const { key } = mintApiKey();
-
-    for (const headers of [
-      { authorization: "Basic secret" },
-      { authorization: "Bearer " },
-      { authorization: `Bearer ${key}`, cookie: "sAccessToken=abc" },
-      {},
-    ]) {
-      await verifyApiAccessTokenHook(hookReq({ params: { orgId: ORG }, headers }), reply());
-    }
-    await verifyApiAccessTokenHook(hookReq({ headers: { authorization: "Bearer x" } }), reply());
-
-    const logged = JSON.stringify([
-      ...(log.error as unknown as Mock).mock.calls,
-      ...(log.warn as unknown as Mock).mock.calls,
-    ]);
-    expect(logged).not.toContain(key);
-    expect(logged).not.toContain(hashApiKey(key));
-    expect(logged).not.toContain("Basic secret");
-    expect(logged).not.toContain("sAccessToken");
-  });
-
-  test("but the org id and the reason are still logged", async () => {
-    await verifyApiAccessTokenHook(
-      hookReq({ params: { orgId: ORG }, headers: { authorization: "Basic secret" } }),
-      reply(),
-    );
-
-    expect(log.error).toHaveBeenCalledWith({ orgId: ORG }, "No bearer token found in headers");
-  });
-});
-
 describe("verifyWidgetTokenHook", () => {
   async function runWidget(scopes: string[], version: "v1" | "v2" = "v2") {
     const { key } = mintApiKey("live", version);
@@ -1463,6 +1310,7 @@ describe("controllers", () => {
   function req(over: Record<string, unknown> = {}) {
     return {
       user: { userId: "u-1", orgId: ORG, role: "MEMBER", email: "a@b.c" },
+      actor: buildActor({ kind: "user", userId: "u-1", orgId: ORG, roleKey: "ADMIN" }),
       params: {},
       body: {},
       query: {},
@@ -1487,7 +1335,10 @@ describe("controllers", () => {
   test("create answers 201 with the plaintext once, for the session org and user", async () => {
     const rep = reply();
 
-    await createApiKeyHandler(req({ body: { name: "POS", features: [], mode: "live" } }), rep);
+    await createApiKeyHandler(
+      req({ body: { name: "POS", features: ["contacts"], mode: "live" } }),
+      rep,
+    );
 
     expect(rep.code).toHaveBeenCalledWith(201);
     const body = rep.send.mock.calls[0][0];
@@ -1501,7 +1352,7 @@ describe("controllers", () => {
     const rep = reply();
 
     await createApiKeyHandler(
-      req({ body: { name: "Legacy", features: [], mode: "live", version: "v1" } }),
+      req({ body: { name: "Legacy", features: ["contacts"], mode: "live", version: "v1" } }),
       rep,
     );
 
@@ -1542,7 +1393,7 @@ describe("controllers", () => {
 
   test("an orgId smuggled into the body is ignored", async () => {
     await createApiKeyHandler(
-      req({ body: { name: "x", features: [], orgId: OTHER_ORG } }),
+      req({ body: { name: "x", features: ["contacts"], orgId: OTHER_ORG } }),
       reply(),
     );
 
@@ -1553,7 +1404,7 @@ describe("controllers", () => {
     db.apiAccessToken.count.mockResolvedValueOnce(MAX_KEYS_PER_ORG);
     const rep = reply();
 
-    await createApiKeyHandler(req({ body: { name: "x", features: [] } }), rep);
+    await createApiKeyHandler(req({ body: { name: "x", features: ["contacts"] } }), rep);
 
     expect(rep.code).toHaveBeenCalledWith(409);
   });
@@ -1605,9 +1456,9 @@ describe("controllers", () => {
     db.apiAccessToken.count.mockRejectedValueOnce(new Error("connection lost"));
     const rep = reply();
 
-    await expect(createApiKeyHandler(req({ body: { features: [] } }), rep)).rejects.toThrow(
-      "connection lost",
-    );
+    await expect(
+      createApiKeyHandler(req({ body: { features: ["contacts"] } }), rep),
+    ).rejects.toThrow("connection lost");
     expect(rep.send).not.toHaveBeenCalled();
   });
 
@@ -1619,6 +1470,101 @@ describe("controllers", () => {
 
     expect(getApiUsage).toHaveBeenCalledWith(ORG, { days: 7 });
     expect(rep.send).toHaveBeenCalledWith({ days: [] });
+  });
+
+  describe("a key is a grant", () => {
+    const limited = (over: { denies?: string[]; grants?: string[]; roleKey?: any } = {}) =>
+      buildActor(
+        { kind: "user", userId: "u-1", orgId: ORG, roleKey: over.roleKey ?? "ADMIN" },
+        { denies: over.denies, grants: over.grants },
+      );
+
+    test("create refuses 403, naming them, permissions the member does not hold", async () => {
+      const rep = reply();
+
+      await createApiKeyHandler(
+        req({
+          actor: limited({ denies: ["campaigns.send"] }),
+          body: { name: "x", features: ["campaigns"] },
+        }),
+        rep,
+      );
+
+      expect(rep.code).toHaveBeenCalledWith(403);
+      expect(rep.send.mock.calls[0][0].message).toContain("campaigns.send");
+      expect(db.apiAccessToken.create).not.toHaveBeenCalled();
+    });
+
+    test("a team-scoped member granted api_tokens.manage cannot mint an org-wide key", async () => {
+      const rep = reply();
+
+      await createApiKeyHandler(
+        req({
+          actor: limited({ roleKey: "MANAGER", grants: ["api_tokens.manage"] }),
+          body: { name: "x", features: ["contacts"] },
+        }),
+        rep,
+      );
+
+      expect(rep.code).toHaveBeenCalledWith(403);
+      expect(rep.send.mock.calls[0][0].reason).toBe("scope");
+      expect(db.apiAccessToken.create).not.toHaveBeenCalled();
+    });
+
+    test("the widget feature needs no member permission: no role holds widget.connect", async () => {
+      const rep = reply();
+
+      await createApiKeyHandler(req({ body: { name: "Widget", features: ["widget"] } }), rep);
+
+      expect(rep.code).toHaveBeenCalledWith(201);
+    });
+
+    test("an update cannot widen a limited key to full access", async () => {
+      db.apiAccessToken.findFirst.mockResolvedValueOnce(row({ scopes: ["teams.read"] }));
+      const rep = reply();
+
+      await updateApiKeyHandler(req({ params: { keyId: keyId() }, body: { features: [] } }), rep);
+
+      expect(rep.code).toHaveBeenCalledWith(400);
+      expect(db.apiAccessToken.update).not.toHaveBeenCalled();
+    });
+
+    test("[] on a legacy full-access key leaves its scopes alone", async () => {
+      const existing = row({ scopes: [] });
+      db.apiAccessToken.findFirst.mockResolvedValueOnce(existing);
+
+      await updateApiKeyHandler(
+        req({ params: { keyId: existing.id }, body: { name: "renamed", features: [] } }),
+        reply(),
+      );
+
+      expect(db.apiAccessToken.update.mock.calls[0][0].data).not.toHaveProperty("scopes");
+    });
+
+    test("rotating needs the old key's scopes, since the new key inherits them", async () => {
+      db.apiAccessToken.findFirst.mockResolvedValueOnce(row({ scopes: ["campaigns.send"] }));
+      const rep = reply();
+
+      await rotateApiKeyHandler(
+        req({
+          actor: limited({ denies: ["campaigns.send"] }),
+          params: { keyId: keyId() },
+          body: { graceHours: 1 },
+        }),
+        rep,
+      );
+
+      expect(rep.code).toHaveBeenCalledWith(403);
+      expect(db.apiAccessToken.create).not.toHaveBeenCalled();
+    });
+
+    test("the legacy console's create names every feature instead of storing []", async () => {
+      await createApiAccessTokenHandler(req(), reply());
+
+      const scopes = db.apiAccessToken.create.mock.calls[0][0].data.scopes;
+      expect(scopes.length).toBeGreaterThan(0);
+      expect(scopes).toContain("widget.connect");
+    });
   });
 
   describe("legacy", () => {
@@ -1681,7 +1627,7 @@ describe("controllers", () => {
     test("scopes with no key answers 404", async () => {
       const rep = reply();
 
-      await updateApiAccessTokenScopesHandler(req({ body: { scopes: [] } }), rep);
+      await updateApiAccessTokenScopesHandler(req({ body: { scopes: ["contacts.read"] } }), rep);
 
       expect(rep.code).toHaveBeenCalledWith(404);
     });
@@ -1800,12 +1746,16 @@ describe("routes", () => {
     expect(create.opts.schema.body.safeParse({ name: "x", features: ["bogus"] }).success).toBe(
       false,
     );
-    expect(create.opts.schema.body.parse({ name: "x" })).toMatchObject({
-      mode: "live",
-      features: [],
-    });
-    expect(create.opts.schema.body.parse({ name: "x" }).version).toBe("v2");
-    expect(create.opts.schema.body.parse({ name: "x", version: "v1" }).version).toBe("v1");
+    // A new key names what it may use; nothing is full access by default any more.
+    expect(create.opts.schema.body.safeParse({ name: "x" }).success).toBe(false);
+    expect(create.opts.schema.body.safeParse({ name: "x", features: [] }).success).toBe(false);
+    const named = { name: "x", features: ["contacts"] };
+    expect(create.opts.schema.body.parse(named)).toMatchObject({ mode: "live" });
+    expect(create.opts.schema.body.parse(named).version).toBe("v2");
+    expect(create.opts.schema.body.parse({ ...named, version: "v1" }).version).toBe("v1");
+    const scopes = routes.find((r) => id(r) === "PUT /scopes");
+    expect(scopes.opts.schema.body.safeParse({ scopes: [] }).success).toBe(false);
+    expect(scopes.opts.schema.body.safeParse({ scopes: ["contacts.read"] }).success).toBe(true);
     expect(create.opts.schema.body.safeParse({ name: "x", version: "v3" }).success).toBe(false);
     const rotate = routes.find((r) => id(r) === "POST /keys/:keyId/rotate");
     expect(rotate.opts.schema.body.safeParse({ graceHours: 169 }).success).toBe(false);

@@ -19,7 +19,7 @@ vi.mock("../inbox/message/wamessage.service.js", async (importOriginal) => ({
   getWaMessageByMessageId,
 }));
 
-const { whatsappEventHandler } = await import("./wasurvey.controller.js");
+const { processWhatsappWebhook } = await import("./wasurvey.webhook.js");
 
 /** The business number the echo arrived on. */
 const CHANNEL = "96550334145";
@@ -60,11 +60,6 @@ function echoWebhook() {
   };
 }
 
-const reply = () => {
-  const r = { code: vi.fn(() => r), send: vi.fn(() => r) };
-  return r;
-};
-
 beforeEach(() => {
   vi.clearAllMocks();
   getWaMessageByMessageId.mockResolvedValue(null);
@@ -83,8 +78,8 @@ describe("SMB message echoes", () => {
    * whichever number the org connected first and came back as 131047.
    */
   test("records the business number as the channel, not the customer", async () => {
-    // @ts-expect-error — a webhook request is only ever read for `body` here.
-    await whatsappEventHandler(echoWebhook(), reply());
+    // @ts-expect-error — a hand-built body, looser than the WaMessageBody tuple types.
+    await processWhatsappWebhook(echoWebhook().body);
 
     expect(handleWaMessages).toHaveBeenCalledTimes(1);
     const args = handleWaMessages.mock.calls[0];
@@ -98,7 +93,7 @@ describe("SMB message echoes", () => {
   // nothing matches a message back to the number it ran on.
   test("spells the channel the way the inbound handler does", async () => {
     // @ts-expect-error — see above.
-    await whatsappEventHandler(echoWebhook(), reply());
+    await processWhatsappWebhook(echoWebhook().body);
 
     expect(handleWaMessages.mock.calls[0][5]).not.toContain("+");
   });
@@ -108,7 +103,7 @@ describe("SMB message echoes", () => {
     webhook.body.entry[0].changes[0].value.metadata.display_phone_number = "";
 
     // @ts-expect-error — see above.
-    await whatsappEventHandler(webhook, reply());
+    await processWhatsappWebhook(webhook.body);
 
     expect(handleWaMessages.mock.calls[0][5]).toBe(CHANNEL);
   });

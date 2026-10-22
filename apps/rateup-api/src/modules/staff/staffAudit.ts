@@ -5,7 +5,13 @@ import { staffClientIp } from "./staff.guards.js";
 
 type Db = PrismaClient | Prisma.TransactionClient;
 
-const SECRET_KEY = /password|token|secret|key|authorization|cookie/i;
+const SECRET_KEY = /password|passcode|token|secret|key|authorization|cookie|credential/i;
+/**
+ * `otp` and `pin` as a word of the key (`pin`, `otpCode`, `loginPin`, `user_pin`), not inside
+ * one (`shipping`, `opinion`). Their values are often plain digits, so a number goes too.
+ */
+const SHORT_SECRET_KEY =
+  /(?:^|[_\-.])(?:otp|pin|OTP|PIN)(?![a-z])|(?<=[a-z0-9])(?:Otp|OTP|Pin|PIN)(?![a-z])/;
 const MAX_DEPTH = 6;
 
 /**
@@ -24,7 +30,10 @@ export function redact(value: unknown, depth = 0): unknown {
   return Object.fromEntries(
     Object.entries(value as Record<string, unknown>).map(([key, inner]) => [
       key,
-      SECRET_KEY.test(key) && canHoldSecret(inner) ? "[redacted]" : redact(inner, depth + 1),
+      (SECRET_KEY.test(key) && canHoldSecret(inner)) ||
+      (SHORT_SECRET_KEY.test(key) && inner !== null && typeof inner !== "object")
+        ? "[redacted]"
+        : redact(inner, depth + 1),
     ]),
   );
 }

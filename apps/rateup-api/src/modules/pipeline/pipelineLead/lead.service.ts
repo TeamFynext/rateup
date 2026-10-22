@@ -185,6 +185,47 @@ export class LeadExistsForContactError extends Error {
   }
 }
 
+/**
+ * A lead named a stage, contact, label or assignee that is not this board's or this org's.
+ * Nothing upstream checks these ids — the route guard proves the caller may touch the
+ * board, not that every id in the body belongs to it — so the handler answers 400.
+ */
+export class ForeignLeadRefError extends Error {
+  constructor(readonly field: "stageId" | "contactId" | "labelIds" | "assigneeIds") {
+    super(`${field} does not belong to this board`);
+    this.name = "ForeignLeadRefError";
+  }
+}
+
+/** Refuses any contact, label or assignee id from outside the board's org/board. */
+async function assertLeadRefs(
+  orgId: string,
+  pipelineId: string,
+  refs: { contactId?: string | null; labelIds?: string[]; assigneeIds?: string[] },
+) {
+  if (refs.contactId) {
+    const contact = await prisma.contact.findFirst({
+      where: { id: refs.contactId, orgId },
+      select: { id: true },
+    });
+    if (!contact) throw new ForeignLeadRefError("contactId");
+  }
+  const labelIds = [...new Set(refs.labelIds ?? [])];
+  if (labelIds.length) {
+    const owned = await prisma.pipelineLabel.count({
+      where: { id: { in: labelIds }, pipelineId },
+    });
+    if (owned !== labelIds.length) throw new ForeignLeadRefError("labelIds");
+  }
+  const assigneeIds = [...new Set(refs.assigneeIds ?? [])];
+  if (assigneeIds.length) {
+    const members = await prisma.orgMember.count({
+      where: { userId: { in: assigneeIds }, orgId },
+    });
+    if (members !== assigneeIds.length) throw new ForeignLeadRefError("assigneeIds");
+  }
+}
+
 /** The lead that contact already holds on this board, if they hold one. */
 async function existingLeadForContact(contactId: string, pipelineId: string) {
   const lead = await prisma.lead.findUnique({
@@ -343,9 +384,16 @@ export async function createLead(
     quiet?: boolean;
   },
 ) {
-  const stage = await prisma.pipelineStage.findUniqueOrThrow({
-    where: { id: data.stageId },
+  // The stage has to be a column of the board the lead is going on.
+  const stage = await prisma.pipelineStage.findFirst({
+    where: { id: data.stageId, pipelineId: data.pipelineId },
     select: { status: true, pipeline: { select: { orgId: true } } },
+  });
+  if (!stage) throw new ForeignLeadRefError("stageId");
+  await assertLeadRefs(stage.pipeline.orgId, data.pipelineId, {
+    contactId: data.contactId,
+    labelIds: data.labelIds,
+    assigneeIds: data.assigneeIds,
   });
 
   // A typed-in number is enough to know who the customer is, so the lead gets a
@@ -474,6 +522,23 @@ export async function createLead(
 }
 
 export async function updateLead(id: string, data: UpdateLeadRequestSchema, userId: string) {
+  if (data.contactId || data.labelIds?.length || data.assigneeIds?.length) {
+    const board = await prisma.pipeline.findFirst({
+      where: { leads: { some: { id } } },
+      select: { id: true, orgId: true },
+    });
+    if (!board) {
+      throw new Prisma.PrismaClientKnownRequestError("Lead not found", {
+        code: "P2025",
+        clientVersion: Prisma.prismaVersion.client,
+      });
+    }
+    await assertLeadRefs(board.orgId, board.id, {
+      contactId: data.contactId,
+      labelIds: data.labelIds,
+      assigneeIds: data.assigneeIds,
+    });
+  }
   let addedAssignees: string[] = [];
   const updated = await prisma.$transaction(async (tx) => {
     // The join rows are rewritten before the lead is read back, so the returned

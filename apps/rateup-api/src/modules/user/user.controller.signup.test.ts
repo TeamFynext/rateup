@@ -24,6 +24,8 @@ vi.mock("./user.service.js", () => ({
   getLoggedUserInfo: vi.fn(),
   getLoggedUserProfile: vi.fn(),
   pauseUser: vi.fn(),
+  removeMemberFromOrg: vi.fn(),
+  revokeUserSessions: vi.fn(),
   updateUserActiveStatus: vi.fn(),
   updateUserAvailablityStatus: vi.fn(),
   updateUserPrefLanguage: vi.fn(),
@@ -53,6 +55,7 @@ import Session from "supertokens-node/recipe/session/index.js";
 import { Prisma } from "../../../generated/prisma/client.js";
 import { checkEmailExist, createUserSignup } from "./user.service.js";
 import { UserRecipes } from "../../types/enums.js";
+import { getUserInfo } from "../../utils/supertoken/supertoken.js";
 import {
   checkEmailExistHandler,
   createAppleUserHandler,
@@ -142,35 +145,55 @@ describe("createGoogleUserHandler", () => {
     expect(reply.payload).toEqual({ id: "user-1" });
   });
 
-  test("prefers the posted email and phone when the signup did not come from Google", async () => {
+  test("ignores a posted email when the sign-in has its own address", async () => {
     await createGoogleUserHandler(
       makeRequest(
-        googleBody({ type: "passwordless", email: "posted@acme.com", phoneNumber: "+15559999" }),
+        googleBody({ type: "passwordless", email: "cfo@target.com", phoneNumber: "+15559999" }),
       ),
       makeReply(),
     );
 
     expect(createUserSignupMock.mock.calls[0][0]).toMatchObject({
-      email: "posted@acme.com",
+      email: "owner@acme.com",
       phone: "+15559999",
       phoneNumber: "+15559999",
     });
   });
 
-  test("falls back to empty strings when the account carries no email and the body is bare", async () => {
+  test("a phone-only sign-in may name an address nobody uses, normalised", async () => {
+    getUserMock.mockResolvedValue({ emails: [], phoneNumbers: ["+15559999"] });
+    (getUserInfo as unknown as Mock).mockResolvedValue([]);
+
+    await createGoogleUserHandler(
+      makeRequest(googleBody({ type: "passwordless", email: " New@Acme.com " })),
+      makeReply(),
+    );
+
+    expect(createUserSignupMock.mock.calls[0][0].email).toBe("new@acme.com");
+  });
+
+  test("a phone-only sign-in cannot claim an address another sign-in already uses", async () => {
+    getUserMock.mockResolvedValue({ emails: [], phoneNumbers: ["+15559999"] });
+    (getUserInfo as unknown as Mock).mockResolvedValue([{ id: "someone-else" }]);
+    const reply = makeReply();
+
+    await createGoogleUserHandler(
+      makeRequest(googleBody({ type: "passwordless", email: "cfo@target.com" })),
+      reply,
+    );
+
+    expect(reply.code).toHaveBeenCalledWith(400);
+    expect(createUserSignupMock).not.toHaveBeenCalled();
+  });
+
+  test("refuses a sign-in with no address of its own and none posted", async () => {
     getUserMock.mockResolvedValue({ emails: [], phoneNumbers: [] });
+    const reply = makeReply();
 
-    await createGoogleUserHandler(makeRequest({ type: "google" }), makeReply());
+    await createGoogleUserHandler(makeRequest({ type: "google" }), reply);
 
-    expect(createUserSignupMock.mock.calls[0][0]).toMatchObject({
-      email: "",
-      name: "",
-      orgName: "",
-      phone: "",
-      phoneNumber: "",
-      goals: [],
-      integrationsSelected: [],
-    });
+    expect(reply.code).toHaveBeenCalledWith(400);
+    expect(createUserSignupMock).not.toHaveBeenCalled();
   });
 
   test.each([
@@ -256,7 +279,7 @@ describe("createAppleUserHandler", () => {
     expect(reply.code).toHaveBeenCalledWith(201);
   });
 
-  test("prefers the posted email and phone when the signup did not come from Apple", async () => {
+  test("takes the email from the sign-in, never the body", async () => {
     await createAppleUserHandler(
       makeRequest(
         googleBody({ type: "google", email: "posted@acme.com", phoneNumber: "+1555888" }),
@@ -265,7 +288,7 @@ describe("createAppleUserHandler", () => {
     );
 
     expect(createUserSignupMock.mock.calls[0][0]).toMatchObject({
-      email: "posted@acme.com",
+      email: "owner@acme.com",
       phone: "+1555888",
     });
   });

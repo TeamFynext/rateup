@@ -1,5 +1,12 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
+// Hook URLs are resolved before every call (src/utils/ssrf.ts); keep that off the network.
+vi.mock("node:dns/promises", () => ({
+  lookup: vi.fn(async (host: string) => [
+    { address: host.includes("internal") ? "10.0.0.5" : "203.0.113.10", family: 4 },
+  ]),
+}));
+
 vi.mock("../../../utils/prisma.js", () => ({
   default: {
     integration: { findUnique: vi.fn(), update: vi.fn(), create: vi.fn() },
@@ -270,6 +277,45 @@ describe("Make deliveries", () => {
 
     expect(result).toBe("skipped");
     expect(axios.post).not.toHaveBeenCalled();
+  });
+
+  test("a hook on a private address is switched off and never called", async () => {
+    const internal = "https://metadata.internal/hook";
+    const result = await makeProvider.processJob!(
+      makeRow([
+        { id: "h-1", hookUrl: internal, subscribed_field: "new_contact_create", active: true },
+      ]),
+      {
+        integrationName: "make",
+        triggerKey: "make_delivery",
+        orgId: ORG,
+        data: { trigger: "new_contact_create", hookUrl: internal, payload: {} },
+      },
+      { finalAttempt: false } as never,
+    );
+
+    expect(result).toBe("skipped");
+    expect(axios.post).not.toHaveBeenCalled();
+    expect(db.$executeRaw).toHaveBeenCalled();
+  });
+
+  test("a delivery follows no redirects and has a timeout", async () => {
+    (axios.post as unknown as Mock).mockResolvedValueOnce({ status: 200 });
+    await makeProvider.processJob!(
+      makeRow([{ id: "h-1", hookUrl: HOOK, subscribed_field: "new_contact_create", active: true }]),
+      {
+        integrationName: "make",
+        triggerKey: "make_delivery",
+        orgId: ORG,
+        data: { trigger: "new_contact_create", hookUrl: HOOK, payload: {} },
+      },
+      { finalAttempt: false } as never,
+    );
+
+    expect((axios.post as unknown as Mock).mock.calls[0][2]).toMatchObject({
+      maxRedirects: 0,
+      timeout: 15_000,
+    });
   });
 
   test("the Make provider ignores a Zapier delivery job", async () => {

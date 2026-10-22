@@ -723,13 +723,58 @@ export async function updateUserRecipe() {
   }
 }
 
-export async function pauseUser(id: string, data: PauseUserInput) {
-  return await prisma.user.update({
+/**
+ * Ends every session the user has. Called when their access changes in a way an existing
+ * session must not outlive: a password change or reset, a pause, a removal. Logged, not
+ * thrown: the change itself has already been made.
+ */
+export async function revokeUserSessions(userId: string, keepSessionHandle?: string) {
+  try {
+    if (!keepSessionHandle) {
+      await Session.revokeAllSessionsForUser(userId);
+      return;
+    }
+    const handles = await Session.getAllSessionHandlesForUser(userId);
+    const others = handles.filter((handle) => handle !== keepSessionHandle);
+    if (others.length) await Session.revokeMultipleSessions(others);
+  } catch (err) {
+    log.error({ err, userId }, "Could not revoke the user's sessions");
+  }
+}
+
+/** `pausedBy` is whoever is signed in, never what the client claims. */
+export async function pauseUser(id: string, data: PauseUserInput, pausedBy: string) {
+  const user = await prisma.user.update({
     where: {
       id,
     },
-    data,
+    data: { isPaused: data.isPaused, pausedBy: data.isPaused ? pausedBy : null },
   });
+  // The status is cached with the actor; both go so the next request sees the change.
+  await bustActorsForUser(id);
+  if (data.isPaused) await revokeUserSessions(id);
+  return user;
+}
+
+/**
+ * Takes a member out of one org: their team places and membership there. The account itself
+ * is deleted only when this was their last org, so removing someone from org A no longer
+ * destroys the login they use for org B. Their sessions end either way, since a session
+ * carries the org it was opened for.
+ */
+export async function removeMemberFromOrg(userId: string, orgId: string) {
+  await prisma.$transaction([
+    prisma.teamMember.deleteMany({ where: { userId, team: { orgId } } }),
+    prisma.orgMember.deleteMany({ where: { userId, orgId } }),
+  ]);
+  await bustActorsForUser(userId);
+
+  const remaining = await prisma.orgMember.count({ where: { userId } });
+  if (remaining === 0) {
+    return { accountDeleted: true, user: await updateUserActiveStatus(userId) };
+  }
+  await revokeUserSessions(userId);
+  return { accountDeleted: false, user: null };
 }
 
 /**

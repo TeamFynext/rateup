@@ -31,6 +31,7 @@ import { apiUsageOnResponse, flushApiUsage } from "../../modules/apiAccessToken/
 import { refuseTestKeyOnPaidRoute, requireScope } from "./scopes.js";
 import { idempotencyPreHandler } from "./idempotency.js";
 import { ExternalApiError } from "./errors.js";
+import { externalRateLimit } from "./rateLimit.js";
 import { registerPartnerHooks } from "./partnerHooks.js";
 
 type Mock = ReturnType<typeof vi.fn>;
@@ -159,5 +160,32 @@ describe("registerPartnerHooks", () => {
     expect(usageOnResponse).toHaveBeenCalledOnce();
     await app.close();
     expect(flushApiUsage).toHaveBeenCalled();
+  });
+});
+
+describe("rate limits", () => {
+  const limiterOptions = () =>
+    Object.fromEntries(
+      (externalRateLimit as unknown as Mock).mock.calls.map(([o]) => [o.key, o]),
+    ) as Record<string, any>;
+
+  test("the pre-auth per-address limiter fails closed and reads the safe client address", async () => {
+    await build();
+
+    const ip = limiterOptions().externalIp;
+    expect(ip.failClosed).toBe(true);
+    // Not the left-most X-Forwarded-For entry: a spoofed header keeps the same bucket.
+    expect(ip.keyFrom({ ip: "203.0.113.4", headers: { "x-forwarded-for": "10.0.0.1" } })).toBe(
+      "203.0.113.4",
+    );
+  });
+
+  test("a per-key bucket sits beside the per-org one", async () => {
+    await build();
+
+    const { externalOrg, externalKey } = limiterOptions();
+    expect(externalOrg).toBeDefined();
+    expect(externalKey.keyFrom({ apiKey: { id: "key-1" } })).toBe("key-1");
+    expect(externalKey.max).toBeLessThan(externalOrg.max);
   });
 });

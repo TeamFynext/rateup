@@ -9,6 +9,8 @@ const db = vi.hoisted(() => ({
   },
   staffUser: { findUnique: vi.fn(), update: vi.fn() },
   staffAuditLog: { create: vi.fn(), update: vi.fn() },
+  org: { findFirst: vi.fn() },
+  user: { findFirst: vi.fn() },
 }));
 // rateLimit runs INCR+EXPIRE as one EVAL; route it through `incr` so the cases below can
 // keep steering the count (or the outage) with `redis.incr`.
@@ -453,6 +455,73 @@ test("a subscription change without a reason is refused before anything is writt
     expect(res.statusCode, url).toBe(400);
     expect(res.json().code, url).toBe("VALIDATION");
   }
+});
+
+describe("privileged writes (plan, add-ons, suspension, pause)", () => {
+  const org = "/api/staff/orgs/0a5b8a7e-2f7c-4d2e-9a51-3c1f0e6b9d24";
+  const headers = { ...withSession, origin: ORIGIN, "x-staff-csrf": "1" };
+  const reason = "Customer asked on the phone";
+  const expiry = { expiresAt: new Date(Date.now() + 86_400_000).toISOString(), reason };
+
+  test("a subscription change needs a staff owner", async () => {
+    db.staffSession.findUnique.mockResolvedValue(
+      liveSession({ staffUser: { ...liveSession().staffUser, isOwner: false } }),
+    );
+    const { app } = await buildApp();
+    const res = await app.inject({
+      method: "PUT",
+      url: `${org}/subscription/expiry`,
+      headers,
+      payload: expiry,
+    });
+    expect(res.statusCode).toBe(403);
+    expect(res.json().code).toBe("NOT_OWNER");
+  });
+
+  test.each([
+    ["PUT", "/subscription/expiry", expiry],
+    ["POST", "/suspend", { reason }],
+    ["POST", "/unsuspend", { reason }],
+  ] as const)(
+    "%s %s wants a Google sign-in from the last 15 minutes",
+    async (method, path, payload) => {
+      db.staffSession.findUnique.mockResolvedValue(
+        liveSession({ authenticatedAt: new Date(Date.now() - 16 * 60_000) }),
+      );
+      const { app } = await buildApp();
+      const res = await app.inject({ method, url: `${org}${path}`, headers, payload });
+      expect(res.statusCode).toBe(401);
+      expect(res.json().code).toBe("REAUTH_REQUIRED");
+    },
+  );
+
+  test("a staff member cannot change an org they belong to", async () => {
+    db.org.findFirst.mockResolvedValue({ id: "org" });
+    const { app } = await buildApp();
+    const res = await app.inject({
+      method: "POST",
+      url: `${org}/suspend`,
+      headers,
+      payload: { reason },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(res.json().code).toBe("OWN_ACCOUNT");
+    const where = db.org.findFirst.mock.calls[0][0].where;
+    expect(JSON.stringify(where)).toContain("ann@rateup.app");
+  });
+
+  test("nor pause themselves or someone in their own org", async () => {
+    db.user.findFirst.mockResolvedValue({ id: "u" });
+    const { app } = await buildApp();
+    const res = await app.inject({
+      method: "PUT",
+      url: "/api/staff/users/0a5b8a7e-2f7c-4d2e-9a51-3c1f0e6b9d24/pause",
+      headers,
+      payload: { paused: true, reason },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(res.json().code).toBe("OWN_ACCOUNT");
+  });
 });
 
 test("a maintenance preview needs a session and the CSRF header, like any POST", async () => {

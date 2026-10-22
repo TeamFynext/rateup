@@ -9,6 +9,7 @@ import { waAutomatedReplyRoutes } from "./automatedReply/wa_automatedReply.route
 import { metaAutomationRoutes } from "./automatedReply/instagram_automatedReply.route.js";
 import { PlatformType } from "../../../generated/prisma/enums.js";
 import { instagramProfileRoutes } from "./instagram/instagram_profile.route.js";
+import { messengerProfileRoutes } from "./facebook/messenger_profile.route.js";
 import { waInboxRoutes } from "./inbox/wainbox.routes.js";
 import { waAuthRoutes } from "./auth/wa_auth.route.js";
 import { handleWhatsappError } from "./wa_error_handler.js";
@@ -37,6 +38,7 @@ export async function whatsappRoutes(server: FastifyInstance) {
   server.register(instagramProfileRoutes, {
     prefix: "/instagram-profile",
   });
+  server.register(messengerProfileRoutes, { prefix: "/messenger-profile" });
   server.register(waInboxRoutes, { prefix: "/inbox" });
   server.register(waCatalogRoutes, { prefix: "/catalog" });
   server.register(waCallingRoutes, { prefix: "/calls" });

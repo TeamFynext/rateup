@@ -24,7 +24,7 @@ export async function runAssignNode(
   let assignedUserIds = assignData?.assign?.assignedUserIds || [];
   let teamId = assignData?.assign?.teamId || null;
   if (assignData?.assign?.assignType === "me") {
-    const teams = await getTeamIdsByUserId(assignedUserIds?.[0]);
+    const teams = await getTeamIdsByUserId(assignedUserIds?.[0], orgId);
     teamId = teams?.[0] || null;
   } else if (
     teamId &&

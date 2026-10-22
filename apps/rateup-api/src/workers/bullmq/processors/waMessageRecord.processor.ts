@@ -18,14 +18,16 @@ export const waMessageRecordWorker = new Worker<WaMessageRecordJob>(
     const data = job.data;
 
     // The first attempt may have written the row and failed afterwards, or the
-    // status consumer's own path may have caught up — either way, done.
+    // status consumer's own path may have caught up — either way, done. An
+    // early exit only; a store racing this one is settled by the unique index
+    // and comes back as null below.
     if (await getWaMessageByMessageId(data.messageId)) {
       log.debug({ messageId: data.messageId }, "Message already recorded; nothing to do");
       return;
     }
 
     // Throws on failure so BullMQ applies the queue's backoff and attempts.
-    await handleWaMessages(
+    const stored = await handleWaMessages(
       "send",
       data.payload as never,
       data.recipient,
@@ -43,6 +45,10 @@ export const waMessageRecordWorker = new Worker<WaMessageRecordJob>(
       {},
       data.campaign,
     );
+    if (stored === null) {
+      log.debug({ messageId: data.messageId }, "Message recorded by another attempt meanwhile");
+      return;
+    }
     log.warn(
       { messageId: data.messageId, orgId: data.orgId, attempt: job.attemptsMade + 1 },
       "Message stored by the record queue",

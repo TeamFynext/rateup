@@ -1,5 +1,12 @@
 import { beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
 
+// Hook URLs are resolved before every call (src/utils/ssrf.ts); keep that off the network.
+vi.mock("node:dns/promises", () => ({
+  lookup: vi.fn(async (host: string) => [
+    { address: host.includes("internal") ? "10.0.0.5" : "203.0.113.10", family: 4 },
+  ]),
+}));
+
 vi.hoisted(() => {
   process.env.GOOGLE_OAUTH_CLIENT_ID = "google-client-id";
   process.env.GOOGLE_OAUTH_CLIENT_SECRET = "google-client-secret";
@@ -366,7 +373,24 @@ describe("deleteZapierTriggerHooks", () => {
       ORG,
     );
 
-    expect(axios.delete).toHaveBeenCalledWith("https://hooks.zapier.com/1");
+    expect(axios.delete).toHaveBeenCalledWith(
+      "https://hooks.zapier.com/1",
+      expect.objectContaining({ maxRedirects: 0 }),
+    );
+  });
+
+  test("never calls a stored hook URL on a private address, but still removes it", async () => {
+    db.integration.findUnique.mockResolvedValue(
+      integration([{ hookUrl: "https://metadata.internal/1", active: true }]),
+    );
+
+    await deleteZapierTriggerHooks(
+      { hookUrl: "https://metadata.internal/1", active: true } as never,
+      ORG,
+    );
+
+    expect(axios.delete).not.toHaveBeenCalled();
+    expect(db.integration.update).toHaveBeenCalled();
   });
 
   test("skips the outbound call when the stored subscription is inactive", async () => {

@@ -15,6 +15,11 @@ import {
 } from "./earningRule.schema.js";
 import { getLoyaltyProgramByOrg } from "../program/program.service.js";
 
+/** Prisma's "no row matched" — here, an id outside the caller's programme. */
+function isRecordNotFound(e: unknown) {
+  return typeof e === "object" && e !== null && "code" in e && e.code === "P2025";
+}
+
 export async function createLoyaltyEarningRuleHandler(
   request: FastifyRequest<{ Body: LoyaltyEarningRuleInput }>,
   reply: FastifyReply,
@@ -61,7 +66,10 @@ export async function getLoyaltyEarningRuleByIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    const result = await getLoyaltyEarningRuleById(request.params.ruleId);
+    const program = await getLoyaltyProgramByOrg(request.user.orgId);
+    const result = program
+      ? await getLoyaltyEarningRuleById(request.params.ruleId, program.id)
+      : null;
     if (!result) {
       return reply.code(404).send({ error: "Earning rule not found" });
     }
@@ -80,9 +88,16 @@ export async function updateLoyaltyEarningRuleHandler(
   reply: FastifyReply,
 ) {
   try {
-    const result = await updateLoyaltyEarningRule(request.params.ruleId, request.body);
+    const program = await getLoyaltyProgramByOrg(request.user.orgId);
+    if (!program) {
+      return reply.code(404).send({ error: "Earning rule not found" });
+    }
+    const result = await updateLoyaltyEarningRule(request.params.ruleId, program.id, request.body);
     reply.code(200).send(result);
   } catch (e) {
+    if (isRecordNotFound(e)) {
+      return reply.code(404).send({ error: "Earning rule not found" });
+    }
     log.error(e);
     reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
@@ -93,9 +108,16 @@ export async function deleteLoyaltyEarningRuleHandler(
   reply: FastifyReply,
 ) {
   try {
-    await deleteLoyaltyEarningRule(request.params.ruleId);
+    const program = await getLoyaltyProgramByOrg(request.user.orgId);
+    if (!program) {
+      return reply.code(404).send({ error: "Earning rule not found" });
+    }
+    await deleteLoyaltyEarningRule(request.params.ruleId, program.id);
     reply.code(204).send();
   } catch (e) {
+    if (isRecordNotFound(e)) {
+      return reply.code(404).send({ error: "Earning rule not found" });
+    }
     log.error(e);
     reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }

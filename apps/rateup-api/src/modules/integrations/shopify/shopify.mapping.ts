@@ -48,7 +48,8 @@ export function resolveShopifyPathValue(
     resolvedValue = String(val ?? "");
   }
 
-  log.info(`[Shopify Webhook Variable] Resolved path: "${path}" -> value: "${resolvedValue}"`);
+  // The value is customer data (names, phones, addresses); only the path is logged.
+  log.trace({ path }, "[Shopify Webhook Variable] Resolved path");
 
   return resolvedValue;
 }

@@ -773,6 +773,21 @@ describe("handleWaMessages - fanning out", () => {
     await expect(callHandleWaMessages()).resolves.toEqual(WA_MESSAGE);
   });
 
+  test("does nothing past the insert for a message another delivery stored", async () => {
+    // addNewWaMessage's answer when the unique messageId index refuses the row.
+    m.addNewWaMessage.mockResolvedValue(null);
+
+    await expect(callHandleWaMessages({ type: "send", messageId: "wamid-1" })).resolves.toBeNull();
+    expect(m.createWaMessageOrgTeamMap).not.toHaveBeenCalled();
+    expect(m.sendViaWs).not.toHaveBeenCalled();
+
+    await expect(
+      callHandleWaMessages({ type: "receive", messageId: "wamid-1" }),
+    ).resolves.toBeNull();
+    expect(m.emit).not.toHaveBeenCalled();
+    expect(m.sendViaWs).not.toHaveBeenCalled();
+  });
+
   // A storage failure is logged and rethrown, so the caller can tell the message was
   // never stored rather than receiving undefined and treating it as a success.
   test("reports a storage failure rather than swallowing it", async () => {

@@ -58,7 +58,15 @@ describe("surveyInScope", () => {
     expect(await surveyInScope("someone-elses-survey", orgWide)).toBe(false);
     expect(db.survey.findFirst.mock.calls[0][0].where).toEqual({
       id: "someone-elses-survey",
-      OR: [{ orgId: ORG }, { orgId: null }],
+      OR: [{ orgId: ORG }, { orgId: null, teams: { some: { team: { orgId: ORG } } } }],
     });
+  });
+
+  test("a survey with no org is reached only through a team of the actor's org", async () => {
+    db.survey.findFirst.mockResolvedValue(null);
+
+    expect(await surveyInScope("legacy-survey", orgWide)).toBe(false);
+    const where = db.survey.findFirst.mock.calls[0][0].where;
+    expect(where.OR).not.toContainEqual({ orgId: null });
   });
 });

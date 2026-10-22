@@ -1,5 +1,7 @@
 import { Prisma, RulePlatform } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
+import { ActionType } from "../../../../generated/prisma/enums.js";
+import { assertPublicUrl, PublicUrlError } from "../../../utils/ssrf.js";
 import { CreateRuleInput, requestedPlatforms, UpdateRuleInput } from "./wa_rule.schema.js";
 
 const MESSAGE_BODY_FIELD = "MESSAGE_BODY";
@@ -224,7 +226,9 @@ function triggerSkipsKeywordLock(triggerEvent: string) {
     triggerEvent === "INSTAGRAM_COMMENT" ||
     triggerEvent === "INSTAGRAM_STORY_MENTION" ||
     triggerEvent === "INSTAGRAM_REFERRAL" ||
-    triggerEvent === "WHATSAPP_AD_REFERRAL"
+    triggerEvent === "WHATSAPP_AD_REFERRAL" ||
+    triggerEvent === "MESSENGER_REFERRAL" ||
+    triggerEvent === "FACEBOOK_COMMENT"
   );
 }
 
@@ -265,9 +269,28 @@ async function resolveRulePlatforms(
   return found;
 }
 
+/**
+ * A CALL_EXTERNAL_API action posts to a URL the rule author typed, so it is refused at save
+ * time unless it resolves to a public address (the send path checks again before each call).
+ * An empty value is left alone: templates start that way and the action then does nothing.
+ * Throws PublicUrlError, which the controller answers with a 400.
+ */
+export async function assertRuleActionUrls(actions: CreateRuleInput["actions"] | undefined) {
+  for (const action of actions ?? []) {
+    if (action.type !== ActionType.CALL_EXTERNAL_API) continue;
+    const value: unknown = action.value;
+    if (value === undefined || value === null || value === "") continue;
+    if (typeof value !== "string") {
+      throw new PublicUrlError("The external API action needs a URL");
+    }
+    await assertPublicUrl(value, { allowHttp: true });
+  }
+}
+
 // Create Rule
 export async function createRule(data: CreateRuleInput & { orgId: string }) {
   const { groups, actions, options, orgId } = data;
+  await assertRuleActionUrls(actions);
   const platforms = await resolveRulePlatforms(
     orgId,
     data.whatsappSettingsPhoneIds,
@@ -367,9 +390,10 @@ export async function getRuleById(id: string, orgId: string) {
 }
 
 // Update Rule
-export async function updateRule(id: string, data: UpdateRuleInput) {
-  const existingRule = await prisma.rule.findUnique({
-    where: { id },
+export async function updateRule(id: string, orgId: string, data: UpdateRuleInput) {
+  // Scoped to the caller's org: another org's rule reads as missing.
+  const existingRule = await prisma.rule.findFirst({
+    where: { id, orgId },
     select: {
       orgId: true,
       platform: true,
@@ -393,6 +417,7 @@ export async function updateRule(id: string, data: UpdateRuleInput) {
   }
 
   const { groups, actions, options, platform: _platform, platforms: _platforms, ...rest } = data;
+  await assertRuleActionUrls(actions);
 
   const existingPlatforms = existingRule.platforms.length
     ? existingRule.platforms
@@ -447,7 +472,7 @@ export async function updateRule(id: string, data: UpdateRuleInput) {
     }
 
     const updatedRule = await tx.rule.update({
-      where: { id },
+      where: { id, orgId },
       data: {
         ...rest,
         ...(channelsTouched && { platform: platforms[0], platforms }),
@@ -501,10 +526,12 @@ export async function updateRule(id: string, data: UpdateRuleInput) {
 }
 
 // Delete Rule
-export async function deleteRule(id: string) {
+export async function deleteRule(id: string, orgId: string) {
   return prisma.$transaction(async (tx) => {
     await clearMessageBodyReservations(tx, id);
-    return tx.rule.delete({ where: { id } });
+    // Another org's rule matches nothing: Prisma throws P2025 and the reservation clear
+    // above rolls back with it.
+    return tx.rule.delete({ where: { id, orgId } });
   });
 }
 

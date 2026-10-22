@@ -1,7 +1,8 @@
 import "dotenv/config";
 import { LogController } from "fastify";
 import { build } from "./app.js";
-import { trustProxyFromEnv } from "./utils/trustProxy.js";
+import { initProcessMetrics } from "./utils/metrics.js";
+import { trustProxySetting } from "./utils/http.js";
 
 /**
  * API service entrypoint — HTTP only, safe to run at N replicas.
@@ -9,11 +10,15 @@ import { trustProxyFromEnv } from "./utils/trustProxy.js";
  * BullMQ consumers and cron jobs run in the worker service (src/worker.ts).
  */
 async function start() {
+  // Served at /api/health/metrics when METRICS_TOKEN is set.
+  initProcessMetrics("api");
   const server = await build({
     // logger: true,
     logController: new LogController({ disableRequestLogging: true }),
     bodyLimit: 30971520,
-    trustProxy: trustProxyFromEnv(),
+    // Cloudflare → Railway edge: trust that many hops (TRUST_PROXY_HOPS, default 2), never
+    // the whole X-Forwarded-For chain, whose left end the client writes.
+    trustProxy: trustProxySetting(),
     connectionTimeout: 60_000,
     keepAliveTimeout: 65_000,
     requestTimeout: 30_000,

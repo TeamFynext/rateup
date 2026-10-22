@@ -4,6 +4,7 @@ import {
   CloneAutomatedReplyBody,
   CreateAutomatedReplySchema,
   InitiateAutomatedReplyBody,
+  UpdateAutomatedReplySchema,
 } from "./wa_automatedReply.schema.js";
 import { FastifyReply } from "fastify";
 import {
@@ -120,7 +121,7 @@ export async function cloneAutomatedReplyHandler(
 export async function updateAutomatedReplyHandler(
   req: FastifyRequest<{
     Params: ByWaAutomatedReplyIdParams;
-    Body: CreateAutomatedReplySchema;
+    Body: UpdateAutomatedReplySchema;
   }>,
   reply: FastifyReply,
 ) {

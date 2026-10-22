@@ -10,6 +10,8 @@ const getWaSendingSettings = vi.fn();
 const getInstagramChannel = vi.fn();
 const getMessengerChannel = vi.fn();
 const enqueueWaMessageRecord = vi.fn();
+const getSentMessageId = vi.fn();
+const markMessageSent = vi.fn();
 
 vi.mock("../wa_axios.js", async () => {
   class GraphApiError extends Error {
@@ -29,6 +31,7 @@ vi.mock("../whatsappSurvey/wasurvey.auth.js", () => ({
   assertCampaignCredit,
 }));
 vi.mock("../../../workers/bullmq/queues/whatsapp.queue.js", () => ({ enqueueWaMessageRecord }));
+vi.mock("./sendIdempotency.js", () => ({ getSentMessageId, markMessageSent }));
 vi.mock("../settings/wa_settings.service.js", () => ({
   getWaSettings,
   getWaSendingSettings,
@@ -58,6 +61,8 @@ beforeEach(() => {
   callMetaApi.mockResolvedValue({ data: { messages: [{ id: "wamid.1" }] } });
   getWaMessageByMessageId.mockResolvedValue(null);
   enqueueWaMessageRecord.mockResolvedValue({ id: "record:wamid.1" });
+  getSentMessageId.mockResolvedValue(null);
+  markMessageSent.mockResolvedValue(undefined);
 });
 
 afterEach(() => {
@@ -90,7 +95,7 @@ describe("sendMetaMessage", () => {
   it("sends and records the message once", async () => {
     const result = await send();
 
-    expect(result).toEqual({ ok: true, messageId: "wamid.1" });
+    expect(result).toEqual({ ok: true, messageId: "wamid.1", recipientId: "+100" });
     expect(callMetaApi).toHaveBeenCalledWith("/phone-1/messages", "POST", "wa-token", payload, {});
     expect(handleWaMessages).toHaveBeenCalledTimes(1);
     // 10th positional argument is `failed`
@@ -161,7 +166,7 @@ describe("sendMetaMessage", () => {
       payload: { recipient: { id: "igs-1" }, message: { text: "hi" } },
     } as never);
 
-    expect(result).toEqual({ ok: true, messageId: "ig.1" });
+    expect(result).toEqual({ ok: true, messageId: "ig.1", recipientId: "igs-1" });
     // Scoped to the sending org, so a send never goes out on another org's account.
     expect(getInstagramChannel).toHaveBeenCalledWith("iba-1", ORG);
     const [path, method, token, , config] = callMetaApi.mock.calls[0];
@@ -196,7 +201,7 @@ describe("sendMetaMessage", () => {
 
     await expect(
       send({ campaign: { participantId: "p-1", campaignSendId: "s-1" }, messageType: "CAMPAIGN" }),
-    ).resolves.toEqual({ ok: true, messageId: "wamid.1" });
+    ).resolves.toEqual({ ok: true, messageId: "wamid.1", recipientId: "+100" });
     expect(handleWaMessages).toHaveBeenCalledTimes(1);
     expect(enqueueWaMessageRecord).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -213,7 +218,11 @@ describe("sendMetaMessage", () => {
     handleWaMessages.mockRejectedValueOnce(new Error("db down"));
     enqueueWaMessageRecord.mockRejectedValue(new Error("redis down"));
 
-    await expect(sendThroughRetries()).resolves.toEqual({ ok: true, messageId: "wamid.1" });
+    await expect(sendThroughRetries()).resolves.toEqual({
+      ok: true,
+      messageId: "wamid.1",
+      recipientId: "+100",
+    });
     expect(handleWaMessages).toHaveBeenCalledTimes(2);
   });
 
@@ -222,7 +231,11 @@ describe("sendMetaMessage", () => {
     enqueueWaMessageRecord.mockRejectedValue(new Error("redis down"));
     getWaMessageByMessageId.mockResolvedValue({ id: "row-1" });
 
-    await expect(sendThroughRetries()).resolves.toEqual({ ok: true, messageId: "wamid.1" });
+    await expect(sendThroughRetries()).resolves.toEqual({
+      ok: true,
+      messageId: "wamid.1",
+      recipientId: "+100",
+    });
     expect(handleWaMessages).toHaveBeenCalledTimes(1);
     expect(getWaMessageByMessageId).toHaveBeenCalledWith("wamid.1");
   });
@@ -231,7 +244,11 @@ describe("sendMetaMessage", () => {
     handleWaMessages.mockRejectedValue(new Error("db down"));
     enqueueWaMessageRecord.mockRejectedValue(new Error("redis down"));
 
-    await expect(sendThroughRetries()).resolves.toEqual({ ok: true, messageId: "wamid.1" });
+    await expect(sendThroughRetries()).resolves.toEqual({
+      ok: true,
+      messageId: "wamid.1",
+      recipientId: "+100",
+    });
     // The first attempt plus every fallback retry, then it gives up rather than throw.
     expect(handleWaMessages).toHaveBeenCalledTimes(4);
   });
@@ -287,6 +304,67 @@ describe("sendMetaMessage", () => {
   });
 });
 
+describe("sendMetaMessage — idempotency key", () => {
+  const campaignSend = (over = {}) =>
+    send({
+      campaign: { participantId: "p-1", campaignSendId: "s-1" },
+      messageType: "CAMPAIGN",
+      idempotencyKey: "job-1",
+      ...over,
+    });
+
+  it("marks the key as soon as Meta accepts, before recording", async () => {
+    await campaignSend();
+
+    expect(markMessageSent).toHaveBeenCalledWith("job-1", "wamid.1");
+    expect(markMessageSent.mock.invocationCallOrder[0]).toBeLessThan(
+      handleWaMessages.mock.invocationCallOrder[0],
+    );
+  });
+
+  // A stalled job rerun by BullMQ after Meta accepted its message.
+  it("does not call Graph again when the key is already marked", async () => {
+    getSentMessageId.mockResolvedValue("wamid.earlier");
+
+    const result = await campaignSend();
+
+    expect(result).toEqual({ ok: true, messageId: "wamid.earlier", replayed: true });
+    expect(callMetaApi).not.toHaveBeenCalled();
+    // Paid for on the first run; a rerun spends nothing.
+    expect(assertCampaignCredit).not.toHaveBeenCalled();
+    expect(markMessageSent).not.toHaveBeenCalled();
+    // The first run died before storing it, so this one does.
+    expect(handleWaMessages).toHaveBeenCalledTimes(1);
+    expect(handleWaMessages.mock.calls[0][7]).toBe("wamid.earlier");
+    expect(handleWaMessages.mock.calls[0][9]).toBe(false);
+  });
+
+  it("does not record twice when the first run already stored the message", async () => {
+    getSentMessageId.mockResolvedValue("wamid.earlier");
+    getWaMessageByMessageId.mockResolvedValue({ id: "row-1" });
+
+    await campaignSend();
+
+    expect(callMetaApi).not.toHaveBeenCalled();
+    expect(handleWaMessages).not.toHaveBeenCalled();
+  });
+
+  it("does not mark a rejected send", async () => {
+    callMetaApi.mockRejectedValue(new GraphApiError({ code: 131026 } as never));
+
+    await campaignSend();
+
+    expect(markMessageSent).not.toHaveBeenCalled();
+  });
+
+  it("leaves sends without a key alone", async () => {
+    await send();
+
+    expect(getSentMessageId).not.toHaveBeenCalled();
+    expect(markMessageSent).not.toHaveBeenCalled();
+  });
+});
+
 describe("metaErrorMessage", () => {
   it("prefers the copy Meta wrote for humans", () => {
     expect(
@@ -299,5 +377,21 @@ describe("metaErrorMessage", () => {
     expect(metaErrorMessage({ error_data: { details: "deep" } })).toBe("deep");
     expect(metaErrorMessage({ code: 131026 })).toBe("Graph error 131026");
     expect(metaErrorMessage(undefined)).toBe("Failed to send message");
+  });
+});
+
+// A private reply is addressed to the comment, not a person; Meta's answer names them.
+describe("sendMetaMessage - addressed to a comment", () => {
+  it("reports the recipient Meta named", async () => {
+    callMetaApi.mockResolvedValue({ data: { message_id: "m.1", recipient_id: "psid-9" } });
+
+    const result = await sendMetaMessage({
+      platform: PlatformType.FACEBOOK,
+      orgId: ORG,
+      sourceIdentifier: "page-1",
+      payload: { recipient: { comment_id: "c-1" }, message: { text: "hi" } },
+    } as never);
+
+    expect(result).toEqual({ ok: true, messageId: "m.1", recipientId: "psid-9" });
   });
 });

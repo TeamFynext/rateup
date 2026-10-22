@@ -4,7 +4,8 @@ import type z from "zod";
 
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
-import { clientIp, rateLimit } from "../../../utils/rateLimit.js";
+import { rateLimit } from "../../../utils/rateLimit.js";
+import { clientIp } from "../../../utils/http.js";
 import {
   checkoutFromStorefront,
   getPublicCheckout,

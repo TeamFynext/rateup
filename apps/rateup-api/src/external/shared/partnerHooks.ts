@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
 
 import { apiUsageOnResponse, flushApiUsage } from "../../modules/apiAccessToken/apiUsage.js";
+import { clientIp } from "../../utils/http.js";
 import { isOrgSuspended, ORG_SUSPENDED_MESSAGE } from "../../modules/org/orgSuspension.js";
 import { ExternalApiError, externalErrorHandler } from "./errors.js";
 import {
@@ -46,7 +47,10 @@ export function registerPartnerHooks(
       max: 300,
       windowSeconds: 60,
       key: "externalIp",
-      keyFrom: (r) => r.ip || "unknown",
+      keyFrom: clientIp,
+      // Fail closed: this is what bounds the bcrypt path and key guessing, and Redis sits in
+      // another region from the API, so an outage there must not lift it.
+      failClosed: true,
     }),
   );
 
@@ -69,6 +73,16 @@ export function registerPartnerHooks(
   server.addHook(
     "preHandler",
     externalRateLimit({ max: 1200, windowSeconds: 60, key: "externalOrg" }),
+  );
+  // And one per key inside it, so one runaway integration cannot spend the whole org's.
+  server.addHook(
+    "preHandler",
+    externalRateLimit({
+      max: 600,
+      windowSeconds: 60,
+      key: "externalKey",
+      keyFrom: (r) => r.apiKey?.id,
+    }),
   );
 
   // After the key and its scopes: a replay must never answer a caller who could not have

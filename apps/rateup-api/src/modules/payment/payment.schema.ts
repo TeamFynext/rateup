@@ -3,23 +3,21 @@ import { PaymentPlanStatus } from "../../../generated/prisma/client.js";
 import { z } from "zod";
 import { PaymentPlanType } from "./payment.service.js";
 
+/**
+ * A subscription checkout. Only the tier and, optionally, which of its linked gateway plans
+ * (the currency) are the customer's to choose; the server resolves the price and cadence
+ * from those links and the org from the session. `orgId`, `planName` and
+ * `isAnnualMessageLimit` are still accepted from older clients and ignored.
+ */
 const createCheckoutRequestSchema = z.object({
-  orgId: z.string({
-    error: (issue) => (issue.input === undefined ? "Org Id is required" : undefined),
-  }),
-  planId: z.string({
-    error: (issue) => (issue.input === undefined ? "Plan Id is required" : undefined),
-  }),
-  planName: z.string({
-    error: (issue) => (issue.input === undefined ? "Plan name is required" : undefined),
-  }),
-  period: z.string({
-    error: (issue) => (issue.input === undefined ? "Plan Period is required" : undefined),
-  }),
   rateupPlanId: z.string({
     error: (issue) => (issue.input === undefined ? "Rateup Plan Id is required" : undefined),
   }),
-  isAnnualMessageLimit: z.boolean(),
+  planId: z.string().optional(),
+  period: z.string().optional(),
+  orgId: z.string().optional(),
+  planName: z.string().optional(),
+  isAnnualMessageLimit: z.boolean().optional(),
 });
 const createRateUpPlanSchema = z.object({
   name: z.string().trim().min(1),
@@ -89,6 +87,7 @@ export {
   updateRateUpPlanSchema,
   rateupPlanParamSchema,
   paymentPlanDeleteSchema,
+  updatePlanSchema,
 };
 
 export const orderIdParamsSchema = z.object({

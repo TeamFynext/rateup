@@ -21,6 +21,7 @@ import {
 import {
   verifyTeamAccess,
   verifyTeamAdminAccess,
+  verifyTeamParamInScope,
   verifyTeamMaxCountRestriction,
   verifyTeamMemberMaxCountRestriction,
 } from "./team.auth.js";
@@ -112,7 +113,7 @@ export async function teamRoutes(server: FastifyInstance) {
     "/:id",
     {
       config: { permission: "teams.manage" },
-      preHandler: [checkSession, getVerifySubscriptionHandler([sf.Team])],
+      preHandler: [checkSession, getVerifySubscriptionHandler([sf.Team]), verifyTeamParamInScope],
       schema: {
         params: deleteTeamByIdRequestSchema,
       },
@@ -194,7 +195,7 @@ export async function teamRoutes(server: FastifyInstance) {
     "/members/:teamId",
     {
       config: { permission: "teams.manage_members" },
-      preHandler: [checkSession, getVerifySubscriptionHandler([sf.Team])],
+      preHandler: [checkSession, getVerifySubscriptionHandler([sf.Team]), verifyTeamParamInScope],
       schema: {
         params: getTeamMembersRequestSchema,
       },
@@ -206,7 +207,7 @@ export async function teamRoutes(server: FastifyInstance) {
     "/notmembers/:teamId",
     {
       config: { permission: "teams.manage_members" },
-      preHandler: [checkSession, getVerifySubscriptionHandler([sf.Team])],
+      preHandler: [checkSession, getVerifySubscriptionHandler([sf.Team]), verifyTeamParamInScope],
       schema: {
         params: getTeamMembersRequestSchema,
       },
@@ -218,11 +219,7 @@ export async function teamRoutes(server: FastifyInstance) {
     "/invitation/:teamId",
     {
       config: { permission: "members.invite" },
-      preHandler: [
-        checkSession,
-        getVerifySubscriptionHandler([sf.Team]),
-        //TODO check team member
-      ],
+      preHandler: [checkSession, getVerifySubscriptionHandler([sf.Team]), verifyTeamParamInScope],
       schema: {
         params: getTeamMembersRequestSchema,
       },
@@ -297,7 +294,7 @@ export async function teamRoutes(server: FastifyInstance) {
     "/:teamId/channels",
     {
       config: { permission: "channels.manage" },
-      preHandler: [checkSession, getVerifySubscriptionHandler([sf.Team])],
+      preHandler: [checkSession, getVerifySubscriptionHandler([sf.Team]), verifyTeamParamInScope],
       schema: {
         params: getTeamMembersRequestSchema,
         body: setTeamChannelsSchema,

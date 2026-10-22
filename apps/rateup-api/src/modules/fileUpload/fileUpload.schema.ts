@@ -36,10 +36,11 @@ const fileDeleteInputSchema = z.object({
   fileKeyArray: z
     .array(
       z.object({
-        Key: z.string().trim().min(1),
+        Key: z.string().trim().min(1).max(1024),
       }),
     )
-    .min(1),
+    .min(1)
+    .max(50),
 });
 
 export type fileDeleteInput = z.infer<typeof fileDeleteInputSchema>;

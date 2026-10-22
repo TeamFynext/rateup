@@ -1,6 +1,12 @@
 import { describe, expect, test } from "vitest";
 import { createLocalJWKSet, exportJWK, generateKeyPair, SignJWT, type JWTPayload } from "jose";
-import { buildGoogleAuthUrl, checkGoogleClaims, pkcePair, verifyGoogleIdToken } from "./google.js";
+import {
+  buildGoogleAuthUrl,
+  checkGoogleClaims,
+  googleAuthenticatedAt,
+  pkcePair,
+  verifyGoogleIdToken,
+} from "./google.js";
 
 const base: JWTPayload = {
   sub: "google-sub-1",
@@ -137,5 +143,23 @@ describe("verifyGoogleIdToken", async () => {
   test("rejects a token from another issuer", async () => {
     const token = await sign("https://evil.example", "cid");
     await expect(verifyGoogleIdToken(token, "cid", jwks)).rejects.toThrow();
+  });
+});
+
+describe("googleAuthenticatedAt", () => {
+  const now = new Date("2026-10-20T12:00:00Z");
+
+  test("is Google's auth_time, not the moment of the sign-in", () => {
+    const authTime = now.getTime() / 1000 - 3600;
+    expect(googleAuthenticatedAt({ auth_time: authTime }, now)).toEqual(new Date(authTime * 1000));
+  });
+
+  test("a token without auth_time is stale: a silent sign-in cannot pass step-up", () => {
+    expect(googleAuthenticatedAt({}, now)).toEqual(new Date(0));
+    expect(googleAuthenticatedAt({ auth_time: "now" } as JWTPayload, now)).toEqual(new Date(0));
+  });
+
+  test("never later than now", () => {
+    expect(googleAuthenticatedAt({ auth_time: now.getTime() / 1000 + 600 }, now)).toEqual(now);
   });
 });

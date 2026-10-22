@@ -175,6 +175,15 @@ export const SuperTokensConfig: TypeInput = {
 
             return response;
           },
+          passwordResetPOST: async function (input) {
+            const response = await originalImplementation.passwordResetPOST!(input);
+            // A reset is how someone takes an account back: every session open before it
+            // ends, including any held by whoever had the old password.
+            if (response.status === "OK") {
+              await Session.revokeAllSessionsForUser(response.user.id);
+            }
+            return response;
+          },
         }),
       },
       emailDelivery: {
@@ -305,6 +314,33 @@ export const SuperTokensConfig: TypeInput = {
       },
       contactMethod: "PHONE",
       flowType: "USER_INPUT_CODE",
+      override: {
+        apis: (originalImplementation) => ({
+          ...originalImplementation,
+          createCodePOST: async function (input) {
+            // Phone sign-up is a product flow today (the dashboard's /signup?auth=phone), so it
+            // stays on unless PASSWORDLESS_PHONE_SIGNUP=false: then an SMS is only ever sent
+            // to a number that already has an account, which ends SMS pumping to arbitrary
+            // numbers. The per-IP/per-number limits in plugins/index.ts apply either way.
+            if (
+              process.env.PASSWORDLESS_PHONE_SIGNUP === "false" &&
+              "phoneNumber" in input &&
+              input.phoneNumber
+            ) {
+              const existing = await supertokens.listUsersByAccountInfo(input.tenantId, {
+                phoneNumber: input.phoneNumber,
+              });
+              if (existing.length === 0) {
+                return {
+                  status: "GENERAL_ERROR",
+                  message: "No account uses this phone number. Sign up with your email first.",
+                };
+              }
+            }
+            return originalImplementation.createCodePOST!(input);
+          },
+        }),
+      },
     }),
 
     Session.init({
@@ -371,7 +407,18 @@ export const SuperTokensConfig: TypeInput = {
       },
     }),
 
-    Dashboard.init(),
+    // The SuperTokens admin dashboard is an admin login surface at /api/auth/dashboard; off
+    // unless explicitly enabled, and then limited to the listed admin emails.
+    ...(process.env.SUPERTOKENS_DASHBOARD === "1"
+      ? [
+          Dashboard.init({
+            admins: (process.env.SUPERTOKENS_DASHBOARD_ADMINS ?? "")
+              .split(",")
+              .map((email) => email.trim())
+              .filter(Boolean),
+          }),
+        ]
+      : []),
     jwt.init(),
   ],
 };

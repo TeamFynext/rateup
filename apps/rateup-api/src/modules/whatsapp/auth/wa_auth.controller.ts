@@ -1,6 +1,6 @@
 import { FastifyReply } from "fastify";
 import { FastifyRequest } from "fastify/types/request.js";
-import { RegisterBusinessBody } from "./wa_auth.schema.js";
+import type { RegisterBusinessBody, UserTokenBody } from "./wa_auth.schema.js";
 import crypto from "node:crypto";
 import {
   getAccessTokenFromCode,
@@ -102,6 +102,9 @@ export async function registerBusinessClientHandler(
     if (waSetting) {
       await updateWaSettings(orgId, phone?.id, {
         accessToken,
+        // The public key just registered with Meta above must pair with the private key on
+        // file, or every Flow sent from this number fails to decrypt after a reconnect.
+        encryption: keys,
         assets,
       });
       await recordAuditEvent(req, "Channel updated", {
@@ -159,12 +162,23 @@ export async function deRegisterBusinessClientHandler(
 }
 
 export async function getUserAccessTokenHanlder(
-  req: FastifyRequest<{ Body: RegisterBusinessBody }>,
+  req: FastifyRequest<{ Body: UserTokenBody; Params: { waSettingsId: string } }>,
   rep: FastifyReply,
 ) {
   try {
     const { code } = req.body;
-    const { waSettingsId } = req.params as { waSettingsId: string };
+    const { waSettingsId } = req.params;
+
+    // The pages synced below are written against this settings row, so it has to be the
+    // caller's own. `getMetaAssets` returning null cannot tell "not yours" from "nothing
+    // synced yet", so ownership is checked on its own, before anything reaches Meta.
+    const owned = await prisma.whatsappSettings.findFirst({
+      where: { id: waSettingsId, orgId: req.user.orgId },
+      select: { id: true },
+    });
+    if (!owned) {
+      return rep.status(404).send({ message: "WhatsApp settings not found" });
+    }
 
     const userAccessToken = await getAccessTokenFromCode(
       code,

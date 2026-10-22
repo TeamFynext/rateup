@@ -380,6 +380,20 @@ describe("the approval controller", () => {
     expect(answer(rep).code).toBe(201);
   });
 
+  test("files the request within the caller's programme, as the signed-in user", async () => {
+    await createApprovalRequestHandler(
+      request({
+        user: { orgId: ORG, userId: "user-7" },
+        body: { requestType: "POINTS_ADJUSTMENT", accountId: "acct-1", requestedBy: "someone" },
+      }),
+      reply(),
+    );
+
+    const [data, programId] = (createApprovalRequest as Mock).mock.calls[0];
+    expect(programId).toBe(PROGRAM);
+    expect(data.requestedBy).toBe("user-7");
+  });
+
   test("refuses to create when the org has no program", async () => {
     (getLoyaltyProgramByOrg as Mock).mockResolvedValue(null);
     const rep = reply();

@@ -6,6 +6,7 @@ import { log } from "../../utils/logger.js";
 import { generateAutomationKey } from "./automation/automation.keys.js";
 import { isAutomationPlatform } from "./automation/automation.platforms.js";
 import axios from "axios";
+import { assertPublicUrl, publicAxiosOptions } from "../../utils/ssrf.js";
 
 export const getAllIntegrationsByOrgId = (orgId: string) => {
   return prisma.integration.findMany({
@@ -150,7 +151,14 @@ export async function deleteZapierTriggerHooks(
   }
 
   if (stored.active) {
-    await axios.delete(stored.hookUrl);
+    // Stored before hook URLs were checked, so it may point anywhere; only a
+    // public address is told about the removal.
+    try {
+      await assertPublicUrl(stored.hookUrl);
+      await axios.delete(stored.hookUrl, publicAxiosOptions(10_000));
+    } catch (error) {
+      log.warn({ err: error, orgId }, "Could not notify Zapier of a removed trigger hook");
+    }
   }
   const credential = {
     ...integration.credential,

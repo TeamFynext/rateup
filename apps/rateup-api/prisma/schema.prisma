@@ -2,8 +2,12 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider        = "prisma-client"
+  output          = "../generated/prisma"
+  // `where:` on @@unique/@@index. Without it a partial index cannot be declared
+  // here, and an index the schema does not declare is dropped by the next
+  // `prisma db push` (see 20260918120000_analytics_indexes).
+  previewFeatures = ["partialIndexes"]
 }
 
 // for having typed Json fields
@@ -904,6 +908,10 @@ enum TriggerEvent {
   WHATSAPP_AD_REFERRAL
   /// A RateUp shop order changed state; options.shopOrderStatus narrows it (paid, shipped, …).
   SHOP_ORDER_EVENT
+  /// Someone opened the Messenger thread from an m.me link; options.messengerRef narrows it to one ?ref=.
+  MESSENGER_REFERRAL
+  /// Someone commented on a Facebook Page post; answered with a private reply on Messenger.
+  FACEBOOK_COMMENT
 }
 
 model RuleAction {
@@ -1049,22 +1057,27 @@ model TeamMember {
 }
 
 model Invitation {
-  id        String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email     String
-  name      String
-  type      InviteType
-  org       Org          @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId     String       @db.Uuid
-  team      Team?        @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId    String?      @db.Uuid
-  invitedBy String
-  createdAt DateTime     @default(now())
-  status    InviteStatus @default(PENDING)
+  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email          String
+  name           String
+  type           InviteType
+  org            Org          @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId          String       @db.Uuid
+  team           Team?        @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId         String?      @db.Uuid
+  invitedBy      String
+  createdAt      DateTime     @default(now())
+  status         InviteStatus @default(PENDING)
   /// The role the invitee gets on accept. NULL falls back to ADMIN.
-  role      Role?
+  role           Role?
   /// Every team the invitee joins on accept, teamId included. teamId stays the team the
   /// invitation is filed under; empty here means teamId alone.
-  teamIds   String[]     @default([]) @db.Uuid
+  teamIds        String[]     @default([]) @db.Uuid
+  /// SHA-256 (hex) of the token in the emailed invite link. The raw token is never stored;
+  /// NULL once the invitation is accepted, and on rows issued before tokens existed.
+  tokenHash      String?      @unique
+  /// When the emailed link stops working. A resend issues a new token and a new expiry.
+  tokenExpiresAt DateTime?
 
   @@unique([email, teamId], name: "team_id_email_unique")
 }
@@ -1942,6 +1955,23 @@ model Order {
   RateupPlan           RateupPlan?         @relation(fields: [rateupPlanId], references: [id])
   rateupPlanId         String?             @db.Uuid
   checkoutRefId        String?             @unique
+  /// What the gateway must collect for this order, in minor units, fixed by the server
+  /// when the order is created. Webhooks compare the captured amount against it.
+  amountMinor          Int?
+  currency             String?
+  /// How many packs an add-on order bought. Read by the payment webhook instead of the
+  /// payment's `notes`, which the browser's Checkout options can set.
+  addonQuantity        Int?
+}
+
+/// Razorpay webhook deliveries already acted on, keyed by `x-razorpay-event-id`, so a
+/// replayed or redelivered event is acknowledged without being applied twice.
+model RazorpayWebhookEvent {
+  eventId    String   @id
+  event      String
+  receivedAt DateTime @default(now())
+
+  @@index([receivedAt])
 }
 
 model Payments {
@@ -2171,17 +2201,23 @@ model WaMessage {
   pricingBillable                 Boolean?
   pricingType                     String?
 
+  // One row per platform message id. Meta redelivers webhooks, and with several
+  // replicas two copies of one message used to pass the "already stored?" check
+  // together and both be written — and both run the automations. Inserts now
+  // conflict here instead (see addNewWaMessage). Partial, so the rows that have
+  // no id (call logs, rejected sends) stay out of it. It also serves the status
+  // writes' `WHERE wm."messageId" = ANY(...)` in bulkUpdateStatuses: `= ANY`
+  // implies NOT NULL, so the planner can use a partial index for it.
+  @@unique([messageId], map: "WaMessage_messageId_key", where: raw("\"messageId\" IS NOT NULL"))
+  // Also serves every plain `contactId = …` lookup, including the ON DELETE CASCADE
+  // from Contact, which is why there is no separate [contactId] index any more.
   @@index([contactId, waCreatedAt(sort: Desc)])
-  @@index([contactId])
   @@index([sourceIdentifier, contactId])
   @@index([sendBy, waCreatedAt])
   @@index([conversationId])
   // Speeds the conversation backfill scan: EXISTS(WaMessage WHERE contactId = c.id
   // AND conversationId IS NULL) can be answered from this index alone.
   @@index([contactId, conversationId])
-  // Status writes match on the Meta message id (`WHERE wm."messageId" = ANY(...)`)
-  // in bulkUpdateStatuses; without this the batch degrades to a seq scan.
-  @@index([messageId])
   // Unused by reads, but deleting an org cascades to MeteredConversation, and each
   // deleted row's foreign-key check would otherwise scan all of WaMessage.
   @@index([meteredConversationId])

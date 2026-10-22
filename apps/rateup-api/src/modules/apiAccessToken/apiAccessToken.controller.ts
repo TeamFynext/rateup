@@ -5,6 +5,8 @@ import {
   ApiKeyLimitError,
   ApiKeyNotFoundError,
   ApiKeyNotRotatableError,
+  ApiKeyScopesRequiredError,
+  type ApiKeyScopeGuard,
   createApiKey,
   createApiKeyForOrg,
   deleteApiKey,
@@ -19,6 +21,8 @@ import {
 } from "./apiAccessToken.service.js";
 import { getApiUsage, listApiRequests } from "./apiUsage.js";
 import { featuresForScopes, permissionsForFeatures } from "../../authz/apiKeyFeatures.js";
+import { ForbiddenError } from "../../authz/errors.js";
+import { assertCanGrantKeyScopes } from "../../authz/grant.js";
 import type {
   ApiRequestsQuery,
   ApiUsageQuery,
@@ -38,11 +42,33 @@ function refuse(rep: FastifyReply, error: unknown): boolean {
     rep.code(409).send({ message: error.message });
     return true;
   }
+  if (error instanceof ApiKeyScopesRequiredError) {
+    rep.code(400).send({ message: error.message });
+    return true;
+  }
+  if (error instanceof ForbiddenError) {
+    rep.code(error.statusCode).send(error.toBody());
+    return true;
+  }
   if (error instanceof ApiKeyLimitError) {
     rep.code(409).send({ message: error.message, error: "Revoke a key you no longer use" });
     return true;
   }
   return false;
+}
+
+/**
+ * A key is a grant: the member minting, widening or rotating one may hand it only what they
+ * hold themselves (src/authz/grant.ts).
+ */
+function scopeGuard(req: FastifyRequest): ApiKeyScopeGuard {
+  return (scopes) => {
+    // `authorize` sets the actor on every session route; without one there is nothing to grant from.
+    if (!req.actor) {
+      throw new ForbiddenError("No actor for this request.", { reason: "permission" });
+    }
+    assertCanGrantKeyScopes(req.actor, scopes);
+  };
 }
 
 // ---- keys (plural) ----
@@ -62,9 +88,11 @@ export async function createApiKeyHandler(
 ) {
   try {
     const { features, ...input } = req.body;
+    const scopes = permissionsForFeatures(features);
+    scopeGuard(req)(scopes);
     const { key, record } = await createApiKeyForOrg(req.user.orgId, {
       ...input,
-      scopes: permissionsForFeatures(features),
+      scopes,
       createdById: req.user.userId ?? null,
     });
     // The only time the plaintext leaves the server.
@@ -80,9 +108,12 @@ export async function updateApiKeyHandler(
 ) {
   try {
     const { features, ...input } = req.body;
+    const scopes = features !== undefined ? permissionsForFeatures(features) : undefined;
+    // `[]` only round-trips a legacy full-access key unchanged (the service refuses widening).
+    if (scopes !== undefined && scopes.length > 0) scopeGuard(req)(scopes);
     const record = await updateApiKey(req.user.orgId, req.params.keyId, {
       ...input,
-      ...(features !== undefined ? { scopes: permissionsForFeatures(features) } : {}),
+      ...(scopes !== undefined ? { scopes } : {}),
     });
     rep.send({ key: withFeatures(record) });
   } catch (error) {
@@ -110,7 +141,11 @@ export async function rotateApiKeyHandler(
     const { key, record, previousKeyExpiresAt } = await rotateApiKey(
       req.user.orgId,
       req.params.keyId,
-      { graceHours: req.body.graceHours, createdById: req.user.userId ?? null },
+      {
+        graceHours: req.body.graceHours,
+        createdById: req.user.userId ?? null,
+        guard: scopeGuard(req),
+      },
     );
     rep.send({ apiKey: key, key: withFeatures(record), previousKeyExpiresAt });
   } catch (error) {
@@ -137,9 +172,10 @@ export async function listApiRequestsHandler(
 export async function createApiAccessTokenHandler(req: FastifyRequest, rep: FastifyReply) {
   const orgId = req.user.orgId;
   try {
-    const apiKey = await createApiKey(orgId);
+    const apiKey = await createApiKey(orgId, scopeGuard(req));
     rep.code(201).send({ apiKey });
   } catch (error) {
+    if (refuse(rep, error)) return;
     if (error instanceof ApiKeyAlreadyExistsError) {
       rep.code(409).send({
         message: error.message,
@@ -173,19 +209,25 @@ export async function updateApiAccessTokenScopesHandler(
   rep: FastifyReply,
 ) {
   try {
+    scopeGuard(req)(req.body.scopes);
     await setApiKeyScopes(req.user.orgId, req.body.scopes);
   } catch (error) {
     if (error instanceof ApiKeyNotFoundError) {
       rep.code(404).send({ message: "This organization has no API key" });
       return;
     }
-    throw error;
+    if (!refuse(rep, error)) throw error;
+    return;
   }
   rep.send({ scopes: req.body.scopes });
 }
 
 /** Rotates the newest key; the old one keeps working for the grace period. */
 export async function regenerateApiAccessTokenHandler(req: FastifyRequest, rep: FastifyReply) {
-  const apiKey = await regenerateApiKey(req.user.orgId);
-  rep.send({ apiKey });
+  try {
+    const apiKey = await regenerateApiKey(req.user.orgId, scopeGuard(req));
+    rep.send({ apiKey });
+  } catch (error) {
+    if (!refuse(rep, error)) throw error;
+  }
 }

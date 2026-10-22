@@ -1,7 +1,7 @@
 // Ported from message-dispatcher/src/index.ts.
 //
 // The hot path of the whole system: one job per campaign recipient, at
-// concurrency 250. `processParticipant` renders the template for that contact and
+// concurrency `WA_MESSAGE_CONCURRENCY` (default 50). `processParticipant` renders the template for that contact and
 // sends it.
 //
 // Completion is tracked in a Redis set rather than by watching the queue, because
@@ -29,8 +29,15 @@ import { acquirePhoneSendSlot, resolvePhoneRate } from "../../shared/phoneRateLi
  * the expensive half (a dozen queries each, across a region boundary in
  * production), so this multiplied by the store's latency is the connection
  * demand that `DB_POOL_MAX` has to absorb.
+ *
+ * Default 50, down from 250: at 250 against two pools of `DB_POOL_MAX` = 10 the
+ * jobs mostly sat waiting for a connection, and the waits are what timed out.
+ * Keep `WA_MESSAGE_CONCURRENCY` within a small multiple of `DB_POOL_MAX` (a send
+ * holds a connection only for its store, not for the Graph call) and raise them
+ * together — budgeting `DB_POOL_MAX × 2 pools × replicas` against Postgres'
+ * `max_connections` (or PgBouncer's pool). See AGENTS.md → "Worker capacity".
  */
-const WA_MESSAGE_CONCURRENCY = Number.parseInt(process.env.WA_MESSAGE_CONCURRENCY || "250", 10);
+const WA_MESSAGE_CONCURRENCY = Number.parseInt(process.env.WA_MESSAGE_CONCURRENCY || "50", 10);
 
 const workerConnection = baseRedis.duplicate();
 
@@ -78,7 +85,13 @@ export const waMessageWorker = new Worker(
     const isFinalAttempt = job.attemptsMade >= maxAttempts - 1;
 
     try {
-      const outcome = await processParticipant(job.data, { isFinalAttempt });
+      // The job id makes the Graph call at-most-once: a job that stalls after
+      // Meta accepted its message is rerun by BullMQ from the top, and without
+      // the key that rerun sent the message a second time.
+      const outcome = await processParticipant(job.data, {
+        isFinalAttempt,
+        idempotencyKey: job.id,
+      });
 
       // Rethrow only for a transient failure, and only while attempts remain. A
       // permanent rejection would spend three attempts and two backoff waits to

@@ -207,6 +207,9 @@ describe("reading a flow - who is allowed to see it", () => {
   test("lists only the flows of the caller's org, and only their own teams'", async () => {
     await getFlowsFromDb(ORG_A, "user-1");
 
+    // The team lookup is limited to this org: a member of two orgs must not pull in the
+    // other org's teams (SURV-17).
+    expect(getTeamIdsMock).toHaveBeenCalledWith("user-1", ORG_A);
     const { where } = db.waFlow.findMany.mock.calls[0][0];
     expect(where.orgId).toBe(ORG_A);
     expect(where.survey.teams.some.teamId).toEqual({ in: ["team-1"] });

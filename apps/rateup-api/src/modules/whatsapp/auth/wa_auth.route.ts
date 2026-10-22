@@ -5,11 +5,30 @@ import {
   registerBusinessClientHandler,
 } from "./wa_auth.controller.js";
 import { declareAccess } from "../../../authz/registry.js";
+import {
+  phoneIdParamsSchema,
+  registerBusinessBodySchema,
+  userTokenBodySchema,
+  waSettingsIdParamsSchema,
+} from "./wa_auth.schema.js";
 
 export async function waAuthRoutes(server: FastifyInstance) {
-  declareAccess(server, { access: "session" });
+  // Connecting, removing and re-syncing a channel all change what the org sends from.
+  declareAccess(server, { write: "channels.manage" });
 
-  server.post("/register", registerBusinessClientHandler);
-  server.post("/deregister/:phoneId", deRegisterBusinessClientHandler);
-  server.post("/user-token/:waSettingsId", getUserAccessTokenHanlder);
+  server.post(
+    "/register",
+    { schema: { body: registerBusinessBodySchema } },
+    registerBusinessClientHandler,
+  );
+  server.post(
+    "/deregister/:phoneId",
+    { schema: { params: phoneIdParamsSchema } },
+    deRegisterBusinessClientHandler,
+  );
+  server.post(
+    "/user-token/:waSettingsId",
+    { schema: { params: waSettingsIdParamsSchema, body: userTokenBodySchema } },
+    getUserAccessTokenHanlder,
+  );
 }

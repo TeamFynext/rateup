@@ -1,7 +1,7 @@
 import z from "zod";
 import { ZapierTriggers } from "./zapier.types.js";
 import { WaMessageAssignStatus } from "../../../../types/enums.js";
-import { contactCoreSchema } from "../../../contact/contact.schema.js";
+import { contactCoreSchema, updateContactSchema } from "../../../contact/contact.schema.js";
 
 //any changes to schema should affect in integration created in zapier
 
@@ -9,8 +9,11 @@ const successSchema = z.object({
   success: z.boolean(),
 });
 
+/** A REST-hook target: absolute https only (the address itself is checked on save and send). */
+const hookUrlSchema = z.url({ protocol: /^https$/ }).max(2048);
+
 const triggerSubscriptionBodySchema = z.object({
-  hookUrl: z.string(),
+  hookUrl: hookUrlSchema,
   subscribed_field: z.enum(ZapierTriggers),
   zapId: z.string(),
 });
@@ -76,6 +79,31 @@ const contactLabelSchema = z.object({
   orgId: z.string().optional(),
 });
 
+/** The Zapier app also sends the org id; the org comes from the API key, so it is ignored. */
+const zapierCreateContactSchema = contactCoreSchema.extend({ orgId: z.string().optional() });
+
+/** Also how the Zapier app closes or reopens a contact's conversation. */
+const zapierUpdateContactSchema = updateContactSchema
+  .pick({
+    name: true,
+    phone: true,
+    email: true,
+    address: true,
+    dob: true,
+    external_id: true,
+    source: true,
+    notes: true,
+    customFields: true,
+    labels: true,
+    contactGroupIds: true,
+    assignedUserIds: true,
+    lifecycleId: true,
+    waMessageAssignStatus: true,
+  })
+  .extend({ contactId: z.uuid(), orgId: z.string().optional() });
+
+export type ZapierCreateContactSchema = z.infer<typeof zapierCreateContactSchema>;
+export type ZapierUpdateContactSchema = z.infer<typeof zapierUpdateContactSchema>;
 export type TriggerSubscriptionBodySchema = z.infer<typeof triggerSubscriptionBodySchema>;
 export type NewMemberToGroupShema = z.infer<typeof newMemberToGroupShema>;
 export type InviteMemberRequestSchema = z.infer<typeof inviteMemberRequestSchema>;
@@ -96,4 +124,6 @@ export {
   pageSchema,
   contactSearchSchema,
   contactSearchResponseSchema,
+  zapierCreateContactSchema,
+  zapierUpdateContactSchema,
 };

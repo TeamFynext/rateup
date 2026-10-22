@@ -5,6 +5,32 @@ vi.mock("../../utils/prisma.js", () => ({ default: {} }));
 import { redact } from "./staffAudit.js";
 
 describe("redact", () => {
+  test("credentials, OTPs, PINs and passcodes go, numbers included; look-alike words stay", () => {
+    expect(
+      redact({
+        credential: "c",
+        passcode: "p",
+        otp: 123456,
+        otpCode: "123456",
+        loginPin: 1234,
+        user_pin: "0000",
+        shipping: "express",
+        opinion: "fine",
+        pinned: true,
+      }),
+    ).toEqual({
+      credential: "[redacted]",
+      passcode: "[redacted]",
+      otp: "[redacted]",
+      otpCode: "[redacted]",
+      loginPin: "[redacted]",
+      user_pin: "[redacted]",
+      shipping: "express",
+      opinion: "fine",
+      pinned: true,
+    });
+  });
+
   test("replaces secret-looking values at any depth and leaves the rest", () => {
     expect(
       redact({

@@ -59,6 +59,42 @@ function toContactCustomFieldValueInput(
   return { contactId, fieldId: field.id, value: field.value };
 }
 
+/**
+ * Refuses a write that points a contact at another org's lifecycle stage, labels or custom
+ * fields. These ids reach here from the dashboard, Zapier and imports as given; every row
+ * they name is an org-owned row, so a foreign one is answered like a missing one.
+ */
+export async function assertContactRefsInOrg(
+  orgId: string,
+  refs: {
+    lifecycleId?: string | null;
+    labels?: string[] | null;
+    customFields?: { id?: string }[] | null;
+  },
+) {
+  if (refs.lifecycleId) {
+    const lifecycle = await prisma.lifecycle.findFirst({
+      where: { id: refs.lifecycleId, orgId },
+      select: { id: true },
+    });
+    if (!lifecycle) throw new ContactNotFoundError(`Lifecycle ${refs.lifecycleId} not found`);
+  }
+  const labelIds = [...new Set(refs.labels ?? [])];
+  if (labelIds.length) {
+    const owned = await prisma.contactLabel.count({ where: { id: { in: labelIds }, orgId } });
+    if (owned !== labelIds.length) throw new ContactNotFoundError("Label not found");
+  }
+  const fieldIds = [
+    ...new Set((refs.customFields ?? []).map((f) => f.id).filter((id): id is string => !!id)),
+  ];
+  if (fieldIds.length) {
+    const owned = await prisma.contactCustomField.count({
+      where: { id: { in: fieldIds }, orgId },
+    });
+    if (owned !== fieldIds.length) throw new ContactNotFoundError("Custom field not found");
+  }
+}
+
 export async function createContact(
   /** `consent`: for callers that know the person's answer, such as a store's checkout opt-in. */
   contact: ContactCore & { orgId: string; consent?: boolean },
@@ -70,6 +106,11 @@ export async function createContact(
     throw new Error("Phone must be provided");
   }
   const { customFields, labels, contactGroupIds, assignedUserIds, lifecycleId, ...rest } = contact;
+  await assertContactRefsInOrg(contact.orgId, {
+    lifecycleId: lifecycleId?.length ? lifecycleId : null,
+    labels,
+    customFields,
+  });
   const user = await prisma.contact.create({
     data: {
       ...rest,
@@ -170,6 +211,12 @@ export async function getOrcreateContact(contact: ContactCore & { orgId: string 
 }
 
 export async function createMultipleContacts(contacts: createMultipleContactInput, orgId: string) {
+  // One check for the whole batch: every label and stage any row names.
+  const lifecycleIds = [...new Set(contacts.map((c) => c.lifecycleId).filter((id) => !!id))];
+  for (const lifecycleId of lifecycleIds) {
+    await assertContactRefsInOrg(orgId, { lifecycleId });
+  }
+  await assertContactRefsInOrg(orgId, { labels: contacts.flatMap((c) => c.labels ?? []) });
   // These keys come in on the input DTO but are not Contact columns — they are persisted
   // separately below, so they are blanked out of the create payload.
   const omitted: undefined = undefined;
@@ -545,6 +592,11 @@ export async function updateContactById(
   if (!contactRecord) {
     throw new ContactNotFoundError(`Contact ${contactId} not found`);
   }
+  await assertContactRefsInOrg(orgId, {
+    lifecycleId: contact.lifecycleId,
+    labels: contact.labels,
+    customFields: contact.customFields,
+  });
   if (contact.labels) {
     await prisma.contactLabelMap.deleteMany({
       where: {
@@ -806,7 +858,7 @@ export async function updateContactById(
       type: "conversation.closed",
       contact: updatedContact,
     });
-    const assignedUsers = await getAssignedUserForContact(updatedContact.id);
+    const assignedUsers = await getAssignedUserForContact(updatedContact.id, updatedContact.orgId);
     await deleteAssignedUsersforContact(updatedContact.id);
     await notify({
       event: "inbox.closed",
@@ -836,6 +888,7 @@ export async function updateContactLabelsById(
   orgId: string,
   lifecycleId: string,
 ) {
+  await assertContactRefsInOrg(orgId, { lifecycleId });
   const contact = await prisma.contact.update({
     where: {
       id: contactId,
@@ -1393,7 +1446,7 @@ export async function bulkUpdateWaMessageAssignStatus(
 
       // Handle assigned users
 
-      const assignedUsers = await getAssignedUserForContact(contact.id);
+      const assignedUsers = await getAssignedUserForContact(contact.id, contact.orgId);
 
       await deleteAssignedUsersforContact(contact.id);
 

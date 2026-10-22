@@ -386,6 +386,18 @@ describe("handleInstagramMessages", () => {
     });
   });
 
+  test("runs nothing for a redelivered message the store already has", async () => {
+    handleWaMessagesMock.mockResolvedValue(null);
+
+    await handleInstagramMessages(
+      webhook(messaging({ message: { mid: "mid-1", text: "price?" } })),
+      SETTINGS,
+    );
+
+    expect(answerFlowMock).not.toHaveBeenCalled();
+    expect(runRuleMock).not.toHaveBeenCalled();
+  });
+
   test("matches on an empty string for a message with no text", async () => {
     await handleInstagramMessages(webhook(messaging({ message: { mid: "mid-1" } })), SETTINGS);
 
@@ -579,7 +591,7 @@ describe("handleInstagramPostback", () => {
     );
 
     expect(waMessageCall().body).toMatchObject({ type: "postback", payload: "TRACK" });
-    expect(waMessageCall().messageId).toBe("ig_postback_1700000000000");
+    expect(waMessageCall().messageId).toBe("ig_postback_igs-1_1700000000000");
     expect(runRuleMock.mock.calls[0][1].message).toBe("TRACK");
   });
 
@@ -686,7 +698,7 @@ describe("handleInstagramReferral", () => {
     );
 
     expect(waMessageCall().body).toMatchObject({ type: "referral" });
-    expect(waMessageCall().messageId).toBe("ig_referral_1700000000000");
+    expect(waMessageCall().messageId).toBe("ig_referral_igs-1_1700000000000");
     expect(runRuleMock.mock.calls[0]).toEqual([
       "INSTAGRAM_REFERRAL",
       {
@@ -809,13 +821,16 @@ describe("handleInstagramMessageReaction", () => {
     expect(call.sourceIdentifier).toBe(IBA_ID);
   });
 
-  test("stores the reaction against the message it reacted to", async () => {
+  test("stores the reaction under an id of its own, not the reacted message's", async () => {
     await handleInstagramMessageReaction(
       webhook(messaging({ reaction: { mid: "mid-1", action: "react", emoji: "❤️" } })),
       SETTINGS,
     );
 
-    expect(waMessageCall().messageId).toBe("mid-1");
+    // mid-1 is already stored as the message itself; the unique messageId index
+    // would drop the reaction as a redelivery. The body still names mid-1.
+    expect(waMessageCall().messageId).toBe("ig_reaction_igs-1_1700000000000");
+    expect(waMessageCall().body.reaction.mid).toBe("mid-1");
   });
 
   test("stores a reaction handed to it directly, echo or not", async () => {

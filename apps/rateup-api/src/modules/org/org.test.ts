@@ -465,14 +465,11 @@ describe("orgRoutes", () => {
     ]);
   });
 
-  // NOTE: creating an organisation needs only a session — no role and no
-  // platform check.
-  test("creating an org carries no gate beyond the session", async () => {
+  // Sign-up creates the org; the bare create took its owner from the body (AUTH-12).
+  test("there is no bare org-create route", async () => {
     const { routes } = await collectRoutes();
 
-    const create = routes.find((r) => r.method === "POST" && r.url === "/");
-    expect(create.opts.preHandler).toBeUndefined();
-    expect(create.opts.schema.body).toBeDefined();
+    expect(routes.find((r) => r.method === "POST" && r.url === "/")).toBeUndefined();
   });
 
   test("the org detail writers carry no role requirement", async () => {

@@ -14,7 +14,6 @@ vi.mock("../../../utils/rateLimit.js", () => ({
     limiters.push(opts);
     return async () => undefined;
   },
-  clientIp: (r: { ip: string }) => r.ip,
 }));
 vi.mock("../../../utils/prisma.js", () => ({ default: {} }));
 vi.mock("./checkout.service.js", () => ({}));
