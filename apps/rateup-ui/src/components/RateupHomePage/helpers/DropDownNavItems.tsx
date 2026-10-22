@@ -5,6 +5,7 @@ import {
   IconLayoutKanban,
   IconMessageCircle,
   IconRobot,
+  IconShoppingBag,
   IconSpeakerphone,
 } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
@@ -61,6 +62,12 @@ const components: {
     title: "Pipeline",
     to: "/products/pipeline",
     description: "Turn conversations into leads on a board.",
+  },
+  {
+    icon: <IconShoppingBag className="size-6 text-ru-n-600" />,
+    title: "Social Commerce",
+    to: "/products/social-commerce",
+    description: "Sell and take payment inside the chat.",
   },
   {
     icon: <IconRobot className="size-6 text-ru-n-600" />,

@@ -9,11 +9,11 @@ import {
   IconBrandMessenger,
   IconBrandWhatsapp,
   IconBrowser,
-  IconBuildingStore,
   IconChartBar,
   IconChartInfographic,
   IconCircleCheck,
   IconCreditCard,
+  IconPackage,
   IconCrown,
   IconDashboard,
   IconFileSpreadsheet,
@@ -32,6 +32,7 @@ import {
   IconSend,
   IconMessageCog,
   IconSettings,
+  IconTicket,
   IconShield,
   IconShieldExclamation,
   IconShoppingCart,
@@ -54,6 +55,7 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { ContactLabelOption } from "@/backend/campaign/contacts/contacts.api";
+import { useShopOrders, useShopSetup } from "@/backend/commerce/shop.query";
 import type { GetLabelsRes } from "@/backend/lifecycle/lifecycle.types";
 import type { ConversationTagOption } from "@/backend/whatsapp/inbox/conversationTag/conversationTag.api.ts";
 import {
@@ -228,6 +230,13 @@ export function useNavMain({
   metaAgentNav,
 }: NavMainInput) {
   const { t } = useTranslation();
+  const { data: shopOrders } = useShopOrders(
+    { tab: "needs_action", limit: 1 },
+    isModuleOn("commerce") && can("commerce.read"),
+  );
+  const shopNeedsAction = shopOrders?.counts.needs_action ?? 0;
+  const { data: shopSetup } = useShopSetup(isModuleOn("commerce") && can("commerce.read"));
+  const shopSetupLeft = shopSetup && shopSetup.done < shopSetup.total ? shopSetup : null;
 
   // null = sees every feature; Set = restricted to the team's enabled features
   const hasTeamFeature = (feature: TeamFeature) =>
@@ -588,43 +597,52 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(isModuleOn("commerce")
+      ...(isModuleOn("commerce") && can("commerce.read")
         ? [
             {
               title: t("Commerce"),
-              url: "/dashboard/commerce/overview",
+              url: shopSetupLeft ? "/dashboard/commerce/setup" : "/dashboard/commerce/overview",
               icon: IconShoppingCartBolt,
               items: [
+                ...(shopSetupLeft
+                  ? [
+                      {
+                        title: t("Setup"),
+                        url: "/dashboard/commerce/setup",
+                        icon: IconRocket,
+                        badge: `${shopSetupLeft.done}/${shopSetupLeft.total}`,
+                        badgeTone: "warning" as const,
+                      },
+                    ]
+                  : []),
                 {
                   title: t("Overview"),
                   url: "/dashboard/commerce/overview",
                   icon: IconDashboard,
                 },
                 {
-                  title: t("Catalogs"),
-                  url: "/dashboard/commerce/catalogs",
-                  icon: IconBuildingStore,
+                  title: t("Products"),
+                  url: "/dashboard/commerce/products",
+                  icon: IconPackage,
                 },
                 {
                   title: t("Orders"),
                   url: "/dashboard/commerce/orders",
                   icon: IconShoppingCart,
+                  ...(shopNeedsAction > 0
+                    ? { badge: String(shopNeedsAction), badgeTone: "warning" as const }
+                    : {}),
                 },
                 {
-                  title: t("Payments"),
-                  url: "/dashboard/commerce/payments",
-                  icon: IconCreditCard,
+                  title: t("Coupons"),
+                  url: "/dashboard/commerce/coupons",
+                  icon: IconTicket,
                 },
-                // TODO:commerce
-                // {
-                //   title: t("Coupons"),
-                //   url: "/dashboard/commerce/coupons",
-                //   icon: IconTicket,
-                // },
                 {
-                  title: t("Checkout Settings"),
+                  title: t("Settings"),
                   url: "/dashboard/commerce/settings",
                   icon: IconSettings,
+                  ownsPaths: ["/dashboard/commerce/catalogs", "/dashboard/commerce/catalog-orders"],
                 },
               ],
             },
@@ -886,5 +904,8 @@ export function useNavMain({
     user?.role,
     loyaltyNav,
     metaAgentNav,
+    can,
+    shopNeedsAction,
+    shopSetupLeft,
   ]);
 }

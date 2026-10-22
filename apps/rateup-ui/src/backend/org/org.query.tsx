@@ -10,6 +10,7 @@ import type { OrgModule } from "@/utils/modules.ts";
 
 import type { IMemberPermissions, IUpdateLogo, IUpdateOrgDetails } from "./org.api";
 import {
+  completeBusinessProfile,
   completeOrgDetails,
   deleteOrgByAdmin,
   getAllOrgs,
@@ -202,6 +203,14 @@ export function useCompleteOrgDetails() {
   return useMutation({
     mutationFn: ({ onboarding }: { onboarding?: Record<string, unknown> }) =>
       completeOrgDetails(onboarding),
+  });
+}
+
+export function useCompleteBusinessProfile() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: completeBusinessProfile,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: userKeys.info() }),
   });
 }
 

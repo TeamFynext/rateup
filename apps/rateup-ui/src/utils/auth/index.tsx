@@ -156,65 +156,18 @@ export async function resendOTP() {
 export function useSignUp() {
   const navigate = useNavigate();
 
-  return async function (
-    email: string,
-    password: string,
-    name: string,
-    orgName: string,
-    phoneNumber: string,
-    planId?: string,
-    website?: string,
-    industry?: string,
-    location?: string,
-    // Both arrive as the multi-select arrays the signup wizard collects.
-    goals?: string[],
-    integrationsSelected?: string[],
-    teamSize?: string,
-  ) {
+  return async function (email: string, password: string, name: string, planId?: string) {
     try {
       const existingCookie = document.cookie
         .split("; ")
         .find((row) => row.startsWith("referral_code="));
       const referralCode = existingCookie?.split("=")[1];
 
-      const optionalFormFields: Array<{ id: string; value: string | string[] | null }> = [
-        {
-          id: "phoneNumber",
-          value: phoneNumber || null,
-        },
-        {
-          id: "planId",
-          value: planId || null,
-        },
-        {
-          id: "website",
-          value: website || null,
-        },
-        {
-          id: "industry",
-          value: industry || null,
-        },
-        {
-          id: "location",
-          value: location || null,
-        },
-        {
-          id: "goals",
-          value: goals || null,
-        },
-        {
-          id: "integrationsSelected",
-          value: integrationsSelected || null,
-        },
-        {
-          id: "teamSize",
-          value: teamSize || null,
-        },
-        {
-          id: "referralCode",
-          value: referralCode || null,
-        },
-      ].filter((field) => field.value !== null);
+      // The business itself is asked on `/signup/business`, once the account exists.
+      const optionalFormFields = [
+        { id: "planId", value: planId },
+        { id: "referralCode", value: referralCode },
+      ].filter((field): field is { id: string; value: string } => !!field.value);
 
       const response = await signUp({
         formFields: [
@@ -230,14 +183,8 @@ export function useSignUp() {
             id: "name",
             value: name,
           },
-          {
-            id: "orgName",
-            value: orgName,
-          },
           ...optionalFormFields,
-          // `goals` and `integrationsSelected` are sent as the arrays the signup
-          // wizard collects, which SuperTokens' formFields type does not model.
-        ] as Array<{ id: string; value: string }>,
+        ],
       });
 
       if (response?.status === "FIELD_ERROR") {
@@ -313,11 +260,9 @@ export const useConsumeVerificationCode = () => {
         // Without this refresh the dashboard redirects straight back here, and this page
         // sends the user to the dashboard again — the two bounce off each other.
         await refreshEmailVerificationClaim();
-        // Verifying the address is the last step of signing up, so this lands on
-        // the success screen rather than the dashboard: it says what was set up
-        // and hands over from there.
+        // Next comes the business step, which ends on the success screen.
         navigate({
-          to: "/signup/success",
+          to: "/signup/business",
         });
       }
     } catch (err) {

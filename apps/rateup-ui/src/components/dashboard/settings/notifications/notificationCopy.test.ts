@@ -50,10 +50,11 @@ describe("notification copy", () => {
     }
   });
 
-  test("both plan limits open billing, and the retired conversation limit still does", () => {
+  test("every plan limit opens billing, and the retired conversation limit still does", () => {
     for (const event of [
       "billing.active_contact_limit",
       "billing.campaign_credit_limit",
+      "billing.shop_order_limit",
       "billing.conversation_limit",
     ] as const) {
       expect(notificationPath(event)).toBe("/dashboard/settings/billing");

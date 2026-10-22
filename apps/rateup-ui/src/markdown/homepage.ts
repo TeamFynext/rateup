@@ -29,6 +29,14 @@ RateUp brings all customer conversations into one powerful platform — helping 
 
 # Core Features
 
+RateUp covers three jobs, all in the chat your customers already use: support, sell, and bring them back.
+
+## Shop & Checkout (new)
+
+Send products, build the cart and share a payment link right in a WhatsApp, Instagram or Messenger chat, without a website. (/products/social-commerce)
+
+---
+
 ## Smart Automation & AI Chatbot
 
 Design advanced automation workflows using a drag-and-drop builder to automate customer journeys, trigger personalized responses, assign tasks, and manage interactions efficiently.
@@ -195,13 +203,15 @@ Turn WhatsApp, Instagram and Messenger conversations into leads on a drag-and-dr
 
 # Integrations
 
-RateUp integrates seamlessly with CRM systems and business tools to improve productivity and streamline customer operations.
+Works with the tools you already run. Orders, customers and points sync both ways.
 
-### Integration Benefits
-- Centralized customer data
-- Improved workflow efficiency
-- Enhanced team productivity
-- Better operational visibility
+- Store & POS: Shopify, WooCommerce, Petpooja
+- CRM: HubSpot, Pipedrive, Zoho CRM and Bigin, GetLead
+- Automation: Zapier, Make, Pabbly Connect
+- Payments, booking & data: WhatsApp Payments (India), Amelia, Google Sheets
+- REST API and webhooks for anything else (https://docs.rateup.app)
+
+All integrations: /integrations
 
 ---
 

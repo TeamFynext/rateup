@@ -1,374 +1,507 @@
-import styles from "./TermsOfService.module.css";
+import { LEGAL_ENTITY, LEGAL_JURISDICTION } from "../Legal/company";
+import { DocLink, H3, LegalPage, type LegalSection, Mail, P, UL } from "../Legal/LegalPage";
 
-function TermsOfService() {
+const SECTIONS: readonly LegalSection[] = [
+  {
+    id: "agreement",
+    title: "About these Terms",
+    body: (
+      <>
+        <P>
+          RateUp is operated by {LEGAL_ENTITY} ("RateUp", "we", "us"). These Terms of Service (the
+          "Terms") govern your use of the RateUp website at www.rateup.app, the RateUp web and
+          mobile apps, our API and any related services (together, the "Service").
+        </P>
+        <P>
+          The Service is built for businesses. By creating an account, or by using the Service, you
+          agree to these Terms on behalf of the business you represent (the "Customer", "you"), and
+          you confirm that you have authority to do so and are at least 18 years old. If you do not
+          agree, do not use the Service.
+        </P>
+        <P>
+          These Terms include, by reference, our{" "}
+          <DocLink to="/privacy-policy">Privacy Policy</DocLink>,{" "}
+          <DocLink to="/acceptable-use">Acceptable Use Policy</DocLink>,{" "}
+          <DocLink to="/refund-policy">Refund &amp; Cancellation Policy</DocLink> and{" "}
+          <DocLink to="/dpa">Data Processing Agreement</DocLink>. If you have signed an order form
+          with us, the order form takes precedence where it differs.
+        </P>
+      </>
+    ),
+  },
+  {
+    id: "definitions",
+    title: "Definitions",
+    body: (
+      <UL>
+        <li>
+          <b>Users</b> are the people you allow to use your account, such as your team members.
+        </li>
+        <li>
+          <b>End Customers</b> are the people your business talks to through the Service, such as
+          your customers, leads, loyalty members and survey respondents.
+        </li>
+        <li>
+          <b>Customer Data</b> is everything you or your End Customers put into the Service:
+          contacts, messages, media, survey responses, loyalty activity, orders and similar data.
+        </li>
+        <li>
+          <b>Third-Party Platforms</b> are services that you connect to RateUp and that we do not
+          control, such as WhatsApp, Instagram and Messenger (operated by Meta), Shopify,
+          WooCommerce, Google, Stripe and Razorpay.
+        </li>
+      </UL>
+    ),
+  },
+  {
+    id: "accounts",
+    title: "Your account",
+    body: (
+      <UL>
+        <li>Give us accurate registration and billing details, and keep them up to date.</li>
+        <li>
+          Each User needs their own login. Do not share logins, and do not let people use the
+          Service in a way meant to avoid paying for seats or usage.
+        </li>
+        <li>
+          You are responsible for everything done through your account and for keeping passwords and
+          API keys secure. Tell us promptly at <Mail /> if you suspect unauthorised access.
+        </li>
+        <li>
+          You may not use the Service if you are barred from receiving it under the laws of India,
+          the country you are based in, or any other applicable sanctions law.
+        </li>
+      </UL>
+    ),
+  },
+  {
+    id: "plans-and-usage",
+    title: "Plans, limits and usage",
+    body: (
+      <>
+        <P>
+          The Service is offered on a Free plan and on paid plans. What each plan includes, and its
+          limits, are shown on our <DocLink to="/pricing">Pricing page</DocLink> and in your
+          account's billing settings. Limits may include monthly active contacts, campaign credits,
+          Users, shop orders and other usage.
+        </P>
+        <UL>
+          <li>
+            Usage is measured by RateUp's systems, and those measurements decide what counts against
+            your limits, unless we agree otherwise in writing.
+          </li>
+          <li>
+            When you reach a limit, some features may pause until the next billing period, until you
+            upgrade, or until you buy an add-on such as a campaign credit pack.
+          </li>
+          <li>
+            Credit packs and other add-ons are valid until the expiry date shown when you buy them.
+          </li>
+          <li>
+            We may change what the Free plan includes. If we reduce a paid plan's features during a
+            period you have already paid for, we will tell you first.
+          </li>
+        </UL>
+      </>
+    ),
+  },
+  {
+    id: "fees",
+    title: "Fees, billing and taxes",
+    body: (
+      <UL>
+        <li>
+          Paid plans are billed in advance, either annually or monthly, and renew automatically for
+          the same period until cancelled.
+        </li>
+        <li>
+          Upgrades start immediately where your payment method allows it, and otherwise at your next
+          renewal. Downgrades and switches from annual to monthly take effect at your next renewal.
+          We don't charge or refund a pro-rated difference for the current period; the new price
+          applies from your next bill.
+        </li>
+        <li>
+          You authorise us, and our payment providers, to charge the payment method you choose at
+          checkout. Payments are processed by Stripe or Razorpay; we do not store full card numbers.
+        </li>
+        <li>
+          Fees do not include taxes. You are responsible for any taxes, duties or levies that apply
+          to your purchase, other than taxes on our income.
+        </li>
+        <li>
+          If a payment fails, we will let you know. If it is still unpaid 14 days later, we may move
+          your account to the Free plan or suspend paid features until it is paid.
+        </li>
+        <li>
+          We may change our prices. We will tell you at least 30 days in advance, and a new price
+          applies from your next renewal after that notice.
+        </li>
+        <li>
+          Message fees charged by Meta for WhatsApp, and charges for the Meta Business AI agent, are
+          billed to your own Meta business account by Meta directly. They are not part of your
+          RateUp fees.
+        </li>
+      </UL>
+    ),
+  },
+  {
+    id: "cancellation-and-refund",
+    title: "Cancellation and refunds",
+    body: (
+      <>
+        <P>
+          You can cancel a paid plan at any time from Settings → Billing in your account. You keep
+          every paid feature until the end of the period you have paid for, and you will not be
+          charged again. Your account then moves to the Free plan.
+        </P>
+        <P>
+          Fees already paid are non-refundable, including for unused time, except where we made a
+          billing error or where the law requires a refund. The full policy is in our{" "}
+          <DocLink to="/refund-policy">Refund &amp; Cancellation Policy</DocLink>.
+        </P>
+      </>
+    ),
+  },
+  {
+    id: "third-party-platforms",
+    title: "WhatsApp, Meta and other platforms",
+    body: (
+      <>
+        <P>
+          Much of the Service works through Third-Party Platforms. Your use of them is governed by
+          their own terms, which you are responsible for accepting and following, including the
+          WhatsApp Business Terms of Service, the WhatsApp Business Messaging Policy, Meta's
+          Commerce Policies and Meta's Platform Terms.
+        </P>
+        <UL>
+          <li>
+            Meta decides whether to approve your business account, phone numbers and message
+            templates, sets messaging limits and quality ratings, and may restrict or ban a number
+            or account. RateUp does not control these decisions and is not responsible for them.
+          </li>
+          <li>
+            If a Third-Party Platform changes or withdraws a feature or its API, the matching RateUp
+            feature may change or stop working. We will try to tell you in advance where we can.
+          </li>
+          <li>
+            When you connect a Third-Party Platform, you authorise us to exchange data with it on
+            your behalf so that the integration works.
+          </li>
+        </UL>
+      </>
+    ),
+  },
+  {
+    id: "messaging-and-consent",
+    title: "Messaging and consent",
+    body: (
+      <>
+        <P>You are responsible for the messages you send through the Service. In particular:</P>
+        <UL>
+          <li>
+            Only send marketing or broadcast messages to people who have opted in to receive them
+            from your business, and keep a record of that consent.
+          </li>
+          <li>Honour opt-out requests promptly, on every channel.</li>
+          <li>
+            Follow the marketing, anti-spam, consumer protection and privacy laws that apply to you
+            and to your End Customers.
+          </li>
+          <li>
+            Follow our <DocLink to="/acceptable-use">Acceptable Use Policy</DocLink>.
+          </li>
+        </UL>
+      </>
+    ),
+  },
+  {
+    id: "shop-and-payments",
+    title: "Shop, checkout and payments",
+    body: (
+      <>
+        <P>
+          If you sell through RateUp's shop and checkout features, you are the seller and RateUp is
+          not. In particular:
+        </P>
+        <UL>
+          <li>
+            Payments from your buyers are taken by your own Stripe, Razorpay or other payment
+            account, under your agreement with that provider. RateUp does not receive, hold or
+            transfer your buyers' money.
+          </li>
+          <li>
+            You are responsible for your products, prices, descriptions, taxes, delivery, returns,
+            refunds and customer service, and for meeting consumer law where you sell.
+          </li>
+          <li>
+            You must not sell products or services that Meta's Commerce Policies, your payment
+            provider or the law prohibit.
+          </li>
+        </UL>
+      </>
+    ),
+  },
+  {
+    id: "loyalty-surveys-ai",
+    title: "Loyalty, reviews and AI features",
+    body: (
+      <UL>
+        <li>
+          Loyalty points, rewards, referral bonuses and offers belong to your programme. You set the
+          rules, honour them with your End Customers and are responsible for any value they carry.
+          RateUp does not issue or guarantee them.
+        </li>
+        <li>
+          If you use RateUp to ask for reviews on Google or any other site, you are responsible for
+          following that site's review policies.
+        </li>
+        <li>
+          Automations, chatbots and AI agents can produce answers that are wrong or incomplete. You
+          are responsible for the content and instructions you give them, for reviewing what they
+          send, and for any decision you make based on their output.
+        </li>
+      </UL>
+    ),
+  },
+  {
+    id: "customer-data",
+    title: "Your data",
+    body: (
+      <>
+        <P>
+          You own your Customer Data. You give RateUp permission to host, process and transmit it
+          only as needed to provide, secure and support the Service, and as described in our{" "}
+          <DocLink to="/dpa">Data Processing Agreement</DocLink>, which forms part of these Terms.
+        </P>
+        <P>
+          You are responsible for having a lawful basis, and any notices or consents needed, to
+          collect Customer Data and to share it with us. We may use aggregated, de-identified data
+          about how the Service is used to operate and improve it; this data does not identify you
+          or your End Customers.
+        </P>
+        <H3>Export and deletion</H3>
+        <P>
+          While your account is open you can export your data from the Service where the product
+          offers an export, or ask us at <Mail />. For 30 days after your account closes, we will
+          help you export it on request. After that we delete Customer Data within 90 days, except
+          what the law requires us to keep and copies in backups, which are overwritten on their
+          normal cycle.
+        </P>
+      </>
+    ),
+  },
+  {
+    id: "service-changes",
+    title: "Changes to the Service and availability",
+    body: (
+      <P>
+        We improve the Service continually, which means features may be added, changed or removed.
+        We aim to keep the Service available at all times, but it may be interrupted for
+        maintenance, by Third-Party Platforms or by events outside our control. Unless you have a
+        separate written service-level agreement with us, we do not guarantee any particular uptime.
+      </P>
+    ),
+  },
+  {
+    id: "suspension-and-termination",
+    title: "Suspension and termination",
+    body: (
+      <>
+        <P>
+          You may stop using the Service and close your account at any time. We may suspend or end
+          your access, in whole or in part, if:
+        </P>
+        <UL>
+          <li>you seriously or repeatedly breach these Terms or the Acceptable Use Policy;</li>
+          <li>fees remain unpaid after the notice described above;</li>
+          <li>
+            your use creates a legal or security risk for RateUp, other customers or End Customers;
+            or
+          </li>
+          <li>a Third-Party Platform requires us to, or bans your account or number.</li>
+        </UL>
+        <P>
+          Where it is reasonable, we will tell you first and give you a chance to fix the problem.
+          Sections that by their nature should survive termination, such as fees owed, data export,
+          liability and indemnity, continue to apply.
+        </P>
+      </>
+    ),
+  },
+  {
+    id: "intellectual-property",
+    title: "Our intellectual property",
+    body: (
+      <>
+        <P>
+          RateUp and its licensors own the Service, including its software, design and content.
+          Subject to these Terms, we give you a limited, non-exclusive, non-transferable right to
+          use the Service for your business during your subscription.
+        </P>
+        <P>You must not, and must not let anyone else:</P>
+        <UL>
+          <li>
+            copy, modify, reverse engineer or decompile the Service, except where the law allows it
+            despite this restriction;
+          </li>
+          <li>resell, sublicense or rent the Service without our written agreement;</li>
+          <li>bypass usage limits, security controls or access restrictions; or</li>
+          <li>scrape the Service or use it to build a competing product.</li>
+        </UL>
+        <P>If you send us ideas or feedback, we may use them without any obligation to you.</P>
+      </>
+    ),
+  },
+  {
+    id: "confidentiality",
+    title: "Confidentiality",
+    body: (
+      <P>
+        Each of us will keep the other's non-public business information confidential, use it only
+        for the purposes of these Terms, and share it only with people who need it and are bound by
+        similar duties. This does not apply to information that is public through no fault of the
+        receiving party, or that must be disclosed by law.
+      </P>
+    ),
+  },
+  {
+    id: "warranties",
+    title: "Disclaimers",
+    body: (
+      <P>
+        Except as expressly stated in these Terms, the Service is provided "as is" and "as
+        available". To the extent the law allows, we disclaim all implied warranties, including
+        merchantability, fitness for a particular purpose and non-infringement. We do not guarantee
+        that the Service will be uninterrupted or error-free, or that messages will be delivered by
+        Third-Party Platforms.
+      </P>
+    ),
+  },
+  {
+    id: "liability",
+    title: "Limitation of liability",
+    body: (
+      <>
+        <P>To the extent the law allows:</P>
+        <UL>
+          <li>
+            Neither party is liable for indirect, incidental, special or consequential losses, or
+            for loss of profits, revenue, goodwill or data, however caused.
+          </li>
+          <li>
+            Each party's total liability arising out of or relating to these Terms is limited to the
+            fees you paid to RateUp in the 12 months before the event giving rise to the claim. If
+            you use only the Free plan, RateUp's total liability is limited to USD 100.
+          </li>
+          <li>
+            These limits do not apply to your obligation to pay fees, to your indemnity below, to
+            fraud or wilful misconduct, or to any liability that cannot be limited by law.
+          </li>
+        </UL>
+      </>
+    ),
+  },
+  {
+    id: "indemnity",
+    title: "Indemnity",
+    body: (
+      <P>
+        You will defend and indemnify RateUp, its affiliates and their officers and employees
+        against third-party claims, and the resulting losses, costs and reasonable legal fees,
+        arising from your Customer Data, the messages you send, the products you sell, or your
+        breach of these Terms, the Acceptable Use Policy, a Third-Party Platform's terms or the law.
+        We will tell you promptly about any such claim and let you control its defence.
+      </P>
+    ),
+  },
+  {
+    id: "changes",
+    title: "Changes to these Terms",
+    body: (
+      <P>
+        We may update these Terms from time to time. For material changes, we will notify the
+        account owner by email or in the app at least 30 days before they take effect. If you do not
+        agree to a change, you can cancel before it takes effect; continuing to use the Service
+        after that date means you accept the updated Terms.
+      </P>
+    ),
+  },
+  {
+    id: "governing-law",
+    title: "Governing law and disputes",
+    body: (
+      <P>
+        These Terms are governed by the laws of India. If a dispute arises, we will first try to
+        resolve it in good faith for 30 days after one party notifies the other in writing. If it is
+        not resolved, the courts at {LEGAL_JURISDICTION} have exclusive jurisdiction.
+      </P>
+    ),
+  },
+  {
+    id: "general",
+    title: "General",
+    body: (
+      <UL>
+        <li>
+          These Terms, the policies they include and any order form are the whole agreement between
+          us about the Service, and replace any earlier agreement on the same subject.
+        </li>
+        <li>
+          You may not transfer these Terms without our written consent. We may transfer them to an
+          affiliate or to a successor in a merger, acquisition or sale of assets.
+        </li>
+        <li>
+          Neither party is liable for delays caused by events beyond its reasonable control, such as
+          natural disasters, outages of Third-Party Platforms, or government action.
+        </li>
+        <li>
+          If any part of these Terms cannot be enforced, the rest stays in effect. Not enforcing a
+          right is not a waiver of it.
+        </li>
+        <li>
+          We send notices to the account owner's email address or in the app. You can send notices
+          to <Mail />.
+        </li>
+      </UL>
+    ),
+  },
+  {
+    id: "shipping-and-delivery",
+    title: "Delivery of the Service",
+    body: (
+      <P>
+        RateUp is a cloud service; nothing is shipped. You get access as soon as you sign up, and
+        paid features become available as soon as your payment is confirmed. You use the Service
+        through a web browser or the RateUp mobile app on an internet-connected device.
+      </P>
+    ),
+  },
+  {
+    id: "contact",
+    title: "Contact",
+    body: (
+      <P>
+        Questions about these Terms can be sent to {LEGAL_ENTITY} at <Mail />.
+      </P>
+    ),
+  },
+];
+
+export default function TermsOfService() {
   return (
-    <div className={styles["terms-of-service-container"]}>
-      <h1
-        style={{
-          fontWeight: 500,
-        }}
-      >
-        Terms of Service
-      </h1>
-      <p className={styles["last-revised-p"]}>Last revised on 01.01.2024</p>
-      <section>
-        <h2>The Gist</h2>
-        <p>
-          Uprate Technologies Private Limited operates the RateUp (www.rateup.app) service, which we
-          hope you use. If you use it, please use it responsibly. If you don't, we'll have to
-          terminate your account.
-        </p>
-        <p>
-          For paid accounts, you'll be charged on a monthly basis. You can cancel anytime, but there
-          are no refunds.
-        </p>
-        <p>
-          The Terms of Service, RateUp itself, and our prices can change at any time. We'll warn you
-          30 days in advance of any price changes. We'll try to warn you about major changes to the
-          Terms of Service or RateUp, but we make no guarantees.
-        </p>
-        <p>
-          That's the basic idea, but You must read through the entire Terms of Service below and
-          agree with all the details before You use any of our sites (whether or not you have
-          created an account).
-        </p>
-      </section>
-      <section>
-        <h2>Your Agreement with RateUp</h2>
-        <p>
-          Your use of the RateUp service is governed by this agreement (the "Terms"). "RateUp" means
-          Uprate Technologies The "Service" means the services Uprate Technologies makes available
-          include our web sites (www.rateup.app), our blog, our API, and any other software, sites,
-          and services offered by Uprate Technologies Pvt. Ltd. in connection to any of those.
-          "Customer Source Code" means any source code you submit to Uprate Technologies for the
-          purpose of using the Service. "Content" means all content generated by Uprate Technologies
-          on your behalf (including metric data) and does not include Customer Source Code.
-        </p>
-        <p>
-          In order to use the Service, You (the "Customer", "You", or "Your") must first agree to
-          the Terms. You understand and agree that Uprate Technologies Pvt. Ltd. will treat Your use
-          of the Service as acceptance of the Terms from that point onwards.
-        </p>
-        <p>
-          Uprate Technologies may make changes to the Terms from time to time. You may reject the
-          changes by terminating Your account. You understand and agree that if You use the Service
-          after the date on which the Terms have changed, Uprate Technologies will treat Your use as
-          acceptance of the updated Terms.
-        </p>
-        <p>If you have any questions about the Terms, please contact us at hello@rateup.app.</p>
-      </section>
-      <section>
-        <h2>Your Account</h2>
-        <ul>
-          <li>
-            You may not use the Service if You are a person barred from receiving the Service under
-            the laws of the United States or other countries, including the country in which You are
-            resident or from which You use the Service.
-          </li>
-          <li>You may not use the service unless you are over the age of 13.</li>
-          <li>You must be a human. Accounts created by automated methods are not permitted.</li>
-        </ul>
-      </section>
-      <section>
-        <h2>Use of the Service</h2>
-        <ul>
-          <li>
-            You must provide accurate and complete registration information any time You register to
-            use the Service.
-          </li>
-          <li>
-            You are responsible for the security of Your passwords and for any use of Your account.
-          </li>
-          <li>
-            Your use of the Service must comply with all applicable laws, regulations and
-            ordinances.
-          </li>
-          <li>
-            You agree to not engage in any activity that interferes with or disrupts the Service.
-          </li>
-          <li>
-            Uprate Technologies reserves the right to enforce quotas and usage limits (to any
-            resources, including the API) at its sole discretion, with or without notice, which may
-            result in Uprate Technologies Pvt. Ltd. disabling or throttling your usage of the
-            Service for any amount of time.
-          </li>
-          <li>
-            You may not allow multiple people to use the same account or otherwise access the
-            Service in a manner intended to avoid incurring fees.
-          </li>
-        </ul>
-      </section>
-      <section>
-        <h2>Service Policies and Privacy</h2>
-        <p>
-          The Service shall be subject to the privacy policy for the Service available at privacy
-          policy. You agree to the use of Your data in accordance with Uprate Technologies's privacy
-          policies.
-        </p>
-      </section>
-      <section>
-        <h2>Fees for Use of the Service</h2>
-        <ul>
-          <li>
-            The Service may be provided to You without charge up with certain limits or for a
-            certain "trial" period of time.
-          </li>
-          <li>
-            Usage over this limit (or after the "trial" period) requires Your purchase of additional
-            resources or services.
-          </li>
-          <li>
-            For all purchased resources and services, we will charge Your credit card on a monthly
-            basis.
-          </li>
-          <li>
-            Payments are non-refundable. There will be no refunds or credits for partial months of
-            service, upgrade/downgrade refunds, or refunds for months unused with an open account.
-          </li>
-          <li>
-            Charges are solely based on Uprate Technologies's measurements of Your use of the
-            Service, unless otherwise agreed to in writing.
-          </li>
-          <li>
-            All fees are exclusive of all taxes, levies, or duties imposed by taxing authorities,
-            and You shall be responsible for payment of all such taxes, levies, or duties.
-          </li>
-          <li>
-            You acknowledge and agree that any credit card and related billing and payment
-            information that You provide to Uprate Technologies Pvt. Ltd. may be shared by Uprate
-            Technologies with companies who work on Uprate Technologies's behalf, such as payment
-            processors and/or credit agencies, solely for the purposes of checking credit, effecting
-            payment to Uprate Technologies and servicing Your account.
-          </li>
-          <li>
-            Uprate Technologies may change its fees and payment policies for the Service by
-            notifying You at least thirty (30) days before the beginning of the billing cycle in
-            which such change will take effect.
-          </li>
-        </ul>
-      </section>
-      <section id="shipping-and-delivery">
-        <h2>Shipping and Delivery</h2>
-        <p>
-          <strong>Non-Physical Delivery: </strong>
-          RateUp provides a cloud-based SaaS solution. Consequently, there are no physical goods
-          shipped or delivered to the subscriber. All services are accessible electronically.
-        </p>
-        <p>
-          <strong>Access to Services: </strong>
-          Upon successful subscription and payment, RateUp shall provide the subscriber with
-          necessary login credentials. These credentials will allow the subscriber to access RateUp
-          services via an internet-connected device. No physical installation or additional setup is
-          required on the subscriber's part.
-        </p>
-        <p>
-          <strong>Support Services: </strong>
-          In the event of technical issues or the need for assistance, the subscriber may contact
-          RateUp's customer service team through designated communication channels, including the
-          website or email. RateUp commits to a prompt response and resolution of subscriber
-          inquiries and issues.
-        </p>
-        <p>
-          <strong>Subscription and Billing: </strong>
-          RateUp's services are offered on a subscription basis. Charges shall be automatically
-          billed and collected at the commencement of each billing cycle, consistent with the
-          subscriber's chosen service plan.
-        </p>
-        <p>
-          <strong>Inquiries and Clarifications: </strong>
-          Subscribers are encouraged to contact RateUp for any inquiries or clarifications regarding
-          this Policy. RateUp commits to providing timely and clear responses to assist subscribers.
-        </p>
-      </section>
-      <section id="cancellation-and-refund">
-        <h2>Cancellation, Refund and Termination</h2>
-        <ul>
-          <li>
-            You must cancel Your account via www.rateup.app. An email or phone request to cancel
-            Your account is not considered cancellation.
-          </li>
-          <li>You will not receive any refunds if You cancel Your account.</li>
-          <li>
-            If You cancel the Service before the end of Your current paid up month, Your
-            cancellation will take effect immediately and You will not be charged again.
-          </li>
-          <li>
-            All of Customer Source Code and Content will, within a reasonable amount of time to be
-            determined solely by Uprate Technologies Pvt. Ltd., be deleted from the Service upon
-            cancellation.
-          </li>
-          <li>
-            You agree that Uprate Technologies, in its sole discretion and for any or no reason, may
-            terminate or suspend Your account. You agree that any termination of Your access to the
-            Service may be without prior notice, and You agree that Uprate Technologies Pvt. Ltd.
-            will not be liable to You or any third party for such termination.
-          </li>
-        </ul>
-      </section>
-      <section>
-        <h2>Customer Source Code</h2>
-        <ul>
-          <li>
-            Uprate Technologies claims no ownership or control over any Customer Source Code. You
-            retain copyright and any other rights You already hold in the Customer Source Code and
-            You are responsible for protecting those rights, as appropriate.
-          </li>
-          <li>
-            You agree to assume full responsibility for configuring the Service to allow appropriate
-            access to any Customer Source code provided to the Service.
-          </li>
-          <li>
-            You understand that public projects display Customer Source Code to any party on the
-            Internet, including search engines and web spiders.
-          </li>
-          <li>
-            You understand that private projects will display Customer Source Code to You and any
-            collaborators that you designate for that project.
-          </li>
-          <li>
-            You retain sole responsibility for any collaborators or third-party services that you
-            allow to view Customer Source Code and entrust them at your own risk.
-          </li>
-          <li>
-            Uprate Technologies is not responsible if you fail to configure, or misconfigure, your
-            project and inadvertently allow unauthorized parties view any Customer Source Code.
-          </li>
-        </ul>
-      </section>
-      <section>
-        <h2>Ideas and Feedback</h2>
-        <p>
-          You may choose to or we may invite You to submit comments or ideas about the Service,
-          including but not limited to ideas about improving the Service or our products ("Ideas").
-          By submitting any Idea, You agree that Your disclosure is unsolicited and without
-          restriction and will not place Uprate Technologies under any fiduciary or other
-          obligation, and that we are free to use the Idea without any additional compensation to
-          You, and/or to disclose the Idea on a non-confidential basis or otherwise to anyone.
-        </p>
-      </section>
-      <section>
-        <h2>Modification of the Service</h2>
-        <ul>
-          <li>
-            You acknowledge and agree that the Service may change from time to time without prior
-            notice to You.
-          </li>
-          <li>
-            Changes include, without limitation, changes to fee and payment policies, security
-            patches, added or removed functionality, and other enhancements or restrictions.
-          </li>
-          <li>
-            Uprate Technologies shall not be liable to you or to any third party for any
-            modification, price change, suspension or discontinuance of the Service.
-          </li>
-        </ul>
-      </section>
-      <section>
-        <h2>External Resources</h2>
-        <p>
-          The Services may include hyperlinks to other web sites or content or resources or email
-          content. You acknowledge and agree that Uprate Technologies Pvt. Ltd. is not responsible
-          for the availability of any such external sites or resources, and does not endorse any
-          advertising, products or other materials on or available from such web sites or resources.
-        </p>
-      </section>
-      <section>
-        <h2>License from Uprate Technologies and Restrictions</h2>
-        <p>
-          Uprate Technologies gives You a personal, worldwide, royalty-free, non-assignable and
-          non-exclusive license to use the software provided to You by Uprate Technologies as part
-          of the Service as provided to You by Uprate Technologies. This license is for the sole
-          purpose of enabling You to use and enjoy the benefit of the Service as provided by Uprate
-          Technologies, in the manner permitted by the Terms.
-        </p>
-        <p>
-          You may not (and You may not permit anyone else to): (a) copy, modify, create a derivative
-          work of, reverse engineer, decompile or otherwise attempt to extract the source code of
-          the Service or any part thereof, unless this is expressly permitted or required by law, or
-          unless You have been specifically told that You may do so by Uprate Technologies Pvt.
-          Ltd., in writing (e.g., through an open source software license); or (b) attempt to
-          disable or circumvent any security mechanisms used by the Service.
-        </p>
-        <p>
-          Open source software licenses for components of the Service released under an open source
-          license constitute separate written agreements. To the limited extent that the open source
-          software licenses expressly supersede these Terms, the open source licenses govern Your
-          agreement with Uprate Technologies for the use of the components of the Service released
-          under an open source license.
-        </p>
-      </section>
-      <section>
-        <h2>Exclusion of warranties</h2>
-        <ul>
-          <li>
-            You expressly understand and agree that your use of the service is at your sole risk and
-            that the service is provided "as is" and "as available.".
-          </li>
-          <li>
-            You agree that Uprate Technologies has no responsibility or liability for the deletion
-            or failure to store any Content and other communications maintained or transmitted
-            through use of the Service. You further acknowledge that You are solely responsible for
-            securing and backing up Customer Source Code.
-          </li>
-          <li>
-            Uprate Technologies does not warrant to you that: (a) your use of the service will meet
-            your requirements, (b) your use of the service will be uninterrupted, timely, secure or
-            free from error, (c) the results or data provided by the Service will be accurate, (d)
-            the quality of the service will meet your expectations and (e) any errors in the Service
-            will be fixed.
-          </li>
-        </ul>
-      </section>
-      <section>
-        <h2>Limitation of liability</h2>
-        <p>
-          You expressly understand and agree that Uprate Technologies, its subsidiaries and
-          affiliates, and its licensors shall not be liable to you for any direct, indirect,
-          incidental, special consequential or exemplary damages which may be incurred by you,
-          however caused and under any theory of liability. This shall include, but not be limited
-          to, any loss of profit (whether incurred directly or indirectly), any loss of goodwill or
-          business reputation, any loss of data suffered, cost of procurement of substitute goods or
-          services, or other intangible loss (whether or not Uprate Technologies has been advised of
-          or should have been aware of the possibility of any such losses arising).
-        </p>
-      </section>
-      <section>
-        <h2>Indemnification</h2>
-        <p>
-          You agree to hold harmless and indemnify Uprate Technologies Pvt. Ltd., and its
-          subsidiaries, affiliates, officers, agents, employees, advertisers, licensors, suppliers
-          or partners (collectively "Uprate Technologies Pvt. Ltd. and Partners") from and against
-          any third party claim arising from or in any way related to (a) Your breach of the Terms,
-          (b) Your use of the Service, (c) Your violation of applicable laws, rules or regulations
-          in connection with the Service, or (d) Your Customer Source Code, including any liability
-          or expense arising from all claims, losses, damages (actual and consequential), suits,
-          judgments, litigation costs and attorneys' fees, of every kind and nature. In such a case,
-          Uprate Technologies will provide You with written notice of such claim, suit or action.
-        </p>
-      </section>
-      <section>
-        <h2>General Legal Terms</h2>
-        <p>
-          The Terms constitute the whole legal agreement between You and Uprate Technologies Pvt.
-          Ltd. and govern Your use of the Service and completely replace any prior agreements
-          between You and Uprate Technologies Pvt. Ltd. in relation to the Service.
-        </p>
-        <p>
-          You agree that if Uprate Technologies does not exercise or enforce any legal right or
-          remedy which is contained in the Terms (or which Uprate Technologies has the benefit of
-          under any applicable law), this will not be taken to be a formal waiver of Uprate
-          Technologies's rights and that those rights or remedies will still be available to Uprate
-          Technologies
-        </p>
-        <p>
-          Uprate Technologies shall not be liable for failing or delaying performance of its
-          obligations resulting from any condition beyond its reasonable control, including but not
-          limited to, governmental action, acts of terrorism, earthquake, fire, flood or other acts
-          of God, labor conditions, power failures, and Internet disturbances.
-        </p>
-      </section>
-    </div>
+    <LegalPage
+      title="Terms of Service"
+      updated="21 October 2026"
+      summary={
+        <>
+          <b className="text-ru-n-700">In short:</b> use RateUp lawfully and follow Meta's WhatsApp
+          and Instagram rules. Paid plans renew until you cancel, and paid fees aren't refunded. You
+          own your data and can export it. Meta bills its message fees to you directly. If you sell
+          through RateUp, you are the seller. This summary isn't part of the Terms; the full text
+          below is.
+        </>
+      }
+      sections={SECTIONS}
+    />
   );
 }
-
-export default TermsOfService;

@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as authRouteRouteImport } from './routes/(auth)/route'
 import { Route as marketingRouteRouteImport } from './routes/(marketing)/route'
 import { Route as publicFacingRouteRouteImport } from './routes/(public-facing)/route'
+import { Route as shopRouteRouteImport } from './routes/(shop)/route'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as AuthRouteRouteImport } from './routes/auth/route'
 import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
@@ -33,18 +34,24 @@ import { Route as authLoginIndexRouteImport } from './routes/(auth)/login/index'
 import { Route as authLogoutIndexRouteImport } from './routes/(auth)/logout/index'
 import { Route as authSignupIndexRouteImport } from './routes/(auth)/signup/index'
 import { Route as marketingAboutUsIndexRouteImport } from './routes/(marketing)/about-us/index'
+import { Route as marketingAcceptableUseIndexRouteImport } from './routes/(marketing)/acceptable-use/index'
 import { Route as marketingBlogIndexRouteImport } from './routes/(marketing)/blog/index'
 import { Route as marketingBlogRssDotxmlRouteImport } from './routes/(marketing)/blog/rss[.]xml'
 import { Route as marketingBlogSitemapDotxmlRouteImport } from './routes/(marketing)/blog/sitemap[.]xml'
 import { Route as marketingBookADemoIndexRouteImport } from './routes/(marketing)/book-a-demo/index'
 import { Route as marketingContactUsIndexRouteImport } from './routes/(marketing)/contact-us/index'
+import { Route as marketingDpaIndexRouteImport } from './routes/(marketing)/dpa/index'
 import { Route as marketingIntegrationsIndexRouteImport } from './routes/(marketing)/integrations/index'
 import { Route as marketingPartnerPageIndexRouteImport } from './routes/(marketing)/partner-page/index'
 import { Route as marketingPricingIndexRouteImport } from './routes/(marketing)/pricing/index'
 import { Route as marketingPrivacyPolicyIndexRouteImport } from './routes/(marketing)/privacy-policy/index'
+import { Route as marketingRefundPolicyIndexRouteImport } from './routes/(marketing)/refund-policy/index'
+import { Route as marketingSubprocessorsIndexRouteImport } from './routes/(marketing)/subprocessors/index'
 import { Route as marketingTermsOfServiceIndexRouteImport } from './routes/(marketing)/terms-of-service/index'
 import { Route as marketingToolsIndexRouteImport } from './routes/(marketing)/tools/index'
 import { Route as marketingToolsSitemapDotxmlRouteImport } from './routes/(marketing)/tools/sitemap[.]xml'
+import { Route as shopSSlugRouteRouteImport } from './routes/(shop)/s/$slug/route'
+import { Route as shopSSitemapDotxmlRouteImport } from './routes/(shop)/s/sitemap[.]xml'
 import { Route as AdminGenerateIndexRouteImport } from './routes/admin/generate/index'
 import { Route as AdminOrdersIndexRouteImport } from './routes/admin/orders/index'
 import { Route as AdminOrgsIndexRouteImport } from './routes/admin/orgs/index'
@@ -94,6 +101,7 @@ import { Route as authLoginCompleteLoginIndexRouteImport } from './routes/(auth)
 import { Route as authLoginResetPasswordIndexRouteImport } from './routes/(auth)/login/reset-password/index'
 import { Route as authLoginVerifyEmailIndexRouteImport } from './routes/(auth)/login/verify-email/index'
 import { Route as authLoginVerifyPhoneNumberIndexRouteImport } from './routes/(auth)/login/verify-phone-number/index'
+import { Route as authSignupBusinessIndexRouteImport } from './routes/(auth)/signup/business/index'
 import { Route as authSignupSuccessIndexRouteImport } from './routes/(auth)/signup/success/index'
 import { Route as marketingBlogSlugIndexRouteImport } from './routes/(marketing)/blog/$slug/index'
 import { Route as marketingBlogAuthorSitemapDotxmlRouteImport } from './routes/(marketing)/blog/author/sitemap[.]xml'
@@ -111,6 +119,7 @@ import { Route as marketingProductsOmnichannelInboxIndexRouteImport } from './ro
 import { Route as marketingProductsPipelineIndexRouteImport } from './routes/(marketing)/products/pipeline/index'
 import { Route as marketingProductsQrStudioIndexRouteImport } from './routes/(marketing)/products/qr-studio/index'
 import { Route as marketingProductsQrIndexRouteImport } from './routes/(marketing)/products/qr/index'
+import { Route as marketingProductsSocialCommerceIndexRouteImport } from './routes/(marketing)/products/social-commerce/index'
 import { Route as marketingProductsTestimonialGatewayIndexRouteImport } from './routes/(marketing)/products/testimonial-gateway/index'
 import { Route as marketingProductsWhatsappBroadcastIndexRouteImport } from './routes/(marketing)/products/whatsapp-broadcast/index'
 import { Route as marketingProductsWhatsappBusinessApiIndexRouteImport } from './routes/(marketing)/products/whatsapp-business-api/index'
@@ -131,6 +140,9 @@ import { Route as publicFacingLtShortIdIndexRouteImport } from './routes/(public
 import { Route as publicFacingQrShortIdIndexRouteImport } from './routes/(public-facing)/qr/$shortId/index'
 import { Route as publicFacingWasShortIdIndexRouteImport } from './routes/(public-facing)/was/$shortId/index'
 import { Route as publicFacingWsShortIdIndexRouteImport } from './routes/(public-facing)/ws/$shortId/index'
+import { Route as shopCTokenIndexRouteImport } from './routes/(shop)/c/$token/index'
+import { Route as shopCTokenInvoiceRouteImport } from './routes/(shop)/c/$token/invoice'
+import { Route as shopSSlugIndexRouteImport } from './routes/(shop)/s/$slug/index'
 import { Route as AdminOrgsOrgIdIndexRouteImport } from './routes/admin/orgs/$orgId/index'
 import { Route as AuthShopifyLogoutIndexRouteImport } from './routes/auth/shopify/logout/index'
 import { Route as AuthShopifyOauth2callbackIndexRouteImport } from './routes/auth/shopify/oauth2callback/index'
@@ -141,12 +153,19 @@ import { Route as DashboardAnalyticsCallsIndexRouteImport } from './routes/dashb
 import { Route as DashboardAutomationAutomationIdIndexRouteImport } from './routes/dashboard/automation/$automationId/index'
 import { Route as DashboardCampaignCampaignIdIndexRouteImport } from './routes/dashboard/campaign/$campaignId/index'
 import { Route as DashboardCampaignCampaignIdEditRouteImport } from './routes/dashboard/campaign/$campaignId/edit'
+import { Route as DashboardCommerceCatalogOrdersIndexRouteImport } from './routes/dashboard/commerce/catalog-orders/index'
 import { Route as DashboardCommerceCatalogsIndexRouteImport } from './routes/dashboard/commerce/catalogs/index'
 import { Route as DashboardCommerceCouponsIndexRouteImport } from './routes/dashboard/commerce/coupons/index'
 import { Route as DashboardCommerceOrdersIndexRouteImport } from './routes/dashboard/commerce/orders/index'
+import { Route as DashboardCommerceOrdersOrderIdRouteImport } from './routes/dashboard/commerce/orders/$orderId'
 import { Route as DashboardCommerceOverviewIndexRouteImport } from './routes/dashboard/commerce/overview/index'
 import { Route as DashboardCommercePaymentsIndexRouteImport } from './routes/dashboard/commerce/payments/index'
+import { Route as DashboardCommerceProductsIndexRouteImport } from './routes/dashboard/commerce/products/index'
+import { Route as DashboardCommerceProductsProductIdRouteImport } from './routes/dashboard/commerce/products/$productId'
+import { Route as DashboardCommerceProductsNewRouteImport } from './routes/dashboard/commerce/products/new'
 import { Route as DashboardCommerceSettingsIndexRouteImport } from './routes/dashboard/commerce/settings/index'
+import { Route as DashboardCommerceSettingsStorefrontPreviewRouteImport } from './routes/dashboard/commerce/settings/storefront-preview'
+import { Route as DashboardCommerceSetupIndexRouteImport } from './routes/dashboard/commerce/setup/index'
 import { Route as DashboardContactsCustomFieldsIndexRouteImport } from './routes/dashboard/contacts/custom-fields/index'
 import { Route as DashboardContactsGroupsIndexRouteImport } from './routes/dashboard/contacts/groups/index'
 import { Route as DashboardContactsLabelsIndexRouteImport } from './routes/dashboard/contacts/labels/index'
@@ -209,6 +228,7 @@ import { Route as publicFacingPublicSurveyCsIndexRouteImport } from './routes/(p
 import { Route as publicFacingPublicTestimonialCollectionIdIndexRouteImport } from './routes/(public-facing)/public/testimonial/$collectionId/index'
 import { Route as publicFacingWsShortIdEndIndexRouteImport } from './routes/(public-facing)/ws/$shortId/end/index'
 import { Route as publicFacingWsShortIdResponseSubmittedIndexRouteImport } from './routes/(public-facing)/ws/$shortId/response-submitted/index'
+import { Route as shopSSlugPHandleRouteImport } from './routes/(shop)/s/$slug/p/$handle'
 import { Route as DashboardAnalyticsTeamTeamidIndexRouteImport } from './routes/dashboard/analytics/team/$teamid/index'
 import { Route as DashboardContactsGroupsGroupIdIndexRouteImport } from './routes/dashboard/contacts/groups/$groupId/index'
 import { Route as DashboardLoyaltyProgramAdvancedIndexRouteImport } from './routes/dashboard/loyalty/program/advanced/index'
@@ -239,6 +259,10 @@ const marketingRouteRoute = marketingRouteRouteImport.update({
 } as any)
 const publicFacingRouteRoute = publicFacingRouteRouteImport.update({
   id: '/(public-facing)',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const shopRouteRoute = shopRouteRouteImport.update({
+  id: '/(shop)',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRouteRoute = AdminRouteRouteImport.update({
@@ -346,6 +370,12 @@ const marketingAboutUsIndexRoute = marketingAboutUsIndexRouteImport.update({
   path: '/about-us/',
   getParentRoute: () => marketingRouteRoute,
 } as any)
+const marketingAcceptableUseIndexRoute =
+  marketingAcceptableUseIndexRouteImport.update({
+    id: '/acceptable-use/',
+    path: '/acceptable-use/',
+    getParentRoute: () => marketingRouteRoute,
+  } as any)
 const marketingBlogIndexRoute = marketingBlogIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -372,6 +402,11 @@ const marketingContactUsIndexRoute = marketingContactUsIndexRouteImport.update({
   path: '/contact-us/',
   getParentRoute: () => marketingRouteRoute,
 } as any)
+const marketingDpaIndexRoute = marketingDpaIndexRouteImport.update({
+  id: '/dpa/',
+  path: '/dpa/',
+  getParentRoute: () => marketingRouteRoute,
+} as any)
 const marketingIntegrationsIndexRoute =
   marketingIntegrationsIndexRouteImport.update({
     id: '/integrations/',
@@ -395,6 +430,18 @@ const marketingPrivacyPolicyIndexRoute =
     path: '/privacy-policy/',
     getParentRoute: () => marketingRouteRoute,
   } as any)
+const marketingRefundPolicyIndexRoute =
+  marketingRefundPolicyIndexRouteImport.update({
+    id: '/refund-policy/',
+    path: '/refund-policy/',
+    getParentRoute: () => marketingRouteRoute,
+  } as any)
+const marketingSubprocessorsIndexRoute =
+  marketingSubprocessorsIndexRouteImport.update({
+    id: '/subprocessors/',
+    path: '/subprocessors/',
+    getParentRoute: () => marketingRouteRoute,
+  } as any)
 const marketingTermsOfServiceIndexRoute =
   marketingTermsOfServiceIndexRouteImport.update({
     id: '/terms-of-service/',
@@ -412,6 +459,16 @@ const marketingToolsSitemapDotxmlRoute =
     path: '/tools/sitemap.xml',
     getParentRoute: () => marketingRouteRoute,
   } as any)
+const shopSSlugRouteRoute = shopSSlugRouteRouteImport.update({
+  id: '/s/$slug',
+  path: '/s/$slug',
+  getParentRoute: () => shopRouteRoute,
+} as any)
+const shopSSitemapDotxmlRoute = shopSSitemapDotxmlRouteImport.update({
+  id: '/s/sitemap.xml',
+  path: '/s/sitemap.xml',
+  getParentRoute: () => shopRouteRoute,
+} as any)
 const AdminGenerateIndexRoute = AdminGenerateIndexRouteImport.update({
   id: '/generate/',
   path: '/generate/',
@@ -672,6 +729,11 @@ const authLoginVerifyPhoneNumberIndexRoute =
     path: '/login/verify-phone-number/',
     getParentRoute: () => authRouteRoute,
   } as any)
+const authSignupBusinessIndexRoute = authSignupBusinessIndexRouteImport.update({
+  id: '/signup/business/',
+  path: '/signup/business/',
+  getParentRoute: () => authRouteRoute,
+} as any)
 const authSignupSuccessIndexRoute = authSignupSuccessIndexRouteImport.update({
   id: '/signup/success/',
   path: '/signup/success/',
@@ -770,6 +832,12 @@ const marketingProductsQrIndexRoute =
   marketingProductsQrIndexRouteImport.update({
     id: '/products/qr/',
     path: '/products/qr/',
+    getParentRoute: () => marketingRouteRoute,
+  } as any)
+const marketingProductsSocialCommerceIndexRoute =
+  marketingProductsSocialCommerceIndexRouteImport.update({
+    id: '/products/social-commerce/',
+    path: '/products/social-commerce/',
     getParentRoute: () => marketingRouteRoute,
   } as any)
 const marketingProductsTestimonialGatewayIndexRoute =
@@ -892,6 +960,21 @@ const publicFacingWsShortIdIndexRoute =
     path: '/ws/$shortId/',
     getParentRoute: () => publicFacingRouteRoute,
   } as any)
+const shopCTokenIndexRoute = shopCTokenIndexRouteImport.update({
+  id: '/c/$token/',
+  path: '/c/$token/',
+  getParentRoute: () => shopRouteRoute,
+} as any)
+const shopCTokenInvoiceRoute = shopCTokenInvoiceRouteImport.update({
+  id: '/c/$token/invoice',
+  path: '/c/$token/invoice',
+  getParentRoute: () => shopRouteRoute,
+} as any)
+const shopSSlugIndexRoute = shopSSlugIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => shopSSlugRouteRoute,
+} as any)
 const AdminOrgsOrgIdIndexRoute = AdminOrgsOrgIdIndexRouteImport.update({
   id: '/orgs/$orgId/',
   path: '/orgs/$orgId/',
@@ -949,6 +1032,12 @@ const DashboardCampaignCampaignIdEditRoute =
     path: '/campaign/$campaignId/edit',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
+const DashboardCommerceCatalogOrdersIndexRoute =
+  DashboardCommerceCatalogOrdersIndexRouteImport.update({
+    id: '/catalog-orders/',
+    path: '/catalog-orders/',
+    getParentRoute: () => DashboardCommerceRouteRoute,
+  } as any)
 const DashboardCommerceCatalogsIndexRoute =
   DashboardCommerceCatalogsIndexRouteImport.update({
     id: '/catalogs/',
@@ -967,6 +1056,12 @@ const DashboardCommerceOrdersIndexRoute =
     path: '/orders/',
     getParentRoute: () => DashboardCommerceRouteRoute,
   } as any)
+const DashboardCommerceOrdersOrderIdRoute =
+  DashboardCommerceOrdersOrderIdRouteImport.update({
+    id: '/orders/$orderId',
+    path: '/orders/$orderId',
+    getParentRoute: () => DashboardCommerceRouteRoute,
+  } as any)
 const DashboardCommerceOverviewIndexRoute =
   DashboardCommerceOverviewIndexRouteImport.update({
     id: '/overview/',
@@ -979,10 +1074,40 @@ const DashboardCommercePaymentsIndexRoute =
     path: '/payments/',
     getParentRoute: () => DashboardCommerceRouteRoute,
   } as any)
+const DashboardCommerceProductsIndexRoute =
+  DashboardCommerceProductsIndexRouteImport.update({
+    id: '/products/',
+    path: '/products/',
+    getParentRoute: () => DashboardCommerceRouteRoute,
+  } as any)
+const DashboardCommerceProductsProductIdRoute =
+  DashboardCommerceProductsProductIdRouteImport.update({
+    id: '/products/$productId',
+    path: '/products/$productId',
+    getParentRoute: () => DashboardCommerceRouteRoute,
+  } as any)
+const DashboardCommerceProductsNewRoute =
+  DashboardCommerceProductsNewRouteImport.update({
+    id: '/products/new',
+    path: '/products/new',
+    getParentRoute: () => DashboardCommerceRouteRoute,
+  } as any)
 const DashboardCommerceSettingsIndexRoute =
   DashboardCommerceSettingsIndexRouteImport.update({
     id: '/settings/',
     path: '/settings/',
+    getParentRoute: () => DashboardCommerceRouteRoute,
+  } as any)
+const DashboardCommerceSettingsStorefrontPreviewRoute =
+  DashboardCommerceSettingsStorefrontPreviewRouteImport.update({
+    id: '/settings/storefront-preview',
+    path: '/settings/storefront-preview',
+    getParentRoute: () => DashboardCommerceRouteRoute,
+  } as any)
+const DashboardCommerceSetupIndexRoute =
+  DashboardCommerceSetupIndexRouteImport.update({
+    id: '/setup/',
+    path: '/setup/',
     getParentRoute: () => DashboardCommerceRouteRoute,
   } as any)
 const DashboardContactsCustomFieldsIndexRoute =
@@ -1357,6 +1482,11 @@ const publicFacingWsShortIdResponseSubmittedIndexRoute =
     path: '/ws/$shortId/response-submitted/',
     getParentRoute: () => publicFacingRouteRoute,
   } as any)
+const shopSSlugPHandleRoute = shopSSlugPHandleRouteImport.update({
+  id: '/p/$handle',
+  path: '/p/$handle',
+  getParentRoute: () => shopSSlugRouteRoute,
+} as any)
 const DashboardAnalyticsTeamTeamidIndexRoute =
   DashboardAnalyticsTeamTeamidIndexRouteImport.update({
     id: '/analytics/team/$teamid/',
@@ -1489,9 +1619,11 @@ export interface FileRoutesByFullPath {
   '/': typeof marketingIndexRoute
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/s/$slug': typeof shopSSlugRouteRouteWithChildren
   '/blog/rss.xml': typeof marketingBlogRssDotxmlRoute
   '/blog/sitemap.xml': typeof marketingBlogSitemapDotxmlRoute
   '/tools/sitemap.xml': typeof marketingToolsSitemapDotxmlRoute
+  '/s/sitemap.xml': typeof shopSSitemapDotxmlRoute
   '/dashboard/campaign/new': typeof DashboardCampaignNewRoute
   '/dashboard/meta-agent/connectors': typeof DashboardMetaAgentConnectorsRoute
   '/dashboard/meta-agent/insights': typeof DashboardMetaAgentInsightsRoute
@@ -1507,13 +1639,17 @@ export interface FileRoutesByFullPath {
   '/logout/': typeof authLogoutIndexRoute
   '/signup/': typeof authSignupIndexRoute
   '/about-us/': typeof marketingAboutUsIndexRoute
+  '/acceptable-use/': typeof marketingAcceptableUseIndexRoute
   '/blog/': typeof marketingBlogIndexRoute
   '/book-a-demo/': typeof marketingBookADemoIndexRoute
   '/contact-us/': typeof marketingContactUsIndexRoute
+  '/dpa/': typeof marketingDpaIndexRoute
   '/integrations/': typeof marketingIntegrationsIndexRoute
   '/partner-page/': typeof marketingPartnerPageIndexRoute
   '/pricing/': typeof marketingPricingIndexRoute
   '/privacy-policy/': typeof marketingPrivacyPolicyIndexRoute
+  '/refund-policy/': typeof marketingRefundPolicyIndexRoute
+  '/subprocessors/': typeof marketingSubprocessorsIndexRoute
   '/terms-of-service/': typeof marketingTermsOfServiceIndexRoute
   '/tools/': typeof marketingToolsIndexRoute
   '/admin/generate/': typeof AdminGenerateIndexRoute
@@ -1553,7 +1689,12 @@ export interface FileRoutesByFullPath {
   '/dashboard/whatsapp/': typeof DashboardWhatsappIndexRoute
   '/blog/author/sitemap.xml': typeof marketingBlogAuthorSitemapDotxmlRoute
   '/blog/tag/sitemap.xml': typeof marketingBlogTagSitemapDotxmlRoute
+  '/c/$token/invoice': typeof shopCTokenInvoiceRoute
   '/dashboard/campaign/$campaignId/edit': typeof DashboardCampaignCampaignIdEditRoute
+  '/dashboard/commerce/orders/$orderId': typeof DashboardCommerceOrdersOrderIdRoute
+  '/dashboard/commerce/products/$productId': typeof DashboardCommerceProductsProductIdRoute
+  '/dashboard/commerce/products/new': typeof DashboardCommerceProductsNewRoute
+  '/dashboard/commerce/settings/storefront-preview': typeof DashboardCommerceSettingsStorefrontPreviewRoute
   '/dashboard/instagram/flowbots/$flowbotId': typeof DashboardInstagramFlowbotsFlowbotIdRoute
   '/dashboard/messenger/flowbots/$flowbotId': typeof DashboardMessengerFlowbotsFlowbotIdRoute
   '/dashboard/settings/members/$memberId': typeof DashboardSettingsMembersMemberIdRoute
@@ -1562,6 +1703,7 @@ export interface FileRoutesByFullPath {
   '/login/reset-password/': typeof authLoginResetPasswordIndexRoute
   '/login/verify-email/': typeof authLoginVerifyEmailIndexRoute
   '/login/verify-phone-number/': typeof authLoginVerifyPhoneNumberIndexRoute
+  '/signup/business/': typeof authSignupBusinessIndexRoute
   '/signup/success/': typeof authSignupSuccessIndexRoute
   '/blog/$slug/': typeof marketingBlogSlugIndexRoute
   '/integrations/hubspot/': typeof marketingIntegrationsHubspotIndexRoute
@@ -1577,6 +1719,7 @@ export interface FileRoutesByFullPath {
   '/products/pipeline/': typeof marketingProductsPipelineIndexRoute
   '/products/qr-studio/': typeof marketingProductsQrStudioIndexRoute
   '/products/qr/': typeof marketingProductsQrIndexRoute
+  '/products/social-commerce/': typeof marketingProductsSocialCommerceIndexRoute
   '/products/testimonial-gateway/': typeof marketingProductsTestimonialGatewayIndexRoute
   '/products/whatsapp-broadcast/': typeof marketingProductsWhatsappBroadcastIndexRoute
   '/products/whatsapp-business-api/': typeof marketingProductsWhatsappBusinessApiIndexRoute
@@ -1597,6 +1740,8 @@ export interface FileRoutesByFullPath {
   '/qr/$shortId/': typeof publicFacingQrShortIdIndexRoute
   '/was/$shortId/': typeof publicFacingWasShortIdIndexRoute
   '/ws/$shortId/': typeof publicFacingWsShortIdIndexRoute
+  '/c/$token/': typeof shopCTokenIndexRoute
+  '/s/$slug/': typeof shopSSlugIndexRoute
   '/admin/orgs/$orgId/': typeof AdminOrgsOrgIdIndexRoute
   '/auth/shopify/logout/': typeof AuthShopifyLogoutIndexRoute
   '/auth/shopify/oauth2callback/': typeof AuthShopifyOauth2callbackIndexRoute
@@ -1606,12 +1751,15 @@ export interface FileRoutesByFullPath {
   '/dashboard/analytics/calls/': typeof DashboardAnalyticsCallsIndexRoute
   '/dashboard/automation/$automationId/': typeof DashboardAutomationAutomationIdIndexRoute
   '/dashboard/campaign/$campaignId/': typeof DashboardCampaignCampaignIdIndexRoute
+  '/dashboard/commerce/catalog-orders/': typeof DashboardCommerceCatalogOrdersIndexRoute
   '/dashboard/commerce/catalogs/': typeof DashboardCommerceCatalogsIndexRoute
   '/dashboard/commerce/coupons/': typeof DashboardCommerceCouponsIndexRoute
   '/dashboard/commerce/orders/': typeof DashboardCommerceOrdersIndexRoute
   '/dashboard/commerce/overview/': typeof DashboardCommerceOverviewIndexRoute
   '/dashboard/commerce/payments/': typeof DashboardCommercePaymentsIndexRoute
+  '/dashboard/commerce/products/': typeof DashboardCommerceProductsIndexRoute
   '/dashboard/commerce/settings/': typeof DashboardCommerceSettingsIndexRoute
+  '/dashboard/commerce/setup/': typeof DashboardCommerceSetupIndexRoute
   '/dashboard/contacts/custom-fields/': typeof DashboardContactsCustomFieldsIndexRoute
   '/dashboard/contacts/groups/': typeof DashboardContactsGroupsIndexRoute
   '/dashboard/contacts/labels/': typeof DashboardContactsLabelsIndexRoute
@@ -1658,6 +1806,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/whatsapp/orders/': typeof DashboardWhatsappOrdersIndexRoute
   '/dashboard/whatsapp/payments/': typeof DashboardWhatsappPaymentsIndexRoute
   '/dashboard/whatsapp/templates/': typeof DashboardWhatsappTemplatesIndexRoute
+  '/s/$slug/p/$handle': typeof shopSSlugPHandleRoute
   '/login/callback/apple/': typeof authLoginCallbackAppleIndexRoute
   '/login/callback/google/': typeof authLoginCallbackGoogleIndexRoute
   '/login/callback/paused/': typeof authLoginCallbackPausedIndexRoute
@@ -1705,6 +1854,7 @@ export interface FileRoutesByTo {
   '/blog/rss.xml': typeof marketingBlogRssDotxmlRoute
   '/blog/sitemap.xml': typeof marketingBlogSitemapDotxmlRoute
   '/tools/sitemap.xml': typeof marketingToolsSitemapDotxmlRoute
+  '/s/sitemap.xml': typeof shopSSitemapDotxmlRoute
   '/dashboard/campaign/new': typeof DashboardCampaignNewRoute
   '/dashboard/meta-agent/connectors': typeof DashboardMetaAgentConnectorsRoute
   '/dashboard/meta-agent/insights': typeof DashboardMetaAgentInsightsRoute
@@ -1720,13 +1870,17 @@ export interface FileRoutesByTo {
   '/logout': typeof authLogoutIndexRoute
   '/signup': typeof authSignupIndexRoute
   '/about-us': typeof marketingAboutUsIndexRoute
+  '/acceptable-use': typeof marketingAcceptableUseIndexRoute
   '/blog': typeof marketingBlogIndexRoute
   '/book-a-demo': typeof marketingBookADemoIndexRoute
   '/contact-us': typeof marketingContactUsIndexRoute
+  '/dpa': typeof marketingDpaIndexRoute
   '/integrations': typeof marketingIntegrationsIndexRoute
   '/partner-page': typeof marketingPartnerPageIndexRoute
   '/pricing': typeof marketingPricingIndexRoute
   '/privacy-policy': typeof marketingPrivacyPolicyIndexRoute
+  '/refund-policy': typeof marketingRefundPolicyIndexRoute
+  '/subprocessors': typeof marketingSubprocessorsIndexRoute
   '/terms-of-service': typeof marketingTermsOfServiceIndexRoute
   '/tools': typeof marketingToolsIndexRoute
   '/admin/generate': typeof AdminGenerateIndexRoute
@@ -1766,7 +1920,12 @@ export interface FileRoutesByTo {
   '/dashboard/whatsapp': typeof DashboardWhatsappIndexRoute
   '/blog/author/sitemap.xml': typeof marketingBlogAuthorSitemapDotxmlRoute
   '/blog/tag/sitemap.xml': typeof marketingBlogTagSitemapDotxmlRoute
+  '/c/$token/invoice': typeof shopCTokenInvoiceRoute
   '/dashboard/campaign/$campaignId/edit': typeof DashboardCampaignCampaignIdEditRoute
+  '/dashboard/commerce/orders/$orderId': typeof DashboardCommerceOrdersOrderIdRoute
+  '/dashboard/commerce/products/$productId': typeof DashboardCommerceProductsProductIdRoute
+  '/dashboard/commerce/products/new': typeof DashboardCommerceProductsNewRoute
+  '/dashboard/commerce/settings/storefront-preview': typeof DashboardCommerceSettingsStorefrontPreviewRoute
   '/dashboard/instagram/flowbots/$flowbotId': typeof DashboardInstagramFlowbotsFlowbotIdRoute
   '/dashboard/messenger/flowbots/$flowbotId': typeof DashboardMessengerFlowbotsFlowbotIdRoute
   '/dashboard/settings/members/$memberId': typeof DashboardSettingsMembersMemberIdRoute
@@ -1775,6 +1934,7 @@ export interface FileRoutesByTo {
   '/login/reset-password': typeof authLoginResetPasswordIndexRoute
   '/login/verify-email': typeof authLoginVerifyEmailIndexRoute
   '/login/verify-phone-number': typeof authLoginVerifyPhoneNumberIndexRoute
+  '/signup/business': typeof authSignupBusinessIndexRoute
   '/signup/success': typeof authSignupSuccessIndexRoute
   '/blog/$slug': typeof marketingBlogSlugIndexRoute
   '/integrations/hubspot': typeof marketingIntegrationsHubspotIndexRoute
@@ -1790,6 +1950,7 @@ export interface FileRoutesByTo {
   '/products/pipeline': typeof marketingProductsPipelineIndexRoute
   '/products/qr-studio': typeof marketingProductsQrStudioIndexRoute
   '/products/qr': typeof marketingProductsQrIndexRoute
+  '/products/social-commerce': typeof marketingProductsSocialCommerceIndexRoute
   '/products/testimonial-gateway': typeof marketingProductsTestimonialGatewayIndexRoute
   '/products/whatsapp-broadcast': typeof marketingProductsWhatsappBroadcastIndexRoute
   '/products/whatsapp-business-api': typeof marketingProductsWhatsappBusinessApiIndexRoute
@@ -1810,6 +1971,8 @@ export interface FileRoutesByTo {
   '/qr/$shortId': typeof publicFacingQrShortIdIndexRoute
   '/was/$shortId': typeof publicFacingWasShortIdIndexRoute
   '/ws/$shortId': typeof publicFacingWsShortIdIndexRoute
+  '/c/$token': typeof shopCTokenIndexRoute
+  '/s/$slug': typeof shopSSlugIndexRoute
   '/admin/orgs/$orgId': typeof AdminOrgsOrgIdIndexRoute
   '/auth/shopify/logout': typeof AuthShopifyLogoutIndexRoute
   '/auth/shopify/oauth2callback': typeof AuthShopifyOauth2callbackIndexRoute
@@ -1819,12 +1982,15 @@ export interface FileRoutesByTo {
   '/dashboard/analytics/calls': typeof DashboardAnalyticsCallsIndexRoute
   '/dashboard/automation/$automationId': typeof DashboardAutomationAutomationIdIndexRoute
   '/dashboard/campaign/$campaignId': typeof DashboardCampaignCampaignIdIndexRoute
+  '/dashboard/commerce/catalog-orders': typeof DashboardCommerceCatalogOrdersIndexRoute
   '/dashboard/commerce/catalogs': typeof DashboardCommerceCatalogsIndexRoute
   '/dashboard/commerce/coupons': typeof DashboardCommerceCouponsIndexRoute
   '/dashboard/commerce/orders': typeof DashboardCommerceOrdersIndexRoute
   '/dashboard/commerce/overview': typeof DashboardCommerceOverviewIndexRoute
   '/dashboard/commerce/payments': typeof DashboardCommercePaymentsIndexRoute
+  '/dashboard/commerce/products': typeof DashboardCommerceProductsIndexRoute
   '/dashboard/commerce/settings': typeof DashboardCommerceSettingsIndexRoute
+  '/dashboard/commerce/setup': typeof DashboardCommerceSetupIndexRoute
   '/dashboard/contacts/custom-fields': typeof DashboardContactsCustomFieldsIndexRoute
   '/dashboard/contacts/groups': typeof DashboardContactsGroupsIndexRoute
   '/dashboard/contacts/labels': typeof DashboardContactsLabelsIndexRoute
@@ -1871,6 +2037,7 @@ export interface FileRoutesByTo {
   '/dashboard/whatsapp/orders': typeof DashboardWhatsappOrdersIndexRoute
   '/dashboard/whatsapp/payments': typeof DashboardWhatsappPaymentsIndexRoute
   '/dashboard/whatsapp/templates': typeof DashboardWhatsappTemplatesIndexRoute
+  '/s/$slug/p/$handle': typeof shopSSlugPHandleRoute
   '/login/callback/apple': typeof authLoginCallbackAppleIndexRoute
   '/login/callback/google': typeof authLoginCallbackGoogleIndexRoute
   '/login/callback/paused': typeof authLoginCallbackPausedIndexRoute
@@ -1908,6 +2075,7 @@ export interface FileRoutesById {
   '/(auth)': typeof authRouteRouteWithChildren
   '/(marketing)': typeof marketingRouteRouteWithChildren
   '/(public-facing)': typeof publicFacingRouteRouteWithChildren
+  '/(shop)': typeof shopRouteRouteWithChildren
   '/admin': typeof AdminRouteRouteWithChildren
   '/auth': typeof AuthRouteRouteWithChildren
   '/dashboard': typeof DashboardRouteRouteWithChildren
@@ -1924,9 +2092,11 @@ export interface FileRoutesById {
   '/(marketing)/': typeof marketingIndexRoute
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/(shop)/s/$slug': typeof shopSSlugRouteRouteWithChildren
   '/(marketing)/blog/rss.xml': typeof marketingBlogRssDotxmlRoute
   '/(marketing)/blog/sitemap.xml': typeof marketingBlogSitemapDotxmlRoute
   '/(marketing)/tools/sitemap.xml': typeof marketingToolsSitemapDotxmlRoute
+  '/(shop)/s/sitemap.xml': typeof shopSSitemapDotxmlRoute
   '/dashboard/campaign/new': typeof DashboardCampaignNewRoute
   '/dashboard/meta-agent/connectors': typeof DashboardMetaAgentConnectorsRoute
   '/dashboard/meta-agent/insights': typeof DashboardMetaAgentInsightsRoute
@@ -1942,13 +2112,17 @@ export interface FileRoutesById {
   '/(auth)/logout/': typeof authLogoutIndexRoute
   '/(auth)/signup/': typeof authSignupIndexRoute
   '/(marketing)/about-us/': typeof marketingAboutUsIndexRoute
+  '/(marketing)/acceptable-use/': typeof marketingAcceptableUseIndexRoute
   '/(marketing)/blog/': typeof marketingBlogIndexRoute
   '/(marketing)/book-a-demo/': typeof marketingBookADemoIndexRoute
   '/(marketing)/contact-us/': typeof marketingContactUsIndexRoute
+  '/(marketing)/dpa/': typeof marketingDpaIndexRoute
   '/(marketing)/integrations/': typeof marketingIntegrationsIndexRoute
   '/(marketing)/partner-page/': typeof marketingPartnerPageIndexRoute
   '/(marketing)/pricing/': typeof marketingPricingIndexRoute
   '/(marketing)/privacy-policy/': typeof marketingPrivacyPolicyIndexRoute
+  '/(marketing)/refund-policy/': typeof marketingRefundPolicyIndexRoute
+  '/(marketing)/subprocessors/': typeof marketingSubprocessorsIndexRoute
   '/(marketing)/terms-of-service/': typeof marketingTermsOfServiceIndexRoute
   '/(marketing)/tools/': typeof marketingToolsIndexRoute
   '/admin/generate/': typeof AdminGenerateIndexRoute
@@ -1988,7 +2162,12 @@ export interface FileRoutesById {
   '/dashboard/whatsapp/': typeof DashboardWhatsappIndexRoute
   '/(marketing)/blog/author/sitemap.xml': typeof marketingBlogAuthorSitemapDotxmlRoute
   '/(marketing)/blog/tag/sitemap.xml': typeof marketingBlogTagSitemapDotxmlRoute
+  '/(shop)/c/$token/invoice': typeof shopCTokenInvoiceRoute
   '/dashboard/campaign/$campaignId/edit': typeof DashboardCampaignCampaignIdEditRoute
+  '/dashboard/commerce/orders/$orderId': typeof DashboardCommerceOrdersOrderIdRoute
+  '/dashboard/commerce/products/$productId': typeof DashboardCommerceProductsProductIdRoute
+  '/dashboard/commerce/products/new': typeof DashboardCommerceProductsNewRoute
+  '/dashboard/commerce/settings/storefront-preview': typeof DashboardCommerceSettingsStorefrontPreviewRoute
   '/dashboard/instagram/flowbots/$flowbotId': typeof DashboardInstagramFlowbotsFlowbotIdRoute
   '/dashboard/messenger/flowbots/$flowbotId': typeof DashboardMessengerFlowbotsFlowbotIdRoute
   '/dashboard/settings/members/$memberId': typeof DashboardSettingsMembersMemberIdRoute
@@ -1997,6 +2176,7 @@ export interface FileRoutesById {
   '/(auth)/login/reset-password/': typeof authLoginResetPasswordIndexRoute
   '/(auth)/login/verify-email/': typeof authLoginVerifyEmailIndexRoute
   '/(auth)/login/verify-phone-number/': typeof authLoginVerifyPhoneNumberIndexRoute
+  '/(auth)/signup/business/': typeof authSignupBusinessIndexRoute
   '/(auth)/signup/success/': typeof authSignupSuccessIndexRoute
   '/(marketing)/blog/$slug/': typeof marketingBlogSlugIndexRoute
   '/(marketing)/integrations/hubspot/': typeof marketingIntegrationsHubspotIndexRoute
@@ -2012,6 +2192,7 @@ export interface FileRoutesById {
   '/(marketing)/products/pipeline/': typeof marketingProductsPipelineIndexRoute
   '/(marketing)/products/qr-studio/': typeof marketingProductsQrStudioIndexRoute
   '/(marketing)/products/qr/': typeof marketingProductsQrIndexRoute
+  '/(marketing)/products/social-commerce/': typeof marketingProductsSocialCommerceIndexRoute
   '/(marketing)/products/testimonial-gateway/': typeof marketingProductsTestimonialGatewayIndexRoute
   '/(marketing)/products/whatsapp-broadcast/': typeof marketingProductsWhatsappBroadcastIndexRoute
   '/(marketing)/products/whatsapp-business-api/': typeof marketingProductsWhatsappBusinessApiIndexRoute
@@ -2032,6 +2213,8 @@ export interface FileRoutesById {
   '/(public-facing)/qr/$shortId/': typeof publicFacingQrShortIdIndexRoute
   '/(public-facing)/was/$shortId/': typeof publicFacingWasShortIdIndexRoute
   '/(public-facing)/ws/$shortId/': typeof publicFacingWsShortIdIndexRoute
+  '/(shop)/c/$token/': typeof shopCTokenIndexRoute
+  '/(shop)/s/$slug/': typeof shopSSlugIndexRoute
   '/admin/orgs/$orgId/': typeof AdminOrgsOrgIdIndexRoute
   '/auth/shopify/logout/': typeof AuthShopifyLogoutIndexRoute
   '/auth/shopify/oauth2callback/': typeof AuthShopifyOauth2callbackIndexRoute
@@ -2041,12 +2224,15 @@ export interface FileRoutesById {
   '/dashboard/analytics/calls/': typeof DashboardAnalyticsCallsIndexRoute
   '/dashboard/automation/$automationId/': typeof DashboardAutomationAutomationIdIndexRoute
   '/dashboard/campaign/$campaignId/': typeof DashboardCampaignCampaignIdIndexRoute
+  '/dashboard/commerce/catalog-orders/': typeof DashboardCommerceCatalogOrdersIndexRoute
   '/dashboard/commerce/catalogs/': typeof DashboardCommerceCatalogsIndexRoute
   '/dashboard/commerce/coupons/': typeof DashboardCommerceCouponsIndexRoute
   '/dashboard/commerce/orders/': typeof DashboardCommerceOrdersIndexRoute
   '/dashboard/commerce/overview/': typeof DashboardCommerceOverviewIndexRoute
   '/dashboard/commerce/payments/': typeof DashboardCommercePaymentsIndexRoute
+  '/dashboard/commerce/products/': typeof DashboardCommerceProductsIndexRoute
   '/dashboard/commerce/settings/': typeof DashboardCommerceSettingsIndexRoute
+  '/dashboard/commerce/setup/': typeof DashboardCommerceSetupIndexRoute
   '/dashboard/contacts/custom-fields/': typeof DashboardContactsCustomFieldsIndexRoute
   '/dashboard/contacts/groups/': typeof DashboardContactsGroupsIndexRoute
   '/dashboard/contacts/labels/': typeof DashboardContactsLabelsIndexRoute
@@ -2093,6 +2279,7 @@ export interface FileRoutesById {
   '/dashboard/whatsapp/orders/': typeof DashboardWhatsappOrdersIndexRoute
   '/dashboard/whatsapp/payments/': typeof DashboardWhatsappPaymentsIndexRoute
   '/dashboard/whatsapp/templates/': typeof DashboardWhatsappTemplatesIndexRoute
+  '/(shop)/s/$slug/p/$handle': typeof shopSSlugPHandleRoute
   '/(auth)/login/callback/apple/': typeof authLoginCallbackAppleIndexRoute
   '/(auth)/login/callback/google/': typeof authLoginCallbackGoogleIndexRoute
   '/(auth)/login/callback/paused/': typeof authLoginCallbackPausedIndexRoute
@@ -2144,9 +2331,11 @@ export interface FileRouteTypes {
     | '/'
     | '/admin/'
     | '/dashboard/'
+    | '/s/$slug'
     | '/blog/rss.xml'
     | '/blog/sitemap.xml'
     | '/tools/sitemap.xml'
+    | '/s/sitemap.xml'
     | '/dashboard/campaign/new'
     | '/dashboard/meta-agent/connectors'
     | '/dashboard/meta-agent/insights'
@@ -2162,13 +2351,17 @@ export interface FileRouteTypes {
     | '/logout/'
     | '/signup/'
     | '/about-us/'
+    | '/acceptable-use/'
     | '/blog/'
     | '/book-a-demo/'
     | '/contact-us/'
+    | '/dpa/'
     | '/integrations/'
     | '/partner-page/'
     | '/pricing/'
     | '/privacy-policy/'
+    | '/refund-policy/'
+    | '/subprocessors/'
     | '/terms-of-service/'
     | '/tools/'
     | '/admin/generate/'
@@ -2208,7 +2401,12 @@ export interface FileRouteTypes {
     | '/dashboard/whatsapp/'
     | '/blog/author/sitemap.xml'
     | '/blog/tag/sitemap.xml'
+    | '/c/$token/invoice'
     | '/dashboard/campaign/$campaignId/edit'
+    | '/dashboard/commerce/orders/$orderId'
+    | '/dashboard/commerce/products/$productId'
+    | '/dashboard/commerce/products/new'
+    | '/dashboard/commerce/settings/storefront-preview'
     | '/dashboard/instagram/flowbots/$flowbotId'
     | '/dashboard/messenger/flowbots/$flowbotId'
     | '/dashboard/settings/members/$memberId'
@@ -2217,6 +2415,7 @@ export interface FileRouteTypes {
     | '/login/reset-password/'
     | '/login/verify-email/'
     | '/login/verify-phone-number/'
+    | '/signup/business/'
     | '/signup/success/'
     | '/blog/$slug/'
     | '/integrations/hubspot/'
@@ -2232,6 +2431,7 @@ export interface FileRouteTypes {
     | '/products/pipeline/'
     | '/products/qr-studio/'
     | '/products/qr/'
+    | '/products/social-commerce/'
     | '/products/testimonial-gateway/'
     | '/products/whatsapp-broadcast/'
     | '/products/whatsapp-business-api/'
@@ -2252,6 +2452,8 @@ export interface FileRouteTypes {
     | '/qr/$shortId/'
     | '/was/$shortId/'
     | '/ws/$shortId/'
+    | '/c/$token/'
+    | '/s/$slug/'
     | '/admin/orgs/$orgId/'
     | '/auth/shopify/logout/'
     | '/auth/shopify/oauth2callback/'
@@ -2261,12 +2463,15 @@ export interface FileRouteTypes {
     | '/dashboard/analytics/calls/'
     | '/dashboard/automation/$automationId/'
     | '/dashboard/campaign/$campaignId/'
+    | '/dashboard/commerce/catalog-orders/'
     | '/dashboard/commerce/catalogs/'
     | '/dashboard/commerce/coupons/'
     | '/dashboard/commerce/orders/'
     | '/dashboard/commerce/overview/'
     | '/dashboard/commerce/payments/'
+    | '/dashboard/commerce/products/'
     | '/dashboard/commerce/settings/'
+    | '/dashboard/commerce/setup/'
     | '/dashboard/contacts/custom-fields/'
     | '/dashboard/contacts/groups/'
     | '/dashboard/contacts/labels/'
@@ -2313,6 +2518,7 @@ export interface FileRouteTypes {
     | '/dashboard/whatsapp/orders/'
     | '/dashboard/whatsapp/payments/'
     | '/dashboard/whatsapp/templates/'
+    | '/s/$slug/p/$handle'
     | '/login/callback/apple/'
     | '/login/callback/google/'
     | '/login/callback/paused/'
@@ -2360,6 +2566,7 @@ export interface FileRouteTypes {
     | '/blog/rss.xml'
     | '/blog/sitemap.xml'
     | '/tools/sitemap.xml'
+    | '/s/sitemap.xml'
     | '/dashboard/campaign/new'
     | '/dashboard/meta-agent/connectors'
     | '/dashboard/meta-agent/insights'
@@ -2375,13 +2582,17 @@ export interface FileRouteTypes {
     | '/logout'
     | '/signup'
     | '/about-us'
+    | '/acceptable-use'
     | '/blog'
     | '/book-a-demo'
     | '/contact-us'
+    | '/dpa'
     | '/integrations'
     | '/partner-page'
     | '/pricing'
     | '/privacy-policy'
+    | '/refund-policy'
+    | '/subprocessors'
     | '/terms-of-service'
     | '/tools'
     | '/admin/generate'
@@ -2421,7 +2632,12 @@ export interface FileRouteTypes {
     | '/dashboard/whatsapp'
     | '/blog/author/sitemap.xml'
     | '/blog/tag/sitemap.xml'
+    | '/c/$token/invoice'
     | '/dashboard/campaign/$campaignId/edit'
+    | '/dashboard/commerce/orders/$orderId'
+    | '/dashboard/commerce/products/$productId'
+    | '/dashboard/commerce/products/new'
+    | '/dashboard/commerce/settings/storefront-preview'
     | '/dashboard/instagram/flowbots/$flowbotId'
     | '/dashboard/messenger/flowbots/$flowbotId'
     | '/dashboard/settings/members/$memberId'
@@ -2430,6 +2646,7 @@ export interface FileRouteTypes {
     | '/login/reset-password'
     | '/login/verify-email'
     | '/login/verify-phone-number'
+    | '/signup/business'
     | '/signup/success'
     | '/blog/$slug'
     | '/integrations/hubspot'
@@ -2445,6 +2662,7 @@ export interface FileRouteTypes {
     | '/products/pipeline'
     | '/products/qr-studio'
     | '/products/qr'
+    | '/products/social-commerce'
     | '/products/testimonial-gateway'
     | '/products/whatsapp-broadcast'
     | '/products/whatsapp-business-api'
@@ -2465,6 +2683,8 @@ export interface FileRouteTypes {
     | '/qr/$shortId'
     | '/was/$shortId'
     | '/ws/$shortId'
+    | '/c/$token'
+    | '/s/$slug'
     | '/admin/orgs/$orgId'
     | '/auth/shopify/logout'
     | '/auth/shopify/oauth2callback'
@@ -2474,12 +2694,15 @@ export interface FileRouteTypes {
     | '/dashboard/analytics/calls'
     | '/dashboard/automation/$automationId'
     | '/dashboard/campaign/$campaignId'
+    | '/dashboard/commerce/catalog-orders'
     | '/dashboard/commerce/catalogs'
     | '/dashboard/commerce/coupons'
     | '/dashboard/commerce/orders'
     | '/dashboard/commerce/overview'
     | '/dashboard/commerce/payments'
+    | '/dashboard/commerce/products'
     | '/dashboard/commerce/settings'
+    | '/dashboard/commerce/setup'
     | '/dashboard/contacts/custom-fields'
     | '/dashboard/contacts/groups'
     | '/dashboard/contacts/labels'
@@ -2526,6 +2749,7 @@ export interface FileRouteTypes {
     | '/dashboard/whatsapp/orders'
     | '/dashboard/whatsapp/payments'
     | '/dashboard/whatsapp/templates'
+    | '/s/$slug/p/$handle'
     | '/login/callback/apple'
     | '/login/callback/google'
     | '/login/callback/paused'
@@ -2562,6 +2786,7 @@ export interface FileRouteTypes {
     | '/(auth)'
     | '/(marketing)'
     | '/(public-facing)'
+    | '/(shop)'
     | '/admin'
     | '/auth'
     | '/dashboard'
@@ -2578,9 +2803,11 @@ export interface FileRouteTypes {
     | '/(marketing)/'
     | '/admin/'
     | '/dashboard/'
+    | '/(shop)/s/$slug'
     | '/(marketing)/blog/rss.xml'
     | '/(marketing)/blog/sitemap.xml'
     | '/(marketing)/tools/sitemap.xml'
+    | '/(shop)/s/sitemap.xml'
     | '/dashboard/campaign/new'
     | '/dashboard/meta-agent/connectors'
     | '/dashboard/meta-agent/insights'
@@ -2596,13 +2823,17 @@ export interface FileRouteTypes {
     | '/(auth)/logout/'
     | '/(auth)/signup/'
     | '/(marketing)/about-us/'
+    | '/(marketing)/acceptable-use/'
     | '/(marketing)/blog/'
     | '/(marketing)/book-a-demo/'
     | '/(marketing)/contact-us/'
+    | '/(marketing)/dpa/'
     | '/(marketing)/integrations/'
     | '/(marketing)/partner-page/'
     | '/(marketing)/pricing/'
     | '/(marketing)/privacy-policy/'
+    | '/(marketing)/refund-policy/'
+    | '/(marketing)/subprocessors/'
     | '/(marketing)/terms-of-service/'
     | '/(marketing)/tools/'
     | '/admin/generate/'
@@ -2642,7 +2873,12 @@ export interface FileRouteTypes {
     | '/dashboard/whatsapp/'
     | '/(marketing)/blog/author/sitemap.xml'
     | '/(marketing)/blog/tag/sitemap.xml'
+    | '/(shop)/c/$token/invoice'
     | '/dashboard/campaign/$campaignId/edit'
+    | '/dashboard/commerce/orders/$orderId'
+    | '/dashboard/commerce/products/$productId'
+    | '/dashboard/commerce/products/new'
+    | '/dashboard/commerce/settings/storefront-preview'
     | '/dashboard/instagram/flowbots/$flowbotId'
     | '/dashboard/messenger/flowbots/$flowbotId'
     | '/dashboard/settings/members/$memberId'
@@ -2651,6 +2887,7 @@ export interface FileRouteTypes {
     | '/(auth)/login/reset-password/'
     | '/(auth)/login/verify-email/'
     | '/(auth)/login/verify-phone-number/'
+    | '/(auth)/signup/business/'
     | '/(auth)/signup/success/'
     | '/(marketing)/blog/$slug/'
     | '/(marketing)/integrations/hubspot/'
@@ -2666,6 +2903,7 @@ export interface FileRouteTypes {
     | '/(marketing)/products/pipeline/'
     | '/(marketing)/products/qr-studio/'
     | '/(marketing)/products/qr/'
+    | '/(marketing)/products/social-commerce/'
     | '/(marketing)/products/testimonial-gateway/'
     | '/(marketing)/products/whatsapp-broadcast/'
     | '/(marketing)/products/whatsapp-business-api/'
@@ -2686,6 +2924,8 @@ export interface FileRouteTypes {
     | '/(public-facing)/qr/$shortId/'
     | '/(public-facing)/was/$shortId/'
     | '/(public-facing)/ws/$shortId/'
+    | '/(shop)/c/$token/'
+    | '/(shop)/s/$slug/'
     | '/admin/orgs/$orgId/'
     | '/auth/shopify/logout/'
     | '/auth/shopify/oauth2callback/'
@@ -2695,12 +2935,15 @@ export interface FileRouteTypes {
     | '/dashboard/analytics/calls/'
     | '/dashboard/automation/$automationId/'
     | '/dashboard/campaign/$campaignId/'
+    | '/dashboard/commerce/catalog-orders/'
     | '/dashboard/commerce/catalogs/'
     | '/dashboard/commerce/coupons/'
     | '/dashboard/commerce/orders/'
     | '/dashboard/commerce/overview/'
     | '/dashboard/commerce/payments/'
+    | '/dashboard/commerce/products/'
     | '/dashboard/commerce/settings/'
+    | '/dashboard/commerce/setup/'
     | '/dashboard/contacts/custom-fields/'
     | '/dashboard/contacts/groups/'
     | '/dashboard/contacts/labels/'
@@ -2747,6 +2990,7 @@ export interface FileRouteTypes {
     | '/dashboard/whatsapp/orders/'
     | '/dashboard/whatsapp/payments/'
     | '/dashboard/whatsapp/templates/'
+    | '/(shop)/s/$slug/p/$handle'
     | '/(auth)/login/callback/apple/'
     | '/(auth)/login/callback/google/'
     | '/(auth)/login/callback/paused/'
@@ -2784,6 +3028,7 @@ export interface RootRouteChildren {
   authRouteRoute: typeof authRouteRouteWithChildren
   marketingRouteRoute: typeof marketingRouteRouteWithChildren
   publicFacingRouteRoute: typeof publicFacingRouteRouteWithChildren
+  shopRouteRoute: typeof shopRouteRouteWithChildren
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
   AuthRouteRoute: typeof AuthRouteRouteWithChildren
   DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
@@ -2816,6 +3061,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: ''
       preLoaderRoute: typeof publicFacingRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(shop)': {
+      id: '/(shop)'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof shopRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -2965,6 +3217,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof marketingAboutUsIndexRouteImport
       parentRoute: typeof marketingRouteRoute
     }
+    '/(marketing)/acceptable-use/': {
+      id: '/(marketing)/acceptable-use/'
+      path: '/acceptable-use'
+      fullPath: '/acceptable-use/'
+      preLoaderRoute: typeof marketingAcceptableUseIndexRouteImport
+      parentRoute: typeof marketingRouteRoute
+    }
     '/(marketing)/blog/': {
       id: '/(marketing)/blog/'
       path: '/'
@@ -3000,6 +3259,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof marketingContactUsIndexRouteImport
       parentRoute: typeof marketingRouteRoute
     }
+    '/(marketing)/dpa/': {
+      id: '/(marketing)/dpa/'
+      path: '/dpa'
+      fullPath: '/dpa/'
+      preLoaderRoute: typeof marketingDpaIndexRouteImport
+      parentRoute: typeof marketingRouteRoute
+    }
     '/(marketing)/integrations/': {
       id: '/(marketing)/integrations/'
       path: '/integrations'
@@ -3028,6 +3294,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof marketingPrivacyPolicyIndexRouteImport
       parentRoute: typeof marketingRouteRoute
     }
+    '/(marketing)/refund-policy/': {
+      id: '/(marketing)/refund-policy/'
+      path: '/refund-policy'
+      fullPath: '/refund-policy/'
+      preLoaderRoute: typeof marketingRefundPolicyIndexRouteImport
+      parentRoute: typeof marketingRouteRoute
+    }
+    '/(marketing)/subprocessors/': {
+      id: '/(marketing)/subprocessors/'
+      path: '/subprocessors'
+      fullPath: '/subprocessors/'
+      preLoaderRoute: typeof marketingSubprocessorsIndexRouteImport
+      parentRoute: typeof marketingRouteRoute
+    }
     '/(marketing)/terms-of-service/': {
       id: '/(marketing)/terms-of-service/'
       path: '/terms-of-service'
@@ -3048,6 +3328,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/tools/sitemap.xml'
       preLoaderRoute: typeof marketingToolsSitemapDotxmlRouteImport
       parentRoute: typeof marketingRouteRoute
+    }
+    '/(shop)/s/$slug': {
+      id: '/(shop)/s/$slug'
+      path: '/s/$slug'
+      fullPath: '/s/$slug'
+      preLoaderRoute: typeof shopSSlugRouteRouteImport
+      parentRoute: typeof shopRouteRoute
+    }
+    '/(shop)/s/sitemap.xml': {
+      id: '/(shop)/s/sitemap.xml'
+      path: '/s/sitemap.xml'
+      fullPath: '/s/sitemap.xml'
+      preLoaderRoute: typeof shopSSitemapDotxmlRouteImport
+      parentRoute: typeof shopRouteRoute
     }
     '/admin/generate/': {
       id: '/admin/generate/'
@@ -3392,6 +3686,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authLoginVerifyPhoneNumberIndexRouteImport
       parentRoute: typeof authRouteRoute
     }
+    '/(auth)/signup/business/': {
+      id: '/(auth)/signup/business/'
+      path: '/signup/business'
+      fullPath: '/signup/business/'
+      preLoaderRoute: typeof authSignupBusinessIndexRouteImport
+      parentRoute: typeof authRouteRoute
+    }
     '/(auth)/signup/success/': {
       id: '/(auth)/signup/success/'
       path: '/signup/success'
@@ -3509,6 +3810,13 @@ declare module '@tanstack/react-router' {
       path: '/products/qr'
       fullPath: '/products/qr/'
       preLoaderRoute: typeof marketingProductsQrIndexRouteImport
+      parentRoute: typeof marketingRouteRoute
+    }
+    '/(marketing)/products/social-commerce/': {
+      id: '/(marketing)/products/social-commerce/'
+      path: '/products/social-commerce'
+      fullPath: '/products/social-commerce/'
+      preLoaderRoute: typeof marketingProductsSocialCommerceIndexRouteImport
       parentRoute: typeof marketingRouteRoute
     }
     '/(marketing)/products/testimonial-gateway/': {
@@ -3651,6 +3959,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof publicFacingWsShortIdIndexRouteImport
       parentRoute: typeof publicFacingRouteRoute
     }
+    '/(shop)/c/$token/': {
+      id: '/(shop)/c/$token/'
+      path: '/c/$token'
+      fullPath: '/c/$token/'
+      preLoaderRoute: typeof shopCTokenIndexRouteImport
+      parentRoute: typeof shopRouteRoute
+    }
+    '/(shop)/c/$token/invoice': {
+      id: '/(shop)/c/$token/invoice'
+      path: '/c/$token/invoice'
+      fullPath: '/c/$token/invoice'
+      preLoaderRoute: typeof shopCTokenInvoiceRouteImport
+      parentRoute: typeof shopRouteRoute
+    }
+    '/(shop)/s/$slug/': {
+      id: '/(shop)/s/$slug/'
+      path: '/'
+      fullPath: '/s/$slug/'
+      preLoaderRoute: typeof shopSSlugIndexRouteImport
+      parentRoute: typeof shopSSlugRouteRoute
+    }
     '/admin/orgs/$orgId/': {
       id: '/admin/orgs/$orgId/'
       path: '/orgs/$orgId'
@@ -3721,6 +4050,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardCampaignCampaignIdEditRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/commerce/catalog-orders/': {
+      id: '/dashboard/commerce/catalog-orders/'
+      path: '/catalog-orders'
+      fullPath: '/dashboard/commerce/catalog-orders/'
+      preLoaderRoute: typeof DashboardCommerceCatalogOrdersIndexRouteImport
+      parentRoute: typeof DashboardCommerceRouteRoute
+    }
     '/dashboard/commerce/catalogs/': {
       id: '/dashboard/commerce/catalogs/'
       path: '/catalogs'
@@ -3742,6 +4078,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardCommerceOrdersIndexRouteImport
       parentRoute: typeof DashboardCommerceRouteRoute
     }
+    '/dashboard/commerce/orders/$orderId': {
+      id: '/dashboard/commerce/orders/$orderId'
+      path: '/orders/$orderId'
+      fullPath: '/dashboard/commerce/orders/$orderId'
+      preLoaderRoute: typeof DashboardCommerceOrdersOrderIdRouteImport
+      parentRoute: typeof DashboardCommerceRouteRoute
+    }
     '/dashboard/commerce/overview/': {
       id: '/dashboard/commerce/overview/'
       path: '/overview'
@@ -3756,11 +4099,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardCommercePaymentsIndexRouteImport
       parentRoute: typeof DashboardCommerceRouteRoute
     }
+    '/dashboard/commerce/products/': {
+      id: '/dashboard/commerce/products/'
+      path: '/products'
+      fullPath: '/dashboard/commerce/products/'
+      preLoaderRoute: typeof DashboardCommerceProductsIndexRouteImport
+      parentRoute: typeof DashboardCommerceRouteRoute
+    }
+    '/dashboard/commerce/products/$productId': {
+      id: '/dashboard/commerce/products/$productId'
+      path: '/products/$productId'
+      fullPath: '/dashboard/commerce/products/$productId'
+      preLoaderRoute: typeof DashboardCommerceProductsProductIdRouteImport
+      parentRoute: typeof DashboardCommerceRouteRoute
+    }
+    '/dashboard/commerce/products/new': {
+      id: '/dashboard/commerce/products/new'
+      path: '/products/new'
+      fullPath: '/dashboard/commerce/products/new'
+      preLoaderRoute: typeof DashboardCommerceProductsNewRouteImport
+      parentRoute: typeof DashboardCommerceRouteRoute
+    }
     '/dashboard/commerce/settings/': {
       id: '/dashboard/commerce/settings/'
       path: '/settings'
       fullPath: '/dashboard/commerce/settings/'
       preLoaderRoute: typeof DashboardCommerceSettingsIndexRouteImport
+      parentRoute: typeof DashboardCommerceRouteRoute
+    }
+    '/dashboard/commerce/settings/storefront-preview': {
+      id: '/dashboard/commerce/settings/storefront-preview'
+      path: '/settings/storefront-preview'
+      fullPath: '/dashboard/commerce/settings/storefront-preview'
+      preLoaderRoute: typeof DashboardCommerceSettingsStorefrontPreviewRouteImport
+      parentRoute: typeof DashboardCommerceRouteRoute
+    }
+    '/dashboard/commerce/setup/': {
+      id: '/dashboard/commerce/setup/'
+      path: '/setup'
+      fullPath: '/dashboard/commerce/setup/'
+      preLoaderRoute: typeof DashboardCommerceSetupIndexRouteImport
       parentRoute: typeof DashboardCommerceRouteRoute
     }
     '/dashboard/contacts/custom-fields/': {
@@ -4197,6 +4575,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof publicFacingWsShortIdResponseSubmittedIndexRouteImport
       parentRoute: typeof publicFacingRouteRoute
     }
+    '/(shop)/s/$slug/p/$handle': {
+      id: '/(shop)/s/$slug/p/$handle'
+      path: '/p/$handle'
+      fullPath: '/s/$slug/p/$handle'
+      preLoaderRoute: typeof shopSSlugPHandleRouteImport
+      parentRoute: typeof shopSSlugRouteRoute
+    }
     '/dashboard/analytics/team/$teamid/': {
       id: '/dashboard/analytics/team/$teamid/'
       path: '/analytics/team/$teamid'
@@ -4342,6 +4727,7 @@ interface authRouteRouteChildren {
   authLoginResetPasswordIndexRoute: typeof authLoginResetPasswordIndexRoute
   authLoginVerifyEmailIndexRoute: typeof authLoginVerifyEmailIndexRoute
   authLoginVerifyPhoneNumberIndexRoute: typeof authLoginVerifyPhoneNumberIndexRoute
+  authSignupBusinessIndexRoute: typeof authSignupBusinessIndexRoute
   authSignupSuccessIndexRoute: typeof authSignupSuccessIndexRoute
   authLoginCallbackAppleIndexRoute: typeof authLoginCallbackAppleIndexRoute
   authLoginCallbackGoogleIndexRoute: typeof authLoginCallbackGoogleIndexRoute
@@ -4358,6 +4744,7 @@ const authRouteRouteChildren: authRouteRouteChildren = {
   authLoginResetPasswordIndexRoute: authLoginResetPasswordIndexRoute,
   authLoginVerifyEmailIndexRoute: authLoginVerifyEmailIndexRoute,
   authLoginVerifyPhoneNumberIndexRoute: authLoginVerifyPhoneNumberIndexRoute,
+  authSignupBusinessIndexRoute: authSignupBusinessIndexRoute,
   authSignupSuccessIndexRoute: authSignupSuccessIndexRoute,
   authLoginCallbackAppleIndexRoute: authLoginCallbackAppleIndexRoute,
   authLoginCallbackGoogleIndexRoute: authLoginCallbackGoogleIndexRoute,
@@ -4399,12 +4786,16 @@ interface marketingRouteRouteChildren {
   marketingIndexRoute: typeof marketingIndexRoute
   marketingToolsSitemapDotxmlRoute: typeof marketingToolsSitemapDotxmlRoute
   marketingAboutUsIndexRoute: typeof marketingAboutUsIndexRoute
+  marketingAcceptableUseIndexRoute: typeof marketingAcceptableUseIndexRoute
   marketingBookADemoIndexRoute: typeof marketingBookADemoIndexRoute
   marketingContactUsIndexRoute: typeof marketingContactUsIndexRoute
+  marketingDpaIndexRoute: typeof marketingDpaIndexRoute
   marketingIntegrationsIndexRoute: typeof marketingIntegrationsIndexRoute
   marketingPartnerPageIndexRoute: typeof marketingPartnerPageIndexRoute
   marketingPricingIndexRoute: typeof marketingPricingIndexRoute
   marketingPrivacyPolicyIndexRoute: typeof marketingPrivacyPolicyIndexRoute
+  marketingRefundPolicyIndexRoute: typeof marketingRefundPolicyIndexRoute
+  marketingSubprocessorsIndexRoute: typeof marketingSubprocessorsIndexRoute
   marketingTermsOfServiceIndexRoute: typeof marketingTermsOfServiceIndexRoute
   marketingToolsIndexRoute: typeof marketingToolsIndexRoute
   marketingIntegrationsHubspotIndexRoute: typeof marketingIntegrationsHubspotIndexRoute
@@ -4420,6 +4811,7 @@ interface marketingRouteRouteChildren {
   marketingProductsPipelineIndexRoute: typeof marketingProductsPipelineIndexRoute
   marketingProductsQrStudioIndexRoute: typeof marketingProductsQrStudioIndexRoute
   marketingProductsQrIndexRoute: typeof marketingProductsQrIndexRoute
+  marketingProductsSocialCommerceIndexRoute: typeof marketingProductsSocialCommerceIndexRoute
   marketingProductsTestimonialGatewayIndexRoute: typeof marketingProductsTestimonialGatewayIndexRoute
   marketingProductsWhatsappBroadcastIndexRoute: typeof marketingProductsWhatsappBroadcastIndexRoute
   marketingProductsWhatsappBusinessApiIndexRoute: typeof marketingProductsWhatsappBusinessApiIndexRoute
@@ -4443,12 +4835,16 @@ const marketingRouteRouteChildren: marketingRouteRouteChildren = {
   marketingIndexRoute: marketingIndexRoute,
   marketingToolsSitemapDotxmlRoute: marketingToolsSitemapDotxmlRoute,
   marketingAboutUsIndexRoute: marketingAboutUsIndexRoute,
+  marketingAcceptableUseIndexRoute: marketingAcceptableUseIndexRoute,
   marketingBookADemoIndexRoute: marketingBookADemoIndexRoute,
   marketingContactUsIndexRoute: marketingContactUsIndexRoute,
+  marketingDpaIndexRoute: marketingDpaIndexRoute,
   marketingIntegrationsIndexRoute: marketingIntegrationsIndexRoute,
   marketingPartnerPageIndexRoute: marketingPartnerPageIndexRoute,
   marketingPricingIndexRoute: marketingPricingIndexRoute,
   marketingPrivacyPolicyIndexRoute: marketingPrivacyPolicyIndexRoute,
+  marketingRefundPolicyIndexRoute: marketingRefundPolicyIndexRoute,
+  marketingSubprocessorsIndexRoute: marketingSubprocessorsIndexRoute,
   marketingTermsOfServiceIndexRoute: marketingTermsOfServiceIndexRoute,
   marketingToolsIndexRoute: marketingToolsIndexRoute,
   marketingIntegrationsHubspotIndexRoute:
@@ -4471,6 +4867,8 @@ const marketingRouteRouteChildren: marketingRouteRouteChildren = {
   marketingProductsPipelineIndexRoute: marketingProductsPipelineIndexRoute,
   marketingProductsQrStudioIndexRoute: marketingProductsQrStudioIndexRoute,
   marketingProductsQrIndexRoute: marketingProductsQrIndexRoute,
+  marketingProductsSocialCommerceIndexRoute:
+    marketingProductsSocialCommerceIndexRoute,
   marketingProductsTestimonialGatewayIndexRoute:
     marketingProductsTestimonialGatewayIndexRoute,
   marketingProductsWhatsappBroadcastIndexRoute:
@@ -4552,6 +4950,38 @@ const publicFacingRouteRouteChildren: publicFacingRouteRouteChildren = {
 const publicFacingRouteRouteWithChildren =
   publicFacingRouteRoute._addFileChildren(publicFacingRouteRouteChildren)
 
+interface shopSSlugRouteRouteChildren {
+  shopSSlugIndexRoute: typeof shopSSlugIndexRoute
+  shopSSlugPHandleRoute: typeof shopSSlugPHandleRoute
+}
+
+const shopSSlugRouteRouteChildren: shopSSlugRouteRouteChildren = {
+  shopSSlugIndexRoute: shopSSlugIndexRoute,
+  shopSSlugPHandleRoute: shopSSlugPHandleRoute,
+}
+
+const shopSSlugRouteRouteWithChildren = shopSSlugRouteRoute._addFileChildren(
+  shopSSlugRouteRouteChildren,
+)
+
+interface shopRouteRouteChildren {
+  shopSSlugRouteRoute: typeof shopSSlugRouteRouteWithChildren
+  shopSSitemapDotxmlRoute: typeof shopSSitemapDotxmlRoute
+  shopCTokenInvoiceRoute: typeof shopCTokenInvoiceRoute
+  shopCTokenIndexRoute: typeof shopCTokenIndexRoute
+}
+
+const shopRouteRouteChildren: shopRouteRouteChildren = {
+  shopSSlugRouteRoute: shopSSlugRouteRouteWithChildren,
+  shopSSitemapDotxmlRoute: shopSSitemapDotxmlRoute,
+  shopCTokenInvoiceRoute: shopCTokenInvoiceRoute,
+  shopCTokenIndexRoute: shopCTokenIndexRoute,
+}
+
+const shopRouteRouteWithChildren = shopRouteRoute._addFileChildren(
+  shopRouteRouteChildren,
+)
+
 interface AdminRouteRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
   AdminGenerateIndexRoute: typeof AdminGenerateIndexRoute
@@ -4614,23 +5044,40 @@ const AuthRouteRouteWithChildren = AuthRouteRoute._addFileChildren(
 
 interface DashboardCommerceRouteRouteChildren {
   DashboardCommerceIndexRoute: typeof DashboardCommerceIndexRoute
+  DashboardCommerceOrdersOrderIdRoute: typeof DashboardCommerceOrdersOrderIdRoute
+  DashboardCommerceProductsProductIdRoute: typeof DashboardCommerceProductsProductIdRoute
+  DashboardCommerceProductsNewRoute: typeof DashboardCommerceProductsNewRoute
+  DashboardCommerceSettingsStorefrontPreviewRoute: typeof DashboardCommerceSettingsStorefrontPreviewRoute
+  DashboardCommerceCatalogOrdersIndexRoute: typeof DashboardCommerceCatalogOrdersIndexRoute
   DashboardCommerceCatalogsIndexRoute: typeof DashboardCommerceCatalogsIndexRoute
   DashboardCommerceCouponsIndexRoute: typeof DashboardCommerceCouponsIndexRoute
   DashboardCommerceOrdersIndexRoute: typeof DashboardCommerceOrdersIndexRoute
   DashboardCommerceOverviewIndexRoute: typeof DashboardCommerceOverviewIndexRoute
   DashboardCommercePaymentsIndexRoute: typeof DashboardCommercePaymentsIndexRoute
+  DashboardCommerceProductsIndexRoute: typeof DashboardCommerceProductsIndexRoute
   DashboardCommerceSettingsIndexRoute: typeof DashboardCommerceSettingsIndexRoute
+  DashboardCommerceSetupIndexRoute: typeof DashboardCommerceSetupIndexRoute
 }
 
 const DashboardCommerceRouteRouteChildren: DashboardCommerceRouteRouteChildren =
   {
     DashboardCommerceIndexRoute: DashboardCommerceIndexRoute,
+    DashboardCommerceOrdersOrderIdRoute: DashboardCommerceOrdersOrderIdRoute,
+    DashboardCommerceProductsProductIdRoute:
+      DashboardCommerceProductsProductIdRoute,
+    DashboardCommerceProductsNewRoute: DashboardCommerceProductsNewRoute,
+    DashboardCommerceSettingsStorefrontPreviewRoute:
+      DashboardCommerceSettingsStorefrontPreviewRoute,
+    DashboardCommerceCatalogOrdersIndexRoute:
+      DashboardCommerceCatalogOrdersIndexRoute,
     DashboardCommerceCatalogsIndexRoute: DashboardCommerceCatalogsIndexRoute,
     DashboardCommerceCouponsIndexRoute: DashboardCommerceCouponsIndexRoute,
     DashboardCommerceOrdersIndexRoute: DashboardCommerceOrdersIndexRoute,
     DashboardCommerceOverviewIndexRoute: DashboardCommerceOverviewIndexRoute,
     DashboardCommercePaymentsIndexRoute: DashboardCommercePaymentsIndexRoute,
+    DashboardCommerceProductsIndexRoute: DashboardCommerceProductsIndexRoute,
     DashboardCommerceSettingsIndexRoute: DashboardCommerceSettingsIndexRoute,
+    DashboardCommerceSetupIndexRoute: DashboardCommerceSetupIndexRoute,
   }
 
 const DashboardCommerceRouteRouteWithChildren =
@@ -4909,6 +5356,7 @@ const rootRouteChildren: RootRouteChildren = {
   authRouteRoute: authRouteRouteWithChildren,
   marketingRouteRoute: marketingRouteRouteWithChildren,
   publicFacingRouteRoute: publicFacingRouteRouteWithChildren,
+  shopRouteRoute: shopRouteRouteWithChildren,
   AdminRouteRoute: AdminRouteRouteWithChildren,
   AuthRouteRoute: AuthRouteRouteWithChildren,
   DashboardRouteRoute: DashboardRouteRouteWithChildren,

@@ -44,7 +44,8 @@ export function Step2({
   handleNext,
 }: {
   formData: SignupForm;
-  handleBack: () => void;
+  /** Absent on the first step of a screen, where there is nothing to go back to. */
+  handleBack?: () => void;
   handleNext: () => void;
 }) {
   const uid = useId();
@@ -229,14 +230,16 @@ export function Step2({
       </FieldGroup>
 
       <div className="mt-auto flex items-center gap-3">
-        <Button
-          variant="outline"
-          onClick={handleBack}
-          className="h-10 cursor-pointer gap-2 rounded-lg px-4 text-[13.5px] font-semibold"
-        >
-          <IconArrowLeft className="size-4" />
-          {translations("Back")}
-        </Button>
+        {handleBack && (
+          <Button
+            variant="outline"
+            onClick={handleBack}
+            className="h-10 cursor-pointer gap-2 rounded-lg px-4 text-[13.5px] font-semibold"
+          >
+            <IconArrowLeft className="size-4" />
+            {translations("Back")}
+          </Button>
+        )}
         <Button
           onClick={handleContinue}
           className="h-10 flex-1 cursor-pointer rounded-lg text-sm font-semibold"

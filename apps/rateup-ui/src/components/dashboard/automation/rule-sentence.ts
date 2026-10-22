@@ -43,6 +43,7 @@ export const PLAIN_TRIGGERS: Record<string, string> = {
   INSTAGRAM_COMMENT: "Someone comments on your post",
   INSTAGRAM_STORY_MENTION: "Someone mentions you in a story",
   INSTAGRAM_REFERRAL: "Someone opens your ig.me link",
+  WHATSAPP_AD_REFERRAL: "Someone taps your click-to-WhatsApp ad",
   MESSENGER_REFERRAL: "Someone opens your m.me link",
   FACEBOOK_COMMENT: "Someone comments on your Page's post",
 };
@@ -223,6 +224,15 @@ export function actionPart(
     }
     case "ASSIGN_LIFECYCLE":
       return done("set the lifecycle");
+    case "SEND_SHOP_PRODUCTS": {
+      const ids =
+        value && typeof value === "object" && "productIds" in value ? value.productIds : [];
+      const drop =
+        value && typeof value === "object" && "dropLimit" in value ? value.dropLimit : null;
+      if (!ids.length) return gap("send products to buy …");
+      const what = ids.length === 1 ? "a product" : `${ids.length} products`;
+      return done(`send ${what} to buy${drop ? `, first ${drop} only` : ""}`);
+    }
     case "CALL_EXTERNAL_API": {
       try {
         return done(`call ${new URL(id).host}`);

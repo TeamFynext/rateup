@@ -333,6 +333,7 @@ export enum TeamFeature {
   Templates = "templates",
   Automation = "automation",
   Loyalty = "loyalty",
+  Commerce = "commerce",
   WebForms = "web_forms",
   Tickets = "tickets",
   Pipeline = "pipeline",

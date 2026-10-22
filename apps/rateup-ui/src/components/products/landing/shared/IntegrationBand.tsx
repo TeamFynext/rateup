@@ -38,20 +38,16 @@ export default function IntegrationBand({
 
         <div className="mb-3 grid gap-3 md:grid-cols-2">
           {points.map((point) => {
-            const logo = point.slug
-              ? INTEGRATIONS.find((intg) => intg.slug === point.slug)?.logo
-              : null;
+            const Mark = point.slug
+              ? INTEGRATIONS.find((intg) => intg.slug === point.slug)?.Mark
+              : undefined;
             return (
               <div
                 key={point.name}
                 className="flex items-start gap-3.5 rounded-2xl border border-ru-n-200 bg-ru-n-50 p-5"
               >
                 <span className="flex size-11 flex-none items-center justify-center rounded-xl border border-ru-n-200 bg-white text-ru-n-600">
-                  {logo ? (
-                    <img src={logo} alt="" loading="lazy" className="size-7 object-contain" />
-                  ) : (
-                    point.mark
-                  )}
+                  {Mark ? <Mark className="size-7" /> : point.mark}
                 </span>
                 <div className="min-w-0">
                   <h3 className="text-base font-semibold text-ru-n-700">{point.name}</h3>

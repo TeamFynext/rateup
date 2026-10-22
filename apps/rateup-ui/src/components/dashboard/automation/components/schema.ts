@@ -109,6 +109,11 @@ const TRIGGER_EVENTS = [
     platforms: ["INSTAGRAM"],
   },
   {
+    label: "Came From a Click-to-WhatsApp Ad",
+    value: "WHATSAPP_AD_REFERRAL",
+    platforms: ["WHATSAPP"],
+  },
+  {
     label: "m.me Link Opened",
     value: "MESSENGER_REFERRAL",
     platforms: ["FACEBOOK"],
@@ -245,6 +250,11 @@ export const ACTION_TYPES = [
     value: "ASSIGN_STAGE",
     platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
   },
+  {
+    label: "Send Products to Buy",
+    value: "SEND_SHOP_PRODUCTS",
+    platforms: ["WHATSAPP", "INSTAGRAM"],
+  },
 ] as const;
 
 /**
@@ -354,12 +364,28 @@ const assignLifecycleActionSchema = z.object({
   value: z.union([z.string().min(1, "Lifecycle is required"), assignLifecycleActionValueSchema]),
 });
 
+/** Mirrors `shopProductsActionSchema` in rateup-api's commerce/shop/commentToBuy.schema.ts. */
+export const shopProductsActionValueSchema = z.object({
+  productIds: z.array(z.string()).min(1, "Pick at least one product").max(10),
+  message: z.string().trim().max(600).optional(),
+  dropLimit: z.number().int().min(1, "A drop needs at least 1 unit").nullish(),
+});
+
+const shopProductsActionSchema = z.object({
+  id: z.string().optional(),
+  type: z.literal("SEND_SHOP_PRODUCTS"),
+  value: shopProductsActionValueSchema,
+});
+
 const regularActionSchema = z.object({
   id: z.string().optional(),
   type: z.enum(
     optionValues(ACTION_TYPES).filter(
       (value) =>
-        value !== "CALL_EXTERNAL_API" && value !== "SEND_TEMPLATE" && value !== "ASSIGN_LIFECYCLE",
+        value !== "CALL_EXTERNAL_API" &&
+        value !== "SEND_TEMPLATE" &&
+        value !== "ASSIGN_LIFECYCLE" &&
+        value !== "SEND_SHOP_PRODUCTS",
     ) as [string, ...string[]],
   ),
   value: z.string().min(1, "Value is required"),
@@ -369,6 +395,7 @@ const ruleActionSchema = z.union([
   externalApiActionSchema,
   sendTemplateActionSchema,
   assignLifecycleActionSchema,
+  shopProductsActionSchema,
   regularActionSchema,
 ]);
 
@@ -440,6 +467,12 @@ const ruleOptionsSchema = z.object({
     .max(10)
     .default([])
     .transform((replies) => replies.filter((reply) => reply.length > 0)),
+  // Click-to-WhatsApp: mirrors the API's check in wa_rule.schema.ts.
+  adIds: z
+    .array(z.string().trim().min(1).max(64, "That doesn't look like an ad id"))
+    .max(50)
+    .optional(),
+  adMatch: z.string().trim().max(200).optional(),
 });
 
 const createRuleBaseSchema = z.object({

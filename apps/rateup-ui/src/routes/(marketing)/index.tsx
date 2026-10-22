@@ -4,14 +4,14 @@ import { setResponseHeader } from "@tanstack/react-start/server";
 import { useEffect, useRef } from "react";
 
 import Layout from "@/components/RateupHomePage/Layout.tsx";
+import AlsoIncluded from "@/components/RateupHomePage/shared/AlsoIncluded";
 import CaseStudies from "@/components/RateupHomePage/shared/CaseStudies";
-import Features from "@/components/RateupHomePage/shared/Features";
 import HeroSectionNew from "@/components/RateupHomePage/shared/HeroSectionNew";
-import HowItWorks from "@/components/RateupHomePage/shared/HowItWorks";
 import Integrations from "@/components/RateupHomePage/shared/Integrations";
+import JobBands from "@/components/RateupHomePage/shared/JobBands";
+import Journey from "@/components/RateupHomePage/shared/Journey";
 import LoyaltySection from "@/components/RateupHomePage/shared/LoyaltySection";
 import Overview from "@/components/RateupHomePage/shared/Overview";
-import Problem from "@/components/RateupHomePage/shared/Problem";
 import TrustedBy from "@/components/RateupHomePage/shared/TrustedBy";
 import { buildPageHead } from "@/lib/metadata";
 import { rateupLogoOg } from "@/utils/constants.ts";
@@ -102,9 +102,9 @@ function RouteComponent() {
       <HeroSectionNew />
       <Overview />
       <TrustedBy />
-      <Problem />
-      <HowItWorks />
-      <Features />
+      <JobBands />
+      <Journey />
+      <AlsoIncluded />
       <CaseStudies />
       <Integrations />
       <LoyaltySection />

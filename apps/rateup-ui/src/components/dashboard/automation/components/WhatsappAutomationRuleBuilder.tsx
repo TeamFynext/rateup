@@ -12,7 +12,11 @@ import {
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 
-import { findAutomationTemplate, templateFormValues } from "../automation-templates.ts";
+import {
+  findAutomationTemplate,
+  templateFormValues,
+  withProduct,
+} from "../automation-templates.ts";
 import RuleBuilderForm from "./RuleBuilderForm.tsx";
 import RuleShare from "./RuleShare.tsx";
 import type { CreateRuleInput, CreateRuleValues, Platform } from "./schema.ts";
@@ -27,6 +31,8 @@ interface WhatsappAutomationRuleBuilderProps {
   initialChannelId?: string;
   /** An `AUTOMATION_TEMPLATES` id, picked before the wizard opened. */
   initialTemplateId?: string;
+  /** A shop product to put in the template's product actions. */
+  initialProductId?: string;
 }
 
 type SavedRule = NonNullable<ReturnType<typeof useRuleById>["data"]>;
@@ -80,6 +86,7 @@ const WhatsappAutomationRuleBuilder: React.FC<WhatsappAutomationRuleBuilderProps
   initialTriggerEvent,
   initialChannelId,
   initialTemplateId,
+  initialProductId,
 }) => {
   const isEditMode = Boolean(ruleId && ruleId !== "new");
   const { data: ruleData, isLoading: isRuleLoading } = useRuleById(
@@ -108,7 +115,9 @@ const WhatsappAutomationRuleBuilder: React.FC<WhatsappAutomationRuleBuilderProps
       ruleId={isEditMode ? ruleId : undefined}
       ruleData={isEditMode ? ruleData : undefined}
       initialValues={
-        isEditMode ? toFormValues(ruleData, {}) : templateFormValues(template, newRuleValues)
+        isEditMode
+          ? toFormValues(ruleData, {})
+          : withProduct(templateFormValues(template, newRuleValues), initialProductId)
       }
       baseValues={newRuleValues}
       initialTemplateId={template?.id}

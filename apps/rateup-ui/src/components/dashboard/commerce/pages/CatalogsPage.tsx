@@ -51,6 +51,7 @@ import { fallbackImage } from "@/utils/constants";
 import CatalogSettingsTab from "../CatalogSettingsTab";
 import { useCommerce } from "../CommerceContext";
 import { CommerceShell } from "../CommerceShell";
+import { settingsTab } from "../shop/shopMeta";
 import { catalogPrice } from "../utils";
 
 const TILE_CLASSES = [
@@ -167,6 +168,7 @@ export function CatalogsPage() {
   return (
     <CommerceShell
       title="Catalogs"
+      back={{ ...settingsTab("legacy"), label: "Settings" }}
       description="Manage products and collections synced to WhatsApp & Instagram."
       showCatalogSwitcher
       actions={

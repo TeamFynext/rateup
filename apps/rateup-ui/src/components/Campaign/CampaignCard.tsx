@@ -106,8 +106,7 @@ function LiveCampaignCard({
           <span className="text-secondary-foreground">
             <strong className="text-foreground font-semibold tabular-nums">
               {recipients.toLocaleString()}
-            </strong>
-            {""}
+            </strong>{" "}
             {t("recipients")}
           </span>
           <span className="text-muted-foreground tabular-nums">

@@ -70,6 +70,30 @@ const pageMetadata = {
       "Discover how RateUp protects your data. Read our privacy policy for WhatsApp Business API, automation & omnichannel engagement solutions with full transparency.",
     sitemap: { priority: "0.3", changefreq: "yearly" },
   },
+  "/refund-policy": {
+    title: "Refund & Cancellation Policy | RateUp",
+    description:
+      "How cancelling a RateUp plan works, when refunds apply, and how upgrades, downgrades, credit packs and Meta message charges are billed.",
+    sitemap: { priority: "0.3", changefreq: "yearly" },
+  },
+  "/acceptable-use": {
+    title: "Acceptable Use Policy | RateUp",
+    description:
+      "The rules for messaging, selling and handling customer data on RateUp, including opt-in, opt-out and Meta's WhatsApp policies.",
+    sitemap: { priority: "0.3", changefreq: "yearly" },
+  },
+  "/dpa": {
+    title: "Data Processing Agreement | RateUp",
+    description:
+      "RateUp's Data Processing Agreement: how we process your customers' personal data on your behalf, security measures, breach notice and international transfers.",
+    sitemap: { priority: "0.3", changefreq: "yearly" },
+  },
+  "/subprocessors": {
+    title: "Subprocessors | RateUp",
+    description:
+      "The service providers that process data on RateUp's behalf, what each one does, and where the data is processed.",
+    sitemap: { priority: "0.3", changefreq: "yearly" },
+  },
   "/login/reset-password": {
     title: "Reset Password of RateUp - Omnichannel Customer Engagement Platform",
     description:
@@ -119,6 +143,15 @@ const pageMetadata = {
     ogTitle: "WhatsApp CRM Pipeline for Leads & Support",
     ogDescription:
       "Every enquiry becomes a lead with an owner, a next step and a stage — set right from the inbox.",
+    sitemap: { priority: "0.8", changefreq: "monthly" },
+  },
+  "/products/social-commerce": {
+    title: "Sell on WhatsApp, Instagram & Messenger | Social Commerce | RateUp",
+    description:
+      "Let customers buy and pay inside WhatsApp, Instagram and Messenger. Catalog sync, in-chat checkout, your own Stripe or Razorpay, one Orders list, shipping and loyalty points.",
+    ogTitle: "Social Commerce on WhatsApp, Instagram & Messenger",
+    ogDescription:
+      "The simplest way to sell on WhatsApp and Instagram. Customers order in the chat and pay through a link, into your own payment account.",
     sitemap: { priority: "0.8", changefreq: "monthly" },
   },
   "/products/meta-ai-agent": {

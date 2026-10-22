@@ -613,6 +613,30 @@ export const RATEUP_CONNECTOR_TOOLS = [
     label: "Route to a team",
     blurb: "Send the conversation to the right team before a handoff.",
   },
+  {
+    name: "search_products",
+    group: "commerce",
+    label: "Search products",
+    blurb: "Your live products, prices and stock, so the agent only offers what you sell.",
+  },
+  {
+    name: "start_checkout",
+    group: "commerce",
+    label: "Start a checkout",
+    blurb: "Puts what the customer chose in a cart and returns a secure payment link.",
+  },
+  {
+    name: "get_order_status",
+    group: "commerce",
+    label: "Order status",
+    blurb: "Where the customer's recent orders are, with tracking links.",
+  },
+  {
+    name: "notify_when_back_in_stock",
+    group: "commerce",
+    label: "Back-in-stock alert",
+    blurb: "Signs the customer up for a message when a sold-out item returns.",
+  },
 ] as const;
 export type RateupConnectorToolName = (typeof RATEUP_CONNECTOR_TOOLS)[number]["name"];
 

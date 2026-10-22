@@ -9,6 +9,7 @@ import {
   inboxRowSortTime,
   isMetaAiMessage,
   parseWaMessage,
+  returnMessageContentBasedOnParsedMessage,
 } from "./inbox.ts";
 
 describe("getContactChannelSource", () => {
@@ -125,6 +126,41 @@ describe("inbox row sorting", () => {
     ];
     expect(sort(rows, "sortBy:newest")).toEqual(["late", "mid", "undated"]);
     expect(sort(rows, "sortBy:oldest")).toEqual(["mid", "late", "undated"]);
+  });
+});
+
+describe("a sent Instagram template", () => {
+  const sent = (payload: Record<string, unknown>) =>
+    ({
+      sourcePlatform: MessagePlatform.INSTAGRAM,
+      messageBody: {
+        exchangeProcess: "send",
+        send: { recipient: { id: "ig-1" }, message: { attachment: { type: "template", payload } } },
+      },
+    }) as unknown as Parameters<typeof parseWaMessage>[0];
+
+  it("keeps the product cards so the thread can draw them", () => {
+    const parsed = parseWaMessage(
+      sent({
+        template_type: "generic",
+        elements: [{ title: "Mug", subtitle: "USD 12.00", buttons: [{ title: "Buy now" }] }],
+      }),
+    );
+    expect(parsed.messageType).toBe("ig_template");
+    expect(parsed.messageContent).toEqual({
+      templateType: "generic",
+      text: undefined,
+      elements: [{ title: "Mug", subtitle: "USD 12.00", buttons: [{ title: "Buy now" }] }],
+      buttons: [],
+    });
+    expect(returnMessageContentBasedOnParsedMessage(parsed, "send")).toBe("Mug");
+  });
+
+  it("previews a checkout link by its text", () => {
+    const parsed = parseWaMessage(
+      sent({ template_type: "button", text: "Pay for your order", buttons: [{ type: "web_url" }] }),
+    );
+    expect(returnMessageContentBasedOnParsedMessage(parsed, "send")).toBe("Pay for your order");
   });
 });
 

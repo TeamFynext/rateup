@@ -9,9 +9,7 @@ export const Route = createFileRoute("/dashboard/commerce")({
 function CommerceLayout() {
   return (
     <CommerceProvider>
-      <div className="-m-4 flex min-h-[calc(100dvh)] flex-col bg-muted/40">
-        <Outlet />
-      </div>
+      <Outlet />
     </CommerceProvider>
   );
 }

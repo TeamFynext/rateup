@@ -264,6 +264,15 @@ export function buildComparison(tiers: PricingTier[]): ComparisonGroup[] {
     }),
   });
 
+  // Only Free is capped; a tier row seeded before the cap carries no number and is unmetered.
+  const capRow = (label: string, read: (tier: PricingTier) => number | null | undefined) => ({
+    label,
+    cells: tiers.map((tier) => {
+      const value = read(tier);
+      return value && value > 0 && !isUnlimitedCount(value) ? formatCount(value) : "Unlimited";
+    }),
+  });
+
   const gateRow = (label: string, read: (tier: PricingTier) => boolean) => ({
     label,
     cells: tiers.map((tier) => read(tier) || null),
@@ -278,6 +287,7 @@ export function buildComparison(tiers: PricingTier[]): ComparisonGroup[] {
         meterRow("Active contacts / month", (t) => f(t)?.whatsapp?.activeContacts?.count?.max),
         meterRow("Campaign messages / month", (t) => f(t)?.whatsapp?.campaignCredits?.count?.max),
         limitRow("Form submissions / month", (t) => f(t)?.webSurvey?.count?.monthlyResponseLimit),
+        capRow("Orders / month", (t) => f(t)?.whatsapp?.shopOrders?.count?.max),
       ],
     },
     {
@@ -448,8 +458,9 @@ export function limitAnswer(
     : "On a paid plan you can add one-off packs that stack and never renew, or move up a plan.";
 
   return (
-    `${base} ${remedy} On Free, upgrading is the way to raise a limit. Enterprise limits ` +
-    "are set in your contract."
+    `${base} ${remedy} On Free, upgrading is the way to raise a limit. Once Free's 50 orders ` +
+    "for the month are taken, shoppers are asked to message you to order, and an order " +
+    "already paid for always goes through. Enterprise limits are set in your contract."
   );
 }
 

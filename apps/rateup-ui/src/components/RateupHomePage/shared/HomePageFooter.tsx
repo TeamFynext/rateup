@@ -11,7 +11,9 @@ import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 import type { ReactNode } from "react";
 
+import { LEGAL_DOCS, LEGAL_ENTITY } from "@/components/HomePage/pages/Legal/company";
 import { MetaLockup } from "@/components/integrations/logos";
+import { openCookieSettings } from "@/components/ui/cookie-consent";
 import { imagesPath } from "@/utils/constants";
 
 import RateupLockup from "./RateupLockup";
@@ -24,10 +26,6 @@ import styles from "@/styles/commonCssModules/homepagecss.module.css";
  * The comp nests this inside the navy closing-CTA block; here it is a separate component
  * (it is `Layout`'s default footer for every marketing page), so it carries its own navy
  * ground and the hairline that separates it from whatever sits above.
- *
- * The comp's link columns are plain text; these are real links, and the four labels it lists
- * that have no page behind them (Careers, DPA, Security, plus a "Case studies" page) resolve
- * to the closest real destination rather than to a dead route.
  */
 
 /** rgba(255,255,255,.08) in the comp — the hairline that divides the navy stack. */
@@ -163,6 +161,9 @@ export default function HomePageFooter() {
             <Link to="/products/pipeline" className={LINK}>
               Pipeline
             </Link>
+            <Link to="/products/social-commerce" className={LINK}>
+              Social Commerce
+            </Link>
             <Link to="/products/meta-ai-agent" className={LINK}>
               Meta AI Agent
             </Link>
@@ -204,12 +205,14 @@ export default function HomePageFooter() {
           </FooterCol>
 
           <FooterCol title="Legal">
-            <Link to="/privacy-policy" className={LINK}>
-              Privacy
-            </Link>
-            <Link to="/terms-of-service" className={LINK}>
-              Terms
-            </Link>
+            {LEGAL_DOCS.map((doc) => (
+              <Link key={doc.label} to={doc.to} className={LINK}>
+                {doc.label}
+              </Link>
+            ))}
+            <button type="button" onClick={openCookieSettings} className={`text-left ${LINK}`}>
+              Cookie settings
+            </button>
           </FooterCol>
         </div>
 
@@ -223,7 +226,7 @@ export default function HomePageFooter() {
           className={`flex flex-wrap items-center justify-between gap-3.5 border-t pt-5.5 ${HAIRLINE}`}
         >
           <span className="text-[13.5px] text-white/42">
-            © {new Date().getFullYear()} RateUp. All rights reserved.
+            © {new Date().getFullYear()} {LEGAL_ENTITY}. All rights reserved.
           </span>
           <FooterSocials />
           <span className="text-[13px] tracking-[0.08em] text-white/42">www.rateup.app</span>

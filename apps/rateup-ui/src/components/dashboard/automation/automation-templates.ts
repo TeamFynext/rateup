@@ -1,5 +1,6 @@
 import type { CreateRuleInput } from "@/components/dashboard/automation/components/schema.ts";
 import { DEFAULT_RULE_VALUES } from "@/components/dashboard/automation/components/schema.ts";
+import { asShopProductsValue } from "@/components/dashboard/automation/components/ShopProductsAction.tsx";
 import { ShopifyEvents } from "@/types/enums.ts";
 
 /** An integration the template's trigger depends on. */
@@ -127,6 +128,49 @@ export const AUTOMATION_TEMPLATES: readonly AutomationTemplate[] = [
         },
       ],
       options: { instagramScope: "ALL", instagramPublicReplies: ["Sent you a DM 📩"] },
+    },
+  },
+  {
+    id: "comment-to-buy",
+    category: "instagram",
+    name: "Comment to buy",
+    sentence: "Someone comments “buy” → DM them the product with a link to check out.",
+    requires: "instagram",
+    values: {
+      name: "Comment to buy",
+      platform: "INSTAGRAM",
+      triggerEvent: "INSTAGRAM_COMMENT",
+      groups: keywords("buy", "link", "price"),
+      actions: [{ type: "SEND_SHOP_PRODUCTS", value: { productIds: [] } }],
+      options: { instagramScope: "ALL", instagramPublicReplies: ["Sent you the link 📩"] },
+    },
+  },
+  {
+    id: "live-drop",
+    category: "instagram",
+    name: "Live drop",
+    sentence: "Someone comments “mine” on your live → the first 20 get a checkout link.",
+    requires: "instagram",
+    values: {
+      name: "Live drop",
+      platform: "INSTAGRAM",
+      triggerEvent: "INSTAGRAM_COMMENT",
+      groups: keywords("mine", "buy"),
+      actions: [{ type: "SEND_SHOP_PRODUCTS", value: { productIds: [], dropLimit: 20 } }],
+      options: { instagramCommentSource: "LIVE", instagramPublicReplies: ["Check your DMs 📩"] },
+    },
+  },
+  {
+    id: "ad-to-products",
+    category: "store",
+    name: "Ad to products",
+    sentence: "Someone taps your click-to-WhatsApp ad → show them the products it promoted.",
+    values: {
+      name: "Ad to products",
+      platform: "WHATSAPP",
+      triggerEvent: "WHATSAPP_AD_REFERRAL",
+      groups: [],
+      actions: [{ type: "SEND_SHOP_PRODUCTS", value: { productIds: [] } }],
     },
   },
   {
@@ -397,5 +441,25 @@ export function templateFormValues(
     platform: platforms[0],
     platforms,
     options: { ...base.options, ...template.values.options },
+  };
+}
+
+/** A template opened from a product's page starts with that product in its product actions. */
+export function withProduct(
+  values: CreateRuleInput,
+  productId: string | undefined,
+): CreateRuleInput {
+  if (!productId) return values;
+  return {
+    ...values,
+    actions: values.actions.map((action) =>
+      action.type === "SEND_SHOP_PRODUCTS"
+        ? {
+            id: action.id,
+            type: "SEND_SHOP_PRODUCTS" as const,
+            value: { ...asShopProductsValue(action.value), productIds: [productId] },
+          }
+        : action,
+    ),
   };
 }

@@ -2,6 +2,8 @@ import { IconChecks, IconChevronLeft, IconLock } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 import { useEffect, useEffectEvent } from "react";
 
+import { formatMoney, toMoney } from "@/backend/commerce/shop.api";
+import { useShopProduct, useShopStore } from "@/backend/commerce/shop.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import type { NameLookup, SentencePart } from "@/components/dashboard/automation/rule-sentence.ts";
 import { actionPart } from "@/components/dashboard/automation/rule-sentence.ts";
@@ -16,6 +18,7 @@ import type { WaTemplateFetchBody } from "@/types/global";
 
 import type { CreateRuleInput, Platform } from "../schema.ts";
 import { asPlatform, isCommentTrigger, PLATFORMS } from "../schema.ts";
+import { asShopProductsValue } from "../ShopProductsAction.tsx";
 import { useRuleSentence } from "./useRuleSentence.ts";
 
 /** Actions the customer never sees; the preview lists them under the conversation instead. */
@@ -54,6 +57,7 @@ const EVENT_NOTE: Record<string, string> = {
   LIFECYCLE_UPDATED: "Lifecycle changed",
   INSTAGRAM_STORY_MENTION: "Mentioned you in their story",
   INSTAGRAM_REFERRAL: "Opened your ig.me link",
+  WHATSAPP_AD_REFERRAL: "Tapped your ad",
   MESSENGER_REFERRAL: "Opened your m.me link",
 };
 
@@ -103,6 +107,19 @@ function Note({ children }: Readonly<{ children: ReactNode }>) {
     <span className="self-center rounded-md bg-white/90 px-2 py-0.5 text-center text-[10.5px] text-[#6B7480] shadow-sm">
       {children}
     </span>
+  );
+}
+
+function ProductLine({ id }: Readonly<{ id: string }>) {
+  const { data: product } = useShopProduct(id);
+  const { data: store } = useShopStore();
+  if (!product) return null;
+  const price = product.variants[0]?.price;
+  return (
+    <>
+      {"\n"}• {product.title}
+      {price != null && store ? ` · ${formatMoney(toMoney(price), store.currency)}` : ""}
+    </>
   );
 }
 
@@ -245,6 +262,36 @@ function AutomationPreview({
             ) : (
               <Bubble key={key} className={cn(style.theirs, "italic opacity-70")}>
                 Pick a template to see it here
+              </Bubble>
+            );
+          }
+          if (action.type === "SEND_SHOP_PRODUCTS") {
+            const value = asShopProductsValue(action.value);
+            if (platform === "WHATSAPP" && value.productIds.length) {
+              return (
+                <Bubble key={key} className={style.theirs}>
+                  {value.message || "A few picks for you"}
+                  {value.productIds.slice(0, 5).map((id) => (
+                    <ProductLine key={id} id={id} />
+                  ))}
+                  {"\n"}
+                  <span className="font-semibold underline">View items</span>
+                </Bubble>
+              );
+            }
+            return value.productIds.length ? (
+              <Bubble key={key} className={style.theirs}>
+                {value.message || "Thanks for your comment! Here it is:"}
+                {value.productIds.slice(0, 5).map((id) => (
+                  <ProductLine key={id} id={id} />
+                ))}
+                {"\n"}
+                {value.productIds.length === 1 ? "Buy it here: " : "Shop here: "}
+                <span className="underline">link</span>
+              </Bubble>
+            ) : (
+              <Bubble key={key} className={cn(style.theirs, "italic opacity-70")}>
+                Pick products to see the reply here
               </Bubble>
             );
           }

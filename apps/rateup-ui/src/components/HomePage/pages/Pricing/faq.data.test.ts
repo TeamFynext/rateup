@@ -68,6 +68,11 @@ describe("the packs the pricing page quotes", () => {
     // Free cannot buy packs; the API refuses the order.
     expect(answerFor(PLANS)).toMatch(/On Free, upgrading is the way to raise a limit/);
   });
+
+  test("say what Free's order cap does, and that a paid order is never refused", () => {
+    expect(answerFor(PLANS)).toMatch(/50 orders/);
+    expect(answerFor(PLANS)).toMatch(/already paid for always goes through/);
+  });
 });
 
 describe("the FAQ entries and their structured data", () => {
@@ -82,6 +87,13 @@ describe("the FAQ entries and their structured data", () => {
       list.filter((faq) => faq.question !== LIMIT_QUESTION);
 
     expect(others(buildFaqs(PLANS))).toEqual(others(buildFaqs(undefined)));
+  });
+
+  test("say the Free plan includes the shop and its 50 orders a month", () => {
+    const entry = buildFaqs(undefined).find((faq) => faq.question.includes("try RateUp"));
+
+    expect(entry?.answer).toMatch(/shop/);
+    expect(entry?.answer).toMatch(/50 orders a\s+month/);
   });
 
   test("say Meta bills message fees and the AI agent directly", () => {

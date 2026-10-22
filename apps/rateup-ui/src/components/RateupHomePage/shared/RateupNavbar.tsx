@@ -30,6 +30,7 @@ const PRODUCTS = [
   { label: "WhatsApp Feedback", to: "/products/whatsapp-feedback" },
   { label: "Omnichannel Inbox", to: "/products/omnichannel-inbox" },
   { label: "Pipeline", to: "/products/pipeline" },
+  { label: "Social Commerce", to: "/products/social-commerce" },
   { label: "Meta AI Agent", to: "/products/meta-ai-agent" },
 ] as const;
 

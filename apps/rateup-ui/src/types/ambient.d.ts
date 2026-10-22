@@ -545,6 +545,8 @@ declare global {
     status: UserAvailabilityStatus;
     hasWhatsAppSettings: boolean;
     onboardingCompleted?: boolean;
+    /** False until the owner gives the business details asked after signup. Absent from an older API. */
+    profileCompleted?: boolean;
     presenceMode: UserPresenceMode;
     showLifecycle: boolean;
     isConversionApiActive: boolean;
@@ -979,6 +981,8 @@ declare global {
       loyalty?: subscriptionActiveField;
       referrals?: subscriptionActiveField;
       catalog?: subscriptionActiveField;
+      /** Shop orders a calendar month. Absent on subscriptions stored before the cap. */
+      shopOrders?: subscriptionWithActiveAndCount;
     };
     [sfpn.AI]: subscriptionActiveField & {
       count: {

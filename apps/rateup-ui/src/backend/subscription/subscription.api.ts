@@ -46,12 +46,14 @@ export interface CampaignCreditBudget {
   exhausted: boolean;
 }
 
-/** `GET /subscription/usage` — the two plan meters for the calendar month (UTC). */
+/** `GET /subscription/usage` — the plan meters for the calendar month (UTC). */
 export interface SubscriptionUsage {
   period: string;
   resetsAt: string;
   activeContacts: ActiveContactBudget;
   campaignCredits: CampaignCreditBudget;
+  /** `max` is null when the plan does not cap orders. Absent from an older API. */
+  shopOrders?: { used: number; max: number | null };
 }
 
 export async function getSubscriptionUsage() {

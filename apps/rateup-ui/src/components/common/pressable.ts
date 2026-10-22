@@ -18,7 +18,9 @@ export function pressable(onPress: () => void, label?: string) {
     "aria-label": label,
     onClick: onPress,
     onKeyDown: (event: KeyboardEvent) => {
-      if (event.key !== "Enter" && event.key !== "") return;
+      // A key pressed on an interactive child (a delete button in a row) is that child's.
+      if (event.target !== event.currentTarget) return;
+      if (event.key !== "Enter" && event.key !== " ") return;
       event.preventDefault();
       onPress();
     },

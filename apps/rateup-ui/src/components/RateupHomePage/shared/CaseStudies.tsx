@@ -189,7 +189,7 @@ export default function CaseStudies() {
       onFocusCapture={() => setPaused(true)}
       onBlurCapture={() => setPaused(false)}
     >
-      <div className="mx-auto max-w-280 px-5 py-14 sm:py-26">
+      <div className="mx-auto max-w-280 px-5 py-12 sm:py-18">
         <div className="mx-auto mb-7 max-w-155 text-center sm:mb-11">
           <Eyebrow
             className="mb-4.5"

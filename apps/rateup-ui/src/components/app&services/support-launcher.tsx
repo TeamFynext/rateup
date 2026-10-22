@@ -25,10 +25,16 @@ export function PersonGlyph({ className = "size-6" }: Readonly<{ className?: str
   );
 }
 
+/* Marks that the visit has been shown the nudge bubble; session-scoped like the auto-open. */
+export const NUDGED_KEY = "support_widget_nudged";
+
 interface SupportLauncherProps {
   onOpen: () => void;
   /** Fired on hover/focus, so the marketing layout can start fetching the panel early. */
   onIntent?: () => void;
+  /** A one-line bubble above the launcher; tapping it opens the panel. */
+  nudge?: string;
+  onDismissNudge?: () => void;
 }
 
 /**
@@ -36,7 +42,12 @@ interface SupportLauncherProps {
  * can draw it on first paint and fetch the panel only when it is wanted — the widget draws
  * this same component, so the swap cannot shift.
  */
-export function SupportLauncher({ onOpen, onIntent }: Readonly<SupportLauncherProps>) {
+export function SupportLauncher({
+  onOpen,
+  onIntent,
+  nudge,
+  onDismissNudge,
+}: Readonly<SupportLauncherProps>) {
   const [avatarFailed, setAvatarFailed] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
 
@@ -48,6 +59,40 @@ export function SupportLauncher({ onOpen, onIntent }: Readonly<SupportLauncherPr
 
   return (
     <div className="fixed right-5.5 bottom-5.5 z-[88] flex items-center gap-3">
+      {nudge && (
+        <div
+          role="status"
+          className="absolute right-0 bottom-full mb-3 flex w-max max-w-[calc(100vw-44px)] items-start gap-1 rounded-2xl rounded-br-md border border-ru-n-200 bg-white py-1 pr-1 pl-4 text-sm text-ru-n-700 shadow-[0_12px_30px_rgba(9,23,41,0.16)] motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 sm:max-w-72"
+        >
+          <button
+            type="button"
+            onClick={onOpen}
+            onPointerEnter={onIntent}
+            onFocus={onIntent}
+            className="cursor-pointer py-2 text-left font-medium"
+          >
+            {nudge}
+          </button>
+          <button
+            type="button"
+            onClick={onDismissNudge}
+            aria-label="Dismiss"
+            className="flex size-8 flex-none cursor-pointer items-center justify-center rounded-full text-ru-n-500 hover:bg-ru-n-100"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className="size-4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              aria-hidden="true"
+            >
+              <path d="M6 6l12 12M18 6 6 18" />
+            </svg>
+          </button>
+        </div>
+      )}
       {/* The pill is 240px of chrome over the page; below `sm` the tile carries it alone. */}
       <button
         type="button"

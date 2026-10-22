@@ -33,6 +33,13 @@ export const PERMISSIONS = [
   "meta_agent.use",
   "meta_agent.manage",
   "catalog.manage",
+  "commerce.read",
+  "commerce.sell",
+  "commerce.orders.manage",
+  "commerce.products.manage",
+  "commerce.discounts.manage",
+  "commerce.payments.manage",
+  "commerce.storefront.manage",
   "pipelines.read",
   "pipelines.manage",
   "pipelines.admin",
@@ -88,7 +95,7 @@ export const MEMBER_PERMISSIONS: readonly Permission[] = PERMISSIONS.filter(
 );
 
 /** Must equal the API's `PERMISSIONS_VERSION`; a mismatch means this mirror is stale. */
-export const PERMISSIONS_VERSION = 2;
+export const PERMISSIONS_VERSION = 3;
 
 const ALL = new Set<string>(PERMISSIONS);
 
@@ -146,6 +153,19 @@ export const PERMISSION_GROUPS: ReadonlyArray<{
     permissions: ["meta_agent.read", "meta_agent.use", "meta_agent.manage"],
   },
   { key: "catalog", label: "Catalogue", permissions: ["catalog.manage"] },
+  {
+    key: "commerce",
+    label: "Commerce",
+    permissions: [
+      "commerce.read",
+      "commerce.sell",
+      "commerce.orders.manage",
+      "commerce.products.manage",
+      "commerce.discounts.manage",
+      "commerce.payments.manage",
+      "commerce.storefront.manage",
+    ],
+  },
   {
     key: "pipelines",
     label: "Pipelines",
@@ -234,6 +254,13 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   "meta_agent.use": "Run agent actions",
   "meta_agent.manage": "Connect systems and credentials",
   "catalog.manage": "Manage the product catalogue",
+  "commerce.read": "See products, orders and shop analytics",
+  "commerce.sell": "Send products and payment links in chat",
+  "commerce.orders.manage": "Fulfil, cancel and update orders",
+  "commerce.products.manage": "Add and edit products and stock",
+  "commerce.discounts.manage": "Create and edit coupons",
+  "commerce.payments.manage": "Connect payments, set shipping and refund",
+  "commerce.storefront.manage": "Set up the storefront",
   "pipelines.read": "See pipelines",
   "pipelines.manage": "Edit stages and move leads",
   "pipelines.admin": "Delete boards or move them between teams",

@@ -9,7 +9,7 @@ import {
   HeroActions,
   NavyHero,
 } from "@/components/RateupHomePage/shared/NavyHero";
-import { INTEGRATIONS, integrationPath } from "@/config/integrations";
+import { DEVELOPER_DOCS_URL, INTEGRATIONS, integrationPath } from "@/config/integrations";
 
 import { Band, RelatedLinks } from "./sections";
 import ShowcaseSheet from "./shared/ShowcaseSheet";
@@ -57,7 +57,11 @@ const RELATED = [
   },
 ] as const;
 
-const partnerRails = () => syncRails(INTEGRATIONS);
+const RAIL_PARTNERS = [
+  ...INTEGRATIONS.flatMap(({ name, logo }) => (logo ? [{ name, logo }] : [])),
+  { name: "REST API", logo: null },
+];
+const partnerRails = () => syncRails(RAIL_PARTNERS);
 
 export default function IntegrationsPage() {
   return (
@@ -86,17 +90,7 @@ export default function IntegrationsPage() {
               <>
                 <div className="flex items-center gap-3.5">
                   <span className="flex size-11 flex-none items-center justify-center rounded-xl border border-ru-n-200 bg-ru-n-50">
-                    {integration.logo ? (
-                      <img
-                        src={integration.logo}
-                        alt=""
-                        loading="lazy"
-                        decoding="async"
-                        className="size-7.5 object-contain"
-                      />
-                    ) : (
-                      <span className="font-mono text-sm font-bold text-ru-n-500">{"{ }"}</span>
-                    )}
+                    <integration.Mark className="size-7.5" />
                   </span>
                   <div className="min-w-0">
                     <h3 className="font-display text-[18.5px] font-bold tracking-[-0.02em] text-ru-n-700">
@@ -132,6 +126,31 @@ export default function IntegrationsPage() {
               </div>
             );
           })}
+          <a
+            href={DEVELOPER_DOCS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex h-full flex-col gap-3.5 rounded-[20px] border border-dashed border-ru-n-300 bg-white p-5.5 transition-all hover:border-ru-blue-300 hover:shadow-md sm:p-7"
+          >
+            <div className="flex items-center gap-3.5">
+              <span className="flex size-11 flex-none items-center justify-center rounded-xl border border-ru-n-200 bg-ru-n-50 font-mono text-sm font-bold text-ru-n-500">
+                {"{ }"}
+              </span>
+              <div className="min-w-0">
+                <h3 className="font-display text-[18.5px] font-bold tracking-[-0.02em] text-ru-n-700">
+                  REST API &amp; webhooks
+                </h3>
+                <div className="text-[13.5px] text-ru-n-400">Build your own</div>
+              </div>
+            </div>
+            <p className="text-[15px]/[1.55] text-ru-n-500">
+              A documented REST API and outbound webhooks for anything without a native connector.
+            </p>
+            <span className="mt-auto inline-flex items-center gap-1.5 text-[15px] font-semibold text-ru-blue-600">
+              Read the docs
+              <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+            </span>
+          </a>
         </div>
       </ShowcaseSheet>
 
@@ -140,8 +159,8 @@ export default function IntegrationsPage() {
       </Band>
 
       <ClosingCta eyebrow="30+ more via webhooks" title="Don't see yours?">
-        Anything with a webhook or an API can talk to RateUp, and Zapier covers 3,000+ apps on its
-        own. Tell us what you run and we will confirm how it connects.
+        Anything with a webhook or an API can talk to RateUp, and Zapier alone covers thousands of
+        apps. Tell us what you run and we will confirm how it connects.
       </ClosingCta>
     </>
   );

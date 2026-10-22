@@ -19,6 +19,7 @@ export const FEATURE_PERMISSION: Record<TeamFeature, Permission | null> = {
   [TeamFeature.Templates]: "templates.read",
   [TeamFeature.Automation]: "automation.read",
   [TeamFeature.Loyalty]: "loyalty.read",
+  [TeamFeature.Commerce]: "commerce.read",
   [TeamFeature.WebForms]: "surveys.read",
   [TeamFeature.Tickets]: null,
   [TeamFeature.Pipeline]: "pipelines.read",

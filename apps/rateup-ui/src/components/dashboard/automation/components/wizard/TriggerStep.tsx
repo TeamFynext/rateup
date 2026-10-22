@@ -7,6 +7,7 @@ import {
   IconCircleCheck,
   IconLayoutKanban,
   IconLink,
+  IconSpeakerphone,
   IconMessageCircle,
   IconMessageDots,
   IconRefresh,
@@ -68,6 +69,10 @@ const EVENT_META: Record<string, { icon: typeof IconBolt; hint: string }> = {
   INSTAGRAM_COMMENT: { icon: IconMessageDots, hint: "Reply privately to comments on your posts." },
   INSTAGRAM_STORY_MENTION: { icon: IconAt, hint: "Thank people who tag you in their story." },
   INSTAGRAM_REFERRAL: { icon: IconLink, hint: "Greet people who arrive from a link you shared." },
+  WHATSAPP_AD_REFERRAL: {
+    icon: IconSpeakerphone,
+    hint: "Show the products an ad promoted to everyone who taps it.",
+  },
   MESSENGER_REFERRAL: { icon: IconLink, hint: "Greet people who open your Page from a link." },
   FACEBOOK_COMMENT: {
     icon: IconMessageDots,
@@ -141,6 +146,10 @@ export function TriggerStep() {
     }
     if (value !== "INSTAGRAM_COMMENT") form.setValue("options.instagramCommentSource", undefined);
     if (value !== "INSTAGRAM_REFERRAL") form.setValue("options.instagramRef", undefined);
+    if (value !== "WHATSAPP_AD_REFERRAL") {
+      form.setValue("options.adIds", undefined);
+      form.setValue("options.adMatch", undefined);
+    }
     if (value !== "MESSENGER_REFERRAL") form.setValue("options.messengerRef", undefined);
     const groups = form.getValues("groups");
     if (value === "MESSAGE_RECEIVED") {

@@ -1,4 +1,5 @@
 import { InstagramMark, MessengerMark } from "./channel-marks";
+import HeroVideo from "./HeroVideo";
 import { WhatsAppGlyph } from "./home-ui";
 import { HERO_H1, HERO_SUB, HeroActions, NavyHero } from "./NavyHero";
 
@@ -42,29 +43,44 @@ const CHANNEL_CELLS = [...CHANNELS, CHANNELS[0]];
 
 export default function HeroSectionNew() {
   return (
-    <NavyHero>
-      <h1 className={HERO_H1}>
-        Engage with your Customers on
-        <span className="mt-0.5 block h-[1.14em] overflow-hidden">
-          <span className="flex animate-ru-rot flex-col motion-reduce:animate-none">
-            {CHANNEL_CELLS.map((channel, i) => (
-              <span
-                key={`${channel.name}-${i}`}
-                className={`flex h-[1.14em] items-center justify-center gap-[0.24em] leading-[1.14] ${channel.textClass}`}
-              >
-                {channel.glyph}
-                {channel.name}
-              </span>
-            ))}
+    <>
+      <NavyHero continued>
+        <h1 className={HERO_H1}>
+          Engage with your Customers on
+          <span className="mt-0.5 block h-[1.14em] overflow-hidden">
+            <span className="flex animate-ru-rot flex-col motion-reduce:animate-none">
+              {CHANNEL_CELLS.map((channel, i) => (
+                <span
+                  key={`${channel.name}-${i}`}
+                  className={`flex h-[1.14em] items-center justify-center gap-[0.24em] leading-[1.14] ${channel.textClass}`}
+                >
+                  {channel.glyph}
+                  {channel.name}
+                </span>
+              ))}
+            </span>
           </span>
-        </span>
-      </h1>
+        </h1>
 
-      <p className={`max-w-[30ch] ${HERO_SUB}`}>
-        Most customers buy once and disappear. RateUp fixes that.
-      </p>
+        <p className={`max-w-[30ch] text-balance ${HERO_SUB}`}>
+          Sell, support and bring them back, all in the chat.
+        </p>
 
-      <HeroActions />
-    </NavyHero>
+        <HeroActions videoButton={false} />
+      </NavyHero>
+
+      {/* Navy behind the film's top half, page ground behind the rest. The strip's left stop is
+        where the hero's 160° gradient ends along its bottom edge, so the two meet without a
+        seam. The pad below clears `Overview`, which tucks 32–40px up under what precedes it. */}
+      <div className="overflow-x-clip bg-ru-n-25 px-5 pb-16 sm:pb-20">
+        <div className="relative mx-auto max-w-180">
+          <div
+            aria-hidden="true"
+            className="absolute top-0 bottom-1/2 left-1/2 w-screen -translate-x-1/2 bg-[linear-gradient(90deg,#0e223b,var(--color-ru-blue-950))]"
+          />
+          <HeroVideo />
+        </div>
+      </div>
+    </>
   );
 }

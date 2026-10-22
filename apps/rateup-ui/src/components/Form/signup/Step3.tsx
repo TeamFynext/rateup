@@ -35,6 +35,11 @@ const BUSINESS_GOALS = [
     label: "One shared inbox",
     description: "WhatsApp and Instagram in one queue.",
   },
+  {
+    id: "sell-online",
+    label: "Sell products on WhatsApp & Instagram",
+    description: "A shop with checkout in the chat.",
+  },
 ] as const;
 
 export function Step3({

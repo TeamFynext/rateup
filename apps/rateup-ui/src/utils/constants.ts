@@ -423,9 +423,11 @@ export const rateupLockupWhiteLarge = `${imagesPath}/brand/rateup-lockup-white-l
 
 /* The 90-second product film behind the homepage's click-to-play facade. Self-hosted
    rather than embedded so the band carries no third-party player or cookies. */
-export const rateupProductVideo = `${videosPath}/homepage/rateup_product.mp4`;
+export const rateupProductVideo = `${videosPath}/homepage/rateup-product-v2.mp4`;
+/* A silent loop of the cover and five moments of the film, for the small inline frame that opens it. */
+export const rateupProductVideoPreview = `/homepage-preview/rateup-product-preview.mp4`; // TEMP local preview: revert to `${videosPath}/homepage/rateup-product-preview.mp4` once uploaded
 /* The film's 16:9 cover — the facade's backdrop before the click and the `<video>` poster after. */
-export const rateupProductVideoCover = `${imagesPath}/homepage/homepage_video_cover.jpeg`;
+export const rateupProductVideoCover = `${imagesPath}/homepage/cover-a.jpg`;
 
 /* Square star marks, for slots the 2.52:1 lockup does not fit — avatars, org-logo
    fallbacks, integration tiles. Same bucket as the lockups. */

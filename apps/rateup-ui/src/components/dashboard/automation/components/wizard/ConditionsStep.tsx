@@ -31,6 +31,7 @@ import {
 import { cn } from "@/lib/utils.ts";
 import { ShopifyEvents } from "@/types/enums.ts";
 
+import { AdReferralOptions } from "../AdReferralOptions.tsx";
 import ConditionList from "../ConditionList.tsx";
 import { InstagramCommentSource, InstagramLinkRef } from "../InstagramTriggerOptions.tsx";
 import { MatchSentence } from "../MatchSentence.tsx";
@@ -192,6 +193,7 @@ const ConditionsPanel: React.FC<{
   isInstagramCommentTrigger: boolean;
   isInstagramStoryTrigger: boolean;
   isInstagramReferralTrigger: boolean;
+  isAdReferralTrigger: boolean;
   isMessengerReferralTrigger: boolean;
   instagramCommentSource: string | undefined;
   shopifyEvent: string | undefined;
@@ -221,6 +223,7 @@ const ConditionsPanel: React.FC<{
   isInstagramCommentTrigger,
   isInstagramStoryTrigger,
   isInstagramReferralTrigger,
+  isAdReferralTrigger,
   isMessengerReferralTrigger,
   instagramCommentSource,
   shopifyEvent,
@@ -360,6 +363,19 @@ const ConditionsPanel: React.FC<{
           that reply reaches them, so put label, assign and lifecycle actions after it.
         </AlertDescription>
       </Alert>
+    )}
+
+    {isAdReferralTrigger && (
+      <div className="space-y-4">
+        <Alert>
+          <IconInfoCircle />
+          <AlertDescription>
+            Runs on the first message after someone taps a click-to-WhatsApp ad, before any keyword
+            rule. Add "Send products to buy" to show what the ad promoted.
+          </AlertDescription>
+        </Alert>
+        <AdReferralOptions />
+      </div>
     )}
 
     {isMessengerReferralTrigger && (
@@ -569,6 +585,7 @@ const ConditionsPanel: React.FC<{
     {/* Standard condition blocks */}
     {!isInstagramStoryTrigger &&
       !isInstagramReferralTrigger &&
+      !isAdReferralTrigger &&
       !isMessengerReferralTrigger &&
       !isShopifyTrigger &&
       !isWooTrigger &&
@@ -602,6 +619,7 @@ const ConditionsPanel: React.FC<{
     {!isShopifyTrigger &&
       !isInstagramStoryTrigger &&
       !isInstagramReferralTrigger &&
+      !isAdReferralTrigger &&
       !isMessengerReferralTrigger && (
         <Button
           type="button"
@@ -709,6 +727,7 @@ export function ConditionsStep() {
       isInstagramCommentTrigger={isInstagramCommentTrigger}
       isInstagramStoryTrigger={isInstagramStoryTrigger}
       isInstagramReferralTrigger={triggerEvent === "INSTAGRAM_REFERRAL"}
+      isAdReferralTrigger={triggerEvent === "WHATSAPP_AD_REFERRAL"}
       isMessengerReferralTrigger={triggerEvent === "MESSENGER_REFERRAL"}
       instagramCommentSource={instagramCommentSource}
       shopifyEvent={shopifyEvent}

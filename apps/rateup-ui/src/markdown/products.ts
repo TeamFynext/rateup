@@ -13,6 +13,7 @@ RateUp is a customer engagement platform on the official WhatsApp Business API, 
 - WhatsApp Survey (/products/whatsapp-survey)
 - Omnichannel Inbox (/products/omnichannel-inbox)
 - Pipeline (/products/pipeline)
+- Social Commerce (/products/social-commerce)
 - Meta AI Agent (/products/meta-ai-agent)
 - Shared Team Inbox (/products/inbox)
 - AI Automation (/products/ai-automation)

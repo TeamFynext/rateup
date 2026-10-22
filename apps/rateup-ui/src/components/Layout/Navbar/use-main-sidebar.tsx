@@ -37,6 +37,7 @@ import { useChatContactCountStore } from "@/store/inbox.store.ts";
 import { useMetaAgentChannelStore } from "@/store/metaAgent.store.ts";
 import { usePipelineStore } from "@/store/pipeline.store.ts";
 import { SubscriptionFeaturePathName } from "@/types/enums.ts";
+import { can, resolvePermissions } from "@/utils/authz/can.ts";
 import { normalizeLocale } from "@/utils/locale.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
 
@@ -103,6 +104,10 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
     hasUserData,
     missingOrgId,
     userInfoErrorMessage,
+    // Invited members join a finished org; only someone who may edit it is asked about the business.
+    profileIncomplete:
+      userQueryData?.data?.profileCompleted === false &&
+      can(resolvePermissions(userQueryData.data), "org.settings"),
   });
 
   const isInbox = pathname?.includes("/dashboard/inbox");

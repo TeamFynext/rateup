@@ -32,7 +32,11 @@ import type {
 } from "@/types/global";
 import { formatDate, formatToCustomTime } from "@/utils/dateTime.ts";
 import type { ParsedWaMessageContent } from "@/utils/whatsapp/inbox.ts";
-import { isCallPermissionReply, parseWaMessage } from "@/utils/whatsapp/inbox.ts";
+import {
+  isCallPermissionReply,
+  isIgTemplateContent,
+  parseWaMessage,
+} from "@/utils/whatsapp/inbox.ts";
 
 import type { PendingMessage } from "../../pendingMessages.ts";
 import { reactionEmojiMap } from "../layout/singleMessageLayout/index.tsx";
@@ -40,6 +44,7 @@ import WaInboxAttachments from "./attachments/index.tsx";
 import WaInboxAudio from "./audio/index.tsx";
 import WaInboxContact from "./contact/index.tsx";
 import WaInboxDocument from "./document/index.tsx";
+import IgTemplateBubble from "./igTemplate/index.tsx";
 import WaInboxImage from "./image/index.tsx";
 import WaInboxInteractive from "./interactive/index.tsx";
 import WaInboxLocation from "./location/index.tsx";
@@ -167,6 +172,10 @@ export const SingleMessage = ({ message }: { message: WaGetMessagesBody }) => {
       return <WaInboxText messageContent={asText(messageContent)} />;
     case "ig_comment":
       return <IgCommentBubble messageContent={asComment(messageContent)} />;
+    case "ig_template":
+      return isIgTemplateContent(messageContent) ? (
+        <IgTemplateBubble content={messageContent} />
+      ) : null;
     case "image":
       return <WaInboxImage messageContent={asText(messageContent)} />;
     case "button":

@@ -135,7 +135,7 @@
     "{ms} ms": "{ms} एमएस",
     "{multiplier}x the base rate": "{multiplier}x आधार दर",
     "{name} — no logo yet, the poster uses your colour": "{name} - अभी तक कोई लोगो नहीं है, पोस्टर आपके रंग का उपयोग करता है",
-    "{name} · served {count} customers this hour": "{name} · इस घंटे {count} ग्राहकों को सेवा दी",
+    "{name} · served {count, plural, one {# customer} other {# customers}} this hour": "{name} · इस घंटे {count} ग्राहकों को सेवा दी",
     "{name} (owner)": "{name} (मालिक)",
     "{name} +{total}": "{name} +{total}",
     "{name} added": "{name} जोड़ा गया",

@@ -101,19 +101,21 @@ code compile** — fix the type instead. `npm run typecheck` must be clean befor
 
 ## Stylesheets
 
-There is no `src/globals.css` any more. The Tailwind source scan is split three ways by surface,
+There is no `src/globals.css` any more. The Tailwind source scan is split by surface,
 because `@import "tailwindcss"` scans the whole of `src` — one stylesheet meant every marketing
 visitor downloaded the dashboard, the survey editor and the admin panel (563 KB).
 
 | File                        | Loaded by                                                                | Scans                                                     |
 | --------------------------- | ------------------------------------------------------------------------ | --------------------------------------------------------- |
-| `src/styles/foundation.css` | imported by all three below                                              | nothing — tokens, `@theme`, `@utility`, base layer        |
+| `src/styles/foundation.css` | imported by all of the below                                             | nothing — tokens, `@theme`, `@utility`, base layer        |
 | `src/styles/base.css`       | `__root.tsx`, so every page                                              | the shell + `components/ui` minus the app-only primitives |
 | `src/styles/marketing.css`  | `routes/(marketing)/route.tsx`                                           | the marketing component tree                              |
 | `src/styles/app.css`        | the `dashboard`, `admin`, `(auth)`, `auth` and `(public-facing)` layouts | everything (Tailwind's default scan)                      |
+| `src/styles/shop.css`       | `routes/(shop)/route.tsx` — the buyer storefront `/s` and checkout `/c`  | `components/shop-public`, `routes/(shop)`, lib, utils     |
 
 - **Adding a marketing component in a new directory?** Add its directory to `marketing.css`'s
-  `@source` list, or it renders unstyled. The app is on a full scan and needs nothing.
+  `@source` list, or it renders unstyled. The same goes for `shop.css` and the buyer pages. The
+  app is on a full scan and needs nothing.
 - **Design tokens go in `foundation.css`.** That is also what `components.json` points
   `tailwind.css` at, so `npx shadcn add` writes component variables there. Do not repoint it at
   `app.css` — the CLI auto-detects that one, and tokens written there never reach the marketing

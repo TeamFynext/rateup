@@ -33,6 +33,7 @@ function Page() {
       initialTemplateId={
         typeof searchParams.template === "string" ? searchParams.template : undefined
       }
+      initialProductId={typeof searchParams.product === "string" ? searchParams.product : undefined}
     />
   );
 }

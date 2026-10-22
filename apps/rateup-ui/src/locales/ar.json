@@ -135,7 +135,7 @@
     "{ms} ms": "{ms} مللي ثانية",
     "{multiplier}x the base rate": "{multiplier}x المعدل الأساسي",
     "{name} — no logo yet, the poster uses your colour": "{name} — لا يوجد شعار حتى الآن، الملصق يستخدم لونك",
-    "{name} · served {count} customers this hour": "{name} · خدم {count} عملاء هذه الساعة",
+    "{name} · served {count, plural, one {# customer} other {# customers}} this hour": "{name} · خدم {count} عملاء هذه الساعة",
     "{name} (owner)": "{name} (المالك)",
     "{name} +{total}": "{name} +{total}",
     "{name} added": "تمت إضافة {name}",
