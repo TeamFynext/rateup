@@ -267,7 +267,12 @@ function FeatureComparison({
       if (keepCaps && isUnlimited(next) && was !== undefined && !isUnlimited(was) && was > 0) {
         next = was;
       }
-      return { key: limit.key, label: limit.label, was: formatLimit(was), next: formatLimit(next) };
+      return {
+        key: limit.key,
+        label: limit.label,
+        was: formatLimit(was, limit),
+        next: formatLimit(next, limit),
+      };
     }),
     ...SWITCHES.map((gate) => ({
       key: gate.key,

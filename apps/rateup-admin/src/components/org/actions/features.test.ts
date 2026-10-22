@@ -139,6 +139,26 @@ describe("limits", () => {
     expect(keys).not.toContain("conversations");
   });
 
+  test("a blob stored before the order cap stays uncapped rather than gaining a 0", () => {
+    expect(completeFeatures({}).whatsapp.shopOrders).toBeUndefined();
+    const capped = completeFeatures({
+      whatsapp: { shopOrders: { active: true, count: { max: 50 } } },
+    } as never);
+    expect(capped.whatsapp.shopOrders).toEqual({ active: true, count: { max: 50 } });
+  });
+
+  test("shop orders read as not metered when absent or 0, and 0 removes the cap", () => {
+    const orders = LIMITS.find((limit) => limit.key === "orders")!;
+    expect(formatLimit(undefined, orders)).toBe("Not metered");
+    expect(formatLimit(0, orders)).toBe("Not metered");
+    expect(formatLimit(50, orders)).toBe("50");
+    const features = completeFeatures({
+      whatsapp: { shopOrders: { active: true, count: { max: 50 } } },
+    } as never);
+    orders.set(features, 0);
+    expect(features.whatsapp.shopOrders).toBeUndefined();
+  });
+
   test("reads from a partial or missing blob without throwing", () => {
     for (const limit of LIMITS) expect(limit.get(null)).toBeUndefined();
   });

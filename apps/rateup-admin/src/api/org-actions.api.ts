@@ -25,6 +25,7 @@ export interface SubscriptionFeatures {
   whatsapp: Active & {
     activeContacts: Active & { count: { max: number } };
     campaignCredits: Active & { count: { max: number } };
+    shopOrders?: Active & { count: { max: number } };
     campaign?: Active;
     loyalty?: Active;
     referrals?: Active;
