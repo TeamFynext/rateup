@@ -944,7 +944,7 @@ async function whatsappMessageHandler(
     await notifyInboundMessage({
       orgId,
       contactId: messageObj?.contactId,
-      contactName: userName,
+      contactName: userName ?? from,
       sourceIdentifier,
     });
   }

@@ -700,12 +700,14 @@ export function getMessageObject(data: WaMessageBody) {
   const completeMessageObject = data.entry[0].changes[0].value;
   return { message, completeMessageObject };
 }
-export function getUserName(data: WaMessageBody) {
-  return (data.entry[0].changes[0].value as WaReceiveMessageBody).contacts[0].profile.name;
+// Meta omits `contacts` (or the profile) on some inbound messages. A missing
+// name stays undefined so the contact upsert keeps the name already stored.
+export function getUserName(data: WaMessageBody): string | undefined {
+  return (data.entry[0].changes[0].value as WaReceiveMessageBody).contacts?.[0]?.profile?.name;
 }
 export interface WaParsedMessage {
   from: string;
-  userName: string;
+  userName: string | undefined;
   timestamp: string;
   message: string;
   flowResponse: WaFlowResponses | undefined;
