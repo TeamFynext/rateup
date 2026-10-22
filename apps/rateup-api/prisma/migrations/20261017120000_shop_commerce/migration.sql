@@ -8,6 +8,9 @@ CREATE TYPE "ShopProductStatus" AS ENUM ('ACTIVE', 'DRAFT', 'ARCHIVED');
 CREATE TYPE "ShopMetaSyncStatus" AS ENUM ('NOT_SYNCED', 'SYNCING', 'LIVE', 'REJECTED', 'HIDDEN');
 
 -- CreateEnum
+CREATE TYPE "ShopCheckoutVia" AS ENUM ('RATEUP', 'SHOPIFY', 'WOOCOMMERCE');
+
+-- CreateEnum
 CREATE TYPE "ShopChannel" AS ENUM ('WHATSAPP', 'INSTAGRAM', 'MESSENGER', 'STOREFRONT', 'MANUAL');
 
 -- CreateEnum
@@ -32,7 +35,26 @@ CREATE TYPE "ShopDiscountEligibility" AS ENUM ('ANYONE', 'FIRST_ORDER', 'LOYALTY
 CREATE TYPE "ShopReturnStatus" AS ENUM ('REQUESTED', 'APPROVED', 'REJECTED', 'RECEIVED', 'REFUNDED');
 
 -- AlterEnum
+-- This migration adds more than one value to an enum.
+-- With PostgreSQL versions 11 and earlier, this is not possible
+-- in a single migration. This can be worked around by creating
+-- multiple migrations, each migration adding only one value to
+-- the enum.
+
 ALTER TYPE "TriggerEvent" ADD VALUE 'SHOP_ORDER_EVENT';
+ALTER TYPE "TriggerEvent" ADD VALUE 'WHATSAPP_AD_REFERRAL';
+
+-- AlterEnum
+ALTER TYPE "ActionType" ADD VALUE 'SEND_SHOP_PRODUCTS';
+
+-- AlterTable
+ALTER TABLE "Org" ADD COLUMN     "profileCompletedAt" TIMESTAMP(3);
+
+-- AlterTable
+ALTER TABLE "UsageStats" ADD COLUMN     "shopOrderLimitNotifiedPeriod" DATE,
+ADD COLUMN     "shopOrderLimitWarnedPeriod" DATE,
+ADD COLUMN     "shopOrdersCount" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "shopOrdersPeriodStart" DATE;
 
 -- AlterTable
 ALTER TABLE "Contact" ADD COLUMN     "bsuid" TEXT;
@@ -44,6 +66,8 @@ CREATE TABLE "ShopStore" (
     "name" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "mode" "ShopSourceMode" NOT NULL DEFAULT 'NATIVE',
+    "checkoutVia" "ShopCheckoutVia" NOT NULL DEFAULT 'RATEUP',
+    "mirroredAt" TIMESTAMP(3),
     "currency" TEXT NOT NULL DEFAULT 'USD',
     "taxRate" DECIMAL(5,2),
     "pricesIncludeTax" BOOLEAN NOT NULL DEFAULT true,
@@ -64,6 +88,7 @@ CREATE TABLE "ShopStore" (
     "codConfirmHours" INTEGER NOT NULL DEFAULT 24,
     "codPrepaidDiscountPct" DECIMAL(5,2),
     "bankTransferEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "bankTransferHours" INTEGER NOT NULL DEFAULT 72,
     "bankDetails" JSONB,
     "defaultPaymentProvider" TEXT,
     "paymentLinkTtlHours" INTEGER NOT NULL DEFAULT 24,
@@ -72,6 +97,12 @@ CREATE TABLE "ShopStore" (
     "notifications" JSONB,
     "lowStockThreshold" INTEGER NOT NULL DEFAULT 5,
     "orderNumberSeq" INTEGER NOT NULL DEFAULT 1000,
+    "messageRates" JSONB,
+    "invoiceAutoSend" BOOLEAN NOT NULL DEFAULT false,
+    "invoicePrefix" TEXT NOT NULL DEFAULT 'INV-',
+    "invoiceNumberSeq" INTEGER NOT NULL DEFAULT 0,
+    "taxId" TEXT,
+    "businessAddress" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -181,6 +212,24 @@ CREATE TABLE "ShopInventoryMovement" (
 );
 
 -- CreateTable
+CREATE TABLE "ShopPhoneVerification" (
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "storeId" UUID NOT NULL,
+    "code" TEXT NOT NULL,
+    "purpose" TEXT NOT NULL,
+    "variantId" UUID,
+    "orderId" UUID,
+    "method" TEXT,
+    "phone" TEXT,
+    "contactId" UUID,
+    "confirmedAt" TIMESTAMP(3),
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ShopPhoneVerification_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "ShopBackInStockRequest" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "variantId" UUID NOT NULL,
@@ -190,6 +239,17 @@ CREATE TABLE "ShopBackInStockRequest" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "ShopBackInStockRequest_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ShopDropClaim" (
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "ruleId" UUID NOT NULL,
+    "recipient" TEXT NOT NULL,
+    "orderId" UUID,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ShopDropClaim_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -219,16 +279,29 @@ CREATE TABLE "ShopOrder" (
     "discountId" UUID,
     "customerName" TEXT,
     "customerPhone" TEXT,
+    "phoneVerifiedAt" TIMESTAMP(3),
     "customerEmail" TEXT,
     "shippingAddress" JSONB,
     "shippingRate" JSONB,
     "checkoutToken" TEXT,
     "checkoutExpiresAt" TIMESTAMP(3),
     "attribution" JSONB,
+    "adConversionSentAt" TIMESTAMP(3),
+    "invoiceNumber" TEXT,
+    "invoiceKey" TEXT,
+    "invoiceIssuedAt" TIMESTAMP(3),
+    "invoiceSentAt" TIMESTAMP(3),
+    "reservedAt" TIMESTAMP(3),
+    "reviewReason" TEXT,
+    "amountDue" DECIMAL(12,2),
     "note" TEXT,
     "staffNote" TEXT,
     "externalProvider" TEXT,
     "externalId" TEXT,
+    "checkoutVia" "ShopCheckoutVia" NOT NULL DEFAULT 'RATEUP',
+    "externalCheckoutUrl" TEXT,
+    "externalName" TEXT,
+    "externalPaidAt" TIMESTAMP(3),
     "legacyWaOrderId" UUID,
     "reminderCount" INTEGER NOT NULL DEFAULT 0,
     "lastReminderAt" TIMESTAMP(3),
@@ -375,6 +448,26 @@ CREATE TABLE "ShopReturn" (
 );
 
 -- CreateTable
+CREATE TABLE "AdReferral" (
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "orgId" UUID NOT NULL,
+    "contactId" UUID NOT NULL,
+    "conversationId" UUID,
+    "sourceId" TEXT NOT NULL,
+    "sourceType" TEXT NOT NULL,
+    "sourceUrl" TEXT,
+    "headline" TEXT,
+    "body" TEXT,
+    "mediaType" TEXT,
+    "mediaUrl" TEXT,
+    "ctwaClid" TEXT,
+    "phoneId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "AdReferral_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "_ShopCollectionToShopProduct" (
     "A" UUID NOT NULL,
     "B" UUID NOT NULL,
@@ -413,10 +506,22 @@ CREATE UNIQUE INDEX "ShopVariant_storeId_retailerId_key" ON "ShopVariant"("store
 CREATE INDEX "ShopInventoryMovement_variantId_createdAt_idx" ON "ShopInventoryMovement"("variantId", "createdAt");
 
 -- CreateIndex
+CREATE INDEX "ShopPhoneVerification_storeId_expiresAt_idx" ON "ShopPhoneVerification"("storeId", "expiresAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ShopPhoneVerification_storeId_code_key" ON "ShopPhoneVerification"("storeId", "code");
+
+-- CreateIndex
 CREATE INDEX "ShopBackInStockRequest_variantId_notifiedAt_idx" ON "ShopBackInStockRequest"("variantId", "notifiedAt");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "ShopBackInStockRequest_variantId_contactId_key" ON "ShopBackInStockRequest"("variantId", "contactId");
+
+-- CreateIndex
+CREATE INDEX "ShopDropClaim_orderId_idx" ON "ShopDropClaim"("orderId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ShopDropClaim_ruleId_recipient_key" ON "ShopDropClaim"("ruleId", "recipient");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "ShopOrder_checkoutToken_key" ON "ShopOrder"("checkoutToken");
@@ -428,6 +533,9 @@ CREATE UNIQUE INDEX "ShopOrder_legacyWaOrderId_key" ON "ShopOrder"("legacyWaOrde
 CREATE INDEX "ShopOrder_orgId_createdAt_idx" ON "ShopOrder"("orgId", "createdAt" DESC);
 
 -- CreateIndex
+CREATE INDEX "ShopOrder_status_checkoutExpiresAt_idx" ON "ShopOrder"("status", "checkoutExpiresAt");
+
+-- CreateIndex
 CREATE INDEX "ShopOrder_storeId_status_paymentStatus_idx" ON "ShopOrder"("storeId", "status", "paymentStatus");
 
 -- CreateIndex
@@ -435,6 +543,9 @@ CREATE INDEX "ShopOrder_contactId_idx" ON "ShopOrder"("contactId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "ShopOrder_storeId_number_key" ON "ShopOrder"("storeId", "number");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ShopOrder_storeId_invoiceNumber_key" ON "ShopOrder"("storeId", "invoiceNumber");
 
 -- CreateIndex
 CREATE INDEX "ShopOrderItem_orderId_idx" ON "ShopOrderItem"("orderId");
@@ -470,6 +581,15 @@ CREATE INDEX "ShopShipment_provider_providerRef_idx" ON "ShopShipment"("provider
 CREATE INDEX "ShopReturn_orderId_idx" ON "ShopReturn"("orderId");
 
 -- CreateIndex
+CREATE INDEX "AdReferral_contactId_createdAt_idx" ON "AdReferral"("contactId", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "AdReferral_orgId_createdAt_idx" ON "AdReferral"("orgId", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "AdReferral_orgId_sourceId_idx" ON "AdReferral"("orgId", "sourceId");
+
+-- CreateIndex
 CREATE INDEX "_ShopCollectionToShopProduct_B_index" ON "_ShopCollectionToShopProduct"("B");
 
 -- AddForeignKey
@@ -491,10 +611,16 @@ ALTER TABLE "ShopVariant" ADD CONSTRAINT "ShopVariant_productId_fkey" FOREIGN KE
 ALTER TABLE "ShopInventoryMovement" ADD CONSTRAINT "ShopInventoryMovement_variantId_fkey" FOREIGN KEY ("variantId") REFERENCES "ShopVariant"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "ShopPhoneVerification" ADD CONSTRAINT "ShopPhoneVerification_storeId_fkey" FOREIGN KEY ("storeId") REFERENCES "ShopStore"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "ShopBackInStockRequest" ADD CONSTRAINT "ShopBackInStockRequest_variantId_fkey" FOREIGN KEY ("variantId") REFERENCES "ShopVariant"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ShopBackInStockRequest" ADD CONSTRAINT "ShopBackInStockRequest_contactId_fkey" FOREIGN KEY ("contactId") REFERENCES "Contact"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ShopDropClaim" ADD CONSTRAINT "ShopDropClaim_ruleId_fkey" FOREIGN KEY ("ruleId") REFERENCES "Rule"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ShopOrder" ADD CONSTRAINT "ShopOrder_storeId_fkey" FOREIGN KEY ("storeId") REFERENCES "ShopStore"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -530,8 +656,19 @@ ALTER TABLE "ShopShipment" ADD CONSTRAINT "ShopShipment_orderId_fkey" FOREIGN KE
 ALTER TABLE "ShopReturn" ADD CONSTRAINT "ShopReturn_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "ShopOrder"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "AdReferral" ADD CONSTRAINT "AdReferral_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Org"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "AdReferral" ADD CONSTRAINT "AdReferral_contactId_fkey" FOREIGN KEY ("contactId") REFERENCES "Contact"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "AdReferral" ADD CONSTRAINT "AdReferral_conversationId_fkey" FOREIGN KEY ("conversationId") REFERENCES "Conversation"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "_ShopCollectionToShopProduct" ADD CONSTRAINT "_ShopCollectionToShopProduct_A_fkey" FOREIGN KEY ("A") REFERENCES "ShopCollection"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "_ShopCollectionToShopProduct" ADD CONSTRAINT "_ShopCollectionToShopProduct_B_fkey" FOREIGN KEY ("B") REFERENCES "ShopProduct"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+-- Every org that exists today gave its business details at signup.
+UPDATE "Org" SET "profileCompletedAt" = "createdAt";
