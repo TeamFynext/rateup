@@ -7,10 +7,11 @@ import { toast } from "sonner";
 import { signOut } from "supertokens-auth-react/recipe/session";
 
 import { teamKeys } from "@/backend/org/org.keys";
-import { completeInvite } from "@/backend/team/team.api";
+import { completeInvite, type CompleteInviteResponse } from "@/backend/team/team.api";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
+import { asApiError, getApiErrorMessage } from "@/utils/apiError";
 import { imagesPath, rateupLogo } from "@/utils/constants";
 
 import styles from "../../../components/(auth)/invite/styles.module.css";
@@ -23,6 +24,11 @@ export const Route = createFileRoute("/(auth)/invite/")({
   }),
   component: Invite,
 });
+
+/** The API answers 410 for a token that is unknown, already used or past its expiry. */
+function isInviteGone(error: unknown): boolean {
+  return asApiError(error).response?.status === 410;
+}
 
 function Invite() {
   const navigate = useNavigate();
@@ -53,9 +59,14 @@ function Invite() {
 
     onError: (error: Error) => {
       console.error("Error:", error.message);
-      toast.error(error.message, {
-        id: "load-data",
-      });
+      toast.error(
+        isInviteGone(error)
+          ? translations(
+              "This invitation has expired or was already used; ask your admin to resend it.",
+            )
+          : getApiErrorMessage(error, translations("Failed..! Try another invitation.")),
+        { id: "load-data" },
+      );
     },
   });
 
@@ -131,40 +142,11 @@ function Invite() {
                     </svg>
                   </div>
 
-                  <p className="mt-8 text-center">
-                    {updateInviteMutation.data?.data.data.isUser
-                      ? translations(
-                          "Login to your existing account in this email and continue using the app.",
-                        )
-                      : translations(
-                          "Your account is ready, Create a new password and login to start using the app.",
-                        )}
-                  </p>
-
-                  {updateInviteMutation.data?.data.data.isUser ? (
-                    <Button
-                      onClick={() => {
-                        navigate({
-                          to: "/login",
-                        });
-                      }}
-                    >
-                      {translations("Continue")}
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={() => {
-                        const link = updateInviteMutation.data?.data.data.redirectLink;
-                        if (link) {
-                          const url = new URL(link, window.location.origin);
-                          url.searchParams.set("type", "invite");
-                          window.location.href = url.toString();
-                        }
-                      }}
-                    >
-                      {translations("Continue")}
-                    </Button>
-                  )}
+                  <AcceptedNextStep
+                    accepted={updateInviteMutation.data.data.data}
+                    onLogin={() => navigate({ to: "/login" })}
+                    onResetPassword={() => navigate({ to: "/login/reset-password" })}
+                  />
                 </div>
               )}
             </div>
@@ -172,7 +154,13 @@ function Invite() {
 
           {updateInviteMutation.error && (
             <div className="flex flex-col gap-2">
-              <p>{translations("Failed..! Try another invitation.")}</p>
+              <p>
+                {isInviteGone(updateInviteMutation.error)
+                  ? translations(
+                      "This invitation has expired or was already used; ask your admin to resend it.",
+                    )
+                  : translations("Failed..! Try another invitation.")}
+              </p>
 
               <div className="mt-24 flex justify-center">
                 <Link
@@ -188,5 +176,63 @@ function Invite() {
         </div>
       </Card>
     </div>
+  );
+}
+
+/**
+ * What to do once the invitation is accepted. An existing account just signs in. A new one has
+ * no password yet: the API emails a link to choose one and never hands it to the page, so when
+ * that email could not be sent the reset-password flow is the way in.
+ */
+function AcceptedNextStep({
+  accepted,
+  onLogin,
+  onResetPassword,
+}: Readonly<{
+  accepted: CompleteInviteResponse["data"];
+  onLogin: () => void;
+  onResetPassword: () => void;
+}>) {
+  const { t } = useTranslation();
+
+  if (accepted.isUser) {
+    return (
+      <>
+        <p className="mt-8 text-center">
+          {t("Login to your existing account in this email and continue using the app.")}
+        </p>
+        <Button onClick={onLogin}>{t("Continue")}</Button>
+      </>
+    );
+  }
+
+  if (accepted.passwordSetupEmailSent) {
+    return (
+      <>
+        <p className="mt-8 text-center font-semibold">
+          {t("Check your email to set your password")}
+        </p>
+        <p className="text-center text-sm text-muted-foreground">
+          {t("We sent a link to {email}. Open it to choose a password, then sign in.", {
+            email: accepted.email,
+          })}
+        </p>
+        <Button variant="outline" onClick={onLogin}>
+          {t("Go to Login")}
+        </Button>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <p className="mt-8 text-center">
+        {t(
+          'Your account is ready, but we could not email you a password link. Use "Forgot password?" with {email} to set one.',
+          { email: accepted.email },
+        )}
+      </p>
+      <Button onClick={onResetPassword}>{t("Forgot password?")}</Button>
+    </>
   );
 }

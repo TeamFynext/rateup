@@ -43,6 +43,7 @@ import {
   actionChannelProblem,
   asPlatform,
   getTriggerEventsForPlatforms,
+  isCommentTrigger,
   PLATFORMS,
   triggerChannelProblem,
 } from "../schema.ts";
@@ -71,6 +72,11 @@ const EVENT_META: Record<string, { icon: typeof IconBolt; hint: string }> = {
   WHATSAPP_AD_REFERRAL: {
     icon: IconSpeakerphone,
     hint: "Show the products an ad promoted to everyone who taps it.",
+  },
+  MESSENGER_REFERRAL: { icon: IconLink, hint: "Greet people who open your Page from a link." },
+  FACEBOOK_COMMENT: {
+    icon: IconMessageDots,
+    hint: "Reply privately in Messenger to comments on your Page's posts.",
   },
 };
 
@@ -144,10 +150,11 @@ export function TriggerStep() {
       form.setValue("options.adIds", undefined);
       form.setValue("options.adMatch", undefined);
     }
+    if (value !== "MESSENGER_REFERRAL") form.setValue("options.messengerRef", undefined);
     const groups = form.getValues("groups");
     if (value === "MESSAGE_RECEIVED") {
       if (groups.length === 0) form.setValue("groups", EMPTY_KEYWORD_GROUP);
-    } else if (value !== "INSTAGRAM_COMMENT") {
+    } else if (!isCommentTrigger(value)) {
       form.setValue("groups", []);
     }
   };

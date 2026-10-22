@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 
 import { CreditsCard } from "@/components/Card/CreditsCard.tsx";
+import { SafeHtml } from "@/components/common/SafeHtml.tsx";
 import { getBgImgAndBgColor } from "@/components/Layout/TakeSurveyLayout/utils.ts";
 import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage/index.tsx";
 import { useSelectedPreview } from "@/components/Survey/SurveyTheme/SurveyThemeContext.tsx";
@@ -79,10 +80,7 @@ export default function TemplateCard({ survey }: { survey: Survey }) {
                 maxWidth: "200px",
               }}
             >
-              <span
-                className="block truncate"
-                dangerouslySetInnerHTML={{ __html: newTitle ?? "" }}
-              />
+              <SafeHtml as="span" className="block truncate" html={newTitle} />
             </div>
           </div>
         </div>

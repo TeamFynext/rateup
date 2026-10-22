@@ -5,6 +5,7 @@ import {
   useGetQrWithShortUrlIdPublic,
   useIncrementNoOfScansMutation,
 } from "@/backend/generateQr/generateQr.query";
+import { safeHttpUrl } from "@/utils/safeRedirectUrl.ts";
 
 export const Route = createFileRoute("/(public-facing)/qr/$shortId/")({
   component: GenerateQrRedirectionPage,
@@ -23,12 +24,14 @@ function GenerateQrRedirectionPage(): null {
   const incrementNoOfScans = async () => {
     if (data) {
       const currentWindowUrl = window.location.href;
-      const destinationUrl = data.link;
+      // The API validates the scheme on save; this guards rows stored before that (or any
+      // other path) from turning the short link into a `javascript:` / `data:` navigation.
+      const destinationUrl = safeHttpUrl(data.link);
       const searchParams = new URL(currentWindowUrl).searchParams;
       if (searchParams.has("qr")) {
         await incrementNoOfScansMutation.mutateAsync(shortId);
       }
-      window.location.replace(destinationUrl);
+      if (destinationUrl) window.location.replace(destinationUrl);
     }
   };
 

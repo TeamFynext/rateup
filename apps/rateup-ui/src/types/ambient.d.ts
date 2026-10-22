@@ -309,7 +309,8 @@ declare global {
     createdAt: string;
     teams: STeam[];
     isProtected: boolean;
-    password?: string;
+    /** Whether a password is set. The API never returns the password (a bcrypt hash) itself. */
+    hasPassword?: boolean;
     isPublished: boolean;
     kioskMode: boolean;
     type: SurveyType;
@@ -655,6 +656,9 @@ declare global {
       status: string;
       type: "TEAM";
       invitedBy: string;
+      createdAt: string;
+      /** When the emailed link stops working; null on rows issued before links expired. */
+      expiresAt: string | null;
     }>;
     members: Array<member>;
   }

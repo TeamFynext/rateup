@@ -1,29 +1,49 @@
-import axios from "axios";
 import { toast } from "sonner";
 
+import { axiosClient } from "@/backend/apiClient";
 import type { RequestPayload } from "@/types/api.ts";
 
 import { getApiErrorData, getApiErrorMessage } from "../apiError.ts";
 import { fallbackImage } from "../constants.ts";
 
+export interface UploadOptions {
+  /** Lets any file type through, not just media (the survey "file" question). */
+  allowAll?: boolean;
+  /**
+   * The form link an anonymous survey respondent is answering. Without a session the API
+   * keys the upload under that form's org, and refuses an upload that names no live form.
+   */
+  surveyTeamMapId?: string;
+}
+
+/**
+ * The multipart body for an upload. The API reads only the fields that precede the file
+ * part, so every field (`surveyTeamMapId` above all) is appended before `file`.
+ */
+export const buildUploadFormData = (file: File | Blob, options: UploadOptions = {}) => {
+  const formData = new FormData();
+  formData.append("metadata", JSON.stringify({ allowAll: options.allowAll ?? false }));
+  formData.append("size", file.size.toString());
+  if (options.surveyTeamMapId) formData.append("surveyTeamMapId", options.surveyTeamMapId);
+  formData.append("file", file);
+  return formData;
+};
+
 export const uploadFile = async (
   // FormData accepts a Blob just as it does a File; the theme uploader passes both.
   file: File | Blob,
   withThumbnails = false,
-  data = { allowAll: false },
+  options: UploadOptions = {},
 ) => {
-  const formData = new FormData();
-  formData.append("metadata", JSON.stringify(data));
-  formData.append("size", file?.size?.toString());
-  formData.append("file", file);
+  const formData = buildUploadFormData(file, options);
   try {
     toast.loading("Uploading file...", {
       id: "upload-file",
     });
-    const response = await axios.post(
-      `${import.meta.env.VITE_API_URL}/api/public/upload/${
-        withThumbnails ? "fileWithThumb" : "file"
-      }`,
+    // The app client, so a signed-in caller's upload carries the session and is keyed
+    // under their org; uploads can take far longer than its default timeout.
+    const response = await axiosClient.post(
+      `/public/upload/${withThumbnails ? "fileWithThumb" : "file"}`,
       formData,
       {
         timeout: 0,
@@ -39,20 +59,13 @@ export const uploadFile = async (
   }
 };
 
+/** Needs a session: the API deletes only keys under the caller's own org. */
 export const deleteUploadedFiles = async (data: RequestPayload) => {
   try {
     toast.loading("Deleting file...", {
       id: "delete-file",
     });
-    const response = await axios.put(
-      `${import.meta.env.VITE_API_URL}/api/public/upload/file/delete`,
-      data,
-      {
-        headers: {
-          Accept: "application/json",
-        },
-      },
-    );
+    const response = await axiosClient.put("/public/upload/file/delete", data);
     toast.success("File deleted successfully", {
       id: "delete-file",
     });

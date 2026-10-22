@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useRegisterBusinessClientMutation } from "@/backend/whatsapp/settings/waSettings.query";
 import { FacebookBrandButton } from "@/components/common/facebook-brand-button.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
+import { isFacebookOrigin } from "@/utils/facebookOrigin.ts";
 
 const fbLogin = (
   configId: string | null = null,
@@ -70,7 +71,7 @@ export function MetaLoginButton({
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      if (!event.origin.endsWith("facebook.com")) return;
+      if (!isFacebookOrigin(event.origin)) return;
       try {
         const data = JSON.parse(event.data);
         if (data.type === "WA_EMBEDDED_SIGNUP") {

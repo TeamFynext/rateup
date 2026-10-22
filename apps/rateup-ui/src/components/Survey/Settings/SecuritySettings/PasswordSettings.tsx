@@ -1,4 +1,4 @@
-import { useId, useEffect, useState } from "react";
+import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useUpdateSurveyPwdMutation } from "@/backend/surveys/surveys.query";
@@ -23,10 +23,6 @@ const PasswordSettings = ({ survey, surveyId }: { survey: Survey; surveyId: stri
   const { t: translations } = useTranslation();
   const updateSurveyPassword = useUpdateSurveyPwdMutation(surveyId);
 
-  useEffect(() => {
-    setPassword(survey?.password?.length ? survey.password : "");
-  }, [survey]);
-
   const handleSwitchChange = () => {
     if (!passwordProtection) {
       setIsPasswordInputInvalid(false);
@@ -41,7 +37,8 @@ const PasswordSettings = ({ survey, surveyId }: { survey: Survey; surveyId: stri
       return;
     }
     setIsPasswordInputInvalid(false);
-    updateSurveyPassword.mutate({ surveyId, password });
+    // The input stays empty once saved: the API keeps only a hash and never sends it back.
+    updateSurveyPassword.mutate({ surveyId, password }, { onSuccess: () => setPassword("") });
   };
 
   const switchTooltip = passwordProtection
@@ -92,7 +89,7 @@ const PasswordSettings = ({ survey, surveyId }: { survey: Survey; surveyId: stri
             disabled={!passwordProtection || updateSurveyPassword.isPending}
             onClick={handleSave}
           >
-            {survey?.password?.length
+            {survey?.hasPassword && survey.isProtected
               ? translations("Edit Password")
               : translations("Save Password")}
           </Button>

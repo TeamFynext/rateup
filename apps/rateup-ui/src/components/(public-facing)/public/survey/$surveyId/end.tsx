@@ -4,6 +4,7 @@ import Confetti from "react-confetti";
 import { useTranslation } from "react-i18next";
 
 import { CreditsCard } from "@/components/Card/CreditsCard.tsx";
+import { SafeHtml } from "@/components/common/SafeHtml.tsx";
 import { getBgImgAndBgColor } from "@/components/Layout/TakeSurveyLayout/utils.ts";
 import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage/index.tsx";
 import type { SurveyTheme } from "@/context/SurveyThemeContext.tsx";
@@ -198,12 +199,7 @@ export default function ThankYou({
                     {translations("Thank You!")}
                   </h1>
                 ) : (
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: newTitle ?? "",
-                    }}
-                    style={{ color: titleStyles?.color }}
-                  />
+                  <SafeHtml html={newTitle} style={{ color: titleStyles?.color }} />
                 )}
               </div>
             </div>

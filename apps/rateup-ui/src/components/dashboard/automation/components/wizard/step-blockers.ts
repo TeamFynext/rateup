@@ -27,6 +27,7 @@ export const STEP_FIELDS: Record<WizardStep, readonly FieldPath<CreateRuleInput>
     "options.instagramPostIds",
     "options.instagramCommentSource",
     "options.instagramRef",
+    "options.messengerRef",
   ],
   actions: ["actions", "options.instagramPublicReplies"],
   review: ["name", "options.sendOncePerDay", "options.businessHours"],

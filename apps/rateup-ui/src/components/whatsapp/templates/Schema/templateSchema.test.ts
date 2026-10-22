@@ -1,33 +1,46 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { describe, expect, test } from "vitest";
 
 import { TemplateType, WaTemplateStatus } from "@/types/enums.ts";
 import { WHATSAPP_BUTTON_TYPE, WHATSAPP_TEMPLATE_BROADCAST_TYPE } from "@/utils/constants.ts";
 
+import { firstErrorMessage, friendlyWhatsAppError } from "../Details/template-form.ts";
 import { templateSchema } from "./templateSchema.ts";
+
+const { IMAGE, VIDEO, NONE } = WHATSAPP_TEMPLATE_BROADCAST_TYPE;
 
 const file = (type: string, name = "card.png") => new File(["x"], name, { type });
 
-const card = (header: File | string | null, format = WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE) => ({
+const callButton = {
+  type: WHATSAPP_BUTTON_TYPE.CALL_PHONE_NUMBER,
+  text: "call us",
+  phone_number: "+919666555555",
+};
+
+type Card = {
+  body: string;
+  header: File | string | null;
+  format: string;
+  example: string[];
+  buttons: Record<string, string>[];
+};
+
+const card = (header: File | string | null, format = IMAGE, extra: Partial<Card> = {}): Card => ({
   body: "hey",
   header,
   format,
   example: [],
-  buttons: [
-    {
-      type: WHATSAPP_BUTTON_TYPE.CALL_PHONE_NUMBER,
-      text: "call us",
-      phone_number: "+919666555555",
-    },
-  ],
+  buttons: [callButton],
+  ...extra,
 });
 
-const carousel = (cards: ReturnType<typeof card>[]) => ({
+const carousel = (cards: Card[]) => ({
   name: "heyyy",
   body: "Would you like to start survey?",
   footer: "",
   language: "en",
   header: null,
-  format: WHATSAPP_TEMPLATE_BROADCAST_TYPE.NONE,
+  format: NONE,
   category: "MARKETING",
   buttons: [],
   status: WaTemplateStatus.DRAFT,
@@ -37,55 +50,107 @@ const carousel = (cards: ReturnType<typeof card>[]) => ({
   productCarousel: [],
 });
 
-const issuesOf = (input: unknown) => {
-  const result = templateSchema.safeParse(input);
-  return result.success ? [] : result.error.issues;
+/** The toast text the editor shows on save: same resolver, same error walk. */
+const toastFor = async (values: unknown) => {
+  const resolver = zodResolver(templateSchema);
+  const result = await resolver(values as never, undefined, {
+    fields: {},
+    shouldUseNativeValidation: false,
+  });
+  return firstErrorMessage(result.errors);
 };
 
-const messages = (input: unknown) => issuesOf(input).map((i) => i.message);
+const png = () => file("image/png");
 
-describe("templateSchema media carousel", () => {
-  test("accepts freshly uploaded PNG cards", () => {
-    expect(messages(carousel([card(file("image/png")), card(file("image/png"))]))).toEqual([]);
+describe("template editor save message", () => {
+  test("freshly uploaded PNG cards save", async () => {
+    expect(await toastFor(carousel([card(png()), card(png())]))).toBeUndefined();
   });
 
-  test("accepts uploaded MP4 cards", () => {
-    const video = WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO;
+  test("uploaded MP4 cards save", async () => {
+    const mp4 = () => file("video/mp4", "clip.mp4");
+    expect(await toastFor(carousel([card(mp4(), VIDEO), card(mp4(), VIDEO)]))).toBeUndefined();
+  });
+
+  test("a card with no button names the card", async () => {
+    expect(await toastFor(carousel([card(png()), card(png(), IMAGE, { buttons: [] })]))).toBe(
+      "Card 2: Each card needs at least 1 button",
+    );
+  });
+
+  test("a card with three buttons names the card", async () => {
+    const buttons = [callButton, callButton, callButton];
+    expect(await toastFor(carousel([card(png(), IMAGE, { buttons }), card(png())]))).toBe(
+      "Card 1: Each card can have at most 2 buttons",
+    );
+  });
+
+  test("an empty card body names the card", async () => {
+    expect(await toastFor(carousel([card(png()), card(png(), IMAGE, { body: "" })]))).toBe(
+      "Card 2: Card body is required",
+    );
+  });
+
+  test("a card button with no text names the card", async () => {
+    const buttons = [{ ...callButton, text: "  " }];
+    expect(await toastFor(carousel([card(png()), card(png(), IMAGE, { buttons })]))).toBe(
+      "Card 2: Enter the button text",
+    );
+  });
+
+  test("a bad phone number names the card", async () => {
+    const buttons = [{ ...callButton, phone_number: "+91123" }];
+    expect(await toastFor(carousel([card(png(), IMAGE, { buttons }), card(png())]))).toBe(
+      "Card 1: Enter a valid phone number with country code",
+    );
+  });
+
+  test("an unsupported card image says which format", async () => {
+    const avif = file("image/avif", "car.avif");
+    expect(await toastFor(carousel([card(avif), card(png())]))).toBe(
+      "Card 1: AVIF files aren't supported. Use a PNG or JPG image, or an MP4 video.",
+    );
+  });
+
+  test("an MP4 on an image card asks for an image", async () => {
+    expect(await toastFor(carousel([card(png()), card(file("video/mp4"))]))).toBe(
+      "Card 2: This card is set to Image, so choose a PNG or JPG file.",
+    );
+  });
+
+  test("a PNG on a video card asks for a video", async () => {
+    const mp4 = file("video/mp4", "clip.mp4");
+    expect(await toastFor(carousel([card(png(), VIDEO), card(mp4, VIDEO)]))).toBe(
+      "Card 1: This card is set to Video, so choose an MP4 file.",
+    );
+  });
+
+  test("a single card asks for a second one", async () => {
+    expect(await toastFor(carousel([card(png())]))).toBe("Add at least 2 cards to the carousel.");
+  });
+
+  test("an unsupported template header image says which format, without a card number", async () => {
     expect(
-      messages(carousel([card(file("video/mp4"), video), card(file("video/mp4"), video)])),
-    ).toEqual([]);
+      await toastFor({
+        ...carousel([]),
+        templateType: TemplateType.GENERAL_NOTIFICATION,
+        format: IMAGE,
+        header: file("image/avif", "banner.avif"),
+      }),
+    ).toBe("AVIF files aren't supported. Use a PNG or JPG image, an MP4 video or a PDF.");
+  });
+});
+
+describe("WhatsApp rejection messages", () => {
+  test("a missing button text is reworded", () => {
+    expect(friendlyWhatsAppError("Button at index 0 is missing expected field(s) (text)")).toBe(
+      "Button 1 has no text. Fill it in and save again.",
+    );
   });
 
-  test("rejects an image card whose file is not an image", () => {
-    expect(messages(carousel([card(file("video/mp4")), card(file("image/png"))]))).toEqual([
-      "Incorrect Type use only image/png,image/jpg,image/jpeg",
-    ]);
-  });
-
-  test("names the file type when a card image is not an accepted format", () => {
-    const issues = issuesOf(carousel([card(file("image/avif")), card(file("image/png"))]));
-    expect(issues[0]).toMatchObject({
-      path: ["mediaCarousel", 0, "header"],
-      message:
-        "File must be one of [image/png, image/jpg, image/jpeg, video/mp4] but was image/avif",
-    });
-  });
-
-  test("names the file type when the template header is not an accepted format", () => {
-    const issues = issuesOf({
-      ...carousel([]),
-      templateType: TemplateType.GENERAL_NOTIFICATION,
-      format: WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE,
-      header: file("image/avif"),
-    });
-    expect(issues[0]?.path).toEqual(["header"]);
-    expect(issues[0]?.message).toMatch(/^File must be one of \[.*\] but was image\/avif$/);
-  });
-
-  test("rejects a video card whose file is not a video", () => {
-    const video = WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO;
-    expect(
-      messages(carousel([card(file("image/png"), video), card(file("video/mp4"), video)])),
-    ).toEqual(["Incorrect Type use only video/mp4"]);
+  test("other messages pass through", () => {
+    expect(friendlyWhatsAppError("Template name already exists")).toBe(
+      "Template name already exists",
+    );
   });
 });

@@ -4,7 +4,7 @@ import { getRequestHeader, getRequestIP } from "@tanstack/react-start/server";
 /**
  * The visitor's address: the X-Forwarded-For entry our own proxies appended, counted from the
  * right. The leftmost entry is whatever the visitor sent, so trusting it would let them pick
- * their own rate-limit bucket. Mirrors `trustProxyFromEnv` in rateup-api.
+ * their own rate-limit bucket. Mirrors `trustProxyHops` in rateup-api's `utils/http.ts`.
  */
 export function visitorIp(
   forwardedFor: string | undefined,
@@ -22,7 +22,7 @@ export function visitorIp(
 
 /**
  * Headers that let rateup-api rate-limit the visitor a server render is for, rather than this
- * server's own address (`rateLimit.ts` in rateup-api checks the secret). In the browser the
+ * server's own address (`clientIp` in rateup-api's `utils/http.ts` checks the secret). In the browser the
  * request comes from the visitor already, so there is nothing to add.
  */
 export const ssrVisitorHeaders = createIsomorphicFn()

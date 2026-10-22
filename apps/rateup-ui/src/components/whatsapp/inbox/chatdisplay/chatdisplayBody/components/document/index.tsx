@@ -90,7 +90,7 @@ export default function WaInboxDocument({ messageContent }: Props) {
         {documentSrc && (
           <AttachmentTrigger
             aria-label={`Open ${filename ?? "document"}`}
-            onClick={() => window.open(documentSrc, "_blank")}
+            onClick={() => window.open(documentSrc, "_blank", "noopener,noreferrer")}
           />
         )}
       </Attachment>

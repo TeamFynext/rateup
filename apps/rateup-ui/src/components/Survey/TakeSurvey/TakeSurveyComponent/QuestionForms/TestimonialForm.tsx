@@ -11,6 +11,7 @@ import { Spinner } from "@/components/ui/spinner.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
+import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
 import { cn } from "@/lib/utils.ts";
 import { fallbackImage } from "@/utils/constants.ts";
 import { dataURItoBlob, getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
@@ -33,6 +34,7 @@ const unstyledInputClassName =
 export function TestimonialForm({ features, isPreview }: TestimonialProps) {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { response, updateResponse } = useContext(CurrentResponsesContext);
+  const surveyTeamMapId = useSurveyContext()?.surveyTeamMapId;
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [opened, setOpened] = useState(false);
@@ -72,7 +74,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
   useEffect(() => {
     if (!file) return;
     setIsUploading(true);
-    uploadFile(file)
+    uploadFile(file, false, { surveyTeamMapId })
       .then((key) => {
         updateResponse({ ...asAnswer(response), photo: key });
         setIsUploading(false);

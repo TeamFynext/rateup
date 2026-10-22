@@ -40,6 +40,7 @@ import {
 import { Separator } from "@/components/ui/separator.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
+import { useCan } from "@/hooks/usePermission.ts";
 
 import type { DraftMenuItem } from "./shared.tsx";
 
@@ -52,6 +53,7 @@ export function PersistentMenuTab({
   const setMutation = useSetInstagramPersistentMenuMutation(channelId);
   const syncMutation = useSyncInstagramPersistentMenuMutation(channelId);
   const deleteMutation = useDeleteInstagramPersistentMenuMutation(channelId);
+  const canManage = useCan("channels.manage");
   const locale = "default";
   const [items, setItems] = useState<DraftMenuItem[]>([]);
   const { t } = useTranslation();
@@ -115,166 +117,179 @@ export function PersistentMenuTab({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {items.map((item, index) => (
-          <div
-            key={item.id}
-            className="group space-y-3 rounded-xl border bg-card p-4 transition-colors hover:border-primary/30"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="text-[10px]">
-                  {item.type === "postback" ? t("Postback") : t("Web URL")}
-                </Badge>
-                <span className="text-sm font-medium text-muted-foreground">
-                  {t("Item {number}", { number: index + 1 })}
-                </span>
-              </div>
-              <Tooltip>
-                <TooltipTrigger
-                  render={
-                    <Button
-                      aria-label={t("Delete")}
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="size-8 text-muted-foreground hover:text-destructive"
-                      onClick={() => setItems(items.filter((_, i) => i !== index))}
-                      disabled={items.length <= 1}
-                    />
-                  }
-                >
-                  <IconTrash className="size-4" />
-                </TooltipTrigger>
-                <TooltipContent>{t("Remove item")}</TooltipContent>
-              </Tooltip>
-            </div>
-
-            <div className="grid gap-3 md:grid-cols-2">
-              <Field>
-                <FieldLabel
-                  htmlFor={`${uid}-field-5-${index}`}
-                  className="text-xs text-muted-foreground"
-                >
-                  {t("Type")}
-                </FieldLabel>
-                <Select
-                  value={item.type}
-                  onValueChange={(v) => updateItem(index, { type: v ?? "postback" })}
-                  items={[
-                    { value: "postback", label: t("Postback") },
-                    { value: "web_url", label: t("Web URL") },
-                  ]}
-                >
-                  <SelectTrigger id={`${uid}-field-5-${index}`}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="postback">{t("Postback")}</SelectItem>
-                    <SelectItem value="web_url">{t("Web URL")}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </Field>
-              <Field>
-                <FieldLabel
-                  htmlFor={`${uid}-field-6-${index}`}
-                  className="text-xs text-muted-foreground"
-                >
-                  {t("Title")}
-                </FieldLabel>
-                <Input
-                  id={`${uid}-field-6-${index}`}
-                  value={item.title}
-                  placeholder={t("e.g. Talk to an agent")}
-                  onChange={(e) => updateItem(index, { title: e.target.value })}
-                />
-              </Field>
-            </div>
-
-            {item.type === "postback" ? (
-              <Field>
-                <FieldLabel
-                  htmlFor={`${uid}-field-7-${index}`}
-                  className="text-xs text-muted-foreground"
-                >
-                  {t("Payload")}
-                </FieldLabel>
-                <Textarea
-                  id={`${uid}-field-7-${index}`}
-                  value={item.payload}
-                  placeholder={t("e.g. CARE_HELP")}
-                  rows={2}
-                  onChange={(e) => updateItem(index, { payload: e.target.value })}
-                />
-              </Field>
-            ) : (
-              <Field>
-                <FieldLabel
-                  htmlFor={`${uid}-field-8-${index}`}
-                  className="text-xs text-muted-foreground"
-                >
-                  {t("URL")}
-                </FieldLabel>
-                <Input
-                  id={`${uid}-field-8-${index}`}
-                  value={item.url}
-                  placeholder="https://example.com"
-                  type="url"
-                  onChange={(e) => updateItem(index, { url: e.target.value })}
-                />
-              </Field>
+        {!canManage && (
+          <p className="text-sm text-muted-foreground">
+            {t(
+              "You can view these settings. Ask an admin for the manage channels permission to change them.",
             )}
+          </p>
+        )}
+        {/* Writes need `channels.manage` on the API; without it the fieldset disables every
+            control natively. The phone preview in the header stays usable. */}
+        <fieldset disabled={!canManage} className="min-w-0 space-y-4">
+          {items.map((item, index) => (
+            <div
+              key={item.id}
+              className="group space-y-3 rounded-xl border bg-card p-4 transition-colors hover:border-primary/30"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="text-[10px]">
+                    {item.type === "postback" ? t("Postback") : t("Web URL")}
+                  </Badge>
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {t("Item {number}", { number: index + 1 })}
+                  </span>
+                </div>
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        aria-label={t("Delete")}
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="size-8 text-muted-foreground hover:text-destructive"
+                        onClick={() => setItems(items.filter((_, i) => i !== index))}
+                        disabled={items.length <= 1}
+                      />
+                    }
+                  >
+                    <IconTrash className="size-4" />
+                  </TooltipTrigger>
+                  <TooltipContent>{t("Remove item")}</TooltipContent>
+                </Tooltip>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <Field>
+                  <FieldLabel
+                    htmlFor={`${uid}-field-5-${index}`}
+                    className="text-xs text-muted-foreground"
+                  >
+                    {t("Type")}
+                  </FieldLabel>
+                  <Select
+                    // A fieldset does not reach Base UI's Select, so it is disabled explicitly.
+                    disabled={!canManage}
+                    value={item.type}
+                    onValueChange={(v) => updateItem(index, { type: v ?? "postback" })}
+                    items={[
+                      { value: "postback", label: t("Postback") },
+                      { value: "web_url", label: t("Web URL") },
+                    ]}
+                  >
+                    <SelectTrigger id={`${uid}-field-5-${index}`}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="postback">{t("Postback")}</SelectItem>
+                      <SelectItem value="web_url">{t("Web URL")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field>
+                  <FieldLabel
+                    htmlFor={`${uid}-field-6-${index}`}
+                    className="text-xs text-muted-foreground"
+                  >
+                    {t("Title")}
+                  </FieldLabel>
+                  <Input
+                    id={`${uid}-field-6-${index}`}
+                    value={item.title}
+                    placeholder={t("e.g. Talk to an agent")}
+                    onChange={(e) => updateItem(index, { title: e.target.value })}
+                  />
+                </Field>
+              </div>
+
+              {item.type === "postback" ? (
+                <Field>
+                  <FieldLabel
+                    htmlFor={`${uid}-field-7-${index}`}
+                    className="text-xs text-muted-foreground"
+                  >
+                    {t("Payload")}
+                  </FieldLabel>
+                  <Textarea
+                    id={`${uid}-field-7-${index}`}
+                    value={item.payload}
+                    placeholder={t("e.g. CARE_HELP")}
+                    rows={2}
+                    onChange={(e) => updateItem(index, { payload: e.target.value })}
+                  />
+                </Field>
+              ) : (
+                <Field>
+                  <FieldLabel
+                    htmlFor={`${uid}-field-8-${index}`}
+                    className="text-xs text-muted-foreground"
+                  >
+                    {t("URL")}
+                  </FieldLabel>
+                  <Input
+                    id={`${uid}-field-8-${index}`}
+                    value={item.url}
+                    placeholder="https://example.com"
+                    type="url"
+                    onChange={(e) => updateItem(index, { url: e.target.value })}
+                  />
+                </Field>
+              )}
+            </div>
+          ))}
+
+          <Separator />
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                setItems((c) => [
+                  ...c,
+                  { id: crypto.randomUUID(), type: "postback", title: "", payload: "", url: "" },
+                ])
+              }
+              disabled={items.length >= 5}
+            >
+              <IconPlus className="mr-1.5 size-4" />
+              {t("Add item")}
+            </Button>
+            <div className="flex-1" />
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={() => deleteMutation.mutate()}
+              loading={deleteMutation.isPending}
+            >
+              <IconCloudOff className="mr-1.5 size-4" />
+              {t("Clear from Meta")}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => syncMutation.mutate()}
+              loading={syncMutation.isPending}
+            >
+              <IconCloudUpload className="mr-1.5 size-4" />
+              {t("Sync with Meta")}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              onClick={save}
+              disabled={!canSave || setMutation.isPending}
+            >
+              <IconSend className="mr-1.5 size-4" />
+              {t("Save")}
+            </Button>
           </div>
-        ))}
-
-        <Separator />
-
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              setItems((c) => [
-                ...c,
-                { id: crypto.randomUUID(), type: "postback", title: "", payload: "", url: "" },
-              ])
-            }
-            disabled={items.length >= 5}
-          >
-            <IconPlus className="mr-1.5 size-4" />
-            {t("Add item")}
-          </Button>
-          <div className="flex-1" />
-          <Button
-            type="button"
-            variant="destructive"
-            size="sm"
-            onClick={() => deleteMutation.mutate()}
-            loading={deleteMutation.isPending}
-          >
-            <IconCloudOff className="mr-1.5 size-4" />
-            {t("Clear from Meta")}
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={() => syncMutation.mutate()}
-            loading={syncMutation.isPending}
-          >
-            <IconCloudUpload className="mr-1.5 size-4" />
-            {t("Sync with Meta")}
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            onClick={save}
-            disabled={!canSave || setMutation.isPending}
-          >
-            <IconSend className="mr-1.5 size-4" />
-            {t("Save")}
-          </Button>
-        </div>
+        </fieldset>
       </CardContent>
     </Card>
   );

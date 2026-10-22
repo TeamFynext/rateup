@@ -11,7 +11,15 @@
  * telling someone on the Free plan to "contact your admin" helps nobody. The API
  * sends this so the UI does not have to guess from the status code.
  */
-export type AccessDenialReason = "subscription" | "subscription_expired" | "team" | "unknown";
+export type AccessDenialReason =
+  | "subscription"
+  | "subscription_expired"
+  | "team"
+  /** The member lacks a permission (e.g. one they tried to put on an API key). */
+  | "permission"
+  /** The member is limited to some teams, and the action reaches every team. */
+  | "scope"
+  | "unknown";
 
 /** Error body shape the API returns on a failed request. */
 export interface ApiErrorData {

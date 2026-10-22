@@ -8,7 +8,6 @@ import { PlanFeatures } from "@/components/dashboard/settings/billing/PlanFeatur
 import { useRouteAndCartStore } from "@/components/HomePage/pages/Pricing/store/RouteAndCartStore.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
-import { useUser } from "@/context/UserContext.tsx";
 import { formatIsoDateString } from "@/utils/dateTime.ts";
 
 import { AddonPacks } from "./AddonPacks.tsx";
@@ -31,7 +30,6 @@ type BillingTab = "plan" | "usage" | "history";
 export function BillingPage({ tab }: Readonly<{ tab: BillingTab }>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { user } = useUser();
   const data = useBillingData();
   const { cart, reset: resetCart } = useRouteAndCartStore();
 
@@ -153,15 +151,7 @@ export function BillingPage({ tab }: Readonly<{ tab: BillingTab }>) {
         isStarting={checkout.isStartingCheckout}
         onConfirm={() => {
           checkout.startPlanCheckout(
-            {
-              planId: cart?.planId,
-              rateupPlanId: cart?.id,
-              planName: cart?.name,
-              period: cart?.period,
-              orgId: user?.orgId,
-              // Required by the checkout body; it no longer changes any limit.
-              isAnnualMessageLimit: false,
-            },
+            { rateupPlanId: cart?.id, period: cart?.period, planId: cart?.planId },
             { gateway: cart?.gateway, priceId: cart?.priceId },
           );
           closeConfirmOrder();

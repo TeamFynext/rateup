@@ -1,46 +1,59 @@
-import { IconDownload, IconExternalLink } from "@tabler/icons-react";
+import { IconExternalLink } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button.tsx";
 
-/** Built by rateup-wordpress/build.mjs --publish into public/downloads. */
-export const WOO_PLUGIN_DOWNLOAD_URL = "/downloads/rateup-for-woocommerce.zip";
+/**
+ * Whether RateUp for WooCommerce is listed on WordPress.org: approved 2026-10-20. While
+ * false, the install cards say the plugin is in review instead of sending merchants to it.
+ */
+export const WOO_PLUGIN_LISTED = true;
+
+/** As the plugin is named on WordPress.org. */
+const PLUGIN_NAME = "RateUp for WooCommerce";
+const PLUGIN_SLUG = "rateup-for-woocommerce";
 
 /**
- * How to install the RateUp for WooCommerce plugin: the zip, and the store's own
- * "Upload Plugin" screen, which RateUp can open directly since it knows the store's address.
+ * How to install the RateUp for WooCommerce plugin from WordPress.org. The button opens the
+ * plugin's own page in the store's admin, with its Install Now button: looked up by slug, it
+ * works as soon as the plugin is published, while WordPress's search can take days to list it.
  */
 export function WooPluginInstall({ storeUrl }: Readonly<{ storeUrl: string }>) {
   const { t } = useTranslation();
 
+  if (!WOO_PLUGIN_LISTED) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        {t(
+          "The RateUp plugin is being reviewed by WordPress.org and will be available to install soon.",
+        )}
+      </p>
+    );
+  }
+
+  const details = new URLSearchParams({ tab: "plugin-information", plugin: PLUGIN_SLUG });
   return (
     <div className="flex flex-col gap-3">
       <ol className="list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
-        <li>{t("Download the plugin.")}</li>
         <li>
-          {t("In WordPress, go to Plugins › Add New Plugin › Upload Plugin and choose the file.")}
+          {t("In WordPress, go to Plugins › Add New Plugin and search for “{name}”.", {
+            name: PLUGIN_NAME,
+          })}
         </li>
         <li>{t("Click Install Now, then Activate Plugin.")}</li>
       </ol>
-      <div className="flex flex-wrap gap-2">
+      <div>
         <Button
           variant="outline"
-          render={<a href={WOO_PLUGIN_DOWNLOAD_URL} download="rateup-for-woocommerce.zip" />}
-        >
-          <IconDownload data-icon="inline-start" />
-          {t("Download plugin")}
-        </Button>
-        <Button
-          variant="ghost"
           render={
             <a
-              href={`${storeUrl}/wp-admin/plugin-install.php?tab=upload`}
+              href={`${storeUrl}/wp-admin/plugin-install.php?${details}`}
               target="_blank"
               rel="noreferrer"
             />
           }
         >
-          {t("Open Upload Plugin")}
+          {t("Find it in WordPress")}
           <IconExternalLink data-icon="inline-end" />
         </Button>
       </div>

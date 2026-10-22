@@ -6,10 +6,11 @@ import SharePopover from "@/components/blog/ShareBlog.tsx";
 import ErrorPage from "@/components/error.tsx";
 import RoutePending from "@/components/Loaders/RoutePending.tsx";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
-import { BASE_URL } from "@/lib/metadata.ts";
+import { BASE_URL, serializeJsonLd } from "@/lib/metadata.ts";
 import type { Tag } from "@/lib/posts.ts";
 import { createMarkdownMiddleware } from "@/markdown/serveMarkdown";
 import { GHOST_ORIGIN, rateupLogoOg } from "@/utils/constants.ts";
+import { sanitizeCmsHtml } from "@/utils/sanitizeCmsHtml.ts";
 
 export const Route = createFileRoute("/(marketing)/blog/$slug/")({
   server: {
@@ -39,7 +40,15 @@ export const Route = createFileRoute("/(marketing)/blog/$slug/")({
     const { getSinglePost } = await import("@/lib/posts.ts");
     const post = await getSinglePost(slug);
     if (!post) throw notFound();
-    return post;
+    // Ghost HTML goes into `dangerouslySetInnerHTML` on the app origin. Sanitised here, with
+    // the DOM-free sanitiser, so the server render and client navigations get the same markup.
+    return {
+      ...post,
+      html: sanitizeCmsHtml(post.html),
+      feature_image_caption: post.feature_image_caption
+        ? sanitizeCmsHtml(post.feature_image_caption)
+        : null,
+    };
   },
   head: ({ loaderData: post }) => {
     // `loaderData` rather than a second `getSinglePost` call — the head used to refetch every
@@ -122,7 +131,7 @@ export const Route = createFileRoute("/(marketing)/blog/$slug/")({
       ],
 
       links: [{ rel: "canonical", href: canonical }],
-      scripts: [{ type: "application/ld+json", children: JSON.stringify(jsonLd) }],
+      scripts: [{ type: "application/ld+json", children: serializeJsonLd(jsonLd) }],
     };
   },
 });
@@ -138,7 +147,7 @@ function getInitials(name?: string) {
     .toUpperCase();
 }
 
-// For rendering post content
+// For rendering post content. `html` is already sanitised by the loader (`sanitizeCmsHtml`).
 function PostContent({ html }: Readonly<{ html: string }>) {
   return (
     <div
