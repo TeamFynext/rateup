@@ -1,7 +1,10 @@
 // dayjs import removed (unused)
 import prisma from "../../../utils/prisma.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
-import { CreateAutomatedReplySchema } from "./wa_automatedReply.schema.js";
+import type {
+  CreateAutomatedReplySchema,
+  UpdateAutomatedReplySchema,
+} from "./wa_automatedReply.schema.js";
 import { getSubscription } from "../../subscription/subscription.service.js";
 import { canMessageContact, type Recipient } from "../../subscription/activeContacts.js";
 import { log } from "../../../utils/logger.js";
@@ -47,6 +50,13 @@ export async function getAutomatedReplyById(id: string, orgId: string) {
   });
 }
 
+/** The client sends the platform lowercased; anything unrecognised is WhatsApp. */
+function automationPlatform(platform: string) {
+  if (platform === "instagram") return PlatformType.INSTAGRAM;
+  if (platform === "facebook") return PlatformType.FACEBOOK;
+  return PlatformType.WHATSAPP;
+}
+
 export async function createAutomatedReply(data: CreateAutomatedReplySchema, orgId: string) {
   const automatedReply = await prisma.waAutomatedReply.create({
     data: {
@@ -54,11 +64,7 @@ export async function createAutomatedReply(data: CreateAutomatedReplySchema, org
       name: data.name,
       matchData: data.matchData as WaAutomatedReplyMatchData,
       whatsappSettingsPhoneId: data.whatsappSettingsPhoneId,
-      platform: data.platform
-        ? data.platform === "instagram"
-          ? PlatformType.INSTAGRAM
-          : PlatformType.WHATSAPP
-        : PlatformType.WHATSAPP,
+      platform: data.platform ? automationPlatform(data.platform) : PlatformType.WHATSAPP,
     },
   });
   if (automatedReply)
@@ -95,19 +101,10 @@ export async function cloneAutomatedReply(id: string, orgId: string, name?: stri
 }
 
 // Unlike createAutomatedReply, updates are genuinely partial (callers commonly rename or
-// re-platform an automation without resending matchData), so this intentionally doesn't
-// reuse CreateAutomatedReplySchema (whose name/matchData are required). matchData is
-// forwarded to Prisma's Json column as-is (its own generated update input types the field
-// `unknown`), so it's left untyped here rather than pinned to a shape this function never
-// inspects.
+// re-platform an automation without resending matchData).
 export async function updateAutomatedReply(
   id: string,
-  data: {
-    name?: string;
-    matchData?: unknown;
-    whatsappSettingsPhoneId?: string;
-    platform?: string;
-  },
+  data: UpdateAutomatedReplySchema,
   orgId: string,
 ) {
   const existing = await prisma.waAutomatedReply.findFirst({
@@ -127,11 +124,7 @@ export async function updateAutomatedReply(
       name: data.name,
       matchData: data?.matchData as WaAutomatedReplyMatchData | undefined,
       whatsappSettingsPhoneId: data?.whatsappSettingsPhoneId,
-      platform: data.platform
-        ? data.platform === "instagram"
-          ? PlatformType.INSTAGRAM
-          : PlatformType.WHATSAPP
-        : undefined,
+      platform: data.platform ? automationPlatform(data.platform) : undefined,
     },
   });
   return updatedAutomatedReply;

@@ -184,6 +184,36 @@ export async function loadActor(userId: string, orgId: string): Promise<Actor | 
   );
 }
 
+/** Same prefix as the membership keys, so bustActorsForUser clears it too. */
+const statusKey = (userId: string) => `authz:${userId}:status`;
+
+/**
+ * Whether a signed-in user's account may be used at all: a paused or deactivated account is
+ * refused on every request, not just shown as paused. Cached alongside the actor; pausing or
+ * removing a user busts it with bustActorsForUser. A user with no app row yet (a sign-up
+ * still being completed) is not blocked.
+ */
+export async function isUserBlocked(userId: string): Promise<boolean> {
+  const key = statusKey(userId);
+  try {
+    const cached = await redis.get(key);
+    if (cached === "1" || cached === "0") return cached === "1";
+  } catch (err) {
+    log.warn({ err, key }, "authz status cache read failed; reading the user from Postgres");
+  }
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { active: true, isPaused: true },
+  });
+  const blocked = !!user && (!user.active || user.isPaused === true);
+  try {
+    await redis.set(key, blocked ? "1" : "0", "EX", ACTOR_CACHE_TTL_SECONDS);
+  } catch (err) {
+    log.warn({ err, key }, "authz status cache write failed");
+  }
+  return blocked;
+}
+
 /** Call after a role, team membership or ownership change so the next request sees it. */
 export async function bustActor(userId: string, orgId: string): Promise<void> {
   try {

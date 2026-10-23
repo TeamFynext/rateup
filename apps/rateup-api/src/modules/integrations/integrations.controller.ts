@@ -9,6 +9,7 @@ import {
 import { log } from "../../utils/logger.js";
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
+  AutomationHookParams,
   ByNameParams,
   DeleteZapierHookInput,
   IntegrationSchema,
@@ -18,29 +19,35 @@ import {
   UpdateIntgrationInput,
 } from "./integrations.schema.js";
 import { IntegratedApps } from "../../types/enums.js";
+import { removeAutomationHookById } from "./automation/automation.hooks.js";
+import { isAutomationPlatform } from "./automation/automation.platforms.js";
 import { listIntegrationActivity } from "./external/integrationActivity.js";
 import { connectWithApiKey } from "./shared/apiKeyConnect.js";
 import { finishOAuthConnect, OAuthConnectError, startOAuthConnect } from "./shared/oauthConnect.js";
 import { IntegrationConnectError } from "./shared/oauthConnectError.js";
 import { recordAuditEvent } from "../../utils/auditLog.js";
+import { redactCredentialSecrets } from "./shared/credentialCrypto.js";
 
 /**
- * Strips secrets the UI never needs before an integration leaves the API: the
- * Shopify token pair (the refresh token mints new access tokens for 90 days),
- * and Amelia's API key, which the settings page only needs to know is saved.
+ * Every secret leaves the API as a placeholder, which `updateIntegrationByName` swaps
+ * back on save. Amelia's settings page reads `hasApiKey` instead.
  */
 function redactIntegration<T extends { name: string; credential: unknown } | null>(
   integration: T,
 ): T {
-  if (integration?.name === IntegratedApps.amelia) {
-    const { apiKey, ...credential } = (integration.credential ?? {}) as { apiKey?: string };
-    return { ...integration, credential: { ...credential, hasApiKey: Boolean(apiKey) } };
+  if (!integration) return integration;
+  const credential = redactCredentialSecrets(integration.credential);
+  if (integration.name === IntegratedApps.amelia) {
+    const { apiKey, ...rest } = (credential ?? {}) as { apiKey?: string };
+    return { ...integration, credential: { ...rest, hasApiKey: Boolean(apiKey) } };
   }
-  if (integration?.name !== IntegratedApps.shopify) return integration;
-  const credential = integration.credential as { session?: Record<string, unknown> } | null;
-  if (!credential?.session) return integration;
-  const { accessToken: _a, refreshToken: _r, ...session } = credential.session;
-  return { ...integration, credential: { ...credential, session } };
+  // The Shopify token pair goes entirely: only saveShopifySession ever writes the session.
+  const session = (credential as { session?: Record<string, unknown> } | null)?.session;
+  if (integration.name === IntegratedApps.shopify && session) {
+    const { accessToken: _a, refreshToken: _r, ...rest } = session;
+    return { ...integration, credential: { ...(credential as object), session: rest } };
+  }
+  return { ...integration, credential };
 }
 
 export const getAllIntegrationsByOrgHandler = async (
@@ -104,7 +111,7 @@ export const createIntegrationHandler = async (
   try {
     const { orgId } = request.user;
     const data = await createIntegration(request.body, orgId);
-    reply.send(data);
+    reply.send({ ...redactIntegration(data), apikey: data.apikey });
   } catch {
     log.error("Error creating integration by name");
     return reply.code(500).send({ error: "Something went wrong" });
@@ -162,6 +169,24 @@ export async function deleteZapierTriggerHookHandler(
     log.error(e);
     reply.code(500).send(e);
   }
+}
+
+/**
+ * Removes one of an automation platform's hooks by id, from the dashboard. The
+ * platform is not told; its deliveries simply stop. Zapier's older hooks have no
+ * id and stay on `/zapier-hook`.
+ */
+export async function deleteAutomationHookHandler(
+  request: FastifyRequest<{ Params: AutomationHookParams }>,
+  reply: FastifyReply,
+) {
+  const { name, hookId } = request.params;
+  if (!isAutomationPlatform(name)) {
+    return reply.code(400).send({ error: `${name} has no hooks` });
+  }
+  const removed = await removeAutomationHookById(name, request.user.orgId, hookId);
+  if (!removed) return reply.code(404).send({ error: "Hook not found" });
+  return reply.send({ success: true });
 }
 
 /**

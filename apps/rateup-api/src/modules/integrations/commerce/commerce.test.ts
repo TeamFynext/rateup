@@ -4,7 +4,10 @@ vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), warn: vi.fn(), debug: vi.fn(), trace: vi.fn() },
 }));
 vi.mock("../../../utils/prisma.js", () => ({
-  default: { loyaltyRedemption: { findUnique: vi.fn(), update: vi.fn() } },
+  default: {
+    loyaltyRedemption: { findUnique: vi.fn(), update: vi.fn() },
+    shopOrder: { findFirst: vi.fn() },
+  },
 }));
 vi.mock("../../../workers/bullmq/queues/webhook.queue.js", () => ({
   shopifyLoyaltyQueue: { add: vi.fn() },
@@ -34,6 +37,7 @@ import type { CommerceOrder, CommerceProvider, CommerceStore } from "./commerce.
 import { syncRedemptionDiscount } from "./discounts.js";
 import {
   commerceAwardKey,
+  commerceLoyaltyJobId,
   processCommerceOrderLoyalty,
   type CommerceLoyaltyJobData,
 } from "./loyalty.js";
@@ -219,7 +223,7 @@ describe("the order pipeline", () => {
     expect(shopifyLoyaltyQueue.add).toHaveBeenCalledWith(
       "order-loyalty",
       expect.objectContaining({ provider: "woocommerce", storeId: WOO, status: "paid" }),
-      expect.objectContaining({ jobId: `loyalty-${WOO}-completed-901` }),
+      expect.objectContaining({ jobId: "loyalty-https-//shop.example.com-completed-901" }),
     );
     expect(emitIntegrationEvent).toHaveBeenCalledWith(
       "org-1",
@@ -231,6 +235,28 @@ describe("the order pipeline", () => {
       expect.anything(),
       "919000000001",
     );
+  });
+
+  test("the loyalty job id is one BullMQ accepts, for a store URL too", async () => {
+    // The queue is mocked above, so check the id against BullMQ's own rule: a
+    // "Custom Id cannot contain :" throw here is what made every Woo order fail.
+    const { Job } = await vi.importActual<typeof import("bullmq")>("bullmq");
+    const queue = { name: "q", opts: {}, toKey: (key: string) => `bull:q:${key}`, keys: {} };
+    // The check `Queue.add` runs before writing to Redis; protected in BullMQ's types.
+    const validate = (jobId: string) =>
+      (
+        new Job(queue as never, "order-loyalty", {}, { jobId }) as unknown as {
+          validateOptions(jobData: unknown): void;
+        }
+      ).validateOptions({});
+
+    for (const storeId of [WOO, "https://shop.example.com:8443/store", "acme.myshopify.com"]) {
+      const jobId = commerceLoyaltyJobId({ storeId, eventKey: "completed", orderId: "901" });
+      expect(() => validate(jobId)).not.toThrow();
+    }
+    // Shopify's ids are unchanged, so a job retrying across the deploy still dedupes.
+    const shopify = { storeId: "acme.myshopify.com", eventKey: "orders/paid", orderId: "7" };
+    expect(commerceLoyaltyJobId(shopify)).toBe("loyalty-acme.myshopify.com-orders/paid-7");
   });
 
   test("no phone: loyalty and integrations still hear about it, WhatsApp paths do not", async () => {
@@ -245,6 +271,35 @@ describe("the order pipeline", () => {
     expect(emitIntegrationEvent).toHaveBeenCalled();
     expect(scheduleOrderSurvey).not.toHaveBeenCalled();
     expect(runOrderAutomation).not.toHaveBeenCalled();
+  });
+
+  test("a RateUp order copied into the store is RateUp's: no points, events or messages here", async () => {
+    const runOrderAutomation = vi.fn();
+    await onOrderEvent(store(provider({ runOrderAutomation })), order({ rateupWriteBack: true }));
+    expect(shopifyLoyaltyQueue.add).not.toHaveBeenCalled();
+    expect(emitIntegrationEvent).not.toHaveBeenCalled();
+    expect(scheduleOrderSurvey).not.toHaveBeenCalled();
+    expect(runOrderAutomation).not.toHaveBeenCalled();
+  });
+
+  test("a store checkout RateUp started earns its points here and nothing else", async () => {
+    const runOrderAutomation = vi.fn();
+    db.shopOrder.findFirst.mockResolvedValueOnce({ id: "rateup-1" });
+    await onOrderEvent(store(provider({ runOrderAutomation })), order());
+    expect(db.shopOrder.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { orgId: "org-1", externalProvider: "woocommerce", externalId: "901" },
+      }),
+    );
+    expect(shopifyLoyaltyQueue.add).toHaveBeenCalled();
+    expect(emitIntegrationEvent).not.toHaveBeenCalled();
+    expect(scheduleOrderSurvey).not.toHaveBeenCalled();
+    expect(runOrderAutomation).not.toHaveBeenCalled();
+  });
+
+  test("a signed RateUp checkout is recognised before its store id is recorded", async () => {
+    await onOrderEvent(store(provider()), { ...order(), rateupOrderId: "rateup-1" });
+    expect(emitIntegrationEvent).not.toHaveBeenCalled();
   });
 
   test("an order with no id cannot earn points, but is still news", async () => {

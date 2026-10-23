@@ -8,7 +8,11 @@ vi.mock("../../../utils/logger.js", () => ({
 }));
 
 import { log } from "../../../utils/logger.js";
-import { registerMetaWebhookRawBody, verifyMetaWebhookSignature } from "./metaWebhookSignature.js";
+import {
+  registerMetaWebhookRawBody,
+  signatureMode,
+  verifyMetaWebhookSignature,
+} from "./metaWebhookSignature.js";
 
 const APP_SECRET = "test-app-secret";
 const BODY = JSON.stringify({ object: "instagram", entry: [{ id: "iba-1" }] });
@@ -80,9 +84,41 @@ describe("verifyMetaWebhookSignature - enforce", () => {
   });
 });
 
-// The default, so switching it on cannot silently drop real traffic signed with a
-// secret this deployment does not have.
-describe("verifyMetaWebhookSignature - log (default)", () => {
+describe("verifyMetaWebhookSignature - default", () => {
+  test.each([
+    ["unset", undefined],
+    ["empty", ""],
+    ["a typo", "enforced"],
+  ])("enforces when the mode is %s", async (_name, mode) => {
+    if (mode !== undefined) process.env.META_WEBHOOK_SIGNATURES = mode;
+    const { server, handler } = await webhookServer();
+
+    const unsigned = await deliver(server);
+    const signed = await deliver(server, sign(BODY));
+
+    expect(unsigned.statusCode).toBe(401);
+    expect(signed.statusCode).toBe(200);
+    expect(handler).toHaveBeenCalledOnce();
+  });
+
+  test("refuses everything when the app secret is missing", async () => {
+    delete process.env.waclient_secret;
+    const { server, handler } = await webhookServer();
+
+    const res = await deliver(server, sign(BODY));
+
+    expect(res.statusCode).toBe(401);
+    expect(handler).not.toHaveBeenCalled();
+  });
+});
+
+// The rollback: deliveries signed with a secret this deployment does not have
+// still get processed, with a warning to go and find out why.
+describe("verifyMetaWebhookSignature - log", () => {
+  beforeEach(() => {
+    process.env.META_WEBHOOK_SIGNATURES = "log";
+  });
+
   test("still processes an unsigned delivery, but reports it", async () => {
     const { server, handler } = await webhookServer();
 
@@ -114,5 +150,27 @@ describe("verifyMetaWebhookSignature - off", () => {
 
     expect(handler).toHaveBeenCalledOnce();
     expect(log.warn).not.toHaveBeenCalled();
+  });
+});
+
+describe("signatureMode", () => {
+  test("off is honoured only in a development runtime", () => {
+    expect(signatureMode({ META_WEBHOOK_SIGNATURES: "off", NODE_ENV: "development" })).toBe("off");
+    expect(signatureMode({ META_WEBHOOK_SIGNATURES: "off", RAILWAY_ENVIRONMENT_NAME: "dev" })).toBe(
+      "off",
+    );
+  });
+
+  test("off enforces in production, where NODE_ENV is unset", () => {
+    expect(signatureMode({ META_WEBHOOK_SIGNATURES: "off" })).toBe("enforce");
+    expect(
+      signatureMode({ META_WEBHOOK_SIGNATURES: "off", RAILWAY_ENVIRONMENT_NAME: "production" }),
+    ).toBe("enforce");
+  });
+
+  test("log stays available as the rollback; anything else enforces", () => {
+    expect(signatureMode({ META_WEBHOOK_SIGNATURES: "log" })).toBe("log");
+    expect(signatureMode({ META_WEBHOOK_SIGNATURES: "of" })).toBe("enforce");
+    expect(signatureMode({})).toBe("enforce");
   });
 });

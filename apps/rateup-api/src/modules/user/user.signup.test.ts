@@ -22,6 +22,9 @@ vi.mock("../subscription/subscription.service.js", () => ({
   createFreePlanSubscription: vi.fn(),
 }));
 vi.mock("../survey/survey.service.js", () => ({ cloneSurvey: vi.fn() }));
+// The real queue writes to the local Redis, and a running bullmq worker then emails every
+// "Acme" signup in this file to ROOT_ORG_MAIL_ID.
+vi.mock("../../workers/bullmq/queues/index.js", () => ({ notificationQueue: { add: vi.fn() } }));
 vi.mock("../referrals/referrals.service.js", () => ({ updateReferral: vi.fn() }));
 vi.mock("../../utils/hubspot.js", () => ({
   createHubSpotCompany: vi.fn(),
@@ -320,5 +323,42 @@ describe("createUserSignup - failures", () => {
     createCompanyMock.mockRejectedValue(new Error("hubspot down"));
 
     await expect(createUserSignup(signupInput())).rejects.toThrow("hubspot down");
+  });
+});
+
+describe("createUserSignup - the new-signup alert", () => {
+  test("is queued for the RateUp team, not sent from the request", async () => {
+    const { notificationQueue } = await import("../../workers/bullmq/queues/index.js");
+    await createUserSignup(signupInput());
+    expect(notificationQueue.add).toHaveBeenCalledWith(
+      "notification",
+      expect.objectContaining({
+        emailData: expect.objectContaining({ subject: "New RateUp SignUp: Acme" }),
+      }),
+    );
+  });
+});
+
+describe("createUserSignup - business asked after signup", () => {
+  test("without an org name, uses a placeholder and leaves the profile to complete", async () => {
+    await createUserSignup(signupInput({ name: "Sam Lee", orgName: undefined }));
+
+    const data = tx.org.create.mock.calls[0][0].data;
+    expect(data.name).toBe("Sam's business");
+    expect(data.profileCompletedAt).toBeNull();
+  });
+
+  test("without an org name, holds the signup alert and HubSpot company for that step", async () => {
+    await createUserSignup(signupInput({ orgName: undefined }));
+
+    expect(createCompanyMock).not.toHaveBeenCalled();
+    expect(createContactMock).not.toHaveBeenCalled();
+  });
+
+  test("with an org name, marks the profile complete at signup", async () => {
+    await createUserSignup(signupInput());
+
+    expect(tx.org.create.mock.calls[0][0].data.profileCompletedAt).toBeInstanceOf(Date);
+    expect(createCompanyMock).toHaveBeenCalledTimes(1);
   });
 });

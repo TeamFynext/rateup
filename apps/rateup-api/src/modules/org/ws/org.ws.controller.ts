@@ -1,4 +1,4 @@
-import { buildActor, loadActor } from "../../../authz/actor.js";
+import { buildActor, isUserBlocked, loadActor } from "../../../authz/actor.js";
 import { roleKeyToLegacy } from "../../../authz/roles.js";
 import { FastifyReply, FastifyRequest } from "fastify";
 import crypto from "node:crypto";
@@ -8,8 +8,8 @@ import baseRedis from "../../../utils/redisConnection.js";
 import { userStatusQueue } from "../../../workers/bullmq/queues/index.js";
 import { WebSocket } from "@fastify/websocket";
 import { getSessionWithoutRequestResponse } from "supertokens-node/recipe/session/index.js";
-import { verifyApiAccessToken } from "../../apiAccessToken/apiAccessToken.service.js";
-import { getOrgById } from "../org.services.js";
+import { authenticateWidgetKey } from "../../apiAccessToken/apiAccessToken.auth.js";
+import { scopesAllowWidget, WIDGET_KEY_REFUSED } from "../../../authz/apiKeyFeatures.js";
 import { Role } from "../../../../generated/prisma/client.js";
 // Constants for delays
 const ONLINE_DEBOUNCE_MS = 2000;
@@ -136,9 +136,21 @@ export async function handleWebSocketConnection(
   // no `role` at all, so it has to default to `main`, which is what the inbox broadcasts
   // target; the support widget sends `?role=fab`.
   const requestedSurface = request.query?.role;
-  const role =
-    requestedSurface && WS_CLIENT_SURFACES.has(requestedSurface) ? requestedSurface : "main";
   const userId = request.userId;
+  // Anything that is not a signed-in user (the widget's public key) is a `fab` socket bound to
+  // one contact, whatever it asks for: `main` hears the whole org's inbox.
+  const isUserPrincipal = !request.principal || request.principal.kind === "user";
+  const requestedContactId = request.query?.contactId;
+  if (!isUserPrincipal && !requestedContactId) {
+    connection.send(JSON.stringify({ error: "A contactId is required" }));
+    connection.close();
+    return;
+  }
+  const role = !isUserPrincipal
+    ? "fab"
+    : requestedSurface && WS_CLIENT_SURFACES.has(requestedSurface)
+      ? requestedSurface
+      : "main";
 
   if (!orgId || !browserId) {
     connection.send(JSON.stringify({ error: "Missing orgId or browserId" }));
@@ -156,7 +168,6 @@ export async function handleWebSocketConnection(
   connection.role = role;
   if (role === "main" && userId) connection.userId = userId;
   // Widget sockets name the conversation they are showing; see RoleTaggedSocket.
-  const requestedContactId = request.query?.contactId;
   if (role === "fab" && requestedContactId) connection.contactId = requestedContactId;
   activeConnections.get(orgId)!.set(socketKey, connection);
 
@@ -199,37 +210,37 @@ export async function orgWsAuthCheckHandler(_request: FastifyRequest, reply: Fas
 }
 
 /**
- * Auth for the embedded support widget's socket. `verifyApiAccessTokenHook` reads the
+ * Auth for the embedded support widget's socket. `verifyWidgetTokenHook` reads the
  * Authorization header, which a browser `new WebSocket(...)` cannot set — there is no API for
- * it — so the widget's org id and api access token arrive as query parameters instead. The
+ * it — so the widget's key arrives as a query parameter instead, and names the org itself. The
  * token is public by design: it ships inside the widget bundle on the customer's page, so it
- * proves only which org the socket belongs to, never who the visitor is. Everything that
+ * proves only which org the socket belongs to, never who the visitor is, and only a key that
+ * is full access or carries the `widget` feature is taken. Everything that
  * follows treats it that way; `contactId` scoping is what keeps one visitor out of another's
  * conversation.
  */
 export const checkWidgetToken = async (
-  request: FastifyRequest<{ Querystring: { orgId?: string; accessToken?: string } }>,
+  request: FastifyRequest<{ Querystring: { accessToken?: string } }>,
   reply: FastifyReply,
 ) => {
-  const { orgId, accessToken } = request.query ?? {};
+  const { accessToken } = request.query ?? {};
 
-  if (!orgId || !accessToken) {
-    reply.code(401).send({ message: "Not authorized" });
-    return;
-  }
-
+  let orgId: string;
   try {
-    const org = await getOrgById(orgId);
-    if (!org) {
-      reply.code(404).send({ message: "Not found" });
-      return;
-    }
-    if (!(await verifyApiAccessToken(orgId, accessToken))) {
+    const grant = await authenticateWidgetKey(accessToken);
+    if (!grant) {
       reply.code(401).send({ message: "Not authorized" });
       return;
     }
+    orgId = grant.orgId;
+    // Only a full-access key or one with the Webchat widget feature: the token is public, so
+    // a key limited to other features (contacts, campaigns…) must not be usable from a page.
+    if (!scopesAllowWidget(grant.scopes)) {
+      reply.code(403).send({ message: "Forbidden", error: WIDGET_KEY_REFUSED });
+      return;
+    }
   } catch (err) {
-    log.error({ err, orgId }, "Could not verify the widget socket token");
+    log.error({ err }, "Could not verify the widget socket token");
     reply.code(401).send({ message: "Not authorized" });
     return;
   }
@@ -272,6 +283,10 @@ export const checkMobileId = async (
     log.error("No userId found in session\n%o", request.headers);
     // This branch used to send the 401 and then carry on to read the payload
     // and set request.user on a request it had already refused.
+    reply.code(401).send({ message: "Not authorized" });
+    return;
+  }
+  if (await isUserBlocked(userId)) {
     reply.code(401).send({ message: "Not authorized" });
     return;
   }

@@ -1906,6 +1906,7 @@ export async function getTeamDetailedMetrics(
     END AS "averageResponseTimeComparedToLastWeek",
     (SELECT COUNT(DISTINCT u.id)::INTEGER
  FROM "TeamMember" tm
+ JOIN "Team" t ON t.id = tm."teamId" AND t."orgId" = ${orgId}::uuid
  JOIN "User" u 
    ON u.id = tm."userId"
   AND u."active" = true
@@ -1914,6 +1915,7 @@ export async function getTeamDetailedMetrics(
 ) AS "teamMembers",
    (SELECT COUNT(DISTINCT u.id)::INTEGER
  FROM "TeamMember" tm
+ JOIN "Team" t ON t.id = tm."teamId" AND t."orgId" = ${orgId}::uuid
  JOIN "User" u 
    ON u.id = tm."userId"
   AND u."active" = true
@@ -1943,6 +1945,8 @@ export async function getTeamDetailedMetrics(
           COUNT(DISTINCT cau."conversationId") FILTER (WHERE NOT (vc."status"::text = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]})))::INT AS "staffActiveChats",
           COUNT(DISTINCT wm.id)::INT AS "messagesHandled"
         FROM "TeamMember" tm
+        -- The roster is the caller's org's team only; a foreign team id yields no members.
+        JOIN "Team" t ON t.id = tm."teamId" AND t."orgId" = ${orgId}::uuid
         JOIN "User" u ON u.id = tm."userId"
         AND u."active" = true
         AND u."deletedAt" IS NULL

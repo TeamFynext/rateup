@@ -24,7 +24,14 @@ vi.mock("../../utils/prisma.js", () => ({
     contactLabelMap: { createMany: vi.fn(), deleteMany: vi.fn() },
     contactGroupMap: { createMany: vi.fn(), deleteMany: vi.fn() },
     contactCustomFieldValue: { createMany: vi.fn(), deleteMany: vi.fn() },
-    contactCustomField: { findMany: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
+    contactCustomField: {
+      findMany: vi.fn(),
+      count: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    },
+    contactLabel: { count: vi.fn() },
     waInboxAssign: { createMany: vi.fn(), deleteMany: vi.fn() },
     lifecycle: { findFirst: vi.fn(), findUnique: vi.fn() },
     conversation: { findMany: vi.fn(), updateMany: vi.fn() },
@@ -97,6 +104,8 @@ vi.mock("./conversation/conversation.service.js", () => ({
 vi.mock("../whatsapp/automatedReply/wa_automatedReply.utils.js", () => ({
   checkAndExecuteRuleByTriggerEvent: vi.fn(),
   resolveContactChannel: vi.fn(async () => ({ platform: "ALL" })),
+  ruleRecipient: (contact: { phone?: string | null; psid?: string | null }, platform: string) =>
+    platform === "FACEBOOK" ? (contact.psid ?? contact.phone) : contact.phone,
 }));
 
 vi.mock("../../workers/bullmq/queues/index.js", () => ({
@@ -181,6 +190,7 @@ type Mock = ReturnType<typeof vi.fn>;
 const db = prisma as unknown as {
   contact: Record<string, Mock>;
   contactLabelMap: Record<string, Mock>;
+  contactLabel: Record<string, Mock>;
   contactGroupMap: Record<string, Mock>;
   contactCustomFieldValue: Record<string, Mock>;
   contactCustomField: Record<string, Mock>;
@@ -257,6 +267,10 @@ beforeEach(() => {
   // mock is re-armed here so one test's leftovers cannot reach the next.
   db.$transaction.mockImplementation(runTransaction);
   db.$queryRaw.mockResolvedValue([]);
+  // Every lifecycle, label and custom field a test names is the org's own unless it says not.
+  db.lifecycle.findFirst.mockResolvedValue({ id: "lifecycle" });
+  db.contactLabel.count.mockImplementation(async (args: any) => args.where.id.in.length);
+  db.contactCustomField.count.mockImplementation(async (args: any) => args.where.id.in.length);
   db.contact.create.mockResolvedValue({ id: "c1", orgId: ORG, phone: "919000000001" });
   db.contact.createManyAndReturn.mockResolvedValue([]);
   db.contact.findFirst.mockResolvedValue(null);
@@ -1269,8 +1283,12 @@ describe("updateContactById", () => {
     expect(incrementInboxStat).toHaveBeenCalledWith(ORG, "totalCount", 1);
   });
 
+  // The inbox's Close button stores RESOLVED and "close as unresolved" UNRESOLVED; both
+  // are a close as far as "chat closed" rules go.
   test.each([
     [WaMessageAssignStatus.CLOSED, "CHAT_CLOSED"],
+    [WaMessageAssignStatus.RESOLVED, "CHAT_CLOSED"],
+    [WaMessageAssignStatus.UNRESOLVED, "CHAT_CLOSED"],
     [WaMessageAssignStatus.ASSIGNED, "CHAT_ASSIGNED"],
   ])("a %s update runs the %s automation", async (status, event) => {
     db.contact.update.mockResolvedValue(updated({ waMessageAssignStatus: status }));
@@ -1312,6 +1330,35 @@ describe("updateContactById", () => {
       phone: "919000000001",
       platform: "INSTAGRAM",
       phoneNumberId: "iba-1",
+    });
+  });
+
+  // A Messenger contact has no phone; with it, the rule had nobody to act on and a
+  // chatbot set to start on close never did.
+  test("closing a Messenger chat runs its rules on the contact's psid", async () => {
+    db.contact.update.mockResolvedValue(
+      updated({ waMessageAssignStatus: WaMessageAssignStatus.CLOSED, phone: null, psid: "psid-1" }),
+    );
+    const { checkAndExecuteRuleByTriggerEvent, resolveContactChannel } =
+      await import("../whatsapp/automatedReply/wa_automatedReply.utils.js");
+    (resolveContactChannel as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      platform: "FACEBOOK",
+      phoneNumberId: "page-1",
+    });
+
+    await updateContactById(
+      "c1",
+      ORG,
+      { waMessageAssignStatus: WaMessageAssignStatus.CLOSED } as any,
+      USER,
+      existing,
+    );
+
+    expect(checkAndExecuteRuleByTriggerEvent).toHaveBeenCalledWith("CHAT_CLOSED", {
+      orgId: ORG,
+      phone: "psid-1",
+      platform: "FACEBOOK",
+      phoneNumberId: "page-1",
     });
   });
 
@@ -1919,5 +1966,47 @@ describe("bulkUpdateWaMessageAssignStatus", () => {
     expect(
       await bulkUpdateWaMessageAssignStatus(["c1"], ORG, WaMessageAssignStatus.CLOSED, USER),
     ).toEqual([before]);
+  });
+});
+
+describe("a contact's references must be its org's own (PART-2 / MSG-13)", () => {
+  test("another org's lifecycle stage is refused on create, update and the lifecycle route", async () => {
+    db.lifecycle.findFirst.mockResolvedValue(null);
+
+    await expect(
+      createContact({ orgId: ORG, phone: "919000000001", lifecycleId: "lc-other" } as any),
+    ).rejects.toThrow("Lifecycle lc-other not found");
+    await expect(
+      updateContactById("c-1", ORG, { lifecycleId: "lc-other" } as any, undefined, {
+        id: "c-1",
+        orgId: ORG,
+      } as any),
+    ).rejects.toThrow("Lifecycle lc-other not found");
+    await expect(updateContactLabelsById("c-1", ORG, "lc-other")).rejects.toThrow();
+    expect(db.lifecycle.findFirst.mock.calls[0][0].where).toEqual({ id: "lc-other", orgId: ORG });
+    expect(db.contact.create).not.toHaveBeenCalled();
+    expect(db.contact.update).not.toHaveBeenCalled();
+  });
+
+  test("another org's labels or custom fields are refused before anything is written", async () => {
+    db.contactLabel.count.mockResolvedValueOnce(0);
+    await expect(
+      updateContactById("c-1", ORG, { labels: ["label-other"] } as any, undefined, {
+        id: "c-1",
+        orgId: ORG,
+      } as any),
+    ).rejects.toThrow("Label not found");
+
+    db.contactCustomField.count.mockResolvedValueOnce(0);
+    await expect(
+      updateContactById(
+        "c-1",
+        ORG,
+        { customFields: [{ id: "field-other", value: "x" }] } as any,
+        undefined,
+        { id: "c-1", orgId: ORG } as any,
+      ),
+    ).rejects.toThrow("Custom field not found");
+    expect(db.contactLabelMap.deleteMany).not.toHaveBeenCalled();
   });
 });

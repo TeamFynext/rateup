@@ -1,8 +1,11 @@
+import { randomUUID } from "node:crypto";
+
 import { buildActor } from "../../../../authz/actor.js";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { log } from "../../../../utils/logger.js";
+import { assertPublicUrl } from "../../../../utils/ssrf.js";
 import { getIntegrationByName, updateIntegrationByName } from "../../integrations.service.js";
-import { IntegratedApps, WaMessageAssignStatus } from "../../../../types/enums.js";
+import { IntegratedApps } from "../../../../types/enums.js";
 import { ByOrgIdParams } from "../../../org/org.schema.js";
 import bcrypt from "bcrypt";
 import { Role } from "../../../../../generated/prisma/client.js";
@@ -35,7 +38,11 @@ import {
   PageSchema,
   SendMessageSchema,
   TriggerSubscriptionBodySchema,
+  ZapierCreateContactSchema,
+  ZapierUpdateContactSchema,
 } from "./zapier.schema.js";
+import { createContactHandler as createContact } from "../../../contact/contact.controller.js";
+import { findForeignContactRef } from "../../../../external/v1/contacts/contactRefs.js";
 
 export async function zapierAuthenticationHandler(
   request: FastifyRequest<{ Querystring: ByOrgIdParams }>,
@@ -51,7 +58,8 @@ export async function zapierAuthenticationHandler(
     }
     const authHeader = request.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      log.error("No bearer token found in headers\n%o", request.headers);
+      // Never log the headers: they carry the API key.
+      log.warn({ url: request.url }, "Zapier request without a bearer token");
       reply.code(400).send({
         message: "Invalid request",
         error: "No bearer token found in headers",
@@ -60,7 +68,7 @@ export async function zapierAuthenticationHandler(
     }
     const apiKey = authHeader.split("Bearer ")[1];
     if (!apiKey) {
-      log.error("No API Key found in headers\n%o", request.headers);
+      log.warn({ url: request.url }, "Zapier request with an empty bearer token");
       reply.code(401).send({
         message: "Not authorized",
         error: "No API Key found in headers",
@@ -85,7 +93,7 @@ export async function zapierAuthenticationHandler(
     const isValid = await bcrypt.compare(apiKey, integration.credential?.accessToken);
 
     if (!isValid) {
-      log.error("Invalid access token\n%o", request.headers);
+      log.warn({ orgId }, "Zapier request with an invalid API key");
       reply.code(401).send({ message: "Not authorized", error: "Invalid access token" });
       return;
     }
@@ -127,9 +135,16 @@ export async function subscribeTriggerHandler(
   reply: FastifyReply,
 ) {
   try {
-    log.info("zapier trigger subscription received with body => %o", request.body);
     const { orgId } = request.query;
     const { hookUrl, subscribed_field, zapId } = request.body;
+    // The hook URL is a capability URL: anyone holding it can post into the Zap.
+    log.info({ orgId, subscribed_field, zapId }, "zapier trigger subscription received");
+    try {
+      await assertPublicUrl(hookUrl);
+    } catch (error) {
+      log.warn({ orgId, err: error }, "zapier trigger subscription with a non-public hook URL");
+      return reply.code(400).send({ error: "hookUrl must be a public https URL" });
+    }
     const integration = (await getIntegrationByName(
       orgId,
       IntegratedApps.zapier,
@@ -160,6 +175,7 @@ export async function subscribeTriggerHandler(
       }
     } else {
       triggerSubscriptions.push({
+        id: randomUUID(),
         ...newTrigger,
         createdAt: hookReceivedAt,
         updatedAt: hookReceivedAt,
@@ -183,8 +199,8 @@ export async function unsubscribeTriggerHandler(
   reply: FastifyReply,
 ) {
   try {
-    log.info({ body: request.body }, "zapier trigger subscription removal received with body");
     const { orgId } = request.query;
+    log.info({ orgId }, "zapier trigger subscription removal received");
     const integration = (await getIntegrationByName(
       orgId,
       IntegratedApps.zapier,
@@ -214,9 +230,14 @@ export async function updateContactLabelsByIdHandler(
   reply: FastifyReply,
 ) {
   try {
+    const problem = await findForeignContactRef(request.user.orgId, [
+      { lifecycleId: request.body.lifecycleId },
+    ]);
+    if (problem) return reply.code(400).send({ error: problem });
+    // The org is the one the API key was checked against; a body `orgId` is ignored.
     const contact = await updateContactLabelsById(
       request.body.contactId,
-      request.body.orgId,
+      request.user.orgId,
       request.body?.lifecycleId,
     );
     return reply.code(201).send({
@@ -246,15 +267,32 @@ export async function getSampleDataForTriggerHandler(
   }
 }
 
+/**
+ * The dashboard's create, behind the check v1 runs (`contactRefs.ts`): the contact services
+ * write label, group, lifecycle, custom field and member ids as given, so a request naming
+ * another org's is refused. The update, lifecycle and group handlers below check the same.
+ */
+export async function createContactHandler(
+  request: FastifyRequest<{ Body: ZapierCreateContactSchema }>,
+  reply: FastifyReply,
+) {
+  const problem = await findForeignContactRef(request.user.orgId, [request.body]);
+  if (problem) return reply.code(400).send({ error: problem });
+  return createContact(request as never, reply);
+}
+
 export async function updateContactHandler(
   request: FastifyRequest<{
-    Body: { contactId: string; orgId: string; waMessageAssignStatus: WaMessageAssignStatus };
+    Body: ZapierUpdateContactSchema;
   }>,
   reply: FastifyReply,
 ) {
   try {
-    const { contactId, orgId, ...rest } = request.body;
-    const data = await updateContactById(contactId, orgId, rest);
+    // The org is the one the API key was checked against; a body `orgId` is ignored.
+    const { contactId, orgId: _ignored, ...rest } = request.body;
+    const problem = await findForeignContactRef(request.user.orgId, [rest]);
+    if (problem) return reply.code(400).send({ error: problem });
+    const data = await updateContactById(contactId, request.user.orgId, rest);
     reply.send(data);
   } catch (e) {
     log.error(e);
@@ -356,6 +394,8 @@ export async function addContactToGroupHandler(
 ) {
   try {
     const { orgId } = request.query;
+    const problem = await findForeignContactRef(orgId, request.body.contacts);
+    if (problem) return reply.code(400).send({ error: problem });
     await addNewContactsToGroup(request.body.groupId, request.body.contacts, orgId);
     reply.send({ success: true });
   } catch (e) {

@@ -28,7 +28,17 @@ export const PAGE_SUBSCRIBED_FIELDS = [
   "messaging_postbacks",
   "message_reads",
   "message_reactions",
+  // m.me links opened in an existing thread (MESSENGER_REFERRAL). Pages connected
+  // before it was added need `npm run messenger:resubscribe-pages`.
+  "messaging_referrals",
 ];
+
+/**
+ * Page comments (FACEBOOK_COMMENT). Kept apart: Meta only grants `feed` to a connection
+ * with pages_read_engagement and pages_manage_metadata, and a refused field fails the whole
+ * subscription, so a Page without them must still get its messages.
+ */
+export const PAGE_COMMENT_FIELDS = ["feed"];
 
 type ChannelWithMeta = Channel & { meta: MetaChannelSettings | null };
 
@@ -165,12 +175,27 @@ export async function deleteMetaChannel(id: string, orgId: string) {
   });
 }
 
+/**
+ * Subscribes the Page to RateUp's webhooks: messages always, comments when the connection
+ * allows them. Each call sets the app's fields outright, so the fallback resends the
+ * message fields alone rather than adding to what was refused.
+ */
 export async function subscribePageToApp(pageId: string, pageAccessToken: string) {
-  await callMetaApi(
-    `/${pageId}/subscribed_apps?subscribed_fields=${PAGE_SUBSCRIBED_FIELDS.join(",")}`,
-    "POST",
-    pageAccessToken,
-  );
+  const subscribe = (fields: string[]) =>
+    callMetaApi(
+      `/${pageId}/subscribed_apps?subscribed_fields=${fields.join(",")}`,
+      "POST",
+      pageAccessToken,
+    );
+  try {
+    await subscribe([...PAGE_SUBSCRIBED_FIELDS, ...PAGE_COMMENT_FIELDS]);
+  } catch (error) {
+    log.warn(
+      { err: error, pageId },
+      "Page refused comment events; subscribing to messages only (Facebook comment rules will not run)",
+    );
+    await subscribe(PAGE_SUBSCRIBED_FIELDS);
+  }
 }
 
 export interface InstagramAccountProfile {

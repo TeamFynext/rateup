@@ -18,11 +18,11 @@ vi.mock("../../../utils/prisma.js", () => ({
     metaAgentConnectorTool: { findMany: vi.fn() },
   },
 }));
-vi.mock("../../../external/v1/loyalty/guards.js", () => ({
+vi.mock("../../../external/v2/loyalty/guards.js", () => ({
   requireLoyaltySubscription: vi.fn(async () => {}),
   loadProgram: vi.fn(async () => ({ id: "prog-1", defaultCountryCode: "IN" })),
 }));
-vi.mock("../../../external/v1/loyalty/loyalty.external.controller.js", () => ({
+vi.mock("../../../external/v2/loyalty/loyalty.controller.js", () => ({
   memberSummary: vi.fn(),
   rewardCatalogue: vi.fn(async () => []),
 }));
@@ -43,7 +43,7 @@ vi.mock("../metaAgent.service.js", () => ({
 }));
 
 import prisma from "../../../utils/prisma.js";
-import { memberSummary } from "../../../external/v1/loyalty/loyalty.external.controller.js";
+import { memberSummary } from "../../../external/v2/loyalty/loyalty.controller.js";
 import {
   executeAssignTeamAction,
   executeAttachLabelAction,

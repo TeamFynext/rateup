@@ -142,6 +142,19 @@ export interface WaReceiveMessageBody {
       };
       /** Quick-reply button tap: the label shown and the payload behind it. */
       button?: { text?: string; payload?: string };
+      /** Set on the first message from a click-to-WhatsApp ad or post. */
+      referral?: {
+        source_url?: string;
+        source_id?: string;
+        source_type?: "ad" | "post";
+        headline?: string;
+        body?: string;
+        ctwa_clid?: string;
+        media_type?: "image" | "video";
+        image_url?: string;
+        video_url?: string;
+        thumbnail_url?: string;
+      };
       /**
        * Present when the WhatsApp user deleted a message they had sent (WhatsApp
        * Business app / coexistence only). Points at the message being revoked.
@@ -420,6 +433,8 @@ export interface WaSendMessageBody {
   };
   audio?: {
     link: string;
+    /** Sent as a voice message; WhatsApp honours it for OGG/Opus only. */
+    voice?: boolean;
   };
   contacts?: {
     addresses?: {
@@ -703,3 +718,6 @@ export interface WaTemplateFetchBody {
   category: WaTemplateCategory;
   components: WaTemplateFetchComponents[];
 }
+
+/** The click-to-WhatsApp ad or post a first message came from. */
+export type WaReferral = NonNullable<WaReceiveMessageBody["messages"][number]["referral"]>;

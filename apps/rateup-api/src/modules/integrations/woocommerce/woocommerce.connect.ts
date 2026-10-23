@@ -22,12 +22,15 @@ import {
   type WooKeys,
 } from "./woocommerce.client.js";
 import {
+  DEFAULT_CHECKOUT_OPT_IN,
   readWooCredential,
   WOO_TOPICS,
   type WooAuthCallbackBody,
+  type WooCheckoutOptIn,
   type WooCredential,
   type WooWebhookRef,
 } from "./woocommerce.types.js";
+import { syncWooPluginConnection } from "./woocommerce.plugin.js";
 import { assertPublicStore, normaliseStoreUrl, WooStoreUrlError } from "./woocommerce.url.js";
 
 /**
@@ -174,7 +177,11 @@ export async function completeWooConnect(body: WooAuthCallbackBody): Promise<voi
     },
     connectedAt: new Date().toISOString(),
     // Reconnecting the same store keeps the admin's choices; another store starts over.
-    ...(previous?.storeUrl === storeUrl && { syncCustomers: previous.syncCustomers }),
+    ...(previous?.storeUrl === storeUrl && {
+      syncCustomers: previous.syncCustomers,
+      widget: previous.widget,
+      widgetKey: previous.widgetKey,
+    }),
   };
 
   const integration = await prisma.integration.upsert({
@@ -198,6 +205,15 @@ export async function completeWooConnect(body: WooAuthCallbackBody): Promise<voi
     log.warn({ err: error, orgId: state.orgId }, "WooCommerce webhooks did not all register");
     await recordIntegrationFailure(integration, "WooCommerce", error, { notifyAfter: 1 });
   }
+
+  // The RateUp plugin, when the store runs it, shows the connection in WordPress
+  // admin. Optional, so this never fails the connect.
+  await syncWooPluginConnection(integration);
+
+  const { onOnlineStoreConnected } = await import("../../commerce/shop/store.service.js");
+  await onOnlineStoreConnected(state.orgId, "WOOCOMMERCE").catch((err) =>
+    log.warn({ err, orgId: state.orgId }, "Could not show Commerce after connecting WooCommerce"),
+  );
 }
 
 /**
@@ -243,10 +259,20 @@ export async function syncWooWebhooks(integration: Integration): Promise<WooWebh
       kept.push({ topic, id: created.id });
     }
   } finally {
-    await prisma.integration.update({
-      where: { id: integration.id },
-      data: { credential: { ...credential, webhooks: kept } },
-    });
+    // Usually nothing changed (the scheduled sweep runs every 45 minutes); not
+    // writing then keeps it from racing a settings change made meanwhile.
+    const unchanged =
+      kept.length === credential.webhooks.length &&
+      kept.every(
+        (ref, i) =>
+          ref.topic === credential.webhooks[i].topic && ref.id === credential.webhooks[i].id,
+      );
+    if (!unchanged) {
+      await prisma.integration.update({
+        where: { id: integration.id },
+        data: { credential: { ...credential, webhooks: kept } },
+      });
+    }
   }
 
   return kept;
@@ -281,7 +307,12 @@ export async function getWooStatus(orgId: string) {
     store: credential.store ?? {},
     keyId: credential.keyId ?? null,
     connectedAt: credential.connectedAt,
-    settings: { syncCustomers: credential.syncCustomers ?? false },
+    settings: {
+      syncCustomers: credential.syncCustomers ?? false,
+      checkoutOptIn: credential.checkoutOptIn ?? DEFAULT_CHECKOUT_OPT_IN,
+    },
+    /** Whether RateUp reached the plugin last time it tried; null before it has tried. */
+    plugin: credential.plugin ?? null,
     webhooks: WOO_TOPICS.map((topic) => ({
       topic,
       registered: credential.webhooks.some((webhook) => webhook.topic === topic),
@@ -307,18 +338,34 @@ export async function repairWooWebhooks(orgId: string) {
 
 export interface WooSettings {
   syncCustomers?: boolean;
+  checkoutOptIn?: WooCheckoutOptIn;
 }
 
-/** The admin's switches, kept in the credential beside the connection. */
+/**
+ * The admin's switches, kept in the credential beside the connection. The
+ * checkout opt-in is shown by the plugin, so a change to it is pushed there at
+ * once; a store without the plugin is not an error — the page says to install it.
+ */
 export async function updateWooSettings(orgId: string, settings: WooSettings) {
   const integration = await prisma.integration.findUnique({ where: whereOrg(orgId) });
   const credential = integration?.active ? readWooCredential(integration.credential) : null;
   if (!integration || !credential) throw new WooConnectError("WooCommerce is not connected.", 400);
 
+  const next = { ...credential, ...settings };
   await prisma.integration.update({
     where: { id: integration.id },
-    data: { credential: { ...credential, ...settings } as never },
+    data: { credential: next as never },
   });
+
+  if (settings.checkoutOptIn) {
+    const push = await syncWooPluginConnection({ ...integration, credential: next as never });
+    if (push === "failed") {
+      throw new WooConnectError(
+        "Your setting was saved, but we couldn't reach your store. Try saving again in a moment.",
+        502,
+      );
+    }
+  }
   return getWooStatus(orgId);
 }
 

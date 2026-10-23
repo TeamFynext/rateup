@@ -23,6 +23,7 @@ import {
 } from "./whatsapp.types.js";
 import { RouteShorthandOptionsWithHandler } from "fastify";
 import type { StoredShopifySession } from "../modules/integrations/shopify/shopify.session.js";
+import type { ShopifyWidgetSettings } from "../modules/integrations/shopify/shopify.schema.js";
 import type { ThreadNote } from "../modules/whatsapp/inbox/note/note.service.js";
 import z from "zod";
 import { ZapierTriggers } from "../modules/integrations/external/zapier/zapier.types.js";
@@ -222,6 +223,8 @@ declare global {
     session: StoredShopifySession;
     isWebhookRegistered: boolean;
     shopifySurveys: ShopifySurvey[];
+    /** The storefront WhatsApp button; unset until the merchant first saves it. */
+    widget?: ShopifyWidgetSettings;
   }
 
   type ShopifyIntegration = Integration & {
@@ -305,6 +308,7 @@ declare global {
     credential: {
       accessToken: string;
       triggerSubscriptions: {
+        id?: string;
         hookUrl: string;
         subscribed_field: ZapierTriggers;
         active: boolean;
@@ -479,6 +483,8 @@ declare global {
       loyalty?: subscriptionActiveField;
       referrals?: subscriptionActiveField;
       catalog?: subscriptionActiveField;
+      /** Shop orders placed a month. Optional: subscriptions stored before it are unmetered. */
+      shopOrders?: subscriptionWithActiveAndCount;
     };
     [sfpn.AI]: subscriptionActiveField & {
       count: {
@@ -738,6 +744,8 @@ declare global {
     error_subcode?: number;
     error_data?: { details?: string };
     fbtrace_id?: string;
+    /** HTTP status of the failed response; ours, not Meta's (see `graphApiErrorDetail`). */
+    httpStatus?: number;
     [key: string]: unknown;
   }
 
@@ -1120,18 +1128,55 @@ declare global {
 
               payload?: string;
 
-              referral?: {
-                ref?: string;
-
-                source?: string;
-
-                type?: string;
-              };
+              referral?: FacebookReferral;
             };
+
+            /** Sent on its own when someone who has chatted before opens an m.me link. */
+            referral?: FacebookReferral;
           },
         ];
+
+        /** Page feed events (comments, posts, reactions); see FacebookFeedChange. */
+        changes?: FacebookFeedChange[];
       },
     ];
+  }
+
+  /** One `feed` change on a Page. RateUp acts only on a new comment. */
+  interface FacebookFeedChange {
+    field: string; // "feed"
+
+    value?: {
+      item?: string; // "comment", "post", "reaction", …
+
+      verb?: string; // "add", "edited", "remove", …
+
+      comment_id?: string;
+
+      post_id?: string;
+
+      /** The comment being answered, when this comment is a reply in a thread. */
+      parent_id?: string;
+
+      message?: string;
+
+      /** Unix seconds. */
+      created_time?: number;
+
+      /** The commenter; `id` is not their Messenger id. The Page itself when it comments. */
+      from?: { id: string; name?: string };
+
+      post?: { id?: string; permalink_url?: string };
+    };
+  }
+
+  /** Where a Messenger thread was opened from: `ref` is an m.me link's ?ref=. */
+  interface FacebookReferral {
+    ref?: string;
+
+    source?: string; // "SHORTLINK" for m.me, "ADS", …
+
+    type?: string; // "OPEN_THREAD"
   }
 
   interface FbSendMessageBody {
@@ -1258,6 +1303,15 @@ declare global {
     publicKey: string;
     privateKey: string;
     passphrase: string;
+  }
+  /**
+   * `WaEncryptionKeys` as stored in `WhatsappSettings.encryption`: AES-256-GCM encrypted JSON
+   * (WEBH-8). Read and written only through `whatsapp/encryption/flowKeysAtRest.ts`.
+   */
+  interface SealedWaEncryptionKeys {
+    v: 1;
+    iv: string;
+    enc: string;
   }
 
   interface LoyaltyActionMessage {
@@ -1453,7 +1507,8 @@ declare global {
     type PWaFlowStartMessageConfig = WaFlowStartMessageConfig;
     // Keyed by screen id — see WaFlow.logicJumps in schema.prisma.
     type PWaFlowLogicJumps = Record<string, FlowLogicJump[]>;
-    type PWaEncryptionKeys = WaEncryptionKeys;
+    // New rows hold the sealed envelope; rows written before WEBH-8 still hold the plain keys.
+    type PWaEncryptionKeys = WaEncryptionKeys | SealedWaEncryptionKeys;
     // The stored copy of a catalog row's fields, as sent to Meta. Prices come back as
     // "10.00 USD" strings, so this is Partial rather than the strict input type.
     type PWaCatalogProductProps = Partial<CatalogProductCore>;
@@ -1465,6 +1520,22 @@ declare global {
     type PWaCatalogShippingAddress = WaCatalogShippingAddress;
     type PWaCatalogOrderProduct = WaCatalogOrderProduct;
 
+    type PShopStorefrontTheme =
+      import("../modules/commerce/shop/shop.types.js").ShopStorefrontTheme;
+    type PShopBankDetails = import("../modules/commerce/shop/shop.types.js").ShopBankDetails;
+    type PShopMessageRates = import("../modules/commerce/shop/messageCost.js").MessageRates;
+    type PShopProductOptions = import("../modules/commerce/shop/shop.types.js").ShopProductOption[];
+    type PShopVariantOptionValues =
+      import("../modules/commerce/shop/shop.types.js").ShopVariantOptionValues;
+    type PShopAddress = import("../modules/commerce/shop/shop.types.js").ShopAddress;
+    type PShopSelectedShipping =
+      import("../modules/commerce/shop/shop.types.js").ShopSelectedShipping;
+    type PShopAttribution = import("../modules/commerce/shop/shop.types.js").ShopAttribution;
+    type PShopShipmentEvents = import("../modules/commerce/shop/shop.types.js").ShopShipmentEvent[];
+    type PShopReturnItems = import("../modules/commerce/shop/shop.types.js").ShopReturnItem[];
+    type PShopNotifications =
+      import("../modules/commerce/shop/shop.types.js").ShopNotificationSettings;
+
     type PMetaAgentBusinessInfo =
       import("../modules/metaAgent/metaAgent.schema.js").BusinessInfoBody;
     /** Meta's FAQ metadata is a flat string map. */
@@ -1474,27 +1545,27 @@ declare global {
     /** An OpenAPI-ish request spec Meta stores verbatim for a connector tool. */
     type PMetaAgentRequestDefinition =
       import("../modules/metaAgent/metaAgent.schema.js").RequestDefinition;
-    type PMetaAgentUserAuthInjectionConfig = {
+    interface PMetaAgentUserAuthInjectionConfig {
       location: "body" | "headers" | "path" | "query";
       field_name: string;
       prefix: string;
-    };
-    type PMetaAgentUserAuthActionConfig = {
+    }
+    interface PMetaAgentUserAuthActionConfig {
       user_action_tool_type: "auth" | "refresh";
       user_auth_token_path: string;
       refresh_token_path?: string;
       expires_at_path?: string;
       expires_at_type?: "absolute" | "relative_seconds";
-    };
+    }
     /** Meta's agent_budget list, as last read or saved. */
     type PMetaAgentBudgets = import("../modules/metaAgent/metaAgent.schema.js").AgentBudget[];
     /** Non-secret mTLS metadata Meta echoes back after a certificate upsert. */
-    type PMetaAgentMtlsConfig = {
+    interface PMetaAgentMtlsConfig {
       has_certificate: boolean;
       fingerprint?: string;
       expires_at?: number;
       subject?: string;
-    };
+    }
     /** `ApprovalRequest.requestData` — the fields specific to each request type. */
     type PApprovalRequestData = ApprovalRequestData;
     type PMetaConversionSettings = MetaConversionSettings;

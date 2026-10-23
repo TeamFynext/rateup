@@ -6,7 +6,7 @@ import prisma from "../../../utils/prisma.js";
 import { addonExpiryFrom, planMeterMax } from "../../subscription/addons.js";
 import { ADDONS } from "../../subscription/catalog.js";
 import { hasContractedCap } from "../../subscription/subscription.data.js";
-import { applyPlanToOrg } from "../../subscription/subscription.service.js";
+import { applyPlanToOrg, bustSubscriptionGate } from "../../subscription/subscription.service.js";
 import { StaffHttpError } from "../staff.errors.js";
 import { recordStaffAction } from "../staffAudit.js";
 import type {
@@ -93,7 +93,7 @@ export async function changeOrgPlan(
     );
   }
 
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const org = await loadOrg(tx, orgId);
     const before = org.Subscription ? snapshot(org.Subscription) : null;
 
@@ -114,6 +114,9 @@ export async function changeOrgPlan(
     });
     return { plan: planName(plan), expiresAt: input.expiresAt };
   });
+  // After the commit: busting inside the transaction would let a read re-cache the old row.
+  void bustSubscriptionGate(orgId);
+  return result;
 }
 
 export async function changeOrgExpiry(
@@ -121,7 +124,7 @@ export async function changeOrgExpiry(
   orgId: string,
   input: ExpiryChangeInput,
 ) {
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const org = await loadOrg(tx, orgId);
     if (!org.Subscription) throw noSubscription();
 
@@ -139,6 +142,9 @@ export async function changeOrgExpiry(
     });
     return { expiresAt: input.expiresAt };
   });
+  // After the commit: busting inside the transaction would let a read re-cache the old row.
+  void bustSubscriptionGate(orgId);
+  return result;
 }
 
 /**
@@ -150,7 +156,7 @@ export async function overrideOrgFeatures(
   orgId: string,
   input: FeatureOverrideInput,
 ) {
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const org = await loadOrg(tx, orgId);
     if (!org.Subscription) throw noSubscription();
 
@@ -173,6 +179,9 @@ export async function overrideOrgFeatures(
     });
     return { features };
   });
+  // After the commit: busting inside the transaction would let a read re-cache the old row.
+  void bustSubscriptionGate(orgId);
+  return result;
 }
 
 /** Marks a pack as granted by staff: it carries the audit row's id instead of a payment. */

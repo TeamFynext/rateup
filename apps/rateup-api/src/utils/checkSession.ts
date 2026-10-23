@@ -4,6 +4,7 @@ import Session from "supertokens-node/recipe/session/index.js";
 import { auditLogHook } from "./auditLog.js";
 import { getOrgIdAndRole } from "../modules/user/user.service.js";
 import { allowSuspendedThrough } from "../authz/authorize.js";
+import { isUserBlocked } from "../authz/actor.js";
 
 /**
  * Verifies that the session is valid and sets the userId on the request object.
@@ -23,7 +24,12 @@ export const checkSession = async (request: FastifyRequest, reply: FastifyReply)
       // letting the route handler run on an unauthenticated request.
       return;
     }
-    // TODO: verify the below works as expected
+    // A paused or removed account is refused here as in the root authorize hook.
+    if (await isUserBlocked(userId)) {
+      await session.revokeSession();
+      reply.code(401).send({ message: "This account is paused or has been removed." });
+      return;
+    }
     request.userId = userId;
     let { role, orgId, email } = session.getAccessTokenPayload();
 

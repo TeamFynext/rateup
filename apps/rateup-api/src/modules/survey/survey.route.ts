@@ -26,7 +26,11 @@ import {
   getSurveyStatsHandler,
   getNPSGraphHandler,
 } from "./survey.controller.js";
-import { verifySurveyAccess, verifySurveyCreateAccess } from "./survey.auth.js";
+import {
+  verifySurveyAccess,
+  verifySurveyTeamIds,
+  verifySurveyVariableAccess,
+} from "./survey.auth.js";
 import { SubscriptionFeaturePathName } from "../../types/enums.js";
 import { getVerifySubscriptionHandler } from "../../utils/auth.js";
 import {
@@ -41,12 +45,15 @@ import {
   updateGoogleLinkRequestSchema,
   updateSurveyPasswordRequestSchema,
   updateSurveyRequestSchema,
+  uuidParamsSchema,
 } from "./survey.schema.js";
 import { getResponsesParamsSchema } from "../response/response.schema.js";
 import { declareAccess } from "../../authz/registry.js";
 
 export async function surveyRoutes(server: FastifyInstance) {
-  declareAccess(server, { access: "session" });
+  // Reading needs surveys.read and every write surveys.manage, so a VIEWER (read-only)
+  // can no longer delete surveys or rewrite their settings.
+  declareAccess(server, { access: "session", write: "surveys.manage" });
   server.addHook(
     "preHandler",
     getVerifySubscriptionHandler([SubscriptionFeaturePathName.WebSurvey]),
@@ -56,7 +63,7 @@ export async function surveyRoutes(server: FastifyInstance) {
   server.post(
     "/",
     {
-      preHandler: [verifySurveyCreateAccess],
+      preHandler: [verifySurveyTeamIds],
       schema: {
         body: createSurveyRequestSchema,
       },
@@ -115,7 +122,7 @@ export async function surveyRoutes(server: FastifyInstance) {
   server.post(
     "/clone/:id",
     {
-      preHandler: [verifySurveyAccess],
+      preHandler: [verifySurveyAccess, verifySurveyTeamIds],
       schema: {
         params: getSurveyByIdParamsSchema,
         body: cloneSurveySchema,
@@ -179,7 +186,7 @@ export async function surveyRoutes(server: FastifyInstance) {
   server.put(
     "/:id",
     {
-      preHandler: verifySurveyAccess,
+      preHandler: [verifySurveyAccess, verifySurveyTeamIds],
       schema: {
         params: getSurveyByIdParamsSchema,
         body: updateSurveyRequestSchema,
@@ -215,6 +222,7 @@ export async function surveyRoutes(server: FastifyInstance) {
   server.post(
     "/survey-variables/:id",
     {
+      preHandler: verifySurveyAccess,
       schema: {
         params: idParamsSchema,
         body: surveyVariableSchema,
@@ -225,6 +233,7 @@ export async function surveyRoutes(server: FastifyInstance) {
   server.get(
     "/survey-variables/:id",
     {
+      preHandler: verifySurveyAccess,
       schema: {
         params: idParamsSchema,
       },
@@ -235,8 +244,9 @@ export async function surveyRoutes(server: FastifyInstance) {
   server.put(
     "/survey-variables/:id",
     {
+      preHandler: verifySurveyVariableAccess,
       schema: {
-        params: idParamsSchema,
+        params: uuidParamsSchema,
         body: surveyVariableUpdateSchema,
       },
     },
@@ -246,8 +256,9 @@ export async function surveyRoutes(server: FastifyInstance) {
   server.delete(
     "/survey-variables/:id",
     {
+      preHandler: verifySurveyVariableAccess,
       schema: {
-        params: idParamsSchema,
+        params: uuidParamsSchema,
       },
     },
     deleteSurveyVariableHandler,

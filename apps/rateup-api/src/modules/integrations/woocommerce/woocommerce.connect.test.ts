@@ -7,7 +7,12 @@ vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), warn: vi.fn(), debug: vi.fn(), trace: vi.fn() },
 }));
 vi.mock("../../../utils/prisma.js", () => ({
-  default: { integration: { findUnique: vi.fn(), upsert: vi.fn(), update: vi.fn() } },
+  default: {
+    integration: { findUnique: vi.fn(), upsert: vi.fn(), update: vi.fn() },
+    org: { findUnique: vi.fn() },
+    channel: { findFirst: vi.fn() },
+    $executeRaw: vi.fn(),
+  },
 }));
 vi.mock("../../../workers/bullmq/queues/index.js", () => ({
   integrationTriggerQueue: { add: vi.fn() },
@@ -27,6 +32,8 @@ const store = vi.hoisted(() => ({
   rejectBasic: false,
   failCreate: false,
   index: { name: "Demo Store", namespaces: ["wp/v2", "wc/v3"] } as Record<string, unknown>,
+  /** The RateUp plugin's settings group; null = the plugin is not installed. */
+  plugin: null as Record<string, string> | null,
 }));
 
 vi.mock("axios", () => {
@@ -60,6 +67,13 @@ vi.mock("axios", () => {
         if (!store.webhooks.delete(webhookId(url))) throw axiosError(404);
         return { data: {} };
       }),
+      put: vi.fn(async (url: string, body: { value: string }) => {
+        if (!authed) throw axiosError(401);
+        // WooCommerce: an unregistered settings group is a 404.
+        if (url !== "/settings/rateup/rateup_data" || !store.plugin) throw axiosError(404);
+        store.plugin.rateup_data = body.value;
+        return { data: { id: "rateup_data", value: body.value } };
+      }),
     };
   };
 
@@ -85,6 +99,7 @@ import {
   WooConnectError,
 } from "./woocommerce.connect.js";
 import { handleWooInbound, isValidWooSignature } from "./woocommerce.inbound.js";
+import { pushWooPluginData } from "./woocommerce.plugin.js";
 import { WOO_TOPICS, type WooCredential } from "./woocommerce.types.js";
 import { assertPublicStore, normaliseStoreUrl, WooStoreUrlError } from "./woocommerce.url.js";
 
@@ -107,7 +122,9 @@ beforeEach(() => {
   store.rejectBasic = false;
   store.failCreate = false;
   store.index = { name: "Demo Store", namespaces: ["wp/v2", "wc/v3"] };
+  store.plugin = null;
   db.findUnique.mockResolvedValue(null);
+  (prisma.org.findUnique as Mock).mockResolvedValue({ name: "Abhi's Store & Co" });
   db.upsert.mockImplementation(async (args: { create: { credential: unknown } }) => ({
     id: "int-1",
     orgId: "org-1",
@@ -291,7 +308,9 @@ describe("the key WooCommerce sends back", () => {
       expect.anything(),
       { notifyAfter: 1 },
     );
-    expect(savedCredential()?.webhooks).toEqual([]);
+    // The connect saved no webhooks, and nothing registered since, so none are stored.
+    const stored = savedCredential() ?? db.upsert.mock.calls[0][0].create.credential;
+    expect(stored.webhooks).toEqual([]);
   });
 });
 
@@ -334,6 +353,156 @@ describe("keeping webhooks registered", () => {
     expect(refs.find((ref) => ref.topic === "order.updated")?.id).not.toBe(2);
     expect(store.webhooks.has(2)).toBe(false);
     expect(refs).toHaveLength(WOO_TOPICS.length);
+    expect(savedCredential()?.webhooks).toEqual(refs);
+  });
+
+  test("writes nothing when every webhook is still healthy", async () => {
+    const refs = WOO_TOPICS.map((topic, i) => ({ topic, id: i + 1 }));
+    for (const ref of refs) {
+      store.webhooks.set(ref.id, { ...ref, status: "active", delivery_url: DELIVERY_URL });
+    }
+
+    await syncWooWebhooks(integration(refs));
+
+    expect(db.update).not.toHaveBeenCalled();
+  });
+
+  test("the scheduled sweep brings back a webhook WooCommerce disabled", async () => {
+    const refs = WOO_TOPICS.map((topic, i) => ({ topic, id: i + 1 }));
+    for (const ref of refs) {
+      store.webhooks.set(ref.id, { ...ref, status: "active", delivery_url: DELIVERY_URL });
+    }
+    store.webhooks.set(2, { ...refs[1], status: "disabled", delivery_url: DELIVERY_URL });
+
+    const { wooCommerceProvider } = await import("./woocommerce.provider.js");
+    await wooCommerceProvider.refreshCredential?.(integration(refs));
+
+    const replaced = savedCredential()?.webhooks.find((ref) => ref.topic === refs[1].topic);
+    expect(replaced?.id).not.toBe(2);
+    expect(store.webhooks.get(replaced!.id)).toMatchObject({
+      status: "active",
+      delivery_url: DELIVERY_URL,
+    });
+  });
+});
+
+describe("the RateUp plugin", () => {
+  /** What the plugin would decode from its `rateup_data` setting. */
+  const pluginData = () =>
+    JSON.parse(Buffer.from(store.plugin?.rateup_data ?? "", "base64").toString("utf8"));
+
+  const connectedIntegration = () =>
+    ({
+      id: "int-1",
+      orgId: "org-1",
+      name: "woocommerce",
+      active: true,
+      credential: {
+        storeUrl: STORE,
+        consumerKey: "ck",
+        consumerSecret: "cs",
+        webhookSecret: "secret",
+        webhooks: [],
+        connectedAt: "2026-10-17T06:00:00.000Z",
+      },
+    }) as never;
+
+  test("a connect tells an installed plugin which org it belongs to", async () => {
+    store.plugin = {};
+
+    await completeWooConnect(callback());
+
+    expect(pluginData()).toEqual({
+      v: 1,
+      connected: true,
+      // Sent as base64 because WordPress would mangle "&" and quotes in plain text.
+      orgName: "Abhi's Store & Co",
+      dashboardUrl: "https://app.test.example/dashboard/settings/integrations/woocommerce",
+      connectedAt: expect.any(String),
+    });
+  });
+
+  test("a store without the plugin connects exactly as before", async () => {
+    await expect(completeWooConnect(callback())).resolves.toBeUndefined();
+
+    expect(recordIntegrationFailure).not.toHaveBeenCalled();
+    expect(savedCredential()?.webhooks).toHaveLength(WOO_TOPICS.length);
+  });
+
+  test("the scheduled sweep catches up a plugin installed after the connect", async () => {
+    const { wooCommerceProvider } = await import("./woocommerce.provider.js");
+    store.plugin = {};
+
+    await wooCommerceProvider.refreshCredential?.(connectedIntegration());
+
+    expect(pluginData()).toMatchObject({ connected: true, orgName: "Abhi's Store & Co" });
+  });
+
+  test("a disconnect sets the plugin back to not connected", async () => {
+    const { wooCommerceProvider } = await import("./woocommerce.provider.js");
+    store.plugin = {};
+
+    await wooCommerceProvider.disconnect?.(connectedIntegration());
+
+    expect(pluginData()).toEqual({ v: 1, connected: false });
+  });
+
+  test("the WhatsApp button travels with the connection, with its number and tap key", async () => {
+    const { wooCommerceProvider } = await import("./woocommerce.provider.js");
+    store.plugin = {};
+    (prisma.channel.findFirst as Mock).mockResolvedValue({
+      status: "ACTIVE",
+      whatsapp: { phone: "+91 98765 43210", status: "ACTIVE" },
+    });
+    const integration = connectedIntegration() as { credential: Record<string, unknown> };
+    integration.credential.widget = {
+      enabled: true,
+      channelId: "22222222-2222-4222-8222-222222222222",
+      buttonLabel: "Chat & ask",
+      greeting: "Hi!",
+      prefill: "Hello",
+      productPrefill: "About {product}: {url}",
+      color: "#25D366",
+      position: "left",
+      offsetY: 20,
+      showOn: ["product", "cart"],
+      hideOnMobile: false,
+    };
+    integration.credential.widgetKey = "AbCdEfGhIjKlMnOpQrStUv";
+
+    await wooCommerceProvider.refreshCredential?.(integration as never);
+
+    const { widget } = pluginData();
+    expect(widget).toMatchObject({
+      enabled: true,
+      phone: "919876543210",
+      buttonLabel: "Chat & ask",
+      showOn: ["product", "cart"],
+      key: "AbCdEfGhIjKlMnOpQrStUv",
+      eventUrl: expect.stringMatching(/\/api\/public\/integrations\/woocommerce\/widget\/event$/),
+    });
+    // The internal channel id never reaches the storefront.
+    expect(widget).not.toHaveProperty("channelId");
+  });
+
+  test("whether the plugin answered is remembered for the settings page", async () => {
+    const { wooCommerceProvider } = await import("./woocommerce.provider.js");
+
+    await wooCommerceProvider.refreshCredential?.(connectedIntegration());
+
+    const [, state] = (prisma.$executeRaw as Mock).mock.calls.at(-1) as [unknown, string];
+    expect(JSON.parse(state)).toMatchObject({ installed: false });
+  });
+
+  test("a store that will not answer is reported, never thrown", async () => {
+    const put = vi.fn(async () => {
+      throw Object.assign(new Error("HTTP 500"), { isAxiosError: true, response: { status: 500 } });
+    });
+    const credential = { storeUrl: STORE, consumerKey: "ck", consumerSecret: "cs" };
+
+    await expect(
+      pushWooPluginData(credential, { v: 1, connected: false }, { put } as never),
+    ).resolves.toBe("failed");
   });
 });
 
@@ -358,9 +527,13 @@ describe("the settings page's view", () => {
     const status = await getWooStatus("org-1");
 
     expect(status).toMatchObject({ connected: true, storeUrl: STORE });
-    expect(JSON.stringify(status)).not.toMatch(/ck|cs|secret/);
+    // The keys' values, quoted: "ck" alone would match "checkoutOptIn".
+    expect(JSON.stringify(status)).not.toMatch(/"ck"|"cs"|secret/);
     if (status.connected) {
-      expect(status.settings).toEqual({ syncCustomers: false });
+      expect(status.settings).toEqual({
+        syncCustomers: false,
+        checkoutOptIn: { enabled: false, label: "Send me offers on WhatsApp" },
+      });
       expect(status.webhooks.filter((hook) => hook.registered).map((hook) => hook.topic)).toEqual([
         "order.created",
       ]);
@@ -395,6 +568,64 @@ describe("the admin's settings", () => {
     await expect(updateWooSettings("org-1", { syncCustomers: true })).rejects.toThrow(
       WooConnectError,
     );
+  });
+
+  describe("the checkout opt-in", () => {
+    const withOrg = { ...connected, orgId: "org-1", name: "woocommerce" };
+    const optIn = { enabled: true, label: "WhatsApp me offers" };
+    const pluginData = () =>
+      JSON.parse(Buffer.from(store.plugin?.rateup_data ?? "", "base64").toString("utf8"));
+
+    test("is off, with the default wording, until the admin saves it", async () => {
+      db.findUnique.mockResolvedValue(withOrg);
+
+      expect(await getWooStatus("org-1")).toMatchObject({
+        settings: {
+          syncCustomers: false,
+          checkoutOptIn: { enabled: false, label: "Send me offers on WhatsApp" },
+        },
+        plugin: null,
+      });
+    });
+
+    test("saving it reaches the plugin at once", async () => {
+      db.findUnique.mockResolvedValue(withOrg);
+      store.plugin = {};
+
+      await updateWooSettings("org-1", { checkoutOptIn: optIn });
+
+      expect(savedCredential()).toEqual({ ...connected.credential, checkoutOptIn: optIn });
+      expect(pluginData()).toMatchObject({ connected: true, checkoutOptIn: optIn });
+    });
+
+    test("a store without the plugin still saves it: the page says to install the plugin", async () => {
+      db.findUnique.mockResolvedValue(withOrg);
+
+      await expect(updateWooSettings("org-1", { checkoutOptIn: optIn })).resolves.toMatchObject({
+        connected: true,
+      });
+      expect(savedCredential()).toMatchObject({ checkoutOptIn: optIn });
+    });
+
+    test("a store that cannot be reached is an error the admin sees, after saving", async () => {
+      db.findUnique.mockResolvedValue(withOrg);
+      store.plugin = {};
+      store.rejectBasic = true;
+
+      await expect(updateWooSettings("org-1", { checkoutOptIn: optIn })).rejects.toMatchObject({
+        statusCode: 502,
+      });
+      expect(savedCredential()).toMatchObject({ checkoutOptIn: optIn });
+    });
+
+    test("switching customer sync leaves the plugin alone", async () => {
+      db.findUnique.mockResolvedValue(withOrg);
+      store.plugin = {};
+
+      await updateWooSettings("org-1", { syncCustomers: true });
+
+      expect(store.plugin).toEqual({});
+    });
   });
 });
 

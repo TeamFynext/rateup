@@ -15,6 +15,7 @@ import { log } from "../../utils/logger.js";
 import dayjs from "dayjs";
 import { getCampaignCreditBudget } from "../subscription/campaignCredits.js";
 import { getFlowBySurveyId } from "../whatsapp/flows/flow.service.js";
+import { getDbTemplate } from "../whatsapp/messageTemplates/wa_templates.service.js";
 import { SpreadsheetExportFormat } from "../../utils/spreadsheet.js";
 import { write } from "hucre";
 
@@ -95,8 +96,9 @@ export async function getCampaignById(campaignId: string, orgId: string) {
           WHERE cp."campaignId" = c.id
         ) as "campaignParticipantsCount"
       FROM "Campaign" c
-      LEFT JOIN "WaTemplate" wt ON wt.id = c."waTemplateId"
       LEFT JOIN "Team" t ON t.id = c."teamId"
+      -- Only the org's own template; a foreign id stored on a campaign reads as none.
+      LEFT JOIN "WaTemplate" wt ON wt.id = c."waTemplateId" AND wt."orgId" = t."orgId"
       LEFT JOIN "WaFlow" wf ON wf."dbFlowId" = NULLIF(c."flowId",'')::uuid
       WHERE c.id = ${campaignId}::uuid
         AND t."orgId" = ${orgId}::uuid`;
@@ -170,7 +172,7 @@ export async function getCampaignsByOrgId(orgId: string, type?: string) {
     p."pending" AS "activePending"
   FROM "Campaign" c
   LEFT JOIN "Team" t ON c."teamId" = t.id
-  LEFT JOIN "WaTemplate" wt ON wt.id = c."waTemplateId"
+  LEFT JOIN "WaTemplate" wt ON wt.id = c."waTemplateId" AND wt."orgId" = t."orgId"
   LEFT JOIN "CampaignStats" s ON s."campaignId" = c.id
   LEFT JOIN LATERAL (
     SELECT
@@ -186,6 +188,27 @@ export async function getCampaignsByOrgId(orgId: string, type?: string) {
   return campaigns;
 }
 
+/**
+ * Every template a campaign names — its own and each drip stage's — has to be one of the
+ * org's. The send path and the campaign read both join on the id, so a foreign id would
+ * otherwise read another org's template JSON (body, header media handle).
+ */
+async function assertTemplatesInOrg(
+  orgId: string,
+  waTemplateId: string | null | undefined,
+  dripStages: Array<{ templateId?: string | null }> | null | undefined,
+) {
+  const ids = new Set<string>();
+  if (waTemplateId) ids.add(waTemplateId);
+  for (const stage of dripStages ?? []) if (stage.templateId) ids.add(stage.templateId);
+
+  for (const id of ids) {
+    if (!(await getDbTemplate(id, orgId))) {
+      throw new CampaignNotFoundError("Template not found");
+    }
+  }
+}
+
 export async function createCampaign(data: CreateCampaignInput, orgId: string, actor: Actor) {
   const team = await prisma.team.findFirst({
     where: { id: data.teamId, orgId },
@@ -193,6 +216,7 @@ export async function createCampaign(data: CreateCampaignInput, orgId: string, a
   });
   if (!team) throw new CampaignNotFoundError("Team not found");
   assertInScope(actor, data.teamId);
+  await assertTemplatesInOrg(orgId, data.waTemplateId, data.dripStages);
 
   let flowId = "";
   if (data.flowId) {
@@ -256,6 +280,8 @@ export async function updateCampaign(campaignId: string, orgId: string, data: Up
     scheduledStatuses,
     ...rest
   } = data;
+
+  await assertTemplatesInOrg(orgId, rest.waTemplateId, dripStages);
 
   if (startedAt) {
     const existingCampaign = await prisma.campaign.findFirst({

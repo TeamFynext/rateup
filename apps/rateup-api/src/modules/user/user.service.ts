@@ -31,6 +31,9 @@ import { Org, Team, TeamMember, User } from "../../../generated/prisma/client.js
 import { bustActorsForUser, loadActor } from "../../authz/actor.js";
 import { grantableRoles } from "../../authz/grant.js";
 import { PERMISSIONS_VERSION } from "../../authz/permissions.js";
+import { hiddenModulesForGoals } from "../org/modules.js";
+import { renderOrgSignupEmailBodies } from "../../utils/email/react/templates.js";
+import { notificationQueue } from "../../workers/bullmq/queues/index.js";
 
 async function createUser({ id, email, recipeName, prefLanguage }: CreateUserParams) {
   const user = await prisma.user.create({
@@ -42,6 +45,79 @@ async function createUser({ id, email, recipeName, prefLanguage }: CreateUserPar
     },
   });
   return user;
+}
+
+/** Stands in until the owner names the business on the step after signup. */
+export function placeholderOrgName(userName: string) {
+  const first = userName.trim().split(/\s+/)[0];
+  return first ? `${first}'s business` : "My business";
+}
+
+interface SignupAnnouncement {
+  orgId: string;
+  orgName: string;
+  orgCreatedAt: Date;
+  userName: string;
+  userEmail: string;
+  userCreatedAt: Date;
+  phone?: string | null;
+  /** HubSpot's contact phone, which has only ever taken the `phone` field. */
+  contactPhone?: string | null;
+  goals?: string[];
+  industry?: string;
+  integrationsSelected?: string[];
+  location?: string;
+  website?: string;
+  teamSize?: string;
+}
+
+/**
+ * The internal new-signup email and the HubSpot company. Sent once the business has a real
+ * name: at signup for clients that still ask for it there, otherwise when the owner completes
+ * the business step.
+ */
+export async function announceSignup(a: SignupAnnouncement) {
+  try {
+    const { html, text } = await renderOrgSignupEmailBodies({
+      orgId: a.orgId,
+      orgName: a.orgName,
+      userName: a.userName,
+      userEmail: a.userEmail,
+      phone: a.phone || "Not given",
+      goals: a.goals ?? [],
+      industry: a.industry,
+      integrations: a.integrationsSelected ?? [],
+      location: a.location,
+      website: a.website,
+      teamSize: a.teamSize,
+    });
+    await notificationQueue.add("notification", {
+      emailData: {
+        to: process.env.ROOT_ORG_MAIL_ID ?? "hello@rateup.app",
+        subject: `New RateUp SignUp: ${a.orgName}`,
+        html,
+        text,
+      },
+    });
+  } catch (err) {
+    log.error({ err }, "Failed to enqueue new-signup alert");
+  }
+
+  const companyId = await createHubSpotCompany({
+    name: a.orgName,
+    joined_date: a.orgCreatedAt,
+    owner_email: a.userEmail,
+  });
+  await createHubSpotContact(
+    {
+      firstname: a.userName,
+      email: a.userEmail,
+      phone: a.contactPhone ?? undefined,
+      company: a.orgName,
+      joined_date: a.userCreatedAt,
+    },
+    companyId,
+  );
 }
 
 export async function createUserSignup({
@@ -83,8 +159,9 @@ export async function createUserSignup({
 
       org = await prisma.org.create({
         data: {
-          name: orgName,
+          name: orgName || placeholderOrgName(name),
           ownerId: newUser.id,
+          profileCompletedAt: orgName ? new Date() : null,
           phone: phoneNumber,
           onboarding: {
             industry: industry || null,
@@ -94,6 +171,9 @@ export async function createUserSignup({
             integrationsSelected: integrationsSelected?.length ? integrationsSelected : null,
             teamSize: teamSize || null,
           },
+          // No goals answered shows everything; either way the org has chosen.
+          hiddenModules: goals?.length ? hiddenModulesForGoals(goals) : [],
+          modulesChosenAt: new Date(),
           surveyThemes: {
             create: {
               name: "Default Theme",
@@ -166,21 +246,24 @@ export async function createUserSignup({
       }
     }
 
-    const companyId = await createHubSpotCompany({
-      name: orgName,
-      joined_date: org.createdAt,
-      owner_email: email,
-    });
-    await createHubSpotContact(
-      {
-        firstname: name,
-        email,
-        phone: phone ?? undefined,
-        company: orgName,
-        joined_date: newUser.createdAt,
-      },
-      companyId,
-    );
+    if (orgName) {
+      await announceSignup({
+        orgId: org.id,
+        orgName,
+        orgCreatedAt: org.createdAt,
+        userName: name,
+        userEmail: email,
+        userCreatedAt: newUser.createdAt,
+        phone: phoneNumber || phone,
+        contactPhone: phone,
+        goals,
+        industry,
+        integrationsSelected,
+        location,
+        website,
+        teamSize,
+      });
+    }
     return result;
   } catch (error) {
     // Rollback the transaction
@@ -266,6 +349,7 @@ export async function getLoggedUserInfo(request: FastifyRequest, reply: FastifyR
       encryptionKeys: true,
       isPaused: true,
       onboardingCompleted: true,
+      profileCompletedAt: true,
       onboarding: true,
       waAssignedChatPermission: true,
       WhatsappSettings: {
@@ -277,6 +361,7 @@ export async function getLoggedUserInfo(request: FastifyRequest, reply: FastifyR
       showLifecycle: true,
       isConversionApiActive: true,
       onboardingChecklistCompleted: true,
+      hiddenModules: true,
     },
   });
   return {
@@ -307,11 +392,13 @@ export async function getLoggedUserInfo(request: FastifyRequest, reply: FastifyR
       !!orgData?.WhatsappSettings?.[0]?.appId &&
       orgData?.WhatsappSettings?.[0]?.status !== "DISCONNECTED",
     onboardingCompleted: orgData?.onboardingCompleted,
+    profileCompleted: !!orgData?.profileCompletedAt,
     onboarding: orgData?.onboarding,
     presenceMode: profile?.presenceMode,
     showLifecycle: orgData?.showLifecycle,
     isConversionApiActive: orgData?.isConversionApiActive,
     onboardingChecklistCompleted: orgData?.onboardingChecklistCompleted,
+    hiddenModules: orgData?.hiddenModules ?? [],
   };
 }
 
@@ -636,13 +723,58 @@ export async function updateUserRecipe() {
   }
 }
 
-export async function pauseUser(id: string, data: PauseUserInput) {
-  return await prisma.user.update({
+/**
+ * Ends every session the user has. Called when their access changes in a way an existing
+ * session must not outlive: a password change or reset, a pause, a removal. Logged, not
+ * thrown: the change itself has already been made.
+ */
+export async function revokeUserSessions(userId: string, keepSessionHandle?: string) {
+  try {
+    if (!keepSessionHandle) {
+      await Session.revokeAllSessionsForUser(userId);
+      return;
+    }
+    const handles = await Session.getAllSessionHandlesForUser(userId);
+    const others = handles.filter((handle) => handle !== keepSessionHandle);
+    if (others.length) await Session.revokeMultipleSessions(others);
+  } catch (err) {
+    log.error({ err, userId }, "Could not revoke the user's sessions");
+  }
+}
+
+/** `pausedBy` is whoever is signed in, never what the client claims. */
+export async function pauseUser(id: string, data: PauseUserInput, pausedBy: string) {
+  const user = await prisma.user.update({
     where: {
       id,
     },
-    data,
+    data: { isPaused: data.isPaused, pausedBy: data.isPaused ? pausedBy : null },
   });
+  // The status is cached with the actor; both go so the next request sees the change.
+  await bustActorsForUser(id);
+  if (data.isPaused) await revokeUserSessions(id);
+  return user;
+}
+
+/**
+ * Takes a member out of one org: their team places and membership there. The account itself
+ * is deleted only when this was their last org, so removing someone from org A no longer
+ * destroys the login they use for org B. Their sessions end either way, since a session
+ * carries the org it was opened for.
+ */
+export async function removeMemberFromOrg(userId: string, orgId: string) {
+  await prisma.$transaction([
+    prisma.teamMember.deleteMany({ where: { userId, team: { orgId } } }),
+    prisma.orgMember.deleteMany({ where: { userId, orgId } }),
+  ]);
+  await bustActorsForUser(userId);
+
+  const remaining = await prisma.orgMember.count({ where: { userId } });
+  if (remaining === 0) {
+    return { accountDeleted: true, user: await updateUserActiveStatus(userId) };
+  }
+  await revokeUserSessions(userId);
+  return { accountDeleted: false, user: null };
 }
 
 /**

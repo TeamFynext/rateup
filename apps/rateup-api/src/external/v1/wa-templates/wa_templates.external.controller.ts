@@ -1,19 +1,67 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import type { OutgoingTemplateComponent } from "../../../types/whatsapp.types.js";
-import {
-  getMessageStatusByIdHandler,
-  sendTemplateToUserCore,
-} from "../../../modules/whatsapp/messageTemplates/wa_templates.controller.js";
+import { sendTemplateToUserCore } from "../../../modules/whatsapp/messageTemplates/wa_templates.controller.js";
 import { TemplateTypeParamsSchema } from "../../../modules/whatsapp/messageTemplates/wa_templates.schema.js";
-import { getTemplatesByOrgIdAndTemplateType } from "../../../modules/whatsapp/messageTemplates/wa_templates.service.js";
-import { SendTemplateByNameToPhone, SendTemplateWithFile } from "./wa_templates.external.schema.js";
+import {
+  getTemplateByIdAndOrgId,
+  getTemplatesByOrgIdAndTemplateType,
+} from "../../../modules/whatsapp/messageTemplates/wa_templates.service.js";
+import {
+  SendTemplateByNameToPhone,
+  SendTemplateToContacts,
+  SendTemplateWithFile,
+} from "./wa_templates.external.schema.js";
+import type { ByTemplateIdParamsSchema } from "./wa_templates.schema.js";
+import { sendTemplateToPhone } from "./sendTemplateToPhone.js";
+import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
-import { parsePhoneNumberWithError } from "libphonenumber-js";
+import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
+import { TemplateSendError } from "../../../modules/whatsapp/messageTemplates/templateSendError.js";
+import {
+  ActiveContactLimitError,
+  OrgSuspendedError,
+} from "../../../modules/whatsapp/whatsappSurvey/wasurvey.auth.js";
 import { getWaSettings } from "../../../modules/whatsapp/settings/wa_settings.service.js";
 import { WaTemplateComponentType } from "../../../types/enums.js";
 import { templateFileUploadSchema } from "./wa_templates.utils.js";
 import FormData from "form-data";
 import { callMetaApi } from "../../../modules/whatsapp/wa_axios.js";
+
+/**
+ * A `teamId` decides which team a send (and its inbox thread) is filed under, and the
+ * senders take it as given — so another org's team id has to be refused before them.
+ */
+async function isForeignTeam(orgId: string, teamId: string | undefined) {
+  if (!teamId) return false;
+  const team = await prisma.team.findFirst({ where: { id: teamId, orgId }, select: { id: true } });
+  return !team;
+}
+
+/**
+ * The text v1 answers a refused send with (400, a bare string, as it always has) — only for
+ * failures whose message we wrote. Anything else (a database or network error) returns null
+ * and is rethrown to the partner error handler, which logs it and answers a fixed 500, so
+ * internal error text never reaches a partner.
+ */
+function sendRefusal(error: unknown): string | null {
+  if (
+    error instanceof TemplateSendError ||
+    error instanceof ActiveContactLimitError ||
+    error instanceof OrgSuspendedError ||
+    error instanceof ParseError
+  ) {
+    return error.message;
+  }
+  return null;
+}
+
+/** The Fastify-style body `/send-with-file` already answers its own 404 with. */
+const teamNotFound = {
+  statusCode: 404,
+  code: "FST_ERR_NOT_FOUND",
+  error: "Not Found",
+  message: "Team not found",
+};
 
 export async function getTemplatesExternalController(
   request: FastifyRequest<{
@@ -23,7 +71,7 @@ export async function getTemplatesExternalController(
 ) {
   const { orgId } = request.user;
   const templates = await getTemplatesByOrgIdAndTemplateType(orgId, request.query.templateType);
-  reply.code(200).send(templates);
+  return reply.code(200).send(templates);
 }
 
 export async function sendTemplateByNameToPhoneExternalController(
@@ -43,9 +91,9 @@ export async function sendTemplateByNameToPhoneExternalController(
       buttonVariable,
       quickReplyPayload,
     } = req.body;
-    log.info("🚀 ~ req.body - external: %o", req.body);
     const orgId = req.user.orgId;
     const userId = req.user.userId;
+    if (await isForeignTeam(orgId, teamId)) return rep.code(404).send(teamNotFound);
     let reqNumber = "+" + req.body.phone;
     let phone = parsePhoneNumberWithError(reqNumber);
     if (phone.isValid() === false) {
@@ -92,16 +140,13 @@ export async function sendTemplateByNameToPhoneExternalController(
       quickReplyPayload,
       true,
     );
-    rep
+    return rep
       .code(200)
       .send(timeDelay ? { status: response.status, scheduleId: response?.id } : response);
   } catch (error) {
-    log.error({ err: error }, "Error sending template to contacts");
-    if (error instanceof Error) {
-      rep.code(400).send(error.message);
-    } else {
-      rep.code(500).send("Error sending template to contacts");
-    }
+    const refusal = sendRefusal(error);
+    if (refusal === null) throw error;
+    return rep.code(400).send(refusal);
   }
 }
 
@@ -144,6 +189,8 @@ export async function sendTemplateByNameToPhoneWithFileExternalController(
         error: "Bad Request",
         message: "Invalid phone number format",
       });
+
+    if (await isForeignTeam(orgId, teamId)) return rep.code(404).send(teamNotFound);
 
     const userId = req.user.userId;
     let phoneNumber = phone.number.replace("+", "");
@@ -228,22 +275,119 @@ export async function sendTemplateByNameToPhoneWithFileExternalController(
       quickReplyPayload,
       true,
     );
-    rep
+    return rep
       .code(200)
       .send(timeDelay ? { status: response.status, scheduleId: response?.id } : response);
   } catch (error) {
-    log.error({ err: error }, "Error sending template to contacts");
-    if (error instanceof Error) {
-      rep.code(400).send(error.message);
-    } else {
-      rep.code(500).send("Error sending template to contacts");
-    }
+    const refusal = sendRefusal(error);
+    if (refusal === null) throw error;
+    return rep.code(400).send(refusal);
   }
 }
 
+export async function sendTemplatesToContactsExternalController(
+  req: FastifyRequest<{
+    Body: SendTemplateToContacts;
+    Params: ByTemplateIdParamsSchema;
+  }>,
+  res: FastifyReply,
+) {
+  const { templateId } = req.params;
+  const orgId = req.user.orgId;
+  const userId = req.userId;
+  const dbTemplate = await getTemplateByIdAndOrgId(templateId, orgId);
+  if (!dbTemplate) {
+    return res.code(404).send({ message: "Template not found" });
+  }
+  if (await isForeignTeam(orgId, req.body.teamId)) {
+    return res.code(404).send({ message: "Team not found" });
+  }
+  // Only the org's own contacts; the rest are counted as skipped.
+  const contacts = await prisma.contact.findMany({
+    where: {
+      id: {
+        in: req.body.contactIds,
+      },
+      orgId,
+    },
+    select: {
+      id: true,
+      phone: true,
+    },
+  });
+
+  let sent = 0;
+  const failed: string[] = [];
+  for (const contact of contacts) {
+    if (!contact.phone) continue;
+    try {
+      await sendTemplateToPhone({
+        orgId,
+        phone: contact.phone,
+        dbTemplate,
+        teamId: req.body.teamId,
+        header: req.body.header,
+        userId,
+      });
+      sent++;
+    } catch (error) {
+      log.error({ err: error, contactId: contact.id }, "Error sending template to contact");
+      failed.push(contact.id);
+    }
+  }
+
+  const skipped = req.body.contactIds.length - contacts.length;
+  return res.code(200).send({ sent, failed, skipped });
+}
+
+const getLatestStatus = (statusObjInput: unknown) => {
+  // WaMessage.stats is a free-form Json? column — read via a documented cast.
+  const statusObj = statusObjInput as {
+    read?: unknown;
+    delivered?: unknown;
+    failed?: unknown;
+    sent?: unknown;
+  } | null;
+  if (statusObj?.failed) return "failed";
+  if (statusObj?.read) return "read";
+  if (statusObj?.delivered) return "delivered";
+  if (statusObj?.sent) return "sent";
+  return "pending";
+};
+
+/**
+ * Scoped through the message's org mapping (or its contact): `WaMessage` has no `orgId`
+ * column. The handler this replaced filtered on one anyway, which Prisma rejects, and before
+ * that it looked messages up by id alone — any key could read any org's delivery status.
+ * Another org's message answers as an unknown one does.
+ */
 export async function getMessageStatusByIdExternalController(
-  request: Parameters<typeof getMessageStatusByIdHandler>[0],
+  request: FastifyRequest<{
+    Params: { messageId: string };
+  }>,
   reply: FastifyReply,
 ) {
-  return getMessageStatusByIdHandler(request, reply);
+  const { messageId } = request.params;
+  const { orgId } = request.user;
+  const messageStatus = await prisma.waMessage.findFirst({
+    where: {
+      messageId,
+      OR: [{ waMessageOrgTeamMaps: { some: { orgId } } }, { contact: { orgId } }],
+    },
+    select: {
+      messageId: true,
+      stats: true,
+      errorMessage: true,
+    },
+    orderBy: { createdAt: "desc" },
+  });
+  if (!messageStatus) return reply.code(404).send({ message: "Message not found" });
+  const status = getLatestStatus(messageStatus.stats);
+  const response = {
+    messageId: messageStatus.messageId,
+    status,
+    ...(status === "failed" ? { errorMessage: messageStatus.errorMessage } : {}),
+  };
+
+  return reply.code(200).send(response);
 }

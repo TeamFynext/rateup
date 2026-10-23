@@ -106,7 +106,10 @@ export function toCatalogItems(
   const item = (
     id: number,
     title: string,
-    source: Pick<WooVariation, "price" | "regular_price" | "sale_price" | "stock_status">,
+    source: Pick<
+      WooVariation,
+      "price" | "regular_price" | "sale_price" | "stock_status" | "manage_stock" | "stock_quantity"
+    >,
     images: { url: string }[],
     link: string | undefined,
     groupId?: string,
@@ -127,6 +130,9 @@ export function toCatalogItems(
         ? "out of stock"
         : (AVAILABILITY[source.stock_status ?? ""] ?? "in stock"),
       brand: (context.brand || product.name).substring(0, 100),
+      ...(source.manage_stock === true &&
+        typeof source.stock_quantity === "number" &&
+        source.stock_quantity > 0 && { inventory: source.stock_quantity }),
       ...money,
       ...(groupId && { item_group_id: groupId }),
     };
@@ -144,6 +150,10 @@ export function toCatalogItems(
         options ? `${product.name} - ${options}` : product.name,
         {
           ...variation,
+          ...(variation.manage_stock === "parent" && {
+            manage_stock: product.manage_stock,
+            stock_quantity: product.stock_quantity,
+          }),
           // A disabled variation is not for sale, whatever its stock says.
           stock_status:
             variation.status && variation.status !== "publish"
@@ -175,7 +185,7 @@ async function catalogContext(credential: WooCredential, client: AxiosInstance) 
   return { currencyCode, brand: credential.store?.name };
 }
 
-async function connectedStore(orgId: string) {
+export async function connectedStore(orgId: string) {
   const integration = await prisma.integration.findUnique({
     where: { orgid_integration_name_unique: { orgId, name: IntegratedApps.woocommerce } },
   });

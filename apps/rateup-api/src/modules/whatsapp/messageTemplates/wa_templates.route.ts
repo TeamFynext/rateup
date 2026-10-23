@@ -18,6 +18,7 @@ import fastifyMultipart from "@fastify/multipart";
 import {
   type ByTemplateIdParamsSchema,
   byTemplateIdParamsSchema,
+  registerTemplatesInDbBodySchema,
   syncTemplatesSchema,
   templateTypeParamsSchema,
   waTemplateInputSchema,
@@ -109,7 +110,11 @@ export async function waTemplatesRoutes(server: FastifyInstance) {
   );
 
   server.get("/unregistered", getUnregisteredTemplatesHandler);
-  server.post("/register", registerTemplatesInDbHandler);
+  server.post(
+    "/register",
+    { schema: { body: registerTemplatesInDbBodySchema } },
+    registerTemplatesInDbHandler,
+  );
   server.post(
     "/upload",
     {

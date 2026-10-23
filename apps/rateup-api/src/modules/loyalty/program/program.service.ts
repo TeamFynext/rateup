@@ -3,6 +3,7 @@ import prisma from "../../../utils/prisma.js";
 import { LoyaltyProgramInput, LoyaltyProgramUpdateInput } from "./program.schema.js";
 import { LoyaltyRewardStatus } from "../rewards/reward.schema.js";
 import { LoyaltyRewardType } from "../../../types/loyalty.js";
+import { bustCache, withCache } from "../../../utils/cache.js";
 
 export async function createLoyaltyProgram(data: LoyaltyProgramInput, orgId: string) {
   // Check if program already exists
@@ -14,7 +15,7 @@ export async function createLoyaltyProgram(data: LoyaltyProgramInput, orgId: str
     throw new Error("Loyalty program already exists for this organization");
   }
 
-  return await prisma.loyaltyProgram.create({
+  const program = await prisma.loyaltyProgram.create({
     data: {
       orgId,
       name: data.name,
@@ -51,6 +52,40 @@ export async function createLoyaltyProgram(data: LoyaltyProgramInput, orgId: str
       tiers: true,
     },
   });
+  void bustLoyaltyProgramSummary(orgId);
+  return program;
+}
+
+const PROGRAM_SUMMARY_TTL_SECONDS = 30;
+const programSummaryKey = (orgId: string) => `loyaltyProgramSummary:${orgId}`;
+
+/**
+ * The programme's own settings without its tiers, rules or rewards — what the partner API
+ * reads on every call to label a receipt and to refuse writes to a draft programme. Cached
+ * for half a minute; the services that write those columns call
+ * `bustLoyaltyProgramSummary`.
+ */
+export async function getLoyaltyProgramSummary(orgId: string) {
+  return withCache(programSummaryKey(orgId), PROGRAM_SUMMARY_TTL_SECONDS, () =>
+    prisma.loyaltyProgram.findUnique({
+      where: { orgId },
+      select: {
+        id: true,
+        status: true,
+        defaultCountryCode: true,
+        currencyName: true,
+        currencySymbol: true,
+        signupBonus: true,
+        tiersEnabled: true,
+        tierQualificationWindowMonths: true,
+        businessName: true,
+      },
+    }),
+  );
+}
+
+export async function bustLoyaltyProgramSummary(orgId: string) {
+  await bustCache(programSummaryKey(orgId));
 }
 
 export async function getLoyaltyProgramByOrg(orgId: string) {
@@ -126,7 +161,7 @@ export async function updateLoyaltyProgram(
   orgId: string,
 ) {
   const { materials, ...rest } = data;
-  return await prisma.loyaltyProgram.update({
+  const program = await prisma.loyaltyProgram.update({
     where: { id: programId, orgId },
     data: {
       ...rest,
@@ -139,6 +174,8 @@ export async function updateLoyaltyProgram(
       tiers: true,
     },
   });
+  void bustLoyaltyProgramSummary(orgId);
+  return program;
 }
 
 export async function deleteLoyaltyProgram(
@@ -155,9 +192,11 @@ export async function deleteLoyaltyProgram(
     throw new Error("Cannot delete program with existing customers. Archive it instead.");
   }
 
-  return await prisma.loyaltyProgram.delete({
+  const program = await prisma.loyaltyProgram.delete({
     where: { id: programId, orgId },
   });
+  void bustLoyaltyProgramSummary(orgId);
+  return program;
 }
 
 export async function resetProgramPoints(programId: string, orgId: string, actorId?: string) {

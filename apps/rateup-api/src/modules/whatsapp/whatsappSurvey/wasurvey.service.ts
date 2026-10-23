@@ -1,4 +1,5 @@
 import { emitSurveyResponseSubmitted } from "../../integrations/events/emitIntegrationEvent.js";
+import { randomUUID } from "node:crypto";
 import {
   PlatformType,
   Prisma,
@@ -216,6 +217,9 @@ export async function sendMessage(
     return {
       status: false,
       message: errorMessage,
+      // Meta's code and subcode, for callers that must tell a rejected number from an
+      // outage (the partner API). Additive: callers reading only status/message are unchanged.
+      error: graphApiErrorDetail(e),
     };
   }
 }
@@ -579,6 +583,30 @@ async function publishSavedResponse(
   );
 }
 
+/** The media types a Flow photo/document picker answer may be stored as, with their extension. */
+const FLOW_MEDIA_TYPES: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/heic": "heic",
+  "image/heif": "heif",
+  "application/pdf": "pdf",
+  "application/msword": "doc",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+  "application/vnd.ms-excel": "xls",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+  "application/vnd.ms-powerpoint": "ppt",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation": "pptx",
+  "text/plain": "txt",
+};
+
+/** Anything off the list is stored as an opaque download, never as a type a browser renders. */
+function flowMediaType(mimeType: string | undefined) {
+  const contentType = mimeType?.split(";")[0]?.trim().toLowerCase() ?? "";
+  const ext = FLOW_MEDIA_TYPES[contentType];
+  return ext ? { contentType, ext } : { contentType: "application/octet-stream", ext: "bin" };
+}
+
 export async function saveResponses(session: SaveResponsesContext) {
   let anonymous = session?.surveyTeamMap?.survey?.WaFlow?.anonymous ?? false;
   let questionResponses = session.responses as unknown as Array<QuestionResponse>;
@@ -609,10 +637,19 @@ export async function saveResponses(session: SaveResponsesContext) {
           // Step 3: Prepare S3 upload parameters
           const imageBuffer = Buffer.from(fileResponse.data, "binary");
 
+          // The key is ours, never the customer's file name: that name comes from
+          // their device and could name (and overwrite) any object in the shared bucket.
+          const media = flowMediaType(parsedResponse.mime_type);
           const s3Params = {
             Bucket: process.env.AWS_S3_BUCKET || "rateup-survey-uploads",
-            Key: parsedResponse.file_name,
-            ContentType: parsedResponse?.mime_type,
+            Key: `flow-media/${session.orgId}/${randomUUID()}.${media.ext}`,
+            ContentType: media.contentType,
+            ...(media.contentType === "application/octet-stream" && {
+              ContentDisposition: "attachment",
+            }),
+            Metadata: parsedResponse.file_name
+              ? { "original-name": encodeURIComponent(parsedResponse.file_name).slice(0, 1024) }
+              : undefined,
             Body: imageBuffer,
           };
 
@@ -715,7 +752,9 @@ async function updateDripCampaignStats(id: string) {
 }
 
 export async function sendTextMessage(
-  to: { phone: string; orgId: string },
+  // `whatsappSettingsPhoneId` names the number to send from. An org with several numbers
+  // refuses a send without one rather than guess (see `getWaSendingSettings`).
+  to: { phone: string; orgId: string; whatsappSettingsPhoneId?: string },
   title: string | null,
   description = "",
   // System/transactional callers (e.g. ticket notifications) pass true to bypass
@@ -728,7 +767,7 @@ export async function sendTextMessage(
     messageData,
     undefined,
     undefined,
-    undefined,
+    to.whatsappSettingsPhoneId,
     undefined,
     undefined,
     undefined,

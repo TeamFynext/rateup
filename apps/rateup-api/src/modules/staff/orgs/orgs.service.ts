@@ -432,34 +432,44 @@ export async function dailyUsage(
 /** The plan limits as the gates see them, plus the raw counters behind them. */
 export async function getOrgUsage(orgId: string, days: UsageDays = 30, now = new Date()) {
   await assertOrgExists(orgId);
-  const [teams, users, formResponses, activeContacts, campaignCredits, usage, packs, daily] =
-    await Promise.all([
-      checkPlanLimit(orgId, "teams"),
-      checkPlanLimit(orgId, "users"),
-      checkPlanLimit(orgId, "formResponses"),
-      getActiveContactBudget(orgId),
-      getCampaignCreditBudget(orgId),
-      prisma.usageStats.findUnique({ where: { orgId } }),
-      prisma.subscriptionAddon.findMany({
-        where: { orgId, expiresAt: { gt: new Date() } },
-        orderBy: { expiresAt: "asc" },
-        select: {
-          id: true,
-          kind: true,
-          quantity: true,
-          creditsGranted: true,
-          creditsUsed: true,
-          expiresAt: true,
-          createdAt: true,
-          paymentRef: true,
-          addon: { select: { name: true, displayName: true } },
-        },
-      }),
-      dailyUsage(orgId, days, now),
-    ]);
+  const [
+    teams,
+    users,
+    formResponses,
+    orders,
+    activeContacts,
+    campaignCredits,
+    usage,
+    packs,
+    daily,
+  ] = await Promise.all([
+    checkPlanLimit(orgId, "teams"),
+    checkPlanLimit(orgId, "users"),
+    checkPlanLimit(orgId, "formResponses"),
+    checkPlanLimit(orgId, "orders"),
+    getActiveContactBudget(orgId),
+    getCampaignCreditBudget(orgId),
+    prisma.usageStats.findUnique({ where: { orgId } }),
+    prisma.subscriptionAddon.findMany({
+      where: { orgId, expiresAt: { gt: new Date() } },
+      orderBy: { expiresAt: "asc" },
+      select: {
+        id: true,
+        kind: true,
+        quantity: true,
+        creditsGranted: true,
+        creditsUsed: true,
+        expiresAt: true,
+        createdAt: true,
+        paymentRef: true,
+        addon: { select: { name: true, displayName: true } },
+      },
+    }),
+    dailyUsage(orgId, days, now),
+  ]);
 
   return {
-    limits: { teams, users, formResponses },
+    limits: { teams, users, formResponses, orders },
     activeContacts,
     campaignCredits,
     daily,

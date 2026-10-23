@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 vi.mock("../../utils/prisma.js", () => ({
   default: {
     surveyResponse: { delete: vi.fn(), findMany: vi.fn() },
+    surveyTeamMap: { findUnique: vi.fn() },
     campaignParticipant: { findMany: vi.fn() },
     usageStats: { findUnique: vi.fn() },
   },
@@ -21,11 +22,9 @@ vi.mock("./response.service.js", () => ({
   generateResponse: vi.fn(),
   getAllResponses: vi.fn(),
   getResponseAnalyticsForGraph: vi.fn(),
-  getResponseBySurveyById: vi.fn(),
   getResponseCountForCamparison: vi.fn(),
   getResponses: vi.fn(),
   getResponseSummary: vi.fn(),
-  getSurveyList: vi.fn(),
   getSurveyResponseBySurveyId: vi.fn(),
   getSurveyResponseCount: vi.fn(),
   resetResponsesStats: vi.fn(),
@@ -41,8 +40,8 @@ vi.mock("../integrations/googlesheet/googlesheet.sync.js", () => ({
 
 vi.mock("../team/team.service.js", () => ({
   getTeamIdsBySurveyMapId: vi.fn(),
-  getTeamIdsByUserId: vi.fn(),
 }));
+vi.mock("../survey/survey.teamScope.js", () => ({ sessionTeamIds: vi.fn() }));
 
 vi.mock("../../utils/location.js", () => ({ fetchLocation: vi.fn() }));
 vi.mock("../../utils/http.js", () => ({ getIp: vi.fn(() => "203.0.113.9") }));
@@ -60,7 +59,8 @@ vi.mock("../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
 
 import prisma from "../../utils/prisma.js";
 import * as service from "./response.service.js";
-import { getTeamIdsBySurveyMapId, getTeamIdsByUserId } from "../team/team.service.js";
+import { getTeamIdsBySurveyMapId } from "../team/team.service.js";
+import { sessionTeamIds as getTeamIdsByUserId } from "../survey/survey.teamScope.js";
 import { createTestimonial } from "../testimonial/testimonial.service.js";
 import { emitSurveyResponseSubmitted } from "../integrations/events/emitIntegrationEvent.js";
 import { syncResponseToGoogleSheet } from "../integrations/googlesheet/googlesheet.sync.js";
@@ -80,6 +80,7 @@ import { responseRoutes } from "./response.route.js";
 import { responsePublicRoutes } from "./response.public.route.js";
 import { enforceResponseLimit } from "../survey/survey.limits.js";
 import {
+  createPublicResponseInputSchema,
   createResponseInputSchema,
   generateXlsxSchema,
   generateXlsxBody,
@@ -143,6 +144,7 @@ beforeEach(() => {
   svc.downloadExcelResponse.mockResolvedValue(Buffer.from("xlsx"));
   (syncResponseToGoogleSheet as unknown as Mock).mockResolvedValue({ id: VICTIM_SURVEY });
   (getTeamIdsByUserId as unknown as Mock).mockResolvedValue([]);
+  db.surveyTeamMap.findUnique.mockResolvedValue({ survey: { uniqueDeviceResponse: false } });
   (getTeamIdsBySurveyMapId as unknown as Mock).mockResolvedValue([]);
   (surveyInScope as unknown as Mock).mockResolvedValue(true);
   (getSurveyIdfromMap as unknown as Mock).mockResolvedValue(VICTIM_SURVEY);
@@ -296,7 +298,7 @@ describe("downloadExcelResponseHandler", () => {
       reply(),
     );
 
-    expect(getTeamIdsByUserId).toHaveBeenCalledWith(USER);
+    expect(getTeamIdsByUserId).toHaveBeenCalledWith(expect.objectContaining({ userId: USER }));
     expect(svc.getAllResponses.mock.calls[0][1]).toEqual(["own-team"]);
   });
 
@@ -478,11 +480,30 @@ describe("createResponseHandler", () => {
     expect(emitSurveyResponseSubmitted).toHaveBeenCalled();
   });
 
-  test("the WhatsApp platform skips the whole post-processing block", async () => {
+  test("the platform is decided by the server, never by the body (SURV-10)", async () => {
     await createResponseHandler({ body: { ...body, platform: "WHATSAPP" } } as never, reply());
 
-    expect(emitSurveyResponseSubmitted).not.toHaveBeenCalled();
-    expect(createTestimonial).not.toHaveBeenCalled();
+    expect(svc.createResponse.mock.calls[0][0].platform).toBe("WEB");
+    expect(emitSurveyResponseSubmitted).toHaveBeenCalled();
+  });
+
+  test("the unique-device rule comes from the survey, not the client flag (SURV-10)", async () => {
+    db.surveyTeamMap.findUnique.mockResolvedValueOnce({ survey: { uniqueDeviceResponse: true } });
+
+    await createResponseHandler({ body: { ...body, checkUniqueDevice: false } } as never, reply());
+
+    expect(svc.createResponse.mock.calls[0][1]).toBe(true);
+    expect(svc.createResponse.mock.calls[0][2]).toBe("203.0.113.9");
+  });
+
+  test("an unknown form link is a 404 and files nothing", async () => {
+    db.surveyTeamMap.findUnique.mockResolvedValueOnce(null);
+    const rep = reply();
+
+    await createResponseHandler({ body } as never, rep);
+
+    expect(answer(rep).code).toBe(404);
+    expect(svc.createResponse).not.toHaveBeenCalled();
   });
 
   // NOTE: a failure inside createResponse itself happens before the 201, so
@@ -494,7 +515,8 @@ describe("createResponseHandler", () => {
     await createResponseHandler({ body } as never, rep);
 
     expect(rep.send).toHaveBeenCalledTimes(1);
-    expect(answer(rep)).toEqual({ code: 500, body: "survey not found" });
+    // The respondent gets a generic message; the Prisma/stack detail stays in the log.
+    expect(answer(rep)).toEqual({ code: 500, body: "Something went wrong" });
   });
 
   test("the public route validates the body, meters the org, and carries no session check", async () => {
@@ -507,7 +529,7 @@ describe("createResponseHandler", () => {
     await responsePublicRoutes(srv);
 
     expect(routes).toHaveLength(1);
-    expect(routes[0].opts.schema.body).toBe(createResponseInputSchema);
+    expect(routes[0].opts.schema.body).toBe(createPublicResponseInputSchema);
     // The one preHandler is the monthly response limit, which is what actually holds the
     // allowance — the form's page-load gate is only a courtesy. Still no session check:
     // the caller is a respondent, not a logged-in user.
@@ -515,16 +537,24 @@ describe("createResponseHandler", () => {
     expect(srv.addHook).not.toHaveBeenCalled();
   });
 
-  test("the public body schema accepts a caller-supplied contactId", () => {
-    const parsed = createResponseInputSchema.safeParse({
+  test("the public body schema strips contactId, phone, platform and idempotencyKey", () => {
+    const parsed = createPublicResponseInputSchema.parse({
       surveyTeamMapId: OWN_MAP,
       language: "en",
       responses: [],
       location: {},
       contactId: "someone-elses-contact",
+      phone: "+15550001",
+      platform: "WHATSAPP",
+      idempotencyKey: "guessable",
     });
 
-    expect(parsed.success).toBe(true);
+    expect(parsed).not.toHaveProperty("contactId");
+    expect(parsed).not.toHaveProperty("phone");
+    expect(parsed).not.toHaveProperty("platform");
+    expect(parsed).not.toHaveProperty("idempotencyKey");
+    // The internal schema the WhatsApp paths build their input from still has them.
+    expect(createResponseInputSchema.shape).toHaveProperty("idempotencyKey");
   });
 });
 
@@ -542,7 +572,7 @@ describe("getAllResponsesHandler", () => {
       reply(),
     );
 
-    expect(getTeamIdsByUserId).toHaveBeenCalledWith(USER);
+    expect(getTeamIdsByUserId).toHaveBeenCalledWith(expect.objectContaining({ userId: USER }));
     expect(svc.getAllResponses).toHaveBeenCalledWith(VICTIM_SURVEY, ["own-team"]);
   });
 

@@ -15,6 +15,11 @@ describe("normalizePricingCategory", () => {
     expect(normalizePricingCategory("MARKETING")).toBe("MARKETING");
   });
 
+  test("folds Meta's priced variants into their family", () => {
+    expect(normalizePricingCategory("marketing_lite")).toBe("MARKETING");
+    expect(normalizePricingCategory("authentication_international")).toBe("AUTHENTICATION");
+  });
+
   test("returns null for a category Meta has not shipped yet, rather than throwing", () => {
     // This runs inside a Kafka batch: throwing here would fail the whole batch and
     // eventually DLQ real status updates over a field nothing depends on.

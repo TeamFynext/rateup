@@ -16,6 +16,12 @@ describe("effectivePermissions", () => {
     expect(perms).toEqual(ROLE_PERMISSIONS.STAFF);
   });
 
+  test("a key-only permission is never granted to a member", () => {
+    const perms = effectivePermissions("ADMIN", ["widget.connect"]);
+    expect(perms.has("widget.connect")).toBe(false);
+    expect(normaliseOverrides("ADMIN", ["widget.connect"], []).grants).toEqual([]);
+  });
+
   test("the owner cannot be trimmed or widened", () => {
     expect(effectivePermissions("OWNER", [], ["org.delete"])).toEqual(ROLE_PERMISSIONS.OWNER);
   });

@@ -15,6 +15,11 @@ import {
 } from "./tier.schema.js";
 import { getLoyaltyProgramByOrg } from "../program/program.service.js";
 
+/** Prisma's "no row matched" — here, an id outside the caller's programme. */
+function isRecordNotFound(e: unknown) {
+  return typeof e === "object" && e !== null && "code" in e && e.code === "P2025";
+}
+
 // deleteLoyaltyTier throws plain Errors annotated with an extra `code` (and, for
 // TIER_HAS_CUSTOMERS, a `customerCount`) field rather than dedicated Error subclasses —
 // this guard narrows an unknown catch value to that shape without a cast.
@@ -62,7 +67,8 @@ export async function getLoyaltyTierByIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    const result = await getLoyaltyTierById(request.params.tierId);
+    const program = await getLoyaltyProgramByOrg(request.user.orgId);
+    const result = program ? await getLoyaltyTierById(request.params.tierId, program.id) : null;
     if (!result) {
       return reply.code(404).send({ error: "Tier not found" });
     }
@@ -81,9 +87,16 @@ export async function updateLoyaltyTierHandler(
   reply: FastifyReply,
 ) {
   try {
-    const result = await updateLoyaltyTier(request.params.tierId, request.body);
+    const program = await getLoyaltyProgramByOrg(request.user.orgId);
+    if (!program) {
+      return reply.code(404).send({ error: "Tier not found" });
+    }
+    const result = await updateLoyaltyTier(request.params.tierId, program.id, request.body);
     reply.code(200).send(result);
   } catch (e) {
+    if (isRecordNotFound(e)) {
+      return reply.code(404).send({ error: "Tier not found" });
+    }
     log.error(e);
     if (typeof e === "object" && e !== null && "code" in e && e.code === "P2002") {
       return reply.code(400).send({ error: "Tier with this priority name already exists" });
@@ -103,11 +116,18 @@ export async function deleteLoyaltyTierHandler(
     const downgradeCustomers =
       request.query?.downgradeCustomers === true || request.query?.downgradeCustomers === "true";
 
-    await deleteLoyaltyTier(request.params.tierId, {
+    const program = await getLoyaltyProgramByOrg(request.user.orgId);
+    if (!program) {
+      return reply.code(404).send({ error: "Tier not found" });
+    }
+    await deleteLoyaltyTier(request.params.tierId, program.id, {
       downgradeCustomers,
     });
     reply.code(204).send();
   } catch (e) {
+    if (hasErrorCode(e, "TIER_NOT_FOUND") || isRecordNotFound(e)) {
+      return reply.code(404).send({ error: "Tier not found" });
+    }
     log.error(e);
 
     if (hasErrorCode(e, "TIER_HAS_CUSTOMERS")) {

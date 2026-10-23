@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("../../../../../utils/prisma.js", () => ({
-  default: { waTemplate: { findUnique: vi.fn() } },
+  default: { waTemplate: { findUnique: vi.fn(), findFirst: vi.fn() } },
 }));
 vi.mock("../../../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
@@ -67,7 +67,7 @@ async function planAndSend(context: ChannelSendContext, message: LoyaltyMessage)
 
 beforeEach(() => {
   vi.clearAllMocks();
-  db.waTemplate.findUnique.mockResolvedValue(null);
+  db.waTemplate.findFirst.mockResolvedValue(null);
   (findOpenSession as Mock).mockResolvedValue(null);
   (sendMetaMessage as Mock).mockResolvedValue({ ok: true, messageId: "wamid.1" });
   (sendTemplateToUserCore as Mock).mockResolvedValue({ status: true, message: "ok" });
@@ -75,8 +75,14 @@ beforeEach(() => {
 });
 
 describe("whatsappChannel.plan — a notification", () => {
+  test("loads a reward's template only from the sending org (MSG-16)", async () => {
+    await planAndSend(ctx(), withTemplate);
+
+    expect(db.waTemplate.findFirst.mock.calls[0][0].where).toEqual({ id: "tmpl-1", orgId: ORG });
+  });
+
   test("inside an open window a template's words go as text, from the template's number", async () => {
-    db.waTemplate.findUnique.mockResolvedValue(storedTemplate("PENDING"));
+    db.waTemplate.findFirst.mockResolvedValue(storedTemplate("PENDING"));
     (findOpenSession as Mock).mockResolvedValue({ phoneId: "phone-9" });
 
     const { plan } = await planAndSend(ctx(), withTemplate);
@@ -104,7 +110,7 @@ describe("whatsappChannel.plan — a notification", () => {
   });
 
   test("a template with buttons is never downgraded", async () => {
-    db.waTemplate.findUnique.mockResolvedValue(storedTemplate("APPROVED", [BODY, BUTTONS]));
+    db.waTemplate.findFirst.mockResolvedValue(storedTemplate("APPROVED", [BODY, BUTTONS]));
     (findOpenSession as Mock).mockResolvedValue({ phoneId: null });
 
     const { plan } = await planAndSend(ctx(), withTemplate);
@@ -114,7 +120,7 @@ describe("whatsappChannel.plan — a notification", () => {
   });
 
   test("with the programme's switch off it is always the template", async () => {
-    db.waTemplate.findUnique.mockResolvedValue(storedTemplate());
+    db.waTemplate.findFirst.mockResolvedValue(storedTemplate());
     (findOpenSession as Mock).mockResolvedValue({ phoneId: null });
 
     const { plan } = await planAndSend(
@@ -127,7 +133,7 @@ describe("whatsappChannel.plan — a notification", () => {
   });
 
   test("outside the window an approved template goes, its parameters as strings", async () => {
-    db.waTemplate.findUnique.mockResolvedValue(storedTemplate());
+    db.waTemplate.findFirst.mockResolvedValue(storedTemplate());
 
     const { plan, result } = await planAndSend(ctx(), withTemplate);
 
@@ -151,7 +157,7 @@ describe("whatsappChannel.plan — a notification", () => {
   });
 
   test("outside the window a template Meta has not approved is not sent", async () => {
-    db.waTemplate.findUnique.mockResolvedValue(storedTemplate("PENDING"));
+    db.waTemplate.findFirst.mockResolvedValue(storedTemplate("PENDING"));
 
     const { plan } = await planAndSend(ctx(), withTemplate);
 
@@ -202,7 +208,7 @@ describe("whatsappChannel.plan — a notification", () => {
       parts: { flow: { dbFlowId: "flow-1", context: { surveyTeamMapId: "stm" } } },
       artefacts: { WHATSAPP: { waTemplateId: "tmpl-f", params: ["Ann", "Kettle"] } },
     };
-    db.waTemplate.findUnique.mockResolvedValue(storedTemplate("APPROVED", [BODY, BUTTONS]));
+    db.waTemplate.findFirst.mockResolvedValue(storedTemplate("APPROVED", [BODY, BUTTONS]));
 
     (findOpenSession as Mock).mockResolvedValue({ phoneId: null });
     const inside = await planAndSend(ctx(), feedback);
@@ -229,7 +235,7 @@ describe("whatsappChannel.plan — a reply", () => {
   });
 
   test("uses a keyword's template only when it has no words of its own", async () => {
-    db.waTemplate.findUnique.mockResolvedValue(storedTemplate());
+    db.waTemplate.findFirst.mockResolvedValue(storedTemplate());
 
     const { plan } = await planAndSend(reply, { ...withTemplate, text: null });
 
@@ -284,7 +290,7 @@ describe("whatsappChannel.send", () => {
   });
 
   test("a template Meta refused is a failed send", async () => {
-    db.waTemplate.findUnique.mockResolvedValue(storedTemplate());
+    db.waTemplate.findFirst.mockResolvedValue(storedTemplate());
     (sendTemplateToUserCore as Mock).mockResolvedValue({ status: false, message: "no channel" });
 
     expect((await planAndSend(ctx(), withTemplate)).result).toMatchObject({

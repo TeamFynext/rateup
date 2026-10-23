@@ -127,18 +127,27 @@ describe("updateSurveyThemeActiveSurveyThemeInDB", () => {
     expect(db.survey.update).not.toHaveBeenCalled();
   });
 
-  // Theme titles are stored as raw HTML — defaultTheme.ts holds
-  // `<h3 ...>Welcome</h3><p ...>` — so the theme JSON is markup that the public
-  // survey page renders. The tenancy check is what stops it being another org's
-  // page; the shape of the JSON itself is still unconstrained (33.4).
-  test("stores whatever JSON the body carried, markup included", async () => {
+  // Theme titles are stored as HTML — defaultTheme.ts holds `<h3 ...>Welcome</h3><p ...>` —
+  // so the theme JSON is markup. The tenancy check stops it being another org's page, and
+  // since FE-1 the titles are sanitised before they are stored; the rest of the JSON is kept.
+  test("sanitises the page titles in the JSON the body carried, keeping everything else", async () => {
     const theme = {
-      surveyTheme: { title: { title: `<img src=x onerror="fetch('https://evil.test')">` } },
+      surveyTheme: {
+        title: { title: `<img src=x onerror="fetch('https://evil.test')">`, styles: { a: 1 } },
+        button: { label: "Go" },
+      },
     };
 
     await updateSurveyThemeActiveSurveyThemeInDB(req({ body: { surveyId: VICTIM_SURVEY, theme } }));
 
-    expect(db.webSurveyTheme.update.mock.calls[0][0].data).toEqual({ theme });
+    expect(db.webSurveyTheme.update.mock.calls[0][0].data).toEqual({
+      theme: {
+        surveyTheme: {
+          title: { title: '<img src="x">', styles: { a: 1 } },
+          button: { label: "Go" },
+        },
+      },
+    });
   });
 
   test("the shipped page themes are themselves markup", () => {

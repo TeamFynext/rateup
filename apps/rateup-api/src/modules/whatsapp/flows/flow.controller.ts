@@ -40,6 +40,7 @@ import {
 } from "./flow.schema.js";
 import { createSurveyFromFlow } from "./flow.utils.js";
 import { metaCategoriesFor } from "./flowCategories.js";
+import { FlowValidationError } from "./flowValidation.js";
 import {
   buildFeedbackFlowJson,
   buildFeedbackTemplateMessage,
@@ -50,6 +51,7 @@ import {
   suggestFeedbackDraftKey,
 } from "./flowTemplates.js";
 import prisma from "../../../utils/prisma.js";
+import { inScope } from "../../../authz/scope.js";
 import { log } from "../../../utils/logger.js";
 import {
   LOYALTY_FEEDBACK_FLOW_CATEGORY,
@@ -177,6 +179,22 @@ export async function getFlowJsonHandler(
   res.send(json);
 }
 
+/**
+ * Whether every team a request names is one of the caller's org's teams, and within the
+ * caller's team scope. The ids become `SurveyTeamMap` rows — the flow's audience — so a
+ * foreign id would attach this org's survey to another org's team.
+ */
+async function teamsAreCallers(
+  req: FastifyRequest,
+  teamIds: readonly (string | null | undefined)[] | null | undefined,
+) {
+  const ids = [...new Set((teamIds ?? []).filter((id): id is string => !!id))];
+  if (ids.length === 0) return true;
+  if (req.actor && ids.some((id) => !inScope(req.actor!, id))) return false;
+  const owned = await prisma.team.count({ where: { id: { in: ids }, orgId: req.user.orgId } });
+  return owned === ids.length;
+}
+
 export async function importFlowsHandler(
   req: FastifyRequest<{
     Body: ImportFlowsBody;
@@ -185,6 +203,9 @@ export async function importFlowsHandler(
 ) {
   const { orgId } = req.user;
   const { waFlowIds, mapData, whatsappSettingsPhoneId } = req.body;
+  if (!(await teamsAreCallers(req, req.body.teamIds))) {
+    return res.status(404).send({ message: "Team not found" });
+  }
   let whatsappSettingsId: string | undefined;
   if (whatsappSettingsPhoneId) {
     const waSettings = await getWaSettings(orgId, whatsappSettingsPhoneId);
@@ -261,6 +282,9 @@ export async function createFlowHandler(
 ) {
   const { orgId } = req.user;
   const { name, categories, teamIds, whatsappSettingsPhoneId, templateKey } = req.body;
+  if (!(await teamsAreCallers(req, teamIds))) {
+    return res.status(404).send({ message: "Team not found" });
+  }
   let createdFlowId: string | undefined;
   let createdOnWhatsappSettingsId: string | undefined;
   try {
@@ -425,8 +449,19 @@ export async function saveFlowJsonToWhatsappHandler(
 
     res.status(200).send();
   } catch (error) {
+    // An unfinished element is the user's to fix, so it is a 400 that names it.
+    if (error instanceof FlowValidationError) {
+      log.info(
+        { dbFlowId: req.params.dbFlowId, errors: error.errors },
+        "Flow JSON failed validation",
+      );
+      return res.status(400).send({ message: error.message, errors: error.errors });
+    }
     log.error({ err: error }, "Error saving flow json to whatsapp");
-    res.status(500).send(error instanceof Error ? error.message : "Unknown error");
+    if (error instanceof GraphApiError) {
+      return res.status(400).send({ message: getGraphApiErrorMessage(error) });
+    }
+    res.status(500).send({ message: error instanceof Error ? error.message : "Unknown error" });
   }
 }
 
@@ -512,6 +547,9 @@ export async function cloneFlowHandler(
   try {
     let teamId = req?.body?.teamId;
     const { orgId, userId } = req.user;
+    if (!(await teamsAreCallers(req, [teamId]))) {
+      return res.status(404).send({ message: "Team not found" });
+    }
     const { dbFlowId } = req.params;
     const previousFlow = await getFlowFromDb(dbFlowId, orgId);
     if (!previousFlow) {

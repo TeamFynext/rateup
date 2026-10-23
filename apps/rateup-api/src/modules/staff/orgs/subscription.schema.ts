@@ -32,6 +32,7 @@ export const subscriptionFeaturesSchema = z.object({
     active: z.boolean(),
     activeContacts: z.object({ active: z.boolean(), count: countOf }),
     campaignCredits: z.object({ active: z.boolean(), count: countOf }),
+    shopOrders: z.object({ active: z.boolean(), count: countOf }).optional(),
     campaign: active.optional(),
     loyalty: active.optional(),
     referrals: active.optional(),

@@ -9,6 +9,22 @@ import { callMetaApi } from "../wa_axios.js";
 import { sendMetaMessage } from "../meta/metaMessage.service.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
 import { getInstagramChannel, updateMetaChannelById } from "../metaChannel/metaChannel.service.js";
+import {
+  sendSendApiFile,
+  sendSendApiGenericTemplate,
+  sendSendApiImage,
+  sendSendApiQuickReply,
+  sendSendApiText,
+  sendSendApiVideo,
+  type MetaFlowChannel,
+  type SendApiQuickReply,
+  type SendApiTemplateElement,
+} from "../meta/sendApiMessages.js";
+
+/** The plain Send API messages live in meta/sendApiMessages; these name the channel. */
+function instagram(ibaId: string): MetaFlowChannel {
+  return { platform: PlatformType.INSTAGRAM, accountId: ibaId };
+}
 
 /** Instagram's messenger-profile surface (ice breakers, persistent menu). */
 async function callInstagramMessengerProfileApi(
@@ -98,62 +114,17 @@ export async function sendInstagramPrivateReply(
   }
 }
 
-/**
- * Send a text message via Instagram
- */
+/** Send a text message via Instagram. */
 export async function sendInstagramTextMessage(
   igsId: string,
   text: string,
   orgId: string,
   ibaId: string,
 ): Promise<unknown> {
-  try {
-    // Get settings for this organization
-    const channel = await getInstagramChannel(ibaId, orgId);
-
-    if (!channel) {
-      throw new Error(`No Instagram settings found for organization ${orgId}`);
-    }
-
-    const { pageAccessToken } = channel;
-
-    // Prepare the message payload
-    const payload = {
-      recipient: {
-        id: igsId,
-      },
-      message: {
-        text: text,
-      },
-    };
-
-    // Send via Meta Graph API
-    const result = await sendMetaMessage({
-      platform: PlatformType.INSTAGRAM,
-      orgId,
-      to: igsId,
-      sourceIdentifier: ibaId,
-      payload,
-      messageType: "AUTOMATED",
-      isAutomated: true,
-      enforcePlanLimits: true,
-    });
-    if (!result.ok) throw new Error(result.error);
-
-    log.info(
-      `[Instagram Messaging] Sent text message to igsId ${igsId}: "${text.substring(0, 50)}..."`,
-    );
-
-    return { message_id: result.messageId };
-  } catch (error) {
-    log.error({ err: error }, `[Instagram Messaging] Error sending text message to ${igsId}`);
-    throw error;
-  }
+  return sendSendApiText(instagram(ibaId), igsId, orgId, text);
 }
 
-/**
- * Send an image via Instagram
- */
+/** Send an image via Instagram; a caption follows as its own message. */
 export async function sendInstagramImage(
   igsId: string,
   imageUrl: string,
@@ -161,207 +132,28 @@ export async function sendInstagramImage(
   ibaId: string,
   caption?: string,
 ): Promise<{ image: unknown; caption?: { sent: boolean; error?: unknown } }> {
-  try {
-    const channel = await getInstagramChannel(ibaId, orgId);
-
-    if (!channel) {
-      throw new Error(`No Instagram settings found for igsId ${igsId} in org ${orgId}`);
-    }
-
-    const { pageAccessToken } = channel;
-
-    const payload = {
-      recipient: {
-        id: igsId,
-      },
-      message: {
-        attachment: {
-          type: "image",
-          payload: {
-            url: imageUrl,
-            is_reusable: true,
-          },
-        },
-      },
-    };
-
-    // Send the image
-    const result = await sendMetaMessage({
-      platform: PlatformType.INSTAGRAM,
-      orgId,
-      to: igsId,
-      sourceIdentifier: ibaId,
-      payload,
-      messageType: "AUTOMATED",
-      isAutomated: true,
-      enforcePlanLimits: true,
-    });
-    if (!result.ok) throw new Error(result.error);
-
-    log.info(`[Instagram Messaging] Sent image to igsId ${igsId}: ${imageUrl}`);
-
-    // The caption goes out as its own message, and files itself when it does.
-
-    if (!caption) {
-      return { image: { message_id: result.messageId } };
-    }
-
-    try {
-      await sendInstagramTextMessage(igsId, caption, orgId, ibaId);
-      return { image: { message_id: result.messageId }, caption: { sent: true } };
-    } catch (captionError) {
-      log.error(
-        { err: captionError },
-        `[Instagram Messaging] Image delivered to ${igsId} but its caption failed`,
-      );
-      return {
-        image: { message_id: result.messageId },
-        caption: { sent: false, error: captionError },
-      };
-    }
-  } catch (error) {
-    log.error({ err: error }, `[Instagram Messaging] Error sending image to ${igsId}`);
-    throw error;
-  }
+  return sendSendApiImage(instagram(ibaId), igsId, orgId, imageUrl, caption);
 }
 
-/**
- * Send a generic template (carousel with buttons) via Instagram
- */
+/** Send a generic template (carousel with buttons) via Instagram. */
 export async function sendInstagramGenericTemplate(
   igsId: string,
-  elements: Array<{
-    title: string;
-    subtitle?: string;
-    image_url?: string;
-    buttons?: Array<{
-      type: "postback" | "web_url";
-      title: string;
-      payload?: string;
-      url?: string;
-    }>;
-  }>,
+  elements: SendApiTemplateElement[],
   orgId: string,
   ibaId: string,
 ): Promise<unknown> {
-  try {
-    const channel = await getInstagramChannel(ibaId, orgId);
-
-    if (!channel) {
-      throw new Error(`No Instagram settings found for organization ${orgId}`);
-    }
-
-    const { pageAccessToken } = channel;
-
-    const payload = {
-      recipient: {
-        id: igsId,
-      },
-      message: {
-        attachment: {
-          type: "template",
-          payload: {
-            template_type: "generic",
-            elements: elements.map((element) => ({
-              title: element.title,
-              subtitle: element.subtitle || "",
-              image_url: element.image_url || "",
-              buttons:
-                element.buttons?.map((button) => ({
-                  type: button.type,
-                  title: button.title,
-                  payload: button.payload,
-                  url: button.url,
-                })) || [],
-            })),
-          },
-        },
-      },
-    };
-
-    const result = await sendMetaMessage({
-      platform: PlatformType.INSTAGRAM,
-      orgId,
-      to: igsId,
-      sourceIdentifier: ibaId,
-      payload,
-      messageType: "AUTOMATED",
-      isAutomated: true,
-      enforcePlanLimits: true,
-    });
-    if (!result.ok) throw new Error(result.error);
-
-    log.info(
-      `[Instagram Messaging] Sent generic template to igsId ${igsId} with ${elements.length} elements`,
-    );
-
-    return { message_id: result.messageId };
-  } catch (error) {
-    log.error({ err: error }, `[Instagram Messaging] Error sending generic template to ${igsId}`);
-    throw error;
-  }
+  return sendSendApiGenericTemplate(instagram(ibaId), igsId, orgId, elements);
 }
 
-/**
- * Send a quick reply message via Instagram
- */
+/** Send a quick reply message via Instagram. */
 export async function sendInstagramQuickReply(
   igsId: string,
   text: string,
-  quickReplies: Array<{
-    content_type: "text";
-    title: string;
-    payload: string;
-    image_url?: string;
-  }>,
+  quickReplies: SendApiQuickReply[],
   orgId: string,
   ibaId: string,
 ): Promise<unknown> {
-  try {
-    const channel = await getInstagramChannel(ibaId, orgId);
-
-    if (!channel) {
-      throw new Error(`No Instagram settings found for organization ${orgId}`);
-    }
-
-    const { pageAccessToken } = channel;
-
-    const payload = {
-      recipient: {
-        id: igsId,
-      },
-      message: {
-        text: text,
-        quick_replies: quickReplies.map((qr) => ({
-          content_type: qr.content_type || "text",
-          title: qr.title,
-          payload: qr.payload,
-          image_url: qr.image_url,
-        })),
-      },
-    };
-
-    const result = await sendMetaMessage({
-      platform: PlatformType.INSTAGRAM,
-      orgId,
-      to: igsId,
-      sourceIdentifier: ibaId,
-      payload,
-      messageType: "AUTOMATED",
-      isAutomated: true,
-      enforcePlanLimits: true,
-    });
-    if (!result.ok) throw new Error(result.error);
-
-    log.info(
-      `[Instagram Messaging] Sent quick reply to igsId ${igsId} with ${quickReplies.length} options`,
-    );
-
-    return { message_id: result.messageId };
-  } catch (error) {
-    log.error({ err: error }, `[Instagram Messaging] Error sending quick reply to ${igsId}`);
-    throw error;
-  }
+  return sendSendApiQuickReply(instagram(ibaId), igsId, orgId, text, quickReplies);
 }
 
 /**
@@ -680,112 +472,24 @@ export async function deleteInstagramPersistentMenu(orgId: string, ibaId: string
   return response;
 }
 
-/**
- * Send a video via Instagram
- */
+/** Send a video via Instagram. */
 export async function sendInstagramVideo(
   igsId: string,
   videoUrl: string,
   orgId: string,
   ibaId: string,
 ): Promise<unknown> {
-  try {
-    const channel = await getInstagramChannel(ibaId, orgId);
-
-    if (!channel) {
-      throw new Error(`No Instagram settings found for organization ${orgId}`);
-    }
-
-    const { pageAccessToken } = channel;
-
-    const payload = {
-      recipient: {
-        id: igsId,
-      },
-      message: {
-        attachment: {
-          type: "video",
-          payload: {
-            url: videoUrl,
-            is_reusable: true,
-          },
-        },
-      },
-    };
-
-    const result = await sendMetaMessage({
-      platform: PlatformType.INSTAGRAM,
-      orgId,
-      to: igsId,
-      sourceIdentifier: ibaId,
-      payload,
-      messageType: "AUTOMATED",
-      isAutomated: true,
-      enforcePlanLimits: true,
-    });
-    if (!result.ok) throw new Error(result.error);
-
-    log.info(`[Instagram Messaging] Sent video to igsId ${igsId}: ${videoUrl}`);
-
-    return { message_id: result.messageId };
-  } catch (error) {
-    log.error({ err: error }, `[Instagram Messaging] Error sending video to ${igsId}`);
-    throw error;
-  }
+  return (await sendSendApiVideo(instagram(ibaId), igsId, orgId, videoUrl)).media;
 }
 
-/**
- * Send a file via Instagram
- */
+/** Send a file via Instagram. */
 export async function sendInstagramFile(
   igsId: string,
   fileUrl: string,
   orgId: string,
   ibaId: string,
 ): Promise<unknown> {
-  try {
-    const channel = await getInstagramChannel(ibaId, orgId);
-
-    if (!channel) {
-      throw new Error(`No Instagram settings found for organization ${orgId}`);
-    }
-
-    const { pageAccessToken } = channel;
-
-    const payload = {
-      recipient: {
-        id: igsId,
-      },
-      message: {
-        attachment: {
-          type: "file",
-          payload: {
-            url: fileUrl,
-            is_reusable: true,
-          },
-        },
-      },
-    };
-
-    const result = await sendMetaMessage({
-      platform: PlatformType.INSTAGRAM,
-      orgId,
-      to: igsId,
-      sourceIdentifier: ibaId,
-      payload,
-      messageType: "AUTOMATED",
-      isAutomated: true,
-      enforcePlanLimits: true,
-    });
-    if (!result.ok) throw new Error(result.error);
-
-    log.info(`[Instagram Messaging] Sent file to igsId ${igsId}: ${fileUrl}`);
-
-    return { message_id: result.messageId };
-  } catch (error) {
-    log.error({ err: error }, `[Instagram Messaging] Error sending file to ${igsId}`);
-    throw error;
-  }
+  return sendSendApiFile(instagram(ibaId), igsId, orgId, fileUrl);
 }
 
 export interface InstagramMediaItem {

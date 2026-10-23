@@ -12,8 +12,11 @@ import {
   getCampaignsExternalController,
   sendCampaignExternalController,
 } from "./campaigns.external.controller.js";
+import { declareExternalScopes } from "../../shared/scopes.js";
 
 export async function externalCampaignRoutes(server: FastifyInstance) {
+  declareExternalScopes(server, { read: "campaigns.read", write: "campaigns.manage" });
+
   server.post(
     "/",
     {
@@ -71,6 +74,7 @@ export async function externalCampaignRoutes(server: FastifyInstance) {
   server.put(
     "/:campaignId/send",
     {
+      config: { permission: "campaigns.send", paid: true },
       schema: {
         tags: ["Campaign"],
         description: "Send a campaign by ID",

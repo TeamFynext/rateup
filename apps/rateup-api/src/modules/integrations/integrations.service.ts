@@ -1,15 +1,20 @@
 import { IntegratedApps } from "../../types/enums.js";
-import { encryptCredentialSecrets } from "./shared/credentialCrypto.js";
+import { encryptCredentialSecrets, restoreRedactedSecrets } from "./shared/credentialCrypto.js";
 import prisma from "../../utils/prisma.js";
 import { IntegrationSchema, UpdateIntgrationInput } from "./integrations.schema.js";
 import { log } from "../../utils/logger.js";
-import { generateApiKey } from "../apiAccessToken/apiAccessToken.service.js";
+import { generateAutomationKey } from "./automation/automation.keys.js";
+import { isAutomationPlatform } from "./automation/automation.platforms.js";
 import axios from "axios";
+import { assertPublicUrl, publicAxiosOptions } from "../../utils/ssrf.js";
 
 export const getAllIntegrationsByOrgId = (orgId: string) => {
   return prisma.integration.findMany({
     where: {
       orgId,
+      // Shop payment gateways hold a merchant's payment keys and are managed only through
+      // Commerce → Payments, which never returns them.
+      NOT: { name: { startsWith: "shop_" } },
     },
   });
 };
@@ -28,8 +33,9 @@ export const getIntegrationByName = async (orgId: string, name: string) => {
 
 export const createIntegration = async (data: IntegrationSchema, orgId?: string) => {
   let apikey;
-  if (data.name === IntegratedApps.zapier) {
-    const { key, hash } = await generateApiKey();
+  if (isAutomationPlatform(data.name)) {
+    if (!orgId) throw new Error(`Missing org to create the ${data.name} API key`);
+    const { key, hash } = await generateAutomationKey(data.name, orgId);
     data.credential = {
       ...data?.credential,
       accessToken: hash,
@@ -52,12 +58,19 @@ export const updateIntegrationByName = async (
   name: string,
   data: UpdateIntgrationInput,
 ) => {
+  if (data.credential) {
+    const stored = await prisma.integration.findUnique({
+      where: { orgid_integration_name_unique: { orgId, name } },
+      select: { credential: true },
+    });
+    data.credential = restoreRedactedSecrets(data.credential, stored?.credential);
+  }
   let apikey;
-  if (name === IntegratedApps.zapier && data.updateKey) {
+  if (isAutomationPlatform(name) && data.updateKey) {
     if (!data.credential) {
-      throw new Error("Missing credential to regenerate the zapier access token");
+      throw new Error(`Missing credential to regenerate the ${name} access token`);
     }
-    const { key, hash } = await generateApiKey();
+    const { key, hash } = await generateAutomationKey(name, orgId);
     data.credential.accessToken = hash;
     apikey = key;
   }
@@ -111,7 +124,15 @@ export async function deleteIntegrationByName(name: string, orgId: string) {
     }
   }
 
-  return prisma.integration.delete({ where });
+  const deleted = await prisma.integration.delete({ where });
+  if (name === "shopify" || name === "woocommerce") {
+    const { onOnlineStoreDisconnected } = await import("../commerce/shop/store.service.js");
+    await onOnlineStoreDisconnected(orgId, name === "shopify" ? "SHOPIFY" : "WOOCOMMERCE").catch(
+      (error) =>
+        log.warn({ err: error, orgId }, "Could not move the shop's checkout back to RateUp"),
+    );
+  }
+  return deleted;
 }
 
 export async function deleteZapierTriggerHooks(
@@ -130,7 +151,14 @@ export async function deleteZapierTriggerHooks(
   }
 
   if (stored.active) {
-    await axios.delete(stored.hookUrl);
+    // Stored before hook URLs were checked, so it may point anywhere; only a
+    // public address is told about the removal.
+    try {
+      await assertPublicUrl(stored.hookUrl);
+      await axios.delete(stored.hookUrl, publicAxiosOptions(10_000));
+    } catch (error) {
+      log.warn({ err: error, orgId }, "Could not notify Zapier of a removed trigger hook");
+    }
   }
   const credential = {
     ...integration.credential,

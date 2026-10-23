@@ -33,6 +33,7 @@ import { statsRoutes } from "./modules/stats/stats.route.js";
 import { paymentStripeRoutes } from "./modules/payment/stripe/stripe.route.js";
 import { apiAccessTokenRoutes } from "./modules/apiAccessToken/apiAccessToken.route.js";
 import { externalV1Routes } from "./external/v1/index.js";
+import { externalV2Routes } from "./external/v2/index.js";
 import { orgWsRoutes } from "./modules/org/ws/org.ws.routes.js";
 import { stripePublicRoutes } from "./modules/payment/stripe/stripe.public.route.js";
 import { emailPublicRoutes } from "./modules/email/email.public.route.js";
@@ -43,6 +44,8 @@ import { integrationPublicRoutes } from "./modules/integrations/integration.publ
 import { mobileNotificationRoutes } from "./modules/mobileNotification/mobile.route.js";
 import { dashboardRoutes } from "./modules/dashboard/dashboard.route.js";
 import { commerceRoutes } from "./modules/commerce/commerce.route.js";
+import { shopRoutes } from "./modules/commerce/shop/shop.route.js";
+import { shopPublicRoutes } from "./modules/commerce/shop/shop.public.route.js";
 import { notificationRoutes } from "./modules/notification/notification.route.js";
 import { instagramWebhookRoutes } from "./modules/whatsapp/instagram/instagram.webhook.route.js";
 import { facebookWebhookRoutes } from "./modules/whatsapp/facebook/facebook.webhook.route.js";
@@ -93,6 +96,7 @@ const routeConfigs = [
   { plugin: customerCommsPublicRoutes, prefix: "/api/public/customer-comms" },
   { plugin: shopifyLinkPublicRoutes, prefix: "/api/public/r" },
   { plugin: loyaltyCardPublicRoutes, prefix: "/api/public/loyalty/cards" },
+  { plugin: shopPublicRoutes, prefix: "/api/public/shop" },
 
   // // Protected routes
   { plugin: surveyRoutes, prefix: "/api/survey" },
@@ -127,12 +131,14 @@ const routeConfigs = [
   { plugin: orgWsRoutes, prefix: "/api/org/ws" },
   { plugin: apiAccessTokenRoutes, prefix: "/api/api-access-token" },
   { plugin: externalV1Routes, prefix: "/api/external/v1/:orgId" },
+  { plugin: externalV2Routes, prefix: "/api/external/v2" },
   { plugin: emailPublicRoutes, prefix: "/api/email" },
   { plugin: generateQrRoutes, prefix: "/api/generateQr" },
   { plugin: integrationsRoutes, prefix: "/api/integrations" },
   { plugin: mobileNotificationRoutes, prefix: "/api/mobilenotification" },
   { plugin: dashboardRoutes, prefix: "/api/dashboard" },
   { plugin: commerceRoutes, prefix: "/api/commerce" },
+  { plugin: shopRoutes, prefix: "/api/shop" },
   { plugin: notificationRoutes, prefix: "/api/notification" },
   { plugin: customerCommsRoutes, prefix: "/api/customer-comms" },
   { plugin: instagramWebhookRoutes, prefix: "/api/instagram/webhook" },

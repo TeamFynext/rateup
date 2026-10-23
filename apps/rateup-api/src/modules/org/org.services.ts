@@ -28,6 +28,7 @@ export async function createOrg(input: CreateOrgInput) {
     data: {
       name: input.name,
       ownerId: input.owner,
+      modulesChosenAt: new Date(),
       surveyThemes: {
         create: {
           name: "Default Theme",
@@ -207,6 +208,8 @@ export async function getAllMembersWithTeamsAndInvitation(orgId: string) {
       status: true,
       type: true,
       invitedBy: true,
+      createdAt: true,
+      tokenExpiresAt: true,
       team: {
         select: {
           id: true,
@@ -225,6 +228,10 @@ export async function getAllMembersWithTeamsAndInvitation(orgId: string) {
     status: invite.status,
     type: invite.type,
     invitedBy: invite.invitedBy,
+    createdAt: invite.createdAt,
+    // When the emailed link stops working. Invitations sent before invite tokens existed have
+    // no working link at all, so they read as already expired and the UI offers a resend.
+    expiresAt: invite.tokenExpiresAt ?? invite.createdAt,
     teams: invite.team
       ? [
           {

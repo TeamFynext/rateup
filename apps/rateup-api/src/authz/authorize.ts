@@ -9,7 +9,7 @@ import {
   ORG_SUSPENDED_CODE,
   ORG_SUSPENDED_MESSAGE,
 } from "../modules/org/orgSuspension.js";
-import { loadActor } from "./actor.js";
+import { isUserBlocked, loadActor } from "./actor.js";
 import type { Permission } from "./permissions.js";
 import { roleKeyToLegacy } from "./roles.js";
 
@@ -31,6 +31,11 @@ export async function attachSessionActor(
     const userId = session.getUserId();
     if (!userId) {
       reply.code(401).send({ message: "Not authorized" });
+      return false;
+    }
+    if (await isUserBlocked(userId)) {
+      await session.revokeSession();
+      reply.code(401).send({ message: "This account is paused or has been removed." });
       return false;
     }
     request.userId = userId;

@@ -9,6 +9,8 @@ export * from "./cron.queue.js";
 export * from "./integration.queue.js";
 export * from "./loyaltyFeedback.queue.js";
 export * from "./notification.queue.js";
+export * from "./statusRetry.queue.js";
 export * from "./user.queue.js";
 export * from "./webhook.queue.js";
 export * from "./whatsapp.queue.js";
+export * from "./waWebhookRetry.queue.js";

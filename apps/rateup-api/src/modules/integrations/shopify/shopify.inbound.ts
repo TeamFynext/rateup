@@ -59,6 +59,16 @@ export async function handleWebhook(webhook: ShopifyWebhookJobData) {
     case ShopifyEvents.APP_UNINSTALLED:
       await handleShopifyAppUnistalled(webhook);
       break;
+    case ShopifyEvents.PRODUCTS_CREATE:
+    case ShopifyEvents.PRODUCTS_UPDATE:
+    case ShopifyEvents.PRODUCTS_DELETE:
+    case ShopifyEvents.INVENTORY_LEVELS_UPDATE: {
+      const integration = await getShopifyIntegrationByShop(webhook.shop);
+      if (!integration?.orgId) break;
+      const { scheduleStoreMirror } = await import("../../commerce/shop/storeSync.service.js");
+      await scheduleStoreMirror(integration.orgId, "shopify");
+      break;
+    }
   }
 }
 
@@ -66,6 +76,10 @@ export async function handleShopifyAppUnistalled(webhook: { shop: string }) {
   const { shop } = webhook;
   const shopifyInfo = await getShopifyIntegrationByShop(shop);
   if (!shopifyInfo) return;
+  if (shopifyInfo.orgId) {
+    const { onOnlineStoreDisconnected } = await import("../../commerce/shop/store.service.js");
+    await onOnlineStoreDisconnected(shopifyInfo.orgId, "SHOPIFY");
+  }
   if (!shopifyInfo.org || !shopifyInfo.orgId) {
     await updateShopifyIntegrationByShop(shop, { active: false });
     return;

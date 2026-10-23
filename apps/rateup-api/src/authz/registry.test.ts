@@ -7,6 +7,7 @@ import {
   declareAccess,
   describeRoute,
   isMisplacedStaffRoute,
+  markStaffGuarded,
   registerAuthzRouteRegistry,
 } from "./registry.js";
 
@@ -49,6 +50,28 @@ describe("classifyRoute", () => {
     const r = route("/api/external/v1/:orgId/contacts");
     expect(classifyRoute(r)).toBe("tagged");
     expect(r.config.access).toBe("token");
+  });
+
+  test("the v2 token API, which names no org in its URL, is tagged token too", () => {
+    for (const r of [
+      route("/api/external/v2/contacts"),
+      route("/api/external/v2/loyalty/members/:ref"),
+    ]) {
+      expect(classifyRoute(r)).toBe("tagged");
+      expect(r.config.access).toBe("token");
+    }
+  });
+
+  test("the partner spec's own public declaration wins over the v2 prefix", () => {
+    const r = route("/api/external/v2/openapi.json", { access: "public" });
+    expect(classifyRoute(r)).toBe("declared");
+    expect(r.config.access).toBe("public");
+  });
+
+  test("a look-alike prefix is not the external API", () => {
+    const r = route("/api/external/v20/contacts");
+    expect(classifyRoute(r)).toBe("undeclared");
+    expect(r.config.access).toBeUndefined();
   });
 
   test("anything else under /api with no declaration is undeclared and left alone", () => {
@@ -158,10 +181,24 @@ describe("declareAccess", () => {
 
 describe("access: staff", () => {
   // It makes authorize() stand aside, so outside the staff plugin it would be an open door.
+  const staffRoute = (url: string) => {
+    const config = { access: "staff" };
+    markStaffGuarded(config);
+    return route(url, config);
+  };
+
   test("is only valid under /api/staff/", () => {
-    expect(isMisplacedStaffRoute(route("/api/staff/auth/me", { access: "staff" }))).toBe(false);
-    expect(isMisplacedStaffRoute(route("/api/org/all", { access: "staff" }))).toBe(true);
-    expect(isMisplacedStaffRoute(route("/api/staffing", { access: "staff" }))).toBe(true);
+    expect(isMisplacedStaffRoute(staffRoute("/api/staff/auth/me"))).toBe(false);
+    expect(isMisplacedStaffRoute(staffRoute("/api/org/all"))).toBe(true);
+    expect(isMisplacedStaffRoute(staffRoute("/api/staffing"))).toBe(true);
     expect(isMisplacedStaffRoute(route("/api/org/all", { access: "session" }))).toBe(false);
+  });
+
+  test("the prefix alone is not enough: the staff plugin must have registered the route", () => {
+    expect(isMisplacedStaffRoute(route("/api/staff/auth/me", { access: "staff" }))).toBe(true);
+    // Copying the config (as Fastify and the plugin's own hook do) keeps the mark.
+    expect(isMisplacedStaffRoute(route("/api/staff/x", { ...staffRoute("/x").config }))).toBe(
+      false,
+    );
   });
 });

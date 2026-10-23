@@ -7,7 +7,9 @@
 import { Job, Worker } from "bullmq";
 
 import { log } from "../../../utils/logger.js";
-import { sweepExpiredIdempotencyRecords } from "../../../external/v1/idempotency.js";
+import { sweepExpiredIdempotencyRecords } from "../../../external/shared/idempotency.js";
+import { sweepOldApiUsage } from "../../../modules/apiAccessToken/apiUsage.js";
+import { sweepExpiredApiKeys } from "../../../modules/apiAccessToken/apiAccessToken.service.js";
 import baseRedis from "../../../utils/redisConnection.js";
 import { resetAnnualCounts, resetMonthlyCounts } from "../../../modules/stats/stats.service.js";
 import {
@@ -16,7 +18,10 @@ import {
 } from "../../../modules/survey/survey.service.js";
 import { sendCampaignCronAction } from "../../../modules/campaign/campaign.service.js";
 import { syncShopifyWebhooks } from "../../../modules/integrations/shopify/shopify.webhooks.js";
+import { syncShopifyWidgets } from "../../../modules/integrations/shopify/shopify.widget.js";
 import { cleanupShopifyCheckouts } from "../../../modules/integrations/shopify/shopify.checkouts.service.js";
+import { sweepExpiredDrafts } from "../../../modules/commerce/shop/orders.service.js";
+import { mirrorFollowedStores } from "../../../modules/commerce/shop/storeSync.service.js";
 import { refreshIntegrationCredentials } from "../../../modules/integrations/shared/credentialRefresh.js";
 import {
   processDripCampaigns,
@@ -33,6 +38,7 @@ import { reevaluateRollingTiers } from "../../../modules/loyalty/tiers/tierReeva
 import { settleSentCampaigns } from "../../../modules/campaign/campaignSettle.service.js";
 import { purgeStaffSessions } from "../../../modules/staff/staff.session.js";
 import { runOnboardingDrip } from "../../../modules/customerComms/drip.service.js";
+import { flushUsageCounters } from "../../shared/usageCounter.js";
 
 const workerConnection = baseRedis.duplicate();
 
@@ -73,8 +79,15 @@ const HANDLERS: Record<ScheduledJobId, () => Promise<void>> = {
     await safeRun("cleanupShopifyCheckouts", cleanupShopifyCheckouts);
   },
 
+  shopExpiredDrafts: async () => {
+    await safeRun("sweepExpiredDrafts", () => sweepExpiredDrafts());
+  },
+  shopStoreMirror: async () => {
+    await safeRun("mirrorFollowedStores", mirrorFollowedStores);
+  },
   shopifyWebhookSync: async () => {
     await safeRun("syncShopifyWebhooks", syncShopifyWebhooks);
+    await safeRun("syncShopifyWidgets", syncShopifyWidgets);
   },
 
   integrationCredentialRefresh: async () => {
@@ -88,11 +101,31 @@ const HANDLERS: Record<ScheduledJobId, () => Promise<void>> = {
     await safeRun("resetAnnualCounts", resetAnnualCounts);
   },
 
+  usageFlush: async () => {
+    // Every ten seconds, so no info log per tick — only when something moved.
+    await safeRun("flushUsageCounters", async () => {
+      const result = await flushUsageCounters(baseRedis);
+      if (result.restored || result.dropped) {
+        log.warn(result, "Usage flush finished with failures");
+      } else if (result.applied) {
+        log.debug(result, "Usage flush applied");
+      }
+    });
+  },
+
   externalIdempotencySweep: async () => {
     log.info("Running daily JOB --> External API idempotency record sweep");
     await safeRun("sweepExpiredIdempotencyRecords", async () => {
       const removed = await sweepExpiredIdempotencyRecords();
       log.info({ removed }, "Swept expired external idempotency records");
+    });
+    await safeRun("sweepOldApiUsage", async () => {
+      const removed = await sweepOldApiUsage();
+      log.info({ removed }, "Swept old partner API usage rows");
+    });
+    await safeRun("sweepExpiredApiKeys", async () => {
+      const removed = await sweepExpiredApiKeys();
+      log.info({ removed }, "Swept long-expired partner API keys");
     });
   },
 

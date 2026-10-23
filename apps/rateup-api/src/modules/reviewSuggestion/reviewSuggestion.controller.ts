@@ -80,7 +80,11 @@ export async function updateReviewSuggestionHandler(
   const access = await hasAccessToReview(request.actor, reviewSuggestionId);
   if (access !== "allowed") return refuse(reply, access);
 
-  const updatedReview = await updateReviewSuggestion(reviewSuggestionId, request.body);
+  const updatedReview = await updateReviewSuggestion(
+    reviewSuggestionId,
+    request.body,
+    request.actor!.orgId,
+  );
   reply.send(updatedReview);
 }
 
@@ -92,7 +96,7 @@ export async function deleteReviewSuggestionHandler(
   const access = await hasAccessToReview(request.actor, reviewSuggestionId);
   if (access !== "allowed") return refuse(reply, access);
 
-  const reviews = await deleteReviewSuggestion(reviewSuggestionId);
+  const reviews = await deleteReviewSuggestion(reviewSuggestionId, request.actor!.orgId);
   reply.send(reviews);
 }
 

@@ -44,7 +44,7 @@ const namedBody = (
   required: ["phone", field],
 });
 
-export type RateupToolGroup = "loyalty" | "crm";
+export type RateupToolGroup = "loyalty" | "crm" | "commerce";
 
 interface RateupTool {
   group: RateupToolGroup;
@@ -124,6 +124,102 @@ export const RATEUP_TOOLS = {
         method: "POST",
         path: "/crm/team",
         body: namedBody("team", "The team name, exactly as get_crm_options lists it"),
+      },
+      user_auth_required: false,
+    },
+  },
+  search_products: {
+    group: "commerce",
+    definition: {
+      name: "search_products",
+      description:
+        "Search the shop's products by what the customer asks for (a name, a kind of product, a colour or a size). Returns matching products with each option's variant_id, price and whether it is in stock. Use the variant_id with start_checkout. Never invent products or prices: only offer what this returns.",
+      request_definition: {
+        method: "GET",
+        path: "/shop/products",
+        query_parameters: {
+          q: {
+            type: "string",
+            description: "What to search for; leave empty to list bestsellers",
+            required: false,
+          },
+        },
+      },
+      user_auth_required: false,
+    },
+  },
+  start_checkout: {
+    group: "commerce",
+    definition: {
+      name: "start_checkout",
+      description:
+        "Put chosen products in a cart for the customer you are talking to and get a secure checkout link where they add their address, apply points or a coupon, and pay. Send the link in your reply with the total. Only use variant_ids from search_products.",
+      request_definition: {
+        method: "POST",
+        path: "/shop/checkout",
+        body: {
+          content_type: "application/json",
+          params: {
+            phone: {
+              type: "string",
+              description: "The customer's WhatsApp number",
+              binding: { kind: "macro", macro: "WHATSAPP_PHONE_NUMBER" },
+            },
+            items: {
+              type: "array",
+              description: "What the customer wants to buy",
+              items: {
+                type: "object",
+                properties: {
+                  variant_id: { type: "string", description: "A variant_id from search_products" },
+                  quantity: { type: "integer", description: "How many, 1 or more" },
+                },
+                required: ["variant_id", "quantity"],
+              },
+            },
+            coupon_code: { type: "string", description: "A coupon code the customer gave, if any" },
+          },
+          required: ["phone", "items"],
+        },
+      },
+      user_auth_required: false,
+    },
+  },
+  get_order_status: {
+    group: "commerce",
+    definition: {
+      name: "get_order_status",
+      description:
+        "Look up the recent orders of the customer you are talking to: what they ordered, whether it is paid, where it is (packed, shipped, delivered) and the tracking link. Call it whenever they ask where their order is.",
+      request_definition: {
+        method: "GET",
+        path: "/shop/orders",
+        query_parameters: { phone: customerPhone },
+      },
+      user_auth_required: false,
+    },
+  },
+  notify_when_back_in_stock: {
+    group: "commerce",
+    definition: {
+      name: "notify_when_back_in_stock",
+      description:
+        "When something the customer wants is sold out, sign them up to get a WhatsApp message as soon as it is back. Use the sold-out variant_id from search_products.",
+      request_definition: {
+        method: "POST",
+        path: "/shop/back-in-stock",
+        body: {
+          content_type: "application/json",
+          params: {
+            phone: {
+              type: "string",
+              description: "The customer's WhatsApp number",
+              binding: { kind: "macro", macro: "WHATSAPP_PHONE_NUMBER" },
+            },
+            variant_id: { type: "string", description: "The sold-out variant_id" },
+          },
+          required: ["phone", "variant_id"],
+        },
       },
       user_auth_required: false,
     },

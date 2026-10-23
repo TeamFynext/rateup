@@ -68,15 +68,16 @@ export interface StatusTallySnapshot {
 }
 
 /**
- * On unless switched off outside production, since the whole point is to be
- * running when someone fires a campaign at the mock and wants to check the
- * arithmetic. `STATUS_TALLY=1` turns it on anywhere, `STATUS_TALLY=0` off.
+ * On only where NODE_ENV says local (development or test), since the point is to be
+ * running when someone fires a campaign at the mock and wants to check the arithmetic.
+ * Production leaves NODE_ENV unset, so "not production" would have kept it on there.
+ * `STATUS_TALLY=1` turns it on anywhere (the dev environment's mock), `STATUS_TALLY=0` off.
  */
 function tallyEnabled(): boolean {
   const flag = process.env.STATUS_TALLY;
   if (flag === "1" || flag === "true") return true;
   if (flag === "0" || flag === "false") return false;
-  return (process.env.NODE_ENV || "development") !== "production";
+  return process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";
 }
 
 const zeroed = (): Record<Status, number> => ({ sent: 0, delivered: 0, read: 0, failed: 0 });

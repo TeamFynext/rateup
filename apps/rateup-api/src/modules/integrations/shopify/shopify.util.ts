@@ -20,6 +20,10 @@ export const ShopifyOrderWebhookTopicEventMap = [
   { key: ShopifyEvents.CHECKOUTS_CREATE, value: "checkouts/create" },
   { key: ShopifyEvents.CHECKOUTS_UPDATE, value: "checkouts/update" },
   { key: ShopifyEvents.CHECKOUTS_DELETE, value: "checkouts/delete" },
+  { key: ShopifyEvents.PRODUCTS_CREATE, value: "products/create" },
+  { key: ShopifyEvents.PRODUCTS_UPDATE, value: "products/update" },
+  { key: ShopifyEvents.PRODUCTS_DELETE, value: "products/delete" },
+  { key: ShopifyEvents.INVENTORY_LEVELS_UPDATE, value: "inventory_levels/update" },
 ];
 
 export function getScheduledTime(sendAfter: ShopifySendAfter | undefined) {

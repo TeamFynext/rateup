@@ -27,6 +27,11 @@ declare module "fastify" {
     staffPublic?: boolean;
     /** A staff POST that changes nothing (a preview), so it gets no fallback audit row. */
     staffReadOnly?: boolean;
+    /**
+     * Partner API only. The route spends money per call (a WhatsApp template or campaign
+     * send), so a `rk_test_` key may not reach it. See src/external/shared/scopes.ts.
+     */
+    paid?: boolean;
   }
 
   interface FastifyRequest {

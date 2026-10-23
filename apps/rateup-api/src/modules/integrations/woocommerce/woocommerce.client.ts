@@ -124,8 +124,8 @@ export interface WooCouponInput {
   description: string;
   discount_type: "percent" | "fixed_cart";
   amount: string;
-  /** UTC, without a zone suffix — WooCommerce's `_gmt` format. */
-  date_expires_gmt: string | null;
+  /** UTC with a `Z` suffix; see `asWooUtc` in woocommerce.coupons.ts. */
+  date_expires: string | null;
   minimum_amount?: string;
   individual_use: boolean;
   usage_limit: number;
@@ -172,6 +172,8 @@ export interface WooCatalogProduct {
   regular_price?: string;
   sale_price?: string;
   stock_status?: "instock" | "outofstock" | "onbackorder" | string;
+  manage_stock?: boolean;
+  stock_quantity?: number | null;
   images?: Array<{ src?: string }>;
   variations?: number[];
 }
@@ -184,6 +186,9 @@ export interface WooVariation {
   regular_price?: string;
   sale_price?: string;
   stock_status?: string;
+  /** `"parent"` when the variable product's own count applies. */
+  manage_stock?: boolean | "parent";
+  stock_quantity?: number | null;
   status?: string;
   image?: { src?: string } | null;
   attributes?: Array<{ name?: string; option?: string }>;
@@ -230,5 +235,47 @@ export async function searchWooProducts(client: AxiosInstance, search: string, p
   const response = await client.get<WooProduct[]>("/products", {
     params: { search: search || undefined, per_page: perPage, status: "publish" },
   });
+  return response.data;
+}
+
+/** The order fields RateUp writes (REST v3 `POST /orders`); amounts are decimal strings. */
+export interface WooOrderInput {
+  status?: "pending" | "processing" | "on-hold";
+  set_paid?: boolean;
+  currency?: string;
+  payment_method?: string;
+  payment_method_title?: string;
+  customer_note?: string;
+  billing?: Record<string, string | undefined>;
+  shipping?: Record<string, string | undefined>;
+  line_items: Array<{
+    product_id: number;
+    variation_id?: number;
+    quantity: number;
+    total?: string;
+  }>;
+  shipping_lines?: Array<{ method_id: string; method_title: string; total: string }>;
+  fee_lines?: Array<{ name: string; total: string }>;
+  meta_data?: Array<{ key: string; value: string }>;
+}
+
+export interface WooCreatedOrder {
+  id: number;
+  number?: string;
+  order_key?: string;
+  payment_url?: string;
+}
+
+export async function createWooOrder(client: AxiosInstance, order: WooOrderInput) {
+  const response = await client.post<WooCreatedOrder>("/orders", order);
+  return response.data;
+}
+
+export async function updateWooOrder(
+  client: AxiosInstance,
+  id: number | string,
+  patch: { status?: "processing" | "cancelled"; set_paid?: boolean },
+) {
+  const response = await client.put<WooCreatedOrder>(`/orders/${id}`, patch);
   return response.data;
 }

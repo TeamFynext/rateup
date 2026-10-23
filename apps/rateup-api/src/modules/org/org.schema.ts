@@ -3,6 +3,7 @@ import { PERMISSIONS } from "../../authz/permissions.js";
 import { ROLE_KEYS } from "../../authz/roles.js";
 import { z } from "zod";
 import { WaAssignedChatPermission } from "../../types/enums.js";
+import { ORG_MODULES } from "./modules.js";
 
 const orgCore = {
   name: z
@@ -40,6 +41,11 @@ export const memberPermissionsSchema = z.object({
   denies: z.array(z.enum(PERMISSIONS)).default([]),
 });
 export type MemberPermissionsInput = z.infer<typeof memberPermissionsSchema>;
+
+export const orgModulesSchema = z.object({
+  hiddenModules: z.array(z.enum(ORG_MODULES)).max(ORG_MODULES.length),
+});
+export type OrgModulesInput = z.infer<typeof orgModulesSchema>;
 
 export const memberActivityQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
@@ -83,6 +89,7 @@ const updateOrgDetailsSchema = z.object({
   // absent: it is tracked on `LoyaltyProgram.onboardingStep` by the guided wizard.
   onboardingChecklist: z
     .object({
+      features: z.boolean().optional(),
       api: z.boolean().optional(),
       verify: z.boolean().optional(),
       payment: z.boolean().optional(),
@@ -101,6 +108,7 @@ const updateOrgDetailsSchema = z.object({
       // its own column: `onboardingChecklist` is already a JSON field.
       skipped: z
         .object({
+          features: z.boolean().optional(),
           instagram: z.boolean().optional(),
           messenger: z.boolean().optional(),
           invite: z.boolean().optional(),
@@ -109,6 +117,23 @@ const updateOrgDetailsSchema = z.object({
           points: z.boolean().optional(),
           cmds: z.boolean().optional(),
         })
+        .optional(),
+    })
+    .optional(),
+});
+/**
+ * `PUT /org/completeorgdetails`: the signup questionnaire, merged into the `Org.onboarding`
+ * JSON column. Keys not listed here are dropped, so a new questionnaire field must be added
+ * here too. `integration` is the list of channels picked (older clients sent one string).
+ */
+const completeOrgDetailsSchema = z.object({
+  onboarding: z
+    .object({
+      services: z.array(z.string().trim().max(100)).max(50).optional(),
+      industry: z.string().trim().max(200).optional(),
+      template: z.string().trim().max(200).optional(),
+      integration: z
+        .union([z.string().trim().max(200), z.array(z.string().trim().max(100)).max(50)])
         .optional(),
     })
     .optional(),
@@ -128,6 +153,7 @@ export type UpdateLogoInput = z.infer<typeof updateLogoSchema>;
 export type UpdateOrgDetailsInput = z.infer<typeof updateOrgDetailsSchema>;
 export type ByOrgIdParams = z.infer<typeof byOrgIdParams>;
 export type PauseOrgInput = z.infer<typeof pauseOrgSchema>;
+export type CompleteOrgDetailsInput = z.infer<typeof completeOrgDetailsSchema>;
 
 // Auto-exported after fastify-zod migration
 export {
@@ -139,4 +165,16 @@ export {
   byOrgIdParams,
   updateOrgDetailsSchema,
   pauseOrgSchema,
+  completeOrgDetailsSchema,
 };
+
+/** The business step that follows signup (rateup-ui `/signup/business`). */
+export const businessProfileSchema = z.object({
+  orgName: z.string().trim().min(2).max(120),
+  phoneNumber: z.string().trim().max(32).optional(),
+  website: z.string().trim().max(300).optional(),
+  industry: z.string().trim().max(80).optional(),
+  teamSize: z.string().trim().max(20).optional(),
+  goals: z.array(z.string().max(60)).max(20).default([]),
+});
+export type BusinessProfileInput = z.infer<typeof businessProfileSchema>;

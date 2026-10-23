@@ -13,9 +13,13 @@ export function normalizePricingCategory(
 ): WaConversationCategory | null {
   if (!category) return null;
   const key = category.toUpperCase();
-  return key in WaConversationCategory
-    ? WaConversationCategory[key as keyof typeof WaConversationCategory]
-    : null;
+  if (key in WaConversationCategory) {
+    return WaConversationCategory[key as keyof typeof WaConversationCategory];
+  }
+  // Variants such as "marketing_lite" or "authentication_international" are still billable
+  // messages of their family; dropping them to null would leave them out of cost reports.
+  const family = Object.values(WaConversationCategory).find((c) => key.startsWith(`${c}_`));
+  return family ?? null;
 }
 
 export function normalizePricingModel(model: string | null | undefined): WaPricingModel | null {

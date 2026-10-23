@@ -4,14 +4,22 @@ import { z } from "zod";
 
 import { Role } from "../../../../generated/prisma/client.js";
 import { declareAccess } from "../../../authz/registry.js";
-import { ExternalApiError, externalErrorHandler } from "../../../external/v1/errors.js";
-import { loadProgram, requireLoyaltySubscription } from "../../../external/v1/loyalty/guards.js";
 import {
-  memberSummary,
-  rewardCatalogue,
-} from "../../../external/v1/loyalty/loyalty.external.controller.js";
+  ExternalApiError,
+  externalErrorHandler,
+  type ExternalErrorCode,
+} from "../../../external/shared/errors.js";
+import { loadProgram, requireLoyaltySubscription } from "../../../external/v2/loyalty/guards.js";
+import { memberSummary, rewardCatalogue } from "../../../external/v2/loyalty/loyalty.controller.js";
 import prisma from "../../../utils/prisma.js";
 import { rateLimit } from "../../../utils/rateLimit.js";
+import {
+  agentBackInStock,
+  agentOrderStatus,
+  agentSearchProducts,
+  agentStartCheckout,
+} from "../../commerce/shop/agentShop.service.js";
+import { ShopError } from "../../commerce/shop/shop.errors.js";
 import { resolvePipelineForContact } from "../../pipeline/pipelineLead/lead.service.js";
 import {
   executeAssignStageAction,
@@ -250,5 +258,81 @@ export async function rateupToolsRoutes(server: FastifyInstance) {
       }
       return { ok: true, team: match.name };
     },
+  );
+
+  // ---- shop ----
+  const SHOP_ERROR_CODES: Record<ShopError["code"], ExternalErrorCode> = {
+    NOT_FOUND: "not_found",
+    INVALID: "invalid",
+    OUT_OF_STOCK: "out_of_stock",
+    DISCOUNT_INVALID: "discount_invalid",
+    PAYMENT_UNAVAILABLE: "payment_unavailable",
+    PAYMENT_FAILED: "payment_failed",
+    CHECKOUT_EXPIRED: "checkout_expired",
+    CONFLICT: "conflict",
+    PLAN_REQUIRED: "subscription_required",
+    FORBIDDEN: "insufficient_scope",
+    LIMIT_REACHED: "rate_limited",
+    ORDER_LIMIT: "order_limit",
+  };
+  const shopError = (err: unknown): never => {
+    if (err instanceof ShopError) {
+      throw new ExternalApiError(err.statusCode, SHOP_ERROR_CODES[err.code], err.message);
+    }
+    throw err;
+  };
+
+  const productQuery = z.object({ q: z.string().trim().max(120).optional() });
+  server.get<{ Params: AgentParams; Querystring: z.infer<typeof productQuery> }>(
+    "/:agentId/shop/products",
+    { schema: { params: agentParams, querystring: productQuery } },
+    (request) => agentSearchProducts(request.user.orgId, request.query.q).catch(shopError),
+  );
+
+  const checkoutBody = z.object({
+    phone: phoneField,
+    items: z
+      .array(
+        z.object({
+          variant_id: z.string().uuid(),
+          quantity: z.coerce.number().int().min(1).max(99),
+        }),
+      )
+      .min(1)
+      .max(20),
+    coupon_code: z.string().trim().max(32).optional(),
+  });
+  server.post<{ Params: AgentParams; Body: z.infer<typeof checkoutBody> }>(
+    "/:agentId/shop/checkout",
+    { schema: { params: agentParams, body: checkoutBody } },
+    async (request) => {
+      const agent = await prisma.metaBusinessAgent.findUnique({
+        where: { id: request.params.agentId },
+        select: { whatsappSettings: { select: { phoneId: true } } },
+      });
+      return agentStartCheckout(
+        request.user.orgId,
+        request.body.phone,
+        request.body.items,
+        request.body.coupon_code,
+        agent?.whatsappSettings.phoneId ?? null,
+      ).catch(shopError);
+    },
+  );
+
+  server.get<{ Params: AgentParams; Querystring: z.infer<typeof phoneQuery> }>(
+    "/:agentId/shop/orders",
+    { schema: { params: agentParams, querystring: phoneQuery } },
+    (request) => agentOrderStatus(request.user.orgId, request.query.phone).catch(shopError),
+  );
+
+  const backInStockBody = z.object({ phone: phoneField, variant_id: z.string().uuid() });
+  server.post<{ Params: AgentParams; Body: z.infer<typeof backInStockBody> }>(
+    "/:agentId/shop/back-in-stock",
+    { schema: { params: agentParams, body: backInStockBody } },
+    (request) =>
+      agentBackInStock(request.user.orgId, request.body.phone, request.body.variant_id).catch(
+        shopError,
+      ),
   );
 }

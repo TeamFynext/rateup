@@ -360,7 +360,7 @@ describe("getAssignedUserForContactHandler", () => {
 
     await getAssignedUserForContactHandler(makeRequest({ params: { contactId: "c1" } }), reply);
 
-    expect(m.assignedUser).toHaveBeenCalledWith("c1");
+    expect(m.assignedUser).toHaveBeenCalledWith("c1", "org-1");
     expect(reply.code).toHaveBeenCalledWith(200);
   });
 
@@ -580,7 +580,14 @@ describe("getFilteredContactsHandler", () => {
 
     await getFilteredContactsHandler(makeRequest({ query: { page: "2", filterData } }), reply);
 
-    expect(m.filterChats).toHaveBeenCalledWith("org-1", 2, { status: ["NEW"] }, "user-1", ACTOR);
+    // Validated through WaChatFilterSchema: defaults filled in, unset fields left undefined.
+    expect(m.filterChats).toHaveBeenCalledWith(
+      "org-1",
+      2,
+      expect.objectContaining({ status: ["NEW"], messageType: "all", phone: "" }),
+      "user-1",
+      ACTOR,
+    );
     expect(reply.payload).toEqual({ rows: [{ id: "c1" }], nextOffset: 3 });
   });
 
@@ -602,7 +609,7 @@ describe("getFilteredContactsHandler", () => {
     expect(reply.payload).toEqual({ rows: [], nextOffset: null });
   });
 
-  test("returns 500 for a filter that is not valid JSON", async () => {
+  test("returns 400 for a filter that is not valid JSON", async () => {
     const reply = makeReply();
 
     await getFilteredContactsHandler(
@@ -610,8 +617,33 @@ describe("getFilteredContactsHandler", () => {
       reply,
     );
 
-    expect(reply.status).toHaveBeenCalledWith(500);
+    expect(reply.status).toHaveBeenCalledWith(400);
     expect(m.filterChats).not.toHaveBeenCalled();
+  });
+
+  test("returns 400 for a filter with wrong-typed values (INJ-4)", async () => {
+    const reply = makeReply();
+    const bad = encodeURIComponent(JSON.stringify({ status: "NEW", labels: [{ $ne: 1 }] }));
+
+    await getFilteredContactsHandler(makeRequest({ query: { page: "1", filterData: bad } }), reply);
+
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(m.filterChats).not.toHaveBeenCalled();
+  });
+
+  test("accepts the UI's persisted store, whose cleared fields are null", async () => {
+    m.filterChats.mockResolvedValue([]);
+    const reply = makeReply();
+    const stored = encodeURIComponent(
+      JSON.stringify({ messageType: "usermessages", waMessageAssignStatus: null, phone: "" }),
+    );
+
+    await getFilteredContactsHandler(
+      makeRequest({ query: { page: "1", filterData: stored } }),
+      reply,
+    );
+
+    expect(m.filterChats.mock.calls[0][2].waMessageAssignStatus).toBeUndefined();
   });
 
   test("returns 500 when filtering throws", async () => {
@@ -880,7 +912,7 @@ describe("exportWhatsappChatsHandler", () => {
     expect(m.exportChats).toHaveBeenCalledWith(
       "org-1",
       validConstraints,
-      { status: ["NEW"] },
+      expect.objectContaining({ status: ["NEW"] }),
       5000,
       0,
     );

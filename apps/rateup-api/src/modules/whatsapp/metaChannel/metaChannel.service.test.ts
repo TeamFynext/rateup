@@ -37,6 +37,7 @@ import {
   getMessengerChannel,
   getMetaChannelById,
   MetaChannelConflictError,
+  PAGE_COMMENT_FIELDS,
   PAGE_SUBSCRIBED_FIELDS,
   toPublicMetaChannel,
   updateMetaChannelById,
@@ -332,14 +333,28 @@ describe("connectMetaChannel", () => {
     ).rejects.toThrow("This Facebook Page is already connected to another organization");
   });
 
-  test("subscribes the Page to the app with the Page token", async () => {
+  test("subscribes the Page to the app with the Page token, comments included", async () => {
     await connectMetaChannel(ORG, igInput);
 
+    expect(meta).toHaveBeenCalledTimes(1);
     expect(meta).toHaveBeenCalledWith(
-      `/page-1/subscribed_apps?subscribed_fields=${PAGE_SUBSCRIBED_FIELDS.join(",")}`,
+      `/page-1/subscribed_apps?subscribed_fields=${[...PAGE_SUBSCRIBED_FIELDS, ...PAGE_COMMENT_FIELDS].join(",")}`,
       "POST",
       "page-token",
     );
+  });
+
+  // Without the comment permissions Meta refuses the whole call; messages must still work.
+  test("falls back to messages alone when the Page refuses comment events", async () => {
+    meta.mockRejectedValueOnce(new Error("feed needs pages_manage_metadata"));
+
+    await connectMetaChannel(ORG, igInput);
+
+    expect(meta).toHaveBeenCalledTimes(2);
+    expect(meta.mock.calls[1][0]).toBe(
+      `/page-1/subscribed_apps?subscribed_fields=${PAGE_SUBSCRIBED_FIELDS.join(",")}`,
+    );
+    expect(db.create).toHaveBeenCalled();
   });
 
   test("an Instagram account subscribes the Page it is linked to, not its own id", async () => {

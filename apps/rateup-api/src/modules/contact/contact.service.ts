@@ -30,10 +30,11 @@ import {
   resolveInboxActor,
 } from "./conversation/conversation.service.js";
 import type { InboxActor } from "./conversation/conversation.schema.js";
-import { WaMessageAssignStatusTab, WaMessageClosedStatus } from "../whatsapp/constants.js";
+import { WaMessageClosedStatus } from "../whatsapp/constants.js";
 import {
   checkAndExecuteRuleByTriggerEvent,
   resolveContactChannel,
+  ruleRecipient,
 } from "../whatsapp/automatedReply/wa_automatedReply.utils.js";
 import { emitIntegrationEvent } from "../integrations/events/emitIntegrationEvent.js";
 import {
@@ -58,8 +59,45 @@ function toContactCustomFieldValueInput(
   return { contactId, fieldId: field.id, value: field.value };
 }
 
+/**
+ * Refuses a write that points a contact at another org's lifecycle stage, labels or custom
+ * fields. These ids reach here from the dashboard, Zapier and imports as given; every row
+ * they name is an org-owned row, so a foreign one is answered like a missing one.
+ */
+export async function assertContactRefsInOrg(
+  orgId: string,
+  refs: {
+    lifecycleId?: string | null;
+    labels?: string[] | null;
+    customFields?: { id?: string }[] | null;
+  },
+) {
+  if (refs.lifecycleId) {
+    const lifecycle = await prisma.lifecycle.findFirst({
+      where: { id: refs.lifecycleId, orgId },
+      select: { id: true },
+    });
+    if (!lifecycle) throw new ContactNotFoundError(`Lifecycle ${refs.lifecycleId} not found`);
+  }
+  const labelIds = [...new Set(refs.labels ?? [])];
+  if (labelIds.length) {
+    const owned = await prisma.contactLabel.count({ where: { id: { in: labelIds }, orgId } });
+    if (owned !== labelIds.length) throw new ContactNotFoundError("Label not found");
+  }
+  const fieldIds = [
+    ...new Set((refs.customFields ?? []).map((f) => f.id).filter((id): id is string => !!id)),
+  ];
+  if (fieldIds.length) {
+    const owned = await prisma.contactCustomField.count({
+      where: { id: { in: fieldIds }, orgId },
+    });
+    if (owned !== fieldIds.length) throw new ContactNotFoundError("Custom field not found");
+  }
+}
+
 export async function createContact(
-  contact: ContactCore & { orgId: string },
+  /** `consent`: for callers that know the person's answer, such as a store's checkout opt-in. */
+  contact: ContactCore & { orgId: string; consent?: boolean },
   userId?: string,
   /** `quiet`: a bulk import — skip the automation rule, Zap and CRM pushes that fire per contact. */
   options: { quiet?: boolean } = {},
@@ -68,6 +106,11 @@ export async function createContact(
     throw new Error("Phone must be provided");
   }
   const { customFields, labels, contactGroupIds, assignedUserIds, lifecycleId, ...rest } = contact;
+  await assertContactRefsInOrg(contact.orgId, {
+    lifecycleId: lifecycleId?.length ? lifecycleId : null,
+    labels,
+    customFields,
+  });
   const user = await prisma.contact.create({
     data: {
       ...rest,
@@ -104,12 +147,13 @@ export async function createContact(
     await assignWaMessageToUser({ assignees, contactId: user.id }, user.orgId, userId);
   }
   if (options.quiet) return user;
+  // A contact created here has no thread yet, so this resolves off its own
+  // identifiers and stays "ALL" for a plain phone import.
+  const createdChannel = await resolveContactChannel(user);
   await checkAndExecuteRuleByTriggerEvent("CONTACT_CREATED", {
     orgId: user?.orgId,
-    phone: contact?.phone,
-    // A contact created here has no thread yet, so this resolves off its own
-    // identifiers and stays "ALL" for a plain phone import.
-    ...(await resolveContactChannel(user)),
+    phone: ruleRecipient({ phone: contact?.phone, psid: user.psid }, createdChannel.platform),
+    ...createdChannel,
   });
   let lifecycleName;
   if (user.lifecycleId) {
@@ -167,6 +211,12 @@ export async function getOrcreateContact(contact: ContactCore & { orgId: string 
 }
 
 export async function createMultipleContacts(contacts: createMultipleContactInput, orgId: string) {
+  // One check for the whole batch: every label and stage any row names.
+  const lifecycleIds = [...new Set(contacts.map((c) => c.lifecycleId).filter((id) => !!id))];
+  for (const lifecycleId of lifecycleIds) {
+    await assertContactRefsInOrg(orgId, { lifecycleId });
+  }
+  await assertContactRefsInOrg(orgId, { labels: contacts.flatMap((c) => c.labels ?? []) });
   // These keys come in on the input DTO but are not Contact columns — they are persisted
   // separately below, so they are blanked out of the create payload.
   const omitted: undefined = undefined;
@@ -501,6 +551,21 @@ export async function deleteContactById(contactId: string, orgId: string) {
   return user;
 }
 
+/**
+ * The statuses that run "chat closed" rules. The inbox's Close button stores RESOLVED and
+ * its "close as unresolved" UNRESOLVED; with only CLOSED here, closing from the inbox never
+ * ran them. Spam is left out: a spammer is not sent a closing message.
+ */
+const CHAT_CLOSED_STATUSES: readonly string[] = [
+  WaMessageAssignStatus.CLOSED,
+  WaMessageAssignStatus.RESOLVED,
+  WaMessageAssignStatus.UNRESOLVED,
+];
+
+function firesChatClosed(status: string): boolean {
+  return CHAT_CLOSED_STATUSES.includes(status);
+}
+
 //used in zapier controller also
 export async function updateContactById(
   contactId: string,
@@ -527,6 +592,11 @@ export async function updateContactById(
   if (!contactRecord) {
     throw new ContactNotFoundError(`Contact ${contactId} not found`);
   }
+  await assertContactRefsInOrg(orgId, {
+    lifecycleId: contact.lifecycleId,
+    labels: contact.labels,
+    customFields: contact.customFields,
+  });
   if (contact.labels) {
     await prisma.contactLabelMap.deleteMany({
       where: {
@@ -695,7 +765,7 @@ export async function updateContactById(
   // WhatsApp rule firing on an Instagram chat would try to WhatsApp-message an
   // IGSID and fail.
   const triggerEvent =
-    contact.waMessageAssignStatus === WaMessageAssignStatusTab.Closed
+    contact.waMessageAssignStatus && firesChatClosed(contact.waMessageAssignStatus)
       ? "CHAT_CLOSED"
       : contact.waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED
         ? "CHAT_ASSIGNED"
@@ -706,7 +776,7 @@ export async function updateContactById(
     const channel = await resolveContactChannel(updatedContact);
     checkAndExecuteRuleByTriggerEvent(triggerEvent, {
       orgId: updatedContact?.orgId,
-      phone: updatedContact.phone,
+      phone: ruleRecipient(updatedContact, channel.platform),
       ...channel,
     });
   }
@@ -788,7 +858,7 @@ export async function updateContactById(
       type: "conversation.closed",
       contact: updatedContact,
     });
-    const assignedUsers = await getAssignedUserForContact(updatedContact.id);
+    const assignedUsers = await getAssignedUserForContact(updatedContact.id, updatedContact.orgId);
     await deleteAssignedUsersforContact(updatedContact.id);
     await notify({
       event: "inbox.closed",
@@ -818,6 +888,7 @@ export async function updateContactLabelsById(
   orgId: string,
   lifecycleId: string,
 ) {
+  await assertContactRefsInOrg(orgId, { lifecycleId });
   const contact = await prisma.contact.update({
     where: {
       id: contactId,
@@ -1245,6 +1316,8 @@ export async function bulkUpdateWaMessageAssignStatus(
     select: {
       id: true,
       phone: true,
+      igsId: true,
+      psid: true,
       name: true,
       orgId: true,
       waMessageAssignStatus: true,
@@ -1345,17 +1418,16 @@ export async function bulkUpdateWaMessageAssignStatus(
 
   await Promise.all(
     contacts.map(async (contact) => {
-      const bulkTriggerEvent =
-        waMessageAssignStatus === WaMessageAssignStatusTab.Closed
-          ? "CHAT_CLOSED"
-          : waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED
-            ? "CHAT_ASSIGNED"
-            : null;
+      const bulkTriggerEvent = firesChatClosed(waMessageAssignStatus)
+        ? "CHAT_CLOSED"
+        : waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED
+          ? "CHAT_ASSIGNED"
+          : null;
       if (bulkTriggerEvent) {
         const channel = await resolveContactChannel(contact);
         checkAndExecuteRuleByTriggerEvent(bulkTriggerEvent, {
           orgId: contact.orgId,
-          phone: contact.phone,
+          phone: ruleRecipient(contact, channel.platform),
           ...channel,
         });
       }
@@ -1374,7 +1446,7 @@ export async function bulkUpdateWaMessageAssignStatus(
 
       // Handle assigned users
 
-      const assignedUsers = await getAssignedUserForContact(contact.id);
+      const assignedUsers = await getAssignedUserForContact(contact.id, contact.orgId);
 
       await deleteAssignedUsersforContact(contact.id);
 

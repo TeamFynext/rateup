@@ -29,6 +29,8 @@ const WaMedia = z.array(
     type: z.enum(["image", "audio", "video", "document"]),
     url: z.string(),
     name: z.string(),
+    /** An audio recorded as a voice note: WhatsApp shows it as one (mic, profile photo, transcript). */
+    voice: z.boolean().optional(),
   }),
 );
 
@@ -88,31 +90,43 @@ const waMediaFileByMediaIdBody = z.object({
   mediaId: z.string(),
 });
 
+/**
+ * The inbox's filter state, sent JSON-encoded in the query string. Validated rather than
+ * trusted: a wrong-typed value used to reach the service as-is and fail as a 500. The UI's
+ * persisted store sends `null` for cleared fields and may leave `phone` out, so absent and
+ * null both read as "not set".
+ */
+const loose = <T extends z.ZodType>(schema: T) =>
+  schema.nullish().transform((value) => value ?? undefined);
+
 const WaChatFilterSchema = z.object({
   messageType: z.string().default("all"),
   strictFilter: z.boolean().default(false),
-  searchTerm: z.string().optional(),
-  contactGroups: z.array(z.string()).optional(),
-  campaigns: z.array(z.string()).optional(),
-  tags: z.array(z.any()).optional(),
-  waMessageAssignStatus: z.string().optional(),
-  blockedUsers: z.boolean().optional(),
-  status: z.array(z.string()).optional(),
-  assignedTeams: z.array(z.string()).optional(),
-  phone: z.string(),
-  labels: z.array(z.string()).optional(),
+  searchTerm: loose(z.string()),
+  contactGroups: loose(z.array(z.string())),
+  campaigns: loose(z.array(z.string())),
+  tags: loose(z.array(z.any())),
+  waMessageAssignStatus: loose(z.string()),
+  blockedUsers: loose(z.boolean()),
+  status: loose(z.array(z.string())),
+  assignedTeams: loose(z.array(z.string())),
+  phone: z
+    .string()
+    .nullish()
+    .transform((value) => value ?? ""),
+  labels: loose(z.array(z.string())),
   /// Conversation tag ids. Named in full to keep it clear of `tags` above, which
   /// is the org's free-form contact-tag JSON and unrelated.
-  conversationTags: z.array(z.string()).optional(),
-  sortBy: z.string().optional(),
-  category: z.string().optional(),
-  lifecycle: z.string().optional(),
-  assignedUserIds: z.array(z.string()).optional(),
-  favorite: z.boolean().optional(),
-  mentions: z.boolean().optional(),
+  conversationTags: loose(z.array(z.string())),
+  sortBy: loose(z.string()),
+  category: loose(z.string()),
+  lifecycle: loose(z.string()),
+  assignedUserIds: loose(z.array(z.string())),
+  favorite: loose(z.boolean()),
+  mentions: loose(z.boolean()),
   /// Spam tab. Contact-grained — one row per spam contact, not one per ticket —
   /// and mutually exclusive with the status/assignment filters.
-  spam: z.boolean().optional(),
+  spam: loose(z.boolean()),
 });
 
 const waChatFilterQuerySchema = PaginateQuerySchema.extend({

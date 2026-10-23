@@ -42,7 +42,11 @@ vi.mock("../../../utils/logger.js", () => ({
 }));
 // Flow templates look up the org's loyalty programme for the suggestion / business name.
 vi.mock("../../../utils/prisma.js", () => ({
-  default: { loyaltyProgram: { findUnique: vi.fn(async () => null) } },
+  default: {
+    loyaltyProgram: { findUnique: vi.fn(async () => null) },
+    // Every team a test names is the caller's own unless the test says otherwise.
+    team: { count: vi.fn(async (args: any) => args.where.id.in.length) },
+  },
 }));
 
 import {
@@ -69,6 +73,7 @@ import {
   updateFlowMetaDataInWa,
 } from "./flow.service.js";
 import { createSurveyFromFlow } from "./flow.utils.js";
+import { FlowValidationError } from "./flowValidation.js";
 import { createSurvey, deleteSurveyById } from "../../survey/survey.service.js";
 import { callMetaApi, GraphApiError } from "../wa_axios.js";
 import { getWaSettings } from "../settings/wa_settings.service.js";
@@ -418,7 +423,38 @@ describe("saveFlowJsonToWhatsappHandler", () => {
     await saveFlowJsonToWhatsappHandler(request(), rep);
 
     expect(rep.status).toHaveBeenCalledWith(500);
-    expect(rep.send).toHaveBeenCalledWith("meta rejected the asset");
+    expect(rep.send).toHaveBeenCalledWith({ message: "meta rejected the asset" });
+  });
+
+  test("answers 400 with each validation error when Meta rejects the flow JSON", async () => {
+    m.syncLocalFlowToWhatsapp.mockRejectedValue(
+      new FlowValidationError(['Screen 1 › "Rating": Required property is missing.']),
+    );
+    const rep = reply();
+
+    await saveFlowJsonToWhatsappHandler(request(), rep);
+
+    expect(rep.status).toHaveBeenCalledWith(400);
+    expect(rep.send).toHaveBeenCalledWith({
+      message:
+        'Fix this before saving to WhatsApp: Screen 1 › "Rating": Required property is missing.',
+      errors: ['Screen 1 › "Rating": Required property is missing.'],
+    });
+  });
+
+  test("answers 400 with Meta's message when the publish is refused", async () => {
+    m.syncLocalFlowToWhatsapp.mockRejectedValue(new GraphApiError("boom" as any));
+    m.getGraphApiErrorMessage.mockReturnValue(
+      "You need to verify that the flow has valid Flow JSON",
+    );
+    const rep = reply();
+
+    await saveFlowJsonToWhatsappHandler(request(), rep);
+
+    expect(rep.status).toHaveBeenCalledWith(400);
+    expect(rep.send).toHaveBeenCalledWith({
+      message: "You need to verify that the flow has valid Flow JSON",
+    });
   });
 });
 
@@ -877,5 +913,36 @@ describe("importFlowsHandler", () => {
     );
 
     expect(m.createFlowCopyInDb).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("flow team ids must be the caller's (MSG-13)", () => {
+  test("clone refuses another org's team before touching Meta", async () => {
+    const prismaMock = (await import("../../../utils/prisma.js")).default as any;
+    prismaMock.team.count.mockResolvedValueOnce(0);
+    const rep = reply();
+
+    await cloneFlowHandler(request({ body: { teamId: "team-other-org" } }), rep);
+
+    expect(prismaMock.team.count.mock.calls.at(-1)[0].where).toEqual({
+      id: { in: ["team-other-org"] },
+      orgId: ORG_A,
+    });
+    expect(rep.status).toHaveBeenCalledWith(404);
+    expect(m.cloneFlowInWa).not.toHaveBeenCalled();
+  });
+
+  test("import refuses another org's team before creating anything", async () => {
+    const prismaMock = (await import("../../../utils/prisma.js")).default as any;
+    prismaMock.team.count.mockResolvedValueOnce(0);
+    const rep = reply();
+
+    await importFlowsHandler(
+      request({ body: { waFlowIds: ["wa-1"], mapData: {}, teamIds: ["team-other-org"] } }),
+      rep,
+    );
+
+    expect(rep.status).toHaveBeenCalledWith(404);
+    expect(m.getFlowFromWa).not.toHaveBeenCalled();
   });
 });

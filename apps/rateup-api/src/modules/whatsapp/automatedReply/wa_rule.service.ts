@@ -1,6 +1,8 @@
 import { Prisma, RulePlatform } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
-import { CreateRuleInput, UpdateRuleInput } from "./wa_rule.schema.js";
+import { ActionType } from "../../../../generated/prisma/enums.js";
+import { assertPublicUrl, PublicUrlError } from "../../../utils/ssrf.js";
+import { CreateRuleInput, requestedPlatforms, UpdateRuleInput } from "./wa_rule.schema.js";
 
 const MESSAGE_BODY_FIELD = "MESSAGE_BODY";
 
@@ -10,15 +12,15 @@ interface MessageBodyCandidate {
   platform: string;
 }
 
+/** A keyword is claimed once per channel the rule runs on. */
 function extractMessageBodyCandidates(
-  groups?: CreateRuleInput["groups"],
-  options?: CreateRuleInput["options"],
-  platform?: string,
+  groups: CreateRuleInput["groups"] | undefined,
+  options: CreateRuleInput["options"] | undefined,
+  platforms: readonly string[],
 ) {
   if (!groups?.length) return [];
 
   const candidates: MessageBodyCandidate[] = [];
-  const resolvedPlatform = platform ?? "WHATSAPP";
 
   // Extract businessHourId from options instead of conditions
   const businessHourId =
@@ -32,11 +34,9 @@ function extractMessageBodyCandidates(
       if (condition.field === MESSAGE_BODY_FIELD && typeof rawValue === "string") {
         const value = rawValue.trim();
         if (value.length > 0) {
-          candidates.push({
-            value,
-            businessHourId,
-            platform: resolvedPlatform,
-          });
+          for (const platform of platforms) {
+            candidates.push({ value, businessHourId, platform });
+          }
         }
       }
     }
@@ -119,12 +119,14 @@ async function ensureMessageBodyUniqueness(
 
       const conflictingRuleName = existing.ruleCondition?.group.rule?.name;
       const ruleNamePart = conflictingRuleName ? " ('" + conflictingRuleName + "')" : "";
+      const channelPart = " on " + PLATFORM_LABEL[platform as RulePlatform];
       const context = businessHourId ? " during the configured business hours" : "";
       const baseMsg =
         "Keyword '" +
         value +
         "' is already used by another active automation" +
         ruleNamePart +
+        channelPart +
         context +
         ". Please disable that automation first to enable this one.";
 
@@ -154,6 +156,7 @@ async function reserveMessageBodyCommands(
     where: { id: ruleId },
     select: {
       platform: true,
+      platforms: true,
       options: true,
       groups: {
         select: {
@@ -203,14 +206,17 @@ async function reserveMessageBodyCommands(
 
   if (!data.length) return;
 
+  const platforms = rule.platforms.length ? rule.platforms : [rule.platform];
   await tx.ruleMessageBodyLock.createMany({
-    data: data.map((entry) => ({
-      orgId: entry.orgId,
-      messageBody: entry.command,
-      platform: rule.platform,
-      ruleConditionId: entry.ruleConditionId,
-      businessHourId: entry.businessHourId ?? null,
-    })),
+    data: data.flatMap((entry) =>
+      platforms.map((platform) => ({
+        orgId: entry.orgId,
+        messageBody: entry.command,
+        platform,
+        ruleConditionId: entry.ruleConditionId,
+        businessHourId: entry.businessHourId ?? null,
+      })),
+    ),
   });
 }
 
@@ -219,26 +225,91 @@ function triggerSkipsKeywordLock(triggerEvent: string) {
   return (
     triggerEvent === "INSTAGRAM_COMMENT" ||
     triggerEvent === "INSTAGRAM_STORY_MENTION" ||
-    triggerEvent === "INSTAGRAM_REFERRAL"
+    triggerEvent === "INSTAGRAM_REFERRAL" ||
+    triggerEvent === "WHATSAPP_AD_REFERRAL" ||
+    triggerEvent === "MESSENGER_REFERRAL" ||
+    triggerEvent === "FACEBOOK_COMMENT"
   );
+}
+
+const PLATFORM_LABEL: Record<RulePlatform, string> = {
+  WHATSAPP: "WhatsApp",
+  INSTAGRAM: "Instagram",
+  FACEBOOK: "Messenger",
+};
+
+const RULE_PLATFORMS = Object.values(RulePlatform);
+
+/**
+ * The channels a rule runs on, read from the accounts it is attached to, in a stable order. A
+ * request that names its channels has to agree with its accounts, because the channels are what
+ * the trigger and action checks were run against. An account no longer connected tells us
+ * nothing, so with none recognised the request's own channels stand.
+ */
+async function resolveRulePlatforms(
+  orgId: string,
+  accountIds: readonly string[],
+  requested: RulePlatform[] | undefined,
+): Promise<RulePlatform[]> {
+  const channels = await prisma.channel.findMany({
+    where: { orgId, accountId: { in: [...accountIds] }, platform: { in: RULE_PLATFORMS } },
+    select: { platform: true },
+  });
+  const found = RULE_PLATFORMS.filter((platform) =>
+    channels.some((channel) => channel.platform === platform),
+  );
+  if (!found.length) return requested?.length ? requested : [RulePlatform.WHATSAPP];
+
+  const extra = found.filter((platform) => requested && !requested.includes(platform));
+  if (extra.length) {
+    throw new Error(
+      `The ticked accounts include ${extra.map((p) => PLATFORM_LABEL[p]).join(" and ")}, which this automation is not set up for`,
+    );
+  }
+  return found;
+}
+
+/**
+ * A CALL_EXTERNAL_API action posts to a URL the rule author typed, so it is refused at save
+ * time unless it resolves to a public address (the send path checks again before each call).
+ * An empty value is left alone: templates start that way and the action then does nothing.
+ * Throws PublicUrlError, which the controller answers with a 400.
+ */
+export async function assertRuleActionUrls(actions: CreateRuleInput["actions"] | undefined) {
+  for (const action of actions ?? []) {
+    if (action.type !== ActionType.CALL_EXTERNAL_API) continue;
+    const value: unknown = action.value;
+    if (value === undefined || value === null || value === "") continue;
+    if (typeof value !== "string") {
+      throw new PublicUrlError("The external API action needs a URL");
+    }
+    await assertPublicUrl(value, { allowHttp: true });
+  }
 }
 
 // Create Rule
 export async function createRule(data: CreateRuleInput & { orgId: string }) {
   const { groups, actions, options, orgId } = data;
+  await assertRuleActionUrls(actions);
+  const platforms = await resolveRulePlatforms(
+    orgId,
+    data.whatsappSettingsPhoneIds,
+    requestedPlatforms(data),
+  );
 
   const skipMessageBodyLock = triggerSkipsKeywordLock(data.triggerEvent);
 
   const messageBodyCandidates = skipMessageBodyLock
     ? []
-    : extractMessageBodyCandidates(groups, options, data.platform);
+    : extractMessageBodyCandidates(groups, options, platforms);
   ensureNoDuplicateMessageBodyCandidates(messageBodyCandidates);
   await ensureMessageBodyUniqueness(orgId, messageBodyCandidates);
 
   return prisma.$transaction(async (tx) => {
     const ruleCreateData: Prisma.RuleCreateInput = {
       name: data.name,
-      platform: data.platform ?? "WHATSAPP",
+      platform: platforms[0],
+      platforms,
       triggerEvent: data.triggerEvent,
       whatsappSettingsPhoneIds: data.whatsappSettingsPhoneIds,
       isActive: data.isActive ?? true,
@@ -319,12 +390,15 @@ export async function getRuleById(id: string, orgId: string) {
 }
 
 // Update Rule
-export async function updateRule(id: string, data: UpdateRuleInput) {
-  const existingRule = await prisma.rule.findUnique({
-    where: { id },
+export async function updateRule(id: string, orgId: string, data: UpdateRuleInput) {
+  // Scoped to the caller's org: another org's rule reads as missing.
+  const existingRule = await prisma.rule.findFirst({
+    where: { id, orgId },
     select: {
       orgId: true,
       platform: true,
+      platforms: true,
+      whatsappSettingsPhoneIds: true,
       triggerEvent: true,
       isActive: true,
       groups: {
@@ -342,7 +416,26 @@ export async function updateRule(id: string, data: UpdateRuleInput) {
     throw new Error("Rule not found");
   }
 
-  const { groups, actions, options, ...rest } = data;
+  const { groups, actions, options, platform: _platform, platforms: _platforms, ...rest } = data;
+  await assertRuleActionUrls(actions);
+
+  const existingPlatforms = existingRule.platforms.length
+    ? existingRule.platforms
+    : [existingRule.platform];
+  // Channels are re-read only when the accounts or the channels themselves are being changed.
+  const channelsTouched = Boolean(
+    data.whatsappSettingsPhoneIds || data.platform || data.platforms?.length,
+  );
+  const platforms = channelsTouched
+    ? await resolveRulePlatforms(
+        existingRule.orgId,
+        data.whatsappSettingsPhoneIds ?? existingRule.whatsappSettingsPhoneIds,
+        requestedPlatforms(data),
+      )
+    : existingPlatforms;
+  const platformsChanged =
+    platforms.length !== existingPlatforms.length ||
+    platforms.some((platform) => !existingPlatforms.includes(platform));
 
   // When disabling a rule, skip uniqueness checks entirely
   const isDisabling = data.isActive === false;
@@ -354,32 +447,35 @@ export async function updateRule(id: string, data: UpdateRuleInput) {
 
   let messageBodyCandidates: MessageBodyCandidate[] = [];
 
+  // New channels claim the rule's existing keywords too, so they are re-locked like new groups.
+  const relock = !skipMessageBodyLock && Boolean(groups || platformsChanged);
+
   if (!isDisabling && !skipMessageBodyLock) {
-    const platform = data.platform ?? existingRule.platform;
     if (groups) {
-      messageBodyCandidates = extractMessageBodyCandidates(groups, options, platform);
+      messageBodyCandidates = extractMessageBodyCandidates(groups, options, platforms);
       ensureNoDuplicateMessageBodyCandidates(messageBodyCandidates);
       await ensureMessageBodyUniqueness(existingRule.orgId, messageBodyCandidates, id);
-    } else if (isEnabling) {
+    } else if (isEnabling || platformsChanged) {
       const existingOptions = existingRule.options as CreateRuleInput["options"] | null;
-      const existingCandidates = extractMessageBodyCandidates(
+      messageBodyCandidates = extractMessageBodyCandidates(
         existingRule.groups as CreateRuleInput["groups"],
-        existingOptions ?? undefined,
-        platform,
+        options ?? existingOptions ?? undefined,
+        platforms,
       );
-      await ensureMessageBodyUniqueness(existingRule.orgId, existingCandidates, id);
+      await ensureMessageBodyUniqueness(existingRule.orgId, messageBodyCandidates, id);
     }
   }
 
   return prisma.$transaction(async (tx) => {
-    if (groups && !skipMessageBodyLock) {
+    if (relock) {
       await clearMessageBodyReservations(tx, id);
     }
 
     const updatedRule = await tx.rule.update({
-      where: { id },
+      where: { id, orgId },
       data: {
         ...rest,
+        ...(channelsTouched && { platform: platforms[0], platforms }),
         // Only update options if they are explicitly provided in the update data
         ...(options !== undefined && { options: options || null }),
         // Only update groups if they are explicitly provided in the update data
@@ -421,7 +517,7 @@ export async function updateRule(id: string, data: UpdateRuleInput) {
       },
     });
 
-    if (groups && messageBodyCandidates.length) {
+    if (relock) {
       await reserveMessageBodyCommands(tx, id, existingRule.orgId);
     }
 
@@ -430,10 +526,12 @@ export async function updateRule(id: string, data: UpdateRuleInput) {
 }
 
 // Delete Rule
-export async function deleteRule(id: string) {
+export async function deleteRule(id: string, orgId: string) {
   return prisma.$transaction(async (tx) => {
     await clearMessageBodyReservations(tx, id);
-    return tx.rule.delete({ where: { id } });
+    // Another org's rule matches nothing: Prisma throws P2025 and the reservation clear
+    // above rolls back with it.
+    return tx.rule.delete({ where: { id, orgId } });
   });
 }
 

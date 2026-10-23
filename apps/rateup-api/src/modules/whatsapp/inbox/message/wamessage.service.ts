@@ -30,6 +30,7 @@ import {
 } from "../../../../types/enums.js";
 import { updateContactById } from "../../../contact/contact.service.js";
 import { internalEventSentence } from "./internalEvent.js";
+import { isWaMessageIdConflict } from "./waMessageIdConflict.js";
 import {
   findNoteTime,
   getThreadNotes,
@@ -128,6 +129,10 @@ function isWaMessageAssignStatusTabKey(key: string): key is keyof typeof WaMessa
  * Delivery statuses are matched back to a participant through this row (see
  * `bulkUpdateStatuses`), so a campaign send that skips it can never be reported
  * on.
+ *
+ * Returns null, having written nothing, when a message with this `messageId`
+ * is already stored. The caller must then treat the message as already
+ * processed and skip everything that follows a first delivery.
  */
 export async function addNewWaMessage(
   messageBody: WaInboxMessageBody,
@@ -199,7 +204,9 @@ export async function addNewWaMessage(
       contactId,
       waCreatedAt,
       templateComponentParams: componentParams,
-      messageId,
+      // An empty id is no id. Stored as "", the unique index would treat every
+      // later id-less message as a redelivery of the first and drop it.
+      messageId: messageId || undefined,
       sendBy,
       sourcePlatform,
       sourceIdentifier,
@@ -242,23 +249,39 @@ export async function addNewWaMessage(
   // produced them. INTERNAL messages (system notes, private notes) carry a
   // `sendBy` but are not agent replies, so they must not touch these counters.
   const tracksMetrics = Boolean(conversationId) && sourcePlatform !== PlatformType.INTERNAL;
-  if (!tracksMetrics) return await createMessage;
 
-  const messageAt = waCreatedAt ? new Date(waCreatedAt) : new Date();
-  const [newMessage] = await prisma.$transaction([
-    createMessage,
-    prisma.conversation.update({
-      where: { id: conversationId },
-      data: {
-        messageCount: { increment: 1 },
-        lastMessageAt: messageAt,
-        // Direction is inferred from `sendBy`: null means inbound.
-        ...(sendBy ? { lastAgentMessageAt: messageAt } : { lastCustomerMessageAt: messageAt }),
-      },
-    }),
-  ]);
+  // The insert is what decides whether this message is new: `messageId` is
+  // unique, so a redelivered webhook — or the same one on two replicas at
+  // once — fails here rather than writing a second row. Inside the transaction
+  // below, that failure also undoes the conversation counters.
+  try {
+    if (!tracksMetrics) return await createMessage;
 
-  return newMessage;
+    const messageAt = waCreatedAt ? new Date(waCreatedAt) : new Date();
+    const [newMessage] = await prisma.$transaction([
+      createMessage,
+      prisma.conversation.update({
+        where: { id: conversationId },
+        data: {
+          messageCount: { increment: 1 },
+          lastMessageAt: messageAt,
+          // Direction is inferred from `sendBy`: null means inbound.
+          ...(sendBy ? { lastAgentMessageAt: messageAt } : { lastCustomerMessageAt: messageAt }),
+        },
+      }),
+    ]);
+
+    return newMessage;
+  } catch (error) {
+    if (messageId && isWaMessageIdConflict(error)) {
+      log.info(
+        { messageId, contactId, sourcePlatform },
+        "Message already stored; not storing again",
+      );
+      return null;
+    }
+    throw error;
+  }
 }
 
 /**
@@ -470,7 +493,7 @@ export async function filterChats(
     let teamIdsCache: string[] | null = null;
     const getTeamIdsLazy = async () => {
       if (!teamIdsCache) {
-        teamIdsCache = await getTeamIdsByUserId(userId);
+        teamIdsCache = await getTeamIdsByUserId(userId, orgId);
       }
       return teamIdsCache;
     };
@@ -1611,10 +1634,12 @@ export async function reopenConversation(
   };
 }
 
-export async function getAssignedUserForContact(contactId: string) {
+export async function getAssignedUserForContact(contactId: string, orgId: string) {
   return await prisma.waInboxAssign.findMany({
     where: {
       contactId,
+      // Assignee names are only the caller's to see for one of the caller's contacts.
+      contact: { orgId },
     },
     include: {
       assignedUser: {
@@ -1643,7 +1668,7 @@ export async function deleteAssignedUsersforContact(contactId: string) {
   });
 }
 export async function getContactsCountByInbox(orgId: string, userId: string, actor: Actor) {
-  const teamIds = await getTeamIdsByUserId(userId);
+  const teamIds = await getTeamIdsByUserId(userId, orgId);
   const stats = await getInboxCountsFromConversations(orgId);
   const count: {
     new_assigned_count: number;
@@ -1888,6 +1913,7 @@ export interface WaMedia {
   type: "audio" | "image" | "document" | "video";
   url: string;
   name: string;
+  voice?: boolean;
 }
 
 export async function sendMediaMessages(
@@ -1919,7 +1945,7 @@ export async function sendMediaMessages(
         break;
       }
       case "audio": {
-        messageBody = createAudioMessage(to, item.url, platform);
+        messageBody = createAudioMessage(to, item.url, platform, item.voice);
         break;
       }
     }
@@ -2156,7 +2182,18 @@ export async function sendLocationMessage(
   );
 }
 
+/**
+ * The stored message with this platform id, if any.
+ *
+ * Callers use this as a cheap early exit for a redelivered webhook, never as
+ * the dedupe itself: two deliveries in flight together both see null here.
+ * What actually keeps a message to one row is the unique index on `messageId`
+ * (see `addNewWaMessage`).
+ */
 export async function getWaMessageByMessageId(messageId: string): Promise<WaMessage | null> {
+  // `findFirst({ where: { messageId: undefined } })` drops the filter and
+  // returns an arbitrary row — "already stored" for a message with no id.
+  if (!messageId) return null;
   return await prisma.waMessage.findFirst({
     where: {
       messageId,
@@ -2302,6 +2339,8 @@ export async function getChatByContactId(
       where: {
         contactId,
         sourcePlatform: "WEBCHAT",
+        // The widget's key names the org; a contact id from another org must read nothing.
+        contact: { orgId: req.user.orgId },
       },
       orderBy: {
         waCreatedAt: "asc",
@@ -2504,31 +2543,43 @@ export async function createInternalWaMessage({
     fallback: messageText,
   });
 
-  const wamessage = await prisma.waMessage.create({
-    data: {
-      contactId,
-      messageId: messageId,
-      conversationId: ticketId,
-      sourcePlatform: PlatformType.INTERNAL,
-      sourceIdentifier: "internal",
-      sendBy: triggeredByUserDetails?.id,
-      waCreatedAt: new Date(),
-      messageBody: {
-        exchangeProcess: "internal",
-        internal: {
-          text: { body: messageText },
-          // The finished sentence. `text.body` stays the old fragment so rows written
-          // before this keep rendering, and a client that has not been updated still works.
-          summary,
-          triggeredByUser: triggeredByUserDetails,
-          assignStatus,
-          assignedUsers: assignedUserDetails,
+  const write = (id: string) =>
+    prisma.waMessage.create({
+      data: {
+        contactId,
+        messageId: id,
+        conversationId: ticketId,
+        sourcePlatform: PlatformType.INTERNAL,
+        sourceIdentifier: "internal",
+        sendBy: triggeredByUserDetails?.id,
+        waCreatedAt: new Date(),
+        messageBody: {
+          exchangeProcess: "internal",
+          internal: {
+            text: { body: messageText },
+            // The finished sentence. `text.body` stays the old fragment so rows written
+            // before this keep rendering, and a client that has not been updated still works.
+            summary,
+            triggeredByUser: triggeredByUserDetails,
+            assignStatus,
+            assignedUsers: assignedUserDetails,
+          },
         },
+        sourceMessage: "inbox",
       },
-      sourceMessage: "inbox",
-    },
-  });
-  return wamessage;
+    });
+
+  // `messageId` here is usually the id the client gave its optimistic copy of
+  // the event, and one request can write several events under it: a bulk
+  // assign hands the same id to every contact, and a reassignment writes an
+  // "added" and a "removed" event. Those are distinct events, not redeliveries,
+  // so the unique index must not swallow them — the later ones take a fresh id.
+  try {
+    return await write(messageId);
+  } catch (error) {
+    if (!isWaMessageIdConflict(error)) throw error;
+    return await write(crypto.randomUUID());
+  }
 }
 
 function getStatusLabel(status: string | undefined): string | null {

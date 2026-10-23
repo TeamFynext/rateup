@@ -7,31 +7,96 @@
 //
 // Retry handling is manual rather than leaning on Kafka redelivery: offsets are
 // resolved for every message in the batch (so the partition always moves
-// forward), and anything `bulkUpdateStatuses` skipped is re-published to the same
-// topic with an incremented `retryCount` — after a delay that grows with the
-// count (see statusRetry.ts), since the usual reason for a skip is a message row
-// that is about to exist. Past MAX_RETRIES it goes to `status-events-dlq`
-// instead. A stuck row therefore can never block the partition behind it.
-import { Consumer, Kafka, Partitioners, Producer } from "kafkajs";
+// forward), and anything `bulkUpdateStatuses` skipped is scheduled to go back on
+// the same topic with an incremented `retryCount` — after a delay that grows
+// with the count (see statusRetry.ts), since the usual reason for a skip is a
+// message row that is about to exist. Past MAX_RETRIES it goes to
+// `status-events-dlq` instead. A stuck row therefore can never block the
+// partition behind it.
+//
+// The delay is a BullMQ delayed job (queues/statusRetry.queue.ts), not a timer
+// in this process, and every retry and dead letter is durably handed off
+// *before* the batch's offsets are resolved. kafkajs commits whatever was
+// resolved even when eachBatch throws, so resolving first would let a failed
+// hand-off drop the receipt; this way a failure throws with nothing resolved,
+// and Kafka redelivers the batch. Redelivery is safe: a status already stored
+// is not counted twice (`diffStatusData`), and a retry already scheduled keeps
+// its job id.
+import { Consumer, Kafka, Producer } from "kafkajs";
 
 import { log } from "../../shared/logger.js";
 import { bulkUpdateStatuses } from "../../shared/whatsapp/index.js";
+import { enqueueStatusRetries, type StatusRetry } from "../../bullmq/queues/statusRetry.queue.js";
+import {
+  STATUS_EVENTS_DLQ_TOPIC,
+  STATUS_EVENTS_TOPIC,
+  kafkaProducerConfig,
+} from "../../../utils/kafka.js";
 import { MAX_RETRIES, retryDelayMs } from "./statusRetry.js";
 import { createStatusTally } from "./statusTally.js";
 
-const TOPIC = "status-events";
-const DLQ_TOPIC = "status-events-dlq";
-const GROUP_ID = "status-workers";
+export const GROUP_ID = "status-workers";
 
 export interface StatusConsumer {
   consumer: Consumer;
   producer: Producer;
-  /**
-   * Publish every retry still waiting on its delay. Called on shutdown, before
-   * the producer disconnects: a held retry exists only in this process, and
-   * losing it loses the receipt for good.
-   */
-  flushRetries(): Promise<void>;
+}
+
+export interface SkippedReceiptPlan {
+  retries: StatusRetry[];
+  dlq: { value: string }[];
+}
+
+/**
+ * Decide what happens to each receipt `bulkUpdateStatuses` did not apply:
+ * another round after `retryDelayMs(retryCount)`, or the dead-letter topic once
+ * it has been round MAX_RETRIES times.
+ */
+export function planSkippedReceipts(
+  messages: { id: string; value: any }[],
+  processed: ReadonlySet<string>,
+  now: Date = new Date(),
+): SkippedReceiptPlan {
+  const retries: StatusRetry[] = [];
+  const dlq: { value: string }[] = [];
+
+  for (const { id, value: element } of messages) {
+    if (processed.has(id)) continue;
+    const currentRetries = Number(element.retryCount) || 0;
+
+    if (currentRetries + 1 > MAX_RETRIES) {
+      dlq.push({
+        value: JSON.stringify({
+          ...element,
+          error: "skipped in bulkUpdateStatuses",
+          finalRetryCount: currentRetries,
+          droppedAt: now.toISOString(),
+        }),
+      });
+      continue;
+    }
+
+    const messageId = String(element.messageId ?? "");
+    retries.push({
+      // Keyed like the original publish, so a re-published receipt lands on the
+      // same partition as the rest of its message's statuses. Without the key it
+      // round-robined, and `sent` could be consumed on one partition after
+      // `read` on another.
+      key: messageId,
+      value: JSON.stringify({
+        ...element,
+        error: "skipped in bulkUpdateStatuses",
+        retryCount: currentRetries + 1,
+        retriedAt: now.toISOString(),
+      }),
+      messageId,
+      status: String(element.status ?? "unknown").toLowerCase(),
+      retryCount: currentRetries + 1,
+      delayMs: retryDelayMs(currentRetries),
+    });
+  }
+
+  return { retries, dlq };
 }
 
 export async function startStatusConsumer(kafka: Kafka): Promise<StatusConsumer> {
@@ -39,9 +104,9 @@ export async function startStatusConsumer(kafka: Kafka): Promise<StatusConsumer>
   // Counts what actually reaches this worker, so a campaign's receipts can be
   // reconciled against what the sender emitted. See statusTally.ts.
   const tally = createStatusTally();
-  const producer = kafka.producer({
-    createPartitioner: Partitioners.DefaultPartitioner,
-  });
+  // Only the dead-letter topic is produced to from here now; retries go
+  // through BullMQ.
+  const producer = kafka.producer(kafkaProducerConfig());
 
   producer.on(producer.events.DISCONNECT, async () => {
     log.warn("Status producer disconnected, reconnecting...");
@@ -50,117 +115,38 @@ export async function startStatusConsumer(kafka: Kafka): Promise<StatusConsumer>
 
   await producer.connect();
   await consumer.connect();
-  await consumer.subscribe({ topic: TOPIC, fromBeginning: false });
-
-  // Retries waiting out their delay, keyed by the timer that will send them.
-  // Detached from the batch on purpose: `await`ing the delay inside eachBatch
-  // would stall the partition behind one missing row, which is the very thing
-  // the manual retry scheme exists to prevent.
-  const heldRetries = new Map<NodeJS.Timeout, { key: string; value: string }[]>();
-
-  const publishRetries = async (messages: { key: string; value: string }[]) => {
-    try {
-      await producer.send({ topic: TOPIC, messages });
-    } catch (err) {
-      // Nothing else holds a copy: the offsets were committed when the batch was.
-      log.error(
-        `Failed to re-publish ${messages.length} status retries; those receipts are lost: %o`,
-        err,
-      );
-    }
-  };
-
-  const holdRetries = (messages: { key: string; value: string }[], retryCount: number) => {
-    const timer = setTimeout(() => {
-      heldRetries.delete(timer);
-      void publishRetries(messages);
-    }, retryDelayMs(retryCount));
-    heldRetries.set(timer, messages);
-  };
-
-  const flushRetries = async () => {
-    const pending = [...heldRetries.entries()];
-    heldRetries.clear();
-    for (const [timer] of pending) clearTimeout(timer);
-    const messages = pending.flatMap(([, held]) => held);
-    if (messages.length) await publishRetries(messages);
-  };
+  await consumer.subscribe({ topic: STATUS_EVENTS_TOPIC, fromBeginning: false });
 
   await consumer.run({
     eachBatchAutoResolve: false,
     eachBatch: async ({ batch, resolveOffset, commitOffsetsIfNecessary, heartbeat }) => {
-      // Grouped by how many times they have been round already, since that is
-      // what sets the delay before they go round again.
-      const retryMessages = new Map<number, { key: string; value: string }[]>();
-      const dlqMessages: { value: string }[] = [];
-      let retryCount = 0;
       const messages = batch.messages.map((m) => ({
         id: m.offset,
         value: JSON.parse(m.value!.toString()),
       }));
 
-      const skipped = await bulkUpdateStatuses(messages);
-      const skippedOffsets = messages.map((b) => b.id).filter((id) => !skipped.includes(id));
-      // Set of skipped offsets for fast lookup
-      const skippedSet = new Set(skippedOffsets);
+      // `bulkUpdateStatuses` returns the offsets it applied.
+      const processed = new Set(await bulkUpdateStatuses(messages));
+      const { retries, dlq } = planSkippedReceipts(messages, processed);
+
+      // Hand-offs first, offsets after — see the header comment. Either of these
+      // throwing leaves the batch unresolved, to be redelivered.
+      await enqueueStatusRetries(retries);
+      if (dlq.length > 0) {
+        await producer.send({ topic: STATUS_EVENTS_DLQ_TOPIC, messages: dlq });
+      }
 
       for (const message of batch.messages) {
-        const element = JSON.parse(message.value!.toString());
-        const currentRetries = element.retryCount || 0;
-
-        // Only retry/DLQ if this offset was skipped
-        if (skippedSet.has(message.offset)) {
-          if (currentRetries + 1 > MAX_RETRIES) {
-            dlqMessages.push({
-              value: JSON.stringify({
-                ...element,
-                error: "skipped in bulkUpdateStatuses",
-                finalRetryCount: currentRetries,
-                droppedAt: new Date().toISOString(),
-              }),
-            });
-          } else {
-            const group = retryMessages.get(currentRetries) ?? [];
-            group.push({
-              // Keyed like the original publish, so a re-published receipt
-              // lands on the same partition as the rest of its message's
-              // statuses. Without the key it round-robined, and `sent` could
-              // be consumed on one partition after `read` on another.
-              key: String(element.messageId ?? ""),
-              value: JSON.stringify({
-                ...element,
-                error: "skipped in bulkUpdateStatuses",
-                retryCount: currentRetries + 1,
-                retriedAt: new Date().toISOString(),
-              }),
-            });
-            retryMessages.set(currentRetries, group);
-            retryCount += 1;
-          }
-        }
-
         resolveOffset(message.offset);
-        await heartbeat();
       }
-
-      for (const [currentRetries, messages] of retryMessages) {
-        holdRetries(messages, currentRetries);
-      }
-
-      if (dlqMessages.length > 0) {
-        try {
-          await producer.send({ topic: DLQ_TOPIC, messages: dlqMessages });
-        } catch (err) {
-          log.error("Failed to send DLQ messages, they will be retried next batch: %o", err);
-        }
-      }
+      await heartbeat();
 
       tally.record(
         messages.map((m) => m.value),
         {
-          processed: messages.length - skippedSet.size,
-          retried: retryCount,
-          dlq: dlqMessages.length,
+          processed: messages.filter((m) => processed.has(m.id)).length,
+          retried: retries.length,
+          dlq: dlq.length,
         },
       );
 
@@ -169,8 +155,8 @@ export async function startStatusConsumer(kafka: Kafka): Promise<StatusConsumer>
   });
 
   log.info(
-    `Kafka consumer subscribed to ${TOPIC} (group ${GROUP_ID})` +
+    `Kafka consumer subscribed to ${STATUS_EVENTS_TOPIC} (group ${GROUP_ID})` +
       (tally.enabled ? " — status tally on (STATUS_TALLY=0 to silence)" : ""),
   );
-  return { consumer, producer, flushRetries };
+  return { consumer, producer };
 }

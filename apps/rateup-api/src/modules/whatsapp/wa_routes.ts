@@ -6,8 +6,10 @@ import { waRedirectRoutes } from "./redirect/wa_redirect.route.js";
 import { flowRoutes } from "./flows/flow.route.js";
 import { flowEnpointRoutes } from "./flows/flow.endpoint-routes.js";
 import { waAutomatedReplyRoutes } from "./automatedReply/wa_automatedReply.route.js";
-import { instagramAutomationRoutes } from "./automatedReply/instagram_automatedReply.route.js";
+import { metaAutomationRoutes } from "./automatedReply/instagram_automatedReply.route.js";
+import { PlatformType } from "../../../generated/prisma/enums.js";
 import { instagramProfileRoutes } from "./instagram/instagram_profile.route.js";
+import { messengerProfileRoutes } from "./facebook/messenger_profile.route.js";
 import { waInboxRoutes } from "./inbox/wainbox.routes.js";
 import { waAuthRoutes } from "./auth/wa_auth.route.js";
 import { handleWhatsappError } from "./wa_error_handler.js";
@@ -25,12 +27,18 @@ export async function whatsappRoutes(server: FastifyInstance) {
   server.register(flowEnpointRoutes, { prefix: "/endpoint" });
   server.register(waRedirectRoutes, { prefix: "/redirect" });
   server.register(waAutomatedReplyRoutes, { prefix: "/automated-reply" });
-  server.register(instagramAutomationRoutes, {
+  server.register(metaAutomationRoutes, {
     prefix: "/instagram-automation",
+    platform: PlatformType.INSTAGRAM,
+  });
+  server.register(metaAutomationRoutes, {
+    prefix: "/messenger-automation",
+    platform: PlatformType.FACEBOOK,
   });
   server.register(instagramProfileRoutes, {
     prefix: "/instagram-profile",
   });
+  server.register(messengerProfileRoutes, { prefix: "/messenger-profile" });
   server.register(waInboxRoutes, { prefix: "/inbox" });
   server.register(waCatalogRoutes, { prefix: "/catalog" });
   server.register(waCallingRoutes, { prefix: "/calls" });

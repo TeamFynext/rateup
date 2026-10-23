@@ -2,6 +2,7 @@ import { emitSurveyResponseSubmitted } from "../integrations/events/emitIntegrat
 import axios from "axios";
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
+  CreatePublicResponseInput,
   CreateResponseInput,
   GetResponsesParams,
   DeleteResponseParamsSchema,
@@ -19,11 +20,9 @@ import {
   generateResponse,
   getAllResponses,
   getResponseAnalyticsForGraph,
-  getResponseBySurveyById,
   getResponseCountForCamparison,
   getResponses,
   getResponseSummary,
-  getSurveyList,
   getSurveyResponseBySurveyId,
   getSurveyResponseCount,
   resetResponsesStats,
@@ -34,7 +33,9 @@ import {
 } from "./response.service.js";
 import { fetchLocation } from "../../utils/location.js";
 import { getIp } from "../../utils/http.js";
-import { getTeamIdsBySurveyMapId, getTeamIdsByUserId } from "../team/team.service.js";
+import { getTeamIdsBySurveyMapId } from "../team/team.service.js";
+import { sessionTeamIds } from "../survey/survey.teamScope.js";
+import { ResponsePlatform } from "../../../generated/prisma/client.js";
 import { createTestimonial } from "../testimonial/testimonial.service.js";
 import { getQuestionsBySurveyId } from "../question/question.service.js";
 import { log } from "../../utils/logger.js";
@@ -73,7 +74,7 @@ export async function getAllResponsesHandler(
 ) {
   try {
     const surveyId = request.params.surveyId;
-    const teamIds = await getTeamIdsByUserId(request.userId);
+    const teamIds = await sessionTeamIds(request);
     const responses = await getAllResponses(surveyId, teamIds);
     reply.code(200).send(responses);
   } catch (e) {
@@ -82,34 +83,6 @@ export async function getAllResponsesHandler(
   }
 }
 //to get response of survey by id for external api
-export async function getResponsesBySurveyIdHandler(
-  req: FastifyRequest<{
-    Params: GetResponsesParams;
-  }>,
-  res: FastifyReply,
-) {
-  try {
-    const { surveyId } = req.params;
-    const response = await getResponseBySurveyById(surveyId);
-    res.send(response);
-  } catch (error) {
-    log.error("error while geResponsesBySurveyId");
-    res.code(500).send(error);
-  }
-}
-
-//to get survey lisit for external api
-export async function getSurveyListHandler(req: FastifyRequest, res: FastifyReply) {
-  try {
-    const { orgId } = req.user;
-    const response = await getSurveyList(orgId);
-    res.send(response);
-  } catch (error) {
-    log.error("error while getSurveyListHandler");
-    res.code(500).send(error);
-  }
-}
-
 export async function downloadExcelResponseHandler(
   request: FastifyRequest<{
     Body: generateXlsxBody;
@@ -120,7 +93,7 @@ export async function downloadExcelResponseHandler(
     const teamIds =
       request.body.filterTeams?.length > 0
         ? await getTeamIdsBySurveyMapId(request.body.filterTeams, request.userId)
-        : await getTeamIdsByUserId(request.userId);
+        : await sessionTeamIds(request);
     const campaignParticipantIds = await prisma.campaignParticipant.findMany({
       where: {
         campaignId: {
@@ -186,7 +159,7 @@ export async function downloadExcelResponseHandler(
     }
   } catch (error) {
     log.error({ err: error }, "Error downloading excel");
-    reply.status(500).send(error);
+    reply.status(500).send({ message: "Something went wrong" });
   }
 }
 
@@ -226,44 +199,60 @@ export async function deleteResponseHandler(
   }
 }
 
+/**
+ * The anonymous web form's submit. Everything that decides how a submission is metered or
+ * checked comes from the server: the platform is always WEB, and the unique-device rule
+ * is the survey's own setting rather than a flag the browser may leave out.
+ */
 export async function createResponseHandler(
   request: FastifyRequest<{
-    Body: CreateResponseInput;
+    Body: CreatePublicResponseInput;
   }>,
   reply: FastifyReply,
 ) {
-  const { checkUniqueDevice, ...data } = request.body;
+  const { checkUniqueDevice: _clientFlag, ...body } = request.body;
   const ip = getIp(request);
 
   try {
-    const response = await createResponse(data, checkUniqueDevice, ip);
+    const link = await prisma.surveyTeamMap.findUnique({
+      where: { id: body.surveyTeamMapId },
+      select: { survey: { select: { uniqueDeviceResponse: true } } },
+    });
+    if (!link) {
+      return reply.code(404).send("Survey not found");
+    }
+    const data: CreateResponseInput = { ...body, platform: ResponsePlatform.WEB };
+    const response = await createResponse(data, link.survey.uniqueDeviceResponse, ip);
     reply.code(201).send();
     const coords = response.location?.coordinates;
     const location = (await fetchLocation(coords)) ?? undefined;
     // checking location information after response is created since we dont
     // want to leave the user waiting
-    if (data.platform === "WHATSAPP") {
-      // TODO: check if its possible to get location from whatsapp
-    } else {
-      const sideEffects = await Promise.allSettled([
-        sendEmailOnResponseCreation(data.surveyTeamMapId, response),
-        updateResponse(response.id, { ip, location }),
-        sendResponseToWebhook(response, response.surveyTeamMap.team.orgId),
-        createTestimonial(data, response.id),
-        emitSurveyResponseSubmitted(response.surveyTeamMap.team.orgId, response),
-      ]);
-      for (const [index, result] of sideEffects.entries()) {
-        if (result.status === "rejected") {
-          log.error(
-            { err: result.reason, responseId: response.id, index },
-            "Post-response side effect failed",
-          );
-        }
+    const sideEffects = await Promise.allSettled([
+      sendEmailOnResponseCreation(data.surveyTeamMapId, response),
+      updateResponse(response.id, { ip, location }),
+      sendResponseToWebhook(response, response.surveyTeamMap.team.orgId),
+      createTestimonial(data, response.id),
+      emitSurveyResponseSubmitted(response.surveyTeamMap.team.orgId, response),
+    ]);
+    for (const [index, result] of sideEffects.entries()) {
+      if (result.status === "rejected") {
+        log.error(
+          { err: result.reason, responseId: response.id, index },
+          "Post-response side effect failed",
+        );
       }
     }
   } catch (e) {
-    console.error(e);
-    reply.code(500).send(e instanceof Error ? e.message : "Unknown error");
+    if (reply.sent) {
+      log.error({ err: e }, "Post-response processing failed");
+      return;
+    }
+    if (e instanceof Error && e.message === "ALREADY_RESPONDED") {
+      return reply.code(409).send(e.message);
+    }
+    log.error({ err: e }, "Survey response submit failed");
+    reply.code(500).send("Something went wrong");
   }
 }
 export async function generateResponseHandler(
@@ -333,11 +322,12 @@ export async function summarizeResponseHandler(
       type,
       questionId,
       teamId,
+      await sessionTeamIds(request),
     );
     reply.code(200).send(res);
   } catch (e) {
     console.error(e);
-    reply.code(500).send(e);
+    reply.code(500).send({ message: "Something went wrong" });
   }
 }
 
@@ -346,7 +336,11 @@ export async function exportContactResponseToContactsHandler(
   reply: FastifyReply,
 ) {
   try {
-    await exportContactResponseToContacts(request.params.surveyId, request.user.orgId);
+    await exportContactResponseToContacts(
+      request.params.surveyId,
+      request.user.orgId,
+      await sessionTeamIds(request),
+    );
     reply.code(200).send();
   } catch (e) {
     log.error(e);
@@ -359,12 +353,12 @@ export async function getSurveyResponseCountHandler(
   reply: FastifyReply,
 ) {
   try {
-    const teamIds = await getTeamIdsByUserId(request.userId);
+    const teamIds = await sessionTeamIds(request);
     const res = await getSurveyResponseCount(request.params.surveyId, teamIds);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
-    reply.code(500).send(e);
+    reply.code(500).send({ message: "Something went wrong" });
   }
 }
 
@@ -376,12 +370,12 @@ export async function getSurveyResponseBySurveyIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    const teamIds = await getTeamIdsByUserId(request.userId);
+    const teamIds = await sessionTeamIds(request);
     const res = await getSurveyResponseBySurveyId(request.params.surveyId, teamIds, request.query);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
-    reply.code(500).send(e);
+    reply.code(500).send({ message: "Something went wrong" });
   }
 }
 
@@ -395,7 +389,7 @@ export async function getResponseAnalyticsForGraphHandler(
   try {
     const { teamMapIds, dateRange } = request.query;
     const surveyTeamMapIds = teamMapIds ? teamMapIds.split(",") : [];
-    const teamIds = await getTeamIdsByUserId(request.userId);
+    const teamIds = await sessionTeamIds(request);
     const res = await getResponseAnalyticsForGraph(
       request.params.surveyId,
       teamIds,
@@ -405,7 +399,7 @@ export async function getResponseAnalyticsForGraphHandler(
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
-    reply.code(500).send(e);
+    reply.code(500).send({ message: "Something went wrong" });
   }
 }
 
@@ -414,12 +408,12 @@ export async function getResponseCountForCamparisonHandler(
   reply: FastifyReply,
 ) {
   try {
-    const teamIds = await getTeamIdsByUserId(request.userId);
+    const teamIds = await sessionTeamIds(request);
     const res = await getResponseCountForCamparison(request.params.surveyId, teamIds);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
-    reply.code(500).send(e);
+    reply.code(500).send({ message: "Something went wrong" });
   }
 }
 
@@ -436,11 +430,11 @@ export async function getHappyIndexResponsesHandler(
     const { surveyId } = request.params;
     const { teamMapIds } = request.query;
     const surveyTeamMapIds = teamMapIds ? teamMapIds.split(",") : [];
-    const teamIds = await getTeamIdsByUserId(request.userId);
+    const teamIds = await sessionTeamIds(request);
     const result = await happyIndexResponsesBySurveyId(surveyId, surveyTeamMapIds, teamIds);
     reply.send(result);
   } catch (e) {
     console.error(e);
-    reply.code(500).send(e instanceof Error ? e.message : String(e));
+    reply.code(500).send({ message: "Something went wrong" });
   }
 }

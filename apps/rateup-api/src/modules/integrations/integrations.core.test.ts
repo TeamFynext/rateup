@@ -1,4 +1,11 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
+
+// Hook URLs are resolved before every call (src/utils/ssrf.ts); keep that off the network.
+vi.mock("node:dns/promises", () => ({
+  lookup: vi.fn(async (host: string) => [
+    { address: host.includes("internal") ? "10.0.0.5" : "203.0.113.10", family: 4 },
+  ]),
+}));
 
 vi.hoisted(() => {
   process.env.GOOGLE_OAUTH_CLIENT_ID = "google-client-id";
@@ -30,9 +37,20 @@ vi.mock("../apiAccessToken/apiAccessToken.service.js", () => ({
   generateApiKey: vi.fn(async () => ({ key: "plain-api-key", hash: "bcrypt-hash" })),
 }));
 
-vi.mock("axios", () => ({ default: { delete: vi.fn(), get: vi.fn(), post: vi.fn() } }));
+// `create` because the provider registry, loaded on disconnect, reaches modules that
+// build an axios client when they load (utils/hubspot.ts via the Google Sheets sync).
+vi.mock("axios", () => ({
+  default: {
+    delete: vi.fn(),
+    get: vi.fn(),
+    post: vi.fn(),
+    create: vi.fn(() => ({ get: vi.fn(), post: vi.fn(), patch: vi.fn(), delete: vi.fn() })),
+  },
+}));
 
 vi.mock("./shopify/shopify.messages.js", () => ({ sendWhatsAppTemplateToCustomer: vi.fn() }));
+const shopStore = vi.hoisted(() => ({ onOnlineStoreDisconnected: vi.fn(async () => {}) }));
+vi.mock("../commerce/shop/store.service.js", () => shopStore);
 
 import axios from "axios";
 import prisma from "../../utils/prisma.js";
@@ -82,10 +100,12 @@ beforeEach(() => {
 // ===========================================================================
 
 describe("the integration readers", () => {
-  test("the per-org list is scoped to the org", async () => {
+  test("the per-org list is scoped to the org and leaves out shop payment gateways", async () => {
     await getAllIntegrationsByOrgId(ORG);
 
-    expect(db.integration.findMany).toHaveBeenCalledWith({ where: { orgId: ORG } });
+    expect(db.integration.findMany).toHaveBeenCalledWith({
+      where: { orgId: ORG, NOT: { name: { startsWith: "shop_" } } },
+    });
   });
 
   test("by-name is keyed on the org and name compound unique", async () => {
@@ -285,12 +305,27 @@ describe("updateIntegrationByName", () => {
 // ===========================================================================
 
 describe("deleteIntegrationByName", () => {
+  // The provider registry is imported on first disconnect; load it up front so that
+  // import doesn't eat the first test's 5s timeout.
+  beforeAll(async () => {
+    await import("./providers/registry.js");
+  }, 60_000);
+
   test("is scoped to the org and name", async () => {
     await deleteIntegrationByName("amelia", ORG);
 
     expect(db.integration.delete.mock.calls[0][0].where).toEqual({
       orgid_integration_name_unique: { name: "amelia", orgId: ORG },
     });
+  });
+
+  test("disconnecting Shopify or WooCommerce moves a shop checking out there back to RateUp", async () => {
+    db.integration.findUnique.mockResolvedValue(null);
+    await deleteIntegrationByName("woocommerce", ORG);
+    expect(shopStore.onOnlineStoreDisconnected).toHaveBeenCalledWith(ORG, "WOOCOMMERCE");
+
+    await deleteIntegrationByName("amelia", ORG);
+    expect(shopStore.onOnlineStoreDisconnected).toHaveBeenCalledTimes(1);
   });
 
   test("propagates a missing-row failure rather than answering quietly", async () => {
@@ -338,7 +373,24 @@ describe("deleteZapierTriggerHooks", () => {
       ORG,
     );
 
-    expect(axios.delete).toHaveBeenCalledWith("https://hooks.zapier.com/1");
+    expect(axios.delete).toHaveBeenCalledWith(
+      "https://hooks.zapier.com/1",
+      expect.objectContaining({ maxRedirects: 0 }),
+    );
+  });
+
+  test("never calls a stored hook URL on a private address, but still removes it", async () => {
+    db.integration.findUnique.mockResolvedValue(
+      integration([{ hookUrl: "https://metadata.internal/1", active: true }]),
+    );
+
+    await deleteZapierTriggerHooks(
+      { hookUrl: "https://metadata.internal/1", active: true } as never,
+      ORG,
+    );
+
+    expect(axios.delete).not.toHaveBeenCalled();
+    expect(db.integration.update).toHaveBeenCalled();
   });
 
   test("skips the outbound call when the stored subscription is inactive", async () => {

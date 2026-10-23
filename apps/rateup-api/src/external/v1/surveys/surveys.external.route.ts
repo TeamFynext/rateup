@@ -7,9 +7,12 @@ import { campaignResponseByIdSchema } from "../../../modules/campaign/campaign.s
 import {
   getResponsesBySurveyParamsSchema,
   getSurveyListResponseSchema,
-} from "../../../modules/response/response.schema.js";
+} from "./surveys.external.schema.js";
+import { declareExternalScopes } from "../../shared/scopes.js";
 
 export async function externalSurveyRoutes(server: FastifyInstance) {
+  declareExternalScopes(server, { read: "surveys.read", write: "surveys.manage" });
+
   server.get(
     "/:surveyId",
     {

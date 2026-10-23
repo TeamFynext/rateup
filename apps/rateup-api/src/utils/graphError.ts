@@ -32,6 +32,35 @@ function isTransportError(error: unknown): boolean {
 }
 
 /**
+ * Transport failures after which nobody knows whether Meta acted on the
+ * request: the client stopped waiting (a timeout) or gave up (an abort), not
+ * the network refusing to connect. Retrying one of these is how a recipient
+ * gets the same message twice.
+ */
+const OUTCOME_UNKNOWN_TRANSPORT_CODES: ReadonlySet<string> = new Set([
+  "ECONNABORTED",
+  "ETIMEDOUT",
+  "ERR_CANCELED",
+]);
+
+/** Whether a failed send may in fact have been delivered. */
+export function isSendOutcomeUnknown(detail: WaGraphApiErrorDetail | undefined): boolean {
+  const code = detail?.transportCode;
+  return typeof code === "string" && OUTCOME_UNKNOWN_TRANSPORT_CODES.has(code);
+}
+
+/**
+ * The HTTP status a thrown Graph failure carried, when it got that far. Set by
+ * `callMetaApi` on both `GraphApiError` and `MetaHttpError`; duck-typed for the
+ * same reason as `isTransportError`.
+ */
+function httpStatusOf(error: unknown): number | undefined {
+  if (error === null || typeof error !== "object") return undefined;
+  const status = (error as { status?: unknown }).status;
+  return typeof status === "number" ? status : undefined;
+}
+
+/**
  * The one way a WhatsApp/Graph failure is turned into something storable.
  *
  * Meta returns failures as `{ error: {...} }`; anything else (DNS, timeout, a
@@ -48,9 +77,16 @@ function isTransportError(error: unknown): boolean {
  * where every reader looks.
  */
 export function graphApiErrorDetail(error: unknown): WaGraphApiErrorDetail {
+  const httpStatus = httpStatusOf(error);
   if (error !== null && typeof error === "object" && "error" in error) {
     const detail = (error as { error?: WaGraphApiErrorDetail }).error;
-    if (detail) return detail;
+    if (detail) return httpStatus === undefined ? detail : { ...detail, httpStatus };
+  }
+  // A response with no Graph body — an HTML 502, an empty 429. The status is
+  // all there is to classify it by; without it this read as UNKNOWN, which is
+  // permanent.
+  if (httpStatus !== undefined && error instanceof Error) {
+    return { message: error.message, type: error.name, httpStatus };
   }
   if (isTransportError(error)) {
     const { message, name, code } = error as { message?: string; name?: string; code?: string };

@@ -68,7 +68,9 @@ export function encryptSecret(plain: string): string {
   if (!key) {
     if (!warnedNoKey) {
       warnedNoKey = true;
-      log.warn("INTEGRATION_SECRET_KEY is not set; integration credentials are stored unencrypted");
+      log.error(
+        "INTEGRATION_SECRET_KEY is not set; integration credentials are stored unencrypted",
+      );
     }
     return plain;
   }
@@ -129,4 +131,35 @@ export function encryptCredentialSecrets<T>(credential: T): T {
 /** A copy of `credential` with every secret field decrypted. */
 export function decryptCredentialSecrets<T>(credential: T): T {
   return transformSecrets(credential, decryptSecret) as T;
+}
+
+/** What a secret reads as once it leaves the API. Truthy, so "is it set?" checks still work. */
+export const REDACTED_SECRET = "[redacted]";
+
+/** A copy of `credential` with every secret field replaced by {@link REDACTED_SECRET}. */
+export function redactCredentialSecrets<T>(credential: T): T {
+  return transformSecrets(credential, () => REDACTED_SECRET) as T;
+}
+
+/**
+ * Puts the stored secrets back wherever a client echoed {@link REDACTED_SECRET}. Settings
+ * pages save by sending the whole credential they read, so without this a save would
+ * overwrite every token with the placeholder.
+ */
+export function restoreRedactedSecrets<T>(incoming: T, stored: unknown): T {
+  if (Array.isArray(incoming)) {
+    const prior = Array.isArray(stored) ? stored : [];
+    return incoming.map((item, i) => restoreRedactedSecrets(item, prior[i])) as T;
+  }
+  if (!isPlainObject(incoming)) return incoming;
+  const prior = isPlainObject(stored) ? stored : {};
+  const out: Record<string, unknown> = {};
+  for (const [key, child] of Object.entries(incoming)) {
+    if (SECRET_KEYS.has(key) && child === REDACTED_SECRET) {
+      if (prior[key] !== undefined) out[key] = prior[key];
+    } else {
+      out[key] = restoreRedactedSecrets(child, prior[key]);
+    }
+  }
+  return out as T;
 }

@@ -18,16 +18,22 @@ vi.mock("../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
 vi.mock("./shopify/shopify.route.js", () => ({ shopifyRoutes: vi.fn() }));
 vi.mock("../../utils/auditLog.js", () => ({ recordAuditEvent: vi.fn() }));
 vi.mock("./providers/registry.js", () => ({ getIntegrationProvider: vi.fn() }));
+vi.mock("./automation/automation.hooks.js", () => ({
+  addAutomationHook: vi.fn(),
+  removeAutomationHookById: vi.fn(),
+}));
 
 import { recordAuditEvent } from "../../utils/auditLog.js";
 import * as service from "./integrations.service.js";
 import { getIntegrationProvider } from "./providers/registry.js";
+import { removeAutomationHookById } from "./automation/automation.hooks.js";
 import { IntegrationConnectError } from "./shared/oauthConnectError.js";
 import {
   connectWithApiKeyHandler,
   createIntegrationHandler,
   deleteIntegrationByNameHandler,
   deleteZapierTriggerHookHandler,
+  deleteAutomationHookHandler,
   getAllIntegrationsByOrgHandler,
   getIntegrationStatusesHandler,
   updateIntegrationByNameHandler,
@@ -268,6 +274,37 @@ describe("deleteZapierTriggerHookHandler", () => {
 });
 
 // ===========================================================================
+// deleteAutomationHookHandler
+// ===========================================================================
+
+describe("deleteAutomationHookHandler", () => {
+  const removeHook = removeAutomationHookById as unknown as ReturnType<typeof vi.fn>;
+  const call = (name: string, rep = reply()) =>
+    deleteAutomationHookHandler(
+      { user: { orgId: ORG }, params: { name, hookId: "h-1" } } as never,
+      rep,
+    ).then(() => answer(rep));
+
+  test("removes the hook by id within the session's org", async () => {
+    removeHook.mockResolvedValueOnce(true);
+
+    expect((await call("make")).body).toEqual({ success: true });
+    expect(removeHook).toHaveBeenCalledWith("make", ORG, "h-1");
+  });
+
+  test("a hook that is not there is a 404", async () => {
+    removeHook.mockResolvedValueOnce(false);
+
+    expect((await call("make")).code).toBe(404);
+  });
+
+  test("an integration that is not an automation platform has no hooks", async () => {
+    expect((await call("hubspot")).code).toBe(400);
+    expect(removeHook).not.toHaveBeenCalled();
+  });
+});
+
+// ===========================================================================
 // Route registration
 // ===========================================================================
 
@@ -291,14 +328,46 @@ describe("route registration", () => {
 
     await integrationsRoutes(srv);
 
-    expect(hooks).toHaveLength(1);
-    expect(hooks[0].name).toBe("onRoute");
+    expect(hooks.map((h) => h.name)).toEqual(["onRoute", "preHandler"]);
     const read: any = { method: "GET", url: "/x", config: {} };
     const write: any = { method: "POST", url: "/x", config: {} };
     hooks[0].fn(read);
     hooks[0].fn(write);
     expect(read.config).toEqual({ permission: "integrations.read", access: "session" });
     expect(write.config).toEqual({ permission: "integrations.manage", access: "session" });
+  });
+
+  test("shop gateway and shipping rows are not reachable through the generic routes", async () => {
+    const { srv, hooks } = server();
+
+    await integrationsRoutes(srv);
+
+    const guard = hooks.find((h) => h.name === "preHandler").fn;
+    const run = async (request: any) => {
+      const rep = reply();
+      await guard({ routeOptions: { url: "/api/integrations/:name" }, ...request }, rep);
+      return rep.code.mock.calls[0]?.[0];
+    };
+    for (const method of ["GET", "PUT", "DELETE"]) {
+      expect(await run({ method, params: { name: "shop_stripe" } }), method).toBe(404);
+    }
+    expect(await run({ method: "GET", params: { name: "shop_easypost" } })).toBe(404);
+    expect(
+      await run({
+        method: "POST",
+        routeOptions: { url: "/api/integrations/" },
+        body: { name: "shop_razorpay", credential: {} },
+      }),
+    ).toBe(404);
+    expect(await run({ method: "GET", params: { name: "hubspot" } })).toBeUndefined();
+    // Another route's body may carry an unrelated name.
+    expect(
+      await run({
+        method: "POST",
+        routeOptions: { url: "/api/integrations/shopify/x" },
+        body: { name: "shop_window" },
+      }),
+    ).toBeUndefined();
   });
 
   test("no longer registers a cross-org listing route", async () => {

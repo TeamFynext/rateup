@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { listOrders } from "../billing/billing.service.js";
+import { guardOrgAccessWrite, guardSubscriptionWrite } from "../staff.privileged.js";
 import { idParamSchema, pageQuerySchema, type IdParam } from "../staff.schema.js";
 import {
   deleteOrgAsStaff,
@@ -126,50 +127,59 @@ export async function staffOrgRoutes(server: FastifyInstance) {
     data: await getOrgSubscription(request.params.id),
   }));
 
-  // Subscription changes. Every body carries a reason, stored on the audit row.
+  // Subscription changes. Every body carries a reason, stored on the audit row. A staff owner
+  // only, with a Google sign-in from the last 15 minutes, never on their own account.
+  const subscriptionWrite = { preHandler: guardSubscriptionWrite };
   server.put<{ Params: IdParam; Body: PlanChangeInput }>(
     "/orgs/:id/subscription/plan",
-    { schema: { params: idParamSchema, body: planChangeSchema } },
+    { ...subscriptionWrite, schema: { params: idParamSchema, body: planChangeSchema } },
     async (request) => ({ data: await changeOrgPlan(request, request.params.id, request.body) }),
   );
   server.put<{ Params: IdParam; Body: ExpiryChangeInput }>(
     "/orgs/:id/subscription/expiry",
-    { schema: { params: idParamSchema, body: expiryChangeSchema } },
+    { ...subscriptionWrite, schema: { params: idParamSchema, body: expiryChangeSchema } },
     async (request) => ({
       data: await changeOrgExpiry(request, request.params.id, request.body),
     }),
   );
   server.put<{ Params: IdParam; Body: FeatureOverrideInput }>(
     "/orgs/:id/subscription/overrides",
-    { schema: { params: idParamSchema, body: featureOverrideSchema } },
+    { ...subscriptionWrite, schema: { params: idParamSchema, body: featureOverrideSchema } },
     async (request) => ({
       data: await overrideOrgFeatures(request, request.params.id, request.body),
     }),
   );
   server.post<{ Params: IdParam; Body: AddonGrantInput }>(
     "/orgs/:id/addons",
-    { schema: { params: idParamSchema, body: addonGrantSchema } },
+    { ...subscriptionWrite, schema: { params: idParamSchema, body: addonGrantSchema } },
     async (request) => ({
       data: await grantAddonPacks(request, request.params.id, request.body),
     }),
   );
   server.post<{ Params: AddonParam; Body: ReasonOnlyInput }>(
     "/orgs/:id/addons/:addonId/revoke",
-    { schema: { params: addonParamSchema, body: reasonOnlySchema } },
+    { ...subscriptionWrite, schema: { params: addonParamSchema, body: reasonOnlySchema } },
     async (request) => ({
       data: await revokeAddonPack(request, request.params.id, request.params.addonId, request.body),
     }),
   );
 
-  // Suspension: the customer's sessions, API key and outbound sends all stop.
+  // Suspension: the customer's sessions, API key and outbound sends all stop. Step-up, and
+  // never on an account the staff member belongs to.
   server.post<{ Params: IdParam; Body: SuspendInput }>(
     "/orgs/:id/suspend",
-    { schema: { params: idParamSchema, body: reasonOnlyBodySchema } },
+    {
+      preHandler: guardOrgAccessWrite,
+      schema: { params: idParamSchema, body: reasonOnlyBodySchema },
+    },
     async (request) => ({ data: await suspendOrg(request, request.params.id, request.body) }),
   );
   server.post<{ Params: IdParam; Body: SuspendInput }>(
     "/orgs/:id/unsuspend",
-    { schema: { params: idParamSchema, body: reasonOnlyBodySchema } },
+    {
+      preHandler: guardOrgAccessWrite,
+      schema: { params: idParamSchema, body: reasonOnlyBodySchema },
+    },
     async (request) => ({ data: await unsuspendOrg(request, request.params.id, request.body) }),
   );
 

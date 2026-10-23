@@ -3,6 +3,7 @@ import {
   createIntegrationHandler,
   deleteIntegrationByNameHandler,
   deleteZapierTriggerHookHandler,
+  deleteAutomationHookHandler,
   connectWithApiKeyHandler,
   finishOAuthConnectHandler,
   getAllIntegrationsByOrgHandler,
@@ -17,10 +18,12 @@ import {
   integrationSchema,
   updateIntgrationSchema,
   deleteZapierHookSchema,
+  automationHookParamsSchema,
   apiKeyConnectSchema,
   oauthAuthorizeQuerySchema,
   oauthCallbackSchema,
   type DeleteZapierHookInput,
+  type AutomationHookParams,
   type ApiKeyConnectInput,
   type OAuthAuthorizeQuery,
   type OAuthCallbackInput,
@@ -31,6 +34,7 @@ import {
 import { shopifyRoutes } from "./shopify/shopify.route.js";
 import { wooCommerceRoutes } from "./woocommerce/woocommerce.route.js";
 import { hubSpotRoutes } from "./hubspot/hubspot.route.js";
+import { pipedriveRoutes } from "./pipedrive/pipedrive.route.js";
 import { petpoojaRoutes } from "./petpooja/petpooja.js";
 import { waPaymentRoutes } from "./wapayment/wapayment.route.js";
 import { declareAccess } from "../../authz/registry.js";
@@ -38,9 +42,23 @@ import { declareAccess } from "../../authz/registry.js";
 export async function integrationsRoutes(server: FastifyInstance) {
   declareAccess(server, { read: "integrations.read", write: "integrations.manage" });
 
+  // Shop gateway and shipping keys are managed only through /api/shop, behind
+  // commerce.payments.manage; these generic routes would hand them to integrations.read.
+  server.addHook("preHandler", async (request, reply) => {
+    const params = request.params as { name?: unknown } | undefined;
+    // Only the create route names the integration in its body.
+    const creating =
+      request.method === "POST" && /\/integrations\/?$/.test(request.routeOptions.url ?? "");
+    const body = creating ? (request.body as { name?: unknown } | undefined) : undefined;
+    if (isShopIntegration(params?.name) || isShopIntegration(body?.name)) {
+      return reply.code(404).send({ error: "Not found" });
+    }
+  });
+
   server.register(shopifyRoutes, { prefix: "/shopify" });
   server.register(wooCommerceRoutes, { prefix: "/woocommerce" });
   server.register(hubSpotRoutes, { prefix: "/hubspot" });
+  server.register(pipedriveRoutes, { prefix: "/pipedrive" });
   server.register(petpoojaRoutes, { prefix: "/petpooja" });
   // No prefix: the WhatsApp payment paths predate the provider folders.
   server.register(waPaymentRoutes);
@@ -124,4 +142,12 @@ export async function integrationsRoutes(server: FastifyInstance) {
     },
     deleteZapierTriggerHookHandler,
   );
+
+  server.delete<{ Params: AutomationHookParams }>(
+    "/:name/hooks/:hookId",
+    { schema: { params: automationHookParamsSchema } },
+    deleteAutomationHookHandler,
+  );
 }
+
+const isShopIntegration = (name: unknown) => typeof name === "string" && name.startsWith("shop_");

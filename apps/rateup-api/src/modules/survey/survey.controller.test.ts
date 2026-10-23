@@ -35,6 +35,7 @@ vi.mock("./survey.service.js", () => ({
   getSurveyStatsBySurveyTeamMapId: vi.fn(),
   getSurveyTemplates: vi.fn(),
   getSurveyVariables: vi.fn(),
+  getPublicSurveyVariables: vi.fn(),
   getWebSurveysByUserId: vi.fn(),
   getWhatsappSurveysByUserId: vi.fn(),
   updateCompletedSurvey: vi.fn(),
@@ -48,7 +49,7 @@ vi.mock("./survey.service.js", () => ({
   verifySurveyPassword: vi.fn(),
 }));
 
-vi.mock("../team/team.service.js", () => ({ getTeamIdsByUserId: vi.fn() }));
+vi.mock("./survey.teamScope.js", () => ({ sessionTeamIds: vi.fn() }));
 vi.mock("supertokens-node/recipe/session/index.js", () => ({
   default: { getSession: vi.fn() },
 }));
@@ -65,7 +66,7 @@ vi.mock("../response/response.service.js", () => ({ getSurveyResponseByIp: vi.fn
 
 import Session from "supertokens-node/recipe/session/index.js";
 import { Prisma } from "../../../generated/prisma/client.js";
-import { getTeamIdsByUserId } from "../team/team.service.js";
+import { sessionTeamIds } from "./survey.teamScope.js";
 import { getSurveyResponseByIp } from "../response/response.service.js";
 import {
   getFlowBySurveyId,
@@ -113,7 +114,7 @@ import {
 
 const svc = service as unknown as Record<string, ReturnType<typeof vi.fn>>;
 const getSessionMock = Session.getSession as unknown as ReturnType<typeof vi.fn>;
-const getTeamIdsMock = getTeamIdsByUserId as unknown as ReturnType<typeof vi.fn>;
+const getTeamIdsMock = sessionTeamIds as unknown as ReturnType<typeof vi.fn>;
 const getResponseByIpMock = getSurveyResponseByIp as unknown as ReturnType<typeof vi.fn>;
 
 function makeReply() {
@@ -139,6 +140,7 @@ function makeRequest(overrides: Record<string, unknown> = {}) {
     query: {},
     userId: "user-1",
     user: { orgId: "org-1", userId: "user-1" },
+    actor: { orgId: "org-1", scope: { all: true, teamIds: [] } },
     ...overrides,
   } as any;
 }
@@ -202,7 +204,16 @@ describe("getSurveyByIdHandler", () => {
     await getSurveyByIdHandler(makeRequest({ params: { id: "s1" } }), reply);
 
     expect(svc.getSurveyById).toHaveBeenCalledWith("s1", ["team-1"]);
-    expect(reply.payload).toEqual({ id: "s1" });
+    expect(reply.payload).toEqual({ id: "s1", hasPassword: false });
+  });
+
+  test("never sends the stored password hash to the dashboard", async () => {
+    svc.getSurveyById.mockResolvedValue({ id: "s1", password: "$2b$10$hash" });
+    const reply = makeReply();
+
+    await getSurveyByIdHandler(makeRequest({ params: { id: "s1" } }), reply);
+
+    expect(reply.payload).toEqual({ id: "s1", hasPassword: true });
   });
 
   test("returns 404 when the survey resolves to nothing", async () => {
@@ -215,8 +226,8 @@ describe("getSurveyByIdHandler", () => {
     expect(reply.code).toHaveBeenCalledWith(404);
   });
 
-  test("returns 500 when the session cannot be resolved", async () => {
-    getSessionMock.mockRejectedValue(new Error("no session"));
+  test("returns 500 when the team lookup fails", async () => {
+    getTeamIdsMock.mockRejectedValueOnce(new Error("db down"));
     const reply = makeReply();
 
     await getSurveyByIdHandler(makeRequest({ params: { id: "s1" } }), reply);
@@ -391,14 +402,14 @@ describe("survey listing handlers", () => {
     svc.getSurveysByUserId.mockResolvedValue([]);
     await getSurveysHandler(makeRequest(), makeReply());
 
-    expect(svc.getSurveysByUserId).toHaveBeenCalledWith("user-1", true, true);
+    expect(svc.getSurveysByUserId).toHaveBeenCalledWith("user-1", true, true, "org-1");
   });
 
   test("getSurveysWithQuestionsHandler requests questions but not counts", async () => {
     svc.getSurveysByUserId.mockResolvedValue([]);
     await getSurveysWithQuestionsHandler(makeRequest(), makeReply());
 
-    expect(svc.getSurveysByUserId).toHaveBeenCalledWith("user-1", true);
+    expect(svc.getSurveysByUserId).toHaveBeenCalledWith("user-1", true, false, "org-1");
   });
 
   test("getWebSurveysHandler sends the web survey list", async () => {
@@ -414,7 +425,7 @@ describe("survey listing handlers", () => {
     svc.getWhatsappSurveysByUserId.mockResolvedValue([]);
     await getWhatsappSurveysHandler(makeRequest(), makeReply());
 
-    expect(svc.getWhatsappSurveysByUserId).toHaveBeenCalledWith("user-1", "whatsapp");
+    expect(svc.getWhatsappSurveysByUserId).toHaveBeenCalledWith("user-1", "whatsapp", "org-1");
   });
 
   test("getSurveysLandingHandler requires a session before listing", async () => {

@@ -3,6 +3,7 @@ import {
   NewWaMessageBody,
   PaginateQuerySchema,
   WaChatFilterQuerySchema,
+  WaChatFilterSchema,
   WaChatExportQuerySchema,
   WaChatExportConstraints,
   waChatExportConstraints,
@@ -103,7 +104,16 @@ import { WaMessageClosedStatus } from "../../constants.js";
 import { getFacebookUserDetailsFromMeta } from "../../facebook/facebook.service.js";
 import { notifyInboundMessage } from "./inboundNotify.js";
 import { assignConversationOwner } from "./assignOwner.service.js";
-//this function automates the process of adding wa contacts and the associated messages to db
+/**
+ * Stores one message, in either direction, on any channel — creating the
+ * contact and conversation it belongs to — and broadcasts it to the inbox.
+ *
+ * Resolves to null when a message with this `messageId` is already stored: the
+ * delivery is a duplicate and nothing after the insert ran. Callers that react
+ * to a message (rules, flows, loyalty, automated replies) must stop there, or a
+ * redelivered webhook runs them twice. Throws when the message could not be
+ * stored.
+ */
 export async function handleWaMessages(
   type: "send" | "receive",
   messageBody: WaMessagePayload,
@@ -358,6 +368,12 @@ export async function handleWaMessages(
           }
         : undefined,
     );
+
+    // Another delivery of this message got there first — a Meta retry, or the
+    // same webhook on another replica. It owns everything below (team map,
+    // events, notifications, the inbox broadcast), and the caller's automations
+    // too: null tells the caller not to run them a second time.
+    if (waMessage === null) return null;
 
     // A ticket with no subject is titled by the message that opened it — the
     // first message is the best one-line description of what it is about. The
@@ -838,13 +854,11 @@ export async function getFilteredContactsHandler(
     // NaN parameter, and `filterChats`'s own catch swallows that into `[]`) —
     // default to the first page instead.
     const pageNumber = parseInt(page ?? "1", 10);
-    const contacts = await filterChats(
-      orgId,
-      pageNumber,
-      JSON.parse(decodeURIComponent(filterData)),
-      userId,
-      request.actor!,
-    );
+    const filter = parseChatFilter(filterData);
+    if (!filter) {
+      return reply.status(400).send("Invalid filterData");
+    }
+    const contacts = await filterChats(orgId, pageNumber, filter, userId, request.actor!);
     reply.status(200).send({
       rows: contacts ?? [],
       nextOffset: Array.isArray(contacts) && contacts.length > 0 ? pageNumber + 1 : null,
@@ -854,6 +868,17 @@ export async function getFilteredContactsHandler(
     reply.status(500).send("Internal Server Error");
   }
 }
+/** The inbox filter from its query-string JSON, or null when it is not valid JSON of that shape. */
+function parseChatFilter(encoded: string | undefined) {
+  if (!encoded) return null;
+  try {
+    const parsed = WaChatFilterSchema.safeParse(JSON.parse(decodeURIComponent(encoded)));
+    return parsed.success ? parsed.data : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function getMediaFileByMediaId(
   request: FastifyRequest<{
     Params: WaMediaFileByMediaIdBody;
@@ -897,9 +922,10 @@ export async function exportWhatsappChatsHandler(
       return reply.status(400).send("Invalid export constraints");
     }
 
-    const filterfilterDataDecoded = JSON.parse(
-      decodeURIComponent(filterData?.replace(/(^"|"$)/g, "")),
-    );
+    const filterfilterDataDecoded = parseChatFilter(filterData?.replace(/(^"|"$)/g, ""));
+    if (!filterfilterDataDecoded) {
+      return reply.status(400).send("Invalid filterData");
+    }
 
     const writer = new XlsxStreamWriter({
       name: "Chats",
@@ -981,7 +1007,7 @@ export async function getAssignedUserForContactHandler(
   reply: FastifyReply,
 ) {
   try {
-    const res = await getAssignedUserForContact(request.params.contactId);
+    const res = await getAssignedUserForContact(request.params.contactId, request.user.orgId);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);

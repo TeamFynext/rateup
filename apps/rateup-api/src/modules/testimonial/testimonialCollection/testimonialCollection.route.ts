@@ -16,7 +16,7 @@ import {
 } from "./testimonialCollection.controller.js";
 import { declareAccess } from "../../../authz/registry.js";
 export async function testimonialCollectionRoutes(server: FastifyInstance) {
-  declareAccess(server, { access: "session" });
+  declareAccess(server, { access: "session", write: "surveys.manage" });
 
   server.post(
     "/create",

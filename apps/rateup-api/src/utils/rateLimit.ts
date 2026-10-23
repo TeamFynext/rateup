@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import connection from "./redisConnection.js";
 import { log } from "./logger.js";
+import { clientIp } from "./http.js";
 
 export interface RateLimitOptions<R extends FastifyRequest = FastifyRequest> {
   /** How many requests one bucket may make inside the window. */
@@ -10,7 +11,9 @@ export interface RateLimitOptions<R extends FastifyRequest = FastifyRequest> {
   /** Distinguishes one limiter's counters from another's. */
   key: string;
   /**
-   * What a bucket is keyed on. Defaults to the client IP. Return null/undefined to skip
+   * What a bucket is keyed on. Defaults to the client IP (`clientIp`: Cloudflare's
+   * `CF-Connecting-IP`, else the address Fastify resolved under `TRUST_PROXY_HOPS` — never a
+   * client-written `X-Forwarded-For` entry). Return null/undefined to skip
    * this limiter for the request (e.g. a body without the field). Fastify validates the
    * body before preHandlers run, so `request.body` is safe to read here.
    */
@@ -29,19 +32,21 @@ export interface RateLimitOptions<R extends FastifyRequest = FastifyRequest> {
   throwOnLimit?: (kind: "rate_limited" | "unavailable") => Error;
 }
 
-/**
- * The client address. Behind a proxy Fastify only trusts `x-forwarded-for` when
- * `trustProxy` is set, so `request.ip` is the right thing to read either way —
- * reading the header directly would let a caller pick their own bucket.
- */
-function clientIp(request: FastifyRequest): string {
-  return request.ip || "unknown";
-}
-
 /** Read at call time, not import time, so a test or a hot env change is seen. */
 function failClosedDisabled(): boolean {
   return process.env.RATE_LIMIT_FAIL_CLOSED_DISABLED === "true";
 }
+
+/**
+ * One round trip per check. Only the first request in a window sets the expiry, so the
+ * window starts when its first request arrives and is not extended by later ones; doing it
+ * in a script also closes the gap where a crash between INCR and EXPIRE left a counter that
+ * never expired. Redis caches the script by hash after the first EVAL.
+ */
+const INCR_WITH_WINDOW = `
+local count = redis.call("INCR", KEYS[1])
+if count == 1 then redis.call("EXPIRE", KEYS[1], ARGV[1]) end
+return count`;
 
 export function rateLimit<R extends FastifyRequest = FastifyRequest>({
   max,
@@ -58,10 +63,7 @@ export function rateLimit<R extends FastifyRequest = FastifyRequest>({
 
     let count: number;
     try {
-      count = await connection.incr(bucket);
-      // Only the first request in a window sets the expiry, so the window starts
-      // when the window's first request arrives and is not extended by later ones.
-      if (count === 1) await connection.expire(bucket, windowSeconds);
+      count = Number(await connection.eval(INCR_WITH_WINDOW, 1, bucket, windowSeconds));
     } catch (error) {
       if (failClosed && !failClosedDisabled()) {
         log.error({ err: error, bucket }, "Rate limit check failed; refusing the request");

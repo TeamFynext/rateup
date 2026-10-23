@@ -15,7 +15,7 @@ export async function supportUserWebhookEventHandler(request: FastifyRequest, re
     }
     reply.code(200).send();
     const data = request.body as WaMessageBody;
-    await handleSupportUserWebhook(data);
+    await handleSupportUserWebhook(data, request.user.orgId);
   } catch (e) {
     log.error(e);
     if (!reply.sent) {

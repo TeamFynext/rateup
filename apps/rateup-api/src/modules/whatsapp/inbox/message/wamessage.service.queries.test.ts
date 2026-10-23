@@ -624,6 +624,12 @@ describe("getContactsCountByInbox", () => {
     expect(result.new).not.toBe(result.newAssigned);
   });
 
+  test("looks up the caller's teams inside the session's org only", async () => {
+    await getContactsCountByInbox("org-1", "user-1", ALL_ACTOR);
+
+    expect(teamIdsMock).toHaveBeenCalledWith("user-1", "org-1");
+  });
+
   test("counts spam per contact, not per ticket", async () => {
     await getContactsCountByInbox("org-1", "user-1", ALL_ACTOR);
 
@@ -725,14 +731,17 @@ describe("getChatByContactId", () => {
     const res = makeRes();
 
     await getChatByContactId(
-      { params: { contactId: "contact-1" } } as unknown as FastifyRequest<{
+      {
+        params: { contactId: "contact-1" },
+        user: { orgId: "org-1" },
+      } as unknown as FastifyRequest<{
         Params: ByContactIdParams;
       }>,
       res as unknown as FastifyReply,
     );
 
     expect(db.waMessage.findMany).toHaveBeenCalledWith({
-      where: { contactId: "contact-1", sourcePlatform: "WEBCHAT" },
+      where: { contactId: "contact-1", sourcePlatform: "WEBCHAT", contact: { orgId: "org-1" } },
       orderBy: { waCreatedAt: "asc" },
     });
     expect(res.status).toHaveBeenCalledWith(200);
@@ -743,7 +752,10 @@ describe("getChatByContactId", () => {
     const res = makeRes();
 
     await getChatByContactId(
-      { params: { contactId: "contact-1" } } as unknown as FastifyRequest<{
+      {
+        params: { contactId: "contact-1" },
+        user: { orgId: "org-1" },
+      } as unknown as FastifyRequest<{
         Params: ByContactIdParams;
       }>,
       res as unknown as FastifyReply,

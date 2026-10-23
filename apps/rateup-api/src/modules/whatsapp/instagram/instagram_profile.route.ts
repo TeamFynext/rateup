@@ -13,19 +13,57 @@ import {
   syncInstagramPersistentMenuHandler,
 } from "./instagram_profile.controller.js";
 import { declareAccess } from "../../../authz/registry.js";
+import {
+  instagramIbaIdParamsSchema,
+  instagramIceBreakersBodySchema,
+  instagramPersistentMenuBodySchema,
+  instagramProfileParamsSchema,
+} from "./instagram_profile.schema.js";
 
 export async function instagramProfileRoutes(server: FastifyInstance) {
-  declareAccess(server, { access: "session" });
+  // Changing an account's ice breakers or menu is a channel setting, as for Messenger.
+  declareAccess(server, { read: "channels.read", write: "channels.manage" });
 
-  server.get("/:channelId", getInstagramProfileHandler);
-  server.post("/:channelId/ice-breakers", setInstagramIceBreakersHandler);
-  server.post("/:channelId/ice-breakers/sync", syncInstagramIceBreakersHandler);
-  server.delete("/:channelId/ice-breakers", deleteInstagramIceBreakersHandler);
-  server.post("/:channelId/persistent-menu", setInstagramPersistentMenuHandler);
-  server.post("/:channelId/persistent-menu/sync", syncInstagramPersistentMenuHandler);
-  server.delete("/:channelId/persistent-menu", deleteInstagramPersistentMenuHandler);
+  const params = instagramProfileParamsSchema;
+  const ibaParams = instagramIbaIdParamsSchema;
 
-  server.get("/media/:ibaId", getInstagramMediaHandler);
-  server.get("/links/:ibaId/stats", getInstagramLinkStatsHandler);
-  server.get("/stories/:ibaId", getInstagramStoriesHandler);
+  server.get("/:channelId", { schema: { params } }, getInstagramProfileHandler);
+  server.post(
+    "/:channelId/ice-breakers",
+    { schema: { params, body: instagramIceBreakersBodySchema } },
+    setInstagramIceBreakersHandler,
+  );
+  server.post(
+    "/:channelId/ice-breakers/sync",
+    { schema: { params } },
+    syncInstagramIceBreakersHandler,
+  );
+  server.delete(
+    "/:channelId/ice-breakers",
+    { schema: { params } },
+    deleteInstagramIceBreakersHandler,
+  );
+  server.post(
+    "/:channelId/persistent-menu",
+    { schema: { params, body: instagramPersistentMenuBodySchema } },
+    setInstagramPersistentMenuHandler,
+  );
+  server.post(
+    "/:channelId/persistent-menu/sync",
+    { schema: { params } },
+    syncInstagramPersistentMenuHandler,
+  );
+  server.delete(
+    "/:channelId/persistent-menu",
+    { schema: { params } },
+    deleteInstagramPersistentMenuHandler,
+  );
+
+  server.get("/media/:ibaId", { schema: { params: ibaParams } }, getInstagramMediaHandler);
+  server.get(
+    "/links/:ibaId/stats",
+    { schema: { params: ibaParams } },
+    getInstagramLinkStatsHandler,
+  );
+  server.get("/stories/:ibaId", { schema: { params: ibaParams } }, getInstagramStoriesHandler);
 }

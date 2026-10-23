@@ -32,12 +32,25 @@ import prisma from "../../../utils/prisma.js";
 import { sendLoyaltyEvent } from "../messaging/send.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
 import { notify } from "../../notification/notify.js";
+import { announceLoyaltyTransactions } from "../loyalty.webhooks.js";
+import { LoyaltyError } from "../loyalty.errors.js";
 
 /**
  * Create a new approval request
  */
-export async function createApprovalRequest(data: CreateApprovalRequestInput) {
+export async function createApprovalRequest(
+  data: CreateApprovalRequestInput,
+  /**
+   * The caller's programme. When given, the account — and any redemption or transaction
+   * the request points at — must belong to it, so a request cannot be filed into another
+   * org's queue (where one approver's click would credit the points).
+   */
+  programId?: string,
+) {
   try {
+    if (programId !== undefined) {
+      await assertApprovalTargetsInProgram(data, programId);
+    }
     const approval = await prisma.approvalRequest.create({
       data: {
         requestType: data.requestType,
@@ -90,6 +103,29 @@ export async function createApprovalRequest(data: CreateApprovalRequestInput) {
   } catch (error) {
     log.error({ err: error }, "Error creating approval request:");
     throw error;
+  }
+}
+
+async function assertApprovalTargetsInProgram(data: CreateApprovalRequestInput, programId: string) {
+  const account = await prisma.customerLoyaltyAccount.findFirst({
+    where: { id: data.accountId, programId },
+    select: { id: true },
+  });
+  if (!account) throw new LoyaltyError("MEMBER_NOT_FOUND", "Customer account not found");
+
+  if (data.redemptionId) {
+    const redemption = await prisma.loyaltyRedemption.findFirst({
+      where: { id: data.redemptionId, accountId: data.accountId },
+      select: { id: true },
+    });
+    if (!redemption) throw new LoyaltyError("MEMBER_NOT_FOUND", "Redemption not found");
+  }
+  if (data.transactionId) {
+    const transaction = await prisma.loyaltyTransaction.findFirst({
+      where: { id: data.transactionId, accountId: data.accountId },
+      select: { id: true },
+    });
+    if (!transaction) throw new LoyaltyError("MEMBER_NOT_FOUND", "Transaction not found");
   }
 }
 
@@ -257,7 +293,9 @@ export async function rejectApprovalRequest(data: RejectRequestInput, programId:
     return await prisma.$transaction(async (tx) => {
       // Update approval status
       const updatedApproval = await tx.approvalRequest.update({
-        where: { id: data.approvalId },
+        // Only a request still PENDING moves; a concurrent decision makes this throw and
+        // rolls the transaction back.
+        where: { id: data.approvalId, status: "PENDING" },
         data: {
           status: "REJECTED",
           reviewedBy: data.reviewerId,
@@ -312,7 +350,9 @@ export async function cancelApprovalRequest(data: CancelRequestInput, programId:
 
     return await prisma.$transaction(async (tx) => {
       const updatedApproval = await tx.approvalRequest.update({
-        where: { id: data.approvalId },
+        // Only a request still PENDING moves; a concurrent decision makes this throw and
+        // rolls the transaction back.
+        where: { id: data.approvalId, status: "PENDING" },
         data: {
           status: "CANCELLED",
           reviewedBy: data.reviewerId,
@@ -404,9 +444,10 @@ async function approveRedemption(approval: ApprovalWithAccount, data: ApproveReq
       },
     });
 
-    // 2. Update customer points
+    // 2. Update customer points — only while the balance still covers the cost, so two
+    // redemptions approved at once cannot take the balance below zero.
     await tx.customerLoyaltyAccount.update({
-      where: { id: approval.accountId },
+      where: { id: approval.accountId, currentPoints: { gte: redemption.reward.pointsCost } },
       data: {
         currentPoints: {
           decrement: redemption.reward.pointsCost,
@@ -425,7 +466,10 @@ async function approveRedemption(approval: ApprovalWithAccount, data: ApproveReq
 
     // 4. Update approval status
     const updatedApproval = await tx.approvalRequest.update({
-      where: { id: approval.id },
+      // The PENDING check that matters: it runs under the row lock, inside the
+      // transaction, so a second approval of the same request (double click, two
+      // reviewers) throws here and rolls back its ledger row and balance change.
+      where: { id: approval.id, status: "PENDING" },
       data: {
         status: "APPROVED",
         reviewedBy: data.reviewerId,
@@ -478,14 +522,26 @@ async function approveRedemption(approval: ApprovalWithAccount, data: ApproveReq
     await syncRedemptionDiscount(approval.redemptionId);
   }
 
+  announceApprovedTransaction(approval, approved.transaction);
   return approved;
+}
+
+/** The ledger row an approval wrote, to the org's webhook — called once its transaction committed. */
+function announceApprovedTransaction(
+  approval: ApprovalWithAccount,
+  transaction: Parameters<typeof announceLoyaltyTransactions>[1][number],
+) {
+  void announceLoyaltyTransactions(approval.account?.contact?.orgId, [transaction], {
+    phone: approval.account?.contact?.phone ?? null,
+    cardCode: approval.account?.cardCode ?? null,
+  });
 }
 
 /**
  * Approve a points adjustment (add or deduct)
  */
 async function approvePointsAdjustment(approval: ApprovalWithAccount, data: ApproveRequestInput) {
-  return await prisma.$transaction(async (tx) => {
+  const approved = await prisma.$transaction(async (tx) => {
     const customer = await tx.customerLoyaltyAccount.findUnique({
       where: { id: approval.accountId },
     });
@@ -539,7 +595,7 @@ async function approvePointsAdjustment(approval: ApprovalWithAccount, data: Appr
       });
     } else {
       await tx.customerLoyaltyAccount.update({
-        where: { id: approval.accountId },
+        where: { id: approval.accountId, currentPoints: { gte: Math.abs(points) } },
         data: {
           currentPoints: { decrement: Math.abs(points) },
         },
@@ -548,7 +604,10 @@ async function approvePointsAdjustment(approval: ApprovalWithAccount, data: Appr
 
     // 3. Update approval
     const updatedApproval = await tx.approvalRequest.update({
-      where: { id: approval.id },
+      // The PENDING check that matters: it runs under the row lock, inside the
+      // transaction, so a second approval of the same request (double click, two
+      // reviewers) throws here and rolls back its ledger row and balance change.
+      where: { id: approval.id, status: "PENDING" },
       data: {
         status: "APPROVED",
         reviewedBy: data.reviewerId,
@@ -585,6 +644,9 @@ async function approvePointsAdjustment(approval: ApprovalWithAccount, data: Appr
 
     return updatedApproval;
   });
+
+  announceApprovedTransaction(approval, approved.transaction);
+  return approved;
 }
 
 /**
@@ -611,7 +673,10 @@ async function approveTierOverride(approval: ApprovalWithAccount, data: ApproveR
 
     // Update approval
     const updatedApproval = await tx.approvalRequest.update({
-      where: { id: approval.id },
+      // The PENDING check that matters: it runs under the row lock, inside the
+      // transaction, so a second approval of the same request (double click, two
+      // reviewers) throws here and rolls back its ledger row and balance change.
+      where: { id: approval.id, status: "PENDING" },
       data: {
         status: "APPROVED",
         reviewedBy: data.reviewerId,
@@ -664,7 +729,10 @@ async function approveAccountSuspension(approval: ApprovalWithAccount, data: App
 
     // Update approval
     const updatedApproval = await tx.approvalRequest.update({
-      where: { id: approval.id },
+      // The PENDING check that matters: it runs under the row lock, inside the
+      // transaction, so a second approval of the same request (double click, two
+      // reviewers) throws here and rolls back its ledger row and balance change.
+      where: { id: approval.id, status: "PENDING" },
       data: {
         status: "APPROVED",
         reviewedBy: data.reviewerId,
@@ -705,7 +773,10 @@ async function approveAccountReactivation(
 
     // Update approval
     const updatedApproval = await tx.approvalRequest.update({
-      where: { id: approval.id },
+      // The PENDING check that matters: it runs under the row lock, inside the
+      // transaction, so a second approval of the same request (double click, two
+      // reviewers) throws here and rolls back its ledger row and balance change.
+      where: { id: approval.id, status: "PENDING" },
       data: {
         status: "APPROVED",
         reviewedBy: data.reviewerId,

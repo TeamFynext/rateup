@@ -1,6 +1,12 @@
 import { describe, expect, test } from "vitest";
 
-import { ALL_PERMISSIONS, isPermission, PERMISSIONS } from "./permissions.js";
+import {
+  ALL_PERMISSIONS,
+  isPermission,
+  KEY_ONLY_PERMISSIONS,
+  MEMBER_PERMISSIONS,
+  PERMISSIONS,
+} from "./permissions.js";
 import {
   DEFAULT_INVITED_ROLE,
   legacyRolesWith,
@@ -45,9 +51,21 @@ describe("system roles", () => {
   });
 
   test("OWNER holds everything; ADMIN holds everything but deleting and transferring the org", () => {
-    expect(sorted(ROLE_PERMISSIONS.OWNER)).toEqual(sorted(ALL_PERMISSIONS));
-    const adminMissing = [...ALL_PERMISSIONS].filter((p) => !ROLE_PERMISSIONS.ADMIN.has(p)).sort();
+    expect(sorted(ROLE_PERMISSIONS.OWNER)).toEqual(sorted(MEMBER_PERMISSIONS));
+    const adminMissing = [...MEMBER_PERMISSIONS]
+      .filter((p) => !ROLE_PERMISSIONS.ADMIN.has(p))
+      .sort();
     expect(adminMissing).toEqual(["org.delete", "org.transfer_ownership"]);
+  });
+
+  test("key-only permissions are in the catalogue but in no role", () => {
+    expect([...KEY_ONLY_PERMISSIONS]).toEqual(["widget.connect"]);
+    for (const p of KEY_ONLY_PERMISSIONS) {
+      expect(ALL_PERMISSIONS.has(p)).toBe(true);
+      expect(MEMBER_PERMISSIONS.has(p)).toBe(false);
+      expect(rolesWith(p)).toEqual([]);
+    }
+    expect(MEMBER_PERMISSIONS.size + KEY_ONLY_PERMISSIONS.size).toBe(ALL_PERMISSIONS.size);
   });
 
   // MANAGER and STAFF are frozen: they are the legacy ADMIN and MEMBER, and parity.test.ts
@@ -64,6 +82,13 @@ describe("system roles", () => {
       "channels.read",
       "chatbots.manage",
       "chatbots.read",
+      "commerce.discounts.manage",
+      "commerce.orders.manage",
+      "commerce.payments.manage",
+      "commerce.products.manage",
+      "commerce.read",
+      "commerce.sell",
+      "commerce.storefront.manage",
       "contacts.export",
       "contacts.manage",
       "contacts.read",
@@ -119,6 +144,11 @@ describe("system roles", () => {
       "catalog.manage",
       "channels.read",
       "chatbots.read",
+      "commerce.discounts.manage",
+      "commerce.orders.manage",
+      "commerce.products.manage",
+      "commerce.read",
+      "commerce.sell",
       "contacts.manage",
       "contacts.read",
       "flows.manage",

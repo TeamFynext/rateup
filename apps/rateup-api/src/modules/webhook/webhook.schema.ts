@@ -1,10 +1,32 @@
 import z from "zod";
 
 /**
+ * Events posted in the envelope shape `{ id, type, createdAt, orgId, data }`
+ * (`webhook.events.ts`), emitted straight from the code that made the change
+ * rather than fanned out as integration events. `message.status` is the richer
+ * successor of `message_status`: it is emitted once the status consumer has
+ * matched the receipt to a stored message, so it knows the recipient, template
+ * and source.
+ */
+export const ENVELOPE_WEBHOOK_EVENTS = [
+  "message.status",
+  "survey.response.created",
+  // A WhatsApp Flow was completed. Also announced as survey.response.created (a Flow is a
+  // survey underneath), so subscribe to one or the other, not both.
+  "flow.response.created",
+  "loyalty.points.earned",
+  "loyalty.points.redeemed",
+  "loyalty.points.adjusted",
+] as const;
+
+export type EnvelopeWebhookEventName = (typeof ENVELOPE_WEBHOOK_EVENTS)[number];
+
+/**
  * What an org's webhook can subscribe to. `message_status` is a WhatsApp status
- * callback; the rest are integration events, delivered through
- * `webhook.provider.ts` in the shape `webhook.payloads.ts` documents. Each name
- * is a public contract once a receiver depends on it.
+ * callback; then the integration events, delivered through
+ * `webhook.provider.ts` in the shape `webhook.payloads.ts` documents; then the
+ * envelope events above. Each name is a public contract once a receiver depends
+ * on it.
  */
 export const WEBHOOK_EVENTS = [
   "message_status",
@@ -20,6 +42,7 @@ export const WEBHOOK_EVENTS = [
   "lead.stage_changed",
   "survey.response_submitted",
   "team.member_joined",
+  ...ENVELOPE_WEBHOOK_EVENTS,
 ] as const;
 
 export type WebhookEventName = (typeof WEBHOOK_EVENTS)[number];

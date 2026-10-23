@@ -37,15 +37,37 @@ export function classifyRoute(route: RouteOptions): "declared" | "tagged" | "und
     config.access = "public";
     return "tagged";
   }
-  if (url.startsWith("/api/external/v1/")) {
+  if (url.startsWith("/api/external/v1/") || url.startsWith("/api/external/v2/")) {
     config.access = "token";
     return "tagged";
   }
   return "undeclared";
 }
 
+/**
+ * Set only by the staff plugin's own onRoute hook (`markStaffGuarded`), which is what runs
+ * the staff guard chain. Not exported: a route cannot claim it by writing config by hand.
+ */
+const STAFF_GUARDED = Symbol("staffGuarded");
+
+interface StaffMarkable {
+  [STAFF_GUARDED]?: true;
+}
+
+/** For `registerStaffApi` only: this route runs inside the plugin that authenticates staff. */
+export function markStaffGuarded(config: object): void {
+  (config as StaffMarkable)[STAFF_GUARDED] = true;
+}
+
+/**
+ * `access: "staff"` makes `authorize` stand aside, so it is valid only on a route the staff
+ * plugin registered (its mark), and only under /api/staff/. A URL prefix alone is not proof:
+ * a /api/staff/* route registered anywhere else would boot with no guard at all.
+ */
 export function isMisplacedStaffRoute(route: RouteOptions): boolean {
-  return route.config?.access === "staff" && !route.url.startsWith("/api/staff/");
+  if (route.config?.access !== "staff") return false;
+  const guarded = (route.config as StaffMarkable)[STAFF_GUARDED] === true;
+  return !guarded || !route.url.startsWith("/api/staff/");
 }
 
 export function registerAuthzRouteRegistry(server: FastifyInstance) {
@@ -59,7 +81,7 @@ export function registerAuthzRouteRegistry(server: FastifyInstance) {
     const misplacedStaff = routes.filter(isMisplacedStaffRoute).map(describeRoute);
     if (misplacedStaff.length > 0) {
       throw new Error(
-        `access "staff" is only valid under /api/staff/:\n  ${misplacedStaff.join("\n  ")}`,
+        `access "staff" is only valid on routes the staff plugin registers under /api/staff/:\n  ${misplacedStaff.join("\n  ")}`,
       );
     }
 

@@ -24,6 +24,16 @@ export async function sendEmailService(
   }
 }
 
+/** Whether the address belongs to a member of the org (case-insensitive). */
+export async function isOrgMemberEmail(orgId: string | undefined, email: string) {
+  if (!orgId) return false;
+  const member = await prisma.orgMember.findFirst({
+    where: { orgId, user: { email: { equals: email.trim(), mode: "insensitive" } } },
+    select: { userId: true },
+  });
+  return member !== null;
+}
+
 export async function storeOtp(otp: string, userId: string, surveyId?: string) {
   const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
   const expiryTime = Date.now() + 10 * 60 * 1000;

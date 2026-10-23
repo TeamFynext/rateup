@@ -1,3 +1,5 @@
+import crypto from "node:crypto";
+import supertokens from "supertokens-node";
 import { getOrgChannelIds } from "../channel/channel.service.js";
 import prisma from "../../utils/prisma.js";
 import { assertSeatAvailable } from "./team.limits.js";
@@ -11,6 +13,7 @@ import {
   InviteMemberInput,
   SetTeamChannelsInput,
 } from "./team.schema.js";
+import { log } from "../../utils/logger.js";
 import { invalidateChannelAccessCache } from "../whatsapp/settings/wa_channel_access.js";
 import { bustActor, bustActorsForOrg, bustActorsForUser } from "../../authz/actor.js";
 import { ForbiddenError } from "../../authz/errors.js";
@@ -22,6 +25,7 @@ import {
 } from "../../authz/roles.js";
 import EmailVerification from "supertokens-node/recipe/emailverification/index.js";
 import { createEmailBody } from "../../utils/email/supertoken/inviteEmail.js";
+import { sendResetPasswordMail } from "../../utils/email/supertoken/passwordReset.js";
 import { Role } from "../../../generated/prisma/client.js";
 
 import EmailPassword from "supertokens-node/recipe/emailpassword/index.js";
@@ -142,7 +146,10 @@ export function getTeamsByOrgId(input: GetTeamsByOrgInput, page?: number) {
   });
 }
 
-export async function deleteTeamById(id: string) {
+export async function deleteTeamById(id: string, orgId: string) {
+  // Bound to the caller's org: a team id from another org reads as not found.
+  const owned = await prisma.team.findFirst({ where: { id, orgId }, select: { id: true } });
+  if (!owned) return null;
   const team = await prisma.team.delete({
     where: {
       id,
@@ -157,6 +164,43 @@ export async function deleteTeamById(id: string) {
     await bustActorsForOrg(team.orgId);
   }
   return team;
+}
+
+/** How long an invitation link works after it is issued (or re-issued by a resend). */
+export const INVITE_TTL_MS = 14 * 24 * 60 * 60 * 1000;
+
+/**
+ * Invitation links carry a random token, never the invitation's id: the id is listed to
+ * anyone who can see the members page, and it used to be the whole credential. Only the
+ * token's SHA-256 is stored, so the table cannot be read back into working links.
+ */
+export function hashInviteToken(token: string) {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
+
+function issueInviteToken() {
+  const token = crypto.randomBytes(32).toString("base64url");
+  return {
+    token,
+    tokenHash: hashInviteToken(token),
+    tokenExpiresAt: new Date(Date.now() + INVITE_TTL_MS),
+  };
+}
+
+function inviteLink(token: string) {
+  return `${process.env.FRONTEND_URL}/invite?type=team&token=${token}`;
+}
+
+/** The link is no good: unknown, already used, withdrawn or expired. One message for all. */
+export class InvalidInviteError extends Error {
+  constructor() {
+    super("This invitation is invalid or has expired.");
+    this.name = "InvalidInviteError";
+  }
+}
+
+function isExpired(invitation: { tokenExpiresAt: Date | null }) {
+  return !invitation.tokenExpiresAt || invitation.tokenExpiresAt.getTime() <= Date.now();
 }
 
 //used in zapier controller also
@@ -183,6 +227,9 @@ export async function inviteTeamMember(input: ResolvedInviteInput) {
     // Every team this invitation grants; `teamId` is the one it is filed under and is
     // always included.
     const inviteTeamIds = [...new Set([...(input.teamIds ?? []), ...(teamId ? [teamId] : [])])];
+    // Every team named must be the inviting org's: otherwise accepting would put the invitee
+    // into another tenant's team.
+    if (inviteTeamIds.length) await assertTeamsBelongToOrg(inviteTeamIds, orgId);
 
     // Check if team member with the input email already exists
     const existingTeamMember = inviteTeamIds.length
@@ -214,7 +261,7 @@ export async function inviteTeamMember(input: ResolvedInviteInput) {
     if (existingMemberships.length) {
       const memberOfGroup = existingMemberships.find((o) => o.orgId === orgId);
       if (memberOfGroup) {
-        const joinedTeams = await addUserToTeams(inviteTeamIds, memberOfGroup.userId);
+        const joinedTeams = await addUserToTeams(inviteTeamIds, memberOfGroup.userId, orgId);
         const invitedPerson = await prisma.orgMember.findFirst({
           where: {
             userId: invitedBy,
@@ -276,6 +323,7 @@ export async function inviteTeamMember(input: ResolvedInviteInput) {
     const existingInvitation = await prisma.invitation.findFirst({
       where: {
         email,
+        orgId,
         OR: [
           { teamId },
           ...(inviteTeamIds.length ? [{ teamIds: { hasSome: inviteTeamIds } }] : []),
@@ -290,21 +338,22 @@ export async function inviteTeamMember(input: ResolvedInviteInput) {
     });
 
     if (existingInvitation) {
-      if (existingInvitation.status === "PENDING") {
-        // Call Resend email function here
-        //TODO
-
+      if (existingInvitation.status === "PENDING" && isExpired(existingInvitation)) {
+        // A lapsed invitation is replaced rather than blocking a fresh one.
+        await deleteMemberInvite(existingInvitation.id, orgId);
+      } else if (existingInvitation.status === "PENDING") {
         throw new Error("Invitation with the provided email is already pending.");
       } else if (existingInvitation.status === "ACCEPTED" && existingInvitation.teamId === teamId) {
         if (!user) {
-          await deleteMemberInvite(existingInvitation.id);
+          await deleteMemberInvite(existingInvitation.id, orgId);
         } else {
           throw new Error("Team member with the provided email already exists.");
         }
       }
     }
 
-    const newInvite = await prisma.invitation.create({
+    const { token, tokenHash, tokenExpiresAt } = issueInviteToken();
+    const created = await prisma.invitation.create({
       data: {
         email,
         name,
@@ -314,8 +363,12 @@ export async function inviteTeamMember(input: ResolvedInviteInput) {
         invitedBy,
         role,
         teamIds: inviteTeamIds,
+        tokenHash,
+        tokenExpiresAt,
       },
     });
+    // The hash never leaves the service.
+    const { tokenHash: _tokenHash, ...newInvite } = created;
 
     if (newInvite) {
       const msg = {
@@ -323,10 +376,7 @@ export async function inviteTeamMember(input: ResolvedInviteInput) {
         // from: 'hello@rateup.app', // Change to your verified sender
         subject: "Invitation to Join Team - RateUp.app",
         text: "You are invited to manage a Team in RateUp. Click on the accept to continue with the process.",
-        html: await createEmailBody(
-          `${process.env.FRONTEND_URL}/invite?type=team&token=${newInvite.id}`,
-          email,
-        ),
+        html: await createEmailBody(inviteLink(token), email),
       };
       try {
         // Sent inline: an invitee is waiting on this link to finish onboarding.
@@ -358,21 +408,26 @@ export async function inviteTeamMember(input: ResolvedInviteInput) {
  * @param id
  * @returns
  */
-export async function resendInviteTeamMember(id: string) {
+export async function resendInviteTeamMember(id: string, orgId: string) {
   const existingInvitation = await prisma.invitation.findFirst({
     where: {
       id,
+      orgId,
     },
   });
-  if (existingInvitation && existingInvitation.status === "PENDING") {
+  if (!existingInvitation) throw new InvalidInviteError();
+  if (existingInvitation.status === "PENDING") {
+    // A resend issues a fresh token and a fresh expiry; the previous link stops working.
+    const { token, tokenHash, tokenExpiresAt } = issueInviteToken();
+    await prisma.invitation.update({
+      where: { id: existingInvitation.id },
+      data: { tokenHash, tokenExpiresAt },
+    });
     const msg = {
-      to: existingInvitation?.email,
+      to: existingInvitation.email,
       subject: "Invitation to Join Team - RateUp.app",
       text: "You are invited to manage a Team in RateUp. Click on the accept to continue with the process.",
-      html: await createEmailBody(
-        `${process.env.FRONTEND_URL}/invite?type=team&token=${existingInvitation?.id}`,
-        existingInvitation?.email,
-      ),
+      html: await createEmailBody(inviteLink(token), existingInvitation.email),
     };
     // Sent inline: this is a resend triggered by someone waiting on the invite.
     await sendTransactionalEmail(msg);
@@ -380,21 +435,21 @@ export async function resendInviteTeamMember(id: string) {
   return "sent";
 }
 
-//Complete Email invite
+/**
+ * Accepts an invitation by its emailed token.
+ *
+ * The token must match a PENDING, unexpired invitation, and it is spent by a conditional
+ * update before anything else happens, so two concurrent clicks cannot both accept it. A
+ * failure part-way hands the invitation back so the invitee can try again.
+ *
+ * A brand-new invitee gets a SuperTokens account with a random password nobody knows, and
+ * the link to set their own is emailed to the invited address rather than returned here:
+ * whoever holds the invite link must not end up holding the account.
+ */
 export async function completeInvite(token: string) {
+  const tokenHash = hashInviteToken(token);
   const invitation = await prisma.invitation.findUnique({
-    where: { id: token },
-  });
-
-  if (!invitation) throw new Error("Invitation not found");
-
-  const updatedInvitation = await prisma.invitation.update({
-    where: {
-      id: token,
-    },
-    data: {
-      status: "ACCEPTED",
-    },
+    where: { tokenHash },
     include: {
       org: {
         select: {
@@ -415,131 +470,163 @@ export async function completeInvite(token: string) {
     },
   });
 
+  if (!invitation || invitation.status !== "PENDING" || isExpired(invitation)) {
+    throw new InvalidInviteError();
+  }
+
+  // Single use: only one caller can move it out of PENDING.
+  const claimed = await prisma.invitation.updateMany({
+    where: { id: invitation.id, status: "PENDING", tokenHash },
+    data: { status: "ACCEPTED", tokenHash: null },
+  });
+  if (claimed.count !== 1) throw new InvalidInviteError();
+
+  try {
+    return await acceptInvitation(invitation);
+  } catch (error) {
+    await prisma.invitation.updateMany({
+      where: { id: invitation.id, status: "ACCEPTED" },
+      data: { status: "PENDING", tokenHash },
+    });
+    throw error;
+  }
+}
+
+type ClaimedInvitation = Prisma.InvitationGetPayload<{
+  include: {
+    org: { select: { name: true; owner: { select: { email: true } } } };
+    team: { select: { code: true; name: true } };
+  };
+}>;
+
+async function acceptInvitation(invitation: ClaimedInvitation) {
+  const loginLink = `${process.env.FRONTEND_URL}/login`;
+  const result = {
+    orgId: invitation.orgId,
+    email: invitation.email,
+    name: invitation.name,
+    team: invitation.team,
+    org: { name: invitation.org.name },
+  };
+
   // find user in User table with the same email as the invitation
   const user = await prisma.user.findFirst({
     where: {
-      email: updatedInvitation.email,
+      email: invitation.email,
     },
   });
 
-  const isUser = user !== null;
-  let redirectLink = "";
-
-  if (!isUser) {
-    //Create new user , verify email
-    const FAKE_PASSWORD = "qwerty123";
-    let signUpResult = await EmailPassword.signUp("public", updatedInvitation.email, FAKE_PASSWORD);
-    if (signUpResult.status === "EMAIL_ALREADY_EXISTS_ERROR") {
-      throw new Error("User already exists");
+  if (user) {
+    // The local row's email is not proof of ownership on its own (a phone-only sign-up
+    // typed it in), so the account must actually sign in with the invited address.
+    const authUser = await supertokens.getUser(user.id);
+    const invited = invitation.email.toLowerCase();
+    if (!authUser?.emails.some((email) => email.toLowerCase() === invited)) {
+      throw new Error("The invited address is not a sign-in address of this account.");
     }
 
-    const tokenRes = await EmailVerification.createEmailVerificationToken(
-      "public",
-      signUpResult.recipeUserId, //TODO VERIFY SUPERTOKEN STT
-    );
-
-    if (tokenRes.status === "OK") {
-      await EmailVerification.verifyEmailUsingToken("public", tokenRes.token);
-      let id = signUpResult.user.id;
-      let email = updatedInvitation.email;
-      let recipeName = getUserRecipeName(
-        signUpResult.user.loginMethods[0].recipeId,
-        signUpResult.user.loginMethods[0].thirdParty?.id,
-      );
-      if (!recipeName) {
-        throw new Error(`Unsupported auth recipe: ${signUpResult.user.loginMethods[0].recipeId}`);
-      }
-      const user = await createUser({ id, email, recipeName });
-
-      if (!user) {
-        throw new Error("failed user adding");
-      }
-
-      await prisma.user.update({
-        where: { id: id },
-        data: { name: updatedInvitation.name },
-      });
-    }
-    //Create as ADMIN / SUPER_ADMIN in orgMember based on invite type
-    if (updatedInvitation.type === "TEAM") {
-      let orgMember = await prisma.orgMember.create({
-        data: {
-          orgId: updatedInvitation.orgId,
-          userId: signUpResult.user.id,
-          ...invitedRole(updatedInvitation.role),
-        },
-      });
-
-      //Create Team member
-      if (orgMember) {
-        await addUserToTeams(invitedTeamIds(updatedInvitation), signUpResult.user.id);
-      }
-
-      const linkResponse = await EmailPassword.createResetPasswordLink(
-        "public",
-        signUpResult.user.id,
-        updatedInvitation.email,
-      );
-
-      if (linkResponse.status === "OK") {
-        console.log(linkResponse.link);
-        redirectLink = linkResponse.link;
-      } else {
-        console.log("User not exists");
-
-        // user does not exist or is not an email password user
-      }
-    }
-
-    const companyId = await getHubSpotCompanyByOwnerEmail(updatedInvitation.org.owner.email);
-    await createHubSpotContact(
-      {
-        email: updatedInvitation.email,
-        firstname: updatedInvitation.name,
-        company: updatedInvitation.org.name,
-        joined_date: updatedInvitation.createdAt,
-      },
-      companyId,
-    );
-  } else {
-    //for existing user
     if (!user.name) {
       await prisma.user.update({
         where: { id: user.id },
-        data: { name: updatedInvitation.name },
+        data: { name: invitation.name },
       });
     }
 
     // Scoped to the inviting org. Keyed on userId alone, a user who already belonged to
     // any other org looked like an existing member here, so accepting an invite to a
     // second org silently did not add them to it.
-    let orgMember = await prisma.orgMember.findFirst({
-      where: { userId: user.id, orgId: updatedInvitation.orgId },
+    const orgMember = await prisma.orgMember.findFirst({
+      where: { userId: user.id, orgId: invitation.orgId },
       select: {
         orgId: true,
         role: true,
       },
     });
     if (!orgMember) {
-      let orgMember = await prisma.orgMember.create({
+      await prisma.orgMember.create({
         data: {
-          orgId: updatedInvitation.orgId,
+          orgId: invitation.orgId,
           userId: user.id,
-          ...invitedRole(updatedInvitation.role),
+          ...invitedRole(invitation.role),
         },
       });
-      //Create Team member
-      if (orgMember) {
-        await addUserToTeams(invitedTeamIds(updatedInvitation), user.id);
-      }
-    } else if (orgMember) {
-      await addUserToTeams(invitedTeamIds(updatedInvitation), user.id);
     }
+    await addUserToTeams(invitedTeamIds(invitation), user.id, invitation.orgId);
 
-    redirectLink = `${process.env.FRONTEND_URL}/login`;
+    return { ...result, isUser: true, redirectLink: loginLink, passwordSetupEmailSent: false };
   }
 
-  return { ...updatedInvitation, isUser: isUser, redirectLink };
+  // A password nobody knows: the invitee sets their own through the emailed reset link.
+  const unusablePassword = crypto.randomBytes(32).toString("base64url");
+  const signUpResult = await EmailPassword.signUp("public", invitation.email, unusablePassword);
+  if (signUpResult.status !== "OK") {
+    throw new Error("User already exists");
+  }
+  const userId = signUpResult.user.id;
+
+  // Opening the emailed link is what proves the address, so it is marked verified.
+  const tokenRes = await EmailVerification.createEmailVerificationToken(
+    "public",
+    signUpResult.recipeUserId,
+  );
+  if (tokenRes.status === "OK") {
+    await EmailVerification.verifyEmailUsingToken("public", tokenRes.token);
+  }
+
+  const recipeName = getUserRecipeName(
+    signUpResult.user.loginMethods[0].recipeId,
+    signUpResult.user.loginMethods[0].thirdParty?.id,
+  );
+  if (!recipeName) {
+    throw new Error(`Unsupported auth recipe: ${signUpResult.user.loginMethods[0].recipeId}`);
+  }
+  const created = await createUser({ id: userId, email: invitation.email, recipeName });
+  if (!created) {
+    throw new Error("failed user adding");
+  }
+  await prisma.user.update({
+    where: { id: userId },
+    data: { name: invitation.name },
+  });
+
+  if (invitation.type === "TEAM") {
+    await prisma.orgMember.create({
+      data: {
+        orgId: invitation.orgId,
+        userId,
+        ...invitedRole(invitation.role),
+      },
+    });
+    await addUserToTeams(invitedTeamIds(invitation), userId, invitation.orgId);
+  }
+
+  let passwordSetupEmailSent = false;
+  const linkResponse = await EmailPassword.createResetPasswordLink(
+    "public",
+    userId,
+    invitation.email,
+  );
+  if (linkResponse.status === "OK") {
+    const link = new URL(linkResponse.link);
+    link.searchParams.set("type", "invite");
+    await sendResetPasswordMail(link.toString(), invitation.email);
+    passwordSetupEmailSent = true;
+  } else {
+    log.error({ userId }, "Could not create the password-setup link for an invitee");
+  }
+
+  const companyId = await getHubSpotCompanyByOwnerEmail(invitation.org.owner.email);
+  await createHubSpotContact(
+    {
+      email: invitation.email,
+      firstname: invitation.name,
+      company: invitation.org.name,
+      joined_date: invitation.createdAt,
+    },
+    companyId,
+  );
+
+  return { ...result, isUser: false, redirectLink: loginLink, passwordSetupEmailSent };
 }
 
 /**
@@ -558,9 +645,10 @@ function invitedTeamIds(invitation: { teamId: string | null; teamIds: string[] }
   return invitation.teamId ? [invitation.teamId] : [];
 }
 
-async function addUserToTeams(teamIds: string[], userId: string) {
+async function addUserToTeams(teamIds: string[], userId: string, orgId: string) {
+  // Only the org's own teams, whatever ids the invitation carries.
   const teams = await prisma.team.findMany({
-    where: { id: { in: teamIds } },
+    where: { id: { in: teamIds }, orgId },
     select: { id: true, name: true },
   });
 
@@ -578,10 +666,11 @@ async function addUserToTeams(teamIds: string[], userId: string) {
   return teams;
 }
 
-export function getTeamMembers(input: GetTeamMembersInput) {
+export function getTeamMembers(input: GetTeamMembersInput, orgId: string) {
   return prisma.teamMember.findMany({
     where: {
       teamId: input.teamId,
+      team: { orgId },
     },
     select: {
       id: true, // or any other fields you want from teamMember
@@ -616,6 +705,7 @@ export async function getUsersNotInTeam(teamId: string, orgId: string) {
     FROM "User" u
     INNER JOIN "OrgMember" om ON om."userId" = u.id
     WHERE om."orgId" = $1
+      AND u.active = true
       AND u.id NOT IN (
         SELECT "userId"
         FROM "TeamMember"
@@ -629,9 +719,10 @@ export async function getUsersNotInTeam(teamId: string, orgId: string) {
 }
 
 export async function getTeamMembersAndFromInvitation(orgId: string, input: GetTeamMembersInput) {
-  const team = await prisma.team.findUnique({
+  const team = await prisma.team.findFirst({
     where: {
       id: input.teamId,
+      orgId,
     },
     select: {
       id: true,
@@ -688,6 +779,7 @@ export async function getTeamMembersAndFromInvitation(orgId: string, input: GetT
   // Invitations that grant this team without being filed under it.
   const alsoInvited = await prisma.invitation.findMany({
     where: {
+      orgId,
       status: { not: "ACCEPTED" },
       teamId: { not: input.teamId },
       teamIds: { has: input.teamId },
@@ -725,12 +817,16 @@ export async function getTeamMembersAndFromInvitation(orgId: string, input: GetT
         type: invite.type,
         invitedBy: invite.invitedBy,
         createdAt: invite.createdAt,
+        // The id is only a handle for resend/delete; the link's token is never listed.
+        expiresAt: invite.tokenExpiresAt,
       };
     }),
   };
 }
 
-export async function deleteMemberInvite(id: string) {
+export async function deleteMemberInvite(id: string, orgId: string) {
+  const owned = await prisma.invitation.findFirst({ where: { id, orgId }, select: { id: true } });
+  if (!owned) return null;
   const invitation = await prisma.invitation.delete({
     where: {
       id,
@@ -781,17 +877,27 @@ export async function getTeamsByUserId(userId: string) {
   return teams.map(({ team }) => team);
 }
 
-export async function getTeamIdsByUserId(userId: string) {
+/**
+ * The ids of the teams `userId` is a member of inside `orgId`.
+ *
+ * Always pass the org: a user can belong to several orgs, and without it the result spans
+ * all of them, so a session in one org would act on another org's teams (SURV-17). The
+ * org-less form is kept only for the survey service's legacy fallback.
+ */
+export async function getTeamIdsByUserId(userId: string, orgId?: string): Promise<string[]> {
+  // Prisma drops an `undefined` filter, so a missing user would match every membership.
+  if (!userId) return [];
   const teams = await prisma.teamMember.findMany({
     where: {
       userId,
+      ...(orgId !== undefined && { team: { orgId } }),
     },
     select: {
       teamId: true,
     },
   });
 
-  return teams.map(({ teamId }) => teamId) || [];
+  return teams.map(({ teamId }) => teamId);
 }
 export async function getTeamIdsBySurveyMapId(mapId: string[], userId: string) {
   const teams = await prisma.surveyTeamMap.findMany({
@@ -817,7 +923,7 @@ export async function getTeamIdsBySurveyMapId(mapId: string[], userId: string) {
 export async function editTeam(
   { name, code, googleLink, reviewPageLinks, color }: EditTeamInput,
   params: IdParamInput,
-  _request: FastifyRequest,
+  request: FastifyRequest,
   _reply: FastifyReply,
 ) {
   if (name !== undefined && name.length < 3) {
@@ -827,8 +933,9 @@ export async function editTeam(
     throw new Error("Invalid team code.");
   }
   try {
+    // Bound to the caller's org; a foreign id finds no row and the update throws.
     const team = await prisma.team.update({
-      where: { id: params.id },
+      where: { id: params.id, orgId: request.user.orgId },
       data: {
         name,
         code,
@@ -850,20 +957,21 @@ export async function editTeam(
 export async function manageTags(
   { tags }: EditTeamInput,
   params: IdParamInput,
-  _request: FastifyRequest,
+  request: FastifyRequest,
   _reply: FastifyReply,
 ) {
   const team = await prisma.team.update({
-    where: { id: params.id },
+    where: { id: params.id, orgId: request.user.orgId },
     data: {
       tags,
     },
   });
   return team;
 }
-export async function getTeamById(teamId: string) {
+/** By id; with `orgId`, only when the team is that org's. */
+export async function getTeamById(teamId: string, orgId?: string) {
   const team = await prisma.team.findUnique({
-    where: { id: teamId },
+    where: { id: teamId, ...(orgId && { orgId }) },
   });
 
   return team;
@@ -1016,9 +1124,10 @@ export async function getTeamChannels(teamId: string) {
  * `channelIds` are Channel ids of any platform, scoped to the team's own org so a caller cannot
  * grant another tenant's channel.
  */
-export async function setTeamChannels(teamId: string, input: SetTeamChannelsInput) {
+export async function setTeamChannels(teamId: string, input: SetTeamChannelsInput, orgId: string) {
   const team = await prisma.team.findUnique({ where: { id: teamId }, select: { orgId: true } });
-  if (!team) throw new Error("Team not found");
+  // Another org's team reads as missing.
+  if (!team || team.orgId !== orgId) throw new Error("Team not found");
 
   const channelIds = input.allChannels ? [] : await getOrgChannelIds(team.orgId, input.channelIds);
 

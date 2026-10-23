@@ -37,9 +37,11 @@ export async function getLoyaltyTiers(programId: string) {
   });
 }
 
-export async function getLoyaltyTierById(tierId: string) {
-  return await prisma.loyaltyTier.findUnique({
-    where: { id: tierId },
+// Every by-id read and write below is pinned to the caller's programme: a tier id from
+// another org's programme behaves exactly like one that does not exist.
+export async function getLoyaltyTierById(tierId: string, programId: string) {
+  return await prisma.loyaltyTier.findFirst({
+    where: { id: tierId, programId },
     include: {
       customers: {
         take: 10,
@@ -48,17 +50,35 @@ export async function getLoyaltyTierById(tierId: string) {
   });
 }
 
-export async function updateLoyaltyTier(tierId: string, data: LoyaltyTierUpdateInput) {
+export async function updateLoyaltyTier(
+  tierId: string,
+  programId: string,
+  data: LoyaltyTierUpdateInput,
+) {
   return await prisma.loyaltyTier.update({
-    where: { id: tierId },
+    where: { id: tierId, programId },
     data,
   });
 }
 
-export async function deleteLoyaltyTier(tierId: string, options: DeleteLoyaltyTierOptions = {}) {
+export async function deleteLoyaltyTier(
+  tierId: string,
+  programId: string,
+  options: DeleteLoyaltyTierOptions = {},
+) {
+  const tier = await prisma.loyaltyTier.findFirst({
+    where: { id: tierId, programId },
+    select: { programId: true, priority: true },
+  });
+  if (!tier) {
+    const error = new Error("Tier not found.") as Error & { code: string };
+    error.code = "TIER_NOT_FOUND";
+    throw error;
+  }
+
   // Check if there are customers in this tier
   const customers = await prisma.customerLoyaltyAccount.findMany({
-    where: { currentTierId: tierId },
+    where: { currentTierId: tierId, programId },
     select: { id: true },
   });
 
@@ -75,15 +95,6 @@ export async function deleteLoyaltyTier(tierId: string, options: DeleteLoyaltyTi
       error.code = "TIER_HAS_CUSTOMERS";
       error.customerCount = customerCount;
       throw error;
-    }
-
-    // Find the tier to delete
-    const tier = await prisma.loyaltyTier.findUnique({
-      where: { id: tierId },
-      select: { programId: true, priority: true },
-    });
-    if (!tier) {
-      throw new Error("Tier not found.");
     }
 
     // Find the previous tier by priority (lower priority number = higher tier)
@@ -105,12 +116,12 @@ export async function deleteLoyaltyTier(tierId: string, options: DeleteLoyaltyTi
 
     // Move all customers to the previous tier
     await prisma.customerLoyaltyAccount.updateMany({
-      where: { currentTierId: tierId },
+      where: { currentTierId: tierId, programId },
       data: { currentTierId: previousTier.id },
     });
   }
 
   return await prisma.loyaltyTier.delete({
-    where: { id: tierId },
+    where: { id: tierId, programId },
   });
 }

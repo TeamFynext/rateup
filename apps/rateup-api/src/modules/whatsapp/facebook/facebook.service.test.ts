@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("../../../utils/prisma.js", () => ({
-  default: { waMessage: { findMany: vi.fn(), findFirst: vi.fn(), update: vi.fn() } },
+  default: {
+    waMessage: { findMany: vi.fn(), findFirst: vi.fn(), update: vi.fn() },
+    contact: { findUnique: vi.fn() },
+  },
   excludeFields: vi.fn(),
 }));
 vi.mock("../wa_axios.js", () => ({
@@ -13,23 +16,37 @@ vi.mock("../inbox/message/wamessage.service.js", () => ({
   updateWaMessageByMessageId: vi.fn(),
 }));
 vi.mock("../inbox/message/wamessage.controller.js", () => ({ handleWaMessages: vi.fn() }));
+vi.mock("../automatedReply/wa_automatedReply.utils.js", () => ({
+  checkAndExecuteRuleByTriggerEvent: vi.fn(),
+}));
+vi.mock("../automatedReply/metaFlow.service.js", () => ({
+  handleMetaFlowUserResponse: vi.fn(),
+}));
+const shop = vi.hoisted(() => ({ handleShopReply: vi.fn() }));
+vi.mock("../../commerce/shop/checkout.service.js", () => shop);
+vi.mock("../../../utils/redisConnection.js", () => ({ default: { set: vi.fn() } }));
 vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));
 
 import prisma from "../../../utils/prisma.js";
+import redisConnection from "../../../utils/redisConnection.js";
 import { callMetaApi } from "../wa_axios.js";
 import { getMessengerChannel } from "../metaChannel/metaChannel.service.js";
 import { updateWaMessageByMessageId } from "../inbox/message/wamessage.service.js";
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
+import { checkAndExecuteRuleByTriggerEvent } from "../automatedReply/wa_automatedReply.utils.js";
+import { handleMetaFlowUserResponse } from "../automatedReply/metaFlow.service.js";
 import {
   getFacebookUserDetailsFromMeta,
+  handleFacebookComment,
   handleFacebookMessageDelivered,
   handleFacebookMessageRead,
   handleFacebookMessages,
   handleFacebookPostback,
   handleFacebookQuickReply,
+  handleFacebookReferral,
   handleFacebookWebhook,
 } from "./facebook.service.js";
 
@@ -87,6 +104,8 @@ beforeEach(() => {
   // No message already stored with this mid — the retry guard lets the event through.
   db.findFirst.mockResolvedValue(null);
   db.update.mockResolvedValue({});
+  // A comment not seen before: the once-only claim succeeds.
+  (redisConnection.set as unknown as Mock).mockResolvedValue("OK");
 });
 
 describe("getFacebookUserDetailsFromMeta", () => {
@@ -415,6 +434,22 @@ describe("handleFacebookMessages", () => {
       handleFacebookMessages(webhook(messaging({ message: { mid: "mid-1" } })), SETTINGS),
     ).resolves.toBeUndefined();
   });
+
+  test("answers nothing when a racing delivery already stored the mid", async () => {
+    const event = () => webhook(messaging({ message: { mid: "mid-1", text: "hi" } }));
+
+    handleWaMessagesMock.mockResolvedValue({ id: "row-1" });
+    await handleFacebookMessages(event(), SETTINGS);
+    expect(handleMetaFlowUserResponse).toHaveBeenCalledTimes(1);
+
+    // Both deliveries passed the read; the unique index let the other one store.
+    vi.clearAllMocks();
+    handleWaMessagesMock.mockResolvedValue(null);
+    await handleFacebookMessages(event(), SETTINGS);
+
+    expect(handleMetaFlowUserResponse).not.toHaveBeenCalled();
+    expect(checkAndExecuteRuleByTriggerEvent).not.toHaveBeenCalled();
+  });
 });
 
 describe("handleFacebookMessageDelivered", () => {
@@ -605,10 +640,10 @@ describe("handleFacebookPostback", () => {
     });
   });
 
-  test("invents a message id from the timestamp, since a postback has no mid", async () => {
+  test("invents a message id from the sender and timestamp, since a postback has no mid", async () => {
     await handleFacebookPostback(postbackEvent(), SETTINGS);
 
-    expect(waMessageCall().messageId).toBe("postback_1700000000000");
+    expect(waMessageCall().messageId).toBe("postback_psid-1_1700000000000");
   });
 
   test("ignores a postback with no payload", async () => {
@@ -701,5 +736,392 @@ describe("handleFacebookQuickReply", () => {
 
     await expect(handleFacebookQuickReply(body, SETTINGS)).resolves.toBeUndefined();
     expect(handleWaMessagesMock).not.toHaveBeenCalled();
+  });
+});
+
+// An inbound Messenger message used to stop at the inbox; now it can answer a running
+// chatbot or fire the Page's rules, in that order, as Instagram does.
+describe("chatbots and rules on an inbound Messenger message", () => {
+  const answerFlowMock = handleMetaFlowUserResponse as unknown as Mock;
+  const runRulesMock = checkAndExecuteRuleByTriggerEvent as unknown as Mock;
+  const MESSENGER = { platform: PlatformType.FACEBOOK, accountId: PAGE_ID };
+
+  beforeEach(() => {
+    answerFlowMock.mockResolvedValue(false);
+    runRulesMock.mockResolvedValue(undefined);
+  });
+
+  test("offers a typed message to the waiting chatbot, then to the rules", async () => {
+    await handleFacebookMessages(
+      webhook(messaging({ message: { mid: "mid-1", text: "hello" } })),
+      SETTINGS,
+    );
+
+    expect(answerFlowMock).toHaveBeenCalledWith(PSID, "hello", ORG_ID, MESSENGER, undefined);
+    expect(runRulesMock).toHaveBeenCalledWith("MESSAGE_RECEIVED", {
+      orgId: ORG_ID,
+      platform: "FACEBOOK",
+      phoneNumberId: PAGE_ID,
+      phone: PSID,
+      message: "hello",
+    });
+  });
+
+  test("leaves the rules alone when the message answered a chatbot", async () => {
+    answerFlowMock.mockResolvedValue(true);
+
+    await handleFacebookMessages(
+      webhook(messaging({ message: { mid: "mid-1", text: "a@b.com" } })),
+      SETTINGS,
+    );
+
+    expect(runRulesMock).not.toHaveBeenCalled();
+  });
+
+  test("passes a quick reply's payload so the chatbot takes that branch", async () => {
+    await handleFacebookQuickReply(
+      webhook(
+        messaging({ message: { mid: "mid-1", text: "Yes", quick_reply: { payload: "opt-yes" } } }),
+      ),
+      SETTINGS,
+    );
+
+    expect(answerFlowMock).toHaveBeenCalledWith(PSID, "Yes", ORG_ID, MESSENGER, "opt-yes");
+    expect(runRulesMock.mock.calls[0][1].message).toBe("Yes");
+  });
+
+  test("passes a button's title and payload, and gives the rules the payload", async () => {
+    await handleFacebookPostback(
+      webhook(messaging({ postback: { title: "Buy", payload: "btn_0_0" } })),
+      SETTINGS,
+    );
+
+    expect(answerFlowMock).toHaveBeenCalledWith(PSID, "Buy", ORG_ID, MESSENGER, "btn_0_0");
+    expect(runRulesMock.mock.calls[0][1].message).toBe("btn_0_0");
+  });
+
+  test("hands a shop button to the checkout instead of the chatbot and rules", async () => {
+    const contactDb = (prisma as unknown as { contact: { findUnique: Mock } }).contact;
+    contactDb.findUnique.mockResolvedValue({ id: "contact-1" });
+    shop.handleShopReply.mockResolvedValue(true);
+
+    await handleFacebookPostback(
+      webhook(messaging({ postback: { title: "Buy now", payload: "shop_buy:var-1:1" } })),
+      SETTINGS,
+    );
+
+    expect(shop.handleShopReply).toHaveBeenCalledWith("shop_buy:var-1:1", {
+      orgId: ORG_ID,
+      contactId: "contact-1",
+      channel: "MESSENGER",
+      channelAccountId: PAGE_ID,
+    });
+    expect(answerFlowMock).not.toHaveBeenCalled();
+    expect(runRulesMock).not.toHaveBeenCalled();
+  });
+
+  test.each([
+    [
+      "message",
+      () =>
+        handleFacebookMessages(webhook(messaging({ message: { mid: "m", text: "hi" } })), SETTINGS),
+    ],
+    [
+      "quick reply",
+      () =>
+        handleFacebookQuickReply(
+          webhook(messaging({ message: { mid: "m", text: "hi", quick_reply: { payload: "p" } } })),
+          SETTINGS,
+        ),
+    ],
+    [
+      "postback",
+      () => handleFacebookPostback(webhook(messaging({ postback: { payload: "p" } })), SETTINGS),
+    ],
+  ])("does neither when the %s could not be stored", async (_label, handle) => {
+    handleWaMessagesMock.mockRejectedValue(new Error("write failed"));
+
+    await handle();
+
+    expect(answerFlowMock).not.toHaveBeenCalled();
+    expect(runRulesMock).not.toHaveBeenCalled();
+  });
+
+  test("does not let a rule failure escape the handler", async () => {
+    runRulesMock.mockRejectedValue(new Error("rule blew up"));
+
+    await expect(
+      handleFacebookMessages(webhook(messaging({ message: { mid: "m", text: "hi" } })), SETTINGS),
+    ).resolves.toBeUndefined();
+  });
+});
+
+describe("m.me links", () => {
+  const answerFlowMock = handleMetaFlowUserResponse as unknown as Mock;
+  const runRulesMock = checkAndExecuteRuleByTriggerEvent as unknown as Mock;
+  const referral = { ref: "summer_sale", source: "SHORTLINK", type: "OPEN_THREAD" };
+  const linkContext = {
+    orgId: ORG_ID,
+    phoneNumberId: PAGE_ID,
+    phone: PSID,
+    messengerRef: "summer_sale",
+    platform: "FACEBOOK",
+  };
+
+  beforeEach(() => {
+    answerFlowMock.mockResolvedValue(false);
+    runRulesMock.mockResolvedValue(undefined);
+  });
+
+  test("routes a standalone referral to the referral handler", async () => {
+    await handleFacebookWebhook(webhook(messaging({ referral })));
+
+    expect(waMessageCall().body).toMatchObject({ type: "referral", referral });
+    expect(runRulesMock).toHaveBeenCalledWith("MESSENGER_REFERRAL", linkContext);
+  });
+
+  test("stores the visit so the inbox shows where they came from", async () => {
+    await handleFacebookReferral(webhook(messaging({ referral })), SETTINGS);
+
+    const call = waMessageCall();
+    expect(call.type).toBe("receive");
+    expect(call.platform).toBe(PlatformType.FACEBOOK);
+    expect(call.sourceIdentifier).toBe(PAGE_ID);
+    expect(call.messageId).toBe(`fb_referral_${PSID}_1700000000000`);
+  });
+
+  test("stops at the link rule when one ran", async () => {
+    runRulesMock.mockResolvedValue({ rule: { id: "r1" }, executedActions: [] });
+
+    await handleFacebookReferral(webhook(messaging({ referral })), SETTINGS);
+
+    expect(runRulesMock).toHaveBeenCalledTimes(1);
+    expect(runRulesMock).toHaveBeenCalledWith("MESSENGER_REFERRAL", linkContext);
+  });
+
+  test("falls back to keyword rules on the ref when no link rule ran", async () => {
+    await handleFacebookReferral(webhook(messaging({ referral })), SETTINGS);
+
+    expect(runRulesMock).toHaveBeenLastCalledWith("MESSAGE_RECEIVED", {
+      orgId: ORG_ID,
+      phoneNumberId: PAGE_ID,
+      phone: PSID,
+      message: "summer_sale",
+      platform: "FACEBOOK",
+    });
+  });
+
+  test("never answers a waiting chatbot with a link visit", async () => {
+    await handleFacebookReferral(webhook(messaging({ referral })), SETTINGS);
+
+    expect(answerFlowMock).not.toHaveBeenCalled();
+  });
+
+  // Meta retries a batch it did not get a 2xx for, so the same visit can arrive twice.
+  test("does nothing for a visit it already stored", async () => {
+    db.findFirst.mockResolvedValue({ id: "stored" });
+
+    await handleFacebookReferral(webhook(messaging({ referral })), SETTINGS);
+
+    expect(handleWaMessagesMock).not.toHaveBeenCalled();
+    expect(runRulesMock).not.toHaveBeenCalled();
+  });
+
+  test("runs no rules when the visit could not be stored", async () => {
+    handleWaMessagesMock.mockRejectedValue(new Error("write failed"));
+
+    await handleFacebookReferral(webhook(messaging({ referral })), SETTINGS);
+
+    expect(runRulesMock).not.toHaveBeenCalled();
+  });
+
+  test("stores a link with no ref but runs no rules", async () => {
+    await handleFacebookReferral(
+      webhook(messaging({ referral: { source: "SHORTLINK", type: "OPEN_THREAD" } })),
+      SETTINGS,
+    );
+
+    expect(handleWaMessagesMock).toHaveBeenCalled();
+    expect(runRulesMock).not.toHaveBeenCalled();
+  });
+
+  describe("on a Get Started tap", () => {
+    const getStarted = () =>
+      handleFacebookPostback(
+        webhook(
+          messaging({ postback: { title: "Get Started", payload: "GET_STARTED", referral } }),
+        ),
+        SETTINGS,
+      );
+
+    test("runs the link rules first and stops when one ran", async () => {
+      runRulesMock.mockResolvedValue({ rule: { id: "r1" }, executedActions: [] });
+
+      await getStarted();
+
+      expect(runRulesMock).toHaveBeenCalledTimes(1);
+      expect(runRulesMock).toHaveBeenCalledWith("MESSENGER_REFERRAL", linkContext);
+      expect(answerFlowMock).not.toHaveBeenCalled();
+    });
+
+    test("carries on to chatbots and rules when no link rule ran", async () => {
+      await getStarted();
+
+      expect(answerFlowMock).toHaveBeenCalled();
+      expect(runRulesMock).toHaveBeenLastCalledWith(
+        "MESSAGE_RECEIVED",
+        expect.objectContaining({ message: "GET_STARTED" }),
+      );
+    });
+
+    test("keeps the referral on the stored postback", async () => {
+      await getStarted();
+
+      expect(waMessageCall().body).toMatchObject({ type: "postback", referral });
+    });
+  });
+});
+
+describe("Facebook Page comments", () => {
+  const runRulesMock = checkAndExecuteRuleByTriggerEvent as unknown as Mock;
+  const claimMock = redisConnection.set as unknown as Mock;
+  const comment = (value: Record<string, unknown> = {}) => ({
+    field: "feed",
+    value: {
+      item: "comment",
+      verb: "add",
+      comment_id: "post-1_comment-1",
+      post_id: "page-1_post-1",
+      message: "price?",
+      created_time: 1_700_000_000,
+      from: { id: "asid-1", name: "Asha" },
+      post: { permalink_url: "https://facebook.com/page-1/posts/1" },
+      ...value,
+    },
+  });
+  /** A rule that answered: its private reply named the person. */
+  const reached = (psid = "psid-9") =>
+    runRulesMock.mockImplementation(async (_event, context) => {
+      context.facebookComment.recipientId = psid;
+      return { rule: { id: "r1" }, executedActions: [] };
+    });
+
+  beforeEach(() => {
+    runRulesMock.mockResolvedValue(undefined);
+  });
+
+  test("runs the Page's comment rules with no contact and the comment to answer", async () => {
+    await handleFacebookComment(comment(), SETTINGS);
+
+    expect(runRulesMock).toHaveBeenCalledWith("FACEBOOK_COMMENT", {
+      orgId: ORG_ID,
+      platform: "FACEBOOK",
+      phoneNumberId: PAGE_ID,
+      message: "price?",
+      facebookComment: { commentId: "post-1_comment-1" },
+      facebookPostId: "page-1_post-1",
+    });
+  });
+
+  test("files the comment in the conversation of the person the reply reached", async () => {
+    reached();
+
+    await handleFacebookComment(comment(), SETTINGS);
+
+    const call = waMessageCall();
+    expect(call.type).toBe("receive");
+    expect(call.from).toBe("psid-9");
+    expect(call.platform).toBe(PlatformType.FACEBOOK);
+    expect(call.sourceIdentifier).toBe(PAGE_ID);
+    expect(call.userName).toBe("Asha");
+    expect(call.messageId).toBe("fb_comment_post-1_comment-1");
+    expect(call.body).toEqual({
+      sender: { id: "psid-9" },
+      recipient: { id: PAGE_ID },
+      timestamp: 1_700_000_000_000,
+      message: {
+        mid: "fb_comment_post-1_comment-1",
+        text: "price?",
+        comment_id: "post-1_comment-1",
+        media_id: "page-1_post-1",
+        media_permalink: "https://facebook.com/page-1/posts/1",
+      },
+    });
+  });
+
+  // Nobody could message that person, so the inbox would only gain a dead end.
+  test("keeps a comment no rule answered out of the inbox", async () => {
+    await handleFacebookComment(comment(), SETTINGS);
+
+    expect(handleWaMessagesMock).not.toHaveBeenCalled();
+  });
+
+  test.each([
+    ["an edit", { verb: "edited" }],
+    ["a deletion", { verb: "remove" }],
+    ["a new post", { item: "post" }],
+    ["a reaction", { item: "reaction" }],
+  ])("ignores %s", async (_label, value) => {
+    await handleFacebookComment(comment(value), SETTINGS);
+
+    expect(runRulesMock).not.toHaveBeenCalled();
+  });
+
+  // Answering the Page's own replies under its post would loop.
+  test("ignores the Page's own comments", async () => {
+    await handleFacebookComment(comment({ from: { id: PAGE_ID, name: "The Page" } }), SETTINGS);
+
+    expect(runRulesMock).not.toHaveBeenCalled();
+  });
+
+  test("ignores a change that is not from the feed", async () => {
+    await handleFacebookComment({ ...comment(), field: "ratings" }, SETTINGS);
+
+    expect(runRulesMock).not.toHaveBeenCalled();
+  });
+
+  test("answers a comment once, however often Meta delivers it", async () => {
+    claimMock.mockResolvedValue(null);
+
+    await handleFacebookComment(comment(), SETTINGS);
+
+    expect(runRulesMock).not.toHaveBeenCalled();
+    expect(claimMock).toHaveBeenCalledWith(
+      "fb_comment:post-1_comment-1",
+      "1",
+      "EX",
+      7 * 24 * 60 * 60,
+      "NX",
+    );
+  });
+
+  test("does not let a rule failure escape", async () => {
+    runRulesMock.mockRejectedValue(new Error("rule blew up"));
+
+    await expect(handleFacebookComment(comment(), SETTINGS)).resolves.toBeUndefined();
+    expect(handleWaMessagesMock).not.toHaveBeenCalled();
+  });
+
+  test("reaches the comment handler from a webhook's feed changes", async () => {
+    await handleFacebookWebhook({
+      object: "page",
+      entry: [{ id: PAGE_ID, time: 1, changes: [comment()] }],
+    } as any);
+
+    expect(runRulesMock).toHaveBeenCalledWith("FACEBOOK_COMMENT", expect.anything());
+  });
+
+  // The reply already went out and the comment is claimed: a retry from Meta would be
+  // ignored, so a filing failure is logged rather than failing the batch.
+  test("does not fail the batch when an answered comment cannot be filed", async () => {
+    reached();
+    handleWaMessagesMock.mockRejectedValue(new Error("write failed"));
+
+    const result = await handleFacebookWebhook({
+      object: "page",
+      entry: [{ id: PAGE_ID, time: 1, changes: [comment()] }],
+    } as any);
+
+    expect(result).toEqual({ processed: 1, failed: 0 });
   });
 });

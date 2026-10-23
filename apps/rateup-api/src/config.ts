@@ -65,7 +65,7 @@ export const SuperTokensConfig: TypeInput = {
       signUpFeature: {
         formFields: [
           { id: "name" },
-          { id: "orgName" },
+          { id: "orgName", optional: true },
           { id: "phoneNumber", optional: true },
           { id: "planId", optional: true },
           { id: "location", optional: true },
@@ -140,7 +140,7 @@ export const SuperTokensConfig: TypeInput = {
               const { id, emails, loginMethods } = response.user;
               const email = emails[0];
 
-              if (name && orgName) {
+              if (name) {
                 const recipeName = getUserRecipeName(
                   loginMethods[0].recipeId,
                   loginMethods[0].thirdParty?.id,
@@ -153,7 +153,7 @@ export const SuperTokensConfig: TypeInput = {
                   id,
                   email,
                   name,
-                  orgName,
+                  orgName: orgName || undefined,
                   phoneNumber: phoneNumber ?? undefined,
                   recipeName,
                   planId: planId ?? undefined,
@@ -173,6 +173,15 @@ export const SuperTokensConfig: TypeInput = {
               }
             }
 
+            return response;
+          },
+          passwordResetPOST: async function (input) {
+            const response = await originalImplementation.passwordResetPOST!(input);
+            // A reset is how someone takes an account back: every session open before it
+            // ends, including any held by whoever had the old password.
+            if (response.status === "OK") {
+              await Session.revokeAllSessionsForUser(response.user.id);
+            }
             return response;
           },
         }),
@@ -305,6 +314,33 @@ export const SuperTokensConfig: TypeInput = {
       },
       contactMethod: "PHONE",
       flowType: "USER_INPUT_CODE",
+      override: {
+        apis: (originalImplementation) => ({
+          ...originalImplementation,
+          createCodePOST: async function (input) {
+            // Phone sign-up is a product flow today (the dashboard's /signup?auth=phone), so it
+            // stays on unless PASSWORDLESS_PHONE_SIGNUP=false: then an SMS is only ever sent
+            // to a number that already has an account, which ends SMS pumping to arbitrary
+            // numbers. The per-IP/per-number limits in plugins/index.ts apply either way.
+            if (
+              process.env.PASSWORDLESS_PHONE_SIGNUP === "false" &&
+              "phoneNumber" in input &&
+              input.phoneNumber
+            ) {
+              const existing = await supertokens.listUsersByAccountInfo(input.tenantId, {
+                phoneNumber: input.phoneNumber,
+              });
+              if (existing.length === 0) {
+                return {
+                  status: "GENERAL_ERROR",
+                  message: "No account uses this phone number. Sign up with your email first.",
+                };
+              }
+            }
+            return originalImplementation.createCodePOST!(input);
+          },
+        }),
+      },
     }),
 
     Session.init({
@@ -371,7 +407,18 @@ export const SuperTokensConfig: TypeInput = {
       },
     }),
 
-    Dashboard.init(),
+    // The SuperTokens admin dashboard is an admin login surface at /api/auth/dashboard; off
+    // unless explicitly enabled, and then limited to the listed admin emails.
+    ...(process.env.SUPERTOKENS_DASHBOARD === "1"
+      ? [
+          Dashboard.init({
+            admins: (process.env.SUPERTOKENS_DASHBOARD_ADMINS ?? "")
+              .split(",")
+              .map((email) => email.trim())
+              .filter(Boolean),
+          }),
+        ]
+      : []),
     jwt.init(),
   ],
 };
@@ -379,23 +426,23 @@ export const SuperTokensConfig: TypeInput = {
 // Swagger tags
 
 const publicTags = [
-  { name: "Contacts", description: "Contact related endpoints" },
-  { name: "Contacts/Groups", description: "Contact Group related endpoints" },
-  { name: "Team", description: "Team related endpoints" },
-  { name: "Campaign", description: "Campaign related endpoints" },
-  {
-    name: "Campaign/Participants",
-    description: "Campaign Participants related endpoints",
-  },
+  { name: "Contacts", description: "Contacts, looked up by id or phone; bulk import up to 1000" },
+  { name: "Contacts/Groups", description: "Contact groups and their members" },
+  { name: "Teams", description: "Teams, for routing sends" },
+  { name: "Campaigns", description: "WhatsApp campaigns: create, send and read responses" },
+  { name: "Surveys", description: "Surveys and their responses" },
   {
     name: "WhatsApp/Template",
-    description: "WhatsApp Template related endpoints",
+    description:
+      "Send approved WhatsApp templates and read message status. Each send is a paid " +
+      "message, so send an Idempotency-Key with it: a retry then replays instead of sending twice.",
   },
   {
     name: "Loyalty",
     description:
       "Points, members, rewards and vouchers for a till or e-commerce integration. " +
-      "Members are named by phone number or card code; every write takes an Idempotency-Key.",
+      "Members are named by phone number or card code. Send an Idempotency-Key with every " +
+      "write, so a retried award or redemption is not applied twice.",
   },
 ];
 

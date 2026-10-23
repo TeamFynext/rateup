@@ -107,7 +107,8 @@ const applyRedemptionSchema = z.object({
 });
 
 const assignRewardSchema = z.object({
-  customerId: z.string().min(1),
+  /** Legacy: the path's `:customerId` is the member; a body value must match it. */
+  customerId: z.string().min(1).optional(),
   rewardId: z.string().min(1),
   notes: z.string().optional(),
 });

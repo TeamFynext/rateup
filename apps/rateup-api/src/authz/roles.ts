@@ -1,4 +1,4 @@
-import { ALL_PERMISSIONS, type Permission } from "./permissions.js";
+import { MEMBER_PERMISSIONS, type Permission } from "./permissions.js";
 
 export const ROLE_KEYS = ["OWNER", "ADMIN", "MANAGER", "STAFF", "AGENT", "VIEWER"] as const;
 export type RoleKey = (typeof ROLE_KEYS)[number];
@@ -41,6 +41,8 @@ const AGENT_PERMISSIONS = set(
   "contacts.read",
   "loyalty.read",
   "loyalty.cashier",
+  "commerce.read",
+  "commerce.sell",
   "analytics.read",
   "members.read",
   "teams.read",
@@ -70,6 +72,9 @@ const STAFF_PERMISSIONS = union(
     "pipelines.read",
     "pipelines.manage",
     "catalog.manage",
+    "commerce.orders.manage",
+    "commerce.products.manage",
+    "commerce.discounts.manage",
     "integrations.read",
   ),
 );
@@ -94,6 +99,8 @@ const MANAGER_PERMISSIONS = union(
     "teams.manage_members",
     "integrations.manage",
     "integrations.shopify",
+    "commerce.payments.manage",
+    "commerce.storefront.manage",
     "webhooks.read",
     "webhooks.manage",
     "org.settings",
@@ -108,7 +115,7 @@ const VIEWER_PERMISSIONS: ReadonlySet<Permission> = new Set(
   [...STAFF_PERMISSIONS].filter((permission) => permission.endsWith(".read")),
 );
 
-const ADMIN_PERMISSIONS = without(ALL_PERMISSIONS, "org.delete", "org.transfer_ownership");
+const ADMIN_PERMISSIONS = without(MEMBER_PERMISSIONS, "org.delete", "org.transfer_ownership");
 
 export const ROLES: Record<RoleKey, RoleDefinition> = {
   OWNER: {
@@ -116,7 +123,8 @@ export const ROLES: Record<RoleKey, RoleDefinition> = {
     label: "Owner",
     summary: "Everything, including billing, deleting the organisation and handing it over.",
     teamScope: "ALL",
-    permissions: ALL_PERMISSIONS,
+    // Every member permission; the key-only ones (widget.connect) belong to no role.
+    permissions: MEMBER_PERMISSIONS,
   },
   ADMIN: {
     key: "ADMIN",

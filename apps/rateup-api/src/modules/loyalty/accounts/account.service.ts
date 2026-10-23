@@ -24,6 +24,7 @@ import { scheduleFeedbackRequest } from "../feedback/feedback.scheduler.js";
 import { log } from "../../../utils/logger.js";
 import { ensureMemberCard, sendMemberCard } from "./memberCard.service.js";
 import { effectiveBonuses } from "../program/bonuses.js";
+import { announceLoyaltyTransactions, type LoyaltyLedgerRow } from "../loyalty.webhooks.js";
 
 export async function findAccountByReferralCode(programId: string, referralCode: string) {
   return await prisma.customerLoyaltyAccount.findFirst({
@@ -195,8 +196,10 @@ export async function createCustomerAccount(
   };
   const hold = options.holdBonuses === true;
 
+  // Ledger rows the bonuses wrote, announced once the account exists.
+  const bonusRows: (LoyaltyLedgerRow | null)[] = [];
   if (!hold) {
-    await creditReferrer(prisma, programId, snapshot, contactId);
+    bonusRows.push(await creditReferrer(prisma, programId, snapshot, contactId));
   }
 
   const openingPoints = hold ? 0 : pointsOwedToNewMember(snapshot);
@@ -230,8 +233,10 @@ export async function createCustomerAccount(
   }
 
   if (!hold) {
-    await creditNewMember(prisma, account, snapshot, openingPoints, orgId);
+    bonusRows.push(...(await creditNewMember(prisma, account, snapshot, openingPoints, orgId)));
   }
+  // Each bonus row was its own committed write (`prisma`, not a transaction).
+  void announceLoyaltyTransactions(orgId, bonusRows);
 
   // Every new member has a card code from day one; it is what lets the first-message send
   // tell them apart from members enrolled before cards existed.
@@ -310,14 +315,17 @@ function pointsOwedToNewMember(snapshot: LoyaltyPendingBonuses): number {
   return snapshot.signupBonus + refereePoints;
 }
 
-/** Pay the person whose code was used — points into their balance, or a gift reward. */
+/**
+ * Pay the person whose code was used — points into their balance, or a gift reward.
+ * Returns the ledger row a points bonus wrote, for the caller to announce once committed.
+ */
 async function creditReferrer(
   db: Db,
   programId: string,
   snapshot: LoyaltyPendingBonuses,
   refereeContactId: string,
-) {
-  if (!snapshot.referredById) return;
+): Promise<LoyaltyLedgerRow | null> {
+  if (!snapshot.referredById) return null;
 
   if (snapshot.referralBonusType === "points" && snapshot.referralBonus > 0) {
     const updatedReferrer = await db.customerLoyaltyAccount.update({
@@ -327,7 +335,7 @@ async function creditReferrer(
         lifetimePoints: { increment: snapshot.referralBonus },
       },
     });
-    await db.loyaltyTransaction.create({
+    return await db.loyaltyTransaction.create({
       data: {
         accountId: snapshot.referredById,
         programId,
@@ -345,12 +353,14 @@ async function creditReferrer(
       if (!(e as Error).message?.includes("already assigned")) throw e;
     }
   }
+  return null;
 }
 
 /**
  * The new member's side: the referee gift or ledger row, the joining-bonus ledger row and
  * the "points issued" message. `balanceAfter` is the account's balance once the points are
- * in — a referee who also gets a joining bonus holds both.
+ * in — a referee who also gets a joining bonus holds both. Returns the ledger rows written,
+ * for the caller to announce once committed.
  */
 async function creditNewMember(
   db: Db,
@@ -363,38 +373,43 @@ async function creditNewMember(
   snapshot: LoyaltyPendingBonuses,
   balanceAfter: number,
   orgId: string,
-) {
+): Promise<LoyaltyLedgerRow[]> {
   const refereePoints = snapshot.refereeBonusType === "points" ? snapshot.refereeBonus : 0;
+  const rows: LoyaltyLedgerRow[] = [];
 
   if (snapshot.referredById) {
     if (snapshot.refereeBonusType === "gift" && snapshot.refereeRewardId) {
       await assignRewardToCustomer(account.id, snapshot.refereeRewardId);
     } else if (refereePoints > 0) {
+      rows.push(
+        await db.loyaltyTransaction.create({
+          data: {
+            accountId: account.id,
+            programId: account.programId,
+            transactionType: "earn",
+            source: "referral",
+            points: refereePoints,
+            balanceAfter,
+            metadata: { referrerAccountId: snapshot.referredById },
+          },
+        }),
+      );
+    }
+  }
+
+  if (snapshot.signupBonus > 0) {
+    rows.push(
       await db.loyaltyTransaction.create({
         data: {
           accountId: account.id,
           programId: account.programId,
           transactionType: "earn",
-          source: "referral",
-          points: refereePoints,
+          source: "signup_bonus",
+          points: snapshot.signupBonus,
           balanceAfter,
-          metadata: { referrerAccountId: snapshot.referredById },
         },
-      });
-    }
-  }
-
-  if (snapshot.signupBonus > 0) {
-    await db.loyaltyTransaction.create({
-      data: {
-        accountId: account.id,
-        programId: account.programId,
-        transactionType: "earn",
-        source: "signup_bonus",
-        points: snapshot.signupBonus,
-        balanceAfter,
-      },
-    });
+      }),
+    );
     // Only meaningful when there were points to announce.
     if (account.contact?.phone) {
       await sendLoyaltyEvent(
@@ -409,6 +424,7 @@ async function creditNewMember(
       );
     }
   }
+  return rows;
 }
 
 /**
@@ -433,7 +449,7 @@ export async function releasePendingSignupBonus(
   const snapshot = account?.pendingBonuses ?? null;
   if (!account || !snapshot) return false;
 
-  await creditReferrer(db, account.programId, snapshot, account.contactId);
+  const referrerRow = await creditReferrer(db, account.programId, snapshot, account.contactId);
 
   const points = pointsOwedToNewMember(snapshot);
   const updated = await db.customerLoyaltyAccount.update({
@@ -446,7 +462,18 @@ export async function releasePendingSignupBonus(
     },
   });
 
-  await creditNewMember(db, account, snapshot, updated.currentPoints, account.contact.orgId);
+  const memberRows = await creditNewMember(
+    db,
+    account,
+    snapshot,
+    updated.currentPoints,
+    account.contact.orgId,
+  );
+  // Only when these writes were already committed: a caller that passes a transaction
+  // owns the commit, and would have to announce the rows itself.
+  if (db === prisma) {
+    void announceLoyaltyTransactions(account.contact.orgId, [referrerRow, ...memberRows]);
+  }
   return true;
 }
 
@@ -881,6 +908,13 @@ export async function awardPoints(
     }
   }
 
+  // Committed by now — `runAward`'s transaction has returned. Not awaited: it only
+  // enqueues, and never rejects.
+  void announceLoyaltyTransactions(customer.program.orgId, [transaction], {
+    phone: customer.contact?.phone ?? null,
+    cardCode: customer.cardCode ?? null,
+  });
+
   // Ask for feedback later, if the programme has it switched on. Off the request path: the
   // scheduler only opens a row and arms a delayed job, and a failure there is not the
   // cashier's problem — the points are already awarded.
@@ -1141,6 +1175,12 @@ export async function assignRewardToCustomer(
   customerId: string,
   rewardId: string,
   _notes?: string,
+  /**
+   * The caller's programme, when a person (not a system job) is assigning. A member of any
+   * other programme is reported as not found, so one org cannot issue rewards — and the
+   * WhatsApp that announces them — to another org's members.
+   */
+  programId?: string,
 ) {
   // Check if customer exists
   const customer = await prisma.customerLoyaltyAccount.findUnique({
@@ -1148,7 +1188,7 @@ export async function assignRewardToCustomer(
     include: { contact: true },
   });
 
-  if (!customer) {
+  if (!customer || (programId !== undefined && customer.programId !== programId)) {
     throw new LoyaltyError("MEMBER_NOT_FOUND", "Customer account not found");
   }
 

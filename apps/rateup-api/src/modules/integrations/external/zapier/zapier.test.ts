@@ -1,5 +1,12 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
+// Hook URLs are resolved before every call (src/utils/ssrf.ts); keep that off the network.
+vi.mock("node:dns/promises", () => ({
+  lookup: vi.fn(async (host: string) => [
+    { address: host.includes("internal") ? "10.0.0.5" : "203.0.113.10", family: 4 },
+  ]),
+}));
+
 vi.mock("../../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));
@@ -44,12 +51,20 @@ vi.mock("../../../team/team.service.js", () => ({
   inviteTeamMember: vi.fn(),
 }));
 vi.mock("../../../contact/contact.controller.js", () => ({ createContactHandler: vi.fn() }));
+vi.mock("../../../../external/v1/contacts/contactRefs.js", () => ({
+  findForeignContactRef: vi.fn(async () => null),
+}));
 
 import bcrypt from "bcrypt";
 import { getIntegrationByName, updateIntegrationByName } from "../../integrations.service.js";
 import { sendTextMessage } from "../../../whatsapp/whatsappSurvey/wasurvey.service.js";
 import { inviteTeamMember } from "../../../team/team.service.js";
-import { deleteContactById, getContactById } from "../../../contact/contact.service.js";
+import {
+  deleteContactById,
+  getContactById,
+  updateContactById,
+  updateContactLabelsById,
+} from "../../../contact/contact.service.js";
 import {
   deleteContactByPhoneNumberAndOrgId,
   getContactsByPhoneNumberAndOrgId,
@@ -63,11 +78,14 @@ import {
   inviteMemberHandler,
   sendTextMessageHandler,
   subscribeTriggerHandler,
+  updateContactHandler,
+  updateContactLabelsByIdHandler,
   zapierAuthenticationHandler,
 } from "./zapier.controller.js";
 import { zapierRoutes } from "./zapier.route.js";
 import { contactSearchSchema } from "./zapier.schema.js";
 import { externalIntegrationRoutes } from "../external.route.js";
+import { findForeignContactRef } from "../../../../external/v1/contacts/contactRefs.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
@@ -153,13 +171,14 @@ describe("route registration", () => {
 
     await externalIntegrationRoutes(srv);
 
-    expect(hooks).toHaveLength(0);
+    // Only the per-IP limiter, ahead of every key check below it.
+    expect(hooks.map((h) => h.name)).toEqual(["onRequest"]);
     // Asserted by prefix rather than by count: a bare call count fails every
     // time a provider is added, without saying what changed or whether it was
     // mounted where it should be.
     expect(
       srv.register.mock.calls.map(([, opts]: [unknown, { prefix: string }]) => opts.prefix),
-    ).toEqual(["/getlead", "/zapier", "/zoho"]);
+    ).toEqual(["/getlead", "/make", "/pabbly", "/zapier", "/zoho"]);
   });
 
   test("every route other than /auth carries a data-bearing handler", async () => {
@@ -282,17 +301,23 @@ describe("zapierAuthenticationHandler", () => {
     });
   });
 
-  test("logs the full header set, bearer token included, when the shape is wrong", async () => {
+  test("never logs the headers, which carry the API key", async () => {
     const { log } = await import("../../../../utils/logger.js");
+    (bcrypt.compare as unknown as Mock).mockResolvedValueOnce(false);
 
     await zapierAuthenticationHandler(
       req({ headers: { authorization: "Basic secret" } }) as never,
       reply(),
     );
+    await zapierAuthenticationHandler(req() as never, reply());
 
-    expect((log.error as unknown as Mock).mock.calls[0]).toContain(
-      "No bearer token found in headers\n%o",
+    const logged = JSON.stringify(
+      [log.error, log.warn, log.info, log.debug, log.trace].flatMap(
+        (fn) => (fn as unknown as Mock).mock.calls,
+      ),
     );
+    expect(logged).not.toContain("secret");
+    expect(logged).not.toContain("plain-api-key");
   });
 });
 
@@ -455,6 +480,115 @@ describe("the unauthenticated handlers take their org from the query string", ()
     const stored = (updateIntegrationByName as unknown as Mock).mock.calls[0][2].credential
       .triggerSubscriptions[0];
     expect(stored.active).toBe(true);
+  });
+});
+
+// ===========================================================================
+// Contact writes use the org the API key was checked against
+// ===========================================================================
+
+describe("Zapier hook URLs and contact references", () => {
+  test("a hook URL on a private address is refused", async () => {
+    const rep = reply();
+
+    await subscribeTriggerHandler(
+      {
+        query: { orgId: VICTIM_ORG },
+        body: {
+          hookUrl: "https://metadata.internal/x",
+          subscribed_field: "new_message_received",
+          zapId: "z",
+        },
+      } as never,
+      rep,
+    );
+
+    expect(rep.code).toHaveBeenCalledWith(400);
+    expect(updateIntegrationByName).not.toHaveBeenCalled();
+  });
+
+  test("the subscription body (a capability URL) is not logged", async () => {
+    const { log } = await import("../../../../utils/logger.js");
+    await subscribeTriggerHandler(
+      {
+        query: { orgId: VICTIM_ORG },
+        body: {
+          hookUrl: "https://hooks.zapier.com/secret-path",
+          subscribed_field: "new_message_received",
+          zapId: "z",
+        },
+      } as never,
+      reply(),
+    );
+
+    const logged = JSON.stringify(Object.values(log).flatMap((fn) => (fn as Mock).mock.calls));
+    expect(logged).not.toContain("secret-path");
+  });
+
+  test("a lifecycle stage of another org is refused", async () => {
+    (findForeignContactRef as unknown as Mock).mockResolvedValueOnce("Unknown lifecycleId: l-x");
+    const rep = reply();
+
+    await updateContactLabelsByIdHandler(
+      {
+        user: { orgId: "org-of-the-key" },
+        body: { contactId: "c-1", lifecycleId: "l-x" },
+      } as never,
+      rep,
+    );
+
+    expect(rep.code).toHaveBeenCalledWith(400);
+    expect(updateContactLabelsById).not.toHaveBeenCalled();
+  });
+
+  test("a contact update naming another org's labels is refused", async () => {
+    (findForeignContactRef as unknown as Mock).mockResolvedValueOnce("Unknown labels: x");
+    const rep = reply();
+
+    await updateContactHandler(
+      { user: { orgId: "org-of-the-key" }, body: { contactId: "c-1", labels: ["x"] } } as never,
+      rep,
+    );
+
+    expect(rep.code).toHaveBeenCalledWith(400);
+    expect(updateContactById).not.toHaveBeenCalled();
+  });
+});
+
+describe("contact writes ignore an orgId in the body", () => {
+  const KEY_ORG = "org-of-the-key";
+
+  test("contact-lifecycle updates within the key's org", async () => {
+    (updateContactLabelsById as unknown as Mock).mockResolvedValueOnce({
+      id: "c-1",
+      Lifecycle: { name: "Customer" },
+    });
+
+    await updateContactLabelsByIdHandler(
+      {
+        user: { orgId: KEY_ORG },
+        query: { orgId: KEY_ORG },
+        body: { contactId: "c-1", lifecycleId: "l-1", orgId: VICTIM_ORG },
+      } as never,
+      reply(),
+    );
+
+    expect(updateContactLabelsById).toHaveBeenCalledWith("c-1", KEY_ORG, "l-1");
+  });
+
+  test("contact update writes within the key's org, without the body orgId", async () => {
+    await updateContactHandler(
+      {
+        user: { orgId: KEY_ORG },
+        query: { orgId: KEY_ORG },
+        body: { contactId: "c-1", orgId: VICTIM_ORG, waMessageAssignStatus: "CLOSED" },
+      } as never,
+      reply(),
+    );
+
+    expect(updateContactById).toHaveBeenCalledWith("c-1", KEY_ORG, {
+      waMessageAssignStatus: "CLOSED",
+    });
   });
 });
 

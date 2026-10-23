@@ -40,9 +40,10 @@ import {
 } from "./payment.schema.js";
 import type { AddonKind } from "../subscription/addons.js";
 import Session from "supertokens-node/recipe/session/index.js";
-import { validateWebhookSignature } from "razorpay/dist/utils/razorpay-utils.js";
-import { createHash } from "node:crypto";
+import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { log } from "../../utils/logger.js";
+import prisma from "../../utils/prisma.js";
+import { Prisma } from "../../../generated/prisma/client.js";
 // import { html } from "cheerio";
 import { notificationQueue } from "../../workers/bullmq/queues/index.js";
 
@@ -57,7 +58,9 @@ export async function createCheckoutSessionHandler(
   const userId = session.getUserId();
 
   try {
-    const checkoutSession = await createCheckoutSession(userId, data);
+    // The org is the session's. A body `orgId` is still accepted from older clients and
+    // ignored, as are `planName` and `isAnnualMessageLimit`.
+    const checkoutSession = await createCheckoutSession(userId, request.user.orgId, data);
     reply.code(201).send(checkoutSession);
   } catch (e) {
     // A refused add-on purchase is a rule, not a fault: send the reason back so the
@@ -72,6 +75,48 @@ interface RazorpayWebhookBody {
   payload?: RazorpaySubscriptionChargedPayload & {
     payment?: { entity?: RazorpayPaymentWebhookData };
   };
+}
+
+/**
+ * Razorpay signs a webhook with hex HMAC-SHA256 of the raw body. Compared in constant time
+ * (the SDK helper uses `===`), and only after checking the lengths, which
+ * `timingSafeEqual` requires to match.
+ */
+export function isValidRazorpaySignature(
+  rawBody: string | Buffer,
+  signature: string | undefined,
+  secret: string,
+) {
+  if (!signature) return false;
+  const expected = Buffer.from(createHmac("sha256", secret).update(rawBody).digest("hex"), "utf8");
+  const given = Buffer.from(signature, "utf8");
+  return given.length === expected.length && timingSafeEqual(given, expected);
+}
+
+/**
+ * Records a delivery's `x-razorpay-event-id` before acting on it. False when it has been
+ * recorded already: a redelivery or a replayed capture, which must not reset an org's
+ * counters or credit packs twice. Deliveries without the header are processed as before.
+ */
+async function claimRazorpayEvent(eventId: string | undefined, event: string | undefined) {
+  if (!eventId) return true;
+  try {
+    await prisma.razorpayWebhookEvent.create({ data: { eventId, event: event ?? "unknown" } });
+    return true;
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return false;
+    }
+    throw error;
+  }
+}
+
+/** Gives a claimed event back after a failure, so Razorpay's retry is acted on. */
+async function releaseRazorpayEvent(eventId: string | undefined) {
+  if (!eventId) return;
+  await prisma.razorpayWebhookEvent
+    .deleteMany({ where: { eventId } })
+    .catch((err) => log.error({ err, eventId }, "Could not release a Razorpay webhook event"));
 }
 
 export async function verificationHandler(
@@ -95,11 +140,7 @@ export async function verificationHandler(
     return reply.code(500).send("Webhook misconfigured");
   }
 
-  const isValidSignature = validateWebhookSignature(
-    rawBody.toString(),
-    webhookSignature,
-    webhookSecret,
-  );
+  const isValidSignature = isValidRazorpaySignature(rawBody, webhookSignature, webhookSecret);
 
   if (!isValidSignature) {
     // Nearly always a secret mismatch between the dashboard webhook and
@@ -120,45 +161,71 @@ export async function verificationHandler(
   }
 
   const data = webhookBody;
+  const eventIdHeader = request.headers["x-razorpay-event-id"];
+  const eventId = typeof eventIdHeader === "string" && eventIdHeader ? eventIdHeader : undefined;
+
+  if (!(await claimRazorpayEvent(eventId, data?.event))) {
+    log.info({ eventId, event: data?.event }, "Razorpay webhook event already processed");
+    return reply.code(200).send({ success: true, duplicate: true });
+  }
+
+  try {
+    const outcome = await dispatchRazorpayEvent(data);
+    // A 5xx asks Razorpay to retry, and a handler that reported failure in-band applied
+    // nothing; either way a redelivery carries the same event id, so free it.
+    const failedInBand =
+      typeof outcome.body === "object" &&
+      outcome.body !== null &&
+      (outcome.body as { success?: unknown }).success === false;
+    if (outcome.code >= 500 || failedInBand) await releaseRazorpayEvent(eventId);
+    return reply.code(outcome.code).send(outcome.body);
+  } catch (error) {
+    await releaseRazorpayEvent(eventId);
+    throw error;
+  }
+}
+
+async function dispatchRazorpayEvent(
+  data: RazorpayWebhookBody | undefined,
+): Promise<{ code: number; body: unknown }> {
+  const answer = (code: number, body: unknown) => ({ code, body });
 
   if (data?.event === "payment.captured" || data?.event === "payment.failed") {
-    console.log(data?.event);
     if (!data.payload?.payment?.entity) {
-      return reply.code(400).send("Missing payload.payment.entity");
+      return answer(400, "Missing payload.payment.entity");
     }
     try {
       const paymentPlans = await verifyPayment(data.payload.payment.entity, data.event);
-      return reply.code(201).send(paymentPlans);
+      return answer(201, paymentPlans);
     } catch (e) {
       console.log(e);
-      return reply.code(500).send("Failed");
+      return answer(500, "Failed");
     }
   }
 
   if (data?.event === "subscription.charged") {
-    console.log(".....................subscription.charged");
     if (!data.payload) {
-      return reply.code(400).send("Missing payload");
+      return answer(400, "Missing payload");
     }
     try {
       const paymentPlans = await updateSubscription(data.payload);
-      return reply.code(201).send(paymentPlans);
+      return answer(201, paymentPlans);
     } catch (e) {
       console.log(e);
-      return reply.code(500).send("Failed");
+      return answer(500, "Failed");
     }
   }
 
   if (data?.event === "subscription.updated") {
     if (!data.payload) {
-      return reply.code(400).send("Missing payload");
+      return answer(400, "Missing payload");
     }
     try {
       const updated = await applySubscriptionUpdate(data.payload);
-      return reply.code(201).send(updated);
+      return answer(201, updated);
     } catch (e) {
       console.log(e);
-      return reply.code(500).send("Failed");
+      return answer(500, "Failed");
     }
   }
 
@@ -167,14 +234,14 @@ export async function verificationHandler(
   // move money or change entitlements; subscription.charged above does that.
   if (isSubscriptionStatusEvent(data?.event)) {
     if (!data.payload) {
-      return reply.code(400).send("Missing payload");
+      return answer(400, "Missing payload");
     }
     try {
       const updated = await applySubscriptionStatusEvent(data.event, data.payload);
-      return reply.code(201).send(updated);
+      return answer(201, updated);
     } catch (e) {
       console.log(e);
-      return reply.code(500).send("Failed");
+      return answer(500, "Failed");
     }
   }
 
@@ -183,7 +250,7 @@ export async function verificationHandler(
   // answering "unhandled" with an error turns every ignored event into a redelivery
   // loop rather than a no-op.
   log.info({ event: data?.event }, "Razorpay webhook event ignored");
-  return reply.code(200).send({ success: true, handled: false });
+  return answer(200, { success: true, handled: false });
 }
 
 export async function syncPaymentPlansHandler(request: FastifyRequest, reply: FastifyReply) {
@@ -402,11 +469,14 @@ export async function updateSubscriptionOrderHandler(
 ) {
   try {
     const { status } = request.body;
-    const order = await updateOrder(request.params.orderId, status, request.user.orgId);
-
     // The guard outlives the trial flow it was written for: an unpaid order must not be
-    // marked complete, however it got here.
-    if (status === "COMPLETE" && order.paymentStatus !== "SUCCESS") {
+    // marked complete, however it got here. It is part of the UPDATE, not a check after.
+    const outcome = await updateOrder(request.params.orderId, status, request.user.orgId);
+
+    if (outcome === "not_found") {
+      return reply.code(404).send({ message: "Order not found" });
+    }
+    if (outcome === "unpaid") {
       return reply.code(409).send({
         message: "This order has not been paid for; its subscription cannot be started",
       });

@@ -7,23 +7,27 @@ import {
 import { supportEmailSchema, type SupportEmailInput } from "./support-user.schema.js";
 import { rateLimit } from "../../../utils/rateLimit.js";
 import { getChatByContactId } from "../inbox/message/wamessage.service.js";
-import { verifyApiAccessTokenHook } from "../../apiAccessToken/apiAccessToken.auth.js";
+import { verifyWidgetTokenHook } from "../../apiAccessToken/apiAccessToken.auth.js";
 import { type ByContactIdParams, byContactIdSchema } from "../../contact/contact.schema.js";
-import type { ByOrgIdParams } from "../../org/org.schema.js";
 import { declareAccess } from "../../../authz/registry.js";
 
+/**
+ * The embedded support widget's REST surface; every route here is the widget's (its chat
+ * messages, contact card, history and Email tab). The key it sends is public — it ships in
+ * the customer's page — so `verifyWidgetTokenHook` only takes a full-access key or one with
+ * the Webchat widget feature.
+ */
 export async function supportUserWebhookRoutes(server: FastifyInstance) {
   declareAccess(server, { access: "token" });
   // TODO: implement challanges for webhook
   // server.get("/", webhookSubscribeHandler);
-  server.post("/", { preHandler: verifyApiAccessTokenHook }, supportUserWebhookEventHandler);
+  server.post("/", { preHandler: verifyWidgetTokenHook }, supportUserWebhookEventHandler);
 
-  // `verifyApiAccessTokenHook` resolves the org from `?orgId=` when the path has no
-  // `:orgId`, so the querystring is part of this route's contract.
-  server.get<{ Params: ByContactIdParams; Querystring: Partial<ByOrgIdParams> }>(
+  // The widget's key names the org; `verifyWidgetTokenHook` takes it from there.
+  server.get<{ Params: ByContactIdParams }>(
     "/contact/:contactId",
     {
-      preHandler: verifyApiAccessTokenHook,
+      preHandler: verifyWidgetTokenHook,
       schema: {
         params: byContactIdSchema,
       },
@@ -33,7 +37,7 @@ export async function supportUserWebhookRoutes(server: FastifyInstance) {
   server.post(
     "/contact",
     {
-      preHandler: verifyApiAccessTokenHook,
+      preHandler: verifyWidgetTokenHook,
     },
     getOrCreateContactHandler,
   );
@@ -45,7 +49,7 @@ export async function supportUserWebhookRoutes(server: FastifyInstance) {
     {
       preHandler: [
         rateLimit({ max: 5, windowSeconds: 60 * 60, key: "supportWidgetEmail" }),
-        verifyApiAccessTokenHook,
+        verifyWidgetTokenHook,
       ],
       schema: {
         body: supportEmailSchema,

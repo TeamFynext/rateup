@@ -1,6 +1,5 @@
 import { z } from "zod";
 import {
-  WaButtonType,
   WaTemplateCategory,
   WaTemplateComponentType,
   WaTemplateSupportedFormats,

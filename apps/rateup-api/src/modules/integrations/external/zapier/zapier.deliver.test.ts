@@ -1,5 +1,12 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
+// Hook URLs are resolved before every call (src/utils/ssrf.ts); keep that off the network.
+vi.mock("node:dns/promises", () => ({
+  lookup: vi.fn(async (host: string) => [
+    { address: host.includes("internal") ? "10.0.0.5" : "203.0.113.10", family: 4 },
+  ]),
+}));
+
 vi.mock("../../../../utils/prisma.js", () => ({
   default: {
     integration: { findUnique: vi.fn() },
@@ -153,7 +160,7 @@ describe("deliverZapierHook", () => {
 
     await expect(
       deliverZapierHook(listening(), deliveryJob(), { finalAttempt: false }),
-    ).resolves.toBeUndefined();
+    ).resolves.toBe("skipped");
 
     expect(db.$executeRaw).toHaveBeenCalledTimes(1);
     // The hook that failed is the one named in the statement, not a neighbour by position.

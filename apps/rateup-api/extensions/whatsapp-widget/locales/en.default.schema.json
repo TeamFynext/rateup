@@ -1,0 +1,9 @@
+{
+  "whatsapp_embed": {
+    "name": "WhatsApp chat button",
+    "settings": {
+      "header": "Set up in RateUp",
+      "info": "Choose the WhatsApp number, message, colour and pages in RateUp under Apps → Shopify → WhatsApp widget. This switch only shows or hides the button on your store."
+    }
+  }
+}

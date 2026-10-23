@@ -417,6 +417,11 @@ export enum ShopifyEvents {
   CHECKOUTS_CREATE = "CHECKOUTS_CREATE",
   CHECKOUTS_UPDATE = "CHECKOUTS_UPDATE",
   CHECKOUTS_DELETE = "CHECKOUTS_DELETE",
+  // Keep a shop that follows the Shopify store current (`storeSync.service.ts`).
+  PRODUCTS_CREATE = "PRODUCTS_CREATE",
+  PRODUCTS_UPDATE = "PRODUCTS_UPDATE",
+  PRODUCTS_DELETE = "PRODUCTS_DELETE",
+  INVENTORY_LEVELS_UPDATE = "INVENTORY_LEVELS_UPDATE",
   CUSTOMERS_REDACT = "CUSTOMERS_REDACT",
   SHOP_REDACT = "SHOP_REDACT",
   // VARIANTS_IN_STOCK
@@ -445,12 +450,15 @@ export enum IntegratedApps {
   waPayment = "waPayment",
   petpooja = "petpooja",
   zapier = "zapier",
+  make = "make",
+  pabbly = "pabbly",
   zoho = "zoho",
   getlead = "getlead",
   // Registered ahead of their providers (integrations plan, Phases 1-3). The
   // statuses endpoint lists them as not connected until an org connects one.
   woocommerce = "woocommerce",
   hubspot = "hubspot",
+  pipedrive = "pipedrive",
   googlebusiness = "googlebusiness",
 }
 
@@ -555,6 +563,8 @@ export enum FacebookEvent {
   MESSAGE_REACTION = "MESSAGE_REACTION",
   POSTBACK = "POSTBACK",
   QUICK_REPLY = "QUICK_REPLY",
+  /** The person opened the thread from an m.me link (a standalone `referral` event). */
+  REFERRAL = "REFERRAL",
   // Declared but never returned by getFacebookWebhookEvent — opt-ins are not currently
   // subscribed to on the Meta app. Add a branch there if that changes.
   OPT_IN = "OPT_IN",

@@ -20,7 +20,6 @@ vi.mock("./wa_templates.service.js", () => ({
   getUnregisteredTemplates: vi.fn(),
   registerTemplatesInDb: vi.fn(),
   saveTemplate: vi.fn(),
-  sendTemplateToPhone: vi.fn(),
   syncTemplates: vi.fn(),
   updateTemplate: vi.fn(),
   updateTemplateInDb: vi.fn(),
@@ -71,7 +70,6 @@ import {
   getUnregisteredTemplates,
   registerTemplatesInDb,
   saveTemplate,
-  sendTemplateToPhone,
   syncTemplates,
   updateTemplate,
   updateTemplateInDb,
@@ -91,13 +89,11 @@ import { TemplateType } from "../../../../generated/prisma/client.js";
 import {
   createTemplateHandler,
   deleteTemplateHandler,
-  getMessageStatusByIdHandler,
   getTemplateByIdHandler,
   getTemplatesHandler,
   getUnregisteredTemplatesHandler,
   registerTemplatesInDbHandler,
   saveTemplateAsDraftHandler,
-  sendTemplatesToContactsHandler,
   sendTemplateToUserCore,
   sendTemplateToUserHandler,
   syncTemplatesHandler,
@@ -133,7 +129,6 @@ const m = {
   saveTemplate: saveTemplate as unknown as Mock,
   sendMessage: sendMessage as unknown as Mock,
   sendPaymentInitTemplate: sendPaymentInitTemplate as unknown as Mock,
-  sendTemplateToPhone: sendTemplateToPhone as unknown as Mock,
   syncTemplates: syncTemplates as unknown as Mock,
   updateTemplate: updateTemplate as unknown as Mock,
   updateTemplateInDb: updateTemplateInDb as unknown as Mock,
@@ -211,7 +206,6 @@ beforeEach(() => {
   m.getFlowId.mockReturnValue(undefined);
   m.createTemplateMessage.mockReturnValue({ type: "template" });
   m.sendMessage.mockResolvedValue({ id: "msg-1" });
-  m.sendTemplateToPhone.mockResolvedValue(undefined);
   m.getFileUrlFromKey.mockImplementation((k: string) => `https://cdn/${k}`);
   m.getGraphApiErrorMessage.mockReturnValue("Meta says no");
   db.contact.findMany.mockResolvedValue([{ id: "c-1", phone: "15550001" }]);
@@ -763,144 +757,5 @@ describe("sendTemplateToUserHandler", () => {
     );
 
     expect(rep.code).toHaveBeenCalledWith(400);
-  });
-});
-
-describe("sendTemplatesToContactsHandler", () => {
-  test("sends the template to each contact named", async () => {
-    db.contact.findMany.mockResolvedValue([
-      { id: "c-1", phone: "15550001" },
-      { id: "c-2", phone: "15550002" },
-    ]);
-
-    await sendTemplatesToContactsHandler(
-      request({
-        params: { templateId: TEMPLATE_ID },
-        body: { contactIds: ["c-1", "c-2"], teamId: "team-1" },
-      }),
-      reply(),
-    );
-
-    expect(m.sendTemplateToPhone).toHaveBeenCalledTimes(2);
-    expect(m.sendTemplateToPhone.mock.calls[0][0].phone).toBe("15550001");
-  });
-
-  test("reports the contacts it could not reach, rather than failing outright", async () => {
-    m.sendTemplateToPhone.mockRejectedValue(new Error("graph is down"));
-    const rep = reply();
-
-    await sendTemplatesToContactsHandler(
-      request({ params: { templateId: TEMPLATE_ID }, body: { contactIds: ["c-1"] } }),
-      rep,
-    );
-
-    expect(rep.code).toHaveBeenCalledWith(200);
-    expect(sent(rep)).toMatchObject({ sent: 0, failed: ["c-1"] });
-  });
-
-  test("cannot send to contacts belonging to another org", async () => {
-    db.contact.findMany.mockResolvedValue([]);
-    const rep = reply();
-
-    await sendTemplatesToContactsHandler(
-      request({ params: { templateId: TEMPLATE_ID }, body: { contactIds: ["another-orgs-id"] } }),
-      rep,
-    );
-
-    expect(db.contact.findMany.mock.calls[0][0].where).toEqual({
-      id: { in: ["another-orgs-id"] },
-      orgId: ORG_A,
-    });
-    expect(m.sendTemplateToPhone).not.toHaveBeenCalled();
-    expect(sent(rep)).toMatchObject({ sent: 0, skipped: 1 });
-  });
-
-  test("reports how many contacts it reached", async () => {
-    const rep = reply();
-
-    await sendTemplatesToContactsHandler(
-      request({ params: { templateId: TEMPLATE_ID }, body: { contactIds: ["c-1"] } }),
-      rep,
-    );
-
-    expect(rep.code).toHaveBeenCalledWith(200);
-    expect(sent(rep)).toEqual({ sent: 1, failed: [], skipped: 0 });
-  });
-});
-
-describe("getMessageStatusByIdHandler", () => {
-  test("reports the furthest state the message reached", async () => {
-    db.waMessage.findFirst.mockResolvedValue({
-      messageId: "wamid-1",
-      stats: { sent: "t", delivered: "t", read: "t" },
-    });
-    const rep = reply();
-
-    await getMessageStatusByIdHandler(request({ params: { messageId: "wamid-1" } }), rep);
-
-    expect(sent(rep)).toEqual({ messageId: "wamid-1", status: "read" });
-  });
-
-  test("reports pending for a message with no state recorded yet", async () => {
-    db.waMessage.findFirst.mockResolvedValue({ messageId: "wamid-1", stats: {} });
-    const rep = reply();
-
-    await getMessageStatusByIdHandler(request({ params: { messageId: "wamid-1" } }), rep);
-
-    expect(sent(rep).status).toBe("pending");
-  });
-
-  test("includes the reason for a failed message", async () => {
-    db.waMessage.findFirst.mockResolvedValue({
-      messageId: "wamid-1",
-      stats: { failed: "t" },
-      errorMessage: "invalid number",
-    });
-    const rep = reply();
-
-    await getMessageStatusByIdHandler(request({ params: { messageId: "wamid-1" } }), rep);
-
-    expect(sent(rep)).toEqual({
-      messageId: "wamid-1",
-      status: "failed",
-      errorMessage: "invalid number",
-    });
-  });
-
-  test("answers 404 for a message id we hold nothing for", async () => {
-    const rep = reply();
-
-    await getMessageStatusByIdHandler(request({ params: { messageId: "nope" } }), rep);
-
-    expect(rep.code).toHaveBeenCalledWith(404);
-  });
-
-  test("scopes the lookup to the caller's org", async () => {
-    db.waMessage.findFirst.mockResolvedValue(null);
-    const rep = reply();
-
-    await getMessageStatusByIdHandler(
-      request({ user: { orgId: ORG_B }, params: { messageId: "wamid-1" } }),
-      rep,
-    );
-
-    expect(db.waMessage.findFirst.mock.calls[0][0].where).toEqual({
-      messageId: "wamid-1",
-      orgId: ORG_B,
-    });
-    expect(rep.code).toHaveBeenCalledWith(404);
-  });
-
-  test("reports the failure of a message that was delivered first", async () => {
-    db.waMessage.findFirst.mockResolvedValue({
-      messageId: "wamid-1",
-      stats: { delivered: "t", failed: "t" },
-      errorMessage: "later rejected",
-    });
-    const rep = reply();
-
-    await getMessageStatusByIdHandler(request({ params: { messageId: "wamid-1" } }), rep);
-
-    expect(sent(rep).status).toBe("failed");
   });
 });

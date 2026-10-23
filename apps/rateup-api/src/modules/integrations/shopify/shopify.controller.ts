@@ -1,6 +1,24 @@
-import { AttributionQuery, registerWebhookbyTopicInput, ShopParamInput } from "./shopify.schema.js";
+import {
+  AttributionQuery,
+  registerWebhookbyTopicInput,
+  ShopifyWidgetEvent,
+  ShopifyWidgetSettings,
+  ShopifyClaimBody,
+  ShopParamInput,
+} from "./shopify.schema.js";
+import {
+  getWidgetSettings,
+  recordWidgetEvent,
+  saveWidgetSettings,
+  ShopifyWidgetError,
+} from "./shopify.widget.js";
 import { getShopifyAttribution } from "./shopify.attribution.service.js";
 import { connectShopify, getShopifyAuthUrl, handleShopifyAuthCallback } from "./shopify.connect.js";
+import {
+  consumeShopifyClaimToken,
+  mintShopifyClaimToken,
+  verifyShopifyClaimToken,
+} from "./shopify.claim.js";
 import {
   claimUnownedShopifyIntegration,
   deleteShopifyIntegrationByShop,
@@ -40,7 +58,9 @@ export async function getShopifyAuthHandler(
     // Scopes are granted by Shopify managed installation (shopify.app.toml) and
     // reported through app/scopes_update, so a scope change no longer needs a
     // fresh OAuth round-trip; only a missing or disconnected integration does.
-    if (!shopifyInfo || !shopifyInfo.active) {
+    // An install no org has claimed goes through OAuth again too: the callback is what
+    // mints the claim token, and only the merchant can complete it.
+    if (!shopifyInfo || !shopifyInfo.active || !shopifyInfo.orgId) {
       await getShopifyAuthUrl(request.raw, reply.raw, request.query.shop);
     } else {
       reply.redirect(`${FRONTEND_URL}`);
@@ -62,20 +82,29 @@ export async function getShopifyAuthCallbackHandler(
   try {
     const { session } = await handleShopifyAuthCallback(request, reply);
     await connectShopify(session);
-    reply.redirect(`${FRONTEND_URL}/auth/shopify?shop=${session.shop}`);
+    // The claim token is what lets the merchant's RateUp login take this install;
+    // the shop name alone no longer does (shopify.claim.ts).
+    const claim = await mintShopifyClaimToken(session.shop);
+    const query = new URLSearchParams({ shop: session.shop, claim });
+    reply.redirect(`${FRONTEND_URL}/auth/shopify?${query}`);
   } catch (e) {
     console.error(e);
     reply.redirect(`${FRONTEND_URL}/auth/shopify/retry?shop=${request.query.shop}`);
   }
 }
 
+/** One answer for an unknown shop, a claimed shop and a bad token, so none is an oracle. */
+const NO_PENDING_INSTALL = { message: "No pending Shopify install for this store" };
+
 export async function updateShopifyIntegrationByShopHandler(
-  request: FastifyRequest<{ Params: ShopParamInput }>,
+  request: FastifyRequest<{ Params: ShopParamInput; Body: ShopifyClaimBody }>,
   reply: FastifyReply,
 ) {
   try {
     const shop = request.params.shop;
     const orgId = request.user.orgId;
+    const claim = verifyShopifyClaimToken(request.body.claimToken, shop);
+    if (!claim) return reply.code(404).send(NO_PENDING_INSTALL);
     const integration = await getShopifyInfo(orgId);
     if (integration) {
       if (integration.credential.session.shop === shop) return reply.code(200).send("success");
@@ -87,10 +116,13 @@ export async function updateShopifyIntegrationByShopHandler(
         .code(409)
         .send({ message: "Disconnect the current Shopify store before linking another" });
     }
+    if (!(await consumeShopifyClaimToken(claim))) return reply.code(404).send(NO_PENDING_INSTALL);
     const claimed = await claimUnownedShopifyIntegration(shop, orgId);
-    if (!claimed.count) {
-      return reply.code(409).send({ message: "This store is already linked to an organisation" });
-    }
+    if (!claimed.count) return reply.code(404).send(NO_PENDING_INSTALL);
+    const { onOnlineStoreConnected } = await import("../../commerce/shop/store.service.js");
+    await onOnlineStoreConnected(orgId, "SHOPIFY").catch((err) =>
+      console.error("Could not show Commerce after linking Shopify", err),
+    );
     reply.code(200).send({ message: "success" });
   } catch (e) {
     console.error(e);
@@ -227,6 +259,44 @@ export async function getAttributionHandler(
   reply.send({ data: await getShopifyAttribution(request.user.orgId, from, to) });
 }
 
+/** The storefront WhatsApp button's settings, with its theme editor link and 30-day taps. */
+export async function getWidgetHandler(request: FastifyRequest, reply: FastifyReply) {
+  try {
+    reply.send({ data: await getWidgetSettings(request.user.orgId) });
+  } catch (e) {
+    if (e instanceof ShopifyWidgetError) return reply.code(e.status).send({ message: e.message });
+    log.error({ err: e }, "Error reading the Shopify widget settings");
+    return reply.code(500).send({ error: errorMessage(e) });
+  }
+}
+
+export async function saveWidgetHandler(
+  request: FastifyRequest<{ Body: ShopifyWidgetSettings }>,
+  reply: FastifyReply,
+) {
+  try {
+    reply.send({ data: await saveWidgetSettings(request.user.orgId, request.body) });
+  } catch (e) {
+    if (e instanceof ShopifyWidgetError) return reply.code(e.status).send({ message: e.message });
+    log.error({ err: e }, "Error saving the Shopify widget settings");
+    return reply.code(500).send({ error: errorMessage(e) });
+  }
+}
+
+/** A tap on the storefront button. Answers without a body: `sendBeacon` ignores it. */
+export async function widgetEventHandler(
+  request: FastifyRequest<{ Body: ShopifyWidgetEvent }>,
+  reply: FastifyReply,
+) {
+  try {
+    const counted = await recordWidgetEvent(request.body);
+    return reply.code(counted ? 204 : 404).send();
+  } catch (e) {
+    log.error({ err: e }, "Error recording a Shopify widget event");
+    return reply.code(500).send();
+  }
+}
+
 export async function getProductsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     if (!shopify) throw new Error("Shopify integration is not configured");
@@ -274,7 +344,12 @@ export async function deleteIntegrationByShopHandler(
 ) {
   try {
     if (!shopify) throw new Error("Shopify integration is not configured");
+    const { orgId } = request.user;
     const integration = await getShopifyIntegrationByShop(request.params.shop);
+    // Only the org that holds the shop may remove it.
+    if (!integration || integration.orgId !== orgId) {
+      return reply.code(404).send({ message: "Not found" });
+    }
     try {
       const client = new shopify.clients.Graphql({
         session: await getActiveShopifySession(integration),
@@ -288,7 +363,7 @@ export async function deleteIntegrationByShopHandler(
     } catch {
       log.trace("App is not installed in shop. continue deleting...");
     }
-    const res = await deleteShopifyIntegrationByShop(request.params.shop);
+    const res = await deleteShopifyIntegrationByShop(request.params.shop, orgId);
     reply.code(200).send(res);
   } catch (e) {
     log.error({ err: e }, "error deleting integration");

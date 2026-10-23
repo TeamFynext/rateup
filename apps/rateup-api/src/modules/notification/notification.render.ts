@@ -113,6 +113,12 @@ const RENDERERS: Renderers = {
     path: "/dashboard/loyalty/feedback",
     action: "View feedback",
   }),
+  "commerce.order_needs_review": (d) => ({
+    title: `Order #${d.orderNumber} needs review`,
+    body: d.reason,
+    path: `/dashboard/commerce/orders/${d.orderId}`,
+    action: "Open order",
+  }),
   "whatsapp.template_status": (d) => ({
     title: `Template ${d.status.toLowerCase()}`,
     body: `Meta marked the WhatsApp template "${d.templateName}" as ${d.status.toLowerCase()}.`,
@@ -141,6 +147,12 @@ const RENDERERS: Renderers = {
   }),
   "billing.campaign_credit_limit": (d) => ({
     title: "Campaign credits used up",
+    body: d.message,
+    path: "/dashboard/settings/billing",
+    action: "Open billing",
+  }),
+  "billing.shop_order_limit": (d) => ({
+    title: d.reached === false ? "Monthly orders nearly used" : "Monthly orders reached",
     body: d.message,
     path: "/dashboard/settings/billing",
     action: "Open billing",

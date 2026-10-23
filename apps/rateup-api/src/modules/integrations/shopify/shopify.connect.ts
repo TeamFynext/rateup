@@ -10,12 +10,15 @@ import {
   updateShopifyIntegrationByOrgId,
 } from "./shopify.credential.js";
 import { saveShopifySession, toStoredSession } from "./shopify.session.js";
+import { syncWidgetMetafield } from "./shopify.widget.js";
+import { log } from "../../../utils/logger.js";
 
 /**
  * Shopify's connect flow starts in Shopify, not in RateUp: the merchant installs
  * the app, Shopify calls `/api/public/integrations/shopify/auth`, and the
  * callback saves the shop with no org. The merchant's RateUp login then claims
- * it (`PUT /integrations/shopify/session/:shop`). That is why Shopify keeps its
+ * it (`PUT /integrations/shopify/session/:shop`) with the single-use claim token
+ * the callback put in its redirect (`shopify.claim.ts`). That is why Shopify keeps its
  * own routes rather than the shared OAuth flow, which signs the org into the
  * state before the consent screen. Both URLs are registered with Shopify.
  */
@@ -63,9 +66,26 @@ export async function connectShopify(session: Session) {
   };
   const existing = await getShopifyIntegrationByShop(session.shop);
   if (existing?.orgId) {
-    await updateShopifyIntegrationByOrgId(existing.orgId, { credential, active: true });
+    // The WhatsApp button's settings outlive a reinstall; Shopify dropped the
+    // metafield that carried them to the storefront, so it is written again.
+    const widget = existing.credential?.widget;
+    await updateShopifyIntegrationByOrgId(existing.orgId, {
+      credential: { ...credential, ...(widget && { widget }) },
+      active: true,
+    });
     // The credential update above never touches the session; only this does.
-    await saveShopifySession(existing.id, session);
+    const stored = await saveShopifySession(existing.id, session);
+    if (widget) {
+      try {
+        await syncWidgetMetafield({
+          ...existing,
+          credential: { ...credential, session: stored, widget },
+        });
+      } catch (e) {
+        // The daily widget sync retries; a reconnect must not fail over this.
+        log.error({ err: e, shop: session.shop }, "Could not restore the Shopify widget metafield");
+      }
+    }
   } else {
     await createIntegration({ name: IntegratedApps.shopify, credential });
   }

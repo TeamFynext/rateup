@@ -599,10 +599,10 @@ describe("assignment lookups", () => {
   test("lists who a contact is assigned to, with their names", async () => {
     db.waInboxAssign.findMany.mockResolvedValue([{ assignedUserId: "user-9" }]);
 
-    await getAssignedUserForContact("contact-1");
+    await getAssignedUserForContact("contact-1", "org-1");
 
     expect(db.waInboxAssign.findMany).toHaveBeenCalledWith({
-      where: { contactId: "contact-1" },
+      where: { contactId: "contact-1", contact: { orgId: "org-1" } },
       include: { assignedUser: { select: { name: true } } },
     });
   });
@@ -865,6 +865,28 @@ describe("createInternalWaMessage - system notes", () => {
     expect(db.waMessage.create.mock.calls[0][0].data.messageBody.internal.summary).toBe(
       "Grace closed this chat",
     );
+  });
+
+  test("keeps a second event that reuses the client's id, under a fresh id", async () => {
+    // A bulk assign hands every contact the same optimistic id; the unique
+    // messageId index refuses the second write, which is a distinct event.
+    db.waMessage.create
+      .mockRejectedValueOnce(Object.assign(new Error("unique"), { code: "P2002" }))
+      .mockResolvedValueOnce({ id: "row-2" });
+
+    const row = await createInternalWaMessage({
+      contactId: "contact-2",
+      waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
+      trigerredByUser: "user-1",
+      messageId: "client-id-1",
+    });
+
+    expect(row).toEqual({ id: "row-2" });
+    expect(db.waMessage.create).toHaveBeenCalledTimes(2);
+    expect(db.waMessage.create.mock.calls[0][0].data.messageId).toBe("client-id-1");
+    const retried = db.waMessage.create.mock.calls[1][0].data.messageId;
+    expect(retried).not.toBe("client-id-1");
+    expect(retried).toMatch(/^[0-9a-f-]{36}$/);
   });
 
   test("files the note against the contact's latest ticket", async () => {

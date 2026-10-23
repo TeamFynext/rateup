@@ -9,13 +9,15 @@ vi.mock("../../utils/logger.js", () => ({
 }));
 
 vi.mock("./email.service.js", () => ({
+  isOrgMemberEmail: vi.fn(),
   sendEmailService: vi.fn(),
   storeOtp: vi.fn(),
   validateOtp: vi.fn(),
 }));
 
 import { log } from "../../utils/logger.js";
-import { sendEmailService, storeOtp, validateOtp } from "./email.service.js";
+import { isOrgMemberEmail, sendEmailService, storeOtp, validateOtp } from "./email.service.js";
+import { checkSession } from "../../utils/checkSession.js";
 import { sendEmailHandler, sendOTPEmailHandler, validateOTPHandler } from "./email.controller.js";
 import { emailPublicRoutes } from "./email.public.route.js";
 import { GenerateOtpSchema, sendEmailSchema, validateOtpSchema } from "./email.schema.js";
@@ -26,6 +28,7 @@ const service = {
   send: sendEmailService as unknown as Mock,
   store: storeOtp as unknown as Mock,
   validate: validateOtp as unknown as Mock,
+  isMember: isOrgMemberEmail as unknown as Mock,
 };
 
 function reply() {
@@ -43,6 +46,7 @@ beforeEach(() => {
   service.send.mockResolvedValue(undefined);
   service.store.mockResolvedValue(undefined);
   service.validate.mockResolvedValue(true);
+  service.isMember.mockResolvedValue(true);
 });
 
 // ===========================================================================
@@ -61,7 +65,7 @@ describe("sendEmailHandler", () => {
   test("answers 200 once the send resolves", async () => {
     const rep = reply();
 
-    await sendEmailHandler({ body } as never, rep);
+    await sendEmailHandler({ body, user: { orgId: "org-1" } } as never, rep);
 
     expect(answer(rep).code).toBe(200);
   });
@@ -71,7 +75,7 @@ describe("sendEmailHandler", () => {
   test("sends the service's empty result as the response body", async () => {
     const rep = reply();
 
-    await sendEmailHandler({ body } as never, rep);
+    await sendEmailHandler({ body, user: { orgId: "org-1" } } as never, rep);
 
     expect(answer(rep).body).toBeUndefined();
   });
@@ -79,32 +83,37 @@ describe("sendEmailHandler", () => {
   test("prints nothing to stdout", async () => {
     const spy = vi.spyOn(console, "log").mockImplementation(() => {});
 
-    await sendEmailHandler({ body } as never, reply());
+    await sendEmailHandler({ body, user: { orgId: "org-1" } } as never, reply());
 
     expect(spy).not.toHaveBeenCalled();
     spy.mockRestore();
   });
 
   test("hands the request body to the service untouched", async () => {
-    await sendEmailHandler({ body } as never, reply());
+    await sendEmailHandler({ body, user: { orgId: "org-1" } } as never, reply());
 
     expect(service.send).toHaveBeenCalledWith(body);
   });
 
-  test("delivers to any address the caller names", async () => {
+  test("refuses an address that is not a member of the caller's org", async () => {
+    service.isMember.mockResolvedValueOnce(false);
     const rep = reply();
 
-    await sendEmailHandler({ body: { ...body, toEmail: "victim@elsewhere.test" } } as never, rep);
+    await sendEmailHandler(
+      { body: { ...body, toEmail: "victim@elsewhere.test" }, user: { orgId: "org-1" } } as never,
+      rep,
+    );
 
-    expect(service.send.mock.calls[0][0].toEmail).toBe("victim@elsewhere.test");
-    expect(answer(rep).code).toBe(200);
+    expect(service.isMember).toHaveBeenCalledWith("org-1", "victim@elsewhere.test");
+    expect(service.send).not.toHaveBeenCalled();
+    expect(answer(rep).code).toBe(403);
   });
 
   test("logs the failure and answers 500", async () => {
     service.send.mockRejectedValueOnce(new Error("transport down"));
     const rep = reply();
 
-    await sendEmailHandler({ body } as never, rep);
+    await sendEmailHandler({ body, user: { orgId: "org-1" } } as never, rep);
 
     expect(answer(rep).code).toBe(500);
     expect(log.error).toHaveBeenCalled();
@@ -116,7 +125,7 @@ describe("sendEmailHandler", () => {
     );
     const rep = reply();
 
-    await sendEmailHandler({ body } as never, rep);
+    await sendEmailHandler({ body, user: { orgId: "org-1" } } as never, rep);
 
     expect(answer(rep).body).toEqual({ error: "Something Went Wrong! Try again." });
     expect(JSON.stringify(answer(rep).body)).not.toContain("prisma");
@@ -126,7 +135,7 @@ describe("sendEmailHandler", () => {
     service.send.mockRejectedValueOnce({});
     const rep = reply();
 
-    await sendEmailHandler({ body } as never, rep);
+    await sendEmailHandler({ body, user: { orgId: "org-1" } } as never, rep);
 
     expect(answer(rep).body).toEqual({ error: "Something Went Wrong! Try again." });
   });
@@ -226,14 +235,19 @@ describe("sendOTPEmailHandler", () => {
     expect(req.session.getUserId).not.toHaveBeenCalled();
   });
 
-  test("stores a code even when the purpose renders no code", async () => {
+  test("always renders the OTP template, whatever purpose the caller names", async () => {
     const rep = reply();
-    const body = { ...otpBody(), purpose: "GeneralTemplate" };
+    const body = {
+      ...otpBody(),
+      purpose: "GeneralTemplate",
+      data: { surveyName: "s", title: "Verify your bank", buttonLink: "https://phish.example" },
+    };
 
     await sendOTPEmailHandler({ body } as never, rep);
 
     expect(service.store).toHaveBeenCalledOnce();
-    expect(service.send.mock.calls[0][0].purpose).toBe("GeneralTemplate");
+    expect(service.send.mock.calls[0][0].purpose).toBe("SurveyEmailOTPQuestion");
+    expect(service.send.mock.calls[0][1]).not.toHaveProperty("buttonLink");
     expect(answer(rep).code).toBe(200);
   });
 
@@ -368,19 +382,18 @@ describe("emailPublicRoutes", () => {
     expect(srv.register).not.toHaveBeenCalled();
   });
 
-  test("rate limits every route, and still authenticates none of them", async () => {
+  test("send-email needs a session; the respondent OTP routes stay public", async () => {
     const { srv, posts } = server();
 
     await emailPublicRoutes(srv);
 
-    // The tree declares itself public; no route adds authentication of its own.
-    expect(srv.addHook).toHaveBeenCalledWith("onRoute", expect.any(Function));
-    for (const p of posts) {
-      expect(p.opts.preHandler).toBeTypeOf("function");
-      expect(p.opts.onRequest).toBeUndefined();
-      expect(p.opts.config).toBeUndefined();
-      expect(Object.keys(p.opts).sort()).toEqual(["preHandler", "schema"]);
-    }
+    const [send, otpSend, otpValidate] = posts;
+    expect(send.opts.config).toEqual({ access: "session" });
+    expect(send.opts.preHandler[0]).toBe(checkSession);
+    expect(send.opts.preHandler).toHaveLength(3);
+    expect(otpSend.opts.config).toBeUndefined();
+    expect(otpSend.opts.preHandler).toHaveLength(2);
+    expect(otpValidate.opts.preHandler).toBeTypeOf("function");
   });
 
   test("validates only the body, and never the reply", async () => {

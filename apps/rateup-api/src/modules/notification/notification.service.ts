@@ -127,6 +127,7 @@ export async function createNotification(input: {
 const LIMIT_EVENT = {
   activeContacts: "billing.active_contact_limit",
   campaignCredits: "billing.campaign_credit_limit",
+  shopOrders: "billing.shop_order_limit",
 } as const;
 
 const LIMIT_MESSAGE: Record<MeterLimit, { upgrade: string; contract: string }> = {
@@ -146,7 +147,35 @@ const LIMIT_MESSAGE: Record<MeterLimit, { upgrade: string; contract: string }> =
       "You've used the campaign credits set on your agreement, so campaigns are paused. Talk " +
       "to us to raise it.",
   },
+  shopOrders: {
+    upgrade:
+      "Your shop has taken this month's orders, so customers are asked to message you to " +
+      "order. Upgrade to keep taking orders online.",
+    contract:
+      "Your shop has taken the orders set on your agreement this month, so customers are " +
+      "asked to message you to order. Talk to us to raise it.",
+  },
 };
+
+/** Whether the org can lift a limit by buying a bigger tier: Free can, a contract cannot. */
+async function canUpgrade(orgId: string): Promise<boolean> {
+  const subscription = await prisma.subscription.findUnique({
+    where: { orgId },
+    select: {
+      basePlan: {
+        select: {
+          name: true,
+          paymentPlanId: true,
+          monthlyPaymentPlanId: true,
+          yearlyPaymentPlanId: true,
+          stripeId: true,
+        },
+      },
+    },
+  });
+  const plan = subscription?.basePlan ?? null;
+  return isGatewayBilledPlan(plan) || plan?.name === "FREE PLAN";
+}
 
 /**
  * Tells everyone who can act on it that an allowance is spent: an in-app/push notification
@@ -156,25 +185,9 @@ const LIMIT_MESSAGE: Record<MeterLimit, { upgrade: string; contract: string }> =
  */
 export async function notifyLimitReached(orgId: string, limit: MeterLimit) {
   try {
-    const subscription = await prisma.subscription.findUnique({
-      where: { orgId },
-      select: {
-        basePlan: {
-          select: {
-            paymentPlanId: true,
-            monthlyPaymentPlanId: true,
-            yearlyPaymentPlanId: true,
-            stripeId: true,
-          },
-        },
-      },
-    });
-
     // A sales-led account has no tier above it to buy, so "upgrade" would be a dead end.
     const copy = LIMIT_MESSAGE[limit];
-    const message = isGatewayBilledPlan(subscription?.basePlan ?? null)
-      ? copy.upgrade
-      : copy.contract;
+    const message = (await canUpgrade(orgId)) ? copy.upgrade : copy.contract;
 
     await notify({
       event: LIMIT_EVENT[limit],
@@ -185,6 +198,26 @@ export async function notifyLimitReached(orgId: string, limit: MeterLimit) {
     await sendUsageLimitMailAlert(orgId, limit);
   } catch (error) {
     log.error({ err: error, orgId, limit }, "Failed to send the limit-reached notification");
+  }
+}
+
+/** The in-app warning that most of the month's orders are taken. No email: nothing has stopped. */
+export async function notifyOrderLimitNearing(orgId: string, used: number, max: number) {
+  try {
+    const next = (await canUpgrade(orgId))
+      ? "Upgrade to keep taking orders online after that."
+      : "Talk to us to raise it.";
+    await notify({
+      event: "billing.shop_order_limit",
+      orgId,
+      audience: { kind: "permitted" },
+      data: {
+        message: `Your shop has taken ${used} of its ${max} orders this month. ${next}`,
+        reached: false,
+      },
+    });
+  } catch (error) {
+    log.error({ err: error, orgId }, "Failed to send the order-limit warning");
   }
 }
 

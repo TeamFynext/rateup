@@ -47,7 +47,7 @@ vi.mock("../../metaAgent/metaAgent.threadOwner.js", async (importOriginal) => ({
   setMetaAgentThreadOwner,
 }));
 
-const { whatsappEventHandler } = await import("./wasurvey.controller.js");
+const { processWhatsappWebhook } = await import("./wasurvey.webhook.js");
 const { isMetaAiOriginated } = await import("./wasurvey.utils.js");
 
 const CHANNEL = "15551323034";
@@ -79,11 +79,6 @@ function standbyWebhook(standby: Record<string, unknown>) {
   };
 }
 
-const reply = () => {
-  const r = { code: vi.fn(() => r), send: vi.fn(() => r) };
-  return r;
-};
-
 beforeEach(() => {
   vi.clearAllMocks();
   getWaMessageByMessageId.mockResolvedValue(null);
@@ -110,8 +105,8 @@ describe("standby webhooks (Meta Business Agent threads)", () => {
       ],
     });
 
-    // @ts-expect-error — a webhook request is only ever read for `body` here.
-    await whatsappEventHandler(webhook, reply());
+    // @ts-expect-error — a hand-built body, looser than the WaMessageBody tuple types.
+    await processWhatsappWebhook(webhook.body);
 
     expect(handleWaMessages).toHaveBeenCalledTimes(1);
     const [type, , from, orgId, , , , messageId] = handleWaMessages.mock.calls[0];
@@ -149,8 +144,8 @@ describe("standby webhooks (Meta Business Agent threads)", () => {
       ],
     });
 
-    // @ts-expect-error — a webhook request is only ever read for `body` here.
-    await whatsappEventHandler(webhook, reply());
+    // @ts-expect-error — a hand-built body, looser than the WaMessageBody tuple types.
+    await processWhatsappWebhook(webhook.body);
 
     expect(handleStaticFlowReply).toHaveBeenCalledWith("org-1", expect.anything(), {
       agentHeld: true,
@@ -176,7 +171,7 @@ describe("standby webhooks (Meta Business Agent threads)", () => {
     });
 
     // @ts-expect-error — see above.
-    await whatsappEventHandler(webhook, reply());
+    await processWhatsappWebhook(webhook.body);
 
     expect(handleWaMessages).toHaveBeenCalledTimes(1);
     const args = handleWaMessages.mock.calls[0];
@@ -214,10 +209,105 @@ describe("standby webhooks (Meta Business Agent threads)", () => {
     });
 
     // @ts-expect-error — see above.
-    await whatsappEventHandler(webhook, reply());
+    await processWhatsappWebhook(webhook.body);
 
     expect(handleWaMessages).not.toHaveBeenCalled();
     expect(recordMetaAiTokenUsage).not.toHaveBeenCalled();
+  });
+
+  test("does not count an echo a racing delivery stored first", async () => {
+    // Both copies passed the read; the unique index let the other one store.
+    handleWaMessages.mockResolvedValue(null);
+    const webhook = standbyWebhook({
+      message_echoes: [
+        {
+          id: "wamid.ai-reply-1",
+          timestamp: "1790056886",
+          message: { to: CUSTOMER, type: "text", biz_opaque_callback_data: BIZAI, text: {} },
+        },
+      ],
+    });
+
+    // @ts-expect-error — see above.
+    await processWhatsappWebhook(webhook.body);
+
+    expect(handleWaMessages).toHaveBeenCalledTimes(1);
+    expect(recordMetaAiTokenUsage).not.toHaveBeenCalled();
+  });
+
+  test("does not save a flow reply twice when a racing delivery stored it first", async () => {
+    handleWaMessages.mockResolvedValue(null);
+    const webhook = standbyWebhook({
+      contacts: [{ profile: { name: "Alen Joy" }, wa_id: CUSTOMER }],
+      messages: [
+        {
+          from: CUSTOMER,
+          id: "wamid.flow-reply",
+          timestamp: "1790056876",
+          context: { id: "wamid.agent-flow" },
+          interactive: {
+            type: "nfm_reply",
+            nfm_reply: { name: "flow", body: "Sent", response_json: '{"flow_token":"meta"}' },
+          },
+          type: "interactive",
+        },
+      ],
+    });
+
+    // @ts-expect-error — see above.
+    await processWhatsappWebhook(webhook.body);
+
+    expect(handleStaticFlowReply).not.toHaveBeenCalled();
+  });
+
+  test("runs no handlers for an inbound message a racing delivery stored first", async () => {
+    const inbound = () => ({
+      body: {
+        object: "whatsapp_business_account",
+        entry: [
+          {
+            id: "238205772710930",
+            changes: [
+              {
+                field: "messages",
+                value: {
+                  messaging_product: "whatsapp",
+                  metadata: { display_phone_number: CHANNEL, phone_number_id: PHONE_ID },
+                  contacts: [{ profile: { name: "Alen Joy" }, wa_id: CUSTOMER }],
+                  messages: [
+                    {
+                      from: CUSTOMER,
+                      id: "wamid.inbound-2",
+                      timestamp: "1790056876",
+                      text: { body: "hello" },
+                      type: "text",
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+      },
+    });
+
+    // A first delivery reaches the handlers… (the chain past the signup bonus is
+    // not mocked here, and processWhatsappWebhook rethrows a handler's failure so
+    // the consumer can retry it — only what ran before that matters.)
+    // @ts-expect-error — see above.
+    await processWhatsappWebhook(inbound().body).catch(() => {});
+    expect(releasePendingSignupBonusByPhone).toHaveBeenCalledTimes(1);
+
+    // …a copy the unique index turned away does not.
+    vi.clearAllMocks();
+    getWaSettingsByPhoneId.mockResolvedValue({ orgId: "org-1", phoneId: PHONE_ID });
+    getWaMessageByMessageId.mockResolvedValue(null);
+    handleWaMessages.mockResolvedValue(null);
+    // @ts-expect-error — see above.
+    await processWhatsappWebhook(inbound().body);
+
+    expect(handleWaMessages).toHaveBeenCalledTimes(1);
+    expect(releasePendingSignupBonusByPhone).not.toHaveBeenCalled();
   });
 
   test("applies delivery statuses for the agent's reply", async () => {
@@ -235,7 +325,7 @@ describe("standby webhooks (Meta Business Agent threads)", () => {
     });
 
     // @ts-expect-error — see above.
-    await whatsappEventHandler(webhook, reply());
+    await processWhatsappWebhook(webhook.body);
 
     expect(handleMessageStatusUpdate).toHaveBeenCalledWith(
       "delivered",

@@ -18,6 +18,7 @@ import {
 } from "./approval.schema.js";
 import { log } from "../../../utils/logger.js";
 import { getLoyaltyProgramByOrg } from "../program/program.service.js";
+import { LoyaltyError } from "../loyalty.errors.js";
 
 /**
  * Create a new approval request
@@ -33,9 +34,19 @@ export async function createApprovalRequestHandler(
       return reply.code(404).send({ error: "Loyalty program not found" });
     }
 
-    const result = await createApprovalRequest(request.body);
+    // Who asked is the signed-in user, not whatever the body claims.
+    const result = await createApprovalRequest(
+      {
+        ...request.body,
+        requestedBy: request.user.userId ?? null,
+      },
+      program.id,
+    );
     reply.code(201).send(result);
   } catch (e) {
+    if (e instanceof LoyaltyError && e.code === "MEMBER_NOT_FOUND") {
+      return reply.code(404).send({ error: e.message });
+    }
     log.error({ err: e }, "Error creating approval request:");
     reply.code(500).send({ error: errorMessage(e) });
   }
@@ -108,7 +119,8 @@ export async function approveApprovalRequestHandler(
 
     const data: ApproveRequestInput = {
       approvalId: request.params.approvalId,
-      reviewerId: request.body.reviewerId,
+      // The reviewer is the signed-in user; the body value is only a fallback.
+      reviewerId: request.user.userId ?? request.body.reviewerId,
       reviewerName: request.body.reviewerName,
       notes: request.body.notes,
     };
@@ -140,7 +152,8 @@ export async function rejectApprovalRequestHandler(
 
     const data: RejectRequestInput = {
       approvalId: request.params.approvalId,
-      reviewerId: request.body.reviewerId,
+      // The reviewer is the signed-in user; the body value is only a fallback.
+      reviewerId: request.user.userId ?? request.body.reviewerId,
       reviewerName: request.body.reviewerName,
       reason: request.body.reason,
     };
@@ -172,7 +185,8 @@ export async function cancelApprovalRequestHandler(
 
     const data: CancelRequestInput = {
       approvalId: request.params.approvalId,
-      reviewerId: request.body.reviewerId,
+      // The reviewer is the signed-in user; the body value is only a fallback.
+      reviewerId: request.user.userId ?? request.body.reviewerId,
       reviewerName: request.body.reviewerName,
       reason: request.body.reason,
     };

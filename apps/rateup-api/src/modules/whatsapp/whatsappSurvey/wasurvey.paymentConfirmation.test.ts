@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const db = {
+  whatsappSettings: { findUnique: vi.fn() },
   waCatalogOrder: { findFirst: vi.fn(), update: vi.fn() },
   waTemplate: { findFirst: vi.fn() },
 };
@@ -22,6 +23,7 @@ const { handlePaymentConfirmation } = await import("./wasurvey.utils.js");
 beforeEach(() => {
   vi.clearAllMocks();
   db.waTemplate.findFirst.mockResolvedValue(null);
+  db.whatsappSettings.findUnique.mockResolvedValue({ orgId: "org-1" });
 });
 
 describe("handlePaymentConfirmation", () => {
@@ -30,7 +32,9 @@ describe("handlePaymentConfirmation", () => {
   test("sends nothing for a payment that matches no order", async () => {
     db.waCatalogOrder.findFirst.mockResolvedValue(null);
 
-    await expect(handlePaymentConfirmation("919188346187", "ref-1")).resolves.toBeUndefined();
+    await expect(
+      handlePaymentConfirmation("15555550100", "ref-1", "pn-1"),
+    ).resolves.toBeUndefined();
 
     expect(sendMessage).not.toHaveBeenCalled();
     expect(db.waTemplate.findFirst).not.toHaveBeenCalled();
@@ -47,7 +51,7 @@ describe("handlePaymentConfirmation", () => {
       data: { components: [{ type: "BODY", text: "Thanks, your order is confirmed." }] },
     });
 
-    await handlePaymentConfirmation("919188346187", "ref-1");
+    await handlePaymentConfirmation("15555550100", "ref-1", "pn-1");
 
     expect(db.waCatalogOrder.update).toHaveBeenCalledWith({
       where: { id: "order-1" },
@@ -59,5 +63,21 @@ describe("handlePaymentConfirmation", () => {
     const [orgId, message] = sendMessage.mock.calls[0];
     expect(orgId).toBe("org-1");
     expect(message.interactive.body.text).toBe("Thanks, your order is confirmed.");
+  });
+
+  test("only an order of the org that received the payment can be paid", async () => {
+    db.waCatalogOrder.findFirst.mockResolvedValue(null);
+    await handlePaymentConfirmation("15555550100", "ref-1", "pn-1");
+    expect(db.waCatalogOrder.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { transactionId: "ref-1", catalog: { orgId: "org-1" } } }),
+    );
+    expect(db.waCatalogOrder.update).not.toHaveBeenCalled();
+  });
+
+  test("ignores a payment to a number no org owns", async () => {
+    db.whatsappSettings.findUnique.mockResolvedValue(null);
+    await handlePaymentConfirmation("15555550100", "ref-1", "pn-unknown");
+    expect(db.waCatalogOrder.findFirst).not.toHaveBeenCalled();
+    expect(db.waCatalogOrder.update).not.toHaveBeenCalled();
   });
 });

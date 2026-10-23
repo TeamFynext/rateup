@@ -16,7 +16,7 @@ vi.mock("../modules/org/orgSuspension.js", async (importOriginal) => {
 });
 vi.mock("../authz/actor.js", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../authz/actor.js")>();
-  return { ...actual, loadActor: vi.fn() };
+  return { ...actual, loadActor: vi.fn(), isUserBlocked: vi.fn(async () => false) };
 });
 
 import Session from "supertokens-node/recipe/session/index.js";
@@ -24,7 +24,7 @@ import { log } from "./logger.js";
 import { auditLogHook } from "./auditLog.js";
 import { getOrgIdAndRole } from "../modules/user/user.service.js";
 import { checkSession } from "./checkSession.js";
-import { buildActor, loadActor } from "../authz/actor.js";
+import { buildActor, isUserBlocked, loadActor } from "../authz/actor.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
@@ -257,6 +257,23 @@ describe("checkSession - after authorize", () => {
     await checkSession(request, makeReply());
 
     expect(getSessionMock).not.toHaveBeenCalled();
+    expect(auditLogHookMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("checkSession - a paused or removed account", () => {
+  test("is refused with 401, its session revoked, before anything else runs", async () => {
+    const revokeSession = vi.fn();
+    getSessionMock.mockResolvedValue({ ...makeSession(), revokeSession });
+    (isUserBlocked as unknown as Mock).mockResolvedValueOnce(true);
+    const request: any = { headers: {} };
+    const reply: any = { code: vi.fn(() => reply), send: vi.fn(() => reply) };
+
+    await checkSession(request, reply);
+
+    expect(reply.code).toHaveBeenCalledWith(401);
+    expect(revokeSession).toHaveBeenCalled();
+    expect(request.user).toBeUndefined();
     expect(auditLogHookMock).not.toHaveBeenCalled();
   });
 });

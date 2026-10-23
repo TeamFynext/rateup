@@ -8,6 +8,9 @@ import {
 } from "./tasks/migrateActiveContactPricing.js";
 import { seedAddons } from "./tasks/seedAddons.js";
 import { seedPlans } from "./tasks/seedPlans.js";
+import { enableFreeCommerce } from "./tasks/enableFreeCommerce.js";
+import { capFreeOrders } from "./tasks/capFreeOrders.js";
+import { backfillOrgModules } from "./tasks/backfillOrgModules.js";
 
 export interface TaskDefinition {
   id: string;
@@ -126,6 +129,37 @@ export const MAINTENANCE_TASKS: TaskDefinition[] = [
       "it would create.",
     destructive: false,
     run: migrateShopifyAbandonedCheckouts,
+  },
+  {
+    id: "backfill-org-modules",
+    title: "Choose each org's visible features",
+    description:
+      "For every org that has never chosen its features, keeps Loyalty, Commerce, Web " +
+      "Forms, QR & Links and Meta AI Agent visible only where the org already has data in " +
+      "them, and hides the rest from its navigation. Nothing is disabled — an admin turns a " +
+      "feature back on from Features in the menu. Orgs that have already chosen are skipped, so " +
+      "it is safe to re-run.",
+    destructive: false,
+    run: backfillOrgModules,
+  },
+  {
+    id: "enable-free-commerce",
+    title: "Open Commerce on the Free plan",
+    description:
+      "Turns the Commerce (shop) feature on for the Free plan and for every org already on it. " +
+      "New Free orgs get it automatically; this covers the ones created before. Safe to re-run.",
+    destructive: false,
+    run: enableFreeCommerce,
+  },
+  {
+    id: "cap-free-orders",
+    title: "Cap Free shops at 50 orders a month",
+    description:
+      "Writes the Free plan's monthly order cap onto the Free plan and every org already on " +
+      "it. New Free orgs get it automatically; until this runs, older Free orgs take orders " +
+      "without a cap. Leaves a cap staff already set alone. Safe to re-run.",
+    destructive: false,
+    run: capFreeOrders,
   },
 ];
 

@@ -2,7 +2,9 @@ import crypto from "node:crypto";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { getWaSettings, updateWaSettings } from "../settings/wa_settings.service.js";
 import { setBusinessPublicKey } from "./wa_encryption.service.js";
+import { openFlowKeys } from "./flowKeysAtRest.js";
 import { log } from "../../../utils/logger.js";
+import { isNonProductionRuntime } from "../../../utils/meta.js";
 import { getFlowFromDb, handleDecryptedFlowRequest } from "../flows/flow.service.js";
 import { FlowEndpointException, undecryptableRequest } from "../flows/flow.errors.js";
 import { WhatsappSettings } from "../../../../generated/prisma/client.js";
@@ -141,7 +143,9 @@ export async function handleFlowResponse(
     throw new Error("No WhatsApp settings found for orgId " + orgId);
   }
   const { encryption: storedEncryption, phoneId, accessToken } = waSettings;
-  let encryption = storedEncryption;
+  // Sealed rows and legacy plain rows both read here (WEBH-8). A sealed value that does not
+  // decrypt throws: the request fails rather than silently re-keying the number.
+  let encryption = openFlowKeys(storedEncryption);
   if (!encryption) {
     log.warn("Encryption keys not found for org: %s", orgId);
 
@@ -268,7 +272,9 @@ export function isRequestSignatureValid(req: FastifyRequest): SignatureCheck {
 
   // timingSafeEqual throws on a length mismatch, so check that first.
   if (expected.length !== received.length || !crypto.timingSafeEqual(expected, received)) {
-    if (process.env.FLOW_SIGNATURE_DEBUG === "1") {
+    // Development only: it logs the expected signature, which is an HMAC oracle for
+    // the raw body, so the flag does nothing in production.
+    if (process.env.FLOW_SIGNATURE_DEBUG === "1" && isNonProductionRuntime()) {
       // Everything needed to reproduce the digest offline and find which secret
       // Meta actually signed with. The body is the encrypted envelope, so this
       // leaks no answer data — but it is verbose, hence the explicit opt-in.

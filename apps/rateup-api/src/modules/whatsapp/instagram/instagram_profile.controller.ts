@@ -18,6 +18,10 @@ import {
   setInstagramIceBreakers,
   setInstagramPersistentMenu,
 } from "./instagram_messaging.service.js";
+import type {
+  InstagramIceBreakersBody,
+  InstagramPersistentMenuBody,
+} from "./instagram_profile.schema.js";
 
 interface InstagramProfileParams {
   /** MetaChannel id of an Instagram channel. */
@@ -147,10 +151,7 @@ export async function getInstagramProfileHandler(
 export async function setInstagramIceBreakersHandler(
   request: FastifyRequest<{
     Params: InstagramProfileParams;
-    Body: {
-      iceBreakers: Array<{ question: string; payload: string }>;
-      syncWithMeta?: boolean;
-    };
+    Body: InstagramIceBreakersBody;
   }>,
   reply: FastifyReply,
 ) {
@@ -231,18 +232,7 @@ export async function deleteInstagramIceBreakersHandler(
 export async function setInstagramPersistentMenuHandler(
   request: FastifyRequest<{
     Params: InstagramProfileParams;
-    Body: {
-      persistentMenu: Array<{
-        locale: string;
-        call_to_actions: Array<{
-          type: "postback" | "web_url";
-          title: string;
-          payload?: string;
-          url?: string;
-        }>;
-      }>;
-      syncWithMeta?: boolean;
-    };
+    Body: InstagramPersistentMenuBody;
   }>,
   reply: FastifyReply,
 ) {

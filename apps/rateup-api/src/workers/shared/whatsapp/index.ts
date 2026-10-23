@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc.js";
 import { log } from "../logger.js";
-import { publisher } from "../ws.publisher.js";
+import { publisher, WS_CHANNEL } from "../ws.publisher.js";
 import prisma from "../../../utils/prisma.js";
 import dbPool from "../../../utils/db.js";
 import { Prisma } from "../../../../generated/prisma/client.js";
@@ -30,12 +30,17 @@ import {
   normalizePricingCategory,
   normalizePricingModel,
 } from "../../../modules/whatsapp/metering/pricing.utils.js";
-import crypto from "node:crypto";
+import { aes_decrypt } from "../../../../utils/encryption/encryption.utils.js";
 import { Queue } from "bullmq";
 // Defined in its own dependency-free module so `queues/campaign.queue.ts` can
 // share the key without importing this one; re-exported here because the send
 // and drain paths read it from beside `enqueueCampaignMessages`.
 import { campaignSendJobId, campaignSendJobsKey } from "../campaignSendKeys.js";
+import {
+  emitWebhookEvents,
+  type WebhookEventInput,
+} from "../../../modules/webhook/webhook.events.js";
+import { messageStatusWebhookEvents } from "./statusWebhook.js";
 
 export { campaignSendJobsKey };
 
@@ -89,8 +94,9 @@ export async function getCampaignById(campaignId: string) {
           WHERE cds."campaignId" = c.id
         ) as "dripStages"
       FROM "Campaign" c 
-      LEFT JOIN "WaTemplate" wt ON wt.id = c."waTemplateId" 
       LEFT JOIN "Team" t ON t.id = c."teamId"
+      -- Only the campaign's own org's template: a foreign waTemplateId reads as none.
+      LEFT JOIN "WaTemplate" wt ON wt.id = c."waTemplateId" AND wt."orgId" = t."orgId"
       LEFT JOIN "WaFlow" wf ON wf."dbFlowId" = NULLIF(c."flowId",'')::uuid 
       WHERE c.id = ${campaignId}::uuid
     `;
@@ -122,22 +128,11 @@ export function getFlowIdFromTemplateComponents(
 }
 
 /**
- * Decrypt AES-256-CBC encrypted data using key and IV
- * @param encryptedData Hex-encoded encrypted string
- * @param encryptionKey Encryption key
- * @param iv Hex-encoded initialization vector
- * @returns Decrypted string
+ * Token decryption is the shared helper, which reads both the AES-256-GCM tokens written
+ * since the encryption upgrade (`gcm1:<ct>:<tag>`) and legacy CBC ones. Re-exported under
+ * the name this module always exported it as.
  */
-export function aes_decrypt(
-  encryptedData: string,
-  encryptionKey: crypto.CipherKey,
-  iv: string,
-): string {
-  const decipher = crypto.createDecipheriv("aes-256-cbc", encryptionKey, Buffer.from(iv, "hex"));
-  let decrypted = decipher.update(encryptedData, "hex", "utf8");
-  decrypted += decipher.final("utf8");
-  return decrypted;
-}
+export { aes_decrypt };
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
@@ -159,8 +154,6 @@ export interface EnqueueCampaignMessagesOptions {
    */
   campaignSendId: string;
   scheduledAt?: string | null;
-  /** Decrypted once for the whole batch by the caller. */
-  accessToken?: string;
   surveyTeamMapId?: string | null;
   connection?: any;
   /**
@@ -184,7 +177,6 @@ export async function enqueueCampaignMessages({
   campaignId,
   campaignSendId,
   scheduledAt,
-  accessToken,
   surveyTeamMapId,
   connection,
   dailySendLimit,
@@ -192,7 +184,6 @@ export async function enqueueCampaignMessages({
   if (!participants.length) {
     return;
   }
-  const campaignJobIds = [];
   // Calculate delay once if scheduledAt is provided
   const baseDelay = scheduledAt ? dayjs(scheduledAt).diff(dayjs(), "millisecond") : 0;
 
@@ -233,7 +224,8 @@ export async function enqueueCampaignMessages({
       orgId: participant.orgId,
       name: participant.name,
       customFields: participant.customFields,
-      accessToken,
+      // No access token: one copy per recipient sat in Redis for as long as the
+      // job did. The dispatcher resolves it by `phoneId` (`accessTokenCache.ts`).
       scheduledAt,
       campaignId,
       campaignSendId,
@@ -259,17 +251,22 @@ export async function enqueueCampaignMessages({
     },
   }));
 
+  // Keyed by send, not campaign, so "the queue has drained" is answerable per
+  // attempt — which is what closes a CampaignSend and schedules the next retry.
+  const jobsKey = campaignSendJobsKey(campaignSendId);
+
   // Add jobs in batches to prevent memory issues
   for (let i = 0; i < jobs.length; i += BATCH_SIZE) {
     const batch = jobs.slice(i, i + BATCH_SIZE);
-    await queue.addBulk(batch);
+    const batchIds = batch.map((job) => job.opts.jobId);
 
-    campaignJobIds.push(...batch.map((job) => job.opts.jobId));
-  }
-  if (campaignJobIds.length > 0) {
-    // Keyed by send, not campaign, so "the queue has drained" is answerable per
-    // attempt — which is what closes a CampaignSend and schedules the next retry.
-    await connection.sadd(campaignSendJobsKey(campaignSendId), ...campaignJobIds);
+    // Each chunk's ids go into the set *before* its jobs exist. This used to run
+    // once, after every chunk: an undelayed job could finish and SREM its id
+    // before the SADD put it there, so the set never emptied and the send never
+    // closed. If `addBulk` then throws, the ids it never created stay in the set;
+    // that is harmless, because the caller fails the send on the same error.
+    await connection.sadd(jobsKey, ...batchIds);
+    await queue.addBulk(batch);
   }
 
   log.info(
@@ -346,11 +343,14 @@ export async function fetchCampaignParticipants(
   JOIN "CampaignParticipant" cp ON cpds."participantId" = cp.id
   JOIN "Contact" c ON cp."contactId" = c.id
   JOIN "Campaign" camp ON cp."campaignId" = camp.id
-  JOIN "WaTemplate" wt ON wt.id = $1
+  -- Tenancy comes from the campaign, never from the contact: credentials, template and
+  -- recipients must all be the campaign org's (see the WHERE below).
+  JOIN "Team" ct ON ct.id = camp."teamId"
+  JOIN "WaTemplate" wt ON wt.id = $1 AND wt."orgId" = ct."orgId"
   JOIN LATERAL (
       SELECT *
       FROM "WhatsappSettings" was
-      WHERE was."orgId" = c."orgId"
+      WHERE was."orgId" = ct."orgId"
         AND (
           wt."whatsappSettingsPhoneId" IS NULL
           OR was."phoneId" = wt."whatsappSettingsPhoneId"
@@ -364,6 +364,7 @@ export async function fetchCampaignParticipants(
   LEFT JOIN "ContactCustomField" ccf ON ccf.id = ccfv."fieldId"
   WHERE cpds."dripStageId" = $2
   AND camp.id = $3
+  AND c."orgId" = ct."orgId"
 `;
 
     const params: any[] = [dripStage.waTemplateId, dripStageId, campaignId];
@@ -445,11 +446,14 @@ export async function fetchCampaignParticipants(
   FROM "CampaignParticipant" cp
   JOIN "Contact" c ON cp."contactId" = c.id
   JOIN "Campaign" camp ON cp."campaignId" = camp.id
-  JOIN "WaTemplate" wt ON camp."waTemplateId" = wt.id
+  -- Tenancy comes from the campaign, never from the contact: credentials, template and
+  -- recipients must all be the campaign org's (see the WHERE below).
+  JOIN "Team" ct ON ct.id = camp."teamId"
+  JOIN "WaTemplate" wt ON camp."waTemplateId" = wt.id AND wt."orgId" = ct."orgId"
   JOIN LATERAL (
     SELECT *
     FROM "WhatsappSettings" was
-    WHERE was."orgId" = c."orgId"
+    WHERE was."orgId" = ct."orgId"
       AND (
         wt."whatsappSettingsPhoneId" IS NULL
         OR was."phoneId" = wt."whatsappSettingsPhoneId"
@@ -462,6 +466,7 @@ export async function fetchCampaignParticipants(
   LEFT JOIN "ContactCustomFieldValue" ccfv ON ccfv."contactId" = c.id
   LEFT JOIN "ContactCustomField" ccf ON ccf.id = ccfv."fieldId"
     WHERE cp."campaignId" = $1
+      AND c."orgId" = ct."orgId"
 `;
 
   const params: any[] = [campaignId];
@@ -1013,6 +1018,20 @@ function isCampaignMessage(sourceMessage: string | null | undefined): boolean {
   return String(sourceMessage ?? "").toLowerCase() === "campaign";
 }
 
+/**
+ * Fan `message_status_update` payloads out to the API's sockets. Best-effort:
+ * the statuses are already committed, and failing the batch over a missed
+ * socket push would only get it redelivered.
+ */
+async function publishStatusUpdates(events: string[]): Promise<void> {
+  if (!events.length) return;
+  const results = await Promise.allSettled(
+    events.map((event) => publisher.publish(WS_CHANNEL, event)),
+  );
+  const failed = results.filter((r) => r.status === "rejected").length;
+  if (failed) log.warn(`Failed to publish ${failed}/${events.length} message status updates`);
+}
+
 export async function bulkUpdateStatuses(
   batch: {
     id: string;
@@ -1102,6 +1121,7 @@ export async function bulkUpdateStatuses(
             wm."sourceIdentifier",
             wm."sourceMessage",
             wm."meteredConversationId",
+            wm."messageBody"->'template'->>'name' AS "templateName",
             cp.id AS "participantId",
             cp."campaignId",
             cp.status AS "participantStatus",
@@ -1143,6 +1163,7 @@ export async function bulkUpdateStatuses(
       sourceIdentifier?: string;
       sourceMessage?: string | null;
       meteredConversationId?: string | null;
+      templateName?: string | null;
     }
   >();
   for (const row of messageData) {
@@ -1171,6 +1192,7 @@ export async function bulkUpdateStatuses(
         sourceIdentifier: row.sourceIdentifier,
         sourceMessage: row.sourceMessage,
         meteredConversationId: row.meteredConversationId,
+        templateName: row.templateName ?? null,
       });
     }
   }
@@ -1183,6 +1205,12 @@ export async function bulkUpdateStatuses(
   const pricingUpdates: any[] = [];
   const dripCampaignParticipantUpdates: any[] = [];
   const dripCampaignStatsUpdates: any[] = [];
+  // `message.status` for the org webhook, queued once the writes below have landed.
+  const webhookEvents: WebhookEventInput[] = [];
+  // `message_status_update` payloads for the inbox, held for the same reason: a
+  // socket told of a status the transaction then rolled back would show the
+  // agent something the database never kept.
+  const wsEvents: string[] = [];
 
   const processedOffsets: string[] = [];
 
@@ -1205,6 +1233,9 @@ export async function bulkUpdateStatuses(
     ) {
       continue;
     }
+
+    // What Meta actually reported, before the backfill below infers the rest.
+    const reportedStatuses = new Set(Object.keys(agg.redisData));
 
     // Backfill logical prerequisite statuses
     const { redisData } = agg;
@@ -1237,8 +1268,7 @@ export async function bulkUpdateStatuses(
 
     const { stats, newStatus } = processStatusUpdates(msg.stats, redisData);
     if (messageInfo.contactOrgId) {
-      publisher.publish(
-        "ws:messages",
+      wsEvents.push(
         JSON.stringify({
           orgId: messageInfo.contactOrgId,
           data: {
@@ -1260,6 +1290,22 @@ export async function bulkUpdateStatuses(
     // alone left real failures stored with a null reason. Fall through the
     // fields Meta actually populates before giving up.
     const errorMsg = lastErr?.[0] ? metaErrorMessage(lastErr[0]) : null;
+
+    webhookEvents.push(
+      ...messageStatusWebhookEvents({
+        orgId: contactOrgId,
+        messageId: externalMessageId,
+        reported: reportedStatuses,
+        newStatuses: diffStatusData,
+        recipientPhone: contactPhone,
+        channel: sourceIdentifier,
+        templateName: messageInfo.templateName,
+        sourceMessage: messageInfo.sourceMessage,
+        campaignId: campaignParticipant.campaignId,
+        error: lastErr?.[0] ?? null,
+        errorMessage: errorMsg,
+      }),
+    );
 
     if (campaignParticipant?.campaignParticipantDripStageId) {
       dripCampaignParticipantUpdates.push(
@@ -1358,6 +1404,13 @@ export async function bulkUpdateStatuses(
     pricingUpdates,
     campaignSendStatsUpdates,
   );
+
+  // After the writes, so neither the inbox nor a receiver hears of a status the
+  // database does not hold — `executeBulkUpdates` throws on rollback, so a
+  // failed batch reaches neither line. Only orgs subscribed to `message.status`
+  // cost anything past a cache read, and neither call throws into the batch.
+  await publishStatusUpdates(wsEvents);
+  await emitWebhookEvents(webhookEvents);
 
   return processedOffsets;
 }

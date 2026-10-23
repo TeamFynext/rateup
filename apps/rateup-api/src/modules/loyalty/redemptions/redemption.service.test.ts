@@ -1,3 +1,4 @@
+import { Prisma } from "../../../../generated/prisma/client.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("../../../utils/prisma.js", () => {
@@ -26,11 +27,13 @@ vi.mock("../redemptionValidator.js", () => ({
 }));
 
 vi.mock("../messaging/send.js", () => ({ sendLoyaltyEvent: vi.fn() }));
+vi.mock("../loyalty.webhooks.js", () => ({ announceLoyaltyTransactions: vi.fn() }));
 
 import prisma from "../../../utils/prisma.js";
 import { validateRedemption } from "../redemptionValidator.js";
 import { sendLoyaltyEvent } from "../messaging/send.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
+import { announceLoyaltyTransactions } from "../loyalty.webhooks.js";
 import {
   applyRedemption,
   getRedemptionsByCustomer,
@@ -301,6 +304,24 @@ describe("redeemReward — point rewards", () => {
     await redeemReward(PROGRAM, input);
     expect(db.loyaltyReward.update.mock.calls[0][0].data).toEqual({
       stockRedeemed: { increment: 1 },
+    });
+    // The stock check is part of the UPDATE, not only the earlier read.
+    expect(db.loyaltyReward.update.mock.calls[0][0].where).toEqual({
+      id: expect.any(String),
+      stockRedeemed: { lt: 10 },
+    });
+  });
+
+  test("losing the race for the last unit is out of stock, not a crash", async () => {
+    db.loyaltyReward.findFirst.mockResolvedValue(
+      reward({ rewardType: "point", rewardValue: { points: 300 }, stockQuantity: 10 }),
+    );
+    db.loyaltyReward.update.mockRejectedValueOnce(
+      new Prisma.PrismaClientKnownRequestError("No record", { code: "P2025", clientVersion: "x" }),
+    );
+
+    await expect(redeemReward(PROGRAM, input)).rejects.toMatchObject({
+      code: "REWARD_OUT_OF_STOCK",
     });
   });
 
@@ -822,5 +843,51 @@ describe("getTransactionsForExport", () => {
     db.loyaltyTransaction.findMany.mockResolvedValue([{ id: "txn-1" }]);
 
     await expect(getTransactionsForExport(PROGRAM, {})).resolves.toHaveLength(1);
+  });
+});
+
+// ===========================================================================
+// The org webhook (loyalty.points.redeemed)
+// ===========================================================================
+
+describe("redeemReward — webhook", () => {
+  const announce = announceLoyaltyTransactions as unknown as Mock;
+
+  test("announces the ledger row after the transaction commits", async () => {
+    const order: string[] = [];
+    db.$transaction.mockImplementation(async (fn: (tx: unknown) => unknown) => {
+      const result = await fn(db);
+      order.push("commit");
+      return result;
+    });
+    announce.mockImplementation(() => {
+      order.push("announce");
+      return Promise.resolve(1);
+    });
+
+    await redeemReward(PROGRAM, input);
+
+    expect(order).toEqual(["commit", "announce"]);
+    expect(announce).toHaveBeenCalledWith(ORG, [{ id: "txn-1" }], {
+      phone: "919000000001",
+      cardCode: null,
+    });
+  });
+
+  test("announces nothing when the deduction rolls back", async () => {
+    db.customerLoyaltyAccount.update.mockRejectedValue(notFound());
+
+    await expect(redeemReward(PROGRAM, input)).rejects.toThrow();
+    expect(announce).not.toHaveBeenCalled();
+  });
+
+  test("a coupon held for approval hands over no ledger row", async () => {
+    db.loyaltyReward.findFirst.mockResolvedValue(
+      reward({ redemptionRules: { approval_rules: { requires_approval: true } } }),
+    );
+
+    await redeemReward(PROGRAM, input);
+
+    expect(announce).toHaveBeenCalledWith(ORG, [null], expect.anything());
   });
 });

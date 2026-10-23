@@ -44,7 +44,15 @@ export const ratingEmoji = "⭐️";
 
 export { isMetaAiOriginated } from "../../metaAgent/metaAgent.origin.js";
 
+/**
+ * What a delivery is, judged by its FIRST change only (and a status change by its
+ * first status). Callers with a whole delivery must narrow it first:
+ * `processWhatsappWebhook` (wasurvey.webhook.ts) asks once per change, and its
+ * status handler reads each status's own type.
+ */
 export function getEventType(data: WaMessageBody) {
+  // A delivery with no change in it is nothing to handle — not a TypeError.
+  if (!data?.entry?.[0]?.changes?.[0]) return null;
   if (data.object === "whatsapp_business_account") {
     // Checked first: a standby change nests its messages and statuses under
     // `value.standby`, so every branch below would read it as empty.
@@ -61,23 +69,29 @@ export function getEventType(data: WaMessageBody) {
     }
     if (data.entry[0].changes[0].field === WaEvent.TemplateStatusChange) {
       return WaEvent.TemplateStatusChange;
+    } else if (data.entry[0].changes[0].field === WaEvent.TemplateCategoryUpdate) {
+      // The dispatcher has handled this for a while, but nothing classified it,
+      // so every category change fell through as "no event".
+      return WaEvent.TemplateCategoryUpdate;
     } else if (data.entry[0].changes[0].field === WaEvent.ACCOUNT_UPDATE) {
       return WaEvent.ACCOUNT_UPDATE;
     } else if (data.entry[0].changes[0].field === WaEvent.PhoneNumberNameUpdate) {
       return WaEvent.PhoneNumberNameUpdate;
     } else if (
       data.entry[0].changes[0].field === WaEvent.Message &&
-      (data.entry[0].changes[0].value as WaReceiveMessageBody).messages?.length > 0
+      ((data.entry[0].changes[0].value as WaReceiveMessageBody | undefined)?.messages?.length ??
+        0) > 0
     ) {
       return WaEvent.Message;
     } else if (
       data.entry[0].changes[0].field === WaEvent.SMBMessageEchoes &&
-      (data as unknown as WaMessageEchoBody).entry[0].changes[0].value.message_echoes?.length > 0
+      ((data as unknown as WaMessageEchoBody).entry[0].changes[0].value?.message_echoes?.length ??
+        0) > 0
     ) {
       return WaEvent.SMBMessageEchoes;
     } else if (
-      (data.entry[0].changes[0].value as WaReceiveMessageBody).statuses?.[0]?.status ===
-        "captured" &&
+      (data.entry[0].changes[0].value as WaReceiveMessageBody | undefined)?.statuses?.[0]
+        ?.status === "captured" &&
       (data.entry[0].changes[0].value as WaReceiveMessageBody)?.statuses?.[0]?.payment?.transaction
         ?.status === "success" &&
       (data.entry[0].changes[0].value as WaReceiveMessageBody)?.statuses?.[0]?.type === "payment"
@@ -614,9 +628,25 @@ export async function convertNodeToWhatsAppMessage(
       return null;
   }
 }
-export const handlePaymentConfirmation = async (phoneNo: string, refrenceId: string) => {
+export const handlePaymentConfirmation = async (
+  phoneNo: string,
+  refrenceId: string,
+  phoneNumberId: string | undefined,
+) => {
+  // Reference ids are chosen by whichever business sends the order_details, so another org's
+  // payment could carry this one's id: only the receiving number's org can be paid.
+  const settings = phoneNumberId
+    ? await prisma.whatsappSettings.findUnique({
+        where: { phoneId: phoneNumberId },
+        select: { orgId: true },
+      })
+    : null;
+  if (!settings) {
+    log.warn({ refrenceId, phoneNumberId }, "Payment for an unknown WhatsApp number; ignored");
+    return;
+  }
   const order = await prisma.waCatalogOrder.findFirst({
-    where: { transactionId: refrenceId },
+    where: { transactionId: refrenceId, catalog: { orgId: settings.orgId } },
     include: { catalog: true },
   });
 
@@ -677,19 +707,23 @@ export const handlePaymentConfirmation = async (phoneNo: string, refrenceId: str
 };
 export function getMessageObject(data: WaMessageBody) {
   if ((data.entry[0].changes[0].value as WaReceiveMessageBody).messages.length > 1) {
-    // TODO: Find out when this happens
-    throw new Error("This shouldn't have occured. Multiple messages not supported");
+    // Meta does batch messages. The webhook processor hands every message over
+    // in a body of its own (`singleMessageBody`, wasurvey.webhook.ts), so a body
+    // with more than one never reaches here from the webhook.
+    throw new Error("getMessageObject takes a body with exactly one message");
   }
   const message = (data.entry[0].changes[0].value as WaReceiveMessageBody).messages[0];
   const completeMessageObject = data.entry[0].changes[0].value;
   return { message, completeMessageObject };
 }
-export function getUserName(data: WaMessageBody) {
-  return (data.entry[0].changes[0].value as WaReceiveMessageBody).contacts[0].profile.name;
+// Meta omits `contacts` (or the profile) on some inbound messages. A missing
+// name stays undefined so the contact upsert keeps the name already stored.
+export function getUserName(data: WaMessageBody): string | undefined {
+  return (data.entry[0].changes[0].value as WaReceiveMessageBody).contacts?.[0]?.profile?.name;
 }
 export interface WaParsedMessage {
   from: string;
-  userName: string;
+  userName: string | undefined;
   timestamp: string;
   message: string;
   flowResponse: WaFlowResponses | undefined;
@@ -1348,10 +1382,17 @@ export function createVideoMessage(
   };
 }
 
+/**
+ * `voice` sends a WhatsApp voice message rather than an audio file: shown with the mic and
+ * profile photo, auto-downloaded and transcribed. WhatsApp honours it only for OGG/Opus,
+ * which the upload endpoint produces for `?voice=1`, and ignores it for any other format.
+ * https://developers.facebook.com/documentation/business-messaging/whatsapp/messages/audio-messages
+ */
 export function createAudioMessage(
   to: string,
   link: string,
   platform: PlatformType,
+  voice = false,
 ): WaSendMessageBody | IgSendMessageBody | FbSendMessageBody {
   if (platform === PlatformType.INSTAGRAM) {
     return {
@@ -1394,6 +1435,7 @@ export function createAudioMessage(
     type: "audio",
     audio: {
       link,
+      ...(voice && { voice: true }),
     },
   };
 }

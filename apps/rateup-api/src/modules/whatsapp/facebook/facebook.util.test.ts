@@ -134,3 +134,22 @@ describe("getFacebookWebhookEvent - which check wins when several could match", 
     expect(event).toBe(FacebookEvent.POSTBACK);
   });
 });
+
+describe("getFacebookWebhookEvent - m.me links", () => {
+  test("classifies a standalone referral as a link opened", () => {
+    const event = getFacebookWebhookEvent(
+      messaging({ referral: { ref: "summer_sale", source: "SHORTLINK", type: "OPEN_THREAD" } }),
+    );
+
+    expect(event).toBe(FacebookEvent.REFERRAL);
+  });
+
+  // A first conversation's ref rides on the Get Started tap, which is still a postback.
+  test("keeps a Get Started tap carrying a ref a postback", () => {
+    const event = getFacebookWebhookEvent(
+      messaging({ postback: { payload: "GET_STARTED", referral: { ref: "summer_sale" } } }),
+    );
+
+    expect(event).toBe(FacebookEvent.POSTBACK);
+  });
+});

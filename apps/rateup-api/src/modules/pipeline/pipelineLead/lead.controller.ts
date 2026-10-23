@@ -14,6 +14,7 @@ import {
   listLeads,
   BadCursorError,
   LeadExistsForContactError,
+  ForeignLeadRefError,
   moveLead,
   reopenLead,
   updateLead,
@@ -104,6 +105,9 @@ export async function createLeadHandler(
         stageName: error.stageName,
       });
     }
+    if (error instanceof ForeignLeadRefError) {
+      return reply.code(400).send({ message: error.message, field: error.field });
+    }
     request.log.error(error);
     return reply.code(500).send({ message: "Error creating lead" });
   }
@@ -117,6 +121,9 @@ export async function updateLeadHandler(
     const lead = await updateLead(request.params.id, request.body, request.userId);
     return reply.code(200).send(lead);
   } catch (error) {
+    if (error instanceof ForeignLeadRefError) {
+      return reply.code(400).send({ message: error.message, field: error.field });
+    }
     request.log.error(error);
     return reply.code(500).send({ message: "Error updating lead" });
   }

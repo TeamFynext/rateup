@@ -12,7 +12,7 @@ async function routes(fastify: FastifyInstance) {
     onFile,
     limits: { fileSize: MAX_LOGO_BYTES, files: 1, fields: 16, fieldSize: 4096 },
   });
-  declareAccess(fastify, { access: "session" });
+  declareAccess(fastify, { access: "session", write: "surveys.manage" });
   fastify.addHook("preHandler", preHandlerHook);
 
   fastify.get(
