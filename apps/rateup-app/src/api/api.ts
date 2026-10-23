@@ -1,12 +1,11 @@
 import axios from "@/config/axios";
+import { API_URL } from "@/config/env";
 import { router } from "expo-router";
 import SuperTokens from "supertokens-react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { unregisterPushToken } from "../utils/notification";
 import { clearLocalUserData } from "../utils/clearLocalData";
-
-const API_URL = process.env.EXPO_PUBLIC_API_URL;
+import { logger } from "@/utils/logger";
 
 interface ICreateGoogleUser {
   name: string;
@@ -38,7 +37,6 @@ export const signIn = async (email: string, password: string) => {
         message: "Authentication error. Please try again",
       };
     }
-    await AsyncStorage.setItem("accessToken", token);
 
     return {
       success: true,
@@ -60,7 +58,7 @@ export const signOut = async () => {
     try {
       await unregisterPushToken();
     } catch (error) {
-      console.error("Failed to unregister the push token on sign-out:", error);
+      logger.error("Failed to unregister the push token on sign-out:", error);
     }
 
     await SuperTokens.signOut();

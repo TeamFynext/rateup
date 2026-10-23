@@ -6,15 +6,15 @@ import { useLoggedInUser } from "@/api/api";
 export type OrgModule = "pipeline" | "loyalty" | "commerce" | "web_forms" | "qr_links" | "ai_agent";
 
 /**
- * Areas the org has hidden in Settings → Features, from `GET /api/user/info`. Hiding is
- * navigation only, so an older API that sends no list leaves everything on.
+ * Feature areas the org has hidden in Settings → Features, from `GET /api/user/info`.
+ * Hiding is navigation only, so an older API that sends no list leaves everything on.
  */
 export function useOrgModules() {
   const { data: user } = useLoggedInUser();
   const hidden: unknown = user?.hiddenModules;
 
   return useMemo(() => {
-    const off = new Set(Array.isArray(hidden) ? hidden.map(String) : []);
-    return { isOn: (module: OrgModule) => !off.has(module) };
+    const hiddenModules = new Set(Array.isArray(hidden) ? hidden.map(String) : []);
+    return { isOn: (module: OrgModule) => !hiddenModules.has(module) };
   }, [hidden]);
 }

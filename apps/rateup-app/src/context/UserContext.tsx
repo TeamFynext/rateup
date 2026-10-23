@@ -11,6 +11,8 @@ import { useOpenChatStore } from "../utils/store";
 import { WaMessageAssignStatus } from "../api/inbox/types";
 import { queryClient } from "../config/queryClient";
 import { receiveCallEvent } from "@/store/callStore";
+import { logger } from "@/utils/logger";
+import { API_URL } from "@/config/env";
 
 /**
  * Refetch what a dropped socket may have left stale.
@@ -42,10 +44,19 @@ interface UserContextProps {
 const UserContext = createContext<UserContextProps | undefined>(undefined);
 
 const ORG_WS_BASE_PATH = "/org/ws";
-const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3001";
 const WEBSOCKET_PROTOCOL = API_URL.startsWith("https") ? "wss" : "ws";
 const WEBSOCKET_URL = API_URL.replace(/(http)s?/, WEBSOCKET_PROTOCOL);
 const WS_URL = `${WEBSOCKET_URL}/api${ORG_WS_BASE_PATH}`;
+
+/**
+ * React Native's WebSocket constructor, which takes request headers as a third argument.
+ * The project's DOM lib types only the browser's two-argument form.
+ */
+type NativeWebSocket = new (
+  url: string,
+  protocols: string | string[] | null,
+  options: { headers: Record<string, string> },
+) => WebSocket;
 
 /**
  * Patch a delivery receipt straight into the stores.
@@ -204,6 +215,7 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
   const [mobileId, setMobileId] = useState<string | null>(null);
   const connectionRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const connectingRef = useRef(false);
   const retryIntervalRef = useRef(1000); // 1s, exponential backoff
   // Whether a socket has opened before. The first open follows the screens'
   // own initial fetches, so only a later one — a reconnect — refetches.
@@ -229,24 +241,41 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const connectWebSocket = async () => {
-    if (connectionRef.current || !isAuthenticated || !orgId) {
+    if (connectionRef.current || connectingRef.current || !isAuthenticated || !orgId || !mobileId) {
       return;
     }
-    const token = await SuperTokens.getAccessToken();
+    // Held across the token read below, so a resume and a backoff timer firing together
+    // cannot each open a socket.
+    connectingRef.current = true;
+    let token: string | undefined;
+    try {
+      token = await SuperTokens.getAccessToken();
+    } finally {
+      connectingRef.current = false;
+    }
 
     if (!token) {
-      console.log("no token found");
+      logger.log("no token found");
       return;
     }
+    // Something else connected while the token was being read.
+    if (connectionRef.current) return;
 
-    const socket = new WebSocket(
-      `${WS_URL}/${mobileId}/mobilews?accessToken=${encodeURIComponent(token)}`,
+    // The token goes in the Authorization header, never the URL: query strings end up
+    // in proxy and access logs. React Native's WebSocket takes headers as a third
+    // argument. Each (re)connect reads the token afresh, so a refreshed one is used.
+    const socket = new (WebSocket as unknown as NativeWebSocket)(
+      `${WS_URL}/${mobileId}/mobilews`,
+      null,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
     );
 
     connectionRef.current = socket;
 
     socket.onopen = () => {
-      console.log("📡 WebSocket connected");
+      logger.log("📡 WebSocket connected");
       retryIntervalRef.current = 1000;
       if (hasConnectedRef.current) refetchAfterReconnect();
       hasConnectedRef.current = true;
@@ -269,25 +298,27 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
         }
         setWsData(message);
       } catch (err) {
-        console.error("❌ Error parsing WebSocket message:", err);
+        logger.error("❌ Error parsing WebSocket message:", err);
       }
     };
 
     socket.onclose = () => {
-      console.log("🔌 WebSocket disconnected");
+      logger.log("🔌 WebSocket disconnected");
 
       if (connectionRef.current === socket) {
         connectionRef.current = null;
       }
 
+      if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = setTimeout(() => {
+        reconnectTimeoutRef.current = null;
         retryIntervalRef.current = Math.min(retryIntervalRef.current * 2, 30000);
         connectWebSocketRef.current();
       }, retryIntervalRef.current);
     };
 
     socket.onerror = (err) => {
-      console.error("💥 WebSocket error:", err);
+      logger.error("💥 WebSocket error:", err);
     };
   };
 
@@ -303,6 +334,9 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
     connectWebSocketRef.current();
     return () => {
       if (connectionRef.current) {
+        // Detached first: this close is deliberate, and onclose would schedule a
+        // reconnect after the provider has gone (or a duplicate alongside the next one).
+        connectionRef.current.onclose = null;
         connectionRef.current.close();
         connectionRef.current = null;
       }
@@ -320,7 +354,7 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
         connectionRef.current?.readyState !== WebSocket.OPEN &&
         isAuthenticated
       ) {
-        console.log("🔁 Reconnecting WebSocket on app resume");
+        logger.log("🔁 Reconnecting WebSocket on app resume");
         connectWebSocketRef.current();
       }
     });

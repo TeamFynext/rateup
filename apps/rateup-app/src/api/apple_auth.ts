@@ -1,7 +1,8 @@
 import * as AppleAuthentication from "expo-apple-authentication";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "@/config/axios";
+import { API_URL } from "@/config/env";
 import SuperTokens from "supertokens-react-native";
+import { describeError, logger } from "@/utils/logger";
 
 export const signInWithApple = async () => {
   try {
@@ -22,7 +23,7 @@ export const signInWithApple = async () => {
       };
     }
 
-    const response = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/api/auth/signinup`, {
+    const response = await axios.post(`${API_URL}/api/auth/signinup`, {
       thirdPartyId: "apple",
       clientType: "mobile",
       oAuthTokens: {
@@ -48,14 +49,12 @@ export const signInWithApple = async () => {
       };
     }
 
-    await AsyncStorage.setItem("accessToken", token);
-
     return {
       success: true,
       data: response.data,
     };
   } catch (err: any) {
-    console.log("Error during Apple Sign-In:", err.message);
+    logger.warn("Error during Apple Sign-In:", describeError(err));
 
     if (err.code === "ERR_CANCELED") {
       return {

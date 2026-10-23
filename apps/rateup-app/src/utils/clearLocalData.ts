@@ -11,6 +11,7 @@ import {
   useSelectedTabStore,
   useSessionActiveStore,
 } from "@/utils/store";
+import { logger } from "@/utils/logger";
 
 /**
  * Every AsyncStorage key that belongs to the signed-in account.
@@ -24,8 +25,15 @@ import {
  * Deliberately excluded: the theme preference and the browser id, which are
  * device settings rather than account data.
  */
+/**
+ * Older builds copied the SuperTokens access token into AsyncStorage under this key. No
+ * build writes or reads it any more; it is only still named so that installs upgrading
+ * from those builds lose the stale copy (AuthContext also drops it at startup).
+ */
+export const LEGACY_ACCESS_TOKEN_KEY = "accessToken";
+
 const ACCOUNT_STORAGE_KEYS = [
-  "accessToken",
+  LEGACY_ACCESS_TOKEN_KEY,
   "cachedUserId",
   "cachedOrgId",
   "inbox-selected-contact",
@@ -77,7 +85,7 @@ export async function clearLocalUserData() {
     useSelectedTabStore.setState({ selectedTab: "Open" });
     useSessionActiveStore.setState({ isSessionActive: true });
   } catch (error) {
-    console.error("Failed to reset in-memory stores on sign-out:", error);
+    logger.error("Failed to reset in-memory stores on sign-out:", error);
   }
 
   // Cached server responses back the same screens as the stores above.
@@ -85,7 +93,7 @@ export async function clearLocalUserData() {
     queryClient.cancelQueries();
     queryClient.clear();
   } catch (error) {
-    console.error("Failed to clear the query cache on sign-out:", error);
+    logger.error("Failed to clear the query cache on sign-out:", error);
   }
 
   const results = await Promise.allSettled([
@@ -107,7 +115,7 @@ export async function clearLocalUserData() {
 
   results.forEach((result) => {
     if (result.status === "rejected") {
-      console.error("Failed to clear local account data on sign-out:", result.reason);
+      logger.error("Failed to clear local account data on sign-out:", result.reason);
     }
   });
 }

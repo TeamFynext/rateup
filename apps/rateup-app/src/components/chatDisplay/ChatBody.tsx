@@ -23,6 +23,7 @@ import { Colors } from "@/constants/colors";
 import { useMessagesStore } from "@/store/inboxStore";
 import { getMessagesFromIDB } from "@/utils/sqlite";
 import { Skeleton } from "@/components/common/Skeleton";
+import { logger } from "@/utils/logger";
 
 const { height: screenHeight } = Dimensions.get("window");
 
@@ -77,7 +78,7 @@ const ChatBody = ({ id }: { id: string }) => {
       })
       .catch((error) => {
         // A miss just means the thread paints when the request lands.
-        console.error("Failed to read cached messages:", error);
+        logger.error("Failed to read cached messages:", error);
       });
 
     return () => {

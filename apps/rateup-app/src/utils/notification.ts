@@ -4,6 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Colors } from "@/constants/colors";
 import { addToken, deleteToken } from "@/api/notification";
 import { useOpenChatStore } from "@/utils/store";
+import { logger } from "@/utils/logger";
 
 /**
  * Module-scope on purpose: a handler registered after the first notification
@@ -108,7 +109,7 @@ export async function setupAndroidNotificationChannel() {
     });
   } catch (err) {
     // A missing channel degrades pushes to silent; it should not stop the app booting.
-    console.error("Failed to create Android notification channel:", err);
+    logger.error("Failed to create Android notification channel:", err);
   }
 
   try {
@@ -125,7 +126,7 @@ export async function setupAndroidNotificationChannel() {
       bypassDnd: true,
     });
   } catch (err) {
-    console.error("Failed to create Android call notification channel:", err);
+    logger.error("Failed to create Android call notification channel:", err);
   }
 }
 
@@ -179,7 +180,7 @@ export async function registerForPushNotificationsAsync({ prompt = true } = {}) 
     const tokenData = await getExpoPushTokenWithRetry();
     return tokenData;
   } catch (err) {
-    console.error("❌ Failed to get push token:", err);
+    logger.error("❌ Failed to get push token:", err);
     return null;
   }
 }
@@ -215,7 +216,7 @@ export async function syncPushToken({ prompt = false } = {}) {
   } catch (err) {
     // Left unsynced on purpose: `lastSyncedToken` is not advanced, so the next
     // foreground retries rather than assuming this device is registered.
-    console.error("Failed to register push token:", err);
+    logger.error("Failed to register push token:", err);
     return null;
   }
 
@@ -243,6 +244,6 @@ export async function unregisterPushToken() {
   } catch (err) {
     // Never block sign-out on this. The row is also pruned server-side once Expo
     // reports the token as DeviceNotRegistered.
-    console.error("Failed to unregister push token:", err);
+    logger.error("Failed to unregister push token:", err);
   }
 }

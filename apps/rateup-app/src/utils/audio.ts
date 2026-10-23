@@ -1,4 +1,5 @@
 import { setAudioModeAsync } from "expo-audio";
+import { logger } from "@/utils/logger";
 
 // expo-audio never configures an AVAudioSession on its own — the category is only
 // ever set from setAudioModeAsync. Without these calls iOS leaves the app on its
@@ -25,7 +26,7 @@ export async function configurePlaybackAudioMode(): Promise<void> {
       allowsRecording: false,
     });
   } catch (error) {
-    console.error("Error configuring playback audio mode:", error);
+    logger.error("Error configuring playback audio mode:", error);
   }
 }
 

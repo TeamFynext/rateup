@@ -1,4 +1,5 @@
 import axios from "@/config/axios";
+import { logger } from "@/utils/logger";
 
 const SURVEYURL = "/api/survey";
 
@@ -7,7 +8,7 @@ export async function getSurveys() {
     let surveys: Array<any> = (await axios.get(SURVEYURL)).data;
     return surveys;
   } catch (e) {
-    console.error(e);
+    logger.error(e);
     return { error: "Error Occured!" };
   }
 }

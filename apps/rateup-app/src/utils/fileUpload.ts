@@ -1,4 +1,5 @@
 import axios from "../config/axios";
+import { logger } from "@/utils/logger";
 
 export const getFileUrlFromKey = (key: string, s3Upload = true, unsplashImage = false) => {
   if (!key) return;
@@ -20,7 +21,7 @@ export const deleteUploadedFiles = async (data: any) => {
     });
     return response?.data;
   } catch (error) {
-    console.log("error", error);
+    logger.log("error", error);
   }
 };
 
@@ -51,7 +52,7 @@ export const uploadFile = async (
     );
     return response?.data?.data?.key as string;
   } catch (error: any) {
-    console.log("File upload failed:", error?.response?.data?.message);
+    logger.log("File upload failed:", error?.response?.data?.message);
     throw error?.response?.data?.message;
   }
 };

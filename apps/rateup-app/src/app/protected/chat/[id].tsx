@@ -17,6 +17,7 @@ import { loadContactFromDB } from "@/utils/sqlite";
 import { Colors } from "@/constants/colors";
 import { isSessionWindowOpen } from "@/utils/sessionWindow";
 import KeyboardAvoider from "@/components/common/KeyboardAvoider";
+import { logger } from "@/utils/logger";
 
 /**
  * `/api/contact/:id` and the cached row both return a bare Contact, which carries no
@@ -73,7 +74,7 @@ const ChatDisplay = () => {
       })
       .catch((error) => {
         // A cache miss is not a failure worth surfacing; the fetch still runs.
-        console.error("Failed to read the cached contact:", error);
+        logger.error("Failed to read the cached contact:", error);
       });
 
     return () => {

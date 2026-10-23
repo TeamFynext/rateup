@@ -14,6 +14,7 @@ import { WaMessageAssignStatus } from "./api/inbox/types";
 import { colors } from "./constants/constants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { randomUUID } from "expo-crypto";
+import { logger } from "@/utils/logger";
 
 export function getSoucePlatformIconAndColor(sourcePlatform: string | undefined) {
   switch (sourcePlatform) {
@@ -207,7 +208,7 @@ export const getMobileId = async (): Promise<string> => {
 
     return id;
   } catch (error) {
-    console.error("Failed to get or set mobile ID", error);
+    logger.error("Failed to get or set mobile ID", error);
     return "";
   }
 };

@@ -3,6 +3,7 @@ import * as Notifications from "expo-notifications";
 import * as TaskManager from "expo-task-manager";
 
 import { cancelIncomingCall, showIncomingCall } from "../../modules/rateup-calls";
+import { logger } from "@/utils/logger";
 
 /**
  * Android: the data-only push the API sends for an incoming call (and when it stops
@@ -57,6 +58,6 @@ if (Platform.OS === "android") {
   });
 
   Notifications.registerTaskAsync(CALL_PUSH_TASK).catch((err) =>
-    console.warn("Could not register the call push task", err),
+    logger.warn("Could not register the call push task", err),
   );
 }
