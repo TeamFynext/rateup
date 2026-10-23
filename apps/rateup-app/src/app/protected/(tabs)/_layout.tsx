@@ -4,12 +4,14 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-naviga
 import { useColorScheme } from "nativewind";
 import { Colors } from "@/constants/colors";
 import { getInboxHeaderBg } from "@/constants/inboxDesign";
+import { useOrgModules } from "@/hooks/useOrgModules";
 import { usePermissions } from "@/hooks/usePermissions";
 
 function ProtectedLayout() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const { can } = usePermissions();
+  const { isOn } = useOrgModules();
 
   return (
     <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
@@ -25,7 +27,7 @@ function ProtectedLayout() {
           <NativeTabs.Trigger.Label>Inbox</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>
 
-        {can("loyalty.cashier") && (
+        {can("loyalty.cashier") && isOn("loyalty") && (
           <NativeTabs.Trigger name="loyalty">
             <NativeTabs.Trigger.Icon sf="gift.fill" md="redeem" />
             <NativeTabs.Trigger.Label>Loyalty</NativeTabs.Trigger.Label>
