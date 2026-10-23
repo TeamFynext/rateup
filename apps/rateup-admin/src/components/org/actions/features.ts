@@ -3,15 +3,24 @@ import { formatNumber } from "@/lib/format";
 
 type Partial2 = Partial<SubscriptionFeatures> | null | undefined;
 
-/** The four counted allowances, in the order the Usage tab shows them. */
+/** The counted allowances, in the order the Usage tab shows them. */
 export const LIMITS = [
   {
-    key: "conversations",
-    label: "Conversations",
+    key: "activeContacts",
+    label: "Active contacts",
     hint: "a month",
-    get: (f: Partial2) => f?.whatsapp?.conversation?.count?.max,
+    get: (f: Partial2) => f?.whatsapp?.activeContacts?.count?.max,
     set: (f: SubscriptionFeatures, value: number) => {
-      f.whatsapp.conversation.count.max = value;
+      f.whatsapp.activeContacts.count.max = value;
+    },
+  },
+  {
+    key: "campaignCredits",
+    label: "Campaign credits",
+    hint: "a month",
+    get: (f: Partial2) => f?.whatsapp?.campaignCredits?.count?.max,
+    set: (f: SubscriptionFeatures, value: number) => {
+      f.whatsapp.campaignCredits.count.max = value;
     },
   },
   {
@@ -37,6 +46,18 @@ export const LIMITS = [
     get: (f: Partial2) => f?.webSurvey?.count?.monthlyResponseLimit,
     set: (f: SubscriptionFeatures, value: number) => {
       f.webSurvey.count.monthlyResponseLimit = value;
+    },
+  },
+  {
+    key: "orders",
+    label: "Shop orders",
+    hint: "a month",
+    // The API meters orders only above 0 (planLimits.ts), so absent and 0 both mean no cap.
+    unmeteredAtZero: true,
+    get: (f: Partial2) => f?.whatsapp?.shopOrders?.count?.max,
+    set: (f: SubscriptionFeatures, value: number) => {
+      if (value > 0) f.whatsapp.shopOrders = { active: true, count: { max: value } };
+      else delete f.whatsapp.shopOrders;
     },
   },
 ] as const;
@@ -69,7 +90,7 @@ export const SWITCHES = [
   },
   {
     key: "catalog",
-    label: "Catalog sync",
+    label: "Commerce (shop & catalog)",
     get: (f: Partial2) => f?.whatsapp?.catalog?.active,
     set: (f: SubscriptionFeatures, on: boolean) => {
       f.whatsapp.catalog = { active: on };
@@ -95,7 +116,13 @@ export const SWITCHES = [
 
 export const isUnlimited = (value: number | undefined) => (value ?? 0) >= UNLIMITED_COUNT;
 
-export function formatLimit(value: number | undefined): string {
+export type Limit = (typeof LIMITS)[number];
+
+export const isUnmetered = (limit: Limit, value: number | undefined) =>
+  "unmeteredAtZero" in limit && !value;
+
+export function formatLimit(value: number | undefined, limit?: Limit): string {
+  if (limit && isUnmetered(limit, value)) return "Not metered";
   if (value === undefined) return "—";
   return isUnlimited(value) ? "Unlimited" : formatNumber(value);
 }
@@ -130,14 +157,27 @@ export function completeFeatures(stored: Partial2): SubscriptionFeatures {
     },
     whatsapp: {
       active: f.whatsapp?.active ?? false,
-      conversation: {
-        active: f.whatsapp?.conversation?.active ?? false,
-        count: max(f.whatsapp?.conversation?.count?.max),
+      activeContacts: {
+        active: f.whatsapp?.activeContacts?.active ?? false,
+        count: max(f.whatsapp?.activeContacts?.count?.max),
+      },
+      campaignCredits: {
+        active: f.whatsapp?.campaignCredits?.active ?? false,
+        count: max(f.whatsapp?.campaignCredits?.count?.max),
       },
       campaign: on(f.whatsapp?.campaign?.active),
       loyalty: on(f.whatsapp?.loyalty?.active),
       referrals: on(f.whatsapp?.referrals?.active),
       catalog: on(f.whatsapp?.catalog?.active),
+      // Absent stays absent: a blob stored before the cap must not be saved as "0 = unmetered".
+      ...(f.whatsapp?.shopOrders
+        ? {
+            shopOrders: {
+              active: f.whatsapp.shopOrders.active ?? true,
+              count: max(f.whatsapp.shopOrders.count?.max),
+            },
+          }
+        : {}),
     },
     ai: {
       active: f.ai?.active ?? false,

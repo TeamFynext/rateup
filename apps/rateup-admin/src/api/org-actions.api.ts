@@ -1,6 +1,7 @@
 import { queryOptions, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { api } from "./client";
+import type { PackKind } from "./orgs.api";
 import type { IsoDate } from "./types";
 
 /** The unlimited sentinel the API stores for an uncapped count (subscription.data.ts). */
@@ -22,7 +23,9 @@ export interface SubscriptionFeatures {
     count: { monthlyResponseLimit: number };
   };
   whatsapp: Active & {
-    conversation: Active & { count: { max: number } };
+    activeContacts: Active & { count: { max: number } };
+    campaignCredits: Active & { count: { max: number } };
+    shopOrders?: Active & { count: { max: number } };
     campaign?: Active;
     loyalty?: Active;
     referrals?: Active;
@@ -89,8 +92,9 @@ export const useOverrideFeatures = (orgId: string) =>
   );
 
 export const useGrantPacks = (orgId: string) =>
-  useOrgMutation((input: { quantity: number; expiresAt?: string; reason: string }) =>
-    api.post(`/orgs/${orgId}/addons`, input),
+  useOrgMutation(
+    (input: { kind: PackKind; quantity: number; expiresAt?: string; reason: string }) =>
+      api.post(`/orgs/${orgId}/addons`, input),
   );
 
 export const useRevokePack = (orgId: string) =>

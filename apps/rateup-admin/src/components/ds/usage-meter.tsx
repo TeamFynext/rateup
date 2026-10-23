@@ -21,15 +21,21 @@ export function UsageMeter({
   used,
   max,
   metered,
+  remaining,
+  exceeded: reached,
   hint,
 }: {
   label: string;
   used: number;
   max?: number;
   metered: boolean;
+  /** Overrides `max - used`, for an allowance with headroom beyond `max` (credit packs). */
+  remaining?: number;
+  exceeded?: boolean;
   hint?: string;
 }) {
-  const exceeded = metered && max !== undefined && used >= max;
+  const exceeded = reached ?? (metered && max !== undefined && used >= max);
+  const left = remaining ?? (max === undefined ? 0 : Math.max(max - used, 0));
   return (
     <div className="flex min-w-0 flex-col gap-3 rounded-xl bg-card p-5 shadow-xs ring-1 ring-foreground/10">
       <div className="flex items-start justify-between gap-3">
@@ -53,9 +59,7 @@ export function UsageMeter({
         />
       </div>
       <p className="text-xs text-muted-foreground">
-        {metered && max !== undefined
-          ? `${formatNumber(Math.max(max - used, 0))} left`
-          : "Not metered on this plan"}
+        {metered && max !== undefined ? `${formatNumber(left)} left` : "Not metered on this plan"}
         {hint ? ` · ${hint}` : ""}
       </p>
     </div>

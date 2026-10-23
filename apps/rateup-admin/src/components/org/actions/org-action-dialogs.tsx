@@ -19,9 +19,12 @@ import {
   type OrgSubscription,
   type SubscriptionFeatures,
 } from "@/api/org-actions.api";
+import type { PackKind } from "@/api/orgs.api";
 import { planOptionsQueryOptions } from "@/api/orgs.query";
 import { ActionDialog, done, Notice } from "@/components/ds/action-dialog";
+import { FilterChips } from "@/components/ds/filter-chips";
 import { ListSkeleton } from "@/components/ds/query-states";
+import { PACK_KINDS } from "@/components/org/packs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import {
@@ -62,10 +65,6 @@ interface SuspensionProps {
   onClose: () => void;
   org: SuspensionTarget;
 }
-
-/** Mirrors CONVERSATION_ADDON and ADDON_VALID_DAYS in the API's subscription catalog. */
-const CONVERSATIONS_PER_PACK = 5_000;
-const PACK_DAYS = 30;
 
 /**
  * Every subscription change on an org page, opened from the header's Manage menu or the
@@ -268,7 +267,12 @@ function FeatureComparison({
       if (keepCaps && isUnlimited(next) && was !== undefined && !isUnlimited(was) && was > 0) {
         next = was;
       }
-      return { key: limit.key, label: limit.label, was: formatLimit(was), next: formatLimit(next) };
+      return {
+        key: limit.key,
+        label: limit.label,
+        was: formatLimit(was, limit),
+        next: formatLimit(next, limit),
+      };
     }),
     ...SWITCHES.map((gate) => ({
       key: gate.key,
@@ -391,35 +395,56 @@ function EditLimitsDialog({ orgId, onClose, subscription }: DialogProps) {
 
 function GrantPacksDialog({ orgId, onClose, subscription }: DialogProps) {
   const mutation = useGrantPacks(orgId);
+  const [kind, setKind] = useState<PackKind>("ACTIVE_CONTACTS");
   const [quantity, setQuantity] = useState(1);
-  const planMax = subscription?.features?.whatsapp?.conversation?.count?.max;
+  const pack = PACK_KINDS[kind];
+  const whatsapp = subscription?.features?.whatsapp;
+  const planMax = (
+    kind === "ACTIVE_CONTACTS" ? whatsapp?.activeContacts : whatsapp?.campaignCredits
+  )?.count?.max;
   const metered = planMax !== undefined && planMax > 0 && !isUnlimited(planMax);
-  const until = dayjs().add(PACK_DAYS, "day").toDate();
+  const until = dayjs().add(pack.validDays, "day").toDate();
+  const packs = quantity === 1 ? "pack" : "packs";
 
   return (
     <ActionDialog
       open
       onOpenChange={onClose}
-      title="Grant conversation packs"
-      description={`Free extra conversations on top of the plan, for ${PACK_DAYS} days. Nothing is charged.`}
-      submitLabel={`Grant ${quantity} ${quantity === 1 ? "pack" : "packs"}`}
-      blocked={!metered && "This plan's conversations are not metered"}
+      title="Grant packs"
+      description="Free extra allowance on top of the plan. Nothing is charged."
+      submitLabel={`Grant ${quantity} ${packs}`}
+      blocked={!metered && `This plan does not cap ${pack.unit}`}
       pending={mutation.isPending}
       error={mutation.error}
       onSubmit={(reason) =>
         mutation.mutate(
-          { quantity, reason },
+          { kind, quantity, reason },
           {
             onSuccess: () =>
-              done(`Granted ${quantity} ${quantity === 1 ? "pack" : "packs"}.`, onClose),
+              done(
+                `Granted ${quantity} ${pack.label.toLowerCase()}${quantity === 1 ? "" : "s"}.`,
+                onClose,
+              ),
           },
         )
       }
     >
+      <div className="flex flex-col gap-3">
+        <Label>Pack</Label>
+        <FilterChips
+          chips={(Object.keys(PACK_KINDS) as PackKind[]).map((value) => ({
+            value,
+            label: PACK_KINDS[value].label,
+          }))}
+          value={kind}
+          onChange={setKind}
+          className="mx-0 px-0"
+        />
+      </div>
       {!metered ? (
         <Notice>
-          This plan's conversations are not metered, so a pack would add nothing. Change the plan or
-          its limits instead.
+          This plan does not cap {pack.unit}, so a pack would add nothing. Change the plan or its
+          limits instead.
         </Notice>
       ) : (
         <div className="flex flex-col gap-3">
@@ -442,8 +467,8 @@ function GrantPacksDialog({ orgId, onClose, subscription }: DialogProps) {
             </StepButton>
           </div>
           <p className="text-sm text-muted-foreground">
-            {formatNumber(quantity * CONVERSATIONS_PER_PACK)} extra conversations, on top of the
-            plan's {formatNumber(planMax)}, until {formatDate(until)}.
+            {formatNumber(quantity * pack.unitsPerPack)} extra {pack.unit}, on top of the plan's{" "}
+            {formatNumber(planMax)} a month, until {formatDate(until)}.
           </p>
         </div>
       )}

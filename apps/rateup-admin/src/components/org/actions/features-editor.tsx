@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
-import { formatLimit, isUnlimited, LIMITS, SWITCHES } from "./features";
+import { formatLimit, isUnlimited, isUnmetered, LIMITS, SWITCHES } from "./features";
 
 /**
  * The four limits and the feature switches, edited in place. Given a `reference` (the
@@ -26,8 +26,9 @@ export function FeaturesEditor({
     <>
       <div className="grid gap-5 sm:grid-cols-2">
         {LIMITS.map((limit) => {
-          const value = limit.get(draft) ?? 0;
+          const value = limit.get(draft);
           const unlimited = isUnlimited(value);
+          const unmetered = isUnmetered(limit, value);
           return (
             <div key={limit.key} className="flex flex-col gap-2">
               <Label htmlFor={`limit-${limit.key}`}>
@@ -43,8 +44,8 @@ export function FeaturesEditor({
                 min={0}
                 max={UNLIMITED_COUNT - 1}
                 disabled={unlimited}
-                value={unlimited ? "" : value}
-                placeholder={unlimited ? "Unlimited" : undefined}
+                value={unlimited || unmetered ? "" : (value ?? 0)}
+                placeholder={unlimited ? "Unlimited" : unmetered ? "Not metered" : undefined}
                 onChange={(event) => {
                   const next = Math.max(0, Math.floor(Number(event.target.value) || 0));
                   onChange((features) => limit.set(features, Math.min(next, UNLIMITED_COUNT - 1)));
@@ -55,8 +56,11 @@ export function FeaturesEditor({
                 {reference ? (
                   <ReferenceHint
                     label={referenceLabel}
-                    value={formatLimit(limit.get(reference))}
-                    differs={limit.get(reference) !== limit.get(draft)}
+                    value={formatLimit(limit.get(reference), limit)}
+                    differs={
+                      formatLimit(limit.get(reference), limit) !==
+                      formatLimit(limit.get(draft), limit)
+                    }
                   />
                 ) : (
                   <span />

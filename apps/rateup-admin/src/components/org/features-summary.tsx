@@ -38,7 +38,7 @@ export function FeaturesSummary({
                 {overridden && <OverrideTag />}
               </dt>
               <dd className="mt-0.5 text-sm font-medium tabular">
-                {formatLimit(value)}
+                {formatLimit(value, limit)}
                 {"hint" in limit && value !== undefined && (
                   <span className="font-normal text-muted-foreground"> {limit.hint}</span>
                 )}

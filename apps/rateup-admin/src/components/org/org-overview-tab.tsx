@@ -90,7 +90,7 @@ function UsageSection({ orgId, onTab }: { orgId: string; onTab: (tab: OrgTab) =>
       </SectionHeading>
       {query.isPending ? (
         <div className="grid grid-cols-2 gap-4">
-          {Array.from({ length: 4 }, (_, index) => (
+          {Array.from({ length: 5 }, (_, index) => (
             <Skeleton key={index} className="h-32 rounded-xl" />
           ))}
         </div>
@@ -182,10 +182,6 @@ function PlanSection({ org, onTab }: { org: OrgSummary; onTab: (tab: OrgTab) => 
               value: expires && isEffectivelyNever(expires) ? "Never" : formatDate(expires),
             },
             { label: "Last renewed", value: formatDate(subscription.renewedAt) },
-            {
-              label: "Allowance",
-              value: subscription.annualAllowance ? "Pooled yearly" : "Monthly",
-            },
             {
               label: "Billed by",
               value: subscription.gatewayRef ? (
