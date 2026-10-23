@@ -57,6 +57,8 @@ import healthRoutes from "./routes/health.js";
 import { customerAccountPublicRoutes } from "./modules/loyalty/accounts/account.public.route.js";
 import { loyaltyProgramPublicRoutes } from "./modules/loyalty/program/program.public.route.js";
 import { loyaltyFeedbackPublicRoutes } from "./modules/loyalty/feedback/feedback.public.route.js";
+import { customerCommsPublicRoutes } from "./modules/customerComms/customerComms.public.route.js";
+import { customerCommsRoutes } from "./modules/customerComms/customerComms.route.js";
 import { shopifyLinkPublicRoutes } from "./modules/integrations/shopify/shopify.link.route.js";
 import { loyaltyCardPublicRoutes } from "./modules/loyalty/accounts/card.public.route.js";
 import { apiAnalyticsRoutes } from "./modules/apiAnalytics/apianalytics.routes.js";
@@ -91,6 +93,7 @@ const routeConfigs = [
   },
   { plugin: loyaltyProgramPublicRoutes, prefix: "/api/public/loyalty/programs" },
   { plugin: loyaltyFeedbackPublicRoutes, prefix: "/api/public/loyalty/feedback" },
+  { plugin: customerCommsPublicRoutes, prefix: "/api/public/customer-comms" },
   { plugin: shopifyLinkPublicRoutes, prefix: "/api/public/r" },
   { plugin: loyaltyCardPublicRoutes, prefix: "/api/public/loyalty/cards" },
   { plugin: shopPublicRoutes, prefix: "/api/public/shop" },
@@ -137,6 +140,7 @@ const routeConfigs = [
   { plugin: commerceRoutes, prefix: "/api/commerce" },
   { plugin: shopRoutes, prefix: "/api/shop" },
   { plugin: notificationRoutes, prefix: "/api/notification" },
+  { plugin: customerCommsRoutes, prefix: "/api/customer-comms" },
   { plugin: instagramWebhookRoutes, prefix: "/api/instagram/webhook" },
   { plugin: facebookWebhookRoutes, prefix: "/api/facebook/webhook" },
   { plugin: supportUserWebhookRoutes, prefix: "/api/support" },

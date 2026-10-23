@@ -115,6 +115,7 @@ import { phoneSubscribesTo } from "../../webhook/webhook.events.js";
 import { sendViaWstoOrgHandler } from "../../org/ws/org.ws.controller.js";
 import { channelDigits } from "../../../utils/channelIdentifier.js";
 import { notify } from "../../notification/notify.js";
+import { handleSenderOrgStop } from "../../customerComms/whatsapp.js";
 import { checkAndExecuteRuleByTriggerEvent } from "../automatedReply/wa_automatedReply.utils.js";
 import {
   handleAutomatedReply,
@@ -838,6 +839,11 @@ async function whatsappMessageHandler(
   if (messageObj === null) {
     log.debug("Duplicate delivery of %s; skipping its handlers", incomingMessageId);
     return;
+  }
+  try {
+    await handleSenderOrgStop(orgId, from, parsedMessage);
+  } catch (e) {
+    log.error({ err: e }, "Error handling a customer-comms stop reply");
   }
   // The click on a click-to-WhatsApp ad that opened this chat. Meta sends the referral only
   // here, so it is kept even when Meta AI holds the thread.

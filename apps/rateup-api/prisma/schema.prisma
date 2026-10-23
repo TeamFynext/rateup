@@ -126,6 +126,14 @@ model User {
   lastLoggedInAt DateTime?
   presenceMode   UserPresenceMode @default(automatic)
 
+  /// RateUp's own product mail to this person (src/modules/customerComms). Opted out via
+  /// the signed unsubscribe link or the one-click List-Unsubscribe header.
+  marketingEmailOptOutAt    DateTime?
+  /// WhatsApp tips from RateUp's own number need an explicit opt-in; an opt-out after it
+  /// (the "Stop updates" button) wins.
+  marketingWhatsappOptInAt  DateTime?
+  marketingWhatsappOptOutAt DateTime?
+
   org                         Org[]
   orgMember                   OrgMember[]
   teamMember                  TeamMember[]
@@ -154,6 +162,7 @@ model User {
   leadNotes                   LeadNote[]
   leadActivities              LeadActivity[]
   leadTasks                   LeadTask[]
+  customerMessages            CustomerMessage[]
 }
 
 model Org {
@@ -256,6 +265,7 @@ model Org {
   /// The StaffUser who suspended. No FK: a staff member can be deleted, the record stays.
   suspendedByStaffId String?   @db.Uuid
   staffNotes         OrgNote[]
+  customerMessages   CustomerMessage[]
 
   @@index([suspendedAt])
 }
@@ -4267,6 +4277,122 @@ model WaCall {
 
   @@index([orgId, createdAt])
   @@index([contactId, createdAt])
+}
+
+// ---------------------------------------------------------------------------------------
+// Customer comms: RateUp messaging its own customers (src/modules/customerComms), run from
+// the staff console's Engage pages.
+// ---------------------------------------------------------------------------------------
+
+enum CustomerMessageChannel {
+  EMAIL
+  WHATSAPP
+}
+
+enum CustomerMessageSource {
+  DRIP
+  BROADCAST
+}
+
+enum CustomerMessageStatus {
+  QUEUED
+  SENT
+  FAILED
+  SKIPPED
+}
+
+/// One message to one person on one channel. The unique key is what makes a drip step or a
+/// broadcast send at most once per person, however often the sweep that queues it runs.
+model CustomerMessage {
+  id          String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt   DateTime               @default(now())
+  user        User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String                 @db.Uuid
+  org         Org                    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId       String                 @db.Uuid
+  channel     CustomerMessageChannel
+  source      CustomerMessageSource
+  /// The drip step's key, or `broadcast:<id>`.
+  key         String
+  broadcast   Broadcast?             @relation(fields: [broadcastId], references: [id], onDelete: SetNull)
+  broadcastId String?                @db.Uuid
+  status      CustomerMessageStatus  @default(QUEUED)
+  skipReason  String?
+  error       String?
+  sentAt      DateTime?
+
+  @@unique([userId, channel, key])
+  @@index([orgId, createdAt])
+  @@index([key, status])
+  @@index([broadcastId, status])
+  @@index([userId, sentAt])
+}
+
+enum EmailSuppressionReason {
+  BOUNCE
+  COMPLAINT
+  MANUAL
+}
+
+/// Addresses SES told us never to mail again (hard bounce, spam complaint). Checked before
+/// every customer-comms email; mailing them again is what gets an SES account paused.
+model EmailSuppression {
+  email     String                 @id
+  reason    EmailSuppressionReason
+  detail    String?
+  createdAt DateTime               @default(now())
+}
+
+/// Staff settings for a drip step; the schedule and goals live in code (drip.catalogue.ts).
+/// Absent means on, with the catalogue's wording.
+model DripStepSetting {
+  key            String    @id
+  enabled        Boolean   @default(true)
+  /// Staff-edited wording (DripEmail shape); null sends the catalogue's.
+  email     Json?
+  /// Staff's WhatsApp choice, `{ template: string | null }` (null template = off); null
+  /// column sends the catalogue's.
+  whatsapp  Json?
+  /// Last edit to either of the above.
+  editedAt  DateTime?
+  editedBy  String?
+  updatedAt DateTime  @default(now()) @updatedAt
+}
+
+enum BroadcastStatus {
+  DRAFT
+  SCHEDULED
+  SENDING
+  SENT
+}
+
+/// A newsletter or one-off announcement composed in the staff console.
+model Broadcast {
+  id               String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @default(now()) @updatedAt
+  name             String
+  channels         CustomerMessageChannel[]
+  /// [PBroadcastAudience]
+  audience         Json
+  emailSubject     String?
+  /// Markdown subset; see emails/customer-update.tsx.
+  emailBody        String?
+  ctaLabel         String?
+  ctaUrl           String?
+  waTemplateName   String?
+  /// Body variables for the template, in `{{n}}` order. `{name}` and `{org}` are filled per person.
+  waParams         String[]                 @default([])
+  status           BroadcastStatus          @default(DRAFT)
+  scheduledAt      DateTime?
+  startedAt        DateTime?
+  finishedAt       DateTime?
+  /// No FK, like OrgNote: the record outlives the staff member.
+  createdByStaffId String                   @db.Uuid
+  createdByEmail   String
+  messages         CustomerMessage[]
+
+  @@index([status, scheduledAt])
 }
 
 /// An iOS device's PushKit VoIP token. A VoIP push is the only thing that wakes a closed iOS

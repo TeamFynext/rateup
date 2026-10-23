@@ -37,6 +37,7 @@ import type { ScheduledJobId } from "../queues/cron.queue.js";
 import { reevaluateRollingTiers } from "../../../modules/loyalty/tiers/tierReevaluation.service.js";
 import { settleSentCampaigns } from "../../../modules/campaign/campaignSettle.service.js";
 import { purgeStaffSessions } from "../../../modules/staff/staff.session.js";
+import { runOnboardingDrip } from "../../../modules/customerComms/drip.service.js";
 import { flushUsageCounters } from "../../shared/usageCounter.js";
 
 const workerConnection = baseRedis.duplicate();
@@ -153,6 +154,10 @@ const HANDLERS: Record<ScheduledJobId, () => Promise<void>> = {
   downgradeExpiredSubscriptions: async () => {
     log.info("Running Daily at 4:00 AM --> Returning expired subscriptions to the free plan");
     await safeRun("downgradeExpiredSubscriptions", downgradeExpiredSubscriptions);
+  },
+
+  customerOnboardingDrip: async () => {
+    await safeRun("runOnboardingDrip", runOnboardingDrip);
   },
 
   staffSessionPurge: async () => {

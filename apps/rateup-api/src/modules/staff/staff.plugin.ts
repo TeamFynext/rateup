@@ -7,6 +7,7 @@ import prisma from "../../utils/prisma.js";
 import { staffAccessRoutes } from "./access/access.route.js";
 import { staffAuthRoutes } from "./auth/staffAuth.route.js";
 import { staffBillingRoutes } from "./billing/billing.route.js";
+import { staffEngageRoutes } from "./engage/engage.route.js";
 import { staffOpsRoutes } from "./ops/ops.route.js";
 import { staffOrgRoutes } from "./orgs/orgs.route.js";
 import { staffOverviewRoutes } from "./overview/overview.route.js";
@@ -117,6 +118,7 @@ export async function registerStaffApi(
   // generic one. Handlers call recordStaffAction for the specific, before/after version.
   server.addHook("onResponse", async (request, reply) => {
     if (!MUTATING.has(request.method) || request.staffAuditRecorded || !request.staff) return;
+    if (request.routeOptions.config?.staffReadOnly) return;
     try {
       await prisma.staffAuditLog.create({
         data: {
@@ -154,5 +156,6 @@ export async function registerStaffApi(
   await server.register(staffUserRoutes);
   await server.register(staffBillingRoutes);
   await server.register(staffOpsRoutes);
+  await server.register(staffEngageRoutes);
   await server.register(staffAccessRoutes(config));
 }
