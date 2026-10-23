@@ -9,6 +9,9 @@ import {
   IconLayoutDashboard,
   IconPackage,
   IconRefresh,
+  IconRoute,
+  IconSend,
+  IconSpeakerphone,
   IconShieldLock,
   IconShoppingCart,
   IconStar,
@@ -63,6 +66,16 @@ export const NAV_GROUPS: NavGroup[] = [
       { title: "Stripe", to: "/billing/stripe", icon: IconCreditCard },
       { title: "Orders", to: "/billing/orders", icon: IconShoppingCart },
       { title: "Subscriptions", to: "/billing/subscriptions", icon: IconPackage },
+    ],
+  },
+  {
+    id: "engage",
+    title: "Engage",
+    icon: IconSpeakerphone,
+    panel: "pages",
+    items: [
+      { title: "Onboarding", to: "/engage/onboarding", icon: IconRoute },
+      { title: "Broadcasts", to: "/engage/broadcasts", icon: IconSend },
     ],
   },
   {

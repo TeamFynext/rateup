@@ -19,6 +19,7 @@ import type { OrgAction } from "@/components/org/actions/org-action-dialogs";
 import { FeaturesSummary } from "@/components/org/features-summary";
 import { OrgChannelsPanel } from "@/components/org/org-channels-panel";
 import { MemberRow } from "@/components/org/org-members-tab";
+import { OrgMessagesPanel } from "@/components/org/org-messages-panel";
 import { OrgNotesPanel } from "@/components/org/org-notes-panel";
 import type { OrgTab } from "@/components/org/org-tabs";
 import { UsageMeters } from "@/components/org/org-usage-tab";
@@ -73,6 +74,7 @@ export function OrgOverviewTab({
         <PlanSection org={org} onTab={onTab} />
         <OrgNotesPanel orgId={org.id} onAction={onAction} />
         <ActivitySection orgId={org.id} onTab={onTab} />
+        <OrgMessagesPanel orgId={org.id} />
         <BusinessSection org={org} />
       </div>
     </div>

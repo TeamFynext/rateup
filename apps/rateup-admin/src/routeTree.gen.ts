@@ -26,6 +26,10 @@ import { Route as AppOpsTestDataRouteImport } from './routes/_app/ops/test-data'
 import { Route as AppOpsUpdateCenterRouteImport } from './routes/_app/ops/update-center'
 import { Route as AppOrgsIndexRouteImport } from './routes/_app/orgs/index'
 import { Route as AppOrgsOrgIdRouteImport } from './routes/_app/orgs/$orgId'
+import { Route as AppEngageBroadcastsIndexRouteImport } from './routes/_app/engage/broadcasts/index'
+import { Route as AppEngageBroadcastsBroadcastIdRouteImport } from './routes/_app/engage/broadcasts/$broadcastId'
+import { Route as AppEngageOnboardingIndexRouteImport } from './routes/_app/engage/onboarding/index'
+import { Route as AppEngageOnboardingKeyRouteImport } from './routes/_app/engage/onboarding/$key'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -111,6 +115,29 @@ const AppOrgsOrgIdRoute = AppOrgsOrgIdRouteImport.update({
   path: '/$orgId',
   getParentRoute: () => AppOrgsRoute,
 } as any)
+const AppEngageBroadcastsIndexRoute =
+  AppEngageBroadcastsIndexRouteImport.update({
+    id: '/engage/broadcasts/',
+    path: '/engage/broadcasts/',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppEngageBroadcastsBroadcastIdRoute =
+  AppEngageBroadcastsBroadcastIdRouteImport.update({
+    id: '/engage/broadcasts/$broadcastId',
+    path: '/engage/broadcasts/$broadcastId',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppEngageOnboardingIndexRoute =
+  AppEngageOnboardingIndexRouteImport.update({
+    id: '/engage/onboarding/',
+    path: '/engage/onboarding/',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppEngageOnboardingKeyRoute = AppEngageOnboardingKeyRouteImport.update({
+  id: '/engage/onboarding/$key',
+  path: '/engage/onboarding/$key',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
@@ -129,6 +156,10 @@ export interface FileRoutesByFullPath {
   '/ops/update-center': typeof AppOpsUpdateCenterRoute
   '/orgs/$orgId': typeof AppOrgsOrgIdRoute
   '/orgs/': typeof AppOrgsIndexRoute
+  '/engage/broadcasts/$broadcastId': typeof AppEngageBroadcastsBroadcastIdRoute
+  '/engage/onboarding/$key': typeof AppEngageOnboardingKeyRoute
+  '/engage/broadcasts/': typeof AppEngageBroadcastsIndexRoute
+  '/engage/onboarding/': typeof AppEngageOnboardingIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -146,6 +177,10 @@ export interface FileRoutesByTo {
   '/ops/update-center': typeof AppOpsUpdateCenterRoute
   '/orgs/$orgId': typeof AppOrgsOrgIdRoute
   '/orgs': typeof AppOrgsIndexRoute
+  '/engage/broadcasts/$broadcastId': typeof AppEngageBroadcastsBroadcastIdRoute
+  '/engage/onboarding/$key': typeof AppEngageOnboardingKeyRoute
+  '/engage/broadcasts': typeof AppEngageBroadcastsIndexRoute
+  '/engage/onboarding': typeof AppEngageOnboardingIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -166,6 +201,10 @@ export interface FileRoutesById {
   '/_app/ops/update-center': typeof AppOpsUpdateCenterRoute
   '/_app/orgs/$orgId': typeof AppOrgsOrgIdRoute
   '/_app/orgs/': typeof AppOrgsIndexRoute
+  '/_app/engage/broadcasts/$broadcastId': typeof AppEngageBroadcastsBroadcastIdRoute
+  '/_app/engage/onboarding/$key': typeof AppEngageOnboardingKeyRoute
+  '/_app/engage/broadcasts/': typeof AppEngageBroadcastsIndexRoute
+  '/_app/engage/onboarding/': typeof AppEngageOnboardingIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -186,6 +225,10 @@ export interface FileRouteTypes {
     | '/ops/update-center'
     | '/orgs/$orgId'
     | '/orgs/'
+    | '/engage/broadcasts/$broadcastId'
+    | '/engage/onboarding/$key'
+    | '/engage/broadcasts/'
+    | '/engage/onboarding/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -203,6 +246,10 @@ export interface FileRouteTypes {
     | '/ops/update-center'
     | '/orgs/$orgId'
     | '/orgs'
+    | '/engage/broadcasts/$broadcastId'
+    | '/engage/onboarding/$key'
+    | '/engage/broadcasts'
+    | '/engage/onboarding'
   id:
     | '__root__'
     | '/_app'
@@ -222,6 +269,10 @@ export interface FileRouteTypes {
     | '/_app/ops/update-center'
     | '/_app/orgs/$orgId'
     | '/_app/orgs/'
+    | '/_app/engage/broadcasts/$broadcastId'
+    | '/_app/engage/onboarding/$key'
+    | '/_app/engage/broadcasts/'
+    | '/_app/engage/onboarding/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -350,6 +401,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOrgsOrgIdRouteImport
       parentRoute: typeof AppOrgsRoute
     }
+    '/_app/engage/broadcasts/': {
+      id: '/_app/engage/broadcasts/'
+      path: '/engage/broadcasts'
+      fullPath: '/engage/broadcasts/'
+      preLoaderRoute: typeof AppEngageBroadcastsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/engage/broadcasts/$broadcastId': {
+      id: '/_app/engage/broadcasts/$broadcastId'
+      path: '/engage/broadcasts/$broadcastId'
+      fullPath: '/engage/broadcasts/$broadcastId'
+      preLoaderRoute: typeof AppEngageBroadcastsBroadcastIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/engage/onboarding/': {
+      id: '/_app/engage/onboarding/'
+      path: '/engage/onboarding'
+      fullPath: '/engage/onboarding/'
+      preLoaderRoute: typeof AppEngageOnboardingIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/engage/onboarding/$key': {
+      id: '/_app/engage/onboarding/$key'
+      path: '/engage/onboarding/$key'
+      fullPath: '/engage/onboarding/$key'
+      preLoaderRoute: typeof AppEngageOnboardingKeyRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
@@ -380,6 +459,10 @@ interface AppRouteChildren {
   AppOpsShopifyRoute: typeof AppOpsShopifyRoute
   AppOpsTestDataRoute: typeof AppOpsTestDataRoute
   AppOpsUpdateCenterRoute: typeof AppOpsUpdateCenterRoute
+  AppEngageBroadcastsBroadcastIdRoute: typeof AppEngageBroadcastsBroadcastIdRoute
+  AppEngageOnboardingKeyRoute: typeof AppEngageOnboardingKeyRoute
+  AppEngageBroadcastsIndexRoute: typeof AppEngageBroadcastsIndexRoute
+  AppEngageOnboardingIndexRoute: typeof AppEngageOnboardingIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -396,6 +479,10 @@ const AppRouteChildren: AppRouteChildren = {
   AppOpsShopifyRoute: AppOpsShopifyRoute,
   AppOpsTestDataRoute: AppOpsTestDataRoute,
   AppOpsUpdateCenterRoute: AppOpsUpdateCenterRoute,
+  AppEngageBroadcastsBroadcastIdRoute: AppEngageBroadcastsBroadcastIdRoute,
+  AppEngageOnboardingKeyRoute: AppEngageOnboardingKeyRoute,
+  AppEngageBroadcastsIndexRoute: AppEngageBroadcastsIndexRoute,
+  AppEngageOnboardingIndexRoute: AppEngageOnboardingIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
