@@ -42,3 +42,6 @@ yarn-error.*
 app-example
 # JetBrains IDEs — project-local settings, committed by accident once already
 .idea/
+
+# Firebase Admin SDK service-account keys — never commit (see security audit INFRA-4)
+*-firebase-adminsdk-*.json

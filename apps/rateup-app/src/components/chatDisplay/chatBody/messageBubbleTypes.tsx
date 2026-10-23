@@ -29,6 +29,8 @@ import {
 import TextWithFormatting from "@/utils/TextFormatting";
 import { useAudioPlayer } from "expo-audio";
 import * as IntentLauncher from "expo-intent-launcher";
+import { logger } from "@/utils/logger";
+import { parseDocumentContent, safeMediaId, splitMediaContent } from "@/utils/mediaContent";
 
 export default function WaInboxText({
   messageContent,
@@ -62,7 +64,7 @@ export function WaInboxImage({ messageContent }: { messageContent: string }) {
 
   // `?.` on the split made this destructure `undefined` when there is no content,
   // which throws rather than short-circuiting. Default to an empty string instead.
-  const [link, caption] = (messageContent ?? "").split("_caption_");
+  const [link = "", caption] = splitMediaContent(messageContent, 2);
   const imageUrl = link.startsWith("http") ? link : `${getFileUrlFromKey(link)}`;
 
   const openModal = () => setIsModalVisible(true);
@@ -113,14 +115,13 @@ export function WaInboxVideo({ messageContent }: { messageContent: string }) {
   const isDark = colorScheme === "dark";
   const { mutate, isPending, reset } = useGetMediaFile();
   const [localPath, setLocalPath] = useState<string | null>(null);
-  const [id, caption] = messageContent.split("_caption_");
+  const [id = "", caption] = splitMediaContent(messageContent, 2);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const appFolderPath = `${FileSystem.documentDirectory ?? ""}wa_media`;
   // `id` is a WhatsApp media id on a received video, but the whole CloudFront URL on one we
   // sent, which made the path `wa_media/http://…` and failed the existence check. Made
   // file-safe the way the audio bubble does it.
-  const safeId = id.replace(/[^a-zA-Z0-9-]/g, "_");
-  const downloadPath = `${appFolderPath}/${safeId}.mp4`;
+  const downloadPath = `${appFolderPath}/${safeMediaId(id)}.mp4`;
 
   const link = id.startsWith("http") ? id : null;
   // Check if file already exists on mount. A video with a link plays from it and is never
@@ -140,7 +141,7 @@ export function WaInboxVideo({ messageContent }: { messageContent: string }) {
       }
     };
     // A failed check only means the video is downloaded again on tap.
-    checkLocalFile().catch((err) => console.warn("Video cache check failed:", err));
+    checkLocalFile().catch((err) => logger.warn("Video cache check failed:", err));
   }, [appFolderPath, downloadPath, link]);
 
   const handleDownload = async () => {
@@ -162,7 +163,7 @@ export function WaInboxVideo({ messageContent }: { messageContent: string }) {
           });
           setLocalPath(downloadPath);
         } catch (error) {
-          console.error("File write failed:", error);
+          logger.error("File write failed:", error);
         } finally {
           // The bytes are on disk now and playback reads from there, so drop
           // the ArrayBuffer the mutation is still holding.
@@ -271,10 +272,9 @@ export function WaInboxAudio({
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [id, caption] = messageContent.split("_caption_");
-  const safeId = id.replace(/[^a-zA-Z0-9-]/g, "_");
+  const [id = "", caption] = splitMediaContent(messageContent, 2);
   const appFolderPath = `${FileSystem.documentDirectory ?? ""}wa_media`;
-  const downloadPath = `${appFolderPath}/${safeId}.mp3`;
+  const downloadPath = `${appFolderPath}/${safeMediaId(id)}.mp3`;
   const link = id.startsWith("http") ? id : null;
   const source = localPath || link || null;
   const player = useAudioPlayer(source ? { uri: source } : null);
@@ -341,7 +341,7 @@ export function WaInboxAudio({
           });
           setLocalPath(downloadPath);
         } catch (error) {
-          console.error("Audio file write failed:", error);
+          logger.error("Audio file write failed:", error);
         } finally {
           reset();
         }
@@ -510,10 +510,12 @@ export function WaInboxDocument({ messageContent }: { messageContent: string }) 
   const [isPending, setIsPending] = useState(false);
   const [localPath, setLocalPath] = useState<string | null>(null);
 
-  // Parse messageContent
-  const [id, filename = "document.pdf", caption = ""] = messageContent.split("_caption_");
+  // `filename` is the customer's and is only ever displayed. The file on disk is named
+  // from the media id (`storageName`): a filename such as `../SQLite/chat_contacts_db`
+  // would otherwise overwrite the app's own databases.
+  const { id, filename, caption, storageName } = parseDocumentContent(messageContent);
   const appFolderPath = `${FileSystem.documentDirectory ?? ""}wa_media`;
-  const downloadPath = `${appFolderPath}/${filename}`;
+  const downloadPath = `${appFolderPath}/${storageName}`;
 
   useEffect(() => {
     // Check if the document exists locally
@@ -537,16 +539,13 @@ export function WaInboxDocument({ messageContent }: { messageContent: string }) 
   const { mutateAsync, reset } = useGetMediaFile();
 
   const handleDownload = async () => {
-    const folderPath = `${FileSystem.documentDirectory ?? ""}wa_media`;
-    const fullPath = `${folderPath}/${filename}`;
-
     if (id.startsWith("http")) {
       try {
         setIsPending(true);
-        const result = await FileSystem.downloadAsync(id, fullPath);
+        const result = await FileSystem.downloadAsync(id, downloadPath);
         if (result.status === 200) {
           setIsPending(false);
-          setLocalPath(fullPath);
+          setLocalPath(downloadPath);
         } else {
           setIsPending(false);
           Toast.show({
@@ -556,7 +555,7 @@ export function WaInboxDocument({ messageContent }: { messageContent: string }) 
         }
       } catch (error) {
         setIsPending(false);
-        console.error("Download error:", error);
+        logger.error("Download error:", error);
         Toast.show({
           type: "error",
           text1: "Error while downloading.",
@@ -580,7 +579,7 @@ export function WaInboxDocument({ messageContent }: { messageContent: string }) 
 
         setLocalPath(downloadPath);
       } catch (error) {
-        console.error("Download error:", error);
+        logger.error("Download error:", error);
         Toast.show({
           type: "error",
           text1: "Failed to download document.",
@@ -606,7 +605,7 @@ export function WaInboxDocument({ messageContent }: { messageContent: string }) 
           await Linking.openURL(localPath);
         }
       } catch (err) {
-        console.error("Error opening file:", err);
+        logger.error("Error opening file:", err);
         Toast.show({
           type: "error",
           text1: "Unable to open the document.",
@@ -837,7 +836,7 @@ export function WaInboxInteractive({ interactiveBody, messageContent }: Props) {
                     <Pressable
                       key={r.id}
                       className="py-2"
-                      onPress={() => console.log("Selected:", r)}
+                      onPress={() => logger.log("Selected:", r)}
                     >
                       <Text
                         className="text-sm font-medium"

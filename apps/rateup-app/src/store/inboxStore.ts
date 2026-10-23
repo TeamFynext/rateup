@@ -19,6 +19,7 @@ import {
   saveContactToDB,
   saveMessagesToIDB,
 } from "../utils/sqlite";
+import { logger } from "@/utils/logger";
 
 export function makeFilterKey(filter: any) {
   return Object.entries(filter || {})
@@ -454,7 +455,7 @@ export const useContactsStore = create<ContactsStoreState>()(
           // }
           saveContactToDB(updatedContact);
         } catch (e) {
-          console.error(e);
+          logger.error(e);
         }
       },
 
@@ -702,7 +703,7 @@ export const useContactsStore = create<ContactsStoreState>()(
           saveContactToDB(updatedContact);
           updateIdb.forEach((i) => saveContactIdsForFilter(i.key, i.contactIds));
         } catch (e) {
-          console.error(e);
+          logger.error(e);
         }
       },
 
@@ -733,7 +734,7 @@ export const useContactsStore = create<ContactsStoreState>()(
         // Not awaited — nothing here needs the result — but the rejection is
         // handled, or a dropped connection would surface as an unhandled promise
         // rejection rather than a log line.
-        markMessageAsRead(contact.id).catch((e) => console.error(e));
+        markMessageAsRead(contact.id).catch((e) => logger.error(e));
       },
 
       setSelectedContact(contact) {
