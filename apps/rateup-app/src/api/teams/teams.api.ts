@@ -1,5 +1,6 @@
 import axios from "@/config/axios";
 import { MembersResponse } from "@/context/type";
+import { logger } from "@/utils/logger";
 
 /** A team as `/team/user` returns it: the caller's own teams, with active member counts. */
 export interface UserTeam {
@@ -25,7 +26,7 @@ export async function getTeamsMembersOfOrg() {
     let members: MembersResponse = (await axios.get("/api/org/members-with-teams")).data;
     return members;
   } catch (e) {
-    console.error(e);
+    logger.error(e);
     //return { error: "Error Occured!" };
   }
 }

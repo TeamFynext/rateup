@@ -1,15 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { Eye, EyeOff, Lock, TriangleAlert } from "lucide-react-native";
 import React, { useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { Modal, Pressable, ScrollView, Text, View } from "react-native";
 
 import {
   changePassword,
@@ -19,6 +11,7 @@ import {
   useUserProfile,
 } from "@/api/api";
 import { Toast } from "@/components/common/Notice";
+import KeyboardAvoider from "@/components/common/KeyboardAvoider";
 import {
   Card,
   CashierButton,
@@ -274,8 +267,7 @@ function DeleteAccountModal({
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={close}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      <KeyboardAvoider
         style={{
           flex: 1,
           justifyContent: "center",
@@ -351,7 +343,7 @@ function DeleteAccountModal({
             </View>
           </View>
         </View>
-      </KeyboardAvoidingView>
+      </KeyboardAvoider>
     </Modal>
   );
 }

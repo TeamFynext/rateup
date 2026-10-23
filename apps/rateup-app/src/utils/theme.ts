@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { logger } from "@/utils/logger";
 
 const THEME_KEY = "rateup_theme_preference";
 
@@ -11,7 +12,7 @@ export async function getThemePreference(): Promise<ThemePreference> {
       return value as ThemePreference;
     }
   } catch (error) {
-    console.error("Error reading theme preference:", error);
+    logger.error("Error reading theme preference:", error);
   }
   return "system";
 }
@@ -20,6 +21,6 @@ export async function setThemePreference(theme: ThemePreference): Promise<void> 
   try {
     await AsyncStorage.setItem(THEME_KEY, theme);
   } catch (error) {
-    console.error("Error saving theme preference:", error);
+    logger.error("Error saving theme preference:", error);
   }
 }

@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Dimensions } from "react-native";
 import * as ScreenOrientation from "expo-screen-orientation";
+import { logger } from "@/utils/logger";
 
 /**
  * Android's large-screen line: a display whose shorter side is 600dp or more is a tablet,
@@ -14,7 +15,7 @@ function applyLock(width: number, height: number) {
     Math.min(width, height) < LARGE_SCREEN_DP
       ? ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP)
       : ScreenOrientation.unlockAsync();
-  lock.catch((err) => console.warn("Could not set the screen orientation:", err));
+  lock.catch((err) => logger.warn("Could not set the screen orientation:", err));
 }
 
 /**

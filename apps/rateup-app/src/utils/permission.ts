@@ -1,4 +1,5 @@
 import { PermissionsAndroid, Platform, Alert, Linking } from "react-native";
+import { logger } from "@/utils/logger";
 
 export default async function requestStoragePermission(): Promise<boolean> {
   if (Platform.OS !== "android") return true;
@@ -38,7 +39,7 @@ export default async function requestStoragePermission(): Promise<boolean> {
 
     return false;
   } catch (err) {
-    console.warn("Permission request failed", err);
+    logger.warn("Permission request failed", err);
     return false;
   }
 }

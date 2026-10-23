@@ -4,6 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Colors } from "@/constants/colors";
 import { addToken, deleteToken } from "@/api/notification";
 import { useOpenChatStore } from "@/utils/store";
+import { logger } from "@/utils/logger";
 
 /**
  * Module-scope on purpose: a handler registered after the first notification
@@ -41,6 +42,17 @@ Notifications.setNotificationHandler({
       !!openChatId &&
       data.contactId === openChatId;
 
+    // A call push while the app is open: the socket already rang the call screen and its
+    // ringtone, so a banner and a second ringtone on top would only double up.
+    if (data?.type === "wa_call") {
+      return {
+        shouldShowBanner: false,
+        shouldShowList: false,
+        shouldPlaySound: false,
+        shouldSetBadge: false,
+      };
+    }
+
     if (isOpenConversation) {
       // No list entry or badge either: the user is reading it, so it is not
       // pending. Leaving those true would strand an unread badge for a message
@@ -63,6 +75,8 @@ Notifications.setNotificationHandler({
 });
 
 const ANDROID_DEFAULT_CHANNEL = "default";
+/** Incoming WhatsApp calls: their own ringtone, and loud enough to hear across a room. */
+const ANDROID_CALL_CHANNEL = "wa_calls";
 
 /**
  * Android 8+ takes every behaviour that matters — heads-up, sound, vibration —
@@ -95,7 +109,24 @@ export async function setupAndroidNotificationChannel() {
     });
   } catch (err) {
     // A missing channel degrades pushes to silent; it should not stop the app booting.
-    console.error("Failed to create Android notification channel:", err);
+    logger.error("Failed to create Android notification channel:", err);
+  }
+
+  try {
+    await Notifications.setNotificationChannelAsync(ANDROID_CALL_CHANNEL, {
+      name: "WhatsApp calls",
+      description: "Customers calling your WhatsApp number",
+      importance: Notifications.AndroidImportance.MAX,
+      // Bundled by the expo-notifications plugin (app.json `sounds`). The API names the
+      // same file and channel when it pushes a call — see calling.push.ts in rateup-api.
+      sound: "wa_call_ringtone.wav",
+      vibrationPattern: [0, 800, 400, 800, 400, 800],
+      lightColor: Colors.accent.whatsapp,
+      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+      bypassDnd: true,
+    });
+  } catch (err) {
+    logger.error("Failed to create Android call notification channel:", err);
   }
 }
 
@@ -149,7 +180,7 @@ export async function registerForPushNotificationsAsync({ prompt = true } = {}) 
     const tokenData = await getExpoPushTokenWithRetry();
     return tokenData;
   } catch (err) {
-    console.error("❌ Failed to get push token:", err);
+    logger.error("❌ Failed to get push token:", err);
     return null;
   }
 }
@@ -185,7 +216,7 @@ export async function syncPushToken({ prompt = false } = {}) {
   } catch (err) {
     // Left unsynced on purpose: `lastSyncedToken` is not advanced, so the next
     // foreground retries rather than assuming this device is registered.
-    console.error("Failed to register push token:", err);
+    logger.error("Failed to register push token:", err);
     return null;
   }
 
@@ -213,6 +244,6 @@ export async function unregisterPushToken() {
   } catch (err) {
     // Never block sign-out on this. The row is also pruned server-side once Expo
     // reports the token as DeviceNotRegistered.
-    console.error("Failed to unregister push token:", err);
+    logger.error("Failed to unregister push token:", err);
   }
 }

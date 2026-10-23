@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { View, Text, ScrollView, Pressable, ActivityIndicator, useColorScheme } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Clipboard from "expo-clipboard";
 import dayjs from "dayjs";
 import { ArrowLeft, Check, Copy, Pencil, User, Phone } from "lucide-react-native";
@@ -135,6 +136,7 @@ function InfoRow({
 
 const ContactInfo = () => {
   const params = useLocalSearchParams();
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const isDark = useColorScheme() === "dark";
   const t = getInboxRowTheme(isDark);
@@ -222,7 +224,7 @@ const ContactInfo = () => {
       </View>
 
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 + insets.bottom }}
         showsVerticalScrollIndicator={false}
       >
         {/* Identity block */}

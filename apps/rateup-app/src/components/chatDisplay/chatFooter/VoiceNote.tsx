@@ -31,6 +31,7 @@ import {
 import { Colors } from "@/constants/colors";
 import { Toast } from "@/components/common/Notice";
 import { configurePlaybackAudioMode, configureRecordingAudioMode } from "@/utils/audio";
+import { logger } from "@/utils/logger";
 
 /** Speech, not music: mono AAC at 64 kbps is a quarter of the high-quality preset's size. */
 const VOICE_NOTE_OPTIONS: RecordingOptions = {
@@ -121,7 +122,7 @@ export function useVoiceNote({ onSend }: { onSend: (file: VoiceNoteFile) => Prom
     try {
       await recorder.stop();
     } catch (err) {
-      console.error("voice note stop failed:", err);
+      logger.error("voice note stop failed:", err);
     }
     // Back to playback before anything else plays: a stopped recorder leaves iOS in
     // `.playAndRecord`, which silences voice-note playback.
@@ -152,7 +153,7 @@ export function useVoiceNote({ onSend }: { onSend: (file: VoiceNoteFile) => Prom
       await recorder.prepareToRecordAsync();
       recorder.record();
     } catch (err) {
-      console.error("voice note start failed:", err);
+      logger.error("voice note start failed:", err);
       Toast.error("Could not start recording.");
       setPhase("idle");
       return;

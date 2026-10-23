@@ -7,6 +7,7 @@ import { GoogleIcon } from "../constants/imageExports";
 import { loggedUserDetails } from "../api/api";
 import { useAuth } from "../context/AuthContext";
 import { syncPushToken } from "../utils/notification";
+import { logger } from "@/utils/logger";
 
 const GoogleLogin = ({ setError }: { setError: (msg: string) => void }) => {
   const router = useRouter();
@@ -44,13 +45,13 @@ const GoogleLogin = ({ setError }: { setError: (msg: string) => void }) => {
           setError("Push notification setup failed. You may not recieve alerts");
         }
       } catch (tokenError) {
-        console.error("Push token registration error:", tokenError);
+        logger.error("Push token registration error:", tokenError);
         setError("Failed to enable push notifications");
       }
 
       router.replace("/protected/inbox");
     } catch (error) {
-      console.error("Unexpected Google login error:", error);
+      logger.error("Unexpected Google login error:", error);
       setError("Something went wrong.");
     } finally {
       setLoading(false);

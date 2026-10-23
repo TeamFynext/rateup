@@ -1,7 +1,8 @@
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "@/config/axios";
+import { API_URL } from "@/config/env";
 import SuperTokens from "supertokens-react-native";
+import { describeError, logger } from "@/utils/logger";
 
 export const signInWithGoogle = async () => {
   try {
@@ -16,7 +17,7 @@ export const signInWithGoogle = async () => {
     const accessToken = tokens.accessToken;
 
     // Send tokens to SuperTokens backend
-    const response = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/api/auth/signinup`, {
+    const response = await axios.post(`${API_URL}/api/auth/signinup`, {
       thirdPartyId: "google",
       clientType: "mobile",
       oAuthTokens: {
@@ -34,7 +35,7 @@ export const signInWithGoogle = async () => {
       };
     }
 
-    // Get and store access token
+    // A session needs an access token; SuperTokens keeps it, nothing else should.
     const token = await SuperTokens.getAccessToken();
     if (!token) {
       return {
@@ -43,15 +44,14 @@ export const signInWithGoogle = async () => {
       };
     }
 
-    await AsyncStorage.setItem("accessToken", token);
-
     return {
       success: true,
       data: response.data,
     };
   } catch (err: any) {
-    console.log("Error during Google Sign-In:", err.message);
-    console.log("Full error object:", JSON.stringify(err, null, 2));
+    // Code and message only: the axios error carries the request body, which holds
+    // Google's access and id tokens.
+    logger.warn("Error during Google Sign-In:", describeError(err));
     return {
       success: false,
       message: err?.response?.data?.message || "Google Sign-In failed. Please try again.",
