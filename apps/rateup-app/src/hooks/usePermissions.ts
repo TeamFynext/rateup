@@ -19,7 +19,14 @@ export type Permission =
   | "flows.read"
   | "flows.manage"
   | "surveys.read"
-  | "surveys.manage";
+  | "surveys.manage"
+  | "commerce.read"
+  | "commerce.sell"
+  | "commerce.orders.manage"
+  | "commerce.products.manage"
+  | "commerce.discounts.manage"
+  | "commerce.payments.manage"
+  | "commerce.storefront.manage";
 
 export type RoleKey = "OWNER" | "ADMIN" | "MANAGER" | "STAFF" | "AGENT" | "VIEWER";
 
@@ -41,7 +48,8 @@ const LEGACY_ROLE_KEY: Record<string, RoleKey> = {
 };
 
 // Until the API sends a permission list, an app in front of an older server keeps today's
-// behaviour: every action visible, the server deciding.
+// behaviour: every action visible, the server deciding. Commerce is left out: a server
+// that predates permissions has no shop to open.
 const EVERYTHING: ReadonlySet<string> = new Set<Permission>([
   "inbox.read",
   "inbox.reply",

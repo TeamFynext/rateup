@@ -20,6 +20,8 @@ import { useSelectedContactStore } from "@/utils/store";
 import { useContactById } from "@/api/inbox/contacts/contacts.query";
 import { useGetAssignedUserForContact } from "@/api/inbox/messages/message.query";
 import AssignToUser from "@/components/chatDisplay/chatFooter/AssignToUser";
+import ContactOrders from "@/components/shop/ContactOrders";
+import { useCommerceAccess } from "@/components/shop/chatSell";
 
 /** Mirrors the header's `channelLabel`, shown beside the number. */
 function platformLabel(platform?: string) {
@@ -153,6 +155,7 @@ const ContactInfo = () => {
   const contact: any = fetched ?? stored;
 
   const { data: assignedUsers } = useGetAssignedUserForContact(id);
+  const { canRead: canReadOrders } = useCommerceAccess();
 
   const [copied, setCopied] = useState(false);
 
@@ -395,6 +398,12 @@ const ContactInfo = () => {
             last
           />
         </Section>
+
+        {canReadOrders && id ? (
+          <Section label="Orders">
+            <ContactOrders contactId={id} />
+          </Section>
+        ) : null}
       </ScrollView>
     </View>
   );

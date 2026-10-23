@@ -700,6 +700,18 @@ interface Props1 {
   interactiveBody: WaSendMessageBody["interactive"];
 }
 
+/** How many catalog items a WhatsApp product or product-list message carried. */
+function catalogItemCount(body: Props["interactiveBody"]): number {
+  const action = body?.action as
+    | { product_retailer_id?: string; sections?: { product_items?: unknown[] }[] }
+    | undefined;
+  if (body?.type === "product") return action?.product_retailer_id ? 1 : 0;
+  if (body?.type === "product_list") {
+    return (action?.sections ?? []).reduce((n, s) => n + (s.product_items?.length ?? 0), 0);
+  }
+  return 0;
+}
+
 export function WaInboxInteractive({ interactiveBody, messageContent }: Props) {
   const [openSections, setOpenSections] = useState(false);
   const colorScheme = useColorScheme();
@@ -736,6 +748,17 @@ export function WaInboxInteractive({ interactiveBody, messageContent }: Props) {
           style={{ color: isDark ? Colors.dark.textPrimary : Colors.light.textPrimary }}
         >
           {interactiveBody.body.text}
+        </Text>
+      )}
+
+      {catalogItemCount(interactiveBody) > 0 && (
+        <Text
+          className="text-sm"
+          style={{ color: isDark ? Colors.dark.textMuted : Colors.light.textMuted }}
+        >
+          {catalogItemCount(interactiveBody) === 1
+            ? "1 catalog item"
+            : `${catalogItemCount(interactiveBody)} catalog items`}
         </Text>
       )}
 
