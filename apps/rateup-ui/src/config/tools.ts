@@ -489,49 +489,117 @@ export const TOOLS: ToolDefinition[] = [
   {
     slug: "shopify-fee-calculator",
     name: "Shopify Fee Calculator",
-    headline: "Shopify Fee Calculator",
-    tagline: "Calculate your exact net profit on a single Shopify transaction.",
+    headline: "Shopify Transaction Fee Calculator",
+    tagline:
+      "Work out every fee Shopify and your payment gateway take from an order — and the profit that is left.",
     description:
-      "Calculate your exact net profit per order including Shopify transaction fees and payment processing costs.",
+      "Shopify transaction fees, gateway charges and GST per order, for India and the US — plus your monthly total.",
     category: "Calculators",
-    badge: "Shopify pricing",
+    badge: "Shopify fees",
     cta: "Reduce RTO to offset gateway fees.",
-    steps: [],
+    steps: [
+      {
+        n: "01",
+        title: "Pick your store and plan",
+        body: "Choose India or the US and your Shopify plan. That sets Shopify's transaction fee and, in the US, the Shopify Payments card rate.",
+      },
+      {
+        n: "02",
+        title: "Enter the order",
+        body: "Sale price, product cost, the shipping you pay and your gateway's rate. In India, add GST on the fees — it is a real cost unless you claim it back.",
+      },
+      {
+        n: "03",
+        title: "See it at volume",
+        body: "Enter your monthly orders to see what fees cost you over a month — the number to weigh against a plan upgrade.",
+      },
+    ],
     faqs: [
       {
-        question: "What is the Shopify Transaction Fee?",
+        question: "What is the Shopify transaction fee?",
         answer:
-          "Shopify charges an additional transaction fee (0.2% to 2.0% depending on your plan) on all orders if you use a third-party payment gateway instead of Shopify Payments. If you use Shopify Payments, this fee is waived.",
+          "It is a percentage Shopify charges on each order paid through a third-party payment provider instead of Shopify Payments: 2% on Basic, 1% on Grow, 0.6% on Advanced and 0.2% on Plus. It is charged on top of the provider's own fee. Orders paid through Shopify Payments carry no Shopify transaction fee.",
       },
       {
-        question: "How do third-party payment gateway fees work?",
+        question: "Does Shopify charge transaction fees in India?",
         answer:
-          "If you use gateways like Stripe, Razorpay, or PayPal, they charge their own processing fees (usually around 2-3%). When using them on Shopify, you pay this gateway fee PLUS the Shopify Transaction Fee.",
+          "Yes. Shopify Payments is not available in India, so Indian stores use a gateway such as Razorpay, PayU or Cashfree and pay Shopify's transaction fee on every order — 2% on Basic, 1% on Grow and 0.6% on Advanced — plus the gateway's fee, usually around 2%. GST at 18% applies to these fees as well.",
       },
       {
-        question: "When should I upgrade to the Advanced or Plus plan?",
+        question: "What are Shopify Payments fees in the US?",
         answer:
-          "You should upgrade when the savings from lower transaction fees outweigh the increased monthly subscription cost. Our calculator helps you pinpoint exactly how much profit you lose to fees on each transaction, so you can estimate this at scale.",
+          "For online card payments, Shopify Payments charges about 2.9% + 30¢ on Basic, 2.7% + 30¢ on Grow and 2.5% + 30¢ on Advanced, with no extra Shopify transaction fee. International and currency-converted cards cost more. Check your Shopify admin under Settings → Payments for your exact rates.",
+      },
+      {
+        question: "Are Shopify transaction fees charged on COD orders?",
+        answer:
+          "No. Shopify does not charge transaction fees on manual payment methods such as cash on delivery and bank transfer, and no gateway fee applies either. Your courier charges its own COD fee instead, and some COD apps add a per-order fee of their own — check the app's pricing if you use one.",
+      },
+      {
+        question: "When should I upgrade my Shopify plan to save on fees?",
+        answer:
+          "When the transaction fees you save are more than the extra plan cost. In India, moving from Basic to Grow cuts Shopify's fee from 2% to 1%, which pays off once your monthly online revenue is above roughly the difference in plan price divided by 1%. Our Shopify Profit Calculator compares the plans on your own revenue.",
       },
     ],
     softwareApp: {
       name: "Shopify Fee Calculator",
-      description: "Calculate your exact net profit on a single Shopify transaction",
-      applicationCategory: "UtilityApplication",
-      featureList: [],
+      description:
+        "Free Shopify transaction fee calculator for India and the US. Calculates Shopify's transaction fee by plan, payment gateway or Shopify Payments charges, GST on fees, app fees and net profit per order, plus total fees per month at your order volume. No signup required.",
+      applicationCategory: "BusinessApplication",
+      featureList: [
+        "Shopify transaction fee by plan: Basic, Grow, Advanced",
+        "India mode with third-party gateway and 18% GST on fees",
+        "US mode with Shopify Payments card rates",
+        "Net profit and margin per order",
+        "Monthly fees at your order volume",
+        "No signup, runs in your browser",
+      ],
     },
   },
   {
     slug: "profit-margin-calculator",
     name: "Profit Margin Calculator",
-    headline: "Ecommerce Profit Margin Calculator",
-    tagline: "Calculate gross margin, net margin, markup and breakeven ROAS.",
-    description: "Calculate gross margin, net margin, markup and breakeven ROAS per order.",
+    headline: "Shopify Profit Margin Calculator",
+    tagline:
+      "Calculate gross margin, net margin, markup and breakeven ROAS per order — with Shopify's transaction fee built in, or for any other store.",
+    description:
+      "Gross margin, net margin, markup and breakeven ROAS per order, with Shopify fees built in.",
     category: "Calculators",
     badge: "Margin analysis",
     cta: "Improve net margin with higher RTO delivery.",
-    steps: [],
+    steps: [
+      {
+        n: "01",
+        title: "Pick where you sell",
+        body: "Choose your Shopify plan to fill in Shopify's transaction fee, or switch to another platform and enter its commission.",
+      },
+      {
+        n: "02",
+        title: "Add every cost",
+        body: "Product cost, shipping, packaging, ad spend per order and your gateway fee. Leave nothing out — small costs are what turn a healthy gross margin into a thin net one.",
+      },
+      {
+        n: "03",
+        title: "Check your breakeven ROAS",
+        body: "If your ads return less than this, each order they bring in loses money. Use it as the floor for every campaign.",
+      },
+    ],
     faqs: [
+      {
+        question: "How do I calculate profit margin on Shopify?",
+        answer:
+          "Subtract every cost of an order from its selling price, then divide by the selling price. On Shopify that means product cost, shipping, packaging, ad spend per order, your payment gateway fee and Shopify's own transaction fee. Gross margin counts only product cost; net margin counts everything.",
+      },
+      {
+        question: "What is a good profit margin for a Shopify store?",
+        answer:
+          "Gross margins of 50–70% are common for D2C brands that make their own products; resellers often run 20–40%. Net margin after shipping, ads and fees is much lower — 10–20% is healthy for most stores. If your gross margin is under 40%, paid ads rarely leave room for profit.",
+      },
+      {
+        question: "Does Shopify take a cut of each sale in India?",
+        answer:
+          "Yes. Shopify Payments is not available in India, so you use a third-party gateway such as Razorpay, PayU or Cashfree, and Shopify charges its own transaction fee on top: about 2% on Basic, 1% on Grow and 0.6% on Advanced. Your gateway charges its own fee as well, usually around 2%.",
+      },
       {
         question: "What is the difference between Gross Margin and Net Margin?",
         answer:
@@ -553,6 +621,222 @@ export const TOOLS: ToolDefinition[] = [
       description: "Calculate gross margin, net margin, markup and breakeven ROAS",
       applicationCategory: "UtilityApplication",
       featureList: [],
+    },
+  },
+  {
+    slug: "shopify-conversion-rate-calculator",
+    name: "Shopify Conversion Rate Calculator",
+    headline: "Shopify Conversion Rate Calculator",
+    tagline:
+      "Find your store's conversion rate, see which step of the funnel leaks the most, and what a small lift is worth in rupees.",
+    description:
+      "Conversion rate, cart and checkout abandonment, revenue per session — and the revenue a higher rate would add.",
+    category: "Calculators",
+    badge: "Shopify analytics",
+    cta: "Win back abandoned checkouts on WhatsApp.",
+    steps: [
+      {
+        n: "01",
+        title: "Copy your funnel",
+        body: "Open Shopify Analytics and find the conversion rate breakdown. Copy sessions, added to cart, reached checkout and orders for the same date range.",
+      },
+      {
+        n: "02",
+        title: "Find the leak",
+        body: "The overall rate hides where people drop out. A low add-to-cart rate points at product pages; high checkout abandonment points at shipping cost, COD or payment trouble.",
+      },
+      {
+        n: "03",
+        title: "Price the fix",
+        body: "Move the slider to see what a higher conversion rate earns on the traffic you already pay for — then decide what is worth fixing first.",
+      },
+    ],
+    faqs: [
+      {
+        question: "How is Shopify conversion rate calculated?",
+        answer:
+          "Conversion rate is orders divided by sessions, multiplied by 100. If your store had 40,000 sessions and 640 orders in a month, your conversion rate is 640 ÷ 40,000 × 100 = 1.6%. Shopify counts sessions, not unique visitors, so one person visiting twice counts as two sessions.",
+      },
+      {
+        question: "What is a good conversion rate for a Shopify store?",
+        answer:
+          "Most ecommerce stores convert between 1% and 3% of sessions. Above 3% is strong. It varies a lot by category and price — low-priced consumables and repeat-purchase brands convert higher, expensive or considered purchases convert lower. Compare yourself to your own past months first, then to stores like yours.",
+      },
+      {
+        question: "Where do I find these numbers in Shopify?",
+        answer:
+          "In Shopify admin, go to Analytics and open the conversion rate breakdown report. It shows sessions, sessions with add to cart, sessions that reached checkout and sessions that completed checkout for the date range you pick. Use the same date range for every number.",
+      },
+      {
+        question: "What is the difference between cart abandonment and checkout abandonment?",
+        answer:
+          "Cart abandonment is people who added a product to cart but never started checkout — often they were browsing or comparing. Checkout abandonment is people who started checkout and entered details but did not pay — usually surprise shipping costs, missing COD, payment failures or a slow form. Checkout abandoners are the most valuable to win back, because they were closest to buying.",
+      },
+      {
+        question: "How do I improve my store's conversion rate?",
+        answer:
+          "Fix the step with the biggest drop. For add to cart: better product photos, clear prices, reviews and fast pages on mobile. For checkout: show shipping costs early, offer COD where it makes sense, and cut form fields. Then win back the people who still leave — a WhatsApp message with their cart link, sent within an hour, recovers far more checkouts than email alone.",
+      },
+    ],
+    softwareApp: {
+      name: "Shopify Conversion Rate Calculator",
+      description:
+        "Free calculator for Shopify store conversion rate. Enter sessions, add-to-cart, checkout and order counts to get your conversion rate, cart and checkout abandonment, revenue per session, and the extra revenue a higher conversion rate would bring. No signup required.",
+      applicationCategory: "BusinessApplication",
+      featureList: [
+        "Calculate store conversion rate from sessions and orders",
+        "Cart abandonment and checkout abandonment rates",
+        "Revenue per session",
+        "Slider to model extra revenue from a higher conversion rate",
+        "No signup, runs in your browser",
+      ],
+    },
+  },
+  {
+    slug: "shopify-shipping-cost-calculator",
+    name: "Shopify Shipping Cost Calculator",
+    headline: "Shopify Shipping Cost Calculator",
+    tagline:
+      "Work out what each parcel really costs to ship — chargeable weight, delivery zone, COD charge and GST — and how much of your profit it takes.",
+    description:
+      "Volumetric vs actual weight, 500 g slabs, zone rates, COD and GST — your true shipping cost per order.",
+    category: "Calculators",
+    badge: "India specific",
+    cta: "Confirm COD orders on WhatsApp before you ship.",
+    steps: [
+      {
+        n: "01",
+        title: "Measure the parcel",
+        body: "Weigh it packed and measure the outer box. Couriers bill on whichever is bigger — actual weight or length × width × height ÷ 5000 — rounded up to the next 500 g.",
+      },
+      {
+        n: "02",
+        title: "Enter your rate card",
+        body: "Pick the delivery zone to pre-fill example rates, then type in the first-500 g and extra-500 g rates from your own courier or shipping aggregator.",
+      },
+      {
+        n: "03",
+        title: "Decide who pays",
+        body: "Set what you charge at checkout and your margin. If free shipping eats too much of the profit, raise the free-shipping threshold or fix the box size.",
+      },
+    ],
+    faqs: [
+      {
+        question: "How is shipping cost calculated in India?",
+        answer:
+          "Couriers charge by chargeable weight and delivery zone. Chargeable weight is the higher of the parcel's actual weight and its volumetric weight, rounded up to the next 500 g. You pay a rate for the first 500 g and a rate for every extra 500 g, plus a COD charge on cash-on-delivery orders, plus 18% GST.",
+      },
+      {
+        question: "What is volumetric weight and how do I calculate it?",
+        answer:
+          "Volumetric weight is how much space a parcel takes up, expressed as weight. Multiply length × width × height in centimetres and divide by 5000 (the divisor most Indian couriers use). A 25 × 20 × 10 cm box has a volumetric weight of 1 kg — so even if the product inside weighs 400 g, you are billed for 1 kg.",
+      },
+      {
+        question: "What are shipping zones A, B, C, D and E?",
+        answer:
+          "Indian couriers and shipping aggregators group deliveries by distance. Zone A is within the same city, B within the same state or region, C between metro cities, D the rest of India, and E special areas such as the North East and Jammu & Kashmir. Rates rise from A to E. Exact zone rules vary slightly by courier.",
+      },
+      {
+        question: "How much is the COD charge?",
+        answer:
+          "Most couriers charge a flat minimum or a percentage of the order value, whichever is higher — commonly around ₹35–50 or 1.5–2.5%. It is charged on every COD shipment, and many couriers still charge it, or a return fee, when the parcel comes back undelivered.",
+      },
+      {
+        question: "Should my Shopify store offer free shipping?",
+        answer:
+          "Free shipping lifts conversion, but you pay the cost. Use this calculator to see how much of your gross profit shipping takes on a typical order. A common approach is to set the free-shipping threshold a little above your average order value, so customers add one more item to qualify and the bigger basket covers the shipping.",
+      },
+      {
+        question: "Where do I set shipping rates in Shopify?",
+        answer:
+          "In Shopify admin, go to Settings → Shipping and delivery. Create shipping zones and add flat rates, rates by weight or price, or a free-shipping rate above a minimum order value. Indian stores usually ship through a courier or shipping aggregator app that connects to Shopify and books the parcels.",
+      },
+    ],
+    softwareApp: {
+      name: "Shopify Shipping Cost Calculator",
+      description:
+        "Free shipping cost calculator for Shopify stores in India. Calculates volumetric and chargeable weight, freight by zone in 500 g slabs, COD charges and GST, the extra cost of an oversized box, and how much of the order's gross profit shipping takes. No signup required.",
+      applicationCategory: "BusinessApplication",
+      featureList: [
+        "Volumetric vs actual weight with 500 g slab rounding",
+        "Zone A–E example rates, fully editable",
+        "COD charge as minimum fee or percentage of order value",
+        "18% GST on freight and COD",
+        "Shows the extra cost of an oversized box",
+        "Share of gross profit spent on shipping",
+        "No signup, runs in your browser",
+      ],
+    },
+  },
+  {
+    slug: "shopify-profit-calculator",
+    name: "Shopify Profit Calculator",
+    headline: "Shopify Profit Calculator",
+    tagline:
+      "See what your store actually made this month — after product cost, shipping, returns, payment and Shopify fees, ads and overheads.",
+    description:
+      "Monthly net profit, break-even orders, ROAS and the cheapest Shopify plan for your revenue.",
+    category: "Calculators",
+    badge: "Shopify India",
+    cta: "Grow repeat orders without more ad spend.",
+    steps: [
+      {
+        n: "01",
+        title: "Enter last month",
+        body: "Orders and average order value from Shopify Analytics, your return and RTO rate, and the costs from your courier, gateway and bank statement.",
+      },
+      {
+        n: "02",
+        title: "Read the profit and loss",
+        body: "Revenue minus everything it took to earn it. Contribution shows what orders earn before fixed costs — if it is negative, more orders make things worse.",
+      },
+      {
+        n: "03",
+        title: "Find the cheapest fix",
+        body: "Check your break-even orders, ad efficiency and Shopify plan. Often the quickest win is fewer returns or a plan change, not more traffic.",
+      },
+    ],
+    faqs: [
+      {
+        question: "How do I calculate profit for my Shopify store?",
+        answer:
+          "Start with revenue from delivered orders. Subtract product cost, shipping (including return shipping on RTO and returns), packaging, payment gateway fees and Shopify's transaction fee — that is contribution. Then subtract monthly fixed costs: ad spend, your Shopify plan, apps, salaries and rent. What is left is net profit.",
+      },
+      {
+        question: "Does Shopify charge a transaction fee in India?",
+        answer:
+          "Yes. Shopify Payments is not available in India, so stores use a third-party gateway such as Razorpay, PayU or Cashfree, and Shopify adds its own transaction fee on top of the gateway's: about 2% on Basic, 1% on Grow and 0.6% on Advanced. Check Settings → Plan in your Shopify admin for the exact rate on your account.",
+      },
+      {
+        question: "When should I upgrade my Shopify plan?",
+        answer:
+          "When the transaction fees you save are more than the extra monthly fee. Going from Basic to Grow cuts the fee from 2% to 1%, so it pays off once your monthly revenue is roughly above the difference in plan price divided by 1%. The plan comparison in this calculator does that maths on your own revenue.",
+      },
+      {
+        question: "What is break-even orders?",
+        answer:
+          "It is how many orders you need each month for the profit on those orders to cover your fixed costs — ads, Shopify plan, apps, salaries and rent. Below that number you lose money; every order above it is profit. If your profit per order is zero or negative, there is no break-even point and more orders only increase the loss.",
+      },
+      {
+        question: "How do returns and RTO affect Shopify profit?",
+        answer:
+          "A returned or undelivered order earns nothing, but you still paid to ship it out, pay again to ship it back, and lose the packaging. At a 15–25% return and RTO rate, that is often the single biggest leak in an Indian D2C store's profit — bigger than Shopify's fees.",
+      },
+    ],
+    softwareApp: {
+      name: "Shopify Profit Calculator",
+      description:
+        "Free monthly profit calculator for Shopify stores in India. Calculates net profit and margin after product cost, shipping, returns and RTO, payment gateway and Shopify transaction fees, ads and overheads, plus break-even orders, ROAS, ad cost per order and the cheapest Shopify plan for your revenue. No signup required.",
+      applicationCategory: "BusinessApplication",
+      featureList: [
+        "Monthly net profit and net margin",
+        "Returns and RTO cost included",
+        "Payment gateway and Shopify transaction fees",
+        "Break-even orders per month",
+        "ROAS and ad cost per order",
+        "Compare Shopify Basic, Grow and Advanced at your revenue",
+        "No signup, runs in your browser",
+      ],
     },
   },
 ];

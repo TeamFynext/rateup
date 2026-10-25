@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 
 import { getToolBySlug } from "@/config/tools.ts";
 
+import { SHOPIFY_PLAN_NAMES, SHOPIFY_PLANS, type ShopifyPlan } from "../shared/shopifyPlans.ts";
 import {
   FaqSection,
   Field,
@@ -10,6 +11,7 @@ import {
   ResultFigure,
   ResultPanel,
   ResultRows,
+  SelectControl,
   TextControl,
   ToolCard,
   ToolContainer,
@@ -18,6 +20,12 @@ import {
 
 const SLUG = "profit-margin-calculator";
 
+/**
+ * "shopify" fills the platform fee from the plan's third-party transaction fee;
+ * "other" leaves it free for a marketplace commission or a self-hosted store.
+ */
+type Platform = "shopify" | "other";
+
 const DEFAULTS = {
   sellingPrice: 1200,
   cogs: 420,
@@ -25,7 +33,7 @@ const DEFAULTS = {
   packaging: 25,
   adSpend: 150,
   gatewayPct: 2,
-  platformPct: 0,
+  platformPct: SHOPIFY_PLANS.Basic.txnPct,
 };
 
 type Inputs = typeof DEFAULTS;
@@ -37,7 +45,6 @@ const FIELDS: { key: keyof Inputs; label: string }[] = [
   { key: "packaging", label: "Packaging ₹" },
   { key: "adSpend", label: "Ad Spend per Order ₹" },
   { key: "gatewayPct", label: "Payment Gateway Fee %" },
-  { key: "platformPct", label: "Platform / Marketplace Fee %" },
 ];
 
 const inr = (value: number) => `₹${Math.round(value).toLocaleString("en-IN")}`;
@@ -46,6 +53,11 @@ const pct = (value: number) => `${value.toFixed(1)}%`;
 export default function ProfitMarginCalculator() {
   const tool = getToolBySlug(SLUG);
   const [inputs, setInputs] = useState<Inputs>(DEFAULTS);
+  const [platform, setPlatform] = useState<Platform>("shopify");
+  const [plan, setPlan] = useState<ShopifyPlan>("Basic");
+
+  const isShopify = platform === "shopify";
+  const platformLabel = isShopify ? "Shopify Transaction Fee" : "Platform / Marketplace Fee";
 
   const set = (key: keyof Inputs, raw: string) => {
     const parsed = Number(raw.replace(/[^\d.]/g, ""));
@@ -53,6 +65,19 @@ export default function ProfitMarginCalculator() {
       ...current,
       [key]: Number.isFinite(parsed) ? parsed : 0,
     }));
+  };
+
+  const pickPlatform = (next: Platform) => {
+    setPlatform(next);
+    setInputs((current) => ({
+      ...current,
+      platformPct: next === "shopify" ? SHOPIFY_PLANS[plan].txnPct : 0,
+    }));
+  };
+
+  const pickPlan = (next: ShopifyPlan) => {
+    setPlan(next);
+    setInputs((current) => ({ ...current, platformPct: SHOPIFY_PLANS[next].txnPct }));
   };
 
   const result = useMemo(() => {
@@ -104,6 +129,32 @@ export default function ProfitMarginCalculator() {
             subtitle="Enter your product and operational costs to calculate margins per order."
           >
             <div className="grid gap-3.5 sm:grid-cols-2">
+              <Field label="Where you sell" htmlFor="pmc-platform">
+                <SelectControl
+                  id="pmc-platform"
+                  value={platform}
+                  onChange={(event) => pickPlatform(event.target.value as Platform)}
+                >
+                  <option value="shopify">Shopify store</option>
+                  <option value="other">Other — marketplace or own site</option>
+                </SelectControl>
+              </Field>
+              {isShopify ? (
+                <Field label="Shopify plan" htmlFor="pmc-plan">
+                  <SelectControl
+                    id="pmc-plan"
+                    value={plan}
+                    onChange={(event) => pickPlan(event.target.value as ShopifyPlan)}
+                  >
+                    {SHOPIFY_PLAN_NAMES.map((name) => (
+                      <option key={name} value={name}>
+                        {name} — {SHOPIFY_PLANS[name].txnPct}% transaction fee
+                      </option>
+                    ))}
+                  </SelectControl>
+                </Field>
+              ) : null}
+
               {FIELDS.map((field) => (
                 <Field key={field.key} label={field.label} htmlFor={`pmc-${field.key}`}>
                   <TextControl
@@ -114,6 +165,23 @@ export default function ProfitMarginCalculator() {
                   />
                 </Field>
               ))}
+
+              <Field
+                label={`${platformLabel} %`}
+                htmlFor="pmc-platformPct"
+                hint={
+                  isShopify
+                    ? "Charged by Shopify on top of your gateway, as Shopify Payments isn't offered in India."
+                    : "Marketplace commission, or 0 for your own website."
+                }
+              >
+                <TextControl
+                  id="pmc-platformPct"
+                  inputMode="decimal"
+                  value={inputs.platformPct}
+                  onChange={(event) => set("platformPct", event.target.value)}
+                />
+              </Field>
             </div>
           </ToolCard>
 
@@ -162,8 +230,10 @@ export default function ProfitMarginCalculator() {
                     cost: inr(result.gatewayFee),
                   },
                   {
-                    label: "− Platform Fee",
-                    detail: `${inputs.platformPct}%`,
+                    label: `− ${platformLabel}`,
+                    detail: isShopify
+                      ? `${inputs.platformPct}% on ${plan}`
+                      : `${inputs.platformPct}%`,
                     cost: inr(result.platformFee),
                   },
                   {
@@ -174,20 +244,20 @@ export default function ProfitMarginCalculator() {
                 ]}
               />
 
-              <div className="mt-4 grid grid-cols-2 gap-4 rounded-xl border border-border/50 bg-muted/30 p-4">
-                <div>
-                  <div className="text-[11.5px] font-extrabold tracking-[0.1em] text-muted-foreground uppercase">
+              <div className="mt-5 grid grid-cols-2 gap-3">
+                <div className="rounded-xl bg-white/[0.06] p-4">
+                  <div className="text-[10.5px] font-extrabold tracking-[0.1em] text-ru-blue-300 uppercase">
                     Markup
                   </div>
-                  <div className="mt-1 font-display text-[22px] font-black">
+                  <div className="mt-1 font-display text-[22px] font-black text-white">
                     {pct(result.markup)}
                   </div>
                 </div>
-                <div>
-                  <div className="text-[11.5px] font-extrabold tracking-[0.1em] text-muted-foreground uppercase">
+                <div className="rounded-xl bg-white/[0.06] p-4">
+                  <div className="text-[10.5px] font-extrabold tracking-[0.1em] text-ru-blue-300 uppercase">
                     Breakeven ROAS
                   </div>
-                  <div className="mt-1 font-display text-[22px] font-black">
+                  <div className="mt-1 font-display text-[22px] font-black text-white">
                     {result.breakevenRoas === Infinity
                       ? "∞"
                       : `${result.breakevenRoas.toFixed(2)}×`}

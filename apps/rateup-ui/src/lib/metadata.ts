@@ -233,7 +233,7 @@ const pageMetadata = {
   "/tools": {
     title: "WhatsApp & Customer Engagement Tools | RateUp",
     description:
-      "Tools for WhatsApp business messaging: link generator, QR code generator, API pricing calculator, COD RTO loss calculator and NPS survey templates. No signup required.",
+      "Free tools for WhatsApp and Shopify: link and QR code generators, WhatsApp API pricing, COD RTO loss, Shopify fee, profit, margin, shipping and conversion rate calculators. No signup.",
     ogDescription:
       "Calculators and generators for WhatsApp business messaging, built by RateUp. No signup, runs in your browser.",
     sitemap: false,
@@ -302,20 +302,48 @@ const pageMetadata = {
     sitemap: false,
   },
   "/tools/shopify-fee-calculator": {
-    title: "Shopify Fee Calculator - Transaction Profit & Costs | RateUp",
+    title: "Shopify Transaction Fee Calculator - India & US | RateUp",
     description:
-      "Calculate your exact net profit on a single Shopify transaction. Factor in Shopify transaction fees, payment processing costs, COGS, and shipping.",
-    ogTitle: "Shopify Fee Calculator - Transaction Profit & Costs",
+      "Calculate Shopify transaction fees, payment gateway charges and GST on every order — Basic, Grow and Advanced, for India and the US — and see your net profit and monthly fee total.",
+    ogTitle: "Shopify Transaction Fee Calculator - India & US",
     ogDescription:
-      "Calculate your exact net profit per order including Shopify transaction fees and payment processing costs.",
+      "Every fee Shopify and your gateway take from an order, and the profit that is left. No signup.",
     sitemap: false,
   },
   "/tools/profit-margin-calculator": {
-    title: "Ecommerce Profit Margin & Breakeven ROAS Calculator | RateUp",
+    title: "Shopify Profit Margin Calculator - Net Margin & Breakeven ROAS | RateUp",
     description:
-      "Calculate gross margin, net margin, markup percentage, and breakeven ROAS for your D2C ecommerce orders. Factor in COGS, shipping, ad spend, and gateway fees.",
-    ogTitle: "Ecommerce Profit Margin & Breakeven ROAS Calculator",
-    ogDescription: "Calculate gross margin, net margin, markup and breakeven ROAS per order.",
+      "Calculate gross margin, net margin, markup and breakeven ROAS per order for your Shopify or D2C store. Factor in COGS, shipping, ad spend, gateway and Shopify transaction fees.",
+    ogTitle: "Shopify Profit Margin Calculator - Net Margin & Breakeven ROAS",
+    ogDescription:
+      "Gross margin, net margin, markup and breakeven ROAS per order, with Shopify fees built in.",
+    sitemap: false,
+  },
+  "/tools/shopify-conversion-rate-calculator": {
+    title: "Shopify Conversion Rate Calculator - Funnel & Abandonment | RateUp",
+    description:
+      "Calculate your Shopify store's conversion rate, add-to-cart rate, cart and checkout abandonment, and revenue per session — and see what a higher rate is worth. No signup.",
+    ogTitle: "Shopify Conversion Rate Calculator - Funnel & Abandonment",
+    ogDescription:
+      "Find your conversion rate, spot the leakiest funnel step, and price a small lift in rupees.",
+    sitemap: false,
+  },
+  "/tools/shopify-shipping-cost-calculator": {
+    title: "Shopify Shipping Cost Calculator for India - Volumetric Weight & COD | RateUp",
+    description:
+      "Calculate shipping cost per order for your Shopify store: volumetric vs actual weight, 500 g slabs, zone rates, COD charges and GST — and how much of your margin it takes.",
+    ogTitle: "Shopify Shipping Cost Calculator for India",
+    ogDescription:
+      "Work out what each parcel really costs to ship — chargeable weight, zone, COD and GST — and who should pay for it.",
+    sitemap: false,
+  },
+  "/tools/shopify-profit-calculator": {
+    title: "Shopify Profit Calculator - Monthly Net Profit & Break-even | RateUp",
+    description:
+      "Calculate your Shopify store's monthly net profit after product cost, shipping, returns, payment and Shopify fees, ads and overheads. Find your break-even orders and cheapest plan.",
+    ogTitle: "Shopify Profit Calculator - Monthly Net Profit & Break-even",
+    ogDescription:
+      "See what your Shopify store really made this month, how many orders you need to break even, and which plan costs least.",
     sitemap: false,
   },
   // ── Partner / reseller ──────────────────────────────────────────────────────

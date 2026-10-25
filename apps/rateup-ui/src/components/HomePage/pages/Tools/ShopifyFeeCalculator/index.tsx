@@ -2,10 +2,12 @@ import { useMemo, useState } from "react";
 
 import { getToolBySlug } from "@/config/tools.ts";
 
+import { SHOPIFY_PLAN_NAMES, SHOPIFY_PLANS, type ShopifyPlan } from "../shared/shopifyPlans.ts";
 import {
   FaqSection,
   Field,
   HowItWorks,
+  InfoNote,
   RelatedTools,
   ResultFigure,
   ResultPanel,
@@ -19,335 +21,326 @@ import {
 
 const SLUG = "shopify-fee-calculator";
 
-const PLAN_RATES = {
-  Basic: {
-    online: { pct: 2.9, fixed: 0.3 },
-    inPerson: { pct: 2.7, fixed: 0.0 },
-    externalTxnFee: 2.0,
+/**
+ * India: Shopify Payments isn't offered, so every order goes through a third-party
+ * gateway and pays Shopify's transaction fee on top. US: Shopify Payments is the
+ * default and waives that fee. Card rates differ in every other country, so only
+ * these two are offered rather than showing US rates under a € or £ sign.
+ */
+type Region = "IN" | "US";
+type Gateway = "shopify-payments" | "third-party";
+
+/** Shopify Payments US online card rates, by plan. List rates; Shopify changes them. */
+const US_CARD_RATES: Record<ShopifyPlan, { pct: number; fixed: number }> = {
+  Basic: { pct: 2.9, fixed: 0.3 },
+  Grow: { pct: 2.7, fixed: 0.3 },
+  Advanced: { pct: 2.5, fixed: 0.3 },
+};
+
+const GST_PCT = 18;
+
+const REGION_DEFAULTS: Record<Region, Inputs> = {
+  IN: {
+    salePrice: 1200,
+    quantity: 1,
+    cogs: 420,
+    shipping: 70,
+    gatewayPct: 2,
+    gatewayFixed: 0,
+    appFeesPct: 0,
+    otherFixed: 0,
+    ordersPerMonth: 1000,
   },
-  Shopify: {
-    online: { pct: 2.6, fixed: 0.3 },
-    inPerson: { pct: 2.5, fixed: 0.0 },
-    externalTxnFee: 1.0,
-  },
-  Advanced: {
-    online: { pct: 2.4, fixed: 0.3 },
-    inPerson: { pct: 2.4, fixed: 0.0 },
-    externalTxnFee: 0.6,
-  },
-  Plus: {
-    online: { pct: 2.15, fixed: 0.3 },
-    inPerson: { pct: 2.15, fixed: 0.0 },
-    externalTxnFee: 0.2,
+  US: {
+    salePrice: 60,
+    quantity: 1,
+    cogs: 20,
+    shipping: 6,
+    gatewayPct: 2.9,
+    gatewayFixed: 0.3,
+    appFeesPct: 0,
+    otherFixed: 0,
+    ordersPerMonth: 1000,
   },
 };
 
-type ShopifyPlan = keyof typeof PLAN_RATES;
-type GatewayType = "Shopify Payments" | "External Gateway";
-type PaymentType = "Online" | "In-Person";
-
-const DEFAULTS = {
-  currency: "$",
-  salePrice: 100,
-  quantity: 1,
-  cogs: 30,
-  shipping: 5,
-  plan: "Basic" as ShopifyPlan,
-  gateway: "Shopify Payments" as GatewayType,
-  paymentType: "Online" as PaymentType,
-  appFeesPct: 0,
-  otherFixed: 0,
-  otherVariablePct: 0,
-  extGatewayPct: 2.9,
-  extGatewayFixed: 0.3,
-};
-
-type Inputs = typeof DEFAULTS;
+interface Inputs {
+  salePrice: number;
+  quantity: number;
+  cogs: number;
+  shipping: number;
+  gatewayPct: number;
+  gatewayFixed: number;
+  appFeesPct: number;
+  otherFixed: number;
+  ordersPerMonth: number;
+}
 
 export default function ShopifyFeeCalculator() {
   const tool = getToolBySlug(SLUG);
-  const [inputs, setInputs] = useState<Inputs>(DEFAULTS);
+  const [region, setRegion] = useState<Region>("IN");
+  const [plan, setPlan] = useState<ShopifyPlan>("Basic");
+  const [gateway, setGateway] = useState<Gateway>("third-party");
+  const [addGst, setAddGst] = useState(true);
+  const [inputs, setInputs] = useState<Inputs>(REGION_DEFAULTS.IN);
+
+  const currency = region === "IN" ? "₹" : "$";
+  const locale = region === "IN" ? "en-IN" : "en-US";
+  // India has no Shopify Payments, so the gateway choice only exists in the US.
+  const usesShopifyPayments = region === "US" && gateway === "shopify-payments";
+  const gstApplies = region === "IN" && addGst;
 
   const set = (key: keyof Inputs, raw: string) => {
-    if (key === "currency" || key === "plan" || key === "gateway" || key === "paymentType") {
-      setInputs((current) => ({ ...current, [key]: raw }));
-      return;
-    }
-    const parsed = Number(raw.replace(/[^\d.-]/g, ""));
+    const parsed = Number(raw.replace(/[^\d.]/g, ""));
     setInputs((current) => ({
       ...current,
       [key]: Number.isFinite(parsed) ? parsed : 0,
     }));
   };
 
-  const fmt = (value: number) => {
-    return `${inputs.currency}${value.toLocaleString("en-US", {
+  const pickRegion = (next: Region) => {
+    setRegion(next);
+    setGateway(next === "US" ? "shopify-payments" : "third-party");
+    setInputs(REGION_DEFAULTS[next]);
+  };
+
+  const reset = () => {
+    setPlan("Basic");
+    setAddGst(true);
+    setGateway(region === "US" ? "shopify-payments" : "third-party");
+    setInputs(REGION_DEFAULTS[region]);
+  };
+
+  const fmt = (value: number) =>
+    `${value < 0 ? "−" : ""}${currency}${Math.abs(value).toLocaleString(locale, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}`;
-  };
-
-  const reset = () => setInputs(DEFAULTS);
 
   const result = useMemo(() => {
-    const grossRevenue = inputs.salePrice * inputs.quantity;
-    const cogsTotal = inputs.cogs * inputs.quantity; // assuming cogs is per item
-    const shippingCost = inputs.shipping;
+    const gross = inputs.salePrice * inputs.quantity;
+    const cogsTotal = inputs.cogs * inputs.quantity;
 
-    let shopifyTxnFee = 0;
-    let paymentProcessingFee = 0;
+    const processingRate = usesShopifyPayments
+      ? US_CARD_RATES[plan]
+      : { pct: inputs.gatewayPct, fixed: inputs.gatewayFixed };
+    const processing = (gross * processingRate.pct) / 100 + processingRate.fixed;
+    const shopifyTxnPct = usesShopifyPayments ? 0 : SHOPIFY_PLANS[plan].txnPct;
+    const shopifyTxn = (gross * shopifyTxnPct) / 100;
+    const gst = gstApplies ? ((processing + shopifyTxn) * GST_PCT) / 100 : 0;
+    const apps = (gross * inputs.appFeesPct) / 100;
 
-    const planRates = PLAN_RATES[inputs.plan];
-
-    if (inputs.gateway === "Shopify Payments") {
-      const rate = planRates[inputs.paymentType === "Online" ? "online" : "inPerson"];
-      paymentProcessingFee = (grossRevenue * rate.pct) / 100 + rate.fixed;
-      shopifyTxnFee = 0;
-    } else {
-      // External Gateway
-      paymentProcessingFee = (grossRevenue * inputs.extGatewayPct) / 100 + inputs.extGatewayFixed;
-      shopifyTxnFee = (grossRevenue * planRates.externalTxnFee) / 100;
-    }
-
-    const appFeesTotal = (grossRevenue * inputs.appFeesPct) / 100;
-    const otherVariableTotal = (grossRevenue * inputs.otherVariablePct) / 100;
-    const otherFixedTotal = inputs.otherFixed;
-
-    const totalFees =
-      cogsTotal +
-      shippingCost +
-      shopifyTxnFee +
-      paymentProcessingFee +
-      appFeesTotal +
-      otherFixedTotal +
-      otherVariableTotal;
-
-    const netProfit = grossRevenue - totalFees;
+    const fees = processing + shopifyTxn + gst + apps + inputs.otherFixed;
+    const netProfit = gross - cogsTotal - inputs.shipping - fees;
 
     return {
-      grossRevenue,
+      gross,
       cogsTotal,
-      shippingCost,
-      shopifyTxnFee,
-      paymentProcessingFee,
-      appFeesTotal,
-      otherFixedTotal,
-      otherVariableTotal,
+      processingRate,
+      processing,
+      shopifyTxnPct,
+      shopifyTxn,
+      gst,
+      apps,
+      fees,
+      feeShare: gross > 0 ? (fees / gross) * 100 : 0,
       netProfit,
+      netMargin: gross > 0 ? (netProfit / gross) * 100 : 0,
+      monthlyFees: fees * inputs.ordersPerMonth,
+      monthlyShopifyTxn:
+        (shopifyTxn + (gstApplies ? (shopifyTxn * GST_PCT) / 100 : 0)) * inputs.ordersPerMonth,
     };
-  }, [inputs]);
+  }, [inputs, plan, usesShopifyPayments, gstApplies]);
+
+  const numberField = (key: keyof Inputs, label: string, hint?: string) => (
+    <Field key={key} label={label} hint={hint} htmlFor={`fee-${key}`}>
+      <TextControl
+        id={`fee-${key}`}
+        inputMode="decimal"
+        value={inputs[key]}
+        onChange={(event) => set(key, event.target.value)}
+      />
+    </Field>
+  );
 
   return (
     <>
       <ToolContainer className="pt-7">
         <div className="grid items-start gap-5 lg:grid-cols-[1fr_1.15fr]">
-          <ToolCard title="Transaction Details" subtitle="Calculate profit for a single order.">
+          <ToolCard title="Your order" subtitle="Fees and profit for a single Shopify order.">
             <div className="grid gap-3.5 sm:grid-cols-2">
-              <Field label="Currency" htmlFor="shopify-currency">
+              <Field label="Store location" htmlFor="fee-region">
                 <SelectControl
-                  id="shopify-currency"
-                  value={inputs.currency}
-                  onChange={(e) => set("currency", e.target.value)}
+                  id="fee-region"
+                  value={region}
+                  onChange={(event) => pickRegion(event.target.value as Region)}
                 >
-                  <option value="$">$ (USD)</option>
-                  <option value="₹">₹ (INR)</option>
-                  <option value="€">€ (EUR)</option>
-                  <option value="£">£ (GBP)</option>
+                  <option value="IN">India (₹)</option>
+                  <option value="US">United States ($)</option>
+                </SelectControl>
+              </Field>
+              <Field label="Shopify plan" htmlFor="fee-plan">
+                <SelectControl
+                  id="fee-plan"
+                  value={plan}
+                  onChange={(event) => setPlan(event.target.value as ShopifyPlan)}
+                >
+                  {SHOPIFY_PLAN_NAMES.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
                 </SelectControl>
               </Field>
 
-              <div className="hidden sm:block" />
+              {numberField("salePrice", `Sale price per item ${currency}`)}
+              {numberField("quantity", "Quantity")}
+              {numberField("cogs", `Product cost per item ${currency}`)}
+              {numberField("shipping", `Shipping you pay ${currency}`)}
 
-              <Field label="Sale Price (per item)" htmlFor="shopify-price">
-                <TextControl
-                  id="shopify-price"
-                  inputMode="decimal"
-                  value={inputs.salePrice}
-                  onChange={(e) => set("salePrice", e.target.value)}
-                />
-              </Field>
+              {region === "US" ? (
+                <Field label="Payment provider" htmlFor="fee-gateway" className="sm:col-span-2">
+                  <SelectControl
+                    id="fee-gateway"
+                    value={gateway}
+                    onChange={(event) => setGateway(event.target.value as Gateway)}
+                  >
+                    <option value="shopify-payments">Shopify Payments</option>
+                    <option value="third-party">Third-party (Stripe, PayPal…)</option>
+                  </SelectControl>
+                </Field>
+              ) : null}
 
-              <Field label="Quantity" htmlFor="shopify-quantity">
-                <TextControl
-                  id="shopify-quantity"
-                  inputMode="numeric"
-                  value={inputs.quantity}
-                  onChange={(e) => set("quantity", e.target.value)}
-                />
-              </Field>
-
-              <Field label="Cost of Goods Sold (COGS)" htmlFor="shopify-cogs">
-                <TextControl
-                  id="shopify-cogs"
-                  inputMode="decimal"
-                  value={inputs.cogs}
-                  onChange={(e) => set("cogs", e.target.value)}
-                />
-              </Field>
-
-              <Field label="Shipping Cost (Paid by Seller)" htmlFor="shopify-shipping">
-                <TextControl
-                  id="shopify-shipping"
-                  inputMode="decimal"
-                  value={inputs.shipping}
-                  onChange={(e) => set("shipping", e.target.value)}
-                />
-              </Field>
-
-              <Field label="Shopify Plan" htmlFor="shopify-plan">
-                <SelectControl
-                  id="shopify-plan"
-                  value={inputs.plan}
-                  onChange={(e) => set("plan", e.target.value)}
-                >
-                  <option value="Basic">Basic</option>
-                  <option value="Shopify">Shopify</option>
-                  <option value="Advanced">Advanced</option>
-                  <option value="Plus">Plus</option>
-                </SelectControl>
-              </Field>
-
-              <Field label="Payment Gateway" htmlFor="shopify-gateway">
-                <SelectControl
-                  id="shopify-gateway"
-                  value={inputs.gateway}
-                  onChange={(e) => set("gateway", e.target.value)}
-                >
-                  <option value="Shopify Payments">Shopify Payments</option>
-                  <option value="External Gateway">External Gateway</option>
-                </SelectControl>
-              </Field>
-
-              <Field label="Payment Type" htmlFor="shopify-payment-type">
-                <SelectControl
-                  id="shopify-payment-type"
-                  value={inputs.paymentType}
-                  onChange={(e) => set("paymentType", e.target.value)}
-                >
-                  <option value="Online">Online</option>
-                  <option value="In-Person">In-Person</option>
-                </SelectControl>
-              </Field>
-
-              <div className="hidden sm:block" />
-
-              {inputs.gateway === "External Gateway" && (
+              {usesShopifyPayments ? null : (
                 <>
-                  <Field label="External Gateway Fee (%)" htmlFor="shopify-ext-pct">
-                    <TextControl
-                      id="shopify-ext-pct"
-                      inputMode="decimal"
-                      value={inputs.extGatewayPct}
-                      onChange={(e) => set("extGatewayPct", e.target.value)}
-                    />
-                  </Field>
-                  <Field label="External Gateway Fixed Fee" htmlFor="shopify-ext-fixed">
-                    <TextControl
-                      id="shopify-ext-fixed"
-                      inputMode="decimal"
-                      value={inputs.extGatewayFixed}
-                      onChange={(e) => set("extGatewayFixed", e.target.value)}
-                    />
-                  </Field>
+                  {numberField(
+                    "gatewayPct",
+                    "Gateway fee %",
+                    region === "IN" ? "Razorpay, PayU, Cashfree — usually about 2%" : undefined,
+                  )}
+                  {numberField("gatewayFixed", `Gateway fixed fee ${currency}`)}
                 </>
               )}
 
-              <Field label="App Fees (%)" htmlFor="shopify-app-fees">
-                <TextControl
-                  id="shopify-app-fees"
-                  inputMode="decimal"
-                  value={inputs.appFeesPct}
-                  onChange={(e) => set("appFeesPct", e.target.value)}
-                />
-              </Field>
+              {region === "IN" ? (
+                <Field label="GST on fees" htmlFor="fee-gst" className="sm:col-span-2">
+                  <SelectControl
+                    id="fee-gst"
+                    value={addGst ? "add" : "none"}
+                    onChange={(event) => setAddGst(event.target.value === "add")}
+                  >
+                    <option value="add">Add 18% GST on gateway and Shopify fees</option>
+                    <option value="none">Leave GST out</option>
+                  </SelectControl>
+                </Field>
+              ) : null}
 
-              <Field label="Other Variable Fees (%)" htmlFor="shopify-other-var">
-                <TextControl
-                  id="shopify-other-var"
-                  inputMode="decimal"
-                  value={inputs.otherVariablePct}
-                  onChange={(e) => set("otherVariablePct", e.target.value)}
-                />
-              </Field>
-
-              <Field label="Other Fixed Fees (per tx)" htmlFor="shopify-other-fixed">
-                <TextControl
-                  id="shopify-other-fixed"
-                  inputMode="decimal"
-                  value={inputs.otherFixed}
-                  onChange={(e) => set("otherFixed", e.target.value)}
-                />
-              </Field>
+              {numberField("appFeesPct", "App fees % of sale", "Apps that charge per order")}
+              {numberField("otherFixed", `Other fees per order ${currency}`)}
             </div>
 
-            <div className="mt-8">
-              <button
-                type="button"
-                onClick={reset}
-                className="w-full rounded-full border border-border bg-card px-4 py-3 text-[14px] font-bold text-foreground transition-colors hover:bg-muted"
-              >
-                Reset
-              </button>
-            </div>
+            <InfoNote>
+              {usesShopifyPayments ? (
+                <>
+                  Shopify Payments: <b>no Shopify transaction fee</b>, card rate{" "}
+                  {US_CARD_RATES[plan].pct}% + {fmt(US_CARD_RATES[plan].fixed)} on {plan}.
+                </>
+              ) : (
+                <>
+                  {region === "IN" ? "Shopify Payments isn't offered in India, so " : ""}
+                  Shopify adds <b>{SHOPIFY_PLANS[plan].txnPct}%</b> on {plan} on top of your
+                  gateway&apos;s fee.
+                </>
+              )}
+            </InfoNote>
+
+            <button
+              type="button"
+              onClick={reset}
+              className="mt-6 w-full rounded-full border border-border bg-card px-4 py-3 text-[14px] font-bold text-foreground transition-colors hover:bg-muted"
+            >
+              Reset
+            </button>
           </ToolCard>
 
           <div className="flex flex-col gap-3.5">
-            <ResultPanel eyebrow="Transaction Summary">
-              <ResultFigure value={fmt(result.netProfit)} note="Net Profit" />
-
-              <div className="mt-5 border-t border-white/10 pt-4 pb-2" />
+            <ResultPanel eyebrow="Fees on this order">
+              <ResultFigure
+                value={fmt(result.fees)}
+                note={`${result.feeShare.toFixed(1)}% of the sale goes to fees`}
+              />
 
               <ResultRows
                 rows={[
                   {
-                    label: "Gross Sale Revenue",
-                    detail: "Sale Price × Quantity",
-                    cost: fmt(result.grossRevenue),
+                    label: "Payment processing",
+                    detail: usesShopifyPayments
+                      ? `Shopify Payments ${result.processingRate.pct}% + ${fmt(result.processingRate.fixed)}`
+                      : `Gateway ${result.processingRate.pct}% + ${fmt(result.processingRate.fixed)}`,
+                    cost: fmt(result.processing),
                   },
                   {
-                    label: "Cost of Goods Sold",
-                    detail: "COGS × Quantity",
-                    cost: `-${fmt(result.cogsTotal)}`,
+                    label: "Shopify transaction fee",
+                    detail: usesShopifyPayments
+                      ? "Waived on Shopify Payments"
+                      : `${result.shopifyTxnPct}% on ${plan}`,
+                    cost: fmt(result.shopifyTxn),
+                  },
+                  ...(gstApplies
+                    ? [
+                        {
+                          label: "GST",
+                          detail: `${GST_PCT}% on gateway + Shopify fees`,
+                          cost: fmt(result.gst),
+                        },
+                      ]
+                    : []),
+                  {
+                    label: "App fees",
+                    detail: `${inputs.appFeesPct}% of sale`,
+                    cost: fmt(result.apps),
                   },
                   {
-                    label: "Shipping Cost",
-                    detail: "Paid by seller",
-                    cost: `-${fmt(result.shippingCost)}`,
-                  },
-                  {
-                    label: "Shopify Transaction Fee",
-                    detail:
-                      inputs.gateway === "Shopify Payments"
-                        ? "0% on Shopify Payments"
-                        : `${PLAN_RATES[inputs.plan].externalTxnFee}% on external gateway`,
-                    cost: `-${fmt(result.shopifyTxnFee)}`,
-                  },
-                  {
-                    label: "Payment Processing Fee",
-                    detail:
-                      inputs.gateway === "Shopify Payments"
-                        ? `${PLAN_RATES[inputs.plan][inputs.paymentType === "Online" ? "online" : "inPerson"].pct}% + ${inputs.currency}${PLAN_RATES[inputs.plan][inputs.paymentType === "Online" ? "online" : "inPerson"].fixed}`
-                        : `${inputs.extGatewayPct}% + ${inputs.currency}${inputs.extGatewayFixed}`,
-                    cost: `-${fmt(result.paymentProcessingFee)}`,
-                  },
-                  {
-                    label: "App Fees",
-                    detail: `${inputs.appFeesPct}%`,
-                    cost: `-${fmt(result.appFeesTotal)}`,
-                  },
-                  {
-                    label: "Other Fixed Fees",
-                    detail: "Per transaction",
-                    cost: `-${fmt(result.otherFixedTotal)}`,
-                  },
-                  {
-                    label: "Other Variable Fees",
-                    detail: `${inputs.otherVariablePct}%`,
-                    cost: `-${fmt(result.otherVariableTotal)}`,
+                    label: "Other fees",
+                    detail: "Per order",
+                    cost: fmt(inputs.otherFixed),
                   },
                 ]}
               />
             </ResultPanel>
+
+            <ToolCard title="Profit on this order">
+              <ResultRowsLight
+                rows={[
+                  { label: "Sale", value: fmt(result.gross) },
+                  { label: "− Product cost", value: fmt(result.cogsTotal) },
+                  { label: "− Shipping", value: fmt(inputs.shipping) },
+                  { label: "− Fees", value: fmt(result.fees) },
+                ]}
+              />
+              <div className="mt-4 rounded-xl bg-[#E7F9EE] p-5">
+                <div className="text-[11.5px] font-extrabold tracking-[0.1em] text-[#0F7A42] uppercase">
+                  Net profit
+                </div>
+                <div className="mt-1 font-display text-[30px] leading-[1.1] font-black text-[#0B5C32] sm:text-[34px]">
+                  {fmt(result.netProfit)}
+                </div>
+                <div className="mt-0.5 text-[13px] text-[#0F7A42]">
+                  {result.netMargin.toFixed(1)}% net margin
+                </div>
+              </div>
+            </ToolCard>
+
+            <ToolCard title="Fees at your volume">
+              <div className="grid items-end gap-3.5 sm:grid-cols-2">
+                {numberField("ordersPerMonth", "Orders per month")}
+                <div className="pb-1 text-[13.5px] leading-[1.5] text-muted-foreground">
+                  <b className="text-foreground">{fmt(result.monthlyFees)}</b> a month in fees, of
+                  which <b className="text-foreground">{fmt(result.monthlyShopifyTxn)}</b> is
+                  Shopify&apos;s transaction fee.
+                </div>
+              </div>
+            </ToolCard>
           </div>
         </div>
       </ToolContainer>
@@ -358,9 +351,26 @@ export default function ShopifyFeeCalculator() {
       {tool ? (
         <ToolCta
           title={tool.cta}
-          description="Reduce your cost per acquisition and increase LTV using RateUp's automated WhatsApp engagement."
+          description="A refused COD parcel costs you shipping both ways on top of every fee above. RateUp connects to Shopify and confirms each COD order on WhatsApp before you ship."
         />
       ) : null}
     </>
+  );
+}
+
+/** Plain label/value rows for a white card. */
+function ResultRowsLight({ rows }: Readonly<{ rows: { label: string; value: string }[] }>) {
+  return (
+    <div className="-mt-1">
+      {rows.map((row) => (
+        <div
+          key={row.label}
+          className="flex justify-between border-b border-border py-2.5 text-[14px] last:border-b-0"
+        >
+          <span className="text-muted-foreground">{row.label}</span>
+          <span className="font-bold text-foreground">{row.value}</span>
+        </div>
+      ))}
+    </div>
   );
 }

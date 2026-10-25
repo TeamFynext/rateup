@@ -1,8 +1,13 @@
 import {
   IconBrandWhatsapp,
   IconCalculator,
+  IconChartFunnel,
   IconMessage2Star,
+  IconPercentage,
   IconQrcode,
+  IconReceiptTax,
+  IconReportMoney,
+  IconTruckDelivery,
   IconTruckReturn,
   type Icon,
 } from "@tabler/icons-react";
@@ -18,6 +23,11 @@ const TOOL_ICONS: Record<string, Icon> = {
   "whatsapp-qr-code-generator": IconQrcode,
   "rto-loss-calculator": IconTruckReturn,
   "nps-survey-templates": IconMessage2Star,
+  "shopify-conversion-rate-calculator": IconChartFunnel,
+  "shopify-shipping-cost-calculator": IconTruckDelivery,
+  "shopify-profit-calculator": IconReportMoney,
+  "shopify-fee-calculator": IconReceiptTax,
+  "profit-margin-calculator": IconPercentage,
 };
 
 const PROMISES = [
