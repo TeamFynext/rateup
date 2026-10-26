@@ -141,7 +141,11 @@ export default function OrdersScreen() {
             />
           )}
           refreshControl={
-            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={t.brand} />
+            <RefreshControl
+              refreshing={isRefetching}
+              onRefresh={() => void refetch()}
+              tintColor={t.brand}
+            />
           }
           ListEmptyComponent={
             isLoading ? (

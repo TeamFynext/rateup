@@ -83,7 +83,11 @@ export default function OrderDetailScreen() {
         <ScrollView
           contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 48 }}
           refreshControl={
-            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={t.brand} />
+            <RefreshControl
+              refreshing={isRefetching}
+              onRefresh={() => void refetch()}
+              tintColor={t.brand}
+            />
           }
         >
           <Summary order={order} />

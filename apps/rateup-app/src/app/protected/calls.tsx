@@ -246,7 +246,7 @@ export default function CallHistoryScreen() {
         ListFooterComponent={
           query.isFetchingNextPage ? (
             <ActivityIndicator style={{ marginVertical: 16 }} color={Colors.brand.blue} />
-          ) : null
+          ) : undefined
         }
       />
       {sheet}

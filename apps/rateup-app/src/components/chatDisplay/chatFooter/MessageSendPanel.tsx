@@ -1237,13 +1237,11 @@ const MessageSendPanel = ({
                 <VoiceNoteMic voice={voice} />
               ) : (
                 <Pressable
-                  onPress={
-                    voice.phase === "locked" || voice.phase === "review"
-                      ? voice.send
-                      : isPrivate
-                        ? handleSendPrivateMessage
-                        : handleSend
-                  }
+                  onPress={() => {
+                    if (voice.phase === "locked" || voice.phase === "review") void voice.send();
+                    else if (isPrivate) void handleSendPrivateMessage();
+                    else void handleSend();
+                  }}
                   disabled={isUploading || voice.phase === "sending"}
                   accessibilityRole="button"
                   accessibilityLabel="Send"
