@@ -13,8 +13,6 @@ import { pendingCashierWrites } from "@/utils/clearLocalData";
 import { roleLabelOf } from "@/hooks/usePermissions";
 import StatusRow from "./StatusPicker";
 import { useCommerceAccess } from "@/components/shop/chatSell";
-import { FONT, useTheme } from "@/components/loyalty/cashier/ui";
-import { ChevronRight, ShoppingBag } from "lucide-react-native";
 
 interface UserProfile {
   email: string;
@@ -54,7 +52,6 @@ const AccountBar = ({
   const { setColorScheme } = useColorScheme();
   const [themePref, setThemePref] = useState<ThemePreference>("system");
   const { canRead: canReadOrders } = useCommerceAccess();
-  const { t } = useTheme();
 
   useEffect(() => {
     async function loadTheme() {
@@ -210,28 +207,18 @@ const AccountBar = ({
         {canReadOrders && (
           <Pressable
             onPress={() => router.push("/protected/orders" as never)}
-            style={({ pressed }) => ({
-              marginTop: 24,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 12,
-              paddingHorizontal: 16,
-              paddingVertical: 16,
-              borderRadius: 16,
-              borderWidth: 1,
-              borderColor: t.border1,
-              backgroundColor: t.surface,
-              opacity: pressed ? 0.8 : 1,
-            })}
+            className="mt-6 bg-white dark:bg-slate-900 rounded-2xl px-4 py-4 shadow-sm flex-row items-center gap-3 active:opacity-80"
           >
-            <ShoppingBag size={20} color={t.fg3} />
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontFamily: FONT.semibold, fontSize: 16, color: t.fg1 }}>Orders</Text>
-              <Text style={{ fontFamily: FONT.regular, fontSize: 12, color: t.fg3 }}>
+            <Ionicons name="bag-handle-outline" size={20} color="#6b7280" />
+            <View className="flex-1">
+              <Text className="text-base font-semibold text-gray-700 dark:text-gray-300">
+                Orders
+              </Text>
+              <Text className="text-xs text-gray-500 dark:text-gray-400">
                 Pack, ship and follow up on shop orders
               </Text>
             </View>
-            <ChevronRight size={18} color={t.fg4} />
+            <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
           </Pressable>
         )}
 
