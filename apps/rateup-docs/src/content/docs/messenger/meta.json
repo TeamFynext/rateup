@@ -1,6 +1,9 @@
 {
   "pages": [
     "index",
-    "chatbots"
+    "chatbots",
+    "comments",
+    "m-me-links",
+    "welcome-menu"
   ]
 }

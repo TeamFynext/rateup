@@ -1,10 +1,15 @@
 {
   "pages": [
     "index",
+    "setup",
     "overview",
-    "catalogs",
+    "products",
     "orders",
+    "coupons",
+    "settings",
     "payments",
-    "checkout-settings"
+    "checkout-settings",
+    "storefront",
+    "catalogs"
   ]
 }

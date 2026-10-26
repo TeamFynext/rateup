@@ -1,6 +1,6 @@
 ---
 title: "Messenger Chatbots"
-description: Build chatbots for your Facebook Page in the same editor as WhatsApp and Instagram, and start them from an automation rule.
+description: Build chatbots for your Facebook Page in the same editor as WhatsApp and Instagram, and start them from a message, a comment, an m.me link or a menu tap.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
@@ -15,7 +15,7 @@ and an [automation rule](/automation) starts it.
 
 ## Create a Chatbot
 
-Open **Messenger** in the sidebar and click **Create Chatbot**. The wizard opens on **Starting
+Open **Messenger** in the sidebar, stay on the **Chatbots** tab and click **Create Chatbot**. The wizard opens on **Starting
 point** — the channel is already Messenger.
 
 <Steps>
@@ -90,9 +90,18 @@ On **Review**, name the rule and click **Activate automation**.
   unused until you build the rule yourself in [Automation](/automation).
 </Callout>
 
-Messenger rules can use the same triggers as WhatsApp's general ones — **Message Received**, **Chat
-Closed**, **Chat Assigned**, **Contact Created** and the rest — but not the Instagram-only
-comment, story and link triggers. See [Triggers](/automation/triggers).
+Messenger rules can use the general triggers — **Message Received**, **Chat Closed**, **Chat
+Assigned**, **Contact Created** and the rest — plus two of their own. See
+[Triggers](/automation/triggers#messenger-triggers).
+
+| To start the chatbot when… | Build the rule with |
+|----------------------------|---------------------|
+| Someone messages a keyword | **Message Received** and a **Message Body** keyword |
+| Someone taps Get Started, an ice breaker or a menu item | **Message Received** on the keyword that tap sends — see [Welcome & Menu](/messenger/welcome-menu) |
+| Someone opens an m.me link | **m.me Link Opened** — see [m.me Links](/messenger/m-me-links) |
+| Someone comments on a Page post | **Facebook Page Comment** — see [Facebook Comments](/messenger/comments) |
+
+On a comment rule, the chatbot's first message goes out as the private reply to the comment.
 
 ---
 
@@ -171,6 +180,7 @@ their last message. A message the bot consumes as an answer does not also fire y
 
 - [Messenger Overview](/messenger) — connecting a Page
 - [Automation](/automation) — rules that start a chatbot
+- [Welcome & Menu](/messenger/welcome-menu), [m.me Links](/messenger/m-me-links) and [Facebook Comments](/messenger/comments) — other ways in
 - [Chatbot Builder](/whatsapp/chatbot-builder) — the editor canvas
 - [Instagram Chatbots](/instagram/chatbots)
 - [WhatsApp Chatbots](/whatsapp/chatbots)

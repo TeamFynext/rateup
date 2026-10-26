@@ -11,7 +11,7 @@ builder's **Conditions** step, whose heading follows the trigger:
 | Trigger | Heading | Under it |
 |---------|---------|----------|
 | **Message Received** | *"Which messages should it reply to?"* | *"Without a condition it would answer every message — even “thanks”."* |
-| **Instagram Comment (Private Reply)** | *"Which comments should it answer?"* | *"Add keywords, or leave it empty to answer every comment."* |
+| **Instagram Comment (Private Reply)**, **Facebook Page Comment** | *"Which comments should it answer?"* | *"Add keywords, or leave it empty to answer every comment."* |
 | Every other trigger | *"Only when…"* | *"Narrow it down, or continue to run it every time."* |
 
 A **Message Received** rule needs at least one condition. For the other triggers they are
@@ -34,7 +34,8 @@ Each condition is one row: a field, an operator and a value.
 | **Lead Stage** | The contact's stage on a [pipeline](/pipeline) | Equals | **Select stage** |
 | **Contact Lifecycle (legacy)** | The contact's lifecycle stage — listed only on a condition that already uses it | Equals | **Select lifecycle** |
 
-An **Instagram Comment (Private Reply)** rule can test only **Message Body** — the comment text.
+An **Instagram Comment (Private Reply)** or **Facebook Page Comment** rule can test only **Message
+Body** — the comment text.
 
 <Callout type="info">
   **Contains** is the right default for message text. **Equals** on a message body almost never
@@ -82,6 +83,9 @@ Some triggers replace the groups with their own settings, or add settings above 
 | **Instagram Comment (Private Reply)** | **Comments on** — **Posts & reels**, **Live videos** or **Both** — then **Apply to** **All posts** or **Specific posts**, then Message Body groups |
 | **Instagram Story Mention** | A note only — nothing to set |
 | **ig.me Link Opened** | The **Link name**, with the finished link, a copy button and a QR download |
+| **Facebook Page Comment** | A note on how the private reply works, then Message Body groups |
+| **m.me Link Opened** | The **Link name**, with the finished `m.me` link, a copy button and a QR download. No condition groups |
+| **Came From a Click-to-WhatsApp Ad** | **Ad IDs (optional)** and **Or ads whose headline or link contains**. No condition groups |
 
 ### Narrow a Store Rule to Certain Products
 
@@ -112,6 +116,10 @@ The **Link name** becomes the link's `?ref=`. Use letters, numbers, `-`, `_` and
 empty to answer every ig.me link, and ads that open the chat with a ref. The link appears once an
 Instagram account is ticked — *"Pick an Instagram account to see the link"*. See
 [Ice Breakers, Menu & Links](/instagram/entry-points).
+
+An **m.me Link Opened** rule works the same way for Messenger: the same characters, empty to answer
+every m.me link to the Page, and *"Pick a Page to see the link"* until a Page is ticked. See
+[m.me Links](/messenger/m-me-links).
 
 ---
 

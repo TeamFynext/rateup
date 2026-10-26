@@ -1,63 +1,151 @@
 ---
 title: "Overview"
-description: Sales, orders, average order value and top products at a glance.
+description: Revenue, orders, conversion, what your WhatsApp messages cost against what they sold, click-to-WhatsApp ad sales, and what needs attention.
 ---
 
+import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
-The **Overview** page answers the question you ask first every morning: how is the store doing?
+**Overview** shows *"Sales from every channel for the dates you pick."* Pick the period with the
+date selector at the top; every number on the page follows it. **Add product** next to it opens a
+new product.
 
-<ScreenShot src="/docs/screenshots/commerce/overview-stats.png" alt="The headline numbers" />
+<ScreenShot src="/docs/screenshots/commerce/overview-stats.png" alt="Commerce → Overview, top half: the date selector and Add product button, then the four tiles Revenue, Orders, Chat to paid order, Recovered from cart reminders (with '+12.4% vs the previous period' lines), the stacked Revenue chart and Where orders come from" />
 
 ---
 
-## The Headline Numbers
+## Read the Key Numbers
 
-| Card | What it counts |
+| Tile | What it counts |
 |------|----------------|
-| **Total Sales** | Revenue over the selected period |
-| **Orders** | Number of orders placed |
-| **Avg Order Value** | Total sales divided by order count |
-| **Products Live** | Products currently available in the connected catalog |
+| **Revenue** | Money from paid orders (including partly refunded ones), by the day they were paid |
+| **Orders** | Orders placed in the period |
+| **Chat to paid order** | Paid orders as a share of every order started in the period, carts included |
+| **Recovered from cart reminders** | Revenue from orders paid after at least one cart or payment reminder |
+
+The first three compare with the period of the same length just before, shown as *"+12.4% vs the
+previous period"* (percentage **pts** for the conversion tile). **Recovered from cart reminders**
+reads *"In the selected dates"*.
+
+If your plan caps orders, a banner shows *"Orders this month — 12 of 50"*. When the month's orders
+are used up, *"new orders are refused until the month resets"* — **Upgrade plan** opens
+[Billing](/settings/billing).
 
 ---
 
-## Sales Over Time
+## See Where Revenue Came From
 
-A chart of sales and order volume across the period. Hover any point to see the exact figures for
-that day.
-
-Use it to spot the pattern behind the totals — a good month driven by one big order looks very
-different from a good month driven by steady volume.
-
----
-
-## Top Products
-
-Your best sellers for the period, ranked. Use this to decide what to feature in campaigns, and to
-notice when a product stops moving.
+| Card | Shows |
+|------|-------|
+| **Revenue** | *"Paid orders and carts recovered by a reminder, per day"* — two stacked bars, **Paid orders** and **Recovered carts** |
+| **Where orders come from** | Paid revenue and order count per channel: **WhatsApp**, **Instagram**, **Messenger**, **Storefront** or **Manual** |
 
 ---
 
-## Recent Orders
+## Compare Messaging Cost With Revenue
 
-The latest orders, with the customer, the stage each has reached, and the date.
+**Messaging cost vs revenue** puts what your WhatsApp messages cost next to the paid orders they
+brought in. *"Orders count towards the last campaign or automation message in the 7 days before
+them."*
 
-Click through to [Orders](/commerce/orders) for the full list with filtering.
+<ScreenShot src="/docs/screenshots/commerce/message-cost.png" alt="The 'Messaging cost vs revenue' card: Messaging cost, Revenue from messages, Return on spend and Billed messages, the per-category line, and the Source table with a campaign row, 'Automations and flows' and 'Inbox replies'. Message rates button top right" />
+
+| Figure | Meaning |
+|--------|---------|
+| **Messaging cost** | Billed messages × your rate for their category |
+| **Revenue from messages** | Paid orders credited to a message |
+| **Return on spend** | Revenue divided by cost, as `12×` |
+| **Billed messages** | Messages Meta marked as billable; a line under it splits them into **Marketing**, **Utility**, **Authentication** and **Service**, billed and free |
+
+The **Source** table breaks the same figures down per row: each **campaign** by name, **Automations
+and flows** (all automations together), **One-off templates**, **Inbox replies**, each
+**Click-to-WhatsApp ad**, and **Instagram comments and stories**.
+
+### Enter Your Own Message Rates
+
+<Steps>
+<Step>
+Click **Message rates** (or **Enter rates** in the notice).
+</Step>
+<Step>
+Enter *"what Meta charges you for one delivered message"* for **Marketing**, **Utility**,
+**Authentication** and **Service**, in the shop's currency. Each rate is between 0 and 10. *"Find
+your rates in WhatsApp Manager under Insights."*
+</Step>
+<Step>
+Click **Save rates**.
+</Step>
+</Steps>
+
+Until you do, a shop selling in US dollars uses typical rates, and the card says *"Costs are
+estimates from typical rates."* A shop in any other currency shows no cost at all until rates are
+entered (*"Enter what Meta charges you per message in … to see what your messages cost."*). A US
+dollar shop can go back with **Use typical rates**. Entering rates needs *"Connect payments, set
+shipping and refund"*.
+
+<Callout type="info">
+  These are estimates. Meta prices by the customer's country and bills your WhatsApp Business account
+  directly — RateUp does not charge you for them. The card also notes that *"Replies inside the
+  24-hour service window are charged at the utility rate from 1 October 2026."*
+</Callout>
 
 ---
 
-## Reading the Numbers Honestly
+## See What Your Click-to-WhatsApp Ads Sold
 
-- **Average order value** moves sharply on low volume — treat it as noise until you have enough
-  orders for it to mean something
-- **Products live** counts what is *available*, not what is selling; a high number with flat sales
-  usually means the catalog needs curating, not expanding
-- Compare periods rather than reading a single number in isolation
+**Click-to-WhatsApp ads** appears only when someone reached you from such an ad in the period. *"A
+sale counts towards the last ad the customer clicked in the 7 days before it. Cost is what the
+messages to them in that week cost."*
+
+| Column | Meaning |
+|--------|---------|
+| **Ad** | The ad's headline (linked to the ad when Meta gave a link) and *"Ad 1234…"* |
+| **Clicks** / **People** | Taps on the ad, and the distinct people who tapped |
+| **Cost** | What the messages to those people cost, at your [message rates](#enter-your-own-message-rates) |
+| **Orders** / **Revenue** / **Return** | Paid orders credited to the ad, their value, and revenue ÷ cost |
+
+When an order credited to an ad is paid, RateUp also reports it to Meta as a **Purchase** from that
+ad, so Ads Manager sees the sale. The order page shows *"Reported to Meta as a purchase from the ad
+on …"* — see [Where This Sale Came From](/commerce/orders#see-where-a-sale-came-from).
+
+To answer ad clicks with the products the ad promoted, use the **Came From a Click-to-WhatsApp Ad**
+trigger with [Send products to buy](/automation/actions#send-products-to-buy).
+
+---
+
+## Work Through Needs Attention
+
+**Needs attention** lists what needs a person, each linked to where you fix it. *"Nothing needs you
+right now."* when it is empty.
+
+| Tag | Item |
+|-----|------|
+| **Stock** | Up to three tracked variants at or below their low-stock alert, with *"… people waiting for a restock"* when back-in-stock requests are waiting |
+| **COD** | Cash orders the customer has not confirmed on WhatsApp yet |
+| **Carts** | Carts opened today and not yet paid, with their value |
+| **Return** | Return requests waiting for you |
+| **Delivery** | Deliveries marked failed — *"Arrange a new slot with the customer."* |
+| **Meta** | Active products Meta rejected — *"Fix them so they show in WhatsApp and Instagram."* |
+
+**Recent orders** shows the six newest orders with payment and fulfilment status; **View all** opens
+[Orders](/commerce/orders).
+
+---
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| **Messaging cost** shows **—** | No rates for a non-USD shop | **Message rates** → enter your rates |
+| No **Click-to-WhatsApp ads** card | No ad clicks in the period | Widen the dates; the card hides itself when there is nothing to show |
+| A sale is not credited to a campaign | The customer's last campaign or automation message was more than 7 days before the order | Expected — only the 7 days before count |
+| Revenue lower than the order total | Revenue counts paid orders only, by payment date | Check **Awaiting payment** in Orders |
 
 ---
 
 ## Related Pages
 
 - [Orders](/commerce/orders)
-- [Catalogs](/commerce/catalogs)
+- [Setup](/commerce/setup)
+- [Campaigns](/campaign)
+- [Triggers](/automation/triggers#whatsapp-triggers) — the click-to-WhatsApp ad trigger

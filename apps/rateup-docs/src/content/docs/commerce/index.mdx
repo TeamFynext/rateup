@@ -1,78 +1,139 @@
 ---
-title: "Commerce Overview"
-description: Sell through WhatsApp — catalogs, orders, payments and checkout, all from the RateUp dashboard.
+title: "Commerce"
+description: Sell in WhatsApp, Instagram and Messenger chats and on your own storefront — products, orders, coupons, payments and delivery in one place.
 ---
 
 import ScreenShot from "@/components/Screenshot";
 
-**Commerce** turns your WhatsApp channel into a storefront. Customers browse your catalog, place
-an order in chat, and pay — and every step lands in RateUp.
+**Commerce** is RateUp's shop. You add your products once and they publish to your WhatsApp catalog,
+your Instagram shop and your own storefront page. Customers check out in the chat or on the
+storefront, and every order — whichever channel it came from — lands in one list.
 
-<ScreenShot src="/docs/screenshots/commerce/overview.png" alt="The Commerce Overview page" />
+<ScreenShot src="/docs/screenshots/commerce/overview.png" alt="Commerce → Overview on a shop with a few weeks of orders: the four key-number tiles, the Revenue chart and Where orders come from, with the Commerce sidebar group expanded (Overview, Products, Orders, Coupons, Settings)" />
 
 ---
 
 ## What's in Commerce
 
+The sidebar's **Commerce** group has these entries:
+
 <Cards>
+  <Card
+    title="Setup"
+    href="/commerce/setup"
+    description="The guided checklist from connecting WhatsApp to your first test order. Shown only until it is finished."
+  />
   <Card
     title="Overview"
     href="/commerce/overview"
-    description="Sales, order volume, average order value and what is selling."
+    description="Revenue, orders, messaging cost against what it sold, click-to-WhatsApp ads and what needs attention."
   />
   <Card
-    title="Catalogs"
-    href="/commerce/catalogs"
-    description="The products customers can buy, synced with your WhatsApp catalog."
+    title="Products"
+    href="/commerce/products"
+    description="Add, import, bulk-edit and duplicate products, and see where each one is live."
   />
   <Card
     title="Orders"
     href="/commerce/orders"
-    description="Every order and the stage it has reached, from pending to delivered."
+    description="Every order from every channel, the order page, shipping, refunds, returns and invoices."
   />
   <Card
-    title="Payments"
+    title="Coupons"
+    href="/commerce/coupons"
+    description="Discount codes for chat checkout and the storefront."
+  />
+  <Card
+    title="Settings"
+    href="/commerce/settings"
+    description="Getting paid, delivery, checkout, store details and customer messages."
+  />
+</Cards>
+
+The **Settings** pages in detail:
+
+<Cards>
+  <Card
+    title="Getting Paid"
     href="/commerce/payments"
-    description="How customers pay — UPI, cards, WhatsApp Pay or cash on delivery."
+    description="Stripe, Razorpay, cash on delivery, bank transfer and PDF invoices."
   />
   <Card
-    title="Checkout Settings"
+    title="Checkout"
     href="/commerce/checkout-settings"
-    description="Taxes and charges, abandoned-cart recovery and the checkout experience."
+    description="Where customers pay, what checkout in chat asks for, and cart reminders."
+  />
+  <Card
+    title="Storefront"
+    href="/commerce/storefront"
+    description="Your public shop page, product links, search indexing and WhatsApp confirmation."
+  />
+  <Card
+    title="Legacy Catalog Tools"
+    href="/commerce/catalogs"
+    description="The older tools that work straight on the Meta catalog and its cart orders."
   />
 </Cards>
 
 ---
 
+## Open Commerce
+
+Clicking **Commerce** in the sidebar opens **Setup** while your shop still has steps left, and
+**Overview** once they are all done. While setup is unfinished, the **Setup** entry carries a badge
+with the steps done out of the total, such as **3/7**.
+
+The **Orders** entry carries a badge with the number of orders in its **Needs action** tab — cash
+orders still to be confirmed, paid orders to pack, failed deliveries and requested returns.
+
+---
+
 ## How an Order Happens
 
-1. A customer browses your **catalog** in WhatsApp
-2. They add items and send the order to you
-3. RateUp creates an **order** and moves it through the stages
-4. A **checkout link** is sent for payment, unless the order is cash on delivery
-5. Once paid, the order moves to packing and delivery
-6. The conversation stays in the [Inbox](/inbox) throughout
+| Way in | What happens |
+|--------|--------------|
+| A customer sends a cart from your WhatsApp catalog | RateUp turns the cart into an order and walks them through checkout in the chat |
+| You build the cart in a conversation | **Sell → Create order / payment link** in the [Inbox](/inbox), or **Create order** on the Orders page, sends them a payment or checkout link |
+| A shopper buys on your storefront | They check out on the storefront's own checkout page — see [Storefront](/commerce/storefront) |
+| An Instagram comment or click-to-WhatsApp ad | An automation sends the products with a way to buy — see [Send Products to Buy](/automation/actions#send-products-to-buy) |
+
+Wherever it started, the order appears under [Orders](/commerce/orders) and the conversation stays
+in the [Inbox](/inbox).
 
 ---
 
 ## Before You Start
 
-Commerce is built on top of your WhatsApp Business account. You need:
+| You need | Where |
+|----------|-------|
+| Commerce turned on for your organisation | [Features](/settings/features) |
+| A connected WhatsApp number | [Channels](/settings/channels) |
+| A Meta catalog connected to your shop, so WhatsApp and Instagram can show your products | **Commerce → Settings → Store** |
+| At least one way to get paid | [Getting Paid](/commerce/payments) |
 
-- A connected **WhatsApp Business** account
-- A **WhatsApp catalog** connected to that account
-- A **payment method** configured, if you want in-chat payment
+[Setup](/commerce/setup) walks you through all of these in order.
 
-<Callout type="warn">
-  Without a connected catalog, Catalogs and Payments show a "no catalog connected" notice and the
-  rest of Commerce has nothing to work with. Connect one first — see
-  [Catalogs](/commerce/catalogs#connect-a-catalog-to-your-whatsapp-account).
-</Callout>
+---
+
+## Who Can Do What
+
+Commerce has its own permissions, set per role under [Members & Roles](/settings/users):
+
+| Permission | Lets someone |
+|------------|--------------|
+| *"See products, orders and shop analytics"* | Open Commerce at all |
+| *"Send products and payment links in chat"* | Sell in conversations, create orders and test orders |
+| *"Fulfil, cancel and update orders"* | Mark orders packed, shipped or paid, cancel them |
+| *"Add and edit products and stock"* | Add, import, edit and archive products |
+| *"Create and edit coupons"* | Manage [Coupons](/commerce/coupons) |
+| *"Connect payments, set shipping and refund"* | Payment providers, delivery rates, checkout settings, refunds |
+| *"Set up the storefront"* | Store details and the storefront |
 
 ---
 
 ## Related Pages
 
-- [Catalogs](/commerce/catalogs#connect-a-catalog-to-your-whatsapp-account) — connecting a catalog to your account
+- [Setup](/commerce/setup) — the guided checklist
 - [Inbox](/inbox) — where order conversations live
+- [Integrations](/settings/integrations) — connecting Shopify or WooCommerce
 - [Abandoned-Cart Reminders](/automation/abandoned-cart-reminders) — WhatsApp reminders for Shopify checkouts
