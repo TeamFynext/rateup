@@ -1,16 +1,16 @@
 ---
 title: "Messenger Overview"
-description: Connect a Facebook Page on its own and run chatbots that answer the messages people send it.
+description: Connect a Facebook Page on its own, run chatbots, answer Page comments, share m.me links and set the Get Started button and menu.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
-**Messenger** holds the chatbots that answer messages sent to your Facebook Page — *"Chatbots that
-answer messages sent to your Facebook Page."* Messenger conversations land in the [Inbox](/inbox)
-like any other channel, and a Page connects on its own: no WhatsApp number is needed.
+**Messenger** holds everything that runs on your Facebook Page — *"Chatbots and links for messages
+sent to your Facebook Page."* Messenger conversations land in the [Inbox](/inbox) like any other
+channel, and a Page connects on its own: no WhatsApp number is needed.
 
-<ScreenShot src="/docs/screenshots/messenger/overview.png" alt="Messenger page with a Facebook Page connected and no chatbots yet: Create Chatbot, search, sort and the starter examples" />
+<ScreenShot src="/docs/screenshots/messenger/overview.png" alt="Messenger page with a Facebook Page 'Demo Cafe' connected: the heading and description, the four tabs (Chatbots, Comments, m.me Links, Welcome & Menu) with Chatbots open, the Page selector on the right (two Pages connected), and the chatbot list with Create Chatbot, search, sort and the starter examples" />
 
 ---
 
@@ -23,14 +23,47 @@ like any other channel, and a Page connects on its own: no WhatsApp number is ne
     description="Build a chatbot from an example or a blank canvas, and start it from an automation rule."
   />
   <Card
-    title="Automation"
-    href="/automation"
-    description="The rules that start a Messenger chatbot when someone messages your Page."
+    title="Facebook Comments"
+    href="/messenger/comments"
+    description="Answer comments on your Page's posts privately in Messenger, and in public."
+  />
+  <Card
+    title="m.me Links"
+    href="/messenger/m-me-links"
+    description="Links and QR codes that open a chat with your Page and start an automation."
+  />
+  <Card
+    title="Welcome & Menu"
+    href="/messenger/welcome-menu"
+    description="The Get Started button, greeting, ice breakers and persistent menu."
   />
 </Cards>
 
+The page has one tab per tool:
+
+| Tab | What it holds |
+|-----|---------------|
+| **Chatbots** | Your Messenger chatbots — see [Messenger Chatbots](/messenger/chatbots) |
+| **Comments** | Rules with the **Facebook Page Comment** trigger — see [Facebook Comments](/messenger/comments) |
+| **m.me Links** | Rules with the **m.me Link Opened** trigger — see [m.me Links](/messenger/m-me-links) |
+| **Welcome & Menu** | Get Started, greeting, ice breakers and persistent menu — see [Welcome & Menu](/messenger/welcome-menu) |
+
 **Messenger** appears in the sidebar under **Instagram** for anyone whose team has access to
-chatbots. It has no ice breakers, persistent menu or links of its own — those are Instagram-only.
+chatbots.
+
+---
+
+## Work with Several Pages
+
+With more than one Page connected, a **Select Page** list sits beside the tabs. **Comments**,
+**m.me Links** and **Welcome & Menu** belong to the Page selected there — the first Page until you
+pick another. Switch Pages before you edit.
+
+Chatbots are the exception: a chatbot is not tied to a Page. The [rule](/automation) that starts it
+decides which Page it runs on.
+
+Nothing on Messenger needs a sync step: rules take effect when you save them, and **Welcome & Menu**
+changes Messenger as soon as you click **Save**.
 
 ---
 
@@ -70,7 +103,9 @@ Log in again and choose at least one."* — Meta was not given access to any Pag
 ## Where Conversations Go
 
 Every message to a connected Page becomes a ticket in the [Inbox](/inbox), with a Messenger badge.
-A chatbot's messages are already in the thread when an agent picks it up.
+A chatbot's messages are already in the thread when an agent picks it up. A button tap shows as the
+button's title, an m.me link visit as *"Opened a link (ref: …)"*, and a Page comment joins the
+person's conversation once a [comment rule](/messenger/comments) has replied to it.
 
 ---
 
@@ -82,12 +117,16 @@ A chatbot's messages are already in the thread when an agent picks it up.
 | A Page is missing from **Choose Facebook Pages** | It was not shared with RateUp during login | Log in again and pick it |
 | A Page is greyed out in **Choose Facebook Pages** | *"Connected to another organization"* | Disconnect it there first |
 | **Messenger** is not in the sidebar | Your team has no access to chatbots | Ask an admin to give your team access to chatbots |
+| A comment rule, link or menu you set up is not shown | Another Page is selected | Switch the Page selector |
 
 ---
 
 ## Related Pages
 
 - [Messenger Chatbots](/messenger/chatbots)
+- [Facebook Comments](/messenger/comments)
+- [m.me Links](/messenger/m-me-links)
+- [Welcome & Menu](/messenger/welcome-menu)
 - [Channels](/settings/channels) — connecting and disconnecting Pages
 - [Instagram](/instagram)
 - [Automation](/automation)

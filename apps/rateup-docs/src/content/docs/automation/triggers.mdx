@@ -1,6 +1,6 @@
 ---
 title: "Triggers"
-description: The events that start an automation rule, which channels each one runs on, and which ones need a single channel.
+description: The events that start an automation rule — messages, contacts, store events, Instagram, Messenger and ad taps — which channels each runs on, and which need a single channel.
 ---
 
 import ScreenShot from "@/components/Screenshot";
@@ -33,7 +33,7 @@ Tick the accounts under **Listen on** — or **Send from**, for the store events
 </Steps>
 
 The **Event** list shows only the events that every switched-on channel can fire. Switch on
-WhatsApp and Instagram together and the Instagram-only and store events drop out of the list.
+WhatsApp and Instagram together and the events of a single platform — Instagram, Messenger or the WhatsApp ad trigger — and the store events drop out of the list.
 
 ---
 
@@ -130,15 +130,55 @@ replies.
 
 ---
 
+## Messenger Triggers
+
+Listed only when **Messenger** is the rule's one channel.
+
+| On the rule card | In the builder | Hint |
+|------------------|----------------|------|
+| **Facebook Page Comment** | **Someone comments on your Page's post** | *"Reply privately in Messenger to comments on your Page's posts."* |
+| **m.me Link Opened** | **Someone opens your m.me link** | *"Greet people who open your Page from a link."* |
+
+- **Facebook Page Comment** fires on comments on any post of the Page. The **Conditions** step takes
+  **Message Body** keywords on the comment text, or none to answer every comment. The first message
+  the rule sends arrives as a private reply in Messenger, so put label and assign actions after it.
+  The **Actions** step also offers **Reply in public (optional)**. See
+  [Facebook Comments](/messenger/comments).
+- **m.me Link Opened** fires when someone opens a chat with your Page from an m.me link. You name
+  the link on the **Conditions** step; someone new starts the rule only when they tap the Page's
+  Get Started button. See [m.me Links](/messenger/m-me-links).
+
+Taps on the Get Started button, ice breakers and the persistent menu are not triggers of their own:
+each sends a keyword that a **Message Received** rule answers — see
+[Welcome & Menu](/messenger/welcome-menu).
+
+---
+
+## WhatsApp Triggers
+
+Listed only when **WhatsApp** is the rule's one channel.
+
+| On the rule card | In the builder | Hint |
+|------------------|----------------|------|
+| **Came From a Click-to-WhatsApp Ad** | **Someone taps your click-to-WhatsApp ad** | *"Show the products an ad promoted to everyone who taps it."* |
+
+It runs on the first message after someone taps a click-to-WhatsApp ad, before any keyword rule.
+On the **Conditions** step, **Ad IDs (optional)** — *"Find an ad's ID in Ads Manager. Press Enter
+after each one."* — and **Or ads whose headline or link contains** narrow it to certain ads. *"Leave
+both empty to answer every ad. A rule naming an ad goes before one for every ad."* Pair it with
+[**Send products to buy**](/automation/actions#send-products-to-buy) to show what the ad promoted.
+
+---
+
 ## Why a Channel Chip Is Dimmed
 
 A chip you cannot switch on is dimmed, and its reason shows under the chips and when you hover it.
 
 | Reason shown | Cause | Fix |
 |--------------|-------|-----|
-| *"This event doesn't happen on …"* | An Instagram-only event is chosen | Pick another event, or keep the rule on Instagram |
+| *"This event doesn't happen on …"* | An event of one platform is chosen — Instagram, Messenger or WhatsApp | Pick another event, or keep the rule on that platform |
 | *"Store events send from one channel. Pick a single channel"* | A Shopify or WooCommerce event is chosen | Make a separate rule per channel |
-| *"“Send Template” can't run on …"* | An action only runs on WhatsApp | Remove the action — see [Actions](/automation/actions) |
+| *"“Send Template” can't run on …"* | An action does not run on that platform — such as a WhatsApp-only action, or **Send Products to Buy** on Messenger | Remove the action — see [Actions](/automation/actions) |
 | *"“Trigger Chatbot” runs on one channel. Remove it, or pick a single channel"* | A chatbot action is on the rule | Remove it, or keep one channel |
 
 The last channel that is on cannot be switched off — a rule needs at least one. Switching a channel
@@ -146,8 +186,9 @@ off removes its accounts from the rule.
 
 <Callout type="warn">
   Changing the **Event** clears what belonged to the old one — the Shopify event and products, the
-  WooCommerce status and products, the Instagram post choices and the ig.me link name — and, for
-  every event except **Message Received** and Instagram comments, removes the condition groups.
+  WooCommerce status and products, the Instagram post choices, the ig.me and m.me link names and the
+  ad IDs — and, for every event except **Message Received** and Instagram and Facebook comments,
+  removes the condition groups.
   Check the **Conditions** step again after switching events.
 </Callout>
 
@@ -167,7 +208,9 @@ off removes its accounts from the rule.
 | Follow up after resolution | Chat Closed |
 | Welcome a new contact | Contact Created |
 | React when a lead moves on | Lead Stage Updated |
-| React to social activity | Instagram Comment / Story Mention / ig.me Link Opened |
+| React to social activity | Instagram Comment / Story Mention / ig.me Link Opened, Facebook Page Comment |
+| Greet people from a link you shared | ig.me Link Opened / m.me Link Opened |
+| Answer people who tapped your ad | Came From a Click-to-WhatsApp Ad |
 | Confirm or update an order | Shopify Event / WooCommerce Event |
 | Win back an abandoned cart | Shopify Event → **On abandoned checkouts** |
 
@@ -190,3 +233,4 @@ off removes its accounts from the rule.
 - [Actions](/automation/actions)
 - [Abandoned-Cart Reminders](/automation/abandoned-cart-reminders)
 - [Comments & Story Mentions](/instagram/automations)
+- [Facebook Comments](/messenger/comments) and [m.me Links](/messenger/m-me-links)

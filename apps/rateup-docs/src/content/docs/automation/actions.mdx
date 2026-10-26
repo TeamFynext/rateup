@@ -45,6 +45,7 @@ The **Add action** menu offers only the actions every switched-on channel can ru
 | Action | Name in messages | Channels |
 |--------|------------------|----------|
 | **Send a message** | Send Message | WhatsApp, Instagram, Messenger |
+| **Send products to buy** | Send Products to Buy | WhatsApp, Instagram |
 | **Send a template** | Send Template | WhatsApp only |
 | **Send a flow** | Send Flow | WhatsApp only |
 | **Send a web survey** | Send Web Survey | WhatsApp, Instagram, Messenger |
@@ -58,7 +59,8 @@ The **Add action** menu offers only the actions every switched-on channel can ru
 
 Adding an action also limits the channels. With **Send a template** on the rule, the
 **Instagram** and **Messenger** chips on the **Trigger** step are dimmed with *"“Send Template”
-can't run on Instagram or Messenger"*. With **Start a chatbot** on it, every other chip is dimmed
+can't run on Instagram or Messenger"*; with **Send products to buy**, the **Messenger** chip reads
+*"“Send Products to Buy” can't run on Messenger"*. With **Start a chatbot** on it, every other chip is dimmed
 with *"“Trigger Chatbot” runs on one channel. Remove it, or pick a single channel"*. Remove the
 action to free the channel.
 
@@ -69,6 +71,7 @@ action to free the channel.
 | Action | Sends |
 |--------|-------|
 | **Send a message** | A plain message — *"Write the reply your customer will get"* |
+| **Send products to buy** | Products from your [store](/commerce) — see [below](#send-products-to-buy) |
 | **Send a template** | An approved [template](/whatsapp/templates) |
 | **Send a flow** | A [WhatsApp flow](/whatsapp/flows) |
 | **Send a web survey** | A [web form](/web-forms), listed as *form name (team name)* |
@@ -104,12 +107,35 @@ cart link — see [Abandoned-Cart Reminders](/automation/abandoned-cart-reminder
   [Message Analytics](/analytics/message-analytics) if replies are not arriving.
 </Callout>
 
-### Reply in Public to an Instagram Comment
+### Send Products to Buy
 
-On an **Instagram Comment (Private Reply)** rule, the Actions step also shows **Reply in public
-(optional)**: *"Posted under the comment so others see you answered. One is picked at random each
+**Send products to buy** sends up to **10** products from your [store](/commerce). Click **Choose
+products**, tick them in the picker — *"Up to 10 products per reply."* — and click **Use … products**.
+**Message (optional)** adds up to 600 characters of your own above them.
+
+| Rule runs on | What the customer gets |
+|--------------|------------------------|
+| WhatsApp | *"Sent as catalog cards the customer can add to a cart from. Products must be live in your WhatsApp catalog."* |
+| Instagram | One message listing the products with a link — *"One product with one option gets a direct checkout link. More than that links to your storefront."* |
+
+On Instagram the action also offers **Limited drop** — see
+[Sell from a Comment](/instagram/automations#sell-from-a-comment). Pair it with an Instagram comment
+rule for comment-to-buy, or with **Came From a Click-to-WhatsApp Ad** to show what an ad promoted.
+The template gallery has **Comment to buy**, **Live drop** and **Ad to products** ready-made.
+
+<Callout type="warn">
+  The action sends nothing if Commerce is not set up, or if none of its products is still for sale.
+  On Instagram with several products, turn the storefront on in **Commerce → Settings**, or the reply
+  can only list the products without a link.
+</Callout>
+
+### Reply in Public to a Comment
+
+On an **Instagram Comment (Private Reply)** or **Facebook Page Comment** rule, the Actions step also
+shows **Reply in public (optional)**: *"Posted under the comment so others see you answered. One is picked at random each
 time, so add a few."* Click **Add a public reply**, then **Add a variation** — up to 10, each up to
-2,200 characters. See [Comments & Story Mentions](/instagram/automations).
+2,200 characters. See [Comments & Story Mentions](/instagram/automations) and
+[Facebook Comments](/messenger/comments).
 
 ---
 

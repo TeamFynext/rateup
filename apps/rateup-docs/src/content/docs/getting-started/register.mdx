@@ -1,14 +1,14 @@
 ---
 title: "Create an Account"
-description: Sign up for RateUp with email, Google or Apple, and complete the three-step setup.
+description: Sign up for RateUp with email, Google or Apple, verify your email, then tell RateUp about your business in two short steps.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
-import ImagePlaceholder from "@/components/ImagePlaceholder";
 
-Signing up takes three short steps. What you are asked for depends on whether you register with
-**email** or with **Google / Apple**.
+Signing up is three steps: **Account**, **Your store** and **Goals**. The account is created at the
+end of the first step; the other two describe your business and choose which features your menu
+starts with.
 
 <Callout type="info">
   If a colleague invited you, do **not** sign up here — use the invite link in your email instead.
@@ -24,14 +24,7 @@ Signing up takes three short steps. What you are asked for depends on whether yo
 Visit [rateup.app](https://rateup.app) and click **Login** in the top-right corner.
 </Step>
 <Step>
-On the login page, click **Create account**.
-</Step>
-<Step>
-Choose how to register:
-
-- **Continue with Google**
-- **Continue with Apple**
-- **Continue with Email**
+Next to *"Don't have an account?"* in the header, click **Create account**.
 </Step>
 </Steps>
 
@@ -41,29 +34,33 @@ Choose how to register:
   width="350px"
 />
 
+A rail above the card shows where you are — *"Step 1 of 3 · Account"* — and roughly how long the
+step takes.
+
 ---
 
 ## Step 1 · Create Your Account
 
-What this step asks for depends on the method you chose.
+The card is headed *"Create your account"*. Choose **Google** or **Apple** at the top, or fill in
+the form under *"or with email"*.
 
 ### With email
 
 | Field | Notes |
 |-------|-------|
-| **Name** | Your own name |
-| **Email address** | Must be valid, and not already registered |
+| **Full name** | Your own name |
+| **Work email** | Must be valid, and not already registered |
 | **Password** | See the rules below |
 
-As you type, a checklist appears under the password field and ticks each rule off:
+A strength meter under the password reads **Weak**, **Fair**, **Good** or **Strong**. A password is
+accepted only when it has all of these:
 
 | Rule | Meaning |
 |------|---------|
-| **At least 8 characters** | Shorter passwords are rejected |
-| **1 uppercase letter** | `A`–`Z` |
-| **1 lowercase letter** | `a`–`z` |
-| **1 number** | `0`–`9` |
-| **1 special character** | See the accepted list below |
+| At least 8 characters | Shorter passwords are rejected. 12 or more is ideal |
+| An uppercase and a lowercase letter | `A`–`Z` and `a`–`z` |
+| A number | `0`–`9` |
+| A special character | One from the list below |
 
 Accepted special characters:
 
@@ -71,121 +68,114 @@ Accepted special characters:
 ! @ # $ % ^ & * ( ) , . ? " : { } | < >
 ```
 
-<Callout type="warn">
-  All five rules must be green before you can continue. Until then the field shows *"Your password
-  must meet all security requirements"* — it does not say which rule is missing, so read the
-  checklist.
-</Callout>
+The meter never shows **Good** or **Strong** for a password that would be refused, so if it stops
+at **Fair**, a rule is still missing. Submitting it anyway shows *"Your password must meet all
+security requirements"*.
+
+The terms box — *"I agree to the Terms of Service and Privacy Policy"* — is ticked for you. Click
+**Create account**.
 
 ### With Google or Apple
 
-Your name and email come from the provider, so instead you are asked for a **phone number**. It is
-required, and it is verified later with a one-time code.
+After you approve RateUp with the provider, the card shows **Account connected** with your email.
+Check your **Full name** and click **Create account**.
 
 ---
 
-## Step 2 · Tell Us About Your Business
+## Verify Your Email
+
+Email signups only. RateUp sends a verification link and shows *"Check your inbox"*:
+
+<Steps>
+<Step>
+Open the email and click the link. *"It works once and expires in 24 hours."*
+</Step>
+<Step>
+RateUp opens **Step 2** of signup.
+</Step>
+</Steps>
+
+If it does not arrive, click **Resend the email** (available again after a one-minute countdown) and
+check your spam folder.
+
+<Callout type="warn">
+  An unverified account cannot reach the dashboard — every visit sends you back to the verification
+  screen until the link is clicked.
+</Callout>
+
+---
+
+## Step 2 · Tell Us About Your Store
 
 <ScreenShot
   src={`/docs/screenshots/authentication/signup-step2.png`}
-  alt="Signup step 2 'Tell Us About Your Business' with business name, website, industry, location and team size, and the Step 2 of 3 progress indicator."
-  width="350px"
+  alt="Signup step 2, 'Tell us about your store': business name, WhatsApp business number, website, what you sell and team size."
 />
 
-{/* TODO: capture signup step 2 */}
+The card is headed *"Tell us about your store"* — *"What your customers will see in chat."*
 
 | Field | Required | Notes |
 |-------|----------|-------|
-| **Business name** | Yes | Appears across RateUp and on customer-facing pages |
-| **Website URL** | No | For example `https://yourcompany.com` |
-| **Industry** | Yes | Chosen from the list below |
-| **Location** | Yes | Where the business operates |
-| **Team size** | Yes, in practice | **1–5**, **6–25**, **26–100** or **100+** |
+| **Business name** | Yes | At least 2 characters. Appears across RateUp and on customer-facing pages |
+| **WhatsApp business number** | Yes | With country code. Must be a valid phone number |
+| **Website** | No | For example `https://yourcompany.com` |
+| **What do you sell?** | Yes | E-commerce · Healthcare · Education · Finance · Real Estate · Hospitality · Retail · Technology · Marketing · Other |
+| **How big is your team?** | Yes | **1–5**, **6–25**, **26–100** or **100+** |
 
-**Industries:** E-commerce · Healthcare · Education · Finance · Real Estate · Hospitality ·
-Retail · Technology · Marketing · Other.
+Click **Continue**.
 
 <Callout type="info">
-  **Team size** is marked optional but the **Continue** button stays disabled until you pick one. If
-  the button looks stuck on this step, that is almost always why.
+  Leaving after step 1 is safe: the account already exists, and the next time you sign in RateUp
+  brings you back here to finish.
 </Callout>
-
-Your industry choice shapes the templates, automations and onboarding RateUp suggests — so pick the
-closest match rather than **Other** where you can.
 
 ---
 
-## Step 3 · What Are You Most Excited to Use?
+## Step 3 · What Should RateUp Do First?
 
-Select all that apply. This tailors your dashboard and onboarding tour; it does not restrict what
-you can use later.
+*"Pick one or more — you can change this later."*
 
-| Option | Covers |
-|--------|--------|
-| **WhatsApp Business API** | Verified sender and templates |
-| **Loyalty on WhatsApp** | Points, tiers and rewards |
-| **WhatsApp Campaigns** | Broadcasts |
-| **Customer Feedback** | NPS, CSAT and review drives |
-| **Web Feedback Forms** | Surveys and forms |
-| **Unified Inbox** | WhatsApp and Instagram in one place |
+| Option | Described as |
+|--------|--------------|
+| **WhatsApp Business API** | Verified sender, approved templates |
+| **Loyalty inside chat** | Points and tiers in the thread |
+| **Campaigns that get opened** | Broadcasts with delivery reporting |
+| **Reviews and ratings** | Ask for a rating after delivery |
+| **Surveys on the web** | NPS and CSAT forms you can share |
+| **One shared inbox** | WhatsApp and Instagram in one queue |
+| **Sell products on WhatsApp & Instagram** | A shop with checkout in the chat |
 
-A progress indicator shows **Step 3 of 3**. Use **Back** to revisit earlier steps — nothing is lost.
+Your picks decide which optional features start in your menu: **Loyalty inside chat** turns on
+Loyalty, **Surveys on the web** turns on Web Forms, and **Sell products on WhatsApp & Instagram**
+turns on Commerce. Pipeline is always on. Pick nothing and every feature starts on. Nothing is
+locked — you can change the set at any time in [Features](/settings/features).
+
+Click **Finish setup**. **Back** returns to step 2 without losing anything.
 
 ---
 
-## Verification
+## You're In
 
-The last stage depends, again, on how you registered.
+The last screen says *"… is live"* and lists what was set up — **Email verified**, **Workspace
+created for …** and **Free account started — no card on file**. Click **Go to dashboard**.
 
-### Email signup — verify your email
-
-<Steps>
-<Step>
-RateUp sends a verification email. The page reads **Verify Your Email — check your inbox to
-continue**.
-</Step>
-<Step>
-Open the email and click the verification link.
-</Step>
-<Step>
-Your account is activated and you can sign in.
-</Step>
-</Steps>
-
-If it does not arrive, use **Resend verification email** and check your spam and promotions
-folders.
-
-### Google / Apple signup — verify your phone
-
-<Steps>
-<Step>
-The **Verify your Phone Number** screen asks for the **OTP code** sent to the number you gave.
-</Step>
-<Step>
-Enter it and click **Verify OTP**, or use **Resend OTP** if it does not arrive.
-</Step>
-</Steps>
-
-<Callout type="warn">
-  Email verification is required before your first login. An unverified account cannot sign in.
-</Callout>
+Owners and Admins land on the [setup guide](/getting-started/setup-guide), which starts with
+**Choose features** and then connecting a channel.
 
 ---
 
 ## The Flow at a Glance
 
 ```
-Create account
-  ├── Email        →  name, email, password
-  └── Google/Apple →  phone number
+Step 1 · Account
+  ├── Email        →  full name, work email, password  →  verify email link
+  └── Google/Apple →  full name
         ↓
-Business details  →  name, website, industry, location, team size
+Step 2 · Your store  →  business name, WhatsApp number, website, what you sell, team size
         ↓
-Interests         →  select all that apply
+Step 3 · Goals       →  pick one or more (sets your starting features)
         ↓
-Verify            →  email link, or phone OTP
-        ↓
-Dashboard
+Success screen  →  Go to dashboard  →  setup guide
 ```
 
 ---
@@ -194,34 +184,22 @@ Dashboard
 
 | Message | Meaning | What to do |
 |---------|---------|-----------|
-| **"This account already exists"** | That email is already registered | [Log in](/getting-started/login), or [reset your password](/getting-started/resetpassword) |
-| **"Sign up process is already completed"** | Registration finished on a previous attempt | Go to the login page and sign in |
-| **"Your password must meet all security requirements"** | One or more of the five password rules is unmet | Check the password checklist — the unticked rules are the ones to fix |
-| **"Enter a valid email"** | The address is malformed | Check for typos |
-| **Continue button will not activate** | A required field is empty — usually **team size** | Fill every field on the step |
-| **No verification email** | Filtered as spam, or a typo in the address | Check spam, then **Resend verification email** |
-
----
-
-## What Happens Next
-
-<Steps>
-<Step>
-**[Log in](/getting-started/login)** with your new account.
-</Step>
-<Step>
-**[Connect a channel](/settings/channels)** — a WhatsApp Business account or Instagram. Nothing
-works until one is live.
-</Step>
-<Step>
-**[Invite your team](/settings/users)** and group them into [teams](/settings/teams).
-</Step>
-</Steps>
+| *"This account already exists. Please sign in to continue"* | That email is already registered | [Log in](/getting-started/login), or [reset your password](/getting-started/resetpassword) |
+| *"Sign up process is already completed"* | Registration finished on a previous attempt | Go to the login page and sign in |
+| *"Your password must meet all security requirements"* | One or more password rules is unmet | Add whatever is missing — upper and lower case, a number, a special character, 8+ characters |
+| *"Enter a valid email"* | The address is malformed | Check for typos |
+| *"Please accept the Terms of Service and Privacy Policy to continue"* | The terms box was unticked | Tick it |
+| *"Enter a valid phone number"* | The WhatsApp number is incomplete or has no country code | Pick the country and enter the full number |
+| *"Couldn't save. Try again."* | Steps 2–3 did not save | Click **Finish setup** again |
+| No verification email | Filtered as spam, or a typo in the address | Check spam, then **Resend the email** |
+| A feature you expected is missing from the menu | Your step 3 picks did not include it | Turn it on in [Features](/settings/features) |
 
 ---
 
 ## Related Pages
 
+- [Setup Guide](/getting-started/setup-guide) — what to do after signing up
 - [Login](/getting-started/login)
 - [Reset Password](/getting-started/resetpassword)
+- [Features](/settings/features) — change which features show in the menu
 - [Account Settings](/settings/account) — changing these details later

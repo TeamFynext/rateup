@@ -46,6 +46,24 @@ plus whatever WhatsApp reported.
 
 Required fields carry a red asterisk, and every counter shows how much room is left.
 
+### Header and card files
+
+An **Image**, **Video** or **Document** header takes an uploaded file, and so does each card of a
+**CAROUSEL** template. WhatsApp accepts only these formats, so the editor checks the file before
+saving:
+
+| Where | Accepts | Largest file |
+|-------|---------|--------------|
+| **Image** header | PNG or JPG | 5 MB |
+| **Video** header | MP4 | 16 MB |
+| **Document** header | PDF (PNG, JPG and MP4 also pass) | 100 MB for a PDF |
+| Carousel card | PNG or JPG on an image card, MP4 on a video card | 50 MB |
+
+A file that does not fit is refused on save with a message naming the problem, for example *"AVIF
+files aren't supported. Use a PNG or JPG image, an MP4 video or a PDF."*, *"The header is set to
+Image, so choose a PNG or JPG file."* or *"This file is too large. PNG files can be up to 5 MB."*
+On a carousel the message starts with the card — *"Card 2: Each card needs at least 1 button"*.
+
 ### Template types
 
 The dropdown shows them in the API's own spelling:
@@ -168,7 +186,9 @@ an edit puts the template back through WhatsApp's review.
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| *"Error in Template"* on submit | A required field is empty | The message names the first field it found |
+| A red toast on **Save as draft** or **Save & Submit** | A field fails a check | The toast shows the first problem found — on a carousel it starts with the card number. If nothing more specific applies it reads *"Please check the template and try again."* |
+| *"Button 2 has no text. Fill it in and save again."* | WhatsApp rejected a button with a missing field | Fill in that button (numbered from 1) |
+| A WebP, SVG, GIF or AVIF image is refused | WhatsApp takes only PNG or JPG images | Convert the image — see [Header and card files](#header-and-card-files) |
 | Name rejected | Capitals, spaces or punctuation | Lower-case letters and underscores only |
 | Category keeps changing back | The template type forces it | Change the type, or accept the category |
 | Fields cannot be typed in | The template is submitted or approved | Click **Edit** |

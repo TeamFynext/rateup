@@ -1,6 +1,6 @@
 ---
 title: "Comments & Story Mentions"
-description: Answer Instagram comments with a private DM and a public reply — on posts, reels and live videos — and thank people who mention you in their story.
+description: Answer Instagram comments with a private DM and a public reply — on posts, reels and live videos — sell from a comment, and thank people who mention you in their story.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
@@ -82,6 +82,84 @@ video is never in the post list, so a post filter would block it.
 
 ---
 
+## Sell from a Comment
+
+A comment rule can answer with the product itself. When someone comments a keyword — *buy*,
+*link*, *mine* — on a post, reel or live, the private reply lists the product with a link to buy
+it. This needs [Commerce](/commerce) set up with the products in your store.
+
+<ScreenShot src="/docs/screenshots/instagram/comment-to-buy.png" alt="Actions step of an Instagram comment rule (keywords buy, link, price) with a Send products to buy card open: one product chip, Message (optional) filled in, Limited drop switched on with Units available 20; below it, Reply in public (optional) with 'Sent you the link 📩'" />
+
+<Steps>
+<Step>
+Create a comment rule as [above](#answer-comments-automatically) — or, on **Template**, pick
+**Comment to buy** (*"Someone comments “buy” → DM them the product with a link to check out."*) or
+**Live drop** (*"Someone comments “mine” on your live → the first 20 get a checkout link."*).
+</Step>
+<Step>
+On **Conditions**, set the keywords — the templates use `buy`, `link` and `price`, or `mine` and
+`buy` for lives.
+</Step>
+<Step>
+On **Actions**, add **Send products to buy** and click **Choose products** — up to 10.
+Optionally write a **Message (optional)**, up to 600 characters; without one the reply opens with
+*"Thanks for your comment! Here it is:"* (or *"Thanks! Here's the edit:"* for several products).
+</Step>
+<Step>
+For a drop, switch on **Limited drop** and set **Units available** (below).
+</Step>
+<Step>
+Add a public reply such as *"Sent you the link 📩"*, then name the rule and click **Activate
+automation**.
+</Step>
+</Steps>
+
+What the link opens depends on what you picked — *"One product with one option gets a direct
+checkout link. More than that links to your storefront."*
+
+| You picked | The reply ends with |
+|------------|---------------------|
+| One product with one option that can be sold | *"Buy it here:"* and a checkout link, starting at the address step |
+| One product with several options | *"Shop here:"* and the product's storefront page |
+| Several products | *"Shop here:"* and your storefront |
+| Anything but a direct checkout, storefront off | *"Reply here and we'll help you order."* — no link |
+
+The reply lists up to 5 products with their prices, and is kept within Meta's 1,000-character limit
+for a private reply: your message is shortened before the link ever is.
+
+<Callout type="warn">
+  With several products — or one with several options — turn the storefront on in **Commerce →
+  Settings** first. Otherwise the
+  builder warns *"Turn on your storefront in Commerce → Settings, or the reply can only list these
+  products without a link."* — and every commenter gets a list they cannot buy from.
+</Callout>
+
+### Sell a Limited Drop
+
+**Limited drop** — *"Sell only so many, one per person, first come. Later commenters hear it sold
+out."* — caps the rule at **Units available** (20 when you switch it on).
+
+| Situation | What happens |
+|-----------|--------------|
+| A unit is free | The commenter gets the reply and their checkout link |
+| The same person comments again | They get their first checkout back, not a second unit |
+| Every unit is taken | The reply reads *"Sorry, … has sold out."*, plus a link to your storefront when it is on |
+| A checkout lapses unpaid | Its unit goes back to the drop and someone else can take it |
+
+A unit is held while its checkout is still open, not by stock: stock is taken only when the order
+is placed, and an order beyond the limit is refused.
+
+<Callout type="info">
+  Run a drop on a live by choosing **Live videos** under **Comments on** — the **Live drop** template
+  does this for you. Set **Units available** to what you can actually ship, not what you hope to
+  sell.
+</Callout>
+
+On a **Story Mention** rule, **Send products to buy** sends the same message as a DM, followed by
+the product cards.
+
+---
+
 ## Thank People Who Mention You in a Story
 
 The **Story Mentions** tab lists your **Story Mention Automations** — *"Triggered when someone
@@ -135,6 +213,9 @@ action to remove it, or click the card to edit it in [Automation](/automation).
 | Some posts get no answer | **Apply to** is **Specific posts** | Add the post, or choose **All posts** |
 | The private reply arrives but nothing after it | Instagram allows one private reply until the person writes back | Make the first message ask them to reply |
 | *"Instagram comments stop at 2200 characters"* | A public reply is too long | Shorten it |
+| A comment-to-buy reply has no link | Several products and the storefront is off, or nothing picked is still for sale | Turn the storefront on, or check the products |
+| Nothing is sent for a comment-to-buy rule | Commerce is not set up, or none of the products is active | Set up [Commerce](/commerce) and check the products |
+| Commenters hear *"has sold out"* too early | **Units available** is lower than you meant, or open checkouts still hold units | Raise the number; lapsed checkouts free their units |
 
 ---
 
@@ -143,4 +224,6 @@ action to remove it, or click the card to edit it in [Automation](/automation).
 - [Instagram Chatbots](/instagram/chatbots) — what a comment or story rule can start
 - [Ice Breakers, Menu & Links](/instagram/entry-points)
 - [Automation](/automation) — the rule builder in full
+- [Actions](/automation/actions#send-products-to-buy) — **Send products to buy** on WhatsApp too
+- [Commerce](/commerce) — products, storefront and orders
 - [Inbox](/inbox)

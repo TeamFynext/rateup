@@ -2,6 +2,7 @@
   "pages": [
     "index",
     "account",
+    "features",
     "users",
     "teams",
     "notifications",

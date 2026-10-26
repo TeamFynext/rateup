@@ -1,0 +1,181 @@
+---
+title: "Welcome & Menu"
+description: Set the Get Started button, greeting, ice breakers and persistent menu people see when they open a Messenger chat with your Facebook Page.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ScreenShot from "@/components/Screenshot";
+
+The **Welcome & Menu** tab on **Messenger** sets what people see before they type anything: a
+**Get Started button**, the **Greeting** above it, tappable **Ice breakers**, and a **Persistent
+menu** next to the message box. Everything on the tab belongs to the Page selected at the top of
+the page.
+
+<ScreenShot src="/docs/screenshots/messenger/welcome-menu.png" alt="Messenger page, Welcome & Menu tab open, Page 'Demo Cafe'. The info alert at the top, then the four cards: Get Started button (Live badge, keyword START), Greeting (Live, a one-line welcome using the first-name placeholder), Ice breakers (2/4, two questions filled in), Persistent menu (2/20, one Send a keyword item and one Open a website item)" />
+
+---
+
+## How a Tap Starts Something
+
+Get Started, ice breakers and menu items do not start a chatbot directly. Each one sends a
+**keyword** — *"A tap sends its keyword as a message, so use a keyword one of your Messenger chatbots
+or rules answers."* The keyword reaches your rules exactly as if the person had typed it, so a
+**Message Received** rule on that keyword decides what happens next — usually **Trigger Chatbot**.
+
+<Steps>
+<Step>
+Pick a keyword for each tap — `START`, `HOURS`, `AGENT`.
+</Step>
+<Step>
+In [Automation](/automation), build a **Messenger** rule with the **Message Received** trigger and a
+**Message Body** condition on that keyword.
+</Step>
+<Step>
+On **Actions**, add **Start a chatbot** and pick a [Messenger chatbot](/messenger/chatbots), or
+reply with **Send a message**.
+</Step>
+<Step>
+Come back to **Welcome & Menu** and enter the same keyword under **Keyword sent on tap**.
+</Step>
+</Steps>
+
+<Callout type="warn">
+  A keyword no rule answers does nothing — the person taps, the tap lands in the
+  [Inbox](/inbox), and nobody replies until an agent sees it. Build the rule first, then the button.
+</Callout>
+
+---
+
+## Changes Are Live When You Save
+
+Each card has its own **Save**. *"These are shown when someone opens a chat with your Page, and
+change in Messenger as soon as you save."* There is no separate sync step, unlike
+[Instagram](/instagram/entry-points). **Remove** takes a card's setting off Messenger.
+
+The tab reads the settings back from Meta every time it opens, so what you see is what is live —
+including anything changed outside RateUp. The badge on each card says **Live** or **Not set**.
+
+| Message | Meaning |
+|---------|---------|
+| *"Couldn't read this Page's Messenger profile from Meta."* | Meta did not answer. Click **Try again** |
+| *"You can view these settings. Ask an admin for the manage channels permission to change them."* | Your role cannot change channels, so every control is disabled — see [Members & Roles](/settings/users) |
+
+---
+
+## Set the Get Started Button
+
+*"People chatting with your Page for the first time tap this before they can type. It also passes
+on the ref of the m.me link they came from."*
+
+<Steps>
+<Step>
+On the **Get Started button** card, enter the **Keyword sent on tap** — for example `START`.
+</Step>
+<Step>
+Click **Save**.
+</Step>
+</Steps>
+
+The Get Started button matters beyond the first tap:
+
+- The [persistent menu](#set-up-the-persistent-menu) only shows once it is set.
+- An [m.me link](/messenger/m-me-links) opened by someone new starts its automation when they tap
+  Get Started. When an m.me link rule answers the tap, it runs instead of your keyword rule.
+
+Removing the button while a menu is live asks first — *"Messenger only shows the persistent menu
+with a Get Started button, so your menu is removed too."*
+
+---
+
+## Write a Greeting
+
+*"The welcome line shown above the Get Started button."* Enter the **Greeting text** and click
+**Save**.
+
+| Rule | Detail |
+|------|--------|
+| Length | Up to **160** characters — the counter under the box shows how many are used |
+| First name | `{{user_first_name}}` is replaced with the person's first name |
+
+---
+
+## Add Ice Breakers
+
+*"Up to 4 questions people can tap to start a chat. Messenger may show them in place of the Get
+Started button."*
+
+<Steps>
+<Step>
+On the **Ice breakers** card, fill in **Question 1**: the **Question text** as the customer would ask
+it — *"What are your business hours?"* — and the **Keyword sent on tap**, such as `HOURS`.
+</Step>
+<Step>
+Click **Add question** for more, up to 4. The badge counts them — **2/4**.
+</Step>
+<Step>
+Click **Save**.
+</Step>
+</Steps>
+
+| Field | Limit |
+|-------|-------|
+| **Question text** | 80 characters |
+| **Keyword sent on tap** | 1,000 characters |
+
+**Save** stays disabled until every question has both fields filled in. The bin icon removes a
+question; the last one cannot be removed — use **Remove** to take the ice breakers off Messenger.
+
+---
+
+## Set Up the Persistent Menu
+
+*"The menu next to the message box, always available. Items send a keyword or open a website."*
+
+<Steps>
+<Step>
+Set a [Get Started button](#set-the-get-started-button) first. Until then the card shows
+*"Messenger only shows a persistent menu once a Get Started button is set."* and **Save** stays
+disabled.
+</Step>
+<Step>
+For **Item 1**, pick the **Action** — **Send a keyword** or **Open a website** — and enter the
+**Title** people see, such as *"Talk to an agent"*.
+</Step>
+<Step>
+Enter the **Keyword sent on tap** (for **Send a keyword**) or the **URL** (for **Open a website**).
+</Step>
+<Step>
+Click **Add item** for more, then **Save**.
+</Step>
+</Steps>
+
+| Field | Limit |
+|-------|-------|
+| Items | Up to **20** — the badge counts them |
+| **Title** | 30 characters |
+| **Keyword sent on tap** | 1,000 characters |
+| **URL** | A full `http://` or `https://` address |
+
+Keep the menu short. Three items people actually need get used; twenty get scrolled past.
+
+---
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| Tapping a button does nothing | No rule answers its keyword | Add a **Message Received** rule on that keyword |
+| The menu does not show in Messenger | No Get Started button | Set one, then save the menu again |
+| **Save** is disabled | Nothing changed, a field is empty or too long, or (menu) no Get Started button | Fill in every field within its limit |
+| Every control is greyed out | Your role cannot change channels | Ask an admin |
+| Ice breakers show but Get Started does not | Messenger may show ice breakers in its place | Nothing to fix — both send a keyword |
+
+---
+
+## Related Pages
+
+- [Messenger Overview](/messenger)
+- [m.me Links](/messenger/m-me-links) — links that start an automation, with Get Started
+- [Messenger Chatbots](/messenger/chatbots) — what a keyword can start
+- [Triggers](/automation/triggers) — **Message Received** and the Messenger triggers
+- [Ice Breakers, Menu & Links](/instagram/entry-points) — the Instagram equivalent

@@ -1,70 +1,104 @@
 ---
-title: "Checkout Settings"
-description: Taxes and charges, abandoned-cart recovery, and the checkout experience customers get.
+title: "Checkout"
+description: Choose where customers pay — RateUp checkout or your Shopify or WooCommerce checkout — what checkout in chat asks for, and when unpaid carts get a reminder.
 ---
 
 import ScreenShot from "@/components/Screenshot";
 
-**Checkout Settings** gathers the rules that apply after a customer decides to buy.
+**Commerce → Settings → Checkout** decides where customers pay and what RateUp asks them on the way.
+Changes are kept when you click **Save changes** in the bar at the bottom.
 
-<ScreenShot src="/docs/screenshots/commerce/checkout-settings.png" alt="Checkout Settings" />
+<ScreenShot src="/docs/screenshots/commerce/checkout-settings.png" alt="Commerce → Settings → Checkout on a shop that follows Shopify: 'Where customers pay' with the Shopify checkout and RateUp checkout radio cards and Stop syncing from Shopify, then (RateUp checkout picked) 'Checkout in chat' with the five numbered rows and 'Cart reminders' with 30 minutes and 1 day selected" />
 
 ---
 
-## Taxes & Charges
+## Choose Where Customers Pay
 
-The money added to, or waived from, the cart total:
+**Where customers pay** depends on where your products come from.
 
-| Setting | Purpose |
-|---------|---------|
-| **Tax rate** | The tax applied to the order |
-| **Shipping charge** | Flat delivery fee |
-| **Free shipping over** | Cart value above which shipping is waived |
-| **Minimum order value** | The smallest order you will accept |
+| Your products | What you can choose |
+|---------------|---------------------|
+| Added or copied into RateUp | Always **RateUp checkout**. *"To let customers pay on your Shopify or WooCommerce checkout instead, connect the store and import its products with “Keep in sync” on, from Products → Import."* |
+| Kept in sync with Shopify or WooCommerce | **Shopify checkout** / **WooCommerce checkout**, or **RateUp checkout** |
+
+The choice *"applies to the storefront, checkout links in chat, comment replies and the AI agent."*
+
+| Option | What the customer gets |
+|--------|------------------------|
+| **Shopify checkout** | *"Customers pay on your Shopify checkout page, which handles delivery, tax, invoices and discount codes. RateUp coupons, points at checkout and cart reminders don't apply."* |
+| **WooCommerce checkout** | *"Customers add their address and pick one of your RateUp delivery rates, then pay on your WooCommerce checkout page, which handles tax and invoices. RateUp coupons, points at checkout and cart reminders don't apply."* |
+| **RateUp checkout** | The methods from [Getting Paid](/commerce/payments). *"Coupons, loyalty points and cart reminders work in chat, and orders are added to Shopify."* |
+
+On a store checkout the shopper sees *"Taking you to our secure checkout…"* and **Continue to
+payment**. Orders paid there are packed, shipped, refunded and invoiced in the store — RateUp follows
+along.
 
 <Callout type="warn">
-  A **free shipping** threshold set close to your average order value is a strong nudge; set too
-  far above it and it does nothing but annoy people. Check your average order value on the
-  [Overview](/commerce/overview) page before choosing a number.
+  On a store checkout, products you added in RateUp itself cannot be paid for, so they are hidden from
+  the storefront, chat and the AI agent. The Products page shows how many with *"… products aren't for
+  sale while customers pay on your store's checkout"*.
 </Callout>
+
+### Stop Following the Store
+
+**Stop syncing from Shopify** (or WooCommerce) turns the store's products into your own: *"you edit
+their prices and stock here from now on. Customers check out in RateUp, and orders are no longer
+added to Shopify."* It needs both product and payment permissions.
+
+If the store is disconnected under [Integrations](/settings/integrations), a red banner says
+*"Shopify is disconnected"*: products stop syncing and customers check out in RateUp until you
+reconnect it or stop syncing.
 
 ---
 
-## Abandoned Cart Recovery
+## Choose What Checkout in Chat Asks
 
-Customers who start an order and stop can be reminded automatically.
+Shown for RateUp checkout. **Checkout in chat** — *"What we ask after a customer sends a cart, in this
+order."*
 
-| Control | What it does |
-|---------|--------------|
-| **Toggle** | Turns recovery reminders on or off |
-| **Timing** | How long to wait before reminding — 30 minutes, 1 hour, 3 hours or 24 hours |
+| Step | Asks | Switch |
+|------|------|--------|
+| 1 **Delivery address** | *"Asked with the WhatsApp address form and saved for next time."* | On / off |
+| 2 **Delivery option** | *"Shows the rates from Commerce → Settings → Delivery that match the address."* | On / off |
+| 3 **Use loyalty points** | *"Only asked when the customer has enough points."* | On / off |
+| 4 **Coupon code** | *"Customers can type a code before paying."* | On / off |
+| 5 **Payment link** | *"How long a payment link stays valid"*, in hours | Default 24 |
 
-Shorter timings catch people who got distracted; longer ones catch people who were comparing
-prices. One reminder that arrives while the intent is still fresh beats several that read as
-nagging.
-
-<Callout type="warn">
-  This card does not send anything: its switch and timing live only in the page and are not saved. Reminders
-  for Shopify checkouts are automation rules: see
-  [Abandoned-Cart Reminders](/automation/abandoned-cart-reminders).
-</Callout>
+With **Use loyalty points** on, set **Value of 1 point**, **Fewest points to redeem** and **Most of
+the order paid in points (%)**.
 
 ---
 
-## Checkout Experience
+## Remind Customers Who Did Not Pay
 
-Three toggles that change what the customer goes through:
+**Cart reminders** — *"Remind customers who sent a cart but did not pay. Pick up to three times."* —
+offers **30 minutes**, **1 hour**, **3 hours** and **1 day**. Pick none to send no reminders.
 
-| Setting | Effect when on |
-|---------|----------------|
-| **Send order confirmation** | The customer gets a confirmation message once the order is placed |
-| **Guest checkout** | Customers can buy without registering |
-| **Order notes** | Customers can add a note to their order — delivery instructions, gift messages |
+**Add a coupon to the last reminder** attaches one of your active [coupons](/commerce/coupons) to the
+final one. Paid orders that had a reminder count as **Recovered from cart reminders** on the
+[Overview](/commerce/overview).
+
+Reminders are sent only on RateUp checkout. The times you pick here are what turns them on or off;
+the **Cart reminder** row in [Customer messages](/commerce/settings#choose-what-customers-hear) picks
+the template used outside WhatsApp's 24-hour window. For Shopify's own abandoned checkouts, use
+[Abandoned-Cart Reminders](/automation/abandoned-cart-reminders).
+
+---
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| No Shopify or WooCommerce option | Products were copied in, not kept in sync | Import them with **Keep in sync** from [Products](/commerce/products#import-products) |
+| *"No way to get paid is set up yet."* | Nothing set up under Getting paid | Connect a provider or turn on cash or transfer |
+| **Checkout in chat** and **Cart reminders** are missing | A store checkout is chosen | Expected — the store's checkout handles these |
+| Coupons do nothing at checkout | **Coupon code** is off, or a store checkout is chosen | Turn it on, or create codes in the store |
 
 ---
 
 ## Related Pages
 
-- [Payments](/commerce/payments)
-- [Orders](/commerce/orders)
-- [Overview](/commerce/overview)
+- [Getting Paid](/commerce/payments)
+- [Settings](/commerce/settings)
+- [Products](/commerce/products#import-products)
+- [Storefront](/commerce/storefront)

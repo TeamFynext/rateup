@@ -25,7 +25,7 @@ integrations feature.
 | Category | Services |
 |----------|----------|
 | CRM | HubSpot, Pipedrive, Zoho CRM/Bigin, GetLead CRM |
-| Stores & POS | Shopify, WooCommerce, Petpooja |
+| Stores & POS | Shopify, [WooCommerce](#woocommerce), Petpooja |
 | Automation | Zapier, Make, Pabbly Connect |
 | Payments | WhatsApp Payment |
 | Bookings | Amelia |
@@ -524,7 +524,8 @@ directly.
 **Widget** is a chat button for your own website, shipped as the `@rateup/support-widget` React
 package. Visitors chat from it, and their messages land in your [Inbox](/inbox) as **Webchat**
 tickets. It opens from **RateUp services → Widget**. On Shopify you don't need it — *"Add a
-WhatsApp button to your store without code"* from the Shopify integration instead.
+WhatsApp button to your store without code"* from the Shopify integration instead. On WooCommerce,
+use the integration's **WhatsApp widget** tab (see [WooCommerce](#woocommerce)).
 
 <Steps>
 <Step>
@@ -554,6 +555,97 @@ already says which organization it belongs to, so there is no organization ID to
 The widget refuses a key limited to other features (say, only **Contacts**): its chat does not
 connect and its requests answer `403`. It also takes only keys that start with `rk_`, since those
 name their organization; an older key answers `401`.
+
+---
+
+## WooCommerce
+
+The WooCommerce integration connects one WordPress store. RateUp hears about new orders, order
+status changes, new customers and product changes, which drive order automations, loyalty points and
+coupons. Connecting a store also turns **Commerce** on in [Features](/settings/features).
+
+Two parts work together:
+
+| Part | What it is | Needed for |
+|------|-----------|-----------|
+| **The connection** | A WooCommerce REST API key your store issues to RateUp when you approve it | Everything |
+| **The RateUp for WooCommerce plugin** | A free plugin from WordPress.org, installed in your store | The **WhatsApp opt-in at checkout** box and the **WhatsApp widget** button on your store |
+
+### Connect your store
+
+<Steps>
+<Step>
+In **Settings → Integrations**, click **Add integration** and pick **WooCommerce**.
+</Step>
+<Step>
+Under **Connect your store**, enter the **Store address** — *"The address your customers shop at.
+It must use HTTPS."* — and click **Connect**.
+</Step>
+<Step>
+Your WordPress admin opens. Approve RateUp there.
+</Step>
+<Step>
+WooCommerce sends you back to RateUp, which says *"WooCommerce is connected."*
+</Step>
+</Steps>
+
+If you arrive from the plugin's own **Connect to RateUp** button in WordPress, the store address is
+filled in for you — you still click **Connect**.
+
+### Install the RateUp plugin
+
+The plugin is listed on WordPress.org as **RateUp for WooCommerce**. Wherever RateUp needs it, it
+shows **Install the RateUp plugin** with the steps:
+
+<Steps>
+<Step>
+Click **Find it in WordPress**. It opens the plugin's page inside your own store's admin (your store
+address + `/wp-admin/plugin-install.php`), with its **Install Now** button. Or, in WordPress, go to
+**Plugins › Add New Plugin** and search for *"RateUp for WooCommerce"*.
+</Step>
+<Step>
+Click **Install Now**, then **Activate Plugin**.
+</Step>
+<Step>
+Back in RateUp, on the **WhatsApp widget** tab, click **Check again**. RateUp confirms *"The RateUp
+plugin is installed."* and the card changes to **RateUp plugin installed**.
+</Step>
+</Steps>
+
+<Callout type="info">
+  **Find it in WordPress** opens the plugin's page directly (`rateup-for-woocommerce`), so it
+  works even when a plugin search in WordPress does not list it yet.
+</Callout>
+
+### The Connection tab
+
+| Card | Contains |
+|------|----------|
+| **Connection** | The **Store**, **WooCommerce version**, **Currency** and when it was **Connected**; **What RateUp hears about** — **New orders**, **Order status changes**, **New customers**, **Product changes**, each ticked when its webhook is registered; and **Disconnect** |
+| **Customers** | **Add new customers as contacts** — *"Each new WooCommerce customer with a phone number becomes a contact. A number that is already a contact is linked to it, not duplicated. Customers from before this is on are not added."* |
+| **WhatsApp opt-in at checkout** | **Show the box at checkout** and the **Text beside the box** (up to 200 characters, saved with **Save**). Needs the plugin |
+
+The checkout box is unticked by default and is marketing consent only — order updates are sent
+either way:
+
+| Shopper | Ticked the box | Left it unticked |
+|---------|---------------|------------------|
+| New contact | Consent on | Consent off |
+| Existing contact | Consent on | Unchanged |
+
+The **Connection** card's description names the key RateUp holds — *"To revoke RateUp's access from
+the store side, delete key #… under WooCommerce › Settings › Advanced › REST API."*
+
+### WooCommerce troubleshooting
+
+| Message | Cause | Fix |
+|---------|-------|-----|
+| *"WordPress answers at that address, but WooCommerce is not active on it."* | WooCommerce is not installed or not activated | Activate WooCommerce, then **Connect** again |
+| *"We could not reach a WordPress site at that address. Check it, and that pretty permalinks are on (Settings › Permalinks)."* | Wrong address, or WordPress uses plain permalinks | Fix the address, or choose any permalink setting other than **Plain** |
+| *"WooCommerce was not connected. Try again, and approve RateUp when asked."* | You declined in WordPress, or the key did not reach RateUp | Connect again and approve |
+| *"One webhook is not registered"* | RateUp could not register a webhook in the store | Click **Register again** |
+| *"Recent store updates failed to process"* | Store events are arriving but failing | Read the error shown under it; contact support if it persists |
+| *"The plugin wasn't found. Install and activate it, then check again."* | The plugin is missing or not activated | Install and activate it, then **Check again** |
 
 ---
 
