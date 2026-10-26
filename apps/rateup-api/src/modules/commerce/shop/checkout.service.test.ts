@@ -173,7 +173,13 @@ describe("an order with nothing to pay", () => {
       status: "DRAFT",
       paymentStatus: "UNPAID",
       total: "0.00",
-      shippingAddress: { line1: "1 Main St" },
+      shippingAddress: {
+        name: "Asha",
+        line1: "1 Main St",
+        city: "Paris",
+        postalCode: "75001",
+        country: "FR",
+      },
       store: { askAddress: true, codEnabled: false, bankTransferEnabled: false },
     };
     db.shopOrder.findUnique.mockResolvedValue(order);
@@ -193,7 +199,13 @@ describe("paying on the checkout page", () => {
         status: "DRAFT",
         paymentStatus: "UNPAID",
         total: "30.00",
-        shippingAddress: { line1: "1 Main St", country: "FR" },
+        shippingAddress: {
+          name: "Asha",
+          line1: "1 Main St",
+          city: "Paris",
+          postalCode: "75001",
+          country: "FR",
+        },
         store: { askAddress: true, codEnabled: true, bankTransferEnabled: true },
       });
       orders.assertDeliveryChosen.mockRejectedValueOnce(
@@ -232,7 +244,13 @@ describe("a shop that has taken this month's orders", () => {
     paymentStatus: "UNPAID",
     total: "0.00",
     checkoutVia: "RATEUP",
-    shippingAddress: { line1: "1 Main St" },
+    shippingAddress: {
+      name: "Asha",
+      line1: "1 Main St",
+      city: "Paris",
+      postalCode: "75001",
+      country: "FR",
+    },
     store: { askAddress: true, codEnabled: true, bankTransferEnabled: false },
   };
   const sent = async () => {

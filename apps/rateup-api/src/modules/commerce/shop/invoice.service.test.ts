@@ -44,8 +44,9 @@ const db = vi.hoisted(() => {
           (o) => o.storeId === where.storeId && o.invoiceNumber === where.invoiceNumber,
         ) ?? null,
     ),
-    findUnique: vi.fn(async ({ where }: { where: { id: string } }) => {
-      const row = state.orders.get(where.id);
+    findUnique: vi.fn(async ({ where }: { where: { id?: string; checkoutToken?: string } }) => {
+      // A checkout token here is "tok-<id>".
+      const row = state.orders.get(where.id ?? where.checkoutToken?.replace(/^tok-/, "") ?? "");
       return row ? select(row) : null;
     }),
     findUniqueOrThrow: vi.fn(async ({ where }: { where: { id: string } }) => {
@@ -135,7 +136,7 @@ vi.mock("./invoice.js", async (importOriginal) => ({
   buildInvoicePdf: vi.fn(async () => new Uint8Array([37, 80, 68, 70])),
 }));
 
-const { issueInvoiceNumber, sendInvoice, ensureInvoice, openInvoice } =
+const { issueInvoiceNumber, sendInvoice, ensureInvoice, openInvoice, invoiceLinkForToken } =
   await import("./invoice.service.js");
 
 const paidOrder = (id: string): Row => ({
@@ -296,5 +297,30 @@ describe("invoice files stay private", () => {
 
     expect(fetcher.fetchPublicBytes).toHaveBeenCalledWith(state.logoUrl);
     expect(s3.uploadFile).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("the customer's invoice link", () => {
+  test("issues the invoice of a paid order nobody has invoiced yet", async () => {
+    state.orders.set("a", paidOrder("a"));
+    const url = await invoiceLinkForToken("tok-a");
+    expect(typeof url).toBe("string");
+    expect(state.orders.get("a")!.invoiceNumber).toBeTruthy();
+    expect(state.orders.get("a")!.invoiceKey).toBeTruthy();
+  });
+
+  test("hands back the same invoice the next time", async () => {
+    state.orders.set("a", paidOrder("a"));
+    await invoiceLinkForToken("tok-a");
+    const first = state.orders.get("a")!.invoiceNumber;
+    await invoiceLinkForToken("tok-a");
+    expect(state.orders.get("a")!.invoiceNumber).toBe(first);
+  });
+
+  test("issues nothing for an unpaid order or an unknown link", async () => {
+    state.orders.set("a", { ...paidOrder("a"), paymentStatus: "PENDING" });
+    await expect(invoiceLinkForToken("tok-a")).rejects.toMatchObject({ code: "CONFLICT" });
+    expect(state.orders.get("a")!.invoiceNumber).toBeNull();
+    await expect(invoiceLinkForToken("tok-zzz")).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
 });

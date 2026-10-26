@@ -5,6 +5,7 @@ import connection from "../../../utils/redisConnection.js";
 import { inStoreCheckout, sellableWhere } from "./checkoutVia.js";
 import { storeAcceptingOrders } from "./orderAllowance.js";
 import { toNumber } from "./pricing.js";
+import { storeLogoUrl } from "./storeLogo.js";
 import { ShopError } from "./shop.errors.js";
 import { commerceEnabled } from "./store.service.js";
 
@@ -135,7 +136,7 @@ export async function getStorefront(slug: string, opts: { preview?: boolean } = 
       name: store.name || org?.name,
       slug: store.slug,
       description: store.description,
-      logoUrl: store.logoUrl,
+      logoUrl: storeLogoUrl(store.logoUrl),
       currency: store.currency,
       theme: store.storefrontTheme ?? null,
       whatsappNumber: wa?.phone ? wa.phone.replace(/[^\d]/g, "") : null,

@@ -147,6 +147,9 @@ async function businessNumber(orgId: string) {
   return { phoneId: first.phoneId, digits: first.phone.replace(/\D/g, "") };
 }
 
+/** Meta's "(#131009) Parameter value is not valid"; on a product card, a catalog mismatch. */
+const INVALID_PARAMETER = 131009;
+
 /**
  * Sends one product, as a customer would get it, to the merchant's own WhatsApp. WhatsApp
  * only allows it inside the 24-hour window, so when that is closed the answer carries a
@@ -186,40 +189,53 @@ export async function sendProductToMe(
   }
   const variant = product.variants[0];
   const live = product.metaSyncStatus === "LIVE" && store.metaCatalogId && variant;
-  const payload = live
-    ? {
-        messaging_product: "whatsapp",
-        recipient_type: "individual",
-        to,
-        type: "interactive",
-        interactive: {
-          type: "product",
-          body: { text: product.title.slice(0, 1024) },
-          action: { catalog_id: store.metaCatalogId, product_retailer_id: variant.retailerId },
-        },
-      }
-    : {
-        messaging_product: "whatsapp",
-        recipient_type: "individual",
-        to,
-        type: "text",
-        text: {
-          preview_url: true,
-          body: `${product.title}${variant ? ` — ${formatMoney(toNumber(variant.price), store.currency)}` : ""}\n${storefrontProductUrl(store.slug, product)}`,
-        },
-      };
-  const result = await sendMetaMessage({
-    platform: PlatformType.WHATSAPP,
-    orgId: store.orgId,
+  const asText = {
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
     to,
-    sourceIdentifier: session.phoneId ?? business.phoneId ?? undefined,
-    payload,
-    messageType: "INBOX",
-    enforcePlanLimits: false,
-  });
+    type: "text",
+    text: {
+      preview_url: true,
+      body: `${product.title}${variant ? ` — ${formatMoney(toNumber(variant.price), store.currency)}` : ""}\n${storefrontProductUrl(store.slug, product)}`,
+    },
+  };
+  const send = (payload: Record<string, unknown>) =>
+    sendMetaMessage({
+      platform: PlatformType.WHATSAPP,
+      orgId: store.orgId,
+      to,
+      sourceIdentifier: session.phoneId ?? business.phoneId ?? undefined,
+      payload,
+      messageType: "INBOX",
+      enforcePlanLimits: false,
+    });
+
+  if (live) {
+    const card = await send({
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      to,
+      type: "interactive",
+      interactive: {
+        type: "product",
+        body: { text: product.title.slice(0, 1024) },
+        action: { catalog_id: store.metaCatalogId, product_retailer_id: variant.retailerId },
+      },
+    });
+    if (card.ok) return { sent: true as const, asProductCard: true };
+    // 131009 "Invalid catalog_id": the store's catalog isn't the one connected to this
+    // WhatsApp account, so no product card can go out. Send the link, and say why.
+    if (card.detail?.code !== INVALID_PARAMETER)
+      throw new ShopError("PAYMENT_FAILED", card.error ?? "WhatsApp refused the message");
+    const text = await send(asText);
+    if (!text.ok)
+      throw new ShopError("PAYMENT_FAILED", text.error ?? "WhatsApp refused the message");
+    return { sent: true as const, asProductCard: false, catalogNotConnected: true };
+  }
+  const result = await send(asText);
   if (!result.ok)
     throw new ShopError("PAYMENT_FAILED", result.error ?? "WhatsApp refused the message");
-  return { sent: true as const, asProductCard: Boolean(live) };
+  return { sent: true as const, asProductCard: false };
 }
 
 /**

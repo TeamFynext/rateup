@@ -11,6 +11,7 @@ import { privateBucket, signedFileUrl, uploadFile } from "../../../utils/upload/
 import { sendShopMessage, type SendOutcome } from "./notify.js";
 import { buildInvoicePdf, formatInvoiceNumber, type InvoiceData } from "./invoice.js";
 import { ShopError } from "./shop.errors.js";
+import { storeLogoUrl } from "./storeLogo.js";
 
 /** Payment states an order has an invoice in: it was paid, even if money went back since. */
 const INVOICEABLE = new Set(["PAID", "PARTIALLY_REFUNDED", "REFUNDED"]);
@@ -129,11 +130,11 @@ async function invoiceContent(
     select: { data: true },
   });
   const snap = saved?.data as unknown as InvoiceSnapshot | null | undefined;
-  if (!snap?.order) return { ...snapshotOf(order), logoUrl: order.store.logoUrl };
+  if (!snap?.order) return { ...snapshotOf(order), logoUrl: storeLogoUrl(order.store.logoUrl) };
   return {
     store: snap.store,
     order: { ...snap.order, paidAt: snap.order.paidAt ? new Date(snap.order.paidAt) : null },
-    logoUrl: order.store.logoUrl,
+    logoUrl: storeLogoUrl(order.store.logoUrl),
   };
 }
 
@@ -251,9 +252,20 @@ async function existingInvoiceLink(where: { id: string } | { checkoutToken: stri
 /** An issued invoice for anyone who can see the order; issuing one stays a manage action. */
 export const viewInvoice = (orderId: string) => existingInvoiceLink({ id: orderId });
 
-/** The customer's way back to their invoice: the checkout token proves it is theirs. */
-export const invoiceLinkForToken = async (token: string) =>
-  (await existingInvoiceLink({ checkoutToken: token })).url;
+/**
+ * The customer's way to their invoice: the checkout token proves the order is theirs. The
+ * checkout page offers it on every paid order, so one not issued yet (auto-send off, staff
+ * never opened it) is issued now, under the same rules staff issue it by.
+ */
+export async function invoiceLinkForToken(token: string) {
+  const order = await prisma.shopOrder.findUnique({
+    where: { checkoutToken: token },
+    select: { id: true },
+  });
+  if (!order) throw new ShopError("NOT_FOUND", "Invoice not found");
+  const { number, key } = await ensureInvoice(order.id);
+  return invoiceLink(key, number, INVOICE_VIEW_SECONDS);
+}
 
 export type InvoiceSendResult =
   | { sent: true; number: string; channel: string }

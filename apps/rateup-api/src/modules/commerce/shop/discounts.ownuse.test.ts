@@ -102,7 +102,9 @@ describe("redeeming a code, under a lock on it", () => {
 
   test("re-checks once per customer against a use committed since the reprice", async () => {
     const db = tx({ perCustomerLimit: 1 }, { redemptions: 1 });
-    await expect(redeemDiscount(db as never, "d1", "o2", "c1", 5)).rejects.toMatchObject({
+    await expect(
+      redeemDiscount(db as never, "d1", "o2", { contactId: "c1" }, 5),
+    ).rejects.toMatchObject({
       reason: "You've already used that code",
     });
     expect(db.$queryRaw).toHaveBeenCalled();
@@ -114,20 +116,81 @@ describe("redeeming a code, under a lock on it", () => {
 
   test("re-checks a first-order code, counting this customer's other hold of it", async () => {
     const placed = tx({ eligibility: "FIRST_ORDER" }, { orders: 1 });
-    await expect(redeemDiscount(placed as never, "d1", "o2", "c1", 5)).rejects.toMatchObject({
+    await expect(
+      redeemDiscount(placed as never, "d1", "o2", { contactId: "c1" }, 5),
+    ).rejects.toMatchObject({
       reason: "That code is for first orders only",
     });
     const held = tx({ eligibility: "FIRST_ORDER" }, { redemptions: 1 });
-    await expect(redeemDiscount(held as never, "d1", "o2", "c1", 5)).rejects.toMatchObject({
+    await expect(
+      redeemDiscount(held as never, "d1", "o2", { contactId: "c1" }, 5),
+    ).rejects.toMatchObject({
       reason: "That code is for first orders only",
     });
   });
 
   test("records an eligible use", async () => {
     const db = tx({ eligibility: "FIRST_ORDER", perCustomerLimit: 1 }, {});
-    await redeemDiscount(db as never, "d1", "o2", "c1", 5);
+    await redeemDiscount(db as never, "d1", "o2", { contactId: "c1" }, 5);
     expect(db.shopDiscountRedemption.create).toHaveBeenCalledWith({
       data: { discountId: "d1", orderId: "o2", contactId: "c1", amount: 5 },
     });
+  });
+
+  test("records a use by a shopper known only by the number they typed", async () => {
+    const db = tx({ perCustomerLimit: 1 }, {});
+    await redeemDiscount(db as never, "d1", "o2", { phone: "+919876543210" }, 5);
+    expect(db.shopDiscountRedemption.count).toHaveBeenCalledWith({
+      where: {
+        discountId: "d1",
+        OR: [{ order: { customerPhone: "+919876543210" } }],
+        NOT: { orderId: "o2" },
+      },
+    });
+    expect(db.shopDiscountRedemption.create).toHaveBeenCalledWith({
+      data: { discountId: "d1", orderId: "o2", contactId: null, amount: 5 },
+    });
+  });
+});
+
+describe("a once-per-customer code on an order with no chat contact", () => {
+  const oncePer = { ...usedUp, usedCount: 0, usageLimit: null, perCustomerLimit: 1 };
+  const lookup = (uses: number) =>
+    ({
+      shopDiscount: { findUnique: vi.fn(async () => oncePer) },
+      shopDiscountRedemption: {
+        findUnique: vi.fn(async () => null),
+        count: vi.fn(async () => uses),
+      },
+    }) as never;
+
+  test("asks for the number when there is none", async () => {
+    await expect(
+      resolveDiscount("s1", "ONCE", { subtotal: 50, orderId: "o1" }, lookup(0)),
+    ).rejects.toMatchObject({
+      code: "DISCOUNT_INVALID",
+      message: "Add your WhatsApp number to use that code",
+    });
+  });
+
+  test("applies once the shopper has typed a number", async () => {
+    const found = await resolveDiscount(
+      "s1",
+      "ONCE",
+      { subtotal: 50, orderId: "o1", phone: "+919876543210" },
+      lookup(0),
+    );
+    expect(found.discount.id).toBe("d1");
+  });
+
+  test("is refused to a number that has used it before", async () => {
+    await expect(
+      resolveDiscount(
+        "s1",
+        "ONCE",
+        { subtotal: 50, orderId: "o1", phone: "+919876543210" },
+        lookup(1),
+      ),
+    ).rejects.toMatchObject({ reason: "You've already used that code" });
   });
 });

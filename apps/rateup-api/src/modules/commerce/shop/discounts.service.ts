@@ -174,11 +174,59 @@ export class DiscountRefused extends ShopError {
   }
 }
 
+/**
+ * Who is using a code. A chat order knows the contact; a storefront or staff-made order may
+ * only know the phone the shopper typed, which then stands in for them, as Shopify does.
+ */
+export interface DiscountCustomer {
+  contactId?: string | null;
+  phone?: string | null;
+}
+
+function knownCustomer(who: DiscountCustomer): boolean {
+  return Boolean(who.contactId || who.phone);
+}
+
+/** Uses of a code by this customer on other orders, by contact or by phone. */
+function usesBy(
+  db: Prisma.TransactionClient | typeof prisma,
+  discountId: string,
+  who: DiscountCustomer,
+  excludeOrderId?: string,
+) {
+  const or: Prisma.ShopDiscountRedemptionWhereInput[] = [];
+  if (who.contactId) or.push({ contactId: who.contactId });
+  if (who.phone) or.push({ order: { customerPhone: who.phone } });
+  return db.shopDiscountRedemption.count({
+    where: { discountId, OR: or, ...(excludeOrderId ? { NOT: { orderId: excludeOrderId } } : {}) },
+  });
+}
+
+/** Placed orders of this customer in the store, by contact or by phone. */
+function placedOrdersBy(
+  db: Prisma.TransactionClient | typeof prisma,
+  storeId: string,
+  who: DiscountCustomer,
+  excludeOrderId?: string,
+) {
+  const or: Prisma.ShopOrderWhereInput[] = [];
+  if (who.contactId) or.push({ contactId: who.contactId });
+  if (who.phone) or.push({ customerPhone: who.phone });
+  return db.shopOrder.count({
+    where: {
+      storeId,
+      OR: or,
+      status: { in: ["OPEN", "COMPLETED"] },
+      ...(excludeOrderId ? { NOT: { id: excludeOrderId } } : {}),
+    },
+  });
+}
+
 /** Looks a code up for a cart and says whether it applies. */
 export async function resolveDiscount(
   storeId: string,
   rawCode: string,
-  ctx: { subtotal: number; contactId?: string | null; orderId?: string; currency?: string },
+  ctx: DiscountCustomer & { subtotal: number; orderId?: string; currency?: string },
   db: Prisma.TransactionClient | typeof prisma = prisma,
 ) {
   const code = normaliseCode(rawCode);
@@ -205,34 +253,24 @@ export async function resolveDiscount(
     );
 
   if (d.eligibility !== "ANYONE" || d.perCustomerLimit !== null) {
-    if (!ctx.contactId) throw invalid("Sign in through the chat to use that code");
-    if (d.eligibility === "FIRST_ORDER") {
-      const previous = await db.shopOrder.count({
-        where: {
-          storeId,
-          contactId: ctx.contactId,
-          status: { in: ["OPEN", "COMPLETED"] },
-          ...(ctx.orderId ? { NOT: { id: ctx.orderId } } : {}),
-        },
-      });
-      if (previous) throw invalid("That code is for first orders only");
-    }
     if (d.eligibility === "LOYALTY_MEMBERS") {
+      // Membership hangs off the contact; a typed number alone can't prove it.
+      if (!ctx.contactId) throw invalid("Sign in through the chat to use that code");
       const member = await db.customerLoyaltyAccount.count({
         where: { contactId: ctx.contactId, status: "active" },
       });
       if (!member) throw invalid("That code is for loyalty members");
     }
-    if (d.perCustomerLimit !== null) {
-      const used = await db.shopDiscountRedemption.count({
-        where: {
-          discountId: d.id,
-          contactId: ctx.contactId,
-          ...(ctx.orderId ? { NOT: { orderId: ctx.orderId } } : {}),
-        },
-      });
-      if (used >= d.perCustomerLimit) throw invalid("You've already used that code");
-    }
+    // Said plainly: the shopper can fix it by adding their number.
+    if (!knownCustomer(ctx))
+      throw new ShopError("DISCOUNT_INVALID", "Add your WhatsApp number to use that code");
+    if (d.eligibility === "FIRST_ORDER" && (await placedOrdersBy(db, storeId, ctx, ctx.orderId)))
+      throw invalid("That code is for first orders only");
+    if (
+      d.perCustomerLimit !== null &&
+      (await usesBy(db, d.id, ctx, ctx.orderId)) >= d.perCustomerLimit
+    )
+      throw invalid("You've already used that code");
   }
   return { discount: d, ...ruleOf(d) };
 }
@@ -246,7 +284,7 @@ export async function redeemDiscount(
   tx: Prisma.TransactionClient,
   discountId: string,
   orderId: string,
-  contactId: string | null,
+  who: DiscountCustomer,
   amount: number,
 ) {
   const already = await tx.shopDiscountRedemption.findUnique({
@@ -256,30 +294,18 @@ export async function redeemDiscount(
   await tx.$queryRaw`SELECT 1 FROM "ShopDiscount" WHERE id = ${discountId}::uuid FOR UPDATE`;
   const discount = await tx.shopDiscount.findUniqueOrThrow({ where: { id: discountId } });
   if (discount.eligibility !== "ANYONE" || discount.perCustomerLimit !== null) {
-    if (!contactId) throw new DiscountRefused("This code needs a known customer");
-    if (discount.perCustomerLimit !== null) {
-      const used = await tx.shopDiscountRedemption.count({
-        where: { discountId, contactId, NOT: { orderId } },
-      });
-      if (used >= discount.perCustomerLimit)
-        throw new DiscountRefused("You've already used that code");
-    }
-    if (discount.eligibility === "FIRST_ORDER") {
-      const previous = await tx.shopOrder.count({
-        where: {
-          storeId: discount.storeId,
-          contactId,
-          status: { in: ["OPEN", "COMPLETED"] },
-          NOT: { id: orderId },
-        },
-      });
-      // A first-order code held by another of this customer's drafts counts as used too.
-      const heldElsewhere = await tx.shopDiscountRedemption.count({
-        where: { discountId, contactId, NOT: { orderId } },
-      });
-      if (previous || heldElsewhere)
-        throw new DiscountRefused("That code is for first orders only");
-    }
+    if (!knownCustomer(who)) throw new DiscountRefused("This code needs a known customer");
+    if (discount.eligibility === "LOYALTY_MEMBERS" && !who.contactId)
+      throw new DiscountRefused("That code is for loyalty members");
+    const usedElsewhere = await usesBy(tx, discountId, who, orderId);
+    if (discount.perCustomerLimit !== null && usedElsewhere >= discount.perCustomerLimit)
+      throw new DiscountRefused("You've already used that code");
+    // A first-order code held by another of this customer's drafts counts as used too.
+    if (
+      discount.eligibility === "FIRST_ORDER" &&
+      (usedElsewhere || (await placedOrdersBy(tx, discount.storeId, who, orderId)))
+    )
+      throw new DiscountRefused("That code is for first orders only");
   }
   // Conditional, so the last use of a limited code goes to one order only.
   const { count } = await tx.shopDiscount.updateMany({
@@ -290,7 +316,9 @@ export async function redeemDiscount(
     data: { usedCount: { increment: 1 } },
   });
   if (!count) throw new ShopError("DISCOUNT_INVALID", "That code has just been fully used");
-  await tx.shopDiscountRedemption.create({ data: { discountId, orderId, contactId, amount } });
+  await tx.shopDiscountRedemption.create({
+    data: { discountId, orderId, contactId: who.contactId ?? null, amount },
+  });
 }
 
 export async function releaseDiscount(tx: Prisma.TransactionClient, orderId: string) {

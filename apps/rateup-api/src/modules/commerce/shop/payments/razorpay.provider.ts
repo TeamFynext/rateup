@@ -14,6 +14,35 @@ const client = (credential: PaymentAccountCredential) => {
   return new Razorpay({ key_id: credential.keyId, key_secret: credential.keySecret });
 };
 
+/**
+ * The Razorpay SDK rejects with a plain `{ statusCode, error: { description, … } }`, not an
+ * Error, which nothing downstream knows how to report. This turns it into a ShopError that
+ * carries Razorpay's own description; anything else passes through untouched.
+ */
+export function razorpayFailure(err: unknown): unknown {
+  if (err instanceof Error || typeof err !== "object" || err === null) return err;
+  const body = (err as { error?: { description?: unknown; code?: unknown } }).error;
+  const description =
+    typeof body?.description === "string" && body.description.trim()
+      ? body.description.trim()
+      : "Razorpay couldn't process that request";
+  return new ShopError("PAYMENT_FAILED", `Razorpay: ${description}`);
+}
+
+/** The number as Razorpay takes it: `+` and digits, 8–14 characters, or nothing. */
+export function razorpayContact(phone: string | null | undefined): string | undefined {
+  const compact = phone?.replace(/[^\d+]/g, "");
+  return compact && compact.length >= 8 && compact.length <= 14 ? compact : undefined;
+}
+
+async function call<T>(request: () => Promise<T>): Promise<T> {
+  try {
+    return await request();
+  } catch (err) {
+    throw razorpayFailure(err);
+  }
+}
+
 interface RazorpayLink {
   id: string;
   short_url: string;
@@ -60,28 +89,36 @@ export const razorpayProvider: PaymentProvider = {
   },
 
   async createLink(credential, input) {
-    const link = (await client(credential).paymentLink.create({
-      amount: toMinorUnits(input.amount, input.currency),
-      currency: input.currency.toUpperCase(),
-      description: `${input.storeName} — order #${input.orderNumber}`,
-      reference_id: `${input.orderId.slice(0, 30)}-${Date.now().toString(36)}`.slice(0, 40),
-      expire_by: Math.floor(Math.max(input.expiresAt.getTime(), Date.now() + 16 * 60_000) / 1000),
-      customer: {
-        ...(input.customer.name ? { name: input.customer.name } : {}),
-        ...(input.customer.email ? { email: input.customer.email } : {}),
-        ...(input.customer.phone ? { contact: input.customer.phone } : {}),
-      },
-      notify: { sms: false, email: false },
-      callback_url: input.returnUrl,
-      callback_method: "get",
-      notes: { orderId: input.orderId, source: "rateup_shop" },
-    } as never)) as unknown as RazorpayLink;
+    const link = (await call(() =>
+      client(credential).paymentLink.create({
+        amount: toMinorUnits(input.amount, input.currency),
+        currency: input.currency.toUpperCase(),
+        description: `${input.storeName} — order #${input.orderNumber}`,
+        reference_id: `${input.orderId.slice(0, 30)}-${Date.now().toString(36)}`.slice(0, 40),
+        expire_by: Math.floor(Math.max(input.expiresAt.getTime(), Date.now() + 16 * 60_000) / 1000),
+        customer: {
+          ...(input.customer.name ? { name: input.customer.name } : {}),
+          ...(input.customer.email ? { email: input.customer.email } : {}),
+          // Razorpay refuses the whole link over a contact outside 8–14 characters; a link
+          // without one still works, the shopper just types it on Razorpay's page.
+          ...(razorpayContact(input.customer.phone)
+            ? { contact: razorpayContact(input.customer.phone) }
+            : {}),
+        },
+        notify: { sms: false, email: false },
+        callback_url: input.returnUrl,
+        callback_method: "get",
+        notes: { orderId: input.orderId, source: "rateup_shop" },
+      } as never),
+    )) as unknown as RazorpayLink;
     return { url: link.short_url, providerRef: link.id, expiresAt: input.expiresAt };
   },
 
   async fetchState(credential, providerRef) {
     return linkState(
-      (await client(credential).paymentLink.fetch(providerRef)) as unknown as RazorpayLink,
+      (await call(() =>
+        client(credential).paymentLink.fetch(providerRef),
+      )) as unknown as RazorpayLink,
     );
   },
 
@@ -124,11 +161,11 @@ export const razorpayProvider: PaymentProvider = {
   },
 
   async expireLink(credential, providerRef) {
-    await client(credential).paymentLink.cancel(providerRef);
+    await call(() => client(credential).paymentLink.cancel(providerRef));
   },
 
   async refundedTotal(credential, paymentId) {
-    const payment = (await client(credential).payments.fetch(paymentId)) as unknown as {
+    const payment = (await call(() => client(credential).payments.fetch(paymentId))) as unknown as {
       amount_refunded?: number;
       currency: string;
     };
@@ -136,9 +173,11 @@ export const razorpayProvider: PaymentProvider = {
   },
 
   async refund(credential, paymentId, amount, currency) {
-    const refund = await client(credential).payments.refund(paymentId, {
-      amount: toMinorUnits(amount, currency),
-    });
+    const refund = await call(() =>
+      client(credential).payments.refund(paymentId, {
+        amount: toMinorUnits(amount, currency),
+      }),
+    );
     return { refundId: refund.id };
   },
 };
