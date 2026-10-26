@@ -72,9 +72,13 @@ function SendToMeBody({
           <AlertDescription>
             {result.asProductCard
               ? t("It arrived as a product card, the same one customers can add to a cart.")
-              : t(
-                  "It arrived as a photo with a link, because the product is not live in your WhatsApp catalog yet.",
-                )}
+              : result.catalogNotConnected
+                ? t(
+                    "It arrived as a link. Your shop's catalog isn't the one connected to your WhatsApp number, so product cards can't be sent. Choose the catalog again in Commerce → Settings to connect it.",
+                  )
+                : t(
+                    "It arrived as a photo with a link, because the product is not live in your WhatsApp catalog yet.",
+                  )}
           </AlertDescription>
         </Alert>
         <DialogFooter>

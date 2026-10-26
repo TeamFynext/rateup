@@ -88,7 +88,19 @@ export function CatalogConnect({ store }: Readonly<{ store: ShopStore }>) {
   const pick = useMutation({
     mutationFn: (catalogId: string) => updateShopStore({ metaCatalogId: catalogId }),
     onSuccess: (_, catalogId) => {
-      setFound((f) => (f ? { ...f, selected: catalogId } : f));
+      // WhatsApp has one catalog at a time: the picked one is now it.
+      setFound((f) =>
+        f
+          ? {
+              ...f,
+              selected: catalogId,
+              catalogs: f.catalogs.map((c) => ({
+                ...c,
+                connectedToWhatsapp: c.catalogId === catalogId,
+              })),
+            }
+          : f,
+      );
       toast.success(t("Catalog connected. Your products are being published to it now."));
       void invalidate();
     },
@@ -138,7 +150,8 @@ export function CatalogConnect({ store }: Readonly<{ store: ShopStore }>) {
                     )}
                   </span>
                 </span>
-                {!inUse && (
+                {/* The shop's catalog only sends product cards while it is the one on WhatsApp. */}
+                {(!inUse || !c.connectedToWhatsapp) && (
                   <Button
                     size="sm"
                     variant="outline"
@@ -146,7 +159,7 @@ export function CatalogConnect({ store }: Readonly<{ store: ShopStore }>) {
                     loading={pick.isPending && pick.variables === c.catalogId}
                     onClick={() => pick.mutate(c.catalogId)}
                   >
-                    {t("Use this catalog")}
+                    {inUse ? t("Connect to WhatsApp") : t("Use this catalog")}
                   </Button>
                 )}
               </li>

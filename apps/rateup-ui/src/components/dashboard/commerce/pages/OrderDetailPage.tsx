@@ -39,6 +39,7 @@ import {
   refundShopReturn,
   updateShopReturn,
   type ShippingQuote,
+  type ShopFulfillmentStatus,
   type ShopSettableFulfillmentStatus,
   type ShopOrderDetail,
   type ShopReturn,
@@ -529,12 +530,17 @@ function ItemsSection({ order }: Readonly<{ order: ShopOrderDetail }>) {
   );
 }
 
-const QUICK_STATUSES: ShopSettableFulfillmentStatus[] = [
-  "PACKED",
-  "OUT_FOR_DELIVERY",
-  "DELIVERED",
-  "FAILED_DELIVERY",
-];
+/** The quick updates that move an order forward from where it is now; earlier steps are not offered. */
+const NEXT_STATUSES: Record<ShopFulfillmentStatus, ShopSettableFulfillmentStatus[]> = {
+  UNFULFILLED: ["PACKED", "OUT_FOR_DELIVERY", "DELIVERED"],
+  PACKED: ["OUT_FOR_DELIVERY", "DELIVERED"],
+  SHIPPED: ["OUT_FOR_DELIVERY", "DELIVERED", "FAILED_DELIVERY"],
+  OUT_FOR_DELIVERY: ["DELIVERED", "FAILED_DELIVERY"],
+  FAILED_DELIVERY: ["OUT_FOR_DELIVERY", "DELIVERED"],
+  DELIVERED: [],
+  RETURNED: [],
+  CANCELLED: [],
+};
 
 function FulfillmentSection({ order }: Readonly<{ order: ShopOrderDetail }>) {
   const { t } = useTranslation();
@@ -558,7 +564,7 @@ function FulfillmentSection({ order }: Readonly<{ order: ShopOrderDetail }>) {
       description={nextStepLabel(t, order.nextStep)}
       actions={
         <div className="flex flex-wrap gap-1.5">
-          {QUICK_STATUSES.filter((s) => s !== order.fulfillmentStatus).map((s) => (
+          {NEXT_STATUSES[order.fulfillmentStatus].map((s) => (
             <Button
               key={s}
               size="sm"

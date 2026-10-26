@@ -49,6 +49,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
+function isText(value: unknown): value is string {
+  return typeof value === "string" && value.trim() !== "";
+}
+
 /** Views an unknown rejection as an axios-shaped error. */
 export function asApiError(error: unknown): ApiError {
   return isRecord(error) ? (error as ApiError) : {};
@@ -68,14 +72,16 @@ export function getApiErrorMessage(error: unknown, fallback = "Something went wr
   const apiError = asApiError(error);
   const data = apiError.response?.data;
 
-  if (typeof data === "string") return data;
+  if (typeof data === "string" && data.trim()) return data;
   if (isRecord(data)) {
-    const body = data as ApiErrorData;
-    if (body.message) return body.message;
-    if (body.error) return body.error;
+    // Only text is a message: a provider error passed through as an object would crash
+    // whatever renders it ("Objects are not valid as a React child").
+    if (isText(data.message)) return data.message;
+    if (isText(data.error)) return data.error;
+    if (isRecord(data.error) && isText(data.error.description)) return data.error.description;
   }
 
-  return apiError.message || fallback;
+  return isText(apiError.message) ? apiError.message : fallback;
 }
 
 /**

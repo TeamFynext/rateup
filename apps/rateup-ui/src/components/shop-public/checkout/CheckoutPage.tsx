@@ -8,6 +8,7 @@ import type { PublicCheckout, ShopBankDetails } from "@/backend/commerce/shop.ap
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
+import { cn } from "@/lib/utils.ts";
 import { asApiError, getApiErrorMessage } from "@/utils/apiError.ts";
 
 import { MessageShopButton, ShopUnavailable } from "../shared.tsx";
@@ -17,6 +18,13 @@ import { CheckoutHeader } from "./OrderParts.tsx";
 import { OrderStatusView } from "./OrderStatusView.tsx";
 import { StoreRedirect } from "./StoreHandoff.tsx";
 import { publicCheckoutKey, useCheckout } from "./useCheckout.ts";
+
+/**
+ * Shopify's split on desktop: the form on the page colour, a grey summary panel running to
+ * the right edge, and a hairline between them the full height of the page.
+ */
+const SPLIT_BACKGROUND =
+  "lg:bg-[linear-gradient(to_right,var(--background)_50%,var(--border)_50%,var(--border)_calc(50%+1px),var(--summary-panel)_calc(50%+1px))] [--summary-panel:color-mix(in_oklab,var(--muted),var(--secondary))]";
 
 interface Props {
   token: string;
@@ -39,12 +47,24 @@ export function CheckoutPage({ token, justPaid, paymentCancelled }: Readonly<Pro
 
   if (query.isPending) {
     return (
-      <main className="mx-auto flex w-full max-w-2xl flex-col gap-3 p-4">
-        <Skeleton className="h-12 w-full" />
-        <Skeleton className="h-32 w-full rounded-2xl" />
-        <Skeleton className="h-48 w-full rounded-2xl" />
-        <Skeleton className="h-40 w-full rounded-2xl" />
-      </main>
+      <div className={cn("min-h-dvh bg-background", SPLIT_BACKGROUND)}>
+        <div className="mx-auto grid w-full max-w-5xl gap-8 px-4 py-6 lg:grid-cols-2 lg:py-10">
+          <div className="flex flex-col gap-4 lg:pr-12">
+            <Skeleton className="h-7 w-32" />
+            <Skeleton className="h-11 w-full" />
+            <Skeleton className="h-11 w-full" />
+            <Skeleton className="mt-4 h-7 w-44" />
+            <Skeleton className="h-11 w-full" />
+            <Skeleton className="h-11 w-full" />
+            <Skeleton className="h-11 w-full" />
+          </div>
+          <div className="hidden flex-col gap-4 lg:flex lg:pl-12">
+            <Skeleton className="h-14 w-full bg-background" />
+            <Skeleton className="h-11 w-full bg-background" />
+            <Skeleton className="h-24 w-full bg-background" />
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -92,6 +112,87 @@ export function CheckoutPage({ token, justPaid, paymentCancelled }: Readonly<Pro
     number: checkout.order.number,
   });
 
+  const inForm = !placed && !handOff;
+
+  if (inForm) {
+    return (
+      <div className={cn("min-h-dvh bg-background text-foreground", SPLIT_BACKGROUND)}>
+        <CheckoutHeader store={checkout.store} wide />
+        <main>
+          {/* Keyed by order so its local drafts start from this order's saved details. */}
+          <CheckoutForm
+            key={checkout.order.id}
+            token={token}
+            checkout={checkout}
+            queue={queue}
+            send={send}
+            flush={flush}
+            saving={saving}
+            payment={confirmingPayment ? "confirming" : paymentNotSeen ? "not_seen" : null}
+            saveError={
+              typingError
+                ? getApiErrorMessage(typingError, t("Couldn't save your details. Try again."))
+                : null
+            }
+            onLeave={leaving}
+            onPlaced={(bank) => {
+              setBankDetails(bank);
+              if (checkout.order.channel === "STOREFRONT") clearBag(checkout.store.slug);
+              void queryClient.invalidateQueries({ queryKey: publicCheckoutKey(token) });
+            }}
+            notices={
+              <>
+                {confirmingPayment && (
+                  <Alert role="status">
+                    <AlertTitle>{t("Confirming your payment")}</AlertTitle>
+                    <AlertDescription>{t("This can take a few seconds.")}</AlertDescription>
+                  </Alert>
+                )}
+                {paymentNotSeen && (
+                  <Alert role="status">
+                    <IconClockExclamation />
+                    <AlertTitle>{t("We haven't received your payment yet")}</AlertTitle>
+                    <AlertDescription className="flex flex-col gap-3">
+                      <span>
+                        {t(
+                          "If money has left your account, don't pay again. Check again in a minute, or message {store} and they'll look into it.",
+                          { store: checkout.store.name },
+                        )}
+                      </span>
+                      <span className="flex flex-wrap gap-2">
+                        <Button
+                          variant="outline"
+                          className="h-11 rounded-xl"
+                          loading={query.isFetching}
+                          onClick={() => query.refetch()}
+                        >
+                          <IconRefresh />
+                          {t("Check again")}
+                        </Button>
+                        <MessageShopButton
+                          whatsappNumber={checkout.store.whatsappNumber}
+                          text={askForHelp}
+                        />
+                      </span>
+                    </AlertDescription>
+                  </Alert>
+                )}
+                {paymentCancelled && !justPaid && (
+                  <Alert role="status">
+                    <AlertTitle>{t("Payment didn't go through")}</AlertTitle>
+                    <AlertDescription>
+                      {t("You left the payment page before paying. You can try again below.")}
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </>
+            }
+          />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-dvh bg-muted/40 text-foreground">
       <CheckoutHeader store={checkout.store} />
@@ -102,76 +203,8 @@ export function CheckoutPage({ token, justPaid, paymentCancelled }: Readonly<Pro
             checkout={checkout}
             bankDetails={bankDetails ?? checkout.bankDetails}
           />
-        ) : handOff ? (
-          <StoreRedirect token={token} label={store.label} onLeave={leaving} />
         ) : (
-          <>
-            {confirmingPayment && (
-              <Alert className="mb-3" role="status">
-                <AlertTitle>{t("Confirming your payment")}</AlertTitle>
-                <AlertDescription>{t("This can take a few seconds.")}</AlertDescription>
-              </Alert>
-            )}
-            {paymentNotSeen && (
-              <Alert className="mb-3" role="status">
-                <IconClockExclamation />
-                <AlertTitle>{t("We haven't received your payment yet")}</AlertTitle>
-                <AlertDescription className="flex flex-col gap-3">
-                  <span>
-                    {t(
-                      "If money has left your account, don't pay again. Check again in a minute, or message {store} and they'll look into it.",
-                      { store: checkout.store.name },
-                    )}
-                  </span>
-                  <span className="flex flex-wrap gap-2">
-                    <Button
-                      variant="outline"
-                      className="h-11 rounded-xl"
-                      loading={query.isFetching}
-                      onClick={() => query.refetch()}
-                    >
-                      <IconRefresh />
-                      {t("Check again")}
-                    </Button>
-                    <MessageShopButton
-                      whatsappNumber={checkout.store.whatsappNumber}
-                      text={askForHelp}
-                    />
-                  </span>
-                </AlertDescription>
-              </Alert>
-            )}
-            {paymentCancelled && !justPaid && (
-              <Alert className="mb-3" role="status">
-                <AlertTitle>{t("Payment didn't go through")}</AlertTitle>
-                <AlertDescription>
-                  {t("You left the payment page before paying. You can try again below.")}
-                </AlertDescription>
-              </Alert>
-            )}
-            {/* Keyed by order so its local drafts start from this order's saved details. */}
-            <CheckoutForm
-              key={checkout.order.id}
-              token={token}
-              checkout={checkout}
-              queue={queue}
-              send={send}
-              flush={flush}
-              saving={saving}
-              payment={confirmingPayment ? "confirming" : paymentNotSeen ? "not_seen" : null}
-              saveError={
-                typingError
-                  ? getApiErrorMessage(typingError, t("Couldn't save your details. Try again."))
-                  : null
-              }
-              onLeave={leaving}
-              onPlaced={(bank) => {
-                setBankDetails(bank);
-                if (checkout.order.channel === "STOREFRONT") clearBag(checkout.store.slug);
-                void queryClient.invalidateQueries({ queryKey: publicCheckoutKey(token) });
-              }}
-            />
-          </>
+          handOff && <StoreRedirect token={token} label={store.label} onLeave={leaving} />
         )}
       </main>
     </div>
