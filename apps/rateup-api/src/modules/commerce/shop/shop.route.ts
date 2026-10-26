@@ -212,8 +212,10 @@ export async function shopRoutes(server: FastifyInstance) {
         ...(metaCatalogId === null ? { metaCatalogId: null } : {}),
       });
       forgetPublicStorefront(before.slug, updated.slug);
-      // A new catalog is linked to WhatsApp and gets every product, old ones included.
-      if (metaCatalogId && metaCatalogId !== before.metaCatalogId) {
+      // A picked catalog is linked to WhatsApp and gets every product, old ones included.
+      // Picking the current one again reconnects it, for when WhatsApp was pointed at
+      // another catalog since (product cards then fail with "Invalid catalog_id").
+      if (metaCatalogId) {
         await connectCatalog(before, metaCatalogId);
         return { ...updated, metaCatalogId };
       }

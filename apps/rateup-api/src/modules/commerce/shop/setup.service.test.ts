@@ -20,9 +20,12 @@ vi.mock("../../../utils/logger.js", () => ({ log: { warn: vi.fn() } }));
 vi.mock("../../../workers/bullmq/queues/shop.queue.js", () => queue);
 vi.mock("../../whatsapp/catalog/catalog.service.js", () => catalog);
 vi.mock("../../loyalty/messaging/channels/whatsapp/session.js", () => session);
-vi.mock("../../whatsapp/meta/metaMessage.service.js", () => ({
-  sendMetaMessage: vi.fn(async () => ({ ok: true })),
+const meta = vi.hoisted(() => ({
+  sendMetaMessage: vi.fn<(input: { payload: { type: string } }) => Promise<unknown>>(async () => ({
+    ok: true,
+  })),
 }));
+vi.mock("../../whatsapp/meta/metaMessage.service.js", () => meta);
 vi.mock("./orders.service.js", () => ({ createDraftOrder: vi.fn() }));
 vi.mock("./events.js", () => ({
   checkoutUrl: (t: string) => `https://shop.test/c/${t}`,
@@ -98,6 +101,49 @@ describe("sending a product to yourself", () => {
       reason: "window_closed",
       openChatUrl: "https://wa.me/15550100?text=Hi",
     });
+  });
+});
+
+describe("sending a live product to yourself", () => {
+  const live = {
+    id: "p1",
+    title: "Mug",
+    handle: "mug",
+    variants: [{ retailerId: "r1", price: "10.00" }],
+    metaSyncStatus: "LIVE",
+  };
+  const store = { ...STORE, metaCatalogId: "c-store", slug: "shop", currency: "USD" };
+
+  beforeEach(() => {
+    db.shopProduct.findFirst.mockResolvedValue(live);
+    session.findOpenSession.mockResolvedValue({ phoneId: "pid" });
+  });
+
+  test("goes as a product card", async () => {
+    const result = await sendProductToMe(store, "p1", "+1 555 0142");
+    expect(result).toEqual({ sent: true, asProductCard: true });
+    expect(meta.sendMetaMessage).toHaveBeenCalledTimes(1);
+  });
+
+  test("falls back to a link, and says so, when the catalog isn't the one on WhatsApp", async () => {
+    meta.sendMetaMessage
+      .mockResolvedValueOnce({ ok: false, error: "Invalid catalog_id", detail: { code: 131009 } })
+      .mockResolvedValueOnce({ ok: true });
+    const result = await sendProductToMe(store, "p1", "+1 555 0142");
+    expect(result).toEqual({ sent: true, asProductCard: false, catalogNotConnected: true });
+    expect(meta.sendMetaMessage.mock.calls[1][0].payload.type).toBe("text");
+  });
+
+  test("reports any other refusal", async () => {
+    meta.sendMetaMessage.mockResolvedValueOnce({
+      ok: false,
+      error: "Rate limited",
+      detail: { code: 130429 },
+    });
+    await expect(sendProductToMe(store, "p1", "+1 555 0142")).rejects.toMatchObject({
+      message: "Rate limited",
+    });
+    expect(meta.sendMetaMessage).toHaveBeenCalledTimes(1);
   });
 });
 

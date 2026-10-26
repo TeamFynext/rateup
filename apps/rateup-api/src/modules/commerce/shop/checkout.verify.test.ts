@@ -61,7 +61,13 @@ const draft = (over: Record<string, unknown> = {}) => ({
   paidAt: null,
   customerPhone: "15550100",
   total: "20.00",
-  shippingAddress: { line1: "1 Main St" },
+  shippingAddress: {
+    name: "Asha",
+    line1: "1 Main St",
+    city: "Paris",
+    postalCode: "75001",
+    country: "FR",
+  },
   store: { askAddress: true, codEnabled: true, bankTransferEnabled: true },
   ...over,
 });

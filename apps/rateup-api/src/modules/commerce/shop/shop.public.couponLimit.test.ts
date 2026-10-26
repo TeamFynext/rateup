@@ -5,6 +5,7 @@ import { describe, expect, test, vi } from "vitest";
 interface Limiter {
   key: string;
   max: number;
+  windowSeconds: number;
   keyFrom?: (r: unknown) => string | null | undefined;
 }
 const limiters = vi.hoisted(() => [] as Limiter[]);
@@ -39,6 +40,9 @@ describe("guessing coupon codes on the hosted checkout", () => {
     const byIp = limiters.find((l) => l.key === "shopCouponIp")!;
     expect(byToken.max).toBeLessThanOrEqual(10);
     expect(byIp.max).toBeLessThanOrEqual(30);
+    // Short enough that a shopper locked out by typos is back within minutes.
+    expect(byToken.windowSeconds).toBeLessThanOrEqual(15 * 60);
+    expect(byIp.windowSeconds).toBeLessThanOrEqual(15 * 60);
 
     const withCode = {
       params: { token: "tok-1234567890" },

@@ -123,7 +123,13 @@ describe("holding a coupon use and points for a payment link", () => {
       where: { id: "o1", status: "DRAFT", reservedAt: null },
       data: { reservedAt: expect.any(Date) },
     });
-    expect(discounts.redeemDiscount).toHaveBeenCalledWith(db, "d1", "o1", "c1", 10);
+    expect(discounts.redeemDiscount).toHaveBeenCalledWith(
+      db,
+      "d1",
+      "o1",
+      expect.objectContaining({ contactId: "c1" }),
+      10,
+    );
     expect(loyalty.spendPoints).toHaveBeenCalledWith(
       db,
       "org",

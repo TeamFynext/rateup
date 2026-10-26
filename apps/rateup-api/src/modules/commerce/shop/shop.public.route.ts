@@ -81,19 +81,21 @@ export async function shopPublicRoutes(server: FastifyInstance) {
     preHandler: rateLimit({ max: 20, windowSeconds: 60 * 60, key: "shopStoreCheckout" }),
   };
   // Guessing coupon codes: a few tries per checkout and per visitor, counted only when a
-  // request carries a code.
+  // request carries a code. A short window, so a shopper who mistypes a few codes waits
+  // minutes, not an hour; a guesser still gets at most 40 tries an hour per checkout.
   type CouponReq = FastifyRequest<{ Params: Token; Body: { discountCode?: string | null } }>;
   const tryingCode = (request: CouponReq) => Boolean(request.body?.discountCode);
+  const COUPON_WINDOW_SECONDS = 15 * 60;
   const couponTries = [
     rateLimit<CouponReq>({
       max: 10,
-      windowSeconds: 60 * 60,
+      windowSeconds: COUPON_WINDOW_SECONDS,
       key: "shopCouponToken",
       keyFrom: (r) => (tryingCode(r) ? r.params.token : null),
     }),
     rateLimit<CouponReq>({
       max: 30,
-      windowSeconds: 60 * 60,
+      windowSeconds: COUPON_WINDOW_SECONDS,
       key: "shopCouponIp",
       keyFrom: (r) => (tryingCode(r) ? clientIp(r) : null),
     }),

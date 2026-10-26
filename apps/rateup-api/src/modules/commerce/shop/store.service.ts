@@ -4,6 +4,7 @@ import type { Prisma, ShopStore } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
 import { assertCheckoutVia } from "./externalCheckout.service.js";
 import { notFound, ShopError } from "./shop.errors.js";
+import { storeLogoUrl } from "./storeLogo.js";
 import { getSubscriptionGate } from "../../subscription/subscription.service.js";
 
 export function slugify(input: string): string {
@@ -35,12 +36,17 @@ async function uniqueSlug(base: string): Promise<string> {
  */
 export async function getOrCreateStore(orgId: string): Promise<ShopStore> {
   const existing = await prisma.shopStore.findUnique({ where: { orgId } });
-  if (existing) return existing;
+  if (existing) return { ...existing, logoUrl: storeLogoUrl(existing.logoUrl) };
 
   const [org, program, catalog] = await Promise.all([
     prisma.org.findUnique({ where: { id: orgId }, select: { name: true, logo: true } }),
     prisma.loyaltyProgram.findUnique({ where: { orgId }, select: { currencyCode: true } }),
-    prisma.whatsappCatalog.findFirst({ where: { orgId }, select: { catalogId: true } }),
+    // Only the catalog connected to a WhatsApp number can send product cards; with none,
+    // the store starts without one and setup picks it (and connects it on Meta).
+    prisma.whatsappCatalog.findFirst({
+      where: { orgId, connectedWaPhoneIds: { some: {} } },
+      select: { catalogId: true },
+    }),
   ]);
   if (!org) throw notFound("Organisation");
 
@@ -52,7 +58,7 @@ export async function getOrCreateStore(orgId: string): Promise<ShopStore> {
         orgId,
         name: org.name,
         slug: await uniqueSlug(org.name),
-        logoUrl: org.logo,
+        logoUrl: storeLogoUrl(org.logo),
         currency: program?.currencyCode ?? "USD",
         metaCatalogId: catalog?.catalogId ?? null,
       },

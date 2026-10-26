@@ -315,6 +315,8 @@ export async function repriceOrder(orderId: string, patch: CheckoutPatch = {}) {
       discount = await resolveDiscount(store.id, discountCode, {
         subtotal,
         contactId: order.contactId,
+        // The number may arrive in the same save as the code.
+        phone: patch.customer?.phone ?? order.customerPhone,
         orderId: order.id,
         currency: order.currency,
       });
@@ -605,7 +607,13 @@ export async function reserveOrderBenefits(orderId: string) {
     });
     if (!count) return;
     if (o.discountId) {
-      await redeemDiscount(tx, o.discountId, o.id, o.contactId, toNumber(o.discountTotal));
+      await redeemDiscount(
+        tx,
+        o.discountId,
+        o.id,
+        { contactId: o.contactId, phone: o.customerPhone },
+        toNumber(o.discountTotal),
+      );
     }
     if (o.pointsRedeemed > 0 && o.contactId) {
       await spendPoints(
@@ -744,7 +752,13 @@ export async function placeOrder(
     // A held coupon and points were taken with the payment link; only unheld ones are spent here.
     if (!o.reservedAt && o.discountId) {
       try {
-        await redeemDiscount(tx, o.discountId, o.id, o.contactId, toNumber(o.discountTotal));
+        await redeemDiscount(
+          tx,
+          o.discountId,
+          o.id,
+          { contactId: o.contactId, phone: o.customerPhone },
+          toNumber(o.discountTotal),
+        );
       } catch (err) {
         if (!opts.paid) throw err;
         problems.push(

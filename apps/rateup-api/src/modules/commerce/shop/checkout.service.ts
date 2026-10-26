@@ -44,6 +44,10 @@ import {
   customerReachable,
   startPhoneVerification,
 } from "./phoneVerify.service.js";
+import { type AddressField, missingAddressField } from "./addressRules.js";
+import { parsePhoneNumberFromString } from "libphonenumber-js";
+
+import { storeLogoUrl } from "./storeLogo.js";
 import { ShopError } from "./shop.errors.js";
 import {
   assertCanTakeOrder,
@@ -657,7 +661,7 @@ export async function getPublicCheckout(token: string, opts: { justPaid?: boolea
       acceptingOrders,
       name: store.name,
       slug: store.slug,
-      logoUrl: store.logoUrl,
+      logoUrl: storeLogoUrl(store.logoUrl),
       currency: store.currency,
       allowCoupons: store.allowCoupons && !inStore,
       askAddress: store.askAddress,
@@ -786,6 +790,13 @@ function publicOrder(order: Awaited<ReturnType<typeof getOrderByToken>>) {
   };
 }
 
+/** A typed number as E.164 when it is a complete, dialable one; otherwise undefined. */
+export function checkoutPhone(raw: string | null | undefined): string | undefined {
+  if (!raw) return undefined;
+  const parsed = parsePhoneNumberFromString(raw);
+  return parsed?.isValid() ? parsed.number : undefined;
+}
+
 export async function updatePublicCheckout(token: string, patch: CheckoutPatch) {
   const order = await getOrderByToken(token);
   if (order.status !== "DRAFT")
@@ -800,16 +811,31 @@ export async function updatePublicCheckout(token: string, patch: CheckoutPatch) 
       );
   }
   // A chat order is messaged on the contact's own number; the page must not redirect it.
-  const safePatch =
-    order.channel !== "STOREFRONT" && patch.customer
-      ? { ...patch, customer: { ...patch.customer, phone: undefined } }
-      : patch;
+  // Without a contact (storefront, or staff-made with none) the number is the shopper's own
+  // to set and correct. Only a complete number is kept: the page saves as they type.
+  const typedPhone = checkoutPhone(patch.customer?.phone);
+  const keepsItsNumber = order.channel !== "STOREFRONT" && Boolean(order.contactId);
+  const safePatch = patch.customer
+    ? {
+        ...patch,
+        customer: { ...patch.customer, phone: keepsItsNumber ? undefined : typedPhone },
+      }
+    : patch;
   await repriceOrder(order.id, safePatch);
   if (patch.shippingAddress) {
     await prisma.shopOrder.update({ where: { id: order.id }, data: { checkoutStage: "PAYMENT" } });
   }
   return getPublicCheckout(token);
 }
+
+const ADDRESS_FIELD_PROMPT: Record<AddressField, string> = {
+  name: "Add the name for the delivery",
+  line1: "Add a delivery address first",
+  city: "Add the city for the delivery",
+  region: "Add the state for the delivery",
+  postalCode: "Add the postal code for the delivery",
+  country: "Choose the country for the delivery",
+};
 
 export async function payPublicCheckout(
   token: string,
@@ -828,8 +854,10 @@ export async function payPublicCheckout(
       `This order is paid on the ${storeLabel(order.checkoutVia)} checkout page`,
     );
   const address = order.shippingAddress as ShopAddress | null;
-  if (order.store.askAddress && order.status === "DRAFT" && !address?.line1)
-    throw new ShopError("INVALID", "Add a delivery address first");
+  if (order.store.askAddress && order.status === "DRAFT") {
+    const missing = missingAddressField(address);
+    if (missing) throw new ShopError("INVALID", ADDRESS_FIELD_PROMPT[missing]);
+  }
   if (order.status === "DRAFT") await assertDeliveryChosen(order, order.store);
   if (method === "cod" && !order.store.codEnabled)
     throw new ShopError("PAYMENT_UNAVAILABLE", "Cash on delivery isn't offered");

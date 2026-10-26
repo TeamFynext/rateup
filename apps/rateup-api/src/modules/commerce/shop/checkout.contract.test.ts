@@ -259,10 +259,26 @@ describe("the public checkout", () => {
 
   test("a storefront shopper's phone can", async () => {
     orders.getOrderByToken.mockResolvedValue(order({ channel: "STOREFRONT" }));
-    await updatePublicCheckout("tok", { customer: { phone: "+1 555 0123" } });
+    await updatePublicCheckout("tok", { customer: { phone: "+91 98765 43210" } });
     expect(orders.repriceOrder).toHaveBeenCalledWith("o1", {
-      customer: { phone: "+1 555 0123" },
+      customer: { phone: "+919876543210" },
     });
+  });
+
+  test("a staff-made order with no contact takes the number, and can correct it", async () => {
+    orders.getOrderByToken.mockResolvedValue(
+      order({ channel: "MANUAL", contactId: null, customerPhone: "+919" }),
+    );
+    await updatePublicCheckout("tok", { customer: { phone: "+91 98765 43210" } });
+    expect(orders.repriceOrder).toHaveBeenCalledWith("o1", {
+      customer: { phone: "+919876543210" },
+    });
+  });
+
+  test("a half-typed number is not saved", async () => {
+    orders.getOrderByToken.mockResolvedValue(order({ channel: "STOREFRONT" }));
+    await updatePublicCheckout("tok", { customer: { phone: "+919" } });
+    expect(orders.repriceOrder).toHaveBeenCalledWith("o1", { customer: { phone: undefined } });
   });
 });
 
