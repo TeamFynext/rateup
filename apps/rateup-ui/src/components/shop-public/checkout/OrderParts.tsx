@@ -1,5 +1,6 @@
 import { IconLock } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
+import { createContext, useContext } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -12,7 +13,14 @@ import { cn } from "@/lib/utils.ts";
 
 import { StoreAvatar } from "../shared.tsx";
 
-/** The checkout's own section card, matching the approved checkout design. */
+/**
+ * Inside the checkout form, sections are flat headed blocks on the page, as in Shopify's
+ * checkout; elsewhere (order status, hand-off) they stay cards.
+ */
+const FlatSections = createContext(false);
+export const FlatCheckoutSections = FlatSections.Provider;
+
+/** The checkout's own section: a card, or a flat block inside the checkout form. */
 export function CheckoutSection({
   title,
   action,
@@ -24,14 +32,23 @@ export function CheckoutSection({
   children: React.ReactNode;
   className?: string;
 }>) {
+  const flat = useContext(FlatSections);
   return (
     <section
       aria-label={title}
-      className={cn("flex flex-col gap-3 rounded-2xl border border-border bg-card p-4", className)}
+      className={cn(
+        "flex flex-col gap-3",
+        !flat && "rounded-2xl border border-border bg-card p-4",
+        className,
+      )}
     >
       {(title || action) && (
         <div className="flex items-center justify-between gap-2">
-          {title && <h2 className="text-[15px] font-bold">{title}</h2>}
+          {title && (
+            <h2 className={flat ? "text-xl font-bold tracking-tight" : "text-[15px] font-bold"}>
+              {title}
+            </h2>
+          )}
           {action}
         </div>
       )}
@@ -40,7 +57,10 @@ export function CheckoutSection({
   );
 }
 
-export function CheckoutHeader({ store }: Readonly<{ store: PublicCheckout["store"] }>) {
+export function CheckoutHeader({
+  store,
+  wide = false,
+}: Readonly<{ store: PublicCheckout["store"]; wide?: boolean }>) {
   const { t } = useTranslation();
   const brand = (
     <span className="inline-flex min-w-0 items-center gap-2">
@@ -50,7 +70,12 @@ export function CheckoutHeader({ store }: Readonly<{ store: PublicCheckout["stor
   );
   return (
     <header className="border-b border-border bg-background print:hidden">
-      <div className="mx-auto flex w-full max-w-2xl items-center justify-between gap-3 px-4 py-3.5">
+      <div
+        className={cn(
+          "mx-auto flex w-full items-center justify-between gap-3 px-4 py-3.5",
+          wide ? "max-w-5xl" : "max-w-2xl",
+        )}
+      >
         {store.storefrontEnabled ? (
           <Link
             to="/s/$slug"

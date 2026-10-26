@@ -946,7 +946,12 @@ export const findShopCatalogs = () => post<FoundCatalogs>(`${BASE}/setup/find-ca
 export const republishShop = () => post<{ republished: number }>(`${BASE}/setup/republish`);
 
 export type SendToMeResult =
-  | { sent: true; asProductCard: boolean }
+  | {
+      sent: true;
+      asProductCard: boolean;
+      /** The store's catalog isn't the one connected to WhatsApp, so no card could go out. */
+      catalogNotConnected?: boolean;
+    }
   | { sent: false; reason: "window_closed"; openChatUrl: string };
 /** The product as a customer gets it, to the merchant's own WhatsApp (needs their 24-hour window). */
 export const sendShopProductToMe = (productId: string, phone: string) =>
