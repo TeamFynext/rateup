@@ -49,12 +49,14 @@ export const BroadCastTypeValue = ({
   if (type === WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT) {
     return (
       <Field className="gap-1.5" data-invalid={!!error}>
-        <FieldLabel htmlFor={`${uid}-header`}>Text</FieldLabel>
+        <FieldLabel htmlFor={`${uid}-header`} className="sr-only">
+          Header text
+        </FieldLabel>
         <InputGroup>
           <InputGroupInput
             id={`${uid}-header`}
             {...registerField(form, "header")}
-            placeholder={translations("Header")}
+            placeholder={translations("e.g. Your order is on its way")}
             aria-invalid={!!error}
           />
           <InputGroupAddon align="inline-end">
@@ -85,7 +87,7 @@ export const BroadCastTypeValue = ({
   };
 
   return (
-    <Field className="w-full max-w-100 gap-1.5" data-invalid={!!error}>
+    <Field className="w-full gap-1.5" data-invalid={!!error}>
       <input
         ref={fileInputRef}
         type="file"

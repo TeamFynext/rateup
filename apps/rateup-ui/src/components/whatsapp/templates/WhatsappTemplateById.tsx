@@ -1,6 +1,23 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IconAsterisk, IconImageInPicture, IconInfoCircle } from "@tabler/icons-react";
-import { useNavigate, useParams } from "@tanstack/react-router";
+import {
+  IconArrowLeft,
+  IconArrowRight,
+  IconAsterisk,
+  IconBan,
+  IconFileText,
+  IconLetterT,
+  IconMapPin,
+  IconPhoto,
+  IconVideo,
+  IconCopy,
+  IconDeviceFloppy,
+  IconImageInPicture,
+  IconInfoCircle,
+  IconLock,
+  IconPencil,
+  IconSend,
+} from "@tabler/icons-react";
+import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useId } from "react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { FieldPath } from "react-hook-form";
@@ -11,16 +28,20 @@ import type { z } from "zod/v4";
 
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useConnectedWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
+import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { uploadTemplateMedia } from "@/backend/whatsapp/whatsapp.api";
+import type { LibraryTemplate } from "@/backend/whatsapp/whatsapp.api";
 import {
+  useCreateTemplateFromLibraryMutation,
   useCreateTemplateMutation,
   useSaveTemplateAsDraftMutation,
   useUpdateTemplateMutation,
   useWaTemplateById,
 } from "@/backend/whatsapp/whatsapp.query";
+import { PAGE_TITLE } from "@/components/common/page-heading.tsx";
+import { WizardSection } from "@/components/dashboard/automation/components/wizard/WizardSection.tsx";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import { LengthTracker } from "@/components/input/LengthTracker.tsx";
-import { LinkCopyElement } from "@/components/input/LinkCopyElement.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -28,7 +49,6 @@ import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { PhonePreviewButton } from "@/components/ui/phone-preview.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import {
   Select,
   SelectContent,
@@ -36,42 +56,54 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
+import { Stepper } from "@/components/ui/stepper.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
-import {
-  QuickReplyButton,
-  ResponseMessageContainer,
-} from "@/components/whatsapp/MessageComponents.tsx";
 import { BroadCastTypeValue } from "@/components/whatsapp/templates/Details/BroadCastTypeValue.tsx";
 import ButtonInput from "@/components/whatsapp/templates/Details/ButtonInput.tsx";
 import { ButtonSelection } from "@/components/whatsapp/templates/Details/ButtonSelectionMenu.tsx";
 import CardCarousel, {
   ProductCardCarouselPreview,
 } from "@/components/whatsapp/templates/Details/CardCarousel.tsx";
-import { HeaderWithFormatting } from "@/components/whatsapp/templates/Details/HeaderWithFormating.tsx";
 import {
   firstErrorMessage,
   friendlyWhatsAppError,
   type TemplateFormValues,
 } from "@/components/whatsapp/templates/Details/template-form.ts";
 import { TextFormateToolBar } from "@/components/whatsapp/templates/Details/TextFormateToolBar.tsx";
-import TextWithFormatting from "@/components/whatsapp/templates/Details/TextWithFormating.tsx";
 import type { WaTemplateDefaultValues } from "@/components/whatsapp/templates/Schema/templateSchema.ts";
 import {
   configSchema,
   templateSchema,
 } from "@/components/whatsapp/templates/Schema/templateSchema.ts";
 import WaTemplateStatusBadge from "@/components/whatsapp/templates/WaTemplateStatusBadge.tsx";
+import type { LibraryInputs } from "@/components/whatsapp/templates/wizard/library.ts";
+import {
+  EMPTY_LIBRARY_INPUTS,
+  humanize,
+  libraryInputsBlocker,
+  libraryLanguage,
+  libraryToFormValues,
+  starterToFormValues,
+  toTemplateName,
+} from "@/components/whatsapp/templates/wizard/library.ts";
+import { LibraryDetailsStep } from "@/components/whatsapp/templates/wizard/LibraryDetailsStep.tsx";
+import type {
+  StartSource,
+  TemplateStart,
+} from "@/components/whatsapp/templates/wizard/StartStep.tsx";
+import { StartStep } from "@/components/whatsapp/templates/wizard/StartStep.tsx";
+import { WaCarouselCard, WaTemplateMessage } from "@/components/whatsapp/wa-template-bubble.tsx";
 import { WhatsAppChatShell } from "@/components/whatsapp/whatsapp-preview-shell.tsx";
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
 import { useToggle } from "@/hooks/use-toggle.ts";
+import { cn } from "@/lib/utils.ts";
 import {
   OrderType,
   SubscriptionFeaturePathName,
   TemplateType,
   WaTemplateCategory,
   WaTemplateStatus,
+  WhatsappSettingsStatus,
 } from "@/types/enums.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 import {
@@ -94,6 +126,95 @@ type BackTarget =
   | { to: "/dashboard/loyalty/messages"; search: { tab: "templates" } };
 
 const DEFAULT_BACK: BackTarget = { to: "/dashboard/whatsapp/templates" };
+
+const HEADER_LABEL: Record<string, string> = {
+  NONE: "None",
+  TEXT: "Text",
+  IMAGE: "Image",
+  VIDEO: "Video",
+  DOCUMENT: "Document",
+  LOCATION: "Location",
+};
+
+const HEADER_ICON: Record<string, typeof IconLetterT> = {
+  NONE: IconBan,
+  TEXT: IconLetterT,
+  IMAGE: IconPhoto,
+  VIDEO: IconVideo,
+  DOCUMENT: IconFileText,
+  LOCATION: IconMapPin,
+};
+
+type TemplateStep = "start" | "setup" | "content" | "buttons" | "details" | "review";
+
+const STEP_LABEL: Record<TemplateStep, string> = {
+  start: "Start",
+  setup: "Setup",
+  content: "Message",
+  buttons: "Buttons",
+  details: "Details",
+  review: "Review",
+};
+
+/** What Continue validates on each step; the rest is checked on save. */
+const STEP_FIELDS: Record<TemplateStep, readonly string[]> = {
+  start: [],
+  setup: ["name", "templateType", "category", "language"],
+  content: ["format", "header", "body", "example", "footer", "mediaCarousel", "productCarousel"],
+  buttons: ["buttons"],
+  details: [],
+  review: [],
+};
+
+const CATEGORY_HINT: Record<string, string> = {
+  MARKETING: "Offers, announcements and anything promotional.",
+  UTILITY: "Updates about something the customer did: orders, bookings, payments.",
+  AUTHENTICATION: "One-time codes for signing in or verifying.",
+};
+
+function stepHeading(
+  step: TemplateStep,
+  { isEdit, fromLibrary }: { isEdit: boolean; fromLibrary: boolean },
+) {
+  switch (step) {
+    case "start":
+      return {
+        title: "Start your template",
+        description:
+          "Use one of Meta's ready-written templates, one of ours, or write your own. You can change it in the next steps.",
+      };
+    case "setup":
+      return {
+        title: "Name it and choose the number",
+        description: fromLibrary
+          ? "The name is how you'll find it later. Meta's library sets the category and language."
+          : "The name is how you'll find it later; customers never see it.",
+      };
+    case "content":
+      return {
+        title: "Write the message",
+        description:
+          "Use variables like {{1}} for details that change on every send, such as a name or an order number.",
+      };
+    case "buttons":
+      return {
+        title: "Add buttons",
+        description: "Optional. Quick replies, links, calls, flows or a checkout.",
+      };
+    case "details":
+      return {
+        title: "Fill in the details",
+        description: "Meta wrote the message. Tell it where the buttons go.",
+      };
+    case "review":
+      return isEdit
+        ? { title: "Review and save", description: "Saving sends the changes to Meta for review." }
+        : {
+            title: "Review and submit",
+            description: "Read it once as your customer will. Click Change to fix anything.",
+          };
+  }
+}
 
 export function WhatsappTemplateById({
   forceTemplateType,
@@ -126,36 +247,40 @@ export function WhatsappTemplateById({
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const [value, toggle] = useToggle([true, false]);
   const { update } = useRouteParams();
+  /** A new template's starting values; also what "Start from scratch" goes back to. */
+  const blankValues = (whatsappSettingsPhoneId = "") => ({
+    name: "",
+    header: null,
+    language: "en",
+    body: "Would you like to start survey?",
+    footer: "Powered by rateup.app",
+    category: "MARKETING",
+    format: "NONE",
+    buttons: [],
+    status: WaTemplateStatus.DRAFT,
+    example: [],
+    templateType: forceTemplateType || TemplateType.GENERAL_NOTIFICATION,
+    mediaCarousel: [],
+    productCarousel: [],
+    whatsappSettingsPhoneId,
+    defaultValues: {
+      catalog: {
+        thumbnail_product_retailer_id: "",
+        mpm: {
+          sections: [],
+        },
+        spm: {
+          product_retailer_id: "",
+        },
+        catalogId: "",
+      },
+      whatsappSettingsPhoneId,
+    },
+  });
   const form = useForm<TemplateFormValues>({
     resolver: zodResolver(templateSchema),
     defaultValues: {
-      name: "",
-      header: null,
-      language: "en",
-      body: "Would you like to start survey?",
-      footer: "Powered by rateup.app",
-      category: "MARKETING",
-      format: "NONE",
-      buttons: [],
-      status: WaTemplateStatus.DRAFT,
-      example: [],
-      templateType: forceTemplateType || TemplateType.GENERAL_NOTIFICATION,
-      mediaCarousel: [],
-      productCarousel: [],
-      whatsappSettingsPhoneId: "",
-      defaultValues: {
-        catalog: {
-          thumbnail_product_retailer_id: "",
-          mpm: {
-            sections: [],
-          },
-          spm: {
-            product_retailer_id: "",
-          },
-          catalogId: "",
-        },
-        whatsappSettingsPhoneId: "",
-      },
+      ...blankValues(),
       ...initialValues,
     },
   });
@@ -171,6 +296,104 @@ export function WhatsappTemplateById({
   const values = form.watch();
   const configValues = configForm.watch();
   const formErrors = form.formState.errors;
+
+  // ── Wizard ────────────────────────────────────────────────────────────────
+  const isEdit = Boolean(templateId);
+  const isReadOnly = Boolean(editingItem?.data?.id && value);
+  // A starter handed in by the caller (loyalty Messages) has already chosen what to start from.
+  const skipStart = isEdit || Boolean(initialValues);
+  const [start, setStart] = useState<TemplateStart | null>(null);
+  const [startSource, setStartSource] = useState<StartSource>("library");
+  /** The library entry being created as-is; cleared by "Customize". */
+  const [libraryEntry, setLibraryEntry] = useState<LibraryTemplate | null>(null);
+  const [libraryInputs, setLibraryInputs] = useState<LibraryInputs>(EMPTY_LIBRARY_INPUTS);
+  const createFromLibrary = useCreateTemplateFromLibraryMutation();
+
+  const hasButtonsStep =
+    values.templateType !== TemplateType.PAYMENT_CONFIRMATION &&
+    values.templateType !== TemplateType.CAROUSEL;
+  const steps: TemplateStep[] = [
+    ...(skipStart ? [] : ["start" as const]),
+    "setup",
+    ...(libraryEntry
+      ? ["details" as const]
+      : (["content", ...(hasButtonsStep ? ["buttons" as const] : [])] as TemplateStep[])),
+    "review",
+  ];
+  const [step, setStep] = useState<TemplateStep>(skipStart ? "setup" : "start");
+  const [furthest, setFurthest] = useState(isEdit ? Number.POSITIVE_INFINITY : 0);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const stepIndex = Math.max(steps.indexOf(step), 0);
+  const isLastStep = stepIndex === steps.length - 1;
+
+  const goTo = (next: TemplateStep) => {
+    // A step the template no longer has (buttons on a carousel) lands on the nearest one.
+    const target = steps.includes(next) ? next : steps[Math.min(stepIndex, steps.length - 1)]!;
+    setStep(target);
+    setFurthest((prev) => Math.max(prev, steps.indexOf(target)));
+    bodyRef.current?.scrollTo({ top: 0 });
+  };
+
+  // A new template starts on the first connected number, so the library can be browsed
+  // without a detour through set-up.
+  const { data: waAccounts } = useWaSettings();
+  useEffect(() => {
+    if (isEdit || form.getValues("whatsappSettingsPhoneId")) return;
+    const first = waAccounts?.find(
+      (account) => account.status !== WhatsappSettingsStatus.DISCONNECTED,
+    );
+    if (first?.phoneId) {
+      setTemplateValue("whatsappSettingsPhoneId", first.phoneId);
+      setTemplateValue("defaultValues.whatsappSettingsPhoneId", first.phoneId);
+    }
+  }, [waAccounts, isEdit]);
+
+  const pickStart = (picked: TemplateStart) => {
+    const channel = form.getValues("whatsappSettingsPhoneId") ?? "";
+    const base = {
+      ...blankValues(channel),
+      templateType: forceTemplateType || TemplateType.GENERAL_NOTIFICATION,
+    };
+    setStart(picked);
+    setLibraryInputs(EMPTY_LIBRARY_INPUTS);
+    // A new starting point is a new template: nothing past Start has been done for it,
+    // even if the reader got further with the last pick.
+    setFurthest(0);
+    switch (picked.kind) {
+      case "scratch":
+        setLibraryEntry(null);
+        form.reset(base);
+        // Nothing to look at on this step after a blank pick, so it moves straight on.
+        setStep("setup");
+        setFurthest(1);
+        break;
+      case "starter":
+        setLibraryEntry(null);
+        form.reset({ ...base, ...starterToFormValues(picked.starter) });
+        break;
+      case "library":
+        setLibraryEntry(picked.entry);
+        form.reset({
+          ...base,
+          ...libraryToFormValues(picked.entry, EMPTY_LIBRARY_INPUTS),
+          name: toTemplateName(picked.entry.name),
+        });
+        break;
+    }
+  };
+
+  /** Leaves the library's wording for an ordinary template the reader can edit. */
+  const customizeLibraryEntry = () => {
+    if (!libraryEntry) return;
+    setTemplateValue("buttons", libraryToFormValues(libraryEntry, libraryInputs).buttons);
+    setLibraryEntry(null);
+    setStep("content");
+    // Message and Buttons replace Details, and neither has been done yet. Steps are
+    // counted by position: Start, Setup, then Message at 2.
+    setFurthest(2);
+    bodyRef.current?.scrollTo({ top: 0 });
+    toast.info("It's now your own template, so Meta will review it before it can be sent.");
+  };
 
   /**
    * Most writes here target runtime-built paths (`buttons.3.text`,
@@ -197,8 +420,6 @@ export function WhatsappTemplateById({
   } = useFieldArray({ control: form.control, name: "buttons" });
 
   const isOrderCreate = values.templateType === TemplateType.ORDER_DETAILS;
-  // Chat bubble background; the shadcn card token resolves per-theme.
-  const bubbleBg = "var(--card)";
 
   useEffect(() => {
     if (editingItem) {
@@ -389,6 +610,7 @@ export function WhatsappTemplateById({
   async function handleSubmit(saveAsDraft: boolean = false) {
     const isValid = await form.trigger();
     if (!isValid) {
+      goTo(stepForError(form.formState.errors));
       toast.error(
         firstErrorMessage(form.formState.errors) ?? "Please check the template and try again.",
       );
@@ -410,14 +632,17 @@ export function WhatsappTemplateById({
     if (dynamicVariableArray?.length > 0) {
       if (!isArrayInCorrectOrder(dynamicVariableArray)) {
         toast.error("Dynamic variables name should is sequential numeric order");
+        goTo("content");
         return;
       } else if (values.example!.length !== dynamicVariableArray.length || hasEmptyExamples) {
         toast.error("Please provide example values for all dynamic variables");
+        goTo("content");
         return;
       }
     }
     if (values?.buttons?.length > 12) {
       toast.error(translations("Max number of button in buttons should be 12"));
+      goTo("buttons");
       return;
     }
 
@@ -446,6 +671,7 @@ export function WhatsappTemplateById({
               "All quick reply buttons must be grouped together at the beginning or end of the button list.",
             ),
           );
+          goTo("buttons");
           return;
         }
       }
@@ -723,607 +949,870 @@ export function WhatsappTemplateById({
     return null;
   }
 
+  // Placeholder samples, keyed the way the body numbers them.
+  const bodySamples = Object.fromEntries(
+    (values.example ?? []).map((sample, index) => [String(index + 1), sample]),
+  );
+  const isAuthPreview = values?.category === WaTemplateCategory.AUTHENTICATION;
+  const hasOrderCard = isOrderCreate || values.templateType === TemplateType.PAYMENT_CONFIRMATION;
+  const headerFormat = values.format ?? "NONE";
   const messageContent = (
-    <div className="flex flex-col p-4">
-      <ResponseMessageContainer backgroundColor={bubbleBg}>
-        {/* The order card is part of the message only for the order flows; every other
-            template type is header + body + footer + buttons. */}
-        {(isOrderCreate || values.templateType === TemplateType.PAYMENT_CONFIRMATION) && (
-          <div>
-            <p className="text-xs">
-              {translations("ORDER")} #{"{{Order number}}"}
-            </p>
-            <Separator className="border-dashed" />
-
-            <div className="flex items-center">
-              <IconImageInPicture height={50} size={32} />
-              <div>
-                <p className="text-xs">{"{{Product name}}"}</p>
-                <p className="text-xs">
-                  {translations("Quantity")} {"{{#}}"}
-                </p>
+    <div className="flex flex-col gap-2 px-2 py-3">
+      <WaTemplateMessage
+        aboveBody={
+          hasOrderCard ? (
+            <div className="flex flex-col gap-1.5 rounded-md bg-[#f5f6f6] p-2 text-[12px] text-[#111b21] dark:bg-[#1d282f] dark:text-[#e9edef]">
+              <p className="text-[#667781] dark:text-[#8696a0]">
+                {translations("ORDER")} #{"{{Order number}}"}
+              </p>
+              <div className="flex items-center gap-2">
+                <IconImageInPicture className="size-8 shrink-0 text-[#8696a0]" aria-hidden />
+                <div>
+                  <p>{"{{Product name}}"}</p>
+                  <p className="text-[#667781] dark:text-[#8696a0]">
+                    {translations("Quantity")} {"{{#}}"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between border-t border-dashed border-[#d1d7db] pt-1.5 dark:border-[#2a3942]">
+                <p>{translations("Total")}</p>
+                <p>{"{{Amount}}"}</p>
               </div>
             </div>
-            <Separator className="border-dashed" />
-            <div className="flex items-center justify-between">
-              <p className="text-xs">{translations("Total")}</p>
-              <p className="text-xs">${"{{}}"}</p>
-            </div>
-          </div>
-        )}
-        {HeaderWithFormatting(values?.header ?? "", values?.format ?? "")}
-        <p
-          style={{
-            wordBreak: "break-all",
-            whiteSpace: "pre-wrap",
-            fontFamily: "inherit",
-          }}
-        >
-          {TextWithFormatting(values?.body, values?.example, values?.category)}
-        </p>
-        <p
-          className="text-muted-foreground"
-          style={{
-            wordBreak: "break-all",
-          }}
-        >
-          {values?.category === WaTemplateCategory.AUTHENTICATION
-            ? values?.code_expiration_minutes
-              ? `Expires in ${values?.code_expiration_minutes} minutes.`
-              : ""
-            : values.footer}
-        </p>
-      </ResponseMessageContainer>
-      {values?.buttons?.slice(0, 2).map((data) => (
-        <QuickReplyButton
-          text={data?.text ?? ""}
-          key={data?.text}
-          type={data.type}
-          style={{ backgroundColor: bubbleBg }}
-        />
-      ))}
-      {values?.buttons?.length > 2 && (
-        <QuickReplyButton
-          text={translations("See all options")}
-          style={{ backgroundColor: bubbleBg }}
-        />
-      )}
-      <ScrollArea>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            gap: 8,
-            width: "fit-content",
-            padding: 4,
-          }}
-        >
+          ) : undefined
+        }
+        header={
+          isAuthPreview || headerFormat === "NONE"
+            ? null
+            : {
+                format: headerFormat,
+                text: typeof values.header === "string" ? values.header : undefined,
+                media: values.header,
+              }
+        }
+        // Authentication templates carry Meta's fixed wording, not the business's.
+        body={
+          isAuthPreview
+            ? "*{{1}}* is your verification code. For your security, do not share this code."
+            : values.body
+        }
+        samples={isAuthPreview ? { "1": "123456" } : bodySamples}
+        footer={
+          isAuthPreview
+            ? values.code_expiration_minutes
+              ? `This code expires in ${values.code_expiration_minutes} minutes.`
+              : null
+            : values.footer || null
+        }
+        buttons={values.buttons}
+      />
+      {(values.mediaCarousel?.length ?? 0) > 0 || (values.productCarousel?.length ?? 0) > 0 ? (
+        <div className="-mx-2 flex gap-2 overflow-x-auto px-4 pb-1">
           {values.mediaCarousel?.map((card, index) => (
-            <div
-              className="flex w-45 flex-col gap-px"
+            <WaCarouselCard
               key={index}
-              style={{ borderRadius: "10px", background: bubbleBg }}
-            >
-              {HeaderWithFormatting(card?.header ?? "", card?.format ?? "")}
-              <p
-                className="p-2.5"
-                style={{
-                  wordBreak: "break-all",
-                  whiteSpace: "pre-wrap",
-                  fontFamily: "inherit",
-                }}
-              >
-                {TextWithFormatting(card?.body, card?.example, values?.category)}
-              </p>
-              {card?.buttons.map((data) => (
-                <QuickReplyButton
-                  text={data?.text}
-                  key={data?.text}
-                  type={data?.type}
-                  style={{ backgroundColor: bubbleBg }}
-                />
-              ))}
-            </div>
+              header={{ format: card?.format ?? "IMAGE", media: card?.header }}
+              body={card?.body}
+              samples={Object.fromEntries(
+                (card?.example ?? []).map((sample, i) => [String(i + 1), sample]),
+              )}
+              buttons={card?.buttons}
+            />
           ))}
           <ProductCardCarouselPreview form={form} catalog={catalog} />
         </div>
-      </ScrollArea>
+      ) : null}
     </div>
   );
 
-  return (
-    <form>
-      <div
-        className="flex flex-col gap-4"
-        onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, () => handleSubmit(true)]])}
-      >
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <h2 className="truncate text-2xl font-semibold">
-            {editingItem ? editingItem?.data?.name : translations("Create Template")}
-          </h2>
-          <div className="flex flex-wrap items-center gap-2.5">
-            <PhonePreviewButton platform="whatsapp" label={translations("Preview")}>
-              <WhatsAppChatShell>{messageContent}</WhatsAppChatShell>
-            </PhonePreviewButton>
-            {editingItem?.data?.id && value ? (
-              <Button onClick={() => toggle()}>{translations("Edit")}</Button>
-            ) : (
-              <React.Fragment>
-                {!isOrderCreate && (
-                  <Button
-                    variant="outline"
-                    disabled={isSubmittingDraft}
-                    onClick={() => handleSubmit(true)}
-                  >
-                    {isSubmittingDraft && <Spinner />}
-                    {translations("Save as draft")}
-                  </Button>
-                )}
+  const heading = stepHeading(step, { isEdit, fromLibrary: Boolean(libraryEntry) });
+  const isCarousel = values.templateType === TemplateType.CAROUSEL;
+  const isPaymentConfirmation = values.templateType === TemplateType.PAYMENT_CONFIRMATION;
+  const isAuthentication = values?.category === WaTemplateCategory.AUTHENTICATION;
 
-                <Button loading={isSubmitting} onClick={() => handleSubmit(false)}>
-                  {translations("Save & Submit")}
-                </Button>
-              </React.Fragment>
+  let blocker: string | null = null;
+  if (step === "start" && !start) blocker = "Pick a template, or start from scratch";
+  if (step === "setup" && !isEdit && !values.whatsappSettingsPhoneId) {
+    blocker = "Pick the WhatsApp number it's sent from";
+  }
+  if (step === "details" && libraryEntry)
+    blocker = libraryInputsBlocker(libraryEntry, libraryInputs);
+
+  const goNext = async () => {
+    const next = steps[stepIndex + 1];
+    if (!next || blocker) return;
+    const fields = STEP_FIELDS[step];
+    const valid = fields.length
+      ? await form.trigger(fields as FieldPath<TemplateFormValues>[], { shouldFocus: true })
+      : true;
+    if (!valid) {
+      toast.error(firstErrorMessage(form.formState.errors) ?? "Some fields need attention");
+      return;
+    }
+    goTo(next);
+  };
+  const goBack = () => {
+    const previous = steps[stepIndex - 1];
+    if (previous) goTo(previous);
+  };
+
+  const submitLibrary = async () => {
+    if (!libraryEntry) return;
+    const nameValid = await form.trigger("name");
+    const missing = libraryInputsBlocker(libraryEntry, libraryInputs);
+    if (!nameValid || missing) {
+      toast.error(missing ?? formErrors.name?.message ?? "Check the template name");
+      goTo(nameValid ? "details" : "setup");
+      return;
+    }
+    createFromLibrary.mutate(
+      {
+        whatsappSettingsPhoneId: values.whatsappSettingsPhoneId ?? "",
+        name: values.name,
+        libraryTemplateName: libraryEntry.name,
+        language: libraryEntry.language,
+        category: libraryEntry.category,
+        templateType: forceTemplateType,
+        buttons: libraryEntry.required_inputs.buttons.map((required) => {
+          const given = libraryInputs.buttons[required.index];
+          return {
+            index: required.index,
+            type: required.type,
+            url: given?.url?.trim() || undefined,
+            urlSuffixExample: given?.urlSuffixExample?.trim() || undefined,
+            phoneNumber: given?.phoneNumber?.trim() || undefined,
+          };
+        }),
+        bodyInputs: Object.keys(libraryInputs.body).length ? libraryInputs.body : undefined,
+      },
+      { onSuccess: () => navigate(backTo) },
+    );
+  };
+
+  const saveError =
+    updateTemplateMutation.error?.message ||
+    saveTemplateAsDraftMutation.error?.message ||
+    createTemplateMutation.error?.message;
+  const templateName = editingItem?.data?.name || values.name;
+  // Only steps the reader has reached are clickable; a saved template opens them all.
+  const canSave = !isReadOnly && (isEdit || isLastStep);
+  // A draft can be kept from any step once there is something to keep; order templates
+  // never had one. A library pick is kept as an ordinary draft of Meta's wording, since
+  // Meta only creates library templates in one go.
+  const canDraft = !isReadOnly && !isOrderCreate && step !== "start";
+
+  const setupStep = (
+    <div className="relative flex flex-col gap-6">
+      <ReadonlyOverlay />
+      <Field data-invalid={!!formErrors.name}>
+        <FieldLabel htmlFor={`${uid}-field`}>
+          <span className="flex flex-nowrap items-center gap-1">
+            {translations("Template Name")}
+            {requiredIcon}
+          </span>
+        </FieldLabel>
+        <InputGroup>
+          <InputGroupInput
+            id={`${uid}-field`}
+            placeholder="order_shipped"
+            disabled={!!editingItem?.data?.id}
+            aria-invalid={!!formErrors.name}
+            {...registerField("name")}
+          />
+          <InputGroupAddon align="inline-end">
+            <LengthTracker length={values?.name?.length} maxValue={512} atStart />
+          </InputGroupAddon>
+        </InputGroup>
+        <FieldDescription>
+          {translations("Lower-case letters and underscores only")}. Customers never see it.
+        </FieldDescription>
+        {formErrors.name && <FieldError>{formErrors.name.message}</FieldError>}
+      </Field>
+      <Field>
+        <FieldLabel>
+          <span className="flex flex-nowrap items-center gap-1">
+            WhatsApp number
+            {requiredIcon}
+          </span>
+        </FieldLabel>
+        <AccountSelector
+          value={values.whatsappSettingsPhoneId}
+          onChange={(value) => {
+            setTemplateValue("whatsappSettingsPhoneId", value ?? "");
+            setTemplateValue("defaultValues.whatsappSettingsPhoneId", value ?? "");
+          }}
+          hideLabel
+          optional={false}
+          disabled={!!editingItem?.data?.id}
+          className="!h-10 w-full !text-sm !text-foreground"
+        />
+        <FieldDescription>
+          {editingItem?.data?.id
+            ? "A submitted template stays on the number it was created on."
+            : "The template belongs to this number's WhatsApp account."}
+        </FieldDescription>
+      </Field>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {!isPaymentConfirmation && !isCarousel && (
+          <Field>
+            <FieldLabel htmlFor={`${uid}-category`}>
+              <span className="flex flex-nowrap items-center gap-1">
+                Category
+                {requiredIcon}
+              </span>
+            </FieldLabel>
+            <Select
+              items={categoryOptions}
+              value={values.category ?? ""}
+              onValueChange={(value) => setTemplateValue("category", value)}
+              disabled={
+                Boolean(libraryEntry) ||
+                isOrderCreate ||
+                catalogBtn ||
+                spmBtn ||
+                mpmBtn ||
+                checkoutBtn
+              }
+            >
+              <SelectTrigger id={`${uid}-category`} className="w-full">
+                <SelectValue placeholder={translations("Category")} />
+              </SelectTrigger>
+              <SelectContent>
+                {categoryOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FieldDescription>
+              {CATEGORY_HINT[values.category] ?? "Meta prices and reviews by category."}
+            </FieldDescription>
+          </Field>
+        )}
+        <Field>
+          <FieldLabel htmlFor={`${uid}-field-2`}>
+            <span className="flex flex-nowrap items-center gap-1">
+              {translations("Language")}
+              {requiredIcon}
+            </span>
+          </FieldLabel>
+          <Select
+            items={languageOptions}
+            value={values.language ?? ""}
+            onValueChange={(value) => setTemplateValue("language", value)}
+            disabled={Boolean(libraryEntry)}
+          >
+            <SelectTrigger id={`${uid}-field-2`} className="w-full">
+              <SelectValue placeholder={translations("Language")} />
+            </SelectTrigger>
+            <SelectContent>
+              {languageOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {libraryEntry && (
+            <FieldDescription>Set by the library entry you picked.</FieldDescription>
+          )}
+        </Field>
+      </div>
+      {!libraryEntry && (
+        <Field>
+          <FieldLabel htmlFor={`${uid}-templatetype`}>
+            <span className="flex flex-nowrap items-center gap-1">
+              Template type
+              {requiredIcon}
+            </span>
+          </FieldLabel>
+          <Select
+            items={templateTypeOptions}
+            value={values.templateType ?? ""}
+            onValueChange={(value) => setTemplateValue("templateType", value)}
+          >
+            <SelectTrigger id={`${uid}-templatetype`} className="w-full">
+              <SelectValue placeholder={translations("TemplateType")} />
+            </SelectTrigger>
+            <SelectContent>
+              {templateTypes.map((option) => (
+                <SelectItem key={option.value} value={option.value} disabled={option.disabled}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <FieldDescription>
+            Carousel, order details and payment confirmation change what the next steps ask for.
+          </FieldDescription>
+        </Field>
+      )}
+    </div>
+  );
+
+  const contentStep = (
+    <div className="relative flex flex-col gap-8">
+      <ReadonlyOverlay />
+      {!isAuthentication && !isPaymentConfirmation && !isCarousel && (
+        <WizardSection
+          title="Header"
+          hint="Optional. A bold line of text, or an image, video or document above the message."
+        >
+          <div
+            role="radiogroup"
+            aria-label={translations("Broadcast header")}
+            className="flex flex-wrap gap-2"
+          >
+            {broadcastTypeOptions.map((option) => {
+              const Icon = HEADER_ICON[option.value] ?? IconLetterT;
+              const on = values.format === option.value;
+              const locked = spmBtn || catalogBtn || mpmBtn;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  disabled={locked && !on}
+                  onClick={() => {
+                    const currentHeader = values.header;
+                    if (currentHeader) {
+                      const isFile = currentHeader instanceof File;
+                      if (option.value === WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT || isFile) {
+                        setTemplateValue("header", null);
+                      }
+                    }
+                    setTemplateValue("format", option.value);
+                  }}
+                  className={cn(
+                    "inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-[13px] font-medium transition-colors outline-none",
+                    "focus-visible:ring-ring focus-visible:ring-2 disabled:opacity-50",
+                    on
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border text-muted-foreground hover:bg-muted",
+                  )}
+                >
+                  <Icon className="size-4" aria-hidden />
+                  {HEADER_LABEL[option.value] ?? humanize(option.value)}
+                </button>
+              );
+            })}
+          </div>
+          <BroadCastTypeValue form={form} type={values?.format} />
+        </WizardSection>
+      )}
+
+      {!isAuthentication && (
+        <WizardSection
+          title={
+            <span className="flex flex-nowrap items-center gap-1">
+              {translations("Body")}
+              {requiredIcon}
+            </span>
+          }
+          hint={translations("Make your messages personal using variables and get more replies!")}
+        >
+          <div className="flex flex-col">
+            <TextFormateToolBar
+              applyFormatting={applyFormatting}
+              insertValue={insertValue}
+              undo={undo}
+              dynamicVariables={dynamicVariables}
+            />
+            <div className="relative">
+              <Textarea
+                className="field-sizing-content min-h-32 rounded-t-none rounded-b-xl pr-22.5"
+                placeholder={translations("Enter the text")}
+                rows={5}
+                aria-invalid={!!formErrors.body}
+                {...bodyField}
+                // The toolbar inserts at the caret, so the element has to be reachable
+                // as well as registered: `registerField` also sets `ref`, and spreading
+                // it alone left `inputRef` null and every insert a no-op.
+                ref={(element) => {
+                  registerBodyRef(element);
+                  inputRef.current = element;
+                }}
+              />
+              <div className="pointer-events-none absolute right-2 bottom-2">
+                <LengthTracker length={values?.body?.length ?? 0} maxValue={1024} atStart />
+              </div>
+            </div>
+            {formErrors.body && <FieldError>{formErrors.body.message}</FieldError>}
+          </div>
+        </WizardSection>
+      )}
+
+      {!isAuthentication && dynamicVariables?.length > 0 && (
+        <WizardSection
+          title="Sample values"
+          hint="Meta reviews the template with these. They are examples only; real values are filled in on each send."
+        >
+          {dynamicVariables.map((data, index) => (
+            <Field key={data} data-invalid={!!errorAt(`example.${index}`)}>
+              <InputGroup>
+                <InputGroupAddon className="font-mono text-xs">{`{{${data}}}`}</InputGroupAddon>
+                <InputGroupInput
+                  placeholder={`${translations("Enter the content for")} {{${data}}}`}
+                  aria-invalid={!!errorAt(`example.${index}`)}
+                  {...registerField(`example.${index}`)}
+                />
+              </InputGroup>
+              {errorAt(`example.${index}`) && (
+                <FieldError>{errorAt(`example.${index}`)}</FieldError>
+              )}
+            </Field>
+          ))}
+        </WizardSection>
+      )}
+
+      {!isPaymentConfirmation && !isCarousel && !isAuthentication && (
+        <Field data-invalid={!!formErrors.footer}>
+          <FieldLabel htmlFor={`${uid}-field-4`}>{translations("Footer (Optional)")}</FieldLabel>
+          <InputGroup>
+            <InputGroupInput
+              id={`${uid}-field-4`}
+              placeholder={translations("Footer")}
+              aria-invalid={!!formErrors.footer}
+              {...registerField("footer")}
+            />
+            <InputGroupAddon align="inline-end">
+              <LengthTracker length={values?.footer?.length} maxValue={60} atStart />
+            </InputGroupAddon>
+          </InputGroup>
+          <FieldDescription>
+            {translations("Footers are great to add any disclaimers or to add a thoughtful PS")}
+          </FieldDescription>
+          {formErrors.footer && <FieldError>{formErrors.footer.message}</FieldError>}
+        </Field>
+      )}
+      {!isPaymentConfirmation && !isCarousel && isAuthentication && (
+        <Field>
+          <FieldLabel htmlFor={`${uid}-field-5`}>
+            {translations("Code Expiration (minutes)")}
+          </FieldLabel>
+          <Input
+            id={`${uid}-field-5`}
+            type="number"
+            min={1}
+            max={90}
+            placeholder={translations("Expiration time")}
+            value={values.code_expiration_minutes ?? ""}
+            onChange={(event) =>
+              setTemplateValue("code_expiration_minutes", Number(event.target.value))
+            }
+          />
+          <FieldDescription>
+            Authentication templates use Meta's fixed wording; the code and its expiry are all you
+            set.
+          </FieldDescription>
+        </Field>
+      )}
+
+      {isCarousel && (
+        <WizardSection title="Cards">
+          <CardCarousel form={form} catalog={catalog} productRetailerIds={productRetailerIds} />
+        </WizardSection>
+      )}
+    </div>
+  );
+
+  const buttonsStep = (
+    <div className="relative flex flex-col gap-6">
+      <ReadonlyOverlay />
+      <ButtonSelection
+        handleMenuSelection={handleMenuSelection}
+        flowBtn={flowBtn}
+        mpmBtn={mpmBtn}
+        checkoutBtn={checkoutBtn}
+        catalogBtn={catalogBtn}
+        spmBtn={spmBtn}
+        btnLen={values?.buttons?.length}
+        disabled={isOrderCreate}
+        category={values?.category}
+      />
+      {values?.buttons?.length > 0 ? (
+        <div className="flex flex-col gap-3">
+          {values?.buttons?.map((data, index) => (
+            <div
+              className="border-border bg-muted flex flex-wrap items-end gap-3 rounded-xl border p-3"
+              key={index}
+            >
+              <ButtonInput
+                form={form}
+                deleteButton={deleteButton}
+                index={index}
+                data={data}
+                catalog={catalog}
+                productRetailerIds={productRetailerIds}
+              />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-muted-foreground text-sm">
+          No buttons yet. They're optional — continue without them if the message stands on its own.
+        </p>
+      )}
+      {isOrderCreate && (
+        <WizardSection title={translations("Config")}>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <Field>
+              <FieldLabel htmlFor={`${uid}-field-6`}>
+                <span className="flex flex-nowrap items-center gap-1">
+                  {translations("Name")}
+                  {requiredIcon}
+                </span>
+              </FieldLabel>
+              <Input id={`${uid}-field-6`} placeholder={"name"} {...configForm.register("name")} />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor={`${uid}-field-7`}>
+                <span className="flex flex-nowrap items-center gap-1">
+                  {translations("Price")}
+                  {requiredIcon}
+                </span>
+              </FieldLabel>
+              <Input
+                id={`${uid}-field-7`}
+                type="number"
+                min={0}
+                placeholder={translations("price")}
+                value={configValues.price ?? 0}
+                onChange={(event) =>
+                  configForm.setValue("price", Number(event.target.value), { shouldDirty: true })
+                }
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor={`${uid}-field-8`}>
+                <span className="flex flex-nowrap items-center gap-1">
+                  {translations("Tax")}
+                  {requiredIcon}
+                </span>
+              </FieldLabel>
+              <Input
+                id={`${uid}-field-8`}
+                type="number"
+                min={0}
+                placeholder={translations("tax")}
+                value={configValues.tax ?? 0}
+                onChange={(event) =>
+                  configForm.setValue("tax", Number(event.target.value), { shouldDirty: true })
+                }
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor={`${uid}-field-9`}>{translations("OrderType")}</FieldLabel>
+              <Select
+                items={orderTypeOptions}
+                value={configValues.orderType ?? ""}
+                onValueChange={(value) =>
+                  configForm.setValue("orderType", value as OrderType, { shouldDirty: true })
+                }
+              >
+                <SelectTrigger id={`${uid}-field-9`} className="w-full">
+                  <SelectValue placeholder={translations("order type")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {orderTypeOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FieldDescription>
+                When this field is passed in we hide the &quot;Review and Pay&quot; button and only
+                show the &quot;Pay Now&quot; button in the order details bubble
+              </FieldDescription>
+            </Field>
+          </div>
+        </WizardSection>
+      )}
+    </div>
+  );
+
+  const pickedAccount = waAccounts?.find(
+    (account) => account.phoneId === values.whatsappSettingsPhoneId,
+  );
+  const accountLabel = pickedAccount
+    ? [pickedAccount.phoneDisplayName, pickedAccount.phone].filter(Boolean).join(" · ")
+    : "—";
+  const reviewRows: { label: string; value: React.ReactNode; step: TemplateStep }[] = [
+    { label: "Name", value: values.name || "—", step: "setup" },
+    { label: "WhatsApp number", value: accountLabel, step: "setup" },
+    { label: "Category", value: humanize(values.category), step: "setup" },
+    { label: "Language", value: values.language, step: "setup" },
+    ...(libraryEntry
+      ? [
+          {
+            label: "Source",
+            value: `Meta's library · ${humanize(libraryEntry.name)}`,
+            step: "start" as const,
+          },
+        ]
+      : [{ label: "Type", value: humanize(values.templateType), step: "setup" as const }]),
+  ];
+  const reviewStep = (
+    <div className="flex flex-col gap-6">
+      {saveError && (
+        <Alert variant="destructive">
+          <IconInfoCircle />
+          <AlertDescription>{friendlyWhatsAppError(saveError)}</AlertDescription>
+        </Alert>
+      )}
+      <dl className="ring-foreground/10 bg-card divide-border divide-y rounded-xl ring-1">
+        {reviewRows.map((row) => (
+          <div key={row.label} className="flex items-center gap-4 px-4 py-3 text-sm">
+            <dt className="text-muted-foreground w-36 shrink-0">{row.label}</dt>
+            <dd className="min-w-0 flex-1 truncate font-medium">{row.value}</dd>
+            {steps.includes(row.step) && !isReadOnly && (
+              <Button type="button" variant="link" size="sm" onClick={() => goTo(row.step)}>
+                Change
+              </Button>
             )}
           </div>
+        ))}
+      </dl>
+      <p className="text-muted-foreground text-[13px]">
+        {libraryEntry?.pre_approved
+          ? "Meta pre-approved this wording, so it can be sent as soon as it's created."
+          : "Meta reviews every new template, usually within minutes and at most 24 hours. Its status shows on the Templates page."}
+      </p>
+    </div>
+  );
+
+  const backLabel = backTo.to === DEFAULT_BACK.to ? "Templates" : "Loyalty templates";
+
+  return (
+    <div
+      className="bg-background flex h-full min-h-0 flex-col"
+      onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, () => canDraft && handleSubmit(true)]])}
+    >
+      {/* The chrome the automation and campaign wizards use: a 56px bar over the steps. */}
+      <header className="border-border bg-card flex h-14 shrink-0 items-center justify-between gap-4 border-b px-8">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <Link
+            {...backTo}
+            className="text-muted-foreground hover:text-foreground inline-flex shrink-0 items-center gap-1 text-[13px]"
+          >
+            <IconArrowLeft className="size-3.5" aria-hidden />
+            {backLabel}
+          </Link>
+          <span className="text-muted-foreground/50" aria-hidden>
+            /
+          </span>
+          <span className="font-display truncate text-[15px] font-semibold">
+            {templateName || (isEdit ? "Untitled template" : translations("Create Template"))}
+          </span>
+          {isEdit && <WaTemplateStatusBadge status={values.status} />}
         </div>
-        <div className="w-full overflow-auto rounded-lg bg-card p-4 shadow-md md:p-6">
-          <div className="flex flex-col gap-6">
-            {(createTemplateMutation.isError ||
-              saveTemplateAsDraftMutation.isError ||
-              updateTemplateMutation.isError) && (
-              <Alert variant="destructive">
-                <IconInfoCircle />
+        <div className="flex shrink-0 items-center gap-3">
+          {editingItem?.data?.id && (
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="text-muted-foreground hidden font-mono text-xs lg:inline-flex"
+              title={`${translations("Template ID")}: ${editingItem.data.id} — click to copy`}
+              onClick={() => {
+                void navigator.clipboard.writeText(editingItem.data.id);
+                toast.success("Template ID copied");
+              }}
+            >
+              ID {editingItem.data.id}
+              <IconCopy className="size-3.5" aria-hidden />
+            </Button>
+          )}
+          {isReadOnly && (
+            <Button type="button" size="sm" variant="outline" onClick={() => toggle()}>
+              <IconPencil className="size-4" aria-hidden />
+              {translations("Edit")}
+            </Button>
+          )}
+          <PhonePreviewButton platform="whatsapp" label={translations("Preview")} defaultOpen>
+            <WhatsAppChatShell>{messageContent}</WhatsAppChatShell>
+          </PhonePreviewButton>
+        </div>
+      </header>
+
+      <form
+        onSubmit={(event) => {
+          // Enter in a text field moves on; it never submits a half-built template.
+          event.preventDefault();
+          if (!isLastStep) void goNext();
+        }}
+        className="flex min-h-0 flex-1 flex-col"
+      >
+        <div className="border-border bg-card flex h-15 shrink-0 items-center border-b px-8">
+          <Stepper
+            steps={steps.map((id, index) => ({
+              id,
+              label: STEP_LABEL[id],
+              complete: isEdit || index < furthest,
+              enabled: index <= furthest,
+            }))}
+            currentStep={step}
+            onStepChange={(id) => {
+              const target = steps.find((candidate) => candidate === id);
+              if (target) goTo(target);
+            }}
+          />
+        </div>
+
+        {/* min-h-0 is what lets this scroll instead of pushing the footer off. */}
+        <div ref={bodyRef} className="min-h-0 flex-1 overflow-y-auto">
+          <div
+            className={cn(
+              "mx-auto flex w-full flex-col gap-8 px-8 pt-9 pb-8 lg:px-12",
+              step === "start" ? "max-w-240" : "max-w-160",
+            )}
+          >
+            <header className="flex flex-col gap-1.5">
+              <h1 className={PAGE_TITLE}>{heading.title}</h1>
+              <p className="text-muted-foreground text-sm text-pretty">{heading.description}</p>
+            </header>
+            {isReadOnly && step !== "review" && (
+              <Alert>
+                <IconLock />
                 <AlertDescription>
-                  {updateTemplateMutation.error?.message ||
-                    saveTemplateAsDraftMutation?.error?.message ||
-                    createTemplateMutation?.error?.message ||
-                    "Error Saving Changes"}
+                  You're viewing the submitted template. Click Edit to change it — an edited
+                  template goes back to Meta for review.
                 </AlertDescription>
               </Alert>
             )}
-            <div className="flex flex-wrap items-end justify-between gap-4">
-              <WaTemplateStatusBadge status={values.status} />
-              {editingItem?.data?.id && (
-                <LinkCopyElement
-                  className="w-full max-w-xs"
-                  link={editingItem?.data?.id}
-                  value={editingItem?.data?.id}
-                  label={translations("Template ID")}
-                />
-              )}
-            </div>
-            <div className="relative grid grid-cols-1 gap-4 md:grid-cols-2">
-              <ReadonlyOverlay />
-              <Field>
-                <FieldLabel htmlFor={`${uid}-field`}>
-                  <div className="flex items-center gap-1 flex-nowrap">
-                    <p className="text-sm font-medium">{translations("Template Name")}</p>
-                    {requiredIcon}
-                    <p className="text-xs text-blue-600">
-                      ({translations("Lower-case letters and underscores only")})
-                    </p>
-                  </div>
-                </FieldLabel>
-                <InputGroup>
-                  <InputGroupInput
-                    id={`${uid}-field`}
-                    placeholder={translations("Name")}
-                    disabled={!!editingItem?.data?.id}
-                    aria-invalid={!!formErrors.name}
-                    {...registerField("name")}
-                  />
-                  <InputGroupAddon align="inline-end">
-                    <LengthTracker length={values?.name?.length} maxValue={512} atStart />
-                  </InputGroupAddon>
-                </InputGroup>
-                {formErrors.name && <FieldError>{formErrors.name.message}</FieldError>}
-              </Field>
-              <Field>
-                <FieldLabel htmlFor={`${uid}-templatetype`}>
-                  <div className="flex items-center gap-1 flex-nowrap">
-                    <p className="text-sm font-medium">TemplateType</p>
-                    {requiredIcon}
-                  </div>
-                </FieldLabel>
-                <Select
-                  items={templateTypeOptions}
-                  value={values.templateType ?? ""}
-                  onValueChange={(value) => setTemplateValue("templateType", value)}
-                >
-                  <SelectTrigger id={`${uid}-templatetype`} className="w-full">
-                    <SelectValue placeholder={translations("TemplateType")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {templateTypes.map((option) => (
-                      <SelectItem
-                        key={option.value}
-                        value={option.value}
-                        disabled={option.disabled}
-                      >
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Field>
-              {form.getValues().templateType !== TemplateType.PAYMENT_CONFIRMATION &&
-                form.getValues().templateType !== TemplateType.CAROUSEL && (
-                  <Field>
-                    <FieldLabel htmlFor={`${uid}-category`}>
-                      <div className="flex items-center gap-1 flex-nowrap">
-                        <p className="text-sm font-medium">Category</p>
-                        {requiredIcon}
-                      </div>
-                    </FieldLabel>
-                    <Select
-                      items={categoryOptions}
-                      value={values.category ?? ""}
-                      onValueChange={(value) => setTemplateValue("category", value)}
-                      disabled={isOrderCreate || catalogBtn || spmBtn || mpmBtn || checkoutBtn}
-                    >
-                      <SelectTrigger id={`${uid}-category`} className="w-full">
-                        <SelectValue placeholder={translations("Category")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categoryOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </Field>
-                )}
 
-              <Field>
-                <FieldLabel htmlFor={`${uid}-field-2`}>
-                  <div className="flex items-center gap-1 flex-nowrap">
-                    <p className="text-sm font-medium">{translations("Language")}</p>
-                    {requiredIcon}
-                  </div>
-                </FieldLabel>
-                <Select
-                  items={languageOptions}
-                  value={values.language ?? ""}
-                  onValueChange={(value) => setTemplateValue("language", value)}
-                >
-                  <SelectTrigger id={`${uid}-field-2`} className="w-full">
-                    <SelectValue placeholder={translations("Language")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {languageOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Field>
-              <div>
-                <AccountSelector
-                  value={values.whatsappSettingsPhoneId}
-                  onChange={(value) => {
-                    setTemplateValue("whatsappSettingsPhoneId", value ?? "");
-                    setTemplateValue("defaultValues.whatsappSettingsPhoneId", value ?? "");
-                  }}
-                  label={translations("Account")}
-                  className="h-10"
-                />
-              </div>
-            </div>
-            {values?.category !== WaTemplateCategory.AUTHENTICATION &&
-              form.getValues().templateType !== TemplateType.PAYMENT_CONFIRMATION &&
-              form.getValues().templateType !== TemplateType.CAROUSEL && (
-                <div className="relative grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <ReadonlyOverlay />
-                  <div>
-                    <Field>
-                      <FieldLabel htmlFor={`${uid}-field-3`}>
-                        <div>
-                          <div className="flex items-center gap-1 flex-nowrap">
-                            <p className="text-sm font-medium">
-                              {translations("Broadcast header")}
-                              {""}
-                            </p>
-                            {requiredIcon}
-                          </div>
-                          <p className="text-[13px]">
-                            {translations(
-                              "Highlight your brand here, use images or videos, to stand out",
-                            )}
-                          </p>
-                        </div>
-                      </FieldLabel>
-                      <Select
-                        items={broadcastTypeOptions}
-                        value={values.format ?? ""}
-                        onValueChange={(value) => {
-                          const currentHeader = values.header;
-                          if (currentHeader) {
-                            const isFile = currentHeader instanceof File;
-                            if (value === WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT || isFile) {
-                              setTemplateValue("header", null);
-                            }
-                          }
-                          setTemplateValue("format", value);
-                        }}
-                        disabled={spmBtn || catalogBtn || mpmBtn}
-                      >
-                        <SelectTrigger id={`${uid}-field-3`} className="w-full">
-                          <SelectValue placeholder={translations("Broadcast Type")} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {broadcastTypeOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                  </div>
-                  <div className="flex flex-col justify-end">
-                    <BroadCastTypeValue form={form} type={values?.format} />
-                  </div>
-                </div>
-              )}
-
-            <div className="relative flex flex-col gap-2">
-              <ReadonlyOverlay />
-              {values?.category !== WaTemplateCategory.AUTHENTICATION && (
-                <>
-                  <div>
-                    <div className="flex items-center gap-1 flex-nowrap">
-                      <p className="text-sm font-medium">{translations("Body")}</p>
-                      {requiredIcon}
-                    </div>
-                    <p className="text-[13px] text-muted-foreground">
-                      {translations(
-                        "Make your messages personal using variables and get more replies!",
-                      )}
-                    </p>
-                  </div>
-                  <div className="flex flex-col">
-                    <TextFormateToolBar
-                      applyFormatting={applyFormatting}
-                      insertValue={insertValue}
-                      undo={undo}
-                      dynamicVariables={dynamicVariables}
-                    />
-                    <div className="relative">
-                      <Textarea
-                        className="field-sizing-content rounded-t-none rounded-b-xl pr-22.5"
-                        placeholder={translations("Enter the text")}
-                        rows={3}
-                        aria-invalid={!!formErrors.body}
-                        {...bodyField}
-                        // The toolbar inserts at the caret, so the element has to be reachable
-                        // as well as registered: `registerField` also sets `ref`, and spreading
-                        // it alone left `inputRef` null and every insert a no-op.
-                        ref={(element) => {
-                          registerBodyRef(element);
-                          inputRef.current = element;
-                        }}
-                      />
-                      <div className="pointer-events-none absolute right-2 bottom-2">
-                        <LengthTracker length={values?.body?.length ?? 0} maxValue={1024} atStart />
-                      </div>
-                    </div>
-                    {formErrors.body && <FieldError>{formErrors.body.message}</FieldError>}
-                  </div>
-                </>
-              )}
-            </div>
-            <div className="relative flex flex-col gap-4">
-              <ReadonlyOverlay />
-              {values?.category !== WaTemplateCategory.AUTHENTICATION &&
-                dynamicVariables?.length > 0 && (
-                  <div className="flex flex-col gap-2">
-                    {dynamicVariables.map((data, index) => (
-                      <Field key={data} data-invalid={!!errorAt(`example.${index}`)}>
-                        <Input
-                          placeholder={`${translations("Enter the content for")} {{${data}}}`}
-                          aria-invalid={!!errorAt(`example.${index}`)}
-                          {...registerField(`example.${index}`)}
-                        />
-                        {errorAt(`example.${index}`) && (
-                          <FieldError>{errorAt(`example.${index}`)}</FieldError>
-                        )}
-                      </Field>
-                    ))}
-                  </div>
-                )}
-
-              {form.getValues().templateType !== TemplateType.PAYMENT_CONFIRMATION &&
-                form.getValues().templateType !== TemplateType.CAROUSEL && (
-                  <>
-                    {values?.category !== WaTemplateCategory.AUTHENTICATION ? (
-                      <Field data-invalid={!!formErrors.footer}>
-                        <FieldLabel htmlFor={`${uid}-field-4`}>
-                          <div>
-                            <p className="text-sm font-medium">
-                              {translations("Footer (Optional)")}
-                            </p>
-                            <p className="text-[13px]">
-                              {translations(
-                                "Footers are great to add any disclaimers or to add a thoughtful PS",
-                              )}
-                            </p>
-                          </div>
-                        </FieldLabel>
-                        <InputGroup>
-                          <InputGroupInput
-                            id={`${uid}-field-4`}
-                            placeholder={translations("Footer")}
-                            aria-invalid={!!formErrors.footer}
-                            {...registerField("footer")}
-                          />
-                          <InputGroupAddon align="inline-end">
-                            <LengthTracker length={values?.footer?.length} maxValue={60} atStart />
-                          </InputGroupAddon>
-                        </InputGroup>
-                        {formErrors.footer && <FieldError>{formErrors.footer.message}</FieldError>}
-                      </Field>
-                    ) : (
-                      <Field>
-                        <FieldLabel htmlFor={`${uid}-field-5`}>
-                          <p className="text-sm font-medium">
-                            {translations("Code Expiration (minutes)")}
-                          </p>
-                        </FieldLabel>
-                        <Input
-                          id={`${uid}-field-5`}
-                          type="number"
-                          min={1}
-                          max={90}
-                          placeholder={translations("Expiration time")}
-                          value={values.code_expiration_minutes ?? ""}
-                          onChange={(event) =>
-                            setTemplateValue("code_expiration_minutes", Number(event.target.value))
-                          }
-                        />
-                      </Field>
-                    )}
-
-                    <ButtonSelection
-                      handleMenuSelection={handleMenuSelection}
-                      flowBtn={flowBtn}
-                      mpmBtn={mpmBtn}
-                      checkoutBtn={checkoutBtn}
-                      catalogBtn={catalogBtn}
-                      spmBtn={spmBtn}
-                      btnLen={values?.buttons?.length}
-                      disabled={isOrderCreate}
-                      category={values?.category}
-                    />
-                    {values?.buttons?.length > 0 && (
-                      <div className="flex flex-col gap-3">
-                        {values?.buttons?.map((data, index) => (
-                          <div
-                            className="flex flex-wrap items-end gap-3 rounded-xl border border-border bg-muted p-3"
-                            key={index}
-                          >
-                            <ButtonInput
-                              form={form}
-                              deleteButton={deleteButton}
-                              index={index}
-                              data={data}
-                              catalog={catalog}
-                              productRetailerIds={productRetailerIds}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {isOrderCreate && (
-                      <div className="flex flex-col gap-4">
-                        <div className="flex items-center gap-1 flex-nowrap">
-                          <p className="text-sm font-medium">{translations("Config")}</p>
-                          {requiredIcon}
-                        </div>
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                          <Field>
-                            <FieldLabel htmlFor={`${uid}-field-6`}>
-                              <div className="flex items-center gap-1 flex-nowrap">
-                                <p className="text-sm font-medium">{translations("Name")}</p>
-                                {requiredIcon}
-                              </div>
-                            </FieldLabel>
-                            <Input
-                              id={`${uid}-field-6`}
-                              placeholder={"name"}
-                              {...configForm.register("name")}
-                            />
-                          </Field>
-                          <Field>
-                            <FieldLabel htmlFor={`${uid}-field-7`}>
-                              <div className="flex items-center gap-1 flex-nowrap">
-                                <p className="text-sm font-medium">{translations("Price")}</p>
-                                {requiredIcon}
-                              </div>
-                            </FieldLabel>
-                            <Input
-                              id={`${uid}-field-7`}
-                              type="number"
-                              min={0}
-                              placeholder={translations("price")}
-                              value={configValues.price ?? 0}
-                              onChange={(event) =>
-                                configForm.setValue("price", Number(event.target.value), {
-                                  shouldDirty: true,
-                                })
-                              }
-                            />
-                          </Field>
-                          <Field>
-                            <FieldLabel htmlFor={`${uid}-field-8`}>
-                              <div className="flex items-center gap-1 flex-nowrap">
-                                <p className="text-sm font-medium">{translations("Tax")}</p>
-                                {requiredIcon}
-                              </div>
-                            </FieldLabel>
-                            <Input
-                              id={`${uid}-field-8`}
-                              type="number"
-                              min={0}
-                              placeholder={translations("tax")}
-                              value={configValues.tax ?? 0}
-                              onChange={(event) =>
-                                configForm.setValue("tax", Number(event.target.value), {
-                                  shouldDirty: true,
-                                })
-                              }
-                            />
-                          </Field>
-                          <Field>
-                            <FieldLabel htmlFor={`${uid}-field-9`}>
-                              <p className="text-sm font-medium">{translations("OrderType")}</p>
-                            </FieldLabel>
-                            <Select
-                              items={orderTypeOptions}
-                              value={configValues.orderType ?? ""}
-                              onValueChange={(value) =>
-                                configForm.setValue("orderType", value as OrderType, {
-                                  shouldDirty: true,
-                                })
-                              }
-                            >
-                              <SelectTrigger id={`${uid}-field-9`} className="w-full">
-                                <SelectValue placeholder={translations("order type")} />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {orderTypeOptions.map((option) => (
-                                  <SelectItem key={option.value} value={option.value}>
-                                    {option.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FieldDescription>
-                              When this field is passed in we hide the &quot;Review and Pay&quot;
-                              button and only show the &quot;Pay Now&quot; button in the order
-                              details bubble
-                            </FieldDescription>
-                          </Field>
-                        </div>
-                      </div>
-                    )}
-                  </>
-                )}
-              {form.getValues().templateType === TemplateType.CAROUSEL && (
-                <CardCarousel
-                  form={form}
-                  catalog={catalog}
-                  productRetailerIds={productRetailerIds}
-                />
-              )}
-            </div>
+            {step === "start" && (
+              <StartStep
+                source={startSource}
+                onSourceChange={setStartSource}
+                showStarters={!forceTemplateType}
+                channelId={values.whatsappSettingsPhoneId ?? ""}
+                onChannelChange={(id) => {
+                  setTemplateValue("whatsappSettingsPhoneId", id);
+                  setTemplateValue("defaultValues.whatsappSettingsPhoneId", id);
+                }}
+                language={libraryLanguage(values.language)}
+                picked={start}
+                onPick={pickStart}
+              />
+            )}
+            {step === "setup" && setupStep}
+            {step === "content" && contentStep}
+            {step === "buttons" && buttonsStep}
+            {step === "details" && libraryEntry && (
+              <LibraryDetailsStep
+                entry={libraryEntry}
+                inputs={libraryInputs}
+                onInputsChange={(next) => {
+                  setLibraryInputs(next);
+                  // Kept in the form too, so the preview and a draft carry the links.
+                  const filled = libraryToFormValues(libraryEntry, next);
+                  setTemplateValue("buttons", filled.buttons);
+                  setTemplateValue("body", filled.body);
+                }}
+                onCustomize={customizeLibraryEntry}
+              />
+            )}
+            {step === "review" && reviewStep}
           </div>
         </div>
-      </div>
-    </form>
+
+        <footer className="border-border bg-card flex h-17 shrink-0 items-center gap-3 border-t px-8">
+          {stepIndex === 0 ? (
+            <Button type="button" variant="ghost" onClick={() => navigate(backTo)}>
+              Cancel
+            </Button>
+          ) : (
+            <Button type="button" variant="ghost" onClick={goBack}>
+              <IconArrowLeft className="size-4" aria-hidden />
+              Back
+            </Button>
+          )}
+          <div className="ml-auto flex items-center gap-3">
+            {blocker && (
+              <span role="status" className="text-destructive text-right text-[13px]">
+                {blocker}
+              </span>
+            )}
+            {canDraft && (
+              <Button
+                key="draft"
+                type="button"
+                variant="outline"
+                loading={isSubmittingDraft}
+                onClick={() => void handleSubmit(true)}
+              >
+                <IconDeviceFloppy className="size-4" aria-hidden />
+                {translations("Save as draft")}
+              </Button>
+            )}
+            {!isLastStep && (
+              <Button
+                key="next"
+                type="button"
+                variant={canSave ? "outline" : "default"}
+                disabled={Boolean(blocker)}
+                onClick={() => void goNext()}
+              >
+                Continue
+                <IconArrowRight className="size-4" aria-hidden />
+              </Button>
+            )}
+            {canSave && libraryEntry && (
+              <Button
+                key="library"
+                type="button"
+                className="min-w-44"
+                loading={createFromLibrary.isPending}
+                disabled={Boolean(blocker)}
+                onClick={() => void submitLibrary()}
+              >
+                <IconSend className="size-4" aria-hidden />
+                Create template
+              </Button>
+            )}
+            {canSave && !libraryEntry && (
+              <>
+                <Button
+                  key="submit"
+                  type="button"
+                  loading={isSubmitting}
+                  onClick={() => void handleSubmit(false)}
+                >
+                  {isEdit ? (
+                    <IconDeviceFloppy className="size-4" aria-hidden />
+                  ) : (
+                    <IconSend className="size-4" aria-hidden />
+                  )}
+                  {isEdit ? "Save & resubmit" : "Submit to Meta"}
+                </Button>
+              </>
+            )}
+          </div>
+        </footer>
+      </form>
+    </div>
   );
+}
+
+const SETUP_FIELDS = new Set([
+  "name",
+  "templateType",
+  "category",
+  "language",
+  "whatsappSettingsPhoneId",
+]);
+
+/** The step that owns the first field with an error, so a failed save shows it. */
+function stepForError(errors: object): TemplateStep {
+  const field = Object.keys(errors).find((key) => key !== "ref");
+  if (!field) return "content";
+  if (SETUP_FIELDS.has(field)) return "setup";
+  if (field === "buttons") return "buttons";
+  return "content";
 }
 
 function isArrayInCorrectOrder(arr: string[]): boolean {

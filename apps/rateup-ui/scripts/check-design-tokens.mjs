@@ -55,6 +55,7 @@ const SCANNED = [
 const FIXED_PALETTE = [
   "src/components/ui/phone-preview.tsx",
   "src/components/whatsapp/whatsapp-preview-shell.tsx",
+  "src/components/whatsapp/wa-template-bubble.tsx",
   "src/components/whatsapp/MessageComponents.tsx",
   "src/components/whatsapp/automation/components/flowbot-phone-preview.tsx",
   "src/components/whatsapp/flows/FlowShare/index.tsx",

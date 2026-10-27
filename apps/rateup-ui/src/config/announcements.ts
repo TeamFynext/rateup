@@ -40,6 +40,19 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-10-27-template-wizard-meta-library",
+    title: "Step-by-step templates, with Meta's library",
+    summary:
+      "Creating a WhatsApp template is now a guided wizard. Start from Meta's ready-written templates, one of our starters or a blank page.",
+    publishedAt: "2026-10-27",
+    kinds: ["new", "improvement"],
+    area: "WhatsApp",
+    link: {
+      to: "/dashboard/whatsapp/templates/create",
+      label: "Create a template",
+    },
+  },
+  {
     id: "2026-10-19-checkout-in-your-store",
     title: "Check out in Shopify or WooCommerce",
     summary:

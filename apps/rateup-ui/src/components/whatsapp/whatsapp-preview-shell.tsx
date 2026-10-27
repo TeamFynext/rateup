@@ -38,7 +38,7 @@ export function WhatsAppChatHeader({
 
 export function WhatsAppChatInputBar() {
   return (
-    <div className="flex shrink-0 items-center gap-1.5 px-2 py-1.5 bg-[#f4f1ea] dark:bg-[#0b141a]">
+    <div className="flex shrink-0 items-center gap-1.5 px-2 py-1.5 bg-[#efeae2] dark:bg-[#0b141a]">
       <div className="flex flex-1 items-center gap-1.5 rounded-full bg-white px-3 py-1.5 dark:bg-[#2a3942]">
         <IconMoodSmile className="size-4 shrink-0 text-[#54656f] dark:text-[#8696a0]" />
         <span className="flex-1 truncate text-[11px] text-[#8696a0]">Message</span>
@@ -62,7 +62,7 @@ export function WhatsAppChatShell({
   return (
     <div className="flex h-full flex-col">
       <WhatsAppChatHeader contactName={contactName} />
-      <div className="flex-1 overflow-y-auto bg-[#f4f1ea] dark:bg-[#0b141a]">{children}</div>
+      <div className="flex-1 overflow-y-auto bg-[#efeae2] dark:bg-[#0b141a]">{children}</div>
       <WhatsAppChatInputBar />
     </div>
   );
