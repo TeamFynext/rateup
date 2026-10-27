@@ -16,25 +16,111 @@ campaigns and re-engagement.
 
 ## Creating a Template
 
+Click **Create Templates**. A new template is built one step at a time, with a phone preview on the
+right that updates as you type.
+
+<ScreenShot src="/docs/screenshots/whatsapp/template-start-library.png" alt="Start your template: Meta's library, with a delivery confirmation picked and previewed on the phone" />
+
 <Steps>
 <Step>
-Click **Create Template** and choose a starting point: **Blank Template**, or
-**Create Draft from Predefined Template** to start from a ready-made one.
+**Start** — choose what to start from:
+- **Meta's library** — wording Meta has already written. See [below](#start-from-metas-library).
+- **RateUp starters** — our own ready-made templates, which you can edit freely.
+- **Start from scratch** — a blank message. The only way to make a **Marketing** template.
 </Step>
 <Step>
-Enter a **template name**. Lower-case letters and underscores only.
+**Setup** — enter a **Template Name** (lower-case letters and underscores only; customers never see
+it) and pick the **WhatsApp number** it belongs to. A starter or blank template also asks for the
+**Category**, **Language** and **Template type**.
 </Step>
 <Step>
-Choose the **category** and **language**.
+**Message** and **Buttons** — write the header, body, footer and buttons. Every field is described
+in the [template editor](/whatsapp/template-editor).
 </Step>
 <Step>
-Build the message in the [template editor](/whatsapp/template-editor) — header, body, footer and
-buttons.
-</Step>
-<Step>
-**Save as draft** while you work, or **Save & Submit** to send it to WhatsApp for approval.
+**Review** — check the summary, click **Change** on any row to fix it, then **Submit to Meta**.
 </Step>
 </Steps>
+
+You can't skip ahead: **Continue** stays disabled until the current step is complete, and the reason
+shows beside it in red, for example *"Pick the WhatsApp number it's sent from"*. A step you have
+already finished can be reopened from the progress bar. If you go back to **Start** and pick
+something else, the later steps lock again because the template begins afresh.
+
+**Save as draft** is on every step after **Start**. It keeps the template in RateUp without sending
+anything to Meta. `Ctrl`/`Cmd` + `S` does the same.
+
+<ScreenShot src="/docs/screenshots/whatsapp/template-start-starters.png" alt="The RateUp starters tab with Payment Confirmed picked" />
+
+---
+
+## Start From Meta's Library
+
+Meta's template library holds ready-written messages for common updates: deliveries, appointments,
+payments, one-time codes. Meta wrote the wording to its own rules, so these templates are
+usually approved quickly. Some are **Pre-approved by Meta** and can be sent as soon as they are
+created.
+
+| Control | Does |
+|---------|------|
+| **Search** | Searches the library: *delivery*, *payment*, *appointment*… |
+| Number picker | Which of your WhatsApp numbers to browse with. The library can differ between business accounts |
+| **Category** | **All**, **Utility** or **Authentication** |
+| **Topic** | Narrows to one use, such as **Order management** or **Event reminder**. The count is how many templates match |
+| **Load more** | Fetches the next page of the library |
+
+<Callout type="info">
+  The library has **Utility** and **Authentication** templates only. For a promotion, use **Start
+  from scratch**.
+</Callout>
+
+Picking a library template changes the steps to **Start → Setup → Details → Review**:
+
+<Steps>
+<Step>
+**Setup** — the name is filled in from the template, and you can change it. **Category** and
+**Language** are locked: *"Set by the library entry you picked."*
+</Step>
+<Step>
+**Details** — Meta's wording is shown locked. Fill in what it needs from you:
+- **Where the buttons go** — the link a button opens, or the phone number it calls (with the
+  country code). End a link with `{{1}}` to add a different value on every send, such as an
+  order number, then give an **Example value for `{{1}}`**.
+- **Fixed text** — some templates ask for text that becomes a permanent part of the message, such
+  as your business name. Never put a customer's details here.
+</Step>
+<Step>
+**Review** — the **Source** row shows the library template you started from. Click **Create
+template**.
+</Step>
+</Steps>
+
+<ScreenShot src="/docs/screenshots/whatsapp/template-library-details.png" alt="The Details step: Meta's wording, Customize the wording, and the link for the Manage order button" />
+
+### Change Meta's wording
+
+Click **Customize the wording** on **Details** to turn the library template into an ordinary one.
+Its text, links and phone numbers carry over into the **Message** and **Buttons** steps, where you
+can change anything. It then goes through Meta's full review like any template you write yourself,
+and a pre-approved template loses that status.
+
+A draft saved from a library pick is also kept as an ordinary template, so it gets the full review
+when you submit it.
+
+---
+
+## Review and Submit
+
+<ScreenShot src="/docs/screenshots/whatsapp/template-review.png" alt="The Review step with Change links beside each row" />
+
+| Button | Shown | Does |
+|--------|-------|------|
+| **Submit to Meta** | A new template | Sends it to Meta for review |
+| **Create template** | A library template you have not customised | Creates it on your account from Meta's library |
+| **Save & resubmit** | Editing an existing template | Saves your edit and sends it back to Meta for review |
+
+Meta reviews a new template *"usually within minutes and at most 24 hours"*. Its status shows on
+the Templates page.
 
 ---
 
@@ -59,7 +145,8 @@ Click **Add Variable** where you want it. The next free placeholder — `{{1}}`,
 inserted at the cursor.
 </Step>
 <Step>
-Provide an **example** value. WhatsApp requires one for approval and rejects templates without it.
+Fill in its row under **Sample values**. Meta reviews the template with these examples and rejects
+it if any are missing. Real values are filled in on each send.
 </Step>
 </Steps>
 

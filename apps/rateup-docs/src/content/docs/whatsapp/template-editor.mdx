@@ -1,50 +1,81 @@
 ---
 title: "Template Editor"
-description: The template detail page — every field, the formatting toolbar, button rules, what each template type forces, and what happens on submit.
+description: The step-by-step template editor — every step and field, the formatting toolbar, button rules, what each template type forces, and what happens on submit.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
 Creating a template, or opening one from the [Templates](/whatsapp/templates) list, opens the
-editor: one form, top to bottom, with the rendered message a click away behind **Preview**.
+editor. It works one step at a time, **Start → Setup → Message → Buttons → Review**, with a phone
+preview on the right showing the message as the customer will see it.
 
-<ScreenShot src="/docs/screenshots/whatsapp/template-editor.png" alt="The template editor" />
+<ScreenShot src="/docs/screenshots/whatsapp/template-message.png" alt="The Message step: a text header, a body with two variables and their sample values, and the phone preview" />
+
+Opening an existing template skips **Start** and lands on **Setup**, with every step open. A
+**CAROUSEL** or **PAYMENT_CONFIRMATION** template has no **Buttons** step. A template started from
+Meta's library has a **Details** step instead of **Message** and **Buttons**. See
+[Start from Meta's library](/whatsapp/templates#start-from-metas-library).
 
 ---
 
-## The Header
+## The Header and Footer Bars
 
 | Control | Does |
 |---------|------|
-| **Preview** | Shows the message as WhatsApp will render it, in a phone frame |
-| **Save as draft** | Keeps it in RateUp without sending it to WhatsApp. `Ctrl`/`Cmd` + `S` does the same |
-| **Save & Submit** | Sends it to WhatsApp for approval |
-| **Edit** | Appears instead on a template already submitted — the fields are read-only until you click it |
-| **Status badge** | Where the template stands with WhatsApp — **DRAFT** until you submit |
-| **Template ID** | Meta's id for the template, with a copy button. Only on a saved template |
+| **Templates** | Back to the list. Changes you have not saved are lost |
+| **Status badge** | Where an existing template stands with WhatsApp, such as **DRAFT** or **APPROVED** |
+| **ID** | Meta's id for the template. Click to copy. Only on a saved template |
+| **Edit** | Appears on a template already submitted. The fields are read-only until you click it |
+| **Preview** | Opens or closes the phone preview |
+| **Back** / **Cancel** | The previous step. On the first step, **Cancel** returns to the list |
+| **Save as draft** | Keeps it in RateUp without sending it to WhatsApp. On every step after **Start**. `Ctrl`/`Cmd` + `S` does the same |
+| **Continue** | The next step. Disabled until the current step is complete, with the reason in red beside it |
+| **Submit to Meta** | On **Review**: sends it to WhatsApp for approval. **Save & resubmit** when editing |
 
-Anything the save rejects appears in a red band at the top of the form — *"Error Saving Changes"*
-plus whatever WhatsApp reported.
+Anything the save rejects appears in a red band on **Review**, along with whatever WhatsApp reported.
 
 ---
 
-## The Fields
+## The Setup Step
+
+<ScreenShot src="/docs/screenshots/whatsapp/template-setup.png" alt="The Setup step: name, WhatsApp number, category and language" />
 
 | Field | Notes |
 |-------|-------|
-| **Template Name** | **Lower-case letters and underscores only** — the hint sits beside the label. Counter runs to **512** |
-| **TemplateType** | What kind of message this is — see below |
-| **Category** | **MARKETING**, **UTILITY** or **AUTHENTICATION** |
+| **Template Name** | **Lower-case letters and underscores only**. Customers never see it. Counter runs to **512** |
+| **WhatsApp number** | Which of your numbers owns the template. *"A submitted template stays on the number it was created on."* |
+| **Category** | **MARKETING**, **UTILITY** or **AUTHENTICATION**. The hint under it says what each is for |
 | **Language** | One template, one language. Send the wrong language and it will not match your audience |
-| **Account** | Which of your WhatsApp numbers owns the template |
-| **Broadcast header** | The header: **None**, **Text**, **Image**, **Video**, **Document**, **Location** or **Product** |
-| **Body** | The message. Required, up to **1024** characters |
-| **Footer (Optional)** | Small print — *"Footers are great to add any disclaimers or to add a thoughtful PS"*. Up to **60** characters |
-| **Buttons (Optional)** | Added with **+ Add Action Button** — see below |
+| **Template type** | What kind of message this is. See [Template types](#template-types) |
+
+## The Message Step
+
+| Field | Notes |
+|-------|-------|
+| **Header** | **None**, **Text**, **Image**, **Video**, **Document** or **Location**. A **Text** header is one bold line, up to **60** characters |
+| **Body** | The message. Required, up to **1024** characters. See [Writing the body](#writing-the-body) |
+| **Sample values** | One per variable in the body. Appears once the body has a `{{1}}` |
+| **Footer (Optional)** | Small print, such as *"Footers are great to add any disclaimers or to add a thoughtful PS"*. Up to **60** characters |
 | **Code Expiration (minutes)** | Replaces **Footer** on an **AUTHENTICATION** template. Between 1 and 90 minutes |
 
-Required fields carry a red asterisk, and every counter shows how much room is left.
+A **CAROUSEL** template builds its **Cards** on this step instead.
+
+## The Buttons Step
+
+<ScreenShot src="/docs/screenshots/whatsapp/template-buttons.png" alt="The Buttons step with a Visit a Website button" />
+
+Optional. See [Buttons](#buttons) below for every type and the rules on combining them.
+
+## The Review Step
+
+A summary of **Name**, **WhatsApp number**, **Category**, **Language** and **Type**, each with a
+**Change** link back to its step. Read the phone preview once as your customer will, then click
+**Submit to Meta**.
+
+---
+
+## Files and Template Types
 
 ### Header and card files
 
@@ -101,7 +132,8 @@ There is an emoji picker at the left of the same toolbar.
 ### Variables
 
 **Add Variable** numbers them for you — `{{1}}`, then `{{2}}`, and so on. Each one gets its own
-example field below the body, prompting *"Enter the content for `{{1}}`"*.
+row under **Sample values**, prompting *"Enter the content for `{{1}}`"*. The phone preview shows
+the sample in place of the variable.
 
 <Callout type="warn">
   Both variable rules are enforced only when you submit, and both reject the whole template:
@@ -171,8 +203,9 @@ both. **Save as draft** is not offered for this type.
 
 ## Read-Only After Submission
 
-Once a template has been submitted, its fields lock. Click **Edit** to change it — and remember that
-an edit puts the template back through WhatsApp's review.
+Once a template has been submitted, its fields lock, and each step says *"You're viewing the
+submitted template. Click Edit to change it"*. Click **Edit** in the header, then **Save &
+resubmit** on **Review**. An edit puts the template back through WhatsApp's review.
 
 <Callout type="warn">
   Editing an approved template is not free: it re-enters review, and until it clears you cannot rely
@@ -186,13 +219,13 @@ an edit puts the template back through WhatsApp's review.
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| A red toast on **Save as draft** or **Save & Submit** | A field fails a check | The toast shows the first problem found — on a carousel it starts with the card number. If nothing more specific applies it reads *"Please check the template and try again."* |
+| A red toast on **Save as draft** or **Submit to Meta** | A field fails a check | The toast shows the first problem found — on a carousel it starts with the card number. If nothing more specific applies it reads *"Please check the template and try again."* |
 | *"Button 2 has no text. Fill it in and save again."* | WhatsApp rejected a button with a missing field | Fill in that button (numbered from 1) |
 | A WebP, SVG, GIF or AVIF image is refused | WhatsApp takes only PNG or JPG images | Convert the image — see [Header and card files](#header-and-card-files) |
 | Name rejected | Capitals, spaces or punctuation | Lower-case letters and underscores only |
 | Category keeps changing back | The template type forces it | Change the type, or accept the category |
 | Fields cannot be typed in | The template is submitted or approved | Click **Edit** |
-| Approved template will not send | Wrong account, or no consent from the contact | Check the **Account** field and the contact's consent |
+| Approved template will not send | Wrong number, or no consent from the contact | Check the **WhatsApp number** on **Setup** and the contact's consent |
 
 ---
 
