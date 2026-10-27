@@ -26,6 +26,16 @@ import {
   waUserSendTemplateBodySchema,
 } from "./wa_templates.schema.js";
 import { declareAccess } from "../../../authz/registry.js";
+import {
+  createTemplateFromLibraryHandler,
+  getTemplateLibraryHandler,
+} from "./templateLibrary.controller.js";
+import {
+  type CreateFromLibraryInput,
+  createFromLibrarySchema,
+  type TemplateLibraryQuery,
+  templateLibraryQuerySchema,
+} from "./templateLibrary.schema.js";
 
 export async function waTemplatesRoutes(server: FastifyInstance) {
   server.register(fastifyMultipart, {
@@ -49,6 +59,19 @@ export async function waTemplatesRoutes(server: FastifyInstance) {
     },
     getTemplatesHandler,
   );
+  // Meta's template library. Registered before `/:templateId`, though Fastify would
+  // prefer the static path anyway.
+  server.get<{ Querystring: TemplateLibraryQuery }>(
+    "/library",
+    { schema: { querystring: templateLibraryQuerySchema } },
+    getTemplateLibraryHandler,
+  );
+  server.post<{ Body: CreateFromLibraryInput }>(
+    "/library",
+    { schema: { body: createFromLibrarySchema } },
+    createTemplateFromLibraryHandler,
+  );
+
   server.get(
     "/:templateId",
     {
