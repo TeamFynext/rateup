@@ -12,7 +12,6 @@ import { Colors } from "@/constants/colors";
 import { pendingCashierWrites } from "@/utils/clearLocalData";
 import { roleLabelOf } from "@/hooks/usePermissions";
 import StatusRow from "./StatusPicker";
-import { useCommerceAccess } from "@/components/shop/chatSell";
 
 interface UserProfile {
   email: string;
@@ -51,7 +50,6 @@ const AccountBar = ({
   const [loading, setLoading] = useState(false);
   const { setColorScheme } = useColorScheme();
   const [themePref, setThemePref] = useState<ThemePreference>("system");
-  const { canRead: canReadOrders } = useCommerceAccess();
 
   useEffect(() => {
     async function loadTheme() {
@@ -203,24 +201,6 @@ const AccountBar = ({
             })}
           </View>
         </View>
-
-        {canReadOrders && (
-          <Pressable
-            onPress={() => router.push("/protected/orders" as never)}
-            className="mt-6 bg-white dark:bg-slate-900 rounded-2xl px-4 py-4 shadow-sm flex-row items-center gap-3 active:opacity-80"
-          >
-            <Ionicons name="bag-handle-outline" size={20} color="#6b7280" />
-            <View className="flex-1">
-              <Text className="text-base font-semibold text-gray-700 dark:text-gray-300">
-                Orders
-              </Text>
-              <Text className="text-xs text-gray-500 dark:text-gray-400">
-                Pack, ship and follow up on shop orders
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
-          </Pressable>
-        )}
 
         <Pressable
           onPress={() => router.push("/protected/security")}

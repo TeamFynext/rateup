@@ -3,6 +3,7 @@ import AccountBar from "@/components/home/Account";
 import ScreenHeader from "@/components/common/ScreenHeader";
 import { colors } from "@/constants/constants";
 import { getInboxRowTheme } from "@/constants/inboxDesign";
+import { router } from "expo-router";
 import { UserX } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
 import { useCallback, useState } from "react";
@@ -70,7 +71,12 @@ export default function AccountScreen() {
   // the same `ScreenHeader` the other four tabs use, at the one title size and weight.
   return (
     <View style={{ flex: 1, backgroundColor: t.pageBg }}>
-      <ScreenHeader title="Account Details" />
+      <ScreenHeader
+        title="Account Details"
+        onBack={() =>
+          router.canGoBack() ? router.back() : router.replace("/protected/more" as never)
+        }
+      />
       <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         // iOS draws the tab bar over the screen. A scroll view that is not the screen's
