@@ -75,7 +75,11 @@ function AnalyticsView({
     <ScrollView
       contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 }}
       refreshControl={
-        <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={t.brand} />
+        <RefreshControl
+          refreshing={isRefetching}
+          onRefresh={() => void refetch()}
+          tintColor={t.brand}
+        />
       }
     >
       <SurveyStatsWebForm surveyId={surveyId} />
@@ -121,14 +125,18 @@ function ResponsesView({
       keyExtractor={(item) => item.id}
       contentContainerStyle={{ padding: 16, gap: 10, paddingBottom: 32 }}
       refreshControl={
-        <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={t.brand} />
+        <RefreshControl
+          refreshing={isRefetching}
+          onRefresh={() => void refetch()}
+          tintColor={t.brand}
+        />
       }
       ListHeaderComponent={
         responses.length > 0 ? (
           <Text style={{ fontFamily: FONT.medium, fontSize: 13, color: t.fg3 }}>
             {plural(data?.totalCount ?? responses.length, "response")}
           </Text>
-        ) : null
+        ) : undefined
       }
       ListEmptyComponent={
         isError ? (

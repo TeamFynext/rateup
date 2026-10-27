@@ -202,8 +202,10 @@ const withPushKitDelegate = (config) =>
     contents = replaceOnce(contents, "import React\n", "import React\nimport PushKit\n", "imports");
     contents = replaceOnce(
       contents,
-      "class AppDelegate: ExpoAppDelegate {",
-      "class AppDelegate: ExpoAppDelegate, PKPushRegistryDelegate {",
+      // A prefix, so it survives Expo adding protocols to the class (SDK 58 added
+      // `ExpoReactNativeFactoryProvider`).
+      "class AppDelegate: ExpoAppDelegate",
+      "class AppDelegate: ExpoAppDelegate, PKPushRegistryDelegate",
       "the AppDelegate class",
     );
     contents = replaceOnce(
@@ -212,11 +214,13 @@ const withPushKitDelegate = (config) =>
       `    ${HELPER}.setup()\n\n    return super.application(application, didFinishLaunchingWithOptions: launchOptions)`,
       "didFinishLaunching's return",
     );
+    // Appended as the AppDelegate class's last members. SDK 58 moved the Linking API
+    // methods (the old anchor) to SceneDelegate, so the end of the class is the anchor now.
     contents = replaceOnce(
       contents,
-      "  // Linking API\n",
-      `${DELEGATE_METHODS}  // Linking API\n`,
-      "the Linking API marker",
+      "}\n\nclass ReactNativeDelegate",
+      `${DELEGATE_METHODS.trimEnd()}\n}\n\nclass ReactNativeDelegate`,
+      "the end of the AppDelegate class",
     );
     config.modResults.contents = contents;
     return config;

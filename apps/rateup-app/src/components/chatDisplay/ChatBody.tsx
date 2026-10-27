@@ -15,7 +15,7 @@ import DateSeparator from "./chatBody/DateSeperator";
 import dayjs from "dayjs";
 import { useMarkMessageAsRead } from "@/api/inbox/contacts/contacts.query";
 import { useAuth } from "@/context/AuthContext";
-import { ViewToken } from "react-native";
+import type { ListViewToken as ViewToken } from "react-native";
 import { useGetMessagesByContactId } from "@/api/inbox/messages/message.query";
 import { ChevronDown } from "lucide-react-native";
 import { useWsData } from "@/context/UserContext";
@@ -291,7 +291,7 @@ const ChatBody = ({ id }: { id: string }) => {
             <View className="my-2">
               <ActivityIndicator size="small" color="#009987" />
             </View>
-          ) : null
+          ) : undefined
         }
         contentContainerStyle={{
           // Design: `padding: 18px 16px` around the message column. The list is

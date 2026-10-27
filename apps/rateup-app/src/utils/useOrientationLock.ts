@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Dimensions } from "react-native";
+import { Dimensions, type DimensionsPayload } from "react-native";
 import * as ScreenOrientation from "expo-screen-orientation";
 import { logger } from "@/utils/logger";
 
@@ -29,9 +29,10 @@ export function useOrientationLock() {
   useEffect(() => {
     const { width, height } = Dimensions.get("screen");
     applyLock(width, height);
-    const sub = Dimensions.addEventListener("change", ({ screen }) =>
-      applyLock(screen.width, screen.height),
-    );
+    const sub = Dimensions.addEventListener("change", ({ screen }: DimensionsPayload) => {
+      const size = screen ?? Dimensions.get("screen");
+      applyLock(size.width, size.height);
+    });
     return () => sub.remove();
   }, []);
 }

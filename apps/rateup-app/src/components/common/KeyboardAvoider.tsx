@@ -7,7 +7,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Platform, findNodeHandle } from "react-native";
 import type { ComponentProps } from "react";
-import type { LayoutChangeEvent, View } from "react-native";
+import type { LayoutChangeEvent, ViewInstance } from "react-native";
 
 cssInterop(KeyboardAvoidingView, { className: "style" });
 
@@ -55,7 +55,7 @@ export default function KeyboardAvoider({
   onLayout,
   ...props
 }: Props) {
-  const ref = useRef<View>(null);
+  const ref = useRef<ViewInstance>(null);
   const parentY = useRef(0);
   // How far below its parent-relative `y` the view really sits in the window.
   const [windowOffset, setWindowOffset] = useState(0);
@@ -77,7 +77,7 @@ export default function KeyboardAvoider({
     // React Native's `measureInWindow` is unreliable on edge-to-edge Android, so this is
     // the same native call `automaticOffset` makes.
     const tag = findNodeHandle(view);
-    if (tag === null) return;
+    if (tag == null) return;
     KeyboardControllerNative.viewPositionInWindow(tag)
       .then((position) => apply(position.y))
       .catch(() => {});
@@ -99,7 +99,9 @@ export default function KeyboardAvoider({
 
   return (
     <KeyboardAvoidingView
-      ref={ref}
+      // keyboard-controller still types its ref with the pre-0.88 `View` type; at runtime
+      // it is the same host view, so the cast only bridges the type definitions.
+      ref={ref as unknown as ComponentProps<typeof KeyboardAvoidingView>["ref"]}
       behavior="padding"
       keyboardVerticalOffset={gap - bottomInset + windowOffset}
       style={[{ flex: 1 }, style]}

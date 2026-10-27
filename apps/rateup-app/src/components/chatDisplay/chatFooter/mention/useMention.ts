@@ -1,5 +1,5 @@
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { TextInput, TextInputSelectionChangeEvent } from "react-native";
+import type { TextInputInstance, TextInputSelectionChangeEvent } from "react-native";
 
 import { useTeamsMembersOfOrg } from "@/api/teams/teams.query";
 import { TeamMembersData } from "@/context/type";
@@ -24,7 +24,9 @@ export function useMention({
 }) {
   // Read through a ref: `pick` is memoised and would otherwise call a stale callback.
   const onPickRef = useRef(onPick);
-  onPickRef.current = onPick;
+  useLayoutEffect(() => {
+    onPickRef.current = onPick;
+  });
   const { data: orgMembers } = useTeamsMembersOfOrg();
 
   const users = useMemo<MentionUser[]>(
@@ -38,7 +40,7 @@ export function useMention({
   const [caret, setCaret] = useState(0);
   const [justPicked, setJustPicked] = useState(false);
 
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<TextInputInstance>(null);
   // Caret position to apply once the inserted text has been committed.
   const pendingCaretRef = useRef<number | null>(null);
 

@@ -6,7 +6,6 @@ import {
   Text,
   TextInput,
   ActivityIndicator,
-  InteractionManager,
   Modal,
   ScrollView,
   useColorScheme,
@@ -66,16 +65,26 @@ export default function AssigneeSheet({
   // in the tap's frame stalls the slide. Paint the chrome first, the list after.
   const [contentSettled, setContentSettled] = useState(false);
   const contentReady = visible && contentSettled;
+
+  // Clear the search each time the sheet opens. Done during render rather than in the
+  // effect below, so the first frame already shows the empty search.
+  const [wasVisible, setWasVisible] = useState(visible);
+  if (visible !== wasVisible) {
+    setWasVisible(visible);
+    if (visible) setQuery("");
+  }
+
   useEffect(() => {
     if (!visible) return;
-    setQuery("");
-    const task = InteractionManager.runAfterInteractions(() => setContentSettled(true));
+    // InteractionManager was removed in React Native 0.88; requestIdleCallback is its replacement.
+    const handle = requestIdleCallback(() => setContentSettled(true));
     return () => {
-      task.cancel();
+      cancelIdleCallback(handle);
       setContentSettled(false);
     };
   }, [visible]);
 
+  const myId = me?.userId;
   const picks = useMemo<Pick[]>(() => {
     const teams: { id: string; name: string }[] = teamRes?.data ?? [];
     const visibleTeams = new Map(teams.map((team) => [team.id, team.name]));
@@ -86,13 +95,13 @@ export default function AssigneeSheet({
       .filter((m) => m.teams.some((team) => visibleTeams.has(team.team_id)) && matches(m.name))
       .sort(
         (a, b) =>
-          Number(b.id === me?.userId) - Number(a.id === me?.userId) ||
+          Number(b.id === myId) - Number(a.id === myId) ||
           Number(b.status === "online") - Number(a.status === "online") ||
           a.name.localeCompare(b.name),
       );
 
     const out: Pick[] = [];
-    if (!needle && me?.userId && ownerId !== me.userId) out.push({ kind: "me", key: "me" });
+    if (!needle && myId && ownerId !== myId) out.push({ kind: "me", key: "me" });
     if (!needle && canUnassign) out.push({ kind: "unassign", key: "unassign" });
     for (const member of people) {
       out.push({
@@ -111,7 +120,7 @@ export default function AssigneeSheet({
       }
     }
     return out;
-  }, [teamRes, teamMembers, query, me?.userId, ownerId, canUnassign]);
+  }, [teamRes, teamMembers, query, myId, ownerId, canUnassign]);
 
   return (
     <Modal

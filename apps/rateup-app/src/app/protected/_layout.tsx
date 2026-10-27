@@ -4,7 +4,7 @@ import { LifecycleContext } from "@/context/LifecycleContext";
 import { UserProvider } from "@/context/UserContext";
 import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
 import { Redirect, Stack } from "expo-router";
-import { ActivityIndicator, useColorScheme, View } from "react-native";
+import { ActivityIndicator, Platform, useColorScheme, View } from "react-native";
 import { useNotificationDeepLink } from "@/utils/useNotificationDeepLink";
 import { usePushTokenSync } from "@/utils/usePushTokenSync";
 import { useShareIntentRedirect } from "@/utils/useShareIntentRedirect";
@@ -62,7 +62,21 @@ function AuthenticatedLayout() {
               and pushes them down; full size, it is a modal above everything. Either
               way it lives outside the screens, so a call survives navigation. */}
           <CallScreen />
-          <Stack screenOptions={{ headerShown: false }} />
+          <Stack screenOptions={{ headerShown: false }}>
+            {/* The More tab's menu: a native sheet sized to its rows. On iOS the content
+                is clear so the system sheet shows through (Liquid Glass on iOS 26). */}
+            <Stack.Screen
+              name="more-menu"
+              options={{
+                presentation: "formSheet",
+                sheetAllowedDetents: "fitToContents",
+                sheetGrabberVisible: true,
+                sheetCornerRadius: 24,
+                contentStyle:
+                  Platform.OS === "ios" ? { backgroundColor: "transparent" } : undefined,
+              }}
+            />
+          </Stack>
         </SafeAreaView>
       </LifecycleContext>
     </UserProvider>

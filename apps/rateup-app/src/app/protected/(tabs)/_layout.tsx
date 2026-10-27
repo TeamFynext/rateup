@@ -6,6 +6,7 @@ import { Colors } from "@/constants/colors";
 import { getInboxHeaderBg } from "@/constants/inboxDesign";
 import { useOrgModules } from "@/hooks/useOrgModules";
 import { usePermissions } from "@/hooks/usePermissions";
+import { router } from "expo-router";
 
 function ProtectedLayout() {
   const { colorScheme } = useColorScheme();
@@ -47,9 +48,18 @@ function ProtectedLayout() {
           <NativeTabs.Trigger.Label>Teams</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>
 
-        <NativeTabs.Trigger name="account">
-          <NativeTabs.Trigger.Icon sf="person.crop.circle" md="person" />
-          <NativeTabs.Trigger.Label>Account</NativeTabs.Trigger.Label>
+        {/* The last slot is a hub, not a feature: Account, Orders, Calls and anything
+            added later live in its menu, so the bar never needs a sixth item. `disabled`
+            stops the native tap from switching tabs (it does not grey the item out); the
+            tap still reaches `tabPress`, which opens the menu as a native sheet over the current tab. */}
+        <NativeTabs.Trigger
+          name="more"
+          disabled
+          listeners={{ tabPress: () => router.push("/protected/more-menu" as never) }}
+        >
+          {/* `line.3.horizontal` is SF Symbols 2 (iOS 14), inside this build's 16.4 target. */}
+          <NativeTabs.Trigger.Icon sf="line.3.horizontal" md="menu" />
+          <NativeTabs.Trigger.Label>Menu</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>
       </NativeTabs>
     </ThemeProvider>
