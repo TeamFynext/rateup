@@ -166,3 +166,79 @@ export async function getShareUrlFromSurveyTeamMapId(surveyTeamMapShortId: strin
   const res = await axiosClient.get(`${REDIRECT_URL}/${surveyTeamMapShortId}`);
   return res.data;
 }
+
+// ---------------------------------------------------------------------------
+// Meta's template library
+// ---------------------------------------------------------------------------
+
+/** A ready-written template from Meta's library (UTILITY or AUTHENTICATION only). */
+export interface LibraryTemplate {
+  name: string;
+  language: string;
+  category: string;
+  topic: string | null;
+  usecase: string | null;
+  industry: string[];
+  /** True only when Meta approves it unchanged without review. Read per entry. */
+  pre_approved: boolean;
+  header: string | null;
+  header_type: string | null;
+  body: string;
+  body_params: string[];
+  footer: string | null;
+  buttons: { type: string; text?: string; url?: string; phone_number?: string }[];
+  required_inputs: {
+    buttons: { index: number; type: string; text?: string; needs: "url" | "phone_number" }[];
+    body_inputs: { param_name: string }[];
+  };
+}
+
+export interface LibraryPage {
+  data: LibraryTemplate[];
+  after: string | null;
+}
+
+export interface TemplateLibraryQuery {
+  whatsappSettingsPhoneId?: string;
+  search?: string;
+  language?: string;
+  category?: string;
+  topic?: string;
+}
+
+export const getTemplateLibrary = async (query: TemplateLibraryQuery, after?: string) => {
+  const res = await axiosClient.get(`${TEMPLATES_URL}/library`, {
+    params: {
+      ...Object.fromEntries(Object.entries(query).filter(([, value]) => Boolean(value))),
+      ...(after ? { after } : {}),
+    },
+  });
+  return res.data as LibraryPage;
+};
+
+export interface CreateFromLibraryInput {
+  whatsappSettingsPhoneId: string;
+  name: string;
+  libraryTemplateName: string;
+  language: string;
+  category?: string;
+  templateType?: TemplateType;
+  buttons?: {
+    index: number;
+    type: string;
+    url?: string;
+    urlSuffixExample?: string;
+    phoneNumber?: string;
+  }[];
+  bodyInputs?: Record<string, string>;
+}
+
+/** Creates the template on Meta and stores it; answers with the stored row. */
+export const createTemplateFromLibrary = async (input: CreateFromLibraryInput) => {
+  try {
+    const res = await axiosClient.post(`${TEMPLATES_URL}/library`, input);
+    return res.data as { id: string };
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, "Couldn't create the template"));
+  }
+};

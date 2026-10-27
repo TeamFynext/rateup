@@ -1,24 +1,12 @@
-import {
-  IconBadge,
-  IconChecks,
-  IconChevronLeft,
-  IconDotsVertical,
-  IconExternalLink,
-  IconPhoto,
-} from "@tabler/icons-react";
+import { IconBadge, IconChevronLeft, IconDotsVertical } from "@tabler/icons-react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 import { PhonePreviewButton, usePhonePreview } from "@/components/ui/phone-preview.tsx";
-import { cn } from "@/lib/utils";
+import { WaTemplateMessage } from "@/components/whatsapp/wa-template-bubble.tsx";
 import type { WaTemplateFetchBody } from "@/types/global";
 
 import { CampaignWizardHeaderAction } from "./CampaignWizardShell.tsx";
-
-/** The body text with `{n}` swapped for what each variable resolves to. */
-function fillPlaceholders(text: string, sample: Record<string, string>): string {
-  return text.replace(/{{(\d+)}}/g, (match, index: string) => sample[index] ?? match);
-}
 
 function componentOfType(template: WaTemplateFetchBody, type: string) {
   return template.components?.find((c) => c.type?.toUpperCase() === type);
@@ -70,7 +58,7 @@ function CampaignPreviewScreen({
   const initials = (businessName ?? "RU").slice(0, 2).toUpperCase();
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-[#F7F8FA]">
+    <div className="flex min-h-0 flex-1 flex-col bg-[#efeae2]">
       <div className="flex h-14 shrink-0 items-center gap-2.5 border-b border-[#E4E7EC] bg-white px-3">
         <IconChevronLeft className="size-4.5 text-[#1B2027]" aria-hidden />
         <span className="font-display flex size-8 items-center justify-center rounded-full bg-[#25D366] text-xs font-bold text-white">
@@ -88,7 +76,7 @@ function CampaignPreviewScreen({
 
       {template ? (
         <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto px-2.5 py-3">
-          <span className="self-center rounded-md bg-white px-2 py-0.5 text-[10px] text-[#6B7480] shadow-sm">
+          <span className="self-center rounded-md bg-white px-2 py-0.5 text-[11px] text-[#54656f] shadow-[0_1px_0.5px_rgba(11,20,26,0.13)]">
             {t("Today")}
           </span>
           <WaTemplateBubble template={template} sampleValues={sampleValues} />
@@ -116,51 +104,22 @@ export function WaTemplateBubble({
   const buttons = componentOfType(template, "BUTTONS")?.buttons ?? [];
 
   return (
-    <div className="flex w-62.5 flex-col overflow-hidden rounded-[10px] bg-white shadow-sm">
-      {header?.format && header.format !== "TEXT" ? (
-        <span className="m-1 flex h-26 flex-col items-center justify-center gap-1 rounded-lg bg-[#FEECCB] text-[#AE5D07]">
-          <IconPhoto className="size-5" aria-hidden />
-          <span className="text-[10px] font-medium">{header.format}</span>
-        </span>
-      ) : null}
-
-      {header?.format === "TEXT" && header.text ? (
-        <div className="px-2.5 pt-1.5 text-[12.5px] font-semibold text-[#1B2027]">
-          {fillPlaceholders(header.text, sampleValues)}
-        </div>
-      ) : null}
-
-      {body?.text ? (
-        <div className="px-2.5 pt-1.5 pb-1 text-[12.5px] leading-snug whitespace-pre-line text-[#1B2027]">
-          {fillPlaceholders(body.text, sampleValues)}
-        </div>
-      ) : null}
-
-      {footer?.text ? (
-        <div className="px-2.5 pb-1 text-[11px] text-[#6B7480]">{footer.text}</div>
-      ) : null}
-
-      <div className="flex items-center justify-end gap-1 px-2 pb-1.5">
-        <span className="text-[10px] text-[#6B7480]">
-          {new Date().toLocaleTimeString(undefined, {
-            hour: "numeric",
-            minute: "2-digit",
-          })}
-        </span>
-        <IconChecks className="size-3.5 text-[#53BDEB]" aria-hidden />
-      </div>
-
-      {buttons.map((button, index) => (
-        <div
-          key={`${button.type}-${index}`}
-          className={cn(
-            "flex h-9 items-center justify-center gap-1.5 border-t border-[#E4E7EC] text-[13px] font-medium text-[#027EB5]",
-          )}
-        >
-          <IconExternalLink className="size-3.5" aria-hidden />
-          {button.text}
-        </div>
-      ))}
-    </div>
+    <WaTemplateMessage
+      // A fixed width: callers place it in a shrink-wrapped column.
+      className="w-64"
+      header={
+        header?.format
+          ? {
+              format: header.format,
+              text: header.text,
+              media: header.example?.header_handle?.[0] ?? null,
+            }
+          : null
+      }
+      body={body?.text}
+      footer={footer?.text}
+      buttons={buttons}
+      samples={sampleValues}
+    />
   );
 }

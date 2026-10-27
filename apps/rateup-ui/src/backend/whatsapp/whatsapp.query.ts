@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
@@ -7,8 +7,14 @@ import { usePendingSend } from "@/store/pendingMessages.ts";
 import type { RequestPayload } from "@/types/api.ts";
 import type { WaTemplateComponent } from "@/types/global";
 
-import type { SyncTemplatesInput } from "./whatsapp.api";
+import type {
+  CreateFromLibraryInput,
+  SyncTemplatesInput,
+  TemplateLibraryQuery,
+} from "./whatsapp.api";
 import {
+  createTemplateFromLibrary,
+  getTemplateLibrary,
   createWaTemplate,
   deleteWaTemplate,
   getShareUrlFromSurveyTeamMapId,
@@ -34,6 +40,31 @@ export const useWaTemplateById = (id: string) =>
     queryKey: whatsappKeys.template(id),
     queryFn: () => getWaTemplateById(id),
   });
+
+/** Meta's template library, a page at a time. Waits for a channel: the catalogue is per account. */
+export const useTemplateLibrary = (query: TemplateLibraryQuery) =>
+  useInfiniteQuery({
+    enabled: Boolean(query.whatsappSettingsPhoneId),
+    queryKey: whatsappKeys.templateLibrary(query),
+    queryFn: ({ pageParam }) => getTemplateLibrary(query, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last) => last.after ?? undefined,
+    staleTime: 10 * 60 * 1000,
+  });
+
+export const useCreateTemplateFromLibraryMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateFromLibraryInput) => createTemplateFromLibrary(input),
+    onSuccess: () => {
+      toast.success("Template created and sent to Meta");
+      void queryClient.invalidateQueries({ queryKey: whatsappKeys.templates() });
+    },
+    onError: (error) => {
+      toast.error(error.message || "Couldn't create the template");
+    },
+  });
+};
 
 export const useCreateTemplateMutation = (onSuccess: () => void, onError: () => void) => {
   const queryClient = useQueryClient();

@@ -38,11 +38,11 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
+import { WaCarouselCard } from "@/components/whatsapp/wa-template-bubble.tsx";
 import { WHATSAPP_BUTTON_TYPE, WHATSAPP_TEMPLATE_BROADCAST_TYPE } from "@/utils/constants.ts";
 import { parseStringWithVariables } from "@/utils/whatsapp/templates.tsx";
 
 import { WebsurveySelector } from "../../flows/WebsurveySelector/WebsurveySelector.tsx";
-import { QuickReplyButton } from "../../MessageComponents.tsx";
 import { PhoneNumberField } from "./PhoneNumberField.tsx";
 import {
   appendItem,
@@ -683,18 +683,12 @@ export const ProductCardCarouselPreview = ({
   return (
     <>
       {productCardData.map((card, index) => (
-        <div className="flex w-45 flex-col gap-0 overflow-hidden rounded-xl bg-white" key={index}>
-          <img
-            src={card.image || undefined}
-            className="h-25 w-full object-cover"
-            alt="image of the product"
-          />
-          <div className="flex flex-col gap-px bg-(--light-grey-color) p-2.5">
-            <p className="truncate font-semibold">{card.title}</p>
-            <p className="text-sm text-muted-foreground">{card.price}</p>
-          </div>
-          <QuickReplyButton text={card.button.text} type={card.button.type} />
-        </div>
+        <WaCarouselCard
+          key={index}
+          header={{ format: "IMAGE", media: card.image || null }}
+          body={[card.title && `*${card.title}*`, card.price].filter(Boolean).join("\n")}
+          buttons={[card.button]}
+        />
       ))}
     </>
   );

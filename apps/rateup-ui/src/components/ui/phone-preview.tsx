@@ -254,7 +254,8 @@ export function PhonePreviewButton({
 export function PhoneFrame({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <div className="relative mx-auto h-150 w-73 rounded-[3rem] border-[3px] border-muted-foreground/30 bg-black p-2 shadow-xl">
-      <div className="absolute left-1/2 top-4.5 z-10 h-5.5 w-22.5 -translate-x-1/2 rounded-full bg-black" />
+      {/* The iPhone 18 Pro's narrower Dynamic Island: centred on the status bar's middle line. */}
+      <div className="absolute top-4.5 left-1/2 z-10 h-5 w-18 -translate-x-1/2 rounded-full bg-black" />
       <div className="flex h-full flex-col overflow-hidden rounded-[2.25rem] bg-background">
         {children}
       </div>
@@ -303,36 +304,75 @@ function PhoneSimulator() {
   );
 }
 
+/** iOS's cellular bars: four, rising, rounded. */
+function SignalGlyph() {
+  return (
+    <svg viewBox="0 0 18 12" aria-hidden className="h-[11px] w-[17px] fill-current">
+      <rect x="0" y="7.5" width="3.2" height="4.5" rx="1" />
+      <rect x="4.8" y="5.2" width="3.2" height="6.8" rx="1" />
+      <rect x="9.6" y="2.6" width="3.2" height="9.4" rx="1" />
+      <rect x="14.4" y="0" width="3.2" height="12" rx="1" />
+    </svg>
+  );
+}
+
+/** iOS's Wi-Fi fan: three arcs over a dot-like wedge. */
+function WifiGlyph() {
+  return (
+    <svg viewBox="0 0 16 12" aria-hidden className="h-[11px] w-[15px] fill-current">
+      <path d="M8 2.3c2.3 0 4.4.9 6 2.4.2.2.4.2.6 0l1.1-1.1c.2-.2.2-.5 0-.7A11.2 11.2 0 0 0 8 0C5 0 2.3 1.1.3 3c-.2.2-.2.5 0 .7l1.1 1.1c.2.2.4.2.6 0A8.6 8.6 0 0 1 8 2.3Z" />
+      <path d="M8 6.1c1.2 0 2.4.4 3.3 1.2.2.2.4.2.6 0L13 6.2c.2-.2.2-.5 0-.7a7.6 7.6 0 0 0-10 0c-.2.2-.2.5 0 .7l1.1 1.1c.2.2.4.2.6 0 .9-.8 2.1-1.2 3.3-1.2Z" />
+      <path d="M10.4 9c.2-.2.2-.5 0-.7a3.6 3.6 0 0 0-4.8 0c-.2.2-.2.5 0 .7l2.1 2.1c.2.2.4.2.6 0L10.4 9Z" />
+    </svg>
+  );
+}
+
+/** iOS's battery: a faint rounded case, a solid charge, and the terminal nub. */
+function BatteryGlyph({ level = 0.8 }: Readonly<{ level?: number }>) {
+  return (
+    <svg viewBox="0 0 27 13" aria-hidden className="h-[12px] w-[25px]">
+      <rect
+        x="0.5"
+        y="0.5"
+        width="23"
+        height="12"
+        rx="3.8"
+        fill="none"
+        stroke="currentColor"
+        strokeOpacity="0.35"
+      />
+      <rect x="2" y="2" width={20 * level} height="9" rx="2.5" fill="currentColor" />
+      <path
+        d="M25 4.5v4c.8-.3 1.5-1.1 1.5-2s-.7-1.7-1.5-2Z"
+        fill="currentColor"
+        fillOpacity="0.4"
+      />
+    </svg>
+  );
+}
+
+/** The iOS status bar: time left of the island, signal, Wi-Fi and battery right of it. */
 function StatusBar({ variant = "light" }: Readonly<{ variant?: "light" | "dark" }>) {
-  const now = new Date();
-  const timeStr = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  // iOS shows "9:41", never "09:41 AM".
+  const timeStr = new Date()
+    .toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
+    .replace(/\s?[AP]M$/i, "");
   const isLight = variant === "light";
 
   return (
-    <div className="flex items-center justify-between px-6 pt-3 pb-1">
-      <span className={cn("text-[11px] font-medium", isLight ? "text-white" : "text-foreground")}>
+    <div
+      className={cn(
+        "flex h-10 shrink-0 items-center justify-between pr-6 pl-8",
+        isLight ? "text-white" : "text-foreground",
+      )}
+    >
+      <span className="w-12 text-center text-[13px] font-semibold tracking-tight tabular-nums">
         {timeStr}
       </span>
-      <div className="flex items-center gap-1">
-        <div className="flex items-end gap-0.5">
-          {(["h-1", "h-1.5", "h-2", "h-2.5"] as const).map((h) => (
-            <div
-              key={h}
-              className={cn("w-0.5 rounded-full", h, isLight ? "bg-white" : "bg-foreground")}
-            />
-          ))}
-        </div>
-        <span className={cn("ml-1 text-[9px]", isLight ? "text-white" : "text-foreground")}>
-          5G
-        </span>
-        <div
-          className={cn(
-            "ml-1 h-2.5 w-5 rounded-sm border p-px",
-            isLight ? "border-white/50" : "border-foreground/50",
-          )}
-        >
-          <div className={cn("h-full w-3/4 rounded-xs", isLight ? "bg-white" : "bg-foreground")} />
-        </div>
+      <div className="flex items-center gap-[5px]">
+        <SignalGlyph />
+        <WifiGlyph />
+        <BatteryGlyph />
       </div>
     </div>
   );

@@ -22,6 +22,8 @@ export const whatsappKeys = {
   templates: () => ["watemplates"] as const,
   templatesByType: (templateType: KeyPart) => ["watemplates", templateType] as const,
   template: (id: KeyPart) => ["watemplate", id] as const,
+  /** Meta's template library, per channel and filter set. */
+  templateLibrary: (query: KeyPart) => ["waTemplateLibrary", query] as const,
   /** Distinct root from `templates()` — differs by capital T. */
   unregisteredTemplates: () => ["waTemplates", "unregistered"] as const,
 
