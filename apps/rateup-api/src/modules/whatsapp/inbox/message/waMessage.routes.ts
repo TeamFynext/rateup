@@ -5,6 +5,7 @@ import {
   blockWhatsappUserHandler,
   bulkAssignWaMessageHandler,
   clearConversationMentionsHandler,
+  agentTypingHandler,
   reopenConversationHandler,
   createPrivateMessageHandler,
   editPrivateNoteHandler,
@@ -32,6 +33,7 @@ import {
   bulkWaMessageAssignBody,
   assignOwnerBody,
   clearMentionsSchema,
+  agentTypingSchema,
   reopenConversationSchema,
   favoriteContactSchema,
   spamContactSchema,
@@ -75,6 +77,19 @@ export async function waMessageRoutes(server: FastifyInstance) {
       },
     },
     markMessagesAsReadHandler,
+  );
+
+  // An agent started or stopped typing: tells teammates and shows the customer
+  // a typing bubble on WhatsApp / Instagram / Messenger.
+  server.post(
+    "/typing/:contactId",
+    {
+      schema: {
+        params: byContactIdSchema,
+        body: agentTypingSchema,
+      },
+    },
+    agentTypingHandler,
   );
 
   server.post(
