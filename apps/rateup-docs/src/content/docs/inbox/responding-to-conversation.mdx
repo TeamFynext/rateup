@@ -5,6 +5,7 @@ description: Send messages, quick replies, attachments, templates and chatbots; 
 
 import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
 import { Step, Steps } from "fumadocs-ui/components/steps";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
 import ScreenShot from "@/components/Screenshot";
 
 This page covers everything about answering a customer: the composer, its limits, and the four
@@ -89,6 +90,53 @@ invitation message and button.
   not send the message"*. A send that vanishes without an error has not failed; it has been replaced
   by the confirmed message.
 </Callout>
+
+---
+
+## What the Customer Sees While You Type
+
+When you type in the **Message** tab, the customer sees a typing bubble in their own app, the
+same one they see when a friend is writing. It works on WhatsApp, Instagram and Messenger.
+
+| | WhatsApp | Instagram | Messenger |
+|---|---|---|---|
+| Typing bubble shows | Yes | Yes | Yes |
+| Hidden when you stop typing for 5 seconds | No — stays up to 25 seconds | Yes | Yes |
+| Hidden when your reply arrives | Yes | Yes | Yes |
+| Also marks their message as read | Yes — their ticks turn blue | No | No |
+
+- The bubble is only sent inside the 24-hour reply window. Outside it you cannot send a free-form
+  reply, so there is nothing to type.
+- Writing a **Private Note** never shows a bubble. Notes are for your team.
+- Website chat has no typing bubble.
+
+<ImagePlaceholder
+  file="inbox/customer-typing-bubble.png"
+  shot="The customer's side: a WhatsApp chat on a phone with Demo Cafe, the customer's last message showing blue ticks and the typing bubble below it. 390 wide, @2x."
+  caption="What the customer sees while you type."
+/>
+
+{/* TODO: capture the customer's phone view of the typing bubble */}
+
+<Callout type="info">
+  Opening a ticket already tells the customer you have seen their message: blue ticks on WhatsApp,
+  **Seen** on Instagram and Messenger. The typing bubble comes on top of that.
+</Callout>
+
+### When a teammate is typing
+
+If a teammate is writing a reply in the same ticket, a line above the composer says so —
+*"Jane is typing…"*, or *"2 teammates are typing…"* when there are more. It goes away a few
+seconds after they stop. Check it before you start your own reply, so the customer does not get
+two answers.
+
+<ImagePlaceholder
+  file="inbox/teammate-typing.png"
+  shot="The bottom of an open ticket: the 'Jane is typing…' line with its three dots above the Message / Private Note tabs and the composer. §5 names, 1440 wide, cropped to the composer."
+  caption="A teammate replying in the same ticket."
+/>
+
+{/* TODO: capture with a second session typing in the same ticket */}
 
 ---
 
