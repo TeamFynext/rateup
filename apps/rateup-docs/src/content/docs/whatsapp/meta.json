@@ -7,6 +7,7 @@
     "chatbot-builder",
     "templates",
     "template-editor",
+    "template-analytics",
     "conversational-components",
     "settings"
   ]
