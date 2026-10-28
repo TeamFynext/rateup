@@ -1,7 +1,7 @@
 // Extracted verbatim from the `/dashboard/whatsapp/templates/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
-import { IconDots, IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconChartBar, IconDots, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -35,6 +35,8 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import WaPageTourSteps from "@/components/WelcomeTour/components/WaPageTourSteps.ts";
 import WelcomeTour from "@/components/WelcomeTour/WelcomeTour.tsx";
+import { EnableTemplateAnalytics } from "@/components/whatsapp/templates/analytics/EnableTemplateAnalytics.tsx";
+import { useNumbersWithoutAnalytics } from "@/components/whatsapp/templates/analytics/useNumbersWithoutAnalytics.ts";
 import { TemplateFilterSort } from "@/components/whatsapp/templates/FilterAndSort.tsx";
 import { SyncTemplatesButton } from "@/components/whatsapp/templates/SyncTemplates.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
@@ -142,6 +144,7 @@ export function Template() {
   }, [templates, filters, sortOption, debouncedSearch, selectedAccountId]);
 
   const templateDeleteMutation = useDeleteWaTemplateMutation();
+  const numbersWithoutAnalytics = useNumbersWithoutAnalytics(filteredTemplates);
 
   async function handleDeleteTemplate(templateId: string) {
     const shouldDelete = await confirm({
@@ -163,6 +166,12 @@ export function Template() {
     navigate({
       to: "/dashboard/whatsapp/templates/$templateId",
       params: { templateId: "create" },
+    });
+  }
+  function handleAnalyticsClick(template: { id: string }) {
+    navigate({
+      to: "/dashboard/whatsapp/templates/$templateId/analytics",
+      params: { templateId: template.id },
     });
   }
   function handleEditClick(template: { id: string }) {
@@ -259,17 +268,27 @@ export function Template() {
         emptyDescription={translations("Try changing filters or create a new template.")}
         onRetry={refetch}
       >
-        <CardGrid
-          items={filteredTemplates ?? []}
-          getKey={(template) => template.id}
-          renderItem={(template) => (
-            <TemplateCard
-              template={template}
-              onClick={() => handleEditClick(template)}
-              onDelete={() => handleDeleteTemplate(template.id)}
+        <div className="flex flex-col gap-4">
+          {numbersWithoutAnalytics.map((phoneId) => (
+            <EnableTemplateAnalytics
+              key={phoneId}
+              phoneId={phoneId}
+              accountName={data?.find((account) => account.phoneId === phoneId)?.phoneDisplayName}
             />
-          )}
-        />
+          ))}
+          <CardGrid
+            items={filteredTemplates ?? []}
+            getKey={(template) => template.id}
+            renderItem={(template) => (
+              <TemplateCard
+                template={template}
+                onClick={() => handleEditClick(template)}
+                onAnalytics={() => handleAnalyticsClick(template)}
+                onDelete={() => handleDeleteTemplate(template.id)}
+              />
+            )}
+          />
+        </div>
       </ListPageContent>
     </ListPage>
   );
@@ -278,10 +297,11 @@ export function Template() {
 interface TemplateCardProps {
   readonly template: TemplateListEntry;
   readonly onClick: () => void;
+  readonly onAnalytics: () => void;
   readonly onDelete: () => void;
 }
 
-function TemplateCard({ template, onClick, onDelete }: Readonly<TemplateCardProps>) {
+function TemplateCard({ template, onClick, onAnalytics, onDelete }: Readonly<TemplateCardProps>) {
   const { t: translations } = useTranslation();
   const hasActiveCampaign = (template?._count?.Campaign ?? 0) > 0;
 
@@ -336,22 +356,24 @@ function TemplateCard({ template, onClick, onDelete }: Readonly<TemplateCardProp
     template?.WhatsappSettings?.phoneDisplayName || template?.whatsappSettingsPhoneId;
 
   const content = (
-    <div className="flex items-center gap-2 flex-wrap min-h-10">
-      <span className={BRAND_CHIP_CLASS} title={template?.whatsappSettingsPhoneId ?? undefined}>
-        {accountName ?? "No Account"}
-      </span>
-      {category && (
-        <span
-          className={`text-[11px] font-medium px-2 py-0.5 rounded-md border ${categoryMeta ? `${categoryMeta.bg} ${categoryMeta.color}` : CHIP_CLASS}`}
-        >
-          {categoryMeta?.label ?? category}
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2 flex-wrap min-h-10">
+        <span className={BRAND_CHIP_CLASS} title={template?.whatsappSettingsPhoneId ?? undefined}>
+          {accountName ?? "No Account"}
         </span>
-      )}
-      {template?.templateType && (
-        <span className={BRAND_CHIP_CLASS} title={template.templateType}>
-          {formatLabel(template.templateType)}
-        </span>
-      )}
+        {category && (
+          <span
+            className={`text-[11px] font-medium px-2 py-0.5 rounded-md border ${categoryMeta ? `${categoryMeta.bg} ${categoryMeta.color}` : CHIP_CLASS}`}
+          >
+            {categoryMeta?.label ?? category}
+          </span>
+        )}
+        {template?.templateType && (
+          <span className={BRAND_CHIP_CLASS} title={template.templateType}>
+            {formatLabel(template.templateType)}
+          </span>
+        )}
+      </div>
     </div>
   );
 
@@ -362,6 +384,27 @@ function TemplateCard({ template, onClick, onDelete }: Readonly<TemplateCardProp
       {statusMeta.label}
     </span>
   );
+  // On the card itself, not only in the ⋯ menu, so it can be found.
+  const canViewAnalytics = !!template?.data?.id && template.data.status !== "DRAFT";
+  const footerLeft = (
+    <div className="flex items-center gap-2">
+      {statusBadge}
+      {canViewAnalytics && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 gap-1 px-2 text-xs"
+          onClick={(e) => {
+            e.stopPropagation();
+            onAnalytics();
+          }}
+        >
+          <IconChartBar size={14} />
+          {translations("Analytics")}
+        </Button>
+      )}
+    </div>
+  );
 
   return (
     <ActionCard
@@ -369,7 +412,7 @@ function TemplateCard({ template, onClick, onDelete }: Readonly<TemplateCardProp
       subtitle={template?.data?.category || "Template"}
       actions={menu}
       content={content}
-      footerLeft={statusBadge}
+      footerLeft={footerLeft}
       createdAt={template.createdAt}
       onClick={onClick}
     />

@@ -121,8 +121,9 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
       // line up with the device preview panel's header beside it.
       /^\/dashboard\/automation\/[^/]+/.test(pathname ?? "") ||
       /^\/dashboard\/campaign\/(new|[^/]+\/edit)/.test(pathname ?? "") ||
-      // The template wizard, built the same way.
-      /^\/dashboard\/(whatsapp|loyalty)\/templates\/[^/]+/.test(pathname ?? "") ||
+      // The template wizard, built the same way. The template's analytics page
+      // below it is an ordinary padded page.
+      /^\/dashboard\/(whatsapp|loyalty)\/templates\/[^/]+\/?$/.test(pathname ?? "") ||
       pathname?.includes("/dashboard/whatsapp/flows/v2/") ||
       pathname?.includes("/dashboard/whatsapp/flowbots/") ||
       pathname?.includes("/dashboard/instagram/flowbots/") ||

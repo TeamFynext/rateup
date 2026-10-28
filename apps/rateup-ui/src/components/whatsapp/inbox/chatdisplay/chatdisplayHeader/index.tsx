@@ -87,14 +87,18 @@ export default function WaInboxChatDisplayHeader({
 
   if (!contact) return null;
   return (
-    <div className="shrink-0 bg-background">
+    // A container, not the viewport: the panel is resized with a handle, so
+    // what fits in this row depends on its own width, not the window's.
+    <div className="@container/header shrink-0 bg-background">
       {/* h-14 is the shared panel-header height (sidebar, chat list, ticket panel,
           phone preview). The divider has to live on the h-14 row itself, not on
           this wrapper: borders are inside the box, so a wrapper border would sit
           1px below every other header's line. Each row below owns its own
           border-b for the same reason. */}
       <div className="flex h-14 shrink-0 items-center justify-between gap-2.5 border-b border-border px-3 lg:px-5">
-        <div className="flex min-w-0 flex-1 shrink items-center gap-2.5">
+        {/* Takes its natural width first; it only truncates once the optional
+            timer and status pill on the right have nothing left to give. */}
+        <div className="flex min-w-0 shrink items-center gap-2.5">
           {/* Stacked layout only: dropping the selection is what brings the list
               back, which is also why this is hidden once both panes fit. */}
           <button
@@ -122,10 +126,12 @@ export default function WaInboxChatDisplayHeader({
               {sourcePlatform?.icon}
             </div>
           </div>
-          <div className="min-w-0 shrink flex flex-col justify-center">
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="flex items-center gap-1">
-                <h3 className="truncate text-sm font-extrabold leading-tight text-foreground">
+          <div className="flex min-w-0 shrink flex-col justify-center">
+            {/* min-w-0 down to the name, so the name truncates instead of the
+                badges spilling over the buttons on the right. */}
+            <div className="flex min-w-0 items-center gap-2">
+              <div className="flex min-w-0 items-center gap-1">
+                <h3 className="min-w-0 truncate text-sm font-extrabold leading-tight text-foreground">
                   {displayName}
                 </h3>
                 {!contact.consent && (
@@ -133,7 +139,7 @@ export default function WaInboxChatDisplayHeader({
                     side="bottom"
                     trigger={
                       <Badge
-                        className="w-full h-4.5 text-[10px] text-destructive bg-destructive/10 "
+                        className="h-4.5 shrink-0 text-[10px] text-destructive bg-destructive/10"
                         variant={"secondary"}
                       >
                         <IconBellOff /> DND
@@ -152,110 +158,113 @@ export default function WaInboxChatDisplayHeader({
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <CustomTooltip
-            side="bottom"
-            content={<p>{contact?.isFavorite ? "Remove from favourites" : "Add to favourites"}</p>}
-            trigger={
+        <div className="flex flex-1 items-center justify-end gap-2">
+          {/* Session timer and status pill are the least urgent items in this row
+              (the status is repeated on the list row and in the details panel).
+              They show whenever they fit: anything that does not wraps to a second
+              line, which this one-line box clips. The status is last, so it goes
+              first. Fixed width breakpoints hid them on a 15" laptop with room to
+              spare. */}
+          <div className="flex h-8 min-w-0 flex-1 flex-wrap content-start items-center justify-end gap-x-2 gap-y-2 overflow-hidden">
+            <div className="flex h-8 items-center">
+              <WaInboxCountdownTimer timeStamp={contact?.lastReceivedMessageTimeStamp} />
+            </div>
+            <div className="flex h-8 items-center">
+              <span className={cn(STATUS_PILL_BASE, "px-2.5 py-1.25 text-xs", status.className)}>
+                <span className="size-1.5 rounded-full bg-current" />
+                {status.label}
+              </span>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <CustomTooltip
+              side="bottom"
+              content={
+                <p>{contact?.isFavorite ? "Remove from favourites" : "Add to favourites"}</p>
+              }
+              trigger={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={contact?.isFavorite ? "Remove from favourites" : "Add to favourites"}
+                  aria-pressed={!!contact?.isFavorite}
+                  loading={toggleFavorite.isPending}
+                  onClick={() =>
+                    toggleFavorite.mutate({
+                      conversationId: getRowKey(contact),
+                      isFavorite: !contact?.isFavorite,
+                    })
+                  }
+                  className={cn(contact?.isFavorite && "bg-amber-50 dark:bg-amber-950/40")}
+                >
+                  <IconStar
+                    className={cn(
+                      "size-4",
+                      contact?.isFavorite ? "text-amber-500" : "text-muted-foreground",
+                    )}
+                    fill={contact?.isFavorite ? "currentColor" : "none"}
+                  />
+                </Button>
+              }
+            />
+            {(contact?.mentionCount ?? 0) > 0 && (
+              <CustomTooltip
+                side="bottom"
+                content={<p>Clear mention</p>}
+                trigger={
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="Clear mention"
+                    loading={clearMention.isPending}
+                    onClick={() =>
+                      clearMention.mutate({
+                        contactId: contact.id,
+                        conversationId: contact.conversationId ?? undefined,
+                      })
+                    }
+                    className="bg-primary/10"
+                  >
+                    <IconAt className="size-4 text-primary" />
+                  </Button>
+                }
+              />
+            )}
+            {platform === MessagePlatform.WHATSAPP && <CallContactButton contact={contact} />}
+            <CloseTicketMenu contact={contact} />
+            {onToggleContextPanel && (
+              <CustomTooltip
+                side="bottom"
+                content={<p>Toggle details panel</p>}
+                trigger={
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={onToggleContextPanel}
+                    aria-label="Toggle details panel"
+                    className="hidden xl:inline-flex"
+                  >
+                    <IconLayoutSidebarRight className="size-4 text-muted-foreground" />
+                  </Button>
+                }
+              />
+            )}
+            {onToggleDetailsOverlay && (
               <Button
                 type="button"
                 variant="ghost"
                 size="icon-sm"
-                aria-label={contact?.isFavorite ? "Remove from favourites" : "Add to favourites"}
-                aria-pressed={!!contact?.isFavorite}
-                loading={toggleFavorite.isPending}
-                onClick={() =>
-                  toggleFavorite.mutate({
-                    conversationId: getRowKey(contact),
-                    isFavorite: !contact?.isFavorite,
-                  })
-                }
-                className={cn(contact?.isFavorite && "bg-amber-50 dark:bg-amber-950/40")}
+                onClick={onToggleDetailsOverlay}
+                aria-label="Show ticket details"
+                className="xl:hidden"
               >
-                <IconStar
-                  className={cn(
-                    "size-4",
-                    contact?.isFavorite ? "text-amber-500" : "text-muted-foreground",
-                  )}
-                  fill={contact?.isFavorite ? "currentColor" : "none"}
-                />
+                <IconLayoutSidebarRight className="size-4 text-muted-foreground" />
               </Button>
-            }
-          />
-          {(contact?.mentionCount ?? 0) > 0 && (
-            <CustomTooltip
-              side="bottom"
-              content={<p>Clear mention</p>}
-              trigger={
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label="Clear mention"
-                  loading={clearMention.isPending}
-                  onClick={() =>
-                    clearMention.mutate({
-                      contactId: contact.id,
-                      conversationId: contact.conversationId ?? undefined,
-                    })
-                  }
-                  className="bg-primary/10"
-                >
-                  <IconAt className="size-4 text-primary" />
-                </Button>
-              }
-            />
-          )}
-          {/* Session timer and status pill are the widest, least urgent items in
-              this row — the status is repeated on the list row and in the details
-              panel, so narrow widths drop them rather than squeeze the name. */}
-          <span className="hidden md:contents">
-            <WaInboxCountdownTimer timeStamp={contact?.lastReceivedMessageTimeStamp} />
-          </span>
-
-          <span
-            className={cn(
-              STATUS_PILL_BASE,
-              "hidden px-2.5 py-1.25 text-xs md:inline-flex",
-              status.className,
             )}
-          >
-            <span className="size-1.5 rounded-full bg-current" />
-            {status.label}
-          </span>
-
-          {platform === MessagePlatform.WHATSAPP && <CallContactButton contact={contact} />}
-          <CloseTicketMenu contact={contact} />
-          {onToggleContextPanel && (
-            <CustomTooltip
-              side="bottom"
-              content={<p>Toggle details panel</p>}
-              trigger={
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={onToggleContextPanel}
-                  aria-label="Toggle details panel"
-                  className="hidden xl:inline-flex"
-                >
-                  <IconLayoutSidebarRight className="size-4 text-muted-foreground" />
-                </Button>
-              }
-            />
-          )}
-          {onToggleDetailsOverlay && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              onClick={onToggleDetailsOverlay}
-              aria-label="Show ticket details"
-              className="xl:hidden"
-            >
-              <IconLayoutSidebarRight className="size-4 text-muted-foreground" />
-            </Button>
-          )}
+          </div>
         </div>
       </div>
       <TicketSubBar contact={contact} />

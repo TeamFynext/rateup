@@ -49,9 +49,11 @@ import { buildAssignEvent } from "@/components/whatsapp/inbox/assign/assignEvent
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import type { User } from "@/context/UserContext.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import { useAgentTyping } from "@/hooks/useAgentTyping.ts";
 import { cn } from "@/lib/utils.ts";
 import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
 import useContactStore, { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";
+import { useTeammatesTyping } from "@/store/typing.store.ts";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 import { formatDateWithRelativeTime } from "@/utils/dateTime.ts";
@@ -147,6 +149,7 @@ export default function WaInboxChatDisplayFooter({
   const [switchedByMention, setSwitchedByMention] = useState(false);
   function handleDraftChange(value: TiptapNode) {
     setBody({ ...body, text: { ...body.text, body: value } });
+    agentTyping.onKeystroke();
     const mentions = extractMentionUserIds(value).length;
     // Read from the store: the editor may still hold the callback from an earlier render.
     if (
@@ -225,6 +228,7 @@ export default function WaInboxChatDisplayFooter({
     resetBody();
     resetMedia();
     setAudioUrl(null);
+    agentTyping.onSent();
     sendnewWaMessage.mutate({
       ...values,
       // Drawn in the thread from onMutate until the sent message is read back.
@@ -367,6 +371,13 @@ export default function WaInboxChatDisplayFooter({
     isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp);
   // Past the 24h window only a template reaches the customer; a note still works.
   const isNoteMode = activeTab === "private" || isSessionExpired;
+  // Replies only: a note is not for the customer, and teammates see it land.
+  const agentTyping = useAgentTyping({
+    contactId: contact.id,
+    conversationId: contact.conversationId,
+    enabled: !isNoteMode,
+  });
+  const teammatesTyping = useTeammatesTyping(contact.id, user?.userId);
   submiRef.current = () => {
     if (isNoteMode) handleSendPrivateMessage();
     else handleSendMessage();
@@ -439,6 +450,7 @@ export default function WaInboxChatDisplayFooter({
         </div>
       )}
       <div className="flex flex-col gap-2 bg-white p-1.5 dark:bg-transparent sm:p-2">
+        <TeammatesTyping names={teammatesTyping} />
         {/* One line, always: the tabs give up width (the note tab shortens its
             label) so the character count never wraps to a row of its own. Every
             row here is height the message list does not get. */}
@@ -853,6 +865,32 @@ interface MessageBody {
     name?: string;
     address?: string;
   } | null;
+}
+
+/** "Priya is typing…" for teammates replying in this thread. */
+function TeammatesTyping({ names }: Readonly<{ names: string[] }>) {
+  const { t } = useTranslation();
+  if (names.length === 0) return null;
+  const label =
+    names.length === 1 && names[0]
+      ? t("{name} is typing…", { name: names[0] })
+      : t("{count, plural, one {A teammate is typing…} other {# teammates are typing…}}", {
+          count: names.length,
+        });
+  return (
+    <p aria-live="polite" className="flex items-center gap-1.5 px-1 text-xs text-muted-foreground">
+      <span className="flex gap-0.5" aria-hidden>
+        {[0, 150, 300].map((delay) => (
+          <span
+            key={delay}
+            className="size-1 animate-bounce rounded-full bg-muted-foreground"
+            style={{ animationDelay: `${delay}ms` }}
+          />
+        ))}
+      </span>
+      {label}
+    </p>
+  );
 }
 
 export const useMessageBodyStore = create<{

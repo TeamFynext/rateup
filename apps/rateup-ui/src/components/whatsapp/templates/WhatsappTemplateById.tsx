@@ -2,6 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   IconArrowLeft,
   IconArrowRight,
+  IconChartBar,
   IconAsterisk,
   IconBan,
   IconFileText,
@@ -1624,6 +1625,21 @@ export function WhatsappTemplateById({
             >
               ID {editingItem.data.id}
               <IconCopy className="size-3.5" aria-hidden />
+            </Button>
+          )}
+          {editingItem?.data?.id && values.status !== "DRAFT" && (
+            <Button
+              size="sm"
+              variant="outline"
+              render={
+                <Link
+                  to="/dashboard/whatsapp/templates/$templateId/analytics"
+                  params={{ templateId: editingItem.id }}
+                />
+              }
+            >
+              <IconChartBar className="size-4" aria-hidden />
+              {translations("Analytics")}
             </Button>
           )}
           {isReadOnly && (

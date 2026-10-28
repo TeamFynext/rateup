@@ -23,6 +23,7 @@ import {
   useContactsStore,
   useMessagesStore,
 } from "@/store/inbox.store.ts";
+import { useTypingStore } from "@/store/typing.store.ts";
 import { WaMessageAssignStatus } from "@/types/enums.ts";
 import { soundsPath } from "@/utils/constants.ts";
 import { claimAcrossTabs } from "@/utils/crossTabClaim";
@@ -223,6 +224,10 @@ export const useChatSocket = () => {
               }
             }
 
+            break;
+          case "inbox_typing":
+            // A teammate started or stopped a reply; the composer shows who.
+            if (data?.inbox_typing?.contactId) useTypingStore.getState().receive(data.inbox_typing);
             break;
           case "meta_agent_thread":
             // Contact-level: routed to that contact's live ticket, which also
