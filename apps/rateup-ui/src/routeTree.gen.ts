@@ -251,6 +251,7 @@ import { Route as publicFacingPublicWaSurveyTeamMapIdRedirectIndexRouteImport } 
 import { Route as DashboardSettingsIntegrationsIdCallbackIndexRouteImport } from './routes/dashboard/settings/integrations/$id/callback/index'
 import { Route as DashboardWhatsappFlowsV1DbFlowIdIndexRouteImport } from './routes/dashboard/whatsapp/flows/v1/$dbFlowId/index'
 import { Route as DashboardWhatsappFlowsV2DbFlowIdIndexRouteImport } from './routes/dashboard/whatsapp/flows/v2/$dbFlowId/index'
+import { Route as DashboardWhatsappTemplatesTemplateIdAnalyticsIndexRouteImport } from './routes/dashboard/whatsapp/templates/$templateId/analytics/index'
 
 const authRouteRoute = authRouteRouteImport.update({
   id: '/(auth)',
@@ -1622,6 +1623,12 @@ const DashboardWhatsappFlowsV2DbFlowIdIndexRoute =
     path: '/whatsapp/flows/v2/$dbFlowId/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
+const DashboardWhatsappTemplatesTemplateIdAnalyticsIndexRoute =
+  DashboardWhatsappTemplatesTemplateIdAnalyticsIndexRouteImport.update({
+    id: '/whatsapp/templates/$templateId/analytics/',
+    path: '/whatsapp/templates/$templateId/analytics/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteRouteWithChildren
@@ -1862,6 +1869,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings/integrations/$id/callback/': typeof DashboardSettingsIntegrationsIdCallbackIndexRoute
   '/dashboard/whatsapp/flows/v1/$dbFlowId/': typeof DashboardWhatsappFlowsV1DbFlowIdIndexRoute
   '/dashboard/whatsapp/flows/v2/$dbFlowId/': typeof DashboardWhatsappFlowsV2DbFlowIdIndexRoute
+  '/dashboard/whatsapp/templates/$templateId/analytics/': typeof DashboardWhatsappTemplatesTemplateIdAnalyticsIndexRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRouteRouteWithChildren
@@ -2096,6 +2104,7 @@ export interface FileRoutesByTo {
   '/dashboard/settings/integrations/$id/callback': typeof DashboardSettingsIntegrationsIdCallbackIndexRoute
   '/dashboard/whatsapp/flows/v1/$dbFlowId': typeof DashboardWhatsappFlowsV1DbFlowIdIndexRoute
   '/dashboard/whatsapp/flows/v2/$dbFlowId': typeof DashboardWhatsappFlowsV2DbFlowIdIndexRoute
+  '/dashboard/whatsapp/templates/$templateId/analytics': typeof DashboardWhatsappTemplatesTemplateIdAnalyticsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -2341,6 +2350,7 @@ export interface FileRoutesById {
   '/dashboard/settings/integrations/$id/callback/': typeof DashboardSettingsIntegrationsIdCallbackIndexRoute
   '/dashboard/whatsapp/flows/v1/$dbFlowId/': typeof DashboardWhatsappFlowsV1DbFlowIdIndexRoute
   '/dashboard/whatsapp/flows/v2/$dbFlowId/': typeof DashboardWhatsappFlowsV2DbFlowIdIndexRoute
+  '/dashboard/whatsapp/templates/$templateId/analytics/': typeof DashboardWhatsappTemplatesTemplateIdAnalyticsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -2583,6 +2593,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings/integrations/$id/callback/'
     | '/dashboard/whatsapp/flows/v1/$dbFlowId/'
     | '/dashboard/whatsapp/flows/v2/$dbFlowId/'
+    | '/dashboard/whatsapp/templates/$templateId/analytics/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
@@ -2817,6 +2828,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings/integrations/$id/callback'
     | '/dashboard/whatsapp/flows/v1/$dbFlowId'
     | '/dashboard/whatsapp/flows/v2/$dbFlowId'
+    | '/dashboard/whatsapp/templates/$templateId/analytics'
   id:
     | '__root__'
     | '/(auth)'
@@ -3061,6 +3073,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings/integrations/$id/callback/'
     | '/dashboard/whatsapp/flows/v1/$dbFlowId/'
     | '/dashboard/whatsapp/flows/v2/$dbFlowId/'
+    | '/dashboard/whatsapp/templates/$templateId/analytics/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -4775,6 +4788,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardWhatsappFlowsV2DbFlowIdIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/whatsapp/templates/$templateId/analytics/': {
+      id: '/dashboard/whatsapp/templates/$templateId/analytics/'
+      path: '/whatsapp/templates/$templateId/analytics'
+      fullPath: '/dashboard/whatsapp/templates/$templateId/analytics/'
+      preLoaderRoute: typeof DashboardWhatsappTemplatesTemplateIdAnalyticsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
   }
 }
 
@@ -5317,6 +5337,7 @@ interface DashboardRouteRouteChildren {
   DashboardSettingsIntegrationsIdCallbackIndexRoute: typeof DashboardSettingsIntegrationsIdCallbackIndexRoute
   DashboardWhatsappFlowsV1DbFlowIdIndexRoute: typeof DashboardWhatsappFlowsV1DbFlowIdIndexRoute
   DashboardWhatsappFlowsV2DbFlowIdIndexRoute: typeof DashboardWhatsappFlowsV2DbFlowIdIndexRoute
+  DashboardWhatsappTemplatesTemplateIdAnalyticsIndexRoute: typeof DashboardWhatsappTemplatesTemplateIdAnalyticsIndexRoute
 }
 
 const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
@@ -5415,6 +5436,8 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
     DashboardWhatsappFlowsV1DbFlowIdIndexRoute,
   DashboardWhatsappFlowsV2DbFlowIdIndexRoute:
     DashboardWhatsappFlowsV2DbFlowIdIndexRoute,
+  DashboardWhatsappTemplatesTemplateIdAnalyticsIndexRoute:
+    DashboardWhatsappTemplatesTemplateIdAnalyticsIndexRoute,
 }
 
 const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(

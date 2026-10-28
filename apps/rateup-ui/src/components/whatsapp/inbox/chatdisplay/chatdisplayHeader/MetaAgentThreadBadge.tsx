@@ -125,7 +125,8 @@ export default function MetaAgentThreadBadge({
         ) : (
           <IconSparkles className="size-3" />
         )}
-        {view.label}
+        {/* Icon-only in a narrow chat header; the aria-label still names it. */}
+        <span className="hidden @xl/header:inline">{view.label}</span>
         <IconChevronDown className="size-2.5 opacity-70" />
       </PopoverTrigger>
       <PopoverContent side="bottom" align="start" className="w-64 gap-3">
