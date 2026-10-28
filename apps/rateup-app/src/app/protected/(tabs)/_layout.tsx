@@ -1,5 +1,4 @@
 import { NativeTabs } from "expo-router/unstable-native-tabs";
-import "@/config/superTokens";
 import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
 import { useColorScheme } from "nativewind";
 import { Colors } from "@/constants/colors";

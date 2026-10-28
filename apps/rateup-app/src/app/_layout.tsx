@@ -1,4 +1,7 @@
 import React, { useEffect } from "react";
+// First, so SuperTokens is initialised before any screen (including the `/` session
+// check) calls into it.
+import "@/config/superTokens";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/config/queryClient";
