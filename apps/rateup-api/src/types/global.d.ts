@@ -1700,7 +1700,14 @@ export interface FlowLogicJump {
 }
 
 export interface orgWsMessage {
-  type: "inbox" | "inbox_note" | "message_deleted" | "meta_agent_thread" | "notification" | "call";
+  type:
+    | "inbox"
+    | "inbox_note"
+    | "inbox_typing"
+    | "message_deleted"
+    | "meta_agent_thread"
+    | "notification"
+    | "call";
   inbox?: {
     /** Contact plus the ticket the message landed on — the inbox list is keyed by ticket. */
     contact: Contact & { conversationId?: string | null; conversationStatus?: string | null };
@@ -1724,6 +1731,15 @@ export interface orgWsMessage {
     deletedAt: string;
     /** Identifies the message inside the inbox row's last-message preview. */
     waCreatedAt?: string | null;
+  };
+  /** A teammate started or stopped typing a reply. Lapses on the client if no refresh arrives. */
+  inbox_typing?: {
+    contactId: string;
+    conversationId: string | null;
+    userId: string;
+    userName: string | null;
+    typing: boolean;
+    at: string;
   };
   /** Who now holds a contact's thread under Meta AI thread control. */
   meta_agent_thread?: {

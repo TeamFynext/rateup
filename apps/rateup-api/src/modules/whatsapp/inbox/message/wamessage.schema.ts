@@ -209,6 +209,13 @@ const clearMentionsSchema = z.object({
   conversationId: z.string().optional(),
 });
 
+const agentTypingSchema = z.object({
+  typing: z.boolean(),
+  conversationId: z.string().nullish(),
+  /** Typing stopped because the reply was sent. */
+  sent: z.boolean().optional(),
+});
+
 const reopenConversationSchema = z.object({
   conversationId: z.string().optional(),
   messageId: z.string().optional(), // for the internal "assigned" event
@@ -264,6 +271,7 @@ export type BlockUserBody = z.infer<typeof blockUserSchema>;
 export type FavoriteContactBody = z.infer<typeof favoriteContactSchema>;
 export type SpamContactBody = z.infer<typeof spamContactSchema>;
 export type ClearMentionsBody = z.infer<typeof clearMentionsSchema>;
+export type AgentTypingBody = z.infer<typeof agentTypingSchema>;
 export type ReopenConversationBody = z.infer<typeof reopenConversationSchema>;
 export type LogsQuery = z.infer<typeof logsQuerySchema>;
 export type GenerateInboxResponseBody = z.infer<typeof generateInboxResponseBody>;
@@ -283,6 +291,7 @@ export {
   favoriteContactSchema,
   spamContactSchema,
   clearMentionsSchema,
+  agentTypingSchema,
   reopenConversationSchema,
   generateInboxResponseBody,
   bulkWaMessageAssignBody,

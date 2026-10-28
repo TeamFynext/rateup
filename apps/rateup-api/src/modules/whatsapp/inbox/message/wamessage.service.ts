@@ -18,7 +18,7 @@ import {
 import { log } from "../../../../utils/logger.js";
 import { emitIntegrationEvent } from "../../../integrations/events/emitIntegrationEvent.js";
 import { callMetaApi } from "../../wa_axios.js";
-import { getWaSettings, getWaSettingsByPhone } from "../../settings/wa_settings.service.js";
+import { getWaSettings } from "../../settings/wa_settings.service.js";
 import { getScopedSourceIdentifiers } from "../../settings/wa_channel_access.js";
 import type { Actor } from "../../../../authz/actor.js";
 import axios from "axios";
@@ -76,7 +76,7 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 import type { ByContactIdParams } from "../../../contact/contact.schema.js";
 import { channelDigits, channelIdentifierSpellings } from "../../../../utils/channelIdentifier.js";
 import { dateFilterFor } from "../../../apiAnalytics/apianalytics.service.js";
-import { getInstagramChannel, getMessengerChannel } from "../../metaChannel/metaChannel.service.js";
+import { sendSenderAction } from "./senderAction.js";
 
 /**
  * One row of the raw inbox-list query. The projection is built by hand in SQL and spread
@@ -1971,88 +1971,6 @@ export async function sendMediaMessages(
   }
 }
 
-/** Meta refuses a read receipt for anything older than this. */
-const MARK_AS_READ_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
-
-/** Channels whose customers see a read receipt. WEBCHAT and INTERNAL have no upstream. */
-const READ_RECEIPT_PLATFORMS = [
-  PlatformType.WHATSAPP,
-  PlatformType.INSTAGRAM,
-  PlatformType.FACEBOOK,
-];
-
-/**
- * Tells the channel the customer's latest inbound message has been seen, so
- * their WhatsApp ticks turn blue / their Instagram or Messenger thread shows
- * "Seen" when an agent opens the conversation.
- *
- * Only the newest message is acknowledged. WhatsApp marks every earlier message
- * in the conversation read along with it, and the Meta sender action applies to
- * the thread rather than to a specific message — one call covers the thread
- * either way.
- *
- * Best-effort: a failed receipt must not fail the agent's action, and the
- * conversation is already marked read on our side regardless.
- */
-async function sendReadReceipt(contactId: string) {
-  const latest = await prisma.waMessage.findFirst({
-    where: {
-      contactId,
-      sourcePlatform: { in: READ_RECEIPT_PLATFORMS },
-      messageBody: { path: ["exchangeProcess"], equals: "receive" },
-      waCreatedAt: { gte: new Date(Date.now() - MARK_AS_READ_MAX_AGE_MS) },
-    },
-    orderBy: { waCreatedAt: "desc" },
-    select: {
-      messageId: true,
-      sourceIdentifier: true,
-      sourcePlatform: true,
-      contact: { select: { orgId: true, phone: true, igsId: true, psid: true } },
-    },
-  });
-
-  const orgId = latest?.contact?.orgId;
-  if (!latest || !orgId || !latest.sourceIdentifier) return;
-
-  if (latest.sourcePlatform === PlatformType.WHATSAPP) {
-    // Addressed by message id, and only WhatsApp needs one.
-    if (!latest.messageId) return;
-    // Inbound messages carry the business number they arrived on; resolve the
-    // channel from that so a multi-number org acknowledges on the right one.
-    const channel = await getWaSettingsByPhone(latest.sourceIdentifier);
-    const waSettings = await getWaSettings(orgId, channel?.phoneId ?? undefined);
-    if (!waSettings?.phoneId) return;
-
-    await callMetaApi(`/${waSettings.phoneId}/messages`, "POST", waSettings.accessToken, {
-      messaging_product: "whatsapp",
-      status: "read",
-      message_id: latest.messageId,
-    });
-    return;
-  }
-
-  // Instagram and Messenger share one Send API shape: a sender action addressed
-  // to the person, with no message id. Meta requires the request to carry
-  // nothing but `recipient` and `sender_action`.
-  const isInstagram = latest.sourcePlatform === PlatformType.INSTAGRAM;
-  const settings = isInstagram
-    ? await getInstagramChannel(latest.sourceIdentifier, orgId)
-    : await getMessengerChannel(latest.sourceIdentifier, orgId);
-  const accessToken = settings?.pageAccessToken;
-  // Instagram threads key off the IGSID, Messenger off the page-scoped id.
-  const recipientId = isInstagram ? latest.contact?.igsId : latest.contact?.psid;
-  if (!accessToken || !recipientId) return;
-
-  const body = { recipient: { id: recipientId }, sender_action: "mark_seen" };
-  // Instagram takes the token as a query parameter, Messenger as a bearer —
-  // the same split `sendMessage` makes for outbound messages on these channels.
-  await (isInstagram
-    ? callMetaApi("/me/messages", "POST", undefined, body, {
-        params: { access_token: accessToken },
-      })
-    : callMetaApi("/me/messages", "POST", accessToken, body));
-}
-
 export async function markMessagesAsRead(contactId: string, userId: string) {
   const marked = await prisma.$executeRawUnsafe(
     `
@@ -2070,7 +1988,7 @@ export async function markMessagesAsRead(contactId: string, userId: string) {
   // first opened the thread — re-sending on every open would be one Graph call
   // per poll.
   if (marked > 0) {
-    void sendReadReceipt(contactId).catch((e) =>
+    void sendSenderAction(contactId, "read").catch((e) =>
       log.error({ err: e, contactId }, "Failed to send the read receipt"),
     );
   }

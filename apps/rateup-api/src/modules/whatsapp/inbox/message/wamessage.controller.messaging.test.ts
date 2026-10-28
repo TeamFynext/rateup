@@ -6,6 +6,7 @@ vi.mock("../note/note.service.js", () => ({
   deleteNote: vi.fn(),
 }));
 vi.mock("./assignOwner.service.js", () => ({ assignConversationOwner: vi.fn() }));
+vi.mock("./typing.service.js", () => ({ setAgentTyping: vi.fn() }));
 vi.mock("./wamessage.service.js", () => ({
   addNewWaMessage: vi.fn(),
   assignWaMessageToUser: vi.fn(),

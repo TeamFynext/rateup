@@ -27,6 +27,17 @@ import {
 } from "./wa_templates.schema.js";
 import { declareAccess } from "../../../authz/registry.js";
 import {
+  enableTemplateInsightsHandler,
+  getTemplateAnalyticsHandler,
+  getTemplateInsightsStatusHandler,
+} from "./templateAnalytics.controller.js";
+import {
+  type TemplateAnalyticsAccount,
+  templateAnalyticsAccountSchema,
+  type TemplateAnalyticsQuery,
+  templateAnalyticsQuerySchema,
+} from "./templateAnalytics.schema.js";
+import {
   createTemplateFromLibraryHandler,
   getTemplateLibraryHandler,
 } from "./templateLibrary.controller.js";
@@ -70,6 +81,27 @@ export async function waTemplatesRoutes(server: FastifyInstance) {
     "/library",
     { schema: { body: createFromLibrarySchema } },
     createTemplateFromLibraryHandler,
+  );
+
+  // Meta's per-template analytics (sent, delivered, read, button clicks, cost).
+  server.get<{ Querystring: TemplateAnalyticsQuery }>(
+    "/analytics",
+    { schema: { querystring: templateAnalyticsQuerySchema } },
+    getTemplateAnalyticsHandler,
+  );
+  server.get<{ Querystring: TemplateAnalyticsAccount }>(
+    "/analytics/status",
+    { schema: { querystring: templateAnalyticsAccountSchema } },
+    getTemplateInsightsStatusHandler,
+  );
+  // Permanent on Meta's side and account-wide, so it is a channel setting.
+  server.post<{ Body: TemplateAnalyticsAccount }>(
+    "/analytics/enable",
+    {
+      schema: { body: templateAnalyticsAccountSchema },
+      config: { permission: "channels.manage" },
+    },
+    enableTemplateInsightsHandler,
   );
 
   server.get(

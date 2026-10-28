@@ -14,6 +14,7 @@ import {
   FavoriteContactBody,
   SpamContactBody,
   ClearMentionsBody,
+  AgentTypingBody,
   ReopenConversationBody,
   GenerateInboxResponseBody,
   PrivateWaMessageBody,
@@ -104,6 +105,7 @@ import { WaMessageClosedStatus } from "../../constants.js";
 import { getFacebookUserDetailsFromMeta } from "../../facebook/facebook.service.js";
 import { notifyInboundMessage } from "./inboundNotify.js";
 import { assignConversationOwner } from "./assignOwner.service.js";
+import { setAgentTyping } from "./typing.service.js";
 /**
  * Stores one message, in either direction, on any channel — creating the
  * contact and conversation it belongs to — and broadcasts it to the inbox.
@@ -764,6 +766,28 @@ export async function markMessagesAsReadHandler(
     reply.code(200).send(res);
   } catch (e) {
     reply.code(500).send(e);
+  }
+}
+
+export async function agentTypingHandler(
+  request: FastifyRequest<{ Body: AgentTypingBody; Params: ByContactIdParams }>,
+  reply: FastifyReply,
+) {
+  const { userId, orgId } = request.user;
+  if (!userId || !orgId) {
+    reply.status(401).send("User not found on request");
+    return;
+  }
+  try {
+    await setAgentTyping({ ...request.body, orgId, userId, contactId: request.params.contactId });
+    reply.code(204).send();
+  } catch (e) {
+    if (e instanceof HttpError) {
+      reply.code(e.statusCode).send(e.message);
+      return;
+    }
+    log.error({ err: e }, "Error relaying agent typing");
+    reply.code(500).send("Internal Server Error");
   }
 }
 
