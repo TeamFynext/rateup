@@ -1,5 +1,5 @@
 import type { LoyaltyWaCommand } from "@/backend/loyalty/settings/settings.api";
-import type { WaAutomatedReply, WaAutomationFlowJson, WaAutomationFlowNode } from "@/types/global";
+import type { WaAutomationFlowJson, WaAutomationFlowNode } from "@/types/global";
 import type { CreateRule, Rule } from "@/types/rule.ts";
 
 import type { LoyaltyMessageDefinition } from "./loyaltyMessageCatalog.ts";
@@ -179,7 +179,7 @@ export function loyaltyMenuGraph(
   };
 }
 
-/** The create body for `POST /whatsapp/automated-reply`. */
+/** The create body for `POST /chatbots`. */
 export function loyaltyChatbotPayload(input: {
   name: string;
   graph: WaAutomationFlowJson;
@@ -239,9 +239,9 @@ function menuNodeOf(graph: WaAutomationFlowJson | undefined): WaAutomationFlowNo
 }
 
 /** The generated bot among the org's chatbots, recognised by its menu node. */
-export function findLoyaltyChatbot(
-  automations: readonly WaAutomatedReply[],
-): WaAutomatedReply | undefined {
+export function findLoyaltyChatbot<T extends { matchData?: { json?: WaAutomationFlowJson } }>(
+  automations: readonly T[],
+): T | undefined {
   return automations.find((automation) => menuNodeOf(automation.matchData?.json));
 }
 

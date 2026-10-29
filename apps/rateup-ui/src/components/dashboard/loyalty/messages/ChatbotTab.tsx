@@ -5,19 +5,18 @@ import {
   IconMessageCircle,
   IconMessageChatbot,
 } from "@tabler/icons-react";
-import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import {
+  useChatbots,
+  useCreateChatbotMutation,
+  useUpdateChatbotMutation,
+} from "@/backend/chatbots/chatbots.query";
 import { useLoyaltyProgram } from "@/backend/loyalty/program.query";
 import { useLoyaltyCommands } from "@/backend/loyalty/settings/settings.query";
-import {
-  useAllWaAutomatedReplies,
-  useCreateWaAutomatedReplyMutation,
-  useUpdateWaAutomatedReplyMutation,
-} from "@/backend/whatsapp/automated-reply/automatedReply.query";
 import { useCreateRuleMutation, useRules } from "@/backend/whatsapp/rule/rule.query";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
@@ -27,7 +26,7 @@ import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
-import type { WaAutomatedReply } from "@/types/global";
+import { AutomationPlatform } from "@/types/platform.ts";
 
 import { LOYALTY_PATHS } from "../paths.ts";
 import {
@@ -53,22 +52,24 @@ const DEFAULT_TRIGGER_WORD = "menu";
  * The keyword replies, as one tappable WhatsApp menu.
  *
  * The programme already answers POINTS, REWARDS and the rest — but only for a customer who
- * knows to type them. This builds a chatbot in WhatsApp › Chatbot that lists them instead,
+ * knows to type them. This builds a chatbot in Chatbots that lists them instead,
  * and a rule so that texting one word opens it. Tapping a row sends that row's keyword, so
  * the reply that comes back is the real one, computed live; nothing about the answers moves
  * here. See `loyaltyChatbot.ts` for why that works.
  */
 export function ChatbotTab() {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
 
   const { data: program } = useLoyaltyProgram();
   const { data: commands = [], isPending: commandsPending } = useLoyaltyCommands();
-  const { data: automations = [], isPending: botsPending } = useAllWaAutomatedReplies();
+  // With graphs: the menu bot is recognised by its menu block.
+  const { data: chatbots, isPending: botsPending } = useChatbots(AutomationPlatform.WHATSAPP, {
+    withGraph: true,
+  });
   const { data: rules = [] } = useRules();
 
-  const createBot = useCreateWaAutomatedReplyMutation();
-  const updateBot = useUpdateWaAutomatedReplyMutation();
+  const createBot = useCreateChatbotMutation();
+  const updateBot = useUpdateChatbotMutation();
   const createRule = useCreateRuleMutation();
 
   const [triggerWord, setTriggerWord] = useState(DEFAULT_TRIGGER_WORD);
@@ -89,7 +90,7 @@ export function ChatbotTab() {
       Boolean(triggerWord.trim()),
   );
 
-  const chatbot = findLoyaltyChatbot(automations);
+  const chatbot = findLoyaltyChatbot(chatbots?.data ?? []);
   const rule = findMenuRule(rules, chatbot?.id);
   const triggerWords = ruleTriggerWords(rule);
   const drift = useMemo(
@@ -126,7 +127,7 @@ export function ChatbotTab() {
     createBot.mutate(
       loyaltyChatbotPayload({ name: botName, graph, whatsappSettingsPhoneId: accountId || null }),
       {
-        onSuccess: (created: WaAutomatedReply) => {
+        onSuccess: ({ chatbot: created }) => {
           // The rule is what makes the menu reachable, so a failure here is worth saying
           // out loud — the chatbot itself is already saved and the tab will show it.
           createRule.mutate(
@@ -175,7 +176,6 @@ export function ChatbotTab() {
       },
       {
         onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["allWaAutomatedReplies"] });
           toast.success(t("Menu updated."));
         },
       },
@@ -328,7 +328,7 @@ export function ChatbotTab() {
                     : t("Create the chatbot")}
                 </Button>
                 <span className="text-xs text-muted-foreground">
-                  {t("Adds a chatbot under WhatsApp › Chatbot, and a rule that opens it.")}
+                  {t("Adds a chatbot under Chatbots, and a rule that opens it.")}
                 </span>
               </div>
             </CardContent>

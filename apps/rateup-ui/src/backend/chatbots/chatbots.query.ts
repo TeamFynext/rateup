@@ -1,8 +1,13 @@
-import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { shouldSkipLocalErrorToast } from "@/backend/apiClient";
-import { automationKeys } from "@/backend/whatsapp/automation.keys";
 import { setMessengerProfileSection } from "@/backend/whatsapp/messenger-profile/messengerProfile.api";
 import { updateRule } from "@/backend/whatsapp/rule/rule.api";
 import type { RequestPayload, RequestPayloadFields } from "@/types/api.ts";
@@ -18,30 +23,28 @@ import {
   getChatbot,
   getChatbotRules,
   getChatbots,
+  initiateChatbot,
   updateChatbot,
 } from "./chatbots.api";
 
 export const chatbotKeys = {
   all: () => ["chatbots"] as const,
   lists: () => ["chatbots", "list"] as const,
-  list: (platform?: AutomationPlatform) => ["chatbots", "list", platform ?? "all"] as const,
+  list: (platform?: AutomationPlatform, withGraph = false, search = "") =>
+    [
+      "chatbots",
+      "list",
+      platform ?? "all",
+      ...(withGraph ? ["graph"] : []),
+      ...(search ? ["search", search] : []),
+    ] as const,
   detail: (id: string) => ["chatbots", "detail", id] as const,
   rules: (id: string) => ["chatbots", "rules", id] as const,
 };
 
-/**
- * After any write, every chatbot list goes stale: this page's, and the per-channel ones the
- * rules picker, the inbox and loyalty still read. Not the open chatbot: the editor holds it.
- */
+/** After any write, every chatbot list goes stale. Not the open chatbot: the editor holds it. */
 export function invalidateChatbotLists(qc: QueryClient) {
   void qc.invalidateQueries({ queryKey: chatbotKeys.lists() });
-  void qc.invalidateQueries({ queryKey: ["allWaAutomatedReplies"] });
-  void qc.invalidateQueries({
-    queryKey: automationKeys.allInstagramAutomations(),
-  });
-  void qc.invalidateQueries({
-    queryKey: automationKeys.allMessengerAutomations(),
-  });
 }
 
 function errorToast(fallback: string) {
@@ -50,10 +53,19 @@ function errorToast(fallback: string) {
   };
 }
 
-export const useChatbots = (platform?: AutomationPlatform) =>
+/**
+ * `withGraph`: each chatbot comes with its graph, for finding one by what it contains.
+ * `search`: only chatbots whose name contains it (matched by the API). The last results stay
+ * on screen while the next ones load.
+ */
+export const useChatbots = (
+  platform?: AutomationPlatform,
+  { withGraph = false, search = "" }: { withGraph?: boolean; search?: string } = {},
+) =>
   useQuery({
-    queryKey: chatbotKeys.list(platform),
-    queryFn: () => getChatbots(platform),
+    queryKey: chatbotKeys.list(platform, withGraph, search),
+    queryFn: () => getChatbots(platform, { withGraph, search }),
+    placeholderData: keepPreviousData,
   });
 
 export const useChatbot = (id: string) =>
@@ -222,3 +234,14 @@ export const useToggleChatbotMutation = () => {
     onSettled: () => invalidateChatbotLists(qc),
   });
 };
+
+/** Starts a chatbot for the contact open in the inbox. */
+export const useInitiateChatbotMutation = (chatbotId: string) =>
+  useMutation({
+    mutationFn: (body: { recipientId: string; accountId?: string }) =>
+      initiateChatbot(chatbotId, body),
+    onSuccess: () => {
+      toast.success("Chatbot started");
+    },
+    onError: errorToast("Error starting the chatbot"),
+  });

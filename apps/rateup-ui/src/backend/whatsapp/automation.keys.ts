@@ -9,11 +9,6 @@
 type KeyPart = unknown;
 
 export const automationKeys = {
-  waAutomatedReply: (params: KeyPart) => ["waAutomatedReply", params] as const,
-  instagramAutomation: (params: KeyPart) => ["instagramAutomation", params] as const,
-  messengerAutomation: (params: KeyPart) => ["messengerAutomation", params] as const,
-  allInstagramAutomations: () => ["allInstagramAutomations"] as const,
-  allMessengerAutomations: () => ["allMessengerAutomations"] as const,
   eventTriggers: (programId: KeyPart) => ["event-triggers", programId] as const,
 } as const;
 

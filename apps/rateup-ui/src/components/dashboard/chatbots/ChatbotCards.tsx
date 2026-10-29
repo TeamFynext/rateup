@@ -39,13 +39,13 @@ export function ChannelBadge({ platform }: Readonly<{ platform: string }>) {
   );
 }
 
-function useStepLabel() {
+export function useStepLabel() {
   const { t } = useTranslation();
   return (count: number) => t("{count, plural, one {# step} other {# steps}}", { count });
 }
 
 /** "12 runs · 8 completed", or "No runs yet". */
-function useRunsLabel() {
+export function useRunsLabel() {
   const { t } = useTranslation();
   return ({ started, completed }: ChatbotSummary["runs"]) =>
     started === 0
