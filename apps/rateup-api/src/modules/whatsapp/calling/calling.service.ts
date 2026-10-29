@@ -12,7 +12,8 @@ import { HttpError } from "../../../utils/http.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
 import redis from "../../../utils/redisConnection.js";
-import { getContactById, getOrCreateContactByPhone } from "../../contact/contact.service.js";
+import { getContactById, getOrCreateWaContact } from "../../contact/contact.service.js";
+import { addressWaPayload, inboundIdentity, isBsuid, waAddress } from "../bsuid.js";
 import {
   getActiveConversationForContact,
   openConversationForContact,
@@ -89,10 +90,14 @@ async function requireSettings(orgId: string, phoneId: string) {
 }
 
 async function callsEndpoint(phoneId: string, accessToken: string, body: Record<string, unknown>) {
-  const res = await callMetaApi(`/${phoneId}/calls`, "POST", accessToken, {
-    messaging_product: "whatsapp",
-    ...body,
-  });
+  // `to` may be a BSUID for a customer whose phone we do not have; Meta takes
+  // that as `recipient`.
+  const res = await callMetaApi(
+    `/${phoneId}/calls`,
+    "POST",
+    accessToken,
+    addressWaPayload({ messaging_product: "whatsapp", ...body }),
+  );
   return res.data;
 }
 
@@ -374,11 +379,12 @@ export async function startCall(
     throw new HttpError("WhatsApp number not found", 404);
   }
   const contact = await getContactById(input.contactId, actor.orgId);
-  if (!contact?.phone) throw new HttpError("This contact has no WhatsApp number", 400);
+  const address = contact?.phone ?? contact?.bsuid;
+  if (!contact || !address) throw new HttpError("This contact has no WhatsApp number", 400);
 
   const id = crypto.randomUUID();
   const data = await callsEndpoint(input.phoneId, settings.accessToken, {
-    to: contact.phone,
+    to: address,
     action: "connect",
     session: { sdp_type: "offer", sdp: input.sdp },
     biz_opaque_callback_data: id,
@@ -395,7 +401,7 @@ export async function startCall(
       phoneId: input.phoneId,
       direction: WaCallDirection.BUSINESS_INITIATED,
       status: WaCallStatus.RINGING,
-      customerWaId: contact.phone,
+      customerWaId: address,
       contactId: contact.id,
       conversationId: conversation?.id ?? null,
       initiatedById: actor.userId,
@@ -431,7 +437,9 @@ export async function getCallPermission(
 ): Promise<CallPermissionState> {
   const settings = await requireSettings(actor.orgId, phoneId);
   const contact = await getContactById(contactId, actor.orgId);
-  if (!contact?.phone) throw new HttpError("This contact has no WhatsApp number", 400);
+  if (!contact?.phone && !contact?.bsuid) {
+    throw new HttpError("This contact has no WhatsApp number", 400);
+  }
 
   const res = await callMetaApi(
     `/${phoneId}/call_permissions`,
@@ -440,7 +448,7 @@ export async function getCallPermission(
     undefined,
     {},
     {},
-    { user_wa_id: contact.phone },
+    contact.phone ? { user_wa_id: contact.phone } : { recipient: contact.bsuid },
   );
   const permission = res.data?.permission ?? {};
   const actions: MetaPermissionAction[] = res.data?.actions ?? [];
@@ -468,14 +476,15 @@ export async function requestCallPermission(
 ): Promise<void> {
   await requireSettings(actor.orgId, input.phoneId);
   const contact = await getContactById(input.contactId, actor.orgId);
-  if (!contact?.phone) throw new HttpError("This contact has no WhatsApp number", 400);
+  const address = contact?.phone ?? contact?.bsuid;
+  if (!address) throw new HttpError("This contact has no WhatsApp number", 400);
 
   await sendMessage(
     actor.orgId,
     {
       messaging_product: "whatsapp",
       recipient_type: "individual",
-      to: contact.phone,
+      to: address,
       type: "interactive",
       interactive: {
         type: "call_permission_request",
@@ -525,14 +534,21 @@ async function onIncomingCall(
   event: CallWebhookCall,
 ) {
   const orgId = settings.orgId;
-  const customer = event.from;
-  const name = value.contacts?.find((c) => c.wa_id === customer)?.profile?.name;
+  // The caller's phone when Meta shared it, else their BSUID.
+  const identity = inboundIdentity(event, value.contacts);
+  const customer = waAddress(identity) ?? event.from;
+  const entry = value.contacts?.find(
+    (c) => (identity.bsuid && c.user_id === identity.bsuid) || c.wa_id === customer,
+  );
+  const name = entry?.profile?.name;
 
-  const res = await getOrCreateContactByPhone(
-    customer,
+  const res = await getOrCreateWaContact(
+    identity.phone || identity.bsuid ? identity : { phone: customer },
     orgId,
-    { phone: customer, ...(name && { name }) },
-    undefined,
+    {
+      ...(name && { name }),
+      ...(identity.username && { whatsappUserName: identity.username }),
+    },
     true,
   );
   const contact = res?.contact;
@@ -579,7 +595,9 @@ async function onIncomingCall(
     orgId,
     callId: call.id,
     contactId: call.contactId,
-    callerName: call.contact?.name ?? `+${call.customerWaId}`,
+    callerName:
+      call.contact?.name ??
+      (isBsuid(call.customerWaId) ? "WhatsApp user" : `+${call.customerWaId}`),
     handle: call.customerWaId,
     userIds: audience,
   });

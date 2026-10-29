@@ -12,6 +12,20 @@ export const contactSchema = z.object({
   name: z.string().nullable(),
   /** Digits, country code first, no `+`. */
   phone: wirePhoneSchema.nullable(),
+  /**
+   * WhatsApp's business-scoped user ID. A customer with a WhatsApp username can reach the
+   * business with this and no phone; a template can be sent to it in place of a phone.
+   */
+  businessScopedUserId: z
+    .string()
+    .nullable()
+    .describe(
+      "WhatsApp business-scoped user ID (BSUID), e.g. US.13491208655302741918. Send to it as `phone` when the contact has no phone number",
+    ),
+  whatsappUsername: z
+    .string()
+    .nullable()
+    .describe("The customer's WhatsApp (or Instagram) username, when known"),
   email: z.string().nullable(),
   externalId: z.string().nullable(),
   source: z.string().nullable(),

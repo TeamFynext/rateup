@@ -1,4 +1,5 @@
 import { MetaAgentThreadOwner } from "../../../generated/prisma/client.js";
+import { isBsuid } from "../whatsapp/bsuid.js";
 import prisma from "../../utils/prisma.js";
 import { log } from "../../utils/logger.js";
 import { sendViaWstoOrgHandler } from "../org/ws/org.ws.controller.js";
@@ -25,7 +26,11 @@ export interface WaMessagingHandoverValue {
   messaging_product?: "whatsapp";
   metadata?: { display_phone_number?: string; phone_number_id?: string };
   recipient?: { display_phone_number?: string; phone_number_id?: string };
-  sender?: { phone_number?: string };
+  /**
+   * The customer. `user_id` (their BSUID) is not in Meta's handover docs yet but
+   * every other webhook gained it alongside the phone, so it is read when present.
+   */
+  sender?: { phone_number?: string; user_id?: string };
   timestamp?: string;
   type?: string;
   control_passed?: HandoverDetail;
@@ -77,12 +82,15 @@ export function metaTimestampToDate(timestamp: string | number | undefined): Dat
 }
 
 /**
- * Records who holds `phone`'s thread and tells the inbox. A no-op, with no
+ * Records who holds the customer's thread and tells the inbox. A no-op, with no
  * broadcast, when the contact already has that owner or holds a newer state.
  */
 export async function setMetaAgentThreadOwner(input: {
   orgId: string;
-  phone: string;
+  /** The customer's phone, or their BSUID when Meta withheld the phone. */
+  phone?: string;
+  /** The customer's BSUID, when known alongside the phone. */
+  bsuid?: string;
   owner: MetaAgentThreadOwner;
   reason?: string | null;
   at?: Date;
@@ -93,16 +101,19 @@ export async function setMetaAgentThreadOwner(input: {
    */
   inferred?: boolean;
 }): Promise<boolean> {
-  const { orgId, phone, owner } = input;
+  const { orgId, owner } = input;
   const at = input.at ?? new Date();
   const reason = input.reason ?? null;
-  if (!phone) return false;
+  const phone = isBsuid(input.phone) ? undefined : input.phone;
+  const bsuid = input.bsuid ?? (isBsuid(input.phone) ? input.phone : undefined);
+  const customer = [...(phone ? [{ phone }] : []), ...(bsuid ? [{ bsuid }] : [])];
+  if (!customer.length) return false;
 
   const { count } = await prisma.contact.updateMany({
     where: {
       orgId,
-      phone,
       AND: [
+        { OR: customer },
         { OR: [{ metaAgentThreadOwner: null }, { metaAgentThreadOwner: { not: owner } }] },
         {
           OR: [
@@ -120,8 +131,8 @@ export async function setMetaAgentThreadOwner(input: {
   });
   if (count === 0) return false;
 
-  const contact = await prisma.contact.findUnique({
-    where: { contact_phone_org_id_unique: { phone, orgId } },
+  const contact = await prisma.contact.findFirst({
+    where: { orgId, OR: customer },
     select: { id: true, name: true },
   });
   if (!contact) return true;
@@ -154,7 +165,7 @@ export async function setMetaAgentThreadOwner(input: {
         assignees.length > 0
           ? { kind: "users", userIds: assignees.map((a) => a.assignedUserId) }
           : { kind: "inboxQueue", sourceIdentifier: null },
-      data: { contactId: contact.id, contactName: contact.name ?? phone },
+      data: { contactId: contact.id, contactName: contact.name ?? phone ?? "WhatsApp user" },
     });
   }
   return true;

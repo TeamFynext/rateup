@@ -126,6 +126,8 @@ describe("the response schema is a boundary", () => {
       id: ID,
       name: "Ann",
       phone: "919876543210",
+      businessScopedUserId: null,
+      whatsappUsername: null,
       email: "ann@example.com",
       externalId: "crm-1",
       source: "external",

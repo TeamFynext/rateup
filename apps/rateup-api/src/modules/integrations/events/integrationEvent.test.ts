@@ -769,6 +769,7 @@ describe("outgoing Webhook adapter", () => {
         id: "c1",
         name: "Ann",
         phone: "919000000001",
+        businessScopedUserId: null,
         email: "ann@example.com",
         source: "WHATSAPP",
         lifecycleId: null,

@@ -54,6 +54,7 @@ vi.mock("../../../contact/contact.service.js", () => ({
   getContactById: vi.fn(),
   getOrCreateContactByIgsId: vi.fn(),
   getOrCreateContactByPhone: vi.fn(),
+  getOrCreateWaContact: vi.fn(),
   getOrCreateContactByPsid: vi.fn(),
   updateContactById: vi.fn(),
 }));
@@ -124,6 +125,7 @@ import {
   getContactById,
   getOrCreateContactByIgsId,
   getOrCreateContactByPhone,
+  getOrCreateWaContact,
   getOrCreateContactByPsid,
   updateContactById,
 } from "../../../contact/contact.service.js";
@@ -177,6 +179,8 @@ const m = {
   getContactById: getContactById as unknown as Mock,
   byIgsId: getOrCreateContactByIgsId as unknown as Mock,
   byPhone: getOrCreateContactByPhone as unknown as Mock,
+  /** WhatsApp contacts resolve by phone or BSUID; webchat still goes through byPhone. */
+  byWa: getOrCreateWaContact as unknown as Mock,
   byPsid: getOrCreateContactByPsid as unknown as Mock,
   updateContact: updateContactById as unknown as Mock,
   isFirstSend: checkIfFirstSendMessageInConversation as unknown as Mock,
@@ -192,6 +196,12 @@ const m = {
   fbDetails: getFacebookUserDetailsFromMeta as unknown as Mock,
   emit: emitIntegrationEvent as unknown as Mock,
 };
+
+/** The contact every finder hands back: WhatsApp's and the generic phone one. */
+function resolveContact(value: unknown) {
+  m.byPhone.mockResolvedValue(value);
+  m.byWa.mockResolvedValue(value);
+}
 
 const CONTACT = {
   id: "contact-1",
@@ -288,7 +298,7 @@ beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => {});
   vi.spyOn(console, "log").mockImplementation(() => {});
 
-  m.byPhone.mockResolvedValue({ contact: { ...CONTACT }, conversation: { ...CONVERSATION } });
+  resolveContact({ contact: { ...CONTACT }, conversation: { ...CONVERSATION } });
   m.byIgsId.mockResolvedValue({ contact: { ...CONTACT }, conversation: { ...CONVERSATION } });
   m.byPsid.mockResolvedValue({ contact: { ...CONTACT }, conversation: { ...CONVERSATION } });
   m.addNewWaMessage.mockResolvedValue(WA_MESSAGE);
@@ -301,11 +311,21 @@ describe("handleWaMessages - finding the contact", () => {
   test("resolves a WhatsApp sender by phone number", async () => {
     await callHandleWaMessages();
 
-    expect(m.byPhone).toHaveBeenCalledWith(
-      "15550001",
+    expect(m.byWa).toHaveBeenCalledWith(
+      { phone: "15550001" },
       "org-1",
       expect.objectContaining({ phone: "15550001", source: "whatsapp" }),
-      undefined,
+      true,
+    );
+  });
+
+  test("resolves a sender Meta only named by BSUID, never writing it as a phone", async () => {
+    await callHandleWaMessages({ from: "US.13491208655302741918" });
+
+    expect(m.byWa).toHaveBeenCalledWith(
+      { bsuid: "US.13491208655302741918" },
+      "org-1",
+      expect.not.objectContaining({ phone: "US.13491208655302741918" }),
       true,
     );
   });
@@ -320,6 +340,7 @@ describe("handleWaMessages - finding the contact", () => {
       true,
     );
     expect(m.byPhone).not.toHaveBeenCalled();
+    expect(m.byWa).not.toHaveBeenCalled();
   });
 
   test("resolves a Facebook sender by their page-scoped id", async () => {
@@ -402,7 +423,7 @@ describe("handleWaMessages - stamping the contact's activity", () => {
   test("records an inbound message against lastReceivedMessageTimeStamp", async () => {
     await callHandleWaMessages({ type: "receive" });
 
-    const data = m.byPhone.mock.calls[0][2];
+    const data = m.byWa.mock.calls[0][2];
     expect(data.lastReceivedMessageTimeStamp).toBe("2026-07-27T09:00:00Z");
     expect(data.lastSentMessageTimeStamp).toBeUndefined();
   });
@@ -410,7 +431,7 @@ describe("handleWaMessages - stamping the contact's activity", () => {
   test("records an outbound message against lastSentMessageTimeStamp", async () => {
     await callHandleWaMessages({ type: "send" });
 
-    const data = m.byPhone.mock.calls[0][2];
+    const data = m.byWa.mock.calls[0][2];
     expect(data.lastSentMessageTimeStamp).toBe("2026-07-27T09:00:00Z");
     expect(data.lastReceivedMessageTimeStamp).toBeUndefined();
   });
@@ -418,7 +439,7 @@ describe("handleWaMessages - stamping the contact's activity", () => {
   test("remembers which channel and identifier the message arrived on", async () => {
     await callHandleWaMessages();
 
-    expect(m.byPhone.mock.calls[0][2]).toMatchObject({
+    expect(m.byWa.mock.calls[0][2]).toMatchObject({
       lastMessagePlatform: PlatformType.WHATSAPP,
       lastMessageSourceIdentifier: "phone-1",
     });
@@ -427,7 +448,7 @@ describe("handleWaMessages - stamping the contact's activity", () => {
 
 describe("handleWaMessages - reopening a closed chat", () => {
   test("moves a closed conversation back to UNASSIGNED when the customer writes in", async () => {
-    m.byPhone.mockResolvedValue({
+    resolveContact({
       contact: { ...CONTACT, isSpam: false, waMessageAssignStatus: WaMessageAssignStatus.CLOSED },
       conversation: { ...CONVERSATION },
     });
@@ -440,7 +461,7 @@ describe("handleWaMessages - reopening a closed chat", () => {
   });
 
   test("leaves a spam contact's closed chat closed", async () => {
-    m.byPhone.mockResolvedValue({
+    resolveContact({
       contact: { ...CONTACT, isSpam: true, waMessageAssignStatus: WaMessageAssignStatus.CLOSED },
       conversation: { ...CONVERSATION },
     });
@@ -451,7 +472,7 @@ describe("handleWaMessages - reopening a closed chat", () => {
   });
 
   test("does not reopen on an outbound message", async () => {
-    m.byPhone.mockResolvedValue({
+    resolveContact({
       contact: { ...CONTACT, waMessageAssignStatus: WaMessageAssignStatus.CLOSED },
       conversation: { ...CONVERSATION },
     });
@@ -476,7 +497,7 @@ describe("handleWaMessages - reopening a closed chat", () => {
 
 describe("handleWaMessages - choosing the conversation", () => {
   test("opens a new conversation for an inbound message when none is active", async () => {
-    m.byPhone.mockResolvedValue({
+    resolveContact({
       contact: { ...CONTACT, waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED },
       conversation: null,
     });
@@ -490,7 +511,7 @@ describe("handleWaMessages - choosing the conversation", () => {
   });
 
   test("reuses the active conversation rather than opening another", async () => {
-    m.byPhone.mockResolvedValue({
+    resolveContact({
       contact: { ...CONTACT, waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED },
       conversation: null,
     });
@@ -503,7 +524,7 @@ describe("handleWaMessages - choosing the conversation", () => {
   });
 
   test("appends an outbound message to the last conversation", async () => {
-    m.byPhone.mockResolvedValue({ contact: { ...CONTACT }, conversation: null });
+    resolveContact({ contact: { ...CONTACT }, conversation: null });
     m.getLastConversation.mockResolvedValue({ id: "conv-last", subject: "Set" });
 
     await callHandleWaMessages({ type: "send" });
@@ -515,7 +536,7 @@ describe("handleWaMessages - choosing the conversation", () => {
 
 describe("handleWaMessages - titling the ticket", () => {
   test("titles a blank conversation from the message that opened it", async () => {
-    m.byPhone.mockResolvedValue({
+    resolveContact({
       contact: { ...CONTACT },
       conversation: { id: "conv-1", subject: null },
     });
@@ -535,7 +556,7 @@ describe("handleWaMessages - titling the ticket", () => {
   });
 
   test("leaves the conversation untitled when the message yields no subject", async () => {
-    m.byPhone.mockResolvedValue({
+    resolveContact({
       contact: { ...CONTACT },
       conversation: { id: "conv-1", subject: null },
     });
@@ -629,7 +650,7 @@ describe("handleWaMessages - outbound bookkeeping", () => {
 
 describe("handleWaMessages - taking a thread over from Meta AI", () => {
   const onMetaAi = () =>
-    m.byPhone.mockResolvedValue({
+    resolveContact({
       contact: { ...CONTACT, metaAgentThreadOwner: "AI" },
       conversation: { ...CONVERSATION },
     });
@@ -735,7 +756,7 @@ describe("handleWaMessages - fanning out", () => {
   });
 
   test("reaches the inbox for a reply it sent to a webchat contact", async () => {
-    m.byPhone.mockResolvedValue({
+    resolveContact({
       contact: { ...CONTACT, source: PlatformType.WEBCHAT },
       conversation: { ...CONVERSATION },
     });
@@ -748,7 +769,7 @@ describe("handleWaMessages - fanning out", () => {
   });
 
   test("reaches the widget for a reply recorded against another platform", async () => {
-    m.byPhone.mockResolvedValue({
+    resolveContact({
       contact: { ...CONTACT, source: PlatformType.WEBCHAT },
       conversation: { ...CONVERSATION },
     });
@@ -759,7 +780,7 @@ describe("handleWaMessages - fanning out", () => {
   });
 
   test("keeps non-webchat traffic aimed at the inbox alone", async () => {
-    m.byPhone.mockResolvedValue({
+    resolveContact({
       contact: { ...CONTACT, source: PlatformType.WHATSAPP },
       conversation: { ...CONVERSATION },
     });

@@ -7,7 +7,10 @@ const assignees = vi.fn();
 const notify = vi.fn();
 
 vi.mock("../../utils/prisma.js", () => ({
-  default: { contact: { updateMany, findUnique }, waInboxAssign: { findMany: assignees } },
+  default: {
+    contact: { updateMany, findFirst: findUnique },
+    waInboxAssign: { findMany: assignees },
+  },
 }));
 vi.mock("../org/ws/org.ws.controller.js", () => ({ sendViaWstoOrgHandler }));
 vi.mock("../notification/notify.js", () => ({ notify }));
@@ -71,8 +74,8 @@ describe("setMetaAgentThreadOwner", () => {
     expect(updateMany).toHaveBeenCalledWith({
       where: {
         orgId: "org-1",
-        phone: "919188346187",
         AND: [
+          { OR: [{ phone: "919188346187" }] },
           { OR: [{ metaAgentThreadOwner: null }, { metaAgentThreadOwner: { not: "STAFF" } }] },
           { OR: [{ metaAgentThreadOwnerAt: null }, { metaAgentThreadOwnerAt: { lte: at } }] },
         ],
@@ -112,7 +115,7 @@ describe("setMetaAgentThreadOwner", () => {
     });
 
     expect(changed).toBe(false);
-    expect(updateMany.mock.calls[0][0].where.AND[1]).toEqual({
+    expect(updateMany.mock.calls[0][0].where.AND[2]).toEqual({
       OR: [{ metaAgentThreadOwnerAt: null }, { metaAgentThreadOwnerAt: { lt: at } }],
     });
   });
@@ -174,5 +177,15 @@ describe("setMetaAgentThreadOwner", () => {
     expect(changed).toBe(false);
     expect(findUnique).not.toHaveBeenCalled();
     expect(sendViaWstoOrgHandler).not.toHaveBeenCalled();
+  });
+
+  test("finds a customer known only by BSUID", async () => {
+    updateMany.mockResolvedValue({ count: 1 });
+    findUnique.mockResolvedValue({ id: "contact-1", name: "Ann" });
+    assignees.mockResolvedValue([]);
+
+    await setMetaAgentThreadOwner({ orgId: "org-1", phone: "IN.42", owner: "AI", at });
+
+    expect(updateMany.mock.calls[0][0].where.AND[0]).toEqual({ OR: [{ bsuid: "IN.42" }] });
   });
 });

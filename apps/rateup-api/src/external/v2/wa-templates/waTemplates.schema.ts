@@ -3,7 +3,7 @@ import { z } from "zod";
 import { TemplateType } from "../../../../generated/prisma/client.js";
 import { WaTemplateStatus } from "../../../types/enums.js";
 import { pageSchema, paginationQuerySchema } from "../pagination.js";
-import { phoneSchema } from "../phone.js";
+import { waRecipientSchema } from "../phone.js";
 
 /** The header media a template can carry. Meta templates have no audio or sticker header. */
 const headerMediaTypeSchema = z.enum(["image", "video", "document"]);
@@ -84,7 +84,7 @@ export const sendTemplateBodySchema = z.object({
     .max(15)
     .optional()
     .describe("e.g. en_US. Required when the template exists in several languages"),
-  phone: phoneSchema,
+  phone: waRecipientSchema,
   header: headerMediaSchema.optional().describe("Overrides the template's default header media"),
   scheduleInMinutes: z
     .int()
@@ -116,7 +116,7 @@ const multipartList = <T extends z.ZodType>(item: T, max: number) =>
 export const sendWithFileFieldsSchema = z.object({
   templateName: sendTemplateBodySchema.shape.templateName,
   language: sendTemplateBodySchema.shape.language,
-  phone: phoneSchema,
+  phone: waRecipientSchema,
   headerType: headerMediaTypeSchema.optional(),
   filename: z.string().min(1).max(240).optional(),
   fileSize: z.coerce
@@ -142,7 +142,11 @@ export type SendWithFileFields = z.infer<typeof sendWithFileFieldsSchema>;
  */
 export const sendWithFileFormSchema = z.object({
   templateName: z.string().describe("The approved template's name"),
-  phone: z.string().describe("Digits with the country code, no `+`, e.g. 919876543210"),
+  phone: z
+    .string()
+    .describe(
+      "Digits with the country code, no `+` (e.g. 919876543210), or the contact's `businessScopedUserId`",
+    ),
   language: z
     .string()
     .optional()
@@ -217,7 +221,11 @@ export const sendToContactsResultSchema = z.object({
   skipped: z.array(
     z.object({
       contactId: z.string(),
-      reason: z.enum(["not_found", "no_phone"]),
+      reason: z
+        .enum(["not_found", "no_phone"])
+        .describe(
+          "`no_phone`: the contact has neither a phone number nor a business-scoped user ID (BSUID)",
+        ),
     }),
   ),
 });

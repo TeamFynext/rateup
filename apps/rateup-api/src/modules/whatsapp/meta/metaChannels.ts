@@ -2,6 +2,7 @@ import { PlatformType } from "../../../../generated/prisma/enums.js";
 import { WaTemplateCategory } from "../../../types/enums.js";
 import { getWaSendingSettings } from "../settings/wa_settings.service.js";
 import { channelDigits } from "../../../utils/channelIdentifier.js";
+import { addressWaPayload } from "../bsuid.js";
 import { getInstagramChannel, getMessengerChannel } from "../metaChannel/metaChannel.service.js";
 
 /**
@@ -47,6 +48,8 @@ export interface MetaChannel {
    * comment, not a person, so the contact only becomes known from the response.
    */
   extractRecipientId?(responseData: unknown): string | undefined;
+  /** The body as it goes on the wire, when the channel spells something differently. */
+  prepareBody?(payload: Record<string, unknown>): Record<string, unknown>;
 }
 
 const whatsapp: MetaChannel = {
@@ -73,6 +76,10 @@ const whatsapp: MetaChannel = {
   extractMessageId(data) {
     return (data as { messages?: { id?: string }[] } | undefined)?.messages?.[0]?.id;
   },
+  // A customer known only by their business-scoped user ID is addressed through
+  // `recipient`, not `to`. Callers keep writing `to`; this is the one place that
+  // knows the difference.
+  prepareBody: addressWaPayload,
 };
 
 /** Instagram and Messenger share the Send API; only the settings lookup differs. */

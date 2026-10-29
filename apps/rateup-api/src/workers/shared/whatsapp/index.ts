@@ -314,7 +314,10 @@ export async function fetchCampaignParticipants(
     let query = `
     SELECT 
     cp.id,
-    c.phone,
+    -- The send address: the phone, or the WhatsApp business-scoped user ID of a
+    -- customer whose phone Meta withholds (the send adapter turns it into
+    -- Meta's recipient field).
+    COALESCE(c.phone, c.bsuid) AS phone,
     c.name,
     c."orgId",
     c.id as "contactId",
@@ -420,7 +423,10 @@ export async function fetchCampaignParticipants(
   let query = `
   SELECT 
     cp.id,
-    c.phone,
+    -- The send address: the phone, or the WhatsApp business-scoped user ID of a
+    -- customer whose phone Meta withholds (the send adapter turns it into
+    -- Meta's recipient field).
+    COALESCE(c.phone, c.bsuid) AS phone,
     c.name,
     c."orgId",
     c.id as "contactId",
