@@ -48,6 +48,23 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     kinds: ["improvement"],
     area: "Chatbots",
     link: { to: "/dashboard/chatbots", label: "Open Chatbots" },
+    id: "2026-10-28-template-analytics",
+    title: "See how each template performs",
+    summary:
+      "Each template now has an Analytics page with sends, reads, button clicks and cost from Meta. An admin turns it on once per WhatsApp number.",
+    publishedAt: "2026-10-28",
+    kinds: ["new"],
+    area: "WhatsApp",
+    link: { to: "/dashboard/whatsapp/templates", label: "Open templates" },
+  },
+  {
+    id: "2026-10-28-inbox-typing-indicators",
+    title: "Typing indicators in the inbox",
+    summary:
+      "While you write a reply, customers see you typing on WhatsApp, Instagram and Messenger. You also see when a teammate is typing in the same chat.",
+    publishedAt: "2026-10-28",
+    kinds: ["new"],
+    area: "Inbox",
   },
   {
     id: "2026-10-27-template-wizard-meta-library",

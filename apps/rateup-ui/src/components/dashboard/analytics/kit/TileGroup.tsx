@@ -22,7 +22,7 @@ export function TileGroup({
   /** How many tiles the skeleton draws. */
   count: number;
   /** Tiles per row on wide screens. */
-  columns?: 3 | 4;
+  columns?: 3 | 4 | 5;
   children: ReactNode;
 }>) {
   const isStale = Boolean(query.isPlaceholderData) && !query.isError;
@@ -54,7 +54,7 @@ export function TileGroup({
       <div
         className={cn(
           "grid grid-cols-1 gap-4 transition-opacity sm:grid-cols-2",
-          columns === 3 ? "lg:grid-cols-3" : "lg:grid-cols-4",
+          columns === 3 ? "lg:grid-cols-3" : columns === 5 ? "lg:grid-cols-5" : "lg:grid-cols-4",
           isStale && "opacity-60",
         )}
         aria-busy={isStale}

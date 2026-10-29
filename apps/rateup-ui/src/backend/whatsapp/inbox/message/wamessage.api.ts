@@ -339,6 +339,21 @@ export async function markWaMessagesAsRead(contactId: string) {
   return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/mark/${contactId}`)).data;
 }
 
+export interface AgentTypingBody {
+  typing: boolean;
+  conversationId?: string | null;
+  /** Typing stopped because the reply went out. */
+  sent?: boolean;
+}
+
+/**
+ * Tells teammates this agent is (or stopped) typing, and shows the customer a
+ * typing bubble on WhatsApp, Instagram or Messenger.
+ */
+export async function sendAgentTyping(contactId: string, body: AgentTypingBody) {
+  await axiosClient.post(`${WA_CONTACT_BASE_PATH}/typing/${contactId}`, body);
+}
+
 /**
  * Inbox Tickets v2 — set (not toggle) the favourite/star flag. The flag lives on
  * the conversation (ticket), so each of a contact's tickets stars independently.

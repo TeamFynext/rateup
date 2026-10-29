@@ -256,8 +256,19 @@ const WaInboxChatSelect = () => {
   const rowCount = contactIds.length + (hasNextPageFilteredContacts ? 1 : 0);
   const compactList = useInboxViewStore((s) => s.compact);
 
+  // Measured heights are cached per key. Keyed by index (the default), a live
+  // message that reorders the list left each ticket on the previous occupant's
+  // height: a row whose own size did not change is never re-measured, so a
+  // taller row (two lines of labels) moved into a shorter slot and overlapped
+  // the next one until a reload. Keyed by ticket, the height moves with it.
+  const getItemKey = useCallback(
+    (index: number) => contactIds[index] ?? `loader-${index}`,
+    [contactIds],
+  );
+
   const rowVirtualizer = useVirtualizer({
     count: rowCount,
+    getItemKey,
     getScrollElement: () => parentRef.current,
     // Rows are measured once drawn; this only sizes the ones not yet rendered.
     estimateSize: () => (compactList ? 66 : 90),
