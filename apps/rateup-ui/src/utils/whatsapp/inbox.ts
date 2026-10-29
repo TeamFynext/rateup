@@ -121,6 +121,38 @@ export function getContactDisplayPhone(
 }
 
 /**
+ * Where a WhatsApp send to this contact goes: their phone number, or — for a
+ * customer with a WhatsApp username whose number Meta withholds — their
+ * business-scoped user ID. The API turns a BSUID into Meta's `recipient` field.
+ * For sending only; show `getContactDisplayPhone` or `getContactLabel` instead.
+ */
+export function getContactWaAddress(
+  contact?: { phone?: string | null; bsuid?: string | null } | null,
+): string | undefined {
+  return contact?.phone || contact?.bsuid || undefined;
+}
+
+/**
+ * A short way to name a contact in a sentence ("Block …"): name, then phone,
+ * then WhatsApp username, then "WhatsApp user" for someone known only by BSUID.
+ */
+export function getContactLabel(
+  contact?: {
+    name?: string | null;
+    phone?: string | null;
+    whatsappUserName?: string | null;
+    bsuid?: string | null;
+  } | null,
+): string | undefined {
+  if (!contact) return undefined;
+  if (contact.name) return contact.name;
+  if (contact.phone) return `+${contact.phone}`;
+  if (contact.whatsappUserName) return `@${contact.whatsappUserName}`;
+  if (contact.bsuid) return "WhatsApp user";
+  return undefined;
+}
+
+/**
  * A parsed message body. Which member applies follows `messageType`: the media
  * and text kinds are strings (media pack `link_caption_caption`), and the
  * structured kinds keep the shape their renderer expects.

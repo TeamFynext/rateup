@@ -6,6 +6,8 @@ import {
   compareInboxRowTimes,
   getContactChannelSource,
   getContactDisplayPhone,
+  getContactLabel,
+  getContactWaAddress,
   inboxRowSortTime,
   isMetaAiMessage,
   parseWaMessage,
@@ -198,5 +200,25 @@ describe("parseWaMessage - Messenger and Instagram events", () => {
     expect(received({ type: "referral", referral: { source: "SHORTLINK" } }).messageContent).toBe(
       "Opened a link",
     );
+  });
+});
+
+describe("getContactWaAddress", () => {
+  it("sends to the phone when there is one", () => {
+    expect(getContactWaAddress({ phone: "919876543210", bsuid: "IN.42" })).toBe("919876543210");
+  });
+  it("falls back to the BSUID for a customer whose phone is withheld", () => {
+    expect(getContactWaAddress({ phone: null, bsuid: "IN.42" })).toBe("IN.42");
+  });
+  it("is undefined with neither", () => {
+    expect(getContactWaAddress({ phone: null })).toBeUndefined();
+  });
+});
+
+describe("getContactLabel", () => {
+  it("never shows a BSUID as a number", () => {
+    expect(getContactLabel({ bsuid: "IN.42" })).toBe("WhatsApp user");
+    expect(getContactLabel({ bsuid: "IN.42", whatsappUserName: "ann" })).toBe("@ann");
+    expect(getContactLabel({ phone: "911", bsuid: "IN.42" })).toBe("+911");
   });
 });

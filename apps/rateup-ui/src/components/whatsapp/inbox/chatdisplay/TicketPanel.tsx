@@ -88,6 +88,8 @@ import {
 import {
   getContactChannelSource,
   getContactDisplayPhone,
+  getContactLabel,
+  getContactWaAddress,
   isInboxSessionExpired,
 } from "@/utils/whatsapp/inbox.ts";
 
@@ -248,9 +250,10 @@ export default function TicketPanel({
     !isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp) && !contact?.blockedOnWhatsApp;
 
   async function blockContact() {
-    if (!contact?.phone) return;
+    const address = getContactWaAddress(contact);
+    if (!contact || !address) return;
     const ok = await confirm({
-      title: t("Block {name}", { name: contact.name || contact.phone }),
+      title: t("Block {name}", { name: getContactLabel(contact) ?? address }),
       description: t(
         "They will not be able to message you, and you will not be able to message them.",
       ),
@@ -259,7 +262,7 @@ export default function TicketPanel({
     });
     if (!ok) return;
     blockMutation.mutate(
-      { phoneNumbersList: [contact.phone] },
+      { phoneNumbersList: [address] },
       { onSuccess: () => setSelectedContact({ ...contact, blockedOnWhatsApp: true }) },
     );
   }
