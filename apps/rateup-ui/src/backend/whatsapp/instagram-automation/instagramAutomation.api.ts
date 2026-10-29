@@ -1,4 +1,3 @@
-import type { RequestPayload } from "@/types/api.ts";
 import type { WaAutomatedReply } from "@/types/global";
 import { AutomationPlatform } from "@/types/platform.ts";
 
@@ -21,65 +20,12 @@ function transformAutomation(automation: WaAutomatedReply): WaAutomatedReply {
   };
 }
 
-export async function createMetaAutomation(platform: MetaAutomationPlatform, data: RequestPayload) {
-  const res = await axiosClient.post(BASE_PATHS[platform], data);
-  const result = res.data as { success: boolean; data: WaAutomatedReply };
-  return {
-    ...result,
-    data: transformAutomation(result.data),
-  };
-}
-
 export async function getAllMetaAutomations(platform: MetaAutomationPlatform) {
   const res = await axiosClient.get(BASE_PATHS[platform]);
   const result = res.data as { success: boolean; data: WaAutomatedReply[] };
   return {
     ...result,
     data: result.data.map(transformAutomation),
-  };
-}
-
-export async function getMetaAutomationById(
-  platform: MetaAutomationPlatform,
-  automationId: string,
-) {
-  const res = await axiosClient.get(`${BASE_PATHS[platform]}/${automationId}`);
-  const result = res.data as { success: boolean; data: WaAutomatedReply };
-  return {
-    ...result,
-    data: transformAutomation(result.data),
-  };
-}
-
-export async function updateMetaAutomation(
-  platform: MetaAutomationPlatform,
-  automationId: string,
-  data: RequestPayload,
-) {
-  const res = await axiosClient.put(`${BASE_PATHS[platform]}/${automationId}`, data);
-  const result = res.data as { success: boolean; data: WaAutomatedReply };
-  return {
-    ...result,
-    data: transformAutomation(result.data),
-  };
-}
-
-export async function deleteMetaAutomation(platform: MetaAutomationPlatform, automationId: string) {
-  const res = await axiosClient.delete(`${BASE_PATHS[platform]}/${automationId}`);
-  return res.data as { success: boolean; message: string };
-}
-
-/** Copies a chatbot, graph and all, as a new one on the same platform. */
-export async function cloneMetaAutomation(
-  platform: MetaAutomationPlatform,
-  automationId: string,
-  name: string,
-) {
-  const res = await axiosClient.post(`${BASE_PATHS[platform]}/${automationId}/clone`, { name });
-  const result = res.data as { success: boolean; data: WaAutomatedReply };
-  return {
-    ...result,
-    data: transformAutomation(result.data),
   };
 }
 

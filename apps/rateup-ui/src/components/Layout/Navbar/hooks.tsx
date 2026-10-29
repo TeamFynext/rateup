@@ -37,7 +37,7 @@ import {
   IconShieldExclamation,
   IconShoppingCart,
   IconShoppingCartBolt,
-  IconSitemap,
+  IconMessageChatbot,
   IconSparkles,
   IconStack2,
   IconStar,
@@ -648,8 +648,17 @@ export function useNavMain({
             },
           ]
         : []),
+      // Chatbots on every channel, in one place.
+      ...(hasTeamFeature(TeamFeature.Chatbots)
+        ? [
+            {
+              title: t("Chatbots"),
+              url: "/dashboard/chatbots",
+              icon: IconMessageChatbot,
+            },
+          ]
+        : []),
       ...(hasTeamFeature(TeamFeature.Flows) ||
-      hasTeamFeature(TeamFeature.Chatbots) ||
       hasTeamFeature(TeamFeature.Templates) ||
       hasTeamFeature(TeamFeature.Automation)
         ? [
@@ -658,11 +667,9 @@ export function useNavMain({
               // The first item listed below that this person can see.
               url: hasTeamFeature(TeamFeature.Templates)
                 ? "/dashboard/whatsapp/templates"
-                : hasTeamFeature(TeamFeature.Chatbots)
-                  ? "/dashboard/whatsapp/flowbots"
-                  : hasTeamFeature(TeamFeature.Flows)
-                    ? "/dashboard/whatsapp/flows"
-                    : "/dashboard/whatsapp/conversational-components",
+                : hasTeamFeature(TeamFeature.Flows)
+                  ? "/dashboard/whatsapp/flows"
+                  : "/dashboard/whatsapp/conversational-components",
               icon: IconBrandWhatsapp,
               items: [
                 ...(hasTeamFeature(TeamFeature.Templates)
@@ -671,15 +678,6 @@ export function useNavMain({
                         title: t("Templates"),
                         url: "/dashboard/whatsapp/templates",
                         icon: IconTemplate,
-                      },
-                    ]
-                  : []),
-                ...(hasTeamFeature(TeamFeature.Chatbots)
-                  ? [
-                      {
-                        title: t("Chatbot"),
-                        url: "/dashboard/whatsapp/flowbots",
-                        icon: IconSitemap,
                       },
                     ]
                   : []),

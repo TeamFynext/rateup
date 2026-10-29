@@ -34,18 +34,22 @@ describe("isComponentSupportedOnPlatform", () => {
   );
 
   // The engine skips these on Messenger: they lean on Instagram-only APIs.
-  test.each([
-    "instagramStoryReplyNode",
-    "instagramProductTemplateNode",
-    "instagramIceBreakerNode",
-    "instagramFollowCheckNode",
-  ])("%s is Instagram only", (node) => {
-    expect(isComponentSupportedOnPlatform(node, INSTAGRAM)).toBe(true);
-    expect(isComponentSupportedOnPlatform(node, FACEBOOK)).toBe(false);
-    expect(isComponentSupportedOnPlatform(node, WHATSAPP)).toBe(false);
+  test.each(["instagramProductTemplateNode", "instagramFollowCheckNode"])(
+    "%s is Instagram only",
+    (node) => {
+      expect(isComponentSupportedOnPlatform(node, INSTAGRAM)).toBe(true);
+      expect(isComponentSupportedOnPlatform(node, FACEBOOK)).toBe(false);
+      expect(isComponentSupportedOnPlatform(node, WHATSAPP)).toBe(false);
+    },
+  );
+
+  test("documents go out on WhatsApp and, as a file, on Messenger", () => {
+    expect(isComponentSupportedOnPlatform("documentNode", WHATSAPP)).toBe(true);
+    expect(isComponentSupportedOnPlatform("documentNode", FACEBOOK)).toBe(true);
+    expect(isComponentSupportedOnPlatform("documentNode", INSTAGRAM)).toBe(false);
   });
 
-  test.each(["buttonNode", "listNode", "documentNode", "ctaUrlNode", "templateNode", "flowNode"])(
+  test.each(["buttonNode", "listNode", "ctaUrlNode", "templateNode", "flowNode"])(
     "%s is WhatsApp only",
     (node) => {
       expect(isComponentSupportedOnPlatform(node, WHATSAPP)).toBe(true);

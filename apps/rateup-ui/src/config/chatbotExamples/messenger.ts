@@ -3,11 +3,6 @@ import { AutomationPlatform } from "@/types/platform.ts";
 import { ask, assign, cards, createGraph, quickReplies, text } from "./graph.ts";
 import type { ChatbotExample } from "./types.ts";
 
-const ON_MESSAGE = {
-  triggerEvent: "MESSAGE_RECEIVED",
-  hint: "Starts when a message to your Page matches a rule you set up.",
-};
-
 export const MESSENGER_EXAMPLES: ChatbotExample[] = [
   {
     key: "fb-page-welcome",
@@ -15,7 +10,7 @@ export const MESSENGER_EXAMPLES: ChatbotExample[] = [
     useCase: "welcome",
     name: "Page welcome",
     description: "Greets people who message your Page with quick replies to get them started.",
-    suggestedTrigger: ON_MESSAGE,
+    trigger: "keyword",
     build: () => {
       const g = createGraph();
       const menu = quickReplies(g, "Welcome", "Hi 👋 Thanks for messaging us! How can we help?", [
@@ -35,12 +30,40 @@ export const MESSENGER_EXAMPLES: ChatbotExample[] = [
     },
   },
   {
+    key: "fb-get-started-welcome",
+    platform: AutomationPlatform.FACEBOOK,
+    useCase: "welcome",
+    name: "Get Started welcome",
+    description: "Greets people the moment they tap Get Started on a new chat.",
+    trigger: "getstarted",
+    isNew: true,
+    build: () => {
+      const g = createGraph();
+      const menu = quickReplies(g, "Welcome", "Welcome! 👋 What would you like to do?", [
+        "Shop",
+        "Track an order",
+        "Talk to us",
+      ]);
+      const shop = text(g, "Shop", "Browse everything here: https://example.com/shop");
+      const order = ask(g, "Order number", "Sure! What's your order number?", "orderNumber");
+      const checking = text(g, "Checking", "Thanks! Our team will check and get back to you.");
+      const human = text(g, "Talk to us", "Connecting you with our team…");
+      g.connect(g.start, menu.id);
+      g.connect(menu.id, shop, menu.choices[0]);
+      g.connect(menu.id, order, menu.choices[1]);
+      g.connect(menu.id, human, menu.choices[2]);
+      g.chain(order, checking);
+      g.chain(human, assign(g));
+      return g.done();
+    },
+  },
+  {
     key: "fb-faq-hours-location",
     platform: AutomationPlatform.FACEBOOK,
     useCase: "support",
     name: "FAQ, hours and location",
     description: "Answers the usual questions, including when you're open and where to find you.",
-    suggestedTrigger: ON_MESSAGE,
+    trigger: "keyword",
     build: () => {
       const g = createGraph();
       const faq = quickReplies(g, "FAQs", "What would you like to know?", [
@@ -64,7 +87,7 @@ export const MESSENGER_EXAMPLES: ChatbotExample[] = [
     useCase: "leads",
     name: "Lead capture",
     description: "Asks for a name and a phone number or email, then hands the lead to your team.",
-    suggestedTrigger: ON_MESSAGE,
+    trigger: "keyword",
     build: () => {
       const g = createGraph();
       const name = ask(g, "Name", "Hi! What's your name?", "name");
@@ -87,7 +110,7 @@ export const MESSENGER_EXAMPLES: ChatbotExample[] = [
     useCase: "sales",
     name: "Product cards",
     description: "Shows products as swipeable cards with a link to buy each one.",
-    suggestedTrigger: ON_MESSAGE,
+    trigger: "keyword",
     build: () => {
       const g = createGraph();
       const intro = text(g, "Intro", "Here are this week's favourites ✨");
@@ -120,7 +143,7 @@ export const MESSENGER_EXAMPLES: ChatbotExample[] = [
     useCase: "bookings",
     name: "Booking request",
     description: "Picks a service, asks for a preferred time and passes the request to your team.",
-    suggestedTrigger: ON_MESSAGE,
+    trigger: "keyword",
     build: () => {
       const g = createGraph();
       const service = quickReplies(g, "Service", "Which service would you like to book?", [
@@ -147,7 +170,7 @@ export const MESSENGER_EXAMPLES: ChatbotExample[] = [
     useCase: "feedback",
     name: "Rating with follow-up",
     description: "Asks how it went and follows up differently on a good or bad answer.",
-    suggestedTrigger: ON_MESSAGE,
+    trigger: "keyword",
     build: () => {
       const g = createGraph();
       const rating = quickReplies(g, "Rating", "How was your experience with us?", [
@@ -172,15 +195,54 @@ export const MESSENGER_EXAMPLES: ChatbotExample[] = [
     },
   },
   {
+    key: "fb-page-comment-to-dm",
+    platform: AutomationPlatform.FACEBOOK,
+    useCase: "growth",
+    name: "Page comment to DM",
+    description: "Replies privately in Messenger to anyone who comments on a Page post.",
+    trigger: "comment",
+    isNew: true,
+    build: () => {
+      const g = createGraph();
+      // One message: a private reply is all Messenger allows until the person writes back.
+      const dm = text(
+        g,
+        "Private reply",
+        "Thanks for your comment! Here's the link: https://example.com/offer",
+      );
+      g.chain(g.start, dm);
+      return g.done();
+    },
+  },
+  {
+    key: "fb-mme-link-campaign",
+    platform: AutomationPlatform.FACEBOOK,
+    useCase: "growth",
+    name: "m.me link campaign",
+    description: "Welcomes people who open your m.me link from an ad, website or QR code.",
+    trigger: "link",
+    isNew: true,
+    build: () => {
+      const g = createGraph();
+      const menu = quickReplies(g, "Welcome", "Welcome! Want the offer from our ad? 🎉", [
+        "Yes, send it",
+        "Just browsing",
+      ]);
+      const offer = text(g, "Offer", "Here you go: https://example.com/offer");
+      const browse = text(g, "Browse", "No problem! Ask us anything and we'll reply here.");
+      g.connect(g.start, menu.id);
+      g.connect(menu.id, offer, menu.choices[0]);
+      g.connect(menu.id, browse, menu.choices[1]);
+      return g.done();
+    },
+  },
+  {
     key: "fb-talk-to-a-person",
     platform: AutomationPlatform.FACEBOOK,
     useCase: "handoff",
     name: "Talk to a person",
     description: "Lets people ask for a person and assigns the chat to your team.",
-    suggestedTrigger: {
-      triggerEvent: "MESSAGE_RECEIVED",
-      hint: "Starts when someone sends a keyword like “agent” or “human”.",
-    },
+    trigger: "keyword",
     build: () => {
       const g = createGraph();
       const hello = text(g, "On it", "Connecting you with someone from our team…");

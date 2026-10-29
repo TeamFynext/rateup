@@ -30,7 +30,8 @@ const PLATFORM_COMPONENT_SUPPORT: Record<string, AutomationPlatform[]> = {
 
   // WhatsApp only
   buttonNode: [AutomationPlatform.WHATSAPP],
-  documentNode: [AutomationPlatform.WHATSAPP],
+  // Messenger sends it as a file attachment; Instagram has no files.
+  documentNode: [AutomationPlatform.WHATSAPP, AutomationPlatform.FACEBOOK],
   listNode: [AutomationPlatform.WHATSAPP],
   ctaUrlNode: [AutomationPlatform.WHATSAPP],
   templateNode: [AutomationPlatform.WHATSAPP],
@@ -45,10 +46,9 @@ const PLATFORM_COMPONENT_SUPPORT: Record<string, AutomationPlatform[]> = {
   instagramGenericTemplateNode: META_SEND_API,
   instagramQuickReplyNode: META_SEND_API,
 
-  // Instagram only
-  instagramStoryReplyNode: [AutomationPlatform.INSTAGRAM],
+  // Instagram only. Story replies and ice breakers are not blocks: a story mention is a rule
+  // trigger and ice breakers live in the Instagram profile, so neither is listed here.
   instagramProductTemplateNode: [AutomationPlatform.INSTAGRAM],
-  instagramIceBreakerNode: [AutomationPlatform.INSTAGRAM],
   instagramFollowCheckNode: [AutomationPlatform.INSTAGRAM],
 };
 

@@ -8,12 +8,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import z from "zod";
 
-import { useUpdateWaAutomatedReplyMutation } from "@/backend/whatsapp/automated-reply/automatedReply.query";
-import { automationKeys } from "@/backend/whatsapp/automation.keys";
-import {
-  metaAutomationKey,
-  useUpdateMetaAutomationMutation,
-} from "@/backend/whatsapp/instagram-automation/instagramAutomation.query";
+import { chatbotKeys, useUpdateChatbotMutation } from "@/backend/chatbots/chatbots.query.ts";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -158,14 +153,10 @@ export function AutomatedReplyForm({
   const waAutomatedReplyId =
     typeof searchParams.waAutomatedReplyId === "string" ? searchParams.waAutomatedReplyId : "";
 
-  const updateMutation = useUpdateWaAutomatedReplyMutation();
+  // Every channel saves through /api/chatbots.
+  const updateMutation = useUpdateChatbotMutation();
   const platformValue = automationPlatformOf(rootForm.watch("platform"));
-  // Instagram and Messenger chatbots save through their own API; WhatsApp through its own.
   const metaPlatform = platformValue === AutomationPlatform.WHATSAPP ? null : platformValue;
-  const isMessenger = metaPlatform === AutomationPlatform.FACEBOOK;
-  const updateMetaMutation = useUpdateMetaAutomationMutation(
-    metaPlatform ?? AutomationPlatform.INSTAGRAM,
-  );
   const isDirty = rootForm.formState.isDirty;
 
   // FIX: Guard cancel with confirmation if form has unsaved changes
@@ -186,41 +177,21 @@ export function AutomatedReplyForm({
 
   function handleSubmitClick() {
     const data = rootForm.getValues();
-
-    if (metaPlatform) {
-      const id = data.id ?? waAutomatedReplyId ?? "";
-      updateMetaMutation.mutate(
-        { ...data, id },
-        {
-          onSuccess: () => {
-            qc.invalidateQueries({ queryKey: metaAutomationKey(metaPlatform, id) });
-            toast.success(
-              isMessenger
-                ? t("Messenger automation updated successfully")
-                : t("Instagram Automation updated successfully"),
-            );
-            setSaveSuccess(true);
-          },
-        },
-      );
-      return;
-    }
+    const id = data.id ?? waAutomatedReplyId ?? "";
 
     updateMutation.mutate(
-      { ...data, id: data.id ?? waAutomatedReplyId ?? "" },
+      { ...data, id },
       {
         onSuccess: () => {
-          qc.invalidateQueries({
-            queryKey: automationKeys.waAutomatedReply({ waAutomatedReplyId }),
-          });
-          toast.success(t("Automated Reply updated successfully"));
+          void qc.invalidateQueries({ queryKey: chatbotKeys.detail(id) });
+          toast.success(t("Chatbot settings saved"));
           setSaveSuccess(true);
         },
       },
     );
   }
 
-  const isSaving = updateMutation.isPending || updateMetaMutation.isPending;
+  const isSaving = updateMutation.isPending;
 
   let submitLabel = t("Save changes");
   if (isSaving) {

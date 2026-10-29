@@ -3,11 +3,6 @@ import { AutomationPlatform } from "@/types/platform.ts";
 import { ask, assign, buttons, createGraph, list, text } from "./graph.ts";
 import type { ChatbotExample } from "./types.ts";
 
-const ON_MESSAGE = {
-  triggerEvent: "MESSAGE_RECEIVED",
-  hint: "Starts when a WhatsApp message matches a rule you set up.",
-};
-
 /** The WhatsApp examples. The first six are the former templates (tpl-001 to tpl-008). */
 export const WHATSAPP_EXAMPLES: ChatbotExample[] = [
   {
@@ -16,7 +11,7 @@ export const WHATSAPP_EXAMPLES: ChatbotExample[] = [
     useCase: "welcome",
     name: "Welcome menu",
     description: "Greets people with buttons to explore, read FAQs or get in touch.",
-    suggestedTrigger: ON_MESSAGE,
+    trigger: "keyword",
     build: () => {
       const g = createGraph();
       const welcome = buttons(
@@ -60,7 +55,7 @@ export const WHATSAPP_EXAMPLES: ChatbotExample[] = [
     useCase: "support",
     name: "FAQ list",
     description: "Answers common questions from a list, with a way back to the list.",
-    suggestedTrigger: ON_MESSAGE,
+    trigger: "keyword",
     build: () => {
       const g = createGraph();
       const intro = buttons(
@@ -115,7 +110,7 @@ export const WHATSAPP_EXAMPLES: ChatbotExample[] = [
     useCase: "sales",
     name: "Mini store",
     description: "Lets people browse categories and follow a link to your store.",
-    suggestedTrigger: ON_MESSAGE,
+    trigger: "keyword",
     build: () => {
       const g = createGraph();
       const menu = buttons(
@@ -164,7 +159,7 @@ export const WHATSAPP_EXAMPLES: ChatbotExample[] = [
     useCase: "bookings",
     name: "Appointment booking",
     description: "Picks a service, a day and a time, then confirms the booking.",
-    suggestedTrigger: ON_MESSAGE,
+    trigger: "keyword",
     build: () => {
       const g = createGraph();
       const welcome = buttons(
@@ -224,7 +219,7 @@ export const WHATSAPP_EXAMPLES: ChatbotExample[] = [
     useCase: "feedback",
     name: "Rating with follow-up",
     description: "Asks how it went and follows up differently on a good or bad answer.",
-    suggestedTrigger: ON_MESSAGE,
+    trigger: "any",
     build: () => {
       const g = createGraph();
       const intro = buttons(
@@ -258,7 +253,7 @@ export const WHATSAPP_EXAMPLES: ChatbotExample[] = [
     useCase: "qualification",
     name: "Loan eligibility",
     description: "Checks employment, income and credit score before passing a lead on.",
-    suggestedTrigger: ON_MESSAGE,
+    trigger: "keyword",
     build: () => {
       const g = createGraph();
       const intro = buttons(
@@ -319,7 +314,7 @@ export const WHATSAPP_EXAMPLES: ChatbotExample[] = [
     useCase: "leads",
     name: "Lead capture",
     description: "Asks for a name and what they need, then hands the lead to your team.",
-    suggestedTrigger: ON_MESSAGE,
+    trigger: "leadad",
     build: () => {
       const g = createGraph();
       const name = ask(g, "Name", "Hi! What's your name?", "name");
@@ -335,10 +330,7 @@ export const WHATSAPP_EXAMPLES: ChatbotExample[] = [
     useCase: "handoff",
     name: "Talk to a person",
     description: "Lets people ask for a person and assigns the chat to your team.",
-    suggestedTrigger: {
-      triggerEvent: "MESSAGE_RECEIVED",
-      hint: "Starts when someone sends a keyword like “agent” or “human”.",
-    },
+    trigger: "keyword",
     build: () => {
       const g = createGraph();
       const hello = text(g, "On it", "Connecting you with someone from our team…");

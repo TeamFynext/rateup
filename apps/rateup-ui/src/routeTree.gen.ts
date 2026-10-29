@@ -71,6 +71,8 @@ import { Route as DashboardAnalyticsIndexRouteImport } from './routes/dashboard/
 import { Route as DashboardAutomationIndexRouteImport } from './routes/dashboard/automation/index'
 import { Route as DashboardCampaignIndexRouteImport } from './routes/dashboard/campaign/index'
 import { Route as DashboardCampaignNewRouteImport } from './routes/dashboard/campaign/new'
+import { Route as DashboardChatbotsIndexRouteImport } from './routes/dashboard/chatbots/index'
+import { Route as DashboardChatbotsChatbotIdRouteImport } from './routes/dashboard/chatbots/$chatbotId'
 import { Route as DashboardCommerceIndexRouteImport } from './routes/dashboard/commerce/index'
 import { Route as DashboardContactsIndexRouteImport } from './routes/dashboard/contacts/index'
 import { Route as DashboardFeaturesIndexRouteImport } from './routes/dashboard/features/index'
@@ -569,6 +571,17 @@ const DashboardCampaignNewRoute = DashboardCampaignNewRouteImport.update({
   path: '/campaign/new',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const DashboardChatbotsIndexRoute = DashboardChatbotsIndexRouteImport.update({
+  id: '/chatbots/',
+  path: '/chatbots/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardChatbotsChatbotIdRoute =
+  DashboardChatbotsChatbotIdRouteImport.update({
+    id: '/chatbots/$chatbotId',
+    path: '/chatbots/$chatbotId',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
 const DashboardCommerceIndexRoute = DashboardCommerceIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -1653,6 +1666,7 @@ export interface FileRoutesByFullPath {
   '/tools/sitemap.xml': typeof marketingToolsSitemapDotxmlRoute
   '/s/sitemap.xml': typeof shopSSitemapDotxmlRoute
   '/dashboard/campaign/new': typeof DashboardCampaignNewRoute
+  '/dashboard/chatbots/$chatbotId': typeof DashboardChatbotsChatbotIdRoute
   '/dashboard/meta-agent/connectors': typeof DashboardMetaAgentConnectorsRoute
   '/dashboard/meta-agent/insights': typeof DashboardMetaAgentInsightsRoute
   '/dashboard/meta-agent/knowledge': typeof DashboardMetaAgentKnowledgeRoute
@@ -1698,6 +1712,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/analytics/': typeof DashboardAnalyticsIndexRoute
   '/dashboard/automation/': typeof DashboardAutomationIndexRoute
   '/dashboard/campaign/': typeof DashboardCampaignIndexRoute
+  '/dashboard/chatbots/': typeof DashboardChatbotsIndexRoute
   '/dashboard/commerce/': typeof DashboardCommerceIndexRoute
   '/dashboard/contacts/': typeof DashboardContactsIndexRoute
   '/dashboard/features/': typeof DashboardFeaturesIndexRoute
@@ -1888,6 +1903,7 @@ export interface FileRoutesByTo {
   '/tools/sitemap.xml': typeof marketingToolsSitemapDotxmlRoute
   '/s/sitemap.xml': typeof shopSSitemapDotxmlRoute
   '/dashboard/campaign/new': typeof DashboardCampaignNewRoute
+  '/dashboard/chatbots/$chatbotId': typeof DashboardChatbotsChatbotIdRoute
   '/dashboard/meta-agent/connectors': typeof DashboardMetaAgentConnectorsRoute
   '/dashboard/meta-agent/insights': typeof DashboardMetaAgentInsightsRoute
   '/dashboard/meta-agent/knowledge': typeof DashboardMetaAgentKnowledgeRoute
@@ -1933,6 +1949,7 @@ export interface FileRoutesByTo {
   '/dashboard/analytics': typeof DashboardAnalyticsIndexRoute
   '/dashboard/automation': typeof DashboardAutomationIndexRoute
   '/dashboard/campaign': typeof DashboardCampaignIndexRoute
+  '/dashboard/chatbots': typeof DashboardChatbotsIndexRoute
   '/dashboard/commerce': typeof DashboardCommerceIndexRoute
   '/dashboard/contacts': typeof DashboardContactsIndexRoute
   '/dashboard/features': typeof DashboardFeaturesIndexRoute
@@ -2134,6 +2151,7 @@ export interface FileRoutesById {
   '/(marketing)/tools/sitemap.xml': typeof marketingToolsSitemapDotxmlRoute
   '/(shop)/s/sitemap.xml': typeof shopSSitemapDotxmlRoute
   '/dashboard/campaign/new': typeof DashboardCampaignNewRoute
+  '/dashboard/chatbots/$chatbotId': typeof DashboardChatbotsChatbotIdRoute
   '/dashboard/meta-agent/connectors': typeof DashboardMetaAgentConnectorsRoute
   '/dashboard/meta-agent/insights': typeof DashboardMetaAgentInsightsRoute
   '/dashboard/meta-agent/knowledge': typeof DashboardMetaAgentKnowledgeRoute
@@ -2179,6 +2197,7 @@ export interface FileRoutesById {
   '/dashboard/analytics/': typeof DashboardAnalyticsIndexRoute
   '/dashboard/automation/': typeof DashboardAutomationIndexRoute
   '/dashboard/campaign/': typeof DashboardCampaignIndexRoute
+  '/dashboard/chatbots/': typeof DashboardChatbotsIndexRoute
   '/dashboard/commerce/': typeof DashboardCommerceIndexRoute
   '/dashboard/contacts/': typeof DashboardContactsIndexRoute
   '/dashboard/features/': typeof DashboardFeaturesIndexRoute
@@ -2377,6 +2396,7 @@ export interface FileRouteTypes {
     | '/tools/sitemap.xml'
     | '/s/sitemap.xml'
     | '/dashboard/campaign/new'
+    | '/dashboard/chatbots/$chatbotId'
     | '/dashboard/meta-agent/connectors'
     | '/dashboard/meta-agent/insights'
     | '/dashboard/meta-agent/knowledge'
@@ -2422,6 +2442,7 @@ export interface FileRouteTypes {
     | '/dashboard/analytics/'
     | '/dashboard/automation/'
     | '/dashboard/campaign/'
+    | '/dashboard/chatbots/'
     | '/dashboard/commerce/'
     | '/dashboard/contacts/'
     | '/dashboard/features/'
@@ -2612,6 +2633,7 @@ export interface FileRouteTypes {
     | '/tools/sitemap.xml'
     | '/s/sitemap.xml'
     | '/dashboard/campaign/new'
+    | '/dashboard/chatbots/$chatbotId'
     | '/dashboard/meta-agent/connectors'
     | '/dashboard/meta-agent/insights'
     | '/dashboard/meta-agent/knowledge'
@@ -2657,6 +2679,7 @@ export interface FileRouteTypes {
     | '/dashboard/analytics'
     | '/dashboard/automation'
     | '/dashboard/campaign'
+    | '/dashboard/chatbots'
     | '/dashboard/commerce'
     | '/dashboard/contacts'
     | '/dashboard/features'
@@ -2857,6 +2880,7 @@ export interface FileRouteTypes {
     | '/(marketing)/tools/sitemap.xml'
     | '/(shop)/s/sitemap.xml'
     | '/dashboard/campaign/new'
+    | '/dashboard/chatbots/$chatbotId'
     | '/dashboard/meta-agent/connectors'
     | '/dashboard/meta-agent/insights'
     | '/dashboard/meta-agent/knowledge'
@@ -2902,6 +2926,7 @@ export interface FileRouteTypes {
     | '/dashboard/analytics/'
     | '/dashboard/automation/'
     | '/dashboard/campaign/'
+    | '/dashboard/chatbots/'
     | '/dashboard/commerce/'
     | '/dashboard/contacts/'
     | '/dashboard/features/'
@@ -3526,6 +3551,20 @@ declare module '@tanstack/react-router' {
       path: '/campaign/new'
       fullPath: '/dashboard/campaign/new'
       preLoaderRoute: typeof DashboardCampaignNewRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/chatbots/': {
+      id: '/dashboard/chatbots/'
+      path: '/chatbots'
+      fullPath: '/dashboard/chatbots/'
+      preLoaderRoute: typeof DashboardChatbotsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/chatbots/$chatbotId': {
+      id: '/dashboard/chatbots/$chatbotId'
+      path: '/chatbots/$chatbotId'
+      fullPath: '/dashboard/chatbots/$chatbotId'
+      preLoaderRoute: typeof DashboardChatbotsChatbotIdRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/commerce/': {
@@ -5268,10 +5307,12 @@ interface DashboardRouteRouteChildren {
   DashboardMetaAgentRouteRoute: typeof DashboardMetaAgentRouteRouteWithChildren
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardCampaignNewRoute: typeof DashboardCampaignNewRoute
+  DashboardChatbotsChatbotIdRoute: typeof DashboardChatbotsChatbotIdRoute
   DashboardSetupFeaturesRoute: typeof DashboardSetupFeaturesRoute
   DashboardAnalyticsIndexRoute: typeof DashboardAnalyticsIndexRoute
   DashboardAutomationIndexRoute: typeof DashboardAutomationIndexRoute
   DashboardCampaignIndexRoute: typeof DashboardCampaignIndexRoute
+  DashboardChatbotsIndexRoute: typeof DashboardChatbotsIndexRoute
   DashboardContactsIndexRoute: typeof DashboardContactsIndexRoute
   DashboardFeaturesIndexRoute: typeof DashboardFeaturesIndexRoute
   DashboardInboxIndexRoute: typeof DashboardInboxIndexRoute
@@ -5346,10 +5387,12 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardMetaAgentRouteRoute: DashboardMetaAgentRouteRouteWithChildren,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardCampaignNewRoute: DashboardCampaignNewRoute,
+  DashboardChatbotsChatbotIdRoute: DashboardChatbotsChatbotIdRoute,
   DashboardSetupFeaturesRoute: DashboardSetupFeaturesRoute,
   DashboardAnalyticsIndexRoute: DashboardAnalyticsIndexRoute,
   DashboardAutomationIndexRoute: DashboardAutomationIndexRoute,
   DashboardCampaignIndexRoute: DashboardCampaignIndexRoute,
+  DashboardChatbotsIndexRoute: DashboardChatbotsIndexRoute,
   DashboardContactsIndexRoute: DashboardContactsIndexRoute,
   DashboardFeaturesIndexRoute: DashboardFeaturesIndexRoute,
   DashboardInboxIndexRoute: DashboardInboxIndexRoute,

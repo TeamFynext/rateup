@@ -1,17 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import { ChatbotList } from "@/components/dashboard/chatbots/ChatbotList.tsx";
-import { AutomationPlatform } from "@/types/platform.ts";
-
+/** Chatbots moved to their own section; old links land on it, filtered to WhatsApp. */
 export const Route = createFileRoute("/dashboard/whatsapp/flowbots/")({
-  component: FlowbotsPage,
+  beforeLoad: () => {
+    throw redirect({ to: "/dashboard/chatbots", search: { channel: "whatsapp" }, replace: true });
+  },
 });
-
-function FlowbotsPage() {
-  return (
-    <ChatbotList
-      platform={AutomationPlatform.WHATSAPP}
-      detailsBasePath="/dashboard/whatsapp/flowbots"
-    />
-  );
-}

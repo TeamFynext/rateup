@@ -40,6 +40,14 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-10-28-chatbots-section",
+    title: "All your chatbots in one place",
+    summary:
+      "WhatsApp, Instagram and Messenger chatbots now live together under Chatbots in the sidebar. A new wizard sets up the rule that starts each one, every card shows its runs and an on/off switch, and you can start an Instagram or Messenger chatbot from the inbox.",
+    publishedAt: "2026-10-28",
+    kinds: ["improvement"],
+    area: "Chatbots",
+    link: { to: "/dashboard/chatbots", label: "Open Chatbots" },
     id: "2026-10-28-template-analytics",
     title: "See how each template performs",
     summary:
@@ -328,7 +336,7 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     publishedAt: "2026-10-14",
     kinds: ["new", "improvement"],
     area: "Chatbots",
-    link: { to: "/dashboard/whatsapp/flowbots" },
+    link: { to: "/dashboard/chatbots" },
   },
   {
     id: "2026-10-14-messenger-chatbots",
@@ -338,7 +346,7 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     publishedAt: "2026-10-14",
     kinds: ["new"],
     area: "Messenger",
-    link: { to: "/dashboard/messenger" },
+    link: { to: "/dashboard/chatbots", search: { channel: "messenger" } },
   },
   {
     id: "2026-10-14-live-calls-strip",

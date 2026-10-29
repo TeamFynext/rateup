@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
+import { useChatbotPlatform } from "../../chatbotPlatformContext.ts";
 import type { NodeFields } from "../../types/node-types.ts";
 import { isNodeValid } from "../../types/node-validation.ts";
 import BaseNode from "./base-node.tsx";
@@ -321,7 +322,8 @@ function GenericNode(props: NodeProps) {
   const parts = spec(data ?? {});
   const hasChoices = parts.some((p) => p.t === "choices");
   const flags = NODE_FLAGS[nodeType] ?? {};
-  const invalid = !isNodeValid({ type: nodeType, data: data ?? {} });
+  const platform = useChatbotPlatform();
+  const invalid = !isNodeValid({ type: nodeType, data: data ?? {} }, platform);
 
   return (
     <BaseNode

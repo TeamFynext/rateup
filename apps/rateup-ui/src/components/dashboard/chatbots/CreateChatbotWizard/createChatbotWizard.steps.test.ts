@@ -3,32 +3,21 @@ import { describe, expect, test } from "vitest";
 import { AutomationPlatform } from "@/types/platform.ts";
 
 import {
-  firstStep,
   FROM_SCRATCH,
   isStepComplete,
   nextStep,
   previousStep,
-  stepsFor,
+  WIZARD_STEPS,
 } from "./createChatbotWizard.steps.ts";
 
-describe("stepsFor / nextStep / previousStep", () => {
-  test("from the generic button: channel → starting point → details", () => {
-    expect(stepsFor(false)).toEqual(["channel", "start", "details"]);
-    expect(firstStep(false)).toBe("channel");
-    expect(nextStep(false, "channel")).toBe("start");
-    expect(nextStep(false, "start")).toBe("details");
-    expect(nextStep(false, "details")).toBeNull();
-    expect(previousStep(false, "details")).toBe("start");
-    expect(previousStep(false, "channel")).toBeNull();
-  });
-
-  // Opened from a channel's own page, there is nothing to choose on the channel step.
-  test("from a channel's page the channel step is skipped both ways", () => {
-    expect(stepsFor(true)).toEqual(["start", "details"]);
-    expect(firstStep(true)).toBe("start");
-    expect(nextStep(true, "start")).toBe("details");
-    expect(previousStep(true, "start")).toBeNull();
-    expect(nextStep(true, "channel")).toBeNull();
+describe("nextStep / previousStep", () => {
+  test("channel → starting point → details", () => {
+    expect(WIZARD_STEPS).toEqual(["channel", "start", "details"]);
+    expect(nextStep("channel")).toBe("start");
+    expect(nextStep("start")).toBe("details");
+    expect(nextStep("details")).toBeNull();
+    expect(previousStep("details")).toBe("start");
+    expect(previousStep("channel")).toBeNull();
   });
 });
 

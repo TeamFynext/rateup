@@ -50,7 +50,8 @@ interface RuleCardProps {
   onDelete: (e: MouseEvent<HTMLElement>) => void;
 }
 
-const PLATFORM_BADGE: Record<string, string> = {
+/** A channel's badge colours, keyed by the API platform. The chatbot cards use them too. */
+export const PLATFORM_BADGE: Record<string, string> = {
   WHATSAPP: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-200",
   INSTAGRAM: "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-200",
   FACEBOOK: "bg-ru-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-200",

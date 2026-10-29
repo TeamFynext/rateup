@@ -3,7 +3,7 @@ import {
   IconHandFinger,
   IconLink,
   IconMessageDots,
-  IconRobot,
+  IconSitemap,
 } from "@tabler/icons-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
@@ -12,7 +12,6 @@ import { useTranslation } from "react-i18next";
 import { useChannels } from "@/backend/channels/channels.query";
 import { ListPageLoading } from "@/components/common/list-page-layout.tsx";
 import { PageHeading } from "@/components/common/page-heading.tsx";
-import { ChatbotList } from "@/components/dashboard/chatbots/ChatbotList.tsx";
 import { MessengerCommentsTab } from "@/components/dashboard/messenger/MessengerCommentsTab.tsx";
 import { MessengerProfileTab } from "@/components/dashboard/messenger/MessengerProfileTab.tsx";
 import { MMeLinksTab } from "@/components/dashboard/messenger/MMeLinksTab.tsx";
@@ -33,13 +32,13 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
-import { AutomationPlatform } from "@/types/platform.ts";
 
 export const Route = createFileRoute("/dashboard/messenger/")({
-  component: MessengerChatbotsPage,
+  component: MessengerPage,
 });
 
-function MessengerChatbotsPage() {
+/** Comments, m.me links and the welcome screen of a Facebook Page. Its chatbots live in Chatbots. */
+function MessengerPage() {
   const { t } = useTranslation();
   const { data: pages, isPending } = useChannels(true, "FACEBOOK");
   const hasPage = (pages?.length ?? 0) > 0;
@@ -49,10 +48,20 @@ function MessengerChatbotsPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-265 flex-col gap-6">
-      <PageHeading
-        title={t("Messenger")}
-        description={t("Chatbots and links for messages sent to your Facebook Page.")}
-      />
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeading
+          title={t("Messenger")}
+          description={t("Comments, links and the welcome screen for your Facebook Page.")}
+        />
+        <Button
+          variant="outline"
+          size="sm"
+          render={<Link to="/dashboard/chatbots" search={{ channel: "messenger" }} />}
+        >
+          <IconSitemap className="mr-1.5 size-4" />
+          {t("Messenger chatbots")}
+        </Button>
+      </div>
 
       {isPending && <ListPageLoading />}
 
@@ -83,13 +92,9 @@ function MessengerChatbotsPage() {
       )}
 
       {!isPending && hasPage && (
-        <Tabs defaultValue="chatbots">
+        <Tabs defaultValue="comments">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <TabsList>
-              <TabsTrigger value="chatbots">
-                <IconRobot className="mr-1.5 size-4" />
-                {t("Chatbots")}
-              </TabsTrigger>
               <TabsTrigger value="comments">
                 <IconMessageDots className="mr-1.5 size-4" />
                 {t("Comments")}
@@ -122,12 +127,6 @@ function MessengerChatbotsPage() {
               </Select>
             )}
           </div>
-          <TabsContent value="chatbots" className="mt-4">
-            <ChatbotList
-              platform={AutomationPlatform.FACEBOOK}
-              detailsBasePath="/dashboard/messenger/flowbots"
-            />
-          </TabsContent>
           <TabsContent value="comments" className="mt-4">
             {page && <MessengerCommentsTab pageId={page.accountId} />}
           </TabsContent>

@@ -10,6 +10,10 @@ import type { Resolver } from "react-hook-form";
  * This is the single source of truth: `validateNodeData` (used for the Save
  * toast) is derived from it.
  */
+import { parseToWhatsAppFormat } from "@/components/RichTextEditor/wa-editor/format.tsx";
+import type { AutomationPlatform } from "@/types/platform.ts";
+import { formatBytes, limitsFor, type MediaNodeType } from "@/types/platformLimits.ts";
+import type { TiptapNode } from "@/types/tiptapNode";
 import { hasRealContent, safeStrOrNull } from "@/utils/index.ts";
 
 import type { NodeData, NodeFields, TypedNode } from "./node-types.ts";
@@ -29,8 +33,118 @@ export type NodeFieldErrors = Record<string, string>;
 const isBlank = (v: unknown): boolean =>
   v === undefined || v === null || (typeof v === "string" && v.trim() === "");
 
-export function getNodeFieldErrors(node: { type: string; data?: NodeFields }): NodeFieldErrors {
+/**
+ * The length of a message field as it is sent: rich text is counted once turned into
+ * WhatsApp-style text (the form every channel's sender uses), a plain string as it is.
+ */
+export function sentLength(value: unknown): number {
+  if (value === undefined || value === null) return 0;
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (trimmed.startsWith("{")) {
+      try {
+        return parseToWhatsAppFormat(JSON.parse(trimmed) as TiptapNode).length;
+      } catch {
+        // Not JSON after all: count it as typed.
+      }
+    }
+    return value.length;
+  }
+  if (typeof value === "object") return parseToWhatsAppFormat(value as TiptapNode).length;
+  return 0;
+}
+
+interface CardFields {
+  title?: string;
+  subtitle?: string;
+  buttons?: Array<{ title?: string }>;
+}
+
+/**
+ * What breaks the chatbot's channel's limits (see platformLimits.ts). Separate from the
+ * required-field checks, which hold on every channel.
+ */
+export function getNodeLimitErrors(
+  node: { type: string; data?: NodeFields },
+  platform: AutomationPlatform,
+): NodeFieldErrors {
   const errors: NodeFieldErrors = {};
+  const data = node.data ?? {};
+  const limits = limitsFor(platform);
+  const tooLong = (value: unknown, max: number) => sentLength(value) > max;
+
+  switch (node.type) {
+    case "textNode":
+      if (tooLong(data.body, limits.text)) {
+        errors.body = `Message text must be ${limits.text} characters or less on this channel.`;
+      }
+      break;
+    case "imageNode":
+    case "videoNode":
+    case "documentNode":
+      if (tooLong(data.caption, limits.caption)) {
+        errors.caption = `Caption must be ${limits.caption} characters or less on this channel.`;
+      }
+      break;
+    case "textInputNode":
+    case "numberInputNode":
+    case "emailInputNode":
+    case "phoneInputNode":
+    case "dateInputNode":
+      if (tooLong(data.question, limits.text)) {
+        errors.question = `Question must be ${limits.text} characters or less on this channel.`;
+      }
+      break;
+    case "instagramQuickReplyNode": {
+      const { max, title } = limits.quickReplies;
+      if (tooLong(data.text, limits.text)) {
+        errors.text = `Message text must be ${limits.text} characters or less on this channel.`;
+      }
+      const replies = data.quick_replies ?? [];
+      if (replies.length > max) {
+        errors.quick_replies = `Up to ${max} quick replies.`;
+      } else if (replies.some((reply) => (reply?.title ?? "").length > title)) {
+        errors.quick_replies = `Quick replies must be ${title} characters or less.`;
+      }
+      break;
+    }
+    case "instagramGenericTemplateNode": {
+      const { max, title, subtitle, buttons, buttonTitle } = limits.cards;
+      const cards = (data.elements ?? []) as CardFields[];
+      if (cards.length > max) {
+        errors.elements = `Up to ${max} cards.`;
+      } else if (cards.some((card) => (card.title ?? "").length > title)) {
+        errors.elements = `Card titles must be ${title} characters or less.`;
+      } else if (cards.some((card) => (card.subtitle ?? "").length > subtitle)) {
+        errors.elements = `Card subtitles must be ${subtitle} characters or less.`;
+      } else if (cards.some((card) => (card.buttons ?? []).length > buttons)) {
+        errors.elements = `Up to ${buttons} buttons per card.`;
+      } else if (
+        cards.some((card) =>
+          (card.buttons ?? []).some((b) => (b?.title ?? "").length > buttonTitle),
+        )
+      ) {
+        errors.elements = `Card buttons must be ${buttonTitle} characters or less.`;
+      }
+      break;
+    }
+    default:
+      break;
+  }
+  return errors;
+}
+
+/** The largest upload a media block takes on a channel, and how to say it. */
+export function mediaLimit(nodeType: MediaNodeType, platform: AutomationPlatform | undefined) {
+  const bytes = limitsFor(platform).mediaBytes[nodeType];
+  return bytes ? { bytes, text: formatBytes(bytes) } : undefined;
+}
+
+export function getNodeFieldErrors(
+  node: { type: string; data?: NodeFields },
+  platform?: AutomationPlatform,
+): NodeFieldErrors {
+  const errors: NodeFieldErrors = platform ? getNodeLimitErrors(node, platform) : {};
   const data = node.data ?? {};
 
   if (isBlank(data.label)) {
@@ -237,14 +351,17 @@ export function getNodeFieldErrors(node: { type: string; data?: NodeFields }): N
 }
 
 /** True when the node has no validation errors. */
-export function isNodeValid(node: { type: string; data?: NodeFields }): boolean {
-  return Object.keys(getNodeFieldErrors(node)).length === 0;
+export function isNodeValid(
+  node: { type: string; data?: NodeFields },
+  platform?: AutomationPlatform,
+): boolean {
+  return Object.keys(getNodeFieldErrors(node, platform)).length === 0;
 }
 
 /** react-hook-form resolver backed by {@link getNodeFieldErrors}. */
-export function nodeResolver(nodeType: string): Resolver<NodeData> {
+export function nodeResolver(nodeType: string, platform?: AutomationPlatform): Resolver<NodeData> {
   return (values) => {
-    const fieldErrors = getNodeFieldErrors({ type: nodeType, data: values });
+    const fieldErrors = getNodeFieldErrors({ type: nodeType, data: values }, platform);
     const errors = Object.fromEntries(
       Object.entries(fieldErrors).map(([name, message]) => [name, { type: "validate", message }]),
     );
@@ -256,8 +373,8 @@ export function nodeResolver(nodeType: string): Resolver<NodeData> {
  * First field error as a single message (optionally prefixed with the node
  * label) — used for the Save toast.
  */
-export function firstNodeError(node: TypedNode): string {
-  const errors = getNodeFieldErrors(node);
+export function firstNodeError(node: TypedNode, platform?: AutomationPlatform): string {
+  const errors = getNodeFieldErrors(node, platform);
   const keys = Object.keys(errors);
   if (!keys.length) return "";
   const label = node.data?.label;

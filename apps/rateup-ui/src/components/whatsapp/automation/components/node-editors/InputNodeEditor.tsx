@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 
+import { useChannelLimits } from "../../chatbotPlatformContext.ts";
 import { ContainedTextField } from "../editor-ui.tsx";
 import { FieldMsg, styles, useFieldError } from "./shared.tsx";
 import type { NodeComponentProps } from "./shared.tsx";
@@ -31,10 +32,11 @@ export const InputNodeEditor: React.FC<
   >
 > = ({ nodeData, handleInputChange }) => {
   const typedData = nodeData;
+  const max = useChannelLimits().text;
   const questionEditor = useWaEditor({
     content: typedData.question || "",
     placeholder: "Enter your question text here...",
-    max: 4096,
+    max,
     onChange: (value) => handleInputChange("question", value),
   });
   return (
@@ -57,7 +59,7 @@ export const InputNodeEditor: React.FC<
                 className="overflow-y-auto rounded-xl"
               />
               <div className="flex items-center justify-end space-x-1 px-2 pt-1">
-                <WaTextCharacterCount editor={questionEditor} max={4096} />
+                <WaTextCharacterCount editor={questionEditor} max={max} />
               </div>
               <div className="flex flex-wrap p-2">
                 <div className="mt-1 flex items-center">

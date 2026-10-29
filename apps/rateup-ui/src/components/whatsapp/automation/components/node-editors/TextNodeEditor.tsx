@@ -19,7 +19,9 @@ import { UndoToolbar } from "@/components/tiptap/toolbars/undo.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { TooltipProvider } from "@/components/ui/tooltip.tsx";
+import { AutomationPlatform } from "@/types/platform.ts";
 
+import { useChannelLimits, useChatbotPlatform } from "../../chatbotPlatformContext.ts";
 import { Switch } from "../editor-ui.tsx";
 import { FieldMsg, styles } from "./shared.tsx";
 import type { NodeComponentProps } from "./shared.tsx";
@@ -30,10 +32,12 @@ export const TextNodeEditor: React.FC<NodeComponentProps<"textNode">> = ({
   handleInputChange,
 }) => {
   const typedData = nodeData;
+  const platform = useChatbotPlatform();
+  const max = useChannelLimits().text;
   const bodyEditor = useWaEditor({
     content: typedData.body || "",
     placeholder: "Enter your message text here...",
-    max: 4096,
+    max,
     onChange: (value) => handleInputChange("body", value),
   });
   return (
@@ -56,7 +60,7 @@ export const TextNodeEditor: React.FC<NodeComponentProps<"textNode">> = ({
                 className="overflow-y-auto rounded-xl"
               />
               <div className="flex items-center justify-end space-x-1 px-2 pt-1">
-                <WaTextCharacterCount editor={bodyEditor} max={4096} />
+                <WaTextCharacterCount editor={bodyEditor} max={max} />
               </div>
               <div className="flex flex-wrap p-2">
                 <div className="mt-1 flex items-center">
@@ -94,12 +98,14 @@ export const TextNodeEditor: React.FC<NodeComponentProps<"textNode">> = ({
         </div>
       </div>
       <FieldMsg name="body" />
-      <Switch
-        label="Enable link preview"
-        checked={typedData.previewUrl || true}
-        onChange={(e) => handleInputChange("previewUrl", e.target.checked)}
-        description={"Enable link preview to show URL previews in WhatsApp."}
-      />
+      {platform === AutomationPlatform.WHATSAPP && (
+        <Switch
+          label="Enable link preview"
+          checked={typedData.previewUrl || true}
+          onChange={(e) => handleInputChange("previewUrl", e.target.checked)}
+          description={"Enable link preview to show URL previews in WhatsApp."}
+        />
+      )}
     </div>
   );
 };

@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button.tsx";
-import { findExample } from "@/config/chatbotExamples/index.ts";
+import { findExample, findTrigger } from "@/config/chatbotExamples/index.ts";
 import type { AutomationPlatform } from "@/types/platform.ts";
 
 /** The rule builder's platform values are the API's, upper-case. */
@@ -14,10 +14,10 @@ const RULE_PLATFORM = {
 } as const;
 
 /**
- * Shown once in the editor of a chatbot just made from an example that has a suggested
- * trigger: a chatbot does nothing until a rule starts it. The wizard sends `?example=` (and
- * `?channel=` when an account was picked); acting on the prompt or dismissing it drops them,
- * so it does not come back.
+ * Shown once in the editor of a chatbot the wizard just made: a chatbot does nothing until
+ * something starts it. The wizard sends `?trigger=` (the "How it starts" choice), `?example=`
+ * and, when an account was picked, `?channel=`; acting on the prompt or dismissing it drops
+ * them, so it does not come back.
  */
 export function TriggerSetupPrompt({ platform }: Readonly<{ platform: AutomationPlatform }>) {
   const { t } = useTranslation();
@@ -25,7 +25,8 @@ export function TriggerSetupPrompt({ platform }: Readonly<{ platform: Automation
   const search = useSearch({ strict: false });
   const example = findExample(typeof search.example === "string" ? search.example : undefined);
   const channel = typeof search.channel === "string" ? search.channel : undefined;
-  const trigger = example?.suggestedTrigger;
+  const chosen = typeof search.trigger === "string" ? search.trigger : example?.trigger;
+  const trigger = findTrigger(platform, chosen);
 
   if (!trigger) return null;
 
@@ -39,24 +40,26 @@ export function TriggerSetupPrompt({ platform }: Readonly<{ platform: Automation
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <div className="text-sm font-semibold text-foreground">{t("Set up the trigger")}</div>
         <p className="text-sm text-muted-foreground">{t(trigger.hint)}</p>
-        <div>
-          <Button
-            size="sm"
-            render={
-              <Link
-                to="/dashboard/automation/$automationId"
-                params={{ automationId: "new" }}
-                search={{
-                  platform: RULE_PLATFORM[platform],
-                  triggerEvent: trigger.triggerEvent,
-                  ...(channel && { channel }),
-                }}
-              />
-            }
-          >
-            {t("Create the rule")}
-          </Button>
-        </div>
+        {trigger.triggerEvent && (
+          <div>
+            <Button
+              size="sm"
+              render={
+                <Link
+                  to="/dashboard/automation/$automationId"
+                  params={{ automationId: "new" }}
+                  search={{
+                    platform: RULE_PLATFORM[platform],
+                    triggerEvent: trigger.triggerEvent,
+                    ...(channel && { channel }),
+                  }}
+                />
+              }
+            >
+              {t("Create the rule")}
+            </Button>
+          </div>
+        )}
       </div>
       <Button
         variant="ghost"
