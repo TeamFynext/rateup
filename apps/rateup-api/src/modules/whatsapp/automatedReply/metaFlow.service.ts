@@ -23,6 +23,7 @@ import {
 } from "../instagram/instagram_messaging.service.js";
 import {
   sendSendApiAudio,
+  sendSendApiFile,
   sendSendApiGenericTemplate,
   sendSendApiImage,
   sendSendApiQuickReply,
@@ -123,7 +124,10 @@ function nodeChoices(node: MetaFlowNode): { handle: string; title: string }[] {
     const options = nodeArray<InstagramQuickReplyOption>(
       node.data?.quick_replies ?? node.data?.quickReplies,
     );
-    return options.map((qr, i) => ({ handle: quickReplyHandle(qr, i), title: qr.title ?? "" }));
+    return options.map((qr, i) => ({
+      handle: quickReplyHandle(qr, i),
+      title: qr.title ?? "",
+    }));
   }
   if (node.type === "instagramGenericTemplateNode") {
     return nodeArray<InstagramTemplateElement>(node.data?.elements).flatMap((el, ci) =>
@@ -269,9 +273,17 @@ async function adoptCommentRecipientRun(
   if (!reached || reached === standIn) return;
   await prisma.$transaction([
     prisma.waAutomatedReplyMessage.deleteMany({
-      where: { phone: reached, waAutomatedReplyId: automationId, orgId, NOT: { id: runId } },
+      where: {
+        phone: reached,
+        waAutomatedReplyId: automationId,
+        orgId,
+        NOT: { id: runId },
+      },
     }),
-    prisma.waAutomatedReplyMessage.update({ where: { id: runId }, data: { phone: reached } }),
+    prisma.waAutomatedReplyMessage.update({
+      where: { id: runId },
+      data: { phone: reached },
+    }),
   ]);
   log.info(`${logPrefix(channel)} Run ${runId} now follows ${reached} after the comment reply`);
 }
@@ -376,7 +388,13 @@ export async function processNextMetaFlowNode(
 
       case "imageNode":
       case "videoNode":
-      case "audioNode": {
+      case "audioNode":
+      case "documentNode": {
+        // Files go out on Messenger only; Instagram has no file attachments.
+        if (node.type === "documentNode" && isInstagram(channel)) {
+          log.warn(`${prefix} Skipping document node ${nodeId}: Instagram can't send files`);
+          break;
+        }
         // Media cannot be sent as a private reply; send a text private reply first.
         const facebookCommentPending = Boolean(
           channel.pendingComment && !channel.pendingComment.recipientId,
@@ -612,7 +630,7 @@ async function handleTextNode(
   }
 }
 
-/** imageNode, videoNode or audioNode. Returns whether anything was sent. */
+/** imageNode, videoNode, audioNode or (Messenger) documentNode. Returns whether anything was sent. */
 async function handleMediaNode(
   node: MetaFlowNode,
   recipientId: string,
@@ -630,6 +648,10 @@ async function handleMediaNode(
   const url = getFileUrlFromKey(mediaKey);
   if (node.type === "audioNode") {
     await sendSendApiAudio(channel, recipientId, orgId, url);
+  } else if (node.type === "documentNode") {
+    await sendSendApiFile(channel, recipientId, orgId, url);
+    // Messenger file attachments take no caption, so it follows as its own message.
+    if (caption) await sendSendApiText(channel, recipientId, orgId, caption);
   } else if (node.type === "videoNode") {
     await sendSendApiVideo(channel, recipientId, orgId, url, caption);
   } else {
@@ -816,7 +838,10 @@ export async function handleMetaFlowUserResponse(
 
     const now = Date.now();
     const waiting = rows
-      .map((row) => ({ row, waitingAt: Date.parse(readProgress(row.response).waitingAt ?? "") }))
+      .map((row) => ({
+        row,
+        waitingAt: Date.parse(readProgress(row.response).waitingAt ?? ""),
+      }))
       .filter(({ waitingAt }) => now - waitingAt < REPLY_WINDOW_MS)
       .sort((a, b) => b.waitingAt - a.waitingAt)[0]?.row;
 

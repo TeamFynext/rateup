@@ -817,8 +817,10 @@ export async function handleLeadGen(body: WaMessageBody) {
   for (const lead of body.entry[0].changes) {
     const { page_id, ad_id, leadgen_id } = lead.value as LeadGenBody;
     const nodeType = "leadgenNode";
+    // A chatbot switched off on the Chatbots page is not started by its lead ad.
     const automation = await prisma.waAutomatedReply.findFirst({
       where: {
+        isActive: true,
         matchData: {
           path: ["json", "nodes"],
           array_contains: [
