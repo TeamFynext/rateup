@@ -997,6 +997,7 @@ describe("toWebhookPayload", () => {
           id: "c1",
           name: "Ann",
           phone: "919000000001",
+          businessScopedUserId: null,
           email: null,
           source: null,
           lifecycleId: null,

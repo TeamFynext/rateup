@@ -445,7 +445,7 @@ export async function sendToContactsHandler(
   const requested = [...new Set(body.contactIds)];
   const contacts = await prisma.contact.findMany({
     where: { orgId, id: { in: requested } },
-    select: { id: true, phone: true },
+    select: { id: true, phone: true, bsuid: true },
   });
   const byId = new Map(contacts.map((c) => [c.id, c]));
   const skipped: { contactId: string; reason: "not_found" | "no_phone" }[] = [];
@@ -453,8 +453,9 @@ export async function sendToContactsHandler(
   for (const id of requested) {
     const contact = byId.get(id);
     if (!contact) skipped.push({ contactId: id, reason: "not_found" });
-    else if (!contact.phone) skipped.push({ contactId: id, reason: "no_phone" });
-    else sendable.push({ id, phone: contact.phone });
+    // A customer with a WhatsApp username may have only a business-scoped user ID.
+    else if (!contact.phone && !contact.bsuid) skipped.push({ contactId: id, reason: "no_phone" });
+    else sendable.push({ id, phone: (contact.phone ?? contact.bsuid) as string });
   }
 
   const components = buildComponents(body.header, body.bodyVariables);

@@ -16,8 +16,14 @@ interface CallWebhookError {
 /** One entry of `value.calls[]` on a `calls` webhook change. */
 export interface CallWebhookCall {
   id: string;
+  /** The caller's phone (user-initiated). May be omitted; see `from_user_id`. */
   from: string;
+  /** The customer's BSUID on a user-initiated call. */
+  from_user_id?: string;
+  /** The customer's phone (business-initiated). May be omitted; see `to_user_id`. */
   to: string;
+  /** The customer's BSUID on a business-initiated call. */
+  to_user_id?: string;
   event: "connect" | "terminate";
   direction: "USER_INITIATED" | "BUSINESS_INITIATED";
   timestamp: string;
@@ -39,13 +45,14 @@ export interface CallWebhookStatus {
   status: "RINGING" | "ACCEPTED" | "REJECTED";
   timestamp: string;
   recipient_id: string;
+  recipient_user_id?: string;
   biz_opaque_callback_data?: string;
 }
 
 export interface CallWebhookValue {
   messaging_product: "whatsapp";
   metadata: { phone_number_id: string; display_phone_number: string };
-  contacts?: { wa_id: string; profile?: { name?: string } }[];
+  contacts?: { wa_id?: string; user_id?: string; profile?: { name?: string; username?: string } }[];
   calls?: CallWebhookCall[];
   statuses?: CallWebhookStatus[];
   errors?: CallWebhookError[];

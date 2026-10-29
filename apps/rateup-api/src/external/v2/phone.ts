@@ -1,6 +1,8 @@
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import z from "zod";
 
+import { isBsuid } from "../../modules/whatsapp/bsuid.js";
+
 const EXAMPLE = "Digits with the country code, no `+`, e.g. 919876543210";
 
 /**
@@ -26,6 +28,31 @@ export const phoneSchema = z
     return parsed.number.slice(1);
   })
   .describe(EXAMPLE);
+
+/**
+ * Who a WhatsApp send goes to: a phone number (normalised exactly as `phoneSchema`), or a
+ * WhatsApp business-scoped user ID (BSUID) such as `"US.13491208655302741918"` — what a contact
+ * with a WhatsApp username has instead of a phone (see `businessScopedUserId` on a contact).
+ * A BSUID is passed through verbatim.
+ */
+export const waRecipientSchema = z
+  .union([z.string().trim().min(4).max(160), z.number().int().positive()])
+  .transform((value, ctx) => {
+    if (typeof value === "string" && isBsuid(value)) return value;
+    const result = phoneSchema.safeParse(value);
+    if (!result.success) {
+      ctx.addIssue({
+        code: "custom",
+        message:
+          "Not a valid phone number with a country code, or a business-scoped user ID (BSUID)",
+      });
+      return z.NEVER;
+    }
+    return result.data;
+  })
+  .describe(
+    "Digits with the country code, no `+` (e.g. 919876543210), or the contact's `businessScopedUserId` (e.g. US.13491208655302741918)",
+  );
 
 /** A phone in a response: same shape as `phoneSchema`'s output. */
 export const wirePhoneSchema = z.string().describe(EXAMPLE);

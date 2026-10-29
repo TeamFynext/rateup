@@ -30,7 +30,8 @@ import { getSentMessageId, markMessageSent } from "./sendIdempotency.js";
 export interface MetaSendInput extends MetaChannelContext {
   platform: PlatformType;
   /**
-   * Recipient: a phone number (WhatsApp), igsId (Instagram) or psid (Messenger).
+   * Recipient: a phone number or business-scoped user ID (WhatsApp), igsId
+   * (Instagram) or psid (Messenger).
    * May be omitted for an Instagram private reply, which is addressed to a
    * comment — the contact is then taken from Meta's `recipient_id`.
    */
@@ -275,7 +276,7 @@ export async function sendMetaMessage(input: MetaSendInput): Promise<MetaSendRes
       channel.buildPath(credentials, { orgId, category }),
       "POST",
       usesQueryToken ? undefined : credentials.accessToken,
-      payload,
+      channel.prepareBody ? channel.prepareBody(payload) : payload,
       usesQueryToken ? { params: { access_token: credentials.accessToken } } : {},
     );
     endSendTimer({ outcome: "ok" });

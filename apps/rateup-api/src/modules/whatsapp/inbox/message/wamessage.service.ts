@@ -803,7 +803,8 @@ export async function filterChats(
       params.push(`%${bodyFilterProps.searchTerm}%`);
       params.push(`%${bodyFilterProps.searchTerm.replace(/\s+/g, "")}%`);
       filters.push(
-        `(c."name" ILIKE $${paramIndex}::TEXT OR REPLACE(c."phone", ' ', '') LIKE $${paramIndex + 1}::TEXT)`,
+        // A customer with a WhatsApp username may have no name or phone on file.
+        `(c."name" ILIKE $${paramIndex}::TEXT OR c."whatsappUserName" ILIKE $${paramIndex}::TEXT OR REPLACE(c."phone", ' ', '') LIKE $${paramIndex + 1}::TEXT)`,
       );
       paramIndex += 2;
     }
@@ -838,6 +839,7 @@ export async function filterChats(
           c.id,
           c."name",
           c."phone",
+          c."bsuid",
           c."other",
           c."waMessageAssignStatus",
           c."lastReceivedMessageTimeStamp",

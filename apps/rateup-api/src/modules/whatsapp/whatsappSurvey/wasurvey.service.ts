@@ -1,3 +1,4 @@
+import { isBsuid } from "../bsuid.js";
 import { emitSurveyResponseSubmitted } from "../../integrations/events/emitIntegrationEvent.js";
 import { randomUUID } from "node:crypto";
 import {
@@ -224,8 +225,16 @@ export async function sendMessage(
   }
 }
 
+/** Contacts named by a block/unblock list, whose entries are phones or BSUIDs. */
+function customersIn(ids: string[] | undefined) {
+  const list = ids ?? [];
+  return { OR: [{ phone: { in: list } }, { bsuid: { in: list } }] };
+}
+
 function createBlockWhatsappUserBody(phoneNumbersList: string[]) {
-  const listBody = phoneNumbersList.map((phone) => ({ user: phone }));
+  // A customer known only by their business-scoped user ID is blocked by
+  // `user_id`; Meta reads `user` as a phone number.
+  const listBody = phoneNumbersList.map((id) => (isBsuid(id) ? { user_id: id } : { user: id }));
   return {
     messaging_product: "whatsapp",
     block_users: listBody,
@@ -247,7 +256,7 @@ export async function blockWhatsappUser(orgId: string, phoneNumbers: string[]) {
       log.trace(`blocked users successfully %o %o`, res.data, res.statusText);
       const contactsToBlock = await prisma.contact.findMany({
         where: {
-          phone: { in: phoneNumbers },
+          ...customersIn(phoneNumbers),
           orgId,
           blockedOnWhatsApp: false,
           lastReceivedMessageTimeStamp: { not: null },
@@ -257,9 +266,7 @@ export async function blockWhatsappUser(orgId: string, phoneNumbers: string[]) {
 
       await prisma.contact.updateMany({
         where: {
-          phone: {
-            in: phoneNumbers,
-          },
+          ...customersIn(phoneNumbers),
           orgId,
         },
         data: {
@@ -287,7 +294,7 @@ export async function blockWhatsappUser(orgId: string, phoneNumbers: string[]) {
       log.trace(`blocked users successfully %o %o`, res.data, res.statusText);
       const contactsToBlock = await prisma.contact.findMany({
         where: {
-          phone: { in: blockedNumbers },
+          ...customersIn(blockedNumbers),
           orgId,
           blockedOnWhatsApp: false,
           lastReceivedMessageTimeStamp: { not: null },
@@ -297,9 +304,7 @@ export async function blockWhatsappUser(orgId: string, phoneNumbers: string[]) {
 
       await prisma.contact.updateMany({
         where: {
-          phone: {
-            in: blockedNumbers,
-          },
+          ...customersIn(blockedNumbers),
           orgId,
         },
         data: {
@@ -342,7 +347,7 @@ export async function unblockWhatsappUser(orgId: string, phoneNumbers: string[])
       log.trace(`blocked users successfully %o %o`, res.data, res.statusText);
       const contactsToUnblock = await prisma.contact.findMany({
         where: {
-          phone: { in: phoneNumbers },
+          ...customersIn(phoneNumbers),
           orgId,
           blockedOnWhatsApp: true,
           lastReceivedMessageTimeStamp: { not: null },
@@ -352,9 +357,7 @@ export async function unblockWhatsappUser(orgId: string, phoneNumbers: string[])
 
       await prisma.contact.updateMany({
         where: {
-          phone: {
-            in: phoneNumbers,
-          },
+          ...customersIn(phoneNumbers),
           orgId,
         },
         data: {
@@ -382,7 +385,7 @@ export async function unblockWhatsappUser(orgId: string, phoneNumbers: string[])
       log.trace(`blocked users successfully %o %o`, res.data, res.statusText);
       const contactsToUnblock = await prisma.contact.findMany({
         where: {
-          phone: { in: unblockedNumbers },
+          ...customersIn(unblockedNumbers),
           orgId,
           blockedOnWhatsApp: true,
           lastReceivedMessageTimeStamp: { not: null },
@@ -392,9 +395,7 @@ export async function unblockWhatsappUser(orgId: string, phoneNumbers: string[])
 
       await prisma.contact.updateMany({
         where: {
-          phone: {
-            in: unblockedNumbers,
-          },
+          ...customersIn(unblockedNumbers),
           orgId,
         },
         data: {

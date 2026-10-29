@@ -151,6 +151,16 @@ const WA_ERROR_SPECS: ReadonlyMap<number, WaErrorSpec> = new Map<number, WaError
   [131026, spec(PERMANENT, INVALID_NUMBER, "Number could not receive the message")],
   [130403, spec(PERMANENT, OTHER, "This business has blocked the contact on WhatsApp")],
   [131021, spec(PERMANENT, INVALID_NUMBER, "Recipient is the sender's own number")],
+  // Sent to a business-scoped user ID (a customer whose phone we do not have) as a
+  // message kind that needs a phone number — authentication templates, for one.
+  [
+    131062,
+    spec(
+      PERMANENT,
+      OTHER,
+      "This message needs the contact's phone number; only their business-scoped user ID (BSUID) is known",
+    ),
+  ],
   [
     131050,
     spec(PERMANENT, INVALID_NUMBER, "Contact opted out of marketing messages from this business"),

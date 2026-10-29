@@ -68,6 +68,7 @@ interface Participant {
 
 interface Contact {
   name: string;
+  /** The send address: phone, or the BSUID of a customer whose phone is withheld. */
   phone: string;
   customFields: Array<{
     slug: string;
@@ -232,7 +233,7 @@ async function sendCampaignMessage({
   isFinalAttempt,
 }: SendCampaignParams): Promise<DispatchOutcome> {
   if (!contact.phone) {
-    log.warn("Contact %o does not have a phone number", contact);
+    log.warn("Contact %o has no phone number or business-scoped user ID", contact);
     // Nothing to send and nothing a retry would fix.
     return { ok: false, failureClass: WaFailureClass.PERMANENT };
   }

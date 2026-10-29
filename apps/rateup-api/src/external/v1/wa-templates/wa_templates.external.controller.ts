@@ -313,17 +313,20 @@ export async function sendTemplatesToContactsExternalController(
     select: {
       id: true,
       phone: true,
+      bsuid: true,
     },
   });
 
   let sent = 0;
   const failed: string[] = [];
   for (const contact of contacts) {
-    if (!contact.phone) continue;
+    // The phone, or the business-scoped user ID (BSUID) of a customer whose phone is withheld.
+    const address = contact.phone ?? contact.bsuid;
+    if (!address) continue;
     try {
       await sendTemplateToPhone({
         orgId,
-        phone: contact.phone,
+        phone: address,
         dbTemplate,
         teamId: req.body.teamId,
         header: req.body.header,
