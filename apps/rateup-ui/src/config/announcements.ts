@@ -48,6 +48,8 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     kinds: ["improvement"],
     area: "Chatbots",
     link: { to: "/dashboard/chatbots", label: "Open Chatbots" },
+  },
+  {
     id: "2026-10-28-template-analytics",
     title: "See how each template performs",
     summary:
