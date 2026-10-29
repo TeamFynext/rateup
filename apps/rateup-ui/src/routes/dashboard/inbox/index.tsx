@@ -37,9 +37,15 @@ interface InboxSearch {
   reveal?: boolean;
 }
 
-/** What the list search matches a contact on: the phone is unique, the name is the fallback. */
-const listSearchTermFor = (contact: { phone?: string | null; name?: string | null }) =>
-  contact.phone || contact.name || "";
+/**
+ * What the list search matches a contact on: the phone is unique, the name is the
+ * fallback, and the WhatsApp username covers a customer whose phone is withheld.
+ */
+const listSearchTermFor = (contact: {
+  phone?: string | null;
+  name?: string | null;
+  whatsappUserName?: string | null;
+}) => contact.phone || contact.name || contact.whatsappUserName || "";
 
 function WhatsAppInbox() {
   const searchParams: InboxSearch = useSearch({

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { RadioGroup } from "@/components/ui/radio-group.tsx";
 import { WaFlowStatus } from "@/types/enums.ts";
+import { getContactWaAddress } from "@/utils/whatsapp/inbox.ts";
 
 import NothingFound from "../../../../../NothingFound/NothingFound.tsx";
 import { usePhoneIdStore } from "../../../chatselect/accountSelectorStore.ts";
@@ -30,7 +31,7 @@ export default function WaInboxFlowDisplayModal(props: Props) {
   const { data, isLoading, error } = useWaFlowsFromDb(true, whatsappSettingsPhoneId);
   const [teamId, setTeamId] = useState<string | null>(null);
   const sendFlowToUser = useSendFlowToUser(
-    props?.contact?.phone,
+    getContactWaAddress(props?.contact),
     props?.contact?.id,
     props?.contact ? getRowKey(props.contact) : undefined,
   );

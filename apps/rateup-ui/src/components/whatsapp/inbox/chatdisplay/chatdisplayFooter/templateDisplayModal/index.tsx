@@ -27,6 +27,7 @@ import useTemplatesAvailableForTeam from "@/hooks/team.tsx";
 import { cn } from "@/lib/utils.ts";
 import { WaTemplateStatus } from "@/types/enums.ts";
 import type { WaTemplateFetchBody } from "@/types/global";
+import { getContactLabel, getContactWaAddress } from "@/utils/whatsapp/inbox.ts";
 
 import { TeamSelector } from "../../../../../input/TeamSelector.tsx";
 import { usePhoneIdStore } from "../../../chatselect/accountSelectorStore.ts";
@@ -69,7 +70,7 @@ export default function WaInboxTemplateDisplayModal({
   const [category, setCategory] = useState<string | null>(null);
   // The row key lets the send draw its card in the thread while it is in flight.
   const sendTemplate = useSendWaTemplateToUser(
-    contact?.phone ?? "",
+    getContactWaAddress(contact) ?? "",
     contact?.id,
     contact ? getRowKey(contact) : undefined,
   );
@@ -104,7 +105,7 @@ export default function WaInboxTemplateDisplayModal({
     onClose();
   }
 
-  const recipient = contact?.name || (contact?.phone ? `+${contact.phone}` : "");
+  const recipient = getContactLabel(contact) ?? "";
 
   return (
     <Dialog open={opened} onOpenChange={(next) => !next && close()}>

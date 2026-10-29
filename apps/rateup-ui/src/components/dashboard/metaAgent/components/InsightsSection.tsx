@@ -323,8 +323,9 @@ function TurnsPanel({ waSettingsId }: Readonly<{ waSettingsId: string }>) {
               placeholder="+15551234567 or US.2788620304833812"
             />
             <FieldDescription>
-              A phone number with its country code, a WhatsApp user ID, or a conversation ID from
-              the test console. Use the user ID for customers with a WhatsApp username.
+              A phone number with its country code, a business-scoped user ID (BSUID), or a
+              conversation ID from the test console. Use the BSUID for customers with a WhatsApp
+              username.
             </FieldDescription>
           </Field>
           <Button type="submit" disabled={!user.trim()} loading={load.isPending && !after}>

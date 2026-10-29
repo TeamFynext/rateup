@@ -20,6 +20,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { cn } from "@/lib/utils.ts";
 import { MessagePlatform } from "@/types/enums.ts";
 import { AutomationPlatform } from "@/types/platform.ts";
+import { getContactWaAddress } from "@/utils/whatsapp/inbox.ts";
 
 interface Props {
   sessionExpired: boolean;
@@ -66,7 +67,7 @@ export default function WaInboxAutomationDisplayModal(props: Props) {
       ? props.contact?.igsId
       : platform === AutomationPlatform.FACEBOOK
         ? props.contact?.psid
-        : props.contact?.phone;
+        : getContactWaAddress(props.contact);
   const canSend = Boolean(selectedAutomationId && recipientId && (!isMeta || props.accountId));
 
   function onClose() {
