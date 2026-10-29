@@ -3,6 +3,8 @@ import type { Edge } from "@xyflow/react";
 import type { TypedNode } from "@/components/whatsapp/automation/types/node-types.ts";
 import type { AutomationPlatform } from "@/types/platform.ts";
 
+import type { ChatbotTriggerKind } from "./triggers.ts";
+
 /** What a chatbot is for. Drives the filter chips in the creation wizard. */
 export type ChatbotUseCase =
   | "welcome"
@@ -45,8 +47,10 @@ export interface ChatbotExample {
   name: string;
   /** One sentence, shown on the card. */
   description: string;
-  /** The rule that usually starts this chatbot; the editor offers to set it up. */
-  suggestedTrigger?: { triggerEvent: string; hint: string };
+  /** How it usually starts: the "How it starts" option the wizard picks for it. */
+  trigger: ChatbotTriggerKind;
+  /** Marked "New" in the wizard. */
+  isNew?: boolean;
   /** A fresh graph on every call, with new ids for nodes, edges and choices. */
   build: () => ChatbotGraph;
 }

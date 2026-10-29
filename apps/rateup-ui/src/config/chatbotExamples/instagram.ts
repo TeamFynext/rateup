@@ -3,11 +3,6 @@ import { AutomationPlatform } from "@/types/platform.ts";
 import { ask, assign, cards, createGraph, quickReplies, text } from "./graph.ts";
 import type { ChatbotExample } from "./types.ts";
 
-const ON_DM = {
-  triggerEvent: "MESSAGE_RECEIVED",
-  hint: "Starts when an Instagram DM matches a rule you set up.",
-};
-
 export const INSTAGRAM_EXAMPLES: ChatbotExample[] = [
   {
     key: "ig-dm-welcome",
@@ -15,7 +10,7 @@ export const INSTAGRAM_EXAMPLES: ChatbotExample[] = [
     useCase: "welcome",
     name: "DM welcome",
     description: "Greets people in DMs with quick replies to shop, ask a question or talk to us.",
-    suggestedTrigger: ON_DM,
+    trigger: "keyword",
     build: () => {
       const g = createGraph();
       const menu = quickReplies(
@@ -41,7 +36,7 @@ export const INSTAGRAM_EXAMPLES: ChatbotExample[] = [
     useCase: "support",
     name: "FAQ quick replies",
     description: "Answers the questions you get most with one tap each.",
-    suggestedTrigger: ON_DM,
+    trigger: "keyword",
     build: () => {
       const g = createGraph();
       const faq = quickReplies(g, "FAQs", "What would you like to know?", [
@@ -65,7 +60,7 @@ export const INSTAGRAM_EXAMPLES: ChatbotExample[] = [
     useCase: "leads",
     name: "Lead capture",
     description: "Asks for a name and a phone number or email, then hands the lead to your team.",
-    suggestedTrigger: ON_DM,
+    trigger: "keyword",
     build: () => {
       const g = createGraph();
       const name = ask(g, "Name", "Hi! What's your name?", "name");
@@ -88,7 +83,7 @@ export const INSTAGRAM_EXAMPLES: ChatbotExample[] = [
     useCase: "sales",
     name: "Product cards",
     description: "Shows products as swipeable cards with a link to buy each one.",
-    suggestedTrigger: ON_DM,
+    trigger: "keyword",
     build: () => {
       const g = createGraph();
       const intro = text(g, "Intro", "Here are this week's favourites ✨");
@@ -121,7 +116,7 @@ export const INSTAGRAM_EXAMPLES: ChatbotExample[] = [
     useCase: "bookings",
     name: "Booking request",
     description: "Picks a service, asks for a preferred time and passes the request to your team.",
-    suggestedTrigger: ON_DM,
+    trigger: "keyword",
     build: () => {
       const g = createGraph();
       const service = quickReplies(g, "Service", "Which service would you like to book?", [
@@ -149,10 +144,7 @@ export const INSTAGRAM_EXAMPLES: ChatbotExample[] = [
     name: "Comment to DM a link",
     description:
       "Replies privately to anyone who comments on a post, with the link they asked for.",
-    suggestedTrigger: {
-      triggerEvent: "INSTAGRAM_COMMENT",
-      hint: "Starts when someone comments on a post you choose.",
-    },
+    trigger: "comment",
     build: () => {
       const g = createGraph();
       // One message: a private reply is all Instagram allows until the person writes back.
@@ -171,7 +163,7 @@ export const INSTAGRAM_EXAMPLES: ChatbotExample[] = [
     useCase: "growth",
     name: "Follow to unlock a code",
     description: "Sends a discount code to followers and asks everyone else to follow first.",
-    suggestedTrigger: ON_DM,
+    trigger: "keyword",
     build: () => {
       const g = createGraph();
       const check = g.add("instagramFollowCheckNode", { label: "Follows you?" });
@@ -193,13 +185,14 @@ export const INSTAGRAM_EXAMPLES: ChatbotExample[] = [
     useCase: "growth",
     name: "Story mention thank-you",
     description: "Thanks people who mention you in their story.",
-    suggestedTrigger: {
-      triggerEvent: "INSTAGRAM_STORY_MENTION",
-      hint: "Starts when someone mentions you in their story.",
-    },
+    trigger: "story",
     build: () => {
       const g = createGraph();
-      const thanks = text(g, "Thanks", "Thanks so much for the shout-out! 💛");
+      const thanks = text(
+        g,
+        "Thanks",
+        "Thanks so much for the shout-out! 💛 Here's 10% off your next order: THANKS10",
+      );
       g.chain(g.start, thanks);
       return g.done();
     },
@@ -210,10 +203,7 @@ export const INSTAGRAM_EXAMPLES: ChatbotExample[] = [
     useCase: "growth",
     name: "ig.me link campaign",
     description: "Welcomes people who open your ig.me link from an ad, bio or QR code.",
-    suggestedTrigger: {
-      triggerEvent: "INSTAGRAM_REFERRAL",
-      hint: "Starts when someone opens your ig.me link.",
-    },
+    trigger: "link",
     build: () => {
       const g = createGraph();
       const menu = quickReplies(g, "Welcome", "Welcome! You're here for the launch offer 🎉", [
@@ -234,10 +224,7 @@ export const INSTAGRAM_EXAMPLES: ChatbotExample[] = [
     useCase: "handoff",
     name: "Talk to a person",
     description: "Lets people ask for a person and assigns the chat to your team.",
-    suggestedTrigger: {
-      triggerEvent: "MESSAGE_RECEIVED",
-      hint: "Starts when someone sends a keyword like “agent” or “human”.",
-    },
+    trigger: "keyword",
     build: () => {
       const g = createGraph();
       const hello = text(g, "On it", "Connecting you with someone from our team…");

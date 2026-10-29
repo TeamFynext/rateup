@@ -12,8 +12,8 @@ const DASHBOARD_LANDING_PRIORITY: Array<{ feature: TeamFeature; to: string }> = 
 
 const WHATSAPP_LANDING_PRIORITY: Array<{ feature: TeamFeature; to: string }> = [
   { feature: TeamFeature.Templates, to: "/dashboard/whatsapp/templates" },
-  { feature: TeamFeature.Chatbots, to: "/dashboard/whatsapp/flowbots" },
   { feature: TeamFeature.Flows, to: "/dashboard/whatsapp/flows" },
+  { feature: TeamFeature.Chatbots, to: "/dashboard/chatbots" },
   { feature: TeamFeature.Automation, to: "/dashboard/automation" },
 ];
 
@@ -28,9 +28,11 @@ const PROTECTED_ROUTE_FEATURE_MAP: Array<[string, TeamFeature]> = [
   ["/dashboard/surveys", TeamFeature.WebForms],
   ["/dashboard/automation", TeamFeature.Automation],
   ["/dashboard/whatsapp/flows", TeamFeature.Flows],
+  ["/dashboard/chatbots", TeamFeature.Chatbots],
+  // Old chatbot addresses; they only redirect into /dashboard/chatbots now.
   ["/dashboard/whatsapp/flowbots", TeamFeature.Chatbots],
   ["/dashboard/instagram/flowbots", TeamFeature.Chatbots],
-  // The whole Messenger section is chatbots, list page included.
+  // Messenger's Page tools sit behind the same feature as its nav entry.
   ["/dashboard/messenger", TeamFeature.Chatbots],
   ["/dashboard/whatsapp/templates", TeamFeature.Templates],
   ["/dashboard/meta-agent", TeamFeature.AiChatbot],

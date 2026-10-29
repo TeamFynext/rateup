@@ -7,6 +7,14 @@ import { WHATSAPP_EXAMPLES } from "./whatsapp.ts";
 
 export { CHATBOT_USE_CASES } from "./types.ts";
 export type { ChatbotExample, ChatbotGraph, ChatbotUseCase } from "./types.ts";
+export {
+  CHATBOT_TRIGGERS,
+  findTrigger,
+  isTriggerKind,
+  triggerOptionsFor,
+  type ChatbotTriggerKind,
+  type ChatbotTriggerOption,
+} from "./triggers.ts";
 
 /** Every ready-made chatbot, across channels. */
 export const CHATBOT_EXAMPLES: readonly ChatbotExample[] = [

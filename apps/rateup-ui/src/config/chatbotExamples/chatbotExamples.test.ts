@@ -2,9 +2,16 @@ import { describe, expect, test } from "vitest";
 
 import type { TypedNode } from "@/components/whatsapp/automation/types/node-types.ts";
 import { validateNodeData } from "@/components/whatsapp/automation/types/node-types.ts";
+import { getNodeLimitErrors } from "@/components/whatsapp/automation/types/node-validation.ts";
 import { AutomationPlatform, isComponentSupportedOnPlatform } from "@/types/platform.ts";
 
-import { CHATBOT_EXAMPLES, CHATBOT_USE_CASES, examplesFor } from "./index.ts";
+import {
+  CHATBOT_EXAMPLES,
+  CHATBOT_TRIGGERS,
+  CHATBOT_USE_CASES,
+  examplesFor,
+  findTrigger,
+} from "./index.ts";
 
 /** The handles a node's branches may leave from: its choices, or "right" for "then". */
 function handlesOf(node: TypedNode): string[] {
@@ -84,6 +91,13 @@ describe.each(CHATBOT_EXAMPLES.map((example) => [example.key, example] as const)
       expect(problems).toEqual([]);
     });
 
+    test("fits its channel's limits", () => {
+      const problems = graph.nodes
+        .map((node) => getNodeLimitErrors(node, example.platform))
+        .filter((errors) => Object.keys(errors).length > 0);
+      expect(problems).toEqual([]);
+    });
+
     // The limits the node editors enforce, and Meta's own.
     test("stays within the quick reply and card limits", () => {
       for (const node of graph.nodes) {
@@ -136,6 +150,20 @@ describe("the catalogue", () => {
   test("every example's use case has a chip", () => {
     const useCases = new Set(CHATBOT_USE_CASES.map((useCase) => useCase.value));
     for (const example of CHATBOT_EXAMPLES) expect(useCases.has(example.useCase)).toBe(true);
+  });
+
+  test("every example starts in a way its channel offers", () => {
+    for (const example of CHATBOT_EXAMPLES) {
+      expect(findTrigger(example.platform, example.trigger), example.key).toBeDefined();
+    }
+  });
+
+  test("every start but a lead ad names its rule trigger", () => {
+    for (const options of Object.values(CHATBOT_TRIGGERS)) {
+      for (const option of options) {
+        if (option.kind !== "leadad") expect(option.triggerEvent, option.kind).toBeTruthy();
+      }
+    }
   });
 
   test("every channel has examples", () => {

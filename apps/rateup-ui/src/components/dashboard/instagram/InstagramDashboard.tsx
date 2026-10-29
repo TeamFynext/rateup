@@ -6,7 +6,7 @@ import {
   IconMenu2,
   IconMessageDots,
   IconMessageQuestion,
-  IconRobot,
+  IconSitemap,
   IconHistory,
   IconLink,
 } from "@tabler/icons-react";
@@ -36,7 +36,6 @@ import { Separator } from "@/components/ui/separator.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 
-import { ChatbotsTab } from "./tabs/ChatbotsTab.tsx";
 import { CommentsTab } from "./tabs/CommentsTab.tsx";
 import { IceBreakersTab } from "./tabs/IceBreakersTab.tsx";
 import { IgMeLinksTab } from "./tabs/IgMeLinksTab.tsx";
@@ -89,7 +88,7 @@ export function InstagramDashboard() {
           <EmptyTitle>{t("No Instagram accounts connected")}</EmptyTitle>
           <EmptyDescription>
             {t(
-              "Connect an Instagram Business account to manage ice breakers, chatbots, comment automations, and more.",
+              "Connect an Instagram Business account to manage ice breakers, comment automations, and more.",
             )}
           </EmptyDescription>
         </EmptyHeader>
@@ -118,6 +117,14 @@ export function InstagramDashboard() {
         </div>
 
         <div className="flex items-center gap-3">
+          <Link
+            to="/dashboard/chatbots"
+            search={{ channel: "instagram" }}
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+          >
+            <IconSitemap className="mr-1.5 size-4" />
+            {t("Instagram chatbots")}
+          </Link>
           <Select
             value={selectedSetting?.id ?? ""}
             onValueChange={(v) => setSelectedId(v ?? undefined)}
@@ -148,12 +155,8 @@ export function InstagramDashboard() {
 
       <Separator />
 
-      <Tabs defaultValue="chatbots">
+      <Tabs defaultValue="comments">
         <TabsList>
-          <TabsTrigger value="chatbots">
-            <IconRobot className="mr-1.5 size-4" />
-            {t("Chatbots")}
-          </TabsTrigger>
           <TabsTrigger value="comments">
             <IconMessageDots className="mr-1.5 size-4" />
             {t("Comments")}
@@ -178,9 +181,6 @@ export function InstagramDashboard() {
 
         {selectedSetting && (
           <>
-            <TabsContent value="chatbots" className="mt-4">
-              <ChatbotsTab />
-            </TabsContent>
             <TabsContent value="comments" className="mt-4">
               <CommentsTab ibaId={selectedSetting.accountId} />
             </TabsContent>

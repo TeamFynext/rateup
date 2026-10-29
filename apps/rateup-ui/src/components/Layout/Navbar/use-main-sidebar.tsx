@@ -124,9 +124,8 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
       // The template wizard, built the same way.
       /^\/dashboard\/(whatsapp|loyalty)\/templates\/[^/]+/.test(pathname ?? "") ||
       pathname?.includes("/dashboard/whatsapp/flows/v2/") ||
-      pathname?.includes("/dashboard/whatsapp/flowbots/") ||
-      pathname?.includes("/dashboard/instagram/flowbots/") ||
-      pathname?.includes("/dashboard/messenger/flowbots/");
+      // The chatbot builder, on any channel. The list at /dashboard/chatbots keeps its padding.
+      /^\/dashboard\/chatbots\/[^/]+/.test(pathname ?? "");
 
   // Only the inbox's Channel filter needs these, and the query is shared and
   // cached forever — so it costs nothing on the pages that already fetched it.

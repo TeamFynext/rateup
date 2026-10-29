@@ -7,7 +7,7 @@ import {
   IconFileFilled,
   IconLayoutBoard,
   IconPaperclip,
-  IconRobot,
+  IconMessageChatbot,
   IconTrash,
   IconTypography,
   IconWaveSine,
@@ -321,6 +321,12 @@ function WaTextEditor({
   useEffect(() => {
     updatePhoneId(conversationChannelId);
   }, [conversationChannelId, updatePhoneId]);
+
+  // Chatbots run on WhatsApp, Instagram and Messenger threads; templates and flows on WhatsApp only.
+  const chatbotChannel =
+    platform === MessagePlatform.WHATSAPP ||
+    platform === MessagePlatform.INSTAGRAM ||
+    platform === MessagePlatform.FACEBOOK;
 
   const isSessionExpired = isInboxSessionExpired(selectedContact?.lastReceivedMessageTimeStamp);
 
@@ -641,13 +647,17 @@ function WaTextEditor({
                         }
                         content={<span>Flow</span>}
                       />
+                    </div>
+                  )}
+                  {channelTools && chatbotChannel && (
+                    <div className="hidden sm:flex">
                       <CustomTooltip
                         trigger={
                           <Button variant="ghost" onClick={() => openAutomationModal()} size="sm">
-                            <IconRobot className="w-4 h-4" />
+                            <IconMessageChatbot className="w-4 h-4" />
                           </Button>
                         }
-                        content={<span>Automation</span>}
+                        content={<span>Chatbot</span>}
                       />
                     </div>
                   )}
@@ -684,12 +694,16 @@ function WaTextEditor({
                               <IconWaveSine size={16} />
                               Flow
                             </DropdownMenuItem>
+                          </>
+                        )}
+                        {channelTools && chatbotChannel && (
+                          <>
                             <DropdownMenuItem
                               className="gap-2 text-xs"
                               onClick={() => openAutomationModal()}
                             >
-                              <IconRobot size={16} />
-                              Automation
+                              <IconMessageChatbot size={16} />
+                              Chatbot
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                           </>
@@ -748,6 +762,8 @@ function WaTextEditor({
         contact={selectedContact}
         opened={automationModalOpened}
         close={automationModalClose}
+        platform={platform}
+        accountId={conversationChannelId}
       />
     </div>
   );

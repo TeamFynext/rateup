@@ -42,11 +42,12 @@ function FbLoginRedirect({
   useEffect(() => {
     const waSettingId = localStorage.getItem("waSettingsId") ?? "";
     const automationId = localStorage.getItem("automationId");
+    // A base saved before chatbots moved still works: the old editor routes redirect.
     const automationRouteBase =
-      localStorage.getItem("automationRouteBase") || "/dashboard/whatsapp/flowbots";
+      localStorage.getItem("automationRouteBase") || "/dashboard/chatbots";
     const targetRoute = automationId
       ? `${automationRouteBase}/${automationId}`
-      : "/dashboard/whatsapp/flowbots";
+      : "/dashboard/chatbots";
     if (code) {
       update.mutate(
         { code, waSettingId },

@@ -4,7 +4,9 @@ import { IconX } from "@tabler/icons-react";
 
 import { Button } from "@/components/ui/button.tsx";
 
+import { useChannelLimits } from "../../chatbotPlatformContext.ts";
 import { ContainedTextField, Select } from "../editor-ui.tsx";
+import { FieldMsg } from "./shared.tsx";
 import type { NodeComponentProps } from "./shared.tsx";
 
 // Instagram Generic Template Node Editor
@@ -12,13 +14,15 @@ export const InstagramGenericTemplateNodeEditor: React.FC<
   NodeComponentProps<"instagramGenericTemplateNode">
 > = ({ nodeData, handleInputChange }) => {
   const typedData = nodeData;
+  const { cards } = useChannelLimits();
 
   return (
     <div className="flex flex-col gap-2">
       <p className="text-sm font-medium">Template Elements (Cards)</p>
       <p className="text-xs text-muted-foreground">
-        Create cards with images, text, and buttons for Instagram messaging
+        Up to {cards.max} cards with images, text and up to {cards.buttons} buttons each.
       </p>
+      <FieldMsg name="elements" />
 
       {(typedData.elements || []).map((element, index: number) => (
         <div
@@ -57,7 +61,7 @@ export const InstagramGenericTemplateNodeEditor: React.FC<
               };
               handleInputChange("elements", newElements);
             }}
-            maxLength={80}
+            maxLength={cards.title}
           />
 
           <ContainedTextField
@@ -72,7 +76,7 @@ export const InstagramGenericTemplateNodeEditor: React.FC<
               };
               handleInputChange("elements", newElements);
             }}
-            maxLength={80}
+            maxLength={cards.subtitle}
           />
 
           <ContainedTextField
@@ -115,7 +119,7 @@ export const InstagramGenericTemplateNodeEditor: React.FC<
                   newElements[index]!.buttons![btnIndex]!.title = e.target.value;
                   handleInputChange("elements", newElements);
                 }}
-                maxLength={20}
+                maxLength={cards.buttonTitle}
               />
               {button.type === "web_url" && (
                 <ContainedTextField
@@ -147,7 +151,7 @@ export const InstagramGenericTemplateNodeEditor: React.FC<
           <Button
             size="xs"
             variant="ghost"
-            disabled={(element.buttons?.length ?? 0) >= 3}
+            disabled={(element.buttons?.length ?? 0) >= cards.buttons}
             onClick={() => {
               const newElements = [...(typedData.elements || [])];
               if (!newElements[index]!.buttons) {
@@ -168,7 +172,7 @@ export const InstagramGenericTemplateNodeEditor: React.FC<
 
       <Button
         variant="outline"
-        disabled={typedData.elements?.length >= 10}
+        disabled={(typedData.elements?.length ?? 0) >= cards.max}
         onClick={() => {
           const newElements = [...(typedData.elements || []), { title: "", buttons: [] }];
           handleInputChange("elements", newElements);

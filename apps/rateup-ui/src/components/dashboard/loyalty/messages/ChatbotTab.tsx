@@ -3,7 +3,7 @@ import {
   IconCheck,
   IconExternalLink,
   IconMessageCircle,
-  IconRobot,
+  IconMessageChatbot,
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -222,7 +222,7 @@ export function ChatbotTab() {
             <CardContent className="flex flex-col gap-3 p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <IconRobot size={16} className="text-muted-foreground" />
+                  <IconMessageChatbot size={16} className="text-muted-foreground" />
                   <p className="text-sm font-medium text-foreground">{chatbot.name}</p>
                   <Badge
                     variant="secondary"
@@ -235,10 +235,7 @@ export function ChatbotTab() {
                   variant="outline"
                   size="sm"
                   render={
-                    <Link
-                      to="/dashboard/whatsapp/flowbots/$flowbotId"
-                      params={{ flowbotId: chatbot.id }}
-                    />
+                    <Link to="/dashboard/chatbots/$chatbotId" params={{ chatbotId: chatbot.id }} />
                   }
                 >
                   <IconExternalLink size={14} />
@@ -325,7 +322,7 @@ export function ChatbotTab() {
                   onClick={create}
                   disabled={createBot.isPending || createRule.isPending || triggerClash}
                 >
-                  <IconRobot size={16} />
+                  <IconMessageChatbot size={16} />
                   {createBot.isPending || createRule.isPending
                     ? t("Creating…")
                     : t("Create the chatbot")}

@@ -6,30 +6,12 @@ import { automationKeys } from "@/backend/whatsapp/automation.keys";
 import type { RequestPayload, RequestPayloadFields } from "@/types/api.ts";
 
 import {
-  cloneWaAutomatedReply,
   createWaAutomatedReply,
-  deleteWaAutomatedReply,
   getAllWaAutomatedReplies,
-  getAutomatedRepliesMessageById,
   getWaAutomatedRepliesById,
-  getWaAutomatedRepliesByTeamId,
   initiateWaAutomatedReply,
   updateWaAutomatedReply,
 } from "./automatedReply.api";
-
-export const useWaAutomatedReplies = (teamId: string) =>
-  useQuery({
-    queryKey: ["waAutomatedReplies", { teamId }],
-    queryFn: () => getWaAutomatedRepliesByTeamId(teamId),
-    enabled: !!teamId,
-  });
-
-export const useWaAutomatedRepliesMessageById = (id: string) =>
-  useQuery({
-    queryKey: ["waAutomatedRepliesMessageById", { id }],
-    queryFn: () => getAutomatedRepliesMessageById(id),
-    enabled: !!id,
-  });
 
 export const useAllWaAutomatedReplies = () =>
   useQuery({
@@ -55,33 +37,6 @@ export const useCreateWaAutomatedReplyMutation = () => {
     onError: (error) => {
       if (!shouldSkipLocalErrorToast(error))
         toast.error(error?.message || "Error Creating Automated Reply");
-    },
-  });
-};
-
-export const useDeleteWaAutomatedReplyMutation = () => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (waAutomatedReplyId: string) => deleteWaAutomatedReply(waAutomatedReplyId),
-    onSuccess: (_res) => {
-      qc.invalidateQueries({ queryKey: ["allWaAutomatedReplies"] });
-      toast.success("Automated Reply deleted");
-    },
-  });
-};
-
-export const useCloneWaAutomatedReplyMutation = () => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: cloneWaAutomatedReply,
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["allWaAutomatedReplies"] });
-      toast.success("Automation cloned");
-    },
-    onError: (error) => {
-      if (!shouldSkipLocalErrorToast(error)) {
-        toast.error(error?.message ?? "Error cloning automation");
-      }
     },
   });
 };

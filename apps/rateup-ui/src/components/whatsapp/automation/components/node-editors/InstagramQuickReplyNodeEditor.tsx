@@ -4,7 +4,9 @@ import { IconX } from "@tabler/icons-react";
 
 import { Button } from "@/components/ui/button.tsx";
 
+import { useChannelLimits } from "../../chatbotPlatformContext.ts";
 import { ContainedTextField } from "../editor-ui.tsx";
+import { FieldMsg, useFieldError } from "./shared.tsx";
 import type { NodeComponentProps } from "./shared.tsx";
 
 // Instagram Quick Reply Node Editor
@@ -12,6 +14,8 @@ export const InstagramQuickReplyNodeEditor: React.FC<
   NodeComponentProps<"instagramQuickReplyNode">
 > = ({ nodeData, handleInputChange }) => {
   const typedData = nodeData;
+  const limits = useChannelLimits();
+  const textError = useFieldError("text");
 
   return (
     <div className="flex flex-col gap-2">
@@ -21,10 +25,15 @@ export const InstagramQuickReplyNodeEditor: React.FC<
         required
         value={typedData.text || ""}
         onChange={(e) => handleInputChange("text", e.target.value)}
+        maxLength={limits.text}
+        error={textError}
       />
 
       <p className="mt-2 text-sm font-medium">Quick Replies</p>
-      <p className="text-xs text-muted-foreground">Add up to 13 quick reply buttons</p>
+      <p className="text-xs text-muted-foreground">
+        Add up to {limits.quickReplies.max} quick reply buttons
+      </p>
+      <FieldMsg name="quick_replies" />
 
       {(typedData.quick_replies || []).map((reply, index: number) => (
         <div key={index} className="flex flex-wrap items-center gap-2">
@@ -40,7 +49,7 @@ export const InstagramQuickReplyNodeEditor: React.FC<
               };
               handleInputChange("quick_replies", newReplies);
             }}
-            maxLength={20}
+            maxLength={limits.quickReplies.title}
           />
           <ContainedTextField
             flex={1}
@@ -73,7 +82,7 @@ export const InstagramQuickReplyNodeEditor: React.FC<
 
       <Button
         variant="outline"
-        disabled={typedData.quick_replies?.length >= 13}
+        disabled={(typedData.quick_replies?.length ?? 0) >= limits.quickReplies.max}
         onClick={() => {
           const newReplies = [
             ...(typedData.quick_replies || []),

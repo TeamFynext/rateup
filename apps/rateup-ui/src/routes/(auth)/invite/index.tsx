@@ -1,7 +1,7 @@
 import { IconArrowAutofitLeft } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { signOut } from "supertokens-auth-react/recipe/session";
@@ -70,19 +70,21 @@ function Invite() {
     },
   });
 
+  // The token is single-use, so it must be sent once. StrictMode runs this effect twice in dev;
+  // the cleanup cancels the first timer, and the ref stops any repeat for the same token.
+  const sentFor = useRef<string | null>(null);
   useEffect(() => {
-    if (type === "team" && token) {
-      toast.loading(translations("Hold on, while validating your invite."), {
-        id: "load-data",
-      });
-      setTimeout(() => {
-        if (!updateInviteMutation.data) updateInviteMutation.mutate();
-      }, 2000);
-    }
+    if (type !== "team" || !token || sentFor.current === token) return;
+    toast.loading(translations("Hold on, while validating your invite."), {
+      id: "load-data",
+    });
+    const timer = setTimeout(() => {
+      sentFor.current = token;
+      updateInviteMutation.mutate();
+    }, 2000);
+    return () => clearTimeout(timer);
     // TODO : improve with org invite
   }, [type, token]);
-
-  useEffect(() => {}, [updateInviteMutation.error]);
 
   return (
     <div className="flex flex-col items-center gap-2">

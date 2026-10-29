@@ -25,12 +25,6 @@ export async function getAllWaAutomatedReplies() {
   return automations.map(transformAutomation);
 }
 
-export async function getWaAutomatedRepliesByTeamId(teamId: string) {
-  const res = await axiosClient.get(`${base}/team/${teamId}`);
-  const automations = res.data as WaAutomatedReply[];
-  return automations.map(transformAutomation);
-}
-
 export async function getWaAutomatedRepliesById(waAutomatedReplyId: string) {
   const res = await axiosClient.get(`${base}/${waAutomatedReplyId}`);
   return transformAutomation(res.data as WaAutomatedReply);
@@ -39,29 +33,6 @@ export async function getWaAutomatedRepliesById(waAutomatedReplyId: string) {
 export async function updateWaAutomatedReply(waAutomatedReplyId: string, data: RequestPayload) {
   const res = await axiosClient.put(`${base}/${waAutomatedReplyId}`, data);
   return transformAutomation(res.data as WaAutomatedReply);
-}
-
-export async function deleteWaAutomatedReply(waAutomatedReplyId: string) {
-  const res = await axiosClient.delete(`${base}/${waAutomatedReplyId}`);
-  return transformAutomation(res.data as WaAutomatedReply);
-}
-
-export async function cloneWaAutomatedReply({
-  automationId,
-  name,
-}: {
-  automationId: string;
-  name: string;
-}) {
-  const res = await axiosClient.post(`${base}/clone/${automationId}`, {
-    name,
-  });
-  return transformAutomation(res.data as WaAutomatedReply);
-}
-
-export async function getAutomatedRepliesMessageById(id: string) {
-  const res = await axiosClient.get(`${base}/message/${id}`);
-  return res.data;
 }
 
 export async function initiateWaAutomatedReply(id: string, phone: string) {

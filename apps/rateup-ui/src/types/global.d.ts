@@ -376,6 +376,9 @@ export interface WaAutomatedReply {
   commands: Array<string>;
   platform?: string; // "whatsapp" | "instagram" | "facebook" (the API value, lowercased)
   whatsappSettingsPhoneId: string;
+  /** Off: rules and lead ads don't start it. Missing on rows from older endpoints. */
+  isActive?: boolean;
+  updatedAt?: Date;
 }
 
 //  types related to wa inbox

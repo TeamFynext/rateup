@@ -24,19 +24,16 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useSessionContext } from "supertokens-auth-react/recipe/session";
 
-import { useUpdateWaAutomatedReplyMutation } from "@/backend/whatsapp/automated-reply/automatedReply.query";
-import { automationKeys } from "@/backend/whatsapp/automation.keys";
-import {
-  metaAutomationKey,
-  useUpdateMetaAutomationMutation,
-} from "@/backend/whatsapp/instagram-automation/instagramAutomation.query";
+import { chatbotKeys, useUpdateChatbotMutation } from "@/backend/chatbots/chatbots.query.ts";
 import { PhonePreviewButton } from "@/components/ui/phone-preview.tsx";
 import type { WaAutomatedReply } from "@/types/global";
-import { AutomationPlatform, automationPlatformOf } from "@/types/platform.ts";
+import { automationPlatformOf } from "@/types/platform.ts";
 
+import { ChatbotPlatformContext } from "../chatbotPlatformContext.ts";
 import { validateNodeData } from "../types/node-types.ts";
 import type { TypedNode } from "../types/node-types.ts";
 import { asTypedNode, asTypedNodes } from "../types/node-types.ts";
+import { firstNodeError, getNodeLimitErrors } from "../types/node-validation.ts";
 import { getLayoutedElements } from "../utils/auto-layout.ts";
 import { useDebouncedCallback, useHotkeys } from "../utils/flow-hooks.ts";
 import { HistoryManager } from "../utils/history.ts";
@@ -91,14 +88,8 @@ function FlowEditorContent({
   const isInitialLoadRef = useRef(true);
   const qc = useQueryClient();
   const platform = automationPlatformOf(waAutomationData?.platform);
-  const metaPlatform = platform === AutomationPlatform.WHATSAPP ? null : platform;
-  // Each platform saves through its own route: the WhatsApp one is gated on the WhatsApp
-  // subscription, so an Instagram or Messenger flow must not go through it.
-  const updateWaMutation = useUpdateWaAutomatedReplyMutation();
-  const updateMetaMutation = useUpdateMetaAutomationMutation(
-    metaPlatform ?? AutomationPlatform.INSTAGRAM,
-  );
-  const updateWaAutomatedReplyMutation = metaPlatform ? updateMetaMutation : updateWaMutation;
+  // Every channel saves through /api/chatbots, which also refuses blocks the channel can't send.
+  const updateWaAutomatedReplyMutation = useUpdateChatbotMutation();
 
   // Initialize history manager
   const historyManagerRef = useRef(new HistoryManager());
@@ -144,9 +135,7 @@ function FlowEditorContent({
         {
           onSettled: () => {
             qc.setQueryData(
-              metaPlatform
-                ? metaAutomationKey(metaPlatform, waAutomationData.id)
-                : automationKeys.waAutomatedReply({ waAutomatedReplyId: waAutomationData.id }),
+              chatbotKeys.detail(waAutomationData.id),
               (oldData: WaAutomatedReply | undefined) => ({
                 ...oldData,
                 matchData: {
@@ -402,12 +391,17 @@ function FlowEditorContent({
           if (!silent) toast.error(validationResult.message);
           return false;
         }
+        // What the chatbot's channel can't send, e.g. a text over Instagram's 1000 characters.
+        if (Object.keys(getNodeLimitErrors(asTypedNode(node), platform)).length) {
+          if (!silent) toast.error(firstNodeError(asTypedNode(node), platform));
+          return false;
+        }
       }
 
       if (!silent) toast.success("Flow validation successful!");
       return true;
     },
-    [reactFlowInstance],
+    [reactFlowInstance, platform],
   );
 
   // Load flow from JSON
@@ -576,11 +570,13 @@ export default function FlowEditor({
 }>) {
   return (
     <ReactFlowProvider>
-      <FlowEditorContent
-        waAutomationData={data}
-        refetch={refetch}
-        onOpenSettings={onOpenSettings}
-      />
+      <ChatbotPlatformContext.Provider value={automationPlatformOf(data.platform)}>
+        <FlowEditorContent
+          waAutomationData={data}
+          refetch={refetch}
+          onOpenSettings={onOpenSettings}
+        />
+      </ChatbotPlatformContext.Provider>
     </ReactFlowProvider>
   );
 }

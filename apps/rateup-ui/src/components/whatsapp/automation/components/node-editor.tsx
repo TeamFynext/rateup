@@ -9,6 +9,7 @@ import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import { Button } from "@/components/ui/button.tsx";
 
+import { useChatbotPlatform } from "../chatbotPlatformContext.ts";
 import type { NodeData, NodeTypeMap, TypedNode } from "../types/node-types.ts";
 import { firstNodeError, nodeResolver } from "../types/node-validation.ts";
 import { ContainedTextField } from "./editor-ui.tsx";
@@ -56,9 +57,10 @@ export default function NodeEditor({ node, onChange, onClose }: Readonly<NodeEdi
   // react-hook-form is the single source of truth for the editor. Values sync
   // back to the flow on every change; the resolver produces per-field errors
   // (shown inline) and drives the node card's invalid border.
+  const platform = useChatbotPlatform();
   const form = useRHForm<NodeData>({
     defaultValues: node.data,
-    resolver: nodeResolver(node.type),
+    resolver: nodeResolver(node.type, platform),
     mode: "onChange",
   });
   const nodeData = form.watch();
@@ -91,7 +93,7 @@ export default function NodeEditor({ node, onChange, onClose }: Readonly<NodeEdi
   const handleDone = async () => {
     const valid = await form.trigger();
     if (!valid) {
-      toast.error(firstNodeError({ ...node, data: form.getValues() }));
+      toast.error(firstNodeError({ ...node, data: form.getValues() }, platform));
       return;
     }
     onClose();

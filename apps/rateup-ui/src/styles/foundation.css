@@ -60,6 +60,21 @@
   --sidebar-ring: oklch(0.4337 0.115 254.47);
   --custom-shadow-base: 0 1px 3px rgba(11, 31, 72, 0.05);
   --custom-shadow-hover: 0 8px 28px rgba(11, 31, 72, 0.1);
+  /* Channel colours: the one place the app uses a messaging app's own brand colour, to show
+     which channel something is for (chatbot wizard, channel badges). WhatsApp is the design
+     system's green; Instagram and Messenger have no DS ramp, so they are the apps' own. */
+  --channel-whatsapp: #1fa85b; /* ru-green-500 */
+  --channel-whatsapp-fg: #115f34; /* ru-green-700 */
+  --channel-whatsapp-soft: #edf9f1; /* ru-green-50 */
+  --channel-whatsapp-border: #7bd3a0; /* ru-green-300 */
+  --channel-instagram: #d62976;
+  --channel-instagram-fg: #a3195b;
+  --channel-instagram-soft: #fdeef5;
+  --channel-instagram-border: #f4b8d3;
+  --channel-messenger: #0a7cff;
+  --channel-messenger-fg: #0457c2;
+  --channel-messenger-soft: #ebf4ff;
+  --channel-messenger-border: #b8d8ff;
 }
 
 .dark {
@@ -103,6 +118,39 @@
 
   /* React Flow canvas */
   --flow-dots: oklch(0.35 0.006 56.043);
+
+  /* Channel colours on a dark ground: text lightens, tints are the colour over the surface. */
+  --channel-whatsapp-fg: #7bd3a0;
+  --channel-whatsapp-soft: color-mix(in oklab, #1fa85b 16%, transparent);
+  --channel-whatsapp-border: color-mix(in oklab, #1fa85b 45%, transparent);
+  --channel-instagram: #e04b8f;
+  --channel-instagram-fg: #f4a3c6;
+  --channel-instagram-soft: color-mix(in oklab, #e04b8f 16%, transparent);
+  --channel-instagram-border: color-mix(in oklab, #e04b8f 45%, transparent);
+  --channel-messenger: #3d97ff;
+  --channel-messenger-fg: #9cc8ff;
+  --channel-messenger-soft: color-mix(in oklab, #3d97ff 16%, transparent);
+  --channel-messenger-border: color-mix(in oklab, #3d97ff 45%, transparent);
+}
+
+/* Sets the `ch-*` colours below to one channel's, for everything inside. */
+.channel-whatsapp {
+  --ch: var(--channel-whatsapp);
+  --ch-fg: var(--channel-whatsapp-fg);
+  --ch-soft: var(--channel-whatsapp-soft);
+  --ch-border: var(--channel-whatsapp-border);
+}
+.channel-instagram {
+  --ch: var(--channel-instagram);
+  --ch-fg: var(--channel-instagram-fg);
+  --ch-soft: var(--channel-instagram-soft);
+  --ch-border: var(--channel-instagram-border);
+}
+.channel-messenger {
+  --ch: var(--channel-messenger);
+  --ch-fg: var(--channel-messenger-fg);
+  --ch-soft: var(--channel-messenger-soft);
+  --ch-border: var(--channel-messenger-border);
 }
 
 @theme inline {
@@ -145,6 +193,11 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  /* The channel set by the nearest `.channel-*` class: bg-ch, text-ch-fg, bg-ch-soft… */
+  --color-ch: var(--ch);
+  --color-ch-fg: var(--ch-fg);
+  --color-ch-soft: var(--ch-soft);
+  --color-ch-border: var(--ch-border);
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);

@@ -53,9 +53,12 @@ import { Spinner } from "@/components/ui/spinner.tsx";
 import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { FileConverter } from "@/components/whatsapp/flow-v2/input/DataSource.tsx";
+import { AutomationPlatform } from "@/types/platform.ts";
 import { deleteUploadedFiles, getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
 
+import { useChannelLimits, useChatbotPlatform } from "../../chatbotPlatformContext.ts";
 import type { NodeType, NodeTypeMap } from "../../types/node-types.ts";
+import { mediaLimit } from "../../types/node-validation.ts";
 import { ContainedTextField, FileButton } from "../editor-ui.tsx";
 import { FieldMsg, useFieldError } from "./shared.tsx";
 import type { NodeComponentProps } from "./shared.tsx";
@@ -67,10 +70,14 @@ export const MediaNodeEditor: React.FC<
   > & { nodeType: NodeType; disableCaption?: boolean }
 > = ({ nodeData, handleInputChange, nodeType, disableCaption = false }) => {
   const typedData = nodeData;
+  const platform = useChatbotPlatform();
+  const captionMax = useChannelLimits().caption;
+  // Messenger sends a file as a plain attachment, which has no caption.
+  const metaDocument = nodeType === "documentNode" && platform !== AutomationPlatform.WHATSAPP;
   const captionEditor = useWaEditor({
     content: typedData.caption || "",
     placeholder: "Enter caption...",
-    max: 1024,
+    max: captionMax,
     onChange: (value) => handleInputChange("caption", value),
   });
   const [media, setMedia] = useState<string | null>(null);
@@ -97,7 +104,16 @@ export const MediaNodeEditor: React.FC<
   };
 
   // Define file size limits based on media type
+  const channelLimit =
+    nodeType === "imageNode" ||
+    nodeType === "videoNode" ||
+    nodeType === "audioNode" ||
+    nodeType === "documentNode"
+      ? mediaLimit(nodeType, platform)
+      : undefined;
+
   const getFileSizeLimit = () => {
+    if (channelLimit) return channelLimit.bytes;
     switch (nodeType) {
       case "imageNode":
         return 5 * 1024 * 1024;
@@ -113,6 +129,7 @@ export const MediaNodeEditor: React.FC<
   };
 
   const getFileSizeLimitText = () => {
+    if (channelLimit) return channelLimit.text;
     switch (nodeType) {
       case "imageNode":
         return "5MB";
@@ -330,7 +347,7 @@ export const MediaNodeEditor: React.FC<
           {"Upload"}
         </Button>
       )}
-      {nodeType !== "audioNode" && !disableCaption && (
+      {nodeType !== "audioNode" && !disableCaption && !metaDocument && (
         <>
           <div className="text-xs font-bold text-muted-foreground">Caption (optional)</div>
           <div className="flex items-start space-x-2 pb-0">
@@ -348,7 +365,7 @@ export const MediaNodeEditor: React.FC<
                     className="overflow-y-auto rounded-xl"
                   />
                   <div className="flex items-center justify-end space-x-1 px-2 pt-1">
-                    <WaTextCharacterCount editor={captionEditor} max={1024} />
+                    <WaTextCharacterCount editor={captionEditor} max={captionMax} />
                   </div>
                   <div className="flex flex-wrap p-2">
                     <div className="mt-1 flex items-center">
