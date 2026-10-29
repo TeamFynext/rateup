@@ -256,6 +256,15 @@ without its country code is refused with `400 validation_failed`.
 
 Every response carries phones the same way: digits only, country code first, no `+`.
 
+#### Customers without a phone number
+
+A WhatsApp customer who uses a WhatsApp username can message you without sharing their phone
+number. Their contact then has `phone: null` and a `businessScopedUserId` instead — WhatsApp's
+business-scoped user ID (BSUID), such as `"US.13491208655302741918"`. To send them a template,
+pass the BSUID as `phone` exactly as you received it. Template sends to contacts
+(`/wa/templates/{templateId}/send/contacts`) and campaigns use it automatically. Authentication
+(one-time code) templates cannot be sent to a BSUID; WhatsApp refuses them.
+
 Loyalty endpoints are more forgiving: a member's `phone` may also be local to the programme's country
 (`9876543210` on an Indian programme). Digits are read as including a country code first, and as a
 local number only when that is not a valid number.
@@ -328,6 +337,8 @@ curl -X POST "https://api.rateup.app/api/external/v2/contacts" \
   "id": "3f6c1d2a-8b4e-4f0a-9c7d-1e2b3a4c5d6e",
   "name": "Priya Shah",
   "phone": "919876543210",
+  "businessScopedUserId": null,
+  "whatsappUsername": null,
   "email": "priya@example.com",
   "externalId": "crm-4821",
   "source": "external",
@@ -548,7 +559,7 @@ curl -X POST "https://api.rateup.app/api/external/v2/wa/templates/send" \
 |-------|------|
 | `templateName` | The approved template's name |
 | `language` | e.g. `en_US`. Required when the template exists in several languages |
-| `phone` | Digits with the country code, no `+` — `919876543210` |
+| `phone` | Digits with the country code, no `+` — `919876543210`. Or a contact's `businessScopedUserId` (see [Customers without a phone number](#customers-without-a-phone-number)) |
 | `header` | Optional `{ type: "image" \| "video" \| "document", link, filename? }`. Overrides the template's default media. `link` must be public — WhatsApp fetches it |
 | `bodyVariables` | Values for the body's `{{1}}`, `{{2}}`, … in order. Leave it out if the body has no variables |
 | `buttonVariable` | The dynamic part of a URL button, or a copy-code button's code |
@@ -610,6 +621,8 @@ It answers once every send has been tried:
   "skipped": [{ "contactId": "77aa…", "reason": "no_phone" }]
 }
 ```
+
+`no_phone` means the contact has neither a phone number nor a `businessScopedUserId` (BSUID).
 
 **Check delivery**
 

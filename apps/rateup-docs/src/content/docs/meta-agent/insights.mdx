@@ -64,7 +64,7 @@ delivered. Event dates are in Pacific Time.
 the debugging view for *"why did the agent say that?"*
 
 <Steps>
-  <Step>Under **Customer**, enter a phone number with its country code (such as `+15551234567`) or a WhatsApp user ID. Use the user ID for customers with a WhatsApp username.</Step>
+  <Step>Under **Customer**, enter a phone number with its country code (such as `+15551234567`) or a business-scoped user ID (BSUID). Use the BSUID for customers with a WhatsApp username.</Step>
   <Step>Click **Load turns**.</Step>
   <Step>Click **Load more** to page further back.</Step>
 </Steps>
@@ -81,7 +81,7 @@ Each step is marked **Worked**, **Error** or **Timed out**.
 |---------|-------|-----|
 | **Load insights** is disabled with *"Choose 30 days or fewer"* | The range is longer than Meta allows | Shorten it |
 | Today's numbers look low | Meta totals once a day | Look again tomorrow, or judge by earlier days |
-| *"No turns found for this customer."* | The agent has not talked to them, or they use a WhatsApp username | Try their WhatsApp user ID instead of the phone number |
+| *"No turns found for this customer."* | The agent has not talked to them, or they use a WhatsApp username | Try their business-scoped user ID (BSUID) instead of the phone number |
 | A tool shows a high **Errors** rate | Your API is failing or slow | Read the tool's [error logs](/meta-agent/connectors#watch-it-work) and run it by hand |
 
 ---
