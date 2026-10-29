@@ -19,6 +19,13 @@ export const chatbotPlatformSchema = z.preprocess(
 
 export const listChatbotsQuerySchema = z.object({
   platform: chatbotPlatformSchema.optional(),
+  /** "true": each chatbot comes with its graph. */
+  withGraph: z
+    .enum(["true", "false"])
+    .optional()
+    .transform((value) => value === "true"),
+  /** Part of the name, any case. */
+  search: z.string().trim().max(100).optional(),
 });
 
 export const chatbotIdParamsSchema = z.object({
@@ -62,8 +69,19 @@ export const cloneChatbotBodySchema = z
   })
   .optional();
 
+/**
+ * Who to start the chatbot for, from the inbox. `recipientId` is the phone number on
+ * WhatsApp, the igsId on Instagram and the psid on Messenger. `accountId` (the Instagram
+ * account id or the Page id) is required on Instagram and Messenger.
+ */
+export const initiateChatbotBodySchema = z.object({
+  recipientId: z.string().trim().min(1).max(100),
+  accountId: z.string().trim().min(1).max(100).optional(),
+});
+
 export type ListChatbotsQuery = z.infer<typeof listChatbotsQuerySchema>;
 export type ChatbotIdParams = z.infer<typeof chatbotIdParamsSchema>;
 export type CreateChatbotBody = z.infer<typeof createChatbotBodySchema>;
 export type UpdateChatbotBody = z.infer<typeof updateChatbotBodySchema>;
 export type CloneChatbotBody = z.infer<typeof cloneChatbotBodySchema>;
+export type InitiateChatbotBody = z.infer<typeof initiateChatbotBodySchema>;

@@ -5,6 +5,7 @@ import {
   createChatbotHandler,
   deleteChatbotHandler,
   getChatbotHandler,
+  initiateChatbotHandler,
   listChatbotRulesHandler,
   listChatbotsHandler,
   updateChatbotHandler,
@@ -13,6 +14,7 @@ import {
   chatbotIdParamsSchema,
   cloneChatbotBodySchema,
   createChatbotBodySchema,
+  initiateChatbotBodySchema,
   listChatbotsQuerySchema,
   updateChatbotBodySchema,
 } from "./chatbots.schema.js";
@@ -23,7 +25,7 @@ import {
  * blocks the others.
  */
 export async function chatbotRoutes(server: FastifyInstance) {
-  // The same permissions as the per-channel routes. Moving to chatbots.* would take editing
+  // The automation permissions, as chatbots always had. Moving to chatbots.* would take editing
   // away from STAFF, who hold automation.manage but not chatbots.manage.
   declareAccess(server, { read: "automation.read", write: "automation.manage" });
 
@@ -41,5 +43,10 @@ export async function chatbotRoutes(server: FastifyInstance) {
     "/:id/clone",
     { schema: { params: chatbotIdParamsSchema, body: cloneChatbotBodySchema } },
     cloneChatbotHandler,
+  );
+  server.post(
+    "/:id/initiate",
+    { schema: { params: chatbotIdParamsSchema, body: initiateChatbotBodySchema } },
+    initiateChatbotHandler,
   );
 }

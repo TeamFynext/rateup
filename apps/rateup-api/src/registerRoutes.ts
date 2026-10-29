@@ -154,7 +154,7 @@ const routeConfigs = [
   { plugin: metaAgentRoutes, prefix: "/api/meta-agent" },
   { plugin: metaChannelRoutes, prefix: "/api/meta/channels" },
   { plugin: channelRoutes, prefix: "/api/channels" },
-  // Chatbots on every channel; the per-channel routes under /api/wa stay for older clients.
+  // Chatbots on every channel.
   { plugin: chatbotRoutes, prefix: "/api/chatbots" },
   { plugin: metaAgentWebhookRoutes, prefix: "/api/meta-agent/webhook" },
   // Called by Meta, with the key the built-in RateUp connector was installed with.

@@ -1,8 +1,6 @@
 /**
  * One place for chatbots on every channel. WhatsApp, Instagram and Messenger chatbots are
- * all rows of WaAutomatedReply, told apart by `platform`; the older per-channel routes
- * (`/api/wa/automated-reply`, `/api/wa/instagram-automation`, `/api/wa/messenger-automation`)
- * stay for the mobile app, the rules picker and the inbox.
+ * all rows of WaAutomatedReply, told apart by `platform`.
  *
  * Every query is scoped to the org. WhatsApp chatbots also need the org's WhatsApp
  * subscription, as on the old WhatsApp route; Instagram and Messenger never did.
@@ -15,7 +13,10 @@ import { SubscriptionFeaturePathName } from "../../types/enums.js";
 import { PlatformType } from "../../../generated/prisma/enums.js";
 import { CHATBOT_PLATFORMS, type ChatbotPlatform } from "./chatbotBlocks.js";
 
-/** The fields the list shows. The graph itself is only sent by `getChatbot`. */
+/**
+ * The fields the list shows. The graph is sent by `getChatbot`, and by the list only when
+ * asked for (`withGraph`), for callers that look for a chatbot by what it contains.
+ */
 export interface ChatbotSummary {
   id: string;
   name: string;
@@ -27,6 +28,7 @@ export interface ChatbotSummary {
   whatsappSettingsPhoneId: string | null;
   /** Conversations it has started, and how many reached the end. */
   runs: { started: number; completed: number };
+  matchData?: unknown;
 }
 
 /** What blocks a channel for this org, if anything. */
@@ -68,7 +70,11 @@ function stepCount(matchData: unknown): number {
  * left out and named in `locked`, so the page can offer to connect or upgrade instead of
  * failing.
  */
-export async function listChatbots(orgId: string, platform?: ChatbotPlatform) {
+export async function listChatbots(
+  orgId: string,
+  platform?: ChatbotPlatform,
+  { withGraph = false, search }: { withGraph?: boolean; search?: string } = {},
+) {
   const wanted = platform ? [platform] : [...CHATBOT_PLATFORMS];
   const locked: Partial<Record<ChatbotPlatform, ChannelLock>> = {};
   for (const p of wanted) {
@@ -79,7 +85,11 @@ export async function listChatbots(orgId: string, platform?: ChatbotPlatform) {
 
   const rows = open.length
     ? await prisma.waAutomatedReply.findMany({
-        where: { orgId, platform: { in: open } },
+        where: {
+          orgId,
+          platform: { in: open },
+          ...(search && { name: { contains: search, mode: "insensitive" } }),
+        },
         orderBy: { createdAt: "desc" },
         select: {
           id: true,
@@ -103,6 +113,7 @@ export async function listChatbots(orgId: string, platform?: ChatbotPlatform) {
     platform: row.platform as ChatbotPlatform,
     stepCount: stepCount(matchData),
     runs: runs.get(row.id) ?? { started: 0, completed: 0 },
+    ...(withGraph && { matchData }),
   }));
   return { data, locked };
 }

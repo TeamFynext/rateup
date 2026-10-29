@@ -18,6 +18,15 @@ vi.mock("./chatbotStart.js", async (original) => ({
 vi.mock("../whatsapp/whatsappSurvey/wasurvey.utils.js", () => ({
   parseToWhatsAppFormat: (value: unknown) => (typeof value === "string" ? value : ""),
 }));
+vi.mock("../whatsapp/automatedReply/wa_automatedReply.service.js", () => ({
+  verifyAutomationTriggerLimit: vi.fn(),
+}));
+vi.mock("../whatsapp/automatedReply/metaFlow.service.js", () => ({
+  startMetaFlow: vi.fn(),
+}));
+vi.mock("../whatsapp/whatsappSurvey/wasurvey.controller.js", () => ({
+  handleAutomatedReply: vi.fn(),
+}));
 vi.mock("../../utils/redisConnection.js", () => ({
   default: { keys: vi.fn(), del: vi.fn() },
 }));
@@ -26,6 +35,9 @@ vi.mock("../../utils/logger.js", () => ({
 }));
 
 import connection from "../../utils/redisConnection.js";
+import { verifyAutomationTriggerLimit } from "../whatsapp/automatedReply/wa_automatedReply.service.js";
+import { startMetaFlow } from "../whatsapp/automatedReply/metaFlow.service.js";
+import { handleAutomatedReply } from "../whatsapp/whatsappSurvey/wasurvey.controller.js";
 import * as service from "./chatbots.service.js";
 import * as start from "./chatbotStart.js";
 import {
@@ -33,6 +45,7 @@ import {
   createChatbotHandler,
   deleteChatbotHandler,
   getChatbotHandler,
+  initiateChatbotHandler,
   listChatbotRulesHandler,
   listChatbotsHandler,
   updateChatbotHandler,
@@ -73,7 +86,10 @@ describe("list", () => {
     s.listChatbots.mockResolvedValue({ data: [], locked: {} });
     const reply = makeReply();
     await listChatbotsHandler(req({ query: { platform: "FACEBOOK" } }), reply);
-    expect(s.listChatbots).toHaveBeenCalledWith("org-1", "FACEBOOK");
+    expect(s.listChatbots).toHaveBeenCalledWith("org-1", "FACEBOOK", {
+      withGraph: undefined,
+      search: undefined,
+    });
     expect(reply.payload).toEqual({ data: [], locked: {} });
   });
 
@@ -290,5 +306,79 @@ describe("rules", () => {
     await listChatbotRulesHandler(req({ params: { id: "bot-1" } }), reply);
     expect(reply.statusCode).toBe(404);
     expect(st.chatbotRules).not.toHaveBeenCalled();
+  });
+});
+
+describe("initiate", () => {
+  const limit = verifyAutomationTriggerLimit as unknown as Mock;
+  const waStart = handleAutomatedReply as unknown as Mock;
+  const metaStart = startMetaFlow as unknown as Mock;
+
+  test("starts a WhatsApp chatbot for the phone number", async () => {
+    s.getChatbot.mockResolvedValue(WA_BOT);
+    limit.mockResolvedValue(true);
+    const reply = makeReply();
+    await initiateChatbotHandler(
+      req({ params: { id: "bot-1" }, body: { recipientId: "919000000001" } }),
+      reply,
+    );
+    expect(waStart).toHaveBeenCalledWith("org-1", null, null, "919000000001", null, "bot-1");
+    expect(reply.payload).toEqual({ success: true });
+  });
+
+  test("refuses WhatsApp when the plan's limit is reached", async () => {
+    s.getChatbot.mockResolvedValue(WA_BOT);
+    limit.mockResolvedValue(false);
+    const reply = makeReply();
+    await initiateChatbotHandler(
+      req({ params: { id: "bot-1" }, body: { recipientId: "9" } }),
+      reply,
+    );
+    expect(reply.statusCode).toBe(403);
+    expect(waStart).not.toHaveBeenCalled();
+  });
+
+  test("starts an Instagram chatbot on the given account", async () => {
+    s.getChatbot.mockResolvedValue(IG_BOT);
+    const reply = makeReply();
+    await initiateChatbotHandler(
+      req({ params: { id: "bot-1" }, body: { recipientId: "igsid-1", accountId: "iba-1" } }),
+      reply,
+    );
+    expect(metaStart).toHaveBeenCalledWith("igsid-1", IG_BOT, "org-1", {
+      platform: "INSTAGRAM",
+      accountId: "iba-1",
+    });
+    expect(reply.payload).toEqual({ success: true });
+  });
+
+  test("needs the account on Instagram and Messenger", async () => {
+    s.getChatbot.mockResolvedValue({ ...IG_BOT, platform: "FACEBOOK" });
+    const reply = makeReply();
+    await initiateChatbotHandler(
+      req({ params: { id: "bot-1" }, body: { recipientId: "psid" } }),
+      reply,
+    );
+    expect(reply.statusCode).toBe(400);
+    expect(metaStart).not.toHaveBeenCalled();
+  });
+
+  test("won't start a chatbot that is switched off", async () => {
+    s.getChatbot.mockResolvedValue({ ...WA_BOT, isActive: false });
+    limit.mockResolvedValue(true);
+    const reply = makeReply();
+    await initiateChatbotHandler(
+      req({ params: { id: "bot-1" }, body: { recipientId: "9" } }),
+      reply,
+    );
+    expect(reply.statusCode).toBe(409);
+    expect(waStart).not.toHaveBeenCalled();
+  });
+
+  test("404s another org's chatbot", async () => {
+    s.getChatbot.mockResolvedValue(null);
+    const reply = makeReply();
+    await initiateChatbotHandler(req({ params: { id: "x" }, body: { recipientId: "1" } }), reply);
+    expect(reply.statusCode).toBe(404);
   });
 });

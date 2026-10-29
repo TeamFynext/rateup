@@ -127,6 +127,25 @@ describe("listChatbots", () => {
     expect(result.data[0]).not.toHaveProperty("matchData");
   });
 
+  test("sends each graph when asked for it", async () => {
+    const matchData = { json: { nodes: [{ type: "startNode" }] } };
+    db.waAutomatedReply.findMany.mockResolvedValue([
+      { id: "a", name: "Menu", platform: "WHATSAPP", createdAt: PAST, matchData },
+    ]);
+    const result = await listChatbots("org-1", undefined, { withGraph: true });
+    expect(result.data[0]).toMatchObject({ id: "a", matchData });
+  });
+
+  test("searches names in the database, any case", async () => {
+    db.waAutomatedReply.findMany.mockResolvedValue([]);
+    await listChatbots("org-1", undefined, { search: "menu" });
+    expect(db.waAutomatedReply.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ name: { contains: "menu", mode: "insensitive" } }),
+      }),
+    );
+  });
+
   test("counts each chatbot's runs: all started, and those completed", async () => {
     db.waAutomatedReply.findMany.mockResolvedValue([
       { id: "a", name: "A", platform: "INSTAGRAM", matchData: {} },
