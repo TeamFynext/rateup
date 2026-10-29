@@ -696,6 +696,11 @@ declare global {
     id: string;
     name: string;
     phone: string;
+    /**
+     * WhatsApp's business-scoped user ID ("US.1349…"). A customer with a WhatsApp
+     * username can reach us with this and no phone. Never show it as a number.
+     */
+    bsuid?: string | null;
     other?: string;
     email: string;
     address?: string | null;
@@ -804,6 +809,8 @@ declare global {
     createdAt: string;
     name: string | null;
     phone: string | null;
+    /** WhatsApp business-scoped user ID; see `ContactsData.bsuid`. */
+    bsuid?: string | null;
     email: string | null;
     address: string | null;
     source: string | null;

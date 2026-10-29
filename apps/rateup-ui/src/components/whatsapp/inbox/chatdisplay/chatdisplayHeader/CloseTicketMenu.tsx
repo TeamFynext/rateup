@@ -31,7 +31,11 @@ import { useUser } from "@/context/UserContext.tsx";
 import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
 import useContactStore, { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";
 import { NOT_SPAM_EVENT, WaMessageAssignStatus } from "@/types/enums.ts";
-import { isInboxSessionExpired } from "@/utils/whatsapp/inbox.ts";
+import {
+  getContactLabel,
+  getContactWaAddress,
+  isInboxSessionExpired,
+} from "@/utils/whatsapp/inbox.ts";
 
 import { generateInternalMessageId } from "../../util.tsx";
 import type { OptimisticMessage } from "../chatdisplayFooter/index.tsx";
@@ -73,7 +77,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
 
   async function handleBlock() {
     const shouldBlock = await confirm({
-      title: `Block ${contact?.name ?? contact?.phone}`,
+      title: `Block ${getContactLabel(contact) ?? "this contact"}`,
       description: "Are you sure to block this user?",
       warning: "The blocked user cannot message you and you cannot message the user",
       confirmText: "Block",
@@ -83,7 +87,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
     if (!shouldBlock) return;
 
     blockmut.mutate(
-      { phoneNumbersList: [contact.phone] },
+      { phoneNumbersList: [getContactWaAddress(contact) ?? ""] },
       {
         onSuccess: () => {
           setSelectedContact({ ...contact, blockedOnWhatsApp: true });
@@ -146,7 +150,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
    * list drops them from whichever tab is on screen.
    */
   async function handleSpam(next: boolean) {
-    const who = contact?.name ?? contact?.phone;
+    const who = getContactLabel(contact);
     const confirmed = await confirm(
       next
         ? {

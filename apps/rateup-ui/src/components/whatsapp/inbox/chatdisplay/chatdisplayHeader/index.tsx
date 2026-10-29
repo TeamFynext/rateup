@@ -74,7 +74,13 @@ export default function WaInboxChatDisplayHeader({
   const phone = getContactDisplayPhone(contact);
 
   const displayName =
-    contact?.name || contact?.whatsappUserName || phone || contact?.igsId || contact?.psid;
+    contact?.name ||
+    contact?.whatsappUserName ||
+    phone ||
+    contact?.igsId ||
+    contact?.psid ||
+    // Known only by a WhatsApp BSUID: the id itself is meaningless to read.
+    (contact?.bsuid ? "WhatsApp user" : undefined);
 
   const status = deriveStatus(contact);
 

@@ -59,7 +59,9 @@ import { getApiErrorMessage } from "@/utils/apiError.ts";
 import { formatDateWithRelativeTime } from "@/utils/dateTime.ts";
 import { deleteUploadedFiles } from "@/utils/file-upload/upload.ts";
 import {
+  getContactLabel,
   getContactPlatform,
+  getContactWaAddress,
   isInboxSessionExpired,
   returnMessageContentBasedOnParsedMessage,
 } from "@/utils/whatsapp/inbox.ts";
@@ -270,7 +272,7 @@ export default function WaInboxChatDisplayFooter({
               : {
                   messaging_product: "whatsapp",
                   recipient_type: "individual",
-                  to: contact.phone,
+                  to: getContactWaAddress(contact) ?? "",
                   type: "text",
                   text: {
                     body:
@@ -710,7 +712,7 @@ export const WaInboxBlockedContactFooter = ({ contact }: { contact: ContactWithU
   const unblockMut = useUnBlockWhatsAppUser(filterData ?? "");
   async function handleUnblock() {
     const shouldUnblock = await confirm({
-      title: `Unblock ${contact?.name ?? contact?.phone}`,
+      title: `Unblock ${getContactLabel(contact) ?? "this contact"}`,
       description: "Are you sure to unblock this contact?",
       confirmText: "Unblock",
       cancelText: "cancel",
@@ -719,7 +721,7 @@ export const WaInboxBlockedContactFooter = ({ contact }: { contact: ContactWithU
     if (!shouldUnblock) return;
 
     unblockMut.mutate(
-      { phoneNumbersList: [contact.phone] },
+      { phoneNumbersList: [getContactWaAddress(contact) ?? ""] },
       {
         onSuccess: () => {
           setSelectedContact({ ...contact, blockedOnWhatsApp: false });
@@ -759,7 +761,7 @@ export const WaInboxSpamContactFooter = ({ contact }: { contact: ContactWithUpda
 
   async function handleNotSpam() {
     const confirmed = await confirm({
-      title: `Remove ${contact?.name ?? contact?.phone} from spam`,
+      title: `Remove ${getContactLabel(contact) ?? "this contact"} from spam`,
       description: "Are you sure this contact is not spam?",
       confirmText: "Not spam",
       cancelText: "Cancel",

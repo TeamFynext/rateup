@@ -1,6 +1,7 @@
 import { useDeleteConversation } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
+import { getContactLabel } from "@/utils/whatsapp/inbox.ts";
 
 /** The bits of an inbox row this action needs — any ticket row satisfies it. */
 export interface DeletableTicket {
@@ -33,7 +34,7 @@ export function useDeleteTicket(contact: DeletableTicket | null | undefined) {
   async function deleteTicket() {
     if (!contact || !conversationId) return;
 
-    const who = contact.name ?? contact.phone ?? "this contact";
+    const who = getContactLabel(contact) ?? "this contact";
     const ticket = contact.ticketNumber ? `Ticket #${contact.ticketNumber}` : "This conversation";
     const confirmed = await confirm({
       title: "Delete conversation",

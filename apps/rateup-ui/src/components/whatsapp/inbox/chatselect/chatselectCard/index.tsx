@@ -113,6 +113,7 @@ export default function WaInboxChatSelectCard({
     getContactDisplayPhone(contact) ||
     contact?.igsId ||
     contact?.psid ||
+    (contact?.bsuid ? "WhatsApp user" : undefined) ||
     "Unknown";
 
   const compact = useInboxViewStore((s) => s.compact);
