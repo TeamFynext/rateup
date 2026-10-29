@@ -97,13 +97,47 @@ export interface WaReceiveMessageBody {
     {
       profile: {
         name: string;
+        /** The customer's WhatsApp username, once they have adopted one. */
+        username?: string;
       };
+      /**
+       * The customer's phone number. Meta omits it for a customer with a username
+       * unless this business has messaged/called them (or been messaged) within 30
+       * days, or they are in the business's contact book.
+       */
       wa_id: string;
+      /** Business-scoped user ID (BSUID), e.g. "US.13491208655302741918". Always present. */
+      user_id?: string;
+      /** Parent BSUID; only for portfolios enrolled in a parent BSUID account. */
+      parent_user_id?: string;
     },
   ];
   messages: [
     {
+      /**
+       * The sender's phone number — may be omitted (see `contacts[].wa_id`).
+       * Read the sender through `inboundIdentity` (whatsapp/bsuid.ts), not this.
+       */
       from: string;
+      /** The sender's BSUID. Always present. */
+      from_user_id?: string;
+      from_parent_user_id?: string;
+      /**
+       * `type: "system"` — Meta telling us the customer's identity changed.
+       * `user_changed_number`: a new phone (and BSUID); `user_changed_user_id`:
+       * a new BSUID only. `previous_user_id` links the old identity to the new.
+       */
+      system?: {
+        body?: string;
+        type?: "user_changed_number" | "user_changed_user_id" | string;
+        wa_id?: string;
+        user_id?: string;
+        previous_user_id?: string;
+        parent_user_id?: string;
+        previous_parent_user_id?: string;
+        /** Legacy (pre-BSUID) spelling of the new phone number. */
+        new_wa_id?: string;
+      };
       id: string;
       timestamp: string;
       type: WaMessageTypes;
@@ -177,7 +211,11 @@ export interface WaReceiveMessageBody {
   message_echoes?: [
     {
       from: string;
+      /** The customer's phone number — may be omitted; see `to_user_id`. */
       to: string;
+      /** The customer's BSUID. */
+      to_user_id?: string;
+      to_parent_user_id?: string;
       id: string;
       timestamp: string;
       type: WaMessageTypes;
@@ -221,9 +259,14 @@ export interface WaReceiveMessageBody {
       id: string;
       status: string;
       timestamp: string;
+      /** The customer's phone number — may be omitted; see `recipient_user_id`. */
       recipient_id: string;
-      /** Meta's stable cross-app user id (e.g. "IN.1684570989242773"). */
+      /**
+       * The customer's business-scoped user ID (e.g. "IN.1684570989242773").
+       * Omitted on a `failed` status for a message that was sent to a phone number.
+       */
       recipient_user_id?: string;
+      recipient_parent_user_id?: string;
       /**
        * Legacy conversation-based-pricing object. Optional because Meta stopped
        * sending it: under per-message pricing (PMP, from 2025-07-01) real v25.0
@@ -574,6 +617,8 @@ export enum WaMessageTypes {
   button = "button",
   order = "order",
   revoke = "revoke",
+  /** Meta's notice that the customer changed number or BSUID; not a message they wrote. */
+  system = "system",
 }
 
 //type for waTemplate starts here

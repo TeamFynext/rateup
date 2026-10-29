@@ -177,7 +177,9 @@ import {
   getOrCreateContactByIgsId,
   getOrCreateContactByPhone,
   getOrCreateContactByPsid,
+  getOrCreateWaContact,
   getOrcreateContact,
+  applyWaIdentityChange,
   handleContactConsent,
   updateContactById,
   updateContactLabelsById,
@@ -2008,5 +2010,119 @@ describe("a contact's references must be its org's own (PART-2 / MSG-13)", () =>
       ),
     ).rejects.toThrow("Custom field not found");
     expect(db.contactLabelMap.deleteMany).not.toHaveBeenCalled();
+  });
+});
+
+describe("getOrCreateWaContact (phone or BSUID)", () => {
+  const ORG_ID = "org-1";
+  const findFirst = () => vi.mocked(prisma.contact.findFirst);
+  const findUnique = () => vi.mocked(prisma.contact.findUnique);
+  const update = () => vi.mocked(prisma.contact.update);
+  const create = () => vi.mocked(prisma.contact.create);
+
+  beforeEach(() => {
+    findFirst().mockResolvedValue(null);
+    findUnique().mockResolvedValue(null);
+    update().mockImplementation((async (args: any) => ({
+      id: args.where.id,
+      ...args.data,
+    })) as any);
+    create().mockImplementation((async (args: any) => ({ id: "new", ...args.data })) as any);
+  });
+
+  test("stamps the BSUID onto an existing phone contact", async () => {
+    findFirst().mockResolvedValue({ id: "c1", phone: "911", bsuid: null } as any);
+
+    await getOrCreateWaContact({ phone: "911", bsuid: "IN.42" }, ORG_ID, { name: "Ann" });
+
+    expect(update()).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "c1" },
+        data: expect.objectContaining({ bsuid: "IN.42", name: "Ann" }),
+      }),
+    );
+    expect(create()).not.toHaveBeenCalled();
+  });
+
+  test("finds a username customer by BSUID and fills in the phone once Meta shares it", async () => {
+    findUnique().mockResolvedValue({ id: "c2", phone: null, bsuid: "IN.42" } as any);
+
+    await getOrCreateWaContact({ phone: "911", bsuid: "IN.42" }, ORG_ID);
+
+    expect(update()).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "c2" },
+        data: expect.objectContaining({ phone: "911" }),
+      }),
+    );
+  });
+
+  test("creates a BSUID-only contact without inventing a phone", async () => {
+    await getOrCreateWaContact({ bsuid: "US.7" }, ORG_ID, { phone: "US.7" } as any);
+
+    expect(create()).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ bsuid: "US.7", phone: undefined, orgId: ORG_ID }),
+      }),
+    );
+  });
+
+  test("moves the BSUID to the phone contact when both exist separately", async () => {
+    findFirst().mockResolvedValue({ id: "phone-contact", phone: "911", bsuid: null } as any);
+    findUnique().mockResolvedValue({ id: "bsuid-contact", phone: null, bsuid: "IN.42" } as any);
+
+    await getOrCreateWaContact({ phone: "911", bsuid: "IN.42" }, ORG_ID);
+
+    expect(update()).toHaveBeenCalledWith({
+      where: { id: "bsuid-contact" },
+      data: { bsuid: null },
+    });
+    expect(update()).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "phone-contact" },
+        data: expect.objectContaining({ bsuid: "IN.42" }),
+      }),
+    );
+  });
+});
+
+describe("applyWaIdentityChange", () => {
+  test("moves the contact holding the old BSUID onto the new one", async () => {
+    vi.mocked(prisma.contact.findFirst)
+      .mockResolvedValueOnce({ id: "c1", phone: null, bsuid: "IN.old" } as any)
+      .mockResolvedValueOnce(null);
+
+    const id = await applyWaIdentityChange("org-1", { previousBsuid: "IN.old", bsuid: "IN.new" });
+
+    expect(id).toBe("c1");
+    expect(prisma.contact.update).toHaveBeenCalledWith({
+      where: { id: "c1" },
+      data: { bsuid: "IN.new" },
+    });
+  });
+
+  test("leaves both alone when the new identity belongs to another contact", async () => {
+    vi.mocked(prisma.contact.findFirst)
+      .mockResolvedValueOnce({ id: "c1", phone: "911", bsuid: "IN.old" } as any)
+      .mockResolvedValueOnce({ id: "c2" } as any);
+
+    const id = await applyWaIdentityChange("org-1", {
+      previousPhone: "911",
+      phone: "922",
+      bsuid: "IN.new",
+    });
+
+    expect(id).toBeNull();
+    expect(prisma.contact.update).not.toHaveBeenCalled();
+  });
+});
+
+describe("handleContactConsent with a BSUID", () => {
+  test("matches the contact on bsuid, not phone", async () => {
+    vi.mocked(prisma.contact.findFirst).mockResolvedValue(null);
+    await handleContactConsent("org-1", "US.7", false);
+    expect(prisma.contact.findFirst).toHaveBeenCalledWith({
+      where: { bsuid: "US.7", orgId: "org-1" },
+    });
   });
 });

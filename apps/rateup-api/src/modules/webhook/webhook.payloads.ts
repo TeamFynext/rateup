@@ -14,6 +14,8 @@ function publicContact(contact: ContactRecord) {
     id: contact.id,
     name: contact.name ?? null,
     phone: contact.phone ?? null,
+    /** WhatsApp business-scoped user ID; the only id a username customer may have. */
+    businessScopedUserId: contact.bsuid ?? null,
     email: contact.email ?? null,
     source: contact.source ?? null,
     lifecycleId: contact.lifecycleId ?? null,

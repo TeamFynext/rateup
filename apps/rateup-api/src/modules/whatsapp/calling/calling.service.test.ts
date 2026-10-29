@@ -26,7 +26,7 @@ vi.mock("../../../utils/logger.js", () => ({
 vi.mock("../../../authz/actor.js", () => ({ loadActor: vi.fn() }));
 vi.mock("../../contact/contact.service.js", () => ({
   getContactById: vi.fn(),
-  getOrCreateContactByPhone: vi.fn(),
+  getOrCreateWaContact: vi.fn(),
 }));
 vi.mock("../../contact/conversation/conversation.service.js", () => ({
   getActiveConversationForContact: vi.fn(),
@@ -60,7 +60,7 @@ vi.mock("../../../workers/bullmq/queues/callWatchdog.queue.js", () => ({
 import prisma from "../../../utils/prisma.js";
 import redis from "../../../utils/redisConnection.js";
 import { loadActor } from "../../../authz/actor.js";
-import { getContactById, getOrCreateContactByPhone } from "../../contact/contact.service.js";
+import { getContactById, getOrCreateWaContact } from "../../contact/contact.service.js";
 import { getActiveConversationForContact } from "../../contact/conversation/conversation.service.js";
 import { sendViaWstoOrgHandler } from "../../org/ws/org.ws.controller.js";
 import { getChannelScope } from "../settings/wa_channel_access.js";
@@ -160,7 +160,7 @@ beforeEach(() => {
 
 describe("incoming call webhook", () => {
   test("creates the call, keeps the offer off the broadcast, and rings only agents who can reply", async () => {
-    vi.mocked(getOrCreateContactByPhone).mockResolvedValue({
+    vi.mocked(getOrCreateWaContact).mockResolvedValue({
       contact: { id: CONTACT_ID },
     } as never);
     vi.mocked(getActiveConversationForContact).mockResolvedValue({ id: "conv-1" } as never);
@@ -213,7 +213,7 @@ describe("incoming call webhook", () => {
   });
 
   test("a redelivered connect does not ring twice", async () => {
-    vi.mocked(getOrCreateContactByPhone).mockResolvedValue({
+    vi.mocked(getOrCreateWaContact).mockResolvedValue({
       contact: { id: CONTACT_ID },
     } as never);
     vi.mocked(getActiveConversationForContact).mockResolvedValue({ id: "conv-1" } as never);

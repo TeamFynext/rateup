@@ -2,6 +2,7 @@ import { Contact } from "../../../generated/prisma/client.js";
 import { log } from "../../utils/logger.js";
 import prisma from "../../utils/prisma.js";
 import { ContactNotFoundError } from "./contact.errors.js";
+import { isBsuid } from "../whatsapp/bsuid.js";
 import { buildContactListWhere } from "./contact.listQuery.js";
 import { releaseThreadsOnTicketClose } from "../metaAgent/metaAgent.autoRelease.js";
 export { ContactNotFoundError };
@@ -1013,6 +1014,175 @@ export async function getOrCreateContactByPhone(
   }
 }
 
+const WA_CONTACT_INCLUDE = {
+  waInboxAssign: {
+    select: {
+      assignedUser: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  },
+} as const;
+
+/**
+ * Get or create the contact for a WhatsApp customer, matched on phone number or
+ * business-scoped user ID (BSUID) — whichever the webhook carried, and both when
+ * it carried both.
+ *
+ * Phone is tried first: it is what every contact made before BSUIDs is keyed on,
+ * and what loyalty, campaigns and imports match against. The BSUID catches the
+ * customer whose phone Meta withheld (they use a WhatsApp username). Whichever
+ * half the stored contact is missing is filled in, so a contact first seen by
+ * BSUID alone gains its phone the first time Meta shares it, and an existing
+ * phone contact gains its BSUID on its next message.
+ *
+ * Two different contacts can match — one by phone, one by BSUID — when a
+ * customer first wrote with their phone hidden and the phone was also on file
+ * (imported, or from an earlier number). They are not merged here: the phone
+ * contact keeps the identity and the BSUID moves to it, so new messages thread
+ * there; the BSUID-only contact keeps its history.
+ */
+export async function getOrCreateWaContact(
+  identity: { phone?: string; bsuid?: string },
+  orgId: string,
+  additionalData: Omit<updateContactSchema, "customFields"> & { bsuid?: string } = {},
+  addToConversation: boolean = false,
+) {
+  const { phone, bsuid } = identity;
+  if (!phone && !bsuid) throw new Error("A WhatsApp contact needs a phone number or a BSUID");
+
+  const [byPhone, byBsuid] = await Promise.all([
+    phone ? prisma.contact.findFirst({ where: { phone, orgId } }) : null,
+    bsuid
+      ? prisma.contact.findUnique({
+          where: { contact_bsuid_org_id_unique: { bsuid, orgId } },
+        })
+      : null,
+  ]);
+
+  const updateData: Record<string, unknown> = { ...additionalData };
+  if (!additionalData.name) delete updateData.name;
+  // Never let a caller's spelling overwrite the identity resolved here.
+  delete updateData.phone;
+  delete updateData.bsuid;
+
+  const existing = byPhone ?? byBsuid;
+  if (existing) {
+    if (bsuid && existing.bsuid !== bsuid) {
+      if (byBsuid && byBsuid.id !== existing.id) {
+        log.warn(
+          { orgId, contactId: existing.id, otherContactId: byBsuid.id },
+          "WhatsApp customer matched two contacts (phone and BSUID); moving the BSUID to the phone contact",
+        );
+        await prisma.contact.update({ where: { id: byBsuid.id }, data: { bsuid: null } });
+      }
+      updateData.bsuid = bsuid;
+    }
+    if (phone && !existing.phone) updateData.phone = phone;
+    const contact = await prisma.contact.update({
+      where: { id: existing.id },
+      data: updateData,
+      include: WA_CONTACT_INCLUDE,
+    });
+    return { contact, conversation: undefined };
+  }
+
+  let contact;
+  try {
+    contact = await prisma.contact.create({
+      data: { ...(updateData as object), phone, bsuid, orgId },
+      include: WA_CONTACT_INCLUDE,
+    });
+  } catch (e) {
+    // Another path (an echo, a send record) created this customer a moment ago.
+    if ((e as { code?: string })?.code === "P2002") {
+      return getOrCreateWaContact(identity, orgId, additionalData, addToConversation);
+    }
+    throw e;
+  }
+  const conversation = addToConversation
+    ? await createConversation({ contactId: contact.id, orgId: contact.orgId })
+    : undefined;
+  await emitIntegrationEvent(orgId, { type: "contact.created", contact });
+  return { contact, conversation };
+}
+
+/**
+ * The phone number we hold for a BSUID, if any. An inbound webhook for a username
+ * customer may leave the phone out even when we learned it earlier; the phone is
+ * still what loyalty, consent and orders are keyed on, so handlers get it back.
+ */
+export async function findWaContactPhoneByBsuid(
+  orgId: string,
+  bsuid: string,
+): Promise<string | undefined> {
+  const contact = await prisma.contact.findUnique({
+    where: { contact_bsuid_org_id_unique: { bsuid, orgId } },
+    select: { phone: true },
+  });
+  return contact?.phone ?? undefined;
+}
+
+/**
+ * Meta's `system` message: the customer changed phone number
+ * (`user_changed_number`) or only their BSUID (`user_changed_user_id`). The
+ * contact holding the previous identity takes the new one, so the thread
+ * carries on instead of the next message opening a stranger's chat.
+ *
+ * Returns the contact id that was updated, or null when no contact held the old
+ * identity (nothing to carry over; the next message creates the contact).
+ */
+export async function applyWaIdentityChange(
+  orgId: string,
+  change: {
+    previousPhone?: string;
+    previousBsuid?: string;
+    phone?: string;
+    bsuid?: string;
+  },
+): Promise<string | null> {
+  const { previousPhone, previousBsuid, phone, bsuid } = change;
+  const or = [
+    ...(previousBsuid ? [{ bsuid: previousBsuid }] : []),
+    ...(previousPhone ? [{ phone: previousPhone }] : []),
+  ];
+  if (!or.length) return null;
+  const contact = await prisma.contact.findFirst({ where: { orgId, OR: or } });
+  if (!contact) return null;
+
+  const data: { phone?: string; bsuid?: string } = {};
+  if (bsuid && bsuid !== contact.bsuid) data.bsuid = bsuid;
+  if (phone && phone !== contact.phone) data.phone = phone;
+  if (!Object.keys(data).length) return contact.id;
+
+  // The new identity may already belong to another contact (they messaged from
+  // the new number before Meta told us it was theirs). Leave both alone rather
+  // than break the unique index; the log is how support finds them.
+  const clash = await prisma.contact.findFirst({
+    where: {
+      orgId,
+      id: { not: contact.id },
+      OR: [
+        ...(data.bsuid ? [{ bsuid: data.bsuid }] : []),
+        ...(data.phone ? [{ phone: data.phone }] : []),
+      ],
+    },
+    select: { id: true },
+  });
+  if (clash) {
+    log.warn(
+      { orgId, contactId: contact.id, otherContactId: clash.id },
+      "WhatsApp identity change points at an identity another contact already holds; not applied",
+    );
+    return null;
+  }
+  await prisma.contact.update({ where: { id: contact.id }, data });
+  return contact.id;
+}
+
 export async function getOrCreateContactByIgsId(
   igsId: string,
   orgId: string,
@@ -1170,10 +1340,9 @@ export async function getExistingContactCountByPhno(ids: string[], orgId: string
 
 export const handleContactConsent = async (orgId: string, phone: string, consent: boolean) => {
   const contact_consent = await prisma.contact.findFirst({
-    where: {
-      phone,
-      orgId,
-    },
+    // A customer with a WhatsApp username may be known only by their BSUID; their
+    // STOP has to land all the same.
+    where: isBsuid(phone) ? { bsuid: phone, orgId } : { phone, orgId },
   });
   if (!contact_consent) {
     log.info({ orgId }, "Consent callback for a phone number this org does not have");

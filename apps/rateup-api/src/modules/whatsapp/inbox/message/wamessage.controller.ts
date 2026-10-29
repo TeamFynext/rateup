@@ -73,6 +73,7 @@ import {
   getContactById,
   getOrCreateContactByIgsId,
   getOrCreateContactByPhone,
+  getOrCreateWaContact,
   getOrCreateContactByPsid,
   updateContactById,
 } from "../../../contact/contact.service.js";
@@ -106,6 +107,7 @@ import { getFacebookUserDetailsFromMeta } from "../../facebook/facebook.service.
 import { notifyInboundMessage } from "./inboundNotify.js";
 import { assignConversationOwner } from "./assignOwner.service.js";
 import { setAgentTyping } from "./typing.service.js";
+import { echoIdentity, inboundIdentity, isBsuid, type WaCustomerIdentity } from "../../bsuid.js";
 /**
  * Stores one message, in either direction, on any channel — creating the
  * contact and conversation it belongs to — and broadcasts it to the inbox.
@@ -174,11 +176,21 @@ export async function handleWaMessages(
     // phone contact). This object only ever flows into
     // `Omit<updateContactSchema, "customFields">`-typed params below, where every
     // field is optional, so it's left to infer its own (accurate) shape instead.
+    // A WhatsApp customer is a phone number, a business-scoped user ID (BSUID), or
+    // both. `from` is whichever the caller had — a BSUID for a customer whose phone
+    // Meta withheld — and the payload itself may carry the other half.
+    const waIdentity =
+      sourcePlatform === PlatformType.WHATSAPP ? waIdentityFor(type, messageBody, from) : undefined;
     const contactCore = {
       name: userName,
       ...(sourcePlatform === PlatformType.WEBCHAT || sourcePlatform === PlatformType.FACEBOOK
         ? { other: from }
-        : { phone: from }),
+        : waIdentity
+          ? {
+              phone: waIdentity.phone,
+              ...(waIdentity.username ? { whatsappUserName: waIdentity.username } : {}),
+            }
+          : { phone: from }),
       psid: sourcePlatform === PlatformType.FACEBOOK ? from : undefined,
       igsId: sourcePlatform === PlatformType.INSTAGRAM ? from : undefined,
       source:
@@ -247,6 +259,8 @@ export async function handleWaMessages(
       res = await getOrCreateContactByPsid(from, orgId, contactData, true);
     } else if (sourcePlatform === PlatformType.WEBCHAT) {
       res = await getOrCreateContactByPhone(from, orgId, contactData, PlatformType.WEBCHAT, true);
+    } else if (waIdentity) {
+      res = await getOrCreateWaContact(waIdentity, orgId, contactData, true);
     } else {
       res = await getOrCreateContactByPhone(from, orgId, contactData, undefined, true);
     }
@@ -257,6 +271,8 @@ export async function handleWaMessages(
       throw new Error(`Failed to get or create contact for ${sourcePlatform} message from ${from}`);
     }
     let { contact, conversation } = res;
+    // One spelling per customer for the meters, whichever half this message named.
+    const customerId = waIdentity ? (contact.phone ?? contact.bsuid ?? from) : from;
     // Prepare parameter data and handle specific cases
     let parameterData: OutgoingTemplateComponent[] | undefined;
     const sendBody = messageBody as WaSendMessageBody;
@@ -325,7 +341,7 @@ export async function handleWaMessages(
       orgId,
       platform: sourcePlatform,
       channelId: sourceIdentifier,
-      customerId: from,
+      customerId,
       contactId: contact.id,
       at: messageAt,
       direction: type,
@@ -335,7 +351,7 @@ export async function handleWaMessages(
       await recordActiveContact({
         orgId,
         platform: sourcePlatform,
-        customerId: from,
+        customerId,
         contactId: contact.id,
         at: messageAt,
         direction: type,
@@ -455,14 +471,15 @@ export async function handleWaMessages(
       !sentByMetaAi &&
       !failed &&
       sourcePlatform === PlatformType.WHATSAPP &&
-      contact.phone &&
+      (contact.phone || contact.bsuid) &&
       contact.metaAgentThreadOwner === MetaAgentThreadOwner.AI
     ) {
       const now = new Date();
       try {
         const changed = await setMetaAgentThreadOwner({
           orgId,
-          phone: contact.phone,
+          phone: contact.phone ?? undefined,
+          bsuid: contact.bsuid ?? undefined,
           owner: MetaAgentThreadOwner.STAFF,
           reason: takeoverReason,
           at: now,
@@ -566,7 +583,9 @@ export async function sendNewWaMessageHandler(
         to = contact.other;
         break;
       default:
-        to = contact.phone;
+        // A customer with a WhatsApp username may be known only by their BSUID;
+        // the send adapter turns that into Meta's `recipient`.
+        to = contact.phone ?? contact.bsuid;
     }
     switch (type) {
       case "text": {
@@ -676,25 +695,18 @@ export async function sendNewWaMessageHandler(
         if (!contacts) {
           throw new Error("Contacts not provided for contact message");
         }
-        if (!contact.phone) {
-          throw new Error(`Contact ${contact.id} has no phone number for a contact-card send`);
+        if (!to) {
+          throw new Error(`Contact ${contact.id} has no WhatsApp address for a contact-card send`);
         }
-        await sendContactMessage(
-          contacts,
-          contact.phone,
-          orgId,
-          userId,
-          whatsappSettingsPhoneId,
-          teamId,
-        );
+        await sendContactMessage(contacts, to, orgId, userId, whatsappSettingsPhoneId, teamId);
         break;
       }
       case "location": {
         if (!location) {
           throw new Error("Location not provided for location message");
         }
-        if (!contact.phone) {
-          throw new Error(`Contact ${contact.id} has no phone number for a location send`);
+        if (!to) {
+          throw new Error(`Contact ${contact.id} has no WhatsApp address for a location send`);
         }
         // Meta's Cloud API expects numeric coordinates; the request body carries
         // them as strings (form-friendly), so they're converted here rather than
@@ -706,7 +718,7 @@ export async function sendNewWaMessageHandler(
             name: location.name,
             address: location.address,
           },
-          contact.phone,
+          to,
           orgId,
           userId,
           whatsappSettingsPhoneId,
@@ -1401,4 +1413,29 @@ export async function exportWaMessageLogsHandler(
       error: "An error occurred while exporting the message logs.",
     });
   }
+}
+
+/**
+ * The WhatsApp customer a stored message belongs to. Inbound: the sender, from
+ * `messages[0]` and its `contacts` entry. Outbound (an API send or an echo from
+ * the WhatsApp Business app): the recipient, from `to` / `to_user_id` /
+ * `recipient`. `from` — the address the caller resolved — fills whichever half
+ * the payload left out.
+ */
+function waIdentityFor(
+  type: "send" | "receive",
+  messageBody: WaMessagePayload,
+  from: string,
+): WaCustomerIdentity {
+  const body = messageBody as unknown as Record<string, unknown> | undefined;
+  const identity =
+    type === "receive"
+      ? inboundIdentity(
+          (body?.messages as Record<string, unknown>[] | undefined)?.[0],
+          body?.contacts,
+        )
+      : echoIdentity(body as Parameters<typeof echoIdentity>[0], body?.contacts);
+  if (isBsuid(from)) identity.bsuid ??= from;
+  else if (from) identity.phone ??= from;
+  return identity;
 }

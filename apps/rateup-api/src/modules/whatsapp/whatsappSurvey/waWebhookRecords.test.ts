@@ -168,4 +168,58 @@ describe("buildWaWebhookRecords", () => {
     expect(buildWaWebhookRecords(delivery({ changes: [] }))).toEqual([]);
     expect(buildWaWebhookRecords(null as never)).toEqual([]);
   });
+
+  test("keys a customer by BSUID, so a webhook without their phone lands on the same partition", () => {
+    const withPhone = delivery({
+      changes: [
+        {
+          field: "messages",
+          value: {
+            metadata,
+            contacts: [{ profile: { name: "A" }, wa_id: "911", user_id: "IN.111" }],
+            messages: [{ ...message("911", "m1"), from_user_id: "IN.111" }],
+          },
+        },
+      ],
+    });
+    const withoutPhone = delivery({
+      changes: [
+        {
+          field: "messages",
+          value: {
+            metadata,
+            contacts: [{ profile: { name: "A", username: "ann" }, user_id: "IN.111" }],
+            messages: [{ ...message("", "m2"), from: undefined, from_user_id: "IN.111" }],
+          },
+        },
+      ],
+    });
+    expect(buildWaWebhookRecords(withPhone).map((r) => r.key)).toEqual(["IN.111"]);
+    expect(buildWaWebhookRecords(withoutPhone).map((r) => r.key)).toEqual(["IN.111"]);
+  });
+
+  test("splits a batch by BSUID and narrows contacts to each sender", () => {
+    const body = delivery({
+      changes: [
+        {
+          field: "messages",
+          value: {
+            metadata,
+            contacts: [
+              { profile: { name: "A" }, user_id: "IN.111" },
+              { profile: { name: "B" }, wa_id: "922", user_id: "IN.222" },
+            ],
+            messages: [
+              { ...message("", "m1"), from: undefined, from_user_id: "IN.111" },
+              { ...message("922", "m2"), from_user_id: "IN.222" },
+            ],
+          },
+        },
+      ],
+    });
+    const records = buildWaWebhookRecords(body);
+    expect(records.map((r) => r.key)).toEqual(["IN.111", "IN.222"]);
+    const second = parsed(records[1]!.value).entry[0].changes[0].value;
+    expect(second.contacts).toEqual([{ profile: { name: "B" }, wa_id: "922", user_id: "IN.222" }]);
+  });
 });

@@ -37,6 +37,7 @@ import {
 import connection from "../../../utils/redisConnection.js";
 import crypto from "node:crypto";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
+import { inboundIdentity, waAddress } from "../bsuid.js";
 
 dayjs.extend(customParseFormat);
 
@@ -738,7 +739,13 @@ export function parseMessage(data: WaMessageBody): WaParsedMessage {
   }
   const { message, completeMessageObject } = getMessageObject(data);
   const userName = getUserName(data);
-  const { from, timestamp, type } = message;
+  const { timestamp, type } = message;
+  // The phone number when Meta shared it, else the sender's BSUID: a customer
+  // with a WhatsApp username can arrive with no `from` at all.
+  const from =
+    waAddress(
+      inboundIdentity(message, (completeMessageObject as WaReceiveMessageBody)?.contacts),
+    ) ?? "";
   let subtype: string = type;
 
   let flowResponse;

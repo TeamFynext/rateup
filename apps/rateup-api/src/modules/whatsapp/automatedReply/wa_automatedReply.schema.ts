@@ -70,7 +70,9 @@ const cloneAutomatedReplyBody = z.object({
 });
 
 const initiateAutomatedReplyBody = z.object({
-  phone: z.string().trim().min(1).max(32),
+  // A phone number, or a WhatsApp business-scoped user ID ("US.1349…", up to
+  // ~135 characters) for a customer whose phone Meta withholds.
+  phone: z.string().trim().min(1).max(160),
 });
 
 export type CreateAutomatedReplySchema = z.infer<typeof createAutomatedReplySchema>;

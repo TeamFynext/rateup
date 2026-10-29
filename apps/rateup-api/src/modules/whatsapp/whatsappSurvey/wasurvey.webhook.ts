@@ -89,7 +89,12 @@ import {
   PlatformType,
   WhatsappSettings,
 } from "../../../../generated/prisma/client.js";
-import { handleContactConsent } from "../../contact/contact.service.js";
+import {
+  applyWaIdentityChange,
+  findWaContactPhoneByBsuid,
+  handleContactConsent,
+} from "../../contact/contact.service.js";
+import { echoIdentity, inboundIdentity, isBsuid, waAddress } from "../bsuid.js";
 import { getOrgById } from "../../org/org.services.js";
 import { canMessageContact } from "../../subscription/activeContacts.js";
 import { updateMonthlyStat } from "../../stats/stats.service.js";
@@ -259,7 +264,11 @@ function singleMessageBody(body: WaMessageBody, message: WaInboundMessage): WaMe
   const change = entry.changes[0];
   const value = change.value as WaReceiveMessageBody;
   const contacts = value.contacts ?? [];
-  const own = contacts.filter((contact) => contact?.wa_id === message.from);
+  const own = contacts.filter(
+    (contact) =>
+      (!!message.from_user_id && contact?.user_id === message.from_user_id) ||
+      (!!message.from && contact?.wa_id === message.from),
+  );
   return singleChangeBody(body, entry, {
     ...change,
     value: { ...value, contacts: own.length ? own : contacts, messages: [message] },
@@ -338,10 +347,12 @@ async function handleSMBMessageEchoes(body: WaMessageBody) {
             // WA app. The tag stays on the stored body, which is what the inbox
             // reads to label it as the AI's.
             const byMetaAi = isMetaAiOriginated(message.biz_opaque_callback_data);
+            // The customer's phone when Meta shared it, else their BSUID.
+            const recipient = waAddress(echoIdentity(message, value.contacts)) ?? message.to;
             const stored = await handleWaMessages(
               "send",
               message,
-              message.to,
+              recipient,
               waSettings.orgId,
               PlatformType.WHATSAPP,
               channelIdentifier,
@@ -441,27 +452,31 @@ async function handleStandbyEvent(body: WaMessageBody) {
 async function markStandbyThreadsAsAi(value: WaStandbyChangeValue) {
   const phoneId = value?.metadata?.phone_number_id;
   if (!phoneId) return;
-  const latest = new Map<string, Date>();
-  const note = (phone: string | undefined, timestamp: string | undefined) => {
-    if (!phone) return;
+  const latest = new Map<string, { at: Date; phone?: string; bsuid?: string }>();
+  const note = (customer: { phone?: string; bsuid?: string }, timestamp: string | undefined) => {
+    const key = customer.bsuid ?? customer.phone;
+    if (!key) return;
     const at = metaTimestampToDate(timestamp);
-    const seen = latest.get(phone);
-    if (!seen || seen < at) latest.set(phone, at);
+    const seen = latest.get(key);
+    if (!seen || seen.at < at) latest.set(key, { ...customer, at });
   };
   // Only the customer's messages say who holds the thread: Meta routes them
   // to standby while the agent does. The agent's own replies do not — its last
   // one is often the handoff line ("I'll ask a representative…"), sent as it
   // passes the thread on, and reading that as "AI" undid the handover.
-  for (const message of value.standby.messages ?? []) note(message.from, message.timestamp);
+  for (const message of value.standby.messages ?? []) {
+    note(inboundIdentity(message, value.standby.contacts), message.timestamp);
+  }
   if (latest.size === 0) return;
 
   const waSettings = await getWaSettingsByPhoneId(phoneId);
   if (!waSettings) return;
-  for (const [phone, at] of latest) {
+  for (const { phone, bsuid, at } of latest.values()) {
     try {
       await setMetaAgentThreadOwner({
         orgId: waSettings.orgId,
         phone,
+        bsuid,
         owner: MetaAgentThreadOwner.AI,
         at,
         inferred: true,
@@ -483,8 +498,9 @@ async function handleMessagingHandoversEvent(body: WaMessageBody) {
       const value = change.value as unknown as WaMessagingHandoverValue;
       const phoneId = value?.recipient?.phone_number_id ?? value?.metadata?.phone_number_id;
       const phone = value?.sender?.phone_number;
+      const bsuid = value?.sender?.user_id;
       const resolved = value ? resolveHandoverOwner(value) : null;
-      if (!phoneId || !phone || !resolved) {
+      if (!phoneId || (!phone && !bsuid) || !resolved) {
         log.warn({ value }, "Unrecognised messaging_handovers change; ignored");
         continue;
       }
@@ -499,6 +515,7 @@ async function handleMessagingHandoversEvent(body: WaMessageBody) {
         await setMetaAgentThreadOwner({
           orgId: waSettings.orgId,
           phone,
+          bsuid,
           owner: resolved.owner,
           reason: resolved.reason,
           at: metaTimestampToDate(value.timestamp),
@@ -579,12 +596,13 @@ async function handleMessageStatuses(body: WaMessageBody) {
       if (isPaymentStatus(status)) {
         await safeAsyncOperation(
           () =>
-            handlePaymentConfirmation(status.recipient_id, status.payment.reference_id, phoneId),
-          (error) =>
-            log.error(
-              { err: error },
-              `Error handling payment confirmation for recipient_id ${status.recipient_id}`,
+            handlePaymentConfirmation(
+              status.recipient_id || status.recipient_user_id || "",
+              status.payment.reference_id,
+              phoneId,
             ),
+          (error) =>
+            log.error({ err: error }, `Error handling payment confirmation for ${status.id}`),
         );
         return;
       }
@@ -602,7 +620,8 @@ async function handleMessageStatuses(body: WaMessageBody) {
             enqueueWebhookDispatch(phoneId, "message_status", {
               status: status.status,
               messageId: status.id,
-              recipientId: status.recipient_id,
+              // The phone, or the BSUID when Meta withheld it.
+              recipientId: status.recipient_id || status.recipient_user_id,
               timestamp: status.timestamp,
               errors: status.errors ?? null,
             }),
@@ -780,6 +799,31 @@ interface InboundOptions {
   storeOnly?: boolean;
 }
 
+/**
+ * A `system` message: the customer changed phone number (`user_changed_number`)
+ * or only their business-scoped user ID (`user_changed_user_id`). The contact
+ * that held the previous identity takes the new one, so the conversation carries
+ * on under the same contact. Nothing is stored in the thread and no automation
+ * runs: the customer did not write anything.
+ */
+async function handleIdentityChangeNotice(orgId: string, message: WaInboundMessage) {
+  const system = message.system;
+  if (!system) return;
+  const newPhone = system.wa_id ?? system.new_wa_id;
+  const changed = await applyWaIdentityChange(orgId, {
+    previousPhone: message.from || undefined,
+    previousBsuid: system.previous_user_id ?? message.from_user_id,
+    phone: newPhone && !isBsuid(newPhone) ? newPhone : undefined,
+    bsuid: system.user_id,
+  });
+  log.info(
+    { orgId, type: system.type, contactId: changed },
+    changed
+      ? "Applied a WhatsApp customer identity change"
+      : "WhatsApp identity change for a customer we have no contact for (or a clash); skipped",
+  );
+}
+
 async function whatsappMessageHandler(
   waSettings: Omit<WhatsappSettings, "accessToken_iv">,
   waMessage: WaMessageBody,
@@ -794,10 +838,26 @@ async function whatsappMessageHandler(
     await handleRevokedMessage(waSettings, incomingMessage);
     return;
   }
+  // Meta telling us the customer changed number or BSUID — not something they
+  // wrote, so it is applied to the contact and goes no further.
+  if (incomingMessage?.type === WaMessageTypes.system) {
+    await handleIdentityChangeNotice(waSettings.orgId, incomingMessage);
+    return;
+  }
 
   const parsedMessage = parseMessage(waMessage);
   const { orgId } = waSettings;
-  const { message: tempMessage, from, type, completeMessageObject, userName } = parsedMessage;
+  const { message: tempMessage, type, completeMessageObject, userName } = parsedMessage;
+  // `from` is the customer's phone, or their BSUID when Meta withheld the phone
+  // (a customer with a WhatsApp username). If we learned their phone earlier it
+  // is used instead: loyalty, consent and orders below are keyed on the phone.
+  const from = isBsuid(parsedMessage.from)
+    ? ((await findWaContactPhoneByBsuid(orgId, parsedMessage.from)) ?? parsedMessage.from)
+    : parsedMessage.from;
+  // False only for a customer we know by BSUID alone. The loyalty programme is
+  // keyed on phone numbers, so they are kept out of it rather than enrolled under
+  // an id that is not a phone and could never be matched to one later.
+  const phoneKnown = !isBsuid(from);
 
   let sourcePlatform;
   let sourceIdentifier;
@@ -975,13 +1035,17 @@ async function whatsappMessageHandler(
     type === "text" || type === "interactive" ? message?.trim()?.toLocaleLowerCase() : "";
   // A web self-signup is verified by the customer's first message. Released before the
   // command lookup so a pending customer texting POINTS sees the bonus in the reply.
-  try {
-    await releasePendingSignupBonusByPhone(from, orgId);
-  } catch (e) {
-    log.error({ err: e }, "Error releasing a pending loyalty signup bonus");
+  if (phoneKnown) {
+    try {
+      await releasePendingSignupBonusByPhone(from, orgId);
+    } catch (e) {
+      log.error({ err: e }, "Error releasing a pending loyalty signup bonus");
+    }
   }
-  const loyaltyWaCommand = await getLoyaltyWaCommandByRequestMessage(orgId, message);
-  const joinTapped = isJoinTap(parsedMessage);
+  const loyaltyWaCommand = phoneKnown
+    ? await getLoyaltyWaCommandByRequestMessage(orgId, message)
+    : null;
+  const joinTapped = phoneKnown && isJoinTap(parsedMessage);
   const loyaltyReply: InboundReplyContext = {
     orgId,
     channel: LoyaltyChannel.WHATSAPP,
@@ -992,6 +1056,7 @@ async function whatsappMessageHandler(
   // A new member's first message opens the window their card can be sent in. The join and
   // "card" paths send it themselves, so they are left alone here.
   const sendsCardItself =
+    !phoneKnown ||
     joinTapped ||
     loyaltyWaCommand?.type === LoyaltyTemplateTypes.MemberCard ||
     loyaltyWaCommand?.type === LoyaltyTemplateTypes.CustomerRegistration ||
@@ -1003,7 +1068,7 @@ async function whatsappMessageHandler(
       log.error({ err: e }, "Error sending a member card on first message");
     }
   }
-  if (parsedMessage?.buttonId && !joinTapped) {
+  if (parsedMessage?.buttonId && !joinTapped && phoneKnown) {
     const handledLoyaltyRedeem = await handleLoyaltyRedeemInteraction(loyaltyReply, parsedMessage);
     if (handledLoyaltyRedeem) {
       return;
@@ -1015,7 +1080,7 @@ async function whatsappMessageHandler(
     return;
   }
 
-  const joinPayload = parseWaJoinMessage(message);
+  const joinPayload = phoneKnown ? parseWaJoinMessage(message) : null;
 
   if (joinPayload?.isJoin || joinTapped) {
     await handleWaJoinRegistration({
@@ -1089,12 +1154,13 @@ async function whatsappMessageHandler(
     await handleSubscriptionStatus(orgId, from, messageLowerCase);
   } else {
     try {
-      await sendNewCustomerWelcomeIfDue({
-        orgId,
-        contactId: messageObj?.contactId,
-        phone: from,
-        name: userName,
-      });
+      if (phoneKnown)
+        await sendNewCustomerWelcomeIfDue({
+          orgId,
+          contactId: messageObj?.contactId,
+          phone: from,
+          name: userName,
+        });
     } catch (e) {
       log.error({ err: e }, "Error sending the loyalty welcome to a new contact");
     }
