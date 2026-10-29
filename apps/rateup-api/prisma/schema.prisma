@@ -2269,6 +2269,12 @@ model WaAutomatedReply {
   org                     Org?     @relation(fields: [orgId], references: [id], onDelete: Cascade)
   whatsappSettingsPhoneId String?
   platform                String   @default("WHATSAPP") // enums.ts: AutomationPlatform (WHATSAPP | INSTAGRAM)
+  /// Off: rules and lead ads no longer start it. An agent can still start it from the inbox,
+  /// and conversations already running finish.
+  isActive                Boolean  @default(true)
+  /// Last edit, for the Chatbots page's "Last edited" sort. Rows from before it read as
+  /// the day the column was added.
+  updatedAt               DateTime @default(now()) @updatedAt
 
   waAutomatedReplyMessages WaAutomatedReplyMessage[]
 }
@@ -2308,6 +2314,9 @@ model WaAutomatedReplyMessage {
   waAutomatedReply   WaAutomatedReply? @relation(fields: [waAutomatedReplyId], references: [id], onDelete: Cascade)
   orgId              String            @db.Uuid
   org                Org               @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  /// The Chatbots page counts runs per chatbot and status.
+  @@index([waAutomatedReplyId, status])
 }
 
 /// A partner API key. An org may hold several (one per integration), each with its own

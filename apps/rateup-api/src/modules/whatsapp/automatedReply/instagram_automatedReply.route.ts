@@ -2,6 +2,9 @@
  * Routes for the Meta chatbot flows. Registered twice in wa_routes.ts: once at
  * `/instagram-automation` for Instagram and once at `/messenger-automation` for
  * Facebook Messenger.
+ *
+ * @deprecated for chatbot CRUD: the dashboard uses `/api/chatbots` (modules/chatbots).
+ * Kept for older clients and for `/:id/initiate`, which has no replacement yet.
  */
 
 import { FastifyInstance } from "fastify";

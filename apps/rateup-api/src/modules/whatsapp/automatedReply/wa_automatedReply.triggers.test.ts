@@ -733,7 +733,7 @@ describe("checkAndExecuteRuleByTriggerEvent - Instagram events", () => {
   });
 
   test("hands the comment to a chatbot so its first message is the private reply", async () => {
-    const automation = { id: "bot-1" };
+    const automation = { id: "bot-1", isActive: true };
     (getMetaAutomationById as Mock).mockResolvedValue(automation);
     db.rule.findMany.mockResolvedValue([
       rule({
@@ -1045,7 +1045,7 @@ describe("Facebook (Messenger) rules", () => {
   });
 
   test("starts the Messenger chatbot it names", async () => {
-    const automation = { id: "bot-1" };
+    const automation = { id: "bot-1", isActive: true };
     (getMetaAutomationById as Mock).mockResolvedValue(automation);
     db.rule.findMany.mockResolvedValue([
       messengerRule([{ id: "a1", type: "TRIGGER_CHATBOT", value: "bot-1" }]),
@@ -1065,6 +1065,21 @@ describe("Facebook (Messenger) rules", () => {
       undefined,
     );
     expect(result?.executedActions[0].success).toBe(true);
+  });
+
+  test("doesn't start a chatbot that is switched off", async () => {
+    (getMetaAutomationById as Mock).mockResolvedValue({ id: "bot-1", isActive: false });
+    db.rule.findMany.mockResolvedValue([
+      messengerRule([{ id: "a1", type: "TRIGGER_CHATBOT", value: "bot-1" }]),
+    ]);
+
+    const result = await checkAndExecuteRuleByTriggerEvent(
+      TriggerEvent.MESSAGE_RECEIVED,
+      messengerContext,
+    );
+
+    expect(startMetaFlow).not.toHaveBeenCalled();
+    expect(result?.executedActions[0].success).toBe(false);
   });
 
   // It used to report success and do nothing.
@@ -1440,7 +1455,7 @@ describe("Facebook comment rules", () => {
   });
 
   test("starts a chatbot whose first message is the private reply", async () => {
-    (getMetaAutomationById as Mock).mockResolvedValue({ id: "bot-1" });
+    (getMetaAutomationById as Mock).mockResolvedValue({ id: "bot-1", isActive: true });
     db.rule.findMany.mockResolvedValue([
       commentRule([{ id: "a1", type: "TRIGGER_CHATBOT", value: "bot-1" }]),
     ]);
@@ -1450,7 +1465,7 @@ describe("Facebook comment rules", () => {
 
     expect(startMetaFlow).toHaveBeenCalledWith(
       "fb_comment:comment-1",
-      { id: "bot-1" },
+      { id: "bot-1", isActive: true },
       "org-1",
       { platform: "FACEBOOK", accountId: "page-1", pendingComment: ctx.facebookComment },
       undefined,

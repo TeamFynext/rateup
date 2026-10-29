@@ -613,7 +613,9 @@ export function actingPlatform(
 const RULE_INCLUDE = {
   groups: {
     include: {
-      conditions: { include: { messageBodyLocks: { include: { businessHour: true } } } },
+      conditions: {
+        include: { messageBodyLocks: { include: { businessHour: true } } },
+      },
     },
   },
   actions: true,
@@ -826,7 +828,11 @@ async function sendMetaRuleText(
   if (context.platform === "FACEBOOK") {
     // On a comment rule the first send is the private reply; see facebookComment.
     await sendSendApiText(
-      { platform: PlatformType.FACEBOOK, accountId, pendingComment: context.facebookComment },
+      {
+        platform: PlatformType.FACEBOOK,
+        accountId,
+        pendingComment: context.facebookComment,
+      },
       recipient,
       context.orgId,
       text,
@@ -874,7 +880,10 @@ export async function resolveContactChannel(contact: {
   id?: string | null;
   igsId?: string | null;
   psid?: string | null;
-}): Promise<{ platform: "WHATSAPP" | "INSTAGRAM" | "FACEBOOK" | "ALL"; phoneNumberId?: string }> {
+}): Promise<{
+  platform: "WHATSAPP" | "INSTAGRAM" | "FACEBOOK" | "ALL";
+  phoneNumberId?: string;
+}> {
   if (contact.id) {
     const latest = await prisma.waMessage.findFirst({
       // Channels only: closing or assigning a chat writes an INTERNAL activity note just
@@ -887,10 +896,16 @@ export async function resolveContactChannel(contact: {
       select: { sourcePlatform: true, sourceIdentifier: true },
     });
     if (latest?.sourcePlatform === "INSTAGRAM") {
-      return { platform: "INSTAGRAM", phoneNumberId: latest.sourceIdentifier ?? undefined };
+      return {
+        platform: "INSTAGRAM",
+        phoneNumberId: latest.sourceIdentifier ?? undefined,
+      };
     }
     if (latest?.sourcePlatform === "FACEBOOK") {
-      return { platform: "FACEBOOK", phoneNumberId: latest.sourceIdentifier ?? undefined };
+      return {
+        platform: "FACEBOOK",
+        phoneNumberId: latest.sourceIdentifier ?? undefined,
+      };
     }
     if (latest?.sourcePlatform === "WHATSAPP") {
       // Deliberately no phoneNumberId: rules scope WhatsApp by `phoneId`, and
@@ -906,7 +921,9 @@ export async function resolveContactChannel(contact: {
 
 export async function checkAndExecuteRuleByTriggerEvent(
   triggerEvent: TriggerEvent,
-  context: RuleExecutionContext & { platform: "WHATSAPP" | "INSTAGRAM" | "FACEBOOK" | "ALL" },
+  context: RuleExecutionContext & {
+    platform: "WHATSAPP" | "INSTAGRAM" | "FACEBOOK" | "ALL";
+  },
 ): Promise<
   | {
       rule: RuleWithConditions;
@@ -1155,7 +1172,9 @@ async function isOutsideRuleBusinessHours(rule: RuleWithConditions): Promise<boo
     ? rule.options.businessHours.businessHoursId
     : undefined;
   if (!businessHoursId) return false;
-  const businessHour = await prisma.businessHour.findUnique({ where: { id: businessHoursId } });
+  const businessHour = await prisma.businessHour.findUnique({
+    where: { id: businessHoursId },
+  });
   return (
     Boolean(businessHour) && !validateTimeWindow(businessHour as automationProps["businessHour"])
   );
@@ -1163,7 +1182,10 @@ async function isOutsideRuleBusinessHours(rule: RuleWithConditions): Promise<boo
 
 export type ScheduledRuleOutcome =
   | { status: "inactive" | "outside_business_hours" | "conditions_not_met" }
-  | { status: "ran"; executedActions: Awaited<ReturnType<typeof executeRuleActions>> };
+  | {
+      status: "ran";
+      executedActions: Awaited<ReturnType<typeof executeRuleActions>>;
+    };
 
 /**
  * Runs one rule that was chosen ahead of time — a reminder scheduled for it — rather than
@@ -1211,7 +1233,10 @@ async function executeRuleActions(
   context: RuleExecutionContext,
 ): Promise<ActionResult[]> {
   const results: ActionResult[] = [];
-  const actionContext = { ...context, platform: actingPlatform(rule, context.platform) };
+  const actionContext = {
+    ...context,
+    platform: actingPlatform(rule, context.platform),
+  };
 
   for (const action of rule.actions) {
     try {
@@ -1938,6 +1963,11 @@ async function executeTriggerChatbotAction(
       log.warn({ chatbotId, platform }, "Rule names a chatbot that is not on its platform");
       return false;
     }
+    // Switched off on the Chatbots page: rules no longer start it.
+    if (!automation.isActive) {
+      log.info({ chatbotId, platform }, "Rule names a chatbot that is switched off");
+      return false;
+    }
     if (!context.phoneNumberId) {
       log.error("No %s account id in context for chatbot %s", platform, chatbotId);
       return false;
@@ -1949,17 +1979,23 @@ async function executeTriggerChatbotAction(
       automation as unknown as MetaFlowAutomation,
       context.orgId,
       // On a Facebook comment the chatbot's first message is the private reply.
-      { platform, accountId: context.phoneNumberId, pendingComment: context.facebookComment },
+      {
+        platform,
+        accountId: context.phoneNumberId,
+        pendingComment: context.facebookComment,
+      },
       takeInstagramCommentId(context),
     );
     adoptCommentRecipient(context);
     return true;
   }
 
+  // A chatbot switched off on the Chatbots page is not started by rules.
   const automation = await prisma.waAutomatedReply.findFirst({
     where: {
       orgId: context.orgId,
       id: chatbotId,
+      isActive: true,
     },
   });
 
@@ -1973,7 +2009,8 @@ async function executeTriggerChatbotAction(
     return true;
   }
 
-  return true;
+  log.info({ chatbotId }, "Rule names a WhatsApp chatbot that is switched off or missing");
+  return false;
 }
 
 const EXTERNAL_API_TIMEOUT_MS = 10_000;

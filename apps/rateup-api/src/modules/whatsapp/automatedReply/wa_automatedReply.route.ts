@@ -41,6 +41,11 @@ import type {
 } from "./wa_automatedReply.schema.js";
 import { declareAccess } from "../../../authz/registry.js";
 
+/**
+ * @deprecated for chatbot CRUD: the dashboard uses `/api/chatbots` (modules/chatbots).
+ * These stay for the mobile app, the rules picker and the inbox's "start chatbot"; the
+ * `/rule` and `/initiate` routes are still the only ones of their kind.
+ */
 export async function waAutomatedReplyRoutes(fastify: FastifyInstance) {
   declareAccess(fastify, { read: "automation.read", write: "automation.manage" });
   fastify.addHook(

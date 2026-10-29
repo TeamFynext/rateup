@@ -34,6 +34,7 @@ vi.mock("../instagram/instagram_messaging.service.js", () => ({
 
 vi.mock("../meta/sendApiMessages.js", () => ({
   sendSendApiAudio: vi.fn(),
+  sendSendApiFile: vi.fn(),
   sendSendApiGenericTemplate: vi.fn(),
   sendSendApiImage: vi.fn(),
   sendSendApiQuickReply: vi.fn(),
@@ -69,6 +70,7 @@ import {
 } from "../instagram/instagram_messaging.service.js";
 import {
   sendSendApiAudio,
+  sendSendApiFile,
   sendSendApiGenericTemplate,
   sendSendApiImage,
   sendSendApiQuickReply,
@@ -111,6 +113,7 @@ const m = {
   sendImage: sendSendApiImage as unknown as Mock,
   sendVideo: sendSendApiVideo as unknown as Mock,
   sendAudio: sendSendApiAudio as unknown as Mock,
+  sendFile: sendSendApiFile as unknown as Mock,
   sendQuickReply: sendSendApiQuickReply as unknown as Mock,
   sendGeneric: sendSendApiGenericTemplate as unknown as Mock,
   sendProduct: sendInstagramProductTemplate as unknown as Mock,
@@ -139,7 +142,11 @@ function flow(nodes: any[], edges: any[] = [], overrides: Record<string, unknown
 
 const START = { id: "start", type: "startNode", data: {} };
 const END = { id: "end", type: "endNode", data: {} };
-const textNode = (id: string, body = "Hello there") => ({ id, type: "textNode", data: { body } });
+const textNode = (id: string, body = "Hello there") => ({
+  id,
+  type: "textNode",
+  data: { body },
+});
 const edge = (source: string, target: string, sourceHandle?: string) => ({
   source,
   target,
@@ -179,7 +186,9 @@ describe("startMetaFlow", () => {
     await startMetaFlow(IGS_ID, flow([START]), ORG_ID, IG);
 
     expect(m.logAction).toHaveBeenCalledWith(
-      expect.objectContaining({ response: { action: "automation_started", startNode: "start" } }),
+      expect.objectContaining({
+        response: { action: "automation_started", startNode: "start" },
+      }),
     );
   });
 
@@ -343,7 +352,11 @@ describe("processNextMetaFlowNode - sending each node type", () => {
   });
 
   test("sends an image node through the CDN url", async () => {
-    const node = { id: "i1", type: "imageNode", data: { link: "key-1", caption: "Look" } };
+    const node = {
+      id: "i1",
+      type: "imageNode",
+      data: { link: "key-1", caption: "Look" },
+    };
 
     await run(flow([node]), "i1");
 
@@ -372,7 +385,11 @@ describe("processNextMetaFlowNode - sending each node type", () => {
   });
 
   test("sends plain text when a quick reply node has no options", async () => {
-    const node = { id: "q1", type: "instagramQuickReplyNode", data: { text: "Pick one" } };
+    const node = {
+      id: "q1",
+      type: "instagramQuickReplyNode",
+      data: { text: "Pick one" },
+    };
 
     await run(flow([node]), "q1");
 
@@ -385,7 +402,12 @@ describe("processNextMetaFlowNode - sending each node type", () => {
       id: "g1",
       type: "instagramGenericTemplateNode",
       data: {
-        elements: [{ title: "Card", buttons: [{ type: "postback", id: "btn-a", title: "Buy" }] }],
+        elements: [
+          {
+            title: "Card",
+            buttons: [{ type: "postback", id: "btn-a", title: "Buy" }],
+          },
+        ],
       },
     };
 
@@ -401,7 +423,11 @@ describe("processNextMetaFlowNode - sending each node type", () => {
   });
 
   test("sends a product template node's products", async () => {
-    const node = { id: "p1", type: "instagramProductTemplateNode", data: { productIds: ["p-1"] } };
+    const node = {
+      id: "p1",
+      type: "instagramProductTemplateNode",
+      data: { productIds: ["p-1"] },
+    };
 
     await run(flow([node]), "p1");
 
@@ -453,7 +479,11 @@ describe("processNextMetaFlowNode - replying to a comment", () => {
 
   // An image cannot be a private reply, so a text stand-in goes out first.
   test("sends a text stand-in before an image when replying to a comment", async () => {
-    const node = { id: "i1", type: "imageNode", data: { link: "key-1", caption: "Look" } };
+    const node = {
+      id: "i1",
+      type: "imageNode",
+      data: { link: "key-1", caption: "Look" },
+    };
 
     await run(flow([node]), "i1", "comment-1");
 
@@ -490,7 +520,10 @@ describe("processNextMetaFlowNode - waiting for the user", () => {
     await run(automation, "in1");
 
     expect(m.sendText).toHaveBeenCalledExactlyOnceWith(IG, IGS_ID, ORG_ID, "Your email?");
-    expect(parked()).toMatchObject({ where: { id: "msg-1" }, data: { currentNode: "in1" } });
+    expect(parked()).toMatchObject({
+      where: { id: "msg-1" },
+      data: { currentNode: "in1" },
+    });
   });
 
   test("asks the question as the private reply when the flow came from a comment", async () => {
@@ -519,18 +552,28 @@ describe("processNextMetaFlowNode - waiting for the user", () => {
     const node = {
       id: "q1",
       type,
-      data: { text: "Pick", quick_replies: [{ id: "a" }], elements: [{ title: "Card" }] },
+      data: {
+        text: "Pick",
+        quick_replies: [{ id: "a" }],
+        elements: [{ title: "Card" }],
+      },
     };
     const automation = flow([node, textNode("t1")], [edge("q1", "t1")]);
 
     await run(automation, "q1");
 
-    expect(parked()).toMatchObject({ data: { currentNode: "q1", status: "inProgress" } });
+    expect(parked()).toMatchObject({
+      data: { currentNode: "q1", status: "inProgress" },
+    });
     expect(m.sendText).not.toHaveBeenCalledWith(IG, IGS_ID, ORG_ID, "Hello there");
   });
 
   test("finishes rather than waits at a choice with no branches", async () => {
-    const node = { id: "q1", type: "instagramQuickReplyNode", data: { quick_replies: [] } };
+    const node = {
+      id: "q1",
+      type: "instagramQuickReplyNode",
+      data: { quick_replies: [] },
+    };
 
     await run(flow([node]), "q1");
 
@@ -600,7 +643,11 @@ describe("processNextMetaFlowNode - pausing", () => {
   });
 
   test("parks the flow and marks it paused", async () => {
-    const node = { id: "p1", type: "pauseNode", data: { duration: 5, unit: "minutes" } };
+    const node = {
+      id: "p1",
+      type: "pauseNode",
+      data: { duration: 5, unit: "minutes" },
+    };
 
     await run(flow([node], [edge("p1", "t1")]), "p1");
 
@@ -667,7 +714,10 @@ describe("handleMetaFlowUserResponse", () => {
       id: "msg-1",
       currentNode,
       response,
-      waAutomatedReply: { id: "ig-auto-1", matchData: { json: { nodes, edges } } },
+      waAutomatedReply: {
+        id: "ig-auto-1",
+        matchData: { json: { nodes, edges } },
+      },
     };
   }
 
@@ -730,7 +780,9 @@ describe("handleMetaFlowUserResponse", () => {
 
     await handleMetaFlowUserResponse(IGS_ID, "Yes", ORG_ID, IG, "opt-yes");
 
-    expect(db.waAutomatedReplyMessage.update.mock.calls[0][0].where).toEqual({ id: "msg-2" });
+    expect(db.waAutomatedReplyMessage.update.mock.calls[0][0].where).toEqual({
+      id: "msg-2",
+    });
   });
 
   test("records what the user said", async () => {
@@ -798,7 +850,9 @@ describe("handleMetaFlowUserResponse", () => {
     const card = {
       id: "g1",
       type: "instagramGenericTemplateNode",
-      data: { elements: [{ title: "Card", buttons: [{ type: "postback", title: "Buy" }] }] },
+      data: {
+        elements: [{ title: "Card", buttons: [{ type: "postback", title: "Buy" }] }],
+      },
     };
     db.waAutomatedReplyMessage.findMany.mockResolvedValue([
       waitingAt("g1", [card, textNode("t1", "Great")], [edge("g1", "t1", "btn_0_0")]),
@@ -855,11 +909,20 @@ describe("handleMetaFlowUserResponse", () => {
 
 describe("processNextMetaFlowNode - media and assignment", () => {
   test("sends a video node with its caption", async () => {
-    const node = { id: "v1", type: "videoNode", data: { link: "vid-1", caption: "Watch" } };
+    const node = {
+      id: "v1",
+      type: "videoNode",
+      data: { link: "vid-1", caption: "Watch" },
+    };
 
     await run(flow([node]), "v1");
 
     expect(m.sendVideo).toHaveBeenCalledWith(IG, IGS_ID, ORG_ID, "https://cdn/vid-1", "Watch");
+  });
+
+  test("skips a document on Instagram, which can't send files", async () => {
+    await run(flow([{ id: "d1", type: "documentNode", data: { link: "doc-1" } }]), "d1");
+    expect(m.sendFile).not.toHaveBeenCalled();
   });
 
   test("sends an audio node", async () => {
@@ -900,9 +963,36 @@ describe("processNextMetaFlowNode - a send Meta refuses", () => {
 
 describe("Messenger flows", () => {
   const PSID = "psid-1";
-  const MESSENGER = { platform: PlatformType.FACEBOOK, accountId: "page-1" } as const;
+  const MESSENGER = {
+    platform: PlatformType.FACEBOOK,
+    accountId: "page-1",
+  } as const;
   const runMessenger = (automation: any, nodeId: string, commentId?: string) =>
     processNextMetaFlowNode(PSID, automation, nodeId, ORG_ID, "msg-1", MESSENGER, commentId);
+
+  test("sends a document as a file on Messenger", async () => {
+    await runMessenger(flow([{ id: "d1", type: "documentNode", data: { link: "doc-1" } }]), "d1");
+    expect(m.sendFile).toHaveBeenCalledWith(MESSENGER, PSID, ORG_ID, "https://cdn/doc-1");
+    expect(m.sendText).not.toHaveBeenCalled();
+  });
+
+  test("sends a document's caption as a text right after the file", async () => {
+    await runMessenger(
+      flow([
+        {
+          id: "d1",
+          type: "documentNode",
+          data: { link: "doc-1", caption: "Your invoice" },
+        },
+      ]),
+      "d1",
+    );
+    expect(m.sendFile).toHaveBeenCalledWith(MESSENGER, PSID, ORG_ID, "https://cdn/doc-1");
+    expect(m.sendText).toHaveBeenCalledWith(MESSENGER, PSID, ORG_ID, "Your invoice");
+    expect(m.sendFile.mock.invocationCallOrder[0]).toBeLessThan(
+      m.sendText.mock.invocationCallOrder[0]!,
+    );
+  });
 
   test("sends text, quick replies and cards on the Messenger channel", async () => {
     const quickReply = {
@@ -929,7 +1019,11 @@ describe("Messenger flows", () => {
     ["a follow check", { id: "n1", type: "instagramFollowCheckNode", data: {} }],
     [
       "a product template",
-      { id: "n1", type: "instagramProductTemplateNode", data: { productIds: ["p"] } },
+      {
+        id: "n1",
+        type: "instagramProductTemplateNode",
+        data: { productIds: ["p"] },
+      },
     ],
   ])("skips %s and carries on", async (_name, node) => {
     await runMessenger(flow([node, textNode("t1", "Next")], [edge("n1", "t1")]), "n1");
@@ -1083,7 +1177,11 @@ describe("a Messenger chatbot started from a Page comment", () => {
 
   // A private reply cannot carry media, as on Instagram.
   test("answers the comment in text before media", async () => {
-    const node = { id: "i1", type: "imageNode", data: { link: "key-1", caption: "Our menu" } };
+    const node = {
+      id: "i1",
+      type: "imageNode",
+      data: { link: "key-1", caption: "Our menu" },
+    };
     const channel = onComment();
 
     await processNextMetaFlowNode(STAND_IN, flow([node]), "i1", ORG_ID, "msg-1", channel);

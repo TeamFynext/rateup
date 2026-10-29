@@ -23,6 +23,42 @@ function isWrite(method: string) {
  */
 export type AccessDenialReason = "subscription" | "subscription_expired" | "team" | "unknown";
 
+/** Whether a subscription has run out. Reads are still allowed then; writes are not. */
+export function subscriptionExpired(subscription: { expiresAt: Date | string | null }) {
+  return dayjs(subscription.expiresAt).isBefore(dayjs());
+}
+
+/** The features asked for that the subscription doesn't switch on. */
+export function missingSubscriptionFeatures(
+  features: unknown,
+  featurePathNames: readonly SubscriptionFeaturePathName[],
+) {
+  return featurePathNames.filter(
+    (feature) =>
+      !getNestedProperty<subscriptionActiveField>((features ?? {}) as object, feature)?.active,
+  );
+}
+
+/** What stops an org using these features, if anything. */
+export type SubscriptionDenial = "no_subscription" | "subscription_expired" | "not_in_plan";
+
+/**
+ * The checks getVerifySubscriptionHandler makes, in the same order, for callers that need the
+ * answer rather than a 403 (e.g. the Chatbots page, which hides a locked channel).
+ */
+export function subscriptionDenial(
+  subscription: { features: unknown; expiresAt: Date | string | null } | null | undefined,
+  featurePathNames: readonly SubscriptionFeaturePathName[],
+  { write }: { write: boolean },
+): SubscriptionDenial | null {
+  if (!subscription) return "no_subscription";
+  if (write && subscriptionExpired(subscription)) return "subscription_expired";
+  if (missingSubscriptionFeatures(subscription.features, featurePathNames).length) {
+    return "not_in_plan";
+  }
+  return null;
+}
+
 export function getVerifySubscriptionHandler(featurePathNames: Array<SubscriptionFeaturePathName>) {
   return async function verifySubscription(request: FastifyRequest, reply: FastifyReply) {
     try {
@@ -40,7 +76,7 @@ export function getVerifySubscriptionHandler(featurePathNames: Array<Subscriptio
         });
         return;
       }
-      if (dayjs(subscription.expiresAt).isBefore(dayjs()) && isWrite(request.method)) {
+      if (subscriptionExpired(subscription) && isWrite(request.method)) {
         log.error(
           { subscription, user: request.user },
 
@@ -54,10 +90,7 @@ export function getVerifySubscriptionHandler(featurePathNames: Array<Subscriptio
         return;
       }
 
-      const missingFeatures = featurePathNames.filter(
-        (feature) =>
-          !getNestedProperty<subscriptionActiveField>(subscription.features, feature)?.active,
-      );
+      const missingFeatures = missingSubscriptionFeatures(subscription.features, featurePathNames);
       if (missingFeatures.length > 0) {
         log.debug(
           { missingFeatures, orgId: request.user?.orgId },
