@@ -19,7 +19,9 @@
     "format": "oxfmt .",
     "format:check": "oxfmt --check .",
     "prepare": "husky",
-    "brand:assets": "node scripts/generate-brand-assets.mjs"
+    "brand:assets": "node scripts/generate-brand-assets.mjs",
+    "ota:android": "node scripts/ota-update.mjs android",
+    "ota:ios": "node scripts/ota-update.mjs ios"
   },
   "dependencies": {
     "@config-plugins/react-native-webrtc": "^15.0.2",

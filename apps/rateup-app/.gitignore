@@ -45,3 +45,5 @@ app-example
 
 # Firebase Admin SDK service-account keys — never commit (see security audit INFRA-4)
 *-firebase-adminsdk-*.json
+
+.env.prod
