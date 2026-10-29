@@ -18,7 +18,6 @@ vi.mock("../../../utils/prisma.js", () => ({
 vi.mock("./instagram_automatedReply.service.js", () => ({
   createOrUpdateMetaFlowRun: vi.fn(),
   logMetaFlowAction: vi.fn(),
-  wasInstagramAutomationSentRecently: vi.fn(),
 }));
 
 vi.mock("../whatsappSurvey/wasurvey.utils.js", () => ({
@@ -61,7 +60,6 @@ import prisma from "../../../utils/prisma.js";
 import {
   createOrUpdateMetaFlowRun,
   logMetaFlowAction,
-  wasInstagramAutomationSentRecently,
 } from "./instagram_automatedReply.service.js";
 import {
   doesUserFollowInstagramAccount,
@@ -108,7 +106,6 @@ const db = prisma as unknown as {
 const m = {
   track: createOrUpdateMetaFlowRun as unknown as Mock,
   logAction: logMetaFlowAction as unknown as Mock,
-  sentRecently: wasInstagramAutomationSentRecently as unknown as Mock,
   sendText: sendSendApiText as unknown as Mock,
   sendImage: sendSendApiImage as unknown as Mock,
   sendVideo: sendSendApiVideo as unknown as Mock,
@@ -166,7 +163,6 @@ beforeEach(() => {
   db.waAutomatedReplyMessage.updateMany.mockResolvedValue({ count: 1 });
   m.track.mockResolvedValue({ id: "msg-1" });
   m.logAction.mockResolvedValue({});
-  m.sentRecently.mockResolvedValue(false);
 });
 
 describe("startMetaFlow", () => {
@@ -205,18 +201,6 @@ describe("startMetaFlow", () => {
 
     expect(m.track).not.toHaveBeenCalled();
     expect(log.error).toHaveBeenCalled();
-  });
-
-  // The once-a-day throttle moved to rules with the sendOnceIn24Hours column, so the
-  // flow engine no longer consults the recent-send log at all — not even when a caller
-  // still passes the old flag.
-  test("never consults the recent-send log", async () => {
-    m.sentRecently.mockResolvedValue(true);
-
-    await startMetaFlow(IGS_ID, flow([START], [], { sendOnceIn24Hours: true }), ORG_ID, IG);
-
-    expect(m.sentRecently).not.toHaveBeenCalled();
-    expect(m.track).toHaveBeenCalled();
   });
 
   // Still not rethrown — one broken automation must not disturb the webhook that

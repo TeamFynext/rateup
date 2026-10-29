@@ -1,18 +1,6 @@
 import { FastifyInstance } from "fastify/types/instance.js";
-import {
-  createAutomatedReplyHandler,
-  cloneAutomatedReplyHandler,
-  updateAutomatedReplyHandler,
-  deleteAutomatedReplyHandler,
-  getAutomatedRepliesByIdHandler,
-  getAllAutomatedRepliesByOrgIdHandler,
-  getAutomatedRepliesMessagIdHandler,
-  initiateAutomatedReplyByIdHandler,
-  verifyAutomationTriggerLimitHandler,
-} from "./wa_automatedReply.controller.js";
 import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
 import { SubscriptionFeaturePathName } from "../../../types/enums.js";
-// --- Rule Controller Imports ---
 import {
   createRuleHandler,
   getAllRulesHandler,
@@ -20,7 +8,7 @@ import {
   updateRuleHandler,
   deleteRuleHandler,
   getRulesByAutomationIdHandler,
-} from "./wa_rule.controller.js"; // You need to implement these controllers
+} from "./wa_rule.controller.js";
 import {
   createRuleSchema,
   getRulesQuerySchema,
@@ -28,65 +16,17 @@ import {
   updateRuleSchema,
   getRulesByAutomationIdQuerySchema,
 } from "./wa_rule.schema.js";
-import {
-  byWaAutomatedReplyIdParams,
-  cloneAutomatedReplyBody,
-  createAutomatedReplySchema,
-  initiateAutomatedReplyBody,
-  updateAutomatedReplySchema,
-} from "./wa_automatedReply.schema.js";
-import type {
-  ByWaAutomatedReplyIdParams,
-  InitiateAutomatedReplyBody,
-} from "./wa_automatedReply.schema.js";
 import { declareAccess } from "../../../authz/registry.js";
 
 /**
- * @deprecated for chatbot CRUD: the dashboard uses `/api/chatbots` (modules/chatbots).
- * These stay for the mobile app, the rules picker and the inbox's "start chatbot"; the
- * `/rule` and `/initiate` routes are still the only ones of their kind.
+ * `/api/wa/automated-reply/rule`: the automation rules. Chatbots themselves are served by
+ * `/api/chatbots` (modules/chatbots).
  */
 export async function waAutomatedReplyRoutes(fastify: FastifyInstance) {
   declareAccess(fastify, { read: "automation.read", write: "automation.manage" });
   fastify.addHook(
     "preHandler",
     getVerifySubscriptionHandler([SubscriptionFeaturePathName.Whatsapp]),
-  );
-  fastify.get("/message/:id", getAutomatedRepliesMessagIdHandler);
-  fastify.get("/", getAllAutomatedRepliesByOrgIdHandler);
-  fastify.post("/", { schema: { body: createAutomatedReplySchema } }, createAutomatedReplyHandler);
-  fastify.post(
-    "/clone/:waAutomatedReplyId",
-    {
-      schema: {
-        params: byWaAutomatedReplyIdParams,
-        body: cloneAutomatedReplyBody,
-      },
-    },
-    cloneAutomatedReplyHandler,
-  );
-  fastify.get(
-    "/:waAutomatedReplyId",
-    { schema: { params: byWaAutomatedReplyIdParams } },
-    getAutomatedRepliesByIdHandler,
-  );
-  fastify.put(
-    "/:waAutomatedReplyId",
-    { schema: { params: byWaAutomatedReplyIdParams, body: updateAutomatedReplySchema } },
-    updateAutomatedReplyHandler,
-  );
-  fastify.delete(
-    "/:waAutomatedReplyId",
-    { schema: { params: byWaAutomatedReplyIdParams } },
-    deleteAutomatedReplyHandler,
-  );
-  fastify.post<{ Params: ByWaAutomatedReplyIdParams; Body: InitiateAutomatedReplyBody }>(
-    "/initiate/:waAutomatedReplyId",
-    {
-      schema: { params: byWaAutomatedReplyIdParams, body: initiateAutomatedReplyBody },
-      preHandler: verifyAutomationTriggerLimitHandler,
-    },
-    initiateAutomatedReplyByIdHandler,
   );
   // --- Rule Routes ---
   fastify.post(

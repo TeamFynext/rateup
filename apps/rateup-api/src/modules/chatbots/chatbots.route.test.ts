@@ -9,6 +9,7 @@ vi.mock("./chatbots.controller.js", () => ({
   updateChatbotHandler: vi.fn(),
   deleteChatbotHandler: vi.fn(),
   cloneChatbotHandler: vi.fn(),
+  initiateChatbotHandler: vi.fn(),
 }));
 
 import { declareAccess } from "../../authz/registry.js";
@@ -27,7 +28,7 @@ function fakeServer() {
 }
 
 describe("chatbotRoutes", () => {
-  test("uses the same permissions as the per-channel chatbot routes", async () => {
+  test("uses the automation permissions", async () => {
     const server = fakeServer();
     await chatbotRoutes(server);
     expect(declareAccess).toHaveBeenCalledWith(server, {
@@ -36,7 +37,7 @@ describe("chatbotRoutes", () => {
     });
   });
 
-  test("serves list, get, rules, create, update, delete and clone", async () => {
+  test("serves list, get, rules, create, update, delete, clone and initiate", async () => {
     const server = fakeServer();
     await chatbotRoutes(server);
     expect(server.routes).toEqual([
@@ -47,6 +48,7 @@ describe("chatbotRoutes", () => {
       "PUT /:id",
       "DELETE /:id",
       "POST /:id/clone",
+      "POST /:id/initiate",
     ]);
   });
 });

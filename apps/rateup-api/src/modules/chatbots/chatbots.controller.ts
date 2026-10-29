@@ -4,6 +4,12 @@ import connection from "../../utils/redisConnection.js";
 import { unsupportedBlocks, type ChatbotPlatform } from "./chatbotBlocks.js";
 import { chatbotRules, createStartRule, startOffered } from "./chatbotStart.js";
 import { limitProblems, type LimitProblem } from "./chatbotLimits.js";
+import { verifyAutomationTriggerLimit } from "../whatsapp/automatedReply/wa_automatedReply.service.js";
+import {
+  startMetaFlow,
+  type MetaFlowAutomation,
+} from "../whatsapp/automatedReply/metaFlow.service.js";
+import { handleAutomatedReply } from "../whatsapp/whatsappSurvey/wasurvey.controller.js";
 import {
   channelLock,
   cloneChatbot,
@@ -18,6 +24,7 @@ import type {
   ChatbotIdParams,
   CloneChatbotBody,
   CreateChatbotBody,
+  InitiateChatbotBody,
   ListChatbotsQuery,
   UpdateChatbotBody,
 } from "./chatbots.schema.js";
@@ -95,7 +102,8 @@ export async function listChatbotsHandler(
   reply: FastifyReply,
 ) {
   try {
-    return reply.send(await listChatbots(req.user.orgId, req.query?.platform));
+    const { platform, withGraph, search } = req.query ?? {};
+    return reply.send(await listChatbots(req.user.orgId, platform, { withGraph, search }));
   } catch (error) {
     return fail(reply, error, "list chatbots");
   }
@@ -234,5 +242,42 @@ export async function deleteChatbotHandler(
     return reply.code(204).send();
   } catch (error) {
     return fail(reply, error, "delete the chatbot");
+  }
+}
+
+/** Starts the chatbot for one person, from the inbox's chatbot picker. */
+export async function initiateChatbotHandler(
+  req: FastifyRequest<{ Params: ChatbotIdParams; Body: InitiateChatbotBody }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = req.user;
+    const chatbot = await loadOpen(req.params.id, orgId, reply, { write: true });
+    if (!chatbot) return reply;
+    if (chatbot.isActive === false) {
+      return reply.code(409).send({ message: "This chatbot is switched off" });
+    }
+    const { recipientId, accountId } = req.body;
+
+    if (chatbot.platform === "WHATSAPP") {
+      if (!(await verifyAutomationTriggerLimit(orgId))) {
+        return reply.code(403).send({ message: "Automation Trigger is inactive or limit reached" });
+      }
+      await handleAutomatedReply(orgId, null, null, recipientId, null, chatbot.id);
+    } else {
+      if (!accountId) {
+        return reply.code(400).send({ message: "accountId is required on this channel" });
+      }
+      const platform = chatbot.platform as Exclude<ChatbotPlatform, "WHATSAPP">;
+      // The stored matchData is typed loosely on the Prisma model; this row is a Meta flow graph.
+      await startMetaFlow(recipientId, chatbot as unknown as MetaFlowAutomation, orgId, {
+        platform,
+        accountId,
+      });
+    }
+    log.info(`[Chatbots] Started chatbot ${chatbot.id} for ${recipientId}`);
+    return reply.send({ success: true });
+  } catch (error) {
+    return fail(reply, error, "start the chatbot");
   }
 }
