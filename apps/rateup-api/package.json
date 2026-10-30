@@ -24,13 +24,8 @@
     "test": "vitest --silent",
     "prepare": "husky",
     "postinstall": "prisma generate",
-    "recover:campaign-sends": "tsx scripts/recover-unrecorded-campaign-sends.ts",
-    "backfill:first-responded": "tsx scripts/backfill-first-responded-at.ts",
-    "authz:migrate": "tsx scripts/migrate-authz-roles.ts",
-    "staff:add": "tsx scripts/staff-add.ts",
-    "shopify:drop-shop-app-webhooks": "tsx scripts/shopify-drop-shop-app-webhooks.ts",
-    "integrations:encrypt-credentials": "tsx scripts/encrypt-integration-credentials.ts",
-    "messenger:resubscribe-pages": "tsx scripts/messenger-resubscribe-pages.ts"
+    "backfill:wa-echoes": "tsx scripts/backfill-wa-echoes.ts",
+    "staff:add": "tsx scripts/staff-add.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1152.0",

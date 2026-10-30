@@ -264,6 +264,7 @@ function callHandleWaMessages(
     teamId?: string | null;
     messageType?: any;
     isAutomated?: boolean;
+    opensConversation?: boolean;
   } = {},
 ) {
   const o = {
@@ -290,6 +291,8 @@ function callHandleWaMessages(
     o.isAutomated ?? false,
     false,
     {},
+    undefined,
+    { opensConversation: o.opensConversation },
   );
 }
 
@@ -531,6 +534,38 @@ describe("handleWaMessages - choosing the conversation", () => {
 
     expect(m.getLastConversation).toHaveBeenCalledWith("contact-1");
     expect(m.openConversation).not.toHaveBeenCalled();
+  });
+
+  // A reply typed in the WhatsApp Business app used to land on the closed ticket
+  // (or on none), so the inbox never showed it.
+  test("an echo to a closed chat reopens the contact and opens a new ticket", async () => {
+    resolveContact({
+      contact: { ...CONTACT, isSpam: false, waMessageAssignStatus: WaMessageAssignStatus.CLOSED },
+      conversation: null,
+    });
+    m.getActiveConversation.mockResolvedValue(null);
+    m.openConversation.mockResolvedValue({ id: "conv-new", subject: null });
+
+    await callHandleWaMessages({ type: "send", opensConversation: true });
+
+    expect(m.updateContact).toHaveBeenCalledWith("contact-1", "org-1", {
+      waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED,
+    });
+    expect(m.openConversation).toHaveBeenCalledWith("contact-1", "org-1");
+    expect(m.addNewWaMessage.mock.calls[0][5]).toBe("conv-new");
+  });
+
+  test("an echo to a contact with an open ticket stays on that ticket", async () => {
+    resolveContact({
+      contact: { ...CONTACT, waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED },
+      conversation: null,
+    });
+    m.getActiveConversation.mockResolvedValue({ id: "conv-active", subject: "Set" });
+
+    await callHandleWaMessages({ type: "send", opensConversation: true });
+
+    expect(m.openConversation).not.toHaveBeenCalled();
+    expect(m.addNewWaMessage.mock.calls[0][5]).toBe("conv-active");
   });
 });
 

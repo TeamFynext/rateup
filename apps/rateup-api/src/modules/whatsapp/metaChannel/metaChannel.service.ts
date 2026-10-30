@@ -28,8 +28,7 @@ export const PAGE_SUBSCRIBED_FIELDS = [
   "messaging_postbacks",
   "message_reads",
   "message_reactions",
-  // m.me links opened in an existing thread (MESSENGER_REFERRAL). Pages connected
-  // before it was added need `npm run messenger:resubscribe-pages`.
+  // m.me links opened in an existing thread (MESSENGER_REFERRAL).
   "messaging_referrals",
 ];
 

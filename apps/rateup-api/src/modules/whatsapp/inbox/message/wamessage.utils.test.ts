@@ -144,6 +144,27 @@ describe("returnAppropriateTimeStamp", () => {
 
     expect(result).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
+
+  // A late or retried echo used to be stamped with the time it was processed,
+  // landing the reply in the wrong place in the thread.
+  test("stamps a WhatsApp echo with the time it was sent", async () => {
+    const body = {
+      exchangeProcess: "send",
+      send: { type: "text", timestamp: "1700000000" },
+    } as any;
+
+    const result = await returnAppropriateTimeStamp(body, PlatformType.WHATSAPP);
+
+    expect(result).toBe(dayjs.unix(1700000000).utc().format());
+  });
+
+  test("ignores a send timestamp off WhatsApp", async () => {
+    const body = { exchangeProcess: "send", send: { timestamp: 1700000000000 } } as any;
+
+    const result = await returnAppropriateTimeStamp(body, PlatformType.INSTAGRAM);
+
+    expect(Date.parse(result)).toBeGreaterThan(Date.now() - 5000);
+  });
 });
 
 // The WhatsApp 24-hour session window. The unit is "day": "D" normalises to "date",

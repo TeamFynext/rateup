@@ -26,6 +26,7 @@ import {
   WA_SUBSCRIBE_STATUS,
   createReplyButtonsMessage,
   flowResponseStrings,
+  downloadAndUpload,
   getEventType,
   handlePaymentConfirmation,
   isMetaAiOriginated,
@@ -304,10 +305,36 @@ async function handleMessageEvent(body: WaMessageBody, options: InboundOptions =
   throwCollected(errors, "inbound messages");
 }
 
+/**
+ * An image sent from the WhatsApp Business app arrives as a Meta media id only.
+ * The inbox draws a sent image from `image.link` (an S3 key or URL), so the file
+ * is copied into S3 the same way an inbound image is. Meta media ids also expire,
+ * so keeping only the id would lose the picture later anyway. A failed copy keeps
+ * the message — with the id — rather than dropping it.
+ */
+async function withEchoImageStored<
+  T extends { id?: string; type?: string; image?: { id?: string; link?: string } },
+>(orgId: string, message: T): Promise<T> {
+  const image = message.type === "image" ? message.image : undefined;
+  if (!image?.id || image.link) return message;
+  try {
+    const key = await downloadAndUpload(orgId, image.id);
+    return key ? { ...message, image: { ...image, link: key } } : message;
+  } catch (error) {
+    log.error({ err: error, messageId: message.id }, "Could not copy an echoed image to S3");
+    return message;
+  }
+}
+
 // Handler: Manage SMB Message Echoes
 async function handleSMBMessageEchoes(body: WaMessageBody) {
   log.trace("handleSMBMessageEchoes => %o", body);
 
+  // Collected and rethrown at the end, like inbound messages: a swallowed error
+  // (a database blip, a timeout) used to lose the echo for good, because the
+  // delivery was acked and never retried. A retry is safe — echoes already
+  // stored are skipped by their Meta id.
+  const errors: unknown[] = [];
   for (const entry of body.entry || []) {
     for (const change of entry.changes || []) {
       const value = change.value as WaReceiveMessageBody;
@@ -331,6 +358,13 @@ async function handleSMBMessageEchoes(body: WaMessageBody) {
 
       if (value.message_echoes) {
         for (const message of value.message_echoes) {
+          // One line per echo, so "the reply never showed" can be told apart from
+          // "Meta never sent it" (e.g. typed on WhatsApp for Windows, which Meta
+          // does not echo) by searching the logs for the message id or customer.
+          log.info(
+            { phoneId, messageId: message.id, type: message.type, to: message.to },
+            "WhatsApp Business app echo received",
+          );
           try {
             // An echoed revoke is the business side deleting its own message —
             // same treatment as a customer revoke: flag the original, store nothing.
@@ -351,7 +385,7 @@ async function handleSMBMessageEchoes(body: WaMessageBody) {
             const recipient = waAddress(echoIdentity(message, value.contacts)) ?? message.to;
             const stored = await handleWaMessages(
               "send",
-              message,
+              await withEchoImageStored(waSettings.orgId, message),
               recipient,
               waSettings.orgId,
               PlatformType.WHATSAPP,
@@ -363,6 +397,10 @@ async function handleSMBMessageEchoes(body: WaMessageBody) {
               null,
               byMetaAi ? "AUTOMATED" : "INBOX",
               byMetaAi,
+              false,
+              {},
+              undefined,
+              { opensConversation: true },
             );
             // After the store, so a redelivered echo (skipped above, or null from
             // the store) is never counted twice and a reply that failed to save is
@@ -380,11 +418,13 @@ async function handleSMBMessageEchoes(body: WaMessageBody) {
               { err: error },
               `Error processing SMB Message Echo for message_id ${message.id}`,
             );
+            errors.push(error);
           }
         }
       }
     }
   }
+  throwCollected(errors, "message echoes");
 }
 
 /**
