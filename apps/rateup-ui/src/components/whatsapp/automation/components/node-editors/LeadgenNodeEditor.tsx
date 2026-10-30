@@ -5,7 +5,7 @@ import { useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { useWaAutomatedReplyById } from "@/backend/whatsapp/automated-reply/automatedReply.query";
+import { useChatbot } from "@/backend/chatbots/chatbots.query";
 import {
   useMetaAssets,
   useSubscribeFieldToPage,
@@ -38,7 +38,7 @@ export const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
   const navigate = useNavigate();
   const flowbotId = params.flowbotId as string;
   const { data: waSettings, isLoading: isSettingsLoading } = useWaSettings();
-  const { data, isPending } = useWaAutomatedReplyById(flowbotId);
+  const { data, isPending } = useChatbot(flowbotId);
   const waSetting =
     waSettings &&
     (waSettings.find((w) => w.phoneId === data?.whatsappSettingsPhoneId) ?? waSettings[0]);

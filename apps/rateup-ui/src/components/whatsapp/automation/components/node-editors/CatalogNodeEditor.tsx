@@ -5,7 +5,7 @@ import { useParams } from "@tanstack/react-router";
 import { EditorContent } from "@tiptap/react";
 import { useEffect, useMemo } from "react";
 
-import { useWaAutomatedReplyById } from "@/backend/whatsapp/automated-reply/automatedReply.query";
+import { useChatbot } from "@/backend/chatbots/chatbots.query";
 import { useConnectedWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
 import {
   useProductSetsByCatalog,
@@ -62,7 +62,7 @@ export const CatalogNodeEditor = ({
     strict: false,
   });
   const flowbotId = params.flowbotId as string;
-  const { data: automation, isPending } = useWaAutomatedReplyById(flowbotId);
+  const { data: automation, isPending } = useChatbot(flowbotId);
   const { data, isLoading } = useConnectedWaCatalog(
     typedData.whatsappSettingsPhoneId || automation?.whatsappSettingsPhoneId || "",
   );

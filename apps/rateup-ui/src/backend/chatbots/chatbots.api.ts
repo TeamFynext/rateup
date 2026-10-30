@@ -4,11 +4,7 @@ import type { AutomationPlatform } from "@/types/platform.ts";
 
 import { axiosClient } from "../apiClient";
 
-/**
- * `/api/chatbots`: chatbots on every channel through one API. The older per-channel clients
- * (`automatedReply.api.ts`, `instagramAutomation.api.ts`) stay for the rules picker, the
- * inbox and loyalty.
- */
+/** `/api/chatbots`: chatbots on every channel through one API. */
 const base = "/chatbots";
 
 /** How the API names a channel; the UI keeps the lowercase AutomationPlatform values. */
@@ -32,6 +28,8 @@ export interface ChatbotSummary {
   whatsappSettingsPhoneId: string | null;
   /** Conversations it has started, and how many reached the end. */
   runs: { started: number; completed: number };
+  /** Only when the list was asked for graphs (`withGraph`). */
+  matchData?: WaAutomatedReply["matchData"];
 }
 
 export interface ChatbotList {
@@ -43,8 +41,16 @@ function lower<T extends { platform?: string | null }>(row: T): T {
   return { ...row, platform: row.platform?.toLowerCase() };
 }
 
-export async function getChatbots(platform?: AutomationPlatform): Promise<ChatbotList> {
-  const res = await axiosClient.get(base, { params: platform ? { platform } : undefined });
+export async function getChatbots(
+  platform?: AutomationPlatform,
+  { withGraph = false, search }: { withGraph?: boolean; search?: string } = {},
+): Promise<ChatbotList> {
+  const params = {
+    ...(platform && { platform }),
+    ...(withGraph && { withGraph: "true" }),
+    ...(search && { search }),
+  };
+  const res = await axiosClient.get(base, { params });
   const body = res.data as ChatbotList;
   return { data: body.data.map(lower), locked: body.locked ?? {} };
 }
@@ -100,4 +106,15 @@ export async function cloneChatbot(id: string, name: string): Promise<WaAutomate
 
 export async function deleteChatbot(id: string): Promise<void> {
   await axiosClient.delete(`${base}/${id}`);
+}
+
+/**
+ * Starts the chatbot for one person, from the inbox. `recipientId` is the phone number on
+ * WhatsApp, the igsId on Instagram, the psid on Messenger; `accountId` is needed on the last two.
+ */
+export async function initiateChatbot(
+  id: string,
+  body: { recipientId: string; accountId?: string },
+): Promise<void> {
+  await axiosClient.post(`${base}/${id}/initiate`, body);
 }

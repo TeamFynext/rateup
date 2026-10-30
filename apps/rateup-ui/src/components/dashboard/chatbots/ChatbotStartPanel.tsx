@@ -202,7 +202,7 @@ function ChatbotOffCard({
           {t("This chatbot is switched off")}
         </div>
         <p className="text-sm text-muted-foreground">
-          {t("Rules and lead ads won't start it. You can still start it from the inbox.")}
+          {t("Rules, lead ads and the inbox won't start it. Switch it on to use it again.")}
         </p>
         <div>
           <Button

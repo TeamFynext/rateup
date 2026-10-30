@@ -3,16 +3,12 @@ import { useMemo } from "react";
 import { useContactGroup } from "@/backend/campaign/contactGroup/contactGroup.query";
 import { useContactLabels } from "@/backend/campaign/contacts/contacts.query";
 import { useChannels } from "@/backend/channels/channels.query";
+import { useChatbots } from "@/backend/chatbots/chatbots.query";
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { usePipelineQuery, usePipelinesQuery } from "@/backend/pipeline/pipeline.query.tsx";
 import { useAllSurveysSummary } from "@/backend/surveys/surveys.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
-import { useAllWaAutomatedReplies } from "@/backend/whatsapp/automated-reply/automatedReply.query";
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
-import {
-  useAllInstagramAutomations,
-  useAllMessengerAutomations,
-} from "@/backend/whatsapp/instagram-automation/instagramAutomation.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import type { NameKind, NameLookup } from "@/components/dashboard/automation/rule-sentence.ts";
 import { buildRuleSentence } from "@/components/dashboard/automation/rule-sentence.ts";
@@ -37,9 +33,7 @@ export function useRuleSentence(rule: CreateRuleInput) {
   const { data: templates } = useWaTemplates();
   const { data: flows } = useWaFlowsFromDb();
   const { data: surveys } = useAllSurveysSummary();
-  const { data: waBots } = useAllWaAutomatedReplies();
-  const { data: igBots } = useAllInstagramAutomations();
-  const { data: messengerBots } = useAllMessengerAutomations();
+  const { data: chatbots } = useChatbots();
   const { data: pipelines = [] } = usePipelinesQuery();
   const { data: board } = usePipelineQuery(findLeadsPipeline(pipelines)?.id);
 
@@ -67,23 +61,10 @@ export function useRuleSentence(rule: CreateRuleInput) {
           (survey.teams ?? []).map((team) => [team.mapId, survey.title] as const),
         ),
       ),
-      chatbot: byId([...(waBots ?? []), ...(igBots ?? []), ...(messengerBots ?? [])]),
+      chatbot: byId(chatbots?.data ?? []),
     };
     return (kind, id) => tables[kind].get(id) || undefined;
-  }, [
-    channels,
-    teams,
-    members,
-    labels,
-    groups,
-    board,
-    templates,
-    flows,
-    surveys,
-    waBots,
-    igBots,
-    messengerBots,
-  ]);
+  }, [channels, teams, members, labels, groups, board, templates, flows, surveys, chatbots]);
 
   const parts = useMemo(() => buildRuleSentence(rule, lookup), [rule, lookup]);
   return { parts, lookup };

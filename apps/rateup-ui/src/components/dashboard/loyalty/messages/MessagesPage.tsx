@@ -24,7 +24,7 @@ export function MessagesPage({ tab }: Readonly<{ tab?: MessagesTab }>) {
   const navigate = useNavigate();
   const { data: state } = useLoyaltyOnboardingState();
   const { allowedFeatures } = useTeamFeatures();
-  // The Chatbot tab writes into WhatsApp › Chatbot and Automation. A member who cannot
+  // The Chatbot tab writes into Chatbots and Automation. A member who cannot
   // open those should not be offered it here either — and a stale `?tab=chatbot` link
   // lands on Automatic rather than an empty page.
   const canBuildChatbot =

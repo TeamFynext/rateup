@@ -25,17 +25,13 @@ import type { ControllerRenderProps } from "react-hook-form";
 import { Controller, useFieldArray, useFormContext, useWatch } from "react-hook-form";
 
 import { useContactLabels } from "@/backend/campaign/contacts/contacts.query";
+import { useChatbots } from "@/backend/chatbots/chatbots.query";
 import { useLifeCyclesQuery } from "@/backend/lifecycle/lifecycle.query";
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { usePipelineQuery, usePipelinesQuery } from "@/backend/pipeline/pipeline.query.tsx";
 import { useAllSurveysSummary } from "@/backend/surveys/surveys.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
-import { useAllWaAutomatedReplies } from "@/backend/whatsapp/automated-reply/automatedReply.query";
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
-import {
-  useAllInstagramAutomations,
-  useAllMessengerAutomations,
-} from "@/backend/whatsapp/instagram-automation/instagramAutomation.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import { MessageBodyEditor } from "@/components/dashboard/loyalty/messages/MessageBodyEditor.tsx";
 import { findLeadsPipeline } from "@/components/pipeline/pipelineTypes.ts";
@@ -81,9 +77,7 @@ const ActionValueInput = ({
   valueField: ControllerRenderProps<CreateRuleInput, `actions.${number}.value`>;
 }) => {
   const { control } = useFormContext<CreateRuleInput>();
-  const { data: waData } = useAllWaAutomatedReplies();
-  const { data: igData } = useAllInstagramAutomations();
-  const { data: messengerData } = useAllMessengerAutomations();
+  const { data: chatbots } = useChatbots();
   const { data: labelsData } = useContactLabels();
   const { data: lifecyclesData } = useLifeCyclesQuery();
   const { data: pipelinesData = [] } = usePipelinesQuery();
@@ -101,13 +95,11 @@ const ActionValueInput = ({
 
   // A rule can only start a chatbot on its own platform; the API refuses any other.
   const filteredAutomations = useMemo(() => {
-    let automations = waData;
-    if (platform === "INSTAGRAM") automations = igData;
-    if (platform === "FACEBOOK") automations = messengerData;
-    return [...(automations || [])].sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    );
-  }, [waData, igData, messengerData, platform]);
+    const channel = platform?.toLowerCase();
+    return (chatbots?.data ?? [])
+      .filter((chatbot) => chatbot.platform === channel)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [chatbots, platform]);
 
   const webSurveyOptions = useMemo(() => {
     if (!surveysSummary?.surveys?.length) return [];

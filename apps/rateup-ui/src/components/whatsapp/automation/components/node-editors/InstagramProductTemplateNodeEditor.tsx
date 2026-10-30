@@ -3,7 +3,7 @@
 import { useParams } from "@tanstack/react-router";
 import { useMemo } from "react";
 
-import { useWaAutomatedReplyById } from "@/backend/whatsapp/automated-reply/automatedReply.query";
+import { useChatbot } from "@/backend/chatbots/chatbots.query";
 import { useConnectedWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 
@@ -17,7 +17,7 @@ export const InstagramProductTemplateNodeEditor: React.FC<
   const typedData = nodeData;
   const params = useParams({ strict: false });
   const flowbotId = params.flowbotId as string;
-  const { data: automation, isPending } = useWaAutomatedReplyById(flowbotId);
+  const { data: automation, isPending } = useChatbot(flowbotId);
   const { data: catalogData, isLoading } = useConnectedWaCatalog(
     typedData.whatsappSettingsPhoneId || automation?.whatsappSettingsPhoneId || "",
   );

@@ -4,7 +4,7 @@ import { useId, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { useWaAutomatedReplyById } from "@/backend/whatsapp/automated-reply/automatedReply.query";
+import { useChatbot } from "@/backend/chatbots/chatbots.query";
 import type { MetaAssets } from "@/backend/whatsapp/settings/waSettings.api";
 import {
   useSyncLeadgenFormQuestions,
@@ -464,7 +464,7 @@ function LeadFormQuestionsInputComponent(props: LeadFormQuestionsInputComponentP
   const automatedId =
     typeof searchParams.waAutomatedReplyId === "string" ? searchParams.waAutomatedReplyId : "";
   const { data: waSettings, isLoading: isSettingsLoading } = useWaSettings();
-  const { data: automatedReply, isPending } = useWaAutomatedReplyById(automatedId);
+  const { data: automatedReply, isPending } = useChatbot(automatedId);
   const isLeadAutomation = automatedReply && automatedReply?.commands[0]?.startsWith("lead");
   const waSetting =
     waSettings &&

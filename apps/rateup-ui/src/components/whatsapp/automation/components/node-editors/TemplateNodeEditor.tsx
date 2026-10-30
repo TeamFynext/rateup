@@ -4,7 +4,7 @@ import { useParams } from "@tanstack/react-router";
 import { useEffect, useMemo } from "react";
 import { useImmer } from "use-immer";
 
-import { useWaAutomatedReplyById } from "@/backend/whatsapp/automated-reply/automatedReply.query";
+import { useChatbot } from "@/backend/chatbots/chatbots.query";
 import { useMetaAssets, useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import type { WaTemplateListEntry } from "@/backend/whatsapp/whatsapp.api";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
@@ -38,7 +38,7 @@ export const TemplateNodeEditor: React.FC<
 
   const flowbotId = params.flowbotId as string;
   const { data: waSettings, isLoading: isSettingsLoading } = useWaSettings();
-  const { data, isPending } = useWaAutomatedReplyById(flowbotId);
+  const { data, isPending } = useChatbot(flowbotId);
   const waSetting =
     waSettings &&
     (waSettings.find((w) => w.phoneId === data?.whatsappSettingsPhoneId) ?? waSettings[0]);

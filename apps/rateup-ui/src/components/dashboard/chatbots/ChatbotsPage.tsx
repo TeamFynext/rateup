@@ -67,18 +67,18 @@ export function ChatbotsPage({
 }>) {
   const { t } = useTranslation();
   const platform = channel ? CHANNEL_PARAM_TO_PLATFORM[channel] : undefined;
-  // One list for every channel; the filter is applied here so switching it is instant.
-  const { data, isPending, isError, refetch } = useChatbots();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("latest");
   const [wizard, setWizard] = useState<{ open: boolean; example?: string }>({ open: false });
-  const debouncedSearch = useDebounce(search.trim().toLowerCase(), 200);
+  const debouncedSearch = useDebounce(search.trim(), 300);
+  // The API does the name search. The channel filter is applied here, so switching it is instant.
+  const { data, isPending, isError, refetch } = useChatbots(undefined, {
+    search: debouncedSearch,
+  });
 
   const chatbots = useMemo(() => {
-    const rows = (data?.data ?? [])
-      .filter((chatbot) => !platform || chatbot.platform === platform)
-      .filter((chatbot) => chatbot.name.toLowerCase().includes(debouncedSearch));
+    const rows = (data?.data ?? []).filter((chatbot) => !platform || chatbot.platform === platform);
     return rows.sort((a, b) => {
       if (sortBy === "oldest") return Date.parse(a.createdAt) - Date.parse(b.createdAt);
       if (sortBy === "edited") return Date.parse(b.updatedAt) - Date.parse(a.updatedAt);
