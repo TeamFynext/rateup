@@ -125,6 +125,8 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
       // below it is an ordinary padded page.
       /^\/dashboard\/(whatsapp|loyalty)\/templates\/[^/]+\/?$/.test(pathname ?? "") ||
       pathname?.includes("/dashboard/whatsapp/flows/v2/") ||
+      // The link page editor, built like the automation builder. The list keeps its padding.
+      /^\/dashboard\/link-pages\/[^/]+/.test(pathname ?? "") ||
       // The chatbot builder, on any channel. The list at /dashboard/chatbots keeps its padding.
       /^\/dashboard\/chatbots\/[^/]+/.test(pathname ?? "");
 

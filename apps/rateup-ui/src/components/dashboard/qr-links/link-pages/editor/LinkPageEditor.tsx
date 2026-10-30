@@ -1,28 +1,21 @@
 import {
+  IconArrowLeft,
   IconChartBar,
-  IconDeviceMobile,
   IconExternalLink,
   IconLink,
   IconPalette,
   IconShare,
 } from "@tabler/icons-react";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
+import type { ReactNode } from "react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useImmerReducer } from "use-immer";
 
 import type { LinktreeData } from "@/backend/linktree/linktree.api.ts";
 import { useGetLinktreeWithShortId } from "@/backend/linktree/linktree.query";
-import { BackLink } from "@/components/common/back-link.tsx";
-import { PAGE_TITLE } from "@/components/common/page-heading.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet.tsx";
+import { PhonePreviewButton } from "@/components/ui/phone-preview.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
@@ -53,28 +46,61 @@ export function LinkPageEditor({
     if (data?.name) setBreadcrumb({ shortUrlId: data.name });
   }, [data?.name]);
 
+  if (data && !isPending) return <Editor page={data} tab={tab ?? "links"} />;
+
   return (
-    <div className="mx-auto flex w-full max-w-265 flex-col gap-4">
-      <BackLink to={QR_LINKS_PATHS.linkPages} label={t("Link pages")} />
+    <EditorFrame title={isPending ? <Skeleton className="h-5 w-40" /> : null}>
       {isPending ? (
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-          <div className="flex flex-col gap-4">
-            <Skeleton className="h-9 w-64" />
-            <Skeleton className="h-9 w-96 max-w-full" />
-            <Skeleton className="h-72 rounded-xl" />
-          </div>
-          <Skeleton className="hidden h-150 rounded-[2.5rem] lg:block" />
+        <div className="flex flex-col gap-4">
+          <Skeleton className="h-5 w-72 max-w-full" />
+          <Skeleton className="h-9 w-96 max-w-full" />
+          <Skeleton className="h-72 rounded-xl" />
         </div>
       ) : isError && isNotFound(error) ? (
         <RecordNotFound
           title={t("This link page doesn't exist")}
           description={t("It may have been deleted. Your other link pages are on the list.")}
         />
-      ) : isError ? (
-        <ListLoadError onRetry={() => void refetch()} />
       ) : (
-        <Editor page={data} tab={tab ?? "links"} />
+        <ListLoadError onRetry={() => void refetch()} />
       )}
+    </EditorFrame>
+  );
+}
+
+/**
+ * The automation builder's chrome: a full-bleed 56px breadcrumb bar, level with the device
+ * preview panel's header beside it, over a scrolling page.
+ */
+function EditorFrame({
+  title,
+  actions,
+  children,
+}: Readonly<{ title: ReactNode; actions?: ReactNode; children: ReactNode }>) {
+  const { t } = useTranslation();
+  return (
+    <div className="flex h-full min-h-0 flex-col bg-background">
+      <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border bg-card px-8">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <Link
+            to={QR_LINKS_PATHS.linkPages}
+            className="inline-flex shrink-0 items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground"
+          >
+            <IconArrowLeft className="size-3.5" aria-hidden />
+            {t("Link pages")}
+          </Link>
+          <span className="text-muted-foreground/50" aria-hidden>
+            /
+          </span>
+          {title && (
+            <span className="truncate font-display text-[15px] font-semibold">{title}</span>
+          )}
+        </div>
+        {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+      </header>
+      <div className="min-h-0 flex-1 overflow-y-auto px-8 py-6">
+        <div className="mx-auto flex w-full max-w-265 flex-col gap-4">{children}</div>
+      </div>
     </div>
   );
 }
@@ -106,35 +132,18 @@ function Editor({ page, tab }: Readonly<{ page: LinktreeData; tab: LinkPageTab }
   );
 
   return (
-    <>
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex min-w-0 flex-col gap-1">
-          <h1 className={`m-0 truncate ${PAGE_TITLE}`}>{page.name}</h1>
-          <StatusLine
-            live={!!page.isPublished}
-            label={
-              page.isPublished
-                ? t("Live at {url}", { url: url.replace(/^https?:\/\//, "") })
-                : t("Draft. Publish it to share the link.")
-            }
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <Sheet>
-            <SheetTrigger render={<Button variant="outline" className="lg:hidden" />}>
-              <IconDeviceMobile data-icon="inline-start" />
-              {t("Preview")}
-            </SheetTrigger>
-            <SheetContent side="right" className="w-full gap-0 sm:max-w-sm">
-              <SheetHeader>
-                <SheetTitle>{t("Preview")}</SheetTitle>
-              </SheetHeader>
-              <div className="min-h-0 flex-1 overflow-hidden border-t">{preview}</div>
-            </SheetContent>
-          </Sheet>
+    <EditorFrame
+      title={page.name}
+      actions={
+        <>
+          {/* The shared device panel, the same phone the WhatsApp previews use. */}
+          <PhonePreviewButton platform="browser" defaultOpen>
+            <div className="flex min-h-0 flex-1 flex-col">{preview}</div>
+          </PhonePreviewButton>
           {page.isPublished && (
             <Button
               variant="outline"
+              size="sm"
               render={<a href={url} target="_blank" rel="noreferrer" />}
               nativeButton={false}
             >
@@ -142,7 +151,7 @@ function Editor({ page, tab }: Readonly<{ page: LinktreeData; tab: LinkPageTab }
               {t("Open")}
             </Button>
           )}
-          <label className="flex h-9 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm font-medium has-disabled:cursor-not-allowed has-disabled:opacity-60">
+          <label className="flex h-8 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm font-medium has-disabled:cursor-not-allowed has-disabled:opacity-60">
             {t("Published")}
             <Switch
               checked={!!page.isPublished}
@@ -150,68 +159,67 @@ function Editor({ page, tab }: Readonly<{ page: LinktreeData; tab: LinkPageTab }
               onCheckedChange={(checked) => void setPublished(checked)}
             />
           </label>
-        </div>
-      </div>
+        </>
+      }
+    >
+      <StatusLine
+        live={!!page.isPublished}
+        label={
+          page.isPublished
+            ? t("Live at {url}", { url: url.replace(/^https?:\/\//, "") })
+            : t("Draft. Publish it to share the link.")
+        }
+      />
       {!page.isPublished && links.length === 0 && (
         <p className="-mt-2 text-sm text-muted-foreground">
           {t("Add at least one link before you publish.")}
         </p>
       )}
 
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-        <Tabs
-          value={tab}
-          onValueChange={(value) =>
-            setTab(LINK_PAGE_TABS.find((name) => name === value) ?? "links")
-          }
-          className="min-w-0 gap-4"
-        >
-          <TabsList>
-            <TabsTrigger value="links">
-              <IconLink />
-              {t("Links")}
-            </TabsTrigger>
-            <TabsTrigger value="appearance">
-              <IconPalette />
-              {t("Appearance")}
-            </TabsTrigger>
-            <TabsTrigger value="share">
-              <IconShare />
-              {t("Share")}
-            </TabsTrigger>
-            <TabsTrigger value="stats">
-              <IconChartBar />
-              {t("Stats")}
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="links">
-            <LinksPanel shortUrlId={page.shortUrlId} links={links} />
-          </TabsContent>
-          <TabsContent value="appearance">
-            <AppearancePanel
-              shortUrlId={page.shortUrlId}
-              saved={page.theme ?? DEFAULT_LINK_PAGE_THEME}
-              theme={theme}
-              dispatch={dispatch}
-            />
-          </TabsContent>
-          <TabsContent value="share">
-            <SharePanel page={page} />
-          </TabsContent>
-          <TabsContent value="stats">
-            <StatsPanel page={page} />
-          </TabsContent>
-        </Tabs>
-
-        <div className="sticky top-4 hidden lg:block">
-          <div className="mx-auto h-150 w-75 overflow-hidden rounded-[2.5rem] border-8 border-foreground shadow-lg dark:border-muted">
-            {preview}
-          </div>
-          <p className="mt-2 text-center text-xs text-muted-foreground">
+      <Tabs
+        value={tab}
+        onValueChange={(value) => setTab(LINK_PAGE_TABS.find((name) => name === value) ?? "links")}
+        className="min-w-0 gap-4"
+      >
+        <TabsList>
+          <TabsTrigger value="links">
+            <IconLink />
+            {t("Links")}
+          </TabsTrigger>
+          <TabsTrigger value="appearance">
+            <IconPalette />
+            {t("Appearance")}
+          </TabsTrigger>
+          <TabsTrigger value="share">
+            <IconShare />
+            {t("Share")}
+          </TabsTrigger>
+          <TabsTrigger value="stats">
+            <IconChartBar />
+            {t("Stats")}
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="links">
+          <LinksPanel shortUrlId={page.shortUrlId} links={links} />
+        </TabsContent>
+        <TabsContent value="appearance" className="flex flex-col gap-4">
+          <p className="text-sm text-muted-foreground">
             {t("Updates as you edit. Theme changes go live when you save.")}
           </p>
-        </div>
-      </div>
-    </>
+          <AppearancePanel
+            shortUrlId={page.shortUrlId}
+            saved={page.theme ?? DEFAULT_LINK_PAGE_THEME}
+            theme={theme}
+            dispatch={dispatch}
+          />
+        </TabsContent>
+        <TabsContent value="share">
+          <SharePanel page={page} />
+        </TabsContent>
+        <TabsContent value="stats">
+          <StatsPanel page={page} />
+        </TabsContent>
+      </Tabs>
+    </EditorFrame>
   );
 }

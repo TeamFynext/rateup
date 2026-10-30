@@ -5,6 +5,7 @@ import {
   IconFileText,
   IconList,
   IconPhone,
+  IconSend2,
 } from "@tabler/icons-react";
 import type { Edge } from "@xyflow/react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -12,11 +13,18 @@ import { useTranslation } from "react-i18next";
 
 import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query.ts";
 import { useWaTemplateById } from "@/backend/whatsapp/whatsapp.query.ts";
+import { DM, DmComposer, DmHeader } from "@/components/common/dm-preview-shell.tsx";
 import type { TiptapNode } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import { parseJsonToReact } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { WhatsAppChatHeader } from "@/components/whatsapp/whatsapp-preview-shell.tsx";
+import {
+  WA,
+  WaDateChip,
+  WaWallpaper,
+  WhatsAppChatHeader,
+  WhatsAppChatInputBar,
+} from "@/components/whatsapp/whatsapp-preview-shell.tsx";
 import { cn } from "@/lib/utils";
 import { WHATSAPP_BUTTON_TYPE } from "@/utils/constants.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
@@ -219,28 +227,10 @@ function FlowMessageCard({ flowId, at }: Readonly<{ flowId: string | undefined; 
   );
 }
 
-function InstagramDmHeader() {
-  return (
-    <div className="flex shrink-0 items-center gap-2 border-b px-3 py-2">
-      <div className="size-5 rounded-full bg-linear-to-br from-purple-400 to-pink-400" />
-      <span className="text-xs font-semibold">Instagram</span>
-    </div>
-  );
-}
-
-function MessengerHeader() {
-  return (
-    <div className="flex shrink-0 items-center gap-2 border-b px-3 py-2">
-      <div className="size-5 rounded-full bg-linear-to-br from-blue-500 to-violet-500 dark:from-blue-400 dark:to-violet-400" />
-      <span className="text-xs font-semibold">Messenger</span>
-    </div>
-  );
-}
-
 const PREVIEW_HEADERS = {
   whatsapp: WhatsAppChatHeader,
-  instagram: InstagramDmHeader,
-  facebook: MessengerHeader,
+  instagram: () => <DmHeader />,
+  facebook: () => <DmHeader />,
 };
 
 type PreviewPlatform = keyof typeof PREVIEW_HEADERS;
@@ -252,27 +242,40 @@ type PreviewPlatform = keyof typeof PREVIEW_HEADERS;
  */
 const CHAT_LOOK: Record<
   PreviewPlatform,
-  { channel: string; canvas: string; bot: string; user: string; showTime: boolean }
+  {
+    channel: string;
+    canvas: string;
+    bot: string;
+    user: string;
+    /** Message text size and colour. */
+    text: string;
+    showTime: boolean;
+  }
 > = {
+  // WhatsApp's own colours (see whatsapp-preview-shell.tsx); its wallpaper is drawn by WaWallpaper.
   whatsapp: {
     channel: "channel-whatsapp",
-    canvas: "bg-[#f4f1ea] dark:bg-[#0b141a]",
-    bot: "w-[78%] rounded-lg bg-white shadow-sm dark:bg-[#202c33]",
-    user: "rounded-2xl rounded-br-sm bg-[#d9fdd3] text-foreground shadow-sm dark:bg-[#005c4b] dark:text-white",
+    canvas: "",
+    bot: cn("ml-2 w-[80%] rounded-lg rounded-tl-none", WA.incoming, WA.shadow),
+    user: cn("mr-2 rounded-lg rounded-tr-none text-left", WA.outgoing, WA.shadow),
+    text: "text-[14.2px] leading-4.75",
     showTime: true,
   },
+  // Instagram and Messenger share Instagram's thread (see common/dm-preview-shell.tsx).
   instagram: {
     channel: "channel-instagram",
-    canvas: "bg-card",
-    bot: "w-fit max-w-[78%] rounded-2xl bg-secondary",
-    user: "rounded-2xl bg-ch text-white",
+    canvas: DM.screen,
+    bot: cn("w-fit max-w-[78%] rounded-[22px]", DM.incoming),
+    user: cn("rounded-[22px] text-left", DM.outgoing),
+    text: "text-[14px] leading-5",
     showTime: false,
   },
   facebook: {
     channel: "channel-messenger",
-    canvas: "bg-card",
-    bot: "w-fit max-w-[78%] rounded-2xl bg-secondary",
-    user: "rounded-2xl bg-ch text-white",
+    canvas: DM.screen,
+    bot: cn("w-fit max-w-[78%] rounded-[22px]", DM.incoming),
+    user: cn("rounded-[22px] text-left", DM.outgoing),
+    text: "text-[14px] leading-5",
     showTime: false,
   },
 };
@@ -506,261 +509,333 @@ export function FlowbotPreviewPlayground({
     : null;
   const awaitingInput = !!waitingNode && isInputNode(waitingNode);
   const reachedEnd = started && !waitingNodeId;
+  const isWa = platform === "whatsapp";
+  const Canvas = isWa ? WaWallpaper : "div";
 
   return (
     <div className={cn("flex h-full flex-col", look.channel)}>
       <Header />
-      <div className={cn("flex-1 space-y-2 overflow-y-auto p-3", look.canvas)}>
-        {context && started && (
-          <div className="mx-auto w-fit rounded-full border border-border bg-card px-2.5 py-0.5 text-[10px] text-muted-foreground">
-            {context}
-          </div>
-        )}
-        {history.map((entry, idx) => {
-          if (entry.kind === "user") {
-            return (
-              <div
-                key={`user-${idx}`}
-                className={cn(
-                  "ml-auto w-fit max-w-[85%] px-3 py-2 text-right text-[11px]",
-                  look.user,
-                )}
-              >
-                {entry.label}
+      <Canvas className={cn("flex min-h-0 flex-1 flex-col", look.canvas)}>
+        <div className="min-h-0 flex-1 space-y-2 overflow-x-hidden overflow-y-auto p-3">
+          {context &&
+            started &&
+            (isWa ? (
+              <div className="flex justify-center">
+                <WaDateChip>{context}</WaDateChip>
               </div>
-            );
-          }
-
-          const node = nodesById.get(entry.nodeId) as TypedNode | undefined;
-          const data: NodeFields | undefined = node?.data;
-          const isWaitingHere = waitingNodeId === entry.nodeId;
-          const selectedOptionId = selections[entry.nodeId];
-
-          if (node?.type === "instagramGenericTemplateNode") {
-            return (
-              <CardCarousel
-                key={`${entry.nodeId}-${idx}`}
-                cards={(data?.elements ?? []) as CardElement[]}
-                active={isWaitingHere}
-                selectedId={selectedOptionId}
-                onSelect={handleSelect}
-              />
-            );
-          }
-
-          if (node?.type === "templateNode") {
-            return (
-              <TemplateMessageCard
-                key={`${entry.nodeId}-${idx}`}
-                templateId={data?.template?.id}
-                at={entry.at}
-              />
-            );
-          }
-
-          if (node?.type === "flowNode") {
-            return (
-              <FlowMessageCard
-                key={`${entry.nodeId}-${idx}`}
-                flowId={data?.flow?.id}
-                at={entry.at}
-              />
-            );
-          }
-
-          const media = getNodeMedia(node);
-          const rawBody = media ? (media.kind !== "audio" ? media.caption : "") : getNodeBody(node);
-          const body = parseJsonToReact(rawBody ?? "");
-          const isEmptyBody = (typeof body === "string" && !body) || body == null;
-          const options = getNodeOptions(node);
-          // WhatsApp lists open a menu; quick replies sit under the message as chips; anything
-          // else with choices is a button inside the bubble.
-          const optionStyle: "buttons" | "list" | "chips" | null =
-            options.length === 0
-              ? null
-              : node?.type === "listNode"
-                ? "list"
-                : node?.type === "instagramQuickReplyNode"
-                  ? "chips"
-                  : "buttons";
-          const headerImage = data?.headerType === "image" ? data?.link : undefined;
-          const rawFooter = data?.footer;
-          const footer = rawFooter ? parseJsonToReact(rawFooter) : null;
-          const ctaButton =
-            node?.type === "ctaUrlNode" ? { label: data?.display_text, url: data?.url } : null;
-
-          return (
-            <div key={`${entry.nodeId}-${idx}`} className="space-y-1.5">
-              <div className={cn("overflow-hidden", look.bot)}>
-                {headerImage && (
-                  <img
-                    src={getFileUrlFromKey(headerImage) || "/placeholder.svg"}
-                    alt=""
-                    className="h-40 w-full object-cover"
-                  />
-                )}
-                {media?.kind === "image" && (
-                  <img src={media.src} alt="" className="h-40 w-full object-cover" />
-                )}
-                {media?.kind === "video" && (
-                  // eslint-disable-next-line jsx-a11y/media-has-caption
-                  <video src={media.src} controls className="h-40 w-full bg-black object-cover" />
-                )}
-                {media?.kind === "audio" && (
-                  <div className="px-3 pt-2">
-                    {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-                    <audio src={media.src} controls className="w-full" />
-                  </div>
-                )}
-                {media?.kind === "document" && (
-                  <div className="flex items-center gap-2 px-3 pt-2">
-                    <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                      <IconFileText className="size-4" />
-                    </div>
-                    <span className="truncate text-[11px] text-foreground">
-                      {media.filename || t("Document")}
-                    </span>
-                  </div>
-                )}
-                {!(media && isEmptyBody) && (
-                  <div
-                    className={cn(
-                      "whitespace-pre-wrap px-3 text-[11px] text-foreground",
-                      look.showTime ? "pt-2" : "py-2",
-                    )}
-                  >
-                    {isEmptyBody ? t("(empty message)") : body}
-                  </div>
-                )}
-                {footer && (
-                  <div className="px-3 pt-1 text-[10px] text-muted-foreground">{footer}</div>
-                )}
-                {look.showTime && (
-                  <div className="px-3 pb-1.5 pt-1 text-right text-[9px] text-muted-foreground">
-                    {formatTime(entry.at)}
-                  </div>
-                )}
-                {optionStyle === "list" && (
-                  <div className="flex w-full items-center justify-center gap-1.5 border-t border-border py-2.5 text-[12px] font-medium text-wa-green">
-                    <IconList className="size-3.5" />
-                    {data?.button || t("View options")}
-                  </div>
-                )}
-                {optionStyle === "buttons" &&
-                  (() => {
-                    return (
-                      <div className="border-t border-border">
-                        {options.map((opt, i) => {
-                          const isSelected = selectedOptionId === opt.id;
-                          return (
-                            <button
-                              key={opt.id}
-                              type="button"
-                              disabled={!isWaitingHere}
-                              onClick={() => handleSelect(opt)}
-                              className={cn(
-                                "text-wa-green flex w-full items-center justify-center gap-1.5 py-2.5 text-[12px] font-medium transition-colors",
-                                i > 0 && "border-t border-border",
-                                isWaitingHere && "hover:bg-muted/40",
-                                isSelected && "bg-muted/60 text-muted-foreground",
-                              )}
-                            >
-                              <IconArrowBackUp className="size-3.5 -scale-x-100" />
-                              {opt.label || t("Button")}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    );
-                  })()}
-                {ctaButton && (
-                  <div className="border-t border-border">
-                    <a
-                      href={ctaButton.url || "#"}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-wa-green flex w-full items-center justify-center gap-1.5 py-2.5 text-[12px] font-medium transition-colors hover:bg-muted/40"
-                    >
-                      <IconExternalLink className="size-3.5" />
-                      {ctaButton.label || t("Open link")}
-                    </a>
-                  </div>
-                )}
+            ) : (
+              <div className="mx-auto w-fit rounded-full border border-border bg-card px-2.5 py-0.5 text-[10px] text-muted-foreground">
+                {context}
               </div>
-              {optionStyle === "list" && (isWaitingHere || selectedOptionId) && (
-                <ListSheet
-                  options={options}
+            ))}
+          {history.map((entry, idx) => {
+            if (entry.kind === "user") {
+              return (
+                <div
+                  key={`user-${idx}`}
+                  className={cn(
+                    "ml-auto w-fit max-w-[85%] px-3 py-2 text-right",
+                    isWa ? "text-[14.2px] leading-4.75" : "text-[14px] leading-5",
+                    look.user,
+                  )}
+                >
+                  {entry.label}
+                </div>
+              );
+            }
+
+            const node = nodesById.get(entry.nodeId) as TypedNode | undefined;
+            const data: NodeFields | undefined = node?.data;
+            const isWaitingHere = waitingNodeId === entry.nodeId;
+            const selectedOptionId = selections[entry.nodeId];
+
+            if (node?.type === "instagramGenericTemplateNode") {
+              return (
+                <CardCarousel
+                  key={`${entry.nodeId}-${idx}`}
+                  cards={(data?.elements ?? []) as CardElement[]}
                   active={isWaitingHere}
                   selectedId={selectedOptionId}
                   onSelect={handleSelect}
                 />
-              )}
-              {optionStyle === "chips" && isWaitingHere && (
-                <div className="flex flex-wrap justify-end gap-1.5 pl-6">
-                  {options.map((opt) => (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => handleSelect(opt)}
-                      className="rounded-full border border-ch-border bg-card px-3 py-1 text-[11px] font-medium text-ch-fg transition-colors hover:bg-ch-soft"
+              );
+            }
+
+            if (node?.type === "templateNode") {
+              return (
+                <TemplateMessageCard
+                  key={`${entry.nodeId}-${idx}`}
+                  templateId={data?.template?.id}
+                  at={entry.at}
+                />
+              );
+            }
+
+            if (node?.type === "flowNode") {
+              return (
+                <FlowMessageCard
+                  key={`${entry.nodeId}-${idx}`}
+                  flowId={data?.flow?.id}
+                  at={entry.at}
+                />
+              );
+            }
+
+            const media = getNodeMedia(node);
+            const rawBody = media
+              ? media.kind !== "audio"
+                ? media.caption
+                : ""
+              : getNodeBody(node);
+            const body = parseJsonToReact(rawBody ?? "");
+            const isEmptyBody = (typeof body === "string" && !body) || body == null;
+            const options = getNodeOptions(node);
+            // WhatsApp lists open a menu; quick replies sit under the message as chips; anything
+            // else with choices is a button inside the bubble.
+            const optionStyle: "buttons" | "list" | "chips" | null =
+              options.length === 0
+                ? null
+                : node?.type === "listNode"
+                  ? "list"
+                  : node?.type === "instagramQuickReplyNode"
+                    ? "chips"
+                    : "buttons";
+            const headerImage = data?.headerType === "image" ? data?.link : undefined;
+            const rawFooter = data?.footer;
+            const footer = rawFooter ? parseJsonToReact(rawFooter) : null;
+            const ctaButton =
+              node?.type === "ctaUrlNode" ? { label: data?.display_text, url: data?.url } : null;
+
+            return (
+              <div key={`${entry.nodeId}-${idx}`} className="space-y-1.5">
+                <div className={cn("overflow-hidden", look.bot)}>
+                  {headerImage && (
+                    <img
+                      src={getFileUrlFromKey(headerImage) || "/placeholder.svg"}
+                      alt=""
+                      className="h-40 w-full object-cover"
+                    />
+                  )}
+                  {media?.kind === "image" && (
+                    <img src={media.src} alt="" className="h-40 w-full object-cover" />
+                  )}
+                  {media?.kind === "video" && (
+                    // eslint-disable-next-line jsx-a11y/media-has-caption
+                    <video src={media.src} controls className="h-40 w-full bg-black object-cover" />
+                  )}
+                  {media?.kind === "audio" && (
+                    <div className="px-3 pt-2">
+                      {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                      <audio src={media.src} controls className="w-full" />
+                    </div>
+                  )}
+                  {media?.kind === "document" && (
+                    <div className="flex items-center gap-2 px-3 pt-2">
+                      <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                        <IconFileText className="size-4" />
+                      </div>
+                      <span className="truncate text-[11px] text-foreground">
+                        {media.filename || t("Document")}
+                      </span>
+                    </div>
+                  )}
+                  {!(media && isEmptyBody) && (
+                    <div
+                      className={cn(
+                        "whitespace-pre-wrap px-3",
+                        look.text,
+                        look.showTime ? "pt-2" : "py-2",
+                      )}
                     >
-                      {opt.label || t("Reply")}
-                    </button>
-                  ))}
+                      {isEmptyBody ? t("(empty message)") : body}
+                    </div>
+                  )}
+                  {footer && (
+                    <div className="px-3 pt-1 text-[10px] text-muted-foreground">{footer}</div>
+                  )}
+                  {look.showTime && (
+                    <div
+                      className={cn(
+                        "px-2 pt-1 pb-1.5 text-right text-[11px] leading-none",
+                        WA.muted,
+                      )}
+                    >
+                      {formatTime(entry.at).toLowerCase()}
+                    </div>
+                  )}
+                  {optionStyle === "list" && (
+                    <div className="flex w-full items-center justify-center gap-1.5 border-t border-border py-2.5 text-[12px] font-medium text-wa-green">
+                      <IconList className="size-3.5" />
+                      {data?.button || t("View options")}
+                    </div>
+                  )}
+                  {optionStyle === "buttons" &&
+                    (() => {
+                      return (
+                        <div className="border-t border-border">
+                          {options.map((opt, i) => {
+                            const isSelected = selectedOptionId === opt.id;
+                            return (
+                              <button
+                                key={opt.id}
+                                type="button"
+                                disabled={!isWaitingHere}
+                                onClick={() => handleSelect(opt)}
+                                className={cn(
+                                  "text-wa-green flex w-full items-center justify-center gap-1.5 py-2.5 text-[12px] font-medium transition-colors",
+                                  i > 0 && "border-t border-border",
+                                  isWaitingHere && "hover:bg-muted/40",
+                                  isSelected && "bg-muted/60 text-muted-foreground",
+                                )}
+                              >
+                                <IconArrowBackUp className="size-3.5 -scale-x-100" />
+                                {opt.label || t("Button")}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
+                  {ctaButton && (
+                    <div className="border-t border-border">
+                      <a
+                        href={ctaButton.url || "#"}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-wa-green flex w-full items-center justify-center gap-1.5 py-2.5 text-[12px] font-medium transition-colors hover:bg-muted/40"
+                      >
+                        <IconExternalLink className="size-3.5" />
+                        {ctaButton.label || t("Open link")}
+                      </a>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-      <div className="flex shrink-0 items-center gap-2 border-t bg-white px-3 py-2 dark:bg-[#202c33]">
-        {!started && (
-          <Button
-            type="button"
-            size="sm"
-            disabled={!entryNode}
-            onClick={handleStart}
-            className="mx-auto"
+                {optionStyle === "list" && (isWaitingHere || selectedOptionId) && (
+                  <ListSheet
+                    options={options}
+                    active={isWaitingHere}
+                    selectedId={selectedOptionId}
+                    onSelect={handleSelect}
+                  />
+                )}
+                {optionStyle === "chips" && isWaitingHere && (
+                  <div className="flex flex-wrap justify-end gap-1.5 pl-6">
+                    {options.map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => handleSelect(opt)}
+                        className={cn(
+                          "rounded-full border px-3 py-1.5 text-[13px] font-semibold transition-colors hover:bg-[#efefef] dark:hover:bg-[#262626]",
+                          DM.divider,
+                          DM.link,
+                        )}
+                      >
+                        {opt.label || t("Reply")}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        {!isWa && started && waitingNodeId && awaitingInput ? (
+          <DmComposer
+            action={
+              <button
+                type="button"
+                disabled={!inputValue.trim()}
+                onClick={handleSubmitInput}
+                className={cn("shrink-0 text-[14px] font-semibold disabled:opacity-40", DM.link)}
+              >
+                {t("Send")}
+              </button>
+            }
           >
-            {t("Start")}
-          </Button>
-        )}
-        {started && waitingNodeId && awaitingInput && (
-          <>
-            <Input
+            <input
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSubmitInput()}
-              placeholder={t("Type your reply…")}
-              className="h-8 flex-1 text-[11px]"
+              placeholder={t("Message...")}
+              aria-label={t("Type your reply…")}
+              className="min-w-0 flex-1 bg-transparent text-[14px] outline-none placeholder:text-[#737373] dark:placeholder:text-[#a8a8a8]"
             />
-            <Button
-              type="button"
-              size="sm"
-              disabled={!inputValue.trim()}
-              onClick={handleSubmitInput}
-            >
-              {t("Send")}
-            </Button>
-          </>
-        )}
-        {started && waitingNodeId && !awaitingInput && (
-          <span className="mx-auto text-[10px] text-muted-foreground">
-            {t("Waiting for a reply above…")}
-          </span>
-        )}
-        {reachedEnd && (
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={handleRestart}
-            className="mx-auto"
+          </DmComposer>
+        ) : isWa && started && waitingNodeId && awaitingInput ? (
+          <WhatsAppChatInputBar
+            action={
+              <button
+                type="button"
+                aria-label={t("Send")}
+                disabled={!inputValue.trim()}
+                onClick={handleSubmitInput}
+                className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#1daa61] text-white disabled:opacity-60 dark:bg-[#21c063] dark:text-[#0b141a]"
+              >
+                <IconSend2 className="size-5" aria-hidden />
+              </button>
+            }
           >
-            {t("Restart conversation")}
-          </Button>
+            <input
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSubmitInput()}
+              placeholder={t("Message")}
+              aria-label={t("Type your reply…")}
+              className="min-w-0 flex-1 bg-transparent text-[14px] text-[#111b21] outline-none placeholder:text-[#667781] dark:text-[#e9edef] dark:placeholder:text-[#8696a0]"
+            />
+          </WhatsAppChatInputBar>
+        ) : (
+          <div className="flex shrink-0 items-center gap-2 px-3 pt-2 pb-5">
+            {!started && (
+              <Button
+                type="button"
+                size="sm"
+                disabled={!entryNode}
+                onClick={handleStart}
+                className="mx-auto"
+              >
+                {t("Start")}
+              </Button>
+            )}
+            {started && waitingNodeId && awaitingInput && (
+              <>
+                <Input
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSubmitInput()}
+                  placeholder={t("Type your reply…")}
+                  className="h-8 flex-1 text-[11px]"
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={!inputValue.trim()}
+                  onClick={handleSubmitInput}
+                >
+                  {t("Send")}
+                </Button>
+              </>
+            )}
+            {started && waitingNodeId && !awaitingInput && (
+              <span className="mx-auto text-[10px] text-muted-foreground">
+                {t("Waiting for a reply above…")}
+              </span>
+            )}
+            {reachedEnd && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={handleRestart}
+                className="mx-auto"
+              >
+                {t("Restart conversation")}
+              </Button>
+            )}
+          </div>
         )}
-      </div>
+      </Canvas>
     </div>
   );
 }

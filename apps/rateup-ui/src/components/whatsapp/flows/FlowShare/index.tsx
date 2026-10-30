@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
+import { WaBubble, WaWallpaper } from "@/components/whatsapp/whatsapp-preview-shell.tsx";
 import { getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
 
 import { ShareSection } from "./ShareSection.tsx";
@@ -305,32 +306,16 @@ export default function FlowShare({ flowName, flowDbId, survey, surveyId }: Flow
           }
           rightTitle="Preview"
           rightContent={
-            <div
-              className="bg-[#E5DDD5] dark:bg-gray-950 rounded min-h-[250px] flex flex-col justify-end p-4 relative"
-              style={{
-                backgroundImage:
-                  "repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0, 0, 0, 0.02) 10px, rgba(0, 0, 0, 0.02) 20px)",
-              }}
-            >
-              <div className="bg-[#DCF8C6] dark:bg-[#005c4b] rounded-md rounded-tr-sm p-2 max-w-[85%] ml-auto mb-1 border border-[#c8e6c9] dark:border-[#064e3b] relative break-words before:content-[''] before:absolute before:right-[-6px] before:top-0 before:w-0 before:h-0 before:border-l-[6px] before:border-l-[#DCF8C6] dark:before:border-l-[#005c4b] before:border-b-[6px] before:border-b-transparent">
-                <div>
-                  {startMessageBody.split("\n").map((line, i) => (
-                    <div key={i} className="text-xs" style={{ lineHeight: 1.4 }}>
-                      {line || "\u00A0"}
-                    </div>
-                  ))}
-                  <span className="text-[10px] mt-1 inline-block bg-black/5 dark:bg-white/10 text-black/70 dark:text-white/70 px-1 py-0.5 rounded font-mono">
-                    #{flowName} @{selectedTeam}
-                  </span>
-                  {startMessageSuffix &&
-                    startMessageSuffix.split("\n").map((line, i) => (
-                      <div key={i} className="text-xs mt-1" style={{ lineHeight: 1.4 }}>
-                        {line || "\u00A0"}
-                      </div>
-                    ))}
-                </div>
-              </div>
-            </div>
+            <WaWallpaper className="min-h-62.5 justify-end overflow-hidden rounded-md p-3">
+              <WaBubble outgoing>
+                {startMessageBody}
+                {"\n"}
+                <span className="mt-1 inline-block rounded bg-black/5 px-1 py-0.5 font-mono text-[12px] dark:bg-white/10">
+                  #{flowName} @{selectedTeam}
+                </span>
+                {startMessageSuffix && `\n${startMessageSuffix}`}
+              </WaBubble>
+            </WaWallpaper>
           }
         />
 

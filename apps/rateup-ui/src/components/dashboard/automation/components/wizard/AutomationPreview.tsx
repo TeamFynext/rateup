@@ -1,10 +1,18 @@
-import { IconChecks, IconChevronLeft, IconLock } from "@tabler/icons-react";
+import { IconLock } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 import { useEffect, useEffectEvent } from "react";
 
 import { formatMoney, toMoney } from "@/backend/commerce/shop.api";
 import { useShopProduct, useShopStore } from "@/backend/commerce/shop.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
+import {
+  DmBubble,
+  DmChatShell,
+  DmComposer,
+  DmIncomingGroup,
+  DmNote,
+  DmTimestamp,
+} from "@/components/common/dm-preview-shell.tsx";
 import type { NameLookup, SentencePart } from "@/components/dashboard/automation/rule-sentence.ts";
 import { actionPart } from "@/components/dashboard/automation/rule-sentence.ts";
 import { stripWhatsAppFormatting } from "@/components/dashboard/automation/whatsapp-formatting.ts";
@@ -12,6 +20,13 @@ import { WaTemplateBubble } from "@/components/dashboard/campaign/wizard/Campaig
 import type { PhonePlatform } from "@/components/ui/phone-preview.tsx";
 import { PhonePreviewButton, usePhonePreview } from "@/components/ui/phone-preview.tsx";
 import TextWithFormatting from "@/components/whatsapp/templates/Details/TextWithFormating.tsx";
+import {
+  WaBubble,
+  WaDateChip,
+  WaThread,
+  WhatsAppChatHeader,
+  WhatsAppChatInputBar,
+} from "@/components/whatsapp/whatsapp-preview-shell.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";
 import type { WaTemplateFetchBody } from "@/types/global";
@@ -31,24 +46,6 @@ const BEHIND_THE_SCENES = new Set([
   "ASSIGN_LIFECYCLE",
   "CALL_EXTERNAL_API",
 ]);
-
-const CHAT_STYLE: Record<Platform, { header: string; mine: string; theirs: string }> = {
-  WHATSAPP: {
-    header: "bg-[#008069] text-white",
-    mine: "bg-[#D9FDD3] text-[#1B2027]",
-    theirs: "bg-white text-[#1B2027]",
-  },
-  INSTAGRAM: {
-    header: "bg-white text-[#1B2027] border-b border-[#E4E7EC]",
-    mine: "bg-[#3797F0] text-white",
-    theirs: "bg-[#EFEFEF] text-[#1B2027]",
-  },
-  FACEBOOK: {
-    header: "bg-white text-[#1B2027] border-b border-[#E4E7EC]",
-    mine: "bg-[#0084FF] text-white",
-    theirs: "bg-[#EFEFEF] text-[#1B2027]",
-  },
-};
 
 const EVENT_NOTE: Record<string, string> = {
   CHAT_CLOSED: "Chat closed by your team",
@@ -86,28 +83,20 @@ const upperFirst = (text: string) => text.charAt(0).toUpperCase() + text.slice(1
 
 function Bubble({
   mine,
+  wa,
   className,
   children,
-}: Readonly<{ mine?: boolean; className: string; children: ReactNode }>) {
+}: Readonly<{ mine?: boolean; wa?: boolean; className?: string; children: ReactNode }>) {
+  const Message = wa ? WaBubble : DmBubble;
   return (
-    <div
-      className={cn(
-        "max-w-[85%] rounded-[10px] px-2.5 py-1.5 text-[12.5px] leading-snug whitespace-pre-line shadow-sm",
-        mine ? "self-end" : "self-start",
-        className,
-      )}
-    >
+    <Message outgoing={mine} className={className}>
       {children}
-    </div>
+    </Message>
   );
 }
 
-function Note({ children }: Readonly<{ children: ReactNode }>) {
-  return (
-    <span className="self-center rounded-md bg-white/90 px-2 py-0.5 text-center text-[10.5px] text-[#6B7480] shadow-sm">
-      {children}
-    </span>
-  );
+function Note({ wa, children }: Readonly<{ wa?: boolean; children: ReactNode }>) {
+  return wa ? <WaDateChip>{children}</WaDateChip> : <DmNote>{children}</DmNote>;
 }
 
 function ProductLine({ id }: Readonly<{ id: string }>) {
@@ -206,7 +195,6 @@ function AutomationPreview({
 }>) {
   const { user } = useUser();
   const { data: templates } = useWaTemplates();
-  const style = CHAT_STYLE[platform];
   const businessName = user?.orgName || "Your business";
 
   const incoming = customerMessage(rule);
@@ -219,111 +207,138 @@ function AutomationPreview({
     .filter((action) => BEHIND_THE_SCENES.has(action.type))
     .map((action) => actionPart(action, lookup).text);
   const publicReply = rule.options?.instagramPublicReplies?.find((reply) => reply.trim());
+  const wa = platform === "WHATSAPP";
 
-  return (
-    <div className="flex min-h-0 flex-1 flex-col bg-[#EFEAE2]">
-      <div className={cn("flex h-12 shrink-0 items-center gap-2 px-3", style.header)}>
-        <IconChevronLeft className="size-4" aria-hidden />
-        <span className="font-display flex size-7 items-center justify-center rounded-full bg-white/25 text-[10px] font-bold">
-          {businessName.slice(0, 2).toUpperCase()}
-        </span>
-        <span className="truncate text-[13px] font-semibold">{businessName}</span>
-      </div>
-
-      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-3 py-3">
-        {note && <Note>{note}</Note>}
-        {incoming && isCommentTrigger(rule.triggerEvent) && (
-          <Note>Commented on your post: “{incoming}”</Note>
-        )}
-        {incoming && isCommentTrigger(rule.triggerEvent) && publicReply && (
-          <Note>You replied under it: “{publicReply}”</Note>
-        )}
-        {incoming && !isCommentTrigger(rule.triggerEvent) && (
-          <Bubble mine className={style.mine}>
-            {incoming}
-          </Bubble>
-        )}
-
-        {actions.map((action, index) => {
-          if (BEHIND_THE_SCENES.has(action.type)) return null;
-          const key = `${action.type}-${index}`;
-          if (action.type === "SEND_TEMPLATE") {
-            const templateId =
-              typeof action.value === "string"
-                ? action.value
-                : action.value && "templateId" in action.value
-                  ? action.value.templateId
-                  : "";
-            const template = templates?.find((t) => String(t.id) === templateId)?.data;
-            return template ? (
-              <div key={key} className="self-start">
-                <WaTemplateBubble template={template} sampleValues={exampleValues(template)} />
-              </div>
-            ) : (
-              <Bubble key={key} className={cn(style.theirs, "italic opacity-70")}>
-                Pick a template to see it here
-              </Bubble>
-            );
-          }
-          if (action.type === "SEND_SHOP_PRODUCTS") {
-            const value = asShopProductsValue(action.value);
-            if (platform === "WHATSAPP" && value.productIds.length) {
-              return (
-                <Bubble key={key} className={style.theirs}>
-                  {value.message || "A few picks for you"}
-                  {value.productIds.slice(0, 5).map((id) => (
-                    <ProductLine key={id} id={id} />
-                  ))}
-                  {"\n"}
-                  <span className="font-semibold underline">View items</span>
-                </Bubble>
-              );
-            }
-            return value.productIds.length ? (
-              <Bubble key={key} className={style.theirs}>
-                {value.message || "Thanks for your comment! Here it is:"}
-                {value.productIds.slice(0, 5).map((id) => (
-                  <ProductLine key={id} id={id} />
-                ))}
-                {"\n"}
-                {value.productIds.length === 1 ? "Buy it here: " : "Shop here: "}
-                <span className="underline">link</span>
-              </Bubble>
-            ) : (
-              <Bubble key={key} className={cn(style.theirs, "italic opacity-70")}>
-                Pick products to see the reply here
-              </Bubble>
-            );
-          }
-          if (action.type === "SEND_MESSAGE") {
-            const text = typeof action.value === "string" ? action.value.trim() : "";
-            return (
-              <Bubble key={key} className={cn(style.theirs, !text && "italic opacity-70")}>
-                {!text && "Your reply appears here"}
-                {text &&
-                  (platform === "WHATSAPP"
-                    ? TextWithFormatting(text)
-                    : stripWhatsAppFormatting(text))}
-                <span className="ml-2 inline-flex translate-y-0.5 items-center gap-0.5 text-[10px] text-[#6B7480]">
-                  <IconChecks className="size-3 text-[#53BDEB]" aria-hidden />
-                </span>
-              </Bubble>
-            );
-          }
-          return (
-            <Bubble key={key} className={cn(style.theirs, "italic")}>
-              {upperFirst(actionPart(action, lookup).text)}
-            </Bubble>
-          );
-        })}
-      </div>
-
-      {internal.length > 0 && (
-        <div className="flex items-start gap-1.5 border-t border-[#E4E7EC] bg-white px-3 py-2 text-[11px] text-[#6B7480]">
-          <IconLock className="mt-px size-3 shrink-0" aria-hidden />
-          <span>Only your team sees: {internal.join(" · ")}</span>
-        </div>
+  const intro = (
+    <>
+      {note && <Note wa={wa}>{note}</Note>}
+      {incoming && isCommentTrigger(rule.triggerEvent) && (
+        <Note wa={wa}>Commented on your post: “{incoming}”</Note>
       )}
+      {incoming && isCommentTrigger(rule.triggerEvent) && publicReply && (
+        <Note wa={wa}>You replied under it: “{publicReply}”</Note>
+      )}
+      {incoming && !isCommentTrigger(rule.triggerEvent) && (
+        <Bubble wa={wa} mine>
+          {incoming}
+        </Bubble>
+      )}
+    </>
+  );
+
+  const replies = actions.map((action, index) => {
+    if (BEHIND_THE_SCENES.has(action.type)) return null;
+    const key = `${action.type}-${index}`;
+    if (action.type === "SEND_TEMPLATE") {
+      const templateId =
+        typeof action.value === "string"
+          ? action.value
+          : action.value && "templateId" in action.value
+            ? action.value.templateId
+            : "";
+      const template = templates?.find((t) => String(t.id) === templateId)?.data;
+      return template ? (
+        <WaTemplateBubble
+          key={key}
+          template={template}
+          sampleValues={exampleValues(template)}
+          className="w-[calc(100%-0.5rem)] max-w-64"
+        />
+      ) : (
+        <Bubble wa={wa} key={key} className="italic opacity-70">
+          Pick a template to see it here
+        </Bubble>
+      );
+    }
+    if (action.type === "SEND_SHOP_PRODUCTS") {
+      const value = asShopProductsValue(action.value);
+      if (platform === "WHATSAPP" && value.productIds.length) {
+        return (
+          <Bubble wa={wa} key={key}>
+            {value.message || "A few picks for you"}
+            {value.productIds.slice(0, 5).map((id) => (
+              <ProductLine key={id} id={id} />
+            ))}
+            {"\n"}
+            <span className="font-semibold underline">View items</span>
+          </Bubble>
+        );
+      }
+      return value.productIds.length ? (
+        <Bubble wa={wa} key={key}>
+          {value.message || "Thanks for your comment! Here it is:"}
+          {value.productIds.slice(0, 5).map((id) => (
+            <ProductLine key={id} id={id} />
+          ))}
+          {"\n"}
+          {value.productIds.length === 1 ? "Buy it here: " : "Shop here: "}
+          <span className="underline">link</span>
+        </Bubble>
+      ) : (
+        <Bubble wa={wa} key={key} className="italic opacity-70">
+          Pick products to see the reply here
+        </Bubble>
+      );
+    }
+    if (action.type === "SEND_MESSAGE") {
+      const text = typeof action.value === "string" ? action.value.trim() : "";
+      return (
+        <Bubble wa={wa} key={key} className={cn(!text && "italic opacity-70")}>
+          {!text && "Your reply appears here"}
+          {text && (wa ? TextWithFormatting(text) : stripWhatsAppFormatting(text))}
+        </Bubble>
+      );
+    }
+    return (
+      <Bubble wa={wa} key={key} className="italic">
+        {upperFirst(actionPart(action, lookup).text)}
+      </Bubble>
+    );
+  });
+
+  const teamNote = internal.length > 0 && (
+    <div className="flex shrink-0 items-start gap-1.5 border-t border-[#E4E7EC] bg-white px-3 py-2 text-[11px] text-[#6B7480]">
+      <IconLock className="mt-px size-3 shrink-0" aria-hidden />
+      <span>Only your team sees: {internal.join(" · ")}</span>
     </div>
+  );
+
+  if (wa) {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col">
+        <WhatsAppChatHeader contactName={businessName} />
+        <WaThread
+          className="gap-1.5"
+          footer={
+            <>
+              {teamNote}
+              <WhatsAppChatInputBar />
+            </>
+          }
+        >
+          {intro}
+          {replies}
+        </WaThread>
+      </div>
+    );
+  }
+
+  // Instagram and Messenger: the business's replies run together beside its picture.
+  const hasReplies = actions.some((action) => !BEHIND_THE_SCENES.has(action.type));
+  return (
+    <DmChatShell
+      name={businessName}
+      threadClassName="justify-end"
+      footer={
+        <>
+          {teamNote}
+          <DmComposer />
+        </>
+      }
+    >
+      <DmTimestamp />
+      {intro}
+      {hasReplies && <DmIncomingGroup>{replies}</DmIncomingGroup>}
+    </DmChatShell>
   );
 }

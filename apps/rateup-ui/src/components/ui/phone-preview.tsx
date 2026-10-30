@@ -3,6 +3,7 @@ import {
   IconBrandInstagram,
   IconBrandWhatsapp,
   IconDeviceMobile,
+  IconWorld,
   IconX,
 } from "@tabler/icons-react";
 import { useRouterState } from "@tanstack/react-router";
@@ -21,12 +22,14 @@ import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 import { Button } from "./button.tsx";
+import { PhoneMockupCard } from "./phone-mockup.tsx";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-export type PhonePlatform = "instagram" | "whatsapp" | "facebook";
+/** The app the phone opens. `browser` is for web pages, e.g. a link page. */
+export type PhonePlatform = "instagram" | "whatsapp" | "facebook" | "browser";
 
 interface PhonePreviewState {
   open: boolean;
@@ -181,7 +184,12 @@ export function PhonePreviewPanel() {
         </div>
         <div className="flex flex-1 flex-col items-center gap-4 overflow-y-auto p-4">
           {open && toolbar}
-          {open && <PhoneSimulator />}
+          {/* The phone sizes itself to this box, so the whole handset fits on a laptop screen. */}
+          {open && (
+            <div className="flex min-h-136 w-full flex-1 justify-center">
+              <PhoneSimulator className="h-full max-h-152 w-auto" />
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -241,7 +249,7 @@ export function PhonePreviewButton({
         }
       }}
     >
-      <IconDeviceMobile className="size-4" />
+      <IconDeviceMobile data-icon="inline-start" />
       {label ?? t("Preview")}
     </Button>
   );
@@ -251,16 +259,19 @@ export function PhonePreviewButton({
 // Phone hardware frame
 // ---------------------------------------------------------------------------
 
-export function PhoneFrame({ children }: Readonly<{ children: ReactNode }>) {
+export function PhoneFrame({
+  children,
+  className,
+}: Readonly<{ children: ReactNode; className?: string }>) {
+  // The screens draw their own home bar (the app one is the tap target for "go home").
   return (
-    <div className="relative mx-auto h-150 w-73 rounded-[3rem] border-[3px] border-muted-foreground/30 bg-black p-2 shadow-xl">
-      {/* The iPhone 18 Pro's narrower Dynamic Island: centred on the status bar's middle line. */}
-      <div className="absolute top-4.5 left-1/2 z-10 h-5 w-18 -translate-x-1/2 rounded-full bg-black" />
-      <div className="flex h-full flex-col overflow-hidden rounded-[2.25rem] bg-background">
-        {children}
-      </div>
-      {/* <div className="absolute bottom-2 left-1/2 h-1 w-25 -translate-x-1/2 rounded-full bg-muted-foreground/30" /> */}
-    </div>
+    <PhoneMockupCard
+      className={cn("mx-auto w-73 shrink-0 drop-shadow-xl", className)}
+      showHomeIndicator={false}
+      screenClassName="bg-background"
+    >
+      <div className="flex h-full flex-col">{children}</div>
+    </PhoneMockupCard>
   );
 }
 
@@ -287,14 +298,19 @@ const APP_META: Record<
     label: "Facebook",
     gradient: "from-blue-600 to-blue-500",
   },
+  browser: {
+    icon: IconWorld,
+    label: "Browser",
+    gradient: "from-sky-500 to-blue-600",
+  },
 };
 
-function PhoneSimulator() {
+function PhoneSimulator({ className }: Readonly<{ className?: string }>) {
   const { screen, platform, goHome, openApp } = usePhonePreview();
   const { appContent } = usePhonePreviewContent();
 
   return (
-    <PhoneFrame>
+    <PhoneFrame className={className}>
       {screen === "home" ? (
         <HomeScreen platform={platform} onOpenApp={openApp} />
       ) : (
@@ -303,6 +319,14 @@ function PhoneSimulator() {
     </PhoneFrame>
   );
 }
+
+/** The status bar takes the open app's top-bar colour, as it does on a phone. */
+const STATUS_BAR_LOOK: Record<PhonePlatform, string> = {
+  whatsapp: "bg-white text-[#111b21] dark:bg-[#0b141a] dark:text-[#e9edef]",
+  instagram: "bg-white text-black dark:bg-black dark:text-white",
+  facebook: "bg-white text-black dark:bg-black dark:text-white",
+  browser: "",
+};
 
 /** iOS's cellular bars: four, rising, rounded. */
 function SignalGlyph() {
@@ -352,7 +376,10 @@ function BatteryGlyph({ level = 0.8 }: Readonly<{ level?: number }>) {
 }
 
 /** The iOS status bar: time left of the island, signal, Wi-Fi and battery right of it. */
-function StatusBar({ variant = "light" }: Readonly<{ variant?: "light" | "dark" }>) {
+function StatusBar({
+  variant = "light",
+  className,
+}: Readonly<{ variant?: "light" | "dark"; className?: string }>) {
   // iOS shows "9:41", never "09:41 AM".
   const timeStr = new Date()
     .toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
@@ -362,14 +389,18 @@ function StatusBar({ variant = "light" }: Readonly<{ variant?: "light" | "dark" 
   return (
     <div
       className={cn(
-        "flex h-10 shrink-0 items-center justify-between pr-6 pl-8",
+        // As on iOS: the time centred in the space left of the camera cutout, the icons centred
+        // in the space right of it, so nothing runs into the cutout however narrow the phone.
+        "grid h-9 shrink-0 grid-cols-[1fr_5.25rem_1fr] items-center px-2",
         isLight ? "text-white" : "text-foreground",
+        className,
       )}
     >
-      <span className="w-12 text-center text-[13px] font-semibold tracking-tight tabular-nums">
+      <span className="justify-self-center text-[13px] font-semibold tracking-tight tabular-nums">
         {timeStr}
       </span>
-      <div className="flex items-center gap-[5px]">
+      <span aria-hidden />
+      <div className="flex items-center gap-[5px] justify-self-center">
         <SignalGlyph />
         <WifiGlyph />
         <BatteryGlyph />
@@ -456,46 +487,25 @@ function AppScreen({
   children: ReactNode;
   onGoHome: () => void;
 }>) {
+  const { t } = useTranslation();
+  const { platform } = usePhonePreview();
   return (
-    <div className="flex h-full flex-col">
-      <StatusBar variant="dark" />
-      {/* App content */}
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">{children}</div>
+    <div className="relative flex h-full flex-col">
+      <StatusBar variant="dark" className={platform ? STATUS_BAR_LOOK[platform] : undefined} />
+      {/* App content runs to the bottom edge; the home bar floats over it, as on a real phone. */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto">
+        {children}
+      </div>
 
       {/* Home bar */}
-      <div className="flex justify-center pb-1 pt-1.5">
+      <div className="absolute inset-x-0 bottom-1.5 z-10 flex justify-center">
         <button
+          aria-label={t("Home")}
           type="button"
           className="h-1 w-25 rounded-full bg-muted-foreground/30 transition-colors hover:bg-muted-foreground/50 active:bg-muted-foreground/70"
           onClick={onGoHome}
         />
       </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// DM screen building blocks (shared by Instagram / Facebook / WhatsApp previews)
-// ---------------------------------------------------------------------------
-
-export function DmHeader({ name }: Readonly<{ name: string }>) {
-  return (
-    <div className="flex items-center gap-2 border-b px-3 py-2">
-      <span className="text-xs text-muted-foreground">←</span>
-      <div className="size-5 rounded-full bg-linear-to-br from-purple-400 to-pink-400" />
-      <span className="text-xs font-semibold">{name}</span>
-    </div>
-  );
-}
-
-export function MessagingInput({ trailing }: Readonly<{ trailing?: ReactNode }>) {
-  const { t } = useTranslation();
-  return (
-    <div className="mt-auto flex items-center gap-2 border-t px-3 py-2">
-      <div className="flex-1 rounded-full border bg-muted/30 px-3 py-1.5 text-[10px] text-muted-foreground">
-        {t("Message...")}
-      </div>
-      {trailing}
     </div>
   );
 }
