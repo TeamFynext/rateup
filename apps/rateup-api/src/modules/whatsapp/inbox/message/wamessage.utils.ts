@@ -68,6 +68,15 @@ export async function returnAppropriateTimeStamp(
     const utcTimeStamp = dayjs.unix(unixTimeStamp).utc().format();
     return utcTimeStamp;
   }
+  // An echo (a reply typed in the WhatsApp Business app, or a Meta AI reply) says
+  // when it was sent, in unix seconds. Stamping it with the time we processed it
+  // put a late or retried webhook in the wrong place in the thread. Sends RateUp
+  // makes itself carry no `timestamp` and are stamped now, as before. WhatsApp
+  // only: Instagram and Messenger timestamps are milliseconds.
+  if (platform === PlatformType.WHATSAPP) {
+    const echoedAt = Number((messageBody.send as { timestamp?: unknown } | undefined)?.timestamp);
+    if (Number.isFinite(echoedAt) && echoedAt > 0) return dayjs.unix(echoedAt).utc().format();
+  }
   return dayjs().utc().format();
 }
 

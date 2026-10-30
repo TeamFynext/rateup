@@ -43,8 +43,7 @@ export function requireIntegrationKey(purpose: IntegrationKeyPurpose): Buffer {
 
 // Once per process, when it boots (this module loads with the integration code in
 // every service). Not a boot failure: a deploy without the key keeps working, with
-// credentials stored in plaintext, until the key is set and the backfill
-// (`npm run integrations:encrypt-credentials`) has run.
+// credentials stored in plaintext, until the key is set.
 if (!process.env.INTEGRATION_SECRET_KEY && process.env.NODE_ENV !== "test") {
   log.error(
     "INTEGRATION_SECRET_KEY is not set: integration credentials (HubSpot, Zoho, Pipedrive, Shopify, …) " +

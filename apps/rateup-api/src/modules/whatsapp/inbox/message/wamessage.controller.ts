@@ -147,6 +147,17 @@ export async function handleWaMessages(
     /** The send session (initial send or a specific retry) this message is part of. */
     campaignSendId?: string | null;
   },
+  options: {
+    /**
+     * File an outbound message the way an inbound one is filed: onto the live
+     * ticket, reopening the contact and opening a new ticket when the last one
+     * is closed or there is none. For replies a person typed in the WhatsApp
+     * Business app (echoes) — a live chat the inbox has to show. Other sends
+     * (campaigns, automations) keep landing on the last ticket without
+     * reopening anything.
+     */
+    opensConversation?: boolean;
+  } = {},
 ) {
   try {
     /**
@@ -288,10 +299,17 @@ export async function handleWaMessages(
         template.data as unknown as OutgoingTemplatePayload;
     }
 
+    // An echo used to land on the contact's last ticket even when it was closed,
+    // and on no ticket at all for a contact that never had one (created by
+    // loyalty, a store sync or an import) — either way the inbox never showed it.
+    const filesLikeInbound = type === "receive" || options.opensConversation === true;
+
     if (type === "receive") {
       if (sourcePlatform === PlatformType.WHATSAPP) {
         waMessageBody = await handleWaReceivedImages(waMessageBody, orgId);
       }
+    }
+    if (filesLikeInbound) {
       // A closed chat reopens when the customer writes back — unless they are a
       // spam contact, whose messages stay filed against the closed ticket instead
       // of resurfacing in the inbox. (Was a SPAM *status* check before spam moved
@@ -303,10 +321,7 @@ export async function handleWaMessages(
       }
     }
     if (!conversation) {
-      if (
-        type === "receive" &&
-        contact.waMessageAssignStatus === WaMessageAssignStatus.UNASSIGNED
-      ) {
+      if (filesLikeInbound && contact.waMessageAssignStatus === WaMessageAssignStatus.UNASSIGNED) {
         // An inbound message belongs to a live conversation. If the last one was
         // closed (or there was never one), this message opens a new conversation
         // rather than appending to a finished record.
