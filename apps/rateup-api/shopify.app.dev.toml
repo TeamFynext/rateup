@@ -24,8 +24,7 @@ automatically_update_urls_on_dev = false
 # Shopify managed installation: merchants are asked for exactly these scopes at
 # install, and again whenever this list changes and is deployed (reported back
 # through app/scopes_update).
-scopes = "read_assigned_fulfillment_orders,read_cart_transforms,read_checkouts,read_customers,read_draft_orders,read_fulfillments,read_merchant_managed_fulfillment_orders,read_orders,read_inventory,read_products,read_third_party_fulfillment_orders,unauthenticated_read_customers,unauthenticated_write_customers,write_customers,write_discounts,write_draft_orders,write_orders,write_products"
-
+scopes = "read_assigned_fulfillment_orders,read_cart_transforms,read_checkouts,read_customers,read_draft_orders,read_fulfillments,read_merchant_managed_fulfillment_orders,read_orders,read_products,read_third_party_fulfillment_orders,unauthenticated_read_customers,unauthenticated_write_customers,write_customers,write_discounts,write_products"
 [auth]
 # The OAuth callback still issues the (expiring) offline token: a non-embedded
 # app has no App Bridge ID token to use token exchange with.
