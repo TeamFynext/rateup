@@ -353,10 +353,12 @@ export function parseWaMessage(message: Partial<WaGetMessagesBody>): ParsedWaMes
           messageContent = `${send?.image?.link}_caption_${send?.image?.caption ?? ""}`;
           break;
         case "video":
-          messageContent = `${send?.video?.link}_caption_${send?.video?.caption ?? ""}`;
+          messageContent = `${send?.video?.link ?? send?.video?.id}_caption_${send?.video?.caption ?? ""}`;
           break;
+        // A reply sent from the WhatsApp Business app (an echo) carries only Meta's
+        // media id, no link; the bubble fetches the file by id when it is not a URL.
         case "audio":
-          messageContent = `${send?.audio?.link}`;
+          messageContent = `${send?.audio?.link ?? send?.audio?.id}`;
           break;
         case "template":
           messageContent = send.template?.name ?? "";
@@ -370,7 +372,7 @@ export function parseWaMessage(message: Partial<WaGetMessagesBody>): ParsedWaMes
           messageContent = send.reaction!.emoji;
           break;
         case "document":
-          messageContent = `${send?.document!.link}_caption_${send?.document!.filename}_caption_${send?.document!.caption ?? ""}`;
+          messageContent = `${send?.document?.link ?? send?.document?.id}_caption_${send?.document?.filename}_caption_${send?.document?.caption ?? ""}`;
           break;
         case "contacts":
           messageContent = [...send.contacts!];

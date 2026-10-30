@@ -656,16 +656,21 @@ export interface WaSendMessageBody {
     emoji: string;
     message_id: string;
   };
+  // `link` on what RateUp sends; an echo (a reply sent from the WhatsApp
+  // Business app) carries only Meta's media `id`.
   document?: {
-    link: string;
+    link?: string;
+    id?: string;
     caption?: string;
     filename?: string;
   };
   audio?: {
-    link: string;
+    link?: string;
+    id?: string;
   };
   video?: {
-    link: string;
+    link?: string;
+    id?: string;
     caption?: string;
   };
   contacts?: {
