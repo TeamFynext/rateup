@@ -1,4 +1,4 @@
-import { WhatsAppChatHeader } from "@/components/whatsapp/whatsapp-preview-shell.tsx";
+import { WaWallpaper, WhatsAppChatHeader } from "@/components/whatsapp/whatsapp-preview-shell.tsx";
 import type { WaFlowScreen } from "@/types/global";
 
 import { FlowChatPreview } from "./FlowChatPreview.tsx";
@@ -17,8 +17,7 @@ export function FlowPreviewPhoneContent({
     <div className="relative flex h-full flex-col">
       <WhatsAppChatHeader />
 
-      {/* Chat background */}
-      <div className="flex-1 bg-[#efeae2] dark:bg-[#0b141a]" />
+      <WaWallpaper />
 
       {/* Flow Sheet — bottom sheet overlay */}
       {currentScreen && (

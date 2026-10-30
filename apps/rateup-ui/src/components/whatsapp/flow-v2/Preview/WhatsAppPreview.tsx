@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea.tsx";
 import type { FormElement, Screen } from "@/components/whatsapp/flow-v2/utils/store.ts";
 import {
   FlowSheetShell,
+  WaWallpaper,
   WhatsAppChatHeader,
 } from "@/components/whatsapp/whatsapp-preview-shell.tsx";
 import { QuestionType2 } from "@/types/enums.ts";
@@ -292,8 +293,7 @@ export function FlowScreenSheetView({ screen }: Readonly<{ screen: Screen | unde
     <div className="relative flex h-full flex-col">
       <WhatsAppChatHeader />
 
-      {/* Chat background */}
-      <div className="flex-1 bg-[#efeae2] dark:bg-[#0b141a]" />
+      <WaWallpaper />
 
       {/* Flow Sheet — bottom sheet overlay */}
       <div className="absolute bottom-0 left-0 right-0 h-[calc(100%-9px)] bg-background rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.12)]">

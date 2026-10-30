@@ -12,6 +12,7 @@ import {
 import type { ReactNode } from "react";
 import { useMemo } from "react";
 
+import { WaTail, WaTime } from "@/components/whatsapp/whatsapp-preview-shell.tsx";
 import { cn } from "@/lib/utils.ts";
 
 /**
@@ -115,19 +116,6 @@ export function visibleWaButtons(buttons: readonly WaPreviewButton[]) {
   return { shown: buttons.slice(0, 2), overflow: true };
 }
 
-/** WhatsApp's incoming-bubble tail, its own path. */
-function Tail() {
-  return (
-    <svg
-      viewBox="0 0 8 13"
-      aria-hidden
-      className="absolute top-0 -left-2 h-3.25 w-2 text-white dark:text-[#202c33]"
-    >
-      <path fill="currentColor" d="M1.533 3.568 8 12.193V1H2.812C1.042 1 .474 2.156 1.533 3.568z" />
-    </svg>
-  );
-}
-
 function MediaHeader({ header }: Readonly<{ header: WaPreviewHeader }>) {
   const src = useMemo(() => {
     if (header.media instanceof File) return URL.createObjectURL(header.media);
@@ -178,18 +166,6 @@ function MediaHeader({ header }: Readonly<{ header: WaPreviewHeader }>) {
   }
 }
 
-/** The time, laid over the last line's end the way WhatsApp does, with room kept for it. */
-function Time({ time }: Readonly<{ time: string }>) {
-  return (
-    <>
-      <span aria-hidden className="inline-block w-13" />
-      <span className="absolute right-2 bottom-1 text-[11px] leading-none text-[#667781] dark:text-[#8696a0]">
-        {time}
-      </span>
-    </>
-  );
-}
-
 export function WaTemplateMessage({
   header,
   body,
@@ -237,7 +213,7 @@ export function WaTemplateMessage({
           hasButtons && "rounded-b-none",
         )}
       >
-        <Tail />
+        <WaTail />
         {aboveBody && <div className="px-1 pt-1">{aboveBody}</div>}
         {isMedia && header && (
           <div className="p-0.75 pb-0">
@@ -253,16 +229,16 @@ export function WaTemplateMessage({
           {bodyText && (
             <p className="text-[14.2px] leading-4.75 whitespace-pre-wrap">
               {formatWaText(bodyText)}
-              {!footer && <Time time={clock} />}
+              {!footer && <WaTime time={clock} />}
             </p>
           )}
           {footer && (
             <p className="mt-1 text-[13px] leading-4 text-[#667781] dark:text-[#8696a0]">
               {footer}
-              <Time time={clock} />
+              <WaTime time={clock} />
             </p>
           )}
-          {!bodyText && !footer && <Time time={clock} />}
+          {!bodyText && !footer && <WaTime time={clock} />}
         </div>
       </div>
       {hasButtons && (

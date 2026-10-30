@@ -1,6 +1,8 @@
 import { Link, type LinkProps } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
+import { PhoneMockupCard } from "@/components/ui/phone-mockup";
+
 import { type JobAnchor, JobTag } from "./capabilities";
 import { ArrowRight, StarLabel, useReveal } from "./home-ui";
 
@@ -54,10 +56,12 @@ function Phone({
   children: ReactNode;
 }>) {
   return (
-    <div
-      className={`absolute top-8 h-150 w-75 -translate-x-1/2 ${x} rounded-[44px] bg-[#060f1c] p-2.5 shadow-[inset_0_0_0_2px_rgba(144,178,220,0.28),0_50px_90px_-30px_rgba(0,0,0,0.75)] max-sm:top-5 max-sm:origin-top max-sm:scale-[0.8]`}
+    <PhoneMockupCard
+      variant="gray"
+      className={`absolute top-8 w-75 -translate-x-1/2 ${x} drop-shadow-[0_40px_40px_rgba(0,0,0,0.55)] max-sm:top-5 max-sm:origin-top max-sm:scale-[0.8]`}
+      screenClassName="bg-[#efe7dd] bg-[radial-gradient(rgba(120,95,60,0.07)_1.2px,transparent_1.3px)] bg-size-[18px_18px]"
     >
-      <div className="relative h-full overflow-hidden rounded-[35px] bg-[#efe7dd] bg-[radial-gradient(rgba(120,95,60,0.07)_1.2px,transparent_1.3px)] bg-size-[18px_18px]">
+      <div className="relative h-full overflow-hidden">
         <div className="flex h-23 items-center gap-2.5 bg-white px-4 pt-11">
           <span
             className={`flex size-9 flex-none items-center justify-center rounded-full font-display text-[13px] font-extrabold text-white ${avatar}`}
@@ -71,7 +75,7 @@ function Phone({
         </div>
         <div className="flex flex-col gap-2 px-3 py-3.5">{children}</div>
       </div>
-    </div>
+    </PhoneMockupCard>
   );
 }
 

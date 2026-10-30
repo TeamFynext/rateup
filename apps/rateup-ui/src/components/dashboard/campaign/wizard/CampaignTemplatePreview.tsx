@@ -1,9 +1,9 @@
-import { IconBadge, IconChevronLeft, IconDotsVertical } from "@tabler/icons-react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 import { PhonePreviewButton, usePhonePreview } from "@/components/ui/phone-preview.tsx";
 import { WaTemplateMessage } from "@/components/whatsapp/wa-template-bubble.tsx";
+import { WaDateChip, WhatsAppChatShell } from "@/components/whatsapp/whatsapp-preview-shell.tsx";
 import type { WaTemplateFetchBody } from "@/types/global";
 
 import { CampaignWizardHeaderAction } from "./CampaignWizardShell.tsx";
@@ -55,38 +55,25 @@ function CampaignPreviewScreen({
   sampleValues = {},
 }: Readonly<CampaignPreviewScreenProps>) {
   const { t } = useTranslation("campaign.wizard");
-  const initials = (businessName ?? "RU").slice(0, 2).toUpperCase();
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-[#efeae2]">
-      <div className="flex h-14 shrink-0 items-center gap-2.5 border-b border-[#E4E7EC] bg-white px-3">
-        <IconChevronLeft className="size-4.5 text-[#1B2027]" aria-hidden />
-        <span className="font-display flex size-8 items-center justify-center rounded-full bg-[#25D366] text-xs font-bold text-white">
-          {initials}
-        </span>
-        <div className="flex min-w-0 flex-1 flex-col">
-          <span className="flex items-center gap-1 text-[13px] font-semibold text-[#1B2027]">
-            <span className="truncate">{businessName ?? t("Your business")}</span>
-            <IconBadge className="size-3.5 shrink-0 text-[#25D366]" aria-hidden />
-          </span>
-          <span className="text-[10.5px] text-[#6B7480]">{t("Business account")}</span>
-        </div>
-        <IconDotsVertical className="size-4 text-[#434A55]" aria-hidden />
-      </div>
-
+    <WhatsAppChatShell contactName={businessName} subtitle={t("Business account")}>
       {template ? (
-        <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto px-2.5 py-3">
-          <span className="self-center rounded-md bg-white px-2 py-0.5 text-[11px] text-[#54656f] shadow-[0_1px_0.5px_rgba(11,20,26,0.13)]">
-            {t("Today")}
-          </span>
-          <WaTemplateBubble template={template} sampleValues={sampleValues} />
-        </div>
+        <>
+          <WaDateChip>{t("Today")}</WaDateChip>
+          {/* Fits the phone screen, less the bubble's own left margin for its tail. */}
+          <WaTemplateBubble
+            template={template}
+            sampleValues={sampleValues}
+            className="mt-1 w-[calc(100%-0.5rem)] max-w-64"
+          />
+        </>
       ) : (
-        <div className="flex flex-1 items-center justify-center px-8 text-center text-[13px] text-[#6B7480]">
+        <div className="flex flex-1 items-center justify-center px-8 text-center text-[13px] text-[#667781] dark:text-[#8696a0]">
           {t("Pick a template to see how it will look.")}
         </div>
       )}
-    </div>
+    </WhatsAppChatShell>
   );
 }
 
@@ -94,9 +81,11 @@ function CampaignPreviewScreen({
 export function WaTemplateBubble({
   template,
   sampleValues = {},
+  className = "w-64",
 }: Readonly<{
   template: WaTemplateFetchBody;
   sampleValues?: Record<string, string>;
+  className?: string;
 }>) {
   const header = componentOfType(template, "HEADER");
   const body = componentOfType(template, "BODY");
@@ -105,8 +94,8 @@ export function WaTemplateBubble({
 
   return (
     <WaTemplateMessage
-      // A fixed width: callers place it in a shrink-wrapped column.
-      className="w-64"
+      // A fixed width by default: callers place it in a shrink-wrapped column.
+      className={className}
       header={
         header?.format
           ? {

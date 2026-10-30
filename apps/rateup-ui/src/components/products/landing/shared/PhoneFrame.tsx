@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { PhoneMockupCard } from "@/components/ui/phone-mockup";
+
 /**
  * The one handset every product-page chat mock is drawn in.
  *
@@ -69,10 +71,6 @@ function StatusBar() {
   return (
     <div className="relative z-2 flex h-11 flex-none items-center justify-between bg-ru-n-50 px-5.5 text-[12.5px] font-semibold tabular-nums text-ru-n-700">
       <span>9:41</span>
-      <span
-        aria-hidden="true"
-        className="absolute top-2.25 left-1/2 h-6.5 w-22 -translate-x-1/2 rounded-full bg-ru-blue-900"
-      />
       <span className="flex items-center gap-1.5 text-ru-n-600" aria-hidden="true">
         <svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor">
           <rect y="7" width="3" height="4" rx="1" />
@@ -241,22 +239,8 @@ export default function PhoneFrame({
         className="pointer-events-none absolute top-[-6%] left-1/2 aspect-square w-[min(620px,130%)] -translate-x-1/2 bg-[radial-gradient(ellipse_at_center,var(--color-ru-blue-50)_0%,transparent_62%)]"
       />
 
-      <div className="relative w-[min(100%,342px)] rounded-[46px] bg-ru-blue-900 p-2.5 shadow-[0_30px_68px_rgba(15,37,64,0.3),inset_0_0_0_1px_rgba(255,255,255,0.1)]">
-        {/* Side buttons. Decorative — they are what makes the frame read as a handset. */}
-        <span
-          aria-hidden="true"
-          className="absolute top-34 -left-0.5 h-6.5 w-0.5 rounded-l-sm bg-ru-blue-950"
-        />
-        <span
-          aria-hidden="true"
-          className="absolute top-45 -left-0.5 h-11.5 w-0.5 rounded-l-sm bg-ru-blue-950"
-        />
-        <span
-          aria-hidden="true"
-          className="absolute top-40.5 -right-0.5 h-16.5 w-0.5 rounded-r-sm bg-ru-blue-950"
-        />
-
-        <div className="relative flex h-160 flex-col overflow-hidden rounded-[38px] bg-white">
+      <PhoneMockupCard className="w-[min(100%,342px)] drop-shadow-[0_30px_34px_rgba(15,37,64,0.3)]">
+        <div className="relative flex h-full flex-col">
           <StatusBar />
           <ThreadHeader initial={initial} name={name} />
 
@@ -268,12 +252,8 @@ export default function PhoneFrame({
           </div>
 
           <Composer />
-          <span
-            aria-hidden="true"
-            className="absolute bottom-2 left-1/2 z-3 h-1 w-26.5 -translate-x-1/2 rounded-full bg-ru-n-300"
-          />
         </div>
-      </div>
+      </PhoneMockupCard>
     </div>
   );
 }

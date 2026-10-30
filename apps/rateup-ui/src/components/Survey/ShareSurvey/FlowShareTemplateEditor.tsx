@@ -20,7 +20,8 @@ import { generateWaSurveyIdentifier_byName } from "@/utils/whatsapp/wa_url.tsx";
 
 import type { LengthTrackerProps } from "../../input/LengthTracker.tsx";
 import { LengthTracker } from "../../input/LengthTracker.tsx";
-import { SentMessageContainer, WaResponseMessage } from "../../whatsapp/MessageComponents.tsx";
+import { WaTemplateMessage } from "../../whatsapp/wa-template-bubble.tsx";
+import { WaBubble, WaWallpaper } from "../../whatsapp/whatsapp-preview-shell.tsx";
 
 const exceed = (l: number) => `Cannot exceed ${l} characters.`;
 const empty = `Cannot be empty.`;
@@ -332,50 +333,47 @@ export function FlowShareMessageEditor({ selectedTeamCode }: { selectedTeamCode:
           <div className="mb-1 flex items-center justify-center gap-4">
             <h4 className="text-lg font-semibold">{translations("Preview")}</h4>
           </div>
-          <div className="relative mx-3 flex flex-1 flex-col justify-end overflow-hidden rounded-lg bg-white p-5 before:absolute before:inset-0 before:bg-[#efeae2] before:bg-[url('https://djd7kjh9uwow0.cloudfront.net/images/whatsapp/whatsapp_chat_bg.jpg')] before:opacity-60 before:content-['']">
-            <div className="flex flex-col gap-4">
-              <SentMessageContainer>
-                <div className="flex h-full items-center pl-2.5">
-                  <div>
-                    <RenderNewLine text={startMessageForm.values.prefix} />
-                    <code
-                      style={{
-                        backgroundColor: "rgba(11, 20, 26, .05)",
-                        color: "rgba(17, 27, 33, .7)",
-                        display: "inline-block",
-                        font: "inherit",
-                        fontSize: ".9rem",
-                      }}
-                    >
-                      {generateWaSurveyIdentifier_byName(
-                        survey?.title ?? "",
-                        selectedTeamCode,
-                      ).replaceAll("`", "")}
-                    </code>
-                    <RenderNewLine text={startMessageForm.values.suffix} />
-                  </div>
-                </div>
-              </SentMessageContainer>
+          <WaWallpaper className="mx-3 justify-end gap-3 overflow-hidden rounded-lg p-4">
+            <WaBubble outgoing>
+              {startMessageForm.values.prefix}
+              {startMessageForm.values.prefix && "\n"}
+              <code className="inline-block rounded bg-black/5 px-1 font-[inherit] text-[13px] opacity-80 dark:bg-white/10">
+                {generateWaSurveyIdentifier_byName(
+                  survey?.title ?? "",
+                  selectedTeamCode,
+                ).replaceAll("`", "")}
+              </code>
+              {startMessageForm.values.suffix && `\n${startMessageForm.values.suffix}`}
+            </WaBubble>
 
-              <WaResponseMessage
-                header={templateForm.values.header}
-                footer={templateForm.values.footer}
-                body={templateForm.values.body}
-                quickReplyButtons={[templateForm.values.cta]}
-                image={getFileUrlFromKey(templateForm.values.headerImage ?? "")}
-              />
-            </div>
-          </div>
+            <WaTemplateMessage
+              aboveBody={
+                templateForm.values.headerImage ? (
+                  <img
+                    src={getFileUrlFromKey(templateForm.values.headerImage)}
+                    alt=""
+                    className="w-full rounded-md"
+                  />
+                ) : undefined
+              }
+              header={
+                templateForm.values.header
+                  ? { format: "TEXT", text: templateForm.values.header }
+                  : null
+              }
+              body={templateForm.values.body}
+              footer={templateForm.values.footer}
+              buttons={
+                templateForm.values.cta
+                  ? [{ type: "QUICK_REPLY", text: templateForm.values.cta }]
+                  : []
+              }
+            />
+          </WaWallpaper>
         </div>
       </div>
     </Card>
   );
-}
-
-function RenderNewLine({ text }: { text: string }) {
-  return text.split("\n").map((t: string, i: number) => {
-    return <p key={i}>{t}</p>;
-  });
 }
 
 interface TextInputWithLengthTrackerProps
