@@ -7,7 +7,9 @@ import { phoneSchema, wirePhoneSchema } from "../phone.js";
 /** Bulk bodies are bounded: one request is one transaction's worth of work, not an import job. */
 const MAX_BULK = 1000;
 
-export const contactGroupIdParamsSchema = z.object({ contactGroupId: z.uuid() });
+export const contactGroupIdParamsSchema = z.object({
+  contactGroupId: z.uuid().describe("The audience's id"),
+});
 
 const groupType = z.enum(["NORMAL", "LOYALTY"]);
 const tags = z

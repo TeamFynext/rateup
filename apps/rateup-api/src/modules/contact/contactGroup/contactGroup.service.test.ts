@@ -151,7 +151,7 @@ describe("getContactsByContactGroupId", () => {
     db.contactGroup.findFirst.mockResolvedValue(null);
 
     await expect(getContactsByContactGroupId("nope", ORG)).rejects.toThrow(
-      "Contact group nope not found",
+      "Audience nope not found",
     );
   });
 });
@@ -257,7 +257,7 @@ describe("getContactsByContactGroupIdWithPagination", () => {
     db.contactGroup.findFirst.mockResolvedValue(null);
 
     await expect(getContactsByContactGroupIdWithPagination("nope", ORG)).rejects.toThrow(
-      "Contact group nope not found",
+      "Audience nope not found",
     );
   });
 });
@@ -294,7 +294,7 @@ describe("addNewContactsToGroup", () => {
     db.contactGroup.findFirst.mockResolvedValue(null);
 
     await expect(addNewContactsToGroup("nope", [] as any, ORG)).rejects.toThrow(
-      "Contact group not found",
+      "Audience not found",
     );
   });
 
@@ -374,7 +374,7 @@ describe("addExistingContactsToGroup", () => {
     db.contactGroup.findFirst.mockResolvedValue(null);
 
     await expect(addExistingContactsToGroup("nope", ["c1"], false, ORG)).rejects.toThrow(
-      "Contact group not found",
+      "Audience not found",
     );
   });
 

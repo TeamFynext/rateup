@@ -172,7 +172,7 @@ describe("startContactImport", () => {
       where: { id: "g-other", team: { orgId: ORG } },
       select: { id: true },
     });
-    expect(res).toMatchObject({ status: "error", message: "Contact group not found." });
+    expect(res).toMatchObject({ status: "error", message: "Audience not found." });
   });
 
   test("names why each refused row was refused", async () => {

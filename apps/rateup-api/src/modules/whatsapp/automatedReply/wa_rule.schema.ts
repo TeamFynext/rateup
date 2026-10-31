@@ -222,7 +222,7 @@ function refineRuleChannels(
       ctx.addIssue({
         code: "custom",
         path: ["actions", index, "type"],
-        message: "A chatbot runs on one channel. Pick a single channel to start one",
+        message: "A journey runs on one channel. Pick a single channel to start one",
       });
     }
   });

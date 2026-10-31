@@ -104,7 +104,7 @@ WeeklyStatsEmail.PreviewProps = {
   periodStart: "Mon 10 Aug 2026",
   periodEnd: "Sun 16 Aug 2026",
   dashboardLink: "https://rateup.app/dashboard",
-  unsubscribeUrl: "https://rateup.app/dashboard/settings/account",
+  unsubscribeUrl: "https://rateup.app/dashboard/settings/profile",
   rows: [
     { title: "Coffee Bar — Customer Satisfaction", totalResponses: 1284, weeklyResponses: 96 },
     { title: "Post-visit NPS (WhatsApp)", totalResponses: 842, weeklyResponses: 61 },

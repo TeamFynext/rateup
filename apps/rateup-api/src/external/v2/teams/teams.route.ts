@@ -17,7 +17,7 @@ export async function externalTeamRoutes(server: FastifyInstance) {
       schema: {
         tags: ["Teams"],
         summary: "List teams",
-        description: "Newest first. A team id is what campaigns and contact groups are scoped to.",
+        description: "Newest first. A team id is what campaigns and audiences are scoped to.",
         querystring: paginationQuerySchema,
         response: { 200: pageSchema(teamSchema), ...externalErrorResponses },
       },

@@ -41,10 +41,16 @@ export const createCampaignSchema = z
     dynamicTags: z.array(z.string().max(500)).max(50).optional(),
     /** Required for a DRIP campaign. */
     dripStages: z.array(dripStageInputSchema).min(1).max(20).optional(),
-    /** Members of these groups (their WhatsApp contacts) become the audience. */
-    contactGroupIds: z.array(z.uuid()).max(1000).optional(),
-    /** Individual contacts added alongside the groups. */
-    contactIds: z.array(z.uuid()).max(1000).optional(),
+    contactGroupIds: z
+      .array(z.uuid())
+      .max(1000)
+      .optional()
+      .describe("Audience ids: their members (WhatsApp contacts) become recipients"),
+    contactIds: z
+      .array(z.uuid())
+      .max(1000)
+      .optional()
+      .describe("Individual contacts added alongside the audiences"),
   })
   .refine((b) => b.type !== CampaignType.WHATSAPP || Boolean(b.templateId), {
     path: ["templateId"],

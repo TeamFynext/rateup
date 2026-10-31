@@ -132,7 +132,7 @@ describe("dispatchNotification", () => {
       toast: true,
       desktop: false,
     });
-    expect(row.data).toMatchObject({ campaignId: "cmp-1", path: "/dashboard/campaign/cmp-1" });
+    expect(row.data).toMatchObject({ campaignId: "cmp-1", path: "/dashboard/campaigns/cmp-1" });
     expect(jobs.find((j) => j.emailData)!.emailData!.subject).toBe("Campaign completed");
   });
 

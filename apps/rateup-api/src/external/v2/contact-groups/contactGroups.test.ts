@@ -66,7 +66,9 @@ import {
   createContactGroup,
   removeContactsFromGroup,
 } from "../../../modules/contact/contactGroup/contactGroup.service.js";
+import { buildActor } from "../../../authz/actor.js";
 import { externalErrorHandler } from "../../shared/errors.js";
+import { requireScope } from "../../shared/scopes.js";
 import { externalContactGroupRoutes } from "./contactGroups.route.js";
 
 type Mock = ReturnType<typeof vi.fn>;
@@ -482,5 +484,67 @@ describe("group writes", () => {
     const res = await app.inject({ method: "DELETE", url: `/${G1}` });
     expect(res.statusCode).toBe(204);
     expect(res.payload).toBe("");
+  });
+});
+
+/** Mounted at `/audiences` as v2/index.ts does, behind a key holding `scopes`. */
+async function buildAudiencesApp(scopes: string[]) {
+  const app = Fastify();
+  app.setValidatorCompiler(validatorCompiler);
+  app.setSerializerCompiler(serializerCompiler);
+  app.setErrorHandler(externalErrorHandler);
+  app.addHook("preHandler", async (request) => {
+    (request as { user?: unknown }).user = { orgId: ORG, role: "SUPER_ADMIN" };
+    request.actor = buildActor({ kind: "apiKey", orgId: ORG, scopes: scopes as never });
+    requireScope(request);
+  });
+  await app.register(externalContactGroupRoutes, { prefix: "/audiences" });
+  await app.ready();
+  return app;
+}
+
+describe("served at /audiences", () => {
+  const base = "/audiences";
+  test("reads a group", async () => {
+    const app = await buildAudiencesApp(["contacts.read"]);
+    const res = await app.inject({ method: "GET", url: `${base}/${G1}` });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject({ id: G1, memberCount: 2 });
+  });
+
+  test("another org's group keeps its contact_group_not_found code", async () => {
+    const app = await buildAudiencesApp(["contacts.read"]);
+    const res = await app.inject({ method: "GET", url: `${base}/${G_OTHER}` });
+    expect(res.statusCode).toBe(404);
+    expect(res.json().error).toMatchObject({
+      code: "contact_group_not_found",
+      message: "No such audience",
+    });
+  });
+
+  test("lists with the pagination envelope", async () => {
+    db.contactGroup.findMany.mockResolvedValue([groupRow(G1)]);
+    const app = await buildAudiencesApp(["contacts.read"]);
+    const res = await app.inject({ method: "GET", url: `${base}?limit=1` });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject({ data: [{ id: G1 }] });
+    expect(db.contactGroup.findMany.mock.calls[0][0].take).toBe(2);
+  });
+
+  test("a read-only key cannot write", async () => {
+    const app = await buildAudiencesApp(["contacts.read"]);
+    const res = await app.inject({ method: "DELETE", url: `${base}/${G1}` });
+    expect(res.statusCode).toBe(403);
+    expect(res.json().error).toMatchObject({
+      code: "insufficient_scope",
+      details: { permission: "contacts.manage" },
+    });
+    expect(db.contactGroup.deleteMany).not.toHaveBeenCalled();
+  });
+
+  test("a contacts.manage key writes", async () => {
+    const app = await buildAudiencesApp(["contacts.manage"]);
+    const res = await app.inject({ method: "DELETE", url: `${base}/${G1}` });
+    expect(res.statusCode).toBe(204);
   });
 });

@@ -55,7 +55,7 @@ const dashboardLink = `${FRONTEND_URL}/dashboard`;
  * settings, where a signed-in owner can turn the mail off. Point it at a real
  * one-click endpoint when one exists — every caller reads it from here.
  */
-const emailPreferencesLink = `${FRONTEND_URL}/dashboard/settings/account`;
+const emailPreferencesLink = `${FRONTEND_URL}/dashboard/settings/profile`;
 
 /**
  * What a brand-new paying account should do first. Shared by the trial and
@@ -71,7 +71,7 @@ const ONBOARDING_STEPS = [
   {
     title: "Invite your team",
     description: "Bring in the people who'll read responses and follow up with customers.",
-    href: `${FRONTEND_URL}/dashboard/settings/team`,
+    href: `${FRONTEND_URL}/dashboard/settings/teams`,
   },
 ] as const;
 

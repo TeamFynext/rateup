@@ -148,7 +148,7 @@ export async function startContactImport(
       where: { id: contactGroupId, team: { orgId } },
       select: { id: true },
     });
-    if (!group) return { data: [], status: "error", message: "Contact group not found." };
+    if (!group) return { data: [], status: "error", message: "Audience not found." };
   }
 
   // Only the fields the caller ticked, and only those the org actually has.

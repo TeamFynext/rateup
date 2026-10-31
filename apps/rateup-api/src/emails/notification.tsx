@@ -40,7 +40,7 @@ export function NotificationEmail({
 NotificationEmail.PreviewProps = {
   title: "Campaign completed",
   body: "Diwali offer — repeat customers has finished sending. Its delivery numbers are ready.",
-  actionLink: "https://rateup.app/dashboard/campaign/campaign-1",
+  actionLink: "https://rateup.app/dashboard/campaigns/campaign-1",
   actionLabel: "View campaign",
   settingsLink: "https://rateup.app/dashboard/settings/notifications",
 } satisfies NotificationEmailProps;

@@ -39,12 +39,23 @@ import { readImportFormFields } from "../contactImport.form.js";
 import { startContactImport } from "../contactImport.service.js";
 import { PaginationQuery } from "../contact.schema.js";
 
+/**
+ * The legacy v1 partner API forwards to these handlers. The dashboard calls a contact group an
+ * "audience"; v1 integrations keep the wording they were built against.
+ */
+const isPartnerV1 = (reply: FastifyReply) =>
+  reply.request?.url?.startsWith("/api/external/v1/") ?? false;
+
+function forPartnerV1(reply: FastifyReply, message: string) {
+  return isPartnerV1(reply) ? message.replace(/^Audience\b/, "Contact group") : message;
+}
+
 function replyForError(reply: FastifyReply, error: unknown, context: string) {
   if (error instanceof ContactGroupNotFoundError) {
-    return reply.code(404).send({ error: error.message });
+    return reply.code(404).send({ error: forPartnerV1(reply, error.message) });
   }
   if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
-    return reply.code(404).send({ error: "Contact group not found" });
+    return reply.code(404).send({ error: forPartnerV1(reply, "Audience not found") });
   }
   log.error({ err: error }, context);
   return reply.code(500).send({ error: "Something went wrong" });
@@ -66,7 +77,7 @@ export async function getContactGroupsHandler(
 
     if (request.query.contactGroupId) {
       const res = await getContactGroupById(request.query.contactGroupId, orgId);
-      if (!res) return reply.code(404).send({ error: "Contact group not found" });
+      if (!res) return reply.code(404).send({ error: "Audience not found" });
       return reply.code(200).send(res);
     }
 
@@ -133,7 +144,9 @@ export async function createContactGroupHandler(
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       return reply.code(409).send({
-        error: "Contact group with this name already exist in the provided team",
+        error: isPartnerV1(reply)
+          ? "Contact group with this name already exist in the provided team"
+          : "An audience with this name already exists in this team",
       });
     }
     return replyForError(reply, error, "Error creating a contact group");

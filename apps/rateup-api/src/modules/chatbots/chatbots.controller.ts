@@ -29,7 +29,7 @@ import type {
   UpdateChatbotBody,
 } from "./chatbots.schema.js";
 
-const NOT_FOUND = { message: "Chatbot not found" };
+const NOT_FOUND = { message: "Journey not found" };
 
 /** The same 403 body the subscription guard sends, so the client's handling carries over. */
 function sendLocked(reply: FastifyReply, lock: ChannelLock) {
@@ -48,7 +48,7 @@ function sendLocked(reply: FastifyReply, lock: ChannelLock) {
 
 function sendUnsupported(reply: FastifyReply, platform: ChatbotPlatform, blocks: string[]) {
   return reply.code(400).send({
-    message: "This chatbot uses blocks its channel can't send",
+    message: "This journey uses blocks its channel can't send",
     platform,
     unsupportedBlocks: blocks,
   });
@@ -105,7 +105,7 @@ export async function listChatbotsHandler(
     const { platform, withGraph, search } = req.query ?? {};
     return reply.send(await listChatbots(req.user.orgId, platform, { withGraph, search }));
   } catch (error) {
-    return fail(reply, error, "list chatbots");
+    return fail(reply, error, "list journeys");
   }
 }
 
@@ -120,7 +120,7 @@ export async function getChatbotHandler(
     if (!chatbot) return reply;
     return reply.send({ data: chatbot });
   } catch (error) {
-    return fail(reply, error, "load the chatbot");
+    return fail(reply, error, "load the journey");
   }
 }
 
@@ -136,7 +136,7 @@ export async function listChatbotRulesHandler(
     if (!chatbot) return reply;
     return reply.send({ data: await chatbotRules(chatbot.id, req.user.orgId) });
   } catch (error) {
-    return fail(reply, error, "load the chatbot's rules");
+    return fail(reply, error, "load the journey's rules");
   }
 }
 
@@ -156,7 +156,7 @@ export async function createChatbotHandler(
     const { start, ...fields } = req.body;
     if (start && !startOffered(platform, start.kind)) {
       return reply.code(400).send({
-        message: `This chatbot can't start that way on ${platform}`,
+        message: `This journey can't start that way on ${platform}`,
         start: start.kind,
       });
     }
@@ -174,7 +174,7 @@ export async function createChatbotHandler(
       : undefined;
     return reply.code(201).send({ data: chatbot, ...(startRule && { startRule }) });
   } catch (error) {
-    return fail(reply, error, "create the chatbot");
+    return fail(reply, error, "create the journey");
   }
 }
 
@@ -192,7 +192,7 @@ export async function updateChatbotHandler(
 
     const { platform: requested, ...changes } = req.body;
     if (requested && requested !== platform) {
-      return reply.code(409).send({ message: "A chatbot's channel can't be changed" });
+      return reply.code(409).send({ message: "A journey's channel can't be changed" });
     }
     const blocks = unsupportedBlocks(changes.matchData?.json, platform);
     if (blocks.length) return sendUnsupported(reply, platform, blocks);
@@ -205,7 +205,7 @@ export async function updateChatbotHandler(
     });
     return reply.send({ data: chatbot });
   } catch (error) {
-    return fail(reply, error, "save the chatbot");
+    return fail(reply, error, "save the journey");
   }
 }
 
@@ -220,7 +220,7 @@ export async function cloneChatbotHandler(
     const chatbot = await cloneChatbot(source, orgId, req.body?.name);
     return reply.code(201).send({ data: chatbot });
   } catch (error) {
-    return fail(reply, error, "copy the chatbot");
+    return fail(reply, error, "copy the journey");
   }
 }
 
@@ -241,7 +241,7 @@ export async function deleteChatbotHandler(
 
     return reply.code(204).send();
   } catch (error) {
-    return fail(reply, error, "delete the chatbot");
+    return fail(reply, error, "delete the journey");
   }
 }
 
@@ -255,7 +255,7 @@ export async function initiateChatbotHandler(
     const chatbot = await loadOpen(req.params.id, orgId, reply, { write: true });
     if (!chatbot) return reply;
     if (chatbot.isActive === false) {
-      return reply.code(409).send({ message: "This chatbot is switched off" });
+      return reply.code(409).send({ message: "This journey is switched off" });
     }
     const { recipientId, accountId } = req.body;
 
@@ -278,6 +278,6 @@ export async function initiateChatbotHandler(
     log.info(`[Chatbots] Started chatbot ${chatbot.id} for ${recipientId}`);
     return reply.send({ success: true });
   } catch (error) {
-    return fail(reply, error, "start the chatbot");
+    return fail(reply, error, "start the journey");
   }
 }

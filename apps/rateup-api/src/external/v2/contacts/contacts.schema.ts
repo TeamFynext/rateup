@@ -56,7 +56,7 @@ export const contactListQuerySchema = paginationQuerySchema.extend({
     .optional()
     .describe("Case-insensitive match on name, email or phone digits"),
   labelId: z.uuid().optional().describe("Only contacts carrying this label"),
-  contactGroupId: z.uuid().optional().describe("Only members of this contact group"),
+  contactGroupId: z.uuid().optional().describe("Only members of this audience"),
 });
 
 export const contactLookupQuerySchema = z.object({ phone: phoneSchema });

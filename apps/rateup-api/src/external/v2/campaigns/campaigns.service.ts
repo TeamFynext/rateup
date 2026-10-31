@@ -230,7 +230,7 @@ async function assertCreateRefs(orgId: string, body: CreateCampaignBody) {
     });
     const missingGroups = missing(groupIds, groups);
     if (missingGroups.length) {
-      throw new ExternalApiError(404, "contact_group_not_found", "No such contact group", {
+      throw new ExternalApiError(404, "contact_group_not_found", "No such audience", {
         contactGroupIds: missingGroups,
       });
     }

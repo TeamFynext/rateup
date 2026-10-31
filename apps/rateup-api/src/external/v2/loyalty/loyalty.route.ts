@@ -215,7 +215,7 @@ export async function externalLoyaltyRoutes(server: FastifyInstance) {
         tags: TAG,
         summary: "Send the member's card on WhatsApp",
         description:
-          "Only delivers inside the customer's 24-hour WhatsApp window; outside it the " +
+          "Only delivers inside the member's 24-hour WhatsApp window; outside it the " +
           "response says `session_closed` rather than pretending to have sent anything.",
         body: S.sendCardBodySchema,
         response: { 200: S.cardSendResultSchema, ...externalErrorResponses },

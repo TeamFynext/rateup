@@ -79,7 +79,7 @@ export function SurveyResponseEmail({
 SurveyResponseEmail.PreviewProps = {
   surveyTitle: "Coffee Bar — Customer Satisfaction",
   resultsLink: "https://rateup.app/dashboard/surveys/abc?tab=Result",
-  unsubscribeUrl: "https://rateup.app/dashboard/settings/account",
+  unsubscribeUrl: "https://rateup.app/dashboard/settings/profile",
   answers: [
     {
       question: "How would you rate your visit?",

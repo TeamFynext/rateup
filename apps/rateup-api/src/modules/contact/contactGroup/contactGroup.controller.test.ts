@@ -145,7 +145,7 @@ describe("getContactGroupsHandler", () => {
 
     await getContactGroupsHandler(request({ query: { contactGroupId: "g-other-org" } }), rep);
 
-    expect(answer(rep)).toEqual({ code: 404, body: { error: "Contact group not found" } });
+    expect(answer(rep)).toEqual({ code: 404, body: { error: "Audience not found" } });
   });
 
   // The org check now runs before every branch, not just the fallback.
@@ -237,6 +237,19 @@ describe("createContactGroupHandler", () => {
     await createContactGroupHandler(request({ body: { name: "VIPs" } }), rep);
 
     expect(rep.send).toHaveBeenCalledTimes(1);
+    expect(answer(rep)).toEqual({
+      code: 409,
+      body: { error: "An audience with this name already exists in this team" },
+    });
+  });
+
+  test("keeps the v1 partner API's wording for a duplicate name", async () => {
+    (createContactGroup as Mock).mockRejectedValue(new FakePrismaKnownError("P2002"));
+    const rep = reply();
+    rep.request = { url: "/api/external/v1/org-1/contact-groups" };
+
+    await createContactGroupHandler(request({ body: { name: "VIPs" } }), rep);
+
     expect(answer(rep)).toEqual({
       code: 409,
       body: { error: "Contact group with this name already exist in the provided team" },
@@ -368,13 +381,25 @@ describe("addExistingContactsToGroupHandler", () => {
 
   test("reports a missing group as a 404", async () => {
     (addExistingContactsToGroup as Mock).mockRejectedValue(
-      new ContactGroupNotFoundError("Contact group not found"),
+      new ContactGroupNotFoundError("Audience not found"),
     );
     const rep = reply();
 
     await addExistingContactsToGroupHandler(request({ params: { contactGroupId: "g1" } }), rep);
 
-    expect(answer(rep)).toEqual({ code: 404, body: { error: "Contact group not found" } });
+    expect(answer(rep)).toEqual({ code: 404, body: { error: "Audience not found" } });
+  });
+
+  test("tells a v1 partner integration a missing group is a contact group", async () => {
+    (addExistingContactsToGroup as Mock).mockRejectedValue(
+      new ContactGroupNotFoundError("Audience g1 not found"),
+    );
+    const rep = reply();
+    rep.request = { url: "/api/external/v1/org-1/contact-groups/g1/contacts" };
+
+    await addExistingContactsToGroupHandler(request({ params: { contactGroupId: "g1" } }), rep);
+
+    expect(answer(rep)).toEqual({ code: 404, body: { error: "Contact group g1 not found" } });
   });
 });
 

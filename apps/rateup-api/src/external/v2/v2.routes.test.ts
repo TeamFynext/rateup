@@ -1,6 +1,6 @@
 import { documentIdempotencyHeader } from "../shared/idempotency.js";
 import { beforeAll, describe, expect, test, vi } from "vitest";
-import Fastify, { type FastifyInstance, type RouteOptions } from "fastify";
+import Fastify, { type RouteOptions } from "fastify";
 import { serializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
 
 /**
@@ -42,24 +42,17 @@ import { buildActor } from "../../authz/actor.js";
 import { permissionsForFeatures } from "../../authz/apiKeyFeatures.js";
 import { requireScope } from "../shared/scopes.js";
 import { externalErrorResponses } from "../shared/errors.js";
-import { externalSurveyRoutes } from "./surveys/surveys.route.js";
-import { externalContactRoutes } from "./contacts/contacts.route.js";
-import { externalContactGroupRoutes } from "./contact-groups/contactGroups.route.js";
-import { externalTeamRoutes } from "./teams/teams.route.js";
-import { externalCampaignRoutes } from "./campaigns/campaigns.route.js";
-import { externalWaTemplateRoutes } from "./wa-templates/waTemplates.route.js";
-import { externalLoyaltyRoutes } from "./loyalty/loyalty.route.js";
-import { EXTERNAL_V2_PREFIX } from "./index.js";
+import { EXTERNAL_V2_PREFIX, registerV2Modules } from "./index.js";
 
-/** As `externalV2Routes` in index.ts mounts them. */
-const MODULES: [string, (server: FastifyInstance) => Promise<void>][] = [
-  ["/surveys", externalSurveyRoutes],
-  ["/contacts", externalContactRoutes],
-  ["/contact-groups", externalContactGroupRoutes],
-  ["/teams", externalTeamRoutes],
-  ["/campaigns", externalCampaignRoutes],
-  ["/wa/templates", externalWaTemplateRoutes],
-  ["/loyalty", externalLoyaltyRoutes],
+/** The prefixes `registerV2Modules` in index.ts mounts, each expected to carry routes. */
+const MODULES = [
+  "/surveys",
+  "/contacts",
+  "/audiences",
+  "/teams",
+  "/campaigns",
+  "/wa/templates",
+  "/loyalty",
 ];
 
 const ROOT = EXTERNAL_V2_PREFIX;
@@ -81,7 +74,7 @@ beforeAll(async () => {
     async (v2) => {
       // What registerPartnerHooks installs for route options; its request hooks are not needed.
       v2.addHook("onRoute", documentIdempotencyHeader);
-      for (const [prefix, plugin] of MODULES) await v2.register(plugin, { prefix });
+      registerV2Modules(v2);
     },
     { prefix: ROOT },
   );
@@ -107,7 +100,7 @@ const each = (check: (r: RouteOptions) => void) => {
 
 describe("partner API route registry", () => {
   test("every module registered routes", () => {
-    for (const [prefix] of MODULES) {
+    for (const prefix of MODULES) {
       expect(
         own().some((r) => r.url.startsWith(`${ROOT}${prefix}`)),
         prefix,
@@ -196,5 +189,38 @@ describe("partner API route registry", () => {
       })
       .map((r) => `${r.method} ${r.url}`);
     expect(passed).toEqual([]);
+  });
+});
+
+describe("audiences", () => {
+  const AUDIENCES = `${ROOT}/audiences`;
+
+  test("are served only at /audiences", () => {
+    expect(own().some((r) => r.url.startsWith(AUDIENCES))).toBe(true);
+    expect(own().filter((r) => r.url.startsWith(`${ROOT}/contact-groups`))).toEqual([]);
+  });
+
+  test("need contacts.read to read and contacts.manage to write", () => {
+    const actor = (scopes: string[]) =>
+      buildActor({
+        kind: "apiKey",
+        orgId: "11111111-1111-1111-1111-111111111111",
+        scopes: scopes as never,
+      });
+    const passes = (r: RouteOptions, scopes: string[]) => {
+      try {
+        requireScope({ routeOptions: { config: r.config }, actor: actor(scopes) } as never);
+        return true;
+      } catch {
+        return false;
+      }
+    };
+    each((r) => {
+      if (!r.url.startsWith(AUDIENCES)) return;
+      const read = methods(r).every((m) => m === "GET");
+      expect(passes(r, ["contacts.read"]), "contacts.read").toBe(read);
+      expect(passes(r, ["contacts.manage"]), "contacts.manage").toBe(!read);
+      expect(passes(r, ["campaigns.read"]), "unrelated scope").toBe(false);
+    });
   });
 });

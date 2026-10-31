@@ -11,6 +11,8 @@ import { seedPlans } from "./tasks/seedPlans.js";
 import { enableFreeCommerce } from "./tasks/enableFreeCommerce.js";
 import { capFreeOrders } from "./tasks/capFreeOrders.js";
 import { backfillOrgModules } from "./tasks/backfillOrgModules.js";
+import { renamePlanDescriptions } from "./tasks/renamePlanDescriptions.js";
+import { rewriteDripEmailLinks } from "./tasks/rewriteDripEmailLinks.js";
 
 export interface TaskDefinition {
   id: string;
@@ -134,10 +136,10 @@ export const MAINTENANCE_TASKS: TaskDefinition[] = [
     id: "backfill-org-modules",
     title: "Choose each org's visible features",
     description:
-      "For every org that has never chosen its features, keeps Loyalty, Commerce, Web " +
-      "Forms, QR & Links and Meta AI Agent visible only where the org already has data in " +
+      "For every org that has never chosen its features, keeps Loyalty, Commerce, " +
+      "Surveys, QR & Links and Meta AI Agent visible only where the org already has data in " +
       "them, and hides the rest from its navigation. Nothing is disabled — an admin turns a " +
-      "feature back on from Features in the menu. Orgs that have already chosen are skipped, so " +
+      "feature back on from Customize Menu. Orgs that have already chosen are skipped, so " +
       "it is safe to re-run.",
     destructive: false,
     run: backfillOrgModules,
@@ -160,6 +162,30 @@ export const MAINTENANCE_TASKS: TaskDefinition[] = [
       "without a cap. Leaves a cap staff already set alone. Safe to re-run.",
     destructive: false,
     run: capFreeOrders,
+  },
+  {
+    id: "rename-plan-descriptions",
+    title: "Update plan descriptions to the new feature names",
+    description:
+      "Rewrites plan description lines whose wording changed in the catalog — for now " +
+      '"Automations, templates & chatbots" becomes "Automations, templates & journeys". ' +
+      "Plan rows only copy the catalog when a tier is seeded, so live plans keep the old " +
+      "wording until this runs. Only exact matches change, so a description staff edited by " +
+      "hand is left alone. Run it once after the API with the rename is live. Safe to re-run.",
+    destructive: false,
+    run: renamePlanDescriptions,
+  },
+  {
+    id: "rewrite-drip-email-links",
+    title: "Update links in edited onboarding emails",
+    description:
+      "Onboarding emails that staff edited keep the links typed into them, so one saved before " +
+      "the dashboard renames still points at an old address (they redirect, but read wrong). " +
+      "Rewrites those links to the new addresses, e.g. /dashboard/automation becomes " +
+      "/dashboard/automation/rules; the rest of each email is left as saved. Emails nobody " +
+      "edited already use the new links. Preview first. Safe to re-run.",
+    destructive: false,
+    run: rewriteDripEmailLinks,
   },
 ];
 
