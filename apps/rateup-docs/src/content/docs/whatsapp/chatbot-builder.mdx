@@ -1,15 +1,15 @@
 ---
-title: "Chatbot Builder"
-description: The canvas where a chatbot is actually built — nodes, connections, the toolbar, validation, preview and settings.
+title: "Journey Builder"
+description: The canvas where a journey is actually built — nodes, connections, the toolbar, validation, preview and settings.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
-Opening a chatbot from the [Chatbots](/whatsapp/chatbots) list opens the **builder**: a canvas of
-connected nodes, one node per thing the bot says or does.
+Opening a journey from the [Journeys](/whatsapp/chatbots) list opens the **builder**: a canvas of
+connected nodes, one node per thing the journey says or does.
 
-<ScreenShot src="/docs/screenshots/whatsapp/chatbot-builder.png" alt="The chatbot builder" />
+<ScreenShot src="/docs/screenshots/whatsapp/chatbot-builder.png" alt="The journey builder" />
 
 ---
 
@@ -17,10 +17,10 @@ connected nodes, one node per thing the bot says or does.
 
 | # | Region | What it is |
 |---|--------|-----------|
-| 1 | **Canvas** | The bot itself — nodes and the arrows between them |
+| 1 | **Canvas** | The journey itself — nodes and the arrows between them |
 | 2 | **Toolbar** (top centre) | Save, validate, undo/redo, auto layout, settings |
 | 3 | **Components panel** (right) | The nodes you can add. Becomes the **node editor** when you select a node |
-| 4 | **Controls** (bottom left) and **minimap** (bottom right) | Zoom in and out, fit to view, lock the canvas — and a map of a bot too big for one screen |
+| 4 | **Controls** (bottom left) and **minimap** (bottom right) | Zoom in and out, fit to view, lock the canvas — and a map of a journey too big for one screen |
 
 ---
 
@@ -55,12 +55,12 @@ Click **Save** in the toolbar.
 
 | Control | Does |
 |---------|------|
-| **Save** | Writes the bot. Disabled — *"All changes saved"* — when there is nothing to write |
+| **Save** | Writes the journey. Disabled — *"All changes saved"* — when there is nothing to write |
 | **Validate flow** | Checks the structure and reports the first problem it finds |
 | **Undo** / **Redo** | `Ctrl`/`Cmd` + `Z` and `Ctrl` + `Y` also work |
 | **Auto layout** | Re-arranges every node — **Vertical** or **Horizontal** — then fits the view |
 | **Settings** | Opens **Automation settings** (below) |
-| **Preview** (top right) | Runs the bot in a phone frame |
+| **Preview** (top right) | Runs the journey in a phone frame |
 
 ---
 
@@ -82,7 +82,7 @@ hidden, so an Instagram automation and a WhatsApp one show different lists.
 
 | Node | What it needs, and what to watch |
 |------|----------------------------------|
-| **Start** | Where the bot begins. **Start Message** is read-only — it shows the keyword that triggers this bot. Exactly one per bot |
+| **Start** | Where the journey begins. **Start Message** is read-only — it shows the keyword that triggers this journey. Exactly one per journey |
 | **Text** | Up to **1024** characters |
 | **Reply Buttons** | A body, an optional header and footer (footer max **60** characters), and up to **3** buttons |
 | **List** | A **Button Text**, then sections with rows — each row has a title and an optional description |
@@ -98,7 +98,7 @@ hidden, so an Instagram automation and a WhatsApp one show different lists.
 
 ## Validating Before You Save
 
-**Validate flow** answers a question the canvas cannot: is this bot actually runnable? It reports the
+**Validate flow** answers a question the canvas cannot: is this journey actually runnable? It reports the
 first thing that is wrong.
 
 | Message | Meaning |
@@ -109,12 +109,12 @@ first thing that is wrong.
 | *"Only one start node is allowed in the flow."* | Shown while you drag a second one in |
 | *"First node should be a Lead Node."* | A lead automation has to open with **Lead** |
 | *"Only one Lead node is allowed"* | Delete the spare one |
-| *"Lead node is only allowed lead automation"* | Remove the **Lead** node from an ordinary bot |
+| *"Lead node is only allowed lead automation"* | Remove the **Lead** node from an ordinary journey |
 
 A clean structure reports *"Flow validation successful!"*.
 
 <Callout type="info">
-  Validation checks the shape of the bot, not its wording or its dead ends. A bot can validate
+  Validation checks the shape of the journey, not its wording or its dead ends. A journey can validate
   perfectly and still trap a customer in a loop — that is what the preview is for.
 </Callout>
 
@@ -122,7 +122,7 @@ A clean structure reports *"Flow validation successful!"*.
 
 ## Preview
 
-**Preview** runs the bot in a phone frame, following the same arrows a customer would.
+**Preview** runs the journey in a phone frame, following the same arrows a customer would.
 
 Walk it end to end and check every button leads somewhere, no path dead-ends, and the customer can
 always reach a person.
@@ -135,8 +135,8 @@ The **Settings** button opens **Automation settings**:
 
 | Field | Notes |
 |-------|-------|
-| **Chatbot Name** | Required, at least 3 characters. An internal name — customers never see it |
-| **WhatsApp Account** | WhatsApp chatbots only. Optional — only needed when the bot has a lead step that sends messages from a specific number |
+| **Journey Name** | Required, at least 3 characters. An internal name — customers never see it |
+| **WhatsApp Account** | WhatsApp journeys only. Optional — only needed when the journey has a lead step that sends messages from a specific number |
 
 Closing with unsaved edits asks **Discard Changes?** — **Keep Editing** or **Discard**.
 
@@ -148,7 +148,7 @@ Closing with unsaved edits asks **Discard Changes?** — **Keep Editing** or **D
 |---------|-------|-----|
 | **Save** is greyed out | There is nothing to save | Everything is already written |
 | Edits disappeared after a reload | They were never saved | Save before leaving; the builder does not auto-save |
-| A node cannot be dropped | The channel does not support it | Check the group is offered for this bot's platform |
+| A node cannot be dropped | The channel does not support it | Check the group is offered for this journey's platform |
 | Customers never reach a node | Nothing connects to it | Drag an arrow into it, then validate |
 | The canvas is unreadable | Nodes have drifted | **Auto layout → Vertical** |
 
@@ -156,7 +156,7 @@ Closing with unsaved edits asks **Discard Changes?** — **Keep Editing** or **D
 
 ## Related Pages
 
-- [Chatbots](/whatsapp/chatbots) — creating, cloning and managing them
-- [Flow Editor](/whatsapp/flow-editor) — building the flows a bot can open
-- [Templates](/whatsapp/templates)
-- [Instagram Chatbots](/instagram/chatbots) — the same builder on Instagram
+- [Journeys](/whatsapp/chatbots) — creating, cloning and managing them
+- [Flow Editor](/whatsapp/flow-editor) — building the flows a journey can open
+- [Message Templates](/whatsapp/templates)
+- [Instagram Journeys](/instagram/chatbots) — the same builder on Instagram

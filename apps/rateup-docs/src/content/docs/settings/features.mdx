@@ -1,23 +1,23 @@
 ---
-title: "Features"
-description: Choose which optional features — Pipeline, Loyalty, Commerce, Web Forms, QR & Links and Meta AI Agent — show in your organisation's menu.
+title: "Customize Menu"
+description: Choose which optional features — Pipelines, Loyalty, Commerce, Surveys, QR & Links and Meta AI Agent — show in your organisation's menu.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
-**Features** lists everything RateUp offers and lets an admin choose which optional features show in
+**Customize Menu** lists everything RateUp offers and lets an admin choose which optional features show in
 the menu for the whole organisation. A feature you turn off is only hidden: nothing in it is deleted,
 and nothing you built on it stops running.
 
-<ScreenShot src="/docs/screenshots/settings/features.png" alt="/dashboard/features as an admin at 1440×900: the 'Which features will you use?' heading, the six feature cards in two columns (some ticked, one with a 'Not on your plan' badge), the 'Always included' strip, and the sticky footer with '# features selected', Discard and Save changes" />
+<ScreenShot src="/docs/screenshots/settings/features.png" alt="/dashboard/customize-menu as an admin at 1440×900: the 'Which features will you use?' heading, the six feature cards in two columns (some ticked, one with a 'Not on your plan' badge), the 'Always included' strip, and the sticky footer with '# features selected', Discard and Save changes" />
 
 ---
 
-## Open Features
+## Open Customize Menu
 
-Click the **grid** icon (**Features**) at the bottom of the sidebar rail, between the notification
-bell and your avatar. It opens `/dashboard/features`. Everyone in the organisation can open it.
+Click the **grid** icon (**Customize Menu**) at the bottom of the sidebar rail, between the notification
+bell and your avatar. It opens `/dashboard/customize-menu`. Everyone in the organisation can open it.
 
 The old address `/dashboard/settings/features` redirects there.
 
@@ -27,11 +27,11 @@ The old address `/dashboard/settings/features` redirects there.
 
 | Feature | What it is | Needs a plan that includes it |
 |---------|------------|-------------------------------|
-| [**Pipeline**](/pipeline) | *"Track leads and work on boards, from first message to closed deal."* | No |
+| [**Pipelines**](/pipeline) | *"Track leads and work on boards, from first message to closed deal."* | No |
 | [**Loyalty**](/loyalty) | *"Points, tiers and rewards your customers collect over WhatsApp."* | Yes |
 | [**Commerce**](/commerce) | *"Catalogs, orders and payments inside the chat."* | Yes |
-| [**Web Forms**](/web-forms) | *"Surveys and feedback forms you share as a link."* | Yes |
-| [**QR & Links**](/qr-studio) | *"QR codes and link pages that open a chat with you."* | No |
+| [**Surveys**](/web-forms) | *"Surveys and feedback forms you share as a link."* | Yes |
+| [**QR & Links**](/qr-studio) | *"QR codes and link-in-bio pages that open a chat with you."* | No |
 | [**Meta AI Agent**](/meta-agent/overview) | *"Meta's AI agent answering customers on your WhatsApp number."* | Yes |
 
 Each card also explains the feature in a sentence and lists three things a team does with it. A
@@ -39,7 +39,7 @@ feature your plan does not include carries a **Not on your plan** badge. You can
 opening it shows the plan-upgrade screen.
 
 Under the cards, **Always included** lists what cannot be turned off: **Inbox**, **Contacts**,
-**Campaigns**, **Automation**, **WhatsApp templates, chatbots and flows**, **Instagram and
+**Campaigns**, **Automation Rules**, **WhatsApp templates, journeys and flows**, **Instagram and
 Messenger** and **Analytics**.
 
 ---
@@ -48,7 +48,7 @@ Messenger** and **Analytics**.
 
 <Steps>
 <Step>
-Open **Features**. If you are allowed to change it, the page is headed *"Which features will you
+Open **Customize Menu**. If you are allowed to change it, the page is headed *"Which features will you
 use?"* and every card has a tick box.
 </Step>
 <Step>
@@ -79,14 +79,14 @@ organization. Ask an admin to turn on any of the others."*
 |-------|--------|
 | **Sidebar** | The feature's entry disappears for everyone |
 | **Its pages** | Opening one by URL or bookmark shows, for example, *"Loyalty is turned off"*. Admins get a **Turn on Loyalty** button there; everyone else is told *"Ask an admin to turn on Loyalty from Features in the menu."* |
-| **Inbox** | With **Pipeline** off, conversation rows lose their stage chip and the ticket panel loses its board section. With **Commerce** off, the ticket panel's orders section is hidden |
+| **Inbox** | With **Pipelines** off, conversation rows lose their stage chip and the ticket panel loses its board section. With **Commerce** off, the ticket panel's orders section is hidden |
 | **Members & Roles** | The roles table and **Fine-tune abilities** hide the abilities for that feature, with *"Abilities for features your organization has turned off are hidden."* and a **Manage features** link. Fine-tuned abilities you set earlier are kept |
 | **Setup guide** | With **Loyalty** off, the guide's loyalty step is not offered |
 | **Your data and automations** | Untouched. Programmes, boards, products, forms and codes stay, and automations, reminders and scheduled jobs that rely on the feature keep running |
 
 <Callout type="warn">
   Turning a feature off does **not** stop it. A loyalty programme keeps awarding points and sending
-  its messages, and published QR codes and link pages keep working. To stop a feature, switch it off
+  its messages, and published QR codes and link-in-bio pages keep working. To stop a feature, switch it off
   inside the feature itself. Turning it off here only hides it.
 </Callout>
 
@@ -99,9 +99,9 @@ starting set:
 
 | Signup answer | Turns on |
 |---------------|----------|
-| *(always)* | **Pipeline** |
+| *(always)* | **Pipelines** |
 | **Loyalty inside chat** | **Loyalty** |
-| **Surveys on the web** | **Web Forms** |
+| **Surveys on the web** | **Surveys** |
 | **Sell products on WhatsApp & Instagram** | **Commerce** |
 
 Everything else starts off, including **QR & Links** and **Meta AI Agent**. If you skipped every
@@ -113,14 +113,14 @@ Connecting a Shopify or WooCommerce store in [Integrations](/settings/integratio
 
 ---
 
-## Features, Roles and Teams
+## Customize Menu, Roles and Teams
 
 Three different settings decide what someone sees. They stack: an entry shows only if all of them
 allow it.
 
 | Setting | Decides | Applies to |
 |---------|---------|-----------|
-| **Features** (this page) | Whether a feature is in the menu at all | The whole organisation |
+| **Customize Menu** (this page) | Whether a feature is in the menu at all | The whole organisation |
 | [**Members & Roles**](/settings/users) | What a person may do in each feature — read, manage, export | One person, through their role and fine-tuned abilities |
 | [**Teams → Channel Access**](/settings/teams) | Which channels' conversations a team sees | The members of that team |
 

@@ -1,6 +1,6 @@
 ---
 title: "Messages"
-description: Everything your programme says on WhatsApp — automatic messages, keyword replies, the chatbot menu and the templates behind them.
+description: Everything your programme says on WhatsApp — automatic messages, keyword replies, the journey menu and the templates behind them.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
@@ -8,7 +8,7 @@ import ScreenShot from "@/components/Screenshot";
 
 **Messages** (`/dashboard/loyalty/messages`) is *"Everything your program says on WhatsApp — what
 sends automatically, how it replies, and the templates behind them."* It has four tabs:
-**Automatic**, **Replies**, **Chatbot** and **Templates**. The sidebar entry counts templates still
+**Automatic**, **Replies**, **Journey** and **Templates**. The sidebar entry counts templates still
 awaiting Meta. *When* scheduled messages send is set on [Reminders](/loyalty/reminders).
 
 <ScreenShot src="/docs/screenshots/loyalty/messages-automatic.png" alt="Loyalty Messages, Automatic tab: the live / awaiting Meta / not written count and the New customers messages" />
@@ -61,7 +61,7 @@ Click **Save and submit to Meta**. *"Submitted to Meta — usually approved with
 </Steps>
 
 For an image, a footer or buttons, click **Open in WhatsApp template editor** — the same editor as
-[WhatsApp › Templates](/whatsapp/template-editor). Nothing is saved until you save there; a draft you
+[Meta › WhatsApp › Templates](/whatsapp/template-editor). Nothing is saved until you save there; a draft you
 started shows on the card, ready to carry on. A message with an image, footer or buttons can only be
 edited in that editor. **Advanced** lets you pick an existing loyalty template instead.
 
@@ -116,7 +116,7 @@ elsewhere in your inbox."* Pick another word.
 
 ## Turn Replies Into a Tappable Menu
 
-The **Chatbot** tab turns your keyword replies into a WhatsApp list, so customers pick from a menu
+The **Journey** tab turns your keyword replies into a WhatsApp list, so customers pick from a menu
 instead of having to know the words. *"Every keyword below becomes a row customers can tap."*
 
 <Steps>
@@ -128,14 +128,13 @@ Pick the **WhatsApp account** and a **Trigger word** customers text to open the 
 of your keywords.
 </Step>
 <Step>
-Click **Create the chatbot**. This *"Adds a chatbot under WhatsApp › Chatbot, and a rule that opens
-it."*
+Click **Create the journey**. This *"Adds a journey under Journeys, and a rule that opens it."*
 </Step>
 </Steps>
 
 When you change your keywords later, the tab says *"The menu is behind your keywords"* — click
-**Update the menu**. **Open in flow editor** opens the chatbot in the
-[chatbot builder](/whatsapp/chatbots).
+**Update the menu**. **Open in journey builder** opens the journey in the
+[journey builder](/whatsapp/chatbot-builder).
 
 ---
 
@@ -173,5 +172,5 @@ WhatsApp too.
 
 - [Reminders](/loyalty/reminders) — when scheduled messages send
 - [WhatsApp Template Editor](/whatsapp/template-editor)
-- [WhatsApp Chatbots](/whatsapp/chatbots)
+- [WhatsApp Journeys](/whatsapp/chatbots)
 - [Settings](/loyalty/settings) — the sending number and the 24-hour switch

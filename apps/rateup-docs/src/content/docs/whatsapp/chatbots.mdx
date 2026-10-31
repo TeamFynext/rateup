@@ -1,25 +1,29 @@
 ---
-title: "Chatbots"
+title: "Journeys"
 description: Automated WhatsApp conversations that answer common questions and hand over when they cannot — start one from a ready-made example or a blank canvas.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
-A **chatbot** answers a WhatsApp conversation automatically — handling the questions you get
-constantly, and passing anything else to a person. **WhatsApp → Chatbot** lists every WhatsApp
-chatbot you have built.
+A **journey** answers a WhatsApp conversation automatically — handling the questions you get
+constantly, and passing anything else to a person. **Automation → Journeys** in the sidebar lists every
+journey you have built.
 
-<ScreenShot src="/docs/screenshots/whatsapp/chatbots-list.png" alt="Your WhatsApp chatbots" />
+Journeys were previously called Chatbots. A journey is a scripted, step-by-step conversation you
+draw in a visual builder — it follows the path you set and does not use AI. For an AI agent that
+answers in its own words, see [Meta AI Agent](/meta-agent).
 
-Instagram and Messenger have chatbots of their own, built in the same editor — see
-[Instagram Chatbots](/instagram/chatbots) and [Messenger Chatbots](/messenger/chatbots).
+<ScreenShot src="/docs/screenshots/whatsapp/chatbots-list.png" alt="Your WhatsApp journeys" />
+
+Instagram and Messenger have journeys of their own, built in the same editor — see
+[Instagram Journeys](/instagram/chatbots) and [Messenger Journeys](/messenger/chatbots).
 
 ---
 
-## Create a Chatbot
+## Create a Journey
 
-Click **Create Chatbot**. A short wizard opens — *"Start from a ready-made example or a blank
+Click **Create Journey**. A short wizard opens — *"Start from a ready-made example or a blank
 canvas. You can change everything later."*
 
 <Steps>
@@ -30,22 +34,22 @@ one of the examples below. Filter them with the chips along the top (**All**, **
 you can see the conversation before you create anything.
 </Step>
 <Step>
-Click **Next**. **Details.** The **Chatbot Name** is filled in from the example; change it if you
+Click **Next**. **Details.** The **Journey Name** is filled in from the example; change it if you
 like. It must be at least 3 characters and is only ever seen by your team.
 </Step>
 <Step>
 Optionally pick an **Account** — *"Only needed when the flow sends messages from a specific WhatsApp
-number."* The **How it starts** box tells you what usually starts this kind of bot.
+number."* The **How it starts** box tells you what usually starts this kind of journey.
 </Step>
 <Step>
-Click **Create Chatbot**. The [builder](/whatsapp/chatbot-builder) opens with the example already
+Click **Create Journey**. The [builder](/whatsapp/chatbot-builder) opens with the example already
 laid out as nodes. Edit the wording, then **Save**.
 </Step>
 </Steps>
 
-<ScreenShot src="/docs/screenshots/whatsapp/chatbot-wizard-examples.png" alt="Create Chatbot wizard, Starting point step, with Welcome menu playing in the phone preview" />
+<ScreenShot src="/docs/screenshots/whatsapp/chatbot-wizard-examples.png" alt="Create Journey wizard, Starting point step, with Welcome menu playing in the phone preview" />
 
-When you have no chatbots yet, the empty list offers three examples and **Start from scratch** as
+When you have no journeys yet, the empty list offers three examples and **Start from scratch** as
 buttons, so you can open the wizard with a starting point already chosen.
 
 ---
@@ -63,35 +67,35 @@ buttons, so you can open the wizard with a starting point already chosen.
 | **Lead capture** | Lead capture | Asks for a name and what they need, then hands the lead to your team |
 | **Talk to a person** | Handoff | Lets people ask for a person and assigns the chat to your team |
 
-Examples carry placeholder wording and links (`https://example.com/…`). Replace them before the bot
+Examples carry placeholder wording and links (`https://example.com/…`). Replace them before the journey
 goes live — a customer who taps **Visit store** and lands on `example.com` is worse off than one who
-got no bot at all.
+got no journey at all.
 
 ---
 
 ## Make It Start
 
-A chatbot does nothing on its own. An [automation rule](/automation) starts it, with the
-**Trigger Chatbot** action.
+A journey does nothing on its own. An [automation rule](/automation) starts it, with the
+**Trigger Journey** action.
 
-When you create a chatbot from an example, the builder opens with a **Set up the trigger** card at
+When you create a journey from an example, the builder opens with a **Set up the trigger** card at
 the bottom — for example *"Starts when someone sends a keyword like “agent” or “human”."* Click
 **Create the rule** to open a new automation with the platform and the **Message Received** trigger
 already filled in. Dismiss the card with **×** and it does not come back.
 
-<ScreenShot src="/docs/screenshots/whatsapp/chatbot-trigger-prompt.png" alt="Chatbot builder after creating from Talk to a person, with the Set up the trigger card" />
+<ScreenShot src="/docs/screenshots/whatsapp/chatbot-trigger-prompt.png" alt="Journey builder after creating from Talk to a person, with the Set up the trigger card" />
 
 <Callout type="warn">
-  Creating the chatbot is not the same as switching it on. Until a rule with **Trigger Chatbot**
+  Creating the journey is not the same as switching it on. Until a rule with **Trigger Journey**
   points at it, no customer ever reaches it — and the **Set up the trigger** card only appears once.
-  If you dismissed it, create the rule from [Automation](/automation) yourself.
+  If you dismissed it, create the rule from [Automation Rules](/automation) yourself.
 </Callout>
 
 ---
 
 ## Testing Before You Go Live
 
-The builder's **Preview** runs the bot as a customer would experience it. Walk it end to end and
+The builder's **Preview** runs the journey as a customer would experience it. Walk it end to end and
 check:
 
 - Every button leads somewhere real
@@ -100,7 +104,7 @@ check:
 - The wording sounds like your brand
 
 <Callout type="warn">
-  The single worst chatbot failure is the loop with no exit. Before you switch the rule on, try
+  The single worst journey failure is the loop with no exit. Before you switch the rule on, try
   deliberately giving unexpected answers and confirm you can still get out.
 </Callout>
 
@@ -108,17 +112,17 @@ check:
 
 ## Handover to an Agent
 
-When the bot reaches an **Assign** step, the conversation becomes a normal ticket in the
-[Inbox](/inbox). The bot's messages are already in the thread, so the agent has the context and the
+When the journey reaches an **Assign** step, the conversation becomes a normal ticket in the
+[Inbox](/inbox). The journey's messages are already in the thread, so the agent has the context and the
 customer does not repeat themselves.
 
 ---
 
-## Manage Your Chatbots
+## Manage Your Journeys
 
 | Action | Notes |
 |--------|-------|
-| **Search chatbots...** | Filters the list by name |
+| **Search journeys...** | Filters the list by name |
 | **Sort** | Order the cards, newest first by default |
 | **Refresh** | Reloads the list |
 | **Clone** | From a card's **More actions** menu. Asks for a name, prefilled *"Copy of …"* |
@@ -135,17 +139,17 @@ customer does not repeat themselves.
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| **Create Chatbot** stays disabled on Details | The name is shorter than 3 characters | Type a longer name |
-| The bot never runs | No rule starts it | Add a rule with **Trigger Chatbot** in [Automation](/automation) |
+| **Create Journey** stays disabled on Details | The name is shorter than 3 characters | Type a longer name |
+| The journey never runs | No rule starts it | Add a rule with **Trigger Journey** in [Automation Rules](/automation) |
 | Customers see `example.com` links | Example wording was not replaced | Edit the nodes in the builder and save |
 
 ---
 
 ## Related Pages
 
-- [Chatbot Builder](/whatsapp/chatbot-builder) — the canvas in detail
-- [Automation](/automation) — the rules that start a chatbot
-- [Instagram Chatbots](/instagram/chatbots)
-- [Messenger Chatbots](/messenger/chatbots)
-- [Flows](/whatsapp/flows)
+- [Journey Builder](/whatsapp/chatbot-builder) — the canvas in detail
+- [Automation Rules](/automation) — the rules that start a journey
+- [Instagram Journeys](/instagram/chatbots)
+- [Messenger Journeys](/messenger/chatbots)
+- [WhatsApp Flows](/whatsapp/flows)
 - [Inbox](/inbox)

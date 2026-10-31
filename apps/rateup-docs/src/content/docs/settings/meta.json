@@ -2,13 +2,14 @@
   "pages": [
     "index",
     "account",
-    "features",
+    "notifications",
+    "security",
     "users",
     "teams",
-    "notifications",
     "channels",
     "integrations",
-    "security",
-    "billing"
+    "billing",
+    "[Audit log](/analytics/team-activity)",
+    "features"
   ]
 }

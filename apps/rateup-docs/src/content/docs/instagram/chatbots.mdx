@@ -1,22 +1,24 @@
 ---
-title: "Instagram Chatbots"
+title: "Instagram Journeys"
 description: Build automated DM conversations — from an example or a blank canvas — that carry on when people tap a reply or answer a question.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
-An **Instagram chatbot** handles a DM conversation automatically — answering the questions you get
+An **Instagram journey** handles a DM conversation automatically — answering the questions you get
 constantly, collecting details, rewarding followers, and handing over to a person when it cannot.
-They live on the **Chatbots** tab of **Instagram**.
+They live on the **Journeys** tab of **Instagram**.
 
-<ScreenShot src="/docs/screenshots/instagram/chatbots.png" alt="Instagram Chatbots tab with Create Chatbot, refresh, search, sort and chatbot cards" />
+Journeys were previously called Chatbots.
+
+<ScreenShot src="/docs/screenshots/instagram/chatbots.png" alt="Instagram Journeys tab with Create Journey, refresh, search, sort and journey cards" />
 
 ---
 
-## Create a Chatbot
+## Create a Journey
 
-Click **Create Chatbot**. The wizard opens on **Starting point** — the channel is already Instagram.
+Click **Create Journey**. The wizard opens on **Starting point** — the channel is already Instagram.
 
 <Steps>
 <Step>
@@ -25,21 +27,21 @@ filter them by use (**Welcome**, **Support**, **Growth**, …). On a wide screen
 plays in a phone preview on the right.
 </Step>
 <Step>
-Click **Next**. Check the **Chatbot Name** — at least 3 characters, only your team sees it.
+Click **Next**. Check the **Journey Name** — at least 3 characters, only your team sees it.
 </Step>
 <Step>
-Optionally pick an **Account** — *"Optional. Used to set up the rule that starts this chatbot."* The
-chatbot itself is not tied to an account; the rule decides which account it answers on.
+Optionally pick an **Account** — *"Optional. Used to set up the rule that starts this journey."* The
+journey itself is not tied to an account; the rule decides which account it answers on.
 </Step>
 <Step>
-Click **Create Chatbot**. The editor opens with the example laid out. Change the wording, then
+Click **Create Journey**. The editor opens with the example laid out. Change the wording, then
 **Save**.
 </Step>
 </Steps>
 
-<ScreenShot src="/docs/screenshots/instagram/chatbot-wizard.png" alt="Instagram Create Chatbot wizard, Growth filter, Follow to unlock a code playing in the preview" />
+<ScreenShot src="/docs/screenshots/instagram/chatbot-wizard.png" alt="Instagram Create Journey wizard, Growth filter, Follow to unlock a code playing in the preview" />
 
-With no chatbots yet, the tab offers three examples and **Start from scratch** as buttons.
+With no journeys yet, the tab offers three examples and **Start from scratch** as buttons.
 
 ---
 
@@ -65,9 +67,9 @@ before you switch the rule on.
 
 ## Make It Start
 
-A chatbot runs only when an [automation rule](/automation) starts it with **Trigger Chatbot**. A
-rule can only start a chatbot of its own platform, so an Instagram rule lists only Instagram
-chatbots.
+A journey runs only when an [automation rule](/automation) starts it with **Trigger Journey**. A
+rule can only start a journey of its own platform, so an Instagram rule lists only Instagram
+journeys.
 
 After you create from an example, the editor shows a **Set up the trigger** card. **Create the
 rule** opens a new Instagram automation with the right trigger already chosen — **Instagram
@@ -75,15 +77,15 @@ Comment**, **Instagram Story Mention**, **ig.me Link Opened** or **Message Recei
 picked an account in the wizard, that account too. Dismiss the card and it does not come back.
 
 <Callout type="warn">
-  A chatbot with no rule never runs. If you dismissed **Set up the trigger**, create the rule from
-  [Automation](/automation) or from the **Comments**, **Story Mentions** or **ig.me Links** tab.
+  A journey with no rule never runs. If you dismissed **Set up the trigger**, create the rule from
+  [Automation Rules](/automation) or from the **Comments**, **Story Mentions** or **ig.me Links** tab.
 </Callout>
 
 ---
 
-## What an Instagram Bot Can Send
+## What an Instagram Journey Can Send
 
-The editor is the same one WhatsApp uses — see the [Chatbot Builder](/whatsapp/chatbot-builder) for
+The editor is the same one WhatsApp uses — see the [Journey Builder](/whatsapp/chatbot-builder) for
 the canvas itself. On Instagram, the **Components** panel offers:
 
 | Group | Components |
@@ -111,16 +113,16 @@ Contacts — do not appear.
 ## How a Conversation Continues
 
 A **Quick Reply**, **Cards** or **Input** step stops and waits for the person. When they answer, the
-bot carries on down the matching branch:
+journey carries on down the matching branch:
 
-| They… | The bot… |
+| They… | The journey… |
 |-------|----------|
 | Tap one of the step's own buttons | Follows that button's branch |
 | Type text that matches a button's title (case does not matter) | Treats it as that button |
 | Type anything else at a **Quick Reply** step | Keeps waiting; the message goes to your rules instead |
 | Answer an **Input** step | Saves the answer and moves on |
 
-A reply that the waiting bot consumes does not also fire your keyword rules. The bot waits for up to
+A reply that the waiting journey consumes does not also fire your keyword rules. The journey waits for up to
 **24 hours** — Instagram only lets a business message someone within 24 hours of their last
 message — and after that the next DM is treated as a fresh message.
 
@@ -145,19 +147,19 @@ branch, a *"Follow us, then send “code” again"* nudge on the second.
 
 ---
 
-## Chatbots Started by a Comment
+## Journeys Started by a Comment
 
-When a comment rule starts a chatbot, the bot's first message goes out as a **private reply** to
+When a comment rule starts a journey, the journey's first message goes out as a **private reply** to
 that comment — the only way to reach someone who has never messaged you. Instagram allows one per
 comment, and nothing more until the person writes back:
 
-- Only a **Text** step is sent as the private reply. Make the bot's first step a Text.
-- An image, video or audio cannot be a private reply. If one comes first, the bot sends its caption
+- Only a **Text** step is sent as the private reply. Make the journey's first step a Text.
+- An image, video or audio cannot be a private reply. If one comes first, the journey sends its caption
   (or *"Thanks for your comment!"*) as the private reply, then tries the media as a normal DM.
 - Every step after the private reply is a normal DM. Instagram refuses those to someone who has
-  never messaged you, and a refused message stops the bot at that step.
+  never messaged you, and a refused message stops the journey at that step.
 
-Keep a comment bot to one Text message — the **Comment to DM a link** example is built exactly that
+Keep a comment journey to one Text message — the **Comment to DM a link** example is built exactly that
 way.
 
 ---
@@ -169,18 +171,18 @@ leads somewhere, that nothing loops, and that a person is reachable within a ste
 
 ---
 
-## Manage Chatbots
+## Manage Journeys
 
 | Action | Notes |
 |--------|-------|
-| **Search chatbots...** | Filters by name |
+| **Search journeys...** | Filters by name |
 | **Sort** | Orders the cards |
 | **Clone** | From **More actions**. Asks for a name, prefilled *"Copy of …"* |
 | **Delete** | From **More actions**, after you confirm |
-| **Settings** | In the editor toolbar. Renames the chatbot |
+| **Settings** | In the editor toolbar. Renames the journey |
 
 <Callout type="warn">
-  Editing a chatbot changes it for everyone already part-way through it. Clone, edit the clone, test
+  Editing a journey changes it for everyone already part-way through it. Clone, edit the clone, test
   it, then point the rule at the clone.
 </Callout>
 
@@ -190,19 +192,19 @@ leads somewhere, that nothing loops, and that a person is reachable within a ste
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| The bot never runs | No rule starts it | Add **Trigger Chatbot** to an Instagram rule |
-| The bot does not move on after a quick reply | The person typed something that matches no button | Word the buttons so people tap them; a typed message is handled by your rules |
+| The journey never runs | No rule starts it | Add **Trigger Journey** to an Instagram rule |
+| The journey does not move on after a quick reply | The person typed something that matches no button | Word the buttons so people tap them; a typed message is handled by your rules |
 | Everyone gets the "follow first" branch | The Follow Check runs before the person has messaged you | Put a quick reply before it |
-| A comment bot sends nothing, or stops after one message | Its first step is not a Text, or it sends more than the one private reply Instagram allows | Start with a single Text step |
-| The rule's **Trigger Chatbot** list is empty | The rule's platform is not Instagram | Set the rule's platform to Instagram |
+| A comment journey sends nothing, or stops after one message | Its first step is not a Text, or it sends more than the one private reply Instagram allows | Start with a single Text step |
+| The rule's **Trigger Journey** list is empty | The rule's platform is not Instagram | Set the rule's platform to Instagram |
 
 ---
 
 ## Related Pages
 
-- [Comments & Story Mentions](/instagram/automations) — rules that start a bot from public activity
+- [Comments & Story Mentions](/instagram/automations) — rules that start a journey from public activity
 - [Ice Breakers, Menu & Links](/instagram/entry-points)
-- [Chatbot Builder](/whatsapp/chatbot-builder) — the editor canvas
-- [Messenger Chatbots](/messenger/chatbots)
-- [Automation](/automation)
+- [Journey Builder](/whatsapp/chatbot-builder) — the editor canvas
+- [Messenger Journeys](/messenger/chatbots)
+- [Automation Rules](/automation)
 - [Inbox](/inbox)

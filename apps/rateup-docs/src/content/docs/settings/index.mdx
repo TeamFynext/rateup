@@ -10,19 +10,37 @@ which channels are connected, and what you pay for.
 
 ## The Sections
 
+The Settings sidebar is split into groups. Entries you have no ability for are hidden.
+
+### You
+
+Settings that belong to you as a person.
+
 <Cards>
   <Card
-    title="Account"
+    title="Profile & Business"
     href="/settings/account"
     description="Your profile, your organisation's business details and business hours."
   />
   <Card
-    title="Features"
-    href="/settings/features"
-    description="Choose which optional features — Loyalty, Commerce, QR & Links and more — show in the menu for everyone."
+    title="Notifications"
+    href="/settings/notifications"
+    description="Choose what RateUp tells you about and where — in the app, on your phone, by email or as desktop alerts."
   />
   <Card
-    title="Members & Roles"
+    title="Password & Account"
+    href="/settings/security"
+    description="Change your password, delete your account or your organisation."
+  />
+</Cards>
+
+### Organization
+
+Settings that apply to everyone in the organisation.
+
+<Cards>
+  <Card
+    title="Members"
     href="/settings/users"
     description="Invite people, give each a role, fine-tune individual abilities, and pause or remove access when someone leaves."
   />
@@ -30,11 +48,6 @@ which channels are connected, and what you pay for.
     title="Teams"
     href="/settings/teams"
     description="Group members into teams, and choose which channels each team sees."
-  />
-  <Card
-    title="Notifications"
-    href="/settings/notifications"
-    description="Choose what RateUp tells you about and where — in the app, on your phone, by email or as desktop alerts."
   />
   <Card
     title="Channels"
@@ -47,16 +60,29 @@ which channels are connected, and what you pay for.
     description="API keys and their usage, the signed organisation webhook, and third-party platforms."
   />
   <Card
-    title="Security"
-    href="/settings/security"
-    description="Change your password, delete your account or your organisation."
-  />
-  <Card
     title="Billing"
     href="/settings/billing"
     description="Your plan, active contacts and campaign credits, top-up packs, and invoices."
   />
+  <Card
+    title="Audit log"
+    href="/analytics/team-activity"
+    description="Who on your team created, changed or deleted what, and when."
+  />
 </Cards>
+
+### RateUp
+
+**RateUp Admin** — shown only to RateUp staff.
+
+The groups were previously called **Account Settings**, **Platform Settings**, **System Settings**
+and **Admin Settings**.
+
+<Card
+  title="Customize Menu"
+  href="/settings/features"
+  description="Not in the Settings list: the grid icon at the foot of the sidebar rail chooses which optional features — Loyalty, Commerce, QR & Links and more — show in the menu for everyone."
+/>
 
 ---
 
@@ -74,6 +100,7 @@ What each person can do comes from their role, plus any abilities fine-tuned for
 | Business details and hours · [features](/settings/features) · integrations · the webhook | Managers, Admins, the Owner |
 | Channels | Admins, the Owner |
 | API keys | Admins, the Owner |
+| [Audit log](/analytics/team-activity) | Admins, the Owner — anyone with *See the audit log* |
 | Billing | Admins, the Owner |
 | Transferring or deleting the organisation | The Owner only |
 
@@ -90,14 +117,15 @@ Managers act only within their own teams; Admins and the Owner reach every team.
 
 | I want to… | Go to |
 |-----------|-------|
-| Hide Loyalty, Commerce or another feature from the menu | [Features](/settings/features) |
+| Hide Loyalty, Commerce or another feature from the menu | [Customize Menu](/settings/features) |
 | Add a new agent | [Members & Roles](/settings/users) → **Invite** |
 | Stop someone using the Inbox | [Members & Roles](/settings/users#fine-tune-one-persons-abilities) → fine-tune their abilities |
 | Stop getting emails about something | [Notifications](/settings/notifications) |
 | Connect a second WhatsApp number | [Channels](/settings/channels) |
 | Send events to my own system | [Integrations](/settings/integrations#webhook) → Webhook |
 | Build against the REST API | [External API](/external-api) — keys in [Integrations → API Service](/settings/integrations#api-service) |
-| Change my password | [Security](/settings/security) |
+| Change my password | [Password & Account](/settings/security) |
+| Find out who changed a setting | [Audit log](/analytics/team-activity) |
 | Get more active contacts or campaign credits | [Billing](/settings/billing) → **Buy a pack** |
 
 ---

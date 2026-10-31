@@ -43,8 +43,8 @@ they happen: WhatsApp message statuses, new inbound messages, contact and lead c
 responses and loyalty points. Every delivery is **signed** and **retried**.
 
 <Callout type="info">
-  A web form can also post its own responses to a URL set on that form — see
-  [Web Forms → Settings](/web-forms/settings). That is separate from this webhook.
+  A survey can also post its own responses to a URL set on that survey — see
+  [Surveys → Settings](/web-forms/settings). That is separate from this webhook.
 </Callout>
 
 <ScreenShot src="/docs/screenshots/settings/webhook-integration.png" alt="The Webhook page: the saved endpoint with Change and Remove, and the Events card with search and grouped events" />
@@ -129,7 +129,7 @@ marked **Envelope** arrive in the envelope shape described under [Payloads](#pay
 | Contacts | **Contact created** · **Contact updated** · **Contact deleted** | A contact is added (by hand, by import or from a conversation), changed, or removed |
 | | **Contact assigned** | Someone is newly assigned to a contact's conversation |
 | | **Lifecycle changed** | A contact moves to another lifecycle stage |
-| | **Added to group** | Contacts join a contact group |
+| | **Added to audience** | Contacts join an audience |
 | Conversations | **Conversation closed** | A conversation in the inbox is closed |
 | Leads | **Lead created** · **Lead stage changed** | A lead is added, or moves stage — including from a connected CRM |
 | Surveys & Flows | **Survey response submitted** (`survey.response_submitted`) | A response is filed — ids only |
@@ -562,7 +562,7 @@ name their organization; an older key answers `401`.
 
 The WooCommerce integration connects one WordPress store. RateUp hears about new orders, order
 status changes, new customers and product changes, which drive order automations, loyalty points and
-coupons. Connecting a store also turns **Commerce** on in [Features](/settings/features).
+coupons. Connecting a store also turns **Commerce** on in [Customize Menu](/settings/features).
 
 Two parts work together:
 
@@ -661,6 +661,6 @@ the store side, delete key #… under WooCommerce › Settings › Advanced › 
 
 - [External API](/external-api) — endpoints, errors, retries and the v1 → v2 migration
 - [Members & Roles](/settings/users) — who may manage API keys and webhooks
-- [Web Forms → Settings](/web-forms/settings) — a form's own response webhook
+- [Surveys → Settings](/web-forms/settings) — a survey's own response webhook
 - [Message Analytics](/analytics/message-analytics) — the same delivery data, in the dashboard
 - [Channels](/settings/channels)

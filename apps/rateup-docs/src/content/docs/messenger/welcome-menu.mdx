@@ -17,21 +17,21 @@ the page.
 
 ## How a Tap Starts Something
 
-Get Started, ice breakers and menu items do not start a chatbot directly. Each one sends a
-**keyword** — *"A tap sends its keyword as a message, so use a keyword one of your Messenger chatbots
+Get Started, ice breakers and menu items do not start a journey directly. Each one sends a
+**keyword** — *"A tap sends its keyword as a message, so use a keyword one of your Messenger journeys
 or rules answers."* The keyword reaches your rules exactly as if the person had typed it, so a
-**Message Received** rule on that keyword decides what happens next — usually **Trigger Chatbot**.
+**Message Received** rule on that keyword decides what happens next — usually **Trigger Journey**.
 
 <Steps>
 <Step>
 Pick a keyword for each tap — `START`, `HOURS`, `AGENT`.
 </Step>
 <Step>
-In [Automation](/automation), build a **Messenger** rule with the **Message Received** trigger and a
+In [Automation Rules](/automation), build a **Messenger** rule with the **Message Received** trigger and a
 **Message Body** condition on that keyword.
 </Step>
 <Step>
-On **Actions**, add **Start a chatbot** and pick a [Messenger chatbot](/messenger/chatbots), or
+On **Actions**, add **Start a journey** and pick a [Messenger journey](/messenger/chatbots), or
 reply with **Send a message**.
 </Step>
 <Step>
@@ -176,6 +176,6 @@ Keep the menu short. Three items people actually need get used; twenty get scrol
 
 - [Messenger Overview](/messenger)
 - [m.me Links](/messenger/m-me-links) — links that start an automation, with Get Started
-- [Messenger Chatbots](/messenger/chatbots) — what a keyword can start
+- [Messenger Journeys](/messenger/chatbots) — what a keyword can start
 - [Triggers](/automation/triggers) — **Message Received** and the Messenger triggers
 - [Ice Breakers, Menu & Links](/instagram/entry-points) — the Instagram equivalent

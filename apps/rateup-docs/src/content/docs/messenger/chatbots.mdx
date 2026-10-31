@@ -1,21 +1,23 @@
 ---
-title: "Messenger Chatbots"
-description: Build chatbots for your Facebook Page in the same editor as WhatsApp and Instagram, and start them from a message, a comment, an m.me link or a menu tap.
+title: "Messenger Journeys"
+description: Build journeys for your Facebook Page in the same editor as WhatsApp and Instagram, and start them from a message, a comment, an m.me link or a menu tap.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
-A **Messenger chatbot** answers people who message your Facebook Page — greeting them, answering
+A **Messenger journey** answers people who message your Facebook Page — greeting them, answering
 the usual questions, collecting a lead or a booking, and handing over to your team. You build it in
-the same editor as [WhatsApp](/whatsapp/chatbots) and [Instagram](/instagram/chatbots) chatbots,
+the same editor as [WhatsApp](/whatsapp/chatbots) and [Instagram](/instagram/chatbots) journeys,
 and an [automation rule](/automation) starts it.
+
+Journeys were previously called Chatbots.
 
 ---
 
-## Create a Chatbot
+## Create a Journey
 
-Open **Messenger** in the sidebar, stay on the **Chatbots** tab and click **Create Chatbot**. The wizard opens on **Starting
+Open **Meta → Messenger** in the sidebar, stay on the **Journeys** tab and click **Create Journey**. The wizard opens on **Starting
 point** — the channel is already Messenger.
 
 <Steps>
@@ -24,21 +26,21 @@ Pick **Start from scratch** or one of the [examples](#messenger-examples). Filte
 chips along the top. On a wide screen, the selected example plays in a phone preview on the right.
 </Step>
 <Step>
-Click **Next**. Check the **Chatbot Name** — at least 3 characters, only your team sees it.
+Click **Next**. Check the **Journey Name** — at least 3 characters, only your team sees it.
 </Step>
 <Step>
 Optionally pick an **Account** — your Facebook Page. *"Optional. Used to set up the rule that starts
-this chatbot."*
+this journey."*
 </Step>
 <Step>
-Click **Create Chatbot**. The editor opens at `/dashboard/messenger/flowbots/<id>` with the example
+Click **Create Journey**. The editor opens at `/dashboard/messenger/flowbots/<id>` with the example
 laid out. Change the wording, then **Save**.
 </Step>
 </Steps>
 
-<ScreenShot src="/docs/screenshots/messenger/chatbot-wizard.png" alt="Messenger Create Chatbot wizard with Page welcome playing in the preview" />
+<ScreenShot src="/docs/screenshots/messenger/chatbot-wizard.png" alt="Messenger Create Journey wizard with Page welcome playing in the preview" />
 
-With no chatbots yet, the page offers three examples and **Start from scratch** as buttons.
+With no journeys yet, the page offers three examples and **Start from scratch** as buttons.
 
 ---
 
@@ -55,15 +57,15 @@ With no chatbots yet, the page offers three examples and **Start from scratch** 
 | **Talk to a person** | Handoff | Lets people ask for a person and assigns the chat to your team |
 
 Every example comes with placeholder text, links and opening hours — `https://example.com/shop`,
-*"Mon–Sat, 9 AM – 6 PM"*. Change them to yours before the bot goes live.
+*"Mon–Sat, 9 AM – 6 PM"*. Change them to yours before the journey goes live.
 
 ---
 
 ## Start It from a Rule
 
-A Messenger chatbot runs only when an automation rule with the **Messenger** platform starts it,
-using the **Trigger Chatbot** action. The action lists only Messenger chatbots — a rule can only
-start a chatbot of its own platform.
+A Messenger journey runs only when an automation rule with the **Messenger** platform starts it,
+using the **Trigger Journey** action. The action lists only Messenger journeys — a rule can only
+start a journey of its own platform.
 
 <Steps>
 <Step>
@@ -76,36 +78,36 @@ if you picked one in the wizard. On **Template**, click **Start from scratch** t
 </Step>
 <Step>
 On **Conditions**, set the condition — a keyword, or any message. On **Actions**, check that **Trigger
-Chatbot** points at your new chatbot.
+Journey** points at your new journey.
 </Step>
 <Step>
 On **Review**, name the rule and click **Activate automation**.
 </Step>
 </Steps>
 
-<ScreenShot src="/docs/screenshots/messenger/trigger-prompt.png" alt="Messenger chatbot editor after creating from Page welcome, with the Set up the trigger card" />
+<ScreenShot src="/docs/screenshots/messenger/trigger-prompt.png" alt="Messenger journey editor after creating from Page welcome, with the Set up the trigger card" />
 
 <Callout type="warn">
-  The **Set up the trigger** card appears once. Dismiss it and it is gone — the chatbot then sits
-  unused until you build the rule yourself in [Automation](/automation).
+  The **Set up the trigger** card appears once. Dismiss it and it is gone — the journey then sits
+  unused until you build the rule yourself in [Automation Rules](/automation).
 </Callout>
 
 Messenger rules can use the general triggers — **Message Received**, **Chat Closed**, **Chat
 Assigned**, **Contact Created** and the rest — plus two of their own. See
 [Triggers](/automation/triggers#messenger-triggers).
 
-| To start the chatbot when… | Build the rule with |
+| To start the journey when… | Build the rule with |
 |----------------------------|---------------------|
 | Someone messages a keyword | **Message Received** and a **Message Body** keyword |
 | Someone taps Get Started, an ice breaker or a menu item | **Message Received** on the keyword that tap sends — see [Welcome & Menu](/messenger/welcome-menu) |
 | Someone opens an m.me link | **m.me Link Opened** — see [m.me Links](/messenger/m-me-links) |
 | Someone comments on a Page post | **Facebook Page Comment** — see [Facebook Comments](/messenger/comments) |
 
-On a comment rule, the chatbot's first message goes out as the private reply to the comment.
+On a comment rule, the journey's first message goes out as the private reply to the comment.
 
 ---
 
-## What a Messenger Bot Can Send
+## What a Messenger Journey Can Send
 
 The **Components** panel on Messenger offers:
 
@@ -126,7 +128,7 @@ The **Components** panel on Messenger offers:
 
 Instagram's **Product Template** and **Follow Check** do not appear, and neither do WhatsApp's
 buttons, lists, templates or flows. The canvas, toolbar and **Preview** work as described in the
-[Chatbot Builder](/whatsapp/chatbot-builder).
+[Journey Builder](/whatsapp/chatbot-builder).
 
 ---
 
@@ -134,31 +136,31 @@ buttons, lists, templates or flows. The canvas, toolbar and **Preview** work as 
 
 A **Quick Reply**, **Cards** or **Input** step waits for the person, then carries on:
 
-| They… | The bot… |
+| They… | The journey… |
 |-------|----------|
 | Tap one of the step's buttons | Follows that button's branch |
 | Type a button's title (case does not matter) | Treats it as that button |
 | Type anything else at a **Quick Reply** step | Keeps waiting; the message goes to your rules instead |
 | Answer an **Input** step | Saves the answer and moves on |
 
-The bot waits up to **24 hours** — Messenger only lets a Page message someone within 24 hours of
-their last message. A message the bot consumes as an answer does not also fire your rules.
+The journey waits up to **24 hours** — Messenger only lets a Page message someone within 24 hours of
+their last message. A message the journey consumes as an answer does not also fire your rules.
 
 ---
 
-## Manage Chatbots
+## Manage Journeys
 
 | Action | Notes |
 |--------|-------|
-| **Search chatbots...** | Filters by name |
+| **Search journeys...** | Filters by name |
 | **Sort** | Orders the cards |
 | **Refresh** | Reloads the list |
 | **Clone** | From **More actions**. Asks for a name, prefilled *"Copy of …"* |
 | **Delete** | From **More actions**, after you confirm |
-| **Settings** | In the editor toolbar. Renames the chatbot |
+| **Settings** | In the editor toolbar. Renames the journey |
 
 <Callout type="info">
-  To change a chatbot people are using, clone it, edit and preview the clone, then point the rule
+  To change a journey people are using, clone it, edit and preview the clone, then point the rule
   at the clone.
 </Callout>
 
@@ -169,19 +171,19 @@ their last message. A message the bot consumes as an answer does not also fire y
 | Symptom | Cause | Fix |
 |---------|-------|-----|
 | The page shows *"Connect a Facebook Page"* | No Page is connected | See [Connect a Facebook Page](/messenger#connect-a-facebook-page) |
-| The bot never runs | No Messenger rule starts it | Add a rule with **Trigger Chatbot** |
-| **Trigger Chatbot** does not list the bot | The rule's platform is not **Messenger** | Change the rule's platform |
-| The bot stops part-way | Meta refused a message — usually because more than 24 hours passed since the person last wrote | Nothing to fix; it restarts when a rule fires again |
-| *"Failed to load automation"* in the editor | The chatbot could not be loaded | Click **Retry** |
+| The journey never runs | No Messenger rule starts it | Add a rule with **Trigger Journey** |
+| **Trigger Journey** does not list the journey | The rule's platform is not **Messenger** | Change the rule's platform |
+| The journey stops part-way | Meta refused a message — usually because more than 24 hours passed since the person last wrote | Nothing to fix; it restarts when a rule fires again |
+| *"Failed to load automation"* in the editor | The journey could not be loaded | Click **Retry** |
 
 ---
 
 ## Related Pages
 
 - [Messenger Overview](/messenger) — connecting a Page
-- [Automation](/automation) — rules that start a chatbot
+- [Automation Rules](/automation) — rules that start a journey
 - [Welcome & Menu](/messenger/welcome-menu), [m.me Links](/messenger/m-me-links) and [Facebook Comments](/messenger/comments) — other ways in
-- [Chatbot Builder](/whatsapp/chatbot-builder) — the editor canvas
-- [Instagram Chatbots](/instagram/chatbots)
-- [WhatsApp Chatbots](/whatsapp/chatbots)
+- [Journey Builder](/whatsapp/chatbot-builder) — the editor canvas
+- [Instagram Journeys](/instagram/chatbots)
+- [WhatsApp Journeys](/whatsapp/chatbots)
 - [Inbox](/inbox)

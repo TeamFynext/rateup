@@ -1,15 +1,18 @@
 ---
-title: "Team Activity"
+title: "Audit Log"
 description: The audit trail — what your team created, changed or deleted in RateUp, by whom and when.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
-**Team activity** is the second tab under **Analytics → Logs**: *"What your team created, changed or
-deleted, newest first"*. Use it to answer "who changed this, and when?"
+**Audit log** lives under **Settings → Audit log**, in the **Organization** group: *"Who on your
+team created, changed or deleted what, and when."* Use it to answer "who changed this, and when?"
 
-<ScreenShot src="/docs/screenshots/analytics/team-activity.png" alt="Team activity log with Action, User, Details and Time columns" />
+It used to be the second tab under **Analytics → Logs**. Old links to the Analytics audit log now
+open **Settings → Audit log**.
+
+<ScreenShot src="/docs/screenshots/analytics/team-activity.png" alt="Audit log with Action, User, Details and Time columns" />
 
 ---
 
@@ -30,8 +33,8 @@ Sort by **User** or **Time** from their headings. Rows come 25 to a page.
 
 <Steps>
 <Step>
-Set the **Date range** in the filter bar. The **Team** filter is hidden here — this tab covers the
-whole organisation.
+Set the date range with the picker at the top right of the page (**Last 7 Days** by default). The
+page has its own picker and no **Team** filter — it covers the whole organisation.
 </Step>
 <Step>
 Pick a person in the first select (**Everyone** by default).
@@ -45,7 +48,9 @@ With nothing to show, it reads *"No activity found"* — *"Nothing matches these
 range."* when you have filtered, or *"Nothing your team did falls in this date range."* when you
 have not.
 
-This tab needs the **See the audit log** ability. It has no PDF report.
+The page needs the **See the audit log** ability — Admins and the Owner have it by default. Without
+it, **Audit log** is missing from the Settings list, and opening the page by URL reads *"You can't see
+the audit log"* — *"Ask an admin to give your role access to the audit log."* It has no PDF report.
 
 ---
 
@@ -58,15 +63,16 @@ This tab needs the **See the audit log** ability. It has no PDF report.
 | Reviewing a new admin's first week | Filter by that person |
 
 <Callout type="info">
-  Team activity records changes, not presence. To see who is online right now, use the **Right
+  The audit log records changes, not presence. To see who is online right now, use the **Right
   now** card on [Overview](/analytics/overview) or the **Status** column on
-  [Conversations → Agents](/analytics/agent-performance).
+  [Team Performance → Agents](/analytics/agent-performance).
 </Callout>
 
 ---
 
 ## Related Pages
 
-- [Message Logs](/analytics/message-logs) — the other Logs tab
+- [Message Logs](/analytics/message-logs) — every WhatsApp message sent, under **Analytics → Message log**
 - [Members & Roles](/settings/users) — each member's own Activity tab
-- [Security](/settings/security)
+- [Password & Account](/settings/security)
+- [Settings Overview](/settings) — the **Organization** group the audit log sits in

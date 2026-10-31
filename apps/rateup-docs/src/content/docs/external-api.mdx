@@ -7,7 +7,7 @@ import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
 The **External API** (the partner API) lets your own systems drive RateUp: create contacts, fill
-contact groups, launch campaigns, send WhatsApp templates, run a loyalty till and read survey
+audiences, launch campaigns, send WhatsApp templates, run a loyalty till and read survey
 responses. It is a REST API over HTTPS with JSON bodies, authenticated with an API key you create
 in **Settings → Integrations → API Service**.
 
@@ -83,7 +83,7 @@ A key with **Full access** can call every endpoint, including ones added later. 
 
 | Feature | Covers | Permissions behind it |
 |---------|--------|-----------------------|
-| **Contacts** | Contacts and contact groups | `contacts.read`, `contacts.manage` |
+| **Contacts** | Contacts and audiences | `contacts.read`, `contacts.manage` |
 | **Teams** | Listing teams, to route sends | `teams.read` |
 | **Campaigns** | Creating and sending campaigns, reading their responses | `campaigns.read`, `campaigns.manage`, `campaigns.send` |
 | **Surveys** | Surveys and their responses | `surveys.read` |
@@ -275,8 +275,8 @@ local number only when that is not a valid number.
 |-------|---------|
 | Any request, per IP address (checked before the key) | 300 a minute |
 | Any request, per organisation, across both versions | 1,200 a minute |
-| Contact writes · contact-group writes | 300 a minute each |
-| `POST /contacts/bulk` · `POST /contact-groups/{id}/contacts/import` | 30 a minute each |
+| Contact writes · audience writes | 300 a minute each |
+| `POST /contacts/bulk` · `POST /audiences/{id}/contacts/import` | 30 a minute each |
 | Campaign writes | 120 a minute |
 | `POST /campaigns/{id}/send` | 10 a minute |
 | `POST /wa/templates/send` and `/send-with-file` (shared) | 600 a minute |
@@ -375,28 +375,35 @@ set to `null` clears them.
 `reason` is `already_exists` or `duplicate_in_request`; `index` is the row's position in your
 array.
 
-### Contact groups
+### Audiences
 
 Feature: **Contacts**.
 
+<Callout type="info">
+  Audiences were called **contact groups** before. In v2 they live at `/audiences`. The field
+  names keep the old spelling: the path parameter is `contactGroupId`, campaigns take
+  `contactGroupIds`, contacts filter on `contactGroupId`, and the error codes are
+  `contact_group_not_found` and `contact_group_already_exists`.
+</Callout>
+
 | Method & path | Does |
 |---------------|------|
-| `GET /contact-groups` | List groups. Filters: `search`, `teamId`, `type` (`NORMAL` or `LOYALTY`) |
-| `POST /contact-groups` | Create a group: `name`, `teamId`, optional `icon` and `tags` |
-| `GET /contact-groups/{contactGroupId}` | A group with its `memberCount` |
-| `PATCH /contact-groups/{contactGroupId}` | Change `name`, `icon` or `tags` (`null` clears `icon` or `tags`) |
-| `DELETE /contact-groups/{contactGroupId}` | Delete the group and its memberships — the contacts stay. Answers `204` |
-| `GET /contact-groups/{contactGroupId}/contacts` | The group's contacts, newest first |
-| `POST /contact-groups/{contactGroupId}/contacts` | Add up to 1,000 existing contacts by id |
-| `POST /contact-groups/{contactGroupId}/contacts/remove` | Remove up to 1,000 contacts by id. The contacts are not deleted |
-| `POST /contact-groups/{contactGroupId}/contacts/import` | Up to 1,000 contacts by phone: unknown numbers are created, known ones reused unchanged, all are added |
+| `GET /audiences` | List audiences. Filters: `search`, `teamId`, `type` (`NORMAL` or `LOYALTY`) |
+| `POST /audiences` | Create an audience: `name`, `teamId`, optional `icon` and `tags` |
+| `GET /audiences/{contactGroupId}` | An audience with its `memberCount` |
+| `PATCH /audiences/{contactGroupId}` | Change `name`, `icon` or `tags` (`null` clears `icon` or `tags`) |
+| `DELETE /audiences/{contactGroupId}` | Delete the audience and its memberships — the contacts stay. Answers `204` |
+| `GET /audiences/{contactGroupId}/contacts` | The audience's contacts, newest first |
+| `POST /audiences/{contactGroupId}/contacts` | Add up to 1,000 existing contacts by id |
+| `POST /audiences/{contactGroupId}/contacts/remove` | Remove up to 1,000 contacts by id. The contacts are not deleted |
+| `POST /audiences/{contactGroupId}/contacts/import` | Up to 1,000 contacts by phone: unknown numbers are created, known ones reused unchanged, all are added |
 
-Group names are unique within a team — a clash is `409 contact_group_already_exists`.
+Audience names are unique within a team — a clash is `409 contact_group_already_exists`.
 
-**Import contacts into a group**
+**Import contacts into an audience**
 
 ```bash
-curl -X POST "https://api.rateup.app/api/external/v2/contact-groups/$GROUP_ID/contacts/import" \
+curl -X POST "https://api.rateup.app/api/external/v2/audiences/$AUDIENCE_ID/contacts/import" \
   -H "Authorization: Bearer $RATEUP_API_KEY" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: import-2026-10-16-batch-1" \
@@ -433,7 +440,7 @@ Feature: **Teams**.
 |---------------|------|
 | `GET /teams` | List teams — `{ "data": [{ "id", "name" }], "nextCursor" }` |
 
-A team id is what campaigns and contact groups belong to, and what a template send can be
+A team id is what campaigns and audiences belong to, and what a template send can be
 attributed to.
 
 ### Campaigns
@@ -443,8 +450,8 @@ Feature: **Campaigns**. Needs a plan with WhatsApp campaigns.
 | Method & path | Does |
 |---------------|------|
 | `GET /campaigns` | List campaigns. Filters: `status`, `type`, `teamId` |
-| `GET /campaigns/{campaignId}` | The campaign, its contact groups, drip stages, recipient count and latest send |
-| `POST /campaigns` | Create a campaign as a **DRAFT**, with its audience |
+| `GET /campaigns/{campaignId}` | The campaign, its audiences (`contactGroupIds`), drip stages, recipient count and latest send |
+| `POST /campaigns` | Create a campaign as a **DRAFT**, with its recipients |
 | `POST /campaigns/{campaignId}/send` | Launch it now or at `scheduledAt`. Paid — live keys only |
 | `GET /campaigns/{campaignId}/responses` | Responses to the WhatsApp Flow on the campaign's template |
 | `DELETE /campaigns/{campaignId}` | Delete it in any state; anything queued or scheduled is cancelled first |
@@ -471,7 +478,7 @@ curl -X POST "https://api.rateup.app/api/external/v2/campaigns" \
 | `templateId` | Required for `WHATSAPP` |
 | `dripStages` | Required for `DRIP`: 1–20 of `{ templateId, delay, delayUnit: "minutes" \| "hours" \| "days", sendAtTime?: "HH:mm" }` |
 | `dynamicTags` | Template variable mappings, in `{{1}}`, `{{2}}` order |
-| `contactGroupIds`, `contactIds` | The audience — up to 1,000 of each |
+| `contactGroupIds`, `contactIds` | The recipients: audience ids and individual contact ids — up to 1,000 of each |
 
 The status cannot be set; a campaign starts as a draft. Then:
 
@@ -771,7 +778,7 @@ and `notes`.
 | `409 voucher_already_redeemed` / `voucher_not_approved` | The voucher was used, or still awaits approval |
 | `409 member_already_exists` | That number is already enrolled |
 
-The card send only delivers inside the customer's 24-hour WhatsApp window; outside it the answer
+The card send only delivers inside the member's 24-hour WhatsApp window; outside it the answer
 is `{ "sent": false, "skippedReason": "session_closed" }` rather than an error.
 
 ---
@@ -817,12 +824,16 @@ v1 stays for integrations already built on it. It is mounted at
 | Module | Routes |
 |--------|--------|
 | Contacts | `POST /contacts` (one contact or an array), `GET /contacts`, `GET /contacts/{contactId}`, `PUT /contacts/{contactId}`, `DELETE /contacts/{contactId}` |
-| Contact groups | `POST /contact-groups`, `GET /contact-groups`, `GET /contact-groups/{id}/contacts`, `PUT /contact-groups/{id}`, `DELETE /contact-groups/{id}`, `POST /contact-groups/{id}/contacts/existing`, `POST /contact-groups/{id}/contacts/new`, `DELETE /contact-groups/{id}/contacts` |
+| Audiences (contact groups) | `POST /contact-groups`, `GET /contact-groups`, `GET /contact-groups/{id}/contacts`, `PUT /contact-groups/{id}`, `DELETE /contact-groups/{id}`, `POST /contact-groups/{id}/contacts/existing`, `POST /contact-groups/{id}/contacts/new`, `DELETE /contact-groups/{id}/contacts` |
 | Teams | `GET /teams` |
 | Campaigns | `POST /campaigns`, `GET /campaigns`, `GET /campaigns/{id}/responses`, `DELETE /campaigns/{id}`, `PUT /campaigns/{id}/send` |
 | Surveys | `GET /surveys`, `GET /surveys/{surveyId}` (its responses) |
 | WhatsApp templates | `GET /wa/templates`, `POST /wa/templates/send`, `POST /wa/templates/send-with-file`, `POST /wa/templates/{templateId}/send/contacts`, `GET /wa/templates/message/{messageId}/status` |
 | Loyalty | The same module and shapes as v2, under `/loyalty` |
+
+v1 is frozen at its original paths and wording: audiences are only at `/contact-groups` there, and
+its error messages still say "Contact group" (for example `{ "error": "Contact group not found" }`).
+Use v2 for `/audiences`.
 
 What v1 shares with v2 now:
 
@@ -887,10 +898,11 @@ Once it is live on a **Live** v2 key, **revoke the v1 key**.
 | Contacts · create many | `POST /contacts` with an array | `POST /contacts/bulk` with `{ contacts }`, reporting `created` and `skipped` |
 | Contacts · update | `PUT /contacts/{id}` | `PATCH /contacts/{id}` — only sent fields change |
 | Contacts · find by phone | — | `GET /contacts/lookup?phone=` |
-| Groups · update | `PUT /contact-groups/{id}` | `PATCH /contact-groups/{id}` |
-| Groups · add existing | `POST …/contacts/existing` | `POST …/contacts` with `{ contactIds }` |
-| Groups · add new | `POST …/contacts/new` | `POST …/contacts/import` — matches by phone, creates the unknown ones |
-| Groups · remove | `DELETE …/contacts` with a body | `POST …/contacts/remove` with `{ contactIds }` |
+| Audiences · path | `/contact-groups` | `/audiences` |
+| Audiences · update | `PUT /contact-groups/{id}` | `PATCH /audiences/{id}` |
+| Audiences · add existing | `POST …/contacts/existing` | `POST …/contacts` with `{ contactIds }` |
+| Audiences · add new | `POST …/contacts/new` | `POST …/contacts/import` — matches by phone, creates the unknown ones |
+| Audiences · remove | `DELETE …/contacts` with a body | `POST …/contacts/remove` with `{ contactIds }` |
 | Campaigns · template | `waTemplateId` | `templateId` |
 | Campaigns · status | Settable on create | Always a `DRAFT`; launch with send |
 | Campaigns · send | `PUT /campaigns/{id}/send` | `POST /campaigns/{id}/send` — answers `202` with the send session |
@@ -934,4 +946,4 @@ Once it is live on a **Live** v2 key, **revoke the v1 key**.
 - [WhatsApp Templates](/whatsapp/templates) — building and approving templates
 - [Custom Fields](/contacts/custom-fields) — the slugs `customFields` is keyed by
 - [Loyalty](/loyalty) — the programme the loyalty endpoints run
-- [Web Forms → Settings](/web-forms/settings) — the per-form survey response webhook
+- [Surveys → Settings](/web-forms/settings) — the per-survey response webhook

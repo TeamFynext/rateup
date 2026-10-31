@@ -72,8 +72,8 @@ The toolbar holds one search box and three filters. They combine, so *Label: VIP
 **Reset** appears once a filter is active and clears them.
 
 <Callout type="info">
-  There is no filter for groups or custom fields on this page. To see who is in a group, open the
-  group itself under [Groups](/contacts/groups).
+  There is no filter for audiences or custom fields on this page. To see who is in an audience, open
+  the audience itself under [Audiences](/contacts/groups).
 </Callout>
 
 ---
@@ -95,7 +95,7 @@ Optionally add:
 | Section | Fields |
 |---------|--------|
 | **Contact details** | **Email**, **Date of Birth**, **External ID**, **Address** |
-| **Assignment** | **Labels**; **Lead stage**, which puts them straight onto your [pipeline](/pipeline) board (shown only if your board has columns); **Assignee**, the team members responsible for them; and **Group**, any number of [groups](/contacts/groups) |
+| **Assignment** | **Labels**; **Lead stage**, which puts them straight onto your [pipeline](/pipeline) board (shown only if your board has columns); **Assignee**, the team members responsible for them; and **Audience**, any number of [audiences](/contacts/groups) |
 | **Custom fields** | A value for each [custom field](/contacts/custom-fields). Email and number fields are checked |
 | **notes** | Free text |
 </Step>
@@ -144,7 +144,7 @@ consent**, **Blocked** and **Spam** where they apply. Beneath it, four figures: 
 | **Labels** | Their labels |
 | **Custom fields** | Every custom field with a value — hidden fields are left out |
 | **Loyalty** | Program, Tier, Points and Referral code — only for loyalty members |
-| **Groups** | Every group they are in. Remove them from one, or **Add to group** to add them to another |
+| **Audiences** | Every audience they are in. Remove them from one, or **Add to audience** to add them to another |
 | **Notes** | Free-text notes. Click **Edit notes**, then **Save** |
 | **Conversations** | Their five most recent conversations, with ticket number, subject or message count, and status |
 
@@ -162,7 +162,7 @@ appears showing *"N Selected"* with four actions:
 
 | Action | What it does |
 |--------|--------------|
-| **Add to Group** | Adds everyone selected to one [group](/contacts/groups) |
+| **Add to Audience** | Adds everyone selected to one [audience](/contacts/groups) |
 | **Apply Label** | Opens **Apply Labels to Contacts** — pick one or more labels and click **Apply** |
 | **Update lead stage** | Puts everyone on one column of your [pipeline](/pipeline) board, opening a lead for anyone not on it. Organisations without the Pipeline feature see **Update Lifecycle Stage** |
 | **Delete** | Deletes everyone selected, after a confirmation |
@@ -270,10 +270,10 @@ If no row in the file is usable, nothing is queued and the list opens straight a
 
 ### What an import can set
 
-An import sets **name**, **phone** and **custom fields** only. Email, labels, groups and stages are
+An import sets **name**, **phone** and **custom fields** only. Email, labels, audiences and stages are
 not read from the file — apply them afterwards with [bulk actions](#bulk-actions). To import straight
-into a group, use **Import** on the group's own page instead — see
-[Groups](/contacts/groups#add-members).
+into an audience, use **Import** on the audience's own page instead — see
+[Audiences](/contacts/groups#add-members).
 
 <Callout type="warn">
   Only import people who have agreed to hear from you. Messaging a list that never opted in lowers
@@ -310,7 +310,7 @@ Delete one contact from **⋮ → Delete contact**, or several with the **Delete
 <Callout type="warn">
   Deleting a contact cannot be undone, and it reaches further than RateUp:
 
-  - **Every conversation and message** with them is deleted, along with their group memberships,
+  - **Every conversation and message** with them is deleted, along with their audience memberships,
     labels and campaign history
   - If you have [Zoho CRM or Bigin connected](/settings/integrations), the matching contact is
     **deleted there too**
@@ -334,8 +334,8 @@ Delete one contact from **⋮ → Delete contact**, or several with the **Delete
 
 ## Related Pages
 
-- [Groups](/contacts/groups)
+- [Audiences](/contacts/groups)
 - [Labels](/contacts/labels)
 - [Custom Fields](/contacts/custom-fields)
-- [Pipeline](/pipeline) — the board **Lead stage** writes to
+- [Pipelines](/pipeline) — the board **Lead stage** writes to
 - [Campaigns](/campaign)

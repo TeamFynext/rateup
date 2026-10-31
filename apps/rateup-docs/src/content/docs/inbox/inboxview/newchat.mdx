@@ -1,25 +1,25 @@
 ---
-title: "New"
-description: The New view holds recent tickets without an owner — the queue that needs attention first.
+title: "Unassigned"
+description: The Unassigned view holds recent tickets without an owner — the queue that needs attention first.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
-**New** shows every open ticket that is **not yet assigned to anyone** and has had a message in the
+**Unassigned** shows every open ticket that is **not yet assigned to anyone** and has had a message in the
 **last 24 hours**.
 
 It is the queue of fresh, unowned work, which makes it the first place any agent or manager should
 look.
 
 <Callout type="info">
-  **New means unassigned *and* recent.** A ticket leaves this view the moment someone is assigned —
+  **Unassigned means no owner *and* recent.** A ticket leaves this view the moment someone is assigned —
   even if nobody has replied yet. It also drops out once 24 hours pass without a message. It is
   still open and unowned, but you now find it only in **Open**.
 </Callout>
 
 <Callout type="warn">
-  An empty **New** view does not mean nothing is waiting. Unowned tickets older than a day are only
+  An empty **Unassigned** view does not mean nothing is waiting. Unowned tickets older than a day are only
   in [**Open**](/inbox/inboxview/open). Look for rows with a **New** status pill there, and sort by
   **Oldest First** to find them.
 </Callout>
@@ -28,7 +28,7 @@ look.
 
 ## What You See
 
-<ScreenShot src="/docs/screenshots/inbox/view-new.png" alt="Unassigned tickets in the New view" />
+<ScreenShot src="/docs/screenshots/inbox/view-new.png" alt="Unassigned tickets in the Unassigned view" />
 
 - Every ticket is **unassigned**
 - Rows carry a cream background, an **amber left edge** and a filled **Unassigned** badge
@@ -43,13 +43,13 @@ The fastest route does not require opening the ticket at all.
 
 <Steps>
 <Step>
-Hover the row in the **New** view.
+Hover the row in the **Unassigned** view.
 </Step>
 <Step>
 Click the **person +** button on the right of the row.
 </Step>
 <Step>
-The ticket moves to **Mine** and disappears from **New**. A system note records that you took it.
+The ticket moves to **Assigned to me** and disappears from **Unassigned**. A system note records that you took it.
 </Step>
 </Steps>
 
@@ -61,7 +61,7 @@ You can also open the ticket and use the **Assign to me** bar shown above the re
 
 <Steps>
 <Step>
-Open the ticket from the **New** view.
+Open the ticket from the **Unassigned** view.
 </Step>
 <Step>
 Click **Assign to…** next to **Assign to me**, or press **A** to open the picker in the **Ticket
@@ -71,7 +71,7 @@ Details** panel.
 Pick a person, or a **team** to hand the ticket to whichever member's turn it is. People who are online are listed first.
 </Step>
 <Step>
-The ticket is assigned immediately and moves to that person's **Mine** view.
+The ticket is assigned immediately and moves to that person's **Assigned to me** view.
 </Step>
 </Steps>
 
@@ -88,9 +88,9 @@ guarantees every conversation has someone accountable for it.
 
 ---
 
-## Keeping New Empty
+## Keeping Unassigned Empty
 
-**New** works best as a queue you actively drain:
+**Unassigned** works best as a queue you actively drain:
 
 - Check it frequently — a ticket sitting here has nobody watching it
 - Assign first, investigate second; ownership can always be changed later
@@ -102,5 +102,5 @@ guarantees every conversation has someone accountable for it.
 ## Related Pages
 
 - [Open](/inbox/inboxview/open) — the full active workload
-- [Mine](/inbox/inboxview/mine) — what you picked up
+- [Assigned to me](/inbox/inboxview/mine) — what you picked up
 - [Assignment & Reassignment](/inbox/asigning-conversation)

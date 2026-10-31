@@ -1,14 +1,28 @@
 ---
 title: "WhatsApp Overview"
-description: Flows, chatbots, templates, catalogs and conversational components — everything you build on your WhatsApp Business account.
+description: Flows, journeys, templates, catalogs and ice breakers & commands — everything you build on your WhatsApp Business account.
 ---
 
 import ImagePlaceholder from "@/components/ImagePlaceholder";
 
 The **WhatsApp** section is where you build what customers experience on WhatsApp: the forms they
-fill in, the bots they talk to, the messages you send them and the products they browse.
+fill in, the journeys they talk to, the messages you send them and the products they browse.
 
 Conversations themselves happen in the [Inbox](/inbox); this section is what feeds it.
+
+There is no separate **WhatsApp** entry in the sidebar. Its pages sit in the **WhatsApp** section of
+the **Meta** group, except journeys, which are under **Automation**:
+
+| Sidebar entry | Opens |
+|---------------|-------|
+| **Meta → WhatsApp → Templates** | [Message Templates](/whatsapp/templates) |
+| **Meta → WhatsApp → Flows** | [WhatsApp Flows](/whatsapp/flows) |
+| **Meta → WhatsApp → Ice Breakers** | [Ice Breakers & Commands](/whatsapp/conversational-components) |
+| **Automation → Journeys** | [Journeys](/whatsapp/chatbots) |
+
+The **Meta** group's other section, **Instagram & Messenger**, holds [Instagram](/instagram) and
+[Messenger](/messenger). Number settings
+are under [Settings → Channels](/settings/channels).
 
 ---
 
@@ -16,7 +30,7 @@ Conversations themselves happen in the [Inbox](/inbox); this section is what fee
 
 <Cards>
   <Card
-    title="Flows"
+    title="WhatsApp Flows"
     href="/whatsapp/flows"
     description="Multi-screen forms customers complete inside WhatsApp."
   />
@@ -26,17 +40,17 @@ Conversations themselves happen in the [Inbox](/inbox); this section is what fee
     description="Screens, elements, logic jumps — and pushing a flow live."
   />
   <Card
-    title="Chatbots"
+    title="Journeys"
     href="/whatsapp/chatbots"
     description="Automated conversations that answer without an agent."
   />
   <Card
-    title="Chatbot Builder"
+    title="Journey Builder"
     href="/whatsapp/chatbot-builder"
     description="The node canvas: components, connections, validation and preview."
   />
   <Card
-    title="Templates"
+    title="Message Templates"
     href="/whatsapp/templates"
     description="Pre-approved messages — required outside the 24-hour window. Start from Meta's library, a RateUp starter or scratch."
   />
@@ -51,7 +65,7 @@ Conversations themselves happen in the [Inbox](/inbox); this section is what fee
     description="Sends, reads, button clicks and cost for each template, from Meta."
   />
   <Card
-    title="Conversational Components"
+    title="Ice Breakers & Commands"
     href="/whatsapp/conversational-components"
     description="Ice breakers and commands shown before the customer types."
   />
@@ -74,9 +88,9 @@ Conversations themselves happen in the [Inbox](/inbox); this section is what fee
 ```
 Customer opens your WhatsApp
         │
-        ├── sees ice breakers / commands   → Conversational Components
-        ├── talks to a bot                 → Chatbots
-        ├── fills in a form                → Flows
+        ├── sees ice breakers / commands   → Ice Breakers & Commands
+        ├── talks to a journey             → Journeys
+        ├── fills in a form                → WhatsApp Flows
         ├── browses products               → Catalog  → Commerce
         └── anything else                  → Inbox    (a human replies)
 

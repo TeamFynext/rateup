@@ -20,7 +20,7 @@ shared inbox suffers from:
 - **Silent drops** — everyone assuming somebody else picked it up
 
 An unassigned ticket is visible to everyone but owned by nobody. It carries a **New** status pill
-until that changes, and while it is recent it also sits in the **New** view with an amber edge.
+until that changes, and while it is recent it also sits in the **Unassigned** view with an amber edge.
 
 ---
 
@@ -39,7 +39,7 @@ until that changes, and while it is recent it also sits in the **New** view with
 
 <Steps>
 <Step>
-Open the **New** view — or find any row with an amber left edge.
+Open the **Unassigned** view — or find any row with an amber left edge.
 </Step>
 <Step>
 Click the **person +** button on the right of the row.
@@ -47,7 +47,7 @@ Click the **person +** button on the right of the row.
 Alternatively, open the ticket and click **Assign to me** in the bar above the composer.
 </Step>
 <Step>
-The status pill turns to **Assigned**, the ticket moves to your **Mine** view, and the composer
+The status pill turns to **Assigned**, the ticket moves to your **Assigned to me** view, and the composer
 unlocks.
 </Step>
 </Steps>
@@ -92,7 +92,7 @@ The picker has three groups:
 | **People** | Members of the teams you can see — you first, then whoever is online, then everyone else by name. The current owner is marked **· Owner** |
 | **Auto-assign in a team** | Your teams. Picking one hands the ticket to one of its members — see below |
 
-Assigning **replaces** the current owner: the ticket leaves their **Mine** view and enters the new
+Assigning **replaces** the current owner: the ticket leaves their **Assigned to me** view and enters the new
 owner's. A person who is in several teams is recorded under the ticket's current team when they
 belong to it.
 
@@ -131,13 +131,13 @@ Reassignment changes the owner of an already-assigned ticket. Reach for it when:
 Leave a **private note** explaining where things stand. This is the handover.
 </Step>
 <Step>
-**@mention** the new owner in that note so it reaches their **@Mentions** view.
+**@mention** the new owner in that note so it reaches their **Unread mentions** view.
 </Step>
 <Step>
 Click the assignee under **Assignment** (or press **A**) and pick the new owner.
 </Step>
 <Step>
-The ticket leaves your **Mine** view and enters theirs. A system note records the change.
+The ticket leaves your **Assigned to me** view and enters theirs. A system note records the change.
 </Step>
 </Steps>
 
@@ -187,7 +187,7 @@ Picking a **team** gives each ticket to the next member in turn, so a batch is s
 team rather than landing on one person.
 
 Useful at shift changes, or when redistributing an absent colleague's queue. Bulk assign is not
-offered in **Mine** or **Spam**.
+offered in **Assigned to me** or **Spam contacts**.
 
 <Callout type="warn">
   Bulk assign **replaces** the existing assignees. Each ticket ends up with only the person it was
@@ -226,7 +226,7 @@ Abilities are set per role, and can be added or removed for one person — see
 
 ## Related Pages
 
-- [New](/inbox/inboxview/newchat) — the unowned queue
+- [Unassigned](/inbox/inboxview/newchat) — the unowned queue
 - [Private Notes & @Mentions](/inbox/private-notes) — writing a handover
 - [Closing & Reopening](/inbox/conversation-lifecycle)
 - [Conversations → Agents](/analytics/agent-performance) — transfers per agent

@@ -1,6 +1,6 @@
 ---
 title: "Replying to Customers"
-description: Send messages, quick replies, attachments, templates and chatbots; copy, react to and download messages — and understand when the composer is locked and why.
+description: Send messages, quick replies, attachments, templates and journeys; copy, react to and download messages — and understand when the composer is locked and why.
 ---
 
 import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
@@ -192,7 +192,7 @@ Under the message box sits a row of tools. Which ones you see depends on the cha
 | 📎 **Insert Media** | Attach a file — see below | All |
 | **Template** | Send an approved WhatsApp template | WhatsApp |
 | **Flow** | Send a WhatsApp Flow | WhatsApp |
-| **Automation** | Start one of your chatbots for this customer — see below | WhatsApp |
+| **Automation** | Start one of your journeys for this customer — see below | WhatsApp |
 | 🎙️ **Voice note** | Record and send audio | All but Webchat |
 | **From** selector | Which of your numbers the reply is sent from — see below | All but Webchat |
 
@@ -239,26 +239,26 @@ gives *"Select a account to send the message"*.
 
 On Instagram and Messenger the selector is locked to the account the conversation is on.
 
-### Start a chatbot for this customer
+### Start a journey for this customer
 
 **Automation** (the robot icon) hands the customer to one of your
-[WhatsApp chatbots](/whatsapp/chatbots).
+[WhatsApp journeys](/whatsapp/chatbots).
 
 <Steps>
 <Step>
-Click **Automation**. The **Initiate Automation** dialog lists your chatbots.
+Click **Automation**. The **Start a journey** dialog lists your journeys.
 </Step>
 <Step>
-Select one under **Select an automation**.
+Select one. Use **Search journeys...** to find it by name.
 </Step>
 <Step>
-Click **Send**. The chatbot's first message goes out and it takes the conversation from there.
+Click **Start journey**. The journey's first message goes out and it takes the conversation from there.
 </Step>
 </Steps>
 
 Use it to hand a customer to a self-service flow — booking, order tracking, a feedback survey —
-without typing the steps out yourself. With no chatbots set up, the dialog reads *"No Automations
-found"*. Automation needs an open 24-hour window, so it is not offered once the window has closed.
+without typing the steps out yourself. With no journeys set up, the dialog reads *"No WhatsApp journeys
+yet"*. Automation needs an open 24-hour window, so it is not offered once the window has closed.
 
 [Sending templates in detail →](/inbox/send-templates)
 
@@ -424,7 +424,7 @@ the full-size view. Click the image to open it full size.
 | Label on the bubble | Sent by |
 |---------------------|---------|
 | Your colleague's name and avatar | A person on your team |
-| 🤖 **Automation** | A chatbot, flow or automation rule — in a lighter bubble |
+| 🤖 **Automation** | A journey, flow or automation rule — in a lighter bubble |
 | 📣 **Campaign** | A [campaign](/campaign) |
 | Centred grey chip | A system note — assigned, reassigned, closed, reopened, spam |
 | Centred amber bubble with 🔒 | A private note — never sent to the customer |
@@ -476,7 +476,7 @@ deleted in the thread rather than removing the row.
 </Accordion>
 <Accordion title="The customer replied but my ticket did not update.">
 Click the **refresh** icon in the toolbar. If the reply came after the ticket was closed, it has
-opened a **new ticket** — check the **New** view.
+opened a **new ticket** — check the **Unassigned** view.
 </Accordion>
 <Accordion title="Can I reply to two tickets from the same customer separately?">
 Yes, and you should. Each ticket has its own thread and the customer sees one continuous chat.

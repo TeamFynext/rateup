@@ -1,12 +1,12 @@
 ---
-title: "Spam"
+title: "Spam Contacts"
 description: Flag a contact as spam to take them out of every working view — and take them back out of it.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
-**Spam** holds the contacts you have flagged as junk — promotional blasts, automated noise, and
+**Spam contacts** holds the contacts you have flagged as junk — promotional blasts, automated noise, and
 anyone who is not a genuine customer.
 
 Spam is a flag on the **contact**, not a status on a ticket. Flag someone once and they leave every
@@ -40,18 +40,18 @@ will be closed. Click **Mark as spam**.
 
 - **Every open ticket** for that contact is closed, with the close reason **Spam**
 - All assignees are cleared
-- The contact disappears from **Open**, **New**, **Closed**, **All**, **Mine**, **@Mentions** and
-  **Favourites**, and stops counting towards their badges
-- They appear once in **Spam**, with a red **Spam** pill on the row
+- The contact disappears from **Open**, **Unassigned**, **Closed**, **All**, **Assigned to me**, **Unread mentions** and
+  **Starred**, and stops counting towards their badges
+- They appear once in **Spam contacts**, with a red **Spam** pill on the row
 - A system note records who flagged them and when
 - The composer is replaced by a banner: *"This contact is marked as spam."*
 
 New messages from a spam contact still arrive — WhatsApp is not told anything — but they land on
-that contact's row in **Spam** rather than in **New**.
+that contact's row in **Spam contacts** rather than in **Unassigned**.
 
 <Callout type="info">
   Because the flag is on the contact, there is no **Close** or **Reopen** on a spam ticket, and
-  selection mode in the Spam tab offers no bulk assign or close. Only **Not spam** moves the contact
+  selection mode in the Spam contacts tab offers no bulk assign or close. Only **Not spam** moves the contact
   forward.
 </Callout>
 
@@ -61,7 +61,7 @@ that contact's row in **Spam** rather than in **New**.
 
 <Steps>
 <Step>
-Open the contact from the **Spam** tab.
+Open the contact from the **Spam contacts** tab.
 </Step>
 <Step>
 Click **Not spam** — in the chat header, in the banner above the composer, or at the bottom of the
@@ -73,7 +73,7 @@ Confirm. The flag is cleared and the contact returns to your working views.
 </Steps>
 
 Their old tickets stay closed — they were genuinely finished. The contact's next message opens a
-fresh ticket in **New**.
+fresh ticket in **Unassigned**.
 
 ---
 
@@ -84,8 +84,8 @@ Both apply to the contact. The difference is whether the messages still reach yo
 | | Mark contact as spam | Block contact |
 |---|---------------------|---------------|
 | **Scope** | The contact, and all their tickets | The contact |
-| **Effect** | Open tickets close; the contact moves to **Spam** | Neither side can message the other |
-| **Future messages** | Still arrive, into the **Spam** tab | Do not arrive at all |
+| **Effect** | Open tickets close; the contact moves to **Spam contacts** | Neither side can message the other |
+| **Future messages** | Still arrive, into the **Spam contacts** tab | Do not arrive at all |
 | **Reversible** | Yes, with **Not spam** | Yes, by unblocking |
 
 To block: open a ticket, use the **Close** menu — or the **⋮** overflow menu if the ticket is
@@ -118,7 +118,7 @@ flagged as spam, so anything they send afterwards still lands here.
 
 ## Best Practices
 
-- Use **Spam** for people, and the close statuses for conversations that are finished
+- Use **Spam contacts** for people, and the close statuses for conversations that are finished
 - Review the tab occasionally — genuine customers do end up here by accident
 - Block only when flagging as spam is not enough
 

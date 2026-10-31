@@ -1,6 +1,6 @@
 ---
 title: "Logic & Variables"
-description: Logic jumps, variables and custom validation — making a form respond to who is filling it in.
+description: Logic jumps, variables and custom validation — making a survey respond to who is filling it in.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
@@ -47,14 +47,14 @@ Each group gets the question that suits them, and nobody is asked something irre
 
 <Callout type="warn">
   Test every branch in **Preview** before sharing. A jump pointing at a deleted question strands
-  respondents mid-form, and you will only find out from the drop-off in your response count.
+  respondents mid-survey, and you will only find out from the drop-off in your response count.
 </Callout>
 
 ---
 
 ## Variables
 
-**Variables** store a value while someone fills in the form, and let you use it later.
+**Variables** store a value while someone fills in the survey, and let you use it later.
 
 | Kind | Meaning |
 |------|---------|
@@ -63,7 +63,7 @@ Each group gets the question that suits them, and nobody is asked something irre
 
 ### Default Variables
 
-Each answerable question gets a variable named after its **position in the form**, not after the
+Each answerable question gets a variable named after its **position in the survey**, not after the
 question itself. The third question's answer is `Q3_response`.
 
 Two question types answer several things at once, so they get one variable per field:
@@ -83,7 +83,7 @@ to reference one of those answers, assign it to a custom variable.
 
 <Callout type="warn">
   Because the names follow position, **reordering or inserting a question renumbers them**. Move
-  question 3 to the end of a five-question form and `Q3_response` now means what used to be
+  question 3 to the end of a five-question survey and `Q3_response` now means what used to be
   question 4. Anywhere you have referenced a default variable — question text, a thank-you page, a
   condition, an automation — points at the new occupant of that position, not at the question you
   meant. After changing the order, re-check every reference. A custom variable, whose name you
@@ -104,7 +104,7 @@ Reference the variable later — in question text, on the thank-you page, or in 
 </Step>
 </Steps>
 
-Names must be unique within a form — reusing one is rejected with **Variable already exist**.
+Names must be unique within a survey — reusing one is rejected with **Variable already exist**.
 
 ### What variables are for
 
@@ -113,7 +113,7 @@ Names must be unique within a form — reusing one is rejected with **Variable a
 - **Passing context in** — carrying a campaign or location identifier into the response record
 
 <Callout type="info">
-  Passing a variable in through the form's URL is how you tell which QR code, campaign or branch a
+  Passing a variable in through the survey's URL is how you tell which QR code, campaign or branch a
   response came from — without asking the customer.
 </Callout>
 
@@ -142,7 +142,7 @@ Every rule carries an **error message**. Write it as help, not as a scolding: *"
 
 ## Putting Them Together
 
-A well-built feedback form usually uses all three:
+A well-built feedback survey usually uses all three:
 
 1. **Validation** keeps the contact details usable
 2. **Logic jumps** ask detractors and promoters different things

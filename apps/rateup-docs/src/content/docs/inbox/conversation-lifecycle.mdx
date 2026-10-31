@@ -152,7 +152,7 @@ A **new ticket** is created for the same customer, with the previous assignees c
 | **Status** | Stays **Closed** | **Assigned** |
 | **Close time and result** | Frozen | Not set |
 | **Assignees** | None | Whoever was assigned when it closed |
-| **Where it appears** | Closed view, history bar | Open / Mine |
+| **Where it appears** | Closed view, history bar | Open / Assigned to me |
 
 <Callout type="warn">
   Reopening does not revive the old ticket. Its resolution time and outcome stay exactly as they
@@ -166,7 +166,7 @@ closed one being brought back to life.
 
 ## When a Customer Replies After Closure
 
-Nothing to do. Their message creates a **new ticket** in the **New** view, and the closed ticket
+Nothing to do. Their message creates a **new ticket** in the **Unassigned** view, and the closed ticket
 stays closed.
 
 This is the whole point of the ticket model: one topic, one ticket, one honest record of how it
@@ -225,7 +225,7 @@ To delete many tickets at once, use selection mode in the list and **Delete sele
 ## Auto-Close
 
 Tickets that go quiet can be closed automatically. Two rules, configured under
-**Inbox Settings → Automation**:
+**Inbox Settings → Auto-close**:
 
 - **New and unassigned conversations** — closed after a set time without a new message
 - **Assigned conversations** — closed after a set time without a new message
@@ -274,6 +274,6 @@ The first close wins. The second person will see the read-only banner.
 ## Related Pages
 
 - [Closed view](/inbox/inboxview/closed)
-- [Spam view](/inbox/inboxview/spam)
+- [Spam contacts view](/inbox/inboxview/spam)
 - [Tickets & Conversations](/inbox/tickets)
 - [Inbox Settings](/inbox/inbox-settings) — auto-close rules
