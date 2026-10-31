@@ -397,7 +397,7 @@ function Editor({ step }: { step: DripStepDetail }) {
                     />
                     <Input
                       aria-label="Link (optional)"
-                      placeholder="Link (optional), e.g. /dashboard/automation"
+                      placeholder="Link (optional), e.g. /dashboard/automation/rules"
                       value={highlight.path}
                       onChange={(e) => updateHighlight(index, { path: e.target.value })}
                       className="h-9 rounded-lg"

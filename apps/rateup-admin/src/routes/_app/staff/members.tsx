@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { formatDate, formatRelative } from "@/lib/format";
 
-export const Route = createFileRoute("/_app/staff")({
+export const Route = createFileRoute("/_app/staff/members")({
   component: StaffMembersPage,
 });
 
@@ -91,7 +91,7 @@ function columns(me: StaffUser, onAction: (action: StaffAction) => void): Column
       cell: (member) => (
         <span className="flex items-center justify-end gap-1">
           <Link
-            to="/audit"
+            to="/staff/audit-log"
             search={{ staff: member.id }}
             className="px-2 text-xs font-medium tracking-wide text-muted-foreground uppercase hover:text-foreground"
           >

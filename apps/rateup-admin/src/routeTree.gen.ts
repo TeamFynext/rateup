@@ -14,7 +14,6 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAuditRouteImport } from './routes/_app/audit'
 import { Route as AppOrgsRouteImport } from './routes/_app/orgs'
-import { Route as AppStaffRouteImport } from './routes/_app/staff'
 import { Route as AppBillingOrdersRouteImport } from './routes/_app/billing/orders'
 import { Route as AppBillingPlansRouteImport } from './routes/_app/billing/plans'
 import { Route as AppBillingRazorpayRouteImport } from './routes/_app/billing/razorpay'
@@ -26,6 +25,9 @@ import { Route as AppOpsTestDataRouteImport } from './routes/_app/ops/test-data'
 import { Route as AppOpsUpdateCenterRouteImport } from './routes/_app/ops/update-center'
 import { Route as AppOrgsIndexRouteImport } from './routes/_app/orgs/index'
 import { Route as AppOrgsOrgIdRouteImport } from './routes/_app/orgs/$orgId'
+import { Route as AppStaffIndexRouteImport } from './routes/_app/staff/index'
+import { Route as AppStaffAuditLogRouteImport } from './routes/_app/staff/audit-log'
+import { Route as AppStaffMembersRouteImport } from './routes/_app/staff/members'
 import { Route as AppEngageBroadcastsIndexRouteImport } from './routes/_app/engage/broadcasts/index'
 import { Route as AppEngageBroadcastsBroadcastIdRouteImport } from './routes/_app/engage/broadcasts/$broadcastId'
 import { Route as AppEngageOnboardingIndexRouteImport } from './routes/_app/engage/onboarding/index'
@@ -53,11 +55,6 @@ const AppAuditRoute = AppAuditRouteImport.update({
 const AppOrgsRoute = AppOrgsRouteImport.update({
   id: '/orgs',
   path: '/orgs',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppStaffRoute = AppStaffRouteImport.update({
-  id: '/staff',
-  path: '/staff',
   getParentRoute: () => AppRoute,
 } as any)
 const AppBillingOrdersRoute = AppBillingOrdersRouteImport.update({
@@ -115,6 +112,21 @@ const AppOrgsOrgIdRoute = AppOrgsOrgIdRouteImport.update({
   path: '/$orgId',
   getParentRoute: () => AppOrgsRoute,
 } as any)
+const AppStaffIndexRoute = AppStaffIndexRouteImport.update({
+  id: '/staff/',
+  path: '/staff/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppStaffAuditLogRoute = AppStaffAuditLogRouteImport.update({
+  id: '/staff/audit-log',
+  path: '/staff/audit-log',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppStaffMembersRoute = AppStaffMembersRouteImport.update({
+  id: '/staff/members',
+  path: '/staff/members',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppEngageBroadcastsIndexRoute =
   AppEngageBroadcastsIndexRouteImport.update({
     id: '/engage/broadcasts/',
@@ -144,7 +156,6 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/audit': typeof AppAuditRoute
   '/orgs': typeof AppOrgsRouteWithChildren
-  '/staff': typeof AppStaffRoute
   '/billing/orders': typeof AppBillingOrdersRoute
   '/billing/plans': typeof AppBillingPlansRoute
   '/billing/razorpay': typeof AppBillingRazorpayRoute
@@ -155,7 +166,10 @@ export interface FileRoutesByFullPath {
   '/ops/test-data': typeof AppOpsTestDataRoute
   '/ops/update-center': typeof AppOpsUpdateCenterRoute
   '/orgs/$orgId': typeof AppOrgsOrgIdRoute
+  '/staff/audit-log': typeof AppStaffAuditLogRoute
+  '/staff/members': typeof AppStaffMembersRoute
   '/orgs/': typeof AppOrgsIndexRoute
+  '/staff/': typeof AppStaffIndexRoute
   '/engage/broadcasts/$broadcastId': typeof AppEngageBroadcastsBroadcastIdRoute
   '/engage/onboarding/$key': typeof AppEngageOnboardingKeyRoute
   '/engage/broadcasts/': typeof AppEngageBroadcastsIndexRoute
@@ -164,7 +178,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/audit': typeof AppAuditRoute
-  '/staff': typeof AppStaffRoute
   '/': typeof AppIndexRoute
   '/billing/orders': typeof AppBillingOrdersRoute
   '/billing/plans': typeof AppBillingPlansRoute
@@ -176,7 +189,10 @@ export interface FileRoutesByTo {
   '/ops/test-data': typeof AppOpsTestDataRoute
   '/ops/update-center': typeof AppOpsUpdateCenterRoute
   '/orgs/$orgId': typeof AppOrgsOrgIdRoute
+  '/staff/audit-log': typeof AppStaffAuditLogRoute
+  '/staff/members': typeof AppStaffMembersRoute
   '/orgs': typeof AppOrgsIndexRoute
+  '/staff': typeof AppStaffIndexRoute
   '/engage/broadcasts/$broadcastId': typeof AppEngageBroadcastsBroadcastIdRoute
   '/engage/onboarding/$key': typeof AppEngageOnboardingKeyRoute
   '/engage/broadcasts': typeof AppEngageBroadcastsIndexRoute
@@ -188,7 +204,6 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_app/audit': typeof AppAuditRoute
   '/_app/orgs': typeof AppOrgsRouteWithChildren
-  '/_app/staff': typeof AppStaffRoute
   '/_app/': typeof AppIndexRoute
   '/_app/billing/orders': typeof AppBillingOrdersRoute
   '/_app/billing/plans': typeof AppBillingPlansRoute
@@ -200,7 +215,10 @@ export interface FileRoutesById {
   '/_app/ops/test-data': typeof AppOpsTestDataRoute
   '/_app/ops/update-center': typeof AppOpsUpdateCenterRoute
   '/_app/orgs/$orgId': typeof AppOrgsOrgIdRoute
+  '/_app/staff/audit-log': typeof AppStaffAuditLogRoute
+  '/_app/staff/members': typeof AppStaffMembersRoute
   '/_app/orgs/': typeof AppOrgsIndexRoute
+  '/_app/staff/': typeof AppStaffIndexRoute
   '/_app/engage/broadcasts/$broadcastId': typeof AppEngageBroadcastsBroadcastIdRoute
   '/_app/engage/onboarding/$key': typeof AppEngageOnboardingKeyRoute
   '/_app/engage/broadcasts/': typeof AppEngageBroadcastsIndexRoute
@@ -213,7 +231,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/audit'
     | '/orgs'
-    | '/staff'
     | '/billing/orders'
     | '/billing/plans'
     | '/billing/razorpay'
@@ -224,7 +241,10 @@ export interface FileRouteTypes {
     | '/ops/test-data'
     | '/ops/update-center'
     | '/orgs/$orgId'
+    | '/staff/audit-log'
+    | '/staff/members'
     | '/orgs/'
+    | '/staff/'
     | '/engage/broadcasts/$broadcastId'
     | '/engage/onboarding/$key'
     | '/engage/broadcasts/'
@@ -233,7 +253,6 @@ export interface FileRouteTypes {
   to:
     | '/login'
     | '/audit'
-    | '/staff'
     | '/'
     | '/billing/orders'
     | '/billing/plans'
@@ -245,7 +264,10 @@ export interface FileRouteTypes {
     | '/ops/test-data'
     | '/ops/update-center'
     | '/orgs/$orgId'
+    | '/staff/audit-log'
+    | '/staff/members'
     | '/orgs'
+    | '/staff'
     | '/engage/broadcasts/$broadcastId'
     | '/engage/onboarding/$key'
     | '/engage/broadcasts'
@@ -256,7 +278,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/_app/audit'
     | '/_app/orgs'
-    | '/_app/staff'
     | '/_app/'
     | '/_app/billing/orders'
     | '/_app/billing/plans'
@@ -268,7 +289,10 @@ export interface FileRouteTypes {
     | '/_app/ops/test-data'
     | '/_app/ops/update-center'
     | '/_app/orgs/$orgId'
+    | '/_app/staff/audit-log'
+    | '/_app/staff/members'
     | '/_app/orgs/'
+    | '/_app/staff/'
     | '/_app/engage/broadcasts/$broadcastId'
     | '/_app/engage/onboarding/$key'
     | '/_app/engage/broadcasts/'
@@ -315,13 +339,6 @@ declare module '@tanstack/react-router' {
       path: '/orgs'
       fullPath: '/orgs'
       preLoaderRoute: typeof AppOrgsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/staff': {
-      id: '/_app/staff'
-      path: '/staff'
-      fullPath: '/staff'
-      preLoaderRoute: typeof AppStaffRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/billing/orders': {
@@ -401,6 +418,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOrgsOrgIdRouteImport
       parentRoute: typeof AppOrgsRoute
     }
+    '/_app/staff/': {
+      id: '/_app/staff/'
+      path: '/staff'
+      fullPath: '/staff/'
+      preLoaderRoute: typeof AppStaffIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/staff/audit-log': {
+      id: '/_app/staff/audit-log'
+      path: '/staff/audit-log'
+      fullPath: '/staff/audit-log'
+      preLoaderRoute: typeof AppStaffAuditLogRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/staff/members': {
+      id: '/_app/staff/members'
+      path: '/staff/members'
+      fullPath: '/staff/members'
+      preLoaderRoute: typeof AppStaffMembersRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/engage/broadcasts/': {
       id: '/_app/engage/broadcasts/'
       path: '/engage/broadcasts'
@@ -448,7 +486,6 @@ const AppOrgsRouteWithChildren =
 interface AppRouteChildren {
   AppAuditRoute: typeof AppAuditRoute
   AppOrgsRoute: typeof AppOrgsRouteWithChildren
-  AppStaffRoute: typeof AppStaffRoute
   AppIndexRoute: typeof AppIndexRoute
   AppBillingOrdersRoute: typeof AppBillingOrdersRoute
   AppBillingPlansRoute: typeof AppBillingPlansRoute
@@ -459,6 +496,9 @@ interface AppRouteChildren {
   AppOpsShopifyRoute: typeof AppOpsShopifyRoute
   AppOpsTestDataRoute: typeof AppOpsTestDataRoute
   AppOpsUpdateCenterRoute: typeof AppOpsUpdateCenterRoute
+  AppStaffAuditLogRoute: typeof AppStaffAuditLogRoute
+  AppStaffMembersRoute: typeof AppStaffMembersRoute
+  AppStaffIndexRoute: typeof AppStaffIndexRoute
   AppEngageBroadcastsBroadcastIdRoute: typeof AppEngageBroadcastsBroadcastIdRoute
   AppEngageOnboardingKeyRoute: typeof AppEngageOnboardingKeyRoute
   AppEngageBroadcastsIndexRoute: typeof AppEngageBroadcastsIndexRoute
@@ -468,7 +508,6 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAuditRoute: AppAuditRoute,
   AppOrgsRoute: AppOrgsRouteWithChildren,
-  AppStaffRoute: AppStaffRoute,
   AppIndexRoute: AppIndexRoute,
   AppBillingOrdersRoute: AppBillingOrdersRoute,
   AppBillingPlansRoute: AppBillingPlansRoute,
@@ -479,6 +518,9 @@ const AppRouteChildren: AppRouteChildren = {
   AppOpsShopifyRoute: AppOpsShopifyRoute,
   AppOpsTestDataRoute: AppOpsTestDataRoute,
   AppOpsUpdateCenterRoute: AppOpsUpdateCenterRoute,
+  AppStaffAuditLogRoute: AppStaffAuditLogRoute,
+  AppStaffMembersRoute: AppStaffMembersRoute,
+  AppStaffIndexRoute: AppStaffIndexRoute,
   AppEngageBroadcastsBroadcastIdRoute: AppEngageBroadcastsBroadcastIdRoute,
   AppEngageOnboardingKeyRoute: AppEngageOnboardingKeyRoute,
   AppEngageBroadcastsIndexRoute: AppEngageBroadcastsIndexRoute,

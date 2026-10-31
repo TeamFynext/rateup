@@ -41,7 +41,7 @@ export const LIMITS = [
   },
   {
     key: "formResponses",
-    label: "Form responses",
+    label: "Survey responses",
     hint: "a month",
     get: (f: Partial2) => f?.webSurvey?.count?.monthlyResponseLimit,
     set: (f: SubscriptionFeatures, value: number) => {
@@ -98,7 +98,7 @@ export const SWITCHES = [
   },
   {
     key: "ai",
-    label: "Business Agent (AI)",
+    label: "Meta AI Agent",
     get: (f: Partial2) => f?.ai?.active,
     set: (f: SubscriptionFeatures, on: boolean) => {
       f.ai.active = on;
@@ -106,7 +106,7 @@ export const SWITCHES = [
   },
   {
     key: "webhook",
-    label: "Form webhooks",
+    label: "Survey webhooks",
     get: (f: Partial2) => f?.webSurvey?.webhook?.active,
     set: (f: SubscriptionFeatures, on: boolean) => {
       f.webSurvey.webhook = { active: on };
