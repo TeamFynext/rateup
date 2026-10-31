@@ -214,8 +214,8 @@ function ProductEditor({ product }: Readonly<{ product?: ShopProduct }>) {
                   variant="outline"
                   render={
                     <Link
-                      to="/dashboard/automation/$automationId"
-                      params={{ automationId: "new" }}
+                      to="/dashboard/automation/rules/$ruleId"
+                      params={{ ruleId: "new" }}
                       search={{ template: "comment-to-buy", product: product.id }}
                     />
                   }

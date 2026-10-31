@@ -118,12 +118,12 @@ export function InstagramDashboard() {
 
         <div className="flex items-center gap-3">
           <Link
-            to="/dashboard/chatbots"
+            to="/dashboard/automation/journeys"
             search={{ channel: "instagram" }}
             className={buttonVariants({ variant: "outline", size: "sm" })}
           >
             <IconSitemap className="mr-1.5 size-4" />
-            {t("Instagram chatbots")}
+            {t("Instagram journeys")}
           </Link>
           <Select
             value={selectedSetting?.id ?? ""}

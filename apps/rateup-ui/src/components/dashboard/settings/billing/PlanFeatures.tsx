@@ -103,7 +103,7 @@ function derivedBullets(subscription?: Subscription): string[] {
   if (responses) bullets.push(`${count(responses)} form submissions / mo`);
   if (features.whatsapp?.campaign?.active) bullets.push("Campaigns");
   if (features.loyalty?.active) bullets.push("Loyalty & referrals");
-  if (features.ai?.active) bullets.push("Meta Business AI agent");
+  if (features.ai?.active) bullets.push("Meta AI Agent");
 
   return bullets;
 }

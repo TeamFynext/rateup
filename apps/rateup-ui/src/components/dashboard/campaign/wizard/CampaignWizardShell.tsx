@@ -84,7 +84,7 @@ export function CampaignWizardShell({
         <header className="border-border bg-card flex h-14 shrink-0 items-center justify-between gap-4 border-b px-8">
           <div className="flex min-w-0 items-center gap-2.5">
             <Link
-              to="/dashboard/campaign"
+              to="/dashboard/campaigns"
               className="text-muted-foreground hover:text-foreground inline-flex shrink-0 items-center gap-1 text-[13px]"
             >
               <IconArrowLeft className="size-3.5" aria-hidden />

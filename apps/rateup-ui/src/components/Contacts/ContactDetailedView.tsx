@@ -1,4 +1,11 @@
-import { IconCheck, IconCopy, IconEdit, IconFolder, IconInbox, IconX } from "@tabler/icons-react";
+import {
+  IconCheck,
+  IconCopy,
+  IconEdit,
+  IconUsersGroup,
+  IconInbox,
+  IconX,
+} from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import type { ComponentProps, ReactNode } from "react";
@@ -188,7 +195,7 @@ const ContactDetailedView = ({
 
   async function handleRemoveContactFromGroup(group: GroupRef, contactIds: string[]) {
     const shouldRemove = await confirm({
-      title: "Remove Contact from Group",
+      title: "Remove Contact from Audience",
       description: `Are you sure you want to remove ${selectedContact.name} from group ${group?.name}?`,
       confirmText: "Remove",
       cancelText: "Cancel",
@@ -203,7 +210,7 @@ const ContactDetailedView = ({
       { contactIds, groupId: group.id },
       {
         onSuccess: () => {
-          toast.success("contact removed from group");
+          toast.success("contact removed from audience");
         },
         onError: (error) => {
           toast.error(error?.message || "something went wrong");
@@ -556,7 +563,7 @@ const ContactDetailedView = ({
               )}
             </Section>
 
-            <Section title="Groups">
+            <Section title="Audiences">
               <div className="space-y-1 pt-1">
                 {groups.length > 0 ? (
                   groups.map((entry: { contactGroup?: GroupRef }) => {
@@ -567,7 +574,7 @@ const ContactDetailedView = ({
                         className="flex items-center justify-between gap-2 rounded-md bg-muted/50 px-2 py-1"
                       >
                         <span className="flex items-center gap-2 text-sm min-w-0">
-                          <IconFolder className="w-4 h-4 text-muted-foreground shrink-0" />
+                          <IconUsersGroup className="w-4 h-4 text-muted-foreground shrink-0" />
                           <span className="truncate">{group?.name}</span>
                         </span>
                         <Button
@@ -596,10 +603,12 @@ const ContactDetailedView = ({
                     addToGroup.mutate({ customerList: [selectedContact.id], groupId })
                   }
                   disabled={addToGroup.isPending}
-                  label="Add to group"
-                  placeholder="Search groups"
-                  emptyText="No groups yet"
-                  marker={() => <IconFolder className="size-4 shrink-0 text-muted-foreground" />}
+                  label="Add to audience"
+                  placeholder="Search audiences"
+                  emptyText="No audiences yet"
+                  marker={() => (
+                    <IconUsersGroup className="size-4 shrink-0 text-muted-foreground" />
+                  )}
                   className={cn(buttonVariants({ variant: "outline", size: "sm" }), "mt-1")}
                 />
               </div>

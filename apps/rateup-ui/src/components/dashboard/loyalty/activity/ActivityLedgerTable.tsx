@@ -85,7 +85,7 @@ export function ActivityLedgerTable({
                   nothing to open: the details view is keyed on the phone. */}
               {contact?.phone ? (
                 <Link
-                  to={LOYALTY_PATHS.customers}
+                  to={LOYALTY_PATHS.members}
                   search={{ phone: contact.phone }}
                   title={t("Open {name}", { name })}
                   className="block truncate font-medium text-primary underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"

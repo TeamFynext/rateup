@@ -3,11 +3,11 @@
  * cross-link read from here, so a moved route is one edit.
  */
 export const LOYALTY_PATHS = {
-  overview: "/dashboard/loyalty/dashboard",
+  overview: "/dashboard/loyalty/overview",
   cashier: "/dashboard/loyalty/cashier",
   /** The sidebar-less staff-device variant of the cashier. */
   cashierStandalone: "/cashier",
-  customers: "/dashboard/loyalty/customers",
+  members: "/dashboard/loyalty/members",
   program: "/dashboard/loyalty/program",
   /** The reward catalog, with the joining and referral bonuses above it. */
   rewards: "/dashboard/loyalty/rewards",

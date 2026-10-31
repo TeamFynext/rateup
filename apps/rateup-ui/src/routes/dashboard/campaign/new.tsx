@@ -1,11 +1,15 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import { NewCampaignPage } from "@/components/dashboard/campaign/wizard/NewCampaignPage.tsx";
-
+/** Campaigns moved to /dashboard/campaigns; old links and bookmarks keep working. */
 export const Route = createFileRoute("/dashboard/campaign/new")({
-  component: RouteComponent,
+  beforeLoad: ({ location }) => {
+    throw redirect({
+      to: "/dashboard/campaigns/new",
+      // The old URL's query, carried across as-is: the target's own validateSearch
+      // parses it, so this route does not restate (and drift from) that schema.
+      search: location.search as never,
+      hash: location.hash,
+      replace: true,
+    });
+  },
 });
-
-function RouteComponent() {
-  return <NewCampaignPage />;
-}

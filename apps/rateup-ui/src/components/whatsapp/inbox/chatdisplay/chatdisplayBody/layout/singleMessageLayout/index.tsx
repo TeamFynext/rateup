@@ -1,4 +1,5 @@
 import {
+  IconBolt,
   IconAlertCircle,
   IconArchive,
   IconCheck,
@@ -10,7 +11,6 @@ import {
   IconPhoneIncoming,
   IconPhoneOutgoing,
   IconPhoneX,
-  IconRobot,
   IconShieldOff,
   IconSparkles,
   IconSpeakerphone,
@@ -325,7 +325,7 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
             ) : isMetaAi ? (
               <IconSparkles className="size-3 shrink-0" />
             ) : (
-              <IconRobot className="size-3 shrink-0" />
+              <IconBolt className="size-3 shrink-0" />
             )}
             {isCampaign ? "Campaign" : isMetaAi ? "Meta AI" : "Automation"}
           </MessageHeader>

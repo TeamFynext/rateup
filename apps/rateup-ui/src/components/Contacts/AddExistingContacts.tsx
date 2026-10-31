@@ -106,7 +106,7 @@ const AddExistingContacts = ({
     const ok = await confirm({
       title: t("Add all matching contacts"),
       description: t(
-        "{count, plural, one {# contact matches} other {# contacts match}} these filters. Anyone already in the group is skipped.",
+        "{count, plural, one {# contact matches} other {# contacts match}} these filters. Anyone already in the audience is skipped.",
         { count: totalCount },
       ),
       confirmText: t("Add all"),

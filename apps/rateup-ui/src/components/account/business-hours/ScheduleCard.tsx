@@ -473,8 +473,8 @@ export function ScheduleCard({
                 <span key={rule.id}>
                   {index > 0 && ", "}
                   <Link
-                    to="/dashboard/automation/$automationId"
-                    params={{ automationId: rule.id }}
+                    to="/dashboard/automation/rules/$ruleId"
+                    params={{ ruleId: rule.id }}
                     className="text-primary underline-offset-2 hover:underline"
                   >
                     {rule.name}

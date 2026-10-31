@@ -1,4 +1,4 @@
-import { IconFolder } from "@tabler/icons-react";
+import { IconUsersGroup } from "@tabler/icons-react";
 
 import {
   useAddExistingContactMutation,
@@ -68,14 +68,14 @@ const AddToGroupModal = ({
             <div className="overflow-hidden rounded-md bg-popover text-popover-foreground ring-1 ring-foreground/10">
               <ComboboxChipsInput
                 autoFocus
-                placeholder="Search groups"
+                placeholder="Search audiences"
                 className="h-9 w-full shrink-0 border-b border-border px-3 text-sm"
               />
-              <ComboboxEmpty>{items.length ? "No matches" : "No groups yet"}</ComboboxEmpty>
+              <ComboboxEmpty>{items.length ? "No matches" : "No audiences yet"}</ComboboxEmpty>
               <ComboboxList className="max-h-72">
                 {(item: { id: string; label: string }) => (
                   <ComboboxItem key={item.id} value={item} disabled={addToGroup.isPending}>
-                    <IconFolder className="text-muted-foreground" />
+                    <IconUsersGroup className="text-muted-foreground" />
                     <span className="truncate">{item.label}</span>
                   </ComboboxItem>
                 )}

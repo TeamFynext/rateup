@@ -74,7 +74,7 @@ const ConditionValueInput = ({
         items={contactGroups?.map((g) => ({ value: g.id, label: g.name })) ?? []}
       >
         <SelectTrigger>
-          <SelectValue placeholder="Select group" />
+          <SelectValue placeholder="Select audience" />
         </SelectTrigger>
         <SelectContent>
           {contactGroups?.map((g) => (

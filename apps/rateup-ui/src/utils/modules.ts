@@ -1,5 +1,5 @@
 import {
-  IconBrowser,
+  IconChecklist,
   IconFilterBolt,
   IconGift,
   IconQrcode,
@@ -42,7 +42,7 @@ export const ORG_MODULE_INFO: readonly OrgModuleInfo[] = [
   {
     key: "pipeline",
     icon: IconFilterBolt,
-    paths: ["/dashboard/pipeline"],
+    paths: ["/dashboard/pipelines"],
     permissionGroups: ["pipelines"],
   },
   {
@@ -61,7 +61,7 @@ export const ORG_MODULE_INFO: readonly OrgModuleInfo[] = [
   },
   {
     key: "web_forms",
-    icon: IconBrowser,
+    icon: IconChecklist,
     planGate: SubscriptionFeaturePathName.WebSurvey,
     paths: ["/dashboard/surveys"],
     // `surveys` and `responses` also guard WhatsApp Flow forms, which stay on.
@@ -90,13 +90,13 @@ export function getModuleForDashboardPath(pathname: string): OrgModuleInfo | und
 export function moduleLabel(t: TFunction, key: OrgModule): string {
   switch (key) {
     case "pipeline":
-      return t("Pipeline");
+      return t("Pipelines");
     case "loyalty":
       return t("Loyalty");
     case "commerce":
       return t("Commerce");
     case "web_forms":
-      return t("Web Forms");
+      return t("Surveys");
     case "qr_links":
       return t("QR & Links");
     case "ai_agent":
@@ -115,7 +115,7 @@ export function moduleDescription(t: TFunction, key: OrgModule): string {
     case "web_forms":
       return t("Surveys and feedback forms you share as a link.");
     case "qr_links":
-      return t("QR codes and link pages that open a chat with you.");
+      return t("QR codes and link-in-bio pages that open a chat with you.");
     case "ai_agent":
       return t("Meta's AI agent answering customers on your WhatsApp number.");
   }
@@ -205,8 +205,8 @@ export function alwaysIncluded(t: TFunction): string[] {
     t("Inbox"),
     t("Contacts"),
     t("Campaigns"),
-    t("Automation"),
-    t("WhatsApp templates, chatbots and flows"),
+    t("Automation Rules"),
+    t("WhatsApp templates, journeys and flows"),
     t("Instagram and Messenger"),
     t("Analytics"),
   ];

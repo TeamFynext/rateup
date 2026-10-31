@@ -1,11 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import { GroupPage } from "@/components/dashboard/contacts/groups/GroupPage.tsx";
-
+/** Contact groups were renamed Audiences; old links keep working. */
 export const Route = createFileRoute("/dashboard/contacts/groups/")({
-  component: RouteComponent,
+  beforeLoad: () => {
+    throw redirect({ to: "/dashboard/contacts/audiences", replace: true });
+  },
 });
-
-function RouteComponent() {
-  return <GroupPage />;
-}

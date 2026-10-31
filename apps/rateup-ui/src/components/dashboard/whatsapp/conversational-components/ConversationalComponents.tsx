@@ -1,4 +1,4 @@
-// Extracted verbatim from the `/dashboard/whatsapp/conversational-components/` route so the route file carries routing
+// Extracted verbatim from the `/dashboard/whatsapp/ice-breakers/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
 import { IconPlus, IconRefresh, IconTrash } from "@tabler/icons-react";
@@ -13,6 +13,7 @@ import {
   useUpdateConversationalAutomation,
   useWaSettings,
 } from "@/backend/whatsapp/settings/waSettings.query";
+import { PageHeading } from "@/components/common/page-heading.tsx";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,8 +45,14 @@ export function ConversationalComponents() {
   };
 
   return (
-    <>
-      <div className="mb-4 flex items-end gap-2 justify-between">
+    <div className="mx-auto flex w-full max-w-265 flex-col gap-5">
+      <PageHeading
+        title={t("Ice Breakers & Commands")}
+        description={t(
+          "The suggested questions and slash commands customers see when they open a WhatsApp chat with you.",
+        )}
+      />
+      <div className="flex items-end gap-2 justify-between">
         <div className="max-w-xs flex-1">
           <AccountSelector
             value={selectedPhoneId}
@@ -61,7 +68,7 @@ export function ConversationalComponents() {
       </div>
 
       <DisplayConversationalSettings selectedPhoneId={selectedPhoneId} />
-    </>
+    </div>
   );
 }
 function DisplayConversationalSettings({

@@ -1,4 +1,4 @@
-// Extracted verbatim from the `/dashboard/testimonial/$collectionId/` route so the route file carries routing
+// Extracted verbatim from the `/dashboard/surveys/testimonials/$collectionId/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
 import { IconDeviceFloppy, IconPencil, IconShare, IconTrash } from "@tabler/icons-react";

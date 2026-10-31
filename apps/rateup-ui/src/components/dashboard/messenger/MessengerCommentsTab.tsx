@@ -50,8 +50,8 @@ export function MessengerCommentsTab({ pageId }: Readonly<{ pageId: string }>) {
       size="sm"
       render={
         <Link
-          to="/dashboard/automation/$automationId"
-          params={{ automationId: "new" }}
+          to="/dashboard/automation/rules/$ruleId"
+          params={{ ruleId: "new" }}
           search={{ platform: "FACEBOOK", triggerEvent: "FACEBOOK_COMMENT", channel: pageId }}
         />
       }
@@ -89,14 +89,14 @@ export function MessengerCommentsTab({ pageId }: Readonly<{ pageId: string }>) {
                 {t('Create an automation with the "Facebook Page Comment" trigger to get started.')}
               </EmptyDescription>
             </EmptyHeader>
-            <EmptyContent>{createButton(t("Create automation"))}</EmptyContent>
+            <EmptyContent>{createButton(t("Create rule"))}</EmptyContent>
           </Empty>
         ) : (
           <CardGrid
             items={commentRules}
             getKey={(item) => item.id}
             renderItem={(item) => (
-              <Link to="/dashboard/automation/$automationId" params={{ automationId: item.id }}>
+              <Link to="/dashboard/automation/rules/$ruleId" params={{ ruleId: item.id }}>
                 <RuleCard
                   item={item}
                   onToggleActive={() =>

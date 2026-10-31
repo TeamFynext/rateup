@@ -52,15 +52,15 @@ import { exportAgentReport } from "./report/exportReport.ts";
 
 const ICON = "size-4 text-muted-foreground";
 
-/** One agent's numbers: `/dashboard/analytics/$staffid`. */
+/** One agent's numbers: `/dashboard/analytics/agents/$agentId`. */
 export function AnalyticsPage() {
-  const { staffid } = useParams({ strict: false });
+  const { agentId } = useParams({ strict: false });
   const [day, setDay] = useState(7);
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [isExporting, setIsExporting] = useState(false);
 
-  const query = useGetStaffDetailedConversationAnalytics(staffid ?? "", { days: day });
+  const query = useGetStaffDetailedConversationAnalytics(agentId ?? "", { days: day });
   const analytics = query.data;
   const agent = analytics?.userPerformance;
 
@@ -68,7 +68,7 @@ export function AnalyticsPage() {
     requestFreshAnalytics();
     queryClient
       .invalidateQueries({
-        queryKey: staffKeys.detailedConversationAnalytics(staffid, { days: day }),
+        queryKey: staffKeys.detailedConversationAnalytics(agentId, { days: day }),
         refetchType: "all",
       })
       .finally(endFreshAnalytics);
@@ -120,7 +120,7 @@ export function AnalyticsPage() {
           back={
             <BackLink
               to="/dashboard/analytics"
-              search={{ tab: "conversations", view: "agents" }}
+              search={{ tab: "team-performance", view: "agents" }}
               label={t("Agents")}
               iconOnly
             />

@@ -222,7 +222,7 @@ export function OrdersPage() {
           {can("contacts.manage") && can("commerce.orders.manage") && (
             <Button variant="outline" onClick={() => setSegmentOpen(true)}>
               <IconUsersGroup data-icon="inline-start" />
-              {t("Save shoppers as a group")}
+              {t("Save shoppers as an audience")}
             </Button>
           )}
           {can("commerce.sell") && <TestOrderButton variant="outline" />}

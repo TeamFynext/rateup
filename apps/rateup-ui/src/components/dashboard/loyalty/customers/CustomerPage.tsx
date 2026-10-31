@@ -1,4 +1,4 @@
-// Extracted from the `/dashboard/loyalty/customers/` route so the route file carries routing
+// Extracted from the `/dashboard/loyalty/members/` route so the route file carries routing
 // config only. The opened member lives in the URL as `?phone=`, not in component state, so
 // other screens — the Activity ledger — can link straight to a customer.
 
@@ -157,7 +157,7 @@ export function CustomerPage({ search }: Readonly<{ search: CustomersSearch }>) 
   // The details view is found by number, so a row without one has nothing to open. The API
   // only enrols contacts that have a phone, so this is a guard rather than a case to design for.
   const openCustomer = (phone: string | undefined) => {
-    if (phone) navigate({ to: LOYALTY_PATHS.customers, search: { phone } });
+    if (phone) navigate({ to: LOYALTY_PATHS.members, search: { phone } });
   };
 
   const getTierBadgeClassName = (tierColor: string) => {
@@ -299,7 +299,7 @@ export function CustomerPage({ search }: Readonly<{ search: CustomersSearch }>) 
           {/* Header */}
           <div className="flex items-start justify-between">
             <div>
-              <h1 className={cn(PAGE_TITLE, "mb-1")}>{t("Customers")}</h1>
+              <h1 className={cn(PAGE_TITLE, "mb-1")}>{t("Members")}</h1>
               <p className="text-sm text-muted-foreground">
                 {t("Manage your loyalty program members")}
               </p>
@@ -354,7 +354,7 @@ export function CustomerPage({ search }: Readonly<{ search: CustomersSearch }>) 
       ) : (
         <div className="space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <BackLink to={LOYALTY_PATHS.customers} search={{}} label={t("Customers")} />
+            <BackLink to={LOYALTY_PATHS.members} search={{}} label={t("Members")} />
             {/* Their own details — name, birthday — as opposed to their points and tier,
                 which the panel below owns and the counter changes. Only offered once the
                 account is known: a link can name a number the programme has no member for. */}

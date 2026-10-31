@@ -1,11 +1,13 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import { Testimonials } from "@/components/dashboard/testimonial/Testimonials.tsx";
-
+/** Testimonials moved under Surveys; old links keep working. */
 export const Route = createFileRoute("/dashboard/testimonial/")({
-  component: RouteComponent,
+  beforeLoad: ({ location }) => {
+    throw redirect({
+      to: "/dashboard/surveys/testimonials",
+      search: location.search as never,
+      hash: location.hash,
+      replace: true,
+    });
+  },
 });
-
-function RouteComponent() {
-  return <Testimonials />;
-}

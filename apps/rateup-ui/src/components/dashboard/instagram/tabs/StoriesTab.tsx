@@ -63,8 +63,8 @@ export function StoriesTab({ ibaId }: Readonly<{ ibaId: string }>) {
             size="sm"
             render={
               <Link
-                to="/dashboard/automation/$automationId"
-                params={{ automationId: "new" }}
+                to="/dashboard/automation/rules/$ruleId"
+                params={{ ruleId: "new" }}
                 search={{
                   platform: "INSTAGRAM",
                   triggerEvent: "INSTAGRAM_STORY_MENTION",
@@ -97,8 +97,8 @@ export function StoriesTab({ ibaId }: Readonly<{ ibaId: string }>) {
                 size="sm"
                 render={
                   <Link
-                    to="/dashboard/automation/$automationId"
-                    params={{ automationId: "new" }}
+                    to="/dashboard/automation/rules/$ruleId"
+                    params={{ ruleId: "new" }}
                     search={{
                       platform: "INSTAGRAM",
                       triggerEvent: "INSTAGRAM_STORY_MENTION",
@@ -108,7 +108,7 @@ export function StoriesTab({ ibaId }: Readonly<{ ibaId: string }>) {
                 }
               >
                 <IconPlus className="mr-1.5 size-4" />
-                {t("Create automation")}
+                {t("Create rule")}
               </Button>
             </EmptyContent>
           </Empty>
@@ -119,7 +119,7 @@ export function StoriesTab({ ibaId }: Readonly<{ ibaId: string }>) {
             items={storyMentionRules}
             getKey={(item) => item.id}
             renderItem={(item) => (
-              <Link to="/dashboard/automation/$automationId" params={{ automationId: item.id }}>
+              <Link to="/dashboard/automation/rules/$ruleId" params={{ ruleId: item.id }}>
                 <RuleCard
                   item={item}
                   onToggleActive={() =>

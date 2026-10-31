@@ -306,7 +306,7 @@ export function NavUser({ user }: Readonly<NavUserProps>) {
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <Link to="/dashboard/settings/account">
+              <Link to="/dashboard/settings/profile">
                 <DropdownMenuItem>
                   <BadgeCheck />
                   Account

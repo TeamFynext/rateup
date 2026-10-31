@@ -163,7 +163,7 @@ export function useCampaignWizard(
     (next: string) => {
       if (!isCampaignWizardStep(next)) return;
       void navigate({
-        to: "/dashboard/campaign/$campaignId/edit",
+        to: "/dashboard/campaigns/$campaignId/edit",
         params: { campaignId },
         search: { step: next },
         // The wizard's own rail is the navigation; letting the router restore
@@ -204,7 +204,7 @@ export function useCampaignWizard(
     // covered the Next button. Leaving is different: the page the confirmation
     // would appear on is about to be replaced, so it has to be said here.
     toast.success(t("Draft saved"), { id: "campaign-wizard-save" });
-    void navigate({ to: "/dashboard/campaign" });
+    void navigate({ to: "/dashboard/campaigns" });
   }, [navigate, t]);
 
   const continueAfterSave = useCallback(() => {

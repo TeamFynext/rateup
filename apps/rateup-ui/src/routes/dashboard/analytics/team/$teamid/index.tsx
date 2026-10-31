@@ -1,11 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import { TeamPage } from "@/components/dashboard/analytics/team/TeamPage.tsx";
-
+/** A team's drill-down moved to /dashboard/analytics/teams/$teamId; old links keep working. */
 export const Route = createFileRoute("/dashboard/analytics/team/$teamid/")({
-  component: RouteComponent,
+  beforeLoad: ({ params, location }) => {
+    throw redirect({
+      to: "/dashboard/analytics/teams/$teamId",
+      params: { teamId: params.teamid },
+      search: location.search as never,
+      hash: location.hash,
+      replace: true,
+    });
+  },
 });
-
-function RouteComponent() {
-  return <TeamPage />;
-}

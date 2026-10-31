@@ -27,14 +27,18 @@ function TestimonialCollectionCard({ collection }: Readonly<TestimonialCollectio
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
     navigate({
-      to: `testimonial/${collection.id}?tab=Edit`,
+      to: "/dashboard/surveys/testimonials/$collectionId",
+      params: { collectionId: collection.id },
+      search: { tab: "Edit" },
     });
   };
 
   const handleShare = (e: React.MouseEvent) => {
     e.stopPropagation();
     navigate({
-      to: `testimonial/${collection.id}?tab=Share`,
+      to: "/dashboard/surveys/testimonials/$collectionId",
+      params: { collectionId: collection.id },
+      search: { tab: "Share" },
     });
   };
 
@@ -55,7 +59,8 @@ function TestimonialCollectionCard({ collection }: Readonly<TestimonialCollectio
 
   const handleCardClick = () => {
     navigate({
-      to: `${collection.id}`,
+      to: "/dashboard/surveys/testimonials/$collectionId",
+      params: { collectionId: collection.id },
     });
   };
 

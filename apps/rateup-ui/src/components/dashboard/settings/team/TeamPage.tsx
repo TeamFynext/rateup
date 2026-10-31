@@ -1,4 +1,4 @@
-// Extracted verbatim from the `/dashboard/settings/team/` route so the route file carries routing
+// Extracted verbatim from the `/dashboard/settings/teams/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -140,7 +140,7 @@ export function TeamPage() {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-1">
-            <h2 className="text-2xl">{translations("Team Management")}</h2>
+            <h2 className="text-2xl">{translations("Teams")}</h2>
             <Button
               disabled={isLoadingTeamsUser}
               variant="outline"
@@ -152,7 +152,7 @@ export function TeamPage() {
           </div>
 
           <p className="text-sm text-muted-foreground">
-            {translations("Organize members into teams and manage roles")}
+            {translations("Organize members into teams")}
           </p>
         </div>
 
@@ -182,7 +182,7 @@ export function TeamPage() {
           <ActionCard
             onClick={() => {
               navigate({
-                to: `/dashboard/settings/team/${team.id}`,
+                to: `/dashboard/settings/teams/${team.id}`,
               });
             }}
             title={

@@ -54,7 +54,7 @@ export function MessagesPage({ tab }: Readonly<{ tab?: MessagesTab }>) {
         <TabsList>
           <TabsTrigger value="automatic">{t("Automatic")}</TabsTrigger>
           <TabsTrigger value="replies">{t("Replies")}</TabsTrigger>
-          {canBuildChatbot && <TabsTrigger value="chatbot">{t("Chatbot")}</TabsTrigger>}
+          {canBuildChatbot && <TabsTrigger value="chatbot">{t("Journey")}</TabsTrigger>}
           <TabsTrigger value="templates" className="gap-1.5">
             {t("Templates")}
             {templatesPending > 0 && (

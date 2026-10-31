@@ -40,14 +40,30 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
-    id: "2026-10-28-chatbots-section",
-    title: "All your chatbots in one place",
+    id: "2026-10-30-feature-renames",
+    title: "Clearer names across RateUp",
     summary:
-      "WhatsApp, Instagram and Messenger chatbots now live together under Chatbots in the sidebar. A new wizard sets up the rule that starts each one, every card shows its runs and an on/off switch, and you can start an Instagram or Messenger chatbot from the inbox.",
+      "Chatbots are now Journeys, contact groups are Audiences and Web Forms are Surveys, and a few inbox tabs and settings pages have clearer names. Your old links still work.",
+    publishedAt: "2026-10-30",
+    kinds: ["improvement"],
+  },
+  {
+    id: "2026-10-30-sidebar-regroup",
+    title: "A tidier sidebar",
+    summary:
+      "WhatsApp, Instagram and Messenger now sit together under Meta, and Rules and Journeys under Automation. Calls moved to the Inbox and the audit log to Settings.",
+    publishedAt: "2026-10-30",
+    kinds: ["improvement"],
+  },
+  {
+    id: "2026-10-28-chatbots-section",
+    title: "All your journeys in one place",
+    summary:
+      "WhatsApp, Instagram and Messenger journeys now live together under Journeys in the sidebar. A new wizard sets up the rule that starts each one, every card shows its runs and an on/off switch, and you can start an Instagram or Messenger journey from the inbox.",
     publishedAt: "2026-10-28",
     kinds: ["improvement"],
-    area: "Chatbots",
-    link: { to: "/dashboard/chatbots", label: "Open Chatbots" },
+    area: "Journeys",
+    link: { to: "/dashboard/automation/journeys", label: "Open Journeys" },
   },
   {
     id: "2026-10-28-template-analytics",
@@ -169,7 +185,7 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     publishedAt: "2026-10-18",
     kinds: ["new"],
     area: "Instagram",
-    link: { to: "/dashboard/automation", label: "Open automations" },
+    link: { to: "/dashboard/automation/rules", label: "Open rules" },
   },
   {
     id: "2026-10-18-bulk-edit-products",
@@ -219,13 +235,13 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     publishedAt: "2026-10-16",
     kinds: ["new"],
     area: "Settings",
-    link: { to: "/dashboard/features", label: "Open Features" },
+    link: { to: "/dashboard/customize-menu", label: "Open Customize Menu" },
   },
   {
     id: "2026-10-17-messenger-welcome-menu",
     title: "Get Started button, ice breakers and menu for Messenger",
     summary:
-      "Set the greeting and Get Started button people see when they first message your Page, add tap-to-ask questions and an always-there menu, each starting the chatbot you choose.",
+      "Set the greeting and Get Started button people see when they first message your Page, add tap-to-ask questions and an always-there menu, each starting the journey you choose.",
     publishedAt: "2026-10-17",
     kinds: ["new"],
     area: "Messenger",
@@ -235,7 +251,7 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     id: "2026-10-17-facebook-comment-replies",
     title: "Reply to Facebook comments in Messenger",
     summary:
-      "When someone comments on your Page's posts, send them a private Messenger reply or start a chatbot, and thank them publicly under the comment.",
+      "When someone comments on your Page's posts, send them a private Messenger reply or start a journey, and thank them publicly under the comment.",
     publishedAt: "2026-10-17",
     kinds: ["new"],
     area: "Messenger",
@@ -245,7 +261,7 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     id: "2026-10-17-messenger-m-me-links",
     title: "m.me links start a Messenger automation",
     summary:
-      "Share an m.me link or QR code on your website, ads or emails. When someone opens it, the chatbot or message you choose starts right away.",
+      "Share an m.me link or QR code on your website, ads or emails. When someone opens it, the journey or message you choose starts right away.",
     publishedAt: "2026-10-17",
     kinds: ["new"],
     area: "Messenger",
@@ -268,7 +284,7 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     publishedAt: "2026-10-16",
     kinds: ["improvement"],
     area: "Automation",
-    link: { to: "/dashboard/automation", label: "Open automations" },
+    link: { to: "/dashboard/automation/rules", label: "Open rules" },
   },
   {
     id: "2026-10-16-automation-multi-channel",
@@ -278,7 +294,7 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     publishedAt: "2026-10-16",
     kinds: ["new"],
     area: "Automation",
-    link: { to: "/dashboard/automation", label: "Open automations" },
+    link: { to: "/dashboard/automation/rules", label: "Open rules" },
   },
   {
     id: "2026-10-16-automation-templates",
@@ -288,7 +304,7 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     publishedAt: "2026-10-16",
     kinds: ["new", "improvement"],
     area: "Automation",
-    link: { to: "/dashboard/automation", label: "Open automations" },
+    link: { to: "/dashboard/automation/rules", label: "Open rules" },
   },
   {
     id: "2026-10-16-webhook-settings-redesign",
@@ -328,27 +344,27 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     publishedAt: "2026-10-14",
     kinds: ["improvement"],
     area: "Automation",
-    link: { to: "/dashboard/automation", label: "Open automations" },
+    link: { to: "/dashboard/automation/rules", label: "Open rules" },
   },
   {
     id: "2026-10-14-chatbot-examples",
-    title: "Start a chatbot from a ready-made example",
+    title: "Start a journey from a ready-made example",
     summary:
-      "Creating a chatbot now lets you pick WhatsApp, Instagram or Messenger and start from an example for welcomes, FAQs, leads, bookings and more, previewed before you create it.",
+      "Creating a journey now lets you pick WhatsApp, Instagram or Messenger and start from an example for welcomes, FAQs, leads, bookings and more, previewed before you create it.",
     publishedAt: "2026-10-14",
     kinds: ["new", "improvement"],
-    area: "Chatbots",
-    link: { to: "/dashboard/chatbots" },
+    area: "Journeys",
+    link: { to: "/dashboard/automation/journeys" },
   },
   {
     id: "2026-10-14-messenger-chatbots",
-    title: "Chatbots for Facebook Messenger",
+    title: "Journeys for Facebook Messenger",
     summary:
-      "Build chatbots for your Facebook Page in the same editor you use for WhatsApp and Instagram, and start them from an automation rule when someone messages your Page.",
+      "Build journeys for your Facebook Page in the same editor you use for WhatsApp and Instagram, and start them from an automation rule when someone messages your Page.",
     publishedAt: "2026-10-14",
     kinds: ["new"],
     area: "Messenger",
-    link: { to: "/dashboard/chatbots", search: { channel: "messenger" } },
+    link: { to: "/dashboard/automation/journeys", search: { channel: "messenger" } },
   },
   {
     id: "2026-10-14-live-calls-strip",
@@ -358,7 +374,7 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     publishedAt: "2026-10-14",
     kinds: ["improvement"],
     area: "Analytics",
-    link: { to: "/dashboard/analytics/calls", label: "Open calls" },
+    link: { to: "/dashboard/inbox/calls", label: "Open calls" },
   },
   {
     id: "2026-10-07-whatsapp-call-log",
@@ -368,7 +384,7 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     publishedAt: "2026-10-07",
     kinds: ["new"],
     area: "Inbox",
-    link: { to: "/dashboard/analytics/calls", label: "Open calls" },
+    link: { to: "/dashboard/inbox/calls", label: "Open calls" },
   },
   {
     id: "2026-10-07-whatsapp-voice-calls",
@@ -424,7 +440,7 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     id: "2026-10-01-instagram-links-follow-check",
     title: "ig.me links and follow-to-unlock",
     summary:
-      "Create ig.me links that start a chosen automation when someone opens them, and add a Follow check step to a chatbot to reward people who follow you.",
+      "Create ig.me links that start a chosen automation when someone opens them, and add a Follow check step to a journey to reward people who follow you.",
     publishedAt: "2026-10-01",
     kinds: ["new"],
     area: "Instagram",
@@ -432,9 +448,9 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
   },
   {
     id: "2026-10-01-instagram-chatbot-replies",
-    title: "Instagram chatbots continue after a reply",
+    title: "Instagram journeys continue after a reply",
     summary:
-      "Chatbots now carry on when someone taps a button or answers a question, and can ask for details like an email address.",
+      "Journeys now carry on when someone taps a button or answers a question, and can ask for details like an email address.",
     publishedAt: "2026-10-01",
     kinds: ["fix", "improvement"],
     area: "Instagram",
@@ -499,7 +515,7 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     publishedAt: "2026-09-25",
     kinds: ["new"],
     area: "Pipeline",
-    link: { to: "/dashboard/pipeline" },
+    link: { to: "/dashboard/pipelines" },
   },
   {
     id: "2026-09-25-pipeline-types",
@@ -509,7 +525,7 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     publishedAt: "2026-09-25",
     kinds: ["new"],
     area: "Pipeline",
-    link: { to: "/dashboard/pipeline" },
+    link: { to: "/dashboard/pipelines" },
   },
   {
     id: "2026-09-23-meta-agent-rateup-connector",
@@ -539,7 +555,7 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     publishedAt: "2026-09-23",
     kinds: ["improvement"],
     area: "AI Agent",
-    link: { to: "/dashboard/meta-agent/settings", label: "Open Go live" },
+    link: { to: "/dashboard/meta-agent/go-live", label: "Open Go live" },
   },
   {
     id: "2026-09-23-qr-codes-link-pages",
@@ -569,7 +585,7 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     publishedAt: "2026-09-22",
     kinds: ["improvement"],
     area: "AI Agent",
-    link: { to: "/dashboard/meta-agent/overview", label: "Open the setup guide" },
+    link: { to: "/dashboard/meta-agent/setup-guide", label: "Open the setup guide" },
   },
   {
     id: "2026-09-20-fine-tune-abilities",
@@ -619,7 +635,7 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     publishedAt: "2026-09-18",
     kinds: ["improvement"],
     area: "Settings",
-    link: { to: "/dashboard/settings/team", label: "Open Teams" },
+    link: { to: "/dashboard/settings/teams", label: "Open Teams" },
   },
   {
     id: "2026-09-17-settings-ui-improvements",
@@ -628,13 +644,13 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     publishedAt: "2026-09-17",
     kinds: ["improvement"],
     area: "Settings",
-    link: { to: "/dashboard/settings/account", label: "Open Settings" },
+    link: { to: "/dashboard/settings/profile", label: "Open Settings" },
   },
   {
     id: "2026-09-12-loyalty-keyword-menu-chatbot",
     title: "Turn your keyword replies into a tappable menu",
     summary:
-      "Messages has a new Chatbot tab that turns your keyword replies into a tappable WhatsApp menu. Customers pick from a list instead of having to know that POINTS or REFER are the magic words.",
+      "Messages has a new Journey tab that turns your keyword replies into a tappable WhatsApp menu. Customers pick from a list instead of having to know that POINTS or REFER are the magic words.",
     publishedAt: "2026-09-12",
     kinds: ["new"],
     area: "Loyalty",
@@ -798,7 +814,7 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     publishedAt: "2026-09-15",
     kinds: ["improvement"],
     area: "Campaigns",
-    link: { to: "/dashboard/campaign", label: "Open campaigns" },
+    link: { to: "/dashboard/campaigns", label: "Open campaigns" },
   },
   {
     id: "2026-09-12-inbox-channel-on-ticket",
@@ -848,7 +864,7 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     publishedAt: "2026-09-08",
     kinds: ["new", "improvement", "fix"],
     area: "Campaigns",
-    link: { to: "/dashboard/campaign", label: "Open campaigns" },
+    link: { to: "/dashboard/campaigns", label: "Open campaigns" },
   },
   {
     id: "2026-09-08-campaign-resume-when",
@@ -858,7 +874,7 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     publishedAt: "2026-09-08",
     kinds: ["new", "improvement"],
     area: "Campaigns",
-    link: { to: "/dashboard/campaign", label: "Open campaigns" },
+    link: { to: "/dashboard/campaigns", label: "Open campaigns" },
   },
   {
     id: "2026-09-07-campaign-page-controls",
@@ -868,7 +884,7 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     publishedAt: "2026-09-07",
     kinds: ["new", "improvement"],
     area: "Campaigns",
-    link: { to: "/dashboard/campaign", label: "Open campaigns" },
+    link: { to: "/dashboard/campaigns", label: "Open campaigns" },
   },
   {
     id: "2026-09-06-campaign-wizard",
@@ -878,7 +894,7 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     publishedAt: "2026-09-06",
     kinds: ["new", "improvement"],
     area: "Campaigns",
-    link: { to: "/dashboard/campaign", label: "Create a campaign" },
+    link: { to: "/dashboard/campaigns", label: "Create a campaign" },
   },
   {
     id: "2026-08-31-channels-page-rebuilt",
@@ -918,7 +934,7 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     publishedAt: "2026-08-28",
     kinds: ["new", "improvement"],
     area: "Pipeline",
-    link: { to: "/dashboard/pipeline", label: "Open the pipeline" },
+    link: { to: "/dashboard/pipelines", label: "Open the pipeline" },
   },
   {
     id: "2026-10-06-active-contact-pricing",
@@ -988,7 +1004,7 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     publishedAt: "2026-08-17",
     kinds: ["new", "improvement"],
     area: "Pipeline",
-    link: { to: "/dashboard/settings/team", label: "Open teams" },
+    link: { to: "/dashboard/settings/teams", label: "Open teams" },
   },
   {
     id: "2026-08-15-inbox-sending-feedback",
@@ -1038,7 +1054,7 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     publishedAt: "2026-08-12",
     kinds: ["new"],
     area: "Pipeline",
-    link: { to: "/dashboard/pipeline", label: "Open the pipeline" },
+    link: { to: "/dashboard/pipelines", label: "Open the pipeline" },
   },
   {
     id: "2026-08-19-plan-tiers",
@@ -1088,7 +1104,7 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     publishedAt: "2026-08-05",
     kinds: ["improvement"],
     area: "Campaigns",
-    link: { to: "/dashboard/campaign", label: "Open campaigns" },
+    link: { to: "/dashboard/campaigns", label: "Open campaigns" },
   },
   {
     id: "2026-08-05-ig-comment-post-link",
@@ -1147,7 +1163,7 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     publishedAt: "2026-09-03",
     kinds: ["new"],
     area: "Campaigns",
-    link: { to: "/dashboard/campaign", label: "Open campaigns" },
+    link: { to: "/dashboard/campaigns", label: "Open campaigns" },
   },
   {
     id: "2026-09-03-campaign-allowance-warning",
@@ -1157,7 +1173,7 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     publishedAt: "2026-09-03",
     kinds: ["new"],
     area: "Campaigns",
-    link: { to: "/dashboard/campaign", label: "Open campaigns" },
+    link: { to: "/dashboard/campaigns", label: "Open campaigns" },
   },
   {
     id: "2026-07-22-team-channel-permissions",
@@ -1167,7 +1183,7 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     publishedAt: "2026-07-22",
     kinds: ["new"],
     area: "Settings",
-    link: { to: "/dashboard/settings/team", label: "Manage teams" },
+    link: { to: "/dashboard/settings/teams", label: "Manage teams" },
   },
   {
     id: "2026-07-22-survey-builder",

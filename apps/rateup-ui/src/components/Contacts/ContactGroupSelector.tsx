@@ -66,8 +66,8 @@ function MultiGroupSelect({
       options={groupOptions}
       value={value}
       onValueChange={onChange}
-      placeholder="Select groups"
-      emptyIndicator="No groups found."
+      placeholder="Select audiences"
+      emptyIndicator="No audiences found."
       className={`${className}`}
     />
   );
@@ -87,7 +87,7 @@ function SingleGroupSelect({
   return (
     <Select value={value} onValueChange={(value) => onChange(value ?? "")} items={groupItems}>
       <SelectTrigger aria-label="Select a group" className={`${className}`}>
-        <SelectValue placeholder={"Select a group"} />
+        <SelectValue placeholder={"Select an audience"} />
       </SelectTrigger>
       <SelectContent>
         {groups?.map((g) => (

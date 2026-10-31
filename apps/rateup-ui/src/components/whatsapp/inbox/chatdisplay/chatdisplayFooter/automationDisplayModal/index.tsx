@@ -3,7 +3,7 @@ import {
   IconBrandMessenger,
   IconBrandWhatsapp,
   IconCheck,
-  IconMessageChatbot,
+  IconRoute,
   IconPlayerPlay,
   IconSearch,
 } from "@tabler/icons-react";
@@ -141,7 +141,7 @@ export default function WaInboxAutomationDisplayModal(props: Props) {
             <ChannelIcon className="size-5" aria-hidden />
           </span>
           <div className="min-w-0 space-y-0.5">
-            <DialogTitle className="text-base font-semibold">{t("Start a chatbot")}</DialogTitle>
+            <DialogTitle className="text-base font-semibold">{t("Start a journey")}</DialogTitle>
             <DialogDescription className="truncate text-sm">
               {t("Sends its first message to {name} on {channel}.", {
                 name: contactName,
@@ -160,8 +160,8 @@ export default function WaInboxAutomationDisplayModal(props: Props) {
               <InputGroupInput
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder={t("Search chatbots...")}
-                aria-label={t("Search chatbots...")}
+                placeholder={t("Search journeys...")}
+                aria-label={t("Search journeys...")}
               />
             </InputGroup>
           </div>
@@ -177,7 +177,7 @@ export default function WaInboxAutomationDisplayModal(props: Props) {
           ) : isError ? (
             <Empty className="py-8">
               <EmptyHeader>
-                <EmptyTitle>{t("Couldn't load chatbots")}</EmptyTitle>
+                <EmptyTitle>{t("Couldn't load journeys")}</EmptyTitle>
               </EmptyHeader>
               <EmptyContent>
                 <Button size="sm" variant="outline" onClick={() => void refetch()}>
@@ -189,35 +189,37 @@ export default function WaInboxAutomationDisplayModal(props: Props) {
             <Empty className="py-8">
               <EmptyHeader>
                 <EmptyMedia variant="icon" className="bg-ch-soft text-ch">
-                  <IconMessageChatbot />
+                  <IconRoute />
                 </EmptyMedia>
                 <EmptyTitle>
                   {all.length
-                    ? t("Every {channel} chatbot is switched off", { channel: channel.label })
-                    : t("No {channel} chatbots yet", { channel: channel.label })}
+                    ? t("Every {channel} journey is switched off", { channel: channel.label })
+                    : t("No {channel} journeys yet", { channel: channel.label })}
                 </EmptyTitle>
                 <EmptyDescription>
                   {all.length
-                    ? t("Switch one on in Chatbots to start it from here.")
-                    : t("Create one in Chatbots to start it from here.")}
+                    ? t("Switch one on in Journeys to start it from here.")
+                    : t("Create one in Journeys to start it from here.")}
                 </EmptyDescription>
               </EmptyHeader>
               <EmptyContent>
                 <Button
                   size="sm"
                   variant="outline"
-                  render={<Link to="/dashboard/chatbots" search={{ channel: channel.param }} />}
+                  render={
+                    <Link to="/dashboard/automation/journeys" search={{ channel: channel.param }} />
+                  }
                 >
-                  {t("Open Chatbots")}
+                  {t("Open Journeys")}
                 </Button>
               </EmptyContent>
             </Empty>
           ) : shown.length === 0 ? (
             <p className="px-3 py-8 text-center text-sm text-muted-foreground">
-              {t("No chatbots found matching your search")}
+              {t("No journeys found matching your search")}
             </p>
           ) : (
-            <div role="radiogroup" aria-label={t("Chatbots")} className="flex flex-col gap-2">
+            <div role="radiogroup" aria-label={t("Journeys")} className="flex flex-col gap-2">
               {shown.map((chatbot) => (
                 <ChatbotOption
                   key={chatbot.id}
@@ -233,7 +235,7 @@ export default function WaInboxAutomationDisplayModal(props: Props) {
         <DialogFooter className="items-center gap-3 border-t border-border px-6 py-4 sm:justify-between">
           <p className="text-xs text-muted-foreground">
             {!reachable && !isLoading
-              ? t("This contact can't get a chatbot on {channel} yet.", {
+              ? t("This contact can't get a journey on {channel} yet.", {
                   channel: channel.label,
                 })
               : t("The first message goes out right away.")}
@@ -244,7 +246,7 @@ export default function WaInboxAutomationDisplayModal(props: Props) {
             </Button>
             <Button disabled={!canSend} loading={initiate.isPending} onClick={start}>
               <IconPlayerPlay className="mr-1.5 size-4" aria-hidden />
-              {t("Start chatbot")}
+              {t("Start journey")}
             </Button>
           </div>
         </DialogFooter>
@@ -282,7 +284,7 @@ function ChatbotOption({
             : "bg-ch-soft text-ch group-hover:bg-ch group-hover:text-white",
         )}
       >
-        <IconMessageChatbot className="size-4.5" aria-hidden />
+        <IconRoute className="size-4.5" aria-hidden />
       </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm font-medium">{chatbot.name}</span>

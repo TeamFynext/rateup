@@ -7,7 +7,7 @@ import {
   IconFileFilled,
   IconLayoutBoard,
   IconPaperclip,
-  IconMessageChatbot,
+  IconRoute,
   IconTrash,
   IconTypography,
   IconWaveSine,
@@ -654,10 +654,10 @@ function WaTextEditor({
                       <CustomTooltip
                         trigger={
                           <Button variant="ghost" onClick={() => openAutomationModal()} size="sm">
-                            <IconMessageChatbot className="w-4 h-4" />
+                            <IconRoute className="w-4 h-4" />
                           </Button>
                         }
-                        content={<span>Chatbot</span>}
+                        content={<span>Journey</span>}
                       />
                     </div>
                   )}
@@ -702,8 +702,8 @@ function WaTextEditor({
                               className="gap-2 text-xs"
                               onClick={() => openAutomationModal()}
                             >
-                              <IconMessageChatbot size={16} />
-                              Chatbot
+                              <IconRoute size={16} />
+                              Journey
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                           </>

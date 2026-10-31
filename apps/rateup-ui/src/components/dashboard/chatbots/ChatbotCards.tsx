@@ -119,7 +119,10 @@ function ChatbotCard({ chatbot }: Readonly<{ chatbot: ChatbotSummary }>) {
         date: formatDate(chatbot.updatedAt),
       })}`}
       onClick={() =>
-        void navigate({ to: "/dashboard/chatbots/$chatbotId", params: { chatbotId: chatbot.id } })
+        void navigate({
+          to: "/dashboard/automation/journeys/$journeyId",
+          params: { journeyId: chatbot.id },
+        })
       }
       actions={<ChatbotActions chatbot={chatbot} />}
       content={
@@ -204,7 +207,10 @@ function ChatbotTable({ data }: Readonly<{ data: ChatbotSummary[] }>) {
       data={data}
       columns={columns}
       onRowClick={(row) =>
-        void navigate({ to: "/dashboard/chatbots/$chatbotId", params: { chatbotId: row.id } })
+        void navigate({
+          to: "/dashboard/automation/journeys/$journeyId",
+          params: { journeyId: row.id },
+        })
       }
     />
   );
@@ -233,8 +239,8 @@ function ChatbotActions({ chatbot }: Readonly<{ chatbot: ChatbotSummary }>) {
 
   async function remove() {
     const ok = await confirm({
-      title: t("Delete chatbot"),
-      description: t("Are you sure you want to delete this chatbot? This can't be undone."),
+      title: t("Delete journey"),
+      description: t("Are you sure you want to delete this journey? This can't be undone."),
       confirmText: t("Delete"),
       cancelText: t("Cancel"),
     });
@@ -273,7 +279,7 @@ function ChatbotActions({ chatbot }: Readonly<{ chatbot: ChatbotSummary }>) {
       <Dialog open={cloneOpen} onOpenChange={setCloneOpen}>
         <DialogContent className="sm:max-w-112.5">
           <DialogHeader>
-            <DialogTitle>{t("Clone chatbot")}</DialogTitle>
+            <DialogTitle>{t("Clone journey")}</DialogTitle>
           </DialogHeader>
           <form
             className="space-y-4"

@@ -31,7 +31,7 @@ interface SubscriptionEditorModalProps {
 export function SubscriptionEditorModal({
   opened,
   onClose,
-  subscription, // rateuplan if router.pathname === "/admin/rateup"
+  subscription, // rateuplan if router.pathname === "/admin/plans"
 }: Readonly<SubscriptionEditorModalProps>) {
   const subscriptionForm = useForm<SubscriptionFormValues>({
     defaultValues: {
@@ -43,7 +43,7 @@ export function SubscriptionEditorModal({
   const pathname = useRouterState({
     select: (s) => s.location.pathname,
   });
-  const rateupPlanEnable = pathname === "/admin/rateup";
+  const rateupPlanEnable = pathname.replace(/\/$/, "") === "/admin/plans";
   const updateMutation = useUpdateSubscriptionMutation();
   const rateupPaymentsPlanUpdateMutation = useRateupPaymentsPlanUpdateMutation(onClose);
   const isRazorPayPlan = !rateupPlanEnable && subscription?.basePlan?.paymentPlanId;

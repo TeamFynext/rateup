@@ -18,7 +18,7 @@ const MODULES: Record<string, string> = {
   webhook: "Webhooks",
   payment: "Billing",
   subscription: "Billing",
-  "meta-agent": "Meta Business Agent",
+  "meta-agent": "Meta AI Agent",
   commerce: "Commerce",
   testimonials: "Testimonials",
   lifecycles: "Lifecycles",

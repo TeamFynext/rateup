@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigate, useRouterState } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -61,9 +61,6 @@ const SaveTestimonialCollection = ({ opened, close }: SaveTestimonialCollectionP
   });
 
   const navigate = useNavigate();
-  const pathname = useRouterState({
-    select: (s) => s.location.pathname,
-  });
 
   const saveCollection = useCreateTestimonialCollection();
 
@@ -76,9 +73,12 @@ const SaveTestimonialCollection = ({ opened, close }: SaveTestimonialCollectionP
       {
         onSuccess: (data) => {
           close();
-          navigate({
-            to: `${pathname}/${data?.id}`,
-          });
+          if (data?.id) {
+            navigate({
+              to: "/dashboard/surveys/testimonials/$collectionId",
+              params: { collectionId: data.id },
+            });
+          }
         },
       },
     );

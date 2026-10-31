@@ -1,11 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import { AutomationPage } from "@/components/dashboard/automation/AutomationPage.tsx";
-
+/** Automation is a group now (Rules and Journeys); its own address opens Rules. */
 export const Route = createFileRoute("/dashboard/automation/")({
-  component: RouteComponent,
+  beforeLoad: ({ location }) => {
+    throw redirect({ to: "/dashboard/automation/rules", hash: location.hash, replace: true });
+  },
 });
-
-function RouteComponent() {
-  return <AutomationPage />;
-}

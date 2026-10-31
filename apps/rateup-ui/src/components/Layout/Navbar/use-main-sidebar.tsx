@@ -111,7 +111,9 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
   });
 
   const isInbox = pathname?.includes("/dashboard/inbox");
-  const paddingExclusion = isInbox
+  // The chat screen itself is full-bleed; Calls under it is an ordinary padded page.
+  const isInboxChat = /^\/dashboard\/inbox\/?$/.test(pathname ?? "");
+  const paddingExclusion = isInboxChat
     ? true
     : // The setup guide, and the Meta AI Agent built like it, carry a fixed
       // header over their own scroller.
@@ -119,16 +121,16 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
       pathname?.includes("/dashboard/meta-agent") ||
       // The automation builder and campaign wizard: a full-bleed 56px bar that must
       // line up with the device preview panel's header beside it.
-      /^\/dashboard\/automation\/[^/]+/.test(pathname ?? "") ||
-      /^\/dashboard\/campaign\/(new|[^/]+\/edit)/.test(pathname ?? "") ||
+      /^\/dashboard\/automation\/rules\/[^/]+/.test(pathname ?? "") ||
+      /^\/dashboard\/campaigns\/(new|[^/]+\/edit)/.test(pathname ?? "") ||
       // The template wizard, built the same way. The template's analytics page
       // below it is an ordinary padded page.
       /^\/dashboard\/(whatsapp|loyalty)\/templates\/[^/]+\/?$/.test(pathname ?? "") ||
       pathname?.includes("/dashboard/whatsapp/flows/v2/") ||
       // The link page editor, built like the automation builder. The list keeps its padding.
       /^\/dashboard\/link-pages\/[^/]+/.test(pathname ?? "") ||
-      // The chatbot builder, on any channel. The list at /dashboard/chatbots keeps its padding.
-      /^\/dashboard\/chatbots\/[^/]+/.test(pathname ?? "");
+      // The journey builder, on any channel. The list at /dashboard/journeys keeps its padding.
+      /^\/dashboard\/automation\/journeys\/[^/]+/.test(pathname ?? "");
 
   // Only the inbox's Channel filter needs these, and the query is shared and
   // cached forever — so it costs nothing on the pages that already fetched it.
@@ -140,7 +142,7 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
 
   // Same shape as the inbox counts above: the sidebar is mounted app-wide, so
   // the pipeline's leads are only fetched while the user is actually on it.
-  const isPipeline = pathname?.includes("/dashboard/pipeline");
+  const isPipeline = pathname?.includes("/dashboard/pipelines");
   const { data: pipelines = [] } = usePipelinesQuery(Boolean(isPipeline));
   const activePipelineId =
     (typeof search?.p === "string" ? search.p : undefined) ??

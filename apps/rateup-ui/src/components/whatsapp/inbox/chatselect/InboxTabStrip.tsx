@@ -24,14 +24,19 @@ import { useChatContactCountStore } from "@/store/inbox.store.ts";
  */
 const TABS = [
   { value: "open", label: "Open", icon: IconInbox, countKey: "openCount" },
-  { value: "new", label: "New", icon: IconSparkles, countKey: "newCount" },
+  { value: "unassigned", label: "Unassigned", icon: IconSparkles, countKey: "newCount" },
   { value: "closed", label: "Closed", icon: IconCircleCheck, countKey: "closedCount" },
   { value: "all", label: "All", icon: IconStack2, countKey: "allCount" },
-  { value: "mine", label: "Mine", icon: IconUserCheck, countKey: "mineCount" },
-  { value: "mentions", label: "@Mentions", icon: IconAt, countKey: "mentionsCount" },
-  { value: "favourites", label: "Favourites", icon: IconStar, countKey: "favouriteCount" },
-  { value: "spam", label: "Spam", icon: IconShieldExclamation, countKey: "spamCount" },
+  { value: "assigned", label: "Assigned to me", icon: IconUserCheck, countKey: "mineCount" },
+  { value: "mentions", label: "Unread mentions", icon: IconAt, countKey: "mentionsCount" },
+  { value: "starred", label: "Starred", icon: IconStar, countKey: "favouriteCount" },
+  { value: "spam", label: "Spam contacts", icon: IconShieldExclamation, countKey: "spamCount" },
 ] as const;
+
+/** The English label (a translation key) for a `?tab=` value, or undefined for an unknown one. */
+export function inboxTabLabel(tab: string): string | undefined {
+  return TABS.find((t) => t.value === tab)?.label;
+}
 
 export default function InboxTabStrip({ tab }: Readonly<{ tab: string }>) {
   const { t: translations } = useTranslation();

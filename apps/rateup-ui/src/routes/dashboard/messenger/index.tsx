@@ -56,10 +56,10 @@ function MessengerPage() {
         <Button
           variant="outline"
           size="sm"
-          render={<Link to="/dashboard/chatbots" search={{ channel: "messenger" }} />}
+          render={<Link to="/dashboard/automation/journeys" search={{ channel: "messenger" }} />}
         >
           <IconSitemap className="mr-1.5 size-4" />
-          {t("Messenger chatbots")}
+          {t("Messenger journeys")}
         </Button>
       </div>
 
@@ -74,7 +74,7 @@ function MessengerPage() {
             <EmptyTitle>{t("Connect a Facebook Page")}</EmptyTitle>
             <EmptyDescription>
               {t(
-                "Messenger chatbots run on a connected Facebook Page. Connect one to get started.",
+                "Messenger journeys run on a connected Facebook Page. Connect one to get started.",
               )}
             </EmptyDescription>
           </EmptyHeader>

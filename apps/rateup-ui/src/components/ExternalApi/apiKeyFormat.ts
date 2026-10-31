@@ -36,7 +36,7 @@ export const FEATURE_OPTIONS: readonly {
   label: string;
   description: string;
 }[] = [
-  { value: "contacts", label: "Contacts", description: "Contacts and contact groups." },
+  { value: "contacts", label: "Contacts", description: "Contacts and audiences." },
   { value: "teams", label: "Teams", description: "List teams, to route sends." },
   {
     value: "campaigns",

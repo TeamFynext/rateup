@@ -140,7 +140,7 @@ export function CardView({ data, viewMode, onToggleActive, onDelete }: Readonly<
           items={data}
           getKey={(item) => item.id}
           renderItem={(item) => (
-            <Link to="/dashboard/automation/$automationId" params={{ automationId: item.id }}>
+            <Link to="/dashboard/automation/rules/$ruleId" params={{ ruleId: item.id }}>
               <RuleCard
                 item={item}
                 onToggleActive={() => {
@@ -160,7 +160,7 @@ export function CardView({ data, viewMode, onToggleActive, onDelete }: Readonly<
           columns={columns}
           onRowClick={(row) => {
             navigate({
-              to: `/dashboard/automation/${row.id}`,
+              to: `/dashboard/automation/rules/${row.id}`,
             });
           }}
         />

@@ -14,7 +14,7 @@ const WOO_TRIGGER_EVENTS = wooEventData.map((event) => event.value) as [WooEvent
 export const CONDITION_FIELDS = [
   { label: "Message Body", value: "MESSAGE_BODY" },
   { label: "Contact Email", value: "CONTACT_EMAIL" },
-  { label: "Contact Group", value: "CONTACT_GROUP" },
+  { label: "Audience", value: "CONTACT_GROUP" },
   { label: "Contact Label", value: "CONTACT_LABEL" },
   // Superseded by Lead Stage. Kept for the same reason as Assign Lead Stage
   // below: conditions already written against it still have to render and save.
@@ -199,7 +199,7 @@ export const ACTION_TYPES = [
     platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
   },
   {
-    label: "Trigger Chatbot",
+    label: "Trigger Journey",
     value: "TRIGGER_CHATBOT",
     platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
   },

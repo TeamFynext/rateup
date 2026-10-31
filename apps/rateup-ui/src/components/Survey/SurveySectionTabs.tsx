@@ -9,7 +9,7 @@ type SurveySection = "surveys" | "templates" | "testimonial";
 const SECTION_ROUTES: Record<SurveySection, string> = {
   surveys: "/dashboard/surveys",
   templates: "/dashboard/surveys/templates",
-  testimonial: "/dashboard/testimonial",
+  testimonial: "/dashboard/surveys/testimonials",
 };
 
 const ALL_SECTION_TABS: { value: SurveySection; label: string; icon: TablerIcon }[] = [
@@ -31,7 +31,7 @@ export default function SurveySectionTabs() {
 
   const activeSection: SurveySection = pathname.startsWith("/dashboard/surveys/templates")
     ? "templates"
-    : pathname.startsWith("/dashboard/testimonial")
+    : pathname.startsWith("/dashboard/surveys/testimonials")
       ? "testimonial"
       : "surveys";
 

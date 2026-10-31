@@ -7,7 +7,7 @@
 //
 // Only the pipeline id is URL state, so switching board is a link and every
 // other row is a click into `usePipelineStore`. Each row still points at
-// `/dashboard/pipeline`, so the sidebar works from anywhere in the app.
+// `/dashboard/pipelines`, so the sidebar works from anywhere in the app.
 
 import {
   IconAdjustmentsHorizontal,
@@ -37,7 +37,7 @@ import { SOURCE_META, STATUS_BAND } from "./pipeline.constants.tsx";
 import { leadFilterLabel, sourceLabel } from "./pipeline.labels.ts";
 import { OTHER_PIPELINE_LIMIT, pipelineTypeConfig } from "./pipelineTypes.ts";
 
-const PIPELINE_PATH = "/dashboard/pipeline";
+const PIPELINE_PATH = "/dashboard/pipelines";
 
 // Labels come from `leadFilterLabel`, which is where `t` can reach them.
 const FILTER_ROWS: ReadonlyArray<{ id: LeadFilter; icon: Icon }> = [

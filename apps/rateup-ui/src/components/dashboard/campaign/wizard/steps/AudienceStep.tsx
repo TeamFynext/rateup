@@ -54,7 +54,7 @@ export function AudienceStep({ wizard, registerSubmit }: Readonly<CampaignWizard
             {t("Who should receive this?")}
           </h1>
           <p className="text-muted-foreground text-[13px]">
-            {t("Pick contacts, saved groups, or reuse the audience of a past campaign.")}
+            {t("Pick contacts, saved audiences, or reuse the audience of a past campaign.")}
           </p>
         </div>
         <AudienceTabs value={tab} onChange={setTab} />

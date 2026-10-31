@@ -1,4 +1,4 @@
-// Extracted verbatim from the `/dashboard/testimonial/` route so the route file carries routing
+// Extracted verbatim from the `/dashboard/surveys/testimonials/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
 import { IconPlus } from "@tabler/icons-react";

@@ -33,7 +33,7 @@ const ACTION_LABELS: Record<string, string> = {
 
 const RESOURCE_TYPE_MAPPINGS: Record<string, string> = {
   contact: "Contact",
-  "contact-group": "Contact Group",
+  "contact-group": "Audience",
   "wa-template": "WA Template",
   campaign: "Campaign",
   user: "User",
@@ -106,7 +106,7 @@ const formatActionMessage = (method: string, route: string): string => {
 // Filter option names for route features; anything else is title-cased from its path.
 const FEATURE_LABELS: Record<string, string> = {
   contact: "Contacts",
-  "contact-group": "Contact groups",
+  "contact-group": "Audiences",
   pipeline: "Pipeline",
   loyalty: "Loyalty",
   survey: "Surveys",

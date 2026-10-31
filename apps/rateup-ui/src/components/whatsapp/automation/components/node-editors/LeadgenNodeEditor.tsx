@@ -131,8 +131,8 @@ export const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
   async function handleFbLogin() {
     localStorage.setItem("waSettingsId", waSetting?.id ?? "");
     localStorage.setItem("automationId", flowbotId);
-    // Every chatbot's editor lives under /dashboard/chatbots, whatever its channel.
-    localStorage.setItem("automationRouteBase", "/dashboard/chatbots");
+    // Every journey's editor lives under /dashboard/journeys, whatever its channel.
+    localStorage.setItem("automationRouteBase", "/dashboard/automation/journeys");
 
     const url = `https://www.facebook.com/v25.0/dialog/oauth?client_id=${import.meta.env.VITE_META_APP_ID}&redirect_uri=${encodeURIComponent(`${import.meta.env.VITE_FRONTEND_URL}/auth/fb`)}&config_id=${import.meta.env.VITE_META_USER_CONFIG_ID}`;
     if (url) {

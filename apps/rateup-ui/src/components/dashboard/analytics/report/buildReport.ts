@@ -500,8 +500,8 @@ export function buildMessagesReport({ t }: BuildContext, data: ReportData) {
 
 export const reportBuilders = {
   overview: buildOverviewReport,
-  conversations: buildConversationsReport,
-  messages: buildMessagesReport,
+  "team-performance": buildConversationsReport,
+  "template-delivery": buildMessagesReport,
 } as const;
 
 /**

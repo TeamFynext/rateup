@@ -125,7 +125,7 @@ const CatalogSettings = ({ catalogData }: { catalogData: WaCatalog }) => {
 
     deleteCatalog.mutate(catalogData?.catalogId, {
       onSuccess: () => {
-        navigate({ to: "/dashboard/whatsapp/catalog" });
+        navigate({ to: "/dashboard/commerce/catalogs" });
       },
     });
   }

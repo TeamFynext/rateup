@@ -347,7 +347,7 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
             control={form.control}
             render={({ field }) => (
               <Field className="flex flex-col gap-1">
-                <FieldTitle>{translations("Group")}</FieldTitle>
+                <FieldTitle>{translations("Audience")}</FieldTitle>
                 <ContactGroupSelector
                   value={field.value}
                   onChange={field.onChange}

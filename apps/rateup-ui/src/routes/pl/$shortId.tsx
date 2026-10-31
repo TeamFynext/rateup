@@ -7,7 +7,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 export const Route = createFileRoute("/pl/$shortId")({
   beforeLoad: ({ params }) => {
     throw redirect({
-      to: "/dashboard/pipeline",
+      to: "/dashboard/pipelines",
       search: { lead: params.shortId },
       replace: true,
     });

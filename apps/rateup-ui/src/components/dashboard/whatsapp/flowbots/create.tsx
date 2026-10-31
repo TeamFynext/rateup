@@ -126,7 +126,7 @@ export function AutomatedReplyForm({
     name: z
       .string()
       .trim()
-      .min(1, t("Chatbot name is required"))
+      .min(1, t("Journey name is required"))
       .min(3, t("Name must be at least 3 characters")),
   });
 
@@ -184,7 +184,7 @@ export function AutomatedReplyForm({
       {
         onSuccess: () => {
           void qc.invalidateQueries({ queryKey: chatbotKeys.detail(id) });
-          toast.success(t("Chatbot settings saved"));
+          toast.success(t("Journey settings saved"));
           setSaveSuccess(true);
         },
       },
@@ -214,7 +214,7 @@ export function AutomatedReplyForm({
             <div>
               <CardTitle>{t("Basic Information")}</CardTitle>
               <CardDescription>
-                {t("Configure the basic settings for your Chatbot")}
+                {t("Configure the basic settings for your journey")}
               </CardDescription>
             </div>
           </CardHeader>
@@ -227,17 +227,17 @@ export function AutomatedReplyForm({
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor="chatbot-name">
-                      {t("Chatbot Name")} <span aria-hidden="true">*</span>
+                      {t("Journey Name")} <span aria-hidden="true">*</span>
                     </FieldLabel>
                     <FieldContent>
                       <Input
                         {...field}
                         id="chatbot-name"
-                        placeholder={t("e.g. Welcome Bot, Support Bot...")}
+                        placeholder={t("e.g. Welcome journey, Support journey...")}
                         aria-invalid={fieldState.invalid}
                       />
                       <FieldDescription>
-                        {t("Give this bot a clear internal name.")}
+                        {t("Give this journey a clear internal name.")}
                       </FieldDescription>
                       {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                     </FieldContent>
@@ -260,7 +260,7 @@ export function AutomatedReplyForm({
                       </TooltipTrigger>
                       <TooltipContent side="right" className="max-w-xs text-xs">
                         {t(
-                          "Only required if this chatbot includes a lead automation step that sends messages via a specific WhatsApp number.",
+                          "Only required if this journey includes a lead automation step that sends messages via a specific WhatsApp number.",
                         )}
                       </TooltipContent>
                     </Tooltip>

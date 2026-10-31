@@ -1,14 +1,15 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import { ChatbotEditor } from "@/components/dashboard/chatbots/ChatbotEditor.tsx";
 import { parseChatbotEditorSearch } from "@/components/dashboard/chatbots/chatbotEditorSearch.ts";
 
+/** Chatbots were renamed Journeys; old editor links keep working. */
 export const Route = createFileRoute("/dashboard/chatbots/$chatbotId")({
-  validateSearch: parseChatbotEditorSearch,
-  component: RouteComponent,
+  beforeLoad: ({ params, location }) => {
+    throw redirect({
+      to: "/dashboard/automation/journeys/$journeyId",
+      params: { journeyId: params.chatbotId },
+      search: parseChatbotEditorSearch(location.search as Record<string, unknown>),
+      replace: true,
+    });
+  },
 });
-
-function RouteComponent() {
-  const { chatbotId } = Route.useParams();
-  return <ChatbotEditor chatbotId={chatbotId} />;
-}

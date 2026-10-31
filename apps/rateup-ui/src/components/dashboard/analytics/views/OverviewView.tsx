@@ -284,8 +284,8 @@ function NeedsAttention({ filters }: Readonly<{ filters: AnalyticsFilters }>) {
               {slowestAgents.map(({ agent, seconds }) => (
                 <li key={agent.staff.userId}>
                   <Link
-                    to="/dashboard/analytics/$staffid"
-                    params={{ staffid: agent.staff.userId }}
+                    to="/dashboard/analytics/agents/$agentId"
+                    params={{ agentId: agent.staff.userId }}
                     className={ATTENTION_ROW}
                   >
                     <AttentionRowContent
@@ -309,7 +309,7 @@ function NeedsAttention({ filters }: Readonly<{ filters: AnalyticsFilters }>) {
                 <li key={template.templateName}>
                   <Link
                     to="/dashboard/analytics"
-                    search={{ tab: "messages" }}
+                    search={{ tab: "template-delivery" }}
                     className={ATTENTION_ROW}
                   >
                     <AttentionRowContent

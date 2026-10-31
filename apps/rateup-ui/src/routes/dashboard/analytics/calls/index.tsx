@@ -1,14 +1,15 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import CallsPage from "@/components/whatsapp/calling/history/CallsPage.tsx";
-
+/** Calls moved under the Inbox (/dashboard/inbox/calls); old links keep working. */
 export const Route = createFileRoute("/dashboard/analytics/calls/")({
-  validateSearch: (search: Record<string, unknown>): { tab?: "log" | "analytics" } => ({
-    tab: search.tab === "analytics" ? "analytics" : undefined,
-  }),
-  component: RouteComponent,
+  beforeLoad: ({ location }) => {
+    throw redirect({
+      to: "/dashboard/inbox/calls",
+      // The old URL's query, carried across as-is: the target's own validateSearch
+      // parses it, so this route does not restate (and drift from) that schema.
+      search: location.search as never,
+      hash: location.hash,
+      replace: true,
+    });
+  },
 });
-
-function RouteComponent() {
-  return <CallsPage />;
-}

@@ -64,8 +64,8 @@ export function CommentsTab({ ibaId }: Readonly<{ ibaId: string }>) {
             size="sm"
             render={
               <Link
-                to="/dashboard/automation/$automationId"
-                params={{ automationId: "new" }}
+                to="/dashboard/automation/rules/$ruleId"
+                params={{ ruleId: "new" }}
                 search={{
                   platform: "INSTAGRAM",
                   triggerEvent: "INSTAGRAM_COMMENT",
@@ -96,8 +96,8 @@ export function CommentsTab({ ibaId }: Readonly<{ ibaId: string }>) {
                 size="sm"
                 render={
                   <Link
-                    to="/dashboard/automation/$automationId"
-                    params={{ automationId: "new" }}
+                    to="/dashboard/automation/rules/$ruleId"
+                    params={{ ruleId: "new" }}
                     search={{
                       platform: "INSTAGRAM",
                       triggerEvent: "INSTAGRAM_COMMENT",
@@ -107,7 +107,7 @@ export function CommentsTab({ ibaId }: Readonly<{ ibaId: string }>) {
                 }
               >
                 <IconPlus className="mr-1.5 size-4" />
-                {t("Create automation")}
+                {t("Create rule")}
               </Button>
             </EmptyContent>
           </Empty>
@@ -118,7 +118,7 @@ export function CommentsTab({ ibaId }: Readonly<{ ibaId: string }>) {
             items={commentRules}
             getKey={(item) => item.id}
             renderItem={(item) => (
-              <Link to="/dashboard/automation/$automationId" params={{ automationId: item.id }}>
+              <Link to="/dashboard/automation/rules/$ruleId" params={{ ruleId: item.id }}>
                 <RuleCard
                   item={item}
                   onToggleActive={() =>

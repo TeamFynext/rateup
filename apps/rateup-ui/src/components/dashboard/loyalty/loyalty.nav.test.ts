@@ -11,7 +11,7 @@ describe("buildLoyaltyNavItems", () => {
     expect(rows.map((r) => r.title)).toEqual([
       "Overview",
       "Cashier",
-      "Customers",
+      "Members",
       "Program",
       "Rewards",
       "Activity",
@@ -40,7 +40,7 @@ describe("buildLoyaltyNavItems", () => {
     expect(buildLoyaltyNavItems({ t, programState: null })[3]).not.toHaveProperty("badge");
   });
 
-  test("counts land on Customers, Activity and Messages only", () => {
+  test("counts land on Members, Activity and Messages only", () => {
     const rows = buildLoyaltyNavItems({
       t,
       programState: "live",

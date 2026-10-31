@@ -66,10 +66,10 @@ export const useAddGroupParticipantMutation = (campaignId: string) => {
       // key ["campaigns"] — it does not cover ["campaignById", id], so without
       // this the count stayed stale and the step never ticked.
       queryClient.invalidateQueries({ queryKey: campaignKeys.byId(campaignId) });
-      toast.success(translations("Added group participants successfully."));
+      toast.success(translations("Added audience participants successfully."));
     },
     onError: (error) => {
-      toast.error(error?.message || `Error adding group participants`);
+      toast.error(error?.message || `Error adding audience participants`);
     },
   });
 };

@@ -160,8 +160,8 @@ export function IgMeLinksTab({
             size="sm"
             render={
               <Link
-                to="/dashboard/automation/$automationId"
-                params={{ automationId: "new" }}
+                to="/dashboard/automation/rules/$ruleId"
+                params={{ ruleId: "new" }}
                 search={createSearch}
               />
             }
@@ -210,8 +210,8 @@ export function IgMeLinksTab({
                 size="sm"
                 render={
                   <Link
-                    to="/dashboard/automation/$automationId"
-                    params={{ automationId: "new" }}
+                    to="/dashboard/automation/rules/$ruleId"
+                    params={{ ruleId: "new" }}
                     search={createSearch}
                   />
                 }
@@ -231,8 +231,8 @@ export function IgMeLinksTab({
                 <li key={rule.id} className="flex flex-wrap items-center gap-3 p-3">
                   <div className="min-w-0 flex-1">
                     <Link
-                      to="/dashboard/automation/$automationId"
-                      params={{ automationId: rule.id }}
+                      to="/dashboard/automation/rules/$ruleId"
+                      params={{ ruleId: rule.id }}
                       className="font-medium hover:underline"
                     >
                       {rule.name}

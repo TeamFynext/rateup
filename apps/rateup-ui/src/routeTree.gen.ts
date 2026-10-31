@@ -24,6 +24,7 @@ import { Route as marketingIndexRouteImport } from './routes/(marketing)/index'
 import { Route as marketingBlogRouteRouteImport } from './routes/(marketing)/blog/route'
 import { Route as DotwellKnownApiCatalogRouteImport } from './routes/[.]well-known/api-catalog'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminUpdateCenterRouteImport } from './routes/admin/updateCenter'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as DashboardCommerceRouteRouteImport } from './routes/dashboard/commerce/route'
 import { Route as DashboardLoyaltyRouteRouteImport } from './routes/dashboard/loyalty/route'
@@ -55,6 +56,7 @@ import { Route as shopSSitemapDotxmlRouteImport } from './routes/(shop)/s/sitema
 import { Route as AdminGenerateIndexRouteImport } from './routes/admin/generate/index'
 import { Route as AdminOrdersIndexRouteImport } from './routes/admin/orders/index'
 import { Route as AdminOrgsIndexRouteImport } from './routes/admin/orgs/index'
+import { Route as AdminPlansIndexRouteImport } from './routes/admin/plans/index'
 import { Route as AdminRateupIndexRouteImport } from './routes/admin/rateup/index'
 import { Route as AdminRazorpayIndexRouteImport } from './routes/admin/razorpay/index'
 import { Route as AdminReferralsIndexRouteImport } from './routes/admin/referrals/index'
@@ -62,7 +64,8 @@ import { Route as AdminShareQrIndexRouteImport } from './routes/admin/share-qr/i
 import { Route as AdminShopifyIndexRouteImport } from './routes/admin/shopify/index'
 import { Route as AdminStripeIndexRouteImport } from './routes/admin/stripe/index'
 import { Route as AdminSubscriptionsIndexRouteImport } from './routes/admin/subscriptions/index'
-import { Route as AdminUpdateCenterIndexRouteImport } from './routes/admin/updateCenter/index'
+import { Route as AdminUpdateCenterIndexRouteImport } from './routes/admin/update-center/index'
+import { Route as AdminUserStatsIndexRouteImport } from './routes/admin/user-stats/index'
 import { Route as AdminUserstatsIndexRouteImport } from './routes/admin/userstats/index'
 import { Route as AuthFbIndexRouteImport } from './routes/auth/fb/index'
 import { Route as AuthOauth2callbackIndexRouteImport } from './routes/auth/oauth2callback/index'
@@ -71,25 +74,35 @@ import { Route as DashboardAnalyticsIndexRouteImport } from './routes/dashboard/
 import { Route as DashboardAutomationIndexRouteImport } from './routes/dashboard/automation/index'
 import { Route as DashboardCampaignIndexRouteImport } from './routes/dashboard/campaign/index'
 import { Route as DashboardCampaignNewRouteImport } from './routes/dashboard/campaign/new'
+import { Route as DashboardCampaignsIndexRouteImport } from './routes/dashboard/campaigns/index'
+import { Route as DashboardCampaignsNewRouteImport } from './routes/dashboard/campaigns/new'
 import { Route as DashboardChatbotsIndexRouteImport } from './routes/dashboard/chatbots/index'
 import { Route as DashboardChatbotsChatbotIdRouteImport } from './routes/dashboard/chatbots/$chatbotId'
 import { Route as DashboardCommerceIndexRouteImport } from './routes/dashboard/commerce/index'
 import { Route as DashboardContactsIndexRouteImport } from './routes/dashboard/contacts/index'
+import { Route as DashboardCustomizeMenuIndexRouteImport } from './routes/dashboard/customize-menu/index'
 import { Route as DashboardFeaturesIndexRouteImport } from './routes/dashboard/features/index'
 import { Route as DashboardInboxIndexRouteImport } from './routes/dashboard/inbox/index'
 import { Route as DashboardInstagramIndexRouteImport } from './routes/dashboard/instagram/index'
+import { Route as DashboardJourneysIndexRouteImport } from './routes/dashboard/journeys/index'
+import { Route as DashboardJourneysJourneyIdRouteImport } from './routes/dashboard/journeys/$journeyId'
 import { Route as DashboardLinkPagesIndexRouteImport } from './routes/dashboard/link-pages/index'
 import { Route as DashboardMessengerIndexRouteImport } from './routes/dashboard/messenger/index'
 import { Route as DashboardMetaAgentIndexRouteImport } from './routes/dashboard/meta-agent/index'
 import { Route as DashboardMetaAgentConnectorsRouteImport } from './routes/dashboard/meta-agent/connectors'
+import { Route as DashboardMetaAgentGoLiveRouteImport } from './routes/dashboard/meta-agent/go-live'
 import { Route as DashboardMetaAgentInsightsRouteImport } from './routes/dashboard/meta-agent/insights'
 import { Route as DashboardMetaAgentKnowledgeRouteImport } from './routes/dashboard/meta-agent/knowledge'
 import { Route as DashboardMetaAgentOperateRouteImport } from './routes/dashboard/meta-agent/operate'
 import { Route as DashboardMetaAgentOverviewRouteImport } from './routes/dashboard/meta-agent/overview'
+import { Route as DashboardMetaAgentRichRepliesRouteImport } from './routes/dashboard/meta-agent/rich-replies'
 import { Route as DashboardMetaAgentSettingsRouteImport } from './routes/dashboard/meta-agent/settings'
+import { Route as DashboardMetaAgentSetupGuideRouteImport } from './routes/dashboard/meta-agent/setup-guide'
 import { Route as DashboardMetaAgentSkillsRouteImport } from './routes/dashboard/meta-agent/skills'
+import { Route as DashboardMetaAgentTestRouteImport } from './routes/dashboard/meta-agent/test'
 import { Route as DashboardMetaAgentUiSkillsRouteImport } from './routes/dashboard/meta-agent/ui-skills'
 import { Route as DashboardPipelineIndexRouteImport } from './routes/dashboard/pipeline/index'
+import { Route as DashboardPipelinesIndexRouteImport } from './routes/dashboard/pipelines/index'
 import { Route as DashboardQrCodesIndexRouteImport } from './routes/dashboard/qr-codes/index'
 import { Route as DashboardQrCreatorIndexRouteImport } from './routes/dashboard/qrCreator/index'
 import { Route as DashboardQuickAccessLinksIndexRouteImport } from './routes/dashboard/quickAccessLinks/index'
@@ -154,10 +167,16 @@ import { Route as AuthShopifyOauth2callbackIndexRouteImport } from './routes/aut
 import { Route as AuthShopifyRetryIndexRouteImport } from './routes/auth/shopify/retry/index'
 import { Route as DashboardAnalyticsStaffidIndexRouteImport } from './routes/dashboard/analytics/$staffid/index'
 import { Route as DashboardAnalyticsAuditLogIndexRouteImport } from './routes/dashboard/analytics/audit-log/index'
+import { Route as DashboardAnalyticsCallHistoryIndexRouteImport } from './routes/dashboard/analytics/call-history/index'
 import { Route as DashboardAnalyticsCallsIndexRouteImport } from './routes/dashboard/analytics/calls/index'
 import { Route as DashboardAutomationAutomationIdIndexRouteImport } from './routes/dashboard/automation/$automationId/index'
+import { Route as DashboardAutomationJourneysIndexRouteImport } from './routes/dashboard/automation/journeys/index'
+import { Route as DashboardAutomationJourneysJourneyIdRouteImport } from './routes/dashboard/automation/journeys/$journeyId'
+import { Route as DashboardAutomationRulesIndexRouteImport } from './routes/dashboard/automation/rules/index'
 import { Route as DashboardCampaignCampaignIdIndexRouteImport } from './routes/dashboard/campaign/$campaignId/index'
 import { Route as DashboardCampaignCampaignIdEditRouteImport } from './routes/dashboard/campaign/$campaignId/edit'
+import { Route as DashboardCampaignsCampaignIdIndexRouteImport } from './routes/dashboard/campaigns/$campaignId/index'
+import { Route as DashboardCampaignsCampaignIdEditRouteImport } from './routes/dashboard/campaigns/$campaignId/edit'
 import { Route as DashboardCommerceCatalogOrdersIndexRouteImport } from './routes/dashboard/commerce/catalog-orders/index'
 import { Route as DashboardCommerceCatalogsIndexRouteImport } from './routes/dashboard/commerce/catalogs/index'
 import { Route as DashboardCommerceCouponsIndexRouteImport } from './routes/dashboard/commerce/coupons/index'
@@ -171,10 +190,12 @@ import { Route as DashboardCommerceProductsNewRouteImport } from './routes/dashb
 import { Route as DashboardCommerceSettingsIndexRouteImport } from './routes/dashboard/commerce/settings/index'
 import { Route as DashboardCommerceSettingsStorefrontPreviewRouteImport } from './routes/dashboard/commerce/settings/storefront-preview'
 import { Route as DashboardCommerceSetupIndexRouteImport } from './routes/dashboard/commerce/setup/index'
+import { Route as DashboardContactsAudiencesIndexRouteImport } from './routes/dashboard/contacts/audiences/index'
 import { Route as DashboardContactsCustomFieldsIndexRouteImport } from './routes/dashboard/contacts/custom-fields/index'
 import { Route as DashboardContactsGroupsIndexRouteImport } from './routes/dashboard/contacts/groups/index'
 import { Route as DashboardContactsLabelsIndexRouteImport } from './routes/dashboard/contacts/labels/index'
 import { Route as DashboardContactsLifecycleIndexRouteImport } from './routes/dashboard/contacts/lifecycle/index'
+import { Route as DashboardInboxCallsIndexRouteImport } from './routes/dashboard/inbox/calls/index'
 import { Route as DashboardInstagramFlowbotsFlowbotIdRouteImport } from './routes/dashboard/instagram/flowbots/$flowbotId'
 import { Route as DashboardLinkPagesShortUrlIdIndexRouteImport } from './routes/dashboard/link-pages/$shortUrlId/index'
 import { Route as DashboardLoyaltyActivityIndexRouteImport } from './routes/dashboard/loyalty/activity/index'
@@ -186,8 +207,10 @@ import { Route as DashboardLoyaltyDashboardIndexRouteImport } from './routes/das
 import { Route as DashboardLoyaltyEarningRulesIndexRouteImport } from './routes/dashboard/loyalty/earning-rules/index'
 import { Route as DashboardLoyaltyFeedbackIndexRouteImport } from './routes/dashboard/loyalty/feedback/index'
 import { Route as DashboardLoyaltyMaterialsIndexRouteImport } from './routes/dashboard/loyalty/materials/index'
+import { Route as DashboardLoyaltyMembersIndexRouteImport } from './routes/dashboard/loyalty/members/index'
 import { Route as DashboardLoyaltyMessagesIndexRouteImport } from './routes/dashboard/loyalty/messages/index'
 import { Route as DashboardLoyaltyOnboardingIndexRouteImport } from './routes/dashboard/loyalty/onboarding/index'
+import { Route as DashboardLoyaltyOverviewIndexRouteImport } from './routes/dashboard/loyalty/overview/index'
 import { Route as DashboardLoyaltyProgramIndexRouteImport } from './routes/dashboard/loyalty/program/index'
 import { Route as DashboardLoyaltyRemindersIndexRouteImport } from './routes/dashboard/loyalty/reminders/index'
 import { Route as DashboardLoyaltyRewardsIndexRouteImport } from './routes/dashboard/loyalty/rewards/index'
@@ -199,6 +222,7 @@ import { Route as DashboardQrCodesShortUrlIdIndexRouteImport } from './routes/da
 import { Route as DashboardQrCreatorShortUrlIdIndexRouteImport } from './routes/dashboard/qrCreator/$shortUrlId/index'
 import { Route as DashboardQuickAccessLinksShortUrlIdIndexRouteImport } from './routes/dashboard/quickAccessLinks/$shortUrlId/index'
 import { Route as DashboardSettingsAccountIndexRouteImport } from './routes/dashboard/settings/account/index'
+import { Route as DashboardSettingsAuditLogIndexRouteImport } from './routes/dashboard/settings/audit-log/index'
 import { Route as DashboardSettingsBillingIndexRouteImport } from './routes/dashboard/settings/billing/index'
 import { Route as DashboardSettingsChannelsIndexRouteImport } from './routes/dashboard/settings/channels/index'
 import { Route as DashboardSettingsFeaturesIndexRouteImport } from './routes/dashboard/settings/features/index'
@@ -207,17 +231,22 @@ import { Route as DashboardSettingsMembersIndexRouteImport } from './routes/dash
 import { Route as DashboardSettingsMembersMemberIdRouteImport } from './routes/dashboard/settings/members/$memberId'
 import { Route as DashboardSettingsMembersRolesRouteImport } from './routes/dashboard/settings/members/roles'
 import { Route as DashboardSettingsNotificationsIndexRouteImport } from './routes/dashboard/settings/notifications/index'
+import { Route as DashboardSettingsPasswordIndexRouteImport } from './routes/dashboard/settings/password/index'
+import { Route as DashboardSettingsProfileIndexRouteImport } from './routes/dashboard/settings/profile/index'
 import { Route as DashboardSettingsSecurityIndexRouteImport } from './routes/dashboard/settings/security/index'
 import { Route as DashboardSettingsTeamIndexRouteImport } from './routes/dashboard/settings/team/index'
+import { Route as DashboardSettingsTeamsIndexRouteImport } from './routes/dashboard/settings/teams/index'
 import { Route as DashboardSettingsUsersIndexRouteImport } from './routes/dashboard/settings/users/index'
 import { Route as DashboardSurveysSurveyIdIndexRouteImport } from './routes/dashboard/surveys/$surveyId/index'
 import { Route as DashboardSurveysTemplatesIndexRouteImport } from './routes/dashboard/surveys/templates/index'
+import { Route as DashboardSurveysTestimonialsIndexRouteImport } from './routes/dashboard/surveys/testimonials/index'
 import { Route as DashboardTestimonialCollectionIdIndexRouteImport } from './routes/dashboard/testimonial/$collectionId/index'
 import { Route as DashboardWhatsappCallsIndexRouteImport } from './routes/dashboard/whatsapp/calls/index'
 import { Route as DashboardWhatsappCatalogIndexRouteImport } from './routes/dashboard/whatsapp/catalog/index'
 import { Route as DashboardWhatsappConversationalComponentsIndexRouteImport } from './routes/dashboard/whatsapp/conversational-components/index'
 import { Route as DashboardWhatsappFlowbotsIndexRouteImport } from './routes/dashboard/whatsapp/flowbots/index'
 import { Route as DashboardWhatsappFlowsIndexRouteImport } from './routes/dashboard/whatsapp/flows/index'
+import { Route as DashboardWhatsappIceBreakersIndexRouteImport } from './routes/dashboard/whatsapp/ice-breakers/index'
 import { Route as DashboardWhatsappOrdersIndexRouteImport } from './routes/dashboard/whatsapp/orders/index'
 import { Route as DashboardWhatsappPaymentsIndexRouteImport } from './routes/dashboard/whatsapp/payments/index'
 import { Route as DashboardWhatsappTemplatesIndexRouteImport } from './routes/dashboard/whatsapp/templates/index'
@@ -234,7 +263,12 @@ import { Route as publicFacingPublicTestimonialCollectionIdIndexRouteImport } fr
 import { Route as publicFacingWsShortIdEndIndexRouteImport } from './routes/(public-facing)/ws/$shortId/end/index'
 import { Route as publicFacingWsShortIdResponseSubmittedIndexRouteImport } from './routes/(public-facing)/ws/$shortId/response-submitted/index'
 import { Route as shopSSlugPHandleRouteImport } from './routes/(shop)/s/$slug/p/$handle'
+import { Route as DashboardAnalyticsAgentsAgentIdIndexRouteImport } from './routes/dashboard/analytics/agents/$agentId/index'
 import { Route as DashboardAnalyticsTeamTeamidIndexRouteImport } from './routes/dashboard/analytics/team/$teamid/index'
+import { Route as DashboardAnalyticsTeamsTeamIdIndexRouteImport } from './routes/dashboard/analytics/teams/$teamId/index'
+import { Route as DashboardAutomationRulesRuleIdIndexRouteImport } from './routes/dashboard/automation/rules/$ruleId/index'
+import { Route as DashboardCommerceCatalogsCatalogIdIndexRouteImport } from './routes/dashboard/commerce/catalogs/$catalogId/index'
+import { Route as DashboardContactsAudiencesAudienceIdIndexRouteImport } from './routes/dashboard/contacts/audiences/$audienceId/index'
 import { Route as DashboardContactsGroupsGroupIdIndexRouteImport } from './routes/dashboard/contacts/groups/$groupId/index'
 import { Route as DashboardLoyaltyProgramAdvancedIndexRouteImport } from './routes/dashboard/loyalty/program/advanced/index'
 import { Route as DashboardLoyaltyRewardsRewardIdIndexRouteImport } from './routes/dashboard/loyalty/rewards/$rewardId/index'
@@ -243,6 +277,8 @@ import { Route as DashboardLoyaltyTemplatesTemplateIdIndexRouteImport } from './
 import { Route as DashboardSettingsChannelsChannelIndexRouteImport } from './routes/dashboard/settings/channels/$channel/index'
 import { Route as DashboardSettingsIntegrationsIdIndexRouteImport } from './routes/dashboard/settings/integrations/$id/index'
 import { Route as DashboardSettingsTeamTeamIdIndexRouteImport } from './routes/dashboard/settings/team/$teamId/index'
+import { Route as DashboardSettingsTeamsTeamIdIndexRouteImport } from './routes/dashboard/settings/teams/$teamId/index'
+import { Route as DashboardSurveysTestimonialsCollectionIdIndexRouteImport } from './routes/dashboard/surveys/testimonials/$collectionId/index'
 import { Route as DashboardWhatsappCatalogCatalogIdIndexRouteImport } from './routes/dashboard/whatsapp/catalog/$catalogId/index'
 import { Route as DashboardWhatsappFlowbotsFlowbotIdIndexRouteImport } from './routes/dashboard/whatsapp/flowbots/$flowbotId/index'
 import { Route as DashboardWhatsappTemplatesTemplateIdIndexRouteImport } from './routes/dashboard/whatsapp/templates/$templateId/index'
@@ -324,6 +360,11 @@ const DotwellKnownApiCatalogRoute = DotwellKnownApiCatalogRouteImport.update({
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminUpdateCenterRoute = AdminUpdateCenterRouteImport.update({
+  id: '/updateCenter',
+  path: '/updateCenter',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
@@ -490,6 +531,11 @@ const AdminOrgsIndexRoute = AdminOrgsIndexRouteImport.update({
   path: '/orgs/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminPlansIndexRoute = AdminPlansIndexRouteImport.update({
+  id: '/plans/',
+  path: '/plans/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminRateupIndexRoute = AdminRateupIndexRouteImport.update({
   id: '/rateup/',
   path: '/rateup/',
@@ -526,8 +572,13 @@ const AdminSubscriptionsIndexRoute = AdminSubscriptionsIndexRouteImport.update({
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminUpdateCenterIndexRoute = AdminUpdateCenterIndexRouteImport.update({
-  id: '/updateCenter/',
-  path: '/updateCenter/',
+  id: '/update-center/',
+  path: '/update-center/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminUserStatsIndexRoute = AdminUserStatsIndexRouteImport.update({
+  id: '/user-stats/',
+  path: '/user-stats/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminUserstatsIndexRoute = AdminUserstatsIndexRouteImport.update({
@@ -571,6 +622,16 @@ const DashboardCampaignNewRoute = DashboardCampaignNewRouteImport.update({
   path: '/campaign/new',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const DashboardCampaignsIndexRoute = DashboardCampaignsIndexRouteImport.update({
+  id: '/campaigns/',
+  path: '/campaigns/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardCampaignsNewRoute = DashboardCampaignsNewRouteImport.update({
+  id: '/campaigns/new',
+  path: '/campaigns/new',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const DashboardChatbotsIndexRoute = DashboardChatbotsIndexRouteImport.update({
   id: '/chatbots/',
   path: '/chatbots/',
@@ -592,6 +653,12 @@ const DashboardContactsIndexRoute = DashboardContactsIndexRouteImport.update({
   path: '/contacts/',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const DashboardCustomizeMenuIndexRoute =
+  DashboardCustomizeMenuIndexRouteImport.update({
+    id: '/customize-menu/',
+    path: '/customize-menu/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
 const DashboardFeaturesIndexRoute = DashboardFeaturesIndexRouteImport.update({
   id: '/features/',
   path: '/features/',
@@ -607,6 +674,17 @@ const DashboardInstagramIndexRoute = DashboardInstagramIndexRouteImport.update({
   path: '/instagram/',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const DashboardJourneysIndexRoute = DashboardJourneysIndexRouteImport.update({
+  id: '/journeys/',
+  path: '/journeys/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardJourneysJourneyIdRoute =
+  DashboardJourneysJourneyIdRouteImport.update({
+    id: '/journeys/$journeyId',
+    path: '/journeys/$journeyId',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
 const DashboardLinkPagesIndexRoute = DashboardLinkPagesIndexRouteImport.update({
   id: '/link-pages/',
   path: '/link-pages/',
@@ -626,6 +704,12 @@ const DashboardMetaAgentConnectorsRoute =
   DashboardMetaAgentConnectorsRouteImport.update({
     id: '/connectors',
     path: '/connectors',
+    getParentRoute: () => DashboardMetaAgentRouteRoute,
+  } as any)
+const DashboardMetaAgentGoLiveRoute =
+  DashboardMetaAgentGoLiveRouteImport.update({
+    id: '/go-live',
+    path: '/go-live',
     getParentRoute: () => DashboardMetaAgentRouteRoute,
   } as any)
 const DashboardMetaAgentInsightsRoute =
@@ -652,10 +736,22 @@ const DashboardMetaAgentOverviewRoute =
     path: '/overview',
     getParentRoute: () => DashboardMetaAgentRouteRoute,
   } as any)
+const DashboardMetaAgentRichRepliesRoute =
+  DashboardMetaAgentRichRepliesRouteImport.update({
+    id: '/rich-replies',
+    path: '/rich-replies',
+    getParentRoute: () => DashboardMetaAgentRouteRoute,
+  } as any)
 const DashboardMetaAgentSettingsRoute =
   DashboardMetaAgentSettingsRouteImport.update({
     id: '/settings',
     path: '/settings',
+    getParentRoute: () => DashboardMetaAgentRouteRoute,
+  } as any)
+const DashboardMetaAgentSetupGuideRoute =
+  DashboardMetaAgentSetupGuideRouteImport.update({
+    id: '/setup-guide',
+    path: '/setup-guide',
     getParentRoute: () => DashboardMetaAgentRouteRoute,
   } as any)
 const DashboardMetaAgentSkillsRoute =
@@ -664,6 +760,11 @@ const DashboardMetaAgentSkillsRoute =
     path: '/skills',
     getParentRoute: () => DashboardMetaAgentRouteRoute,
   } as any)
+const DashboardMetaAgentTestRoute = DashboardMetaAgentTestRouteImport.update({
+  id: '/test',
+  path: '/test',
+  getParentRoute: () => DashboardMetaAgentRouteRoute,
+} as any)
 const DashboardMetaAgentUiSkillsRoute =
   DashboardMetaAgentUiSkillsRouteImport.update({
     id: '/ui-skills',
@@ -673,6 +774,11 @@ const DashboardMetaAgentUiSkillsRoute =
 const DashboardPipelineIndexRoute = DashboardPipelineIndexRouteImport.update({
   id: '/pipeline/',
   path: '/pipeline/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardPipelinesIndexRoute = DashboardPipelinesIndexRouteImport.update({
+  id: '/pipelines/',
+  path: '/pipelines/',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
 const DashboardQrCodesIndexRoute = DashboardQrCodesIndexRouteImport.update({
@@ -1043,6 +1149,12 @@ const DashboardAnalyticsAuditLogIndexRoute =
     path: '/analytics/audit-log/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
+const DashboardAnalyticsCallHistoryIndexRoute =
+  DashboardAnalyticsCallHistoryIndexRouteImport.update({
+    id: '/analytics/call-history/',
+    path: '/analytics/call-history/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
 const DashboardAnalyticsCallsIndexRoute =
   DashboardAnalyticsCallsIndexRouteImport.update({
     id: '/analytics/calls/',
@@ -1055,6 +1167,24 @@ const DashboardAutomationAutomationIdIndexRoute =
     path: '/automation/$automationId/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
+const DashboardAutomationJourneysIndexRoute =
+  DashboardAutomationJourneysIndexRouteImport.update({
+    id: '/automation/journeys/',
+    path: '/automation/journeys/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardAutomationJourneysJourneyIdRoute =
+  DashboardAutomationJourneysJourneyIdRouteImport.update({
+    id: '/automation/journeys/$journeyId',
+    path: '/automation/journeys/$journeyId',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardAutomationRulesIndexRoute =
+  DashboardAutomationRulesIndexRouteImport.update({
+    id: '/automation/rules/',
+    path: '/automation/rules/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
 const DashboardCampaignCampaignIdIndexRoute =
   DashboardCampaignCampaignIdIndexRouteImport.update({
     id: '/campaign/$campaignId/',
@@ -1065,6 +1195,18 @@ const DashboardCampaignCampaignIdEditRoute =
   DashboardCampaignCampaignIdEditRouteImport.update({
     id: '/campaign/$campaignId/edit',
     path: '/campaign/$campaignId/edit',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardCampaignsCampaignIdIndexRoute =
+  DashboardCampaignsCampaignIdIndexRouteImport.update({
+    id: '/campaigns/$campaignId/',
+    path: '/campaigns/$campaignId/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardCampaignsCampaignIdEditRoute =
+  DashboardCampaignsCampaignIdEditRouteImport.update({
+    id: '/campaigns/$campaignId/edit',
+    path: '/campaigns/$campaignId/edit',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
 const DashboardCommerceCatalogOrdersIndexRoute =
@@ -1145,6 +1287,12 @@ const DashboardCommerceSetupIndexRoute =
     path: '/setup/',
     getParentRoute: () => DashboardCommerceRouteRoute,
   } as any)
+const DashboardContactsAudiencesIndexRoute =
+  DashboardContactsAudiencesIndexRouteImport.update({
+    id: '/contacts/audiences/',
+    path: '/contacts/audiences/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
 const DashboardContactsCustomFieldsIndexRoute =
   DashboardContactsCustomFieldsIndexRouteImport.update({
     id: '/contacts/custom-fields/',
@@ -1167,6 +1315,12 @@ const DashboardContactsLifecycleIndexRoute =
   DashboardContactsLifecycleIndexRouteImport.update({
     id: '/contacts/lifecycle/',
     path: '/contacts/lifecycle/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardInboxCallsIndexRoute =
+  DashboardInboxCallsIndexRouteImport.update({
+    id: '/inbox/calls/',
+    path: '/inbox/calls/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
 const DashboardInstagramFlowbotsFlowbotIdRoute =
@@ -1235,6 +1389,12 @@ const DashboardLoyaltyMaterialsIndexRoute =
     path: '/materials/',
     getParentRoute: () => DashboardLoyaltyRouteRoute,
   } as any)
+const DashboardLoyaltyMembersIndexRoute =
+  DashboardLoyaltyMembersIndexRouteImport.update({
+    id: '/members/',
+    path: '/members/',
+    getParentRoute: () => DashboardLoyaltyRouteRoute,
+  } as any)
 const DashboardLoyaltyMessagesIndexRoute =
   DashboardLoyaltyMessagesIndexRouteImport.update({
     id: '/messages/',
@@ -1245,6 +1405,12 @@ const DashboardLoyaltyOnboardingIndexRoute =
   DashboardLoyaltyOnboardingIndexRouteImport.update({
     id: '/onboarding/',
     path: '/onboarding/',
+    getParentRoute: () => DashboardLoyaltyRouteRoute,
+  } as any)
+const DashboardLoyaltyOverviewIndexRoute =
+  DashboardLoyaltyOverviewIndexRouteImport.update({
+    id: '/overview/',
+    path: '/overview/',
     getParentRoute: () => DashboardLoyaltyRouteRoute,
   } as any)
 const DashboardLoyaltyProgramIndexRoute =
@@ -1313,6 +1479,12 @@ const DashboardSettingsAccountIndexRoute =
     path: '/settings/account/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
+const DashboardSettingsAuditLogIndexRoute =
+  DashboardSettingsAuditLogIndexRouteImport.update({
+    id: '/settings/audit-log/',
+    path: '/settings/audit-log/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
 const DashboardSettingsBillingIndexRoute =
   DashboardSettingsBillingIndexRouteImport.update({
     id: '/settings/billing/',
@@ -1361,6 +1533,18 @@ const DashboardSettingsNotificationsIndexRoute =
     path: '/settings/notifications/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
+const DashboardSettingsPasswordIndexRoute =
+  DashboardSettingsPasswordIndexRouteImport.update({
+    id: '/settings/password/',
+    path: '/settings/password/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardSettingsProfileIndexRoute =
+  DashboardSettingsProfileIndexRouteImport.update({
+    id: '/settings/profile/',
+    path: '/settings/profile/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
 const DashboardSettingsSecurityIndexRoute =
   DashboardSettingsSecurityIndexRouteImport.update({
     id: '/settings/security/',
@@ -1371,6 +1555,12 @@ const DashboardSettingsTeamIndexRoute =
   DashboardSettingsTeamIndexRouteImport.update({
     id: '/settings/team/',
     path: '/settings/team/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardSettingsTeamsIndexRoute =
+  DashboardSettingsTeamsIndexRouteImport.update({
+    id: '/settings/teams/',
+    path: '/settings/teams/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
 const DashboardSettingsUsersIndexRoute =
@@ -1389,6 +1579,12 @@ const DashboardSurveysTemplatesIndexRoute =
   DashboardSurveysTemplatesIndexRouteImport.update({
     id: '/surveys/templates/',
     path: '/surveys/templates/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardSurveysTestimonialsIndexRoute =
+  DashboardSurveysTestimonialsIndexRouteImport.update({
+    id: '/surveys/testimonials/',
+    path: '/surveys/testimonials/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
 const DashboardTestimonialCollectionIdIndexRoute =
@@ -1425,6 +1621,12 @@ const DashboardWhatsappFlowsIndexRoute =
   DashboardWhatsappFlowsIndexRouteImport.update({
     id: '/whatsapp/flows/',
     path: '/whatsapp/flows/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardWhatsappIceBreakersIndexRoute =
+  DashboardWhatsappIceBreakersIndexRouteImport.update({
+    id: '/whatsapp/ice-breakers/',
+    path: '/whatsapp/ice-breakers/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
 const DashboardWhatsappOrdersIndexRoute =
@@ -1522,10 +1724,40 @@ const shopSSlugPHandleRoute = shopSSlugPHandleRouteImport.update({
   path: '/p/$handle',
   getParentRoute: () => shopSSlugRouteRoute,
 } as any)
+const DashboardAnalyticsAgentsAgentIdIndexRoute =
+  DashboardAnalyticsAgentsAgentIdIndexRouteImport.update({
+    id: '/analytics/agents/$agentId/',
+    path: '/analytics/agents/$agentId/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
 const DashboardAnalyticsTeamTeamidIndexRoute =
   DashboardAnalyticsTeamTeamidIndexRouteImport.update({
     id: '/analytics/team/$teamid/',
     path: '/analytics/team/$teamid/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardAnalyticsTeamsTeamIdIndexRoute =
+  DashboardAnalyticsTeamsTeamIdIndexRouteImport.update({
+    id: '/analytics/teams/$teamId/',
+    path: '/analytics/teams/$teamId/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardAutomationRulesRuleIdIndexRoute =
+  DashboardAutomationRulesRuleIdIndexRouteImport.update({
+    id: '/automation/rules/$ruleId/',
+    path: '/automation/rules/$ruleId/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardCommerceCatalogsCatalogIdIndexRoute =
+  DashboardCommerceCatalogsCatalogIdIndexRouteImport.update({
+    id: '/catalogs/$catalogId/',
+    path: '/catalogs/$catalogId/',
+    getParentRoute: () => DashboardCommerceRouteRoute,
+  } as any)
+const DashboardContactsAudiencesAudienceIdIndexRoute =
+  DashboardContactsAudiencesAudienceIdIndexRouteImport.update({
+    id: '/contacts/audiences/$audienceId/',
+    path: '/contacts/audiences/$audienceId/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
 const DashboardContactsGroupsGroupIdIndexRoute =
@@ -1574,6 +1806,18 @@ const DashboardSettingsTeamTeamIdIndexRoute =
   DashboardSettingsTeamTeamIdIndexRouteImport.update({
     id: '/settings/team/$teamId/',
     path: '/settings/team/$teamId/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardSettingsTeamsTeamIdIndexRoute =
+  DashboardSettingsTeamsTeamIdIndexRouteImport.update({
+    id: '/settings/teams/$teamId/',
+    path: '/settings/teams/$teamId/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardSurveysTestimonialsCollectionIdIndexRoute =
+  DashboardSurveysTestimonialsCollectionIdIndexRouteImport.update({
+    id: '/surveys/testimonials/$collectionId/',
+    path: '/surveys/testimonials/$collectionId/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
 const DashboardWhatsappCatalogCatalogIdIndexRoute =
@@ -1656,6 +1900,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/loyalty': typeof DashboardLoyaltyRouteRouteWithChildren
   '/dashboard/meta-agent': typeof DashboardMetaAgentRouteRouteWithChildren
   '/.well-known/api-catalog': typeof DotwellKnownApiCatalogRoute
+  '/admin/updateCenter': typeof AdminUpdateCenterRoute
   '/pl/$shortId': typeof PlShortIdRoute
   '/': typeof marketingIndexRoute
   '/admin/': typeof AdminIndexRoute
@@ -1666,14 +1911,20 @@ export interface FileRoutesByFullPath {
   '/tools/sitemap.xml': typeof marketingToolsSitemapDotxmlRoute
   '/s/sitemap.xml': typeof shopSSitemapDotxmlRoute
   '/dashboard/campaign/new': typeof DashboardCampaignNewRoute
+  '/dashboard/campaigns/new': typeof DashboardCampaignsNewRoute
   '/dashboard/chatbots/$chatbotId': typeof DashboardChatbotsChatbotIdRoute
+  '/dashboard/journeys/$journeyId': typeof DashboardJourneysJourneyIdRoute
   '/dashboard/meta-agent/connectors': typeof DashboardMetaAgentConnectorsRoute
+  '/dashboard/meta-agent/go-live': typeof DashboardMetaAgentGoLiveRoute
   '/dashboard/meta-agent/insights': typeof DashboardMetaAgentInsightsRoute
   '/dashboard/meta-agent/knowledge': typeof DashboardMetaAgentKnowledgeRoute
   '/dashboard/meta-agent/operate': typeof DashboardMetaAgentOperateRoute
   '/dashboard/meta-agent/overview': typeof DashboardMetaAgentOverviewRoute
+  '/dashboard/meta-agent/rich-replies': typeof DashboardMetaAgentRichRepliesRoute
   '/dashboard/meta-agent/settings': typeof DashboardMetaAgentSettingsRoute
+  '/dashboard/meta-agent/setup-guide': typeof DashboardMetaAgentSetupGuideRoute
   '/dashboard/meta-agent/skills': typeof DashboardMetaAgentSkillsRoute
+  '/dashboard/meta-agent/test': typeof DashboardMetaAgentTestRoute
   '/dashboard/meta-agent/ui-skills': typeof DashboardMetaAgentUiSkillsRoute
   '/dashboard/setup/features': typeof DashboardSetupFeaturesRoute
   '/invite/': typeof authInviteIndexRoute
@@ -1697,6 +1948,7 @@ export interface FileRoutesByFullPath {
   '/admin/generate/': typeof AdminGenerateIndexRoute
   '/admin/orders/': typeof AdminOrdersIndexRoute
   '/admin/orgs/': typeof AdminOrgsIndexRoute
+  '/admin/plans/': typeof AdminPlansIndexRoute
   '/admin/rateup/': typeof AdminRateupIndexRoute
   '/admin/razorpay/': typeof AdminRazorpayIndexRoute
   '/admin/referrals/': typeof AdminReferralsIndexRoute
@@ -1704,7 +1956,8 @@ export interface FileRoutesByFullPath {
   '/admin/shopify/': typeof AdminShopifyIndexRoute
   '/admin/stripe/': typeof AdminStripeIndexRoute
   '/admin/subscriptions/': typeof AdminSubscriptionsIndexRoute
-  '/admin/updateCenter/': typeof AdminUpdateCenterIndexRoute
+  '/admin/update-center/': typeof AdminUpdateCenterIndexRoute
+  '/admin/user-stats/': typeof AdminUserStatsIndexRoute
   '/admin/userstats/': typeof AdminUserstatsIndexRoute
   '/auth/fb/': typeof AuthFbIndexRoute
   '/auth/oauth2callback/': typeof AuthOauth2callbackIndexRoute
@@ -1712,16 +1965,20 @@ export interface FileRoutesByFullPath {
   '/dashboard/analytics/': typeof DashboardAnalyticsIndexRoute
   '/dashboard/automation/': typeof DashboardAutomationIndexRoute
   '/dashboard/campaign/': typeof DashboardCampaignIndexRoute
+  '/dashboard/campaigns/': typeof DashboardCampaignsIndexRoute
   '/dashboard/chatbots/': typeof DashboardChatbotsIndexRoute
   '/dashboard/commerce/': typeof DashboardCommerceIndexRoute
   '/dashboard/contacts/': typeof DashboardContactsIndexRoute
+  '/dashboard/customize-menu/': typeof DashboardCustomizeMenuIndexRoute
   '/dashboard/features/': typeof DashboardFeaturesIndexRoute
   '/dashboard/inbox/': typeof DashboardInboxIndexRoute
   '/dashboard/instagram/': typeof DashboardInstagramIndexRoute
+  '/dashboard/journeys/': typeof DashboardJourneysIndexRoute
   '/dashboard/link-pages/': typeof DashboardLinkPagesIndexRoute
   '/dashboard/messenger/': typeof DashboardMessengerIndexRoute
   '/dashboard/meta-agent/': typeof DashboardMetaAgentIndexRoute
   '/dashboard/pipeline/': typeof DashboardPipelineIndexRoute
+  '/dashboard/pipelines/': typeof DashboardPipelinesIndexRoute
   '/dashboard/qr-codes/': typeof DashboardQrCodesIndexRoute
   '/dashboard/qrCreator/': typeof DashboardQrCreatorIndexRoute
   '/dashboard/quickAccessLinks/': typeof DashboardQuickAccessLinksIndexRoute
@@ -1733,7 +1990,9 @@ export interface FileRoutesByFullPath {
   '/blog/author/sitemap.xml': typeof marketingBlogAuthorSitemapDotxmlRoute
   '/blog/tag/sitemap.xml': typeof marketingBlogTagSitemapDotxmlRoute
   '/c/$token/invoice': typeof shopCTokenInvoiceRoute
+  '/dashboard/automation/journeys/$journeyId': typeof DashboardAutomationJourneysJourneyIdRoute
   '/dashboard/campaign/$campaignId/edit': typeof DashboardCampaignCampaignIdEditRoute
+  '/dashboard/campaigns/$campaignId/edit': typeof DashboardCampaignsCampaignIdEditRoute
   '/dashboard/commerce/orders/$orderId': typeof DashboardCommerceOrdersOrderIdRoute
   '/dashboard/commerce/products/$productId': typeof DashboardCommerceProductsProductIdRoute
   '/dashboard/commerce/products/new': typeof DashboardCommerceProductsNewRoute
@@ -1794,9 +2053,13 @@ export interface FileRoutesByFullPath {
   '/auth/shopify/retry/': typeof AuthShopifyRetryIndexRoute
   '/dashboard/analytics/$staffid/': typeof DashboardAnalyticsStaffidIndexRoute
   '/dashboard/analytics/audit-log/': typeof DashboardAnalyticsAuditLogIndexRoute
+  '/dashboard/analytics/call-history/': typeof DashboardAnalyticsCallHistoryIndexRoute
   '/dashboard/analytics/calls/': typeof DashboardAnalyticsCallsIndexRoute
   '/dashboard/automation/$automationId/': typeof DashboardAutomationAutomationIdIndexRoute
+  '/dashboard/automation/journeys/': typeof DashboardAutomationJourneysIndexRoute
+  '/dashboard/automation/rules/': typeof DashboardAutomationRulesIndexRoute
   '/dashboard/campaign/$campaignId/': typeof DashboardCampaignCampaignIdIndexRoute
+  '/dashboard/campaigns/$campaignId/': typeof DashboardCampaignsCampaignIdIndexRoute
   '/dashboard/commerce/catalog-orders/': typeof DashboardCommerceCatalogOrdersIndexRoute
   '/dashboard/commerce/catalogs/': typeof DashboardCommerceCatalogsIndexRoute
   '/dashboard/commerce/coupons/': typeof DashboardCommerceCouponsIndexRoute
@@ -1806,10 +2069,12 @@ export interface FileRoutesByFullPath {
   '/dashboard/commerce/products/': typeof DashboardCommerceProductsIndexRoute
   '/dashboard/commerce/settings/': typeof DashboardCommerceSettingsIndexRoute
   '/dashboard/commerce/setup/': typeof DashboardCommerceSetupIndexRoute
+  '/dashboard/contacts/audiences/': typeof DashboardContactsAudiencesIndexRoute
   '/dashboard/contacts/custom-fields/': typeof DashboardContactsCustomFieldsIndexRoute
   '/dashboard/contacts/groups/': typeof DashboardContactsGroupsIndexRoute
   '/dashboard/contacts/labels/': typeof DashboardContactsLabelsIndexRoute
   '/dashboard/contacts/lifecycle/': typeof DashboardContactsLifecycleIndexRoute
+  '/dashboard/inbox/calls/': typeof DashboardInboxCallsIndexRoute
   '/dashboard/link-pages/$shortUrlId/': typeof DashboardLinkPagesShortUrlIdIndexRoute
   '/dashboard/loyalty/activity/': typeof DashboardLoyaltyActivityIndexRoute
   '/dashboard/loyalty/approvals/': typeof DashboardLoyaltyApprovalsIndexRoute
@@ -1820,8 +2085,10 @@ export interface FileRoutesByFullPath {
   '/dashboard/loyalty/earning-rules/': typeof DashboardLoyaltyEarningRulesIndexRoute
   '/dashboard/loyalty/feedback/': typeof DashboardLoyaltyFeedbackIndexRoute
   '/dashboard/loyalty/materials/': typeof DashboardLoyaltyMaterialsIndexRoute
+  '/dashboard/loyalty/members/': typeof DashboardLoyaltyMembersIndexRoute
   '/dashboard/loyalty/messages/': typeof DashboardLoyaltyMessagesIndexRoute
   '/dashboard/loyalty/onboarding/': typeof DashboardLoyaltyOnboardingIndexRoute
+  '/dashboard/loyalty/overview/': typeof DashboardLoyaltyOverviewIndexRoute
   '/dashboard/loyalty/program/': typeof DashboardLoyaltyProgramIndexRoute
   '/dashboard/loyalty/reminders/': typeof DashboardLoyaltyRemindersIndexRoute
   '/dashboard/loyalty/rewards/': typeof DashboardLoyaltyRewardsIndexRoute
@@ -1832,23 +2099,29 @@ export interface FileRoutesByFullPath {
   '/dashboard/qrCreator/$shortUrlId/': typeof DashboardQrCreatorShortUrlIdIndexRoute
   '/dashboard/quickAccessLinks/$shortUrlId/': typeof DashboardQuickAccessLinksShortUrlIdIndexRoute
   '/dashboard/settings/account/': typeof DashboardSettingsAccountIndexRoute
+  '/dashboard/settings/audit-log/': typeof DashboardSettingsAuditLogIndexRoute
   '/dashboard/settings/billing/': typeof DashboardSettingsBillingIndexRoute
   '/dashboard/settings/channels/': typeof DashboardSettingsChannelsIndexRoute
   '/dashboard/settings/features/': typeof DashboardSettingsFeaturesIndexRoute
   '/dashboard/settings/integrations/': typeof DashboardSettingsIntegrationsIndexRoute
   '/dashboard/settings/members/': typeof DashboardSettingsMembersIndexRoute
   '/dashboard/settings/notifications/': typeof DashboardSettingsNotificationsIndexRoute
+  '/dashboard/settings/password/': typeof DashboardSettingsPasswordIndexRoute
+  '/dashboard/settings/profile/': typeof DashboardSettingsProfileIndexRoute
   '/dashboard/settings/security/': typeof DashboardSettingsSecurityIndexRoute
   '/dashboard/settings/team/': typeof DashboardSettingsTeamIndexRoute
+  '/dashboard/settings/teams/': typeof DashboardSettingsTeamsIndexRoute
   '/dashboard/settings/users/': typeof DashboardSettingsUsersIndexRoute
   '/dashboard/surveys/$surveyId/': typeof DashboardSurveysSurveyIdIndexRoute
   '/dashboard/surveys/templates/': typeof DashboardSurveysTemplatesIndexRoute
+  '/dashboard/surveys/testimonials/': typeof DashboardSurveysTestimonialsIndexRoute
   '/dashboard/testimonial/$collectionId/': typeof DashboardTestimonialCollectionIdIndexRoute
   '/dashboard/whatsapp/calls/': typeof DashboardWhatsappCallsIndexRoute
   '/dashboard/whatsapp/catalog/': typeof DashboardWhatsappCatalogIndexRoute
   '/dashboard/whatsapp/conversational-components/': typeof DashboardWhatsappConversationalComponentsIndexRoute
   '/dashboard/whatsapp/flowbots/': typeof DashboardWhatsappFlowbotsIndexRoute
   '/dashboard/whatsapp/flows/': typeof DashboardWhatsappFlowsIndexRoute
+  '/dashboard/whatsapp/ice-breakers/': typeof DashboardWhatsappIceBreakersIndexRoute
   '/dashboard/whatsapp/orders/': typeof DashboardWhatsappOrdersIndexRoute
   '/dashboard/whatsapp/payments/': typeof DashboardWhatsappPaymentsIndexRoute
   '/dashboard/whatsapp/templates/': typeof DashboardWhatsappTemplatesIndexRoute
@@ -1865,7 +2138,12 @@ export interface FileRoutesByFullPath {
   '/public/testimonial/$collectionId/': typeof publicFacingPublicTestimonialCollectionIdIndexRoute
   '/ws/$shortId/end/': typeof publicFacingWsShortIdEndIndexRoute
   '/ws/$shortId/response-submitted/': typeof publicFacingWsShortIdResponseSubmittedIndexRoute
+  '/dashboard/analytics/agents/$agentId/': typeof DashboardAnalyticsAgentsAgentIdIndexRoute
   '/dashboard/analytics/team/$teamid/': typeof DashboardAnalyticsTeamTeamidIndexRoute
+  '/dashboard/analytics/teams/$teamId/': typeof DashboardAnalyticsTeamsTeamIdIndexRoute
+  '/dashboard/automation/rules/$ruleId/': typeof DashboardAutomationRulesRuleIdIndexRoute
+  '/dashboard/commerce/catalogs/$catalogId/': typeof DashboardCommerceCatalogsCatalogIdIndexRoute
+  '/dashboard/contacts/audiences/$audienceId/': typeof DashboardContactsAudiencesAudienceIdIndexRoute
   '/dashboard/contacts/groups/$groupId/': typeof DashboardContactsGroupsGroupIdIndexRoute
   '/dashboard/loyalty/program/advanced/': typeof DashboardLoyaltyProgramAdvancedIndexRoute
   '/dashboard/loyalty/rewards/$rewardId/': typeof DashboardLoyaltyRewardsRewardIdIndexRoute
@@ -1874,6 +2152,8 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings/channels/$channel/': typeof DashboardSettingsChannelsChannelIndexRoute
   '/dashboard/settings/integrations/$id/': typeof DashboardSettingsIntegrationsIdIndexRoute
   '/dashboard/settings/team/$teamId/': typeof DashboardSettingsTeamTeamIdIndexRoute
+  '/dashboard/settings/teams/$teamId/': typeof DashboardSettingsTeamsTeamIdIndexRoute
+  '/dashboard/surveys/testimonials/$collectionId/': typeof DashboardSurveysTestimonialsCollectionIdIndexRoute
   '/dashboard/whatsapp/catalog/$catalogId/': typeof DashboardWhatsappCatalogCatalogIdIndexRoute
   '/dashboard/whatsapp/flowbots/$flowbotId/': typeof DashboardWhatsappFlowbotsFlowbotIdIndexRoute
   '/dashboard/whatsapp/templates/$templateId/': typeof DashboardWhatsappTemplatesTemplateIdIndexRoute
@@ -1894,6 +2174,7 @@ export interface FileRoutesByTo {
   '/sitemap_index.xml': typeof Sitemap_indexDotxmlRoute
   '/dashboard/loyalty': typeof DashboardLoyaltyRouteRouteWithChildren
   '/.well-known/api-catalog': typeof DotwellKnownApiCatalogRoute
+  '/admin/updateCenter': typeof AdminUpdateCenterRoute
   '/pl/$shortId': typeof PlShortIdRoute
   '/': typeof marketingIndexRoute
   '/admin': typeof AdminIndexRoute
@@ -1903,14 +2184,20 @@ export interface FileRoutesByTo {
   '/tools/sitemap.xml': typeof marketingToolsSitemapDotxmlRoute
   '/s/sitemap.xml': typeof shopSSitemapDotxmlRoute
   '/dashboard/campaign/new': typeof DashboardCampaignNewRoute
+  '/dashboard/campaigns/new': typeof DashboardCampaignsNewRoute
   '/dashboard/chatbots/$chatbotId': typeof DashboardChatbotsChatbotIdRoute
+  '/dashboard/journeys/$journeyId': typeof DashboardJourneysJourneyIdRoute
   '/dashboard/meta-agent/connectors': typeof DashboardMetaAgentConnectorsRoute
+  '/dashboard/meta-agent/go-live': typeof DashboardMetaAgentGoLiveRoute
   '/dashboard/meta-agent/insights': typeof DashboardMetaAgentInsightsRoute
   '/dashboard/meta-agent/knowledge': typeof DashboardMetaAgentKnowledgeRoute
   '/dashboard/meta-agent/operate': typeof DashboardMetaAgentOperateRoute
   '/dashboard/meta-agent/overview': typeof DashboardMetaAgentOverviewRoute
+  '/dashboard/meta-agent/rich-replies': typeof DashboardMetaAgentRichRepliesRoute
   '/dashboard/meta-agent/settings': typeof DashboardMetaAgentSettingsRoute
+  '/dashboard/meta-agent/setup-guide': typeof DashboardMetaAgentSetupGuideRoute
   '/dashboard/meta-agent/skills': typeof DashboardMetaAgentSkillsRoute
+  '/dashboard/meta-agent/test': typeof DashboardMetaAgentTestRoute
   '/dashboard/meta-agent/ui-skills': typeof DashboardMetaAgentUiSkillsRoute
   '/dashboard/setup/features': typeof DashboardSetupFeaturesRoute
   '/invite': typeof authInviteIndexRoute
@@ -1934,6 +2221,7 @@ export interface FileRoutesByTo {
   '/admin/generate': typeof AdminGenerateIndexRoute
   '/admin/orders': typeof AdminOrdersIndexRoute
   '/admin/orgs': typeof AdminOrgsIndexRoute
+  '/admin/plans': typeof AdminPlansIndexRoute
   '/admin/rateup': typeof AdminRateupIndexRoute
   '/admin/razorpay': typeof AdminRazorpayIndexRoute
   '/admin/referrals': typeof AdminReferralsIndexRoute
@@ -1941,7 +2229,8 @@ export interface FileRoutesByTo {
   '/admin/shopify': typeof AdminShopifyIndexRoute
   '/admin/stripe': typeof AdminStripeIndexRoute
   '/admin/subscriptions': typeof AdminSubscriptionsIndexRoute
-  '/admin/updateCenter': typeof AdminUpdateCenterIndexRoute
+  '/admin/update-center': typeof AdminUpdateCenterIndexRoute
+  '/admin/user-stats': typeof AdminUserStatsIndexRoute
   '/admin/userstats': typeof AdminUserstatsIndexRoute
   '/auth/fb': typeof AuthFbIndexRoute
   '/auth/oauth2callback': typeof AuthOauth2callbackIndexRoute
@@ -1949,16 +2238,20 @@ export interface FileRoutesByTo {
   '/dashboard/analytics': typeof DashboardAnalyticsIndexRoute
   '/dashboard/automation': typeof DashboardAutomationIndexRoute
   '/dashboard/campaign': typeof DashboardCampaignIndexRoute
+  '/dashboard/campaigns': typeof DashboardCampaignsIndexRoute
   '/dashboard/chatbots': typeof DashboardChatbotsIndexRoute
   '/dashboard/commerce': typeof DashboardCommerceIndexRoute
   '/dashboard/contacts': typeof DashboardContactsIndexRoute
+  '/dashboard/customize-menu': typeof DashboardCustomizeMenuIndexRoute
   '/dashboard/features': typeof DashboardFeaturesIndexRoute
   '/dashboard/inbox': typeof DashboardInboxIndexRoute
   '/dashboard/instagram': typeof DashboardInstagramIndexRoute
+  '/dashboard/journeys': typeof DashboardJourneysIndexRoute
   '/dashboard/link-pages': typeof DashboardLinkPagesIndexRoute
   '/dashboard/messenger': typeof DashboardMessengerIndexRoute
   '/dashboard/meta-agent': typeof DashboardMetaAgentIndexRoute
   '/dashboard/pipeline': typeof DashboardPipelineIndexRoute
+  '/dashboard/pipelines': typeof DashboardPipelinesIndexRoute
   '/dashboard/qr-codes': typeof DashboardQrCodesIndexRoute
   '/dashboard/qrCreator': typeof DashboardQrCreatorIndexRoute
   '/dashboard/quickAccessLinks': typeof DashboardQuickAccessLinksIndexRoute
@@ -1970,7 +2263,9 @@ export interface FileRoutesByTo {
   '/blog/author/sitemap.xml': typeof marketingBlogAuthorSitemapDotxmlRoute
   '/blog/tag/sitemap.xml': typeof marketingBlogTagSitemapDotxmlRoute
   '/c/$token/invoice': typeof shopCTokenInvoiceRoute
+  '/dashboard/automation/journeys/$journeyId': typeof DashboardAutomationJourneysJourneyIdRoute
   '/dashboard/campaign/$campaignId/edit': typeof DashboardCampaignCampaignIdEditRoute
+  '/dashboard/campaigns/$campaignId/edit': typeof DashboardCampaignsCampaignIdEditRoute
   '/dashboard/commerce/orders/$orderId': typeof DashboardCommerceOrdersOrderIdRoute
   '/dashboard/commerce/products/$productId': typeof DashboardCommerceProductsProductIdRoute
   '/dashboard/commerce/products/new': typeof DashboardCommerceProductsNewRoute
@@ -2031,9 +2326,13 @@ export interface FileRoutesByTo {
   '/auth/shopify/retry': typeof AuthShopifyRetryIndexRoute
   '/dashboard/analytics/$staffid': typeof DashboardAnalyticsStaffidIndexRoute
   '/dashboard/analytics/audit-log': typeof DashboardAnalyticsAuditLogIndexRoute
+  '/dashboard/analytics/call-history': typeof DashboardAnalyticsCallHistoryIndexRoute
   '/dashboard/analytics/calls': typeof DashboardAnalyticsCallsIndexRoute
   '/dashboard/automation/$automationId': typeof DashboardAutomationAutomationIdIndexRoute
+  '/dashboard/automation/journeys': typeof DashboardAutomationJourneysIndexRoute
+  '/dashboard/automation/rules': typeof DashboardAutomationRulesIndexRoute
   '/dashboard/campaign/$campaignId': typeof DashboardCampaignCampaignIdIndexRoute
+  '/dashboard/campaigns/$campaignId': typeof DashboardCampaignsCampaignIdIndexRoute
   '/dashboard/commerce/catalog-orders': typeof DashboardCommerceCatalogOrdersIndexRoute
   '/dashboard/commerce/catalogs': typeof DashboardCommerceCatalogsIndexRoute
   '/dashboard/commerce/coupons': typeof DashboardCommerceCouponsIndexRoute
@@ -2043,10 +2342,12 @@ export interface FileRoutesByTo {
   '/dashboard/commerce/products': typeof DashboardCommerceProductsIndexRoute
   '/dashboard/commerce/settings': typeof DashboardCommerceSettingsIndexRoute
   '/dashboard/commerce/setup': typeof DashboardCommerceSetupIndexRoute
+  '/dashboard/contacts/audiences': typeof DashboardContactsAudiencesIndexRoute
   '/dashboard/contacts/custom-fields': typeof DashboardContactsCustomFieldsIndexRoute
   '/dashboard/contacts/groups': typeof DashboardContactsGroupsIndexRoute
   '/dashboard/contacts/labels': typeof DashboardContactsLabelsIndexRoute
   '/dashboard/contacts/lifecycle': typeof DashboardContactsLifecycleIndexRoute
+  '/dashboard/inbox/calls': typeof DashboardInboxCallsIndexRoute
   '/dashboard/link-pages/$shortUrlId': typeof DashboardLinkPagesShortUrlIdIndexRoute
   '/dashboard/loyalty/activity': typeof DashboardLoyaltyActivityIndexRoute
   '/dashboard/loyalty/approvals': typeof DashboardLoyaltyApprovalsIndexRoute
@@ -2057,8 +2358,10 @@ export interface FileRoutesByTo {
   '/dashboard/loyalty/earning-rules': typeof DashboardLoyaltyEarningRulesIndexRoute
   '/dashboard/loyalty/feedback': typeof DashboardLoyaltyFeedbackIndexRoute
   '/dashboard/loyalty/materials': typeof DashboardLoyaltyMaterialsIndexRoute
+  '/dashboard/loyalty/members': typeof DashboardLoyaltyMembersIndexRoute
   '/dashboard/loyalty/messages': typeof DashboardLoyaltyMessagesIndexRoute
   '/dashboard/loyalty/onboarding': typeof DashboardLoyaltyOnboardingIndexRoute
+  '/dashboard/loyalty/overview': typeof DashboardLoyaltyOverviewIndexRoute
   '/dashboard/loyalty/program': typeof DashboardLoyaltyProgramIndexRoute
   '/dashboard/loyalty/reminders': typeof DashboardLoyaltyRemindersIndexRoute
   '/dashboard/loyalty/rewards': typeof DashboardLoyaltyRewardsIndexRoute
@@ -2069,23 +2372,29 @@ export interface FileRoutesByTo {
   '/dashboard/qrCreator/$shortUrlId': typeof DashboardQrCreatorShortUrlIdIndexRoute
   '/dashboard/quickAccessLinks/$shortUrlId': typeof DashboardQuickAccessLinksShortUrlIdIndexRoute
   '/dashboard/settings/account': typeof DashboardSettingsAccountIndexRoute
+  '/dashboard/settings/audit-log': typeof DashboardSettingsAuditLogIndexRoute
   '/dashboard/settings/billing': typeof DashboardSettingsBillingIndexRoute
   '/dashboard/settings/channels': typeof DashboardSettingsChannelsIndexRoute
   '/dashboard/settings/features': typeof DashboardSettingsFeaturesIndexRoute
   '/dashboard/settings/integrations': typeof DashboardSettingsIntegrationsIndexRoute
   '/dashboard/settings/members': typeof DashboardSettingsMembersIndexRoute
   '/dashboard/settings/notifications': typeof DashboardSettingsNotificationsIndexRoute
+  '/dashboard/settings/password': typeof DashboardSettingsPasswordIndexRoute
+  '/dashboard/settings/profile': typeof DashboardSettingsProfileIndexRoute
   '/dashboard/settings/security': typeof DashboardSettingsSecurityIndexRoute
   '/dashboard/settings/team': typeof DashboardSettingsTeamIndexRoute
+  '/dashboard/settings/teams': typeof DashboardSettingsTeamsIndexRoute
   '/dashboard/settings/users': typeof DashboardSettingsUsersIndexRoute
   '/dashboard/surveys/$surveyId': typeof DashboardSurveysSurveyIdIndexRoute
   '/dashboard/surveys/templates': typeof DashboardSurveysTemplatesIndexRoute
+  '/dashboard/surveys/testimonials': typeof DashboardSurveysTestimonialsIndexRoute
   '/dashboard/testimonial/$collectionId': typeof DashboardTestimonialCollectionIdIndexRoute
   '/dashboard/whatsapp/calls': typeof DashboardWhatsappCallsIndexRoute
   '/dashboard/whatsapp/catalog': typeof DashboardWhatsappCatalogIndexRoute
   '/dashboard/whatsapp/conversational-components': typeof DashboardWhatsappConversationalComponentsIndexRoute
   '/dashboard/whatsapp/flowbots': typeof DashboardWhatsappFlowbotsIndexRoute
   '/dashboard/whatsapp/flows': typeof DashboardWhatsappFlowsIndexRoute
+  '/dashboard/whatsapp/ice-breakers': typeof DashboardWhatsappIceBreakersIndexRoute
   '/dashboard/whatsapp/orders': typeof DashboardWhatsappOrdersIndexRoute
   '/dashboard/whatsapp/payments': typeof DashboardWhatsappPaymentsIndexRoute
   '/dashboard/whatsapp/templates': typeof DashboardWhatsappTemplatesIndexRoute
@@ -2102,7 +2411,12 @@ export interface FileRoutesByTo {
   '/public/testimonial/$collectionId': typeof publicFacingPublicTestimonialCollectionIdIndexRoute
   '/ws/$shortId/end': typeof publicFacingWsShortIdEndIndexRoute
   '/ws/$shortId/response-submitted': typeof publicFacingWsShortIdResponseSubmittedIndexRoute
+  '/dashboard/analytics/agents/$agentId': typeof DashboardAnalyticsAgentsAgentIdIndexRoute
   '/dashboard/analytics/team/$teamid': typeof DashboardAnalyticsTeamTeamidIndexRoute
+  '/dashboard/analytics/teams/$teamId': typeof DashboardAnalyticsTeamsTeamIdIndexRoute
+  '/dashboard/automation/rules/$ruleId': typeof DashboardAutomationRulesRuleIdIndexRoute
+  '/dashboard/commerce/catalogs/$catalogId': typeof DashboardCommerceCatalogsCatalogIdIndexRoute
+  '/dashboard/contacts/audiences/$audienceId': typeof DashboardContactsAudiencesAudienceIdIndexRoute
   '/dashboard/contacts/groups/$groupId': typeof DashboardContactsGroupsGroupIdIndexRoute
   '/dashboard/loyalty/program/advanced': typeof DashboardLoyaltyProgramAdvancedIndexRoute
   '/dashboard/loyalty/rewards/$rewardId': typeof DashboardLoyaltyRewardsRewardIdIndexRoute
@@ -2111,6 +2425,8 @@ export interface FileRoutesByTo {
   '/dashboard/settings/channels/$channel': typeof DashboardSettingsChannelsChannelIndexRoute
   '/dashboard/settings/integrations/$id': typeof DashboardSettingsIntegrationsIdIndexRoute
   '/dashboard/settings/team/$teamId': typeof DashboardSettingsTeamTeamIdIndexRoute
+  '/dashboard/settings/teams/$teamId': typeof DashboardSettingsTeamsTeamIdIndexRoute
+  '/dashboard/surveys/testimonials/$collectionId': typeof DashboardSurveysTestimonialsCollectionIdIndexRoute
   '/dashboard/whatsapp/catalog/$catalogId': typeof DashboardWhatsappCatalogCatalogIdIndexRoute
   '/dashboard/whatsapp/flowbots/$flowbotId': typeof DashboardWhatsappFlowbotsFlowbotIdIndexRoute
   '/dashboard/whatsapp/templates/$templateId': typeof DashboardWhatsappTemplatesTemplateIdIndexRoute
@@ -2141,6 +2457,7 @@ export interface FileRoutesById {
   '/dashboard/loyalty': typeof DashboardLoyaltyRouteRouteWithChildren
   '/dashboard/meta-agent': typeof DashboardMetaAgentRouteRouteWithChildren
   '/.well-known/api-catalog': typeof DotwellKnownApiCatalogRoute
+  '/admin/updateCenter': typeof AdminUpdateCenterRoute
   '/pl/$shortId': typeof PlShortIdRoute
   '/(marketing)/': typeof marketingIndexRoute
   '/admin/': typeof AdminIndexRoute
@@ -2151,14 +2468,20 @@ export interface FileRoutesById {
   '/(marketing)/tools/sitemap.xml': typeof marketingToolsSitemapDotxmlRoute
   '/(shop)/s/sitemap.xml': typeof shopSSitemapDotxmlRoute
   '/dashboard/campaign/new': typeof DashboardCampaignNewRoute
+  '/dashboard/campaigns/new': typeof DashboardCampaignsNewRoute
   '/dashboard/chatbots/$chatbotId': typeof DashboardChatbotsChatbotIdRoute
+  '/dashboard/journeys/$journeyId': typeof DashboardJourneysJourneyIdRoute
   '/dashboard/meta-agent/connectors': typeof DashboardMetaAgentConnectorsRoute
+  '/dashboard/meta-agent/go-live': typeof DashboardMetaAgentGoLiveRoute
   '/dashboard/meta-agent/insights': typeof DashboardMetaAgentInsightsRoute
   '/dashboard/meta-agent/knowledge': typeof DashboardMetaAgentKnowledgeRoute
   '/dashboard/meta-agent/operate': typeof DashboardMetaAgentOperateRoute
   '/dashboard/meta-agent/overview': typeof DashboardMetaAgentOverviewRoute
+  '/dashboard/meta-agent/rich-replies': typeof DashboardMetaAgentRichRepliesRoute
   '/dashboard/meta-agent/settings': typeof DashboardMetaAgentSettingsRoute
+  '/dashboard/meta-agent/setup-guide': typeof DashboardMetaAgentSetupGuideRoute
   '/dashboard/meta-agent/skills': typeof DashboardMetaAgentSkillsRoute
+  '/dashboard/meta-agent/test': typeof DashboardMetaAgentTestRoute
   '/dashboard/meta-agent/ui-skills': typeof DashboardMetaAgentUiSkillsRoute
   '/dashboard/setup/features': typeof DashboardSetupFeaturesRoute
   '/(auth)/invite/': typeof authInviteIndexRoute
@@ -2182,6 +2505,7 @@ export interface FileRoutesById {
   '/admin/generate/': typeof AdminGenerateIndexRoute
   '/admin/orders/': typeof AdminOrdersIndexRoute
   '/admin/orgs/': typeof AdminOrgsIndexRoute
+  '/admin/plans/': typeof AdminPlansIndexRoute
   '/admin/rateup/': typeof AdminRateupIndexRoute
   '/admin/razorpay/': typeof AdminRazorpayIndexRoute
   '/admin/referrals/': typeof AdminReferralsIndexRoute
@@ -2189,7 +2513,8 @@ export interface FileRoutesById {
   '/admin/shopify/': typeof AdminShopifyIndexRoute
   '/admin/stripe/': typeof AdminStripeIndexRoute
   '/admin/subscriptions/': typeof AdminSubscriptionsIndexRoute
-  '/admin/updateCenter/': typeof AdminUpdateCenterIndexRoute
+  '/admin/update-center/': typeof AdminUpdateCenterIndexRoute
+  '/admin/user-stats/': typeof AdminUserStatsIndexRoute
   '/admin/userstats/': typeof AdminUserstatsIndexRoute
   '/auth/fb/': typeof AuthFbIndexRoute
   '/auth/oauth2callback/': typeof AuthOauth2callbackIndexRoute
@@ -2197,16 +2522,20 @@ export interface FileRoutesById {
   '/dashboard/analytics/': typeof DashboardAnalyticsIndexRoute
   '/dashboard/automation/': typeof DashboardAutomationIndexRoute
   '/dashboard/campaign/': typeof DashboardCampaignIndexRoute
+  '/dashboard/campaigns/': typeof DashboardCampaignsIndexRoute
   '/dashboard/chatbots/': typeof DashboardChatbotsIndexRoute
   '/dashboard/commerce/': typeof DashboardCommerceIndexRoute
   '/dashboard/contacts/': typeof DashboardContactsIndexRoute
+  '/dashboard/customize-menu/': typeof DashboardCustomizeMenuIndexRoute
   '/dashboard/features/': typeof DashboardFeaturesIndexRoute
   '/dashboard/inbox/': typeof DashboardInboxIndexRoute
   '/dashboard/instagram/': typeof DashboardInstagramIndexRoute
+  '/dashboard/journeys/': typeof DashboardJourneysIndexRoute
   '/dashboard/link-pages/': typeof DashboardLinkPagesIndexRoute
   '/dashboard/messenger/': typeof DashboardMessengerIndexRoute
   '/dashboard/meta-agent/': typeof DashboardMetaAgentIndexRoute
   '/dashboard/pipeline/': typeof DashboardPipelineIndexRoute
+  '/dashboard/pipelines/': typeof DashboardPipelinesIndexRoute
   '/dashboard/qr-codes/': typeof DashboardQrCodesIndexRoute
   '/dashboard/qrCreator/': typeof DashboardQrCreatorIndexRoute
   '/dashboard/quickAccessLinks/': typeof DashboardQuickAccessLinksIndexRoute
@@ -2218,7 +2547,9 @@ export interface FileRoutesById {
   '/(marketing)/blog/author/sitemap.xml': typeof marketingBlogAuthorSitemapDotxmlRoute
   '/(marketing)/blog/tag/sitemap.xml': typeof marketingBlogTagSitemapDotxmlRoute
   '/(shop)/c/$token/invoice': typeof shopCTokenInvoiceRoute
+  '/dashboard/automation/journeys/$journeyId': typeof DashboardAutomationJourneysJourneyIdRoute
   '/dashboard/campaign/$campaignId/edit': typeof DashboardCampaignCampaignIdEditRoute
+  '/dashboard/campaigns/$campaignId/edit': typeof DashboardCampaignsCampaignIdEditRoute
   '/dashboard/commerce/orders/$orderId': typeof DashboardCommerceOrdersOrderIdRoute
   '/dashboard/commerce/products/$productId': typeof DashboardCommerceProductsProductIdRoute
   '/dashboard/commerce/products/new': typeof DashboardCommerceProductsNewRoute
@@ -2279,9 +2610,13 @@ export interface FileRoutesById {
   '/auth/shopify/retry/': typeof AuthShopifyRetryIndexRoute
   '/dashboard/analytics/$staffid/': typeof DashboardAnalyticsStaffidIndexRoute
   '/dashboard/analytics/audit-log/': typeof DashboardAnalyticsAuditLogIndexRoute
+  '/dashboard/analytics/call-history/': typeof DashboardAnalyticsCallHistoryIndexRoute
   '/dashboard/analytics/calls/': typeof DashboardAnalyticsCallsIndexRoute
   '/dashboard/automation/$automationId/': typeof DashboardAutomationAutomationIdIndexRoute
+  '/dashboard/automation/journeys/': typeof DashboardAutomationJourneysIndexRoute
+  '/dashboard/automation/rules/': typeof DashboardAutomationRulesIndexRoute
   '/dashboard/campaign/$campaignId/': typeof DashboardCampaignCampaignIdIndexRoute
+  '/dashboard/campaigns/$campaignId/': typeof DashboardCampaignsCampaignIdIndexRoute
   '/dashboard/commerce/catalog-orders/': typeof DashboardCommerceCatalogOrdersIndexRoute
   '/dashboard/commerce/catalogs/': typeof DashboardCommerceCatalogsIndexRoute
   '/dashboard/commerce/coupons/': typeof DashboardCommerceCouponsIndexRoute
@@ -2291,10 +2626,12 @@ export interface FileRoutesById {
   '/dashboard/commerce/products/': typeof DashboardCommerceProductsIndexRoute
   '/dashboard/commerce/settings/': typeof DashboardCommerceSettingsIndexRoute
   '/dashboard/commerce/setup/': typeof DashboardCommerceSetupIndexRoute
+  '/dashboard/contacts/audiences/': typeof DashboardContactsAudiencesIndexRoute
   '/dashboard/contacts/custom-fields/': typeof DashboardContactsCustomFieldsIndexRoute
   '/dashboard/contacts/groups/': typeof DashboardContactsGroupsIndexRoute
   '/dashboard/contacts/labels/': typeof DashboardContactsLabelsIndexRoute
   '/dashboard/contacts/lifecycle/': typeof DashboardContactsLifecycleIndexRoute
+  '/dashboard/inbox/calls/': typeof DashboardInboxCallsIndexRoute
   '/dashboard/link-pages/$shortUrlId/': typeof DashboardLinkPagesShortUrlIdIndexRoute
   '/dashboard/loyalty/activity/': typeof DashboardLoyaltyActivityIndexRoute
   '/dashboard/loyalty/approvals/': typeof DashboardLoyaltyApprovalsIndexRoute
@@ -2305,8 +2642,10 @@ export interface FileRoutesById {
   '/dashboard/loyalty/earning-rules/': typeof DashboardLoyaltyEarningRulesIndexRoute
   '/dashboard/loyalty/feedback/': typeof DashboardLoyaltyFeedbackIndexRoute
   '/dashboard/loyalty/materials/': typeof DashboardLoyaltyMaterialsIndexRoute
+  '/dashboard/loyalty/members/': typeof DashboardLoyaltyMembersIndexRoute
   '/dashboard/loyalty/messages/': typeof DashboardLoyaltyMessagesIndexRoute
   '/dashboard/loyalty/onboarding/': typeof DashboardLoyaltyOnboardingIndexRoute
+  '/dashboard/loyalty/overview/': typeof DashboardLoyaltyOverviewIndexRoute
   '/dashboard/loyalty/program/': typeof DashboardLoyaltyProgramIndexRoute
   '/dashboard/loyalty/reminders/': typeof DashboardLoyaltyRemindersIndexRoute
   '/dashboard/loyalty/rewards/': typeof DashboardLoyaltyRewardsIndexRoute
@@ -2317,23 +2656,29 @@ export interface FileRoutesById {
   '/dashboard/qrCreator/$shortUrlId/': typeof DashboardQrCreatorShortUrlIdIndexRoute
   '/dashboard/quickAccessLinks/$shortUrlId/': typeof DashboardQuickAccessLinksShortUrlIdIndexRoute
   '/dashboard/settings/account/': typeof DashboardSettingsAccountIndexRoute
+  '/dashboard/settings/audit-log/': typeof DashboardSettingsAuditLogIndexRoute
   '/dashboard/settings/billing/': typeof DashboardSettingsBillingIndexRoute
   '/dashboard/settings/channels/': typeof DashboardSettingsChannelsIndexRoute
   '/dashboard/settings/features/': typeof DashboardSettingsFeaturesIndexRoute
   '/dashboard/settings/integrations/': typeof DashboardSettingsIntegrationsIndexRoute
   '/dashboard/settings/members/': typeof DashboardSettingsMembersIndexRoute
   '/dashboard/settings/notifications/': typeof DashboardSettingsNotificationsIndexRoute
+  '/dashboard/settings/password/': typeof DashboardSettingsPasswordIndexRoute
+  '/dashboard/settings/profile/': typeof DashboardSettingsProfileIndexRoute
   '/dashboard/settings/security/': typeof DashboardSettingsSecurityIndexRoute
   '/dashboard/settings/team/': typeof DashboardSettingsTeamIndexRoute
+  '/dashboard/settings/teams/': typeof DashboardSettingsTeamsIndexRoute
   '/dashboard/settings/users/': typeof DashboardSettingsUsersIndexRoute
   '/dashboard/surveys/$surveyId/': typeof DashboardSurveysSurveyIdIndexRoute
   '/dashboard/surveys/templates/': typeof DashboardSurveysTemplatesIndexRoute
+  '/dashboard/surveys/testimonials/': typeof DashboardSurveysTestimonialsIndexRoute
   '/dashboard/testimonial/$collectionId/': typeof DashboardTestimonialCollectionIdIndexRoute
   '/dashboard/whatsapp/calls/': typeof DashboardWhatsappCallsIndexRoute
   '/dashboard/whatsapp/catalog/': typeof DashboardWhatsappCatalogIndexRoute
   '/dashboard/whatsapp/conversational-components/': typeof DashboardWhatsappConversationalComponentsIndexRoute
   '/dashboard/whatsapp/flowbots/': typeof DashboardWhatsappFlowbotsIndexRoute
   '/dashboard/whatsapp/flows/': typeof DashboardWhatsappFlowsIndexRoute
+  '/dashboard/whatsapp/ice-breakers/': typeof DashboardWhatsappIceBreakersIndexRoute
   '/dashboard/whatsapp/orders/': typeof DashboardWhatsappOrdersIndexRoute
   '/dashboard/whatsapp/payments/': typeof DashboardWhatsappPaymentsIndexRoute
   '/dashboard/whatsapp/templates/': typeof DashboardWhatsappTemplatesIndexRoute
@@ -2350,7 +2695,12 @@ export interface FileRoutesById {
   '/(public-facing)/public/testimonial/$collectionId/': typeof publicFacingPublicTestimonialCollectionIdIndexRoute
   '/(public-facing)/ws/$shortId/end/': typeof publicFacingWsShortIdEndIndexRoute
   '/(public-facing)/ws/$shortId/response-submitted/': typeof publicFacingWsShortIdResponseSubmittedIndexRoute
+  '/dashboard/analytics/agents/$agentId/': typeof DashboardAnalyticsAgentsAgentIdIndexRoute
   '/dashboard/analytics/team/$teamid/': typeof DashboardAnalyticsTeamTeamidIndexRoute
+  '/dashboard/analytics/teams/$teamId/': typeof DashboardAnalyticsTeamsTeamIdIndexRoute
+  '/dashboard/automation/rules/$ruleId/': typeof DashboardAutomationRulesRuleIdIndexRoute
+  '/dashboard/commerce/catalogs/$catalogId/': typeof DashboardCommerceCatalogsCatalogIdIndexRoute
+  '/dashboard/contacts/audiences/$audienceId/': typeof DashboardContactsAudiencesAudienceIdIndexRoute
   '/dashboard/contacts/groups/$groupId/': typeof DashboardContactsGroupsGroupIdIndexRoute
   '/dashboard/loyalty/program/advanced/': typeof DashboardLoyaltyProgramAdvancedIndexRoute
   '/dashboard/loyalty/rewards/$rewardId/': typeof DashboardLoyaltyRewardsRewardIdIndexRoute
@@ -2359,6 +2709,8 @@ export interface FileRoutesById {
   '/dashboard/settings/channels/$channel/': typeof DashboardSettingsChannelsChannelIndexRoute
   '/dashboard/settings/integrations/$id/': typeof DashboardSettingsIntegrationsIdIndexRoute
   '/dashboard/settings/team/$teamId/': typeof DashboardSettingsTeamTeamIdIndexRoute
+  '/dashboard/settings/teams/$teamId/': typeof DashboardSettingsTeamsTeamIdIndexRoute
+  '/dashboard/surveys/testimonials/$collectionId/': typeof DashboardSurveysTestimonialsCollectionIdIndexRoute
   '/dashboard/whatsapp/catalog/$catalogId/': typeof DashboardWhatsappCatalogCatalogIdIndexRoute
   '/dashboard/whatsapp/flowbots/$flowbotId/': typeof DashboardWhatsappFlowbotsFlowbotIdIndexRoute
   '/dashboard/whatsapp/templates/$templateId/': typeof DashboardWhatsappTemplatesTemplateIdIndexRoute
@@ -2386,6 +2738,7 @@ export interface FileRouteTypes {
     | '/dashboard/loyalty'
     | '/dashboard/meta-agent'
     | '/.well-known/api-catalog'
+    | '/admin/updateCenter'
     | '/pl/$shortId'
     | '/'
     | '/admin/'
@@ -2396,14 +2749,20 @@ export interface FileRouteTypes {
     | '/tools/sitemap.xml'
     | '/s/sitemap.xml'
     | '/dashboard/campaign/new'
+    | '/dashboard/campaigns/new'
     | '/dashboard/chatbots/$chatbotId'
+    | '/dashboard/journeys/$journeyId'
     | '/dashboard/meta-agent/connectors'
+    | '/dashboard/meta-agent/go-live'
     | '/dashboard/meta-agent/insights'
     | '/dashboard/meta-agent/knowledge'
     | '/dashboard/meta-agent/operate'
     | '/dashboard/meta-agent/overview'
+    | '/dashboard/meta-agent/rich-replies'
     | '/dashboard/meta-agent/settings'
+    | '/dashboard/meta-agent/setup-guide'
     | '/dashboard/meta-agent/skills'
+    | '/dashboard/meta-agent/test'
     | '/dashboard/meta-agent/ui-skills'
     | '/dashboard/setup/features'
     | '/invite/'
@@ -2427,6 +2786,7 @@ export interface FileRouteTypes {
     | '/admin/generate/'
     | '/admin/orders/'
     | '/admin/orgs/'
+    | '/admin/plans/'
     | '/admin/rateup/'
     | '/admin/razorpay/'
     | '/admin/referrals/'
@@ -2434,7 +2794,8 @@ export interface FileRouteTypes {
     | '/admin/shopify/'
     | '/admin/stripe/'
     | '/admin/subscriptions/'
-    | '/admin/updateCenter/'
+    | '/admin/update-center/'
+    | '/admin/user-stats/'
     | '/admin/userstats/'
     | '/auth/fb/'
     | '/auth/oauth2callback/'
@@ -2442,16 +2803,20 @@ export interface FileRouteTypes {
     | '/dashboard/analytics/'
     | '/dashboard/automation/'
     | '/dashboard/campaign/'
+    | '/dashboard/campaigns/'
     | '/dashboard/chatbots/'
     | '/dashboard/commerce/'
     | '/dashboard/contacts/'
+    | '/dashboard/customize-menu/'
     | '/dashboard/features/'
     | '/dashboard/inbox/'
     | '/dashboard/instagram/'
+    | '/dashboard/journeys/'
     | '/dashboard/link-pages/'
     | '/dashboard/messenger/'
     | '/dashboard/meta-agent/'
     | '/dashboard/pipeline/'
+    | '/dashboard/pipelines/'
     | '/dashboard/qr-codes/'
     | '/dashboard/qrCreator/'
     | '/dashboard/quickAccessLinks/'
@@ -2463,7 +2828,9 @@ export interface FileRouteTypes {
     | '/blog/author/sitemap.xml'
     | '/blog/tag/sitemap.xml'
     | '/c/$token/invoice'
+    | '/dashboard/automation/journeys/$journeyId'
     | '/dashboard/campaign/$campaignId/edit'
+    | '/dashboard/campaigns/$campaignId/edit'
     | '/dashboard/commerce/orders/$orderId'
     | '/dashboard/commerce/products/$productId'
     | '/dashboard/commerce/products/new'
@@ -2524,9 +2891,13 @@ export interface FileRouteTypes {
     | '/auth/shopify/retry/'
     | '/dashboard/analytics/$staffid/'
     | '/dashboard/analytics/audit-log/'
+    | '/dashboard/analytics/call-history/'
     | '/dashboard/analytics/calls/'
     | '/dashboard/automation/$automationId/'
+    | '/dashboard/automation/journeys/'
+    | '/dashboard/automation/rules/'
     | '/dashboard/campaign/$campaignId/'
+    | '/dashboard/campaigns/$campaignId/'
     | '/dashboard/commerce/catalog-orders/'
     | '/dashboard/commerce/catalogs/'
     | '/dashboard/commerce/coupons/'
@@ -2536,10 +2907,12 @@ export interface FileRouteTypes {
     | '/dashboard/commerce/products/'
     | '/dashboard/commerce/settings/'
     | '/dashboard/commerce/setup/'
+    | '/dashboard/contacts/audiences/'
     | '/dashboard/contacts/custom-fields/'
     | '/dashboard/contacts/groups/'
     | '/dashboard/contacts/labels/'
     | '/dashboard/contacts/lifecycle/'
+    | '/dashboard/inbox/calls/'
     | '/dashboard/link-pages/$shortUrlId/'
     | '/dashboard/loyalty/activity/'
     | '/dashboard/loyalty/approvals/'
@@ -2550,8 +2923,10 @@ export interface FileRouteTypes {
     | '/dashboard/loyalty/earning-rules/'
     | '/dashboard/loyalty/feedback/'
     | '/dashboard/loyalty/materials/'
+    | '/dashboard/loyalty/members/'
     | '/dashboard/loyalty/messages/'
     | '/dashboard/loyalty/onboarding/'
+    | '/dashboard/loyalty/overview/'
     | '/dashboard/loyalty/program/'
     | '/dashboard/loyalty/reminders/'
     | '/dashboard/loyalty/rewards/'
@@ -2562,23 +2937,29 @@ export interface FileRouteTypes {
     | '/dashboard/qrCreator/$shortUrlId/'
     | '/dashboard/quickAccessLinks/$shortUrlId/'
     | '/dashboard/settings/account/'
+    | '/dashboard/settings/audit-log/'
     | '/dashboard/settings/billing/'
     | '/dashboard/settings/channels/'
     | '/dashboard/settings/features/'
     | '/dashboard/settings/integrations/'
     | '/dashboard/settings/members/'
     | '/dashboard/settings/notifications/'
+    | '/dashboard/settings/password/'
+    | '/dashboard/settings/profile/'
     | '/dashboard/settings/security/'
     | '/dashboard/settings/team/'
+    | '/dashboard/settings/teams/'
     | '/dashboard/settings/users/'
     | '/dashboard/surveys/$surveyId/'
     | '/dashboard/surveys/templates/'
+    | '/dashboard/surveys/testimonials/'
     | '/dashboard/testimonial/$collectionId/'
     | '/dashboard/whatsapp/calls/'
     | '/dashboard/whatsapp/catalog/'
     | '/dashboard/whatsapp/conversational-components/'
     | '/dashboard/whatsapp/flowbots/'
     | '/dashboard/whatsapp/flows/'
+    | '/dashboard/whatsapp/ice-breakers/'
     | '/dashboard/whatsapp/orders/'
     | '/dashboard/whatsapp/payments/'
     | '/dashboard/whatsapp/templates/'
@@ -2595,7 +2976,12 @@ export interface FileRouteTypes {
     | '/public/testimonial/$collectionId/'
     | '/ws/$shortId/end/'
     | '/ws/$shortId/response-submitted/'
+    | '/dashboard/analytics/agents/$agentId/'
     | '/dashboard/analytics/team/$teamid/'
+    | '/dashboard/analytics/teams/$teamId/'
+    | '/dashboard/automation/rules/$ruleId/'
+    | '/dashboard/commerce/catalogs/$catalogId/'
+    | '/dashboard/contacts/audiences/$audienceId/'
     | '/dashboard/contacts/groups/$groupId/'
     | '/dashboard/loyalty/program/advanced/'
     | '/dashboard/loyalty/rewards/$rewardId/'
@@ -2604,6 +2990,8 @@ export interface FileRouteTypes {
     | '/dashboard/settings/channels/$channel/'
     | '/dashboard/settings/integrations/$id/'
     | '/dashboard/settings/team/$teamId/'
+    | '/dashboard/settings/teams/$teamId/'
+    | '/dashboard/surveys/testimonials/$collectionId/'
     | '/dashboard/whatsapp/catalog/$catalogId/'
     | '/dashboard/whatsapp/flowbots/$flowbotId/'
     | '/dashboard/whatsapp/templates/$templateId/'
@@ -2624,6 +3012,7 @@ export interface FileRouteTypes {
     | '/sitemap_index.xml'
     | '/dashboard/loyalty'
     | '/.well-known/api-catalog'
+    | '/admin/updateCenter'
     | '/pl/$shortId'
     | '/'
     | '/admin'
@@ -2633,14 +3022,20 @@ export interface FileRouteTypes {
     | '/tools/sitemap.xml'
     | '/s/sitemap.xml'
     | '/dashboard/campaign/new'
+    | '/dashboard/campaigns/new'
     | '/dashboard/chatbots/$chatbotId'
+    | '/dashboard/journeys/$journeyId'
     | '/dashboard/meta-agent/connectors'
+    | '/dashboard/meta-agent/go-live'
     | '/dashboard/meta-agent/insights'
     | '/dashboard/meta-agent/knowledge'
     | '/dashboard/meta-agent/operate'
     | '/dashboard/meta-agent/overview'
+    | '/dashboard/meta-agent/rich-replies'
     | '/dashboard/meta-agent/settings'
+    | '/dashboard/meta-agent/setup-guide'
     | '/dashboard/meta-agent/skills'
+    | '/dashboard/meta-agent/test'
     | '/dashboard/meta-agent/ui-skills'
     | '/dashboard/setup/features'
     | '/invite'
@@ -2664,6 +3059,7 @@ export interface FileRouteTypes {
     | '/admin/generate'
     | '/admin/orders'
     | '/admin/orgs'
+    | '/admin/plans'
     | '/admin/rateup'
     | '/admin/razorpay'
     | '/admin/referrals'
@@ -2671,7 +3067,8 @@ export interface FileRouteTypes {
     | '/admin/shopify'
     | '/admin/stripe'
     | '/admin/subscriptions'
-    | '/admin/updateCenter'
+    | '/admin/update-center'
+    | '/admin/user-stats'
     | '/admin/userstats'
     | '/auth/fb'
     | '/auth/oauth2callback'
@@ -2679,16 +3076,20 @@ export interface FileRouteTypes {
     | '/dashboard/analytics'
     | '/dashboard/automation'
     | '/dashboard/campaign'
+    | '/dashboard/campaigns'
     | '/dashboard/chatbots'
     | '/dashboard/commerce'
     | '/dashboard/contacts'
+    | '/dashboard/customize-menu'
     | '/dashboard/features'
     | '/dashboard/inbox'
     | '/dashboard/instagram'
+    | '/dashboard/journeys'
     | '/dashboard/link-pages'
     | '/dashboard/messenger'
     | '/dashboard/meta-agent'
     | '/dashboard/pipeline'
+    | '/dashboard/pipelines'
     | '/dashboard/qr-codes'
     | '/dashboard/qrCreator'
     | '/dashboard/quickAccessLinks'
@@ -2700,7 +3101,9 @@ export interface FileRouteTypes {
     | '/blog/author/sitemap.xml'
     | '/blog/tag/sitemap.xml'
     | '/c/$token/invoice'
+    | '/dashboard/automation/journeys/$journeyId'
     | '/dashboard/campaign/$campaignId/edit'
+    | '/dashboard/campaigns/$campaignId/edit'
     | '/dashboard/commerce/orders/$orderId'
     | '/dashboard/commerce/products/$productId'
     | '/dashboard/commerce/products/new'
@@ -2761,9 +3164,13 @@ export interface FileRouteTypes {
     | '/auth/shopify/retry'
     | '/dashboard/analytics/$staffid'
     | '/dashboard/analytics/audit-log'
+    | '/dashboard/analytics/call-history'
     | '/dashboard/analytics/calls'
     | '/dashboard/automation/$automationId'
+    | '/dashboard/automation/journeys'
+    | '/dashboard/automation/rules'
     | '/dashboard/campaign/$campaignId'
+    | '/dashboard/campaigns/$campaignId'
     | '/dashboard/commerce/catalog-orders'
     | '/dashboard/commerce/catalogs'
     | '/dashboard/commerce/coupons'
@@ -2773,10 +3180,12 @@ export interface FileRouteTypes {
     | '/dashboard/commerce/products'
     | '/dashboard/commerce/settings'
     | '/dashboard/commerce/setup'
+    | '/dashboard/contacts/audiences'
     | '/dashboard/contacts/custom-fields'
     | '/dashboard/contacts/groups'
     | '/dashboard/contacts/labels'
     | '/dashboard/contacts/lifecycle'
+    | '/dashboard/inbox/calls'
     | '/dashboard/link-pages/$shortUrlId'
     | '/dashboard/loyalty/activity'
     | '/dashboard/loyalty/approvals'
@@ -2787,8 +3196,10 @@ export interface FileRouteTypes {
     | '/dashboard/loyalty/earning-rules'
     | '/dashboard/loyalty/feedback'
     | '/dashboard/loyalty/materials'
+    | '/dashboard/loyalty/members'
     | '/dashboard/loyalty/messages'
     | '/dashboard/loyalty/onboarding'
+    | '/dashboard/loyalty/overview'
     | '/dashboard/loyalty/program'
     | '/dashboard/loyalty/reminders'
     | '/dashboard/loyalty/rewards'
@@ -2799,23 +3210,29 @@ export interface FileRouteTypes {
     | '/dashboard/qrCreator/$shortUrlId'
     | '/dashboard/quickAccessLinks/$shortUrlId'
     | '/dashboard/settings/account'
+    | '/dashboard/settings/audit-log'
     | '/dashboard/settings/billing'
     | '/dashboard/settings/channels'
     | '/dashboard/settings/features'
     | '/dashboard/settings/integrations'
     | '/dashboard/settings/members'
     | '/dashboard/settings/notifications'
+    | '/dashboard/settings/password'
+    | '/dashboard/settings/profile'
     | '/dashboard/settings/security'
     | '/dashboard/settings/team'
+    | '/dashboard/settings/teams'
     | '/dashboard/settings/users'
     | '/dashboard/surveys/$surveyId'
     | '/dashboard/surveys/templates'
+    | '/dashboard/surveys/testimonials'
     | '/dashboard/testimonial/$collectionId'
     | '/dashboard/whatsapp/calls'
     | '/dashboard/whatsapp/catalog'
     | '/dashboard/whatsapp/conversational-components'
     | '/dashboard/whatsapp/flowbots'
     | '/dashboard/whatsapp/flows'
+    | '/dashboard/whatsapp/ice-breakers'
     | '/dashboard/whatsapp/orders'
     | '/dashboard/whatsapp/payments'
     | '/dashboard/whatsapp/templates'
@@ -2832,7 +3249,12 @@ export interface FileRouteTypes {
     | '/public/testimonial/$collectionId'
     | '/ws/$shortId/end'
     | '/ws/$shortId/response-submitted'
+    | '/dashboard/analytics/agents/$agentId'
     | '/dashboard/analytics/team/$teamid'
+    | '/dashboard/analytics/teams/$teamId'
+    | '/dashboard/automation/rules/$ruleId'
+    | '/dashboard/commerce/catalogs/$catalogId'
+    | '/dashboard/contacts/audiences/$audienceId'
     | '/dashboard/contacts/groups/$groupId'
     | '/dashboard/loyalty/program/advanced'
     | '/dashboard/loyalty/rewards/$rewardId'
@@ -2841,6 +3263,8 @@ export interface FileRouteTypes {
     | '/dashboard/settings/channels/$channel'
     | '/dashboard/settings/integrations/$id'
     | '/dashboard/settings/team/$teamId'
+    | '/dashboard/settings/teams/$teamId'
+    | '/dashboard/surveys/testimonials/$collectionId'
     | '/dashboard/whatsapp/catalog/$catalogId'
     | '/dashboard/whatsapp/flowbots/$flowbotId'
     | '/dashboard/whatsapp/templates/$templateId'
@@ -2870,6 +3294,7 @@ export interface FileRouteTypes {
     | '/dashboard/loyalty'
     | '/dashboard/meta-agent'
     | '/.well-known/api-catalog'
+    | '/admin/updateCenter'
     | '/pl/$shortId'
     | '/(marketing)/'
     | '/admin/'
@@ -2880,14 +3305,20 @@ export interface FileRouteTypes {
     | '/(marketing)/tools/sitemap.xml'
     | '/(shop)/s/sitemap.xml'
     | '/dashboard/campaign/new'
+    | '/dashboard/campaigns/new'
     | '/dashboard/chatbots/$chatbotId'
+    | '/dashboard/journeys/$journeyId'
     | '/dashboard/meta-agent/connectors'
+    | '/dashboard/meta-agent/go-live'
     | '/dashboard/meta-agent/insights'
     | '/dashboard/meta-agent/knowledge'
     | '/dashboard/meta-agent/operate'
     | '/dashboard/meta-agent/overview'
+    | '/dashboard/meta-agent/rich-replies'
     | '/dashboard/meta-agent/settings'
+    | '/dashboard/meta-agent/setup-guide'
     | '/dashboard/meta-agent/skills'
+    | '/dashboard/meta-agent/test'
     | '/dashboard/meta-agent/ui-skills'
     | '/dashboard/setup/features'
     | '/(auth)/invite/'
@@ -2911,6 +3342,7 @@ export interface FileRouteTypes {
     | '/admin/generate/'
     | '/admin/orders/'
     | '/admin/orgs/'
+    | '/admin/plans/'
     | '/admin/rateup/'
     | '/admin/razorpay/'
     | '/admin/referrals/'
@@ -2918,7 +3350,8 @@ export interface FileRouteTypes {
     | '/admin/shopify/'
     | '/admin/stripe/'
     | '/admin/subscriptions/'
-    | '/admin/updateCenter/'
+    | '/admin/update-center/'
+    | '/admin/user-stats/'
     | '/admin/userstats/'
     | '/auth/fb/'
     | '/auth/oauth2callback/'
@@ -2926,16 +3359,20 @@ export interface FileRouteTypes {
     | '/dashboard/analytics/'
     | '/dashboard/automation/'
     | '/dashboard/campaign/'
+    | '/dashboard/campaigns/'
     | '/dashboard/chatbots/'
     | '/dashboard/commerce/'
     | '/dashboard/contacts/'
+    | '/dashboard/customize-menu/'
     | '/dashboard/features/'
     | '/dashboard/inbox/'
     | '/dashboard/instagram/'
+    | '/dashboard/journeys/'
     | '/dashboard/link-pages/'
     | '/dashboard/messenger/'
     | '/dashboard/meta-agent/'
     | '/dashboard/pipeline/'
+    | '/dashboard/pipelines/'
     | '/dashboard/qr-codes/'
     | '/dashboard/qrCreator/'
     | '/dashboard/quickAccessLinks/'
@@ -2947,7 +3384,9 @@ export interface FileRouteTypes {
     | '/(marketing)/blog/author/sitemap.xml'
     | '/(marketing)/blog/tag/sitemap.xml'
     | '/(shop)/c/$token/invoice'
+    | '/dashboard/automation/journeys/$journeyId'
     | '/dashboard/campaign/$campaignId/edit'
+    | '/dashboard/campaigns/$campaignId/edit'
     | '/dashboard/commerce/orders/$orderId'
     | '/dashboard/commerce/products/$productId'
     | '/dashboard/commerce/products/new'
@@ -3008,9 +3447,13 @@ export interface FileRouteTypes {
     | '/auth/shopify/retry/'
     | '/dashboard/analytics/$staffid/'
     | '/dashboard/analytics/audit-log/'
+    | '/dashboard/analytics/call-history/'
     | '/dashboard/analytics/calls/'
     | '/dashboard/automation/$automationId/'
+    | '/dashboard/automation/journeys/'
+    | '/dashboard/automation/rules/'
     | '/dashboard/campaign/$campaignId/'
+    | '/dashboard/campaigns/$campaignId/'
     | '/dashboard/commerce/catalog-orders/'
     | '/dashboard/commerce/catalogs/'
     | '/dashboard/commerce/coupons/'
@@ -3020,10 +3463,12 @@ export interface FileRouteTypes {
     | '/dashboard/commerce/products/'
     | '/dashboard/commerce/settings/'
     | '/dashboard/commerce/setup/'
+    | '/dashboard/contacts/audiences/'
     | '/dashboard/contacts/custom-fields/'
     | '/dashboard/contacts/groups/'
     | '/dashboard/contacts/labels/'
     | '/dashboard/contacts/lifecycle/'
+    | '/dashboard/inbox/calls/'
     | '/dashboard/link-pages/$shortUrlId/'
     | '/dashboard/loyalty/activity/'
     | '/dashboard/loyalty/approvals/'
@@ -3034,8 +3479,10 @@ export interface FileRouteTypes {
     | '/dashboard/loyalty/earning-rules/'
     | '/dashboard/loyalty/feedback/'
     | '/dashboard/loyalty/materials/'
+    | '/dashboard/loyalty/members/'
     | '/dashboard/loyalty/messages/'
     | '/dashboard/loyalty/onboarding/'
+    | '/dashboard/loyalty/overview/'
     | '/dashboard/loyalty/program/'
     | '/dashboard/loyalty/reminders/'
     | '/dashboard/loyalty/rewards/'
@@ -3046,23 +3493,29 @@ export interface FileRouteTypes {
     | '/dashboard/qrCreator/$shortUrlId/'
     | '/dashboard/quickAccessLinks/$shortUrlId/'
     | '/dashboard/settings/account/'
+    | '/dashboard/settings/audit-log/'
     | '/dashboard/settings/billing/'
     | '/dashboard/settings/channels/'
     | '/dashboard/settings/features/'
     | '/dashboard/settings/integrations/'
     | '/dashboard/settings/members/'
     | '/dashboard/settings/notifications/'
+    | '/dashboard/settings/password/'
+    | '/dashboard/settings/profile/'
     | '/dashboard/settings/security/'
     | '/dashboard/settings/team/'
+    | '/dashboard/settings/teams/'
     | '/dashboard/settings/users/'
     | '/dashboard/surveys/$surveyId/'
     | '/dashboard/surveys/templates/'
+    | '/dashboard/surveys/testimonials/'
     | '/dashboard/testimonial/$collectionId/'
     | '/dashboard/whatsapp/calls/'
     | '/dashboard/whatsapp/catalog/'
     | '/dashboard/whatsapp/conversational-components/'
     | '/dashboard/whatsapp/flowbots/'
     | '/dashboard/whatsapp/flows/'
+    | '/dashboard/whatsapp/ice-breakers/'
     | '/dashboard/whatsapp/orders/'
     | '/dashboard/whatsapp/payments/'
     | '/dashboard/whatsapp/templates/'
@@ -3079,7 +3532,12 @@ export interface FileRouteTypes {
     | '/(public-facing)/public/testimonial/$collectionId/'
     | '/(public-facing)/ws/$shortId/end/'
     | '/(public-facing)/ws/$shortId/response-submitted/'
+    | '/dashboard/analytics/agents/$agentId/'
     | '/dashboard/analytics/team/$teamid/'
+    | '/dashboard/analytics/teams/$teamId/'
+    | '/dashboard/automation/rules/$ruleId/'
+    | '/dashboard/commerce/catalogs/$catalogId/'
+    | '/dashboard/contacts/audiences/$audienceId/'
     | '/dashboard/contacts/groups/$groupId/'
     | '/dashboard/loyalty/program/advanced/'
     | '/dashboard/loyalty/rewards/$rewardId/'
@@ -3088,6 +3546,8 @@ export interface FileRouteTypes {
     | '/dashboard/settings/channels/$channel/'
     | '/dashboard/settings/integrations/$id/'
     | '/dashboard/settings/team/$teamId/'
+    | '/dashboard/settings/teams/$teamId/'
+    | '/dashboard/surveys/testimonials/$collectionId/'
     | '/dashboard/whatsapp/catalog/$catalogId/'
     | '/dashboard/whatsapp/flowbots/$flowbotId/'
     | '/dashboard/whatsapp/templates/$templateId/'
@@ -3222,6 +3682,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/updateCenter': {
+      id: '/admin/updateCenter'
+      path: '/updateCenter'
+      fullPath: '/admin/updateCenter'
+      preLoaderRoute: typeof AdminUpdateCenterRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/dashboard/': {
@@ -3441,6 +3908,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminOrgsIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/plans/': {
+      id: '/admin/plans/'
+      path: '/plans'
+      fullPath: '/admin/plans/'
+      preLoaderRoute: typeof AdminPlansIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/rateup/': {
       id: '/admin/rateup/'
       path: '/rateup'
@@ -3490,11 +3964,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSubscriptionsIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
-    '/admin/updateCenter/': {
-      id: '/admin/updateCenter/'
-      path: '/updateCenter'
-      fullPath: '/admin/updateCenter/'
+    '/admin/update-center/': {
+      id: '/admin/update-center/'
+      path: '/update-center'
+      fullPath: '/admin/update-center/'
       preLoaderRoute: typeof AdminUpdateCenterIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/user-stats/': {
+      id: '/admin/user-stats/'
+      path: '/user-stats'
+      fullPath: '/admin/user-stats/'
+      preLoaderRoute: typeof AdminUserStatsIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/admin/userstats/': {
@@ -3553,6 +4034,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardCampaignNewRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/campaigns/': {
+      id: '/dashboard/campaigns/'
+      path: '/campaigns'
+      fullPath: '/dashboard/campaigns/'
+      preLoaderRoute: typeof DashboardCampaignsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/campaigns/new': {
+      id: '/dashboard/campaigns/new'
+      path: '/campaigns/new'
+      fullPath: '/dashboard/campaigns/new'
+      preLoaderRoute: typeof DashboardCampaignsNewRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/chatbots/': {
       id: '/dashboard/chatbots/'
       path: '/chatbots'
@@ -3581,6 +4076,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardContactsIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/customize-menu/': {
+      id: '/dashboard/customize-menu/'
+      path: '/customize-menu'
+      fullPath: '/dashboard/customize-menu/'
+      preLoaderRoute: typeof DashboardCustomizeMenuIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/features/': {
       id: '/dashboard/features/'
       path: '/features'
@@ -3600,6 +4102,20 @@ declare module '@tanstack/react-router' {
       path: '/instagram'
       fullPath: '/dashboard/instagram/'
       preLoaderRoute: typeof DashboardInstagramIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/journeys/': {
+      id: '/dashboard/journeys/'
+      path: '/journeys'
+      fullPath: '/dashboard/journeys/'
+      preLoaderRoute: typeof DashboardJourneysIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/journeys/$journeyId': {
+      id: '/dashboard/journeys/$journeyId'
+      path: '/journeys/$journeyId'
+      fullPath: '/dashboard/journeys/$journeyId'
+      preLoaderRoute: typeof DashboardJourneysJourneyIdRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/link-pages/': {
@@ -3630,6 +4146,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardMetaAgentConnectorsRouteImport
       parentRoute: typeof DashboardMetaAgentRouteRoute
     }
+    '/dashboard/meta-agent/go-live': {
+      id: '/dashboard/meta-agent/go-live'
+      path: '/go-live'
+      fullPath: '/dashboard/meta-agent/go-live'
+      preLoaderRoute: typeof DashboardMetaAgentGoLiveRouteImport
+      parentRoute: typeof DashboardMetaAgentRouteRoute
+    }
     '/dashboard/meta-agent/insights': {
       id: '/dashboard/meta-agent/insights'
       path: '/insights'
@@ -3658,6 +4181,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardMetaAgentOverviewRouteImport
       parentRoute: typeof DashboardMetaAgentRouteRoute
     }
+    '/dashboard/meta-agent/rich-replies': {
+      id: '/dashboard/meta-agent/rich-replies'
+      path: '/rich-replies'
+      fullPath: '/dashboard/meta-agent/rich-replies'
+      preLoaderRoute: typeof DashboardMetaAgentRichRepliesRouteImport
+      parentRoute: typeof DashboardMetaAgentRouteRoute
+    }
     '/dashboard/meta-agent/settings': {
       id: '/dashboard/meta-agent/settings'
       path: '/settings'
@@ -3665,11 +4195,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardMetaAgentSettingsRouteImport
       parentRoute: typeof DashboardMetaAgentRouteRoute
     }
+    '/dashboard/meta-agent/setup-guide': {
+      id: '/dashboard/meta-agent/setup-guide'
+      path: '/setup-guide'
+      fullPath: '/dashboard/meta-agent/setup-guide'
+      preLoaderRoute: typeof DashboardMetaAgentSetupGuideRouteImport
+      parentRoute: typeof DashboardMetaAgentRouteRoute
+    }
     '/dashboard/meta-agent/skills': {
       id: '/dashboard/meta-agent/skills'
       path: '/skills'
       fullPath: '/dashboard/meta-agent/skills'
       preLoaderRoute: typeof DashboardMetaAgentSkillsRouteImport
+      parentRoute: typeof DashboardMetaAgentRouteRoute
+    }
+    '/dashboard/meta-agent/test': {
+      id: '/dashboard/meta-agent/test'
+      path: '/test'
+      fullPath: '/dashboard/meta-agent/test'
+      preLoaderRoute: typeof DashboardMetaAgentTestRouteImport
       parentRoute: typeof DashboardMetaAgentRouteRoute
     }
     '/dashboard/meta-agent/ui-skills': {
@@ -3684,6 +4228,13 @@ declare module '@tanstack/react-router' {
       path: '/pipeline'
       fullPath: '/dashboard/pipeline/'
       preLoaderRoute: typeof DashboardPipelineIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/pipelines/': {
+      id: '/dashboard/pipelines/'
+      path: '/pipelines'
+      fullPath: '/dashboard/pipelines/'
+      preLoaderRoute: typeof DashboardPipelinesIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/qr-codes/': {
@@ -4134,6 +4685,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAnalyticsAuditLogIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/analytics/call-history/': {
+      id: '/dashboard/analytics/call-history/'
+      path: '/analytics/call-history'
+      fullPath: '/dashboard/analytics/call-history/'
+      preLoaderRoute: typeof DashboardAnalyticsCallHistoryIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/analytics/calls/': {
       id: '/dashboard/analytics/calls/'
       path: '/analytics/calls'
@@ -4148,6 +4706,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAutomationAutomationIdIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/automation/journeys/': {
+      id: '/dashboard/automation/journeys/'
+      path: '/automation/journeys'
+      fullPath: '/dashboard/automation/journeys/'
+      preLoaderRoute: typeof DashboardAutomationJourneysIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/automation/journeys/$journeyId': {
+      id: '/dashboard/automation/journeys/$journeyId'
+      path: '/automation/journeys/$journeyId'
+      fullPath: '/dashboard/automation/journeys/$journeyId'
+      preLoaderRoute: typeof DashboardAutomationJourneysJourneyIdRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/automation/rules/': {
+      id: '/dashboard/automation/rules/'
+      path: '/automation/rules'
+      fullPath: '/dashboard/automation/rules/'
+      preLoaderRoute: typeof DashboardAutomationRulesIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/campaign/$campaignId/': {
       id: '/dashboard/campaign/$campaignId/'
       path: '/campaign/$campaignId'
@@ -4160,6 +4739,20 @@ declare module '@tanstack/react-router' {
       path: '/campaign/$campaignId/edit'
       fullPath: '/dashboard/campaign/$campaignId/edit'
       preLoaderRoute: typeof DashboardCampaignCampaignIdEditRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/campaigns/$campaignId/': {
+      id: '/dashboard/campaigns/$campaignId/'
+      path: '/campaigns/$campaignId'
+      fullPath: '/dashboard/campaigns/$campaignId/'
+      preLoaderRoute: typeof DashboardCampaignsCampaignIdIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/campaigns/$campaignId/edit': {
+      id: '/dashboard/campaigns/$campaignId/edit'
+      path: '/campaigns/$campaignId/edit'
+      fullPath: '/dashboard/campaigns/$campaignId/edit'
+      preLoaderRoute: typeof DashboardCampaignsCampaignIdEditRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/commerce/catalog-orders/': {
@@ -4253,6 +4846,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardCommerceSetupIndexRouteImport
       parentRoute: typeof DashboardCommerceRouteRoute
     }
+    '/dashboard/contacts/audiences/': {
+      id: '/dashboard/contacts/audiences/'
+      path: '/contacts/audiences'
+      fullPath: '/dashboard/contacts/audiences/'
+      preLoaderRoute: typeof DashboardContactsAudiencesIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/contacts/custom-fields/': {
       id: '/dashboard/contacts/custom-fields/'
       path: '/contacts/custom-fields'
@@ -4279,6 +4879,13 @@ declare module '@tanstack/react-router' {
       path: '/contacts/lifecycle'
       fullPath: '/dashboard/contacts/lifecycle/'
       preLoaderRoute: typeof DashboardContactsLifecycleIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/inbox/calls/': {
+      id: '/dashboard/inbox/calls/'
+      path: '/inbox/calls'
+      fullPath: '/dashboard/inbox/calls/'
+      preLoaderRoute: typeof DashboardInboxCallsIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/instagram/flowbots/$flowbotId': {
@@ -4358,6 +4965,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardLoyaltyMaterialsIndexRouteImport
       parentRoute: typeof DashboardLoyaltyRouteRoute
     }
+    '/dashboard/loyalty/members/': {
+      id: '/dashboard/loyalty/members/'
+      path: '/members'
+      fullPath: '/dashboard/loyalty/members/'
+      preLoaderRoute: typeof DashboardLoyaltyMembersIndexRouteImport
+      parentRoute: typeof DashboardLoyaltyRouteRoute
+    }
     '/dashboard/loyalty/messages/': {
       id: '/dashboard/loyalty/messages/'
       path: '/messages'
@@ -4370,6 +4984,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/dashboard/loyalty/onboarding/'
       preLoaderRoute: typeof DashboardLoyaltyOnboardingIndexRouteImport
+      parentRoute: typeof DashboardLoyaltyRouteRoute
+    }
+    '/dashboard/loyalty/overview/': {
+      id: '/dashboard/loyalty/overview/'
+      path: '/overview'
+      fullPath: '/dashboard/loyalty/overview/'
+      preLoaderRoute: typeof DashboardLoyaltyOverviewIndexRouteImport
       parentRoute: typeof DashboardLoyaltyRouteRoute
     }
     '/dashboard/loyalty/program/': {
@@ -4449,6 +5070,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsAccountIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/settings/audit-log/': {
+      id: '/dashboard/settings/audit-log/'
+      path: '/settings/audit-log'
+      fullPath: '/dashboard/settings/audit-log/'
+      preLoaderRoute: typeof DashboardSettingsAuditLogIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/settings/billing/': {
       id: '/dashboard/settings/billing/'
       path: '/settings/billing'
@@ -4505,6 +5133,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsNotificationsIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/settings/password/': {
+      id: '/dashboard/settings/password/'
+      path: '/settings/password'
+      fullPath: '/dashboard/settings/password/'
+      preLoaderRoute: typeof DashboardSettingsPasswordIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/settings/profile/': {
+      id: '/dashboard/settings/profile/'
+      path: '/settings/profile'
+      fullPath: '/dashboard/settings/profile/'
+      preLoaderRoute: typeof DashboardSettingsProfileIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/settings/security/': {
       id: '/dashboard/settings/security/'
       path: '/settings/security'
@@ -4517,6 +5159,13 @@ declare module '@tanstack/react-router' {
       path: '/settings/team'
       fullPath: '/dashboard/settings/team/'
       preLoaderRoute: typeof DashboardSettingsTeamIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/settings/teams/': {
+      id: '/dashboard/settings/teams/'
+      path: '/settings/teams'
+      fullPath: '/dashboard/settings/teams/'
+      preLoaderRoute: typeof DashboardSettingsTeamsIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/settings/users/': {
@@ -4538,6 +5187,13 @@ declare module '@tanstack/react-router' {
       path: '/surveys/templates'
       fullPath: '/dashboard/surveys/templates/'
       preLoaderRoute: typeof DashboardSurveysTemplatesIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/surveys/testimonials/': {
+      id: '/dashboard/surveys/testimonials/'
+      path: '/surveys/testimonials'
+      fullPath: '/dashboard/surveys/testimonials/'
+      preLoaderRoute: typeof DashboardSurveysTestimonialsIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/testimonial/$collectionId/': {
@@ -4580,6 +5236,13 @@ declare module '@tanstack/react-router' {
       path: '/whatsapp/flows'
       fullPath: '/dashboard/whatsapp/flows/'
       preLoaderRoute: typeof DashboardWhatsappFlowsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/whatsapp/ice-breakers/': {
+      id: '/dashboard/whatsapp/ice-breakers/'
+      path: '/whatsapp/ice-breakers'
+      fullPath: '/dashboard/whatsapp/ice-breakers/'
+      preLoaderRoute: typeof DashboardWhatsappIceBreakersIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/whatsapp/orders/': {
@@ -4694,11 +5357,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof shopSSlugPHandleRouteImport
       parentRoute: typeof shopSSlugRouteRoute
     }
+    '/dashboard/analytics/agents/$agentId/': {
+      id: '/dashboard/analytics/agents/$agentId/'
+      path: '/analytics/agents/$agentId'
+      fullPath: '/dashboard/analytics/agents/$agentId/'
+      preLoaderRoute: typeof DashboardAnalyticsAgentsAgentIdIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/analytics/team/$teamid/': {
       id: '/dashboard/analytics/team/$teamid/'
       path: '/analytics/team/$teamid'
       fullPath: '/dashboard/analytics/team/$teamid/'
       preLoaderRoute: typeof DashboardAnalyticsTeamTeamidIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/analytics/teams/$teamId/': {
+      id: '/dashboard/analytics/teams/$teamId/'
+      path: '/analytics/teams/$teamId'
+      fullPath: '/dashboard/analytics/teams/$teamId/'
+      preLoaderRoute: typeof DashboardAnalyticsTeamsTeamIdIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/automation/rules/$ruleId/': {
+      id: '/dashboard/automation/rules/$ruleId/'
+      path: '/automation/rules/$ruleId'
+      fullPath: '/dashboard/automation/rules/$ruleId/'
+      preLoaderRoute: typeof DashboardAutomationRulesRuleIdIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/commerce/catalogs/$catalogId/': {
+      id: '/dashboard/commerce/catalogs/$catalogId/'
+      path: '/catalogs/$catalogId'
+      fullPath: '/dashboard/commerce/catalogs/$catalogId/'
+      preLoaderRoute: typeof DashboardCommerceCatalogsCatalogIdIndexRouteImport
+      parentRoute: typeof DashboardCommerceRouteRoute
+    }
+    '/dashboard/contacts/audiences/$audienceId/': {
+      id: '/dashboard/contacts/audiences/$audienceId/'
+      path: '/contacts/audiences/$audienceId'
+      fullPath: '/dashboard/contacts/audiences/$audienceId/'
+      preLoaderRoute: typeof DashboardContactsAudiencesAudienceIdIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/contacts/groups/$groupId/': {
@@ -4755,6 +5453,20 @@ declare module '@tanstack/react-router' {
       path: '/settings/team/$teamId'
       fullPath: '/dashboard/settings/team/$teamId/'
       preLoaderRoute: typeof DashboardSettingsTeamTeamIdIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/settings/teams/$teamId/': {
+      id: '/dashboard/settings/teams/$teamId/'
+      path: '/settings/teams/$teamId'
+      fullPath: '/dashboard/settings/teams/$teamId/'
+      preLoaderRoute: typeof DashboardSettingsTeamsTeamIdIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/surveys/testimonials/$collectionId/': {
+      id: '/dashboard/surveys/testimonials/$collectionId/'
+      path: '/surveys/testimonials/$collectionId'
+      fullPath: '/dashboard/surveys/testimonials/$collectionId/'
+      preLoaderRoute: typeof DashboardSurveysTestimonialsCollectionIdIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/whatsapp/catalog/$catalogId/': {
@@ -5111,10 +5823,12 @@ const shopRouteRouteWithChildren = shopRouteRoute._addFileChildren(
 )
 
 interface AdminRouteRouteChildren {
+  AdminUpdateCenterRoute: typeof AdminUpdateCenterRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminGenerateIndexRoute: typeof AdminGenerateIndexRoute
   AdminOrdersIndexRoute: typeof AdminOrdersIndexRoute
   AdminOrgsIndexRoute: typeof AdminOrgsIndexRoute
+  AdminPlansIndexRoute: typeof AdminPlansIndexRoute
   AdminRateupIndexRoute: typeof AdminRateupIndexRoute
   AdminRazorpayIndexRoute: typeof AdminRazorpayIndexRoute
   AdminReferralsIndexRoute: typeof AdminReferralsIndexRoute
@@ -5123,15 +5837,18 @@ interface AdminRouteRouteChildren {
   AdminStripeIndexRoute: typeof AdminStripeIndexRoute
   AdminSubscriptionsIndexRoute: typeof AdminSubscriptionsIndexRoute
   AdminUpdateCenterIndexRoute: typeof AdminUpdateCenterIndexRoute
+  AdminUserStatsIndexRoute: typeof AdminUserStatsIndexRoute
   AdminUserstatsIndexRoute: typeof AdminUserstatsIndexRoute
   AdminOrgsOrgIdIndexRoute: typeof AdminOrgsOrgIdIndexRoute
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminUpdateCenterRoute: AdminUpdateCenterRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminGenerateIndexRoute: AdminGenerateIndexRoute,
   AdminOrdersIndexRoute: AdminOrdersIndexRoute,
   AdminOrgsIndexRoute: AdminOrgsIndexRoute,
+  AdminPlansIndexRoute: AdminPlansIndexRoute,
   AdminRateupIndexRoute: AdminRateupIndexRoute,
   AdminRazorpayIndexRoute: AdminRazorpayIndexRoute,
   AdminReferralsIndexRoute: AdminReferralsIndexRoute,
@@ -5140,6 +5857,7 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminStripeIndexRoute: AdminStripeIndexRoute,
   AdminSubscriptionsIndexRoute: AdminSubscriptionsIndexRoute,
   AdminUpdateCenterIndexRoute: AdminUpdateCenterIndexRoute,
+  AdminUserStatsIndexRoute: AdminUserStatsIndexRoute,
   AdminUserstatsIndexRoute: AdminUserstatsIndexRoute,
   AdminOrgsOrgIdIndexRoute: AdminOrgsOrgIdIndexRoute,
 }
@@ -5185,6 +5903,7 @@ interface DashboardCommerceRouteRouteChildren {
   DashboardCommerceProductsIndexRoute: typeof DashboardCommerceProductsIndexRoute
   DashboardCommerceSettingsIndexRoute: typeof DashboardCommerceSettingsIndexRoute
   DashboardCommerceSetupIndexRoute: typeof DashboardCommerceSetupIndexRoute
+  DashboardCommerceCatalogsCatalogIdIndexRoute: typeof DashboardCommerceCatalogsCatalogIdIndexRoute
 }
 
 const DashboardCommerceRouteRouteChildren: DashboardCommerceRouteRouteChildren =
@@ -5206,6 +5925,8 @@ const DashboardCommerceRouteRouteChildren: DashboardCommerceRouteRouteChildren =
     DashboardCommerceProductsIndexRoute: DashboardCommerceProductsIndexRoute,
     DashboardCommerceSettingsIndexRoute: DashboardCommerceSettingsIndexRoute,
     DashboardCommerceSetupIndexRoute: DashboardCommerceSetupIndexRoute,
+    DashboardCommerceCatalogsCatalogIdIndexRoute:
+      DashboardCommerceCatalogsCatalogIdIndexRoute,
   }
 
 const DashboardCommerceRouteRouteWithChildren =
@@ -5223,8 +5944,10 @@ interface DashboardLoyaltyRouteRouteChildren {
   DashboardLoyaltyEarningRulesIndexRoute: typeof DashboardLoyaltyEarningRulesIndexRoute
   DashboardLoyaltyFeedbackIndexRoute: typeof DashboardLoyaltyFeedbackIndexRoute
   DashboardLoyaltyMaterialsIndexRoute: typeof DashboardLoyaltyMaterialsIndexRoute
+  DashboardLoyaltyMembersIndexRoute: typeof DashboardLoyaltyMembersIndexRoute
   DashboardLoyaltyMessagesIndexRoute: typeof DashboardLoyaltyMessagesIndexRoute
   DashboardLoyaltyOnboardingIndexRoute: typeof DashboardLoyaltyOnboardingIndexRoute
+  DashboardLoyaltyOverviewIndexRoute: typeof DashboardLoyaltyOverviewIndexRoute
   DashboardLoyaltyProgramIndexRoute: typeof DashboardLoyaltyProgramIndexRoute
   DashboardLoyaltyRemindersIndexRoute: typeof DashboardLoyaltyRemindersIndexRoute
   DashboardLoyaltyRewardsIndexRoute: typeof DashboardLoyaltyRewardsIndexRoute
@@ -5248,8 +5971,10 @@ const DashboardLoyaltyRouteRouteChildren: DashboardLoyaltyRouteRouteChildren = {
     DashboardLoyaltyEarningRulesIndexRoute,
   DashboardLoyaltyFeedbackIndexRoute: DashboardLoyaltyFeedbackIndexRoute,
   DashboardLoyaltyMaterialsIndexRoute: DashboardLoyaltyMaterialsIndexRoute,
+  DashboardLoyaltyMembersIndexRoute: DashboardLoyaltyMembersIndexRoute,
   DashboardLoyaltyMessagesIndexRoute: DashboardLoyaltyMessagesIndexRoute,
   DashboardLoyaltyOnboardingIndexRoute: DashboardLoyaltyOnboardingIndexRoute,
+  DashboardLoyaltyOverviewIndexRoute: DashboardLoyaltyOverviewIndexRoute,
   DashboardLoyaltyProgramIndexRoute: DashboardLoyaltyProgramIndexRoute,
   DashboardLoyaltyRemindersIndexRoute: DashboardLoyaltyRemindersIndexRoute,
   DashboardLoyaltyRewardsIndexRoute: DashboardLoyaltyRewardsIndexRoute,
@@ -5273,12 +5998,16 @@ const DashboardLoyaltyRouteRouteWithChildren =
 
 interface DashboardMetaAgentRouteRouteChildren {
   DashboardMetaAgentConnectorsRoute: typeof DashboardMetaAgentConnectorsRoute
+  DashboardMetaAgentGoLiveRoute: typeof DashboardMetaAgentGoLiveRoute
   DashboardMetaAgentInsightsRoute: typeof DashboardMetaAgentInsightsRoute
   DashboardMetaAgentKnowledgeRoute: typeof DashboardMetaAgentKnowledgeRoute
   DashboardMetaAgentOperateRoute: typeof DashboardMetaAgentOperateRoute
   DashboardMetaAgentOverviewRoute: typeof DashboardMetaAgentOverviewRoute
+  DashboardMetaAgentRichRepliesRoute: typeof DashboardMetaAgentRichRepliesRoute
   DashboardMetaAgentSettingsRoute: typeof DashboardMetaAgentSettingsRoute
+  DashboardMetaAgentSetupGuideRoute: typeof DashboardMetaAgentSetupGuideRoute
   DashboardMetaAgentSkillsRoute: typeof DashboardMetaAgentSkillsRoute
+  DashboardMetaAgentTestRoute: typeof DashboardMetaAgentTestRoute
   DashboardMetaAgentUiSkillsRoute: typeof DashboardMetaAgentUiSkillsRoute
   DashboardMetaAgentIndexRoute: typeof DashboardMetaAgentIndexRoute
 }
@@ -5286,12 +6015,16 @@ interface DashboardMetaAgentRouteRouteChildren {
 const DashboardMetaAgentRouteRouteChildren: DashboardMetaAgentRouteRouteChildren =
   {
     DashboardMetaAgentConnectorsRoute: DashboardMetaAgentConnectorsRoute,
+    DashboardMetaAgentGoLiveRoute: DashboardMetaAgentGoLiveRoute,
     DashboardMetaAgentInsightsRoute: DashboardMetaAgentInsightsRoute,
     DashboardMetaAgentKnowledgeRoute: DashboardMetaAgentKnowledgeRoute,
     DashboardMetaAgentOperateRoute: DashboardMetaAgentOperateRoute,
     DashboardMetaAgentOverviewRoute: DashboardMetaAgentOverviewRoute,
+    DashboardMetaAgentRichRepliesRoute: DashboardMetaAgentRichRepliesRoute,
     DashboardMetaAgentSettingsRoute: DashboardMetaAgentSettingsRoute,
+    DashboardMetaAgentSetupGuideRoute: DashboardMetaAgentSetupGuideRoute,
     DashboardMetaAgentSkillsRoute: DashboardMetaAgentSkillsRoute,
+    DashboardMetaAgentTestRoute: DashboardMetaAgentTestRoute,
     DashboardMetaAgentUiSkillsRoute: DashboardMetaAgentUiSkillsRoute,
     DashboardMetaAgentIndexRoute: DashboardMetaAgentIndexRoute,
   }
@@ -5307,19 +6040,25 @@ interface DashboardRouteRouteChildren {
   DashboardMetaAgentRouteRoute: typeof DashboardMetaAgentRouteRouteWithChildren
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardCampaignNewRoute: typeof DashboardCampaignNewRoute
+  DashboardCampaignsNewRoute: typeof DashboardCampaignsNewRoute
   DashboardChatbotsChatbotIdRoute: typeof DashboardChatbotsChatbotIdRoute
+  DashboardJourneysJourneyIdRoute: typeof DashboardJourneysJourneyIdRoute
   DashboardSetupFeaturesRoute: typeof DashboardSetupFeaturesRoute
   DashboardAnalyticsIndexRoute: typeof DashboardAnalyticsIndexRoute
   DashboardAutomationIndexRoute: typeof DashboardAutomationIndexRoute
   DashboardCampaignIndexRoute: typeof DashboardCampaignIndexRoute
+  DashboardCampaignsIndexRoute: typeof DashboardCampaignsIndexRoute
   DashboardChatbotsIndexRoute: typeof DashboardChatbotsIndexRoute
   DashboardContactsIndexRoute: typeof DashboardContactsIndexRoute
+  DashboardCustomizeMenuIndexRoute: typeof DashboardCustomizeMenuIndexRoute
   DashboardFeaturesIndexRoute: typeof DashboardFeaturesIndexRoute
   DashboardInboxIndexRoute: typeof DashboardInboxIndexRoute
   DashboardInstagramIndexRoute: typeof DashboardInstagramIndexRoute
+  DashboardJourneysIndexRoute: typeof DashboardJourneysIndexRoute
   DashboardLinkPagesIndexRoute: typeof DashboardLinkPagesIndexRoute
   DashboardMessengerIndexRoute: typeof DashboardMessengerIndexRoute
   DashboardPipelineIndexRoute: typeof DashboardPipelineIndexRoute
+  DashboardPipelinesIndexRoute: typeof DashboardPipelinesIndexRoute
   DashboardQrCodesIndexRoute: typeof DashboardQrCodesIndexRoute
   DashboardQrCreatorIndexRoute: typeof DashboardQrCreatorIndexRoute
   DashboardQuickAccessLinksIndexRoute: typeof DashboardQuickAccessLinksIndexRoute
@@ -5328,50 +6067,70 @@ interface DashboardRouteRouteChildren {
   DashboardSurveysIndexRoute: typeof DashboardSurveysIndexRoute
   DashboardTestimonialIndexRoute: typeof DashboardTestimonialIndexRoute
   DashboardWhatsappIndexRoute: typeof DashboardWhatsappIndexRoute
+  DashboardAutomationJourneysJourneyIdRoute: typeof DashboardAutomationJourneysJourneyIdRoute
   DashboardCampaignCampaignIdEditRoute: typeof DashboardCampaignCampaignIdEditRoute
+  DashboardCampaignsCampaignIdEditRoute: typeof DashboardCampaignsCampaignIdEditRoute
   DashboardInstagramFlowbotsFlowbotIdRoute: typeof DashboardInstagramFlowbotsFlowbotIdRoute
   DashboardMessengerFlowbotsFlowbotIdRoute: typeof DashboardMessengerFlowbotsFlowbotIdRoute
   DashboardSettingsMembersMemberIdRoute: typeof DashboardSettingsMembersMemberIdRoute
   DashboardSettingsMembersRolesRoute: typeof DashboardSettingsMembersRolesRoute
   DashboardAnalyticsStaffidIndexRoute: typeof DashboardAnalyticsStaffidIndexRoute
   DashboardAnalyticsAuditLogIndexRoute: typeof DashboardAnalyticsAuditLogIndexRoute
+  DashboardAnalyticsCallHistoryIndexRoute: typeof DashboardAnalyticsCallHistoryIndexRoute
   DashboardAnalyticsCallsIndexRoute: typeof DashboardAnalyticsCallsIndexRoute
   DashboardAutomationAutomationIdIndexRoute: typeof DashboardAutomationAutomationIdIndexRoute
+  DashboardAutomationJourneysIndexRoute: typeof DashboardAutomationJourneysIndexRoute
+  DashboardAutomationRulesIndexRoute: typeof DashboardAutomationRulesIndexRoute
   DashboardCampaignCampaignIdIndexRoute: typeof DashboardCampaignCampaignIdIndexRoute
+  DashboardCampaignsCampaignIdIndexRoute: typeof DashboardCampaignsCampaignIdIndexRoute
+  DashboardContactsAudiencesIndexRoute: typeof DashboardContactsAudiencesIndexRoute
   DashboardContactsCustomFieldsIndexRoute: typeof DashboardContactsCustomFieldsIndexRoute
   DashboardContactsGroupsIndexRoute: typeof DashboardContactsGroupsIndexRoute
   DashboardContactsLabelsIndexRoute: typeof DashboardContactsLabelsIndexRoute
   DashboardContactsLifecycleIndexRoute: typeof DashboardContactsLifecycleIndexRoute
+  DashboardInboxCallsIndexRoute: typeof DashboardInboxCallsIndexRoute
   DashboardLinkPagesShortUrlIdIndexRoute: typeof DashboardLinkPagesShortUrlIdIndexRoute
   DashboardQrCodesShortUrlIdIndexRoute: typeof DashboardQrCodesShortUrlIdIndexRoute
   DashboardQrCreatorShortUrlIdIndexRoute: typeof DashboardQrCreatorShortUrlIdIndexRoute
   DashboardQuickAccessLinksShortUrlIdIndexRoute: typeof DashboardQuickAccessLinksShortUrlIdIndexRoute
   DashboardSettingsAccountIndexRoute: typeof DashboardSettingsAccountIndexRoute
+  DashboardSettingsAuditLogIndexRoute: typeof DashboardSettingsAuditLogIndexRoute
   DashboardSettingsBillingIndexRoute: typeof DashboardSettingsBillingIndexRoute
   DashboardSettingsChannelsIndexRoute: typeof DashboardSettingsChannelsIndexRoute
   DashboardSettingsFeaturesIndexRoute: typeof DashboardSettingsFeaturesIndexRoute
   DashboardSettingsIntegrationsIndexRoute: typeof DashboardSettingsIntegrationsIndexRoute
   DashboardSettingsMembersIndexRoute: typeof DashboardSettingsMembersIndexRoute
   DashboardSettingsNotificationsIndexRoute: typeof DashboardSettingsNotificationsIndexRoute
+  DashboardSettingsPasswordIndexRoute: typeof DashboardSettingsPasswordIndexRoute
+  DashboardSettingsProfileIndexRoute: typeof DashboardSettingsProfileIndexRoute
   DashboardSettingsSecurityIndexRoute: typeof DashboardSettingsSecurityIndexRoute
   DashboardSettingsTeamIndexRoute: typeof DashboardSettingsTeamIndexRoute
+  DashboardSettingsTeamsIndexRoute: typeof DashboardSettingsTeamsIndexRoute
   DashboardSettingsUsersIndexRoute: typeof DashboardSettingsUsersIndexRoute
   DashboardSurveysSurveyIdIndexRoute: typeof DashboardSurveysSurveyIdIndexRoute
   DashboardSurveysTemplatesIndexRoute: typeof DashboardSurveysTemplatesIndexRoute
+  DashboardSurveysTestimonialsIndexRoute: typeof DashboardSurveysTestimonialsIndexRoute
   DashboardTestimonialCollectionIdIndexRoute: typeof DashboardTestimonialCollectionIdIndexRoute
   DashboardWhatsappCallsIndexRoute: typeof DashboardWhatsappCallsIndexRoute
   DashboardWhatsappCatalogIndexRoute: typeof DashboardWhatsappCatalogIndexRoute
   DashboardWhatsappConversationalComponentsIndexRoute: typeof DashboardWhatsappConversationalComponentsIndexRoute
   DashboardWhatsappFlowbotsIndexRoute: typeof DashboardWhatsappFlowbotsIndexRoute
   DashboardWhatsappFlowsIndexRoute: typeof DashboardWhatsappFlowsIndexRoute
+  DashboardWhatsappIceBreakersIndexRoute: typeof DashboardWhatsappIceBreakersIndexRoute
   DashboardWhatsappOrdersIndexRoute: typeof DashboardWhatsappOrdersIndexRoute
   DashboardWhatsappPaymentsIndexRoute: typeof DashboardWhatsappPaymentsIndexRoute
   DashboardWhatsappTemplatesIndexRoute: typeof DashboardWhatsappTemplatesIndexRoute
+  DashboardAnalyticsAgentsAgentIdIndexRoute: typeof DashboardAnalyticsAgentsAgentIdIndexRoute
   DashboardAnalyticsTeamTeamidIndexRoute: typeof DashboardAnalyticsTeamTeamidIndexRoute
+  DashboardAnalyticsTeamsTeamIdIndexRoute: typeof DashboardAnalyticsTeamsTeamIdIndexRoute
+  DashboardAutomationRulesRuleIdIndexRoute: typeof DashboardAutomationRulesRuleIdIndexRoute
+  DashboardContactsAudiencesAudienceIdIndexRoute: typeof DashboardContactsAudiencesAudienceIdIndexRoute
   DashboardContactsGroupsGroupIdIndexRoute: typeof DashboardContactsGroupsGroupIdIndexRoute
   DashboardSettingsChannelsChannelIndexRoute: typeof DashboardSettingsChannelsChannelIndexRoute
   DashboardSettingsIntegrationsIdIndexRoute: typeof DashboardSettingsIntegrationsIdIndexRoute
   DashboardSettingsTeamTeamIdIndexRoute: typeof DashboardSettingsTeamTeamIdIndexRoute
+  DashboardSettingsTeamsTeamIdIndexRoute: typeof DashboardSettingsTeamsTeamIdIndexRoute
+  DashboardSurveysTestimonialsCollectionIdIndexRoute: typeof DashboardSurveysTestimonialsCollectionIdIndexRoute
   DashboardWhatsappCatalogCatalogIdIndexRoute: typeof DashboardWhatsappCatalogCatalogIdIndexRoute
   DashboardWhatsappFlowbotsFlowbotIdIndexRoute: typeof DashboardWhatsappFlowbotsFlowbotIdIndexRoute
   DashboardWhatsappTemplatesTemplateIdIndexRoute: typeof DashboardWhatsappTemplatesTemplateIdIndexRoute
@@ -5387,19 +6146,25 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardMetaAgentRouteRoute: DashboardMetaAgentRouteRouteWithChildren,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardCampaignNewRoute: DashboardCampaignNewRoute,
+  DashboardCampaignsNewRoute: DashboardCampaignsNewRoute,
   DashboardChatbotsChatbotIdRoute: DashboardChatbotsChatbotIdRoute,
+  DashboardJourneysJourneyIdRoute: DashboardJourneysJourneyIdRoute,
   DashboardSetupFeaturesRoute: DashboardSetupFeaturesRoute,
   DashboardAnalyticsIndexRoute: DashboardAnalyticsIndexRoute,
   DashboardAutomationIndexRoute: DashboardAutomationIndexRoute,
   DashboardCampaignIndexRoute: DashboardCampaignIndexRoute,
+  DashboardCampaignsIndexRoute: DashboardCampaignsIndexRoute,
   DashboardChatbotsIndexRoute: DashboardChatbotsIndexRoute,
   DashboardContactsIndexRoute: DashboardContactsIndexRoute,
+  DashboardCustomizeMenuIndexRoute: DashboardCustomizeMenuIndexRoute,
   DashboardFeaturesIndexRoute: DashboardFeaturesIndexRoute,
   DashboardInboxIndexRoute: DashboardInboxIndexRoute,
   DashboardInstagramIndexRoute: DashboardInstagramIndexRoute,
+  DashboardJourneysIndexRoute: DashboardJourneysIndexRoute,
   DashboardLinkPagesIndexRoute: DashboardLinkPagesIndexRoute,
   DashboardMessengerIndexRoute: DashboardMessengerIndexRoute,
   DashboardPipelineIndexRoute: DashboardPipelineIndexRoute,
+  DashboardPipelinesIndexRoute: DashboardPipelinesIndexRoute,
   DashboardQrCodesIndexRoute: DashboardQrCodesIndexRoute,
   DashboardQrCreatorIndexRoute: DashboardQrCreatorIndexRoute,
   DashboardQuickAccessLinksIndexRoute: DashboardQuickAccessLinksIndexRoute,
@@ -5408,7 +6173,10 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardSurveysIndexRoute: DashboardSurveysIndexRoute,
   DashboardTestimonialIndexRoute: DashboardTestimonialIndexRoute,
   DashboardWhatsappIndexRoute: DashboardWhatsappIndexRoute,
+  DashboardAutomationJourneysJourneyIdRoute:
+    DashboardAutomationJourneysJourneyIdRoute,
   DashboardCampaignCampaignIdEditRoute: DashboardCampaignCampaignIdEditRoute,
+  DashboardCampaignsCampaignIdEditRoute: DashboardCampaignsCampaignIdEditRoute,
   DashboardInstagramFlowbotsFlowbotIdRoute:
     DashboardInstagramFlowbotsFlowbotIdRoute,
   DashboardMessengerFlowbotsFlowbotIdRoute:
@@ -5417,15 +6185,23 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardSettingsMembersRolesRoute: DashboardSettingsMembersRolesRoute,
   DashboardAnalyticsStaffidIndexRoute: DashboardAnalyticsStaffidIndexRoute,
   DashboardAnalyticsAuditLogIndexRoute: DashboardAnalyticsAuditLogIndexRoute,
+  DashboardAnalyticsCallHistoryIndexRoute:
+    DashboardAnalyticsCallHistoryIndexRoute,
   DashboardAnalyticsCallsIndexRoute: DashboardAnalyticsCallsIndexRoute,
   DashboardAutomationAutomationIdIndexRoute:
     DashboardAutomationAutomationIdIndexRoute,
+  DashboardAutomationJourneysIndexRoute: DashboardAutomationJourneysIndexRoute,
+  DashboardAutomationRulesIndexRoute: DashboardAutomationRulesIndexRoute,
   DashboardCampaignCampaignIdIndexRoute: DashboardCampaignCampaignIdIndexRoute,
+  DashboardCampaignsCampaignIdIndexRoute:
+    DashboardCampaignsCampaignIdIndexRoute,
+  DashboardContactsAudiencesIndexRoute: DashboardContactsAudiencesIndexRoute,
   DashboardContactsCustomFieldsIndexRoute:
     DashboardContactsCustomFieldsIndexRoute,
   DashboardContactsGroupsIndexRoute: DashboardContactsGroupsIndexRoute,
   DashboardContactsLabelsIndexRoute: DashboardContactsLabelsIndexRoute,
   DashboardContactsLifecycleIndexRoute: DashboardContactsLifecycleIndexRoute,
+  DashboardInboxCallsIndexRoute: DashboardInboxCallsIndexRoute,
   DashboardLinkPagesShortUrlIdIndexRoute:
     DashboardLinkPagesShortUrlIdIndexRoute,
   DashboardQrCodesShortUrlIdIndexRoute: DashboardQrCodesShortUrlIdIndexRoute,
@@ -5434,6 +6210,7 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardQuickAccessLinksShortUrlIdIndexRoute:
     DashboardQuickAccessLinksShortUrlIdIndexRoute,
   DashboardSettingsAccountIndexRoute: DashboardSettingsAccountIndexRoute,
+  DashboardSettingsAuditLogIndexRoute: DashboardSettingsAuditLogIndexRoute,
   DashboardSettingsBillingIndexRoute: DashboardSettingsBillingIndexRoute,
   DashboardSettingsChannelsIndexRoute: DashboardSettingsChannelsIndexRoute,
   DashboardSettingsFeaturesIndexRoute: DashboardSettingsFeaturesIndexRoute,
@@ -5442,11 +6219,16 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardSettingsMembersIndexRoute: DashboardSettingsMembersIndexRoute,
   DashboardSettingsNotificationsIndexRoute:
     DashboardSettingsNotificationsIndexRoute,
+  DashboardSettingsPasswordIndexRoute: DashboardSettingsPasswordIndexRoute,
+  DashboardSettingsProfileIndexRoute: DashboardSettingsProfileIndexRoute,
   DashboardSettingsSecurityIndexRoute: DashboardSettingsSecurityIndexRoute,
   DashboardSettingsTeamIndexRoute: DashboardSettingsTeamIndexRoute,
+  DashboardSettingsTeamsIndexRoute: DashboardSettingsTeamsIndexRoute,
   DashboardSettingsUsersIndexRoute: DashboardSettingsUsersIndexRoute,
   DashboardSurveysSurveyIdIndexRoute: DashboardSurveysSurveyIdIndexRoute,
   DashboardSurveysTemplatesIndexRoute: DashboardSurveysTemplatesIndexRoute,
+  DashboardSurveysTestimonialsIndexRoute:
+    DashboardSurveysTestimonialsIndexRoute,
   DashboardTestimonialCollectionIdIndexRoute:
     DashboardTestimonialCollectionIdIndexRoute,
   DashboardWhatsappCallsIndexRoute: DashboardWhatsappCallsIndexRoute,
@@ -5455,11 +6237,21 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
     DashboardWhatsappConversationalComponentsIndexRoute,
   DashboardWhatsappFlowbotsIndexRoute: DashboardWhatsappFlowbotsIndexRoute,
   DashboardWhatsappFlowsIndexRoute: DashboardWhatsappFlowsIndexRoute,
+  DashboardWhatsappIceBreakersIndexRoute:
+    DashboardWhatsappIceBreakersIndexRoute,
   DashboardWhatsappOrdersIndexRoute: DashboardWhatsappOrdersIndexRoute,
   DashboardWhatsappPaymentsIndexRoute: DashboardWhatsappPaymentsIndexRoute,
   DashboardWhatsappTemplatesIndexRoute: DashboardWhatsappTemplatesIndexRoute,
+  DashboardAnalyticsAgentsAgentIdIndexRoute:
+    DashboardAnalyticsAgentsAgentIdIndexRoute,
   DashboardAnalyticsTeamTeamidIndexRoute:
     DashboardAnalyticsTeamTeamidIndexRoute,
+  DashboardAnalyticsTeamsTeamIdIndexRoute:
+    DashboardAnalyticsTeamsTeamIdIndexRoute,
+  DashboardAutomationRulesRuleIdIndexRoute:
+    DashboardAutomationRulesRuleIdIndexRoute,
+  DashboardContactsAudiencesAudienceIdIndexRoute:
+    DashboardContactsAudiencesAudienceIdIndexRoute,
   DashboardContactsGroupsGroupIdIndexRoute:
     DashboardContactsGroupsGroupIdIndexRoute,
   DashboardSettingsChannelsChannelIndexRoute:
@@ -5467,6 +6259,10 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardSettingsIntegrationsIdIndexRoute:
     DashboardSettingsIntegrationsIdIndexRoute,
   DashboardSettingsTeamTeamIdIndexRoute: DashboardSettingsTeamTeamIdIndexRoute,
+  DashboardSettingsTeamsTeamIdIndexRoute:
+    DashboardSettingsTeamsTeamIdIndexRoute,
+  DashboardSurveysTestimonialsCollectionIdIndexRoute:
+    DashboardSurveysTestimonialsCollectionIdIndexRoute,
   DashboardWhatsappCatalogCatalogIdIndexRoute:
     DashboardWhatsappCatalogCatalogIdIndexRoute,
   DashboardWhatsappFlowbotsFlowbotIdIndexRoute:

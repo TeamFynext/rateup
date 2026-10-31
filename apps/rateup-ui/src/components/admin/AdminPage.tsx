@@ -14,12 +14,12 @@ export function AdminPage() {
           <div className="flex items-center gap-3">
             <IconSettings className="h-5 w-5 text-primary" />
             <h1 className="text-2xl font-semibold tracking-tight">
-              {translations("Admin Dashboard")}
+              {translations("RateUp Admin")}
             </h1>
           </div>
         </div>
         <p className="text-sm text-muted-foreground">
-          Manage your platform settings, users, and integrations from a centralized dashboard
+          RateUp's internal console for running the platform across every customer organization
         </p>
       </div>
 

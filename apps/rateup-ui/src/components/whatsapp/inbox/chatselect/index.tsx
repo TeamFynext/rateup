@@ -49,6 +49,7 @@ import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 import type { WaInboxMessage } from "@/types/global";
 import { INBOX_BULK_CHUNK_SIZE, INBOX_BULK_SELECTION_LIMIT } from "@/utils/constants.ts";
 
+import { normalizeInboxTab } from "../inboxTabs.ts";
 import WhatsAppInboxLoader from "../loader/index.tsx";
 import AddUnknownContactModal from "./addUnknownContactModal/index.tsx";
 import BulkAssignUser from "./AssignUser.tsx";
@@ -58,7 +59,7 @@ import ChatselectPanelHeader from "./ChatselectPanelHeader.tsx";
 
 const WaInboxChatSelect = () => {
   const searchParams = useSearch({ strict: false });
-  const tab = (searchParams.tab as string) ?? "open";
+  const tab = normalizeInboxTab((searchParams.tab as string | undefined) ?? "open");
   const { filter, setFilter, clearFilter } = useChatFilterStore();
   const [processedFilter, setProcessedFilter] = useState<ChatFilter | null>(null);
   const {
@@ -396,15 +397,15 @@ const WaInboxChatSelect = () => {
         waMessageAssignStatus: "Addressed",
         blockedUsers: false,
       });
-    } else if (tab === "new") {
-      // New = unassigned and active within the last 24h (the API's "New" tab).
+    } else if (tab === "unassigned") {
+      // Unassigned = unassigned and active within the last 24h (the API's "New" tab).
       prepareFilters({
         ...base,
         messageType: "usermessages",
         waMessageAssignStatus: "New",
         blockedUsers: false,
       });
-    } else if (tab === "mine") {
+    } else if (tab === "assigned") {
       // Assigned to me. The API resolves "mine" against the session user.
       prepareFilters({
         ...base,
@@ -424,7 +425,7 @@ const WaInboxChatSelect = () => {
         spam: true,
         blockedUsers: false,
       });
-    } else if (tab === "favourites" || tab === "mentions") {
+    } else if (tab === "starred" || tab === "mentions") {
       // These two are orthogonal booleans, not tab values — they AND with whatever
       // status filter is active, so the status side stays unrestricted here.
       prepareFilters({
@@ -432,7 +433,7 @@ const WaInboxChatSelect = () => {
         messageType: "all",
         waMessageAssignStatus: null,
         blockedUsers: false,
-        favorite: tab === "favourites" ? true : undefined,
+        favorite: tab === "starred" ? true : undefined,
         mentions: tab === "mentions" ? true : undefined,
       });
     } else {
@@ -658,7 +659,7 @@ const WaInboxChatSelect = () => {
                 <div className="flex items-center gap-2">
                   {/* Not on Spam: assigning or closing a spam contact's ticket is a
                       dead end — no tab but Spam can show it either way. */}
-                  {tab !== "Assigned" && tab !== "mine" && tab !== "spam" && (
+                  {tab !== "Assigned" && tab !== "assigned" && tab !== "spam" && (
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger

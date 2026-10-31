@@ -90,7 +90,7 @@ export function MessengerProfileTab({ channelId }: Readonly<{ channelId: string 
         <IconInfoCircle />
         <AlertDescription>
           {t(
-            "These are shown when someone opens a chat with your Page, and change in Messenger as soon as you save. A tap sends its keyword as a message, so use a keyword one of your Messenger chatbots or rules answers.",
+            "These are shown when someone opens a chat with your Page, and change in Messenger as soon as you save. A tap sends its keyword as a message, so use a keyword one of your Messenger journeys or rules answers.",
           )}
         </AlertDescription>
       </Alert>

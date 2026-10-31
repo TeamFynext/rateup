@@ -394,7 +394,7 @@ export function AudiencePicker({
       const confirmed = await confirm({
         title: t("Remove every recipient?"),
         description: t(
-          "This takes all {count} recipients off the campaign. Contacts and groups themselves are not deleted.",
+          "This takes all {count} recipients off the campaign. Contacts and audiences themselves are not deleted.",
           { count: enrolledTotal },
         ),
         confirmText: t("Remove all"),
@@ -447,7 +447,7 @@ export function AudiencePicker({
     selectedTab === CampaignParticipantSource.INDIVIDUAL
       ? t("contacts")
       : selectedTab === CampaignParticipantSource.GROUP
-        ? t("groups")
+        ? t("audiences")
         : t("campaigns");
 
   // No `overflow-hidden` on the root: the two panels carry their hairline as a
@@ -633,7 +633,7 @@ export function AudiencePicker({
                       />
                     ))
                   ) : (
-                    <EmptyRow label={t("No groups found")} />
+                    <EmptyRow label={t("No audiences found")} />
                   ))}
 
                 {selectedTab === CampaignParticipantSource.CAMPAIGN &&
@@ -725,7 +725,7 @@ export function AudiencePicker({
                 </span>
                 <span className="text-muted-foreground max-w-75 text-[13px] leading-relaxed">
                   {t(
-                    "Tick contacts on the left or pick a group. You can also save this draft and add recipients later.",
+                    "Tick contacts on the left or pick an audience. You can also save this draft and add recipients later.",
                   )}
                 </span>
               </div>
@@ -766,7 +766,7 @@ export function AudiencePicker({
               </SelectedGroup>
 
               <SelectedGroup
-                label={t("Groups · {count}", { count: selectedGroups.length })}
+                label={t("Audiences · {count}", { count: selectedGroups.length })}
                 hidden={selectedGroups.length === 0}
               >
                 {selectedGroups.map((group) => (
@@ -821,7 +821,7 @@ export function AudiencePicker({
               {selectedCount > 0 ? (
                 <div className="bg-muted text-secondary-foreground mt-auto flex justify-between rounded-lg px-3.5 py-3 text-[12.5px]">
                   <span>
-                    {t("Groups and campaigns are added as individual recipients when saved")}
+                    {t("Audiences and campaigns are added as individual recipients when saved")}
                   </span>
                   <span className="text-foreground font-semibold tabular-nums">
                     {t("{count} selected", { count: selectedCount })}
@@ -861,7 +861,7 @@ export function AudienceTabs({
         </TabsTrigger>
         <TabsTrigger value={CampaignParticipantSource.GROUP}>
           <IconFolderOpen className="size-4" aria-hidden />
-          {t("Group")}
+          {t("Audience")}
         </TabsTrigger>
         <TabsTrigger value={CampaignParticipantSource.CAMPAIGN}>
           <IconSend className="size-4" aria-hidden />

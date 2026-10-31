@@ -141,7 +141,7 @@ export function FilterSelect({
             : [...rest, { id: "filterGroupName", value: values.join(",") }];
         });
       }}
-      placeholder={translations("Filter by group")}
+      placeholder={translations("Filter by audience")}
     />
   );
 }

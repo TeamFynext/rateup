@@ -1,4 +1,4 @@
-// Extracted verbatim from the `/dashboard/campaign/$campaignId/` route so the route file carries routing
+// Extracted verbatim from the `/dashboard/campaigns/$campaignId/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
 import {
@@ -238,7 +238,7 @@ export function CampaignDetails() {
   // one set of fields and one validation path.
   const openEditCampaign = (campaign: Campaign, step: CampaignWizardStep = "review") => {
     void navigate({
-      to: "/dashboard/campaign/$campaignId/edit",
+      to: "/dashboard/campaigns/$campaignId/edit",
       params: { campaignId: campaign.id },
       search: { step },
     });
@@ -309,7 +309,7 @@ export function CampaignDetails() {
       onSuccess: () => {
         toast.success("Campaign deleted successfully");
         navigate({
-          to: "/dashboard/campaign",
+          to: "/dashboard/campaigns",
         });
       },
       onError: (error) => {
@@ -392,7 +392,7 @@ export function CampaignDetails() {
       <div className="bg-card flex shrink-0 flex-col gap-3.5 px-8 pt-5">
         <div className="flex items-center justify-between gap-5">
           <div className="flex gap-3">
-            <BackLink to="/dashboard/campaign" label={t("Campaigns")} iconOnly />
+            <BackLink to="/dashboard/campaigns" label={t("Campaigns")} iconOnly />
             <div className="flex min-w-0 items-center gap-3">
               <h1 className="font-display truncate text-2xl font-bold tracking-tight">
                 {campaign.name}

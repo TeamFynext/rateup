@@ -106,7 +106,7 @@ const CHANNELS: readonly ChannelOption[] = [
       "Product cards",
     ],
     accountLabel: "Instagram account",
-    accountHint: "The account whose DMs and comments start this chatbot.",
+    accountHint: "The account whose DMs and comments start this journey.",
     previewNote:
       "Quick replies show as chips under the message, up to 13. Cards swipe sideways, up to 10.",
   },
@@ -119,7 +119,7 @@ const CHANNELS: readonly ChannelOption[] = [
     blurb: "Answers for people who message or comment on your Facebook Page.",
     only: ["Get Started button", "Page comment → private reply", "m.me link campaigns"],
     accountLabel: "Facebook Page",
-    accountHint: "The Page whose messages and comments start this chatbot.",
+    accountHint: "The Page whose messages and comments start this journey.",
     previewNote:
       "Quick replies show as chips under the message, up to 13. Cards swipe sideways, up to 10.",
   },
@@ -266,15 +266,15 @@ export function CreateChatbotWizard({
       onSuccess: ({ chatbot: created, startRule }) => {
         if (startRule?.skipped === "failed") {
           toast.warning(
-            t("The chatbot was created, but its rule wasn't. Set it up in the builder."),
+            t("The journey was created, but its rule wasn't. Set it up in the builder."),
           );
         } else if (startRule?.skipped === "no_account") {
           toast.warning(t("No account is connected on this channel yet, so no rule was made."));
         }
         close();
         void navigate({
-          to: "/dashboard/chatbots/$chatbotId",
-          params: { chatbotId: created.id },
+          to: "/dashboard/automation/journeys/$journeyId",
+          params: { journeyId: created.id },
           search: {
             ...(trigger && { trigger: trigger.kind }),
             ...(example && { example: example.key }),
@@ -309,7 +309,7 @@ export function CreateChatbotWizard({
         <div className="flex shrink-0 flex-wrap items-center gap-x-6 gap-y-3 border-b border-border py-4 pl-6 pr-12">
           <div className="min-w-0 flex-1">
             <DialogTitle className="font-display text-lg font-semibold">
-              {t("Create Chatbot")}
+              {t("Create Journey")}
             </DialogTitle>
             <DialogDescription className="text-xs">
               {t(
@@ -377,7 +377,7 @@ export function CreateChatbotWizard({
                 disabled={!canAdvance}
                 onClick={handleCreate}
               >
-                {t("Create Chatbot")}
+                {t("Create Journey")}
               </Button>
             ) : (
               <Button
@@ -452,7 +452,7 @@ function ChannelStep({
           {t("Step 1")}
         </span>
         <h2 className="font-display text-base font-semibold text-foreground">
-          {t("Where will this chatbot reply?")}
+          {t("Where will this journey reply?")}
         </h2>
         <p className="text-sm text-muted-foreground">
           {t(
@@ -482,7 +482,7 @@ function ChannelStep({
                   </span>
                 </span>
                 <p className="text-xs text-muted-foreground">
-                  {t("No account connected yet. Connect one to build chatbots for {channel}.", {
+                  {t("No account connected yet. Connect one to build journeys for {channel}.", {
                     channel: t(option.label),
                   })}
                 </p>
@@ -621,7 +621,7 @@ function StartStep({
           <span className="flex min-w-0 flex-1 flex-col gap-0.5">
             <span className="text-sm font-medium text-foreground">{t("Start from scratch")}</span>
             <span className="text-xs text-muted-foreground">
-              {t("A blank {channel} chatbot with just the start step.", {
+              {t("A blank {channel} journey with just the start step.", {
                 channel: t(channel.label),
               })}
             </span>
@@ -756,7 +756,7 @@ function ChatPreview({
           />
         ) : (
           <div className="flex h-full items-center justify-center p-6 text-center text-sm text-muted-foreground">
-            {t("Pick an example to see it in action. A blank chatbot starts with no messages.")}
+            {t("Pick an example to see it in action. A blank journey starts with no messages.")}
           </div>
         )}
       </div>
@@ -810,19 +810,19 @@ function DetailsStep({
       </div>
 
       <Field data-invalid={tooShort}>
-        <FieldLabel htmlFor="chatbot-name">{t("Chatbot Name")}</FieldLabel>
+        <FieldLabel htmlFor="chatbot-name">{t("Journey Name")}</FieldLabel>
         <Input
           id="chatbot-name"
           value={name}
           onChange={(event) => onNameChange(event.target.value)}
-          placeholder={t("e.g. Welcome Bot, Support Bot...")}
+          placeholder={t("e.g. Welcome journey, Support journey...")}
           aria-invalid={tooShort}
           autoFocus
         />
         <FieldDescription>
           {tooShort
             ? t("Name must be at least 3 characters")
-            : t("Give this bot a clear internal name.")}
+            : t("Give this journey a clear internal name.")}
         </FieldDescription>
       </Field>
 
@@ -880,7 +880,7 @@ function DetailsStep({
           />
           <span className="text-xs text-secondary-foreground">
             {trigger === "leadad"
-              ? t("A lead ad starts this chatbot from its Lead ad block, so no rule is needed.")
+              ? t("A lead ad starts this journey from its Lead ad block, so no rule is needed.")
               : t(
                   "We create the rule for you, switched off until you turn it on in the builder. You can fine-tune it in Automation later.",
                 )}

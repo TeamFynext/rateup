@@ -141,7 +141,7 @@ function conditionText(
     case "CONTACT_LABEL":
       return `is labelled ${quote(names("label", value) ?? "a label")}`;
     case "CONTACT_GROUP":
-      return `is in ${quote(names("group", value) ?? "a group")}`;
+      return `is in ${quote(names("group", value) ?? "an audience")}`;
     case "CONTACT_STAGE":
       return `is in the ${quote(names("stage", value) ?? "chosen")} stage`;
     default:
@@ -210,7 +210,7 @@ export function actionPart(
     }
     case "TRIGGER_CHATBOT": {
       const name = named("chatbot");
-      return name ? done(`start the ${quote(name)} chatbot`) : gap("start a chatbot …");
+      return name ? done(`start the ${quote(name)} journey`) : gap("start a journey …");
     }
     case "CLOSE_TICKET":
       return id ? done(`close the chat as ${CLOSE_STATUS[id] ?? id}`) : gap("close the chat …");

@@ -25,7 +25,7 @@ export function ChatbotEditor({ chatbotId }: Readonly<{ chatbotId: string }>) {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
-          <p className="mb-4 text-destructive">{t("Failed to load the chatbot")}</p>
+          <p className="mb-4 text-destructive">{t("Failed to load the journey")}</p>
           <Button onClick={() => void refetch()}>{t("Retry")}</Button>
         </div>
       </div>
@@ -47,7 +47,7 @@ export function ChatbotEditor({ chatbotId }: Readonly<{ chatbotId: string }>) {
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
         <DialogContent className="max-h-[90vh] max-w-2xl overflow-hidden p-0">
           <DialogHeader className="px-6 pt-6">
-            <DialogTitle>{t("Chatbot settings")}</DialogTitle>
+            <DialogTitle>{t("Journey settings")}</DialogTitle>
           </DialogHeader>
           <ScrollArea className="max-h-[calc(90vh-88px)] px-6 pb-6">
             <AutomatedReplyForm initialValues={data} />

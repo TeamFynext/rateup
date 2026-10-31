@@ -1,4 +1,10 @@
-import { createFileRoute, Navigate, useNavigate, useSearch } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Navigate,
+  redirect,
+  useNavigate,
+  useSearch,
+} from "@tanstack/react-router";
 import { Activity, useEffect } from "react";
 
 import { useContactById } from "@/backend/campaign/contacts/contacts.query";
@@ -10,6 +16,7 @@ import {
 import WaInboxChatDisplay from "@/components/whatsapp/inbox/chatdisplay/index.tsx";
 import WaInboxChatSelect from "@/components/whatsapp/inbox/chatselect/index.tsx";
 import InboxSettings from "@/components/whatsapp/inbox/InboxSettings/index.tsx";
+import { isLegacyInboxTab, normalizeInboxTab } from "@/components/whatsapp/inbox/inboxTabs.ts";
 import { useMediaQuery } from "@/hooks/use-media-query.ts";
 import { cn } from "@/lib/utils.ts";
 import { useChatFilterStore } from "@/store/chat-filter.store.ts";
@@ -20,13 +27,21 @@ import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
 export const Route = createFileRoute("/dashboard/inbox/")({
   /** Declares the search params this route reads, so links to it type-check. */
   validateSearch: (search: Record<string, unknown>): InboxSearch => ({
-    tab: typeof search.tab === "string" ? search.tab : undefined,
+    // Old tab names (`new`, `mine`, `favourites`) read as the tabs that replaced them.
+    tab: normalizeInboxTab(search.tab),
     contactId: typeof search.contactId === "string" ? search.contactId : undefined,
     // Opens the thread's past-conversations strip; only meaningful with `contactId`.
     history: search.history === true || search.history === "true" ? true : undefined,
     // Searches the list for the contact, so it shows in the list pane as well as the thread.
     reveal: search.reveal === true || search.reveal === "true" ? true : undefined,
   }),
+  // Bookmarks and notification links to an old tab name land on a URL the sidebar can match.
+  beforeLoad: ({ location, search }) => {
+    const tab = new URLSearchParams(location.searchStr).get("tab");
+    if (isLegacyInboxTab(tab)) {
+      throw redirect({ to: "/dashboard/inbox", search, hash: location.hash, replace: true });
+    }
+  },
   component: WhatsAppInbox,
 });
 

@@ -1,4 +1,10 @@
-import { IconDotsVertical, IconEdit, IconFolder, IconPlus, IconTrash } from "@tabler/icons-react";
+import {
+  IconDotsVertical,
+  IconEdit,
+  IconUsersGroup,
+  IconPlus,
+  IconTrash,
+} from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -69,8 +75,8 @@ export function GroupPage() {
 
   async function handleDeleteGroup(group: ContactGroup) {
     const shouldDelete = await confirm({
-      title: translations("Delete Group"),
-      description: translations("Are you sure you want to delete this group?"),
+      title: translations("Delete Audience"),
+      description: translations("Are you sure you want to delete this audience?"),
       confirmText: translations("Delete"),
       cancelText: translations("Cancel"),
     });
@@ -79,10 +85,10 @@ export function GroupPage() {
 
     deleteGroupMutation.mutate(group.id, {
       onSuccess: () => {
-        toast.success("Group deleted successfully");
+        toast.success("Audience deleted successfully");
       },
       onError: (error) => {
-        toast.error(error?.message || "Error in deleting group");
+        toast.error(error?.message || "Error in deleting audience");
       },
     });
   }
@@ -99,13 +105,13 @@ export function GroupPage() {
               }}
             >
               <IconPlus className="size-4" />
-              {translations("Create Group")}
+              {translations("Create Audience")}
             </Button>
           </ListPageHeaderSection>
 
           <ListPageHeaderSection>
             <ListPageSearchInput
-              placeholder={translations("Search contact groups...")}
+              placeholder={translations("Search audiences...")}
               value={search}
               onChange={setSearch}
             />
@@ -118,11 +124,11 @@ export function GroupPage() {
           isLoading={isLoading}
           isError={isError}
           isEmpty={!isLoading && !isError && contactGroups.length === 0}
-          emptyTitle={translations("No groups found")}
+          emptyTitle={translations("No audiences found")}
           emptyDescription={
             debouncedSearch
               ? translations("Try a different search term")
-              : translations("Create your first group to organize contacts")
+              : translations("Create your first audience to organize contacts")
           }
           onRetry={() => void refetch()}
         >
@@ -185,7 +191,7 @@ function ContactGroupCard({ group, handleEdit, handleDelete }: ContactGroupCardP
           </Badge>
         ) : null
       }
-      onClick={() => navigate({ to: `/dashboard/contacts/groups/${group.id}` })}
+      onClick={() => navigate({ to: `/dashboard/contacts/audiences/${group.id}` })}
     />
   );
 }
@@ -207,7 +213,7 @@ export function GroupIconTile({
           <AvatarImage src={getFileUrlFromKey(icon)} className="object-cover" />
         </Avatar>
       ) : (
-        <IconFolder className="size-1/2" />
+        <IconUsersGroup className="size-1/2" />
       )}
     </div>
   );
@@ -223,7 +229,7 @@ function GroupCardMenu({ group, handleEdit, handleDelete }: ContactGroupCardProp
         <IconDotsVertical className="w-4 h-4" />
       </DropdownMenuTrigger>
       {/* Anchored to a small icon button, and the popup defaults to `w-(--anchor-width)` — without
-          a width of its own "Edit Group" and "Delete Group" wrap onto two lines each. */}
+          a width of its own "Edit Audience" and "Delete Audience" wrap onto two lines each. */}
       <DropdownMenuContent align="end" className="w-auto min-w-40">
         <DropdownMenuGroup>
           <DropdownMenuLabel>{t("Actions")}</DropdownMenuLabel>
@@ -235,7 +241,7 @@ function GroupCardMenu({ group, handleEdit, handleDelete }: ContactGroupCardProp
             }}
           >
             <IconEdit className="w-4 h-4 mr-2" />
-            {t("Edit Group")}
+            {t("Edit Audience")}
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={(e) => {
@@ -245,7 +251,7 @@ function GroupCardMenu({ group, handleEdit, handleDelete }: ContactGroupCardProp
             variant="destructive"
           >
             <IconTrash className="w-4 h-4 mr-2" />
-            {t("Delete Group")}
+            {t("Delete Audience")}
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>

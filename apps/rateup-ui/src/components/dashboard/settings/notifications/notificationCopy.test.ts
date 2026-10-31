@@ -37,11 +37,14 @@ describe("notification copy", () => {
   });
 
   test("opens the path the server stored, and rebuilds it for older rows", () => {
-    expect(notificationPath("campaign.failed", { path: "/dashboard/campaign/c-1" })).toBe(
-      "/dashboard/campaign/c-1",
+    expect(notificationPath("campaign.failed", { path: "/dashboard/campaigns/c-1" })).toBe(
+      "/dashboard/campaigns/c-1",
     );
     expect(notificationPath("inbox.closed", { contactId: "c 1" })).toBe(
       "/dashboard/inbox?tab=closed&contactId=c%201",
+    );
+    expect(notificationPath("inbox.assigned", { contactId: "c 1" })).toBe(
+      "/dashboard/inbox?tab=assigned&contactId=c%201",
     );
     for (const path of ["https://evil.example", "//evil.example"]) {
       expect(notificationPath("billing.active_contact_limit", { path })).toBe(

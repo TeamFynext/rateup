@@ -5,35 +5,41 @@ const DASHBOARD_LANDING_PRIORITY: Array<{ feature: TeamFeature; to: string }> = 
   { feature: TeamFeature.Inbox, to: "/dashboard/inbox?tab=open" },
   { feature: TeamFeature.Analytics, to: "/dashboard/analytics" },
   { feature: TeamFeature.Contacts, to: "/dashboard/contacts" },
-  { feature: TeamFeature.Campaigns, to: "/dashboard/campaign" },
-  { feature: TeamFeature.Loyalty, to: "/dashboard/loyalty/dashboard" },
-  { feature: TeamFeature.Pipeline, to: "/dashboard/pipeline" },
+  { feature: TeamFeature.Campaigns, to: "/dashboard/campaigns" },
+  { feature: TeamFeature.Loyalty, to: "/dashboard/loyalty/overview" },
+  { feature: TeamFeature.Pipeline, to: "/dashboard/pipelines" },
 ];
 
 const WHATSAPP_LANDING_PRIORITY: Array<{ feature: TeamFeature; to: string }> = [
   { feature: TeamFeature.Templates, to: "/dashboard/whatsapp/templates" },
   { feature: TeamFeature.Flows, to: "/dashboard/whatsapp/flows" },
-  { feature: TeamFeature.Chatbots, to: "/dashboard/chatbots" },
-  { feature: TeamFeature.Automation, to: "/dashboard/automation" },
+  { feature: TeamFeature.Chatbots, to: "/dashboard/automation/journeys" },
+  { feature: TeamFeature.Automation, to: "/dashboard/automation/rules" },
 ];
 
 const PROTECTED_ROUTE_FEATURE_MAP: Array<[string, TeamFeature]> = [
   ["/dashboard/inbox", TeamFeature.Inbox],
   ["/dashboard/analytics", TeamFeature.Analytics],
   ["/dashboard/contacts", TeamFeature.Contacts],
-  ["/dashboard/campaign", TeamFeature.Campaigns],
+  ["/dashboard/campaigns", TeamFeature.Campaigns],
   ["/dashboard/loyalty", TeamFeature.Loyalty],
   ["/dashboard/commerce", TeamFeature.Commerce],
-  ["/dashboard/pipeline", TeamFeature.Pipeline],
+  ["/dashboard/pipelines", TeamFeature.Pipeline],
   ["/dashboard/surveys", TeamFeature.WebForms],
+  // First match wins: Journeys sit under /dashboard/automation but need their own feature.
+  ["/dashboard/automation/journeys", TeamFeature.Chatbots],
   ["/dashboard/automation", TeamFeature.Automation],
   ["/dashboard/whatsapp/flows", TeamFeature.Flows],
+  // Old journey addresses; they only redirect into /dashboard/automation/journeys now.
+  ["/dashboard/journeys", TeamFeature.Chatbots],
   ["/dashboard/chatbots", TeamFeature.Chatbots],
-  // Old chatbot addresses; they only redirect into /dashboard/chatbots now.
   ["/dashboard/whatsapp/flowbots", TeamFeature.Chatbots],
   ["/dashboard/instagram/flowbots", TeamFeature.Chatbots],
-  // Messenger's Page tools sit behind the same feature as its nav entry.
-  ["/dashboard/messenger", TeamFeature.Chatbots],
+  ["/dashboard/messenger/flowbots", TeamFeature.Chatbots],
+  // Instagram's and Messenger's pages hold comment automations, menus and links, so they
+  // follow the Automation permission, as their entries under Meta do.
+  ["/dashboard/instagram", TeamFeature.Automation],
+  ["/dashboard/messenger", TeamFeature.Automation],
   ["/dashboard/whatsapp/templates", TeamFeature.Templates],
   ["/dashboard/meta-agent", TeamFeature.AiChatbot],
   ["/dashboard/qr-codes", TeamFeature.QrStudio],
@@ -83,11 +89,11 @@ export function getRequiredFeatureForDashboardPath(pathname: string): TeamFeatur
  * Free, so gating them here would be noise.
  */
 const PLAN_GATED_ROUTES: Array<[string, SubscriptionFeaturePathName, string]> = [
-  ["/dashboard/campaign", SubscriptionFeaturePathName.WhatsappCampaign, "Campaigns"],
+  ["/dashboard/campaigns", SubscriptionFeaturePathName.WhatsappCampaign, "Campaigns"],
   ["/dashboard/loyalty", SubscriptionFeaturePathName.WhatsappLoyalty, "Loyalty"],
   ["/dashboard/commerce", SubscriptionFeaturePathName.WhatsappCatalog, "Commerce"],
   ["/dashboard/surveys", SubscriptionFeaturePathName.WebSurvey, "Surveys"],
-  ["/dashboard/meta-agent", SubscriptionFeaturePathName.AI, "The Meta Business Agent"],
+  ["/dashboard/meta-agent", SubscriptionFeaturePathName.AI, "Meta AI Agent"],
 ];
 
 export interface PlanGatedRoute {

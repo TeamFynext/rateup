@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils.ts";
 
 import { railButtonClass } from "./rail-styles.ts";
 
-export const FEATURES_PATH = "/dashboard/features";
+export const FEATURES_PATH = "/dashboard/customize-menu";
 
 /** The rail's way into the feature catalogue, open to every member. */
 export default function FeaturesButton() {
@@ -21,7 +21,7 @@ export default function FeaturesButton() {
         render={
           <Link
             to={FEATURES_PATH}
-            aria-label={t("Features")}
+            aria-label={t("Customize Menu")}
             aria-current={active ? "page" : undefined}
             className={cn(
               buttonVariants({ variant: "ghost", size: "icon-sm" }),
@@ -33,7 +33,7 @@ export default function FeaturesButton() {
       >
         <IconLayoutGrid className="size-5" strokeWidth={1.8} />
       </TooltipTrigger>
-      <TooltipContent side="right">{t("Features")}</TooltipContent>
+      <TooltipContent side="right">{t("Customize Menu")}</TooltipContent>
     </Tooltip>
   );
 }

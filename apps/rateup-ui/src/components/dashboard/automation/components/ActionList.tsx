@@ -10,7 +10,7 @@ import {
   IconMessage,
   IconPlus,
   IconRefresh,
-  IconMessageChatbot,
+  IconRoute,
   IconShoppingBag,
   IconSitemap,
   IconTag,
@@ -265,7 +265,7 @@ const ActionValueInput = ({
         items={filteredAutomations?.map((t) => ({ value: t.id, label: t.name })) ?? []}
       >
         <SelectTrigger className="w-full bg-background">
-          <SelectValue placeholder="Select automation" />
+          <SelectValue placeholder="Select journey" />
         </SelectTrigger>
         <SelectContent>
           {filteredAutomations?.map((t) => (
@@ -613,7 +613,7 @@ const ACTION_META: Record<string, { icon: typeof IconMessage; label: string }> =
   SEND_TEMPLATE: { icon: IconTemplate, label: "Send a template" },
   SEND_FLOW: { icon: IconSitemap, label: "Send a flow" },
   SEND_WEB_SURVEY: { icon: IconClipboardList, label: "Send a web survey" },
-  TRIGGER_CHATBOT: { icon: IconMessageChatbot, label: "Start a chatbot" },
+  TRIGGER_CHATBOT: { icon: IconRoute, label: "Start a journey" },
   ASSIGN_TEAM: { icon: IconUsersGroup, label: "Assign to a team" },
   ASSIGN_USER: { icon: IconUser, label: "Assign to a teammate" },
   ATTACH_LABEL: { icon: IconTag, label: "Add a label" },

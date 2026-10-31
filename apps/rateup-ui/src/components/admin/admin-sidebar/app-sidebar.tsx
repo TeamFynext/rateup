@@ -46,7 +46,7 @@ const data = {
     },
     {
       name: "User Stats",
-      url: "/admin/userstats",
+      url: "/admin/user-stats",
       icon: IconChartBar,
     },
     {
@@ -81,7 +81,7 @@ const data = {
     },
     {
       name: "RateUp Plans",
-      url: "/admin/rateup",
+      url: "/admin/plans",
       icon: IconStar,
     },
     {
@@ -91,7 +91,7 @@ const data = {
     },
     {
       name: "Update Center",
-      url: "/admin/updateCenter",
+      url: "/admin/update-center",
       icon: IconRefresh,
     },
     {

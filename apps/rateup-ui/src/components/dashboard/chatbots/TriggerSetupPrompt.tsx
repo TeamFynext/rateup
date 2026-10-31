@@ -46,8 +46,8 @@ export function TriggerSetupPrompt({ platform }: Readonly<{ platform: Automation
               size="sm"
               render={
                 <Link
-                  to="/dashboard/automation/$automationId"
-                  params={{ automationId: "new" }}
+                  to="/dashboard/automation/rules/$ruleId"
+                  params={{ ruleId: "new" }}
                   search={{
                     platform: RULE_PLATFORM[platform],
                     triggerEvent: trigger.triggerEvent,

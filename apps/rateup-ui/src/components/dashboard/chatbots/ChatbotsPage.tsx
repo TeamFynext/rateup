@@ -101,7 +101,7 @@ export function ChatbotsPage({
         <ListPageHeader>
           <ListPageHeaderSection className="gap-3">
             <Button onClick={() => setWizard({ open: true })} loading={isPending}>
-              {t("Create Chatbot")}
+              {t("Create Journey")}
               <IconPlus size={16} className="ml-2" />
             </Button>
             <RefreshButton queryKeys={[...chatbotKeys.lists()]} />
@@ -109,7 +109,7 @@ export function ChatbotsPage({
 
           <ListPageHeaderSection>
             <ListPageSearchInput
-              placeholder={t("Search chatbots...")}
+              placeholder={t("Search journeys...")}
               value={search}
               onChange={setSearch}
             />
@@ -171,7 +171,7 @@ export function ChatbotsPage({
         {whatsappLocked && (
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm">
             <span className="text-muted-foreground">
-              {t("WhatsApp chatbots are hidden because WhatsApp isn't part of your plan.")}
+              {t("WhatsApp journeys are hidden because WhatsApp isn't part of your plan.")}
             </span>
             <Button
               size="sm"
@@ -188,7 +188,7 @@ export function ChatbotsPage({
           isError={isError}
           isEmpty={isEmpty}
           emptyTitle={
-            debouncedSearch ? t("No chatbots found matching your search") : t("No chatbots yet")
+            debouncedSearch ? t("No journeys found matching your search") : t("No journeys yet")
           }
           emptyDescription={
             debouncedSearch
@@ -218,7 +218,7 @@ export function ChatbotsPage({
                 }
               >
                 <IconPlus size={14} className="mr-1" />
-                {platform ? t("Start from scratch") : t("Create Chatbot")}
+                {platform ? t("Start from scratch") : t("Create Journey")}
               </Button>
             </div>
           ) : (

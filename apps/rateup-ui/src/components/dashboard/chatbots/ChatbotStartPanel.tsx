@@ -132,7 +132,7 @@ function RuleOffCard({
     <div className="absolute bottom-4 left-1/2 z-10 flex w-[min(34rem,calc(100%-2rem))] -translate-x-1/2 items-start gap-3 rounded-lg border border-border bg-card p-4 shadow-lg">
       <IconPlayerPlay className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
       <div className="flex min-w-0 flex-1 flex-col gap-2">
-        <div className="text-sm font-semibold text-foreground">{t("This chatbot is off")}</div>
+        <div className="text-sm font-semibold text-foreground">{t("This journey is off")}</div>
         <p className="text-sm text-muted-foreground">{message}</p>
         <p className="truncate text-xs text-muted-foreground">
           {t("Rule")}: {rule.name} · {t(getTriggerEventLabel(rule.triggerEvent))}
@@ -166,9 +166,7 @@ function RuleOffCard({
             type="button"
             size="sm"
             variant="ghost"
-            render={
-              <Link to="/dashboard/automation/$automationId" params={{ automationId: rule.id }} />
-            }
+            render={<Link to="/dashboard/automation/rules/$ruleId" params={{ ruleId: rule.id }} />}
           >
             {t("Edit rule")}
           </Button>
@@ -199,7 +197,7 @@ function ChatbotOffCard({
       <IconPlayerPlay className="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden />
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <div className="text-sm font-semibold text-foreground">
-          {t("This chatbot is switched off")}
+          {t("This journey is switched off")}
         </div>
         <p className="text-sm text-muted-foreground">
           {t("Rules, lead ads and the inbox won't start it. Switch it on to use it again.")}

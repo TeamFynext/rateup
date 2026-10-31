@@ -205,7 +205,7 @@ export function ReviewStep({ wizard, registerSubmit }: Readonly<CampaignWizardSt
       type: campaign.type,
       dailySendLimit: campaign.dailySendLimit ?? null,
     });
-    void navigate({ to: "/dashboard/campaign/$campaignId", params: { campaignId } });
+    void navigate({ to: "/dashboard/campaigns/$campaignId", params: { campaignId } });
   };
 
   return (
