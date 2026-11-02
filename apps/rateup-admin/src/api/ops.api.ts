@@ -64,8 +64,7 @@ export const referralsQueryOptions = queryOptions({
 });
 
 /**
- * The real run. Needs a Google sign-in from the last 15 minutes (REAUTH_REQUIRED
- * otherwise), the task id typed back and a reason. Refreshes nothing by itself: what a task
+ * The real run. Needs the task id typed back and a reason. Refreshes nothing by itself: what a task
  * touches is its own business, so the caller invalidates.
  */
 export function useApplyTask() {
