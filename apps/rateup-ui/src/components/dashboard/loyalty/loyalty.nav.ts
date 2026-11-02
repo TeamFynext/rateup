@@ -66,7 +66,7 @@ export function buildLoyaltyNavItems({
   return [
     { title: t("Overview"), url: LOYALTY_PATHS.overview, icon: IconDashboard },
     { title: t("Cashier"), url: LOYALTY_PATHS.cashier, icon: IconShoppingCart },
-    { title: t("Customers"), url: LOYALTY_PATHS.customers, icon: IconUsers, count: members },
+    { title: t("Members"), url: LOYALTY_PATHS.members, icon: IconUsers, count: members },
     {
       title: t("Program"),
       url: LOYALTY_PATHS.program,

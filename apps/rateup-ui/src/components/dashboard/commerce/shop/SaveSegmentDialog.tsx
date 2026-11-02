@@ -94,13 +94,13 @@ export function SaveSegmentDialog({
         {
           action: {
             label: t("Open campaigns"),
-            onClick: () => void navigate({ to: "/dashboard/campaign" }),
+            onClick: () => void navigate({ to: "/dashboard/campaigns" }),
           },
         },
       );
       onOpenChange(false);
     },
-    onError: (e) => toast.error(getApiErrorMessage(e, t("Could not save the group"))),
+    onError: (e) => toast.error(getApiErrorMessage(e, t("Could not save the audience"))),
   });
 
   const channelLabels: Record<(typeof CHANNELS)[number], string> = {
@@ -114,9 +114,9 @@ export function SaveSegmentDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{t("Save shoppers as a group")}</DialogTitle>
+          <DialogTitle>{t("Save shoppers as an audience")}</DialogTitle>
           <DialogDescription>
-            {t("Pick who bought what, then use the group as the audience of a campaign.")}
+            {t("Pick who bought what, then use the audience in a campaign.")}
           </DialogDescription>
         </DialogHeader>
         <div className="flex max-h-[60vh] flex-col gap-4 overflow-y-auto overscroll-contain pr-1">
@@ -201,7 +201,7 @@ export function SaveSegmentDialog({
           </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field>
-              <FieldLabel htmlFor="seg-name">{t("Group name")}</FieldLabel>
+              <FieldLabel htmlFor="seg-name">{t("Audience name")}</FieldLabel>
               <Input
                 id="seg-name"
                 value={name}
@@ -245,7 +245,7 @@ export function SaveSegmentDialog({
             disabled={!name.trim() || !teamId || !preview.data?.count}
             onClick={() => save.mutate()}
           >
-            {t("Save group")}
+            {t("Save audience")}
           </Button>
         </DialogFooter>
       </DialogContent>

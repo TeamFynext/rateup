@@ -3,7 +3,6 @@ import {
   IconCopy,
   IconInfoCircle,
   IconLink,
-  IconPlus,
   IconQrcode,
   IconTrash,
 } from "@tabler/icons-react";
@@ -20,15 +19,10 @@ import {
 import { igMeLink } from "@/components/dashboard/instagram/igMeLink.ts";
 import { downloadIgMeQr } from "@/components/dashboard/instagram/igMeQr.ts";
 import { IgMeLinkPhone } from "@/components/dashboard/instagram/instagram-preview.tsx";
+import { ChannelSection } from "@/components/dashboard/meta-channels/ChannelSection.tsx";
+import { CreateRuleButton } from "@/components/dashboard/meta-channels/RuleAutomationsSection.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
 import {
   Empty,
   EmptyContent,
@@ -122,11 +116,9 @@ export function IgMeLinksTab({
     [rules, ibaId],
   );
   const profileLink = igMeLink(username);
-  const createSearch = {
-    platform: "INSTAGRAM",
-    triggerEvent: "INSTAGRAM_REFERRAL",
-    channel: ibaId,
-  } as const;
+  const create = (
+    <CreateRuleButton platform="INSTAGRAM" triggerEvent="INSTAGRAM_REFERRAL" channelId={ibaId} />
+  );
 
   const remove = async (id: string) => {
     const ok = await confirm({
@@ -141,136 +133,101 @@ export function IgMeLinksTab({
   };
 
   return (
-    <Card className="bg-ru-n-25 dark:bg-card">
-      <CardHeader>
-        <div className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-950">
-            <IconLink className="size-4.5 text-emerald-600 dark:text-emerald-400" />
-          </div>
-          <div className="flex-1">
-            <CardTitle className="text-base">{t("ig.me links")}</CardTitle>
-            <CardDescription>
-              {t("Links that open a DM with you and start the automation you choose.")}
-            </CardDescription>
-          </div>
+    <ChannelSection
+      icon={IconLink}
+      title={t("ig.me links")}
+      description={t("Links that open a DM with you and start the automation you choose.")}
+      actions={
+        <>
           <PhonePreviewButton platform="instagram">
             <IgMeLinkPhone link={profileLink} businessName={displayName || username || ""} />
           </PhonePreviewButton>
-          <Button
-            size="sm"
-            render={
-              <Link
-                to="/dashboard/automation/$automationId"
-                params={{ automationId: "new" }}
-                search={createSearch}
-              />
-            }
-          >
-            <IconPlus className="mr-1.5 size-4" />
-            {t("Create link")}
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* When Meta tells us a link was opened, and so when its automation can run. */}
-        <div className="flex gap-2 rounded-xl border bg-muted/30 p-3 text-xs text-muted-foreground">
-          <IconInfoCircle className="mt-0.5 size-4 shrink-0" />
-          <p>
-            {t(
-              "Someone already chatting with you starts the automation the moment they open the link. Someone new starts it with their first message, or by tapping an ice breaker. ig.me links open in the Instagram app, not on Instagram on the web.",
-            )}
-          </p>
-        </div>
-        {profileLink && (
-          <div className="flex flex-wrap items-center gap-3 rounded-xl border bg-muted/30 p-3">
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-medium text-muted-foreground">{t("Profile link")}</p>
-              <p className="truncate font-mono text-sm">{profileLink}</p>
-            </div>
-            <CopyLinkButton link={profileLink} />
-            <QrButton link={profileLink} name={username ?? "profile"} />
+          {create}
+        </>
+      }
+    >
+      {/* When Meta tells us a link was opened, and so when its automation can run. */}
+      <div className="flex gap-2 rounded-xl border bg-muted/30 p-3 text-xs text-muted-foreground">
+        <IconInfoCircle className="mt-0.5 size-4 shrink-0" />
+        <p>
+          {t(
+            "Someone already chatting with you starts the automation the moment they open the link. Someone new starts it with their first message, or by tapping an ice breaker. ig.me links open in the Instagram app, not on Instagram on the web.",
+          )}
+        </p>
+      </div>
+      {profileLink && (
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border bg-muted/30 p-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-medium text-muted-foreground">{t("Profile link")}</p>
+            <p className="truncate font-mono text-sm">{profileLink}</p>
           </div>
-        )}
+          <CopyLinkButton link={profileLink} />
+          <QrButton link={profileLink} name={username ?? "profile"} />
+        </div>
+      )}
 
-        {linkRules.length === 0 ? (
-          <Empty>
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <IconLink className="size-5" />
-              </EmptyMedia>
-              <EmptyTitle>{t("No ig.me links yet")}</EmptyTitle>
-              <EmptyDescription>
-                {t(
-                  "Create a link for your bio, a story or an ad, and choose what happens when someone opens it.",
-                )}
-              </EmptyDescription>
-            </EmptyHeader>
-            <EmptyContent>
-              <Button
-                size="sm"
-                render={
+      {linkRules.length === 0 ? (
+        <Empty className="border">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <IconLink className="size-5" />
+            </EmptyMedia>
+            <EmptyTitle>{t("No ig.me links yet")}</EmptyTitle>
+            <EmptyDescription>
+              {t(
+                "Create a rule for a link in your bio, a story or an ad, and choose what happens when someone opens it.",
+              )}
+            </EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>{create}</EmptyContent>
+        </Empty>
+      ) : (
+        <ul className="divide-y rounded-xl border bg-card">
+          {linkRules.map((rule) => {
+            const ref = rule.options?.instagramRef;
+            const link = igMeLink(username, ref);
+            const linkStats = ref ? stats?.get(ref.toLowerCase()) : undefined;
+            return (
+              <li key={rule.id} className="flex flex-wrap items-center gap-3 p-3">
+                <div className="min-w-0 flex-1">
                   <Link
-                    to="/dashboard/automation/$automationId"
-                    params={{ automationId: "new" }}
-                    search={createSearch}
-                  />
-                }
-              >
-                <IconPlus className="mr-1.5 size-4" />
-                {t("Create link")}
-              </Button>
-            </EmptyContent>
-          </Empty>
-        ) : (
-          <ul className="divide-y rounded-xl border bg-card">
-            {linkRules.map((rule) => {
-              const ref = rule.options?.instagramRef;
-              const link = igMeLink(username, ref);
-              const linkStats = ref ? stats?.get(ref.toLowerCase()) : undefined;
-              return (
-                <li key={rule.id} className="flex flex-wrap items-center gap-3 p-3">
-                  <div className="min-w-0 flex-1">
-                    <Link
-                      to="/dashboard/automation/$automationId"
-                      params={{ automationId: rule.id }}
-                      className="font-medium hover:underline"
-                    >
-                      {rule.name}
-                    </Link>
-                    <div className="flex min-w-0 items-center gap-2">
-                      <span className="truncate font-mono text-xs text-muted-foreground">
-                        {link}
-                      </span>
-                      {!ref && <Badge variant="secondary">{t("Any link")}</Badge>}
-                    </div>
-                    {ref && (
-                      <LinkStats opens={linkStats?.opens ?? 0} people={linkStats?.people ?? 0} />
-                    )}
-                  </div>
-                  <CopyLinkButton link={link} />
-                  <QrButton link={link} name={ref || rule.name} />
-                  <Switch
-                    aria-label={t("Active")}
-                    checked={rule.isActive}
-                    onCheckedChange={() =>
-                      updateMutation.mutate({ ...rule, isActive: !rule.isActive })
-                    }
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label={t("Delete link")}
-                    onClick={() => void remove(rule.id)}
+                    to="/dashboard/automation/rules/$ruleId"
+                    params={{ ruleId: rule.id }}
+                    className="font-medium hover:underline"
                   >
-                    <IconTrash className="size-4" />
-                  </Button>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </CardContent>
-    </Card>
+                    {rule.name}
+                  </Link>
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className="truncate font-mono text-xs text-muted-foreground">{link}</span>
+                    {!ref && <Badge variant="secondary">{t("Any link")}</Badge>}
+                  </div>
+                  {ref && (
+                    <LinkStats opens={linkStats?.opens ?? 0} people={linkStats?.people ?? 0} />
+                  )}
+                </div>
+                <CopyLinkButton link={link} />
+                <QrButton link={link} name={ref || rule.name} />
+                <Switch
+                  aria-label={t("Active")}
+                  checked={rule.isActive}
+                  onCheckedChange={() =>
+                    updateMutation.mutate({ ...rule, isActive: !rule.isActive })
+                  }
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label={t("Delete link")}
+                  onClick={() => void remove(rule.id)}
+                >
+                  <IconTrash className="size-4" />
+                </Button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </ChannelSection>
   );
 }

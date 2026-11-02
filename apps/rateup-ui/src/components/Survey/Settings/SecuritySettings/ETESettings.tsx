@@ -108,7 +108,7 @@ export default function ETESettings({ survey }: ETESettingsInterface) {
                     variant="ghost"
                     size="icon"
                     className="text-destructive"
-                    onClick={() => navigate({ to: "/dashboard/settings/account" })}
+                    onClick={() => navigate({ to: "/dashboard/settings/profile" })}
                   />
                 }
               >

@@ -312,11 +312,11 @@ export function notificationPath(event: NotificationEvent, data: NotificationDat
   switch (event) {
     case "inbox.assigned":
     case "inbox.mentioned":
-      return `/dashboard/inbox?tab=mine&contactId=${encodeURIComponent(contactId)}`;
+      return `/dashboard/inbox?tab=assigned&contactId=${encodeURIComponent(contactId)}`;
     case "inbox.closed":
       return `/dashboard/inbox?tab=closed&contactId=${encodeURIComponent(contactId)}`;
     case "campaign.completed":
-      return `/dashboard/campaign/${encodeURIComponent(str(data.campaignId))}`;
+      return `/dashboard/campaigns/${encodeURIComponent(str(data.campaignId))}`;
     case "billing.active_contact_limit":
     case "billing.campaign_credit_limit":
     case "billing.shop_order_limit":

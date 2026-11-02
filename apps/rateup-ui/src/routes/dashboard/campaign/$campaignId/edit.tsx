@@ -1,23 +1,16 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import { CampaignWizard } from "@/components/dashboard/campaign/wizard/CampaignWizard.tsx";
-import {
-  isCampaignWizardStep,
-  type CampaignWizardStep,
-} from "@/components/dashboard/campaign/wizard/wizardSteps.ts";
-
+/** Campaigns moved to /dashboard/campaigns; old links and bookmarks keep working. */
 export const Route = createFileRoute("/dashboard/campaign/$campaignId/edit")({
-  // The step rides in the URL so browser back/forward and a refresh all land on
-  // the step the person was actually on. An unrecognised value falls back to the
-  // first step rather than rendering nothing.
-  validateSearch: (search: Record<string, unknown>): { step: CampaignWizardStep } => ({
-    step: isCampaignWizardStep(search.step) ? search.step : "basics",
-  }),
-  component: RouteComponent,
+  beforeLoad: ({ params, location }) => {
+    throw redirect({
+      to: "/dashboard/campaigns/$campaignId/edit",
+      params: { campaignId: params.campaignId },
+      // The old URL's query, carried across as-is: the target's own validateSearch
+      // parses it, so this route does not restate (and drift from) that schema.
+      search: location.search as never,
+      hash: location.hash,
+      replace: true,
+    });
+  },
 });
-
-function RouteComponent() {
-  const { campaignId } = Route.useParams();
-  const { step } = Route.useSearch();
-  return <CampaignWizard campaignId={campaignId} step={step} />;
-}

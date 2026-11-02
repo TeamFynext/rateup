@@ -1,7 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import { FeaturesPage } from "@/components/dashboard/features/FeaturesPage.tsx";
-
+/** Features was renamed Customize Menu; old links keep working. */
 export const Route = createFileRoute("/dashboard/features/")({
-  component: FeaturesPage,
+  beforeLoad: () => {
+    throw redirect({ to: "/dashboard/customize-menu", replace: true });
+  },
 });

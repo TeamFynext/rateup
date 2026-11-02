@@ -1,11 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import { CollectionById } from "@/components/dashboard/testimonial/CollectionById.tsx";
-
+/** Testimonials moved under Surveys; old links keep working. */
 export const Route = createFileRoute("/dashboard/testimonial/$collectionId/")({
-  component: RouteComponent,
+  beforeLoad: ({ params, location }) => {
+    throw redirect({
+      to: "/dashboard/surveys/testimonials/$collectionId",
+      params: { collectionId: params.collectionId },
+      search: location.search as never,
+      hash: location.hash,
+      replace: true,
+    });
+  },
 });
-
-function RouteComponent() {
-  return <CollectionById />;
-}

@@ -372,11 +372,11 @@ export const AUTOMATION_TEMPLATES: readonly AutomationTemplate[] = [
   },
   {
     id: "keyword-starts-chatbot",
-    name: "Start a chatbot with a keyword",
-    sentence: "Someone sends “menu” → start your chatbot so they can pick what they need.",
+    name: "Start a journey with a keyword",
+    sentence: "Someone sends “menu” → start your journey so they can pick what they need.",
     category: "replies",
     values: {
-      name: "“menu” → chatbot",
+      name: "“menu” → journey",
       platform: "WHATSAPP",
       triggerEvent: "MESSAGE_RECEIVED",
       groups: [

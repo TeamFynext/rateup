@@ -58,7 +58,7 @@ export function ContactGroup() {
   const params = useParams({
     strict: false,
   });
-  const groupId = params?.groupId as string;
+  const groupId = params?.audienceId as string;
 
   const { customFields } = useCustomFieldsContext();
   const { filter, setGroupDetails } = useGroupTableStore();
@@ -115,12 +115,12 @@ export function ContactGroup() {
       },
       {
         onSuccess: () => {
-          toast.success("Group name updated successfully");
+          toast.success("Audience name updated successfully");
           setGroupName("");
           setIsEditingName(false);
         },
         onError: (error) => {
-          toast.error(error?.message || "Error in updating group name");
+          toast.error(error?.message || "Error in updating audience name");
         },
       },
     );
@@ -130,8 +130,8 @@ export function ContactGroup() {
   }
   async function handleDeleteGroup() {
     const shouldDelete = await confirm({
-      title: "Delete Group",
-      description: "Are you sure you want to delete this group?",
+      title: "Delete Audience",
+      description: "Are you sure you want to delete this audience?",
       confirmText: "Delete",
       cancelText: "Cancel",
     });
@@ -140,14 +140,14 @@ export function ContactGroup() {
 
     deleteGroupMutation.mutate(groupId, {
       onSuccess: () => {
-        toast.success("Group deleted successfully");
+        toast.success("Audience deleted successfully");
         navigate({
-          to: "/dashboard/contacts/groups",
+          to: "/dashboard/contacts/audiences",
         });
         void router.invalidate();
       },
       onError: (error) => {
-        toast.error(error?.message || "Error in deleting group");
+        toast.error(error?.message || "Error in deleting audience");
       },
     });
   }
@@ -185,8 +185,8 @@ export function ContactGroup() {
   return (
     <div className="flex h-full flex-col gap-4">
       <BackLink
-        to="/dashboard/contacts/groups"
-        label={t("Groups")}
+        to="/dashboard/contacts/audiences"
+        label={t("Audiences")}
         onClick={() => void router.invalidate()}
       />
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
@@ -194,7 +194,7 @@ export function ContactGroup() {
           <button
             type="button"
             onClick={() => setShowEditIconDialog(true)}
-            aria-label={t("Change the group icon")}
+            aria-label={t("Change the audience icon")}
             className="group/icon relative shrink-0 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
           >
             <GroupIconTile icon={groupDetails?.icon} className="size-12 rounded-xl" />
@@ -219,7 +219,7 @@ export function ContactGroup() {
                   onKeyDown={(e) => {
                     if (e.key === "Escape") handleCancelEditName();
                   }}
-                  aria-label={t("Group name")}
+                  aria-label={t("Audience name")}
                   className="h-9 w-64 text-base"
                   autoFocus
                 />
@@ -271,7 +271,7 @@ export function ContactGroup() {
             </Button>
             <Button variant="destructive" onClick={() => void handleDeleteGroup()}>
               <IconTrash data-icon="inline-start" />
-              {t("Delete Group")}
+              {t("Delete Audience")}
             </Button>
           </div>
         )}
@@ -358,7 +358,7 @@ function ContactGroupIconEditDialog({
     <Dialog open={opened} onOpenChange={setOpened}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t("Group icon")}</DialogTitle>
+          <DialogTitle>{t("Audience icon")}</DialogTitle>
           <DialogDescription>
             {t("Upload a square image, at least 200×200 pixels, or remove the current one.")}
           </DialogDescription>

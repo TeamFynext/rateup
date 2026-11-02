@@ -63,7 +63,7 @@ export function CampaignWizard({ campaignId, step }: Readonly<CampaignWizardProp
     if (!shouldDelete) return;
 
     deleteCampaign.mutate(campaignId, {
-      onSuccess: () => void navigate({ to: "/dashboard/campaign" }),
+      onSuccess: () => void navigate({ to: "/dashboard/campaigns" }),
     });
   }, [confirm, t, deleteCampaign, campaignId, navigate]);
 

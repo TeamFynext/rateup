@@ -207,7 +207,7 @@ function WebSurveyPicker({
   if (!surveys.length) {
     return (
       <Field>
-        <FieldLabel>Web survey (optional)</FieldLabel>
+        <FieldLabel>Survey (optional)</FieldLabel>
         <FieldDescription>
           No web surveys with a share link yet. Create a web survey and assign it to a team, and it
           can be sent from here as a button that opens it.
@@ -230,7 +230,7 @@ function WebSurveyPicker({
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <Field>
-        <FieldLabel htmlFor="ui-skill-survey">Web survey (optional)</FieldLabel>
+        <FieldLabel htmlFor="ui-skill-survey">Survey (optional)</FieldLabel>
         <Select
           items={surveyItems}
           value={surveyId}
@@ -304,7 +304,7 @@ export function UiSkillsSection({ waSettingsId }: Readonly<{ waSettingsId: strin
       actions={
         <Button size="sm" onClick={() => setCreating(true)}>
           <IconPlus data-icon="inline-start" />
-          Add UI skill
+          Add rich reply
         </Button>
       }
     >
@@ -486,7 +486,7 @@ function UiSkillDialog({
     >
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{uiSkill ? "Edit UI skill" : "Add UI skill"}</DialogTitle>
+          <DialogTitle>{uiSkill ? "Edit rich reply" : "Add rich reply"}</DialogTitle>
           <DialogDescription>
             {uiSkill
               ? "The component type is fixed once a UI skill exists — delete and recreate it to change that."

@@ -89,9 +89,9 @@ export const useCreateChatbotMutation = () => {
     mutationFn: (data: RequestPayload) => createChatbot(data),
     onSuccess: () => {
       invalidateChatbotLists(qc);
-      toast.success("Chatbot created");
+      toast.success("Journey created");
     },
-    onError: errorToast("Error creating the chatbot"),
+    onError: errorToast("Error creating the journey"),
   });
 };
 
@@ -110,7 +110,7 @@ export const useUpdateChatbotMutation = () => {
     onSuccess: () => {
       invalidateChatbotLists(qc);
     },
-    onError: errorToast("Error saving the chatbot"),
+    onError: errorToast("Error saving the journey"),
   });
 };
 
@@ -120,9 +120,9 @@ export const useCloneChatbotMutation = () => {
     mutationFn: ({ id, name }: { id: string; name: string }) => cloneChatbot(id, name),
     onSuccess: () => {
       invalidateChatbotLists(qc);
-      toast.success("Chatbot copied");
+      toast.success("Journey copied");
     },
-    onError: errorToast("Error copying the chatbot"),
+    onError: errorToast("Error copying the journey"),
   });
 };
 
@@ -133,9 +133,9 @@ export const useDeleteChatbotMutation = () => {
     onSuccess: (_res, id) => {
       qc.removeQueries({ queryKey: chatbotKeys.detail(id) });
       invalidateChatbotLists(qc);
-      toast.success("Chatbot deleted");
+      toast.success("Journey deleted");
     },
-    onError: errorToast("Error deleting the chatbot"),
+    onError: errorToast("Error deleting the journey"),
   });
 };
 
@@ -190,7 +190,7 @@ export const useTurnOnStartRuleMutation = (chatbotId: string) => {
       void qc.invalidateQueries({ queryKey: chatbotKeys.rules(chatbotId) });
       void qc.invalidateQueries({ queryKey: ["rules"] });
       if (getStarted) void qc.invalidateQueries({ queryKey: ["messengerProfile"] });
-      toast.success("Chatbot is live");
+      toast.success("Journey is live");
     },
     onError: errorToast("Couldn't switch the rule on"),
   });
@@ -226,10 +226,10 @@ export const useToggleChatbotMutation = () => {
     },
     onError: (error, _vars, context) => {
       for (const [key, value] of context?.before ?? []) qc.setQueryData(key, value);
-      errorToast("Couldn't switch the chatbot")(error);
+      errorToast("Couldn't switch the journey")(error);
     },
     onSuccess: (_bot, { isActive }) => {
-      toast.success(isActive ? "Chatbot switched on" : "Chatbot switched off");
+      toast.success(isActive ? "Journey switched on" : "Journey switched off");
     },
     onSettled: () => invalidateChatbotLists(qc),
   });
@@ -241,7 +241,7 @@ export const useInitiateChatbotMutation = (chatbotId: string) =>
     mutationFn: (body: { recipientId: string; accountId?: string }) =>
       initiateChatbot(chatbotId, body),
     onSuccess: () => {
-      toast.success("Chatbot started");
+      toast.success("Journey started");
     },
-    onError: errorToast("Error starting the chatbot"),
+    onError: errorToast("Error starting the journey"),
   });

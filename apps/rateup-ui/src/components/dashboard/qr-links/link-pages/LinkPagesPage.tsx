@@ -58,7 +58,7 @@ export function LinkPagesPage() {
   return (
     <div className="mx-auto flex w-full max-w-265 flex-col gap-5">
       <PageHeading
-        title={t("Link pages")}
+        title={t("Link-in-bio Pages")}
         description={t(
           "One short link that opens a page of buttons: your surveys, WhatsApp, menu, website.",
         )}

@@ -188,7 +188,7 @@ export function SyncActivityPanel({ integration }: Readonly<{ integration: strin
                       {/* A link, not a button: the panel sits inside the page's read-only
                           fieldset, which disables buttons, and viewing a lead is a read. */}
                       <Link
-                        to="/dashboard/pipeline"
+                        to="/dashboard/pipelines"
                         search={{ p: entry.lead.pipelineId }}
                         // The board keeps its open lead in the store, not the URL.
                         onClick={() => patchPipeline({ leadId: entry.lead.id })}

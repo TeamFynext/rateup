@@ -38,7 +38,7 @@ import { useInboxViewStore } from "@/store/inbox-view.store.ts";
 import { AddUnknownContactForm } from "./addUnknownContactModal/index.tsx";
 import ChannelFilter from "./ChannelFilter.tsx";
 import WaInboxChatExport from "./chatExport/index.tsx";
-import InboxTabStrip from "./InboxTabStrip.tsx";
+import InboxTabStrip, { inboxTabLabel } from "./InboxTabStrip.tsx";
 
 const ChatselectPanelHeader = ({
   isRefetchingFilteredContacts,
@@ -63,6 +63,7 @@ const ChatselectPanelHeader = ({
   const { t: translations } = useTranslation();
   const compactList = useInboxViewStore((s) => s.compact);
   const toggleCompactList = useInboxViewStore((s) => s.toggleCompact);
+  const tabLabel = inboxTabLabel(tab);
 
   useEffect(() => {
     if (filter.searchTerm?.length && !showSearchBar) setShowSearchBar(true);
@@ -118,8 +119,16 @@ const ChatselectPanelHeader = ({
                 goes with it, so the inbox — a full-screen page there — carries the
                 only way back out. */}
             <SidebarTrigger className="-ml-1 size-8 md:hidden" />
-            <span className="truncate text-[15px] font-extrabold whitespace-nowrap capitalize text-foreground">
-              {tab}
+            {/* The tab's label, not its `?tab=` value: "unassigned" is the Unassigned tab. Only an
+                unknown value is capitalised — `capitalize` would turn "Assigned to me" into
+                "Assigned To Me". */}
+            <span
+              className={cn(
+                "truncate text-[15px] font-extrabold whitespace-nowrap text-foreground",
+                !tabLabel && "capitalize",
+              )}
+            >
+              {tabLabel ? translations(tabLabel) : tab}
             </span>
           </div>
           <div className="flex shrink-0 items-center gap-3 text-muted-foreground">

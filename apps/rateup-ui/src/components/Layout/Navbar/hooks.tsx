@@ -7,8 +7,8 @@ import {
   IconBrandFacebook,
   IconBrandInstagram,
   IconBrandMessenger,
+  IconBrandMeta,
   IconBrandWhatsapp,
-  IconBrowser,
   IconChartBar,
   IconChartInfographic,
   IconCircleCheck,
@@ -18,26 +18,24 @@ import {
   IconDashboard,
   IconFileSpreadsheet,
   IconFilterBolt,
-  IconFolder,
   IconGift,
   IconHash,
+  IconHistory,
   IconInbox,
   IconLayoutList,
   IconLogs,
   IconMessage,
-  IconMessages,
   IconQrcode,
   IconRobotFace,
   IconRocket,
   IconSend,
   IconMessageCog,
+  IconMessageCircleBolt,
   IconSettings,
   IconTicket,
-  IconShield,
   IconShieldExclamation,
   IconShoppingCart,
   IconShoppingCartBolt,
-  IconMessageChatbot,
   IconSparkles,
   IconStack2,
   IconStar,
@@ -50,6 +48,14 @@ import {
   IconWaveSine,
   IconWebhook,
   IconPhone,
+  IconRoute,
+  IconSettingsAutomation,
+  IconTrendingUp,
+  IconChecks,
+  IconUsersGroup,
+  IconClipboardList,
+  IconChecklist,
+  IconLock,
 } from "@tabler/icons-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -105,6 +111,9 @@ function withBrandColor(Icon: NavIcon, color: string): NavIcon {
     return <Icon {...props} className={cn(className, color)} />;
   };
 }
+
+const InstagramBrandIcon = withBrandColor(IconBrandInstagram, "text-pink-600! dark:text-pink-500!");
+const MessengerBrandIcon = withBrandColor(IconBrandMessenger, "text-blue-600! dark:text-blue-500!");
 
 const CHANNEL_PLATFORM_ICON: Partial<Record<MessagePlatform, NavIcon>> = {
   [MessagePlatform.WHATSAPP]: withBrandColor(
@@ -163,8 +172,8 @@ export interface NavEntry {
   resetScroll?: boolean;
   /**
    * Path prefixes this sub-item also stands for, when they sit under a sibling's
-   * path: the analytics drill-downs live under `/dashboard/analytics/…` but belong
-   * to Conversations, not to the first sibling that prefix-matches.
+   * path: the analytics drill-downs live under `/dashboard/analytics/agents|teams/…` but belong
+   * to Team Performance, not to the first sibling that prefix-matches.
    */
   ownsPaths?: string[];
   isActive?: boolean;
@@ -207,6 +216,26 @@ interface NavMainInput {
   setupNav: SetupNavInput;
   loyaltyNav?: LoyaltyNavInput;
   metaAgentNav: MetaAgentNavInput;
+}
+
+/**
+ * A section made of other sections' pages. Its own link opens the first page the user can
+ * see (looking inside labelled sections too), and it drops out when they can see none.
+ */
+function navGroup({
+  title,
+  icon,
+  items,
+}: Readonly<{ title: string; icon: NavIcon; items: NavEntry[] }>): NavEntry[] {
+  const url = items.flatMap((item) =>
+    item.url ? [item.url] : (item.items ?? []).map((i) => i.url),
+  )[0];
+  return url ? [{ title, url, icon, items }] : [];
+}
+
+/** A labelled section inside a panel; left out when it has nothing to show. */
+function navSection(group: string, items: NavEntry[]): NavEntry[] {
+  return items.length > 0 ? [{ group, items }] : [];
 }
 
 export function useNavMain({
@@ -272,7 +301,8 @@ export function useNavMain({
               icon: IconInbox,
               items: [
                 // Inbox Tickets v2 filter rail. Order matches the design mockup:
-                // Open · New · Closed · All · Mine · @Mentions · Favourites · Spam.
+                // Open · Unassigned · Closed · All · Assigned to me · Unread mentions ·
+                // Starred · Spam contacts.
                 {
                   title: t("Open"),
                   url: "/dashboard/inbox?tab=open",
@@ -280,8 +310,8 @@ export function useNavMain({
                   count: sectionCounts?.openCount || 0,
                 },
                 {
-                  title: t("New"),
-                  url: "/dashboard/inbox?tab=new",
+                  title: t("Unassigned"),
+                  url: "/dashboard/inbox?tab=unassigned",
                   icon: IconSparkles,
                   count: sectionCounts?.newCount || 0,
                 },
@@ -298,25 +328,25 @@ export function useNavMain({
                   count: sectionCounts?.allCount || 0,
                 },
                 {
-                  title: t("Mine"),
-                  url: "/dashboard/inbox?tab=mine",
+                  title: t("Assigned to me"),
+                  url: "/dashboard/inbox?tab=assigned",
                   icon: IconUserCheck,
                   count: sectionCounts?.mineCount || 0,
                 },
                 {
-                  title: t("@Mentions"),
+                  title: t("Unread mentions"),
                   url: "/dashboard/inbox?tab=mentions",
                   icon: IconAt,
                   count: sectionCounts?.mentionsCount || 0,
                 },
                 {
-                  title: t("Favourites"),
-                  url: "/dashboard/inbox?tab=favourites",
+                  title: t("Starred"),
+                  url: "/dashboard/inbox?tab=starred",
                   icon: IconStar,
                   count: sectionCounts?.favouriteCount || 0,
                 },
                 {
-                  title: t("Spam"),
+                  title: t("Spam contacts"),
                   url: "/dashboard/inbox?tab=spam",
                   icon: IconShieldExclamation,
                   count: sectionCounts?.spamCount || 0,
@@ -353,7 +383,7 @@ export function useNavMain({
                     ...(lifecycles.length > 0
                       ? [
                           {
-                            title: "Lifecycle",
+                            title: t("Lifecycle"),
                             isSectionHeader: true,
                             icon: IconActivity,
                             showClearButton: !!chatFilterStore.filter.lifecycle,
@@ -381,7 +411,7 @@ export function useNavMain({
                           {
                             // Contact-grained: picking one lists every ticket
                             // belonging to a customer carrying the label.
-                            title: "Contact Labels",
+                            title: t("Contact Labels"),
                             isSectionHeader: true,
                             icon: IconTag,
                             showClearButton: chatFilterStore.filter.labels?.length > 0,
@@ -417,7 +447,7 @@ export function useNavMain({
                           {
                             // Ticket-grained, unlike Contact Labels above: picking
                             // one lists only the conversations carrying the tag.
-                            title: "Conversation Tags",
+                            title: t("Conversation Tags"),
                             isSectionHeader: true,
                             icon: IconHash,
                             showClearButton:
@@ -444,7 +474,7 @@ export function useNavMain({
                     ...(staff.length > 0
                       ? [
                           {
-                            title: "Users",
+                            title: t("Users"),
                             isSectionHeader: true,
                             icon: IconUser,
                             showClearButton: chatFilterStore.filter.assignedUserIds?.length > 0,
@@ -465,7 +495,7 @@ export function useNavMain({
                     ...(teams.length > 0
                       ? [
                           {
-                            title: "Teams",
+                            title: t("Teams"),
                             isSectionHeader: true,
                             icon: IconUsers,
                             showClearButton: chatFilterStore.filter.assignedTeams?.length > 0,
@@ -492,6 +522,12 @@ export function useNavMain({
                   ],
                 },
                 {
+                  // WhatsApp voice calls: the live strip and the call log.
+                  title: t("Calls"),
+                  url: "/dashboard/inbox/calls",
+                  icon: IconPhone,
+                },
+                {
                   title: t("Inbox settings"),
                   icon: IconMessageCog,
                   url: "/dashboard/inbox?tab=settings",
@@ -514,68 +550,101 @@ export function useNavMain({
                   icon: IconChartBar,
                 },
                 {
-                  title: t("Conversations"),
-                  url: "/dashboard/analytics?tab=conversations",
-                  icon: IconMessages,
-                  // The agent and team drill-downs: /dashboard/analytics/<id> and /team/<id>.
-                  ownsPaths: ["/dashboard/analytics/"],
+                  title: t("Team Performance"),
+                  url: "/dashboard/analytics?tab=team-performance",
+                  icon: IconTrendingUp,
+                  // The agent and team drill-downs.
+                  ownsPaths: ["/dashboard/analytics/agents/", "/dashboard/analytics/teams/"],
                 },
                 {
-                  title: t("Messages"),
-                  url: "/dashboard/analytics?tab=messages",
-                  icon: IconSend,
+                  title: t("Template Delivery"),
+                  url: "/dashboard/analytics?tab=template-delivery",
+                  icon: IconChecks,
                 },
                 {
-                  title: t("Logs"),
-                  url: "/dashboard/analytics?tab=logs",
+                  title: t("Message log"),
+                  url: "/dashboard/analytics?tab=message-log",
                   icon: IconLogs,
-                },
-                {
-                  title: t("Calls"),
-                  url: "/dashboard/analytics/calls",
-                  icon: IconPhone,
-                  // Sits under the prefix Conversations claims for its drill-downs.
-                  ownsPaths: ["/dashboard/analytics/calls"],
                 },
               ],
             },
           ]
         : []),
-      ...(hasTeamFeature(TeamFeature.Pipeline) && isModuleOn("pipeline")
+      ...(hasTeamFeature(TeamFeature.Contacts)
         ? [
             {
-              title: t("Pipeline"),
-              url: "/dashboard/pipeline",
-              icon: IconFilterBolt,
-              // Views and facets are built next to the pipeline's own
-              // derivations so the sidebar counts and the board agree.
-              items: buildPipelineNavItems(pipelineNav),
-              progress: buildPipelineNavProgress(pipelineNav),
+              title: t("Contacts"),
+              url: "/dashboard/contacts",
+              icon: IconUsers,
+              items: [
+                {
+                  title: t("All Contacts"),
+                  url: "/dashboard/contacts",
+                  icon: IconUsers,
+                },
+                {
+                  title: t("Audiences"),
+                  url: "/dashboard/contacts/audiences",
+                  icon: IconUsersGroup,
+                },
+                {
+                  title: t("Custom Fields"),
+                  url: "/dashboard/contacts/custom-fields",
+                  icon: IconFileSpreadsheet,
+                },
+                {
+                  title: t("Labels"),
+                  url: "/dashboard/contacts/labels",
+                  icon: IconTag,
+                },
+                // Lifecycle is no longer listed here: pipeline stages have taken
+                // over the places it was read from. The page and the route are
+                // still there for the surfaces that have not moved yet — the
+                // inbox chip, automation conditions, Zapier and the Zoho CRM
+                // mapping — so it stays reachable at
+                // `/dashboard/contacts/lifecycle` until those are migrated.
+              ],
             },
           ]
         : []),
       ...(hasTeamFeature(TeamFeature.Campaigns)
         ? [
             {
-              title: t("Campaign"),
-              url: "/dashboard/campaign",
+              title: t("Campaigns"),
+              url: "/dashboard/campaigns",
               icon: IconSend,
             },
           ]
         : []),
-      ...(hasTeamFeature(TeamFeature.Automation)
-        ? [
-            {
-              title: t("Automation"),
-              url: "/dashboard/automation",
-              icon: IconBolt,
-            },
-          ]
-        : []),
+      // Rules start journeys, so the two sit together.
+      ...navGroup({
+        title: t("Automation"),
+        icon: IconBolt,
+        items: [
+          ...(hasTeamFeature(TeamFeature.Automation)
+            ? [
+                {
+                  title: t("Rules"),
+                  url: "/dashboard/automation/rules",
+                  icon: IconSettingsAutomation,
+                },
+              ]
+            : []),
+          ...(hasTeamFeature(TeamFeature.Chatbots)
+            ? [
+                {
+                  title: t("Journeys"),
+                  url: "/dashboard/automation/journeys",
+                  icon: IconRoute,
+                },
+              ]
+            : []),
+        ],
+      }),
       ...(hasTeamFeature(TeamFeature.AiChatbot) && isModuleOn("ai_agent")
         ? [
             {
-              title: "Meta AI Agent",
+              title: t("Meta AI Agent"),
               url: "/dashboard/meta-agent",
               icon: IconRobotFace,
               // Each area of the agent is its own route, so the sidebar is the
@@ -583,6 +652,62 @@ export function useNavMain({
               // (see `metaAgent/metaAgent.nav.ts`).
               progress: buildMetaAgentNavProgress(metaAgentNav),
               items: buildMetaAgentNavItems(metaAgentNav),
+            },
+          ]
+        : []),
+      // Meta's chat surfaces, one section per app. Instagram and Messenger hold comment
+      // automations, menus and links, so they follow the Automation permission.
+      ...navGroup({
+        title: t("Meta"),
+        icon: IconBrandMeta,
+        items: [
+          ...navSection(t("WhatsApp"), [
+            ...(hasTeamFeature(TeamFeature.Templates)
+              ? [
+                  {
+                    title: t("Templates"),
+                    url: "/dashboard/whatsapp/templates",
+                    icon: IconTemplate,
+                  },
+                ]
+              : []),
+            ...(hasTeamFeature(TeamFeature.Flows)
+              ? [{ title: t("Flows"), url: "/dashboard/whatsapp/flows", icon: IconWaveSine }]
+              : []),
+            ...(hasTeamFeature(TeamFeature.Flows) ||
+            hasTeamFeature(TeamFeature.Templates) ||
+            hasTeamFeature(TeamFeature.Automation)
+              ? [
+                  {
+                    // The page also holds slash commands; its heading says so.
+                    title: t("Ice Breakers"),
+                    url: "/dashboard/whatsapp/ice-breakers",
+                    icon: IconMessageCircleBolt,
+                  },
+                ]
+              : []),
+          ]),
+          ...navSection(
+            t("Instagram & Messenger"),
+            hasTeamFeature(TeamFeature.Automation)
+              ? [
+                  { title: t("Instagram"), url: "/dashboard/instagram", icon: InstagramBrandIcon },
+                  { title: t("Messenger"), url: "/dashboard/messenger", icon: MessengerBrandIcon },
+                ]
+              : [],
+          ),
+        ],
+      }),
+      ...(hasTeamFeature(TeamFeature.Pipeline) && isModuleOn("pipeline")
+        ? [
+            {
+              title: t("Pipelines"),
+              url: "/dashboard/pipelines",
+              icon: IconFilterBolt,
+              // Views and facets are built next to the pipeline's own
+              // derivations so the sidebar counts and the board agree.
+              items: buildPipelineNavItems(pipelineNav),
+              progress: buildPipelineNavProgress(pipelineNav),
             },
           ]
         : []),
@@ -607,7 +732,7 @@ export function useNavMain({
                 ...(shopSetupLeft
                   ? [
                       {
-                        title: t("Setup"),
+                        title: t("Store Setup"),
                         url: "/dashboard/commerce/setup",
                         icon: IconRocket,
                         badge: `${shopSetupLeft.done}/${shopSetupLeft.total}`,
@@ -624,11 +749,15 @@ export function useNavMain({
                   title: t("Products"),
                   url: "/dashboard/commerce/products",
                   icon: IconPackage,
+                  // The older Meta catalog products, reached from Settings → Legacy.
+                  ownsPaths: ["/dashboard/commerce/catalogs"],
                 },
                 {
                   title: t("Orders"),
                   url: "/dashboard/commerce/orders",
                   icon: IconShoppingCart,
+                  // Orders sent from the older WhatsApp catalog cart.
+                  ownsPaths: ["/dashboard/commerce/catalog-orders"],
                   ...(shopNeedsAction > 0
                     ? { badge: String(shopNeedsAction), badgeTone: "warning" as const }
                     : {}),
@@ -642,217 +771,76 @@ export function useNavMain({
                   title: t("Settings"),
                   url: "/dashboard/commerce/settings",
                   icon: IconSettings,
-                  ownsPaths: ["/dashboard/commerce/catalogs", "/dashboard/commerce/catalog-orders"],
                 },
               ],
             },
           ]
         : []),
-      // Chatbots on every channel, in one place.
-      ...(hasTeamFeature(TeamFeature.Chatbots)
-        ? [
-            {
-              title: t("Chatbots"),
-              url: "/dashboard/chatbots",
-              icon: IconMessageChatbot,
-            },
-          ]
-        : []),
-      ...(hasTeamFeature(TeamFeature.Flows) ||
-      hasTeamFeature(TeamFeature.Templates) ||
-      hasTeamFeature(TeamFeature.Automation)
-        ? [
-            {
-              title: t("WhatsApp"),
-              // The first item listed below that this person can see.
-              url: hasTeamFeature(TeamFeature.Templates)
-                ? "/dashboard/whatsapp/templates"
-                : hasTeamFeature(TeamFeature.Flows)
-                  ? "/dashboard/whatsapp/flows"
-                  : "/dashboard/whatsapp/conversational-components",
-              icon: IconBrandWhatsapp,
-              items: [
-                ...(hasTeamFeature(TeamFeature.Templates)
-                  ? [
-                      {
-                        title: t("Templates"),
-                        url: "/dashboard/whatsapp/templates",
-                        icon: IconTemplate,
-                      },
-                    ]
-                  : []),
-                ...(hasTeamFeature(TeamFeature.Flows)
-                  ? [
-                      {
-                        title: t("WhatsApp Flow"),
-                        url: "/dashboard/whatsapp/flows",
-                        icon: IconWaveSine,
-                      },
-                    ]
-                  : []),
+      ...navGroup({
+        title: t("Surveys & Links"),
+        icon: IconClipboardList,
+        items: [
+          ...(hasTeamFeature(TeamFeature.WebForms) && isModuleOn("web_forms")
+            ? [{ title: t("Surveys"), url: "/dashboard/surveys", icon: IconChecklist }]
+            : []),
+          ...(hasTeamFeature(TeamFeature.QrStudio) && isModuleOn("qr_links")
+            ? [
+                { title: t("QR codes"), url: "/dashboard/qr-codes", icon: IconQrcode },
                 {
-                  title: t("Conversational"),
-                  url: "/dashboard/whatsapp/conversational-components",
-                  icon: IconMessage,
-                },
-              ],
-            },
-          ]
-        : []),
-      ...(hasTeamFeature(TeamFeature.Chatbots)
-        ? [
-            {
-              title: t("Instagram"),
-              url: "/dashboard/instagram",
-              icon: IconBrandInstagram,
-            },
-            {
-              title: t("Messenger"),
-              url: "/dashboard/messenger",
-              icon: IconBrandMessenger,
-            },
-          ]
-        : []),
-      ...(hasTeamFeature(TeamFeature.WebForms) && isModuleOn("web_forms")
-        ? [
-            {
-              title: t("Web Forms"),
-              url: "/dashboard/surveys",
-              icon: IconBrowser,
-            },
-          ]
-        : []),
-      ...(hasTeamFeature(TeamFeature.QrStudio) && isModuleOn("qr_links")
-        ? [
-            {
-              title: t("QR & Links"),
-              url: "/dashboard/qr-codes",
-              icon: IconQrcode,
-              items: [
-                {
-                  title: t("QR codes"),
-                  url: "/dashboard/qr-codes",
-                  icon: IconQrcode,
-                },
-                {
-                  title: t("Link pages"),
+                  title: t("Link-in-bio Pages"),
                   url: "/dashboard/link-pages",
                   icon: IconLayoutList,
                 },
-              ],
-            },
-          ]
-        : []),
-      ...(hasTeamFeature(TeamFeature.Contacts)
-        ? [
-            {
-              title: t("Contacts"),
-              url: "/dashboard/contacts",
-              icon: IconUsers,
-              items: [
-                {
-                  title: t("All Contacts"),
-                  url: "/dashboard/contacts",
-                  icon: IconUsers,
-                },
-                {
-                  title: t("Groups"),
-                  url: "/dashboard/contacts/groups",
-                  icon: IconFolder,
-                },
-                {
-                  title: t("Custom Fields"),
-                  url: "/dashboard/contacts/custom-fields",
-                  icon: IconFileSpreadsheet,
-                },
-                {
-                  title: t("Labels"),
-                  url: "/dashboard/contacts/labels",
-                  icon: IconTag,
-                },
-                // Lifecycle is no longer listed here: pipeline stages have taken
-                // over the places it was read from. The page and the route are
-                // still there for the surfaces that have not moved yet — the
-                // inbox chip, automation conditions, Zapier and the Zoho CRM
-                // mapping — so it stays reachable at
-                // `/dashboard/contacts/lifecycle` until those are migrated.
-              ],
-            },
-          ]
-        : []),
+              ]
+            : []),
+        ],
+      }),
       {
         title: t("Settings"),
         url: "/dashboard/settings",
         icon: IconSettings,
         items: [
           {
-            group: t("Account Settings"),
+            group: t("You"),
             items: [
               {
-                title: t("Account"),
-                url: "/dashboard/settings/account",
+                title: t("Profile & Business"),
+                url: "/dashboard/settings/profile",
                 icon: IconUser,
-              },
-              ...(can("members.read")
-                ? [
-                    {
-                      title: t("Members"),
-                      url: "/dashboard/settings/members",
-                      icon: IconUserCog,
-                    },
-                  ]
-                : []),
-              {
-                title: t("Teams"),
-                url: "/dashboard/settings/team",
-                icon: IconUsers,
               },
               {
                 title: t("Notifications"),
                 url: "/dashboard/settings/notifications",
                 icon: IconBell,
               },
+              {
+                title: t("Password & Account"),
+                url: "/dashboard/settings/password",
+                icon: IconLock,
+              },
             ],
           },
-          // Both entries below are conditional, so the group itself has to be too — otherwise a
-          // member with neither gets a bare "Platform Settings" heading with nothing under it.
-          ...(can("channels.manage") || hasTeamFeature(TeamFeature.AppsServices)
-            ? [
-                {
-                  group: t("Platform Settings"),
-                  items: [
-                    // Connecting or removing a WhatsApp/Instagram account changes messaging for
-                    // the whole org, not just one team.
-                    ...(can("channels.manage")
-                      ? [
-                          {
-                            title: t("Channels"),
-                            url: "/dashboard/settings/channels",
-                            icon: IconMessage,
-                          },
-                        ]
-                      : []),
-                    ...(hasTeamFeature(TeamFeature.AppsServices)
-                      ? [
-                          {
-                            title: "Integrations",
-                            url: "/dashboard/settings/integrations",
-                            icon: IconWebhook,
-                          },
-                        ]
-                      : []),
-                  ],
-                },
-              ]
-            : []),
           {
-            group: t("System Settings"),
+            group: t("Organization"),
             items: [
-              {
-                title: t("Security"),
-                url: "/dashboard/settings/security",
-                icon: IconShield,
-              },
+              ...(can("members.read")
+                ? [{ title: t("Members"), url: "/dashboard/settings/members", icon: IconUserCog }]
+                : []),
+              { title: t("Teams"), url: "/dashboard/settings/teams", icon: IconUsers },
+              // Connecting or removing a WhatsApp/Instagram account changes messaging for the
+              // whole org, not just one team.
+              ...(can("channels.manage")
+                ? [{ title: t("Channels"), url: "/dashboard/settings/channels", icon: IconMessage }]
+                : []),
+              ...(hasTeamFeature(TeamFeature.AppsServices)
+                ? [
+                    {
+                      title: t("Integrations"),
+                      url: "/dashboard/settings/integrations",
+                      icon: IconWebhook,
+                    },
+                  ]
+                : []),
               ...(can("billing.read")
                 ? [
                     {
@@ -862,15 +850,24 @@ export function useNavMain({
                     },
                   ]
                 : []),
+              ...(can("org.audit.read")
+                ? [
+                    {
+                      title: t("Audit log"),
+                      url: "/dashboard/settings/audit-log",
+                      icon: IconHistory,
+                    },
+                  ]
+                : []),
             ],
           },
           ...(subscription?.orgId === import.meta.env.VITE_ROOT_ORG && can("billing.manage")
             ? [
                 {
-                  group: t("Admin Settings"),
+                  group: t("RateUp"),
                   items: [
                     {
-                      title: t("Admin"),
+                      title: t("RateUp Admin"),
                       url: "/admin",
                       icon: IconCrown,
                     },

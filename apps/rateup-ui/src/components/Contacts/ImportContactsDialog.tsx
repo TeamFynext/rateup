@@ -408,7 +408,7 @@ function ImportProgress({
     { label: t("Added"), value: status.created },
     { label: t("Updated"), value: status.updated },
     { label: t("Already in your list, left unchanged"), value: status.skipped },
-    ...(groupId ? [{ label: t("Added to this group"), value: status.addedToGroup }] : []),
+    ...(groupId ? [{ label: t("Added to this audience"), value: status.addedToGroup }] : []),
     { label: t("Repeated in the file, imported once"), value: status.duplicateCount },
     { label: t("Rejected"), value: status.rejectedCount },
   ];

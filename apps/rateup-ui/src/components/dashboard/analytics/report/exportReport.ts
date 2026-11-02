@@ -78,7 +78,7 @@ async function loadData(tab: ReportTab, filters: AnalyticsFilters): Promise<Repo
     };
   }
 
-  if (tab === "conversations") {
+  if (tab === "team-performance") {
     const [overview, previousOverview, staff, teams, responseTimes, channels] = await Promise.all([
       getConversationOverView(conversation),
       getConversationOverView(previous),
@@ -168,15 +168,15 @@ export async function exportAnalyticsReport(
       };
       const titles: Record<ReportTab, string> = {
         overview: t("Overview"),
-        conversations: t("Conversations"),
-        messages: t("Messages"),
+        "team-performance": t("Team Performance"),
+        "template-delivery": t("Template Delivery"),
       };
       return {
         title: titles[tab],
         scope: [
           describeRange(filters.dateRange.range),
           teamName,
-          ...(tab === "conversations" ? [] : [channelLabel[filters.apiType] ?? filters.apiType]),
+          ...(tab === "team-performance" ? [] : [channelLabel[filters.apiType] ?? filters.apiType]),
         ],
         blocks: reportBuilders[tab](
           { t, dateKey: filters.dateRange.key, teamId: filters.teamId },

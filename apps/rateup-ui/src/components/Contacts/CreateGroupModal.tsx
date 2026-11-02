@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IconFolder } from "@tabler/icons-react";
+import { IconUsersGroup } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -129,7 +129,7 @@ const CreateGroupModal = ({ opened, setOpened, isEdit, groupDetails, type }: Gro
         onSuccess: (data) => {
           setOpened(false);
           form.reset();
-          const route = `/dashboard/${type === ContactGroupType.LOYALTY ? "loyalty/customer/group" : "contacts/groups"}/${data?.data?.id}`;
+          const route = `/dashboard/${type === ContactGroupType.LOYALTY ? "loyalty/customer/group" : "contacts/audiences"}/${data?.data?.id}`;
           navigate({
             to: route,
           });
@@ -164,8 +164,8 @@ const CreateGroupModal = ({ opened, setOpened, isEdit, groupDetails, type }: Gro
           onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, () => void form.handleSubmit(onSubmit)()]])}
         >
           <DialogHeader>
-            <DialogTitle>Create New Group</DialogTitle>
-            <DialogDescription>Create a new contact group with team</DialogDescription>
+            <DialogTitle>Create New Audience</DialogTitle>
+            <DialogDescription>Create a new audience with team</DialogDescription>
           </DialogHeader>
           <div className="my-5">
             <div className="flex flex-col gap-4">
@@ -174,14 +174,14 @@ const CreateGroupModal = ({ opened, setOpened, isEdit, groupDetails, type }: Gro
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor={field.name}>{translations("Group Name")}</FieldLabel>
+                    <FieldLabel htmlFor={field.name}>{translations("Audience Name")}</FieldLabel>
                     <Input
                       {...field}
                       id={field.name}
                       aria-invalid={fieldState.invalid}
                       aria-describedby={fieldState.invalid ? `${field.name}-error` : undefined}
                       required
-                      placeholder={translations("Enter group name")}
+                      placeholder={translations("Enter audience name")}
                       onClick={(e) => e.stopPropagation()}
                     />
                     {fieldState.invalid && (
@@ -212,7 +212,7 @@ const CreateGroupModal = ({ opened, setOpened, isEdit, groupDetails, type }: Gro
                   <AvatarImage src={getFileUrlFromKey(iconValue)} alt={nameValue} />
                 </Avatar>
               ) : (
-                <IconFolder />
+                <IconUsersGroup />
               )}
               <div className="flex flex-col gap-4">
                 <input
@@ -235,7 +235,7 @@ const CreateGroupModal = ({ opened, setOpened, isEdit, groupDetails, type }: Gro
             </DialogClose>
             <Button loading={isUploading} type="submit">
               <span className="text-sm font-normal">
-                {isEdit ? translations("Save") : translations("Create Group")}
+                {isEdit ? translations("Save") : translations("Create Audience")}
               </span>
             </Button>
           </DialogFooter>

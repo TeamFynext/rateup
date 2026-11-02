@@ -409,6 +409,28 @@ function StatusBar({
   );
 }
 
+/**
+ * One app screen on a phone, drawn in the page rather than the preview panel: the frame, the
+ * app's status bar and `children`. For an editor that keeps its preview beside the form.
+ */
+export function PhoneScreen({
+  platform,
+  children,
+  className,
+}: Readonly<{ platform: PhonePlatform; children: ReactNode; className?: string }>) {
+  return (
+    <PhoneFrame className={className}>
+      <div className="relative flex h-full flex-col">
+        <StatusBar variant="dark" className={STATUS_BAR_LOOK[platform]} />
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">{children}</div>
+        <div aria-hidden className="absolute inset-x-0 bottom-1.5 z-10 flex justify-center">
+          <div className="h-1 w-25 rounded-full bg-muted-foreground/30" />
+        </div>
+      </div>
+    </PhoneFrame>
+  );
+}
+
 function HomeScreen({
   platform,
   onOpenApp,

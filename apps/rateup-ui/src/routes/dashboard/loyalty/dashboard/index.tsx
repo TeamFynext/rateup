@@ -1,22 +1,17 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import {
-  DASHBOARD_PERIODS,
-  type DashboardPeriod,
-} from "@/backend/loyalty/dashboard/dashboardPeriods";
-import { OverviewPage } from "@/components/dashboard/loyalty/overview/OverviewPage.tsx";
+import { DASHBOARD_PERIODS } from "@/backend/loyalty/dashboard/dashboardPeriods";
 import { oneOf } from "@/utils/search.ts";
 
-// The no-programme redirect lives on the parent `/dashboard/loyalty` layout route, so
-// every loyalty URL gets it, not just this one.
+/** The loyalty dashboard is the Overview now; old links keep working, `?period=` included. */
 export const Route = createFileRoute("/dashboard/loyalty/dashboard/")({
-  validateSearch: (search: Record<string, unknown>): { period?: DashboardPeriod } => ({
-    period: oneOf(DASHBOARD_PERIODS, search.period),
-  }),
-  component: RouteComponent,
+  beforeLoad: ({ location }) => {
+    throw redirect({
+      to: "/dashboard/loyalty/overview",
+      search: {
+        period: oneOf(DASHBOARD_PERIODS, (location.search as Record<string, unknown>).period),
+      },
+      replace: true,
+    });
+  },
 });
-
-function RouteComponent() {
-  const { period } = Route.useSearch();
-  return <OverviewPage period={period ?? "30d"} />;
-}

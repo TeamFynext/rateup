@@ -1,4 +1,4 @@
-// Extracted verbatim from the `/dashboard/testimonial/` route so the route file carries routing
+// Extracted verbatim from the `/dashboard/surveys/testimonials/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
 import { IconPlus } from "@tabler/icons-react";
@@ -58,7 +58,7 @@ export function Testimonials() {
               <IconPlus className="w-4 h-4 mr-2" />
               {translations("Create Collection")}
             </Button>
-            <InfoButton docUrl={`${docsPath}/testimonial`} />
+            <InfoButton docUrl={`${docsPath}/surveys/testimonials`} />
             <RefreshButton queryKeys={["testimonials", "collections"]} />
           </ListPageHeaderSection>
 

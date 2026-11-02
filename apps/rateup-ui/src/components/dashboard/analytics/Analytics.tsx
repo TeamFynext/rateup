@@ -6,11 +6,7 @@ import { toast } from "sonner";
 
 import { presetRange } from "@/components/whatsapp/inbox/analytics/dateRangePresets.ts";
 
-import type {
-  AnalyticsTab,
-  ConversationsView as ConversationsSubView,
-  LogsView as LogsSubView,
-} from "./analyticsView.ts";
+import type { AnalyticsTab, ConversationsView as ConversationsSubView } from "./analyticsView.ts";
 import { AnalyticsFilterBar } from "./kit/AnalyticsFilterBar.tsx";
 import { AnalyticsHeader } from "./kit/AnalyticsHeader.tsx";
 import type { AnalyticsFilters } from "./kit/filters.ts";
@@ -30,7 +26,6 @@ export function Analytics() {
   const navigate = useNavigate({ from: "/dashboard/analytics/" });
   const tab: AnalyticsTab = search.tab ?? "overview";
   const view: ConversationsSubView = search.view ?? "agents";
-  const log: LogsSubView = search.log ?? "messages";
   const queryClient = useQueryClient();
   const [isExporting, setIsExporting] = useState(false);
   const [filters, setFilters] = useState<AnalyticsFilters>(() => ({
@@ -44,23 +39,23 @@ export function Analytics() {
       title: t("Overview"),
       description: t("How your conversations and WhatsApp messages are doing"),
     },
-    conversations: {
-      title: t("Conversations"),
+    "team-performance": {
+      title: t("Team Performance"),
       description: t("How fast each agent and team replies, and how much they handle"),
     },
-    messages: {
-      title: t("Messages"),
+    "template-delivery": {
+      title: t("Template Delivery"),
       description: t("Whether your outbound WhatsApp messages are delivered, by template and team"),
     },
-    logs: {
-      title: t("Logs"),
-      description: t("Every message sent and every change your team made"),
+    "message-log": {
+      title: t("Message log"),
+      description: t("Every message sent, with its status and where it came from"),
     },
   };
   const heading = headings[tab];
 
   async function exportPdf() {
-    if (tab === "logs") return;
+    if (tab === "message-log") return;
     setIsExporting(true);
     try {
       await exportAnalyticsReport(queryClient, tab, filters);
@@ -80,29 +75,23 @@ export function Analytics() {
         onChange={setFilters}
         show={{
           dateRange: true,
-          team: !(tab === "logs" && log === "activity"),
-          channelType: tab === "overview" || tab === "messages",
+          team: true,
+          channelType: tab === "overview" || tab === "template-delivery",
         }}
-        onExportPdf={tab === "logs" ? undefined : exportPdf}
+        onExportPdf={tab === "message-log" ? undefined : exportPdf}
         isExporting={isExporting}
       />
       <div className="pt-1">
         {tab === "overview" && <OverviewView filters={filters} />}
-        {tab === "conversations" && (
+        {tab === "team-performance" && (
           <ConversationsView
             filters={filters}
             view={view}
             onViewChange={(next) => navigate({ search: (prev) => ({ ...prev, view: next }) })}
           />
         )}
-        {tab === "messages" && <MessagesView filters={filters} />}
-        {tab === "logs" && (
-          <LogsView
-            filters={filters}
-            log={log}
-            onLogChange={(next) => navigate({ search: (prev) => ({ ...prev, log: next }) })}
-          />
-        )}
+        {tab === "template-delivery" && <MessagesView filters={filters} />}
+        {tab === "message-log" && <LogsView filters={filters} />}
       </div>
     </div>
   );

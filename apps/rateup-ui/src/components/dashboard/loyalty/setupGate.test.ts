@@ -6,7 +6,7 @@ describe("isGatedWhileUnset", () => {
   it("lets the screens setup is done from through", () => {
     for (const path of [
       "/dashboard/loyalty/onboarding",
-      "/dashboard/loyalty/dashboard",
+      "/dashboard/loyalty/overview",
       "/dashboard/loyalty/program",
       "/dashboard/loyalty/program/advanced",
     ]) {
@@ -17,7 +17,7 @@ describe("isGatedWhileUnset", () => {
   it("gates every screen that needs a running programme", () => {
     for (const path of [
       "/dashboard/loyalty/cashier",
-      "/dashboard/loyalty/customers",
+      "/dashboard/loyalty/members",
       "/dashboard/loyalty/activity",
       "/dashboard/loyalty/messages",
       "/dashboard/loyalty/reminders",

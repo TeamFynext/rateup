@@ -3,6 +3,7 @@ import { IconArrowLeft } from "@tabler/icons-react";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
 import {
   useCreateRuleMutation,
@@ -132,6 +133,7 @@ const RuleEditor: React.FC<{
   baseValues: CreateRuleInput;
   initialTemplateId: string | undefined;
 }> = ({ ruleId, ruleData, initialValues, baseValues, initialTemplateId }) => {
+  const { t } = useTranslation();
   const isEditMode = Boolean(ruleId);
   const navigate = useNavigate();
   const { history } = useRouter();
@@ -171,7 +173,7 @@ const RuleEditor: React.FC<{
         {
           onSuccess: () => {
             navigate({
-              to: `/dashboard/automation`,
+              to: "/dashboard/automation/rules",
             });
           },
         },
@@ -180,7 +182,7 @@ const RuleEditor: React.FC<{
       createMutation.mutate(data, {
         onSuccess: (data) => {
           navigate({
-            to: `/dashboard/automation/${data?.id}`,
+            to: `/dashboard/automation/rules/${data?.id}`,
             replace: true,
           });
         },
@@ -196,17 +198,17 @@ const RuleEditor: React.FC<{
       <header className="border-border bg-card flex h-14 shrink-0 items-center justify-between gap-4 border-b px-8">
         <div className="flex min-w-0 items-center gap-2.5">
           <Link
-            to="/dashboard/automation"
+            to="/dashboard/automation/rules"
             className="text-muted-foreground hover:text-foreground inline-flex shrink-0 items-center gap-1 text-[13px]"
           >
             <IconArrowLeft className="size-3.5" aria-hidden />
-            Automations
+            {t("Rules")}
           </Link>
           <span className="text-muted-foreground/50" aria-hidden>
             /
           </span>
           <span className="font-display truncate text-[15px] font-semibold">
-            {ruleName || (isEditMode ? "Untitled automation" : "New automation")}
+            {ruleName || (isEditMode ? t("Untitled rule") : t("New rule"))}
           </span>
         </div>
         <div className="flex shrink-0 items-center gap-3">

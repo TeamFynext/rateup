@@ -126,7 +126,7 @@ export function RolesMatrixPage() {
         <p className="text-xs text-muted-foreground">
           {t("Abilities for features your organization has turned off are hidden.")}{" "}
           <Link
-            to="/dashboard/features"
+            to="/dashboard/customize-menu"
             className="text-primary underline-offset-4 hover:underline"
           >
             {t("Manage features")}

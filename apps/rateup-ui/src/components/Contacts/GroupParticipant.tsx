@@ -13,7 +13,7 @@ export const ParticipantMenu = ({ contactId, groupId }: { contactId: string; gro
   const openDeleteModal = async () => {
     const ok = await confirm({
       title: translations("Remove member"),
-      description: translations("Are you sure you want to remove this member from group?"),
+      description: translations("Are you sure you want to remove this member from the audience?"),
       confirmText: translations("Ok"),
       cancelText: translations("cancel"),
     });

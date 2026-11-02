@@ -3,7 +3,7 @@ import {
   IconCheck,
   IconExternalLink,
   IconMessageCircle,
-  IconMessageChatbot,
+  IconRoute,
 } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
@@ -222,7 +222,7 @@ export function ChatbotTab() {
             <CardContent className="flex flex-col gap-3 p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <IconMessageChatbot size={16} className="text-muted-foreground" />
+                  <IconRoute size={16} className="text-muted-foreground" />
                   <p className="text-sm font-medium text-foreground">{chatbot.name}</p>
                   <Badge
                     variant="secondary"
@@ -235,11 +235,14 @@ export function ChatbotTab() {
                   variant="outline"
                   size="sm"
                   render={
-                    <Link to="/dashboard/chatbots/$chatbotId" params={{ chatbotId: chatbot.id }} />
+                    <Link
+                      to="/dashboard/automation/journeys/$journeyId"
+                      params={{ journeyId: chatbot.id }}
+                    />
                   }
                 >
                   <IconExternalLink size={14} />
-                  {t("Open in flow editor")}
+                  {t("Open in journey builder")}
                 </Button>
               </div>
 
@@ -322,13 +325,13 @@ export function ChatbotTab() {
                   onClick={create}
                   disabled={createBot.isPending || createRule.isPending || triggerClash}
                 >
-                  <IconMessageChatbot size={16} />
+                  <IconRoute size={16} />
                   {createBot.isPending || createRule.isPending
                     ? t("Creating…")
-                    : t("Create the chatbot")}
+                    : t("Create the journey")}
                 </Button>
                 <span className="text-xs text-muted-foreground">
-                  {t("Adds a chatbot under Chatbots, and a rule that opens it.")}
+                  {t("Adds a journey under Journeys, and a rule that opens it.")}
                 </span>
               </div>
             </CardContent>

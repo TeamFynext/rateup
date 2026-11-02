@@ -64,7 +64,7 @@ const InboxContactsControl = () => {
 
 enum ContactMethods {
   Individual = "Individual",
-  Group = "Group",
+  Group = "Audience",
 }
 
 const SelectContacts = ({
@@ -198,7 +198,7 @@ const SelectContacts = ({
               ))}
             </div>
           ) : (
-            <p>{translations("No group found")}</p>
+            <p>{translations("No audience found")}</p>
           )}
         </TabsContent>
       </ScrollArea>

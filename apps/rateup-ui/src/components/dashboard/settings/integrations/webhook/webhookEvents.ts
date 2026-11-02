@@ -56,8 +56,8 @@ export const EVENT_GROUPS: Readonly<{ title: string; events: readonly EventOptio
       },
       {
         value: "contact_group.members_added",
-        label: "Added to group",
-        description: "Contacts joined a contact group.",
+        label: "Added to audience",
+        description: "Contacts joined an audience.",
       },
     ],
   },

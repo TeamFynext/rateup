@@ -87,7 +87,7 @@ function EditorFrame({
             className="inline-flex shrink-0 items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground"
           >
             <IconArrowLeft className="size-3.5" aria-hidden />
-            {t("Link pages")}
+            {t("Link-in-bio Pages")}
           </Link>
           <span className="text-muted-foreground/50" aria-hidden>
             /

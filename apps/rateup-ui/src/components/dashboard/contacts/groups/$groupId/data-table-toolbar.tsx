@@ -119,7 +119,7 @@ export function DataTableToolbar<TData extends RowData, TValue>({
               loading={removeContactsMutation.isPending}
             >
               <IconTrash />
-              <span>{t("Remove from group")}</span>
+              <span>{t("Remove from audience")}</span>
             </Button>
             <Button variant="ghost" onClick={() => table.setRowSelection({})}>
               {t("Clear selection")}
@@ -142,7 +142,7 @@ export function DataTableToolbar<TData extends RowData, TValue>({
         setOpened={closeDialog}
         importMutation={importIntoGroup}
         groupId={groupDetails?.id}
-        description={t("Upload a CSV or Excel file. Each row becomes a contact in this group.")}
+        description={t("Upload a CSV or Excel file. Each row becomes a contact in this audience.")}
       />
     </Card>
   );

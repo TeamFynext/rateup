@@ -14,7 +14,7 @@ import {
 import type { LeadListParams, PipelineDetail } from "@/backend/pipeline/pipeline.types.ts";
 import { useUserInfo } from "@/backend/user/user.query.tsx";
 import { useDebounce } from "@/hooks/use-debounce.ts";
-import { Route } from "@/routes/dashboard/pipeline/index.tsx";
+import { Route } from "@/routes/dashboard/pipelines/index.tsx";
 import { usePipelineStore, type PipelineViewState } from "@/store/pipeline.store.ts";
 
 import { findLeadsPipeline } from "./pipelineTypes.ts";

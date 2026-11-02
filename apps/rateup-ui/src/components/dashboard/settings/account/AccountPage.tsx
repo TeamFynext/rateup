@@ -1,4 +1,4 @@
-// Extracted verbatim from the `/dashboard/settings/account/` route so the route file carries routing
+// Extracted verbatim from the `/dashboard/settings/profile/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -275,9 +275,11 @@ export function AccountPage() {
   return (
     <div className="mx-auto flex w-full max-w-265 flex-col gap-2">
       <div>
-        <h2 className="text-2xl mb-1">{translations("Account Settings")}</h2>
+        <h2 className="text-2xl mb-1">{translations("Profile & Business")}</h2>
         <p className="text-sm text-muted-foreground">
-          {translations("Manage your profile, business information and account preferences")}
+          {translations(
+            "Your profile and language, plus your business information and business hours",
+          )}
         </p>
       </div>
       {/* User Profile Section */}
@@ -332,8 +334,7 @@ export function AccountPage() {
                 <div className="flex flex-col gap-0.5">
                   <p className="text-lg sm:text-xl font-medium">{profileData?.data?.data?.name}</p>
                   <p className="text-xs sm:text-sm text-muted-foreground">
-                    {profileData?.data?.data?.email} • {translations("Member since")}
-                    {""}
+                    {profileData?.data?.data?.email} • {translations("Member since")}{" "}
                     {profileData?.data?.data?.createdAt
                       ? dayjs(profileData.data.data.createdAt).format("MMM D, YYYY")
                       : "—"}

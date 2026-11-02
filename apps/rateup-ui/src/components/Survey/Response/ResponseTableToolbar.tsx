@@ -386,7 +386,7 @@ export function ResponseTableToolbar<TData extends RowData>({
         <div className="flex flex-wrap items-center justify-end gap-2">
           <CalenderIconDateRangePicker ranges={ranges} setRange={setRange} />
           <RefreshButton onClick={() => refetchResponse()} />
-          <InfoButton docUrl={`${docsPath}/advancedFt/resultexport`} />
+          <InfoButton docUrl={`${docsPath}/surveys/results#export-responses`} />
 
           {!survey?.isEncrypted && (
             <DropdownMenu open={openedExport} onOpenChange={setOpenedExport}>

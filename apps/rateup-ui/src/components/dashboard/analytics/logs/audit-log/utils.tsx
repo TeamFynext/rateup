@@ -33,7 +33,9 @@ const ACTION_LABELS: Record<string, string> = {
 
 const RESOURCE_TYPE_MAPPINGS: Record<string, string> = {
   contact: "Contact",
-  "contact-group": "Contact Group",
+  "contact-group": "Audience",
+  "automated-reply": "Rule",
+  chatbots: "Journey",
   "wa-template": "WA Template",
   campaign: "Campaign",
   user: "User",
@@ -72,6 +74,23 @@ const parseRoute = (route: string): ParsedRoute => {
 // "<Resource> <action>" derived from the URL. Channel connect/disconnect lives
 // under /settings and /auth, which would otherwise read as "Settings created".
 const ROUTE_OVERRIDES: { method: string; pattern: RegExp; label: string }[] = [
+  // Rules live under the old `automated-reply` API path; journeys under `chatbots`.
+  { method: "POST", pattern: /^\/api\/wa\/automated-reply\/rule\/?$/, label: "Rule created" },
+  { method: "PUT", pattern: /^\/api\/wa\/automated-reply\/rule\/[^/]+\/?$/, label: "Rule updated" },
+  {
+    method: "PATCH",
+    pattern: /^\/api\/wa\/automated-reply\/rule\/[^/]+\/?$/,
+    label: "Rule updated",
+  },
+  {
+    method: "DELETE",
+    pattern: /^\/api\/wa\/automated-reply\/rule\/[^/]+\/?$/,
+    label: "Rule deleted",
+  },
+  { method: "POST", pattern: /^\/api\/chatbots\/?$/, label: "Journey created" },
+  { method: "PUT", pattern: /^\/api\/chatbots\/[^/]+\/?$/, label: "Journey updated" },
+  { method: "PATCH", pattern: /^\/api\/chatbots\/[^/]+\/?$/, label: "Journey updated" },
+  { method: "DELETE", pattern: /^\/api\/chatbots\/[^/]+\/?$/, label: "Journey deleted" },
   { method: "POST", pattern: /^\/api\/wa\/settings\/?$/, label: "Channel added" },
   { method: "PUT", pattern: /^\/api\/wa\/settings\/?$/, label: "Channel updated" },
   { method: "POST", pattern: /^\/api\/wa\/auth\/register\/?$/, label: "Channel added" },
@@ -106,7 +125,7 @@ const formatActionMessage = (method: string, route: string): string => {
 // Filter option names for route features; anything else is title-cased from its path.
 const FEATURE_LABELS: Record<string, string> = {
   contact: "Contacts",
-  "contact-group": "Contact groups",
+  "contact-group": "Audiences",
   pipeline: "Pipeline",
   loyalty: "Loyalty",
   survey: "Surveys",
@@ -117,6 +136,8 @@ const FEATURE_LABELS: Record<string, string> = {
   "wa/template": "WhatsApp templates",
   "wa/campaign": "Campaigns",
   "wa/settings": "Channels",
+  "wa/automated-reply": "Automation rules",
+  chatbots: "Journeys",
 };
 
 /** A feature key from the log (`contact`, `wa/inbox`) as a filter option name. */

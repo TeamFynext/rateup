@@ -15,7 +15,7 @@ import CallLogTab from "./CallLogTab.tsx";
 import { FilterSelect } from "./FilterSelect.tsx";
 import LiveCallsStrip from "./LiveCallsStrip.tsx";
 
-const route = getRouteApi("/dashboard/analytics/calls/");
+const route = getRouteApi("/dashboard/inbox/calls/");
 
 /** What both tabs are narrowed by. */
 export interface CallsScope {

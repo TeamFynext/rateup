@@ -88,7 +88,7 @@ export const useCreateContactGroupMutation = () => {
       });
     },
     onError: (error) => {
-      toast.error(error?.message || `${error?.message || "Error creating group"}`, {
+      toast.error(error?.message || `${error?.message || "Error creating audience"}`, {
         id: "contact-group-create",
       });
     },
@@ -156,12 +156,12 @@ export const useDeleteGroupMutation = () => {
         exact: false,
         refetchType: "all",
       });
-      toast.success("Contact Group deleted", {
+      toast.success("Audience deleted", {
         id: "contact-group-delete",
       });
     },
     onError: (error) => {
-      toast.error(error?.message || `Error deleting contact group`, {
+      toast.error(error?.message || `Error deleting audience`, {
         id: "contact-group-delete",
       });
     },
@@ -215,12 +215,12 @@ export const useAddExistingContactMutation = () => {
         exact: false,
         refetchType: "all",
       });
-      toast.success("Members added to  group successfully.", {
+      toast.success("Members added to audience successfully.", {
         id: "contact-group-add-existing",
       });
     },
     onError: (error) => {
-      toast.error(error?.message || `Error adding members to group`, {
+      toast.error(error?.message || `Error adding members to audience`, {
         id: "contact-group-add-existing",
       });
     },
@@ -232,7 +232,7 @@ export const useRemoveContactsFromGroup = (groupId: string) => {
   return useMutation({
     mutationFn: removeContactsFromGroup,
     onSuccess() {
-      toast.success("Members removed from  group successfully.", {
+      toast.success("Members removed from audience successfully.", {
         id: "contact-group-remove",
       });
       queryClient.invalidateQueries({
@@ -251,7 +251,7 @@ export const useRemoveContactsFromGroup = (groupId: string) => {
       });
     },
     onError(error) {
-      toast.error(error?.message || `Error removing members from group`, {
+      toast.error(error?.message || `Error removing members from audience`, {
         id: "contact-group-remove",
       });
     },
@@ -274,13 +274,13 @@ export const useAddExistingContactToMultipleGroupsMutation = (
       queryClient.invalidateQueries({
         queryKey: campaignKeys.contactGroups(),
       });
-      toast.success("Contacts added to groups successfully.", {
+      toast.success("Contacts added to audiences successfully.", {
         id: "contact-group-add-existing",
       });
       onSuccess();
     },
     onError: (error) => {
-      toast.error(error?.message || `${error?.message || "Error adding contacts to groups"}`, {
+      toast.error(error?.message || `${error?.message || "Error adding contacts to audiences"}`, {
         id: "contact-group-add-existing",
       });
     },
@@ -295,13 +295,13 @@ export const useDeleteManyContactGroupsMutation = (onSucess: () => void) => {
       queryClient.invalidateQueries({
         queryKey: campaignKeys.contactGroups(),
       });
-      toast.success("Contact Groups deleted", {
+      toast.success("Audiences deleted", {
         id: "contact-group-delete",
       });
       onSucess();
     },
     onError: (error) => {
-      toast.error(error?.message || `Error deleting contact groups`, {
+      toast.error(error?.message || `Error deleting audiences`, {
         id: "contact-group-delete",
       });
     },

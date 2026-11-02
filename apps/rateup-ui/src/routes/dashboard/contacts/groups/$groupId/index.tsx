@@ -1,11 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import { ContactGroup } from "@/components/dashboard/contacts/groups/ContactGroup.tsx";
-
+/** Contact groups were renamed Audiences; old links keep working. */
 export const Route = createFileRoute("/dashboard/contacts/groups/$groupId/")({
-  component: RouteComponent,
+  beforeLoad: ({ params }) => {
+    throw redirect({
+      to: "/dashboard/contacts/audiences/$audienceId",
+      params: { audienceId: params.groupId },
+      replace: true,
+    });
+  },
 });
-
-function RouteComponent() {
-  return <ContactGroup />;
-}

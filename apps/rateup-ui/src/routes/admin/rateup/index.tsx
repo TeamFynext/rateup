@@ -1,11 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import { RateupPlan } from "@/components/admin/rateup/RateupPlan.tsx";
-
+// Legacy URL: /admin/rateup was renamed to /admin/plans. Kept as a redirect so bookmarks keep working.
 export const Route = createFileRoute("/admin/rateup/")({
-  component: RouteComponent,
+  beforeLoad: ({ params, search }) => {
+    throw redirect({ to: "/admin/plans", params, search, replace: true });
+  },
 });
-
-function RouteComponent() {
-  return <RateupPlan />;
-}

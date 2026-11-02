@@ -1,4 +1,4 @@
-// Extracted verbatim from the `/dashboard/settings/security/` route so the route file carries routing
+// Extracted verbatim from the `/dashboard/settings/password/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -195,9 +195,9 @@ export function SecurityPage() {
   return (
     <div className="mx-auto flex w-full max-w-265 flex-col gap-6">
       <div>
-        <h2 className="text-2xl mb-1">{translations("Security Settings")}</h2>
+        <h2 className="text-2xl mb-1">{translations("Password & Account")}</h2>
         <p className="text-sm text-muted-foreground">
-          {translations("Manage your password, authentication, and security preferences")}
+          {translations("Change your password, or permanently delete your account or organization")}
         </p>
       </div>
       <div className="flex flex-col gap-6">

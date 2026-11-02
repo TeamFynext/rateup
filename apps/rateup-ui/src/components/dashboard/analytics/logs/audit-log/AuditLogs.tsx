@@ -68,7 +68,7 @@ export function AuditLogs({ dateRange }: Readonly<{ dateRange: AnalyticsDateRang
 
   return (
     <AnalyticsCard
-      title={t("Team activity")}
+      title={t("Audit log")}
       description={t("What your team created, changed or deleted, newest first")}
       query={query}
       isEmpty={false}

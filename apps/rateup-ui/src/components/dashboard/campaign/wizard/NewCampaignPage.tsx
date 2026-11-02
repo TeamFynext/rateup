@@ -89,9 +89,9 @@ export function NewCampaignPage() {
             if (exitAfterCreate.current)
               toast.success(t("Draft saved"), { id: "campaign-wizard-save" });
             return void (exitAfterCreate.current
-              ? navigate({ to: "/dashboard/campaign" })
+              ? navigate({ to: "/dashboard/campaigns" })
               : navigate({
-                  to: "/dashboard/campaign/$campaignId/edit",
+                  to: "/dashboard/campaigns/$campaignId/edit",
                   params: { campaignId },
                   search: { step: "template" },
                 }));

@@ -1,40 +1,30 @@
-// Extracted verbatim from the `/dashboard/instagram/` route so the route file carries routing
-// config only. Behaviour is unchanged.
-
 import {
-  IconBrandInstagram,
+  IconHistory,
+  IconLink,
   IconMenu2,
   IconMessageDots,
   IconMessageQuestion,
-  IconSitemap,
-  IconHistory,
-  IconLink,
 } from "@tabler/icons-react";
-import { Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { getRouteApi } from "@tanstack/react-router";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useChannels } from "@/backend/channels/channels.query";
-import { Badge } from "@/components/ui/badge.tsx";
-import { buttonVariants } from "@/components/ui/button.tsx";
+import { useInstagramProfile } from "@/backend/whatsapp/instagram-profile/instagramProfile.query";
+import { useRules } from "@/backend/whatsapp/rule/rule.query";
 import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty.tsx";
+  type ChannelTool,
+  ChannelPageShell,
+} from "@/components/dashboard/meta-channels/ChannelPageShell.tsx";
+import type { InstagramTool } from "@/components/dashboard/meta-channels/toolSearch.ts";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+  iceBreakersStatus,
+  linksStatus,
+  matchingRules,
+  menuStatus,
+  rulesStatus,
+  unknownStatus,
+} from "@/components/dashboard/meta-channels/toolStatus.ts";
 
 import { CommentsTab } from "./tabs/CommentsTab.tsx";
 import { IceBreakersTab } from "./tabs/IceBreakersTab.tsx";
@@ -42,173 +32,133 @@ import { IgMeLinksTab } from "./tabs/IgMeLinksTab.tsx";
 import { PersistentMenuTab } from "./tabs/PersistentMenuTab.tsx";
 import { StoriesTab } from "./tabs/StoriesTab.tsx";
 
+const route = getRouteApi("/dashboard/instagram/");
+
+/** Comments, story mentions, menus, ice breakers and ig.me links of one Instagram account. */
 export function InstagramDashboard() {
-  const { data: instagramChannels, isLoading } = useChannels(true, "INSTAGRAM");
   const { t } = useTranslation();
-
+  const { tool } = route.useSearch();
+  const navigate = route.useNavigate();
   // Instagram accounts are their own channels, connected without WhatsApp.
-  const connectedSettings = useMemo(() => instagramChannels ?? [], [instagramChannels]);
+  const { data: accounts, isLoading } = useChannels(true, "INSTAGRAM");
+  const [selectedId, setSelectedId] = useState<string>();
+  // Everything below belongs to one account; the first is picked until the user chooses.
+  const account = accounts?.find((a) => a.id === selectedId) ?? accounts?.[0];
+  const businessName = account?.name || account?.username || "";
 
-  const [selectedId, setSelectedId] = useState<string | undefined>();
+  // The same queries the tools read, so the tiles cost no extra requests.
+  const { data: rules } = useRules();
+  const profile = useInstagramProfile(account?.id);
+  const forAccount = (trigger: string) =>
+    rules && account ? matchingRules(rules, "INSTAGRAM", trigger, account.accountId) : undefined;
 
-  useEffect(() => {
-    if (!selectedId && connectedSettings[0]?.id) {
-      setSelectedId(connectedSettings[0].id);
-    }
-  }, [connectedSettings, selectedId]);
-
-  const selectedSetting = connectedSettings.find((s) => s.id === selectedId);
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Skeleton className="h-10 w-10 rounded-lg" />
-          <div className="space-y-1.5">
-            <Skeleton className="h-5 w-48" />
-            <Skeleton className="h-3 w-72" />
-          </div>
-        </div>
-        <Skeleton className="h-10 w-full rounded-xl" />
-        <div className="grid gap-4 md:grid-cols-2">
-          <Skeleton className="h-48 rounded-xl" />
-          <Skeleton className="h-48 rounded-xl" />
-        </div>
-      </div>
-    );
-  }
-
-  if (connectedSettings.length === 0) {
-    return (
-      <Empty className="min-h-96">
-        <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <IconBrandInstagram className="size-6" />
-          </EmptyMedia>
-          <EmptyTitle>{t("No Instagram accounts connected")}</EmptyTitle>
-          <EmptyDescription>
-            {t(
-              "Connect an Instagram Business account to manage ice breakers, comment automations, and more.",
-            )}
-          </EmptyDescription>
-        </EmptyHeader>
-        <EmptyContent>
-          <Link to="/dashboard/settings/channels" className={buttonVariants()}>
-            {t("Go to Settings")}
-          </Link>
-        </EmptyContent>
-      </Empty>
-    );
-  }
+  const tools: ChannelTool<InstagramTool>[] = account
+    ? [
+        {
+          value: "comments",
+          label: t("Comment automations"),
+          icon: IconMessageDots,
+          status: rulesStatus(forAccount("INSTAGRAM_COMMENT"), t),
+          content: <CommentsTab ibaId={account.accountId} />,
+        },
+        {
+          value: "stories",
+          label: t("Story mentions"),
+          icon: IconHistory,
+          status: rulesStatus(forAccount("INSTAGRAM_STORY_MENTION"), t),
+          content: <StoriesTab ibaId={account.accountId} />,
+        },
+        {
+          value: "persistent-menu",
+          label: t("Persistent menu"),
+          icon: IconMenu2,
+          status: profile.isError
+            ? unknownStatus(t)
+            : menuStatus(
+                profile.data
+                  ? (profile.data.data.persistentMenu?.[0]?.call_to_actions?.length ?? 0)
+                  : undefined,
+                t,
+              ),
+          content: <PersistentMenuTab channelId={account.id} businessName={businessName} />,
+        },
+        {
+          value: "ice-breakers",
+          label: t("Ice breakers"),
+          icon: IconMessageQuestion,
+          status: profile.isError
+            ? unknownStatus(t)
+            : iceBreakersStatus(
+                profile.data ? (profile.data.data.iceBreakers?.length ?? 0) : undefined,
+                4,
+                t,
+              ),
+          content: <IceBreakersTab channelId={account.id} businessName={businessName} />,
+        },
+        {
+          value: "ig-me-links",
+          label: t("ig.me links"),
+          icon: IconLink,
+          status: linksStatus(forAccount("INSTAGRAM_REFERRAL"), t),
+          content: (
+            <IgMeLinksTab
+              ibaId={account.accountId}
+              username={account.username}
+              displayName={account.name}
+            />
+          ),
+        },
+      ]
+    : [];
 
   return (
-    <div className="flex h-full flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-lg bg-linear-to-br from-purple-500 to-pink-500 text-white">
-            <IconBrandInstagram className="size-5" />
-          </div>
-          <div>
-            <h1 className="font-display text-lg font-semibold tracking-tight">{t("Instagram")}</h1>
-            <p className="text-sm text-muted-foreground">
-              {t("Manage automations, menus, and engagement tools")}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Link
-            to="/dashboard/chatbots"
-            search={{ channel: "instagram" }}
-            className={buttonVariants({ variant: "outline", size: "sm" })}
-          >
-            <IconSitemap className="mr-1.5 size-4" />
-            {t("Instagram chatbots")}
-          </Link>
-          <Select
-            value={selectedSetting?.id ?? ""}
-            onValueChange={(v) => setSelectedId(v ?? undefined)}
-            items={connectedSettings.map((s) => ({
-              value: s.id,
-              label: s.name || s.username || s.accountId,
-            }))}
-          >
-            <SelectTrigger className="w-56">
-              <SelectValue placeholder={t("Select account")} />
-            </SelectTrigger>
-            <SelectContent>
-              {connectedSettings.map((s) => (
-                <SelectItem key={s.id} value={s.id}>
-                  <div className="flex items-center gap-2">
-                    <IconBrandInstagram className="size-3.5 text-muted-foreground" />
-                    {s.name || s.username || s.accountId}
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Badge variant="secondary" className="text-xs">
-            {t("{count} connected", { count: connectedSettings.length })}
-          </Badge>
-        </div>
-      </div>
-
-      <Separator />
-
-      <Tabs defaultValue="comments">
-        <TabsList>
-          <TabsTrigger value="comments">
-            <IconMessageDots className="mr-1.5 size-4" />
-            {t("Comments")}
-          </TabsTrigger>
-          <TabsTrigger value="stories">
-            <IconHistory className="mr-1.5 size-4" />
-            {t("Story Mentions")}
-          </TabsTrigger>
-          <TabsTrigger value="persistent-menu">
-            <IconMenu2 className="mr-1.5 size-4" />
-            {t("Persistent Menu")}
-          </TabsTrigger>
-          <TabsTrigger value="ice-breakers">
-            <IconMessageQuestion className="mr-1.5 size-4" />
-            {t("Ice Breakers")}
-          </TabsTrigger>
-          <TabsTrigger value="ig-me-links">
-            <IconLink className="mr-1.5 size-4" />
-            {t("ig.me Links")}
-          </TabsTrigger>
-        </TabsList>
-
-        {selectedSetting && (
-          <>
-            <TabsContent value="comments" className="mt-4">
-              <CommentsTab ibaId={selectedSetting.accountId} />
-            </TabsContent>
-            <TabsContent value="stories" className="mt-4">
-              <StoriesTab ibaId={selectedSetting.accountId} />
-            </TabsContent>
-            <TabsContent value="persistent-menu" className="mt-4">
-              <PersistentMenuTab
-                channelId={selectedSetting.id}
-                businessName={selectedSetting.name || selectedSetting.username || ""}
-              />
-            </TabsContent>
-            <TabsContent value="ice-breakers" className="mt-4">
-              <IceBreakersTab
-                channelId={selectedSetting.id}
-                businessName={selectedSetting.name || selectedSetting.username || ""}
-              />
-            </TabsContent>
-            <TabsContent value="ig-me-links" className="mt-4">
-              <IgMeLinksTab
-                ibaId={selectedSetting.accountId}
-                username={selectedSetting.username}
-                displayName={selectedSetting.name}
-              />
-            </TabsContent>
-          </>
-        )}
-      </Tabs>
-    </div>
+    <ChannelPageShell
+      channel="instagram"
+      title={t("Instagram")}
+      description={t("Comments, story mentions, links and DM menus for your account.")}
+      journeysLabel={t("Instagram journeys")}
+      journeysHint={t("Step-by-step conversations in your Instagram DMs")}
+      accounts={accounts?.map((a) => ({
+        id: a.id,
+        label: a.name || (a.username ? `@${a.username}` : a.accountId),
+        // The handle under the name, unless the name already is the handle.
+        handle: a.username && a.name ? `@${a.username}` : undefined,
+        status: a.status,
+        profileUrl: a.username ? `https://instagram.com/${a.username}` : undefined,
+      }))}
+      isLoading={isLoading}
+      selectedId={account?.id}
+      onSelect={setSelectedId}
+      accountLabel={t("Instagram account")}
+      notConnected={{
+        title: t("Connect an Instagram account"),
+        description: t(
+          "Comment automations, ice breakers and ig.me links run on a connected Instagram Business account. Connect one to get started.",
+        ),
+        actionLabel: t("Connect Instagram account"),
+        features: [
+          {
+            icon: IconMessageDots,
+            title: t("Reply to comments"),
+            description: t("Send a private DM when someone comments on a post or reel."),
+          },
+          {
+            icon: IconMessageQuestion,
+            title: t("Greet new DMs"),
+            description: t("Ice breakers and a menu people can tap instead of typing."),
+          },
+          {
+            icon: IconLink,
+            title: t("Share ig.me links"),
+            description: t("Links and QR codes that open a DM and start an automation."),
+          },
+        ],
+      }}
+      tools={tools}
+      activeTool={tool}
+      onToolChange={(next) =>
+        void navigate({ search: { tool: next }, replace: false, resetScroll: false })
+      }
+    />
   );
 }

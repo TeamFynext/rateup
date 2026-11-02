@@ -30,13 +30,13 @@ describe("buildMetaAgentNavItems", () => {
       "Test and go live",
     ]);
     expect(rows(items).map((row) => row.url)).toEqual([
-      "/dashboard/meta-agent/overview",
+      "/dashboard/meta-agent/setup-guide",
       "/dashboard/meta-agent/knowledge",
       "/dashboard/meta-agent/skills",
-      "/dashboard/meta-agent/ui-skills",
+      "/dashboard/meta-agent/rich-replies",
       "/dashboard/meta-agent/connectors",
-      "/dashboard/meta-agent/operate",
-      "/dashboard/meta-agent/settings",
+      "/dashboard/meta-agent/test",
+      "/dashboard/meta-agent/go-live",
       "/dashboard/meta-agent/insights",
     ]);
   });
@@ -45,10 +45,10 @@ describe("buildMetaAgentNavItems", () => {
     const byUrl = Object.fromEntries(
       rows(buildMetaAgentNavItems({ t, status })).map((row) => [row.url, row.done]),
     );
-    expect(byUrl["/dashboard/meta-agent/overview"]).toBe(true);
+    expect(byUrl["/dashboard/meta-agent/setup-guide"]).toBe(true);
     expect(byUrl["/dashboard/meta-agent/knowledge"]).toBe(true);
     expect(byUrl["/dashboard/meta-agent/skills"]).toBe(false);
-    expect(byUrl["/dashboard/meta-agent/operate"]).toBeUndefined();
+    expect(byUrl["/dashboard/meta-agent/test"]).toBeUndefined();
     expect(byUrl["/dashboard/meta-agent/insights"]).toBeUndefined();
   });
 

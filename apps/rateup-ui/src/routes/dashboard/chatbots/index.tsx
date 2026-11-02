@@ -1,30 +1,14 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import {
-  ChatbotsPage,
-  type ChatbotChannelParam,
-} from "@/components/dashboard/chatbots/ChatbotsPage.tsx";
+import { parseJourneysSearch } from "@/components/dashboard/chatbots/journeysSearch.ts";
 
-const CHANNELS: readonly ChatbotChannelParam[] = ["whatsapp", "instagram", "messenger"];
-
-function isChannel(value: unknown): value is ChatbotChannelParam {
-  return CHANNELS.includes(value as ChatbotChannelParam);
-}
-
+/** Chatbots were renamed Journeys; old links keep working, `?channel=` included. */
 export const Route = createFileRoute("/dashboard/chatbots/")({
-  validateSearch: (search: Record<string, unknown>): { channel?: ChatbotChannelParam } => ({
-    channel: isChannel(search.channel) ? search.channel : undefined,
-  }),
-  component: RouteComponent,
+  beforeLoad: ({ location }) => {
+    throw redirect({
+      to: "/dashboard/automation/journeys",
+      search: parseJourneysSearch(location.search as Record<string, unknown>),
+      replace: true,
+    });
+  },
 });
-
-function RouteComponent() {
-  const { channel } = Route.useSearch();
-  const navigate = useNavigate({ from: Route.fullPath });
-  return (
-    <ChatbotsPage
-      channel={channel}
-      onChannelChange={(next) => void navigate({ search: { channel: next }, replace: true })}
-    />
-  );
-}

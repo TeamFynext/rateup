@@ -5,7 +5,7 @@ import {
   IconBrandInstagram,
   IconBrandWhatsapp,
   IconDownload,
-  IconFolder,
+  IconUsersGroup,
   IconGlobe,
   IconPlus,
   IconSearch,
@@ -300,8 +300,8 @@ export function DataTableToolbar({ table }: Readonly<DataTableToolbarProps>) {
               className="hover:text-blue-500"
               onClick={() => setOpenAddtoGroupModal(true)}
             >
-              <IconFolder />
-              <span>{t("Add to Group")}</span>
+              <IconUsersGroup />
+              <span>{t("Add to Audience")}</span>
             </Button>
             <Button
               variant="outline"

@@ -4,27 +4,40 @@
 import type { ReactNode } from "react";
 
 export function PageHeading({
+  icon,
   title,
   description,
   actions,
 }: Readonly<{
+  /** A tile beside the title, e.g. a channel's logo on its brand fill. */
+  icon?: ReactNode;
   title: string;
   description?: ReactNode;
   /** Sits opposite the title — a back link, a primary action. */
   actions?: ReactNode;
 }>) {
+  const heading = (
+    <div className="flex min-w-0 flex-col gap-1.5">
+      <h1 className="m-0 font-display text-[28px] leading-tight font-bold tracking-[-0.025em]">
+        {title}
+      </h1>
+      {description ? (
+        <p className="m-0 max-w-[56ch] text-[15px] leading-relaxed text-muted-foreground">
+          {description}
+        </p>
+      ) : null}
+    </div>
+  );
   return (
     <div className="flex flex-wrap items-start justify-between gap-3">
-      <div className="flex min-w-0 flex-col gap-1.5">
-        <h1 className="m-0 font-display text-[28px] leading-tight font-bold tracking-[-0.025em]">
-          {title}
-        </h1>
-        {description ? (
-          <p className="m-0 max-w-[56ch] text-[15px] leading-relaxed text-muted-foreground">
-            {description}
-          </p>
-        ) : null}
-      </div>
+      {icon ? (
+        <div className="flex min-w-0 flex-1 basis-80 items-center gap-3.5">
+          {icon}
+          {heading}
+        </div>
+      ) : (
+        heading
+      )}
       {actions}
     </div>
   );

@@ -1,25 +1,15 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import { CampaignsPage } from "@/components/dashboard/campaign/CampaignsPage.tsx";
-import { CampaignStatus } from "@/types/enums.ts";
-
-function isCampaignStatus(value: unknown): value is CampaignStatus {
-  return (
-    typeof value === "string" && Object.values(CampaignStatus).includes(value as CampaignStatus)
-  );
-}
-
+/** Campaigns moved to /dashboard/campaigns; old links and bookmarks keep working. */
 export const Route = createFileRoute("/dashboard/campaign/")({
-  // The sidebar's Drafts and Scheduled rows are this page with a status filter
-  // applied, so the filter has to live in the URL for those links to mean
-  // anything — and so a filtered list survives a refresh.
-  validateSearch: (search: Record<string, unknown>): { status?: CampaignStatus } => ({
-    status: isCampaignStatus(search.status) ? search.status : undefined,
-  }),
-  component: RouteComponent,
+  beforeLoad: ({ location }) => {
+    throw redirect({
+      to: "/dashboard/campaigns",
+      // The old URL's query, carried across as-is: the target's own validateSearch
+      // parses it, so this route does not restate (and drift from) that schema.
+      search: location.search as never,
+      hash: location.hash,
+      replace: true,
+    });
+  },
 });
-
-function RouteComponent() {
-  const { status } = Route.useSearch();
-  return <CampaignsPage initialStatus={status} />;
-}

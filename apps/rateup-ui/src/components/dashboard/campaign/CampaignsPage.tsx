@@ -1,4 +1,4 @@
-// Extracted verbatim from the `/dashboard/campaign/` route so the route file carries routing
+// Extracted verbatim from the `/dashboard/campaigns/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
 import { IconFilter, IconMessage, IconRotate, IconSend } from "@tabler/icons-react";
@@ -75,7 +75,7 @@ export function CampaignsPage({
   // journey, so they land in the same place.
   const openEditCampaign = (campaign: Campaign) => {
     void navigate({
-      to: "/dashboard/campaign/$campaignId/edit",
+      to: "/dashboard/campaigns/$campaignId/edit",
       params: { campaignId: campaign.id },
       search: { step: campaign.waTemplateId ? "review" : "template" },
     });
@@ -114,7 +114,7 @@ export function CampaignsPage({
 
   const handleViewDetails = (campaign: Campaign) => {
     navigate({
-      to: `/dashboard/campaign/${campaign.id}`,
+      to: `/dashboard/campaigns/${campaign.id}`,
     });
   };
 
@@ -233,10 +233,10 @@ export function CampaignsPage({
             {/* Creation is a route now, not a modal: a half-built campaign is
                 a real DRAFT with a URL, so it survives a refresh and can be
                 picked up again from the list. */}
-            <Button render={<Link to="/dashboard/campaign/new" />} loading={isPending}>
+            <Button render={<Link to="/dashboard/campaigns/new" />} loading={isPending}>
               {t("Create Campaign")}
             </Button>
-            <InfoButton docUrl={`${docsPath}/campaign`} />
+            <InfoButton docUrl={`${docsPath}/campaigns`} />
             <RefreshButton queryKeys={["campaigns"]} />
           </ListPageHeaderSection>
 

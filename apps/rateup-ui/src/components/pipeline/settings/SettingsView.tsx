@@ -906,7 +906,7 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
         // replaced: the page falls back to whichever pipeline is now first, and
         // lands on its board rather than on another pipeline's settings.
         onDeleted={() =>
-          void navigate({ to: "/dashboard/pipeline", search: { view: "board", f: "open" } })
+          void navigate({ to: "/dashboard/pipelines", search: { view: "board", f: "open" } })
         }
       />
     </div>

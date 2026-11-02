@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { UpdateCenter } from "@/components/admin/updateCenter/UpdateCenter.tsx";
 
-export const Route = createFileRoute("/admin/updateCenter/")({
+export const Route = createFileRoute("/admin/update-center/")({
   component: RouteComponent,
 });
 

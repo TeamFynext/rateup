@@ -33,6 +33,17 @@ export const AGENT_STEPS = [
 
 export type AgentStep = (typeof AGENT_STEPS)[number];
 
+/**
+ * A step's URL slug. The keys above are code names; four steps were renamed in
+ * the URL to match their sidebar labels, so the slug is not always the key.
+ */
+type AgentStepSlug =
+  | Exclude<AgentStep, "overview" | "ui-skills" | "operate" | "settings">
+  | "setup-guide"
+  | "rich-replies"
+  | "test"
+  | "go-live";
+
 /** Where a step sits on the setup guide. */
 export type AgentStepGroup = "connect" | "teach" | "extend" | "launch";
 
@@ -46,7 +57,7 @@ export interface AgentStepMeta {
   tint: RowTint;
   minutes: number;
   group: AgentStepGroup;
-  to: `/dashboard/meta-agent/${AgentStep}`;
+  to: `/dashboard/meta-agent/${AgentStepSlug}`;
 }
 
 export const AGENT_STEP_META: Record<AgentStep, AgentStepMeta> = {
@@ -58,7 +69,7 @@ export const AGENT_STEP_META: Record<AgentStep, AgentStepMeta> = {
     tint: "green",
     minutes: 2,
     group: "connect",
-    to: "/dashboard/meta-agent/overview",
+    to: "/dashboard/meta-agent/setup-guide",
   },
   knowledge: {
     label: "Knowledge",
@@ -90,7 +101,7 @@ export const AGENT_STEP_META: Record<AgentStep, AgentStepMeta> = {
     tint: "warm",
     minutes: 3,
     group: "extend",
-    to: "/dashboard/meta-agent/ui-skills",
+    to: "/dashboard/meta-agent/rich-replies",
   },
   connectors: {
     label: "Connectors",
@@ -111,7 +122,7 @@ export const AGENT_STEP_META: Record<AgentStep, AgentStepMeta> = {
     tint: "accent",
     minutes: 2,
     group: "launch",
-    to: "/dashboard/meta-agent/operate",
+    to: "/dashboard/meta-agent/test",
   },
   settings: {
     label: "Go live",
@@ -122,7 +133,7 @@ export const AGENT_STEP_META: Record<AgentStep, AgentStepMeta> = {
     tint: "brand",
     minutes: 1,
     group: "launch",
-    to: "/dashboard/meta-agent/settings",
+    to: "/dashboard/meta-agent/go-live",
   },
   insights: {
     label: "Insights",

@@ -322,7 +322,8 @@ function handleLiveNotification(
   const message = notificationMessage(t, notification.event, notification.data);
   const open = () => void navigate({ href: notification.path });
   const isNewMessage = notification.event.startsWith("inbox.message.");
-  const onInbox = window.location.pathname.startsWith("/dashboard/inbox");
+  // The chat screen, not the Calls page under it.
+  const onInbox = /^\/dashboard\/inbox\/?$/.test(window.location.pathname);
   const tag = notification.id ?? `${notification.event}:${notification.data?.contactId ?? ""}`;
   // The inbox shows a new message by itself; a toast on top of it is noise.
   const wantsToast = notification.toast && !(isNewMessage && onInbox);

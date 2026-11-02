@@ -47,23 +47,23 @@ interface MemberRow {
   active: number;
 }
 
-/** One team's numbers: `/dashboard/analytics/team/$teamid`. */
+/** One team's numbers: `/dashboard/analytics/teams/$teamId`. */
 export function TeamPage() {
   const { t } = useTranslation();
   const [day, setDay] = useState(7);
   const queryClient = useQueryClient();
-  const { teamid } = useParams({ strict: false });
+  const { teamId } = useParams({ strict: false });
   const navigate = useNavigate();
   const [isExporting, setIsExporting] = useState(false);
 
-  const query = useGetTeamDetailedMetrics(teamid ?? "", { days: day });
+  const query = useGetTeamDetailedMetrics(teamId ?? "", { days: day });
   const data = query.data;
 
   function refresh() {
     requestFreshAnalytics();
     queryClient
       .invalidateQueries({
-        queryKey: teamKeys.detailedMetrics(teamid, { days: day }),
+        queryKey: teamKeys.detailedMetrics(teamId, { days: day }),
         refetchType: "all",
       })
       .finally(endFreshAnalytics);
@@ -115,8 +115,8 @@ export function TeamPage() {
           <div className="flex min-w-44 items-center gap-3">
             <StaffAvatar name={row.original.name} photo={row.original.photo} className="size-8" />
             <Link
-              to="/dashboard/analytics/$staffid"
-              params={{ staffid: row.original.id }}
+              to="/dashboard/analytics/agents/$agentId"
+              params={{ agentId: row.original.id }}
               onClick={(event) => event.stopPropagation()}
               className={NAME_LINK}
             >
@@ -175,7 +175,7 @@ export function TeamPage() {
           back={
             <BackLink
               to="/dashboard/analytics"
-              search={{ tab: "conversations", view: "teams" }}
+              search={{ tab: "team-performance", view: "teams" }}
               label={t("Teams")}
               iconOnly
             />
@@ -261,7 +261,10 @@ export function TeamPage() {
               columns={columns}
               data={rows}
               onRowClick={(row) =>
-                navigate({ to: "/dashboard/analytics/$staffid", params: { staffid: row.id } })
+                navigate({
+                  to: "/dashboard/analytics/agents/$agentId",
+                  params: { agentId: row.id },
+                })
               }
             />
           </div>

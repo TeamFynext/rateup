@@ -1,9 +1,10 @@
-// Extracted verbatim from the `/dashboard/automation/` route so the route file carries routing
+// Extracted verbatim from the `/dashboard/automation/rules/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
 import { IconChevronDown, IconFilter, IconGrid3x3, IconList, IconPlus } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import {
   useDeleteRuleMutation,
@@ -39,6 +40,7 @@ const AUTOMATION_SORT_OPTIONS = [
 ] as const;
 
 export function AutomationPage() {
+  const { t } = useTranslation();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<"latest" | "oldest" | "a-z" | "z-a">("latest");
@@ -66,8 +68,8 @@ export function AutomationPage() {
 
   const handleCreate = () => {
     navigate({
-      to: "/dashboard/automation/$automationId",
-      params: { automationId: "new" },
+      to: "/dashboard/automation/rules/$ruleId",
+      params: { ruleId: "new" },
     });
   };
 
@@ -87,7 +89,7 @@ export function AutomationPage() {
       <ListPageHeader>
         <ListPageHeaderSection className="gap-3">
           <Button onClick={handleCreate} loading={isLoading}>
-            Create Automation
+            {t("Create rule")}
             <IconPlus size={16} className="ml-2" />
           </Button>
           <RefreshButton queryKeys={["rules"]} />
@@ -95,7 +97,7 @@ export function AutomationPage() {
 
         <ListPageHeaderSection>
           <ListPageSearchInput
-            placeholder="Search..."
+            placeholder={t("Search rules...")}
             value={searchTerm}
             onChange={setSearchTerm}
           />
@@ -181,8 +183,8 @@ export function AutomationPage() {
             limit={4}
             onPick={(template) =>
               navigate({
-                to: "/dashboard/automation/$automationId",
-                params: { automationId: "new" },
+                to: "/dashboard/automation/rules/$ruleId",
+                params: { ruleId: "new" },
                 search: { template: template.id },
               })
             }
@@ -198,8 +200,10 @@ export function AutomationPage() {
           isLoading={isLoading}
           isError={isError}
           isEmpty={isEmpty}
-          emptyTitle="No Automation Yet"
-          emptyDescription="You haven't created any automation yet. Get started by creating your first automation."
+          emptyTitle={t("No rules yet")}
+          emptyDescription={t(
+            "Create your first rule to reply, tag or assign automatically when something happens.",
+          )}
           onRetry={refetch}
         >
           <CardView

@@ -67,8 +67,8 @@ export const CARD_ROUTES = {
   api: { to: "/dashboard/settings/channels/$channel", params: { channel: "whatsapp" } },
   cmds: { to: "/dashboard/whatsapp/templates" },
   // Business hours are a section of the account page, not their own route.
-  hours: { to: "/dashboard/settings/account", hash: "business-hours" },
-  auto: { to: "/dashboard/automation" },
+  hours: { to: "/dashboard/settings/profile", hash: "business-hours" },
+  auto: { to: "/dashboard/automation/rules" },
   points: { to: "/dashboard/loyalty/settings" },
   invite: { to: "/dashboard/settings/users" },
   // Only reached once connected, to manage them.
@@ -148,7 +148,7 @@ export function setupCopy(t: TFunction): Record<CardId, CardCopy> {
     features: {
       title: t("Choose the features you will use"),
       desc: t(
-        "Pick what your business needs, such as loyalty, commerce or web forms. Only those show in your menu, and you can change it any time.",
+        "Pick what your business needs, such as loyalty, commerce or surveys. Only those show in your menu, and you can change it any time.",
       ),
       btnLabel: t("Choose features"),
       navLabel: t("Choose features"),

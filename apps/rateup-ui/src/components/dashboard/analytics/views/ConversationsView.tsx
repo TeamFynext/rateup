@@ -117,8 +117,8 @@ function AgentsTable({ filters }: Readonly<{ filters: AnalyticsFilters }>) {
             <StaffAvatar name={row.original.name} photo={row.original.photo} />
             <div className="flex min-w-0 flex-col">
               <Link
-                to="/dashboard/analytics/$staffid"
-                params={{ staffid: row.original.id }}
+                to="/dashboard/analytics/agents/$agentId"
+                params={{ agentId: row.original.id }}
                 onClick={(event) => event.stopPropagation()}
                 className={NAME_LINK}
               >
@@ -215,7 +215,7 @@ function AgentsTable({ filters }: Readonly<{ filters: AnalyticsFilters }>) {
           data={rows}
           DataTableToolbar={SearchToolbar}
           onRowClick={(row) =>
-            navigate({ to: "/dashboard/analytics/$staffid", params: { staffid: row.id } })
+            navigate({ to: "/dashboard/analytics/agents/$agentId", params: { agentId: row.id } })
           }
         />
       </div>
@@ -257,8 +257,8 @@ function TeamsTable({ filters }: Readonly<{ filters: AnalyticsFilters }>) {
               aria-hidden
             />
             <Link
-              to="/dashboard/analytics/team/$teamid"
-              params={{ teamid: row.original.id }}
+              to="/dashboard/analytics/teams/$teamId"
+              params={{ teamId: row.original.id }}
               onClick={(event) => event.stopPropagation()}
               className={NAME_LINK}
             >
@@ -321,7 +321,7 @@ function TeamsTable({ filters }: Readonly<{ filters: AnalyticsFilters }>) {
           data={rows}
           DataTableToolbar={SearchToolbar}
           onRowClick={(row) =>
-            navigate({ to: "/dashboard/analytics/team/$teamid", params: { teamid: row.id } })
+            navigate({ to: "/dashboard/analytics/teams/$teamId", params: { teamId: row.id } })
           }
         />
       </div>

@@ -785,7 +785,7 @@ export function DeleteTeam({ selectedTeam }: { selectedTeam: SelectedTeam }) {
         setIsDeleting(false);
         setIsDialogOpen(false);
         navigate({
-          to: "/dashboard/settings/team",
+          to: "/dashboard/settings/teams",
         });
       },
     });

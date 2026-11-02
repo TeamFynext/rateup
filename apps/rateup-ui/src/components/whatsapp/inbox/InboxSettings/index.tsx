@@ -11,7 +11,7 @@ import InboxAutomation from "./InboxAutomation.tsx";
 
 /** Channel accounts are managed under Settings → Channels, so they have no tab here. */
 const TABS = [
-  { value: "automation", label: "Automation", icon: IconBolt },
+  { value: "automation", label: "Auto-close", icon: IconBolt },
   { value: "conversation_tags", label: "Conversation tags", icon: IconHash },
   { value: "quick_replies", label: "Quick replies", icon: IconMessage },
 ] as const;
@@ -30,7 +30,7 @@ const InboxSettings = () => {
       <div className="shrink-0 border-b border-border bg-card px-7 py-4">
         <h1 className={SECTION_TITLE}>{t("Inbox Settings")}</h1>
         <p className="mt-0.5 text-[13px] text-muted-foreground">
-          {t("Manage automation, conversation tags and quick replies.")}
+          {t("Manage auto-close, conversation tags and quick replies.")}
         </p>
 
         {/* y is clipped explicitly: overflow-x alone makes y `auto` too, and each tab's

@@ -14,8 +14,8 @@ import { needsKeyword } from "./ChatbotStartPanel.tsx";
 describe("the Chatbots section", () => {
   test("the list, the editor and the old addresses all need the Chatbots feature", () => {
     for (const path of [
-      "/dashboard/chatbots",
-      "/dashboard/chatbots/0b6f9c1e-0000-4000-8000-000000000000",
+      "/dashboard/automation/journeys",
+      "/dashboard/automation/journeys/0b6f9c1e-0000-4000-8000-000000000000",
       "/dashboard/whatsapp/flowbots",
       "/dashboard/instagram/flowbots/abc",
     ]) {
@@ -24,7 +24,9 @@ describe("the Chatbots section", () => {
   });
 
   test("WhatsApp's landing no longer sends anyone to the old chatbot list", () => {
-    expect(getWhatsappLandingTarget(new Set([TeamFeature.Chatbots]))).toBe("/dashboard/chatbots");
+    expect(getWhatsappLandingTarget(new Set([TeamFeature.Chatbots]))).toBe(
+      "/dashboard/automation/journeys",
+    );
   });
 
   test("the URL's messenger is the API's FACEBOOK", () => {
