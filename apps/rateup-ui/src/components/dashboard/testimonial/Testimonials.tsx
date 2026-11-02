@@ -58,7 +58,7 @@ export function Testimonials() {
               <IconPlus className="w-4 h-4 mr-2" />
               {translations("Create Collection")}
             </Button>
-            <InfoButton docUrl={`${docsPath}/testimonial`} />
+            <InfoButton docUrl={`${docsPath}/surveys/testimonials`} />
             <RefreshButton queryKeys={["testimonials", "collections"]} />
           </ListPageHeaderSection>
 

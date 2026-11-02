@@ -95,14 +95,25 @@ export function DmHeader({
 }
 
 /** Profile card at the top of a new thread: picture, name, and what the account is. */
-export function DmProfileCard({ name }: Readonly<{ name?: string }>) {
+export function DmProfileCard({
+  name,
+  label = "Instagram",
+  children,
+}: Readonly<{
+  name?: string;
+  /** Under the name: the app the thread is in. */
+  label?: string;
+  /** Under the label, e.g. a Page's greeting. */
+  children?: ReactNode;
+}>) {
   const { user } = useUser();
   const title = name || user?.orgName || "Your business";
   return (
     <div className="flex flex-col items-center gap-1 px-3 pt-4 pb-3 text-center">
       <DmAvatar className="size-18" />
       <p className="mt-1 text-[15px] font-semibold">{title}</p>
-      <p className={cn("text-[12px]", DM.muted)}>Instagram</p>
+      <p className={cn("text-[12px]", DM.muted)}>{label}</p>
+      {children}
     </div>
   );
 }

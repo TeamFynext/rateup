@@ -101,7 +101,9 @@ export function TemplatesPage() {
                 {translations("Start Blank")}
               </Button>
             )}
-            <InfoButton docUrl={`${docsPath}/webSurvey/surveyTemplates`} />
+            <InfoButton
+              docUrl={`${docsPath}/surveys/creating-a-survey#start-blank-or-from-a-template`}
+            />
             <RefreshButton queryKeys={["survey-templates"]} />
           </ListPageHeaderSection>
         </ListPageHeader>

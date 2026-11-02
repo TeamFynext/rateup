@@ -58,7 +58,7 @@ export function FeatureSelectionPage() {
             </h1>
             <p className="m-0 max-w-[60ch] text-[15px] leading-relaxed text-muted-foreground">
               {t(
-                "Pick the ones your business needs and we will keep the rest out of your menu. Nothing is locked: you can change this any time from Features in the menu.",
+                "Pick the ones your business needs and we will keep the rest out of your menu. Nothing is locked: you can change this any time from Customize Menu.",
               )}
             </p>
           </div>

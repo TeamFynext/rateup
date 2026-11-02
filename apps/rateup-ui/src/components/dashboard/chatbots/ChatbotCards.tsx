@@ -76,7 +76,7 @@ function StatusBadge({ isActive }: Readonly<{ isActive: boolean }>) {
 }
 
 /** The on/off switch. Its clicks stay off the card and the table row (see ActionCard). */
-function ActiveSwitch({ chatbot }: Readonly<{ chatbot: ChatbotSummary }>) {
+export function ActiveSwitch({ chatbot }: Readonly<{ chatbot: ChatbotSummary }>) {
   const { t } = useTranslation();
   const toggle = useToggleChatbotMutation();
   return (

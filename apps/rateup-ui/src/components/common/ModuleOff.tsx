@@ -34,7 +34,7 @@ export function ModuleOff({ module }: Readonly<{ module: OrgModuleInfo }>) {
         <EmptyDescription>
           {can("org.settings")
             ? t("Turn it on to add it back to the menu for everyone in your organization.")
-            : t("Ask an admin to turn on {feature} from Features in the menu.", { feature: label })}
+            : t("Ask an admin to turn on {feature} from Customize Menu.", { feature: label })}
         </EmptyDescription>
       </EmptyHeader>
       <EmptyContent className="flex-row justify-center">

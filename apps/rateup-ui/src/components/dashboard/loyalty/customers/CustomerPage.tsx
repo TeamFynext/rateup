@@ -327,7 +327,7 @@ export function CustomerPage({ search }: Readonly<{ search: CustomersSearch }>) 
                 </DropdownMenuContent>
               </DropdownMenu>
               {""}
-              <InfoButton docUrl={`${docsPath}/loyality/customers`} />
+              <InfoButton docUrl={`${docsPath}/loyalty/members`} />
             </div>
           </div>
 

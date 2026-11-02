@@ -34,7 +34,7 @@ export default function SurveyPageHeader<T extends string>({
       <div className="flex h-[62px] items-center gap-4 border-b border-border px-6">
         <BackLink to="/dashboard/surveys" label={translations("Surveys")} />
         <h1 className={cn(SECTION_TITLE, "truncate")}>{title}</h1>
-        <InfoButton docUrl={`${docsPath}/advancedFt/overview`} />
+        <InfoButton docUrl={`${docsPath}/surveys`} />
       </div>
 
       <Tabs

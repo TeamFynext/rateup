@@ -209,7 +209,7 @@ export const ACTION_TYPES = [
     platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
   },
   {
-    label: "Send Web Survey",
+    label: "Send Survey",
     value: "SEND_WEB_SURVEY",
     platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
   },

@@ -98,7 +98,7 @@ export function moduleLabel(t: TFunction, key: OrgModule): string {
     case "web_forms":
       return t("Surveys");
     case "qr_links":
-      return t("QR & Links");
+      return t("QR codes & Link-in-bio Pages");
     case "ai_agent":
       return t("Meta AI Agent");
   }

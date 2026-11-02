@@ -1,5 +1,3 @@
-// Extracted verbatim from `InstagramDashboard.tsx`. Behaviour is unchanged.
-
 import {
   IconMessageDots,
   IconPlus,
@@ -18,18 +16,15 @@ import {
   useSyncInstagramIceBreakersMutation,
 } from "@/backend/whatsapp/instagram-profile/instagramProfile.query";
 import { IceBreakersPhone } from "@/components/dashboard/instagram/instagram-preview.tsx";
+import {
+  ChannelPreviewButton,
+  WithChannelPreview,
+} from "@/components/dashboard/meta-channels/ChannelPreview.tsx";
+import { ChannelSection } from "@/components/dashboard/meta-channels/ChannelSection.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { PhonePreviewButton } from "@/components/ui/phone-preview.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
@@ -75,28 +70,23 @@ export function IceBreakersTab({
     setMutation.mutate(payload);
   };
 
+  const preview = <IceBreakersPhone items={items} businessName={businessName} />;
+
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-lg bg-ru-blue-100 dark:bg-blue-950">
-            <IconMessageDots className="size-4.5 text-blue-600 dark:text-blue-400" />
-          </div>
-          <div className="flex-1">
-            <CardTitle className="text-base">{t("Ice breaker questions")}</CardTitle>
-            <CardDescription>
-              {t("Up to 4 starter questions shown when users open your Instagram DM.")}
-            </CardDescription>
-          </div>
-          <PhonePreviewButton platform="instagram">
-            <IceBreakersPhone items={items} businessName={businessName} />
-          </PhonePreviewButton>
-          <Badge variant="outline" className="text-xs tabular-nums">
-            {items.length}/4
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <WithChannelPreview platform="instagram" preview={preview}>
+      <ChannelSection
+        icon={IconMessageDots}
+        title={t("Ice breaker questions")}
+        description={t("Up to 4 starter questions shown when users open your Instagram DM.")}
+        actions={
+          <>
+            <ChannelPreviewButton platform="instagram">{preview}</ChannelPreviewButton>
+            <Badge variant="outline" className="text-xs tabular-nums">
+              {items.length}/4
+            </Badge>
+          </>
+        }
+      >
         {!canManage && (
           <p className="text-sm text-muted-foreground">
             {t(
@@ -105,7 +95,7 @@ export function IceBreakersTab({
           </p>
         )}
         {/* Writes need `channels.manage` on the API; without it the fieldset disables every
-            control natively. The phone preview in the header stays usable. */}
+            control natively. The phone preview stays usable. */}
         <fieldset disabled={!canManage} className="min-w-0 space-y-4">
           {items.map((item, index) => (
             <div
@@ -189,39 +179,40 @@ export function IceBreakersTab({
               <IconPlus className="mr-1.5 size-4" />
               {t("Add question")}
             </Button>
-            <div className="flex-1" />
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              onClick={() => deleteMutation.mutate()}
-              loading={deleteMutation.isPending}
-            >
-              <IconCloudOff className="mr-1.5 size-4" />
-              {t("Clear from Meta")}
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => syncMutation.mutate()}
-              loading={syncMutation.isPending}
-            >
-              <IconCloudUpload className="mr-1.5 size-4" />
-              {t("Sync with Meta")}
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              onClick={save}
-              disabled={!canSave || setMutation.isPending}
-            >
-              <IconSend className="mr-1.5 size-4" />
-              {t("Save")}
-            </Button>
+            <div className="ml-auto flex flex-wrap justify-end gap-2">
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={() => deleteMutation.mutate()}
+                loading={deleteMutation.isPending}
+              >
+                <IconCloudOff className="mr-1.5 size-4" />
+                {t("Clear from Meta")}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => syncMutation.mutate()}
+                loading={syncMutation.isPending}
+              >
+                <IconCloudUpload className="mr-1.5 size-4" />
+                {t("Sync with Meta")}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={save}
+                disabled={!canSave || setMutation.isPending}
+              >
+                <IconSend className="mr-1.5 size-4" />
+                {t("Save")}
+              </Button>
+            </div>
           </div>
         </fieldset>
-      </CardContent>
-    </Card>
+      </ChannelSection>
+    </WithChannelPreview>
   );
 }

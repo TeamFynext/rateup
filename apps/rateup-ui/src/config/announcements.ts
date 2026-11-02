@@ -40,6 +40,16 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-11-01-instagram-messenger-pages",
+    title: "A new home for Instagram and Messenger",
+    summary:
+      "Each channel page now opens on an overview of every tool and whether it is live, with the tools listed down the side. Ice breakers, menus and the Messenger welcome screen show a live phone preview as you edit.",
+    publishedAt: "2026-11-01",
+    kinds: ["improvement"],
+    area: "Meta",
+    link: { to: "/dashboard/instagram" },
+  },
+  {
     id: "2026-10-30-feature-renames",
     title: "Clearer names across RateUp",
     summary:

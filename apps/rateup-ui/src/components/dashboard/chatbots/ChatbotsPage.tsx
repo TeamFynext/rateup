@@ -101,7 +101,7 @@ export function ChatbotsPage({
         <ListPageHeader>
           <ListPageHeaderSection className="gap-3">
             <Button onClick={() => setWizard({ open: true })} loading={isPending}>
-              {t("Create Journey")}
+              {t("Create journey")}
               <IconPlus size={16} className="ml-2" />
             </Button>
             <RefreshButton queryKeys={[...chatbotKeys.lists()]} />
@@ -218,7 +218,7 @@ export function ChatbotsPage({
                 }
               >
                 <IconPlus size={14} className="mr-1" />
-                {platform ? t("Start from scratch") : t("Create Journey")}
+                {platform ? t("Start from scratch") : t("Create journey")}
               </Button>
             </div>
           ) : (

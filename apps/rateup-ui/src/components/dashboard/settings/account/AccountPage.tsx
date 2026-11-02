@@ -334,8 +334,7 @@ export function AccountPage() {
                 <div className="flex flex-col gap-0.5">
                   <p className="text-lg sm:text-xl font-medium">{profileData?.data?.data?.name}</p>
                   <p className="text-xs sm:text-sm text-muted-foreground">
-                    {profileData?.data?.data?.email} • {translations("Member since")}
-                    {""}
+                    {profileData?.data?.data?.email} • {translations("Member since")}{" "}
                     {profileData?.data?.data?.createdAt
                       ? dayjs(profileData.data.data.createdAt).format("MMM D, YYYY")
                       : "—"}

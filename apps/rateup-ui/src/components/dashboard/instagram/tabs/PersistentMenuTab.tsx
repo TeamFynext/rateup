@@ -1,5 +1,3 @@
-// Extracted verbatim from `InstagramDashboard.tsx`. Behaviour is unchanged.
-
 import {
   IconMenu2,
   IconPlus,
@@ -18,18 +16,15 @@ import {
   useSyncInstagramPersistentMenuMutation,
 } from "@/backend/whatsapp/instagram-profile/instagramProfile.query";
 import { PersistentMenuPhone } from "@/components/dashboard/instagram/instagram-preview.tsx";
+import {
+  ChannelPreviewButton,
+  WithChannelPreview,
+} from "@/components/dashboard/meta-channels/ChannelPreview.tsx";
+import { ChannelSection } from "@/components/dashboard/meta-channels/ChannelSection.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { PhonePreviewButton } from "@/components/ui/phone-preview.tsx";
 import {
   Select,
   SelectContent,
@@ -93,30 +88,25 @@ export function PersistentMenuTab({
     setMutation.mutate([{ locale, call_to_actions }]);
   };
 
+  const preview = <PersistentMenuPhone items={items} businessName={businessName} />;
+
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-950">
-            <IconMenu2 className="size-4.5 text-amber-600 dark:text-amber-400" />
-          </div>
-          <div className="flex-1">
-            <CardTitle className="text-base">{t("Menu entries")}</CardTitle>
-            <CardDescription>
-              {t(
-                "Postback items trigger in-conversation actions. Web URL items open external links. Max 5 items.",
-              )}
-            </CardDescription>
-          </div>
-          <PhonePreviewButton platform="instagram">
-            <PersistentMenuPhone items={items} businessName={businessName} />
-          </PhonePreviewButton>
-          <Badge variant="outline" className="text-xs tabular-nums">
-            {items.length}/5
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <WithChannelPreview platform="instagram" preview={preview}>
+      <ChannelSection
+        icon={IconMenu2}
+        title={t("Menu entries")}
+        description={t(
+          "Postback items trigger in-conversation actions. Web URL items open external links. Max 5 items.",
+        )}
+        actions={
+          <>
+            <ChannelPreviewButton platform="instagram">{preview}</ChannelPreviewButton>
+            <Badge variant="outline" className="text-xs tabular-nums">
+              {items.length}/5
+            </Badge>
+          </>
+        }
+      >
         {!canManage && (
           <p className="text-sm text-muted-foreground">
             {t(
@@ -125,7 +115,7 @@ export function PersistentMenuTab({
           </p>
         )}
         {/* Writes need `channels.manage` on the API; without it the fieldset disables every
-            control natively. The phone preview in the header stays usable. */}
+            control natively. The phone preview stays usable. */}
         <fieldset disabled={!canManage} className="min-w-0 space-y-4">
           {items.map((item, index) => (
             <div
@@ -258,39 +248,40 @@ export function PersistentMenuTab({
               <IconPlus className="mr-1.5 size-4" />
               {t("Add item")}
             </Button>
-            <div className="flex-1" />
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              onClick={() => deleteMutation.mutate()}
-              loading={deleteMutation.isPending}
-            >
-              <IconCloudOff className="mr-1.5 size-4" />
-              {t("Clear from Meta")}
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => syncMutation.mutate()}
-              loading={syncMutation.isPending}
-            >
-              <IconCloudUpload className="mr-1.5 size-4" />
-              {t("Sync with Meta")}
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              onClick={save}
-              disabled={!canSave || setMutation.isPending}
-            >
-              <IconSend className="mr-1.5 size-4" />
-              {t("Save")}
-            </Button>
+            <div className="ml-auto flex flex-wrap justify-end gap-2">
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={() => deleteMutation.mutate()}
+                loading={deleteMutation.isPending}
+              >
+                <IconCloudOff className="mr-1.5 size-4" />
+                {t("Clear from Meta")}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => syncMutation.mutate()}
+                loading={syncMutation.isPending}
+              >
+                <IconCloudUpload className="mr-1.5 size-4" />
+                {t("Sync with Meta")}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={save}
+                disabled={!canSave || setMutation.isPending}
+              >
+                <IconSend className="mr-1.5 size-4" />
+                {t("Save")}
+              </Button>
+            </div>
           </div>
         </fieldset>
-      </CardContent>
-    </Card>
+      </ChannelSection>
+    </WithChannelPreview>
   );
 }

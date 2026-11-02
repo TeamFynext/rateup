@@ -311,7 +311,7 @@ export function EarningRulesPage() {
                 {t("Define how customers earn points through purchases and activities")}
               </p>
             </div>
-            <InfoButton docUrl={`${docsPath}/loyality/earningRules`} />
+            <InfoButton docUrl={`${docsPath}/loyalty/program#change-how-points-are-earned`} />
           </div>
 
           {/* What all of this costs. The wizard shows it live while the numbers are being

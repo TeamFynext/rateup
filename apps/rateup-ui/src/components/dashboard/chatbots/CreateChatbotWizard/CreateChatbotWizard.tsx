@@ -309,7 +309,7 @@ export function CreateChatbotWizard({
         <div className="flex shrink-0 flex-wrap items-center gap-x-6 gap-y-3 border-b border-border py-4 pl-6 pr-12">
           <div className="min-w-0 flex-1">
             <DialogTitle className="font-display text-lg font-semibold">
-              {t("Create Journey")}
+              {t("Create journey")}
             </DialogTitle>
             <DialogDescription className="text-xs">
               {t(
@@ -377,7 +377,7 @@ export function CreateChatbotWizard({
                 disabled={!canAdvance}
                 onClick={handleCreate}
               >
-                {t("Create Journey")}
+                {t("Create journey")}
               </Button>
             ) : (
               <Button

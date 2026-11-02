@@ -236,7 +236,7 @@ export function CampaignsPage({
             <Button render={<Link to="/dashboard/campaigns/new" />} loading={isPending}>
               {t("Create Campaign")}
             </Button>
-            <InfoButton docUrl={`${docsPath}/campaign`} />
+            <InfoButton docUrl={`${docsPath}/campaigns`} />
             <RefreshButton queryKeys={["campaigns"]} />
           </ListPageHeaderSection>
 

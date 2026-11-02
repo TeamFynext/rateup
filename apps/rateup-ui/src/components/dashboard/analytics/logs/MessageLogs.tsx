@@ -168,7 +168,7 @@ export function MessageLogs({ filters }: Readonly<{ filters: AnalyticsFilters }>
 
   return (
     <AnalyticsCard
-      title={t("Message logs")}
+      title={t("Sent messages")}
       description={t(
         "Every WhatsApp message sent from Campaigns, the Inbox, templates and the API",
       )}

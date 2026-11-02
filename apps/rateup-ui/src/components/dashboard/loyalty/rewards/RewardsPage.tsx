@@ -102,7 +102,7 @@ export function RewardsPage() {
         )}
         actions={
           <div className="flex items-center gap-2">
-            <InfoButton docUrl={`${docsPath}/loyality/rewards`} />
+            <InfoButton docUrl={`${docsPath}/loyalty/rewards`} />
             <Button onClick={() => setPicking(true)}>
               <IconPlus data-icon="inline-start" />
               {t("Create reward")}

@@ -108,7 +108,7 @@ const GeneralSettings = ({
         <CardTitle className="font-display text-[15px] font-extrabold">
           {translations("General")}
         </CardTitle>
-        <InfoButton docUrl={`${docsPath}/webSurvey/shareSurvey`} />
+        <InfoButton docUrl={`${docsPath}/surveys/settings`} />
       </CardHeader>
       <CardContent className="flex flex-col gap-1">
         <form
