@@ -1,4 +1,4 @@
-import { NativeTabs } from "expo-router/unstable-native-tabs";
+import { NativeTabs } from "expo-router/native-tabs";
 import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
 import { useColorScheme } from "nativewind";
 import { Colors } from "@/constants/colors";
@@ -34,12 +34,12 @@ function ProtectedLayout() {
           </NativeTabs.Trigger>
         )}
 
-        {/* WA Flow and Web Forms share one tab: Android's bottom bar holds at most five
+        {/* WhatsApp Flows and Surveys share one tab: Android's bottom bar holds at most five
             items, and a sixth throws. `list.bullet.rectangle.portrait` is iOS 15, under this
             build's 16.4 target, where an unrecognised symbol name draws nothing at all. */}
         <NativeTabs.Trigger name="forms">
           <NativeTabs.Trigger.Icon sf="list.bullet.rectangle.portrait" md="list_alt" />
-          <NativeTabs.Trigger.Label>Forms</NativeTabs.Trigger.Label>
+          <NativeTabs.Trigger.Label>Responses</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>
 
         <NativeTabs.Trigger name="teams">
@@ -47,7 +47,7 @@ function ProtectedLayout() {
           <NativeTabs.Trigger.Label>Teams</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>
 
-        {/* The last slot is a hub, not a feature: Account, Orders, Calls and anything
+        {/* The last slot is a hub, not a feature: Profile, Orders, Calls and anything
             added later live in its menu, so the bar never needs a sixth item. `disabled`
             stops the native tap from switching tabs (it does not grey the item out); the
             tap still reaches `tabPress`, which opens the menu as a native sheet over the current tab. */}

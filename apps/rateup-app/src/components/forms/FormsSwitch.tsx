@@ -5,8 +5,8 @@ import SegmentedControl from "@/components/common/SegmentedControl";
 export type FormsKind = "flow" | "webform";
 
 const OPTIONS = [
-  { value: "flow", label: "WA Flow" },
-  { value: "webform", label: "Web Forms" },
+  { value: "flow", label: "WhatsApp Flows" },
+  { value: "webform", label: "Surveys" },
 ] as const;
 
 export default function FormsSwitch({

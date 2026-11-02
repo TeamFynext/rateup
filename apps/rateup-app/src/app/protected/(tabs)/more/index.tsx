@@ -37,7 +37,7 @@ export default function MoreScreen() {
         <Tap
           onPress={() => go("/protected/more/account")}
           accessibilityRole="button"
-          accessibilityLabel="Account details"
+          accessibilityLabel="Profile"
           pressedStyle={{ opacity: 0.8 }}
           style={{
             flexDirection: "row",

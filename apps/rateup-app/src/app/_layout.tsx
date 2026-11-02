@@ -132,7 +132,7 @@ export default function LayoutWrapper() {
     <ShareIntentProvider>
       <QueryClientProvider client={queryClient}>
         <SafeAreaProvider>
-          <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
+          <KeyboardProvider>
             <RootLayout />
             {/* Sibling of the navigator so notices sit above every screen, and
                 box-none inside so it never intercepts a touch. */}

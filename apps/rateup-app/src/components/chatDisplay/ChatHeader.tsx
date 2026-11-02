@@ -592,7 +592,7 @@ const ChatHeader = ({
               disabled={toggleFavorite.isPending}
               accessibilityRole="button"
               accessibilityState={{ selected: !!isFavorite }}
-              accessibilityLabel={isFavorite ? "Remove from favourites" : "Add to favourites"}
+              accessibilityLabel={isFavorite ? "Unstar" : "Star"}
               style={{
                 width: 34,
                 height: 34,

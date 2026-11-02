@@ -39,7 +39,7 @@ const NAME_OPTIONS = [
   { value: "Z-A", label: "Z–A" },
 ] as const;
 
-/** The Forms tab's filter screen; WA Flow and Web Forms differ only in store and statuses. */
+/** The Responses tab's filter screen; WhatsApp Flows and Surveys differ only in store and statuses. */
 export default function FormsFilter({
   store,
   statusOptions,

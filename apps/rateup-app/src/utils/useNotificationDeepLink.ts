@@ -3,24 +3,12 @@ import * as Notifications from "expo-notifications";
 import { router } from "expo-router";
 import { getRingingCalls } from "@/api/whatsapp/calling";
 import { syncRingingCalls } from "@/store/callStore";
-
-type NotificationPayload = {
-  type?: string;
-  /** A rateup-api notification catalogue key, on `type: "notification"` pushes. */
-  event?: string;
-  contactId?: string;
-};
-
-/** The chat a tap should open. Only inbox events have one; anything else just opens the app. */
-function readPayload(response: Notifications.NotificationResponse | null) {
-  const data = response?.notification?.request?.content?.data as NotificationPayload | undefined;
-  const opensChat =
-    data?.type === "wa_message" ||
-    (data?.type === "notification" && data.event?.startsWith("inbox."));
-  if (!opensChat) return null;
-  if (typeof data?.contactId !== "string" || !data.contactId) return null;
-  return data.contactId;
-}
+import { useSelectedTabStore } from "@/utils/store";
+import {
+  resolveNotificationTarget,
+  type NotificationPayload,
+  type NotificationTarget,
+} from "@/utils/notificationTarget";
 
 /**
  * Routes a notification tap to the chat it came from.
@@ -49,11 +37,28 @@ export function useNotificationDeepLink() {
   useEffect(() => {
     let cancelled = false;
 
-    const open = (contactId: string) => {
-      // The chat screen hydrates itself from `contactId` when the selected-contact
-      // store is empty, which is always the case on a cold start, so there is
-      // nothing to seed here.
-      router.push(`/protected/chat/${contactId}` as never);
+    const open = (target: NotificationTarget) => {
+      switch (target.kind) {
+        case "chat":
+          // The chat screen hydrates itself from `contactId` when the selected-contact
+          // store is empty, which is always the case on a cold start, so there is
+          // nothing to seed here.
+          router.push(`/protected/chat/${target.contactId}` as never);
+          return;
+        case "inbox":
+          if (target.tab) useSelectedTabStore.getState().setSelectedTab(target.tab);
+          router.navigate("/protected/inbox" as never);
+          return;
+        case "calls":
+          router.push("/protected/calls" as never);
+          return;
+        case "order":
+          router.push({
+            pathname: "/protected/orders/[id]",
+            params: { id: target.orderId },
+          } as never);
+          return;
+      }
     };
 
     // A call push opens the call screen, not the chat: fetch what is still ringing (the
@@ -68,8 +73,8 @@ export function useNotificationDeepLink() {
           .catch(() => undefined);
         return;
       }
-      const contactId = readPayload(response);
-      if (contactId) open(contactId);
+      const target = resolveNotificationTarget(data);
+      if (target) open(target);
     };
 
     Notifications.getLastNotificationResponseAsync().then((response) => {
