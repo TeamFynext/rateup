@@ -96,8 +96,8 @@ export const NAV_GROUPS: NavGroup[] = [
     icon: IconShieldLock,
     panel: "pages",
     items: [
-      { title: "Staff members", to: "/staff", icon: IconShieldLock },
-      { title: "Audit log", to: "/audit", icon: IconHistory },
+      { title: "Staff members", to: "/staff/members", icon: IconShieldLock },
+      { title: "Audit log", to: "/staff/audit-log", icon: IconHistory },
     ],
   },
 ];

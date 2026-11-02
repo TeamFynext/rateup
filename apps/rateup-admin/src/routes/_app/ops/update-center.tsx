@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useId, useState } from "react";
 
-import { isReauthRequired } from "@/api/client";
 import {
   maintenanceTasksQueryOptions,
   useApplyTask,
@@ -16,15 +15,11 @@ import { JsonBlock } from "@/components/ds/json-block";
 import { PageHeading } from "@/components/ds/page-heading";
 import { Pill } from "@/components/ds/pill";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/ds/query-states";
-import { StepUpPrompt } from "@/components/ds/step-up";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { getApiErrorMessage } from "@/lib/apiError";
-import { rememberIntent, takeIntent } from "@/lib/resume";
-
-const PAGE = "/ops/update-center";
 
 export const Route = createFileRoute("/_app/ops/update-center")({
   component: UpdateCenterPage,
@@ -32,8 +27,6 @@ export const Route = createFileRoute("/_app/ops/update-center")({
 
 function UpdateCenterPage() {
   const query = useQuery(maintenanceTasksQueryOptions);
-  // Back from the step-up sign-in: reopen the Apply dialog that sent us there.
-  const [resume] = useState(() => takeIntent(PAGE, "apply"));
   return (
     <div className="flex flex-col gap-8">
       <PageHeading
@@ -43,8 +36,8 @@ function UpdateCenterPage() {
       <p className="flex items-start gap-2 rounded-lg bg-tone-peach px-4 py-3 text-xs text-foreground/70">
         <IconAlertTriangle className="mt-px size-4 shrink-0 text-tone-peach-accent" stroke={1.75} />
         <span>
-          Always preview first. Applying needs a Google sign-in from the last 15 minutes, the task
-          id typed back, and a reason for the audit log.
+          Always preview first. Applying needs the task id typed back and a reason for the audit
+          log.
         </span>
       </p>
       {query.isPending ? (
@@ -56,7 +49,7 @@ function UpdateCenterPage() {
       ) : (
         <ul className="flex flex-col gap-4">
           {query.data.map((task) => (
-            <TaskCard key={task.id} task={task} resume={resume?.id === task.id} />
+            <TaskCard key={task.id} task={task} />
           ))}
         </ul>
       )}
@@ -64,10 +57,10 @@ function UpdateCenterPage() {
   );
 }
 
-function TaskCard({ task, resume }: { task: MaintenanceTask; resume: boolean }) {
+function TaskCard({ task }: { task: MaintenanceTask }) {
   const preview = usePreviewTask();
   const [result, setResult] = useState<TaskResult | null>(null);
-  const [applying, setApplying] = useState(resume);
+  const [applying, setApplying] = useState(false);
 
   return (
     <li className="flex min-w-0 flex-col gap-5 rounded-xl border p-6">
@@ -136,11 +129,7 @@ function TaskCard({ task, resume }: { task: MaintenanceTask; resume: boolean }) 
   );
 }
 
-/**
- * The real run, behind three things the API also checks: the task id typed back, a reason,
- * and a Google sign-in from the last 15 minutes. When the sign-in is too old the dialog
- * turns into the step-up prompt; the trip to Google returns here with it reopened.
- */
+/** The real run, behind two things the API also checks: the task id typed back and a reason. */
 function ApplyDialog({
   task,
   onClose,
@@ -153,7 +142,6 @@ function ApplyDialog({
   const apply = useApplyTask();
   const [confirm, setConfirm] = useState("");
   const confirmId = useId();
-  const stepUp = isReauthRequired(apply.error);
 
   return (
     <ActionDialog
@@ -163,12 +151,9 @@ function ApplyDialog({
       title={`Apply ${task.title}`}
       description={task.description}
       submitLabel="Apply for real"
-      blocked={
-        (stepUp && "Sign in with Google again first") ||
-        (confirm.trim() !== task.id && `Type "${task.id}" to confirm`)
-      }
+      blocked={confirm.trim() !== task.id && `Type "${task.id}" to confirm`}
       pending={apply.isPending}
-      error={stepUp ? null : apply.error}
+      error={apply.error}
       onSubmit={(reason) =>
         apply.mutate(
           { taskId: task.id, confirm: confirm.trim(), reason },
@@ -176,33 +161,26 @@ function ApplyDialog({
         )
       }
     >
-      {stepUp ? (
-        <StepUpPrompt
-          onBeforeLeave={() => rememberIntent({ path: PAGE, kind: "apply", id: task.id })}
-        />
-      ) : (
-        <>
-          {task.destructive && (
-            <Notice>This writes to the live database and is hard to undo. Preview it first.</Notice>
-          )}
-          <div className="flex flex-col gap-2">
-            <Label htmlFor={confirmId}>
-              Type{" "}
-              <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">{task.id}</code> to
-              confirm
-            </Label>
-            <Input
-              id={confirmId}
-              autoFocus
-              autoComplete="off"
-              spellCheck={false}
-              value={confirm}
-              onChange={(event) => setConfirm(event.target.value)}
-              className="h-9 rounded-lg font-mono"
-            />
-          </div>
-        </>
-      )}
+      <>
+        {task.destructive && (
+          <Notice>This writes to the live database and is hard to undo. Preview it first.</Notice>
+        )}
+        <div className="flex flex-col gap-2">
+          <Label htmlFor={confirmId}>
+            Type <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">{task.id}</code>{" "}
+            to confirm
+          </Label>
+          <Input
+            id={confirmId}
+            autoFocus
+            autoComplete="off"
+            spellCheck={false}
+            value={confirm}
+            onChange={(event) => setConfirm(event.target.value)}
+            className="h-9 rounded-lg font-mono"
+          />
+        </div>
+      </>
     </ActionDialog>
   );
 }
