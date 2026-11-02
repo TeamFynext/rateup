@@ -45,7 +45,7 @@ More columns are available from the **View** menu at the top right of the toolba
 | **Status** | **Active**, or **Blocked** if you have blocked them on WhatsApp |
 | **Other** | Extra information, such as a location |
 | **Label** | Their [labels](/contacts/labels) |
-| **Lead stage** | Their column on your [pipeline](/pipeline) board. Organisations without a board see **Lifecycle Stage** instead, if lifecycle display is on |
+| **Lead stage** | Their column on your [pipeline](/pipelines) board. Organisations without a board see **Lifecycle Stage** instead, if lifecycle display is on |
 | *Each custom field* | One column per [custom field](/contacts/custom-fields) |
 | **Source** | Where they came from — see above |
 | **Consent** | **Granted** or **Denied** — whether they may receive templates and campaigns |
@@ -73,7 +73,7 @@ The toolbar holds one search box and three filters. They combine, so *Label: VIP
 
 <Callout type="info">
   There is no filter for audiences or custom fields on this page. To see who is in an audience, open
-  the audience itself under [Audiences](/contacts/groups).
+  the audience itself under [Audiences](/contacts/audiences).
 </Callout>
 
 ---
@@ -95,7 +95,7 @@ Optionally add:
 | Section | Fields |
 |---------|--------|
 | **Contact details** | **Email**, **Date of Birth**, **External ID**, **Address** |
-| **Assignment** | **Labels**; **Lead stage**, which puts them straight onto your [pipeline](/pipeline) board (shown only if your board has columns); **Assignee**, the team members responsible for them; and **Audience**, any number of [audiences](/contacts/groups) |
+| **Assignment** | **Labels**; **Lead stage**, which puts them straight onto your [pipeline](/pipelines) board (shown only if your board has columns); **Assignee**, the team members responsible for them; and **Audience**, any number of [audiences](/contacts/audiences) |
 | **Custom fields** | A value for each [custom field](/contacts/custom-fields). Email and number fields are checked |
 | **notes** | Free text |
 </Step>
@@ -162,9 +162,9 @@ appears showing *"N Selected"* with four actions:
 
 | Action | What it does |
 |--------|--------------|
-| **Add to Audience** | Adds everyone selected to one [audience](/contacts/groups) |
+| **Add to Audience** | Adds everyone selected to one [audience](/contacts/audiences) |
 | **Apply Label** | Opens **Apply Labels to Contacts** — pick one or more labels and click **Apply** |
-| **Update lead stage** | Puts everyone on one column of your [pipeline](/pipeline) board, opening a lead for anyone not on it. Organisations without the Pipeline feature see **Update Lifecycle Stage** |
+| **Update lead stage** | Puts everyone on one column of your [pipeline](/pipelines) board, opening a lead for anyone not on it. Organisations without the Pipelines feature see **Update Lifecycle Stage** |
 | **Delete** | Deletes everyone selected, after a confirmation |
 
 The header checkbox selects the current **page** only. To act on more people, raise the rows per
@@ -273,7 +273,7 @@ If no row in the file is usable, nothing is queued and the list opens straight a
 An import sets **name**, **phone** and **custom fields** only. Email, labels, audiences and stages are
 not read from the file — apply them afterwards with [bulk actions](#bulk-actions). To import straight
 into an audience, use **Import** on the audience's own page instead — see
-[Audiences](/contacts/groups#add-members).
+[Audiences](/contacts/audiences#add-members).
 
 <Callout type="warn">
   Only import people who have agreed to hear from you. Messaging a list that never opted in lowers
@@ -327,15 +327,15 @@ Delete one contact from **⋮ → Delete contact**, or several with the **Delete
 - Import carefully; most bad data arrives in bulk
 - Keep country codes on every phone number
 - Review contacts with repeated message failures — see
-  [Message Analytics](/analytics/message-analytics)
+  [Template Delivery](/analytics/template-delivery)
 - Agree naming conventions for [labels](/contacts/labels) before everyone invents their own
 
 ---
 
 ## Related Pages
 
-- [Audiences](/contacts/groups)
+- [Audiences](/contacts/audiences)
 - [Labels](/contacts/labels)
 - [Custom Fields](/contacts/custom-fields)
-- [Pipelines](/pipeline) — the board **Lead stage** writes to
-- [Campaigns](/campaign)
+- [Pipelines](/pipelines) — the board **Lead stage** writes to
+- [Campaigns](/campaigns)

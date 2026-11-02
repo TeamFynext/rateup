@@ -1,14 +1,12 @@
 {
   "pages": [
     "index",
-    "flows",
-    "flow-editor",
-    "chatbots",
-    "chatbot-builder",
     "templates",
     "template-editor",
     "template-analytics",
-    "conversational-components",
+    "flows",
+    "flow-editor",
+    "ice-breakers",
     "settings"
   ]
 }

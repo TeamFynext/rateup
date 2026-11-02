@@ -1,28 +1,31 @@
 ---
 title: "WhatsApp Overview"
-description: Flows, journeys, templates, catalogs and ice breakers & commands — everything you build on your WhatsApp Business account.
+description: Message templates, WhatsApp Flows and ice breakers & commands — the WhatsApp tools in the Meta sidebar group.
 ---
 
-import ImagePlaceholder from "@/components/ImagePlaceholder";
+import ScreenShot from "@/components/Screenshot";
 
-The **WhatsApp** section is where you build what customers experience on WhatsApp: the forms they
-fill in, the journeys they talk to, the messages you send them and the products they browse.
+The **WhatsApp** section is where you build what customers experience on WhatsApp: the messages you
+send them, the forms they fill in and the suggestions they see before they type.
 
 Conversations themselves happen in the [Inbox](/inbox); this section is what feeds it.
 
 There is no separate **WhatsApp** entry in the sidebar. Its pages sit in the **WhatsApp** section of
-the **Meta** group, except journeys, which are under **Automation**:
+the **Meta** group. Journeys, including WhatsApp ones, are under **Automation → Journeys**:
+
+<ScreenShot src="/docs/screenshots/whatsapp/meta-panel.png" alt="The Meta sidebar panel: a WhatsApp section with Templates, Flows and Ice Breakers, and an Instagram & Messenger section with Instagram and Messenger" />
 
 | Sidebar entry | Opens |
 |---------------|-------|
-| **Meta → WhatsApp → Templates** | [Message Templates](/whatsapp/templates) |
-| **Meta → WhatsApp → Flows** | [WhatsApp Flows](/whatsapp/flows) |
-| **Meta → WhatsApp → Ice Breakers** | [Ice Breakers & Commands](/whatsapp/conversational-components) |
-| **Automation → Journeys** | [Journeys](/whatsapp/chatbots) |
+| **Meta → WhatsApp → Templates** | [Message Templates](/whatsapp/templates) — `/dashboard/whatsapp/templates` |
+| **Meta → WhatsApp → Flows** | [WhatsApp Flows](/whatsapp/flows) — `/dashboard/whatsapp/flows` |
+| **Meta → WhatsApp → Ice Breakers** | [Ice Breakers & Commands](/whatsapp/ice-breakers) — `/dashboard/whatsapp/ice-breakers` |
+| **Automation → Journeys** | [Journeys](/automation/journeys) — `/dashboard/automation/journeys?channel=whatsapp` shows only WhatsApp ones |
 
-The **Meta** group's other section, **Instagram & Messenger**, holds [Instagram](/instagram) and
-[Messenger](/messenger). Number settings
-are under [Settings → Channels](/settings/channels).
+Each entry appears only if your team has that feature: **Templates** and **Flows** follow their own
+abilities, and **Ice Breakers** shows if you have either of them or Automation Rules. The **Meta**
+group's other section, **Instagram & Messenger**, holds [Instagram](/instagram) and
+[Messenger](/messenger). Number settings are under [Settings → Channels](/settings/channels).
 
 ---
 
@@ -38,16 +41,6 @@ are under [Settings → Channels](/settings/channels).
     title="Flow Editor"
     href="/whatsapp/flow-editor"
     description="Screens, elements, logic jumps — and pushing a flow live."
-  />
-  <Card
-    title="Journeys"
-    href="/whatsapp/chatbots"
-    description="Automated conversations that answer without an agent."
-  />
-  <Card
-    title="Journey Builder"
-    href="/whatsapp/chatbot-builder"
-    description="The node canvas: components, connections, validation and preview."
   />
   <Card
     title="Message Templates"
@@ -66,8 +59,13 @@ are under [Settings → Channels](/settings/channels).
   />
   <Card
     title="Ice Breakers & Commands"
-    href="/whatsapp/conversational-components"
+    href="/whatsapp/ice-breakers"
     description="Ice breakers and commands shown before the customer types."
+  />
+  <Card
+    title="Journeys"
+    href="/automation/journeys"
+    description="Automated conversations that answer without an agent — under Automation, not Meta."
   />
   <Card
     title="Catalog"
@@ -89,7 +87,7 @@ are under [Settings → Channels](/settings/channels).
 Customer opens your WhatsApp
         │
         ├── sees ice breakers / commands   → Ice Breakers & Commands
-        ├── talks to a journey             → Journeys
+        ├── talks to a journey             → Automation → Journeys
         ├── fills in a form                → WhatsApp Flows
         ├── browses products               → Catalog  → Commerce
         └── anything else                  → Inbox    (a human replies)
@@ -124,5 +122,5 @@ else for live conversation.
 ## Related Pages
 
 - [Inbox](/inbox) — where conversations are handled
-- [Campaigns](/campaign) — sending templates in bulk
+- [Campaigns](/campaigns) — sending templates in bulk
 - [Commerce](/commerce) — selling through the catalog

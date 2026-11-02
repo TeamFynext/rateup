@@ -1,0 +1,221 @@
+---
+title: "Messenger Journeys"
+description: Build journeys for your Facebook Page in the same editor as WhatsApp and Instagram, and start them from a message, a comment, an m.me link or a menu tap.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ScreenShot from "@/components/Screenshot";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+A **Messenger journey** answers people who message your Facebook Page — greeting them, answering
+the usual questions, collecting a lead or a booking, and handing over to your team. You build it in
+the same editor as WhatsApp and [Instagram](/instagram/journeys) journeys, and an
+[automation rule](/automation) starts it.
+
+Journeys were previously called Chatbots.
+
+Messenger journeys live in the one [Journeys](/automation/journeys) list with the other channels:
+open **Automation → Journeys** and set the channel filter to **Messenger**
+(`/dashboard/automation/journeys?channel=messenger`), or click **Messenger journeys** at the top of
+the [Messenger](/messenger) page, which opens the same filtered list.
+
+<ScreenShot src="/docs/screenshots/messenger/journeys.png" alt="Automation → Journeys filtered to Messenger with no journeys yet: Create journey, the Messenger channel filter, and the starter examples Page welcome, Get Started welcome and FAQ, hours and location, plus Start from scratch" />
+
+
+This page covers what is special about Messenger. The list itself — cards, runs, the on/off switch,
+cloning — is described on [Journeys](/automation/journeys).
+
+---
+
+## Create a Journey
+
+Click **Create journey** on the list. With the list filtered to Messenger, the wizard opens on
+**Channel** with **Messenger** already picked — *"Answers for people who message or comment on your
+Facebook Page."*
+
+<Steps>
+<Step>
+Click **Next**. Pick **Start from scratch** or one of the [examples](#messenger-examples). Filter
+them with the chips along the top. On a wide screen, the selected example plays in a phone preview
+on the right.
+</Step>
+<Step>
+Click **Next**. Check the **Journey Name** — at least 3 characters, only your team sees it.
+</Step>
+<Step>
+Optionally pick a **Facebook Page** — *"The Page whose messages and comments start this journey."*
+Leave it empty and the rule the wizard creates listens on every connected Page.
+</Step>
+<Step>
+Under **How it starts**, pick **Message with a keyword**, **Get Started button**, **Comment on a
+Page post** or **m.me link**. The example picks one for you.
+</Step>
+<Step>
+Click **Create journey**. The editor opens at `/dashboard/automation/journeys/<id>` with the example
+laid out. Change the wording, then switch it on — see [Start It](#start-it).
+</Step>
+</Steps>
+
+With no Messenger journeys yet, the filtered list offers three examples and **Start from scratch** as
+buttons.
+
+---
+
+## Messenger Examples
+
+| Example | Filter | What it does | How it starts |
+|---------|--------|--------------|---------------|
+| **Page welcome** | Welcome | Greets people who message your Page with quick replies to get them started | Message with a keyword |
+| **Get Started welcome** | Welcome | Greets people the moment they tap Get Started on a new chat | Get Started button |
+| **FAQ, hours and location** | Support | Answers the usual questions, including when you're open and where to find you | Message with a keyword |
+| **Lead capture** | Lead capture | Asks for a name and a phone number or email, then hands the lead to your team | Message with a keyword |
+| **Product cards** | Sales | Shows products as swipeable cards with a link to buy each one | Message with a keyword |
+| **Booking request** | Bookings | Picks a service, asks for a preferred time and passes the request to your team | Message with a keyword |
+| **Rating with follow-up** | Feedback | Asks how it went and follows up differently on a good or bad answer | Message with a keyword |
+| **Page comment to DM** | Growth | Replies privately in Messenger to anyone who comments on a Page post | Comment on a Page post |
+| **m.me link campaign** | Growth | Welcomes people who open your m.me link from an ad, website or QR code | m.me link |
+| **Talk to a person** | Handoff | Lets people ask for a person and assigns the chat to your team | Message with a keyword |
+
+**Get Started welcome**, **Page comment to DM** and **m.me link campaign** carry a **New** badge in
+the wizard.
+
+Every example comes with placeholder text, links and opening hours — `https://example.com/shop`,
+*"Mon–Sat, 9 AM – 6 PM"*. Change them to yours before the journey goes live.
+
+---
+
+## Start It
+
+A Messenger journey runs only when a rule on the **Messenger** channel starts it with the **Start a
+journey** action, which lists only Messenger journeys. The wizard creates that rule for you,
+switched off:
+
+| How it starts | Rule the wizard creates |
+|---------------|-------------------------|
+| **Message with a keyword** | **Message Received**, waiting for a keyword |
+| **Get Started button** | **Message Received** on the payload your Page's Get Started button sends — `GET_STARTED` if the Page has no button yet |
+| **Comment on a Page post** | **Facebook Page Comment** on all posts |
+| **m.me link** | **m.me Link Opened** |
+
+<Steps>
+<Step>
+In the editor, the **This journey is off** card shows the rule's name and trigger. For a keyword
+rule, type the keyword — *"Keyword, e.g. menu"*.
+</Step>
+<Step>
+Click **Switch on**. For a **Get Started button** journey on a Page with no Get Started button yet,
+the card says *"Switching it on also adds a Get Started button to your Page."* — switching on sets
+the button up on Messenger too.
+</Step>
+</Steps>
+
+<ImagePlaceholder
+  file="messenger/journey-off-card.png"
+  shot="Messenger journey editor right after creating from Get Started welcome, on a Page with no Get Started button: the example nodes on the canvas and the This journey is off card at the bottom — 'Switching it on also adds a Get Started button to your Page.', 'Rule: Get Started welcome · start · Message Received', Switch on and Edit rule."
+  caption="Switching on a Get Started journey also adds the button to your Page."
+/>
+
+{/* TODO: capture — replaces messenger/trigger-prompt.png; the wizard now creates the rule, so Set up the trigger shows only when it could not */}
+
+**Edit rule** opens the rule in the rule builder instead. If no Page was connected when you created
+the journey, the editor shows **Set up the trigger**; **Create the rule** opens a new Messenger rule
+with the trigger already chosen.
+
+<Callout type="warn">
+  A journey whose rule is off never runs. If you closed the editor without switching it on, open the
+  journey again, or switch on its rule — named *"… · start"* — in [Automation → Rules](/automation).
+</Callout>
+
+Messenger rules can use the general triggers — **Message Received**, **Chat Closed**, **Chat
+Assigned**, **Contact Created** and the rest — plus two of their own. See
+[Triggers](/automation/triggers#messenger-triggers).
+
+| To start the journey when… | Build the rule with |
+|----------------------------|---------------------|
+| Someone messages a keyword | **Message Received** and a **Message Body** keyword |
+| Someone taps Get Started, an ice breaker or a menu item | **Message Received** on the keyword that tap sends — see [Welcome & Menu](/messenger/welcome-menu) |
+| Someone opens an m.me link | **m.me Link Opened** — see [m.me Links](/messenger/m-me-links) |
+| Someone comments on a Page post | **Facebook Page Comment** — see [Facebook Comments](/messenger/comments) |
+
+On a comment rule, the journey's first message goes out as the private reply to the comment.
+
+An agent can also start a Messenger journey by hand from the [Inbox](/inbox): **Journey** in the
+composer — see [Start a Journey from the Inbox](/automation/journeys#start-a-journey-from-the-inbox).
+
+---
+
+## What a Messenger Journey Can Send
+
+The **Components** panel on Messenger offers:
+
+| Group | Components |
+|-------|-----------|
+| **Basic Messages** | Text · Image · Video · Audio · Document |
+| **Interactive** | Input |
+| **Templates** | Cards · Quick Reply |
+| **Flow Control** | Pause · Start |
+| **None Interactive** | Assign |
+
+| Component | Detail |
+|-----------|--------|
+| **Quick Reply** | A **Message Text** with up to **13** tappable replies, each up to 20 characters |
+| **Cards** | Up to **10** swipeable cards, each with up to **3** buttons — a **URL** or an **Action** |
+| **Input** | Asks a question and saves the answer under **Save Answer to Variable** |
+| **Document** | Sent as a file attachment |
+| **Assign** | Hands the conversation to your team in the [Inbox](/inbox) |
+
+Instagram's **Product Template** and **Follow Check** do not appear, and neither do WhatsApp's
+buttons, lists, templates, flows or **Lead**. The canvas, toolbar and **Preview** work as described in the
+[Journey Builder](/automation/journey-builder).
+
+---
+
+## How a Conversation Continues
+
+A **Quick Reply**, **Cards** or **Input** step waits for the person, then carries on:
+
+| They… | The journey… |
+|-------|----------|
+| Tap one of the step's buttons | Follows that button's branch |
+| Type a button's title (case does not matter) | Treats it as that button |
+| Type anything else at a **Quick Reply** step | Keeps waiting; the message goes to your rules instead |
+| Answer an **Input** step | Saves the answer and moves on |
+
+The journey waits up to **24 hours** — Messenger only lets a Page message someone within 24 hours of
+their last message. A message the journey consumes as an answer does not also fire your rules.
+
+---
+
+## Manage Journeys
+
+Search, sort, the on/off switch, **Clone** and **Delete** work as on every journey — see
+[Journeys](/automation/journeys). **Settings** in the editor toolbar renames the journey.
+
+<Callout type="info">
+  To change a journey people are using, clone it, edit and preview the clone, then point the rule
+  at the clone.
+</Callout>
+
+---
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| **Messenger** cannot be picked in the wizard | No Page is connected | See [Connect a Facebook Page](/messenger#connect-a-facebook-page) |
+| The journey never runs | Its rule is still off, or no Messenger rule starts it | Switch it on from the editor's card, or add **Start a journey** to a Messenger rule |
+| **Select journey** on a rule does not list the journey | The rule does not run on Messenger alone | Keep Messenger as the rule's only channel |
+| The journey stops part-way | Meta refused a message — usually because more than 24 hours passed since the person last wrote | Nothing to fix; it restarts when a rule fires again |
+| *"Failed to load the journey"* in the editor | The journey could not be loaded | Click **Retry** |
+
+---
+
+## Related Pages
+
+- [Messenger Overview](/messenger) — connecting a Page
+- [Automation Rules](/automation) — rules that start a journey
+- [Welcome & Menu](/messenger/welcome-menu), [m.me Links](/messenger/m-me-links) and [Facebook Comments](/messenger/comments) — other ways in
+- [Journeys](/automation/journeys) — the list for every channel
+- [Journey Builder](/automation/journey-builder) — the editor canvas
+- [Instagram Journeys](/instagram/journeys)
+- [Inbox](/inbox)

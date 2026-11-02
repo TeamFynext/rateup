@@ -31,27 +31,41 @@ The **Analytics** sidebar entry opens on **Overview**. Its sub-items are **Overv
   />
   <Card
     title="Template Delivery"
-    href="/analytics/message-analytics"
+    href="/analytics/template-delivery"
     description="Delivery of your outbound WhatsApp messages, by team and by template."
   />
   <Card
     title="Message log"
-    href="/analytics/message-logs"
+    href="/analytics/message-log"
     description="Every WhatsApp message sent, searchable and exportable."
   />
 </Cards>
 
-**Team Performance** has two tabs. Links and bookmarks to the section's older tabs still work and
-open the view that replaced them.
+**Team Performance** has two tabs, **Agents** (the default) and **Teams**. Each view has its own
+address:
+
+| View | URL |
+|------|-----|
+| **Overview** | `/dashboard/analytics?tab=overview` |
+| **Team Performance → Agents** | `/dashboard/analytics?tab=team-performance&view=agents` |
+| **Team Performance → Teams** | `/dashboard/analytics?tab=team-performance&view=teams` |
+| **Template Delivery** | `/dashboard/analytics?tab=template-delivery` |
+| **Message log** | `/dashboard/analytics?tab=message-log` |
+| One agent's page | `/dashboard/analytics/agents/<agent id>` |
+| One team's page | `/dashboard/analytics/teams/<team id>` |
+
+Three views were renamed: **Team Performance** was **Conversations**, **Template Delivery** was
+**Messages**, and **Message log** was **Logs**. Bookmarks to the old tabs, and to the old agent and
+team pages, open the view that replaced them.
 
 Two pages that used to be here have moved:
 
 | Was | Now | Page |
 |-----|-----|------|
-| **Analytics → Call History** | **Inbox → Calls** | [Calls](/analytics/calls) |
-| **Analytics → Logs → Audit log** | **Settings → Audit log** | [Audit Log](/analytics/team-activity) |
+| **Analytics → Call History** | **Inbox → Calls** | [Calls](/inbox/calls) |
+| **Analytics → Logs → Audit log** | **Settings → Audit log** | [Audit Log](/settings/audit-log) |
 
-Old links to either land on the new location.
+Old links to either open the new location.
 
 ---
 
@@ -84,20 +98,20 @@ it, your role decides what loads:
 
 | Ability | Lets you see |
 |---------|--------------|
-| **See analytics** | Overview, Team Performance, Template Delivery and Message log — and the **Analytics** tab on [Inbox → Calls](/analytics/calls) |
+| **See analytics** | Overview, Team Performance, Template Delivery and Message log — and the **Analytics** tab on [Inbox → Calls](/inbox/calls) |
 | **Export chats and logs** | **Export Excel** on Message log |
 
-The [audit log](/analytics/team-activity) needs **See the audit log** and is under **Settings →
+The [audit log](/settings/audit-log) needs **See the audit log** and is under **Settings →
 Audit log**.
 
 Abilities come from a member's role, and can be added or removed per person — see
-[Members & Roles](/settings/users).
+[Members & Roles](/settings/members).
 
 ---
 
 ## Related Pages
 
 - [Teams](/settings/teams) — enabling the Analytics feature
-- [Members & Roles](/settings/users) — roles and abilities
-- [Calls](/analytics/calls) — the call log and call analytics, under **Inbox → Calls**
-- [Audit Log](/analytics/team-activity) — under **Settings → Audit log**
+- [Members & Roles](/settings/members) — roles and abilities
+- [Calls](/inbox/calls) — the call log and call analytics, under **Inbox → Calls**
+- [Audit Log](/settings/audit-log) — under **Settings → Audit log**

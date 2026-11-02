@@ -1,6 +1,6 @@
 ---
 title: "Settings Overview"
-description: Your organisation, features, people, notifications, channels, integrations, security and billing — all in one place.
+description: Your profile, notifications and password, and your organisation's members, teams, channels, integrations, billing and audit log.
 ---
 
 **Settings** is where the organisation itself is configured: who works here, what they can reach,
@@ -19,7 +19,7 @@ Settings that belong to you as a person.
 <Cards>
   <Card
     title="Profile & Business"
-    href="/settings/account"
+    href="/settings/profile"
     description="Your profile, your organisation's business details and business hours."
   />
   <Card
@@ -29,7 +29,7 @@ Settings that belong to you as a person.
   />
   <Card
     title="Password & Account"
-    href="/settings/security"
+    href="/settings/password"
     description="Change your password, delete your account or your organisation."
   />
 </Cards>
@@ -41,7 +41,7 @@ Settings that apply to everyone in the organisation.
 <Cards>
   <Card
     title="Members"
-    href="/settings/users"
+    href="/settings/members"
     description="Invite people, give each a role, fine-tune individual abilities, and pause or remove access when someone leaves."
   />
   <Card
@@ -66,7 +66,7 @@ Settings that apply to everyone in the organisation.
   />
   <Card
     title="Audit log"
-    href="/analytics/team-activity"
+    href="/settings/audit-log"
     description="Who on your team created, changed or deleted what, and when."
   />
 </Cards>
@@ -80,7 +80,7 @@ and **Admin Settings**.
 
 <Card
   title="Customize Menu"
-  href="/settings/features"
+  href="/settings/customize-menu"
   description="Not in the Settings list: the grid icon at the foot of the sidebar rail chooses which optional features — Loyalty, Commerce, QR & Links and more — show in the menu for everyone."
 />
 
@@ -89,7 +89,7 @@ and **Admin Settings**.
 ## Who Can Change What
 
 What each person can do comes from their role, plus any abilities fine-tuned for them — see
-[Members & Roles](/settings/users). By default:
+[Members & Roles](/settings/members). By default:
 
 | Area | Who |
 |------|-----|
@@ -97,10 +97,10 @@ What each person can do comes from their role, plus any abilities fine-tuned for
 | Invite people · add people to teams | Managers, Admins, the Owner |
 | Change roles and abilities · pause or remove people | Admins, the Owner |
 | Create or delete teams · team channel access | Admins, the Owner |
-| Business details and hours · [features](/settings/features) · integrations · the webhook | Managers, Admins, the Owner |
+| Business details and hours · [features](/settings/customize-menu) · integrations · the webhook | Managers, Admins, the Owner |
 | Channels | Admins, the Owner |
 | API keys | Admins, the Owner |
-| [Audit log](/analytics/team-activity) | Admins, the Owner — anyone with *See the audit log* |
+| [Audit log](/settings/audit-log) | Admins, the Owner — anyone with *See the audit log* |
 | Billing | Admins, the Owner |
 | Transferring or deleting the organisation | The Owner only |
 
@@ -117,15 +117,15 @@ Managers act only within their own teams; Admins and the Owner reach every team.
 
 | I want to… | Go to |
 |-----------|-------|
-| Hide Loyalty, Commerce or another feature from the menu | [Customize Menu](/settings/features) |
-| Add a new agent | [Members & Roles](/settings/users) → **Invite** |
-| Stop someone using the Inbox | [Members & Roles](/settings/users#fine-tune-one-persons-abilities) → fine-tune their abilities |
+| Hide Loyalty, Commerce or another feature from the menu | [Customize Menu](/settings/customize-menu) |
+| Add a new agent | [Members & Roles](/settings/members) → **Invite** |
+| Stop someone using the Inbox | [Members & Roles](/settings/members#fine-tune-one-persons-abilities) → fine-tune their abilities |
 | Stop getting emails about something | [Notifications](/settings/notifications) |
 | Connect a second WhatsApp number | [Channels](/settings/channels) |
 | Send events to my own system | [Integrations](/settings/integrations#webhook) → Webhook |
 | Build against the REST API | [External API](/external-api) — keys in [Integrations → API Service](/settings/integrations#api-service) |
-| Change my password | [Password & Account](/settings/security) |
-| Find out who changed a setting | [Audit log](/analytics/team-activity) |
+| Change my password | [Password & Account](/settings/password) |
+| Find out who changed a setting | [Audit log](/settings/audit-log) |
 | Get more active contacts or campaign credits | [Billing](/settings/billing) → **Buy a pack** |
 
 ---

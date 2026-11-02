@@ -120,13 +120,14 @@ Flows have a much higher completion rate than surveys — but only if they are s
 
 ## Sending a Flow
 
-A flow reaches customers in three ways:
+A flow reaches customers in four ways:
 
 | Route | Use |
 |-------|-----|
 | **From a conversation** | An agent sends it from the Inbox composer |
 | **From a template** | Attach a flow button to an approved template |
-| **From a journey** | A journey step opens the flow |
+| **From a journey** | A **WhatsApp Flow** step in a [journey](/automation/journeys) opens the flow |
+| **From a rule** | The **Send a flow** action on a WhatsApp [automation rule](/automation/actions) |
 
 ---
 
@@ -137,7 +138,7 @@ what was submitted without leaving the thread.
 
 To push submissions into your own systems, set a **webhook** on the flow's Settings tab. It uses the
 same signed, retried mechanism as surveys — see
-[Surveys → Settings](/web-forms/settings) for the payload, headers and verification.
+[Surveys → Settings](/surveys/settings) for the payload, headers and verification.
 
 To receive every Flow your organisation runs at one endpoint instead, subscribe the organisation
 webhook to **Flow response created** (`flow.response.created`) under
@@ -163,5 +164,5 @@ a Flow"*.
 
 - [Flow Editor](/whatsapp/flow-editor) — screens, elements, logic jumps and settings
 - [Message Templates](/whatsapp/templates) — attaching a flow to a message
-- [Journeys](/whatsapp/chatbots)
-- [Surveys](/web-forms) — the browser-based alternative
+- [Journeys](/automation/journeys)
+- [Surveys](/surveys) — the browser-based alternative

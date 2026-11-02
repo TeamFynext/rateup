@@ -44,7 +44,7 @@ responses and loyalty points. Every delivery is **signed** and **retried**.
 
 <Callout type="info">
   A survey can also post its own responses to a URL set on that survey — see
-  [Surveys → Settings](/web-forms/settings). That is separate from this webhook.
+  [Surveys → Settings](/surveys/settings). That is separate from this webhook.
 </Callout>
 
 <ScreenShot src="/docs/screenshots/settings/webhook-integration.png" alt="The Webhook page: the saved endpoint with Change and Remove, and the Events card with search and grouped events" />
@@ -389,7 +389,7 @@ they can arrive out of order, and a retry can arrive after a later event.
 <Callout type="warn">
   Retries cover blips, not outages. If your endpoint is down for longer than the retry window, those
   events are gone. Treat the webhook as a live feed and reconcile against
-  [Message Logs](/analytics/message-logs) or the [External API](/external-api) when you need a
+  [Message log](/analytics/message-log) or the [External API](/external-api) when you need a
   complete record.
 </Callout>
 
@@ -426,7 +426,7 @@ secret.
 **API Service** is where you create and manage the keys your own systems use to call the
 [External API](/external-api). It opens from **RateUp services → API Service**; seeing it needs the
 **API keys** abilities, which Owners and Admins have by default — see
-[Members & Roles](/settings/users).
+[Members & Roles](/settings/members).
 
 <ScreenShot src="/docs/screenshots/settings/api-service.png" alt="API Service page with the keys table and a key's Edit, Rotate and Revoke menu open" />
 
@@ -562,7 +562,7 @@ name their organization; an older key answers `401`.
 
 The WooCommerce integration connects one WordPress store. RateUp hears about new orders, order
 status changes, new customers and product changes, which drive order automations, loyalty points and
-coupons. Connecting a store also turns **Commerce** on in [Customize Menu](/settings/features).
+coupons. Connecting a store also turns **Commerce** on in [Customize Menu](/settings/customize-menu).
 
 Two parts work together:
 
@@ -660,7 +660,7 @@ the store side, delete key #… under WooCommerce › Settings › Advanced › 
 ## Related Pages
 
 - [External API](/external-api) — endpoints, errors, retries and the v1 → v2 migration
-- [Members & Roles](/settings/users) — who may manage API keys and webhooks
-- [Surveys → Settings](/web-forms/settings) — a survey's own response webhook
-- [Message Analytics](/analytics/message-analytics) — the same delivery data, in the dashboard
+- [Members & Roles](/settings/members) — who may manage API keys and webhooks
+- [Surveys → Settings](/surveys/settings) — a survey's own response webhook
+- [Template Delivery](/analytics/template-delivery) — the same delivery data, in the dashboard
 - [Channels](/settings/channels)

@@ -11,7 +11,26 @@ where work is waiting without opening anything.
 Five views were renamed: **Unassigned** was **New**, **Assigned to me** was **Mine**, **Unread
 mentions** was **@Mentions**, **Starred** was **Favourites** and **Spam contacts** was **Spam**.
 
-<ScreenShot src="/docs/screenshots/inbox/sidebar-views.png" alt="The eight Inbox views, each with a live count" />
+<ScreenShot src="/docs/screenshots/inbox/sidebar-views.png" alt="The Inbox sidebar: Open, Unassigned, Closed, All, Assigned to me, Unread mentions, Starred and Spam contacts, each with a live count" />
+
+Each view has its own address, so you can bookmark one or share it:
+
+| View | URL |
+|------|-----|
+| **Open** | `/dashboard/inbox?tab=open` |
+| **Unassigned** | `/dashboard/inbox?tab=unassigned` |
+| **Closed** | `/dashboard/inbox?tab=closed` |
+| **All** | `/dashboard/inbox?tab=all` |
+| **Assigned to me** | `/dashboard/inbox?tab=assigned` |
+| **Unread mentions** | `/dashboard/inbox?tab=mentions` |
+| **Starred** | `/dashboard/inbox?tab=starred` |
+| **Spam contacts** | `/dashboard/inbox?tab=spam` |
+
+Old bookmarks to `?tab=new`, `?tab=mine` and `?tab=favourites` open **Unassigned**, **Assigned to
+me** and **Starred**.
+
+On a narrow screen, where the sidebar is hidden, the same eight views appear as a strip above the
+conversation list.
 
 ---
 
@@ -20,13 +39,13 @@ mentions** was **@Mentions**, **Starred** was **Favourites** and **Spam contacts
 | View | Contains | Mainly used by |
 |------|----------|----------------|
 | **[Open](/inbox/inboxview/open)** | Every active ticket, assigned or not | Managers |
-| **[Unassigned](/inbox/inboxview/newchat)** | Active tickets with **no owner** and a message in the last 24 hours | Everyone |
+| **[Unassigned](/inbox/inboxview/unassigned)** | Active tickets with **no owner** and a message in the last 24 hours | Everyone |
 | **[Closed](/inbox/inboxview/closed)** | Finished tickets | Everyone |
 | **All** | Every ticket, any status | Anyone searching |
-| **[Assigned to me](/inbox/inboxview/mine)** | Tickets assigned to **you** | Agents |
-| **[Unread mentions](/inbox/inboxview/mentions)** | Tickets where a colleague mentioned you | Everyone |
-| **[Starred](/inbox/inboxview/favourites)** | Tickets you starred | Everyone |
-| **[Spam contacts](/inbox/inboxview/spam)** | Contacts flagged as spam — one row each | Admins |
+| **[Assigned to me](/inbox/inboxview/assigned-to-me)** | Tickets assigned to **you** | Agents |
+| **[Unread mentions](/inbox/inboxview/unread-mentions)** | Tickets where a colleague mentioned you | Everyone |
+| **[Starred](/inbox/inboxview/starred)** | Tickets you starred | Everyone |
+| **[Spam contacts](/inbox/inboxview/spam-contacts)** | Contacts flagged as spam — one row each | Admins |
 
 ---
 

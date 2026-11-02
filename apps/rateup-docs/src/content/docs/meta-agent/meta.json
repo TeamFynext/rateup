@@ -1,13 +1,13 @@
 {
   "pages": [
     "index",
-    "overview",
+    "setup-guide",
     "knowledge",
     "skills",
-    "ui-skills",
+    "rich-replies",
     "connectors",
-    "operate",
-    "settings",
+    "test",
+    "go-live",
     "insights"
   ]
 }

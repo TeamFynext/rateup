@@ -2,9 +2,9 @@
   "pages": [
     "index",
     "onboarding",
-    "dashboard",
+    "overview",
     "cashier-portal",
-    "customers",
+    "members",
     "program",
     "rewards",
     "activity",

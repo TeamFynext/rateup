@@ -10,7 +10,7 @@ An automation is built one step at a time. A step rail across the top reads
 **Template → Trigger → Conditions → Actions → Review**, and **Continue** stays disabled until the
 step you are on is complete — the reason is written next to it.
 
-<ScreenShot src="/docs/screenshots/automation/rule-wizard.png" alt="The automation builder on the Conditions step of a keyword rule, with the Device Preview showing the Instagram conversation" />
+<ScreenShot src="/docs/screenshots/automation/rule-wizard.png" alt="A new rule: the header reads Rules / New rule, the step rail Template, Trigger, Conditions, Actions, Review, the Start from a template gallery with its category chips, and the Device Preview panel on the right" />
 
 ---
 
@@ -18,8 +18,9 @@ step you are on is complete — the reason is written next to it.
 
 <Steps>
 <Step>
-Go to **Automation → Rules** and click **Create rule**. The header reads **Rules / New rule** until you
-give it a name.
+Go to **Automation → Rules** and click **Create rule**. The builder opens at
+`/dashboard/automation/rules/new`, and its header reads **Rules / New rule** until you give the rule a
+name. Click **Rules** in the header to go back to the list.
 </Step>
 <Step>
 **Template — *"Start from a template"*.** Pick the closest template, or click **Start from
@@ -53,7 +54,7 @@ automation**.
 </Step>
 </Steps>
 
-Opening the builder from a template card on the Automation page skips the Template step and starts
+Opening the builder from a template card on the empty Rules list skips the Template step and starts
 on **Trigger**. A new rule is saved switched on.
 
 ---
@@ -115,17 +116,21 @@ hidden value is never saved.
 | **Run once a day per contact** | *"Skips anyone this automation already ran for in the last 24 hours."* |
 | **Only during business hours** | The rule fires only inside the hours you pick under **Business hours** |
 
-Business hours are the schedules defined on [Settings → Profile & Business](/settings/account).
+Business hours are the schedules defined on [Settings → Profile & Business](/settings/profile).
 
 ---
 
 ## Edit a Saved Rule
 
-Click a rule's card to open it. A saved rule opens on **Trigger** with every step unlocked, so you
+Click a rule's card to open it at `/dashboard/automation/rules/<id>`. A saved rule opens on **Trigger** with every step unlocked, so you
 can jump straight to the one you want from the step rail, and **Save changes** is available on every
 step — you do not have to walk to Review again.
 
 If a save fails validation, the builder jumps to the step holding the problem and shows the message.
+
+The rules that [Create journey](/automation/journeys#create-a-journey) sets up appear on the list
+too, named after their journey — *"Welcome menu · start"* — and switched off until you switch them on
+from the journey's editor. Edit them here like any other rule.
 
 ---
 
@@ -178,3 +183,4 @@ Copy the **Share Link**, or download the QR code.
 - [Triggers](/automation/triggers)
 - [Conditions](/automation/conditions)
 - [Actions](/automation/actions)
+- [Journeys](/automation/journeys) — the conversations a rule can start

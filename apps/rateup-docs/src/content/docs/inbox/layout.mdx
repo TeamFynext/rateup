@@ -4,11 +4,18 @@ description: A guided tour of the four regions of the RateUp Inbox and every con
 ---
 
 import ScreenShot from "@/components/Screenshot";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
 
 The Inbox is split into four regions. This page names every one of them, so the rest of the
 documentation can point at things without describing them again.
 
-<ScreenShot src="/docs/screenshots/inbox/layout-annotated.png" alt="The four regions of the Inbox" />
+<ImagePlaceholder
+  file="inbox/layout-annotated.png"
+  shot="The whole Inbox at 1440×900 with a ticket open and Ticket Details expanded, numbered 1–4 on the sidebar, conversation list, chat window and Ticket Details. The sidebar must show the current views (Open, Unassigned, Closed, All, Assigned to me, Unread mentions, Starred, Spam contacts), the filters, Calls and Inbox settings."
+  caption="The four regions of the Inbox."
+/>
+
+{/* TODO: re-capture — the old shot's sidebar showed the renamed views (New, Mine, @Mentions, Favourites, Spam) and had no Calls entry */}
 
 | # | Region | Purpose |
 |---|--------|---------|
@@ -35,8 +42,14 @@ waiting without opening anything.
 | **Starred** | Tickets you have starred |
 | **Spam contacts** | Contacts you have flagged as spam — one row each |
 
-Below the views sits the **Filter** group: **Channel**, **Lifecycle**, **Labels**, **Users** and
-**Teams**. Each narrows whatever view you are in and stays applied as you move between them.
+<ScreenShot src="/docs/screenshots/inbox/sidebar-views.png" alt="The Inbox sidebar: Open, Unassigned, Closed, All, Assigned to me, Unread mentions, Starred and Spam contacts, each with a count" />
+
+Below the views sit the filters: **Channel**, **Lifecycle**, **Contact Labels**, **Conversation
+Tags**, **Users** and **Teams**. Each narrows whatever view you are in and stays applied as you move
+between them. A filter only appears when there is something to filter by.
+
+Under the filters, **Calls** opens the [call log and call analytics](/inbox/calls), and **Inbox
+settings**, pinned to the foot of the sidebar, opens [Inbox Settings](/inbox/inbox-settings).
 
 [Views in detail →](/inbox/inboxview) · [Sidebar filters →](/inbox/inbox-filter)
 

@@ -20,7 +20,7 @@ the page.
 Get Started, ice breakers and menu items do not start a journey directly. Each one sends a
 **keyword** — *"A tap sends its keyword as a message, so use a keyword one of your Messenger journeys
 or rules answers."* The keyword reaches your rules exactly as if the person had typed it, so a
-**Message Received** rule on that keyword decides what happens next — usually **Trigger Journey**.
+**Message Received** rule on that keyword decides what happens next — usually **Start a journey**.
 
 <Steps>
 <Step>
@@ -31,7 +31,7 @@ In [Automation Rules](/automation), build a **Messenger** rule with the **Messag
 **Message Body** condition on that keyword.
 </Step>
 <Step>
-On **Actions**, add **Start a journey** and pick a [Messenger journey](/messenger/chatbots), or
+On **Actions**, add **Start a journey** and pick a [Messenger journey](/messenger/journeys), or
 reply with **Send a message**.
 </Step>
 <Step>
@@ -43,6 +43,11 @@ Come back to **Welcome & Menu** and enter the same keyword under **Keyword sent 
   A keyword no rule answers does nothing — the person taps, the tap lands in the
   [Inbox](/inbox), and nobody replies until an agent sees it. Build the rule first, then the button.
 </Callout>
+
+For the Get Started button there is a shortcut: create a Messenger journey with **Get Started
+button** under **How it starts**. The wizard makes the rule on the button's keyword, and if the Page
+has no Get Started button yet, switching the journey on adds one — see
+[Messenger Journeys](/messenger/journeys#start-it).
 
 ---
 
@@ -58,7 +63,7 @@ including anything changed outside RateUp. The badge on each card says **Live** 
 | Message | Meaning |
 |---------|---------|
 | *"Couldn't read this Page's Messenger profile from Meta."* | Meta did not answer. Click **Try again** |
-| *"You can view these settings. Ask an admin for the manage channels permission to change them."* | Your role cannot change channels, so every control is disabled — see [Members & Roles](/settings/users) |
+| *"You can view these settings. Ask an admin for the manage channels permission to change them."* | Your role cannot change channels, so every control is disabled — see [Members & Roles](/settings/members) |
 
 ---
 
@@ -176,6 +181,6 @@ Keep the menu short. Three items people actually need get used; twenty get scrol
 
 - [Messenger Overview](/messenger)
 - [m.me Links](/messenger/m-me-links) — links that start an automation, with Get Started
-- [Messenger Journeys](/messenger/chatbots) — what a keyword can start
+- [Messenger Journeys](/messenger/journeys) — what a keyword can start
 - [Triggers](/automation/triggers) — **Message Received** and the Messenger triggers
 - [Ice Breakers, Menu & Links](/instagram/entry-points) — the Instagram equivalent

@@ -1,15 +1,15 @@
 {
   "pages": [
     "index",
-    "account",
+    "profile",
     "notifications",
-    "security",
-    "users",
+    "password",
+    "members",
     "teams",
     "channels",
     "integrations",
     "billing",
-    "[Audit log](/analytics/team-activity)",
-    "features"
+    "audit-log",
+    "customize-menu"
   ]
 }

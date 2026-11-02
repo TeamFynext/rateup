@@ -5,8 +5,8 @@ description: Everything RateUp does — messaging, commerce, loyalty, feedback a
 
 import DashboardSvg from "@/components/DashboardSvg";
 
-**RateUp** is a customer messaging and engagement platform. Your customers talk to you on WhatsApp
-and Instagram; RateUp is where your team answers them, sells to them, rewards them and learns from
+**RateUp** is a customer messaging and engagement platform. Your customers talk to you on WhatsApp,
+Instagram and Messenger; RateUp is where your team answers them, sells to them, rewards them and learns from
 them.
 
 <DashboardSvg />
@@ -30,45 +30,83 @@ New to RateUp? These three pages cover the essentials.
   />
   <Card
     title="Invite your team"
-    href="/settings/users"
+    href="/settings/members"
     description="Add people, set their permissions and group them into teams."
   />
 </Cards>
 
 ---
 
-## Talking to Customers
+## Conversations and Customers
+
+The docs follow the app's sidebar, top to bottom.
 
 <Cards>
   <Card
     title="Inbox"
     href="/inbox"
-    description="A shared, ticket-based workspace for every conversation across every channel."
+    description="A shared, ticket-based workspace for every conversation across every channel, with WhatsApp calls."
   />
+  <Card
+    title="Analytics"
+    href="/analytics"
+    description="Overview, team performance, template delivery and the message log."
+  />
+  <Card
+    title="Contacts"
+    href="/contacts"
+    description="Your customer database, with audiences, custom fields and labels."
+  />
+  <Card
+    title="Campaigns"
+    href="/campaigns"
+    description="Send an approved template to your audiences or hand-picked contacts."
+  />
+</Cards>
+
+---
+
+## Automation
+
+<Cards>
+  <Card
+    title="Rules"
+    href="/automation"
+    description="Trigger → Conditions → Actions rules that route, label and reply on their own."
+  />
+  <Card
+    title="Journeys"
+    href="/automation/journeys"
+    description="Step-by-step conversations for WhatsApp, Instagram and Messenger, usually started by a rule. Previously called Chatbots."
+  />
+  <Card
+    title="Meta AI Agent"
+    href="/meta-agent"
+    description="Meta's AI agent answering customers on your WhatsApp number, with handover to your team."
+  />
+</Cards>
+
+---
+
+## Meta
+
+The **Meta** group holds a **WhatsApp** section and an **Instagram & Messenger** section.
+
+<Cards>
   <Card
     title="WhatsApp"
     href="/whatsapp"
-    description="WhatsApp Flows, journeys, message templates, catalog, ice breakers and commands."
+    description="Message templates, WhatsApp Flows, ice breakers and slash commands."
   />
   <Card
     title="Instagram"
     href="/instagram"
-    description="DM journeys, comment and story automations, ig.me links and entry points."
+    description="Comment and story automations, comment-to-buy, ice breakers and ig.me links."
   />
   <Card
     title="Messenger"
     href="/messenger"
-    description="Journeys for the messages people send your Facebook Page."
-  />
-  <Card
-    title="Campaigns"
-    href="/campaign"
-    description="Send an approved template to a segment of your contacts."
-  />
-  <Card
-    title="Automation Rules"
-    href="/automation"
-    description="When → If → Then rules that route, label and reply on their own."
+    description="Page comment replies, m.me links, and the welcome screen and menu for your Facebook Page."
   />
 </Cards>
 
@@ -78,9 +116,9 @@ New to RateUp? These three pages cover the essentials.
 
 <Cards>
   <Card
-    title="Commerce"
-    href="/commerce"
-    description="Sell through WhatsApp — catalog, orders, payments and checkout."
+    title="Pipelines"
+    href="/pipelines"
+    description="Boards that turn conversations into leads, with a forecast and win-rate insights."
   />
   <Card
     title="Loyalty"
@@ -88,41 +126,31 @@ New to RateUp? These three pages cover the essentials.
     description="Points, rewards, referrals and a cashier portal."
   />
   <Card
-    title="Contacts"
-    href="/contacts"
-    description="Your customer database, with audiences, labels, lifecycle stages and custom fields."
-  />
-  <Card
-    title="Pipelines"
-    href="/pipeline"
-    description="A sales board that turns conversations into leads, with a forecast and win-rate insights."
+    title="Commerce"
+    href="/commerce"
+    description="Sell through the chat — products, orders, payments, coupons and a storefront."
   />
 </Cards>
 
 ---
 
-## Listening and Measuring
+## Surveys & Links
 
 <Cards>
   <Card
     title="Surveys"
-    href="/web-forms"
-    description="Surveys and forms, with themes, logic jumps and result export."
+    href="/surveys"
+    description="Surveys and forms, with themes, logic jumps and result export. Previously called Web Forms."
   />
   <Card
     title="Testimonials"
-    href="/testimonials"
+    href="/surveys/testimonials"
     description="Turn survey responses into styled, embeddable social proof."
   />
   <Card
-    title="Analytics"
-    href="/analytics"
-    description="Response times, agent and team performance, delivery health and the message log."
-  />
-  <Card
-    title="QR & Links"
-    href="/qr-studio"
-    description="Trackable QR codes and link-in-bio pages that bring people in."
+    title="QR codes & Link-in-bio Pages"
+    href="/qr-links"
+    description="Trackable QR codes and link-in-bio pages that bring people into a chat."
   />
 </Cards>
 
@@ -134,12 +162,12 @@ New to RateUp? These three pages cover the essentials.
   <Card
     title="Settings"
     href="/settings"
-    description="Profile & business, members, teams, channels, integrations, password & account, and billing."
+    description="You: profile & business, notifications, password & account. Organization: members, teams, channels, integrations, billing and the audit log."
   />
   <Card
-    title="Integrations"
-    href="/settings/integrations"
-    description="Webhooks, API keys and third-party platforms."
+    title="Customize Menu"
+    href="/settings/customize-menu"
+    description="The grid icon on the sidebar rail: choose which optional features show in everyone's menu."
   />
   <Card
     title="External API"
@@ -153,9 +181,9 @@ New to RateUp? These three pages cover the essentials.
 ## How the Pieces Connect
 
 ```
-Customers reach you        →  WhatsApp · Instagram · QR codes · surveys
+Customers reach you        →  WhatsApp · Instagram · Messenger · QR codes · surveys
 Conversations land in      →  Inbox
-Repetitive work handled by →  Automation (Rules · Journeys) · WhatsApp Flows
+Repetitive work handled by →  Automation (Rules · Journeys · Meta AI Agent) · WhatsApp Flows
 You reach out with         →  Campaigns · Templates
 They buy through           →  Commerce
 They come back because of  →  Loyalty
