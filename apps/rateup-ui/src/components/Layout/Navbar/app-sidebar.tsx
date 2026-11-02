@@ -671,7 +671,6 @@ export default function AppSidebar({
   }, [userData]);
 
   const navMain = useNavMain({
-    subscription,
     lifecycles: user?.showLifecycle ? lifecycles : [],
     contactLabels,
     conversationTags,

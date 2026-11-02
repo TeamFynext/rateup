@@ -14,7 +14,6 @@ import {
   IconCircleCheck,
   IconCreditCard,
   IconPackage,
-  IconCrown,
   IconDashboard,
   IconFileSpreadsheet,
   IconFilterBolt,
@@ -196,7 +195,6 @@ export interface NavProgress {
 
 /** Everything the sidebar's nav tree is derived from, gathered by `AppSidebar`. */
 interface NavMainInput {
-  subscription?: Subscription;
   lifecycles?: GetLabelsRes[];
   contactLabels?: ContactLabelOption[];
   conversationTags?: ConversationTagOption[];
@@ -239,7 +237,6 @@ function navSection(group: string, items: NavEntry[]): NavEntry[] {
 }
 
 export function useNavMain({
-  subscription,
   lifecycles = [],
   contactLabels = [],
   conversationTags = [],
@@ -861,20 +858,6 @@ export function useNavMain({
                 : []),
             ],
           },
-          ...(subscription?.orgId === import.meta.env.VITE_ROOT_ORG && can("billing.manage")
-            ? [
-                {
-                  group: t("RateUp"),
-                  items: [
-                    {
-                      title: t("RateUp Admin"),
-                      url: "/admin",
-                      icon: IconCrown,
-                    },
-                  ],
-                },
-              ]
-            : []),
         ],
       },
     ];
@@ -893,7 +876,6 @@ export function useNavMain({
     pipelineNav,
     setupNav,
     staff.length,
-    subscription,
     t,
     teams.length,
     user?.role,
