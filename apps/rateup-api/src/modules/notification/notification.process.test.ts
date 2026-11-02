@@ -36,7 +36,11 @@ const catalogued = {
   source: "inbox",
   subSource: "inbox.assigned",
   event: "inbox.assigned",
-  data: { contactId: "c-1", contactName: "Ann", path: "/dashboard/inbox?tab=mine&contactId=c-1" },
+  data: {
+    contactId: "c-1",
+    contactName: "Ann",
+    path: "/dashboard/inbox?tab=assigned&contactId=c-1",
+  },
   title: "Conversation assigned to you",
   body: "Ann was assigned to you.",
   toast: true,
@@ -73,7 +77,7 @@ describe("processNotification", () => {
     expect(message.roleFilter).toBe("main");
     expect(message.data.notification).toMatchObject({
       id: "n-1",
-      path: "/dashboard/inbox?tab=mine&contactId=c-1",
+      path: "/dashboard/inbox?tab=assigned&contactId=c-1",
       toast: true,
       desktop: true,
       sound: false,

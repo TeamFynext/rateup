@@ -207,7 +207,7 @@ WeeklyReportEmail.PreviewProps = {
   pendingChats: 46,
   averageResponseTime: "4 min",
   inboxLink: "https://rateup.app/dashboard/inbox",
-  unsubscribeUrl: "https://rateup.app/dashboard/settings/account",
+  unsubscribeUrl: "https://rateup.app/dashboard/settings/profile",
   topPerformers: [
     {
       userId: "u1",

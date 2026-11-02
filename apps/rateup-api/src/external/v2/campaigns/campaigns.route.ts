@@ -53,7 +53,7 @@ export async function externalCampaignRoutes(server: FastifyInstance) {
       schema: {
         tags: TAG,
         summary: "Get a campaign",
-        description: "The campaign, its audience's contact groups, drip stages and latest send.",
+        description: "The campaign, the audiences it sends to, drip stages and latest send.",
         params: S.campaignIdParamsSchema,
         response: { 200: S.campaignDetailSchema, ...externalErrorResponses },
       },
@@ -69,7 +69,7 @@ export async function externalCampaignRoutes(server: FastifyInstance) {
         tags: TAG,
         summary: "Create a campaign",
         description:
-          "Created as a DRAFT with its audience (contact groups and/or contacts). Launch it " +
+          "Created as a DRAFT with its recipients (audiences and/or contacts). Launch it " +
           "with `POST /campaigns/{campaignId}/send`.",
         body: S.createCampaignSchema,
         response: { 201: S.campaignDetailSchema, ...externalErrorResponses },

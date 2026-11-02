@@ -17,7 +17,7 @@ export class MetaAgentApiError extends Error {
   fbtraceId?: string;
   constructor(res: AxiosResponse) {
     const body = res.data ?? {};
-    super(body.detail || body.title || "Meta Business Agent API request failed");
+    super(body.detail || body.title || "Meta AI Agent request failed");
     this.name = "MetaAgentApiError";
     this.status = res.status;
     this.title = body.title;

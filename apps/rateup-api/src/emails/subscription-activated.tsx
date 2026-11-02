@@ -98,7 +98,7 @@ SubscriptionActivatedEmail.PreviewProps = {
     {
       title: "Invite your team",
       description: "Bring in the people who'll read responses and follow up with customers.",
-      href: "https://rateup.app/dashboard/settings/team",
+      href: "https://rateup.app/dashboard/settings/teams",
     },
   ],
 } satisfies SubscriptionActivatedEmailProps;

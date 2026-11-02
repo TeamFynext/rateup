@@ -427,7 +427,12 @@ export const SuperTokensConfig: TypeInput = {
 
 const publicTags = [
   { name: "Contacts", description: "Contacts, looked up by id or phone; bulk import up to 1000" },
-  { name: "Contacts/Groups", description: "Contact groups and their members" },
+  {
+    name: "Audiences",
+    description:
+      "Audiences (formerly contact groups) and their members: `/audiences` in v2, " +
+      "`/contact-groups` in v1. Field names and error codes keep the `contactGroup` spelling.",
+  },
   { name: "Teams", description: "Teams, for routing sends" },
   { name: "Campaigns", description: "WhatsApp campaigns: create, send and read responses" },
   { name: "Surveys", description: "Surveys and their responses" },

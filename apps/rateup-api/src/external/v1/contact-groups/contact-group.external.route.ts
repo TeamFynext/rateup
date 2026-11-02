@@ -43,9 +43,9 @@ export async function externalContactGroupRoutes(server: FastifyInstance) {
     {
       schema: {
         body: createContactGroupInputSchema,
-        description: "Create a contact group",
-        summary: "Create a contact group",
-        tags: ["Contacts/Groups"],
+        description: "Create an audience",
+        summary: "Create an audience",
+        tags: ["Audiences"],
         response: {
           200: groupResponseSchema,
         },
@@ -59,9 +59,9 @@ export async function externalContactGroupRoutes(server: FastifyInstance) {
     {
       schema: {
         querystring: getContactGroupsQuerySchema,
-        description: "Get all contact groups",
-        summary: "Get all contact groups",
-        tags: ["Contacts/Groups"],
+        description: "Get all audiences",
+        summary: "Get all audiences",
+        tags: ["Audiences"],
         response: {
           200: groupResponseSchema.array(),
         },
@@ -75,9 +75,9 @@ export async function externalContactGroupRoutes(server: FastifyInstance) {
     {
       schema: {
         params: byContactGroupIdWithOrgIdParamsSchema,
-        description: "Get contacts by contact group id",
-        summary: "Get contacts by contact group id",
-        tags: ["Contacts/Groups"],
+        description: "Get an audience's contacts by audience id",
+        summary: "Get an audience's contacts by audience id",
+        tags: ["Audiences"],
         response: {
           200: contactResponseSchema.array(),
         },
@@ -92,9 +92,9 @@ export async function externalContactGroupRoutes(server: FastifyInstance) {
       schema: {
         params: byContactGroupIdWithOrgIdParamsSchema,
         body: updateContactGroupInputSchema,
-        description: "Update a contact group",
-        summary: "Update a contact group",
-        tags: ["Contacts/Groups"],
+        description: "Update an audience",
+        summary: "Update an audience",
+        tags: ["Audiences"],
       },
     },
     updateContactGroupExternalController,
@@ -105,9 +105,9 @@ export async function externalContactGroupRoutes(server: FastifyInstance) {
     {
       schema: {
         params: byContactGroupIdWithOrgIdParamsSchema,
-        description: "Delete a contact group",
-        summary: "Delete a contact group",
-        tags: ["Contacts/Groups"],
+        description: "Delete an audience",
+        summary: "Delete an audience",
+        tags: ["Audiences"],
       },
     },
     deleteContactGroupExternalController,
@@ -119,9 +119,9 @@ export async function externalContactGroupRoutes(server: FastifyInstance) {
       schema: {
         params: byContactGroupIdWithOrgIdParamsSchema,
         body: addExistingContactsToGroupInputSchema,
-        description: "Add existing contacts to a contact group",
-        summary: "Add existing contacts to a contact group",
-        tags: ["Contacts/Groups"],
+        description: "Add existing contacts to an audience",
+        summary: "Add existing contacts to an audience",
+        tags: ["Audiences"],
       },
     },
     addExistingContactsToGroupExternalController,
@@ -133,9 +133,9 @@ export async function externalContactGroupRoutes(server: FastifyInstance) {
       schema: {
         params: byContactGroupIdWithOrgIdParamsSchema,
         body: extAddNewContactsToGroupInputSchema,
-        description: "Add new contacts to a contact group",
-        summary: "Add new contacts to a contact group",
-        tags: ["Contacts/Groups"],
+        description: "Add new contacts to an audience",
+        summary: "Add new contacts to an audience",
+        tags: ["Audiences"],
       },
     },
     addNewContactsToGroupExternalController,
@@ -147,9 +147,9 @@ export async function externalContactGroupRoutes(server: FastifyInstance) {
       schema: {
         params: byContactGroupIdWithOrgIdParamsSchema,
         body: removeGroupContactsSchema,
-        description: "Remove contacts from a contact group",
-        summary: "Remove contacts from a contact group",
-        tags: ["Contacts/Groups"],
+        description: "Remove contacts from an audience",
+        summary: "Remove contacts from an audience",
+        tags: ["Audiences"],
       },
     },
     removeContactsFromGroupExternalController,

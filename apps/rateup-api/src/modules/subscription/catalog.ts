@@ -53,7 +53,7 @@ export const CATALOG_TIERS: TierSpec[] = [
       "100 active contacts / mo",
       "500 campaign messages / mo",
       "WhatsApp · Instagram · Messenger inbox",
-      "Automations, templates & chatbots",
+      "Automations, templates & journeys",
       "Shop: products, orders & checkout in chat",
       "50 orders / mo",
       "Email support",

@@ -184,7 +184,7 @@ describe("generateChatFilterData", () => {
     const result = await generateChatFilterData("org-1");
 
     expect(result![0]).toEqual({
-      group: "Groups",
+      group: "Audiences",
       items: [{ label: "VIPs", value: "contactGroups|-g1" }],
     });
     expect(result![1]).toEqual({

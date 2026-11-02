@@ -14,7 +14,7 @@ type Renderers = {
   [E in NotificationEvent]: (data: NotificationDataByEvent[E]) => RenderedNotification;
 };
 
-const inboxPath = (contactId: string, tab = "mine") =>
+const inboxPath = (contactId: string, tab = "assigned") =>
   `/dashboard/inbox?tab=${tab}&contactId=${encodeURIComponent(contactId)}`;
 
 const by = (name?: string) => (name ? ` by ${name}` : "");
@@ -71,31 +71,31 @@ const RENDERERS: Renderers = {
   "pipeline.lead_assigned": (d) => ({
     title: "Lead assigned to you",
     body: `${d.leadName} was assigned to you.`,
-    path: `/dashboard/pipeline?p=${encodeURIComponent(d.pipelineId)}`,
+    path: `/dashboard/pipelines?p=${encodeURIComponent(d.pipelineId)}`,
     action: "Open pipeline",
   }),
   "pipeline.task_assigned": (d) => ({
     title: "Task assigned to you",
     body: `"${d.taskTitle}" on ${d.leadName} was assigned to you.`,
-    path: `/dashboard/pipeline?p=${encodeURIComponent(d.pipelineId)}`,
+    path: `/dashboard/pipelines?p=${encodeURIComponent(d.pipelineId)}`,
     action: "Open pipeline",
   }),
   "campaign.completed": (d) => ({
     title: "Campaign completed",
     body: `${d.campaignName} has finished sending. Its delivery numbers are ready.`,
-    path: `/dashboard/campaign/${d.campaignId}`,
+    path: `/dashboard/campaigns/${d.campaignId}`,
     action: "View campaign",
   }),
   "campaign.failed": (d) => ({
     title: "Campaign failed",
     body: `${d.campaignName} could not be sent. ${d.reason}`,
-    path: `/dashboard/campaign/${d.campaignId}`,
+    path: `/dashboard/campaigns/${d.campaignId}`,
     action: "View campaign",
   }),
   "campaign.paused": (d) => ({
     title: "Campaign paused",
     body: `${d.campaignName} was paused: ${d.reason}`,
-    path: `/dashboard/campaign/${d.campaignId}`,
+    path: `/dashboard/campaigns/${d.campaignId}`,
     action: "View campaign",
   }),
   "loyalty.approval_requested": (d) => ({

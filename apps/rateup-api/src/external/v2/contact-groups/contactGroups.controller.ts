@@ -23,8 +23,7 @@ import type {
 } from "./contactGroups.schema.js";
 import { presentContactGroup, presentContactGroupDetail } from "./presenters.js";
 
-const groupGone = () =>
-  new ExternalApiError(404, "contact_group_not_found", "No such contact group");
+const groupGone = () => new ExternalApiError(404, "contact_group_not_found", "No such audience");
 
 /**
  * The dashboard service re-checks the group and throws its own error. Between our check and

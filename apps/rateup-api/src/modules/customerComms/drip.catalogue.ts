@@ -94,7 +94,7 @@ export const DRIP_STEPS: DripStep[] = [
         { title: "A festival greeting", description: "Warm, short, with a small thank-you code." },
         { title: "A feedback ask", description: "Two taps for the customer, a review for you." },
       ],
-      cta: { label: "Create a broadcast", path: "/dashboard/campaign/new" },
+      cta: { label: "Create a broadcast", path: "/dashboard/campaigns/new" },
     },
   },
   {
@@ -137,15 +137,15 @@ export const DRIP_STEPS: DripStep[] = [
         {
           title: "Business hours",
           description: "An away message outside opening times, so no one waits in silence.",
-          path: "/dashboard/settings",
+          path: "/dashboard/settings/profile#business-hours",
         },
         {
           title: "Keyword auto-replies",
           description: "Prices, location, menu: answered the moment someone asks.",
-          path: "/dashboard/automation",
+          path: "/dashboard/automation/rules",
         },
       ],
-      cta: { label: "Set up automations", path: "/dashboard/automation" },
+      cta: { label: "Set up auto-replies", path: "/dashboard/automation/rules" },
     },
   },
   {

@@ -435,7 +435,7 @@ export async function generateChatFilterData(orgId: string) {
     ]);
 
     const groupData = {
-      group: "Groups",
+      group: "Audiences",
       items: cGroups?.map((item) => ({
         label: item?.name,
         value: `contactGroups|-${item?.id}`,

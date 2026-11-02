@@ -17,8 +17,7 @@ const groupInOrg = (orgId: string, contactGroupId: string): Prisma.ContactGroupW
   team: { orgId },
 });
 
-const notFound = () =>
-  new ExternalApiError(404, "contact_group_not_found", "No such contact group");
+const notFound = () => new ExternalApiError(404, "contact_group_not_found", "No such audience");
 
 export async function findGroup(orgId: string, contactGroupId: string) {
   const group = await prisma.contactGroup.findFirst({

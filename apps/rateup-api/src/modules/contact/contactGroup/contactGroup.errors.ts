@@ -1,5 +1,5 @@
 export class ContactGroupNotFoundError extends Error {
-  constructor(message = "Contact group not found") {
+  constructor(message = "Audience not found") {
     super(message);
     this.name = "ContactGroupNotFoundError";
   }

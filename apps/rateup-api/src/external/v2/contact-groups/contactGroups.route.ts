@@ -7,8 +7,13 @@ import { declareExternalScopes } from "../../shared/scopes.js";
 import * as C from "./contactGroups.controller.js";
 import * as S from "./contactGroups.schema.js";
 
+/**
+ * Served at `/audiences` ("Audience" is the product's name for a contact group). The wire
+ * contract keeps the `contactGroup` spelling: `:contactGroupId`, `contactGroupIds`, and the
+ * `contact_group_*` error codes.
+ */
 export async function externalContactGroupRoutes(server: FastifyInstance) {
-  const TAG = ["Contacts/Groups"];
+  const TAG = ["Audiences"];
   declareExternalScopes(server, { read: "contacts.read", write: "contacts.manage" });
 
   // Every write in the module shares one bucket; import is held tighter on top of it, since
@@ -33,7 +38,7 @@ export async function externalContactGroupRoutes(server: FastifyInstance) {
     {
       schema: {
         tags: TAG,
-        summary: "List contact groups",
+        summary: "List audiences",
         description: "Newest first. Filter by team, type, or a case-insensitive name match.",
         querystring: S.contactGroupListQuerySchema,
         response: { 200: S.contactGroupListSchema, ...externalErrorResponses },
@@ -47,9 +52,9 @@ export async function externalContactGroupRoutes(server: FastifyInstance) {
     {
       schema: {
         tags: TAG,
-        summary: "Create a contact group",
+        summary: "Create an audience",
         description:
-          "Group names are unique within a team; a clash answers `409 contact_group_already_exists`.",
+          "Audience names are unique within a team; a clash answers `409 contact_group_already_exists`.",
         body: S.createContactGroupSchema,
         response: { 201: S.contactGroupDetailSchema, ...externalErrorResponses },
       },
@@ -63,8 +68,8 @@ export async function externalContactGroupRoutes(server: FastifyInstance) {
     {
       schema: {
         tags: TAG,
-        summary: "Get a contact group",
-        description: "The group with its member count.",
+        summary: "Get an audience",
+        description: "The audience with its member count.",
         params,
         response: { 200: S.contactGroupDetailSchema, ...externalErrorResponses },
       },
@@ -77,7 +82,7 @@ export async function externalContactGroupRoutes(server: FastifyInstance) {
     {
       schema: {
         tags: TAG,
-        summary: "Update a contact group",
+        summary: "Update an audience",
         description: "Send only the fields to change; `null` clears `icon` or `tags`.",
         params,
         body: S.updateContactGroupSchema,
@@ -93,8 +98,8 @@ export async function externalContactGroupRoutes(server: FastifyInstance) {
     {
       schema: {
         tags: TAG,
-        summary: "Delete a contact group",
-        description: "Deletes the group and its memberships. The contacts themselves remain.",
+        summary: "Delete an audience",
+        description: "Deletes the audience and its memberships. The contacts themselves remain.",
         params,
         response: { 204: S.emptySchema, ...externalErrorResponses },
       },
@@ -110,7 +115,7 @@ export async function externalContactGroupRoutes(server: FastifyInstance) {
     {
       schema: {
         tags: TAG,
-        summary: "List a group's contacts",
+        summary: "List an audience's contacts",
         description: "Ordered by the contact's creation time, newest first.",
         params,
         querystring: paginationQuerySchema,
@@ -125,9 +130,9 @@ export async function externalContactGroupRoutes(server: FastifyInstance) {
     {
       schema: {
         tags: TAG,
-        summary: "Add existing contacts to a group",
+        summary: "Add existing contacts to an audience",
         description:
-          "Up to 1000 contact ids. Ids already in the group are counted, not refused; ids " +
+          "Up to 1000 contact ids. Ids already in the audience are counted, not refused; ids " +
           "that are not this org's contacts come back in `notFound`.",
         params,
         body: S.contactIdsBodySchema,
@@ -143,7 +148,7 @@ export async function externalContactGroupRoutes(server: FastifyInstance) {
     {
       schema: {
         tags: TAG,
-        summary: "Remove contacts from a group",
+        summary: "Remove contacts from an audience",
         description:
           "Up to 1000 contact ids. Ids that are not members are ignored. The contacts " +
           "themselves are not deleted.",
@@ -161,11 +166,11 @@ export async function externalContactGroupRoutes(server: FastifyInstance) {
     {
       schema: {
         tags: TAG,
-        summary: "Import contacts into a group",
+        summary: "Import contacts into an audience",
         description:
           "Up to 1000 contacts, matched by phone: an unknown phone creates a contact " +
           "(source `external`), a known one is reused unchanged. Every resolved contact is " +
-          "added to the group.",
+          "added to the audience.",
         params,
         body: S.importContactsBodySchema,
         response: { 200: S.importContactsResultSchema, ...externalErrorResponses },
