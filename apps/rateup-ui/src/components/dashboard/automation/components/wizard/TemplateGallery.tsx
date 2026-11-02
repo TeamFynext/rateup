@@ -42,6 +42,7 @@ export function TemplateGallery({
   filterable = false,
   onScratch,
   wide = false,
+  triggerEvent,
 }: Readonly<{
   selectedId?: string;
   onPick: (template: AutomationTemplate) => void;
@@ -53,10 +54,15 @@ export function TemplateGallery({
   onScratch?: () => void;
   /** Up to three columns, as the space allows, for a surface with the room. */
   wide?: boolean;
+  /** Only templates for this trigger, for a rule started from one trigger's panel. */
+  triggerEvent?: string;
 }>) {
   const isMissing = useMissingRequirements();
   const [category, setCategory] = useState<TemplateCategory | "all">("all");
-  const inCategory = AUTOMATION_TEMPLATES.filter(
+  const forTrigger = AUTOMATION_TEMPLATES.filter(
+    (template) => !triggerEvent || template.values.triggerEvent === triggerEvent,
+  );
+  const inCategory = forTrigger.filter(
     (template) => category === "all" || template.category === category,
   );
   const templates = limit ? inCategory.slice(0, limit) : inCategory;

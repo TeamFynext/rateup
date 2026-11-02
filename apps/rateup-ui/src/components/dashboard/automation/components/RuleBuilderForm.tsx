@@ -6,7 +6,10 @@ import { toast } from "sonner";
 
 import { PAGE_TITLE } from "@/components/common/page-heading.tsx";
 import type { AutomationTemplate } from "@/components/dashboard/automation/automation-templates.ts";
-import { templateFormValues } from "@/components/dashboard/automation/automation-templates.ts";
+import {
+  AUTOMATION_TEMPLATES,
+  templateFormValues,
+} from "@/components/dashboard/automation/automation-templates.ts";
 import type { WizardStep } from "@/components/dashboard/automation/rule-sentence.ts";
 import { actionPart } from "@/components/dashboard/automation/rule-sentence.ts";
 import { Button } from "@/components/ui/button.tsx";
@@ -35,6 +38,11 @@ interface RuleBuilderFormProps {
   isEdit: boolean;
   /** Set when the rule was started from a template outside the wizard; skips the template step. */
   initialTemplateId?: string;
+  /**
+   * Set when the rule was started for one trigger (e.g. a channel's "Story mentions" panel). The
+   * template step then offers only templates for that trigger, and is skipped when there are none.
+   */
+  presetTriggerEvent?: string;
   /** What a template is merged over, so a rule started from a channel's page stays on it. */
   baseValues: CreateRuleInput;
 }
@@ -114,10 +122,15 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
   isPending,
   isEdit,
   initialTemplateId,
+  presetTriggerEvent,
   baseValues,
 }) => {
-  const steps = isEdit ? EDIT_STEPS : NEW_STEPS;
-  const firstStep: WizardStep = isEdit || initialTemplateId ? "trigger" : "template";
+  const hasTemplatesForPreset =
+    !presetTriggerEvent ||
+    AUTOMATION_TEMPLATES.some((template) => template.values.triggerEvent === presetTriggerEvent);
+  const steps = isEdit || !hasTemplatesForPreset ? EDIT_STEPS : NEW_STEPS;
+  const firstStep: WizardStep =
+    steps.includes("template") && !initialTemplateId ? "template" : "trigger";
   const [step, setStep] = useState<WizardStep>(firstStep);
   // How far the wizard has been walked. A new rule unlocks one step at a time; a saved rule was
   // valid when it was saved, so every step is open.
@@ -235,7 +248,8 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                   selectedId={templateId}
                   onPick={pickTemplate}
                   onScratch={startFromScratch}
-                  filterable
+                  triggerEvent={presetTriggerEvent}
+                  filterable={!presetTriggerEvent}
                   wide
                 />
               )}

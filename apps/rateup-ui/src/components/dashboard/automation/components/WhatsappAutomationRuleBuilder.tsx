@@ -122,6 +122,7 @@ const WhatsappAutomationRuleBuilder: React.FC<WhatsappAutomationRuleBuilderProps
       }
       baseValues={newRuleValues}
       initialTemplateId={template?.id}
+      presetTriggerEvent={isEditMode ? undefined : initialTriggerEvent}
     />
   );
 };
@@ -132,7 +133,8 @@ const RuleEditor: React.FC<{
   initialValues: CreateRuleInput;
   baseValues: CreateRuleInput;
   initialTemplateId: string | undefined;
-}> = ({ ruleId, ruleData, initialValues, baseValues, initialTemplateId }) => {
+  presetTriggerEvent: string | undefined;
+}> = ({ ruleId, ruleData, initialValues, baseValues, initialTemplateId, presetTriggerEvent }) => {
   const { t } = useTranslation();
   const isEditMode = Boolean(ruleId);
   const navigate = useNavigate();
@@ -230,6 +232,7 @@ const RuleEditor: React.FC<{
           isPending={isPending}
           isEdit={isEditMode}
           initialTemplateId={initialTemplateId}
+          presetTriggerEvent={presetTriggerEvent}
           baseValues={baseValues}
         />
       </TabsContent>
