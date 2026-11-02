@@ -13,7 +13,6 @@ import { Route as authRouteRouteImport } from './routes/(auth)/route'
 import { Route as marketingRouteRouteImport } from './routes/(marketing)/route'
 import { Route as publicFacingRouteRouteImport } from './routes/(public-facing)/route'
 import { Route as shopRouteRouteImport } from './routes/(shop)/route'
-import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as AuthRouteRouteImport } from './routes/auth/route'
 import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
 import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
@@ -23,8 +22,6 @@ import { Route as Sitemap_indexDotxmlRouteImport } from './routes/sitemap_index[
 import { Route as marketingIndexRouteImport } from './routes/(marketing)/index'
 import { Route as marketingBlogRouteRouteImport } from './routes/(marketing)/blog/route'
 import { Route as DotwellKnownApiCatalogRouteImport } from './routes/[.]well-known/api-catalog'
-import { Route as AdminIndexRouteImport } from './routes/admin/index'
-import { Route as AdminUpdateCenterRouteImport } from './routes/admin/updateCenter'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as DashboardCommerceRouteRouteImport } from './routes/dashboard/commerce/route'
 import { Route as DashboardLoyaltyRouteRouteImport } from './routes/dashboard/loyalty/route'
@@ -53,20 +50,6 @@ import { Route as marketingToolsIndexRouteImport } from './routes/(marketing)/to
 import { Route as marketingToolsSitemapDotxmlRouteImport } from './routes/(marketing)/tools/sitemap[.]xml'
 import { Route as shopSSlugRouteRouteImport } from './routes/(shop)/s/$slug/route'
 import { Route as shopSSitemapDotxmlRouteImport } from './routes/(shop)/s/sitemap[.]xml'
-import { Route as AdminGenerateIndexRouteImport } from './routes/admin/generate/index'
-import { Route as AdminOrdersIndexRouteImport } from './routes/admin/orders/index'
-import { Route as AdminOrgsIndexRouteImport } from './routes/admin/orgs/index'
-import { Route as AdminPlansIndexRouteImport } from './routes/admin/plans/index'
-import { Route as AdminRateupIndexRouteImport } from './routes/admin/rateup/index'
-import { Route as AdminRazorpayIndexRouteImport } from './routes/admin/razorpay/index'
-import { Route as AdminReferralsIndexRouteImport } from './routes/admin/referrals/index'
-import { Route as AdminShareQrIndexRouteImport } from './routes/admin/share-qr/index'
-import { Route as AdminShopifyIndexRouteImport } from './routes/admin/shopify/index'
-import { Route as AdminStripeIndexRouteImport } from './routes/admin/stripe/index'
-import { Route as AdminSubscriptionsIndexRouteImport } from './routes/admin/subscriptions/index'
-import { Route as AdminUpdateCenterIndexRouteImport } from './routes/admin/update-center/index'
-import { Route as AdminUserStatsIndexRouteImport } from './routes/admin/user-stats/index'
-import { Route as AdminUserstatsIndexRouteImport } from './routes/admin/userstats/index'
 import { Route as AuthFbIndexRouteImport } from './routes/auth/fb/index'
 import { Route as AuthOauth2callbackIndexRouteImport } from './routes/auth/oauth2callback/index'
 import { Route as AuthShopifyIndexRouteImport } from './routes/auth/shopify/index'
@@ -161,7 +144,6 @@ import { Route as publicFacingWsShortIdIndexRouteImport } from './routes/(public
 import { Route as shopCTokenIndexRouteImport } from './routes/(shop)/c/$token/index'
 import { Route as shopCTokenInvoiceRouteImport } from './routes/(shop)/c/$token/invoice'
 import { Route as shopSSlugIndexRouteImport } from './routes/(shop)/s/$slug/index'
-import { Route as AdminOrgsOrgIdIndexRouteImport } from './routes/admin/orgs/$orgId/index'
 import { Route as AuthShopifyLogoutIndexRouteImport } from './routes/auth/shopify/logout/index'
 import { Route as AuthShopifyOauth2callbackIndexRouteImport } from './routes/auth/shopify/oauth2callback/index'
 import { Route as AuthShopifyRetryIndexRouteImport } from './routes/auth/shopify/retry/index'
@@ -307,11 +289,6 @@ const shopRouteRoute = shopRouteRouteImport.update({
   id: '/(shop)',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminRouteRoute = AdminRouteRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthRouteRoute = AuthRouteRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -356,16 +333,6 @@ const DotwellKnownApiCatalogRoute = DotwellKnownApiCatalogRouteImport.update({
   id: '/.well-known/api-catalog',
   path: '/.well-known/api-catalog',
   getParentRoute: () => rootRouteImport,
-} as any)
-const AdminIndexRoute = AdminIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminUpdateCenterRoute = AdminUpdateCenterRouteImport.update({
-  id: '/updateCenter',
-  path: '/updateCenter',
-  getParentRoute: () => AdminRouteRoute,
 } as any)
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/',
@@ -515,76 +482,6 @@ const shopSSitemapDotxmlRoute = shopSSitemapDotxmlRouteImport.update({
   id: '/s/sitemap.xml',
   path: '/s/sitemap.xml',
   getParentRoute: () => shopRouteRoute,
-} as any)
-const AdminGenerateIndexRoute = AdminGenerateIndexRouteImport.update({
-  id: '/generate/',
-  path: '/generate/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminOrdersIndexRoute = AdminOrdersIndexRouteImport.update({
-  id: '/orders/',
-  path: '/orders/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminOrgsIndexRoute = AdminOrgsIndexRouteImport.update({
-  id: '/orgs/',
-  path: '/orgs/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminPlansIndexRoute = AdminPlansIndexRouteImport.update({
-  id: '/plans/',
-  path: '/plans/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminRateupIndexRoute = AdminRateupIndexRouteImport.update({
-  id: '/rateup/',
-  path: '/rateup/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminRazorpayIndexRoute = AdminRazorpayIndexRouteImport.update({
-  id: '/razorpay/',
-  path: '/razorpay/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminReferralsIndexRoute = AdminReferralsIndexRouteImport.update({
-  id: '/referrals/',
-  path: '/referrals/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminShareQrIndexRoute = AdminShareQrIndexRouteImport.update({
-  id: '/share-qr/',
-  path: '/share-qr/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminShopifyIndexRoute = AdminShopifyIndexRouteImport.update({
-  id: '/shopify/',
-  path: '/shopify/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminStripeIndexRoute = AdminStripeIndexRouteImport.update({
-  id: '/stripe/',
-  path: '/stripe/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminSubscriptionsIndexRoute = AdminSubscriptionsIndexRouteImport.update({
-  id: '/subscriptions/',
-  path: '/subscriptions/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminUpdateCenterIndexRoute = AdminUpdateCenterIndexRouteImport.update({
-  id: '/update-center/',
-  path: '/update-center/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminUserStatsIndexRoute = AdminUserStatsIndexRouteImport.update({
-  id: '/user-stats/',
-  path: '/user-stats/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminUserstatsIndexRoute = AdminUserstatsIndexRouteImport.update({
-  id: '/userstats/',
-  path: '/userstats/',
-  getParentRoute: () => AdminRouteRoute,
 } as any)
 const AuthFbIndexRoute = AuthFbIndexRouteImport.update({
   id: '/fb/',
@@ -1115,11 +1012,6 @@ const shopSSlugIndexRoute = shopSSlugIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => shopSSlugRouteRoute,
-} as any)
-const AdminOrgsOrgIdIndexRoute = AdminOrgsOrgIdIndexRouteImport.update({
-  id: '/orgs/$orgId/',
-  path: '/orgs/$orgId/',
-  getParentRoute: () => AdminRouteRoute,
 } as any)
 const AuthShopifyLogoutIndexRoute = AuthShopifyLogoutIndexRouteImport.update({
   id: '/shopify/logout/',
@@ -1888,7 +1780,6 @@ const DashboardWhatsappTemplatesTemplateIdAnalyticsIndexRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/admin': typeof AdminRouteRouteWithChildren
   '/auth': typeof AuthRouteRouteWithChildren
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/llms.txt': typeof LlmsDottxtRoute
@@ -1900,10 +1791,8 @@ export interface FileRoutesByFullPath {
   '/dashboard/loyalty': typeof DashboardLoyaltyRouteRouteWithChildren
   '/dashboard/meta-agent': typeof DashboardMetaAgentRouteRouteWithChildren
   '/.well-known/api-catalog': typeof DotwellKnownApiCatalogRoute
-  '/admin/updateCenter': typeof AdminUpdateCenterRoute
   '/pl/$shortId': typeof PlShortIdRoute
   '/': typeof marketingIndexRoute
-  '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/s/$slug': typeof shopSSlugRouteRouteWithChildren
   '/blog/rss.xml': typeof marketingBlogRssDotxmlRoute
@@ -1945,20 +1834,6 @@ export interface FileRoutesByFullPath {
   '/subprocessors/': typeof marketingSubprocessorsIndexRoute
   '/terms-of-service/': typeof marketingTermsOfServiceIndexRoute
   '/tools/': typeof marketingToolsIndexRoute
-  '/admin/generate/': typeof AdminGenerateIndexRoute
-  '/admin/orders/': typeof AdminOrdersIndexRoute
-  '/admin/orgs/': typeof AdminOrgsIndexRoute
-  '/admin/plans/': typeof AdminPlansIndexRoute
-  '/admin/rateup/': typeof AdminRateupIndexRoute
-  '/admin/razorpay/': typeof AdminRazorpayIndexRoute
-  '/admin/referrals/': typeof AdminReferralsIndexRoute
-  '/admin/share-qr/': typeof AdminShareQrIndexRoute
-  '/admin/shopify/': typeof AdminShopifyIndexRoute
-  '/admin/stripe/': typeof AdminStripeIndexRoute
-  '/admin/subscriptions/': typeof AdminSubscriptionsIndexRoute
-  '/admin/update-center/': typeof AdminUpdateCenterIndexRoute
-  '/admin/user-stats/': typeof AdminUserStatsIndexRoute
-  '/admin/userstats/': typeof AdminUserstatsIndexRoute
   '/auth/fb/': typeof AuthFbIndexRoute
   '/auth/oauth2callback/': typeof AuthOauth2callbackIndexRoute
   '/auth/shopify/': typeof AuthShopifyIndexRoute
@@ -2047,7 +1922,6 @@ export interface FileRoutesByFullPath {
   '/ws/$shortId/': typeof publicFacingWsShortIdIndexRoute
   '/c/$token/': typeof shopCTokenIndexRoute
   '/s/$slug/': typeof shopSSlugIndexRoute
-  '/admin/orgs/$orgId/': typeof AdminOrgsOrgIdIndexRoute
   '/auth/shopify/logout/': typeof AuthShopifyLogoutIndexRoute
   '/auth/shopify/oauth2callback/': typeof AuthShopifyOauth2callbackIndexRoute
   '/auth/shopify/retry/': typeof AuthShopifyRetryIndexRoute
@@ -2174,10 +2048,8 @@ export interface FileRoutesByTo {
   '/sitemap_index.xml': typeof Sitemap_indexDotxmlRoute
   '/dashboard/loyalty': typeof DashboardLoyaltyRouteRouteWithChildren
   '/.well-known/api-catalog': typeof DotwellKnownApiCatalogRoute
-  '/admin/updateCenter': typeof AdminUpdateCenterRoute
   '/pl/$shortId': typeof PlShortIdRoute
   '/': typeof marketingIndexRoute
-  '/admin': typeof AdminIndexRoute
   '/dashboard': typeof DashboardIndexRoute
   '/blog/rss.xml': typeof marketingBlogRssDotxmlRoute
   '/blog/sitemap.xml': typeof marketingBlogSitemapDotxmlRoute
@@ -2218,20 +2090,6 @@ export interface FileRoutesByTo {
   '/subprocessors': typeof marketingSubprocessorsIndexRoute
   '/terms-of-service': typeof marketingTermsOfServiceIndexRoute
   '/tools': typeof marketingToolsIndexRoute
-  '/admin/generate': typeof AdminGenerateIndexRoute
-  '/admin/orders': typeof AdminOrdersIndexRoute
-  '/admin/orgs': typeof AdminOrgsIndexRoute
-  '/admin/plans': typeof AdminPlansIndexRoute
-  '/admin/rateup': typeof AdminRateupIndexRoute
-  '/admin/razorpay': typeof AdminRazorpayIndexRoute
-  '/admin/referrals': typeof AdminReferralsIndexRoute
-  '/admin/share-qr': typeof AdminShareQrIndexRoute
-  '/admin/shopify': typeof AdminShopifyIndexRoute
-  '/admin/stripe': typeof AdminStripeIndexRoute
-  '/admin/subscriptions': typeof AdminSubscriptionsIndexRoute
-  '/admin/update-center': typeof AdminUpdateCenterIndexRoute
-  '/admin/user-stats': typeof AdminUserStatsIndexRoute
-  '/admin/userstats': typeof AdminUserstatsIndexRoute
   '/auth/fb': typeof AuthFbIndexRoute
   '/auth/oauth2callback': typeof AuthOauth2callbackIndexRoute
   '/auth/shopify': typeof AuthShopifyIndexRoute
@@ -2320,7 +2178,6 @@ export interface FileRoutesByTo {
   '/ws/$shortId': typeof publicFacingWsShortIdIndexRoute
   '/c/$token': typeof shopCTokenIndexRoute
   '/s/$slug': typeof shopSSlugIndexRoute
-  '/admin/orgs/$orgId': typeof AdminOrgsOrgIdIndexRoute
   '/auth/shopify/logout': typeof AuthShopifyLogoutIndexRoute
   '/auth/shopify/oauth2callback': typeof AuthShopifyOauth2callbackIndexRoute
   '/auth/shopify/retry': typeof AuthShopifyRetryIndexRoute
@@ -2445,7 +2302,6 @@ export interface FileRoutesById {
   '/(marketing)': typeof marketingRouteRouteWithChildren
   '/(public-facing)': typeof publicFacingRouteRouteWithChildren
   '/(shop)': typeof shopRouteRouteWithChildren
-  '/admin': typeof AdminRouteRouteWithChildren
   '/auth': typeof AuthRouteRouteWithChildren
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/llms.txt': typeof LlmsDottxtRoute
@@ -2457,10 +2313,8 @@ export interface FileRoutesById {
   '/dashboard/loyalty': typeof DashboardLoyaltyRouteRouteWithChildren
   '/dashboard/meta-agent': typeof DashboardMetaAgentRouteRouteWithChildren
   '/.well-known/api-catalog': typeof DotwellKnownApiCatalogRoute
-  '/admin/updateCenter': typeof AdminUpdateCenterRoute
   '/pl/$shortId': typeof PlShortIdRoute
   '/(marketing)/': typeof marketingIndexRoute
-  '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/(shop)/s/$slug': typeof shopSSlugRouteRouteWithChildren
   '/(marketing)/blog/rss.xml': typeof marketingBlogRssDotxmlRoute
@@ -2502,20 +2356,6 @@ export interface FileRoutesById {
   '/(marketing)/subprocessors/': typeof marketingSubprocessorsIndexRoute
   '/(marketing)/terms-of-service/': typeof marketingTermsOfServiceIndexRoute
   '/(marketing)/tools/': typeof marketingToolsIndexRoute
-  '/admin/generate/': typeof AdminGenerateIndexRoute
-  '/admin/orders/': typeof AdminOrdersIndexRoute
-  '/admin/orgs/': typeof AdminOrgsIndexRoute
-  '/admin/plans/': typeof AdminPlansIndexRoute
-  '/admin/rateup/': typeof AdminRateupIndexRoute
-  '/admin/razorpay/': typeof AdminRazorpayIndexRoute
-  '/admin/referrals/': typeof AdminReferralsIndexRoute
-  '/admin/share-qr/': typeof AdminShareQrIndexRoute
-  '/admin/shopify/': typeof AdminShopifyIndexRoute
-  '/admin/stripe/': typeof AdminStripeIndexRoute
-  '/admin/subscriptions/': typeof AdminSubscriptionsIndexRoute
-  '/admin/update-center/': typeof AdminUpdateCenterIndexRoute
-  '/admin/user-stats/': typeof AdminUserStatsIndexRoute
-  '/admin/userstats/': typeof AdminUserstatsIndexRoute
   '/auth/fb/': typeof AuthFbIndexRoute
   '/auth/oauth2callback/': typeof AuthOauth2callbackIndexRoute
   '/auth/shopify/': typeof AuthShopifyIndexRoute
@@ -2604,7 +2444,6 @@ export interface FileRoutesById {
   '/(public-facing)/ws/$shortId/': typeof publicFacingWsShortIdIndexRoute
   '/(shop)/c/$token/': typeof shopCTokenIndexRoute
   '/(shop)/s/$slug/': typeof shopSSlugIndexRoute
-  '/admin/orgs/$orgId/': typeof AdminOrgsOrgIdIndexRoute
   '/auth/shopify/logout/': typeof AuthShopifyLogoutIndexRoute
   '/auth/shopify/oauth2callback/': typeof AuthShopifyOauth2callbackIndexRoute
   '/auth/shopify/retry/': typeof AuthShopifyRetryIndexRoute
@@ -2726,7 +2565,6 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/admin'
     | '/auth'
     | '/dashboard'
     | '/llms.txt'
@@ -2738,10 +2576,8 @@ export interface FileRouteTypes {
     | '/dashboard/loyalty'
     | '/dashboard/meta-agent'
     | '/.well-known/api-catalog'
-    | '/admin/updateCenter'
     | '/pl/$shortId'
     | '/'
-    | '/admin/'
     | '/dashboard/'
     | '/s/$slug'
     | '/blog/rss.xml'
@@ -2783,20 +2619,6 @@ export interface FileRouteTypes {
     | '/subprocessors/'
     | '/terms-of-service/'
     | '/tools/'
-    | '/admin/generate/'
-    | '/admin/orders/'
-    | '/admin/orgs/'
-    | '/admin/plans/'
-    | '/admin/rateup/'
-    | '/admin/razorpay/'
-    | '/admin/referrals/'
-    | '/admin/share-qr/'
-    | '/admin/shopify/'
-    | '/admin/stripe/'
-    | '/admin/subscriptions/'
-    | '/admin/update-center/'
-    | '/admin/user-stats/'
-    | '/admin/userstats/'
     | '/auth/fb/'
     | '/auth/oauth2callback/'
     | '/auth/shopify/'
@@ -2885,7 +2707,6 @@ export interface FileRouteTypes {
     | '/ws/$shortId/'
     | '/c/$token/'
     | '/s/$slug/'
-    | '/admin/orgs/$orgId/'
     | '/auth/shopify/logout/'
     | '/auth/shopify/oauth2callback/'
     | '/auth/shopify/retry/'
@@ -3012,10 +2833,8 @@ export interface FileRouteTypes {
     | '/sitemap_index.xml'
     | '/dashboard/loyalty'
     | '/.well-known/api-catalog'
-    | '/admin/updateCenter'
     | '/pl/$shortId'
     | '/'
-    | '/admin'
     | '/dashboard'
     | '/blog/rss.xml'
     | '/blog/sitemap.xml'
@@ -3056,20 +2875,6 @@ export interface FileRouteTypes {
     | '/subprocessors'
     | '/terms-of-service'
     | '/tools'
-    | '/admin/generate'
-    | '/admin/orders'
-    | '/admin/orgs'
-    | '/admin/plans'
-    | '/admin/rateup'
-    | '/admin/razorpay'
-    | '/admin/referrals'
-    | '/admin/share-qr'
-    | '/admin/shopify'
-    | '/admin/stripe'
-    | '/admin/subscriptions'
-    | '/admin/update-center'
-    | '/admin/user-stats'
-    | '/admin/userstats'
     | '/auth/fb'
     | '/auth/oauth2callback'
     | '/auth/shopify'
@@ -3158,7 +2963,6 @@ export interface FileRouteTypes {
     | '/ws/$shortId'
     | '/c/$token'
     | '/s/$slug'
-    | '/admin/orgs/$orgId'
     | '/auth/shopify/logout'
     | '/auth/shopify/oauth2callback'
     | '/auth/shopify/retry'
@@ -3282,7 +3086,6 @@ export interface FileRouteTypes {
     | '/(marketing)'
     | '/(public-facing)'
     | '/(shop)'
-    | '/admin'
     | '/auth'
     | '/dashboard'
     | '/llms.txt'
@@ -3294,10 +3097,8 @@ export interface FileRouteTypes {
     | '/dashboard/loyalty'
     | '/dashboard/meta-agent'
     | '/.well-known/api-catalog'
-    | '/admin/updateCenter'
     | '/pl/$shortId'
     | '/(marketing)/'
-    | '/admin/'
     | '/dashboard/'
     | '/(shop)/s/$slug'
     | '/(marketing)/blog/rss.xml'
@@ -3339,20 +3140,6 @@ export interface FileRouteTypes {
     | '/(marketing)/subprocessors/'
     | '/(marketing)/terms-of-service/'
     | '/(marketing)/tools/'
-    | '/admin/generate/'
-    | '/admin/orders/'
-    | '/admin/orgs/'
-    | '/admin/plans/'
-    | '/admin/rateup/'
-    | '/admin/razorpay/'
-    | '/admin/referrals/'
-    | '/admin/share-qr/'
-    | '/admin/shopify/'
-    | '/admin/stripe/'
-    | '/admin/subscriptions/'
-    | '/admin/update-center/'
-    | '/admin/user-stats/'
-    | '/admin/userstats/'
     | '/auth/fb/'
     | '/auth/oauth2callback/'
     | '/auth/shopify/'
@@ -3441,7 +3228,6 @@ export interface FileRouteTypes {
     | '/(public-facing)/ws/$shortId/'
     | '/(shop)/c/$token/'
     | '/(shop)/s/$slug/'
-    | '/admin/orgs/$orgId/'
     | '/auth/shopify/logout/'
     | '/auth/shopify/oauth2callback/'
     | '/auth/shopify/retry/'
@@ -3566,7 +3352,6 @@ export interface RootRouteChildren {
   marketingRouteRoute: typeof marketingRouteRouteWithChildren
   publicFacingRouteRoute: typeof publicFacingRouteRouteWithChildren
   shopRouteRoute: typeof shopRouteRouteWithChildren
-  AdminRouteRoute: typeof AdminRouteRouteWithChildren
   AuthRouteRoute: typeof AuthRouteRouteWithChildren
   DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
   LlmsDottxtRoute: typeof LlmsDottxtRoute
@@ -3605,13 +3390,6 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: ''
       preLoaderRoute: typeof shopRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -3676,20 +3454,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/.well-known/api-catalog'
       preLoaderRoute: typeof DotwellKnownApiCatalogRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/admin/': {
-      id: '/admin/'
-      path: '/'
-      fullPath: '/admin/'
-      preLoaderRoute: typeof AdminIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/updateCenter': {
-      id: '/admin/updateCenter'
-      path: '/updateCenter'
-      fullPath: '/admin/updateCenter'
-      preLoaderRoute: typeof AdminUpdateCenterRouteImport
-      parentRoute: typeof AdminRouteRoute
     }
     '/dashboard/': {
       id: '/dashboard/'
@@ -3886,104 +3650,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/s/sitemap.xml'
       preLoaderRoute: typeof shopSSitemapDotxmlRouteImport
       parentRoute: typeof shopRouteRoute
-    }
-    '/admin/generate/': {
-      id: '/admin/generate/'
-      path: '/generate'
-      fullPath: '/admin/generate/'
-      preLoaderRoute: typeof AdminGenerateIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/orders/': {
-      id: '/admin/orders/'
-      path: '/orders'
-      fullPath: '/admin/orders/'
-      preLoaderRoute: typeof AdminOrdersIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/orgs/': {
-      id: '/admin/orgs/'
-      path: '/orgs'
-      fullPath: '/admin/orgs/'
-      preLoaderRoute: typeof AdminOrgsIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/plans/': {
-      id: '/admin/plans/'
-      path: '/plans'
-      fullPath: '/admin/plans/'
-      preLoaderRoute: typeof AdminPlansIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/rateup/': {
-      id: '/admin/rateup/'
-      path: '/rateup'
-      fullPath: '/admin/rateup/'
-      preLoaderRoute: typeof AdminRateupIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/razorpay/': {
-      id: '/admin/razorpay/'
-      path: '/razorpay'
-      fullPath: '/admin/razorpay/'
-      preLoaderRoute: typeof AdminRazorpayIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/referrals/': {
-      id: '/admin/referrals/'
-      path: '/referrals'
-      fullPath: '/admin/referrals/'
-      preLoaderRoute: typeof AdminReferralsIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/share-qr/': {
-      id: '/admin/share-qr/'
-      path: '/share-qr'
-      fullPath: '/admin/share-qr/'
-      preLoaderRoute: typeof AdminShareQrIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/shopify/': {
-      id: '/admin/shopify/'
-      path: '/shopify'
-      fullPath: '/admin/shopify/'
-      preLoaderRoute: typeof AdminShopifyIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/stripe/': {
-      id: '/admin/stripe/'
-      path: '/stripe'
-      fullPath: '/admin/stripe/'
-      preLoaderRoute: typeof AdminStripeIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/subscriptions/': {
-      id: '/admin/subscriptions/'
-      path: '/subscriptions'
-      fullPath: '/admin/subscriptions/'
-      preLoaderRoute: typeof AdminSubscriptionsIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/update-center/': {
-      id: '/admin/update-center/'
-      path: '/update-center'
-      fullPath: '/admin/update-center/'
-      preLoaderRoute: typeof AdminUpdateCenterIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/user-stats/': {
-      id: '/admin/user-stats/'
-      path: '/user-stats'
-      fullPath: '/admin/user-stats/'
-      preLoaderRoute: typeof AdminUserStatsIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/userstats/': {
-      id: '/admin/userstats/'
-      path: '/userstats'
-      fullPath: '/admin/userstats/'
-      preLoaderRoute: typeof AdminUserstatsIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
     }
     '/auth/fb/': {
       id: '/auth/fb/'
@@ -4642,13 +4308,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/s/$slug/'
       preLoaderRoute: typeof shopSSlugIndexRouteImport
       parentRoute: typeof shopSSlugRouteRoute
-    }
-    '/admin/orgs/$orgId/': {
-      id: '/admin/orgs/$orgId/'
-      path: '/orgs/$orgId'
-      fullPath: '/admin/orgs/$orgId/'
-      preLoaderRoute: typeof AdminOrgsOrgIdIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
     }
     '/auth/shopify/logout/': {
       id: '/auth/shopify/logout/'
@@ -5822,50 +5481,6 @@ const shopRouteRouteWithChildren = shopRouteRoute._addFileChildren(
   shopRouteRouteChildren,
 )
 
-interface AdminRouteRouteChildren {
-  AdminUpdateCenterRoute: typeof AdminUpdateCenterRoute
-  AdminIndexRoute: typeof AdminIndexRoute
-  AdminGenerateIndexRoute: typeof AdminGenerateIndexRoute
-  AdminOrdersIndexRoute: typeof AdminOrdersIndexRoute
-  AdminOrgsIndexRoute: typeof AdminOrgsIndexRoute
-  AdminPlansIndexRoute: typeof AdminPlansIndexRoute
-  AdminRateupIndexRoute: typeof AdminRateupIndexRoute
-  AdminRazorpayIndexRoute: typeof AdminRazorpayIndexRoute
-  AdminReferralsIndexRoute: typeof AdminReferralsIndexRoute
-  AdminShareQrIndexRoute: typeof AdminShareQrIndexRoute
-  AdminShopifyIndexRoute: typeof AdminShopifyIndexRoute
-  AdminStripeIndexRoute: typeof AdminStripeIndexRoute
-  AdminSubscriptionsIndexRoute: typeof AdminSubscriptionsIndexRoute
-  AdminUpdateCenterIndexRoute: typeof AdminUpdateCenterIndexRoute
-  AdminUserStatsIndexRoute: typeof AdminUserStatsIndexRoute
-  AdminUserstatsIndexRoute: typeof AdminUserstatsIndexRoute
-  AdminOrgsOrgIdIndexRoute: typeof AdminOrgsOrgIdIndexRoute
-}
-
-const AdminRouteRouteChildren: AdminRouteRouteChildren = {
-  AdminUpdateCenterRoute: AdminUpdateCenterRoute,
-  AdminIndexRoute: AdminIndexRoute,
-  AdminGenerateIndexRoute: AdminGenerateIndexRoute,
-  AdminOrdersIndexRoute: AdminOrdersIndexRoute,
-  AdminOrgsIndexRoute: AdminOrgsIndexRoute,
-  AdminPlansIndexRoute: AdminPlansIndexRoute,
-  AdminRateupIndexRoute: AdminRateupIndexRoute,
-  AdminRazorpayIndexRoute: AdminRazorpayIndexRoute,
-  AdminReferralsIndexRoute: AdminReferralsIndexRoute,
-  AdminShareQrIndexRoute: AdminShareQrIndexRoute,
-  AdminShopifyIndexRoute: AdminShopifyIndexRoute,
-  AdminStripeIndexRoute: AdminStripeIndexRoute,
-  AdminSubscriptionsIndexRoute: AdminSubscriptionsIndexRoute,
-  AdminUpdateCenterIndexRoute: AdminUpdateCenterIndexRoute,
-  AdminUserStatsIndexRoute: AdminUserStatsIndexRoute,
-  AdminUserstatsIndexRoute: AdminUserstatsIndexRoute,
-  AdminOrgsOrgIdIndexRoute: AdminOrgsOrgIdIndexRoute,
-}
-
-const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
-  AdminRouteRouteChildren,
-)
-
 interface AuthRouteRouteChildren {
   AuthFbIndexRoute: typeof AuthFbIndexRoute
   AuthOauth2callbackIndexRoute: typeof AuthOauth2callbackIndexRoute
@@ -6288,7 +5903,6 @@ const rootRouteChildren: RootRouteChildren = {
   marketingRouteRoute: marketingRouteRouteWithChildren,
   publicFacingRouteRoute: publicFacingRouteRouteWithChildren,
   shopRouteRoute: shopRouteRouteWithChildren,
-  AdminRouteRoute: AdminRouteRouteWithChildren,
   AuthRouteRoute: AuthRouteRouteWithChildren,
   DashboardRouteRoute: DashboardRouteRouteWithChildren,
   LlmsDottxtRoute: LlmsDottxtRoute,
