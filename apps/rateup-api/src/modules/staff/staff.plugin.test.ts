@@ -537,14 +537,13 @@ describe("applying a maintenance task", () => {
   const mutating = { ...withSession, "x-staff-csrf": "1", "content-type": "application/json" };
   const body = { confirm: "seed-plans", reason: "Seeding the new catalogue" };
 
-  test("a Google sign-in older than 15 minutes is sent back to sign in again", async () => {
+  test("an older Google sign-in is not asked to sign in again", async () => {
     db.staffSession.findUnique.mockResolvedValue(
       liveSession({ authenticatedAt: new Date(Date.now() - 16 * 60_000) }),
     );
     const { app } = await buildApp();
     const res = await app.inject({ method: "POST", url, headers: mutating, payload: body });
-    expect(res.statusCode).toBe(401);
-    expect(res.json().code).toBe("REAUTH_REQUIRED");
+    expect(res.json().code).not.toBe("REAUTH_REQUIRED");
   });
 
   test("the task id must be typed back exactly", async () => {
@@ -570,7 +569,7 @@ describe("applying a maintenance task", () => {
     expect(actions).not.toContain("maintenance.apply");
   });
 
-  test("a fresh sign-in, the right id and a reason run the task for real", async () => {
+  test("the right id and a reason run the task for real", async () => {
     const { findTask } = await import("../maintenance/maintenance.tasks.js");
     const run = vi.fn(async ({ apply, log }: { apply: boolean; log: (m: string) => void }) => {
       log(`writing: ${apply}`);

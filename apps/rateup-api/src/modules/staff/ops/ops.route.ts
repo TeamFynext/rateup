@@ -25,7 +25,6 @@ import {
   type ReferralCreateInput,
   type TestDataOrgQuery,
 } from "./ops.actions.js";
-import { assertRecentAuth } from "../staff.session.js";
 import { recordStaffAction } from "../staffAudit.js";
 
 const taskParamSchema = z.object({ taskId: z.string().min(1).max(100) });
@@ -88,16 +87,13 @@ export async function staffOpsRoutes(server: FastifyInstance) {
   );
 
   /**
-   * The real run. Three things stand in front of it: a Google sign-in from the last 15
-   * minutes (401 REAUTH_REQUIRED otherwise; the console re-runs sign-in and comes back), the
-   * task id typed back, and a reason. The audit row is written before the task starts, so
+   * The real run. Two things stand in front of it: the task id typed back and a reason. The audit row is written before the task starts, so
    * a run that crashes half-way is still on record as attempted.
    */
   server.post<{ Params: TaskParam; Body: ApplyBody }>(
     "/ops/maintenance/tasks/:taskId/apply",
     { schema: { params: taskParamSchema, body: applyBodySchema } },
     async (request) => {
-      assertRecentAuth(request.staffSession);
       const task = findTask(request.params.taskId);
       if (!task) throw new StaffHttpError(404, "TASK_NOT_FOUND", "No such maintenance task.");
       if (request.body.confirm !== task.id) {
