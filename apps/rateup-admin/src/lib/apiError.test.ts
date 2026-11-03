@@ -33,7 +33,7 @@ describe("getApiErrorMessage", () => {
 });
 
 test("getApiErrorData only returns an object body", () => {
-  expect(getApiErrorData(rejected(400, { code: "REAUTH_REQUIRED" }))?.code).toBe("REAUTH_REQUIRED");
+  expect(getApiErrorData(rejected(400, { code: "NOT_OWNER" }))?.code).toBe("NOT_OWNER");
   expect(getApiErrorData(rejected(400, "text"))).toBeUndefined();
   expect(asApiError(undefined)).toEqual({});
 });

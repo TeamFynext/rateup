@@ -17,7 +17,7 @@ export type AccessDenialReason = "subscription" | "subscription_expired" | "team
 export interface ApiErrorData {
   message?: string;
   error?: string;
-  /** Machine-readable reason from the staff API, e.g. `REAUTH_REQUIRED`. */
+  /** Machine-readable reason from the staff API, e.g. `NOT_OWNER`. */
   code?: string;
   displayMessageInClient?: boolean;
   reason?: AccessDenialReason;

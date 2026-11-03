@@ -4,7 +4,6 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
-import { isReauthRequired } from "@/api/client";
 import {
   AUDIENCE_PLANS,
   AUDIENCE_SEGMENTS,
@@ -29,7 +28,6 @@ import { PageHeading, SectionHeading } from "@/components/ds/page-heading";
 import { Panel } from "@/components/ds/panel";
 import { ErrorState, PanelSkeleton } from "@/components/ds/query-states";
 import { StatFigure } from "@/components/ds/stat-figure";
-import { StepUpPrompt } from "@/components/ds/step-up";
 import { BroadcastStatusPill } from "@/components/engage/broadcast-status";
 import { TestSendDialog } from "@/components/engage/engage-dialogs";
 import { Button } from "@/components/ui/button";
@@ -47,7 +45,6 @@ import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { getApiErrorMessage } from "@/lib/apiError";
 import { formatNumber } from "@/lib/format";
-import { rememberIntent, takeIntent } from "@/lib/resume";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/engage/broadcasts/$broadcastId")({
@@ -165,9 +162,7 @@ function Composer({ broadcast }: { broadcast: Broadcast }) {
     ...broadcastPreviewQueryOptions(broadcast.id, saved),
     enabled: draft.channels.includes("EMAIL"),
   });
-  const [dialog, setDialog] = useState<"test" | "schedule" | "delete" | null>(() =>
-    takeIntent(`/engage/broadcasts/${broadcast.id}`, "schedule") ? "schedule" : null,
-  );
+  const [dialog, setDialog] = useState<"test" | "schedule" | "delete" | null>(null);
 
   const audienceKey = JSON.stringify(draft.audience);
   useEffect(() => {
@@ -606,7 +601,7 @@ function Composer({ broadcast }: { broadcast: Broadcast }) {
   );
 }
 
-/** Real sends to real customers: a fresh Google sign-in, like other irreversible actions. */
+/** Real sends to real customers. */
 function ScheduleDialog({
   broadcast,
   reach,
@@ -620,7 +615,6 @@ function ScheduleDialog({
   const [when, setWhen] = useState<"now" | "later">("now");
   const [at, setAt] = useState("");
   const atId = useId();
-  const stepUp = isReauthRequired(schedule.error);
   const total = reach ? reach.email + reach.whatsapp : null;
 
   return (
@@ -635,12 +629,9 @@ function ScheduleDialog({
       }
       submitLabel={when === "now" ? "Send now" : "Schedule"}
       requireReason={false}
-      blocked={
-        (stepUp && "Sign in with Google again first") ||
-        (when === "later" && !at && "Pick a date and time")
-      }
+      blocked={when === "later" && !at && "Pick a date and time"}
       pending={schedule.isPending}
-      error={stepUp ? null : schedule.error}
+      error={schedule.error}
       onSubmit={() =>
         schedule.mutate(
           { at: when === "later" ? new Date(at).toISOString() : undefined },
@@ -648,41 +639,29 @@ function ScheduleDialog({
         )
       }
     >
-      {stepUp ? (
-        <StepUpPrompt
-          onBeforeLeave={() =>
-            rememberIntent({
-              path: `/engage/broadcasts/${broadcast.id}`,
-              kind: "schedule",
-              id: broadcast.id,
-            })
-          }
+      <>
+        <FilterChips
+          chips={[
+            { value: "now", label: "Send now" },
+            { value: "later", label: "Pick a time" },
+          ]}
+          value={when}
+          onChange={setWhen}
         />
-      ) : (
-        <>
-          <FilterChips
-            chips={[
-              { value: "now", label: "Send now" },
-              { value: "later", label: "Pick a time" },
-            ]}
-            value={when}
-            onChange={setWhen}
-          />
-          {when === "later" && (
-            <div className="flex flex-col gap-2">
-              <Label htmlFor={atId}>Send at (your time)</Label>
-              <Input
-                id={atId}
-                type="datetime-local"
-                value={at}
-                onChange={(e) => setAt(e.target.value)}
-                className="h-9 rounded-lg"
-              />
-            </div>
-          )}
-          <Notice>Once it starts sending it cannot be stopped.</Notice>
-        </>
-      )}
+        {when === "later" && (
+          <div className="flex flex-col gap-2">
+            <Label htmlFor={atId}>Send at (your time)</Label>
+            <Input
+              id={atId}
+              type="datetime-local"
+              value={at}
+              onChange={(e) => setAt(e.target.value)}
+              className="h-9 rounded-lg"
+            />
+          </div>
+        )}
+        <Notice>Once it starts sending it cannot be stopped.</Notice>
+      </>
     </ActionDialog>
   );
 }

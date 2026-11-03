@@ -15,7 +15,8 @@ const MOCK_STAFF: StaffUser = {
   isOwner: true,
 };
 
-export const isStaffMock = import.meta.env.DEV && import.meta.env.VITE_STAFF_MOCK === "true";
+export const isStaffMock =
+  import.meta.env.DEV && import.meta.env.VITE_STAFF_MOCK === "true";
 
 export async function getMe(): Promise<StaffUser> {
   if (isStaffMock) return MOCK_STAFF;
@@ -31,14 +32,11 @@ export async function logout(): Promise<void> {
 /**
  * Google sign-in is a full-page redirect through the API (the OIDC state lives in a cookie set
  * there), so this navigates rather than calling axios. The API sends the browser back to this
- * console's `returnTo` when it is done. `reauth` forces a fresh Google login for
- * step-up on sensitive actions.
+ * console's `returnTo` when it is done.
  */
 export function startGoogleLogin({
   returnTo = "/",
-  reauth = false,
-}: { returnTo?: string; reauth?: boolean } = {}) {
+}: { returnTo?: string } = {}) {
   const params = new URLSearchParams({ returnTo });
-  if (reauth) params.set("reauth", "1");
   window.location.assign(`${API_URL}/api/staff/auth/google/start?${params}`);
 }
