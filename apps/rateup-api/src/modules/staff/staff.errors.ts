@@ -1,6 +1,6 @@
 /**
  * The one error shape of /api/staff: `{ code, message }`. The console branches on `code`
- * (UNAUTHENTICATED → login, REAUTH_REQUIRED → step-up), never on the message.
+ * (UNAUTHENTICATED → login), never on the message.
  */
 export class StaffHttpError extends Error {
   constructor(

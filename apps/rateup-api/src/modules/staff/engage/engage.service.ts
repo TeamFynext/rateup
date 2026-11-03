@@ -34,7 +34,6 @@ import {
   toWhatsappNumber,
 } from "../../customerComms/whatsapp.js";
 import { StaffHttpError } from "../staff.errors.js";
-import { assertRecentAuth } from "../staff.session.js";
 import { recordStaffAction } from "../staffAudit.js";
 import { Prisma } from "../../../../generated/prisma/client.js";
 import type { BroadcastInput, ScheduleInput, TestSendInput } from "./engage.schema.js";
@@ -549,9 +548,7 @@ export async function testBroadcast(request: FastifyRequest, id: string, input: 
   return { sent: true };
 }
 
-/** Sends to real customers, so it asks for a fresh sign-in like other irreversible actions. */
 export async function scheduleBroadcast(request: FastifyRequest, id: string, input: ScheduleInput) {
-  assertRecentAuth(request.staffSession);
   const at = input.at ?? new Date();
   if (at.getTime() < Date.now() - 60_000) {
     throw new StaffHttpError(400, "IN_PAST", "Pick a time in the future.");

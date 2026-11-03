@@ -33,7 +33,7 @@ export function buildGoogleAuthUrl(params: {
   codeChallenge: string;
   /** Null (NODE_ENV=development only) offers every Google account, not just the Workspace's. */
   hostedDomain: string | null;
-  /** Step-up: force Google to ask for the password again, and report when it did. */
+  /** Step-up. Same request as a normal sign-in: any completed sign-in counts as fresh. */
   reauth: boolean;
 }): string {
   const url = new URL(AUTHORIZE_URL);
@@ -48,7 +48,7 @@ export function buildGoogleAuthUrl(params: {
     code_challenge_method: "S256",
     // Only a hint for the account picker; the `hd` claim is what is enforced.
     ...(params.hostedDomain ? { hd: params.hostedDomain } : {}),
-    ...(params.reauth ? { prompt: "login", max_age: "0" } : { prompt: "select_account" }),
+    prompt: "select_account",
   }).toString();
   return url.toString();
 }
@@ -114,8 +114,6 @@ export function checkGoogleClaims(
     hostedDomain: string | null;
     /** From Cloudflare Access; undefined when enforcement is off. */
     cfAccessEmail?: string;
-    /** Step-up only: the flow's start time; Google's auth_time must not predate it. */
-    reauthStartedAt?: number;
   },
 ): { ok: true; identity: GoogleIdentity } | { ok: false; reason: LoginDenial } {
   if (claims.nonce !== expected.nonce) return { ok: false, reason: "expired" };
@@ -133,11 +131,6 @@ export function checkGoogleClaims(
   if (expected.cfAccessEmail !== undefined && email !== expected.cfAccessEmail) {
     return { ok: false, reason: "access_mismatch" };
   }
-  if (expected.reauthStartedAt !== undefined) {
-    const authTime = typeof claims.auth_time === "number" ? claims.auth_time * 1000 : 0;
-    // A minute of slack for clock skew between Google and this server.
-    if (authTime < expected.reauthStartedAt - 60_000) return { ok: false, reason: "expired" };
-  }
   if (typeof claims.sub !== "string" || !claims.sub) return { ok: false, reason: "failed" };
 
   return {
@@ -149,17 +142,4 @@ export function checkGoogleClaims(
       picture: typeof claims.picture === "string" ? claims.picture : undefined,
     },
   };
-}
-
-/**
- * When Google last authenticated the person, from the id_token's `auth_time`. Google only
- * sends it when asked (`max_age`, which a step-up start sets), so a token without it is
- * treated as stale — the epoch — and cannot satisfy step-up. Never later than `now`.
- */
-export function googleAuthenticatedAt(claims: JWTPayload, now = new Date()): Date {
-  const authTime = claims.auth_time;
-  if (typeof authTime !== "number" || !Number.isFinite(authTime) || authTime <= 0) {
-    return new Date(0);
-  }
-  return new Date(Math.min(authTime * 1000, now.getTime()));
 }

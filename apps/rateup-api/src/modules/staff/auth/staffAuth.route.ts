@@ -21,7 +21,6 @@ import {
   buildGoogleAuthUrl,
   checkGoogleClaims,
   exchangeGoogleCode,
-  googleAuthenticatedAt,
   pkcePair,
   randomToken,
   verifyGoogleIdToken,
@@ -160,7 +159,6 @@ export function staffAuthRoutes(config: StaffConfig) {
           nonce: oidc.nonce,
           hostedDomain: staffSignInDomain(config),
           cfAccessEmail: config.cfAccessEnforced ? request.cfAccessEmail : undefined,
-          reauthStartedAt: oidc.reauth ? oidc.startedAt : undefined,
         });
         const claimedEmail = typeof claims.email === "string" ? claims.email.toLowerCase() : "";
         if (!checked.ok) {
@@ -204,9 +202,8 @@ export function staffAuthRoutes(config: StaffConfig) {
         const { token } = await createStaffSession(staff.id, {
           ip: staffClientIp(request),
           userAgent: request.headers["user-agent"],
-          // Step-up trusts Google's own record of when it checked the password, never the
-          // mere fact of a sign-in: one Google completes silently is not a re-authentication.
-          authenticatedAt: googleAuthenticatedAt(claims),
+          // Any completed sign-in counts as fresh for step-up, so signing in again is enough.
+          authenticatedAt: new Date(),
         });
         await recordStaffAuthEvent(request, {
           action: oidc.reauth ? "staff.reauth" : "staff.login",

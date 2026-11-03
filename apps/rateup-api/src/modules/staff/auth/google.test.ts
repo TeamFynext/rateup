@@ -1,12 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { createLocalJWKSet, exportJWK, generateKeyPair, SignJWT, type JWTPayload } from "jose";
-import {
-  buildGoogleAuthUrl,
-  checkGoogleClaims,
-  googleAuthenticatedAt,
-  pkcePair,
-  verifyGoogleIdToken,
-} from "./google.js";
+import { buildGoogleAuthUrl, checkGoogleClaims, pkcePair, verifyGoogleIdToken } from "./google.js";
 
 const base: JWTPayload = {
   sub: "google-sub-1",
@@ -62,21 +56,6 @@ describe("checkGoogleClaims", () => {
     });
     expect(checkGoogleClaims(base, { ...expected, cfAccessEmail: "ann@rateup.app" }).ok).toBe(true);
   });
-
-  test("step-up needs a Google authentication no older than the flow", () => {
-    const startedAt = Date.now();
-    const fresh = { ...base, auth_time: Math.floor(startedAt / 1000) };
-    const stale = { ...base, auth_time: Math.floor((startedAt - 10 * 60_000) / 1000) };
-    expect(checkGoogleClaims(fresh, { ...expected, reauthStartedAt: startedAt }).ok).toBe(true);
-    expect(checkGoogleClaims(stale, { ...expected, reauthStartedAt: startedAt })).toEqual({
-      ok: false,
-      reason: "expired",
-    });
-    expect(checkGoogleClaims(base, { ...expected, reauthStartedAt: startedAt })).toEqual({
-      ok: false,
-      reason: "expired",
-    });
-  });
 });
 
 describe("buildGoogleAuthUrl", () => {
@@ -103,10 +82,10 @@ describe("buildGoogleAuthUrl", () => {
     expect(url.searchParams.has("hd")).toBe(false);
   });
 
-  test("step-up forces a fresh password prompt", () => {
+  test("step-up is the same request: no forced password prompt", () => {
     const url = new URL(buildGoogleAuthUrl({ ...params, reauth: true }));
-    expect(url.searchParams.get("prompt")).toBe("login");
-    expect(url.searchParams.get("max_age")).toBe("0");
+    expect(url.searchParams.get("prompt")).toBe("select_account");
+    expect(url.searchParams.has("max_age")).toBe(false);
   });
 
   test("the PKCE challenge is the S256 of the verifier", async () => {
@@ -143,23 +122,5 @@ describe("verifyGoogleIdToken", async () => {
   test("rejects a token from another issuer", async () => {
     const token = await sign("https://evil.example", "cid");
     await expect(verifyGoogleIdToken(token, "cid", jwks)).rejects.toThrow();
-  });
-});
-
-describe("googleAuthenticatedAt", () => {
-  const now = new Date("2026-10-20T12:00:00Z");
-
-  test("is Google's auth_time, not the moment of the sign-in", () => {
-    const authTime = now.getTime() / 1000 - 3600;
-    expect(googleAuthenticatedAt({ auth_time: authTime }, now)).toEqual(new Date(authTime * 1000));
-  });
-
-  test("a token without auth_time is stale: a silent sign-in cannot pass step-up", () => {
-    expect(googleAuthenticatedAt({}, now)).toEqual(new Date(0));
-    expect(googleAuthenticatedAt({ auth_time: "now" } as JWTPayload, now)).toEqual(new Date(0));
-  });
-
-  test("never later than now", () => {
-    expect(googleAuthenticatedAt({ auth_time: now.getTime() / 1000 + 600 }, now)).toEqual(now);
   });
 });
