@@ -1,7 +1,5 @@
 import axios from "axios";
 
-import { getApiErrorData } from "@/lib/apiError";
-
 /** The API's origin, e.g. https://api.rateup.app. Same variable as rateup-ui. */
 export const API_URL = (import.meta.env.VITE_API_URL ?? "").replace(/\/+$/, "");
 
@@ -30,14 +28,9 @@ export function setUnauthorizedHandler(handler: () => void) {
 }
 
 api.interceptors.response.use(undefined, (error: unknown) => {
-  if (axios.isAxiosError(error) && error.response?.status === 401 && !isReauthRequired(error)) {
+  if (axios.isAxiosError(error) && error.response?.status === 401) {
     // `/auth/me` failing is how the auth guard learns the session is gone; it redirects itself.
     if (!error.config?.url?.startsWith("/auth/me")) onUnauthorized?.();
   }
   return Promise.reject(error);
 });
-
-/** The API's answer for a sensitive action when the Google login is older than 15 minutes. */
-export function isReauthRequired(error: unknown): boolean {
-  return getApiErrorData(error)?.code === "REAUTH_REQUIRED";
-}
