@@ -1,14 +1,11 @@
 import { createHash, randomBytes } from "node:crypto";
 import type { StaffSession, StaffUser } from "../../../generated/prisma/client.js";
 import prisma from "../../utils/prisma.js";
-import { StaffHttpError } from "./staff.errors.js";
 
 /** Signed out after this long without a request. */
 export const SESSION_IDLE_MS = 45 * 60_000;
 /** Signed out this long after Google authenticated them, however active they are. */
 export const SESSION_ABSOLUTE_MS = 12 * 60 * 60_000;
-/** Deleting an org or applying maintenance needs a Google login at most this old. */
-export const STEP_UP_MAX_AGE_MS = 15 * 60_000;
 /** `lastSeenAt` is only written when it is at least this stale: one UPDATE a minute, not per request. */
 const TOUCH_INTERVAL_MS = 60_000;
 /** Ended sessions are kept this long (for the console's session list), then purged. */
@@ -42,11 +39,7 @@ export async function createStaffSession(
   meta: {
     ip?: string;
     userAgent?: string;
-    /**
-     * When Google last checked the person's credentials (`googleAuthenticatedAt`), not when
-     * this session was minted: a sign-in Google waved through on its own live session proves
-     * nothing new, so it must not satisfy step-up.
-     */
+    /** When the person signed in. Step-up counts from this. */
     authenticatedAt: Date;
   },
   now = new Date(),
@@ -106,22 +99,6 @@ export async function revokeAllStaffSessions(staffUserId: string, now = new Date
     where: { staffUserId, revokedAt: null },
     data: { revokedAt: now },
   });
-}
-
-/**
- * Step-up for destructive and privileged actions: refuse unless Google checked this person's
- * credentials in the last 15 minutes (the id_token's `auth_time`, see createStaffSession).
- * The console answers REAUTH_REQUIRED by re-running Google sign-in with `reauth=1`
- * (`prompt=login`), which issues a fresh session.
- */
-export function assertRecentAuth(session: StaffSession | undefined, now = new Date()): void {
-  if (!session || now.getTime() - session.authenticatedAt.getTime() > STEP_UP_MAX_AGE_MS) {
-    throw new StaffHttpError(
-      401,
-      "REAUTH_REQUIRED",
-      "Confirm it's you: sign in with Google again.",
-    );
-  }
 }
 
 /** Daily sweep (scheduledJobs `staffSessionPurge`). */

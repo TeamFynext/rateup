@@ -5,7 +5,6 @@ import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
 import { deleteOrg, orgMemberFate, sendDeletionMailToOrgOwner } from "../../org/org.services.js";
 import { StaffHttpError } from "../staff.errors.js";
-import { assertRecentAuth } from "../staff.session.js";
 import { recordStaffAction } from "../staffAudit.js";
 import { reasonSchema } from "./subscription.schema.js";
 
@@ -83,7 +82,6 @@ export async function deleteOrgAsStaff(
   orgId: string,
   input: DeleteOrgInput,
 ) {
-  assertRecentAuth(request.staffSession);
   const org = await loadOrg(orgId);
   if (input.confirm !== org.name.trim()) {
     throw new StaffHttpError(422, "CONFIRM_MISMATCH", "Type the organisation's name exactly.");

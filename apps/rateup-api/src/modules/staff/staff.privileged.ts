@@ -2,13 +2,11 @@ import type { FastifyRequest } from "fastify";
 import type { Prisma } from "../../../generated/prisma/client.js";
 import prisma from "../../utils/prisma.js";
 import { forbidden } from "./staff.errors.js";
-import { assertRecentAuth } from "./staff.session.js";
 
 /*
  * Guards for the staff writes that change what a customer pays for or whether they can use
  * the product at all: plan, expiry, feature overrides, add-on packs, suspension and pausing a
- * person. Each one wants a Google sign-in from the last 15 minutes (step-up), and none may
- * be made by a staff member to an account they belong to themselves.
+ * person. None may be made by a staff member to an account they belong to themselves.
  */
 
 /** Orgs the address owns or is a member of; matched without regard to case. */
@@ -65,18 +63,15 @@ export function assertStaffOwner(request: FastifyRequest): void {
 /** preHandler for `/orgs/:id/subscription/*` and `/orgs/:id/addons*`. */
 export async function guardSubscriptionWrite(request: FastifyRequest<{ Params: { id: string } }>) {
   assertStaffOwner(request);
-  assertRecentAuth(request.staffSession);
   await assertNotOwnOrg(request, request.params.id);
 }
 
 /** preHandler for suspending and unsuspending an org. */
 export async function guardOrgAccessWrite(request: FastifyRequest<{ Params: { id: string } }>) {
-  assertRecentAuth(request.staffSession);
   await assertNotOwnOrg(request, request.params.id);
 }
 
 /** preHandler for pausing or resuming one person. */
 export async function guardUserAccessWrite(request: FastifyRequest<{ Params: { id: string } }>) {
-  assertRecentAuth(request.staffSession);
   await assertNotOwnUser(request, request.params.id);
 }

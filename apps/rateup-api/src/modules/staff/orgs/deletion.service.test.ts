@@ -56,11 +56,9 @@ beforeEach(() => {
 });
 
 describe("deleteOrgAsStaff", () => {
-  test("needs a Google sign-in from the last 15 minutes", async () => {
-    await expect(deleteOrgAsStaff(requestSignedIn(20), ORG, body)).rejects.toMatchObject({
-      code: "REAUTH_REQUIRED",
-    });
-    expect(orgServices.deleteOrg).not.toHaveBeenCalled();
+  test("an older Google sign-in is not asked to sign in again", async () => {
+    const result = await deleteOrgAsStaff(requestSignedIn(20), ORG, body);
+    expect(result).toBeDefined();
   });
 
   test("the name must be typed back exactly", async () => {

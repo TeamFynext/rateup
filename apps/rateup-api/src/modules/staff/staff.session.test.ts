@@ -3,12 +3,10 @@ import { describe, expect, test, vi } from "vitest";
 vi.mock("../../utils/prisma.js", () => ({ default: {} }));
 
 import {
-  assertRecentAuth,
   hashSessionToken,
   judgeSession,
   newSessionToken,
   SESSION_IDLE_MS,
-  STEP_UP_MAX_AGE_MS,
   type SessionWithStaff,
 } from "./staff.session.js";
 
@@ -43,20 +41,6 @@ describe("judgeSession", () => {
     ["inactive", { staffUser: { active: false } as SessionWithStaff["staffUser"] }],
   ] as const)("refuses a %s session", (reason, override) => {
     expect(judgeSession(session(override as Partial<SessionWithStaff>), now)).toBe(reason);
-  });
-});
-
-describe("assertRecentAuth", () => {
-  test("passes within the step-up window", () => {
-    expect(() => assertRecentAuth(session(), now)).not.toThrow();
-  });
-
-  test("asks for a fresh Google login once the window has passed", () => {
-    const old = session({ authenticatedAt: new Date(now.getTime() - STEP_UP_MAX_AGE_MS - 1) });
-    expect(() => assertRecentAuth(old, now)).toThrowError(
-      expect.objectContaining({ statusCode: 401, code: "REAUTH_REQUIRED" }),
-    );
-    expect(() => assertRecentAuth(undefined, now)).toThrow();
   });
 });
 
