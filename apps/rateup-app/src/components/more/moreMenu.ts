@@ -2,16 +2,19 @@ import { useCommerceAccess } from "@/components/shop/chatSell";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Ionicons } from "@expo/vector-icons";
 import type React from "react";
+import type { SFSymbol } from "expo-symbols";
 
 export type MoreIconName = React.ComponentProps<typeof Ionicons>["name"];
 
 export type MoreMenuItem = {
   key: string;
   icon: MoreIconName;
+  /** Android's menu sheet icon: the outline Ionicon, like an unselected tab. */
+  iconOutline: MoreIconName;
+  /** iOS's menu sheet icon: the SF Symbol, like the tab bar. Must exist on iOS 16.4. */
+  sf: SFSymbol;
   label: string;
   hint?: string;
-  /** The tile's icon colour; the tile behind it is the same colour, faded. */
-  tint: string;
   href: string;
 };
 
@@ -27,27 +30,30 @@ export function useMoreMenuItems(): MoreMenuItem[] {
   const items: (MoreMenuItem | false)[] = [
     {
       key: "account",
-      tint: "#1C518E",
       icon: "person-circle",
+      iconOutline: "person-circle-outline",
+      sf: "person.crop.circle.fill",
       label: "Profile",
       hint: "Status, appearance, password and log out",
       href: "/protected/more/account",
     },
     canReadOrders && {
       key: "orders",
-      tint: "#F59E0B",
       icon: "bag-handle",
+      iconOutline: "bag-handle-outline",
+      sf: "bag.fill",
       label: "Orders",
       hint: "Pack, ship and follow up on shop orders",
-      href: "/protected/orders",
+      href: "/protected/more/orders",
     },
     can("inbox.read") && {
       key: "calls",
-      tint: "#10B981",
       icon: "call",
+      iconOutline: "call-outline",
+      sf: "phone.fill",
       label: "Calls",
       hint: "Missed, incoming and outgoing WhatsApp calls",
-      href: "/protected/calls",
+      href: "/protected/more/calls",
     },
   ];
 

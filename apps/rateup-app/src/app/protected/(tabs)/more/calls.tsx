@@ -168,6 +168,8 @@ export default function CallHistoryScreen() {
       </View>
 
       <FlatList
+        // Inside the Menu tab now: iOS draws the tab bar over the list.
+        contentInsetAdjustmentBehavior="always"
         data={rows}
         keyExtractor={(row) => row.id}
         renderItem={({ item, index }) => {

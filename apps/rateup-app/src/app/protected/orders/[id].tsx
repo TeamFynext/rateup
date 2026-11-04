@@ -64,7 +64,7 @@ export default function OrderDetailScreen() {
   } = useOrder(canRead ? id : "");
 
   const back = () =>
-    router.canGoBack() ? router.back() : router.replace("/protected/orders" as never);
+    router.canGoBack() ? router.back() : router.replace("/protected/more/orders" as never);
 
   return (
     <View style={{ flex: 1, backgroundColor: t.pageBg }}>

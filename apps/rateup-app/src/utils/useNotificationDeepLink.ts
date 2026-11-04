@@ -50,7 +50,7 @@ export function useNotificationDeepLink() {
           router.navigate("/protected/inbox" as never);
           return;
         case "calls":
-          router.push("/protected/calls" as never);
+          router.push("/protected/more/calls" as never);
           return;
         case "order":
           router.push({

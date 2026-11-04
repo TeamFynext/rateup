@@ -161,6 +161,8 @@ export default function OrdersScreen() {
             )
           }
           contentContainerStyle={{ paddingBottom: 40 }}
+          // Inside the Menu tab now: iOS draws the tab bar over the list.
+          contentInsetAdjustmentBehavior="always"
         />
       )}
     </View>

@@ -23,7 +23,7 @@ const InboxButtons = ({ activeFilterCount = 0 }: { activeFilterCount?: number })
     <View style={{ flexDirection: "row", alignItems: "center" }}>
       {can("inbox.read") && (
         <Pressable
-          onPress={() => router.push("/protected/calls" as never)}
+          onPress={() => router.push("/protected/more/calls" as never)}
           accessibilityRole="button"
           accessibilityLabel="Calls"
           style={actionStyle}

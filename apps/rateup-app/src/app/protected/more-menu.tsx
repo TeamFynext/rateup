@@ -6,7 +6,8 @@ import { getInboxRowTheme } from "@/constants/inboxDesign";
 import { roleLabelOf } from "@/hooks/usePermissions";
 import { namePreview } from "@/utils/chatbox_utils";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useNavigationContainerRef } from "expo-router";
+import { SymbolView } from "expo-symbols";
 import { useColorScheme } from "nativewind";
 import { useState } from "react";
 import { Platform, StyleSheet, Text, View, useWindowDimensions } from "react-native";
@@ -19,12 +20,19 @@ const MIN_CELL = 84;
 const MIN_COLUMNS = 3;
 const MAX_COLUMNS = 6;
 const MAX_TILE = 64;
+const ICON_SIZE = 26;
 
-/** `#RRGGBB` at the given alpha, for the faded tile behind each icon. */
-const fade = (hex: string, alpha: number) =>
-  `${hex}${Math.round(alpha * 255)
-    .toString(16)
-    .padStart(2, "0")}`;
+type NavState = { key?: string; routes: { name: string; state?: NavState }[] };
+
+/** The mounted navigator state of the route called `name`, searched depth-first. */
+function findStack(state: NavState | undefined, name: string): NavState | undefined {
+  for (const route of state?.routes ?? []) {
+    if (route.name === name && route.state) return route.state;
+    const inner = findStack(route.state, name);
+    if (inner) return inner;
+  }
+  return undefined;
+}
 
 /**
  * The More tab's menu, shown as a native sheet (`presentation: "formSheet"` in the
@@ -43,6 +51,7 @@ export default function MoreMenuSheet() {
   const insets = useSafeAreaInsets();
   const { width: windowWidth } = useWindowDimensions();
   const { data: user } = useLoggedInUser();
+  const navRef = useNavigationContainerRef();
   const all = useMoreMenuItems();
   const account = all.find((i) => i.key === "account");
   const tiles = all.filter((i) => i.key !== "account");
@@ -54,9 +63,26 @@ export default function MoreMenuSheet() {
   const cell = gridWidth / columns;
   const tile = Math.min(MAX_TILE, Math.round(cell * 0.72));
 
-  // `replace`, not `push`: the sheet gives way to the screen, so Back from that screen
-  // lands on the tab the user started from rather than reopening the sheet.
-  const open = (href: string) => router.replace(href as never);
+  // Close the sheet, then `navigate` into the tabs that are already mounted. A `replace`
+  // here swapped the sheet for a second copy of the whole tab navigator, so every tab
+  // remounted and refetched. Back from that screen still returns to the tab the user
+  // started from, through the tab history.
+  const open = (href: string) => {
+    if (router.canDismiss()) router.dismiss();
+    else router.back();
+    // The Menu tab shows one screen at a time. If it already holds one (Profile, say),
+    // reset its stack to the new screen first, so it is not pushed on top: otherwise
+    // Back from Orders went to Profile, and the tab piled up old screens.
+    const moreStack = findStack(navRef.getRootState(), "more");
+    if (moreStack?.key && moreStack.routes.length > 0) {
+      navRef.dispatch({
+        type: "RESET",
+        payload: { index: 0, routes: [{ name: href.split("/").pop() as string }] },
+        target: moreStack.key,
+      });
+    }
+    router.navigate(href as never);
+  };
 
   const softFill = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)";
 
@@ -105,7 +131,11 @@ export default function MoreMenuSheet() {
                 : "Profile and settings"}
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={t.fg4} />
+          {isIOS ? (
+            <SymbolView name="chevron.right" size={15} weight="semibold" tintColor={t.fg4} />
+          ) : (
+            <Ionicons name="chevron-forward" size={18} color={t.fg4} />
+          )}
         </Tap>
       ) : null}
 
@@ -125,17 +155,24 @@ export default function MoreMenuSheet() {
             style={{ width: cell, alignItems: "center", paddingHorizontal: 4 }}
             pressedStyle={{ opacity: 0.7, transform: [{ scale: 0.94 }] }}
           >
+            {/* Same icons as the tab bar, plain: SF Symbols on iOS, outline Ionicons on
+                Android, in the tab bar's idle colour, in an outlined tile with no fill. */}
             <View
               style={{
                 width: tile,
                 height: tile,
                 borderRadius: Math.round(tile * 0.3),
-                backgroundColor: fade(item.tint, isDark ? 0.22 : 0.14),
+                borderWidth: 1,
+                borderColor: t.border1,
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <Ionicons name={item.icon} size={Math.round(tile * 0.42)} color={item.tint} />
+              {isIOS ? (
+                <SymbolView name={item.sf} size={ICON_SIZE} tintColor={t.fg2} />
+              ) : (
+                <Ionicons name={item.iconOutline} size={ICON_SIZE} color={t.fg2} />
+              )}
             </View>
             <Text numberOfLines={1} style={[styles.tileLabel, { color: t.fg1 }]}>
               {item.label}
