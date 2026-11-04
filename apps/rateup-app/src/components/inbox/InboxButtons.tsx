@@ -25,7 +25,7 @@ const InboxButtons = ({ activeFilterCount = 0 }: { activeFilterCount?: number })
         <Pressable
           onPress={() => router.push("/protected/calls" as never)}
           accessibilityRole="button"
-          accessibilityLabel="Call history"
+          accessibilityLabel="Calls"
           style={actionStyle}
         >
           <Phone size={20} color={t.fg2} />

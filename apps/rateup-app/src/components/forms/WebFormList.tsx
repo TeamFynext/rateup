@@ -88,7 +88,7 @@ const WebForm = ({ switcher }: Readonly<{ switcher: React.ReactNode }>) => {
 
   const header = (
     <ScreenHeader
-      title="Forms"
+      title="Responses"
       actions={
         <HeaderIconButton
           onPress={() => router.push("/protected/webform/WebFormFilter")}
@@ -112,7 +112,7 @@ const WebForm = ({ switcher }: Readonly<{ switcher: React.ReactNode }>) => {
         {header}
         <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" />
-          <Text className="text-primaryBlue font-semibold mt-2">Loading web forms...</Text>
+          <Text className="text-primaryBlue font-semibold mt-2">Loading surveys...</Text>
         </View>
       </View>
     );
@@ -142,7 +142,7 @@ const WebForm = ({ switcher }: Readonly<{ switcher: React.ReactNode }>) => {
                   Check your internet connection
                 </Text>
               ) : (
-                <Text className="text-gray-500">No web forms found.</Text>
+                <Text className="text-gray-500">No surveys found.</Text>
               )}
             </View>
           }

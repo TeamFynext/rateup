@@ -110,7 +110,7 @@ const Flow = ({ switcher }: Readonly<{ switcher: React.ReactNode }>) => {
 
   const header = (
     <ScreenHeader
-      title="Forms"
+      title="Responses"
       actions={
         <HeaderIconButton
           onPress={() => router.push("/protected/flow/FlowFilter")}

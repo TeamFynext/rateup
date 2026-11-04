@@ -131,7 +131,7 @@ export default function CallHistoryScreen() {
             <ArrowLeft size={21} color={t.fg1} />
           </Pressable>
           <Text style={{ fontFamily: "Figtree_800ExtraBold", fontSize: 18, color: t.fg1 }}>
-            Call history
+            Calls
           </Text>
         </View>
         <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: 12, paddingBottom: 10 }}>

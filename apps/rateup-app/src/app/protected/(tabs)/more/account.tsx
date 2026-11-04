@@ -72,7 +72,7 @@ export default function AccountScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: t.pageBg }}>
       <ScreenHeader
-        title="Account Details"
+        title="Profile"
         onBack={() =>
           router.canGoBack() ? router.back() : router.replace("/protected/more" as never)
         }

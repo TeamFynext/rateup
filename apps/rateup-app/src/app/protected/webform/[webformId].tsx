@@ -12,7 +12,7 @@ const WebFormPage = () => {
 
   return (
     <SurveyResultsScreen
-      title={firstParam(params.webFormName) || "Web form"}
+      title={firstParam(params.webFormName) || "Survey"}
       surveyId={webformId}
       version={1}
       flow={null}

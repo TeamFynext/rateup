@@ -79,7 +79,7 @@ export default function MoreMenuSheet() {
         <Tap
           onPress={() => open(account.href)}
           accessibilityRole="button"
-          accessibilityLabel="Account"
+          accessibilityLabel="Profile"
           style={[styles.profileRow, { backgroundColor: softFill }]}
           pressedStyle={{ opacity: 0.6 }}
         >
@@ -97,7 +97,7 @@ export default function MoreMenuSheet() {
           </View>
           <View style={{ flex: 1, minWidth: 0 }}>
             <Text numberOfLines={1} style={[styles.name, { color: t.fg1 }]}>
-              {user?.userName ?? "Account"}
+              {user?.userName ?? "Profile"}
             </Text>
             <Text numberOfLines={1} style={[styles.meta, { color: t.fg3 }]}>
               {user

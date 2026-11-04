@@ -103,7 +103,7 @@ export const useToggleFavorite = () => {
     onError: (error: any) => {
       Toast.show({
         type: "error",
-        text1: "Could not update favourite",
+        text1: "Could not update star",
         text2: error?.response?.data?.message ?? error?.message ?? "Please try again.",
       });
     },

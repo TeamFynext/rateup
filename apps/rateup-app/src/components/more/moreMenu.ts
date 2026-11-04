@@ -29,8 +29,8 @@ export function useMoreMenuItems(): MoreMenuItem[] {
       key: "account",
       tint: "#1C518E",
       icon: "person-circle",
-      label: "Account",
-      hint: "Profile, status, appearance, security and log out",
+      label: "Profile",
+      hint: "Status, appearance, password and log out",
       href: "/protected/more/account",
     },
     canReadOrders && {
@@ -46,7 +46,7 @@ export function useMoreMenuItems(): MoreMenuItem[] {
       tint: "#10B981",
       icon: "call",
       label: "Calls",
-      hint: "Call history",
+      hint: "Missed, incoming and outgoing WhatsApp calls",
       href: "/protected/calls",
     },
   ];

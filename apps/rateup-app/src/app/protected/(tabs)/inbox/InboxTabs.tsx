@@ -403,7 +403,7 @@ export default function InboxLayout() {
                                   : Colors.light.pillText,
                             }}
                           >
-                            Mine
+                            Me
                           </Text>
                         </Pressable>
                       </View>
@@ -424,20 +424,20 @@ export default function InboxLayout() {
                     />
 
                     <SegmentPill
-                      label="Mine"
+                      label="Assigned to me"
                       focused={activeTab === "Mine"}
                       onPress={() => setActiveTab("Mine")}
                     />
 
                     <SegmentPill
-                      label="New"
+                      label="Unassigned"
                       focused={activeTab === "New"}
                       count={contactCounts.newCount}
                       onPress={() => setActiveTab("New")}
                     />
 
                     <SegmentPill
-                      label="Favourites"
+                      label="Starred"
                       focused={activeTab === "Favourites"}
                       onPress={() => setActiveTab("Favourites")}
                     />

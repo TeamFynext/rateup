@@ -111,7 +111,7 @@ const AccountBar = ({
   };
 
   return (
-    // No title of its own: the tab screen puts "Account Details" in the shared
+    // No title of its own: the tab screen puts "Profile" in the shared
     // `ScreenHeader`, on the same bar and at the same weight as the other tabs, and the
     // background is the tab's so the two are one surface.
     <View className="flex-1">
@@ -209,7 +209,7 @@ const AccountBar = ({
           <Ionicons name="shield-checkmark-outline" size={20} color="#6b7280" />
           <View className="flex-1">
             <Text className="text-base font-semibold text-gray-700 dark:text-gray-300">
-              Security
+              Password & Account
             </Text>
             <Text className="text-xs text-gray-500 dark:text-gray-400">
               Password and account deletion

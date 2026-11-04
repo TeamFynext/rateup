@@ -12,7 +12,7 @@ export default function SecurityScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: t.pageBg }}>
-      <ScreenHeader title="Security" onBack={() => router.back()} />
+      <ScreenHeader title="Password & Account" onBack={() => router.back()} />
       {user?.userId ? <Security userId={user.userId} /> : <CenteredSpinner />}
     </View>
   );
