@@ -1,5 +1,5 @@
 # The mock is dependency-free, so this is a copy and a CMD.
-FROM node:24-alpine
+FROM node:26-alpine
 
 WORKDIR /app
 COPY package.json index.mjs index.d.ts graph-fixtures.json ./

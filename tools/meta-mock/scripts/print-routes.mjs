@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** `npm run routes` — what the mock answers, without starting it. */
+/** `pnpm run routes` — what the mock answers, without starting it. */
 import { fixtures } from "../src/fixtures.mjs";
 import { createGraphRoutes } from "../src/graph-routes.mjs";
 

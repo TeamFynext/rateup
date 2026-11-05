@@ -2,9 +2,9 @@
 /**
  * Run the mock as a server.
  *
- *   npx meta-mock                              # :8081, no status callbacks
- *   npx meta-mock --status-progression         # ...and sent → delivered → read
- *   npx meta-mock --port 4000 --verbose
+ *   node bin/meta-mock.mjs                              # :8081, no status callbacks
+ *   node bin/meta-mock.mjs --status-progression         # ...and sent → delivered → read
+ *   node bin/meta-mock.mjs --port 4000 --verbose
  *
  * Reads a `.env` beside the working directory if there is one, so the account
  * identity does not have to be retyped on every run. Real environment
@@ -51,7 +51,7 @@ meta-mock — a local stand-in for Meta's Graph API
   --verbose                  log every request and which layer answered
   --help
 
-Routes: see ROUTES.md, or run \`npm run routes\`.
+Routes: see ROUTES.md, or run \`pnpm run routes\`.
 `);
   process.exit(0);
 }
