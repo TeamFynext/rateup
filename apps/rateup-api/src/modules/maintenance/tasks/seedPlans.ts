@@ -15,10 +15,8 @@
  * subscriptions — there are no metered/usage-based subscription items. The conversation
  * allowance in each tier's features is a plan limit, not a per-unit charge.
  */
-// Must precede every other import: this is an entrypoint (same convention as
-// src/index.ts and the worker entrypoints), and src/utils/payment/razorpay.ts
-// constructs its Razorpay client at module scope, so the keys have to be in the
-// environment before that module is evaluated.
+// The Razorpay client is created on first use (getRazorpay), so loading this task list
+// needs no Razorpay keys; only running this task does.
 import axios from "axios";
 import { PaymentPlanType } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
@@ -27,7 +25,7 @@ import type { TaskContext, TaskOutcome } from "../task.js";
 
 /** The two-argument log the task bodies use, forwarded to the run's collector. */
 type Log = (action: string, detail: string) => void;
-import { RazorpayInstance } from "../../../utils/payment/razorpay.js";
+import { getRazorpay } from "../../../utils/payment/razorpay.js";
 
 const STRIPE_API = "https://api.stripe.com/v1";
 /**
@@ -70,7 +68,7 @@ async function ensureRazorpayPlan(
     return null;
   }
 
-  const created: any = await RazorpayInstance.plans.create({
+  const created: any = await getRazorpay().plans.create({
     period,
     interval: 1,
     item: { name, amount: amount * 100, currency },
