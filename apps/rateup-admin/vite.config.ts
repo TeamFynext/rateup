@@ -1,4 +1,5 @@
 import tailwindcss from "@tailwindcss/vite";
+import { devtools } from "@tanstack/devtools-vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
 import { nitro } from "nitro/vite";
@@ -58,6 +59,9 @@ export default defineConfig({
   // Tests skip them: the suite covers pure modules and needs neither the router generator nor
   // Tailwind, only `resolve.tsconfigPaths`.
   plugins: lazyPlugins(() =>
-    process.env.VITEST ? [] : [nitro(), tailwindcss(), tanstackStart(), viteReact()],
+    process.env.VITEST
+      ? []
+      : // devtools() must come first; it also removes the devtools from production builds.
+        [devtools(), nitro(), tailwindcss(), tanstackStart(), viteReact()],
   ),
 });

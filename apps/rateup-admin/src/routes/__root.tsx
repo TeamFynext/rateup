@@ -1,5 +1,6 @@
+import { TanStackDevtools } from "@tanstack/react-devtools";
 import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
 import {
   createRootRouteWithContext,
   HeadContent,
@@ -8,7 +9,7 @@ import {
   Scripts,
   type ErrorComponentProps,
 } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 
 import { THEME_INIT_SCRIPT, ThemeProvider } from "@/components/theme/theme-provider";
 import { Button } from "@/components/ui/button";
@@ -73,12 +74,15 @@ function RootLayout() {
           <Outlet />
           <Toaster position="top-right" />
         </TooltipProvider>
-        {import.meta.env.DEV && (
-          <>
-            <TanStackRouterDevtools position="bottom-right" />
-            <ReactQueryDevtools buttonPosition="bottom-left" />
-          </>
-        )}
+        {/* One panel for Query and Router, as in rateup-ui. The devtools() Vite plugin strips it
+            from production builds. */}
+        <TanStackDevtools
+          config={{ position: "bottom-right" }}
+          plugins={[
+            { name: "Tanstack Query", render: <ReactQueryDevtoolsPanel /> },
+            { name: "Tanstack Router", render: <TanStackRouterDevtoolsPanel /> },
+          ]}
+        />
       </QueryClientProvider>
     </ThemeProvider>
   );
