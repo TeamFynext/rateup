@@ -193,11 +193,12 @@ model Org {
 
   /// Features (src/modules/org/modules.ts) the org has switched off: hidden from the nav,
   /// never blocked in the API. Stored as what is off so a new feature shows for everyone.
-  hiddenModules   String[]     @default([])
-  shopStore       ShopStore?
-  adReferrals     AdReferral[]
+  hiddenModules     String[]           @default([])
+  shopStore         ShopStore?
+  adReferrals       AdReferral[]
+  instagramMentions InstagramMention[]
   /// Set once the list has been chosen — at signup, by an admin, or by the backfill task.
-  modulesChosenAt DateTime?
+  modulesChosenAt   DateTime?
 
   deletionMailSent DateTime?
   addons           SubscriptionAddon[]
@@ -263,7 +264,7 @@ model Org {
   /// Why, in staff's words. Not shown to the customer; the audit row carries it too.
   suspendedReason    String?
   /// The StaffUser who suspended. No FK: a staff member can be deleted, the record stays.
-  suspendedByStaffId String?   @db.Uuid
+  suspendedByStaffId String?           @db.Uuid
   staffNotes         OrgNote[]
   customerMessages   CustomerMessage[]
 
@@ -490,18 +491,37 @@ model TeamChannel {
   @@index([channelId])
 }
 
+/// How an Instagram channel was connected, which decides the Graph host and token kind.
+enum MetaLoginType {
+  /// Facebook Login for Business: a Page token on graph.facebook.com. Messenger is always this.
+  FACEBOOK_PAGE
+  /// Instagram API with Instagram Login: an Instagram user token on graph.instagram.com, no Page.
+  INSTAGRAM
+}
+
 /// Messenger and Instagram channels' own settings, 1:1 with their Channel. Both send through
-/// a Facebook Page's token: the Page itself for Messenger, the linked Page for Instagram.
+/// a Facebook Page's token (the Page itself for Messenger, the linked Page for Instagram),
+/// except an Instagram channel connected with Instagram Login, which has no Page.
 model MetaChannelSettings {
-  channel         Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
-  channelId       String  @id @db.Uuid
+  channel             Channel       @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  channelId           String        @id @db.Uuid
+  loginType           MetaLoginType @default(FACEBOOK_PAGE)
   /// The Page itself for Messenger; for Instagram, the Page the account is linked to.
-  fbPageId        String
-  pageName        String?
-  pageAccessToken String // encrypted inline as `<iv>:<ciphertext>`
+  /// Null for an Instagram Login channel.
+  fbPageId            String?
+  pageName            String?
+  /// The send token, encrypted inline as `<iv>:<ciphertext>`. A Page token, or for
+  /// `loginType = INSTAGRAM` the long-lived Instagram user token.
+  pageAccessToken     String
+  /// Instagram Login only: when the long-lived token lapses (60 days, refreshable).
+  tokenExpiresAt      DateTime?
+  /// Instagram Login only: last successful refresh (or the connect).
+  tokenRefreshedAt    DateTime?
+  /// Set when a token refresh failed and the channel must be reconnected. Cleared on reconnect.
+  reconnectRequiredAt DateTime?
   /// Token of the login that connected the channel (encrypted inline).
-  accessToken     String?
-  appId           String?
+  accessToken         String?
+  appId               String?
 
   /// Instagram only.
   /// [PInstagramIceBreakers]
@@ -922,6 +942,9 @@ enum TriggerEvent {
   MESSENGER_REFERRAL
   /// Someone commented on a Facebook Page post; answered with a private reply on Messenger.
   FACEBOOK_COMMENT
+  /// Someone replied to one of the business's Instagram stories; options.instagramStoryIds
+  /// narrows it to specific stories, options.keywords to replies containing a keyword.
+  INSTAGRAM_STORY_REPLY
 }
 
 model RuleAction {
@@ -1262,6 +1285,9 @@ model Contact {
   followerCount                Int?
   isIgVerifiedUser             Boolean?
   psid                         String? // Page-Scoped ID for Facebook Messenger 
+  /// When the business blocked this person on Instagram (Moderate Conversations API).
+  /// Null = not blocked. Sends are refused while set.
+  igBlockedAt                  DateTime?
   other                        String?
   Lifecycle                    Lifecycle?                @relation(fields: [lifecycleId], references: [id])
   lifecycleId                  String?                   @db.Uuid
@@ -1290,6 +1316,7 @@ model Contact {
   shopOrders                  ShopOrder[]
   shopStockAlerts             ShopBackInStockRequest[]
   adReferrals                 AdReferral[]
+  instagramMentions           InstagramMention[]
 
   @@unique([external_id, orgId], name: "external_id_org_id_unique")
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
@@ -2198,6 +2225,9 @@ model WaMessage {
   /// deliberately kept — the thread renders the message as deleted rather than
   /// losing what was said.
   deletedAt                       DateTime?
+  /// Set when the customer edited the message (Instagram `message_edit`). The body
+  /// holds the edited text; the original is kept under `messageBody.editHistory`.
+  editedAt                        DateTime?
   /// The metered 24h billing window this message was attributed to when it was
   /// written (see MeteredConversation). Statuses annotate *this* window, never
   /// whichever window happens to be open when the status is processed.
@@ -3210,6 +3240,8 @@ enum LoyaltyEventType {
   NEW_CUSTOMER_WELCOME
   /// Staff signed the customer up at the counter; the member's first message from the programme.
   MEMBER_JOINED
+  /// The member tagged the business on Instagram (story or post) and earned points for it.
+  INSTAGRAM_MENTION_REWARDED
 }
 
 model LoyaltyEventTrigger {
@@ -3634,10 +3666,17 @@ model Conversation {
   /// customer across every ticket they ever open.
   tags                   ConversationTagMap[]
   adReferrals            AdReferral[]
+  /// Instagram/Messenger: the thread opened from a click-to-Direct ad, which keeps the
+  /// messaging window open past 24 h until this time. Null = no ad window.
+  adThreadUntil          DateTime?
+  /// Instagram: the post/reel whose comment automation started this conversation.
+  /// What the Instagram analytics view counts DMs, leads and orders against.
+  sourceMediaId          String?
   createdAt              DateTime                          @default(now())
   updatedAt              DateTime?                         @updatedAt
 
   @@unique([orgId, number], name: "conversation_org_id_number_unique")
+  @@index([orgId, sourceMediaId])
   @@index([contactId])
   @@index([firstRespondedAt])
   @@index([createdAt])
@@ -4355,8 +4394,8 @@ model EmailSuppression {
 /// Staff settings for a drip step; the schedule and goals live in code (drip.catalogue.ts).
 /// Absent means on, with the catalogue's wording.
 model DripStepSetting {
-  key            String    @id
-  enabled        Boolean   @default(true)
+  key       String    @id
+  enabled   Boolean   @default(true)
   /// Staff-edited wording (DripEmail shape); null sends the catalogue's.
   email     Json?
   /// Staff's WhatsApp choice, `{ template: string | null }` (null template = off); null
@@ -5068,4 +5107,55 @@ model AdReferral {
   @@index([contactId, createdAt])
   @@index([orgId, createdAt])
   @@index([orgId, sourceId])
+}
+
+enum InstagramMentionKind {
+  STORY
+  /// Tagged in a post caption.
+  MEDIA
+  /// Tagged in a comment on someone else's post.
+  COMMENT
+}
+
+enum InstagramMentionStatus {
+  /// Seen, but the author is not a contact we can reach yet (no igsId) or not a member.
+  PENDING
+  AWARDED
+  /// Within the rule's cooldown, or no active rule covers this kind.
+  SKIPPED
+  /// Pending for too long; points are no longer owed.
+  EXPIRED
+}
+
+/// One time someone tagged the business on Instagram. The row is what makes loyalty
+/// points for mentions idempotent (one per story/media/comment) and what the cooldown and
+/// the member activity feed read. Story media is not kept: the CDN URL expires in 24 h.
+model InstagramMention {
+  id            String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId         String                 @db.Uuid
+  org           Org                    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  /// The Instagram account (Channel.accountId) that was mentioned.
+  ibaId         String
+  kind          InstagramMentionKind
+  /// Story id, media id or comment id: what Meta names this mention by.
+  sourceId      String
+  mediaId       String?
+  permalink     String?
+  /// The author, by whichever handle Meta gave: igsId from a story mention DM, username
+  /// from a caption/comment mention.
+  igsId         String?
+  username      String?
+  contactId     String?                @db.Uuid
+  contact       Contact?               @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  status        InstagramMentionStatus @default(PENDING)
+  points        Int?
+  transactionId String?                @db.Uuid
+  reason        String?
+  createdAt     DateTime               @default(now())
+  resolvedAt    DateTime?
+
+  @@unique([orgId, kind, sourceId])
+  @@index([orgId, status, createdAt])
+  @@index([orgId, username])
+  @@index([contactId, createdAt])
 }

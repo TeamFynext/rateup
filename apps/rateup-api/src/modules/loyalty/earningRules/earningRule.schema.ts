@@ -1,5 +1,16 @@
 import z from "zod";
 
+import type {
+  InstagramMentionRuleKind,
+  LoyaltyEarningRuleConditions,
+} from "../../../types/loyalty.js";
+
+const INSTAGRAM_MENTION_RULE_KINDS = [
+  "STORY",
+  "MEDIA",
+  "COMMENT",
+] as const satisfies readonly InstagramMentionRuleKind[];
+
 export enum LoyaltyEarningRuleStatus {
   ACTIVE = "ACTIVE",
   INACTIVE = "INACTIVE",
@@ -22,15 +33,40 @@ export const timeRangeSchema = z.object({
   end: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/),
 });
 
+/**
+ * The `conditions` JSON, in the shape `EarningRulesEngine` reads (`LoyaltyEarningRuleConditions`).
+ * It used to describe a flat shape (`location_ids`, `payment_methods: string[]`, …) the engine
+ * never read, so a rule written through it could not restrict anything.
+ */
 export const loyaltyEarningRuleConditionsSchema = z.object({
-  location_ids: z.array(z.string()).optional(),
-  product_categories: z.array(z.string()).optional(),
-  product_skus: z.array(z.string()).optional(),
-  excluded_product_skus: z.array(z.string()).optional(),
-  payment_methods: z.array(z.string()).optional(),
-  customer_type: z.enum(["new", "returning", "all"]).optional(),
-  channels: z.array(z.string()).optional(),
-});
+  trigger: z.enum(["instagram_mention"]).optional(),
+  mentionKinds: z.array(z.enum(INSTAGRAM_MENTION_RULE_KINDS)).optional(),
+  cooldownDays: z.number().int().min(0).max(365).optional(),
+  locations: z.object({ enabled: z.boolean(), location_ids: z.array(z.string()) }).optional(),
+  products: z
+    .object({
+      enabled: z.boolean(),
+      categories: z.array(z.string()).optional(),
+      product_skus: z.array(z.string()).optional(),
+      excluded_categories: z.array(z.string()).optional(),
+    })
+    .optional(),
+  payment_methods: z
+    .object({ enabled: z.boolean(), allowed_methods: z.array(z.string()) })
+    .optional(),
+  customer_type: z
+    .object({
+      enabled: z.boolean(),
+      types: z.array(z.enum(["new", "returning", "first_purchase_only"])),
+    })
+    .optional(),
+  channels: z
+    .object({
+      enabled: z.boolean(),
+      allowed_channels: z.array(z.enum(["online", "in_store", "mobile_app"])),
+    })
+    .optional(),
+}) satisfies z.ZodType<LoyaltyEarningRuleConditions>;
 
 export const loyaltyEarningRuleSchema = z.object({
   name: z.string().min(1, "Rule name is required"),
@@ -53,6 +89,19 @@ export const loyaltyEarningRuleSchema = z.object({
   isDefault: z.boolean().default(false),
   maxPointsPerTransaction: z.number().optional().nullable(),
 });
+
+/**
+ * The "Instagram mentions" earning option. Stored as one `LoyaltyEarningRule` whose
+ * `conditions.trigger` is `instagram_mention`; `pointsPerMention` is its `bonusPoints`.
+ */
+export const instagramMentionRuleSchema = z.object({
+  enabled: z.boolean(),
+  pointsPerMention: z.number().int().min(1).max(100000),
+  mentionKinds: z.array(z.enum(INSTAGRAM_MENTION_RULE_KINDS)).min(1),
+  cooldownDays: z.number().int().min(0).max(365),
+});
+
+export type InstagramMentionRuleInput = z.infer<typeof instagramMentionRuleSchema>;
 
 export const loyaltyEarningRuleUpdateSchema = loyaltyEarningRuleSchema.partial();
 

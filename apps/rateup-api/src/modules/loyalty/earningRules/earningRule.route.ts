@@ -3,10 +3,13 @@ import {
   createLoyaltyEarningRuleHandler,
   deleteLoyaltyEarningRuleHandler,
   getLoyaltyEarningRuleByIdHandler,
+  getInstagramMentionRuleHandler,
   getLoyaltyEarningRulesHandler,
+  saveInstagramMentionRuleHandler,
   updateLoyaltyEarningRuleHandler,
 } from "./earningRule.controller.js";
 import {
+  instagramMentionRuleSchema,
   loyaltyEarningRuleSchema,
   ruleIdParamSchema,
   loyaltyEarningRuleUpdateSchema,
@@ -26,6 +29,14 @@ export async function loyaltyEarningRuleRoutes(server: FastifyInstance) {
   );
 
   server.get("/", getLoyaltyEarningRulesHandler);
+
+  // Before `/:ruleId` in reading order; find-my-way prefers the static path either way.
+  server.get("/instagram-mentions", getInstagramMentionRuleHandler);
+  server.put(
+    "/instagram-mentions",
+    { schema: { body: instagramMentionRuleSchema } },
+    saveInstagramMentionRuleHandler,
+  );
 
   server.get(
     "/:ruleId",

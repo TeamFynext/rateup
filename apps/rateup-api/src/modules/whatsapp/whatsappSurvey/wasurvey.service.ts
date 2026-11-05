@@ -61,6 +61,11 @@ import { assertCanMessageContact } from "./wasurvey.auth.js";
 import type { sendPaymentInitTemplate } from "../automatedReply/wa_automatedReply.utils.js";
 import { channelDigits } from "../../../utils/channelIdentifier.js";
 import { getInstagramChannel, getMessengerChannel } from "../metaChannel/metaChannel.service.js";
+import {
+  gateSendApiMessage,
+  isOutsideWindowError,
+  OUTSIDE_WINDOW_MESSAGE,
+} from "../meta/sendWindow.js";
 
 export async function sendMessage(
   orgId: string,
@@ -113,7 +118,8 @@ export async function sendMessage(
     to = (messageData as FbSendMessageBody).recipient.id;
     configId = "me";
     accessToken = channel.pageAccessToken;
-    sourceIdentifier = channel.fbPageId;
+    // A Messenger channel is a Page, so its accountId is the Page id.
+    sourceIdentifier = channel.fbPageId ?? channel.accountId;
   } else if (platform !== PlatformType.WEBCHAT) {
     // Not `getWaSettings`: an unnamed number must not fall back to the org's
     // oldest channel. Replying on a number the customer never wrote to has no
@@ -138,6 +144,17 @@ export async function sendMessage(
   } else {
     to = (messageData as WaSendMessageBody).to;
   }
+  // Instagram/Messenger: refuses a blocked person or a closed window before anything is
+  // spent, and tags a human inbox reply with its messaging type (see sendWindow.ts).
+  messageData = (await gateSendApiMessage({
+    orgId,
+    platform,
+    to,
+    payload: messageData as Record<string, unknown>,
+    messageType,
+    userId,
+    isAutomated,
+  })) as typeof messageData;
   // Gated once the recipient is known: past the allowance, contacts already counted this
   // month can still be messaged, new ones cannot.
   if (!skipActiveContactLimit) {
@@ -195,7 +212,9 @@ export async function sendMessage(
     log.error({ error: e }, "Error sending message");
     let errorMessage = `Failed to send message`;
     if (e instanceof GraphApiError) {
-      errorMessage = getGraphApiErrorMessage(e);
+      errorMessage = isOutsideWindowError(e.error)
+        ? OUTSIDE_WINDOW_MESSAGE
+        : getGraphApiErrorMessage(e);
     }
 
     await handleWaMessages(

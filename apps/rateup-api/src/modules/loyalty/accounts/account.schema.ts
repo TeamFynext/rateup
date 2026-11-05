@@ -35,6 +35,11 @@ const customerLoyaltyAccountSchema = z.object({
    * fake success and creates nothing.
    */
   website: z.string().max(200).optional(),
+  /**
+   * The Instagram mention whose join invite brought the customer here (`?ig=` on the join
+   * link). The mention is paid to the new member if it is still pending and under 24 h old.
+   */
+  instagramMentionId: z.uuid().optional(),
 });
 
 /**

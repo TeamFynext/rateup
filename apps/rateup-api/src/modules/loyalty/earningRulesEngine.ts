@@ -9,6 +9,7 @@ import prisma from "../../utils/prisma.js";
 import { randomCode } from "../../utils/misc/random.utils.js";
 import type { LoyaltyTier, Prisma } from "../../../generated/prisma/client.js";
 import { computeQualifyingSpend, pickQualifiedTier } from "./tiers/qualifyingSpend.js";
+import { isPurchaseRule } from "./earningRules/triggerRules.js";
 import {
   EarningContext,
   PointsCalculationResult,
@@ -71,6 +72,10 @@ export class EarningRulesEngine {
     const currentTime = this.getTimeString(now);
 
     for (const rule of rules) {
+      // A rule that pays for something else (an Instagram mention) never prices a purchase:
+      // with no amount conditions of its own it would match first and pay its bonus here.
+      if (!isPurchaseRule(rule)) continue;
+
       // Check time validity
       if (rule.validFrom && now < new Date(rule.validFrom)) continue;
       if (rule.validUntil && now > new Date(rule.validUntil)) continue;

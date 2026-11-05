@@ -22,6 +22,7 @@ export const LOYALTY_EVENT_TEMPLATE_NAMES: Record<LoyaltyEventType, string> = {
   [LoyaltyEventType.SIGNUP_ANNIVERSARY]: "loyalty_signup_anniversary",
   [LoyaltyEventType.NEW_CUSTOMER_WELCOME]: "loyalty_new_customer_welcome",
   [LoyaltyEventType.MEMBER_JOINED]: "loyalty_member_joined",
+  [LoyaltyEventType.INSTAGRAM_MENTION_REWARDED]: "loyalty_instagram_mention_rewarded",
 };
 
 /**

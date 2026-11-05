@@ -19,6 +19,11 @@ vi.mock("../automatedReply/wa_automatedReply.utils.js", () => ({
 vi.mock("../automatedReply/metaFlow.service.js", () => ({
   handleMetaFlowUserResponse: vi.fn(),
 }));
+vi.mock("./instagram_mentions.service.js", () => ({
+  handleInstagramMentionChange: vi.fn(),
+  linkPendingInstagramMentions: vi.fn(),
+  recordInstagramStoryMention: vi.fn(),
+}));
 vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), fatal: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));
@@ -274,7 +279,7 @@ describe("handleInstagramWebhook - routing an event to its handler", () => {
   test("ignores a change on a field it does not handle", async () => {
     const body: any = {
       object: "instagram",
-      entry: [{ id: IBA_ID, time: 1, changes: [{ field: "mentions", value: {} }] }],
+      entry: [{ id: IBA_ID, time: 1, changes: [{ field: "story_insights", value: {} }] }],
     };
 
     await expect(handleInstagramWebhook(body)).resolves.toEqual({ processed: 0, failed: 0 });

@@ -26,6 +26,7 @@ import {
   sendNewWaMessageHandler,
   unblockWhatsappUserHandler,
   exportWaMessageLogsHandler,
+  instagramModerationHandler,
 } from "./wamessage.controller.js";
 import { byContactIdSchema } from "../../../contact/contact.schema.js";
 import {
@@ -248,6 +249,18 @@ export async function waMessageRoutes(server: FastifyInstance) {
     },
     unblockWhatsappUserHandler,
   );
+
+  // Instagram's own block and spam folder (Moderate Conversations API), per contact.
+  for (const action of ["block", "unblock", "spam"] as const) {
+    server.post(
+      `/:contactId/instagram/${action}`,
+      {
+        config: { permission: "inbox.manage" },
+        schema: { params: byContactIdSchema },
+      },
+      instagramModerationHandler(action),
+    );
+  }
 
   server.get(
     "/analytics",

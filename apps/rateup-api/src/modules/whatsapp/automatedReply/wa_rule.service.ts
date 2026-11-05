@@ -226,6 +226,8 @@ function triggerSkipsKeywordLock(triggerEvent: string) {
     triggerEvent === "INSTAGRAM_COMMENT" ||
     triggerEvent === "INSTAGRAM_STORY_MENTION" ||
     triggerEvent === "INSTAGRAM_REFERRAL" ||
+    // Matched on its own keyword list, not the keyword table.
+    triggerEvent === "INSTAGRAM_STORY_REPLY" ||
     triggerEvent === "WHATSAPP_AD_REFERRAL" ||
     triggerEvent === "MESSENGER_REFERRAL" ||
     triggerEvent === "FACEBOOK_COMMENT"

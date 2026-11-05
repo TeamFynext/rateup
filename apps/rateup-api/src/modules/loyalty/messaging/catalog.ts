@@ -104,6 +104,16 @@ const definitions: Record<LoyaltyEventType, Omit<LoyaltyEventDefinition, "templa
       "Hi {{1}}, welcome to our loyalty program! You will earn points on every visit, and we will message you here when you have a reward to claim.",
     defaultOn: true,
   },
+  // On by default: the points are the thank-you, and a member who never hears about them
+  // has no reason to tag the business again. Still a points alert, so the programme's
+  // "points activity alerts" switch silences it with the rest.
+  [LoyaltyEventType.INSTAGRAM_MENTION_REWARDED]: {
+    params: ["name", "points", "balance"],
+    defaultBody:
+      "Thanks for the shout-out on Instagram, {{1}}! You just earned {{2}} points. Your balance is now {{3}}.",
+    alertClass: "points",
+    defaultOn: true,
+  },
 };
 
 export const LOYALTY_EVENT_CATALOG: Record<LoyaltyEventType, LoyaltyEventDefinition> =

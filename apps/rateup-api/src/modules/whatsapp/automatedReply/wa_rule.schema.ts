@@ -92,6 +92,10 @@ export const ruleOptionsSchema = z.object({
     .max(2083)
     .regex(/^[A-Za-z0-9_=-]*$/, "Use letters, numbers, - _ and = only")
     .optional(),
+  // Story replies: every story, or the listed story ids; and optional keywords (none = any reply).
+  instagramStoryScope: z.enum(["ALL", "SPECIFIC"]).optional(),
+  instagramStoryIds: z.array(z.string().trim().min(1)).max(100).optional(),
+  instagramStoryKeywords: z.array(z.string().trim().min(1).max(100)).max(50).optional(),
   // The ?ref= of an m.me link; unset matches every link. Same characters and limit as ig.me.
   messengerRef: z
     .string()
@@ -112,6 +116,7 @@ const INSTAGRAM_ONLY_TRIGGERS = new Set<string>([
   TriggerEvent.INSTAGRAM_COMMENT,
   TriggerEvent.INSTAGRAM_STORY_MENTION,
   TriggerEvent.INSTAGRAM_REFERRAL,
+  TriggerEvent.INSTAGRAM_STORY_REPLY,
 ]);
 /** Triggers only WhatsApp has. */
 const WHATSAPP_ONLY_TRIGGERS = new Set<string>([TriggerEvent.WHATSAPP_AD_REFERRAL]);

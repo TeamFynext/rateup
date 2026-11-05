@@ -148,6 +148,7 @@ export async function createCustomerAccount(
         await replyText(reply, `🎉 Welcome back ${account.contact?.name || ""}!`);
       }
       await sendCardAfterEnrolment(orgId, account.id, reply);
+      await payInstagramMentionsOnJoin(orgId, account.contactId, data.instagramMentionId);
       return account;
     } else {
       throw new LoyaltyError("MEMBER_EXISTS", "Customer account already exists");
@@ -284,8 +285,39 @@ You are now registered in our Loyalty Program.
   // Outside the `sourceIdentifier` block on purpose: a member enrolled by staff may already
   // have an open WhatsApp window, in which case the card can go now.
   await sendCardAfterEnrolment(orgId, account.id, reply);
+  await payInstagramMentionsOnJoin(orgId, account.contactId, data.instagramMentionId);
 
   return account;
+}
+
+/**
+ * Instagram mentions the new member made in the last 24 hours, paid now that they have an
+ * account. Loaded lazily — it reaches the Instagram sender — and never fails the enrolment.
+ */
+async function payInstagramMentionsOnJoin(
+  orgId: string,
+  contactId: string,
+  mentionId: string | undefined,
+) {
+  try {
+    // Almost no enrolment has one; check before loading the Instagram code at all.
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const waiting = await prisma.instagramMention.findFirst({
+      where: {
+        orgId,
+        status: "PENDING",
+        createdAt: { gte: since },
+        OR: [{ contactId }, ...(mentionId ? [{ id: mentionId }] : [])],
+      },
+      select: { id: true },
+    });
+    if (!waiting) return;
+    const { awardInstagramMentionsOnJoin } =
+      await import("../../whatsapp/instagram/instagram_mentions.service.js");
+    await awardInstagramMentionsOnJoin({ orgId, contactId, mentionId });
+  } catch (e) {
+    log.error({ err: e, orgId, contactId }, "Could not pay Instagram mentions after enrolment");
+  }
 }
 
 /**

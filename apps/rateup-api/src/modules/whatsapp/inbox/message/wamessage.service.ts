@@ -17,7 +17,8 @@ import {
 } from "./wamessage.schema.js";
 import { log } from "../../../../utils/logger.js";
 import { emitIntegrationEvent } from "../../../integrations/events/emitIntegrationEvent.js";
-import { callMetaApi } from "../../wa_axios.js";
+import { callMetaApi, GraphApiError } from "../../wa_axios.js";
+import { getInstagramChannel } from "../../metaChannel/metaChannel.service.js";
 import { getWaSettings } from "../../settings/wa_settings.service.js";
 import { getScopedSourceIdentifiers } from "../../settings/wa_channel_access.js";
 import type { Actor } from "../../../../authz/actor.js";
@@ -47,6 +48,7 @@ import {
   createAudioMessage,
   createContactMessage,
   createLocationMessage,
+  createTextMessage,
 } from "../../whatsappSurvey/wasurvey.utils.js";
 import { WaMessageAssignStatusTab, WaMessageClosedStatus } from "../../constants.js";
 import { getInboxCountsFromConversations } from "../inboxStats/inboxStats.service.js";
@@ -77,6 +79,7 @@ import type { ByContactIdParams } from "../../../contact/contact.schema.js";
 import { channelDigits, channelIdentifierSpellings } from "../../../../utils/channelIdentifier.js";
 import { dateFilterFor } from "../../../apiAnalytics/apianalytics.service.js";
 import { sendSenderAction } from "./senderAction.js";
+import { messagingWindow, MetaSendRefusedError } from "../../meta/sendWindow.js";
 
 /**
  * One row of the raw inbox-list query. The projection is built by hand in SQL and spread
@@ -121,6 +124,30 @@ const DELETED_MESSAGE_PLACEHOLDER = "This message was deleted";
 
 function isWaMessageAssignStatusTabKey(key: string): key is keyof typeof WaMessageAssignStatusTab {
   return key in WaMessageAssignStatusTab;
+}
+
+/**
+ * The Instagram/Messenger reply window for an inbox row, or null on other channels. The
+ * row's channel is decided the way the client decides it: its last message, else its ids.
+ * Read from the contact's last-received time, which the inbox keeps live; the send path
+ * re-checks per platform (`gateSendApiMessage`).
+ */
+function rowMessagingWindow(row: InboxConversationRow) {
+  const platform =
+    row.lastMessagePlatform && row.lastMessagePlatform !== PlatformType.INTERNAL
+      ? row.lastMessagePlatform
+      : row.igsId
+        ? PlatformType.INSTAGRAM
+        : row.psid
+          ? PlatformType.FACEBOOK
+          : null;
+  if (platform !== PlatformType.INSTAGRAM && platform !== PlatformType.FACEBOOK) return null;
+  const asDate = (value: unknown) =>
+    value instanceof Date ? value : typeof value === "string" ? new Date(value) : null;
+  return messagingWindow({
+    lastInboundAt: asDate(row.lastReceivedMessageTimeStamp),
+    adThreadUntil: asDate(row.adThreadUntil),
+  });
 }
 
 /**
@@ -875,9 +902,13 @@ export async function filterChats(
             )
           ) AS "metaAgentInvolved",
           conv."isFavorite",
+          -- Instagram/Messenger: the ad-thread window and the Instagram block, which
+          -- decide whether the composer may send (see meta/sendWindow.ts).
+          conv."adThreadUntil",
           c."source",
           c."igsId",
           c."psid",
+          c."igBlockedAt",
           c."profilePic",
           c."followerCount",
           c."isIgVerifiedUser",
@@ -1153,6 +1184,7 @@ export async function filterChats(
           }
         : null,
       metadata: row.lastReceivedMetadata,
+      messagingWindow: rowMessagingWindow(row),
       messages: interleave(
         messagesByConversation.get(row.conversationId) || [],
         notesByConversation.get(row.conversationId) ?? [],
@@ -1908,6 +1940,83 @@ export async function setContactSpam(
   return { success: true, isSpam };
 }
 
+export type InstagramModeration = "block" | "unblock" | "spam";
+
+const META_ACTION: Record<InstagramModeration, string> = {
+  block: "block_user",
+  unblock: "unblock_user",
+  spam: "move_to_spam",
+};
+
+/** The Moderate Conversations API body for one person. Pure, for the tests. */
+export function moderateConversationsBody(igsId: string, action: InstagramModeration) {
+  return { user_ids: [{ id: igsId }], actions: [META_ACTION[action]] };
+}
+
+/**
+ * Blocks, unblocks or moves to spam an Instagram customer, on Instagram itself and here.
+ *
+ * Meta goes first: if it refuses, nothing changes locally, so the inbox never claims a
+ * block Instagram does not have. The channel is the account the customer last wrote to.
+ * "Spam" also marks the contact spam the way the inbox's own spam action does.
+ */
+export async function moderateInstagramContact(
+  orgId: string,
+  contactId: string,
+  action: InstagramModeration,
+  userId?: string,
+) {
+  const contact = await prisma.contact.findFirst({
+    where: { id: contactId, orgId },
+    select: { id: true, igsId: true },
+  });
+  if (!contact) throw new HttpError("Contact not found", 404);
+  if (!contact.igsId) throw new HttpError("This contact has no Instagram conversation", 400);
+
+  const latest = await prisma.waMessage.findFirst({
+    where: {
+      contactId,
+      sourcePlatform: PlatformType.INSTAGRAM,
+      sourceIdentifier: { not: null },
+    },
+    orderBy: { waCreatedAt: "desc" },
+    select: { sourceIdentifier: true },
+  });
+  const channel = latest?.sourceIdentifier
+    ? await getInstagramChannel(latest.sourceIdentifier, orgId)
+    : null;
+  if (!channel?.pageAccessToken) {
+    throw new HttpError("The Instagram account for this conversation is not connected", 400);
+  }
+
+  try {
+    await callMetaApi(
+      "/me/moderate_conversations",
+      "POST",
+      channel.pageAccessToken,
+      moderateConversationsBody(contact.igsId, action),
+    );
+  } catch (error) {
+    log.error({ err: error, orgId, contactId, action }, "Instagram moderation failed");
+    const message =
+      error instanceof GraphApiError
+        ? (error.error?.error_user_msg ?? error.error?.message)
+        : undefined;
+    throw new HttpError(message || "Instagram refused the request", 400);
+  }
+
+  if (action === "spam") {
+    await setContactSpam(orgId, contactId, true, userId);
+    return { igBlockedAt: null, isSpam: true };
+  }
+  const updated = await prisma.contact.update({
+    where: { id: contactId },
+    data: { igBlockedAt: action === "block" ? new Date() : null },
+    select: { igBlockedAt: true, isSpam: true },
+  });
+  return updated;
+}
+
 // Matches the `WaMedia` zod schema in wamessage.schema.ts, where all three
 // fields are required — they were previously (incorrectly) optional here even
 // though every real caller (the media-send route) always supplies them.
@@ -1927,11 +2036,43 @@ export async function sendMediaMessages(
   caption = "",
   whatsappSettingsPhoneId = "",
   teamId?: string,
+  // Instagram only: quote this message on the first thing sent.
+  replyToMid?: string,
 ) {
-  for (let i = 0; i < media.length; i++) {
-    const item = media[i];
-    const isLastItem = i === media.length - 1;
-    const captionMsg = isLastItem ? caption : "";
+  const sendApi = platform === PlatformType.INSTAGRAM || platform === PlatformType.FACEBOOK;
+  let items = media;
+
+  // Instagram shows several images as one album, so they go out as one message (up to
+  // ten) rather than one bubble each. Messenger has no album, so it keeps the old way.
+  if (platform === PlatformType.INSTAGRAM) {
+    const images = media.filter((item) => item.type === "image");
+    if (images.length > 1) {
+      try {
+        // Loaded here: the Send API module pulls in the whole send path, which this
+        // service (and every test that mocks its dependencies) otherwise never needs.
+        const { sendSendApiImages } = await import("../../meta/sendApiMessages.js");
+        await sendSendApiImages(
+          { platform, accountId: whatsappSettingsPhoneId },
+          to,
+          orgId,
+          images.map((item) => item.url),
+          { userId, teamId, replyToMid },
+        );
+      } catch (error) {
+        // A refusal is the agent's to read; a Meta rejection is already a failed row.
+        if (error instanceof MetaSendRefusedError) throw error;
+        log.error({ err: error, orgId, to }, "Instagram multi-image send failed");
+      }
+      replyToMid = undefined;
+      items = media.filter((item) => item.type !== "image");
+    }
+  }
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    const isLastItem = i === items.length - 1;
+    // The Send API has no captions: it follows the media as a text message below.
+    const captionMsg = isLastItem && !sendApi ? caption : "";
     let messageBody: WaSendMessageBody | IgSendMessageBody | FbSendMessageBody | undefined;
     switch (item.type) {
       case "image": {
@@ -1959,6 +2100,10 @@ export async function sendMediaMessages(
       log.error("Unsupported media type %s for %s; skipping item", item.type, to);
       continue;
     }
+    if (replyToMid && platform === PlatformType.INSTAGRAM) {
+      messageBody = { ...(messageBody as IgSendMessageBody), reply_to: { mid: replyToMid } };
+      replyToMid = undefined;
+    }
     await sendMessage(
       orgId,
       messageBody,
@@ -1970,6 +2115,22 @@ export async function sendMediaMessages(
       teamId,
     );
     if (!isLastItem) wait(50);
+  }
+
+  if (sendApi && caption.trim()) {
+    const text = createTextMessage(to, "", caption, platform) as IgSendMessageBody;
+    await sendMessage(
+      orgId,
+      replyToMid && platform === PlatformType.INSTAGRAM
+        ? { ...text, reply_to: { mid: replyToMid } }
+        : text,
+      undefined,
+      userId,
+      whatsappSettingsPhoneId,
+      platform,
+      undefined,
+      teamId,
+    );
   }
 }
 

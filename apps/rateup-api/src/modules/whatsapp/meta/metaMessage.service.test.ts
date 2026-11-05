@@ -12,6 +12,7 @@ const getMessengerChannel = vi.fn();
 const enqueueWaMessageRecord = vi.fn();
 const getSentMessageId = vi.fn();
 const markMessageSent = vi.fn();
+const gateSendApiMessage = vi.fn();
 
 vi.mock("../wa_axios.js", async () => {
   class GraphApiError extends Error {
@@ -32,6 +33,11 @@ vi.mock("../whatsappSurvey/wasurvey.auth.js", () => ({
 }));
 vi.mock("../../../workers/bullmq/queues/whatsapp.queue.js", () => ({ enqueueWaMessageRecord }));
 vi.mock("./sendIdempotency.js", () => ({ getSentMessageId, markMessageSent }));
+// The gate reads the database; its own decisions are tested in sendWindow.test.ts.
+vi.mock("./sendWindow.js", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./sendWindow.js")>()),
+  gateSendApiMessage,
+}));
 vi.mock("../settings/wa_settings.service.js", () => ({
   getWaSettings,
   getWaSendingSettings,
@@ -50,6 +56,7 @@ const payload = { messaging_product: "whatsapp", to: "+100" };
 
 beforeEach(() => {
   vi.clearAllMocks();
+  gateSendApiMessage.mockImplementation(async ({ payload }) => payload);
   getWaSendingSettings.mockResolvedValue({
     accessToken: "wa-token",
     phoneId: "phone-1",
@@ -377,6 +384,58 @@ describe("metaErrorMessage", () => {
     expect(metaErrorMessage({ error_data: { details: "deep" } })).toBe("deep");
     expect(metaErrorMessage({ code: 131026 })).toBe("Graph error 131026");
     expect(metaErrorMessage(undefined)).toBe("Failed to send message");
+  });
+
+  it("explains Meta's outside-the-window refusals on Messenger and Instagram", () => {
+    for (const subcode of [2018278, 2534022]) {
+      expect(
+        metaErrorMessage({ code: 10, error_subcode: subcode, message: "raw" } as never),
+      ).toMatch(/7 days by a person/);
+    }
+  });
+});
+
+describe("sendMetaMessage - Send API gate", () => {
+  it("refuses without calling Meta or recording anything", async () => {
+    const { MetaSendRefusedError } = await import("./sendWindow.js");
+    gateSendApiMessage.mockRejectedValue(new MetaSendRefusedError("window_closed"));
+    getInstagramChannel.mockResolvedValue({ pageAccessToken: "ig-token" });
+
+    const result = await sendMetaMessage({
+      platform: PlatformType.INSTAGRAM,
+      orgId: ORG,
+      to: "igsid-1",
+      sourceIdentifier: "iba-1",
+      payload: { recipient: { id: "igsid-1" }, message: { text: "hi" } },
+      userId: "user-1",
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.error).toMatch(/7 days/);
+    expect(callMetaApi).not.toHaveBeenCalled();
+    expect(handleWaMessages).not.toHaveBeenCalled();
+  });
+
+  it("sends and records the payload the gate returned", async () => {
+    gateSendApiMessage.mockImplementation(async ({ payload }) => ({
+      ...payload,
+      messaging_type: "MESSAGE_TAG",
+      tag: "HUMAN_AGENT",
+    }));
+    getInstagramChannel.mockResolvedValue({ pageAccessToken: "ig-token" });
+    callMetaApi.mockResolvedValue({ data: { message_id: "mid.1" } });
+
+    await sendMetaMessage({
+      platform: PlatformType.INSTAGRAM,
+      orgId: ORG,
+      to: "igsid-1",
+      sourceIdentifier: "iba-1",
+      payload: { recipient: { id: "igsid-1" }, message: { text: "hi" } },
+      userId: "user-1",
+    });
+
+    expect(callMetaApi.mock.calls[0]![3]).toMatchObject({ tag: "HUMAN_AGENT" });
+    expect(handleWaMessages.mock.calls[0]![1]).toMatchObject({ tag: "HUMAN_AGENT" });
   });
 });
 

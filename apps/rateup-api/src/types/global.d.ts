@@ -894,6 +894,38 @@ declare global {
   }
 
   //--- instagram
+  /**
+   * An attachment on an inbound Instagram DM. `ig_post` / `ig_reel` are what a shared
+   * post or reel arrives as; `share` is the legacy spelling Meta is retiring (2026).
+   */
+  interface InstagramInboundAttachment {
+    type:
+      | "image"
+      | "video"
+      | "audio"
+      | "file"
+      | "reel"
+      | "ig_reel"
+      | "ig_post"
+      | "share"
+      | "story_mention";
+    payload: {
+      url?: string;
+      /** ig_post / ig_reel: the caption-ish title Meta sends with a shared post. */
+      title?: string;
+      /** ig_post / ig_reel: the shared media's id. */
+      ig_post_media_id?: string;
+      /** reel (legacy): the reel's video id. */
+      reel_video_id?: string;
+    };
+  }
+
+  /** The `mentions` field: the business was tagged in a caption (no comment_id) or comment. */
+  interface InstagramMentionValue {
+    media_id: string;
+    comment_id?: string;
+  }
+
   interface InstagramCommentValue {
     id: string; // comment ID
     text: string;
@@ -922,12 +954,17 @@ declare global {
       {
         time: number;
         id: string; //ID of your Instagram Professional account
-        changes?: [
-          {
-            field: "comments" | "live_comments";
-            value: InstagramCommentValue;
-          },
-        ];
+        changes?: Array<
+          | {
+              field: "comments" | "live_comments";
+              value: InstagramCommentValue;
+            }
+          | {
+              /** Someone tagged the business in a caption or a comment. */
+              field: "mentions";
+              value: InstagramMentionValue;
+            }
+        >;
         messaging: [
           {
             sender: {
@@ -950,19 +987,7 @@ declare global {
             message?: {
               mid: string;
               text?: string;
-              attachments?: Array<{
-                // Included when a customer sends multiple media attachments or a URL for a story mention or share
-                type:
-                  | "image"
-                  | "video"
-                  | "audio"
-                  | "file"
-                  | "reel"
-                  | "ig_reel"
-                  | "share"
-                  | "story_mention";
-                payload: { url: string };
-              }>;
+              attachments?: InstagramInboundAttachment[];
               is_deleted?: boolean; // Included when a customer deletes a message
 
               is_echo?: boolean; // Included when your business sends a message to the customer
@@ -1004,10 +1029,27 @@ declare global {
                 };
               };
 
+              /**
+               * An inline reply to one of our messages (`mid`), or a reply to one of the
+               * business's stories (`story`). Story replies are what INSTAGRAM_STORY_REPLY fires on.
+               */
               reply_to?: {
-                // Included when a customer sends an inline reply
-                mid: string;
+                mid?: string;
+                story?: {
+                  id: string;
+                  /** CDN URL of the story media; expires with the story. */
+                  url?: string;
+                  /** The story's link sticker, when it had one. */
+                  link_sticker_url?: string;
+                };
               };
+            };
+            /** The customer edited a message they sent (the `message_edit` webhook field). */
+            message_edit?: {
+              mid: string;
+              text?: string;
+              /** Arrives as a number or a numeric string. */
+              num_edit?: number | string;
             };
             reaction?: {
               mid: string;
@@ -1034,15 +1076,25 @@ declare global {
     recipient: {
       id: string;
     };
+    /** Set by the send path for agent replies: RESPONSE inside 24 h, MESSAGE_TAG after. */
+    messaging_type?: "RESPONSE" | "UPDATE" | "MESSAGE_TAG";
+    tag?: "HUMAN_AGENT";
+    /** Quote one of the thread's messages (Instagram inline reply). */
+    reply_to?: { mid: string };
     message?: {
       text?: string;
       attachment?: {
         type: string;
-        payload?: { id?: string; attachment_id?: string; url?: string };
+        payload?: { id?: string; attachment_id?: string; url?: string; is_reusable?: boolean };
         is_reusable?: boolean;
       };
+      /** Several images in one message. */
+      attachments?: Array<{
+        type: "image";
+        payload: { attachment_id?: string; url?: string };
+      }>;
     };
-    sender_action?: "react" | "unreact";
+    sender_action?: "react" | "unreact" | "typing_on" | "typing_off" | "mark_seen";
     payload?: {
       message_id: string;
       reaction?: string;
@@ -1230,6 +1282,10 @@ declare global {
     send?: WaSendMessageBody | IgSendMessageBody | FbSendMessageBody;
     receive?: WaReceiveMessageBody | IgReceiveMessageBody | FbReceiveMessageBody;
     internal?: WaInternalMessageBody;
+    /** Instagram edits: the text before each edit, oldest first (`WaMessage.editedAt` is the latest). */
+    editHistory?: Array<{ text: string | null; editedAt: string }>;
+    /** Meta's `num_edit` of the edit applied last; orders and dedupes edit webhooks. */
+    editCount?: number;
   }
   interface WaTemplateDefaultValues {
     image?: {
@@ -1586,6 +1642,7 @@ declare global {
       | import("./whatsapp.types.js").WaSendMessageBody
       | Record<string, unknown>;
     type LoyaltyEarningRuleTimeRanges = LoyaltyAllowedTimeRanges;
+    type LoyaltyEarningRuleConditions = import("./loyalty.js").LoyaltyEarningRuleConditions;
     type PWaRuleOptions =
       import("../modules/whatsapp/automatedReply/wa_rule.schema.js").RuleOptions;
     type PTicketChecklists = TicketChecklist[];
@@ -1705,6 +1762,7 @@ export interface orgWsMessage {
     | "inbox_note"
     | "inbox_typing"
     | "message_deleted"
+    | "message_edited"
     | "meta_agent_thread"
     | "notification"
     | "call";
@@ -1731,6 +1789,14 @@ export interface orgWsMessage {
     deletedAt: string;
     /** Identifies the message inside the inbox row's last-message preview. */
     waCreatedAt?: string | null;
+  };
+  /** The customer edited a message (Instagram). `message` is the updated row; replace it in place. */
+  message_edited?: {
+    messageId: string;
+    contactId: string | null;
+    conversationId?: string | null;
+    editedAt: string;
+    message: WaMessage;
   };
   /** A teammate started or stopped typing a reply. Lapses on the client if no refresh arrives. */
   inbox_typing?: {

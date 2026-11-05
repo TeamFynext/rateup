@@ -105,6 +105,27 @@ function sendApiChannel(
     extractRecipientId(data) {
       return (data as { recipient_id?: string } | undefined)?.recipient_id;
     },
+    prepareBody: stripUploadedUrls,
+  };
+}
+
+/**
+ * A multi-image message is stored with each uploaded image's url beside its
+ * `attachment_id`, so the inbox has something to draw; Meta gets the id alone.
+ */
+export function stripUploadedUrls(payload: Record<string, unknown>): Record<string, unknown> {
+  const message = payload.message as { attachments?: unknown } | undefined;
+  if (!message || !Array.isArray(message.attachments)) return payload;
+  return {
+    ...payload,
+    message: {
+      ...message,
+      attachments: message.attachments.map((item: { payload?: Record<string, unknown> }) => {
+        if (!item?.payload?.attachment_id) return item;
+        const { url: _url, ...rest } = item.payload;
+        return { ...item, payload: rest };
+      }),
+    },
   };
 }
 

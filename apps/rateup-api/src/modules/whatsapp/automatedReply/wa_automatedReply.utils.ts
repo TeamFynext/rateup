@@ -431,6 +431,9 @@ export interface RuleWithConditions {
     instagramPublicReplies?: string[];
     instagramCommentSource?: "ALL" | "POSTS" | "LIVE";
     instagramRef?: string;
+    instagramStoryScope?: "ALL" | "SPECIFIC";
+    instagramStoryIds?: string[];
+    instagramStoryKeywords?: string[];
     adIds?: string[];
     adMatch?: string;
     messengerRef?: string;
@@ -722,6 +725,8 @@ export interface RuleExecutionContext {
   instagramLiveComment?: boolean;
   /** The ?ref= of the ig.me link that opened the thread, for INSTAGRAM_REFERRAL. */
   instagramRef?: string;
+  /** The business's story the customer replied to, for INSTAGRAM_STORY_REPLY. */
+  instagramStoryId?: string;
   /** The click-to-WhatsApp ad that opened the chat, for WHATSAPP_AD_REFERRAL. */
   adReferral?: AdReferralContext;
   /** The ?ref= of the m.me link that opened the thread, for MESSENGER_REFERRAL. */
@@ -1077,6 +1082,8 @@ export async function checkAndExecuteRuleByTriggerEvent(
         if (!isMatch) continue;
       } else if (triggerEvent === TriggerEvent.INSTAGRAM_STORY_MENTION) {
         // Story mentions always match — no post filtering or message checks
+      } else if (triggerEvent === TriggerEvent.INSTAGRAM_STORY_REPLY) {
+        if (!storyReplyRuleMatches(rule.options, context.instagramStoryId, messageText)) continue;
       } else if (triggerEvent === TriggerEvent.INSTAGRAM_REFERRAL) {
         const wanted = rule.options?.instagramRef?.toLowerCase();
         if (wanted && wanted !== context.instagramRef?.toLowerCase()) continue;
@@ -2078,4 +2085,42 @@ async function executeExternalApiAction(
   }
 
   return false;
+}
+
+/**
+ * Whether an INSTAGRAM_STORY_REPLY rule answers this reply: the story is in the rule's
+ * list (or the rule takes every story), and the text contains one of its keywords (or
+ * the rule has none, which means any reply — "reply anything to get the guide").
+ * Keywords match case-insensitively as whole words, so "GUIDE" does not fire on "guided".
+ */
+export function storyReplyRuleMatches(
+  options:
+    | {
+        instagramStoryScope?: string;
+        instagramStoryIds?: string[];
+        instagramStoryKeywords?: string[];
+      }
+    | null
+    | undefined,
+  storyId: string | undefined,
+  text: string | undefined,
+): boolean {
+  if (options?.instagramStoryScope === "SPECIFIC") {
+    const ids = options.instagramStoryIds ?? [];
+    if (!storyId || !ids.includes(storyId)) return false;
+  }
+  const keywords = (options?.instagramStoryKeywords ?? []).map((k) => k.trim()).filter(Boolean);
+  if (!keywords.length) return true;
+  const words = new Set(
+    (text ?? "")
+      .toLowerCase()
+      .split(/[^\p{L}\p{N}]+/u)
+      .filter(Boolean),
+  );
+  const haystack = ` ${(text ?? "").toLowerCase()} `;
+  return keywords.some((keyword) => {
+    const k = keyword.toLowerCase();
+    // A multi-word keyword is matched as a phrase.
+    return k.includes(" ") ? haystack.includes(k) : words.has(k);
+  });
 }

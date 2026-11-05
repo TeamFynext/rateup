@@ -45,6 +45,8 @@ import {
   getWaMessageLogs,
   setConversationFavorite,
   setContactSpam,
+  moderateInstagramContact,
+  type InstagramModeration,
 } from "./wamessage.service.js";
 import { ByContactIdParams } from "../../../contact/contact.schema.js";
 import { createNote, deleteNote, editNote } from "../note/note.service.js";
@@ -575,6 +577,9 @@ export async function sendNewWaMessageHandler(
   try {
     const { contactId } = request.params;
     const { type, contacts, location, whatsappSettingsPhoneId, platform, teamId } = request.body;
+    // A quoted reply exists only on Instagram; elsewhere the field is dropped.
+    const replyToMid =
+      platform === PlatformType.INSTAGRAM ? request.body.replyToMid || undefined : undefined;
     const { orgId, userId } = request.user;
     if (!userId) {
       reply.status(401).send("User not found on request");
@@ -626,6 +631,7 @@ export async function sendNewWaMessageHandler(
             caption,
             whatsappSettingsPhoneId,
             teamId,
+            replyToMid,
           );
           break;
         }
@@ -635,12 +641,16 @@ export async function sendNewWaMessageHandler(
         if (!to) {
           throw new Error(`No destination address found for contact ${contact.id} on ${platform}`);
         }
-        const messageBody = createTextMessage(
+        const textBody = createTextMessage(
           to,
           "",
           request?.body?.text?.body,
           platform as PlatformType,
         );
+        // `reply_to` sits beside `recipient` and `message`, not inside the message.
+        const messageBody = replyToMid
+          ? { ...(textBody as IgSendMessageBody), reply_to: { mid: replyToMid } }
+          : textBody;
         await sendMessage(
           orgId,
           messageBody,
@@ -703,6 +713,7 @@ export async function sendNewWaMessageHandler(
             "",
             whatsappSettingsPhoneId,
             teamId,
+            replyToMid,
           );
         }
         break;
@@ -744,6 +755,11 @@ export async function sendNewWaMessageHandler(
     }
     reply.send("Message Sent");
   } catch (error) {
+    // A refusal the agent can act on (Instagram block, closed messaging window).
+    if (error instanceof HttpError && error.statusCode < 500) {
+      reply.status(error.statusCode).send({ message: error.message });
+      return;
+    }
     console.error(error);
     log.error({ err: error }, "Error in sendNewWaMessageHandler");
     reply.status(500).send("Internal Server Error");
@@ -1110,6 +1126,31 @@ export async function unblockWhatsappUserHandler(
     log.error(e);
     reply.code(500).send(e);
   }
+}
+
+/**
+ * Block, unblock or move to spam an Instagram customer through Meta's Moderate
+ * Conversations API. The action comes from the route, not the body.
+ */
+export function instagramModerationHandler(action: InstagramModeration) {
+  return async (request: FastifyRequest<{ Params: ByContactIdParams }>, reply: FastifyReply) => {
+    try {
+      const result = await moderateInstagramContact(
+        request.user.orgId,
+        request.params.contactId,
+        action,
+        request.user.userId,
+      );
+      reply.code(200).send(result);
+    } catch (e) {
+      if (e instanceof HttpError) {
+        reply.code(e.statusCode).send({ message: e.message });
+        return;
+      }
+      log.error({ err: e }, "Error moderating an Instagram conversation");
+      reply.code(500).send("Internal Server Error");
+    }
+  };
 }
 
 /**

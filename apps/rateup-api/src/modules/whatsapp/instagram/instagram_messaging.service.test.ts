@@ -415,13 +415,13 @@ describe("the remaining message shapes", () => {
     });
   });
 
-  test("sends a story reply carrying both the text and the story it answers", async () => {
+  test("answers a story with a plain DM: text and no attachment", async () => {
     await sendInstagramStoryReply(IGS_ID, "story-1", "love it", ORG_ID, IBA_ID);
 
-    expect(lastCall().body.message).toEqual({
-      text: "love it",
-      attachment: { type: "story_mention", payload: { id: "story-1" } },
-    });
+    // The Send API takes text or an attachment, never both, and story_mention is
+    // inbound-only — the old payload carried both and failed on every run.
+    expect(lastCall().body.message).toEqual({ text: "love it" });
+    expect(lastCall().body.message).not.toHaveProperty("attachment");
   });
 
   test("sends a video as a reusable attachment", async () => {
