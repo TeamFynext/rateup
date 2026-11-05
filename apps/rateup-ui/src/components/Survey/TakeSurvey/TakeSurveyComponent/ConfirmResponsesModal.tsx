@@ -15,6 +15,7 @@ import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 import { extractText, isHtml } from "@/utils/index.ts";
 import type { StoredResponse } from "@/utils/response.ts";
 import { asAnswer } from "@/utils/response.ts";
+import { toText } from "@/utils/toText";
 
 import { getCustomSmileyIcon, getNumericValue, mapSmileyIcon } from "./SmileyRating/index.tsx";
 import { getDefaultSmileySrc } from "./SmileyRating/SmileyRatingStyling.tsx";
@@ -263,7 +264,7 @@ function ConfirmResponsesModal({
                                   {Object.values(asAnswer(answers)).map((ad, index: number) => {
                                     return (
                                       <span className="font-light" key={index}>
-                                        {String(ad ?? "")}
+                                        {toText(ad)}
                                       </span>
                                     );
                                   })}

@@ -430,7 +430,7 @@ export function useNavMain({
                               (lbl: { id: string; name: string; color?: string }) => ({
                                 title: lbl.name,
                                 url: "#",
-                                icon: (props: Record<string, unknown>) => (
+                                icon: (props: { className?: string }) => (
                                   <div
                                     {...props}
                                     className={`rounded-full ${props?.className ?? ""} w-3 h-3`}

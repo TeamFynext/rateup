@@ -11,6 +11,7 @@ import { useUserOrgOrders } from "@/backend/payment/payment.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import { Button } from "@/components/ui/button";
+import { toText } from "@/utils/toText";
 
 import style from "@/components/Graph/graph.module.css";
 
@@ -25,9 +26,10 @@ export function ShopifyPage() {
 function ShopifySubscriptionApprovalCallback() {
   const navigate = useNavigate();
   const searchParams = useSearch({ strict: false });
-  const charge_id = typeof searchParams.charge_id === "string" ? searchParams.charge_id : undefined;
-  const shop = searchParams.shop;
-  const plan = searchParams.plan;
+  // The router JSON-parses search values, so Shopify's numeric charge_id arrives as a number.
+  const charge_id = toText(searchParams.charge_id) || undefined;
+  const shop = toText(searchParams.shop);
+  const plan = toText(searchParams.plan);
 
   const { t: translations } = useTranslation();
   const [isSessionExist, setIsSessionExist] = useState(false);

@@ -38,8 +38,8 @@ export const AssignNodeEditor: React.FC<
       assignedUserIds: (value, values) =>
         values?.choice === "manual" ? isNotEmpty("required")(value) : undefined,
     },
-    onValuesChange: async (values) => {
-      const validationRes = await form.validate();
+    onValuesChange: (values) => {
+      const validationRes = form.validate();
       if (validationRes.hasErrors) return;
       const teamName =
         options?.data

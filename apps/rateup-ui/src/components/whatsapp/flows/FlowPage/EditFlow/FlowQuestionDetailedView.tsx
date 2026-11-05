@@ -392,7 +392,7 @@ function ElementEditor({
     })();
 
     return Object.fromEntries(
-      Object.entries(extraConfigValues ?? {}).filter(([_, value]) => {
+      Object.entries(extraConfigValues ?? {}).filter(([, value]) => {
         // Check if value is an array with length > 0, otherwise check for truthy values
         return Array.isArray(value)
           ? value.length > 0

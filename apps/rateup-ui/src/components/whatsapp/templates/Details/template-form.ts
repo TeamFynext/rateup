@@ -46,16 +46,19 @@ function isChangeEvent(value: unknown): value is { target?: { value?: unknown } 
  * Every consumer is a selector or text control that takes a string, so a non-string value
  * at the path reads as empty rather than being handed on.
  */
-export const inputProps = (form: TemplateForm, p: string) => ({
-  name: p,
-  value: typeof form.watch(path(p)) === "string" ? String(form.watch(path(p))) : "",
-  onChange: (event: { target?: { value?: unknown } } | unknown) =>
-    setValue(
-      form,
-      p,
-      isChangeEvent(event) && event.target !== undefined ? event.target.value : event,
-    ),
-});
+export const inputProps = (form: TemplateForm, p: string) => {
+  const current: unknown = form.watch(path(p));
+  return {
+    name: p,
+    value: typeof current === "string" ? current : "",
+    onChange: (event: unknown) =>
+      setValue(
+        form,
+        p,
+        isChangeEvent(event) && event.target !== undefined ? event.target.value : event,
+      ),
+  };
+};
 
 const readList = (form: TemplateForm, p: string): unknown[] => {
   const current = form.getValues(path(p));

@@ -22,8 +22,8 @@ export interface MultiSelectProps {
   id?: string;
   /** Options rendered in the popup and used to resolve chip labels. */
   options: MultiSelectOption[];
-  /** Selected values (controlled). */
-  value: string[];
+  /** Selected values (controlled). Form fields can hand this undefined before they are set. */
+  value?: string[];
   /** Called with the new selected values. */
   onValueChange: (value: string[]) => void;
   /** Placeholder shown in the input when empty. */

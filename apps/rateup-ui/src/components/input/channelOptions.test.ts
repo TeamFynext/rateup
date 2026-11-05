@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 
 import type { Channel } from "@/backend/channels/channels.api";
 import type { MetaChannel } from "@/backend/meta/metaChannels.api";

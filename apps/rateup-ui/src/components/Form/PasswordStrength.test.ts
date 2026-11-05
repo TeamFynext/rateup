@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { passwordScore } from "./PasswordStrength.tsx";
 import { isPasswordValid } from "./signup/shared.tsx";

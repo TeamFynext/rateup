@@ -57,13 +57,12 @@ export function FileUploadButton({
     }
   }, [resetRef]);
 
-  const url = rightSection
-    ? typeof fileSrc === "string"
-      ? getFileUrlFromKey(fileSrc)
-      : `${DEFAULT_IMAGE_BASE64_START}${fileSrc}`
-    : typeof fileSrc === "object"
+  const url =
+    typeof fileSrc === "object"
       ? getFileUrlFromKey(fileSrc.image)
-      : `${DEFAULT_IMAGE_BASE64_START}${fileSrc}`;
+      : rightSection
+        ? getFileUrlFromKey(fileSrc ?? "")
+        : `${DEFAULT_IMAGE_BASE64_START}${fileSrc ?? ""}`;
 
   return (
     <div className={cn("flex items-center gap-1", className)} style={style}>

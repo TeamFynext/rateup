@@ -1,17 +1,16 @@
 import type { TFunction } from "i18next";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import type { LoyaltyDashboardStats } from "@/backend/loyalty/dashboard/dashboard.query";
 import type { OnboardingState } from "@/backend/loyalty/onboarding.api";
+import { toText } from "@/utils/toText";
 
 import type { GivebackResult } from "../giveback/calculateGiveback";
 import { buildSectionSummaries } from "./programSummary";
 
 /** Interpolates like i18next would, without loading it. */
 const t = ((key: string, opts?: Record<string, unknown>) =>
-  key.replace(/\{(\w+)\}/g, (_m, name: string) =>
-    String(opts?.[name] ?? ""),
-  )) as unknown as TFunction;
+  key.replace(/\{(\w+)\}/g, (_m, name: string) => toText(opts?.[name]))) as unknown as TFunction;
 
 const giveback = {
   status: "ok",

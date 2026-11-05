@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 
 import type { StorefrontProduct, StorefrontVariant } from "@/backend/commerce/shop.api";
 

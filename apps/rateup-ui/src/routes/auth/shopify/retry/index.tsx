@@ -7,6 +7,7 @@ import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { API_URL } from "@/utils/constants.ts";
+import { toText } from "@/utils/toText";
 
 export const Route = createFileRoute("/auth/shopify/retry/")({
   component: Page,
@@ -24,7 +25,7 @@ function ShopifyCallbackRetryWithParams() {
   // The callback's query string is read key-by-key; every value arrives as a string.
   const searchParams = useSearch({ strict: false });
   const stringParams = Object.fromEntries(
-    Object.entries(searchParams).map(([key, value]) => [key, String(value ?? "")]),
+    Object.entries(searchParams).map(([key, value]) => [key, toText(value)]),
   );
   return <ShopifyCallbackRetry searchParams={stringParams} />;
 }

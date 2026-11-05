@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { SurveyType } from "@/types/enums.ts";
+import { toText } from "@/utils/toText";
 
 /**
  * This selector is still written against the Mantine form API (`values`/`setFieldValue`) while
@@ -91,10 +92,10 @@ export function WebsurveySelector({
     const button = fields.reduce<unknown>((acc, key) => readProp(acc, key), form.values);
     const url = readProp(button, "url");
     const example = readProp(button, "example");
-    value = typeof url === "string" ? url.replace("{{1}}", `?${example}`) : "";
+    value = typeof url === "string" ? url.replace("{{1}}", `?${toText(example)}`) : "";
   } else if (index !== undefined) {
     const button = form.values?.buttons?.[index];
-    value = button?.url?.replace("{{1}}", `?${button.example}`) ?? "";
+    value = button?.url?.replace("{{1}}", `?${toText(button.example)}`) ?? "";
   }
 
   return (

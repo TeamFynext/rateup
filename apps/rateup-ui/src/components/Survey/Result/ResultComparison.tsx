@@ -46,7 +46,7 @@ export default function ResultComparison({
   questions,
 }: {
   surveyId: string;
-  version: number;
+  version?: number;
   flowQuestions: FlowQuestionSummary[];
   questions: Question[];
 }) {

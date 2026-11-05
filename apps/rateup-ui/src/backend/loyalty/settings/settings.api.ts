@@ -29,7 +29,7 @@ export interface LoyaltyWaCommand {
   requestMessage: string | null;
   /** Rich-text document (the editor's JSON); plain text when written by the wizard. */
   content: unknown;
-  responseType: "Text" | "Template" | string;
+  responseType: "Text" | "Template" | (string & {});
   waTemplateId: string | null;
   whatsappSettingsPhoneId?: string | null;
 }

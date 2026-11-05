@@ -23,9 +23,11 @@ function QrGlyph({ className = "" }: Readonly<{ className?: string }>) {
   return (
     <svg viewBox="0 0 11 11" className={className} aria-hidden="true" shapeRendering="crispEdges">
       {QR_ROWS.flatMap((row, y) =>
-        [...row].map((cell, x) =>
-          cell === "1" ? <rect key={`${x}-${y}`} x={x} y={y} width="1" height="1" /> : null,
-        ),
+        row
+          .split("")
+          .map((cell, x) =>
+            cell === "1" ? <rect key={`${x}-${y}`} x={x} y={y} width="1" height="1" /> : null,
+          ),
       )}
     </svg>
   );

@@ -152,7 +152,7 @@ const CreateOrEditContactModal = ({
   onSaved?: (contact: { id: string; name: string; phone: string; email: string }) => void;
 }) => {
   const { t } = useTranslation();
-  const { customFields = [] } = useCustomFieldsContext();
+  const { customFields } = useCustomFieldsContext();
   const createContactMutation = useCreateContactMutation();
   const editContactMutation = useEditContactMutation();
   const contactSchema = useMemo(() => buildContactSchema(t, customFields), [t, customFields]);

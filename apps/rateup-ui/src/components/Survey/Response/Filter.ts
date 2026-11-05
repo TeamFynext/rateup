@@ -5,6 +5,7 @@ import dayjs from "dayjs";
 
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { QuestionType } from "@/types/enums.ts";
+import { toText } from "@/utils/toText";
 
 /** The toolbar search text, or the picked choices for a smiley question. */
 type FuzzyFilterValue = string | Array<{ value?: string }>;
@@ -38,10 +39,10 @@ export const fuzzyFilter = <TData extends RowData>(
       .join(" , ");
   } else if (typeof row.getValue(columnId) === "object") {
     formatedResponse = asRecordValues(cellValue).join(" , ");
-  } else formatedResponse = String(cellValue ?? "");
+  } else formatedResponse = toText(cellValue);
 
-  // `rankItem` coerces its query to a string itself; keep that for the smiley choice list.
-  let itemRank = rankItem(formatedResponse, String(value));
+  // A smiley choice list never matches as text; the loop below ranks each choice instead.
+  let itemRank = rankItem(formatedResponse, toText(value));
 
   if (responseType === QuestionType.Smiley && Array.isArray(value) && value.length > 0) {
     const temp: RankingInfo[] = [];

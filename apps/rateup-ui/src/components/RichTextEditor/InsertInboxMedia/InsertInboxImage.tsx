@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { useMediaStore } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter/index.tsx";
+import { getApiErrorMessage } from "@/utils/apiError.ts";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 
 const InsertInboxImage = () => {
@@ -34,8 +35,8 @@ const InsertInboxImage = () => {
 
       setFiles([]);
     } catch (e) {
-      const errorMessage =
-        e instanceof Error ? e.message : String(e || "Failed to upload image. Please try again.");
+      // uploadFile rejects with the message itself.
+      const errorMessage = typeof e === "string" ? e : getApiErrorMessage(e, "");
       toast.error(errorMessage || "Failed to upload image. Please try again.");
       resetMedia();
     }

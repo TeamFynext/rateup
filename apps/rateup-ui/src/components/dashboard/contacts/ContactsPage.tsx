@@ -23,6 +23,7 @@ import { useUser } from "@/context/UserContext.tsx";
 import { useDebouncedState } from "@/hooks/use-debounced-state.ts";
 import { CONTACT_SORT } from "@/utils/constants.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
+import { toText } from "@/utils/toText";
 
 export function ContactsPage() {
   const [searchTerm, setSearchTerm] = useDebouncedState("", 200);
@@ -74,7 +75,7 @@ export function ContactsPage() {
 
   /** A column is identified by its accessor key when it has one, else by its id. */
   const columnKey = (column: { accessorKey?: unknown; id?: string }) =>
-    String(column.accessorKey ?? column.id ?? "");
+    toText(column.accessorKey ?? column.id);
 
   const defaultColumnVisibility = useMemo(
     () =>
@@ -125,7 +126,7 @@ export function FilterSelect({
 }) {
   const { t: translations } = useTranslation();
   // The selection lives in the table's column filters as one comma-joined entry.
-  const selected = String(filterByTag?.find((item) => item.id === "filterGroupName")?.value ?? "")
+  const selected = toText(filterByTag?.find((item) => item.id === "filterGroupName")?.value)
     .split(",")
     .filter(Boolean);
 

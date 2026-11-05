@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 const claim = vi.hoisted(() => ({
   /** Successive answers from the session's cached claim, oldest first. */

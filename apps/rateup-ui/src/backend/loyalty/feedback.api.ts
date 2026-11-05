@@ -69,7 +69,7 @@ export interface FeedbackState {
   flow: FeedbackFlow | null;
   template: FeedbackTemplate | null;
   team: { id: string; name: string; googleLink: string | null } | null;
-  reward: { id: string; name: string; status: LoyaltyRewardStatus | string } | null;
+  reward: { id: string; name: string; status: LoyaltyRewardStatus | (string & {}) } | null;
   counts: FeedbackCounts;
 }
 

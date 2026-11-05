@@ -216,7 +216,7 @@ export default GeneralSettings;
 // ── MultiSelectCreatable ───────────────────────────────────────────────────────
 
 interface MultiSelectCreatableProps {
-  value: string[];
+  value?: string[];
   onValueChange: (v: string[]) => void;
 }
 

@@ -1,13 +1,14 @@
 import type { TFunction } from "i18next";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import type { PipelineType } from "@/backend/pipeline/pipeline.types.ts";
+import { toText } from "@/utils/toText";
 
 import { findLeadsPipeline, PIPELINE_TYPE_ORDER, pipelineTypeConfig } from "./pipelineTypes.ts";
 
 // Echoes the key with its values filled, which is all these assertions need.
 const t = ((key: string, values?: Record<string, unknown>) =>
-  key.replace(/\{(\w+)\}/g, (_, name: string) => String(values?.[name] ?? ""))) as TFunction;
+  key.replace(/\{(\w+)\}/g, (_, name: string) => toText(values?.[name]))) as TFunction;
 
 describe("pipeline types", () => {
   test("only the Leads board carries the sales funnel", () => {

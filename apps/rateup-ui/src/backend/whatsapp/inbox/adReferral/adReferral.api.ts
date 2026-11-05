@@ -8,7 +8,7 @@ export interface ContactAdReferral {
   id: string;
   conversationId: string | null;
   sourceId: string;
-  sourceType: "ad" | "post" | string;
+  sourceType: "ad" | "post" | (string & {});
   sourceUrl: string | null;
   headline: string | null;
   body: string | null;

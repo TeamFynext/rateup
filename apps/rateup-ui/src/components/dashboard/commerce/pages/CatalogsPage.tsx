@@ -47,6 +47,7 @@ import { AddCatalogProductModal } from "@/components/whatsapp/catalog/products/A
 import { useConfirm } from "@/context/confirm-provider";
 import { cn } from "@/lib/utils";
 import { fallbackImage } from "@/utils/constants";
+import { toText } from "@/utils/toText";
 
 import CatalogSettingsTab from "../CatalogSettingsTab";
 import { useCommerce } from "../CommerceContext";
@@ -82,7 +83,7 @@ function stockMeta(props: CatalogProductRow["productProps"]) {
 function toFormValues(product: CatalogProductRow) {
   const { currency, price, base_price, sale_price, image, image_link, url, ...rest } =
     product.productProps ?? {};
-  const num = (v: unknown) => (v ? parseFloat(String(v).replace(/[^0-9.-]+/g, "")) : undefined);
+  const num = (v: unknown) => (v ? parseFloat(toText(v).replace(/[^0-9.-]+/g, "")) : undefined);
 
   return {
     ...product,

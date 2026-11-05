@@ -42,8 +42,6 @@ export default function ShopifyBulkDiscountGenerator() {
   const count = (value: number) => Math.round(value).toLocaleString("en-IN");
 
   const codes = useMemo(() => {
-    // dummy use of seed to trigger regeneration
-    seed; // dummy use of seed to trigger regeneration
     let chars = CHARSETS[charsetType].chars;
     if (excludeAmbiguous) {
       chars = chars.replace(/[0O1IL]/g, "");
@@ -72,6 +70,7 @@ export default function ShopifyBulkDiscountGenerator() {
     }
 
     return Array.from(result);
+    // seed is not read: bumping it is how "Regenerate" asks for a fresh batch.
   }, [prefix, suffix, length, charsetType, excludeAmbiguous, batchSize, seed]);
 
   const handleDownloadCsv = () => {

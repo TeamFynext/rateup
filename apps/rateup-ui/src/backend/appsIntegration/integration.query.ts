@@ -197,7 +197,9 @@ export const useSavePetpoojaSettingsMutation = () => {
   return useMutation({
     mutationFn: savePetpoojaSettings,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: integrationKeys.byType(IntegratedApps.petpooja) });
+      queryClient.invalidateQueries({
+        queryKey: integrationKeys.byType(IntegratedApps.petpooja),
+      });
       toast.success("Petpooja settings saved", { id: "integration-update" });
     },
     onError: (error) => {
@@ -238,7 +240,9 @@ export const useConnectAmeliaMutation = () => {
   return useMutation({
     mutationFn: connectAmelia,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: integrationKeys.byType(IntegratedApps.amelia) });
+      queryClient.invalidateQueries({
+        queryKey: integrationKeys.byType(IntegratedApps.amelia),
+      });
       queryClient.invalidateQueries({ queryKey: ["integrationStatuses"] });
       toast.success("Amelia connected", { id: "integration-update" });
     },

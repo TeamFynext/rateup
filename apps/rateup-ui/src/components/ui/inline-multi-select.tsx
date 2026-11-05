@@ -32,7 +32,7 @@ export interface InlineMultiSelectProps {
  */
 export function InlineMultiSelect({
   options,
-  value = [],
+  value,
   onValueChange,
   placeholder,
   disabled,
@@ -63,8 +63,13 @@ export function InlineMultiSelect({
     );
   };
 
+  // A label that is markup has no text to search, so match on its value instead.
+  const searchText = (option: InlineMultiSelectOption) =>
+    typeof option.label === "string" || typeof option.label === "number"
+      ? String(option.label)
+      : option.value;
   const filteredOptions = options.filter((option) =>
-    String(option.label).toLowerCase().includes(search.trim().toLowerCase()),
+    searchText(option).toLowerCase().includes(search.trim().toLowerCase()),
   );
 
   return (

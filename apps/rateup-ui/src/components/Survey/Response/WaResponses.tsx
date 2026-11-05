@@ -43,6 +43,7 @@ import { useDebounce } from "@/hooks/use-debounce.ts";
 import { IntegratedApps, QuestionType, QuestionType2, WaQuestions } from "@/types/enums.ts";
 import { getApiErrorData } from "@/utils/apiError.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
+import { toText } from "@/utils/toText";
 import {
   LDResponseMap,
   RatingScaleMap,
@@ -238,7 +239,7 @@ const WaResponses = ({
         id: "mobile",
         cell: (info: CellInfo) => (
           <span className="whitespace-nowrap font-medium tabular-nums text-foreground">
-            {String(info.getValue() ?? "")}
+            {toText(info.getValue())}
           </span>
         ),
       },
@@ -562,7 +563,7 @@ export const getCellData = (info: unknown, question: WaFlowQuestion) => {
     case WaQuestions.DocumentPicker:
       return info ? (
         <a
-          href={`${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${info}`}
+          href={`${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${toText(info)}`}
           download
           className="text-primary hover:underline"
         >
@@ -575,8 +576,8 @@ export const getCellData = (info: unknown, question: WaFlowQuestion) => {
       return info ? dayjs(info as string | number | Date).format("DD MMM YYYY") : "";
     case WaQuestions.TextArea:
     case WaQuestions.PhotoPicker:
-      return <WaHoverCardComponent content={info as ReactNode} type={question.metaType} />;
+      return <WaHoverCardComponent content={info} type={question.metaType} />;
     default:
-      return String(info ?? "") || "";
+      return toText(info);
   }
 };

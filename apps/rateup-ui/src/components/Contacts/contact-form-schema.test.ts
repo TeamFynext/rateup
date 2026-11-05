@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { buildContactSchema, contactFormDefaults, toFormValues } from "./contact-form-schema.ts";
 

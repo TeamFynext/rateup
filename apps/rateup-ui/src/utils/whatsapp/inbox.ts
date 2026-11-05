@@ -18,6 +18,7 @@ import type {
   WaTemplateFetchBody,
   WaTemplateFetchBodyComponent,
 } from "@/types/global";
+import { toText } from "@/utils/toText";
 
 import { WaMessageClosedStatus } from "../constants.ts";
 
@@ -603,10 +604,10 @@ export function returnMessageContentBasedOnParsedMessage(
     return exchangeProcess === "send"
       ? parsedMessage.messageContent === "love"
         ? "You Liked a message"
-        : `You reacted ${parsedMessage.messageContent}`
+        : `You reacted ${toText(parsedMessage.messageContent)}`
       : parsedMessage.messageContent === "love"
         ? "Liked a message"
-        : `Reacted ${parsedMessage.messageContent}`;
+        : `Reacted ${toText(parsedMessage.messageContent)}`;
   } else if (parsedMessage.messageType === "attachments") {
     const attachments = isIgAttachmentsContent(parsedMessage.messageContent)
       ? parsedMessage.messageContent.attachments

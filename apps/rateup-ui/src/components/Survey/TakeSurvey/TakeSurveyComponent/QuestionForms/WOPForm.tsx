@@ -7,7 +7,7 @@ import { asAnswerText } from "@/utils/response.ts";
 import { DEFAULT_WOP } from "../util.tsx";
 import WheelComponent from "../WheelComponent.tsx";
 
-const WOPForm = ({ isPreview = false, wop }: { isPreview: boolean; wop?: Wop }) => {
+const WOPForm = ({ isPreview, wop }: { isPreview: boolean; wop?: Wop }) => {
   const [price, setPrice] = useState("");
   const { response, updateResponse } = useContext(CurrentResponsesContext);
 
@@ -31,7 +31,7 @@ const WOPForm = ({ isPreview = false, wop }: { isPreview: boolean; wop?: Wop }) 
         winningSegment={asAnswerText(response) || undefined}
       />
       {!isPreview && price && `You have won ${price}`}
-      {!isPreview && response && !price && `You have won ${response}`}
+      {!isPreview && response && !price && `You have won ${asAnswerText(response)}`}
     </div>
   );
 };

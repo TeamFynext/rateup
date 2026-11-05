@@ -23,6 +23,7 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
+import { toText } from "@/utils/toText";
 
 // ─── Shopify payment options ─────────────────────────────────────────────────
 /** One selectable payment method in the orders & payments settings. */
@@ -225,7 +226,7 @@ export default function PaymentTab({
         Object.fromEntries(
           Object.entries(settings.standardPaymentConfig ?? {}).map(([key, value]) => [
             key,
-            String(value ?? ""),
+            toText(value),
           ]),
         ),
       );

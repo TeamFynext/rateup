@@ -335,8 +335,13 @@ declare global {
     webSurveyThemeId: string;
     /** Defaults to `{}` in the database, so the column is always present. */
     webSurveyPagesTheme: Record<string, SurveyThemePage>;
-    /** Review destination per platform. The legacy "" key holds the Google link. */
-    reviewPageLinks: Partial<Record<ReviewPagePlatform | "", string>>;
+    /**
+     * Review destination per platform. The legacy "" key holds the Google link. The API stores
+     * it as free JSON keyed by platform name, and the survey page also reads custom names.
+     */
+    reviewPageLinks: Partial<
+      Record<import("./enums.ts").ReviewPagePlatform | "" | (string & {}), string>
+    >;
     /** Recipient for survey response notification emails. */
     notificationEmail?: string;
     /** Whether response notification emails are sent at all. */

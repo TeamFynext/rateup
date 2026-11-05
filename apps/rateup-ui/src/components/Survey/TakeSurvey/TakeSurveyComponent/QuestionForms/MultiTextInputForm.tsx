@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { asAnswer } from "@/utils/response.ts";
+import { toText } from "@/utils/toText";
 
 import { handleInputScrollIntoView } from "../util.tsx";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
@@ -29,7 +30,7 @@ const MultiTextInputForm = ({ features }: { features?: Record<string, QuestionFo
         <FormPaperLayout key={index}>
           <Input
             placeholder={field.placeholderText}
-            value={String(asAnswer(response)[field.fieldKey] ?? "")}
+            value={toText(asAnswer(response)[field.fieldKey])}
             onChange={(e) => {
               updateResponse({
                 ...asAnswer(response),

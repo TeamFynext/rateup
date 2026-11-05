@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { AutomationPlatform } from "@/types/platform.ts";
 import { isComponentSupportedOnPlatform } from "@/types/platform.ts";

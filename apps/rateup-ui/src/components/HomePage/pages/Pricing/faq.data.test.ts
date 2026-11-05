@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { buildFaqs } from "@/components/HomePage/pages/Pricing/faq.data.ts";
 import { limitAnswer, resolvePack } from "@/components/HomePage/pages/Pricing/pricing.data.ts";

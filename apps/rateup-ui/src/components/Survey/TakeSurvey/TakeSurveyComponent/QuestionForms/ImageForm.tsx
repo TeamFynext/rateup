@@ -105,7 +105,10 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
                 </div>
               )}
               <img
-                src={previewUrl || `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${response}`}
+                src={
+                  previewUrl ||
+                  `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${asAnswerText(response)}`
+                }
                 alt="Preview"
                 className="size-full object-contain"
               />

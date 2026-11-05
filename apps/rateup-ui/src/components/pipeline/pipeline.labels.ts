@@ -3,7 +3,7 @@
 // These live apart from `pipeline.constants.tsx` because the constants are
 // module-scope objects and `t` only exists inside a component. Each lookup is a
 // switch over literal `t("…")` calls rather than a translated map, for two
-// reasons: `npx i18next-cli extract` only sees literal arguments, so a map keyed
+// reasons: `pnpm dlx i18next-cli extract` only sees literal arguments, so a map keyed
 // by a variable would never register its keys; and a plain function works in
 // `buildPipelineNavItems`, which builds sidebar data outside any component.
 //

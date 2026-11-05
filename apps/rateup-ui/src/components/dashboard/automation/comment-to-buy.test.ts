@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { findAutomationTemplate, templateFormValues, withProduct } from "./automation-templates.ts";
 import { actionPart } from "./rule-sentence.ts";

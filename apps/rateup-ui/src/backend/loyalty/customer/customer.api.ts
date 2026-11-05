@@ -11,6 +11,8 @@ export interface LoyaltyCustomerReferral {
   pointsAwarded?: number;
 }
 
+import { toText } from "@/utils/toText";
+
 import { axiosClient } from "../../apiClient";
 import { LOYALTY_BASE, PUBLIC_LOYALTY_BASE } from "../base.ts";
 
@@ -96,7 +98,7 @@ export async function getAllCustomers(
   },
   columnFilters: ColumnFilterState[],
 ) {
-  const filter = columnFilters.map((data) => `&${data.id}=${data.value}`).join("&");
+  const filter = columnFilters.map((data) => `&${data.id}=${toText(data.value)}`).join("&");
   const desc = sort.desc ? "desc" : "asc";
   const customerUrl = `${base}?page=${pagination.pageIndex}&limit=${pagination.pageSize}&search=${search}&sort=${sort.id}&desc=${desc}${filter}`;
 
@@ -144,7 +146,7 @@ export const exportCustomers = async (format: CustomerExportFormat = "xlsx") => 
 export interface LoyaltyTransaction {
   id: string;
   accountId: string;
-  transactionType: "earn" | "redeem" | string;
+  transactionType: "earn" | "redeem" | (string & {});
   points: number;
   balanceAfter: number;
   source: string;
@@ -192,7 +194,7 @@ export interface LoyaltyCustomerDetail {
     rewardId: string;
     transactionId: string;
     redemptionCode: string;
-    status: "APPROVED" | "PENDING" | "REJECTED" | string;
+    status: "APPROVED" | "PENDING" | "REJECTED" | (string & {});
     expiresAt?: string | null;
     usedAt?: string | null;
     usedContext?: Record<string, unknown>;

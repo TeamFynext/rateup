@@ -46,7 +46,7 @@ function ThemeSelector({
     (themeId: string) => {
       const themeObj = allThemesArr?.find((obj) => obj.id === themeId);
       if (themeObj) {
-        const { name = "" } = themeObj;
+        const { name } = themeObj;
         setSelectedThemeIdToBeRename(themeId);
         setSelectedThemesThemeName(name);
         setIsRenameThemeModalOpened(true);

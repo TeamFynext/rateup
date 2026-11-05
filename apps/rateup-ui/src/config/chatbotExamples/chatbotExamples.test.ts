@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import type { TypedNode } from "@/components/whatsapp/automation/types/node-types.ts";
 import { validateNodeData } from "@/components/whatsapp/automation/types/node-types.ts";

@@ -1,6 +1,6 @@
 // Translated copy for the notification catalogue (rateup-api
 // `src/modules/notification/notification.catalogue.ts`). Switches over literal `t("…")`
-// calls, because `npx i18next-cli extract` only sees literal arguments.
+// calls, because `pnpm dlx i18next-cli extract` only sees literal arguments.
 
 import type { TFunction } from "i18next";
 

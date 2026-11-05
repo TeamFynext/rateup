@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import type { LoyaltyWaCommand } from "@/backend/loyalty/settings/settings.api";
 import type { WaAutomatedReply, WaAutomationFlowJson } from "@/types/global";

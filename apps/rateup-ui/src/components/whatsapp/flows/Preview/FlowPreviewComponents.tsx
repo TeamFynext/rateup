@@ -88,7 +88,7 @@ function FlowDateInputPreview({ label = "Label" }: { label?: string }) {
 
 function FlowFileInputPreview({
   label = "Label",
-  type = "photo",
+  type,
 }: {
   label?: string;
   type: "photo" | "document";

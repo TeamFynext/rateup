@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { firstRoleWith, grantsAt, ROLE_LADDER, roleDiff } from "./roleDiff.ts";
 

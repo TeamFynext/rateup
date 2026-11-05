@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { IntlMessageFormat } from "intl-messageformat";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 type Dictionary = { [key: string]: string | Dictionary };
 

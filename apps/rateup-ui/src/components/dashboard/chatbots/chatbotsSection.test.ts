@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { TeamFeature } from "@/types/enums.ts";
 import { AutomationPlatform } from "@/types/platform.ts";

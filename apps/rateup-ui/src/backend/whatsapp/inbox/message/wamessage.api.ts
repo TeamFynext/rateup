@@ -595,7 +595,7 @@ export async function getWaMessageLogs(filter: WaMessageLogFilter): Promise<WaMe
   // Format date range if it's an array of Date objects
   let dateRange = filter.dateRange;
   if (Array.isArray(dateRange) && dateRange.length === 2) {
-    dateRange = `${dateRange[0]},${dateRange[1]}`;
+    dateRange = dateRange.join(",");
   }
 
   // Build params object
@@ -632,7 +632,7 @@ export async function getWaMessageLogs(filter: WaMessageLogFilter): Promise<WaMe
 export async function exportWaMessageLogs(filter: WaMessageLogFilter) {
   let dateRange = filter.dateRange;
   if (Array.isArray(dateRange) && dateRange.length === 2) {
-    dateRange = `${dateRange[0]},${dateRange[1]}`;
+    dateRange = dateRange.join(",");
   }
 
   const params = {

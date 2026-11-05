@@ -14,7 +14,7 @@ export const CreditsCard = ({
   enableCredits,
   url,
   children,
-  sx = undefined,
+  sx,
   fz = 9,
   pl = 0,
 }: CreditsCardProps) => {

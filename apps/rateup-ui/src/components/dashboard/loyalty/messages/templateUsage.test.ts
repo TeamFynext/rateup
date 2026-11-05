@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import type { EventTrigger } from "@/backend/loyalty/eventTriggers.api";
 import { LoyaltyEventType } from "@/backend/loyalty/eventTriggers.api";

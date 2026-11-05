@@ -16,6 +16,7 @@ import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { fallbackImage } from "@/utils/constants.ts";
+import { toText } from "@/utils/toText";
 
 import { AddCatalogProductModal } from "./AddCatalogProduct.tsx";
 
@@ -192,7 +193,7 @@ const ProductItems = ({ catalogId }: { catalogId: string }) => {
                         <div className="flex flex-wrap gap-1">
                           {filledAttrs.map((pp) => (
                             <Badge key={pp.key} variant="secondary" className="text-xs font-normal">
-                              {pp.label}: {String(productProps[pp.key] ?? "")}
+                              {pp.label}: {toText(productProps[pp.key])}
                             </Badge>
                           ))}
                         </div>

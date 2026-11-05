@@ -1,3 +1,5 @@
+import { toText } from "@/utils/toText";
+
 export interface SelectOption {
   value: string;
   label: string;
@@ -17,7 +19,7 @@ export function toSelectOptions(data: unknown): SelectOption[] {
     const option = entry as { items?: unknown; value?: unknown; label?: unknown };
     if (Array.isArray(option.items)) return toSelectOptions(option.items);
     if (option.value !== undefined) {
-      return [{ value: String(option.value), label: String(option.label ?? option.value) }];
+      return [{ value: toText(option.value), label: toText(option.label ?? option.value) }];
     }
     return [];
   });
