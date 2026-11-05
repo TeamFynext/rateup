@@ -37,6 +37,11 @@ export const FEATURE_OPTIONS: readonly {
   description: string;
 }[] = [
   { value: "contacts", label: "Contacts", description: "Contacts and audiences." },
+  {
+    value: "contacts_merge",
+    label: "Merge contacts",
+    description: "Merge two contacts into one. The merged-away contact is deleted.",
+  },
   { value: "teams", label: "Teams", description: "List teams, to route sends." },
   {
     value: "campaigns",

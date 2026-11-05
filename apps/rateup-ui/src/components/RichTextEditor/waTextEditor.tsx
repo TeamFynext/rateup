@@ -18,6 +18,8 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import type { Editor } from "@tiptap/react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
+import { useChannels } from "@/backend/channels/channels.query";
+import { useWhatsappReach } from "@/backend/channels/whatsappReach.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { pressable } from "@/components/common/pressable.ts";
 import type { TiptapNode } from "@/components/RichTextEditor/wa-editor/format.tsx";
@@ -57,6 +59,7 @@ import WaInboxAutomationDisplayModal from "../whatsapp/inbox/chatdisplay/chatdis
 import WaInboxFlowDisplayModal from "../whatsapp/inbox/chatdisplay/chatdisplayFooter/flowDisplayModel/index.tsx";
 import { useMediaStore } from "../whatsapp/inbox/chatdisplay/chatdisplayFooter/index.tsx";
 import WaInboxTemplateDisplayModal from "../whatsapp/inbox/chatdisplay/chatdisplayFooter/templateDisplayModal/index.tsx";
+import { WaReplyNumberSelect } from "../whatsapp/inbox/chatdisplay/chatdisplayFooter/WaReplyNumberSelect.tsx";
 import { usePhoneIdStore } from "../whatsapp/inbox/chatselect/accountSelectorStore.ts";
 import InboxContactsControl from "./InboxContactMessage/index.tsx";
 import InboxLocationControl from "./InboxLocation/index.tsx";
@@ -289,34 +292,59 @@ function WaTextEditor({
   );
   const platform = selectedContact ? contactPlatform : null;
 
+  const { data: channels, isPending: channelsPending } = useChannels();
+  const isWhatsapp = platform === MessagePlatform.WHATSAPP;
+  // Which numbers can reach this customer: one known only by a business-scoped user ID
+  // (BSUID) is reachable from numbers of that business alone.
+  const { data: reach } = useWhatsappReach(selectedContact?.id, inbox && isWhatsapp);
+
   /**
-   * The account this conversation actually runs on — read off the thread, not off
-   * whatever the agent last sent from.
+   * The account this conversation actually runs on — the ticket's own channel, read off
+   * the ticket, not off whatever the agent last sent from.
    *
-   * Two things made replies leave on the wrong number. The account was matched
-   * with `s.phone === sourceIdentifier`, which never holds for WhatsApp (`+965…`
-   * against `965…`), so nothing ever resolved; and the store was only seeded
-   * while it was still empty, so the first thread of a session fixed the number
-   * for every thread after it. A reply sent on a number the customer never wrote
-   * to has no 24h window open, which is what came back as 131047
-   * "Re-engagement message".
+   * A ticket runs on one channel, and replying on another has no 24h window open, which
+   * comes back from Meta as 131047 "Re-engagement message". Tickets opened before tickets
+   * were per channel record none; for those the thread's last message names the number.
+   * That match is on digits (`+965…` against `965…`), and the store is re-seeded per
+   * thread, so the first thread of a session never fixes the number for the rest.
    *
    * Instagram and Messenger address the send by the account id the thread already
    * recorded, so those pass the identifier straight through.
    */
-  const conversationChannelId = useMemo(() => {
+  const threadAccountId = useMemo(() => {
     if (!platform || platform === MessagePlatform.WEBCHAT) return "";
+    const ticketChannel = selectedContact?.conversationChannelId
+      ? channels?.find((channel) => channel.id === selectedContact.conversationChannelId)
+      : undefined;
+    if (ticketChannel?.platform === platform) return ticketChannel.accountId;
     if (platform !== MessagePlatform.WHATSAPP) return channelIdentifier ?? "";
     return findChannelAccount(waSettings, platform, channelIdentifier)?.phoneId ?? "";
-  }, [waSettings, platform, channelIdentifier]);
+  }, [waSettings, channels, platform, channelIdentifier, selectedContact?.conversationChannelId]);
+
+  /**
+   * The thread's number, unless it cannot reach this customer (or the thread names none):
+   * then the first number that can. Left as is while reach loads, or when no number can.
+   */
+  const conversationChannelId = useMemo(() => {
+    if (!isWhatsapp || !reach) return threadAccountId;
+    const own = reach.find((row) => row.phoneId === threadAccountId);
+    if (own?.reachable) return threadAccountId;
+    const connected = new Set(
+      (channels ?? [])
+        .filter((channel) => channel.status !== "DISCONNECTED")
+        .map((channel) => channel.accountId),
+    );
+    const firstReachable = reach.find(
+      (row) => row.reachable && row.phoneId && connected.has(row.phoneId),
+    );
+    return firstReachable?.phoneId ?? threadAccountId;
+  }, [isWhatsapp, reach, threadAccountId, channels]);
 
   /**
    * Re-seeded per conversation, so switching threads switches the number back to
    * that thread's own. An agent's manual pick in the selector survives — it moves
    * the store, not `conversationChannelId`, so this does not fire again until the
-   * conversation itself changes. Left empty when the thread names no channel we
-   * still have connected: the agent picks, rather than the send silently going
-   * out on whichever number the org connected first.
+   * conversation itself changes.
    */
   useEffect(() => {
     updatePhoneId(conversationChannelId);
@@ -332,6 +360,19 @@ function WaTextEditor({
 
   const AccountSelectComponent = () => {
     if (platform === MessagePlatform.WEBCHAT) return null;
+    if (isWhatsapp) {
+      return (
+        <WaReplyNumberSelect
+          value={whatsappSettingsPhoneId}
+          onChange={updatePhoneId}
+          channels={channels}
+          // A failed reach lookup greys nothing out; the API still has the last word.
+          reach={reach}
+          loading={channelsPending}
+          className="min-w-16 flex-1 rounded-[5px] bg-primary/10 font-normal text-primary sm:w-37.5 sm:flex-none"
+        />
+      );
+    }
     return (
       <AccountSelector
         onChange={(phoneId) => {

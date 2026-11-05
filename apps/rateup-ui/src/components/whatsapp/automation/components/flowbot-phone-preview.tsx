@@ -604,7 +604,11 @@ export function FlowbotPreviewPlayground({
             const rawFooter = data?.footer;
             const footer = rawFooter ? parseJsonToReact(rawFooter) : null;
             const ctaButton =
-              node?.type === "ctaUrlNode" ? { label: data?.display_text, url: data?.url } : null;
+              node?.type === "ctaUrlNode"
+                ? { label: data?.display_text, url: data?.url }
+                : node?.type === "continueOnWhatsappNode"
+                  ? { label: data?.buttonLabel, url: undefined }
+                  : null;
 
             return (
               <div key={`${entry.nodeId}-${idx}`} className="space-y-1.5">

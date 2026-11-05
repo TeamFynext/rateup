@@ -33,6 +33,8 @@ export interface ApiErrorData {
   missingFeatures?: string[];
   /** One readable line per problem, when a request failed validation (e.g. a flow pushed to WhatsApp). */
   errors?: string[];
+  /** On a 409 from adding a contact identity: the contact that already holds it. */
+  ownerContactId?: string;
 }
 
 /** Axios-shaped rejection, as much of it as this app actually reads. */

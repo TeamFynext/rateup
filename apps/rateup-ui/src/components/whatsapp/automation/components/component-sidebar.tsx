@@ -1,5 +1,6 @@
 import {
   IconAd,
+  IconBrandWhatsapp,
   IconBuildingStore,
   IconClockPause,
   IconExternalLink,
@@ -21,14 +22,18 @@ import {
 } from "@tabler/icons-react";
 import type React from "react";
 import { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 
 import type { AutomationPlatform } from "@/types/platform.ts";
 import { isComponentSupportedOnPlatform } from "@/types/platform.ts";
 
 import { FlowPanel } from "./flow-panel.tsx";
 
-// Component categories and items
-const categories = [
+// Component categories and items. `translated` labels go through t(); the rest predate it.
+const categories: Array<{
+  name: string;
+  items: Array<{ id: string; label: string; icon: React.ReactNode; translated?: boolean }>;
+}> = [
   {
     name: "Basic Messages",
     items: [
@@ -94,6 +99,12 @@ const categories = [
         label: "Follow Check",
         icon: <IconUserCheck size={16} />,
       },
+      {
+        id: "continueOnWhatsappNode",
+        label: "Continue on WhatsApp",
+        icon: <IconBrandWhatsapp size={16} />,
+        translated: true,
+      },
     ],
   },
   {
@@ -133,45 +144,57 @@ const categories = [
 
 export default function ComponentSidebar({ platform }: Readonly<{ platform: string }>) {
   const selectedPlatform = platform as AutomationPlatform;
+  const { t } = useTranslation();
 
   // Function to get default node data based on node type. The visible label is
   // filled in on drop from the shared node-config, so nodes get friendly names.
-  const getDefaultNodeData = useCallback((nodeId: string): Record<string, unknown> => {
-    const baseData = { type: nodeId };
+  const getDefaultNodeData = useCallback(
+    (nodeId: string): Record<string, unknown> => {
+      const baseData = { type: nodeId };
 
-    switch (nodeId) {
-      case "instagramGenericTemplateNode":
-        return {
-          ...baseData,
-          elements: [
-            {
-              title: "",
-              subtitle: "",
-              image_url: "",
-              buttons: [],
-            },
-          ],
-        };
-      case "instagramQuickReplyNode":
-        return {
-          ...baseData,
-          text: "",
-          quick_replies: [],
-        };
-      case "instagramProductTemplateNode":
-        return {
-          ...baseData,
-          elements: [],
-        };
-      case "instagramIceBreakerNode":
-        return {
-          ...baseData,
-          iceBreakers: [],
-        };
-      default:
-        return baseData;
-    }
-  }, []);
+      switch (nodeId) {
+        case "instagramGenericTemplateNode":
+          return {
+            ...baseData,
+            elements: [
+              {
+                title: "",
+                subtitle: "",
+                image_url: "",
+                buttons: [],
+              },
+            ],
+          };
+        case "instagramQuickReplyNode":
+          return {
+            ...baseData,
+            text: "",
+            quick_replies: [],
+          };
+        case "instagramProductTemplateNode":
+          return {
+            ...baseData,
+            elements: [],
+          };
+        case "instagramIceBreakerNode":
+          return {
+            ...baseData,
+            iceBreakers: [],
+          };
+        case "continueOnWhatsappNode":
+          return {
+            ...baseData,
+            channelId: "",
+            body: t("Tap below to continue this chat on WhatsApp."),
+            buttonLabel: t("Open WhatsApp"),
+            prefill: t("Hi! I'd like to continue our chat here."),
+          };
+        default:
+          return baseData;
+      }
+    },
+    [t],
+  );
 
   // Function to handle drag start
   const onDragStart = useCallback(
@@ -219,7 +242,9 @@ export default function ComponentSidebar({ platform }: Readonly<{ platform: stri
                 <span className="flex size-8 shrink-0 items-center justify-center text-primary">
                   {item.icon}
                 </span>
-                <span className="text-sm font-medium">{item.label}</span>
+                <span className="text-sm font-medium">
+                  {item.translated ? t(item.label) : item.label}
+                </span>
               </div>
             ))}
           </div>

@@ -96,6 +96,7 @@ import {
 import { useDeleteTicket } from "../useDeleteTicket.ts";
 import { generateInternalMessageId } from "../util.tsx";
 import { AdReferralPanel } from "./AdReferralPanel.tsx";
+import { ContactIdentitySection } from "./chatdisplayBody/components/contact/ContactIdentitySection.tsx";
 import type { OptimisticMessage } from "./chatdisplayFooter/index.tsx";
 import { deriveStatus, STATUS_PILL_BASE } from "./chatdisplayHeader/ticket.ts";
 
@@ -872,6 +873,9 @@ export default function TicketPanel({
           </dl>
         )}
       </Section>
+
+      {/* ---- Identities, duplicates and merge history (contact-level) ---- */}
+      {contact?.id && <ContactIdentitySection contactId={contact.id} />}
 
       {/* ---- Ticket Info ---- */}
       <Section label={t("Ticket info")}>

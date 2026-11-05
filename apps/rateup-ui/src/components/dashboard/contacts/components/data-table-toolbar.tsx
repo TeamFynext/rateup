@@ -5,6 +5,7 @@ import {
   IconBrandInstagram,
   IconBrandWhatsapp,
   IconDownload,
+  IconGitMerge,
   IconUsersGroup,
   IconGlobe,
   IconPlus,
@@ -33,6 +34,8 @@ import CreateOrEditContactModal from "@/components/Contacts/CreatOrEditContactMo
 import ImportContactsDialog from "@/components/Contacts/ImportContactsDialog.tsx";
 import LabelContactModal from "@/components/Contacts/LabelContactModal.tsx";
 import { LifecycleSelector } from "@/components/Contacts/LifecycleSelector.tsx";
+import { MergeContactsDialog } from "@/components/Contacts/merge/MergeContactsDialog.tsx";
+import { useOpenKeptContact } from "@/components/Contacts/merge/useOpenKeptContact.ts";
 import { StageSelector, usePipelineStages } from "@/components/pipeline/shared/StageSelector.tsx";
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { DataTableViewOptions } from "@/components/Table/data-table-view-option.tsx";
@@ -55,6 +58,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useTeamFeatures } from "@/context/TeamFeaturesContext.tsx";
+import { useCan } from "@/hooks/usePermission.ts";
 import { TeamFeature } from "@/types/enums.ts";
 
 import { useContactTableStore } from "../store/contact-table-store.ts";
@@ -174,6 +178,12 @@ export function DataTableToolbar({ table }: Readonly<DataTableToolbarProps>) {
   const [openLifecycleContactModal, setOpenLifecycleContactModal] = useState(false);
   const [openStageContactModal, setOpenStageContactModal] = useState(false);
   const [openImportModal, setOpenImportModal] = useState(false);
+  const [openMergeModal, setOpenMergeModal] = useState(false);
+  const canMerge = useCan("contacts.merge");
+  const openKeptContact = useOpenKeptContact();
+  const selectedIds = Object.keys(table.state.rowSelection);
+  const mergePair =
+    selectedIds.length === 2 ? ([selectedIds[0], selectedIds[1]] as const) : undefined;
   // The bulk action follows whichever vocabulary the org actually has. Pipeline
   // orgs assign a stage; the rest keep the lifecycle action until the pipeline
   // reaches them, so nobody loses the bulk write in the meantime.
@@ -321,6 +331,16 @@ export function DataTableToolbar({ table }: Readonly<DataTableToolbarProps>) {
               <IconActivity />
               <span>{hasPipeline ? t("Update lead stage") : t("Update Lifecycle Stage")}</span>
             </Button>
+            {canMerge && mergePair && (
+              <Button
+                variant="outline"
+                className="hover:text-primary"
+                onClick={() => setOpenMergeModal(true)}
+              >
+                <IconGitMerge />
+                <span>{t("Merge")}</span>
+              </Button>
+            )}
             <Button
               variant="outline"
               className="hover:text-destructive"
@@ -332,6 +352,17 @@ export function DataTableToolbar({ table }: Readonly<DataTableToolbarProps>) {
           </div>
         )}
       </div>
+      {openMergeModal && mergePair && (
+        <MergeContactsDialog
+          open
+          onOpenChange={setOpenMergeModal}
+          contactIds={mergePair}
+          onMerged={({ targetId }) => {
+            resetRowSelection();
+            void openKeptContact(targetId);
+          }}
+        />
+      )}
       <CreateOrEditContactModal
         opened={isOpenedAddContactModal}
         setOpened={setIsOpenedAddContactModal}

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useContactLabels, useCustomFields } from "@/backend/campaign/contacts/contacts.query";
-import { useChannels } from "@/backend/channels/channels.query";
+import { useChannels, useWebchatInUse } from "@/backend/channels/channels.query";
 import { useLifeCyclesQuery } from "@/backend/lifecycle/lifecycle.query";
 import { useLoyaltyFeedback } from "@/backend/loyalty/feedback.query";
 import { useLoyaltyOnboardingState } from "@/backend/loyalty/onboarding.query";
@@ -26,7 +26,7 @@ import { programStateOf } from "@/components/dashboard/loyalty/program/programSt
 import type { MetaAgentNavInput } from "@/components/dashboard/metaAgent/metaAgent.nav.ts";
 import { useAgentSetup } from "@/components/dashboard/metaAgent/setup/useAgentSetup.ts";
 import type { SetupNavInput } from "@/components/dashboard/setup/setup.nav.ts";
-import { getChannelOptions } from "@/components/input/channelOptions.ts";
+import { getChannelOptions, webchatChannelOption } from "@/components/input/channelOptions.ts";
 import type { PipelineNavInput } from "@/components/pipeline/pipeline.nav.tsx";
 import { findLeadsPipeline } from "@/components/pipeline/pipelineTypes.ts";
 import { useUser } from "@/context/UserContext.tsx";
@@ -135,9 +135,14 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
   // Only the inbox's Channel filter needs these, and the query is shared and
   // cached forever — so it costs nothing on the pages that already fetched it.
   const { data: connectedChannels } = useChannels(Boolean(isInbox));
+  // The website chat widget is no connected account, so it joins the list on its own.
+  const { data: webchatInUse } = useWebchatInUse(Boolean(isInbox));
   const channels = useMemo(
-    () => getChannelOptions(connectedChannels, { platform: "all", usePhoneNumber: true }),
-    [connectedChannels],
+    () => [
+      ...getChannelOptions(connectedChannels, { platform: "all", usePhoneNumber: true }),
+      ...(webchatInUse ? [webchatChannelOption(t("Webchat"))] : []),
+    ],
+    [connectedChannels, webchatInUse, t],
   );
 
   // Same shape as the inbox counts above: the sidebar is mounted app-wide, so

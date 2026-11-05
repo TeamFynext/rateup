@@ -40,6 +40,36 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-11-05-continue-on-whatsapp",
+    title: "Continue on WhatsApp step in journeys",
+    summary:
+      "Instagram and Messenger journeys can send a button that moves the chat to your WhatsApp number. When the customer sends that message, their WhatsApp and Instagram or Messenger contacts become one.",
+    publishedAt: "2026-11-05",
+    kinds: ["new"],
+    area: "Journeys",
+    link: { to: "/dashboard/automation/journeys", label: "Open Journeys" },
+  },
+  {
+    id: "2026-11-05-merge-contacts",
+    title: "Merge duplicate contacts",
+    summary:
+      "When one customer shows up as two contacts, merge them to keep a single history. Possible duplicates are listed under Contacts for you to review.",
+    publishedAt: "2026-11-05",
+    kinds: ["new"],
+    area: "Contacts",
+    link: { to: "/dashboard/contacts/duplicates", label: "Review duplicates" },
+  },
+  {
+    id: "2026-11-05-multiple-businesses",
+    title: "WhatsApp numbers from several businesses",
+    summary:
+      "Connect numbers from more than one Meta business, grouped by business in Channels. Replies now go out on the number the ticket is on, and numbers that can't reach a customer are greyed out.",
+    publishedAt: "2026-11-05",
+    kinds: ["new", "improvement"],
+    area: "Channels",
+    link: { to: "/dashboard/settings/channels/whatsapp", label: "Open Channels" },
+  },
+  {
     id: "2026-11-04-instagram-inbox",
     title: "Reply on Instagram for up to 7 days",
     summary:

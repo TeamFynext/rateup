@@ -131,6 +131,11 @@ export type ContactsWithLastMessage = ContactsData & {
 
   // ---- Ticket identity (from Conversation) ----
   conversationId?: string | null;
+  /**
+   * The channel registry row the ticket runs on — what a reply goes out on. Null for
+   * tickets opened before tickets were per channel.
+   */
+  conversationChannelId?: string | null;
   ticketNumber?: number | null;
   ticketSubject?: string | null;
   ticketDescription?: string | null;

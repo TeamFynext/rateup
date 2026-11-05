@@ -13,10 +13,23 @@ export interface ContactCustomFieldValue {
   value: string;
 }
 
+/** One phone or email row of a saved contact; `id` is its identity, absent for a new one. */
+export interface IdentityFieldValue {
+  id?: string;
+  value: string;
+}
+
 export interface ContactFormValues {
   name: string;
   phone: string;
   email: string;
+  /**
+   * Editing a saved contact: every phone and email it is known by, main one first. The single
+   * `phone`/`email` fields are used only when creating.
+   */
+  multiIdentity: boolean;
+  phones: IdentityFieldValue[];
+  emails: IdentityFieldValue[];
   address: string;
   dob: Date | string | null;
   source: string;
@@ -39,6 +52,9 @@ export const contactFormDefaults: ContactFormValues = {
   name: "",
   phone: "",
   email: "",
+  multiIdentity: false,
+  phones: [],
+  emails: [],
   address: "",
   dob: null,
   source: importMethod.MANUAL,
@@ -79,6 +95,9 @@ export interface ContactInitialValues {
   stageId?: string | null;
   notes?: string | null;
   external_id?: string | null;
+  /** Instagram/Messenger ids: older contacts carry one of them in `phone` as well. */
+  igsId?: string | null;
+  psid?: string | null;
   contactType?: string[];
   updateExisting?: boolean;
   /** Saved custom field values as the API returns them, keyed by the definition's id. */
@@ -88,6 +107,19 @@ export interface ContactInitialValues {
 /** Drop the blanks a partially-joined relation leaves behind (`label?.id` is optional). */
 const toIdList = (values?: (string | undefined | null)[]): string[] =>
   values?.filter((value): value is string => !!value) ?? [];
+
+/**
+ * The phone number a saved contact really has. Older Instagram/Messenger contacts carry their
+ * platform id in `phone`, which is not a number anyone can call; it is never shown as one.
+ * E.164 numbers have at most 15 digits, and those ids have 16 or more.
+ */
+export const realPhone = (
+  contact?: Pick<ContactInitialValues, "phone" | "igsId" | "psid"> | null,
+): string | null => {
+  const phone = contact?.phone?.trim();
+  if (!phone || phone === contact?.igsId || phone === contact?.psid) return null;
+  return /^\+?\d{7,15}$/.test(phone) ? phone : null;
+};
 
 /** The form stores phones in E.164; the API keeps them without the leading `+`. */
 const toPhoneValue = (phone?: string | null): string => {
@@ -129,7 +161,7 @@ export const toFormValues = (
   return {
     ...contactFormDefaults,
     name: initialValues.name ?? "",
-    phone: toPhoneValue(initialValues.phone),
+    phone: toPhoneValue(realPhone(initialValues)),
     email: initialValues.email ?? "",
     address: initialValues.address ?? "",
     dob: initialValues.dob ?? null,
@@ -184,6 +216,9 @@ export const buildContactSchema = (t: TFunction, customFields: CustomFieldData[]
       name: z.string(),
       phone: z.string(),
       email: z.string(),
+      multiIdentity: z.boolean(),
+      phones: z.array(z.object({ id: z.string().optional(), value: z.string() })),
+      emails: z.array(z.object({ id: z.string().optional(), value: z.string() })),
       address: z.string(),
       dob: z.custom<Date | string | null>(),
       source: z.string(),
@@ -211,7 +246,15 @@ export const buildContactSchema = (t: TFunction, customFields: CustomFieldData[]
         if (!values.name?.length) {
           ctx.addIssue({ code: "custom", path: ["name"], message: t("Name cannot be blank") });
         }
-        if (!values.phone) {
+        if (values.multiIdentity) {
+          if (!values.phones.some((entry) => entry.value)) {
+            ctx.addIssue({
+              code: "custom",
+              path: ["phones", 0, "value"],
+              message: t("Phone Number cannot be blank"),
+            });
+          }
+        } else if (!values.phone) {
           ctx.addIssue({
             code: "custom",
             path: ["phone"],
@@ -222,7 +265,26 @@ export const buildContactSchema = (t: TFunction, customFields: CustomFieldData[]
         }
       }
 
-      if (values.email && !EMAIL_PATTERN.test(values.email)) {
+      if (values.multiIdentity) {
+        values.phones.forEach((entry, index) => {
+          if (entry.value && !isValidPhoneNumber(entry.value)) {
+            ctx.addIssue({
+              code: "custom",
+              path: ["phones", index, "value"],
+              message: t("Invalid phone number"),
+            });
+          }
+        });
+        values.emails.forEach((entry, index) => {
+          if (entry.value && !EMAIL_PATTERN.test(entry.value)) {
+            ctx.addIssue({
+              code: "custom",
+              path: ["emails", index, "value"],
+              message: t("Invalid email format."),
+            });
+          }
+        });
+      } else if (values.email && !EMAIL_PATTERN.test(values.email)) {
         ctx.addIssue({ code: "custom", path: ["email"], message: t("Invalid email format.") });
       }
 

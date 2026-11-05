@@ -1,4 +1,10 @@
-import { IconBrandWhatsapp, IconLogout, IconPencilMinus, IconPlus } from "@tabler/icons-react";
+import {
+  IconBrandWhatsapp,
+  IconBuildingStore,
+  IconLogout,
+  IconPencilMinus,
+  IconPlus,
+} from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -22,6 +28,7 @@ import { Empty, EmptyContent, EmptyDescription, EmptyHeader } from "@/components
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useDisclosure } from "@/hooks/useDisclosure";
 import { WaConfigType } from "@/types/enums.ts";
+import { groupByBusiness } from "@/utils/whatsapp/businesses.ts";
 
 import { WaSettingEditModal } from "./wa-setting-edit-modal.tsx";
 import { WaManualCredentialsForm } from "./whatsapp-manual-configuration.tsx";
@@ -109,63 +116,98 @@ export function MetaLoginStatus({ waSettings }: Readonly<{ waSettings?: WaSettin
     );
   }
 
+  // A number belongs to a Meta business portfolio; an org can connect several, and a
+  // customer known only by their business-scoped user ID is reachable from one alone.
+  const businesses = groupByBusiness(waSettings, (setting) => ({
+    id: setting.businessPortfolioId,
+    name: setting.businessPortfolioName,
+  }));
+
   return (
     <div className="mt-4 flex flex-col gap-3">
       <div className="flex flex-wrap justify-end gap-2">
         {addButtons}
-        <ContinueWithFacebookButton />
+        <ContinueWithFacebookButton label={translations("Connect another business")} />
+        <ContinueWithFacebookButton label={translations("Add number")} />
       </div>
+      <p className="text-xs text-muted-foreground">
+        {translations(
+          "Connecting through Facebook lets you pick one of your businesses or create a new one. A customer known only by a business-scoped user ID (BSUID) can be messaged only from numbers of the business they wrote to.",
+        )}
+      </p>
 
-      {waSettings.map((setting) => (
-        <SetupRowCard
-          key={setting.id || setting.phoneId}
-          icon={IconBrandWhatsapp}
-          tint="green"
-          done
-          title={setting.phoneDisplayName || setting.phone || translations("Unnamed account")}
-          description={setting.phone}
-          badges={
-            <Badge variant="secondary">
-              {setting.type === WaConfigType.Manual
-                ? translations("Manual")
-                : translations("Automated")}
-            </Badge>
-          }
-          detail={
-            <span className="flex flex-wrap gap-x-8 gap-y-2 pt-1">
-              <IdField label={translations("Business ID")} value={setting.wabaId} />
-              <IdField label={translations("Phone ID")} value={setting.phoneId} />
-              <IdField label={translations("App ID")} value={setting.appId} />
+      {businesses.map((business) => (
+        <section
+          key={business.id ?? business.name ?? "unknown"}
+          className="flex flex-col gap-2"
+          aria-label={business.name ?? translations("Business not identified yet")}
+        >
+          <h3 className="flex items-center gap-1.5 pt-2 text-sm font-semibold">
+            <IconBuildingStore size={16} className="text-muted-foreground" />
+            {business.name ?? translations("Business not identified yet")}
+            <span className="font-normal text-muted-foreground">
+              ·{" "}
+              {translations("{count, plural, one {# number} other {# numbers}}", {
+                count: business.items.length,
+              })}
             </span>
-          }
-          action={
-            <Button
-              variant="secondary"
-              className="h-10 w-full"
-              onClick={() => {
-                setSelectedWaSettings(setting);
-                openEdit();
-              }}
-            >
-              <IconPencilMinus size={16} />
-              {translations("Edit channel")}
-            </Button>
-          }
-          actionFooter={
-            <button
-              type="button"
-              onClick={() =>
-                setting.type === WaConfigType.Manual
-                  ? handleRemoveManual(setting.phoneId)
-                  : handleDeRegister(setting.phoneId)
+          </h3>
+          {business.items.map((setting) => (
+            <SetupRowCard
+              key={setting.id || setting.phoneId}
+              icon={IconBrandWhatsapp}
+              tint="green"
+              done
+              title={setting.phoneDisplayName || setting.phone || translations("Unnamed account")}
+              description={setting.phone}
+              badges={
+                <Badge variant="secondary">
+                  {setting.type === WaConfigType.Manual
+                    ? translations("Manual")
+                    : translations("Automated")}
+                </Badge>
               }
-              className="flex cursor-pointer items-center gap-1 text-xs text-destructive underline-offset-4 hover:underline"
-            >
-              <IconLogout size={13} />
-              {translations("Disconnect")}
-            </button>
-          }
-        />
+              detail={
+                <span className="flex flex-wrap gap-x-8 gap-y-2 pt-1">
+                  <IdField
+                    label={translations("Business portfolio ID")}
+                    value={setting.businessPortfolioId}
+                  />
+                  <IdField label={translations("WhatsApp account ID")} value={setting.wabaId} />
+                  <IdField label={translations("Phone ID")} value={setting.phoneId} />
+                  <IdField label={translations("App ID")} value={setting.appId} />
+                </span>
+              }
+              action={
+                <Button
+                  variant="secondary"
+                  className="h-10 w-full"
+                  onClick={() => {
+                    setSelectedWaSettings(setting);
+                    openEdit();
+                  }}
+                >
+                  <IconPencilMinus size={16} />
+                  {translations("Edit channel")}
+                </Button>
+              }
+              actionFooter={
+                <button
+                  type="button"
+                  onClick={() =>
+                    setting.type === WaConfigType.Manual
+                      ? handleRemoveManual(setting.phoneId)
+                      : handleDeRegister(setting.phoneId)
+                  }
+                  className="flex cursor-pointer items-center gap-1 text-xs text-destructive underline-offset-4 hover:underline"
+                >
+                  <IconLogout size={13} />
+                  {translations("Disconnect")}
+                </button>
+              }
+            />
+          ))}
+        </section>
       ))}
 
       <WaSettingEditModal opened={openedEdit} close={closeEdit} waSetting={selectedWaSettings} />

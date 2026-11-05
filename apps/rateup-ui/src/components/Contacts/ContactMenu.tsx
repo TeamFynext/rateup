@@ -1,4 +1,11 @@
-import { IconDotsVertical, IconEdit, IconEye, IconInbox, IconTrash } from "@tabler/icons-react";
+import {
+  IconDotsVertical,
+  IconEdit,
+  IconEye,
+  IconGitMerge,
+  IconInbox,
+  IconTrash,
+} from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -6,6 +13,7 @@ import { useTranslation } from "react-i18next";
 import { useContactDeleteMutation } from "@/backend/campaign/contacts/contacts.query";
 import { useContactTableStore } from "@/components/dashboard/contacts/store/contact-table-store.ts";
 import { useConfirm } from "@/context/confirm-provider";
+import { useCan } from "@/hooks/usePermission.ts";
 
 import { Button } from "../ui/button.tsx";
 import {
@@ -17,6 +25,8 @@ import {
 } from "../ui/dropdown-menu.tsx";
 import { contactRowToInitialValues } from "./contact-form-schema.ts";
 import CreateOrEditContactModal from "./CreatOrEditContactModal.tsx";
+import { MergeContactsDialog } from "./merge/MergeContactsDialog.tsx";
+import { useOpenKeptContact } from "./merge/useOpenKeptContact.ts";
 
 const ContactMenu = ({ contact, groupId }: { contact: ContactsData; groupId: string }) => {
   const { t: translations } = useTranslation();
@@ -24,6 +34,9 @@ const ContactMenu = ({ contact, groupId }: { contact: ContactsData; groupId: str
   // Opening the details dialog is publishing the row — `ContactDetailHost` renders it.
   const setSelectedContact = useContactTableStore((state) => state.setSelectedContact);
   const [openedEditModal, setOpenedEditModal] = useState(false);
+  const [openedMergeModal, setOpenedMergeModal] = useState(false);
+  const canMerge = useCan("contacts.merge");
+  const openKeptContact = useOpenKeptContact();
   const openDeleteModal = async () => {
     const ok = await confirm({
       title: translations("Delete contact"),
@@ -72,6 +85,12 @@ const ContactMenu = ({ contact, groupId }: { contact: ContactsData; groupId: str
           <IconInbox className="w-4 h-4 mr-2" />
           {translations("Open in Inbox")}
         </DropdownMenuItem>
+        {canMerge && (
+          <DropdownMenuItem onClick={() => setOpenedMergeModal(true)}>
+            <IconGitMerge className="w-4 h-4 mr-2" />
+            {translations("Merge with…")}
+          </DropdownMenuItem>
+        )}
 
         <DropdownMenuSeparator />
         <DropdownMenuItem
@@ -88,6 +107,14 @@ const ContactMenu = ({ contact, groupId }: { contact: ContactsData; groupId: str
         setOpened={setOpenedEditModal}
         initialValues={initialValues}
       />
+      {openedMergeModal && (
+        <MergeContactsDialog
+          open
+          onOpenChange={setOpenedMergeModal}
+          contactId={contact.id}
+          onMerged={({ targetId }) => void openKeptContact(targetId)}
+        />
+      )}
     </DropdownMenu>
   );
 };

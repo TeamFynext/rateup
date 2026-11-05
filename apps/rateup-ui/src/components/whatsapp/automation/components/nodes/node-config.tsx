@@ -1,5 +1,6 @@
 import {
   IconAd,
+  IconBrandWhatsapp,
   IconAddressBook,
   IconBuildingStore,
   IconClockPause,
@@ -74,6 +75,7 @@ export const NODE_VISUALS: Record<string, NodeVisual> = {
   instagramProductTemplateNode: { color: "#c0e250", icon: <IconBuildingStore size={ICON_SIZE} /> },
   instagramIceBreakerNode: { color: "#6e92ed", icon: <IconAddressBook size={ICON_SIZE} /> },
   instagramFollowCheckNode: { color: "#d6336c", icon: <IconUserCheck size={ICON_SIZE} /> },
+  continueOnWhatsappNode: { color: "#25a35a", icon: <IconBrandWhatsapp size={ICON_SIZE} /> },
 };
 
 const FALLBACK: NodeVisual = { color: "#64748b", icon: <IconSquareRounded size={ICON_SIZE} /> };
@@ -119,6 +121,7 @@ export const NODE_LABELS: Record<string, string> = {
   instagramProductTemplateNode: "Product Template",
   instagramIceBreakerNode: "Ice Breakers",
   instagramFollowCheckNode: "Follow Check",
+  continueOnWhatsappNode: "Continue on WhatsApp",
 };
 
 export function getNodeLabel(type?: string): string {

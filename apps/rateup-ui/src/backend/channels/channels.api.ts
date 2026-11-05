@@ -20,6 +20,12 @@ export interface Channel {
   /** Handle, where the platform has one (Instagram). */
   username: string | null;
   status: string;
+  /**
+   * WhatsApp only: the Meta business portfolio that owns the number. A customer known only
+   * by a business-scoped user ID (BSUID) can be messaged from that business's numbers alone.
+   * Both are null until the portfolio has been read from Meta.
+   */
+  whatsapp?: { businessPortfolioId: string | null; businessPortfolioName: string | null } | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -27,5 +33,17 @@ export interface Channel {
 /** Every channel the viewer's teams reach, of every platform. */
 export const getChannels = async (): Promise<Channel[]> => {
   const res = await axiosClient.get<Channel[]>("/channels");
+  return res.data;
+};
+
+/**
+ * What the inbox's channel filter stores for the website chat widget. Webchat has no
+ * connected-channel row, so it is a fixed value rather than an account id.
+ */
+export const WEBCHAT_FILTER = "webchat";
+
+/** Whether the inbox should offer Webchat as a channel: the org has had webchat visitors. */
+export const getWebchatStatus = async (): Promise<{ active: boolean }> => {
+  const res = await axiosClient.get<{ active: boolean }>("/channels/webchat");
   return res.data;
 };

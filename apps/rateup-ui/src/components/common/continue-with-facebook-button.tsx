@@ -22,12 +22,15 @@ export function ContinueWithFacebookButton({
   className,
   buttonType,
   size,
+  label,
 }: Readonly<{
   className?: string;
   /** "login_with" reads "Log in with Facebook"; both wordings are on brand spec. */
   buttonType?: FacebookBrandButtonProps["buttonType"];
   /** Mirrors the brand button's size, for hosts with a narrow action column. */
   size?: FacebookBrandButtonProps["size"];
+  /** Replaces the button's wording, e.g. "Connect another business" — the flow is the same. */
+  label?: string;
 }> = {}) {
   const [opened, { open, close }] = useDisclosure(false);
   const { t: translations } = useTranslation();
@@ -91,7 +94,10 @@ export function ContinueWithFacebookButton({
         buttonType={buttonType}
         size={size}
         className={className}
-        label={buttonType === "login_with" ? undefined : translations("Continue with Facebook")}
+        label={
+          label ??
+          (buttonType === "login_with" ? undefined : translations("Continue with Facebook"))
+        }
       />
       <Dialog open={opened} onOpenChange={(next) => (next ? open() : close())}>
         <DialogContent>
