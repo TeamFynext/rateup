@@ -17,6 +17,7 @@ import {
   resolveChannel,
 } from "@/utils/chatbox_utils";
 import { useAuth } from "@/context/AuthContext";
+import { contactMessagingWindow } from "@/utils/messagingWindow";
 import { useCallback, useEffect, useState } from "react";
 import { FlashList } from "@shopify/flash-list";
 import { WaMessageClosedStatus } from "@/constants/constants";
@@ -216,13 +217,15 @@ export default function Inbox({
       // not "Aisha: You reacted 👍" — the receive wording is the neutral one.
       lastMessageSender ? "receive" : item?.lastMessage?.messageBody?.exchangeProcess,
     );
-    const sessionExpiry = dayjs(item.lastReceivedMessageTimeStamp).add(24, "hour");
-    const now = dayjs();
-    const diffInMinutes = sessionExpiry.diff(now, "minute");
-    const isSessionActive = diffInMinutes > 0;
     // Not `item.lastMessage` directly: a private note there names the channel
     // "internal". See `getContactChannelSource`.
     const { platform, identifier } = getContactChannelSource(item);
+    const sessionExpiry = dayjs(item.lastReceivedMessageTimeStamp).add(24, "hour");
+    const now = dayjs();
+    const diffInMinutes = sessionExpiry.diff(now, "minute");
+    // Instagram/Messenger: a person may reply for 7 days (Meta's Human Agent tag).
+    const metaWindow = contactMessagingWindow(item, platform);
+    const isSessionActive = metaWindow ? metaWindow.state !== "closed" : diffInMinutes > 0;
     const channel = resolveChannel(waSettings, platform, identifier);
     const name = item.name || item?.whatsappUserName || item.igsId || item.phone;
 

@@ -119,13 +119,21 @@ const SENDABLE: Partial<Record<AttachmentKind, { types: string[]; label: string 
   },
 };
 
+/** Instagram and Messenger send a document as a file attachment, which they take as a PDF. */
+const SEND_API_DOCUMENT = { types: ["application/pdf"], label: "PDF" };
+
 /** `null` when the API will take the file's type; otherwise why not, ready for a toast. */
-export function attachmentTypeError(file: {
-  name: string;
-  mimeType: string;
-  kind: AttachmentKind;
-}) {
-  const rule = SENDABLE[file.kind];
+export function attachmentTypeError(
+  file: {
+    name: string;
+    mimeType: string;
+    kind: AttachmentKind;
+  },
+  platform?: string,
+) {
+  const sendApi =
+    !!platform && (platform === MessagePlatform.INSTAGRAM || platform === MessagePlatform.FACEBOOK);
+  const rule = file.kind === "document" && sendApi ? SEND_API_DOCUMENT : SENDABLE[file.kind];
   if (!rule || rule.types.includes(file.mimeType)) return null;
   return `"${file.name}" can't be sent. ${capitalize(file.kind)} files must be ${rule.label}.`;
 }

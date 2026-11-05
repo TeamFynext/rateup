@@ -6,10 +6,11 @@ import {
   Pressable,
   FlatList,
   useColorScheme,
+  Alert,
 } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import React, { useRef, useCallback, useEffect } from "react";
-import { parseWaMessage_ } from "@/api/inbox/messages/utils";
+import { getReplyToMid, parseWaMessage_ } from "@/api/inbox/messages/utils";
 import MessageBubble from "./chatBody/MessageBubble";
 import DateSeparator from "./chatBody/DateSeperator";
 import dayjs from "dayjs";
@@ -21,9 +22,11 @@ import { ChevronDown } from "lucide-react-native";
 import { useWsData } from "@/context/UserContext";
 import { Colors } from "@/constants/colors";
 import { useMessagesStore } from "@/store/inboxStore";
+import { useSelectedContactStore } from "@/utils/store";
 import { getMessagesFromIDB } from "@/utils/sqlite";
 import { Skeleton } from "@/components/common/Skeleton";
 import { logger } from "@/utils/logger";
+import { useReplyTargetStore } from "@/store/replyTargetStore";
 
 const { height: screenHeight } = Dimensions.get("window");
 
@@ -55,6 +58,12 @@ const ChatBody = ({ id }: { id: string }) => {
 
   // Zustand Store Integration
   const key = `${id}_all`;
+  // Names the customer on a quote of one of their messages.
+  const contactName = useSelectedContactStore((state) =>
+    state.selectedContact?.id === id
+      ? state.selectedContact?.name || state.selectedContact?.whatsappUserName || null
+      : null,
+  );
   const storeMessages = useMessagesStore((state) => state.messagesByKey.get(key)?.messages) ?? [];
   const mergeMessages = useMessagesStore((state) => state.mergeMessages);
 
@@ -161,8 +170,53 @@ const ChatBody = ({ id }: { id: string }) => {
       const nextDate = nextItem ? dayjs(nextItem.createdAt).format("YYYY-MM-DD") : null;
 
       const shouldShowDate = currentDate !== nextDate;
+      // An Instagram inline reply quotes another message of the thread by its Meta id.
+      const replyToMid = item.deletedAt ? undefined : getReplyToMid(item);
+      const quotedItem = replyToMid
+        ? messageList.find((m: { messageId?: string }) => m.messageId === replyToMid)
+        : undefined;
+      const quote = replyToMid
+        ? {
+            message: quotedItem,
+            author: quotedItem
+              ? quotedItem.messageBody?.exchangeProcess === "send"
+                ? quotedItem.sender?.name || "Automation"
+                : contactName
+              : null,
+          }
+        : undefined;
+      // Instagram only: a long press offers "Reply", which quotes this message in the
+      // next send (`replyToMid`). Notes and system events have nothing to quote.
+      const canQuote =
+        item.sourcePlatform === "INSTAGRAM" &&
+        !!item.messageId &&
+        !item.deletedAt &&
+        (item.messageBody?.exchangeProcess === "send" ||
+          item.messageBody?.exchangeProcess === "receive");
+      const offerReply = () =>
+        Alert.alert("Message", undefined, [
+          {
+            text: "Reply",
+            onPress: () =>
+              useReplyTargetStore.getState().setTarget({
+                contactId: id,
+                mid: item.messageId,
+                preview:
+                  typeof parsed.messageContent === "string" && parsed.messageContent
+                    ? parsed.messageContent.slice(0, 120)
+                    : parsed.messageType || "Message",
+                author:
+                  item.messageBody?.exchangeProcess === "send"
+                    ? item.sender?.name || "Automation"
+                    : contactName,
+              }),
+          },
+          { text: "Cancel", style: "cancel" },
+        ]);
       return (
-        <View
+        <Pressable
+          onLongPress={canQuote ? offerReply : undefined}
+          delayLongPress={350}
           style={{
             backgroundColor: threadBg,
             paddingHorizontal: 8,
@@ -187,6 +241,8 @@ const ChatBody = ({ id }: { id: string }) => {
             template={parsed.template}
             templateComponentParams={item.templateComponentParams}
             stats={item.stats}
+            quote={quote}
+            editedAt={item.editedAt}
             note={
               item.messageBody?.exchangeProcess === "privateNote"
                 ? {
@@ -197,10 +253,10 @@ const ChatBody = ({ id }: { id: string }) => {
                 : undefined
             }
           />
-        </View>
+        </Pressable>
       );
     },
-    [messageList, threadBg],
+    [messageList, threadBg, contactName, id],
   );
 
   const dynamicPaddingBottom = screenHeight > 800 ? 8 : 10;

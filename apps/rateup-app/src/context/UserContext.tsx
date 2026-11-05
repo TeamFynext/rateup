@@ -12,6 +12,7 @@ import { WaMessageAssignStatus } from "../api/inbox/types";
 import { queryClient } from "../config/queryClient";
 import { receiveCallEvent } from "@/store/callStore";
 import { logger } from "@/utils/logger";
+import { saveMessagesToIDB } from "@/utils/sqlite";
 import { API_URL } from "@/config/env";
 
 /**
@@ -90,6 +91,44 @@ const applyMessageStatusUpdate = (
   useContactsStore.getState().updateContactById(contactId, (c) => ({
     ...c,
     lastMessage: { ...c.lastMessage, stats: mergedStats },
+  }));
+};
+
+/**
+ * The customer edited an Instagram message: the frame carries the whole updated
+ * row, which replaces every cached copy (one per thread key the contact owns) and
+ * the inbox row's last-message snippet when it is that message.
+ */
+const applyMessageEdited = (update: orgWsMessage["message_edited"]) => {
+  const row = update?.message;
+  if (!update?.messageId || !row?.messageBody) return;
+  const { contactId, messageId } = update;
+  const patch = { messageBody: row.messageBody, editedAt: update.editedAt ?? row.editedAt };
+
+  const store = useMessagesStore.getState();
+  const m = new Map(store.messagesByKey);
+  const changed: { key: string; message: typeof row }[] = [];
+  for (const [key, entry] of m) {
+    if (contactId && !key.startsWith(`${contactId}_`)) continue;
+    const idx = entry.messages.findIndex((msg) => (msg.messageId ?? msg.id) === messageId);
+    if (idx === -1) continue;
+    const updated = { ...entry.messages[idx], ...patch };
+    const messages = [...entry.messages];
+    messages[idx] = updated;
+    m.set(key, { ...entry, messages });
+    changed.push({ key, message: updated });
+  }
+  if (changed.length) {
+    useMessagesStore.setState({ messagesByKey: m });
+    changed.forEach(({ key, message }) => saveMessagesToIDB(key, [message]));
+  }
+
+  if (!contactId) return;
+  const lastMessage = useContactsStore.getState().contactsById.get(contactId)?.lastMessage;
+  if (!lastMessage || (lastMessage.messageId ?? lastMessage.id) !== messageId) return;
+  useContactsStore.getState().updateContactById(contactId, (c) => ({
+    ...c,
+    lastMessage: { ...c.lastMessage, ...patch },
   }));
 };
 
@@ -289,6 +328,9 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
         }
         if (message?.type === "inbox") {
           applyInboxUpdate(message.inbox);
+        }
+        if (message?.type === "message_edited") {
+          applyMessageEdited(message.message_edited);
         }
         if (message?.type === "inbox_note") {
           applyInboxNote(message.inbox_note);

@@ -3,6 +3,45 @@ import { WaMessageAssignStatus, WaSendMessageBody } from "../types";
 import { WaMessageClosedStatus } from "@/constants/constants";
 import { MessagePlatform } from "@/constants/enums";
 
+/** One attachment of an Instagram/Messenger DM, flattened for the bubble. Mirrors rateup-ui. */
+export type IgAttachmentItem = {
+  /** The media URL (for a shared post or reel, Meta's CDN link to it). */
+  content: string;
+  type: string;
+  /** Shared post / reel only: the title (caption) Meta sends with it. */
+  title?: string;
+  /** Shared post / reel only: the shared media's id. */
+  mediaId?: string;
+};
+
+/** A customer's reply to one of the business's stories. */
+export type IgStoryReplyContent = {
+  text?: string;
+  story: { id: string; url?: string; linkStickerUrl?: string };
+};
+
+/** Attachment types that are a post or reel someone shared, not their own media. */
+const SHARED_POST_TYPES: ReadonlySet<string> = new Set(["ig_post", "ig_reel", "share", "reel"]);
+
+export const isSharedPostAttachment = (type: string) => SHARED_POST_TYPES.has(type);
+export const isReelAttachment = (type: string) => type === "ig_reel" || type === "reel";
+
+const ATTACHMENT_PREVIEW: Record<string, string> = {
+  image: "📷 Image",
+  video: "🎥 Video",
+  audio: "🎧 Audio",
+  file: "📄 Document",
+  sticker: "Sticker",
+  story_mention: "Mentioned you in their story",
+  ephemeral: "Disappearing media",
+  ig_post: "Shared a post",
+  share: "Shared a post",
+  ig_reel: "Shared a reel",
+  reel: "Shared a reel",
+  story: "Story",
+  ig_story: "Story",
+};
+
 export type ParsedWaMessageReturn = {
   timeStamp: string;
   messageType: string;
@@ -47,6 +86,18 @@ export function parseWaMessage_(message: any): ParsedWaMessageReturn {
             message.attachment.payload.attachment_id;
 
           messageType = message.attachment.type;
+        } else if (message.attachments?.length) {
+          // Several images in one message.
+          messageType = "attachments";
+          messageContent = {
+            attachments: message.attachments.map(
+              (a: { type: string; payload?: { url?: string; attachment_id?: string } }) => ({
+                content: a.payload?.url ?? a.payload?.attachment_id ?? "",
+                type: a.type,
+              }),
+            ),
+            text: message.text,
+          };
         } else if (message.text) {
           messageType = "text";
           messageContent = message.text;
@@ -66,21 +117,46 @@ export function parseWaMessage_(message: any): ParsedWaMessageReturn {
             commentId: receive.message.comment_id,
             mediaId: receive.message.media_id,
           };
-        } else if (receive.message.attachments) {
+        } else if (receive.message.reply_to?.story) {
+          const story: { id: string; url?: string; link_sticker_url?: string } =
+            receive.message.reply_to.story;
+          messageType = "ig_story_reply";
           messageContent = {
-            attachments: receive.message.attachments.map((r: any) => ({
-              content: r.payload ? r.payload.url : "",
-              type: r.type,
-            })),
             text: receive.message.text,
-          };
-          messageType = "attachments";
+            story: { id: story.id, url: story.url, linkStickerUrl: story.link_sticker_url },
+          } satisfies IgStoryReplyContent;
+        } else if (receive.message.attachments?.length) {
+          const attachments: IgAttachmentItem[] = receive.message.attachments.map(
+            (r: {
+              type: string;
+              payload?: {
+                url?: string;
+                title?: string;
+                ig_post_media_id?: string;
+                reel_video_id?: string;
+                id?: string;
+              };
+            }) => ({
+              content: r.payload?.url ?? "",
+              type: r.type,
+              title: r.payload?.title,
+              mediaId: r.payload?.ig_post_media_id ?? r.payload?.reel_video_id ?? r.payload?.id,
+            }),
+          );
+          messageContent = { attachments, text: receive.message.text };
+          messageType = attachments.every((a) => isSharedPostAttachment(a.type))
+            ? "ig_shared_post"
+            : "attachments";
         } else if (receive.message.text) {
           messageContent = receive.message.text;
           messageType = "text";
         } else if (receive.message.quick_reply) {
           messageContent = receive.message.quick_reply.payload;
           messageType = "quickreply";
+        } else if (receive.message.is_unsupported) {
+          // Instagram withholds the content (an unsupported media type).
+          messageType = "ig_unsupported";
+          messageContent = "";
         }
       } else if (receive.reaction && receive.reaction.action === "react") {
         messageContent = receive.reaction.emoji || receive.reaction.reaction;
@@ -254,11 +330,16 @@ export function returnMessageContentBasedOnParsedMessage(
         ? "Liked a message"
         : `Reacted ${parsedMessage.messageContent}`;
   } else if (parsedMessage.messageType === "attachments") {
-    return (
-      parsedMessage.messageContent?.attachments?.[
-        parsedMessage.messageContent.attachments.length - 1
-      ]?.type || "Attachment"
-    );
+    const attachments: IgAttachmentItem[] = parsedMessage.messageContent?.attachments ?? [];
+    const last = attachments[attachments.length - 1]?.type;
+    return (last && ATTACHMENT_PREVIEW[last]) || "Attachment";
+  } else if (parsedMessage.messageType === "ig_shared_post") {
+    const attachments: IgAttachmentItem[] = parsedMessage.messageContent?.attachments ?? [];
+    return attachments.some((a) => isReelAttachment(a.type)) ? "Shared a reel" : "Shared a post";
+  } else if (parsedMessage.messageType === "ig_unsupported") {
+    return "Unsupported message";
+  } else if (parsedMessage.messageType === "ig_story_reply") {
+    return parsedMessage.messageContent?.text || "Replied to your story";
   } else if (parsedMessage.messageType === "ig_comment") {
     return parsedMessage.messageContent?.text || "Comment";
   } else {
@@ -284,4 +365,39 @@ function igTemplateText(payload: {
     .map((e) => [e.title, e.subtitle].filter(Boolean).join(" · "))
     .filter(Boolean);
   return items.length ? items.map((i) => `🛍 ${i}`).join("\n") : "Products";
+}
+
+/**
+ * The Meta id (`mid`) of the message this one quotes: an inbound inline reply carries it
+ * on `message.reply_to.mid`, an agent's quoted reply on the send payload's `reply_to.mid`.
+ * Instagram and Messenger only.
+ */
+export function getReplyToMid(message: {
+  sourcePlatform?: string | null;
+  messageBody?: {
+    exchangeProcess?: string;
+    receive?: { message?: { reply_to?: { mid?: string } } } | null;
+    send?: { reply_to?: { mid?: string } } | null;
+  } | null;
+}): string | undefined {
+  if (
+    message.sourcePlatform !== MessagePlatform.INSTAGRAM &&
+    message.sourcePlatform !== MessagePlatform.FACEBOOK
+  )
+    return undefined;
+  const body = message.messageBody;
+  if (body?.exchangeProcess === "receive") return body.receive?.message?.reply_to?.mid || undefined;
+  if (body?.exchangeProcess === "send") return body.send?.reply_to?.mid || undefined;
+  return undefined;
+}
+
+/** One line of what a message says, for a quote block. */
+export function getMessagePreview(message: {
+  messageBody?: { exchangeProcess?: "send" | "receive" | "internal" | "privateNote" } | null;
+}): string {
+  const preview = returnMessageContentBasedOnParsedMessage(
+    parseWaMessage_(message),
+    message.messageBody?.exchangeProcess,
+  );
+  return typeof preview === "string" ? preview : "";
 }

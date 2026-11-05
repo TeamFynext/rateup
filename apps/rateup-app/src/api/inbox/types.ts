@@ -49,6 +49,12 @@ export type ContactsWithLastMessage = {
   /** Per-ticket star flag (`Conversation.isFavorite`). */
   isFavorite?: boolean;
   contactLabels?: ContactLabel[];
+  /** When the business blocked this person on Instagram. Replies are refused while set. */
+  igBlockedAt?: string | null;
+  /** Instagram/Messenger: a click-to-Direct ad keeps the thread open until this time. */
+  adThreadUntil?: string | null;
+  /** Spam is contact-grained: every row of a spam contact carries it. */
+  isSpam?: boolean;
 };
 
 export enum WaMessageAssignStatus {

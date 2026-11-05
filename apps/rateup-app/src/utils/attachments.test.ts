@@ -12,7 +12,7 @@ import {
 
 // Hoisted above the imports by vitest; the real module pulls in React Native.
 vi.mock("@/constants/enums", () => ({
-  MessagePlatform: { WHATSAPP: "WHATSAPP", INSTAGRAM: "INSTAGRAM" },
+  MessagePlatform: { WHATSAPP: "WHATSAPP", INSTAGRAM: "INSTAGRAM", FACEBOOK: "FACEBOOK" },
 }));
 
 const MB = 1024 * 1024;
@@ -108,6 +108,15 @@ describe("attachmentTypeError", () => {
     expect(
       attachmentTypeError({ name: "a.zip", mimeType: "application/zip", kind: "document" }),
     ).toMatch(/PDF, Word, Excel, PowerPoint or TXT/);
+  });
+
+  test("takes only PDFs as documents on Instagram and Messenger", () => {
+    const pdf = { name: "a.pdf", mimeType: "application/pdf", kind: "document" as const };
+    const doc = { name: "a.txt", mimeType: "text/plain", kind: "document" as const };
+    expect(attachmentTypeError(pdf, "INSTAGRAM")).toBeNull();
+    expect(attachmentTypeError(doc, "INSTAGRAM")).toMatch(/must be PDF\./);
+    expect(attachmentTypeError(doc, "FACEBOOK")).toMatch(/must be PDF\./);
+    expect(attachmentTypeError(doc, "WHATSAPP")).toBeNull();
   });
 
   test("leaves photos and videos to the picker and the API", () => {
