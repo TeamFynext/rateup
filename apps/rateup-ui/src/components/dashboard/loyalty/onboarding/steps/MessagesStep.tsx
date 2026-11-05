@@ -364,7 +364,7 @@ export function MessagesStep({
 
           {eventResults.length > 0 &&
             eventResults.every((r) => r.status === "pending" || r.status === "approved") && (
-              <p className="flex items-center gap-1.5 text-xs text-ru-green-600 dark:text-ru-green-300">
+              <p className="flex items-center gap-1.5 text-xs text-ru-green-600">
                 <IconCheck size={13} />
                 {t("All notifications submitted for approval.")}
               </p>

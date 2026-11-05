@@ -673,7 +673,7 @@ function TemplateCard({
         </span>
         <span className="truncate text-sm font-medium text-foreground">{t(example.name)}</span>
         {example.isNew && (
-          <span className="shrink-0 rounded-full border border-ru-amber-200 bg-ru-amber-50 px-2 text-xs font-medium text-ru-amber-700 dark:border-ru-amber-700 dark:bg-ru-amber-700/20 dark:text-ru-amber-300">
+          <span className="shrink-0 rounded-full border border-ru-amber-200 bg-ru-amber-50 px-2 text-xs font-medium text-ru-amber-700">
             {t("New")}
           </span>
         )}
@@ -683,7 +683,7 @@ function TemplateCard({
         <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
           {useCaseLabel}
         </span>
-        <span className="inline-flex items-center gap-1 rounded-full border border-ru-blue-200 bg-ru-blue-50 px-2 py-0.5 text-xs font-medium text-ru-blue-600 dark:border-ru-blue-700 dark:bg-ru-blue-700/20 dark:text-ru-blue-300">
+        <span className="inline-flex items-center gap-1 rounded-full border border-ru-blue-200 bg-ru-blue-50 px-2 py-0.5 text-xs font-medium text-ru-blue-600">
           <IconBolt className="size-3" aria-hidden />
           {triggerLabel}
         </span>
@@ -873,11 +873,8 @@ function DetailsStep({
             );
           })}
         </div>
-        <div className="mt-1 flex items-start gap-2.5 rounded-lg border border-ru-blue-200 bg-ru-blue-50 p-3 dark:border-ru-blue-700 dark:bg-ru-blue-700/20">
-          <IconBolt
-            className="mt-0.5 size-4 shrink-0 text-ru-blue-600 dark:text-ru-blue-300"
-            aria-hidden
-          />
+        <div className="mt-1 flex items-start gap-2.5 rounded-lg border border-ru-blue-200 bg-ru-blue-50 p-3">
+          <IconBolt className="mt-0.5 size-4 shrink-0 text-ru-blue-600" aria-hidden />
           <span className="text-xs text-secondary-foreground">
             {trigger === "leadad"
               ? t("A lead ad starts this journey from its Lead ad block, so no rule is needed.")

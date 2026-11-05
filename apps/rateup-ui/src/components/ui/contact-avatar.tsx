@@ -25,9 +25,8 @@ interface ContactAvatarProps {
 
 /** Navy initials on a light brand chip: 7.3:1 against `ru-blue-50`. */
 const VARIANT_CLASSES = {
-  blue: "bg-ru-blue-50 text-ru-blue-600 ring-ru-blue-100 dark:bg-ru-blue-900/40 dark:text-ru-blue-200 dark:ring-ru-blue-800",
-  "light-blue":
-    "bg-ru-blue-100 text-ru-blue-700 ring-ru-blue-200 dark:bg-ru-blue-900/60 dark:text-ru-blue-200 dark:ring-ru-blue-800",
+  blue: "bg-ru-blue-50 text-ru-blue-600 ring-ru-blue-100",
+  "light-blue": "bg-ru-blue-100 text-ru-blue-700 ring-ru-blue-200",
 } as const;
 
 const SIZE_CLASSES: Record<

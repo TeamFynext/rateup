@@ -41,8 +41,8 @@ export function ReadOnlyRewardRow({
           className={cn(
             "flex size-9 shrink-0 items-center justify-center rounded-md border",
             isCoupon
-              ? "border-ru-amber-200 bg-ru-amber-50 text-ru-amber-700 dark:border-ru-amber-700/40 dark:bg-ru-amber-700/20 dark:text-ru-amber-300"
-              : "border-ru-green-100 bg-ru-green-50 text-ru-green-700 dark:border-ru-green-700/40 dark:bg-ru-green-700/20 dark:text-ru-green-300",
+              ? "border-ru-amber-200 bg-ru-amber-50 text-ru-amber-700"
+              : "border-ru-green-100 bg-ru-green-50 text-ru-green-700",
           )}
         >
           <Icon size={18} />

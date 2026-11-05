@@ -183,7 +183,7 @@ export function BrochureEditor({
         <Card className="border-border">
           <CardContent className="flex flex-col gap-3 p-4 sm:p-5">
             <div className="flex items-center gap-2">
-              <IconGift size={16} className="text-ru-blue-600 dark:text-ru-blue-300" />
+              <IconGift size={16} className="text-ru-blue-600" />
               <p className="text-sm font-medium text-foreground">{t("Rewards on the card")}</p>
             </div>
             {fields.length === 0 ? (

@@ -238,9 +238,9 @@ function StatusIcon({ status }: Readonly<{ status: ChecklistStatus }>) {
   return (
     <span title={label} className="shrink-0">
       {status === "done" ? (
-        <IconCircleCheckFilled className="size-5 text-ru-green-600 dark:text-ru-green-300" />
+        <IconCircleCheckFilled className="size-5 text-ru-green-600" />
       ) : status === "todo" ? (
-        <IconCircle className="size-5 text-ru-amber-600 dark:text-ru-amber-300" />
+        <IconCircle className="size-5 text-ru-amber-600" />
       ) : (
         <IconCircleDashed className="size-5 text-muted-foreground/60" />
       )}

@@ -23,9 +23,9 @@ export type StepMode = "wizard" | "section";
  * reserved for the VIP tier; green marks the WhatsApp channel. Nothing else gets a colour.
  */
 const TONE_CLASSES: Record<StepTone, string> = {
-  blue: "bg-ru-blue-50 text-ru-blue-600 dark:bg-ru-blue-900/40 dark:text-ru-blue-200",
-  amber: "bg-ru-amber-50 text-ru-amber-600 dark:bg-ru-amber-700/25 dark:text-ru-amber-300",
-  green: "bg-ru-green-50 text-ru-green-600 dark:bg-ru-green-700/30 dark:text-ru-green-300",
+  blue: "bg-ru-blue-50 text-ru-blue-600",
+  amber: "bg-ru-amber-50 text-ru-amber-600",
+  green: "bg-ru-green-50 text-ru-green-600",
 };
 
 /** A tinted square behind an icon — the header of every step and section card. */

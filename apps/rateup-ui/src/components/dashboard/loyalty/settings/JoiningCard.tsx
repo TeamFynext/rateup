@@ -104,7 +104,7 @@ export function JoiningCard({
           )}
         </div>
         {!joinUrl && (
-          <div className="flex flex-wrap items-center gap-3 rounded-lg bg-ru-green-50 px-3 py-2 text-sm text-ru-green-700 dark:bg-ru-green-700/20 dark:text-ru-green-300">
+          <div className="flex flex-wrap items-center gap-3 rounded-lg bg-ru-green-50 px-3 py-2 text-sm text-ru-green-700">
             <IconBrandWhatsapp size={18} className="shrink-0" />
             <span className="min-w-0 flex-1">
               {t("Connect a WhatsApp number to get your join QR.")}

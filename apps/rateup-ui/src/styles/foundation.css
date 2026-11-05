@@ -75,49 +75,118 @@
   --channel-messenger-fg: #0457c2;
   --channel-messenger-soft: #ebf4ff;
   --channel-messenger-border: #b8d8ff;
+
+  /* Design System V2 primitives (tokens/colors.css). `@theme` maps `ru-*` utilities onto these,
+     so the app's dark mode (app.css) can redefine a step without touching any component. */
+  --ru-blue-50: #f1f6fc;
+  --ru-blue-100: #dfeaf7;
+  --ru-blue-200: #bdd2ec;
+  --ru-blue-300: #90b2dc;
+  --ru-blue-400: #5a8cc6;
+  --ru-blue-500: #2e68a8;
+  --ru-blue-600: #1c518e; /* brand navy, from the lockup */
+  --ru-blue-700: #164070;
+  --ru-blue-800: #133355;
+  --ru-blue-900: #0f2540;
+  --ru-blue-950: #091729;
+  --ru-amber-50: #fff8ec;
+  --ru-amber-100: #feeccb;
+  --ru-amber-200: #fcd68f;
+  --ru-amber-300: #fbc05c;
+  --ru-amber-400: #faaa3a;
+  --ru-amber-500: #f8951d; /* star gradient end stop */
+  --ru-amber-600: #db7a0b;
+  --ru-amber-700: #ae5d07;
+  --ru-star-top: #ffd54c; /* top stop of the star gradient */
+  --ru-glow: #2fa3ff; /* the travelling lights on navy; too bright for a light ground */
+  --ru-green-50: #edf9f1;
+  --ru-green-100: #d2f0de;
+  --ru-green-300: #7bd3a0;
+  --ru-green-500: #1fa85b;
+  --ru-green-600: #177f45;
+  --ru-green-700: #115f34;
+  --ru-n-25: #fcfcfd; /* the page canvas marketing sections sit on */
+  --ru-n-50: #f7f8fa;
+  --ru-n-100: #eff1f5;
+  --ru-n-200: #e4e7ec;
+  --ru-n-300: #cbd1da;
+  --ru-n-400: #9ba3af;
+  --ru-n-500: #6b7480;
+  --ru-n-600: #434a55;
+  --ru-n-700: #1b2027; /* ink stops at 700, never black */
 }
 
 .dark {
-  /* Design System V2 `[data-theme="dark"]` scope, lifted to a softer slate so the
-     page reads as charcoal rather than near-black. */
-  --background: oklch(0.2547 0.0128 258.37); /* --canvas #1f2329 */
-  --foreground: oklch(0.9484 0.0046 258.32); /* --fg #eceef1 */
-  --card: oklch(0.288 0.014 261.7); /* --surface #272b32 */
-  --card-foreground: oklch(0.9484 0.0046 258.32);
-  --popover: oklch(0.288 0.014 261.7);
-  --popover-foreground: oklch(0.9484 0.0046 258.32);
-  --primary: oklch(0.6294 0.1034 253.03); /* --accent / blue-400 #5a8cc6 */
-  --primary-foreground: oklch(0.1823 0.0305 249.25); /* --on-accent #07131f */
-  --secondary: oklch(0.3473 0.0171 262.27); /* --surface-3 #353a43 */
-  --secondary-foreground: oklch(0.9484 0.0046 258.32);
-  --muted: oklch(0.3125 0.0154 264.32); /* --surface-2 #2d3139 */
-  --muted-foreground: oklch(0.7231 0.0147 258.35); /* --fg-3 #a0a6af */
-  --accent: oklch(0.3473 0.0171 262.27); /* --surface-3 #353a43 */
-  --accent-foreground: oklch(0.9484 0.0046 258.32);
-  --destructive: oklch(0.7229 0.1388 25.33); /* --error #f08078 */
-  --border: oklch(0.29 0.0254 255.73); /* --border #232c38 */
-  --input: oklch(0.3853 0.0343 253.54); /* --border-strong #374556 */
-  --ring: oklch(0.6294 0.1034 253.03); /* --accent #5a8cc6 */
+  /* Soft graphite dark theme: zinc greys lifted off black, with the light theme's brand blue
+     for the primary, links and selections. `--dk-*` is its ramp. The semantic tokens below use
+     it, and app.css points the `ru-*` primitives at it too, so components written against the
+     light ramp (`text-ru-n-700`, `bg-ru-blue-50`) follow. Every text pair is at least WCAG AA. */
+  --dk-n-25: oklch(0.2103 0.0059 285.89); /* page, zinc lifted off black #18181b */
+  --dk-surface: oklch(0.2452 0.0075 285.83); /* cards, where light uses white #202024 */
+  --dk-raised: oklch(0.2744 0.0073 285.91); /* popovers and menus, a step above cards #27272b */
+  --dk-n-50: oklch(0.2739 0.0055 286.03); /* subtle fills #27272a */
+  --dk-n-100: oklch(0.287 0.009 285.82); /* light borders and fills #2a2a2f */
+  --dk-n-200: oklch(0.325 0.011 285.8); /* borders #34343b */
+  --dk-n-300: oklch(0.3703 0.0119 285.81); /* strong borders, inputs #3f3f46 */
+  --dk-n-400: oklch(0.6397 0.0133 286.02); /* placeholders, 4.8:1 on a card #8b8b94 */
+  --dk-n-500: oklch(0.7118 0.0129 286.07); /* muted text, 6.3:1 #a1a1aa */
+  --dk-n-600: oklch(0.8711 0.0055 286.29); /* secondary text #d4d4d8 */
+  --dk-n-700: oklch(0.9674 0.0013 286.38); /* ink, 14.8:1 on a card #f4f4f5 */
+  --dk-blue-50: oklch(0.2678 0.0264 262.62); /* soft brand tint #1f2633 */
+  --dk-blue-100: oklch(0.2952 0.0325 259.66); /* #232d3d */
+  --dk-blue-200: oklch(0.3615 0.0484 259.12); /* tint borders #2e3e57 */
+  /* The light primary (#1c518e) lifted for a dark ground: white text 5.1:1. */
+  --dk-blue-600: oklch(0.54 0.12 254.47); /* #3970b3 */
+  --dk-blue-700: oklch(0.49 0.115 254.47); /* its hover, white text 6.3:1 #2d61a0 */
+  --dk-text-blue: oklch(0.7536 0.0713 253.97); /* brand blue as text: blue-300, 8.2:1 #90b2dc */
+  --dk-text-blue-strong: oklch(
+    0.8595 0.0398 253.03
+  ); /* text on brand tints: blue-200, 9.9:1 #bfd3eb */
+  --dk-green-50: oklch(0.2701 0.0232 157.43); /* #1d2a22 */
+  --dk-green-100: oklch(0.3157 0.0351 152.24); /* #243729 */
+  --dk-text-green: oklch(0.8007 0.1303 152.1); /* 8.4:1 #78d694 */
+  --dk-amber-50: oklch(0.2742 0.0226 75.41); /* #2e261b */
+  --dk-amber-100: oklch(0.3102 0.0305 72.53); /* #3a2e1f */
+  --dk-amber-200: oklch(0.3735 0.0438 72.64); /* #4f3d26 */
+  --dk-text-amber: oklch(0.8396 0.1204 69.6); /* 8.9:1 #fdbc6f */
+
+  --background: var(--dk-n-25);
+  --foreground: var(--dk-n-700);
+  --card: var(--dk-surface);
+  --card-foreground: var(--dk-n-700);
+  --popover: var(--dk-raised);
+  --popover-foreground: var(--dk-n-700);
+  --primary: var(--dk-blue-600);
+  --primary-foreground: oklch(1 0 0); /* white, as in light mode */
+  --secondary: var(--dk-n-50);
+  --secondary-foreground: var(--dk-n-700);
+  --muted: var(--dk-n-50);
+  --muted-foreground: var(--dk-n-500);
+  --accent: var(--dk-n-50);
+  --accent-foreground: var(--dk-n-700);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: var(--dk-n-200);
+  --input: var(--dk-n-300);
+  --ring: var(--dk-text-blue); /* the brand blue, as in light mode */
+  /* Charts keep a colour ramp: shadcn's neutral preset uses greys, which can't tell series apart. */
   --chart-1: oklch(0.7536 0.0713 253.97); /* blue-300 #90b2dc */
   --chart-2: oklch(0.6294 0.1034 253.03); /* blue-400 #5a8cc6 */
-  --chart-3: oklch(0.5109 0.1185 253.05); /* blue-500 #2e68a8 */
+  --chart-3: var(--dk-text-blue-strong);
   --chart-4: oklch(0.7433 0.0944 251.51); /* --info #7fb0e6 */
   --chart-5: oklch(0.8085 0.1259 74.78); /* --warning #f0b45c */
-  /* The design system's dark scope: navy deepens, and the brand accent lightens
-     to blue-400 so it still reads against it. */
-  --sidebar: oklch(0.2028 0.0412 255.42); /* blue-950 #091729 */
-  --sidebar-foreground: oklch(0.954 0.0063 255.48);
-  --sidebar-primary: oklch(0.6294 0.1034 253.03); /* blue-400 #5a8cc6 */
-  --sidebar-primary-foreground: oklch(0.1823 0.0305 249.25); /* --on-accent */
-  --sidebar-accent: oklch(0.2613 0.0221 254.21); /* --surface-3 #1d252f */
-  --sidebar-accent-foreground: oklch(0.954 0.0063 255.48);
-  --sidebar-border: oklch(0.29 0.0254 255.73); /* --border #232c38 */
-  --sidebar-ring: oklch(0.6294 0.1034 253.03);
-  --custom-shadow-base: 0 1px 4px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
-  --custom-shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  --sidebar: var(--dk-n-25); /* the icon rail matches the page, as in GitHub or Vercel dark */
+  --sidebar-foreground: var(--dk-n-600);
+  --sidebar-primary: var(--dk-blue-600);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: var(--dk-n-50);
+  --sidebar-accent-foreground: var(--dk-n-700);
+  --sidebar-border: var(--dk-n-200);
+  --sidebar-ring: var(--dk-text-blue);
+  --custom-shadow-base: 0 1px 3px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --custom-shadow-hover: 0 8px 28px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1);
 
   /* React Flow canvas */
-  --flow-dots: oklch(0.35 0.006 56.043);
+  --flow-dots: oklch(0.37 0 0);
 
   /* Channel colours on a dark ground: text lightens, tints are the colour over the surface. */
   --channel-whatsapp-fg: #7bd3a0;
@@ -203,45 +272,45 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 
   /* RateUp colors — Design System V2 primitives (tokens/colors.css). */
-  --color-ru-blue-50: #f1f6fc;
-  --color-ru-blue-100: #dfeaf7;
-  --color-ru-blue-200: #bdd2ec;
-  --color-ru-blue-300: #90b2dc;
-  --color-ru-blue-400: #5a8cc6;
-  --color-ru-blue-500: #2e68a8;
-  --color-ru-blue-600: #1c518e; /* brand navy, from the lockup */
-  --color-ru-blue-700: #164070;
-  --color-ru-blue-800: #133355;
-  --color-ru-blue-900: #0f2540;
-  --color-ru-blue-950: #091729;
+  --color-ru-blue-50: var(--ru-blue-50);
+  --color-ru-blue-100: var(--ru-blue-100);
+  --color-ru-blue-200: var(--ru-blue-200);
+  --color-ru-blue-300: var(--ru-blue-300);
+  --color-ru-blue-400: var(--ru-blue-400);
+  --color-ru-blue-500: var(--ru-blue-500);
+  --color-ru-blue-600: var(--ru-blue-600);
+  --color-ru-blue-700: var(--ru-blue-700);
+  --color-ru-blue-800: var(--ru-blue-800);
+  --color-ru-blue-900: var(--ru-blue-900);
+  --color-ru-blue-950: var(--ru-blue-950);
 
-  --color-ru-amber-50: #fff8ec;
-  --color-ru-amber-100: #feeccb;
-  --color-ru-amber-200: #fcd68f;
-  --color-ru-amber-300: #fbc05c;
-  --color-ru-amber-400: #faaa3a;
-  --color-ru-amber-500: #f8951d; /* star gradient end stop */
-  --color-ru-amber-600: #db7a0b;
-  --color-ru-amber-700: #ae5d07;
-  --color-ru-star-top: #ffd54c; /* top stop of the star gradient */
-  --color-ru-glow: #2fa3ff; /* the travelling lights on navy; too bright for a light ground */
+  --color-ru-amber-50: var(--ru-amber-50);
+  --color-ru-amber-100: var(--ru-amber-100);
+  --color-ru-amber-200: var(--ru-amber-200);
+  --color-ru-amber-300: var(--ru-amber-300);
+  --color-ru-amber-400: var(--ru-amber-400);
+  --color-ru-amber-500: var(--ru-amber-500);
+  --color-ru-amber-600: var(--ru-amber-600);
+  --color-ru-amber-700: var(--ru-amber-700);
+  --color-ru-star-top: var(--ru-star-top);
+  --color-ru-glow: var(--ru-glow);
 
-  --color-ru-green-50: #edf9f1;
-  --color-ru-green-100: #d2f0de;
-  --color-ru-green-300: #7bd3a0;
-  --color-ru-green-500: #1fa85b;
-  --color-ru-green-600: #177f45;
-  --color-ru-green-700: #115f34;
+  --color-ru-green-50: var(--ru-green-50);
+  --color-ru-green-100: var(--ru-green-100);
+  --color-ru-green-300: var(--ru-green-300);
+  --color-ru-green-500: var(--ru-green-500);
+  --color-ru-green-600: var(--ru-green-600);
+  --color-ru-green-700: var(--ru-green-700);
 
-  --color-ru-n-25: #fcfcfd; /* the page canvas marketing sections sit on */
-  --color-ru-n-50: #f7f8fa;
-  --color-ru-n-100: #eff1f5;
-  --color-ru-n-200: #e4e7ec;
-  --color-ru-n-300: #cbd1da;
-  --color-ru-n-400: #9ba3af;
-  --color-ru-n-500: #6b7480;
-  --color-ru-n-600: #434a55;
-  --color-ru-n-700: #1b2027; /* ink stops at 700, never black */
+  --color-ru-n-25: var(--ru-n-25);
+  --color-ru-n-50: var(--ru-n-50);
+  --color-ru-n-100: var(--ru-n-100);
+  --color-ru-n-200: var(--ru-n-200);
+  --color-ru-n-300: var(--ru-n-300);
+  --color-ru-n-400: var(--ru-n-400);
+  --color-ru-n-500: var(--ru-n-500);
+  --color-ru-n-600: var(--ru-n-600);
+  --color-ru-n-700: var(--ru-n-700);
 
   /* WhatsApp Feedback theme configurations */
   --color-fb-green: #2a6254;
