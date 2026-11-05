@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { UNLIMITED_COUNT, type SubscriptionFeatures } from "@/api/org-actions.api";
 

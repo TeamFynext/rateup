@@ -3,7 +3,7 @@
  * rail beside a white nav panel, Instrument Sans / Figtree. The admin-only names (`rail`,
  * `tone-*`, `positive`, `negative`) map onto DS V2 values so call sites keep working.
  *
- * `components.json` points `npx shadcn add` here, so shadcn primitives pick these tokens up.
+ * `components.json` points `pnpm dlx shadcn add` here, so shadcn primitives pick these tokens up.
  */
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";

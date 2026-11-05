@@ -15,8 +15,7 @@ const MOCK_STAFF: StaffUser = {
   isOwner: true,
 };
 
-export const isStaffMock =
-  import.meta.env.DEV && import.meta.env.VITE_STAFF_MOCK === "true";
+export const isStaffMock = import.meta.env.DEV && import.meta.env.VITE_STAFF_MOCK === "true";
 
 export async function getMe(): Promise<StaffUser> {
   if (isStaffMock) return MOCK_STAFF;
@@ -34,9 +33,7 @@ export async function logout(): Promise<void> {
  * there), so this navigates rather than calling axios. The API sends the browser back to this
  * console's `returnTo` when it is done.
  */
-export function startGoogleLogin({
-  returnTo = "/",
-}: { returnTo?: string } = {}) {
+export function startGoogleLogin({ returnTo = "/" }: { returnTo?: string } = {}) {
   const params = new URLSearchParams({ returnTo });
   window.location.assign(`${API_URL}/api/staff/auth/google/start?${params}`);
 }
