@@ -6670,7 +6670,9 @@
     "{count, plural, one {# possible duplicate} other {# possible duplicates}} to review": "{count, plural, one {# تكرار محتمل} other {# تكرارات محتملة}} للمراجعة",
     "When two contacts share a phone, an email or a WhatsApp account, they show up here. Scan to check the contacts you already have.": "عندما تشترك جهتا اتصال في هاتف أو بريد إلكتروني أو حساب WhatsApp تظهران هنا. ابحث للتحقق من جهات الاتصال الحالية.",
     "Typed in chat: {value}": "كُتب في الدردشة: {value}",
-    "Typed {value} in chat, which another contact already has": "كتب {value} في الدردشة، وهو موجود لدى جهة اتصال أخرى"
+    "Typed {value} in chat, which another contact already has": "كتب {value} في الدردشة، وهو موجود لدى جهة اتصال أخرى",
+    "Contact merged": "تم دمج جهة الاتصال",
+    "Two contacts were merged into one. Names the kept contact and the one merged into it.": "تم دمج جهتي اتصال في واحدة. يذكر جهة الاتصال المحتفظ بها والتي دُمجت فيها."
   },
   "campaign.card": {
     "{delivered}% delivered · {read}% read": "{delivered}% تم التسليم · {read}% قراءة",

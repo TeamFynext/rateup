@@ -387,10 +387,19 @@ function CompareStep({
   swapping: boolean;
 }>) {
   const { t } = useTranslation();
-  const identities = useMemo(
-    () => [...identitiesOf(preview, "target"), ...identitiesOf(preview, "source")],
-    [preview],
-  );
+  // A value both contacts hold (the same email on each) becomes one identity, so it is
+  // listed once. Channel-scoped ids stay apart per channel.
+  const identities = useMemo(() => {
+    const seen = new Set<string>();
+    return [...identitiesOf(preview, "target"), ...identitiesOf(preview, "source")].filter(
+      (identity) => {
+        const key = `${identity.kind}:${identity.channel?.id ?? ""}:${identity.value.toLowerCase()}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      },
+    );
+  }, [preview]);
   const { combined } = preview;
   const counts = [
     t("{count, plural, one {# conversation} other {# conversations}}", {

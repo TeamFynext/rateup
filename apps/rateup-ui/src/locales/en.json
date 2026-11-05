@@ -6716,7 +6716,9 @@
     "{count, plural, one {# possible duplicate} other {# possible duplicates}} to review": "{count, plural, one {# possible duplicate} other {# possible duplicates}} to review",
     "When two contacts share a phone, an email or a WhatsApp account, they show up here. Scan to check the contacts you already have.": "When two contacts share a phone, an email or a WhatsApp account, they show up here. Scan to check the contacts you already have.",
     "Typed in chat: {value}": "Typed in chat: {value}",
-    "Typed {value} in chat, which another contact already has": "Typed {value} in chat, which another contact already has"
+    "Typed {value} in chat, which another contact already has": "Typed {value} in chat, which another contact already has",
+    "Contact merged": "Contact merged",
+    "Two contacts were merged into one. Names the kept contact and the one merged into it.": "Two contacts were merged into one. Names the kept contact and the one merged into it."
   },
   "campaign.card": {
     "{delivered}% delivered · {read}% read": "{delivered}% delivered · {read}% read",

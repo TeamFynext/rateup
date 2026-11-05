@@ -6670,7 +6670,9 @@
     "{count, plural, one {# possible duplicate} other {# possible duplicates}} to review": "समीक्षा के लिए {count, plural, one {# संभावित डुप्लिकेट} other {# संभावित डुप्लिकेट}}",
     "When two contacts share a phone, an email or a WhatsApp account, they show up here. Scan to check the contacts you already have.": "जब दो संपर्क एक ही फ़ोन, ईमेल या WhatsApp खाता साझा करते हैं, तो वे यहाँ दिखते हैं। अपने मौजूदा संपर्क जाँचने के लिए खोजें।",
     "Typed in chat: {value}": "चैट में लिखा: {value}",
-    "Typed {value} in chat, which another contact already has": "चैट में {value} लिखा, जो पहले से किसी अन्य संपर्क के पास है"
+    "Typed {value} in chat, which another contact already has": "चैट में {value} लिखा, जो पहले से किसी अन्य संपर्क के पास है",
+    "Contact merged": "संपर्क मर्ज किया गया",
+    "Two contacts were merged into one. Names the kept contact and the one merged into it.": "दो संपर्कों को एक में मर्ज किया गया। रखे गए संपर्क और उसमें मर्ज किए गए संपर्क का नाम देता है।"
   },
   "campaign.card": {
     "{delivered}% delivered · {read}% read": "{delivered}% वितरित · {read}% पढ़ा गया",

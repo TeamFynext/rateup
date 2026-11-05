@@ -45,6 +45,12 @@ export const EVENT_GROUPS: Readonly<{ title: string; events: readonly EventOptio
         description: "A contact was removed.",
       },
       {
+        value: "contact.merged",
+        label: "Contact merged",
+        description:
+          "Two contacts were merged into one. Names the kept contact and the one merged into it.",
+      },
+      {
         value: "contact.assigned",
         label: "Contact assigned",
         description: "Someone was newly assigned to a contact's conversation.",

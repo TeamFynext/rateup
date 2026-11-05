@@ -6670,7 +6670,9 @@
     "{count, plural, one {# possible duplicate} other {# possible duplicates}} to review": "{count, plural, one {# mögliches Duplikat} other {# mögliche Duplikate}} zu prüfen",
     "When two contacts share a phone, an email or a WhatsApp account, they show up here. Scan to check the contacts you already have.": "Wenn zwei Kontakte eine Telefonnummer, E-Mail oder ein WhatsApp-Konto teilen, erscheinen sie hier. Suchen Sie, um Ihre vorhandenen Kontakte zu prüfen.",
     "Typed in chat: {value}": "Im Chat eingegeben: {value}",
-    "Typed {value} in chat, which another contact already has": "Hat {value} im Chat eingegeben, das bereits ein anderer Kontakt hat"
+    "Typed {value} in chat, which another contact already has": "Hat {value} im Chat eingegeben, das bereits ein anderer Kontakt hat",
+    "Contact merged": "Kontakt zusammengeführt",
+    "Two contacts were merged into one. Names the kept contact and the one merged into it.": "Zwei Kontakte wurden zu einem zusammengeführt. Nennt den behaltenen Kontakt und den eingefügten."
   },
   "campaign.card": {
     "{delivered}% delivered · {read}% read": "{delivered} % geliefert · {read} % gelesen",
