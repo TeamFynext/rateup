@@ -71,57 +71,63 @@
 }
 
 .dark {
-  --background: #0d131b;
-  --foreground: #edf0f4;
-  --card: #121922;
-  --card-foreground: #edf0f4;
-  --popover: #121922;
-  --popover-foreground: #edf0f4;
-  --primary: #5a8cc6; /* blue-400, so the accent still reads on navy */
-  --primary-foreground: #07131f;
-  --secondary: #1d252f;
-  --secondary-foreground: #edf0f4;
-  --muted: #161d27;
-  --muted-foreground: #8b95a3;
-  --accent: #1d252f;
-  --accent-foreground: #edf0f4;
-  --destructive: #f08078;
-  --border: #232c38;
-  --input: #374556;
-  --ring: #5a8cc6;
+  /* Soft graphite, the same dark theme as rateup-ui (foundation.css): zinc greys lifted off
+     black, with the light theme's brand blue for the primary, links and selections. The rail
+     matches the page. Every text pair is at least WCAG AA. */
+  --background: #18181b; /* page */
+  --foreground: #f4f4f5; /* 14.8:1 on a card */
+  --card: #202024;
+  --card-foreground: #f4f4f5;
+  --popover: #27272b; /* a step above cards */
+  --popover-foreground: #f4f4f5;
+  --primary: #3970b3; /* the light primary (#1c518e) lifted for a dark ground, white text 5.1:1 */
+  --primary-foreground: #ffffff;
+  --secondary: #27272a;
+  --secondary-foreground: #f4f4f5;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa; /* 6.3:1 on a card */
+  --accent: #27272a;
+  --accent-foreground: #f4f4f5;
+  --destructive: #f08078; /* 6.2:1 on a card */
+  --border: #34343b;
+  --input: #3f3f46;
+  --ring: #90b2dc;
 
-  --rail: #091729; /* blue-950 */
+  /* The rail matches the page; callers still tint rail-foreground (/55 idle, /14 active). */
+  --rail: #18181b;
   --rail-foreground: #ffffff;
 
-  --tone-peach: #2a1f10;
-  --tone-peach-accent: #fbc05c;
-  --tone-mint: #10251a;
-  --tone-mint-accent: #7bd3a0;
-  --tone-sky: #13233a;
+  /* Tones: a muted tint of each colour, with its light ink (8–10:1). */
+  --tone-peach: #2e261b;
+  --tone-peach-accent: #fdbc6f;
+  --tone-mint: #1d2a22;
+  --tone-mint-accent: #78d694;
+  --tone-sky: #1f2633;
   --tone-sky-accent: #90b2dc;
-  --tone-slate: #1d252f;
-  --tone-slate-accent: #edf0f4;
+  --tone-slate: #27272a;
+  --tone-slate-accent: #f4f4f5;
 
-  --positive: #1fa85b;
+  --positive: #78d694; /* 9.8:1 on a card */
   --negative: var(--destructive);
 
+  /* The light ramp read from its light end, with amber as the fifth slot. */
   --chart-1: #90b2dc;
   --chart-2: #5a8cc6;
-  --chart-3: #2e68a8;
+  --chart-3: #bfd3eb;
   --chart-4: #7fb0e6;
   --chart-5: #f0b45c;
 
-  --sidebar: #0d131b;
-  --sidebar-foreground: #edf0f4;
-  --sidebar-primary: #5a8cc6;
-  --sidebar-primary-foreground: #07131f;
-  --sidebar-accent: #1d252f;
-  --sidebar-accent-foreground: #edf0f4;
-  --sidebar-border: #232c38;
-  --sidebar-ring: #5a8cc6;
+  --sidebar: #18181b; /* the nav panel, like the page */
+  --sidebar-foreground: #d4d4d8;
+  --sidebar-primary: #3970b3;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #27272a;
+  --sidebar-accent-foreground: #f4f4f5;
+  --sidebar-border: #34343b;
+  --sidebar-ring: #90b2dc;
 
-  --custom-shadow-base: 0 1px 4px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
-  --custom-shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  --custom-shadow-base: 0 1px 3px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --custom-shadow-hover: 0 8px 28px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1);
 }
 
 @theme inline {
