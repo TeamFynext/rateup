@@ -7,7 +7,7 @@
 // user. This script loads .env.prod into the environment first (Expo never overwrites a
 // variable that is already set), so the local .env can stay pointed at development.
 //
-// Usage: npm run ota:android -- "message"   /   npm run ota:ios -- "message"
+// Usage: pnpm run ota:android "message"   /   pnpm run ota:ios "message"
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 
@@ -48,7 +48,7 @@ const message = messageParts.join(" ").trim();
 if (!PLATFORMS.includes(platform)) {
   fail(`Platform must be one of: ${PLATFORMS.join(", ")}. Got: ${platform ?? "(none)"}`);
 }
-if (!message) fail(`Add a message: npm run ota:${platform} -- "What changed"`);
+if (!message) fail(`Add a message: pnpm run ota:${platform} "What changed"`);
 if (!existsSync(ENV_FILE)) fail(`${ENV_FILE} not found in ${process.cwd()}.`);
 
 const prod = parseEnvFile(ENV_FILE);

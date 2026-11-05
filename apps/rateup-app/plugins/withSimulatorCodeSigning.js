@@ -3,7 +3,7 @@ const { withEntitlementsPlist } = require("expo/config-plugins");
 const APPLE_SIGN_IN = "com.apple.developer.applesignin";
 
 /**
- * Lets `npx expo run:ios` build for the simulator without any Apple developer
+ * Lets `pnpm exec expo run:ios` build for the simulator without any Apple developer
  * certificate on the machine.
  *
  * `ios.usesAppleSignIn` makes expo-apple-authentication write the
@@ -26,7 +26,7 @@ const APPLE_SIGN_IN = "com.apple.developer.applesignin";
  * To keep it in a local prebuild — testing Sign in with Apple on a real device,
  * which does need a certificate — run prebuild with `EXPO_APPLE_SIGNIN=1`:
  *
- *   EXPO_APPLE_SIGNIN=1 npx expo prebuild -p ios --clean
+ *   EXPO_APPLE_SIGNIN=1 pnpm exec expo prebuild -p ios --clean
  *
  * Two ordering notes, both load-bearing:
  *   - This must be listed FIRST in app.json's `plugins`. Mods run
