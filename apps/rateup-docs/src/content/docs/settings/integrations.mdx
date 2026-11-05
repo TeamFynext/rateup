@@ -43,8 +43,8 @@ they happen: WhatsApp message statuses, new inbound messages, contact and lead c
 responses and loyalty points. Every delivery is **signed** and **retried**.
 
 <Callout type="info">
-  A web form can also post its own responses to a URL set on that form — see
-  [Web Forms → Settings](/web-forms/settings). That is separate from this webhook.
+  A survey can also post its own responses to a URL set on that survey — see
+  [Surveys → Settings](/surveys/settings). That is separate from this webhook.
 </Callout>
 
 <ScreenShot src="/docs/screenshots/settings/webhook-integration.png" alt="The Webhook page: the saved endpoint with Change and Remove, and the Events card with search and grouped events" />
@@ -127,9 +127,10 @@ marked **Envelope** arrive in the envelope shape described under [Payloads](#pay
 | | **Message received** (`message.received`) | Every inbound message, on any channel, with its content |
 | | **Message status (signed envelope)** (`message.status`) | Each *new* status for an outbound WhatsApp message, in the envelope, with recipient, template, source and campaign |
 | Contacts | **Contact created** · **Contact updated** · **Contact deleted** | A contact is added (by hand, by import or from a conversation), changed, or removed |
+| | **Contact merged** (`contact.merged`) | Two contacts are [merged](/contacts/merging-contacts) into one — by a person, through the External API, or by a [Continue on WhatsApp](/automation/journey-builder#continue-on-whatsapp) link |
 | | **Contact assigned** | Someone is newly assigned to a contact's conversation |
 | | **Lifecycle changed** | A contact moves to another lifecycle stage |
-| | **Added to group** | Contacts join a contact group |
+| | **Added to audience** | Contacts join an audience |
 | Conversations | **Conversation closed** | A conversation in the inbox is closed |
 | Leads | **Lead created** · **Lead stage changed** | A lead is added, or moves stage — including from a connected CRM |
 | Surveys & Flows | **Survey response submitted** (`survey.response_submitted`) | A response is filed — ids only |
@@ -233,7 +234,31 @@ the flow has been saved to WhatsApp.
 }
 ```
 
-The contact events carry `contact: { id, name, phone, email, source, lifecycleId }`.
+The contact events carry `contact: { id, name, phone, businessScopedUserId, email, source,
+lifecycleId }` — `businessScopedUserId` is the customer's WhatsApp business-scoped user ID (BSUID),
+the only id a customer who hides their phone number may have.
+
+**Contact merged** names the contact that was kept and the one that was merged into it and deleted:
+
+```json
+{
+  "event": "contact.merged",
+  "contact": {
+    "id": "4b1e…",
+    "name": "Jane Roe",
+    "phone": "15550100142",
+    "businessScopedUserId": null,
+    "email": "jane@example.com",
+    "source": "whatsapp",
+    "lifecycleId": null
+  },
+  "mergedContactId": "9c07…"
+}
+```
+
+When you receive it, repoint anything you stored against `mergedContactId` to `contact.id`: the
+merged-away contact no longer exists, and its conversations, orders and history now belong to the
+kept one. No **Contact deleted** event is sent for it.
 
 <Callout type="info">
   New integrations should prefer **Message status (signed envelope)** over **Message Status**: it
@@ -389,7 +414,7 @@ they can arrive out of order, and a retry can arrive after a later event.
 <Callout type="warn">
   Retries cover blips, not outages. If your endpoint is down for longer than the retry window, those
   events are gone. Treat the webhook as a live feed and reconcile against
-  [Message Logs](/analytics/message-logs) or the [External API](/external-api) when you need a
+  [Message log](/analytics/message-log) or the [External API](/external-api) when you need a
   complete record.
 </Callout>
 
@@ -426,7 +451,7 @@ secret.
 **API Service** is where you create and manage the keys your own systems use to call the
 [External API](/external-api). It opens from **RateUp services → API Service**; seeing it needs the
 **API keys** abilities, which Owners and Admins have by default — see
-[Members & Roles](/settings/users).
+[Members & Roles](/settings/members).
 
 <ScreenShot src="/docs/screenshots/settings/api-service.png" alt="API Service page with the keys table and a key's Edit, Rotate and Revoke menu open" />
 
@@ -448,9 +473,12 @@ For a v2 key, choose the **Mode**: **Live**, or **Test** — *"Test keys work li
 send WhatsApp messages, so you can build against real data safely."* v1 keys are always live.
 </Step>
 <Step>
-Under **Access**, keep **Full access** or pick **Only selected features**: **Contacts**, **Teams**,
-**Campaigns**, **Surveys**, **WhatsApp messaging**, **Loyalty**, **Webchat widget**. See
-[Keys and Access](/external-api#keys-and-access) for what each one opens. **Webchat widget** is
+Under **Access**, keep **Full access** or pick **Only selected features**: **Contacts**, **Merge
+contacts**, **Teams**, **Campaigns**, **Surveys**, **WhatsApp messaging**, **Loyalty**, **Webchat
+widget**. See [Keys and Access](/external-api#keys-and-access) for what each one opens. **Merge
+contacts** is separate from **Contacts** because a merge deletes the merged-away contact for good —
+*"Merge two contacts into one. The merged-away contact is deleted."* A key you created with
+**Contacts** before it existed cannot merge until you add it. **Webchat widget** is
 only for the [Widget](#widget) — *"This key is visible in your page's source, so give it nothing
 else."*
 </Step>
@@ -499,7 +527,12 @@ The **⋯** menu on each row:
 The **Usage** card charts requests made with your keys over the last **14 days**, stacked as
 **Successful**, **Client errors (4xx)** and **Server errors (5xx)**. With more than one key, filter by
 key. **Recent requests** lists each call — **Method**, **Route**, **Status**, **Latency**, **Key**
-and **Time** — 25 to a page, newest first. Calls appear within a few seconds; the log keeps 30 days.
+and **Time** — 25 to a page, newest first. Calls appear within about ten seconds; the log keeps 30
+days.
+
+The [Widget](#widget)'s key is counted too. Its requests show under routes starting `/support/` —
+loading a visitor's chat, sending their messages, the **Email** tab — and each time a visitor's
+chat connects, as `/org/ws/widget` with status `101`. A call refused for a bad key is not counted.
 
 A rising **Client errors** line after a rotation or a change of access is usually an integration
 still sending an old key or calling outside its features.
@@ -556,13 +589,18 @@ The widget refuses a key limited to other features (say, only **Contacts**): its
 connect and its requests answer `403`. It also takes only keys that start with `rk_`, since those
 name their organization; an older key answers `401`.
 
+Merging a webchat visitor with another contact — say, the WhatsApp customer whose number they typed
+— does not break their chat. The widget keeps working on the merged contact, and it only ever shows
+the **website chat** conversation: never that contact's WhatsApp, Instagram or Messenger messages,
+and never their phone, email or notes. See [Merging Contacts](/contacts/merging-contacts).
+
 ---
 
 ## WooCommerce
 
 The WooCommerce integration connects one WordPress store. RateUp hears about new orders, order
 status changes, new customers and product changes, which drive order automations, loyalty points and
-coupons. Connecting a store also turns **Commerce** on in [Features](/settings/features).
+coupons. Connecting a store also turns **Commerce** on in [Customize Menu](/settings/customize-menu).
 
 Two parts work together:
 
@@ -660,7 +698,7 @@ the store side, delete key #… under WooCommerce › Settings › Advanced › 
 ## Related Pages
 
 - [External API](/external-api) — endpoints, errors, retries and the v1 → v2 migration
-- [Members & Roles](/settings/users) — who may manage API keys and webhooks
-- [Web Forms → Settings](/web-forms/settings) — a form's own response webhook
-- [Message Analytics](/analytics/message-analytics) — the same delivery data, in the dashboard
+- [Members & Roles](/settings/members) — who may manage API keys and webhooks
+- [Surveys → Settings](/surveys/settings) — a survey's own response webhook
+- [Template Delivery](/analytics/template-delivery) — the same delivery data, in the dashboard
 - [Channels](/settings/channels)

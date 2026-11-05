@@ -1,17 +1,17 @@
 ---
 title: "Analytics Overview"
-description: Five views into how your team, your messages and your WhatsApp calls are doing — one filter bar, live counts and PDF reports.
+description: Four views into how your team and your messages are doing — one filter bar, live counts and PDF reports.
 ---
 
 **Analytics** turns your conversation history into numbers you can act on: how fast your team
-replies, how many conversations resolve, whether your WhatsApp messages are delivered, and how
-your voice calls are going.
+replies, how many conversations resolve, and whether your WhatsApp messages are delivered.
 
 ---
 
-## The Five Views
+## The Four Views
 
-The **Analytics** sidebar entry opens on **Overview**. Its sub-items are the five views:
+The **Analytics** sidebar entry opens on **Overview**. Its sub-items are **Overview**, **Team Performance**,
+**Template Delivery** and **Message log**:
 
 <Cards>
   <Card
@@ -20,57 +20,69 @@ The **Analytics** sidebar entry opens on **Overview**. Its sub-items are the fiv
     description="Right now, conversation and delivery tiles, the daily charts and what needs attention."
   />
   <Card
-    title="Conversations → Agents"
+    title="Team Performance → Agents"
     href="/analytics/agent-performance"
     description="What each agent handled, how fast they reply, and a page per agent."
   />
   <Card
-    title="Conversations → Teams"
+    title="Team Performance → Teams"
     href="/analytics/team-performance"
     description="The same picture per team, with a page per team."
   />
   <Card
-    title="Messages"
-    href="/analytics/message-analytics"
+    title="Template Delivery"
+    href="/analytics/template-delivery"
     description="Delivery of your outbound WhatsApp messages, by team and by template."
   />
   <Card
-    title="Logs → Message logs"
-    href="/analytics/message-logs"
+    title="Message log"
+    href="/analytics/message-log"
     description="Every WhatsApp message sent, searchable and exportable."
-  />
-  <Card
-    title="Logs → Team activity"
-    href="/analytics/team-activity"
-    description="What your team created, changed or deleted, and when."
-  />
-  <Card
-    title="Calls"
-    href="/analytics/calls"
-    description="Live calls, the call log, and answer rate, missed calls and busiest hours."
   />
 </Cards>
 
-**Conversations** and **Logs** each have two tabs. The section had six separate tabs before: links
-and bookmarks to the old tabs still work and open the view that replaced them.
+**Team Performance** has two tabs, **Agents** (the default) and **Teams**. Each view has its own
+address:
+
+| View | URL |
+|------|-----|
+| **Overview** | `/dashboard/analytics?tab=overview` |
+| **Team Performance → Agents** | `/dashboard/analytics?tab=team-performance&view=agents` |
+| **Team Performance → Teams** | `/dashboard/analytics?tab=team-performance&view=teams` |
+| **Template Delivery** | `/dashboard/analytics?tab=template-delivery` |
+| **Message log** | `/dashboard/analytics?tab=message-log` |
+| One agent's page | `/dashboard/analytics/agents/<agent id>` |
+| One team's page | `/dashboard/analytics/teams/<team id>` |
+
+Three views were renamed: **Team Performance** was **Conversations**, **Template Delivery** was
+**Messages**, and **Message log** was **Logs**. Bookmarks to the old tabs, and to the old agent and
+team pages, open the view that replaced them.
+
+Two pages that used to be here have moved:
+
+| Was | Now | Page |
+|-----|-----|------|
+| **Analytics → Call History** | **Inbox → Calls** | [Calls](/inbox/calls) |
+| **Analytics → Logs → Audit log** | **Settings → Audit log** | [Audit Log](/settings/audit-log) |
+
+Old links to either open the new location.
 
 ---
 
 ## The Filter Bar
 
-Overview, Conversations, Messages and Logs share one filter bar. The range and team you pick stay
+All four views share one filter bar. The range and team you pick stay
 put as you move between those four views.
 
 | Control | What it does | Shown on |
 |---------|--------------|----------|
 | **Date range** | **Today**, **Yesterday**, **Last 7 Days** (the default), **Last 30 Days** or **Custom Range** — a two-month calendar | Every view |
-| **Team** | One team, or every team | Every view except **Logs → Team activity** |
-| **Channel type** | **Campaign & Inbox**, **External** (your [API](/external-api) sends) or **All** | Overview and Messages |
+| **Team** | One team, or every team | Every view |
+| **Channel type** | **Campaign & Inbox**, **External** (your [API](/external-api) sends) or **All** | Overview and Template Delivery |
 | **Refresh** | Fetches fresh numbers. The figures are cached for about a minute, so use it when you need the latest | Every view |
-| **PDF report** | Downloads a PDF of the current view, named like `rateup-overview-2026-10-09.pdf`. It reads *"Preparing report…"* while it is built | Every view except Logs |
+| **PDF report** | Downloads a PDF of the current view, named like `rateup-overview-2026-10-09.pdf`. It reads *"Preparing report…"* while it is built | Every view except Message log |
 
-A control a view cannot use is hidden rather than shown and ignored. **Calls** has its own range
-and number filters, because it reads your call records rather than your conversations.
+A control a view cannot use is hidden rather than shown and ignored.
 
 <Callout type="info">
   Comparisons only mean something over equal periods. Every tile that shows a change compares the
@@ -86,18 +98,20 @@ it, your role decides what loads:
 
 | Ability | Lets you see |
 |---------|--------------|
-| **See analytics** | Overview, Conversations, Messages, Message logs, and the **Analytics** tab under Calls |
-| **See the audit log** | **Logs → Team activity** |
-| **See conversations** | The **Call log** under Calls |
-| **Export chats and logs** | **Export Excel** on Message logs |
+| **See analytics** | Overview, Team Performance, Template Delivery and Message log — and the **Analytics** tab on [Inbox → Calls](/inbox/calls) |
+| **Export chats and logs** | **Export Excel** on Message log |
+
+The [audit log](/settings/audit-log) needs **See the audit log** and is under **Settings →
+Audit log**.
 
 Abilities come from a member's role, and can be added or removed per person — see
-[Members & Roles](/settings/users).
+[Members & Roles](/settings/members).
 
 ---
 
 ## Related Pages
 
 - [Teams](/settings/teams) — enabling the Analytics feature
-- [Members & Roles](/settings/users) — roles and abilities
-- [WhatsApp Voice Calls](/inbox/whatsapp-calls) — taking the calls that **Calls** reports on
+- [Members & Roles](/settings/members) — roles and abilities
+- [Calls](/inbox/calls) — the call log and call analytics, under **Inbox → Calls**
+- [Audit Log](/settings/audit-log) — under **Settings → Audit log**

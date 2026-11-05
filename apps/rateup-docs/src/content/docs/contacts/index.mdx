@@ -6,7 +6,7 @@ description: Your customer database — the people behind every conversation, ca
 import ScreenShot from "@/components/Screenshot";
 
 **Contacts** is the record of everyone you talk to. Every conversation in the
-[Inbox](/inbox), every [campaign](/campaign) send and every [order](/commerce/orders) is attached
+[Inbox](/inbox), every [campaign](/campaigns) send and every [order](/commerce/orders) is attached
 to a contact here.
 
 <ScreenShot src="/docs/screenshots/contacts/list.png" alt="The contacts list" />
@@ -20,14 +20,14 @@ the database usable as it grows.
 
 | Tool | What it is | Example |
 |------|-----------|---------|
-| **[Groups](/contacts/groups)** | Team-owned lists you add people to — campaign audiences | *Newsletter subscribers* |
+| **[Audiences](/contacts/audiences)** | Team-owned lists you add people to and send campaigns to | *Newsletter subscribers* |
 | **[Labels](/contacts/labels)** | Coloured tags for traits, shown across the Inbox | *VIP*, *Refund pending* |
-| **[Lead stage](/pipeline)** | Where someone sits on your pipeline board | *Qualified → Won* |
+| **[Lead stage](/pipelines)** | Where someone sits on your pipeline board | *Qualified → Won* |
 | **[Custom fields](/contacts/custom-fields)** | Extra data you define | *Membership number* |
 
 <Callout type="info">
   A contact sits on **one** pipeline stage at a time, but can carry **many** labels and belong to
-  **many** groups. If you find yourself creating a group called "VIP", what you want is a label.
+  **many** audiences. If you find yourself creating an audience called "VIP", what you want is a label.
 </Callout>
 
 Organisations without a pipeline board track progress with [lifecycle stages](/contacts/lifecycle)
@@ -44,8 +44,18 @@ instead. That page is no longer in the sidebar, but still works.
     description="Add, search, filter, view details, bulk-edit, import in the background, export and delete."
   />
   <Card
-    title="Groups"
-    href="/contacts/groups"
+    title="Phones, Emails and Accounts"
+    href="/contacts/identities"
+    description="Several phones and emails per contact, their WhatsApp, Instagram and Messenger accounts, and which one is main."
+  />
+  <Card
+    title="Merging Contacts"
+    href="/contacts/merging-contacts"
+    description="Combine two contacts that are one person, and review the possible duplicates RateUp finds."
+  />
+  <Card
+    title="Audiences"
+    href="/contacts/audiences"
     description="Team-owned lists for campaigns — add members, import straight in, remove them."
   />
   <Card
@@ -59,6 +69,15 @@ instead. That page is no longer in the sidebar, but still works.
     description="Coloured tags visible everywhere the contact appears."
   />
 </Cards>
+
+---
+
+## One Person, One Contact
+
+A contact can hold several phone numbers and emails as well as their WhatsApp, Instagram and
+Messenger accounts, so someone who writes on two channels is still one contact. When the same
+person does end up twice, **Contacts → Possible duplicates** lists the pair and you can
+[merge](/contacts/merging-contacts) them.
 
 ---
 
@@ -78,6 +97,6 @@ their details.
 
 ## Related Pages
 
-- [Campaigns](/campaign) — where groups and labels get used
+- [Campaigns](/campaigns) — where audiences and labels get used
 - [Inbox](/inbox) — conversations attached to contacts
-- [Automation](/automation) — rules that read and write contact fields
+- [Automation Rules](/automation) — rules that read and write contact fields

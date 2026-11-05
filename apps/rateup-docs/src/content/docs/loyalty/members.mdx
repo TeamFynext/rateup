@@ -1,0 +1,96 @@
+---
+title: "Members"
+description: Your loyalty members — balances, tiers, birthdays and referral codes, and how to edit a member's details.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ScreenShot from "@/components/Screenshot";
+
+**Members** (`/dashboard/loyalty/members`, previously **Customers**) is the member list for your
+programme. The sidebar
+entry shows how many members you have.
+
+<ScreenShot src="/docs/screenshots/loyalty/customers.png" alt="Loyalty Members table with tier, points, lifetime points and referral code" />
+
+---
+
+## The Columns
+
+| Column | Meaning |
+|--------|---------|
+| **Customer** | Name and phone number |
+| **Tier** | Their current tier |
+| **Points** | What they can spend now |
+| **Lifetime** | Every point they have ever earned — it does not go down when they redeem |
+| **Date of Birth** | Used by the birthday reminder |
+| **Last Active** | When they last did something |
+| **Referral Code** | Their personal code, with **Copy referral code** and **Copy referral link** |
+
+Search with **Search by name or phone...**.
+
+---
+
+## Open a Member
+
+Click a member's name to open their record — the same view staff see in the
+[Cashier](/loyalty/cashier-portal): balance, lifetime points, how far they are from the next tier,
+total spend and their last visits. **Members** at the top goes back to the list.
+
+Customer names in the [Activity](/loyalty/activity) ledger open the same record, and the link can be
+bookmarked or shared.
+
+---
+
+## Edit a Member's Details
+
+<Steps>
+<Step>
+Open the member and click **Edit details**.
+</Step>
+<Step>
+Change the **Name**, **Date of birth**, **Gender** or **Email**. The number they joined on cannot be
+changed here.
+</Step>
+<Step>
+If the programme sends on more than one channel, pick their **Preferred channel**.
+</Step>
+<Step>
+Click **Save**.
+</Step>
+</Steps>
+
+| Field | Note |
+|-------|------|
+| **Date of birth** | *"Needed for the birthday reminder. Leave it empty to remove it."* A birthday cannot be in the future |
+| **Gender** | **Male**, **Female**, **Other** or **Not given** |
+| **Preferred channel** | *"Where they hear from you. The programme falls back to its other channels if this one cannot reach them."* |
+| **Email** | Optional |
+
+---
+
+## Export Members
+
+**Export Data** offers **Export as CSV**, **Export as Excel** and **Export as OpenDocument (ODS)**.
+
+<Callout type="warn">
+  Member exports contain personal data, including dates of birth. Store and delete them accordingly.
+</Callout>
+
+---
+
+## Use the List Well
+
+| Look for | Why |
+|----------|-----|
+| Old **Last Active** dates | Members drifting away — the [quiet-customer reminder](/loyalty/reminders) can bring them back |
+| High **Lifetime**, high **Points** | A big saver who never spends is disengaged |
+| Missing **Date of Birth** | No birthday message can go out for them |
+
+---
+
+## Related Pages
+
+- [Activity](/loyalty/activity) — the point movements behind a balance
+- [Cashier](/loyalty/cashier-portal)
+- [Reminders](/loyalty/reminders) — birthdays and quiet customers
+- [Contacts](/contacts) — loyalty members are contacts too

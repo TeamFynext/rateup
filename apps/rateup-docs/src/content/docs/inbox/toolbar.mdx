@@ -6,8 +6,8 @@ description: Every control in the Inbox toolbar — search, compact list, bulk s
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
-The toolbar sits above the conversation list. The left side names the view you are in; the right
-side holds the actions.
+The toolbar sits above the conversation list. The left side names the view you are in, by the same
+label as the sidebar (**Assigned to me**, **Unread mentions** …); the right side holds the actions.
 
 <ScreenShot
   src="/docs/screenshots/inbox/search_options.png"
@@ -18,7 +18,7 @@ side holds the actions.
 | Icon | Tooltip | What it does |
 |------|---------|--------------|
 | ↕️ | **Switch to compact list** / **Switch to detailed list** | Toggle between full rows and one-line rows |
-| 🔍 | **Search** | Find tickets by contact name or phone number |
+| 🔍 | **Search** | Find tickets by contact name, phone number, email or username |
 | ✅ | **Select Chats** | Turn on selection mode for bulk actions |
 | ⬇️ | **Download chats** | Export conversation history to Excel |
 | 🔄 | **Refresh** | Reload the list |
@@ -29,7 +29,7 @@ control on the right.
 
 <Callout type="info">
   The count comes from the server, so it reflects the entire view — not just the rows loaded so
-  far. While a search is running it shows the number of matching rows instead. In **Spam** it counts
+  far. While a search is running it shows the number of matching rows instead. In **Spam contacts** it counts
   contacts, because that tab lists one row per contact.
 </Callout>
 
@@ -77,6 +77,12 @@ Click the **✕** to clear the search and restore the full view.
 
 Search runs **within the current view**. To search everything — open and closed — switch to
 [**All**](/inbox/inboxview/all) first.
+
+Search matches the contact's name, WhatsApp name and email, and **every** phone number, email and
+username the contact is known by — not only the main one. A customer you
+[merged](/contacts/merging-contacts) with a second number turns up when you search either number.
+Spaces and the leading `+` do not matter: *+91 90000 00001*, *9000000001* and *919000000001* all
+find the same customer.
 
 ### Searching for a number you have never messaged
 
@@ -159,10 +165,10 @@ you switch views.
 
 | View | Assign | Close | Delete |
 |------|:------:|:-----:|:------:|
-| **Open**, **New**, **All**, **@Mentions**, **Favourites** | ✅ | ✅ | ✅ |
-| **Mine** | — | ✅ | ✅ |
+| **Open**, **Unassigned**, **All**, **Unread mentions**, **Starred** | ✅ | ✅ | ✅ |
+| **Assigned to me** | — | ✅ | ✅ |
 | **Closed** | ✅ | — | ✅ |
-| **Spam** | — | — | ✅ |
+| **Spam contacts** | — | — | ✅ |
 
 **Delete** is only shown to members with the **Delete conversations** ability — by default Owners, Admins and Managers.
 
@@ -248,7 +254,7 @@ Read the confirmation — *"Delete N conversations"* — and click **Delete**.
   Deleting cannot be undone. Every message in the selected tickets is removed for everyone, and it
   does not appear in exports or reports afterwards. The contacts themselves are **not** deleted, and
   their other tickets are untouched. To take a customer out of your working views without losing
-  anything, [mark them as spam](/inbox/inboxview/spam) instead.
+  anything, [mark them as spam](/inbox/inboxview/spam-contacts) instead.
 </Callout>
 
 You can delete up to **200** tickets in one go. If a colleague deleted one of your selected tickets
@@ -322,7 +328,7 @@ Enter the **Full Name** and **WhatsApp Number**. **Email Address** is optional.
 </Step>
 <Step>
 Optionally pick a **Lead stage** to put the contact straight onto your
-[pipeline](/pipeline) board. The field only appears if your board has stages.
+[pipeline](/pipelines) board. The field only appears if your board has stages.
 </Step>
 <Step>
 Click **Start Conversation**.

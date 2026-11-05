@@ -10,7 +10,8 @@ RateUp connects to your Instagram professional account so DMs land in the [Inbox
 alongside your other channels — and so the routine parts of Instagram can answer themselves.
 Instagram does not need WhatsApp: you can connect it on its own.
 
-<ScreenShot src="/docs/screenshots/instagram/overview.png" alt="Instagram page with the account selector, the six tabs and the Chatbots tab open" />
+<ScreenShot src="/docs/screenshots/instagram/overview.png" alt="Meta → Instagram with one account connected: the Instagram heading with its brand tile, the account selector, the 1 connected badge and the Instagram journeys button on the right, then the five tabs (Comments, Story Mentions, Persistent Menu, Ice Breakers, ig.me Links) with Comments open showing two comment automations and Create rule" />
+
 
 ---
 
@@ -18,9 +19,9 @@ Instagram does not need WhatsApp: you can connect it on its own.
 
 <Cards>
   <Card
-    title="Chatbots"
-    href="/instagram/chatbots"
-    description="Automated DM conversations, started from an example or a blank canvas."
+    title="Journeys"
+    href="/instagram/journeys"
+    description="Automated DM conversations, in Automation → Journeys filtered to Instagram."
   />
   <Card
     title="Comments & Story Mentions"
@@ -34,16 +35,24 @@ Instagram does not need WhatsApp: you can connect it on its own.
   />
 </Cards>
 
-The page has one tab per tool:
+The page — *"Manage automations, menus, and engagement tools"* — has one tab per tool:
 
 | Tab | What it holds |
 |-----|---------------|
-| **Chatbots** | Your Instagram chatbots — see [Instagram Chatbots](/instagram/chatbots) |
 | **Comments** | Rules with the **Instagram Comment** trigger, including comment-to-buy — see [Comments & Story Mentions](/instagram/automations) |
 | **Story Mentions** | Rules with the **Instagram Story Mention** trigger |
 | **Persistent Menu** | The menu that stays in the DM thread — see [Ice Breakers, Menu & Links](/instagram/entry-points) |
 | **Ice Breakers** | Up to 4 starter questions |
 | **ig.me Links** | Links that open a DM and start an automation |
+
+Journeys are not a tab here: they live in [Automation → Journeys](/automation/journeys) with the
+other channels. The **Instagram journeys** button at the top of the page opens that list filtered to
+Instagram — see [Instagram Journeys](/instagram/journeys).
+
+**Instagram** sits in the sidebar's **Meta** group, in the **Instagram & Messenger** section
+(**Meta → Instagram**, `/dashboard/instagram`). It follows the *See automation rules* ability, not
+*Use journeys*: anyone whose role has *See automation rules* sees it — see
+[Members & Roles](/settings/members).
 
 ---
 
@@ -82,7 +91,7 @@ The **account selector** at the top right lists every connected account, with a 
 Everything on the page — comment rules, story rules, the menu, ice breakers and ig.me links —
 belongs to the account selected there. Switch accounts before you edit.
 
-Chatbots are the exception: a chatbot is not tied to an account. The [rule](/automation) that starts
+Journeys are the exception: a journey is not tied to an account. The [rule](/automation) that starts
 it decides which account it runs on.
 
 ---
@@ -100,7 +109,7 @@ not change Instagram until you push them:
 
 <Callout type="warn">
   Changes to the menu and ice breakers are not live for customers until you sync. Saving and
-  forgetting to sync is the most common reason "nothing changed". Chatbots, comment rules and ig.me
+  forgetting to sync is the most common reason "nothing changed". Journeys, comment rules and ig.me
   links need no sync — they take effect when you save them.
 </Callout>
 
@@ -120,12 +129,15 @@ the row. Agents reply exactly as they would on WhatsApp.
 | *"No Instagram accounts connected"* | No Instagram channel yet | Connect one under **Settings → Channels** |
 | An account is missing from **Choose Instagram accounts** | Its Facebook Page was not shared with RateUp during login | Log in again and pick that Page |
 | A rule or link you made is not listed | Another account is selected | Switch the account selector |
+| **Instagram** is not in the sidebar's **Meta** group | Your role lacks *See automation rules* | Ask an admin to give your role *See automation rules* — see [Members & Roles](/settings/members) |
+| No journeys on the Instagram page | Journeys moved to **Automation → Journeys** | Click **Instagram journeys** at the top of the page |
 
 ---
 
 ## Related Pages
 
 - [Channels](/settings/channels) — connecting and disconnecting accounts
-- [Messenger](/messenger) — chatbots, comments, m.me links and the menu for your Facebook Page
-- [Automation](/automation) — the rules behind comments, stories and links
+- [Instagram Journeys](/instagram/journeys)
+- [Messenger](/messenger) — comments, m.me links and the menu for your Facebook Page
+- [Automation Rules](/automation) — the rules behind comments, stories and links
 - [Inbox](/inbox) — where the conversations arrive

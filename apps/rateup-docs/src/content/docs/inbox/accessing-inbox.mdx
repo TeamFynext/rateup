@@ -5,7 +5,6 @@ description: Open the Inbox from the RateUp dashboard, and understand who can se
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
-import { CDN } from '@/lib/cdn';
 
 Before you can work on tickets, you need access to the Inbox. This page covers where to find it,
 what has to be connected, and what each role is allowed to see.
@@ -40,13 +39,12 @@ If you have not set a password yet, see [Login](/getting-started/login).
 In the left sidebar, click **Inbox**.
 </Step>
 <Step>
-The Inbox opens on the **Open** view, showing every active ticket you have access to.
+The Inbox opens on the **Open** view (`/dashboard/inbox?tab=open`), showing every active ticket
+you have access to.
 </Step>
 </Steps>
 
-<ScreenShot src={`/docs/screenshots/inbox/inbox.png`} alt="Opening the Inbox from the sidebar" />
-
-{/* TODO: re-capture — the sidebar should show the eight Inbox views with their live counts */}
+<ScreenShot src="/docs/screenshots/inbox/sidebar-views.png" alt="The Inbox sidebar with its eight views and their live counts" />
 
 The Inbox is reachable from anywhere in RateUp using the sidebar, and the sidebar counts update as
 new messages arrive.
@@ -55,7 +53,7 @@ new messages arrive.
 
 ## Who Can Access the Inbox
 
-RateUp has six roles, set per member under [Settings → Members](/settings/users):
+RateUp has six roles, set per member under [Settings → Members](/settings/members):
 
 | Role | Inbox reach |
 |------|-------------|
@@ -85,7 +83,7 @@ Two things narrow this further:
 ## What Your Role Controls
 
 What you can do inside a ticket comes from your role's abilities. Any of them can also be added or
-taken away for one person on their page under [Members](/settings/users).
+taken away for one person on their page under [Members](/settings/members).
 
 | Ability | Lets you | Roles that have it |
 |---------|----------|--------------------|
@@ -110,7 +108,7 @@ Channels and teams are configured under [Teams](/settings/teams) and
 | You can read but not reply | The ticket is unassigned, or closed | Assign it to yourself, or reopen it |
 | You cannot see a colleague's ticket | It belongs to a team you are not in | Ask an admin to assign it to you or your team |
 | **Delete** is missing | Your role lacks **Delete conversations** | Ask an Owner or Admin |
-| **New** is empty but customers are waiting | **New** only holds unassigned tickets from the last 24 hours | Check **Open** for older unassigned tickets |
+| **Unassigned** is empty but customers are waiting | **Unassigned** only holds unassigned tickets from the last 24 hours | Check **Open** for older unassigned tickets |
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "Ticket Details Panel"
-description: The right-hand panel — assignment, title and description, lead stage, conversation tags, contact labels, contact and ticket info, spam and delete.
+description: The right-hand panel — assignment, title and description, lead stage, conversation tags, contact labels, contact, identities and ticket info, spam and delete.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
@@ -25,6 +25,7 @@ From top to bottom:
 | [Conversation Tags](#conversation-tags) | The ticket |
 | [Contact Labels](#contact-labels) | The contact |
 | [Contact](#contact) | The contact |
+| [Identities](#identities) | The contact |
 | [Ticket Info](#ticket-info) | The ticket |
 | [Spam, Block and Delete](#spam-block-and-delete) | The contact / the ticket |
 
@@ -93,7 +94,7 @@ Hover a title in the conversation list to read its description without opening t
 
 ## Lead Stage
 
-One row showing where this customer sits on your [pipeline](/pipeline) board. It shows the current
+One row showing where this customer sits on your [pipeline](/pipelines) board. It shows the current
 column in that column's colour, or **Not on the board**.
 
 <Steps>
@@ -112,12 +113,12 @@ bottom, then confirm with **Remove**.
 <Callout type="warn">
   **Remove from the board** deletes the lead. Its notes, tasks, timeline and assignees go with it,
   and the confirmation counts each of them first. To record a deal that did not happen, mark it
-  [lost](/pipeline/leads#closing-a-lead) instead.
+  [lost](/pipelines/leads#closing-a-lead) instead.
 </Callout>
 
 This belongs to the **contact**, so it applies to all of their tickets and shows as a chip on each
 of their rows. The section is absent for organisations without the **Pipeline** feature, and on a
-board with no columns. Columns are configured in [Pipeline → Stages](/pipeline/stages).
+board with no columns. Columns are configured in [Pipeline → Stages](/pipelines/stages).
 
 ---
 
@@ -176,6 +177,58 @@ update the contact everywhere in RateUp, including this ticket and the conversat
 
 ---
 
+## Identities
+
+Every way this customer is known: their phone numbers and emails, their WhatsApp account
+(name, business-scoped user ID (BSUID) and the business it belongs to), and their Instagram and
+Messenger accounts. A customer who wrote to you on several channels — or two contacts you merged —
+shows all of them here. [What identities are →](/contacts/identities)
+
+<ScreenShot src="/docs/screenshots/inbox/ticket-panel-identities.png" alt="The Identities block of a contact known on WhatsApp and Instagram." />
+
+Phone and email rows carry their own controls:
+
+| Control | What it does |
+|---------|--------------|
+| **Main** | Marks the main phone or email — the one shown on the contact everywhere else. Only shown when the contact has more than one of that kind |
+| ⭐ **Make main phone** / **Make main email** | Makes this one the main one |
+| ✏️ **Edit phone number** / **Edit email** | Edit the value in place; **Enter** saves, **Esc** cancels |
+| ✕ **Remove** | Removes it after a confirmation: *"This contact will no longer be matched or reached on it."* |
+
+WhatsApp, Instagram and Messenger rows can be removed but not edited — their ids come from Meta.
+A contact always keeps at least one identity, so the ✕ disappears from the last one.
+
+### Add a Phone or Email
+
+<Steps>
+<Step>
+Click **Add phone or email**.
+</Step>
+<Step>
+Type the number (with its country code) or the address, then click **Add**.
+</Step>
+</Steps>
+
+If another contact already has it, you see **Another contact already has this** — they are probably
+the same person, and **Merge with that contact** opens the merge.
+
+### Possible Duplicates and Merging
+
+When RateUp spots a strong sign that this customer is also another contact — the same phone or
+email, or a webchat visitor who typed this contact's number — a banner appears above the list:
+*"Possible duplicate of Jane Roe"*, with the reason underneath. Click **Review** to compare the two
+and merge them.
+
+**Merge with…** in the block's header does the same for a contact you pick yourself. Each merge
+leaves a line under the list — *"Merged with Jane Roe by John Doe on 5 Nov 2026"*, or *"Linked
+automatically from a WhatsApp link on …"* for a [Continue on WhatsApp](/automation/journey-builder#continue-on-whatsapp)
+link. [How merging works →](/contacts/merging-contacts)
+
+Adding, editing and removing need the **Add, edit and import contacts** permission; merging needs
+**Merge duplicate contacts**, which Owners and Admins have by default.
+
+---
+
 ## Ticket Info
 
 Read-only facts about this ticket:
@@ -187,8 +240,8 @@ Read-only facts about this ticket:
 | **Created** | When the ticket was opened |
 | **Result** | The outcome it was closed with, if any |
 
-**Account** is read from the ticket's own messages, so it stays correct even if the customer has
-since written to a different number of yours.
+Each ticket runs on one channel, so **Account** stays correct even if the customer has since written
+to a different number of yours — that message opens its own ticket on that number.
 
 ---
 
@@ -197,8 +250,8 @@ since written to a different number of yours.
 Up to three buttons sit at the foot of the panel.
 
 **Spam** — the same action as **Close → Mark contact as spam**. It flags the **contact**, closes
-their open tickets and moves them into the **Spam** tab. If the contact is already flagged, the
-button reads **Not spam** and takes them back out. [More about spam →](/inbox/inboxview/spam)
+their open tickets and moves them into the **Spam contacts** tab. If the contact is already flagged, the
+button reads **Not spam** and takes them back out. [More about spam →](/inbox/inboxview/spam-contacts)
 
 **Block** — blocks the customer on WhatsApp after a confirmation: *"They will not be able to message
 you, and you will not be able to message them."* It only appears inside the customer's 24-hour
@@ -216,6 +269,7 @@ Knowing which is which saves confusion:
 
 | Belongs to the **ticket** | Belongs to the **contact** |
 |--------------------------|---------------------------|
+| Channel and account | Identities |
 | Title and description | Name, phone, email |
 | Assignment | Lead stage and lifecycle |
 | Conversation tags | Contact labels |
@@ -232,6 +286,8 @@ ticket field and only this ticket is affected.
 
 - [Tickets & Conversations](/inbox/tickets)
 - [Conversation Tags & Contact Labels](/inbox/conversation-tags)
-- [Pipeline](/pipeline) — the board the lead stage writes to
+- [Identities](/contacts/identities) — the phones, emails and accounts a contact is known by
+- [Merging Contacts](/contacts/merging-contacts) — combining two contacts who are one person
+- [Pipelines](/pipelines) — the board the lead stage writes to
 - [Assignment & Reassignment](/inbox/asigning-conversation)
 - [Closing & Reopening](/inbox/conversation-lifecycle)

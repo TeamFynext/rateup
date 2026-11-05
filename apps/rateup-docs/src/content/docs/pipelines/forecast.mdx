@@ -1,0 +1,70 @@
+---
+title: "Forecast"
+description: Open leads bucketed by the month they should close, weighted by each stage's probability.
+---
+
+import ScreenShot from "@/components/Screenshot";
+
+**Forecast** answers one question: how much is likely to land, and when. It groups your open leads
+by their **expected close** month and weights each one by the win probability of the stage it is in.
+
+The **Forecast** tab exists on Leads boards only. Support, Projects and Custom boards have no win
+probabilities to weight by, so the tab is hidden there — see [Board Types](/pipelines/board-types).
+
+<ScreenShot src="/docs/screenshots/pipelines/pipelines-forcast.png" alt="The Forecast view, with every open lead in the Unscheduled column" />
+
+---
+
+## Reading a Column
+
+| Element | Meaning |
+|---------|---------|
+| The month | Formatted from each lead's **Expected close** date |
+| **{`{n}`} leads** | How many open leads fall in that month |
+| The big number | **Expected to convert** — the probability-weighted count |
+| The bar | That number against the strongest month showing |
+| Each row | A lead, with its stage and that stage's probability. Click to open it. A column carries up to twenty cards — the count above them is the answer, the cards are the evidence |
+
+The headline number is deliberately not the raw lead count. Five leads sitting at 20% are one
+expected win, and the column says **1** rather than **5**.
+
+---
+
+## The Unscheduled Column
+
+Open leads with no **Expected close** date collect in a trailing **Unscheduled** column rather than
+being dropped from the view.
+
+<Callout type="warn">
+  An unscheduled lead is invisible to your forecast in every other respect, so the column is
+  usually the most important one on this screen. If it is the tallest column you have, the forecast
+  is not measuring your pipeline — it is measuring the part of it somebody remembered to date.
+</Callout>
+
+<Callout type="warn">
+  The lead window shows **Expected close** but cannot change it: on a Leads board there is no date
+  picker for it anywhere in the dashboard. The way to set it is the **Expected close** column of a
+  spreadsheet [import](/pipelines/import-export), which only applies to the new cards that import
+  creates. Leads added by hand or by a rule stay **Unscheduled**.
+</Callout>
+
+---
+
+## What It Includes
+
+Only **open** leads. Won and lost leads have already landed, so they belong in
+[Insights](/pipelines/insights) rather than a forecast.
+
+Every open lead on the board, counted on the server. The sidebar's facets and the search box narrow
+the **Board** and **List** views only — they do not narrow the forecast, which answers *"what is
+this pipeline expected to close"* rather than *"what is it expected to close under the filter I left
+on"*. To read one person's forecast, open [Insights](/pipelines/insights) for their win rate, or the
+[List](/pipelines/list) filtered to them.
+
+---
+
+## Related Pages
+
+- [Insights](/pipelines/insights) — what has already happened
+- [Stages](/pipelines/stages) — where the probabilities come from
+- [Working a Lead](/pipelines/leads)

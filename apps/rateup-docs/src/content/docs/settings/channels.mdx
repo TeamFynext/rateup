@@ -29,7 +29,8 @@ number at all — any one channel is enough to get going, and every conversation
 inbox whichever channel it came in on.
 
 Each row shows **N connected** once something is live, and its button reads **Connect** or
-**Configure**.
+**Configure**. Once your WhatsApp numbers come from more than one Meta business, the WhatsApp row
+also says how many — **2 businesses**.
 
 ---
 
@@ -38,7 +39,7 @@ Each row shows **N connected** once something is live, and its button reads **Co
 Every number, Page and account is its own channel, so you can connect as many as you like — several
 WhatsApp numbers, one per brand or region, or a dozen Facebook Pages.
 
-In the Inbox, each ticket shows which account the customer wrote to, so agents always know which
+In the Inbox, each ticket runs on one of them and replies go out from it, so agents always know which
 identity they are replying as.
 
 ---
@@ -76,19 +77,50 @@ affected.
 
 ## Connect a WhatsApp Number
 
-The WhatsApp page lists every connected number under **Connected accounts**, each with a badge
-saying how it was added:
+The WhatsApp page lists every connected number under **Connected accounts**, grouped under the
+Meta business (business portfolio) that owns it — *Demo Cafe · 2 numbers*. Each number carries a
+badge saying how it was added:
 
 | Badge | How it was added |
 |-------|------------------|
 | **Automated** | Through **Continue with Facebook** (Meta's own sign-up flow, which supplies the credentials) |
 | **Manual** | Through **Add manually**, with IDs and an access token from your own Meta app |
 
-Each row shows the number's **Business ID**, **Phone ID** and **App ID**, an **Edit channel** button,
-and **Disconnect**.
+Each row shows the number's **Business portfolio ID**, **WhatsApp account ID**, **Phone ID** and
+**App ID**, an **Edit channel** button, and **Disconnect**.
+
+<ScreenShot src="/docs/screenshots/settings/channels-businesses.png" alt="WhatsApp numbers grouped by the business that owns them." />
 
 Use **Continue with Facebook** wherever you can. **Add manually** is for when you cannot connect
 through Facebook — see [Add a Number Manually](#add-a-number-manually).
+
+---
+
+## Numbers From Several Businesses
+
+One RateUp organisation can hold WhatsApp numbers from **several Meta businesses** — one per brand,
+or a business per country.
+
+| Button | What it does |
+|--------|--------------|
+| **Connect another business** | Opens Meta's sign-up, where you pick another of your businesses or create a new one |
+| **Add number** | Opens the same sign-up to add another number, usually to a business you already have |
+
+The business matters because of how WhatsApp identifies some customers. A customer who hides their
+phone number is known only by a **business-scoped user ID (BSUID)**, and a BSUID works **only from
+numbers of the business they wrote to**. RateUp therefore reads the business behind every number
+from Meta, and uses it to:
+
+- group the numbers here, and in a [team's channel access](/settings/teams)
+- grey out, in the Inbox's reply-number picker, numbers that cannot reach such a customer —
+  see [Choose which number you reply from](/inbox/responding-to-conversation#choose-which-number-you-reply-from)
+- skip such customers in a campaign sent from another business's number — see
+  [Campaign details](/campaigns/campaign-details#recipients-another-business-must-message)
+
+A customer whose phone number is known can be messaged from any of your numbers, of any business.
+
+A number whose business has not been read from Meta yet is listed under **Business not identified
+yet**, and is treated as able to reach everyone — Meta then has the final say.
 
 ---
 
@@ -226,7 +258,7 @@ hours yet starts from Monday to Friday, 09:00–18:00.
   rules are listed in [WhatsApp's Calling Limits](/inbox/whatsapp-calls#whatsapps-calling-limits).
 </Callout>
 
-Answered and missed calls are listed under **Analytics → Calls** — see [Analytics](/analytics).
+Answered and missed calls are listed under **Inbox → Calls** — see [Calls](/inbox/calls).
 
 ---
 
@@ -262,11 +294,11 @@ The number then appears in the list with a **Manual** badge, and **Edit channel*
 | Feature | Needs |
 |---------|-------|
 | [Inbox](/inbox) | Any channel |
-| [Campaigns](/campaign) | WhatsApp |
+| [Campaigns](/campaigns) | WhatsApp |
 | [Commerce](/commerce) | WhatsApp + a catalog |
 | [Loyalty messages](/loyalty/messages) | WhatsApp |
 | [Instagram automations](/instagram) | Instagram |
-| [Messenger chatbots](/messenger) | A Facebook Page |
+| [Messenger journeys](/messenger) | A Facebook Page |
 
 <Callout type="warn">
   Disconnecting a channel stops message delivery for everything built on it. Existing conversations

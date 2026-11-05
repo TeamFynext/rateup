@@ -14,13 +14,15 @@ assignment, closing, reporting — is built on this one idea, so it is worth rea
 
 ## What Is a Ticket?
 
-A ticket is **one topic with one customer**, from the first message about it until it is closed.
+A ticket is **one topic with one customer, on one channel**, from the first message about it until it
+is closed.
 
 Each ticket has:
 
 | | |
 |---|---|
 | **Number** | `#1042` — unique in your organisation, never reused |
+| **Channel** | The WhatsApp number, Instagram account, Facebook page or website chat it runs on |
 | **Title** | A short summary of the topic |
 | **Description** | Optional longer context |
 | **Owner** | One agent, several agents, or a team |
@@ -45,6 +47,31 @@ Each ticket:
 <Callout type="info">
   Opening a ticket shows that ticket's messages only. You will never see a different topic's
   messages mixed into the thread — but the customer's history is always one click away.
+</Callout>
+
+---
+
+## One Ticket per Channel
+
+A ticket runs on **one channel**. When the same customer writes to you on WhatsApp and on Instagram,
+each channel gets its own ticket, with its own owner and status — even when both belong to one
+contact, for example after you [merge](/contacts/merging-contacts) their WhatsApp and Instagram
+contacts.
+
+| The customer… | What happens |
+|---------------|-------------|
+| Writes again on the channel of their open ticket | The message joins that ticket |
+| Writes on a channel where they have no open ticket | A new ticket opens on that channel |
+| Writes on a channel whose last ticket is closed | A new ticket opens on that channel; the closed one stays closed |
+
+This keeps each reply on the right channel: the composer sends from the number or account the ticket
+runs on, so a WhatsApp customer is answered from the number they wrote to — the one with their
+24-hour window open. ([Choosing the number](/inbox/responding-to-conversation#choose-which-number-you-reply-from).) The ticket's channel is shown under **Ticket Info** in the
+[details panel](/inbox/ticket-details#ticket-info).
+
+<Callout type="info">
+  Tickets opened before tickets had a channel still work. The next message on a channel joins such
+  a ticket while it is open, and the ticket takes that channel from then on.
 </Callout>
 
 ---
@@ -132,12 +159,12 @@ Add a description if there is context the messages do not make obvious, then cli
 
 <Steps>
 <Step>
-**A customer writes in.** A ticket is created with status **New** and appears in the **New** and
+**A customer writes in.** A ticket is created with status **New** and appears in the **Unassigned** and
 **Open** views.
 </Step>
 <Step>
 **Someone takes ownership.** Status becomes **Assigned**; the ticket appears in that person's
-**Mine** view. Replying is only possible once a ticket has an owner.
+**Assigned to me** view. Replying is only possible once a ticket has an owner.
 </Step>
 <Step>
 **The team works on it.** Replies go to the customer; private notes and @mentions stay internal.
@@ -147,8 +174,8 @@ Add a description if there is context the messages do not make obvious, then cli
 ticket moves to **Closed**.
 </Step>
 <Step>
-**The customer comes back.** A new ticket is created. The closed one keeps its record and shows up
-in the history bar.
+**The customer comes back.** A new ticket is created on the channel they wrote on. The closed one
+keeps its record and shows up in the history bar.
 </Step>
 </Steps>
 
@@ -158,7 +185,7 @@ in the history bar.
 
 <Accordions type="single">
 <Accordion title="A customer replied to a closed ticket. Where did their message go?">
-Into a **new ticket**, which appears in your **New** view. The closed ticket stays closed so its
+Into a **new ticket**, which appears in your **Unassigned** view. The closed ticket stays closed so its
 resolution time and outcome are not distorted.
 </Accordion>
 <Accordion title="Can I merge two tickets?">
@@ -166,6 +193,11 @@ Not directly. If a customer opened two tickets about the same thing, close one w
 Closed** — noting in a private note which ticket carries on — and continue on the other. An admin
 can instead [delete](/inbox/conversation-lifecycle#deleting-a-conversation) the duplicate, but that
 removes its messages for good.
+</Accordion>
+<Accordion title="Why does one customer have an open WhatsApp ticket and an open Instagram ticket?">
+Because tickets are per channel. Each one replies on its own channel, so both stay open until each is
+closed. If they are two contacts that are really one person, [merge them](/contacts/merging-contacts)
+— the contact becomes one, the tickets stay one per channel.
 </Accordion>
 <Accordion title="Do ticket numbers ever repeat?">
 No. Numbers are unique within your organisation and are not reused, even after a ticket is closed.

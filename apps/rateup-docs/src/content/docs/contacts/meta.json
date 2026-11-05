@@ -1,3 +1,12 @@
 {
-  "pages": ["index", "managing-contacts", "groups", "custom-fields", "labels", "!lifecycle"]
+  "pages": [
+    "index",
+    "managing-contacts",
+    "identities",
+    "merging-contacts",
+    "audiences",
+    "custom-fields",
+    "labels",
+    "!lifecycle"
+  ]
 }

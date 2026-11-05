@@ -4,9 +4,7 @@
     "overview",
     "agent-performance",
     "team-performance",
-    "message-analytics",
-    "message-logs",
-    "team-activity",
-    "calls"
+    "template-delivery",
+    "message-log"
   ]
 }

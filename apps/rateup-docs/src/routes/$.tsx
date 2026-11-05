@@ -1,7 +1,8 @@
-import { createFileRoute, notFound } from '@tanstack/react-router';
+import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
 import { DocsLayout } from 'fumadocs-ui/layouts/docs';
 import { createServerFn } from '@tanstack/react-start';
 import { source } from '@/lib/source';
+import { resolveRedirect } from '@/lib/redirects';
 import browserCollections from 'collections/browser';
 import { DocsBody, DocsDescription, DocsPage, DocsTitle } from 'fumadocs-ui/layouts/docs/page';
 import { baseOptions } from '@/lib/layout.shared';
@@ -25,7 +26,14 @@ const serverLoader = createServerFn({
   .validator((slugs: string[]) => slugs)
   .handler(async ({ data: slugs }) => {
     const page = source.getPage(slugs);
-    if (!page) throw notFound();
+    if (!page) {
+      // A renamed page: send old links to its new home (see src/lib/redirects.ts).
+      const target = resolveRedirect(slugs.join('/'), (path) =>
+        Boolean(source.getPage(path.split('/').filter(Boolean))),
+      );
+      if (target) throw redirect({ href: target, statusCode: 301 });
+      throw notFound();
+    }
 
     return {
       path: page.path,

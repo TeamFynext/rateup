@@ -1,14 +1,32 @@
 ---
-title: "Automation Overview"
-description: Build rules — from a template or from scratch — that react to messages, comments, contact changes and store events on WhatsApp, Instagram and Messenger.
+title: "Automation Rules Overview"
+description: The Automation group — Rules and Journeys — and how rules react to messages, comments, contact changes and store events on WhatsApp, Instagram and Messenger.
 ---
 
 import ScreenShot from "@/components/Screenshot";
 
-**Automation** lets RateUp act on its own. A rule watches for something happening, checks whether
-conditions are met, and does something about it — no agent involved.
+**Automation** is a group in the sidebar with two entries: **Rules** and **Journeys**. A **rule** lets
+RateUp act on its own — it watches for something happening, checks whether conditions are met, and
+does something about it, no agent involved. A **journey** is a whole scripted conversation, and a
+rule is what starts it.
 
-<ScreenShot src="/docs/screenshots/automation/rules-list.png" alt="Your automation rules" />
+<Cards>
+  <Card
+    title="Rules"
+    href="#the-automation-rules-list"
+    description="When something happens, check the conditions and act. This page and the ones below it."
+  />
+  <Card
+    title="Journeys"
+    href="/automation/journeys"
+    description="Step-by-step conversations for WhatsApp, Instagram and Messenger, all in one list."
+  />
+</Cards>
+
+Opening `/dashboard/automation` on its own lands on **Rules**. The rest of this page is about rules;
+see [Journeys](/automation/journeys) for the other half.
+
+<ScreenShot src="/docs/screenshots/automation/rules-list.png" alt="Automation → Rules: Create rule, refresh, Search rules..., Filter, Grid/List and Newest, above rule cards with their trigger, channel badges, switch and Active status" />
 
 ---
 
@@ -61,20 +79,23 @@ an optional starting **Template**.
 
 ---
 
-## The Automations List
+## The Automation Rules List
 
-**Automation** in the sidebar opens every rule your organisation has.
+**Automation → Rules** in the sidebar opens every rule your organisation has, at
+`/dashboard/automation/rules`. **Rules** sits in the **Automation** group next to **Journeys**, since
+rules are what start journeys.
 
 | Control | Does |
 |---------|------|
-| **Create Automation** | Opens the builder for a new rule |
-| **Search...** | Filters by rule name |
+| **Create rule** | Opens the builder for a new rule, at `/dashboard/automation/rules/new` |
+| Refresh | Reloads the list |
+| **Search rules...** | Filters by rule name |
 | **Filter** | **All**, **Active** or **Inactive** |
 | **Grid** / **List** | Cards, or a table with **Name**, **Operator**, **Conditions**, **Actions**, **Status** and **Created** |
 | Sort | **Newest**, **Oldest**, **Name (A-Z)**, **Name (Z-A)** |
 
-Each card shows the rule's name, its trigger, a platform badge and an **Active** / **Inactive**
-switch. A Shopify **On abandoned checkouts** rule also shows what it recovered in the last 30 days —
+Each card shows the rule's name, its trigger, a badge for each channel it runs on and an
+**Active** / **Inactive** switch. Click a card to open the rule at `/dashboard/automation/rules/<id>`. A Shopify **On abandoned checkouts** rule also shows what it recovered in the last 30 days —
 see [Abandoned-Cart Reminders](/automation/abandoned-cart-reminders).
 
 With no rules yet, the page shows *"Start with a template"* — four templates to pick from, and
@@ -102,7 +123,7 @@ To remove a rule for good, use the card's menu and confirm **Delete Rule**.
 | Tool | Use when |
 |------|----------|
 | **Automation rules** | Something happens and you want a reaction — routing, labelling, replying |
-| [Chatbots](/whatsapp/chatbots) | You want a full back-and-forth conversation (a rule starts it) |
+| [Journeys](/automation/journeys) | You want a full back-and-forth conversation (a rule starts it with **Start a journey**) |
 | [Inbox auto-close](/inbox/inbox-settings) | You want idle tickets closed on a timer |
 | [Comments & Story Mentions](/instagram/automations) | You are reacting to Instagram comments and story mentions |
 | [Facebook Comments](/messenger/comments) | You are reacting to comments on your Facebook Page |
@@ -116,3 +137,4 @@ To remove a rule for good, use the card's menu and confirm **Delete Rule**.
 - [Conditions](/automation/conditions)
 - [Actions](/automation/actions)
 - [Abandoned-Cart Reminders](/automation/abandoned-cart-reminders)
+- [Journeys](/automation/journeys)

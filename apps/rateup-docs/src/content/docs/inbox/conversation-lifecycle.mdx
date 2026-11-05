@@ -66,7 +66,7 @@ a reminder that closing removes every assignee.
 
 Below the outcomes, separated from them, sit the two **contact** actions — **Mark contact as spam**
 and **Block contact**. They are not ways of finishing a ticket: they apply to the person, and to
-every ticket they have. [Spam in detail →](/inbox/inboxview/spam)
+every ticket they have. [Spam in detail →](/inbox/inboxview/spam-contacts)
 
 Admins see a third group at the very bottom: **Delete conversation**. See
 [Deleting a Conversation](#deleting-a-conversation).
@@ -123,7 +123,7 @@ to lift the block.
 <Callout type="warn">
   Blocking cuts communication in both directions — the customer cannot reach you even if they later
   need to. To get junk out of your queue while still receiving whatever arrives, use
-  [**Mark contact as spam**](/inbox/inboxview/spam) instead.
+  [**Mark contact as spam**](/inbox/inboxview/spam-contacts) instead.
 </Callout>
 
 ---
@@ -152,7 +152,7 @@ A **new ticket** is created for the same customer, with the previous assignees c
 | **Status** | Stays **Closed** | **Assigned** |
 | **Close time and result** | Frozen | Not set |
 | **Assignees** | None | Whoever was assigned when it closed |
-| **Where it appears** | Closed view, history bar | Open / Mine |
+| **Where it appears** | Closed view, history bar | Open / Assigned to me |
 
 <Callout type="warn">
   Reopening does not revive the old ticket. Its resolution time and outcome stay exactly as they
@@ -166,8 +166,9 @@ closed one being brought back to life.
 
 ## When a Customer Replies After Closure
 
-Nothing to do. Their message creates a **new ticket** in the **New** view, and the closed ticket
-stays closed.
+Nothing to do. Their message creates a **new ticket** on the channel they wrote on, in the
+**Unassigned** view, and the closed ticket stays closed. A ticket that is still open on another of
+their channels is not affected — tickets are [one per channel](/inbox/tickets#one-ticket-per-channel).
 
 This is the whole point of the ticket model: one topic, one ticket, one honest record of how it
 went.
@@ -216,7 +217,7 @@ To delete many tickets at once, use selection mode in the list and **Delete sele
 [Bulk Actions](/inbox/toolbar#delete-many-tickets-at-once).
 
 <Callout type="info">
-  If you only want a customer out of your queue, [mark them as spam](/inbox/inboxview/spam)
+  If you only want a customer out of your queue, [mark them as spam](/inbox/inboxview/spam-contacts)
   instead. It is reversible, and nothing is lost.
 </Callout>
 
@@ -225,7 +226,7 @@ To delete many tickets at once, use selection mode in the list and **Delete sele
 ## Auto-Close
 
 Tickets that go quiet can be closed automatically. Two rules, configured under
-**Inbox Settings → Automation**:
+**Inbox Settings → Auto-close**:
 
 - **New and unassigned conversations** — closed after a set time without a new message
 - **Assigned conversations** — closed after a set time without a new message
@@ -274,6 +275,6 @@ The first close wins. The second person will see the read-only banner.
 ## Related Pages
 
 - [Closed view](/inbox/inboxview/closed)
-- [Spam view](/inbox/inboxview/spam)
+- [Spam contacts view](/inbox/inboxview/spam-contacts)
 - [Tickets & Conversations](/inbox/tickets)
 - [Inbox Settings](/inbox/inbox-settings) — auto-close rules

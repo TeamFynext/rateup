@@ -6,7 +6,7 @@ description: The flow detail page — screens and elements, logic jumps, setting
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
-Opening a flow from the [Flows](/whatsapp/flows) list opens its detail page: six tabs over one flow,
+Opening a flow from the [WhatsApp Flows](/whatsapp/flows) list opens its detail page: six tabs over one flow,
 with **Save to WhatsApp** always in reach.
 
 <ScreenShot src="/docs/screenshots/whatsapp/flow-editor.png" alt="The flow editor" />
@@ -123,8 +123,8 @@ Three cards, each with its own **Save Changes**:
 | **Team & Notifications** | **Select Teams** for the flow, and **Send weekly report to email** |
 | **Webhooks** | An endpoint — `https://example.com/webhook` — that receives every submission |
 
-The webhook uses the same signed, retried delivery as web forms. For the payload, headers and how to
-verify a signature, see [Web Forms → Settings](/web-forms/settings).
+The webhook uses the same signed, retried delivery as surveys. For the payload, headers and how to
+verify a signature, see [Surveys → Settings](/surveys/settings).
 
 ---
 
@@ -145,7 +145,7 @@ How the flow gets in front of people.
 
 Submissions land against the customer's conversation, so an agent sees them in the thread. These
 three tabs are the aggregate view: individual responses, charts and AI summaries, and a team-by-team
-comparison — the same components the [web-form results](/web-forms/results) use.
+comparison — the same components the [survey results](/surveys/results) use.
 
 ---
 
@@ -190,7 +190,7 @@ Both push to WhatsApp the same way.
 
 ## Related Pages
 
-- [Flows](/whatsapp/flows) — creating one, and how a flow is sent
-- [Chatbot Builder](/whatsapp/chatbot-builder) — opening a flow from a bot step
-- [Templates](/whatsapp/templates) — attaching a flow to a template button
-- [Web Forms → Settings](/web-forms/settings) — the webhook contract
+- [WhatsApp Flows](/whatsapp/flows) — creating one, and how a flow is sent
+- [Journey Builder](/automation/journey-builder) — opening a flow from a journey step
+- [Message Templates](/whatsapp/templates) — attaching a flow to a template button
+- [Surveys → Settings](/surveys/settings) — the webhook contract

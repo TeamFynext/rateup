@@ -1,13 +1,13 @@
 {
   "pages": [
     "index",
-    "newchat",
     "open",
-    "mine",
-    "mentions",
-    "favourites",
+    "unassigned",
     "closed",
-    "spam",
-    "all"
+    "all",
+    "assigned-to-me",
+    "unread-mentions",
+    "starred",
+    "spam-contacts"
   ]
 }

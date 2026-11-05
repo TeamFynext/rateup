@@ -1,0 +1,243 @@
+---
+title: "Instagram Journeys"
+description: Build automated DM conversations — from an example or a blank canvas — that carry on when people tap a reply or answer a question.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ScreenShot from "@/components/Screenshot";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+An **Instagram journey** handles a DM conversation automatically — answering the questions you get
+constantly, collecting details, rewarding followers, and handing over to a person when it cannot.
+Instagram journeys live in the one [Journeys](/automation/journeys) list with WhatsApp and Messenger
+ones: open **Automation → Journeys** and set the channel filter to **Instagram**
+(`/dashboard/automation/journeys?channel=instagram`), or click **Instagram journeys** at the top of
+the [Instagram](/instagram) page, which opens the same filtered list.
+
+Journeys were previously called Chatbots.
+
+<ScreenShot src="/docs/screenshots/instagram/journeys.png" alt="Automation → Journeys filtered to Instagram: the channel filter reads Instagram, and two Instagram journey cards — Follow to unlock and Story reply coupon — each with steps, an Instagram badge, an on/off switch, runs and an Active badge" />
+
+This page covers what is special about Instagram. The list itself — cards, runs, the on/off switch,
+cloning — is described on [Journeys](/automation/journeys).
+
+---
+
+## Create a Journey
+
+Click **Create journey** on the list. With the list filtered to Instagram, the wizard opens on
+**Channel** with **Instagram** already picked — *"DM replies, comment-to-DM, story mentions and
+follower rewards."*
+
+<Steps>
+<Step>
+Click **Next**. Pick **Start from scratch** or one of the [examples](#instagram-examples). The chips
+along the top filter them by use (**Welcome**, **Support**, **Growth**, …). On a wide screen, the
+selected example plays in a phone preview on the right.
+</Step>
+<Step>
+Click **Next**. Check the **Journey Name** — at least 3 characters, only your team sees it.
+</Step>
+<Step>
+Optionally pick an **Instagram account** — *"The account whose DMs and comments start this
+journey."* The journey itself is not tied to an account: the rule the wizard creates listens on the
+account you pick, or on every connected Instagram account if you leave it empty.
+</Step>
+<Step>
+Under **How it starts**, pick **DM with a keyword**, **Comment on a post or reel**, **Story
+mention** or **ig.me link**. The example picks one for you.
+</Step>
+<Step>
+Click **Create journey**. The editor opens with the example laid out. Change the wording, then
+switch it on — see [Make It Start](#make-it-start).
+</Step>
+</Steps>
+
+<ImagePlaceholder
+  file="instagram/journey-wizard.png"
+  shot="Create journey wizard on the Details step for Instagram, made from Follow to unlock a code: Journey Name, the Instagram account picker, How it starts with DM with a keyword selected and the other three options (Comment on a post or reel, Story mention, ig.me link), and the Instagram phone preview on the right."
+  caption="Instagram's How it starts choices."
+/>
+
+{/* TODO: re-capture — the old instagram/chatbot-wizard.png showed the two-step wizard without Channel or How it starts */}
+
+With no Instagram journeys yet, the filtered list offers three examples and **Start from scratch**
+as buttons.
+
+---
+
+## Instagram Examples
+
+| Example | Filter | What it does | How it starts |
+|---------|--------|--------------|--------------------|
+| **DM welcome** | Welcome | Greets people with quick replies to shop, ask a question or talk to you | DM with a keyword |
+| **FAQ quick replies** | Support | Answers your most common questions with one tap each | DM with a keyword |
+| **Lead capture** | Lead capture | Asks for a name and a phone number or email, then hands the lead to your team | DM with a keyword |
+| **Product cards** | Sales | Shows products as swipeable cards with a link to buy each one | DM with a keyword |
+| **Booking request** | Bookings | Picks a service, asks for a preferred time and passes the request to your team | DM with a keyword |
+| **Comment to DM a link** | Growth | Replies privately to anyone who comments on a post, with the link they asked for | Comment on a post or reel |
+| **Follow to unlock a code** | Growth | Sends a discount code to followers and asks everyone else to follow first | DM with a keyword |
+| **Story mention thank-you** | Growth | Thanks people who mention you in their story | Story mention |
+| **ig.me link campaign** | Growth | Welcomes people who open your ig.me link from an ad, bio or QR code | ig.me link |
+| **Talk to a person** | Handoff | Lets people ask for a person and assigns the chat to your team | DM with a keyword |
+
+Examples use placeholder links and codes — `https://example.com/offer`, `WELCOME10`. Replace them
+before you switch the journey on.
+
+---
+
+## Make It Start
+
+A journey runs only when an [automation rule](/automation) starts it with **Start a journey**. A
+rule can only start a journey of its own channel, so an Instagram rule lists only Instagram
+journeys.
+
+The wizard creates that rule for you, switched off:
+
+| How it starts | Rule the wizard creates |
+|---------------|-------------------------|
+| **DM with a keyword** | **Message Received**, waiting for a keyword |
+| **Comment on a post or reel** | **Instagram Comment** on all posts and reels |
+| **Story mention** | Story mention |
+| **ig.me link** | ig.me link |
+
+In the editor, the **This journey is off** card switches it on — type the keyword first if it asks
+for one. **Edit rule** opens the rule, for example to narrow a comment rule to
+[specific posts](/instagram/automations). If no Instagram account was connected, the editor shows
+**Set up the trigger** instead; **Create the rule** opens a new Instagram rule with the trigger
+already chosen.
+
+<Callout type="warn">
+  A journey whose rule is off never runs. If you closed the editor without switching it on, open the
+  journey again, or switch on its rule — named *"… · start"* — in [Automation → Rules](/automation).
+  A comment, story or ig.me rule made from the **Comments**, **Story Mentions** or **ig.me Links**
+  tab on the Instagram page can start the journey too.
+</Callout>
+
+An agent can also start an Instagram journey by hand from the [Inbox](/inbox): **Journey** in the
+composer — see [Start a Journey from the Inbox](/automation/journeys#start-a-journey-from-the-inbox).
+
+---
+
+## What an Instagram Journey Can Send
+
+The editor is the same one WhatsApp uses — see the [Journey Builder](/automation/journey-builder) for
+the canvas itself. On Instagram, the **Components** panel offers:
+
+| Group | Components |
+|-------|-----------|
+| **Basic Messages** | Text · Image · Video · Audio |
+| **Interactive** | Input |
+| **Templates** | Cards · Quick Reply · Product Template · Follow Check · Continue on WhatsApp |
+| **Flow Control** | Pause · Start |
+| **None Interactive** | Assign |
+
+| Component | Detail |
+|-----------|--------|
+| **Quick Reply** | A **Message Text** with up to **13** tappable replies, each up to 20 characters |
+| **Cards** | Up to **10** swipeable cards — a title and subtitle (80 characters each), an **Image URL**, and up to **3** buttons per card. A button is a **URL** or an **Action** |
+| **Product Template** | Up to **10** products from your catalogue |
+| **Input** | Asks a question and saves the answer under **Save Answer to Variable** — for an email address, a phone number or a name |
+| **Follow Check** | Branches on whether the person follows you — see below |
+| **Continue on WhatsApp** | A button that moves the chat to one of your WhatsApp numbers and joins the person's Instagram and WhatsApp contacts — see [Continue on WhatsApp](/automation/journey-builder#continue-on-whatsapp) |
+| **Assign** | Hands the conversation to your team in the [Inbox](/inbox) |
+
+WhatsApp-only parts — Reply Buttons, List, Document, templates, catalogs, flows, Location and
+Contacts — do not appear.
+
+---
+
+## How a Conversation Continues
+
+A **Quick Reply**, **Cards** or **Input** step stops and waits for the person. When they answer, the
+journey carries on down the matching branch:
+
+| They… | The journey… |
+|-------|----------|
+| Tap one of the step's own buttons | Follows that button's branch |
+| Type text that matches a button's title (case does not matter) | Treats it as that button |
+| Type anything else at a **Quick Reply** step | Keeps waiting; the message goes to your rules instead |
+| Answer an **Input** step | Saves the answer and moves on |
+
+A reply that the waiting journey consumes does not also fire your keyword rules. The journey waits for up to
+**24 hours** — Instagram only lets a business message someone within 24 hours of their last
+message — and after that the next DM is treated as a fresh message.
+
+<Callout type="info">
+  A tap on an old button from earlier in the thread, or on the persistent menu, is not an answer to
+  the current step. It goes to your rules instead.
+</Callout>
+
+---
+
+## Reward Followers with Follow Check
+
+**Follow Check** sends the person down one of two branches: **Follows you** or **Doesn't follow
+yet**. The **Follow to unlock a code** example shows the pattern — the code goes out on the first
+branch, a *"Follow us, then send “code” again"* nudge on the second.
+
+<Callout type="warn">
+  Instagram only shares who follows you once the person has messaged you. A Follow Check straight
+  after a comment always takes **Doesn't follow yet**. Put it after a quick reply — *"Follow us,
+  then tap Done"* — so the person has written to you first.
+</Callout>
+
+---
+
+## Journeys Started by a Comment
+
+When a comment rule starts a journey, the journey's first message goes out as a **private reply** to
+that comment — the only way to reach someone who has never messaged you. Instagram allows one per
+comment, and nothing more until the person writes back:
+
+- Only a **Text** step is sent as the private reply. Make the journey's first step a Text.
+- An image, video or audio cannot be a private reply. If one comes first, the journey sends its caption
+  (or *"Thanks for your comment!"*) as the private reply, then tries the media as a normal DM.
+- Every step after the private reply is a normal DM. Instagram refuses those to someone who has
+  never messaged you, and a refused message stops the journey at that step.
+
+Keep a comment journey to one Text message — the **Comment to DM a link** example is built exactly that
+way.
+
+---
+
+## Test It
+
+Click **Preview** in the editor to walk the conversation in a phone frame. Check that every reply
+leads somewhere, that nothing loops, and that a person is reachable within a step or two.
+
+---
+
+## Manage Journeys
+
+Search, sort, the on/off switch, **Clone** and **Delete** work as on every journey — see
+[Journeys](/automation/journeys). **Settings** in the editor toolbar renames the journey.
+
+<Callout type="warn">
+  Editing a journey changes it for everyone already part-way through it. Clone, edit the clone, test
+  it, then point the rule at the clone.
+</Callout>
+
+---
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| The journey never runs | Its rule is still off, or no rule starts it | Switch it on from the editor's card, or add **Start a journey** to an Instagram rule |
+| The journey does not move on after a quick reply | The person typed something that matches no button | Word the buttons so people tap them; a typed message is handled by your rules |
+| Everyone gets the "follow first" branch | The Follow Check runs before the person has messaged you | Put a quick reply before it |
+| A comment journey sends nothing, or stops after one message | Its first step is not a Text, or it sends more than the one private reply Instagram allows | Start with a single Text step |
+| **Select journey** on a rule does not list the journey | The rule does not run on Instagram alone | Keep Instagram as the rule's only channel |
+
+---
+
+## Related Pages
+
+- [Comments & Story Mentions](/instagram/automations) — rules that start a journey from public activity
+- [Ice Breakers, Menu & Links](/instagram/entry-points)
+- [Journeys](/automation/journeys) — the list for every channel
+- [Journey Builder](/automation/journey-builder) — the editor canvas
+- [Messenger Journeys](/messenger/journeys)
+- [Automation Rules](/automation)
+- [Inbox](/inbox)

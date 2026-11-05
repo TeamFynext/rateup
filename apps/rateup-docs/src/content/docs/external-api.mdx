@@ -7,7 +7,7 @@ import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
 The **External API** (the partner API) lets your own systems drive RateUp: create contacts, fill
-contact groups, launch campaigns, send WhatsApp templates, run a loyalty till and read survey
+audiences, launch campaigns, send WhatsApp templates, run a loyalty till and read survey
 responses. It is a REST API over HTTPS with JSON bodies, authenticated with an API key you create
 in **Settings → Integrations → API Service**.
 
@@ -83,13 +83,18 @@ A key with **Full access** can call every endpoint, including ones added later. 
 
 | Feature | Covers | Permissions behind it |
 |---------|--------|-----------------------|
-| **Contacts** | Contacts and contact groups | `contacts.read`, `contacts.manage` |
+| **Contacts** | Contacts and audiences, including contact identities | `contacts.read`, `contacts.manage` |
+| **Merge contacts** | Merging two contacts into one (`POST /contacts/{contactId}/merge`) | `contacts.merge` |
 | **Teams** | Listing teams, to route sends | `teams.read` |
 | **Campaigns** | Creating and sending campaigns, reading their responses | `campaigns.read`, `campaigns.manage`, `campaigns.send` |
 | **Surveys** | Surveys and their responses | `surveys.read` |
 | **WhatsApp messaging** | Sending approved templates, reading message status | `templates.read`, `inbox.read`, `inbox.reply` |
 | **Loyalty** | Members, points, rewards and vouchers | `loyalty.read`, `loyalty.cashier` |
 | **Webchat widget** | Only the support widget on your website — its chat socket and `/api/support/*`. No endpoint on this page | `widget.connect` |
+
+**Merge contacts** is separate from **Contacts** because a merge deletes a contact for good. A key
+limited to **Contacts** cannot merge until you add **Merge contacts** to it; a **Full access** key
+can.
 
 `POST /wa/templates/{templateId}/send/contacts` is open to a key with either **WhatsApp messaging**
 or **Campaigns**.
@@ -184,8 +189,8 @@ state, a `5xx` is RateUp's problem.
 | `400` | `validation_failed` (with `details.issues[]` — `path` and `message` per problem), `phone_invalid`, `card_code_invalid`, `member_ref_invalid`, `idempotency_key_invalid`, `cursor_invalid`, `file_invalid` |
 | `401` | `unauthorized` |
 | `403` | `insufficient_scope`, `test_key_not_allowed`, `org_suspended`, `subscription_required`, `subscription_expired`, `campaign_credits_exhausted` |
-| `404` | `not_found`, `contact_not_found`, `contact_group_not_found`, `team_not_found`, `campaign_not_found`, `survey_not_found`, `template_not_found`, `message_not_found`, `program_not_found`, `member_not_found`, `reward_not_found`, `voucher_not_found` |
-| `409` | `contact_already_exists`, `contact_group_already_exists`, `already_exists`, `member_already_exists`, `campaign_send_in_progress`, `reward_already_assigned`, `reward_already_redeemed`, `voucher_already_redeemed`, `voucher_not_approved`, `reward_in_use`, `idempotency_key_reused`, `request_in_progress` |
+| `404` | `not_found`, `contact_not_found`, `contact_group_not_found`, `team_not_found`, `campaign_not_found`, `survey_not_found`, `template_not_found`, `message_not_found`, `identity_not_found`, `program_not_found`, `member_not_found`, `reward_not_found`, `voucher_not_found` |
+| `409` | `contact_already_exists`, `identity_in_use`, `last_identity`, `contact_group_already_exists`, `already_exists`, `member_already_exists`, `campaign_send_in_progress`, `reward_already_assigned`, `reward_already_redeemed`, `voucher_already_redeemed`, `voucher_not_approved`, `reward_in_use`, `idempotency_key_reused`, `request_in_progress` |
 | `422` | `insufficient_points`, `redemption_rules_violated`, `reward_out_of_stock`, `program_not_active`, `member_not_active`, `invalid_amount`, `template_not_approved`, `template_not_sendable`, `contact_limit_reached`, `campaign_incomplete`, `no_recipients`, `send_failed` (WhatsApp refused the message) |
 | `429` | `rate_limited` |
 | `502` | `send_failed` — WhatsApp could not be reached; `details.retryable` is `true` |
@@ -275,8 +280,8 @@ local number only when that is not a valid number.
 |-------|---------|
 | Any request, per IP address (checked before the key) | 300 a minute |
 | Any request, per organisation, across both versions | 1,200 a minute |
-| Contact writes · contact-group writes | 300 a minute each |
-| `POST /contacts/bulk` · `POST /contact-groups/{id}/contacts/import` | 30 a minute each |
+| Contact writes · audience writes | 300 a minute each |
+| `POST /contacts/bulk` · `POST /audiences/{id}/contacts/import` | 30 a minute each |
 | Campaign writes | 120 a minute |
 | `POST /campaigns/{id}/send` | 10 a minute |
 | `POST /wa/templates/send` and `/send-with-file` (shared) | 600 a minute |
@@ -309,12 +314,16 @@ Feature: **Contacts**.
 | Method & path | Does |
 |---------------|------|
 | `GET /contacts` | List contacts. Filters: `search` (name, email or phone digits), `labelId`, `contactGroupId` |
-| `GET /contacts/lookup?phone=` | Find one contact by exact phone number |
-| `GET /contacts/{contactId}` | Get a contact |
+| `GET /contacts/lookup?kind=&value=` | Find one contact by any identity — phone, email, BSUID, Instagram or Messenger id, your own id (see [Find a contact by any identity](#find-a-contact-by-any-identity)). `?phone=` still works |
+| `GET /contacts/{contactId}` | Get a contact, with its `identities` |
 | `POST /contacts` | Create a contact. Runs the organisation's contact-created automations |
 | `POST /contacts/bulk` | Create up to 1,000 contacts. No automations run |
 | `PATCH /contacts/{contactId}` | Change only the fields you send |
 | `DELETE /contacts/{contactId}` | Delete the contact **and its conversation history** |
+| `GET /contacts/{contactId}/identities` | List the contact's identities |
+| `POST /contacts/{contactId}/identities` | Add a phone, email or your own id to the contact |
+| `DELETE /contacts/{contactId}/identities/{identityId}` | Remove one identity |
+| `POST /contacts/{contactId}/merge` | Merge another contact into this one. Feature: **Merge contacts** |
 
 **Create a contact**
 
@@ -375,28 +384,199 @@ set to `null` clears them.
 `reason` is `already_exists` or `duplicate_in_request`; `index` is the row's position in your
 array.
 
-### Contact groups
+#### Contact identities
+
+One person can reach a business several ways: two phone numbers, an email, a WhatsApp
+business-scoped user ID (BSUID) when they message with a username instead of a phone, an
+Instagram account, a Facebook Page conversation, or an id in your own system. Each of these is an
+**identity** on the contact, and a contact can hold any number of each.
+
+| `kind` | `value` | Scope |
+|--------|---------|-------|
+| `PHONE` | Digits with the country code, no `+` | Organisation |
+| `EMAIL` | Lowercased | Organisation |
+| `WA_BSUID` | The business-scoped user ID (BSUID), e.g. `US.13491208655302741918` | Organisation |
+| `IG_SCOPED` | The Instagram-scoped user ID | One Instagram account (`channelId`) |
+| `FB_PSID` | The Page-scoped user ID | One Facebook Page (`channelId`) |
+| `WEBCHAT` | The website widget's visitor id | One widget (`channelId`) |
+| `EXTERNAL` | An id in another system | One `integration`, e.g. `shopify` or `my-crm` |
+
+`GET /contacts/{contactId}`, the lookup and the merge return the contact with its identities;
+lists (`GET /contacts`, audience members) do not, to stay one query per page — call
+`GET /contacts/{contactId}/identities` when you need them.
+
+```json
+{
+  "id": "3f6c1d2a-8b4e-4f0a-9c7d-1e2b3a4c5d6e",
+  "name": "Priya Shah",
+  "phone": "919876543210",
+  "businessScopedUserId": "IN.20781945361027384",
+  "email": "priya@example.com",
+  "…": "…",
+  "identities": [
+    {
+      "id": "a1b2c3d4-0000-4000-8000-000000000001",
+      "kind": "PHONE",
+      "value": "919876543210",
+      "channelId": null,
+      "integration": null,
+      "source": "INBOUND",
+      "verified": true,
+      "primary": true,
+      "username": null,
+      "displayName": "Priya",
+      "lastSeenAt": "2026-11-04T10:12:00.000Z",
+      "createdAt": "2026-10-16T09:30:00.000Z"
+    },
+    {
+      "id": "a1b2c3d4-0000-4000-8000-000000000002",
+      "kind": "EXTERNAL",
+      "value": "cus_8812",
+      "channelId": null,
+      "integration": "shopify",
+      "source": "IMPORT",
+      "verified": true,
+      "primary": true,
+      "username": null,
+      "displayName": null,
+      "lastSeenAt": "2026-11-05T08:00:00.000Z",
+      "createdAt": "2026-11-05T08:00:00.000Z"
+    }
+  ]
+}
+```
+
+- `primary` marks the identity shown as the contact's `phone`, `email` or `businessScopedUserId`;
+  the others are extra ways to reach and find the same person.
+- `verified` is `true` when the platform issued the id (an inbound message) or the customer proved
+  it, and `false` for one someone typed in.
+- `source` is where it came from: `INBOUND` (a message), `META_LINK` (Meta linked a BSUID and a
+  phone), `HANDOFF` (a signed link the customer followed), `CUSTOMER` (they typed it in a Journey
+  or form), `AGENT` (staff added it or merged it in), `IMPORT` (CSV, an integration or this API).
+- `channelId` is the channel a per-channel id belongs to; for other kinds it is the channel the
+  identity was last seen on, or `null`.
+
+Identities recorded before contact identities existed are filled in from each contact's `phone`,
+`email` and platform ids by a one-time backfill; until then a contact may list none, but the
+lookup still finds it.
+
+**Add an identity**
+
+Only `PHONE`, `EMAIL` and `EXTERNAL` can be added; platform ids (BSUID, Instagram, Messenger,
+webchat) only ever come from the platform. `EXTERNAL` needs `integration`.
+
+```bash
+curl -X POST "https://api.rateup.app/api/external/v2/contacts/3f6c1d2a-8b4e-4f0a-9c7d-1e2b3a4c5d6e/identities" \
+  -H "Authorization: Bearer $RATEUP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: 7c9e6679-7425-40de-944b-e07fc1f90ae7" \
+  -d '{ "kind": "EXTERNAL", "value": "cus_8812", "integration": "shopify" }'
+```
+
+Answers `201` with the identity, or `200` when the contact already had it. The first phone or email
+a contact gets becomes its `phone` or `email`; later ones are added as extra identities.
+
+When **another contact** already has that phone, email or id, nothing is moved and the answer is
+`409 identity_in_use` with that contact's id — merge the two if they are the same person:
+
+```json
+{
+  "error": {
+    "code": "identity_in_use",
+    "message": "Another contact already has that identity",
+    "details": { "contactId": "9d8e7f60-1a2b-4c3d-8e9f-0a1b2c3d4e5f" },
+    "requestId": "req-7f2a"
+  }
+}
+```
+
+A clash on a phone or email also shows up in the dashboard as a duplicate to review.
+
+**Remove an identity**
+
+`DELETE /contacts/{contactId}/identities/{identityId}` answers `{ "id": "…", "deleted": true }`.
+Removing the primary phone or email promotes the next one of that kind, or clears the field. A
+contact's **last** identity cannot be removed (`409 last_identity`) — delete the contact instead.
+
+#### Find a contact by any identity
+
+```bash
+curl "https://api.rateup.app/api/external/v2/contacts/lookup?kind=WA_BSUID&value=IN.20781945361027384" \
+  -H "Authorization: Bearer $RATEUP_API_KEY"
+```
+
+| Parameter | |
+|-----------|---|
+| `kind` + `value` | The identity to match exactly. A `PHONE` value is normalised like every phone (`+91 98765-43210` → `919876543210`), an `EMAIL` is matched case-insensitively |
+| `phone` | Shorthand for `kind=PHONE&value=…`, as before. Send either `phone` or `kind` and `value` |
+| `channelId` | `IG_SCOPED`, `FB_PSID`, `WEBCHAT`: only an id recorded on this channel |
+| `integration` | `EXTERNAL`: only an id from this system. Without it, any integration's id matches, and so does the contact's `externalId` |
+
+It finds a merged contact by **any** of its phones, emails or ids, not only the ones shown on the
+contact, and answers the contact with its `identities`, or `404 contact_not_found`.
+
+#### Merge two contacts
+
+When two contacts are the same person — a customer who wrote from a username (BSUID only) and
+later from their phone, or the same shopper on WhatsApp and Instagram — merge one into the other.
+Feature: **Merge contacts** (`contacts.merge`).
+
+```bash
+curl -X POST "https://api.rateup.app/api/external/v2/contacts/3f6c1d2a-8b4e-4f0a-9c7d-1e2b3a4c5d6e/merge" \
+  -H "Authorization: Bearer $RATEUP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: 0b8c2f3e-5d1a-4e7b-9c6f-2a4d8e1b3c5f" \
+  -d '{
+    "sourceContactId": "9d8e7f60-1a2b-4c3d-8e9f-0a1b2c3d4e5f",
+    "fieldChoices": { "name": "source", "customFields": { "city": "source" } }
+  }'
+```
+
+The contact in the path is **kept**; `sourceContactId` is merged into it and deleted:
+
+- every identity moves over (the kept contact's `phone`, `email` and BSUID stay primary);
+- conversations, messages, calls, notes, orders and survey responses move over;
+- labels, audiences and assignees are combined;
+- where both have a value and they differ, the kept contact's wins unless `fieldChoices` says
+  `"source"`; a blank on the kept contact is filled from the source. `fieldChoices` takes `name`,
+  `email`, `address`, `dob`, `gender`, `notes`, `lifecycleId`, and `customFields` keyed by slug;
+- in a loyalty programme both belong to, the larger account (higher balance, then older) is kept.
+
+Answers `200` with the kept contact and its identities, and fires the
+[`contact.merged`](#webhooks) webhook. A merge **cannot be undone**. Merging a contact into itself
+is `400 validation_failed`; a contact that is not found — including a source that was already
+merged — is `404 contact_not_found` with its id in `details.contactId`, so a retry without an
+`Idempotency-Key` does no harm. Merges are limited to 30 a minute per organisation.
+
+### Audiences
 
 Feature: **Contacts**.
 
+<Callout type="info">
+  Audiences were called **contact groups** before. In v2 they live at `/audiences`. The field
+  names keep the old spelling: the path parameter is `contactGroupId`, campaigns take
+  `contactGroupIds`, contacts filter on `contactGroupId`, and the error codes are
+  `contact_group_not_found` and `contact_group_already_exists`.
+</Callout>
+
 | Method & path | Does |
 |---------------|------|
-| `GET /contact-groups` | List groups. Filters: `search`, `teamId`, `type` (`NORMAL` or `LOYALTY`) |
-| `POST /contact-groups` | Create a group: `name`, `teamId`, optional `icon` and `tags` |
-| `GET /contact-groups/{contactGroupId}` | A group with its `memberCount` |
-| `PATCH /contact-groups/{contactGroupId}` | Change `name`, `icon` or `tags` (`null` clears `icon` or `tags`) |
-| `DELETE /contact-groups/{contactGroupId}` | Delete the group and its memberships — the contacts stay. Answers `204` |
-| `GET /contact-groups/{contactGroupId}/contacts` | The group's contacts, newest first |
-| `POST /contact-groups/{contactGroupId}/contacts` | Add up to 1,000 existing contacts by id |
-| `POST /contact-groups/{contactGroupId}/contacts/remove` | Remove up to 1,000 contacts by id. The contacts are not deleted |
-| `POST /contact-groups/{contactGroupId}/contacts/import` | Up to 1,000 contacts by phone: unknown numbers are created, known ones reused unchanged, all are added |
+| `GET /audiences` | List audiences. Filters: `search`, `teamId`, `type` (`NORMAL` or `LOYALTY`) |
+| `POST /audiences` | Create an audience: `name`, `teamId`, optional `icon` and `tags` |
+| `GET /audiences/{contactGroupId}` | An audience with its `memberCount` |
+| `PATCH /audiences/{contactGroupId}` | Change `name`, `icon` or `tags` (`null` clears `icon` or `tags`) |
+| `DELETE /audiences/{contactGroupId}` | Delete the audience and its memberships — the contacts stay. Answers `204` |
+| `GET /audiences/{contactGroupId}/contacts` | The audience's contacts, newest first |
+| `POST /audiences/{contactGroupId}/contacts` | Add up to 1,000 existing contacts by id |
+| `POST /audiences/{contactGroupId}/contacts/remove` | Remove up to 1,000 contacts by id. The contacts are not deleted |
+| `POST /audiences/{contactGroupId}/contacts/import` | Up to 1,000 contacts by phone: unknown numbers are created, known ones reused unchanged, all are added |
 
-Group names are unique within a team — a clash is `409 contact_group_already_exists`.
+Audience names are unique within a team — a clash is `409 contact_group_already_exists`.
 
-**Import contacts into a group**
+**Import contacts into an audience**
 
 ```bash
-curl -X POST "https://api.rateup.app/api/external/v2/contact-groups/$GROUP_ID/contacts/import" \
+curl -X POST "https://api.rateup.app/api/external/v2/audiences/$AUDIENCE_ID/contacts/import" \
   -H "Authorization: Bearer $RATEUP_API_KEY" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: import-2026-10-16-batch-1" \
@@ -433,7 +613,7 @@ Feature: **Teams**.
 |---------------|------|
 | `GET /teams` | List teams — `{ "data": [{ "id", "name" }], "nextCursor" }` |
 
-A team id is what campaigns and contact groups belong to, and what a template send can be
+A team id is what campaigns and audiences belong to, and what a template send can be
 attributed to.
 
 ### Campaigns
@@ -443,8 +623,8 @@ Feature: **Campaigns**. Needs a plan with WhatsApp campaigns.
 | Method & path | Does |
 |---------------|------|
 | `GET /campaigns` | List campaigns. Filters: `status`, `type`, `teamId` |
-| `GET /campaigns/{campaignId}` | The campaign, its contact groups, drip stages, recipient count and latest send |
-| `POST /campaigns` | Create a campaign as a **DRAFT**, with its audience |
+| `GET /campaigns/{campaignId}` | The campaign, its audiences (`contactGroupIds`), drip stages, recipient count and latest send |
+| `POST /campaigns` | Create a campaign as a **DRAFT**, with its recipients |
 | `POST /campaigns/{campaignId}/send` | Launch it now or at `scheduledAt`. Paid — live keys only |
 | `GET /campaigns/{campaignId}/responses` | Responses to the WhatsApp Flow on the campaign's template |
 | `DELETE /campaigns/{campaignId}` | Delete it in any state; anything queued or scheduled is cancelled first |
@@ -471,7 +651,7 @@ curl -X POST "https://api.rateup.app/api/external/v2/campaigns" \
 | `templateId` | Required for `WHATSAPP` |
 | `dripStages` | Required for `DRIP`: 1–20 of `{ templateId, delay, delayUnit: "minutes" \| "hours" \| "days", sendAtTime?: "HH:mm" }` |
 | `dynamicTags` | Template variable mappings, in `{{1}}`, `{{2}}` order |
-| `contactGroupIds`, `contactIds` | The audience — up to 1,000 of each |
+| `contactGroupIds`, `contactIds` | The recipients: audience ids and individual contact ids — up to 1,000 of each |
 
 The status cannot be set; a campaign starts as a draft. Then:
 
@@ -521,7 +701,7 @@ A `DRIP` campaign is started instead, and `send` is `null` — its stages go out
 | `503 send_failed` | It could not be queued — retry with the same key |
 
 Stopping or pausing a campaign, and re-sending to named participants, are dashboard-only — see
-[Campaign Details](/campaign/campaign-details).
+[Campaign Details](/campaigns/campaign-details).
 
 ### WhatsApp templates
 
@@ -771,7 +951,7 @@ and `notes`.
 | `409 voucher_already_redeemed` / `voucher_not_approved` | The voucher was used, or still awaits approval |
 | `409 member_already_exists` | That number is already enrolled |
 
-The card send only delivers inside the customer's 24-hour WhatsApp window; outside it the answer
+The card send only delivers inside the member's 24-hour WhatsApp window; outside it the answer
 is `{ "sent": false, "skippedReason": "session_closed" }` rather than an error.
 
 ---
@@ -790,8 +970,29 @@ others it can deliver:
 | `survey.response.created` | A survey or WhatsApp Flow response is filed — in the same shape as `GET /surveys/{id}/responses`, plus the survey's `type` |
 | `flow.response.created` | A WhatsApp Flow is completed — the same fields plus `flow` (`id`, `metaFlowId`, `name`, `categories`). A Flow also fires `survey.response.created`, so subscribe to one |
 | `loyalty.points.earned` · `loyalty.points.redeemed` · `loyalty.points.adjusted` | A ledger row moved points |
+| `contact.merged` | Two contacts were merged — from the dashboard, a signed handoff link or `POST /contacts/{contactId}/merge` |
 
-These arrive in an envelope — `{ id, type, createdAt, orgId, data }` — and are retried. Each
+`contact.merged` is posted like the other contact events, as `{ event, …fields }`. `contact` is the
+contact that was kept; `mergedContactId` is the one merged into it, which no longer exists — repoint
+anything you stored against it:
+
+```json
+{
+  "event": "contact.merged",
+  "contact": {
+    "id": "3f6c1d2a-8b4e-4f0a-9c7d-1e2b3a4c5d6e",
+    "name": "Priya Shah",
+    "phone": "919876543210",
+    "businessScopedUserId": "IN.20781945361027384",
+    "email": "priya@example.com",
+    "source": "external",
+    "lifecycleId": null
+  },
+  "mergedContactId": "9d8e7f60-1a2b-4c3d-8e9f-0a1b2c3d4e5f"
+}
+```
+
+The other events in this table arrive in an envelope — `{ id, type, createdAt, orgId, data }` — and are retried. Each
 delivery is signed with the organisation's **signing secret** (`whsec_…`, shown on the
 **Signing secret** card):
 
@@ -817,12 +1018,16 @@ v1 stays for integrations already built on it. It is mounted at
 | Module | Routes |
 |--------|--------|
 | Contacts | `POST /contacts` (one contact or an array), `GET /contacts`, `GET /contacts/{contactId}`, `PUT /contacts/{contactId}`, `DELETE /contacts/{contactId}` |
-| Contact groups | `POST /contact-groups`, `GET /contact-groups`, `GET /contact-groups/{id}/contacts`, `PUT /contact-groups/{id}`, `DELETE /contact-groups/{id}`, `POST /contact-groups/{id}/contacts/existing`, `POST /contact-groups/{id}/contacts/new`, `DELETE /contact-groups/{id}/contacts` |
+| Audiences (contact groups) | `POST /contact-groups`, `GET /contact-groups`, `GET /contact-groups/{id}/contacts`, `PUT /contact-groups/{id}`, `DELETE /contact-groups/{id}`, `POST /contact-groups/{id}/contacts/existing`, `POST /contact-groups/{id}/contacts/new`, `DELETE /contact-groups/{id}/contacts` |
 | Teams | `GET /teams` |
 | Campaigns | `POST /campaigns`, `GET /campaigns`, `GET /campaigns/{id}/responses`, `DELETE /campaigns/{id}`, `PUT /campaigns/{id}/send` |
 | Surveys | `GET /surveys`, `GET /surveys/{surveyId}` (its responses) |
 | WhatsApp templates | `GET /wa/templates`, `POST /wa/templates/send`, `POST /wa/templates/send-with-file`, `POST /wa/templates/{templateId}/send/contacts`, `GET /wa/templates/message/{messageId}/status` |
 | Loyalty | The same module and shapes as v2, under `/loyalty` |
+
+v1 is frozen at its original paths and wording: audiences are only at `/contact-groups` there, and
+its error messages still say "Contact group" (for example `{ "error": "Contact group not found" }`).
+Use v2 for `/audiences`.
 
 What v1 shares with v2 now:
 
@@ -887,10 +1092,13 @@ Once it is live on a **Live** v2 key, **revoke the v1 key**.
 | Contacts · create many | `POST /contacts` with an array | `POST /contacts/bulk` with `{ contacts }`, reporting `created` and `skipped` |
 | Contacts · update | `PUT /contacts/{id}` | `PATCH /contacts/{id}` — only sent fields change |
 | Contacts · find by phone | — | `GET /contacts/lookup?phone=` |
-| Groups · update | `PUT /contact-groups/{id}` | `PATCH /contact-groups/{id}` |
-| Groups · add existing | `POST …/contacts/existing` | `POST …/contacts` with `{ contactIds }` |
-| Groups · add new | `POST …/contacts/new` | `POST …/contacts/import` — matches by phone, creates the unknown ones |
-| Groups · remove | `DELETE …/contacts` with a body | `POST …/contacts/remove` with `{ contactIds }` |
+| Contacts · find by BSUID, email, Instagram/Messenger id or your id | — | `GET /contacts/lookup?kind=&value=` |
+| Contacts · identities and merge | — | `/contacts/{contactId}/identities`, `POST /contacts/{contactId}/merge` |
+| Audiences · path | `/contact-groups` | `/audiences` |
+| Audiences · update | `PUT /contact-groups/{id}` | `PATCH /audiences/{id}` |
+| Audiences · add existing | `POST …/contacts/existing` | `POST …/contacts` with `{ contactIds }` |
+| Audiences · add new | `POST …/contacts/new` | `POST …/contacts/import` — matches by phone, creates the unknown ones |
+| Audiences · remove | `DELETE …/contacts` with a body | `POST …/contacts/remove` with `{ contactIds }` |
 | Campaigns · template | `waTemplateId` | `templateId` |
 | Campaigns · status | Settable on create | Always a `DRAFT`; launch with send |
 | Campaigns · send | `PUT /campaigns/{id}/send` | `POST /campaigns/{id}/send` — answers `202` with the send session |
@@ -930,8 +1138,8 @@ Once it is live on a **Live** v2 key, **revoke the v1 key**.
 ## Related Pages
 
 - [Integrations](/settings/integrations) — creating keys, usage, and the organisation webhook
-- [Members & Roles](/settings/users) — who may manage API keys
+- [Members & Roles](/settings/members) — who may manage API keys
 - [WhatsApp Templates](/whatsapp/templates) — building and approving templates
 - [Custom Fields](/contacts/custom-fields) — the slugs `customFields` is keyed by
 - [Loyalty](/loyalty) — the programme the loyalty endpoints run
-- [Web Forms → Settings](/web-forms/settings) — the per-form survey response webhook
+- [Surveys → Settings](/surveys/settings) — the per-survey response webhook

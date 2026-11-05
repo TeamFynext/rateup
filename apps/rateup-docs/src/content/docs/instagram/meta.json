@@ -1,7 +1,7 @@
 {
   "pages": [
     "index",
-    "chatbots",
+    "journeys",
     "automations",
     "entry-points"
   ]
