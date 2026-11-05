@@ -1016,6 +1016,14 @@ export async function getOrCreateContactByPhone(
         if (!additionalData?.name) {
           delete updateData?.name;
         }
+        // Where a contact came from is set once. And a webchat visitor id belongs in the
+        // contact's `other` field only on a contact that started as that visitor: a contact
+        // it was merged into (found through its WEBCHAT identity) keeps its own source and
+        // its own `other` (shown as Location), which a widget message must not overwrite.
+        delete updateData.source;
+        if (source === PlatformType.WEBCHAT && contact.source !== PlatformType.WEBCHAT) {
+          delete (updateData as { other?: unknown }).other;
+        }
         contact = await prisma.contact.update({
           where: {
             id: contact.id,

@@ -1,6 +1,7 @@
 import { Prisma } from "../../../../generated/prisma/client.js";
 import type { Contact } from "../../../../generated/prisma/client.js";
 import { ContactIdentityKind } from "../../../../generated/prisma/enums.js";
+import { PlatformType } from "../../../../generated/prisma/enums.js";
 import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
 import { HttpError } from "../../../utils/http.js";
@@ -429,6 +430,9 @@ async function mergeInTransaction(
     "lastSentMessageTimeStamp",
   ] as const;
   for (const field of fillBlanks) {
+    // A webchat visitor's id lives in its WEBCHAT identity, which moves with the merge; in the
+    // kept contact's `other` it would show as its Location.
+    if (field === "other" && source.source === PlatformType.WEBCHAT) continue;
     if (blank(target[field]) && !blank(source[field])) {
       (data as Record<string, unknown>)[field] = source[field];
     }
