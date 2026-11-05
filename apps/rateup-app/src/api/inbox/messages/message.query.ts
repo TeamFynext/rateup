@@ -7,9 +7,23 @@ import {
   getAssignedUserForContact,
   getMessagesByContactId,
   getWaChatMediaFile,
+  moderateInstagramContact,
   sendNewWaMessage,
+  type InstagramModerationAction,
 } from "./message.api";
 import { logger } from "@/utils/logger";
+import { Toast } from "@/components/common/Notice";
+import { useContactsStore } from "@/store/inboxStore";
+import { useSelectedContactStore } from "@/utils/store";
+
+/** The API's own words for a refused request (e.g. a closed Instagram window), if any. */
+function refusalMessage(error: unknown): string | undefined {
+  const response = (error as { response?: { status?: number; data?: unknown } })?.response;
+  if (!response?.status || response.status >= 500) return undefined;
+  const data = response.data as { message?: unknown } | string | undefined;
+  if (typeof data === "string") return data || undefined;
+  return typeof data?.message === "string" ? data.message : undefined;
+}
 
 export const useGetMessagesByContactId = (contactId: string) => {
   return useInfiniteQuery({
@@ -46,7 +60,37 @@ export const useSendNewWaMessage = (
     onSettled: () => qc.invalidateQueries({ queryKey: ["wa-messages", contactId] }),
     onError: (error) => {
       logger.error("Error sending message", error);
+      // A refusal (Instagram block, closed window) never reaches Meta, so no failed
+      // bubble arrives to explain it.
+      const message = refusalMessage(error);
+      if (message) Toast.error(message);
     },
+  });
+};
+
+const MODERATION_DONE: Record<InstagramModerationAction, string> = {
+  block: "Blocked on Instagram",
+  unblock: "Unblocked on Instagram",
+  spam: "Moved to spam",
+};
+
+/** Block / unblock / move to spam on Instagram, patching the row and the open chat. */
+export const useModerateInstagramContact = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (variables: { contactId: string; action: InstagramModerationAction }) =>
+      moderateInstagramContact(variables.contactId, variables.action),
+    onSuccess: (res, { contactId, action }) => {
+      const patch = { igBlockedAt: res.igBlockedAt, ...(res.isSpam && { isSpam: true }) };
+      useContactsStore
+        .getState()
+        .updateContactById(contactId, (c) => (c ? { ...c, ...patch } : c), false);
+      const { selectedContact, setSelectedContact } = useSelectedContactStore.getState();
+      if (selectedContact?.id === contactId) setSelectedContact({ ...selectedContact, ...patch });
+      if (res.isSpam) qc.invalidateQueries({ queryKey: ["contacts", "filtered"] });
+      Toast.success(MODERATION_DONE[action]);
+    },
+    onError: (error) => Toast.error(refusalMessage(error) ?? "Instagram didn't accept that."),
   });
 };
 

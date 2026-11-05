@@ -63,3 +63,13 @@ export async function getAssignedUserForContact(contactId: any) {
 export async function createPrivateMessage(contactId: string, data: any) {
   return (await axios.post(`/api/wa/inbox/message/privatemessage/${contactId}`, data)).data;
 }
+
+export type InstagramModerationAction = "block" | "unblock" | "spam";
+
+/** Block, unblock or move to spam on Instagram itself; "spam" also marks the contact spam. */
+export async function moderateInstagramContact(
+  contactId: string,
+  action: InstagramModerationAction,
+): Promise<{ igBlockedAt: string | null; isSpam: boolean }> {
+  return (await axios.post(`/api/wa/inbox/message/${contactId}/instagram/${action}`)).data;
+}

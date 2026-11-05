@@ -1,5 +1,6 @@
 import { View, Text, useColorScheme } from "react-native";
 import React, { memo, useCallback } from "react";
+import dayjs from "dayjs";
 import WaInboxText, {
   WaInboxAudio,
   WaInboxDocument,
@@ -16,6 +17,7 @@ import { getClosedIcon } from "@/util";
 import LinearGradient from "react-native-linear-gradient";
 import { Colors } from "@/constants/colors";
 import { getInboxRowTheme } from "@/constants/inboxDesign";
+import { IgAttachmentsBubble, IgStoryReplyBubble, QuotedMessage } from "./igBubbles";
 
 type MessageBubbleProps = {
   messageContent: any;
@@ -34,6 +36,13 @@ type MessageBubbleProps = {
   assignStatus?: string;
   stats?: any;
   note?: { deleted: boolean; edited: boolean; deletedBy?: string };
+  /** Instagram inline reply: the message it quotes (`message` is absent when not loaded). */
+  quote?: {
+    message?: React.ComponentProps<typeof QuotedMessage>["quoted"];
+    author?: string | null;
+  };
+  /** Set when the customer edited the message (Instagram). */
+  editedAt?: string | null;
 };
 
 const MessageBubble = ({
@@ -49,6 +58,8 @@ const MessageBubble = ({
   assignStatus,
   stats,
   note,
+  quote,
+  editedAt,
 }: MessageBubbleProps) => {
   const renderContent = useCallback(
     (textColor?: string) => {
@@ -73,6 +84,19 @@ const MessageBubble = ({
           return (
             <WaInboxInteractive interactiveBody={interactive} messageContent={messageContent} />
           );
+        case "attachments":
+        case "ig_shared_post":
+          return <IgAttachmentsBubble content={messageContent} textColor={textColor} />;
+        case "ig_story_reply":
+          return <IgStoryReplyBubble content={messageContent} textColor={textColor} />;
+        case "ig_unsupported":
+          return (
+            <Text style={{ color: textColor, fontSize: 13, fontStyle: "italic" }}>
+              Instagram didn&apos;t share this message&apos;s content
+            </Text>
+          );
+        case "quickreply":
+          return <WaInboxText messageContent={messageContent} textColor={textColor} />;
         default:
           let displayContent = messageContent;
           if (typeof messageContent === "object" && messageContent !== null) {
@@ -277,6 +301,16 @@ const MessageBubble = ({
 
   const timestampColor = t.fg4;
 
+  // The customer changed the text after sending it (Instagram).
+  const editedLabel = editedAt ? (
+    <Text
+      style={{ fontStyle: "italic" }}
+      accessibilityLabel={`Edited ${dayjs(editedAt).format("DD MMM, h:mm A")}`}
+    >
+      {` · edited ${dayjs(editedAt).format("h:mm A")}`}
+    </Text>
+  ) : null;
+
   const authorLabelStyle = {
     fontSize: 9,
     fontFamily: "Figtree_800ExtraBold",
@@ -324,6 +358,7 @@ const MessageBubble = ({
               paddingHorizontal: 13,
             }}
           >
+            {quote ? <QuotedMessage quoted={quote.message} author={quote.author} /> : null}
             {renderContent(bubbleTextColor)}
             {timestamp ? (
               <Text
@@ -335,6 +370,7 @@ const MessageBubble = ({
                 }}
               >
                 {timestamp}
+                {editedLabel}
               </Text>
             ) : null}
           </View>
@@ -361,6 +397,9 @@ const MessageBubble = ({
               paddingHorizontal: 13,
             }}
           >
+            {quote ? (
+              <QuotedMessage quoted={quote.message} author={quote.author} onSender={!isAutomated} />
+            ) : null}
             {renderContent(bubbleTextColor)}
           </View>
 
@@ -374,6 +413,7 @@ const MessageBubble = ({
               }}
             >
               {timestamp}
+              {editedLabel}
             </Text>
             <View>
               {(() => {

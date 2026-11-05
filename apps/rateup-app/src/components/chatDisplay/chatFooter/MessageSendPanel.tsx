@@ -42,6 +42,7 @@ import {
   Plus,
   Send,
   StickyNote,
+  X,
   Zap,
 } from "lucide-react-native";
 import TemplateSending from "./TemplateSending";
@@ -68,6 +69,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { MessagePlatform } from "@/constants/enums";
 import { logger } from "@/utils/logger";
+import { useReplyTargetStore } from "@/store/replyTargetStore";
 
 type FormValues = {
   type: "text" | "media" | "contact" | "location";
@@ -80,6 +82,8 @@ type FormValues = {
     groupIds: string[];
   };
   location: any | null;
+  /** Instagram only: quote this message (Meta's id). */
+  replyToMid?: string;
 };
 
 const UPLOAD_CONCURRENCY = 3;
@@ -170,6 +174,12 @@ const MessageSendPanel = ({
     state.contactsById.get(contactId),
   )?.conversationId;
   let { isSessionActive } = useSessionActiveStore();
+  // Instagram's inline reply, picked with a long press on a bubble in this chat.
+  const replyTarget = useReplyTargetStore((s) =>
+    s.target?.contactId === contactId && platform === MessagePlatform.INSTAGRAM ? s.target : null,
+  );
+  // A quote belongs to the chat it was picked in.
+  useEffect(() => () => useReplyTargetStore.getState().clear(), [contactId]);
   const form = useForm<FormValues>({
     defaultValues: {
       type: "text",
@@ -344,7 +354,8 @@ const MessageSendPanel = ({
   const attachFiles = async (files: PickedFile[], { showPreview = false } = {}) => {
     setMediaPanelVisible(false);
     const accepted = files.filter((file) => {
-      const error = attachmentTypeError(file) ?? attachmentSizeError(file, file.kind, platform);
+      const error =
+        attachmentTypeError(file, platform) ?? attachmentSizeError(file, file.kind, platform);
       if (error) Toast.error(error);
       return !error;
     });
@@ -714,7 +725,8 @@ const MessageSendPanel = ({
         : formValues;
     if (!values.text.body && !values.media.length) return;
 
-    deliver(values);
+    deliver(replyTarget ? { ...values, replyToMid: replyTarget.mid } : values);
+    useReplyTargetStore.getState().clear();
     reset(initialMessgabody);
     resetMedia();
     setAudioUrl(null);
@@ -738,6 +750,53 @@ const MessageSendPanel = ({
       {/* A note never reaches the customer, so an expired window doesn't close it. */}
       {isSessionActive || isPrivate ? (
         <View className="opacity-100" pointerEvents="auto">
+          {replyTarget && !isPrivate && (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 8,
+                marginHorizontal: 12,
+                marginTop: 10,
+                paddingVertical: 6,
+                paddingHorizontal: 10,
+                borderLeftWidth: 3,
+                borderLeftColor: Colors.brand.blue,
+                borderRadius: 8,
+                backgroundColor: isDark ? Colors.dark.inputBg : Colors.light.inputBg,
+              }}
+            >
+              <View style={{ flex: 1 }}>
+                <Text
+                  numberOfLines={1}
+                  style={{
+                    fontSize: 12,
+                    fontFamily: "InstrumentSans_700Bold",
+                    color: isDark ? Colors.brand.blueLight : Colors.brand.blue,
+                  }}
+                >
+                  {replyTarget.author ? `Replying to ${replyTarget.author}` : "Replying"}
+                </Text>
+                <Text
+                  numberOfLines={1}
+                  style={{
+                    fontSize: 12,
+                    color: isDark ? Colors.dark.textSubtle : Colors.light.textSubtle,
+                  }}
+                >
+                  {replyTarget.preview}
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => useReplyTargetStore.getState().clear()}
+                accessibilityRole="button"
+                accessibilityLabel="Cancel reply"
+                hitSlop={8}
+              >
+                <X size={16} color={iconColor} />
+              </Pressable>
+            </View>
+          )}
           {media.length > 0 && (
             <View className="flex-row flex-wrap gap-2 mb-3 px-4 pt-3">
               {media.map((item) => {

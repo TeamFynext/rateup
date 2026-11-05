@@ -1,5 +1,5 @@
 import { useColorScheme } from "nativewind";
-import { View, Text, Pressable, Modal, Dimensions, ActivityIndicator } from "react-native";
+import { View, Text, Pressable, Modal, Dimensions, ActivityIndicator, Alert } from "react-native";
 import { useState } from "react";
 import { useRouter } from "expo-router";
 import {
@@ -23,6 +23,9 @@ import {
 import {
   AlertCircle,
   Archive,
+  Ban,
+  LockOpen,
+  ShieldAlert,
   ArrowLeft,
   CheckCircle2,
   ChevronRight,
@@ -40,19 +43,95 @@ import { MessagePlatform } from "@/constants/enums";
 import { FontAwesome } from "@expo/vector-icons";
 import { useEditContactMutation, useToggleFavorite } from "@/api/inbox/contacts/contacts.query";
 import { WaMessageAssignStatus } from "@/api/inbox/types";
+import { useModerateInstagramContact } from "@/api/inbox/messages/message.query";
+import { contactMessagingWindow, messagingWindowLabel } from "@/utils/messagingWindow";
 
 const { width: screenWidth } = Dimensions.get("window");
+
+/** Instagram's own block and spam folder for this person (Moderate Conversations API). */
+const InstagramModerationItems = ({
+  contactId,
+  blocked,
+  isSpam,
+  onClose,
+}: {
+  contactId: string;
+  blocked: boolean;
+  isSpam: boolean;
+  onClose: () => void;
+}) => {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const moderate = useModerateInstagramContact();
+  const textColor = isDark ? "#fff" : Colors.light.textPrimary;
+  const iconColor = isDark ? Colors.dark.textPrimary : Colors.light.textPrimary;
+
+  const confirmThen = (title: string, message: string, label: string, run: () => void) =>
+    Alert.alert(title, message, [
+      { text: "Cancel", style: "cancel" },
+      { text: label, style: "destructive", onPress: run },
+    ]);
+
+  const row = (label: string, Icon: typeof Ban, onPress: () => void, color = textColor) => (
+    <Pressable
+      key={label}
+      style={{ padding: 12, width: "100%" }}
+      onPress={() => {
+        onClose();
+        onPress();
+      }}
+    >
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+        <Icon color={color === textColor ? iconColor : color} size={18} />
+        <Text style={{ fontFamily: "InstrumentSans_600SemiBold", color, fontSize: 15 }}>
+          {label}
+        </Text>
+      </View>
+    </Pressable>
+  );
+
+  return (
+    <>
+      {blocked
+        ? row("Unblock", LockOpen, () => moderate.mutate({ contactId, action: "unblock" }))
+        : row(
+            "Block",
+            Ban,
+            () =>
+              confirmThen(
+                "Block on Instagram?",
+                "They won't be able to message your Instagram account, and you won't be able to message them until you unblock them.",
+                "Block",
+                () => moderate.mutate({ contactId, action: "block" }),
+              ),
+            "#DC2626",
+          )}
+      {!isSpam &&
+        row("Spam", ShieldAlert, () =>
+          confirmThen(
+            "Move to spam?",
+            "The conversation moves to the spam folder on Instagram, and the contact is marked as spam here.",
+            "Move to spam",
+            () => moderate.mutate({ contactId, action: "spam" }),
+          ),
+        )}
+    </>
+  );
+};
 
 const MoreOptions = ({
   visible,
   onClose,
   onCloseChatPress,
   contactId,
+  instagram,
 }: {
   visible: boolean;
   onClose: () => void;
   onCloseChatPress: () => void;
   contactId: string;
+  /** Set on an Instagram thread: adds Block / Unblock and Spam. */
+  instagram?: { blocked: boolean; isSpam: boolean };
 }) => {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -111,6 +190,15 @@ const MoreOptions = ({
           </Pressable>
 
           <AssignToUser contactId={contactId} iconSize={18} fontSize={15} plain />
+
+          {instagram && (
+            <InstagramModerationItems
+              contactId={contactId}
+              blocked={instagram.blocked}
+              isSpam={instagram.isSpam}
+              onClose={onClose}
+            />
+          )}
 
           {waAssignStatus !== "CLOSED" ? (
             <Pressable
@@ -433,7 +521,17 @@ const ChatHeader = ({
   const t = getInboxRowTheme(isDark);
   const avatarColor = inboxAvatarColors[paletteIndex(id, inboxAvatarColors.length)];
   const channelColor = inboxChannelColors[platform] ?? Colors.brand.blue;
-  const sessionColor = isSessionActive ? t.warmStrong : t.danger;
+  // Instagram/Messenger: a person may reply for 7 days, so the 24 h session is not the limit.
+  const metaWindow = contactMessagingWindow(
+    {
+      lastReceivedMessageTimeStamp,
+      adThreadUntil: storedContact?.adThreadUntil ?? contact?.adThreadUntil,
+    },
+    platform,
+  );
+  const sessionColor = (metaWindow ? metaWindow.state !== "closed" : isSessionActive)
+    ? t.warmStrong
+    : t.danger;
 
   return (
     <View
@@ -651,7 +749,11 @@ const ChatHeader = ({
             color: sessionColor,
           }}
         >
-          {isSessionActive ? `Session expires in ${hoursLeft}h ${minutesLeft}m` : "Session expired"}
+          {metaWindow
+            ? messagingWindowLabel(metaWindow)
+            : isSessionActive
+              ? `Session expires in ${hoursLeft}h ${minutesLeft}m`
+              : "Session expired"}
         </Text>
       </View>
 
@@ -660,6 +762,14 @@ const ChatHeader = ({
         onClose={() => setOptionsVisible(false)}
         onCloseChatPress={() => setConfirmModalVisible(true)}
         contactId={contactId}
+        instagram={
+          platform === MessagePlatform.INSTAGRAM
+            ? {
+                blocked: !!(storedContact?.igBlockedAt ?? contact?.igBlockedAt),
+                isSpam: !!(storedContact?.isSpam ?? contact?.isSpam),
+              }
+            : undefined
+        }
       />
 
       <ConfirmationModal

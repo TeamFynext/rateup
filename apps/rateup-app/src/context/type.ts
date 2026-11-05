@@ -1,5 +1,5 @@
 export type orgWsMessage = {
-  type: "inbox" | "inbox_note" | "message_status_update";
+  type: "inbox" | "inbox_note" | "message_status_update" | "message_edited";
   inbox?: {
     contact: ContactsData;
     message: WaGetMessagesBody;
@@ -21,6 +21,14 @@ export type orgWsMessage = {
     contactId: string | null;
     sourceIdentifier?: string | null;
     stats: WaMessageStats;
+  };
+  /** The customer edited a message (Instagram): `message` is the whole updated row. */
+  message_edited?: {
+    messageId: string;
+    contactId: string;
+    conversationId?: string | null;
+    editedAt: string;
+    message: WaGetMessagesBody;
   };
 };
 
@@ -52,6 +60,8 @@ export type WaGetMessagesBody = {
   };
   messageId?: string;
   readUsers?: string[];
+  /** Set when the customer edited the message (Instagram); the body holds the edited text. */
+  editedAt?: string | null;
 };
 
 type ContactsData = {
