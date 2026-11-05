@@ -1,0 +1,19 @@
+# pnpm settings for this single-package repo (pnpm 11+ reads them here, not from package.json).
+# Dependencies may only run install/build scripts when listed below.
+allowBuilds:
+  "@ffmpeg-installer/linux-x64": true
+  "@prisma/engines": true
+  bcrypt: true
+  esbuild: true
+  msgpackr-extract: true
+  prisma: true
+# What each dependency may do beyond installing; `pnpm approve` writes this.
+permissions:
+  prisma-json-types-generator:
+    skills: true
+# Agent skills shipped inside dependencies (`pnpm approve`) are linked into both folders:
+# .agents/skills for Codex and other agents, .claude/skills for Claude Code.
+skills:
+  dirs:
+    - .agents/skills
+    - .claude/skills

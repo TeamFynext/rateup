@@ -1,13 +1,129 @@
-# AGENTS.md
+# rateup-api
 
-## Project Description
+The Rateup platform's API backend: TypeScript (Node.js 26, ESM) on Fastify 5. One repo builds
+three long-running processes: the HTTP API, a BullMQ worker and a Kafka worker (see
+[Deployment Topology](#deployment-topology)). Repository: https://github.com/TeamFynext/rateup-api
 
-- **Name:** rateup-api
-- **Type:** Scalable API backend for the Rateup platform
-- **Language:** TypeScript (Node.js, ESM)
-- **Framework:** Fastify 5
-- **Main entry:** src/index.ts (API), src/workers/bullmq/index.ts, src/workers/kafka/index.ts
-- **Repository:** https://github.com/TeamFynext/rateup-api
+## Commands
+
+```bash
+pnpm install                  # also runs `prisma generate` (postinstall)
+pnpm run dev                  # API with hot reload (tsx watch src/index.ts)
+pnpm run dev:bullmq           # BullMQ worker, in a separate terminal
+pnpm run dev:kafka            # Kafka worker, in a separate terminal
+pnpm run build                # compile to dist/ (tsc -p tsconfig.json)
+pnpm run start                # API from dist/ (start:bullmq / start:kafka for the workers)
+pnpm run test                 # all tests (Vitest, silent)
+pnpm exec vitest run <file>   # one file; add -t "name substring" to filter, drop `run` to watch
+pnpm run lint                 # oxlint (lint:fix to fix)
+pnpm run fmt                  # oxfmt (fmt:check to check only)
+pnpm exec prisma generate     # after any schema change
+pnpm run staff:add <email> --owner   # first staff-console owner
+```
+
+Git hooks (Husky, `.husky/`): pre-commit formats staged files with oxfmt via lint-staged;
+pre-push runs `pnpm run build`, so type errors block a push.
+
+## Tech Stack
+
+- **Runtime:** Node.js 26.x (LTS)
+- **Framework:** Fastify 5 with Zod type provider
+- **Database:** PostgreSQL via Prisma ORM (v7)
+- **Queue:** BullMQ + Redis (ioredis)
+- **Streaming:** Kafka (kafkajs)
+- **Auth:** SuperTokens
+- **Authorization:** permission catalogue + system roles in `src/authz/` — every `/api` route declares `config.permission` or `config.access` (see [Request auth & authorization layering](#request-auth--authorization-layering))
+- **Payments:** Stripe, Razorpay
+- **Storage:** AWS S3
+- **Email:** AWS SES (Nodemailer)
+- **Validation:** Zod 4
+- **API Docs:** Swagger + Scalar
+
+## Directory Structure
+
+```
+src/
+├── app.ts              # Fastify app setup (API service)
+├── config.ts           # Configuration (SuperTokens recipes live here)
+├── index.ts            # API entry point (HTTP only)
+├── registerRoutes.ts   # Route registration + root authz hooks
+├── authz/              # Roles, permissions, actor, scope (see Request auth below)
+├── emails/             # React Email templates (`pnpm run email:dev` previews them)
+├── external/           # Partner API: v1, v2 and shared/
+├── modules/            # Feature modules (route, controller, service, schema, auth)
+├── plugins/            # Fastify plugins (kafka, swagger)
+├── routes/             # Standalone routes (health)
+├── types/              # TypeScript type definitions
+├── utils/              # Shared utilities
+└── workers/            # bullmq + kafka worker services (see Deployment Topology)
+prisma/                 # Prisma schema and migrations
+generated/              # Generated Prisma client
+```
+
+### Feature Modules
+
+Modules are organized by domain: `campaign`, `contact`, `dashboard`, `email`, `integrations`, `landingPage`, `lifecycle`, `loyalty`, `menu`, `notification`, `org`, `payment`, `question`, `referrals`, `response`, `services`, `stats`, `subscription`, `survey`, `team`, `testimonial`, `user`, `webhook`, `whatsapp`, and more.
+
+## App bootstrap flow
+
+1. `src/index.ts` — entry point; sets server options (body limit, timeouts, `trustProxy`), wires `unhandledRejection`/`uncaughtException` and SIGTERM/SIGINT graceful shutdown, then `listen()`s. It is HTTP only; queue consumers and the schedule run in the worker services.
+2. `src/app.ts` — `build()` creates the Fastify instance with the Zod type provider (`validatorCompiler`/`serializerCompiler`), registers plugins, then registers routes inside `server.after()`.
+3. `src/plugins/index.ts` — `registerPlugins()` initializes, in order: SuperTokens (auth) + its Fastify plugin and error handler, the auth rate limit, CORS, WebSocket, the Kafka producer, and Swagger (only when `SWAGGER=1`). BullMQ consumers and scheduled jobs deliberately do not register here.
+4. `src/registerRoutes.ts` — a single `routeConfigs` array maps each module's route plugin to a URL prefix. **To add a new route group, import its route plugin and add an entry here.** Public (unauthenticated) routes live under `/api/public/*`; everything else expects a session.
+
+## Module pattern
+
+Feature modules live in `src/modules/<domain>/` and follow a consistent file layout (see `src/modules/survey/` as the reference):
+
+- `*.route.ts` — Fastify plugin exporting the route definitions; attaches `preHandler` hooks and Zod `schema` per route. Public variants are named `*.public.route.ts`.
+- `*.controller.ts` — request handlers (the `*Handler` functions).
+- `*.service.ts` — business logic and Prisma access; also holds functions invoked by cron jobs.
+- `*.schema.ts` — Zod request/response schemas and their inferred types.
+- `*.auth.ts` — module-specific `preHandler` access checks (e.g. `verifySurveyAccess`).
+
+## Request auth & authorization layering
+
+Every route under `/api` declares who may reach it, and the root hooks in `src/registerRoutes.ts` enforce it. There is no per-route role check to remember.
+
+1. **Declaration** — a route carries `config: { permission: "inbox.reply" }` (any one of a list also works) or `config: { access: "session" | "public" | "token" }`. A module usually declares once at the top of its plugin with `declareAccess(server, { read: "x.read", write: "x.manage" })` (`src/authz/registry.ts`); a route's own `config` wins over the module default. `/api/public/*`, `/api/health/*`, `/api/external/v1/*` and `/api/external/v2/*` are tagged by prefix. With `AUTHZ_STRICT=1` (set in vitest) an undeclared route fails boot.
+2. **`authorize`** (`src/authz/authorize.ts`), a root `preHandler` — for a session or permission route it validates the SuperTokens session, loads the **actor** (`src/authz/actor.ts`: role key, permissions, team scope, cached in Redis for 60 s under `authz:<userId>:<orgId>`) and sets `request.actor` plus the legacy `request.user` (`role` now comes from the database, not the token). A missing permission answers `403 { reason: "permission", permission }`. `AUTHZ_AUDIT_ONLY=<module,...>` logs the refusal and lets the request through, per `/api/<module>` prefix, for a rollout soak.
+3. `getVerifySubscriptionHandler([...features])` (`src/utils/auth.ts`) — plan gate; `403 { reason: "subscription" }`. Kept separate from permissions on purpose: "upgrade" and "ask your admin" are different messages.
+4. **Scope** (`src/authz/scope.ts`, `resourceScope.ts`) — team-scoped roles see only rows whose team is in `actor.scope.teamIds`; `inScope`, `assertInScope`, `scopeWhere`, `surveyInScope`, `pipelineInScope`. Module `*.auth.ts` guards read `request.actor`, never `request.user.role`.
+
+**Roles** (`src/authz/roles.ts`): OWNER, ADMIN (org-wide), MANAGER, STAFF, AGENT, VIEWER (their teams). The catalogue of `resource.action` permissions is `src/authz/permissions.ts`; rateup-ui keeps a mirror in `src/utils/authz/`. `OrgMember.roleKey` holds the role; for a member without one the actor derives it from the legacy `role` column and `Org.ownerId`. Handing out a role goes through `assertCanGrant` (`src/authz/grant.ts`); ownership moves only through `POST /api/org/transfer-ownership`. A member can be fine-tuned with `OrgMember.permissionGrants` / `permissionDenies` (`PUT /api/org/members/:id/permissions`, resolved by `src/authz/overrides.ts`); overrides never change team scope and never apply to the owner.
+
+Non-user principals (API key, Zapier, the widget socket, the public flow callback) set `request.principal` and get an actor from it (`src/authz/principal.ts`); an API key's `scopes` narrow it.
+
+**Staff console** (`/api/staff`, `src/modules/staff/`, UI in the `rateup-admin` repo) is a separate auth world: RateUp employees sign in with Google Workspace against the `StaffUser` allowlist, never SuperTokens. Its routes carry `access: "staff"`, which `authorize` stands aside for; `staff.plugin.ts` runs its own `onRequest` chain for every route inside it (Cloudflare Access JWT → Origin → rate limit → staff session → CSRF), so a new staff route registered in that plugin inherits all of it. `access: "staff"` outside `/api/staff/` refuses to boot. Mutations record `StaffAuditLog` rows via `recordStaffAction(tx, request, …)`; a fallback row catches any that don't. Destructive actions call `assertRecentAuth(request.staffSession)` for step-up. The console is off unless `STAFF_CONSOLE_ORIGIN` is set (see `.env.example` and `staff.config.ts`; there is no proxy secret any more); the first owner comes from `pnpm run staff:add <email> --owner`.
+
+Authentication is **SuperTokens** (EmailPassword + Google/Apple ThirdParty + Passwordless SMS), all configured in `src/config.ts`. Sign-up/sign-in overrides there create the app-side user record and stamp `orgId` onto the session.
+
+## Database (Prisma)
+
+- Single schema: `prisma/schema.prisma`. The client is generated to **`generated/prisma/`** (not `node_modules`), so imports use a relative path like `import { Role } from "../../generated/prisma/client.js"`.
+- Import the shared client instance from `src/utils/prisma.ts` (default export) — it wires the `@prisma/adapter-pg` Postgres adapter. Do not instantiate `PrismaClient` per module.
+- Run `pnpm exec prisma generate` after any schema change (also runs on `pnpm install` via postinstall).
+- `excludeFields(obj, [...])` in `src/utils/prisma.ts` is the helper for omitting fields Prisma can't selectively exclude.
+
+## Background processing
+
+Three mechanisms. Know which one a task belongs to; [Deployment Topology](#deployment-topology)
+has the file layout and the rules.
+
+- **BullMQ queues**: producers in `src/workers/bullmq/queues/` (safe to import from the API),
+  consumers in `src/workers/bullmq/processors/` (worker service only, listed in
+  `PROCESSOR_MODULES`). All `Queue` instances share the ioredis connection from
+  `src/utils/redisConnection.ts`.
+- **Scheduled jobs**: BullMQ job schedulers, not in-process cron. Definitions are
+  `SCHEDULED_JOBS` in `queues/cron.queue.ts`, handlers are `HANDLERS` in
+  `processors/scheduledJobs.processor.ts`.
+- **Kafka** (`src/plugins/kafka.ts`, config in `src/utils/kafka.ts`): the API decorates a single
+  producer as `server.kafka.producer`. It retries on startup, continues without Kafka if it
+  cannot connect, and keeps reconnecting in the background. `/api/health` stays a plain liveness
+  check (Railway's deploy healthcheck); `/api/health/ready` answers 503 while Kafka is
+  unreachable. Topics (`status-events`, `wa-webhooks` and their `-dlq`s) are created at boot with
+  12 partitions; brokers come from `KAFKA_BROKERS` (comma-separated) or `KAFKA_URL`. Consumers
+  live in `src/workers/kafka/consumers/`.
 
 ## Deployment Topology
 
@@ -224,69 +340,20 @@ fallback queue still surfaces only as a worker log and a retry.
 its Kafka consumer became `kafka/consumers/status.consumer.ts`, and its `src/utils` +
 `src/modules` became `workers/shared/`. That repo is deprecated; do not add to it.
 
-## Build & Run Commands
+## Conventions & Pitfalls
 
-- **Dev (API):** `npm run dev` (hot-reloads with `tsx watch src/index.ts`)
-- **Dev (bullmq):** `npm run dev:bullmq` (separate terminal)
-- **Dev (kafka):** `npm run dev:kafka` (separate terminal)
-- **Build:** `npm run build` (compiles TypeScript via `tsc -p tsconfig.json`)
-- **Start (API):** `npm run start` (runs `node dist/src/index.js`)
-- **Start (bullmq):** `npm run start:bullmq`
-- **Start (kafka):** `npm run start:kafka`
-- **Test:** `npm run test` (Vitest)
-- **Lint:** `npm run lint` (oxlint) / `npm run lint:fix`
-- **Format:** `npm run fmt` (oxfmt) / `npm run fmt:check`
-- **Prisma generate:** `npx prisma generate` (runs automatically on `npm install` via postinstall)
-
-## Tech Stack
-
-- **Runtime:** Node.js 24.x
-- **Framework:** Fastify 5 with Zod type provider
-- **Database:** PostgreSQL via Prisma ORM (v7)
-- **Queue:** BullMQ + Redis (ioredis)
-- **Streaming:** Kafka (kafkajs)
-- **Auth:** SuperTokens
-- **Authorization:** permission catalogue + system roles in `src/authz/` — every `/api` route declares `config.permission` or `config.access` (see CLAUDE.md "Request auth & authorization layering")
-- **Payments:** Stripe, Razorpay
-- **Storage:** AWS S3
-- **Email:** AWS SES (Nodemailer)
-- **Validation:** Zod 4
-- **API Docs:** Swagger + Scalar
-
-## Directory Structure
-
-```
-src/
-├── app.ts              # Fastify app setup (API service)
-├── config.ts           # Configuration
-├── index.ts            # API entry point (HTTP only)
-├── workers/            # bullmq + kafka worker services (see Deployment Topology)
-├── registerRoutes.ts   # Route registration
-├── modules/            # Feature modules (each with routes, handlers, schemas)
-├── plugins/            # Fastify plugins (kafka, swagger)
-├── routes/             # Route definitions
-├── external/           # External API integrations
-├── types/              # TypeScript type definitions
-└── utils/              # Shared utilities
-prisma/                 # Prisma schema and migrations
-generated/              # Generated Prisma client
-```
-
-### Feature Modules
-
-Modules are organized by domain: `campaign`, `contact`, `dashboard`, `email`, `integrations`, `landingPage`, `lifecycle`, `loyalty`, `menu`, `notification`, `org`, `payment`, `question`, `referrals`, `response`, `services`, `stats`, `subscription`, `survey`, `team`, `testimonial`, `user`, `webhook`, `whatsapp`, and more.
-
-## Key Conventions
-
-- **Module pattern:** Each module typically contains route handlers, Zod schemas, service logic, and authorization rules.
-- **Prisma:** Always run `npx prisma generate` after modifying the schema. Migrations live in `prisma/`.
-- **Linting:** oxlint is used for linting, oxfmt for formatting. Both are enforced on staged files via lint-staged + husky.
-- **Environment:** Node.js 24.x required. Configuration via `.env`.
-- **ESM:** The project uses ES modules (`"type": "module"` in package.json).
-
-## Common Pitfalls
-
-- Forgetting to run `npx prisma generate` after schema changes.
-- Not using Node.js 24.x (see `engines` in package.json).
-- Using Prettier instead of oxfmt — the project has migrated to oxc tooling.
-- Using CommonJS syntax (`require`) — the project is ESM-only.
+- **ESM only**: every relative import includes the `.js` extension (even for `.ts` source),
+  e.g. `import { x } from "./foo.js"`. CommonJS `require` is not available.
+- **Prisma**: run `pnpm exec prisma generate` after any schema change; migrations live in
+  `prisma/`. Import types and enums from `generated/prisma/client.js` by relative path, not
+  `@prisma/client`.
+- **Formatting/linting**: oxfmt + oxlint, never Prettier or ESLint. The pre-commit hook only
+  formats, so run `pnpm run lint` yourself.
+- **Node.js 26.x (LTS)** is required (`engines` in package.json). Configuration comes from `.env`.
+- **External partner API**: two versions, distinct from the first-party `/api/*` routes, with
+  token auth via the `apiAccessToken` module. `src/external/v2/` (`/api/external/v2`, current)
+  takes `rk_` keys that name their org, so the URL has no org id. `src/external/v1/`
+  (`/api/external/v1/:orgId`) is the legacy surface, kept in its original shapes for existing
+  integrations. Each key works only on its own `version`. Both roots share
+  `src/external/shared/` (error envelope, scopes, idempotency, rate limits, `partnerHooks.ts`);
+  every route declares a `config.permission` that the key's scopes must include.

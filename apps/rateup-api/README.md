@@ -4,7 +4,7 @@ Scalable API backend for the [Rateup](https://rateup.app) platform.
 
 ## Tech Stack
 
-- **Runtime:** Node.js 24.x
+- **Runtime:** Node.js 26.x (LTS)
 - **Framework:** Fastify 5 (TypeScript, ESM)
 - **Database:** PostgreSQL via Prisma ORM (v7)
 - **Queue:** BullMQ + Redis
@@ -21,7 +21,7 @@ Scalable API backend for the [Rateup](https://rateup.app) platform.
 
 ### Prerequisites
 
-- Node.js 24.x
+- Node.js 26.x (LTS)
 - PostgreSQL
 - Redis
 
@@ -29,30 +29,30 @@ Scalable API backend for the [Rateup](https://rateup.app) platform.
 
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
 # Set up environment variables
 cp .env.example .env
 
 # Run database migrations
-npx prisma migrate dev
+pnpm exec prisma migrate dev
 
 # Start development server
-npm run dev
+pnpm run dev
 ```
 
 ## Scripts
 
-| Command             | Description                                        |
-| ------------------- | -------------------------------------------------- |
-| `npm run dev`       | Start dev server with hot reload (tsx watch)       |
-| `npm run build`     | Compile TypeScript (`tsc -p tsconfig.json`)        |
-| `npm run start`     | Start production server (`node dist/src/index.js`) |
-| `npm run test`      | Run tests (Vitest)                                 |
-| `npm run lint`      | Lint with oxlint                                   |
-| `npm run lint:fix`  | Lint and auto-fix                                  |
-| `npm run fmt`       | Format with oxfmt                                  |
-| `npm run fmt:check` | Check formatting                                   |
+| Command              | Description                                        |
+| -------------------- | -------------------------------------------------- |
+| `pnpm run dev`       | Start dev server with hot reload (tsx watch)       |
+| `pnpm run build`     | Compile TypeScript (`tsc -p tsconfig.json`)        |
+| `pnpm run start`     | Start production server (`node dist/src/index.js`) |
+| `pnpm run test`      | Run tests (Vitest)                                 |
+| `pnpm run lint`      | Lint with oxlint                                   |
+| `pnpm run lint:fix`  | Lint and auto-fix                                  |
+| `pnpm run fmt`       | Format with oxfmt                                  |
+| `pnpm run fmt:check` | Check formatting                                   |
 
 ## Project Structure
 
@@ -89,7 +89,7 @@ generated/              # Generated Prisma client
 ## Conventions
 
 - **Linting & Formatting:** oxlint + oxfmt, enforced on staged files via lint-staged + husky.
-- **Prisma:** Run `npx prisma generate` after schema changes (also runs automatically on `npm install`).
+- **Prisma:** Run `pnpm exec prisma generate` after schema changes (also runs automatically on `pnpm install`).
 - **ESM:** The project uses ES modules (`"type": "module"`).
 
 ## Agent Instructions

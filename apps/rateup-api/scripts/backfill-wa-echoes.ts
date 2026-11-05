@@ -19,10 +19,10 @@
  * Echoes already on a closed ticket are left there: that is the ticket that was
  * current when they were sent, and reopening old chats now would be wrong.
  *
- *   npm run backfill:wa-echoes                      # dry run: counts only
- *   npm run backfill:wa-echoes -- --apply
- *   npm run backfill:wa-echoes -- --apply --media
- *   npm run backfill:wa-echoes -- --org <orgId> --apply
+ *   pnpm run backfill:wa-echoes                      # dry run: counts only
+ *   pnpm run backfill:wa-echoes --apply
+ *   pnpm run backfill:wa-echoes --apply --media
+ *   pnpm run backfill:wa-echoes --org <orgId> --apply
  *
  * Every step is idempotent, so it can be re-run after an interruption.
  * Needs DATABASE_URL in the environment (and Meta/S3 credentials for --media).
