@@ -608,7 +608,16 @@ function WaTextEditor({
                       <PopoverContent className="w-full">
                         <div className="flex items-center justify-center flex-nowrap">
                           <div className="flex items-center">
-                            {platform !== MessagePlatform.INSTAGRAM && <InsertInboxFile />}
+                            {/* Instagram and Messenger send a file as `attachment.type: "file"`,
+                                which they accept for PDFs only. */}
+                            <InsertInboxFile
+                              accept={
+                                platform === MessagePlatform.INSTAGRAM ||
+                                platform === MessagePlatform.FACEBOOK
+                                  ? "application/pdf"
+                                  : undefined
+                              }
+                            />
                             <InsertInboxImage />
                             <InsertInboxVideo />
                             <InsertInboxAudio />

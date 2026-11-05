@@ -8,6 +8,8 @@ import {
   getContactDisplayPhone,
   getContactLabel,
   getContactWaAddress,
+  getMessagePreview,
+  getReplyToMid,
   inboxRowSortTime,
   isMetaAiMessage,
   parseWaMessage,
@@ -220,5 +222,141 @@ describe("getContactLabel", () => {
     expect(getContactLabel({ bsuid: "IN.42" })).toBe("WhatsApp user");
     expect(getContactLabel({ bsuid: "IN.42", whatsappUserName: "ann" })).toBe("@ann");
     expect(getContactLabel({ phone: "911", bsuid: "IN.42" })).toBe("+911");
+  });
+});
+
+describe("parseWaMessage - Instagram shared posts, story replies and quotes", () => {
+  const received = (message: Record<string, unknown>) =>
+    ({
+      sourcePlatform: MessagePlatform.INSTAGRAM,
+      messageId: "mid-in",
+      messageBody: {
+        exchangeProcess: "receive",
+        receive: { sender: { id: "igsid" }, recipient: { id: "iba" }, timestamp: 1, message },
+      },
+    }) as unknown as Parameters<typeof parseWaMessage>[0];
+
+  it("reads a shared post (ig_post) with its title and media id", () => {
+    const parsed = parseWaMessage(
+      received({
+        mid: "m1",
+        attachments: [
+          {
+            type: "ig_post",
+            payload: {
+              url: "https://cdn.example/p.jpg",
+              title: "New drop",
+              ig_post_media_id: "1789",
+            },
+          },
+        ],
+      }),
+    );
+    expect(parsed.messageType).toBe("ig_shared_post");
+    expect(parsed.messageContent).toEqual({
+      attachments: [
+        {
+          content: "https://cdn.example/p.jpg",
+          type: "ig_post",
+          title: "New drop",
+          mediaId: "1789",
+        },
+      ],
+      text: undefined,
+    });
+    expect(returnMessageContentBasedOnParsedMessage(parsed, "receive")).toBe("Shared a post");
+  });
+
+  it("reads a shared reel (ig_reel)", () => {
+    const parsed = parseWaMessage(
+      received({
+        mid: "m2",
+        attachments: [
+          { type: "ig_reel", payload: { url: "https://cdn.example/r.mp4", title: "Reel" } },
+        ],
+      }),
+    );
+    expect(parsed.messageType).toBe("ig_shared_post");
+    expect(returnMessageContentBasedOnParsedMessage(parsed, "receive")).toBe("Shared a reel");
+  });
+
+  it("reads the legacy share attachment, which carries only a url", () => {
+    const parsed = parseWaMessage(
+      received({
+        mid: "m3",
+        attachments: [{ type: "share", payload: { url: "https://cdn.example/s" } }],
+      }),
+    );
+    expect(parsed.messageType).toBe("ig_shared_post");
+    expect(parsed.messageContent).toEqual({
+      attachments: [
+        { content: "https://cdn.example/s", type: "share", title: undefined, mediaId: undefined },
+      ],
+      text: undefined,
+    });
+  });
+
+  it("keeps ordinary media as attachments", () => {
+    const parsed = parseWaMessage(
+      received({
+        mid: "m4",
+        attachments: [{ type: "image", payload: { url: "https://cdn.example/i" } }],
+      }),
+    );
+    expect(parsed.messageType).toBe("attachments");
+    expect(returnMessageContentBasedOnParsedMessage(parsed, "receive")).toBe("Image");
+  });
+
+  it("reads a story reply with its story and link sticker", () => {
+    const parsed = parseWaMessage(
+      received({
+        mid: "m5",
+        text: "Love this!",
+        reply_to: {
+          story: {
+            id: "st1",
+            url: "https://cdn.example/st",
+            link_sticker_url: "https://shop.example",
+          },
+        },
+      }),
+    );
+    expect(parsed.messageType).toBe("ig_story_reply");
+    expect(parsed.messageContent).toEqual({
+      text: "Love this!",
+      story: { id: "st1", url: "https://cdn.example/st", linkStickerUrl: "https://shop.example" },
+    });
+    expect(returnMessageContentBasedOnParsedMessage(parsed, "receive")).toBe("Love this!");
+  });
+
+  it("finds the quoted mid on an inbound inline reply and on a quoted send", () => {
+    expect(getReplyToMid(received({ mid: "m6", text: "yes", reply_to: { mid: "m0" } }))).toBe("m0");
+    expect(
+      getReplyToMid({
+        sourcePlatform: MessagePlatform.INSTAGRAM,
+        messageBody: {
+          exchangeProcess: "send",
+          send: { recipient: { id: "igsid" }, reply_to: { mid: "m1" }, message: { text: "ok" } },
+        },
+      } as unknown as Parameters<typeof getReplyToMid>[0]),
+    ).toBe("m1");
+    expect(getReplyToMid(received({ mid: "m7", text: "plain" }))).toBeUndefined();
+  });
+
+  it("reads Messenger's payload.id as the shared media id", () => {
+    const parsed = parseWaMessage(
+      received({ mid: "m9", attachments: [{ type: "ig_post", payload: { url: "u", id: "42" } }] }),
+    );
+    expect(parsed.messageContent).toMatchObject({ attachments: [{ mediaId: "42" }] });
+  });
+
+  it("says when Instagram withheld the content", () => {
+    const parsed = parseWaMessage(received({ mid: "m10", is_unsupported: true }));
+    expect(parsed.messageType).toBe("ig_unsupported");
+    expect(returnMessageContentBasedOnParsedMessage(parsed, "receive")).toBe("Unsupported message");
+  });
+
+  it("previews a quoted text message", () => {
+    expect(getMessagePreview(received({ mid: "m8", text: "Hello there" }))).toBe("Hello there");
   });
 });

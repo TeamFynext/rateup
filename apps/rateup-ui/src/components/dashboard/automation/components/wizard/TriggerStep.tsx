@@ -1,5 +1,6 @@
 import {
   IconAt,
+  IconMessageReply,
   IconBolt,
   IconBrandInstagram,
   IconBrandMessenger,
@@ -68,6 +69,10 @@ const EVENT_META: Record<string, { icon: typeof IconBolt; hint: string }> = {
   WOOCOMMERCE_EVENT: { icon: IconShoppingBag, hint: "Message the buyer as their order moves." },
   INSTAGRAM_COMMENT: { icon: IconMessageDots, hint: "Reply privately to comments on your posts." },
   INSTAGRAM_STORY_MENTION: { icon: IconAt, hint: "Thank people who tag you in their story." },
+  INSTAGRAM_STORY_REPLY: {
+    icon: IconMessageReply,
+    hint: "Answer people who reply to your story, e.g. “reply GUIDE”.",
+  },
   INSTAGRAM_REFERRAL: { icon: IconLink, hint: "Greet people who arrive from a link you shared." },
   WHATSAPP_AD_REFERRAL: {
     icon: IconSpeakerphone,
@@ -146,6 +151,11 @@ export function TriggerStep() {
     }
     if (value !== "INSTAGRAM_COMMENT") form.setValue("options.instagramCommentSource", undefined);
     if (value !== "INSTAGRAM_REFERRAL") form.setValue("options.instagramRef", undefined);
+    if (value !== "INSTAGRAM_STORY_REPLY") {
+      form.setValue("options.instagramStoryScope", undefined);
+      form.setValue("options.instagramStoryIds", undefined);
+      form.setValue("options.instagramStoryKeywords", undefined);
+    }
     if (value !== "WHATSAPP_AD_REFERRAL") {
       form.setValue("options.adIds", undefined);
       form.setValue("options.adMatch", undefined);

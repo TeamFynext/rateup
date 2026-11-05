@@ -104,6 +104,11 @@ const TRIGGER_EVENTS = [
     platforms: ["INSTAGRAM"],
   },
   {
+    label: "Instagram Story Reply",
+    value: "INSTAGRAM_STORY_REPLY",
+    platforms: ["INSTAGRAM"],
+  },
+  {
     label: "ig.me Link Opened",
     value: "INSTAGRAM_REFERRAL",
     platforms: ["INSTAGRAM"],
@@ -447,6 +452,11 @@ const ruleOptionsSchema = z.object({
   instagramScope: z.enum(["ALL", "SPECIFIC"]).default("ALL"),
   instagramPostIds: z.array(z.string()).default([]),
   instagramCommentSource: z.enum(["ALL", "POSTS", "LIVE"]).optional(),
+  // Story replies: every story or the picked ones, and optional keywords (none = any reply).
+  // Mirrors wa_rule.schema.ts.
+  instagramStoryScope: z.enum(["ALL", "SPECIFIC"]).optional(),
+  instagramStoryIds: z.array(z.string()).max(100).optional(),
+  instagramStoryKeywords: z.array(z.string().trim().min(1).max(100)).max(50).optional(),
   // Mirrors the API's check in wa_rule.schema.ts.
   // Meta's own limit for an ig.me ref.
   instagramRef: z
@@ -554,6 +564,18 @@ export const createRuleSchema = createRuleBaseSchema.superRefine((data, ctx) => 
       code: "custom",
       path: ["options", "wooEvent"],
       message: "Select a WooCommerce order status",
+    });
+  }
+
+  if (
+    data.triggerEvent === "INSTAGRAM_STORY_REPLY" &&
+    data.options?.instagramStoryScope === "SPECIFIC" &&
+    !data.options.instagramStoryIds?.length
+  ) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["options", "instagramStoryIds"],
+      message: "Pick at least one story",
     });
   }
 

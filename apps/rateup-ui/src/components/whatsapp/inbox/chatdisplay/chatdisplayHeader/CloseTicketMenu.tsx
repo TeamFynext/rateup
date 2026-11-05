@@ -30,9 +30,10 @@ import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
 import useContactStore, { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";
-import { NOT_SPAM_EVENT, WaMessageAssignStatus } from "@/types/enums.ts";
+import { MessagePlatform, NOT_SPAM_EVENT, WaMessageAssignStatus } from "@/types/enums.ts";
 import {
   getContactLabel,
+  getContactPlatform,
   getContactWaAddress,
   isInboxSessionExpired,
 } from "@/utils/whatsapp/inbox.ts";
@@ -72,8 +73,11 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
 
   const closed = isTicketClosed(contact);
   const isSpam = !!contact?.isSpam;
+  // WhatsApp's block takes a phone number; Instagram has its own in the header menu.
   const canBlock =
-    !isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp) && !contact?.blockedOnWhatsApp;
+    getContactPlatform(contact) === MessagePlatform.WHATSAPP &&
+    !isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp) &&
+    !contact?.blockedOnWhatsApp;
 
   async function handleBlock() {
     const shouldBlock = await confirm({

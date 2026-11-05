@@ -40,6 +40,46 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-11-04-instagram-inbox",
+    title: "Reply on Instagram for up to 7 days",
+    summary:
+      "Your team can now answer Instagram and Messenger chats up to 7 days after the customer's last message, and on Instagram quote a message, send several photos or a PDF, and block or move a chat to spam.",
+    publishedAt: "2026-11-04",
+    kinds: ["new", "improvement"],
+    area: "Inbox",
+    link: { to: "/dashboard/inbox" },
+  },
+  {
+    id: "2026-11-04-instagram-mention-points",
+    title: "Loyalty points for Instagram mentions",
+    summary:
+      "Reward members with points when they tag you in a story, post or comment. Turn it on under Earning rules in your loyalty Program.",
+    publishedAt: "2026-11-04",
+    kinds: ["new"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/program", label: "Open Program" },
+  },
+  {
+    id: "2026-11-04-instagram-comment-moderation",
+    title: "Moderate Instagram comments",
+    summary:
+      "Pick a post on the Instagram page to read its comments and reply, like, hide or delete them without opening the app. Comments your automations already answered are marked Auto-replied.",
+    publishedAt: "2026-11-04",
+    kinds: ["new"],
+    area: "Instagram",
+    link: { to: "/dashboard/instagram", search: { tool: "comments" } },
+  },
+  {
+    id: "2026-11-04-instagram-analytics",
+    title: "Instagram analytics",
+    summary:
+      "A new Instagram view in Analytics shows your account's views, reach and followers, and ranks your posts by the DMs, leads and orders they brought in.",
+    publishedAt: "2026-11-04",
+    kinds: ["new"],
+    area: "Analytics",
+    link: { to: "/dashboard/analytics", search: { tab: "instagram" } },
+  },
+  {
     id: "2026-11-01-instagram-messenger-pages",
     title: "A new home for Instagram and Messenger",
     summary:

@@ -34,6 +34,8 @@ import { formatDate, formatToCustomTime } from "@/utils/dateTime.ts";
 import type { ParsedWaMessageContent } from "@/utils/whatsapp/inbox.ts";
 import {
   isCallPermissionReply,
+  isIgAttachmentsContent,
+  isIgStoryReplyContent,
   isIgTemplateContent,
   parseWaMessage,
 } from "@/utils/whatsapp/inbox.ts";
@@ -44,6 +46,8 @@ import WaInboxAttachments from "./attachments/index.tsx";
 import WaInboxAudio from "./audio/index.tsx";
 import WaInboxContact from "./contact/index.tsx";
 import WaInboxDocument from "./document/index.tsx";
+import IgSharedPostCard from "./igSharedPost/index.tsx";
+import IgStoryReply from "./igStoryReply/index.tsx";
 import IgTemplateBubble from "./igTemplate/index.tsx";
 import WaInboxImage from "./image/index.tsx";
 import WaInboxInteractive from "./interactive/index.tsx";
@@ -117,12 +121,8 @@ const asComment = (content: ParsedWaMessageContent) =>
     permalink?: string;
   };
 
-const asAttachments = (content: ParsedWaMessageContent) => {
-  const record = asRecord(content);
-  return Array.isArray(record.attachments)
-    ? (record as Parameters<typeof WaInboxAttachments>[0]["messageContent"])
-    : { attachments: [] };
-};
+const asAttachments = (content: ParsedWaMessageContent) =>
+  isIgAttachmentsContent(content) ? content : { attachments: [] };
 
 const asContacts = (content: ParsedWaMessageContent): WaSendMessageBody["contacts"] =>
   Array.isArray(content) ? content : [];
@@ -201,10 +201,31 @@ export const SingleMessage = ({ message }: { message: WaGetMessagesBody }) => {
       return <WaInboxLocation messageContent={asLocation(messageContent)} />;
     case "attachments":
       return <WaInboxAttachments messageContent={asAttachments(messageContent)} />;
+    case "ig_shared_post": {
+      const { attachments, text } = asAttachments(messageContent);
+      return (
+        <div className="flex flex-col gap-2.5">
+          {attachments.map((attachment, index) => (
+            <IgSharedPostCard key={index} attachment={attachment} />
+          ))}
+          {text ? <WaInboxText messageContent={text} /> : null}
+        </div>
+      );
+    }
+    case "ig_story_reply":
+      return isIgStoryReplyContent(messageContent) ? (
+        <IgStoryReply content={messageContent} />
+      ) : null;
     case "order":
       return <WaInboxOrder messageContent={asOrder(messageContent)} timestamp={timeStamp} />;
     case "call_permission_reply":
       return <CallPermissionReply content={messageContent} />;
+    case "ig_unsupported":
+      return (
+        <span className="text-sm text-muted-foreground italic">
+          {translations("Instagram didn't share this message's content")}
+        </span>
+      );
     default:
       return (
         <span className="text-xs text-destructive font-medium">

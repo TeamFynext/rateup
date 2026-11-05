@@ -30,6 +30,7 @@ describe("parseAnalyticsSearch", () => {
       tab: "template-delivery",
     });
     expect(parseAnalyticsSearch({ tab: "message-log" })).toEqual({ tab: "message-log" });
+    expect(parseAnalyticsSearch({ tab: "instagram" })).toEqual({ tab: "instagram" });
     expect(parseAnalyticsSearch({ tab: "bogus", view: 3 })).toEqual({});
   });
 });

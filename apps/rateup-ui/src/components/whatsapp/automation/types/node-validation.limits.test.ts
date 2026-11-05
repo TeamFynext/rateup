@@ -73,15 +73,15 @@ describe("channel limits", () => {
     expect(mediaLimit("imageNode", WHATSAPP)?.text).toBe("5 MB");
     expect(mediaLimit("imageNode", INSTAGRAM)?.text).toBe("8 MB");
     expect(mediaLimit("videoNode", FACEBOOK)?.text).toBe("25 MB");
-    expect(mediaLimit("documentNode", INSTAGRAM)).toBeUndefined();
+    expect(mediaLimit("documentNode", INSTAGRAM)?.text).toBe("25 MB");
   });
 });
 
 describe("block list", () => {
-  test("documents are on WhatsApp and Messenger, not Instagram", () => {
+  test("documents are on every channel (a PDF on Instagram)", () => {
     expect(isComponentSupportedOnPlatform("documentNode", WHATSAPP)).toBe(true);
     expect(isComponentSupportedOnPlatform("documentNode", FACEBOOK)).toBe(true);
-    expect(isComponentSupportedOnPlatform("documentNode", INSTAGRAM)).toBe(false);
+    expect(isComponentSupportedOnPlatform("documentNode", INSTAGRAM)).toBe(true);
   });
 
   test("story replies and ice breakers are no longer offered as blocks", () => {

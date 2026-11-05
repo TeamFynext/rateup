@@ -107,6 +107,13 @@ export function blockerFor(
     if (instagram && options.instagramScope === "SPECIFIC" && !options.instagramPostIds?.length) {
       return "Pick at least one post";
     }
+    if (
+      rule.triggerEvent === "INSTAGRAM_STORY_REPLY" &&
+      options.instagramStoryScope === "SPECIFIC" &&
+      !options.instagramStoryIds?.length
+    ) {
+      return "Pick at least one story";
+    }
   }
   if (
     step === "review" &&

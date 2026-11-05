@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useGetAssignedUserForContact } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { Alert, AlertTitle } from "@/components/ui/alert.tsx";
 import { useUser } from "@/context/UserContext.tsx";
@@ -13,9 +14,11 @@ import { useAssignPickerRequest } from "../assign/assignEvent.ts";
 import WaInboxChatDisplayBody from "./chatdisplayBody/index.tsx";
 import WaInboxChatDisplayFooter, {
   WaInboxAssignUserFooter,
+  InstagramBlockedContactFooter,
   WaInboxBlockedContactFooter,
   WaInboxSpamContactFooter,
 } from "./chatdisplayFooter/index.tsx";
+import { useReplyTargetStore } from "./chatdisplayFooter/replyTargetStore.ts";
 import WaInboxChatDisplayHeader from "./chatdisplayHeader/index.tsx";
 import { isTicketClosed } from "./chatdisplayHeader/ticket.ts";
 import TicketPanel from "./TicketPanel.tsx";
@@ -94,12 +97,20 @@ export default function WaInboxChatDisplay() {
     });
   }, [assignedUserList, contact?.id]);
 
+  // A quoted reply belongs to the thread it was picked in.
+  const rowKey = contact ? getRowKey(contact) : null;
+  useEffect(() => {
+    useReplyTargetStore.getState().clear();
+  }, [rowKey]);
+
   // A closed ticket is read-only — never show the composer, even when it is still
   // assigned to the current user (assignment is inherited from the contact).
   const isClosedTicket = !!contact && isTicketClosed(contact);
   let footerContent = null;
   if (contact?.blockedOnWhatsApp) {
     footerContent = <WaInboxBlockedContactFooter contact={contact} />;
+  } else if (contact?.igBlockedAt && !contact.isSpam) {
+    footerContent = <InstagramBlockedContactFooter contact={contact} />;
   } else if (contact?.isSpam) {
     // Spam outranks the ticket state: reopening by assignment would produce a
     // live ticket that no tab but Spam can show, so the only way on is "Not spam".

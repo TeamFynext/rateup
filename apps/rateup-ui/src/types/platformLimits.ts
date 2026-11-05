@@ -42,7 +42,12 @@ export const PLATFORM_LIMITS: Record<AutomationPlatform, PlatformLimits> = {
   [AutomationPlatform.INSTAGRAM]: {
     text: 1000,
     caption: 1000,
-    mediaBytes: { imageNode: 8 * MB, videoNode: 25 * MB, audioNode: 25 * MB },
+    mediaBytes: {
+      imageNode: 8 * MB,
+      videoNode: 25 * MB,
+      audioNode: 25 * MB,
+      documentNode: 25 * MB,
+    },
     ...META_CHOICES,
   },
   [AutomationPlatform.FACEBOOK]: {

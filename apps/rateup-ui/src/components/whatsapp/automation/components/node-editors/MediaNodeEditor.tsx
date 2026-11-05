@@ -195,6 +195,8 @@ export const MediaNodeEditor: React.FC<
       case "audioNode":
         return "audio/aac,audio/amr,audio/mpeg,audio/mp4,audio/ogg";
       case "documentNode":
+        // The Send API's file attachment is a PDF on Instagram.
+        if (platform === AutomationPlatform.INSTAGRAM) return "application/pdf";
         return "text/plain,application/vnd.ms-excel,.docx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/pdf";
       default:
         return "";

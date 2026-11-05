@@ -51,6 +51,12 @@ export function InstagramDashboard() {
   const profile = useInstagramProfile(account?.id);
   const forAccount = (trigger: string) =>
     rules && account ? matchingRules(rules, "INSTAGRAM", trigger, account.accountId) : undefined;
+  // The Stories tool holds both story mention and story reply rules.
+  const storyRules = () => {
+    const mentions = forAccount("INSTAGRAM_STORY_MENTION");
+    const replies = forAccount("INSTAGRAM_STORY_REPLY");
+    return mentions && replies ? [...replies, ...mentions] : undefined;
+  };
 
   const tools: ChannelTool<InstagramTool>[] = account
     ? [
@@ -63,9 +69,9 @@ export function InstagramDashboard() {
         },
         {
           value: "stories",
-          label: t("Story mentions"),
+          label: t("Stories"),
           icon: IconHistory,
-          status: rulesStatus(forAccount("INSTAGRAM_STORY_MENTION"), t),
+          status: rulesStatus(storyRules(), t),
           content: <StoriesTab ibaId={account.accountId} />,
         },
         {

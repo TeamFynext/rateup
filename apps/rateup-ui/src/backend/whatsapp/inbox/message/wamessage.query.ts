@@ -48,6 +48,8 @@ import {
   reopenConversation,
   sendNewWaMessage,
   setContactSpam,
+  moderateInstagramContact,
+  type InstagramModerationAction,
   setConversationFavorite,
   unblockWhatsAppUser,
   updateConversation,
@@ -436,6 +438,50 @@ export const useSetContactSpam = () => {
       toast.success(variables.isSpam ? "Contact marked as spam" : "Contact removed from spam");
     },
     onError: () => toast.error("Could not update spam"),
+  });
+};
+
+const MODERATION_DONE: Record<InstagramModerationAction, string> = {
+  block: "Blocked on Instagram",
+  unblock: "Unblocked on Instagram",
+  spam: "Moved to spam",
+};
+
+/**
+ * Block / unblock / move to spam on Instagram. The block lands on every row of the
+ * contact (it is contact-grained, like spam) and on the open thread.
+ */
+export const useModerateInstagramContact = () => {
+  const { filterData } = useContactStore();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (variables: { contactId: string; action: InstagramModerationAction }) =>
+      moderateInstagramContact(variables.contactId, variables.action),
+    onSuccess: (res, variables) => {
+      const { contactsById, updateContactById, selectedContact } = useContactsStore.getState();
+      const patch = (c: ContactWithUpdatedAt): ContactWithUpdatedAt => ({
+        ...c,
+        igBlockedAt: res.igBlockedAt,
+        ...(res.isSpam
+          ? {
+              isSpam: true,
+              conversationStatus: WaMessageAssignStatus.CLOSED,
+              waMessageAssignStatus: WaMessageAssignStatus.CLOSED,
+              assignedUsers: [],
+            }
+          : {}),
+      });
+      for (const [rowKey, row] of contactsById.entries()) {
+        if (row.id === variables.contactId) updateContactById(rowKey, patch);
+      }
+      if (selectedContact?.id === variables.contactId) {
+        useContactsStore.setState({ selectedContact: patch(selectedContact) });
+      }
+      if (res.isSpam) qc.invalidateQueries({ queryKey: contactKeys.inboxCount() });
+      qc.invalidateQueries({ queryKey: contactKeys.filteredBy(filterData) });
+      toast.success(MODERATION_DONE[variables.action]);
+    },
+    onError: (error) => toast.error(getApiErrorMessage(error, "Instagram didn't accept that")),
   });
 };
 

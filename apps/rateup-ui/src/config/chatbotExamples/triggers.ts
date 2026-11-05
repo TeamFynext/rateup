@@ -7,6 +7,7 @@ export type ChatbotTriggerKind =
   | "leadad"
   | "comment"
   | "story"
+  | "storyreply"
   | "link"
   | "getstarted";
 
@@ -72,6 +73,14 @@ export const CHATBOT_TRIGGERS: Record<AutomationPlatform, readonly ChatbotTrigge
       triggerEvent: "INSTAGRAM_STORY_MENTION",
       hint: "Starts when someone mentions you in their story.",
       context: "Mentioned you in their story",
+    },
+    {
+      kind: "storyreply",
+      label: "Story reply",
+      description: "e.g. “reply GUIDE to get it”",
+      triggerEvent: "INSTAGRAM_STORY_REPLY",
+      hint: "Starts when someone replies to your story. Pick stories or keywords in the rule.",
+      context: "Replied to your story",
     },
     {
       kind: "link",

@@ -9,6 +9,7 @@ import { MessagePlatform, WaTemplateComponentTypeUpperCase } from "@/types/enums
 import type {
   IgReceiveMessageBody,
   IgTemplateButton,
+  InstagramInboundAttachment,
   IgTemplateElement,
   IgSendMessageBody,
   WaReceiveMessageBody,
@@ -160,18 +161,66 @@ export function getContactLabel(
 export type ParsedWaMessageContent =
   | string
   | { text?: string; commentId?: string; mediaId?: string; permalink?: string }
-  | {
-      attachments: Array<{
-        content: string;
-        type: NonNullable<NonNullable<IgReceiveMessageBody["message"]>["attachments"]>[0]["type"];
-      }>;
-      text?: string;
-    }
+  | IgAttachmentsContent
+  | IgStoryReplyContent
   | WaSendMessageBody["contacts"]
   | WaSendMessageBody["location"]
   | OrderContent
   | CallPermissionReplyContent
   | IgTemplateContent;
+
+/** One attachment of an Instagram/Messenger DM, flattened for the bubble. */
+export interface IgAttachmentItem {
+  /** The media URL (for a shared post or reel, Meta's CDN link to it). */
+  content: string;
+  type: InstagramInboundAttachment["type"];
+  /** Shared post / reel only: the title (caption) Meta sends with it. */
+  title?: string;
+  /** Shared post / reel only: the shared media's id. */
+  mediaId?: string;
+}
+
+/** `attachments` and `ig_shared_post` messages: a list of media, plus any text sent with them. */
+export interface IgAttachmentsContent {
+  attachments: IgAttachmentItem[];
+  text?: string;
+}
+
+/** A customer's reply to one of the business's stories. */
+export interface IgStoryReplyContent {
+  text?: string;
+  story: {
+    id: string;
+    /** Meta's CDN URL for the story; it stops working once the story expires. */
+    url?: string;
+    /** The story's link sticker, when it had one. */
+    linkStickerUrl?: string;
+  };
+}
+
+/** Attachment types that are a post or reel someone shared into the chat, not their own media. */
+const SHARED_POST_TYPES: ReadonlySet<string> = new Set(["ig_post", "ig_reel", "share", "reel"]);
+
+export function isSharedPostAttachment(type: string): boolean {
+  return SHARED_POST_TYPES.has(type);
+}
+
+export function isIgStoryReplyContent(
+  content: ParsedWaMessageContent,
+): content is IgStoryReplyContent {
+  return typeof content === "object" && content !== null && "story" in content;
+}
+
+export function isIgAttachmentsContent(
+  content: ParsedWaMessageContent,
+): content is IgAttachmentsContent {
+  return (
+    typeof content === "object" &&
+    content !== null &&
+    "attachments" in content &&
+    Array.isArray(content.attachments)
+  );
+}
 
 /** An Instagram/Messenger template we sent: product cards, or text with link buttons. */
 export interface IgTemplateContent {
@@ -191,12 +240,6 @@ export interface ParsedWaMessageReturn {
   messageContent: ParsedWaMessageContent;
   template?: WaTemplateFetchBody;
   interactive?: WaSendMessageBody["interactive"];
-}
-/** The attachments body carries a list of media entries. */
-function isAttachmentContent(
-  content: ParsedWaMessageContent,
-): content is { attachments: Array<{ content: string; type: string }>; text?: string } {
-  return typeof content === "object" && content !== null && "attachments" in content;
 }
 
 /** The Instagram comment body carries the comment's text and ids. */
@@ -283,6 +326,16 @@ export function parseWaMessage(message: Partial<WaGetMessagesBody>): ParsedWaMes
             message.attachment.payload?.attachment_id;
 
           messageType = message.attachment.type;
+        } else if (message.attachments?.length) {
+          // Several images in one message.
+          messageType = "attachments";
+          messageContent = {
+            attachments: message.attachments.map((a) => ({
+              content: a.payload.url ?? a.payload.attachment_id ?? "",
+              type: a.type,
+            })),
+            text: message.text,
+          };
         } else if (message.text) {
           messageType = "text";
           messageContent = message.text;
@@ -303,21 +356,35 @@ export function parseWaMessage(message: Partial<WaGetMessagesBody>): ParsedWaMes
             mediaId: receive.message.media_id,
             permalink: receive.message.media_permalink,
           };
-        } else if (receive.message.attachments) {
+        } else if (receive.message.reply_to?.story) {
+          const { story } = receive.message.reply_to;
+          messageType = "ig_story_reply";
           messageContent = {
-            attachments: receive.message.attachments.map((r) => ({
-              content: r.payload ? r.payload.url : "",
-              type: r.type,
-            })),
             text: receive.message.text,
+            story: { id: story.id, url: story.url, linkStickerUrl: story.link_sticker_url },
           };
-          messageType = "attachments";
+        } else if (receive.message.attachments?.length) {
+          const attachments = receive.message.attachments.map((r): IgAttachmentItem => ({
+            content: r.payload?.url ?? "",
+            type: r.type,
+            title: r.payload?.title,
+            mediaId: r.payload?.ig_post_media_id ?? r.payload?.reel_video_id ?? r.payload?.id,
+          }));
+          messageContent = { attachments, text: receive.message.text };
+          messageType = attachments.every((a) => isSharedPostAttachment(a.type))
+            ? "ig_shared_post"
+            : "attachments";
         } else if (receive.message.text) {
           messageContent = receive.message.text;
           messageType = "text";
         } else if (receive.message.quick_reply) {
           messageContent = receive.message.quick_reply.payload;
           messageType = "quickreply";
+        } else if (receive.message.is_unsupported) {
+          // Instagram withholds the content (an unsupported media type); say so
+          // rather than "No messages yet".
+          messageType = "ig_unsupported";
+          messageContent = "";
         }
       } else if (receive.reaction && receive.reaction.action === "react") {
         messageContent = receive.reaction.emoji || receive.reaction.reaction;
@@ -479,6 +546,23 @@ export function parseWaMessage(message: Partial<WaGetMessagesBody>): ParsedWaMes
   };
 }
 
+/** How an attachment of each type reads in a one-line preview. */
+const ATTACHMENT_PREVIEW: Partial<Record<InstagramInboundAttachment["type"], string>> = {
+  image: "Image",
+  video: "Video",
+  audio: "Audio",
+  file: "Document",
+  sticker: "Sticker",
+  story_mention: "Mentioned you in their story",
+  ephemeral: "Disappearing media",
+  ig_post: "Shared a post",
+  share: "Shared a post",
+  ig_reel: "Shared a reel",
+  reel: "Shared a reel",
+  story: "Story",
+  ig_story: "Story",
+};
+
 /** One-line preview of a message, for the chat list and notifications. */
 export function returnMessageContentBasedOnParsedMessage(
   parsedMessage: ParsedWaMessageReturn,
@@ -524,10 +608,25 @@ export function returnMessageContentBasedOnParsedMessage(
         ? "Liked a message"
         : `Reacted ${parsedMessage.messageContent}`;
   } else if (parsedMessage.messageType === "attachments") {
-    const attachments = isAttachmentContent(parsedMessage.messageContent)
+    const attachments = isIgAttachmentsContent(parsedMessage.messageContent)
       ? parsedMessage.messageContent.attachments
       : [];
-    return attachments.at(-1)?.type ?? "Attachment";
+    const last = attachments.at(-1)?.type;
+    return (last && ATTACHMENT_PREVIEW[last]) || "Attachment";
+  } else if (parsedMessage.messageType === "ig_shared_post") {
+    const attachments = isIgAttachmentsContent(parsedMessage.messageContent)
+      ? parsedMessage.messageContent.attachments
+      : [];
+    return attachments.some((a) => a.type === "ig_reel" || a.type === "reel")
+      ? "Shared a reel"
+      : "Shared a post";
+  } else if (parsedMessage.messageType === "ig_unsupported") {
+    return "Unsupported message";
+  } else if (parsedMessage.messageType === "ig_story_reply") {
+    const content = isIgStoryReplyContent(parsedMessage.messageContent)
+      ? parsedMessage.messageContent
+      : null;
+    return content?.text || "Replied to your story";
   } else if (parsedMessage.messageType === "ig_template") {
     const content = isIgTemplateContent(parsedMessage.messageContent)
       ? parsedMessage.messageContent
@@ -676,4 +775,54 @@ export interface CallPermissionReplyContent {
 
 export function isCallPermissionReply(content: unknown): content is CallPermissionReplyContent {
   return typeof content === "object" && content !== null && "accepted" in content;
+}
+
+const isMetaPlatform = (platform?: string | null) =>
+  platform === MessagePlatform.INSTAGRAM || platform === MessagePlatform.FACEBOOK;
+
+/**
+ * The Meta id (`mid`) of the message this one quotes: an inbound inline reply
+ * carries it on `message.reply_to.mid`, a reply an agent sent with a quote on the
+ * send payload's top-level `reply_to.mid`. Instagram and Messenger only.
+ */
+export function getReplyToMid(
+  message: Partial<Pick<WaGetMessagesBody, "messageBody" | "sourcePlatform">>,
+): string | undefined {
+  if (!isMetaPlatform(message.sourcePlatform)) return undefined;
+  const body = message.messageBody;
+  if (body?.exchangeProcess === "receive" && body.receive && "message" in body.receive) {
+    return body.receive.message?.reply_to?.mid || undefined;
+  }
+  if (body?.exchangeProcess === "send" && body.send && "reply_to" in body.send) {
+    return body.send.reply_to?.mid || undefined;
+  }
+  return undefined;
+}
+
+/** One line of what a message says, for a quote block or the composer's reply strip. */
+export function getMessagePreview(message: Partial<WaGetMessagesBody>): string {
+  const exchangeProcess = message.messageBody?.exchangeProcess ?? "receive";
+  return returnMessageContentBasedOnParsedMessage(parseWaMessage(message), exchangeProcess);
+}
+
+/** Who wrote a message, for a quote's label: the agent, "Automation", or the customer. */
+export function getMessageAuthor(
+  message: Pick<WaGetMessagesBody, "messageBody" | "sender">,
+  contact?: {
+    name?: string | null;
+    whatsappUserName?: string | null;
+    phone?: string | null;
+    igsId?: string | null;
+    psid?: string | null;
+  } | null,
+): string | null {
+  if (message.messageBody?.exchangeProcess === "send") return message.sender?.name || "Automation";
+  return (
+    contact?.name ||
+    contact?.whatsappUserName ||
+    contact?.phone ||
+    contact?.igsId ||
+    contact?.psid ||
+    null
+  );
 }

@@ -94,6 +94,20 @@ export function loyaltyEventCatalog(t: TFunction): LoyaltyEventDefinition[] {
     },
     {
       kind: "event",
+      eventType: LoyaltyEventType.INSTAGRAM_MENTION_REWARDED,
+      group: "notification",
+      label: t("When an Instagram mention earns points"),
+      description: t(
+        "Sent when a member tags you in a story, post or comment and earns points for it. Goes out as an Instagram message when they have no WhatsApp.",
+      ),
+      params: [name, t("points earned"), t("balance after")],
+      templateName: "loyalty_instagram_mention_rewarded",
+      body: "Thanks for the shout-out on Instagram, {{1}}! You just earned {{2}} points. Your balance is now {{3}}.",
+      example: ["Anjali", "25", "1283"],
+      defaultOn: true,
+    },
+    {
+      kind: "event",
       eventType: LoyaltyEventType.POINTS_ADJUSTED,
       group: "notification",
       label: t("When points are adjusted"),

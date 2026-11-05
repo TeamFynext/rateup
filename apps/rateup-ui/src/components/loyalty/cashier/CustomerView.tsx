@@ -16,6 +16,7 @@ import type {
   CustomerRewardsResponse,
   PendingRedemption,
 } from "@/backend/loyalty/cashier/cashier.api";
+import { instagramMentionLabel } from "@/components/dashboard/loyalty/activity/instagramMention.tsx";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -235,7 +236,8 @@ export function CustomerView({
                     <span className="text-foreground">
                       {row.purchaseAmount !== null
                         ? money(row.purchaseAmount)
-                        : row.description || row.source.replaceAll("_", " ")}
+                        : (instagramMentionLabel(row, t) ??
+                          (row.description || row.source.replaceAll("_", " ")))}
                     </span>
                   </span>
                   <span

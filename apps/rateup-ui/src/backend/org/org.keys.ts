@@ -76,6 +76,7 @@ export const analyticsKeys = {
       "teamapioverview",
       "wa-message-logs",
       "user-audit-logs",
+      "instagramInsights",
     ] as const,
 } as const;
 

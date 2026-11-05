@@ -8,7 +8,10 @@ import { Spinner } from "@/components/ui/spinner.tsx";
 import { useMediaStore } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter/index.tsx";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 
-const InsertInboxFile = () => {
+const DEFAULT_ACCEPT = "text/plain,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx";
+
+/** `accept` narrows the picker: Instagram and Messenger take PDFs only. */
+const InsertInboxFile = ({ accept = DEFAULT_ACCEPT }: Readonly<{ accept?: string }>) => {
   const [files, setFiles] = useState<File[]>([]);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
 
@@ -74,13 +77,7 @@ const InsertInboxFile = () => {
             <IconFile size={16} />
             Select Files
           </div>
-          <input
-            type="file"
-            multiple
-            accept="text/plain,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
-            className="hidden"
-            onChange={handleSelect}
-          />
+          <input type="file" multiple accept={accept} className="hidden" onChange={handleSelect} />
         </Button>
 
         {/* File list */}

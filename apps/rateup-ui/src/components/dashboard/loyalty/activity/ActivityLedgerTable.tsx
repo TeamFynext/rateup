@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge.tsx";
 
 import { LOYALTY_PATHS } from "../paths.ts";
 import { PAGE_SIZE } from "./activity.filters.ts";
+import { INSTAGRAM_MENTION_SOURCE, InstagramMentionDetail } from "./instagramMention.tsx";
 
 const KIND_LABEL: Record<string, string> = {
   earn: "Earned",
@@ -95,7 +96,13 @@ export function ActivityLedgerTable({
               ) : (
                 <p className="truncate font-medium text-foreground">{name}</p>
               )}
-              <p className="truncate text-xs text-muted-foreground">{detail}</p>
+              <p className="truncate text-xs text-muted-foreground">
+                {row.original.source === INSTAGRAM_MENTION_SOURCE ? (
+                  <InstagramMentionDetail row={row.original} t={t} />
+                ) : (
+                  detail
+                )}
+              </p>
             </div>
           );
         },

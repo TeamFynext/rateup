@@ -33,7 +33,11 @@ import { ShopifyEvents } from "@/types/enums.ts";
 
 import { AdReferralOptions } from "../AdReferralOptions.tsx";
 import ConditionList from "../ConditionList.tsx";
-import { InstagramCommentSource, InstagramLinkRef } from "../InstagramTriggerOptions.tsx";
+import {
+  InstagramCommentSource,
+  InstagramLinkRef,
+  InstagramStoryReplyOptions,
+} from "../InstagramTriggerOptions.tsx";
 import { MatchSentence } from "../MatchSentence.tsx";
 import { MessengerLinkRef } from "../MessengerTriggerOptions.tsx";
 import type { CreateRuleInput, CreateRuleValues } from "../schema.ts";
@@ -582,8 +586,11 @@ const ConditionsPanel: React.FC<{
       </div>
     )}
 
+    {triggerEvent === "INSTAGRAM_STORY_REPLY" && <InstagramStoryReplyOptions />}
+
     {/* Standard condition blocks */}
-    {!isInstagramStoryTrigger &&
+    {triggerEvent !== "INSTAGRAM_STORY_REPLY" &&
+      !isInstagramStoryTrigger &&
       !isInstagramReferralTrigger &&
       !isAdReferralTrigger &&
       !isMessengerReferralTrigger &&
@@ -617,6 +624,7 @@ const ConditionsPanel: React.FC<{
       ))}
 
     {!isShopifyTrigger &&
+      triggerEvent !== "INSTAGRAM_STORY_REPLY" &&
       !isInstagramStoryTrigger &&
       !isInstagramReferralTrigger &&
       !isAdReferralTrigger &&

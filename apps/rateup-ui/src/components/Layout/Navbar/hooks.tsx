@@ -563,6 +563,11 @@ export function useNavMain({
                   url: "/dashboard/analytics?tab=message-log",
                   icon: IconLogs,
                 },
+                {
+                  title: t("Instagram"),
+                  url: "/dashboard/analytics?tab=instagram",
+                  icon: InstagramBrandIcon,
+                },
               ],
             },
           ]

@@ -30,8 +30,8 @@ const PLATFORM_COMPONENT_SUPPORT: Record<string, AutomationPlatform[]> = {
 
   // WhatsApp only
   buttonNode: [AutomationPlatform.WHATSAPP],
-  // Messenger sends it as a file attachment; Instagram has no files.
-  documentNode: [AutomationPlatform.WHATSAPP, AutomationPlatform.FACEBOOK],
+  // Instagram and Messenger send it as a file attachment, which Instagram takes as a PDF only.
+  documentNode: ALL,
   listNode: [AutomationPlatform.WHATSAPP],
   ctaUrlNode: [AutomationPlatform.WHATSAPP],
   templateNode: [AutomationPlatform.WHATSAPP],
