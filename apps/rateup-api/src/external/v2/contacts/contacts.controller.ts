@@ -12,19 +12,18 @@ import {
 import type { ContactCore } from "../../../modules/contact/contact.schema.js";
 import { ExternalApiError } from "../../shared/errors.js";
 import { cursorOrderBy, cursorWhere, decodeCursor, toPage } from "../pagination.js";
-import { contactSelect, presentContact } from "./presenters.js";
+import { contactSelect, presentContact, presentContactDetail } from "./presenters.js";
 import type {
   BulkCreateContactsBody,
   BulkSkipReason,
   ContactIdParams,
   ContactListQuery,
-  ContactLookupQuery,
   CreateContactBody,
   UpdateContactBody,
 } from "./contacts.schema.js";
 import {
-  findContact,
   loadContact,
+  loadContactDetail,
   resolveContactRefs,
   toCustomFieldInputs,
   type ResolvedRefs,
@@ -62,17 +61,9 @@ export async function listContactsHandler(
 }
 
 export async function getContactHandler(request: FastifyRequest<{ Params: ContactIdParams }>) {
-  return presentContact(await loadContact(request.user.orgId, request.params.contactId));
-}
-
-export async function lookupContactHandler(
-  request: FastifyRequest<{ Querystring: ContactLookupQuery }>,
-) {
-  const contact = await findContact(request.user.orgId, {
-    phone: { in: storedPhoneSpellings(request.query.phone) },
-  });
-  if (!contact) throw new ExternalApiError(404, "contact_not_found", "No contact has that phone");
-  return presentContact(contact);
+  return presentContactDetail(
+    await loadContactDetail(request.user.orgId, request.params.contactId),
+  );
 }
 
 /** The dashboard's create input for one partner body. */

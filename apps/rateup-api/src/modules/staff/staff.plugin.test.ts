@@ -15,7 +15,13 @@ const db = vi.hoisted(() => ({
 // rateLimit runs INCR+EXPIRE as one EVAL; route it through `incr` so the cases below can
 // keep steering the count (or the outage) with `redis.incr`.
 const redis = vi.hoisted(() => {
-  const r = { incr: vi.fn(), expire: vi.fn(), eval: vi.fn() };
+  const r = {
+    incr: vi.fn(),
+    expire: vi.fn(),
+    eval: vi.fn(),
+    set: vi.fn(async () => "OK"),
+    del: vi.fn(),
+  };
   r.eval.mockImplementation((_script: string, _n: number, key: string) => r.incr(key));
   return r;
 });
@@ -35,6 +41,25 @@ vi.mock("../payment/stripe/stripe.service.js", () => ({ getAllStripeSubscription
 vi.mock("../maintenance/maintenance.tasks.js", () => ({
   MAINTENANCE_TASKS: [],
   findTask: vi.fn(),
+}));
+const maintenanceQueue = vi.hoisted(() => ({
+  getJob: vi.fn(async () => null),
+  enqueue: vi.fn(async () => ({})),
+}));
+vi.mock("../../workers/bullmq/queues/maintenance.queue.js", () => ({
+  maintenanceQueue: { getJob: maintenanceQueue.getJob },
+  maintenanceJobId: (taskId: string) => `maintenance-${taskId}`,
+  enqueueMaintenanceRun: maintenanceQueue.enqueue,
+}));
+vi.mock("../maintenance/backgroundRun.js", () => ({
+  ACTIVE_RUN_STATES: ["queued", "running"],
+  newBackgroundRun: vi.fn(async (taskId: string, jobId: string) => ({
+    taskId,
+    jobId,
+    state: "queued",
+  })),
+  readBackgroundRun: vi.fn(async () => null),
+  updateBackgroundRun: vi.fn(),
 }));
 vi.mock("../whatsapp/inbox/message/wamessage.service.js", () => ({
   generateInboxResponse: vi.fn(),
@@ -594,5 +619,47 @@ describe("applying a maintenance task", () => {
     expect(db.staffAuditLog.update.mock.calls[0][0].data.after).toMatchObject({
       status: "finished",
     });
+  });
+
+  test("a background task is queued for the worker, not run in the request", async () => {
+    const { findTask } = await import("../maintenance/maintenance.tasks.js");
+    const run = vi.fn();
+    vi.mocked(findTask).mockReturnValue({
+      id: "seed-plans",
+      title: "Seed plans",
+      description: "",
+      destructive: false,
+      background: {},
+      run,
+    });
+    maintenanceQueue.getJob.mockResolvedValueOnce(null);
+    const { app } = await buildApp();
+    const res = await app.inject({ method: "POST", url, headers: mutating, payload: body });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().data).toMatchObject({ background: true, run: { state: "queued" } });
+    expect(run).not.toHaveBeenCalled();
+    expect(maintenanceQueue.enqueue).toHaveBeenCalledWith(
+      expect.objectContaining({ taskId: "seed-plans" }),
+    );
+    expect(db.staffAuditLog.create.mock.calls[0][0].data.after).toMatchObject({ status: "queued" });
+  });
+
+  test("a background task that is already running is not queued twice", async () => {
+    const { findTask } = await import("../maintenance/maintenance.tasks.js");
+    vi.mocked(findTask).mockReturnValue({
+      id: "seed-plans",
+      title: "Seed plans",
+      description: "",
+      destructive: false,
+      background: {},
+      run: vi.fn(),
+    });
+    maintenanceQueue.getJob.mockResolvedValueOnce({} as never);
+    maintenanceQueue.enqueue.mockClear();
+    const { app } = await buildApp();
+    const res = await app.inject({ method: "POST", url, headers: mutating, payload: body });
+    expect(res.statusCode).toBe(409);
+    expect(res.json().code).toBe("ALREADY_RUNNING");
+    expect(maintenanceQueue.enqueue).not.toHaveBeenCalled();
   });
 });

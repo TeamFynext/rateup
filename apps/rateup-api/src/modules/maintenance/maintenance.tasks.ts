@@ -13,6 +13,10 @@ import { capFreeOrders } from "./tasks/capFreeOrders.js";
 import { backfillOrgModules } from "./tasks/backfillOrgModules.js";
 import { renamePlanDescriptions } from "./tasks/renamePlanDescriptions.js";
 import { rewriteDripEmailLinks } from "./tasks/rewriteDripEmailLinks.js";
+import { backfillConversationChannels } from "./tasks/backfillConversationChannels.js";
+import { backfillContactIdentities } from "./tasks/backfillContactIdentities.js";
+import { backfillBusinessPortfolios } from "./tasks/backfillBusinessPortfolios.js";
+import { findDuplicateContacts } from "./tasks/findDuplicateContacts.js";
 
 export interface TaskDefinition {
   id: string;
@@ -24,6 +28,13 @@ export interface TaskDefinition {
    * The panel makes the operator confirm these; it changes nothing about the task itself.
    */
   destructive: boolean;
+  /**
+   * Set for a resumable task too big for one request (it returns `details.finished: false`
+   * when it stops at its time limit). Applying it from the staff console then hands it to the
+   * bullmq worker, which runs it round after round until it finishes. `roundMs` is each
+   * round's time limit (default one minute). Previews still run inline.
+   */
+  background?: { roundMs?: number };
   run: TaskRunner;
 }
 
@@ -186,6 +197,58 @@ export const MAINTENANCE_TASKS: TaskDefinition[] = [
       "edited already use the new links. Preview first. Safe to re-run.",
     destructive: false,
     run: rewriteDripEmailLinks,
+  },
+  {
+    id: "backfill-conversation-channels",
+    title: "Give every ticket its channel",
+    description:
+      "Tickets now belong to one channel each, so a customer on WhatsApp and Instagram gets a " +
+      "ticket per channel. Fills the channel of tickets written before that from their newest " +
+      "message. Tickets whose messages name no connected channel stay without one and behave as " +
+      "before. Apply runs it in the background until every ticket is done; the preview only " +
+      "covers the first ~20 seconds' worth. Safe to re-run.",
+    destructive: false,
+    background: {},
+    run: backfillConversationChannels,
+  },
+  {
+    id: "backfill-contact-identities",
+    title: "Record contacts' identities",
+    description:
+      "Writes each contact's phone, email, WhatsApp BSUID, Instagram and Messenger ids into the " +
+      "identity list that contact merge and multi-number lookups use. Until it has run, lookups " +
+      "fall back to the old columns, so nothing breaks in between. Apply runs it in the background " +
+      "until every contact is done; the preview only covers the first ~20 seconds' worth. Safe " +
+      "to re-run.",
+    destructive: false,
+    background: {},
+    run: backfillContactIdentities,
+  },
+  {
+    id: "backfill-business-portfolios",
+    title: "Store each WhatsApp number's business",
+    description:
+      "Looks up the Meta business (portfolio) behind every connected WhatsApp number. Customers " +
+      "known only by their business-scoped user ID can only be messaged from numbers of the same " +
+      "business, so pickers and campaigns need it. One Meta call per WhatsApp account; accounts " +
+      "whose token no longer works are listed. Runs in the background. Safe to re-run.",
+    destructive: false,
+    // One round with no time limit: it has no cursor, so a second round would retry the
+    // accounts whose token failed in the first, forever.
+    background: { roundMs: Number.POSITIVE_INFINITY },
+    run: backfillBusinessPortfolios,
+  },
+  {
+    id: "find-duplicate-contacts",
+    title: "Find duplicate contacts",
+    description:
+      "Looks through existing contacts for likely duplicates and lists them under Contacts → " +
+      "Possible duplicates: contacts sharing an email, and webchat visitors who typed another " +
+      "contact's phone or email. Nothing is merged; a person reviews each pair. Pairs already " +
+      "marked as different people stay that way. Runs in the background. Safe to re-run.",
+    destructive: false,
+    background: { roundMs: Number.POSITIVE_INFINITY },
+    run: findDuplicateContacts,
   },
 ];
 

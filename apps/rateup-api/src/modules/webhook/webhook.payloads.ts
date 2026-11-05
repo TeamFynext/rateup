@@ -45,6 +45,15 @@ export function toWebhookPayload(
         payload: { contact: publicContact(event.contact), changed: event.changed },
       };
 
+    case "contact.merged":
+      return {
+        event: event.type,
+        payload: {
+          contact: publicContact(event.contact),
+          mergedContactId: event.sourceContact.id,
+        },
+      };
+
     case "contact.assigned":
       return {
         event: event.type,

@@ -8,7 +8,7 @@ import { Job, Worker } from "bullmq";
 
 import { log } from "../../../utils/logger.js";
 import { sweepExpiredIdempotencyRecords } from "../../../external/shared/idempotency.js";
-import { sweepOldApiUsage } from "../../../modules/apiAccessToken/apiUsage.js";
+import { drainApiUsage, sweepOldApiUsage } from "../../../modules/apiAccessToken/apiUsage.js";
 import { sweepExpiredApiKeys } from "../../../modules/apiAccessToken/apiAccessToken.service.js";
 import baseRedis from "../../../utils/redisConnection.js";
 import { resetAnnualCounts, resetMonthlyCounts } from "../../../modules/stats/stats.service.js";
@@ -99,6 +99,14 @@ const HANDLERS: Record<ScheduledJobId, () => Promise<void>> = {
     log.info("Running Every Day 12.30 AM --> Stats Reset");
     await safeRun("resetMonthlyCounts", resetMonthlyCounts);
     await safeRun("resetAnnualCounts", resetAnnualCounts);
+  },
+
+  apiUsageFlush: async () => {
+    // Every ten seconds, so it only logs when something failed.
+    await safeRun("drainApiUsage", async () => {
+      const result = await drainApiUsage();
+      if (result.failed) log.warn(result, "API usage flush left rows for the next tick");
+    });
   },
 
   usageFlush: async () => {

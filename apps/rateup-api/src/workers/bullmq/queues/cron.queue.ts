@@ -46,6 +46,8 @@ export const SCHEDULED_JOBS = [
   // `UsageStats`, one UPDATE per org. Six-field cron: every ten seconds. See
   // workers/shared/usageCounter.ts.
   { id: "usageFlush", pattern: "*/10 * * * * *", tz: "Etc/UTC" },
+  // Partner API and widget key usage: the API queues rows in Redis, this writes them.
+  { id: "apiUsageFlush", pattern: "*/10 * * * * *", tz: "Etc/UTC" },
   // Expired partner-API replay records (only useful for 24 hours; the durable idempotency
   // guarantee is the ledger's own key), usage-log rows past 30 days, and keys a week past
   // their expiry.

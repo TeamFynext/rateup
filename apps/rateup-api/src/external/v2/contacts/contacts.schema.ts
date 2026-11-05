@@ -1,5 +1,7 @@
 import z from "zod";
 
+import { ContactIdentityKind, ContactIdentitySource } from "../../../../generated/prisma/enums.js";
+import type { MergeChoosableField } from "../../../modules/contact/merge/merge.types.js";
 import { pageSchema, paginationQuerySchema } from "../pagination.js";
 import { phoneSchema, wirePhoneSchema } from "../phone.js";
 
@@ -38,6 +40,47 @@ export const contactSchema = z.object({
 
 export type ContactView = z.infer<typeof contactSchema>;
 
+/**
+ * One way a contact is known: a phone, an email, a WhatsApp business-scoped user ID (BSUID),
+ * an Instagram or Messenger id, a webchat visitor, or an id in another system. A contact can
+ * hold any number of each; `primary` marks the one shown as the contact's `phone`, `email` or
+ * `businessScopedUserId`.
+ */
+export const contactIdentitySchema = z.object({
+  id: z.string(),
+  kind: z.enum(ContactIdentityKind),
+  /** PHONE: digits with the country code, no `+`. EMAIL: lowercased. Others: verbatim. */
+  value: z.string(),
+  channelId: z
+    .string()
+    .nullable()
+    .describe(
+      "IG_SCOPED, FB_PSID and WEBCHAT ids belong to one channel (the Instagram account, Page or widget); for other kinds, the channel this identity was last seen on",
+    ),
+  integration: z
+    .string()
+    .nullable()
+    .describe("EXTERNAL only: the system the id belongs to, e.g. `shopify` or `my-crm`"),
+  source: z.enum(ContactIdentitySource),
+  verified: z
+    .boolean()
+    .describe("Issued by the platform or proven by the customer, as opposed to typed in"),
+  primary: z.boolean(),
+  username: z.string().nullable(),
+  displayName: z.string().nullable(),
+  lastSeenAt: z.iso.datetime().nullable(),
+  createdAt: z.iso.datetime(),
+});
+
+export type ContactIdentityView = z.infer<typeof contactIdentitySchema>;
+
+/** A single contact with its identities: what `GET /contacts/{id}`, lookup and merge return. */
+export const contactDetailSchema = contactSchema.extend({
+  identities: z.array(contactIdentitySchema),
+});
+
+export type ContactDetailView = z.infer<typeof contactDetailSchema>;
+
 // ---- requests -----------------------------------------------------------------------------
 
 /** The most contacts one `POST /contacts/bulk` may carry. */
@@ -59,7 +102,95 @@ export const contactListQuerySchema = paginationQuerySchema.extend({
   contactGroupId: z.uuid().optional().describe("Only members of this audience"),
 });
 
-export const contactLookupQuerySchema = z.object({ phone: phoneSchema });
+export const contactLookupQuerySchema = z
+  .object({
+    phone: phoneSchema
+      .optional()
+      .describe("Shorthand for `kind=PHONE&value=…`. Digits with the country code, no `+`"),
+    kind: z.enum(ContactIdentityKind).optional().describe("Which kind of identity `value` is"),
+    value: z.string().trim().min(1).max(320).optional(),
+    channelId: z
+      .uuid()
+      .optional()
+      .describe("IG_SCOPED, FB_PSID, WEBCHAT: only an id recorded on this channel"),
+    integration: z
+      .string()
+      .trim()
+      .min(1)
+      .max(100)
+      .optional()
+      .describe("EXTERNAL: only an id from this integration"),
+  })
+  .refine(
+    (q) =>
+      q.phone !== undefined
+        ? q.kind === undefined && q.value === undefined
+        : q.kind !== undefined && q.value !== undefined,
+    { message: "Send either `phone`, or `kind` and `value`" },
+  );
+
+/** Kinds a partner may add. Platform ids (BSUID, Instagram, Messenger, webchat) only come from the platform. */
+export const ADDABLE_IDENTITY_KINDS = [
+  ContactIdentityKind.PHONE,
+  ContactIdentityKind.EMAIL,
+  ContactIdentityKind.EXTERNAL,
+] as const;
+
+const integrationKeyField = z
+  .string()
+  .trim()
+  .min(1)
+  .max(100)
+  .regex(/^[A-Za-z0-9_.:-]+$/, "Letters, digits and _ . : - only");
+
+export const addContactIdentityBodySchema = z
+  .object({
+    kind: z.enum(ADDABLE_IDENTITY_KINDS),
+    value: z.string().trim().min(1).max(320),
+    integration: integrationKeyField
+      .optional()
+      .describe("Required for EXTERNAL: the system the id belongs to, e.g. `shopify`"),
+  })
+  .superRefine((body, ctx) => {
+    if (body.kind === ContactIdentityKind.EXTERNAL && !body.integration) {
+      ctx.addIssue({ code: "custom", path: ["integration"], message: "Required for EXTERNAL" });
+    }
+    if (body.kind !== ContactIdentityKind.EXTERNAL && body.integration !== undefined) {
+      ctx.addIssue({ code: "custom", path: ["integration"], message: "Only for EXTERNAL" });
+    }
+  });
+
+export const contactIdentityParamsSchema = z.object({
+  contactId: z.uuid(),
+  identityId: z.uuid(),
+});
+
+const mergeSide = z.enum(["source", "target"]);
+
+export const mergeContactBodySchema = z.object({
+  sourceContactId: z
+    .uuid()
+    .describe("The contact merged away. Everything it owns moves to the contact in the path"),
+  fieldChoices: z
+    .object({
+      name: mergeSide.optional(),
+      email: mergeSide.optional(),
+      address: mergeSide.optional(),
+      dob: mergeSide.optional(),
+      gender: mergeSide.optional(),
+      notes: mergeSide.optional(),
+      lifecycleId: mergeSide.optional(),
+      customFields: z
+        .record(z.string().min(1).max(100), mergeSide)
+        .optional()
+        .describe("Keyed by the custom field's slug"),
+    } satisfies Record<MergeChoosableField | "customFields", z.ZodType>)
+    .strict()
+    .optional()
+    .describe(
+      "Which side's value wins where both contacts have one and they differ. Default: the target's; a blank on the target is filled from the source",
+    ),
+});
 
 const nameField = z.string().trim().min(1).max(200);
 const emailField = z.email().max(320);
@@ -132,6 +263,8 @@ export const bulkCreateContactsResultSchema = z.object({
 
 export const contactDeletedSchema = z.object({ id: z.string(), deleted: z.literal(true) });
 
+export const contactIdentityListSchema = z.object({ data: z.array(contactIdentitySchema) });
+
 export type ContactIdParams = z.infer<typeof contactIdParamsSchema>;
 export type ContactListQuery = z.infer<typeof contactListQuerySchema>;
 export type ContactLookupQuery = z.infer<typeof contactLookupQuerySchema>;
@@ -139,3 +272,6 @@ export type CreateContactBody = z.infer<typeof createContactBodySchema>;
 export type BulkCreateContactsBody = z.infer<typeof bulkCreateContactsBodySchema>;
 export type UpdateContactBody = z.infer<typeof updateContactBodySchema>;
 export type BulkSkipReason = z.infer<typeof bulkSkipReasonSchema>;
+export type AddContactIdentityBody = z.infer<typeof addContactIdentityBodySchema>;
+export type ContactIdentityParams = z.infer<typeof contactIdentityParamsSchema>;
+export type MergeContactBody = z.infer<typeof mergeContactBodySchema>;

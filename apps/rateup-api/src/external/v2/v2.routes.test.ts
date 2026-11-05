@@ -224,3 +224,31 @@ describe("audiences", () => {
     });
   });
 });
+
+describe("contact merge", () => {
+  const MERGE = `${ROOT}/contacts/:contactId/merge`;
+  const passes = (scopes: string[]) => {
+    const route = own().find((r) => r.url === MERGE && methods(r).includes("POST"));
+    expect(route, MERGE).toBeTruthy();
+    const actor = buildActor({
+      kind: "apiKey",
+      orgId: "11111111-1111-1111-1111-111111111111",
+      scopes: scopes as never,
+    });
+    try {
+      requireScope({ routeOptions: { config: route!.config }, actor } as never);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  test("is open to full-access keys and keys with the contacts_merge feature", () => {
+    expect(passes([]), "full access").toBe(true);
+    expect(passes(permissionsForFeatures(["contacts_merge"])), "contacts_merge").toBe(true);
+  });
+
+  test("is not opened to existing Contacts keys by the feature's arrival", () => {
+    expect(passes(permissionsForFeatures(["contacts"]))).toBe(false);
+  });
+});

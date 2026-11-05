@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { declareAccess } from "../../authz/registry.js";
-import { getAccessibleChannels } from "./channel.service.js";
+import { getAccessibleChannels, isWebchatInUse } from "./channel.service.js";
 import { type ChannelListQuery, channelListQuerySchema } from "./channel.schema.js";
 
 /**
@@ -16,5 +16,10 @@ export async function channelRoutes(server: FastifyInstance) {
     { schema: { querystring: channelListQuerySchema } },
     async (req: FastifyRequest<{ Querystring: ChannelListQuery }>, reply: FastifyReply) =>
       reply.send(await getAccessibleChannels(req.actor!, req.query.platform)),
+  );
+
+  /** Whether the inbox's channel filter should offer Webchat (the website chat widget). */
+  server.get("/webchat", async (req: FastifyRequest, reply: FastifyReply) =>
+    reply.send({ active: await isWebchatInUse(req.actor!) }),
   );
 }

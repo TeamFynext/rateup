@@ -8,6 +8,7 @@ export * from "./contactImport.queue.js";
 export * from "./cron.queue.js";
 export * from "./integration.queue.js";
 export * from "./loyaltyFeedback.queue.js";
+export * from "./maintenance.queue.js";
 export * from "./notification.queue.js";
 export * from "./statusRetry.queue.js";
 export * from "./user.queue.js";

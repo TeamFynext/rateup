@@ -37,6 +37,10 @@ import {
   getOrCreateContactByPsid,
 } from "../../contact/contact.service.js";
 import { runAssignNode } from "./assignNode.service.js";
+import {
+  runContinueOnWhatsappStep,
+  type ContinueOnWhatsappData,
+} from "../../contact/handoff/handoff.journey.js";
 import type {
   AssignNodeData,
   AutomationEdge,
@@ -467,6 +471,18 @@ export async function processNextMetaFlowNode(
           remainingCommentId,
         );
         return;
+
+      // Sends a wa.me button carrying a handoff code; see contact/handoff/handoff.journey.ts.
+      case "continueOnWhatsappNode":
+        messageSent = await runContinueOnWhatsappStep({
+          data: node.data as ContinueOnWhatsappData | undefined,
+          recipientId,
+          orgId,
+          channel,
+          commentId: remainingCommentId,
+        });
+        if (messageSent) remainingCommentId = undefined;
+        break;
 
       case "assignNode":
         await handleAssignNode(node, recipientId, orgId, channel, automation.id);

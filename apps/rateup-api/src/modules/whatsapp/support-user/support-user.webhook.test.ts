@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("../../../utils/prisma.js", () => ({
-  default: { contact: { findFirst: vi.fn() } },
+  default: {
+    contact: { findFirst: vi.fn() },
+    contactIdentity: { findFirst: vi.fn(async () => null) },
+  },
 }));
 vi.mock("../../../workers/bullmq/queues/index.js", () => ({
   notificationQueue: { add: vi.fn() },
@@ -10,6 +13,10 @@ vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));
 vi.mock("../inbox/message/wamessage.controller.js", () => ({ handleWaMessages: vi.fn() }));
+// Followed through merges; the tests' ids are all current, and another org's is not found.
+vi.mock("../../contact/merge/currentContact.js", () => ({
+  currentContactId: vi.fn(async (_orgId: string, id: string) => id),
+}));
 vi.mock("../../../utils/email/react/templates.js", () => ({
   renderSupportWidgetEmail: vi.fn(),
 }));

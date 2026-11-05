@@ -3,6 +3,10 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 // A stand-in for prisma's known-request error so the handlers' `instanceof`
 // branches can be exercised without loading the real client. It has to be
 // declared inside the factory: vi.mock is hoisted above every other statement.
+vi.mock("./identity/identity.service.js", () => ({
+  assertIdentityFree: vi.fn(async () => undefined),
+  IdentityTakenError: class extends Error {},
+}));
 vi.mock("../../../generated/prisma/client.js", () => ({
   ContactGroupType: { NORMAL: "NORMAL", LOYALTY: "LOYALTY" },
   Prisma: {

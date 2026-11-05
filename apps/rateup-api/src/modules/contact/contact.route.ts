@@ -40,6 +40,7 @@ import { getVerifySubscriptionHandler } from "../../utils/auth.js";
 import { SubscriptionFeaturePathName } from "../../types/enums.js";
 import { conversationRoutes } from "./conversation/conversation.route.js";
 import { conversationTagRoutes } from "./conversationTag/conversationTag.route.js";
+import { contactIdentityRoutes, contactMergeRoutes } from "./merge/merge.route.js";
 import { lifecycleIdParamSchema } from "../lifecycle/lifecycle.schema.js";
 
 import { declareAccess } from "../../authz/registry.js";
@@ -56,6 +57,10 @@ export async function contactRoutes(server: FastifyInstance) {
   // Conversation-scoped tags — the ticket-grained counterpart to `/labels`,
   // which stay on the contact.
   server.register(conversationTagRoutes, { prefix: "/conversation-tags" });
+
+  // Merging two contacts into one, merge suggestions, and a contact's identities.
+  server.register(contactMergeRoutes, { prefix: "/merge" });
+  server.register(contactIdentityRoutes, { prefix: "/identities" });
 
   server.register(fastifyMultipart, {
     limits: {

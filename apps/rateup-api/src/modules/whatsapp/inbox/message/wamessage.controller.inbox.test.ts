@@ -50,6 +50,19 @@ vi.mock("../../whatsappSurvey/wasurvey.service.js", () => ({
 vi.mock("../../messageTemplates/wa_templates.service.js", () => ({
   getTemplateByNameAndOrgId: vi.fn(),
 }));
+vi.mock("../../../channel/channel.service.js", () => ({
+  resolveChannelId: vi.fn(async () => null),
+}));
+vi.mock("../../../contact/identity/identity.service.js", () => ({
+  recordMessageIdentities: vi.fn(),
+}));
+vi.mock("../../../contact/identity/reach.js", () => ({
+  scopedAddressForChannel: vi.fn(
+    async (_o: string, _c: string, _p: string, _ch: string | null, fallback: string | null) =>
+      fallback,
+  ),
+  whatsappAddressFromNumber: vi.fn(async () => null),
+}));
 vi.mock("../../../contact/contact.service.js", () => ({
   getContactById: vi.fn(),
   getOrCreateContactByIgsId: vi.fn(),
@@ -58,6 +71,7 @@ vi.mock("../../../contact/contact.service.js", () => ({
   updateContactById: vi.fn(),
 }));
 vi.mock("../../../contact/conversation/conversation.service.js", () => ({
+  adoptChannel: vi.fn(async (conversation: unknown) => conversation),
   checkIfFirstSendMessageInConversation: vi.fn(),
   checkIfFirstUserSendMessageInConversation: vi.fn(),
   getActiveConversationForContact: vi.fn(),

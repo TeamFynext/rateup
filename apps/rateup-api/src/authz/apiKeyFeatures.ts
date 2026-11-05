@@ -13,6 +13,12 @@ import type { Permission } from "./permissions.js";
  */
 export const API_KEY_FEATURES = {
   contacts: ["contacts.read", "contacts.manage"],
+  /**
+   * Merging two contacts (`POST /contacts/{id}/merge`). Its own feature rather than part of
+   * `contacts`: a merge deletes the source contact, and keys limited to Contacts before it
+   * existed must not gain it silently. Full-access keys (empty scopes) have it.
+   */
+  contacts_merge: ["contacts.merge"],
   teams: ["teams.read"],
   campaigns: ["campaigns.read", "campaigns.manage", "campaigns.send"],
   surveys: ["surveys.read"],

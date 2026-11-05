@@ -51,6 +51,10 @@ const BLOCK_SUPPORT: Record<string, readonly ChatbotPlatform[]> = {
   instagramGenericTemplateNode: META_SEND_API,
   instagramQuickReplyNode: META_SEND_API,
 
+  // "Continue on WhatsApp": a link to a WhatsApp number carrying a handoff code. Pointless
+  // (and unproven) inside a WhatsApp journey, so only Instagram and Messenger take it.
+  continueOnWhatsappNode: META_SEND_API,
+
   instagramProductTemplateNode: INSTAGRAM_ONLY,
   instagramFollowCheckNode: INSTAGRAM_ONLY,
   // Not blocks (the builder no longer lists them): a story mention is a rule trigger and ice

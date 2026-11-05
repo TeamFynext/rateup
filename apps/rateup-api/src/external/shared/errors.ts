@@ -62,6 +62,8 @@ export type ExternalErrorCode =
   | "survey_not_found"
   | "template_not_found"
   | "message_not_found"
+  /// Contact identities (v2 contacts/identities.controller.ts)
+  | "identity_not_found"
   // 409
   | "member_already_exists"
   | "contact_already_exists"
@@ -75,6 +77,10 @@ export type ExternalErrorCode =
   | "reward_in_use"
   | "idempotency_key_reused"
   | "request_in_progress"
+  /// Another contact holds the identity; `details.contactId` names it.
+  | "identity_in_use"
+  /// A contact keeps at least one identity.
+  | "last_identity"
   // 422
   | "insufficient_points"
   | "redemption_rules_violated"

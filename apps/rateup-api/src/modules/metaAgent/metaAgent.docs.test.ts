@@ -9,7 +9,7 @@ vi.hoisted(() => {
 
 vi.mock("../../utils/prisma.js", () => ({
   default: {
-    whatsappSettings: { findFirstOrThrow: vi.fn() },
+    whatsappSettings: { findFirstOrThrow: vi.fn(), findFirst: vi.fn(async () => null) },
     metaBusinessAgent: {
       findFirst: vi.fn(),
       findFirstOrThrow: vi.fn(),

@@ -93,7 +93,15 @@ import {
   WaReceiveMessageBody,
   WaSendMessageBody,
 } from "../../../../types/whatsapp.types.js";
+import { resolveChannelId } from "../../../channel/channel.service.js";
+import { recordMessageIdentities } from "../../../contact/identity/identity.service.js";
+import { linkHandoffFromMessage } from "../../../contact/handoff/handoff.inbound.js";
 import {
+  scopedAddressForChannel,
+  whatsappAddressFromNumber,
+} from "../../../contact/identity/reach.js";
+import {
+  adoptChannel,
   checkIfFirstSendMessageInConversation,
   checkIfFirstUserSendMessageInConversation,
   getActiveConversationForContact,
@@ -173,6 +181,10 @@ export async function handleWaMessages(
      * Instagram and Facebook account ids pass through untouched.
      */
     sourceIdentifier = normalizeSourceIdentifier(sourceIdentifier, sourcePlatform);
+    // The registry row this message travels on. Tickets are per (contact, channel), so a
+    // person writing on WhatsApp and Instagram has a ticket on each. Null when the
+    // identifier names no connected channel (an old number), which files the old way.
+    const channelId = await resolveChannelId(orgId, sourcePlatform, sourceIdentifier);
 
     // Prepare message body
     let waMessageBody: WaInboxMessageBody = {
@@ -284,6 +296,23 @@ export async function handleWaMessages(
       throw new Error(`Failed to get or create contact for ${sourcePlatform} message from ${from}`);
     }
     let { contact, conversation } = res;
+    // A ticket opened with a brand-new contact does not know its channel yet.
+    if (conversation) conversation = await adoptChannel(conversation, channelId);
+    // What this message tells us about who the customer is. Inbound (and echoes) only:
+    // a campaign send teaches nothing new and would cost a write per recipient.
+    if (type === "receive" || options.opensConversation) {
+      await recordMessageIdentities(orgId, contact.id, {
+        platform: sourcePlatform,
+        channelId,
+        from,
+        phone: waIdentity?.phone,
+        bsuid: waIdentity?.bsuid,
+        username:
+          waIdentity?.username ??
+          (additionalData as { whatsappUserName?: string }).whatsappUserName,
+        displayName: userName,
+      });
+    }
     // One spelling per customer for the meters, whichever half this message named.
     const customerId = waIdentity ? (contact.phone ?? contact.bsuid ?? from) : from;
     // Prepare parameter data and handle specific cases
@@ -323,20 +352,36 @@ export async function handleWaMessages(
       }
     }
     if (!conversation) {
-      if (filesLikeInbound && contact.waMessageAssignStatus === WaMessageAssignStatus.UNASSIGNED) {
+      // A contact reached on several channels can be busy on one (assigned on Instagram)
+      // and new on another; the contact-level status describes only its newest ticket, so
+      // with a known channel the channel's own ticket decides. Spam stays filed away.
+      const opensOnChannel =
+        Boolean(channelId) &&
+        !contact.isSpam &&
+        !WaMessageClosedStatus.includes(contact.waMessageAssignStatus);
+      if (
+        filesLikeInbound &&
+        (contact.waMessageAssignStatus === WaMessageAssignStatus.UNASSIGNED || opensOnChannel)
+      ) {
         // An inbound message belongs to a live conversation. If the last one was
         // closed (or there was never one), this message opens a new conversation
         // rather than appending to a finished record.
         conversation =
-          (await getActiveConversationForContact(contact.id)) ??
-          (await openConversationForContact(contact.id, orgId));
+          (await getActiveConversationForContact(contact.id, channelId)) ??
+          (await openConversationForContact(
+            contact.id,
+            orgId,
+            WaMessageAssignStatus.UNASSIGNED,
+            channelId,
+          ));
       } else {
         // `getLastCreatedConversationForContact` signals "none" with `null`,
         // whereas this local `conversation` (destructured from
         // getOrCreateContactBy*'s own return shape) uses `undefined` for the
         // same absence — normalize so this function's later `conversation &&`
         // / `conversation?.` checks keep working regardless of which path set it.
-        conversation = (await getLastCreatedConversationForContact(contact.id)) ?? undefined;
+        const last = await getLastCreatedConversationForContact(contact.id, channelId);
+        conversation = last ? await adoptChannel(last, channelId) : undefined;
       }
     }
 
@@ -557,6 +602,20 @@ export async function handleWaMessages(
         : "main",
     );
 
+    // Handoff links (contact/handoff): an inbound message carrying a live "Continue on
+    // WhatsApp" code (or an ig.me / m.me ref) proves this sender is the contact the code was
+    // sent to, and the two are merged, the older kept. The returned copy has the token
+    // stripped and names the kept contact, so callers act on that one. Never throws.
+    if (type === "receive") {
+      const linked = await linkHandoffFromMessage({
+        orgId,
+        platform: sourcePlatform,
+        contactId: contact.id,
+        message: waMessage,
+      });
+      if (linked) return linked;
+    }
+
     return waMessage;
   } catch (error) {
     // Logged and rethrown, not swallowed: this is the entry point for every inbound and
@@ -594,18 +653,44 @@ export async function sendNewWaMessageHandler(
     let to;
     switch (platform) {
       case PlatformType.INSTAGRAM:
-        to = contact.igsId;
+      case PlatformType.FACEBOOK: {
+        // A merged contact can hold one id per Instagram account / Page; use the one for
+        // the account this reply goes out from.
+        const sendingChannel = whatsappSettingsPhoneId
+          ? await resolveChannelId(orgId, platform, whatsappSettingsPhoneId)
+          : null;
+        to = await scopedAddressForChannel(
+          orgId,
+          contact.id,
+          platform,
+          sendingChannel,
+          platform === PlatformType.INSTAGRAM ? contact.igsId : contact.psid,
+        );
         break;
-      case PlatformType.FACEBOOK:
-        to = contact.psid;
-        break;
+      }
       case PlatformType.WEBCHAT:
         to = contact.other;
         break;
-      default:
+      default: {
         // A customer with a WhatsApp username may be known only by their BSUID;
-        // the send adapter turns that into Meta's `recipient`.
+        // the send adapter turns that into Meta's `recipient`. A BSUID only works from
+        // numbers of the business that issued it, so the sending number decides.
         to = contact.phone ?? contact.bsuid;
+        if (whatsappSettingsPhoneId) {
+          const reach = await whatsappAddressFromNumber(orgId, contact.id, whatsappSettingsPhoneId);
+          if (reach && !reach.reachable) {
+            reply.status(409).send({
+              reason: reach.reason,
+              message:
+                reach.reason === "OTHER_BUSINESS"
+                  ? "This customer can only be messaged from another WhatsApp business's numbers."
+                  : "This contact has no WhatsApp number or WhatsApp ID.",
+            });
+            return;
+          }
+          if (reach?.reachable) to = reach.address;
+        }
+      }
     }
     switch (type) {
       case "text": {

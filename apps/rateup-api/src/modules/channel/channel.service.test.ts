@@ -1,13 +1,18 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("../../utils/prisma.js", () => ({
-  default: { channel: { findMany: vi.fn(), findFirst: vi.fn() } },
+  default: { channel: { findMany: vi.fn(), findFirst: vi.fn() }, contact: { findFirst: vi.fn() } },
 }));
 vi.mock("../whatsapp/settings/wa_channel_access.js", () => ({ getChannelScope: vi.fn() }));
 
 import prisma from "../../utils/prisma.js";
 import { getChannelScope } from "../whatsapp/settings/wa_channel_access.js";
-import { getAccessibleChannels, getChannelById, getOrgChannelIds } from "./channel.service.js";
+import {
+  getAccessibleChannels,
+  getChannelById,
+  getOrgChannelIds,
+  isWebchatInUse,
+} from "./channel.service.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
@@ -32,6 +37,7 @@ describe("getAccessibleChannels", () => {
     expect(db.findMany).toHaveBeenCalledWith({
       where: { orgId: ORG },
       orderBy: [{ platform: "asc" }, { createdAt: "asc" }],
+      include: { whatsapp: { select: { businessPortfolioId: true, businessPortfolioName: true } } },
     });
   });
 
@@ -108,5 +114,28 @@ describe("getOrgChannelIds", () => {
 
   test("ids that are all foreign come back empty", async () => {
     await expect(getOrgChannelIds(ORG, ["someone-elses"])).resolves.toEqual([]);
+  });
+});
+
+describe("isWebchatInUse", () => {
+  const contacts = (prisma as unknown as { contact: { findFirst: Mock } }).contact;
+
+  test("offers Webchat once the org has had a webchat visitor", async () => {
+    contacts.findFirst.mockResolvedValue({ id: "c1" });
+    expect(await isWebchatInUse(actor)).toBe(true);
+    expect(contacts.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { orgId: ORG, source: "WEBCHAT" } }),
+    );
+  });
+
+  test("not before the first visitor", async () => {
+    contacts.findFirst.mockResolvedValue(null);
+    expect(await isWebchatInUse(actor)).toBe(false);
+  });
+
+  test("not for a member scoped to some channels, who never sees webchat tickets", async () => {
+    scope.mockResolvedValue({ all: false, ids: new Set(["ch-1"]) });
+    contacts.findFirst.mockResolvedValue({ id: "c1" });
+    expect(await isWebchatInUse(actor)).toBe(false);
   });
 });

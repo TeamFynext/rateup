@@ -1,5 +1,21 @@
 import { Contact } from "../../../generated/prisma/client.js";
+import {
+  ContactIdentityKind,
+  ContactIdentitySource,
+  PlatformType,
+} from "../../../generated/prisma/enums.js";
 import { log } from "../../utils/logger.js";
+import {
+  assertIdentityFree,
+  attachIdentity,
+  EDITABLE_COLUMN_KINDS,
+  findContactIdByIdentity,
+  identitiesFromContact,
+  replaceColumnIdentity,
+  suggestFromProvidedDetails,
+  type EditableColumn,
+} from "./identity/identity.service.js";
+import { suggestMerge } from "./merge/suggestions.service.js";
 import prisma from "../../utils/prisma.js";
 import { ContactNotFoundError } from "./contact.errors.js";
 import { isBsuid } from "../whatsapp/bsuid.js";
@@ -118,6 +134,10 @@ export async function createContact(
       lifecycleId: lifecycleId?.length ? lifecycleId : undefined,
     },
   });
+  // New contacts are known by their identities from the start, not only after a backfill.
+  for (const input of identitiesFromContact(user)) {
+    await attachIdentity(user.orgId, user.id, { ...input, source: ContactIdentitySource.AGENT });
+  }
   if (labels && labels.length > 0) {
     await prisma.contactLabelMap.createMany({
       data: labels.map((labelId) => ({
@@ -593,6 +613,22 @@ export async function updateContactById(
   if (!contactRecord) {
     throw new ContactNotFoundError(`Contact ${contactId} not found`);
   }
+  // The phone/email/external id columns are the contact's primary identities; an edit to one
+  // has to move the identity with it, and may not take one another contact holds.
+  const editedColumns = (Object.keys(EDITABLE_COLUMN_KINDS) as EditableColumn[]).filter(
+    (column) => contact[column] !== undefined,
+  );
+  const columnsBefore = editedColumns.length
+    ? await prisma.contact.findFirst({
+        where: { id: contactId, orgId },
+        select: { phone: true, email: true, external_id: true },
+      })
+    : null;
+  for (const column of editedColumns) {
+    if (contact[column] && contact[column] !== columnsBefore?.[column]) {
+      await assertIdentityFree(orgId, contactId, EDITABLE_COLUMN_KINDS[column], contact[column]);
+    }
+  }
   await assertContactRefsInOrg(orgId, {
     lifecycleId: contact.lifecycleId,
     labels: contact.labels,
@@ -843,6 +879,15 @@ export async function updateContactById(
       }
     });
   }
+  for (const column of editedColumns) {
+    await replaceColumnIdentity(
+      orgId,
+      contactId,
+      column,
+      columnsBefore?.[column],
+      updatedContact[column],
+    );
+  }
   await emitIntegrationEvent(updatedContact.orgId, {
     type: "contact.updated",
     contact: updatedContact,
@@ -930,18 +975,27 @@ export async function getOrCreateContactByPhone(
   addToConversation: boolean = false,
 ) {
   try {
+    // A merged contact's second number (or a webchat visitor's id) lives only in its
+    // identities, so those are tried before the column.
+    const viaIdentity = await findContactIdByIdentity(
+      orgId,
+      source === PlatformType.WEBCHAT ? ContactIdentityKind.WEBCHAT : ContactIdentityKind.PHONE,
+      source && source !== PlatformType.WEBCHAT ? null : phone,
+    );
     let contact = await prisma.contact.findFirst({
       // TODO: findout why findUnique is giving error
-      where: source
-        ? {
-            other: phone,
-            orgId: orgId,
-            source,
-          }
-        : {
-            phone: phone,
-            orgId: orgId,
-          },
+      where: viaIdentity
+        ? { id: viaIdentity, orgId }
+        : source
+          ? {
+              other: phone,
+              orgId: orgId,
+              source,
+            }
+          : {
+              phone: phone,
+              orgId: orgId,
+            },
       include: {
         waInboxAssign: {
           select: {
@@ -962,6 +1016,14 @@ export async function getOrCreateContactByPhone(
         if (!additionalData?.name) {
           delete updateData?.name;
         }
+        // Where a contact came from is set once. And a webchat visitor id belongs in the
+        // contact's `other` field only on a contact that started as that visitor: a contact
+        // it was merged into (found through its WEBCHAT identity) keeps its own source and
+        // its own `other` (shown as Location), which a widget message must not overwrite.
+        delete updateData.source;
+        if (source === PlatformType.WEBCHAT && contact.source !== PlatformType.WEBCHAT) {
+          delete (updateData as { other?: unknown }).other;
+        }
         contact = await prisma.contact.update({
           where: {
             id: contact.id,
@@ -979,6 +1041,12 @@ export async function getOrCreateContactByPhone(
               },
             },
           },
+        });
+      }
+      if (source === PlatformType.WEBCHAT) {
+        await suggestFromProvidedDetails(orgId, contact.id, {
+          phone,
+          email: additionalData?.email,
         });
       }
       return { contact, conversation };
@@ -1006,6 +1074,14 @@ export async function getOrCreateContactByPhone(
         conversation = await createConversation({ contactId: contact.id, orgId: contact.orgId });
       }
       await emitIntegrationEvent(orgId, { type: "contact.created", contact });
+      // A webchat visitor's id is what they typed into the widget, often their phone or
+      // email. If another contact already has it, a person is asked whether to merge.
+      if (source === PlatformType.WEBCHAT) {
+        await suggestFromProvidedDetails(orgId, contact.id, {
+          phone,
+          email: additionalData?.email,
+        });
+      }
       return { contact, conversation };
     }
   } catch (e) {
@@ -1054,13 +1130,25 @@ export async function getOrCreateWaContact(
   const { phone, bsuid } = identity;
   if (!phone && !bsuid) throw new Error("A WhatsApp contact needs a phone number or a BSUID");
 
+  // Identities first: after a merge a contact's second number or second BSUID is only
+  // there. The legacy columns still answer for contacts not backfilled yet.
+  const [phoneOwner, bsuidOwner] = await Promise.all([
+    findContactIdByIdentity(orgId, ContactIdentityKind.PHONE, phone),
+    findContactIdByIdentity(orgId, ContactIdentityKind.WA_BSUID, bsuid),
+  ]);
   const [byPhone, byBsuid] = await Promise.all([
-    phone ? prisma.contact.findFirst({ where: { phone, orgId } }) : null,
-    bsuid
-      ? prisma.contact.findUnique({
-          where: { contact_bsuid_org_id_unique: { bsuid, orgId } },
-        })
-      : null,
+    phoneOwner
+      ? prisma.contact.findFirst({ where: { id: phoneOwner, orgId } })
+      : phone
+        ? prisma.contact.findFirst({ where: { phone, orgId } })
+        : null,
+    bsuidOwner
+      ? prisma.contact.findFirst({ where: { id: bsuidOwner, orgId } })
+      : bsuid
+        ? prisma.contact.findUnique({
+            where: { contact_bsuid_org_id_unique: { bsuid, orgId } },
+          })
+        : null,
   ]);
 
   const updateData: Record<string, unknown> = { ...additionalData };
@@ -1071,15 +1159,26 @@ export async function getOrCreateWaContact(
 
   const existing = byPhone ?? byBsuid;
   if (existing) {
-    if (bsuid && existing.bsuid !== bsuid) {
+    if (bsuid && existing.bsuid !== bsuid && !bsuidOwner) {
       if (byBsuid && byBsuid.id !== existing.id) {
         log.warn(
           { orgId, contactId: existing.id, otherContactId: byBsuid.id },
           "WhatsApp customer matched two contacts (phone and BSUID); moving the BSUID to the phone contact",
         );
         await prisma.contact.update({ where: { id: byBsuid.id }, data: { bsuid: null } });
+        // Probably one person written to twice; a person decides whether to merge.
+        await suggestMerge(orgId, existing.id, byBsuid.id, {
+          reason: "BSUID_PHONE_SPLIT",
+          detail: phone,
+        });
       }
       updateData.bsuid = bsuid;
+    } else if (bsuid && byBsuid && byBsuid.id !== existing.id) {
+      // The BSUID is held (as an identity) by another contact: leave it there and ask.
+      await suggestMerge(orgId, existing.id, byBsuid.id, {
+        reason: "BSUID_PHONE_SPLIT",
+        detail: phone,
+      });
     }
     if (phone && !existing.phone) updateData.phone = phone;
     const contact = await prisma.contact.update({
@@ -1190,14 +1289,17 @@ export async function getOrCreateContactByIgsId(
   addToConversation: boolean = false,
 ) {
   try {
-    let contact = await prisma.contact.findUnique({
-      where: {
-        contact_igsid_org_id_unique: {
-          igsId,
-          orgId,
-        },
-      },
-    });
+    const viaIdentity = await findContactIdByIdentity(orgId, ContactIdentityKind.IG_SCOPED, igsId);
+    let contact = viaIdentity
+      ? await prisma.contact.findFirst({ where: { id: viaIdentity, orgId } })
+      : await prisma.contact.findUnique({
+          where: {
+            contact_igsid_org_id_unique: {
+              igsId,
+              orgId,
+            },
+          },
+        });
     let conversation;
     if (contact) {
       if (!additionalData) return { contact, conversation };
@@ -1237,14 +1339,17 @@ export async function getOrCreateContactByPsid(
   addToConversation: boolean = false,
 ) {
   try {
-    let contact = await prisma.contact.findUnique({
-      where: {
-        contact_psid_org_id_unique: {
-          psid,
-          orgId,
-        },
-      },
-    });
+    const viaIdentity = await findContactIdByIdentity(orgId, ContactIdentityKind.FB_PSID, psid);
+    let contact = viaIdentity
+      ? await prisma.contact.findFirst({ where: { id: viaIdentity, orgId } })
+      : await prisma.contact.findUnique({
+          where: {
+            contact_psid_org_id_unique: {
+              psid,
+              orgId,
+            },
+          },
+        });
 
     let conversation;
 

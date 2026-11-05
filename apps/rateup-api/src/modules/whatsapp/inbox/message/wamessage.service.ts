@@ -20,7 +20,9 @@ import { emitIntegrationEvent } from "../../../integrations/events/emitIntegrati
 import { callMetaApi, GraphApiError } from "../../wa_axios.js";
 import { getInstagramChannel } from "../../metaChannel/metaChannel.service.js";
 import { getWaSettings } from "../../settings/wa_settings.service.js";
-import { getScopedSourceIdentifiers } from "../../settings/wa_channel_access.js";
+import { getChannelScope, getScopedSourceIdentifiers } from "../../settings/wa_channel_access.js";
+import { WEBCHAT_FILTER } from "../../../channel/channel.service.js";
+import { currentContactId } from "../../../contact/merge/currentContact.js";
 import type { Actor } from "../../../../authz/actor.js";
 import axios from "axios";
 import type { InboxStatus } from "../../../../types/enums.js";
@@ -509,6 +511,33 @@ export async function generateChatFilterData(orgId: string) {
   }
 }
 
+/**
+ * For a ticket whose channel is not known yet: is it on one of these channel spellings?
+ * Its own messages decide when it has any tagged with it; only a ticket with none (legacy
+ * messages carry no conversationId) falls back to the contact's messages, as before. A
+ * merged contact's webchat ticket therefore stays out of an Instagram filter.
+ */
+function ticketWithoutChannelOn(spellingsParam: string): string {
+  return `(
+    EXISTS (
+      SELECT 1 FROM "WaMessage" wm
+      WHERE wm."conversationId" = conv.id
+      AND wm."sourceIdentifier" = ANY(${spellingsParam}::TEXT[])
+    )
+    OR (
+      NOT EXISTS (
+        SELECT 1 FROM "WaMessage" wm
+        WHERE wm."conversationId" = conv.id AND wm."sourcePlatform" <> 'INTERNAL'
+      )
+      AND EXISTS (
+        SELECT 1 FROM "WaMessage" wm
+        WHERE wm."contactId" = c.id
+        AND wm."sourceIdentifier" = ANY(${spellingsParam}::TEXT[])
+      )
+    )
+  )`;
+}
+
 export async function filterChats(
   orgId: string,
   page: number,
@@ -535,22 +564,27 @@ export async function filterChats(
     // Contact-grained, matching the phone filter: legacy messages carry a null conversationId,
     // so scoping by conversation would hide un-backfilled tickets outright.
     if (!actor.scope.all) {
-      const scope = await getScopedSourceIdentifiers(actor);
+      const [scope, channelScope] = await Promise.all([
+        getScopedSourceIdentifiers(actor),
+        getChannelScope(actor),
+      ]);
       if (!scope.all) {
         if (scope.identifiers.length === 0) {
           // Scoped to zero channels: match nothing rather than falling through to no filter.
           filters.push(`1 = 0`);
         } else {
-          // Every spelling of each channel (see `getScopedSourceIdentifiers`), so
-          // the match covers rows written before identifiers were settled on
-          // digits — and stays on the `sourceIdentifier` index, which an
-          // expression match would not.
+          // A ticket runs on one channel, so a ticket that knows its channel is in scope by
+          // that alone — a merged contact's WhatsApp ticket stays out of an Instagram-only
+          // team. Tickets with no channel yet (before the backfill) fall back to the
+          // contact's messages, matched on every spelling of each channel and on the
+          // `sourceIdentifier` index.
+          params.push(Array.from(channelScope.ids));
           params.push(scope.identifiers);
-          filters.push(`EXISTS (
-            SELECT 1 FROM "WaMessage" wm
-            WHERE wm."contactId" = c.id
-            AND wm."sourceIdentifier" = ANY($${paramIndex++}::TEXT[])
+          filters.push(`(
+            conv."channelId" = ANY($${paramIndex}::UUID[])
+            OR (conv."channelId" IS NULL AND ${ticketWithoutChannelOn(`$${paramIndex + 1}`)})
           )`);
+          paramIndex += 2;
         }
       }
     }
@@ -806,17 +840,55 @@ export async function filterChats(
       //     `(c."lastMessageSourceIdentifier" = $${paramIndex++} OR c."lastMessageSourceIdentifier" = $${paramIndex++})`,
       //   );
       // }
-      if (bodyFilterProps?.phone && bodyFilterProps.phone !== "all") {
+      if (bodyFilterProps?.phone === WEBCHAT_FILTER) {
+        // The website chat widget: tickets whose own messages came through it, or — for a
+        // ticket with no tagged messages yet — a contact that started as a webchat visitor.
+        filters.push(`(
+          conv."channelId" IS NULL AND (
+            EXISTS (
+              SELECT 1 FROM "WaMessage" wm
+              WHERE wm."conversationId" = conv.id AND wm."sourcePlatform" = 'WEBCHAT'
+            )
+            OR (
+              c."source" = 'WEBCHAT'
+              AND NOT EXISTS (
+                SELECT 1 FROM "WaMessage" wm
+                WHERE wm."conversationId" = conv.id AND wm."sourcePlatform" <> 'INTERNAL'
+              )
+            )
+          )
+        )`);
+      } else if (bodyFilterProps?.phone && bodyFilterProps.phone !== "all") {
         // All of the channel's spellings, not the bare and `+`-prefixed pair this
         // used to list — the column holds at least four, so picking a channel hid
         // every ticket whose messages happened to be stored with the separators
         // Meta formats the number with.
-        params.push(channelIdentifierSpellings(bodyFilterProps.phone));
-        filters.push(`EXISTS (
-          SELECT 1 FROM "WaMessage" wm
-          WHERE wm."contactId" = c.id
-          AND wm."sourceIdentifier" = ANY($${paramIndex++}::TEXT[])
+        const picked = bodyFilterProps.phone;
+        const spellings = [...new Set([picked, ...channelIdentifierSpellings(picked)])];
+        // The channel rows the filter names: an Instagram/Messenger account by its id, a
+        // WhatsApp number by its digits however its address is formatted.
+        const pickedChannels = (
+          await prisma.channel.findMany({
+            where: { orgId },
+            select: { id: true, platform: true, accountId: true, address: true },
+          })
+        ).filter(
+          (channel) =>
+            (channel.accountId && spellings.includes(channel.accountId)) ||
+            (channel.platform === PlatformType.WHATSAPP &&
+              channelDigits(channel.address) !== "" &&
+              channelDigits(channel.address) === channelDigits(picked)),
+        );
+        // Ticket-grained: a contact merged across channels has a ticket per channel, and
+        // only the one on the picked channel belongs in the list. Tickets with no channel
+        // yet keep the old contact-level match.
+        params.push(pickedChannels.map((channel) => channel.id));
+        params.push(spellings);
+        filters.push(`(
+          conv."channelId" = ANY($${paramIndex}::UUID[])
+          OR (conv."channelId" IS NULL AND ${ticketWithoutChannelOn(`$${paramIndex + 1}`)})
         )`);
+        paramIndex += 2;
       }
 
       if (liveStatusesOnly) {
@@ -827,13 +899,30 @@ export async function filterChats(
     }
 
     if (isSearchMode && bodyFilterProps.searchTerm) {
-      params.push(`%${bodyFilterProps.searchTerm}%`);
-      params.push(`%${bodyFilterProps.searchTerm.replace(/\s+/g, "")}%`);
+      const term = bodyFilterProps.searchTerm.trim();
+      // Phones are stored as digits, so "+91 90000 00001" has to match "919000000001".
+      const digits = term.replace(/\D/g, "");
+      params.push(`%${term}%`);
+      params.push(`%${term.replace(/\s+/g, "")}%`);
+      params.push(digits.length >= 3 ? `%${digits}%` : null);
       filters.push(
-        // A customer with a WhatsApp username may have no name or phone on file.
-        `(c."name" ILIKE $${paramIndex}::TEXT OR c."whatsappUserName" ILIKE $${paramIndex}::TEXT OR REPLACE(c."phone", ' ', '') LIKE $${paramIndex + 1}::TEXT)`,
+        // A customer with a WhatsApp username may have no name or phone on file, and a
+        // merged one can be known by a second number or email that only its identities hold.
+        `(c."name" ILIKE $${paramIndex}::TEXT
+          OR c."whatsappUserName" ILIKE $${paramIndex}::TEXT
+          OR c."email" ILIKE $${paramIndex}::TEXT
+          OR REPLACE(c."phone", ' ', '') LIKE $${paramIndex + 1}::TEXT
+          OR EXISTS (
+            SELECT 1 FROM "ContactIdentity" ci
+            WHERE ci."contactId" = c."id"
+              AND (
+                (ci."kind" = 'PHONE' AND ci."value" LIKE $${paramIndex + 2}::TEXT)
+                OR (ci."kind" = 'EMAIL' AND ci."value" ILIKE $${paramIndex}::TEXT)
+                OR ci."username" ILIKE $${paramIndex}::TEXT
+              )
+          ))`,
       );
-      paramIndex += 2;
+      paramIndex += 3;
     }
 
     const whereClause = filters.join(" AND ");
@@ -847,6 +936,8 @@ export async function filterChats(
           conv."description"       AS "ticketDescription",
           conv."resolutionResult"  AS "resolutionResult",
           conv."status"            AS "conversationStatus",
+          -- The channel this ticket runs on; the composer replies on it by default.
+          conv."channelId"         AS "conversationChannelId",
           -- Row freshness for the client's cache: it keeps rows in IndexedDB and
           -- only replaces one when the response is newer, so a row without this
           -- was cached forever and a ticket closed since first load kept its old
@@ -2414,8 +2505,12 @@ export async function getChatByContactId(
   req: FastifyRequest<{ Params: ByContactIdParams }>,
   res: FastifyReply,
 ) {
-  const { contactId } = req.params;
   try {
+    // The widget keeps its visitor's contact id; after a merge that id is followed to the
+    // contact it went into. Only the webchat thread is read, never the kept contact's
+    // WhatsApp or Instagram history.
+    const contactId = await currentContactId(req.user.orgId, req.params.contactId);
+    if (!contactId) return res.status(200).send([]);
     const chat = await prisma.waMessage.findMany({
       where: {
         contactId,

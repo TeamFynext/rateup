@@ -58,6 +58,16 @@ vi.mock("../integrations/events/emitIntegrationEvent.js", async () => {
   };
 });
 
+vi.mock("./identity/identity.service.js", () => ({
+  findContactIdByIdentity: vi.fn(async () => null),
+  assertIdentityFree: vi.fn(async () => undefined),
+  attachIdentity: vi.fn(async () => null),
+  identitiesFromContact: vi.fn(() => []),
+  replaceColumnIdentity: vi.fn(async () => undefined),
+  suggestFromProvidedDetails: vi.fn(async () => undefined),
+  EDITABLE_COLUMN_KINDS: { phone: "PHONE", email: "EMAIL", external_id: "EXTERNAL" },
+}));
+vi.mock("./merge/suggestions.service.js", () => ({ suggestMerge: vi.fn() }));
 vi.mock("../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));
@@ -665,14 +675,21 @@ describe("getContactsByOrgId", () => {
     expect(db.contact.count.mock.calls[0][0].where).toEqual(where());
   });
 
-  test("searching matches either the name or the phone", async () => {
-    await getContactsByOrgId(ORG, { search: "ann" } as any);
+  test("searching matches name, phone, email, username or a secondary phone/email", async () => {
+    await getContactsByOrgId(ORG, { search: "Ann" } as any);
 
     expect(where().AND).toEqual([
       {
         OR: [
-          { name: { contains: "ann", mode: "insensitive" } },
-          { phone: { contains: "ann", mode: "insensitive" } },
+          { name: { contains: "Ann", mode: "insensitive" } },
+          { phone: { contains: "Ann", mode: "insensitive" } },
+          { email: { contains: "Ann", mode: "insensitive" } },
+          { whatsappUserName: { contains: "Ann", mode: "insensitive" } },
+          {
+            identities: {
+              some: { kind: { in: ["PHONE", "EMAIL"] }, value: { contains: "ann" } },
+            },
+          },
         ],
       },
     ]);

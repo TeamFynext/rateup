@@ -239,7 +239,7 @@ describe("dispatchNotification", () => {
     // Then the org's WhatsApp numbers, matched by any spelling of their address.
     expect(db.channel.findMany.mock.calls[0][0]).toEqual({
       where: { orgId: "org-1", platform: "WHATSAPP" },
-      select: { id: true, address: true },
+      select: { id: true, address: true, accountId: true },
     });
   });
 

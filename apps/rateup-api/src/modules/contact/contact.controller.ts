@@ -43,6 +43,8 @@ import { sendLoyalty } from "../loyalty/messaging/send.js";
 import { getLoyaltyWaCommandByType } from "../loyalty/settings/settings.service.js";
 import { renderReplyText } from "../loyalty/richText.js";
 import prisma from "../../utils/prisma.js";
+import { ContactIdentityKind } from "../../../generated/prisma/enums.js";
+import { assertIdentityFree, IdentityTakenError } from "./identity/identity.service.js";
 import {
   getSpreadsheetContentType,
   getSpreadsheetFilename,
@@ -53,6 +55,13 @@ import { write, type CellValue } from "hucre";
 import { LifecycleIdParamSchema } from "../lifecycle/lifecycle.schema.js";
 //used in zapier
 function replyForError(reply: FastifyReply, error: unknown, context: string) {
+  if (error instanceof IdentityTakenError) {
+    return reply.code(409).send({
+      error: error.message,
+      kind: error.kind,
+      ownerContactId: error.ownerContactId,
+    });
+  }
   if (error instanceof ContactNotFoundError) {
     return reply.code(404).send({ error: error.message });
   }
@@ -112,12 +121,17 @@ export async function createContactHandler(
       }
       await handlePostRegisterAction(orgId, contact.id);
     } else {
+      // A merged contact's second number or email lives only in its identities, which the
+      // column's unique index cannot see.
+      await assertIdentityFree(orgId, "", ContactIdentityKind.PHONE, request.body.phone);
+      await assertIdentityFree(orgId, "", ContactIdentityKind.EMAIL, request.body.email);
       const contact = await createContact({ ...request.body, orgId }, request.userId);
       reply.code(201).send(contact);
     }
   } catch (error) {
-    log.error(error);
     if (reply.sent) return;
+    if (error instanceof IdentityTakenError) return replyForError(reply, error, "");
+    log.error(error);
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       reply.code(400).send({ error: "Contact already exist" });
     } else {
