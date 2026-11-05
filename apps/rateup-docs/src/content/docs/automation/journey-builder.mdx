@@ -79,6 +79,7 @@ hidden, so an Instagram journey and a WhatsApp one show different lists.
 | **Interactive** | Input | All three |
 | | Reply Buttons · List · Call-To-Action URL · Template · Catalog | WhatsApp |
 | **Templates** | Cards · Quick Reply | Instagram, Messenger |
+| | Continue on WhatsApp | Instagram, Messenger |
 | | Product Template · Follow Check | Instagram |
 | **Location & Contacts** | Location · Contacts | WhatsApp |
 | **Flow Control** | Pause · Start | All three |
@@ -104,6 +105,63 @@ and [Messenger Journeys](/messenger/journeys#what-a-messenger-journey-can-send).
 | **Pause** | **Pause Duration** plus a unit — **Seconds** or **Minutes** |
 | **Assign** | **Assign To Me** or **Assign To Staff**; for staff, optionally **Assign only if assignee is online** |
 | **Lead** | WhatsApp only. Lets a Meta lead ad form start the journey — the wizard's **Lead ad form** choice relies on it. One per journey, for lead journeys only |
+| **Continue on WhatsApp** | Instagram and Messenger only. Moves the chat to one of your WhatsApp numbers — see below |
+
+---
+
+## Continue on WhatsApp
+
+The **Continue on WhatsApp** step sends the customer a card with a button that opens a WhatsApp chat
+with one of your numbers. When they send the message it prepares, RateUp knows their Instagram (or
+Messenger) account and their WhatsApp number are **the same person**, and joins the two contacts into
+one — with no one having to [merge](/contacts/merging-contacts) them by hand.
+
+<ScreenShot src="/docs/screenshots/automation/continue-on-whatsapp.png" alt="The Continue on WhatsApp step in an Instagram journey." />
+
+| Field | What it is |
+|-------|-----------|
+| **WhatsApp number** | Which of your numbers the chat continues on. With none connected, the picker says *"Connect a WhatsApp number first."* |
+| **Message** | The card's text — *"Tap below to continue this chat on WhatsApp."* by default. Up to **80** characters |
+| **Button label** | The button — **Open WhatsApp** by default. Up to **20** characters |
+| **Prefilled message** | What the customer's WhatsApp message starts with — *"Hi! I'd like to continue our chat here."* by default. A short code is added after it |
+
+<Steps>
+<Step>
+The journey reaches the step. RateUp creates a one-time code for this customer and sends the card;
+its button opens `wa.me/<your number>` with the prefilled message and the code — for example
+*"Hi! I'd like to continue our chat here. ref:K7P2QM9X"*.
+</Step>
+<Step>
+The customer taps the button and sends the message as it is.
+</Step>
+<Step>
+The message arrives on your WhatsApp number. RateUp finds the code, removes it from the message your
+team sees, and joins the customer's WhatsApp contact with the Instagram or Messenger one. The
+**older** contact is kept; the message and its ticket move to it.
+</Step>
+</Steps>
+
+The joined contact shows the link in its history: *"Linked automatically from a WhatsApp link on
+5 Nov 2026"*. Its tickets stay [one per channel](/inbox/tickets#one-ticket-per-channel), so the
+WhatsApp conversation opens its own ticket on your number.
+
+| Limit | Detail |
+|-------|--------|
+| **Code lifetime** | **24 hours**, and it works **once**. A code sent after that, or a second time, is ignored — the message arrives as normal and nothing is joined |
+| **Organisation** | A code only works on your own organisation's numbers |
+| **Instagram comments** | Answering a comment privately can only send text, so the step sends the message with the link on its own line instead of a card |
+| **No number** | If the step has no number, or its number has been disconnected, it is skipped and the journey carries on |
+
+<Callout type="warn">
+  Ask customers to send the prepared message **without editing it**. Deleting the `ref:` code means
+  nothing links, and the WhatsApp chat starts as a separate contact you would have to merge yourself.
+</Callout>
+
+<Callout type="info">
+  A [rule](/automation) that waits for an exact keyword on WhatsApp sees the message with its code,
+  so it will not match the prepared message. Start the follow-up from a keyword the customer types
+  afterwards, or from **Any new message**.
+</Callout>
 
 ---
 

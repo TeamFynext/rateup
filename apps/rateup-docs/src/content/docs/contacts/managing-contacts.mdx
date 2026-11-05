@@ -64,7 +64,7 @@ The toolbar holds one search box and three filters. They combine, so *Label: VIP
 
 | Control | Narrows by |
 |---------|-----------|
-| **Search by name, phone, or email...** | Text anywhere in the name, phone number or email. A leading `+` is ignored, so paste numbers as they are |
+| **Search by name, phone, or email...** | Text anywhere in the name, WhatsApp name, or any of the contact's phone numbers and emails — not only the main ones. A leading `+` is ignored, so paste numbers as they are |
 | **Stage** | A column of your pipeline board. Without a board, this is a **Lifecycle** filter instead |
 | **Label** | **All Contacts**, one label, or a status: **Active** or **Blocked** |
 | **Source** | **All Sources**, **WhatsApp**, **Instagram**, **Web**, **Manual** or **Imported** |
@@ -121,7 +121,7 @@ Every row has a **⋮** menu at the end:
 | Option | What it does |
 |--------|--------------|
 | **View Details** | Opens the contact's details — the same as clicking their name |
-| **Edit** | Opens **Edit Contact** with every field from [Add a Contact](#add-a-contact) |
+| **Edit** | Opens **Edit Contact** — see [Edit a contact](#edit-a-contact) |
 | **Open in Inbox** | Jumps to this contact's conversation in the [Inbox](/inbox) |
 | **Delete contact** | Deletes them — see [Deleting Contacts](#deleting-contacts) |
 
@@ -133,13 +133,18 @@ To message a contact, open their conversation with **Open in Inbox** and reply t
 Click a contact's **name** (or **⋮ → View Details**) to open everything RateUp knows about them in
 one place.
 
-The header shows their name and phone, with badges for source, inbox status, lifecycle, **No
-consent**, **Blocked** and **Spam** where they apply. Beneath it, four figures: **Conversations**,
-**Last received**, **Campaigns**, and **Points** for a loyalty member or **Added** for anyone else.
+The header shows their name and their main phone number — or their main email if they have no
+phone; an Instagram- or Messenger-only contact shows neither — with badges for source, inbox status,
+lifecycle, **No consent**, **Blocked** and **Spam** where they apply. Beneath it, four figures:
+**Conversations**, **Last received**, **Campaigns**, and **Points** for a loyalty member or **Added**
+for anyone else.
+
+<ScreenShot src="/docs/screenshots/contacts/contact-view-identities.png" alt="A contact's details, with every phone, email and account under Identities." />
 
 | Section | Contains |
 |---------|----------|
-| **Contact** | Phone, Email, Address, WhatsApp name, Location, Date of birth, Consent, Added, External ID |
+| **Identities** | Every phone, email and account they are known by — see [Phones, Emails and Accounts](/contacts/identities). Add, edit, make main or remove them here, and **Merge with…** another contact — see [Merging Contacts](/contacts/merging-contacts) |
+| **Contact** | Address, WhatsApp name, Location, Date of birth, Consent, Added |
 | **Activity** | Last received, Last sent, Assigned to, Lead stage and Lead owner |
 | **Labels** | Their labels |
 | **Custom fields** | Every custom field with a value — hidden fields are left out |
@@ -152,6 +157,20 @@ Rows with nothing to show are left out. Hover a phone number, email, ID or refer
 a **copy** button.
 
 The footer has **Close**, **Edit**, and **View in inbox**, which opens their conversation.
+
+### Edit a contact
+
+**Edit Contact** has the same fields as [Add a Contact](#add-a-contact), with two differences:
+
+- **Phone numbers** and **Emails** are lists. Every phone and email the contact has is a row; the
+  starred one is the main one. Use ☆ to make another one main, ✕ to remove one, and **+ Add phone**
+  / **+ Add email** for more. See [Phones, Emails and Accounts](/contacts/identities).
+- **Accounts**, under the contact details, lists their WhatsApp, Instagram and Messenger accounts
+  and any merges, with **Merge with…**. Changes there save immediately; everything else saves with
+  **Save**.
+
+If the same person is in your database twice, [merge](/contacts/merging-contacts) the two instead
+of editing one to match the other — a phone or email can only belong to one contact.
 
 ---
 
@@ -329,11 +348,15 @@ Delete one contact from **⋮ → Delete contact**, or several with the **Delete
 - Review contacts with repeated message failures — see
   [Template Delivery](/analytics/template-delivery)
 - Agree naming conventions for [labels](/contacts/labels) before everyone invents their own
+- Review **Contacts → Possible duplicates** now and then, and click **Scan for duplicates** after a
+  large import — see [Merging Contacts](/contacts/merging-contacts)
 
 ---
 
 ## Related Pages
 
+- [Phones, Emails and Accounts](/contacts/identities)
+- [Merging Contacts](/contacts/merging-contacts)
 - [Audiences](/contacts/audiences)
 - [Labels](/contacts/labels)
 - [Custom Fields](/contacts/custom-fields)

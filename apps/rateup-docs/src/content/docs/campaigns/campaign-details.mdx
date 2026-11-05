@@ -86,6 +86,16 @@ one **Stage N**.
 Retry buttons appear on broadcasts only. More on what a retry does in
 [Retry failed recipients](/campaigns/pausing-and-retrying#retry-failed-recipients-yourself).
 
+### Recipients another business must message
+
+A customer who hides their phone number on WhatsApp is known only by a business-scoped user ID
+(BSUID), which works only from numbers of the Meta business they wrote to. If the campaign sends from
+a number of a **different** business, RateUp does not send to them: they are marked **FAILED** at once,
+with the reason *"Not sent: this customer can only be messaged from another WhatsApp business's
+numbers."* No message is attempted, so nothing is charged. Retrying them from the same number fails
+the same way — send them a campaign from a number of their business instead. See
+[Numbers from several businesses](/settings/channels#numbers-from-several-businesses).
+
 ---
 
 ## Analytics

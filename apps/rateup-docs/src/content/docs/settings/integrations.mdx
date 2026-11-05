@@ -127,6 +127,7 @@ marked **Envelope** arrive in the envelope shape described under [Payloads](#pay
 | | **Message received** (`message.received`) | Every inbound message, on any channel, with its content |
 | | **Message status (signed envelope)** (`message.status`) | Each *new* status for an outbound WhatsApp message, in the envelope, with recipient, template, source and campaign |
 | Contacts | **Contact created** · **Contact updated** · **Contact deleted** | A contact is added (by hand, by import or from a conversation), changed, or removed |
+| | **Contact merged** (`contact.merged`) | Two contacts are [merged](/contacts/merging-contacts) into one — by a person, through the External API, or by a [Continue on WhatsApp](/automation/journey-builder#continue-on-whatsapp) link |
 | | **Contact assigned** | Someone is newly assigned to a contact's conversation |
 | | **Lifecycle changed** | A contact moves to another lifecycle stage |
 | | **Added to audience** | Contacts join an audience |
@@ -233,7 +234,31 @@ the flow has been saved to WhatsApp.
 }
 ```
 
-The contact events carry `contact: { id, name, phone, email, source, lifecycleId }`.
+The contact events carry `contact: { id, name, phone, businessScopedUserId, email, source,
+lifecycleId }` — `businessScopedUserId` is the customer's WhatsApp business-scoped user ID (BSUID),
+the only id a customer who hides their phone number may have.
+
+**Contact merged** names the contact that was kept and the one that was merged into it and deleted:
+
+```json
+{
+  "event": "contact.merged",
+  "contact": {
+    "id": "4b1e…",
+    "name": "Jane Roe",
+    "phone": "15550100142",
+    "businessScopedUserId": null,
+    "email": "jane@example.com",
+    "source": "whatsapp",
+    "lifecycleId": null
+  },
+  "mergedContactId": "9c07…"
+}
+```
+
+When you receive it, repoint anything you stored against `mergedContactId` to `contact.id`: the
+merged-away contact no longer exists, and its conversations, orders and history now belong to the
+kept one. No **Contact deleted** event is sent for it.
 
 <Callout type="info">
   New integrations should prefer **Message status (signed envelope)** over **Message Status**: it
@@ -448,9 +473,12 @@ For a v2 key, choose the **Mode**: **Live**, or **Test** — *"Test keys work li
 send WhatsApp messages, so you can build against real data safely."* v1 keys are always live.
 </Step>
 <Step>
-Under **Access**, keep **Full access** or pick **Only selected features**: **Contacts**, **Teams**,
-**Campaigns**, **Surveys**, **WhatsApp messaging**, **Loyalty**, **Webchat widget**. See
-[Keys and Access](/external-api#keys-and-access) for what each one opens. **Webchat widget** is
+Under **Access**, keep **Full access** or pick **Only selected features**: **Contacts**, **Merge
+contacts**, **Teams**, **Campaigns**, **Surveys**, **WhatsApp messaging**, **Loyalty**, **Webchat
+widget**. See [Keys and Access](/external-api#keys-and-access) for what each one opens. **Merge
+contacts** is separate from **Contacts** because a merge deletes the merged-away contact for good —
+*"Merge two contacts into one. The merged-away contact is deleted."* A key you created with
+**Contacts** before it existed cannot merge until you add it. **Webchat widget** is
 only for the [Widget](#widget) — *"This key is visible in your page's source, so give it nothing
 else."*
 </Step>
@@ -499,7 +527,12 @@ The **⋯** menu on each row:
 The **Usage** card charts requests made with your keys over the last **14 days**, stacked as
 **Successful**, **Client errors (4xx)** and **Server errors (5xx)**. With more than one key, filter by
 key. **Recent requests** lists each call — **Method**, **Route**, **Status**, **Latency**, **Key**
-and **Time** — 25 to a page, newest first. Calls appear within a few seconds; the log keeps 30 days.
+and **Time** — 25 to a page, newest first. Calls appear within about ten seconds; the log keeps 30
+days.
+
+The [Widget](#widget)'s key is counted too. Its requests show under routes starting `/support/` —
+loading a visitor's chat, sending their messages, the **Email** tab — and each time a visitor's
+chat connects, as `/org/ws/widget` with status `101`. A call refused for a bad key is not counted.
 
 A rising **Client errors** line after a rotation or a change of access is usually an integration
 still sending an old key or calling outside its features.
@@ -555,6 +588,11 @@ already says which organization it belongs to, so there is no organization ID to
 The widget refuses a key limited to other features (say, only **Contacts**): its chat does not
 connect and its requests answer `403`. It also takes only keys that start with `rk_`, since those
 name their organization; an older key answers `401`.
+
+Merging a webchat visitor with another contact — say, the WhatsApp customer whose number they typed
+— does not break their chat. The widget keeps working on the merged contact, and it only ever shows
+the **website chat** conversation: never that contact's WhatsApp, Instagram or Messenger messages,
+and never their phone, email or notes. See [Merging Contacts](/contacts/merging-contacts).
 
 ---
 

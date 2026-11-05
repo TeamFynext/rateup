@@ -228,14 +228,32 @@ an image or video to preview it first. Then click **Send**.
 
 ### Choose which number you reply from
 
-The **From** selector at the right of the toolbar shows the number or account this reply will be
-sent from. It is set automatically to the number **the customer wrote to**, and switches back each
-time you open a different ticket.
+The **From** selector (**Reply from**) at the right of the toolbar shows the number or account this
+reply will be sent from. It is set automatically to the number **this ticket runs on** — every
+ticket belongs to [one channel](/inbox/tickets#one-ticket-per-channel) — and switches back each time
+you open a different ticket.
+
+<ScreenShot src="/docs/screenshots/inbox/reply-number-picker.png" alt="Picking the number to reply from, under the composer." />
 
 Only change it if you have a reason to. A reply sent from a number the customer has not written to
 has no open 24-hour window, and WhatsApp rejects it. If the customer's number is no longer
 connected, the selector is left empty and you must pick one before sending. Sending without one
 gives *"Select a account to send the message"*.
+
+**When your numbers belong to several Meta businesses**, the list groups them under each business
+name; numbers whose business has not been read from Meta yet sit under **Business not identified
+yet**. Some numbers may be greyed out. Hover one to see why:
+
+| Greyed-out reason | What it means |
+|-------------------|---------------|
+| *"This customer can only be messaged from Demo Cafe"* | The customer is known only by their business-scoped user ID (BSUID) — WhatsApp hid their phone number — and a BSUID works only from numbers of the business they wrote to |
+| *"This customer can only be messaged from another business"* | The same, where the business's name is not known |
+| *"No WhatsApp number or WhatsApp ID for this customer"* | The contact has no phone and no BSUID at all |
+
+A customer with a known phone number can be messaged from any of your numbers, of any business. If
+the ticket's own number cannot reach the customer, the selector starts on the first number that can.
+Should a send still go out from a number of the wrong business, it is refused with *"This customer
+can only be messaged from another WhatsApp business's numbers."*
 
 On Instagram and Messenger the selector is locked to the account the conversation is on.
 
@@ -503,3 +521,4 @@ Yes, and you should. Each ticket has its own thread and the customer sees one co
 - [Closing & Reopening](/inbox/conversation-lifecycle)
 - [Inbox Settings](/inbox/inbox-settings) — where quick replies are created
 - [Meta AI Agent → Go live](/meta-agent/go-live) — the inbox handover setting
+- [Channels](/settings/channels) — numbers from several Meta businesses

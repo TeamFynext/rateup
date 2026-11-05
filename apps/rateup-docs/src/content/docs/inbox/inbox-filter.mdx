@@ -10,7 +10,7 @@ looking at.
 
 | Section | Filters by |
 |---------|-----------|
-| **Channel** | The number or account the customer wrote to |
+| **Channel** | The number or account the ticket runs on, or your website chat |
 | **Lifecycle** | The contact's lifecycle stage |
 | **Contact Labels** | Labels on the contact — matches every ticket that customer has |
 | **Conversation Tags** | Tags on the ticket itself |
@@ -33,11 +33,23 @@ A section only appears if there is something to filter by: no labels defined, no
 
 ## Channel
 
-Scopes the list to **one channel**: a WhatsApp number, an Instagram account or a Facebook page. Each
-entry carries its platform's icon.
+Scopes the list to **one channel**: a WhatsApp number, an Instagram account, a Facebook page or
+**Webchat**. Each entry carries its platform's icon.
+
+<ScreenShot src="/docs/screenshots/inbox/channel-filter-webchat.png" alt="The Channel filter, with Webchat for an organisation that uses the website chat." />
 
 Use it when you run more than one number and they mean different things — a support line and a sales
 line, or one number per branch.
+
+The filter keeps **tickets on that channel**, not every ticket of a customer who has ever used it. A
+customer who writes on WhatsApp and Instagram has a ticket on each, so picking your Instagram account
+shows their Instagram ticket and leaves the WhatsApp one out — even after you
+[merge](/contacts/merging-contacts) their two contacts into one.
+
+**Webchat** is the chat widget on your website. It joins the list once your organisation has had
+its first website chat visitor, and picking it shows the tickets that came in through the widget.
+Members whose team is [limited to certain channels](/settings/teams) do not see it — webchat tickets
+belong to no number or account a team can be given, so those members never see them.
 
 Channel applies to **every** view, including **Spam contacts**, and stays applied as you move between them.
 
