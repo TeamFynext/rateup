@@ -19,6 +19,7 @@ import { ButtonNodeEditor } from "./node-editors/ButtonNodeEditor.tsx";
 import { CatalogNodeEditor } from "./node-editors/CatalogNodeEditor.tsx";
 import { ConditionalNodeEditor } from "./node-editors/ConditionalNodeEditor.tsx";
 import { ContactsNodeEditor } from "./node-editors/ContactsNodeEditor.tsx";
+import { ContinueOnWhatsappNodeEditor } from "./node-editors/ContinueOnWhatsappNodeEditor.tsx";
 import { CtaUrlNodeEditor } from "./node-editors/CtaUrlNodeEditor.tsx";
 import { FlowNodeEditor } from "./node-editors/FlowNodeEditor.tsx";
 import { InputNodeEditor } from "./node-editors/InputNodeEditor.tsx";
@@ -260,6 +261,13 @@ export default function NodeEditor({ node, onChange, onClose }: Readonly<NodeEdi
         );
       case "instagramFollowCheckNode":
         return <InstagramFollowCheckNodeEditor />;
+      case "continueOnWhatsappNode":
+        return (
+          <ContinueOnWhatsappNodeEditor
+            nodeData={nodeData as NodeTypeMap["continueOnWhatsappNode"]}
+            handleInputChange={handleInputChange}
+          />
+        );
       case "instagramIceBreakerNode":
         return (
           <InstagramIceBreakerNodeEditor

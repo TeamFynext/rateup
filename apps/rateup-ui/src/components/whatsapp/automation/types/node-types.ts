@@ -284,6 +284,21 @@ interface InstagramProductTemplateNodeData extends BaseNodeData {
   whatsappSettingsPhoneId?: string;
 }
 
+/**
+ * "Continue on WhatsApp" (Instagram / Messenger): a card whose button opens a chat with
+ * `channelId`'s number, the prefill and a one-time code typed in. The code ties the
+ * WhatsApp number to this contact (rateup-api contact/handoff).
+ */
+export interface ContinueOnWhatsappNodeData extends BaseNodeData {
+  /** The WhatsApp number's channel id. */
+  channelId: string;
+  /** Plain text, the card's title (80 characters). */
+  body: string;
+  buttonLabel: string;
+  /** Words the customer's WhatsApp message starts with. */
+  prefill?: string;
+}
+
 /** Branches on whether the person follows the account; its handles are fixed, see node.tsx. */
 type InstagramFollowCheckNodeData = BaseNodeData;
 
@@ -343,6 +358,7 @@ export interface NodeTypeMap {
   instagramProductTemplateNode: InstagramProductTemplateNodeData;
   instagramIceBreakerNode: InstagramIceBreakerNodeData;
   instagramFollowCheckNode: InstagramFollowCheckNodeData;
+  continueOnWhatsappNode: ContinueOnWhatsappNodeData;
 }
 
 /**
@@ -378,6 +394,9 @@ export interface NodeFields {
   phoneField?: string;
   teamId?: string;
   fbPageId?: string;
+  channelId?: string;
+  buttonLabel?: string;
+  prefill?: string;
   pageAccessToken?: string;
   productRetailerId?: string;
   productSetId?: string;
@@ -457,7 +476,8 @@ export type NodeData =
   | InstagramQuickReplyNodeData
   | InstagramStoryReplyNodeData
   | InstagramProductTemplateNodeData
-  | InstagramIceBreakerNodeData;
+  | InstagramIceBreakerNodeData
+  | ContinueOnWhatsappNodeData;
 
 // Extended Node type with typed data
 export type TypedNode<T extends NodeType = NodeType> = Omit<Node, "data" | "type"> & {

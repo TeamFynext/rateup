@@ -1,5 +1,6 @@
 import { IconFile, IconMusic, IconPhoto, IconVideo } from "@tabler/icons-react";
 import type { NodeProps } from "@xyflow/react";
+import i18n from "i18next";
 import type { JSX, ReactNode } from "react";
 import { memo } from "react";
 
@@ -228,6 +229,17 @@ const NODE_BODY: Record<string, (d: NodeFields) => Part[]> = {
       { id: "notFollowing", title: "Doesn't follow yet" },
     ]),
   ],
+
+  continueOnWhatsappNode: (d) => {
+    const parts: Part[] = [rich(i18n.t("Message"), d.body, i18n.t("Empty message"))];
+    parts.push(field(i18n.t("Button"), d.buttonLabel || "—"));
+    if (!d.channelId) {
+      parts.push(
+        field(undefined, <NodePlaceholder>{i18n.t("Select a WhatsApp number")}</NodePlaceholder>),
+      );
+    }
+    return parts;
+  },
 
   instagramIceBreakerNode: (d) => {
     const c = d.iceBreakers?.length || 0;

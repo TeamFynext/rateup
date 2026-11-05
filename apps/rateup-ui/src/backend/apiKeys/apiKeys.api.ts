@@ -23,6 +23,8 @@ export type ApiKeyVersion = "v1" | "v2";
  */
 export const API_KEY_FEATURES = [
   "contacts",
+  /** Merging contacts. Separate from `contacts`: a merge deletes the merged-away contact. */
+  "contacts_merge",
   "teams",
   "campaigns",
   "surveys",

@@ -2,6 +2,7 @@ import { IconLoader2, IconSend } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { useWhatsappSendAddress } from "@/backend/channels/whatsappReach.query";
 import { useSendFlowToUser, useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
@@ -10,7 +11,6 @@ import { Button } from "@/components/ui/button.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { RadioGroup } from "@/components/ui/radio-group.tsx";
 import { WaFlowStatus } from "@/types/enums.ts";
-import { getContactWaAddress } from "@/utils/whatsapp/inbox.ts";
 
 import NothingFound from "../../../../../NothingFound/NothingFound.tsx";
 import { usePhoneIdStore } from "../../../chatselect/accountSelectorStore.ts";
@@ -30,8 +30,10 @@ export default function WaInboxFlowDisplayModal(props: Props) {
   // ids to a WABA, so sending one from another number is refused.
   const { data, isLoading, error } = useWaFlowsFromDb(true, whatsappSettingsPhoneId);
   const [teamId, setTeamId] = useState<string | null>(null);
+  // The address the chosen number reaches the customer at (phone, or that business's BSUID).
+  const sendAddress = useWhatsappSendAddress(props?.contact, whatsappSettingsPhoneId, props.opened);
   const sendFlowToUser = useSendFlowToUser(
-    getContactWaAddress(props?.contact),
+    sendAddress,
     props?.contact?.id,
     props?.contact ? getRowKey(props.contact) : undefined,
   );

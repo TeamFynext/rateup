@@ -1,6 +1,8 @@
 import { useTranslation } from "react-i18next";
 
+import { useWebchatInUse } from "@/backend/channels/channels.query";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
+import { webchatChannelOption } from "@/components/input/channelOptions.ts";
 import { cn } from "@/lib/utils.ts";
 import { useChatFilterStore } from "@/store/chat-filter.store.ts";
 
@@ -16,6 +18,7 @@ import { useChatFilterStore } from "@/store/chat-filter.store.ts";
 export default function ChannelFilter({ className }: Readonly<{ className?: string }>) {
   const { filter, setFilter } = useChatFilterStore();
   const { t: translations } = useTranslation();
+  const { data: webchatInUse } = useWebchatInUse();
 
   return (
     <div className={cn("min-w-0", className)}>
@@ -30,6 +33,7 @@ export default function ChannelFilter({ className }: Readonly<{ className?: stri
         optional
         showClearButton={false}
         platform="all"
+        extraOptions={webchatInUse ? [webchatChannelOption(translations("Webchat"))] : []}
         className="w-full"
       />
     </div>

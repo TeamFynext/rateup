@@ -24,7 +24,7 @@ describe("isComponentSupportedOnPlatform", () => {
   });
 
   // Instagram and Messenger share the Send API's quick replies and generic template.
-  test.each(["instagramQuickReplyNode", "instagramGenericTemplateNode"])(
+  test.each(["instagramQuickReplyNode", "instagramGenericTemplateNode", "continueOnWhatsappNode"])(
     "%s works on Instagram and Messenger, not WhatsApp",
     (node) => {
       expect(isComponentSupportedOnPlatform(node, INSTAGRAM)).toBe(true);

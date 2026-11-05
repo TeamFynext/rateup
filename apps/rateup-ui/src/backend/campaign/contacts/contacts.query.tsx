@@ -10,6 +10,7 @@ import { useContactsStore } from "@/store/inbox.store.ts";
 import type { RequestPayload } from "@/types/api.ts";
 import type { ColumnFilterState, PaginationState, SortState } from "@/types/api.ts";
 import { ContactGroupType } from "@/types/enums.ts";
+import { getApiErrorMessage } from "@/utils/apiError.ts";
 import { CONTACT_SORT } from "@/utils/constants.ts";
 
 import {
@@ -260,12 +261,15 @@ export const useEditContactMutation = (groupId?: string) => {
       // and can open one on a team's default board — neither of which the
       // pipeline's cache would hear about otherwise.
       queryClient.invalidateQueries({ queryKey: pipelineKeys.all() });
+      // A changed phone or email changes the contact's identities too.
+      queryClient.invalidateQueries({ queryKey: ["contactMerge"] });
       toast.success("Contact updated successfully.", {
         id: "contact-update",
       });
     },
     onError: (error) => {
-      toast.error(error?.message || `Error updating the contact`, {
+      // A 409 names the clash ("Another contact already has this phone").
+      toast.error(getApiErrorMessage(error, "Error updating the contact"), {
         id: "contact-update",
       });
     },

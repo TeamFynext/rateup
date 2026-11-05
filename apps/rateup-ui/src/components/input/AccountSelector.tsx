@@ -24,6 +24,8 @@ interface AccountSelectorBaseProps {
   filterIds?: string[];
   showClearButton?: boolean;
   disabled?: boolean;
+  /** Options that are no connected account (the inbox's Webchat), listed after the channels. */
+  extraOptions?: { value: string; label: string }[];
 }
 
 /** Selecting several accounts hands back the list; selecting one hands back its id. */
@@ -46,6 +48,7 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
     filterIds,
     showClearButton = true,
     disabled = false,
+    extraOptions = [],
   } = props;
   const { value, multiple = false } = props;
   // Every platform's channels come from the one registry list.
@@ -61,6 +64,7 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
     },
   );
 
+  accountOptions = [...accountOptions, ...extraOptions];
   if (withAllOption) {
     accountOptions = [{ value: "all", label: "All" }, ...accountOptions];
   }

@@ -45,6 +45,9 @@ const PLATFORM_COMPONENT_SUPPORT: Record<string, AutomationPlatform[]> = {
   // engine's branch handles depend on them.
   instagramGenericTemplateNode: META_SEND_API,
   instagramQuickReplyNode: META_SEND_API,
+  // "Continue on WhatsApp": a wa.me button carrying a handoff code that links the person's
+  // Instagram / Messenger contact to their WhatsApp number. Meaningless inside WhatsApp.
+  continueOnWhatsappNode: META_SEND_API,
 
   // Instagram only. Story replies and ice breakers are not blocks: a story mention is a rule
   // trigger and ice breakers live in the Instagram profile, so neither is listed here.

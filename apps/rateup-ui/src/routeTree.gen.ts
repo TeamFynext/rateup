@@ -174,6 +174,7 @@ import { Route as DashboardCommerceSettingsStorefrontPreviewRouteImport } from '
 import { Route as DashboardCommerceSetupIndexRouteImport } from './routes/dashboard/commerce/setup/index'
 import { Route as DashboardContactsAudiencesIndexRouteImport } from './routes/dashboard/contacts/audiences/index'
 import { Route as DashboardContactsCustomFieldsIndexRouteImport } from './routes/dashboard/contacts/custom-fields/index'
+import { Route as DashboardContactsDuplicatesIndexRouteImport } from './routes/dashboard/contacts/duplicates/index'
 import { Route as DashboardContactsGroupsIndexRouteImport } from './routes/dashboard/contacts/groups/index'
 import { Route as DashboardContactsLabelsIndexRouteImport } from './routes/dashboard/contacts/labels/index'
 import { Route as DashboardContactsLifecycleIndexRouteImport } from './routes/dashboard/contacts/lifecycle/index'
@@ -1191,6 +1192,12 @@ const DashboardContactsCustomFieldsIndexRoute =
     path: '/contacts/custom-fields/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
+const DashboardContactsDuplicatesIndexRoute =
+  DashboardContactsDuplicatesIndexRouteImport.update({
+    id: '/contacts/duplicates/',
+    path: '/contacts/duplicates/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
 const DashboardContactsGroupsIndexRoute =
   DashboardContactsGroupsIndexRouteImport.update({
     id: '/contacts/groups/',
@@ -1945,6 +1952,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/commerce/setup/': typeof DashboardCommerceSetupIndexRoute
   '/dashboard/contacts/audiences/': typeof DashboardContactsAudiencesIndexRoute
   '/dashboard/contacts/custom-fields/': typeof DashboardContactsCustomFieldsIndexRoute
+  '/dashboard/contacts/duplicates/': typeof DashboardContactsDuplicatesIndexRoute
   '/dashboard/contacts/groups/': typeof DashboardContactsGroupsIndexRoute
   '/dashboard/contacts/labels/': typeof DashboardContactsLabelsIndexRoute
   '/dashboard/contacts/lifecycle/': typeof DashboardContactsLifecycleIndexRoute
@@ -2201,6 +2209,7 @@ export interface FileRoutesByTo {
   '/dashboard/commerce/setup': typeof DashboardCommerceSetupIndexRoute
   '/dashboard/contacts/audiences': typeof DashboardContactsAudiencesIndexRoute
   '/dashboard/contacts/custom-fields': typeof DashboardContactsCustomFieldsIndexRoute
+  '/dashboard/contacts/duplicates': typeof DashboardContactsDuplicatesIndexRoute
   '/dashboard/contacts/groups': typeof DashboardContactsGroupsIndexRoute
   '/dashboard/contacts/labels': typeof DashboardContactsLabelsIndexRoute
   '/dashboard/contacts/lifecycle': typeof DashboardContactsLifecycleIndexRoute
@@ -2467,6 +2476,7 @@ export interface FileRoutesById {
   '/dashboard/commerce/setup/': typeof DashboardCommerceSetupIndexRoute
   '/dashboard/contacts/audiences/': typeof DashboardContactsAudiencesIndexRoute
   '/dashboard/contacts/custom-fields/': typeof DashboardContactsCustomFieldsIndexRoute
+  '/dashboard/contacts/duplicates/': typeof DashboardContactsDuplicatesIndexRoute
   '/dashboard/contacts/groups/': typeof DashboardContactsGroupsIndexRoute
   '/dashboard/contacts/labels/': typeof DashboardContactsLabelsIndexRoute
   '/dashboard/contacts/lifecycle/': typeof DashboardContactsLifecycleIndexRoute
@@ -2730,6 +2740,7 @@ export interface FileRouteTypes {
     | '/dashboard/commerce/setup/'
     | '/dashboard/contacts/audiences/'
     | '/dashboard/contacts/custom-fields/'
+    | '/dashboard/contacts/duplicates/'
     | '/dashboard/contacts/groups/'
     | '/dashboard/contacts/labels/'
     | '/dashboard/contacts/lifecycle/'
@@ -2986,6 +2997,7 @@ export interface FileRouteTypes {
     | '/dashboard/commerce/setup'
     | '/dashboard/contacts/audiences'
     | '/dashboard/contacts/custom-fields'
+    | '/dashboard/contacts/duplicates'
     | '/dashboard/contacts/groups'
     | '/dashboard/contacts/labels'
     | '/dashboard/contacts/lifecycle'
@@ -3251,6 +3263,7 @@ export interface FileRouteTypes {
     | '/dashboard/commerce/setup/'
     | '/dashboard/contacts/audiences/'
     | '/dashboard/contacts/custom-fields/'
+    | '/dashboard/contacts/duplicates/'
     | '/dashboard/contacts/groups/'
     | '/dashboard/contacts/labels/'
     | '/dashboard/contacts/lifecycle/'
@@ -4519,6 +4532,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardContactsCustomFieldsIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/contacts/duplicates/': {
+      id: '/dashboard/contacts/duplicates/'
+      path: '/contacts/duplicates'
+      fullPath: '/dashboard/contacts/duplicates/'
+      preLoaderRoute: typeof DashboardContactsDuplicatesIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/contacts/groups/': {
       id: '/dashboard/contacts/groups/'
       path: '/contacts/groups'
@@ -5700,6 +5720,7 @@ interface DashboardRouteRouteChildren {
   DashboardCampaignsCampaignIdIndexRoute: typeof DashboardCampaignsCampaignIdIndexRoute
   DashboardContactsAudiencesIndexRoute: typeof DashboardContactsAudiencesIndexRoute
   DashboardContactsCustomFieldsIndexRoute: typeof DashboardContactsCustomFieldsIndexRoute
+  DashboardContactsDuplicatesIndexRoute: typeof DashboardContactsDuplicatesIndexRoute
   DashboardContactsGroupsIndexRoute: typeof DashboardContactsGroupsIndexRoute
   DashboardContactsLabelsIndexRoute: typeof DashboardContactsLabelsIndexRoute
   DashboardContactsLifecycleIndexRoute: typeof DashboardContactsLifecycleIndexRoute
@@ -5813,6 +5834,7 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardContactsAudiencesIndexRoute: DashboardContactsAudiencesIndexRoute,
   DashboardContactsCustomFieldsIndexRoute:
     DashboardContactsCustomFieldsIndexRoute,
+  DashboardContactsDuplicatesIndexRoute: DashboardContactsDuplicatesIndexRoute,
   DashboardContactsGroupsIndexRoute: DashboardContactsGroupsIndexRoute,
   DashboardContactsLabelsIndexRoute: DashboardContactsLabelsIndexRoute,
   DashboardContactsLifecycleIndexRoute: DashboardContactsLifecycleIndexRoute,

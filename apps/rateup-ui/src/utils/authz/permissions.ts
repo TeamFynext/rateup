@@ -14,6 +14,7 @@ export const PERMISSIONS = [
   "contacts.read",
   "contacts.manage",
   "contacts.export",
+  "contacts.merge",
   "campaigns.read",
   "campaigns.manage",
   "campaigns.send",
@@ -95,7 +96,7 @@ export const MEMBER_PERMISSIONS: readonly Permission[] = PERMISSIONS.filter(
 );
 
 /** Must equal the API's `PERMISSIONS_VERSION`; a mismatch means this mirror is stale. */
-export const PERMISSIONS_VERSION = 3;
+export const PERMISSIONS_VERSION = 4;
 
 const ALL = new Set<string>(PERMISSIONS);
 
@@ -127,7 +128,7 @@ export const PERMISSION_GROUPS: ReadonlyArray<{
   {
     key: "contacts",
     label: "Contacts",
-    permissions: ["contacts.read", "contacts.manage", "contacts.export"],
+    permissions: ["contacts.read", "contacts.manage", "contacts.export", "contacts.merge"],
   },
   {
     key: "campaigns",
@@ -239,6 +240,7 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   "contacts.read": "See contacts",
   "contacts.manage": "Add, edit and import contacts",
   "contacts.export": "Export contacts",
+  "contacts.merge": "Merge duplicate contacts",
   "campaigns.read": "See campaigns",
   "campaigns.manage": "Create and edit campaigns",
   "campaigns.send": "Send campaigns",

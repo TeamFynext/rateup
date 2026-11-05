@@ -10,6 +10,7 @@ import {
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { useWhatsappSendAddress } from "@/backend/channels/whatsappReach.query";
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useSendWaTemplateToUser, useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import { Badge } from "@/components/ui/badge.tsx";
@@ -27,7 +28,7 @@ import useTemplatesAvailableForTeam from "@/hooks/team.tsx";
 import { cn } from "@/lib/utils.ts";
 import { WaTemplateStatus } from "@/types/enums.ts";
 import type { WaTemplateFetchBody } from "@/types/global";
-import { getContactLabel, getContactWaAddress } from "@/utils/whatsapp/inbox.ts";
+import { getContactLabel } from "@/utils/whatsapp/inbox.ts";
 
 import { TeamSelector } from "../../../../../input/TeamSelector.tsx";
 import { usePhoneIdStore } from "../../../chatselect/accountSelectorStore.ts";
@@ -69,12 +70,14 @@ export default function WaInboxTemplateDisplayModal({
   const [searchTerm, setSearchTerm] = useState("");
   const [category, setCategory] = useState<string | null>(null);
   // The row key lets the send draw its card in the thread while it is in flight.
+  const { whatsappSettingsPhoneId } = usePhoneIdStore();
+  // The address the chosen number reaches the customer at (phone, or that business's BSUID).
+  const sendAddress = useWhatsappSendAddress(contact, whatsappSettingsPhoneId, opened);
   const sendTemplate = useSendWaTemplateToUser(
-    getContactWaAddress(contact) ?? "",
+    sendAddress ?? "",
     contact?.id,
     contact ? getRowKey(contact) : undefined,
   );
-  const { whatsappSettingsPhoneId } = usePhoneIdStore();
   const { isPending: templatesLoading } = useWaTemplates();
   const templatesForTeam = useTemplatesAvailableForTeam(teamId);
 

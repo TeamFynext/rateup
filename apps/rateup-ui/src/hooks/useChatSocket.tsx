@@ -17,6 +17,7 @@ import {
 } from "@/components/dashboard/settings/notifications/notificationCopy.ts";
 import { getBrowserId } from "@/lib/browserId.ts";
 import { receiveCallEvent } from "@/store/call.store.ts";
+import { applyContactMerged } from "@/store/contact-merged.ts";
 import {
   resolveIncomingRowKey,
   useChatContactCountStore,
@@ -267,6 +268,12 @@ export const useChatSocket = () => {
                 metaAgentThreadOwnerAt: data.meta_agent_thread.at,
                 metaAgentHandoverReason: data.meta_agent_thread.reason,
               }));
+            }
+            break;
+          case "contact_merged":
+            // Someone merged two contacts: the source is gone, its tickets are the target's.
+            if (data?.contact_merged?.sourceContactId && data.contact_merged.targetContactId) {
+              void applyContactMerged(queryClient, data.contact_merged);
             }
             break;
           case "call":

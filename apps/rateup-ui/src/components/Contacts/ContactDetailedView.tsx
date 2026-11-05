@@ -21,9 +21,11 @@ import {
   useContactFullDetails,
   useEditContactMutation,
 } from "@/backend/campaign/contacts/contacts.query";
+import { useContactIdentityOverview } from "@/backend/campaign/contacts/merge.query";
 import { useConversationsByContact } from "@/backend/whatsapp/inbox/message/wamessage.query.ts";
 import ChipAddPicker from "@/components/common/chip-add-picker.tsx";
 import { useContactTableStore } from "@/components/dashboard/contacts/store/contact-table-store.ts";
+import { ContactIdentitySection } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayBody/components/contact/ContactIdentitySection.tsx";
 import {
   deriveStatus,
   STATUS_PILL_BASE,
@@ -46,7 +48,7 @@ import {
 import { FieldLabel } from "../ui/field.tsx";
 import { Skeleton } from "../ui/skeleton.tsx";
 import { Textarea } from "../ui/textarea.tsx";
-import { contactRowToInitialValues } from "./contact-form-schema.ts";
+import { contactRowToInitialValues, realPhone } from "./contact-form-schema.ts";
 import CreateOrEditContactModal from "./CreatOrEditContactModal.tsx";
 import { getSourceBadge } from "./utils/utils.tsx";
 
@@ -252,7 +254,21 @@ const ContactDetailedView = ({
   const inboxStatus = details?.waMessageAssignStatus ?? selectedContact.waMessageAssignStatus;
   const lifecycleName = details?.Lifecycle?.name ?? selectedContact.Lifecycle?.name;
   const hasConsent = details?.consent ?? selectedContact.consent;
-  const phone = details?.phone ?? selectedContact.phone;
+  // The identities are the source of truth for how this person is reached; the `phone`
+  // column of an older Instagram/Messenger contact holds its platform id, not a number.
+  const { data: identityOverview } = useContactIdentityOverview(selectedContact.id, opened);
+  const knownIdentities = identityOverview?.identities ?? [];
+  const primaryOf = (kind: "PHONE" | "EMAIL") =>
+    knownIdentities.find((identity) => identity.kind === kind && identity.isPrimary)?.value ??
+    knownIdentities.find((identity) => identity.kind === kind)?.value;
+  const phone =
+    primaryOf("PHONE") ??
+    realPhone({
+      phone: details?.phone ?? selectedContact.phone,
+      igsId: details?.igsId ?? selectedContact.igsId,
+      psid: details?.psid ?? selectedContact.psid,
+    });
+  const subtitle = phone ? (phone.startsWith("+") ? phone : `+${phone}`) : primaryOf("EMAIL");
   const contactName = details?.name ?? selectedContact.name;
   const lastReceived =
     details?.lastReceivedMessageTimeStamp ?? selectedContact.lastReceivedMessageTimeStamp;
@@ -273,7 +289,7 @@ const ContactDetailedView = ({
         <DialogHeader>
           <div className="flex items-center gap-3 pr-8">
             <ContactAvatar
-              name={contactName || phone}
+              name={contactName || subtitle || undefined}
               src={details?.profilePic ?? selectedContact.profilePic}
               size="lg"
             />
@@ -282,10 +298,12 @@ const ContactDetailedView = ({
                 <DialogTitle className="truncate text-lg">{contactName}</DialogTitle>
                 {contactName && <CopyButton value={contactName} label="Name" />}
               </div>
-              <div className="group/row flex items-center gap-1.5">
-                <DialogDescription>{phone}</DialogDescription>
-                {phone && <CopyButton value={phone} label="Phone" />}
-              </div>
+              {subtitle && (
+                <div className="group/row flex items-center gap-1.5">
+                  <DialogDescription>{subtitle}</DialogDescription>
+                  <CopyButton value={subtitle} label={phone ? "Phone" : "Email"} />
+                </div>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-1.5 mt-2 flex-wrap">
@@ -339,13 +357,9 @@ const ContactDetailedView = ({
 
         <div className="grid max-h-[55vh] gap-x-8 gap-y-5 overflow-y-auto -mr-2 pr-2 md:grid-cols-2">
           <div className="space-y-5 min-w-0">
+            <ContactIdentitySection contactId={selectedContact.id} embedded />
+
             <Section title="Contact">
-              <Row label="Phone" value={phone} copyValue={phone} />
-              <Row
-                label="Email"
-                value={details?.email ?? selectedContact.email}
-                copyValue={details?.email ?? selectedContact.email}
-              />
               <Row
                 label="Address"
                 value={details?.address ?? selectedContact.address}
@@ -366,11 +380,6 @@ const ContactDetailedView = ({
               <Row
                 label="Added"
                 value={formatDate(details?.createdAt ?? selectedContact.createdAt)}
-              />
-              <Row
-                label="External ID"
-                value={details?.external_id}
-                copyValue={details?.external_id}
               />
             </Section>
 

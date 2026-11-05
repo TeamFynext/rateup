@@ -16,6 +16,7 @@ import { PageHeading, SectionHeading } from "@/components/common/page-heading.ts
 import { SetupRowCard } from "@/components/common/setup-row-card.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { groupByBusiness } from "@/utils/whatsapp/businesses.ts";
 
 export function ChannelsPage() {
   const navigate = useNavigate();
@@ -29,6 +30,14 @@ export function ChannelsPage() {
   const igCount = countOf("INSTAGRAM");
   const fbCount = countOf("FACEBOOK");
   const hasChannel = waCount + igCount + fbCount > 0;
+  // WhatsApp numbers can come from several Meta businesses; say so once there is more than one.
+  const waBusinessCount = groupByBusiness(
+    channels?.filter((channel) => channel.platform === "WHATSAPP") ?? [],
+    (channel) => ({
+      id: channel.whatsapp?.businessPortfolioId,
+      name: channel.whatsapp?.businessPortfolioName,
+    }),
+  ).filter((business) => business.id || business.name).length;
 
   const open = (channel: "whatsapp" | "facebook" | "instagram") =>
     navigate({ to: "/dashboard/settings/channels/$channel", params: { channel } });
@@ -96,7 +105,18 @@ export function ChannelsPage() {
               "Connect your WhatsApp inbox to handle conversations and campaigns.",
             )}
             done={waCount > 0}
-            badges={statusBadge(waCount)}
+            badges={
+              <>
+                {statusBadge(waCount)}
+                {waBusinessCount > 1 && (
+                  <Badge variant="secondary">
+                    {translations("{count, plural, one {# business} other {# businesses}}", {
+                      count: waBusinessCount,
+                    })}
+                  </Badge>
+                )}
+              </>
+            }
             action={action(waCount > 0, "whatsapp", isLoading)}
           />
 

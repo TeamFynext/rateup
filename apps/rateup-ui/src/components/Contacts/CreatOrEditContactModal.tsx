@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { IconCircleCheck, IconUserPlus } from "@tabler/icons-react";
-import { useEffect, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -10,6 +11,13 @@ import {
   useEditContactMutation,
 } from "@/backend/campaign/contacts/contacts.query";
 import {
+  addContactIdentity,
+  removeContactIdentity,
+  updateContactIdentity,
+  type ContactIdentityOverview,
+} from "@/backend/campaign/contacts/merge.api";
+import { useContactIdentityOverview } from "@/backend/campaign/contacts/merge.query";
+import {
   useAssignContactStageMutation,
   useContactStageQuery,
 } from "@/backend/pipeline/pipeline.query";
@@ -17,6 +25,7 @@ import { usePipelineStages } from "@/components/pipeline/shared/StageSelector.ts
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
 import type { RequestPayload } from "@/types/api.ts";
 import { ContactGroupType } from "@/types/enums.ts";
+import { getApiErrorMessage } from "@/utils/apiError.ts";
 
 import { Button } from "../ui/button.tsx";
 import { ContactAvatar } from "../ui/contact-avatar.tsx";
@@ -35,9 +44,64 @@ import {
   buildContactSchema,
   type ContactFormValues,
   type ContactInitialValues,
+  realPhone,
   toFormValues,
 } from "./contact-form-schema.ts";
 import ContactForm from "./ContactForm.tsx";
+import { normalizeIdentity, planIdentityChanges } from "./identityChanges.ts";
+
+/** A saved contact's phones or emails as form rows, main first; one empty row when none. */
+function identityRows(overview: ContactIdentityOverview | undefined, kind: "PHONE" | "EMAIL") {
+  const all = overview
+    ? overview.identities.length
+      ? overview.identities
+      : overview.legacyIdentities
+    : [];
+  const rows = all
+    .filter((identity) => identity.kind === kind)
+    .sort((a, b) => Number(!!b.isPrimary) - Number(!!a.isPrimary))
+    .map((identity) => ({
+      ...(identity.id ? { id: identity.id } : {}),
+      value: kind === "PHONE" ? `+${identity.value}` : identity.value,
+    }));
+  return rows.length ? rows : [{ value: "" }];
+}
+
+/**
+ * Makes the contact's phones or emails match the edited list: edits, then additions, then
+ * the main one, then removals (last, so the contact is never left with nothing). Stops at
+ * the first refusal, which the caller shows.
+ */
+async function saveIdentityList(
+  contactId: string,
+  kind: "PHONE" | "EMAIL",
+  overview: ContactIdentityOverview | undefined,
+  rows: ContactFormValues["phones"],
+) {
+  const saved = (overview?.identities ?? []).flatMap((identity) =>
+    identity.kind === kind && identity.id
+      ? [{ id: identity.id, value: identity.value, isPrimary: identity.isPrimary }]
+      : [],
+  );
+  const plan = planIdentityChanges(kind, saved, rows);
+  for (const change of plan.update) {
+    await updateContactIdentity(contactId, change.id, { value: change.value });
+  }
+  const addedIds = new Map<string, string>();
+  for (const value of plan.add) {
+    const { identityId } = await addContactIdentity(contactId, { kind, value });
+    addedIds.set(value, identityId);
+  }
+  const mainId = plan.main
+    ? "id" in plan.main
+      ? plan.main.id
+      : addedIds.get(plan.main.value)
+    : undefined;
+  if (mainId) await updateContactIdentity(contactId, mainId, { isPrimary: true });
+  for (const identityId of plan.remove) {
+    await removeContactIdentity(contactId, identityId);
+  }
+}
 import { getSourceBadge } from "./utils/utils.tsx";
 
 /**
@@ -92,6 +156,11 @@ const CreateOrEditContactModal = ({
   const createContactMutation = useCreateContactMutation();
   const editContactMutation = useEditContactMutation();
   const contactSchema = useMemo(() => buildContactSchema(t, customFields), [t, customFields]);
+  const queryClient = useQueryClient();
+  // Editing lists every phone and email the contact is known by, not only the main ones.
+  const editingId = initialValues?.id;
+  const { data: identityOverview } = useContactIdentityOverview(editingId, opened && !!editingId);
+  const [savingIdentities, setSavingIdentities] = useState(false);
 
   // The stage lives on a lead, not on the contact row, so it is fetched and
   // written separately from the rest of the form.
@@ -120,34 +189,61 @@ const CreateOrEditContactModal = ({
   }
 
   const handleSubmit = form.handleSubmit((values) => {
+    const { multiIdentity: _multi, phones: _phones, emails: _emails, ...fields } = values;
     const contactData = {
-      ...values,
+      ...fields,
       dob: values.dob ? new Date(values.dob).toISOString() : null,
       external_id: values.external_id || undefined,
       // "No lifecycle" is "" in the form but a uuid column in the API; null is how it's cleared.
       lifecycleId: values.lifecycleId || null,
-      phone: values.phone?.replace(/^\+/, "") || "",
+      // An Instagram/Messenger contact whose `phone` holds its platform id shows an empty
+      // phone field; left empty, that column is left as it is rather than wiped.
+      phone:
+        values.phone?.replace(/^\+/, "") ||
+        (initialValues?.id && initialValues.phone && !realPhone(initialValues) ? undefined : ""),
       source: type === ContactGroupType.LOYALTY ? ContactGroupType.LOYALTY : values.source,
       lastReceivedMessageTimeStamp: undefined as string | undefined,
     };
     // Edit mode is keyed on the contact's id; a draft without one takes the create path below.
-    if (initialValues?.id) {
-      editContactMutation.mutate(
-        { data: contactData, contactId: initialValues.id },
-        {
-          onSuccess: () => {
-            applyStage(initialValues.id, values.stageId);
-            onSaved?.({
-              id: initialValues.id!,
-              name: contactData.name,
-              phone: contactData.phone,
-              email: contactData.email,
-            });
-            setOpened(false);
-            form.reset();
+    if (editingId) {
+      // Phones and emails go through the identity API (which keeps the contact's main
+      // phone/email columns in step); the external id only when it was typed in here.
+      const editData = {
+        ...contactData,
+        phone: undefined,
+        email: undefined,
+        external_id: form.formState.dirtyFields.external_id ? contactData.external_id : undefined,
+      };
+      void (async () => {
+        setSavingIdentities(true);
+        try {
+          await saveIdentityList(editingId, "PHONE", identityOverview, values.phones);
+          await saveIdentityList(editingId, "EMAIL", identityOverview, values.emails);
+        } catch (error) {
+          toast.error(getApiErrorMessage(error, t("Could not save the phone numbers and emails")));
+          return;
+        } finally {
+          setSavingIdentities(false);
+          void queryClient.invalidateQueries({ queryKey: ["contactMerge"] });
+        }
+        editContactMutation.mutate(
+          { data: editData, contactId: editingId },
+          {
+            onSuccess: () => {
+              applyStage(editingId, values.stageId);
+              const mainPhone = values.phones.find((row) => row.value)?.value ?? "";
+              onSaved?.({
+                id: editingId,
+                name: contactData.name,
+                phone: normalizeIdentity("PHONE", mainPhone),
+                email: values.emails.find((row) => row.value)?.value.trim() ?? "",
+              });
+              setOpened(false);
+              form.reset();
+            },
           },
-        },
-      );
+        );
+      })();
       return;
     }
     if (createNewContactMutation) {
@@ -181,10 +277,25 @@ const CreateOrEditContactModal = ({
       withAllCustomFields({
         ...toFormValues(initialValues, customFields),
         stageId: contactStage?.stageId ?? "",
+        multiIdentity: !!editingId,
+        phones: editingId ? identityRows(identityOverview, "PHONE") : [],
+        emails: editingId ? identityRows(identityOverview, "EMAIL") : [],
       }),
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [opened, initialValues?.id, customFields, form]);
+
+  // The identities may arrive after the form opened; fill the lists then, unless the user has
+  // already started editing them.
+  useEffect(() => {
+    if (!opened || !editingId || !identityOverview) return;
+    if (!form.getFieldState("phones").isDirty) {
+      form.setValue("phones", identityRows(identityOverview, "PHONE"), { shouldDirty: false });
+    }
+    if (!form.getFieldState("emails").isDirty) {
+      form.setValue("emails", identityRows(identityOverview, "EMAIL"), { shouldDirty: false });
+    }
+  }, [opened, editingId, identityOverview, form]);
 
   // The board is fetched after the form mounts, so the current column is seeded
   // here rather than in `defaultValues`.
@@ -242,7 +353,12 @@ const CreateOrEditContactModal = ({
               </ul>
             </FieldError>
           )}
-          <ContactForm form={form} customFields={customFields} type={type} />
+          <ContactForm
+            form={form}
+            customFields={customFields}
+            type={type}
+            contactId={initialValues?.id}
+          />
         </div>
         <DialogFooter>
           <DialogClose render={<Button variant="secondary" onClick={() => form.reset()} />}>
@@ -251,7 +367,8 @@ const CreateOrEditContactModal = ({
           <Button onClick={handleSubmit}>
             {createContactMutation.isPending ||
             createNewContactMutation?.isPending ||
-            editContactMutation.isPending ? (
+            editContactMutation.isPending ||
+            savingIdentities ? (
               <Spinner />
             ) : (
               <IconCircleCheck className="w-4 h-4 mr-2" />

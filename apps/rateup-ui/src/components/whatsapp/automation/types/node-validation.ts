@@ -1,3 +1,4 @@
+import i18n from "i18next";
 import type { Resolver } from "react-hook-form";
 
 /*
@@ -334,6 +335,19 @@ export function getNodeFieldErrors(
       }
       break;
     }
+
+    // Meta's card limits: the title (our message) 80 characters, a button 20.
+    case "continueOnWhatsappNode":
+      if (isBlank(data.channelId)) errors.channelId = i18n.t("Select a WhatsApp number.");
+      if (isBlank(data.body)) errors.body = i18n.t("Message text is required.");
+      else if ((data.body ?? "").length > 80) {
+        errors.body = i18n.t("Message must be 80 characters or less.");
+      }
+      if (isBlank(data.buttonLabel)) errors.buttonLabel = i18n.t("Button label is required.");
+      else if ((data.buttonLabel ?? "").length > 20) {
+        errors.buttonLabel = i18n.t("Button label must be 20 characters or less.");
+      }
+      break;
 
     case "instagramIceBreakerNode":
       if (!data.iceBreakers?.length) {

@@ -12,7 +12,7 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -60,6 +60,7 @@ import { resolveRoleKey } from "@/utils/authz/can.ts";
 import { roleKeyToLegacy, type RoleKey } from "@/utils/authz/roles.ts";
 import { HEX_COLOR } from "@/utils/color.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
+import { groupByBusiness, spansSeveralBusinesses } from "@/utils/whatsapp/businesses.ts";
 
 import { Card, CardContent } from "../ui/card.tsx";
 
@@ -916,6 +917,8 @@ interface ChannelAccessRow {
   id: string;
   label: string;
   platform: string;
+  /** WhatsApp only: the Meta business that owns the number. */
+  business: { id: string | null; name: string | null } | null;
 }
 
 const PLATFORM_LABEL: Record<string, string> = {
@@ -936,7 +939,39 @@ function describeChannels(channels: Channel[] | undefined): ChannelAccessRow[] {
           ? `@${channel.username}`
           : (channel.name ?? channel.accountId),
     platform: PLATFORM_LABEL[channel.platform] ?? channel.platform,
+    business:
+      channel.platform === "WHATSAPP"
+        ? {
+            id: channel.whatsapp?.businessPortfolioId ?? null,
+            name: channel.whatsapp?.businessPortfolioName ?? null,
+          }
+        : null,
   }));
+}
+
+/**
+ * The rows in sections: WhatsApp numbers under their business once the org's numbers
+ * span more than one, then every other channel. One unheaded section otherwise.
+ */
+function sectionChannels(
+  rows: ChannelAccessRow[],
+): { key: string; heading: string | null; unknownBusiness: boolean; rows: ChannelAccessRow[] }[] {
+  const whatsapp = rows.filter((row) => row.business);
+  const businesses = groupByBusiness(whatsapp, (row) => row.business);
+  if (!spansSeveralBusinesses(businesses))
+    return [{ key: "all", heading: null, unknownBusiness: false, rows }];
+  const others = rows.filter((row) => !row.business);
+  return [
+    ...businesses.map((business) => ({
+      key: business.id ?? business.name ?? "unknown",
+      heading: business.name,
+      unknownBusiness: !business.id && !business.name,
+      rows: business.items,
+    })),
+    ...(others.length
+      ? [{ key: "others", heading: null, unknownBusiness: false, rows: others }]
+      : []),
+  ];
 }
 
 export function TeamChannelAccess({ selectedTeam }: { selectedTeam: SelectedTeam }) {
@@ -1039,27 +1074,36 @@ export function TeamChannelAccess({ selectedTeam }: { selectedTeam: SelectedTeam
               {translations("No channels are connected to this organisation yet.")}
             </p>
           ) : (
-            channels.map(({ id, label, platform }) => {
-              return (
-                <label
-                  key={id}
-                  htmlFor={`team-channel-${id}`}
-                  className={cn(
-                    "flex items-center gap-3 px-4 py-2.5 text-sm",
-                    current.allChannels ? "opacity-60" : "cursor-pointer",
-                  )}
-                >
-                  <Checkbox
-                    id={`team-channel-${id}`}
-                    checked={current.allChannels || current.ids.has(id)}
-                    disabled={current.allChannels}
-                    onCheckedChange={() => toggleChannel(id)}
-                  />
-                  <span className="min-w-0 flex-1 truncate">{label}</span>
-                  <span className="shrink-0 text-xs text-muted-foreground">{platform}</span>
-                </label>
-              );
-            })
+            sectionChannels(channels).map((section) => (
+              <Fragment key={section.key}>
+                {(section.heading || section.unknownBusiness) && (
+                  <p className="bg-muted/50 px-4 py-1.5 text-xs font-semibold text-muted-foreground">
+                    {section.heading ?? translations("Business not identified yet")}
+                  </p>
+                )}
+                {section.rows.map(({ id, label, platform }) => {
+                  return (
+                    <label
+                      key={id}
+                      htmlFor={`team-channel-${id}`}
+                      className={cn(
+                        "flex items-center gap-3 px-4 py-2.5 text-sm",
+                        current.allChannels ? "opacity-60" : "cursor-pointer",
+                      )}
+                    >
+                      <Checkbox
+                        id={`team-channel-${id}`}
+                        checked={current.allChannels || current.ids.has(id)}
+                        disabled={current.allChannels}
+                        onCheckedChange={() => toggleChannel(id)}
+                      />
+                      <span className="min-w-0 flex-1 truncate">{label}</span>
+                      <span className="shrink-0 text-xs text-muted-foreground">{platform}</span>
+                    </label>
+                  );
+                })}
+              </Fragment>
+            ))
           )}
 
           {hasNoGrant && (

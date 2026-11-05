@@ -1,4 +1,4 @@
-import type { Channel } from "@/backend/channels/channels.api";
+import { type Channel, WEBCHAT_FILTER } from "@/backend/channels/channels.api";
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import { MessagePlatform } from "@/types/enums.ts";
 
@@ -60,6 +60,11 @@ export function getChannelOptions(
   }
 
   return options;
+}
+
+/** The inbox filter's Webchat entry (the website widget), shown when the org uses it. */
+export function webchatChannelOption(label: string): ChannelOption {
+  return { value: WEBCHAT_FILTER, label, platform: MessagePlatform.WEBCHAT };
 }
 
 /** A connected channel, resolved back from what a message recorded it as. */

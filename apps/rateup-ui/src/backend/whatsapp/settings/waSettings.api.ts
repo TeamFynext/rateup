@@ -32,6 +32,9 @@ export type WaSettings = {
   conversionData?: { event_name?: string; currency?: string };
   paymentMethod?: string;
   status?: WhatsappSettingsStatus;
+  /** The Meta business portfolio that owns the number; null until read from Meta. */
+  businessPortfolioId?: string | null;
+  businessPortfolioName?: string | null;
 }[];
 
 export type UpdateWaSettingsInput = Partial<Omit<WaSettings[0], "teams"> & { teams: string[] }>;

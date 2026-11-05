@@ -24,6 +24,7 @@ import {
   IconLayoutList,
   IconLogs,
   IconMessage,
+  IconMessages,
   IconQrcode,
   IconRobotFace,
   IconRocket,
@@ -52,6 +53,7 @@ import {
   IconTrendingUp,
   IconChecks,
   IconUsersGroup,
+  IconUsersPlus,
   IconClipboardList,
   IconChecklist,
   IconLock,
@@ -60,6 +62,7 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { ContactLabelOption } from "@/backend/campaign/contacts/contacts.api";
+import { useMergeSuggestionCount } from "@/backend/campaign/contacts/merge.query";
 import { useShopOrders, useShopSetup } from "@/backend/commerce/shop.query";
 import type { GetLabelsRes } from "@/backend/lifecycle/lifecycle.types";
 import type { ConversationTagOption } from "@/backend/whatsapp/inbox/conversationTag/conversationTag.api.ts";
@@ -127,6 +130,8 @@ const CHANNEL_PLATFORM_ICON: Partial<Record<MessagePlatform, NavIcon>> = {
     IconBrandFacebook,
     "text-blue-600! dark:text-blue-500!",
   ),
+  // The website chat widget, in the brand blue the ticket panel gives it.
+  [MessagePlatform.WEBCHAT]: withBrandColor(IconMessages, "text-primary!"),
 };
 
 /**
@@ -263,6 +268,10 @@ export function useNavMain({
   const shopNeedsAction = shopOrders?.counts.needs_action ?? 0;
   const { data: shopSetup } = useShopSetup(isModuleOn("commerce") && can("commerce.read"));
   const shopSetupLeft = shopSetup && shopSetup.done < shopSetup.total ? shopSetup : null;
+  const { data: duplicateCount } = useMergeSuggestionCount(
+    (allowedFeatures === null || allowedFeatures.has(TeamFeature.Contacts)) && can("contacts.read"),
+  );
+  const pendingDuplicates = duplicateCount?.pending ?? 0;
 
   // null = sees every feature; Set = restricted to the team's enabled features
   const hasTeamFeature = (feature: TeamFeature) =>
@@ -599,6 +608,12 @@ export function useNavMain({
                   url: "/dashboard/contacts/labels",
                   icon: IconTag,
                 },
+                {
+                  title: t("Possible duplicates"),
+                  url: "/dashboard/contacts/duplicates",
+                  icon: IconUsersPlus,
+                  count: pendingDuplicates,
+                },
                 // Lifecycle is no longer listed here: pipeline stages have taken
                 // over the places it was read from. The page and the route are
                 // still there for the surfaces that have not moved yet — the
@@ -889,5 +904,6 @@ export function useNavMain({
     can,
     shopNeedsAction,
     shopSetupLeft,
+    pendingDuplicates,
   ]);
 }

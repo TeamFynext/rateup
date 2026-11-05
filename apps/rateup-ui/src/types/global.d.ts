@@ -1223,7 +1223,8 @@ export interface orgWsMessage {
     | "message_status_update"
     | "message_deleted"
     | "message_edited"
-    | "meta_agent_thread";
+    | "meta_agent_thread"
+    | "contact_merged";
   inbox?: {
     contact: ContactsData;
     message: WaGetMessagesBody;
@@ -1259,6 +1260,11 @@ export interface orgWsMessage {
     owner: "AI" | "STAFF";
     reason: string | null;
     at: string;
+  };
+  /** Two contacts were merged: `sourceContactId` was deleted into `targetContactId`. */
+  contact_merged?: {
+    sourceContactId: string;
+    targetContactId: string;
   };
 }
 
