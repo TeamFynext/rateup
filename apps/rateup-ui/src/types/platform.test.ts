@@ -43,10 +43,10 @@ describe("isComponentSupportedOnPlatform", () => {
     },
   );
 
-  test("documents go out on WhatsApp and, as a file, on Messenger", () => {
+  test("documents go out on WhatsApp and, as a file, on Messenger and Instagram", () => {
     expect(isComponentSupportedOnPlatform("documentNode", WHATSAPP)).toBe(true);
     expect(isComponentSupportedOnPlatform("documentNode", FACEBOOK)).toBe(true);
-    expect(isComponentSupportedOnPlatform("documentNode", INSTAGRAM)).toBe(false);
+    expect(isComponentSupportedOnPlatform("documentNode", INSTAGRAM)).toBe(true);
   });
 
   test.each(["buttonNode", "listNode", "ctaUrlNode", "templateNode", "flowNode"])(

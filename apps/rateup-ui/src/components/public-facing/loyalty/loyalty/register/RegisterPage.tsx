@@ -87,6 +87,11 @@ function RegisterForm({ program }: Readonly<{ program: PublicLoyaltyProgram | un
   const params = useParams({ strict: false });
   const referCodeRaw = searchParams.refer_code ?? searchParams.ref;
   const referCodeParam = typeof referCodeRaw === "string" ? referCodeRaw : "";
+  // A story mention is answered with a join link carrying its id; the API pays that
+  // mention to the new member. Only a well-formed id is sent, so a mangled link still joins.
+  const igRaw = searchParams.ig;
+  const instagramMentionId =
+    typeof igRaw === "string" && /^[0-9a-f-]{36}$/i.test(igRaw) ? igRaw : undefined;
 
   const session = useSessionContext();
   // The contact lookup is staff-only. This page doubles as the public self-registration
@@ -150,6 +155,7 @@ function RegisterForm({ program }: Readonly<{ program: PublicLoyaltyProgram | un
         // body entirely rather than being sent as an empty value.
         orgId,
         isPublic: !isStaff,
+        ...(instagramMentionId ? { instagramMentionId } : {}),
       },
       {
         onSuccess: () => {

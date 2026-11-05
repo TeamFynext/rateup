@@ -7,14 +7,18 @@ interface TimeRange {
   end: string; // Format: HH:mm (e.g., "17:00")
 }
 
+/** The `conditions` JSON in the shape the API's earning engine reads. */
 interface LoyaltyEarningRuleConditions {
-  location_ids?: string[];
-  product_categories?: string[];
-  product_skus?: string[];
-  excluded_product_skus?: string[];
-  payment_methods?: string[];
-  customer_type?: "new" | "returning" | "all";
-  channels?: string[];
+  locations?: { enabled: boolean; location_ids: string[] };
+  products?: {
+    enabled: boolean;
+    categories?: string[];
+    product_skus?: string[];
+    excluded_categories?: string[];
+  };
+  payment_methods?: { enabled: boolean; allowed_methods: string[] };
+  customer_type?: { enabled: boolean; types: ("new" | "returning" | "first_purchase_only")[] };
+  channels?: { enabled: boolean; allowed_channels: ("online" | "in_store" | "mobile_app")[] };
 }
 
 export interface LoyaltyEarningRule {
@@ -91,4 +95,33 @@ export const updateLoyaltyEarningRule = async (
  */
 export const deleteLoyaltyEarningRule = async (ruleId: string): Promise<void> => {
   await axiosClient.delete(`${LOYALTY_EARNING_RULES_URL}/${ruleId}`);
+};
+
+export type InstagramMentionKind = "STORY" | "MEDIA" | "COMMENT";
+
+/**
+ * The "Instagram mentions" earning option. Stored on the API as one earning rule marked
+ * `conditions.trigger = "instagram_mention"`, which the purchase rule list never returns.
+ */
+export interface InstagramMentionRule {
+  /** Null until the option is first saved. */
+  id: string | null;
+  enabled: boolean;
+  pointsPerMention: number;
+  mentionKinds: InstagramMentionKind[];
+  cooldownDays: number;
+}
+
+export type InstagramMentionRuleInput = Omit<InstagramMentionRule, "id">;
+
+export const getInstagramMentionRule = async (): Promise<InstagramMentionRule> => {
+  const res = await axiosClient.get(`${LOYALTY_EARNING_RULES_URL}/instagram-mentions`);
+  return res.data;
+};
+
+export const saveInstagramMentionRule = async (
+  input: InstagramMentionRuleInput,
+): Promise<InstagramMentionRule> => {
+  const res = await axiosClient.put(`${LOYALTY_EARNING_RULES_URL}/instagram-mentions`, input);
+  return res.data;
 };

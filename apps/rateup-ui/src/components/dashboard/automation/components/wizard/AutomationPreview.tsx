@@ -53,6 +53,7 @@ const EVENT_NOTE: Record<string, string> = {
   STAGE_UPDATED: "Lead moved to a new stage",
   LIFECYCLE_UPDATED: "Lifecycle changed",
   INSTAGRAM_STORY_MENTION: "Mentioned you in their story",
+  INSTAGRAM_STORY_REPLY: "Replied to your story",
   INSTAGRAM_REFERRAL: "Opened your ig.me link",
   WHATSAPP_AD_REFERRAL: "Tapped your ad",
   MESSENGER_REFERRAL: "Opened your m.me link",

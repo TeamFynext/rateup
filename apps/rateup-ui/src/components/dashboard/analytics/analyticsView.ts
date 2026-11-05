@@ -1,9 +1,10 @@
-/** The four views of `/dashboard/analytics`, and the sub-views Team Performance switches between. */
+/** The five views of `/dashboard/analytics`, and the sub-views Team Performance switches between. */
 export const ANALYTICS_TABS = [
   "overview",
   "team-performance",
   "template-delivery",
   "message-log",
+  "instagram",
 ] as const;
 export type AnalyticsTab = (typeof ANALYTICS_TABS)[number];
 export type ConversationsView = "agents" | "teams";

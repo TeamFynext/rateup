@@ -3,12 +3,18 @@ import { toast } from "sonner";
 
 import { loyaltyKeys } from "@/backend/loyalty/loyalty.keys";
 
-import type { LoyaltyEarningRuleInput, LoyaltyEarningRuleUpdateInput } from "./earningRules.api";
+import type {
+  InstagramMentionRuleInput,
+  LoyaltyEarningRuleInput,
+  LoyaltyEarningRuleUpdateInput,
+} from "./earningRules.api";
 import {
   createLoyaltyEarningRule,
   deleteLoyaltyEarningRule,
   getLoyaltyEarningRuleById,
+  getInstagramMentionRule,
   getLoyaltyEarningRules,
+  saveInstagramMentionRule,
   updateLoyaltyEarningRule,
 } from "./earningRules.api";
 
@@ -133,6 +139,26 @@ export const useToggleLoyaltyEarningRuleStatusMutation = (
     onError: (error) => {
       toast.error(error?.message || "Error updating rule status!");
       onError?.();
+    },
+  });
+};
+
+const instagramMentionRuleKey = () =>
+  [...loyaltyKeys.earningRules(), "instagram-mentions"] as const;
+
+/** The "Instagram mentions" earning option (defaults when never saved). */
+export const useInstagramMentionRule = () =>
+  useQuery({
+    queryKey: instagramMentionRuleKey(),
+    queryFn: getInstagramMentionRule,
+  });
+
+export const useSaveInstagramMentionRuleMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: InstagramMentionRuleInput) => saveInstagramMentionRule(input),
+    onSuccess: (saved) => {
+      queryClient.setQueryData(instagramMentionRuleKey(), saved);
     },
   });
 };

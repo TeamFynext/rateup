@@ -59,6 +59,7 @@ import { docsPath } from "@/utils/constants.ts";
 import { randomHexColor } from "@/utils/index.ts";
 
 import { EarnRateField } from "./parts/EarnRateField.tsx";
+import { InstagramMentionsCard } from "./parts/InstagramMentionsCard.tsx";
 import { RuleCard } from "./parts/RuleCard.tsx";
 import { earningRuleSchema } from "./parts/shared.tsx";
 import type { EarningRuleFormValues } from "./parts/shared.tsx";
@@ -438,6 +439,9 @@ export function EarningRulesPage() {
                 </div>
               )}
             </div>
+
+            {/* Points for tagging the business — not a purchase rule, so it has its own card. */}
+            <InstagramMentionsCard pointsName={giveback.pointsName} />
 
             {/* Additional Earning Rules */}
             <div>

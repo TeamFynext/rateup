@@ -23,10 +23,11 @@ import { usePendingMessagesStore } from "@/store/pendingMessages.ts";
 import type { PendingMessage } from "@/store/pendingMessages.ts";
 import { MessagePlatform } from "@/types/enums.ts";
 import type { IgReceiveMessageBody } from "@/types/global";
-import { parseWaMessage } from "@/utils/whatsapp/inbox.ts";
+import { getMessageAuthor, getReplyToMid, parseWaMessage } from "@/utils/whatsapp/inbox.ts";
 
 import WhatsAppInboxLoader from "../../loader/index.tsx";
 import { useComposerTabStore } from "../chatdisplayFooter/composerTabStore.ts";
+import QuotedMessage from "./components/quotedMessage/index.tsx";
 import {
   DateComponent,
   DeletedMessage,
@@ -221,11 +222,15 @@ const MessageItem = ({
   const showDate =
     !previousMessage ||
     !dayjs(message.waCreatedAt).isSame(dayjs(previousMessage.waCreatedAt), "day");
+  const threadMessages = messagesByKey.get(selectedKey ?? "")?.messages || [];
   const reaction = getReactionMessage({
     message,
-    allMessages: messagesByKey.get(selectedKey ?? "")?.messages || [],
+    allMessages: threadMessages,
     selectedContact,
   });
+  // An Instagram inline reply quotes another message of the thread by its Meta id.
+  const replyToMid = message.deletedAt ? undefined : getReplyToMid(message);
+  const quoted = replyToMid ? threadMessages.find((m) => m.messageId === replyToMid) : undefined;
   return (
     <React.Fragment key={message?.id}>
       {showDate && (
@@ -240,6 +245,12 @@ const MessageItem = ({
       >
         {/* Revoked on WhatsApp: the row and its body are kept, only the content
             is withheld — the placeholder still sits in the timeline. */}
+        {replyToMid ? (
+          <QuotedMessage
+            quoted={quoted}
+            author={quoted ? getMessageAuthor(quoted, selectedContact) : null}
+          />
+        ) : null}
         {message?.deletedAt ? <DeletedMessage /> : <SingleMessage message={message} />}
       </WaInboxSingleMessageLayout>
     </React.Fragment>

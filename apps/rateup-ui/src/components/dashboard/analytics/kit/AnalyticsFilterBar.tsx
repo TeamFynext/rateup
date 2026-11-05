@@ -1,5 +1,6 @@
 import { IconFileTypePdf, IconLoader2, IconRefresh } from "@tabler/icons-react";
 import { useIsFetching, useQueryClient } from "@tanstack/react-query";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import { endFreshAnalytics, requestFreshAnalytics } from "@/backend/analytics/analyticsFilter";
@@ -26,6 +27,7 @@ export function AnalyticsFilterBar({
   show,
   onExportPdf,
   isExporting = false,
+  controls,
 }: Readonly<{
   filters: AnalyticsFilters;
   onChange: (filters: AnalyticsFilters) => void;
@@ -33,6 +35,8 @@ export function AnalyticsFilterBar({
   /** Builds a report from the data; absent on views that have nothing to report. */
   onExportPdf?: () => void;
   isExporting?: boolean;
+  /** A view's own controls (the Instagram account and range), shown where the filters go. */
+  controls?: ReactNode;
 }>) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -47,7 +51,7 @@ export function AnalyticsFilterBar({
       .finally(endFreshAnalytics);
   }
 
-  const hasFilters = show.dateRange || show.team || show.channelType;
+  const hasFilters = show.dateRange || show.team || show.channelType || Boolean(controls);
 
   return (
     <AnalyticsToolbar>
@@ -72,6 +76,7 @@ export function AnalyticsFilterBar({
           className="w-full sm:w-48"
         />
       )}
+      {controls}
       {!hasFilters && (
         <span className="text-sm text-muted-foreground">
           {t("Shows all activity, newest first")}

@@ -1,4 +1,5 @@
 import {
+  IconArrowBackUp,
   IconBolt,
   IconAlertCircle,
   IconArchive,
@@ -18,6 +19,7 @@ import {
 } from "@tabler/icons-react";
 import type { EmojiClickData } from "emoji-picker-react";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import type { CallLogEntry } from "@/backend/whatsapp/calling/calling.api";
@@ -48,8 +50,14 @@ import { useContactsStore } from "@/store/inbox.store.ts";
 import { MessagePlatform, NOT_SPAM_EVENT, WaMessageAssignStatus } from "@/types/enums.ts";
 import type { WaReceiveMessageBody } from "@/types/global";
 import { formatDateWithRelativeTime, formatToCustomTime } from "@/utils/dateTime.ts";
-import { getContactPlatform, isMetaAiMessage } from "@/utils/whatsapp/inbox.ts";
+import {
+  getContactPlatform,
+  getMessageAuthor,
+  getMessagePreview,
+  isMetaAiMessage,
+} from "@/utils/whatsapp/inbox.ts";
 
+import { useReplyTargetStore } from "../../../chatdisplayFooter/replyTargetStore.ts";
 import NoteBubble from "./NoteBubble.tsx";
 
 interface Props {
@@ -160,6 +168,7 @@ function getCallIcon(call: CallLogEntry): React.ReactNode {
 
 export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
   const { exchangeProcess, messageObject, reaction } = props;
+  const { t: translations } = useTranslation();
   const { user } = useUser();
   const { selectedContact } = useContactsStore();
   const currentUser = selectedContact?.assignedUsers?.find((c) => c.id === user?.userId);
@@ -269,6 +278,56 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
     </TooltipProvider>
   );
 
+  // Instagram inline reply: quote this message in the next send. Needs Meta's id
+  // for it, which an optimistic copy does not have yet.
+  const replyMid =
+    !isDeleted && messageObject?.sourcePlatform === MessagePlatform.INSTAGRAM
+      ? messageObject.messageId
+      : undefined;
+  const replyAction = replyMid ? (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <Button
+            aria-label={translations("Reply")}
+            variant="ghost"
+            size="icon"
+            className="size-8"
+            onClick={() =>
+              useReplyTargetStore.getState().setTarget({
+                mid: replyMid,
+                preview: getMessagePreview(messageObject),
+                author: getMessageAuthor(messageObject, selectedContact),
+              })
+            }
+          />
+        }
+      >
+        <IconArrowBackUp size={16} />
+      </TooltipTrigger>
+      <TooltipContent side="right">{translations("Reply")}</TooltipContent>
+    </Tooltip>
+  ) : null;
+
+  // The customer changed the text after sending it (Instagram).
+  const editedLabel = messageObject?.editedAt ? (
+    <Tooltip>
+      <TooltipTrigger
+        render={<span className="cursor-default italic" />}
+        aria-label={translations("Edited {time}", {
+          time: formatDateWithRelativeTime(messageObject.editedAt),
+        })}
+      >
+        {translations("edited")}
+      </TooltipTrigger>
+      <TooltipContent>
+        {translations("Edited {time}", {
+          time: formatDateWithRelativeTime(messageObject.editedAt),
+        })}
+      </TooltipContent>
+    </Tooltip>
+  ) : null;
+
   /* ---------------------------------------------------------------- system */
   // Assign / close / spam events: a single centered badge rather than a full-width
   // separator, so status changes read as inline events in the timeline.
@@ -334,7 +393,9 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
           </Bubble>
           <MessageFooter>
             {sourceTag}
+            {replyAction}
             {copyAction}
+            {editedLabel}
             {timestampNode}
             {messageObject.stats && getLatestStatusIcon(messageObject?.stats)}
           </MessageFooter>
@@ -364,7 +425,9 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
           </Bubble>
           <MessageFooter>
             {sourceTag}
+            {replyAction}
             {copyAction}
+            {editedLabel}
             {timestampWithStats}
             {messageObject.stats && getLatestStatusIcon(messageObject?.stats)}
           </MessageFooter>
@@ -409,7 +472,9 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
         </Bubble>
         <MessageFooter>
           {timestampNode}
+          {editedLabel}
           {!isDeleted && <PopoverEmojiPicker onEmojiClick={sendReaction} />}
+          {replyAction}
           {copyAction}
           {sourceTag}
         </MessageFooter>

@@ -225,6 +225,34 @@ export const useChatSocket = () => {
             }
 
             break;
+          case "message_edited": {
+            // The customer edited an Instagram message: the server sends the whole
+            // updated row (new text in the body, the old ones in `editHistory`), and
+            // every cached copy takes it, as with a deletion.
+            const edited = data?.message_edited;
+            const row = edited?.message;
+            if (!edited?.messageId || !row?.messageBody) break;
+            messageStore.patchMessageEverywhere(edited.messageId, {
+              messageBody: row.messageBody,
+              editedAt: edited.editedAt ?? row.editedAt,
+            });
+            const editedRowKey = edited.conversationId ?? edited.contactId;
+            if (editedRowKey && row.waCreatedAt) {
+              updateContactById(editedRowKey, (contact) =>
+                contact?.lastMessage?.waCreatedAt === row.waCreatedAt
+                  ? {
+                      ...contact,
+                      lastMessage: {
+                        ...contact.lastMessage,
+                        messageBody: row.messageBody,
+                        editedAt: edited.editedAt ?? row.editedAt,
+                      },
+                    }
+                  : contact,
+              );
+            }
+            break;
+          }
           case "inbox_typing":
             // A teammate started or stopped a reply; the composer shows who.
             if (data?.inbox_typing?.contactId) useTypingStore.getState().receive(data.inbox_typing);

@@ -25,11 +25,14 @@ import {
   getContactPlatform,
   isInboxSessionExpired,
 } from "@/utils/whatsapp/inbox.ts";
+import { contactMessagingWindow } from "@/utils/whatsapp/messagingWindow.ts";
 
 import { getSoucePlatformIconAndColor } from "../../util.tsx";
 import CloseTicketMenu from "./CloseTicketMenu.tsx";
 import ConversationHistoryStrip from "./ConversationHistoryStrip.tsx";
 import WaInboxCountdownTimer from "./countDown/index.tsx";
+import MetaWindowCountdown, { useMinuteClock } from "./countDown/MetaWindowCountdown.tsx";
+import InstagramModerationMenu from "./InstagramModerationMenu.tsx";
 import MetaAgentThreadBadge from "./MetaAgentThreadBadge.tsx";
 import { deriveStatus, STATUS_PILL_BASE } from "./ticket.ts";
 import TicketSubBar from "./TicketSubBar.tsx";
@@ -67,7 +70,12 @@ export default function WaInboxChatDisplayHeader({
 
   const platform = getContactPlatform(contact);
 
-  const isSessionExpired = isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp);
+  const now = useMinuteClock();
+  // Instagram/Messenger: up to 7 days for a person, not WhatsApp's 24 h session.
+  const metaWindow = contact ? contactMessagingWindow(contact, platform, now) : null;
+  const isSessionExpired = metaWindow
+    ? metaWindow.state === "closed"
+    : isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp);
 
   const sourcePlatform = getSoucePlatformIconAndColor(platform);
 
@@ -173,7 +181,11 @@ export default function WaInboxChatDisplayHeader({
               spare. */}
           <div className="flex h-8 min-w-0 flex-1 flex-wrap content-start items-center justify-end gap-x-2 gap-y-2 overflow-hidden">
             <div className="flex h-8 items-center">
-              <WaInboxCountdownTimer timeStamp={contact?.lastReceivedMessageTimeStamp} />
+              {metaWindow ? (
+                <MetaWindowCountdown win={metaWindow} now={now} />
+              ) : (
+                <WaInboxCountdownTimer timeStamp={contact?.lastReceivedMessageTimeStamp} />
+              )}
             </div>
             <div className="flex h-8 items-center">
               <span className={cn(STATUS_PILL_BASE, "px-2.5 py-1.25 text-xs", status.className)}>
@@ -239,6 +251,9 @@ export default function WaInboxChatDisplayHeader({
               />
             )}
             {platform === MessagePlatform.WHATSAPP && <CallContactButton contact={contact} />}
+            {platform === MessagePlatform.INSTAGRAM && (
+              <InstagramModerationMenu contact={contact} />
+            )}
             <CloseTicketMenu contact={contact} />
             {onToggleContextPanel && (
               <CustomTooltip

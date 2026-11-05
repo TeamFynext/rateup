@@ -742,6 +742,42 @@ interface WaInteractiveMessageAction {
 }
 
 // instagram
+/**
+ * An attachment on an inbound Instagram DM. `ig_post` / `ig_reel` are what a shared
+ * post or reel arrives as; `share` is the legacy spelling Meta is retiring (2026).
+ */
+export interface InstagramInboundAttachment {
+  type:
+    | "image"
+    | "video"
+    | "audio"
+    | "file"
+    | "sticker"
+    | "reel"
+    | "ig_reel"
+    | "ig_post"
+    | "share"
+    | "story_mention"
+    // A view-once photo or video; the payload url is not retrievable.
+    | "ephemeral"
+    // Seen in the wild or in Meta's tables but with no reliable payload; shown as a plain card.
+    | "story"
+    | "ig_story"
+    | "media"
+    | "fallback";
+  payload: {
+    url?: string;
+    /** Messenger's name for a shared post's media id. */
+    id?: string;
+    /** ig_post / ig_reel: the title (caption) Meta sends with a shared post. */
+    title?: string;
+    /** ig_post / ig_reel: the shared media's id. */
+    ig_post_media_id?: string;
+    /** reel (legacy): the reel's video id. */
+    reel_video_id?: string;
+  };
+}
+
 export interface InstagramWebhookBody {
   object: "instagram";
   entry: [
@@ -764,24 +800,7 @@ export interface InstagramWebhookBody {
             media_id?: string; // The post/reel/live media the comment was on
             /** Public instagram.com URL of that media, resolved when the comment arrived. */
             media_permalink?: string;
-            attachments?: [
-              // Included when a customer sends multiple media attachments or a URL for a story mention or share
-              {
-                type:
-                  | "image"
-                  | "video"
-                  | "audio"
-                  | "file"
-                  | "sticker"
-                  | "reel"
-                  | "ig_reel"
-                  | "share"
-                  | "story_mention"
-                  // A view-once photo or video; the payload url is not retrievable.
-                  | "ephemeral";
-                payload: { url: string };
-              },
-            ];
+            attachments?: InstagramInboundAttachment[];
             is_deleted?: boolean; // Included when a customer deletes a message
 
             is_echo?: boolean; // Included when your business sends a message to the customer
@@ -813,18 +832,26 @@ export interface InstagramWebhookBody {
               };
             };
 
+            /**
+             * An inline reply to one of the thread's messages (`mid`), or a reply to one of
+             * the business's stories (`story`).
+             */
             reply_to?: {
-              // Included when a customer sends an inline reply
-              mid: string;
-            };
-
-            reply_to?: {
-              // Included when a customer replies to a story
-              story: {
-                url: string; // CDN-URL
+              mid?: string;
+              story?: {
                 id: string;
+                /** CDN URL of the story media; expires with the story. */
+                url?: string;
+                /** The story's link sticker, when it had one. */
+                link_sticker_url?: string;
               };
             };
+          };
+          /** The customer edited a message they sent (the `message_edit` webhook field). */
+          message_edit?: {
+            mid: string;
+            text?: string;
+            num_edit?: number;
           };
           reaction?: {
             mid: string;
@@ -859,6 +886,11 @@ export interface IgSendMessageBody {
   recipient: {
     id: string;
   };
+  /** Set by the send path for agent replies: RESPONSE inside 24 h, MESSAGE_TAG after. */
+  messaging_type?: "RESPONSE" | "UPDATE" | "MESSAGE_TAG";
+  tag?: "HUMAN_AGENT";
+  /** Quote one of the thread's messages (Instagram inline reply). */
+  reply_to?: { mid: string };
   message?: {
     text?: string;
     attachment?: {
@@ -875,8 +907,13 @@ export interface IgSendMessageBody {
       };
       is_reusable?: boolean;
     };
+    /** Several images in one message. */
+    attachments?: Array<{
+      type: "image";
+      payload: { attachment_id?: string; url?: string };
+    }>;
   };
-  sender_action?: "react" | "unreact";
+  sender_action?: "react" | "unreact" | "typing_on" | "typing_off" | "mark_seen";
   payload?: {
     message_id: string;
     reaction?: string;
@@ -893,6 +930,9 @@ export interface WaInboxMessage {
   receive?: WaReceiveMessageBody | IgReceiveMessageBody | null;
   internal?: WaInternalMessageBody;
   privateNote?: WaPrivateMessageBody;
+  /** Instagram edits: the texts the message had before, oldest first. */
+  editHistory?: Array<{ text: string | null; editedAt: string }>;
+  editCount?: number;
 }
 
 export interface WaTemplateFetchBody {
@@ -1178,7 +1218,12 @@ export interface CampaignDripStage {
 
 // type for org websocket messages
 export interface orgWsMessage {
-  type: "inbox" | "message_status_update" | "message_deleted" | "meta_agent_thread";
+  type:
+    | "inbox"
+    | "message_status_update"
+    | "message_deleted"
+    | "message_edited"
+    | "meta_agent_thread";
   inbox?: {
     contact: ContactsData;
     message: WaGetMessagesBody;
@@ -1199,6 +1244,14 @@ export interface orgWsMessage {
     deletedAt: string;
     /** Identifies the message inside the inbox row's last-message preview. */
     waCreatedAt?: string | null;
+  };
+  /** The customer edited a message (Instagram): `message` is the whole updated row. */
+  message_edited?: {
+    messageId: string;
+    contactId: string;
+    conversationId?: string | null;
+    editedAt: string;
+    message: WaGetMessagesBody;
   };
   /** Who now holds a contact's thread under Meta AI thread control. */
   meta_agent_thread?: {

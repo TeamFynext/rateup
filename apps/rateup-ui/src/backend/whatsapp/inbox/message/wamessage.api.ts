@@ -60,6 +60,8 @@ export interface WaGetMessagesBody {
   // Set when the sender deleted the message on WhatsApp. The body is still here,
   // but the thread shows it as deleted instead of rendering it.
   deletedAt?: string | null;
+  /** Set when the customer edited the message (Instagram); the body holds the edited text. */
+  editedAt?: string | null;
   // What produced the message: INBOX, TEMPLATE, CAMPAIGN, AUTOMATED, FLOW, …
   // Free text on the API side; older rows may be lowercase or null.
   sourceMessage?: string | null;
@@ -157,6 +159,19 @@ export type ContactsWithLastMessage = ContactsData & {
    */
   isSpam?: boolean;
   spamMarkedAt?: string | null;
+  /** When the business blocked this person on Instagram. Replies are refused while set. */
+  igBlockedAt?: string | null;
+  /** Instagram/Messenger: a click-to-Direct ad keeps the thread open until this time. */
+  adThreadUntil?: string | null;
+  /**
+   * Instagram/Messenger reply window as the API saw it (null elsewhere). The web client
+   * recomputes it live (`contactMessagingWindow`); this is for clients that cannot.
+   */
+  messagingWindow?: {
+    state: "open" | "human_agent" | "closed";
+    openUntil: string | null;
+    closesAt: string | null;
+  } | null;
   /** Unseen @mentions for the current user on this ticket. */
   mentionCount?: number;
   /** Sibling tickets for the same contact — drives the thread's history strip. */
@@ -385,6 +400,20 @@ export async function setContactSpam(data: {
     success: boolean;
     isSpam: boolean;
   };
+}
+
+export type InstagramModerationAction = "block" | "unblock" | "spam";
+
+/**
+ * Block, unblock or move to spam on Instagram itself (Meta's Moderate Conversations API).
+ * "spam" also marks the contact spam here, like `setContactSpam`.
+ */
+export async function moderateInstagramContact(
+  contactId: string,
+  action: InstagramModerationAction,
+) {
+  return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/${contactId}/instagram/${action}`))
+    .data as { igBlockedAt: string | null; isSpam: boolean };
 }
 
 /**

@@ -12,12 +12,17 @@ import { AnalyticsHeader } from "./kit/AnalyticsHeader.tsx";
 import type { AnalyticsFilters } from "./kit/filters.ts";
 import { exportAnalyticsReport } from "./report/exportReport.ts";
 import { ConversationsView } from "./views/ConversationsView.tsx";
+import {
+  type InstagramSelection,
+  InstagramFilters,
+  InstagramView,
+} from "./views/InstagramView.tsx";
 import { LogsView } from "./views/LogsView.tsx";
 import { MessagesView } from "./views/MessagesView.tsx";
 import { OverviewView } from "./views/OverviewView.tsx";
 
 /**
- * `/dashboard/analytics`: four views under one filter bar. The filters live here, above
+ * `/dashboard/analytics`: five views under one filter bar. The filters live here, above
  * the views, so moving between views keeps the range and team that were picked.
  */
 export function Analytics() {
@@ -33,6 +38,9 @@ export function Analytics() {
     teamId: "all",
     apiType: "all",
   }));
+  // Instagram reads Graph's own windows (7/30/90 days), not the section's date range.
+  const [instagram, setInstagram] = useState<InstagramSelection>({ range: "30d" });
+  const hasReport = tab !== "message-log" && tab !== "instagram";
 
   const headings: Record<AnalyticsTab, { title: string; description: string }> = {
     overview: {
@@ -51,11 +59,17 @@ export function Analytics() {
       title: t("Message log"),
       description: t("Every message sent, with its status and where it came from"),
     },
+    instagram: {
+      title: t("Instagram"),
+      description: t(
+        "Reach of your Instagram account, and which posts bring in DMs, leads and orders",
+      ),
+    },
   };
   const heading = headings[tab];
 
   async function exportPdf() {
-    if (tab === "message-log") return;
+    if (tab === "message-log" || tab === "instagram") return;
     setIsExporting(true);
     try {
       await exportAnalyticsReport(queryClient, tab, filters);
@@ -74,12 +88,17 @@ export function Analytics() {
         filters={filters}
         onChange={setFilters}
         show={{
-          dateRange: true,
-          team: true,
+          dateRange: tab !== "instagram",
+          team: tab !== "instagram",
           channelType: tab === "overview" || tab === "template-delivery",
         }}
-        onExportPdf={tab === "message-log" ? undefined : exportPdf}
+        onExportPdf={hasReport ? exportPdf : undefined}
         isExporting={isExporting}
+        controls={
+          tab === "instagram" ? (
+            <InstagramFilters value={instagram} onChange={setInstagram} />
+          ) : undefined
+        }
       />
       <div className="pt-1">
         {tab === "overview" && <OverviewView filters={filters} />}
@@ -92,6 +111,7 @@ export function Analytics() {
         )}
         {tab === "template-delivery" && <MessagesView filters={filters} />}
         {tab === "message-log" && <LogsView filters={filters} />}
+        {tab === "instagram" && <InstagramView selection={instagram} />}
       </div>
     </div>
   );

@@ -1,6 +1,9 @@
 import {
+  IconArrowBackUp,
   IconBan,
   IconBolt,
+  IconClock,
+  IconX,
   IconExclamationCircle,
   IconMessage,
   IconMessagePlus,
@@ -26,6 +29,7 @@ import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import {
   useAssignOwner,
   useCreatePrivateMessage,
+  useModerateInstagramContact,
   useSendNewWaMessage,
   useSetContactSpam,
   useUnBlockWhatsAppUser,
@@ -65,12 +69,16 @@ import {
   isInboxSessionExpired,
   returnMessageContentBasedOnParsedMessage,
 } from "@/utils/whatsapp/inbox.ts";
+import type { MessagingWindow } from "@/utils/whatsapp/messagingWindow.ts";
+import { contactMessagingWindow, timeLeft } from "@/utils/whatsapp/messagingWindow.ts";
 
 import { usePhoneIdStore } from "../../chatselect/accountSelectorStore.ts";
 import { generateInternalMessageId } from "../../util.tsx";
+import { useMinuteClock } from "../chatdisplayHeader/countDown/MetaWindowCountdown.tsx";
 import { isTicketClosed } from "../chatdisplayHeader/ticket.ts";
 import { type ComposerTab, useComposerTabStore } from "./composerTabStore.ts";
 import WaInboxFooterMenu from "./footerMenu/index.tsx";
+import { type ReplyTarget, useReplyTargetStore } from "./replyTargetStore.ts";
 import WaInboxTemplateDisplayModal from "./templateDisplayModal/index.tsx";
 
 // Mirrors WaTextEditor's default CharacterCount limit so the footer count and the
@@ -132,6 +140,10 @@ export default function WaInboxChatDisplayFooter({
     getRowKey(contact),
   );
   const createPrivateMessage = useCreatePrivateMessage(contact.id);
+  // Instagram's inline reply: the message a bubble's "Reply" picked, sent as `replyToMid`.
+  const replyTarget = useReplyTargetStore((s) => s.target);
+  const clearReplyTarget = useReplyTargetStore((s) => s.clear);
+  const quotedReply = platform === MessagePlatform.INSTAGRAM ? replyTarget : null;
   const { media, resetMedia } = useMediaStore();
   const { isRecording, audioUrl, setAudioUrl } = useVoiceRecordStore();
   const { body, setBody, resetBody } = useMessageBodyStore();
@@ -226,10 +238,12 @@ export default function WaInboxChatDisplayFooter({
       media: media.length ? media : body.media || [],
       contacts: body.contacts,
       location: body.location,
+      ...(quotedReply && { replyToMid: quotedReply.mid }),
     };
     resetBody();
     resetMedia();
     setAudioUrl(null);
+    clearReplyTarget();
     agentTyping.onSent();
     sendnewWaMessage.mutate({
       ...values,
@@ -368,9 +382,13 @@ export default function WaInboxChatDisplayFooter({
     );
   }
 
-  const isSessionExpired =
-    platform !== MessagePlatform.WEBCHAT &&
-    isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp);
+  const now = useMinuteClock();
+  // Instagram/Messenger: a person may reply for 7 days (Human Agent tag), not 24 h.
+  const metaWindow = contactMessagingWindow(contact, platform, now);
+  const isSessionExpired = metaWindow
+    ? metaWindow.state === "closed"
+    : platform !== MessagePlatform.WEBCHAT &&
+      isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp);
   // Past the 24h window only a template reaches the customer; a note still works.
   const isNoteMode = activeTab === "private" || isSessionExpired;
   // Replies only: a note is not for the customer, and teammates see it land.
@@ -547,6 +565,10 @@ export default function WaInboxChatDisplayFooter({
             </Button>
           </Alert>
         )}
+        {metaWindow && <MetaWindowHint win={metaWindow} now={now} />}
+        {!isNoteMode && quotedReply && (
+          <ReplyQuoteStrip target={quotedReply} onDismiss={clearReplyTarget} />
+        )}
         {composer}
         <p className="hidden px-2 text-[11px] text-muted-foreground sm:block">
           {translations("Enter to send · Shift + Enter for a new line")}
@@ -640,9 +662,11 @@ export const WaInboxAssignUserFooter = ({
   const isClosed = isTicketClosed(contact);
   const closedAt = contact?.ticketClosedAt ?? contact?.closedAt;
   const platform = getContactPlatform(contact);
-  const sessionOpen =
-    platform === MessagePlatform.WEBCHAT ||
-    !isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp);
+  const metaWindow = contactMessagingWindow(contact, platform);
+  const sessionOpen = metaWindow
+    ? metaWindow.state !== "closed"
+    : platform === MessagePlatform.WEBCHAT ||
+      !isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp);
 
   return (
     <Alert
@@ -663,9 +687,15 @@ export const WaInboxAssignUserFooter = ({
               </span>
             )}
             .{" "}
-            {sessionOpen
-              ? t("Their 24-hour window is still open, so you can message them straight away.")
-              : t("Start a new conversation with a template.")}
+            {metaWindow
+              ? sessionOpen
+                ? t("Their reply window is still open, so you can message them straight away.")
+                : t(
+                    "Their reply window has closed. You can message them again once they write to you.",
+                  )
+              : sessionOpen
+                ? t("Their 24-hour window is still open, so you can message them straight away.")
+                : t("Start a new conversation with a template.")}
           </>
         ) : (
           t("This conversation is new and unassigned.")
@@ -745,6 +775,31 @@ export const WaInboxBlockedContactFooter = ({ contact }: { contact: ContactWithU
         loading={unblockMut.isPending}
       >
         <span className="text-xs font-bold">Unblock contact</span>
+      </Button>
+    </Alert>
+  );
+};
+
+/** Blocked on Instagram from here: no replies until they are unblocked. */
+export const InstagramBlockedContactFooter = ({
+  contact,
+}: Readonly<{ contact: ContactWithUpdatedAt }>) => {
+  const { t } = useTranslation();
+  const moderate = useModerateInstagramContact();
+  return (
+    <Alert className="flex! shrink-0 flex-wrap items-center gap-3 rounded-none border-x-0 border-t border-b-0 border-border bg-amber-50 px-3 py-2.5 sm:px-6 dark:bg-amber-950/40">
+      <IconBan className="size-4 shrink-0 text-amber-700 dark:text-amber-500" />
+      <AlertTitle className="flex-1 text-[13px] font-semibold text-amber-700 dark:text-amber-500">
+        {t("You blocked this person on Instagram.")}
+      </AlertTitle>
+      <Button
+        size="sm"
+        variant="outline"
+        className="h-8 shrink-0"
+        onClick={() => moderate.mutate({ contactId: contact.id, action: "unblock" })}
+        loading={moderate.isPending}
+      >
+        <span className="text-xs font-bold">{t("Unblock on Instagram")}</span>
       </Button>
     </Alert>
   );
@@ -867,6 +922,83 @@ interface MessageBody {
     name?: string;
     address?: string;
   } | null;
+}
+
+/**
+ * Instagram/Messenger: how long the agent can still reply, and why the composer is
+ * note-only once Meta's 7-day limit has passed.
+ */
+function MetaWindowHint({ win, now }: Readonly<{ win: MessagingWindow; now: Date }>) {
+  const { t } = useTranslation();
+  if (win.state === "closed") {
+    return (
+      <Alert className="flex! items-start gap-2 border-amber-300 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-950/30">
+        <IconClock className="mt-0.5 size-4 shrink-0 text-amber-700 dark:text-amber-400" />
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <AlertTitle className="text-sm font-medium text-amber-700 dark:text-amber-400">
+            {t("Reply window closed")}
+          </AlertTitle>
+          <AlertDescription className="text-xs">
+            {t(
+              "Meta allows replies for 7 days after the customer's last message. You can message them again once they write to you. Notes still work.",
+            )}
+          </AlertDescription>
+        </div>
+      </Alert>
+    );
+  }
+  if (!win.closesAt) return null;
+  const { days, hours } = timeLeft(win.closesAt, now);
+  const left =
+    days > 0
+      ? t("{days, plural, one {# day} other {# days}}", { days })
+      : t("{hours, plural, one {# hour} other {# hours}}", { hours: Math.max(hours, 1) });
+  return (
+    <p
+      className={cn(
+        "flex items-center gap-1.5 px-1 text-xs",
+        win.state === "open" ? "text-muted-foreground" : "text-amber-700 dark:text-amber-400",
+      )}
+    >
+      <IconClock className="size-3.5 shrink-0" />
+      {win.state === "open"
+        ? t("Window closes in {left}", { left })
+        : t(
+            "Window closes in {left}. Over 24 hours since their last message, so only a person can reply.",
+            {
+              left,
+            },
+          )}
+    </p>
+  );
+}
+
+/** The quoted message an Instagram reply will carry, with a way to drop it. */
+function ReplyQuoteStrip({
+  target,
+  onDismiss,
+}: Readonly<{ target: ReplyTarget; onDismiss: () => void }>) {
+  const { t } = useTranslation();
+  return (
+    <div className="flex items-center gap-2 rounded-md border-l-2 border-primary bg-muted px-2 py-1.5">
+      <IconArrowBackUp className="size-4 shrink-0 text-primary" />
+      <div className="flex min-w-0 flex-1 flex-col">
+        <span className="text-xs font-semibold text-primary">
+          {target.author ? t("Replying to {name}", { name: target.author }) : t("Replying")}
+        </span>
+        <span className="truncate text-xs text-muted-foreground">{target.preview}</span>
+      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        aria-label={t("Cancel reply")}
+        onClick={onDismiss}
+      >
+        <IconX className="size-4" />
+      </Button>
+    </div>
+  );
 }
 
 /** "Priya is typing…" for teammates replying in this thread. */

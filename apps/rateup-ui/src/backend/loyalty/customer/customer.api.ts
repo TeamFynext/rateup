@@ -28,6 +28,8 @@ type CreateLoyaltyCustomerInput = Partial<Omit<LoyaltyCustomer, "id" | "dob">> &
   referCode?: string;
   /** Honeypot on the public form; see RegisterPage. */
   website?: string;
+  /** The Instagram mention whose join link (`?ig=`) brought the customer here. */
+  instagramMentionId?: string;
 };
 export async function createLoyaltyCustomer(
   lc: CreateLoyaltyCustomerInput & { isPublic?: boolean },

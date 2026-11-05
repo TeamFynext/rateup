@@ -42,6 +42,7 @@ export const PLAIN_TRIGGERS: Record<string, string> = {
   WOOCOMMERCE_EVENT: "A WooCommerce order changes status",
   INSTAGRAM_COMMENT: "Someone comments on your post",
   INSTAGRAM_STORY_MENTION: "Someone mentions you in a story",
+  INSTAGRAM_STORY_REPLY: "Someone replies to your story",
   INSTAGRAM_REFERRAL: "Someone opens your ig.me link",
   WHATSAPP_AD_REFERRAL: "Someone taps your click-to-WhatsApp ad",
   MESSENGER_REFERRAL: "Someone opens your m.me link",
