@@ -15,6 +15,7 @@ import { calculateGiveback, givebackBand } from "../giveback.js";
 import { buildGivebackInput, loadProgramGivebackSources } from "../giveback/giveback.service.js";
 import { joinButtonLabel } from "../loyaltyEventTemplates.js";
 import { toRichText } from "../richText.js";
+import { onlyPurchaseRules } from "../earningRules/triggerRules.js";
 import {
   reevaluateProgramTiers,
   type ProgramTierMoves,
@@ -136,6 +137,7 @@ export async function getOnboardingState(orgId: string) {
         },
       }),
     ]);
+  const purchaseRules = onlyPurchaseRules(rules);
 
   return {
     program,
@@ -143,7 +145,9 @@ export async function getOnboardingState(orgId: string) {
     lastCompletedStep: program.onboardingStep,
     saved: {
       tiers: program.tiers,
-      rules,
+      // Purchase rules only: the Instagram-mention rule has its own editor, and shown here
+      // it would be re-saved as a purchase rule (or deleted by `deleteMissing`).
+      rules: purchaseRules,
       rewards,
       commands,
       triggers: triggers.map(({ waTemplate, ...trigger }) => {
@@ -157,7 +161,7 @@ export async function getOnboardingState(orgId: string) {
     },
     counts: {
       tiers: program.tiers.length,
-      rules: rules.length,
+      rules: purchaseRules.length,
       rewards: rewards.length,
       commands: commands.length,
       triggers: triggers.length,
@@ -286,10 +290,13 @@ export async function applyEarningStep(orgId: string, input: EarningStepInput) {
   const program = await requireProgram(orgId);
 
   await prisma.$transaction(async (tx) => {
-    const existing = await tx.loyaltyEarningRule.findMany({
-      where: { programId: program.id },
-      select: { id: true, name: true },
-    });
+    // Purchase rules only, so `deleteMissing` cannot take the Instagram-mention rule with it.
+    const existing = onlyPurchaseRules(
+      await tx.loyaltyEarningRule.findMany({
+        where: { programId: program.id },
+        select: { id: true, name: true, conditions: true },
+      }),
+    );
     const existingIds = new Set(existing.map((r) => r.id));
     const byName = new Map(existing.map((r) => [r.name.trim().toLowerCase(), r.id]));
     const keptIds = new Set<string>();
@@ -371,10 +378,12 @@ export async function applyEarningStep(orgId: string, input: EarningStepInput) {
   });
   void bustLoyaltyProgramSummary(orgId);
 
-  return await prisma.loyaltyEarningRule.findMany({
-    where: { programId: program.id },
-    orderBy: { priority: "desc" },
-  });
+  return onlyPurchaseRules(
+    await prisma.loyaltyEarningRule.findMany({
+      where: { programId: program.id },
+      orderBy: { priority: "desc" },
+    }),
+  );
 }
 
 /* ── step: tiers ────────────────────────────────────────────────────────────── */

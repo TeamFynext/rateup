@@ -37,8 +37,8 @@ const BLOCK_SUPPORT: Record<string, readonly ChatbotPlatform[]> = {
   textInputNode: ALL,
 
   buttonNode: WHATSAPP_ONLY,
-  // Messenger sends a file attachment; Instagram has no files.
-  documentNode: [PlatformType.WHATSAPP, PlatformType.FACEBOOK],
+  // Instagram and Messenger send it as a file attachment (PDF only on Instagram).
+  documentNode: ALL,
   listNode: WHATSAPP_ONLY,
   ctaUrlNode: WHATSAPP_ONLY,
   templateNode: WHATSAPP_ONLY,

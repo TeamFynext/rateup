@@ -11,6 +11,14 @@ import { enqueueWaMessageRecord } from "../../../workers/bullmq/queues/whatsapp.
 import { assertCampaignCredit, assertCanMessageContact } from "../whatsappSurvey/wasurvey.auth.js";
 import { getMetaChannel, type MetaChannelContext, type MetaCredentials } from "./metaChannels.js";
 import { getSentMessageId, markMessageSent } from "./sendIdempotency.js";
+import {
+  gateSendApiMessage,
+  HUMAN_AGENT_REFUSED_MESSAGE,
+  isHumanAgentTagRefused,
+  isOutsideWindowError,
+  MetaSendRefusedError,
+  OUTSIDE_WINDOW_MESSAGE,
+} from "./sendWindow.js";
 
 /**
  * The one way a message leaves this system for Meta.
@@ -87,6 +95,8 @@ export interface MetaSendResult {
   replayed?: boolean;
   /** Human-readable reason, suitable for showing to an agent. */
   error?: string;
+  /** Refused before Meta was called: the person is blocked, or the window is closed. */
+  refused?: MetaSendRefusedError["reason"];
   detail?: WaGraphApiErrorDetail;
   recipientId?: string;
 }
@@ -99,6 +109,9 @@ export interface MetaSendResult {
  * fields that vary by failure), hence the narrowing.
  */
 export function metaErrorMessage(detail: WaGraphApiErrorDetail | undefined): string {
+  // Meta's own copy for these says nothing about what the agent can do next.
+  if (isOutsideWindowError(detail)) return OUTSIDE_WINDOW_MESSAGE;
+  if (isHumanAgentTagRefused(detail)) return HUMAN_AGENT_REFUSED_MESSAGE;
   const userMessage =
     typeof detail?.error_user_msg === "string" ? detail.error_user_msg : undefined;
   return (
@@ -120,7 +133,6 @@ export async function sendMetaMessage(input: MetaSendInput): Promise<MetaSendRes
     platform,
     orgId,
     to,
-    payload,
     category,
     userName,
     userId,
@@ -142,6 +154,29 @@ export async function sendMetaMessage(input: MetaSendInput): Promise<MetaSendRes
   // Read before the plan check, which spends a campaign credit: a rerun of a
   // message that already went out must not pay for it twice either.
   const priorMessageId = idempotencyKey ? await getSentMessageId(idempotencyKey) : null;
+
+  // Instagram/Messenger: a blocked person or a closed window is refused here, before a
+  // credit is spent or Meta is called. Nothing is recorded — the message never existed.
+  // A human inbox reply also gets its `messaging_type` (and the Human Agent tag) here.
+  let payload = input.payload;
+  if (!priorMessageId) {
+    try {
+      payload = await gateSendApiMessage({
+        orgId,
+        platform,
+        to,
+        payload,
+        messageType,
+        userId,
+        isAutomated,
+      });
+    } catch (err) {
+      if (err instanceof MetaSendRefusedError) {
+        return { ok: false, error: err.message, refused: err.reason };
+      }
+      throw err;
+    }
+  }
 
   // Throws ActiveContactLimitError / CampaignCreditsExhaustedError, which callers turn
   // into a 4xx or a campaign pause. Not converted to a result: it is a quota decision,

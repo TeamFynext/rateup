@@ -9,6 +9,12 @@ import {
 } from "./earningRule.service.js";
 import { log } from "../../../utils/logger.js";
 import {
+  findInstagramMentionRule,
+  saveInstagramMentionRule,
+  toInstagramMentionConfig,
+} from "./triggerRules.js";
+import {
+  InstagramMentionRuleInput,
   LoyaltyEarningRuleInput,
   LoyaltyEarningRuleUpdateInput,
   RuleIdParam,
@@ -118,6 +124,37 @@ export async function deleteLoyaltyEarningRuleHandler(
     if (isRecordNotFound(e)) {
       return reply.code(404).send({ error: "Earning rule not found" });
     }
+    log.error(e);
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
+  }
+}
+
+/** The "Instagram mentions" earning option; the defaults when it was never saved. */
+export async function getInstagramMentionRuleHandler(request: FastifyRequest, reply: FastifyReply) {
+  try {
+    const program = await getLoyaltyProgramByOrg(request.user.orgId);
+    if (!program) {
+      return reply.code(200).send(toInstagramMentionConfig(null));
+    }
+    const rule = await findInstagramMentionRule(program.id);
+    reply.code(200).send(toInstagramMentionConfig(rule));
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
+  }
+}
+
+export async function saveInstagramMentionRuleHandler(
+  request: FastifyRequest<{ Body: InstagramMentionRuleInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const program = await getLoyaltyProgramByOrg(request.user.orgId);
+    if (!program) {
+      return reply.code(404).send({ error: "Loyalty program not found" });
+    }
+    reply.code(200).send(await saveInstagramMentionRule(program.id, request.body));
+  } catch (e) {
     log.error(e);
     reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }

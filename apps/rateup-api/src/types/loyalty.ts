@@ -143,7 +143,22 @@ export interface ChannelCondition {
   allowed_channels: ("online" | "in_store" | "mobile_app")[];
 }
 
+/** What a non-purchase rule is triggered by. A rule carrying one never prices a purchase. */
+export type LoyaltyEarningRuleTrigger = "instagram_mention";
+
+/** Which Instagram mentions an `instagram_mention` rule pays for (`InstagramMentionKind`). */
+export type InstagramMentionRuleKind = "STORY" | "MEDIA" | "COMMENT";
+
 export interface LoyaltyEarningRuleConditions {
+  /**
+   * Set on a rule that pays for something other than a purchase; `bonusPoints` is then the
+   * flat award. The purchase engine skips these rules, and the earning-rule list hides them.
+   */
+  trigger?: LoyaltyEarningRuleTrigger;
+  /** `instagram_mention` only: the mention kinds that earn. */
+  mentionKinds?: InstagramMentionRuleKind[];
+  /** `instagram_mention` only: days after an award before the same member earns again. */
+  cooldownDays?: number;
   locations?: LocationCondition;
   products?: ProductCondition;
   payment_methods?: PaymentMethodCondition;

@@ -57,6 +57,8 @@ const NewWaMessageBody = z.object({
     .optional(),
   whatsappSettingsPhoneId: z.string(),
   platform: z.string(),
+  /** Instagram only: Meta's id of the message being quoted. Ignored on other channels. */
+  replyToMid: z.string().max(512).optional(),
 });
 
 const privateNoteText = z.object({

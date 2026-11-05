@@ -904,9 +904,9 @@ describe("processNextMetaFlowNode - media and assignment", () => {
     expect(m.sendVideo).toHaveBeenCalledWith(IG, IGS_ID, ORG_ID, "https://cdn/vid-1", "Watch");
   });
 
-  test("skips a document on Instagram, which can't send files", async () => {
+  test("sends a document (PDF) on Instagram as a file attachment", async () => {
     await run(flow([{ id: "d1", type: "documentNode", data: { link: "doc-1" } }]), "d1");
-    expect(m.sendFile).not.toHaveBeenCalled();
+    expect(m.sendFile).toHaveBeenCalledWith(IG, IGS_ID, ORG_ID, "https://cdn/doc-1");
   });
 
   test("sends an audio node", async () => {

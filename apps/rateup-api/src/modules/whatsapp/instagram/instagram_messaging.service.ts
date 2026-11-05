@@ -215,7 +215,13 @@ export async function sendInstagramProductTemplate(
 }
 
 /**
- * Send a story reply via Instagram
+ * Answer a story mention or story reply.
+ *
+ * Instagram has no outbound "reply to a story" message: `story_mention` is a type
+ * Meta sends us, never one we can send, and the Send API takes `text` or an
+ * `attachment`, not both — the old payload combined the two and failed every time.
+ * The answer is a plain DM in the same thread, which Instagram already shows next
+ * to the story. `storyId` stays in the signature for the flowbot node and the log.
  */
 export async function sendInstagramStoryReply(
   igsId: string,
@@ -224,49 +230,9 @@ export async function sendInstagramStoryReply(
   orgId: string,
   ibaId: string,
 ): Promise<unknown> {
-  try {
-    const channel = await getInstagramChannel(ibaId, orgId);
-
-    if (!channel) {
-      throw new Error(`No Instagram settings found for organization ${orgId}`);
-    }
-
-    const { pageAccessToken } = channel;
-
-    const payload = {
-      recipient: {
-        id: igsId,
-      },
-      message: {
-        text: text,
-        attachment: {
-          type: "story_mention",
-          payload: {
-            id: storyId,
-          },
-        },
-      },
-    };
-
-    const result = await sendMetaMessage({
-      platform: PlatformType.INSTAGRAM,
-      orgId,
-      to: igsId,
-      sourceIdentifier: ibaId,
-      payload,
-      messageType: "AUTOMATED",
-      isAutomated: true,
-      enforcePlanLimits: true,
-    });
-    if (!result.ok) throw new Error(result.error);
-
-    log.info(`[Instagram Messaging] Sent story reply to igsId ${igsId} for story ${storyId}`);
-
-    return { message_id: result.messageId };
-  } catch (error) {
-    log.error({ err: error }, `[Instagram Messaging] Error sending story reply to ${igsId}`);
-    throw error;
-  }
+  const result = await sendSendApiText(instagram(ibaId), igsId, orgId, text);
+  log.info(`[Instagram Messaging] Sent story reply to igsId ${igsId} for story ${storyId}`);
+  return result;
 }
 
 /**

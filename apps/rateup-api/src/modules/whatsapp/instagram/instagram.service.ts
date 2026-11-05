@@ -10,6 +10,19 @@ import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 import { checkAndExecuteRuleByTriggerEvent } from "../automatedReply/wa_automatedReply.utils.js";
 import { handleMetaFlowUserResponse } from "../automatedReply/metaFlow.service.js";
 import { getInstagramChannel } from "../metaChannel/metaChannel.service.js";
+import { sendViaWstoOrgHandler } from "../../org/ws/org.ws.controller.js";
+import {
+  handleInstagramMentionChange,
+  linkPendingInstagramMentions,
+  recordInstagramStoryMention,
+} from "./instagram_mentions.service.js";
+
+/**
+ * How long a thread opened from a click-to-Instagram-Direct ad stays open past the
+ * usual 24 h. Meta's figure for ad threads (Messenger changelog 16 Sep 2025, partner
+ * reports for Instagram); the send path reads `Conversation.adThreadUntil`, not this.
+ */
+export const AD_THREAD_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
 export async function getIgUserDetailsFromMeta(igsId: string, ibaId: string) {
   const channel = await getInstagramChannel(ibaId);
@@ -68,6 +81,10 @@ export async function handleInstagramWebhook(
             log.error({ err: error, ibaId, event }, "[Instagram] Failed to handle comment");
             failed++;
           }
+        } else if (change.field === "mentions") {
+          // Tagged in a caption or a comment: loyalty points for mentions. Never throws.
+          await handleInstagramMentionChange(change.value, settings);
+          processed++;
         }
       }
     }
@@ -111,6 +128,9 @@ export async function handleInstagramWebhook(
             break;
           case InstagramEvent.MESSAGE_SEEN:
             await handleInstagramMessageSeen(currentEventData);
+            break;
+          case InstagramEvent.MESSAGE_EDIT:
+            await handleInstagramMessageEdit(messaging, settings);
             break;
           default:
             log.warn("Unhandled event: %s", event);
@@ -187,6 +207,9 @@ export async function handleInstagramComment(
     );
     // A redelivered comment: the first copy already ran the comment rules.
     if (stored === null) return;
+    if (stored?.conversationId && comment.media?.id) {
+      await attributeConversationToMedia(stored.conversationId, stored.id, comment.media.id);
+    }
   } catch (error) {
     log.error({ err: error }, `[Instagram] Error storing comment ${commentId}`);
   }
@@ -233,6 +256,8 @@ async function handleInstagramStoryMentionRule(
   );
   // Already stored by an earlier delivery, which ran the rules.
   if (stored === null) return;
+  // Loyalty points for the mention, keyed by the DM's mid. Never throws.
+  await recordInstagramStoryMention({ orgId, ibaId, igsId: sender.id, storyId: mid });
   try {
     const storyAttachment = messaging.message?.attachments?.find((a) => a.type === "story_mention");
     await checkAndExecuteRuleByTriggerEvent("INSTAGRAM_STORY_MENTION", {
@@ -307,6 +332,14 @@ export async function handleInstagramMessages(
   // A redelivery of a message already stored — and already answered.
   if (stored === null) return;
 
+  if (stored?.contactId) await linkMentionsWaitingForContact(orgId, stored.contactId);
+
+  // A thread opened from a click-to-Direct ad stays open longer than 24 h.
+  const referral = message.referral;
+  if (referral && "source" in referral && referral.source === "ADS" && stored?.conversationId) {
+    await openAdThreadWindow(stored.conversationId, data.entry[0].messaging[0].timestamp);
+  }
+
   if (message.quick_reply?.payload?.startsWith("shop_")) {
     if (await handleInstagramShopReply(message.quick_reply.payload, sender.id, waSettings)) return;
   }
@@ -325,6 +358,25 @@ export async function handleInstagramMessages(
   );
   if (answeredFlow) return;
 
+  // A reply to one of the business's stories: its own rules win over keyword rules,
+  // the way link rules do. One that no story rule answers falls through to them.
+  const story = message.reply_to?.story;
+  if (story?.id) {
+    try {
+      const fired = await checkAndExecuteRuleByTriggerEvent("INSTAGRAM_STORY_REPLY", {
+        orgId,
+        phoneNumberId: ibaId,
+        message: message.text || "",
+        phone: sender.id,
+        instagramStoryId: story.id,
+        platform: "INSTAGRAM",
+      });
+      if (fired) return;
+    } catch (error) {
+      log.error({ err: error, storyId: story.id }, "[Instagram] Error in story reply rules");
+    }
+  }
+
   try {
     await checkAndExecuteRuleByTriggerEvent("MESSAGE_RECEIVED", {
       orgId,
@@ -336,6 +388,137 @@ export async function handleInstagramMessages(
   } catch (error) {
     log.error({ err: error }, "[Instagram] Error in rule execution for message");
   }
+}
+
+/**
+ * A caption or comment mention names its author only by username, so it waits until that
+ * person DMs us. The indexed lookup keeps the common case — nothing waiting — to one read.
+ */
+async function linkMentionsWaitingForContact(orgId: string, contactId: string) {
+  try {
+    const contact = await prisma.contact.findUnique({
+      where: { id: contactId },
+      select: { whatsappUserName: true },
+    });
+    const username = contact?.whatsappUserName?.trim().replace(/^@/, "").toLowerCase();
+    if (!username) return;
+    const waiting = await prisma.instagramMention.findFirst({
+      where: { orgId, username, contactId: null, status: "PENDING" },
+      select: { id: true },
+    });
+    if (waiting) await linkPendingInstagramMentions(orgId, contactId, username);
+  } catch (error) {
+    log.warn({ err: error, contactId }, "[Instagram] Could not link waiting mentions");
+  }
+}
+
+/**
+ * Remember the post whose comment opened this conversation, for the Instagram analytics
+ * view (DMs, leads and orders per post). Only when the comment is the conversation's
+ * first message — a comment from someone already chatting did not start anything — and
+ * never over a post already recorded.
+ */
+async function attributeConversationToMedia(
+  conversationId: string,
+  messageRowId: string,
+  mediaId: string,
+) {
+  try {
+    const earlier = await prisma.waMessage.count({
+      where: { conversationId, id: { not: messageRowId } },
+    });
+    if (earlier > 0) return;
+    await prisma.conversation.updateMany({
+      where: { id: conversationId, sourceMediaId: null },
+      data: { sourceMediaId: mediaId },
+    });
+  } catch (error) {
+    // Analytics only; the comment is stored and its rules still run.
+    log.warn({ err: error, conversationId, mediaId }, "[Instagram] Could not attribute post");
+  }
+}
+
+/** Extend the conversation's window for an ad-opened thread; never shortens one already set. */
+async function openAdThreadWindow(conversationId: string, timestamp: number | undefined) {
+  const startedAt = typeof timestamp === "number" && timestamp > 0 ? timestamp : Date.now();
+  const until = new Date(startedAt + AD_THREAD_WINDOW_MS);
+  try {
+    await prisma.conversation.updateMany({
+      where: {
+        id: conversationId,
+        OR: [{ adThreadUntil: null }, { adThreadUntil: { lt: until } }],
+      },
+      data: { adThreadUntil: until },
+    });
+  } catch (error) {
+    log.warn({ err: error, conversationId }, "[Instagram] Could not record the ad thread window");
+  }
+}
+
+/**
+ * The customer edited a message. The stored body takes the new text, so search, the
+ * ticket preview and the bubble all show what they now say; the earlier text is kept
+ * under `editHistory`. `num_edit` orders edits that arrive out of order, and makes a
+ * redelivery a no-op.
+ */
+export async function handleInstagramMessageEdit(
+  messaging: InstagramWebhookBody["entry"][0]["messaging"][0],
+  waSettings: { orgId: string; ibaId: string },
+) {
+  const edit = messaging.message_edit;
+  if (!edit?.mid) return;
+  const row = await prisma.waMessage.findFirst({
+    where: { messageId: edit.mid, contact: { orgId: waSettings.orgId } },
+  });
+  if (!row) {
+    log.trace("[Instagram] Edit for a message we never stored: %s", edit.mid);
+    return;
+  }
+
+  const body = row.messageBody as WaInboxMessageBody;
+  const receive = body.receive as IgReceiveMessageBody | undefined;
+  if (!receive?.message) return;
+  const metaEditNumber = Number(edit.num_edit);
+  const editNumber =
+    Number.isFinite(metaEditNumber) && metaEditNumber > 0
+      ? metaEditNumber
+      : (body.editCount ?? 0) + 1;
+  if (editNumber <= (body.editCount ?? 0)) return;
+
+  const editedAt = new Date(
+    typeof messaging.timestamp === "number" && messaging.timestamp > 0
+      ? messaging.timestamp
+      : Date.now(),
+  );
+  const nextBody: WaInboxMessageBody = {
+    ...body,
+    receive: { ...receive, message: { ...receive.message, text: edit.text ?? "" } },
+    editHistory: [
+      ...(body.editHistory ?? []),
+      { text: receive.message.text ?? null, editedAt: editedAt.toISOString() },
+    ],
+    editCount: editNumber,
+  };
+
+  const updated = await prisma.waMessage.update({
+    where: { id: row.id },
+    data: { messageBody: nextBody, editedAt },
+  });
+
+  await sendViaWstoOrgHandler(
+    waSettings.orgId,
+    {
+      type: "message_edited",
+      message_edited: {
+        messageId: edit.mid,
+        contactId: updated.contactId,
+        conversationId: updated.conversationId,
+        editedAt: editedAt.toISOString(),
+        message: updated,
+      },
+    },
+    "main",
+  );
 }
 
 /** "Buy now" and checkout replies on a shop message (payloads starting `shop_`). */

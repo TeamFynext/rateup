@@ -38,11 +38,11 @@ describe("unsupportedBlocks", () => {
     ]);
   });
 
-  test("documents work on WhatsApp and Messenger, not Instagram", () => {
+  test("documents work on every channel (a PDF on Instagram)", () => {
     const g = graph("documentNode");
     expect(unsupportedBlocks(g, "WHATSAPP")).toEqual([]);
     expect(unsupportedBlocks(g, "FACEBOOK")).toEqual([]);
-    expect(unsupportedBlocks(g, "INSTAGRAM")).toEqual(["documentNode"]);
+    expect(unsupportedBlocks(g, "INSTAGRAM")).toEqual([]);
   });
 
   test("older Instagram-only nodes still save on Instagram only", () => {

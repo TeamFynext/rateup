@@ -16,6 +16,10 @@ vi.mock("../inbox/message/wamessage.controller.js", () => ({ handleWaMessages: v
 vi.mock("../../../workers/bullmq/queues/whatsapp.queue.js", () => ({
   enqueueWaMessageRecord: vi.fn().mockResolvedValue({ id: "record" }),
 }));
+// The send gate looks the contact up; nobody is blocked here.
+vi.mock("../../../utils/prisma.js", () => ({
+  default: { contact: { findFirst: vi.fn().mockResolvedValue(null) } },
+}));
 vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), fatal: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));
@@ -25,6 +29,9 @@ import { getInstagramChannel, getMessengerChannel } from "../metaChannel/metaCha
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
 import {
+  buildMultiImageMessage,
+  chunk,
+  sendSendApiImages,
   sendSendApiAudio,
   sendSendApiText,
   sendSendApiVideo,
@@ -151,5 +158,94 @@ describe("answering a Facebook comment", () => {
 
     await expect(sendSendApiText(channel, "fb_comment:comment-1", ORG_ID, "hi")).rejects.toThrow();
     expect(channel.pendingComment.recipientId).toBeUndefined();
+  });
+});
+
+describe("several images in one message", () => {
+  const INSTAGRAM: MetaFlowChannel = { platform: PlatformType.INSTAGRAM, accountId: "iba-1" };
+
+  test("builds one message from attachment ids and urls, in order", () => {
+    expect(
+      buildMultiImageMessage([
+        { url: "https://x/1.png", attachment_id: "a1" },
+        { url: "https://x/2.png" },
+      ]),
+    ).toEqual({
+      attachments: [
+        { type: "image", payload: { attachment_id: "a1", url: "https://x/1.png" } },
+        { type: "image", payload: { url: "https://x/2.png", is_reusable: true } },
+      ],
+    });
+  });
+
+  test("chunks into runs of at most ten", () => {
+    const runs = chunk(
+      Array.from({ length: 23 }, (_, i) => i),
+      10,
+    );
+    expect(runs.map((run) => run.length)).toEqual([10, 10, 3]);
+    expect(runs[2]).toEqual([20, 21, 22]);
+  });
+
+  test("uploads each image, then sends one message of attachment ids", async () => {
+    callMetaApiMock.mockImplementation(
+      async (url: string, _m: string, _t: string, body: unknown) => {
+        if (url === "/me/message_attachments") {
+          const imageUrl = (body as { message: { attachment: { payload: { url: string } } } })
+            .message.attachment.payload.url;
+          return { data: { attachment_id: `id:${imageUrl}` } };
+        }
+        return { data: { message_id: "mid-album" } };
+      },
+    );
+
+    await sendSendApiImages(INSTAGRAM, "igsid-1", ORG_ID, ["u1", "u2"], {
+      userId: "user-1",
+      replyToMid: "mid-quoted",
+    });
+
+    const uploads = callMetaApiMock.mock.calls.filter(([url]) => url === "/me/message_attachments");
+    expect(uploads).toHaveLength(2);
+    expect(uploads[0][3]).toMatchObject({ platform: "instagram" });
+
+    const [, , , body] = callMetaApiMock.mock.calls.find(([url]) => url === "/me/messages")!;
+    expect(body).toMatchObject({
+      recipient: { id: "igsid-1" },
+      reply_to: { mid: "mid-quoted" },
+      message: {
+        attachments: [
+          { type: "image", payload: { attachment_id: "id:u1" } },
+          { type: "image", payload: { attachment_id: "id:u2" } },
+        ],
+      },
+    });
+    // Stored with the urls, so the inbox can draw the images.
+    const filed = handleWaMessagesMock.mock.calls[0];
+    expect(filed[1]).toMatchObject({
+      message: {
+        attachments: [
+          { payload: { attachment_id: "id:u1", url: "u1" } },
+          { payload: { attachment_id: "id:u2", url: "u2" } },
+        ],
+      },
+    });
+    // Filed as the agent's inbox reply, not as an automation.
+    expect(filed[8]).toBe("user-1");
+    expect(filed[11]).toBe("INBOX");
+    expect(filed[12]).toBe(false);
+  });
+
+  test("falls back to the url when an upload fails", async () => {
+    callMetaApiMock.mockImplementation(async (url: string) => {
+      if (url === "/me/message_attachments") throw new Error("upload refused");
+      return { data: { message_id: "mid-album" } };
+    });
+
+    await sendSendApiImages(INSTAGRAM, "igsid-1", ORG_ID, ["u1", "u2"]);
+
+    const [, , , body] = callMetaApiMock.mock.calls.find(([url]) => url === "/me/messages")!;
+    expect((body as { message: unknown }).message).toEqual(
+      buildMultiImageMessage([{ url: "u1" }, { url: "u2" }]),
+    );
   });
 });

@@ -1,5 +1,6 @@
 import prisma from "../../../utils/prisma.js";
 import { LoyaltyEarningRuleInput, LoyaltyEarningRuleUpdateInput } from "./earningRule.schema.js";
+import { onlyPurchaseRules } from "./triggerRules.js";
 
 export async function createLoyaltyEarningRule(data: LoyaltyEarningRuleInput, programId: string) {
   return await prisma.loyaltyEarningRule.create({
@@ -24,16 +25,20 @@ export async function createLoyaltyEarningRule(data: LoyaltyEarningRuleInput, pr
   });
 }
 
+// The purchase rules only. Rules with a `trigger` (Instagram mentions) have their own
+// editor, and everything reading this list — the rule cards, the cashier estimate, the
+// giveback maths, the external API — treats each row as a way a purchase earns.
 export async function getLoyaltyEarningRules(programId: string) {
-  return await prisma.loyaltyEarningRule.findMany({
+  const rules = await prisma.loyaltyEarningRule.findMany({
     where: { programId },
     orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
   });
+  return onlyPurchaseRules(rules);
 }
 
 export async function getActiveLoyaltyEarningRules(programId: string) {
   const now = new Date();
-  return await prisma.loyaltyEarningRule.findMany({
+  const rules = await prisma.loyaltyEarningRule.findMany({
     where: {
       programId,
       status: "active",
@@ -46,6 +51,7 @@ export async function getActiveLoyaltyEarningRules(programId: string) {
     },
     orderBy: { priority: "desc" },
   });
+  return onlyPurchaseRules(rules);
 }
 
 // Every by-id read and write below is pinned to the caller's programme: a rule id from

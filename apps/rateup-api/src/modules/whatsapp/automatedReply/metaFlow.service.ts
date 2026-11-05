@@ -390,11 +390,6 @@ export async function processNextMetaFlowNode(
       case "videoNode":
       case "audioNode":
       case "documentNode": {
-        // Files go out on Messenger only; Instagram has no file attachments.
-        if (node.type === "documentNode" && isInstagram(channel)) {
-          log.warn(`${prefix} Skipping document node ${nodeId}: Instagram can't send files`);
-          break;
-        }
         // Media cannot be sent as a private reply; send a text private reply first.
         const facebookCommentPending = Boolean(
           channel.pendingComment && !channel.pendingComment.recipientId,
@@ -630,7 +625,7 @@ async function handleTextNode(
   }
 }
 
-/** imageNode, videoNode, audioNode or (Messenger) documentNode. Returns whether anything was sent. */
+/** imageNode, videoNode, audioNode or documentNode (a PDF on Instagram). Returns whether anything was sent. */
 async function handleMediaNode(
   node: MetaFlowNode,
   recipientId: string,
@@ -650,7 +645,7 @@ async function handleMediaNode(
     await sendSendApiAudio(channel, recipientId, orgId, url);
   } else if (node.type === "documentNode") {
     await sendSendApiFile(channel, recipientId, orgId, url);
-    // Messenger file attachments take no caption, so it follows as its own message.
+    // Send API file attachments take no caption, so it follows as its own message.
     if (caption) await sendSendApiText(channel, recipientId, orgId, caption);
   } else if (node.type === "videoNode") {
     await sendSendApiVideo(channel, recipientId, orgId, url, caption);

@@ -20,6 +20,7 @@ export const CHATBOT_START_KINDS = [
   "leadad",
   "comment",
   "story",
+  "storyreply",
   "link",
   "getstarted",
 ] as const;
@@ -68,6 +69,11 @@ const START_RULES: Record<
       options: { instagramScope: "ALL", instagramCommentSource: "POSTS" },
     }),
     story: () => ({ triggerEvent: TriggerEvent.INSTAGRAM_STORY_MENTION }),
+    // Any reply to any story until the user narrows it on the Stories tab.
+    storyreply: () => ({
+      triggerEvent: TriggerEvent.INSTAGRAM_STORY_REPLY,
+      options: { instagramStoryScope: "ALL" },
+    }),
     link: () => ({ triggerEvent: TriggerEvent.INSTAGRAM_REFERRAL }),
   },
   FACEBOOK: {

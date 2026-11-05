@@ -532,6 +532,8 @@ export enum LoyaltyEventType {
   SIGNUP_ANNIVERSARY = "SIGNUP_ANNIVERSARY",
   NEW_CUSTOMER_WELCOME = "NEW_CUSTOMER_WELCOME",
   MEMBER_JOINED = "MEMBER_JOINED",
+  /** The member tagged the business on Instagram and earned points for it. */
+  INSTAGRAM_MENTION_REWARDED = "INSTAGRAM_MENTION_REWARDED",
 }
 
 export enum AssignType {
@@ -554,6 +556,8 @@ export enum InstagramEvent {
   STORY_MENTION = "STORY_MENTION",
   COMMENT = "COMMENT",
   LIVE_COMMENT = "LIVE_COMMENT",
+  /** The customer edited a message they had sent (`message_edit`). */
+  MESSAGE_EDIT = "MESSAGE_EDIT",
 }
 
 export enum FacebookEvent {

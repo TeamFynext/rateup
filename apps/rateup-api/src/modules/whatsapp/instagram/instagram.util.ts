@@ -70,6 +70,11 @@ export function getInstagramWebhookEvent(
       return InstagramEvent.POSTBACK;
     }
 
+    // Carries no `message`, only the edited message's id and new text.
+    if (data.message_edit?.mid) {
+      return InstagramEvent.MESSAGE_EDIT;
+    }
+
     if (data.message) {
       const storyMention = data.message.attachments?.some(
         (attachment) => attachment.type === "story_mention",

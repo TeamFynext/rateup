@@ -63,7 +63,7 @@ describe("startOffered", () => {
     const offered = (platform: "WHATSAPP" | "INSTAGRAM" | "FACEBOOK") =>
       CHATBOT_START_KINDS.filter((kind) => startOffered(platform, kind));
     expect(offered("WHATSAPP")).toEqual(["keyword", "any", "leadad"]);
-    expect(offered("INSTAGRAM")).toEqual(["keyword", "comment", "story", "link"]);
+    expect(offered("INSTAGRAM")).toEqual(["keyword", "comment", "story", "storyreply", "link"]);
     expect(offered("FACEBOOK")).toEqual(["keyword", "comment", "link", "getstarted"]);
   });
 });

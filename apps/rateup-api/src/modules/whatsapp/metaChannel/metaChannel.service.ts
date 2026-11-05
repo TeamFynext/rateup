@@ -52,7 +52,11 @@ export type DecryptedMetaChannel = Channel &
   };
 
 /** What leaves the API: the registry row plus the Page it sends through, never a token. */
-export type PublicMetaChannel = Channel & { fbPageId: string; pageName: string | null };
+export type PublicMetaChannel = Channel & {
+  fbPageId: string | null;
+  pageName: string | null;
+  loginType: DecryptedMetaChannel["loginType"];
+};
 
 function flatten(row: ChannelWithMeta | null): DecryptedMetaChannel | null {
   // A Meta-platform channel always has its settings; one without is half-written.

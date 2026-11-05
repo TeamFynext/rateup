@@ -7,6 +7,8 @@ import { flowRoutes } from "./flows/flow.route.js";
 import { flowEnpointRoutes } from "./flows/flow.endpoint-routes.js";
 import { waAutomatedReplyRoutes } from "./automatedReply/wa_automatedReply.route.js";
 import { instagramProfileRoutes } from "./instagram/instagram_profile.route.js";
+import { instagramCommentsRoutes } from "./instagram/instagram_comments.route.js";
+import { instagramInsightsRoutes } from "./instagram/instagram_insights.route.js";
 import { messengerProfileRoutes } from "./facebook/messenger_profile.route.js";
 import { waInboxRoutes } from "./inbox/wainbox.routes.js";
 import { waAuthRoutes } from "./auth/wa_auth.route.js";
@@ -28,6 +30,8 @@ export async function whatsappRoutes(server: FastifyInstance) {
   server.register(instagramProfileRoutes, {
     prefix: "/instagram-profile",
   });
+  server.register(instagramCommentsRoutes, { prefix: "/instagram" });
+  server.register(instagramInsightsRoutes, { prefix: "/instagram-insights" });
   server.register(messengerProfileRoutes, { prefix: "/messenger-profile" });
   server.register(waInboxRoutes, { prefix: "/inbox" });
   server.register(waCatalogRoutes, { prefix: "/catalog" });
