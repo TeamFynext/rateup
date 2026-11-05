@@ -13,6 +13,7 @@ export const PERMISSIONS = [
   "contacts.read",
   "contacts.manage",
   "contacts.export",
+  "contacts.merge",
   "campaigns.read",
   "campaigns.manage",
   "campaigns.send",
@@ -100,7 +101,7 @@ export const MEMBER_PERMISSIONS: ReadonlySet<Permission> = new Set(
  * Bumped whenever the catalogue or a role's bundle changes, so a client holding a stale
  * mirror can tell and fall back to deriving permissions from the role key.
  */
-export const PERMISSIONS_VERSION = 3;
+export const PERMISSIONS_VERSION = 4;
 
 export function isPermission(value: string): value is Permission {
   return (ALL_PERMISSIONS as ReadonlySet<string>).has(value);

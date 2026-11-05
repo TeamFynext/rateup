@@ -50,6 +50,19 @@ vi.mock("../../whatsappSurvey/wasurvey.service.js", () => ({
 vi.mock("../../messageTemplates/wa_templates.service.js", () => ({
   getTemplateByNameAndOrgId: vi.fn(),
 }));
+vi.mock("../../../channel/channel.service.js", () => ({
+  resolveChannelId: vi.fn(async () => null),
+}));
+vi.mock("../../../contact/identity/identity.service.js", () => ({
+  recordMessageIdentities: vi.fn(),
+}));
+vi.mock("../../../contact/identity/reach.js", () => ({
+  scopedAddressForChannel: vi.fn(
+    async (_o: string, _c: string, _p: string, _ch: string | null, fallback: string | null) =>
+      fallback,
+  ),
+  whatsappAddressFromNumber: vi.fn(async () => null),
+}));
 vi.mock("../../../contact/contact.service.js", () => ({
   getContactById: vi.fn(),
   getOrCreateContactByIgsId: vi.fn(),
@@ -59,6 +72,7 @@ vi.mock("../../../contact/contact.service.js", () => ({
   updateContactById: vi.fn(),
 }));
 vi.mock("../../../contact/conversation/conversation.service.js", () => ({
+  adoptChannel: vi.fn(async (conversation: unknown) => conversation),
   checkIfFirstSendMessageInConversation: vi.fn(),
   checkIfFirstUserSendMessageInConversation: vi.fn(),
   getActiveConversationForContact: vi.fn(),
@@ -509,7 +523,7 @@ describe("handleWaMessages - choosing the conversation", () => {
 
     await callHandleWaMessages({ type: "receive" });
 
-    expect(m.openConversation).toHaveBeenCalledWith("contact-1", "org-1");
+    expect(m.openConversation).toHaveBeenCalledWith("contact-1", "org-1", "UNASSIGNED", null);
     expect(m.addNewWaMessage.mock.calls[0][5]).toBe("conv-new");
   });
 
@@ -532,7 +546,7 @@ describe("handleWaMessages - choosing the conversation", () => {
 
     await callHandleWaMessages({ type: "send" });
 
-    expect(m.getLastConversation).toHaveBeenCalledWith("contact-1");
+    expect(m.getLastConversation).toHaveBeenCalledWith("contact-1", null);
     expect(m.openConversation).not.toHaveBeenCalled();
   });
 
@@ -551,7 +565,7 @@ describe("handleWaMessages - choosing the conversation", () => {
     expect(m.updateContact).toHaveBeenCalledWith("contact-1", "org-1", {
       waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED,
     });
-    expect(m.openConversation).toHaveBeenCalledWith("contact-1", "org-1");
+    expect(m.openConversation).toHaveBeenCalledWith("contact-1", "org-1", "UNASSIGNED", null);
     expect(m.addNewWaMessage.mock.calls[0][5]).toBe("conv-new");
   });
 

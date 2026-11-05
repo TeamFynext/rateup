@@ -134,6 +134,7 @@ describe("openConversationForContact", () => {
       contactId: "c1",
       orgId: ORG,
       status: WaMessageAssignStatus.UNASSIGNED,
+      channelId: null,
       reopenCount: 0,
     });
   });

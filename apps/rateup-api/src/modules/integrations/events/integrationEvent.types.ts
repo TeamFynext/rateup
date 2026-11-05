@@ -104,6 +104,15 @@ export type IntegrationEvent =
       /** The row as it was just before it was deleted — it holds the CRM ids to remove. */
       contact: ContactRecord;
     }
+  | {
+      /**
+       * `sourceContact` was merged into `contact` and no longer exists. Not a delete: the
+       * person still exists, now as `contact`, so CRM adapters must not remove records.
+       */
+      type: "contact.merged";
+      contact: ContactRecord;
+      sourceContact: ContactRecord;
+    }
   | { type: "conversation.closed"; contact: ContactRecord }
   | {
       /**

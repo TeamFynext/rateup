@@ -5,6 +5,13 @@ vi.mock("../../../../utils/prisma.js", () => ({
     org: { findUnique: vi.fn() },
     contact: { findMany: vi.fn(), count: vi.fn() },
     conversation: { count: vi.fn() },
+    // The org's channels: the picked-channel filter maps a phone or account id onto them.
+    channel: {
+      findMany: vi.fn(async () => [
+        { id: "ch-wa", platform: "WHATSAPP", accountId: "pnid-1", address: "+1555-000-1" },
+        { id: "ch-ig", platform: "INSTAGRAM", accountId: "17841400000000000", address: null },
+      ]),
+    },
     inboxMention: { findMany: vi.fn() },
     waMessage: { findMany: vi.fn() },
     inboxNote: { findMany: vi.fn(async () => []) },
@@ -15,6 +22,9 @@ vi.mock("../../../../utils/prisma.js", () => ({
 }));
 
 vi.mock("../../wa_axios.js", () => ({ callMetaApi: vi.fn() }));
+vi.mock("../../../contact/merge/currentContact.js", () => ({
+  currentContactId: vi.fn(async (_orgId: string, id: string) => id),
+}));
 vi.mock("../note/note.service.js", () => ({
   getThreadNotes: vi.fn(async () => []),
   findNoteTime: vi.fn(async () => null),
@@ -22,7 +32,10 @@ vi.mock("../note/note.service.js", () => ({
   noteToThreadItem: vi.fn((note) => note),
 }));
 vi.mock("../../settings/wa_settings.service.js", () => ({ getWaSettings: vi.fn() }));
-vi.mock("../../settings/wa_channel_access.js", () => ({ getScopedSourceIdentifiers: vi.fn() }));
+vi.mock("../../settings/wa_channel_access.js", () => ({
+  getScopedSourceIdentifiers: vi.fn(),
+  getChannelScope: vi.fn(async () => ({ all: false, ids: new Set(["ch-wa"]) })),
+}));
 vi.mock("axios", () => ({ default: { get: vi.fn() } }));
 vi.mock("../../../contact/contact.service.js", () => ({ updateContactById: vi.fn() }));
 vi.mock("../../whatsappSurvey/wasurvey.controller.js", () => ({ wait: vi.fn() }));
@@ -285,6 +298,10 @@ describe("filterChats - channel scoping", () => {
     expect(sql).toContain(`wm."sourceIdentifier" = ANY`);
     expect(sql).not.toContain("regexp_replace");
     expect(params).toContainEqual(["15550001"]);
+    // A ticket that knows its channel is judged by it alone, so a merged contact's
+    // tickets on other channels stay out.
+    expect(sql).toContain(`conv."channelId" = ANY`);
+    expect(params).toContainEqual(["ch-wa"]);
   });
 
   test("matches nothing when a member is scoped to no channel at all", async () => {
@@ -405,6 +422,26 @@ describe("filterChats - narrowing and sorting", () => {
 
     expect(sql).toContain(`wm."sourceIdentifier" = ANY`);
     expect(params).toContainEqual(expect.arrayContaining(["15550001", "+15550001"]));
+    // The formatted channel address resolves to its channel by digits.
+    expect(sql).toContain(`conv."channelId" = ANY`);
+    expect(params).toContainEqual(["ch-wa"]);
+  });
+
+  test("the Webchat filter keeps tickets that came through the website widget", async () => {
+    const { sql } = await runFilter({ phone: "webchat" });
+
+    expect(sql).toContain(`wm."sourcePlatform" = 'WEBCHAT'`);
+    expect(sql).toContain(`c."source" = 'WEBCHAT'`);
+    // Not treated as a channel id or a phone number.
+    expect(sql).not.toContain(`conv."channelId" = ANY`);
+  });
+
+  test("an Instagram account filter keeps only tickets on that account", async () => {
+    const { sql, params } = await runFilter({ phone: "17841400000000000" });
+
+    expect(params).toContainEqual(["ch-ig"]);
+    // A ticket with no channel yet is judged by its own messages first.
+    expect(sql).toContain(`wm."conversationId" = conv.id`);
   });
 
   /**
@@ -415,7 +452,9 @@ describe("filterChats - narrowing and sorting", () => {
   test("matches a formatted channel against every spelling its messages hold", async () => {
     const { params } = await runFilter({ phone: "+1555-000-1" });
 
-    const spellings = params.find(Array.isArray) as string[];
+    const spellings = params.find(
+      (param) => Array.isArray(param) && param.includes("+1555-000-1"),
+    ) as string[];
     expect(spellings).toEqual(
       expect.arrayContaining(["+1555-000-1", "1555-000-1", "15550001", "+15550001"]),
     );

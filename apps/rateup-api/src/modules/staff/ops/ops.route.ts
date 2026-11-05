@@ -4,6 +4,19 @@ import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
 import { findTask, MAINTENANCE_TASKS } from "../../maintenance/maintenance.tasks.js";
 import { runTask } from "../../maintenance/task.js";
+import {
+  ACTIVE_RUN_STATES,
+  newBackgroundRun,
+  readBackgroundRun,
+  updateBackgroundRun,
+} from "../../maintenance/backgroundRun.js";
+import {
+  enqueueMaintenanceRun,
+  maintenanceJobId,
+  maintenanceQueue,
+} from "../../../workers/bullmq/queues/maintenance.queue.js";
+import redis from "../../../utils/redisConnection.js";
+import { handleMaintenanceSocket } from "./maintenance.ws.js";
 import { reasonSchema } from "../orgs/subscription.schema.js";
 import { idParamSchema, type IdParam } from "../staff.schema.js";
 import { StaffHttpError } from "../staff.errors.js";
@@ -50,13 +63,57 @@ interface ShopifyStoreRow {
 
 export async function staffOpsRoutes(server: FastifyInstance) {
   server.get("/ops/maintenance/tasks", async () => ({
-    data: MAINTENANCE_TASKS.map(({ id, title, description, destructive }) => ({
+    data: MAINTENANCE_TASKS.map(({ id, title, description, destructive, background }) => ({
       id,
       title,
       description,
       destructive,
+      background: Boolean(background),
     })),
   }));
+
+  /** Pushes every background run update as it happens; see maintenance.ws.ts. */
+  server.get("/ops/maintenance/ws", { websocket: true }, handleMaintenanceSocket);
+
+  /** Where the background run of a task stands (null when it has never been started). */
+  server.get<{ Params: TaskParam }>(
+    "/ops/maintenance/tasks/:taskId/run",
+    { schema: { params: taskParamSchema } },
+    async (request) => {
+      const task = findTask(request.params.taskId);
+      if (!task) throw new StaffHttpError(404, "TASK_NOT_FOUND", "No such maintenance task.");
+      return { data: await readBackgroundRun(task.id) };
+    },
+  );
+
+  /** Asks a background run to stop after its current round; Apply again resumes it. */
+  server.post<{ Params: TaskParam }>(
+    "/ops/maintenance/tasks/:taskId/stop",
+    { schema: { params: taskParamSchema } },
+    async (request) => {
+      const task = findTask(request.params.taskId);
+      if (!task) throw new StaffHttpError(404, "TASK_NOT_FOUND", "No such maintenance task.");
+      const current = await readBackgroundRun(task.id);
+      if (!current || !ACTIVE_RUN_STATES.includes(current.state)) {
+        throw new StaffHttpError(409, "NOT_RUNNING", "That task is not running.");
+      }
+      // A job still waiting for a worker can simply be dropped.
+      const job = await maintenanceQueue.getJob(maintenanceJobId(task.id));
+      const removed = job && (await job.isWaiting()) ? await job.remove().then(() => true) : false;
+      const run = await updateBackgroundRun(task.id, (r) => {
+        r.stopRequested = true;
+        if (removed) {
+          r.state = "stopped";
+          r.summary = `Stopped after ${r.rounds} round(s). Apply again to carry on from there.`;
+        }
+      });
+      await recordStaffAction(prisma, request, {
+        action: "maintenance.stop",
+        after: { taskId: task.id, rounds: run?.rounds },
+      });
+      return { data: run };
+    },
+  );
 
   /**
    * A dry run: the task reports what it would change and writes nothing (every task honours
@@ -104,6 +161,37 @@ export async function staffOpsRoutes(server: FastifyInstance) {
         );
       }
       const auditId = crypto.randomUUID();
+
+      if (task.background) {
+        // Held for the few milliseconds between "is one running?" and "queue it", so two
+        // clicks cannot both start a run. The single job id per task backs this up.
+        const lockKey = `maintenance:starting:${task.id}`;
+        if ((await redis.set(lockKey, "1", "EX", 15, "NX")) !== "OK") {
+          throw new StaffHttpError(409, "ALREADY_RUNNING", "That task is already starting.");
+        }
+        try {
+          const jobId = maintenanceJobId(task.id);
+          if (await maintenanceQueue.getJob(jobId)) {
+            throw new StaffHttpError(
+              409,
+              "ALREADY_RUNNING",
+              "That task is already running in the background.",
+            );
+          }
+          await recordStaffAction(prisma, request, {
+            id: auditId,
+            action: "maintenance.apply",
+            reason: request.body.reason,
+            after: { taskId: task.id, status: "queued" },
+          });
+          const run = await newBackgroundRun(task.id, jobId, auditId, request.staff?.email ?? null);
+          await enqueueMaintenanceRun({ taskId: task.id, auditId });
+          return { data: { background: true as const, run } };
+        } finally {
+          await redis.del(lockKey);
+        }
+      }
+
       await recordStaffAction(prisma, request, {
         id: auditId,
         action: "maintenance.apply",

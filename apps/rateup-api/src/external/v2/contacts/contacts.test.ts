@@ -21,6 +21,7 @@ const db = vi.hoisted(() => {
     contactCustomField: model(),
     contactLabelMap: model(),
     contactCustomFieldValue: model(),
+    contactIdentity: model(),
     $transaction: vi.fn(),
   };
   return client;
@@ -63,6 +64,7 @@ function row(overrides: Record<string, unknown> = {}) {
     createdAt: new Date("2026-01-01T00:00:00.000Z"),
     ContactLabelMap: [{ label: { id: LABEL, name: "VIP" } }],
     customFields: [{ value: "Gold", field: { slug: "tier" } }],
+    identities: [],
     ...overrides,
   };
 }
@@ -135,6 +137,7 @@ describe("the response schema is a boundary", () => {
       labels: [{ id: LABEL, name: "VIP" }],
       customFields: { tier: "Gold" },
       createdAt: "2026-01-01T00:00:00.000Z",
+      identities: [],
     });
   });
 

@@ -16,6 +16,7 @@ import {
   decryptAccessToken,
   enqueueCampaignMessages,
   fetchCampaignParticipants,
+  markParticipantsUnreachable,
   getSurveyTeamMapId,
   updateCampaignStatus,
 } from "../../shared/whatsapp/index.js";
@@ -102,14 +103,34 @@ export const campaignEnqueueWorker = new Worker(
         }
       }
 
-      const participants = await fetchCampaignParticipants(
+      const fetched = await fetchCampaignParticipants(
         campaignId,
         participantId,
         sendToStatuses,
         dripStageId,
         participantIds,
       );
+      // A customer known only by business-scoped user IDs from other businesses cannot be
+      // messaged from this campaign's number. Fail them here with the reason instead of
+      // sending and letting Meta reject each one.
+      const unreachable = fetched.filter((participant) => participant.unreachableFromChannel);
+      if (unreachable.length) {
+        await markParticipantsUnreachable(unreachable.map((participant) => participant.id));
+        log.info(
+          { campaignId, campaignSendId, count: unreachable.length },
+          "Skipped campaign recipients this number's business cannot message",
+        );
+      }
+      const participants = fetched.filter((participant) => !participant.unreachableFromChannel);
 
+      if (!participants.length && unreachable.length) {
+        const reason =
+          "Every recipient is only reachable from another WhatsApp business, so nothing was sent.";
+        await failCampaignSend(campaignSendId, reason);
+        await updateCampaignStatus(campaignId, CampaignStatus.FAILED, null, true, reason);
+        await notifyCampaignStopped(campaignId, "campaign.failed", reason);
+        return;
+      }
       if (!participants.length) {
         log.error("No participants found matching the conditions");
         // Nothing to drain means the completion handler will never fire, so the

@@ -2,21 +2,29 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 
 import prisma from "../../utils/prisma.js";
 import { log } from "../../utils/logger.js";
+import redis from "../../utils/redisConnection.js";
 
 /**
  * The per-key request log behind the console's usage view.
  *
- * Off the request path: each answered call is pushed onto an in-process buffer and written
- * with one `createMany` per batch. The API and Postgres share a region, so a batch insert
- * from here is cheaper than a queue hop to the worker service in another one. The price is
- * that a crash loses up to one flush interval of rows — acceptable for a usage chart, which
- * is why billing must never be computed from this table.
+ * Nothing here touches Postgres on the API: each answered call is buffered in process for
+ * a moment, then pushed onto a Redis list in one round trip. The bullmq worker's
+ * `apiUsageFlush` job (every ten seconds) drains the list into `ApiRequestLog` with batch
+ * inserts. A crash loses at most the in-process moment; a worker that is down only lets the
+ * list grow, up to a cap. Acceptable for a usage chart, which is why billing must never be
+ * computed from this table.
  */
 
-const FLUSH_EVERY_MS = 5_000;
-const FLUSH_AT_ROWS = 500;
-/** If Postgres is down, stop growing rather than eat the process's memory. */
+export const API_USAGE_QUEUE_KEY = "apiUsage:pending";
+const PUSH_EVERY_MS = 1_000;
+const PUSH_AT_ROWS = 200;
+/** If Redis is unreachable, stop growing rather than eat the process's memory. */
 const MAX_BUFFERED_ROWS = 20_000;
+/** If the worker is down, keep the newest rows only. */
+const MAX_QUEUED_ROWS = 500_000;
+/** Rows the worker writes per insert, and inserts per tick. */
+const DRAIN_BATCH = 1_000;
+const DRAIN_BATCHES_PER_TICK = 20;
 export const API_USAGE_RETENTION_DAYS = 30;
 
 interface UsageRow {
@@ -32,14 +40,19 @@ interface UsageRow {
 let buffer: UsageRow[] = [];
 let timer: NodeJS.Timeout | undefined;
 
+/** Hands the buffered rows to Redis for the worker. Never throws. */
 export async function flushApiUsage(): Promise<void> {
   if (buffer.length === 0) return;
   const rows = buffer;
   buffer = [];
   try {
-    await prisma.apiRequestLog.createMany({ data: rows });
+    await redis
+      .multi()
+      .rpush(API_USAGE_QUEUE_KEY, ...rows.map((row) => JSON.stringify(row)))
+      .ltrim(API_USAGE_QUEUE_KEY, -MAX_QUEUED_ROWS, -1)
+      .exec();
   } catch (err) {
-    log.warn({ err, rows: rows.length }, "Could not write API usage rows; dropping them");
+    log.warn({ err, rows: rows.length }, "Could not queue API usage rows; dropping them");
   }
 }
 
@@ -48,15 +61,48 @@ function schedule() {
   timer = setTimeout(() => {
     timer = undefined;
     void flushApiUsage();
-  }, FLUSH_EVERY_MS);
+  }, PUSH_EVERY_MS);
   timer.unref();
 }
 
 export function recordApiUsage(row: UsageRow) {
   if (buffer.length >= MAX_BUFFERED_ROWS) return;
-  buffer.push(row);
-  if (buffer.length >= FLUSH_AT_ROWS) void flushApiUsage();
+  // A latency that is not a number would fail the whole batch's insert on the worker.
+  buffer.push({ ...row, latencyMs: Number.isFinite(row.latencyMs) ? row.latencyMs : 0 });
+  if (buffer.length >= PUSH_AT_ROWS) void flushApiUsage();
   else schedule();
+}
+
+/**
+ * The worker side: moves queued rows into `ApiRequestLog`. A batch that fails to insert is
+ * put back for the next tick once; a row that cannot be parsed is dropped.
+ */
+export async function drainApiUsage(): Promise<{ written: number; failed: number }> {
+  let written = 0;
+  let failed = 0;
+  for (let batch = 0; batch < DRAIN_BATCHES_PER_TICK; batch++) {
+    const raw = await redis.lpop(API_USAGE_QUEUE_KEY, DRAIN_BATCH);
+    if (!raw?.length) break;
+    const rows = raw.flatMap((entry) => {
+      try {
+        const row = JSON.parse(entry) as UsageRow;
+        return [{ ...row, createdAt: new Date(row.createdAt) }];
+      } catch {
+        return [];
+      }
+    });
+    try {
+      await prisma.apiRequestLog.createMany({ data: rows });
+      written += rows.length;
+    } catch (err) {
+      failed += rows.length;
+      log.warn({ err, rows: rows.length }, "Could not write API usage rows; retrying next tick");
+      await redis.rpush(API_USAGE_QUEUE_KEY, ...raw).catch(() => undefined);
+      break;
+    }
+    if (raw.length < DRAIN_BATCH) break;
+  }
+  return { written, failed };
 }
 
 /**

@@ -279,6 +279,43 @@ export async function enqueueCampaignMessages({
 }
 
 /**
+ * SQL for a contact's WhatsApp send address from the campaign's number `was`: the phone; else
+ * the BSUID of that number's business (or one whose business is unknown on either side —
+ * how sends behaved before businesses were stored); else, for a contact with no recorded
+ * identities yet, the legacy column. Null means this number cannot reach them.
+ */
+const WA_BSUID_FOR_NUMBER_SQL = `(
+      SELECT ci.value
+      FROM "ContactIdentity" ci
+      LEFT JOIN "WhatsappSettings" ciw ON ciw."channelId" = ci."channelId"
+      WHERE ci."contactId" = c.id AND ci.kind = 'WA_BSUID'
+        AND (was."businessPortfolioId" IS NULL OR ciw."businessPortfolioId" IS NULL
+             OR ciw."businessPortfolioId" = was."businessPortfolioId")
+      ORDER BY (ciw."businessPortfolioId" = was."businessPortfolioId") DESC NULLS LAST,
+               ci."isPrimary" DESC, ci."createdAt"
+      LIMIT 1)`;
+const HAS_BSUID_IDENTITY_SQL = `EXISTS (
+      SELECT 1 FROM "ContactIdentity" ci2 WHERE ci2."contactId" = c.id AND ci2.kind = 'WA_BSUID')`;
+const WA_SEND_ADDRESS_SQL = `COALESCE(
+      c.phone,
+      ${WA_BSUID_FOR_NUMBER_SQL},
+      CASE WHEN NOT ${HAS_BSUID_IDENTITY_SQL} THEN c.bsuid END)`;
+/** True when the contact has only BSUIDs, all from businesses other than this number's. */
+const WA_UNREACHABLE_SQL = `(c.phone IS NULL AND ${HAS_BSUID_IDENTITY_SQL} AND ${WA_BSUID_FOR_NUMBER_SQL} IS NULL)`;
+
+/** Shown on the recipient and counted as failed; not sent, so never billed. */
+export const UNREACHABLE_FROM_CHANNEL_MESSAGE =
+  "Not sent: this customer can only be messaged from another WhatsApp business's numbers.";
+
+export async function markParticipantsUnreachable(participantIds: string[]): Promise<void> {
+  if (!participantIds.length) return;
+  await prisma.campaignParticipant.updateMany({
+    where: { id: { in: participantIds } },
+    data: { status: "FAILED", errorMessage: UNREACHABLE_FROM_CHANNEL_MESSAGE },
+  });
+}
+
+/**
  * Fetch campaign participants with optimized database query
  * @param campaignId Campaign ID
  * @param participantId Optional specific participant ID
@@ -316,8 +353,11 @@ export async function fetchCampaignParticipants(
     cp.id,
     -- The send address: the phone, or the WhatsApp business-scoped user ID of a
     -- customer whose phone Meta withholds (the send adapter turns it into
-    -- Meta's recipient field).
-    COALESCE(c.phone, c.bsuid) AS phone,
+    -- Meta's recipient field). A BSUID only works from numbers of the business
+    -- that issued it, and a merged contact can hold one per business, so the one
+    -- for this number's business is picked (see contact/identity/reach.ts).
+    ${WA_SEND_ADDRESS_SQL} AS phone,
+    ${WA_UNREACHABLE_SQL} AS "unreachableFromChannel",
     c.name,
     c."orgId",
     c.id as "contactId",
@@ -405,7 +445,7 @@ export async function fetchCampaignParticipants(
     // across the drip cron's repeated re-enqueues of the same stage.
     query += `
   GROUP BY
-    cpds.id, cp.id, c.id, camp.id, wt.id, was."accessToken", was."phoneId", was."phone", was."accessToken_iv", was."messagesPerSecond"
+    cpds.id, cp.id, c.id, camp.id, wt.id, was."accessToken", was."phoneId", was."phone", was."accessToken_iv", was."messagesPerSecond", was."businessPortfolioId"
   ORDER BY cpds."createdAt", cpds.id
 `;
 
@@ -425,8 +465,11 @@ export async function fetchCampaignParticipants(
     cp.id,
     -- The send address: the phone, or the WhatsApp business-scoped user ID of a
     -- customer whose phone Meta withholds (the send adapter turns it into
-    -- Meta's recipient field).
-    COALESCE(c.phone, c.bsuid) AS phone,
+    -- Meta's recipient field). A BSUID only works from numbers of the business
+    -- that issued it, and a merged contact can hold one per business, so the one
+    -- for this number's business is picked (see contact/identity/reach.ts).
+    ${WA_SEND_ADDRESS_SQL} AS phone,
+    ${WA_UNREACHABLE_SQL} AS "unreachableFromChannel",
     c.name,
     c."orgId",
     c.id as "contactId",
@@ -502,7 +545,7 @@ export async function fetchCampaignParticipants(
   }
   query += `
   GROUP BY
-    cp.id, c.id, camp.id, wt.id, was."accessToken", was."phoneId", was."phone", was."accessToken_iv", was."messagesPerSecond"
+    cp.id, c.id, camp.id, wt.id, was."accessToken", was."phoneId", was."phone", was."accessToken_iv", was."messagesPerSecond", was."businessPortfolioId"
   ORDER BY cp."createdAt", cp.id
 `;
   const participants = await prisma.$queryRawUnsafe<any[]>(query, ...params);

@@ -260,13 +260,16 @@ model Org {
   /// customer's own admin and a Shopify uninstall both set that one, so reusing it would
   /// let a customer lift their own suspension — and would leave staff unable to tell the
   /// two apart. Null means not suspended.
-  suspendedAt        DateTime?
+  suspendedAt             DateTime?
   /// Why, in staff's words. Not shown to the customer; the audit row carries it too.
-  suspendedReason    String?
+  suspendedReason         String?
   /// The StaffUser who suspended. No FK: a staff member can be deleted, the record stays.
-  suspendedByStaffId String?           @db.Uuid
-  staffNotes         OrgNote[]
-  customerMessages   CustomerMessage[]
+  suspendedByStaffId      String?                  @db.Uuid
+  staffNotes              OrgNote[]
+  customerMessages        CustomerMessage[]
+  contactIdentities       ContactIdentity[]
+  contactMerges           ContactMerge[]
+  contactMergeSuggestions ContactMergeSuggestion[]
 
   @@index([suspendedAt])
 }
@@ -402,6 +405,11 @@ model WhatsappSettings {
   accessToken              String // encrypted
   accessToken_iv           String?
   wabaId                   String? // WhatsApp Business Account ID
+  /// The Meta business portfolio (Business Manager) that owns `wabaId` — the client's
+  /// business for a partner-owned WABA. BSUIDs are scoped to it: only numbers of the same
+  /// portfolio can message a BSUID-only customer. An org may connect several portfolios.
+  businessPortfolioId      String?
+  businessPortfolioName    String?
   phoneId                  String? @unique
   phone                    String? @unique
   appId                    String
@@ -441,6 +449,8 @@ model WhatsappSettings {
   metaBusinessAgent       MetaBusinessAgent?
   teamAccess              TeamWhatsappChannel[] // teams explicitly granted this channel
   waFlows                 WaFlow[] // flows created under this channel's WABA
+
+  @@index([businessPortfolioId])
 }
 
 /// Every connected channel, whatever the platform: each WhatsApp number, Messenger Page and
@@ -469,9 +479,13 @@ model Channel {
   createdAt DateTime     @default(now())
   updatedAt DateTime     @default(now()) @updatedAt
 
-  teamAccess TeamChannel[]
-  whatsapp   WhatsappSettings?
-  meta       MetaChannelSettings?
+  teamAccess        TeamChannel[]
+  whatsapp          WhatsappSettings?
+  meta              MetaChannelSettings?
+  /// Tickets opened on this channel. A contact has at most one live ticket per channel.
+  conversations     Conversation[]
+  /// Customer identities last seen on this channel.
+  contactIdentities ContactIdentity[]
 
   @@unique([platform, accountId])
   @@index([orgId, platform])
@@ -1317,6 +1331,10 @@ model Contact {
   shopStockAlerts             ShopBackInStockRequest[]
   adReferrals                 AdReferral[]
   instagramMentions           InstagramMention[]
+  /// Every way this person is known: phones, emails, BSUIDs, Instagram and Messenger ids,
+  /// integration ids. The phone/igsId/psid/bsuid/email columns above mirror the primary
+  /// identity of each kind while the old readers are moved over.
+  identities                  ContactIdentity[]
 
   @@unique([external_id, orgId], name: "external_id_org_id_unique")
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
@@ -1386,6 +1404,9 @@ model ContactCustomFieldValue {
 
   value     String // store as string; parse based on field.type
   createdAt DateTime @default(now())
+
+  @@unique([contactId, fieldId])
+  @@index([fieldId])
 }
 
 model WaInboxAssign {
@@ -3672,12 +3693,19 @@ model Conversation {
   /// Instagram: the post/reel whose comment automation started this conversation.
   /// What the Instagram analytics view counts DMs, leads and orders against.
   sourceMediaId          String?
+  /// The channel this ticket runs on. A contact has at most one live ticket per channel,
+  /// so one person writing on WhatsApp and Instagram gets two tickets. Null for tickets
+  /// whose channel is not known yet (pre-backfill, or the channel was disconnected); an
+  /// inbound message on a known channel adopts such a ticket.
+  channelId              String?                           @db.Uuid
+  channel                Channel?                          @relation(fields: [channelId], references: [id], onDelete: SetNull)
   createdAt              DateTime                          @default(now())
   updatedAt              DateTime?                         @updatedAt
 
   @@unique([orgId, number], name: "conversation_org_id_number_unique")
   @@index([orgId, sourceMediaId])
-  @@index([contactId])
+  @@index([contactId, channelId, createdAt(sort: Desc)])
+  @@index([channelId])
   @@index([firstRespondedAt])
   @@index([createdAt])
   @@index([orgId, status])
@@ -5158,4 +5186,124 @@ model InstagramMention {
   @@index([orgId, status, createdAt])
   @@index([orgId, username])
   @@index([contactId, createdAt])
+}
+
+/// The kinds of identifier a customer can be known by. Which of them are unique org-wide
+/// and which per channel is encoded in `ContactIdentity.scope`.
+enum ContactIdentityKind {
+  /// E.164 digits. Org-wide.
+  PHONE
+  /// Lowercased. Org-wide.
+  EMAIL
+  /// WhatsApp business-scoped user ID. Org-wide: Meta issues one per business portfolio, so
+  /// the value already differs between portfolios.
+  WA_BSUID
+  /// Instagram-scoped user id. Scoped to one Instagram account (scope = channelId).
+  IG_SCOPED
+  /// Messenger page-scoped id. Scoped to one Page (scope = channelId).
+  FB_PSID
+  /// Webchat visitor id. Scoped to one webchat channel.
+  WEBCHAT
+  /// An integration's own id for the customer (Shopify, Zoho, external_id). scope = the integration key.
+  EXTERNAL
+}
+
+/// How an identity came to belong to its contact.
+enum ContactIdentitySource {
+  /// The platform told us, on a webhook.
+  INBOUND
+  /// Meta linked it (BSUID ↔ phone, a WhatsApp identity change).
+  META_LINK
+  /// Proven by a signed handoff link the customer followed.
+  HANDOFF
+  /// The customer typed it (a Journey question, a form, checkout).
+  CUSTOMER
+  /// A staff member added it, or merged it in.
+  AGENT
+  /// CSV import, external API, an integration sync, or the backfill.
+  IMPORT
+}
+
+/// One way a person is known. A contact has any number, several of one kind included —
+/// two phones, or two Instagram ids from two of the org's Instagram accounts.
+model ContactIdentity {
+  id          String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId       String                @db.Uuid
+  org         Org                   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  contactId   String                @db.Uuid
+  contact     Contact               @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  kind        ContactIdentityKind
+  /// "" for org-wide kinds (PHONE, EMAIL, WA_BSUID); the channel id for IG_SCOPED, FB_PSID
+  /// and WEBCHAT; the integration key for EXTERNAL.
+  scope       String                @default("")
+  value       String
+  source      ContactIdentitySource
+  /// Issued by the platform or proven, as opposed to typed by someone.
+  verified    Boolean               @default(false)
+  /// The one mirrored into the contact's legacy column for this kind.
+  isPrimary   Boolean               @default(false)
+  username    String?
+  displayName String?
+  avatarUrl   String?
+  /// Channel this identity was last seen on. For WA_BSUID it decides which business
+  /// portfolio's numbers can message it.
+  channelId   String?               @db.Uuid
+  channel     Channel?              @relation(fields: [channelId], references: [id], onDelete: SetNull)
+  lastSeenAt  DateTime?
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @default(now()) @updatedAt
+
+  @@unique([orgId, kind, scope, value])
+  /// Lookup by value across scopes: Meta's scoped ids never collide between accounts, so an
+  /// inbound id is found whichever channel it was first recorded on.
+  @@index([orgId, kind, value])
+  @@index([contactId, kind])
+  @@index([channelId])
+}
+
+/// Audit of one contact merged into another. The source contact is deleted by the merge, so
+/// its id is kept as a plain value and `snapshot` holds what it was.
+model ContactMerge {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId           String   @db.Uuid
+  org             Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  sourceContactId String   @db.Uuid
+  /// No FK: a later merge may delete the target too, and the audit has to outlive it.
+  targetContactId String   @db.Uuid
+  /// User id, or null for a system merge (handoff link) or an API key.
+  mergedBy        String?  @db.Uuid
+  /// MANUAL | HANDOFF | API | SUGGESTION
+  reason          String
+  /// [PContactMergeSnapshot]
+  snapshot        Json
+  createdAt       DateTime @default(now())
+
+  @@index([orgId, createdAt])
+  @@index([targetContactId])
+  @@index([sourceContactId])
+}
+
+/// Two contacts that are probably one person, waiting for a person to decide. Only raised
+/// from strong signals — never from a similar name or photo.
+model ContactMergeSuggestion {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId      String    @db.Uuid
+  org        Org       @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  /// The pair is stored ordered (contactAId < contactBId) so one pair is one row.
+  contactAId String    @db.Uuid
+  contactBId String    @db.Uuid
+  /// SAME_PHONE | SAME_EMAIL | BSUID_PHONE_SPLIT | CUSTOMER_PROVIDED
+  reason     String
+  /// What matched, for the UI ("+91 98…", "rahul@…").
+  detail     String?
+  /// PENDING | MERGED | DISMISSED
+  status     String    @default("PENDING")
+  resolvedBy String?   @db.Uuid
+  resolvedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@unique([orgId, contactAId, contactBId])
+  @@index([orgId, status, createdAt(sort: Desc)])
+  @@index([contactAId])
+  @@index([contactBId])
 }

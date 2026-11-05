@@ -29,6 +29,13 @@ describe("unsupportedBlocks", () => {
     ]);
   });
 
+  test("Continue on WhatsApp is refused in a WhatsApp journey", () => {
+    const g = graph("startNode", "continueOnWhatsappNode");
+    expect(unsupportedBlocks(g, "INSTAGRAM")).toEqual([]);
+    expect(unsupportedBlocks(g, "FACEBOOK")).toEqual([]);
+    expect(unsupportedBlocks(g, "WHATSAPP")).toEqual(["continueOnWhatsappNode"]);
+  });
+
   test("Instagram-only blocks are refused on Messenger", () => {
     const g = graph("instagramFollowCheckNode", "instagramProductTemplateNode");
     expect(unsupportedBlocks(g, "INSTAGRAM")).toEqual([]);

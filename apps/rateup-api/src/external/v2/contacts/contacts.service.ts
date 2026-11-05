@@ -1,7 +1,7 @@
 import type { Prisma } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
 import { ExternalApiError } from "../../shared/errors.js";
-import { contactSelect } from "./presenters.js";
+import { contactDetailSelect, contactSelect } from "./presenters.js";
 
 /**
  * Prisma access for the partner contacts API. Every query here takes the org id and puts it
@@ -14,6 +14,16 @@ export function findContact(orgId: string, where: Prisma.ContactWhereInput) {
 
 export async function loadContact(orgId: string, contactId: string) {
   const contact = await findContact(orgId, { id: contactId });
+  if (!contact) throw new ExternalApiError(404, "contact_not_found", "No such contact");
+  return contact;
+}
+
+/** A contact with its identities, for single-contact answers. 404 when not the org's. */
+export async function loadContactDetail(orgId: string, contactId: string) {
+  const contact = await prisma.contact.findFirst({
+    where: { id: contactId, orgId },
+    select: contactDetailSelect,
+  });
   if (!contact) throw new ExternalApiError(404, "contact_not_found", "No such contact");
   return contact;
 }

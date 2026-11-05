@@ -10,6 +10,7 @@ import { getChatByContactId } from "../inbox/message/wamessage.service.js";
 import { verifyWidgetTokenHook } from "../../apiAccessToken/apiAccessToken.auth.js";
 import { type ByContactIdParams, byContactIdSchema } from "../../contact/contact.schema.js";
 import { declareAccess } from "../../../authz/registry.js";
+import { apiUsageOnResponse, flushApiUsage } from "../../apiAccessToken/apiUsage.js";
 
 /**
  * The embedded support widget's REST surface; every route here is the widget's (its chat
@@ -19,6 +20,11 @@ import { declareAccess } from "../../../authz/registry.js";
  */
 export async function supportUserWebhookRoutes(server: FastifyInstance) {
   declareAccess(server, { access: "token" });
+  // The widget's key shows up in the API keys page's usage like a partner key. Recorded
+  // only once `verifyWidgetTokenHook` has stamped a key, so a refused call writes nothing.
+  // Routes are logged as `/support/...`, telling them apart from partner API calls.
+  server.addHook("onResponse", apiUsageOnResponse("/api"));
+  server.addHook("onClose", flushApiUsage);
   // TODO: implement challanges for webhook
   // server.get("/", webhookSubscribeHandler);
   server.post("/", { preHandler: verifyWidgetTokenHook }, supportUserWebhookEventHandler);

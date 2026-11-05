@@ -1,11 +1,11 @@
 import { loadActor, type Actor } from "../../authz/actor.js";
 import { inScope } from "../../authz/scope.js";
-import { channelIdentifierSpellings } from "../../utils/channelIdentifier.js";
 import { FRONTEND_URL } from "../../utils/constants/constants.js";
 import { renderNotificationEmailBodies } from "../../utils/email/react/templates.js";
 import { PlatformType } from "../../../generated/prisma/enums.js";
 import prisma from "../../utils/prisma.js";
 import { getChannelScope } from "../whatsapp/settings/wa_channel_access.js";
+import { resolveChannelId } from "../channel/channel.service.js";
 import { eventDefinition, type NotificationEvent } from "./notification.catalogue.js";
 import { deliveredChannels, preferencesFromRow } from "./notification.preferences.js";
 import { renderNotification } from "./notification.render.js";
@@ -18,29 +18,6 @@ interface ResolvedAudience {
   userIds: string[] | "everyone";
   /** Narrows the candidates further once each one's actor is loaded. */
   admits?: (actor: Actor) => Promise<boolean> | boolean;
-}
-
-/** The channel a `WaMessage.sourceIdentifier` belongs to, or null when it matches none. */
-async function channelIdForIdentifier(
-  orgId: string,
-  sourceIdentifier: string,
-): Promise<string | null> {
-  // Any platform but WhatsApp records its own account id, which names one channel.
-  const byAccount = await prisma.channel.findFirst({
-    where: { orgId, accountId: sourceIdentifier, platform: { not: PlatformType.WHATSAPP } },
-    select: { id: true },
-  });
-  if (byAccount) return byAccount.id;
-
-  // WhatsApp records the number, in any of its spellings.
-  const numbers = await prisma.channel.findMany({
-    where: { orgId, platform: PlatformType.WHATSAPP },
-    select: { id: true, address: true },
-  });
-  const match = numbers.find((channel) =>
-    channelIdentifierSpellings(channel.address).includes(sourceIdentifier),
-  );
-  return match?.id ?? null;
 }
 
 async function resolveAudience(orgId: string, audience: NotifyAudience): Promise<ResolvedAudience> {
@@ -60,7 +37,7 @@ async function resolveAudience(orgId: string, audience: NotifyAudience): Promise
     }
     case "inboxQueue": {
       const channelId = audience.sourceIdentifier
-        ? await channelIdForIdentifier(orgId, audience.sourceIdentifier)
+        ? await resolveChannelId(orgId, null, audience.sourceIdentifier)
         : null;
       return {
         userIds: "everyone",

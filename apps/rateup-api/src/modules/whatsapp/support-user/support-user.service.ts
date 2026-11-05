@@ -1,5 +1,6 @@
 import { log } from "../../../utils/logger.js";
-import { PlatformType } from "../../../../generated/prisma/enums.js";
+import { ContactIdentityKind, PlatformType } from "../../../../generated/prisma/enums.js";
+import { currentContactId } from "../../contact/merge/currentContact.js";
 import { getSupportUserWebhookEvent } from "./support-user.util.js";
 import { SupportUserEvent } from "../../../types/enums.js";
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
@@ -36,12 +37,27 @@ export async function handleSupportUserWebhook(data: WaMessageBody, orgId: strin
   }
 }
 
-function getWidgetContact(contactId: unknown, orgId: string) {
+/**
+ * The contact a widget message belongs to, and the visitor id its messages are keyed on.
+ * The widget keeps the contact id it was given; if that contact has since been merged into
+ * another, the message goes to the one it was merged into. The visitor id comes from the
+ * contact's WEBCHAT identity — after a merge the kept contact's `other` column is its own
+ * (often empty), while the identity moved with the visitor.
+ */
+async function getWidgetContact(contactId: unknown, orgId: string) {
   if (typeof contactId !== "string" || !contactId) return null;
-  return prisma.contact.findFirst({
-    where: { id: contactId, orgId },
-    select: { orgId: true, other: true },
-  });
+  const id = await currentContactId(orgId, contactId);
+  if (!id) return null;
+  const [contact, identity] = await Promise.all([
+    prisma.contact.findFirst({ where: { id, orgId }, select: { orgId: true, other: true } }),
+    prisma.contactIdentity.findFirst({
+      where: { orgId, contactId: id, kind: ContactIdentityKind.WEBCHAT },
+      orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+      select: { value: true },
+    }),
+  ]);
+  const visitorId = identity?.value ?? contact?.other;
+  return contact && visitorId ? { orgId: contact.orgId, other: visitorId } : null;
 }
 
 type SupportUserChangeValue = WaMessageBody["entry"][number]["changes"][number]["value"];
@@ -52,7 +68,7 @@ export async function handleSupportUserMessages(
   contact: SupportUserContact,
 ) {
   const { orgId, other } = contact;
-  await handleWaMessages("receive", data, other!, orgId, PlatformType.WEBCHAT, undefined);
+  await handleWaMessages("receive", data, other, orgId, PlatformType.WEBCHAT, undefined);
 }
 
 /**

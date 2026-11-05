@@ -1,3 +1,4 @@
+import { storeBusinessPortfolio } from "../settings/businessPortfolio.js";
 import { FastifyReply } from "fastify";
 import { FastifyRequest } from "fastify/types/request.js";
 import type { RegisterBusinessBody, UserTokenBody } from "./wa_auth.schema.js";
@@ -131,6 +132,10 @@ export async function registerBusinessClientHandler(
         phone: phone?.display_phone_number,
       });
     }
+
+    // Which Meta business this number belongs to: BSUID customers can only be messaged from
+    // numbers of the same business, and an org may connect several businesses.
+    await storeBusinessPortfolio(orgId, waba_id, accessToken);
 
     log.info("Business client registered successfully");
     rep.status(200).send({ message: "Business client registered successfully" });

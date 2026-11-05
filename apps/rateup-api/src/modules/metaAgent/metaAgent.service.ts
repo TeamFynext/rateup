@@ -3,7 +3,7 @@ import prisma from "../../utils/prisma.js";
 import { aes_decrypt } from "../../../utils/encryption/encryption.utils.js";
 import { callMetaAgentApi, MetaAgentApiError } from "./metaAgent.client.js";
 import { setMetaAgentThreadOwner } from "./metaAgent.threadOwner.js";
-import { callMetaApi } from "../whatsapp/wa_axios.js";
+import { fetchBusinessPortfolio } from "../whatsapp/settings/businessPortfolio.js";
 import {
   AgentBudgetsBody,
   AgentEventBody,
@@ -1540,13 +1540,16 @@ async function resolveBusinessManagerId(
   }
   let business: { id?: string } | undefined;
   try {
-    const res = await callMetaApi(
-      `/${wabaId}?fields=on_behalf_of_business_info,owner_business_info`,
-      "GET",
-      accessToken,
-    );
-    // The client's business for a partner-owned WABA; its owner otherwise.
-    business = res.data?.on_behalf_of_business_info ?? res.data?.owner_business_info;
+    // Prefer what the channel already stores (set on connect, or by the backfill).
+    const stored = await prisma.whatsappSettings
+      .findFirst({
+        where: { wabaId, businessPortfolioId: { not: null } },
+        select: { businessPortfolioId: true },
+      })
+      .catch(() => null);
+    business = stored?.businessPortfolioId
+      ? { id: stored.businessPortfolioId }
+      : ((await fetchBusinessPortfolio(wabaId, accessToken)) ?? undefined);
   } catch {
     business = undefined;
   }

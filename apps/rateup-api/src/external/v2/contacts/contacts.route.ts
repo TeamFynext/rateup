@@ -4,6 +4,7 @@ import { externalErrorResponses } from "../../shared/errors.js";
 import { externalRateLimit } from "../../shared/rateLimit.js";
 import { declareExternalScopes } from "../../shared/scopes.js";
 import * as C from "./contacts.controller.js";
+import * as I from "./identities.controller.js";
 import * as S from "./contacts.schema.js";
 
 /**
@@ -46,14 +47,18 @@ export async function externalContactRoutes(server: FastifyInstance) {
     {
       schema: {
         tags: TAG,
-        summary: "Find a contact by phone",
+        summary: "Find a contact by any identity",
         description:
-          "Exact match on the phone number: digits with the country code, no `+`, e.g. 919876543210.",
+          "Exact match on one identity: `kind` and `value` (PHONE, EMAIL, WA_BSUID, IG_SCOPED, " +
+          "FB_PSID, WEBCHAT, EXTERNAL), or `phone` alone as before — digits with the country " +
+          "code, no `+`, e.g. 919876543210. Finds a merged contact by any of its phones, emails " +
+          "or ids. `channelId` narrows IG_SCOPED, FB_PSID and WEBCHAT to one channel; " +
+          "`integration` narrows EXTERNAL to one system.",
         querystring: S.contactLookupQuerySchema,
-        response: { 200: S.contactSchema, ...externalErrorResponses },
+        response: { 200: S.contactDetailSchema, ...externalErrorResponses },
       },
     },
-    C.lookupContactHandler,
+    I.lookupContactHandler,
   );
 
   server.post(
@@ -106,8 +111,9 @@ export async function externalContactRoutes(server: FastifyInstance) {
       schema: {
         tags: TAG,
         summary: "Get a contact",
+        description: "With its identities: every phone, email and platform id it is known by.",
         params: S.contactIdParamsSchema,
-        response: { 200: S.contactSchema, ...externalErrorResponses },
+        response: { 200: S.contactDetailSchema, ...externalErrorResponses },
       },
     },
     C.getContactHandler,
@@ -144,5 +150,88 @@ export async function externalContactRoutes(server: FastifyInstance) {
       preHandler: [writeLimit()],
     },
     C.deleteContactHandler,
+  );
+
+  server.get(
+    "/:contactId/identities",
+    {
+      schema: {
+        tags: TAG,
+        summary: "List a contact's identities",
+        params: S.contactIdParamsSchema,
+        response: { 200: S.contactIdentityListSchema, ...externalErrorResponses },
+      },
+    },
+    I.listContactIdentitiesHandler,
+  );
+
+  server.post(
+    "/:contactId/identities",
+    {
+      schema: {
+        tags: TAG,
+        summary: "Add an identity to a contact",
+        description:
+          "A PHONE, EMAIL or EXTERNAL id (with `integration`). 201 when added, 200 when the " +
+          "contact already had it. 409 `identity_in_use` when another contact holds it, with " +
+          "that contact's id in `details.contactId` — merge the two to join them. A contact's " +
+          "first identity of a kind becomes its `phone` or `email`.",
+        params: S.contactIdParamsSchema,
+        body: S.addContactIdentityBodySchema,
+        response: {
+          200: S.contactIdentitySchema,
+          201: S.contactIdentitySchema,
+          ...externalErrorResponses,
+        },
+      },
+      preHandler: [writeLimit()],
+    },
+    I.addContactIdentityHandler,
+  );
+
+  server.delete(
+    "/:contactId/identities/:identityId",
+    {
+      schema: {
+        tags: TAG,
+        summary: "Remove an identity from a contact",
+        description:
+          "409 `last_identity` for the contact's only one. Removing the primary phone or email " +
+          "promotes the next one, or clears the field.",
+        params: S.contactIdentityParamsSchema,
+        response: { 200: S.contactDeletedSchema, ...externalErrorResponses },
+      },
+      preHandler: [writeLimit()],
+    },
+    I.removeContactIdentityHandler,
+  );
+
+  server.post(
+    "/:contactId/merge",
+    {
+      // Its own scope: a merge deletes the source contact (apiKeyFeatures.ts, contacts_merge).
+      config: { permission: "contacts.merge" },
+      schema: {
+        tags: TAG,
+        summary: "Merge another contact into this one",
+        description:
+          "`sourceContactId` is merged into the contact in the path, which is kept: its " +
+          "identities, conversations, orders, labels, audiences and loyalty move over, and the " +
+          "source is deleted. Fires the `contact.merged` webhook. Cannot be undone.",
+        params: S.contactIdParamsSchema,
+        body: S.mergeContactBodySchema,
+        response: { 200: S.contactDetailSchema, ...externalErrorResponses },
+      },
+      preHandler: [
+        writeLimit(),
+        externalRateLimit({
+          max: 30,
+          windowSeconds: 60,
+          key: "extContactsMerge",
+          failClosed: true,
+        }),
+      ],
+    },
+    I.mergeContactHandler,
   );
 }

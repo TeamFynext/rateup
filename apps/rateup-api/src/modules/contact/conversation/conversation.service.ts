@@ -605,42 +605,83 @@ export async function getConversationsByContactId(orgId: string, contactId: stri
   });
 }
 
-export async function getLastCreatedConversationForContact(contactId: string) {
-  return await prisma.conversation.findFirst({
-    where: {
-      contactId: contactId,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+/// The contact's newest ticket, on one channel when `channelId` is given.
+///
+/// With a channel, that channel's own newest ticket wins. A ticket with no channel yet
+/// (written before tickets carried one) stands in when the channel has none, or when it is
+/// still live and newer — so a contact that only ever used one channel behaves exactly as
+/// before, and a merged contact's closed channel-less ticket cannot hide its live Instagram
+/// one.
+export async function getLastCreatedConversationForContact(
+  contactId: string,
+  channelId?: string | null,
+) {
+  if (!channelId) {
+    return await prisma.conversation.findFirst({
+      where: { contactId },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+  const [exact, loose] = await Promise.all([
+    prisma.conversation.findFirst({
+      where: { contactId, channelId },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.conversation.findFirst({
+      where: { contactId, channelId: null },
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
+  if (!exact || !loose) return exact ?? loose;
+  if (!isTerminalInboxStatus(loose.status) && loose.createdAt > exact.createdAt) return loose;
+  if (!isTerminalInboxStatus(exact.status)) return exact;
+  return loose.createdAt > exact.createdAt ? loose : exact;
 }
 
-/// The conversation a new inbound message belongs to: the most recent one that
-/// has not reached a terminal status. Returns null when the last conversation
-/// was closed, which is the signal to open a fresh one.
-export async function getActiveConversationForContact(contactId: string) {
-  const latest = await getLastCreatedConversationForContact(contactId);
+/// The conversation a new inbound message belongs to: the most recent one on that
+/// channel that has not reached a terminal status. Returns null when the last one was
+/// closed, which is the signal to open a fresh one. A live ticket without a channel is
+/// adopted by the first message that names one.
+export async function getActiveConversationForContact(
+  contactId: string,
+  channelId?: string | null,
+) {
+  const latest = await getLastCreatedConversationForContact(contactId, channelId);
   if (!latest || isTerminalInboxStatus(latest.status)) return null;
-  return latest;
+  return await adoptChannel(latest, channelId);
+}
+
+/// Stamps a channel onto a ticket that has none. Never moves a ticket between channels.
+export async function adoptChannel<T extends { id: string; channelId: string | null }>(
+  conversation: T,
+  channelId: string | null | undefined,
+): Promise<T> {
+  if (!channelId || conversation.channelId) return conversation;
+  await prisma.conversation.updateMany({
+    where: { id: conversation.id, channelId: null },
+    data: { channelId },
+  });
+  return { ...conversation, channelId };
 }
 
 /// Opens the next conversation for a contact, carrying the reopen counter
-/// forward from the conversation it succeeds. A thread that is closed and then
-/// messaged again becomes a *new* conversation, so that `closedAt`,
+/// forward from the conversation it succeeds on the same channel. A thread that is
+/// closed and then messaged again becomes a *new* conversation, so that `closedAt`,
 /// `firstRespondedAt` and the resolution-time metrics keep describing exactly
 /// one open-to-close cycle.
 export async function openConversationForContact(
   contactId: string,
   orgId: string,
   status: InboxStatus = WaMessageAssignStatus.UNASSIGNED,
+  channelId?: string | null,
 ) {
-  const previous = await getLastCreatedConversationForContact(contactId);
+  const previous = await getLastCreatedConversationForContact(contactId, channelId);
   const conversation = await prisma.conversation.create({
     data: {
       contactId,
       orgId,
       status,
+      channelId: channelId ?? previous?.channelId ?? null,
       reopenCount: previous ? previous.reopenCount + 1 : 0,
     },
   });

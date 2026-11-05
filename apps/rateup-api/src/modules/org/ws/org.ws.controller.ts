@@ -4,6 +4,8 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import crypto from "node:crypto";
 import { orgWsMessage } from "../../../types/global.js";
 import { log } from "../../../utils/logger.js";
+import { recordApiUsage } from "../../apiAccessToken/apiUsage.js";
+import { currentContactId } from "../../contact/merge/currentContact.js";
 import baseRedis from "../../../utils/redisConnection.js";
 import { userStatusQueue } from "../../../workers/bullmq/queues/index.js";
 import { WebSocket } from "@fastify/websocket";
@@ -42,6 +44,12 @@ type RoleTaggedSocket = WebSocket & {
   contactId?: string;
   /** The signed-in user; a broadcast naming `userIds` reaches only their sockets. */
   userId?: string;
+  /**
+   * Widget sockets only: the contact id the widget asked with. It differs from `contactId`
+   * when that contact was merged since; events are labelled with this one, which is the id
+   * the widget compares them against.
+   */
+  widgetContactId?: string;
 };
 
 const activeConnections = new Map<string, Map<string, RoleTaggedSocket>>();
@@ -112,8 +120,26 @@ subscriber.on("message", (channel, message) => {
       if (client.readyState !== 1) continue;
       if (roleFilter && client.role !== roleFilter) continue;
       if (forUsers && (!client.userId || !forUsers.has(client.userId))) continue;
-      // A socket that named a contact hears about that contact and nothing else.
+      // A socket that named a contact hears about that contact and nothing else — and a
+      // widget only about its webchat thread: a contact merged with a WhatsApp or Instagram
+      // customer must not stream those conversations to a website visitor.
       if (client.contactId && client.contactId !== forContact) continue;
+      if (client.contactId && data?.inbox?.message?.sourcePlatform !== "WEBCHAT") continue;
+      if (client.contactId) {
+        // A widget runs on a public page: it gets the message and nothing of the contact
+        // record (phone, email, notes — after a merge, a WhatsApp customer's), and the event
+        // carries the contact id the widget itself knows.
+        client.send(
+          JSON.stringify({
+            type: data.type,
+            inbox: {
+              contact: { id: client.widgetContactId ?? client.contactId },
+              message: data.inbox.message,
+            },
+          }),
+        );
+        continue;
+      }
       client.send(JSON.stringify(data));
     }
   } catch (err) {
@@ -167,8 +193,13 @@ export async function handleWebSocketConnection(
   // Store role alongside connection
   connection.role = role;
   if (role === "main" && userId) connection.userId = userId;
-  // Widget sockets name the conversation they are showing; see RoleTaggedSocket.
-  if (role === "fab" && requestedContactId) connection.contactId = requestedContactId;
+  // Widget sockets name the conversation they are showing; see RoleTaggedSocket. The id the
+  // widget kept may belong to a contact merged since, so it is followed to the current one.
+  if (role === "fab" && requestedContactId) {
+    connection.widgetContactId = requestedContactId;
+    connection.contactId =
+      (await currentContactId(orgId, requestedContactId).catch(() => null)) ?? requestedContactId;
+  }
   activeConnections.get(orgId)!.set(socketKey, connection);
 
   connection.on("message", (msg) => {
@@ -226,6 +257,7 @@ export const checkWidgetToken = async (
   const { accessToken } = request.query ?? {};
 
   let orgId: string;
+  let keyId: string;
   try {
     const grant = await authenticateWidgetKey(accessToken);
     if (!grant) {
@@ -233,6 +265,7 @@ export const checkWidgetToken = async (
       return;
     }
     orgId = grant.orgId;
+    keyId = grant.keyId;
     // Only a full-access key or one with the Webchat widget feature: the token is public, so
     // a key limited to other features (contacts, campaigns…) must not be usable from a page.
     if (!scopesAllowWidget(grant.scopes)) {
@@ -248,6 +281,17 @@ export const checkWidgetToken = async (
   request.user = { orgId, role: Role.SUPER_ADMIN };
   request.principal = { kind: "widget", orgId };
   request.actor = buildActor(request.principal);
+  // A socket upgrade never reaches an onResponse hook, so the widget's live connection is
+  // counted here, once per connection, against the key that opened it.
+  recordApiUsage({
+    orgId,
+    keyId,
+    method: "GET",
+    route: "/org/ws/widget",
+    status: 101,
+    latencyMs: Math.round(reply.elapsedTime),
+    createdAt: new Date(),
+  });
 };
 
 export const checkMobileId = async (

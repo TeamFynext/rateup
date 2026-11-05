@@ -1632,6 +1632,8 @@ declare global {
       | (Record<string, unknown> & { points?: number });
     type PLoyaltyUsedContext = LoyaltyUsedContext;
     type PContactIntegrationIds = ContactIntegrationIds;
+    type PContactMergeSnapshot =
+      import("../modules/contact/merge/merge.types.js").ContactMergeSnapshot;
     type PLinktreeLinks = LinktreeLink[];
     // Rows written before the current schema keep older shapes; readers migrate them
     // (see migrateFeaturesToCurrentSchema), so the stored type is the legacy superset.
@@ -1765,7 +1767,8 @@ export interface orgWsMessage {
     | "message_edited"
     | "meta_agent_thread"
     | "notification"
-    | "call";
+    | "call"
+    | "contact_merged";
   inbox?: {
     /** Contact plus the ticket the message landed on — the inbox list is keyed by ticket. */
     contact: Contact & { conversationId?: string | null; conversationStatus?: string | null };
@@ -1797,6 +1800,11 @@ export interface orgWsMessage {
     conversationId?: string | null;
     editedAt: string;
     message: WaMessage;
+  };
+  /** One contact was merged into another: drop the source's rows, reload the target's. */
+  contact_merged?: {
+    sourceContactId: string;
+    targetContactId: string;
   };
   /** A teammate started or stopped typing a reply. Lapses on the client if no refresh arrives. */
   inbox_typing?: {

@@ -1,3 +1,4 @@
+import { WaMessageAssignStatus } from "../../../types/enums.js";
 import crypto from "node:crypto";
 import {
   PlatformType,
@@ -392,7 +393,7 @@ export async function startCall(
   const waCallId: string | undefined = data?.calls?.[0]?.id;
   if (!waCallId) throw new Error("Meta accepted the call but returned no call id");
 
-  const conversation = await getActiveConversationForContact(contact.id);
+  const conversation = await getActiveConversationForContact(contact.id, settings.channelId);
   const call = await prisma.waCall.create({
     data: {
       id,
@@ -555,8 +556,13 @@ async function onIncomingCall(
   // A call is customer activity like a message is: it belongs on their live ticket, or
   // opens one so a missed call has somewhere to be seen.
   const conversation = contact
-    ? ((await getActiveConversationForContact(contact.id)) ??
-      (await openConversationForContact(contact.id, orgId)))
+    ? ((await getActiveConversationForContact(contact.id, settings.channelId)) ??
+      (await openConversationForContact(
+        contact.id,
+        orgId,
+        WaMessageAssignStatus.UNASSIGNED,
+        settings.channelId,
+      )))
     : null;
 
   let call: CallWithContact;

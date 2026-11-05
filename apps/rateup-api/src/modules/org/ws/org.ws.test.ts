@@ -43,9 +43,15 @@ vi.mock("../../../authz/actor.js", () => ({
   loadActor: vi.fn().mockResolvedValue(null),
   isUserBlocked: vi.fn(async () => false),
 }));
+// A widget's contact id is followed through merges; here every id is still current.
+vi.mock("../../contact/merge/currentContact.js", () => ({
+  currentContactId: vi.fn(async (_orgId: string, id: string) => id),
+}));
 vi.mock("../../apiAccessToken/apiAccessToken.service.js", () => ({
   authenticateApiAccessToken: vi.fn(),
 }));
+const recordApiUsage = vi.hoisted(() => vi.fn());
+vi.mock("../../apiAccessToken/apiUsage.js", () => ({ recordApiUsage }));
 
 import { getSessionWithoutRequestResponse } from "supertokens-node/recipe/session/index.js";
 import { userStatusQueue } from "../../../workers/bullmq/queues/index.js";
@@ -248,11 +254,71 @@ describe("handleWebSocketConnection", () => {
       req({ query: { role: "fab", contactId: "contact-2" } }),
     );
 
-    broadcast(OWN_ORG, { type: "inbox", inbox: { contact: { id: "contact-1" } } }, "fab");
+    broadcast(
+      OWN_ORG,
+      {
+        type: "inbox",
+        inbox: { contact: { id: "contact-1" }, message: { sourcePlatform: "WEBCHAT" } },
+      },
+      "fab",
+    );
 
     expect(mine.send).toHaveBeenCalledOnce();
     // The whole point: one visitor's widget must never be handed another's conversation.
     expect(theirs.send).not.toHaveBeenCalled();
+  });
+
+  test("a widget never hears its contact's WhatsApp or Instagram messages", async () => {
+    // A webchat visitor merged with a WhatsApp customer is one contact; the website widget
+    // still shows only the webchat thread.
+    const widget = socket();
+    await handleWebSocketConnection(
+      widget,
+      req({ query: { role: "fab", contactId: "contact-1" } }),
+    );
+
+    broadcast(OWN_ORG, {
+      type: "inbox",
+      inbox: { contact: { id: "contact-1" }, message: { sourcePlatform: "WHATSAPP" } },
+    });
+
+    expect(widget.send).not.toHaveBeenCalled();
+  });
+
+  test("a widget gets the message alone, labelled with the contact id it asked with", async () => {
+    const { currentContactId } = await import("../../contact/merge/currentContact.js");
+    vi.mocked(currentContactId).mockResolvedValueOnce("kept-contact");
+    const widget = socket();
+    await handleWebSocketConnection(
+      widget,
+      req({ query: { role: "fab", contactId: "merged-away" } }),
+    );
+
+    broadcast(OWN_ORG, {
+      type: "inbox",
+      inbox: {
+        contact: { id: "kept-contact", phone: "919000000001", email: "a@b.co", notes: "vip" },
+        message: { id: "m1", sourcePlatform: "WEBCHAT" },
+      },
+    });
+
+    const sent = JSON.parse((widget.send as any).mock.calls[0][0]);
+    expect(sent).toEqual({
+      type: "inbox",
+      inbox: { contact: { id: "merged-away" }, message: { id: "m1", sourcePlatform: "WEBCHAT" } },
+    });
+  });
+
+  test("a widget holding a merged-away contact id follows it to the kept contact", async () => {
+    const { currentContactId } = await import("../../contact/merge/currentContact.js");
+    vi.mocked(currentContactId).mockResolvedValueOnce("kept-contact");
+    const widget = socket();
+    await handleWebSocketConnection(
+      widget,
+      req({ query: { role: "fab", contactId: "merged-away" } }),
+    );
+
+    expect((widget as any).contactId).toBe("kept-contact");
   });
 
   test("a socket that named no contact still hears everything", async () => {
@@ -625,6 +691,22 @@ describe("checkWidgetToken", () => {
     expect(verify).toHaveBeenCalledWith(null, KEY);
     expect(request.user.orgId).toBe(OWN_ORG);
     expect(rep.code).not.toHaveBeenCalled();
+  });
+
+  test("counts the connection in the key's usage", async () => {
+    recordApiUsage.mockClear();
+    await checkWidgetToken(widgetReq({ accessToken: KEY }), reply());
+
+    expect(recordApiUsage).toHaveBeenCalledWith(
+      expect.objectContaining({ orgId: OWN_ORG, keyId: "k", route: "/org/ws/widget", status: 101 }),
+    );
+  });
+
+  test("a refused connection is not counted", async () => {
+    recordApiUsage.mockClear();
+    await checkWidgetToken(widgetReq({}), reply());
+
+    expect(recordApiUsage).not.toHaveBeenCalled();
   });
 
   test("refuses a request with no token", async () => {

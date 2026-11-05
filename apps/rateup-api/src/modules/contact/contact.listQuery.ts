@@ -159,6 +159,18 @@ export function buildContactListWhere(
       OR: [
         { name: { contains: search, mode: "insensitive" } },
         { phone: { contains: search, mode: "insensitive" } },
+        { email: { contains: search, mode: "insensitive" } },
+        // WhatsApp or Instagram username.
+        { whatsappUserName: { contains: search, mode: "insensitive" } },
+        // A merged contact's second phone or email lives only in its identities.
+        {
+          identities: {
+            some: {
+              kind: { in: ["PHONE", "EMAIL"] },
+              value: { contains: search.toLowerCase() },
+            },
+          },
+        },
       ],
     });
   }
