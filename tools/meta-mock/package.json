@@ -1,7 +1,8 @@
 {
   "name": "@rateup/meta-mock",
-  "version": "1.0.0",
-  "description": "A local stand-in for Meta's Graph API \u2014 WhatsApp Cloud API and Instagram \u2014 generated from Meta's published Postman collections.",
+  "version": "2.0.0",
+  "private": true,
+  "description": "A local stand-in for Meta's Graph API — WhatsApp Cloud API and Instagram — generated from Meta's published Postman collections.",
   "license": "MIT",
   "repository": "https://github.com/TeamFynext/whatsapp-mock-api",
   "type": "module",
@@ -35,6 +36,7 @@
     "dev": "node bin/meta-mock.mjs --status-progression --verbose"
   },
   "engines": {
-    "node": ">=20"
-  }
+    "node": ">=26"
+  },
+  "packageManager": "pnpm@12.16.1"
 }

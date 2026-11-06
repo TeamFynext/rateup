@@ -23,8 +23,8 @@ example. It is regenerated on every sync and committed, so it diffs when Meta
 changes something.
 
 ```bash
-npm run routes              # the same list, in the terminal
-npm run routes messenger    # filtered
+pnpm run routes              # the same list, in the terminal
+pnpm run routes messenger    # filtered
 ```
 
 Three layers answer a request, and nothing is ever unanswered:
@@ -103,7 +103,7 @@ a broken payment method, a locked account — never gets that far: Graph refuses
 the send synchronously with an error. `sendError` does that for every send:
 
 ```bash
-META_MOCK_SEND_ERROR=131042 npx meta-mock     # or --send-error 131042
+META_MOCK_SEND_ERROR=131042 node bin/meta-mock.mjs     # or --send-error 131042
 ```
 
 ```js
@@ -131,7 +131,7 @@ curl -X DELETE localhost:8081/__stub/send-error
 random from Meta's error reference:
 
 ```bash
-META_MOCK_SEND_ERROR_RATE=0.1 npx meta-mock          # or --send-error-rate 0.1
+META_MOCK_SEND_ERROR_RATE=0.1 node bin/meta-mock.mjs          # or --send-error-rate 0.1
 META_MOCK_SEND_ERROR_CODES=131026,130429 ...          # narrow the pool
 ```
 
@@ -160,10 +160,10 @@ real, end to end, against a real database, with nothing leaving the machine.
 ## Running it
 
 ```bash
-npx meta-mock                        # :8081 — no status callbacks
-npx meta-mock --status-progression   # ...and sent → delivered → read
-npx meta-mock --status-progression --status-jitter 3000   # ...arriving out of order
-npx meta-mock --help
+node bin/meta-mock.mjs                        # :8081 — no status callbacks
+node bin/meta-mock.mjs --status-progression   # ...and sent → delivered → read
+node bin/meta-mock.mjs --status-progression --status-jitter 3000   # ...arriving out of order
+node bin/meta-mock.mjs --help
 ```
 
 **A send is answered and nothing follows unless you ask for status
@@ -177,7 +177,7 @@ the CLI loads it, and real environment variables still win:
 
 ```bash
 cp .env.example .env      # then fill in the WABA and phone number ids
-npm run dev               # progression on, verbose
+pnpm run dev               # progression on, verbose
 ```
 
 The identity matters: status callbacks carry `metadata.phone_number_id`, and the
@@ -188,7 +188,7 @@ one.
 Then point the services at it:
 
 ```bash
-cd rateup-api && META_API_BASE_URL=http://127.0.0.1:8081 npm run dev
+cd rateup-api && META_API_BASE_URL=http://127.0.0.1:8081 pnpm run dev
 ```
 
 Or as a container, alongside the rest of your local infrastructure:
@@ -311,8 +311,8 @@ caller and more surface to keep correct when Meta changes it.
 ## Keeping up with Meta
 
 ```bash
-npm run sync           # re-download both collections and regenerate fixtures
-npm run sync:check     # fail if the committed fixtures are stale (CI)
+pnpm run sync           # re-download both collections and regenerate fixtures
+pnpm run sync:check     # fail if the committed fixtures are stale (CI)
 node scripts/sync-from-postman.mjs --file whatsapp=wa.json --file instagram=ig.json
 ```
 
@@ -348,5 +348,5 @@ segment. Matching only one spelling leaves every Instagram path with an extra
 ## Tests
 
 ```bash
-npm test
+pnpm test
 ```
