@@ -1,5 +1,4 @@
 import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
-
 import { RootProvider } from "fumadocs-ui/provider/tanstack";
 
 import appCss from "../styles.css?url";
@@ -43,7 +42,6 @@ export const Route = createRootRoute({
   }),
   shellComponent: RootDocument,
 });
-
 
 function RootDocument({ children }: Readonly<{ children: React.ReactNode }>) {
   return (

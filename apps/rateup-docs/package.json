@@ -1,34 +1,36 @@
 {
   "name": "rateup-docs",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
-  "engines": {
-    "node": "24.x"
-  },
   "type": "module",
   "scripts": {
-    "dev": "vite dev",
-    "build": "vite build",
-    "start": "node .output/server/index.mjs"
+    "build": "vp build",
+    "start": "node .output/server/index.mjs",
+    "prepare": "vp config"
   },
   "dependencies": {
-    "@tanstack/react-router": "^1.170.44",
-    "@tanstack/react-start": "^1.169.2",
+    "@tanstack/react-router": "^1.170.46",
+    "@tanstack/react-start": "^1.169.4",
     "@types/mdx": "^2.0.14",
-    "@vitejs/plugin-react": "^6.1.2",
-    "fumadocs-core": "^16.17.5",
-    "fumadocs-mdx": "^15.4.7",
-    "fumadocs-ui": "^16.17.5",
-    "nitro": "^3.0.260903-beta",
+    "@vitejs/plugin-react": "^6.2.1",
+    "fumadocs-core": "^16.17.10",
+    "fumadocs-mdx": "^15.4.10",
+    "fumadocs-ui": "^16.17.10",
+    "nitro": "^3.0.261103-rc",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "vite": "^8.3.4"
+    "vite": "catalog:"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.3.3",
-    "@types/node": "26.6.5",
+    "@tailwindcss/vite": "^4.3.4",
+    "@types/node": "26.6.6",
     "@types/react": "19.3.0",
-    "tailwindcss": "^4.3.3",
-    "typescript": "7.0.2"
-  }
+    "tailwindcss": "^4.3.4",
+    "typescript": "7.0.2",
+    "vite-plus": "catalog:"
+  },
+  "engines": {
+    "node": "26.x"
+  },
+  "packageManager": "pnpm@12.16.1"
 }

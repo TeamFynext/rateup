@@ -35,7 +35,14 @@ const ImagePlaceholder = ({ file, shot, caption }: ImagePlaceholderProps) => {
       <div style={{ fontSize: "24px", marginBottom: "8px" }} aria-hidden="true">
         🖼️
       </div>
-      <div style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", fontSize: "11px" }}>
+      <div
+        style={{
+          fontWeight: 700,
+          textTransform: "uppercase",
+          letterSpacing: "0.06em",
+          fontSize: "11px",
+        }}
+      >
         Screenshot to be added
       </div>
       <div style={{ marginTop: "8px" }}>{shot}</div>
