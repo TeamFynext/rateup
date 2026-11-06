@@ -6,6 +6,10 @@ on:
     branches:
       - dev
   workflow_dispatch:
+# One migration run at a time against the dev database; a second push waits.
+concurrency:
+  group: prisma-migrate-dev
+  cancel-in-progress: false
 # The token is never used by these jobs; keep it read-only.
 permissions:
   contents: read
