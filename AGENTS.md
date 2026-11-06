@@ -45,7 +45,10 @@ vp check                          # format + lint (root vite.config.ts)
   `"catalog:"` in each `package.json`, with its version once in `pnpm-workspace.yaml`
   (`catalogMode: prefer`, so `vp add` does this for listed packages). Upgrade it there.
   apps/mobile is the exception: Expo pins its own React, Tailwind 3 and TypeScript 6.
-- **`nodeLinker: hoisted`** is workspace-wide because the Expo app needs it.
+- **Isolated `node_modules` (pnpm's default) everywhere, Expo included.** A package can only
+  import what its own `package.json` declares; an undeclared import fails at once instead of
+  working by accident. Do not switch to `nodeLinker: hoisted`: pnpm applies it to the whole
+  workspace, and Expo 58 does not need it.
 - **Internal packages ship TypeScript source.** `ui` and `utils` are compiled by the app that
   imports them. `@rateup/api` exports source under the `source` condition (dev, tests, type
   checks) and its compiled `dist/` to plain Node in production, for the workers.

@@ -3,10 +3,6 @@ packages:
   - packages/*
   - tools/*
 
-# apps/mobile (Expo / React Native) needs the flat, npm-style node_modules layout, and pnpm
-# applies the linker to the whole workspace. Every app ran on this layout under npm.
-nodeLinker: hoisted
-
 # One version per shared dependency: packages declare what they use as "catalog:" and the
 # version lives here, so an upgrade (TanStack, Tailwind, TypeScript, oxlint...) is one line.
 # apps/mobile keeps its own ranges: Expo pins React, Tailwind 3 and TypeScript 6.
