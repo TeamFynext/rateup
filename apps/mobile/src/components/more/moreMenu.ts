@@ -55,6 +55,15 @@ export function useMoreMenuItems(): MoreMenuItem[] {
       hint: "Missed, incoming and outgoing WhatsApp calls",
       href: "/protected/more/calls",
     },
+    can("meta_agent.read") && {
+      key: "meta-ai",
+      icon: "sparkles",
+      iconOutline: "sparkles-outline",
+      sf: "sparkles",
+      label: "Meta AI",
+      hint: "Conversations it answered, handovers and usage caps",
+      href: "/protected/more/meta-ai",
+    },
   ];
 
   return items.filter((i): i is MoreMenuItem => Boolean(i));

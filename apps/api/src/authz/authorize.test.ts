@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 vi.mock("supertokens-node/recipe/session/index.js", () => ({ default: { getSession: vi.fn() } }));
 vi.mock("../utils/logger.js", () => ({ log: { warn: vi.fn(), error: vi.fn() } }));

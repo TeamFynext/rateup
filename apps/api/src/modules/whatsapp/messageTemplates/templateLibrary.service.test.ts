@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { normalizeLibraryEntry, toMetaButtonInputs } from "./templateLibrary.service.js";
 import { createFromLibrarySchema } from "./templateLibrary.schema.js";
 

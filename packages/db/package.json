@@ -1,6 +1,6 @@
 {
   "name": "@rateup/db",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "private": true,
   "description": "Prisma schema and migrations. `prisma generate` writes the client into apps/api.",
   "license": "MIT",

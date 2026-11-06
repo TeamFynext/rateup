@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 // Everything the processor reaches is mocked, so this exercises only how a delivery
 // is walked: every entry, change, message and status, each status under its own type.

@@ -605,20 +605,44 @@ export async function getConversationsByContactId(orgId: string, contactId: stri
   });
 }
 
+/// Webchat is the website widget, not a connected account: it has no `Channel` row, so its
+/// tickets carry no `channelId` and are told apart by their messages instead. Without this,
+/// a webchat message from a contact with an open WhatsApp ticket fell through to "the
+/// newest ticket on any channel" and was filed on the WhatsApp ticket, and a WhatsApp
+/// message could adopt a live webchat ticket as a channel-less one.
+///
+/// A webchat ticket: no channel, and no message from any other platform (so a ticket just
+/// opened for a webchat message, still empty, counts).
+const WEBCHAT_TICKET = {
+  channelId: null,
+  messages: { none: { sourcePlatform: { notIn: [PlatformType.WEBCHAT, PlatformType.INTERNAL] } } },
+} satisfies Prisma.ConversationWhereInput;
+/// Anything that is not a webchat thread: no webchat message in it.
+const NOT_WEBCHAT_TICKET = {
+  messages: { none: { sourcePlatform: PlatformType.WEBCHAT } },
+} satisfies Prisma.ConversationWhereInput;
+
 /// The contact's newest ticket, on one channel when `channelId` is given.
 ///
 /// With a channel, that channel's own newest ticket wins. A ticket with no channel yet
 /// (written before tickets carried one) stands in when the channel has none, or when it is
 /// still live and newer — so a contact that only ever used one channel behaves exactly as
 /// before, and a merged contact's closed channel-less ticket cannot hide its live Instagram
-/// one.
+/// one. A webchat ticket never stands in for another channel's.
+///
+/// `platform` is the message's platform. Webchat, which has no channel, uses it to find its
+/// own tickets; any other known platform uses it to keep webchat tickets out. Without one
+/// (callers that mean "the contact's newest ticket", e.g. assignment) every ticket counts.
 export async function getLastCreatedConversationForContact(
   contactId: string,
   channelId?: string | null,
+  platform?: PlatformType | null,
 ) {
   if (!channelId) {
+    const scope =
+      platform === PlatformType.WEBCHAT ? WEBCHAT_TICKET : platform ? NOT_WEBCHAT_TICKET : {};
     return await prisma.conversation.findFirst({
-      where: { contactId },
+      where: { contactId, ...scope },
       orderBy: { createdAt: "desc" },
     });
   }
@@ -628,7 +652,7 @@ export async function getLastCreatedConversationForContact(
       orderBy: { createdAt: "desc" },
     }),
     prisma.conversation.findFirst({
-      where: { contactId, channelId: null },
+      where: { contactId, channelId: null, ...NOT_WEBCHAT_TICKET },
       orderBy: { createdAt: "desc" },
     }),
   ]);
@@ -645,8 +669,9 @@ export async function getLastCreatedConversationForContact(
 export async function getActiveConversationForContact(
   contactId: string,
   channelId?: string | null,
+  platform?: PlatformType | null,
 ) {
-  const latest = await getLastCreatedConversationForContact(contactId, channelId);
+  const latest = await getLastCreatedConversationForContact(contactId, channelId, platform);
   if (!latest || isTerminalInboxStatus(latest.status)) return null;
   return await adoptChannel(latest, channelId);
 }
@@ -674,14 +699,17 @@ export async function openConversationForContact(
   orgId: string,
   status: InboxStatus = WaMessageAssignStatus.UNASSIGNED,
   channelId?: string | null,
+  platform?: PlatformType | null,
 ) {
-  const previous = await getLastCreatedConversationForContact(contactId, channelId);
+  const previous = await getLastCreatedConversationForContact(contactId, channelId, platform);
   const conversation = await prisma.conversation.create({
     data: {
       contactId,
       orgId,
       status,
-      channelId: channelId ?? previous?.channelId ?? null,
+      // A webchat ticket has no channel, and must not inherit another ticket's.
+      channelId:
+        channelId ?? (platform === PlatformType.WEBCHAT ? null : (previous?.channelId ?? null)),
       reopenCount: previous ? previous.reopenCount + 1 : 0,
     },
   });

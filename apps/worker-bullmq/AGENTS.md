@@ -8,7 +8,7 @@ deployment topology and worker health and metrics.
 pnpm run dev        # tsx watch, loads @rateup/api from source
 pnpm run build      # type-check, then emit dist/
 pnpm run start      # node dist/index.js
-pnpm run test
+vp test             # tests (vp lint for lint; rules in vite.config.ts)
 ```
 
 Railway: `railway.json` here is this service's config-as-code; the service builds from the

@@ -6,20 +6,24 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { WaMessageAssignStatus } from "../api/inbox/types";
+import { WaMessageClosedStatus } from "../constants/constants";
 import { isInboxSessionExpired } from "../utils/chatbox_utils";
-import { useOpenChatStore } from "../utils/store";
+import { useOpenChatStore, useSelectedContactStore } from "../utils/store";
 
 import {
   deleteMessageFromIDB,
   loadContactIdsForFilter,
-  loadContactsFromDB,
+  loadRowsFromDB,
   removeContactsFromDB,
   saveContactIdsForFilter,
   saveContactsToDB,
   saveContactToDB,
   saveMessagesToIDB,
 } from "../utils/sqlite";
-import { logger } from "@/utils/logger";
+import { describeError, logger } from "@/utils/logger";
+import { getRowKey } from "@/utils/inboxRowKey";
+
+export { getRowKey };
 
 export function makeFilterKey(filter: any) {
   return Object.entries(filter || {})
@@ -49,21 +53,75 @@ export function messageTime(message: any): number {
   return Number.isNaN(time) ? 0 : time;
 }
 
+const TERMINAL_STATUSES = new Set<string>(WaMessageClosedStatus);
+
+/** Every row key the store holds for a contact. */
+export function rowKeysForContact(contactsById: Map<string, any>, contactId: string): string[] {
+  const keys: string[] = [];
+  for (const [key, row] of contactsById) if (row?.id === contactId) keys.push(key);
+  return keys;
+}
+
 /**
- * The list endpoint is ticket-grained — one row per conversation — but this
- * store is keyed by contact. A contact with several tickets on the page used to
- * collapse into whichever row came last, often an old closed ticket quoting an
- * old message. Keep the row whose last message is newest.
+ * The inbox row the user opened. The inbox and chat screens keep it in
+ * `useSelectedContactStore`; this store's own `selectedContact` is not set by them.
  */
-function latestRowPerContact(rows: any[]): any[] {
-  const byId = new Map<string, any>();
-  for (const row of rows) {
-    const seen = byId.get(row.id);
-    if (!seen || messageTime(row.lastMessage) > messageTime(seen.lastMessage)) {
-      byId.set(row.id, row);
+export function openedRow(state?: Pick<ContactsStoreState, "selectedContact">) {
+  return useSelectedContactStore.getState().selectedContact ?? state?.selectedContact ?? null;
+}
+
+/** A contact's live ticket: an open one before a closed one, then the most recently active. */
+function liveRowKeyForContact(contactsById: Map<string, any>, contactId: string): string | null {
+  let best: { key: string; open: boolean; at: number } | null = null;
+  for (const key of rowKeysForContact(contactsById, contactId)) {
+    const row = contactsById.get(key);
+    const open = !TERMINAL_STATUSES.has(row?.waMessageAssignStatus);
+    const at = Math.max(
+      messageTime(row?.lastMessage),
+      messageTime({ waCreatedAt: row?.conversationLastMessageAt }),
+    );
+    if (!best || (open && !best.open) || (open === best.open && at > best.at)) {
+      best = { key, open, at };
     }
   }
-  return Array.from(byId.values());
+  return best?.key ?? null;
+}
+
+/**
+ * Which row an update for a contact belongs to, or null when the store has none.
+ *
+ * Callers mostly know only the contact (the chat screen, socket frames), so this
+ * resolves in the same order as rateup-ui's `resolveIncomingRowKey`: the ticket
+ * the caller names; a row stored under the id itself (a row key passed in, or a
+ * row with no ticket); the open chat's row when it is this contact's; else the
+ * contact's live ticket. A named ticket the store has not seen resolves to null,
+ * so the caller can add it as a new row.
+ */
+export function resolveRowKey(
+  state: Pick<ContactsStoreState, "contactsById" | "selectedContact">,
+  contactId: string,
+  conversationId?: string | null,
+): string | null {
+  const { contactsById } = state;
+  const selectedContact = openedRow(state);
+  if (conversationId && contactsById.has(conversationId)) return conversationId;
+  if (contactsById.has(contactId)) return contactId;
+  if (conversationId) return null;
+  if (selectedContact?.id === contactId) {
+    const selectedKey = getRowKey(selectedContact);
+    if (contactsById.has(selectedKey)) return selectedKey;
+  }
+  return liveRowKeyForContact(contactsById, contactId);
+}
+
+/** The row `resolveRowKey` picks, for selectors that are handed a contact id. */
+export function selectRowForContact(
+  state: Pick<ContactsStoreState, "contactsById" | "selectedContact">,
+  contactId: string,
+  conversationId?: string | null,
+) {
+  const key = resolveRowKey(state, contactId, conversationId);
+  return key ? state.contactsById.get(key) : undefined;
 }
 
 /**
@@ -84,7 +142,7 @@ function retainedStaleIds(
   existingIds: string[],
   serverRows: any[],
 ): string[] {
-  const serverIds = new Set(serverRows.map((row) => row.id));
+  const serverIds = new Set(serverRows.map((row) => getRowKey(row)));
   const newestServerRow = serverRows.reduce(
     (newest, row) => Math.max(newest, messageTime(row.lastMessage)),
     0,
@@ -190,12 +248,26 @@ interface ContactsStoreState {
     updateOtherTabs?: boolean,
     isFullServerSet?: boolean,
   ) => Promise<void>;
+  /**
+   * Patch one inbox row. `contactId` may be a contact id or a row key; pass the
+   * ticket's `conversationId` when known (see `resolveRowKey`).
+   */
   updateContactById: (
     contactId: string,
     updater: (c: ContactWithUpdatedAt) => ContactWithUpdatedAt,
     markUnread?: boolean,
+    conversationId?: string | null,
   ) => void;
-  setContactFavorite: (contactId: string, isFavorite: boolean) => void;
+  setContactFavorite: (
+    contactId: string,
+    isFavorite: boolean,
+    conversationId?: string | null,
+  ) => void;
+  /**
+   * Merge `patch` into every row of a contact, without moving any row between lists.
+   * For contact-grained fields (Meta AI thread ownership) that every ticket shows.
+   */
+  patchContactRows: (contactId: string, patch: Partial<ContactWithUpdatedAt>) => void;
   resetUnreadForContact: (contactId: string, contact?: ContactWithUpdatedAt) => void;
   setSelectedContact: (contact: any) => void;
   getContactsByIds: (ids: string[]) => Promise<ContactWithUpdatedAt[]>;
@@ -236,16 +308,19 @@ export const useContactsStore = create<ContactsStoreState>()(
         const ids = await loadContactIdsForFilter(filterKey);
         if (!ids.length || loadToken !== currentLoadToken) return;
 
-        const contacts = await loadContactsFromDB(ids);
-        if (!contacts.length || loadToken !== currentLoadToken) return;
+        // Keyed by the id the cached list names, which is a contact id in a cache
+        // written before rows were keyed by ticket. The next server page replaces
+        // those with ticket-keyed rows.
+        const rows = await loadRowsFromDB(ids);
+        if (!rows.size || loadToken !== currentLoadToken) return;
         set(
           produce((state: ContactsStoreState) => {
             if (loadToken !== currentLoadToken) return;
             const contactsByIdMap = new Map(state.contactsById);
-            contacts.forEach((c) => {
-              const existing = contactsByIdMap.get(c.id);
+            rows.forEach((c, key) => {
+              const existing = contactsByIdMap.get(key);
               if (!existing || new Date(c.updatedAt) > new Date(existing.updatedAt)) {
-                contactsByIdMap.set(c.id, c);
+                contactsByIdMap.set(key, c);
               }
             });
             state.contactsById = contactsByIdMap;
@@ -271,19 +346,43 @@ export const useContactsStore = create<ContactsStoreState>()(
         // the chat screen never sets this store's selection.
         const { contactsById } = get();
         const openChatId = useOpenChatStore.getState().openChatId;
-        const mergedContacts = latestRowPerContact(contacts).map((c) =>
-          mergeServerRow(contactsById.get(c.id), c, openChatId === c.id),
+        // One row per ticket: a contact with a WhatsApp and an Instagram ticket
+        // keeps both (see `getRowKey`). The chat screen shows all of a contact's
+        // tickets in one thread, so every row of the open contact counts as read.
+        const mergedContacts = contacts.map((c) =>
+          mergeServerRow(contactsById.get(getRowKey(c)), c, openChatId === c.id),
+        );
+        // Rows cached before rows were keyed by ticket sit under the contact id. Once
+        // the server sends that contact's ticket rows, the old copy is superseded;
+        // left in place it would also catch every update `resolveRowKey` resolves.
+        const legacyKeys = new Set(
+          mergedContacts
+            .filter(
+              (c) => getRowKey(c) !== c.id && contactsById.get(c.id)?.conversationId !== undefined,
+            )
+            .map((c) => c.id as string),
         );
         set(
           produce((state: ContactsStoreState) => {
             state.isLoading = true;
-            const existingIds = state.contactsByFilter[filterKey] || [];
+            const existingIds = (state.contactsByFilter[filterKey] || []).filter(
+              (id) => !legacyKeys.has(id),
+            );
             const contactIdsSet = new Set(
               isFullServerSet ? retainedStaleIds(state, existingIds, mergedContacts) : existingIds,
             );
             const contactsByIdMap = new Map(state.contactsById);
+            legacyKeys.forEach((key) => contactsByIdMap.delete(key));
+            if (legacyKeys.size) {
+              for (const key of Object.keys(state.contactsByFilter)) {
+                state.contactsByFilter[key] = state.contactsByFilter[key].filter(
+                  (id) => !legacyKeys.has(id),
+                );
+              }
+            }
             mergedContacts.forEach((updatedContact) => {
-              contactsByIdMap.set(updatedContact.id, updatedContact);
+              const rowKey = getRowKey(updatedContact);
+              contactsByIdMap.set(rowKey, updatedContact);
 
               const isAssigned =
                 updatedContact.waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED;
@@ -292,7 +391,7 @@ export const useContactsStore = create<ContactsStoreState>()(
                 return false;
               if (!isAssigned && currentFilterKey?.includes("waMessageAssignStatus:mine"))
                 return false;
-              contactIdsSet.add(updatedContact.id);
+              contactIdsSet.add(rowKey);
             });
             state.contactsById = contactsByIdMap;
 
@@ -328,7 +427,7 @@ export const useContactsStore = create<ContactsStoreState>()(
         ]);
         const state = get();
         if (updateOtherTabs && contacts.length === 1) {
-          const contactId = contacts[0].id;
+          const contactId = getRowKey(contacts[0]);
           if (!state.currentFilterKey?.includes("waMessageAssignStatus:Assigned")) {
             state.updateContactList("open", contactId, true);
           }
@@ -343,8 +442,11 @@ export const useContactsStore = create<ContactsStoreState>()(
 
       // `markUnread` is part of the interface and passed by callers, but the
       // unread bump is applied by the caller's updater, not here.
-      updateContactById(contactId, updater, _markUnread) {
+      updateContactById(contactIdOrKey, updater, _markUnread, conversationId) {
         const state = get();
+        // From here on `contactId` is the row's key (its ticket id for a ticket row).
+        const contactId = resolveRowKey(state, contactIdOrKey, conversationId);
+        if (!contactId) return;
         const contact = state.contactsById.get(contactId);
         if (!contact) return;
         const updateIdb: any[] = [];
@@ -361,7 +463,7 @@ export const useContactsStore = create<ContactsStoreState>()(
             newContactsById.set(contactId, updatedContact);
             draft.contactsById = newContactsById;
 
-            if (contactId === state.selectedContact?.id) {
+            if (state.selectedContact && contactId === getRowKey(state.selectedContact)) {
               draft.selectedContact = updatedContact;
             }
 
@@ -453,7 +555,7 @@ export const useContactsStore = create<ContactsStoreState>()(
           // if (contactId === get().selectedContact?.id && markUnread) {
           //   markWaMessagesAsRead(contactId); // Add this API call if needed in RN
           // }
-          saveContactToDB(updatedContact);
+          saveContactToDB(updatedContact, contactId);
         } catch (e) {
           logger.error(e);
         }
@@ -657,6 +759,35 @@ export const useContactsStore = create<ContactsStoreState>()(
         saveContactIdsForFilter(filterKey, []);
       },
 
+      patchContactRows(contactId, patch) {
+        const keys = rowKeysForContact(get().contactsById, contactId);
+        if (!keys.length) return;
+        const updated: [string, ContactWithUpdatedAt][] = [];
+        set(
+          produce((draft: any) => {
+            const newContactsById = new Map(draft.contactsById);
+            for (const key of keys) {
+              const row = { ...(newContactsById.get(key) as any), ...patch };
+              newContactsById.set(key, row);
+              updated.push([key, row]);
+              if (draft.selectedContact && getRowKey(draft.selectedContact) === key) {
+                draft.selectedContact = row;
+              }
+            }
+            draft.contactsById = newContactsById;
+          }),
+        );
+        const opened = useSelectedContactStore.getState();
+        if (opened.selectedContact?.id === contactId) {
+          opened.setSelectedContact({ ...opened.selectedContact, ...patch });
+        }
+        try {
+          for (const [key, row] of updated) saveContactToDB(row, key);
+        } catch (error) {
+          logger.error("Could not save the patched rows", describeError(error));
+        }
+      },
+
       /**
        * Star flag. `updateContactById` can't be reused here: it only rewrites a
        * filter list when the assign status or the last message changed, so
@@ -664,7 +795,10 @@ export const useContactsStore = create<ContactsStoreState>()(
        * patches the contact and fixes membership of every cached `favorite:true`
        * list, then mirrors both into SQLite.
        */
-      setContactFavorite(contactId, isFavorite) {
+      setContactFavorite(contactIdOrKey, isFavorite, conversationId) {
+        // The star lives on the ticket, so this is the row's key, not the contact's id.
+        const contactId = resolveRowKey(get(), contactIdOrKey, conversationId);
+        if (!contactId) return;
         const contact = get().contactsById.get(contactId);
         if (!contact) return;
         const updatedContact = {
@@ -680,7 +814,7 @@ export const useContactsStore = create<ContactsStoreState>()(
             newContactsById.set(contactId, updatedContact);
             draft.contactsById = newContactsById;
 
-            if (draft.selectedContact?.id === contactId) {
+            if (draft.selectedContact && getRowKey(draft.selectedContact) === contactId) {
               draft.selectedContact = updatedContact;
             }
 
@@ -700,7 +834,7 @@ export const useContactsStore = create<ContactsStoreState>()(
         );
 
         try {
-          saveContactToDB(updatedContact);
+          saveContactToDB(updatedContact, contactId);
           updateIdb.forEach((i) => saveContactIdsForFilter(i.key, i.contactIds));
         } catch (e) {
           logger.error(e);
@@ -720,12 +854,12 @@ export const useContactsStore = create<ContactsStoreState>()(
        * the server on the next load because the server was never told.
        */
       resetUnreadForContact(contactId, contact) {
-        if (!contact) contact = get().contactsById.get(contactId);
+        if (!contact) contact = selectRowForContact(get(), contactId);
         if (contact && contact.unReadMessageCount !== 0) {
           // Patch the live row, not the `contact` snapshot a caller handed in: a
           // snapshot taken before a newer message arrived would put the old
-          // preview back.
-          get().updateContactById(contactId, (c: any) => ({
+          // preview back. Its row key names the ticket that was opened.
+          get().updateContactById(getRowKey(contact), (c: any) => ({
             ...c,
             unReadMessageCount: 0,
           }));
@@ -756,9 +890,9 @@ export const useContactsStore = create<ContactsStoreState>()(
         });
 
         if (missingIds.length) {
-          const fromDB = await loadContactsFromDB(missingIds);
-          fromDB.forEach((c) => {
-            contactsById.set(c.id, c);
+          const fromDB = await loadRowsFromDB(missingIds);
+          fromDB.forEach((c, key) => {
+            contactsById.set(key, c);
             result.push(c);
           });
           set({ contactsById });
@@ -768,22 +902,26 @@ export const useContactsStore = create<ContactsStoreState>()(
       },
 
       deleteContactsByIds: async (contactIds: string[]) => {
+        // A contact has a row per ticket; deleting the contact removes all of them.
+        const doomed = new Set(contactIds);
+        const rowKeys = new Set<string>();
+        for (const [key, row] of get().contactsById) {
+          if (doomed.has(key) || doomed.has(row?.id)) rowKeys.add(key);
+        }
         set(
           produce((state) => {
-            contactIds.forEach((id) => {
-              state.contactsById.delete(id);
-              Object.keys(state.contactsByFilter).forEach((filterKey) => {
-                const contacts = state.contactsByFilter[filterKey];
-                if (contacts) {
-                  state.contactsByFilter[filterKey] = contacts.filter(
-                    (cid: string) => !contactIds.includes(cid),
-                  );
-                }
-              });
-              if (state.selectedContact?.id === id) {
-                state.selectedContact = null;
+            const contactsById = new Map(state.contactsById);
+            rowKeys.forEach((key) => contactsById.delete(key));
+            state.contactsById = contactsById;
+            Object.keys(state.contactsByFilter).forEach((filterKey) => {
+              const keys = state.contactsByFilter[filterKey];
+              if (keys) {
+                state.contactsByFilter[filterKey] = keys.filter((k: string) => !rowKeys.has(k));
               }
             });
+            if (state.selectedContact && doomed.has(state.selectedContact.id)) {
+              state.selectedContact = null;
+            }
           }),
         );
 

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { ShopError } from "../shop.errors.js";
 import { razorpayContact, razorpayFailure } from "./razorpay.provider.js";

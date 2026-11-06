@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test, vi } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vite-plus/test";
 import { staffConfig, staffSignInDomain, type StaffConfig } from "./staff.config.js";
 
 const base: StaffConfig = {

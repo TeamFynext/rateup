@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, test } from "vitest";
+import { afterAll, beforeAll, describe, expect, test } from "vite-plus/test";
 import { initTestSupertokens } from "../../utils/test/test.setup.utils.js";
 import { deleteUser } from "../user/user.service.js";
 

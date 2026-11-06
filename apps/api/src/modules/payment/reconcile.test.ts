@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 vi.hoisted(() => {
   process.env.RAZORPAY_API_KEY = "rzp_key";

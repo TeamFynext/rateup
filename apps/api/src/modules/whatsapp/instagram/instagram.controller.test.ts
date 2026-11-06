@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 vi.mock("./instagram.service.js", () => ({ handleInstagramWebhook: vi.fn() }));
 vi.mock("../../../utils/logger.js", () => ({

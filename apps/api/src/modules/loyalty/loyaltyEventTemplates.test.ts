@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { isJoinTap, joinButtonLabel, LOYALTY_JOIN_PAYLOAD } from "./loyaltyEventTemplates.js";
 

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import type { WaMessageBody } from "../../../types/whatsapp.types.js";
 import { buildWaWebhookRecords } from "./waWebhookRecords.js";

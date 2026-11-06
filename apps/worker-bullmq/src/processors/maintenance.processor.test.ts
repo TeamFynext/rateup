@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 vi.mock("@rateup/api/workers/shared/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), warn: vi.fn() },

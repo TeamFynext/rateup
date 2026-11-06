@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 const db = vi.hoisted(() => ({ channel: { findFirst: vi.fn() } }));
 vi.mock("../../../utils/prisma.js", () => ({ default: db }));

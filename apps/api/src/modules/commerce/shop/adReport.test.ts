@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import { mergeAdReport } from "./adReport.service.js";
 import { buildMessageReport } from "./messageCost.js";
 

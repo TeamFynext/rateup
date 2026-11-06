@@ -1,6 +1,6 @@
 import Fastify, { type RouteOptions } from "fastify";
 import { serializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
-import { describe, expect, test, vi } from "vitest";
+import { describe, expect, test, vi } from "vite-plus/test";
 
 /** Routes are captured as they register; nothing is called, so the mocks only let modules load. */
 function anything(): any {

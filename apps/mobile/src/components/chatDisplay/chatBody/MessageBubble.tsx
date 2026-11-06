@@ -11,7 +11,7 @@ import WaInboxText, {
 } from "./messageBubbleTypes";
 import { namePreview } from "@/utils/chatbox_utils";
 import { WaTemplateComponent } from "@/context/type";
-import { Lock, CheckCheck, Check, Clock, AlertCircle, Bot } from "lucide-react-native";
+import { Lock, CheckCheck, Check, Clock, AlertCircle, Bot, Sparkles } from "lucide-react-native";
 import { WaMessageAssignStatus } from "@/api/inbox/types";
 import { getClosedIcon } from "@/util";
 import LinearGradient from "react-native-linear-gradient";
@@ -31,6 +31,8 @@ type MessageBubbleProps = {
    * person, so there is no name to make initials from.
    */
   isAutomated?: boolean;
+  /** Written by the Meta Business Agent: labelled "Meta AI", not "Automation". */
+  isMetaAi?: boolean;
   template: any;
   templateComponentParams?: WaTemplateComponent[];
   assignStatus?: string;
@@ -52,6 +54,7 @@ const MessageBubble = ({
   messageType,
   senderName,
   isAutomated,
+  isMetaAi,
   interactive,
   template,
   templateComponentParams,
@@ -382,8 +385,8 @@ const MessageBubble = ({
         <View style={{ maxWidth: "80%", alignItems: "flex-end", gap: 3 }}>
           {isAutomated ? (
             <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-              <Bot size={11} color={t.fg4} />
-              <Text style={authorLabelStyle}>Automation</Text>
+              {isMetaAi ? <Sparkles size={11} color={t.fg4} /> : <Bot size={11} color={t.fg4} />}
+              <Text style={authorLabelStyle}>{isMetaAi ? "Meta AI" : "Automation"}</Text>
             </View>
           ) : senderName ? (
             <Text style={authorLabelStyle}>{senderName}</Text>

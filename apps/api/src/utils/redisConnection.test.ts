@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from "vitest";
+import { describe, expect, test, vi } from "vite-plus/test";
 
 vi.mock("ioredis", () => ({ default: { default: vi.fn() } }));
 process.env.REDIS_URL ??= "redis://localhost:6379";

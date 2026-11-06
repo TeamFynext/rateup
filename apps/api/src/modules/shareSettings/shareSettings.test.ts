@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 vi.hoisted(() => {
   process.env.AWS_CLOUDFRONT_DOMAIN = "cdn.test.example";

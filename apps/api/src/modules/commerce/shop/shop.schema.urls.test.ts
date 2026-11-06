@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { productSchema, shipmentSchema, storeUpdateSchema, webUrl } from "./shop.schema.js";
 

@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from "vitest";
+import { describe, expect, test, vi } from "vite-plus/test";
 
 vi.mock("./messenger_profile.controller.js", () => ({
   deleteMessengerGetStartedHandler: vi.fn(),

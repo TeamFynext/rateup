@@ -5,7 +5,14 @@ import { useAuth } from "./AuthContext";
 import { getMobileId } from "../util";
 import SuperTokens from "supertokens-react-native";
 import { isEqual } from "lodash";
-import { mergeStats, messageTime, useContactsStore, useMessagesStore } from "../store/inboxStore";
+import {
+  mergeStats,
+  messageTime,
+  resolveRowKey,
+  rowKeysForContact,
+  useContactsStore,
+  useMessagesStore,
+} from "../store/inboxStore";
 import { useInboxCountStore } from "../store/inboxCountStore";
 import { useOpenChatStore } from "../utils/store";
 import { WaMessageAssignStatus } from "../api/inbox/types";
@@ -60,6 +67,19 @@ type NativeWebSocket = new (
 ) => WebSocket;
 
 /**
+ * Which of a contact's inbox rows (one per ticket) is quoting this message as its
+ * preview, if any. Status and edit frames name the message, not the ticket.
+ */
+const rowKeyQuotingMessage = (contactId: string, messageId: string): string | null => {
+  const { contactsById } = useContactsStore.getState();
+  for (const key of rowKeysForContact(contactsById, contactId)) {
+    const lastMessage = contactsById.get(key)?.lastMessage;
+    if (lastMessage && (lastMessage.messageId ?? lastMessage.id) === messageId) return key;
+  }
+  return null;
+};
+
+/**
  * Patch a delivery receipt straight into the stores.
  *
  * Deliberately not routed through `wsData` like the `inbox` events are. Three
@@ -77,18 +97,18 @@ const applyMessageStatusUpdate = (
   useMessagesStore.getState().applyMessageStatus(contactId, messageId, stats);
 
   // The inbox row shows its own tick against the last message, and that copy
-  // lives on the contact rather than in the message store.
+  // lives on the row rather than in the message store.
   if (!contactId) return;
-  const contact = useContactsStore.getState().contactsById.get(contactId);
-  const lastMessage = contact?.lastMessage;
-  if (!lastMessage || (lastMessage.messageId ?? lastMessage.id) !== messageId) return;
+  const rowKey = rowKeyQuotingMessage(contactId, messageId);
+  if (!rowKey) return;
+  const lastMessage = useContactsStore.getState().contactsById.get(rowKey)?.lastMessage;
 
   const mergedStats = mergeStats(lastMessage.stats, stats);
   // `updateContactById` rewrites the map and stamps `updatedAt` unconditionally,
   // so a no-op call would re-render the list on every frame.
   if (isEqual(lastMessage.stats, mergedStats)) return;
 
-  useContactsStore.getState().updateContactById(contactId, (c) => ({
+  useContactsStore.getState().updateContactById(rowKey, (c) => ({
     ...c,
     lastMessage: { ...c.lastMessage, stats: mergedStats },
   }));
@@ -124,9 +144,9 @@ const applyMessageEdited = (update: orgWsMessage["message_edited"]) => {
   }
 
   if (!contactId) return;
-  const lastMessage = useContactsStore.getState().contactsById.get(contactId)?.lastMessage;
-  if (!lastMessage || (lastMessage.messageId ?? lastMessage.id) !== messageId) return;
-  useContactsStore.getState().updateContactById(contactId, (c) => ({
+  const rowKey = rowKeyQuotingMessage(contactId, messageId);
+  if (!rowKey) return;
+  useContactsStore.getState().updateContactById(rowKey, (c) => ({
     ...c,
     lastMessage: { ...c.lastMessage, ...patch },
   }));
@@ -150,12 +170,18 @@ const applyInboxUpdate = (inbox: orgWsMessage["inbox"] | undefined) => {
   const contactsStore = useContactsStore.getState();
   const isUnread =
     Array.isArray(message?.readUsers) && message.readUsers.length === 0 && message?.sendBy === null;
+  // The frame names its ticket (`conversationId` on the contact); the list has a
+  // row per ticket, so the message lands on that row, or opens a new one.
+  const conversationId = (inbox?.contact as { conversationId?: string | null } | undefined)
+    ?.conversationId;
+  const rowKey = resolveRowKey(contactsStore, contactId, conversationId);
+  // The chat screen shows all of a contact's tickets in one thread, so any of
+  // them landing while that chat is open has been seen.
   const isOpenInThread = useOpenChatStore.getState().openChatId === contactId;
-  const isKnown = contactsStore.contactsById.has(contactId);
 
-  if (isKnown) {
+  if (rowKey) {
     contactsStore.updateContactById(
-      contactId,
+      rowKey,
       (oldContact) => {
         if (!oldContact) return oldContact;
         // Frames are not guaranteed to arrive in order (a send is recorded only
@@ -335,6 +361,14 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
         if (message?.type === "inbox_note") {
           applyInboxNote(message.inbox_note);
         }
+        if (message?.type === "meta_agent_thread" && message.meta_agent_thread?.contactId) {
+          const { contactId, owner, reason, at } = message.meta_agent_thread;
+          useContactsStore.getState().patchContactRows(contactId, {
+            metaAgentThreadOwner: owner,
+            metaAgentThreadOwnerAt: at,
+            metaAgentHandoverReason: reason,
+          });
+        }
         if (message?.type === "call" && message.call) {
           receiveCallEvent(message.call, queryClient);
         }
@@ -359,8 +393,10 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
       }, retryIntervalRef.current);
     };
 
-    socket.onerror = (err) => {
-      logger.error("💥 WebSocket error:", err);
+    // The event carries no reason (React Native gives none), and onclose follows and
+    // reconnects, so a one-line note is enough.
+    socket.onerror = () => {
+      logger.warn("💥 WebSocket error, will reconnect");
     };
   };
 

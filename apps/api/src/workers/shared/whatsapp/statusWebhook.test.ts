@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import { messageStatusWebhookEvents, type MessageStatusWebhookInput } from "./statusWebhook.js";
 
 const ORG = "11111111-1111-4111-8111-111111111111";

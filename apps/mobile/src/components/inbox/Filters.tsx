@@ -9,9 +9,29 @@ import { WaMessageAssignStatus } from "@/api/inbox/types";
 import { useTeamsByUser, useTeamsMembersOfOrg } from "@/api/teams/teams.query";
 import { useLifeCyclesQuery } from "@/api/lifecycle/lifecycle.query";
 import { useWaSettings } from "@/api/whatsapp/template/whatsapp.query";
+import { useChannels, useWebchatStatus } from "@/api/channels/channels.query";
+import { channelFilterOptions, type ChannelFilterOption } from "@/utils/channelFilterOptions";
+import { FontAwesome } from "@expo/vector-icons";
+import { MessageCircle } from "lucide-react-native";
 import { WaMessageClosedStatus } from "@/constants/constants";
 import { Colors } from "@/constants/colors";
 import KeyboardAvoider from "@/components/common/KeyboardAvoider";
+
+/** The platform's mark in front of a channel chip; "All Channels" has none. */
+function channelChipIcon(option: ChannelFilterOption, color: string) {
+  switch (option.platform) {
+    case "WHATSAPP":
+      return <FontAwesome name="whatsapp" color={color} size={13} />;
+    case "INSTAGRAM":
+      return <FontAwesome name="instagram" color={color} size={13} />;
+    case "FACEBOOK":
+      return <FontAwesome name="facebook" color={color} size={12} />;
+    case "WEBCHAT":
+      return <MessageCircle color={color} size={13} />;
+    default:
+      return null;
+  }
+}
 
 const FiltersScreen = () => {
   const { colorScheme } = useColorScheme();
@@ -25,6 +45,8 @@ const FiltersScreen = () => {
   const { data: membersRes, isLoading: membersLoading } = useTeamsMembersOfOrg();
   const { data: lifecycles, isLoading: lifecyclesLoading } = useLifeCyclesQuery();
   const { data: waSettings, isLoading: waSettingsLoading } = useWaSettings();
+  const { data: channels, isLoading: channelsLoading } = useChannels();
+  const { data: webchatStatus } = useWebchatStatus();
   const { data: filterData, isLoading: filterDataLoading } = useChatFilterData();
 
   const { filter, setFilter, clearFilter, setPreviousFilterForTab, previousFilterForTab } =
@@ -37,16 +59,8 @@ const FiltersScreen = () => {
     clearFilter();
   };
 
-  // 1. Channel / Phone Options
-  const channelOptions = [
-    { label: "All Channels", value: "all" },
-    ...(waSettings
-      ? waSettings.map((account: any) => ({
-          label: account.phone,
-          value: account.phone,
-        }))
-      : []),
-  ];
+  // 1. Channel options: every connected channel and Web chat (see `channelFilterOptions`).
+  const channelOptions = channelFilterOptions(channels, waSettings, !!webchatStatus?.active);
 
   // 2. Status Options (Only on All or Closed tab)
   const isAllTab = selectedTab === "All";
@@ -207,7 +221,7 @@ const FiltersScreen = () => {
               >
                 Channel
               </Text>
-              {waSettingsLoading ? (
+              {channelsLoading && waSettingsLoading ? (
                 <Text className="text-gray-400">Loading Channels...</Text>
               ) : (
                 <View className="flex-row flex-wrap gap-2">
@@ -218,12 +232,13 @@ const FiltersScreen = () => {
                       <Pressable
                         key={opt.value}
                         onPress={() => selectChannel(opt.value)}
-                        className={`px-4 py-2 rounded-full border ${
+                        className={`flex-row items-center gap-1.5 px-4 py-2 rounded-full border ${
                           isSelected
                             ? "bg-primaryBlue border-primaryBlue"
                             : "border-gray-200 dark:border-zinc-700 bg-transparent"
                         }`}
                       >
+                        {channelChipIcon(opt, isSelected ? "#fff" : isDark ? "#d4d4d8" : "#374151")}
                         <Text
                           className={`text-sm ${
                             isSelected ? "text-white font-bold" : "text-gray-700 dark:text-gray-300"

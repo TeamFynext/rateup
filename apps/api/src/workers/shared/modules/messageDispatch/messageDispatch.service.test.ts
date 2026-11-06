@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 const client = vi.hoisted(() => ({ query: vi.fn(async () => ({})), release: vi.fn() }));
 vi.mock("../../../../utils/db.js", () => ({

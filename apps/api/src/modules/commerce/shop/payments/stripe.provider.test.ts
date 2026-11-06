@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 const sessions = vi.hoisted(() => ({ create: vi.fn(), retrieve: vi.fn() }));
 

@@ -1,5 +1,5 @@
 import { config as loadEnv } from "dotenv";
-import { defineConfig } from "vitest/config";
+import { defineConfig } from "vite-plus";
 
 /**
  * The same Redis server as `.env`, but database 15. Code under test that reaches a real BullMQ
@@ -19,10 +19,17 @@ function testRedisUrl(): string {
 }
 
 export default defineConfig({
+  // `vp lint` in this folder uses this block, not the root's type-aware rules (which report
+  // hundreds of existing issues in the backend).
+  lint: {
+    rules: { "typescript/consistent-type-definitions": "error" },
+  },
   // Load workspace packages from their TypeScript source (see @rateup/tsconfig/node.json).
   resolve: { conditions: ["source"] },
   ssr: { resolve: { conditions: ["source"] } },
   test: {
+    // Test logs stay quiet; failures still print.
+    silent: true,
     exclude: ["node_modules", "dist"],
     env: {
       // Signing key for WhatsApp Flow tokens. Anything non-empty: the tests that

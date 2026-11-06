@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { effectivePermissions, normaliseOverrides } from "./overrides.js";
 import { ROLE_PERMISSIONS } from "./roles.js";

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 const limits = vi.hoisted(() => ({
   checkPlanLimit: vi.fn(async () => ({ metered: false, used: 0, exceeded: false })),

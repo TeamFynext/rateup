@@ -1,6 +1,6 @@
 {
   "name": "@rateup/worker-kafka",
-  "version": "0.0.0",
+  "version": "2.0.0",
   "private": true,
   "description": "Kafka worker: WhatsApp webhook and message-status consumers.",
   "license": "MIT",
@@ -10,9 +10,7 @@
     "dev": "tsx watch --conditions=source src/index.ts",
     "build": "tsc -p tsconfig.json && tsc -p tsconfig.build.json",
     "start": "node dist/index.js",
-    "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest --silent",
-    "lint": "oxlint"
+    "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
     "@rateup/api": "workspace:*",
@@ -23,10 +21,9 @@
     "@rateup/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "bullmq": "catalog:",
-    "oxlint": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:"
+    "vite-plus": "catalog:"
   },
   "engines": {
     "node": "26.x"

@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 const requests: { headers: Record<string, string>; body: string }[] = [];
 

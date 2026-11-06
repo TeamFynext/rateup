@@ -33,6 +33,12 @@ const config = defineConfig({
       },
     ],
   },
+  // Fixed dev port, so it never drifts onto another app's: FRONTEND_URL in the API's .env and
+  // the OAuth origins point here.
+  server: {
+    port: 3000,
+    strictPort: true,
+  },
   resolve: {
     tsconfigPaths: true,
     alias: {

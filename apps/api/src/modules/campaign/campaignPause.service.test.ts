@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 const pipeline = { set: vi.fn(), exec: vi.fn(async () => []) };
 vi.mock("../../utils/redisConnection.js", () => ({

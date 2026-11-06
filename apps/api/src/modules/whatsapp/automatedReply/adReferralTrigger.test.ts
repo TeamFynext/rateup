@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import { adRuleMatches, adRuleSpecificity } from "./adReferralTrigger.js";
 
 const ad = { sourceId: "ad-1", headline: "Summer Sale", sourceUrl: "https://fb.me/abc" };

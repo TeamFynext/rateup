@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 // conversationStatusData / resolveInboxActor are pure, but the module imports
 // prisma and sibling services at load time; stub prisma so no DB is touched.

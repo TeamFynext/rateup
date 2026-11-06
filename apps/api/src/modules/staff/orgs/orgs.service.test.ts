@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 const db = vi.hoisted(() => ({
   org: { findMany: vi.fn(), count: vi.fn(), findUnique: vi.fn() },

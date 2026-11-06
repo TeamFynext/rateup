@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 // actor.ts reaches for Postgres and Redis for session actors; API-key actors never do.
 vi.mock("../../utils/prisma.js", () => ({ default: {} }));

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 const cache = vi.hoisted(() => ({ withCache: vi.fn() }));
 const redis = vi.hoisted(() => ({ status: "ready", del: vi.fn() }));

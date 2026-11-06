@@ -325,38 +325,79 @@ export default function SupportWidget({
   /* Opened only once there is a contact: before that there is no thread to listen to, and the
      socket has to name the contact it wants anyway. Re-runs when one is created, which is what
      puts the visitor on the live feed the moment they finish the contact card. */
+  /* The thread from the API, merged into what is on screen. Run on load, and again after the
+     socket reconnects: anything sent while it was down never reached the socket. Kept in a ref
+     so the socket effect below does not reopen the connection when the token or URL object
+     changes identity. */
+  const loadHistory = (id: string) =>
+    fetch(`${API_URL}/api/support/contact/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((response) => response.json())
+      .then((json) => setMessages((prev) => mergeMessages(prev, Array.isArray(json) ? json : [])))
+      .catch((error) => console.error("Could not load the support history", error));
+  const loadHistoryRef = useRef(loadHistory);
+  useEffect(() => {
+    loadHistoryRef.current = loadHistory;
+  });
+
+  /* Opened only once there is a contact: before that there is no thread to listen to, and the
+     socket has to name the contact it wants anyway. Re-runs when one is created, which is what
+     puts the visitor on the live feed the moment they finish the contact card.
+
+     It never gives up. It used to stop after five retries one second apart, and an API restart
+     or deploy takes longer than that, so the widget went deaf until the page was reloaded. Now
+     the wait doubles up to 30 s, and coming back to the tab or back online retries at once. */
   useEffect(() => {
     if (!browserId || !socketUrl) return;
 
     let ws: WebSocket | null = null;
     let closedByUser = false;
     let retryTimer: ReturnType<typeof setTimeout> | null = null;
+    let hasConnected = false;
 
     function connect(): void {
+      if (retryTimer) clearTimeout(retryTimer);
+      retryTimer = null;
       ws = new WebSocket(socketUrl!);
       socketRef.current = ws;
 
-      /* Otherwise the retry budget is spent over the life of the page rather than per
-         outage, and realtime never comes back after five idle timeouts. */
       ws.onopen = () => {
         retryCountRef.current = 0;
+        // A reconnect, not the first open: catch up on what was missed while it was down.
+        if (hasConnected && contactIdRef.current) loadHistoryRef.current(contactIdRef.current);
+        hasConnected = true;
       };
 
       ws.onmessage = handleWebSocketMessage;
 
       ws.onclose = () => {
-        if (!closedByUser && retryCountRef.current < 5) {
-          retryCountRef.current += 1;
-          retryTimer = setTimeout(connect, 1000);
-        }
+        if (closedByUser) return;
+        const delay = Math.min(1000 * 2 ** retryCountRef.current, 30_000);
+        retryCountRef.current += 1;
+        retryTimer = setTimeout(connect, delay);
       };
     }
 
+    /* A backgrounded tab or a dropped network is exactly when the socket closes; on return,
+       retry now rather than waiting out the backoff. */
+    function reconnectNow(): void {
+      if (closedByUser || document.visibilityState !== "visible") return;
+      if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING))
+        return;
+      retryCountRef.current = 0;
+      connect();
+    }
+
     connect();
+    document.addEventListener("visibilitychange", reconnectNow);
+    window.addEventListener("online", reconnectNow);
 
     return () => {
       closedByUser = true;
       if (retryTimer) clearTimeout(retryTimer);
+      document.removeEventListener("visibilitychange", reconnectNow);
+      window.removeEventListener("online", reconnectNow);
       ws?.close();
     };
   }, [socketUrl, browserId]);
@@ -366,13 +407,7 @@ export default function SupportWidget({
     if (!storedContactId) return;
     contactIdRef.current = storedContactId;
     setContactId(storedContactId);
-
-    fetch(`${API_URL}/api/support/contact/${storedContactId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((response) => response.json())
-      .then((json) => setMessages((prev) => mergeMessages(prev, Array.isArray(json) ? json : [])))
-      .catch((error) => console.error("Could not load the support history", error));
+    loadHistoryRef.current(storedContactId);
   }, [token, API_URL]);
 
   useEffect(() => {

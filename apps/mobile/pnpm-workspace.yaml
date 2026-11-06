@@ -4,6 +4,8 @@
 # `pnpm run install:mobile` at the root. Shared code comes in through `link:` dependencies.
 nodeLinker: hoisted
 # What each dependency may do beyond installing; `pnpm approve` writes this.
+patchedDependencies:
+  react-native-css-interop@0.2.7: patches/react-native-css-interop@0.2.7.patch
 permissions:
   expo-sqlite:
     skills: true

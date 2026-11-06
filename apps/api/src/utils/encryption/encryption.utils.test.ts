@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import crypto from "node:crypto";
 import { aes_decrypt, aes_encrypt } from "./encryption.utils.js";
 

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 const queue = vi.hoisted(() => ({ getJob: vi.fn(), add: vi.fn(), remove: vi.fn() }));
 vi.mock("../../../utils/redisConnection.js", () => ({ default: {} }));

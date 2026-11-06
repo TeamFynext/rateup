@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import { createLocalJWKSet, exportJWK, generateKeyPair, SignJWT, type JWTPayload } from "jose";
 import { buildGoogleAuthUrl, checkGoogleClaims, pkcePair, verifyGoogleIdToken } from "./google.js";
 

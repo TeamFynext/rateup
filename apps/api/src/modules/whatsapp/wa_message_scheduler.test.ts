@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { dripStageDueAt, isDripStageDue } from "./wa_message_scheduler.js";
 

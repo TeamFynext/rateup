@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from "vitest";
+import { describe, expect, test, vi } from "vite-plus/test";
 
 const limiter = vi.hoisted(() => vi.fn());
 vi.mock("../../../utils/rateLimit.js", () => ({ rateLimit: vi.fn(() => limiter) }));

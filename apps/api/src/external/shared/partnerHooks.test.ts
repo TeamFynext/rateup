@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vite-plus/test";
 import Fastify, { type FastifyInstance, type FastifyRequest } from "fastify";
 
 vi.mock("../../utils/prisma.js", () => ({ default: {} }));

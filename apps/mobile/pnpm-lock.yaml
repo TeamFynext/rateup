@@ -162,6 +162,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  react-native-css-interop@0.2.7: 315d13873fb0411681789c1ab9fdb95751d4422534aac9e9124d52440f3c2673
+
 importers:
 
   .:
@@ -342,7 +345,7 @@ importers:
         version: 1.4.1(react-native-svg@15.16.0(react-native@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)
       react-native-css-interop:
         specifier: ^0.2.7
-        version: 0.2.7(609bbe7ed33b1c0c05adf6e7b824c29f)
+        version: 0.2.7(patch_hash=315d13873fb0411681789c1ab9fdb95751d4422534aac9e9124d52440f3c2673)(609bbe7ed33b1c0c05adf6e7b824c29f)
       react-native-edge-to-edge:
         specifier: 1.8.1
         version: 1.8.1(react-native@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)
@@ -7821,7 +7824,7 @@ snapshots:
     dependencies:
       comment-json: 4.6.2
       debug: 4.4.3(supports-color@8.1.1)
-      react-native-css-interop: 0.2.7(609bbe7ed33b1c0c05adf6e7b824c29f)
+      react-native-css-interop: 0.2.7(patch_hash=315d13873fb0411681789c1ab9fdb95751d4422534aac9e9124d52440f3c2673)(609bbe7ed33b1c0c05adf6e7b824c29f)
       tailwindcss: 3.4.19(yaml@2.9.1)
     transitivePeerDependencies:
       - react
@@ -8105,7 +8108,7 @@ snapshots:
       react-native: 0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1)
       react-native-svg: 15.16.0(react-native@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)
 
-  react-native-css-interop@0.2.7(609bbe7ed33b1c0c05adf6e7b824c29f):
+  react-native-css-interop@0.2.7(patch_hash=315d13873fb0411681789c1ab9fdb95751d4422534aac9e9124d52440f3c2673)(609bbe7ed33b1c0c05adf6e7b824c29f):
     dependencies:
       '@babel/helper-module-imports': 7.29.7(supports-color@8.1.1)
       '@babel/traverse': 7.29.10(supports-color@8.1.1)

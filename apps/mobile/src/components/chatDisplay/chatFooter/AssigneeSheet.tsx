@@ -14,8 +14,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TeamMembersData } from "@/context/type";
 import { namePreview } from "@/utils/chatbox_utils";
-import { Check, Search, Shuffle, UserCheck, UserX } from "lucide-react-native";
+import { Check, Search, UserCheck, Users, UserX } from "lucide-react-native";
 import { getInboxRowTheme, type InboxRowTheme } from "@/constants/inboxDesign";
+import Tap from "@/components/common/Tap";
 
 export type AssigneePick =
   | { kind: "me"; key: string }
@@ -40,6 +41,7 @@ export default function AssigneeSheet({
   pendingKey,
   error,
   busy,
+  showCurrent = false,
 }: Readonly<{
   visible: boolean;
   onClose: () => void;
@@ -52,6 +54,8 @@ export default function AssigneeSheet({
   error: string | null;
   /** Replaces the list while a long-running pick is in flight, e.g. bulk progress. */
   busy?: React.ReactNode;
+  /** One chat's sheet: say under the title who has it now ("Assigned to …" / "Unassigned"). */
+  showCurrent?: boolean;
 }>) {
   const [query, setQuery] = useState("");
   const { data: me } = useLoggedInUser();
@@ -122,6 +126,22 @@ export default function AssigneeSheet({
     return out;
   }, [teamRes, teamMembers, query, myId, ownerId, canUnassign]);
 
+  // How many people each team hands chats round to, for the team rows.
+  const teamSizes = useMemo(() => {
+    const sizes = new Map<string, number>();
+    for (const member of (teamMembers?.data ?? []) as TeamMembersData[]) {
+      for (const team of member.teams) sizes.set(team.team_id, (sizes.get(team.team_id) ?? 0) + 1);
+    }
+    return sizes;
+  }, [teamMembers]);
+
+  const ownerName = ownerId
+    ? ((teamMembers?.data ?? []) as TeamMembersData[]).find((m) => m.id === ownerId)?.name
+    : undefined;
+  const actions = picks.filter((pick) => pick.kind === "me" || pick.kind === "unassign");
+  const people = picks.filter((pick) => pick.kind === "person");
+  const teams = picks.filter((pick) => pick.kind === "team");
+
   return (
     <Modal
       visible={visible}
@@ -159,16 +179,24 @@ export default function AssigneeSheet({
             marginBottom: 16,
           }}
         />
-        <Text
-          style={{
-            fontFamily: "InstrumentSans_700Bold",
-            fontSize: 18,
-            color: t.fg1,
-            marginBottom: 12,
-          }}
-        >
-          {title}
-        </Text>
+        <View style={{ marginBottom: 14 }}>
+          <Text style={{ fontFamily: "InstrumentSans_700Bold", fontSize: 18, color: t.fg1 }}>
+            {title}
+          </Text>
+          {showCurrent && (
+            <Text
+              numberOfLines={1}
+              style={{
+                marginTop: 2,
+                fontFamily: "InstrumentSans_400Regular",
+                fontSize: 13,
+                color: t.fg3,
+              }}
+            >
+              {ownerId ? `Assigned to ${ownerName || "a teammate"}` : "Unassigned"}
+            </Text>
+          )}
+        </View>
 
         <View
           style={{
@@ -177,9 +205,10 @@ export default function AssigneeSheet({
             gap: 8,
             borderWidth: 1,
             borderColor: t.border1,
-            borderRadius: 10,
-            paddingHorizontal: 10,
-            marginBottom: 8,
+            borderRadius: 12,
+            paddingHorizontal: 12,
+            marginBottom: 12,
+            backgroundColor: t.surface2,
           }}
         >
           <Search size={16} color={t.fg3} />
@@ -246,7 +275,21 @@ export default function AssigneeSheet({
                 No one matches
               </Text>
             )}
-            {picks.map((pick) => (
+            {actions.length > 0 && (
+              <View style={{ flexDirection: "row", gap: 8, marginBottom: 8 }}>
+                {actions.map((pick) => (
+                  <ActionButton
+                    key={pick.key}
+                    pick={pick}
+                    t={t}
+                    pending={pendingKey === pick.key}
+                    onPress={onChoose}
+                  />
+                ))}
+              </View>
+            )}
+            {people.length > 0 && <SectionLabel t={t}>People</SectionLabel>}
+            {people.map((pick) => (
               <PickRow
                 key={pick.key}
                 pick={pick}
@@ -256,6 +299,18 @@ export default function AssigneeSheet({
                 onPress={onChoose}
               />
             ))}
+            {teams.length > 0 && <SectionLabel t={t}>Teams</SectionLabel>}
+            {teams.map((pick) => (
+              <PickRow
+                key={pick.key}
+                pick={pick}
+                t={t}
+                isOwner={false}
+                pending={pendingKey === pick.key}
+                onPress={onChoose}
+                teamSize={pick.kind === "team" ? teamSizes.get(pick.teamId) : undefined}
+              />
+            ))}
           </ScrollView>
         )}
       </SafeAreaView>
@@ -263,47 +318,128 @@ export default function AssigneeSheet({
   );
 }
 
+function SectionLabel({ t, children }: Readonly<{ t: InboxRowTheme; children: string }>) {
+  return (
+    <Text
+      style={{
+        marginTop: 12,
+        marginBottom: 4,
+        paddingHorizontal: 4,
+        fontFamily: "InstrumentSans_700Bold",
+        fontSize: 12,
+        letterSpacing: 0.6,
+        textTransform: "uppercase",
+        color: t.fg3,
+      }}
+    >
+      {children}
+    </Text>
+  );
+}
+
+/** "Assign to me" and "Unassign", side by side above the lists. */
+const ActionButton = memo(function ActionButton({
+  pick,
+  t,
+  pending,
+  onPress,
+}: Readonly<{ pick: Pick; t: InboxRowTheme; pending: boolean; onPress: (pick: Pick) => void }>) {
+  const isMe = pick.kind === "me";
+  const color = isMe ? t.brand : t.fg2;
+  return (
+    <Tap
+      onPress={() => onPress(pick)}
+      accessibilityRole="button"
+      style={{
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 8,
+        height: 44,
+        borderRadius: 12,
+        backgroundColor: isMe ? t.brandSoft : t.surface2,
+        borderWidth: 1,
+        borderColor: isMe ? t.brandSoft : t.border1,
+      }}
+      pressedStyle={{ opacity: 0.7 }}
+    >
+      {pending ? (
+        <ActivityIndicator size="small" color={color} />
+      ) : isMe ? (
+        <UserCheck size={17} color={color} />
+      ) : (
+        <UserX size={17} color={color} />
+      )}
+      <Text style={{ fontFamily: "InstrumentSans_600SemiBold", fontSize: 14, color }}>
+        {isMe ? "Assign to me" : "Unassign"}
+      </Text>
+    </Tap>
+  );
+});
+
+const AVATAR = 36;
+
 const PickRow = memo(function PickRow({
   pick,
   t,
   isOwner,
   pending,
   onPress,
+  teamSize,
 }: Readonly<{
   pick: Pick;
   t: InboxRowTheme;
   isOwner: boolean;
   pending: boolean;
   onPress: (pick: Pick) => void;
+  /** Team rows: how many people the chat can rotate to. */
+  teamSize?: number;
 }>) {
   let icon: React.ReactNode;
-  let title: string;
+  let title = "";
   let subtitle: string | null = null;
-  let titleColor = t.fg1;
-  if (pick.kind === "me") {
-    icon = <UserCheck size={18} color={t.brand} />;
-    title = "Assign to me";
-    titleColor = t.brand;
-  } else if (pick.kind === "unassign") {
-    icon = <UserX size={18} color={t.fg3} />;
-    title = "Unassign";
-  } else if (pick.kind === "team") {
-    icon = <Shuffle size={18} color={t.fg3} />;
-    title = pick.name;
-    subtitle = "Auto-assign to whoever's turn it is";
-  } else {
+  if (pick.kind === "team") {
     icon = (
       <View
         style={{
-          width: 32,
-          height: 32,
-          borderRadius: 16,
-          backgroundColor: t.brandSoft,
+          width: AVATAR,
+          height: AVATAR,
+          borderRadius: 10,
+          backgroundColor: t.surface2,
+          borderWidth: 1,
+          borderColor: t.border1,
           alignItems: "center",
           justifyContent: "center",
         }}
       >
-        <Text style={{ color: t.brand, fontSize: 12, fontFamily: "InstrumentSans_700Bold" }}>
+        <Users size={17} color={t.fg2} />
+      </View>
+    );
+    title = pick.name;
+    subtitle =
+      teamSize != null
+        ? `Round-robin · ${teamSize} member${teamSize === 1 ? "" : "s"}`
+        : "Round-robin";
+  } else if (pick.kind === "person") {
+    icon = (
+      <View
+        style={{
+          width: AVATAR,
+          height: AVATAR,
+          borderRadius: AVATAR / 2,
+          backgroundColor: isOwner ? t.brand : t.brandSoft,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Text
+          style={{
+            color: isOwner ? t.onAccent : t.brand,
+            fontSize: 13,
+            fontFamily: "InstrumentSans_700Bold",
+          }}
+        >
           {namePreview(pick.member.name)}
         </Text>
         {pick.member.status === "online" && (
@@ -312,9 +448,9 @@ const PickRow = memo(function PickRow({
               position: "absolute",
               right: -1,
               bottom: -1,
-              width: 10,
-              height: 10,
-              borderRadius: 5,
+              width: 11,
+              height: 11,
+              borderRadius: 6,
               backgroundColor: t.success,
               borderWidth: 2,
               borderColor: t.surface,
@@ -328,31 +464,39 @@ const PickRow = memo(function PickRow({
   }
 
   return (
-    <Pressable
+    <Tap
       onPress={() => onPress(pick)}
-      style={({ pressed }) => ({
+      accessibilityRole="button"
+      accessibilityState={{ selected: isOwner }}
+      style={{
         flexDirection: "row",
         alignItems: "center",
         gap: 12,
-        minHeight: 48,
+        minHeight: 56,
         paddingVertical: 8,
-        paddingHorizontal: 4,
-        borderRadius: 10,
-        backgroundColor: pressed ? t.surface2 : "transparent",
-      })}
+        paddingHorizontal: 8,
+        borderRadius: 12,
+        backgroundColor: isOwner ? t.brandSoft : "transparent",
+      }}
+      pressedStyle={{ backgroundColor: t.surface2 }}
     >
-      <View style={{ width: 32, alignItems: "center" }}>{icon}</View>
-      <View style={{ flex: 1 }}>
+      {icon}
+      <View style={{ flex: 1, minWidth: 0 }}>
         <Text
           numberOfLines={1}
-          style={{ fontFamily: "InstrumentSans_600SemiBold", fontSize: 15, color: titleColor }}
+          style={{ fontFamily: "InstrumentSans_600SemiBold", fontSize: 15, color: t.fg1 }}
         >
           {title}
         </Text>
         {subtitle && (
           <Text
             numberOfLines={1}
-            style={{ fontFamily: "InstrumentSans_400Regular", fontSize: 12, color: t.fg3 }}
+            style={{
+              marginTop: 1,
+              fontFamily: "InstrumentSans_400Regular",
+              fontSize: 12.5,
+              color: t.fg3,
+            }}
           >
             {subtitle}
           </Text>
@@ -363,6 +507,6 @@ const PickRow = memo(function PickRow({
       ) : (
         isOwner && <Check size={18} color={t.brand} />
       )}
-    </Pressable>
+    </Tap>
   );
 });

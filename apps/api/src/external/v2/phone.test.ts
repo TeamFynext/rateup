@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import { phoneSchema, toWirePhone, waRecipientSchema } from "./phone.js";
 
 describe("phoneSchema", () => {

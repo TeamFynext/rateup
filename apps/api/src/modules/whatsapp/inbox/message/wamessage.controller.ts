@@ -355,8 +355,10 @@ export async function handleWaMessages(
       // A contact reached on several channels can be busy on one (assigned on Instagram)
       // and new on another; the contact-level status describes only its newest ticket, so
       // with a known channel the channel's own ticket decides. Spam stays filed away.
+      // Webchat has no Channel row, but is a channel all the same: its tickets are found
+      // by platform (see `getLastCreatedConversationForContact`).
       const opensOnChannel =
-        Boolean(channelId) &&
+        (Boolean(channelId) || sourcePlatform === PlatformType.WEBCHAT) &&
         !contact.isSpam &&
         !WaMessageClosedStatus.includes(contact.waMessageAssignStatus);
       if (
@@ -367,12 +369,13 @@ export async function handleWaMessages(
         // closed (or there was never one), this message opens a new conversation
         // rather than appending to a finished record.
         conversation =
-          (await getActiveConversationForContact(contact.id, channelId)) ??
+          (await getActiveConversationForContact(contact.id, channelId, sourcePlatform)) ??
           (await openConversationForContact(
             contact.id,
             orgId,
             WaMessageAssignStatus.UNASSIGNED,
             channelId,
+            sourcePlatform,
           ));
       } else {
         // `getLastCreatedConversationForContact` signals "none" with `null`,
@@ -380,7 +383,11 @@ export async function handleWaMessages(
         // getOrCreateContactBy*'s own return shape) uses `undefined` for the
         // same absence — normalize so this function's later `conversation &&`
         // / `conversation?.` checks keep working regardless of which path set it.
-        const last = await getLastCreatedConversationForContact(contact.id, channelId);
+        const last = await getLastCreatedConversationForContact(
+          contact.id,
+          channelId,
+          sourcePlatform,
+        );
         conversation = last ? await adoptChannel(last, channelId) : undefined;
       }
     }
@@ -581,6 +588,10 @@ export async function handleWaMessages(
           ...contact,
           conversationId: conversation?.id ?? null,
           conversationStatus: conversation?.status ?? null,
+          // What the list row and ticket header show, so a ticket opened by this very
+          // message is not drawn as "Ticket —" until the next reload.
+          ticketNumber: conversation?.number ?? null,
+          ticketSubject: conversation?.subject ?? null,
         },
         message: waMessage,
       },

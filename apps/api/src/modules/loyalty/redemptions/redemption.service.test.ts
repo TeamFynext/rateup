@@ -1,5 +1,5 @@
 import { Prisma } from "../../../generated/prisma/client.js";
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 vi.mock("../../../utils/prisma.js", () => {
   const client = {

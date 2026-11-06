@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 vi.hoisted(() => {
   process.env.EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";

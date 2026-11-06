@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 vi.mock("../../utils/db.js", () => ({ default: { query: vi.fn(async () => ({})) } }));
 vi.mock("./logger.js", () => ({

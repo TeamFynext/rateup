@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 // MSG-4 / MSG-12: the participant query must take credentials, template and recipients from
 // the campaign's org — never from the contact's.

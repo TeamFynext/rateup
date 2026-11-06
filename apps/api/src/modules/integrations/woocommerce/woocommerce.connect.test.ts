@@ -1,7 +1,7 @@
 import { createHmac, randomBytes } from "node:crypto";
 
 import Fastify from "fastify";
-import { beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), warn: vi.fn(), debug: vi.fn(), trace: vi.fn() },

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 
 import { graphApiErrorDetail, isSendOutcomeUnknown } from "./graphError.js";
 import { WA_TRANSPORT_ERROR_CODE } from "./waRetryableErrors.js";

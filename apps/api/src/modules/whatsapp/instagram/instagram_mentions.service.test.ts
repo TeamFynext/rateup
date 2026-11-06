@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 /* An in-memory InstagramMention table, so redelivery, claims and cooldowns behave as they
    would against Postgres. Only the filter shapes the service uses are understood. */

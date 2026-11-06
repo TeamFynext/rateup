@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import { QuestionType, WaQuestions } from "../../../types/enums.js";
 import { ChoiceTypeQuestions, ChoiceTypeQuestionsV2, getChoiceIndex } from "./question.utils.js";
 

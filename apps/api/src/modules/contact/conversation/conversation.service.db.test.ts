@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 // The pure helpers (conversationStatusData, resolveInboxActor) already have a
 // suite in conversation.service.test.ts, which stubs prisma as an empty object.
@@ -658,6 +658,53 @@ describe("getLastCreatedConversationForContact / getActiveConversationForContact
 
   test("a contact with no conversations has no active one", async () => {
     expect(await getActiveConversationForContact("c1")).toBeNull();
+  });
+});
+
+// Webchat has no Channel row, so its tickets carry no channelId. A webchat message from a
+// contact with an open WhatsApp ticket used to be filed on that WhatsApp ticket.
+describe("webchat tickets are their own channel", () => {
+  const notOtherPlatforms = {
+    channelId: null,
+    messages: { none: { sourcePlatform: { notIn: ["WEBCHAT", "INTERNAL"] } } },
+  };
+  const noWebchatMessages = { messages: { none: { sourcePlatform: "WEBCHAT" } } };
+
+  test("a webchat message looks only at channel-less tickets with no other platform's messages", async () => {
+    await getLastCreatedConversationForContact("c1", null, "WEBCHAT" as any);
+
+    expect(db.conversation.findFirst.mock.calls[0][0]).toEqual({
+      where: { contactId: "c1", ...notOtherPlatforms },
+      orderBy: { createdAt: "desc" },
+    });
+  });
+
+  test("a message on another platform without a channel skips webchat tickets", async () => {
+    await getLastCreatedConversationForContact("c1", null, "WHATSAPP" as any);
+
+    expect(db.conversation.findFirst.mock.calls[0][0].where).toEqual({
+      contactId: "c1",
+      ...noWebchatMessages,
+    });
+  });
+
+  test("a channel's message never adopts a webchat ticket as a channel-less one", async () => {
+    await getLastCreatedConversationForContact("c1", "wa-channel", "WHATSAPP" as any);
+
+    const wheres = db.conversation.findFirst.mock.calls.map((call: any[]) => call[0].where);
+    expect(wheres).toContainEqual({ contactId: "c1", channelId: "wa-channel" });
+    expect(wheres).toContainEqual({ contactId: "c1", channelId: null, ...noWebchatMessages });
+  });
+
+  test("a new webchat ticket does not inherit the previous ticket's channel", async () => {
+    // The lookup for webchat finds nothing; were it the old any-ticket lookup, the
+    // WhatsApp ticket's channel would be copied onto the new one.
+    db.conversation.findFirst.mockResolvedValue(null);
+    db.conversation.create.mockResolvedValue({ id: "conv-webchat" });
+
+    await openConversationForContact("c1", "org-1", "UNASSIGNED" as any, null, "WEBCHAT" as any);
+
+    expect(db.conversation.create.mock.calls[0][0].data.channelId).toBeNull();
   });
 });
 

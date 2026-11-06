@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 vi.hoisted(() => {
   process.env.STRIPE_SECRET_KEY = "sk_test_x";

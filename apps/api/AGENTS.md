@@ -31,14 +31,19 @@ vp run @rateup/worker-bullmq#dev      # BullMQ worker (pnpm run dev:workers star
 vp run @rateup/worker-kafka#dev       # Kafka worker
 vp run --filter "@rateup/api..." build   # build the API and what it depends on
 vp run -r typecheck                   # every package (the pre-push hook)
-vp run @rateup/api#test               # most tests; the workers have their own
-pnpm -C apps/api exec vitest run <file>   # one file; add -t "name" to filter
+vp -C apps/api test                   # most tests; each worker has its own (vp -C apps/worker-kafka test)
+vp -C apps/api test <file>            # one file; add -t "name" to filter, `test watch` to watch
+vp -C apps/api lint                   # oxlint with this app's rules (--fix to fix)
 vp run @rateup/db#generate            # after any schema change
 vp run @rateup/db#migrate:dev         # create a migration locally
 pnpm -C apps/api run staff:add <email> --owner   # first staff-console owner
 ```
 
-Each backend package lints with `pnpm run lint` (oxlint, its own `.oxlintrc.json`).
+There are no `test`, `lint` or `fmt` scripts: use Vite+'s commands (`vp test`, `vp lint`,
+`vp fmt`) in the app folder or with `vp -C <folder>`. oxlint and Vitest come with Vite+, not as
+separate installs. Each backend app's `vite.config.ts` holds its lint rules (the `lint` block,
+used instead of the root's type-aware rules when `vp lint` runs in that folder) and its test
+settings; test files import from `vite-plus/test`.
 
 Git hooks live at the monorepo root (`.vite-hooks/`, rules in the root `vite.config.ts`):
 pre-commit formats staged files with `vp fmt`; pre-push runs every package's `typecheck`,
@@ -368,8 +373,8 @@ its Kafka consumer became `kafka/consumers/status.consumer.ts`, and its `src/uti
 - **Prisma**: run `pnpm exec prisma generate` after any schema change; migrations live in
   `prisma/`. Import types and enums from `generated/prisma/client.js` by relative path, not
   `@prisma/client`.
-- **Formatting/linting**: `vp fmt` (oxfmt, root `vite.config.ts`) + oxlint (`.oxlintrc.json`),
-  never Prettier or ESLint. The pre-commit hook only formats, so run `pnpm run lint` yourself.
+- **Formatting/linting**: `vp fmt` (oxfmt, root `vite.config.ts`) + `vp lint` (oxlint, this app's `vite.config.ts`),
+  never Prettier or ESLint. The pre-commit hook only formats, so run `vp lint` yourself.
 - **Node.js 26.x (LTS)** is required (`engines` in package.json). Configuration comes from `.env`.
 - **External partner API**: two versions, distinct from the first-party `/api/*` routes, with
   token auth via the `apiAccessToken` module. `src/external/v2/` (`/api/external/v2`, current)

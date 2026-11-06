@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { fitToChannel } from "./degrade.js";
 import type { ChannelCapabilities, LoyaltyMessage } from "./types.js";

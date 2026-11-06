@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { WaMessageAssignStatus } from "../../../../types/enums.js";
 import { NOT_SPAM_EVENT } from "../../constants.js";

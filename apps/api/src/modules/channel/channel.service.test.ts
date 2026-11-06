@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 vi.mock("../../utils/prisma.js", () => ({
   default: { channel: { findMany: vi.fn(), findFirst: vi.fn() }, contact: { findFirst: vi.fn() } },

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 // A stand-in for prisma's known-request error so the handlers' `instanceof`
 // branches can be exercised without loading the real client. It has to be

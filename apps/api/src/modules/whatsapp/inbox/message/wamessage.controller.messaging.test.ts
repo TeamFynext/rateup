@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 vi.mock("../note/note.service.js", () => ({
   createNote: vi.fn(),
@@ -523,7 +523,13 @@ describe("handleWaMessages - choosing the conversation", () => {
 
     await callHandleWaMessages({ type: "receive" });
 
-    expect(m.openConversation).toHaveBeenCalledWith("contact-1", "org-1", "UNASSIGNED", null);
+    expect(m.openConversation).toHaveBeenCalledWith(
+      "contact-1",
+      "org-1",
+      "UNASSIGNED",
+      null,
+      "WHATSAPP",
+    );
     expect(m.addNewWaMessage.mock.calls[0][5]).toBe("conv-new");
   });
 
@@ -546,7 +552,7 @@ describe("handleWaMessages - choosing the conversation", () => {
 
     await callHandleWaMessages({ type: "send" });
 
-    expect(m.getLastConversation).toHaveBeenCalledWith("contact-1", null);
+    expect(m.getLastConversation).toHaveBeenCalledWith("contact-1", null, "WHATSAPP");
     expect(m.openConversation).not.toHaveBeenCalled();
   });
 
@@ -565,8 +571,43 @@ describe("handleWaMessages - choosing the conversation", () => {
     expect(m.updateContact).toHaveBeenCalledWith("contact-1", "org-1", {
       waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED,
     });
-    expect(m.openConversation).toHaveBeenCalledWith("contact-1", "org-1", "UNASSIGNED", null);
+    expect(m.openConversation).toHaveBeenCalledWith(
+      "contact-1",
+      "org-1",
+      "UNASSIGNED",
+      null,
+      "WHATSAPP",
+    );
     expect(m.addNewWaMessage.mock.calls[0][5]).toBe("conv-new");
+  });
+
+  // Webchat has no Channel row (channelId is null). A contact already assigned on
+  // WhatsApp used to have its webchat message filed on that WhatsApp ticket.
+  test("a webchat message from a contact busy on WhatsApp goes to a webchat ticket", async () => {
+    resolveContact({
+      contact: { ...CONTACT, waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED },
+      conversation: null,
+    });
+    m.getActiveConversation.mockResolvedValue(null);
+    m.openConversation.mockResolvedValue({ id: "conv-webchat", subject: null });
+
+    await callHandleWaMessages({
+      type: "receive",
+      platform: PlatformType.WEBCHAT,
+      sourceIdentifier: "webchat",
+      messageBody: { text: "some" },
+    });
+
+    expect(m.getActiveConversation).toHaveBeenCalledWith("contact-1", null, "WEBCHAT");
+    expect(m.getLastConversation).not.toHaveBeenCalled();
+    expect(m.openConversation).toHaveBeenCalledWith(
+      "contact-1",
+      "org-1",
+      "UNASSIGNED",
+      null,
+      "WEBCHAT",
+    );
+    expect(m.addNewWaMessage.mock.calls[0][5]).toBe("conv-webchat");
   });
 
   test("an echo to a contact with an open ticket stays on that ticket", async () => {

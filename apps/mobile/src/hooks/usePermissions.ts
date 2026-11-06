@@ -13,6 +13,12 @@ export type Permission =
   | "inbox.assign"
   | "inbox.manage"
   | "inbox.delete"
+  | "contacts.read"
+  | "contacts.manage"
+  | "contacts.merge"
+  | "meta_agent.read"
+  | "meta_agent.use"
+  | "meta_agent.manage"
   | "loyalty.read"
   | "loyalty.cashier"
   | "loyalty.manage"
@@ -48,14 +54,16 @@ const LEGACY_ROLE_KEY: Record<string, RoleKey> = {
 };
 
 // Until the API sends a permission list, an app in front of an older server keeps today's
-// behaviour: every action visible, the server deciding. Commerce is left out: a server
-// that predates permissions has no shop to open.
+// behaviour: every action visible, the server deciding. Commerce and contact merging are
+// left out: a server that predates permissions has no shop and no merge to open.
 const EVERYTHING: ReadonlySet<string> = new Set<Permission>([
   "inbox.read",
   "inbox.reply",
   "inbox.assign",
   "inbox.manage",
   "inbox.delete",
+  "contacts.read",
+  "contacts.manage",
   "loyalty.read",
   "loyalty.cashier",
   "loyalty.manage",
