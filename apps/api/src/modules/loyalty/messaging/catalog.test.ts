@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { LoyaltyEventType } from "../../../types/enums.js";
 import { LOYALTY_EVENT_TEMPLATE_NAMES } from "../loyaltyEventTemplates.js";

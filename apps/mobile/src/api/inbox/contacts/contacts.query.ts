@@ -78,8 +78,8 @@ export const useEditContactMutation = () => {
  * passes the value it wants. Mirrors the web inbox's `useToggleFavorite`:
  * patch the local row, then refresh the counts and the list.
  *
- * `contactId` is what the mobile contacts store is keyed by; `conversationId`
- * is what the API keys on.
+ * The star lives on the ticket: `conversationId` is what the API keys on and
+ * which of the contact's inbox rows is patched.
  */
 export const useToggleFavorite = () => {
   const queryClient = useQueryClient();
@@ -90,10 +90,15 @@ export const useToggleFavorite = () => {
         isFavorite: vars.isFavorite,
       }),
     onSuccess: (_res, vars) => {
-      useContactsStore.getState().setContactFavorite(vars.contactId, vars.isFavorite);
+      useContactsStore
+        .getState()
+        .setContactFavorite(vars.contactId, vars.isFavorite, vars.conversationId);
 
       const { selectedContact, setSelectedContact } = useSelectedContactStore.getState();
-      if (selectedContact?.id === vars.contactId) {
+      if (
+        selectedContact?.id === vars.contactId &&
+        (!selectedContact.conversationId || selectedContact.conversationId === vars.conversationId)
+      ) {
         setSelectedContact({ ...selectedContact, isFavorite: vars.isFavorite });
       }
 

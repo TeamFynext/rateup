@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test } from "vite-plus/test";
 
 process.env.FLOW_TOKEN_SECRET = "test-secret";
 process.env.API_URL = "api.example.test";

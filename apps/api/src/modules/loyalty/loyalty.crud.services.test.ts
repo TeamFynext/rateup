@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 // The four small CRUD services behind the loyalty admin screens — program,
 // tiers, rewards and earning rules — share one prisma stub.

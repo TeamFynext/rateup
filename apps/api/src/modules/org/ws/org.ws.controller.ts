@@ -17,6 +17,13 @@ import { Role } from "../../../generated/prisma/client.js";
 const ONLINE_DEBOUNCE_MS = 2000;
 const OFFLINE_DELAY_MS = 15000;
 const JOB_KEY_EXPIRE_SEC = 120;
+/**
+ * How often each socket is pinged. Proxies in front of the API (dev tunnels, load balancers)
+ * close a socket that carries no traffic for a minute or two, and a quiet inbox sends none.
+ * The ping keeps it alive; a socket that has not answered the previous ping is dead and
+ * is terminated, so it does not linger in activeConnections.
+ */
+const HEARTBEAT_MS = 30_000;
 
 const subscriber = baseRedis.duplicate();
 const publisher = baseRedis.duplicate();
@@ -208,7 +215,21 @@ export async function handleWebSocketConnection(
   // Debounced online status update
   await scheduleOnlineStatus(userId, orgId);
 
+  let alive = true;
+  connection.on("pong", () => {
+    alive = true;
+  });
+  const heartbeat = setInterval(() => {
+    if (!alive) {
+      connection.terminate();
+      return;
+    }
+    alive = false;
+    connection.ping();
+  }, HEARTBEAT_MS);
+
   connection.on("close", async () => {
+    clearInterval(heartbeat);
     try {
       activeConnections.get(orgId)?.delete(socketKey);
       // Schedule offline status update after 1 minute

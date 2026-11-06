@@ -1,6 +1,6 @@
 import { EventEmitter } from "node:events";
 
-import { expect, test, vi } from "vitest";
+import { expect, test, vi } from "vite-plus/test";
 
 // A server that keeps the socket busy but never finishes: the idle timeout never fires.
 vi.mock("node:https", () => ({

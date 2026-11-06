@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 describe("campaign.auth.ts", () => {
   test("exports nothing — every piece of the dead message limit is gone", async () => {

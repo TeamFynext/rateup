@@ -17,6 +17,7 @@ import dayjs from "dayjs";
 import type { TFunction } from "i18next";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { isValidPhoneNumber } from "react-phone-number-input";
 import { toast } from "sonner";
 
 import type {
@@ -37,11 +38,24 @@ import {
   suggestionReasonText,
 } from "@/components/Contacts/merge/identity.tsx";
 import { MergeContactsDialog } from "@/components/Contacts/merge/MergeContactsDialog.tsx";
+import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
 import { cn } from "@/lib/utils.ts";
 import { applyContactMerged } from "@/store/contact-merged.ts";
 import { asApiError, getApiErrorData, getApiErrorMessage } from "@/utils/apiError.ts";
+
+type EditableKind = "PHONE" | "EMAIL";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Why a phone or email cannot be saved yet, or null when it can. Same rules as the API. */
+function identityValueError(kind: EditableKind, value: string, t: TFunction): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  if (kind === "EMAIL") return EMAIL_RE.test(trimmed) ? null : t("Enter a valid email");
+  return isValidPhoneNumber(trimmed) ? null : t("Enter a valid phone number");
+}
 
 type MergeRequest = { kind: "pick" } | { kind: "pair"; otherId: string; suggestionId?: string };
 
@@ -62,7 +76,7 @@ export function ContactIdentitySection({
   embedded?: boolean;
   /**
    * Kinds edited elsewhere on the same screen (the edit form's phone and email fields).
-   * Hiding PHONE and EMAIL also hides "Add phone or email".
+   * Hiding PHONE and EMAIL also hides "Add phone" and "Add email".
    */
   hideKinds?: IdentityKind[];
   title?: string;
@@ -79,9 +93,15 @@ export function ContactIdentitySection({
   const add = useAddContactIdentity(contactId);
   const remove = useRemoveContactIdentity(contactId);
   const update = useUpdateContactIdentity(contactId);
-  const [adding, setAdding] = useState(false);
+  const [adding, setAdding] = useState<EditableKind | null>(null);
   const [draft, setDraft] = useState("");
-  const [editing, setEditing] = useState<{ id: string; value: string } | null>(null);
+  const [editing, setEditing] = useState<{
+    id: string;
+    kind: EditableKind;
+    value: string;
+  } | null>(null);
+  // The error shows once a save was tried, not while the number is still being typed.
+  const [showErrors, setShowErrors] = useState(false);
   const [merge, setMerge] = useState<MergeRequest | null>(null);
 
   if (!canRead) return null;
@@ -126,10 +146,17 @@ export function ContactIdentitySection({
     if (!editing) return;
     const value = editing.value.trim();
     if (!value) return;
+    if (identityValueError(editing.kind, value, t)) {
+      setShowErrors(true);
+      return;
+    }
     update.mutate(
       { identityId: editing.id, value },
       {
-        onSuccess: () => setEditing(null),
+        onSuccess: () => {
+          setEditing(null);
+          setShowErrors(false);
+        },
         onError: (error) => void onSaveError(error, value, t("Could not save this")),
       },
     );
@@ -148,13 +175,18 @@ export function ContactIdentitySection({
 
   const submitDraft = () => {
     const value = draft.trim();
-    if (!value) return;
+    if (!value || !adding) return;
+    if (identityValueError(adding, value, t)) {
+      setShowErrors(true);
+      return;
+    }
     add.mutate(
-      { kind: value.includes("@") ? "EMAIL" : "PHONE", value },
+      { kind: adding, value },
       {
         onSuccess: () => {
           setDraft("");
-          setAdding(false);
+          setAdding(null);
+          setShowErrors(false);
           toast.success(t("Added"));
         },
         onError: (error) => void onSaveError(error, value, t("Could not add this")),
@@ -245,45 +277,21 @@ export function ContactIdentitySection({
             const several = identities.filter((other) => other.kind === identity.kind).length > 1;
             if (editing && editing.id === identity.id) {
               return (
-                <form
+                <IdentityValueForm
                   key={key}
-                  className="my-1 flex items-center gap-1.5"
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    saveEdit();
+                  kind={editing.kind}
+                  value={editing.value}
+                  onChange={(value) => setEditing({ ...editing, value })}
+                  onSubmit={saveEdit}
+                  onCancel={() => {
+                    setEditing(null);
+                    setShowErrors(false);
                   }}
-                >
-                  <Input
-                    autoFocus
-                    value={editing.value}
-                    onChange={(event) => setEditing({ ...editing, value: event.target.value })}
-                    onKeyDown={(event) => {
-                      if (event.key === "Escape") setEditing(null);
-                    }}
-                    aria-label={
-                      identity.kind === "EMAIL" ? t("Edit email") : t("Edit phone number")
-                    }
-                    inputMode={identity.kind === "PHONE" ? "tel" : "email"}
-                    className="h-8 text-[13px]"
-                  />
-                  <Button
-                    type="submit"
-                    size="sm"
-                    loading={update.isPending}
-                    disabled={!editing.value.trim()}
-                  >
-                    {t("Save")}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label={t("Cancel")}
-                    onClick={() => setEditing(null)}
-                  >
-                    <IconX />
-                  </Button>
-                </form>
+                  submitLabel={t("Save")}
+                  pending={update.isPending}
+                  error={showErrors ? identityValueError(editing.kind, editing.value, t) : null}
+                  className="my-1"
+                />
               );
             }
             return (
@@ -309,13 +317,15 @@ export function ContactIdentitySection({
                     {editable && (
                       <IconButton
                         label={t("Edit {value}", { value: identityLabel(identity, t) })}
-                        onClick={() =>
+                        onClick={() => {
+                          setShowErrors(false);
                           setEditing({
                             id: identity.id ?? "",
+                            kind: identity.kind === "EMAIL" ? "EMAIL" : "PHONE",
                             value:
                               identity.kind === "PHONE" ? `+${identity.value}` : identity.value,
-                          })
-                        }
+                          });
+                        }}
                       >
                         <IconPencil className="size-3.5" />
                       </IconButton>
@@ -347,46 +357,39 @@ export function ContactIdentitySection({
       {canManage &&
         canAddHere &&
         (adding ? (
-          <form
-            className="mt-2 flex items-center gap-1.5"
-            onSubmit={(event) => {
-              event.preventDefault();
-              submitDraft();
+          <IdentityValueForm
+            kind={adding}
+            value={draft}
+            onChange={setDraft}
+            onSubmit={submitDraft}
+            onCancel={() => {
+              setAdding(null);
+              setDraft("");
+              setShowErrors(false);
             }}
-          >
-            <Input
-              autoFocus
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-              placeholder={t("Phone or email")}
-              aria-label={t("Phone or email")}
-              className="h-8 text-[13px]"
-            />
-            <Button type="submit" size="sm" loading={add.isPending} disabled={!draft.trim()}>
-              {t("Add")}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              aria-label={t("Cancel")}
-              onClick={() => {
-                setAdding(false);
-                setDraft("");
-              }}
-            >
-              <IconX />
-            </Button>
-          </form>
+            submitLabel={t("Add")}
+            pending={add.isPending}
+            error={showErrors ? identityValueError(adding, draft, t) : null}
+            className="mt-2"
+          />
         ) : (
-          <button
-            type="button"
-            onClick={() => setAdding(true)}
-            className="mt-2 inline-flex cursor-pointer items-center gap-1 rounded-full border border-dashed border-border px-2.5 py-0.5 text-[12px] font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            <IconPlus className="size-3" />
-            {t("Add phone or email")}
-          </button>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {(["PHONE", "EMAIL"] as const).map((kind) => (
+              <button
+                key={kind}
+                type="button"
+                onClick={() => {
+                  setDraft("");
+                  setShowErrors(false);
+                  setAdding(kind);
+                }}
+                className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-dashed border-border px-2.5 py-0.5 text-[12px] font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <IconPlus className="size-3" />
+                {kind === "PHONE" ? t("Add phone") : t("Add email")}
+              </button>
+            ))}
+          </div>
         ))}
 
       {data && data.merges.length > 0 && <MergeHistory merges={data.merges} />}
@@ -412,6 +415,95 @@ export function ContactIdentitySection({
         />
       )}
     </div>
+  );
+}
+
+/**
+ * One phone or email being added or corrected: a phone field with a country picker (so the
+ * number is saved in full international form) or an email field, then Save and Cancel.
+ */
+function IdentityValueForm({
+  kind,
+  value,
+  onChange,
+  onSubmit,
+  onCancel,
+  submitLabel,
+  pending,
+  error,
+  className,
+}: Readonly<{
+  kind: EditableKind;
+  value: string;
+  onChange: (value: string) => void;
+  onSubmit: () => void;
+  onCancel: () => void;
+  submitLabel: string;
+  pending: boolean;
+  error: string | null;
+  className?: string;
+}>) {
+  const { t } = useTranslation();
+  const label = kind === "EMAIL" ? t("Email address") : t("Phone number");
+  return (
+    <form
+      className={cn("flex flex-col gap-1", className)}
+      noValidate
+      onSubmit={(event) => {
+        event.preventDefault();
+        onSubmit();
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") onCancel();
+      }}
+    >
+      <div className="flex items-center gap-1.5">
+        {kind === "PHONE" ? (
+          <PhoneInput
+            autoFocus
+            defaultCountry="IN"
+            international
+            countryCallingCodeEditable={false}
+            value={value}
+            onChange={(next) => onChange(next ?? "")}
+            placeholder={t("Enter phone number")}
+            aria-label={label}
+            aria-invalid={!!error}
+            className="min-w-0 flex-1 [&_button]:h-8 [&_input]:h-8 [&_input]:text-[13px]"
+          />
+        ) : (
+          <Input
+            autoFocus
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            placeholder={t("email@example.com")}
+            aria-label={label}
+            aria-invalid={!!error}
+            className="h-8 min-w-0 flex-1 text-[13px]"
+          />
+        )}
+        <Button type="submit" size="sm" loading={pending} disabled={!value.trim()}>
+          {submitLabel}
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          aria-label={t("Cancel")}
+          onClick={onCancel}
+        >
+          <IconX />
+        </Button>
+      </div>
+      {error && (
+        <p role="alert" className="text-[12px] text-destructive">
+          {error}
+        </p>
+      )}
+    </form>
   );
 }
 

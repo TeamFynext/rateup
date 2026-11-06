@@ -43,16 +43,14 @@ pnpm run dev
 
 ## Scripts
 
-| Command              | Description                                        |
-| -------------------- | -------------------------------------------------- |
-| `pnpm run dev`       | Start dev server with hot reload (tsx watch)       |
-| `pnpm run build`     | Compile TypeScript (`tsc -p tsconfig.json`)        |
-| `pnpm run start`     | Start production server (`node dist/src/index.js`) |
-| `pnpm run test`      | Run tests (Vitest)                                 |
-| `pnpm run lint`      | Lint with oxlint                                   |
-| `pnpm run lint:fix`  | Lint and auto-fix                                  |
-| `pnpm run fmt`       | Format with oxfmt                                  |
-| `pnpm run fmt:check` | Check formatting                                   |
+| Command          | Description                                            |
+| ---------------- | ------------------------------------------------------ |
+| `pnpm run dev`   | Start dev server with hot reload (tsx watch)           |
+| `pnpm run build` | Compile TypeScript (`tsc -p tsconfig.json`)            |
+| `pnpm run start` | Start production server (`node dist/src/index.js`)     |
+| `vp test`        | Run tests (Vitest via Vite+; `vp test watch` to watch) |
+| `vp lint`        | Lint with this app's rules (`--fix` to fix)            |
+| `vp fmt`         | Format (`--check` to check only)                       |
 
 ## Project Structure
 
@@ -88,7 +86,7 @@ generated/              # Generated Prisma client
 
 ## Conventions
 
-- **Linting & Formatting:** oxlint + `vp fmt`; staged files are formatted by the monorepo's Vite+ pre-commit hook.
+- **Linting & Formatting:** `vp lint` (oxlint) + `vp fmt`; staged files are formatted by the monorepo's Vite+ pre-commit hook.
 - **Prisma:** Run `pnpm exec prisma generate` after schema changes (also runs automatically on `pnpm install`).
 - **ESM:** The project uses ES modules (`"type": "module"`).
 

@@ -156,6 +156,7 @@ export default function AssignToUser({
           setError(null);
         }}
         title="Assign chat"
+        showCurrent
         ownerId={ownerId}
         canUnassign={hasAssignees}
         onChoose={choose}

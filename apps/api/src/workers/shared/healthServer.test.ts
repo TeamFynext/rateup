@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 
-import { describe, expect, test, vi } from "vitest";
+import { describe, expect, test, vi } from "vite-plus/test";
 
 vi.mock("./logger.js", () => ({ log: { error: vi.fn(), info: vi.fn(), warn: vi.fn() } }));
 

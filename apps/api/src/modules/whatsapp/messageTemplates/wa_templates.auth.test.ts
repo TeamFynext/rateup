@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 describe("the message-limit preHandlers", () => {
   test("no longer exist", async () => {

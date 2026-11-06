@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 // The module only touches prisma; stub it so no DB is reached.
 const { prismaMock } = vi.hoisted(() => ({

@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, test, vi } from "vitest";
+import { beforeAll, describe, expect, test, vi } from "vite-plus/test";
 import Fastify, { type RouteOptions } from "fastify";
 import { serializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
 

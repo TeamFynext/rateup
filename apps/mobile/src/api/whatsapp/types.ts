@@ -203,6 +203,8 @@ export enum WaFlowFormElementType {
 }
 
 export type WaSettings = {
+  /** The settings row's id; the Meta AI agent routes are addressed by it. */
+  id?: string;
   wabaId: string;
   phone: string;
   phoneId: string;

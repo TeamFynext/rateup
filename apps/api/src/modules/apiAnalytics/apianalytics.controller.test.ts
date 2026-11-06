@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 vi.mock("./apianalytics.service.js", async () => {
   // `resolveTrendGranularity` is pure, so it runs for real.

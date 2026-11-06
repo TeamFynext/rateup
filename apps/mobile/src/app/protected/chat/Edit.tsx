@@ -1,313 +1,402 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
-  View,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
   Text,
   TextInput,
-  Pressable,
-  FlatList,
-  ActivityIndicator,
-  useWindowDimensions,
+  View,
   useColorScheme,
+  type TextInputProps,
 } from "react-native";
-import ToggleSwitch from "toggle-switch-react-native";
-import { ArrowLeft, ChevronDown, ChevronUp, User } from "lucide-react-native";
-import { countries } from "@/constants/countries";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft } from "lucide-react-native";
+
 import { editContactById, getContactById } from "@/api/inbox/contacts/contacts.api";
-import { convertFullPhoneNumToCoutryCodeAndNationalNum } from "@/utils/phoneNumConvert";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Colors } from "@/constants/colors";
+import { contactDetailsKey, identityOverviewKey } from "@/api/inbox/contacts/merge.query";
+import { Toast } from "@/components/common/Notice";
+import PhoneField, { splitPhone, toInternationalDigits } from "@/components/common/PhoneField";
+import Tap from "@/components/common/Tap";
+import { SheetButton } from "@/components/contactInfo/ContactIdentitiesSection";
+import { getInboxHeaderBg, getInboxRowTheme, type InboxRowTheme } from "@/constants/inboxDesign";
+import { usePermissions } from "@/hooks/usePermissions";
+import { useContactsStore } from "@/store/inboxStore";
+import { useSelectedContactStore } from "@/utils/store";
 
-export default function EditContacts() {
-  const { contactId }: { contactId: string } = useLocalSearchParams();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [isAiChatActive, setIsAiChatActive] = useState(false);
-  // Starts true: the fetch below is kicked off on mount, so the very first paint is already
-  // a load. Raising the flag from the effect instead meant one render of an empty form
-  // before the spinner, and a synchronous setState in an effect body besides. `contactId`
-  // comes from the route, so a different contact remounts this screen and re-initialises.
-  const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
-  const [selectedCountry, setSelectedCountry] = useState(countries[0]);
-  const [showDropdown, setShowDropdown] = useState(false);
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+type Saved = { name: string; phone: string; email: string; address: string };
+
+type ApiError = {
+  response?: {
+    status?: number;
+    data?: { message?: string; error?: string; ownerContactId?: string; kind?: string };
+  };
+};
+
+/** The contact's own fields: name, phone, email and address. */
+export default function EditContact() {
+  const { contactId } = useLocalSearchParams<{ contactId: string }>();
+  const isDark = useColorScheme() === "dark";
+  const t = getInboxRowTheme(isDark);
   const router = useRouter();
-  const { width, height } = useWindowDimensions();
 
-  // Computed, not stored: it is a pure function of the country and what has been typed, and
-  // holding it in state meant the save below could read the *previous* number for one
-  // render after either changed.
-  const fullPhoneNumber =
-    phone && selectedCountry
-      ? (selectedCountry.dial_code + phone.replace(/^0+/, "")).replace("+", "")
-      : "";
-
-  const handleSelectCountry = (country: any) => {
-    setSelectedCountry(country);
-    setShowDropdown(false);
-  };
-
-  const handleEdit = async () => {
-    try {
-      setLoading(true);
-      await editContactById(contactId, {
-        name,
-        aiWaChat: isAiChatActive,
-        phone: fullPhoneNumber,
-      });
-      setLoading(false);
-      setMessage("Successfully Updated");
-    } catch {
-      setError("Failed to update contact details. Please try again.");
-      setMessage("");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getContactDetails = async () => {
-    try {
-      const res = await getContactById(contactId);
-      setIsAiChatActive(res.aiWaChat);
-
-      const numbers = convertFullPhoneNumToCoutryCodeAndNationalNum(`+${res.phone}`);
-      setPhone(numbers.national_number);
-
-      const matchingCountry = countries.find(
-        (country) => country.dial_code === `+${numbers.country_code}`,
-      );
-
-      if (matchingCountry) {
-        setSelectedCountry(matchingCountry);
-      }
-
-      setName(res.name);
-
-      setError("");
-    } catch {
-      setError("Failed to load contact details. Please try again.");
-
-      setMessage("");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    // Silenced, not satisfied: the rule follows the call into `getContactDetails` and sees
-    // the setters inside it. Every one of them runs after `await getContactById`, so none
-    // is the synchronous set-during-commit the rule exists to catch — there is nothing
-    // left in this function that runs in the same tick as the effect.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    getContactDetails();
-    // Reloads when the contact changes. `getContactDetails` is redeclared every
-    // render, so depending on it would refetch in a loop.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contactId]);
-
-  const renderItem = ({ item }: { item: any }) => (
-    <Pressable
-      onPress={() => handleSelectCountry(item)}
-      style={{ backgroundColor: isDark ? Colors.dark.surface : "white" }}
-      className="flex-row items-center px-3 py-3"
-    >
-      <Text style={{ color: isDark ? Colors.dark.textPrimary : "black" }} className="mr-2">
-        {item.flag}
-      </Text>
-      <Text style={{ color: isDark ? Colors.dark.textPrimary : "black" }} className="mr-2">
-        {item.name}
-      </Text>
-      <Text style={{ color: isDark ? Colors.dark.textMuted : "#7A8289" }} className="text-sm">
-        {item.dial_code}
-      </Text>
-    </Pressable>
-  );
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ["contact-by-id", contactId],
+    queryFn: () => getContactById(contactId),
+    enabled: !!contactId,
+  });
 
   return (
-    <SafeAreaView
-      style={{ backgroundColor: isDark ? Colors.dark.bg : "white" }}
-      className="flex-grow"
+    <View style={{ flex: 1, backgroundColor: t.pageBg }}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 8,
+          paddingVertical: 8,
+          paddingHorizontal: 12,
+          backgroundColor: getInboxHeaderBg(isDark),
+          borderBottomWidth: 1,
+          borderBottomColor: t.border1,
+        }}
+      >
+        <Tap
+          onPress={() => router.back()}
+          style={{ width: 34, height: 34, alignItems: "center", justifyContent: "center" }}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <ArrowLeft size={21} color={t.fg1} />
+        </Tap>
+        <Text style={{ fontSize: 15, fontFamily: "Figtree_800ExtraBold", color: t.fg1 }}>
+          Edit contact
+        </Text>
+      </View>
+
+      {isLoading ? (
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+          <ActivityIndicator size="large" />
+        </View>
+      ) : isError || !data ? (
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 14 }}>
+          <Text style={{ fontSize: 14, fontFamily: "InstrumentSans_400Regular", color: t.fg3 }}>
+            Could not load this contact.
+          </Text>
+          <SheetButton label="Try again" kind="secondary" t={t} onPress={() => refetch()} />
+        </View>
+      ) : (
+        // Keyed by contact so the form starts from that contact's saved values.
+        <EditForm
+          key={data.id}
+          contactId={contactId}
+          saved={{
+            name: data.name ?? "",
+            phone: data.phone ?? "",
+            email: data.email ?? "",
+            address: data.address ?? "",
+          }}
+          t={t}
+        />
+      )}
+    </View>
+  );
+}
+
+function EditForm({
+  contactId,
+  saved,
+  t,
+}: Readonly<{ contactId: string; saved: Saved; t: InboxRowTheme }>) {
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const queryClient = useQueryClient();
+  const { can } = usePermissions();
+
+  const initialPhone = splitPhone(saved.phone);
+  const [name, setName] = useState(saved.name);
+  const [country, setCountry] = useState(initialPhone.country);
+  const [national, setNational] = useState(initialPhone.national);
+  const [email, setEmail] = useState(saved.email);
+  const [address, setAddress] = useState(saved.address);
+  // Errors show once a save was tried, not while the user is still typing.
+  const [tried, setTried] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const phoneDigits = toInternationalDigits(country, national);
+  const phoneChanged = national.trim()
+    ? phoneDigits !== saved.phone.replace(/[^\d]/g, "")
+    : !!saved.phone;
+  const errors = {
+    name: name.trim() ? null : "Enter a name",
+    // Clearing a phone is not offered: it is how WhatsApp reaches the contact. A contact
+    // that never had one (Instagram, web chat) may stay without.
+    phone: national.trim()
+      ? phoneDigits
+        ? null
+        : "Enter a valid phone number for this country"
+      : saved.phone
+        ? "Enter a phone number"
+        : null,
+    email: email.trim() && !EMAIL_RE.test(email.trim()) ? "Enter a valid email" : null,
+  };
+  const valid = !errors.name && !errors.phone && !errors.email;
+  const changed =
+    name.trim() !== saved.name ||
+    phoneChanged ||
+    email.trim() !== saved.email ||
+    address.trim() !== saved.address;
+
+  const save = async () => {
+    setTried(true);
+    setFormError(null);
+    if (!valid || !changed || saving) return;
+
+    // Only what changed: re-sending an unchanged phone or email re-runs the API's
+    // duplicate checks for nothing.
+    const body: Record<string, string | null> = {};
+    if (name.trim() !== saved.name) body.name = name.trim();
+    if (phoneChanged && phoneDigits) body.phone = phoneDigits;
+    if (email.trim() !== saved.email) body.email = email.trim() || null;
+    if (address.trim() !== saved.address) body.address = address.trim() || null;
+
+    setSaving(true);
+    try {
+      await editContactById(contactId, body);
+      queryClient.invalidateQueries({ queryKey: ["contact-by-id", contactId] });
+      queryClient.invalidateQueries({ queryKey: contactDetailsKey(contactId) });
+      queryClient.invalidateQueries({ queryKey: identityOverviewKey(contactId) });
+      queryClient.invalidateQueries({ queryKey: ["contacts", "filtered"] });
+
+      // The inbox row and the open chat's header show the name and phone too.
+      const patch: { name?: string; phone?: string } = {};
+      if (body.name) patch.name = body.name;
+      if (body.phone) patch.phone = body.phone;
+      if (Object.keys(patch).length) {
+        useContactsStore.getState().updateContactById(contactId, (c) => ({ ...c, ...patch }));
+        const { selectedContact, setSelectedContact } = useSelectedContactStore.getState();
+        if (selectedContact?.id === contactId) setSelectedContact({ ...selectedContact, ...patch });
+      }
+
+      Toast.show({ type: "success", text1: "Contact saved" });
+      router.back();
+    } catch (error) {
+      const response = (error as ApiError)?.response;
+      const owner = response?.data?.ownerContactId;
+      if (response?.status === 409 && owner) {
+        const what = response.data?.kind === "EMAIL" ? "email" : "phone number";
+        if (can("contacts.merge")) {
+          Alert.alert(
+            `Another contact has this ${what}`,
+            "If they are the same person, merge the two contacts instead.",
+            [
+              { text: "Cancel", style: "cancel" },
+              {
+                text: "Merge contacts",
+                onPress: () =>
+                  router.replace({
+                    pathname: "/protected/chat/Merge",
+                    params: { contactId, otherId: owner },
+                  } as never),
+              },
+            ],
+          );
+        } else {
+          setFormError(`Another contact already has this ${what}. Ask an admin to merge them.`);
+        }
+      } else if (response?.status === 403) {
+        setFormError("You don't have permission to edit contacts.");
+      } else {
+        setFormError(
+          response?.data?.message ?? response?.data?.error ?? "Could not save. Please try again.",
+        );
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <View className="flex-1 p-4">
-        {/* Top Part */}
-        <View className="flex-1">
-          {/* Header */}
-          <View className="flex-row items-center mb-8 gap-2">
-            <Pressable onPress={() => router.back()}>
-              <ArrowLeft color={isDark ? Colors.dark.textPrimary : "black"} />
-            </Pressable>
-            <Text
-              style={{ color: isDark ? Colors.dark.textPrimary : "black" }}
-              className="text-2xl font-bold"
-            >
-              Edit
-            </Text>
-          </View>
-
-          {/* Error / Success Message */}
-          {(error || message) && (
-            <View
-              className="mb-4 p-3 rounded-lg"
-              style={{ backgroundColor: error ? "#ffe5e5" : "#e5fff0" }}
-            >
-              <Text className={`text-sm ${error ? "text-[#cc0000]" : "text-[#007e33]"}`}>
-                {error || message}
-              </Text>
-            </View>
-          )}
-
-          {/* Name Input */}
-          <View className="mb-6">
-            <Text className="text-[#7A8289] mb-2 text-base">
-              Name <Text className="text-[#CC292C]">*</Text>
-            </Text>
-            <View
-              style={{
-                borderColor: isDark ? Colors.dark.borderLight : "#E2E5ED",
-                backgroundColor: isDark ? Colors.dark.inputBg : "transparent",
-              }}
-              className="border rounded-lg px-4 py-4 flex-row gap-2 items-center"
-            >
-              <User size={16} color={isDark ? Colors.dark.textMuted : "#7A8289"} />
-              <TextInput
-                style={{ color: isDark ? Colors.dark.textPrimary : "black" }}
-                className="text-base flex-1"
-                placeholder="Enter contact name"
-                placeholderTextColor={isDark ? Colors.dark.textPlaceholder : "#E2E5ED"}
-                value={name}
-                onChangeText={setName}
-              />
-            </View>
-          </View>
-
-          {/* Phone Input */}
-          <View className="mb-6">
-            <Text className="text-[#7A8289] mb-2 text-base">
-              Phone Number <Text className="text-[#CC292C]">*</Text>
-            </Text>
-            <View className="flex-row items-center">
-              {/* Country Picker */}
-              <View className="relative">
-                <Pressable
-                  onPress={() => setShowDropdown(!showDropdown)}
-                  style={{
-                    minWidth: width * 0.28,
-                    borderColor: isDark ? Colors.dark.borderLight : "#E2E5ED",
-                    backgroundColor: isDark ? Colors.dark.inputBg : "white",
-                  }}
-                  className="flex-row items-center border rounded-lg px-3 py-3"
-                >
-                  <Text
-                    style={{ color: isDark ? Colors.dark.textPrimary : "black" }}
-                    className="mr-2 text-base"
-                  >
-                    {selectedCountry.flag}
-                  </Text>
-                  <Text
-                    style={{ color: isDark ? Colors.dark.textPrimary : "black" }}
-                    className="text-base"
-                  >
-                    {selectedCountry.dial_code}
-                  </Text>
-                  {showDropdown ? (
-                    <ChevronUp
-                      size={18}
-                      color={isDark ? Colors.dark.textPrimary : "black"}
-                      className="ml-1"
-                    />
-                  ) : (
-                    <ChevronDown
-                      size={18}
-                      color={isDark ? Colors.dark.textPrimary : "black"}
-                      className="ml-1"
-                    />
-                  )}
-                </Pressable>
-
-                {/* Dropdown */}
-                {showDropdown && (
-                  <View
-                    style={{
-                      width: width * 0.8,
-                      maxHeight: height * 0.4,
-                      zIndex: 10,
-                      borderColor: isDark ? Colors.dark.borderLight : "#E2E5ED",
-                      backgroundColor: isDark ? Colors.dark.surface : "white",
-                    }}
-                    className="absolute top-14 border rounded-lg shadow-md"
-                  >
-                    <FlatList
-                      data={countries}
-                      keyExtractor={(item) => item.code}
-                      renderItem={renderItem}
-                      keyboardShouldPersistTaps="handled"
-                    />
-                  </View>
-                )}
-              </View>
-
-              {/* Phone Input */}
-              <TextInput
-                style={{
-                  color: isDark ? Colors.dark.textPrimary : "black",
-                  borderColor: isDark ? Colors.dark.borderLight : "#E2E5ED",
-                  backgroundColor: isDark ? Colors.dark.inputBg : "transparent",
-                }}
-                className="flex-1 ml-2 border rounded-lg px-4 py-4 text-base"
-                placeholder="Enter contact phone number"
-                placeholderTextColor={isDark ? Colors.dark.textPlaceholder : "#E2E5ED"}
-                value={phone}
-                onChangeText={setPhone}
-                keyboardType="phone-pad"
-              />
-            </View>
-          </View>
+      <ScrollView
+        contentContainerStyle={{ padding: 16, paddingTop: 8, gap: 18 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        {formError ? (
           <View
             style={{
-              backgroundColor: isAiChatActive
-                ? isDark
-                  ? "rgba(0,153,135,0.15)"
-                  : "#00998733"
-                : isDark
-                  ? Colors.dark.surface
-                  : "#F5F5F5",
+              marginTop: 12,
+              padding: 12,
+              borderRadius: 12,
+              backgroundColor: t.dangerTone.soft,
             }}
-            className="flex-row items-center p-3 justify-between rounded-lg"
           >
             <Text
-              style={{ color: isDark ? Colors.dark.textPrimary : "#000" }}
-              className="text-xl font-semibold"
+              style={{
+                fontSize: 13,
+                fontFamily: "InstrumentSans_400Regular",
+                color: t.dangerTone.fg,
+              }}
             >
-              AI Chat
+              {formError}
             </Text>
-            <ToggleSwitch
-              isOn={isAiChatActive}
-              onColor="#009987"
-              offColor={isDark ? Colors.dark.border : "#000"}
-              onToggle={(isOn) => setIsAiChatActive(isOn)}
-            />
           </View>
-        </View>
+        ) : null}
 
-        {/* Bottom Button */}
-        <View className="mt-8">
-          <Pressable
-            onPress={handleEdit}
-            disabled={loading}
-            className="bg-rateUpGreen rounded-xl py-4 flex items-center justify-center"
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text className="text-white font-bold text-lg">Done</Text>
-            )}
-          </Pressable>
-        </View>
+        <Field label="Name" required error={tried ? errors.name : null} t={t}>
+          <Input
+            t={t}
+            invalid={tried && !!errors.name}
+            value={name}
+            onChangeText={setName}
+            placeholder="Contact name"
+            autoCapitalize="words"
+            textContentType="name"
+            returnKeyType="next"
+          />
+        </Field>
+
+        <Field
+          label="Phone"
+          required={!!saved.phone}
+          hint="The main number, used for WhatsApp. Add more numbers from Contact info."
+          error={tried ? errors.phone : null}
+          t={t}
+        >
+          <PhoneField
+            country={country}
+            national={national}
+            onChangeCountry={setCountry}
+            onChangeNational={setNational}
+            invalid={tried && !!errors.phone}
+          />
+        </Field>
+
+        <Field label="Email" error={tried ? errors.email : null} t={t}>
+          <Input
+            t={t}
+            invalid={tried && !!errors.email}
+            value={email}
+            onChangeText={setEmail}
+            placeholder="email@example.com"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            textContentType="emailAddress"
+            autoComplete="email"
+          />
+        </Field>
+
+        <Field label="Address" t={t}>
+          <Input
+            t={t}
+            value={address}
+            onChangeText={setAddress}
+            placeholder="Street, city, postcode"
+            multiline
+            style={{ minHeight: 80, paddingTop: 13, textAlignVertical: "top" }}
+          />
+        </Field>
+      </ScrollView>
+
+      <View
+        style={{
+          paddingHorizontal: 16,
+          paddingTop: 12,
+          paddingBottom: 12 + insets.bottom,
+          borderTopWidth: 1,
+          borderTopColor: t.border1,
+          backgroundColor: t.surface,
+        }}
+      >
+        <SheetButton
+          label={saving ? "Saving…" : "Save changes"}
+          kind="primary"
+          t={t}
+          disabled={!changed || saving}
+          onPress={save}
+        />
       </View>
-    </SafeAreaView>
+    </KeyboardAvoidingView>
+  );
+}
+
+function Field({
+  label,
+  required,
+  hint,
+  error,
+  t,
+  children,
+}: Readonly<{
+  label: string;
+  required?: boolean;
+  hint?: string;
+  error?: string | null;
+  t: InboxRowTheme;
+  children: React.ReactNode;
+}>) {
+  return (
+    <View style={{ gap: 6 }}>
+      <Text style={{ fontSize: 13, fontFamily: "InstrumentSans_600SemiBold", color: t.fg2 }}>
+        {label}
+        {required ? <Text style={{ color: t.danger }}> *</Text> : null}
+      </Text>
+      {children}
+      {error ? (
+        <Text style={{ fontSize: 12, fontFamily: "InstrumentSans_400Regular", color: t.danger }}>
+          {error}
+        </Text>
+      ) : hint ? (
+        <Text style={{ fontSize: 12, fontFamily: "InstrumentSans_400Regular", color: t.fg4 }}>
+          {hint}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
+
+function Input({
+  t,
+  invalid,
+  style,
+  ...props
+}: Readonly<TextInputProps & { t: InboxRowTheme; invalid?: boolean }>) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <TextInput
+      placeholderTextColor={t.fg4}
+      {...props}
+      onFocus={(e) => {
+        setFocused(true);
+        props.onFocus?.(e);
+      }}
+      onBlur={(e) => {
+        setFocused(false);
+        props.onBlur?.(e);
+      }}
+      style={[
+        {
+          minHeight: 50,
+          borderRadius: 12,
+          borderWidth: 1,
+          borderColor: invalid ? t.danger : focused ? t.brand : t.border1,
+          backgroundColor: t.surface2,
+          paddingHorizontal: 14,
+          fontSize: 16,
+          fontFamily: "InstrumentSans_400Regular",
+          color: t.fg1,
+        },
+        style,
+      ]}
+    />
   );
 }

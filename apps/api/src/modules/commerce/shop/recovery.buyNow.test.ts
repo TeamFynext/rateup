@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 const orders = vi.hoisted(() => ({ createDraftOrder: vi.fn() }));
 const attribution = vi.hoisted(() => ({ chatAttribution: vi.fn() }));

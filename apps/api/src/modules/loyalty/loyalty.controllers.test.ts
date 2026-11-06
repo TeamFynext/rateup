@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 // The four admin CRUD controllers — program, tiers, rewards and earning rules —
 // share one shape: create/list resolve the program from the session, and

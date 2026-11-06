@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import { normalizeMimeType, validateFile } from "./validate.js";
 
 const MB = 1024 * 1024;

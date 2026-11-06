@@ -1,3 +1,4 @@
+import type { Channel } from "@/api/channels/channels.api";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import utc from "dayjs/plugin/utc";
@@ -229,22 +230,71 @@ export function findChannelAccount(
 }
 
 /**
+ * The registered channel a message's platform + identifier name. WhatsApp matches the
+ * number on digits alone (or its phone number id); every other platform its account id.
+ * Mirrors `findChannel` in rateup-ui.
+ */
+export function findRegisteredChannel(
+  channels: Channel[] | undefined,
+  platform: MessagePlatform | string | null | undefined,
+  identifier: string | null | undefined,
+): Channel | undefined {
+  if (!identifier || !platform) return undefined;
+  return channels?.find((channel) => {
+    if (channel.platform !== platform) return false;
+    if (channel.accountId === identifier) return true;
+    if (platform !== MessagePlatform.WHATSAPP) return false;
+    const digits = digitsOf(channel.address);
+    return Boolean(digits) && digits === digitsOf(identifier);
+  });
+}
+
+/**
  * Name the channel a message arrived on, given what the message recorded
  * (`sourcePlatform` + `sourceIdentifier`) and the org's connected accounts.
  *
  * A number that matches no connected account is still named — the org may have
  * disconnected it since, and the digits are more use than an empty chip.
  *
- * Returns null when there is nothing to name: webchat, internal notes, and legacy
- * messages that predate the identifier. Feed it `getContactChannelSource`, not a
- * raw `lastMessage`, or an internal note comes back named "internal".
+ * Webchat is named "Web chat". Returns null when there is nothing to name: internal
+ * notes and legacy messages that predate the identifier. Feed it
+ * `getContactChannelSource`, not a raw `lastMessage`, or an internal note comes back
+ * named "internal".
  */
 export function resolveChannel(
   waSettings: WaSettings | undefined,
   platform: MessagePlatform | string | null | undefined,
   identifier: string | null | undefined,
+  channels?: Channel[],
 ): ResolvedChannel | null {
-  if (!identifier || !platform || platform === MessagePlatform.WEBCHAT) return null;
+  // The website widget is one channel with no account behind it: name the platform.
+  if (platform === MessagePlatform.WEBCHAT) {
+    return { platform: MessagePlatform.WEBCHAT, label: "Web chat", isConnected: true };
+  }
+  if (!identifier || !platform) return null;
+
+  // The channel registry (`/api/channels`) first: it names every platform, where the
+  // WhatsApp settings carry Instagram and Messenger ids that messages do not record.
+  const channel = findRegisteredChannel(channels, platform, identifier);
+  if (channel) {
+    if (platform === MessagePlatform.WHATSAPP) {
+      return {
+        platform: MessagePlatform.WHATSAPP,
+        label: channel.name || channel.address || identifier,
+        account: channel.name ? (channel.address ?? undefined) : undefined,
+        isConnected: true,
+      };
+    }
+    // Instagram and Messenger: the Page or account name, else the handle, and the raw
+    // id only when neither is known.
+    const handle = channel.username ? `@${channel.username}` : undefined;
+    return {
+      platform: platform as MessagePlatform,
+      label: channel.name || handle || channel.accountId,
+      account: channel.name ? handle : undefined,
+      isConnected: true,
+    };
+  }
 
   const account = findChannelAccount(waSettings, platform, identifier);
 

@@ -1,3 +1,4 @@
+import { isMetaAiMessage } from "@/utils/metaAgentThread";
 import {
   View,
   ActivityIndicator,
@@ -27,6 +28,10 @@ import { getMessagesFromIDB } from "@/utils/sqlite";
 import { Skeleton } from "@/components/common/Skeleton";
 import { logger } from "@/utils/logger";
 import { useReplyTargetStore } from "@/store/replyTargetStore";
+import { belongsToTicket } from "@/utils/ticketThread";
+
+/** One shared empty thread, so the filtered list below is not rebuilt on every render. */
+const NO_MESSAGES: any[] = [];
 
 const { height: screenHeight } = Dimensions.get("window");
 
@@ -48,8 +53,23 @@ const ChatBody = ({ id }: { id: string }) => {
   const isDark = colorScheme === "dark";
   // The design's thread sits on `--bg-page`, same as the list.
   const threadBg = isDark ? Colors.dark.bg : Colors.light.bg;
+  // The ticket this chat was opened on. A contact has a ticket per channel (and
+  // older closed ones); like rateup-ui, the thread shows the opened ticket only, so
+  // an Instagram chat is not interleaved with the same contact's WhatsApp messages.
+  // A chat reached without a row (a notification tap) has no ticket and shows all.
+  const conversationId = useSelectedContactStore((state) =>
+    state.selectedContact?.id === id ? (state.selectedContact?.conversationId ?? null) : null,
+  );
+  // The opened ticket's platform, which decides what pre-ticket history it shows. Read
+  // only off the row's last message: a note there says nothing, and guessing from the
+  // contact (a merged one has several) could hide history that belongs; unknown keeps it.
+  const ticketPlatform = useSelectedContactStore((state) => {
+    const row = state.selectedContact;
+    const platform = row?.id === id ? row?.lastMessage?.sourcePlatform : null;
+    return platform && platform !== "INTERNAL" ? (platform as string) : null;
+  });
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isPending, isError, error } =
-    useGetMessagesByContactId(id);
+    useGetMessagesByContactId(id, conversationId);
   const { userId } = useAuth();
   const { mutate: markRead } = useMarkMessageAsRead();
   const listRef = useRef<any>(null);
@@ -64,7 +84,8 @@ const ChatBody = ({ id }: { id: string }) => {
       ? state.selectedContact?.name || state.selectedContact?.whatsappUserName || null
       : null,
   );
-  const storeMessages = useMessagesStore((state) => state.messagesByKey.get(key)?.messages) ?? [];
+  const storeMessages =
+    useMessagesStore((state) => state.messagesByKey.get(key)?.messages) ?? NO_MESSAGES;
   const mergeMessages = useMessagesStore((state) => state.mergeMessages);
 
   // Paint the thread from disk while the first page is in flight.
@@ -116,7 +137,16 @@ const ChatBody = ({ id }: { id: string }) => {
     }
   }, [wsData, id, key, mergeMessages]);
 
-  const messageList = storeMessages;
+  // The store keeps every message of the contact under one key (other screens read
+  // it whole); the thread shows this ticket's, by the same rule as the API (see
+  // `belongsToTicket`).
+  const messageList = React.useMemo(
+    () =>
+      conversationId
+        ? storeMessages.filter((m: any) => belongsToTicket(m, conversationId, ticketPlatform))
+        : storeMessages,
+    [storeMessages, conversationId, ticketPlatform],
+  );
   const prevMessageCount = useRef(messageList.length);
 
   useEffect(() => {
@@ -237,6 +267,7 @@ const ChatBody = ({ id }: { id: string }) => {
             // and isn't returned), so an absent `sender` is the signal that no
             // person pressed send — the same test the web inbox makes.
             isAutomated={item.messageBody?.exchangeProcess === "send" && !item.sender}
+            isMetaAi={item.messageBody?.exchangeProcess === "send" && isMetaAiMessage(item)}
             messageType={parsed.messageType}
             template={parsed.template}
             templateComponentParams={item.templateComponentParams}

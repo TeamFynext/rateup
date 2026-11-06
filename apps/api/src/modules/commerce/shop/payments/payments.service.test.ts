@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
 
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 // Unmetered plan: the monthly order cap has its own tests (orders.orderLimit.test.ts).
 vi.mock("../../../subscription/planLimits.js", () => ({

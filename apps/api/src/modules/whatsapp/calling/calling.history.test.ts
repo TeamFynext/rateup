@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from "vitest";
+import { describe, expect, test, vi } from "vite-plus/test";
 
 vi.mock("../../../utils/prisma.js", () => ({ default: {} }));
 vi.mock("../settings/wa_channel_access.js", () => ({ getChannelScope: vi.fn() }));

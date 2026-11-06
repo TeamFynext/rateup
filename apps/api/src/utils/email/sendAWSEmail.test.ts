@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 // `vi.mock` is hoisted above every const in the file, so the transport has to
 // reach its spy through a getter rather than closing over one.

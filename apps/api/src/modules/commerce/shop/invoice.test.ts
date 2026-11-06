@@ -1,6 +1,6 @@
 import { inflateSync } from "node:zlib";
 
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { buildInvoicePdf, formatInvoiceNumber, totalLines, type InvoiceData } from "./invoice.js";
 

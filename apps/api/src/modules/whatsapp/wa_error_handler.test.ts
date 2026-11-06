@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 // The limit errors' module reaches prisma; stub it so importing never opens a connection.
 vi.mock("../../utils/prisma.js", () => ({ default: {} }));

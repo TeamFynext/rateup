@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 vi.mock("../../../../utils/prisma.js", () => ({
   default: {
@@ -9,7 +9,7 @@ vi.mock("../../../../utils/prisma.js", () => ({
       findUnique: vi.fn(),
       update: vi.fn(),
     },
-    conversation: { update: vi.fn() },
+    conversation: { update: vi.fn(), findUnique: vi.fn() },
     contact: { findMany: vi.fn() },
     waMessageOrgTeamMap: { create: vi.fn() },
     $transaction: vi.fn(),
@@ -111,6 +111,7 @@ import {
   getMediaFile,
   getWaMessageByMessageId,
   getWaMessagesByContactId,
+  legacyHistoryFor,
   markMessagesAsRead,
   markWaMessageAsDeleted,
   sendContactMessage,
@@ -123,7 +124,7 @@ type Mock = ReturnType<typeof vi.fn>;
 
 const db = prisma as unknown as {
   waMessage: { create: Mock; findMany: Mock; findFirst: Mock; findUnique: Mock; update: Mock };
-  conversation: { update: Mock };
+  conversation: { update: Mock; findUnique: Mock };
   contact: { findMany: Mock };
   waMessageOrgTeamMap: { create: Mock };
   $transaction: Mock;
@@ -411,6 +412,50 @@ describe("addNewWaMessage", () => {
     );
 
     expect(db.waMessage.create.mock.calls[0][0].data.stats).toBeUndefined();
+  });
+});
+
+// Messages from before tickets carry no conversationId. They used to show on every ticket
+// of the contact, so a new webchat ticket filled up with the contact's old WhatsApp chat.
+describe("legacyHistoryFor", () => {
+  test("a WhatsApp ticket keeps WhatsApp-era history: WhatsApp, no platform, internal", async () => {
+    db.conversation.findUnique.mockResolvedValueOnce({ channel: { platform: "WHATSAPP" } });
+
+    expect(await legacyHistoryFor("t1")).toEqual({
+      OR: [{ sourcePlatform: { in: ["WHATSAPP", "INTERNAL"] } }, { sourcePlatform: null }],
+    });
+  });
+
+  test("an Instagram ticket keeps only Instagram history", async () => {
+    db.conversation.findUnique.mockResolvedValueOnce({ channel: { platform: "INSTAGRAM" } });
+
+    expect(await legacyHistoryFor("t1")).toEqual({ sourcePlatform: "INSTAGRAM" });
+  });
+
+  test("a channel-less ticket holding webchat messages keeps only webchat history", async () => {
+    db.conversation.findUnique.mockResolvedValueOnce({ channel: null });
+    db.waMessage.findFirst.mockResolvedValueOnce({ id: "wc-1" });
+
+    expect(await legacyHistoryFor("t1")).toEqual({ sourcePlatform: "WEBCHAT" });
+  });
+
+  test("any other channel-less ticket keeps all of it, as before", async () => {
+    db.conversation.findUnique.mockResolvedValueOnce({ channel: null });
+    db.waMessage.findFirst.mockResolvedValueOnce(null);
+
+    expect(await legacyHistoryFor("t1")).toEqual({});
+  });
+
+  test("a ticket's thread takes its own messages plus that history", async () => {
+    db.conversation.findUnique.mockResolvedValueOnce({ channel: null });
+    db.waMessage.findFirst.mockResolvedValueOnce({ id: "wc-1" });
+    db.waMessage.findMany.mockResolvedValueOnce([]);
+
+    await getWaMessagesByContactId("contact-1", "org-1", null, undefined, "t1");
+
+    expect(db.waMessage.findMany.mock.calls[0][0].where.AND[1]).toEqual({
+      OR: [{ conversationId: "t1" }, { conversationId: null, sourcePlatform: "WEBCHAT" }],
+    });
   });
 });
 

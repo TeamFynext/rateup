@@ -164,7 +164,11 @@ export default function WaInboxChatDisplayHeader({
                     }
                   />
                 )}
-                <MetaAgentThreadBadge contact={contact} />
+                {/* Meta AI answers WhatsApp only; the owner is per contact, so an
+                    Instagram or webchat ticket of the same person must not show it. */}
+                {platform === MessagePlatform.WHATSAPP && (
+                  <MetaAgentThreadBadge contact={contact} />
+                )}
               </div>
             </div>
             <p className="truncate text-[11px] leading-snug text-muted-foreground" title={subLine}>

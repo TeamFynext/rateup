@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 // ---------------------------------------------------------------------------
 // contact.service.ts pulls in the queue, chatbot, zapier, zoho, inbox-stats and

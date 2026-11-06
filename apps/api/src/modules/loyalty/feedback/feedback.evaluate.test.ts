@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { buildFeedbackFlowJson, getFeedbackDraft } from "../../whatsapp/flows/flowTemplates.js";
 import { extractOverallRating, parseRating, ratingAveragesByElement } from "./feedback.evaluate.js";

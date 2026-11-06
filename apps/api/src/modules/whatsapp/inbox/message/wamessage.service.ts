@@ -338,6 +338,40 @@ async function channelFilterForContact(contactId: string, phone?: string) {
   return { OR: [{ sourceIdentifier: { in: spellings } }, { sourceIdentifier: "internal" }] };
 }
 
+/**
+ * Which of a contact's ticket-less (pre-ticket) messages belong in this ticket's thread:
+ * those of the ticket's platform. That history is WhatsApp-era, so a WhatsApp ticket also
+ * takes rows with no platform recorded and the old internal system events. A ticket with
+ * no channel is a webchat thread when it holds webchat messages (webchat has no Channel
+ * row); any other channel-less ticket keeps the old behaviour and takes all of it.
+ */
+export async function legacyHistoryFor(
+  conversationId: string,
+): Promise<Prisma.WaMessageWhereInput> {
+  const ticket = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+    select: { channel: { select: { platform: true } } },
+  });
+  let platform = ticket?.channel?.platform ?? null;
+  if (!platform && ticket) {
+    const webchat = await prisma.waMessage.findFirst({
+      where: { conversationId, sourcePlatform: PlatformType.WEBCHAT },
+      select: { id: true },
+    });
+    if (webchat) platform = PlatformType.WEBCHAT;
+  }
+  if (!platform) return {};
+  if (platform === PlatformType.WHATSAPP) {
+    return {
+      OR: [
+        { sourcePlatform: { in: [PlatformType.WHATSAPP, PlatformType.INTERNAL] } },
+        { sourcePlatform: null },
+      ],
+    };
+  }
+  return { sourcePlatform: platform };
+}
+
 const THREAD_PAGE_SIZE = 50;
 
 const messageTime = (message: Pick<WaMessage, "waCreatedAt" | "createdAt">) =>
@@ -382,10 +416,16 @@ export async function getWaMessagesByContactId(
   const sourceIdentifierCondition = await channelFilterForContact(contactId, phone);
   // Scope the thread to one conversation (ticket). Legacy messages predate the
   // conversation backfill and carry a null conversationId — keep showing them so
-  // an un-backfilled contact's history doesn't vanish; once backfilled, the null
-  // branch matches nothing and the filter becomes strict.
+  // an un-backfilled contact's history doesn't vanish, but only on a ticket of the
+  // same channel: a webchat or Instagram ticket must not fill up with the contact's
+  // old WhatsApp history. Once backfilled, the null branch matches nothing.
   const conversationCondition = conversationId
-    ? { OR: [{ conversationId }, { conversationId: null }] }
+    ? {
+        OR: [
+          { conversationId },
+          { conversationId: null, ...(await legacyHistoryFor(conversationId)) },
+        ],
+      }
     : {};
   const where: Prisma.WaMessageWhereInput = {
     contactId,

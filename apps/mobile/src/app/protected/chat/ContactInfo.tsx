@@ -22,6 +22,11 @@ import { useGetAssignedUserForContact } from "@/api/inbox/messages/message.query
 import AssignToUser from "@/components/chatDisplay/chatFooter/AssignToUser";
 import ContactOrders from "@/components/shop/ContactOrders";
 import { useCommerceAccess } from "@/components/shop/chatSell";
+import { usePermissions } from "@/hooks/usePermissions";
+import { InfoRow, Section } from "@/components/contactInfo/InfoSection";
+import ContactDetailsSection from "@/components/contactInfo/ContactDetailsSection";
+import ContactIdentitiesSection from "@/components/contactInfo/ContactIdentitiesSection";
+import ContactMergeSection from "@/components/contactInfo/ContactMergeSection";
 
 /** Mirrors the header's `channelLabel`, shown beside the number. */
 function platformLabel(platform?: string) {
@@ -51,91 +56,6 @@ function formatPhone(phone?: string | null) {
   return `${cc ? `+${cc} ` : ""}${rest.slice(0, 5)} ${rest.slice(5)}`;
 }
 
-function Section({ label, children }: { label: string; children: React.ReactNode }) {
-  const isDark = useColorScheme() === "dark";
-  const t = getInboxRowTheme(isDark);
-  return (
-    <View style={{ marginTop: 22 }}>
-      <Text
-        style={{
-          fontSize: 11,
-          fontFamily: "InstrumentSans_700Bold",
-          color: t.fg4,
-          letterSpacing: 0.8,
-          marginBottom: 8,
-          marginLeft: 4,
-        }}
-      >
-        {label.toUpperCase()}
-      </Text>
-      <View
-        style={{
-          backgroundColor: t.surface2,
-          borderRadius: 14,
-          borderWidth: 1,
-          borderColor: t.border1,
-          paddingHorizontal: 14,
-          paddingVertical: 4,
-        }}
-      >
-        {children}
-      </View>
-    </View>
-  );
-}
-
-function InfoRow({
-  label,
-  value,
-  icon,
-  action,
-  last,
-}: {
-  label: string;
-  value: React.ReactNode;
-  icon?: React.ReactNode;
-  action?: React.ReactNode;
-  last?: boolean;
-}) {
-  const isDark = useColorScheme() === "dark";
-  const t = getInboxRowTheme(isDark);
-  return (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 12,
-        paddingVertical: 12,
-        borderBottomWidth: last ? 0 : 1,
-        borderBottomColor: t.rowDivider,
-      }}
-    >
-      {icon ? <View style={{ width: 18, alignItems: "center" }}>{icon}</View> : null}
-      <View style={{ flex: 1, minWidth: 0 }}>
-        <Text style={{ fontSize: 11, fontFamily: "InstrumentSans_400Regular", color: t.fg4 }}>
-          {label}
-        </Text>
-        {typeof value === "string" ? (
-          <Text
-            numberOfLines={1}
-            style={{
-              fontSize: 14,
-              fontFamily: "InstrumentSans_600SemiBold",
-              color: t.fg1,
-              marginTop: 2,
-            }}
-          >
-            {value || "—"}
-          </Text>
-        ) : (
-          <View style={{ marginTop: 2 }}>{value}</View>
-        )}
-      </View>
-      {action}
-    </View>
-  );
-}
-
 const ContactInfo = () => {
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
@@ -156,6 +76,7 @@ const ContactInfo = () => {
 
   const { data: assignedUsers } = useGetAssignedUserForContact(id);
   const { canRead: canReadOrders } = useCommerceAccess();
+  const canEdit = usePermissions().can("contacts.manage");
 
   const [copied, setCopied] = useState(false);
 
@@ -326,20 +247,22 @@ const ContactInfo = () => {
             label="Name"
             value={contact?.name || contact?.whatsappUserName || ""}
             action={
-              <Pressable
-                onPress={() =>
-                  router.push({
-                    pathname: "/protected/chat/Edit",
-                    params: { contactId: id },
-                  } as never)
-                }
-                hitSlop={10}
-                accessibilityRole="button"
-                accessibilityLabel="Edit contact"
-                style={{ padding: 6 }}
-              >
-                <Pencil size={16} color={t.fg3} />
-              </Pressable>
+              canEdit ? (
+                <Pressable
+                  onPress={() =>
+                    router.push({
+                      pathname: "/protected/chat/Edit",
+                      params: { contactId: id },
+                    } as never)
+                  }
+                  hitSlop={10}
+                  accessibilityRole="button"
+                  accessibilityLabel="Edit contact"
+                  style={{ padding: 6 }}
+                >
+                  <Pencil size={16} color={t.fg3} />
+                </Pressable>
+              ) : undefined
             }
           />
           <InfoRow
@@ -348,6 +271,14 @@ const ContactInfo = () => {
           />
           <InfoRow label="Consent" value={contact?.consent ? "Given" : "Not given"} last />
         </Section>
+
+        {id ? (
+          <>
+            <ContactDetailsSection contactId={id} />
+            <ContactIdentitiesSection contactId={id} />
+            <ContactMergeSection contactId={id} />
+          </>
+        ) : null}
 
         <Section label="Conversation">
           <InfoRow

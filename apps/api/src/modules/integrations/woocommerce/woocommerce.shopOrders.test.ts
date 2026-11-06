@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 const client = vi.hoisted(() => ({ createWooOrder: vi.fn(), updateWooOrder: vi.fn() }));
 vi.mock("./woocommerce.client.js", () => client);

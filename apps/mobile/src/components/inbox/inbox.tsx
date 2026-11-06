@@ -3,6 +3,7 @@ import { useColorScheme } from "nativewind";
 import { Colors } from "@/constants/colors";
 import { ContactsWithLastMessage, WaMessageAssignStatus } from "@/api/inbox/types";
 import { useFilteredContacts } from "@/api/inbox/contacts/contacts.query";
+import { useChannels } from "@/api/channels/channels.query";
 import { useRouter } from "expo-router";
 import dayjs from "dayjs";
 import { useChatFilterStore, useSelectedContactStore } from "@/utils/store";
@@ -22,7 +23,7 @@ import { useCallback, useEffect, useState } from "react";
 import { FlashList } from "@shopify/flash-list";
 import { WaMessageClosedStatus } from "@/constants/constants";
 import ChatBox from "../chatBox/ChatBox";
-import { useContactsStore, makeFilterKey, useMessagesStore } from "@/store/inboxStore";
+import { getRowKey, useContactsStore, makeFilterKey, useMessagesStore } from "@/store/inboxStore";
 import { useWaSettings } from "@/api/whatsapp/template/whatsapp.query";
 import { useQueryClient } from "@tanstack/react-query";
 import { getInboxRowTheme } from "@/constants/inboxDesign";
@@ -54,6 +55,8 @@ export default function Inbox({
   // rather than in the row so the list shares one `waSettings` read instead of
   // one hook per visible row, and `ChatBox` keeps only primitive props to memo on.
   const { data: waSettings } = useWaSettings();
+  // Names Instagram accounts, Messenger Pages and WhatsApp numbers on the channel chip.
+  const { data: channels } = useChannels();
 
   const mergedFilter = {
     ...filter,
@@ -105,7 +108,7 @@ export default function Inbox({
 
       const existingIds = new Set(contactsByFilter[filterKey] || []);
       const newContacts = allContacts.filter(
-        (c) => !contactsById.has(c.id) || !existingIds.has(c.id),
+        (c) => !contactsById.has(getRowKey(c)) || !existingIds.has(getRowKey(c)),
       );
 
       if (!isActive) return;
@@ -226,7 +229,7 @@ export default function Inbox({
     // Instagram/Messenger: a person may reply for 7 days (Meta's Human Agent tag).
     const metaWindow = contactMessagingWindow(item, platform);
     const isSessionActive = metaWindow ? metaWindow.state !== "closed" : diffInMinutes > 0;
-    const channel = resolveChannel(waSettings, platform, identifier);
+    const channel = resolveChannel(waSettings, platform, identifier, channels);
     const name = item.name || item?.whatsappUserName || item.igsId || item.phone;
 
     return (
@@ -311,7 +314,8 @@ export default function Inbox({
       data={finalContacts as any[]}
       // The rows read the selection through props; FlashList only re-renders on a change here.
       extraData={selectedIds}
-      keyExtractor={(item) => item.id}
+      // One row per ticket: a contact with a WhatsApp and an Instagram ticket has two.
+      keyExtractor={(item) => getRowKey(item)}
       renderItem={renderItem as any}
       contentContainerStyle={{ paddingHorizontal: LIST_PADDING_X }}
       refreshControl={

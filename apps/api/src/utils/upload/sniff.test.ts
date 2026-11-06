@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import { Readable } from "node:stream";
 import { matchesSignature, peekStream, UploadTooLargeError } from "./sniff.js";
 

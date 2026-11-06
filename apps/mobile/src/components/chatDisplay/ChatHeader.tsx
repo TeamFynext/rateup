@@ -12,7 +12,7 @@ import dayjs from "dayjs";
 import { useChatAssignStatusStore, useSelectedContactStore } from "@/utils/store";
 import AssignToUser from "./chatFooter/AssignToUser";
 import CallContactButton from "@/components/calling/CallContactButton";
-import { useContactsStore, useMessagesStore } from "@/store/inboxStore";
+import { selectRowForContact, useContactsStore, useMessagesStore } from "@/store/inboxStore";
 import {
   getInboxHeaderBg,
   getInboxRowTheme,
@@ -45,6 +45,7 @@ import { useEditContactMutation, useToggleFavorite } from "@/api/inbox/contacts/
 import { WaMessageAssignStatus } from "@/api/inbox/types";
 import { useModerateInstagramContact } from "@/api/inbox/messages/message.query";
 import { contactMessagingWindow, messagingWindowLabel } from "@/utils/messagingWindow";
+import MetaAgentThreadBadge from "./MetaAgentThreadBadge";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -486,7 +487,9 @@ const ChatHeader = ({
   const contact = selectedContact?.id === id ? selectedContact : undefined;
   // The star lives on the ticket, so read both from the row we opened. Prefer
   // the contacts store, which is what the toggle patches.
-  const storedContact = useContactsStore((state) => state.contactsById.get(id));
+  const storedContact = useContactsStore((state) =>
+    selectRowForContact(state, id, contact?.conversationId),
+  );
   const conversationId = storedContact?.conversationId ?? contact?.conversationId;
   const isFavorite = storedContact?.isFavorite ?? contact?.isFavorite;
   const toggleFavorite = useToggleFavorite();
@@ -636,16 +639,24 @@ const ChatHeader = ({
               </>
             ) : (
               <>
-                <Text
-                  numberOfLines={1}
-                  style={{
-                    fontSize: 15,
-                    fontFamily: "Figtree_800ExtraBold",
-                    color: t.fg1,
-                  }}
-                >
-                  {formatName(name) || phone}
-                </Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <Text
+                    numberOfLines={1}
+                    style={{
+                      flexShrink: 1,
+                      fontSize: 15,
+                      fontFamily: "Figtree_800ExtraBold",
+                      color: t.fg1,
+                    }}
+                  >
+                    {formatName(name) || phone}
+                  </Text>
+                  {/* Meta AI or staff, WhatsApp only (the agent answers no other channel); read
+                      from the live row, which handovers patch. */}
+                  {platform === MessagePlatform.WHATSAPP ? (
+                    <MetaAgentThreadBadge row={storedContact ?? contact} />
+                  ) : null}
+                </View>
                 <Text
                   numberOfLines={1}
                   style={{

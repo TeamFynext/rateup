@@ -25,11 +25,16 @@ function refusalMessage(error: unknown): string | undefined {
   return typeof data?.message === "string" ? data.message : undefined;
 }
 
-export const useGetMessagesByContactId = (contactId: string) => {
+/**
+ * A chat's messages, scoped to one ticket when `conversationId` is given. The key
+ * keeps `["wa-messages", contactId]` as its prefix, so invalidating that still
+ * refetches every ticket of the contact.
+ */
+export const useGetMessagesByContactId = (contactId: string, conversationId?: string | null) => {
   return useInfiniteQuery({
-    queryKey: ["wa-messages", contactId],
+    queryKey: ["wa-messages", contactId, conversationId ?? null],
     initialPageParam: "",
-    queryFn: ({ pageParam }) => getMessagesByContactId(contactId, pageParam),
+    queryFn: ({ pageParam }) => getMessagesByContactId(contactId, pageParam, conversationId),
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     select: (data) => ({
       pages: data.pages,

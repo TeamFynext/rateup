@@ -18,12 +18,7 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/src/index.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest --silent",
-    "lint": "oxlint",
-    "lint:fix": "oxlint --fix",
-    "fmt": "vp fmt",
-    "fmt:check": "vp fmt --check",
-    "email:dev": "email dev -d src/emails -p 3002",
+    "email:dev": "email dev -d src/emails -p 3004",
     "backfill:wa-echoes": "tsx scripts/backfill-wa-echoes.ts",
     "staff:add": "tsx scripts/staff-add.ts"
   },
@@ -99,10 +94,9 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@types/ws": "^8.18.2",
-    "oxlint": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:"
+    "vite-plus": "catalog:"
   },
   "engines": {
     "node": "26.x"

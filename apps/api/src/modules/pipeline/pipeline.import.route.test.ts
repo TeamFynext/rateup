@@ -1,6 +1,6 @@
 import Fastify from "fastify";
 import { serializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 vi.mock("../../utils/prisma.js", () => ({ default: {} }));
 vi.mock("./pipeline.auth.js", () => {

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 vi.mock("../metaChannel/metaChannel.service.js", () => ({ getMetaChannelById: vi.fn() }));
 vi.mock("./messenger_profile.service.js", () => ({

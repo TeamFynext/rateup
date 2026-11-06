@@ -1,5 +1,6 @@
 import * as SQLite from "expo-sqlite";
 import { isEqual } from "lodash";
+import { getRowKey } from "./inboxRowKey";
 
 let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
@@ -29,12 +30,18 @@ export function getDB() {
   return dbPromise;
 }
 
-export async function saveContactToDB(contact: any) {
+/**
+ * `contacts_global` holds inbox rows, one per ticket, under the row's key
+ * (`getRowKey`: its conversation id, else the contact id). A cache written before
+ * rows were keyed by ticket has them under the contact id; `key` lets a caller
+ * that holds such a row rewrite it in place.
+ */
+export async function saveContactToDB(contact: any, key: string = getRowKey(contact)) {
   if (!contact) return;
   const db = await getDB();
   await db.runAsync(
     "INSERT OR REPLACE INTO contacts_global (id, data) VALUES (?, ?)",
-    contact.id,
+    key,
     JSON.stringify(contact),
   );
 }
@@ -45,16 +52,22 @@ export async function saveContactsToDB(contacts: any[]) {
   for (const c of contacts) {
     await db.runAsync(
       "INSERT OR REPLACE INTO contacts_global (id, data) VALUES (?, ?)",
-      c.id,
+      getRowKey(c),
       JSON.stringify(c),
     );
   }
 }
 
+/** One cached row for a contact: the row stored under `id`, else its most recently updated ticket. */
 export async function loadContactFromDB(id: string): Promise<any | undefined> {
   const db = await getDB();
   const result = await db.getFirstAsync<{ data: string }>(
-    "SELECT data FROM contacts_global WHERE id = ?",
+    `SELECT data FROM contacts_global
+       WHERE id = ? OR json_extract(data, '$.id') = ?
+       ORDER BY (id = ?) DESC, json_extract(data, '$.updatedAt') DESC
+       LIMIT 1`,
+    id,
+    id,
     id,
   );
   if (result) {
@@ -75,6 +88,20 @@ export async function loadContactsFromDB(ids: string[]): Promise<any[]> {
   );
 
   return results.map((row) => JSON.parse(row.data));
+}
+
+/** Cached rows by the key each is stored under, which is the key the cached filter lists name. */
+export async function loadRowsFromDB(keys: string[]): Promise<Map<string, any>> {
+  const rows = new Map<string, any>();
+  if (!keys.length) return rows;
+  const db = await getDB();
+  const placeholders = keys.map(() => "?").join(",");
+  const results = await db.getAllAsync<{ id: string; data: string }>(
+    `SELECT id, data FROM contacts_global WHERE id IN (${placeholders})`,
+    ...keys,
+  );
+  for (const row of results) rows.set(row.id, JSON.parse(row.data));
+  return rows;
 }
 
 export async function clearAllContactsFromDB() {
@@ -162,9 +189,15 @@ export async function _removeContactFromDB(id: string) {
   await db.runAsync("DELETE FROM contacts_global WHERE id = ?", id);
 }
 
-export async function removeContactsFromDB(ids: string[]) {
-  if (!ids.length) return;
+/** Removes every cached row of these contacts: one per ticket, plus any stored under the contact id. */
+export async function removeContactsFromDB(contactIds: string[]) {
+  if (!contactIds.length) return;
   const db = await getDB();
-  const placeholders = ids.map(() => "?").join(",");
-  await db.runAsync(`DELETE FROM contacts_global WHERE id IN (${placeholders})`, ...ids);
+  const placeholders = contactIds.map(() => "?").join(",");
+  await db.runAsync(
+    `DELETE FROM contacts_global
+       WHERE id IN (${placeholders}) OR json_extract(data, '$.id') IN (${placeholders})`,
+    ...contactIds,
+    ...contactIds,
+  );
 }

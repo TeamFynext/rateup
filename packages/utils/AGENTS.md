@@ -5,5 +5,5 @@ its own entry: `import { maskPhone } from "@rateup/utils/maskPhone";`.
 
 - No DOM, React, React Native or Node APIs: everything here must run in the browser, in
   Hermes and in Node.
-- Source-only (Vite, Metro and tsx compile it). Tests sit next to the code: `pnpm run test`.
+- Source-only (Vite, Metro and tsx compile it). Tests sit next to the code: `vp test` in this folder.
 - Move a helper here when a second app needs it, instead of copying it.

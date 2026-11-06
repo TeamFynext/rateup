@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 import { legacyRoleToKey, ROLE_PERMISSIONS, type LegacyRole } from "../../authz/roles.js";
 
 vi.mock("./team.service.js", () => ({

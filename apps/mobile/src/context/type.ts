@@ -1,5 +1,5 @@
 export type orgWsMessage = {
-  type: "inbox" | "inbox_note" | "message_status_update" | "message_edited";
+  type: "inbox" | "inbox_note" | "message_status_update" | "message_edited" | "meta_agent_thread";
   inbox?: {
     contact: ContactsData;
     message: WaGetMessagesBody;
@@ -21,6 +21,13 @@ export type orgWsMessage = {
     contactId: string | null;
     sourceIdentifier?: string | null;
     stats: WaMessageStats;
+  };
+  /** Meta AI or staff took over a customer's WhatsApp thread (a handover). */
+  meta_agent_thread?: {
+    contactId: string;
+    owner: "AI" | "STAFF";
+    reason: string | null;
+    at: string;
   };
   /** The customer edited a message (Instagram): `message` is the whole updated row. */
   message_edited?: {

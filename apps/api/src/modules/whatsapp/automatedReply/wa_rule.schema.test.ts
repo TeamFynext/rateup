@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import { createRuleSchema, updateRuleSchema } from "./wa_rule.schema.js";
 
 const base = {

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import type { Permission } from "./permissions.js";
 import { LEGACY_ROLES, legacyRoleToKey, ROLE_PERMISSIONS, type LegacyRole } from "./roles.js";

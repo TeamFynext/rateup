@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 // An in-memory Redis: enough to check what key a login is parked under.
 const { store } = vi.hoisted(() => ({ store: new Map<string, string>() }));

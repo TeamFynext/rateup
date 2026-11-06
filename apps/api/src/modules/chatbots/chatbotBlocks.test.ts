@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import { unsupportedBlocks } from "./chatbotBlocks.js";
 import { chatbotPlatformSchema } from "./chatbots.schema.js";
 

@@ -1,6 +1,6 @@
 import formbody from "@fastify/formbody";
 import Fastify from "fastify";
-import { describe, expect, test, vi } from "vitest";
+import { describe, expect, test, vi } from "vite-plus/test";
 
 vi.mock("../../../utils/prisma.js", () => ({
   default: { integration: { findUnique: vi.fn(async () => null) } },

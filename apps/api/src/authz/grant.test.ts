@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { buildActor } from "./actor.js";
 import { ForbiddenError } from "./errors.js";

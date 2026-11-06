@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc.js";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { InstagramEvent } from "../../../types/enums.js";
 import { getInstagramWebhookEvent, resolveCommentTimestampMs } from "./instagram.util.js";

@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from "vitest";
+import { describe, expect, test, vi } from "vite-plus/test";
 
 vi.mock("../config.js", () => ({ SuperTokensConfig: {} }));
 vi.mock("./swagger.js", () => ({ registerSwagger: vi.fn() }));

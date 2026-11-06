@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 /**
  * createResponse's de-duplication path. A WhatsApp Flow endpoint that saves the

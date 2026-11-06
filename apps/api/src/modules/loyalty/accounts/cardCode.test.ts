@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { CARD_CODE_LENGTH, formatCardCode, parseCardCode } from "./cardCode.js";
 

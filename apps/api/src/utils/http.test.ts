@@ -1,5 +1,5 @@
 import Fastify, { type FastifyInstance } from "fastify";
-import { afterEach, describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test } from "vite-plus/test";
 import { clientIp, getCookieValue, getIp, trustProxyHops, trustProxySetting } from "./http.js";
 
 function request(overrides: Record<string, unknown> = {}) {

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { matchDataSchema } from "./wa_automatedReply.schema.js";
 

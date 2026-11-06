@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 // Hook URLs are resolved before every call (src/utils/ssrf.ts); keep that off the network.
 vi.mock("node:dns/promises", () => ({

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { decodeLeadCursor, encodeLeadCursor } from "./lead.cursor.js";
 import { leadWhere, rottingSql } from "./lead.filters.js";

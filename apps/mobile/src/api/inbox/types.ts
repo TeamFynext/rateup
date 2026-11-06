@@ -55,7 +55,19 @@ export type ContactsWithLastMessage = {
   adThreadUntil?: string | null;
   /** Spam is contact-grained: every row of a spam contact carries it. */
   isSpam?: boolean;
+  /**
+   * Who answers this customer when the Meta Business Agent is on: Meta AI, or staff after
+   * a handover. Null until a handover has been seen. Contact-grained, like `isSpam`.
+   */
+  metaAgentThreadOwner?: MetaAgentThreadOwner | null;
+  metaAgentThreadOwnerAt?: string | null;
+  /** Why it last changed: Meta's handover metadata or a reason the API records. */
+  metaAgentHandoverReason?: string | null;
+  /** Meta AI has replied to this customer at some point. */
+  metaAgentInvolved?: boolean;
 };
+
+export type MetaAgentThreadOwner = "AI" | "STAFF";
 
 export enum WaMessageAssignStatus {
   NEW = "NEW",

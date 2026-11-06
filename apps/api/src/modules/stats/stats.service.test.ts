@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 vi.mock("../../utils/prisma.js", () => ({
   default: {

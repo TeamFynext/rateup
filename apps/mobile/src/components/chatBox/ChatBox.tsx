@@ -103,15 +103,22 @@ type ChipProps = {
   icon?: React.ReactNode;
 };
 
+/**
+ * How far the row's small metadata (chips, time, ticket code) follows the phone's font
+ * size. Unbounded, a large system font made each chip as tall as a line of body text and
+ * a three-chip row wrapped to three lines. Names and the message line still scale fully.
+ */
+const CHIP_TEXT_MAX_SCALE = 1.3;
+
 function Chip({ label, color, background, dot, border, dashed, icon }: ChipProps) {
   return (
     <View
       style={{
         flexDirection: "row",
         alignItems: "center",
-        gap: 5,
-        paddingVertical: 4,
-        paddingHorizontal: 10,
+        gap: 4,
+        paddingVertical: 3,
+        paddingHorizontal: 8,
         borderRadius: 9999,
         backgroundColor: background,
         ...(border
@@ -133,6 +140,7 @@ function Chip({ label, color, background, dot, border, dashed, icon }: ChipProps
       {label ? (
         <Text
           numberOfLines={1}
+          maxFontSizeMultiplier={CHIP_TEXT_MAX_SCALE}
           style={{ fontSize: 11, fontFamily: "InstrumentSans_700Bold", color }}
         >
           {label}
@@ -265,18 +273,19 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       return (
         <View
           style={{
-            width: 28,
-            height: 28,
-            borderRadius: 14,
+            width: 22,
+            height: 22,
+            borderRadius: 11,
             backgroundColor: assignee.bg,
             alignItems: "center",
             justifyContent: "center",
           }}
         >
           <Text
+            maxFontSizeMultiplier={CHIP_TEXT_MAX_SCALE}
             style={{
               color: assignee.fg,
-              fontSize: 11,
+              fontSize: 9.5,
               fontFamily: "Figtree_800ExtraBold",
             }}
           >
@@ -290,15 +299,15 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         onPress={onAssignPress ?? onPress}
         hitSlop={8}
         style={{
-          width: 28,
-          height: 28,
-          borderRadius: 14,
+          width: 22,
+          height: 22,
+          borderRadius: 11,
           backgroundColor: t.brandSoft,
           alignItems: "center",
           justifyContent: "center",
         }}
       >
-        <UserPlus size={14} color={t.brand} />
+        <UserPlus size={12} color={t.brand} />
       </Pressable>
     );
   };
@@ -313,7 +322,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       style={{
         flexDirection: "row",
         backgroundColor: rowBg,
-        padding: 16,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
         borderBottomWidth: 1,
         borderBottomColor: isDark ? "#2A2A2A" : "#F4F4F5",
       }}
@@ -402,7 +412,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       {/* Right Column Container */}
       <View style={{ flex: 1, flexDirection: "row" }}>
         {/* Main Content */}
-        <View style={{ flex: 1, paddingRight: 8, flexDirection: "column", gap: 4 }}>
+        <View style={{ flex: 1, flexDirection: "column", gap: 3 }}>
           {/* Name Row */}
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
             {isFavorite ? <Star size={14} color={t.warm} fill={t.warm} /> : null}
@@ -417,6 +427,19 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             >
               {name || phone}
             </Text>
+            <Text
+              numberOfLines={1}
+              maxFontSizeMultiplier={CHIP_TEXT_MAX_SCALE}
+              style={{
+                marginLeft: "auto",
+                paddingLeft: 8,
+                fontSize: 12,
+                fontFamily: "InstrumentSans_400Regular",
+                color: t.fg4,
+              }}
+            >
+              {lastMessageTimeStamp}
+            </Text>
           </View>
 
           {/* Ticket code + latest message, on one line.
@@ -428,7 +451,12 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               latest message is the useful one, so it takes the slot. */}
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 2 }}>
             {code ? (
-              <Text style={{ fontSize: 12, color: t.fg4, fontFamily: MONO }}>#{code}</Text>
+              <Text
+                maxFontSizeMultiplier={CHIP_TEXT_MAX_SCALE}
+                style={{ fontSize: 12, color: t.fg4, fontFamily: MONO }}
+              >
+                #{code}
+              </Text>
             ) : null}
             {isPhoto ? <ImageIcon size={14} color={t.fg3} /> : null}
             <Text
@@ -451,12 +479,33 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               ) : null}
               {lastMessage || ""}
             </Text>
+            {isUnread ? (
+              <View
+                style={{
+                  backgroundColor: t.success,
+                  borderRadius: 10,
+                  paddingHorizontal: 6,
+                  height: 20,
+                  minWidth: 20,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  maxFontSizeMultiplier={CHIP_TEXT_MAX_SCALE}
+                  style={{ color: t.onAccent, fontSize: 11, fontFamily: "Figtree_800ExtraBold" }}
+                >
+                  {unReadMessageCount > 99 ? "99+" : unReadMessageCount}
+                </Text>
+              </View>
+            ) : null}
+            {renderAssigneeBadge()}
           </View>
 
           {/* Chips — dropped by the compact list, which keeps name, time,
               code + message line and the trailing column. */}
           {!compact && (status || lifecycleInfo || channelPill || contactLabels?.length) ? (
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 6 }}>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 5, marginTop: 4 }}>
               {/* Platform + which of the org's numbers/accounts the ticket came in
                   on, in one pill: the icon says WhatsApp/Instagram/Facebook, the
                   label says which account within it. The label is dropped when
@@ -498,43 +547,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               ))}
             </View>
           ) : null}
-        </View>
-
-        {/* Trailing Column */}
-        <View style={{ alignItems: "flex-end", paddingTop: 2 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <Text
-              style={{
-                fontSize: 12,
-                fontFamily: "InstrumentSans_400Regular",
-                color: t.fg4,
-              }}
-            >
-              {lastMessageTimeStamp}
-            </Text>
-            {isUnread ? (
-              <View
-                style={{
-                  backgroundColor: t.success,
-                  borderRadius: 11,
-                  paddingHorizontal: 8,
-                  height: 22,
-                  minWidth: 22,
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <Text
-                  style={{ color: t.onAccent, fontSize: 11, fontFamily: "Figtree_800ExtraBold" }}
-                >
-                  {unReadMessageCount > 99 ? "99+" : unReadMessageCount}
-                </Text>
-              </View>
-            ) : (
-              renderAssigneeBadge()
-            )}
-          </View>
-          {isUnread ? <View style={{ marginTop: 6 }}>{renderAssigneeBadge()}</View> : null}
         </View>
       </View>
     </Pressable>

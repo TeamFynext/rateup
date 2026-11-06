@@ -1,7 +1,7 @@
 # RateUp monorepo
 
 One pnpm workspace managed with Vite+ (`vp`). Each app and package has its own `AGENTS.md`;
-read it before working there. The backend guide is [apps/api/AGENTS.md](apps/api/AGENTS.md).
+read it before working there. [README.md](README.md) covers setup and running every app. The backend guide is [apps/api/AGENTS.md](apps/api/AGENTS.md).
 
 ## Layout
 
@@ -39,7 +39,8 @@ vp check                          # format + lint (root vite.config.ts)
 
 ## Rules
 
-- **One lockfile.** `pnpm-lock.yaml` and `pnpm-workspace.yaml` live only at the root. Add a
+- **One lockfile for the workspace.** `pnpm-lock.yaml` and `pnpm-workspace.yaml` live at the
+  root; apps/mobile, outside the workspace, has its own (see below). Add a
   dependency from the package folder (`vp add <pkg>`), or `vp add <pkg> --filter <name>`.
   Internal packages use `"workspace:*"`.
 - **Versions live in the catalog.** A dependency used by two or more packages is declared as
@@ -59,10 +60,16 @@ vp check                          # format + lint (root vite.config.ts)
   checks) and its compiled `dist/` to plain Node in production, for the workers.
 - **Format and lint settings live only in the root `vite.config.ts`.** Vite+ ignores `fmt` and
   `lint` blocks in package configs; use `overrides` there for per-package rules. App
-  `vite.config.ts` files keep their build, dev and test settings. The backend packages and
-  apps/mobile still lint with plain oxlint and their own `.oxlintrc.json`.
-- **Git hooks** are in `.vite-hooks/`: pre-commit runs `vp staged`, pre-push runs
-  `vp run -r typecheck`.
+  `vite.config.ts` files keep their build, dev and test settings. The exception: the backend
+  apps (api, workers) keep a `lint` block in their own `vite.config.ts`, which `vp lint` uses
+  when run in that folder, because the root's type-aware rules report hundreds of existing
+  issues there. apps/mobile keeps its own oxlint and Vitest.
+- **No `test`/`lint`/`fmt` scripts.** Use Vite+'s built-in commands in the package folder or
+  with `vp -C <folder>` (`vp test`, `vp lint`, `vp fmt`). Vite+ ships oxlint and Vitest, so no
+  package installs them; test files import from `vite-plus/test`. Scripts are only for what
+  Vite+ does not do (`dev` for non-Vite apps, `build`, `typecheck`, one-off tools).
+- **Git hooks** are in `.vite-hooks/`: pre-commit runs `vp staged`, pre-push runs every
+  package's `typecheck`, apps/mobile included.
 - **Local env files** are not committed. Each app reads `.env` from its own folder;
   `packages/db` has one too, for Prisma commands.
 - **History.** Every file's history was imported from its old repo, so `git log --follow`

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 // The cache sits between the handlers and the service. Here it is a straight
 // pass-through, so these tests keep describing the handlers; the cache itself is

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 vi.mock("../metaChannel/metaChannel.service.js", () => ({ getInstagramChannel: vi.fn() }));
 vi.mock("./instagram_messaging.service.js", () => ({ getInstagramMediaPosts: vi.fn() }));

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 // The redemption, approval and settings controllers.
 vi.mock("../../utils/logger.js", () => ({

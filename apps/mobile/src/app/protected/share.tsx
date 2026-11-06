@@ -39,7 +39,14 @@ export default function ShareScreen() {
 
   const contacts = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return [...contactsById.values()]
+    // The store holds a row per ticket; a contact with several is listed once,
+    // under its most recent.
+    const byContact = new Map<string, any>();
+    for (const row of contactsById.values()) {
+      const seen = byContact.get(row.id);
+      if (!seen || lastActivity(row) > lastActivity(seen)) byContact.set(row.id, row);
+    }
+    return [...byContact.values()]
       .filter(
         (c) =>
           !q ||

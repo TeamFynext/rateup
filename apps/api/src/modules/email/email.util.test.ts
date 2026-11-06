@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 // constants.ts builds the CDN urls from env at import time, so the value has to
 // be in place before the module graph loads.

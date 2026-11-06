@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vite-plus/test";
 
 // The module opens Redis, Postgres and a Meta client at import; none of that
 // is needed for a pure merge function.

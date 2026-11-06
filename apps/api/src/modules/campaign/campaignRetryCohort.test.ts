@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, type Mock } from "vitest";
+import { describe, expect, it, vi, type Mock } from "vite-plus/test";
 
 vi.mock("../../utils/prisma.js", () => ({
   default: {

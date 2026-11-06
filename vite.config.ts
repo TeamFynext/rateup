@@ -43,8 +43,9 @@ export default defineConfig({
       "**/.claude/**",
       "apps/*/src/routeTree.gen.ts",
       "apps/docs/.source/**",
-      // These still lint with plain oxlint and their own .oxlintrc.json. Type-aware
-      // linting reports ~750 existing issues in the backend and ~120 in apps/mobile.
+      // Not linted with these type-aware rules, which report ~750 existing issues in the
+      // backend and ~120 in apps/mobile. The backend apps use the `lint` block in their own
+      // vite.config.ts (`vp lint` in that folder); mobile uses its own oxlint install.
       "apps/api/**",
       "apps/worker-*/**",
       "apps/mobile/**",

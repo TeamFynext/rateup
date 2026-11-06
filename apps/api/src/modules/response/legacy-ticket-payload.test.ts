@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { questionSchema } from "../question/question.schema.js";
 import { createResponseInputSchema } from "./response.schema.js";

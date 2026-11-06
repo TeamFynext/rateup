@@ -31,6 +31,11 @@ const config = defineConfig({
       },
     ],
   },
+  // Fixed dev port, so it never drifts onto another app's (web uses 3000, the backend 3001–3004).
+  server: {
+    port: 3005,
+    strictPort: true,
+  },
   resolve: {
     tsconfigPaths: true,
     noExternal: ["fumadocs-core", "fumadocs-ui", "fumadocs-openapi", "@fumadocs/base-ui"],

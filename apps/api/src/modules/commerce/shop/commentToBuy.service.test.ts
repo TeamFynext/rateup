@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 /**
  * An in-memory claim table behind a transaction whose `pg_advisory_xact_lock` really blocks

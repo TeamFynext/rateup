@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 const db = vi.hoisted(() => ({ contact: { findUnique: vi.fn() } }));
 const meta = vi.hoisted(() => ({ sendMetaMessage: vi.fn() }));

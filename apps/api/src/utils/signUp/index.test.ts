@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import { getValueByKey } from "./index.js";
 
 /** The formFields array SuperTokens hands the signup override. */

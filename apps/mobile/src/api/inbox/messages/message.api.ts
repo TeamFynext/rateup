@@ -1,7 +1,18 @@
 import axios from "@/config/axios";
 
-export async function getMessagesByContactId(contactId: string, cursor: string) {
-  const res = await axios.get(`/api/wa/inbox/message/${contactId}?cursor=${cursor}`);
+/**
+ * One page of a chat, newest first. With `conversationId` the API returns that
+ * ticket's messages only (plus history recorded before tickets existed), as
+ * rateup-ui does; without one, every message of the contact on every channel.
+ */
+export async function getMessagesByContactId(
+  contactId: string,
+  cursor: string,
+  conversationId?: string | null,
+) {
+  const res = await axios.get(`/api/wa/inbox/message/${contactId}`, {
+    params: { cursor, ...(conversationId ? { conversationId } : {}) },
+  });
   return res.data;
 }
 

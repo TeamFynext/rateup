@@ -26,7 +26,8 @@ import {
   resolveMimeType,
   type PickedFile,
 } from "@/utils/attachments";
-import { useMessagesStore, useContactsStore } from "@/store/inboxStore";
+import Tap from "@/components/common/Tap";
+import { selectRowForContact, useMessagesStore, useContactsStore } from "@/store/inboxStore";
 import { VoiceNoteBar, VoiceNoteMic, useVoiceNote, type VoiceNoteFile } from "./VoiceNote";
 import { mediaPreviewActions, useMediaPreviewStore } from "@/utils/mediaPreview";
 import { router } from "expo-router";
@@ -171,7 +172,7 @@ const MessageSendPanel = ({
   const { data: me } = useLoggedInUser();
   // The ticket this chat was opened on; without one the API files the note on the newest.
   const conversationId = useContactsStore((state) =>
-    state.contactsById.get(contactId),
+    selectRowForContact(state, contactId),
   )?.conversationId;
   let { isSessionActive } = useSessionActiveStore();
   // Instagram's inline reply, picked with a long press on a bubble in this chat.
@@ -1076,12 +1077,9 @@ const MessageSendPanel = ({
                     backgroundColor: Colors.brand.blue,
                   }}
                 >
-                  <Pressable
-                    style={({ pressed }) => ({
-                      opacity: pressed ? 0.6 : 1,
-                      paddingVertical: 4,
-                      paddingHorizontal: 12,
-                    })}
+                  <Tap
+                    style={{ paddingVertical: 4, paddingHorizontal: 12 }}
+                    pressedStyle={{ opacity: 0.6 }}
                     onPress={() => {
                       setTemplateModalVisible(true);
                       setTemplateOptionsVisible(false);
@@ -1096,7 +1094,7 @@ const MessageSendPanel = ({
                     >
                       Send Template
                     </Text>
-                  </Pressable>
+                  </Tap>
                   {sellChannel && (
                     <>
                       <Pressable
@@ -1366,12 +1364,9 @@ const MessageSendPanel = ({
                 backgroundColor: Colors.brand.blue,
               }}
             >
-              <Pressable
-                style={({ pressed }) => ({
-                  opacity: pressed ? 0.6 : 1,
-                  paddingVertical: 4,
-                  paddingHorizontal: 12,
-                })}
+              <Tap
+                style={{ paddingVertical: 4, paddingHorizontal: 12 }}
+                pressedStyle={{ opacity: 0.6 }}
                 onPress={() => {
                   setTemplateModalVisible(true);
                   setTemplateOptionsVisible(false);
@@ -1382,7 +1377,7 @@ const MessageSendPanel = ({
                 >
                   Send Template
                 </Text>
-              </Pressable>
+              </Tap>
             </View>
           )}
 
