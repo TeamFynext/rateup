@@ -1,0 +1,15 @@
+{
+  "pages": [
+    "index",
+    "profile",
+    "notifications",
+    "password",
+    "members",
+    "teams",
+    "channels",
+    "integrations",
+    "billing",
+    "audit-log",
+    "customize-menu"
+  ]
+}

@@ -1,0 +1,166 @@
+---
+title: "Connectors"
+description: The one-click RateUp connector for loyalty and CRM data, and your own APIs the agent can call for live answers.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ScreenShot from "@/components/Screenshot";
+
+Knowledge is static. A **connector** is how the agent answers questions whose answer changes by the
+minute — *where is my order*, *how many points do I have* — or acts on the conversation. The page
+has two panels: the built-in **RateUp connector**, and **Connectors** for your own APIs. The step is
+optional.
+
+A connector is one API. The **tools** on it are the individual calls the agent may make.
+
+<ScreenShot src="/docs/screenshots/meta-agent/connectors.png" alt="RateUp connector installed with its Loyalty and CRM tools, and the Connectors list" />
+
+---
+
+## Install the RateUp Connector
+
+The **RateUp connector** gives the agent your own RateUp data with one click: a customer's loyalty
+points and rewards, and your labels, lead stages and teams. RateUp creates the connector at Meta,
+issues it a key and writes each tool for you.
+
+<Steps>
+  <Step>Tick the tools the agent may use. All of them are ticked to begin with.</Step>
+  <Step>Click **Install**. The panel shows **Installed** and how many tools are available to the agent.</Step>
+  <Step>Write a [skill](/meta-agent/skills) that tells the agent when to use them — for example *"Route billing questions to the Billing team before handing over."*</Step>
+</Steps>
+
+| Group | Tool | What the agent can do |
+|-------|------|-----------------------|
+| **Loyalty** | **Loyalty status** | Read the customer's points balance, tier, rewards they can afford and vouchers ready to use |
+| | **Reward catalogue** | List every reward and its points cost, even for someone who has not joined |
+| **CRM** | **Add a label** | Tag the customer with one of your existing [contact labels](/contacts/labels) |
+| | **Move lead stage** | Move the customer to a stage on your [lead board](/pipelines/stages) |
+| | **Route to a team** | Send the conversation to one of your [teams](/settings/teams) before a handoff |
+
+What the RateUp connector can and cannot do:
+
+- **It only ever acts on the customer it is talking to.** Meta fills in the customer's WhatsApp
+  number on every call; the agent cannot choose or change it, whatever the customer types.
+- **It only uses names that exist.** Labels, stages and teams are matched to yours, ignoring case
+  and spacing. The agent cannot create a label or a stage.
+- **It never sends messages, and never redeems rewards.** Those stay with your team.
+- **The customer must already be a contact** for the CRM tools to work.
+- **Loyalty tools need a loyalty programme on your plan.**
+
+The connector appears in the list below with a **Built in** badge. RateUp owns its key and tools, so
+**Manage** opens straight to its **Error logs** and it has no edit button. To change which tools are
+installed, tick or untick them and click **Reinstall**.
+
+<Callout type="warn">
+  **Reinstall** issues a new key and rewrites the tools at Meta. **Remove** takes them away
+  entirely, and any skill that tells the agent to look up loyalty or update labels, stages and teams
+  stops working. Only people with the **Connect systems and credentials** ability can install,
+  reinstall or remove it.
+</Callout>
+
+---
+
+## Add Your Own Connector
+
+<Steps>
+  <Step>Under **Connectors**, click **Add connector**.</Step>
+  <Step>Give it a **Name** and a **Description** — the agent reads the description to decide when this connector is the right one.</Step>
+  <Step>Set the **Base URL**. Tool paths are appended to it, and it must be `https`.</Step>
+  <Step>Choose an **Auth type**.</Step>
+  <Step>Click **Create connector**.</Step>
+</Steps>
+
+| Auth type | What it is |
+|-----------|-----------|
+| **None** | A public API that needs no credentials |
+| **API key** | Meta injects fixed header, query or body fields on every call |
+| **OAuth 2.0 client credentials** | One machine-to-machine token Meta refreshes for you |
+
+A connector synced from Meta may also show **HTTP Basic**, **OAuth 2.0 (user)** or **Custom**, but
+none of them can be chosen from RateUp yet.
+
+Two switches in the same dialog:
+
+- **Require mTLS** — for an API that demands a client certificate on the TLS handshake.
+- **Inject the customer's own token** — for per-customer auth: Meta adds the customer's stored token
+  to every request, in the **Where** and **Field name** you choose (`Authorization` with a `Bearer `
+  prefix by default).
+
+Each connector shows its state: **Connected**, **Awaiting credentials**, **Credentials expired** or
+**Error**.
+
+### Register Credentials
+
+Click **Manage** on the connector, open **Credentials**, fill in the form for its auth type and click
+**Save at Meta**.
+
+| Auth type | What you enter |
+|-----------|----------------|
+| **API key** | **Send the key as** **Headers**, **Query parameters** or **Body fields**, then each **Field name**, **Value** and optional **Prefix** |
+| **OAuth 2.0 client credentials** | **Token URL** (also `https`), **Client id**, **Client secret**, **Scopes** and **Token request encoding** |
+| mTLS | **Client certificate**, **Client private key** and an optional **CA certificate**, PEM-encoded |
+
+---
+
+## Add a Tool
+
+A tool is one endpoint the agent may call.
+
+<Steps>
+  <Step>Click **Manage** on the connector and stay on **Tools**. Click **Add tool**.</Step>
+  <Step>Give it a **Tool name** — a stable key: letters, numbers, underscores and hyphens.</Step>
+  <Step>Write a **Description** the agent can act on, such as *"Fetches a single order by its id, including line items and shipping status."*</Step>
+  <Step>Choose the **Method** and **Path**. Use `{braces}` in the path for path parameters.</Step>
+  <Step>Define its **Path parameters**, **Query parameters**, **Headers** and, for anything but `GET` or `DELETE`, its **Request body**.</Step>
+  <Step>Click **Create tool**.</Step>
+</Steps>
+
+A parameter can be pinned to a value Meta fills in from the conversation with a `binding`, for
+example `{"kind":"macro","macro":"WHATSAPP_PHONE_NUMBER"}` for the customer's number. Use
+`WHATSAPP_PHONE_NUMBER_NATIONAL` for an API that wants the number without the country code.
+
+Tick **Requires the customer's own token** for a call that must run as the customer — the tool then
+shows a **User auth** badge.
+
+### Run a Tool Before the Agent Does
+
+The play button on a tool opens **Run …**. Enter the **Input** as JSON and click **Run**: it calls
+your API for real, with the credentials registered on the connector, and shows the raw response as
+Meta saw it.
+
+---
+
+## Watch It Work
+
+**Manage → Error logs** reads straight from Meta over **Last 24 hours**, **Last 3 days** or **Last 7
+days**: **Calls**, **Success rate** and **Failures**, then each error by tool, failure and message.
+It is the first place to look when the agent starts saying it cannot find an order. For tool
+performance across conversations, see [Insights](/meta-agent/insights).
+
+<Callout type="warn">
+  A tool's description is the whole of what the agent knows about it. A vague one gets called at the
+  wrong moment; an overstated one gets called for data it cannot return. Deleting a connector
+  removes its credentials and every tool on it — any skill that relied on them stops working.
+</Callout>
+
+---
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| **Install** and the checkboxes are greyed out — *"Only admins can install the RateUp connector."* | Your role lacks **Connect systems and credentials** | Ask a Manager, Admin or Owner |
+| The agent says the customer has no loyalty account | They have not joined the programme | Expected — **Reward catalogue** still works for non-members |
+| The agent cannot label or route a customer | They are not a contact yet, or the name does not match one of yours | Check the error logs; add the label, stage or team in RateUp first |
+| **Route to a team** fails | That team has no members | Add members in [Teams](/settings/teams) |
+| **Move lead stage** fails | The business has no lead board | Set one up in [Pipelines](/pipelines) |
+| A connector reads **Awaiting credentials** | Nothing has been saved on **Credentials** | Open **Manage → Credentials** and **Save at Meta** |
+
+---
+
+## Related Pages
+
+- [Skills](/meta-agent/skills) — tell the agent when to call a tool
+- [Test](/meta-agent/test) — exercise a tool with a test message
+- [Insights](/meta-agent/insights) — tool success, error and timeout rates
+- [External API](/external-api) — RateUp's own API, in the other direction

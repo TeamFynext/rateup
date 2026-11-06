@@ -1,0 +1,140 @@
+---
+title: "Automation Rules Overview"
+description: The Automation group — Rules and Journeys — and how rules react to messages, comments, contact changes and store events on WhatsApp, Instagram and Messenger.
+---
+
+import ScreenShot from "@/components/Screenshot";
+
+**Automation** is a group in the sidebar with two entries: **Rules** and **Journeys**. A **rule** lets
+RateUp act on its own — it watches for something happening, checks whether conditions are met, and
+does something about it, no agent involved. A **journey** is a whole scripted conversation, and a
+rule is what starts it.
+
+<Cards>
+  <Card
+    title="Rules"
+    href="#the-automation-rules-list"
+    description="When something happens, check the conditions and act. This page and the ones below it."
+  />
+  <Card
+    title="Journeys"
+    href="/automation/journeys"
+    description="Step-by-step conversations for WhatsApp, Instagram and Messenger, all in one list."
+  />
+</Cards>
+
+Opening `/dashboard/automation` on its own lands on **Rules**. The rest of this page is about rules;
+see [Journeys](/automation/journeys) for the other half.
+
+<ScreenShot src="/docs/screenshots/automation/rules-list.png" alt="Automation → Rules: Create rule, refresh, Search rules..., Filter, Grid/List and Newest, above rule cards with their trigger, channel badges, switch and Active status" />
+
+---
+
+## How a Rule Reads
+
+Every rule has the same three-part shape, and the builder walks you through it in that order:
+
+```
+WHEN   something happens          (the trigger)
+IF     these conditions hold      (filters — required for Message Received)
+THEN   do this                    (one or more actions)
+```
+
+For example:
+
+> **When** a message is received · **if** the body contains "refund" · **then** assign the Billing
+> team and attach the *Refund* label.
+
+A rule runs on one or more platforms — **WhatsApp**, **Instagram** and **Messenger** — and on the
+accounts you pick for each. The builder asks in the order **Trigger → Conditions → Actions**, after
+an optional starting **Template**.
+
+<Cards>
+  <Card
+    title="Creating a Rule"
+    href="/automation/creating-a-rule"
+    description="The step-by-step builder: Template, Trigger, Conditions, Actions and Review."
+  />
+  <Card
+    title="Triggers"
+    href="/automation/triggers"
+    description="The events that start a rule — messages, contact changes, store events, Instagram, Messenger, ad taps."
+  />
+  <Card
+    title="Conditions"
+    href="/automation/conditions"
+    description="Narrowing a trigger down so the rule fires only when it should."
+  />
+  <Card
+    title="Actions"
+    href="/automation/actions"
+    description="What the rule does — assign, label, reply, close, call an API."
+  />
+  <Card
+    title="Abandoned-Cart Reminders"
+    href="/automation/abandoned-cart-reminders"
+    description="Remind Shopify shoppers who left a checkout, and see the revenue it brings back."
+  />
+</Cards>
+
+---
+
+## The Automation Rules List
+
+**Automation → Rules** in the sidebar opens every rule your organisation has, at
+`/dashboard/automation/rules`. **Rules** sits in the **Automation** group next to **Journeys**, since
+rules are what start journeys.
+
+| Control | Does |
+|---------|------|
+| **Create rule** | Opens the builder for a new rule, at `/dashboard/automation/rules/new` |
+| Refresh | Reloads the list |
+| **Search rules...** | Filters by rule name |
+| **Filter** | **All**, **Active** or **Inactive** |
+| **Grid** / **List** | Cards, or a table with **Name**, **Operator**, **Conditions**, **Actions**, **Status** and **Created** |
+| Sort | **Newest**, **Oldest**, **Name (A-Z)**, **Name (Z-A)** |
+
+Each card shows the rule's name, its trigger, a badge for each channel it runs on and an
+**Active** / **Inactive** switch. Click a card to open the rule at `/dashboard/automation/rules/<id>`. A Shopify **On abandoned checkouts** rule also shows what it recovered in the last 30 days —
+see [Abandoned-Cart Reminders](/automation/abandoned-cart-reminders).
+
+With no rules yet, the page shows *"Start with a template"* — four templates to pick from, and
+**See all templates, or start from scratch** for the rest. Picking one opens the builder on its
+**Trigger** step with the template filled in.
+
+---
+
+## Turn a Rule Off Without Losing It
+
+Flip the switch on the rule's card. An **Inactive** rule keeps its whole configuration and simply
+stops firing — use it while investigating, rather than deleting.
+
+To remove a rule for good, use the card's menu and confirm **Delete Rule**.
+
+<Callout type="warn">
+  Automations act on live customer conversations. Test a new rule with a narrow condition first —
+  a specific keyword, a single account — before broadening it.
+</Callout>
+
+---
+
+## Where Automation Fits
+
+| Tool | Use when |
+|------|----------|
+| **Automation rules** | Something happens and you want a reaction — routing, labelling, replying |
+| [Journeys](/automation/journeys) | You want a full back-and-forth conversation (a rule starts it with **Start a journey**) |
+| [Inbox auto-close](/inbox/inbox-settings) | You want idle tickets closed on a timer |
+| [Comments & Story Mentions](/instagram/automations) | You are reacting to Instagram comments and story mentions |
+| [Facebook Comments](/messenger/comments) | You are reacting to comments on your Facebook Page |
+
+---
+
+## Related Pages
+
+- [Creating a Rule](/automation/creating-a-rule)
+- [Triggers](/automation/triggers)
+- [Conditions](/automation/conditions)
+- [Actions](/automation/actions)
+- [Abandoned-Cart Reminders](/automation/abandoned-cart-reminders)
+- [Journeys](/automation/journeys)

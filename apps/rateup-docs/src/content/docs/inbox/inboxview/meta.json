@@ -1,0 +1,13 @@
+{
+  "pages": [
+    "index",
+    "open",
+    "unassigned",
+    "closed",
+    "all",
+    "assigned-to-me",
+    "unread-mentions",
+    "starred",
+    "spam-contacts"
+  ]
+}

@@ -1,0 +1,109 @@
+---
+title: "WhatsApp Settings"
+description: Your WhatsApp Business account configuration — numbers, profile, voice calling and account health.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ScreenShot from "@/components/Screenshot";
+
+**WhatsApp Settings** is the configuration of the WhatsApp Business account itself, as opposed to
+what you build on top of it.
+
+<ScreenShot src="/docs/screenshots/whatsapp/settings.png" alt="WhatsApp account settings" />
+
+---
+
+## Accounts and Numbers
+
+An account can have more than one phone number — one per brand, region or department.
+
+Each number is a separate identity to your customers. In the [Inbox](/inbox), every ticket shows
+which number the customer wrote to, so agents reply as the right business.
+
+---
+
+## Business Profile
+
+The profile customers see when they tap your business name in WhatsApp: the photo, the about line,
+description, category, address, email and websites. You edit it per number under
+[Channels](/settings/channels), on the number's **Profile** tab.
+
+The business name itself is separate. It is Meta's **display name**, it goes through review before
+it can change, and the number has to be re-registered before the new one appears — see
+[Change the Display Name](/settings/channels).
+
+<Callout type="warn">
+  This is customer-facing and appears before anyone has spoken to you. An out-of-date address or a
+  dead website link here costs more trust than it looks like it should.
+</Callout>
+
+WhatsApp has no way to empty a profile field once it is set, so plan on replacing values rather
+than clearing them.
+
+---
+
+## Let Customers Call Your Number
+
+Since October 2026 customers can make WhatsApp voice calls to your number, and agents answer them in
+the browser from the [Inbox](/inbox). Calling is switched on per number, on the **Calling** tab of the
+number's edit dialog under [Channels](/settings/channels).
+
+<ScreenShot src="/docs/screenshots/whatsapp/calling-tab.png" alt="Calling tab of a WhatsApp number with voice calls, callback requests and calling hours on" />
+
+<Steps>
+<Step>
+Go to **Settings → Channels → WhatsApp** and edit the number.
+</Step>
+<Step>
+Open the **Calling** tab and turn on **Voice calls**.
+</Step>
+<Step>
+Choose the options below, then click **Save**. You will see *"Calling settings saved"*.
+</Step>
+</Steps>
+
+| Setting | Effect |
+|---------|--------|
+| **Voice calls** | *"Customers can call this number on WhatsApp, and agents answer from the inbox in their browser."* The others are greyed out until it is on |
+| **Call button in chat** | Shows the call icon at the top of the customer's chat with you |
+| **Callback requests** | When a customer calls and nobody answers, WhatsApp asks them whether you may call back |
+| **Calling hours** | Outside these hours customers cannot call; they see when you are open. Set a **Time zone** (for example `Asia/Kolkata`) and the hours for each day — a new schedule starts at Monday–Friday, 09:00–18:00 |
+
+These settings are held by WhatsApp, not by RateUp, so the tab always shows what WhatsApp is
+enforcing for the number.
+
+<Callout type="info">
+  If the tab shows *"Could not load calling settings"*, the number is usually not eligible:
+  WhatsApp calling needs a messaging limit of at least 2,000 customers a day, and does not work on
+  a number shared with the WhatsApp Business app (coexistence). The full list is in
+  [WhatsApp's Calling Limits](/inbox/whatsapp-calls#whatsapps-calling-limits).
+</Callout>
+
+Every call — answered, missed, its length and the agent — is listed under [Inbox → Calls](/inbox/calls).
+
+---
+
+## Account Health
+
+WhatsApp scores business accounts on quality, based on how recipients respond to your messages.
+Poor scores reduce how many messages you may send.
+
+The things that damage it:
+
+| Cause | Avoid by |
+|-------|----------|
+| Messaging people who did not opt in | Respecting [consent](/contacts) |
+| Irrelevant campaign blasts | Segmenting with [audiences and labels](/contacts) |
+| High block and report rates | Sending less, and sending better |
+| Templates that mislead | Saying plainly what the message is |
+
+Watch failure rates in [Template Delivery](/analytics/template-delivery) — a rise there is usually
+the first visible symptom.
+
+---
+
+## Related Pages
+
+- [Channels](/settings/channels) — connecting accounts, and each number's name, display name, profile and calling
+- [Message Templates](/whatsapp/templates)
+- [Template Delivery](/analytics/template-delivery)

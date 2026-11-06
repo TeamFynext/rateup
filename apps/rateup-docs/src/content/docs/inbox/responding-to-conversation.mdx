@@ -1,0 +1,524 @@
+---
+title: "Replying to Customers"
+description: Send messages, quick replies, attachments, templates and journeys; copy, react to and download messages — and understand when the composer is locked and why.
+---
+
+import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+import ScreenShot from "@/components/Screenshot";
+
+This page covers everything about answering a customer: the composer, its limits, and the four
+situations where you cannot reply.
+
+---
+
+## Before You Reply
+
+<Steps>
+<Step>
+**Check the ticket has an owner.** If the composer is replaced by an **Assign to me** bar, take
+the ticket first.
+</Step>
+<Step>
+**Read the ticket strip** — the number and title tell you what this ticket is about.
+</Step>
+<Step>
+**Check the history bar.** If the customer has previous conversations, expand it and see what your
+team already told them.
+</Step>
+<Step>
+**Check the countdown** in the header on WhatsApp tickets. It shows how long you can still send a
+free-form reply.
+</Step>
+</Steps>
+
+---
+
+## Instagram Comment Threads
+
+A ticket that starts from an Instagram comment opens with **Commented on your post**, followed by a
+**View post** link. It opens the original post on instagram.com in a new tab, so you can read what
+the customer is replying to before you answer.
+
+The link only appears when Instagram supplies the post's permalink.
+
+---
+
+## The Composer
+
+<ScreenShot src="/docs/screenshots/inbox/composer-annotated.png" alt="The composer and its controls" />
+
+Two tabs decide where your text goes:
+
+| Tab | Delivered to | Colour |
+|-----|--------------|--------|
+| **Message** | The customer | Blue |
+| **Private Note** | Your team only | Amber |
+
+<Callout type="warn">
+  Always check which tab is active before sending. The composer changes colour precisely so this is
+  hard to get wrong — but it is worth the half-second glance.
+</Callout>
+
+---
+
+## Send a Reply
+
+<Steps>
+<Step>
+Make sure the **Message** tab is selected.
+</Step>
+<Step>
+Type your reply in the message box.
+</Step>
+<Step>
+Press **Enter**, or click the **send** button.
+</Step>
+</Steps>
+
+The message appears in the thread the moment you send it, carrying a **clock** instead of a tick. The
+clock means RateUp has the message but WhatsApp has not confirmed it yet; it becomes a normal
+outgoing message, with delivery ticks, once it does.
+
+This applies to everything you send from the composer — a typed reply, an attachment, a
+[template](/inbox/send-templates) drawn as the card you previewed, and a flow shown with its
+invitation message and button.
+
+<Callout type="info">
+  If a send fails, the bubble is taken back down and an error appears saying so — most often *"Could
+  not send the message"*. A send that vanishes without an error has not failed; it has been replaced
+  by the confirmed message.
+</Callout>
+
+---
+
+## What the Customer Sees While You Type
+
+When you type in the **Message** tab, the customer sees a typing bubble in their own app, the
+same one they see when a friend is writing. It works on WhatsApp, Instagram and Messenger.
+
+| | WhatsApp | Instagram | Messenger |
+|---|---|---|---|
+| Typing bubble shows | Yes | Yes | Yes |
+| Hidden when you stop typing for 5 seconds | No — stays up to 25 seconds | Yes | Yes |
+| Hidden when your reply arrives | Yes | Yes | Yes |
+| Also marks their message as read | Yes — their ticks turn blue | No | No |
+
+- The bubble is only sent inside the 24-hour reply window. Outside it you cannot send a free-form
+  reply, so there is nothing to type.
+- Writing a **Private Note** never shows a bubble. Notes are for your team.
+- Website chat has no typing bubble.
+
+<ImagePlaceholder
+  file="inbox/customer-typing-bubble.png"
+  shot="The customer's side: a WhatsApp chat on a phone with Demo Cafe, the customer's last message showing blue ticks and the typing bubble below it. 390 wide, @2x."
+  caption="What the customer sees while you type."
+/>
+
+{/* TODO: capture the customer's phone view of the typing bubble */}
+
+<Callout type="info">
+  Opening a ticket already tells the customer you have seen their message: blue ticks on WhatsApp,
+  **Seen** on Instagram and Messenger. The typing bubble comes on top of that.
+</Callout>
+
+### When a teammate is typing
+
+If a teammate is writing a reply in the same ticket, a line above the composer says so —
+*"Jane is typing…"*, or *"2 teammates are typing…"* when there are more. It goes away a few
+seconds after they stop. Check it before you start your own reply, so the customer does not get
+two answers.
+
+<ImagePlaceholder
+  file="inbox/teammate-typing.png"
+  shot="The bottom of an open ticket: the 'Jane is typing…' line with its three dots above the Message / Private Note tabs and the composer. §5 names, 1440 wide, cropped to the composer."
+  caption="A teammate replying in the same ticket."
+/>
+
+{/* TODO: capture with a second session typing in the same ticket */}
+
+---
+
+## Character Limit
+
+Customer messages are limited to **1024 characters**.
+
+A counter sits to the right of the composer tabs, showing how much you have used — for example
+`184 / 1024`.
+
+| State | What happens |
+|-------|--------------|
+| Under the limit | Counter shown in grey |
+| At the limit | Counter turns **red** and **Send** is disabled |
+
+Shorten the message, or split it into two, to send again.
+
+<Callout type="info">
+  Private notes have **no** character limit, so the counter is hidden on that tab.
+</Callout>
+
+---
+
+## Quick Replies
+
+Quick replies are saved answers to questions you get constantly.
+
+Two ways to insert one:
+
+| Method | How |
+|--------|-----|
+| **Button** | Click the **lightning** icon next to the character counter |
+| **Keyboard** | Type `/` in the message box to open the list, and keep typing to filter |
+
+Pick a reply and its text is inserted into the composer, where you can edit it before sending. A
+quick reply with a **paperclip** also carries images, voice notes or videos: they are added to your
+message as attachments. Remove any you do not need before sending — that does not change the saved
+quick reply.
+
+Quick replies are created under [Inbox Settings](/inbox/inbox-settings).
+
+---
+
+## The Composer Toolbar
+
+Under the message box sits a row of tools. Which ones you see depends on the channel.
+
+| Tool | What it does | Channels |
+|------|--------------|----------|
+| 😀 **Emoji** | Insert an emoji | All |
+| **Format Message** (T) | Bold, italic, strikethrough, **Clear formatting**, code, quote, bulleted and numbered lists | All |
+| **Undo / Redo** | Step back or forward through your edits | All |
+| 📎 **Insert Media** | Attach a file — see below | All |
+| **Template** | Send an approved WhatsApp template | WhatsApp |
+| **Flow** | Send a WhatsApp Flow | WhatsApp |
+| **Automation** | Start one of your journeys for this customer — see below | WhatsApp |
+| 🎙️ **Voice note** | Record and send audio | All but Webchat |
+| **From** selector | Which of your numbers the reply is sent from — see below | All but Webchat |
+
+On a phone, **Template**, **Flow**, **Automation**, **Undo** and **Redo** fold into a single **⋯**
+button.
+
+Formatting is converted to WhatsApp's own markup when the message is sent, so **bold** arrives as
+bold on the customer's phone.
+
+### Attachments
+
+**Insert Media** (📎) offers:
+
+| Type | Accepted | Not offered on |
+|------|----------|----------------|
+| **Document** | PDF, TXT, Word, Excel, PowerPoint | Instagram |
+| **Image** | Image files | — |
+| **Video** | Video files | — |
+| **Audio** | AAC, AMR, MP3, MP4 audio, OGG | — |
+| **Contacts** | Share contact cards — pick **Individual** contacts or a whole **Group** | Instagram, Messenger |
+| **Location** | Share a pin — drop it on the map, or use your current location | Instagram, Messenger |
+
+You can also **drag files** straight onto the message box.
+
+Attached files appear as thumbnails above the box. Click the red **✕** on one to remove it, or click
+an image or video to preview it first. Then click **Send**.
+
+<Callout type="info">
+  **Location** uses your browser's location to centre the map. If you have blocked location access
+  for RateUp, the picker reads *"Browser location access denied"*. Allow it in your browser's site
+  settings, or drop the pin by hand.
+</Callout>
+
+### Choose which number you reply from
+
+The **From** selector (**Reply from**) at the right of the toolbar shows the number or account this
+reply will be sent from. It is set automatically to the number **this ticket runs on** — every
+ticket belongs to [one channel](/inbox/tickets#one-ticket-per-channel) — and switches back each time
+you open a different ticket.
+
+<ScreenShot src="/docs/screenshots/inbox/reply-number-picker.png" alt="Picking the number to reply from, under the composer." />
+
+Only change it if you have a reason to. A reply sent from a number the customer has not written to
+has no open 24-hour window, and WhatsApp rejects it. If the customer's number is no longer
+connected, the selector is left empty and you must pick one before sending. Sending without one
+gives *"Select a account to send the message"*.
+
+**When your numbers belong to several Meta businesses**, the list groups them under each business
+name; numbers whose business has not been read from Meta yet sit under **Business not identified
+yet**. Some numbers may be greyed out. Hover one to see why:
+
+| Greyed-out reason | What it means |
+|-------------------|---------------|
+| *"This customer can only be messaged from Demo Cafe"* | The customer is known only by their business-scoped user ID (BSUID) — WhatsApp hid their phone number — and a BSUID works only from numbers of the business they wrote to |
+| *"This customer can only be messaged from another business"* | The same, where the business's name is not known |
+| *"No WhatsApp number or WhatsApp ID for this customer"* | The contact has no phone and no BSUID at all |
+
+A customer with a known phone number can be messaged from any of your numbers, of any business. If
+the ticket's own number cannot reach the customer, the selector starts on the first number that can.
+Should a send still go out from a number of the wrong business, it is refused with *"This customer
+can only be messaged from another WhatsApp business's numbers."*
+
+On Instagram and Messenger the selector is locked to the account the conversation is on.
+
+### Start a journey for this customer
+
+**Automation** (the robot icon) hands the customer to one of your
+[WhatsApp journeys](/automation/journeys).
+
+<Steps>
+<Step>
+Click **Automation**. The **Start a journey** dialog lists your journeys.
+</Step>
+<Step>
+Select one. Use **Search journeys...** to find it by name.
+</Step>
+<Step>
+Click **Start journey**. The journey's first message goes out and it takes the conversation from there.
+</Step>
+</Steps>
+
+Use it to hand a customer to a self-service flow — booking, order tracking, a feedback survey —
+without typing the steps out yourself. With no journeys set up, the dialog reads *"No WhatsApp journeys
+yet"*. Automation needs an open 24-hour window, so it is not offered once the window has closed.
+
+[Sending templates in detail →](/inbox/send-templates)
+
+---
+
+## When Meta AI Is Answering
+
+If you use the [Meta AI agent](/meta-agent), a pill beside the customer's name in the chat header
+shows who is answering them. Click it for the details.
+
+| Pill | Means |
+|------|-------|
+| **Meta AI** | *"Meta AI is replying"* — it answers this customer. Replying here takes the conversation over |
+| **Staff** | *"Handed over to staff"* — Meta AI has stopped answering, and stays silent until the conversation is handed back |
+| **AI agent** | Meta AI has replied to this customer, but no handover has been seen yet |
+
+The popover also says why and when the conversation last changed hands, for example:
+
+| Reason | What happened |
+|--------|---------------|
+| *The customer asked for a person* | Meta AI handed over at the customer's request |
+| *A teammate replied from the inbox* | Someone on your team sent a reply |
+| *An automation sent a message* / *A campaign message was sent* / *A message was sent through the API* | RateUp sent something on its own |
+| *Handed back to Meta AI* | Someone clicked **Hand back to Meta AI** |
+| *Handed back when the ticket closed* | The ticket was closed or resolved |
+
+<Callout type="warn">
+  **Any message RateUp sends takes the conversation off Meta AI** — your reply, but also an
+  automation, a campaign or an API send. WhatsApp gives the conversation to whoever sends. Check the
+  pill before a campaign goes to customers Meta AI is still helping.
+</Callout>
+
+### Hand a conversation back to Meta AI
+
+<Steps>
+<Step>
+Click the **Staff** or **AI agent** pill in the chat header.
+</Step>
+<Step>
+Click **Hand back to Meta AI**. The pill turns to **Meta AI**.
+</Step>
+</Steps>
+
+Closing or resolving the ticket hands it back on its own. That is controlled by **Hand back to Meta
+AI when a ticket is closed** in the agent's [Go live](/meta-agent/go-live) settings — on by default.
+A contact marked as spam is never handed back.
+
+If the customer's WhatsApp number cannot be matched to one of your connected numbers, the popover
+says so, and the conversation can only be handed back from **Meta AI Agent → Test**
+([Hand a Conversation Back to Meta AI](/meta-agent/test#hand-a-conversation-back-to-meta-ai)).
+
+---
+
+## When You Cannot Reply
+
+In these situations the composer is replaced by a banner, or limited to private notes:
+
+| Situation | What you see | How to continue |
+|-----------|--------------|-----------------|
+| **Unassigned ticket** | *"This conversation is new and unassigned."* with **Assign to me** | Take the ticket, or use **Assign to…** to give it to someone |
+| **Closed ticket** | *"This chat has been closed by … at …"* and whether the 24-hour window is still open | Click **New conversation**, **Assign to…**, or **Reopen** in the header |
+| **Assigned to someone else** | *"This chat is not assigned to you"* | Ask the owner, or reassign it to yourself from **Assignment** in the details panel |
+| **Blocked contact** | *"This contact has been blocked by you."* | Click **Unblock contact** |
+| **Contact flagged as spam** | *"This contact is marked as spam."* | Click **Not spam** in the banner |
+| **WhatsApp 24-hour window expired** | A pulsing **+** button above a composer that only writes private notes | **+ → Send WhatsApp Template** |
+| **Instagram / Messenger window expired** | A composer that only writes private notes | Wait for the customer to write again |
+
+
+Once a WhatsApp window expires, the **Message** tab disappears but **Private Note** stays, so you
+can still leave a handover note on the ticket.
+
+### When your plan's active contacts run out
+
+If your plan's monthly active contacts are used up, an amber notice sits above the composer:
+**Active contact limit reached** — *"New contacts can't be messaged until next month. Contacts
+already active this month can still be messaged."* It does not lock the composer. You can keep
+replying to customers you have already messaged this month; a message to a new one is refused with
+an error. **View plans** opens [Billing](/settings/billing).
+
+---
+
+## The WhatsApp 24-Hour Window
+
+WhatsApp — not RateUp — restricts when you may send free-form messages.
+
+### How it works
+
+- The window opens when the **customer** sends you a message
+- It lasts **24 hours** from that message
+- The countdown in the chat header shows the time remaining
+
+### Inside the window
+
+- Send free-form replies, attachments and quick replies
+- Continue the conversation normally
+
+### Outside the window
+
+- Free-form messaging is disabled
+- A **+** button with a pulsing green dot appears above the composer. It opens a menu with just
+  **Send WhatsApp Template**
+- The composer switches to **Private Note**, so you can still write to your team
+- Only **approved templates** can be sent
+- Once the customer replies to your template, a **new 24-hour window** opens and normal replying
+  resumes
+
+<Callout type="info">
+  This limit applies to WhatsApp only. Other channels have their own rules.
+</Callout>
+
+[How to send a template →](/inbox/send-templates)
+
+---
+
+## Message Status
+
+Outgoing messages show delivery ticks:
+
+| Status | Meaning |
+|--------|---------|
+| **Sent** | Accepted by the channel |
+| **Delivered** | Reached the customer's device |
+| **Read** | Opened by the customer |
+
+Hover a message's time to see the exact timestamps. A message still waiting for WhatsApp shows a
+**clock** instead of a tick.
+
+---
+
+## Working With Messages in the Thread
+
+### Copy a message
+
+Every message except a deleted one has a **Copy** button beside its time. Click it to copy the
+text to your clipboard. A *"Copied to clipboard"* notice confirms it.
+
+### React to a customer's message
+
+<Steps>
+<Step>
+Find the customer's message and click the **emoji** button beside its time.
+</Step>
+<Step>
+Pick an emoji. It is sent to the customer as a reaction on that message.
+</Step>
+</Steps>
+
+Reactions work on messages the **customer** sent, not on your own. A reaction the customer sends
+shows as a small emoji on the bubble. Hover it to see who reacted.
+
+<Callout type="info">
+  Instagram and Messenger accept only a limited set of reactions. Picking one they do not support
+  gives *"… not supported"*, and nothing is sent.
+</Callout>
+
+### Download an image
+
+Every image in a conversation carries a **Download image** button, on the thumbnail and again in
+the full-size view. Click the image to open it full size.
+
+### Messages you did not type
+
+| Label on the bubble | Sent by |
+|---------------------|---------|
+| Your colleague's name and avatar | A person on your team |
+| 🤖 **Automation** | A journey, flow or automation rule — in a lighter bubble |
+| 📣 **Campaign** | A [campaign](/campaigns) |
+| Centred grey chip | A system note — assigned, reassigned, closed, reopened, spam |
+| Centred amber bubble with 🔒 | A private note — never sent to the customer |
+
+---
+
+## Deleted Messages
+
+If a WhatsApp user deletes a message they had sent — "delete for everyone" — the message stays in
+the thread but its content is withheld. In its place you see, in italics:
+
+> 🚫 This message was deleted
+
+This applies both ways: a customer deleting their own message, and your business deleting a message
+it sent from the WhatsApp Business app.
+
+| Where | What it shows |
+|-------|---------------|
+| The thread | The placeholder, in the same position in the timeline |
+| The conversation list preview | *"This message was deleted"* |
+| An [exported](/inbox/toolbar) chat | The row is kept; the text is replaced by the placeholder |
+
+<Callout type="info">
+  Deletions are reported by WhatsApp only for accounts using the **WhatsApp Business app**
+  (coexistence). On a Cloud API-only number, a customer deleting a message on their phone changes
+  nothing on your side — you keep seeing what they sent.
+</Callout>
+
+A deletion is an edit to history, not a new message: it starts no automations, opens no ticket and
+does not touch the 24-hour window.
+
+---
+
+## Frequently Asked
+
+<Accordions type="single">
+<Accordion title="Why is my Send button greyed out?">
+Either you are over the 1024-character limit, or the ticket is unassigned, closed or outside the
+24-hour window. The banner above the composer tells you which.
+</Accordion>
+<Accordion title="Can I call the customer instead?">
+On WhatsApp, yes — once calling is turned on for your number and the customer has allowed calls.
+Use the **phone** icon in the chat header. See [WhatsApp Voice Calls](/inbox/whatsapp-calls).
+</Accordion>
+<Accordion title="Can I edit or delete a message I already sent?">
+Not from RateUp — sent messages are part of the record here. Send a correction as a follow-up
+message. If you delete the message from the WhatsApp Business app instead, RateUp marks it as
+deleted in the thread rather than removing the row.
+</Accordion>
+<Accordion title="The customer replied but my ticket did not update.">
+Click the **refresh** icon in the toolbar. If the reply came after the ticket was closed, it has
+opened a **new ticket** — check the **Unassigned** view.
+</Accordion>
+<Accordion title="Can I reply to two tickets from the same customer separately?">
+Yes, and you should. Each ticket has its own thread and the customer sees one continuous chat.
+</Accordion>
+</Accordions>
+
+---
+
+## Best Practices
+
+- Reply fast — the 24-hour window is shorter than it sounds
+- Check the history bar before answering a returning customer
+- Use quick replies for repeat questions, and personalise the opening line
+- Keep long explanations under the character limit, or split them deliberately
+- Close the ticket once the topic is done
+
+---
+
+## Related Pages
+
+- [Sending Templates](/inbox/send-templates)
+- [Private Notes & @Mentions](/inbox/private-notes)
+- [WhatsApp Voice Calls](/inbox/whatsapp-calls)
+- [Closing & Reopening](/inbox/conversation-lifecycle)
+- [Inbox Settings](/inbox/inbox-settings) — where quick replies are created
+- [Meta AI Agent → Go live](/meta-agent/go-live) — the inbox handover setting
+- [Channels](/settings/channels) — numbers from several Meta businesses

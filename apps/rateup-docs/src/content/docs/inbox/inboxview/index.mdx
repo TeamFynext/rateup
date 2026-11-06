@@ -1,0 +1,106 @@
+---
+title: "Inbox Views"
+description: The eight Inbox views — what each one contains, who it is for, and how to choose between them.
+---
+
+import ScreenShot from "@/components/Screenshot";
+
+The sidebar splits your tickets into **eight views**. Each carries a live count, so you can see
+where work is waiting without opening anything.
+
+Five views were renamed: **Unassigned** was **New**, **Assigned to me** was **Mine**, **Unread
+mentions** was **@Mentions**, **Starred** was **Favourites** and **Spam contacts** was **Spam**.
+
+<ScreenShot src="/docs/screenshots/inbox/sidebar-views.png" alt="The Inbox sidebar: Open, Unassigned, Closed, All, Assigned to me, Unread mentions, Starred and Spam contacts, each with a live count" />
+
+Each view has its own address, so you can bookmark one or share it:
+
+| View | URL |
+|------|-----|
+| **Open** | `/dashboard/inbox?tab=open` |
+| **Unassigned** | `/dashboard/inbox?tab=unassigned` |
+| **Closed** | `/dashboard/inbox?tab=closed` |
+| **All** | `/dashboard/inbox?tab=all` |
+| **Assigned to me** | `/dashboard/inbox?tab=assigned` |
+| **Unread mentions** | `/dashboard/inbox?tab=mentions` |
+| **Starred** | `/dashboard/inbox?tab=starred` |
+| **Spam contacts** | `/dashboard/inbox?tab=spam` |
+
+Old bookmarks to `?tab=new`, `?tab=mine` and `?tab=favourites` open **Unassigned**, **Assigned to
+me** and **Starred**.
+
+On a narrow screen, where the sidebar is hidden, the same eight views appear as a strip above the
+conversation list.
+
+---
+
+## At a Glance
+
+| View | Contains | Mainly used by |
+|------|----------|----------------|
+| **[Open](/inbox/inboxview/open)** | Every active ticket, assigned or not | Managers |
+| **[Unassigned](/inbox/inboxview/unassigned)** | Active tickets with **no owner** and a message in the last 24 hours | Everyone |
+| **[Closed](/inbox/inboxview/closed)** | Finished tickets | Everyone |
+| **All** | Every ticket, any status | Anyone searching |
+| **[Assigned to me](/inbox/inboxview/assigned-to-me)** | Tickets assigned to **you** | Agents |
+| **[Unread mentions](/inbox/inboxview/unread-mentions)** | Tickets where a colleague mentioned you | Everyone |
+| **[Starred](/inbox/inboxview/starred)** | Tickets you starred | Everyone |
+| **[Spam contacts](/inbox/inboxview/spam-contacts)** | Contacts flagged as spam — one row each | Admins |
+
+---
+
+## How the Views Overlap
+
+The views are not mutually exclusive — the same ticket can appear in several at once.
+
+- **Unassigned** and **Assigned to me** are both subsets of **Open**
+- A ticket is in **Unassigned** only while nobody owns it and it has had a message in the last 24 hours;
+  assign it and it moves to **Assigned to me**, leave it quiet for a day and it stays only in **Open**
+- **Unread mentions** and **Starred** cut across status — a closed ticket can still be starred
+- **All** contains every ticket, open and closed
+
+**Spam contacts** sits outside all of it. Flagging a contact as spam removes them from every other view,
+including **All**, and the badges stop counting them.
+
+```
+All
+├── Open
+│   ├── Unassigned      (no owner, active in the last 24h)
+│   └── Assigned to me  (owner = you)
+└── Closed
+
+Unread mentions and Starred overlap with all of the above.
+The Spam contacts view is separate: contacts in it appear nowhere else.
+```
+
+---
+
+## Which View Should I Work From?
+
+| If you are… | Start in | Then check |
+|-------------|----------|-----------|
+| An agent handling customers | **Assigned to me** | **Unread mentions**, then **Unassigned** to pick up more |
+| A manager balancing workload | **Open** | **Unassigned** for anything unowned |
+| An admin auditing history | **All** | **Closed** and **Spam contacts** |
+
+---
+
+## Views vs Filters
+
+Views and filters do different jobs and work together:
+
+- A **view** decides which tickets are in the list (status and ownership)
+- **Filters** narrow that list further — by channel, lifecycle stage, label, user or team
+
+Filters live in the sidebar, below the views, and **stay applied as you move between views** — they
+are remembered until you clear them, in this browser. If a view looks emptier than it should, check
+the filter sections for an active selection.
+
+[Sidebar filters →](/inbox/inbox-filter) · [Search & sorting →](/inbox/toolbar)
+
+---
+
+## Related Pages
+
+- [Tickets & Conversations](/inbox/tickets) — what each row actually is
+- [Inbox Layout](/inbox/layout) — where the views sit on screen

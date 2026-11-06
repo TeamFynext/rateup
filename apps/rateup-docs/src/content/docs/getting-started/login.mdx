@@ -1,0 +1,94 @@
+---
+title: "Login"
+description: Sign in to RateUp with Google, Apple or email, and what to do when you cannot.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ScreenShot from "@/components/Screenshot";
+
+---
+
+## Signing In
+
+<Steps>
+<Step>
+Go to [rateup.app](https://rateup.app) and click **Login** in the top-right corner.
+</Step>
+<Step>
+On *"Welcome back"*, click **Google** or **Apple** — or, under *"or with email"*, enter your
+**Email** and **Password**.
+</Step>
+<Step>
+Click **Sign in**. (The **Keep me signed in** box does not change anything in the current build.)
+**Forgot password?** starts a [password reset](/getting-started/resetpassword).
+</Step>
+<Step>
+You land on your dashboard.
+</Step>
+</Steps>
+
+<ScreenShot
+  src={`/docs/screenshots/authentication/login.png`}
+  alt="The RateUp login page"
+  width="350px"
+/>
+
+---
+
+## Before Your First Login
+
+| Requirement | Why |
+|-------------|-----|
+| **Email verified** | Verification is required before you can sign in the first time |
+| **Google account already registered** | Google sign-in works only for an email that has been registered |
+| **An invite accepted** | If a colleague added you, use the invite link before trying to log in |
+
+---
+
+## What You See After Signing In
+
+Your dashboard reflects two things:
+
+- The **business details** you gave during registration
+- The **role** an admin has given you, and any abilities they have added or removed for you
+
+If a section is missing from your sidebar, your role does not include it — the sidebar is built
+from your role's abilities. Ask an Owner or Admin to check your role under
+[Members & Roles](/settings/members). It is not a fault.
+
+With every section showing, the sidebar runs, top to bottom:
+
+| Entry | Holds |
+|-------|-------|
+| **Get started** | The [setup guide](/getting-started/setup-guide) |
+| **Inbox** | The [Inbox](/inbox) views and filters, [Calls](/inbox/calls) and **Inbox settings** |
+| **Analytics** | Overview, Team Performance, Template Delivery and the [Message log](/analytics/message-log) |
+| **Contacts** | [All Contacts](/contacts), Audiences, Custom Fields and Labels |
+| **Campaigns** | [Broadcasts and drips](/campaigns) |
+| **Automation** | [Rules](/automation) and [Journeys](/automation/journeys) |
+| **Meta AI Agent** | The [AI agent's](/meta-agent) setup steps |
+| **Meta** | A **WhatsApp** section — [Templates](/whatsapp/templates), [Flows](/whatsapp/flows), [Ice Breakers](/whatsapp/ice-breakers) — and an **Instagram & Messenger** section — [Instagram](/instagram), [Messenger](/messenger) |
+| **Pipelines** | Your [lead boards](/pipelines) |
+| **Loyalty** | The [loyalty programme](/loyalty) |
+| **Commerce** | Your [shop](/commerce) |
+| **Surveys & Links** | [Surveys](/surveys), [QR codes and Link-in-bio Pages](/qr-links) |
+| **Settings** | **You**, **Organization** and — for RateUp staff — **RateUp**. See [Settings](/settings) |
+
+---
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| "Invalid email or password" | Wrong credentials | Use [Reset Password](/getting-started/resetpassword) |
+| Google sign-in bounces you back | That email has never been registered | Register with email first, or ask an admin to invite you |
+| Login works but the dashboard is empty | No channel connected, or no permissions | See [Accessing the Inbox](/inbox/accessing-inbox) |
+| You never received the verification email | Filtered as spam | Check spam and promotions folders, then retry |
+
+---
+
+## Related Pages
+
+- [Create an Account](/getting-started/register)
+- [Reset Password](/getting-started/resetpassword)
+- [Password & Account](/settings/password) — changing your password once signed in

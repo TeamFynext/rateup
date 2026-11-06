@@ -1,0 +1,138 @@
+---
+title: "Loyalty Overview"
+description: A points-and-rewards programme run over WhatsApp — earning, tiers, rewards, reminders, feedback and a counter-side cashier.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ScreenShot from "@/components/Screenshot";
+
+**Loyalty** runs a points programme for your customers. They join by sending a keyword on
+WhatsApp, earn points when they buy, climb tiers, redeem rewards and refer friends — with no app to
+install. Your staff serve them from the **Cashier**; everything else is configured here.
+
+<ScreenShot src="/docs/screenshots/loyalty/overview.png" alt="The Loyalty sidebar group and the Overview page of a live programme" />
+
+---
+
+## How It Works
+
+| Customer does | What happens |
+|---------------|--------------|
+| Scans your counter QR, or texts your join keyword | They become a member, and get any joining bonus |
+| Buys something | Staff add the purchase in the Cashier and points are earned by your earning rule |
+| Keeps spending | They move up a tier, if tiers are on |
+| Spends points | Staff redeem a reward and the customer gets a code on WhatsApp |
+| Refers a friend | Both sides get the referral bonus |
+| Goes quiet, has a birthday, has points about to expire | A reminder goes out at the hour you set |
+| Answers the post-visit survey happily | They are asked for a Google review, and can be rewarded for it |
+
+Everything the customer does happens in WhatsApp. Nothing reaches customers until you activate the
+programme.
+
+---
+
+## What's in This Section
+
+<Cards>
+  <Card
+    title="Set Up Your Programme"
+    href="/loyalty/onboarding"
+    description="The six-step setup: profile, earning, tiers, rewards, messages and launch."
+  />
+  <Card
+    title="Overview"
+    href="/loyalty/overview"
+    description="Status, giveback, what to do next, headline numbers and charts."
+  />
+  <Card
+    title="Cashier"
+    href="/loyalty/cashier-portal"
+    description="The counter-side screen: find or register a customer, add a purchase, redeem."
+  />
+  <Card
+    title="Members"
+    href="/loyalty/members"
+    description="Your members, their balances, tiers, referral codes and details."
+  />
+  <Card
+    title="Program"
+    href="/loyalty/program"
+    description="Profile, earning rules and tiers — what the programme promises."
+  />
+  <Card
+    title="Rewards"
+    href="/loyalty/rewards"
+    description="Points rewards, coupons, free gifts, and the joining and referral bonuses."
+  />
+  <Card
+    title="Activity"
+    href="/loyalty/activity"
+    description="Every point in and out, and the requests waiting for approval."
+  />
+  <Card
+    title="Messages"
+    href="/loyalty/messages"
+    description="Automatic messages, keyword replies, the journey menu and templates."
+  />
+  <Card
+    title="Reminders"
+    href="/loyalty/reminders"
+    description="When scheduled messages send: birthdays, quiet customers, expiring points."
+  />
+  <Card
+    title="Feedback"
+    href="/loyalty/feedback"
+    description="A WhatsApp survey after a visit, a Google review ask, and the results."
+  />
+  <Card
+    title="Materials"
+    href="/loyalty/materials"
+    description="The counter QR card and the rewards brochure, ready to print."
+  />
+  <Card
+    title="Settings"
+    href="/loyalty/settings"
+    description="Pause, join link, approvals, sending number, integrations, expiry and the danger zone."
+  />
+</Cards>
+
+---
+
+## Set Up in This Order
+
+<Steps>
+<Step>
+Connect a WhatsApp number in [Settings → Channels](/settings/channels). The join QR can only be made
+once a number is connected.
+</Step>
+<Step>
+Run the [setup](/loyalty/onboarding) — profile, earning, tiers, rewards and messages — and
+**Activate program** on the last step.
+</Step>
+<Step>
+Check the WhatsApp templates were approved on [Messages](/loyalty/messages), and set when each
+reminder goes out on [Reminders](/loyalty/reminders).
+</Step>
+<Step>
+Print the counter QR card from [Materials](/loyalty/materials).
+</Step>
+<Step>
+Train your staff on the [Cashier](/loyalty/cashier-portal) before the first customer joins.
+</Step>
+<Step>
+Optionally, set up the post-visit survey on [Feedback](/loyalty/feedback).
+</Step>
+</Steps>
+
+<Callout type="warn">
+  Get the earning rate right before customers join. Changing it after launch changes what every
+  point already issued is worth, and that is the fastest way to lose trust in a loyalty programme.
+</Callout>
+
+---
+
+## Related Pages
+
+- [WhatsApp Templates](/whatsapp/templates) — the approved messages loyalty sends
+- [Contacts](/contacts) — loyalty members are contacts too
+- [Settings → Channels](/settings/channels) — connecting the WhatsApp number

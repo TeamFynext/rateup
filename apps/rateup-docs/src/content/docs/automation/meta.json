@@ -1,0 +1,13 @@
+{
+  "title": "Automation",
+  "pages": [
+    "index",
+    "creating-a-rule",
+    "triggers",
+    "conditions",
+    "actions",
+    "abandoned-cart-reminders",
+    "journeys",
+    "journey-builder"
+  ]
+}

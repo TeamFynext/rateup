@@ -1,0 +1,293 @@
+---
+title: "Ticket Details Panel"
+description: The right-hand panel — assignment, title and description, lead stage, conversation tags, contact labels, contact, identities and ticket info, spam and delete.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ScreenShot from "@/components/Screenshot";
+
+The **Ticket Details** panel is everything about a ticket and its customer that does not belong in
+the message thread.
+
+Open it with the **panel icon** at the far right of the chat header (**Toggle details panel**); close
+it with the chevron in the panel's own header. On a wide screen it sits beside the conversation. On
+a narrower one it opens over it.
+
+<ScreenShot src="/docs/screenshots/inbox/ticket-details-full.png" alt="The Ticket Details panel for an assigned WhatsApp ticket" />
+
+From top to bottom:
+
+| Section | Belongs to |
+|---------|-----------|
+| [Assignment](#assignment) | The ticket |
+| [Title & Description](#title--description) | The ticket |
+| [Lead stage](#lead-stage) | The contact |
+| [Conversation Tags](#conversation-tags) | The ticket |
+| [Contact Labels](#contact-labels) | The contact |
+| [Contact](#contact) | The contact |
+| [Identities](#identities) | The contact |
+| [Ticket Info](#ticket-info) | The ticket |
+| [Spam, Block and Delete](#spam-block-and-delete) | The contact / the ticket |
+
+---
+
+## Panel Header
+
+| Control | What it does |
+|---------|--------------|
+| **Ticket #number** | The ticket's identity |
+| **Copy link to ticket** (🔗) | Copies a link to this ticket to your clipboard; the icon briefly reads **Copied** |
+| **Collapse Panel** (›) | Hides the panel to give the conversation more room |
+
+---
+
+## Assignment
+
+Shows the owner and their team, or **Unassigned**.
+
+<Steps>
+<Step>
+Click the owner (or **Unassigned**) — or press **A** anywhere in the ticket.
+</Step>
+<Step>
+Search in **Search people or teams**, then click a person, **Assign to me**, **Unassign**, or a team
+under **Auto-assign in a team** to hand the ticket to whichever member's turn it is.
+</Step>
+</Steps>
+
+The change saves at once and replaces the previous owner. Without the **Assign conversations**
+ability the owner is shown but cannot be clicked.
+
+[Full assignment guide →](/inbox/asigning-conversation)
+
+---
+
+## Title & Description
+
+The ticket's own words, directly under Assignment because they are what an agent reads first. A
+ticket with no title shows **Untitled ticket**.
+
+<Steps>
+<Step>
+Click the **pencil** (**Edit title and description**).
+</Step>
+<Step>
+Write a short, specific **Ticket title**. It is what your team reads in the conversation list.
+</Step>
+<Step>
+Add a **Description** for context the messages do not make obvious.
+</Step>
+<Step>
+Click **Save**, or **Cancel** to discard.
+</Step>
+</Steps>
+
+| Good title | Weak title |
+|-----------|------------|
+| Refund not received for order 8821 | Question |
+| Wrong size delivered — needs exchange | Customer issue |
+| Bulk pricing request, 200 units | Follow up |
+
+Hover a title in the conversation list to read its description without opening the ticket.
+
+---
+
+## Lead Stage
+
+One row showing where this customer sits on your [pipeline](/pipelines) board. It shows the current
+column in that column's colour, or **Not on the board**.
+
+<Steps>
+<Step>
+Click the stage row to open the picker. It lists every column on the board, each marked as open,
+won or lost.
+</Step>
+<Step>
+Click a column. The customer moves there — a lead is opened for them if they had none.
+</Step>
+</Steps>
+
+To take the customer off the board, open the picker and choose **Remove from the board** at the
+bottom, then confirm with **Remove**.
+
+<Callout type="warn">
+  **Remove from the board** deletes the lead. Its notes, tasks, timeline and assignees go with it,
+  and the confirmation counts each of them first. To record a deal that did not happen, mark it
+  [lost](/pipelines/leads#closing-a-lead) instead.
+</Callout>
+
+This belongs to the **contact**, so it applies to all of their tickets and shows as a chip on each
+of their rows. The section is absent for organisations without the **Pipeline** feature, and on a
+board with no columns. Columns are configured in [Pipeline → Stages](/pipelines/stages).
+
+---
+
+## Conversation Tags
+
+Tags on **this ticket only** — *Bug Report*, *Escalated*, *Refund*.
+
+<Steps>
+<Step>
+Click **+ Add**.
+</Step>
+<Step>
+Type in **Search tags** and click a tag to add it. Click the **✕** on a tag chip to remove it.
+</Step>
+</Steps>
+
+If no tags exist yet, the picker reads *"No conversation tags yet — create them in Inbox
+Settings."* [Tags & labels →](/inbox/conversation-tags)
+
+---
+
+## Contact Labels
+
+Colour-coded labels on the **customer** — VIP, wholesale, churn risk.
+
+<Steps>
+<Step>
+Click **+ Add**.
+</Step>
+<Step>
+Type in **Search labels** and click a label to add it. Click the **✕** on a label chip to remove it.
+</Step>
+</Steps>
+
+With no labels yet, the picker reads *"No contact labels yet."* Labels are created under
+[Contacts → Labels](/contacts/labels).
+
+Labels show on every conversation row for that customer, and filter the Inbox from the sidebar's
+**Contact Labels** section.
+
+---
+
+## Contact
+
+The customer's avatar with a dot in their channel's colour, their name, phone number and **Customer
+since** — the month and year the contact was created. A shield beside the name shows **Consent
+given** (ticked) or **No consent** (crossed).
+
+Click **View contact** to open the contact's details. Edits saved there — name, phone, email —
+update the contact everywhere in RateUp, including this ticket and the conversation list.
+
+<Callout type="warn">
+  **Consent** controls whether this customer may receive template messages. A contact without
+  consent shows a **DND** badge next to their name in the chat header.
+</Callout>
+
+---
+
+## Identities
+
+Every way this customer is known: their phone numbers and emails, their WhatsApp account
+(name, business-scoped user ID (BSUID) and the business it belongs to), and their Instagram and
+Messenger accounts. A customer who wrote to you on several channels — or two contacts you merged —
+shows all of them here. [What identities are →](/contacts/identities)
+
+<ScreenShot src="/docs/screenshots/inbox/ticket-panel-identities.png" alt="The Identities block of a contact known on WhatsApp and Instagram." />
+
+Phone and email rows carry their own controls:
+
+| Control | What it does |
+|---------|--------------|
+| **Main** | Marks the main phone or email — the one shown on the contact everywhere else. Only shown when the contact has more than one of that kind |
+| ⭐ **Make main phone** / **Make main email** | Makes this one the main one |
+| ✏️ **Edit phone number** / **Edit email** | Edit the value in place; **Enter** saves, **Esc** cancels |
+| ✕ **Remove** | Removes it after a confirmation: *"This contact will no longer be matched or reached on it."* |
+
+WhatsApp, Instagram and Messenger rows can be removed but not edited — their ids come from Meta.
+A contact always keeps at least one identity, so the ✕ disappears from the last one.
+
+### Add a Phone or Email
+
+<Steps>
+<Step>
+Click **Add phone or email**.
+</Step>
+<Step>
+Type the number (with its country code) or the address, then click **Add**.
+</Step>
+</Steps>
+
+If another contact already has it, you see **Another contact already has this** — they are probably
+the same person, and **Merge with that contact** opens the merge.
+
+### Possible Duplicates and Merging
+
+When RateUp spots a strong sign that this customer is also another contact — the same phone or
+email, or a webchat visitor who typed this contact's number — a banner appears above the list:
+*"Possible duplicate of Jane Roe"*, with the reason underneath. Click **Review** to compare the two
+and merge them.
+
+**Merge with…** in the block's header does the same for a contact you pick yourself. Each merge
+leaves a line under the list — *"Merged with Jane Roe by John Doe on 5 Nov 2026"*, or *"Linked
+automatically from a WhatsApp link on …"* for a [Continue on WhatsApp](/automation/journey-builder#continue-on-whatsapp)
+link. [How merging works →](/contacts/merging-contacts)
+
+Adding, editing and removing need the **Add, edit and import contacts** permission; merging needs
+**Merge duplicate contacts**, which Owners and Admins have by default.
+
+---
+
+## Ticket Info
+
+Read-only facts about this ticket:
+
+| Field | Meaning |
+|-------|---------|
+| **Channel** | WhatsApp, Instagram, Messenger or Webchat |
+| **Account** | Which of your numbers or accounts the ticket came in on — marked *(no longer connected)* if you have since disconnected it |
+| **Created** | When the ticket was opened |
+| **Result** | The outcome it was closed with, if any |
+
+Each ticket runs on one channel, so **Account** stays correct even if the customer has since written
+to a different number of yours — that message opens its own ticket on that number.
+
+---
+
+## Spam, Block and Delete
+
+Up to three buttons sit at the foot of the panel.
+
+**Spam** — the same action as **Close → Mark contact as spam**. It flags the **contact**, closes
+their open tickets and moves them into the **Spam contacts** tab. If the contact is already flagged, the
+button reads **Not spam** and takes them back out. [More about spam →](/inbox/inboxview/spam-contacts)
+
+**Block** — blocks the customer on WhatsApp after a confirmation: *"They will not be able to message
+you, and you will not be able to message them."* It only appears inside the customer's 24-hour
+window, because WhatsApp only accepts a block then, and not on a contact who is already blocked.
+
+**Delete** — **admins only**. Permanently deletes this ticket and every message in it, after a
+confirmation. The contact and their other tickets are untouched.
+[More about deleting →](/inbox/conversation-lifecycle#deleting-a-conversation)
+
+---
+
+## Ticket Fields vs Contact Fields
+
+Knowing which is which saves confusion:
+
+| Belongs to the **ticket** | Belongs to the **contact** |
+|--------------------------|---------------------------|
+| Channel and account | Identities |
+| Title and description | Name, phone, email |
+| Assignment | Lead stage and lifecycle |
+| Conversation tags | Contact labels |
+| Status and result | Consent |
+| Created and closed dates | Custom fields |
+| Favourite star | Spam and blocked flags |
+
+Change a contact field and it applies to every ticket that customer will ever have. Change a
+ticket field and only this ticket is affected.
+
+---
+
+## Related Pages
+
+- [Tickets & Conversations](/inbox/tickets)
+- [Conversation Tags & Contact Labels](/inbox/conversation-tags)
+- [Identities](/contacts/identities) — the phones, emails and accounts a contact is known by
+- [Merging Contacts](/contacts/merging-contacts) — combining two contacts who are one person
+- [Pipelines](/pipelines) — the board the lead stage writes to
+- [Assignment & Reassignment](/inbox/asigning-conversation)
+- [Closing & Reopening](/inbox/conversation-lifecycle)

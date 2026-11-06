@@ -1,0 +1,254 @@
+---
+title: "Settings"
+description: Publishing, scheduling, access control, languages, kiosk mode and the response webhook.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ScreenShot from "@/components/Screenshot";
+
+Everything about how a survey **behaves**, as opposed to how it looks.
+
+<ScreenShot src="/docs/screenshots/web-forms/settings.png" alt="Survey settings" />
+
+---
+
+## Publishing
+
+| Control | Effect |
+|---------|--------|
+| **Publish** | Makes the survey live and accepting responses |
+| **Unpublish** | Takes it offline |
+| **Pause** | Stops collection without unpublishing |
+
+A survey must be published before its link works.
+
+---
+
+## Scheduling
+
+Set a **start** and an **End Survey At** date so a survey opens and closes on its own — or choose
+**No Expiry** to leave it open indefinitely.
+
+Use scheduling for anything time-bound: an event feedback survey should close when the event is over,
+not linger collecting stray responses for a year.
+
+---
+
+## Access Control
+
+| Setting | Effect |
+|---------|--------|
+| **Password Protection** | Respondents must enter a password |
+| **Allowed email IDs** | Only listed addresses may submit |
+| **Anonymous** | Responses are not tied to an identity |
+
+<Callout type="info">
+  **Anonymous** genuinely changes what people tell you. For sensitive feedback — complaints, staff
+  surveys — it raises both response rate and honesty. For anything you need to follow up on, it
+  makes that impossible. Decide deliberately.
+</Callout>
+
+---
+
+## End-to-End Encryption
+
+**End-to-End Encryption** encrypts response data.
+
+Turn it on for anything sensitive. Note that encrypted responses limit what can be processed
+automatically — check your reporting still works before relying on it.
+
+---
+
+## Languages
+
+Add the languages your survey should offer. At least one is required — you will be told
+*"Must contain atleast one language"* otherwise.
+
+Available languages include English, Hindi, Malayalam and Kannada among others. Respondents pick
+theirs on the [language page](/surveys/design).
+
+---
+
+## Response Behaviour
+
+| Setting | Effect |
+|---------|--------|
+| **Automatic Transition** | Moves to the next question automatically after an answer |
+| **Preview screen** | Show or skip the preview before submission |
+| **Fetch Location** | Captures the respondent's location |
+| **Kiosk Mode** | Resets the survey after each submission, for a shared device |
+
+**Kiosk Mode** is what you want for a tablet at a counter or an event stand — it prevents one
+person seeing the previous person's answers.
+
+<Callout type="warn">
+  **Fetch Location** collects personal data. Tell respondents why you need it, and do not enable it
+  because it is available.
+</Callout>
+
+---
+
+## Send Responses to Your Own System
+
+A **webhook** posts each response to a URL you control as soon as it is submitted. Use it to push
+responses into your own database, CRM or fulfilment system without polling. It sits in the
+**Webhooks** card of this Settings tab and needs the Webhook feature on your plan.
+
+This webhook is configured **per survey**, and the same mechanism serves
+[WhatsApp flows](/whatsapp/flows).
+
+<Callout type="info">
+  This is not the same webhook as the one under [Settings → Integrations](/settings/integrations) —
+  that one is organisation-wide, reports events such as message delivery status, and has its own
+  signing secret. This one carries **survey responses** and is signed with the **Client Secret**
+  shown in this card, which is the same for every survey in your organisation.
+</Callout>
+
+### Set it up
+
+<Steps>
+<Step>
+**Create an HTTPS endpoint** that accepts **POST** and parses a JSON body.
+
+```
+https://example.com/webhook-endpoint
+```
+
+Plain HTTP endpoints are skipped entirely — nothing is ever sent to them.
+</Step>
+<Step>
+Enter the URL under **Enter webhook url endpoint for response** and click **Save Changes**. An
+address that is not a valid URL is refused with *"Invalid Url, eg: https://example.com/your-endpoint"*.
+</Step>
+<Step>
+Once a URL is saved, a **Client Secret** field appears above it. Copy it — it signs every request,
+and you need it to verify what arrives.
+</Step>
+</Steps>
+
+<ScreenShot src="/docs/screenshots/web-forms/webhook-settings.png" alt="Webhooks card with the Client Secret and the endpoint URL" />
+
+### Payload
+
+```json
+{
+  "tag": "feedback",
+  "createdAt": "2024-09-17T10:00:00Z",
+  "phone": "14155552671",
+  "language": "en",
+  "responses": [
+    { "type": "Rating", "response": 3, "title": "Please rate us?" },
+    { "type": "Smiley", "response": "Happy", "title": "Are you satisfied?" }
+  ],
+  "teamId": "3112a17e-d353-482b-82e0-0af2f10771ee",
+  "surveyId": "4365b702-69a3-4362-a162-1725ad50f259"
+}
+```
+
+| Field | Contains |
+|-------|----------|
+| `tag` | The survey's tag |
+| `createdAt` | Submission time, ISO 8601 |
+| `phone` | The respondent's number, where captured |
+| `language` | The language they answered in |
+| `responses` | One entry per question — `type`, `response`, `title` |
+| `teamId` | The owning team |
+| `surveyId` | The survey the response came from |
+
+### Headers
+
+| Header | Contains |
+|--------|----------|
+| `Content-Type` | `application/json` |
+| `X-Rateup-Timestamp` | When this attempt was sent, Unix seconds |
+| `X-Rateup-Signature-256` | `t=<Unix seconds>,v1=<hex HMAC-SHA256 of "<t>.<raw body>">`, keyed with the client secret |
+| `X-Rateup-Signature` | HMAC-SHA256 of the request body, base64-encoded (deprecated — no timestamp) |
+| `X-Rateup-Triggered-At` | When this attempt was sent, ISO 8601 |
+| `X-Webhook-Id` | An id for this delivery — the **same on every retry** of it |
+
+### Verify the signature
+
+Prefer `X-Rateup-Signature-256`: it signs a timestamp too, so a captured delivery cannot be
+replayed. It is checked exactly like the organisation webhook's — see
+[Settings → Integrations → Verify the signature](/settings/integrations#verify-the-signature) — with
+the **Client Secret** as the key.
+
+For the older header, compute an HMAC-SHA256 of the **raw request body** with your client secret, base64-encode it, and
+compare it with `X-Rateup-Signature`.
+
+```javascript
+import crypto from "crypto";
+
+// rawBody: the request body exactly as received, before JSON parsing
+function verifySignature(rawBody, signature, secret) {
+  const expected = crypto.createHmac("sha256", secret).update(rawBody).digest("base64");
+  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+}
+```
+
+Hash the bytes you received rather than re-serialising the parsed JSON — a re-serialised body can
+differ in spacing or key order and never match.
+
+<Callout type="warn">
+  Verify **before** acting on the payload. Your endpoint URL is not a secret, and an unverified
+  handler processes whatever anyone posts to it.
+</Callout>
+
+### Delivery and retries
+
+Responses are queued and delivered in the background, so a slow endpoint never holds up the
+respondent.
+
+| Your endpoint | What happens |
+|---------------|--------------|
+| Answers **2xx** | Delivered; done |
+| Answers **5xx**, or does not answer within 15 seconds | Retried, up to **3 attempts** in all, with exponential backoff |
+| Answers **4xx** | **No retry** — the response is abandoned immediately |
+| Answers with a redirect (**3xx**) | Not followed, and not retried |
+| Resolves to a private or internal address | Refused, and not retried |
+
+<Callout type="warn">
+  A 4xx is read as "your endpoint rejected this deliberately" and the event is dropped for good. If
+  your handler hits something temporary — a database blip, a lock — return a **5xx** so it is
+  retried. Returning 400 loses the response permanently.
+</Callout>
+
+### Make your handler idempotent
+
+Because retries exist, the same response can arrive twice. Record the `X-Webhook-Id` of every
+delivery you process and skip ids you have already seen — a retry carries the same id as the
+original.
+
+Acknowledge with a 2xx as soon as you have the payload, then process it asynchronously.
+
+### Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| Nothing ever arrives | Endpoint is HTTP, not HTTPS | Non-HTTPS endpoints are skipped |
+| Nothing ever arrives | Webhook not saved on this survey, or the plan lacks the Webhook feature | Re-check this Settings tab |
+| Nothing ever arrives | The URL redirects, or resolves to a private address | Use the final public HTTPS address |
+| Signature never matches | Wrong secret, or the body was re-serialised before hashing | Hash the raw body with the **Client Secret** from this card |
+| One failure and it never returns | Your handler returned a 4xx | Return 5xx for transient failures |
+| Duplicate records | No idempotency | Deduplicate on `X-Webhook-Id` |
+
+
+---
+
+## Danger Zone
+
+**Delete Survey** removes the survey and its responses.
+
+<Callout type="warn">
+  Deleting takes every response with it. Export from [Results](/surveys/results) first — and
+  prefer **Unpublish** for a survey you have simply finished with.
+</Callout>
+
+---
+
+## Related Pages
+
+- [Sharing](/surveys/sharing)
+- [Results](/surveys/results)
+- [Design](/surveys/design)
+- [Integrations](/settings/integrations) — the separate organisation-wide webhook

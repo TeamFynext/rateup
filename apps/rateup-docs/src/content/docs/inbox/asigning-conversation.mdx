@@ -1,0 +1,232 @@
+---
+title: "Assignment & Reassignment"
+description: Give every ticket one owner — take it yourself, pick a teammate, or let a team hand it to whoever's turn it is.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ScreenShot from "@/components/Screenshot";
+
+Assignment decides **who is responsible for a ticket**. Every ticket has **one owner**. It is not
+optional bookkeeping: a ticket with no owner cannot be replied to.
+
+---
+
+## Why Assignment Is Required
+
+The composer stays locked until a ticket has an owner. This prevents the two failure modes every
+shared inbox suffers from:
+
+- **Duplicate replies** — two agents answering the same customer minutes apart
+- **Silent drops** — everyone assuming somebody else picked it up
+
+An unassigned ticket is visible to everyone but owned by nobody. It carries a **New** status pill
+until that changes, and while it is recent it also sits in the **Unassigned** view with an amber edge.
+
+---
+
+## The Ways to Assign
+
+| Route | Best for | Where |
+|-------|----------|-------|
+| **Quick assign** | Taking a ticket without reading it first | The **person +** button on a list row (**Assign to me**) |
+| **Assign bar** | Taking a ticket you have just read | **Assign to me** or **Assign to…** above the composer in an unassigned ticket |
+| **Ticket Details** | Assigning to someone else, or reassigning | Click the assignee under **Assignment** — or press **A** |
+| **Bulk assign** | Handing many tickets out at once | Selection mode → **Assign selected chats** |
+
+---
+
+## Assign a Ticket to Yourself
+
+<Steps>
+<Step>
+Open the **Unassigned** view — or find any row with an amber left edge.
+</Step>
+<Step>
+Click the **person +** button on the right of the row.
+
+Alternatively, open the ticket and click **Assign to me** in the bar above the composer.
+</Step>
+<Step>
+The status pill turns to **Assigned**, the ticket moves to your **Assigned to me** view, and the composer
+unlocks.
+</Step>
+</Steps>
+
+<ScreenShot src="/docs/screenshots/inbox/assign-to-me.png" alt="An unassigned ticket with the Assign to me and Assign to… bar above the composer" />
+
+A system note is added to the thread recording who took the ticket, so ownership history is always
+visible.
+
+---
+
+## Assign to a Colleague in One Click
+
+<Steps>
+<Step>
+Open the ticket.
+</Step>
+<Step>
+Click the assignee under **Assignment** in the [Ticket Details](/inbox/ticket-details) panel — it
+reads **Unassigned** if nobody has it. Or click **Assign to…** in the bar above the composer of an
+unassigned ticket.
+
+Shortcut: press **A** anywhere in the open ticket (not while typing). The panel opens with the
+picker ready.
+</Step>
+<Step>
+Type in **Search people or teams** to narrow the list.
+</Step>
+<Step>
+Click a name. The ticket is assigned straight away, *"Assigned to …"* confirms it, and a system note
+records the change.
+</Step>
+</Steps>
+
+<ScreenShot src="/docs/screenshots/inbox/assign-panel.png" alt="The assignee picker open in the Ticket Details panel, with people and Auto-assign in a team" />
+
+The picker has three groups:
+
+| Group | Contains |
+|-------|----------|
+| *(top)* | **Assign to me** (unless you already own it) and **Unassign** (if someone owns it) |
+| **People** | Members of the teams you can see — you first, then whoever is online, then everyone else by name. The current owner is marked **· Owner** |
+| **Auto-assign in a team** | Your teams. Picking one hands the ticket to one of its members — see below |
+
+Assigning **replaces** the current owner: the ticket leaves their **Assigned to me** view and enters the new
+owner's. A person who is in several teams is recorded under the ticket's current team when they
+belong to it.
+
+<Callout type="info">
+  Tickets assigned to several people before one-owner assignment keep showing every assignee, with
+  a `+N` badge, until someone reassigns them. Picking one person then leaves just that person.
+</Callout>
+
+---
+
+## Let a Team Pick Whose Turn It Is
+
+Pick a team under **Auto-assign in a team** when you know which team should have the ticket but not
+who. RateUp hands it to **one** member, turn by turn:
+
+| Rule | Detail |
+|------|--------|
+| **Taking turns** | Members are given tickets in rotation, so nobody gets every one |
+| **Available first** | Only members who are **Online** or **Busy** are in the rotation. If nobody is, every member is |
+| **Its own rotation** | Manual team picks keep their own turn order, separate from any [automation](/automation) that assigns round-robin |
+
+The ticket then shows the member it landed on, like any other assignment.
+
+---
+
+## Reassigning
+
+Reassignment changes the owner of an already-assigned ticket. Reach for it when:
+
+- An agent is going offline or on leave
+- The issue needs escalating
+- Another team is better placed to handle it
+
+<Steps>
+<Step>
+Leave a **private note** explaining where things stand. This is the handover.
+</Step>
+<Step>
+**@mention** the new owner in that note so it reaches their **Unread mentions** view.
+</Step>
+<Step>
+Click the assignee under **Assignment** (or press **A**) and pick the new owner.
+</Step>
+<Step>
+The ticket leaves your **Assigned to me** view and enters theirs. A system note records the change.
+</Step>
+</Steps>
+
+<Callout type="warn">
+  Reassigning without a note is the most common reason customers have to repeat themselves. Always
+  leave the context behind — it takes ten seconds and stays on the ticket forever.
+</Callout>
+
+---
+
+## Picking Up a Closed Ticket
+
+Closed tickets cannot be reassigned in place — they are a finished record.
+
+A closed ticket's composer reads *"This chat has been closed by … at …"*, followed by *"Their
+24-hour window is still open, so you can message them straight away."* or *"Start a new
+conversation with a template."* Beside it are **New conversation** (which assigns you) and
+**Assign to…**. Either one, or **Reopen** in the header, opens a **new ticket** for the same
+customer. **Reopen** carries the previous assignees across. The closed ticket keeps its number,
+close time and result.
+
+[More on reopening →](/inbox/conversation-lifecycle)
+
+---
+
+## Bulk Assignment
+
+<Steps>
+<Step>
+Click the **Select Chats** (✅) icon in the toolbar to enter selection mode.
+</Step>
+<Step>
+Tick the tickets you want to move — or tick one, then use the select-all checkbox in the selection
+bar.
+</Step>
+<Step>
+Click **Assign selected chats**. The dialog, *"Assign N chats"*, holds the same searchable list as
+the picker.
+</Step>
+<Step>
+Click **Assign to me**, a person, or a team. A progress bar — *"Assigning chats…"* — counts the
+tickets as they are done.
+</Step>
+</Steps>
+
+Picking a **team** gives each ticket to the next member in turn, so a batch is spread across the
+team rather than landing on one person.
+
+Useful at shift changes, or when redistributing an absent colleague's queue. Bulk assign is not
+offered in **Assigned to me** or **Spam contacts**.
+
+<Callout type="warn">
+  Bulk assign **replaces** the existing assignees. Each ticket ends up with only the person it was
+  given to, so anyone who was on it before is taken off.
+</Callout>
+
+[Bulk actions in detail →](/inbox/toolbar#assign-many-tickets-at-once)
+
+---
+
+## Permissions
+
+Changing who owns a ticket needs the **Assign conversations** ability. Without it, you see the owner
+under **Assignment** but cannot click it. Within that, the limit is **visibility**:
+
+| Role | Can assign |
+|------|-----------|
+| **Owner**, **Admin** | Any ticket, to anyone — no channel scoping applies |
+| **Manager** | Any ticket on the channels their teams grant |
+| **Staff**, **Agent** | The same channel scope, minus any assigned tickets their organisation hides from them |
+
+Abilities are set per role, and can be added or removed for one person — see
+[Users](/settings/members).
+
+---
+
+## Best Practices
+
+- Assign as soon as a ticket arrives — an unowned ticket is nobody's problem
+- Pick a **team** when you are unsure who should take it, and let the rotation choose
+- Reassign when availability changes, rather than letting a queue stall
+- Avoid ping-ponging tickets between agents; it fragments the history
+- Close tickets once resolved, so ownership lists stay honest
+
+---
+
+## Related Pages
+
+- [Unassigned](/inbox/inboxview/unassigned) — the unowned queue
+- [Private Notes & @Mentions](/inbox/private-notes) — writing a handover
+- [Closing & Reopening](/inbox/conversation-lifecycle)
+- [Conversations → Agents](/analytics/agent-performance) — transfers per agent

@@ -1,0 +1,12 @@
+{
+  "pages": [
+    "index",
+    "templates",
+    "template-editor",
+    "template-analytics",
+    "flows",
+    "flow-editor",
+    "ice-breakers",
+    "settings"
+  ]
+}

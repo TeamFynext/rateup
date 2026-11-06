@@ -1,0 +1,21 @@
+{
+  "pages": [
+    "index",
+    "accessing-inbox",
+    "layout",
+    "tickets",
+    "inboxview",
+    "asigning-conversation",
+    "responding-to-conversation",
+    "send-templates",
+    "whatsapp-calls",
+    "calls",
+    "private-notes",
+    "conversation-lifecycle",
+    "ticket-details",
+    "toolbar",
+    "conversation-tags",
+    "inbox-filter",
+    "inbox-settings"
+  ]
+}

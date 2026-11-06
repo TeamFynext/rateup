@@ -1,0 +1,12 @@
+{
+  "pages": [
+    "index",
+    "managing-contacts",
+    "identities",
+    "merging-contacts",
+    "audiences",
+    "custom-fields",
+    "labels",
+    "!lifecycle"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "pages": [
+    "index",
+    "onboarding",
+    "overview",
+    "cashier-portal",
+    "members",
+    "program",
+    "rewards",
+    "activity",
+    "messages",
+    "reminders",
+    "feedback",
+    "materials",
+    "settings",
+    "!earning-rules",
+    "!transactions",
+    "!approvals",
+    "!commands",
+    "!notifications",
+    "!templates"
+  ]
+}

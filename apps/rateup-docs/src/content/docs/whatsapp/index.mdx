@@ -1,0 +1,126 @@
+---
+title: "WhatsApp Overview"
+description: Message templates, WhatsApp Flows and ice breakers & commands — the WhatsApp tools in the Meta sidebar group.
+---
+
+import ScreenShot from "@/components/Screenshot";
+
+The **WhatsApp** section is where you build what customers experience on WhatsApp: the messages you
+send them, the forms they fill in and the suggestions they see before they type.
+
+Conversations themselves happen in the [Inbox](/inbox); this section is what feeds it.
+
+There is no separate **WhatsApp** entry in the sidebar. Its pages sit in the **WhatsApp** section of
+the **Meta** group. Journeys, including WhatsApp ones, are under **Automation → Journeys**:
+
+<ScreenShot src="/docs/screenshots/whatsapp/meta-panel.png" alt="The Meta sidebar panel: a WhatsApp section with Templates, Flows and Ice Breakers, and an Instagram & Messenger section with Instagram and Messenger" />
+
+| Sidebar entry | Opens |
+|---------------|-------|
+| **Meta → WhatsApp → Templates** | [Message Templates](/whatsapp/templates) — `/dashboard/whatsapp/templates` |
+| **Meta → WhatsApp → Flows** | [WhatsApp Flows](/whatsapp/flows) — `/dashboard/whatsapp/flows` |
+| **Meta → WhatsApp → Ice Breakers** | [Ice Breakers & Commands](/whatsapp/ice-breakers) — `/dashboard/whatsapp/ice-breakers` |
+| **Automation → Journeys** | [Journeys](/automation/journeys) — `/dashboard/automation/journeys?channel=whatsapp` shows only WhatsApp ones |
+
+Each entry appears only if your team has that feature: **Templates** and **Flows** follow their own
+abilities, and **Ice Breakers** shows if you have either of them or Automation Rules. The **Meta**
+group's other section, **Instagram & Messenger**, holds [Instagram](/instagram) and
+[Messenger](/messenger). Number settings are under [Settings → Channels](/settings/channels).
+
+---
+
+## What's Here
+
+<Cards>
+  <Card
+    title="WhatsApp Flows"
+    href="/whatsapp/flows"
+    description="Multi-screen forms customers complete inside WhatsApp."
+  />
+  <Card
+    title="Flow Editor"
+    href="/whatsapp/flow-editor"
+    description="Screens, elements, logic jumps — and pushing a flow live."
+  />
+  <Card
+    title="Message Templates"
+    href="/whatsapp/templates"
+    description="Pre-approved messages — required outside the 24-hour window. Start from Meta's library, a RateUp starter or scratch."
+  />
+  <Card
+    title="Template Editor"
+    href="/whatsapp/template-editor"
+    description="The step-by-step editor: every field, the formatting toolbar and the button rules."
+  />
+  <Card
+    title="Template Analytics"
+    href="/whatsapp/template-analytics"
+    description="Sends, reads, button clicks and cost for each template, from Meta."
+  />
+  <Card
+    title="Ice Breakers & Commands"
+    href="/whatsapp/ice-breakers"
+    description="Ice breakers and commands shown before the customer types."
+  />
+  <Card
+    title="Journeys"
+    href="/automation/journeys"
+    description="Automated conversations that answer without an agent — under Automation, not Meta."
+  />
+  <Card
+    title="Catalog"
+    href="/commerce/products"
+    description="The products customers browse and order in chat — now under Commerce."
+  />
+  <Card
+    title="Settings"
+    href="/whatsapp/settings"
+    description="Numbers, business profile, voice calling and account health."
+  />
+</Cards>
+
+---
+
+## How the Pieces Fit
+
+```
+Customer opens your WhatsApp
+        │
+        ├── sees ice breakers / commands   → Ice Breakers & Commands
+        ├── talks to a journey             → Automation → Journeys
+        ├── fills in a form                → WhatsApp Flows
+        ├── browses products               → Catalog  → Commerce
+        └── anything else                  → Inbox    (a human replies)
+
+You message them first                     → Templates → Campaigns
+```
+
+---
+
+## Before You Start
+
+Everything here requires a connected **WhatsApp Business account** — see
+[Channels](/settings/channels).
+
+Templates additionally require **approval by WhatsApp** before they can be used, so build them
+before you need them, not during a rush.
+
+---
+
+## The 24-Hour Rule
+
+WhatsApp lets you send free-form messages only within **24 hours** of the customer's last message.
+Outside that window, only approved templates go through.
+
+This single rule shapes most of how the section is used: templates for re-engagement, everything
+else for live conversation.
+
+[More on the 24-hour window →](/inbox/responding-to-conversation)
+
+---
+
+## Related Pages
+
+- [Inbox](/inbox) — where conversations are handled
+- [Campaigns](/campaigns) — sending templates in bulk
+- [Commerce](/commerce) — selling through the catalog

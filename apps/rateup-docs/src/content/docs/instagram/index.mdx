@@ -1,0 +1,143 @@
+---
+title: "Instagram Overview"
+description: Automate Instagram DMs, comments, story mentions and ig.me links, and route conversations into the Inbox.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ScreenShot from "@/components/Screenshot";
+
+RateUp connects to your Instagram professional account so DMs land in the [Inbox](/inbox)
+alongside your other channels — and so the routine parts of Instagram can answer themselves.
+Instagram does not need WhatsApp: you can connect it on its own.
+
+<ScreenShot src="/docs/screenshots/instagram/overview.png" alt="Meta → Instagram with one account connected: the Instagram heading with its brand tile, the account selector, the 1 connected badge and the Instagram journeys button on the right, then the five tabs (Comments, Story Mentions, Persistent Menu, Ice Breakers, ig.me Links) with Comments open showing two comment automations and Create rule" />
+
+
+---
+
+## What You Can Set Up
+
+<Cards>
+  <Card
+    title="Journeys"
+    href="/instagram/journeys"
+    description="Automated DM conversations, in Automation → Journeys filtered to Instagram."
+  />
+  <Card
+    title="Comments & Story Mentions"
+    href="/instagram/automations"
+    description="Answer comments privately and in public, sell from a comment, and thank story mentions."
+  />
+  <Card
+    title="Ice Breakers, Menu & Links"
+    href="/instagram/entry-points"
+    description="Ice breakers, the persistent menu, and ig.me links with open counts and QR codes."
+  />
+</Cards>
+
+The page — *"Manage automations, menus, and engagement tools"* — has one tab per tool:
+
+| Tab | What it holds |
+|-----|---------------|
+| **Comments** | Rules with the **Instagram Comment** trigger, including comment-to-buy — see [Comments & Story Mentions](/instagram/automations) |
+| **Story Mentions** | Rules with the **Instagram Story Mention** trigger |
+| **Persistent Menu** | The menu that stays in the DM thread — see [Ice Breakers, Menu & Links](/instagram/entry-points) |
+| **Ice Breakers** | Up to 4 starter questions |
+| **ig.me Links** | Links that open a DM and start an automation |
+
+Journeys are not a tab here: they live in [Automation → Journeys](/automation/journeys) with the
+other channels. The **Instagram journeys** button at the top of the page opens that list filtered to
+Instagram — see [Instagram Journeys](/instagram/journeys).
+
+**Instagram** sits in the sidebar's **Meta** group, in the **Instagram & Messenger** section
+(**Meta → Instagram**, `/dashboard/instagram`). It follows the *See automation rules* ability, not
+*Use journeys*: anyone whose role has *See automation rules* sees it — see
+[Members & Roles](/settings/members).
+
+---
+
+## Connect an Instagram Account
+
+You need an **Instagram professional account** linked to a Facebook Page. Until one is connected, the
+page shows *"No Instagram accounts connected"* with a **Go to Settings** button.
+
+<Steps>
+<Step>
+Open **Settings → Channels** and click **Connect** on **Instagram Messaging**.
+</Step>
+<Step>
+Click **Continue with Facebook** and log in. Meta asks only for Instagram permissions — no WhatsApp
+number is involved.
+</Step>
+<Step>
+In **Choose Instagram accounts**, tick the accounts you want. *"Each account becomes its own
+Instagram channel."* An account already linked to another RateUp organisation is marked
+*"Connected to another organization"*.
+</Step>
+<Step>
+Click **Connect**. The accounts appear under **Instagram connections**.
+</Step>
+</Steps>
+
+You can connect as many accounts as you like. If none show up, Meta was not given access to them —
+*"No Instagram professional accounts were shared. Log in again and choose the Facebook Page each
+account is linked to."* See [Channels](/settings/channels) for disconnecting and the other channels.
+
+---
+
+## Work with Several Accounts
+
+The **account selector** at the top right lists every connected account, with a count beside it.
+Everything on the page — comment rules, story rules, the menu, ice breakers and ig.me links —
+belongs to the account selected there. Switch accounts before you edit.
+
+Journeys are the exception: a journey is not tied to an account. The [rule](/automation) that starts
+it decides which account it runs on.
+
+---
+
+## Syncing with Meta
+
+The **Persistent Menu** and **Ice Breakers** live on Instagram's side. Editing them in RateUp does
+not change Instagram until you push them:
+
+| Action | Effect |
+|--------|--------|
+| **Save** | Stores your changes in RateUp |
+| **Sync with Meta** | Pushes the saved menu or ice breakers to Instagram |
+| **Clear from Meta** | Removes them from Instagram |
+
+<Callout type="warn">
+  Changes to the menu and ice breakers are not live for customers until you sync. Saving and
+  forgetting to sync is the most common reason "nothing changed". Journeys, comment rules and ig.me
+  links need no sync — they take effect when you save them.
+</Callout>
+
+---
+
+## Where Conversations Go
+
+Anything a customer sends by DM becomes a ticket in the [Inbox](/inbox), with an Instagram badge on
+the row. Agents reply exactly as they would on WhatsApp.
+
+---
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| *"No Instagram accounts connected"* | No Instagram channel yet | Connect one under **Settings → Channels** |
+| An account is missing from **Choose Instagram accounts** | Its Facebook Page was not shared with RateUp during login | Log in again and pick that Page |
+| A rule or link you made is not listed | Another account is selected | Switch the account selector |
+| **Instagram** is not in the sidebar's **Meta** group | Your role lacks *See automation rules* | Ask an admin to give your role *See automation rules* — see [Members & Roles](/settings/members) |
+| No journeys on the Instagram page | Journeys moved to **Automation → Journeys** | Click **Instagram journeys** at the top of the page |
+
+---
+
+## Related Pages
+
+- [Channels](/settings/channels) — connecting and disconnecting accounts
+- [Instagram Journeys](/instagram/journeys)
+- [Messenger](/messenger) — comments, m.me links and the menu for your Facebook Page
+- [Automation Rules](/automation) — the rules behind comments, stories and links
+- [Inbox](/inbox) — where the conversations arrive

@@ -1,0 +1,178 @@
+---
+title: "Teams"
+description: Group members into teams, decide which channels each team sees, and route work by team.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ScreenShot from "@/components/Screenshot";
+
+**Teams** groups people so work can be routed to a group rather than to individuals. A person's
+[role](/settings/members#the-six-roles) decides *what* they may do; their teams decide *where* — which
+conversations, campaigns and channels are theirs.
+
+<ScreenShot src="/docs/screenshots/settings/team-page.png" alt="A team page on its Members tab, with Add existing user and Invite new user" />
+
+---
+
+## Who Can Do What
+
+| Task | Ability needed | Roles by default |
+|------|---------------|------------------|
+| Open **Teams** and see who is in a team | *See teams* | Everyone |
+| Add and remove people, edit a team's **Details** | *Add and remove team members* | Manager, Admin, Owner |
+| Create or delete a team, set **Channel Access** | *Create, edit and delete teams* | Admin, Owner |
+
+**Teams** at `/dashboard/settings/teams` lists the teams you belong to, each with its
+colour, code and member count. Click a card to open the team's page.
+
+---
+
+## Create a Team
+
+<Steps>
+<Step>
+Click **Create Team**. You only see it if you can create teams.
+</Step>
+<Step>
+Enter a **Team Name** of at least three characters.
+</Step>
+<Step>
+Enter a **Team Code** — at least two characters, letters, numbers and hyphens only, no spaces. Type a
+space and the form suggests a hyphenated version.
+</Step>
+<Step>
+Pick a **Team Color**, or type a hex value such as `#5A8CC6`. It marks the team across the dashboard.
+</Step>
+<Step>
+Click **Create Team**.
+</Step>
+</Steps>
+
+If your plan's team allowance is used up, creation is refused with *"You have reached the maximum
+limit of N teams."*
+
+---
+
+## Add People to a Team
+
+Open the team. The **Members** tab lists everyone in it with their **Role** and the date they
+**Joined**, plus anyone invited but not yet joined.
+
+<Steps>
+<Step>
+To add someone who already has an account, click **Add existing user** and click **Add** next to
+them. *"All users are already in this team"* means there is nobody left to add.
+</Step>
+<Step>
+To bring in someone new, click **Invite new user**, enter their **Name**, **Email** and **Role**, and
+click **Send invite**. *"They will join this team as soon as they accept."*
+</Step>
+</Steps>
+
+To take someone out, use **Remove Member** on their row and confirm. Removing someone from a team
+does not remove them from the organisation — that happens in [Members](/settings/members#pause-or-remove-someone).
+
+You can also set a person's teams from their own page in [Members](/settings/members#open-a-members-page).
+A person can belong to several teams.
+
+<Callout type="info">
+  Owners and Admins reach every team whether or not they are in it. Team membership matters for
+  Managers, Staff, Agents and Viewers — it is what limits them to their own teams' work.
+</Callout>
+
+---
+
+## Choose Which Channels a Team Sees
+
+The **Channels** tab holds **Channel Access**: *"Choose which channels this team can see. Changes
+save on their own. Org owners always see every channel."* It decides which of your WhatsApp numbers,
+Instagram accounts, Facebook pages and webchat channels the team's conversations come from.
+
+<Steps>
+<Step>
+Open the team and go to the **Channels** tab.
+</Step>
+<Step>
+Leave **All channels** on to give the team everything — *"Includes any channel connected in the
+future."*
+</Step>
+<Step>
+Or switch **All channels** off and turn on the individual channels this team should see. Each is
+labelled with its name and a platform badge.
+</Step>
+<Step>
+Wait for **Saved** to appear. There is no Save button.
+</Step>
+</Steps>
+
+<Callout type="warn">
+  Switching **All channels** off and selecting nothing shows *"No channels selected — members of this
+  team will not see any channel."* Their Inbox will be empty. Either pick a channel or turn **All
+  channels** back on.
+</Callout>
+
+### How the Scope Is Worked Out
+
+| Situation | What the person sees |
+|-----------|---------------------|
+| Owner or Admin | Every channel, always |
+| In several teams | The **union** of every team's channels — being in a team can only widen access |
+| In one team with **All channels** on | Every channel |
+| In no team at all | Every channel — scoping is opt-in per team |
+
+<Callout type="info">
+  Channel access controls what the dashboard **shows**. It is not an API permission boundary: API
+  keys are organisation-wide and are not limited by team or channel. A key can, however, be limited
+  to selected features — see [Keys and Access](/external-api#keys-and-access).
+</Callout>
+
+A channel change takes effect straight away. Adding or removing a **member** can take up to a minute
+to change what they see — if a new team member still has the old view, wait, then refresh.
+
+[Connecting channels →](/settings/channels) · [Filtering by channel in the Inbox →](/inbox/inbox-filter)
+
+---
+
+## Edit or Delete a Team
+
+The **Details** tab, under **Team Settings**, lets you change the **Team Name**, **Team Code**,
+**Team Color** and **Google review link**, then **Save Changes**.
+
+Below it, people who can delete teams see **Delete Team**. Confirm in the dialog — *"This action
+cannot be undone."*
+
+---
+
+## Why Teams Matter for the Inbox
+
+Teams are how work is routed without naming individuals:
+
+- A ticket assigned to a **team** is available to every member of it
+- The Inbox's [team filter](/inbox/inbox-filter) narrows any view to one team's work
+- **Channel Access** decides which conversations reach the team in the first place
+- Team-based routing survives people being on leave; individual routing does not
+
+---
+
+## Designing Your Teams
+
+| Approach | Works when |
+|----------|-----------|
+| **By function** — Support, Sales, Billing | Different skills handle different questions |
+| **By language or region** | You serve several markets |
+| **By shift** | You run extended hours |
+
+Avoid one team per person — routing becomes brittle. What a person may do is set by their
+[role](/settings/members#the-six-roles), and [fine-tuning](/settings/members#fine-tune-one-persons-abilities)
+covers the exceptions. Which features appear in the menu at all is an organisation-wide choice in
+[Customize Menu](/settings/customize-menu) — there is no per-team feature setting.
+
+---
+
+## Related Pages
+
+- [Members & Roles](/settings/members)
+- [Customize Menu](/settings/customize-menu) — hide or show whole features for everyone
+- [Channels](/settings/channels)
+- [Assignment & Reassignment](/inbox/asigning-conversation)
+- [Sidebar Filters](/inbox/inbox-filter)

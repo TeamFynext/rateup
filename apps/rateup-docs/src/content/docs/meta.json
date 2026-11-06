@@ -1,0 +1,22 @@
+{
+  "pages": [
+    "index",
+    "getting-started",
+    "inbox",
+    "analytics",
+    "contacts",
+    "campaigns",
+    "automation",
+    "meta-agent",
+    "whatsapp",
+    "instagram",
+    "messenger",
+    "pipelines",
+    "loyalty",
+    "commerce",
+    "surveys",
+    "qr-links",
+    "settings",
+    "external-api"
+  ]
+}

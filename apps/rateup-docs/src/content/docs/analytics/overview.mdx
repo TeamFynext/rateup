@@ -1,0 +1,110 @@
+---
+title: "Overview"
+description: The daily health check — what is waiting right now, conversation and delivery tiles, the daily charts and where to look first.
+---
+
+import ScreenShot from "@/components/Screenshot";
+
+**Overview** is the first view in Analytics: how your conversations and WhatsApp messages are
+doing, and what needs your attention first.
+
+<ScreenShot src="/docs/screenshots/analytics/overview.png" alt="Analytics Overview with the Right now card, conversation tiles and WhatsApp delivery tiles" />
+
+---
+
+## See What Is Waiting Right Now
+
+The **Right now** card at the top carries a pulsing **Live** badge and the note *"Not affected by
+the date range"*. Its counts are as of this moment:
+
+| Count | Meaning |
+|-------|---------|
+| **Unassigned** | Tickets nobody owns yet. Always counts every team — with a team picked, it says **All teams** underneath |
+| **In progress** | Tickets that have an owner and are still open |
+| **Agents online** | Members online now, out of everyone, e.g. `4 / 9` |
+| **Resolved to date** | Tickets resolved so far, with the change in resolved rate against last week in points |
+
+The team filter narrows **In progress**, **Agents online** and **Resolved to date**.
+
+---
+
+## Read the Conversation Tiles
+
+The **Conversations** tiles cover the range you picked. Each shows its change *"vs previous
+period"* — the same length of time just before your range — coloured green when the move is good
+news.
+
+| Tile | Meaning |
+|------|---------|
+| **Conversations** | Tickets in the range |
+| **First response** | Average time to the first reply of any kind — *"Any reply, including automations"* |
+| **Agent response** | Average time to the first reply from a person — *"First reply from a person"* |
+| **Resolution rate** | Share of tickets that reached a resolved outcome. Its change is in points |
+
+<Callout type="info">
+  **First response** and **Agent response** differ whenever journeys or automations answer first.
+  A fast **First response** with a slow **Agent response** means customers get an instant
+  automated reply and then wait for a person.
+</Callout>
+
+A tile with no replies to measure reads **No replies yet**.
+
+---
+
+## Read the Delivery Tiles
+
+The **WhatsApp delivery** tiles are the same four that open [Template Delivery](/analytics/template-delivery):
+**Messages sent**, **Delivered** (as a percentage, with the count underneath), **Failed** (with its
+share of sent) and **Avg delivery time**. They follow the **Channel type** filter.
+
+---
+
+## The Charts
+
+| Chart | Shows |
+|-------|-------|
+| **Resolved per day** | Tickets closed or resolved each day |
+| **Open conversations** | Tickets still waiting on a resolution at the end of each day |
+| **Response time** | Average first response, by the day the ticket started — or by hour for **Today** and **Yesterday** |
+| **Delivery trend** | Outbound WhatsApp messages per day (or per hour), delivered against failed |
+
+Use **Response time** to find the hours or days when customers wait longest. That is usually a rota
+problem rather than a performance problem.
+
+---
+
+## Find Where to Look First
+
+**Needs attention**, at the foot of the page, picks out the worst of the range:
+
+| List | What it picks | Click a row to open |
+|------|---------------|---------------------|
+| **Slowest first response** | The three agents with the slowest average first response | That agent's page |
+| **Highest template failure rate** | The three templates with the highest failure rate, among templates sent at least 20 times | [Template Delivery](/analytics/template-delivery) |
+
+When nothing qualifies, it reads *"Nothing stands out"*.
+
+---
+
+## Read the Overview Well
+
+| Pattern | Likely meaning |
+|---------|----------------|
+| Rising **Conversations**, steady **Agent response** | The team is keeping up |
+| Steady volume, rising **Agent response** | A staffing or process problem |
+| **Unassigned** climbing during the day | Nobody is picking up new tickets — check **Agents online** |
+| High **Resolution rate**, rising **Open conversations** | Tickets are arriving faster than they are finished |
+
+<Callout type="warn">
+  **Resolution rate** is only as honest as your closing habits. If agents close everything as
+  **Resolved** regardless of what happened, it tells you nothing. See
+  [Closing & Reopening](/inbox/conversation-lifecycle).
+</Callout>
+
+---
+
+## Related Pages
+
+- [Team Performance → Agents](/analytics/agent-performance)
+- [Template Delivery](/analytics/template-delivery)
+- [Analytics Overview](/analytics) — the filter bar and PDF reports

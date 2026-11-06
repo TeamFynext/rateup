@@ -1,0 +1,137 @@
+---
+title: "Inbox Overview"
+description: The RateUp Inbox is a shared, ticket-based workspace for every customer conversation across WhatsApp, Instagram and chat.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ScreenShot from "@/components/Screenshot";
+import { CDN } from '@/lib/cdn';
+
+The **Inbox** is where your team receives, answers and closes customer conversations — all in one
+shared workspace, whichever channel the customer used.
+
+<ScreenShot src={`/docs/screenshots/inbox/inbox-overview.png`} alt="Inbox overview" />
+
+{/* TODO: replace the overview screenshot above with a capture of the current ticket-based Inbox */}
+
+---
+
+## The One Thing to Understand First
+
+**Every row in the Inbox is a ticket.**
+
+A ticket is one topic with one customer — a delivery question, a refund request, a complaint. It
+has its own number, title, owner and outcome.
+
+When a customer comes back next month with a different question, they get a **new ticket**. Their
+old ticket stays closed, exactly as your team left it.
+
+| | Ticket |
+|---|---|
+| **Identity** | `#1042` + a short title |
+| **Owner** | One agent, several agents, or a whole team |
+| **Status** | New → Assigned → Closed |
+| **Contents** | Only the messages belonging to that topic |
+
+<Callout type="info">
+  A customer with three topics has **three rows** in your Inbox. Opening one shows only that
+  topic's messages — the rest are one click away in the ticket's history bar.
+</Callout>
+
+[Read the full explanation →](/inbox/tickets)
+
+---
+
+## What You Can Do
+
+<Cards>
+  <Card
+    title="Sort work into views"
+    href="/inbox/inboxview"
+    description="Eight views — Open, Unassigned, Closed, All, Assigned to me, Unread mentions, Starred and Spam contacts — each with a live count, plus the sidebar filters."
+  />
+  <Card
+    title="Give every ticket an owner"
+    href="/inbox/asigning-conversation"
+    description="Give every ticket one owner — yourself, a colleague, or whoever's turn it is in a team."
+  />
+  <Card
+    title="Reply to customers"
+    href="/inbox/responding-to-conversation"
+    description="Send messages, quick replies, attachments and templates, within WhatsApp's rules."
+  />
+  <Card
+    title="Take WhatsApp calls"
+    href="/inbox/whatsapp-calls"
+    description="Answer customers' WhatsApp voice calls in your browser, and call them once they allow it."
+  />
+  <Card
+    title="See every call"
+    href="/inbox/calls"
+    description="Inbox → Calls: who is on a call right now, the call log, and call analytics."
+  />
+  <Card
+    title="Talk to your team privately"
+    href="/inbox/private-notes"
+    description="Leave internal notes on a ticket and pull colleagues in with @mentions."
+  />
+  <Card
+    title="Close with a clear outcome"
+    href="/inbox/conversation-lifecycle"
+    description="Resolve, close or mark unresolved, reopen when a customer returns — or delete a conversation for good."
+  />
+  <Card
+    title="Work in bulk"
+    href="/inbox/toolbar#bulk-actions"
+    description="Select all, then close, assign or delete many tickets in one go."
+  />
+  <Card
+    title="Find anything"
+    href="/inbox/toolbar"
+    description="Search, sort, switch to a compact list, and export conversation history."
+  />
+</Cards>
+
+---
+
+## Supported Channels
+
+- **WhatsApp Business**
+- **Instagram**
+
+Messages from every connected channel land in the same Inbox, and each ticket shows a channel
+badge so agents always know where the customer is writing from.
+
+---
+
+## Who Uses the Inbox
+
+| Role | Typical use |
+|------|-------------|
+| **Staff**, **Agent** | Works from **Assigned to me**, replies to customers, closes their own tickets |
+| **Manager** | Watches **Open** and **Unassigned**, balances workload across the team |
+| **Owner**, **Admin** | Full visibility, configures auto-close, conversation tags and quick replies in [Inbox Settings](/inbox/inbox-settings) |
+
+What you can *see* depends on your role and the channels your teams grant. What you can *do* comes
+from your role's abilities — see [Accessing the Inbox](/inbox/accessing-inbox).
+
+---
+
+## Where to Start
+
+If you are new to the Inbox, follow the pages in order:
+
+<Steps>
+<Step>
+**[Access the Inbox](/inbox/accessing-inbox)** — find it in the dashboard and check your permissions.
+</Step>
+<Step>
+**[Learn the layout](/inbox/layout)** — the four regions of the screen and what each one does.
+</Step>
+<Step>
+**[Understand tickets](/inbox/tickets)** — the concept everything else is built on.
+</Step>
+<Step>
+**[Pick up your first ticket](/inbox/asigning-conversation)** — assign it, reply, and close it.
+</Step>
+</Steps>

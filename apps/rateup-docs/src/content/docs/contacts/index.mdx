@@ -1,0 +1,102 @@
+---
+title: "Contacts Overview"
+description: Your customer database — the people behind every conversation, campaign and order.
+---
+
+import ScreenShot from "@/components/Screenshot";
+
+**Contacts** is the record of everyone you talk to. Every conversation in the
+[Inbox](/inbox), every [campaign](/campaigns) send and every [order](/commerce/orders) is attached
+to a contact here.
+
+<ScreenShot src="/docs/screenshots/contacts/list.png" alt="The contacts list" />
+
+---
+
+## The Four Ways to Organise Contacts
+
+RateUp gives you four separate tools. They do different jobs, and using the right one is what keeps
+the database usable as it grows.
+
+| Tool | What it is | Example |
+|------|-----------|---------|
+| **[Audiences](/contacts/audiences)** | Team-owned lists you add people to and send campaigns to | *Newsletter subscribers* |
+| **[Labels](/contacts/labels)** | Coloured tags for traits, shown across the Inbox | *VIP*, *Refund pending* |
+| **[Lead stage](/pipelines)** | Where someone sits on your pipeline board | *Qualified → Won* |
+| **[Custom fields](/contacts/custom-fields)** | Extra data you define | *Membership number* |
+
+<Callout type="info">
+  A contact sits on **one** pipeline stage at a time, but can carry **many** labels and belong to
+  **many** audiences. If you find yourself creating an audience called "VIP", what you want is a label.
+</Callout>
+
+Organisations without a pipeline board track progress with [lifecycle stages](/contacts/lifecycle)
+instead. That page is no longer in the sidebar, but still works.
+
+---
+
+## What's in This Section
+
+<Cards>
+  <Card
+    title="Managing Contacts"
+    href="/contacts/managing-contacts"
+    description="Add, search, filter, view details, bulk-edit, import in the background, export and delete."
+  />
+  <Card
+    title="Phones, Emails and Accounts"
+    href="/contacts/identities"
+    description="Several phones and emails per contact, their WhatsApp, Instagram and Messenger accounts, and which one is main."
+  />
+  <Card
+    title="Merging Contacts"
+    href="/contacts/merging-contacts"
+    description="Combine two contacts that are one person, and review the possible duplicates RateUp finds."
+  />
+  <Card
+    title="Audiences"
+    href="/contacts/audiences"
+    description="Team-owned lists for campaigns — add members, import straight in, remove them."
+  />
+  <Card
+    title="Custom Fields"
+    href="/contacts/custom-fields"
+    description="Text, number, email and multi-value fields for data RateUp does not have by default."
+  />
+  <Card
+    title="Labels"
+    href="/contacts/labels"
+    description="Coloured tags visible everywhere the contact appears."
+  />
+</Cards>
+
+---
+
+## One Person, One Contact
+
+A contact can hold several phone numbers and emails as well as their WhatsApp, Instagram and
+Messenger accounts, so someone who writes on two channels is still one contact. When the same
+person does end up twice, **Contacts → Possible duplicates** lists the pair and you can
+[merge](/contacts/merging-contacts) them.
+
+---
+
+## Contacts and Consent
+
+Every contact carries a **consent** status, which controls whether they may receive template
+messages and campaigns. It shows as **Granted** or **Denied** in the contacts table's **Consent**
+column, and contacts without it carry a **DND** badge in the Inbox and a **No consent** badge in
+their details.
+
+<Callout type="warn">
+  Consent is not a formality. Messaging people who did not opt in damages your WhatsApp account's
+  quality rating, and that is far harder to repair than a slow month of campaigns.
+</Callout>
+
+---
+
+## Related Pages
+
+- [Campaigns](/campaigns) — where audiences and labels get used
+- [Inbox](/inbox) — conversations attached to contacts
+- [Automation Rules](/automation) — rules that read and write contact fields
