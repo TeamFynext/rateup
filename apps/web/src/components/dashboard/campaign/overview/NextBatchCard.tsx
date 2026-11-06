@@ -1,8 +1,8 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
 import { IconClock, IconPlayerPlay } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { CampaignRetryStrategy, CampaignSendStatus, CampaignSendTrigger } from "@/types/enums.ts";
 import type { CampaignRetryPolicy, CampaignSend } from "@/types/global";
 

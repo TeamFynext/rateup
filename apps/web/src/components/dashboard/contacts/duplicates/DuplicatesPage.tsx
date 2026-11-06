@@ -1,3 +1,14 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@rateup/ui/components/empty";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconScan, IconUsers } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useState } from "react";
@@ -21,19 +32,8 @@ import {
 } from "@/components/Contacts/merge/identity.tsx";
 import { MergeContactsDialog } from "@/components/Contacts/merge/MergeContactsDialog.tsx";
 import { useOpenKeptContact } from "@/components/Contacts/merge/useOpenKeptContact.ts";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { useCan } from "@/hooks/usePermission.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 

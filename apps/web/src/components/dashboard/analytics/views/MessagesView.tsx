@@ -1,3 +1,5 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -10,8 +12,6 @@ import {
 } from "@/backend/apiAnalytics/apianalytics.query";
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 
 import { AnalyticsCard } from "../kit/AnalyticsCard.tsx";
 import { BarList } from "../kit/BarList.tsx";

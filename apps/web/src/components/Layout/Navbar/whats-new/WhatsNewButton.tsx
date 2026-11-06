@@ -1,3 +1,12 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@rateup/ui/components/popover";
 import { IconSpeakerphone } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { cva } from "class-variance-authority";
@@ -5,15 +14,6 @@ import dayjs from "dayjs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Popover,
-  PopoverContent,
-  PopoverHeader,
-  PopoverTitle,
-  PopoverTrigger,
-} from "@/components/ui/popover.tsx";
 import type { Announcement, AnnouncementKind } from "@/config/announcements";
 import { cn } from "@/lib/utils.ts";
 

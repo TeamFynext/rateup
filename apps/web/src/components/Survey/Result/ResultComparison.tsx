@@ -1,3 +1,5 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import {
   IconChartBar,
   IconChartPie as PieChartIcon,
@@ -25,9 +27,7 @@ import {
   useResponseCount,
   useResponseForComparison,
 } from "@/backend/surveys/response/response.query";
-import { Badge } from "@/components/ui/badge.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import type { FlowQuestionSummary } from "@/components/whatsapp/flow-v2/utils/store.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";

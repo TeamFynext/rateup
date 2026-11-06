@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ui/skeleton.tsx";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 
 const NavbarSkeleton = () => {
   return (

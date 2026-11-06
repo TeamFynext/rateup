@@ -1,3 +1,4 @@
+import { Button } from "@rateup/ui/components/button";
 import {
   IconArrowsDiagonal,
   IconBrandWhatsapp,
@@ -14,7 +15,6 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { type CallDto, getRingingCalls } from "@/backend/whatsapp/calling/calling.api";
-import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import { WS_REOPENED_EVENT } from "@/hooks/useChatSocket.tsx";
 import { useCan } from "@/hooks/usePermission.ts";

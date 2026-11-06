@@ -1,8 +1,7 @@
+import { Badge } from "@rateup/ui/components/badge";
 import { IconCheck, IconClock } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
-
-import { Badge } from "@/components/ui/badge.tsx";
 
 /**
  * Where a message stands, in the merchant's words rather than Meta's enum — the one

@@ -1,3 +1,13 @@
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { Separator } from "@rateup/ui/components/separator";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@rateup/ui/components/tooltip";
 import {
   IconAlertTriangle,
   IconChevronDown,
@@ -21,8 +31,6 @@ import {
   useRegisterWebhookByTopic,
   useRegisterWebhooks,
 } from "@/backend/appsIntegration/shopify/shopify.query";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import {
   Card,
   CardContent,
@@ -31,20 +39,11 @@ import {
   CardTitle,
 } from "@/components/ui/card.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { IntegratedApps, ShopifyEvents } from "@/types/enums.ts";
 import type { ShopifyIntegration } from "@/types/global";
 import { shopifyEventData } from "@/utils/constants.ts";
-
-import { Input } from "../ui/input.tsx";
 
 /**
  * Rule events with no webhook of their own to subscribe: abandoned checkouts are polled,

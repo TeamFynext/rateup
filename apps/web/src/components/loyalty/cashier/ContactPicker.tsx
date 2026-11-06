@@ -1,15 +1,14 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
+import { maskPhone } from "@rateup/utils/maskPhone";
 import { IconArrowLeft, IconLoader2, IconSearch } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { EnrolmentContact } from "@/backend/loyalty/customer/customer.api";
 import { useEnrolmentContacts } from "@/backend/loyalty/customer/customer.query";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
 import { useDebounce } from "@/hooks/use-debounce.ts";
-
-import { maskPhone } from "./maskPhone.ts";
 
 interface ContactPickerProps {
   onBack: () => void;

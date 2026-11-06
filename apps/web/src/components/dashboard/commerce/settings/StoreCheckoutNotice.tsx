@@ -1,3 +1,5 @@
+import { Alert, AlertAction, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
 import { IconAlertTriangle, IconBuildingStore } from "@tabler/icons-react";
 import { useMutation } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -6,8 +8,6 @@ import { toast } from "sonner";
 
 import { stopShopStoreSync, type ShopStore } from "@/backend/commerce/shop.api";
 import { useInvalidateShop } from "@/backend/commerce/shop.query";
-import { Alert, AlertAction, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useCan } from "@/hooks/usePermission.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";

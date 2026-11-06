@@ -1,3 +1,4 @@
+import { Avatar, AvatarFallback, AvatarImage } from "@rateup/ui/components/avatar";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 
@@ -5,7 +6,6 @@ import Layout from "@/components/blog/Layout.tsx";
 import SharePopover from "@/components/blog/ShareBlog.tsx";
 import ErrorPage from "@/components/error.tsx";
 import RoutePending from "@/components/Loaders/RoutePending.tsx";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import { BASE_URL, serializeJsonLd } from "@/lib/metadata.ts";
 import type { Tag } from "@/lib/posts.ts";
 import { createMarkdownMiddleware } from "@/markdown/serveMarkdown";

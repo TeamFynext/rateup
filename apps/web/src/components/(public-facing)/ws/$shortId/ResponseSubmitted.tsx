@@ -1,6 +1,6 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconCircleCheckFilled } from "@tabler/icons-react";
 
-import { Button } from "@/components/ui/button";
 import { rateupLogo } from "@/utils/constants";
 
 import styles from "./ResponseSubmitted.module.css";

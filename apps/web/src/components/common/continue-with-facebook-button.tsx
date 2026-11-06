@@ -1,10 +1,10 @@
+import { Dialog, DialogContent, DialogTitle } from "@rateup/ui/components/dialog";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { FacebookBrandButtonProps } from "@/components/common/facebook-brand-button.tsx";
 import { FacebookBrandButton } from "@/components/common/facebook-brand-button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Field, FieldTitle } from "@/components/ui/field.tsx";
 import { useDisclosure } from "@/hooks/useDisclosure";
 import { loadFacebookSdk } from "@/lib/facebook-sdk";

@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { formatNumber } from "./logic/format";
 import { pendingItems, type OutboxItem } from "./logic/outbox";
-import { maskPhone } from "./logic/maskPhone";
+import { maskPhone } from "@rateup/utils/maskPhone";
 import { relativeFromNow } from "./relativeTime";
 import { Badge, CashierButton, Card, Divider, FONT, useTheme } from "./ui";
 

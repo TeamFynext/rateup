@@ -1,17 +1,17 @@
-import { IconMail, IconSparkles, IconTrendingUp } from "@tabler/icons-react";
-import { useTranslation } from "react-i18next";
-
-import { useRateupPaymentsPlans } from "@/backend/payment/payment.query";
-import PricingSection from "@/components/HomePage/pages/Pricing/PricingSection.tsx";
-import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog.tsx";
+} from "@rateup/ui/components/dialog";
+import { IconMail, IconSparkles, IconTrendingUp } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
+
+import { useRateupPaymentsPlans } from "@/backend/payment/payment.query";
+import PricingSection from "@/components/HomePage/pages/Pricing/PricingSection.tsx";
+import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 
 /**
  * The plan catalogue, for an org that has no live subscription to switch: free, lapsed or

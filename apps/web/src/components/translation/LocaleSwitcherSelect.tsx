@@ -1,13 +1,13 @@
-import { IconLanguage } from "@tabler/icons-react";
-import { useState, useTransition } from "react";
-
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select.tsx";
+} from "@rateup/ui/components/select";
+import { IconLanguage } from "@tabler/icons-react";
+import { useState, useTransition } from "react";
+
 import i18n from "@/i18n.ts";
 import type { Locale } from "@/utils/locale.ts";
 

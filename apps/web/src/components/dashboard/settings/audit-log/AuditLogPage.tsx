@@ -1,9 +1,9 @@
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@rateup/ui/components/empty";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { PageHeading } from "@/components/common/page-heading.tsx";
 import { AuditLogs } from "@/components/dashboard/analytics/logs/audit-log/AuditLogs.tsx";
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty.tsx";
 import { presetRange } from "@/components/whatsapp/inbox/analytics/dateRangePresets.ts";
 import DateRangeSelector from "@/components/whatsapp/inbox/analytics/DateRangeSelector.tsx";
 import { useCan } from "@/hooks/usePermission.ts";

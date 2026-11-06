@@ -1,3 +1,7 @@
+import { Button } from "@rateup/ui/components/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
+import { Separator } from "@rateup/ui/components/separator";
 import {
   IconCircleDashedCheck,
   IconCornerUpLeft,
@@ -7,10 +11,6 @@ import {
 } from "@tabler/icons-react";
 
 import { whatsappToHTML } from "@/components/RichTextEditor/wa-editor/format.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
 import type { WaSendMessageBody } from "@/types/global";
 
 import ChatProductList from "../../product/index.tsx";

@@ -1,7 +1,12 @@
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
 import { IconGlobe, IconMessageCircle } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
-
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 
 interface ApiSelectorProps {
   value?: string;

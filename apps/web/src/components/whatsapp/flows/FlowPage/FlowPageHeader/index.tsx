@@ -1,3 +1,5 @@
+import { Button } from "@rateup/ui/components/button";
+import { Tabs, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import {
   IconBrandWhatsapp,
   IconChartBar,
@@ -14,9 +16,7 @@ import { useTranslation } from "react-i18next";
 
 import { usePushToWaMutation } from "@/backend/whatsapp/flow/flow.query";
 import { BackLink } from "@/components/common/back-link.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { PhonePreviewButton } from "@/components/ui/phone-preview.tsx";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import type { WaFlowStatus } from "@/types/enums.ts";
 
 import WaFlowStatusBadge from "../../WaTemplateStatusBadge.tsx";

@@ -1,10 +1,10 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconDownload, IconPrinter } from "@tabler/icons-react";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { LoyaltyProgram } from "@/backend/loyalty/program.api";
 import { CopyButton } from "@/components/common/copy-button.tsx";
-import { Button } from "@/components/ui/button.tsx";
 
 import { QrPoster } from "./QrPoster.tsx";
 import { usePosterExport } from "./usePosterExport.ts";

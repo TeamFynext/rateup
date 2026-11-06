@@ -1,5 +1,6 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getInitials } from "@/lib/initials";
+import { Avatar, AvatarFallback, AvatarImage } from "@rateup/ui/components/avatar";
+import { getInitials } from "@rateup/ui/lib/initials";
+
 import { cn, isOwnImage } from "@/lib/utils";
 
 /**

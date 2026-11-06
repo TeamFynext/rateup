@@ -1,5 +1,10 @@
 import type { DraggableProvidedDragHandleProps } from "@hello-pangea/dnd";
 import { Draggable, Droppable } from "@hello-pangea/dnd";
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
+import { Spinner } from "@rateup/ui/components/spinner";
 import {
   IconChevronLeft,
   IconChevronRight,
@@ -20,13 +25,8 @@ import { toast } from "sonner";
 import { useReplaceQuestionsMutation } from "@/backend/surveys/questions/questions.query";
 import { usePushToWaMutation, useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
 import { pressable } from "@/components/common/pressable.ts";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 import { FlowMaxElementsPerScreen, FlowMaxScreens } from "@/components/whatsapp/whatsappConfig.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useDisclosure } from "@/hooks/useDisclosure";

@@ -1,3 +1,15 @@
+import { Avatar, AvatarImage } from "@rateup/ui/components/avatar";
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
 import {
   IconDotsVertical,
   IconEdit,
@@ -28,18 +40,6 @@ import CreateGroupModal from "@/components/Contacts/CreateGroupModal.tsx";
 import { sortData } from "@/components/dashboard/SortDropDown.tsx";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import useDebounce from "@/components/menu/hook/useDebounce.ts";
-import { Avatar, AvatarImage } from "@/components/ui/avatar.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { ContactGroupType } from "@/types/enums.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";

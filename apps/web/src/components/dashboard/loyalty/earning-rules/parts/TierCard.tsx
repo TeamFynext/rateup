@@ -1,6 +1,8 @@
 // Extracted verbatim from `EarningRulesPage.tsx`. Behaviour is unchanged.
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
 import {
   IconAward,
   IconDeviceFloppy,
@@ -15,10 +17,8 @@ import { toast } from "sonner";
 
 import type { LoyaltyTier, LoyaltyTierInput } from "@/backend/loyalty/tiers.api";
 import { useUpdateLoyaltyTierMutation } from "@/backend/loyalty/tiers.query";
-import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 
 import { tierSchema } from "./shared.tsx";
 import type { TierFormValues } from "./shared.tsx";

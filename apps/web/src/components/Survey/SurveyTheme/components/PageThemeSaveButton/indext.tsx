@@ -1,8 +1,8 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconLoader2 } from "@tabler/icons-react";
 import { useCallback, useState } from "react";
 
 import { useSurveyUpdateMutation } from "@/backend/surveys/surveys.query";
-import { Button } from "@/components/ui/button.tsx";
 
 import { destructureThemeAndUploadImagesIfAny } from "../../SurveyTheme.utils";
 import { useSurveyThemeContextValue } from "../../SurveyThemeContext.tsx";

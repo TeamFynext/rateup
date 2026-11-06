@@ -1,10 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
-import { Controller, useForm } from "react-hook-form";
-import { useTranslation } from "react-i18next";
-import * as z from "zod";
-
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -12,9 +7,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog.tsx";
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import { useEffect } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+import * as z from "zod";
+
 import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 
 import useFlowStoreV3 from "../utils/store.ts";
 

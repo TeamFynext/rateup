@@ -1,8 +1,8 @@
+import { Empty, EmptyDescription, EmptyHeader } from "@rateup/ui/components/empty";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconCornerDownRight } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
-import { Empty, EmptyDescription, EmptyHeader } from "@/components/ui/empty.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import type { CampaignFunnelStage } from "@/types/global";
 
 /** Bars step down the brand ramp, so the funnel reads as one falling sequence. */

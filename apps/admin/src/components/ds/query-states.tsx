@@ -1,8 +1,8 @@
+import { Button } from "@rateup/ui/components/button";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconAlertTriangle, IconMoodEmpty } from "@tabler/icons-react";
 import { useEffect, useState, type ReactNode } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { getApiErrorMessage } from "@/lib/apiError";
 import { cn } from "@/lib/utils";
 

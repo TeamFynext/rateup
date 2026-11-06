@@ -1,8 +1,7 @@
+import { Progress } from "@rateup/ui/components/progress";
 import { IconBrandWhatsapp, IconLoader2 } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-
-import { Progress } from "@/components/ui/progress.tsx";
 
 export default function WhatsAppInboxLoader({ isLoading }: { isLoading: boolean }) {
   const [progress, setProgress] = useState(0);

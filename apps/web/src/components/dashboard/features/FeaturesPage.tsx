@@ -1,8 +1,8 @@
+import { Button } from "@rateup/ui/components/button";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useUpdateOrgModules } from "@/backend/org/org.query.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
 
 import { FeaturePicker, useFeatureDraft } from "./FeaturePicker.tsx";

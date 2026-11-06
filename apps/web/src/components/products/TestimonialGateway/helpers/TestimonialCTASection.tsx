@@ -1,7 +1,7 @@
+import { Button } from "@rateup/ui/components/button";
 import { motion } from "motion/react";
 
 import { BookDemoLink } from "@/components/RateupHomePage/helper/BookDemoLink.tsx";
-import { Button } from "@/components/ui/button.tsx";
 
 const TestimonialCTASection = () => {
   return (

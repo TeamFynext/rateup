@@ -1,3 +1,5 @@
+import { Button } from "@rateup/ui/components/button";
+import { TooltipProvider } from "@rateup/ui/components/tooltip";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
@@ -12,9 +14,7 @@ import {
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 
 import { THEME_INIT_SCRIPT, ThemeProvider } from "@/components/theme/theme-provider";
-import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { getApiErrorMessage } from "@/lib/apiError";
 
 import appCss from "../styles/app.css?url";

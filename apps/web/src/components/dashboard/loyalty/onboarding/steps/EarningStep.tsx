@@ -1,14 +1,14 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Badge } from "@rateup/ui/components/badge";
+import { Input } from "@rateup/ui/components/input";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
 import { IconCoins } from "@tabler/icons-react";
 import { useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
-import { Badge } from "@/components/ui/badge.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { numberInputValue } from "@/utils/form.ts";
 
 import { EarnRateField } from "../../earning-rules/parts/EarnRateField.tsx";

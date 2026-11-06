@@ -1,3 +1,6 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
 import { IconLoader2, IconSend } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -6,9 +9,6 @@ import { useWhatsappSendAddress } from "@/backend/channels/whatsappReach.query";
 import { useSendFlowToUser, useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { RadioGroup } from "@/components/ui/radio-group.tsx";
 import { WaFlowStatus } from "@/types/enums.ts";
 

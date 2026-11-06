@@ -1,3 +1,11 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
+import { Textarea } from "@rateup/ui/components/textarea";
 import { IconDots, IconLock, IconPencil, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import type { KeyboardEvent } from "react";
@@ -10,15 +18,7 @@ import {
   useEditPrivateNote,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { Bubble, BubbleContent } from "@/components/ui/bubble.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
 import { Message, MessageContent, MessageHeader } from "@/components/ui/message.tsx";
-import { Textarea } from "@/components/ui/textarea.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { useCan } from "@/hooks/usePermission.ts";

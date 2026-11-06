@@ -1,9 +1,9 @@
+import { Spinner } from "@rateup/ui/components/spinner";
+import { Tabs, TabsContent } from "@rateup/ui/components/tabs";
 import { lazy, Suspense } from "react";
 import type { Dispatch, SetStateAction } from "react";
 
 import { useSubscription } from "@/backend/subscription/subscription.query";
-import { Spinner } from "@/components/ui/spinner.tsx";
-import { Tabs, TabsContent } from "@/components/ui/tabs.tsx";
 import { SubscriptionFeaturePathName, SurveyType } from "@/types/enums.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
 

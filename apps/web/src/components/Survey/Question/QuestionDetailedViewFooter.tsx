@@ -1,3 +1,11 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import {
   IconAppWindow,
   IconAsterisk,
@@ -8,14 +16,6 @@ import {
 } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button.tsx";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { cn } from "@/lib/utils.ts";
 import { PageType, QuestionType } from "@/types/enums.ts";
 import { imagesPath, NPSQuestions } from "@/utils/constants.ts";

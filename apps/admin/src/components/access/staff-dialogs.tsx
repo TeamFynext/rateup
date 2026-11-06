@@ -1,3 +1,5 @@
+import { Input } from "@rateup/ui/components/input";
+import { Label } from "@rateup/ui/components/label";
 import { useId, useState } from "react";
 
 import {
@@ -10,8 +12,6 @@ import {
 import { useLogout } from "@/api/auth.query";
 import { ActionDialog, done, Notice } from "@/components/ds/action-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 export type StaffAction =
   | { kind: "add" }

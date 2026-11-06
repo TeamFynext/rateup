@@ -1,7 +1,4 @@
-import { IconPlus } from "@tabler/icons-react";
-import { useTranslation } from "react-i18next";
-
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   Empty,
   EmptyContent,
@@ -9,7 +6,9 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@/components/ui/empty.tsx";
+} from "@rateup/ui/components/empty";
+import { IconPlus } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
 
 import { SectionHeading } from "../../StepChrome.tsx";
 import type { StepTone } from "../../wizardSteps.ts";

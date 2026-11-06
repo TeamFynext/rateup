@@ -1,8 +1,8 @@
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { SurveyType } from "@/types/enums.ts";
 import { imagesPath } from "@/utils/constants.ts";
 

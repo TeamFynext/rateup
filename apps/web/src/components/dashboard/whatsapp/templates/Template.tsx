@@ -1,6 +1,14 @@
 // Extracted verbatim from the `/dashboard/whatsapp/templates/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import { Button } from "@rateup/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import { IconChartBar, IconDots, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
@@ -25,14 +33,6 @@ import {
 import { sortData } from "@/components/dashboard/SortDropDown.tsx";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import useDebounce from "@/components/menu/hook/useDebounce.ts";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import WaPageTourSteps from "@/components/WelcomeTour/components/WaPageTourSteps.ts";
 import WelcomeTour from "@/components/WelcomeTour/WelcomeTour.tsx";
 import { EnableTemplateAnalytics } from "@/components/whatsapp/templates/analytics/EnableTemplateAnalytics.tsx";

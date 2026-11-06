@@ -1,3 +1,4 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconExternalLink } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
@@ -11,7 +12,6 @@ import {
   StoreWidgetLoadError,
   StoreWidgetSkeleton,
 } from "@/components/integrations/storeWidget/StoreWidgetEditor.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import {
   Card,
   CardContent,

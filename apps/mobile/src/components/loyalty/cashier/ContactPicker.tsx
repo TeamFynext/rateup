@@ -6,7 +6,7 @@ import { useEnrolmentContacts } from "@/api/loyalty/loyalty.query";
 import type { EnrolmentContact } from "@/api/loyalty/loyalty.type";
 
 import { hapticSelect } from "./haptics";
-import { maskPhone } from "./logic/maskPhone";
+import { maskPhone } from "@rateup/utils/maskPhone";
 import {
   Badge,
   Card,

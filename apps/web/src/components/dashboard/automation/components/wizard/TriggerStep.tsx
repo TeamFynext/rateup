@@ -1,4 +1,11 @@
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import {
   IconAt,
   IconMessageReply,
   IconBolt,
@@ -29,13 +36,6 @@ import {
   FieldTitle,
 } from "@/components/ui/field.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 import { cn } from "@/lib/utils.ts";
 import { shopifyEventData, wooEventData } from "@/utils/constants.ts";
 

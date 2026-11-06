@@ -1,3 +1,4 @@
+import { Spinner } from "@rateup/ui/components/spinner";
 import { IconPlugOff } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
@@ -5,7 +6,6 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useFinishOAuthConnect } from "@/backend/appsIntegration/integration.query";
-import { Spinner } from "@/components/ui/spinner.tsx";
 
 import { IntegrationPlate } from "../IntegrationPlate.tsx";
 import { INTEGRATIONS_CONFIG } from "../integrations.config.ts";

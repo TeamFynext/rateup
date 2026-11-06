@@ -1,15 +1,15 @@
-import { IconAdjustments, IconChevronDown, IconRotate } from "@tabler/icons-react";
-import { useEffect, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
-
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible.tsx";
+} from "@rateup/ui/components/collapsible";
+import { IconAdjustments, IconChevronDown, IconRotate } from "@tabler/icons-react";
+import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { useOrgModules } from "@/hooks/useOrgModules.ts";
 import { cn } from "@/lib/utils.ts";
 import {

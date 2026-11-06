@@ -1,3 +1,9 @@
+import { Alert, AlertDescription } from "@rateup/ui/components/alert";
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import {
   IconGitMerge,
   IconPencil,
@@ -31,12 +37,6 @@ import {
   suggestionReasonText,
 } from "@/components/Contacts/merge/identity.tsx";
 import { MergeContactsDialog } from "@/components/Contacts/merge/MergeContactsDialog.tsx";
-import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
 import { cn } from "@/lib/utils.ts";

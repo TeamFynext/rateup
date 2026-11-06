@@ -1,19 +1,14 @@
-import { IconAlertTriangle, IconChartBar, IconRefresh } from "@tabler/icons-react";
-import { useState } from "react";
-
-import { useConnectorLogs } from "@/backend/metaAgent/metaAgent.query";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty";
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Empty, EmptyDescription, EmptyTitle } from "@rateup/ui/components/empty";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Switch } from "@/components/ui/switch";
+} from "@rateup/ui/components/select";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import {
   Table,
   TableBody,
@@ -21,7 +16,12 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@rateup/ui/components/table";
+import { IconAlertTriangle, IconChartBar, IconRefresh } from "@tabler/icons-react";
+import { useState } from "react";
+
+import { useConnectorLogs } from "@/backend/metaAgent/metaAgent.query";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 
 // Meta keeps 7 days and rejects anything wider, so those are the only windows

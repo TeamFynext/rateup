@@ -1,10 +1,10 @@
+import { Input } from "@rateup/ui/components/input";
 import { Link } from "@tanstack/react-router";
 import { useId } from "react";
 
 import { useWooStatus } from "@/backend/appsIntegration/woocommerce/woocommerce.query.ts";
 import { WooCommerceLogo } from "@/components/integrations/logos.tsx";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { numberInputValue } from "@/utils/form.ts";
 

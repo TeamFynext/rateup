@@ -1,3 +1,12 @@
+import { Button } from "@rateup/ui/components/button";
+import { Label } from "@rateup/ui/components/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
 import { IconLoader2 } from "@tabler/icons-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -15,16 +24,7 @@ import {
 import { usePipelineQuery, usePipelinesQuery } from "@/backend/pipeline/pipeline.query.tsx";
 import { StageMappingEditor } from "@/components/dashboard/settings/integrations/mapping/StageMappingEditor.tsx";
 import { findLeadsPipeline } from "@/components/pipeline/pipelineTypes.ts";
-import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 
 /** Sentinel for "do not sync a status for this column"; the Select has no empty value. */

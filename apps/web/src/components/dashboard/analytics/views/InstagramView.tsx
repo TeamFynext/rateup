@@ -1,3 +1,21 @@
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@rateup/ui/components/empty";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import {
   IconBrandInstagram,
   IconEye,
@@ -24,25 +42,7 @@ import {
 import { StatTile } from "@/components/common/StatTile.tsx";
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 
 import { AnalyticsCard } from "../kit/AnalyticsCard.tsx";
 import { TrendArea } from "../kit/charts.tsx";

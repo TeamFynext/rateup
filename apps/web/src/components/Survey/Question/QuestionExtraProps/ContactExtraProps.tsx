@@ -1,3 +1,11 @@
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
+import { Textarea } from "@rateup/ui/components/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@rateup/ui/components/tooltip";
 import { IconCircleCheckFilled } from "@tabler/icons-react";
 import { useId, useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -16,10 +24,7 @@ import {
   ComboboxValue,
 } from "@/components/ui/combobox";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { cn } from "@/lib/utils";
 import { QuestionType } from "@/types/enums.ts";

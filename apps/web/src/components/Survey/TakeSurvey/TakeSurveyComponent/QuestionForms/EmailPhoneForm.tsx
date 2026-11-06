@@ -1,8 +1,8 @@
+import { Input } from "@rateup/ui/components/input";
 import { IconMail } from "@tabler/icons-react";
 import { useContext, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Input } from "@/components/ui/input.tsx";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import { asAnswer } from "@/utils/response.ts";

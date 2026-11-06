@@ -1,3 +1,6 @@
+import { Button } from "@rateup/ui/components/button";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@rateup/ui/components/empty";
+import { Input } from "@rateup/ui/components/input";
 import { IconBrandInstagram, IconBrandWhatsapp, IconSearch } from "@tabler/icons-react";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -6,9 +9,6 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { formatMoney, startStorefrontCheckout, type Storefront } from "@/backend/commerce/shop.api";
-import { Button } from "@/components/ui/button.tsx";
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { cn } from "@/lib/utils.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 import { safeHref } from "@/utils/safeHref.ts";

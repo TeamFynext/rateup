@@ -1,8 +1,8 @@
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import { useId, useEffect, useState } from "react";
 
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
 interface RateupSwitchProps {
   offMessage?: string;

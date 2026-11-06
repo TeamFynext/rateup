@@ -1,10 +1,10 @@
+import { Spinner } from "@rateup/ui/components/spinner";
 import { IconBolt, IconPaperclip } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import type { QuickReply } from "@/backend/whatsapp/inbox/quickReply/quickreply.api";
 import { useGetWaQuickReplies } from "@/backend/whatsapp/inbox/quickReply/quickreply.query";
 import { pressable } from "@/components/common/pressable.ts";
-import { Spinner } from "@/components/ui/spinner.tsx";
 
 export function isJSONString(string: string) {
   return /^\s*\{.*\}\s*$/.test(string);

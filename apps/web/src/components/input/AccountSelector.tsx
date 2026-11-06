@@ -1,3 +1,12 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconX } from "@tabler/icons-react";
 import { useId, useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -5,11 +14,8 @@ import { useTranslation } from "react-i18next";
 import { useChannels } from "@/backend/channels/channels.query";
 import { MessagePlatform } from "@/types/enums.ts";
 
-import { Button } from "../ui/button.tsx";
 import { Field, FieldLabel, FieldTitle } from "../ui/field.tsx";
 import { MultiSelect } from "../ui/multi-select.tsx";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
-import { Skeleton } from "../ui/skeleton.tsx";
 import { getChannelOptions } from "./channelOptions.ts";
 
 interface AccountSelectorBaseProps {

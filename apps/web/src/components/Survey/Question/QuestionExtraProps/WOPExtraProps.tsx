@@ -1,3 +1,6 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
 import { IconX } from "@tabler/icons-react";
 import { useId, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -5,8 +8,6 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod/v4";
 
 import { pressable } from "@/components/common/pressable.ts";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import {
   Field,
   FieldDescription,
@@ -14,7 +15,6 @@ import {
   FieldLabel,
   FieldTitle,
 } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 
 import { DEFAULT_WOP } from "../../TakeSurvey/TakeSurveyComponent/util.tsx";
 import type { QuestionExtraPropsForm } from "./questionForm.ts";

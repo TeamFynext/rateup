@@ -1,12 +1,12 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconSearch, IconUserSearch, IconX } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useContacts } from "@/backend/campaign/contacts/contacts.query";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useDebounce } from "@/hooks/use-debounce";
 
 import { LeadAvatar } from "../shared/LeadAvatar.tsx";

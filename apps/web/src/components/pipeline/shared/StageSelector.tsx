@@ -1,10 +1,3 @@
-import { Fragment } from "react";
-import { useTranslation } from "react-i18next";
-
-import { usePipelineQuery, usePipelinesQuery } from "@/backend/pipeline/pipeline.query";
-import { useTeamFeatures } from "@/context/TeamFeaturesContext.tsx";
-import { TeamFeature } from "@/types/enums.ts";
-
 import {
   Select,
   SelectContent,
@@ -14,7 +7,14 @@ import {
   SelectSeparator,
   SelectTrigger,
   SelectValue,
-} from "../../ui/select.tsx";
+} from "@rateup/ui/components/select";
+import { Fragment } from "react";
+import { useTranslation } from "react-i18next";
+
+import { usePipelineQuery, usePipelinesQuery } from "@/backend/pipeline/pipeline.query";
+import { useTeamFeatures } from "@/context/TeamFeaturesContext.tsx";
+import { TeamFeature } from "@/types/enums.ts";
+
 import { stageStatusLabel } from "../pipeline.labels.ts";
 import { groupStagesIntoBands } from "../pipeline.utils.ts";
 import { findLeadsPipeline } from "../pipelineTypes.ts";

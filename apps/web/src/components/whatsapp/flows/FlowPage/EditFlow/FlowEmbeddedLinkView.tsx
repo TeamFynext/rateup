@@ -1,4 +1,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Separator } from "@rateup/ui/components/separator";
 import { IconDeviceSdCard } from "@tabler/icons-react";
 import { useId, useContext, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -7,18 +18,7 @@ import { toast } from "sonner";
 import z from "zod";
 
 import { TextareaWithLengthTracker } from "@/components/input/TextareaWithLengthTracker.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
 import { WaFlowFormElementType } from "@/types/enums.ts";
 import { SAVE_HOTKEY } from "@/utils/constants.ts";
 import { getWaFlowFormElementTypeLabel } from "@/utils/enums/index.ts";

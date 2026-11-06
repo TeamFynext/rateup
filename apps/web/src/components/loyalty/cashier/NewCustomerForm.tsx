@@ -1,4 +1,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
 import { IconArrowLeft } from "@tabler/icons-react";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -8,18 +17,9 @@ import { z } from "zod";
 
 import { LOYALTY_GENDERS, type LoyaltyGender } from "@/backend/loyalty/customer/customer.api";
 import { useContactLookupByPhone } from "@/backend/loyalty/customer/customer.query";
-import { Button } from "@/components/ui/button.tsx";
 import { DatePicker } from "@/components/ui/date-picker.tsx";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 import { useDebounce } from "@/hooks/use-debounce.ts";
 
 const schema = z.object({

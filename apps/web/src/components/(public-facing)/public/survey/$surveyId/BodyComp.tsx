@@ -1,8 +1,8 @@
+import { buttonVariants } from "@rateup/ui/components/button";
 import { IconHome } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import GoogleReview from "@/components/Survey/TakeSurvey/GoogleReview/index.tsx";
-import { buttonVariants } from "@/components/ui/button.tsx";
 import type { ReviewSuggestion } from "@/types/global";
 
 function BodyComp({

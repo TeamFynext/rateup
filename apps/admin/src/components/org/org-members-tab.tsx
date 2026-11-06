@@ -1,3 +1,9 @@
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
 import { IconDots, IconPlayerPause, IconPlayerPlay } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -12,12 +18,6 @@ import { Pill } from "@/components/ds/pill";
 import { EmptyState, ErrorState, PanelSkeleton } from "@/components/ds/query-states";
 import { MemberPauseDialog } from "@/components/org/member-pause-dialog";
 import { groupByRole, ROLE_SUMMARIES } from "@/components/org/roles";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { formatDate, formatRelative } from "@/lib/format";
 
 function MemberStatus({ member }: { member: OrgMember }) {

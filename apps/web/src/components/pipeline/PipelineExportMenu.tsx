@@ -1,10 +1,4 @@
-import { IconDownload } from "@tabler/icons-react";
-import { useTranslation } from "react-i18next";
-
-import type { PipelineExportFormat } from "@/backend/pipeline/pipeline.api.ts";
-import { useExportPipelineMutation } from "@/backend/pipeline/pipeline.query.tsx";
-import type { LeadListParams } from "@/backend/pipeline/pipeline.types.ts";
-import { Button } from "@/components/ui/button";
+import { Button } from "@rateup/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,7 +6,13 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@rateup/ui/components/dropdown-menu";
+import { IconDownload } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
+
+import type { PipelineExportFormat } from "@/backend/pipeline/pipeline.api.ts";
+import { useExportPipelineMutation } from "@/backend/pipeline/pipeline.query.tsx";
+import type { LeadListParams } from "@/backend/pipeline/pipeline.types.ts";
 
 /**
  * Downloads what the board is showing — the same filters and search — so the file

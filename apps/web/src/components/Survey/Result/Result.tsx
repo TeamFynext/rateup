@@ -1,3 +1,6 @@
+import { Button } from "@rateup/ui/components/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
 import { IconArrowLeft } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useId, useCallback, useContext, useMemo, useState } from "react";
@@ -7,10 +10,7 @@ import { toast } from "sonner";
 import { useQuestions } from "@/backend/surveys/questions/questions.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { useUser } from "@/context/UserContext.tsx";
 import { QuestionType2 } from "@/types/enums.ts";

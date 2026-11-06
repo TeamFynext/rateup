@@ -1,6 +1,10 @@
 // Extracted verbatim from the `/dashboard/contacts/lifecycle/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import { Alert, AlertDescription } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
+import { Spinner } from "@rateup/ui/components/spinner";
 import { IconActivity, IconAlertTriangle, IconPlus, IconSettings } from "@tabler/icons-react";
 import * as React from "react";
 import { useMemo, useState } from "react";
@@ -15,11 +19,7 @@ import {
   useUpdateLifeCycleMutation,
 } from "@/backend/lifecycle/lifecycle.query";
 import { useUserInfo } from "@/backend/user/user.query";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Spinner } from "@/components/ui/spinner";
 import { useConfirm } from "@/context/confirm-provider";
 
 import { FunnelVisualization } from "./parts/FunnelVisualization.tsx";

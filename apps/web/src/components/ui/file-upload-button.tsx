@@ -1,7 +1,7 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconRotate, IconTrash, IconUpload } from "@tabler/icons-react";
 import * as React from "react";
 
-import { Button } from "@/components/ui/button";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { cn } from "@/lib/utils";
 import { DEFAULT_IMAGE_BASE64_START } from "@/utils/constants.ts";

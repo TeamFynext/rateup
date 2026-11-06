@@ -1,3 +1,12 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
 import {
   IconAlignBoxLeftMiddleFilled,
   IconCalendarTime,
@@ -20,15 +29,6 @@ import {
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import {
   LDResponse2,
   QuestionType2,

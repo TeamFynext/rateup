@@ -1,6 +1,5 @@
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
 import { useTranslation } from "react-i18next";
-
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 
 import { elementsToBeTranslated } from "./constants.ts";
 import EditTranslations from "./EditTranslations/index.tsx";

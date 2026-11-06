@@ -1,3 +1,5 @@
+import { Button } from "@rateup/ui/components/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import { IconChartBar, IconCreditCard, IconReceipt, IconRefresh } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -6,8 +8,6 @@ import { useTranslation } from "react-i18next";
 import { BillingHistory } from "@/components/dashboard/settings/billing/BillingHistory.tsx";
 import { PlanFeatures } from "@/components/dashboard/settings/billing/PlanFeatures.tsx";
 import { useRouteAndCartStore } from "@/components/HomePage/pages/Pricing/store/RouteAndCartStore.ts";
-import { Button } from "@/components/ui/button.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { formatIsoDateString } from "@/utils/dateTime.ts";
 
 import { AddonPacks } from "./AddonPacks.tsx";

@@ -1,10 +1,10 @@
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
 import { IconAlertTriangle, IconBrandGoogle, IconEdit } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useTeamsByUser } from "@/backend/team/team.query";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { ReviewPagePlatform } from "@/types/enums.ts";
 
 import { GoogleLinkDialog } from "./GoogleLinkDialog.tsx";

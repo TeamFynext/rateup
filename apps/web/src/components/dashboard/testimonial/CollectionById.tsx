@@ -1,6 +1,8 @@
 // Extracted verbatim from the `/dashboard/surveys/testimonials/$collectionId/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import { Button } from "@rateup/ui/components/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import { IconDeviceFloppy, IconPencil, IconShare, IconTrash } from "@tabler/icons-react";
 import { useParams, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -19,10 +21,8 @@ import TestimonialSelect from "@/components/testimonial/TestimonialSelect.tsx";
 import TestimonialShare, {
   TestimonialShareModal,
 } from "@/components/testimonial/TestimonialShare.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
 import { getFilteredTestimonials } from "@/utils/testimonial.ts";

@@ -1,3 +1,11 @@
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
 import type { ColumnFiltersState } from "@tanstack/react-table";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -9,9 +17,7 @@ import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
 import { useDebouncedState } from "@/hooks/use-debounced-state.ts";
 import { cn } from "@/lib/utils";
 
-import { Input } from "../ui/input.tsx";
 import { MultiSelect } from "../ui/multi-select.tsx";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 import { LifecycleSelector } from "./LifecycleSelector.tsx";
 
 /**

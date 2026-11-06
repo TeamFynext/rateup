@@ -1,19 +1,19 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
+import { Textarea } from "@rateup/ui/components/textarea";
 import { IconCrown, IconPlus, IconTrash, IconUser } from "@tabler/icons-react";
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 import type { SavedOnboardingData } from "@/backend/loyalty/onboarding.api";
 import { ColorField } from "@/components/common/color-field.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { Slider } from "@/components/ui/slider.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
-import { Textarea } from "@/components/ui/textarea.tsx";
 import { numberInputValue } from "@/utils/form.ts";
 
 import { readableTextOn } from "../brand.ts";

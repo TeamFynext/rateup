@@ -1,9 +1,9 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconPalette } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import type { LoyaltyProgram } from "@/backend/loyalty/program.api";
-import { Button } from "@/components/ui/button.tsx";
 
 import { LOYALTY_PATHS } from "../paths.ts";
 

@@ -1,3 +1,4 @@
+import { Badge } from "@rateup/ui/components/badge";
 import {
   IconAddressBook,
   IconAdjustmentsQuestion,
@@ -32,7 +33,6 @@ import {
 import { type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { ElementType } from "@/types/enums.ts";
 import { PageType, QuestionType, WaFlowFormNonInputElementType } from "@/types/enums.ts";

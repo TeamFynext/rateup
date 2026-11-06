@@ -1,7 +1,7 @@
+import { Button, buttonVariants } from "@rateup/ui/components/button";
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 
-import { Button, buttonVariants } from "@/components/ui/button.tsx";
 import { rateupLogoWhite } from "@/utils/constants.ts";
 
 interface AuthHeaderProps {

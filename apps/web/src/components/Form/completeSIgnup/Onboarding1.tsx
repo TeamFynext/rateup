@@ -1,3 +1,4 @@
+import { Button } from "@rateup/ui/components/button";
 import {
   IconArrowLeft,
   IconArrowRight,
@@ -10,7 +11,6 @@ import {
 import { motion } from "motion/react";
 import type { Dispatch, SetStateAction } from "react";
 
-import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
 
 import type { OnboardingFormData } from "./onboarding-types.ts";

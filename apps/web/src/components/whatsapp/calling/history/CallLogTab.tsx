@@ -1,3 +1,9 @@
+import { Avatar, AvatarFallback } from "@rateup/ui/components/avatar";
+import { Button } from "@rateup/ui/components/button";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@rateup/ui/components/empty";
+import { Input } from "@rateup/ui/components/input";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import { getInitials } from "@rateup/ui/lib/initials";
 import {
   IconArrowDownLeft,
   IconArrowUpRight,
@@ -20,13 +26,7 @@ import type {
 import { useCallLog } from "@/backend/whatsapp/calling/calling.query";
 import { formatDuration } from "@/components/dashboard/analytics/kit/format.ts";
 import { DotBadge } from "@/components/dashboard/analytics/kit/StatusBadges.tsx";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { getInitials } from "@/components/ui/utils.ts";
 import { cn } from "@/lib/utils";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 import { formatCallDuration } from "@/utils/whatsapp/callFormat.ts";

@@ -1,9 +1,9 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Empty, EmptyDescription, EmptyHeader } from "@rateup/ui/components/empty";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { useTranslation } from "react-i18next";
 
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Empty, EmptyDescription, EmptyHeader } from "@/components/ui/empty.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { cn } from "@/lib/utils";
 import { WaFailureReasonGroup } from "@/types/enums.ts";
 import type { CampaignFailureReason } from "@/types/global";

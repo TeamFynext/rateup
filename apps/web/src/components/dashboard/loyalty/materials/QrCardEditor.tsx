@@ -1,4 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
 import { IconDeviceFloppy, IconDownload, IconPrinter } from "@tabler/icons-react";
 import { useRef } from "react";
 import { Controller, useForm, useWatch, type Control } from "react-hook-form";
@@ -8,10 +10,8 @@ import { z } from "zod";
 import type { LoyaltyProgram } from "@/backend/loyalty/program.api";
 import { useUpdateLoyaltyProgramMutation } from "@/backend/loyalty/program.query";
 import { CopyButton } from "@/components/common/copy-button.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 
 import { formatWhatsappNumber, whatsappJoinUrl } from "../joinLink.ts";

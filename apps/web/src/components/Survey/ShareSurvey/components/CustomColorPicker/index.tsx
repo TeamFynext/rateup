@@ -1,10 +1,10 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconColorPicker } from "@tabler/icons-react";
 import { useCallback, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import { useTranslation } from "react-i18next";
 
 import { pressable } from "@/components/common/pressable.ts";
-import { Button } from "@/components/ui/button.tsx";
 import { cn } from "@/lib/utils.ts";
 
 enum Size {

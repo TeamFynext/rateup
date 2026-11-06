@@ -1,3 +1,12 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
 import { useNavigate } from "@tanstack/react-router";
 import type { ColumnFiltersState, SortingState } from "@tanstack/react-table";
 import dayjs from "dayjs";
@@ -17,16 +26,7 @@ import {
 } from "@/backend/surveys/response/response.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import type { DataTableToolbarProps } from "@/components/Table/data-table.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { useUser } from "@/context/UserContext.tsx";

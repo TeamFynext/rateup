@@ -1,7 +1,4 @@
-import { IconSettings2 } from "@tabler/icons-react";
-import type { Column, ReactTable, RowData } from "@tanstack/react-table";
-
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -10,7 +7,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
+} from "@rateup/ui/components/dropdown-menu";
+import { IconSettings2 } from "@tabler/icons-react";
+import type { Column, ReactTable, RowData } from "@tanstack/react-table";
 
 import type { DataTableFeatures } from "./data-table-features.ts";
 

@@ -1,10 +1,10 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconArrowLeft, IconArrowRight, IconCloud, IconTrash } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { type ReactNode, createContext, use, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button.tsx";
 import type { StepperStep } from "@/components/ui/stepper.tsx";
 import { Stepper } from "@/components/ui/stepper.tsx";
 import { cn } from "@/lib/utils";

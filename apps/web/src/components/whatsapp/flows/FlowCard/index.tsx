@@ -1,3 +1,25 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import { IconCopy, IconDots, IconTrash, IconUsersGroup } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import type { SubmitEvent } from "react";
@@ -12,29 +34,7 @@ import {
   useDeprecateFlowMutation,
 } from "@/backend/whatsapp/flow/flow.query";
 import { ActionCard } from "@/components/common/action-card.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
 import { Field, FieldError } from "@/components/ui/field.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { LOYALTY_FEEDBACK_FLOW_CATEGORY, WaFlowStatus } from "@/types/enums.ts";
 import { SAVE_HOTKEY } from "@/utils/constants.ts";

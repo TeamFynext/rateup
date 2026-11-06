@@ -1,5 +1,9 @@
 // Extracted verbatim from `node-editor.tsx`. Behaviour is unchanged.
 
+import { Button } from "@rateup/ui/components/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
+import { Spinner } from "@rateup/ui/components/spinner";
+import { TooltipProvider } from "@rateup/ui/components/tooltip";
 import { IconRefresh, IconTypography, IconX } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 import { EditorContent } from "@tiptap/react";
@@ -25,10 +29,6 @@ import { RedoToolbar } from "@/components/tiptap/toolbars/redo.tsx";
 import { StrikeThroughToolbar } from "@/components/tiptap/toolbars/strikethrough.tsx";
 import { ToolbarProvider } from "@/components/tiptap/toolbars/toolbar-provider.tsx";
 import { UndoToolbar } from "@/components/tiptap/toolbars/undo.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
-import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 
 import { CatalogMessages } from "../../types/node-types.ts";
 import type { CatalogNodeData } from "../../types/node-types.ts";

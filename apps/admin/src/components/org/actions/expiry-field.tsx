@@ -1,8 +1,8 @@
+import { Input } from "@rateup/ui/components/input";
+import { Label } from "@rateup/ui/components/label";
 import dayjs from "dayjs";
 import { useId } from "react";
 
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 /** `YYYY-MM-DD` for a date input, in the viewer's own time zone. */

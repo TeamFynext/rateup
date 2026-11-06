@@ -1,3 +1,5 @@
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconUsersGroup } from "@tabler/icons-react";
 
 import {
@@ -12,8 +14,6 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "../ui/combobox.tsx";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog.tsx";
-import { Skeleton } from "../ui/skeleton.tsx";
 
 /**
  * Bulk "Add to group" from the contacts table: the same searchable list as the

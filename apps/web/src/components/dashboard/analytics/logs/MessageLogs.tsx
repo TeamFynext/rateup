@@ -1,3 +1,14 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconDownload, IconLoader2, IconSearch, IconX } from "@tabler/icons-react";
 import type { ColumnDef, PaginationState } from "@tanstack/react-table";
 import dayjs from "dayjs";
@@ -12,17 +23,6 @@ import {
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { DataTable } from "@/components/Table/data-table.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 
 import { AnalyticsCard, AnalyticsEmpty } from "../kit/AnalyticsCard.tsx";
 import type { AnalyticsFilters } from "../kit/filters.ts";

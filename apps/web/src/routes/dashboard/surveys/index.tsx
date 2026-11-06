@@ -1,3 +1,12 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
 import { IconPlus, IconUsers } from "@tabler/icons-react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
@@ -21,15 +30,6 @@ import { sortData } from "@/components/dashboard/SortDropDown.tsx";
 import useDebounce from "@/components/menu/hook/useDebounce.ts";
 import { CreateSurveyModal } from "@/components/Survey/CreateSurveyModal.tsx";
 import SurveySectionTabs from "@/components/Survey/SurveySectionTabs.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 import { docsPath } from "@/utils/constants.ts";
 
 export const Route = createFileRoute("/dashboard/surveys/")({

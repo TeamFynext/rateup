@@ -1,4 +1,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Spinner } from "@rateup/ui/components/spinner";
 import { IconPhoto } from "@tabler/icons-react";
 import type { Editor } from "@tiptap/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -6,18 +17,7 @@ import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import z from "zod";
 
-import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 import { uploadToCdn } from "@/utils/file-upload/upload.ts";
 
 const ENTER_URL = "Enter Image Url";

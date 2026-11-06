@@ -1,10 +1,10 @@
 // The strip of tool tiles under the channel header: one per tool, each saying where that tool
 // stands and opening it in the workspace below.
 
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import type { TablerIcon } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { cn } from "@/lib/utils";
 
 /** `live`: something is on. `idle`: nothing set up, or all of it off. `warning`: couldn't tell. */

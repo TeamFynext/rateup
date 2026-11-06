@@ -1,3 +1,5 @@
+import { Button } from "@rateup/ui/components/button";
+import { Separator } from "@rateup/ui/components/separator";
 import {
   IconArrowBackUp,
   IconArrowForwardUp,
@@ -21,9 +23,6 @@ import StarterKit from "@tiptap/starter-kit";
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import { Markdown } from "tiptap-markdown";
-
-import { Button } from "@/components/ui/button.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
 
 import styles from "./TiptapMarkdown.module.css";
 

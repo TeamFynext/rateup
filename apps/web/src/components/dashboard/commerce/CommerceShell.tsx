@@ -1,16 +1,16 @@
-import { IconBook, IconBuildingStore } from "@tabler/icons-react";
-import type { ReactNode } from "react";
-import { useTranslation } from "react-i18next";
-
-import { BackLink } from "@/components/common/back-link.tsx";
-import { PageHeading } from "@/components/common/page-heading.tsx";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@rateup/ui/components/select";
+import { IconBook, IconBuildingStore } from "@tabler/icons-react";
+import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
+
+import { BackLink } from "@/components/common/back-link.tsx";
+import { PageHeading } from "@/components/common/page-heading.tsx";
 import { cn } from "@/lib/utils";
 
 import { useCommerce } from "./CommerceContext";

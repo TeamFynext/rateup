@@ -1,4 +1,14 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
 import {
   IconAlertTriangle,
   IconBrandWhatsapp,
@@ -32,8 +42,6 @@ import {
   initialsOf,
   readableTextOn,
 } from "@/components/dashboard/loyalty/onboarding/brand.ts";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import {
   Card,
   CardContent,
@@ -43,15 +51,7 @@ import {
 } from "@/components/ui/card.tsx";
 import { DatePicker } from "@/components/ui/date-picker.tsx";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 
 const formSchema = z.object({

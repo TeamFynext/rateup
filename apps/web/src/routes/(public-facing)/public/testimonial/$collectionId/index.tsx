@@ -1,9 +1,9 @@
+import { Spinner } from "@rateup/ui/components/spinner";
 import { createFileRoute, useSearch } from "@tanstack/react-router";
 
 import type { CollectionTestimonial } from "@/backend/testimonials/testimonial.api";
 import TestimonialCard from "@/components/testimonial/TestimonialCard.tsx";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 import { rateupLogoOg } from "@/utils/constants.ts";
 
 export const Route = createFileRoute("/(public-facing)/public/testimonial/$collectionId/")({

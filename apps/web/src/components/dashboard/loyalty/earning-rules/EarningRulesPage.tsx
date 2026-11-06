@@ -2,6 +2,18 @@
 // carries routing config only. Behaviour is unchanged.
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Textarea } from "@rateup/ui/components/textarea";
 import { IconAlertTriangle, IconArrowLeft, IconLoader2, IconPlus } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useId, useMemo, useState } from "react";
@@ -31,9 +43,6 @@ import { PAGE_TITLE } from "@/components/common/page-heading.tsx";
 import { calculateGiveback } from "@/components/dashboard/loyalty/giveback/calculateGiveback.ts";
 import { GivebackPanel } from "@/components/dashboard/loyalty/giveback/GivebackPanel.tsx";
 import { useProgrammeGiveback } from "@/components/dashboard/loyalty/giveback/useProgrammeGiveback.ts";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import {
@@ -43,16 +52,7 @@ import {
   FieldLabel,
   FieldTitle,
 } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
-import { Textarea } from "@/components/ui/textarea.tsx";
 import { useConfirm } from "@/context/confirm-provider";
 import { cn } from "@/lib/utils.ts";
 import { docsPath } from "@/utils/constants.ts";

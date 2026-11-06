@@ -1,9 +1,9 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconArrowLeft, IconInfoCircle, IconMail } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "../ui/button.tsx";
 import { Card } from "../ui/card.tsx";
 import { AUTH_CTA, AuthTitle } from "./AuthShell.tsx";
 

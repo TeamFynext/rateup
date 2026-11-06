@@ -1,3 +1,28 @@
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@rateup/ui/components/empty";
+import { Input } from "@rateup/ui/components/input";
+import { Label } from "@rateup/ui/components/label";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
+import { Textarea } from "@rateup/ui/components/textarea";
 import {
   IconAlertTriangle,
   IconBrandWhatsapp,
@@ -49,35 +74,10 @@ import {
   useShopOrder,
   useShopShippingProviders,
 } from "@/backend/commerce/shop.query";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { ContactAvatar } from "@/components/ui/contact-avatar.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
-import { Textarea } from "@/components/ui/textarea.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
 import { getApiErrorData, getApiErrorMessage } from "@/utils/apiError.ts";
 import { copyToClipboard } from "@/utils/whatsappLink.ts";

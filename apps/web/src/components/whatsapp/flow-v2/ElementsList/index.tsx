@@ -1,5 +1,7 @@
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import type { DropResult } from "@hello-pangea/dnd";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
 import {
   IconChevronDown,
   IconChevronUp,
@@ -12,9 +14,7 @@ import { useTranslation } from "react-i18next";
 
 import { pressable } from "@/components/common/pressable.ts";
 import MarkdownToReact from "@/components/RichTextEditor/MarkdownToReact.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { cn } from "@/lib/utils.ts";
 import { QuestionType2 } from "@/types/enums.ts";

@@ -1,3 +1,13 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
 import {
   IconAdjustments,
   IconBuildingStore,
@@ -17,17 +27,7 @@ import {
 import { Fragment } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
 import { WHATSAPP_BUTTON_TYPE } from "@/utils/constants.ts";
 
 interface ButtonSelectionProps {

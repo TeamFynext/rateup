@@ -1,8 +1,7 @@
+import { Tabs, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import { IconCopy, IconGrid3x3, type TablerIcon } from "@tabler/icons-react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 
 type SurveySection = "surveys" | "templates" | "testimonial";
 

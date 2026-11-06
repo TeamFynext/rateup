@@ -1,16 +1,16 @@
-import { IconArrowDown, IconArrowUp, IconEyeOff, IconSelector } from "@tabler/icons-react";
-import type { Column, RowData } from "@tanstack/react-table";
-
-import { cn } from "@/lib/utils.ts";
-
-import { Button } from "../ui/button.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu.tsx";
+} from "@rateup/ui/components/dropdown-menu";
+import { IconArrowDown, IconArrowUp, IconEyeOff, IconSelector } from "@tabler/icons-react";
+import type { Column, RowData } from "@tanstack/react-table";
+
+import { cn } from "@/lib/utils.ts";
+
 import type { DataTableFeatures } from "./data-table-features.ts";
 
 interface DataTableColumnHeaderProps<TData extends RowData, TValue> {

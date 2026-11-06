@@ -1,3 +1,17 @@
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import { Label } from "@rateup/ui/components/label";
+import { Progress } from "@rateup/ui/components/progress";
 import {
   IconAlertTriangle,
   IconDownload,
@@ -16,22 +30,8 @@ import {
   useContactImportStatus,
   useImportCSVContactMutation,
 } from "@/backend/campaign/contacts/contacts.query";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
-import { Progress } from "@/components/ui/progress.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import type { CustomField } from "@/context/CustomFieldsContext.tsx";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";

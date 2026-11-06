@@ -1,4 +1,22 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Textarea } from "@rateup/ui/components/textarea";
 import { useForm } from "react-hook-form";
 
 import type {
@@ -8,26 +26,8 @@ import type {
 } from "@/backend/metaAgent/metaAgent.api";
 import { CONNECTOR_AUTH_TYPES } from "@/backend/metaAgent/metaAgent.api";
 import { useCreateConnector, useUpdateConnector } from "@/backend/metaAgent/metaAgent.query";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { FieldGroup, FieldSeparator } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 
 import { connectorFormSchema, type ConnectorFormValues } from "../../metaAgent.schemas";
 import { FormField } from "../shared/FormField";

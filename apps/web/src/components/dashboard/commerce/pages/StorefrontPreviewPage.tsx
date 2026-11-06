@@ -1,3 +1,5 @@
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@rateup/ui/components/empty";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -5,8 +7,6 @@ import { useShopStorefrontPreview } from "@/backend/commerce/shop.query";
 import { BackLink } from "@/components/common/back-link.tsx";
 import { PageHeading } from "@/components/common/page-heading.tsx";
 import { StorefrontPage } from "@/components/shop-public/storefront/StorefrontPage.tsx";
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 
 import { settingsTab } from "../shop/shopMeta.ts";

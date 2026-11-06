@@ -1,11 +1,4 @@
-import { IconLayoutList, IconPlus } from "@tabler/icons-react";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-
-import type { LinktreeData } from "@/backend/linktree/linktree.api.ts";
-import { useDeleteLinktreeMutation, useLinktrees } from "@/backend/linktree/linktree.query";
-import { PageHeading } from "@/components/common/page-heading.tsx";
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   Empty,
   EmptyContent,
@@ -13,7 +6,14 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@/components/ui/empty.tsx";
+} from "@rateup/ui/components/empty";
+import { IconLayoutList, IconPlus } from "@tabler/icons-react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import type { LinktreeData } from "@/backend/linktree/linktree.api.ts";
+import { useDeleteLinktreeMutation, useLinktrees } from "@/backend/linktree/linktree.query";
+import { PageHeading } from "@/components/common/page-heading.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 
 import {

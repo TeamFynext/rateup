@@ -1,9 +1,9 @@
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
 
 import { usePipelineForecastQuery } from "@/backend/pipeline/pipeline.query.tsx";
 import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 
 import { StageFill } from "../shared/atoms.tsx";
 import { LeadAvatar } from "../shared/LeadAvatar.tsx";

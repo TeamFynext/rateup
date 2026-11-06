@@ -1,8 +1,8 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconArrowLeft, IconArrowRight, IconBolt } from "@tabler/icons-react";
 import { motion } from "motion/react";
 import type { ComponentType } from "react";
 
-import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Loader } from "@/components/ui/loader.tsx";

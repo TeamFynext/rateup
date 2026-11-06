@@ -1,3 +1,13 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import { IconCopy } from "@tabler/icons-react";
 import React, { useState } from "react";
 import { toast } from "sonner";
@@ -5,18 +15,8 @@ import { toast } from "sonner";
 import { useChannels } from "@/backend/channels/channels.query";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import ShareQR from "@/components/Survey/ShareSurvey/ShareQR/index.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { FieldTitle } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import type { RuleGroup } from "@/types/rule.ts";
 
 import { PLATFORMS, toMessagePlatform } from "./schema.ts";

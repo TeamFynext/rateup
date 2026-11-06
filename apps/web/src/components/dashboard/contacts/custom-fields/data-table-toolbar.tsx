@@ -1,3 +1,12 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
 import { IconPlus, IconSearch } from "@tabler/icons-react";
 import type { ReactTable, RowData } from "@tanstack/react-table";
 import { useState } from "react";
@@ -6,16 +15,7 @@ import { useTranslation } from "react-i18next";
 import { CustomFieldForm } from "@/components/Contacts/label-form.tsx";
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { DataTableViewOptions } from "@/components/Table/data-table-view-option.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
-import { Input } from "@/components/ui/input.tsx";
 
 interface DataTableToolbarProps<TData extends RowData> {
   table: ReactTable<DataTableFeatures, TData>;

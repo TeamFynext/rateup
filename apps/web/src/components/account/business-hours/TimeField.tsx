@@ -1,6 +1,6 @@
+import { Input } from "@rateup/ui/components/input";
 import { useEffect, useState } from "react";
 
-import { Input } from "@/components/ui/input.tsx";
 import { cn } from "@/lib/utils.ts";
 
 import { parseTimeInput } from "./schema.ts";

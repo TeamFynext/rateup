@@ -1,3 +1,6 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import { IconExternalLink } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -16,9 +19,6 @@ import ShopifyResults from "@/components/shopify/ShopifyResults.tsx";
 import ShopifySchedules from "@/components/shopify/ShopifySchedules.tsx";
 import ShopifySettings from "@/components/shopify/ShopifySettings.tsx";
 import ShopifyWidget from "@/components/shopify/ShopifyWidget.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { cn } from "@/lib/utils.ts";
 import { IntegratedApps } from "@/types/enums.ts";
 import type { ShopifyIntegration } from "@/types/global";

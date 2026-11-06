@@ -1,7 +1,7 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconChevronDown } from "@tabler/icons-react";
 import React, { useState } from "react";
 
-import { Button } from "@/components/ui/button";
 import {
   Drawer,
   DrawerContent,

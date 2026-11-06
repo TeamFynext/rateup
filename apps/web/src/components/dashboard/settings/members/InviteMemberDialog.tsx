@@ -1,4 +1,14 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
 import { IconCheck, IconMail } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
@@ -9,17 +19,7 @@ import z from "zod";
 
 import { orgKeys, teamKeys } from "@/backend/org/org.keys";
 import { inviteTeamMember } from "@/backend/team/team.api";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { cn } from "@/lib/utils.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";

@@ -1,6 +1,16 @@
 // The channel's journeys at a glance: up to three, live ones first, with the way to the full
 // list and to a new one on this channel.
 
+import { Button } from "@rateup/ui/components/button";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@rateup/ui/components/empty";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconArrowRight, IconPlus, IconSitemap } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
@@ -14,16 +24,6 @@ import {
   useStepLabel,
 } from "@/components/dashboard/chatbots/ChatbotCards.tsx";
 import { CreateChatbotWizard } from "@/components/dashboard/chatbots/CreateChatbotWizard/CreateChatbotWizard.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 
 import { ToolStatusDot } from "./ChannelOverview.tsx";
 import { CHANNELS, type MetaChannel } from "./channels.ts";

@@ -1,3 +1,25 @@
+import { Avatar, AvatarFallback, AvatarImage } from "@rateup/ui/components/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuPortal,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
+import {
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from "@rateup/ui/components/sidebar";
 import {
   IconActivity,
   IconBook,
@@ -20,28 +42,6 @@ import { UserAvailabilityStatus, UserPresenceMode } from "@/backend/user/user.ap
 import { userKeys } from "@/backend/user/user.keys";
 import { useUpdateUserAvailabilityStatus } from "@/backend/user/user.query";
 import { useTheme } from "@/components/theme/theme-provider";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuPortal,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from "@/components/ui/sidebar.tsx";
 import { docsPath } from "@/utils/constants.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 

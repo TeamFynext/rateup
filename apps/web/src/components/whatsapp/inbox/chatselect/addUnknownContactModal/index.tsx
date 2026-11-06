@@ -1,4 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@rateup/ui/components/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
 import { IconBrandWhatsapp, IconUserPlus } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -11,10 +14,7 @@ import type { ICreateContact } from "@/backend/campaign/contacts/contacts.api";
 import { useCreateContactMutation } from "@/backend/campaign/contacts/contacts.query";
 import { useAssignContactStageMutation } from "@/backend/pipeline/pipeline.query";
 import { StageSelector, usePipelineStages } from "@/components/pipeline/shared/StageSelector.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Field, FieldError, FieldGroup, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import { importMethod } from "@/utils/enums/index.ts";
 

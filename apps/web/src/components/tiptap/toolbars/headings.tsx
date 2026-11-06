@@ -1,14 +1,14 @@
-import { IconChevronDown } from "@tabler/icons-react";
-import React from "react";
-
-import { Button } from "@/components/ui/button";
+import { Button } from "@rateup/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+} from "@rateup/ui/components/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
+import { IconChevronDown } from "@tabler/icons-react";
+import React from "react";
+
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 

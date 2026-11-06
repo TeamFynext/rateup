@@ -1,10 +1,10 @@
+import { Input } from "@rateup/ui/components/input";
+import { Textarea } from "@rateup/ui/components/textarea";
 import { IconLoader2, IconPencil } from "@tabler/icons-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { Input } from "@/components/ui/input.tsx";
-import { Textarea } from "@/components/ui/textarea.tsx";
 import { cn } from "@/lib/utils.ts";
 
 interface AutosaveInputProps {

@@ -1,3 +1,14 @@
+import { Badge as UiBadge } from "@rateup/ui/components/badge";
+import { Button as UiButton } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select as UiSelect,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 /*
  * shadcn-based drop-in replacements for the Mantine + Contained* inputs that the
  * node editor used to rely on. These keep the old prop names/shapes so the large
@@ -6,8 +17,6 @@
 import { IconLoader2 } from "@tabler/icons-react";
 import * as React from "react";
 
-import { Badge as UiBadge } from "@/components/ui/badge.tsx";
-import { Button as UiButton } from "@/components/ui/button.tsx";
 import { DatePicker } from "@/components/ui/date-picker.tsx";
 import {
   Field as UiField,
@@ -17,18 +26,9 @@ import {
   FieldLabel,
   FieldTitle,
 } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { RadioGroup as UiRadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
-import {
-  Select as UiSelect,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 import { Switch as UiSwitch } from "@/components/ui/switch.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { cn } from "@/lib/utils.ts";
 
 type Option = { value: string; label: React.ReactNode };

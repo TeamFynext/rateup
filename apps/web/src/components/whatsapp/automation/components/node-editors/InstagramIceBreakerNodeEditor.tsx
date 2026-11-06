@@ -1,8 +1,7 @@
 // Extracted verbatim from `node-editor.tsx`. Behaviour is unchanged.
 
+import { Button } from "@rateup/ui/components/button";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
-
-import { Button } from "@/components/ui/button.tsx";
 
 import { ContainedTextField } from "../editor-ui.tsx";
 import type { NodeComponentProps } from "./shared.tsx";

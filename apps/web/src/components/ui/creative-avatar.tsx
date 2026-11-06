@@ -1,7 +1,7 @@
-import { MessagePlatform } from "@/types/enums.ts";
+import { Avatar, AvatarFallback, AvatarImage } from "@rateup/ui/components/avatar";
+import { getAvatarInitials, isEmojiName } from "@rateup/ui/lib/initials";
 
-import { Avatar, AvatarFallback, AvatarImage } from "./avatar.tsx";
-import { getAvatarInitials, isEmojiName } from "./utils.ts";
+import { MessagePlatform } from "@/types/enums.ts";
 
 interface CreativeAvatarProps {
   name: string | undefined;

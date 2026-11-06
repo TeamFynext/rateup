@@ -1,7 +1,7 @@
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import QRCode from "qrcode";
 import { type Ref, useMemo } from "react";
 
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { cn } from "@/lib/utils.ts";
 
 import { LOGO_SIZE_BASE, TRANSPARENT } from "./qrDesign.ts";

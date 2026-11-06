@@ -1,3 +1,11 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
 import {
   IconChevronLeft,
   IconChevronRight,
@@ -8,9 +16,6 @@ import type { Dispatch, SetStateAction } from "react";
 
 import type { PaginationState } from "@/types/api.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
-
-import { Button } from "../ui/button.tsx";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 
 const pageSizeOptions = PAGE_SIZE.map((size) => ({ value: size, label: size }));
 

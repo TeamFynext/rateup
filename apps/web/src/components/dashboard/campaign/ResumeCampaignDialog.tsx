@@ -1,8 +1,4 @@
-import { IconClock } from "@tabler/icons-react";
-import { useEffect, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
-
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -10,10 +6,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog.tsx";
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import { Label } from "@rateup/ui/components/label";
+import { IconClock } from "@tabler/icons-react";
+import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { cn } from "@/lib/utils";
 

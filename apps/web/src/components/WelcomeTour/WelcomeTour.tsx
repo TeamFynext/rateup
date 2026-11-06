@@ -1,14 +1,13 @@
+import { Button } from "@rateup/ui/components/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import { IconInfoCircle } from "@tabler/icons-react";
 import type { Driver } from "driver.js";
-import { driver } from "driver.js";
-import type { DriveStep } from "driver.js";
 
 import "driver.js/dist/driver.css";
 
+import { driver } from "driver.js";
+import type { DriveStep } from "driver.js";
 import { useRef } from "react";
-
-import { Button } from "@/components/ui/button.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
 import styles from "./Welcome.module.css";
 

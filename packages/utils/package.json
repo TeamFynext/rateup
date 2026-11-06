@@ -1,0 +1,20 @@
+{
+  "name": "@rateup/utils",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Pure TypeScript helpers shared by the apps (web, mobile, admin, server). No DOM, React Native or Node APIs.",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vp test run"
+  },
+  "devDependencies": {
+    "@rateup/tsconfig": "workspace:*",
+    "typescript": "^7.0.2",
+    "vite-plus": "catalog:"
+  }
+}

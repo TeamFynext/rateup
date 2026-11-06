@@ -1,10 +1,10 @@
+import { Tabs, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import { type TablerIcon } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import InfoButton from "@/components/Button/InfoButton.tsx";
 import { BackLink } from "@/components/common/back-link.tsx";
 import { SECTION_TITLE } from "@/components/common/page-heading.tsx";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { cn } from "@/lib/utils.ts";
 import { docsPath } from "@/utils/constants.ts";
 

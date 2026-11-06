@@ -1,3 +1,4 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconMenu, IconX } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
@@ -5,7 +6,6 @@ import { useState } from "react";
 
 import DropDownMobileNavItems from "@/components/RateupHomePage/helpers/DropDownMobileNavItems.tsx";
 import DropDownNavItems from "@/components/RateupHomePage/helpers/DropDownNavItems.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { rateupLogo } from "@/utils/constants.ts";
 
 const InboxHeader = () => {

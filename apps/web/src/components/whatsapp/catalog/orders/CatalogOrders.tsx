@@ -1,3 +1,6 @@
+import { Button } from "@rateup/ui/components/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
+import { Separator } from "@rateup/ui/components/separator";
 import { IconExternalLink, IconShoppingBag } from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
@@ -11,9 +14,6 @@ import { useWaCatalogOrders } from "@/backend/whatsapp/catalog/orders/catalogOrd
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 
 /** An order row, with the contact's phone and name flattened for sorting and filtering. */

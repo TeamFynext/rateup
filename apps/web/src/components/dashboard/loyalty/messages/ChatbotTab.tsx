@@ -1,3 +1,8 @@
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import {
   IconAlertTriangle,
   IconCheck,
@@ -19,13 +24,8 @@ import { useLoyaltyProgram } from "@/backend/loyalty/program.query";
 import { useLoyaltyCommands } from "@/backend/loyalty/settings/settings.query";
 import { useCreateRuleMutation, useRules } from "@/backend/whatsapp/rule/rule.query";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { AutomationPlatform } from "@/types/platform.ts";
 
 import { LOYALTY_PATHS } from "../paths.ts";

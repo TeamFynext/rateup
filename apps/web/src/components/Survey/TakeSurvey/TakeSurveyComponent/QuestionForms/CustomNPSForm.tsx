@@ -1,7 +1,7 @@
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
 import { useAnimate } from "motion/react";
 import { useContext, useEffect, useState } from "react";
 
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";

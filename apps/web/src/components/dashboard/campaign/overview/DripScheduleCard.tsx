@@ -1,9 +1,9 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconCheck, IconClock, IconPlayerPause } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import type { DripSchedule, DripStageSchedule } from "@/backend/campaign/campaign.api.ts";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { cn } from "@/lib/utils";
 
 import { Detail, untilLabel } from "./NextBatchCard.tsx";

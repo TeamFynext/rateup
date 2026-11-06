@@ -1,3 +1,4 @@
+import { Badge } from "@rateup/ui/components/badge";
 import {
   IconAt,
   IconHash,
@@ -21,7 +22,6 @@ import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
 import { pressable } from "@/components/common/pressable.ts";
 import { resolveChannel } from "@/components/input/channelOptions.ts";
 import { StageDot } from "@/components/pipeline/shared/atoms.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";

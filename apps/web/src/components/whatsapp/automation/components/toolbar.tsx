@@ -1,3 +1,12 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
+import { Separator } from "@rateup/ui/components/separator";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import {
   IconArrowBackUp,
   IconArrowDown,
@@ -10,16 +19,6 @@ import {
   IconSparkles,
 } from "@tabler/icons-react";
 import type { ComponentType } from "react";
-
-import { Button } from "@/components/ui/button.tsx";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
 interface ToolbarProps {
   onSave: () => void;

@@ -1,3 +1,12 @@
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
 import { IconArrowRight, IconRocket } from "@tabler/icons-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
@@ -11,16 +20,7 @@ import {
 import { useLoyaltyOnboardingState } from "@/backend/loyalty/onboarding.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { PageHeading } from "@/components/common/page-heading.tsx";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Loader } from "@/components/ui/loader.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 
 import { GivebackPanel } from "../giveback/GivebackPanel.tsx";
 import { useGivebackResult } from "../giveback/useGivebackResult.ts";

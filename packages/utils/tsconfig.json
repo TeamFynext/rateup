@@ -1,0 +1,9 @@
+{
+  "extends": "@rateup/tsconfig/vite-react.json",
+  "compilerOptions": {
+    // Runs on the web, in React Native and on the server: no DOM or Vite types.
+    "lib": ["ES2024"],
+    "types": []
+  },
+  "include": ["src/**/*.ts"]
+}

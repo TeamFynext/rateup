@@ -1,7 +1,7 @@
+import { Button } from "@rateup/ui/components/button";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 
-import { Button } from "@/components/ui/button.tsx";
 import { useMediaQuery } from "@/hooks/use-media-query.ts";
 
 export const Route = createFileRoute("/(public-facing)/public/survey/cs/")({

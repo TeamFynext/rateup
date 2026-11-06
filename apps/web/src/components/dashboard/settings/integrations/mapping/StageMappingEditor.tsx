@@ -1,14 +1,13 @@
-import { IconAlertTriangle } from "@tabler/icons-react";
-import { useMemo, type ReactNode } from "react";
-import { useTranslation } from "react-i18next";
-
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select.tsx";
+} from "@rateup/ui/components/select";
+import { IconAlertTriangle } from "@tabler/icons-react";
+import { useMemo, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 /** Sentinel for "leave this row out of the sync"; the Select has no empty value. */
 const UNMAPPED = "__unmapped__";

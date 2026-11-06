@@ -1,3 +1,13 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Textarea } from "@rateup/ui/components/textarea";
 import { IconPhone } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -11,17 +21,7 @@ import {
   getCallPermission,
   requestCallPermission,
 } from "@/backend/whatsapp/calling/calling.api";
-import { Button } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
-import { Textarea } from "@/components/ui/textarea.tsx";
 import { usePhoneIdStore } from "@/components/whatsapp/inbox/chatselect/accountSelectorStore.ts";
 import { useUser } from "@/context/UserContext.tsx";
 import { useCan } from "@/hooks/usePermission.ts";

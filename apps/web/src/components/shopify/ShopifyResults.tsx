@@ -1,3 +1,10 @@
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
 import { IconClick, IconCoin, IconReceipt, IconSend } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useState } from "react";
@@ -13,13 +20,6 @@ import { AnalyticsCard } from "@/components/dashboard/analytics/kit/AnalyticsCar
 import { BarList } from "@/components/dashboard/analytics/kit/BarList.tsx";
 import { TrendBars } from "@/components/dashboard/analytics/kit/charts.tsx";
 import { TileGroup } from "@/components/dashboard/analytics/kit/TileGroup.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 
 const PERIODS = [
   { value: "7", label: "Last 7 days" },

@@ -1,4 +1,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
 import { IconDeviceFloppy, IconPlus } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -9,7 +18,6 @@ import { useUpdateFeedbackSettingsMutation } from "@/backend/loyalty/feedback.qu
 import type { LoyaltyReward } from "@/backend/loyalty/reward.api.ts";
 import { useLoyaltyRewards } from "@/backend/loyalty/reward.query.ts";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import {
   Card,
   CardContent,
@@ -18,14 +26,6 @@ import {
   CardTitle,
 } from "@/components/ui/card.tsx";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 
 import { CreateReviewRewardDialog } from "./CreateReviewRewardDialog.tsx";
 import {

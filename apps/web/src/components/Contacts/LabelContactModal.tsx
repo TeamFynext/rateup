@@ -1,11 +1,4 @@
-import { IconCircleCheck, IconUsers } from "@tabler/icons-react";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
-
-import { useAssignContactLabelsToMultipleContacts } from "@/backend/campaign/contacts/contacts.query";
-
-import { Button } from "../ui/button.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -13,9 +6,16 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../ui/dialog.tsx";
-import { Label } from "../ui/label.tsx";
-import { Spinner } from "../ui/spinner.tsx";
+} from "@rateup/ui/components/dialog";
+import { Label } from "@rateup/ui/components/label";
+import { Spinner } from "@rateup/ui/components/spinner";
+import { IconCircleCheck, IconUsers } from "@tabler/icons-react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+
+import { useAssignContactLabelsToMultipleContacts } from "@/backend/campaign/contacts/contacts.query";
+
 import LabelSelector from "./LabelSelector.tsx";
 
 const LabelContactModal = ({

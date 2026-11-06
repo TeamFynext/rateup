@@ -1,10 +1,10 @@
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import { IconClipboardList, IconMapPin, IconTruck } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import CollectionOptionsTab from "@/components/dashboard/commerce/CollectionOptionsTab";
 import AddressFieldsTab from "@/components/dashboard/whatsapp/orders-and-payments/components/AddressFieldsTab";
 import DeliveryOptionsTab from "@/components/dashboard/whatsapp/orders-and-payments/components/DeliveryOptionsTab";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 /** The WhatsApp catalog cart's own checkout options: what it collects and how it delivers. */
 export function CatalogCheckoutTabs({ catalogId }: Readonly<{ catalogId: string }>) {

@@ -1,8 +1,3 @@
-import { IconBuilding, IconPhone, IconSearch, IconUser } from "@tabler/icons-react";
-import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-
-import { MIN_SEARCH_LENGTH, useGlobalSearch } from "@/api/search.query";
 import {
   Command,
   CommandDialog,
@@ -12,7 +7,12 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-} from "@/components/ui/command";
+} from "@rateup/ui/components/command";
+import { IconBuilding, IconPhone, IconSearch, IconUser } from "@tabler/icons-react";
+import { useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+
+import { MIN_SEARCH_LENGTH, useGlobalSearch } from "@/api/search.query";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 import { NAV_ITEMS } from "./nav";

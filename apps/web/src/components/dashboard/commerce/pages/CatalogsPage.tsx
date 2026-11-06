@@ -1,3 +1,22 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@rateup/ui/components/empty";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Spinner } from "@rateup/ui/components/spinner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import {
   IconChevronRight,
   IconDots,
@@ -23,26 +42,7 @@ import {
   useProductSetsByCatalog,
   useSyncProductSets,
 } from "@/backend/whatsapp/catalog/productSet.query";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Spinner } from "@/components/ui/spinner";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AddCatalogProductModal } from "@/components/whatsapp/catalog/products/AddCatalogProduct";
 import { useConfirm } from "@/context/confirm-provider";
 import { cn } from "@/lib/utils";

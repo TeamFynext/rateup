@@ -1,3 +1,6 @@
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import {
   IconBell,
   IconCreditCard,
@@ -26,10 +29,7 @@ import {
   useUpdateNotificationSettings,
 } from "@/backend/notification/notification.query";
 import { PageHeading } from "@/components/common/page-heading.tsx";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { getApiErrorMessage } from "@/utils/apiError";
 import { useDesktopPermission } from "@/utils/desktopNotifications";

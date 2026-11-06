@@ -1,9 +1,9 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconCircleCheckFilled, IconCircle, IconRocket } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import type { OnboardingState } from "@/backend/loyalty/onboarding.api";
-import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 
 import { LOYALTY_PATHS } from "../paths.ts";

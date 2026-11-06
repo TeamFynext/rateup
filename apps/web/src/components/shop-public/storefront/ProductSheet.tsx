@@ -1,19 +1,19 @@
-import { IconBell, IconBrandWhatsapp, IconShoppingBagPlus } from "@tabler/icons-react";
-import { useMutation } from "@tanstack/react-query";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-
-import { type StorefrontProduct, subscribeBackInStock } from "@/backend/commerce/shop.api";
-import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
+import { Alert, AlertDescription } from "@rateup/ui/components/alert";
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog.tsx";
+} from "@rateup/ui/components/dialog";
+import { IconBell, IconBrandWhatsapp, IconShoppingBagPlus } from "@tabler/icons-react";
+import { useMutation } from "@tanstack/react-query";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import { type StorefrontProduct, subscribeBackInStock } from "@/backend/commerce/shop.api";
 import { cn } from "@/lib/utils.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 

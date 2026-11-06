@@ -1,7 +1,3 @@
-import { IconCheck, IconPencil, IconPlus, IconTrash, IconX } from "@tabler/icons-react";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,10 +7,14 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
+} from "@rateup/ui/components/alert-dialog";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { Spinner } from "@rateup/ui/components/spinner";
+import { IconCheck, IconPencil, IconPlus, IconTrash, IconX } from "@tabler/icons-react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+
 import { cn } from "@/lib/utils.ts";
 
 import { SettingsPanel } from "./SettingsPanel.tsx";

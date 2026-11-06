@@ -1,5 +1,21 @@
 // Extracted verbatim from `Zoho.tsx`. Behaviour is unchanged.
 
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
 import { IconDeviceFloppy, IconSettings } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -16,22 +32,12 @@ import {
 import { StageMappingEditor } from "@/components/dashboard/settings/integrations/mapping/StageMappingEditor.tsx";
 import { BiginLogo, ZohoLogo } from "@/components/integrations/logos";
 import { usePipelineStages } from "@/components/pipeline/shared/StageSelector.tsx";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { useUser } from "@/context/UserContext";
 import { IntegratedApps } from "@/types/enums";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../../ui/dialog";
 import { Field, FieldDescription, FieldLabel } from "../../ui/field";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
 import { ZohoTriggers, getTriggerLabel, getTriggerDescription } from "./shared.tsx";
 
 /**

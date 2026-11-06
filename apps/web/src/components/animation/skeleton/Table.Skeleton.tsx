@@ -1,5 +1,6 @@
-import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { TableCell, TableHead, TableRow } from "@/components/ui/table.tsx";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import { TableCell, TableHead, TableRow } from "@rateup/ui/components/table";
+
 import useTableLoadingDataCount from "@/hooks/useTableLoadingDataCount.tsx";
 
 const columns = [

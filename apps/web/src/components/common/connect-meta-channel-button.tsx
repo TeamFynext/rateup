@@ -3,6 +3,17 @@
 // platform's permissions, and neither needs a WhatsApp number. Every picked Page or
 // account becomes its own channel; an org can connect as many as it likes.
 
+import { Avatar, AvatarFallback, AvatarImage } from "@rateup/ui/components/avatar";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Spinner } from "@rateup/ui/components/spinner";
 import { IconBrandFacebook, IconBrandInstagram } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -19,18 +30,7 @@ import {
 } from "@/backend/meta/metaChannels.query";
 import type { FacebookBrandButtonProps } from "@/components/common/facebook-brand-button.tsx";
 import { FacebookBrandButton } from "@/components/common/facebook-brand-button.tsx";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 import { loadFacebookSdk } from "@/lib/facebook-sdk";
 import { cn } from "@/lib/utils";
 

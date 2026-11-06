@@ -1,8 +1,8 @@
+import { Badge } from "@rateup/ui/components/badge";
 import { IconStar, IconThumbDownFilled, IconThumbUpFilled } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Badge } from "@/components/ui/badge.tsx";
 import { QuestionType, WaQuestions } from "@/types/enums.ts";
 import type { AnyQuestionType } from "@/utils/response.ts";
 import {

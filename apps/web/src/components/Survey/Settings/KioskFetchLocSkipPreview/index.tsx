@@ -1,3 +1,9 @@
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@rateup/ui/components/tooltip";
 import { IconSettings2 } from "@tabler/icons-react";
 import { useEffect } from "react";
 import type { Dispatch, SetStateAction } from "react";
@@ -7,12 +13,6 @@ import type { SurveyUpdateMutation } from "@/components/Survey/Settings/updateSe
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { FieldLabel } from "@/components/ui/field.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
 
 import UniqueDeviceSettings from "../UniqueDeviceSettings.tsx";
 import {

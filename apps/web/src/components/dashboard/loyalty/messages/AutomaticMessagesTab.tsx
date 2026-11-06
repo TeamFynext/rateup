@@ -1,3 +1,6 @@
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconClock, IconMessageCircle, IconSparkles } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -12,9 +15,6 @@ import { useApplyMessagesStepMutation } from "@/backend/loyalty/onboarding.query
 import { useLoyaltyProgram } from "@/backend/loyalty/program.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import { SectionHeading } from "@/components/common/page-heading.tsx";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { SyncTemplatesButton } from "@/components/whatsapp/templates/SyncTemplates.tsx";
 import { TemplateType } from "@/types/enums.ts";
 

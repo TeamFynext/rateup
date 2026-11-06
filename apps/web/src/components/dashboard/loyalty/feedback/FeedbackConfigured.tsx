@@ -1,8 +1,8 @@
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import type { FeedbackState } from "@/backend/loyalty/feedback.api.ts";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 
 import { LOYALTY_PATHS } from "../paths.ts";
 import type { FeedbackSearch } from "./feedback.search.ts";

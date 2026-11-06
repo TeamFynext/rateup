@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-
 import {
   Dialog,
   DialogClose,
   DialogContent,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@rateup/ui/components/dialog";
+import { useCallback, useEffect, useRef, useState } from "react";
+
 import {
   rateupProductVideo,
   rateupProductVideoCover,

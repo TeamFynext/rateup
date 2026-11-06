@@ -1,3 +1,4 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconRocket } from "@tabler/icons-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
@@ -11,7 +12,6 @@ import {
   useApplyTiersStepMutation,
 } from "@/backend/loyalty/onboarding.query";
 import { PageHeading } from "@/components/common/page-heading.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Loader } from "@/components/ui/loader.tsx";
 import { useConfirm } from "@/context/confirm-provider";
 import { getApiErrorMessage } from "@/utils/apiError.ts";

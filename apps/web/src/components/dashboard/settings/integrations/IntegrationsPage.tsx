@@ -1,3 +1,13 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconPlug, IconPlus, IconSearch } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
@@ -5,17 +15,7 @@ import { useTranslation } from "react-i18next";
 
 import { useIntegrationStatuses } from "@/backend/appsIntegration/integration.query";
 import { useWebhook } from "@/backend/webhook/webhook.query";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
 import { cn } from "@/lib/utils";
 

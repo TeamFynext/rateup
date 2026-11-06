@@ -1,9 +1,9 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconArrowRight } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import PaymentTab from "@/components/dashboard/whatsapp/orders-and-payments/components/PaymentTab";
-import { Button } from "@/components/ui/button.tsx";
 
 import { CatalogCheckoutTabs } from "../CatalogCheckoutTabs";
 import { useCommerce } from "../CommerceContext";

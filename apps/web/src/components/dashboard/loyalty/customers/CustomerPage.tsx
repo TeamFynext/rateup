@@ -2,6 +2,15 @@
 // config only. The opened member lives in the URL as `?phone=`, not in component state, so
 // other screens — the Activity ledger — can link straight to a customer.
 
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
+import { Input } from "@rateup/ui/components/input";
 import {
   IconCopy,
   IconDownload,
@@ -32,16 +41,7 @@ import { PAGE_TITLE } from "@/components/common/page-heading.tsx";
 import { CustomerSummaryPanel } from "@/components/loyalty/cashier/CustomerSummaryPanel.tsx";
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { DataTable } from "@/components/Table/data-table.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { ContactAvatar } from "@/components/ui/contact-avatar.tsx";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";
 import type { WaInboxMessage } from "@/types/global";

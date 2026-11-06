@@ -3,6 +3,10 @@
 // welcome with progress, the required Meta steps in a dashed well, then each
 // area of the agent as a row that opens the page where you finish it.
 
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import {
   IconAlertTriangle,
   IconCircleCheck,
@@ -22,11 +26,7 @@ import {
 } from "@/backend/metaAgent/metaAgent.query";
 import { PageHeading, SectionHeading } from "@/components/common/page-heading.tsx";
 import { SetupRowCard } from "@/components/common/setup-row-card.tsx";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useConfirm } from "@/context/confirm-provider";
 
 import { StepIconChip } from "../../loyalty/onboarding/StepChrome.tsx";

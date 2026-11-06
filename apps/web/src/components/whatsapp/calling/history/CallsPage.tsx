@@ -1,10 +1,10 @@
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import { getRouteApi } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { PageHeading } from "@/components/common/page-heading.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { presetRange } from "@/components/whatsapp/inbox/analytics/dateRangePresets.ts";
 import DateRangeSelector from "@/components/whatsapp/inbox/analytics/DateRangeSelector.tsx";
 import { useCan } from "@/hooks/usePermission.ts";

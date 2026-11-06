@@ -1,3 +1,4 @@
+import { Spinner } from "@rateup/ui/components/spinner";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Suspense, useEffect } from "react";
@@ -7,7 +8,6 @@ import Session from "supertokens-auth-react/recipe/session";
 
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import { Card } from "@/components/ui/card";
-import { Spinner } from "@/components/ui/spinner";
 
 export const Route = createFileRoute("/auth/shopify/logout/")({
   component: Page,

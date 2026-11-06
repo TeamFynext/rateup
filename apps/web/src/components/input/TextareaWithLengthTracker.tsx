@@ -1,7 +1,7 @@
+import { InputGroup, InputGroupAddon, InputGroupTextarea } from "@rateup/ui/components/input-group";
 import * as React from "react";
 
 import { LengthTracker } from "@/components/input/LengthTracker.tsx";
-import { InputGroup, InputGroupAddon, InputGroupTextarea } from "@/components/ui/input-group.tsx";
 import { cn } from "@/lib/utils";
 
 export interface TextareaWithLengthTrackerProps extends Omit<

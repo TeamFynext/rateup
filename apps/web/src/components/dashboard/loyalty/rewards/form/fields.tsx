@@ -1,3 +1,5 @@
+import { Input } from "@rateup/ui/components/input";
+import { Textarea } from "@rateup/ui/components/textarea";
 import { useState, type ReactNode } from "react";
 import { Controller, type Control, type FieldPath, type FieldValues } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -11,9 +13,7 @@ import {
   FieldLabel,
   FieldTitle,
 } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
-import { Textarea } from "@/components/ui/textarea.tsx";
 import { numberInputValue } from "@/utils/form.ts";
 
 interface BaseFieldProps<T extends FieldValues, O> {

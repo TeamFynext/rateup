@@ -1,9 +1,9 @@
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
 import { IconChevronRight } from "@tabler/icons-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
 import AutosaveInput from "@/components/input/AutosaveInput/index.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { cn } from "@/lib/utils.ts";
 
 import { CreditsCard } from "../../../../../Card/CreditsCard.tsx";

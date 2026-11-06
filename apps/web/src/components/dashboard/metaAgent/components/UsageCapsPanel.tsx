@@ -1,4 +1,14 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { useEffect } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
@@ -9,17 +19,7 @@ import {
   useSyncAgentBudgets,
   useUpdateAgentBudgets,
 } from "@/backend/metaAgent/metaAgent.query";
-import { Button } from "@/components/ui/button";
 import { FieldGroup } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useCan } from "@/hooks/usePermission";
 
 import { budgetFormSchema, type BudgetFormValues } from "../metaAgent.schemas";

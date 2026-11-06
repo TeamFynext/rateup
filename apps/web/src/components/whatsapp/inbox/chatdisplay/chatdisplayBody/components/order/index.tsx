@@ -1,10 +1,10 @@
+import { Button } from "@rateup/ui/components/button";
+import { Separator } from "@rateup/ui/components/separator";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@rateup/ui/components/sheet";
 import { IconPackage, IconShoppingCart } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet.tsx";
 import { formatDate } from "@/utils/dateTime.ts";
 
 interface OrderProductItem {

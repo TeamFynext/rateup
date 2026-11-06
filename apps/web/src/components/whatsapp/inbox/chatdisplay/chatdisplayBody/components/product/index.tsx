@@ -1,10 +1,10 @@
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconPackage } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
 import { formatMoney, getShopProducts, getShopStore } from "@/backend/commerce/shop.api";
 import { shopKeys } from "@/backend/commerce/shop.query";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 
 /**
  * The catalog items a WhatsApp product message carried. The message names them by retailer id

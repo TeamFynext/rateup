@@ -1,10 +1,10 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconMusic, IconPaperclip, IconPhoto, IconVideo, IconX } from "@tabler/icons-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import type { QuickReplyMedia } from "@/backend/whatsapp/inbox/quickReply/quickreply.api";
-import { Button } from "@/components/ui/button.tsx";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 
 export const MAX_QUICK_REPLY_MEDIA = 5;

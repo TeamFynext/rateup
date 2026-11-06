@@ -1,9 +1,9 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconCheck, IconCopy } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button.tsx";
 import { copyToClipboard } from "@/utils/whatsappLink.ts";
 
 export function CopyButton({

@@ -1,14 +1,14 @@
-import { useId } from "react";
-
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
+import { Input } from "@rateup/ui/components/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select.tsx";
+} from "@rateup/ui/components/select";
+import { useId } from "react";
+
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 
 import type { FlowInputProps } from "./inputProps.ts";
 import { asText } from "./inputProps.ts";

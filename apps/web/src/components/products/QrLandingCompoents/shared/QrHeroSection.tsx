@@ -1,7 +1,7 @@
+import { Button } from "@rateup/ui/components/button";
 import { Image } from "@unpic/react";
 import { useState } from "react";
 
-import { Button } from "@/components/ui/button.tsx";
 import { imagesPath } from "@/utils/constants.ts";
 
 import { featureImages, QrHerofeatures } from "../QrConstants.tsx";

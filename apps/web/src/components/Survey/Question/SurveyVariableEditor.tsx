@@ -1,4 +1,14 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
 import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useContext, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -10,18 +20,8 @@ import {
   useDeleteSurveyVariableMutation,
   useUpdateSurveyVariableMutation,
 } from "@/backend/surveys/surveys.query";
-import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { SurveyVariableType } from "@/types/enums.ts";
 

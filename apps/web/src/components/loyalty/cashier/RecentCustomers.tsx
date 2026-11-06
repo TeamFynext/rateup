@@ -1,7 +1,6 @@
+import { Badge } from "@rateup/ui/components/badge";
 import { IconClock } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
-
-import { Badge } from "@/components/ui/badge.tsx";
 
 import type { RecentCustomer } from "./recentCustomers.ts";
 

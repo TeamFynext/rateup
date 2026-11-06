@@ -1,9 +1,5 @@
-import { useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +7,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog.tsx";
+} from "@rateup/ui/components/dialog";
+import { useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import {
   loyaltyMessageCatalog,

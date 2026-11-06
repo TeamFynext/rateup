@@ -1,3 +1,11 @@
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@rateup/ui/components/table";
 import { IconClock, IconPhone, IconPhoneCheck, IconPhoneX } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { Fragment } from "react";
@@ -18,14 +26,6 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart.tsx";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table.tsx";
 
 import type { CallsScope } from "./CallsPage.tsx";
 

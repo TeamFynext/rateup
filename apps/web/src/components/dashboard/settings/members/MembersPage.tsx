@@ -1,3 +1,16 @@
+import { Avatar, AvatarFallback, AvatarImage } from "@rateup/ui/components/avatar";
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import {
   IconClockX,
   IconMail,
@@ -21,20 +34,7 @@ import {
 } from "@/backend/team/team.query";
 import { useUserInfo } from "@/backend/user/user.query";
 import { RoleBadge } from "@/components/common/RoleBadge.tsx";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
 import { cn } from "@/lib/utils.ts";
 import { resolveRoleKey } from "@/utils/authz/can.ts";

@@ -1,3 +1,7 @@
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { Separator } from "@rateup/ui/components/separator";
 import {
   IconDeviceFloppy,
   IconInfoCircle,
@@ -12,12 +16,8 @@ import {
   useCatalogSettings,
   useUpdateCatalogSettings,
 } from "@/backend/whatsapp/catalog/catalog.query";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 
 /**

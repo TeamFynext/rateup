@@ -8,7 +8,7 @@ import type { CustomerSearchResult } from "@/api/loyalty/loyalty.type";
 import { hapticSelect } from "./haptics";
 import { formatCardCode, parseCardCode } from "./logic/cardCode";
 import { formatNumber } from "./logic/format";
-import { maskPhone } from "./logic/maskPhone";
+import { maskPhone } from "@rateup/utils/maskPhone";
 import type { RecentCustomer } from "./logic/recentCustomers";
 import { RecentCustomers } from "./RecentCustomers";
 import {

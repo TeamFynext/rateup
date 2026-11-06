@@ -1,3 +1,14 @@
+import { Alert, AlertDescription } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
 import { IconAlertCircle } from "@tabler/icons-react";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -8,17 +19,6 @@ import { toast } from "sonner";
 import { sendShopProductsInChat, type ShopProduct } from "@/backend/commerce/shop.api";
 import { useShopStore } from "@/backend/commerce/shop.query";
 import { productHandle } from "@/components/shop-public/storefrontSeo.ts";
-import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 
 import { SHOP_PATHS } from "../shop/shopMeta.ts";

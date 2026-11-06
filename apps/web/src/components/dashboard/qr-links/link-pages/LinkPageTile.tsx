@@ -1,16 +1,16 @@
-import { IconDots, IconEye, IconLink, IconPencil, IconTrash } from "@tabler/icons-react";
-import { Link } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
-
-import type { LinktreeData } from "@/backend/linktree/linktree.api.ts";
-import { Button } from "@/components/ui/button.tsx";
-import { Card, CardContent } from "@/components/ui/card.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
+} from "@rateup/ui/components/dropdown-menu";
+import { IconDots, IconEye, IconLink, IconPencil, IconTrash } from "@tabler/icons-react";
+import { Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
+
+import type { LinktreeData } from "@/backend/linktree/linktree.api.ts";
+import { Card, CardContent } from "@/components/ui/card.tsx";
 
 import { CopyButton } from "../shared/CopyButton.tsx";
 import { linkPageUrl, QR_LINKS_PATHS } from "../shared/paths.ts";

@@ -1,12 +1,12 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconChevronLeft, IconChevronRight, IconHistory, IconLock } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useMemberActivity } from "@/backend/org/org.query";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
 
 import { describeActivity } from "./activityLabel.ts";

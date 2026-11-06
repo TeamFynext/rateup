@@ -1,4 +1,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Textarea } from "@rateup/ui/components/textarea";
 import { IconLock, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useFieldArray, useForm } from "react-hook-form";
 
@@ -8,19 +19,8 @@ import {
   useUpsertConnectorCertificate,
   useUpsertConnectorOAuth,
 } from "@/backend/metaAgent/metaAgent.query";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import { FieldGroup, FieldLegend, FieldSet } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { TagsInput } from "@/components/ui/tags-input";
-import { Textarea } from "@/components/ui/textarea";
 
 import {
   apiKeyFormSchema,

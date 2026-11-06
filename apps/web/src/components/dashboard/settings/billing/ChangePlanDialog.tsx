@@ -1,3 +1,14 @@
+import { Alert, AlertDescription } from "@rateup/ui/components/alert";
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Separator } from "@rateup/ui/components/separator";
 import { IconArrowDown, IconArrowUp, IconCheck, IconInfoCircle } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -8,17 +19,6 @@ import {
   useSubscriptionChangeOptions,
 } from "@/backend/payment/payment.query";
 import type { PricingPlan } from "@/components/HomePage/pages/Pricing/types.ts";
-import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 
 type Cadence = "monthly" | "yearly";

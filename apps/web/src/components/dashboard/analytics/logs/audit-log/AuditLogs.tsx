@@ -1,3 +1,11 @@
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import type { PaginationState, SortingState } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -5,14 +13,6 @@ import { useTranslation } from "react-i18next";
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useAuditLogFeatures, useUserAuditLogs } from "@/backend/user/user.query";
 import { DataTable } from "@/components/Table/data-table.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import type { AnalyticsDateRange } from "@/types/api.ts";
 
 import { AnalyticsCard, AnalyticsEmpty } from "../../kit/AnalyticsCard.tsx";

@@ -1,3 +1,23 @@
+import { Alert, AlertDescription } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@rateup/ui/components/table";
 import { IconAdjustments } from "@tabler/icons-react";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
@@ -11,27 +31,7 @@ import {
   type ShopMessageCost,
 } from "@/backend/commerce/shop.api";
 import { useInvalidateShop, useShopMessageCost } from "@/backend/commerce/shop.query";
-import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table.tsx";
 import { useCan } from "@/hooks/usePermission.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 

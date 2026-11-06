@@ -1,3 +1,11 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
 import { IconDots, IconTrash } from "@tabler/icons-react";
 import type { MouseEvent } from "react";
 import { useTranslation } from "react-i18next";
@@ -5,14 +13,6 @@ import { useTranslation } from "react-i18next";
 import { useShopifyAttribution } from "@/backend/appsIntegration/shopify/shopify.query";
 import { ActionCard } from "@/components/common/action-card.tsx";
 import { formatRevenue } from "@/components/shopify/ShopifyResults.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { ShopifyEvents } from "@/types/enums.ts";
 import type { Rule } from "@/types/rule.ts";

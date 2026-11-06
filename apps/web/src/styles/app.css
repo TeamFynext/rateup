@@ -8,6 +8,8 @@
  * from marketing pages no longer loading this file at all.
  */
 @import "tailwindcss";
+/* Shared components live outside this app, where the automatic scan does not reach. */
+@source "../../../../packages/ui/src";
 
 /* Tiptap editor content styles (.ProseMirror, placeholder, --editor-* tokens).
    Editors are inlined across many app routes, so the rules stay global to this surface. */

@@ -1,3 +1,20 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@rateup/ui/components/empty";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconGift, IconPlus } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -13,23 +30,6 @@ import { useSubscription } from "@/backend/subscription/subscription.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import InfoButton from "@/components/Button/InfoButton.tsx";
 import { PageHeading } from "@/components/common/page-heading.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { docsPath } from "@/utils/constants.ts";
 
 import { calculateGiveback } from "../giveback/calculateGiveback.ts";

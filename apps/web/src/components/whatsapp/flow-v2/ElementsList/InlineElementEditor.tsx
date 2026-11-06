@@ -1,4 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@rateup/ui/components/button";
+import { Separator } from "@rateup/ui/components/separator";
 import { IconDeviceFloppy } from "@tabler/icons-react";
 import { Image } from "@unpic/react";
 import dayjs from "dayjs";
@@ -7,10 +9,8 @@ import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 import RateupSwitch from "@/components/Switch/RateupSwitch.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
 import {
   DateField,
   MultiSelectField,

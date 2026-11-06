@@ -1,4 +1,4 @@
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
 
 import { CopyButton } from "./CopyButton.tsx";
 

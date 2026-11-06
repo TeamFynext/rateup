@@ -1,19 +1,19 @@
+import { Button } from "@rateup/ui/components/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
 import { IconArrowRight, IconSearch } from "@tabler/icons-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useTriggeringDownload, useUnsplashPhotosList } from "@/backend/unsplash/unsplash.query";
 import type { SelectedImage } from "@/components/LocalOrUnsplashImagePicker/index.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { LoadingOverlay } from "@/components/ui/loading-overlay.tsx";
 import { useIntersection } from "@/hooks/use-intersection.ts";
 import { useMediaQuery } from "@/hooks/use-media-query.ts";
 import { useDisclosure } from "@/hooks/useDisclosure";
 
 import useDebounce from "../../../menu/hook/useDebounce.ts";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "../../../ui/input-group.tsx";
 import ImageCropModal from "../ImageCropModal/index.tsx";
 
 /** A photo result from the Unsplash search endpoint. */

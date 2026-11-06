@@ -1,3 +1,7 @@
+import { Alert, AlertDescription } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Tabs, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import {
   IconCircleCheck,
   IconClick,
@@ -22,10 +26,6 @@ import { TrendArea } from "@/components/dashboard/analytics/kit/charts.tsx";
 import { formatBucket, formatCount } from "@/components/dashboard/analytics/kit/format.ts";
 import { DotBadge } from "@/components/dashboard/analytics/kit/StatusBadges.tsx";
 import { TileGroup } from "@/components/dashboard/analytics/kit/TileGroup.tsx";
-import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 
 import { EnableTemplateAnalytics } from "./EnableTemplateAnalytics.tsx";
 

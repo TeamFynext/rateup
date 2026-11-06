@@ -1,3 +1,4 @@
+import { useIsMobile } from "@rateup/ui/hooks/use-mobile";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -12,7 +13,6 @@ import {
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
-import { useIsMobile } from "@/hooks/use-mobile.ts";
 import { sampleChoices } from "@/utils/constants/forms.ts";
 import { asAnswer } from "@/utils/response.ts";
 

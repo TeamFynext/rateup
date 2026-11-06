@@ -1,3 +1,4 @@
+import { Progress } from "@rateup/ui/components/progress";
 import { IconStarFilled } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
@@ -9,7 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
-import { Progress } from "@/components/ui/progress.tsx";
 
 /** Mean rating per question over the period — the line an owner reads to staff. */
 export function QuestionAveragesCard({

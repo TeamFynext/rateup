@@ -1,14 +1,13 @@
-import { IconDotsVertical, IconRefresh } from "@tabler/icons-react";
-import { useState } from "react";
-
-import { Button } from "@/components/ui/button";
+import { Button } from "@rateup/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@rateup/ui/components/dropdown-menu";
+import { IconDotsVertical, IconRefresh } from "@tabler/icons-react";
+import { useState } from "react";
 
 import {
   DeleteGatewayDialog,

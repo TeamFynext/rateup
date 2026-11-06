@@ -1,3 +1,4 @@
+import { Separator } from "@rateup/ui/components/separator";
 import { IconCalendar } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 
@@ -10,7 +11,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { cn } from "@/lib/utils";
 

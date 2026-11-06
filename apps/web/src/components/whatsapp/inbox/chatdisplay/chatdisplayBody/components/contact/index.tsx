@@ -1,13 +1,13 @@
+import { Button } from "@rateup/ui/components/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
+import { Separator } from "@rateup/ui/components/separator";
 import { IconChevronRight, IconUserPlus } from "@tabler/icons-react";
 import { useState } from "react";
 
 import { useImportCSVContactMutation } from "@/backend/campaign/contacts/contacts.query";
 import CreateContactModal from "@/components/Contacts/CreateContactModal.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
 import type { WaSendMessageBody } from "@/types/global";
 import { importMethod } from "@/utils/enums/index.ts";
 

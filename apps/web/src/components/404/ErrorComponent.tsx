@@ -1,9 +1,8 @@
+import { Button } from "@rateup/ui/components/button";
+import { Spinner } from "@rateup/ui/components/spinner";
 import type { QueryObserverResult, RefetchOptions } from "@tanstack/react-query";
 
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
-
-import { Button } from "../ui/button.tsx";
-import { Spinner } from "../ui/spinner.tsx";
 
 interface ErrorComponentProps {
   refetch: (options?: RefetchOptions) => Promise<QueryObserverResult<unknown, Error>>;

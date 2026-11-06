@@ -1,9 +1,9 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconArrowUpRight } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import { useSubscription } from "@/backend/subscription/subscription.query";
-import { Button } from "@/components/ui/button.tsx";
 
 /** Packs are paid-plan only, so a free org is sent to upgrade instead of to buy credits. */
 export function CampaignCreditsCta({ className }: Readonly<{ className?: string }>) {

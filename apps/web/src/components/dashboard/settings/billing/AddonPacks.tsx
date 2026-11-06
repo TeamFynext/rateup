@@ -1,12 +1,13 @@
+import { Alert, AlertDescription } from "@rateup/ui/components/alert";
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconArrowUpRight, IconInfoCircle, IconMinus, IconPlus } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { AddonKind, AddonOffer } from "@/backend/payment/payment.api";
-import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import {
   Card,
   CardContent,
@@ -15,7 +16,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 
 const CURRENCY_SYMBOL: Record<string, string> = { INR: "₹", USD: "$" };
 

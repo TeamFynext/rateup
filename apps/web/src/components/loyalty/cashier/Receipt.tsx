@@ -1,7 +1,7 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconBrandWhatsapp, IconCheck } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 
 import { formatMoney } from "../../dashboard/loyalty/giveback/format.ts";

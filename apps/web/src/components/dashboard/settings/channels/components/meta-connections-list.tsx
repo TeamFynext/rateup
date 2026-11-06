@@ -2,6 +2,10 @@
 // channel — each Messenger Page and each Instagram account is its own — with a login of
 // its own to add more. None of it needs WhatsApp, and neither platform needs the other.
 
+import { Alert, AlertDescription } from "@rateup/ui/components/alert";
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import {
   IconBrandFacebook,
   IconBrandInstagram,
@@ -20,10 +24,6 @@ import {
 } from "@/components/common/connect-meta-channel-button.tsx";
 import { SectionHeading } from "@/components/common/page-heading.tsx";
 import { SetupRowCard } from "@/components/common/setup-row-card.tsx";
-import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 
 interface PlatformSpec {

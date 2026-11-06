@@ -1,3 +1,7 @@
+import { Button } from "@rateup/ui/components/button";
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from "@rateup/ui/components/empty";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import {
   IconAlertTriangle,
   IconBell,
@@ -20,10 +24,6 @@ import {
   notificationMessage,
   notificationPath,
 } from "@/components/dashboard/settings/notifications/notificationCopy.ts";
-import { Button } from "@/components/ui/button.tsx";
-import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { cn } from "@/lib/utils";
 import { formatToRelativeTime } from "@/utils/dateTime.ts";
 

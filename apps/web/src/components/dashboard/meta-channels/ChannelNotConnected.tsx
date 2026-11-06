@@ -1,10 +1,7 @@
 // Shown in place of the workspace when nothing is connected: what the channel page does once
 // an account is, and the way to connect one.
 
-import { IconArrowRight, type TablerIcon } from "@tabler/icons-react";
-import { Link } from "@tanstack/react-router";
-
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   Empty,
   EmptyContent,
@@ -12,7 +9,9 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@/components/ui/empty.tsx";
+} from "@rateup/ui/components/empty";
+import { IconArrowRight, type TablerIcon } from "@tabler/icons-react";
+import { Link } from "@tanstack/react-router";
 
 import { ChannelBrandTile } from "./ChannelBrandTile.tsx";
 import { CHANNELS, type MetaChannel } from "./channels.ts";

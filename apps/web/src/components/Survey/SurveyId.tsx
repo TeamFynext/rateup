@@ -1,4 +1,14 @@
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@rateup/ui/components/alert-dialog";
+import {
   IconChartBar,
   IconFileText,
   IconMessage,
@@ -14,16 +24,6 @@ import { toast } from "sonner";
 
 import { useQuestions } from "@/backend/surveys/questions/questions.query";
 import { useGetSurveyVariables, useSurvey } from "@/backend/surveys/surveys.query";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { useNavControlContext } from "@/context/NavControlContext.ts";
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";

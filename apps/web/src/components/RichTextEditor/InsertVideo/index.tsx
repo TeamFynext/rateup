@@ -1,15 +1,15 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import { IconVideo } from "@tabler/icons-react";
 import type { Editor } from "@tiptap/react";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
 import { isYouTubeLink } from "../utils.ts";
 

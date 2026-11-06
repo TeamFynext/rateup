@@ -1,4 +1,5 @@
 import { Draggable } from "@hello-pangea/dnd";
+import { Button } from "@rateup/ui/components/button";
 import { IconGripVertical, IconTrash } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 import { cn } from "cn";
@@ -8,7 +9,6 @@ import { useTranslation } from "react-i18next";
 
 import { useQuestionDeleteMutation } from "@/backend/surveys/questions/questions.query";
 import { pressable } from "@/components/common/pressable.ts";
-import { Button } from "@/components/ui/button.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { PageType } from "@/types/enums.ts";

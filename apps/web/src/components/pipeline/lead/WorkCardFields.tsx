@@ -1,12 +1,12 @@
+import { Button } from "@rateup/ui/components/button";
+import { Textarea } from "@rateup/ui/components/textarea";
 import dayjs from "dayjs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useUpdateLeadMutation } from "@/backend/pipeline/pipeline.query.tsx";
 import type { LeadDetail } from "@/backend/pipeline/pipeline.types.ts";
-import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Textarea } from "@/components/ui/textarea";
 
 import { FieldLabel } from "../shared/atoms.tsx";
 import { submitOnEnter } from "../shared/submitOnEnter.ts";

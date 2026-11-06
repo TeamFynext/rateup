@@ -1,3 +1,17 @@
+import { Button } from "@rateup/ui/components/button";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@rateup/ui/components/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
+import { Input } from "@rateup/ui/components/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
+import { SidebarTrigger } from "@rateup/ui/components/sidebar";
 import {
   IconArrowsSort,
   IconBrandWhatsapp,
@@ -14,21 +28,7 @@ import { Fragment, useEffect, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog.tsx";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
-import { SidebarTrigger } from "@/components/ui/sidebar.tsx";
 import { useClickOutside } from "@/hooks/use-click-outside.ts";
 import { cn } from "@/lib/utils.ts";
 import type { ChatFilter } from "@/store/chat-filter.store.ts";

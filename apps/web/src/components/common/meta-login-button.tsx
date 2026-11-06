@@ -1,10 +1,10 @@
+import { Spinner } from "@rateup/ui/components/spinner";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useRegisterBusinessClientMutation } from "@/backend/whatsapp/settings/waSettings.query";
 import { FacebookBrandButton } from "@/components/common/facebook-brand-button.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 import { isFacebookOrigin } from "@/utils/facebookOrigin.ts";
 
 const fbLogin = (

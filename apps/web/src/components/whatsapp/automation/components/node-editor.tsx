@@ -1,3 +1,4 @@
+import { Button } from "@rateup/ui/components/button";
 import { useEffect } from "react";
 import { FormProvider, useForm as useRHForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -7,7 +8,6 @@ import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import { Button } from "@/components/ui/button.tsx";
 
 import { useChatbotPlatform } from "../chatbotPlatformContext.ts";
 import type { NodeData, NodeTypeMap, TypedNode } from "../types/node-types.ts";

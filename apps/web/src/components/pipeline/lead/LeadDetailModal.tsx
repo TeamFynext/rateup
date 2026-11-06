@@ -1,3 +1,19 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import {
   IconArrowBackUp,
   IconArrowsExchange,
@@ -30,22 +46,6 @@ import type {
   PipelineUser,
 } from "@/backend/pipeline/pipeline.types.ts";
 import { useUserInfo } from "@/backend/user/user.query.tsx";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { appInfo } from "@/config/appInfo.ts";
 import { cn } from "@/lib/utils";
 import { formatToRelativeTime } from "@/utils/dateTime.ts";

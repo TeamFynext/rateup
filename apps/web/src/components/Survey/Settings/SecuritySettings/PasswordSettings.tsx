@@ -1,17 +1,17 @@
-import { useId, useState } from "react";
-import { useTranslation } from "react-i18next";
-
-import { useUpdateSurveyPwdMutation } from "@/backend/surveys/surveys.query";
-import { Button } from "@/components/ui/button.tsx";
-import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
+} from "@rateup/ui/components/tooltip";
+import { useId, useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import { useUpdateSurveyPwdMutation } from "@/backend/surveys/surveys.query";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
+import { Switch } from "@/components/ui/switch.tsx";
 
 import { updatePwdSurvey } from "../updateSettings.ts";
 

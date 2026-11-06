@@ -27,6 +27,7 @@
     "@expo-google-fonts/figtree": "^0.4.1",
     "@expo-google-fonts/instrument-sans": "^0.4.2",
     "@expo/vector-icons": "^15.1.1",
+    "@rateup/utils": "workspace:*",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-google-signin/google-signin": "^16.1.2",
     "@react-native-picker/picker": "2.11.4",

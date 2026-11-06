@@ -1,5 +1,17 @@
 import { DragDropContext, Droppable } from "@hello-pangea/dnd";
 import type { DropResult } from "@hello-pangea/dnd";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@rateup/ui/components/alert-dialog";
+import { Button } from "@rateup/ui/components/button";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
 import { IconPlus, IconStack2 } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
@@ -12,18 +24,6 @@ import { toast } from "sonner";
 import { reorderQuestions } from "@/backend/surveys/questions/questions.api";
 import { surveyKeys } from "@/backend/surveys/survey.keys";
 import { pressable } from "@/components/common/pressable.ts";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import type { PageType } from "@/types/enums.ts";
 import { QuestionType } from "@/types/enums.ts";
 import { uniquePages } from "@/utils/constants.ts";

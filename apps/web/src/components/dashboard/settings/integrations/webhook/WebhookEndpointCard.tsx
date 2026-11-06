@@ -1,4 +1,17 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@rateup/ui/components/collapsible";
+import { Input } from "@rateup/ui/components/input";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@rateup/ui/components/input-group";
 import {
   IconChevronDown,
   IconCircleCheck,
@@ -14,7 +27,6 @@ import * as z from "zod";
 import type { WebhookEvent } from "@/backend/webhook/webhook.api";
 import { useDeleteWebhookMutation, useSaveWebhookMutation } from "@/backend/webhook/webhook.query";
 import { ApiCopyButton } from "@/components/ExternalApi/ApiCopyButton.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import {
   Card,
   CardAction,
@@ -25,24 +37,12 @@ import {
   CardTitle,
 } from "@/components/ui/card.tsx";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible.tsx";
-import {
   Field,
   FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field.tsx";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-} from "@/components/ui/input-group.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 
 const formSchema = z.object({

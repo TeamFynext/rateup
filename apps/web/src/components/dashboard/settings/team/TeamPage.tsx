@@ -2,6 +2,16 @@
 // config only. Behaviour is unchanged.
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
 import { IconChevronRight, IconPlus, IconRefresh, IconUsers } from "@tabler/icons-react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useId, useMemo, useState } from "react";
@@ -16,17 +26,7 @@ import { ActionCard } from "@/components/common/action-card.tsx";
 import { ColorField } from "@/components/common/color-field.tsx";
 import { CardGrid } from "@/components/common/generic-card.tsx";
 import { DEFAULT_TEAM_COLOR } from "@/components/settings/team.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
 import { HEX_COLOR } from "@/utils/color.ts";
 

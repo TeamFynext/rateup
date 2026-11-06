@@ -1,8 +1,4 @@
-import { Link } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
-
-import { useUpdateOrgModules } from "@/backend/org/org.query.tsx";
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   Empty,
   EmptyContent,
@@ -10,7 +6,11 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@/components/ui/empty.tsx";
+} from "@rateup/ui/components/empty";
+import { Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
+
+import { useUpdateOrgModules } from "@/backend/org/org.query.tsx";
 import { useOrgModules } from "@/hooks/useOrgModules.ts";
 import { usePermissions } from "@/hooks/usePermission.ts";
 import { moduleLabel, type OrgModuleInfo } from "@/utils/modules.ts";

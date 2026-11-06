@@ -1,3 +1,15 @@
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
 import { IconAlertTriangle, IconX } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useId, useState, type FormEvent } from "react";
@@ -14,17 +26,7 @@ import {
   useRotateApiKey,
   useUpdateApiKey,
 } from "@/backend/apiKeys/apiKeys.query.ts";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { DatePicker } from "@/components/ui/date-picker.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
 import {
   Field,
   FieldDescription,
@@ -34,8 +36,6 @@ import {
   FieldLegend,
   FieldSet,
 } from "@/components/ui/field.tsx";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 
 import { ApiCopyButton } from "./ApiCopyButton.tsx";

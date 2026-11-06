@@ -1,3 +1,22 @@
+import { Button } from "@rateup/ui/components/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import { Progress } from "@rateup/ui/components/progress";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@rateup/ui/components/table";
 import { IconChevronLeft, IconChevronRight, IconRefresh } from "@tabler/icons-react";
 import { useId, useEffect, useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
@@ -10,25 +29,7 @@ import {
   useUnsyncedFlows,
   useWaFlowJson,
 } from "@/backend/whatsapp/flow/flow.query";
-import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
-import { Progress } from "@/components/ui/progress.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table.tsx";
 import { useListState } from "@/hooks/use-list-state.ts";
 import { useDisclosure } from "@/hooks/useDisclosure";
 import { WaFlowFormElementType } from "@/types/enums.ts";
@@ -46,7 +47,6 @@ import {
 import { TeamSelector } from "../../input/TeamSelector.tsx";
 import RateupLoader from "../../Loaders/RateupLoader.tsx";
 import { Field, FieldLabel, FieldTitle } from "../../ui/field.tsx";
-import { Input } from "../../ui/input.tsx";
 import WaTemplateStatusBadge from "./WaTemplateStatusBadge.tsx";
 
 /**

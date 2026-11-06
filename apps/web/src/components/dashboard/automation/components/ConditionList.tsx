@@ -1,3 +1,12 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import React from "react";
 import type { ControllerRenderProps, FieldArrayPath, FieldPath } from "react-hook-form";
@@ -8,17 +17,8 @@ import { useContactLabels } from "@/backend/campaign/contacts/contacts.query";
 import type { GetLabelsRes } from "@/backend/lifecycle/lifecycle.types";
 import { useGetAllBusinessHours } from "@/backend/org/business-hours/business-hours.query";
 import { StageSelector } from "@/components/pipeline/shared/StageSelector.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Field, FieldError } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 import { useLifecycleContext } from "@/context/LifecycleContext.ts";
 
 import { MatchSentence } from "./MatchSentence.tsx";

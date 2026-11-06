@@ -1,3 +1,4 @@
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import {
   IconAlertTriangle,
   IconClock,
@@ -9,7 +10,6 @@ import { useTranslation } from "react-i18next";
 
 import { usePipelineStatsQuery } from "@/backend/pipeline/pipeline.query.tsx";
 import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 import { SOURCE_META } from "../pipeline.constants.tsx";

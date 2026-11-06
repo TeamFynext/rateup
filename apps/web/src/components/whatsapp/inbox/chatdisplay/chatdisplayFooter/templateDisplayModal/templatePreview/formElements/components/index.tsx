@@ -1,3 +1,19 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@rateup/ui/components/tooltip";
 import { IconLoader2, IconPhoto, IconRefresh } from "@tabler/icons-react";
 import { useSearch } from "@tanstack/react-router";
 import { useId, useEffect, useState } from "react";
@@ -11,24 +27,8 @@ import {
   useWaSettings,
 } from "@/backend/whatsapp/settings/waSettings.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
 import type { LeadgenNodeData } from "@/components/whatsapp/automation/types/node-types.ts";
 import { cn } from "@/lib/utils.ts";
 import type { WaTemplateParameterLocation } from "@/types/global";

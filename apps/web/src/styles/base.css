@@ -28,11 +28,9 @@
 @source not "../components/ui/bubble.tsx";
 @source not "../components/ui/button-edge.tsx";
 @source not "../components/ui/chart.tsx";
-@source not "../components/ui/command.tsx";
 @source not "../components/ui/contact-avatar.tsx";
 @source not "../components/ui/creative-avatar.tsx";
 @source not "../components/ui/drawer.tsx";
-@source not "../components/ui/dropdown-menu.tsx";
 @source not "../components/ui/inline-multi-select.tsx";
 @source not "../components/ui/input-otp.tsx";
 @source not "../components/ui/loading-overlay.tsx";
@@ -44,9 +42,13 @@
 @source not "../components/ui/phone-preview.tsx";
 @source not "../components/ui/resizable.tsx";
 @source not "../components/ui/resizable-navbar.tsx";
-@source not "../components/ui/sidebar.tsx";
-@source not "../components/ui/table.tsx";
 @source not "../components/ui/tags-input.tsx";
+/* Shared components (packages/ui), with the same exclusions they had in components/ui. */
+@source "../../../../packages/ui/src/components";
+@source not "../../../../packages/ui/src/components/command.tsx";
+@source not "../../../../packages/ui/src/components/dropdown-menu.tsx";
+@source not "../../../../packages/ui/src/components/sidebar.tsx";
+@source not "../../../../packages/ui/src/components/table.tsx";
 @source "../components/Loaders";
 @source "../components/theme";
 @source "../components/404";

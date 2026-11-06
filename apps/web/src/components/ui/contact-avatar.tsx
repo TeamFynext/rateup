@@ -1,9 +1,8 @@
 import { Avatar as AvatarPrimitive } from "@base-ui/react/avatar";
+import { getAvatarInitials, isEmojiName } from "@rateup/ui/lib/initials";
 import { IconBrandInstagram, IconBrandWhatsapp, IconUser } from "@tabler/icons-react";
 
 import { cn } from "@/lib/utils";
-
-import { getAvatarInitials, isEmojiName } from "./utils.ts";
 
 type ContactAvatarSize = "2xs" | "xs" | "sm" | "md" | "lg" | "xl";
 

@@ -1,6 +1,8 @@
 // Extracted verbatim from the `/dashboard/whatsapp/flows/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import { Button } from "@rateup/ui/components/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import { IconPlus } from "@tabler/icons-react";
 import { useSearch } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
@@ -20,8 +22,6 @@ import {
 } from "@/components/common/list-page-layout.tsx";
 import { sortData } from "@/components/dashboard/SortDropDown.tsx";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { isFlowType } from "@/components/whatsapp/flows/CreateFlowWizard/createFlowWizard.steps.ts";
 import { CreateFlowWizard } from "@/components/whatsapp/flows/CreateFlowWizard/CreateFlowWizard.tsx";
 import FlowCardsList from "@/components/whatsapp/flows/FlowCardsList/index.tsx";

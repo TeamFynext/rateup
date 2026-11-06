@@ -1,22 +1,14 @@
-import { IconInfoCircle, IconPlus, IconTrash, IconUpload } from "@tabler/icons-react";
-import { useId, useContext, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
-
-import { useImportEmailIdsMutation } from "@/backend/surveys/questions/questions.query";
-import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
+import { Alert, AlertDescription } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
+} from "@rateup/ui/components/select";
+import { Spinner } from "@rateup/ui/components/spinner";
 import {
   Table,
   TableBody,
@@ -24,7 +16,15 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table.tsx";
+} from "@rateup/ui/components/table";
+import { IconInfoCircle, IconPlus, IconTrash, IconUpload } from "@tabler/icons-react";
+import { useId, useContext, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+
+import { useImportEmailIdsMutation } from "@/backend/surveys/questions/questions.query";
+import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";

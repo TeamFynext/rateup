@@ -1,3 +1,7 @@
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import { Label } from "@rateup/ui/components/label";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import type { UseQueryResult } from "@tanstack/react-query";
 import { useId, useState } from "react";
 
@@ -5,10 +9,6 @@ import type { CustomerChannel, EmailPreview, TestSendInput } from "@/api/engage.
 import { ActionDialog, done, Notice } from "@/components/ds/action-dialog";
 import { FilterChips } from "@/components/ds/filter-chips";
 import { ErrorState } from "@/components/ds/query-states";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
 
 /** The rendered email, filled in for the signed-in staff member. */
 export function EmailPreviewDialog({

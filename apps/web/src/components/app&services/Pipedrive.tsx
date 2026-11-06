@@ -1,3 +1,6 @@
+import { Alert, AlertAction, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconAlertTriangle, IconExternalLink, IconTrash } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
@@ -11,10 +14,7 @@ import { OAuthConnectButton } from "@/components/dashboard/settings/integrations
 import { IntegrationFormCard } from "@/components/dashboard/settings/integrations/IntegrationFormCard.tsx";
 import { INTEGRATIONS_CONFIG } from "@/components/dashboard/settings/integrations/integrations.config.ts";
 import { IntegrationShell } from "@/components/dashboard/settings/integrations/IntegrationShell.tsx";
-import { Alert, AlertAction, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { IntegratedApps } from "@/types/enums.ts";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime.ts";

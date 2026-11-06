@@ -1,3 +1,13 @@
+import { Button } from "@rateup/ui/components/button";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Separator } from "@rateup/ui/components/separator";
 import { IconRestore, IconStar } from "@tabler/icons-react";
 import { produce } from "immer";
 import { useId, useEffect, useState } from "react";
@@ -7,18 +17,8 @@ import { useTeamsByUser } from "@/backend/team/team.query";
 import { useGetAllTestimonialsByOrg } from "@/backend/testimonials/testimonial.query";
 import type { filterType } from "@/components/dashboard/testimonial/CollectionById.tsx";
 import { TestimonialTabs } from "@/components/dashboard/testimonial/CollectionById.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
 
 const TestimonialFilter = ({
   filters,

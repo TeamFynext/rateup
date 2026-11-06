@@ -1,6 +1,8 @@
 // The `/dashboard/settings/channels/` overview. Built from the same `SetupRowCard`
 // as the setup guide, so a channel reads the same wherever you meet it.
 
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
 import {
   IconBrandFacebook,
   IconBrandInstagram,
@@ -14,8 +16,6 @@ import type { Channel } from "@/backend/channels/channels.api";
 import { useChannels } from "@/backend/channels/channels.query";
 import { PageHeading, SectionHeading } from "@/components/common/page-heading.tsx";
 import { SetupRowCard } from "@/components/common/setup-row-card.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { groupByBusiness } from "@/utils/whatsapp/businesses.ts";
 
 export function ChannelsPage() {

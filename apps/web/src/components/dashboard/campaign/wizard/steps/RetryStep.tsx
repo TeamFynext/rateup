@@ -1,3 +1,7 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { Label } from "@rateup/ui/components/label";
 import { IconMinus, IconPlus, IconRefresh, IconSend, IconSparkles } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -6,12 +10,8 @@ import {
   useCampaignRetryPolicy,
   useUpdateCampaignRetryPolicyMutation,
 } from "@/backend/campaign/campaign.query";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { cn } from "@/lib/utils";

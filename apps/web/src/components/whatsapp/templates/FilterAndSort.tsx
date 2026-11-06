@@ -1,10 +1,10 @@
+import { Button } from "@rateup/ui/components/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
+import { Separator } from "@rateup/ui/components/separator";
 import { IconAdjustmentsHorizontal, IconCheck, IconChevronDown } from "@tabler/icons-react";
 import { useState } from "react";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
 
-import { Button } from "@/components/ui/button.tsx";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
 import { cn } from "@/lib/utils.ts";
 
 const STATUS_OPTIONS = [

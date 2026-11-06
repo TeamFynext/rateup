@@ -1,3 +1,5 @@
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
 import { IconAlertTriangle, IconReceipt } from "@tabler/icons-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -5,8 +7,6 @@ import { toast } from "sonner";
 
 import { useSubscriptionUsage } from "@/backend/subscription/subscription.query";
 import { isUnlimitedCount } from "@/components/HomePage/pages/Pricing/pricing.data.ts";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { getApiErrorData, getApiErrorMessage } from "@/utils/apiError.ts";
 
 const BILLING = "/dashboard/settings/billing";

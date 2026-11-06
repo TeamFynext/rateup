@@ -1,7 +1,7 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconEdit } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button.tsx";
 import { useNavControlContext } from "@/context/NavControlContext.ts";
 import { cn } from "@/lib/utils.ts";
 

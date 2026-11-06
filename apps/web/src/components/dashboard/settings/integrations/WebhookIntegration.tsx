@@ -1,11 +1,4 @@
-import { IconWebhook } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-
-import type { WebhookEvent } from "@/backend/webhook/webhook.api";
-import { useUpdateWebhookEventsMutation, useWebhook } from "@/backend/webhook/webhook.query";
-import { Button } from "@/components/ui/button.tsx";
-import { Card, CardContent, CardHeader } from "@/components/ui/card.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   Empty,
   EmptyContent,
@@ -13,8 +6,15 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@/components/ui/empty.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
+} from "@rateup/ui/components/empty";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import { IconWebhook } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import type { WebhookEvent } from "@/backend/webhook/webhook.api";
+import { useUpdateWebhookEventsMutation, useWebhook } from "@/backend/webhook/webhook.query";
+import { Card, CardContent, CardHeader } from "@/components/ui/card.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
 
 import { INTEGRATIONS_CONFIG } from "./integrations.config.ts";

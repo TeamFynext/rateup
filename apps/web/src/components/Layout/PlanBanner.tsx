@@ -1,9 +1,9 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconAlertTriangle, IconArrowUpRight, IconSparkles, IconX } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button.tsx";
 import { type PlanMeter, usePlanStatus } from "@/hooks/usePlanStatus";
 
 /**

@@ -1,3 +1,4 @@
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import {
   IconBrandInstagram,
   IconBrandMessenger,
@@ -17,7 +18,6 @@ import type {
   MergeSuggestionReason,
   MergeWarning,
 } from "@/backend/campaign/contacts/merge.api";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { cn } from "@/lib/utils.ts";
 import { getContactLabel } from "@/utils/whatsapp/inbox.ts";
 

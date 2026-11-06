@@ -1,0 +1,36 @@
+{
+  "name": "@rateup/ui",
+  "version": "0.0.0",
+  "private": true,
+  "description": "shadcn/ui (Base UI) components shared by apps/web and apps/admin. Source-only: the apps bundle it.",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./components/*": "./src/components/*.tsx",
+    "./hooks/*": "./src/hooks/*.ts",
+    "./lib/*": "./src/lib/*.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@base-ui/react": "^1.9.0",
+    "@tabler/icons-react": "^3.50.0",
+    "class-variance-authority": "^0.7.1",
+    "cmdk": "^1.1.1",
+    "cn": "^0.5.2"
+  },
+  "devDependencies": {
+    "@rateup/tsconfig": "workspace:*",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "typescript": "^7.0.2",
+    "vite": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  }
+}

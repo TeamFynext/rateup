@@ -1,3 +1,6 @@
+import { Button } from "@rateup/ui/components/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -5,9 +8,6 @@ import { useChatbot } from "@/backend/chatbots/chatbots.query.ts";
 import { ChatbotStartPanel } from "@/components/dashboard/chatbots/ChatbotStartPanel.tsx";
 import { AutomatedReplyForm } from "@/components/dashboard/whatsapp/flowbots/create.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import FlowEditor from "@/components/whatsapp/automation/components/flow-editor.tsx";
 import { automationPlatformOf } from "@/types/platform.ts";
 

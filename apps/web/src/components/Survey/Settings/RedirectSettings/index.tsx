@@ -7,20 +7,20 @@ type RedirectError = { url: string; time: string };
 /** The survey's redirect setting as this form edits it. */
 export type RedirectValue = { enable?: boolean; url?: string; time?: string | number };
 
-import type { Dispatch, SetStateAction } from "react";
-
-import type { SurveyUpdateMutation } from "@/components/Survey/Settings/updateSettings.ts";
-import { Button } from "@/components/ui/button.tsx";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
-import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
+} from "@rateup/ui/components/tooltip";
+import type { Dispatch, SetStateAction } from "react";
+
+import type { SurveyUpdateMutation } from "@/components/Survey/Settings/updateSettings.ts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
+import { Switch } from "@/components/ui/switch.tsx";
 
 import { updateRedirect } from "../updateSettings.ts";
 

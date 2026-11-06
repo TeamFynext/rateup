@@ -1,3 +1,10 @@
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
@@ -13,13 +20,6 @@ import { PlanPill, SubscriptionPill } from "@/components/ds/pill";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/ds/query-states";
 import { ResponsiveTable, type Column } from "@/components/ds/responsive-table";
 import { SearchField } from "@/components/ds/search-field";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { formatDate, formatNumber, isEffectivelyNever } from "@/lib/format";
 
 const PAGE_SIZE = 25;

@@ -1,16 +1,16 @@
-import { IconChevronRight } from "@tabler/icons-react";
-import { Link } from "@tanstack/react-router";
-import type { ReactNode } from "react";
-import { useTranslation } from "react-i18next";
-
-import type { LoyaltyRewardType } from "@/backend/loyalty/reward.api";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog.tsx";
+} from "@rateup/ui/components/dialog";
+import { IconChevronRight } from "@tabler/icons-react";
+import { Link } from "@tanstack/react-router";
+import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
+
+import type { LoyaltyRewardType } from "@/backend/loyalty/reward.api";
 import { cn } from "@/lib/utils.ts";
 
 import { LOYALTY_PATHS } from "../paths.ts";

@@ -1,3 +1,6 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import {
   IconAlertCircle,
   IconBolt,
@@ -12,11 +15,8 @@ import {
 import { toast } from "sonner";
 
 import { useCatalogSettings, useCreateAddressFlow } from "@/backend/whatsapp/catalog/catalog.query";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PhonePreviewButton } from "@/components/ui/phone-preview";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { WaQuestions } from "@/types/enums";
 
 const SHOPIFY_FIELDS = [

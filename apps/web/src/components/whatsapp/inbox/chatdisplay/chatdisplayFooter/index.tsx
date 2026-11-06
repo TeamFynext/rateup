@@ -1,3 +1,7 @@
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Badge } from "@rateup/ui/components/badge";
+import { Button, buttonVariants } from "@rateup/ui/components/button";
+import { Tabs, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import {
   IconArrowBackUp,
   IconBan,
@@ -43,11 +47,7 @@ import {
 } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import type { TiptapNode } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import WaTextEditor from "@/components/RichTextEditor/waTextEditor.tsx";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button, buttonVariants } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import AssigneePicker from "@/components/whatsapp/inbox/assign/AssigneePicker.tsx";
 import { buildAssignEvent } from "@/components/whatsapp/inbox/assign/assignEvent.ts";
 import { useConfirm } from "@/context/confirm-provider.tsx";

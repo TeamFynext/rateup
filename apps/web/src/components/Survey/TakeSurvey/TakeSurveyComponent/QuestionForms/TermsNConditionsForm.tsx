@@ -1,9 +1,9 @@
+import { Button } from "@rateup/ui/components/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
 import { useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { FieldLabel } from "@/components/ui/field.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";

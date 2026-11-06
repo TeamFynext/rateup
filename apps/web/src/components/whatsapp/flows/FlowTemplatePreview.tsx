@@ -1,8 +1,8 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button.tsx";
 import { PhoneFrame } from "@/components/ui/phone-preview.tsx";
 import { FlowScreenSheetView } from "@/components/whatsapp/flow-v2/Preview/WhatsAppPreview.tsx";
 import { readEditorScreens } from "@/components/whatsapp/flow-v2/utils/flow-json.ts";

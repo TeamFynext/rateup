@@ -1,11 +1,11 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
 import { useId, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { FileUploadButton } from "@/components/ui/file-upload-button.tsx";
-import { Input } from "@/components/ui/input.tsx";
 
 import { FileConverter } from "./DataSource.tsx";
 import type { FlowInputProps } from "./inputProps.ts";

@@ -1,6 +1,22 @@
 // A tool listing the automation rules one trigger runs for one Instagram account or Facebook
 // Page — Instagram comments, story mentions, Facebook Page comments — as a dense list.
 
+import { Button } from "@rateup/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@rateup/ui/components/empty";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconDots, IconPencil, IconPlus, IconTrash, type TablerIcon } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
@@ -12,22 +28,6 @@ import {
   useUpdateRuleMutation,
 } from "@/backend/whatsapp/rule/rule.query";
 import TimeSinceText from "@/components/DateAndTime/TimeSinceText.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import type { Rule } from "@/types/rule.ts";

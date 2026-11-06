@@ -1,3 +1,15 @@
+import { Button } from "@rateup/ui/components/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Separator } from "@rateup/ui/components/separator";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 import { isEmptyObject } from "@tiptap/react";
@@ -7,20 +19,8 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
-import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import type { QuestionType } from "@/types/enums.ts";
 import { QuestionType as Q } from "@/types/enums.ts";

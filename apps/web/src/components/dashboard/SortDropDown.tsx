@@ -1,7 +1,3 @@
-import dayjs from "dayjs";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-
 import {
   Select,
   SelectContent,
@@ -9,7 +5,10 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select.tsx";
+} from "@rateup/ui/components/select";
+import dayjs from "dayjs";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 const SortDropdown = ({
   onSortChange,

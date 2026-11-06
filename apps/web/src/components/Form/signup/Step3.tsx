@@ -1,7 +1,7 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconArrowLeft, IconArrowRight, IconCheck } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "../../ui/button.tsx";
 import type { SignupForm } from "./shared.tsx";
 
 const BUSINESS_GOALS = [

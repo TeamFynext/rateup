@@ -1,8 +1,7 @@
+import { Button } from "@rateup/ui/components/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import { IconBook } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
-
-import { Button } from "@/components/ui/button.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
 const InfoButton = ({ docUrl, className = "" }: { docUrl: string; className?: string }) => {
   const { t: translations } = useTranslation();

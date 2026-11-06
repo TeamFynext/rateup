@@ -1,3 +1,4 @@
+import { Alert, AlertTitle } from "@rateup/ui/components/alert";
 import { IconExclamationCircle, IconMessage, IconPaperclip } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -5,7 +6,6 @@ import { toast } from "sonner";
 
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useGetAssignedUserForContact } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import { Alert, AlertTitle } from "@/components/ui/alert.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";
 import { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";

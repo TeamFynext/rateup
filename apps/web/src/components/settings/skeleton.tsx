@@ -1,4 +1,4 @@
-import { Skeleton } from "../ui/skeleton.tsx";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 
 function TeamSkeleton() {
   return (

@@ -1,10 +1,10 @@
+import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
 import { IconCheck, IconChevronDown, IconUserOff } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useUpdateLeadMutation } from "@/backend/pipeline/pipeline.query.tsx";
 import type { LeadDetail, PipelineUser } from "@/backend/pipeline/pipeline.types.ts";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
 import { AssigneeStack } from "../shared/AssigneeStack.tsx";

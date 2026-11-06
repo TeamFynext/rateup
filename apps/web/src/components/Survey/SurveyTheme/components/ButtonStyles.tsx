@@ -1,13 +1,13 @@
-import { useId, useCallback } from "react";
-
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select.tsx";
+} from "@rateup/ui/components/select";
+import { useId, useCallback } from "react";
+
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { COORDINATESX, COORDINATESY } from "@/utils/constants.ts";
 
 import CustomColorPicker from "../../ShareSurvey/components/CustomColorPicker/index.tsx";

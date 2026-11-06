@@ -1,8 +1,10 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
+import { Textarea } from "@rateup/ui/components/textarea";
 import { IconCalendar, IconCamera, IconChevronRight, IconFileText } from "@tabler/icons-react";
 import { useId } from "react";
 
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import {
   Carousel,
   CarouselContent,
@@ -12,9 +14,7 @@ import {
 } from "@/components/ui/carousel.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Field, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
-import { Textarea } from "@/components/ui/textarea.tsx";
 import { FlowSheetShell } from "@/components/whatsapp/whatsapp-preview-shell.tsx";
 import type { WaFlowFormNonInputElementType } from "@/types/enums.ts";
 import { WaFlowFormElementType } from "@/types/enums.ts";

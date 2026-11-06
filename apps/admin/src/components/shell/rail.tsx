@@ -1,10 +1,4 @@
-import { IconDeviceDesktop, IconLogout, IconMoon, IconSearch, IconSun } from "@tabler/icons-react";
-import { Link, useRouterState } from "@tanstack/react-router";
-import type { ReactNode } from "react";
-
-import { useLogout, useStaff } from "@/api/auth.query";
-import { useTheme } from "@/components/theme/theme-provider";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@rateup/ui/components/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,9 +9,15 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { getInitials } from "@/lib/initials";
+} from "@rateup/ui/components/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
+import { getInitials } from "@rateup/ui/lib/initials";
+import { IconDeviceDesktop, IconLogout, IconMoon, IconSearch, IconSun } from "@tabler/icons-react";
+import { Link, useRouterState } from "@tanstack/react-router";
+import type { ReactNode } from "react";
+
+import { useLogout, useStaff } from "@/api/auth.query";
+import { useTheme } from "@/components/theme/theme-provider";
 import { cn, isOwnImage } from "@/lib/utils";
 
 import { EnvPill, RateUpStar } from "./brand";

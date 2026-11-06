@@ -1,8 +1,8 @@
+import { Input } from "@rateup/ui/components/input";
 import { Controller, useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 import { Field, FieldDescription, FieldError, FieldTitle } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { TagsInput } from "@/components/ui/tags-input.tsx";
 
 import type { CreateRuleInput } from "./schema.ts";

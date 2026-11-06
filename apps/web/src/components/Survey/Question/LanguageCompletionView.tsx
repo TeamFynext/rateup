@@ -1,12 +1,12 @@
-import { IconChevronDown } from "@tabler/icons-react";
-
-import { Button } from "@/components/ui/button";
+import { Button } from "@rateup/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@rateup/ui/components/dropdown-menu";
+import { IconChevronDown } from "@tabler/icons-react";
+
 import { cn } from "@/lib/utils";
 
 export const LanguageCompletionView = ({

@@ -1,3 +1,21 @@
+import { Alert, AlertDescription } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconBrandMeta, IconFileSpreadsheet, IconUpload } from "@tabler/icons-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -13,24 +31,6 @@ import {
 } from "@/backend/commerce/shop.api";
 import { useInvalidateShop } from "@/backend/commerce/shop.query";
 import { ShopifyLogo, WooCommerceLogo } from "@/components/integrations/logos";
-import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 
 import { settingsTab } from "./shopMeta";

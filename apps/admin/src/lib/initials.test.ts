@@ -1,6 +1,5 @@
+import { getAvatarInitials, getInitials, isEmojiName } from "@rateup/ui/lib/initials";
 import { describe, expect, test } from "vite-plus/test";
-
-import { getAvatarInitials, getInitials, isEmojiName } from "./initials";
 
 describe("getInitials", () => {
   test("first letter of up to two words, upper-cased", () => {

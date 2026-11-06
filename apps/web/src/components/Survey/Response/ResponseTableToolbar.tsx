@@ -1,3 +1,18 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
 import {
   IconFileDownload,
   IconRefresh,
@@ -15,22 +30,7 @@ import { useTranslation } from "react-i18next";
 import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Customer/LCustomerActionView.tsx";
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { DataTableViewOptions } from "@/components/Table/data-table-view-option.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { DatePicker } from "@/components/ui/date-picker.tsx";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 import { docsPath } from "@/utils/constants.ts";
 import { toText } from "@/utils/toText";
 

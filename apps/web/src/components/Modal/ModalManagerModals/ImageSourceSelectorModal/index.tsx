@@ -1,10 +1,10 @@
+import { Button } from "@rateup/ui/components/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
 import { IconBrandUnsplash, IconUpload } from "@tabler/icons-react";
 import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { SelectedImage } from "@/components/LocalOrUnsplashImagePicker/index.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { useDisclosure } from "@/hooks/useDisclosure";
 
 import ImageCropModal from "../ImageCropModal/index.tsx";

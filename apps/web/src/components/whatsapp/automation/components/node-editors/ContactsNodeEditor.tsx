@@ -1,10 +1,9 @@
 // Extracted verbatim from `node-editor.tsx`. Behaviour is unchanged.
 
+import { Button } from "@rateup/ui/components/button";
 import { IconPlus, IconTrash, IconX } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useState } from "react";
-
-import { Button } from "@/components/ui/button.tsx";
 
 import { ContainedDatePickerInput, ContainedTextField, Select } from "../editor-ui.tsx";
 import { FieldMsg, styles } from "./shared.tsx";

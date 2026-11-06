@@ -1,4 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Spinner } from "@rateup/ui/components/spinner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import { IconArrowLeft } from "@tabler/icons-react";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import React, { useState } from "react";
@@ -10,8 +12,6 @@ import {
   useRuleById,
   useUpdateRuleMutation,
 } from "@/backend/whatsapp/rule/rule.query";
-import { Spinner } from "@/components/ui/spinner.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 
 import {
   findAutomationTemplate,

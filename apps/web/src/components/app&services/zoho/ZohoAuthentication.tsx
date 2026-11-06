@@ -1,3 +1,11 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
 import { IconPlugConnected, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -8,11 +16,8 @@ import {
   useStartOAuthConnect,
 } from "@/backend/appsIntegration/integration.query";
 import { IntegrationFormCard } from "@/components/dashboard/settings/integrations/IntegrationFormCard.tsx";
-import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { IntegratedApps } from "@/types/enums";
-
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
 
 /** The `products` the connect asks Zoho for, per choice — the scopes follow from it. */
 const PRODUCTS = { crm: "crm", bigin: "bigin", both: "crm,bigin" } as const;

@@ -1,3 +1,11 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
 import {
   IconBolt,
   IconBrandInstagram,
@@ -27,10 +35,7 @@ import { useChannels } from "@/backend/channels/channels.query";
 import { useCreateChatbotMutation } from "@/backend/chatbots/chatbots.query.ts";
 import { StepTransition } from "@/components/dashboard/loyalty/onboarding/StepChrome.tsx";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { Stepper, type StepperStep } from "@/components/ui/stepper.tsx";
 import { FlowbotPreviewPlayground } from "@/components/whatsapp/automation/components/flowbot-phone-preview.tsx";
 import {

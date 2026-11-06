@@ -1,8 +1,7 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconCheck, IconCopy } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-
-import { Button } from "@/components/ui/button.tsx";
 
 export function ApiCopyButton({ value }: Readonly<{ value: string }>) {
   const [copied, setCopied] = useState(false);

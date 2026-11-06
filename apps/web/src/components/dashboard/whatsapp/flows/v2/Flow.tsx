@@ -1,6 +1,8 @@
 // Extracted verbatim from the `/dashboard/whatsapp/flows/v2/$dbFlowId/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import { Spinner } from "@rateup/ui/components/spinner";
+import { Tabs, TabsContent } from "@rateup/ui/components/tabs";
 import { useParams, useSearch } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 
@@ -9,8 +11,6 @@ import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import Result from "@/components/Survey/Result/Result.tsx";
 import ResultComparison from "@/components/Survey/Result/ResultComparison.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
-import { Tabs, TabsContent } from "@/components/ui/tabs.tsx";
 import EditFlow from "@/components/whatsapp/flow-v2/EditFlow.tsx";
 import { FlowScreenSheet } from "@/components/whatsapp/flow-v2/Preview/WhatsAppPreview.tsx";
 import { readEditorScreens } from "@/components/whatsapp/flow-v2/utils/flow-json.ts";

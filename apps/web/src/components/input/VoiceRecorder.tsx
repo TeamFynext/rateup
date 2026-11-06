@@ -1,3 +1,4 @@
+import { Button } from "@rateup/ui/components/button";
 import {
   IconMicrophone,
   IconPlayerPause,
@@ -13,7 +14,6 @@ import { immer } from "zustand/middleware/immer";
 
 import { deleteUploadedFiles, getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
 
-import { Button } from "../ui/button.tsx";
 import CustomTooltip from "../ui/custom/CustomTooltip.tsx";
 
 interface VoiceRecordState {

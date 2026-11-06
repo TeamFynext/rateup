@@ -1,8 +1,8 @@
+import { Button, buttonVariants } from "@rateup/ui/components/button";
 import { IconChevronLeft, IconChevronRight, IconChevronDown } from "@tabler/icons-react";
 import * as React from "react";
 import { DayPicker, getDefaultClassNames, type DayButton, type Locale } from "react-day-picker";
 
-import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 /**

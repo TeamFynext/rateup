@@ -1,3 +1,5 @@
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
+import { Spinner } from "@rateup/ui/components/spinner";
 import { useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
@@ -7,8 +9,6 @@ import {
 } from "@/backend/testimonials/testimonial.query";
 import type { filterType } from "@/components/dashboard/testimonial/CollectionById.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 import { getFilteredTestimonials } from "@/utils/testimonial.ts";
 
 import NothingFound from "../NothingFound/NothingFound.tsx";

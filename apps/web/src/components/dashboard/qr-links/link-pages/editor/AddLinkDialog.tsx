@@ -1,3 +1,20 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
 import { IconArrowLeft } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -5,7 +22,6 @@ import { v4 as uuidv4 } from "uuid";
 
 import type { LinktreeLink, LinktreeSurveyOption } from "@/backend/linktree/linktree.api.ts";
 import { useLinkTypeOptions } from "@/backend/linktree/linktree.query";
-import { Button } from "@/components/ui/button.tsx";
 import {
   Combobox,
   ComboboxContent,
@@ -14,23 +30,7 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 
 import { CustomLinkFields, useCustomLinkForm } from "./CustomLinkFields.tsx";
 import { type LinkKind, linkKinds, type SurveyLinkType, surveyLinkUrl } from "./linkTypes.ts";

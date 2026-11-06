@@ -1,8 +1,4 @@
-import { IconAlertTriangle } from "@tabler/icons-react";
-import { useId, useState, type ReactNode } from "react";
-import { toast } from "sonner";
-
-import { Button } from "@/components/ui/button";
+import { Button } from "@rateup/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -10,10 +6,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Spinner } from "@/components/ui/spinner";
-import { Textarea } from "@/components/ui/textarea";
+} from "@rateup/ui/components/dialog";
+import { Label } from "@rateup/ui/components/label";
+import { Spinner } from "@rateup/ui/components/spinner";
+import { Textarea } from "@rateup/ui/components/textarea";
+import { IconAlertTriangle } from "@tabler/icons-react";
+import { useId, useState, type ReactNode } from "react";
+import { toast } from "sonner";
+
 import { getApiErrorMessage } from "@/lib/apiError";
 import { cn } from "@/lib/utils";
 

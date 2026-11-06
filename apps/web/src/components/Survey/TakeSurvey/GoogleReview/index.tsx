@@ -1,12 +1,12 @@
+import { Button } from "@rateup/ui/components/button";
+import { Dialog, DialogContent, DialogTitle } from "@rateup/ui/components/dialog";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useUpdateReviewLinkStatsOnSurveyMutation } from "@/backend/surveys/surveys.query";
 import { useDeleteReviewSuggestionMutation } from "@/backend/team/reviewSuggestion/reviewSuggestion.query";
-import { Button } from "@/components/ui/button.tsx";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { ReviewPagePlatform } from "@/types/enums.ts";
 import type { ReviewSuggestion } from "@/types/global";
 import { shuffleArray } from "@/utils/index.ts";

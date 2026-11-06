@@ -1,0 +1,4 @@
+{
+  "extends": "@rateup/tsconfig/vite-react.json",
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
+}

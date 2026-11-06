@@ -1,10 +1,6 @@
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
-import { IconEdit, IconGripVertical, IconTrash } from "@tabler/icons-react";
-import type { ReactNode } from "react";
-import React from "react";
-
-import { Button } from "@/components/ui/button.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
+import { Button } from "@rateup/ui/components/button";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
 import {
   Table,
   TableBody,
@@ -12,7 +8,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table.tsx";
+} from "@rateup/ui/components/table";
+import { IconEdit, IconGripVertical, IconTrash } from "@tabler/icons-react";
+import type { ReactNode } from "react";
+import React from "react";
+
 import { reorder } from "@/utils/questions.ts";
 
 interface TableHeader {

@@ -1,3 +1,6 @@
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
+import { Spinner } from "@rateup/ui/components/spinner";
 import { IconClock, IconExternalLink, IconMessage } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
@@ -9,9 +12,6 @@ import { useSaveReminderMutation } from "@/backend/loyalty/reminders.query.tsx";
 import { useLoyaltyRewards } from "@/backend/loyalty/reward.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import { PageHeading } from "@/components/common/page-heading.tsx";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 import { TemplateType } from "@/types/enums.ts";
 
 import { loyaltyEventCatalog } from "../messages/loyaltyMessageCatalog.ts";

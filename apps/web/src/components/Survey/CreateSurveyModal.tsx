@@ -1,4 +1,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@rateup/ui/components/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Spinner } from "@rateup/ui/components/spinner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useId, useEffect, useState } from "react";
@@ -11,20 +22,9 @@ import type { CreateSurveyResponse } from "@/backend/surveys/survey.api";
 import { surveyKeys } from "@/backend/surveys/survey.keys";
 import { useCreateSurveyMutation } from "@/backend/surveys/surveys.query";
 import { useAllThemes } from "@/backend/surveyTheme/surveyTheme.query";
-import { Button } from "@/components/ui/button.tsx";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 
 const Languages = ["English", "മലയാളം", "Deutsch", "हिन्दी", "ಕನ್ನಡ", "Français", "عربي", "தமிழ்"];
 const defaultLanguage = "English";

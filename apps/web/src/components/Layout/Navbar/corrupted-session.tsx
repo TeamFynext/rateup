@@ -1,9 +1,9 @@
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
 import { IconAlertTriangle } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import {
   Card,
   CardContent,

@@ -1,3 +1,6 @@
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconClockExclamation, IconRefresh } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -5,9 +8,6 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { PublicCheckout, ShopBankDetails } from "@/backend/commerce/shop.api";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { cn } from "@/lib/utils.ts";
 import { asApiError, getApiErrorMessage } from "@/utils/apiError.ts";
 

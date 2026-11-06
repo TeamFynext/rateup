@@ -1,3 +1,4 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconDownload, IconSparkles } from "@tabler/icons-react";
 import { toPng } from "html-to-image";
 import { useEffect, useRef, useState } from "react";
@@ -5,7 +6,6 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import type { QrDesign } from "@/components/common/qr-designer/qrDesign.ts";
-import { Button } from "@/components/ui/button.tsx";
 import { rateupIcon } from "@/utils/constants";
 
 import CustomQRCode from "../components/CustomQrCode/CustomQrCode.tsx";

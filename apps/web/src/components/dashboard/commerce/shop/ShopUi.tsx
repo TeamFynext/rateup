@@ -1,3 +1,6 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import { IconExternalLink } from "@tabler/icons-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { cva, type VariantProps } from "class-variance-authority";
@@ -9,10 +12,7 @@ import type { ShopMetaSyncStatus } from "@/backend/commerce/shop.api";
 import { BackLink } from "@/components/common/back-link.tsx";
 import { CopyButton } from "@/components/common/copy-button.tsx";
 import { PageHeading } from "@/components/common/page-heading.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { cn } from "@/lib/utils";
 
 import { SHOP_PATHS, type SettingsTab, type Tone } from "./shopMeta.ts";

@@ -1,10 +1,10 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconX } from "@tabler/icons-react";
 import { motion, useReducedMotion } from "motion/react";
 import type { FieldErrors } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button.tsx";
 import { useConfirm } from "@/context/confirm-provider";
 import { cn } from "@/lib/utils.ts";
 

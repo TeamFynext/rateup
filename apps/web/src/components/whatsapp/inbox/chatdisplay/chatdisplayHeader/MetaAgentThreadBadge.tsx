@@ -1,10 +1,4 @@
-import { IconChevronDown, IconSparkles, IconUserCheck } from "@tabler/icons-react";
-import dayjs from "dayjs";
-
-import { useSetThreadControl } from "@/backend/metaAgent/metaAgent.query";
-import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
-import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   Popover,
   PopoverContent,
@@ -12,7 +6,13 @@ import {
   PopoverHeader,
   PopoverTitle,
   PopoverTrigger,
-} from "@/components/ui/popover.tsx";
+} from "@rateup/ui/components/popover";
+import { IconChevronDown, IconSparkles, IconUserCheck } from "@tabler/icons-react";
+import dayjs from "dayjs";
+
+import { useSetThreadControl } from "@/backend/metaAgent/metaAgent.query";
+import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
+import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { cn } from "@/lib/utils.ts";
 import { type ContactWithUpdatedAt, useContactsStore } from "@/store/inbox.store.ts";
 

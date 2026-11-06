@@ -1,3 +1,6 @@
+import { Button } from "@rateup/ui/components/button";
+import { Empty, EmptyDescription, EmptyTitle } from "@rateup/ui/components/empty";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconFileText, IconTrash, IconUpload } from "@tabler/icons-react";
 import { useRef } from "react";
 import { toast } from "sonner";
@@ -9,9 +12,6 @@ import {
   useSyncFiles,
   useUploadFile,
 } from "@/backend/metaAgent/metaAgent.query";
-import { Button } from "@/components/ui/button";
-import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty";
-import { Skeleton } from "@/components/ui/skeleton";
 
 import { PanelCard } from "../shared/PanelCard";
 

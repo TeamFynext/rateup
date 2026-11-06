@@ -1,3 +1,10 @@
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
 import { IconLoader2 } from "@tabler/icons-react";
 import { useId, useMemo } from "react";
 
@@ -5,7 +12,6 @@ import { useCustomFields } from "@/backend/campaign/contacts/contacts.query";
 import { useWaTemplateById } from "@/backend/whatsapp/whatsapp.query";
 
 import { Field, FieldDescription, FieldLabel } from "../ui/field.tsx";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 import {
   contactVariablePresets,
   shopifyVariablePresets,

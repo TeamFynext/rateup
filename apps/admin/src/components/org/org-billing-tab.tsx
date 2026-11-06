@@ -1,3 +1,4 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconExternalLink, IconPlus } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -22,7 +23,6 @@ import { ResponsiveTable, type Column } from "@/components/ds/responsive-table";
 import type { OrgAction } from "@/components/org/actions/org-action-dialogs";
 import { FeaturesSummary } from "@/components/org/features-summary";
 import { packAllowance } from "@/components/org/packs";
-import { Button } from "@/components/ui/button";
 import { formatDate, formatMoney, formatRelative, isEffectivelyNever } from "@/lib/format";
 
 const ORDER_COLUMNS = orderColumns({ withOrg: false });

@@ -1,3 +1,23 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@rateup/ui/components/table";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import {
   IconCheck,
   IconChevronLeft,
@@ -17,28 +37,8 @@ import { DEFAULT_QR_DESIGN } from "@/components/common/qr-designer/qrDesign.ts";
 import { downloadBlob } from "@/utils/downloadBlob.ts";
 
 import Heading from "../../../styled/Heading/Heading.tsx";
-import { Badge } from "../../../ui/badge.tsx";
-import { Button } from "../../../ui/button.tsx";
 import { Checkbox } from "../../../ui/checkbox.tsx";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../../ui/dialog.tsx";
 import { Field, FieldLabel } from "../../../ui/field.tsx";
-import { Input } from "../../../ui/input.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../../ui/select.tsx";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../../ui/table.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../../../ui/tooltip.tsx";
 import Preview from "../Preview/Preview.tsx";
 
 function TagManager({

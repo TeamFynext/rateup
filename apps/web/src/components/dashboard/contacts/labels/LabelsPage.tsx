@@ -1,6 +1,16 @@
 // Extracted verbatim from the `/dashboard/contacts/labels/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import { Textarea } from "@rateup/ui/components/textarea";
 import { IconPlus, IconTag } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 
@@ -14,17 +24,7 @@ import { DataTableToolbar } from "@/components/dashboard/contacts/labels/data-ta
 import type { ContactLabel } from "@/components/dashboard/contacts/labels/utils.tsx";
 import { createColumns } from "@/components/dashboard/contacts/labels/utils.tsx";
 import { DataTable } from "@/components/Table/data-table.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Textarea } from "@/components/ui/textarea.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 
 export function LabelsPage() {

@@ -1,3 +1,4 @@
+import { SidebarProvider } from "@rateup/ui/components/sidebar";
 import type { CSSProperties, ReactNode } from "react";
 
 import { RouteAccessGuard } from "@/components/common/RouteAccessGuard.tsx";
@@ -10,7 +11,6 @@ import { useChatSocket } from "@/hooks/useChatSocket.tsx";
 
 import NavbarSkeleton from "../../animation/skeleton/Navbar.Skeleton";
 import { PhonePreviewPanel, PhonePreviewProvider } from "../../ui/phone-preview.tsx";
-import { SidebarProvider } from "../../ui/sidebar.tsx";
 import AppSidebar from "./app-sidebar.tsx";
 import CorruptedSessionScreen from "./corrupted-session.tsx";
 import { useMainSidebar } from "./use-main-sidebar.tsx";

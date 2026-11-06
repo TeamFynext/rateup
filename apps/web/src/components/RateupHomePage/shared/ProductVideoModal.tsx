@@ -1,12 +1,12 @@
-import { useState } from "react";
-
 import {
   Dialog,
   DialogClose,
   DialogContent,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@rateup/ui/components/dialog";
+import { useState } from "react";
+
 import { rateupProductVideo, rateupProductVideoCover } from "@/utils/constants";
 
 interface ProductVideoModalProps {

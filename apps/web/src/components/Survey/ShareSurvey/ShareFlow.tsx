@@ -1,26 +1,26 @@
-import { useParams } from "@tanstack/react-router";
-import { useId, useCallback, useContext, useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-
-import { usePushToWaMutation, useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
-import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
-import { Button } from "@/components/ui/button.tsx";
-import { Card } from "@/components/ui/card.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
+} from "@rateup/ui/components/select";
+import { Spinner } from "@rateup/ui/components/spinner";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
+} from "@rateup/ui/components/tooltip";
+import { useParams } from "@tanstack/react-router";
+import { useId, useCallback, useContext, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import { usePushToWaMutation, useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
+import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import { Card } from "@/components/ui/card.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { cn } from "@/lib/utils";
 import { SurveyType, WaFlowStatus } from "@/types/enums.ts";
 

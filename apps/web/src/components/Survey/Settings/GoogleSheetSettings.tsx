@@ -1,10 +1,10 @@
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
 import { useId } from "react";
 import { useTranslation } from "react-i18next";
 
 import { ApiCopyButton } from "@/components/ExternalApi/ApiCopyButton.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
 
 const GoogleSheetSettings = ({ spreadSheetId }: { spreadSheetId: string }) => {
   const uid = useId();

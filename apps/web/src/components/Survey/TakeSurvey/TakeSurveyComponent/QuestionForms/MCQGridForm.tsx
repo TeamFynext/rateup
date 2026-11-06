@@ -1,11 +1,5 @@
-import { useContext, useEffect, useRef, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
-
-import type { QuestionFormFeatures } from "@/components/Survey/Question/QuestionExtraProps/questionForm.ts";
-import { Field, FieldTitle } from "@/components/ui/field.tsx";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
+import { Separator } from "@rateup/ui/components/separator";
 import {
   Table,
   TableBody,
@@ -13,7 +7,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table.tsx";
+} from "@rateup/ui/components/table";
+import { useContext, useEffect, useRef, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+
+import type { QuestionFormFeatures } from "@/components/Survey/Question/QuestionExtraProps/questionForm.ts";
+import { Field, FieldTitle } from "@/components/ui/field.tsx";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";

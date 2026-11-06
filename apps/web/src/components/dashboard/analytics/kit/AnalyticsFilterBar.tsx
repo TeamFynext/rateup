@@ -1,3 +1,4 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconFileTypePdf, IconLoader2, IconRefresh } from "@tabler/icons-react";
 import { useIsFetching, useQueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
@@ -7,7 +8,6 @@ import { endFreshAnalytics, requestFreshAnalytics } from "@/backend/analytics/an
 import { analyticsKeys } from "@/backend/org/org.keys";
 import { ApiSelector } from "@/components/apiAnalytics/APISelector.tsx";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import DateRangeSelector from "@/components/whatsapp/inbox/analytics/DateRangeSelector.tsx";
 import { cn } from "@/lib/utils";
 

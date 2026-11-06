@@ -1,3 +1,5 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
 import { IconPlayerPlay, IconX } from "@tabler/icons-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
@@ -13,8 +15,6 @@ import {
 import { useMessengerProfile } from "@/backend/whatsapp/messenger-profile/messengerProfile.query.ts";
 import { getTriggerEventLabel } from "@/components/dashboard/automation/components/schema.ts";
 import { TriggerSetupPrompt } from "@/components/dashboard/chatbots/TriggerSetupPrompt.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { AutomationPlatform } from "@/types/platform.ts";
 
 /**

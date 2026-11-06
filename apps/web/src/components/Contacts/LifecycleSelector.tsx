@@ -1,8 +1,3 @@
-import React from "react";
-
-import type { GetLabelsRes } from "@/backend/lifecycle/lifecycle.types";
-import { useLifecycleContext } from "@/context/LifecycleContext.ts";
-
 import {
   Select,
   SelectContent,
@@ -12,7 +7,11 @@ import {
   SelectSeparator,
   SelectTrigger,
   SelectValue,
-} from "../ui/select.tsx";
+} from "@rateup/ui/components/select";
+import React from "react";
+
+import type { GetLabelsRes } from "@/backend/lifecycle/lifecycle.types";
+import { useLifecycleContext } from "@/context/LifecycleContext.ts";
 
 const ALL_VALUE = "all";
 

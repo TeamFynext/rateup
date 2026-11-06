@@ -1,6 +1,6 @@
+import { Badge } from "@rateup/ui/components/badge";
 import { useTranslation } from "react-i18next";
 
-import { Badge } from "@/components/ui/badge.tsx";
 import { cn } from "@/lib/utils";
 
 /** One badge shape for every status in the section: an outline chip with a dot whose colour carries the state. */

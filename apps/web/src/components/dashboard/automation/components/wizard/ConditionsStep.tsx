@@ -1,3 +1,13 @@
+import { Alert, AlertDescription } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
 import { IconInfoCircle, IconLoader2, IconPlus, IconRefresh, IconTrash } from "@tabler/icons-react";
 import React, { useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
@@ -9,8 +19,6 @@ import {
   useInstagramMediaPosts,
   useInstagramStories,
 } from "@/backend/whatsapp/instagram-profile/instagramProfile.query";
-import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import {
   Field,
@@ -19,15 +27,7 @@ import {
   FieldLabel,
   FieldTitle,
 } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 import { cn } from "@/lib/utils.ts";
 import { ShopifyEvents } from "@/types/enums.ts";
 

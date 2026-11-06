@@ -1,3 +1,21 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@rateup/ui/components/table";
 import { IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useMutation } from "@tanstack/react-query";
 import { countries as countryData } from "country-data-list";
@@ -21,28 +39,10 @@ import {
   type ShopStore,
 } from "@/backend/commerce/shop.api";
 import { useInvalidateShop, useShopShippingProviders } from "@/backend/commerce/shop.query";
-import { Button } from "@/components/ui/button.tsx";
 import { CountryDropdown } from "@/components/ui/country-dropdown.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useCan } from "@/hooks/usePermission.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";

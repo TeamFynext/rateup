@@ -1,3 +1,5 @@
+import { Button } from "@rateup/ui/components/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
 import { IconEye } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -11,8 +13,6 @@ import type { WaTemplateListEntry } from "@/backend/whatsapp/whatsapp.api";
 import { ActiveStatusBadge } from "@/components/app&services/Shopify.tsx";
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import type { ShopifyIntegration, ShopifySchedule, ShopifySurvey } from "@/types/global";
 import { shopifyEventData } from "@/utils/constants.ts";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime.ts";

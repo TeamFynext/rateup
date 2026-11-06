@@ -1,11 +1,17 @@
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@rateup/ui/components/table";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useDisclosure } from "@/hooks/useDisclosure";
-
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog.tsx";
-import { ScrollArea } from "../ui/scroll-area.tsx";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table.tsx";
 
 const ContactImportErrorModal = ({
   isError = false,

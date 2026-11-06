@@ -1,3 +1,5 @@
+import { Button } from "@rateup/ui/components/button";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import {
   IconCalendarX,
   IconChevronDown,
@@ -22,9 +24,7 @@ import type {
   PipelineStage,
   PipelineStats,
 } from "@/backend/pipeline/pipeline.types.ts";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 import { STATUS_BAND, TASK_TYPE_ICON } from "../pipeline.constants.tsx";

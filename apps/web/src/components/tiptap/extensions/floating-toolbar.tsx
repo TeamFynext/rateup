@@ -1,10 +1,10 @@
+import { ScrollArea, ScrollBar } from "@rateup/ui/components/scroll-area";
+import { Separator } from "@rateup/ui/components/separator";
+import { TooltipProvider } from "@rateup/ui/components/tooltip";
 import { type Editor } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
 import { useEffect } from "react";
 
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { useMediaQuery } from "@/hooks/use-media-querry";
 
 import { AlignmentTooolbar } from "../toolbars/alignment";

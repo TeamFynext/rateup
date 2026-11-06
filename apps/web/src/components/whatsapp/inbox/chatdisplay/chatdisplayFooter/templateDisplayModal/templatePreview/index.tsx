@@ -1,3 +1,5 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
 import { IconArrowLeft, IconSend } from "@tabler/icons-react";
 import type { UseMutationResult } from "@tanstack/react-query";
 import type { AxiosResponse } from "axios";
@@ -7,8 +9,6 @@ import { useImmer } from "use-immer";
 
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useWaTemplateById } from "@/backend/whatsapp/whatsapp.query";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import type { NewPendingMessage } from "@/store/pendingMessages.ts";
 import { WaTemplateComponentType } from "@/types/enums.ts";
 import { WaTemplateSupportedParameters } from "@/types/enums.ts";

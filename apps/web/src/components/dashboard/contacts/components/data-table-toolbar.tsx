@@ -1,3 +1,19 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import {
   IconActivity,
   IconBan,
@@ -39,23 +55,7 @@ import { useOpenKeptContact } from "@/components/Contacts/merge/useOpenKeptConta
 import { StageSelector, usePipelineStages } from "@/components/pipeline/shared/StageSelector.tsx";
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { DataTableViewOptions } from "@/components/Table/data-table-view-option.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useTeamFeatures } from "@/context/TeamFeaturesContext.tsx";
 import { useCan } from "@/hooks/usePermission.ts";

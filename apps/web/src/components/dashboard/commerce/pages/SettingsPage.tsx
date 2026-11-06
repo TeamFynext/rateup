@@ -1,10 +1,10 @@
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@rateup/ui/components/empty";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import { useShopStore } from "@/backend/commerce/shop.query";
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 
 import { CheckoutTab } from "../settings/CheckoutTab.tsx";

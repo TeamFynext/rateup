@@ -1,12 +1,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@rateup/ui/components/button";
+import { Tabs, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import { IconCalculator, IconCrown, IconGift } from "@tabler/icons-react";
 import { useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button.tsx";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { useConfirm } from "@/context/confirm-provider";
 
 import { toFiniteNumber } from "../../giveback/calculateGiveback.ts";

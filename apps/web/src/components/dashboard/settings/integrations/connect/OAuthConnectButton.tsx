@@ -1,8 +1,8 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconPlugConnected } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import { useStartOAuthConnect } from "@/backend/appsIntegration/integration.query";
-import { Button } from "@/components/ui/button.tsx";
 
 /**
  * "Connect with …" for any provider that connects through a consent screen. The API builds

@@ -1,8 +1,7 @@
+import { ScrollArea, ScrollBar } from "@rateup/ui/components/scroll-area";
+import { Separator } from "@rateup/ui/components/separator";
+import { TooltipProvider } from "@rateup/ui/components/tooltip";
 import { Editor } from "@tiptap/core";
-
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { AlignmentTooolbar } from "./alignment";
 import { BlockquoteToolbar } from "./blockquote";

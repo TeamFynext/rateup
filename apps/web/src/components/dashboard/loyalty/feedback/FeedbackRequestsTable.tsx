@@ -1,3 +1,11 @@
+import { Badge } from "@rateup/ui/components/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
 import { IconExternalLink, IconGift, IconStarFilled } from "@tabler/icons-react";
 import type { ColumnDef, PaginationState } from "@tanstack/react-table";
 import dayjs from "dayjs";
@@ -12,14 +20,6 @@ import {
 import { useFeedbackRequests } from "@/backend/loyalty/feedback.query.ts";
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { DataTable } from "@/components/Table/data-table.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 
 import { FEEDBACK_PAGE_SIZE, requestsQueryFor, type FeedbackSearch } from "./feedback.search.ts";
 

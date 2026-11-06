@@ -1,4 +1,17 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Empty, EmptyDescription, EmptyTitle } from "@rateup/ui/components/empty";
+import { Input } from "@rateup/ui/components/input";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Textarea } from "@rateup/ui/components/textarea";
 import { IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -17,20 +30,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty";
 import { FieldGroup } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Textarea } from "@/components/ui/textarea";
 
 import { faqFormSchema, type FaqFormValues } from "../../metaAgent.schemas";
 import { FormField } from "../shared/FormField";

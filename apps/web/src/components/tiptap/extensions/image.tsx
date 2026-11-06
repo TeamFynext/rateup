@@ -1,3 +1,16 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+} from "@rateup/ui/components/dropdown-menu";
+import { Input } from "@rateup/ui/components/input";
+import { Separator } from "@rateup/ui/components/separator";
 import {
   IconAlignCenter,
   IconAlignLeft,
@@ -15,20 +28,7 @@ import Image from "@tiptap/extension-image";
 import { type NodeViewProps, NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
 import { useEffect, useRef, useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-} from "@/components/ui/dropdown-menu";
 import { FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { useImageUpload } from "@/hooks/use-image-upload";
 import { cn } from "@/lib/utils";
 

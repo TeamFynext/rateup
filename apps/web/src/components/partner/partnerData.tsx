@@ -1,3 +1,16 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import { Progress } from "@rateup/ui/components/progress";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Textarea } from "@rateup/ui/components/textarea";
 import {
   IconArrowLeft,
   IconArrowRight,
@@ -16,23 +29,10 @@ import z from "zod/v4";
 
 import { usePartnerApplicationMutation } from "@/backend/partnerdata/partnerdata.query";
 import { partnerApplicationSchema } from "@/components/RateupHomePage/schema";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CountryDropdown } from "@/components/ui/country-dropdown";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Field, FieldLegend, FieldSet, FieldTitle } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 /* ─────────────────────────── types ─────────────────────────── */

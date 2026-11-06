@@ -1,13 +1,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { Spinner } from "@rateup/ui/components/spinner";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import z from "zod";
 
 import { useUpdateWaSettingsMutation } from "@/backend/whatsapp/settings/waSettings.query";
-import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 
 interface ChannelNameFormValues {
   phoneDisplayName: string;

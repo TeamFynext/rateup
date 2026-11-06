@@ -1,12 +1,3 @@
-import { IconAlertTriangle, IconLoader2 } from "@tabler/icons-react";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-
-import {
-  useGetLeadWebhook,
-  useIssueGetLeadWebhookMutation,
-} from "@/backend/appsIntegration/getlead/getlead.query";
-import { LinkCopyElement } from "@/components/input/LinkCopyElement.tsx";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,8 +7,17 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button.tsx";
+} from "@rateup/ui/components/alert-dialog";
+import { Button } from "@rateup/ui/components/button";
+import { IconAlertTriangle, IconLoader2 } from "@tabler/icons-react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import {
+  useGetLeadWebhook,
+  useIssueGetLeadWebhookMutation,
+} from "@/backend/appsIntegration/getlead/getlead.query";
+import { LinkCopyElement } from "@/components/input/LinkCopyElement.tsx";
 import { Card } from "@/components/ui/card";
 
 /**

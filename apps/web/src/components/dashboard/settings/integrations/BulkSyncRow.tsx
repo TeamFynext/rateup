@@ -1,8 +1,8 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconLoader2 } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button.tsx";
 import { formatToRelativeTime } from "@/utils/dateTime.ts";
 
 /** One first-time sync run, as a CRM's status reports it. */

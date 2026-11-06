@@ -1,6 +1,5 @@
+import { Badge } from "@rateup/ui/components/badge";
 import { useTranslation } from "react-i18next";
-
-import { Badge } from "@/components/ui/badge.tsx";
 
 import type { ProgramState } from "./programState.ts";
 

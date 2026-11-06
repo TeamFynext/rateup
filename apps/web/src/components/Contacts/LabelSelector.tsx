@@ -1,10 +1,17 @@
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+
 import type { ContactLabelOption } from "@/backend/campaign/contacts/contacts.api";
 import { useContactLabels } from "@/backend/campaign/contacts/contacts.query";
 
 import { Card } from "../ui/card.tsx";
 import { MultiSelect } from "../ui/multi-select.tsx";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
-import { Skeleton } from "../ui/skeleton.tsx";
 
 /** A contact label as the label picker renders it. */
 

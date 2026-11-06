@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Spinner } from "@rateup/ui/components/spinner";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -12,7 +13,6 @@ import { useUserInfo } from "@/backend/user/user.query";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 
 import { Card } from "../ui/card.tsx";
-import { Spinner } from "../ui/spinner.tsx";
 import { AuthShell, AuthTitle } from "./AuthShell.tsx";
 import { asSignupForm } from "./signup/shared.tsx";
 import { SIGNUP_COPY, SignupProgress } from "./signup/SignupProgress.tsx";

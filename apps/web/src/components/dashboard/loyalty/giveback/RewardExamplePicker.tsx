@@ -1,19 +1,19 @@
-import { IconAlertTriangle, IconPlus } from "@tabler/icons-react";
-import { useTranslation } from "react-i18next";
-
-import type { LoyaltyPresetKey } from "@/backend/loyalty/onboarding.api";
-import { ActionCard } from "@/components/common/action-card.tsx";
-import { CardGrid } from "@/components/common/generic-card.tsx";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog.tsx";
+} from "@rateup/ui/components/dialog";
+import { IconAlertTriangle, IconPlus } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
+
+import type { LoyaltyPresetKey } from "@/backend/loyalty/onboarding.api";
+import { ActionCard } from "@/components/common/action-card.tsx";
+import { CardGrid } from "@/components/common/generic-card.tsx";
 
 import {
   buildExample,

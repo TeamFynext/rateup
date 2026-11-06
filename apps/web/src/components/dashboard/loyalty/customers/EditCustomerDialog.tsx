@@ -1,12 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IconCake } from "@tabler/icons-react";
-import { Controller, useForm } from "react-hook-form";
-import { useTranslation } from "react-i18next";
-import z from "zod";
-
-import type { UpdateLoyaltyCustomerInput } from "@/backend/loyalty/customer/customer.api";
-import type { LoyaltyChannel } from "@/backend/loyalty/program.api";
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +7,22 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog.tsx";
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { IconCake } from "@tabler/icons-react";
+import { Controller, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+import z from "zod";
+
+import type { UpdateLoyaltyCustomerInput } from "@/backend/loyalty/customer/customer.api";
+import type { LoyaltyChannel } from "@/backend/loyalty/program.api";
 import {
   Field,
   FieldDescription,
@@ -22,14 +30,6 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 
 import { channelLabel } from "../channels/channels.ts";
 

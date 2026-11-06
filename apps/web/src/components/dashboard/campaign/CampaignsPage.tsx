@@ -1,6 +1,17 @@
 // Extracted verbatim from the `/dashboard/campaigns/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Tabs, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import { IconFilter, IconMessage, IconRotate, IconSend } from "@tabler/icons-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useId, useMemo, useState } from "react";
@@ -29,18 +40,7 @@ import {
 import { sortData } from "@/components/dashboard/SortDropDown.tsx";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import useDebounce from "@/components/menu/hook/useDebounce.ts";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { CampaignStatus, CampaignType } from "@/types/enums.ts";
 import type { Campaign } from "@/types/global";
 import { getAccessDenialReason, isPlanDenial } from "@/utils/apiError.ts";

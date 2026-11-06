@@ -1,3 +1,11 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@rateup/ui/components/tooltip";
 import { IconKey } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
@@ -6,15 +14,7 @@ import { toast } from "sonner";
 
 import { useAllResponses } from "@/backend/surveys/response/response.query";
 import { useEditSurveyMutation } from "@/backend/surveys/surveys.query";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";

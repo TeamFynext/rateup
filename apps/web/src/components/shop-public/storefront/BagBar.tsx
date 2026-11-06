@@ -1,9 +1,4 @@
-import { IconBrandWhatsapp, IconChevronUp, IconTrash } from "@tabler/icons-react";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-
-import { formatMoney } from "@/backend/commerce/shop.api";
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   Sheet,
   SheetContent,
@@ -11,7 +6,12 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet.tsx";
+} from "@rateup/ui/components/sheet";
+import { IconBrandWhatsapp, IconChevronUp, IconTrash } from "@tabler/icons-react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import { formatMoney } from "@/backend/commerce/shop.api";
 
 import { type ResolvedBagLine, variantLabel, whatsappOrderLink } from "../catalog.ts";
 import { QuantityStepper, TAP_AREA } from "../shared.tsx";

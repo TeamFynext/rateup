@@ -1,4 +1,16 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import { Spinner } from "@rateup/ui/components/spinner";
 import { IconStar, IconMessage } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { type KeyboardEvent, useId, useRef, useState } from "react";
@@ -11,20 +23,8 @@ import type { FlowTemplate } from "@/backend/whatsapp/flow/flow.api";
 import { useCreateFlowMutation, useFlowTemplates } from "@/backend/whatsapp/flow/flow.query";
 import { StepTransition } from "@/components/dashboard/loyalty/onboarding/StepChrome.tsx";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 import { Stepper, type StepperStep } from "@/components/ui/stepper.tsx";
 import { cn } from "@/lib/utils.ts";
 

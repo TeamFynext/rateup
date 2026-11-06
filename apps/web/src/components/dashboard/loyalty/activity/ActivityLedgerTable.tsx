@@ -1,3 +1,4 @@
+import { Badge } from "@rateup/ui/components/badge";
 import { Link } from "@tanstack/react-router";
 import type { ColumnDef, PaginationState } from "@tanstack/react-table";
 import dayjs from "dayjs";
@@ -11,7 +12,6 @@ import type {
 import { useGetTransactions } from "@/backend/loyalty/redemption/redemption.query";
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { DataTable } from "@/components/Table/data-table.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
 
 import { LOYALTY_PATHS } from "../paths.ts";
 import { PAGE_SIZE } from "./activity.filters.ts";

@@ -1,4 +1,22 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Textarea } from "@rateup/ui/components/textarea";
 import { useId, useEffect, useState } from "react";
 import type { Control } from "react-hook-form";
 import { Controller, useForm } from "react-hook-form";
@@ -11,15 +29,6 @@ import {
   useCreateShopifyProduct,
   useUpdateCatalogProducts,
 } from "@/backend/whatsapp/catalog/products/products.query";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
 import {
   Field,
   FieldDescription,
@@ -30,16 +39,7 @@ import {
   FieldSet,
   FieldTitle,
 } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 import { TagsInput } from "@/components/ui/tags-input.tsx";
-import { Textarea } from "@/components/ui/textarea.tsx";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group.tsx";
 import { CatalogProductType } from "@/types/enums.ts";
 import {

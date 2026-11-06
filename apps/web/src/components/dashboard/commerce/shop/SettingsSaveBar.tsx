@@ -1,6 +1,6 @@
+import { Button } from "@rateup/ui/components/button";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button.tsx";
 import { cn } from "@/lib/utils";
 
 /** The one Save for a settings tab, pinned to the bottom of the viewport while it scrolls. */

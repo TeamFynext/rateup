@@ -1,3 +1,5 @@
+import { Button } from "@rateup/ui/components/button";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconClock, IconPlus } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -9,9 +11,7 @@ import {
   useUpdateBusinessHour,
 } from "@/backend/org/business-hours/business-hours.query";
 import { useRules } from "@/backend/whatsapp/rule/rule.query";
-import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 
 import type { DependentRule } from "./ScheduleCard.tsx";
 import { ScheduleCard } from "./ScheduleCard.tsx";

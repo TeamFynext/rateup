@@ -1,3 +1,5 @@
+import { Spinner } from "@rateup/ui/components/spinner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import {
   IconBolt,
   IconBrandWhatsapp,
@@ -17,8 +19,6 @@ import { userKeys } from "@/backend/user/user.keys";
 import { ChannelDetailsPage } from "@/components/dashboard/settings/channels/ChannelDetailsPage.tsx";
 import { useRouteAndCartStore } from "@/components/HomePage/pages/Pricing/store/RouteAndCartStore.ts";
 import { Card } from "@/components/ui/card.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
 import type { OnboardingFormData } from "./onboarding-types.ts";
 import OnboardingStep1 from "./Onboarding1.tsx";

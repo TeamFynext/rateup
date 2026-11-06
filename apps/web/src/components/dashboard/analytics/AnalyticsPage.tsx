@@ -1,3 +1,13 @@
+import { Button } from "@rateup/ui/components/button";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@rateup/ui/components/table";
 import {
   IconArrowBackUp,
   IconArrowForwardUp,
@@ -20,17 +30,7 @@ import { useGetStaffDetailedConversationAnalytics } from "@/backend/conversation
 import { staffKeys } from "@/backend/org/org.keys";
 import { BackLink } from "@/components/common/back-link.tsx";
 import { type StatChange, StatTile } from "@/components/common/StatTile.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { ContactAvatar } from "@/components/ui/contact-avatar.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table.tsx";
 import { DateSelector } from "@/components/whatsapp/inbox/analytics/DateRangeSelector.tsx";
 import { formatToRelativeTime } from "@/utils/dateTime.ts";
 

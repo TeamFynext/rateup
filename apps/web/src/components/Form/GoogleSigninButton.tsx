@@ -1,3 +1,4 @@
+import { Button } from "@rateup/ui/components/button";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { getAuthorisationURLWithQueryParamsAndSetState } from "supertokens-auth-react/recipe/thirdparty";
@@ -5,7 +6,6 @@ import { getAuthorisationURLWithQueryParamsAndSetState } from "supertokens-auth-
 import { isSuperTokensGeneralError } from "@/utils/auth/index.tsx";
 
 import { GoogleIcon } from "../Button/GoogleIcon.tsx";
-import { Button } from "../ui/button.tsx";
 
 function GoogleSignInButton({ buttonText, className }: { buttonText: string; className?: string }) {
   const { t: translations } = useTranslation();

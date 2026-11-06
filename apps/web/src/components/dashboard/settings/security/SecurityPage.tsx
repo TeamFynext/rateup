@@ -2,6 +2,18 @@
 // config only. Behaviour is unchanged.
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import { Separator } from "@rateup/ui/components/separator";
 import {
   IconAlertTriangle,
   IconEye,
@@ -26,20 +38,8 @@ import {
   useGetUserProfile,
   useUpdateActiveStatusMutation,
 } from "@/backend/user/user.query";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
 import { Field, FieldError, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
 

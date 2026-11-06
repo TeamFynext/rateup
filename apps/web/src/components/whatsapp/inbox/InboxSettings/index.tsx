@@ -1,10 +1,10 @@
+import { Tabs, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import { IconBolt, IconHash, IconMessage } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { SECTION_TITLE } from "@/components/common/page-heading.tsx";
 import WaQuickReplySettings from "@/components/RichTextEditor/WaQuickReply/WaQuickReplySettings.tsx";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 
 import ConversationTagSettings from "./ConversationTagSettings.tsx";
 import InboxAutomation from "./InboxAutomation.tsx";

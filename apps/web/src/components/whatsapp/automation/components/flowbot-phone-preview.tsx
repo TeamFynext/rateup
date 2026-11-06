@@ -1,3 +1,5 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
 import {
   IconArrowBackUp,
   IconCopy,
@@ -16,8 +18,6 @@ import { useWaTemplateById } from "@/backend/whatsapp/whatsapp.query.ts";
 import { DM, DmComposer, DmHeader } from "@/components/common/dm-preview-shell.tsx";
 import type { TiptapNode } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import { parseJsonToReact } from "@/components/RichTextEditor/wa-editor/format.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import {
   WA,
   WaDateChip,

@@ -1,8 +1,8 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconBolt, IconX } from "@tabler/icons-react";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button.tsx";
 import { findExample, findTrigger } from "@/config/chatbotExamples/index.ts";
 import type { AutomationPlatform } from "@/types/platform.ts";
 

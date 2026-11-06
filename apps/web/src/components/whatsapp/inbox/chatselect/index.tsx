@@ -1,3 +1,18 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Progress, ProgressLabel } from "@rateup/ui/components/progress";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@rateup/ui/components/tooltip";
 import { IconCircleCheck, IconLoader, IconTrash, IconUserCheck } from "@tabler/icons-react";
 import { useSearch } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -16,21 +31,6 @@ import {
   useFilteredContacts,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
-import { Progress, ProgressLabel } from "@/components/ui/progress.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useLifecycleContext } from "@/context/LifecycleContext.ts";
 import { useUser } from "@/context/UserContext.tsx";

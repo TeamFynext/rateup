@@ -1,3 +1,14 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import { IconAlertTriangle, IconClock, IconGift, IconPencil } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useId, useMemo, useState } from "react";
@@ -5,20 +16,9 @@ import { useTranslation } from "react-i18next";
 
 import type { EventTrigger } from "@/backend/loyalty/eventTriggers.api";
 import type { SaveReminderInput } from "@/backend/loyalty/reminders.api";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
 import type { LoyaltyEventDefinition } from "../messages/loyaltyMessageCatalog.ts";
 import { LoyaltyTemplateStatusBadge } from "../messages/LoyaltyTemplateStatusBadge.tsx";

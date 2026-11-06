@@ -1,3 +1,19 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Textarea } from "@rateup/ui/components/textarea";
 import {
   IconAdjustments,
   IconAsterisk,
@@ -19,25 +35,9 @@ import { toast } from "sonner";
 import type { WaConnectedCatalog } from "@/backend/whatsapp/catalog/catalog.api";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import { LengthTracker } from "@/components/input/LengthTracker.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import { Textarea } from "@/components/ui/textarea.tsx";
 import { WaCarouselCard } from "@/components/whatsapp/wa-template-bubble.tsx";
 import { WHATSAPP_BUTTON_TYPE, WHATSAPP_TEMPLATE_BROADCAST_TYPE } from "@/utils/constants.ts";
 import { parseStringWithVariables } from "@/utils/whatsapp/templates.tsx";

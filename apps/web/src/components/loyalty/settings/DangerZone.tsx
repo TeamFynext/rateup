@@ -1,6 +1,6 @@
+import { Button } from "@rateup/ui/components/button";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 
 interface DangerZoneProps {

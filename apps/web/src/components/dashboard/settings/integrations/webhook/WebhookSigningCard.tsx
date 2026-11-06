@@ -1,10 +1,24 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@rateup/ui/components/collapsible";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@rateup/ui/components/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import { IconChevronDown, IconExternalLink, IconEye, IconRefresh } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useRotateWebhookSecretMutation, useWebhookSecret } from "@/backend/webhook/webhook.query";
 import { ApiCopyButton } from "@/components/ExternalApi/ApiCopyButton.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import {
   Card,
   CardAction,
@@ -13,20 +27,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible.tsx";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 
 const DOCS_URL = "https://docs.rateup.app/settings/integrations#verify-the-signature";

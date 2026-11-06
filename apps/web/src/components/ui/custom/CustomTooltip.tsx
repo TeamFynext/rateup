@@ -1,6 +1,5 @@
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import React from "react";
-
-import { Tooltip, TooltipContent, TooltipTrigger } from "../tooltip.tsx";
 
 const CustomTooltip = ({
   trigger,

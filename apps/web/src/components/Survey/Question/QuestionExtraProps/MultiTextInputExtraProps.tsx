@@ -1,19 +1,19 @@
-import { IconPlus } from "@tabler/icons-react";
-import { useId, useContext, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { useTranslation } from "react-i18next";
-
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog.tsx";
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import { Textarea } from "@rateup/ui/components/textarea";
+import { IconPlus } from "@tabler/icons-react";
+import { useId, useContext, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Textarea } from "@/components/ui/textarea.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 
 import DraggableTable from "../../../styled/Table/DraggableTable.tsx";

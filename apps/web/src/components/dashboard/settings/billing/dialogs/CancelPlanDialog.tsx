@@ -1,11 +1,4 @@
-import { IconAlertCircle, IconCircleCheck, IconMail } from "@tabler/icons-react";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
-
-import { useCancelRazorpaySubscriptionMutation } from "@/backend/payment/payment.query";
-import { useCancelStripeSubscriptionMutation } from "@/backend/payment/stripe/stripe.query";
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -13,8 +6,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
+} from "@rateup/ui/components/dialog";
+import { Separator } from "@rateup/ui/components/separator";
+import { IconAlertCircle, IconCircleCheck, IconMail } from "@tabler/icons-react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+
+import { useCancelRazorpaySubscriptionMutation } from "@/backend/payment/payment.query";
+import { useCancelStripeSubscriptionMutation } from "@/backend/payment/stripe/stripe.query";
 import { formatIsoDateString } from "@/utils/dateTime.ts";
 
 /**

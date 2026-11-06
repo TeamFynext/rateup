@@ -1,3 +1,11 @@
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconCurrencyRupee } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
@@ -15,14 +23,6 @@ import { ErrorState } from "@/components/ds/query-states";
 import { SegmentedBar, type Segment } from "@/components/ds/segmented-bar";
 import { StatCard } from "@/components/ds/stat-card";
 import { StatFigure, StatFigureRow } from "@/components/ds/stat-figure";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import {
   daysUntil,

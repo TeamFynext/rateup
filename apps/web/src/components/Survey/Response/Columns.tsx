@@ -1,3 +1,12 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
 import { IconChevronDown, IconEye, IconTrash } from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
@@ -6,15 +15,6 @@ import { useTranslation } from "react-i18next";
 
 import { tint } from "@/components/common/sentimentScale.ts";
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { PageType, QuestionType } from "@/types/enums.ts";

@@ -1,4 +1,16 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Alert, AlertDescription } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Textarea } from "@rateup/ui/components/textarea";
 import {
   IconArrowLeft,
   IconArrowRight,
@@ -44,21 +56,9 @@ import { WizardSection } from "@/components/dashboard/automation/components/wiza
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import { LengthTracker } from "@/components/input/LengthTracker.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { PhonePreviewButton } from "@/components/ui/phone-preview.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 import { Stepper } from "@/components/ui/stepper.tsx";
-import { Textarea } from "@/components/ui/textarea.tsx";
 import { BroadCastTypeValue } from "@/components/whatsapp/templates/Details/BroadCastTypeValue.tsx";
 import ButtonInput from "@/components/whatsapp/templates/Details/ButtonInput.tsx";
 import { ButtonSelection } from "@/components/whatsapp/templates/Details/ButtonSelectionMenu.tsx";

@@ -1,3 +1,12 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@rateup/ui/components/empty";
 import { IconPlus, IconQrcode } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -8,15 +17,6 @@ import {
   useGetAllGeneratedQrsQuery,
 } from "@/backend/generateQr/generateQr.query";
 import { PageHeading } from "@/components/common/page-heading.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 
 import {

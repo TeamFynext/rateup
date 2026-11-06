@@ -1,3 +1,5 @@
+import { Button } from "@rateup/ui/components/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@rateup/ui/components/sheet";
 import { IconBell, IconSettings } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -14,8 +16,6 @@ import {
   useNotificationsCount,
 } from "@/backend/notification/notification.query";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet.tsx";
 
 import { railBadgeClass, railBadgeCount, railButtonClass } from "../Navbar/rail-styles.ts";
 import NotificationList from "./NotificationList.tsx";

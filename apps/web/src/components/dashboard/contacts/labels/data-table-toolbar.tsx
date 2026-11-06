@@ -1,9 +1,9 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
 import { IconPlus, IconSearch, IconX } from "@tabler/icons-react";
 import type { ReactTable, RowData } from "@tanstack/react-table";
 
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
-import { Button } from "@/components/ui/button.tsx";
-import { Input } from "@/components/ui/input.tsx";
 
 interface DataTableToolbarProps<TData extends RowData> {
   table: ReactTable<DataTableFeatures, TData>;

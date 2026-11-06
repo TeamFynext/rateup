@@ -1,10 +1,10 @@
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useEditSurveyMutation } from "@/backend/surveys/surveys.query";
 import { FieldLabel } from "@/components/ui/field.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
 import { updateUniqueDevice } from "./updateSettings.ts";
 

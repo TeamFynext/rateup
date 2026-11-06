@@ -1,3 +1,7 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { Label } from "@rateup/ui/components/label";
+import { Spinner } from "@rateup/ui/components/spinner";
 import {
   IconAlertTriangle,
   IconBolt,
@@ -28,10 +32,6 @@ import { PageHeading } from "@/components/ds/page-heading";
 import type { PillTone } from "@/components/ds/pill";
 import { Pill } from "@/components/ds/pill";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/ds/query-states";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Spinner } from "@/components/ui/spinner";
 import { getApiErrorMessage } from "@/lib/apiError";
 
 export const Route = createFileRoute("/_app/ops/update-center")({

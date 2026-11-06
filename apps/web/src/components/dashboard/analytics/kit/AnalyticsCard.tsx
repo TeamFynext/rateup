@@ -1,8 +1,17 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@rateup/ui/components/empty";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconAlertTriangle, IconChartBarOff, IconLoader2, IconRefresh } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button.tsx";
 import {
   Card,
   CardAction,
@@ -11,15 +20,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { cn } from "@/lib/utils";
 
 /** The slice of a react-query result every analytics surface reads its state from. */

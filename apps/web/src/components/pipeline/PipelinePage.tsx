@@ -1,3 +1,12 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@rateup/ui/components/empty";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconColumns, IconGitBranch } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -10,15 +19,6 @@ import {
   useMoveLeadMutation,
 } from "@/backend/pipeline/pipeline.query.tsx";
 import type { Lead, PipelineStage } from "@/backend/pipeline/pipeline.types.ts";
-import { Button } from "@/components/ui/button";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useCan } from "@/hooks/usePermission.ts";
 
 import { BoardView } from "./board/BoardView.tsx";

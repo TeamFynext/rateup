@@ -1,3 +1,31 @@
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Avatar, AvatarFallback, AvatarImage } from "@rateup/ui/components/avatar";
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@rateup/ui/components/collapsible";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
+  SidebarRail,
+  SidebarSeparator,
+  SidebarTrigger,
+  useSidebar,
+} from "@rateup/ui/components/sidebar";
 import {
   IconAlertTriangle,
   IconChevronRight,
@@ -24,34 +52,6 @@ import type { NavEntry, NavProgress } from "@/components/Layout/Navbar/hooks.tsx
 import NotificationBellIcon from "@/components/Layout/Notification/index.tsx";
 import type { PipelineNavInput } from "@/components/pipeline/pipeline.nav.tsx";
 import { checkExpiry } from "@/components/Premium/ExpiryComponent.tsx";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible.tsx";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
-  SidebarRail,
-  SidebarSeparator,
-  SidebarTrigger,
-  useSidebar,
-} from "@/components/ui/sidebar.tsx";
 import { useTeamFeatures } from "@/context/TeamFeaturesContext.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { useOrgModules } from "@/hooks/useOrgModules.ts";

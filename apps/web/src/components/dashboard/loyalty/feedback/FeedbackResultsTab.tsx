@@ -1,3 +1,11 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
 import { IconExternalLink } from "@tabler/icons-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
@@ -9,14 +17,6 @@ import {
   type FeedbackState,
 } from "@/backend/loyalty/feedback.api.ts";
 import { useFeedbackResults } from "@/backend/loyalty/feedback.query.ts";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 
 import { MetricTiles } from "../overview/MetricTiles.tsx";
 import { LOYALTY_PATHS } from "../paths.ts";

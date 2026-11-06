@@ -1,3 +1,14 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconPencil, IconPlus, IconRefresh, IconSparkles, IconTrash } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import type { TFunction } from "i18next";
@@ -13,19 +24,8 @@ import {
 } from "@/backend/loyalty/settings/settings.query";
 import type { WaTemplateListEntry } from "@/backend/whatsapp/whatsapp.api";
 import { SectionHeading } from "@/components/common/page-heading.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { useConfirm } from "@/context/confirm-provider";
 
 import {

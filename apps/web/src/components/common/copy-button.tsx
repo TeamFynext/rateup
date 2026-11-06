@@ -1,9 +1,9 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconCheck, IconCopy } from "@tabler/icons-react";
 import { useEffect, useRef, useState, type ComponentProps } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button.tsx";
 import { copyToClipboard } from "@/utils/whatsappLink.ts";
 
 interface CopyButtonProps extends Pick<

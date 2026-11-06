@@ -1,12 +1,12 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
 import { IconCheck, IconCopy, IconQrcode } from "@tabler/icons-react";
 import { useState } from "react";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 
 import { downloadIgMeQr } from "@/components/dashboard/instagram/igMeQr.ts";
 import { mMeLink } from "@/components/dashboard/messenger/mMeLink.ts";
-import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldDescription, FieldError, FieldTitle } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 
 import type { CreateRuleInput } from "./schema.ts";
 

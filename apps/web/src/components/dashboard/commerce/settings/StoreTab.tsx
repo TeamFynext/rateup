@@ -1,3 +1,6 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { Textarea } from "@rateup/ui/components/textarea";
 import { IconDownload, IconExternalLink, IconEye } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import QRCode from "qrcode";
@@ -5,12 +8,9 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { toMoney, type ShopStore, type ShopStoreUpdate } from "@/backend/commerce/shop.api";
-import { Button } from "@/components/ui/button.tsx";
 import { CurrencySelect } from "@/components/ui/currency-select.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
-import { Textarea } from "@/components/ui/textarea.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
 
 import { SettingsSaveBar } from "../shop/SettingsSaveBar.tsx";

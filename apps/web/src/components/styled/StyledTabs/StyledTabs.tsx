@@ -1,4 +1,5 @@
-import { Tabs } from "@/components/ui/tabs.tsx";
+import { Tabs } from "@rateup/ui/components/tabs";
+
 import { cn } from "@/lib/utils";
 
 type StyledTabsProps = React.ComponentProps<typeof Tabs>;

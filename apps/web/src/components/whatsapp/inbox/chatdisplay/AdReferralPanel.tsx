@@ -1,3 +1,4 @@
+import { Badge } from "@rateup/ui/components/badge";
 import { IconSpeakerphone } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
@@ -6,7 +7,6 @@ import {
   useContactAdReferrals,
   type ContactAdReferral,
 } from "@/backend/whatsapp/inbox/adReferral/adReferral.api.ts";
-import { Badge } from "@/components/ui/badge.tsx";
 import { safeHref } from "@/utils/safeHref.ts";
 
 /** Meta's free entry-point window after a click-to-WhatsApp ad. */

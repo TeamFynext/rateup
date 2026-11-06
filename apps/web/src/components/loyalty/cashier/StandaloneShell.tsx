@@ -1,10 +1,10 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
 import { IconLogout } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import { useLoyaltyProgram } from "@/backend/loyalty/program.query";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 
 /**

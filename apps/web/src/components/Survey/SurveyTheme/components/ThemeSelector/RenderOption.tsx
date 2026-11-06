@@ -1,10 +1,10 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
 import { IconLoader2, IconPencil, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import type { MouseEvent } from "react";
 
 import { useDeleteThemeMutation } from "@/backend/surveyTheme/surveyTheme.query";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 
 function RenderOption({
   option,

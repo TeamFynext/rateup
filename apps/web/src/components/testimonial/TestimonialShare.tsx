@@ -1,11 +1,11 @@
+import { Button } from "@rateup/ui/components/button";
+import { Dialog, DialogContent, DialogTitle } from "@rateup/ui/components/dialog";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
 import { IconChevronLeft, IconCopy, IconX } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { CollectionTestimonial } from "@/backend/testimonials/testimonial.api";
-import { Button } from "@/components/ui/button.tsx";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import type { TestimonialStyleType } from "@/types/global";
 import { imagesPath } from "@/utils/constants.ts";
 

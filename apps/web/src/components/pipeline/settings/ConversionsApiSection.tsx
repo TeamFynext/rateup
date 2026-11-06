@@ -1,3 +1,12 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
 import { IconCheck } from "@tabler/icons-react";
 import { useEffect, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -10,17 +19,8 @@ import {
   useUpdateWaSettingsMutation,
   useWaSettings,
 } from "@/backend/whatsapp/settings/waSettings.query";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 

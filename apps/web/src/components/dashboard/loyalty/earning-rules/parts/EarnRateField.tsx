@@ -1,9 +1,9 @@
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
 import { IconArrowRight } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
 
 import { formatMoney } from "../../giveback/format.ts";
 import { earnPairFromRate, pointsFor, rateFromEarnPair, sameRate } from "./earnRate.ts";

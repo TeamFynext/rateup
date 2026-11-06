@@ -1,3 +1,5 @@
+import { Button } from "@rateup/ui/components/button";
+import { Textarea } from "@rateup/ui/components/textarea";
 import { IconPencil, IconTrash } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useState } from "react";
@@ -9,8 +11,6 @@ import {
   useUpdateLeadNoteMutation,
 } from "@/backend/pipeline/pipeline.query.tsx";
 import type { LeadNote } from "@/backend/pipeline/pipeline.types.ts";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { formatToRelativeTime } from "@/utils/dateTime.ts";
 

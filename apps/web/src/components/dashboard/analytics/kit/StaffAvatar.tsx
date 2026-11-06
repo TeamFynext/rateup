@@ -1,4 +1,5 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
+import { Avatar, AvatarFallback, AvatarImage } from "@rateup/ui/components/avatar";
+
 import { cn } from "@/lib/utils";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 

@@ -1,3 +1,11 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
 import {
   IconDotsVertical,
   IconEdit,
@@ -15,14 +23,6 @@ import { useContactTableStore } from "@/components/dashboard/contacts/store/cont
 import { useConfirm } from "@/context/confirm-provider";
 import { useCan } from "@/hooks/usePermission.ts";
 
-import { Button } from "../ui/button.tsx";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu.tsx";
 import { contactRowToInitialValues } from "./contact-form-schema.ts";
 import CreateOrEditContactModal from "./CreatOrEditContactModal.tsx";
 import { MergeContactsDialog } from "./merge/MergeContactsDialog.tsx";

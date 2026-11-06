@@ -1,8 +1,8 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconSparkles } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button.tsx";
 import type { AccessDenialReason } from "@/utils/apiError.ts";
 
 /**

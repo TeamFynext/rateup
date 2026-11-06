@@ -1,6 +1,6 @@
+import { Input } from "@rateup/ui/components/input";
 import { useContext } from "react";
 
-import { Input } from "@/components/ui/input.tsx";
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import { asAnswerText } from "@/utils/response.ts";

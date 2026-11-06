@@ -1,3 +1,20 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@rateup/ui/components/table";
 import { IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -11,23 +28,6 @@ import { useLoyaltyProgram } from "@/backend/loyalty/program.query";
 import { useLoyaltyCommands } from "@/backend/loyalty/settings/settings.query";
 import { useDeleteWaTemplateMutation, useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import { ListPageContent, ListPageSearchInput } from "@/components/common/list-page-layout.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table.tsx";
 import { SyncTemplatesButton } from "@/components/whatsapp/templates/SyncTemplates.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { TemplateType } from "@/types/enums.ts";

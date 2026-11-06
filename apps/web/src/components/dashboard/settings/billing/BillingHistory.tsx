@@ -1,20 +1,20 @@
-import { IconDownload, IconFileInvoice } from "@tabler/icons-react";
-import { useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
-
-import type { OrgInvoice } from "@/backend/payment/payment.api";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Card } from "@/components/ui/card.tsx";
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
+} from "@rateup/ui/components/dialog";
+import { Separator } from "@rateup/ui/components/separator";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import { IconDownload, IconFileInvoice } from "@tabler/icons-react";
+import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import type { OrgInvoice } from "@/backend/payment/payment.api";
+import { Card } from "@/components/ui/card.tsx";
 import { formatIsoDateString } from "@/utils/dateTime.ts";
 
 import type { PaymentOrder } from "./types.ts";

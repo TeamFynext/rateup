@@ -1,3 +1,22 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@rateup/ui/components/empty";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import {
   IconBrandInstagram,
   IconBrandMessenger,
@@ -14,25 +33,6 @@ import { useTranslation } from "react-i18next";
 import type { ChatbotSummary } from "@/backend/chatbots/chatbots.api.ts";
 import { useChatbots, useInitiateChatbotMutation } from "@/backend/chatbots/chatbots.query.ts";
 import { useRunsLabel, useStepLabel } from "@/components/dashboard/chatbots/ChatbotCards.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty.tsx";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { cn } from "@/lib/utils.ts";
 import { MessagePlatform } from "@/types/enums.ts";
 import { AutomationPlatform } from "@/types/platform.ts";

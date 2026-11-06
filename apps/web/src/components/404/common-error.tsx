@@ -1,9 +1,9 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconAlertTriangle, IconRefresh } from "@tabler/icons-react";
 import { useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
 import { cx } from "class-variance-authority";
 import { useEffect } from "react";
 
-import { Button } from "@/components/ui/button.tsx";
 import { reportError } from "@/lib/errorReporting.ts";
 
 /**

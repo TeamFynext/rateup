@@ -1,3 +1,5 @@
+import { Button } from "@rateup/ui/components/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import { IconFileDescription, IconQrcode, IconRocket } from "@tabler/icons-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -5,10 +7,8 @@ import { useTranslation } from "react-i18next";
 import { useLoyaltyOnboardingState } from "@/backend/loyalty/onboarding.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { PageHeading } from "@/components/common/page-heading.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Loader } from "@/components/ui/loader.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 
 import { pickJoinKeyword, pickWhatsappNumber } from "../joinLink.ts";
 import { LOYALTY_PATHS } from "../paths.ts";

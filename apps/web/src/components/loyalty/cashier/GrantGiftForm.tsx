@@ -1,11 +1,11 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
 import { IconArrowLeft, IconGift } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { CustomerReward } from "@/backend/loyalty/cashier/cashier.api";
-import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { cn } from "@/lib/utils.ts";
 
 interface GrantGiftFormProps {

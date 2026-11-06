@@ -1,3 +1,11 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
+import { Separator } from "@rateup/ui/components/separator";
 import { IconChevronDown, IconFilter, IconGrid3x3, IconList, IconPlus } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
@@ -14,14 +22,6 @@ import {
   ListPageSortDropdown,
 } from "@/components/common/list-page-layout.tsx";
 import useDebounce from "@/components/menu/hook/useDebounce.ts";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
 import { examplesFor } from "@/config/chatbotExamples/index.ts";
 import { AutomationPlatform } from "@/types/platform.ts";
 

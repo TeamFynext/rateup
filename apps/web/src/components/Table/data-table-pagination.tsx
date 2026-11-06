@@ -1,3 +1,11 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
 import {
   IconChevronLeft,
   IconChevronRight,
@@ -6,8 +14,6 @@ import {
 } from "@tabler/icons-react";
 import type { ReactTable, RowData } from "@tanstack/react-table";
 
-import { Button } from "../ui/button.tsx";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 import type { DataTableFeatures } from "./data-table-features.ts";
 
 interface DataTablePaginationProps<TData extends RowData> {

@@ -1,3 +1,14 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
+import { Separator } from "@rateup/ui/components/separator";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@rateup/ui/components/table";
 import {
   IconExternalLink,
   IconLoader2,
@@ -16,17 +27,6 @@ import type {
   CatalogOrderAddress,
   CatalogOrderProduct,
 } from "@/backend/whatsapp/catalog/orders/catalogOrders.api";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Separator } from "@/components/ui/separator";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table.tsx";
 import { COMMON_CARRIERS, EXCLUDED_KEYS, STAGE_LABELS } from "@/types/enums";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 

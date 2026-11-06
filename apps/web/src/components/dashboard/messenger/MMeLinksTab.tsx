@@ -1,3 +1,13 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@rateup/ui/components/empty";
 import { IconInfoCircle, IconLink, IconTrash } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
@@ -11,16 +21,6 @@ import {
 import { CopyLinkButton, QrButton } from "@/components/dashboard/instagram/tabs/IgMeLinksTab.tsx";
 import { ChannelSection } from "@/components/dashboard/meta-channels/ChannelSection.tsx";
 import { CreateRuleButton } from "@/components/dashboard/meta-channels/RuleAutomationsSection.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 

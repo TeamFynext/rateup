@@ -1,6 +1,9 @@
 // Extracted verbatim from the `/dashboard/whatsapp/ice-breakers/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconPlus, IconRefresh, IconTrash } from "@tabler/icons-react";
 import { useId, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -15,7 +18,6 @@ import {
 } from "@/backend/whatsapp/settings/waSettings.query";
 import { PageHeading } from "@/components/common/page-heading.tsx";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -24,8 +26,6 @@ import {
   CardTitle,
 } from "@/components/ui/card.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 
 export function ConversationalComponents() {
   const { data: waSettings } = useWaSettings();

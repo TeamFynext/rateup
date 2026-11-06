@@ -1,5 +1,3 @@
-import { createContext, use, useCallback, useMemo, useRef, useState } from "react";
-
 import {
   AlertDialog,
   AlertDialogAction,
@@ -9,7 +7,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from "@rateup/ui/components/alert-dialog";
+import { createContext, use, useCallback, useMemo, useRef, useState } from "react";
 
 interface ConfirmOptions {
   title: string;

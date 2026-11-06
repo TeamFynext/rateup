@@ -1,10 +1,10 @@
+import { Avatar, AvatarImage, AvatarFallback } from "@rateup/ui/components/avatar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
 import { IconX } from "@tabler/icons-react";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { ActionCard } from "@/components/common/action-card.tsx";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar.tsx";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { StarRating } from "@/components/ui/star-rating.tsx";
 import type { Testimonial } from "@/types/global";
 import type { TestimonialStyleType } from "@/types/global";

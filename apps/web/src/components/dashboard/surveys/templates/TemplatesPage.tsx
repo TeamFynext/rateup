@@ -1,6 +1,14 @@
 // Extracted verbatim from the `/dashboard/surveys/templates/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
 import { IconPlus } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
@@ -20,14 +28,6 @@ import { pressable } from "@/components/common/pressable.ts";
 import SurveyTemplates from "@/components/dashboard/surveys/templates/surveyTemplates.tsx";
 import { CreateSurveyModal } from "@/components/Survey/CreateSurveyModal.tsx";
 import SurveySectionTabs from "@/components/Survey/SurveySectionTabs.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
 import { docsPath } from "@/utils/constants.ts";
 

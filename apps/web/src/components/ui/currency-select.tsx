@@ -1,7 +1,3 @@
-// data
-import { currencies as AllCurrencies } from "country-data-list";
-import React from "react";
-
 // shadcn
 import {
   Select,
@@ -10,7 +6,11 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select.tsx";
+} from "@rateup/ui/components/select";
+// data
+import { currencies as AllCurrencies } from "country-data-list";
+import React from "react";
+
 import { cn } from "@/lib/utils.ts";
 
 // types

@@ -1,5 +1,14 @@
 // Extracted verbatim from `Zoho.tsx`. Behaviour is unchanged.
 
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
 import { IconRefresh } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -20,19 +29,9 @@ import {
 } from "@/components/dashboard/settings/integrations/mapping/StageMappingEditor.tsx";
 import { BiginLogo, ZohoLogo } from "@/components/integrations/logos";
 import { usePipelineStages } from "@/components/pipeline/shared/StageSelector.tsx";
-import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUser } from "@/context/UserContext";
 import { IntegratedApps } from "@/types/enums";
-
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../../ui/dialog";
 
 export function ZohoContactsTable({ integration }: { integration: AppIntegration }) {
   const { user } = useUser();

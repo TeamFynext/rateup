@@ -1,11 +1,11 @@
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import type { DropResult } from "@hello-pangea/dnd";
+import { Button } from "@rateup/ui/components/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import { IconGripVertical, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { cn } from "@/lib/utils.ts";
 import { WaQuestions } from "@/types/enums.ts";

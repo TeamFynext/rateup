@@ -1,9 +1,9 @@
+import { Button } from "@rateup/ui/components/button";
+import { Dialog, DialogContent, DialogTitle } from "@rateup/ui/components/dialog";
 import { IconDownload, IconLoader2 } from "@tabler/icons-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button.tsx";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog.tsx";
 import { downloadBlob } from "@/utils/downloadBlob.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 

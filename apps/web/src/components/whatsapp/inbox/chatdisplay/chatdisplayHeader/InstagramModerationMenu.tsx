@@ -1,3 +1,11 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
 import {
   IconBan,
   IconDotsVertical,
@@ -7,14 +15,6 @@ import {
 import { useTranslation } from "react-i18next";
 
 import { useModerateInstagramContact } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useCan } from "@/hooks/usePermission.ts";
 import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";

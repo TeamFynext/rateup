@@ -1,3 +1,5 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
 import { IconEye, IconSearch } from "@tabler/icons-react";
 import { isEqual } from "lodash";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
@@ -10,9 +12,7 @@ import { useSurvey } from "@/backend/surveys/surveys.query";
 import { useAllThemes } from "@/backend/surveyTheme/surveyTheme.query";
 import type { ElementType } from "@/components/Survey/Question/QuestionTypeSelection.tsx";
 import type { SurveyThemePage } from "@/components/Survey/SurveyTheme/surveyThemeReducer.ts";
-import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { cn } from "@/lib/utils";
 import { PageType, QuestionType, SurveyType } from "@/types/enums.ts";

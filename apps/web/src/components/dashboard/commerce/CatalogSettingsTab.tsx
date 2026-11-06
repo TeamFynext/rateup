@@ -1,3 +1,13 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconLogout, IconTrash } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -10,18 +20,8 @@ import {
   useUpateCatalog,
 } from "@/backend/whatsapp/catalog/catalog.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { useConfirm } from "@/context/confirm-provider";
 import { MetaLoginAssets, WaConfigType } from "@/types/enums";

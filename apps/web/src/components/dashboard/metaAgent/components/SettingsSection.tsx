@@ -1,4 +1,17 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Alert, AlertDescription } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Spinner } from "@rateup/ui/components/spinner";
+import { Textarea } from "@rateup/ui/components/textarea";
 import { IconInfoCircle } from "@tabler/icons-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -10,8 +23,6 @@ import {
   useUpdateAgentInboxSettings,
   useUpdateAgentSettings,
 } from "@/backend/metaAgent/metaAgent.query";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import {
   Field,
   FieldContent,
@@ -20,19 +31,8 @@ import {
   FieldLabel,
   FieldSeparator,
 } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { TagsInput } from "@/components/ui/tags-input";
-import { Textarea } from "@/components/ui/textarea";
 
 import { settingsFormSchema, type SettingsFormValues } from "../metaAgent.schemas";
 import { AllowlistPanel } from "./AllowlistPanel";

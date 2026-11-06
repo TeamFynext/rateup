@@ -1,3 +1,5 @@
+import { buttonVariants } from "@rateup/ui/components/button";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
 import { IconExternalLink } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
@@ -5,9 +7,7 @@ import { useApiKeys } from "@/backend/apiKeys/apiKeys.query.ts";
 import { IntegrationFormCard } from "@/components/dashboard/settings/integrations/IntegrationFormCard.tsx";
 import { INTEGRATIONS_CONFIG } from "@/components/dashboard/settings/integrations/integrations.config.ts";
 import { IntegrationShell } from "@/components/dashboard/settings/integrations/IntegrationShell.tsx";
-import { buttonVariants } from "@/components/ui/button.tsx";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { useCan } from "@/hooks/usePermission.ts";
 import { docsPath } from "@/utils/constants.ts";

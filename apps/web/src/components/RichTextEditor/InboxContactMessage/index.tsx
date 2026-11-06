@@ -1,3 +1,9 @@
+import { Avatar, AvatarFallback } from "@rateup/ui/components/avatar";
+import { Button } from "@rateup/ui/components/button";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
+import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import { IconAddressBook, IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -6,14 +12,8 @@ import { useContactGroup } from "@/backend/campaign/contactGroup/contactGroup.qu
 import { useContacts } from "@/backend/campaign/contacts/contacts.query";
 import ContactPagination from "@/components/Contacts/ContactPagination.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { FieldTitle } from "@/components/ui/field.tsx";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { useMessageBodyStore } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter/index.tsx";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 

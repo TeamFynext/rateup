@@ -1,10 +1,10 @@
+import { Button } from "@rateup/ui/components/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
+import { Spinner } from "@rateup/ui/components/spinner";
 import { IconMusic, IconUpload, IconX } from "@tabler/icons-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button.tsx";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 import { useMediaStore } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter/index.tsx";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 import { uploadFile } from "@/utils/file-upload/upload.ts";

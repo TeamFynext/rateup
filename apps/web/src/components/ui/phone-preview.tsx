@@ -1,3 +1,4 @@
+import { Button } from "@rateup/ui/components/button";
 import {
   IconBrandFacebook,
   IconBrandInstagram,
@@ -21,7 +22,6 @@ import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 
-import { Button } from "./button.tsx";
 import { PhoneMockupCard } from "./phone-mockup.tsx";
 
 // ---------------------------------------------------------------------------

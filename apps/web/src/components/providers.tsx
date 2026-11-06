@@ -1,5 +1,6 @@
 // In Next.js, this file would be called: app/providers.tsx
 
+import { TooltipProvider } from "@rateup/ui/components/tooltip";
 // Since QueryClientProvider relies on useContext under the hood, we have to put 'use client' on top
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import {
@@ -17,7 +18,6 @@ import type { ReactNode } from "react";
 
 import { AppErrorBoundary } from "@/components/AppErrorBoundary.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 import { UserProvider } from "@/context/UserContext.tsx";
 import { asApiError, getApiErrorData } from "@/utils/apiError.ts";
 import RouteChangeHandler from "@/utils/routeHandler.tsx";

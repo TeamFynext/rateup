@@ -1,3 +1,15 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconCheck, IconEdit, IconTrash, IconUpload, IconX } from "@tabler/icons-react";
 import { useNavigate, useParams, useRouter } from "@tanstack/react-router";
 import type { ColumnDef, ColumnFiltersState, SortingState } from "@tanstack/react-table";
@@ -23,18 +35,6 @@ import type { GroupTableFilter } from "@/components/dashboard/contacts/store/gro
 import { useGroupTableStore } from "@/components/dashboard/contacts/store/group-table-store.ts";
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { DataTable } from "@/components/Table/data-table.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
 import { useDebouncedState } from "@/hooks/use-debounced-state.ts";

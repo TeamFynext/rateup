@@ -1,6 +1,6 @@
+import { Button } from "@rateup/ui/components/button";
 import { Component, type ErrorInfo, type ReactNode } from "react";
 
-import { Button } from "@/components/ui/button.tsx";
 import { reportError } from "@/lib/errorReporting.ts";
 
 interface AppErrorBoundaryProps {

@@ -1,3 +1,5 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Progress } from "@rateup/ui/components/progress";
 import {
   IconAlertTriangle,
   IconCalendarDollar,
@@ -12,9 +14,7 @@ import { useTranslation } from "react-i18next";
 import type { SubscriptionUsage } from "@/backend/subscription/subscription.api";
 import { useSubscriptionUsage } from "@/backend/subscription/subscription.query";
 import { isUnlimitedCount } from "@/components/HomePage/pages/Pricing/pricing.data.ts";
-import { Badge } from "@/components/ui/badge.tsx";
 import { Card } from "@/components/ui/card.tsx";
-import { Progress } from "@/components/ui/progress.tsx";
 import { cn } from "@/lib/utils.ts";
 import { formatIsoDateString } from "@/utils/dateTime.ts";
 

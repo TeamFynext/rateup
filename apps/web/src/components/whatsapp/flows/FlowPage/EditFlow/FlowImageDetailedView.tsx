@@ -1,15 +1,15 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
+import { Separator } from "@rateup/ui/components/separator";
 import { IconDeviceSdCard } from "@tabler/icons-react";
 import { useId, useContext, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
 import type { WaFlowFormElement } from "@/types/global";
 import { getWaFlowFormElementTypeLabel } from "@/utils/enums/index.ts";
 import { fileToBase64 } from "@/utils/misc/base64.utils";

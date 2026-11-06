@@ -1,7 +1,4 @@
-import { IconAlertCircle, IconSearch } from "@tabler/icons-react";
-import { useTranslation } from "react-i18next";
-
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   Empty,
   EmptyContent,
@@ -9,8 +6,10 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@/components/ui/empty.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
+} from "@rateup/ui/components/empty";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import { IconAlertCircle, IconSearch } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
 
 export const TILE_GRID = "grid gap-3 sm:grid-cols-2 lg:grid-cols-3";
 

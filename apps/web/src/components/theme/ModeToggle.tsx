@@ -1,6 +1,5 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconMoon, IconSun } from "@tabler/icons-react";
-
-import { Button } from "@/components/ui/button.tsx";
 
 import { useTheme } from "./theme-provider";
 

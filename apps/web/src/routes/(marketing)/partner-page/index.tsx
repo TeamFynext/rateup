@@ -1,3 +1,5 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
 import {
   IconArrowRight,
   IconBook,
@@ -20,8 +22,6 @@ import { useState } from "react";
 
 import { PartnerApplyModal } from "@/components/partner/partnerData";
 import Layout from "@/components/RateupHomePage/Layout";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { buildPageHead } from "@/lib/metadata.ts";
 

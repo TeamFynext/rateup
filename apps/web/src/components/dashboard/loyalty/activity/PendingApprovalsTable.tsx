@@ -1,3 +1,5 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
 import { IconCheck } from "@tabler/icons-react";
 import type { ColumnDef, PaginationState } from "@tanstack/react-table";
 import dayjs from "dayjs";
@@ -12,8 +14,6 @@ import {
 } from "@/backend/loyalty/approval/approval.query";
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { DataTable } from "@/components/Table/data-table.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 
 import { PAGE_SIZE } from "./activity.filters.ts";

@@ -1,7 +1,6 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconX } from "@tabler/icons-react";
 import type { ReactNode } from "react";
-
-import { Button } from "@/components/ui/button.tsx";
 
 function SurveyPreviewModal({
   opened,

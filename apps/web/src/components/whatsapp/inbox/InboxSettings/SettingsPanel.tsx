@@ -1,4 +1,5 @@
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia } from "@/components/ui/empty.tsx";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia } from "@rateup/ui/components/empty";
+
 import { cn } from "@/lib/utils.ts";
 
 /**

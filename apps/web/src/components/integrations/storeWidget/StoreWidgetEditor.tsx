@@ -1,3 +1,15 @@
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Textarea } from "@rateup/ui/components/textarea";
 import {
   IconBrandWhatsapp,
   IconClick,
@@ -18,8 +30,6 @@ import { useChannels } from "@/backend/channels/channels.query";
 import { ColorField } from "@/components/common/color-field.tsx";
 import { StatTile } from "@/components/common/StatTile.tsx";
 import { formatWhatsappNumber } from "@/components/dashboard/loyalty/joinLink.ts";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import {
   Card,
   CardContent,
@@ -35,17 +45,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
-import { Textarea } from "@/components/ui/textarea.tsx";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group.tsx";
 import { cn } from "@/lib/utils.ts";
 import { WhatsappSettingsStatus } from "@/types/enums.ts";

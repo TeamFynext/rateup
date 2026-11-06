@@ -1,14 +1,14 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
 import { IconArrowLeft } from "@tabler/icons-react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
 import type { LoyaltyEarningRule } from "@/backend/loyalty/earningRules.api";
-import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { toText } from "@/utils/toText";
 
 import { formatMoney } from "../../dashboard/loyalty/giveback/format.ts";

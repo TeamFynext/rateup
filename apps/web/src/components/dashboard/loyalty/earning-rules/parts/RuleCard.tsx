@@ -1,6 +1,10 @@
 // Extracted verbatim from `EarningRulesPage.tsx`. Behaviour is unchanged.
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { Textarea } from "@rateup/ui/components/textarea";
 import {
   IconCalendar,
   IconClock,
@@ -23,8 +27,6 @@ import {
   useUpdateLoyaltyEarningRuleMutation,
 } from "@/backend/loyalty/earningRules.query";
 import { useLoyaltyTiers } from "@/backend/loyalty/tiers.query";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import {
@@ -34,9 +36,7 @@ import {
   FieldLabel,
   FieldTitle,
 } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
-import { Textarea } from "@/components/ui/textarea.tsx";
 
 import { EarnRateField } from "./EarnRateField.tsx";
 import { earningRuleSchema, formatStatusLabel, getRuleIcon, toDateInputValue } from "./shared.tsx";

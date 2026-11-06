@@ -1,10 +1,10 @@
+import { Input } from "@rateup/ui/components/input";
 import { useContext, useEffect } from "react";
 
 import type {
   QuestionFormFeatures,
   QuestionFormField,
 } from "@/components/Survey/Question/QuestionExtraProps/questionForm.ts";
-import { Input } from "@/components/ui/input.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { asAnswer } from "@/utils/response.ts";

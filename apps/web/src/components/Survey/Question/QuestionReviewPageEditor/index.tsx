@@ -1,4 +1,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Separator } from "@rateup/ui/components/separator";
+import { Spinner } from "@rateup/ui/components/spinner";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -8,18 +19,7 @@ import { z } from "zod";
 import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { PAGE_TITLE, SECTION_TITLE } from "@/components/common/page-heading.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { QuestionType, ReviewPagePlatform } from "@/types/enums.ts";
 

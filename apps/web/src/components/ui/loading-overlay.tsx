@@ -1,4 +1,5 @@
-import { Spinner } from "@/components/ui/spinner";
+import { Spinner } from "@rateup/ui/components/spinner";
+
 import { cn } from "@/lib/utils";
 
 /**

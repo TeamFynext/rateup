@@ -1,3 +1,5 @@
+import { Alert, AlertDescription } from "@rateup/ui/components/alert";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconAlertTriangle } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo } from "react";
@@ -5,9 +7,7 @@ import { useEffect, useMemo } from "react";
 import { useChannels } from "@/backend/channels/channels.query";
 import type { ChannelOption } from "@/components/input/channelOptions.ts";
 import { getChannelOptions } from "@/components/input/channelOptions.ts";
-import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { cn } from "@/lib/utils.ts";
 
 import type { Platform } from "../schema.ts";

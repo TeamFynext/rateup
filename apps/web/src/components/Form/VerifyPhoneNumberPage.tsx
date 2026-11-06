@@ -1,3 +1,4 @@
+import { Button, buttonVariants } from "@rateup/ui/components/button";
 import { IconArrowAutofitLeft, IconSend } from "@tabler/icons-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
@@ -13,7 +14,6 @@ import { SAVE_HOTKEY } from "@/utils/constants.ts";
 import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 
 import { useRouteAndCartStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore.ts";
-import { Button, buttonVariants } from "../ui/button.tsx";
 import { Field, FieldGroup, FieldLabel } from "../ui/field.tsx";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "../ui/input-otp.tsx";
 

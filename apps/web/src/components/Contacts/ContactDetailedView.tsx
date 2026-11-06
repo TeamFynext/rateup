@@ -1,3 +1,15 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button, buttonVariants } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Textarea } from "@rateup/ui/components/textarea";
 import {
   IconCheck,
   IconCopy,
@@ -34,20 +46,8 @@ import { useConfirm } from "@/context/confirm-provider.tsx";
 import { cn } from "@/lib/utils.ts";
 import { copyToClipboard } from "@/utils/whatsappLink.ts";
 
-import { Badge } from "../ui/badge.tsx";
-import { Button, buttonVariants } from "../ui/button.tsx";
 import { ContactAvatar } from "../ui/contact-avatar.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../ui/dialog.tsx";
 import { FieldLabel } from "../ui/field.tsx";
-import { Skeleton } from "../ui/skeleton.tsx";
-import { Textarea } from "../ui/textarea.tsx";
 import { contactRowToInitialValues, realPhone } from "./contact-form-schema.ts";
 import CreateOrEditContactModal from "./CreatOrEditContactModal.tsx";
 import { getSourceBadge } from "./utils/utils.tsx";

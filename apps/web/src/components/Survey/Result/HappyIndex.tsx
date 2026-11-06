@@ -1,3 +1,5 @@
+import { Progress } from "@rateup/ui/components/progress";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import {
   IconMoodAngry,
   IconMoodCry,
@@ -21,8 +23,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
-import { Progress } from "@/components/ui/progress.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import SurveyContext from "@/context/SurveyContext.ts";
 
 const HappinessRing = ({

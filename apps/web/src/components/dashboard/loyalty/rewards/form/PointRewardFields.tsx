@@ -1,3 +1,11 @@
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
 import { useState } from "react";
 import { Controller, useWatch, type Control, type UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -5,14 +13,6 @@ import { useTranslation } from "react-i18next";
 import type { LoyaltyTier } from "@/backend/loyalty/tier.api";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Field, FieldError, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 
 import { RewardWorthLine } from "../../giveback/RewardWorthLine.tsx";
 import { useRewardEconomicsContext } from "../../giveback/useRewardEconomicsContext.ts";

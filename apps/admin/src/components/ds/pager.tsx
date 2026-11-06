@@ -1,7 +1,7 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import { useRef } from "react";
 
-import { Button } from "@/components/ui/button";
 import { formatNumber } from "@/lib/format";
 
 /** Roughly the height of the sticky top bar, so a scrolled-to list is not tucked under it. */

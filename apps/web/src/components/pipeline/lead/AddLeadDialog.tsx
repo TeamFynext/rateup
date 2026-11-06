@@ -1,3 +1,15 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import { Label } from "@rateup/ui/components/label";
+import { Textarea } from "@rateup/ui/components/textarea";
 import {
   IconAlertTriangle,
   IconChevronDown,
@@ -21,21 +33,9 @@ import type {
   PipelineDetail,
   PipelineUser,
 } from "@/backend/pipeline/pipeline.types.ts";
-import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
-import { Textarea } from "@/components/ui/textarea";
 import { useDebounce } from "@/hooks/use-debounce";
 import { cn } from "@/lib/utils";
 import { asApiError, getApiErrorMessage } from "@/utils/apiError.ts";

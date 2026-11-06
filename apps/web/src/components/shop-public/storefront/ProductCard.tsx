@@ -1,9 +1,9 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconPhoto } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import { formatMoney, type StorefrontProduct } from "@/backend/commerce/shop.api";
-import { Button } from "@/components/ui/button.tsx";
 import { cn } from "@/lib/utils.ts";
 
 import { priceRange, productBadge } from "../catalog.ts";

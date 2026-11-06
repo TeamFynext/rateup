@@ -1,3 +1,12 @@
+import { Button } from "@rateup/ui/components/button";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
 import { IconAlertCircle, IconArrowLeft, IconBuilding, IconWorld } from "@tabler/icons-react";
 import { useId } from "react";
 import { Controller } from "react-hook-form";
@@ -5,10 +14,7 @@ import { useTranslation } from "react-i18next";
 
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
 
-import { Button } from "../../ui/button.tsx";
 import { Field, FieldError, FieldGroup, FieldLabel } from "../../ui/field.tsx";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "../../ui/input-group.tsx";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select.tsx";
 import { AUTH_CONTROL } from "../AuthShell.tsx";
 import { errorMessage, RequiredMark, STEP_TWO_FIELDS } from "./shared.tsx";
 import type { SignupForm } from "./shared.tsx";

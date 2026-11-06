@@ -1,5 +1,21 @@
 // Extracted verbatim from `ChoicesCreator.tsx`. Behaviour is unchanged.
 
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
 import { IconEdit, IconTrash, IconUpload } from "@tabler/icons-react";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -10,23 +26,7 @@ import { z } from "zod/v4";
 import { useResponses } from "@/backend/surveys/response/response.query";
 import { LengthTracker } from "@/components/input/LengthTracker.tsx";
 import { ImageCropModal } from "@/components/Modal/ImageCropModal.tsx";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Field, FieldDescription, FieldGroup, FieldLabel, FieldTitle } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";

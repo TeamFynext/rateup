@@ -1,17 +1,11 @@
-import { IconChartBar, IconRefresh } from "@tabler/icons-react";
-import { useTranslation } from "react-i18next";
-
-import type { LinktreeData } from "@/backend/linktree/linktree.api.ts";
-import { useGetLinktreeWithShortId } from "@/backend/linktree/linktree.query";
-import { Button } from "@/components/ui/button.tsx";
-import { Card, CardContent } from "@/components/ui/card.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@/components/ui/empty.tsx";
+} from "@rateup/ui/components/empty";
 import {
   Table,
   TableBody,
@@ -19,7 +13,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table.tsx";
+} from "@rateup/ui/components/table";
+import { IconChartBar, IconRefresh } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
+
+import type { LinktreeData } from "@/backend/linktree/linktree.api.ts";
+import { useGetLinktreeWithShortId } from "@/backend/linktree/linktree.query";
+import { Card, CardContent } from "@/components/ui/card.tsx";
 
 export function StatsPanel({ page }: Readonly<{ page: LinktreeData }>) {
   const { t } = useTranslation();

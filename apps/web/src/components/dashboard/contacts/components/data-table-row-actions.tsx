@@ -1,18 +1,11 @@
-import { IconDots, IconEdit, IconTrash } from "@tabler/icons-react";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-
-import type { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
-import { useDeleteCustomFieldMutation } from "@/backend/campaign/contacts/contacts.query";
-import { CustomFieldForm } from "@/components/Contacts/label-form.tsx";
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog.tsx";
+} from "@rateup/ui/components/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,7 +13,14 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
+} from "@rateup/ui/components/dropdown-menu";
+import { IconDots, IconEdit, IconTrash } from "@tabler/icons-react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import type { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
+import { useDeleteCustomFieldMutation } from "@/backend/campaign/contacts/contacts.query";
+import { CustomFieldForm } from "@/components/Contacts/label-form.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 
 interface DataTableRowActionsProps {

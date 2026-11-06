@@ -1,8 +1,8 @@
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { useTranslation } from "react-i18next";
 
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import { SectionHeading } from "@/components/common/page-heading.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 
 import { MetaLoginStatus } from "./meta-login-status.tsx";
 

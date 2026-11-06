@@ -1,5 +1,6 @@
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import type { DropResult } from "@hello-pangea/dnd";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
 import { useParams } from "@tanstack/react-router";
 import type { CSSProperties } from "react";
 import type { Dispatch, SetStateAction } from "react";
@@ -8,7 +9,6 @@ import type { CollectionTestimonial } from "@/backend/testimonials/testimonial.a
 import { useUpdateCollection } from "@/backend/testimonials/testimonial.query";
 import type { filterType } from "@/components/dashboard/testimonial/CollectionById.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import type { TestimonialStyleType } from "@/types/global";
 import { reorder } from "@/utils/questions.ts";
 import { getFilteredTestimonials } from "@/utils/testimonial.ts";

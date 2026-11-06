@@ -1,9 +1,9 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconPhotoPlus, IconTrash, IconUpload } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { cn } from "@/lib/utils.ts";
 import { getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";

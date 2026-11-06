@@ -1,3 +1,19 @@
+import { Avatar, AvatarFallback, AvatarImage } from "@rateup/ui/components/avatar";
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
+import { Separator } from "@rateup/ui/components/separator";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import {
   IconCheck,
   IconLoader2,
@@ -35,25 +51,9 @@ import {
 import { ColorField } from "@/components/common/color-field.tsx";
 import { RoleBadge } from "@/components/common/RoleBadge.tsx";
 import { RoleSelect } from "@/components/common/RoleSelect.tsx";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog.tsx";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
 import { cn } from "@/lib/utils.ts";
 import { resolveRoleKey } from "@/utils/authz/can.ts";

@@ -1,10 +1,10 @@
+import { Textarea } from "@rateup/ui/components/textarea";
 import { useContext, useState } from "react";
 import type { ChangeEvent } from "react";
 
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import { asAnswerText } from "@/utils/response.ts";
 
-import { Textarea } from "../../../../ui/textarea.tsx";
 import { handleInputScrollIntoView } from "../util.tsx";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
 

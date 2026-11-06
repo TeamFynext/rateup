@@ -1,3 +1,4 @@
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -7,7 +8,6 @@ import {
 import { SectionHeading } from "@/components/common/page-heading.tsx";
 import type { QrDesign } from "@/components/common/qr-designer/qrDesign.ts";
 import { QrDesigner } from "@/components/common/qr-designer/QrDesigner.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 
 /** Mirrors SHARE_SETTINGS_RESOURCES in rateup-api's shareSettings.schema.ts. */
 const SAVEABLE_RESOURCES = new Set(["survey", "generateQr"]);

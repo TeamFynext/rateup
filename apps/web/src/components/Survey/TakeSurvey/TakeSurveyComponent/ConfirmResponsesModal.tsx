@@ -1,12 +1,12 @@
+import { Button } from "@rateup/ui/components/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
+import { Separator } from "@rateup/ui/components/separator";
+import { Spinner } from "@rateup/ui/components/spinner";
 import { IconCheck, IconChevronLeft, IconStar } from "@tabler/icons-react";
 import { Image as NextImage } from "@unpic/react";
 import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button.tsx";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 import type { SurveyTheme } from "@/context/SurveyThemeContext.tsx";
 import { cn } from "@/lib/utils";
 import { QuestionType as Q } from "@/types/enums.ts";

@@ -1,9 +1,9 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconArrowLeft, IconLock } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import type { CustomerReward } from "@/backend/loyalty/cashier/cashier.api";
 import type { LoyaltyReward } from "@/backend/loyalty/reward.api";
-import { Button } from "@/components/ui/button.tsx";
 import { cn } from "@/lib/utils.ts";
 
 export interface RedeemRow {

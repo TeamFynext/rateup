@@ -1,8 +1,4 @@
-import { useTranslation } from "react-i18next";
-
-import { formatMoney, type ShopAdReport } from "@/backend/commerce/shop.api";
-import { useShopAdReport } from "@/backend/commerce/shop.query";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import {
   Table,
   TableBody,
@@ -10,7 +6,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table.tsx";
+} from "@rateup/ui/components/table";
+import { useTranslation } from "react-i18next";
+
+import { formatMoney, type ShopAdReport } from "@/backend/commerce/shop.api";
+import { useShopAdReport } from "@/backend/commerce/shop.query";
 import { safeHref } from "@/utils/safeHref.ts";
 
 import { roiText, Stat } from "./MessageCostSection.tsx";

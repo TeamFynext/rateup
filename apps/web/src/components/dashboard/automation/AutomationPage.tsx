@@ -1,6 +1,14 @@
 // Extracted verbatim from the `/dashboard/automation/rules/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import { Button } from "@rateup/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
+import { Separator } from "@rateup/ui/components/separator";
 import { IconChevronDown, IconFilter, IconGrid3x3, IconList, IconPlus } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
@@ -22,14 +30,6 @@ import {
 } from "@/components/common/list-page-layout.tsx";
 import { CardView } from "@/components/dashboard/automation/components/card-view.tsx";
 import { TemplateGallery } from "@/components/dashboard/automation/components/wizard/TemplateGallery.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
 import type { Rule } from "@/types/rule.ts";
 
 const AUTOMATION_SORT_OPTIONS = [

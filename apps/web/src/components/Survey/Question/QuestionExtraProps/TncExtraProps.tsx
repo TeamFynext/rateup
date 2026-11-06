@@ -1,9 +1,9 @@
+import { Input } from "@rateup/ui/components/input";
+import { Textarea } from "@rateup/ui/components/textarea";
 import { useId, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Textarea } from "@/components/ui/textarea.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 
 import type { QuestionExtraPropsForm } from "./questionForm.ts";

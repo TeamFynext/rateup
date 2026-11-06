@@ -1,3 +1,4 @@
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconArrowRight } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
@@ -24,7 +25,6 @@ import { OrgNotesPanel } from "@/components/org/org-notes-panel";
 import type { OrgTab } from "@/components/org/org-tabs";
 import { UsageMeters } from "@/components/org/org-usage-tab";
 import { groupByRole } from "@/components/org/roles";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   formatDate,
   formatDateTime,

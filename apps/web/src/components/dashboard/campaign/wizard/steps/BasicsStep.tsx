@@ -1,4 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Input } from "@rateup/ui/components/input";
+import { Label } from "@rateup/ui/components/label";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -7,8 +9,6 @@ import { z } from "zod";
 import { useCreateCampaignMutation } from "@/backend/campaign/campaign.query";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { cn } from "@/lib/utils";
 import { CampaignStatus, CampaignType } from "@/types/enums.ts";

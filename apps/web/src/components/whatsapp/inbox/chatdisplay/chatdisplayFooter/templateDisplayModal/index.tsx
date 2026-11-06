@@ -1,3 +1,19 @@
+import { Badge } from "@rateup/ui/components/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@rateup/ui/components/empty";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import {
   IconBrandWhatsapp,
   IconFile,
@@ -13,17 +29,6 @@ import { useTranslation } from "react-i18next";
 import { useWhatsappSendAddress } from "@/backend/channels/whatsappReach.query";
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useSendWaTemplateToUser, useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog.tsx";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty.tsx";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import useTemplatesAvailableForTeam from "@/hooks/team.tsx";
 import { cn } from "@/lib/utils.ts";
 import { WaTemplateStatus } from "@/types/enums.ts";

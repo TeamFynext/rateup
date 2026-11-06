@@ -1,15 +1,15 @@
-import { useId } from "react";
-
-import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
+} from "@rateup/ui/components/select";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import { useId } from "react";
+
+import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { WaFlowStatus } from "@/types/enums.ts";
 
 interface FlowSelectorProps {

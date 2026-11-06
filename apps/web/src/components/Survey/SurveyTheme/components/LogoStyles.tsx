@@ -1,11 +1,11 @@
+import { Button } from "@rateup/ui/components/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
 import { IconTrash, IconUpload } from "@tabler/icons-react";
 import { useId, useCallback, useRef, useState } from "react";
 
 import ImageCropModal from "@/components/Modal/ModalManagerModals/ImageCropModal/index.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 
 import { getSurveyThemeKeyOf } from "../SurveyTheme.constants";
 import {

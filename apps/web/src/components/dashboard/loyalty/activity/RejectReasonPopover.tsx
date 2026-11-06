@@ -1,10 +1,9 @@
+import { Button } from "@rateup/ui/components/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
+import { Textarea } from "@rateup/ui/components/textarea";
 import { IconX } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-
-import { Button } from "@/components/ui/button.tsx";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
-import { Textarea } from "@/components/ui/textarea.tsx";
 
 /** The API requires a reason to reject, and whoever asked will read it. */
 export function RejectReasonPopover({

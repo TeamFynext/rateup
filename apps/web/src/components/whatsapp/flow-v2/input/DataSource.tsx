@@ -1,3 +1,6 @@
+import { Button } from "@rateup/ui/components/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
 import { IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useId, useEffect, useRef, useState } from "react";
 import type { FieldValues, Resolver } from "react-hook-form";
@@ -6,13 +9,10 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod/v4";
 
 import { LengthTracker } from "@/components/input/LengthTracker.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { FileUploadButton } from "@/components/ui/file-upload-button.tsx";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
 import { useDisclosure } from "@/hooks/useDisclosure";
 import type { QuestionType2 } from "@/types/enums.ts";
 import {

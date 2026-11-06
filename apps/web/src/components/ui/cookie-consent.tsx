@@ -1,8 +1,8 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconCookie } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
-import { Button } from "@/components/ui/button.tsx";
 import { cn } from "@/lib/utils.ts";
 
 const OPEN_EVENT = "rateup:cookie-settings";

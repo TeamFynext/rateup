@@ -1,5 +1,17 @@
 // Extracted verbatim from `node-editor.tsx`. Behaviour is unchanged.
 
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@rateup/ui/components/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
+import { Spinner } from "@rateup/ui/components/spinner";
+import { TooltipProvider } from "@rateup/ui/components/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import {
   IconDeviceFloppy,
   IconFile,
@@ -40,18 +52,6 @@ import {
   AttachmentTitle,
   AttachmentTrigger,
 } from "@/components/ui/attachment.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog.tsx";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
-import { TooltipProvider } from "@/components/ui/tooltip.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { FileConverter } from "@/components/whatsapp/flow-v2/input/DataSource.tsx";
 import { AutomationPlatform } from "@/types/platform.ts";
 import { deleteUploadedFiles, getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";

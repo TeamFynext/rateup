@@ -1,13 +1,18 @@
+import { Button } from "@rateup/ui/components/button";
+import { Textarea } from "@rateup/ui/components/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@rateup/ui/components/tooltip";
 import { IconCircleCheckFilled } from "@tabler/icons-react";
 import { useId, useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 
 import type { QuestionExtraPropsForm, QuestionFormFeatures } from "./questionForm.ts";

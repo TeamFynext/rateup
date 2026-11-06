@@ -1,7 +1,7 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconMessageReply } from "@tabler/icons-react";
 import React from "react";
 
-import { Button } from "@/components/ui/button.tsx";
 import TextWithFormatting from "@/components/whatsapp/templates/Details/TextWithFormating.tsx";
 import type { WaTemplateComponent, WaTemplateFetchBodyComponent } from "@/types/global";
 

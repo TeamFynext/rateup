@@ -1,3 +1,11 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
 import { IconLoader2 } from "@tabler/icons-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -11,15 +19,7 @@ import { usePipelineQuery, usePipelinesQuery } from "@/backend/pipeline/pipeline
 import { IntegrationFormCard } from "@/components/dashboard/settings/integrations/IntegrationFormCard.tsx";
 import { StageMappingEditor } from "@/components/dashboard/settings/integrations/mapping/StageMappingEditor.tsx";
 import { findLeadsPipeline } from "@/components/pipeline/pipelineTypes.ts";
-import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 
 import { suggestStageMappings } from "./hubspotStageSuggestions";

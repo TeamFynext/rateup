@@ -1,7 +1,7 @@
+import { Avatar, AvatarFallback, AvatarImage } from "@rateup/ui/components/avatar";
+import { Badge } from "@rateup/ui/components/badge";
 import { Link } from "@tanstack/react-router";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
 import type { Post } from "@/lib/posts.ts";
 
 function initials(name?: string) {

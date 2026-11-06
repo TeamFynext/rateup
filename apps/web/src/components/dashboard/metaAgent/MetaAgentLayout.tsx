@@ -1,9 +1,5 @@
-import { IconCircleCheck, IconCircleDashed, IconRocket } from "@tabler/icons-react";
-import { Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { useEffect, useRef } from "react";
-
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
 import {
   Empty,
   EmptyContent,
@@ -11,15 +7,18 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@/components/ui/empty";
+} from "@rateup/ui/components/empty";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
+} from "@rateup/ui/components/select";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import { IconCircleCheck, IconCircleDashed, IconRocket } from "@tabler/icons-react";
+import { Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { useEffect, useRef } from "react";
 
 import { MetaAgentProvider, useMetaAgentContext } from "./MetaAgentContext";
 import { useAgentSetup } from "./setup/useAgentSetup.ts";

@@ -1,3 +1,8 @@
+/* eslint-disable */
+// @ts-nocheck
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import { IconLink, IconPhoto, IconUpload, IconX } from "@tabler/icons-react";
 import {
   type CommandProps,
@@ -9,12 +14,7 @@ import {
 } from "@tiptap/react";
 import { type MouseEvent, useState } from "react";
 
-/* eslint-disable */
-// @ts-nocheck
-import { Button } from "@/components/ui/button";
 import { FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useImageUpload } from "@/hooks/use-image-upload";
 import { NODE_HANDLES_SELECTED_STYLE_CLASSNAME, isValidUrl } from "@/lib/tiptap-utils";
 import { cn } from "@/lib/utils";

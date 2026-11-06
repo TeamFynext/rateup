@@ -1,9 +1,9 @@
+import { Button } from "@rateup/ui/components/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
 import { IconTrash, IconUpload } from "@tabler/icons-react";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button.tsx";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { useDisclosure } from "@/hooks/useDisclosure";
 
 import ImageSourceSelectorModal from "../Modal/ModalManagerModals/ImageSourceSelectorModal/index.tsx";

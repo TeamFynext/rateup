@@ -1,8 +1,8 @@
+import { Button } from "@rateup/ui/components/button";
 import { Image } from "@unpic/react";
 import { motion } from "motion/react";
 
 import { BookDemoLink } from "@/components/RateupHomePage/helper/BookDemoLink.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { imagesPath } from "@/utils/constants.ts";
 
 function QrCTA() {

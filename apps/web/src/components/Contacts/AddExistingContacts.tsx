@@ -1,3 +1,15 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@rateup/ui/components/table";
 import { IconSearch } from "@tabler/icons-react";
 import type { ColumnFiltersState } from "@tanstack/react-table";
 import { useState } from "react";
@@ -13,13 +25,8 @@ import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useDebouncedState } from "@/hooks/use-debounced-state.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 
-import { Button } from "../ui/button.tsx";
 import { Checkbox } from "../ui/checkbox.tsx";
 import { FieldLabel } from "../ui/field.tsx";
-import { Input } from "../ui/input.tsx";
-import { ScrollArea } from "../ui/scroll-area.tsx";
-import { Skeleton } from "../ui/skeleton.tsx";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table.tsx";
 import {
   ContactListFilters,
   toContactListQuery,

@@ -1,5 +1,8 @@
 // Extracted verbatim from `node-editor.tsx`. Behaviour is unchanged.
 
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import { IconBrandFacebookFilled, IconCheck, IconRefresh } from "@tabler/icons-react";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
@@ -17,10 +20,7 @@ import {
   useWaSettings,
 } from "@/backend/whatsapp/settings/waSettings.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
 import type { LeadgenNodeData } from "../../types/node-types.ts";
 import { ContainedSelection } from "../editor-ui.tsx";

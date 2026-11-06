@@ -1,3 +1,5 @@
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
 import {
   IconAlertTriangle,
   IconCircle,
@@ -13,8 +15,6 @@ import Confetti from "react-confetti";
 import { useTranslation } from "react-i18next";
 
 import type { OnboardingState } from "@/backend/loyalty/onboarding.api";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { cn } from "@/lib/utils.ts";
 

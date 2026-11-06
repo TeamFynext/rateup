@@ -1,10 +1,10 @@
+import { Button } from "@rateup/ui/components/button";
+import { Spinner } from "@rateup/ui/components/spinner";
 import { IconX } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
 import { useSurveyThemeData } from "@/context/SurveyThemeContext.tsx";

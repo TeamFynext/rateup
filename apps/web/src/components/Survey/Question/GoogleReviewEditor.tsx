@@ -1,3 +1,6 @@
+import { Button } from "@rateup/ui/components/button";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
+import { Separator } from "@rateup/ui/components/separator";
 import { IconStar } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 import React, { useEffect, useState } from "react";
@@ -7,9 +10,6 @@ import { toast } from "sonner";
 import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
 import { useSurvey } from "@/backend/surveys/surveys.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
-import { Button } from "@/components/ui/button.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import useFlowStore, { EditorType } from "@/components/whatsapp/flow-v2/utils/store.ts";
 import { cn } from "@/lib/utils";

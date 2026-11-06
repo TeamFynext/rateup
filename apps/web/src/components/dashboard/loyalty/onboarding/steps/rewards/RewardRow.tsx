@@ -1,26 +1,26 @@
-import { IconChevronRight, IconTrash } from "@tabler/icons-react";
-import { useMemo } from "react";
-import { Controller, type ControllerRenderProps, type useForm } from "react-hook-form";
-import { useTranslation } from "react-i18next";
-
-import { Button } from "@/components/ui/button.tsx";
-import { Card, CardContent } from "@/components/ui/card.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible.tsx";
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
-import { Input } from "@/components/ui/input.tsx";
+} from "@rateup/ui/components/collapsible";
+import { Input } from "@rateup/ui/components/input";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select.tsx";
+} from "@rateup/ui/components/select";
+import { IconChevronRight, IconTrash } from "@tabler/icons-react";
+import { useMemo } from "react";
+import { Controller, type ControllerRenderProps, type useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+
+import { Card, CardContent } from "@/components/ui/card.tsx";
+import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { cn } from "@/lib/utils.ts";
 import { numberInputValue } from "@/utils/form.ts";
 

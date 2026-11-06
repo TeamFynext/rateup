@@ -1,12 +1,12 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
 import { IconRefresh, IconSettings, IconTrash, IconUsers, IconWorldWww } from "@tabler/icons-react";
 import { useState } from "react";
 
 import { useEditSurveyMutation } from "@/backend/surveys/surveys.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { useUpdateFlowMetaDataMutation } from "@/backend/whatsapp/flow/flow.query";
-import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 

@@ -1,8 +1,8 @@
+import { Input } from "@rateup/ui/components/input";
 import { AnimatePresence, motion, useAnimate } from "motion/react";
 import { useContext, useEffect, useRef, useState } from "react";
 
 import type { QuestionFormFeatures } from "@/components/Survey/Question/QuestionExtraProps/questionForm.ts";
-import { Input } from "@/components/ui/input.tsx";
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";

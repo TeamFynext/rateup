@@ -1,9 +1,9 @@
+import { Button } from "@rateup/ui/components/button";
 import classNames from "classnames/bind";
 import { useAnimate } from "motion/react";
 import { useContext, useState } from "react";
 import type { MouseEvent } from "react";
 
-import { Button } from "@/components/ui/button.tsx";
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import { useSurveyContext } from "@/context/SurveyObjContext.tsx";

@@ -1,7 +1,7 @@
+import { Badge } from "@rateup/ui/components/badge";
 import { useTranslation } from "react-i18next";
 
 import type { LoyaltyRewardType } from "@/backend/loyalty/reward.api";
-import { Badge } from "@/components/ui/badge.tsx";
 import { cn } from "@/lib/utils.ts";
 
 import { useRewardEconomicsContext } from "../giveback/useRewardEconomicsContext.ts";

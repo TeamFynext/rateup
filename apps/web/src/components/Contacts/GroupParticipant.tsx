@@ -1,9 +1,8 @@
+import { Button } from "@rateup/ui/components/button";
 import { useTranslation } from "react-i18next";
 
 import { useRemoveContactsFromGroup } from "@/backend/campaign/contactGroup/contactGroup.query";
 import { useConfirm } from "@/context/confirm-provider";
-
-import { Button } from "../ui/button.tsx";
 
 export const ParticipantMenu = ({ contactId, groupId }: { contactId: string; groupId: string }) => {
   const removeContactsMutation = useRemoveContactsFromGroup(groupId);

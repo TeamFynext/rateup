@@ -1,3 +1,7 @@
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { maskPhone } from "@rateup/utils/maskPhone";
 import {
   IconArrowRight,
   IconCopy,
@@ -17,9 +21,6 @@ import type {
   PendingRedemption,
 } from "@/backend/loyalty/cashier/cashier.api";
 import { instagramMentionLabel } from "@/components/dashboard/loyalty/activity/instagramMention.tsx";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { ContactAvatar } from "@/components/ui/contact-avatar.tsx";
 import { FRONTEND_URL } from "@/utils/constants.ts";
@@ -27,7 +28,6 @@ import { FRONTEND_URL } from "@/utils/constants.ts";
 import { formatMoney } from "../../dashboard/loyalty/giveback/format.ts";
 import { LOYALTY_PATHS } from "../../dashboard/loyalty/paths.ts";
 import type { CashierStep } from "./cashier.search.ts";
-import { maskPhone } from "./maskPhone.ts";
 
 interface CustomerViewProps {
   data: CustomerRewardsResponse;

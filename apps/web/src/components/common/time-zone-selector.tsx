@@ -1,3 +1,4 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconCheck } from "@tabler/icons-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -5,7 +6,6 @@ import timezones from "timezones-list";
 
 import { cn } from "@/lib/utils.ts";
 
-import { Button } from "../ui/button.tsx";
 import {
   Combobox,
   ComboboxChipsInput,

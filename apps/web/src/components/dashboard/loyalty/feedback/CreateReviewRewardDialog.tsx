@@ -1,11 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Controller, useForm } from "react-hook-form";
-import { useTranslation } from "react-i18next";
-
-import type { LoyaltyReward } from "@/backend/loyalty/reward.api.ts";
-import { useCreateLoyaltyRewardMutation } from "@/backend/loyalty/reward.query.ts";
-import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -13,17 +7,23 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog.tsx";
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select.tsx";
-import { Textarea } from "@/components/ui/textarea.tsx";
+} from "@rateup/ui/components/select";
+import { Textarea } from "@rateup/ui/components/textarea";
+import { Controller, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+
+import type { LoyaltyReward } from "@/backend/loyalty/reward.api.ts";
+import { useCreateLoyaltyRewardMutation } from "@/backend/loyalty/reward.query.ts";
+import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { TemplateType } from "@/types/enums.ts";
 
 import { reviewRewardSchema, type ReviewRewardFormValues } from "./schemas.ts";

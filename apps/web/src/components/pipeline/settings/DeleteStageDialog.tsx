@@ -1,11 +1,4 @@
-import { IconAlertTriangle } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-
-import { useIntegrationStatuses } from "@/backend/appsIntegration/integration.query";
-import { useDeleteStageMutation } from "@/backend/pipeline/pipeline.query.tsx";
-import type { PipelineStage } from "@/backend/pipeline/pipeline.types.ts";
-import { Button } from "@/components/ui/button";
+import { Button } from "@rateup/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -13,15 +6,22 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+} from "@rateup/ui/components/dialog";
+import { Label } from "@rateup/ui/components/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@rateup/ui/components/select";
+import { IconAlertTriangle } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import { useIntegrationStatuses } from "@/backend/appsIntegration/integration.query";
+import { useDeleteStageMutation } from "@/backend/pipeline/pipeline.query.tsx";
+import type { PipelineStage } from "@/backend/pipeline/pipeline.types.ts";
 import { IntegratedApps } from "@/types/enums.ts";
 
 import { StageDot } from "../shared/atoms.tsx";

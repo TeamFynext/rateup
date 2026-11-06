@@ -1,3 +1,21 @@
+import { Button } from "@rateup/ui/components/button";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@rateup/ui/components/empty";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@rateup/ui/components/table";
 import dayjs from "dayjs";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -7,7 +25,6 @@ import type { ApiKey } from "@/backend/apiKeys/apiKeys.api.ts";
 import { useApiRequests, useApiUsage } from "@/backend/apiKeys/apiKeys.query.ts";
 import { requestOutcomeConfig } from "@/components/common/chartTheme.ts";
 import { DotBadge } from "@/components/dashboard/analytics/kit/StatusBadges.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import {
   Card,
   CardAction,
@@ -23,23 +40,6 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart.tsx";
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table.tsx";
 import { formatToRelativeTime } from "@/utils/dateTime.ts";
 import { toText } from "@/utils/toText";
 

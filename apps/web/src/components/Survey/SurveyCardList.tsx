@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge.tsx";
+import { Badge } from "@rateup/ui/components/badge";
 
 export function StatusBadge({ active }: { active: boolean }) {
   return (

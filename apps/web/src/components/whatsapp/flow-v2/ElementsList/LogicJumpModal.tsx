@@ -1,3 +1,19 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Separator } from "@rateup/ui/components/separator";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { useId, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -8,23 +24,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
 import { LogicAction, LogicCondition, QuestionType2 } from "@/types/enums.ts";
 import type { FlowLogicCondition, FlowLogicJump } from "@/types/global";
 import { logicSupportedTypes3 } from "@/utils/data.ts";

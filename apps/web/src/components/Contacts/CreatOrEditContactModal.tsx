@@ -1,4 +1,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Spinner } from "@rateup/ui/components/spinner";
 import { IconCircleCheck, IconUserPlus } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
@@ -27,19 +38,8 @@ import type { RequestPayload } from "@/types/api.ts";
 import { ContactGroupType } from "@/types/enums.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 
-import { Button } from "../ui/button.tsx";
 import { ContactAvatar } from "../ui/contact-avatar.tsx";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../ui/dialog.tsx";
 import { FieldError } from "../ui/field.tsx";
-import { Spinner } from "../ui/spinner.tsx";
 import {
   buildContactSchema,
   type ContactFormValues,

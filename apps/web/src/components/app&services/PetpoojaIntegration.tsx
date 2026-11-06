@@ -1,4 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
 import { IconRefresh, IconTrash } from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useId, useEffect, useState } from "react";
@@ -30,10 +33,7 @@ import { useConfirm } from "@/context/confirm-provider.tsx";
 import { IntegratedApps } from "@/types/enums.ts";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime.ts";
 
-import { Button } from "../ui/button";
 import { Field, FieldDescription, FieldError, FieldLabel } from "../ui/field";
-import { Input } from "../ui/input";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group";
 
 export function PetpoojaIntegration() {
   const { data: integration } = useIntegrationByType(IntegratedApps.petpooja);

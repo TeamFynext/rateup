@@ -4,7 +4,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select.tsx";
+} from "@rateup/ui/components/select";
 
 /** A compact single-choice filter for the Calls page toolbar. */
 export function FilterSelect({

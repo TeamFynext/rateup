@@ -1,3 +1,5 @@
+import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
 import { IconCalendar, IconShield, IconUser } from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
@@ -7,8 +9,6 @@ import { useTranslation } from "react-i18next";
 import type { AuditLogData } from "@/backend/user/user.api";
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { createSortableHeader } from "@/components/Table/data-table.tsx";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { toText } from "@/utils/toText";
 
 // Types

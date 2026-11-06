@@ -1,9 +1,9 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconBrandAppleFilled } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { getAuthorisationURLWithQueryParamsAndSetState } from "supertokens-auth-react/recipe/thirdparty";
 
-import { Button } from "@/components/ui/button.tsx";
 import { isSuperTokensGeneralError } from "@/utils/auth/index.tsx";
 
 interface AppleSignInButtonProps {

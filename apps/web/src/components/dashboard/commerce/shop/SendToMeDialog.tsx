@@ -1,12 +1,5 @@
-import { IconAlertCircle, IconBrandWhatsapp, IconCircleCheck } from "@tabler/icons-react";
-import { useMutation } from "@tanstack/react-query";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-
-import { sendShopProductToMe } from "@/backend/commerce/shop.api";
-import { useGetUserProfile } from "@/backend/user/user.query.tsx";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Button } from "@/components/ui/button.tsx";
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +7,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog.tsx";
+} from "@rateup/ui/components/dialog";
+import { IconAlertCircle, IconBrandWhatsapp, IconCircleCheck } from "@tabler/icons-react";
+import { useMutation } from "@tanstack/react-query";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import { sendShopProductToMe } from "@/backend/commerce/shop.api";
+import { useGetUserProfile } from "@/backend/user/user.query.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import { getApiErrorMessage } from "@/utils/apiError.ts";

@@ -1,4 +1,12 @@
 import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from "@rateup/ui/components/command";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
+import {
   IconAlignCenter,
   IconAlignLeft,
   IconAlignRight,
@@ -17,14 +25,6 @@ import type { Editor } from "@tiptap/core";
 import { FloatingMenu } from "@tiptap/react/menus";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useDebounce } from "@/hooks/use-debounce";
 import { cn } from "@/lib/utils";
 

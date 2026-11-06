@@ -1,3 +1,16 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Spinner } from "@rateup/ui/components/spinner";
+import { Textarea } from "@rateup/ui/components/textarea";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import { IconChevronDown, IconPlus, IconStar, IconStarFilled, IconX } from "@tabler/icons-react";
 import { type ReactNode, useId } from "react";
 import type { ControllerRenderProps, UseFormReturn } from "react-hook-form";
@@ -8,20 +21,13 @@ import type { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
 import { useContactLabels } from "@/backend/campaign/contacts/contacts.query";
 import { StageSelector, usePipelineStages } from "@/components/pipeline/shared/StageSelector.tsx";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { ContactIdentitySection } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayBody/components/contact/ContactIdentitySection.tsx";
 import { cn } from "@/lib/utils.ts";
 import { ContactGroupType } from "@/types/enums.ts";
 
-import { Button } from "../ui/button.tsx";
 import { Calendar } from "../ui/calendar.tsx";
 import { Field, FieldDescription, FieldError, FieldLabel, FieldTitle } from "../ui/field.tsx";
-import { Input } from "../ui/input.tsx";
 import { MultiSelect } from "../ui/multi-select.tsx";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover.tsx";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
-import { Textarea } from "../ui/textarea.tsx";
 import type { ContactFormValues } from "./contact-form-schema.ts";
 import ContactGroupSelector from "./ContactGroupSelector.tsx";
 import { UserSelector } from "./CreateContactModal.tsx";

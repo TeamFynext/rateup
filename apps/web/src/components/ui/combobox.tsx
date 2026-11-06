@@ -1,14 +1,14 @@
 import { Combobox as ComboboxPrimitive } from "@base-ui/react";
-import { IconChevronDown, IconX, IconCheck } from "@tabler/icons-react";
-import * as React from "react";
-
-import { Button } from "@/components/ui/button";
+import { Button } from "@rateup/ui/components/button";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
   InputGroupInput,
-} from "@/components/ui/input-group";
+} from "@rateup/ui/components/input-group";
+import { IconChevronDown, IconX, IconCheck } from "@tabler/icons-react";
+import * as React from "react";
+
 import { cn } from "@/lib/utils";
 
 const Combobox = ComboboxPrimitive.Root;

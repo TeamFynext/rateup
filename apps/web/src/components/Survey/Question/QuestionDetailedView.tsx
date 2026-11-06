@@ -1,3 +1,6 @@
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
 import { IconAlertOctagon, IconDeviceSdCard, IconEye } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 import { Color } from "@tiptap/extension-color";
@@ -34,9 +37,6 @@ import { ImageExtension } from "@/components/tiptap/extensions/image";
 import { ImagePlaceholder } from "@/components/tiptap/extensions/image-placeholder";
 import SearchAndReplace from "@/components/tiptap/extensions/search-and-replace";
 import { EditorToolbar } from "@/components/tiptap/toolbars/editor-toolbar.tsx";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { cn } from "@/lib/utils";
 import {

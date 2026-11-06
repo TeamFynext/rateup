@@ -1,9 +1,9 @@
+import { Spinner } from "@rateup/ui/components/spinner";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { signInAndUp } from "supertokens-auth-react/recipe/thirdparty";
 
-import { Spinner } from "@/components/ui/spinner";
 import { isSuperTokensGeneralError } from "@/utils/auth/index.tsx";
 
 export const Route = createFileRoute("/(auth)/login/callback/google/")({

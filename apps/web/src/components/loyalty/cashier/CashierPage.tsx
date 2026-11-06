@@ -1,3 +1,5 @@
+import { Button } from "@rateup/ui/components/button";
+import { Empty, EmptyDescription, EmptyHeader } from "@rateup/ui/components/empty";
 import { IconAddressBook, IconExternalLink, IconUserPlus } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -34,9 +36,7 @@ import { useLoyaltyTiers } from "@/backend/loyalty/tiers.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import { PageHeading } from "@/components/common/page-heading.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
-import { Empty, EmptyDescription, EmptyHeader } from "@/components/ui/empty.tsx";
 import { Loader } from "@/components/ui/loader.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";

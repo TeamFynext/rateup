@@ -1,3 +1,19 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@rateup/ui/components/empty";
 import { IconInbox } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 import type { ColumnFiltersState } from "@tanstack/react-table";
@@ -21,22 +37,6 @@ import {
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import { BINARY_COLORS, SCALE_10, SCALE_5 } from "@/components/common/sentimentScale.ts";
 import type { DataTableToolbarProps } from "@/components/Table/data-table.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty.tsx";
 import { markdownToPlainText } from "@/components/whatsapp/flow-v2/FlowScreensList/ScreenListItem.tsx";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { useDebounce } from "@/hooks/use-debounce.ts";

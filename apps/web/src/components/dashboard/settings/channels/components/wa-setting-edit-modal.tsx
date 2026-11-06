@@ -1,7 +1,4 @@
-import { useTranslation } from "react-i18next";
-
-import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -9,8 +6,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+} from "@rateup/ui/components/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
+import { useTranslation } from "react-i18next";
+
+import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import { WaConfigType } from "@/types/enums.ts";
 
 import { WaBusinessProfileForm } from "./wa-business-profile-form.tsx";

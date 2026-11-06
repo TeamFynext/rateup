@@ -1,4 +1,19 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@rateup/ui/components/tooltip";
 import { IconCheck } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSearch } from "@tanstack/react-router";
@@ -10,7 +25,6 @@ import z from "zod";
 
 import { chatbotKeys, useUpdateChatbotMutation } from "@/backend/chatbots/chatbots.query.ts";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import {
   Card,
   CardContent,
@@ -18,13 +32,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
 import {
   Field,
   FieldContent,
@@ -34,13 +41,6 @@ import {
   FieldLabel,
   FieldTitle,
 } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
 import type { RequestPayloadFields } from "@/types/api.ts";
 import type { WaAutomatedReply } from "@/types/global";
 import { AutomationPlatform, automationPlatformOf } from "@/types/platform.ts";

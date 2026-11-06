@@ -1,8 +1,8 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconArrowRight } from "@tabler/icons-react";
 import { Image } from "@unpic/react";
 
 import { BookDemoLink } from "@/components/RateupHomePage/helper/BookDemoLink.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { imagesPath } from "@/utils/constants.ts";
 
 const ReviewAiHero = () => {

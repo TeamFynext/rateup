@@ -1,3 +1,4 @@
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconBrandInstagram, IconBrandMessenger, IconBrandWhatsapp } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 
@@ -9,7 +10,6 @@ import { SectionHeading } from "@/components/ds/page-heading";
 import { Panel } from "@/components/ds/panel";
 import { Pill } from "@/components/ds/pill";
 import { ErrorState } from "@/components/ds/query-states";
-import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 

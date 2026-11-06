@@ -1,3 +1,4 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconCircleCheck, IconPlug } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -13,7 +14,6 @@ import {
   StoreWidgetLoadError,
   StoreWidgetSkeleton,
 } from "@/components/integrations/storeWidget/StoreWidgetEditor.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import {
   Card,
   CardContent,

@@ -1,9 +1,9 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Badge } from "@/components/ui/badge.tsx";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { PageType, QuestionType } from "@/types/enums.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 import { extractText, isHtml } from "@/utils/index.ts";

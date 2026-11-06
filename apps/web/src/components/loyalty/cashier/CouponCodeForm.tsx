@@ -1,11 +1,11 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
 import { IconArrowLeft, IconTicket } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { VerifyRedemptionResponse } from "@/backend/loyalty/redemption/redemption.api";
-import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 
 export interface CouponLookup {
   /** A redemption code (coupon / point reward) or an issued gift's short code. */

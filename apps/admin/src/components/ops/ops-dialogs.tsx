@@ -1,3 +1,5 @@
+import { Input } from "@rateup/ui/components/input";
+import { Label } from "@rateup/ui/components/label";
 import { useId, useState } from "react";
 
 import {
@@ -8,8 +10,6 @@ import {
   type ShopifyStore,
 } from "@/api/ops.api";
 import { ActionDialog, done, Notice } from "@/components/ds/action-dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { formatNumber } from "@/lib/format";
 
 export function AddReferralDialog({ onClose }: { onClose: () => void }) {

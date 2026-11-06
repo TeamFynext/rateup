@@ -1,3 +1,4 @@
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
 import { IconAlertTriangle, IconLoader2 } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod/v4";
@@ -14,7 +15,6 @@ import { INTEGRATIONS_CONFIG } from "@/components/dashboard/settings/integration
 import { IntegrationShell } from "@/components/dashboard/settings/integrations/IntegrationShell.tsx";
 import { SyncActivityPanel } from "@/components/dashboard/settings/integrations/SyncActivityPanel.tsx";
 import { LinkCopyElement } from "@/components/input/LinkCopyElement.tsx";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { IntegratedApps } from "@/types/enums.ts";
 

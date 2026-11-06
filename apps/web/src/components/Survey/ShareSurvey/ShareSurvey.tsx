@@ -1,3 +1,26 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@rateup/ui/components/tooltip";
 import {
   IconCalendarClock,
   IconChevronLeft,
@@ -17,33 +40,10 @@ import { updateSurvey } from "@/backend/surveys/survey.api";
 import { surveyKeys } from "@/backend/surveys/survey.keys";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import type { SurveyUpdateMutation } from "@/components/Survey/Settings/updateSettings.ts";
-import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
 import { Field, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
 import type { RequestPayload } from "@/types/api.ts";
 import { SurveyType } from "@/types/enums.ts";
 import { imagesPath } from "@/utils/constants.ts";

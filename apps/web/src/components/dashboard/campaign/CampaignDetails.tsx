@@ -1,6 +1,26 @@
 // Extracted verbatim from the `/dashboard/campaigns/$campaignId/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import {
   IconChartBar,
   IconFileText,
@@ -32,26 +52,6 @@ import { useCampaignParticipants } from "@/backend/campaign/campaignParticipants
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import { BackLink } from "@/components/common/back-link.tsx";
 import { CampaignPausedBanner } from "@/components/dashboard/campaign/CampaignPausedBanner.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
 import { useDebouncedState } from "@/hooks/use-debounced-state.ts";

@@ -1,13 +1,13 @@
 import type { DropResult } from "@hello-pangea/dnd";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
+import { Button } from "@rateup/ui/components/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
+import { Textarea } from "@rateup/ui/components/textarea";
 import { IconEdit, IconGripVertical, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useContext, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button.tsx";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Field, FieldError } from "@/components/ui/field.tsx";
-import { Textarea } from "@/components/ui/textarea.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { cn } from "@/lib/utils";
 import { SurveyType } from "@/types/enums.ts";

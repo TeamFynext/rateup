@@ -1,9 +1,9 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconEdit, IconPaperclip, IconTrash } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import type { QuickReply } from "@/backend/whatsapp/inbox/quickReply/quickreply.api";
 import { pressable } from "@/components/common/pressable.ts";
-import { Button } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 
 import { isJSONString } from ".";

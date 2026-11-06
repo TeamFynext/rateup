@@ -1,8 +1,3 @@
-import { useMemo } from "react";
-import { useTranslation } from "react-i18next";
-
-import type { Channel } from "@/backend/channels/channels.api";
-import type { WhatsappReach } from "@/backend/channels/whatsappReach.api";
 import {
   Select,
   SelectContent,
@@ -12,9 +7,14 @@ import {
   SelectSeparator,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
+} from "@rateup/ui/components/select";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
+import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
+
+import type { Channel } from "@/backend/channels/channels.api";
+import type { WhatsappReach } from "@/backend/channels/whatsappReach.api";
 import { cn } from "@/lib/utils.ts";
 import { groupByBusiness, spansSeveralBusinesses } from "@/utils/whatsapp/businesses.ts";
 

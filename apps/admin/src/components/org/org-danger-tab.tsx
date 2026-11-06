@@ -1,3 +1,6 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { Label } from "@rateup/ui/components/label";
 import { IconMailExclamation, IconTrash } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -12,9 +15,6 @@ import {
 import type { OrgSummary } from "@/api/orgs.api";
 import { ActionDialog, done, Notice } from "@/components/ds/action-dialog";
 import { ErrorState, PanelSkeleton } from "@/components/ds/query-states";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { formatNumber } from "@/lib/format";
 
 /**

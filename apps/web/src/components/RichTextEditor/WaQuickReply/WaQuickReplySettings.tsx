@@ -1,3 +1,5 @@
+import { Button } from "@rateup/ui/components/button";
+import { Empty, EmptyDescription, EmptyHeader } from "@rateup/ui/components/empty";
 import { IconPlus, IconRefresh } from "@tabler/icons-react";
 import type { Content } from "@tiptap/react";
 import { useEffect, useState } from "react";
@@ -13,8 +15,6 @@ import {
   useDeleteReply,
   useGetWaQuickReplies,
 } from "@/backend/whatsapp/inbox/quickReply/quickreply.query";
-import { Button } from "@/components/ui/button.tsx";
-import { Empty, EmptyDescription, EmptyHeader } from "@/components/ui/empty.tsx";
 
 import CreateOrEditQuickReply from "./CreateOrEditQuickReply.tsx";
 import QuickReplyItem from "./QuickReplyItem.tsx";

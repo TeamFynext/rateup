@@ -1,3 +1,6 @@
+import { Button } from "@rateup/ui/components/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
+import { Separator } from "@rateup/ui/components/separator";
 import {
   IconArrowBackUp,
   IconBold,
@@ -11,10 +14,7 @@ import type { EmojiClickData } from "emoji-picker-react";
 import React, { lazy, Suspense, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
 
 const EmojiPicker = lazy(() => import("emoji-picker-react"));
 

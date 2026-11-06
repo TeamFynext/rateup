@@ -1,10 +1,10 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconDownload } from "@tabler/icons-react";
 import type { JSX } from "react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { useGetMediaFile } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import { Button } from "@/components/ui/button.tsx";
 
 interface Props {
   messageContent: string;

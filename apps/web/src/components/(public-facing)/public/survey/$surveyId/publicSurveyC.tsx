@@ -1,3 +1,4 @@
+import { Button } from "@rateup/ui/components/button";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -5,7 +6,6 @@ import { useTranslation } from "react-i18next";
 import { TakeSurveyLayoutWeb } from "@/components/Layout/TakeSurveyLayout/TakeSurveyLayoutWeb.tsx";
 import GoogleReview from "@/components/Survey/TakeSurvey/GoogleReview/index.tsx";
 import TakeSurvey from "@/components/Survey/TakeSurvey/TakeSurveyComponent/index.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { rateupLogo } from "@/utils/constants.ts";
 
 import { FormClosed } from "../../../ws/$shortId/FormClosed.tsx";

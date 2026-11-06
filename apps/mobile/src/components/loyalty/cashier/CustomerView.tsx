@@ -8,7 +8,7 @@ import type { CustomerRewardsResponse, PendingRedemption } from "@/api/loyalty/l
 import { hapticSelect, hapticSuccess } from "./haptics";
 import type { CashierStep } from "./logic/cashier.steps";
 import { formatMoney, formatNumber } from "./logic/format";
-import { maskPhone } from "./logic/maskPhone";
+import { maskPhone } from "@rateup/utils/maskPhone";
 import {
   ActionRow,
   Badge,

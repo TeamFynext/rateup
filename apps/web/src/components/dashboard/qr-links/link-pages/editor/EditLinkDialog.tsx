@@ -1,14 +1,14 @@
-import { useTranslation } from "react-i18next";
-
-import type { LinktreeLink } from "@/backend/linktree/linktree.api.ts";
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog.tsx";
+} from "@rateup/ui/components/dialog";
+import { useTranslation } from "react-i18next";
+
+import type { LinktreeLink } from "@/backend/linktree/linktree.api.ts";
 
 import { CustomLinkFields, useCustomLinkForm } from "./CustomLinkFields.tsx";
 

@@ -1,9 +1,9 @@
+import { buttonVariants } from "@rateup/ui/components/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import { IconLayoutGrid } from "@tabler/icons-react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
-import { buttonVariants } from "@/components/ui/button.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { cn } from "@/lib/utils.ts";
 
 import { railButtonClass } from "./rail-styles.ts";

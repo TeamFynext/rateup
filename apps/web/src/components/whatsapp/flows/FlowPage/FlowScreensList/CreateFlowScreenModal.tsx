@@ -1,4 +1,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
 import { useParams } from "@tanstack/react-router";
 import { useCallback, useContext, useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -6,16 +15,7 @@ import { useTranslation } from "react-i18next";
 import z from "zod";
 
 import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
 import { Field, FieldError, FieldGroup } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import type { WaFlowScreen } from "@/types/global";
 import { SAVE_HOTKEY } from "@/utils/constants.ts";
 import { getHotkeyHandler } from "@/utils/hotkeys.ts";

@@ -1,17 +1,17 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
 import { IconDots, IconPencil, IconTrash } from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
 
 import type { ContactLabelOption } from "@/backend/campaign/contacts/contacts.api";
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { createSortableHeader } from "@/components/Table/data-table.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
 
 /** Alias for the labels endpoint's row shape, kept for readability here. */
 export type ContactLabel = ContactLabelOption;

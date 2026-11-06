@@ -1,8 +1,8 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconRefresh } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import { useSyncTemplatesMutation } from "@/backend/whatsapp/whatsapp.query";
-import { Button } from "@/components/ui/button.tsx";
 
 export function SyncTemplatesButton({
   disabled = false,

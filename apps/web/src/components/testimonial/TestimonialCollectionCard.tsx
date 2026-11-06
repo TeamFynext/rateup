@@ -1,3 +1,10 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
 import { IconDotsVertical, IconEdit, IconShare2, IconTrash } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -5,13 +12,6 @@ import { useTranslation } from "react-i18next";
 import type { TestimonialCollectionSummary } from "@/backend/testimonials/testimonial.api.ts";
 import { useDeleteTestimonialCollection } from "@/backend/testimonials/testimonial.query";
 import { ActionCard } from "@/components/common/action-card.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 
 interface TestimonialCollectionCardProps {

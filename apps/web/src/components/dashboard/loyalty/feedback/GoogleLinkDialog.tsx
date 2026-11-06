@@ -1,4 +1,14 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -7,17 +17,7 @@ import { z } from "zod";
 
 import { loyaltyKeys } from "@/backend/loyalty/loyalty.keys.ts";
 import { useEditTeamMutation } from "@/backend/team/team.query";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { ReviewPagePlatform } from "@/types/enums.ts";
 
 const urlSchema = z.object({

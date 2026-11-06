@@ -1,3 +1,5 @@
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
 import { IconAlertTriangle, IconKey } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
@@ -13,8 +15,6 @@ import {
   WIDGET_KEY_NAME,
 } from "@/components/ExternalApi/apiKeyFormat.ts";
 import TerminalBlock from "@/components/TerminalBlock.tsx";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import {
   Card,
   CardContent,

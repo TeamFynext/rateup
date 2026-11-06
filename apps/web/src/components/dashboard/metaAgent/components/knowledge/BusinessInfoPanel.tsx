@@ -1,4 +1,20 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@rateup/ui/components/alert-dialog";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Spinner } from "@rateup/ui/components/spinner";
+import { Textarea } from "@rateup/ui/components/textarea";
 import { IconRestore } from "@tabler/icons-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -10,23 +26,7 @@ import {
   useSyncBusinessInfo,
   useUpdateBusinessInfo,
 } from "@/backend/metaAgent/metaAgent.query";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
 import { FieldGroup, FieldLegend, FieldSeparator, FieldSet } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Spinner } from "@/components/ui/spinner";
-import { Textarea } from "@/components/ui/textarea";
 
 import { businessInfoFormSchema, type BusinessInfoFormValues } from "../../metaAgent.schemas";
 import { FormField } from "../shared/FormField";

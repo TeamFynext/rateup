@@ -1,3 +1,7 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import {
   IconCheck,
   IconLoader2,
@@ -15,12 +19,8 @@ import {
   useCatalogSettings,
   useUpdateCatalogSettings,
 } from "@/backend/whatsapp/catalog/catalog.query";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Switch } from "@/components/ui/switch";
 
 const emptyOption = (): DeliveryOption => ({

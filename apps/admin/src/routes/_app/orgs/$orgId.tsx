@@ -1,3 +1,5 @@
+import { Button } from "@rateup/ui/components/button";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconArrowLeft, IconBan } from "@tabler/icons-react";
 import { useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
@@ -35,8 +37,6 @@ import { OrgMembersTab } from "@/components/org/org-members-tab";
 import { OrgOverviewTab } from "@/components/org/org-overview-tab";
 import { ORG_TAB_LABELS, ORG_TABS, orgTabSchema, type OrgTab } from "@/components/org/org-tabs";
 import { OrgUsageTab } from "@/components/org/org-usage-tab";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { getApiErrorData } from "@/lib/apiError";
 import { formatDate, formatRelative } from "@/lib/format";
 import { cn } from "@/lib/utils";

@@ -1,3 +1,13 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@rateup/ui/components/empty";
 import {
   IconCheck,
   IconCopy,
@@ -21,16 +31,6 @@ import { downloadIgMeQr } from "@/components/dashboard/instagram/igMeQr.ts";
 import { IgMeLinkPhone } from "@/components/dashboard/instagram/instagram-preview.tsx";
 import { ChannelSection } from "@/components/dashboard/meta-channels/ChannelSection.tsx";
 import { CreateRuleButton } from "@/components/dashboard/meta-channels/RuleAutomationsSection.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty.tsx";
 import { PhonePreviewButton } from "@/components/ui/phone-preview.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";

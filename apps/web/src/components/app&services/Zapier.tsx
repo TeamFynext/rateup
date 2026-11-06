@@ -1,3 +1,12 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@rateup/ui/components/tooltip";
 import { IconReload, IconTrash } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -17,13 +26,6 @@ import { INTEGRATIONS_CONFIG } from "@/components/dashboard/settings/integration
 import { IntegrationShell } from "@/components/dashboard/settings/integrations/IntegrationShell.tsx";
 import { ApiCopyButton } from "@/components/ExternalApi/ApiCopyButton.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { IntegratedApps, ZapierTriggers } from "@/types/enums.ts";
@@ -32,8 +34,6 @@ import { formatIsoDateStringWithTime } from "@/utils/dateTime.ts";
 
 import { Card } from "../ui/card";
 import { Field, FieldDescription, FieldLabel } from "../ui/field";
-import { Input } from "../ui/input";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group";
 
 export function Zapier() {
   const {

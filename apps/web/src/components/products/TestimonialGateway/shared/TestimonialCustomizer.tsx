@@ -1,8 +1,7 @@
+import { Button } from "@rateup/ui/components/button";
+import { Tabs, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import { motion } from "motion/react";
 import { useState } from "react";
-
-import { Button } from "@/components/ui/button.tsx";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 
 import TestimonialCard from "../helpers/TestimonialCard.tsx";
 

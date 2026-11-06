@@ -1,14 +1,11 @@
-import { IconAlertCircle, IconArrowsSort, IconFolderCode, IconSearch } from "@tabler/icons-react";
-import type { ReactNode } from "react";
-
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
+} from "@rateup/ui/components/dropdown-menu";
 import {
   Empty,
   EmptyContent,
@@ -16,9 +13,12 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@/components/ui/empty.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
+} from "@rateup/ui/components/empty";
+import { Input } from "@rateup/ui/components/input";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import { IconAlertCircle, IconArrowsSort, IconFolderCode, IconSearch } from "@tabler/icons-react";
+import type { ReactNode } from "react";
+
 import { cn } from "@/lib/utils";
 
 const LIST_SKELETON_COUNT = 12;

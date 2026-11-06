@@ -1,13 +1,13 @@
-import { IconCalculator, IconMinus, IconPlus } from "@tabler/icons-react";
-import { useMemo, useState } from "react";
-
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet.tsx";
+} from "@rateup/ui/components/sheet";
+import { IconCalculator, IconMinus, IconPlus } from "@tabler/icons-react";
+import { useMemo, useState } from "react";
+
 import { Slider } from "@/components/ui/slider.tsx";
 
 import {

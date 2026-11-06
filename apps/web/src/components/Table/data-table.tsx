@@ -1,3 +1,11 @@
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@rateup/ui/components/table";
 import type {
   Column,
   ColumnDef,
@@ -12,7 +20,6 @@ import { useTable } from "@tanstack/react-table";
 import * as React from "react";
 
 import { TableBodySkeleton, TableHeadSkeleton } from "../animation/skeleton/Table.Skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table.tsx";
 import { DataTableColumnHeader } from "./data-table-column-header.tsx";
 import { type DataTableFeatures, features } from "./data-table-features.ts";
 import { DataTablePagination } from "./data-table-pagination.tsx";

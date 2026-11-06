@@ -1,15 +1,15 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
+import { Separator } from "@rateup/ui/components/separator";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 /* oxlint-disable */
 // @ts-nocheck
 import { IconArrowLeft, IconArrowRight, IconRepeat, IconX } from "@tabler/icons-react";
 import { useId, useEffect, useState } from "react";
 
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Separator } from "@/components/ui/separator";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 import { type SearchAndReplaceStorage } from "../extensions/search-and-replace";

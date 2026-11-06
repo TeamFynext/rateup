@@ -1,5 +1,6 @@
+import { Button } from "@rateup/ui/components/button";
+
 import { mapSmileyIcon } from "@/components/Survey/TakeSurvey/TakeSurveyComponent/SmileyRating/index.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { SmileyResponse } from "@/types/enums.ts";
 
 function SmileyQuestionCondition({

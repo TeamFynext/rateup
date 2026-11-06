@@ -1,10 +1,10 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconMoodSad, IconReload } from "@tabler/icons-react";
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
 
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { API_URL } from "@/utils/constants.ts";
 import { toText } from "@/utils/toText";

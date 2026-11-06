@@ -1,3 +1,5 @@
+import { Button } from "@rateup/ui/components/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
 import { IconPhoto, IconTrash } from "@tabler/icons-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -5,8 +7,6 @@ import { useTranslation } from "react-i18next";
 import type { SelectedImage } from "@/components/LocalOrUnsplashImagePicker/index.tsx";
 import ImageCropModal from "@/components/Modal/ModalManagerModals/ImageCropModal/index.tsx";
 import ImageSourceSelectorModal from "@/components/Modal/ModalManagerModals/ImageSourceSelectorModal/index.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { cn } from "@/lib/utils.ts";
 
 import type { PickedImage } from "../theme.ts";

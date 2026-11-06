@@ -1,7 +1,7 @@
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
 import { useTranslation } from "react-i18next";
 
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { WaQuestions } from "@/types/enums.ts";
 import { toText } from "@/utils/toText";
 

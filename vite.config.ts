@@ -3,13 +3,13 @@ import { defineConfig } from "vite-plus";
 // Workspace-wide format, lint and staged-file settings. Vite+ reads these only from the root:
 // package configs keep their own build/dev/test settings, and per-package differences live
 // in `overrides` below. Each override reproduces what that repo used before the move.
-const VITE_PLUS_APPS = ["apps/web/**", "apps/admin/**", "apps/docs/**"];
+const VITE_PLUS_APPS = ["apps/web/**", "apps/admin/**", "apps/docs/**", "packages/ui/**"];
 
 export default defineConfig({
   staged: {
     // apps/web only formats on commit; its lint is not clean enough to gate commits yet.
     "apps/web/**/*.{ts,tsx,js,jsx,json,css,md}": "vp fmt --no-error-on-unmatched-pattern",
-    "apps/{admin,docs}/**": "vp check --fix --no-error-on-unmatched-pattern",
+    "{apps/admin,apps/docs,packages/ui}/**": "vp check --fix --no-error-on-unmatched-pattern",
     // Backend code (formerly all of rateup-api) only formats on commit.
     "{apps/api,apps/worker-*,packages/server,packages/db}/**/*.{ts,js,md,json}":
       "vp fmt --no-error-on-unmatched-pattern",

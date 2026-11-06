@@ -1,11 +1,11 @@
+import { Button } from "@rateup/ui/components/button";
+import { Spinner } from "@rateup/ui/components/spinner";
 import { IconArrowRight, IconRefresh } from "@tabler/icons-react";
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 import { startPublicStoreCheckout } from "@/backend/commerce/shop.api";
-import { Button } from "@/components/ui/button.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 
 import { CheckoutSection } from "./OrderParts.tsx";

@@ -1,8 +1,7 @@
+import { Spinner } from "@rateup/ui/components/spinner";
 import type { HTMLAttributes } from "react";
 
 import { cn } from "@/lib/utils.ts";
-
-import { Spinner } from "../ui/spinner.tsx";
 
 export default function RateupLoader({
   className,

@@ -1,3 +1,5 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
 import {
   IconArrowRight,
   IconCircleCheck,
@@ -12,8 +14,6 @@ import {
 } from "@/components/Campaign/campaignProgress.ts";
 import { pressable } from "@/components/common/pressable.ts";
 import { CampaignStatusBadge } from "@/components/dashboard/campaign/campaignStatus.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { CampaignStatus, CampaignType } from "@/types/enums.ts";
 import type { Campaign } from "@/types/global";
 

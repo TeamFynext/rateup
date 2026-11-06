@@ -1,5 +1,10 @@
 // Extracted verbatim from `LifecyclePage.tsx`. Behaviour is unchanged.
 
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { Spinner } from "@rateup/ui/components/spinner";
+import { Textarea } from "@rateup/ui/components/textarea";
 import {
   IconArrowDown,
   IconArrowUp,
@@ -15,14 +20,9 @@ import { useId, useMemo, useState } from "react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldLabel, FieldTitle } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 import { EMOJI_PRESETS, getStageToneStyle, sortStages } from "./shared.tsx";

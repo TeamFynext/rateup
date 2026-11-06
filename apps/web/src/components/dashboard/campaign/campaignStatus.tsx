@@ -1,7 +1,7 @@
+import { Badge } from "@rateup/ui/components/badge";
 import { IconAlertCircle } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
-import { Badge } from "@/components/ui/badge.tsx";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card.tsx";
 import { CampaignStatus } from "@/types/enums.ts";
 

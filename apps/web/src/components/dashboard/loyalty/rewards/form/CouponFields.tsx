@@ -1,16 +1,16 @@
-import { Controller, useWatch, type UseFormReturn } from "react-hook-form";
-import { useTranslation } from "react-i18next";
-
-import type { LoyaltyTier } from "@/backend/loyalty/tier.api";
-import { DatePicker } from "@/components/ui/date-picker.tsx";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select.tsx";
+} from "@rateup/ui/components/select";
+import { Controller, useWatch, type UseFormReturn } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+
+import type { LoyaltyTier } from "@/backend/loyalty/tier.api";
+import { DatePicker } from "@/components/ui/date-picker.tsx";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { fromDateKey, toDateKey } from "@/utils/dateTime.ts";
 
 import type { CouponFormValues, CouponValues } from "../schemas.ts";

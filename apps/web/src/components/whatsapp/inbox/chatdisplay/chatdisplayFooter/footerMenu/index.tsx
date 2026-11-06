@@ -1,3 +1,11 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
 import { IconAutomation, IconMessage2Code, IconPlus, IconWaveSine } from "@tabler/icons-react";
 import { useState } from "react";
 
@@ -6,14 +14,6 @@ import {
   InboxSellMenuItems,
   type SellDialog,
 } from "@/components/dashboard/commerce/inbox/InboxSellMenu.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
 import { cn } from "@/lib/utils.ts";
 
 import WaInboxAutomationDisplayModal from "../automationDisplayModal/index.tsx";

@@ -1,18 +1,18 @@
-import { IconCalendarEvent } from "@tabler/icons-react";
-import { useContext, useState } from "react";
-import { useTranslation } from "react-i18next";
-
-import { Calendar } from "@/components/ui/calendar.tsx";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog.tsx";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
+} from "@rateup/ui/components/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
+import { useIsMobile } from "@rateup/ui/hooks/use-mobile";
+import { IconCalendarEvent } from "@tabler/icons-react";
+import { useContext, useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import { Calendar } from "@/components/ui/calendar.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
-import { useIsMobile } from "@/hooks/use-mobile.ts";
 import { asAnswerText } from "@/utils/response.ts";
 
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext.tsx";

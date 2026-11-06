@@ -1,7 +1,7 @@
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import type { ReactNode } from "react";
 
 import { Card } from "@/components/ui/card.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { cn } from "@/lib/utils";
 
 import { AnalyticsError, type AnalyticsQueryState, UpdatingLabel } from "./AnalyticsCard.tsx";

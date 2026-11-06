@@ -99,8 +99,8 @@ code compile** — fix the type instead. `vp check` must report zero errors befo
 - Use `pnpm dlx shadcn@latest` for component management
 - Always check for existing components before creating new ones
 - Compose UI using provided patterns (see shadcn skill)
-- shadcn/ui primitives in `src/components/ui/` are built on `@base-ui/react` (not Radix). There is no direct `@radix-ui/*` dependency in `package.json`; don't add one or reintroduce `cmdk`/`Command`-based patterns.
-- For select-style fields prefer `Select` (`src/components/ui/select.tsx`) for single choice and `MultiSelect` (`src/components/ui/multi-select.tsx`, a thin wrapper over `Combobox` in `src/components/ui/combobox.tsx`) for multi choice. Always pass `items` on `<Select>`/`<Combobox>` roots so the trigger renders the correct label.
+- shadcn/ui primitives are built on `@base-ui/react` (not Radix). The ones shared with the staff console (button, dialog, select, sidebar, table and 21 more) live in `packages/ui` and are imported as `@rateup/ui/components/<name>`; the rest stay in `src/components/ui/`. There is no direct `@radix-ui/*` dependency in `package.json`; don't add one or reintroduce `cmdk`/`Command`-based patterns.
+- For select-style fields prefer `Select` (`@rateup/ui/components/select`) for single choice and `MultiSelect` (`src/components/ui/multi-select.tsx`, a thin wrapper over `Combobox` in `src/components/ui/combobox.tsx`) for multi choice. Always pass `items` on `<Select>`/`<Combobox>` roots so the trigger renders the correct label.
 - **`ScrollArea` needs a bounded height, not a `max-h-*`.** Base UI puts `overflow: scroll` on an
   inner viewport that is `size-full`, so in an auto-height parent the viewport grows to its content
   and a `max-h-*` on the `<ScrollArea>` root never scrolls — it just overflows, and gets silently
@@ -146,7 +146,7 @@ back-button treatments, several of them written the same week.
 - **Back to a parent page** → `BackLink` (`src/components/common/back-link.tsx`). It names the
   destination and renders a real `<Link>`.
 - **List pages** → the kit in `src/components/common/list-page-layout.tsx`.
-- **Empty state** → `src/components/ui/empty.tsx`. Not a hand-rolled centred div, and not the
+- **Empty state** → `@rateup/ui/components/empty`. Not a hand-rolled centred div, and not the
   older `NothingFound`.
 - **Loading** → `Skeleton` when the shape is known, `Spinner` otherwise. Never `return null`,
   and never a bare `Loading...`.

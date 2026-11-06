@@ -1,3 +1,14 @@
+import { Button } from "@rateup/ui/components/button";
+import { Dialog, DialogContent, DialogTitle } from "@rateup/ui/components/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
+import { TooltipProvider } from "@rateup/ui/components/tooltip";
 import {
   IconArrowBackUp,
   IconArrowForwardUp,
@@ -33,15 +44,6 @@ import { RedoToolbar } from "@/components/tiptap/toolbars/redo.tsx";
 import { StrikeThroughToolbar } from "@/components/tiptap/toolbars/strikethrough.tsx";
 import { ToolbarProvider } from "@/components/tiptap/toolbars/toolbar-provider.tsx";
 import { UndoToolbar } from "@/components/tiptap/toolbars/undo.tsx";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog.tsx";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
-import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 import { useDisclosure } from "@/hooks/useDisclosure";
 import { cn } from "@/lib/utils";
 import { useContactsStore } from "@/store/inbox.store.ts";
@@ -52,9 +54,7 @@ import { getContactChannelSource, isInboxSessionExpired } from "@/utils/whatsapp
 import { AccountSelector } from "../input/AccountSelector.tsx";
 import { findChannelAccount } from "../input/channelOptions.ts";
 import VoiceRecorder from "../input/VoiceRecorder.tsx";
-import { Button } from "../ui/button.tsx";
 import CustomTooltip from "../ui/custom/CustomTooltip.tsx";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover.tsx";
 import WaInboxAutomationDisplayModal from "../whatsapp/inbox/chatdisplay/chatdisplayFooter/automationDisplayModal/index.tsx";
 import WaInboxFlowDisplayModal from "../whatsapp/inbox/chatdisplay/chatdisplayFooter/flowDisplayModel/index.tsx";
 import { useMediaStore } from "../whatsapp/inbox/chatdisplay/chatdisplayFooter/index.tsx";

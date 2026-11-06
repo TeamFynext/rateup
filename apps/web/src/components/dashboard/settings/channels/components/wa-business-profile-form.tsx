@@ -1,4 +1,18 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Avatar, AvatarFallback, AvatarImage } from "@rateup/ui/components/avatar";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Spinner } from "@rateup/ui/components/spinner";
+import { Textarea } from "@rateup/ui/components/textarea";
 import { IconCamera } from "@tabler/icons-react";
 import { useEffect, useRef } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -12,21 +26,7 @@ import {
   useUpdateBusinessProfileMutation,
   useUpdateProfilePictureMutation,
 } from "@/backend/whatsapp/settings/waSettings.query";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
-import { Textarea } from "@/components/ui/textarea.tsx";
 import { getApiErrorMessage } from "@/utils/apiError";
 
 /** What WhatsApp accepts for a profile photo, and the ceiling the API enforces anyway. */

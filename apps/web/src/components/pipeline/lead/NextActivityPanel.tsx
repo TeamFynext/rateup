@@ -1,3 +1,7 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { Label } from "@rateup/ui/components/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
 import { IconCalendarX, IconPlus, IconTrash } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import type { TFunction } from "i18next";
@@ -10,11 +14,7 @@ import {
   useUpdateLeadTaskMutation,
 } from "@/backend/pipeline/pipeline.query.tsx";
 import type { LeadDetail, LeadTask, LeadTaskType } from "@/backend/pipeline/pipeline.types.ts";
-import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { cn } from "@/lib/utils";
 

@@ -3,6 +3,8 @@
 // WhatsApp's own Meta steps, then the optional work. The step rail from that design is the app sidebar's
 // "Get started" section (see `setup.nav.tsx`) rather than a second rail in here.
 
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
 import { IconArrowRight, IconCircleCheck, IconCircleX, IconLoader2 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -23,8 +25,6 @@ import { ContinueWithFacebookButton } from "@/components/common/continue-with-fa
 import { SectionHeading } from "@/components/common/page-heading.tsx";
 import { SetupRowCard } from "@/components/common/setup-row-card.tsx";
 import { BookDemoLink } from "@/components/RateupHomePage/helper/BookDemoLink.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { useOrgModules } from "@/hooks/useOrgModules.ts";
 import { SubscriptionFeaturePathName } from "@/types/enums.ts";

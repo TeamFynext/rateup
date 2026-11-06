@@ -1,3 +1,16 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Separator } from "@rateup/ui/components/separator";
+import { Textarea } from "@rateup/ui/components/textarea";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import {
   IconMenu2,
   IconPlus,
@@ -21,20 +34,7 @@ import {
   WithChannelPreview,
 } from "@/components/dashboard/meta-channels/ChannelPreview.tsx";
 import { ChannelSection } from "@/components/dashboard/meta-channels/ChannelSection.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
-import { Textarea } from "@/components/ui/textarea.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { useCan } from "@/hooks/usePermission.ts";
 
 import type { DraftMenuItem } from "./shared.tsx";

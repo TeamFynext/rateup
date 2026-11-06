@@ -1,13 +1,12 @@
 // Routing and code-splitting only. Each integration renders its own `IntegrationShell`,
 // because the status line needs facts that only that integration's query has.
 
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconPlugOff } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 // Lazy load integration pages
 import { lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
-
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 
 import { IntegrationEmptyState } from "./IntegrationEmptyState.tsx";
 import { IntegrationShell } from "./IntegrationShell.tsx";

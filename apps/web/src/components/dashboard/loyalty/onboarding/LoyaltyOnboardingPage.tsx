@@ -1,3 +1,4 @@
+import { Progress } from "@rateup/ui/components/progress";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -19,7 +20,6 @@ import {
 } from "@/backend/loyalty/onboarding.query";
 import { SECTION_TITLE } from "@/components/common/page-heading.tsx";
 import { Loader } from "@/components/ui/loader.tsx";
-import { Progress } from "@/components/ui/progress.tsx";
 import { Stepper, type StepperStep } from "@/components/ui/stepper.tsx";
 import { useConfirm } from "@/context/confirm-provider";
 import { useUser } from "@/context/UserContext.tsx";

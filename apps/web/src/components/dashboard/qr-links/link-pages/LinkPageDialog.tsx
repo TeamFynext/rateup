@@ -1,4 +1,14 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
 import { useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -8,17 +18,7 @@ import {
   useCreateLinktreeMutation,
   useUpdateLinktreeMutation,
 } from "@/backend/linktree/linktree.query";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 
 import { QR_LINKS_PATHS } from "../shared/paths.ts";
 

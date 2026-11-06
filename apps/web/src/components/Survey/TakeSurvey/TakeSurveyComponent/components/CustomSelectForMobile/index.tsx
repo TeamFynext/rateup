@@ -1,3 +1,5 @@
+import { Button } from "@rateup/ui/components/button";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
 import { IconArrowLeft, IconCheck, IconChevronDown } from "@tabler/icons-react";
 import classNames from "classnames/bind";
 import { motion, useAnimate } from "motion/react";
@@ -5,8 +7,6 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { useSurveyThemeData } from "@/context/SurveyThemeContext.tsx";
 
 import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils.ts";

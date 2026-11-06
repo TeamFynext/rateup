@@ -1,8 +1,8 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 
 import { StepIconChip } from "../onboarding/StepChrome.tsx";

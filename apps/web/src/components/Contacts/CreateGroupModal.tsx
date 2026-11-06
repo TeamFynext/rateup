@@ -1,4 +1,17 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Avatar, AvatarImage } from "@rateup/ui/components/avatar";
+import { Button, buttonVariants } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import { Label } from "@rateup/ui/components/label";
 import { IconUsersGroup } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -17,20 +30,7 @@ import { getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
 import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 
 import { TeamSelector } from "../input/TeamSelector.tsx";
-import { Avatar, AvatarImage } from "../ui/avatar.tsx";
-import { Button, buttonVariants } from "../ui/button.tsx";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../ui/dialog.tsx";
 import { Field, FieldError, FieldLabel, FieldTitle } from "../ui/field.tsx";
-import { Input } from "../ui/input.tsx";
-import { Label } from "../ui/label.tsx";
 
 interface GroupModalProps {
   opened: boolean;

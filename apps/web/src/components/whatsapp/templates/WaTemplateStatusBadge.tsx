@@ -1,4 +1,5 @@
-import { Badge } from "@/components/ui/badge.tsx";
+import { Badge } from "@rateup/ui/components/badge";
+
 import { cn } from "@/lib/utils";
 import { WaTemplateStatus } from "@/types/enums.ts";
 

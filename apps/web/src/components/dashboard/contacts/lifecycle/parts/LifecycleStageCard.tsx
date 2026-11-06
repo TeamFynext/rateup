@@ -1,8 +1,8 @@
 // Extracted verbatim from `LifecyclePage.tsx`. Behaviour is unchanged.
 
+import { Badge } from "@rateup/ui/components/badge";
 import { useTranslation } from "react-i18next";
 
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 

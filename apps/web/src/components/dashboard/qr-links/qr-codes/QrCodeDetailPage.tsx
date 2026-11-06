@@ -1,4 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconPencil } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -16,11 +19,8 @@ import { BackLink } from "@/components/common/back-link.tsx";
 import { PageHeading, SectionHeading } from "@/components/common/page-heading.tsx";
 import type { QrDesign } from "@/components/common/qr-designer/qrDesign.ts";
 import { QrDesigner } from "@/components/common/qr-designer/QrDesigner.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
 import { isNotFound } from "@/utils/apiError.ts";
 

@@ -1,21 +1,21 @@
-import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-
-import MarkdownToReact from "@/components/RichTextEditor/MarkdownToReact.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Calendar } from "@/components/ui/calendar.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { Field, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select.tsx";
-import { Textarea } from "@/components/ui/textarea.tsx";
+} from "@rateup/ui/components/select";
+import { Textarea } from "@rateup/ui/components/textarea";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import MarkdownToReact from "@/components/RichTextEditor/MarkdownToReact.tsx";
+import { Calendar } from "@/components/ui/calendar.tsx";
+import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { Field, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import type { FormElement, Screen } from "@/components/whatsapp/flow-v2/utils/store.ts";
 import {
   FlowSheetShell,

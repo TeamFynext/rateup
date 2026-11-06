@@ -1,3 +1,5 @@
+import { Alert, AlertDescription } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
 import { IconBrandGoogleFilled, IconLock } from "@tabler/icons-react";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { z } from "zod";
@@ -6,8 +8,6 @@ import { startGoogleLogin } from "@/api/auth.api";
 import { meQueryOptions } from "@/api/auth.query";
 import { PAGE_TITLE } from "@/components/ds/page-heading";
 import { RateUpLogo } from "@/components/shell/brand";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 
 /**
  * Reasons the API's OIDC callback sends back as `?error=`. Every refusal reads the same, so

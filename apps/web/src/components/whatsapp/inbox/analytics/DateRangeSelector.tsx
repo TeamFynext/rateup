@@ -1,19 +1,19 @@
-import { IconCalendar, IconChevronDown } from "@tabler/icons-react";
-import dayjs from "dayjs";
-import { Activity, useState } from "react";
-import type { DateRange } from "react-day-picker";
-import { useTranslation } from "react-i18next";
-
-import { Button } from "@/components/ui/button.tsx";
-import { Calendar } from "@/components/ui/calendar.tsx";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
+import { Button } from "@rateup/ui/components/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select.tsx";
+} from "@rateup/ui/components/select";
+import { IconCalendar, IconChevronDown } from "@tabler/icons-react";
+import dayjs from "dayjs";
+import { Activity, useState } from "react";
+import type { DateRange } from "react-day-picker";
+import { useTranslation } from "react-i18next";
+
+import { Calendar } from "@/components/ui/calendar.tsx";
 import type { AnalyticsDateRange } from "@/types/api.ts";
 import { formatDate } from "@/utils/dateTime.ts";
 

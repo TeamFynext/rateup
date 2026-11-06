@@ -1,3 +1,13 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Separator } from "@rateup/ui/components/separator";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { useId, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -8,18 +18,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
 import { QuestionType2 } from "@/types/enums.ts";
 import type { FlowLogicJumpComponentLevel } from "@/types/global";
 import { toSelectOptions } from "@/utils/select-options.ts";

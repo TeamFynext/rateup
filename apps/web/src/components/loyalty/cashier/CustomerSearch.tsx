@@ -1,14 +1,13 @@
+import { Button } from "@rateup/ui/components/button";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
+import { maskPhone } from "@rateup/utils/maskPhone";
 import { IconLoader2, IconSearch, IconUserPlus } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { CustomerSearchResult } from "@/backend/loyalty/cashier/cashier.api";
 import { useSearchCustomers } from "@/backend/loyalty/cashier/cashier.query";
-import { Button } from "@/components/ui/button.tsx";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
 import { useDebounce } from "@/hooks/use-debounce.ts";
-
-import { maskPhone } from "./maskPhone.ts";
 
 interface CustomerSearchProps {
   pointsName: string;

@@ -1,3 +1,4 @@
+import { Badge } from "@rateup/ui/components/badge";
 import {
   IconCrown,
   IconEye,
@@ -8,7 +9,6 @@ import {
 } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
-import { Badge } from "@/components/ui/badge.tsx";
 import { cn } from "@/lib/utils.ts";
 import { resolveRoleKey } from "@/utils/authz/can.ts";
 import { ROLE_META, type RoleKey } from "@/utils/authz/roles.ts";

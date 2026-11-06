@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "@rateup/ui/components/button";
 
 function OpinionQuestionCondition({
   currentMinOpinion,

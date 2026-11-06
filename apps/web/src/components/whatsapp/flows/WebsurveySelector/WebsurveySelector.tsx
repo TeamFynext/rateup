@@ -1,15 +1,15 @@
-import { useId } from "react";
-
-import { useSurveys } from "@/backend/surveys/surveys.query";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
+} from "@rateup/ui/components/select";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import { useId } from "react";
+
+import { useSurveys } from "@/backend/surveys/surveys.query";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { SurveyType } from "@/types/enums.ts";
 import { toText } from "@/utils/toText";
 

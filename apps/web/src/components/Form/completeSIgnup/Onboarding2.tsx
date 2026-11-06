@@ -1,16 +1,16 @@
-import { IconArrowLeft, IconArrowRight, IconBuilding, IconSparkles } from "@tabler/icons-react";
-import { motion } from "motion/react";
-import { useId } from "react";
-
-import { Button } from "@/components/ui/button.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select.tsx";
+} from "@rateup/ui/components/select";
+import { IconArrowLeft, IconArrowRight, IconBuilding, IconSparkles } from "@tabler/icons-react";
+import { motion } from "motion/react";
+import { useId } from "react";
+
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 
 import type { OnboardingFormData } from "./onboarding-types.ts";
 

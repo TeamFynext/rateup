@@ -1,4 +1,25 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Empty, EmptyDescription, EmptyTitle } from "@rateup/ui/components/empty";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Textarea } from "@rateup/ui/components/textarea";
 import { IconPencil, IconPlayerPlay, IconPlus, IconRefresh, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -16,29 +37,8 @@ import {
   useSyncConnectorTools,
   useUpdateConnectorTool,
 } from "@/backend/metaAgent/metaAgent.query";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty";
 import { FieldDescription, FieldGroup } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 import {

@@ -1,4 +1,17 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
+import { TooltipProvider } from "@rateup/ui/components/tooltip";
 import { IconTypography } from "@tabler/icons-react";
 import { EditorContent } from "@tiptap/react";
 import { useEffect, useRef } from "react";
@@ -22,20 +35,7 @@ import { RedoToolbar } from "@/components/tiptap/toolbars/redo.tsx";
 import { StrikeThroughToolbar } from "@/components/tiptap/toolbars/strikethrough.tsx";
 import { ToolbarProvider } from "@/components/tiptap/toolbars/toolbar-provider.tsx";
 import { UndoToolbar } from "@/components/tiptap/toolbars/undo.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
-import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 import { deleteUploadedFiles } from "@/utils/file-upload/upload.ts";
 
 import { isJSONString } from ".";

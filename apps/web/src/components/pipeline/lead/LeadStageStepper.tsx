@@ -1,9 +1,9 @@
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { Fragment, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { Lead, PipelineDetail, PipelineStage } from "@/backend/pipeline/pipeline.types.ts";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 import { daysIdle, daysInStage, isRotting, leadAgeDays } from "../pipeline.utils.ts";

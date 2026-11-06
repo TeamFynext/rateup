@@ -1,8 +1,7 @@
+import { Button } from "@rateup/ui/components/button";
 import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import Webcam from "react-webcam";
-
-import { Button } from "../ui/button.tsx";
 
 const videoConstraints = {
   width: 1280,

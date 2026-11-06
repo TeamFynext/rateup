@@ -1,11 +1,4 @@
-import { useParams } from "@tanstack/react-router";
-import { useId, useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { useImmer } from "use-immer";
-
-import { useUpdateCollection } from "@/backend/testimonials/testimonial.query";
-import { Button } from "@/components/ui/button.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -13,19 +6,26 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+} from "@rateup/ui/components/select";
+import { Separator } from "@rateup/ui/components/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
+import { useParams } from "@tanstack/react-router";
+import { useId, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useImmer } from "use-immer";
+
+import { useUpdateCollection } from "@/backend/testimonials/testimonial.query";
+import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import type { Testimonial, TestimonialStyleType } from "@/types/global";
 
 import CustomColorPicker from "../Survey/SurveyTheme/components/customelements/CustomColorPicker.tsx";

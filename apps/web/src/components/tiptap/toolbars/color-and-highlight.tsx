@@ -1,15 +1,15 @@
+/* eslint-disable */
+// @ts-nocheck
+import { Button } from "@rateup/ui/components/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
+import { Separator } from "@rateup/ui/components/separator";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import { IconCheck, IconChevronDown } from "@tabler/icons-react";
 import type { Extension } from "@tiptap/core";
 import type { ColorOptions } from "@tiptap/extension-color";
 import type { HighlightOptions } from "@tiptap/extension-highlight";
 
-/* eslint-disable */
-// @ts-nocheck
-import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMediaQuery } from "@/hooks/use-media-querry";
 import { cn } from "@/lib/utils";
 

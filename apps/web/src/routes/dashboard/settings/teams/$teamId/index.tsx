@@ -1,3 +1,4 @@
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import { IconUsers } from "@tabler/icons-react";
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import dayjs from "dayjs";
@@ -13,7 +14,6 @@ import {
   EditTeam,
   TeamChannelAccess,
 } from "@/components/settings/team.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
 
 export const Route = createFileRoute("/dashboard/settings/teams/$teamId/")({

@@ -1,3 +1,5 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
 import {
   IconArrowLeft,
   IconAt,
@@ -11,8 +13,6 @@ import {
   useClearMention,
   useToggleFavorite,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 import CallContactButton from "@/components/whatsapp/calling/CallContactButton.tsx";

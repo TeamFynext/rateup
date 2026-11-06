@@ -1,10 +1,10 @@
+import { Input } from "@rateup/ui/components/input";
 import { IconUsers } from "@tabler/icons-react";
 import { Controller, type Control } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { numberInputValue } from "@/utils/form.ts";
 
 import type { RewardsFormInput } from "../../schemas.ts";

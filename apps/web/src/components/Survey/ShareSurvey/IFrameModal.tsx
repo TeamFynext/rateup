@@ -1,18 +1,18 @@
-import { IconCheck, IconCopy } from "@tabler/icons-react";
-import { useId, useState } from "react";
-import { useTranslation } from "react-i18next";
-
-import { Button } from "@/components/ui/button.tsx";
-import { Card, CardContent } from "@/components/ui/card.tsx";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select.tsx";
+} from "@rateup/ui/components/select";
+import { IconCheck, IconCopy } from "@tabler/icons-react";
+import { useId, useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import { Card, CardContent } from "@/components/ui/card.tsx";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 
 const units = [
   { value: "px", label: "px" },

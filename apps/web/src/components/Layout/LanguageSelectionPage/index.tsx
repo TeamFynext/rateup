@@ -1,10 +1,10 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconChevronRight } from "@tabler/icons-react";
 import classNames from "classnames/bind";
 import { useState } from "react";
 
 import { SafeHtml } from "@/components/common/SafeHtml.tsx";
 import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage/index.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import type { SurveyTheme } from "@/context/SurveyThemeContext.tsx";
 import { useMediaQuery } from "@/hooks/use-media-query.ts";
 import { PageType } from "@/types/enums.ts";

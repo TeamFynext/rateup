@@ -1,3 +1,7 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { Spinner } from "@rateup/ui/components/spinner";
+import { useIsMobile } from "@rateup/ui/hooks/use-mobile";
 import { IconMail } from "@tabler/icons-react";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
 import { useContext, useEffect, useState } from "react";
@@ -5,15 +9,11 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useSendOTPEmail, useValidateOtp } from "@/backend/surveys/surveys.query";
-import { Button } from "@/components/ui/button.tsx";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
 import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
-import { useIsMobile } from "@/hooks/use-mobile.ts";
 import { emailPattern } from "@/utils/constants.ts";
 import { asAnswer } from "@/utils/response.ts";
 

@@ -1,3 +1,4 @@
+import { Button } from "@rateup/ui/components/button";
 import {
   MessageScroller as MessageScrollerPrimitive,
   useMessageScroller,
@@ -7,7 +8,6 @@ import {
 import { IconArrowDown } from "@tabler/icons-react";
 import * as React from "react";
 
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 function MessageScrollerProvider(

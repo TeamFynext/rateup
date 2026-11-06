@@ -1,9 +1,9 @@
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useDeleteCampaignMutation } from "@/backend/campaign/campaign.query";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { CampaignStatus } from "@/types/enums.ts";
 

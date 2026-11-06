@@ -1,3 +1,12 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@rateup/ui/components/empty";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconChartBar, IconFileDownload } from "@tabler/icons-react";
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { Range } from "react-date-range";
@@ -9,15 +18,6 @@ import { useAllResponseNPSForGraph } from "@/backend/surveys/surveys.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import OverallResponseGraphWebForm from "@/components/Graph/OverallResponseGraphWebForm.tsx";
 import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Customer/LCustomerActionView.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import type { FlowQuestionSummary } from "@/components/whatsapp/flow-v2/utils/store.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";

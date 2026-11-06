@@ -1,3 +1,12 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
 import {
   IconArrowsSort,
   IconBan,
@@ -17,17 +26,8 @@ import dayjs from "dayjs";
 import type { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
 import { useContactTableStore } from "@/components/dashboard/contacts/store/contact-table-store.ts";
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { ContactAvatar } from "@/components/ui/contact-avatar.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 
 /**
  * The name doubles as the row's "View Details" trigger. It only publishes the row to the

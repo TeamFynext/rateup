@@ -1,9 +1,9 @@
+import { Button } from "@rateup/ui/components/button";
 import type { CSSProperties } from "react";
 
 import { SafeHtml } from "@/components/common/SafeHtml.tsx";
 import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage/index.tsx";
 import type { SurveyThemePage } from "@/components/Survey/SurveyTheme/surveyThemeReducer.ts";
-import { Button } from "@/components/ui/button.tsx";
 import { cn } from "@/lib/utils.ts";
 import { PageType } from "@/types/enums.ts";
 import { cordinateStyle } from "@/utils/index.ts";

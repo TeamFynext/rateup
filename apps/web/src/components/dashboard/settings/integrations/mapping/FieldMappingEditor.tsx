@@ -1,14 +1,14 @@
-import { useTranslation } from "react-i18next";
-
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
+import { Input } from "@rateup/ui/components/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select.tsx";
+} from "@rateup/ui/components/select";
+import { useTranslation } from "react-i18next";
+
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
 
 /**
  * How a provider field is filled in.

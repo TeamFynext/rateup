@@ -1,3 +1,12 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
 import { useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
@@ -21,16 +30,7 @@ import {
   useIsSurveyThemePreview,
 } from "../../Survey/SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext.tsx";
 import { useSelectedPreview } from "../../Survey/SurveyTheme/SurveyThemeContext.tsx";
-import { Button } from "../../ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../../ui/dialog.tsx";
 import { Field, FieldError, FieldLabel } from "../../ui/field.tsx";
-import { Input } from "../../ui/input.tsx";
 import LanguageSelectionPage from "../LanguageSelectionPage/index.tsx";
 import WelcomePage from "../WelcomePage/WelcomePage.tsx";
 import { getBgImgAndBgColor } from "./utils.ts";

@@ -1,3 +1,10 @@
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
 import { useId, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -7,7 +14,6 @@ import type { TemplateType } from "@/types/enums.ts";
 
 import { SelectSkeleton } from "../LoyaltyComponents/utils.tsx";
 import { Field, FieldDescription, FieldError, FieldLabel } from "../ui/field.tsx";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 
 interface WaTemplateSelector {
   value?: string;

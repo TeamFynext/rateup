@@ -1,3 +1,5 @@
+import { Button } from "@rateup/ui/components/button";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import {
   IconChevronRight,
   IconClock,
@@ -22,8 +24,6 @@ import { BackLink } from "@/components/common/back-link.tsx";
 import { type StatChange, StatTile } from "@/components/common/StatTile.tsx";
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { DateSelector } from "@/components/whatsapp/inbox/analytics/DateRangeSelector.tsx";
 
 import { AnalyticsCard } from "../kit/AnalyticsCard.tsx";

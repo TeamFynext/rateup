@@ -1,3 +1,12 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
 import {
   IconPlus,
   IconSearch,
@@ -22,16 +31,7 @@ import ImportContactsDialog from "@/components/Contacts/ImportContactsDialog.tsx
 import { useGroupTableStore } from "@/components/dashboard/contacts/store/group-table-store.ts";
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { DataTableViewOptions } from "@/components/Table/data-table-view-option.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
-import { Input } from "@/components/ui/input.tsx";
 
 interface DataTableToolbarProps<TData extends RowData, _TValue> {
   table: ReactTable<DataTableFeatures, TData>;

@@ -1,3 +1,15 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import { Label } from "@rateup/ui/components/label";
+import { Textarea } from "@rateup/ui/components/textarea";
 import { IconGitBranch } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -8,20 +20,8 @@ import {
 } from "@/backend/pipeline/pipeline.query.tsx";
 import type { PipelineType } from "@/backend/pipeline/pipeline.types.ts";
 import { useTeamsByUser } from "@/backend/team/team.query.tsx";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 import { OTHER_PIPELINE_LIMIT, PIPELINE_TYPE_ORDER, pipelineTypeConfig } from "./pipelineTypes.ts";

@@ -1,6 +1,11 @@
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@rateup/ui/components/tooltip";
 import { useTranslation } from "react-i18next";
 
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { PageType, SubscriptionFeaturePathName } from "@/types/enums.ts";
 import { BasicPages, uniquePages } from "@/utils/constants.ts";
 import { getPageTypeLabel } from "@/utils/enums/index.ts";

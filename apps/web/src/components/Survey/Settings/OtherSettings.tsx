@@ -1,3 +1,12 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useId, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -5,17 +14,8 @@ import { toast } from "sonner";
 
 import { useResetResponsesStats } from "@/backend/surveys/response/response.query";
 import { useDeleteSurveyMutation } from "@/backend/surveys/surveys.query";
-import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
 

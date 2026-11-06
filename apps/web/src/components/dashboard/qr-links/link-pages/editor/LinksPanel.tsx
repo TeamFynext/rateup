@@ -1,11 +1,6 @@
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import type { DropResult } from "@hello-pangea/dnd";
-import { IconGripVertical, IconLink, IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-
-import type { LinktreeLink } from "@/backend/linktree/linktree.api.ts";
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   Empty,
   EmptyContent,
@@ -13,7 +8,12 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@/components/ui/empty.tsx";
+} from "@rateup/ui/components/empty";
+import { IconGripVertical, IconLink, IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import type { LinktreeLink } from "@/backend/linktree/linktree.api.ts";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { cn } from "@/lib/utils.ts";
 

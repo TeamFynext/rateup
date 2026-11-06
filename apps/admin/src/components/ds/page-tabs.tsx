@@ -1,6 +1,5 @@
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
-
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export interface PageTab<T extends string> {
   value: T;

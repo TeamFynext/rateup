@@ -1,3 +1,4 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconArrowLeft } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
@@ -6,7 +7,6 @@ import { useTranslation } from "react-i18next";
 import { subscriptionKeys } from "@/backend/campaign/campaign.keys";
 import { useUpdateOrgDetailsMutation, useUpdateOrgModules } from "@/backend/org/org.query.tsx";
 import { FeaturePicker, useFeatureDraft } from "@/components/dashboard/features/FeaturePicker.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
 
 import { SETUP_PATH } from "./setup.tasks.ts";

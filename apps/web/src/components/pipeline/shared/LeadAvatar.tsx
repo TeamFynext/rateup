@@ -1,7 +1,7 @@
+import { Avatar, AvatarFallback, AvatarImage } from "@rateup/ui/components/avatar";
 import { useTranslation } from "react-i18next";
 
 import type { LeadChannel, LeadSource } from "@/backend/pipeline/pipeline.types.ts";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ContactAvatar } from "@/components/ui/contact-avatar.tsx";
 import { cn } from "@/lib/utils";
 

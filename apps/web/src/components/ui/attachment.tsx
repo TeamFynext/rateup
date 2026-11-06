@@ -1,9 +1,9 @@
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
+import { Button } from "@rateup/ui/components/button";
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const attachmentVariants = cva(

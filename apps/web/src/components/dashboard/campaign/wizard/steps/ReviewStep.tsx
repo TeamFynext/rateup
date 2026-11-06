@@ -1,3 +1,7 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
+import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
 import {
   IconAlertTriangle,
   IconLoader2,
@@ -19,12 +23,8 @@ import {
 } from "@/backend/campaign/campaign.query";
 import { useContacts } from "@/backend/campaign/contacts/contacts.query";
 import { CampaignCreditsCta } from "@/components/dashboard/campaign/CampaignCreditsCta.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import useTemplatesAvailableForTeam from "@/hooks/team.tsx";
 import { useDebounce } from "@/hooks/use-debounce.ts";
 import { cn } from "@/lib/utils";

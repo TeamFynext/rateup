@@ -1,9 +1,4 @@
-import { IconRocket } from "@tabler/icons-react";
-import { Link } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
-
-import type { OnboardingState } from "@/backend/loyalty/onboarding.api";
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   Empty,
   EmptyContent,
@@ -11,7 +6,12 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@/components/ui/empty.tsx";
+} from "@rateup/ui/components/empty";
+import { IconRocket } from "@tabler/icons-react";
+import { Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
+
+import type { OnboardingState } from "@/backend/loyalty/onboarding.api";
 
 import { LOYALTY_PATHS } from "./paths.ts";
 import { buildProgramProgress } from "./program/programProgress.ts";

@@ -1,3 +1,5 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
 import { IconCheck, IconCopy, IconQrcode } from "@tabler/icons-react";
 import { useState } from "react";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
@@ -6,9 +8,7 @@ import { useChannels } from "@/backend/channels/channels.query";
 import { useInstagramStories } from "@/backend/whatsapp/instagram-profile/instagramProfile.query";
 import { igMeLink } from "@/components/dashboard/instagram/igMeLink.ts";
 import { downloadIgMeQr } from "@/components/dashboard/instagram/igMeQr.ts";
-import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldDescription, FieldError, FieldTitle } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { TagsInput } from "@/components/ui/tags-input.tsx";
 import { cn } from "@/lib/utils.ts";

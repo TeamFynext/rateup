@@ -1,8 +1,8 @@
+import { Badge } from "@rateup/ui/components/badge";
 import { IconAlertTriangle } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import type { Lead, PipelineLabel } from "@/backend/pipeline/pipeline.types.ts";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 import { SOURCE_META } from "../pipeline.constants.tsx";

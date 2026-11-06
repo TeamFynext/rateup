@@ -1,6 +1,7 @@
 // Extracted verbatim from the `/(marketing)/pricing/shopify/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import { Button } from "@rateup/ui/components/button";
 import { IconArrowRight, IconLoader } from "@tabler/icons-react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { Suspense, useEffect, useState } from "react";
@@ -10,7 +11,6 @@ import Session from "supertokens-auth-react/recipe/session";
 import { useUserOrgOrders } from "@/backend/payment/payment.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import { Button } from "@/components/ui/button";
 import { toText } from "@/utils/toText";
 
 import style from "@/components/Graph/graph.module.css";

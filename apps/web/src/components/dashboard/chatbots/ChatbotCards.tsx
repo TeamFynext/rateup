@@ -1,3 +1,13 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
+import { Input } from "@rateup/ui/components/input";
 import { IconCopy, IconDots, IconTrash } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -16,16 +26,6 @@ import { PLATFORM_BADGE } from "@/components/dashboard/automation/components/rul
 import { PLATFORMS } from "@/components/dashboard/automation/components/schema.ts";
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { DataTable } from "@/components/Table/data-table.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 

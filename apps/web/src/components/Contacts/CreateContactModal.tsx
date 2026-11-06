@@ -1,4 +1,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Spinner } from "@rateup/ui/components/spinner";
 import { IconDownload, IconInfoCircle, IconUser } from "@tabler/icons-react";
 import { Activity, useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -22,16 +33,11 @@ import { importMethod } from "@/utils/enums/index.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 
-import { Button } from "../ui/button.tsx";
 import { Card } from "../ui/card.tsx";
 import { Checkbox } from "../ui/checkbox.tsx";
 import { Field, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "../ui/field.tsx";
-import { Input } from "../ui/input.tsx";
 import { MultiSelect } from "../ui/multi-select.tsx";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group.tsx";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
-import { Skeleton } from "../ui/skeleton.tsx";
-import { Spinner } from "../ui/spinner.tsx";
 import { Switch } from "../ui/switch.tsx";
 import {
   buildContactSchema,

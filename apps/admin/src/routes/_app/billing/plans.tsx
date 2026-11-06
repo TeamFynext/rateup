@@ -1,3 +1,16 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@rateup/ui/components/collapsible";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
 import { IconChevronDown, IconDotsVertical, IconPlus } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -10,15 +23,6 @@ import { JsonBlock } from "@/components/ds/json-block";
 import { PageHeading } from "@/components/ds/page-heading";
 import { Pill } from "@/components/ds/pill";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/ds/query-states";
-import { Button } from "@/components/ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { formatMoney, formatNumber, humanize } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/billing/plans")({

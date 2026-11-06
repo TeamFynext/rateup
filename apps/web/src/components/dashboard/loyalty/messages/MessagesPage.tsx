@@ -1,10 +1,10 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import { useLoyaltyOnboardingState } from "@/backend/loyalty/onboarding.query";
 import { PageHeading } from "@/components/common/page-heading.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { useTeamFeatures } from "@/context/TeamFeaturesContext.tsx";
 import { TeamFeature } from "@/types/enums.ts";
 

@@ -1,7 +1,6 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconUserShield } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-
-import { Button } from "@/components/ui/button.tsx";
 
 function UnauthorizedPage() {
   const navigate = useNavigate();

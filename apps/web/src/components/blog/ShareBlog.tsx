@@ -1,3 +1,6 @@
+import { Button } from "@rateup/ui/components/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import {
   IconBrandFacebookFilled,
   IconBrandLinkedinFilled,
@@ -14,10 +17,6 @@ import {
   WhatsappShareButton,
 } from "next-share";
 import { useState } from "react";
-
-import { Button } from "@/components/ui/button.tsx";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
 export default function SharePopover() {
   const url = typeof window !== "undefined" ? window.location.href : "";

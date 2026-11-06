@@ -1,3 +1,12 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@rateup/ui/components/tooltip";
 import { IconInfoCircle, IconWebhook } from "@tabler/icons-react";
 import { useId, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -6,17 +15,8 @@ import { useGetWebhookClientSecret } from "@/backend/org/org.query";
 import { ApiCopyButton } from "@/components/ExternalApi/ApiCopyButton.tsx";
 import PremiumFeature from "@/components/Premium/PremiumFeature.tsx";
 import type { SurveyUpdateMutation } from "@/components/Survey/Settings/updateSettings.ts";
-import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
 import { isValidUrl } from "@/utils/index.ts";
 
 const WebhookSettings = ({

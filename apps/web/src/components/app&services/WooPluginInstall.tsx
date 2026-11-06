@@ -1,7 +1,6 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconExternalLink } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
-
-import { Button } from "@/components/ui/button.tsx";
 
 /**
  * Whether RateUp for WooCommerce is listed on WordPress.org: approved 2026-10-20. While

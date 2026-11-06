@@ -1,13 +1,18 @@
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconUsers } from "@tabler/icons-react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { Card } from "@/components/ui/card.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { cn } from "@/lib/utils.ts";
-
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 
 interface TeamSelectorProps {
   className?: string;

@@ -1,13 +1,13 @@
 import { Progress as ProgressPrimitive } from "@base-ui/react/progress";
+import { Button } from "@rateup/ui/components/button";
+import { ProgressIndicator, ProgressTrack } from "@rateup/ui/components/progress";
+import { Spinner } from "@rateup/ui/components/spinner";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import { useContext, useEffect, useState } from "react";
 import type { RefObject } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button.tsx";
-import { ProgressIndicator, ProgressTrack } from "@/components/ui/progress.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";

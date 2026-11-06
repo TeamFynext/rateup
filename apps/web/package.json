@@ -19,6 +19,8 @@
     "@base-ui/react": "^1.9.0",
     "@hello-pangea/dnd": "^18.0.1",
     "@hookform/resolvers": "^7.0.2",
+    "@rateup/ui": "workspace:*",
+    "@rateup/utils": "workspace:*",
     "@sentry/tanstackstart-react": "^11.10.0",
     "@shadcn/react": "^0.3.1",
     "@tabler/icons-react": "^3.50.0",

@@ -1,3 +1,11 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
 import { IconBrandWhatsapp, IconDownload, IconQrcode } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import QRCode from "qrcode";
@@ -5,15 +13,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { CopyButton } from "@/components/common/copy-button.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
 
 import { formatWhatsappNumber, whatsappJoinUrl } from "../joinLink.ts";
 import { LOYALTY_PATHS } from "../paths.ts";

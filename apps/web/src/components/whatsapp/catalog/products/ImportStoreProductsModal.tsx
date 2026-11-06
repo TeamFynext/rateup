@@ -1,3 +1,6 @@
+import { Button } from "@rateup/ui/components/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
 import { IconLoader2 } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -8,11 +11,8 @@ import {
   useShopifyAvailableProducts,
   useWooAvailableProducts,
 } from "@/backend/whatsapp/catalog/products/products.query";
-import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Field, FieldTitle } from "@/components/ui/field.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 
 export type ProductImportSource = "shopify" | "woocommerce";
 

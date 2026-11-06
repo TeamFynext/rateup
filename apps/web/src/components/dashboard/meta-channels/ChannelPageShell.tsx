@@ -3,13 +3,13 @@
 // left, the chosen tool on the right) and the channel's journeys. Each page supplies its copy,
 // accounts and tools; everything they show the same way lives here.
 
+import { Button } from "@rateup/ui/components/button";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconSitemap } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
 import { PageHeading } from "@/components/common/page-heading.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 
 import { ChannelBrandTile } from "./ChannelBrandTile.tsx";
 import { type ChannelAccountOption, ChannelIdentity } from "./ChannelIdentity.tsx";

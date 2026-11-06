@@ -1,9 +1,9 @@
+import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
 import { IconChevronDown, IconLoader2 } from "@tabler/icons-react";
 import { useState } from "react";
 
 import { pressable } from "@/components/common/pressable.ts";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { cn } from "@/lib/utils.ts";
 
 import RenderOption from "../RenderOption.tsx";

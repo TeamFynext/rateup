@@ -1,9 +1,9 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
 import { IconPlus, IconX } from "@tabler/icons-react";
 import { Controller, useFormContext } from "react-hook-form";
 
-import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldDescription, FieldError, FieldTitle } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 
 import type { CreateRuleInput } from "./schema.ts";
 

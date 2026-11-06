@@ -1,3 +1,6 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconBolt, IconRefresh, IconTrash } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 
@@ -10,10 +13,7 @@ import {
   useRateupConnector,
   useUninstallRateupConnector,
 } from "@/backend/metaAgent/metaAgent.query";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useConfirm } from "@/context/confirm-provider";
 import { useCan } from "@/hooks/usePermission";
 

@@ -1,3 +1,16 @@
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import {
   IconAlertTriangle,
   IconArrowsLeftRight,
@@ -20,21 +33,8 @@ import type {
   MergeSide,
 } from "@/backend/campaign/contacts/merge.api";
 import { useMergeContactsMutation, useMergePreview } from "@/backend/campaign/contacts/merge.query";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { useDebounce } from "@/hooks/use-debounce";
 import { cn } from "@/lib/utils.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";

@@ -1,11 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigate } from "@tanstack/react-router";
-import { useForm } from "react-hook-form";
-import { useTranslation } from "react-i18next";
-import { z } from "zod";
-
-import { useCreateQrMutation, useUpdateQrMutation } from "@/backend/generateQr/generateQr.query";
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +7,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog.tsx";
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import { useNavigate } from "@tanstack/react-router";
+import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+import { z } from "zod";
+
+import { useCreateQrMutation, useUpdateQrMutation } from "@/backend/generateQr/generateQr.query";
 import {
   Field,
   FieldDescription,
@@ -21,7 +22,6 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 
 import { QR_LINKS_PATHS } from "../shared/paths.ts";
 import { destinationUrlSchema } from "./destinationUrl.ts";

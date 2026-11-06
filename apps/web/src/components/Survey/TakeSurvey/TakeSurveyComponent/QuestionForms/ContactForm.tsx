@@ -1,10 +1,10 @@
+import { Input } from "@rateup/ui/components/input";
 import { IconMail } from "@tabler/icons-react";
 import type { CountryCode } from "libphonenumber-js";
 import { useContext } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { QuestionFormFeatures } from "@/components/Survey/Question/QuestionExtraProps/questionForm.ts";
-import { Input } from "@/components/ui/input.tsx";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";

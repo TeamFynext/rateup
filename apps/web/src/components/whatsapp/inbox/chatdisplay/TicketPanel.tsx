@@ -1,3 +1,15 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import { Textarea } from "@rateup/ui/components/textarea";
 import {
   IconBan,
   IconCamera,
@@ -58,19 +70,7 @@ import { ContactDetailDialog } from "@/components/Contacts/ContactDetailedView.t
 import { InboxOrdersPanel } from "@/components/dashboard/commerce/inbox/InboxOrdersPanel.tsx";
 import { resolveChannel } from "@/components/input/channelOptions.ts";
 import { findLeadsPipeline } from "@/components/pipeline/pipelineTypes.ts";
-import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Textarea } from "@/components/ui/textarea.tsx";
 import AssigneePicker from "@/components/whatsapp/inbox/assign/AssigneePicker.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useTeamFeatures } from "@/context/TeamFeaturesContext.tsx";

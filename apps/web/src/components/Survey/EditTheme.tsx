@@ -1,9 +1,9 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconLanguage } from "@tabler/icons-react";
 import { isEqual } from "lodash";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useAllThemes } from "@/backend/surveyTheme/surveyTheme.query";
-import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
 import { cn } from "@/lib/utils";
 

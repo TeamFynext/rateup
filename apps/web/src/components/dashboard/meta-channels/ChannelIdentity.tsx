@@ -1,12 +1,12 @@
 // The connected account in the channel header: its name and handle beside the channel's logo,
 // whether the connection is healthy, and — with more than one connected — the picker.
 
+import { Button } from "@rateup/ui/components/button";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@rateup/ui/components/select";
 import { IconExternalLink } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button.tsx";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select.tsx";
 import { cn } from "@/lib/utils";
 
 import { ToolStatusDot } from "./ChannelOverview.tsx";

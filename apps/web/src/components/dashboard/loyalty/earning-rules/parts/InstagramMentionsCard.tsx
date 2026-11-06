@@ -1,3 +1,13 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconBrandInstagram } from "@tabler/icons-react";
 import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -11,18 +21,8 @@ import {
   useInstagramMentionRule,
   useSaveInstagramMentionRuleMutation,
 } from "@/backend/loyalty/earningRules.query";
-import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 

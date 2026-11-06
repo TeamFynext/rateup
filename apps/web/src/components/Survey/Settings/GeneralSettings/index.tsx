@@ -1,3 +1,5 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
 import { IconAdjustmentsHorizontal } from "@tabler/icons-react";
 import { useId, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -5,7 +7,6 @@ import { useTranslation } from "react-i18next";
 
 import { useEditSurveyMutation } from "@/backend/surveys/surveys.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
-import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import {
   Combobox,
@@ -25,7 +26,6 @@ import {
   FieldLabel,
   FieldTitle,
 } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { docsPath } from "@/utils/constants.ts";

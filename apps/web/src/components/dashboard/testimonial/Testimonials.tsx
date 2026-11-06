@@ -1,6 +1,8 @@
 // Extracted verbatim from the `/dashboard/surveys/testimonials/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import { Button } from "@rateup/ui/components/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import { IconPlus } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -23,8 +25,6 @@ import SurveySectionTabs from "@/components/Survey/SurveySectionTabs.tsx";
 import SaveTestimonialCollection from "@/components/testimonial/SaveTestimonialCollection.tsx";
 import TestimonialCard from "@/components/testimonial/TestimonialCard.tsx";
 import TestimonialCollectionCard from "@/components/testimonial/TestimonialCollectionCard.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { docsPath } from "@/utils/constants.ts";
 
 export function Testimonials() {

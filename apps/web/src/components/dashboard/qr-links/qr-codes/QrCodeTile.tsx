@@ -1,17 +1,17 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
 import { IconDots, IconPencil, IconScan, IconTrash } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import type { GeneratedQr } from "@/backend/generateQr/generateQr.api.ts";
 import { QrThumbnail } from "@/components/common/qr-designer/QrThumbnail.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
 
 import { CopyButton } from "../shared/CopyButton.tsx";
 import { QR_LINKS_PATHS, qrShortUrl } from "../shared/paths.ts";

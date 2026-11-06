@@ -1,3 +1,15 @@
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import { Label } from "@rateup/ui/components/label";
 import { IconDownload, IconFileSpreadsheet, IconUpload } from "@tabler/icons-react";
 import type { TFunction } from "i18next";
 import { useEffect, useState } from "react";
@@ -8,18 +20,6 @@ import { fetchImportTemplate, type LeadImportResult } from "@/backend/pipeline/p
 import type { LeadImportSkipReason } from "@/backend/pipeline/pipeline.api.ts";
 import { useImportLeadsMutation } from "@/backend/pipeline/pipeline.query.tsx";
 import type { PipelineDetail } from "@/backend/pipeline/pipeline.types.ts";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 import { downloadBlob } from "@/utils/downloadBlob.ts";
 

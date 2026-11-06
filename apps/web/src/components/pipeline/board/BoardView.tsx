@@ -2,6 +2,7 @@ import {
   dropTargetForElements,
   monitorForElements,
 } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconAlertTriangle, IconPlus } from "@tabler/icons-react";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -15,7 +16,6 @@ import type {
   PipelineStats,
   PipelineType,
 } from "@/backend/pipeline/pipeline.types.ts";
-import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 import { STATUS_BAND } from "../pipeline.constants.tsx";

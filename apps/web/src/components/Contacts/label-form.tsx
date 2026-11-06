@@ -1,4 +1,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@rateup/ui/components/button";
+import { DialogClose, DialogFooter } from "@rateup/ui/components/dialog";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Textarea } from "@rateup/ui/components/textarea";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -9,20 +20,9 @@ import {
   useCreateCustomFieldMutation,
   useUpdateCustomFieldMutation,
 } from "@/backend/campaign/contacts/contacts.query";
-import { Button } from "@/components/ui/button.tsx";
-import { DialogClose, DialogFooter } from "@/components/ui/dialog.tsx";
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { TagsInput } from "@/components/ui/tags-input.tsx";
-import { Textarea } from "@/components/ui/textarea.tsx";
 
 interface CustomFieldFormValues {
   name: string;

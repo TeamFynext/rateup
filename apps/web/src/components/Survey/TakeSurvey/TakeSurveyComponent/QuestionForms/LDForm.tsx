@@ -1,9 +1,9 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconThumbDownFilled, IconThumbUpFilled } from "@tabler/icons-react";
 import { useAnimate } from "motion/react";
 import { useContext } from "react";
 import type { MouseEvent } from "react";
 
-import { Button } from "@/components/ui/button.tsx";
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import { useSurveyContext } from "@/context/SurveyObjContext.tsx";

@@ -1,3 +1,9 @@
+import { Alert, AlertDescription } from "@rateup/ui/components/alert";
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@rateup/ui/components/empty";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import {
   IconAlertCircle,
   IconBrandMeta,
@@ -12,12 +18,6 @@ import { useTemplateLibrary } from "@/backend/whatsapp/whatsapp.query";
 import { ListPageSearchInput } from "@/components/common/list-page-layout.tsx";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import useDebounce from "@/components/menu/hook/useDebounce.ts";
-import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { cn } from "@/lib/utils.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 

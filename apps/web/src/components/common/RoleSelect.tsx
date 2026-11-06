@@ -1,12 +1,12 @@
-import { useTranslation } from "react-i18next";
-
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select.tsx";
+} from "@rateup/ui/components/select";
+import { useTranslation } from "react-i18next";
+
 import { ROLE_META, type RoleKey } from "@/utils/authz/roles.ts";
 
 interface RoleSelectProps {

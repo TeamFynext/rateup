@@ -1,4 +1,12 @@
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import {
   IconMoodSmile,
   IconStarFilled,
   IconTargetArrow,
@@ -26,14 +34,6 @@ import {
   ChartLegendContent,
   ChartTooltip,
 } from "@/components/ui/chart.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 
 const TIME_PERIODS = [
   { label: "Hourly", value: "hourly" },

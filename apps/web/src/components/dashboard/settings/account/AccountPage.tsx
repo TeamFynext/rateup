@@ -2,6 +2,29 @@
 // config only. Behaviour is unchanged.
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Avatar, AvatarFallback, AvatarImage } from "@rateup/ui/components/avatar";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+
+import "react-phone-number-input/style.css";
+
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Textarea } from "@rateup/ui/components/textarea";
 import {
   IconBuilding,
   IconCamera,
@@ -15,9 +38,6 @@ import {
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import React, { useEffect, useRef, useState } from "react";
-
-import "react-phone-number-input/style.css";
-
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { isValidPhoneNumber } from "react-phone-number-input";
@@ -35,29 +55,9 @@ import {
 import { BusinessHoursSection } from "@/components/account/business-hours/BusinessHoursSection.tsx";
 import { RoleBadge } from "@/components/common/RoleBadge.tsx";
 import LocaleSwitcher from "@/components/translation/LocaleSwitcher.tsx";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { Textarea } from "@/components/ui/textarea.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
 import { cropImageToSquare } from "@/utils/file-upload/autoCropSquare.ts";

@@ -1,12 +1,12 @@
+import { Button } from "@rateup/ui/components/button";
+import { Dialog, DialogContent, DialogTitle } from "@rateup/ui/components/dialog";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import { IconPencil } from "@tabler/icons-react";
 import type { CSSProperties } from "react";
 import { useState } from "react";
 
 import { SafeHtml } from "@/components/common/SafeHtml.tsx";
 import CustomTextEditor from "@/components/RichTextEditor/CustomTextEditor.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
 interface ThemeTitleProps {
   value: string;

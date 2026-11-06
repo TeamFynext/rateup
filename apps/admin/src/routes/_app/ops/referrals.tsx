@@ -1,3 +1,4 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -10,7 +11,6 @@ import { EmptyState, ErrorState, ListSkeleton } from "@/components/ds/query-stat
 import { ResponsiveTable, type Column } from "@/components/ds/responsive-table";
 import { StatCard } from "@/components/ds/stat-card";
 import { AddReferralDialog, DeleteReferralDialog } from "@/components/ops/ops-dialogs";
-import { Button } from "@/components/ui/button";
 import { formatDate, formatNumber } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/ops/referrals")({

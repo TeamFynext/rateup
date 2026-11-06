@@ -1,3 +1,4 @@
+import { useIsMobile } from "@rateup/ui/hooks/use-mobile";
 import { IconStar } from "@tabler/icons-react";
 import { useAnimate } from "motion/react";
 import { useContext, useState } from "react";
@@ -5,7 +6,6 @@ import { useContext, useState } from "react";
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
-import { useIsMobile } from "@/hooks/use-mobile.ts";
 import { cn } from "@/lib/utils";
 
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext.tsx";

@@ -1,3 +1,7 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Separator } from "@rateup/ui/components/separator";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import { IconEdit, IconExternalLink, IconShoppingBag, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -10,11 +14,7 @@ import {
 } from "@/backend/whatsapp/catalog/products/products.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import NothingFound from "@/components/NothingFound/NothingFound.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { fallbackImage } from "@/utils/constants.ts";
 import { toText } from "@/utils/toText";
 

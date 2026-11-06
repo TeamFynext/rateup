@@ -1,3 +1,13 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Textarea } from "@rateup/ui/components/textarea";
 import { IconPlus, IconUpload } from "@tabler/icons-react";
 import { useId, useContext, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -8,18 +18,8 @@ import { z } from "zod/v4";
 import { useImageStore } from "@/components/HomePage/pages/Pricing/store/RouteAndCartStore.ts";
 import { LengthTracker } from "@/components/input/LengthTracker.tsx";
 import { ImageCropModal } from "@/components/Modal/ImageCropModal.tsx";
-import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { cn } from "@/lib/utils";
 import type { PageType } from "@/types/enums.ts";

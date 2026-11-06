@@ -1,11 +1,11 @@
+import { Alert, AlertAction, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconArrowLeft, IconArrowRight, IconInfoCircle } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 
 import { PageHeading } from "@/components/common/page-heading.tsx";
-import { Alert, AlertAction, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 
 import { StepIconChip, StepTransition } from "../loyalty/onboarding/StepChrome.tsx";
 import { ConnectorsSection } from "./components/ConnectorsSection";

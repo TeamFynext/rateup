@@ -1,3 +1,11 @@
+import { Label } from "@rateup/ui/components/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
 import { useState } from "react";
 
 import {
@@ -9,14 +17,6 @@ import {
   type RateupPlan,
 } from "@/api/billing.api";
 import { ActionDialog, done, Notice } from "@/components/ds/action-dialog";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { humanize } from "@/lib/format";
 
 type Gateway = "razorpay" | "stripe";

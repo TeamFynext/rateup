@@ -1,3 +1,4 @@
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { useState } from "react";
@@ -7,7 +8,6 @@ import { FilterChips, type FilterChip } from "@/components/ds/filter-chips";
 import { SectionHeading } from "@/components/ds/page-heading";
 import { Panel } from "@/components/ds/panel";
 import { ErrorState } from "@/components/ds/query-states";
-import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate, formatNumber } from "@/lib/format";
 
 type Preset = "7" | "30" | "90" | "365" | "custom";

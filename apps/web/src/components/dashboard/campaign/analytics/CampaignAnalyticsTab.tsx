@@ -1,3 +1,12 @@
+import { Empty, EmptyDescription, EmptyHeader } from "@rateup/ui/components/empty";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@rateup/ui/components/sheet";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -8,15 +17,6 @@ import {
   useCampaignSends,
   useCancelPendingRetriesMutation,
 } from "@/backend/campaign/campaign.query";
-import { Empty, EmptyDescription, EmptyHeader } from "@/components/ui/empty.tsx";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { CampaignParticipantStatus, CampaignSendStatus } from "@/types/enums.ts";
 import type { CampaignSend } from "@/types/global";
 

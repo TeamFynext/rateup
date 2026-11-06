@@ -1,7 +1,7 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { useTranslation } from "react-i18next";
 
-import { Badge } from "@/components/ui/badge.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { cn } from "@/lib/utils";
 
 export interface CampaignMetric {

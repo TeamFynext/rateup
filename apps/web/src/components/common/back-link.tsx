@@ -1,8 +1,8 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconArrowLeft } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button.tsx";
 import { cn } from "@/lib/utils.ts";
 
 interface BackLinkProps {

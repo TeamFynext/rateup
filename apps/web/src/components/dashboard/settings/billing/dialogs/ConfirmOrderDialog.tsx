@@ -1,10 +1,5 @@
-import { IconCircleCheck, IconRefresh, IconX } from "@tabler/icons-react";
-import { useMemo } from "react";
-import { useTranslation } from "react-i18next";
-
-import { useRouteAndCartStore } from "@/components/HomePage/pages/Pricing/store/RouteAndCartStore.ts";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -12,8 +7,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
+} from "@rateup/ui/components/dialog";
+import { Separator } from "@rateup/ui/components/separator";
+import { IconCircleCheck, IconRefresh, IconX } from "@tabler/icons-react";
+import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
+
+import { useRouteAndCartStore } from "@/components/HomePage/pages/Pricing/store/RouteAndCartStore.ts";
 
 import { cadenceLabel, formatAmount } from "../useBillingData.ts";
 

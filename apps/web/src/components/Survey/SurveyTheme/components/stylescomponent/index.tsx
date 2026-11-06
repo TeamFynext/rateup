@@ -1,3 +1,7 @@
+import { Alert, AlertDescription } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
+import { Separator } from "@rateup/ui/components/separator";
 import { IconInfoCircle } from "@tabler/icons-react";
 import { produce } from "immer";
 import { difference } from "lodash";
@@ -11,12 +15,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion.tsx";
-import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Field, FieldTitle } from "@/components/ui/field.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
 
 import { getSurveyThemeKeyOf, supportedPageEditors } from "../../SurveyTheme.constants";
 import { ThemeTabEnum } from "../../SurveyTheme.enums";

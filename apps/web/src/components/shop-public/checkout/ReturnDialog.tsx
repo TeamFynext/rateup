@@ -1,10 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-
-import { type PublicOrder, requestPublicReturn } from "@/backend/commerce/shop.api";
-import { Button } from "@/components/ui/button.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -12,8 +6,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog.tsx";
-import { Textarea } from "@/components/ui/textarea.tsx";
+} from "@rateup/ui/components/dialog";
+import { Textarea } from "@rateup/ui/components/textarea";
+import { useMutation } from "@tanstack/react-query";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import { type PublicOrder, requestPublicReturn } from "@/backend/commerce/shop.api";
+import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 
 import { QuantityStepper } from "../shared.tsx";

@@ -1,3 +1,4 @@
+import { Spinner } from "@rateup/ui/components/spinner";
 import dayjs from "dayjs";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import type { FC } from "react";
@@ -14,7 +15,6 @@ import {
   MessageScrollerViewport,
   useMessageScrollerVisibility,
 } from "@/components/ui/message-scroller.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 import { useChatFilterStore } from "@/store/chat-filter.store.ts";
 import { getMessagesFromIDB } from "@/store/inbox.idb.ts";
 import { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";

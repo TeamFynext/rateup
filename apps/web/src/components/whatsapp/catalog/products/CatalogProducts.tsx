@@ -1,15 +1,15 @@
-import { IconBrandMeta, IconPlus, IconRefresh } from "@tabler/icons-react";
-import { toast } from "sonner";
-
-import type { WaCatalog } from "@/backend/whatsapp/catalog/catalog.api";
-import { useSyncCatalogProducts } from "@/backend/whatsapp/catalog/products/products.query";
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
+} from "@rateup/ui/components/dropdown-menu";
+import { IconBrandMeta, IconPlus, IconRefresh } from "@tabler/icons-react";
+import { toast } from "sonner";
+
+import type { WaCatalog } from "@/backend/whatsapp/catalog/catalog.api";
+import { useSyncCatalogProducts } from "@/backend/whatsapp/catalog/products/products.query";
 import { useDisclosure } from "@/hooks/useDisclosure";
 
 import { AddCatalogProductModal } from "./AddCatalogProduct.tsx";

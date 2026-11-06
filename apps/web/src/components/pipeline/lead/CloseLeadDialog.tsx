@@ -1,10 +1,4 @@
-import { IconCircleCheck, IconCircleX, IconSparkles } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-
-import { useCloseLeadMutation } from "@/backend/pipeline/pipeline.query.tsx";
-import type { Lead, PipelineDetail } from "@/backend/pipeline/pipeline.types.ts";
-import { Button } from "@/components/ui/button";
+import { Button } from "@rateup/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -12,9 +6,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@rateup/ui/components/dialog";
+import { Textarea } from "@rateup/ui/components/textarea";
+import { IconCircleCheck, IconCircleX, IconSparkles } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import { useCloseLeadMutation } from "@/backend/pipeline/pipeline.query.tsx";
+import type { Lead, PipelineDetail } from "@/backend/pipeline/pipeline.types.ts";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 import { usePipelineTypeConfig } from "../pipelineTypes.ts";

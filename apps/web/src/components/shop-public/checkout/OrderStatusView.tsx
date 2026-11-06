@@ -1,3 +1,6 @@
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
 import {
   IconAlertTriangle,
   IconBrandWhatsapp,
@@ -20,9 +23,6 @@ import {
   type ShopFulfillmentStatus,
   type ShopPaymentStatus,
 } from "@/backend/commerce/shop.api";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { cn } from "@/lib/utils.ts";
 import { safeHref } from "@/utils/safeHref.ts";
 

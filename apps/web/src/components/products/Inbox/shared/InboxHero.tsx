@@ -1,9 +1,9 @@
+import { Button } from "@rateup/ui/components/button";
 import { IconArrowRight } from "@tabler/icons-react";
 import { Image } from "@unpic/react";
 import { useEffect, useState } from "react";
 
 import { BookDemoLink } from "@/components/RateupHomePage/helper/BookDemoLink.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { imagesPath } from "@/utils/constants.ts";
 
 const rotatingTexts = ["Drive Growth.", "Empower Teams.", "Start Resolving."];

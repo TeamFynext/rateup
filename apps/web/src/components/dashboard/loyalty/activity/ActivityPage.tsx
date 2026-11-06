@@ -1,3 +1,12 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@rateup/ui/components/dropdown-menu";
+import { Tabs, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import { IconDownload, IconX } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -6,15 +15,6 @@ import { usePendingApprovalCount } from "@/backend/loyalty/approval/approval.que
 import { useLoyaltyProgram } from "@/backend/loyalty/program.query";
 import { useExportTransactionsMutation } from "@/backend/loyalty/redemption/redemption.query";
 import { PageHeading } from "@/components/common/page-heading.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 
 import { LOYALTY_PATHS } from "../paths.ts";
 import { ledgerQueryFor, type ActivityFilter, type ActivitySearch } from "./activity.filters.ts";

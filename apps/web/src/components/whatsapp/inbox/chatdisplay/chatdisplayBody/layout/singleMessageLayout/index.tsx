@@ -1,3 +1,11 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@rateup/ui/components/tooltip";
 import {
   IconArrowBackUp,
   IconBolt,
@@ -25,9 +33,7 @@ import { toast } from "sonner";
 import type { CallLogEntry } from "@/backend/whatsapp/calling/calling.api";
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useSendNewWaMessage } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import { Badge } from "@/components/ui/badge.tsx";
 import { Bubble, BubbleContent, BubbleReactions } from "@/components/ui/bubble.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 import {
@@ -37,12 +43,6 @@ import {
   MessageFooter,
   MessageHeader,
 } from "@/components/ui/message.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
 import { usePhoneIdStore } from "@/components/whatsapp/inbox/chatselect/accountSelectorStore.ts";
 import { PopoverEmojiPicker } from "@/components/whatsapp/templates/Details/TextFormateToolBar.tsx";
 import { useUser } from "@/context/UserContext.tsx";

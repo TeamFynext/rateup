@@ -1,9 +1,9 @@
+import { Button } from "@rateup/ui/components/button";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useUpdateSurveyTheme } from "@/backend/surveyTheme/surveyTheme.query";
-import { Button } from "@/components/ui/button.tsx";
 import { cn } from "@/lib/utils.ts";
 
 import { ThemeTabEnum } from "../../SurveyTheme.enums";

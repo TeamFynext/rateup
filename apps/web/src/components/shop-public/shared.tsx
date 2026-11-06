@@ -1,15 +1,15 @@
-import { IconBrandWhatsapp, IconBuildingStore, IconMinus, IconPlus } from "@tabler/icons-react";
-import { useTranslation } from "react-i18next";
-
-import { formatMoney } from "@/backend/commerce/shop.api";
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@/components/ui/empty.tsx";
+} from "@rateup/ui/components/empty";
+import { IconBrandWhatsapp, IconBuildingStore, IconMinus, IconPlus } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
+
+import { formatMoney } from "@/backend/commerce/shop.api";
 import { cn } from "@/lib/utils.ts";
 
 import { whatsappLink } from "./catalog.ts";

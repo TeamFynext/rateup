@@ -3,6 +3,8 @@
  * tokens in theme.css.
  */
 @import "tailwindcss";
+/* Shared components live outside this app, where the automatic scan does not reach. */
+@source "../../../../packages/ui/src";
 
 @import "@fontsource-variable/instrument-sans";
 @import "@fontsource-variable/figtree";

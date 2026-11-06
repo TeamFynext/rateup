@@ -1,3 +1,12 @@
+import { Button } from "@rateup/ui/components/button";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { useId, Fragment, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -5,17 +14,8 @@ import { toast } from "sonner";
 import type { Updater } from "use-immer";
 import { useImmer } from "use-immer";
 
-import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 import { LogicAction, LogicCondition, QuestionType2, WaQuestions } from "@/types/enums.ts";
 import type { FlowLogicCondition, FlowLogicJump } from "@/types/global";
 import type { FlowLogicJumpComponentLevel } from "@/types/global";

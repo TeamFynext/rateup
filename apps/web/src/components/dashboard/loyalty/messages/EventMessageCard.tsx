@@ -1,3 +1,16 @@
+import { Button } from "@rateup/ui/components/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@rateup/ui/components/collapsible";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
 import { IconArrowBackUp, IconChevronDown, IconPencil, IconPhoto } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
@@ -5,20 +18,7 @@ import { useTranslation } from "react-i18next";
 
 import type { EventTrigger } from "@/backend/loyalty/eventTriggers.api";
 import type { WaTemplateListEntry } from "@/backend/whatsapp/whatsapp.api";
-import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 
 import { EventMessageBodyField } from "./EventMessageBodyField.tsx";

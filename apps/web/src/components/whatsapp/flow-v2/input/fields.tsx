@@ -1,14 +1,15 @@
-import { Field, FieldDescription, FieldError, FieldTitle } from "@/components/ui/field.tsx";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { MultiSelect } from "@/components/ui/multi-select.tsx";
+import { Input } from "@rateup/ui/components/input";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select.tsx";
+} from "@rateup/ui/components/select";
+
+import { Field, FieldDescription, FieldError, FieldTitle } from "@/components/ui/field.tsx";
+import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { toSelectOptions } from "@/utils/select-options.ts";
 
 /**

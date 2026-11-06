@@ -1,17 +1,17 @@
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
-import { IconGripVertical } from "@tabler/icons-react";
-import React, { useContext, useEffect } from "react";
-import { useTranslation } from "react-i18next";
-
-import { Button } from "@/components/ui/button.tsx";
-import { Card } from "@/components/ui/card.tsx";
+import { Button } from "@rateup/ui/components/button";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog.tsx";
+} from "@rateup/ui/components/dialog";
+import { IconGripVertical } from "@tabler/icons-react";
+import React, { useContext, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+
+import { Card } from "@/components/ui/card.tsx";
 import { useListState } from "@/hooks/use-list-state.ts";
 import type { WaFlowFormElement } from "@/types/global";
 

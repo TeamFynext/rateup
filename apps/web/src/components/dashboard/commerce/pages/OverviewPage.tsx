@@ -1,3 +1,15 @@
+import { Button } from "@rateup/ui/components/button";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@rateup/ui/components/empty";
+import { Progress } from "@rateup/ui/components/progress";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@rateup/ui/components/table";
 import { IconArrowRight, IconPlus } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import dayjs from "dayjs";
@@ -8,7 +20,6 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { formatMoney, type ShopOverview } from "@/backend/commerce/shop.api";
 import { useShopOverview, useShopStore } from "@/backend/commerce/shop.query";
 import { BarList } from "@/components/dashboard/analytics/kit/BarList.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
 import {
   ChartContainer,
@@ -18,17 +29,6 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart.tsx";
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty.tsx";
-import { Progress } from "@/components/ui/progress.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table.tsx";
 import { useCan } from "@/hooks/usePermission.ts";
 import { cn } from "@/lib/utils";
 import { getApiErrorMessage } from "@/utils/apiError.ts";

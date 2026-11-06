@@ -1,3 +1,6 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconSend } from "@tabler/icons-react";
 import { useMutation } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -12,9 +15,6 @@ import {
   type ShopPaymentStatus,
 } from "@/backend/commerce/shop.api";
 import { useInvalidateShop, useShopOrders, useShopPayments } from "@/backend/commerce/shop.query";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { useOrgModules } from "@/hooks/useOrgModules.ts";
 import { useCan } from "@/hooks/usePermission.ts";
 import { cn } from "@/lib/utils.ts";

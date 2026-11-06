@@ -1,9 +1,11 @@
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
+import { ScrollArea } from "@rateup/ui/components/scroll-area";
 import { IconSelector } from "@tabler/icons-react";
 import * as React from "react";
 import * as RPNInput from "react-phone-number-input";
 import flags from "react-phone-number-input/flags";
 
-import { Button } from "@/components/ui/button.tsx";
 import {
   Combobox,
   ComboboxChipsInput,
@@ -13,8 +15,6 @@ import {
   ComboboxList,
   ComboboxTrigger,
 } from "@/components/ui/combobox.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { cn } from "@/lib/utils.ts";
 
 const RPNInputDefault = RPNInput.default;

@@ -1,4 +1,4 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 
 import { BusinessInfoPanel } from "./knowledge/BusinessInfoPanel";
 import { FaqsPanel } from "./knowledge/FaqsPanel";

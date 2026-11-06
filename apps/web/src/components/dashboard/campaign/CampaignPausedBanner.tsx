@@ -1,10 +1,10 @@
+import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
 import { IconAlertTriangle, IconArrowUpRight, IconPlayerPlay } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import { META_BILLING_URL } from "@/components/dashboard/setup/setup.tasks.ts";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { CampaignPauseReason, CampaignStatus } from "@/types/enums.ts";
 
 /**

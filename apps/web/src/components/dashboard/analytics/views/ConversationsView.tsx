@@ -1,3 +1,6 @@
+import { Input } from "@rateup/ui/components/input";
+import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Tabs, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import { IconChevronRight, IconSearch, IconUser, IconUsersGroup } from "@tabler/icons-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import type { ColumnDef, ReactTable, RowData } from "@tanstack/react-table";
@@ -11,9 +14,6 @@ import {
 } from "@/backend/conversation/conversation.query";
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { cn } from "@/lib/utils";
 import { MessagePlatform } from "@/types/enums.ts";
 

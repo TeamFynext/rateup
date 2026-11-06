@@ -1,3 +1,6 @@
+import { Button } from "@rateup/ui/components/button";
+import { Separator } from "@rateup/ui/components/separator";
+import { Textarea } from "@rateup/ui/components/textarea";
 import {
   IconArrowBackUp,
   IconBold,
@@ -8,10 +11,7 @@ import {
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
-import { Textarea } from "@/components/ui/textarea.tsx";
 import { PopoverEmojiPicker } from "@/components/whatsapp/templates/Details/TextFormateToolBar.tsx";
 
 import type { LoyaltyMessageVariable } from "./loyaltyMessageCatalog.ts";

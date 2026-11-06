@@ -1,3 +1,7 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Progress } from "@rateup/ui/components/progress";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconRefresh } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
@@ -9,11 +13,7 @@ import type {
 } from "@/backend/subscription/subscription.api";
 import { useSubscriptionUsage } from "@/backend/subscription/subscription.query";
 import { isUnlimitedCount } from "@/components/HomePage/pages/Pricing/pricing.data.ts";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
-import { Progress } from "@/components/ui/progress.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 
 /** One allowance: what it is, how much is gone, how much is left. Every meter uses this. */
 export function UsageMeter({

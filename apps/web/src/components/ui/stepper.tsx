@@ -1,6 +1,6 @@
+import { Badge } from "@rateup/ui/components/badge";
 import { IconCheck } from "@tabler/icons-react";
 
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 /**

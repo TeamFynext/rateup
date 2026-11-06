@@ -1,11 +1,10 @@
+import { Alert, AlertDescription } from "@rateup/ui/components/alert";
+import { Button } from "@rateup/ui/components/button";
 import { IconDownload, IconInfoCircle } from "@tabler/icons-react";
 import { useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { type CellValue, readSheet } from "read-excel-file/browser";
 import { toast } from "sonner";
-
-import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
-import { Button } from "@/components/ui/button.tsx";
 
 interface ImportChoicesProps {
   setValue: (name: string, value: unknown) => void;

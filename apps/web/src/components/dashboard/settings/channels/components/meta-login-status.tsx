@@ -1,3 +1,13 @@
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@rateup/ui/components/dialog";
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader } from "@rateup/ui/components/empty";
 import {
   IconBrandWhatsapp,
   IconBuildingStore,
@@ -15,16 +25,6 @@ import {
 } from "@/backend/whatsapp/settings/waSettings.query";
 import { ContinueWithFacebookButton } from "@/components/common/continue-with-facebook-button.tsx";
 import { SetupRowCard } from "@/components/common/setup-row-card.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader } from "@/components/ui/empty.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useDisclosure } from "@/hooks/useDisclosure";
 import { WaConfigType } from "@/types/enums.ts";

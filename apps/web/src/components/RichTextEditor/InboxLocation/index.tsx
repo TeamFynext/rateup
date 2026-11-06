@@ -1,10 +1,10 @@
+import { Button } from "@rateup/ui/components/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
 import { IconLocation, IconMapPin } from "@tabler/icons-react";
 import type { Point } from "pigeon-maps";
 import { Map, Marker } from "pigeon-maps";
 import { useEffect, useState } from "react";
 
-import { Button } from "@/components/ui/button.tsx";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { useMessageBodyStore } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter/index.tsx";
 
 const InboxLocationControl = () => {

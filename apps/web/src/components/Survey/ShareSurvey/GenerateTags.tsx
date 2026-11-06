@@ -1,18 +1,18 @@
-import { IconArrowsShuffle, IconX } from "@tabler/icons-react";
-import { useState, type KeyboardEvent } from "react";
-import type { Dispatch, SetStateAction } from "react";
-import { useTranslation } from "react-i18next";
-
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Field, FieldTitle } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
+import { Badge } from "@rateup/ui/components/badge";
+import { Button } from "@rateup/ui/components/button";
+import { Input } from "@rateup/ui/components/input";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
+} from "@rateup/ui/components/tooltip";
+import { IconArrowsShuffle, IconX } from "@tabler/icons-react";
+import { useState, type KeyboardEvent } from "react";
+import type { Dispatch, SetStateAction } from "react";
+import { useTranslation } from "react-i18next";
+
+import { Field, FieldTitle } from "@/components/ui/field.tsx";
 
 const GenerateTags = ({
   tagSelectData,

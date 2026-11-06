@@ -1,3 +1,5 @@
+import { Progress, ProgressLabel } from "@rateup/ui/components/progress";
+import { Skeleton } from "@rateup/ui/components/skeleton";
 import { chunk } from "lodash";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -5,8 +7,6 @@ import { useTranslation } from "react-i18next";
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useBulkAssignInboxToUser } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { Combobox } from "@/components/ui/combobox.tsx";
-import { Progress, ProgressLabel } from "@/components/ui/progress.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import {
   AssigneeOptionList,
   useAssigneeOptions,

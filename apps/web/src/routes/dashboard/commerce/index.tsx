@@ -1,7 +1,7 @@
+import { Spinner } from "@rateup/ui/components/spinner";
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 
 import { useShopSetup } from "@/backend/commerce/shop.query";
-import { Spinner } from "@/components/ui/spinner";
 
 export const Route = createFileRoute("/dashboard/commerce/")({
   component: CommerceIndex,

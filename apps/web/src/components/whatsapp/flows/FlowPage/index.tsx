@@ -1,3 +1,4 @@
+import { TabsContent } from "@rateup/ui/components/tabs";
 import { useParams, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -6,7 +7,6 @@ import { useImmer } from "use-immer";
 import { useQuestions } from "@/backend/surveys/questions/questions.query";
 import { useSurvey } from "@/backend/surveys/surveys.query";
 import { useUpdateFlowMutation, useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
-import { TabsContent } from "@/components/ui/tabs.tsx";
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";
