@@ -1,0 +1,168 @@
+import { IntegratedApps } from "../../types/enums.js";
+import { encryptCredentialSecrets, restoreRedactedSecrets } from "./shared/credentialCrypto.js";
+import prisma from "../../utils/prisma.js";
+import { IntegrationSchema, UpdateIntgrationInput } from "./integrations.schema.js";
+import { log } from "../../utils/logger.js";
+import { generateAutomationKey } from "./automation/automation.keys.js";
+import { isAutomationPlatform } from "./automation/automation.platforms.js";
+import axios from "axios";
+import { assertPublicUrl, publicAxiosOptions } from "../../utils/ssrf.js";
+
+export const getAllIntegrationsByOrgId = (orgId: string) => {
+  return prisma.integration.findMany({
+    where: {
+      orgId,
+      // Shop payment gateways hold a merchant's payment keys and are managed only through
+      // Commerce → Payments, which never returns them.
+      NOT: { name: { startsWith: "shop_" } },
+    },
+  });
+};
+
+export const getIntegrationByName = async (orgId: string, name: string) => {
+  const data = await prisma.integration.findUnique({
+    where: {
+      orgid_integration_name_unique: {
+        orgId,
+        name,
+      },
+    },
+  });
+  return data;
+};
+
+export const createIntegration = async (data: IntegrationSchema, orgId?: string) => {
+  let apikey;
+  if (isAutomationPlatform(data.name)) {
+    if (!orgId) throw new Error(`Missing org to create the ${data.name} API key`);
+    const { key, hash } = await generateAutomationKey(data.name, orgId);
+    data.credential = {
+      ...data?.credential,
+      accessToken: hash,
+    };
+    apikey = key;
+  }
+  const integration = await prisma.integration.create({
+    data: {
+      name: data.name,
+      credential: data.credential,
+      orgId: orgId ?? undefined,
+    },
+  });
+
+  return { ...integration, apikey };
+};
+
+export const updateIntegrationByName = async (
+  orgId: string,
+  name: string,
+  data: UpdateIntgrationInput,
+) => {
+  if (data.credential) {
+    const stored = await prisma.integration.findUnique({
+      where: { orgid_integration_name_unique: { orgId, name } },
+      select: { credential: true },
+    });
+    data.credential = restoreRedactedSecrets(data.credential, stored?.credential);
+  }
+  let apikey;
+  if (isAutomationPlatform(name) && data.updateKey) {
+    if (!data.credential) {
+      throw new Error(`Missing credential to regenerate the ${name} access token`);
+    }
+    const { key, hash } = await generateAutomationKey(name, orgId);
+    data.credential.accessToken = hash;
+    apikey = key;
+  }
+  const {
+    updateKey: _ignoredUpdateKey,
+    orgId: _ignoredOrgId,
+    ...rest
+  } = data as UpdateIntgrationInput & { orgId?: string };
+  if (name === IntegratedApps.shopify && rest.credential) {
+    // Shopify rotates the token pair on every refresh and retires the old one,
+    // so a credential read before a refresh and written back after it would
+    // restore a dead token. Only saveShopifySession writes the session; this
+    // replaces the rest of the credential and carries the stored session over,
+    // in one statement.
+    const { session: _ignoredSession, ...credential } = rest.credential;
+    delete rest.credential;
+    await prisma.$executeRaw`UPDATE "Integration" SET credential = ${JSON.stringify(encryptCredentialSecrets(credential))}::jsonb || CASE WHEN credential->'session' IS NULL THEN '{}'::jsonb ELSE jsonb_build_object('session', credential->'session') END WHERE "orgId" = ${orgId}::uuid AND name = ${name}`;
+  }
+  const integration = await prisma.integration.update({
+    where: {
+      orgid_integration_name_unique: {
+        orgId,
+        name,
+      },
+    },
+    data: {
+      ...rest,
+    },
+  });
+  return { ...integration, apikey };
+};
+
+export async function deleteIntegrationByName(name: string, orgId: string) {
+  const where = { orgid_integration_name_unique: { name, orgId } };
+
+  // A registry provider may have set things up on the remote side — webhook
+  // subscriptions, mostly — that would keep calling a receiver with no row
+  // behind it. Best-effort: a remote that is already gone must not block the
+  // org from disconnecting. Imported on use, because the registry pulls in
+  // every provider and some of those import this file.
+  const { getIntegrationProvider } = await import("./providers/registry.js");
+  const provider = getIntegrationProvider(name);
+  if (provider?.disconnect) {
+    const integration = await prisma.integration.findUnique({ where });
+    if (integration) {
+      try {
+        await provider.disconnect(integration);
+      } catch (error) {
+        log.warn({ err: error }, "%s remote cleanup failed on disconnect", provider.label);
+      }
+    }
+  }
+
+  const deleted = await prisma.integration.delete({ where });
+  if (name === "shopify" || name === "woocommerce") {
+    const { onOnlineStoreDisconnected } = await import("../commerce/shop/store.service.js");
+    await onOnlineStoreDisconnected(orgId, name === "shopify" ? "SHOPIFY" : "WOOCOMMERCE").catch(
+      (error) =>
+        log.warn({ err: error, orgId }, "Could not move the shop's checkout back to RateUp"),
+    );
+  }
+  return deleted;
+}
+
+export async function deleteZapierTriggerHooks(
+  data: ZapierIntegration["credential"]["triggerSubscriptions"][0],
+  orgId: string,
+) {
+  const integration = (await getIntegrationByName(
+    orgId,
+    IntegratedApps.zapier,
+  )) as unknown as ZapierIntegration;
+  const subscriptions = integration?.credential?.triggerSubscriptions ?? [];
+  const stored = subscriptions.find((t) => t.hookUrl === data.hookUrl);
+  if (!stored) {
+    log.warn("No zapier trigger subscription matching the requested hook for org %s", orgId);
+    return;
+  }
+
+  if (stored.active) {
+    // Stored before hook URLs were checked, so it may point anywhere; only a
+    // public address is told about the removal.
+    try {
+      await assertPublicUrl(stored.hookUrl);
+      await axios.delete(stored.hookUrl, publicAxiosOptions(10_000));
+    } catch (error) {
+      log.warn({ err: error, orgId }, "Could not notify Zapier of a removed trigger hook");
+    }
+  }
+  const credential = {
+    ...integration.credential,
+    triggerSubscriptions: subscriptions.filter((t) => t.hookUrl !== stored.hookUrl),
+  } as ZapierIntegration["credential"];
+  await updateIntegrationByName(orgId, IntegratedApps.zapier, { credential });
+}

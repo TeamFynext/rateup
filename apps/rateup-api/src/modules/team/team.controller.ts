@@ -1,0 +1,423 @@
+import { FastifyReply, FastifyRequest } from "fastify";
+import { canGrant } from "../../authz/grant.js";
+import {
+  DEFAULT_INVITED_ROLE,
+  legacyRoleToKey,
+  roleKeyToLegacy,
+  type LegacyRole,
+} from "../../authz/roles.js";
+import {
+  completeInvite,
+  createTeam,
+  deleteTeamById,
+  getTeamsByUserId,
+  getTeamMembers,
+  getTeamsByOrgId,
+  inviteTeamMember,
+  deleteMemberInvite,
+  editTeam,
+  getTeamMembersAndFromInvitation,
+  resendInviteTeamMember,
+  manageTags,
+  getTeamById,
+  deleteTeamMember,
+  addMemberToTeams,
+  getUsersNotInTeam,
+  addMembersToTeamsMail,
+  getTeamChannels,
+  setTeamChannels,
+  InvalidInviteError,
+} from "./team.service.js";
+import { ForbiddenError } from "../../authz/errors.js";
+import {
+  CreateTeamInput,
+  DeleteTeamInput,
+  EditTeamInput,
+  GetTeamMembersInput,
+  GetTeamsByOrgInput,
+  IdParamInput,
+  InviteCompleteInput,
+  InviteMemberInput,
+  SetTeamChannelsInput,
+  tagQuerySchema,
+} from "./team.schema.js";
+import { log } from "../../utils/logger.js";
+import { emitIntegrationEvent } from "../integrations/events/emitIntegrationEvent.js";
+import { errorMessage } from "../../utils/commonUtils.js";
+
+export async function createTeamHandler(
+  request: FastifyRequest<{
+    Body: CreateTeamInput;
+  }>,
+  reply: FastifyReply,
+) {
+  // The org and the creating member are the session's, whatever the body names.
+  const body = { ...request.body, orgId: request.user.orgId, userId: request.user.userId! };
+  let team;
+
+  try {
+    team = await createTeam(body);
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send({ success: false, message: errorMessage(e) });
+    return;
+  }
+
+  reply.code(201).send(team);
+}
+
+export async function getAllTeamsByOrgHandler(
+  request: FastifyRequest<{
+    Params: GetTeamsByOrgInput;
+  }>,
+  reply: FastifyReply,
+) {
+  if (request.params.orgId !== request.user.orgId) {
+    reply.code(403).send({ message: "You can only list your own organisation's teams" });
+    return;
+  }
+  try {
+    //TODO:change all the status code to 404 when the requested resource is not found
+    const teams = await getTeamsByOrgId({ orgId: request.params.orgId });
+    if (!teams || teams.length === 0) {
+      reply.code(200).send({ message: "No teams found for this organization" });
+    } else {
+      reply.send(teams);
+    }
+  } catch {
+    reply.code(500).send({ message: "Internal server error" });
+  }
+}
+
+export async function getTeamsByUserHandler(request: FastifyRequest, reply: FastifyReply) {
+  try {
+    const userId = request.userId;
+    const teams = await getTeamsByUserId(userId);
+    if (!teams || teams.length === 0) {
+      reply.code(200).send({ message: "No teams found." });
+    } else {
+      reply.send({ message: `Teams found for user : ${userId}`, data: teams });
+    }
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send();
+  }
+}
+
+export async function deleteTeamByIdHandler(
+  request: FastifyRequest<{
+    Params: DeleteTeamInput;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const team = await deleteTeamById(request.params.id, request.user.orgId);
+    if (!team) {
+      reply.code(404).send({ message: "Team not found" });
+    } else {
+      reply.code(200).send("Deleted team.");
+    }
+  } catch (e) {
+    console.log(e);
+    reply.code(500);
+  }
+}
+
+export async function inviteMemberHandler(
+  request: FastifyRequest<{
+    Body: InviteMemberInput;
+  }>,
+  reply: FastifyReply,
+) {
+  const body = request.body;
+
+  // An inviter may only hand out a role whose permissions they hold themselves.
+  const target = legacyRoleToKey(
+    (body.role ?? roleKeyToLegacy(DEFAULT_INVITED_ROLE)) as LegacyRole,
+    false,
+  );
+  if (!request.actor || !canGrant(request.actor, target)) {
+    return reply
+      .code(403)
+      .send({ success: false, message: `You cannot invite someone as ${target}.` });
+  }
+
+  try {
+    // The org and the inviter are whoever is signed in, whatever the body claims.
+    const invite = await inviteTeamMember({
+      ...body,
+      orgId: request.user.orgId,
+      invitedBy: request.user.userId!,
+    });
+    //reply.code(201).send({ success: true, data: team });
+    reply.code(201).send(invite);
+
+    //TODO Auth
+  } catch (e) {
+    if (e instanceof ForbiddenError) {
+      return reply.code(403).send({ success: false, ...e.toBody() });
+    }
+    console.error(e);
+    reply.code(500).send({ success: false, message: errorMessage(e) });
+  }
+}
+
+export async function resendInviteMemberHandler(
+  request: FastifyRequest<{
+    Params: IdParamInput;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    await resendInviteTeamMember(request.params.id, request.user.orgId);
+    return reply.code(200).send("invite resended");
+  } catch (e) {
+    if (e instanceof InvalidInviteError) {
+      return reply.code(404).send({ success: false, message: "Invitation not found" });
+    }
+    return reply.code(500).send({ success: false, message: errorMessage(e) });
+  }
+}
+export async function completeInviteHandler(
+  request: FastifyRequest<{
+    Params: InviteCompleteInput;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const invite = await completeInvite(request.params.token);
+    // Queued before the reply: sending first meant a queue failure fell into the catch
+    // and attempted a contradictory 500 on an already-answered request.
+    await emitIntegrationEvent(invite.orgId, {
+      type: "team.member_joined",
+      member: {
+        name: invite.name,
+        email: invite.email,
+        isExistingUser: invite.isUser,
+        team: invite.team,
+      },
+    });
+    // Only what the invite page shows: no ids, and never a password or reset link.
+    reply.code(200).send({
+      message: "Invite Accepted successfully.",
+      data: {
+        email: invite.email,
+        name: invite.name,
+        isUser: invite.isUser,
+        redirectLink: invite.redirectLink,
+        passwordSetupEmailSent: invite.passwordSetupEmailSent,
+        team: invite.team,
+        org: invite.org,
+      },
+    });
+  } catch (e) {
+    if (e instanceof InvalidInviteError) {
+      return reply.code(410).send({ message: e.message });
+    }
+    log.error(e);
+    reply.code(500).send({ message: "The invitation could not be accepted." });
+  }
+}
+
+export async function deleteInviteHandler(
+  request: FastifyRequest<{
+    Params: DeleteTeamInput;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const invite = await deleteMemberInvite(request.params.id, request.user.orgId);
+    if (!invite) {
+      reply.code(404).send({ message: "Invitation not found" });
+    } else {
+      reply.code(200).send("Deleted team member invite.");
+    }
+  } catch (e) {
+    console.log(e);
+    reply.code(500);
+  }
+}
+
+//Get Team Members by Team Id
+
+export async function getTeamMembersHandler(
+  request: FastifyRequest<{
+    Params: GetTeamMembersInput;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const members = await getTeamMembers({ teamId: request.params.teamId }, request.user.orgId);
+    if (!members || members.length === 0) {
+      reply.code(200).send({ message: "No members found for this team" });
+    } else {
+      reply.send(members);
+    }
+  } catch {
+    reply.code(500).send({ message: "Internal server error" });
+  }
+}
+
+export async function getUsersNotInTeamHandler(
+  request: FastifyRequest<{
+    Params: GetTeamMembersInput;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const teamId = request.params.teamId;
+    const members = await getUsersNotInTeam(teamId, orgId);
+
+    reply.send(members);
+  } catch {
+    reply.code(500).send({ message: "Internal server error" });
+  }
+}
+
+//Get Team Members from Invitation by team ID
+
+export async function getTeamMembersFromInviteHandler(
+  request: FastifyRequest<{
+    Params: GetTeamMembersInput;
+  }>,
+  reply: FastifyReply,
+) {
+  const orgId = request.user.orgId;
+  try {
+    const data = await getTeamMembersAndFromInvitation(orgId, {
+      teamId: request.params.teamId,
+    });
+    if (!data) {
+      reply.code(200).send({ response: "Error..." });
+    }
+    reply.send(data);
+  } catch {
+    reply.code(500).send({ message: "Internal server error" });
+  }
+}
+
+//Edit or Update Team name, google url
+
+export async function editTeamHandler(
+  request: FastifyRequest<{
+    Body: EditTeamInput;
+    Params: IdParamInput;
+    Querystring: tagQuerySchema;
+  }>,
+  reply: FastifyReply,
+) {
+  const body = request.body;
+  const id = request.params;
+  let team;
+
+  try {
+    if (request.query.onlytag) {
+      team = await manageTags(body, id, request, reply);
+    } else {
+      team = await editTeam(body, id, request, reply);
+    }
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send({ success: false, message: errorMessage(e) });
+    return;
+  }
+
+  reply.code(201).send({ success: true, data: team });
+}
+
+export async function deleteTeamMemberHandler(
+  request: FastifyRequest<{
+    Querystring: {
+      teamId: string;
+      userId: string;
+    };
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const { teamId, userId } = request.query;
+    const res = await deleteTeamMember(teamId, userId, orgId);
+    reply.send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function addMembertoTeamsHandler(
+  request: FastifyRequest<{
+    Params: { id: string };
+    Body: { teamIds: string[]; userEmail: string };
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const user = request.user;
+    // checkSession populates `userId` (never `id`), so testing `id` here rejected
+    // every session-authenticated request.
+    if (!user.userId) {
+      reply.code(401).send({ message: "Missing user" });
+      return;
+    }
+    const res = await addMemberToTeams(request.body.teamIds, request.params.id, user.orgId);
+    const team = await getTeamById(request.body.teamIds[0], user.orgId);
+    if (!team) {
+      throw new Error("Team not found");
+    }
+    await addMembersToTeamsMail(request.body.userEmail, team.name, {
+      id: user.userId,
+      orgId: user.orgId,
+    });
+    reply.send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function getTeamByIdHandler(
+  request: FastifyRequest<{
+    Params: { teamId: string };
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const team = await getTeamById(request.params.teamId, request.user.orgId);
+    if (!team) {
+      reply.code(404).send({ message: "Team not found" });
+      return;
+    }
+    reply.send(team);
+  } catch {
+    reply.code(500).send({ message: "Internal server error" });
+  }
+}
+
+export async function getTeamChannelsHandler(
+  request: FastifyRequest<{ Params: { teamId: string } }>,
+  reply: FastifyReply,
+) {
+  try {
+    reply.send(await getTeamChannels(request.params.teamId));
+  } catch (e) {
+    log.error({ err: e }, "Failed to get team channels");
+    reply.code(500).send({ message: "Internal server error" });
+  }
+}
+
+export async function setTeamChannelsHandler(
+  request: FastifyRequest<{
+    Params: { teamId: string };
+    Body: SetTeamChannelsInput;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    reply.send(await setTeamChannels(request.params.teamId, request.body, request.user.orgId));
+  } catch (e) {
+    log.error({ err: e }, "Failed to set team channels");
+    reply.code(500).send({ message: "Internal server error" });
+  }
+}

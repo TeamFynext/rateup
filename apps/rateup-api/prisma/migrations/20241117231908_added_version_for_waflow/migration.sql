@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "WaFlow" ADD COLUMN     "version" INTEGER NOT NULL DEFAULT 1;

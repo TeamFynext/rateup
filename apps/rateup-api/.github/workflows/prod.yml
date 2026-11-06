@@ -1,0 +1,50 @@
+name: prisma-migrate-prod
+on:
+  push:
+    paths:
+      - prisma/**
+    branches:
+      - main
+  workflow_dispatch:
+# The token is never used by these jobs; keep it read-only.
+permissions:
+  contents: read
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # Reads the pnpm version from package.json's packageManager field.
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+      - name: Setup Nodejs
+        uses: actions/setup-node@v7
+        with:
+          node-version: 26.x
+          cache: "pnpm"
+      - name: Install
+        run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Generate Prisma Client
+        run: pnpm exec prisma generate
+        env:
+          # generate never connects; prisma.config.ts only needs a value to parse.
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+  migrate:
+    runs-on: ubuntu-latest
+    needs: generate
+    steps:
+      - uses: actions/checkout@v7
+      # Reads the pnpm version from package.json's packageManager field.
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+      - name: Setup Nodejs
+        uses: actions/setup-node@v7
+        with:
+          node-version: 26.x
+          cache: "pnpm"
+      - name: Install
+        run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Deploy Migrations
+        run: pnpm exec prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}

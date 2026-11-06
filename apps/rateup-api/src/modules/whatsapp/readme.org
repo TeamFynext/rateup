@@ -1,0 +1,13 @@
+* FAQ
+** How we receive messages from user
+When the user sends a message to our number, Meta servers sends a post request to an endpoint given by us.
+It's type is given in /src/types/whatsapp.types.ts (WaMessageBody)
+** What happens when we send a survey to customer
+A survey goes out as a WhatsApp Flow. The run context — which survey/team mapping, org, respondent, language — is signed into the =flow_token= we hand Meta (/src/modules/whatsapp/flows/flowToken.ts), so it comes back to us on every webhook for that run and nothing about the run needs a database row.
+
+A multi-screen flow posts one =data_exchange= per screen carrying only that screen's fields, so the answers accumulate in Redis keyed by the flow token (/src/modules/whatsapp/flows/flowState.ts) until the flow ends.
+
+When the user submits the last screen, we create a SurveyResponse record with everything collected so far (keyed on the flow token, so a Meta retry cannot file it twice) and drop the Redis entry.
+
+
+* A Flow of what happens when we recieves a message

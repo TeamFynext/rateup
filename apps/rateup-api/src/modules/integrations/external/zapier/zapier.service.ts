@@ -1,0 +1,365 @@
+import prisma from "../../../../utils/prisma.js";
+import { WaMessageAssignStatus } from "../../../../types/enums.js";
+import { emitIntegrationEvent } from "../../events/emitIntegrationEvent.js";
+import { ZapierTriggers } from "./zapier.types.js";
+
+export async function getSampleDataForTrigger(
+  triggerKey: ZapierTriggers,
+  orgId: string,
+  page?: number,
+) {
+  let data = [];
+  switch (triggerKey) {
+    case ZapierTriggers.CONTACT_CREATE:
+    case ZapierTriggers.CONTACT_DELETED:
+    case ZapierTriggers.CONTACT_UPDATED:
+    case ZapierTriggers.CONVERSATION_CLOSED: {
+      const contacts = await prisma.contact.findMany({
+        where: {
+          orgId,
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          igsId: true,
+          source: true,
+          waMessageAssignStatus: true,
+        },
+        ...(page !== undefined
+          ? {
+              skip: page * 20,
+              take: 20,
+            }
+          : {}),
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+      data = [...contacts];
+      break;
+    }
+    case ZapierTriggers.CONTACT_ASSIGN:
+      const contactAssigns = await prisma.contact.findMany({
+        where: {
+          orgId,
+          waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          igsId: true,
+          waInboxAssign: {
+            select: {
+              assignedUser: {
+                select: {
+                  name: true,
+                  email: true,
+                },
+              },
+              Team: {
+                select: {
+                  name: true,
+                  code: true,
+                },
+              },
+            },
+          },
+        },
+        ...(page !== undefined
+          ? {
+              skip: page * 20,
+              take: 20,
+            }
+          : {}),
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+      data = contactAssigns.map((c) => ({
+        contactId: c.id,
+        name: c.name,
+        phone: c.phone,
+        email: c.email,
+        igsId: c.igsId,
+        assignees: c.waInboxAssign.map((a) => ({
+          name: a.assignedUser.name,
+          email: a.assignedUser.email,
+          teamName: a.Team.name,
+          teamCode: a.Team.code,
+        })),
+      }));
+      break;
+    case ZapierTriggers.CONTACT_ADDED_TO_GROUP:
+      const groupContacts = await prisma.contactGroupMap.findMany({
+        where: {
+          contact: {
+            orgId,
+          },
+        },
+        select: {
+          contactId: true,
+          contactGroupId: true,
+        },
+        ...(page !== undefined
+          ? {
+              skip: page * 20,
+              take: 20,
+            }
+          : {}),
+      });
+      data = [...groupContacts];
+      break;
+    case ZapierTriggers.CONTACT_LIFECYCLE_UPDATED:
+      const contactLifecyles = await prisma.contact.findMany({
+        where: {
+          orgId,
+          lifecycleId: {
+            not: null,
+          },
+        },
+        select: {
+          id: true,
+          lifecycleId: true,
+          Lifecycle: {
+            select: {
+              name: true,
+            },
+          },
+        },
+        ...(page !== undefined
+          ? {
+              skip: page * 20,
+              take: 20,
+            }
+          : {}),
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+      data = contactLifecyles.map((l) => ({
+        contactId: l.id,
+        lifecycleId: l.lifecycleId,
+        lifecycleName: l.Lifecycle?.name ?? null,
+      }));
+      break;
+    case ZapierTriggers.CONTACT_STAGE_UPDATED: {
+      const leads = await prisma.lead.findMany({
+        where: { contactId: { not: null }, pipeline: { orgId } },
+        select: {
+          id: true,
+          contactId: true,
+          pipelineId: true,
+          pipeline: { select: { name: true, type: true } },
+          stageId: true,
+          stage: { select: { name: true, status: true } },
+        },
+        ...(page !== undefined
+          ? {
+              skip: page * 20,
+              take: 20,
+            }
+          : {}),
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+      data = leads.map((lead) => ({
+        contactId: lead.contactId,
+        leadId: lead.id,
+        pipelineId: lead.pipelineId,
+        pipelineName: lead.pipeline.name,
+        pipelineType: lead.pipeline.type,
+        stageId: lead.stageId,
+        stageName: lead.stage.name,
+        stageStatus: lead.stage.status,
+      }));
+      break;
+    }
+    case ZapierTriggers.NEW_MESSAGE:
+      const messages = await prisma.waMessage.findMany({
+        where: {
+          contact: {
+            orgId,
+          },
+          messageBody: {
+            path: ["exchangeProcess"],
+            equals: "receive",
+          },
+        },
+        select: {
+          contact: {
+            select: {
+              phone: true,
+            },
+          },
+          sourcePlatform: true,
+          sourceIdentifier: true,
+          messageId: true,
+          messageBody: true,
+        },
+        ...(page !== undefined
+          ? {
+              skip: page * 20,
+              take: 20,
+            }
+          : {}),
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+      data = messages.map((m) => ({
+        from: m.contact?.phone ?? null,
+        messageBody: m.messageBody.receive,
+        platform: m.sourcePlatform,
+        source: m.sourceIdentifier,
+        messageId: m.messageId,
+      }));
+      break;
+    case ZapierTriggers.NEW_TEAM_MEMBER_CREATED:
+      const users = await prisma.teamMember.findMany({
+        where: {
+          team: {
+            orgId,
+          },
+        },
+        select: {
+          user: {
+            select: {
+              name: true,
+              email: true,
+            },
+          },
+          team: {
+            select: {
+              name: true,
+              code: true,
+            },
+          },
+        },
+        ...(page !== undefined
+          ? {
+              skip: page * 20,
+              take: 20,
+            }
+          : {}),
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+      data = users.map((u) => ({
+        isExistingUser: true,
+        name: u.user.name,
+        email: u.user.email,
+        teamName: u.team.name,
+        teamCode: u.team.code,
+      }));
+      break;
+    case ZapierTriggers.RESPONSE_SUBMITTED:
+      const responses = await prisma.surveyResponse.findMany({
+        where: {
+          surveyTeamMap: {
+            team: {
+              orgId,
+            },
+          },
+        },
+        select: {
+          responses: true,
+          language: true,
+          platform: true,
+          createdAt: true,
+          tag: true,
+          deviceData: true,
+          location: true,
+          surveyTeamMap: {
+            select: {
+              survey: {
+                select: {
+                  title: true,
+                },
+              },
+              team: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+          contactId: true,
+        },
+        ...(page !== undefined
+          ? {
+              skip: page * 20,
+              take: 20,
+            }
+          : {}),
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+      data = responses.map((r) => {
+        const { surveyTeamMap, ...rest } = r;
+        return {
+          ...rest,
+          survey: surveyTeamMap.survey.title,
+          team: surveyTeamMap.team.name,
+        };
+      });
+      break;
+  }
+  return data;
+}
+
+export async function deleteContactByPhoneNumberAndOrgId(orgId: string, phone: string) {
+  const contact = await prisma.contact.delete({
+    where: {
+      contact_phone_org_id_unique: {
+        orgId,
+        phone,
+      },
+    },
+  });
+  await emitIntegrationEvent(contact.orgId, { type: "contact.deleted", contact });
+  return contact;
+}
+
+export async function getLifecyclesByOrgId(orgId: string) {
+  return await prisma.lifecycle.findMany({
+    where: {
+      orgId,
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+  });
+}
+
+export async function getContactsByPhoneNumberAndOrgId(phone: string, orgId: string) {
+  return await prisma.contact.findMany({
+    where: {
+      phone: {
+        contains: phone,
+      },
+      orgId,
+    },
+  });
+}
+
+export async function getUserIdByEmailAndOrgId(email: string, orgId: string) {
+  return await prisma.orgMember.findFirst({
+    where: {
+      user: {
+        email,
+      },
+      orgId,
+    },
+    select: {
+      userId: true,
+    },
+  });
+}

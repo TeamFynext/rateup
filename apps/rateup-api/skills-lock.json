@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "skills": {
+    "fastify-best-practices": {
+      "source": "mcollina/skills",
+      "sourceType": "github",
+      "skillPath": "skills/fastify/SKILL.md",
+      "computedHash": "cd479b552b22493a73eabcef8804f956847c8d3d9d0aaf051ccb01d22dc3247e"
+    },
+    "shopify-dev": {
+      "source": "Shopify/shopify-ai-toolkit",
+      "sourceType": "github",
+      "skillPath": "deprecated/shopify-dev/SKILL.md",
+      "computedHash": "6b6437be47ed5694dcf02b0ae5c9f770a4cfa8f7149ba07a75e0e88ec73ae736"
+    },
+    "shopify-use-shopify-cli": {
+      "source": "Shopify/shopify-ai-toolkit",
+      "sourceType": "github",
+      "skillPath": "deprecated/shopify-use-shopify-cli/SKILL.md",
+      "computedHash": "d24dbffc88f9e53e6a7b09476efaf8ebfa70fcfe8d1a9e9237d148dc20fb42f3"
+    }
+  }
+}

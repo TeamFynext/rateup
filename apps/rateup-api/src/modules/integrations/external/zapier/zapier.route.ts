@@ -1,0 +1,190 @@
+import { FastifyInstance } from "fastify";
+import {
+  addContactToGroupHandler,
+  deleteContactHandler,
+  getContactGroupsHandler,
+  getContactHandler,
+  getLifecycleHandler,
+  getSampleDataForTriggerHandler,
+  getTeamsHandler,
+  inviteMemberHandler,
+  sendTextMessageHandler,
+  subscribeTriggerHandler,
+  unsubscribeTriggerHandler,
+  updateContactHandler,
+  updateContactLabelsByIdHandler,
+  zapierAuthenticationHandler,
+  createContactHandler,
+} from "./zapier.controller.js";
+import {
+  contactLabelSchema,
+  contactResponseSchema,
+  contactSearchResponseSchema,
+  contactSearchSchema,
+  dropdownResponseSchema,
+  inviteMemberRequestSchema,
+  newMemberToGroupShema,
+  sendMessageSchema,
+  successSchema,
+  triggerSubscriptionBodySchema,
+  zapierCreateContactSchema,
+  zapierUpdateContactSchema,
+} from "./zapier.schema.js";
+import { declareAccess } from "../../../../authz/registry.js";
+
+export async function zapierRoutes(server: FastifyInstance) {
+  declareAccess(server, { access: "token" });
+  server.addHook("preHandler", zapierAuthenticationHandler);
+
+  //auth
+  server.post("/auth", zapierAuthenticationHandler);
+  //subscriptions for trigger
+  server.post(
+    "/subscribe",
+    {
+      schema: {
+        response: {
+          201: successSchema,
+        },
+        body: triggerSubscriptionBodySchema,
+      },
+    },
+    subscribeTriggerHandler,
+  );
+  server.delete(
+    "/subscribe",
+    {
+      schema: {
+        response: {
+          201: successSchema,
+        },
+      },
+    },
+    unsubscribeTriggerHandler,
+  );
+  //trigger sample data
+  server.get("/sample-data", getSampleDataForTriggerHandler);
+  // hidden triggers polling api for dropdown data
+  server.get(
+    "/teams",
+    {
+      schema: {
+        response: {
+          201: dropdownResponseSchema,
+        },
+      },
+    },
+    getTeamsHandler,
+  );
+  server.get(
+    "/group",
+    {
+      schema: {
+        response: {
+          201: dropdownResponseSchema,
+        },
+      },
+    },
+    getContactGroupsHandler,
+  );
+
+  server.get("/lifecycle", getLifecycleHandler);
+  //actions
+  server.post(
+    "/send-message",
+    {
+      schema: {
+        body: sendMessageSchema,
+        response: {
+          201: successSchema,
+        },
+      },
+    },
+    sendTextMessageHandler,
+  );
+  server.put(
+    "/contact-lifecycle",
+    {
+      schema: {
+        body: contactLabelSchema,
+        response: {
+          201: contactLabelSchema,
+        },
+      },
+    },
+    updateContactLabelsByIdHandler,
+  );
+  server.post(
+    "/contact",
+    {
+      schema: {
+        body: zapierCreateContactSchema,
+        response: {
+          201: contactResponseSchema,
+        },
+      },
+    },
+    createContactHandler,
+  );
+  server.put(
+    "/contact",
+    {
+      schema: {
+        body: zapierUpdateContactSchema,
+        response: {
+          201: contactResponseSchema,
+        },
+      },
+    },
+    updateContactHandler,
+  ); //also for close contact
+  server.get(
+    "/contact",
+    {
+      schema: {
+        querystring: contactSearchSchema,
+        response: {
+          201: contactSearchResponseSchema,
+        },
+      },
+    },
+    getContactHandler,
+  ); //search action
+  server.delete(
+    "/contact",
+    {
+      schema: {
+        body: contactSearchSchema,
+        response: {
+          201: contactResponseSchema,
+        },
+      },
+    },
+    deleteContactHandler,
+  );
+  server.post(
+    "/add-group-member",
+    {
+      schema: {
+        body: newMemberToGroupShema,
+        response: {
+          201: successSchema,
+        },
+      },
+    },
+    addContactToGroupHandler,
+  );
+
+  server.post(
+    "/invite-member",
+    {
+      schema: {
+        body: inviteMemberRequestSchema,
+        response: {
+          201: successSchema,
+        },
+      },
+    },
+    inviteMemberHandler,
+  );
+}

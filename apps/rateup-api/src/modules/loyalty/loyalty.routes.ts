@@ -1,0 +1,48 @@
+import { FastifyInstance } from "fastify";
+import { getVerifySubscriptionHandler } from "../../utils/auth.js";
+import { SubscriptionFeaturePathName } from "../../types/enums.js";
+
+// New Loyalty System Routes
+import { loyaltyProgramRoutes } from "./program/program.route.js";
+import { loyaltyTierRoutes } from "./tiers/tier.route.js";
+import { loyaltyEarningRuleRoutes } from "./earningRules/earningRule.route.js";
+import { loyaltyRewardRoutes } from "./rewards/reward.route.js";
+import { customerAccountRoutes } from "./accounts/account.route.js";
+import { redemptionRoutes } from "./redemptions/redemption.route.js";
+import { referralRoutes } from "./referrals/referral.route.js";
+import { approvalRoutes } from "./approvals/approval.route.js";
+
+import { LoyaltySettingsRoutes } from "./settings/settings.route.js";
+import { loyaltyDashboardRoutes } from "./dashboard/dashboard.router.js";
+import { loyaltyApiSettingRoutes } from "./apiSetting/apiSetting.route.js";
+import { loyaltyOnboardingRoutes } from "./onboarding/onboarding.route.js";
+import { loyaltyGivebackRoutes } from "./giveback/giveback.route.js";
+import { loyaltyFeedbackRoutes } from "./feedback/feedback.route.js";
+import { declareAccess } from "../../authz/registry.js";
+
+export async function loyaltyRoutes(server: FastifyInstance) {
+  declareAccess(server, { read: "loyalty.read" });
+  // WhatsappLoyalty, not Whatsapp: loyalty is a Starter-and-above capability, while
+  // whatsapp.active stays on for every tier so Free keeps the inbox.
+  server.addHook(
+    "preHandler",
+    getVerifySubscriptionHandler([SubscriptionFeaturePathName.WhatsappLoyalty]),
+  );
+
+  // New Loyalty System Routes
+  server.register(loyaltyProgramRoutes, { prefix: "/program" });
+  server.register(loyaltyTierRoutes, { prefix: "/tiers" });
+  server.register(loyaltyEarningRuleRoutes, { prefix: "/earning-rules" });
+  server.register(loyaltyRewardRoutes, { prefix: "/rewards" });
+  server.register(customerAccountRoutes, { prefix: "/accounts" });
+  server.register(redemptionRoutes, { prefix: "/redemptions" });
+  server.register(referralRoutes, { prefix: "/referrals" });
+  server.register(approvalRoutes, { prefix: "/approvals" });
+
+  server.register(LoyaltySettingsRoutes, { prefix: "/settings" });
+  server.register(loyaltyDashboardRoutes, { prefix: "/dashboard" });
+  server.register(loyaltyApiSettingRoutes, { prefix: "/api-settings" });
+  server.register(loyaltyOnboardingRoutes, { prefix: "/onboarding" });
+  server.register(loyaltyGivebackRoutes, { prefix: "/giveback" });
+  server.register(loyaltyFeedbackRoutes, { prefix: "/feedback" });
+}
