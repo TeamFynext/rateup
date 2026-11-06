@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { can, canAny, resolvePermissions, resolveRoleKey } from "./can.ts";
 import { KEY_ONLY_PERMISSIONS, MEMBER_PERMISSIONS, PERMISSION_GROUPS } from "./permissions.ts";

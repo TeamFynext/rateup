@@ -1329,7 +1329,7 @@ export interface AmeliaCredential {
   hasApiKey: boolean;
 }
 
-export type AmeliaIntegration = integration & {
+export type AmeliaIntegration = Integration & {
   credential: AmeliaCredential;
 };
 

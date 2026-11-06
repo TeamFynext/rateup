@@ -1,41 +1,50 @@
+# rateup-ui
+
+The RateUp web app: the customer dashboard and marketing site, built on TanStack Start with a
+Nitro server. This file covers the conventions, commands and design rules for working in it.
+
 <!-- intent-skills:start -->
 
 ## Skill Loading
 
 Before editing files for a substantial task:
 
-- Run `npx @tanstack/intent@latest list` from the workspace root to see available local skills.
-- If a listed skill matches the task, run `npx @tanstack/intent@latest load <package>#<skill>` before changing files.
+- Run `pnpm dlx @tanstack/intent@latest list` from the workspace root to see available local skills.
+- If a listed skill matches the task, run `pnpm dlx @tanstack/intent@latest load <package>#<skill>` before changing files.
 - Use the loaded `SKILL.md` guidance while making the change.
 - Monorepos: when working across packages, run the skill check from the workspace root and prefer the local skill for the package being changed.
 - Multiple matches: prefer the most specific local skill for the package or concern you are changing; load additional skills only when the task spans multiple packages or concerns.
 
 <!-- intent-skills:end -->
 
-# AI Coding Agent Instructions for rateup-ui
-
-This file provides essential guidance for AI coding agents working in this codebase. It summarizes key conventions, build/test commands, and links to further documentation and skills for productivity.
-
 ## Project Overview
 
 - **Framework:** TanStack Start + TanStack Router, React 19, TypeScript
-- **Build Tooling:** Vite 8 + Nitro runtime output
+- **Build Tooling:** Vite+ (Vite 8, Vitest, Oxlint, Oxfmt) + Nitro runtime output
 - **UI:** Tailwind CSS + shadcn/ui on Base UI, against Design System V2 tokens (`src/styles/foundation.css`)
 - **Monorepo:** No (single app)
 
-## Build & Test Commands
+## Commands
 
-- **Development:** `npm run dev`
-- **Build:** `npm run build`
-- **Preview:** `npm run preview`
-- **Start:** `npm run start`
-- **Lint:** `npm run lint`
-- **Lint (auto-fix):** `npm run lint:fix`
-- **Format (write):** `npm run fmt`
-- **Format (check):** `npm run fmt:check`
-- **Type check:** `npm run typecheck`
-- **Tests:** `npm run test`
-- **Translate:** `npm run translate`
+Tooling is [Vite+](https://viteplus.dev) (`vp`, installed globally); see the Vite+ section at the
+end. `package.json` only keeps scripts that do something extra.
+
+```bash
+vp install                    # also installs the git hooks (`prepare` runs `vp config`)
+vp dev                        # dev server
+vp check                      # format + lint + type check (--fix to fix)
+vp check --no-fmt --no-lint   # type check only
+vp test run                   # tests (config: the `test` block in vite.config.ts)
+pnpm run build                # vp build, then copies instrument.server.mjs into .output/server
+vp preview                    # preview the production build
+pnpm run start                # serve .output/ with Sentry instrumentation
+pnpm run check:layers         # import-layer rules (scripts/check-layers.mjs)
+pnpm run check:tokens         # design-token colour debt (scripts/check-design-tokens.mjs)
+pnpm run translate            # extract i18n keys and auto-translate locales
+```
+
+Git hooks (`.vite-hooks/`): pre-commit runs `vp staged` (formats staged files, from the `staged`
+block of `vite.config.ts`); pre-push runs `vp check --no-fmt --no-lint` (type check).
 
 ## Key Conventions
 
@@ -56,7 +65,7 @@ This file provides essential guidance for AI coding agents working in this codeb
 
 `tsconfig.json` runs with `"strict": true` (which turns on `strictNullChecks`, `noImplicitAny`
 and the rest), plus `noUnusedLocals`/`noUnusedParameters`. **Never relax a strictness flag to make
-code compile** — fix the type instead. `npm run typecheck` must be clean before a change ships.
+code compile** — fix the type instead. `vp check` must report zero errors before a change ships.
 
 - **Do not add `any`.** Prefer `unknown` plus a type guard, a generic, or a real interface. If a
   value is genuinely opaque, `unknown` is the correct type — it forces the narrowing to happen at
@@ -85,7 +94,7 @@ code compile** — fix the type instead. `npm run typecheck` must be clean befor
 
 ## shadcn/ui Usage
 
-- Use `npx shadcn@latest` for component management
+- Use `pnpm dlx shadcn@latest` for component management
 - Always check for existing components before creating new ones
 - Compose UI using provided patterns (see shadcn skill)
 - shadcn/ui primitives in `src/components/ui/` are built on `@base-ui/react` (not Radix). There is no direct `@radix-ui/*` dependency in `package.json`; don't add one or reintroduce `cmdk`/`Command`-based patterns.
@@ -117,7 +126,7 @@ visitor downloaded the dashboard, the survey editor and the admin panel (563 KB)
   `@source` list, or it renders unstyled. The same goes for `shop.css` and the buyer pages. The
   app is on a full scan and needs nothing.
 - **Design tokens go in `foundation.css`.** That is also what `components.json` points
-  `tailwind.css` at, so `npx shadcn add` writes component variables there. Do not repoint it at
+  `tailwind.css` at, so `pnpm dlx shadcn add` writes component variables there. Do not repoint it at
   `app.css` — the CLI auto-detects that one, and tokens written there never reach the marketing
   site.
 - Marketing HTML is edge-cacheable (`s-maxage`) from the `(marketing)` layout, which also sets
@@ -153,7 +162,7 @@ must not add their own outer padding.
 
 ## Styling & Design Tokens
 
-`npm run check:tokens` guards this section. It fails when the app surface gains colour debt, and
+`pnpm run check:tokens` guards this section. It fails when the app surface gains colour debt, and
 its baseline may only go down. Run it before committing UI work; `--list` prints the offending
 lines. There is one type face (`font-display`), one danger colour (`--destructive`), and the V1
 aliases (`ink-*`, `rateup-orange`, `rateup-graytext`, `rateup-darkblue`, `rateup-blue-4`,
@@ -183,7 +192,7 @@ reintroduce them.)
   `amber-*` (e.g. `text-amber-700 dark:text-amber-500`, `bg-amber-50 dark:bg-amber-950/40`);
   success → `green-600` / `bg-green-600/10`. Only truly brand-specific one-offs (channel colors) use
   literal hex, and only when consumed as a dynamic `style` value.
-- **`npm run check:tokens` enforces this** on the authenticated app: absolute colours, raw
+- **`pnpm run check:tokens` enforces this** on the authenticated app: absolute colours, raw
   neutral palette, `bg-primary` with `text-white`, accents with no `dark:`, and hexes that are
   already a token. It runs against a baseline that may only go down — see
   `scripts/design-tokens.baseline.json`. Marketing is deliberately out of scope, because those
@@ -240,7 +249,6 @@ User-visible changes are announced in-app from the megaphone button in the icon 
 
 - For custom scripts, see `package.json` scripts section.
 - For Tailwind and theme-related config, see `src/config/`.
-- Pre-commit hooks managed via Husky.
 
 ---
 
@@ -254,3 +262,35 @@ User-visible changes are announced in-app from the megaphone button in the icon 
 ---
 
 If you are unsure about a pattern, prefer linking to the relevant skill or config file rather than duplicating content here.
+
+<!--VITE PLUS START-->
+
+# Using Vite+, the Unified Toolchain for the Web
+
+This project is using Vite+, a unified toolchain built on top of Vite, Rolldown, Vitest, tsdown, Oxlint, Oxfmt, and Vite Task. Vite+ wraps runtime management, package management, and frontend tooling in a single global CLI called `vp`. Vite+ is distinct from Vite, and it invokes Vite through `vp dev` and `vp build`. Run `vp help` to print a list of commands and `vp <command> --help` for information about a specific command.
+
+Docs are local at `node_modules/vite-plus/docs` or online at https://viteplus.dev/guide/.
+
+## Built-in Commands vs Scripts
+
+`vp <name>` runs a built-in command. `vp run <name>` runs a `package.json` script or a `vite.config.ts` task. Scripts cannot overwrite built-ins, so `vp dev` and `vp run dev` may do different things. Check `package.json` and `vite.config.ts` first, and run `vp run <name>` when the project defines a script or task with that name.
+
+## Running Scripts
+
+Run TypeScript and JavaScript files with `vpx <file>`, for example `vpx ./scripts/seed.ts --dry-run`. It handles enums, decorators, JSX, and tsconfig `paths`, so do not add `tsx` or `ts-node` to run scripts. `vpx --watch <file>` reruns the file when a file it uses changes, in place of `tsx watch`. `vp node <file>` runs plain Node.js.
+
+## Tool Versions
+
+Run `vp toolchain` to show versions and relationships in the active Vite+
+release. Add a tool name to select part of the graph. For example, run
+`vp toolchain vite`. Use `--global` to ignore the local `vite-plus` package. Use
+`vp why <package>` to show the package-manager dependency graph.
+
+## Review Checklist
+
+- [ ] Run `vp install` after pulling remote changes and before getting started.
+- [ ] Run `vp check` and `vp test` to format, lint, type check and test changes.
+- [ ] Check if there are `vite.config.ts` tasks or `package.json` scripts necessary for validation, run via `vp run <script>`.
+- [ ] If setup, runtime, or package-manager behavior looks wrong, run `vp env doctor` and include its output when asking for help.
+
+<!--VITE PLUS END-->

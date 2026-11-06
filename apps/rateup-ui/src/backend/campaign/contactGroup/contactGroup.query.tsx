@@ -321,7 +321,7 @@ export const useUpdateContactGroupsForContactMutation = (contactId: string) => {
       removeGroupIds: string[];
     }) => updateContactGroupsForContact(contactId, addGroupIds, removeGroupIds),
 
-    onSuccess: (_, _variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: contactKeys.all(),
       });

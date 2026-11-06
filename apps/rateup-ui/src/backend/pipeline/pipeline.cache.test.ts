@@ -1,5 +1,5 @@
 import { QueryClient } from "@tanstack/react-query";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { hasActiveLeadFilters, normaliseLeadParams } from "./pipeline.keys.ts";
 import { shiftStageCounts } from "./pipeline.query.tsx";

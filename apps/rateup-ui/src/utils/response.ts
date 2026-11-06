@@ -22,6 +22,7 @@ import {
   WaQuestions,
   YNResponse,
 } from "@/types/enums.ts";
+import { toText } from "@/utils/toText";
 
 import SelectedLanguageContext from "../context/SelectedLanguage.ts";
 import { decryptPrivateKey, decryptResponse } from "./encryption/index.ts";
@@ -103,7 +104,7 @@ export function getResponse(q: Question | undefined, response: StoredResponse) {
         typeof response === "string" ? response : asRecord(response),
       );
     case QuestionType.Date:
-      return formatDateTime(response instanceof Date ? response : String(response));
+      return formatDateTime(response instanceof Date ? response : toText(response));
     case QuestionType.Contact:
     case QuestionType.Phone:
     case QuestionType.Email:
@@ -143,7 +144,7 @@ function formatContactInfo(response: string | ResponseRecord) {
 }
 
 function formatEmailOtpResponse(response: ResponseRecord) {
-  return `Verified Email Id: ${response?.email}`;
+  return `Verified Email Id: ${toText(response?.email)}`;
 }
 function formatMultiTextInput(q: Question, response: string | ResponseRecord) {
   if (typeof response === "string") return response;
@@ -151,7 +152,7 @@ function formatMultiTextInput(q: Question, response: string | ResponseRecord) {
   const fields = q?.features?.[selectedLanguage || defaultLanguage]?.fields;
   if (fields) {
     return fields?.map(
-      (f: { fieldKey: string }) => `${f.fieldKey}:  ${response?.[f.fieldKey] ?? "NA"}`,
+      (f: { fieldKey: string }) => `${f.fieldKey}:  ${toText(response?.[f.fieldKey], "NA")}`,
     );
   }
 }
@@ -162,7 +163,7 @@ function formatMCQGridResponse(question: Question, response: ResponseRecord) {
   const gridQuestions = question?.features?.[selectedLanguage || defaultLanguage]?.questions;
   return gridQuestions?.map((q: string) => {
     const cell = response?.[q] as { value?: unknown } | undefined;
-    return `${q}: ${cell?.value ?? "NA"}`;
+    return `${q}: ${toText(cell?.value, "NA")}`;
   });
 }
 
@@ -207,7 +208,7 @@ function formatTestimonialResponse(response: string | ResponseRecord) {
   const contentArray: string[] = [];
   Object.entries(response).map(([key, value]) => {
     if (key === "photo") return;
-    contentArray.push(`${key}:  ${value ? String(value) : "NA"}`);
+    contentArray.push(`${key}:  ${value ? toText(value) : "NA"}`);
   });
   return {
     content: contentArray.join(", "),

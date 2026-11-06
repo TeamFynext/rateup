@@ -1,15 +1,14 @@
 import type { TFunction } from "i18next";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import type { LoyaltyDashboardStats } from "@/backend/loyalty/dashboard/dashboard.query";
+import { toText } from "@/utils/toText";
 
 import type { GivebackResult } from "../giveback/calculateGiveback";
 import { buildMetricTiles } from "./metricTiles";
 
 const t = ((key: string, opts?: Record<string, unknown>) =>
-  key.replace(/\{(\w+)\}/g, (_m, name: string) =>
-    String(opts?.[name] ?? ""),
-  )) as unknown as TFunction;
+  key.replace(/\{(\w+)\}/g, (_m, name: string) => toText(opts?.[name]))) as unknown as TFunction;
 
 const giveback = { pointValue: { best: 0.24, worst: 0.2 } } as unknown as GivebackResult;
 

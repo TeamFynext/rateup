@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { buildMetaAgentNavItems, buildMetaAgentNavProgress } from "./metaAgent.nav.ts";
 import { getAgentStepStatus } from "./setup/agentSetup.ts";

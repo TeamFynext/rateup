@@ -3,6 +3,7 @@ import { toast } from "sonner";
 
 import { subscriptionKeys } from "@/backend/campaign/campaign.keys";
 import type { QueryFilter } from "@/types/api.ts";
+import { toText } from "@/utils/toText";
 
 import {
   getAllSubscriptions,
@@ -78,7 +79,7 @@ export const useUpdateSubscriptionMutation = () => {
 
 export const useMessageStats = (orgId: string, filter: QueryFilter) => {
   const filterQuery = Object.entries(filter)
-    .map(([key, value]) => `${key}=${value}`)
+    .map(([key, value]) => `${key}=${toText(value)}`)
     .join("&");
   return useQuery({
     queryFn: () => getMessageStats(orgId, filterQuery),

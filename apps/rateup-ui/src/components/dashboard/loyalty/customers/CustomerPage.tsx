@@ -46,6 +46,7 @@ import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";
 import type { WaInboxMessage } from "@/types/global";
 import { docsPath } from "@/utils/constants.ts";
+import { toText } from "@/utils/toText";
 
 import { LOYALTY_PATHS } from "../paths.ts";
 import type { CustomersSearch } from "./customers.search.ts";
@@ -96,14 +97,14 @@ interface CustomerDetails {
     profilePic: string | null;
     followerCount: number | null;
     isIgVerifiedUser: boolean | null;
-    other: unknown | null;
+    other: unknown;
     lifecycleId: string;
     closedAt: string | null;
     closedBy: string | null;
     lastMessageBody: WaInboxMessage | null;
     lastMessageWaCreatedAt: string;
     lastMessagePlatform: string;
-    lastReceivedMetadata: unknown | null;
+    lastReceivedMetadata: unknown;
     lastMessageSourceIdentifier: string;
     lastSentMessageTimeStamp: string;
     notes: string | null;
@@ -275,7 +276,7 @@ export function CustomerPage({ search }: Readonly<{ search: CustomersSearch }>) 
             className="h-7 w-7 p-0 hover:bg-primary/10"
             onClick={async () => {
               try {
-                const link = `${import.meta.env.VITE_FRONTEND_URL}/loyalty/${user?.user?.orgId}/register?refer_code=${row.getValue("referralCode")}`;
+                const link = `${import.meta.env.VITE_FRONTEND_URL}/loyalty/${user?.user?.orgId}/register?refer_code=${toText(row.getValue("referralCode"))}`;
                 await navigator.clipboard.writeText(link);
                 toast.success(t("Referral link copied to clipboard!"));
               } catch {

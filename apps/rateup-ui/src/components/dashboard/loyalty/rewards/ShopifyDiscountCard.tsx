@@ -90,15 +90,14 @@ export function ShopifyDiscountCard({
         </p>
       )}
 
-      {connected &&
-        !supported && (
-          // Said plainly rather than hidden: a merchant who turns this on for a free-item
-          // reward and sees nothing at checkout has no way to work out why.
-          <p className="text-xs text-muted-foreground pt-2 border-t">
-            A free item or service cannot be a Shopify discount code — it needs a product to give
-            away. Use a fixed or percentage discount to sync this reward.
-          </p>
-        )}
+      {connected && !supported && (
+        // Said plainly rather than hidden: a merchant who turns this on for a free-item
+        // reward and sees nothing at checkout has no way to work out why.
+        <p className="text-xs text-muted-foreground pt-2 border-t">
+          A free item or service cannot be a Shopify discount code — it needs a product to give
+          away. Use a fixed or percentage discount to sync this reward.
+        </p>
+      )}
 
       {enabled && connected && supported && (
         <div className="pt-2 border-t space-y-3">

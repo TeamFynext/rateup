@@ -41,7 +41,7 @@ const WheelComponent = ({
   height = 600,
   outerCircleWidth = 10,
   imageSrc,
-  disable = false,
+  disable,
 }: WheelComponentProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasContextRef = useRef<CanvasRenderingContext2D | null>(null);

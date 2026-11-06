@@ -46,11 +46,13 @@ const SurveyResultByType = ({
 
   /** One answer: its label, its votes, and a bar in the answer's own scale colour. */
   const renderStatRow = ({
+    id,
     label,
     value: res,
     isMostVoted,
     badge = null,
   }: {
+    id: string | number;
     label: ReactNode;
     value: ChartDatum | undefined;
     isMostVoted?: boolean;
@@ -59,7 +61,7 @@ const SurveyResultByType = ({
     const percentage = Number(res?.percentage ?? 0);
     const color = typeof res?.fill === "string" ? res.fill : "var(--chart-2)";
     return (
-      <div key={label?.toString()} className="flex flex-col gap-1.5">
+      <div key={id} className="flex flex-col gap-1.5">
         <div className="flex items-center justify-between gap-3 text-sm">
           <span className="flex min-w-0 items-center gap-2 font-medium text-foreground">
             <span className="truncate">{badge ?? label}</span>
@@ -110,6 +112,7 @@ const SurveyResultByType = ({
         chartData?.map((item) => {
           const res = getResObj(item.choice);
           return renderStatRow({
+            id: item.choice,
             label: item.choice,
             value: getValue(res),
             isMostVoted: item.choice.toString() === mostVotedChoice?.toString(),
@@ -126,6 +129,7 @@ const SurveyResultByType = ({
           const res = getResObj(item.choice);
           if (version === 2) {
             return renderStatRow({
+              id: item.choice,
               label: item.choice,
               value: getValue(res),
               isMostVoted: item.choice.toString() === mostVotedChoice?.toString(),
@@ -133,6 +137,7 @@ const SurveyResultByType = ({
             });
           } else {
             return renderStatRow({
+              id: item.choice,
               label: (
                 <div className="flex items-center gap-0.5">
                   {Array.from({ length: Number(item.choice) }, (_, i) => (
@@ -163,6 +168,7 @@ const SurveyResultByType = ({
             );
           if (version === 2) {
             return renderStatRow({
+              id: item.choice,
               label: (
                 <div className="flex items-center gap-1">
                   <span>{item.choice}</span>
@@ -174,6 +180,7 @@ const SurveyResultByType = ({
             });
           } else {
             return renderStatRow({
+              id: item.choice,
               label: (
                 <div className="flex items-center gap-1">
                   {icon}
@@ -195,6 +202,7 @@ const SurveyResultByType = ({
         responseArray?.map((item) => {
           const res = getResObj(item.value);
           return renderStatRow({
+            id: item.value,
             label: item.value,
             value: getValue(res),
             isMostVoted: item.value === mostVotedChoice,
@@ -210,6 +218,7 @@ const SurveyResultByType = ({
           const res = getResObj(item.value);
           const Icon = item.Icon;
           return renderStatRow({
+            id: item.value,
             label: (
               <div className="flex items-center gap-2">
                 {version !== 2 && Icon && <Icon size={20} color={item.color} stroke={2} />}
@@ -228,6 +237,7 @@ const SurveyResultByType = ({
       return renderAll(() =>
         chartData.map((res) =>
           renderStatRow({
+            id: res.choice,
             label: res.choice,
             value: getValue(res),
             isMostVoted: res.choice === mostVotedChoice,

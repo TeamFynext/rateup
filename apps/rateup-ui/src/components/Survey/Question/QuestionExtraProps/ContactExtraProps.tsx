@@ -31,7 +31,7 @@ type CountryCode = string;
 
 const countryItems = getCountries().map((country) => ({
   value: country,
-  label: `${String.fromCodePoint(...[...country].map((c) => c.codePointAt(0)! - 0x41 + 0x1f1e6))}  ${en[country]} (+${getCountryCallingCode(country)})`,
+  label: `${String.fromCodePoint(...country.split("").map((c) => c.codePointAt(0)! - 0x41 + 0x1f1e6))}  ${en[country]} (+${getCountryCallingCode(country)})`,
 }));
 
 const CountrySelect = ({

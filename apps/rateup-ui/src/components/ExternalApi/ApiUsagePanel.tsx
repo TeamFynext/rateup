@@ -41,6 +41,7 @@ import {
   TableRow,
 } from "@/components/ui/table.tsx";
 import { formatToRelativeTime } from "@/utils/dateTime.ts";
+import { toText } from "@/utils/toText";
 
 import { lastUtcDays } from "./apiKeyFormat.ts";
 
@@ -51,7 +52,7 @@ const PAGE_SIZE = 25;
 /** Recharts types the tooltip label as a ReactNode; ours is always the `day` value. */
 const formatDay = (day: string) => dayjs(day).format("D MMM");
 const tooltipLabel = (label: unknown) =>
-  typeof label === "string" ? formatDay(label) : String(label ?? "");
+  typeof label === "string" ? formatDay(label) : toText(label);
 
 /**
  * Calls made with the org's keys over the last two weeks: a stacked bar per day split by

@@ -1,12 +1,12 @@
 import type { TFunction } from "i18next";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
+
+import { toText } from "@/utils/toText";
 
 import { buildFeedbackMetricTiles } from "./feedbackMetricTiles.ts";
 
 const t = ((key: string, opts?: Record<string, unknown>) =>
-  key.replace(/\{(\w+)\}/g, (_m, name: string) =>
-    String(opts?.[name] ?? ""),
-  )) as unknown as TFunction;
+  key.replace(/\{(\w+)\}/g, (_m, name: string) => toText(opts?.[name]))) as unknown as TFunction;
 
 describe("buildFeedbackMetricTiles", () => {
   test("nothing to show before the results land", () => {

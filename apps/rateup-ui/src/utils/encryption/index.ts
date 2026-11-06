@@ -63,7 +63,7 @@ export const encryptPrivateKey = async (privateKey: Uint8Array, passkey: Uint8Ar
   try {
     const sodium = await initialize();
     const nonce = sodium.randombytes_buf(sodium.crypto_secretbox_NONCEBYTES);
-    const encryptedPrivateKey = await sodium.crypto_secretbox_easy(privateKey, nonce, passkey);
+    const encryptedPrivateKey = sodium.crypto_secretbox_easy(privateKey, nonce, passkey);
     const nonceWithEncryptedPrivateKey = new Uint8Array(nonce.length + encryptedPrivateKey.length);
     nonceWithEncryptedPrivateKey.set(nonce);
     nonceWithEncryptedPrivateKey.set(encryptedPrivateKey, nonce.length);

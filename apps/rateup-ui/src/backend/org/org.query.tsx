@@ -72,7 +72,7 @@ export function useUpdateRoleMutation() {
       queryClient.invalidateQueries({ queryKey: teamKeys.invited() });
       queryClient.invalidateQueries({ queryKey: orgKeys.teamsAll() });
       // The changed person may be the one signed in on another tab; their own permissions refresh too.
-      queryClient.invalidateQueries({ queryKey: userKeys.info() });
+      void queryClient.invalidateQueries({ queryKey: userKeys.info() });
     },
     onError: (error) => {
       console.error("Error Role Update:", error.message);
@@ -254,7 +254,7 @@ export function useUpdateOrgModules() {
       queryClient.setQueryData<Awaited<ReturnType<typeof fetchUserInfo>>>(userKeys.info(), (old) =>
         old && "data" in old ? { ...old, data: { ...old.data, hiddenModules } } : old,
       );
-      void queryClient.invalidateQueries({ queryKey: userKeys.info() });
+      queryClient.invalidateQueries({ queryKey: userKeys.info() });
     },
     onError: (error) => {
       toast.error(getApiErrorMessage(error, "Could not save your features"));

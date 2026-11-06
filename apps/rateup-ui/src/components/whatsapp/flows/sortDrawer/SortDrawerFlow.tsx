@@ -25,7 +25,7 @@ interface Idata {
 interface ISortDrawerProps {
   opened: boolean;
   close: () => void;
-  data: Idata[];
+  data?: Idata[];
   v?: number;
 }
 

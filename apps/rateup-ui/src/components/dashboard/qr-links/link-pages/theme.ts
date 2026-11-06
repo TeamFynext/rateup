@@ -2,6 +2,7 @@ import type { TFunction } from "i18next";
 
 import type { LinktreeTheme } from "@/backend/linktree/linktree.api.ts";
 import { luminance } from "@/utils/color.ts";
+import { toText } from "@/utils/toText";
 
 export const DEFAULT_LINK_PAGE_THEME: LinktreeTheme = {
   background: {
@@ -82,7 +83,7 @@ export function themePresets(t: TFunction): ThemePreset[] {
 }
 
 export function matchesPreset(theme: LinktreeTheme, preset: ThemePreset) {
-  const same = (a: unknown, b: string) => String(a ?? "").toLowerCase() === b;
+  const same = (a: unknown, b: string) => toText(a).toLowerCase() === b;
   return (
     same(theme.background.styles.backgroundColor, preset.page) &&
     same(theme.title.styles.color, preset.text) &&

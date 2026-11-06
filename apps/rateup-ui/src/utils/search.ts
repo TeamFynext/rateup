@@ -1,10 +1,12 @@
 /**
  * Plain `validateSearch` helpers. Route options other than the component land in the client
- * entry, so a validator there must not pull in zod; keep this module import-free.
+ * entry, so a validator there must not pull in zod; import only dependency-free helpers.
  *
  * The router JSON-parses search values, so `?page=3` arrives as a number and `?q=true` as a
  * boolean — a helper that wants a string does not get one for those.
  */
+
+import { toText } from "./toText";
 
 /** The value when it is a string, else `undefined`. */
 export function optionalString(value: unknown): string | undefined {
@@ -13,7 +15,7 @@ export function optionalString(value: unknown): string | undefined {
 
 /** Any present value as a string (an all-digit phone arrives as a number); `undefined` stays absent. */
 export function coercedString(value: unknown): string | undefined {
-  return value === undefined ? undefined : String(value);
+  return value === undefined ? undefined : toText(value);
 }
 
 /** The value when it is one of `options`, else `undefined`. */

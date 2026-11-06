@@ -47,7 +47,7 @@ export function DataTable<TData extends RowData & { id?: string | number }>({
   DataTableToolbar,
   onRowClick,
   isPending,
-  serverSide = undefined,
+  serverSide,
   defaultColumnVisibility = {},
 }: Readonly<DataTableProps<TData>>) {
   const [rowSelection, setRowSelection] = React.useState({});

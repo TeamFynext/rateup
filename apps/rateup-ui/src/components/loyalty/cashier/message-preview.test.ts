@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import type { LoyaltyNotificationOutcome } from "@/backend/loyalty/customer/customer.api";
 import { LoyaltyEventType, type EventTrigger } from "@/backend/loyalty/eventTriggers.api";

@@ -284,7 +284,7 @@ function RegisterForm({ program }: Readonly<{ program: PublicLoyaltyProgram | un
                     placeholder={t("Full name")}
                   />
                   {autofilledFor === phone && field.value && (
-                    <FieldDescription className="flex items-center gap-1.5 text-xs text-ru-green-600 dark:text-ru-green-300">
+                    <FieldDescription className="flex items-center gap-1.5 text-xs text-ru-green-600">
                       <IconCheck className="size-3" />
                       {t("Filled in from your contacts")}
                     </FieldDescription>
@@ -442,7 +442,7 @@ function JoinedState({
 
   return (
     <div className="flex flex-col items-center gap-4 py-2 text-center">
-      <IconCircleCheck className="size-12 text-ru-green-600 dark:text-ru-green-300" />
+      <IconCircleCheck className="size-12 text-ru-green-600" />
       <div>
         <p className="font-display text-lg font-bold text-foreground">{t("You're in")}</p>
         <p className="mt-1 max-w-[36ch] text-sm text-muted-foreground">

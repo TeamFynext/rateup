@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils.ts";
 import { fallbackImage } from "@/utils/constants.ts";
 import { dataURItoBlob, getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
 import { asAnswer } from "@/utils/response.ts";
+import { toText } from "@/utils/toText";
 
 import WebcamCapture from "../../../../input/WebCamCapture.tsx";
 import { ImageCropModal } from "../../../../Modal/ImageCropModal.tsx";
@@ -128,7 +129,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
           <FormPaperLayout>
             <Input
               placeholder={translations("Enter job title")}
-              value={String(asAnswer(response).jobTitle ?? "")}
+              value={toText(asAnswer(response).jobTitle)}
               onChange={handleJobTitleChange}
               style={{ maxWidth: "400px" }}
               className={cn(unstyledInputClassName, "text-base")}
@@ -142,7 +143,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
         <FormPaperLayout>
           <Textarea
             placeholder={translations("Enter testimonial")}
-            value={String(asAnswer(response).testimonial ?? "")}
+            value={toText(asAnswer(response).testimonial)}
             onChange={handleTestimonialChange}
             style={{ maxWidth: "400px" }}
             className={cn(unstyledInputClassName, "text-base min-h-0")}
@@ -209,7 +210,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
                 </div>
               )}
               <img
-                src={getFileUrlFromKey(String(asAnswer(response).photo ?? ""))}
+                src={getFileUrlFromKey(toText(asAnswer(response).photo))}
                 alt="Your uploaded image"
                 className="size-full rounded-[10px] object-cover"
                 style={{ height: fallbackImage ? 148 : 200 }}

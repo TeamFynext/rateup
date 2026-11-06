@@ -34,6 +34,7 @@ import type { QuestionType } from "@/types/enums.ts";
 import { WaFlowFormElementType, WaFlowStatus } from "@/types/enums.ts";
 import type { WaFlowFormElement, WaFlowScreen } from "@/types/global";
 import { FlowChoiceQuestions, imagesPath } from "@/utils/constants.ts";
+import { toText } from "@/utils/toText";
 import {
   getFlowElementText,
   getFlowFooterElementsFromScreen,
@@ -211,7 +212,7 @@ function ScreenListItem({
     });
   }
   const handleSaveJsonToWa = () => {
-    const errorMessages = [];
+    const errorMessages: string[] = [];
     for (const flScreen of flowJson?.screens ?? []) {
       const questions = getQuestionsFromScreen(flScreen, survey, map);
       for (const qs of questions ?? []) {
@@ -220,7 +221,7 @@ function ScreenListItem({
           if (!choice || (typeof choice === "string" && choice?.length === 0)) {
             const title = Object.values(qs?.title ?? {})?.[0];
             const label = Object.values(qs?.label ?? {})?.[0];
-            errorMessages.push(title || label);
+            errorMessages.push(toText(title || label));
           }
         }
       }

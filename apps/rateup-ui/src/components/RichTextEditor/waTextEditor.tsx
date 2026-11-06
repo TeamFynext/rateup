@@ -76,7 +76,7 @@ interface WaTextEditorProps {
   /** Receives the editor's Tiptap document (`editor.getJSON()`). */
   handleInputChange: (value: TiptapNode) => void;
   /** Initial content: a Tiptap document, or WhatsApp-formatted/plain text. */
-  content: TiptapNode | string;
+  content?: TiptapNode | string;
   className?: string;
   mah?: number | string;
   placeholder?: string;

@@ -1,4 +1,6 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
+
+import { toText } from "@/utils/toText";
 
 import {
   buildAgentReport,
@@ -12,7 +14,7 @@ import type { Translate } from "./reportModel.ts";
 
 /** Interpolates `{name}` the way the ICU translator does, without loading i18n. */
 const t: Translate = (key, values) =>
-  key.replace(/\{(\w+)\}/g, (_, name: string) => String(values?.[name] ?? ""));
+  key.replace(/\{(\w+)\}/g, (_, name: string) => toText(values?.[name]));
 
 const context = { t, dateKey: "last7days", teamId: "all" };
 

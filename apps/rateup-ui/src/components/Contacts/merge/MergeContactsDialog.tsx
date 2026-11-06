@@ -38,6 +38,7 @@ import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { useDebounce } from "@/hooks/use-debounce";
 import { cn } from "@/lib/utils.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
+import { toText } from "@/utils/toText";
 
 import { contactChannelHint, contactName, IdentityRow, mergeWarningText } from "./identity.tsx";
 
@@ -327,14 +328,14 @@ function fieldValue(conflict: MergeConflict, side: MergeSide, preview: MergePrev
   const value = conflict[side];
   if (value === null || value === undefined) return "—";
   if (conflict.field === "lifecycleId") {
-    return preview.lifecycles.find((l) => l.id === value)?.name ?? String(value);
+    return preview.lifecycles.find((l) => l.id === value)?.name ?? toText(value);
   }
   if (conflict.field === "dob") {
-    const date = dayjs(String(value));
-    return date.isValid() ? date.format("D MMM YYYY") : String(value);
+    const date = dayjs(toText(value));
+    return date.isValid() ? date.format("D MMM YYYY") : toText(value);
   }
   if (Array.isArray(value)) return value.join(", ");
-  return typeof value === "object" ? JSON.stringify(value) : String(value);
+  return toText(value);
 }
 
 function ContactCard({ contact, kept }: Readonly<{ contact: MergeContact; kept: boolean }>) {

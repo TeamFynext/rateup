@@ -268,10 +268,7 @@ export function VipTierStep({
               const savedId = watchedUpper?.[index]?.id;
               const count = members(typeof savedId === "string" ? savedId : undefined);
               return (
-                <Card
-                  key={row.fieldKey}
-                  className="border-ru-amber-200 dark:border-ru-amber-700/40"
-                >
+                <Card key={row.fieldKey} className="border-ru-amber-200">
                   <CardContent className="flex flex-col gap-5 p-4 sm:p-5">
                     <SectionHeading
                       icon={<IconCrown />}

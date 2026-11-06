@@ -109,7 +109,7 @@ const ButtonInput = ({
   const err = (field: string) => errorAt(form, `buttons.${index}.${field}`);
 
   let type = data.type;
-  if (String(data?.url ?? "").includes("COPY_CODE")) {
+  if (typeof data?.url === "string" && data.url.includes("COPY_CODE")) {
     type = WHATSAPP_BUTTON_TYPE.OTP;
   }
 

@@ -9,6 +9,7 @@ import type { DataTableFeatures } from "@/components/Table/data-table-features.t
 import { createSortableHeader } from "@/components/Table/data-table.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
+import { toText } from "@/utils/toText";
 
 // Types
 interface ParsedRoute {
@@ -189,7 +190,7 @@ const UserCell = ({ user }: { user?: { name?: string } }) => (
 const formatMetadata = (body: unknown): string => {
   if (body === null || body === undefined || body === "") return "Empty";
 
-  if (typeof body !== "object") return String(body);
+  if (typeof body !== "object") return toText(body);
 
   if (Array.isArray(body)) {
     return body.length ? body.map((item) => formatMetadata(item)).join(", ") : "Empty";
@@ -203,7 +204,7 @@ const formatMetadata = (body: unknown): string => {
 
   return entries
     .map(([key, value]) => {
-      const text = typeof value === "object" ? JSON.stringify(value) : String(value);
+      const text = typeof value === "object" ? JSON.stringify(value) : toText(value);
       return `${key}: ${text}`;
     })
     .join(", ");

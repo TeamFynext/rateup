@@ -8,6 +8,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart.tsx";
+import { toText } from "@/utils/toText";
 
 /**
  * The section's three chart forms, all on the admin dashboard's rules: horizontal dashed
@@ -27,7 +28,7 @@ interface SeriesProps {
 
 /** Recharts types the tooltip label as a ReactNode; ours is always the x value. */
 const labelOf = (formatX?: (value: string) => string) => (label: unknown) =>
-  formatX && typeof label === "string" ? formatX(label) : String(label ?? "");
+  formatX && typeof label === "string" ? formatX(label) : toText(label);
 
 function tooltipValue(label: string, formatY?: (value: number) => string) {
   return (value: unknown) => (

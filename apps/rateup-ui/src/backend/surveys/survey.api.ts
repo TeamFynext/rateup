@@ -308,7 +308,7 @@ export async function getSurveyResponseForGraph(
 ) {
   return (
     await axiosClient.get(
-      `${SURVEYURL}/summary/response?timePeriod=${timePeriod}&userTimeZone=${userTimeZone}&surveyId=${surveyId}&teamMapIds=${teamMapIds}`,
+      `${SURVEYURL}/summary/response?timePeriod=${timePeriod}&userTimeZone=${userTimeZone}&surveyId=${surveyId}&teamMapIds=${teamMapIds.join(",")}`,
     )
   ).data;
 }
@@ -321,7 +321,7 @@ export async function getNPSSurveyResponseForGraph(
 ) {
   return (
     await axiosClient.get(
-      `${SURVEYURL}/summary/response/nps?timePeriod=${timePeriod}&userTimeZone=${userTimeZone}&surveyId=${surveyId}&teamMapIds=${teamMapIds}`,
+      `${SURVEYURL}/summary/response/nps?timePeriod=${timePeriod}&userTimeZone=${userTimeZone}&surveyId=${surveyId}&teamMapIds=${teamMapIds.join(",")}`,
     )
   ).data;
 }

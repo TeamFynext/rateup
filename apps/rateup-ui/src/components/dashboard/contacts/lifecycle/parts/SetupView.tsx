@@ -130,7 +130,7 @@ export function SetupView({
                   stageCount={stages.length}
                   onRename={(newName) => handleRenameStage(stage.id, newName)}
                   onDeleteStage={() => {
-                    void handleDeleteStage(stage.id);
+                    handleDeleteStage(stage.id);
                   }}
                   onUpdateDescription={(description) =>
                     handleUpdateDescription(stage.id, description)
@@ -205,7 +205,7 @@ export function SetupView({
                   stageCount={lostStages.length}
                   onRename={(newName) => handleRenameStage(stage.id, newName)}
                   onDeleteStage={() => {
-                    void handleDeleteStage(stage.id);
+                    handleDeleteStage(stage.id);
                   }}
                   onUpdateDescription={(description) =>
                     handleUpdateDescription(stage.id, description)

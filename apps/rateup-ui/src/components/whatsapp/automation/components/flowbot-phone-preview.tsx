@@ -163,7 +163,7 @@ function TemplateMessageCard({
         <div className="border-t border-border">
           {template.buttons.map((btn, i: number) => (
             <div
-              key={String(btn.id ?? i)}
+              key={typeof btn.id === "string" ? btn.id : i}
               className={cn(
                 "text-wa-green flex w-full items-center justify-center gap-1.5 py-2.5 text-[12px] font-medium",
                 i > 0 && "border-t border-border",

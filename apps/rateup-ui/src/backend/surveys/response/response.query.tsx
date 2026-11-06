@@ -10,6 +10,7 @@ import SurveyContext from "@/context/SurveyContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
 import type { QueryFilter } from "@/types/api.ts";
 import { decryptResultResponse } from "@/utils/response.ts";
+import { toText } from "@/utils/toText";
 
 import { useSurvey } from "../surveys.query";
 import type { downloadExcelResponseType } from "./response.api";
@@ -64,7 +65,7 @@ export const useAllResponses = (surveyId: string) => {
 
 export const useResponsesBySurvey = (surveyId: string, filter: QueryFilter) => {
   const filterQuery = Object.entries(filter)
-    .map(([key, value]) => `${key}=${value}`)
+    .map(([key, value]) => `${key}=${toText(value)}`)
     .join("&");
   return useQuery({
     queryFn: () => getResponsesBySurveyId(surveyId, filterQuery),

@@ -52,7 +52,7 @@ function Shell({
       {label ? <FieldTitle>{label}</FieldTitle> : null}
       {children}
       {description ? <FieldDescription>{description}</FieldDescription> : null}
-      {error ? <FieldError>{String(error)}</FieldError> : null}
+      {error ? <FieldError>{error}</FieldError> : null}
     </Field>
   );
 }

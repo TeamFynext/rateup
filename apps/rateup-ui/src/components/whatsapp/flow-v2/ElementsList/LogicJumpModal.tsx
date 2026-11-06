@@ -155,13 +155,11 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
           if (typeof r === "string") {
             return { label: r, value: r };
           }
-          if (typeof r === "object" && r !== null) {
-            return {
-              label: r.label || String(r.value || r),
-              value: r.value !== undefined ? r.value : r.label || String(r),
-            };
-          }
-          return { label: String(r), value: String(r) };
+          // An option with neither a label nor a value is dropped by the filter below.
+          return {
+            label: r.label || r.value || "",
+            value: r.value !== undefined ? r.value : r.label || "",
+          };
         })
         .filter((r) => r.value);
     } catch (error) {

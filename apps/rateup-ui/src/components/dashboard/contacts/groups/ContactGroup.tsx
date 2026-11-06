@@ -42,6 +42,7 @@ import { cn } from "@/lib/utils.ts";
 import { CONTACT_SORT } from "@/utils/constants.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 import { deleteUploadedFiles, uploadFile } from "@/utils/file-upload/upload.ts";
+import { toText } from "@/utils/toText";
 
 export function ContactGroup() {
   const { t } = useTranslation();
@@ -154,7 +155,7 @@ export function ContactGroup() {
 
   /** A column is identified by its accessor key when it has one, else by its id. */
   const columnKey = (column: { accessorKey?: unknown; id?: string }) =>
-    String(column.accessorKey ?? column.id ?? "");
+    toText(column.accessorKey ?? column.id);
 
   const defaultColumnVisibility = useMemo(
     () =>

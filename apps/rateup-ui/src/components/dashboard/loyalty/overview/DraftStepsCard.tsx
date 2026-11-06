@@ -51,7 +51,7 @@ export function DraftStepsCard({
             {progress.steps.map((step) => (
               <li key={step.id} className="inline-flex items-center gap-1.5">
                 {step.done ? (
-                  <IconCircleCheckFilled className="size-4 text-ru-green-600 dark:text-ru-green-300" />
+                  <IconCircleCheckFilled className="size-4 text-ru-green-600" />
                 ) : (
                   <IconCircle className="size-4 text-muted-foreground/50" />
                 )}

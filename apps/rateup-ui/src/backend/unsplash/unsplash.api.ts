@@ -2,7 +2,7 @@ import { axiosClient } from "../apiClient";
 
 const unsplash_URL = "/unsplash";
 export const getPhotosList = async ({
-  pageParams = 1,
+  pageParams,
   searchQuery,
 }: {
   pageParams: number;

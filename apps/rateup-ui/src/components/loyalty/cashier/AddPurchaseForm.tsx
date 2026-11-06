@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
 import { Input } from "@/components/ui/input.tsx";
+import { toText } from "@/utils/toText";
 
 import { formatMoney } from "../../dashboard/loyalty/giveback/format.ts";
 import { estimateEarn } from "./points-estimate.ts";
@@ -117,7 +118,7 @@ export function AddPurchaseForm({
                 name={field.name}
                 ref={field.ref}
                 onBlur={field.onBlur}
-                value={field.value === undefined || field.value === null ? "" : String(field.value)}
+                value={toText(field.value)}
                 onChange={(event) => field.onChange(event.target.value)}
               />
             </InputGroup>

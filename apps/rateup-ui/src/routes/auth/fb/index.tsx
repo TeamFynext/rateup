@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import { useUpdateUserAccessToken } from "@/backend/whatsapp/settings/waSettings.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
+import { toText } from "@/utils/toText";
 
 export const Route = createFileRoute("/auth/fb/")({
   component: Page,
@@ -22,7 +23,7 @@ function FbLoginRedirectWithParams() {
   // The callback's query string is read key-by-key; every value arrives as a string.
   const searchParams = useSearch({ strict: false });
   const stringParams = Object.fromEntries(
-    Object.entries(searchParams).map(([key, value]) => [key, String(value ?? "")]),
+    Object.entries(searchParams).map(([key, value]) => [key, toText(value)]),
   );
   return <FbLoginRedirect searchParams={stringParams} />;
 }

@@ -7,38 +7,35 @@ The project uses Vite for development/build, Nitro for server output, and Tailwi
 
 - TanStack Start + TanStack Router
 - React 19 + TypeScript
-- Vite 8 + Nitro runtime output
+- Vite+ (`vp`): Vite 8, Vitest, Oxlint and Oxfmt behind one CLI, with Nitro runtime output
 - Tailwind CSS
 - shadcn/ui built on Base UI (`@base-ui/react`, preferred for new UI) + existing Mantine components
-- Vitest for tests
-- OXC (oxlint + oxfmt) for linting/formatting
-- Husky for pre-commit hooks
+- Git hooks in `.vite-hooks/` (pre-commit formats staged files, pre-push type-checks)
 
 ## Prerequisites
 
-- Node.js 24.x
-- npm
+- Node.js 26.x (LTS)
+- pnpm 12 (version pinned by `packageManager` in package.json)
+- Vite+ CLI installed globally (`vp`), see https://viteplus.dev/guide/
 
 ## Install
 
 ```bash
-npm install
+vp install   # also installs the git hooks via the `prepare` script
 ```
 
 ## Scripts
 
 ```bash
-npm run dev        # Start development server (Vite)
-npm run build      # Build production output
-npm run preview    # Preview production build locally
-npm run start      # Start Nitro server from .output/server/index.mjs
-npm run test       # Run tests with Vitest
-npm run lint       # Run oxlint
-npm run lint:fix   # Run oxlint with auto-fix
-npm run fmt        # Format with oxfmt (oxfmt)
-npm run fmt:check  # Check formatting (oxfmt --check)
-npm run typecheck  # Run TypeScript type checking (tsc --noEmit)
-npm run translate  # Extract i18n keys and auto-translate locales
+vp dev             # Start development server
+pnpm run build     # Build production output (vp build + copy Sentry instrument file)
+vp preview         # Preview production build locally
+pnpm run start     # Start Nitro server from .output/server/index.mjs
+vp test run        # Run tests
+vp check           # Format check + lint + type check (vp check --fix to fix)
+vp lint            # Lint only (--fix to auto-fix)
+vp fmt             # Format (--check to check only)
+pnpm run translate # Extract i18n keys and auto-translate locales
 ```
 
 ### Useful Commands
@@ -72,7 +69,7 @@ Kill the process running on port 3000 (Windows PowerShell)
 ## TypeScript
 
 The project compiles under `"strict": true` (including `strictNullChecks` and `noImplicitAny`),
-with `noUnusedLocals` and `noUnusedParameters`. `npm run typecheck` should report zero errors, and
+with `noUnusedLocals` and `noUnusedParameters`. `vp check` should report zero errors, and
 strictness flags are not relaxed to make code compile.
 
 - Don't add `any` — prefer `unknown` with a type guard, a generic, or a real interface. Legacy

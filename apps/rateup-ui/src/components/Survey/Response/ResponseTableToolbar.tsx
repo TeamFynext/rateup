@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { docsPath } from "@/utils/constants.ts";
+import { toText } from "@/utils/toText";
 
 import InfoButton from "../../Button/InfoButton.tsx";
 import RefreshButton from "../../Button/RefreshButton.tsx";
@@ -117,13 +118,13 @@ export function ResponseTableToolbar<TData extends RowData>({
     let searchTermValue = "";
 
     if (filters?.search !== undefined) {
-      searchTermValue = String(filters.search || "");
+      searchTermValue = toText(filters.search || "");
     } else if (searchByValue) {
       const backendKey = getBackendFilterKey(searchByValue);
       if (filters?.[searchByValue] !== undefined) {
-        searchTermValue = String(filters[searchByValue] || "");
+        searchTermValue = toText(filters[searchByValue] || "");
       } else if (filters?.[backendKey] !== undefined) {
-        searchTermValue = String(filters[backendKey] || "");
+        searchTermValue = toText(filters[backendKey] || "");
       }
     }
 

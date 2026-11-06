@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 
 import { rewardEconomics } from "./calculateGiveback";
 import { roundNice, suggestPointsCost, TARGET_GIVEBACK_PCT } from "./suggestPointsCost";

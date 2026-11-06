@@ -15,6 +15,8 @@ export interface CampaignParticipant {
   contact?: ContactsData;
 }
 
+import { toText } from "@/utils/toText";
+
 import { axiosClient } from "../../apiClient";
 
 type CampaignPayload = { data: RequestPayload; campaignId: string };
@@ -45,7 +47,7 @@ export const getCampaignParticipants = async (
   columnFilters: ColumnFilterState[],
   selectedDripStage?: string,
 ) => {
-  const filter = columnFilters.map((data) => `&${data.id}=${data.value}`).join("&");
+  const filter = columnFilters.map((data) => `&${data.id}=${toText(data.value)}`).join("&");
   const desc = !Array.isArray(sort) && sort.desc ? "desc" : "asc";
   const url = `/campaign/${campaignId}/participants?page=${pagination.pageIndex}&limit=${pagination.pageSize}&search=${search}&desc=${desc}${filter}${selectedDripStage ? `&selectedDripStage=${selectedDripStage}` : ""}`;
   const res = await axiosClient.get(url);

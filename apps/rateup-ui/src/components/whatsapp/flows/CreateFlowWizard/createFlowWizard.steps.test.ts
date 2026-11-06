@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { LOYALTY_FEEDBACK_FLOW_CATEGORY } from "@/types/enums.ts";
 
