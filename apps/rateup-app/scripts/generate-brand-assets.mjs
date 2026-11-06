@@ -11,7 +11,7 @@
  *   assets/images/favicon.png             48, transparent   - web
  *   assets/images/splash-logo.png        800w, transparent  - splash, drawn at 200dp
  *
- * Run: npm run brand:assets
+ * Run: pnpm run brand:assets
  */
 import sharp from "sharp";
 import { readFile, writeFile } from "node:fs/promises";
