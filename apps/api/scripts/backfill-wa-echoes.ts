@@ -29,8 +29,8 @@
  */
 import "dotenv/config";
 
-import { Prisma } from "../generated/prisma/client.js";
-import prisma from "../src/utils/prisma.js";
+import { Prisma } from "@rateup/server/generated/prisma/client.js";
+import prisma from "@rateup/server/utils/prisma.js";
 
 const CHUNK = 1_000;
 const NIL_UUID = "00000000-0000-0000-0000-000000000000";
@@ -158,7 +158,8 @@ async function main() {
   );
 
   const downloadAndUpload = media
-    ? (await import("../src/modules/whatsapp/whatsappSurvey/wasurvey.utils.js")).downloadAndUpload
+    ? (await import("@rateup/server/modules/whatsapp/whatsappSurvey/wasurvey.utils.js"))
+        .downloadAndUpload
     : undefined;
 
   const created = new Map<string, string>();

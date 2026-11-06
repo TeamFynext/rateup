@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
 
-vi.mock("../config.js", () => ({ swaggerConfig: {} }));
+vi.mock("@rateup/server/config.js", () => ({ swaggerConfig: {} }));
 
 import { buildPartnerSpec } from "./swagger.js";
 

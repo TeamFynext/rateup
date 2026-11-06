@@ -1,29 +1,50 @@
-# rateup-api
+# RateUp backend (apps/api)
 
-The Rateup platform's API backend: TypeScript (Node.js 26, ESM) on Fastify 5. One repo builds
-three long-running processes: the HTTP API, a BullMQ worker and a Kafka worker (see
-[Deployment Topology](#deployment-topology)). Repository: https://github.com/TeamFynext/rateup-api
+The Rateup platform's backend: TypeScript (Node.js 26, ESM) on Fastify 5, built as three
+long-running processes: the HTTP API, a BullMQ worker and a Kafka worker (see
+[Deployment Topology](#deployment-topology)). It was the rateup-api repo until the monorepo
+split; this file still documents the whole backend.
+
+## Where the code lives
+
+| Folder               | Package                 | Holds                                                                                                                                                                                                |
+| -------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/api`           | `@rateup/api`           | `src/index.ts`, `app.ts`, `registerRoutes.ts`, `routes/`, HTTP plugins, `scripts/`                                                                                                                   |
+| `apps/worker-bullmq` | `@rateup/worker-bullmq` | the BullMQ entry and `processors/`                                                                                                                                                                   |
+| `apps/worker-kafka`  | `@rateup/worker-kafka`  | the Kafka entry and `consumers/`                                                                                                                                                                     |
+| `packages/server`    | `@rateup/server`        | everything shared: `modules/`, `utils/`, `types/`, `authz/`, `external/`, `emails/`, `workers/shared/`, `workers/bullmq/queues/`, worker `metrics.ts`, the Kafka plugin, the generated Prisma client |
+| `packages/db`        | `@rateup/db`            | `prisma/schema.prisma`, migrations, `prisma.config.ts`                                                                                                                                               |
+
+Paths below such as `src/modules/...` or `src/workers/shared/...` are inside
+`packages/server` unless the table puts them in an app. Apps import shared code as
+`@rateup/server/<path under src>.js` (for example `@rateup/server/utils/prisma.js`); inside
+`packages/server` imports stay relative. In dev, tests and type checks the package loads
+from source (the `source` export condition); in production Node loads its compiled `dist/`.
 
 ## Commands
 
+Run at the monorepo root unless noted.
+
 ```bash
-pnpm install                  # also runs `prisma generate` (postinstall)
-pnpm run dev                  # API with hot reload (tsx watch src/index.ts)
-pnpm run dev:bullmq           # BullMQ worker, in a separate terminal
-pnpm run dev:kafka            # Kafka worker, in a separate terminal
-pnpm run build                # compile to dist/ (tsc -p tsconfig.json)
-pnpm run start                # API from dist/ (start:bullmq / start:kafka for the workers)
-pnpm run test                 # all tests (Vitest, silent)
-pnpm exec vitest run <file>   # one file; add -t "name substring" to filter, drop `run` to watch
-pnpm run lint                 # oxlint (lint:fix to fix)
-pnpm run fmt                  # oxfmt (fmt:check to check only)
-pnpm exec prisma generate     # after any schema change
-pnpm run staff:add <email> --owner   # first staff-console owner
+vp install                            # also runs `prisma generate` (@rateup/db postinstall)
+vp run @rateup/api#dev                # API with hot reload
+vp run @rateup/worker-bullmq#dev      # BullMQ worker (pnpm run dev:workers starts both workers)
+vp run @rateup/worker-kafka#dev       # Kafka worker
+vp run --filter "@rateup/api..." build   # build the API and what it depends on
+vp run -r typecheck                   # every package (the pre-push hook)
+vp run @rateup/server#test            # most tests live here; also @rateup/api#test, workers
+pnpm -C packages/server exec vitest run <file>   # one file; add -t "name" to filter
+vp run @rateup/db#generate            # after any schema change
+vp run @rateup/db#migrate:dev         # create a migration locally
+pnpm -C apps/api run staff:add <email> --owner   # first staff-console owner
 ```
 
+Each backend package lints with `pnpm run lint` (oxlint, its own `.oxlintrc.json`).
+
 Git hooks live at the monorepo root (`.vite-hooks/`, rules in the root `vite.config.ts`):
-pre-commit formats staged files with `vp fmt`; pre-push runs every package's `typecheck`
-(here `tsc --noEmit`), so type errors block a push.
+pre-commit formats staged files with `vp fmt`; pre-push runs every package's `typecheck`,
+so type errors block a push. Each app's `build` type-checks first, then emits only its own
+files (`tsconfig.build.json`).
 
 ## Tech Stack
 
@@ -112,7 +133,7 @@ Three mechanisms. Know which one a task belongs to; [Deployment Topology](#deplo
 has the file layout and the rules.
 
 - **BullMQ queues**: producers in `src/workers/bullmq/queues/` (safe to import from the API),
-  consumers in `src/workers/bullmq/processors/` (worker service only, listed in
+  consumers in `apps/worker-bullmq/src/processors/` (worker service only, listed in
   `PROCESSOR_MODULES`). All `Queue` instances share the ioredis connection from
   `src/utils/redisConnection.ts`.
 - **Scheduled jobs**: BullMQ job schedulers, not in-process cron. Definitions are
@@ -124,18 +145,17 @@ has the file layout and the rules.
   check (Railway's deploy healthcheck); `/api/health/ready` answers 503 while Kafka is
   unreachable. Topics (`status-events`, `wa-webhooks` and their `-dlq`s) are created at boot with
   12 partitions; brokers come from `KAFKA_BROKERS` (comma-separated) or `KAFKA_URL`. Consumers
-  live in `src/workers/kafka/consumers/`.
+  live in `apps/worker-kafka/src/consumers/`.
 
 ## Deployment Topology
 
-One repo, three long-running processes, deployed as three Railway services off the same
-build:
+Three long-running processes, deployed as three Railway services from the same monorepo:
 
-| Service  | Entry                         | Runs                                              | Replicas              |
-| -------- | ----------------------------- | ------------------------------------------------- | --------------------- |
-| `api`    | `src/index.ts`                | HTTP routes, WebSocket, Kafka producer            | scale freely          |
-| `bullmq` | `src/workers/bullmq/index.ts` | Queue consumers + wall-clock schedule             | scale freely          |
-| `kafka`  | `src/workers/kafka/index.ts`  | Stream consumers (`status-events`, `wa-webhooks`) | up to partition count |
+| Service  | Entry                             | Runs                                              | Replicas              |
+| -------- | --------------------------------- | ------------------------------------------------- | --------------------- |
+| `api`    | `apps/api/src/index.ts`           | HTTP routes, WebSocket, Kafka producer            | scale freely          |
+| `bullmq` | `apps/worker-bullmq/src/index.ts` | Queue consumers + wall-clock schedule             | scale freely          |
+| `kafka`  | `apps/worker-kafka/src/index.ts`  | Stream consumers (`status-events`, `wa-webhooks`) | up to partition count |
 
 All three scale horizontally. The `bullmq` service used to be pinned to one replica
 because its cron ran as in-process timers with no lock; the schedule now lives in Redis as
@@ -174,7 +194,7 @@ Rules to keep in mind when adding code:
 - Anything that _enqueues_ imports from `src/workers/bullmq/queues/`. Nothing outside
   `src/workers/` may import from `processors/`.
 - New consumers go in `processors/`, export their `Worker` instance, and get added to
-  `PROCESSOR_MODULES` in `src/workers/bullmq/index.ts` (the export is what lets shutdown
+  `PROCESSOR_MODULES` in `apps/worker-bullmq/src/index.ts` (the export is what lets shutdown
   drain them).
 - New scheduled jobs need two edits: an entry in `SCHEDULED_JOBS` (`queues/cron.queue.ts`)
   and a handler of the same id in `HANDLERS`
@@ -185,8 +205,9 @@ Rules to keep in mind when adding code:
   the delivery to `wa-webhooks` and only then answers 200 (`wasurvey.ingress.ts`). The
   kafka service processes it (`consumers/waWebhook.consumer.ts` → `wasurvey.webhook.ts`).
   New webhook handling goes in `wasurvey.webhook.ts`, not in the route.
-- Railway config-as-code lives in `railway.api.json`, `railway.bullmq.json`,
-  `railway.kafka.json`; set each service's config path in its Railway settings.
+- Railway config-as-code lives in each app's `railway.json` (`apps/api`, `apps/worker-bullmq`,
+  `apps/worker-kafka`). Each service builds from the repo root: set its config path to that
+  file and leave the root directory empty so the workspace installs.
 
 ### Worker capacity, health and metrics
 

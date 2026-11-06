@@ -19,8 +19,11 @@ function testRedisUrl(): string {
 }
 
 export default defineConfig({
+  // Load workspace packages from their TypeScript source (see @rateup/tsconfig/node.json).
+  resolve: { conditions: ["source"] },
+  ssr: { resolve: { conditions: ["source"] } },
   test: {
-    exclude: ["node_modules", "dist", "src/utils/redisConnection.ts"],
+    exclude: ["node_modules", "dist"],
     env: {
       // Signing key for WhatsApp Flow tokens. Anything non-empty: the tests that
       // care about the signature set their own value.

@@ -1,0 +1,150 @@
+import { z } from "zod";
+
+import { UserRecipes } from "../../types/enums.js";
+import { UserPresenceMode } from "../../generated/prisma/enums.js";
+
+const userCore = {
+  id: z.uuid(),
+  prefLanguage: z.string().optional(),
+};
+
+const createUserSchema = z.object({
+  ...userCore,
+  email: z.email(),
+  recipeName: z.enum(UserRecipes),
+});
+
+const userInfoSchema = z.object({
+  ...userCore,
+});
+
+const createUserSignupSchema = z.object({
+  ...userCore,
+  email: z.email(),
+  name: z.string().min(1),
+  /** Absent for signups that ask for the business on the step after; see `placeholderOrgName`. */
+  orgName: z.string().min(1).optional(),
+  phone: z.string().optional(),
+  phoneNumber: z.string().optional(),
+  recipeName: z.enum(UserRecipes),
+  planId: z.string().optional(),
+  location: z.string().optional(),
+  website: z.url().optional(),
+  industry: z.string().optional(),
+  goals: z.array(z.string()).optional(),
+  integrationsSelected: z.array(z.string()).optional(),
+  teamSize: z.string().optional(),
+  referralCode: z.string().optional(),
+});
+
+const pauseUserSchema = z.object({
+  isPaused: z.boolean(),
+  pausedBy: z.string(),
+});
+
+const createUserGoogleSchema = z.object({
+  name: z.string().min(1),
+  orgName: z.string().min(1).optional(),
+  phone: z.string().optional(),
+  phoneNumber: z.string().optional(),
+  type: z.string(),
+  email: z.string().optional(),
+  goals: z.array(z.string()).optional(),
+  integrationsSelected: z.array(z.string()).optional(),
+  location: z.string().optional(),
+  website: z.string().optional(),
+  industry: z.string().optional(),
+  referralCode: z.string().optional(),
+});
+
+const changeUserPasswordSchema = z.object({
+  existingPassword: z.string().min(4),
+  newPassword: z.string().min(4),
+});
+
+// Optional because the same route serves self-deletion (re-authenticated), a super-admin
+// removing someone else, and Google-only accounts with no password to verify.
+const deleteUserSchema = z.object({
+  password: z.string().optional(),
+});
+
+// Title and phone are optional so a client editing only the name (the mobile app) does
+// not have to resend them; an empty title would not fit the Gender enum anyway.
+const updateProfileSchema = z.object({
+  title: z.string().optional(),
+  name: z.string(),
+  phone: z.string().optional(),
+});
+
+/** The locales the clients ship translations for; anything else is rejected. */
+const SUPPORTED_LOCALES = ["en", "ar", "de", "fr", "hi"] as const;
+
+const updateUserLanguageSchema = z.object({
+  prefLanguage: z.enum(SUPPORTED_LOCALES).optional(),
+});
+
+const updateProfilePhotoSchema = z.object({
+  profilePhoto: z
+    .string()
+    .min(6)
+    .refine((value) => value.includes("."), {
+      error: "Invalid photo.",
+    }),
+});
+
+const userEmailCheckSchema = z.object({
+  email: z.email(),
+});
+
+export enum UserAvailabilityStatus {
+  offline = "offline",
+  online = "online",
+  busy = "busy",
+}
+
+const userStatusSchema = z.object({
+  status: z.enum(UserAvailabilityStatus),
+  presenceMode: z.enum(UserPresenceMode),
+});
+
+export type CreateUserParams = z.infer<typeof createUserSchema>;
+export type userInfoParams = z.infer<typeof userInfoSchema>;
+export type CreateUserSignupSchema = z.infer<typeof createUserSignupSchema>;
+export type CreateUserGoogleSchema = z.infer<typeof createUserGoogleSchema>;
+export type ChangeUserPasswordSchema = z.infer<typeof changeUserPasswordSchema>;
+export type DeleteUserSchema = z.infer<typeof deleteUserSchema>;
+export type updateUserLanguageSchema = z.infer<typeof updateUserLanguageSchema>;
+export type UpdateProfileSchema = z.infer<typeof updateProfileSchema>;
+export type UpdateProfilePhotoSchema = z.infer<typeof updateProfilePhotoSchema>;
+export type userEmailCheckSchemaInput = z.infer<typeof userEmailCheckSchema>;
+export type PauseUserInput = z.infer<typeof pauseUserSchema>;
+export type UserStatusSchema = z.infer<typeof userStatusSchema>;
+
+// Auto-exported after fastify-zod migration
+export {
+  createUserSignupSchema,
+  createUserGoogleSchema,
+  changeUserPasswordSchema,
+  deleteUserSchema,
+  updateProfileSchema,
+  updateProfilePhotoSchema,
+  updateUserLanguageSchema,
+  userEmailCheckSchema,
+  pauseUserSchema,
+  userStatusSchema,
+};
+
+export const auditLogQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  sortBy: z.enum(["user", "createdAt"]).optional(),
+  sortOrder: z.enum(["asc", "desc"]).optional(),
+  from: z.coerce.date().optional(),
+  to: z.coerce.date().optional(),
+  userId: z.uuid().optional(),
+  feature: z
+    .string()
+    .regex(/^(wa\/)?[\w-]+$/)
+    .optional(),
+});
+export type AuditLogQuery = z.infer<typeof auditLogQuerySchema>;

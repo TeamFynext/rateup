@@ -14,7 +14,7 @@
  */
 import "dotenv/config";
 
-import prisma from "../src/utils/prisma.js";
+import prisma from "@rateup/server/utils/prisma.js";
 
 function argValue(flag: string): string | undefined {
   const index = process.argv.indexOf(flag);

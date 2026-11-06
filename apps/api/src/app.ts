@@ -1,5 +1,5 @@
 import Fastify, { FastifyInstance, FastifyServerOptions } from "fastify";
-import { log } from "./utils/logger.js";
+import { log } from "@rateup/server/utils/logger.js";
 import { registerPlugins } from "./plugins/index.js";
 import { registerRoutes } from "./registerRoutes.js";
 import { serializerCompiler, validatorCompiler } from "fastify-type-provider-zod";

@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
-import { initTestSupertokens } from "../../utils/test/test.setup.utils.js";
-import { deleteUser } from "../user/user.service.js";
+import { initTestSupertokens } from "@rateup/server/utils/test/test.setup.utils.js";
+import { deleteUser } from "@rateup/server/modules/user/user.service.js";
 
 import build from "../../app.js";
 

@@ -32,14 +32,14 @@
     {
       "label": "bullmq",
       "type": "shell",
-      "command": "vp run @rateup/api#dev:bullmq",
+      "command": "vp run @rateup/worker-bullmq#dev",
       "isBackground": true,
       "presentation": { "group": "system" }
     },
     {
       "label": "kafka Worker",
       "type": "shell",
-      "command": "vp run @rateup/api#dev:kafka",
+      "command": "vp run @rateup/worker-kafka#dev",
       "isBackground": true,
       "presentation": { "group": "system" }
     },

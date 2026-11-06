@@ -1,0 +1,602 @@
+import { beforeEach, describe, expect, test, vi } from "vitest";
+
+vi.mock("../../../utils/prisma.js", () => {
+  const tx = {
+    rule: { create: vi.fn(), findUnique: vi.fn(), update: vi.fn(), delete: vi.fn() },
+    ruleMessageBodyLock: { createMany: vi.fn(), deleteMany: vi.fn() },
+  };
+  return {
+    default: {
+      __tx: tx,
+      rule: { findMany: vi.fn(), findUnique: vi.fn(), findFirst: vi.fn() },
+      ruleMessageBodyLock: { findFirst: vi.fn() },
+      ruleAction: { findMany: vi.fn() },
+      channel: { findMany: vi.fn() },
+      $transaction: vi.fn(async (cb: (client: unknown) => Promise<unknown>) => cb(tx)),
+    },
+    excludeFields: vi.fn(),
+  };
+});
+
+vi.mock("../../../generated/prisma/client.js", () => ({
+  Prisma: {},
+  RulePlatform: { WHATSAPP: "WHATSAPP", INSTAGRAM: "INSTAGRAM", FACEBOOK: "FACEBOOK" },
+}));
+
+import prisma from "../../../utils/prisma.js";
+import {
+  assertRuleActionUrls,
+  createRule,
+  deleteRule,
+  getAllRules,
+  getRuleById,
+  getRulesByAutomationId,
+  updateRule,
+} from "./wa_rule.service.js";
+import { Prisma } from "../../../generated/prisma/client.js";
+
+type Mock = ReturnType<typeof vi.fn>;
+
+const db = prisma as unknown as {
+  __tx: {
+    rule: { create: Mock; findUnique: Mock; update: Mock; delete: Mock };
+    ruleMessageBodyLock: { createMany: Mock; deleteMany: Mock };
+  };
+  rule: { findMany: Mock; findUnique: Mock; findFirst: Mock };
+  ruleMessageBodyLock: { findFirst: Mock };
+  ruleAction: { findMany: Mock };
+  channel: { findMany: Mock };
+  $transaction: Mock;
+};
+const tx = db.__tx;
+
+const CREATED_RULE: {
+  id: string;
+  name: string;
+  groups: unknown[];
+  actions: unknown[];
+} = { id: "rule-1", name: "Greeting", groups: [], actions: [] };
+
+/** A rule payload with one MESSAGE_BODY keyword condition. */
+function ruleInput(overrides: Record<string, unknown> = {}) {
+  return {
+    name: "Greeting",
+    platform: "WHATSAPP",
+    triggerEvent: "MESSAGE_RECEIVED",
+    whatsappSettingsPhoneIds: [],
+    groups: [
+      {
+        operator: "AND",
+        conditions: [{ field: "MESSAGE_BODY", operator: "CONTAINS", value: "hello" }],
+      },
+    ],
+    actions: [{ type: "SEND_TEXT", value: "hi there" }],
+    orgId: "org-1",
+    ...overrides,
+  } as any;
+}
+
+/** An existing lock row pointing back at the rule that reserved the keyword. */
+function existingLock({ ruleId = "rule-other", isActive = true, name = "Other rule" } = {}) {
+  return { ruleCondition: { group: { ruleId, rule: { isActive, name } } } };
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  db.$transaction.mockImplementation(async (cb: (client: unknown) => Promise<unknown>) => cb(tx));
+  db.ruleMessageBodyLock.findFirst.mockResolvedValue(null);
+  db.rule.findMany.mockResolvedValue([]);
+  db.rule.findUnique.mockResolvedValue(null);
+  db.rule.findFirst.mockResolvedValue(null);
+  db.ruleAction.findMany.mockResolvedValue([]);
+  db.channel.findMany.mockResolvedValue([]);
+  tx.rule.create.mockResolvedValue(CREATED_RULE);
+  tx.rule.update.mockResolvedValue(CREATED_RULE);
+  tx.rule.delete.mockResolvedValue(CREATED_RULE);
+  tx.rule.findUnique.mockResolvedValue({
+    platform: "WHATSAPP",
+    platforms: ["WHATSAPP"],
+    options: null,
+    groups: [{ conditions: [{ id: "cond-1", field: "MESSAGE_BODY", value: "hello" }] }],
+  });
+  tx.ruleMessageBodyLock.createMany.mockResolvedValue({ count: 1 });
+  tx.ruleMessageBodyLock.deleteMany.mockResolvedValue({ count: 0 });
+});
+
+describe("createRule - what gets stored", () => {
+  test("creates the rule with its groups, conditions and actions", async () => {
+    const result = await createRule(ruleInput());
+
+    const data = tx.rule.create.mock.calls[0][0].data;
+    expect(data).toMatchObject({
+      name: "Greeting",
+      platform: "WHATSAPP",
+      triggerEvent: "MESSAGE_RECEIVED",
+      org: { connect: { id: "org-1" } },
+    });
+    expect(data.groups.create[0].conditions.createMany.data).toEqual([
+      { field: "MESSAGE_BODY", operator: "CONTAINS", value: "hello" },
+    ]);
+    expect(data.actions.createMany.data).toEqual([{ type: "SEND_TEXT", value: "hi there" }]);
+    expect(result).toBe(CREATED_RULE);
+  });
+
+  test("defaults an unspecified rule to an active WhatsApp AND rule", async () => {
+    await createRule(ruleInput({ platform: undefined, isActive: undefined, operator: undefined }));
+
+    // A JSON column takes the DbNull sentinel, not a bare `null`, which prisma rejects.
+    expect(tx.rule.create.mock.calls[0][0].data).toMatchObject({
+      platform: "WHATSAPP",
+      isActive: true,
+      operator: "AND",
+      options: Prisma.DbNull,
+    });
+  });
+
+  test("stores an empty group and action list when none are given", async () => {
+    await createRule(ruleInput({ groups: undefined, actions: undefined }));
+
+    const data = tx.rule.create.mock.calls[0][0].data;
+    expect(data.groups.create).toEqual([]);
+    expect(data.actions.createMany.data).toEqual([]);
+  });
+
+  test("reserves the keyword once the rule exists", async () => {
+    await createRule(ruleInput());
+
+    expect(tx.ruleMessageBodyLock.createMany).toHaveBeenCalledWith({
+      data: [
+        {
+          orgId: "org-1",
+          messageBody: "hello",
+          platform: "WHATSAPP",
+          ruleConditionId: "cond-1",
+          businessHourId: null,
+        },
+      ],
+    });
+  });
+
+  test("writes the rule and its keyword reservation in one transaction", async () => {
+    await createRule(ruleInput());
+
+    expect(db.$transaction).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("createRule - keyword uniqueness", () => {
+  test("refuses a keyword another active rule already owns", async () => {
+    db.ruleMessageBodyLock.findFirst.mockResolvedValue(existingLock({ name: "Welcome" }));
+
+    await expect(createRule(ruleInput())).rejects.toThrow(
+      /Keyword 'hello' is already used by another active automation \('Welcome'\)/,
+    );
+  });
+
+  test("allows a keyword whose owning rule is switched off", async () => {
+    db.ruleMessageBodyLock.findFirst.mockResolvedValue(existingLock({ isActive: false }));
+
+    await expect(createRule(ruleInput())).resolves.toBe(CREATED_RULE);
+  });
+
+  test("mentions the business hours when the clash is time-scoped", async () => {
+    db.ruleMessageBodyLock.findFirst.mockResolvedValue(existingLock());
+
+    await expect(
+      createRule(
+        ruleInput({ options: { businessHours: { enabled: true, businessHoursId: "bh-1" } } }),
+      ),
+    ).rejects.toThrow(/during the configured business hours/);
+  });
+
+  test("refuses the same keyword used twice inside one rule", async () => {
+    const groups = [
+      {
+        operator: "AND",
+        conditions: [
+          { field: "MESSAGE_BODY", operator: "CONTAINS", value: "hello" },
+          { field: "MESSAGE_BODY", operator: "EQUALS", value: "hello" },
+        ],
+      },
+    ];
+
+    await expect(createRule(ruleInput({ groups }))).rejects.toThrow(
+      /Duplicate message body and business hour combination/,
+    );
+  });
+
+  test("allows the same keyword twice when the rule never reaches the check", async () => {
+    // Two different keywords are not a duplicate.
+    const groups = [
+      {
+        operator: "AND",
+        conditions: [
+          { field: "MESSAGE_BODY", operator: "CONTAINS", value: "hello" },
+          { field: "MESSAGE_BODY", operator: "CONTAINS", value: "hi" },
+        ],
+      },
+    ];
+
+    await expect(createRule(ruleInput({ groups }))).resolves.toBe(CREATED_RULE);
+  });
+
+  test("checks the keyword against this org only", async () => {
+    await createRule(ruleInput());
+
+    expect(db.ruleMessageBodyLock.findFirst.mock.calls[0][0].where).toMatchObject({
+      orgId: "org-1",
+      messageBody: "hello",
+      platform: "WHATSAPP",
+      businessHourId: null,
+    });
+  });
+
+  test("trims a keyword before reserving it", async () => {
+    const groups = [
+      {
+        operator: "AND",
+        conditions: [{ field: "MESSAGE_BODY", operator: "CONTAINS", value: "  hello  " }],
+      },
+    ];
+
+    await createRule(ruleInput({ groups }));
+
+    expect(db.ruleMessageBodyLock.findFirst.mock.calls[0][0].where.messageBody).toBe("hello");
+  });
+
+  test("ignores a blank keyword entirely", async () => {
+    const groups = [
+      {
+        operator: "AND",
+        conditions: [{ field: "MESSAGE_BODY", operator: "CONTAINS", value: "   " }],
+      },
+    ];
+
+    await createRule(ruleInput({ groups }));
+
+    expect(db.ruleMessageBodyLock.findFirst).not.toHaveBeenCalled();
+  });
+
+  test("ignores conditions that are not about the message body", async () => {
+    const groups = [
+      {
+        operator: "AND",
+        conditions: [{ field: "CONTACT_EMAIL", operator: "CONTAINS", value: "acme.com" }],
+      },
+    ];
+
+    await createRule(ruleInput({ groups }));
+
+    expect(db.ruleMessageBodyLock.findFirst).not.toHaveBeenCalled();
+  });
+
+  test.each([["INSTAGRAM_COMMENT"], ["INSTAGRAM_STORY_MENTION"], ["INSTAGRAM_REFERRAL"]])(
+    "skips keyword locking entirely for a %s rule",
+    async (triggerEvent) => {
+      await createRule(ruleInput({ triggerEvent }));
+
+      expect(db.ruleMessageBodyLock.findFirst).not.toHaveBeenCalled();
+      expect(tx.ruleMessageBodyLock.createMany).not.toHaveBeenCalled();
+    },
+  );
+});
+
+describe("updateRule", () => {
+  const existing: {
+    orgId: string;
+    platform: string;
+    platforms: string[];
+    whatsappSettingsPhoneIds: string[];
+    triggerEvent: string;
+    isActive: boolean;
+    groups: { conditions: { field: string; value: string }[] }[];
+    options: Record<string, unknown> | null;
+  } = {
+    orgId: "org-1",
+    platform: "WHATSAPP",
+    platforms: ["WHATSAPP"],
+    whatsappSettingsPhoneIds: ["phone-1"],
+    triggerEvent: "MESSAGE_RECEIVED",
+    isActive: true,
+    groups: [{ conditions: [{ field: "MESSAGE_BODY", value: "hello" }] }],
+    options: null,
+  };
+
+  beforeEach(() => {
+    db.rule.findFirst.mockResolvedValue(existing);
+  });
+
+  test("looks the rule up within the caller's org and writes it there", async () => {
+    await updateRule("rule-1", "org-1", { name: "Renamed" } as any);
+
+    expect(db.rule.findFirst.mock.calls[0][0].where).toEqual({ id: "rule-1", orgId: "org-1" });
+    expect(tx.rule.update.mock.calls[0][0].where).toEqual({ id: "rule-1", orgId: "org-1" });
+  });
+
+  test("refuses to update a rule that does not exist", async () => {
+    db.rule.findFirst.mockResolvedValue(null);
+
+    await expect(updateRule("missing", "org-1", { name: "New" } as any)).rejects.toThrow(
+      "Rule not found",
+    );
+  });
+
+  test("applies a plain field change", async () => {
+    await updateRule("rule-1", "org-1", { name: "Renamed" } as any);
+
+    expect(tx.rule.update.mock.calls[0][0].data).toMatchObject({ name: "Renamed" });
+  });
+
+  test("replaces the groups when new ones are supplied", async () => {
+    const groups = [
+      {
+        operator: "OR",
+        conditions: [{ field: "MESSAGE_BODY", operator: "EQUALS", value: "hi" }],
+      },
+    ];
+
+    await updateRule("rule-1", "org-1", { groups } as any);
+
+    const data = tx.rule.update.mock.calls[0][0].data;
+    expect(data.groups.deleteMany).toEqual({});
+    expect(data.groups.create[0].operator).toBe("OR");
+  });
+
+  test("clears the old keyword reservations before writing new groups", async () => {
+    const groups = [
+      {
+        operator: "AND",
+        conditions: [{ field: "MESSAGE_BODY", operator: "EQUALS", value: "hi" }],
+      },
+    ];
+
+    await updateRule("rule-1", "org-1", { groups } as any);
+
+    expect(tx.ruleMessageBodyLock.deleteMany).toHaveBeenCalled();
+    expect(tx.ruleMessageBodyLock.createMany).toHaveBeenCalled();
+  });
+
+  test("leaves groups and their reservations alone when none are supplied", async () => {
+    await updateRule("rule-1", "org-1", { name: "Renamed" } as any);
+
+    expect(tx.rule.update.mock.calls[0][0].data.groups).toBeUndefined();
+    expect(tx.ruleMessageBodyLock.deleteMany).not.toHaveBeenCalled();
+  });
+
+  test("replaces the actions only when new ones are supplied", async () => {
+    await updateRule("rule-1", "org-1", { actions: [{ type: "SEND_TEXT", value: "hi" }] } as any);
+
+    expect(tx.rule.update.mock.calls[0][0].data.actions.deleteMany).toEqual({});
+  });
+
+  test("only touches options when they are explicitly given", async () => {
+    await updateRule("rule-1", "org-1", { name: "Renamed" } as any);
+    expect(tx.rule.update.mock.calls[0][0].data.options).toBeUndefined();
+
+    vi.clearAllMocks();
+    db.rule.findFirst.mockResolvedValue(existing);
+    tx.rule.update.mockResolvedValue(CREATED_RULE);
+    await updateRule("rule-1", "org-1", { options: null } as any);
+    expect(tx.rule.update.mock.calls[0][0].data).toHaveProperty("options", null);
+  });
+
+  test("skips the keyword check entirely when the rule is being switched off", async () => {
+    db.ruleMessageBodyLock.findFirst.mockResolvedValue(existingLock());
+    const groups = [
+      {
+        operator: "AND",
+        conditions: [{ field: "MESSAGE_BODY", operator: "EQUALS", value: "hello" }],
+      },
+    ];
+
+    await expect(
+      updateRule("rule-1", "org-1", { isActive: false, groups } as any),
+    ).resolves.toBeDefined();
+  });
+
+  test("re-checks the existing keywords when switching a rule back on", async () => {
+    db.rule.findFirst.mockResolvedValue({ ...existing, isActive: false });
+    db.ruleMessageBodyLock.findFirst.mockResolvedValue(existingLock({ name: "Welcome" }));
+
+    await expect(updateRule("rule-1", "org-1", { isActive: true } as any)).rejects.toThrow(
+      /already used by another active automation/,
+    );
+  });
+
+  test("does not clash with the keyword this same rule already owns", async () => {
+    db.ruleMessageBodyLock.findFirst.mockResolvedValue(existingLock({ ruleId: "rule-1" }));
+    const groups = [
+      {
+        operator: "AND",
+        conditions: [{ field: "MESSAGE_BODY", operator: "EQUALS", value: "hello" }],
+      },
+    ];
+
+    await expect(updateRule("rule-1", "org-1", { groups } as any)).resolves.toBeDefined();
+  });
+
+  test.each([["INSTAGRAM_COMMENT"], ["INSTAGRAM_STORY_MENTION"], ["INSTAGRAM_REFERRAL"]])(
+    "skips keyword locking when the rule becomes a %s rule",
+    async (triggerEvent) => {
+      const groups = [
+        {
+          operator: "AND",
+          conditions: [{ field: "MESSAGE_BODY", operator: "EQUALS", value: "hello" }],
+        },
+      ];
+
+      await updateRule("rule-1", "org-1", { triggerEvent, groups } as any);
+
+      expect(db.ruleMessageBodyLock.findFirst).not.toHaveBeenCalled();
+      expect(tx.ruleMessageBodyLock.deleteMany).not.toHaveBeenCalled();
+    },
+  );
+});
+
+describe("deleteRule", () => {
+  test("releases the rule's keywords before deleting it", async () => {
+    await deleteRule("rule-1", "org-1");
+
+    expect(tx.ruleMessageBodyLock.deleteMany).toHaveBeenCalledWith({
+      where: { ruleCondition: { group: { ruleId: "rule-1" } } },
+    });
+    expect(tx.rule.delete).toHaveBeenCalledWith({ where: { id: "rule-1", orgId: "org-1" } });
+  });
+
+  test("does both in one transaction so a keyword is never orphaned", async () => {
+    await deleteRule("rule-1", "org-1");
+
+    expect(db.$transaction).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("reading rules", () => {
+  test("lists an org's rules with their groups, conditions and actions", async () => {
+    db.rule.findMany.mockResolvedValue([CREATED_RULE]);
+
+    const result = await getAllRules("org-1");
+
+    expect(db.rule.findMany.mock.calls[0][0]).toMatchObject({
+      where: { orgId: "org-1" },
+      include: { groups: { include: { conditions: true } }, actions: true },
+    });
+    expect(result).toEqual([CREATED_RULE]);
+  });
+
+  // orgId is required and the where clause is unconditional, so the filter can no
+  // longer be dropped by omitting the argument.
+  test("always filters by org, so no caller can list every org's rules", async () => {
+    await getAllRules("org-1");
+
+    expect(db.rule.findMany.mock.calls[0][0].where).toEqual({ orgId: "org-1" });
+  });
+
+  test("fetches one rule with everything attached, scoped to its org", async () => {
+    db.rule.findFirst.mockResolvedValue(CREATED_RULE);
+
+    await expect(getRuleById("rule-1", "org-1")).resolves.toBe(CREATED_RULE);
+    expect(db.rule.findFirst.mock.calls[0][0].where).toEqual({ id: "rule-1", orgId: "org-1" });
+  });
+
+  test("returns null for a rule that does not exist", async () => {
+    db.rule.findFirst.mockResolvedValue(null);
+
+    await expect(getRuleById("missing", "org-1")).resolves.toBeNull();
+  });
+
+  test("returns null for a rule that belongs to another org", async () => {
+    db.rule.findFirst.mockResolvedValue(null);
+
+    await expect(getRuleById("rule-victim", "org-attacker")).resolves.toBeNull();
+    expect(db.rule.findFirst.mock.calls[0][0].where).toEqual({
+      id: "rule-victim",
+      orgId: "org-attacker",
+    });
+  });
+});
+
+describe("getRulesByAutomationId", () => {
+  test("finds the rules whose action points at that automation", async () => {
+    db.ruleAction.findMany.mockResolvedValue([
+      { rule: { id: "rule-1" } },
+      { rule: { id: "rule-2" } },
+    ]);
+
+    const result = await getRulesByAutomationId("auto-1", "org-1");
+
+    expect(db.ruleAction.findMany.mock.calls[0][0].where).toEqual({
+      value: { equals: "auto-1" },
+      rule: { orgId: "org-1" },
+    });
+    expect(result).toEqual([{ id: "rule-1" }, { id: "rule-2" }]);
+  });
+
+  test("returns an empty list when no rule uses that automation", async () => {
+    await expect(getRulesByAutomationId("auto-1", "org-1")).resolves.toEqual([]);
+  });
+});
+
+describe("createRule - channels", () => {
+  test("runs on every platform its accounts belong to, and locks keywords on each", async () => {
+    db.channel.findMany.mockResolvedValue([{ platform: "FACEBOOK" }, { platform: "WHATSAPP" }]);
+    tx.rule.findUnique.mockResolvedValue({
+      platform: "WHATSAPP",
+      platforms: ["WHATSAPP", "FACEBOOK"],
+      options: null,
+      groups: [{ conditions: [{ id: "cond-1", field: "MESSAGE_BODY", value: "hello" }] }],
+    });
+
+    await createRule(
+      ruleInput({
+        platforms: ["WHATSAPP", "FACEBOOK"],
+        whatsappSettingsPhoneIds: ["phone-1", "page-1"],
+      }),
+    );
+
+    expect(tx.rule.create.mock.calls[0][0].data).toMatchObject({
+      platform: "WHATSAPP",
+      platforms: ["WHATSAPP", "FACEBOOK"],
+    });
+    const locks = tx.ruleMessageBodyLock.createMany.mock.calls[0][0].data;
+    expect(locks.map((lock: { platform: string }) => lock.platform)).toEqual([
+      "WHATSAPP",
+      "FACEBOOK",
+    ]);
+    expect(db.ruleMessageBodyLock.findFirst).toHaveBeenCalledTimes(2);
+  });
+
+  test("refuses accounts on a channel the rule was not checked for", async () => {
+    db.channel.findMany.mockResolvedValue([{ platform: "INSTAGRAM" }, { platform: "WHATSAPP" }]);
+
+    await expect(
+      createRule(ruleInput({ whatsappSettingsPhoneIds: ["phone-1", "iba-1"] })),
+    ).rejects.toThrow(/include Instagram/);
+    expect(tx.rule.create).not.toHaveBeenCalled();
+  });
+});
+
+describe("assertRuleActionUrls - external API actions", () => {
+  test("accepts a public address, over http too", async () => {
+    await expect(
+      assertRuleActionUrls([{ type: "CALL_EXTERNAL_API", value: "http://8.8.8.8/hook" }]),
+    ).resolves.toBeUndefined();
+  });
+
+  test.each([
+    ["loopback", "http://127.0.0.1:8080/admin"],
+    ["the metadata address", "http://169.254.169.254/latest/meta-data"],
+    ["a private network", "https://10.0.0.5/hook"],
+    ["a non-http scheme", "file:///etc/passwd"],
+    ["embedded credentials", "https://user:pw@8.8.8.8/hook"],
+    ["something that is not a URL", "not a url"],
+  ])("refuses %s", async (_label, url) => {
+    await expect(
+      assertRuleActionUrls([{ type: "CALL_EXTERNAL_API", value: url }]),
+    ).rejects.toMatchObject({ name: "PublicUrlError" });
+  });
+
+  test("refuses a value that is not a string", async () => {
+    await expect(
+      assertRuleActionUrls([{ type: "CALL_EXTERNAL_API", value: { url: "http://8.8.8.8" } }]),
+    ).rejects.toMatchObject({ name: "PublicUrlError" });
+  });
+
+  test("leaves an empty URL and other action types alone", async () => {
+    await expect(
+      assertRuleActionUrls([
+        { type: "CALL_EXTERNAL_API", value: "" },
+        { type: "SEND_MESSAGE", value: "http://127.0.0.1" },
+      ]),
+    ).resolves.toBeUndefined();
+  });
+
+  test("createRule refuses an internal URL before touching the database", async () => {
+    await expect(
+      createRule({
+        ...ruleInput(),
+        actions: [{ type: "CALL_EXTERNAL_API", value: "http://127.0.0.1/x" }],
+      } as Parameters<typeof createRule>[0]),
+    ).rejects.toMatchObject({ name: "PublicUrlError" });
+    expect(db.$transaction).not.toHaveBeenCalled();
+  });
+});

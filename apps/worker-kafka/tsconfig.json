@@ -1,0 +1,11 @@
+{
+  // Type check: loads @rateup/server from source, plus its global declarations
+  // (Fastify route config, PrismaJson and friends), which nothing imports directly.
+  "extends": "@rateup/tsconfig/node.json",
+  "compilerOptions": {
+    // Nothing is emitted here; the root only has to contain the @rateup/server sources.
+    "rootDir": "../..",
+    "noEmit": true
+  },
+  "include": ["src/**/*.ts", "../../packages/server/src/types/*.d.ts"]
+}

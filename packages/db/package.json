@@ -1,0 +1,24 @@
+{
+  "name": "@rateup/db",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Prisma schema and migrations. `prisma generate` writes the client into @rateup/server.",
+  "license": "MIT",
+  "author": "Rateup Team",
+  "type": "module",
+  "scripts": {
+    "postinstall": "prisma generate",
+    "generate": "prisma generate",
+    "migrate:dev": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "studio": "prisma studio"
+  },
+  "dependencies": {
+    "dotenv": "^18.0.9",
+    "prisma": "^7.10.1",
+    "prisma-json-types-generator": "^6.0.0"
+  },
+  "engines": {
+    "node": "26.x"
+  }
+}

@@ -1,0 +1,143 @@
+import { PlatformType } from "../../../generated/prisma/enums.js";
+import { WaTemplateCategory } from "../../../types/enums.js";
+import { getWaSendingSettings } from "../settings/wa_settings.service.js";
+import { channelDigits } from "../../../utils/channelIdentifier.js";
+import { addressWaPayload } from "../bsuid.js";
+import { getInstagramChannel, getMessengerChannel } from "../metaChannel/metaChannel.service.js";
+
+/**
+ * What every Meta surface differs on, and nothing else.
+ *
+ * WhatsApp, Instagram and Facebook Messenger all send through Graph but disagree
+ * on three details: which settings row holds the credentials, what the path
+ * looks like, and where the message id lands in the response. Those three
+ * differences are the whole of this table — so adding Threads later is a new
+ * entry rather than another branch inside the send path.
+ */
+
+/** Where a send is addressed from, before the channel resolves credentials. */
+export interface MetaChannelContext {
+  orgId: string;
+  /** WhatsApp: the business phone id. Instagram: the IBA id. Facebook: the page id. */
+  sourceIdentifier?: string;
+  /** WhatsApp only: MARKETING sends go to a different endpoint. */
+  category?: WaTemplateCategory;
+}
+
+export interface MetaCredentials {
+  accessToken: string;
+  /** Echoed onto the stored message so replies thread to the right account. */
+  sourceIdentifier: string;
+  /** WhatsApp only. */
+  phoneId?: string;
+  /**
+   * Where the token goes. Instagram rejects the Authorization header on
+   * `/me/messages` and wants `?access_token=`; WhatsApp wants the header.
+   */
+  auth: "header" | "query";
+}
+
+export interface MetaChannel {
+  platform: PlatformType;
+  /** Null when the org has not connected this surface — the caller reports it, never throws. */
+  resolveCredentials(ctx: MetaChannelContext): Promise<MetaCredentials | null>;
+  buildPath(creds: MetaCredentials, ctx: MetaChannelContext): string;
+  extractMessageId(responseData: unknown): string | undefined;
+  /**
+   * Who Meta says it delivered to. Instagram private replies are addressed to a
+   * comment, not a person, so the contact only becomes known from the response.
+   */
+  extractRecipientId?(responseData: unknown): string | undefined;
+  /** The body as it goes on the wire, when the channel spells something differently. */
+  prepareBody?(payload: Record<string, unknown>): Record<string, unknown>;
+}
+
+const whatsapp: MetaChannel = {
+  platform: PlatformType.WHATSAPP,
+  async resolveCredentials({ orgId, sourceIdentifier }) {
+    // Deliberately not `getWaSettings`: a send that names no number must not fall
+    // back to the org's oldest one. See `getWaSendingSettings`.
+    const settings = await getWaSendingSettings(orgId, sourceIdentifier);
+    if (!settings?.accessToken || !settings.phoneId) return null;
+    return {
+      accessToken: settings.accessToken,
+      auth: "header",
+      phoneId: settings.phoneId,
+      // The business number the message goes out on, digits only — the one
+      // spelling every stored identifier is compared on (see `channelDigits`).
+      sourceIdentifier: channelDigits(settings.phone) || settings.phoneId,
+    };
+  },
+  buildPath(creds, { category }) {
+    // Marketing traffic is metered separately by Meta and has its own endpoint.
+    const endpoint = category === WaTemplateCategory.MARKETING ? "marketing_messages" : "messages";
+    return `/${creds.phoneId}/${endpoint}`;
+  },
+  extractMessageId(data) {
+    return (data as { messages?: { id?: string }[] } | undefined)?.messages?.[0]?.id;
+  },
+  // A customer known only by their business-scoped user ID is addressed through
+  // `recipient`, not `to`. Callers keep writing `to`; this is the one place that
+  // knows the difference.
+  prepareBody: addressWaPayload,
+};
+
+/** Instagram and Messenger share the Send API; only the settings lookup differs. */
+function sendApiChannel(
+  platform: PlatformType,
+  lookup: (identifier: string, orgId: string) => Promise<{ pageAccessToken: string } | null>,
+  auth: MetaCredentials["auth"],
+): MetaChannel {
+  return {
+    platform,
+    async resolveCredentials({ orgId, sourceIdentifier }) {
+      if (!sourceIdentifier) return null;
+      const settings = await lookup(sourceIdentifier, orgId);
+      if (!settings?.pageAccessToken) return null;
+      return { accessToken: settings.pageAccessToken, sourceIdentifier, auth };
+    },
+    buildPath() {
+      return "/me/messages";
+    },
+    extractMessageId(data) {
+      return (data as { message_id?: string } | undefined)?.message_id;
+    },
+    extractRecipientId(data) {
+      return (data as { recipient_id?: string } | undefined)?.recipient_id;
+    },
+    prepareBody: stripUploadedUrls,
+  };
+}
+
+/**
+ * A multi-image message is stored with each uploaded image's url beside its
+ * `attachment_id`, so the inbox has something to draw; Meta gets the id alone.
+ */
+export function stripUploadedUrls(payload: Record<string, unknown>): Record<string, unknown> {
+  const message = payload.message as { attachments?: unknown } | undefined;
+  if (!message || !Array.isArray(message.attachments)) return payload;
+  return {
+    ...payload,
+    message: {
+      ...message,
+      attachments: message.attachments.map((item: { payload?: Record<string, unknown> }) => {
+        if (!item?.payload?.attachment_id) return item;
+        const { url: _url, ...rest } = item.payload;
+        return { ...item, payload: rest };
+      }),
+    },
+  };
+}
+
+const CHANNELS: Partial<Record<PlatformType, MetaChannel>> = {
+  [PlatformType.WHATSAPP]: whatsapp,
+  // Header auth, as the Instagram senders have always used. `auth` stays on the
+  // credentials because the older inbox path passes the token as a query
+  // parameter instead, and both have to keep working while it is routed here.
+  [PlatformType.INSTAGRAM]: sendApiChannel(PlatformType.INSTAGRAM, getInstagramChannel, "header"),
+  [PlatformType.FACEBOOK]: sendApiChannel(PlatformType.FACEBOOK, getMessengerChannel, "header"),
+};
+
+export function getMetaChannel(platform: PlatformType): MetaChannel | undefined {
+  return CHANNELS[platform];
+}

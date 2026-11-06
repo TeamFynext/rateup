@@ -1,8 +1,8 @@
 import "dotenv/config";
 import { LogController } from "fastify";
 import { build } from "./app.js";
-import { initProcessMetrics } from "./utils/metrics.js";
-import { trustProxySetting } from "./utils/http.js";
+import { initProcessMetrics } from "@rateup/server/utils/metrics.js";
+import { trustProxySetting } from "@rateup/server/utils/http.js";
 
 /**
  * API service entrypoint — HTTP only, safe to run at N replicas.

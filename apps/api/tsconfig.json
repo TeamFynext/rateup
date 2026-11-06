@@ -1,14 +1,16 @@
 {
-  "extends": "@tsconfig/node26/tsconfig.json",
+  // Type check: loads @rateup/server from source, plus its global declarations
+  // (Fastify route config, PrismaJson and friends), which nothing imports directly.
+  "extends": "@rateup/tsconfig/node.json",
   "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": ".",
-    "resolveJsonModule": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "esModuleInterop": true,
-    "jsx": "react-jsx"
+    // Nothing is emitted here; the root only has to contain the @rateup/server sources.
+    "rootDir": "../..",
+    "noEmit": true
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "utils/**/*.ts", "scripts/**/*.ts"],
-  "exclude": ["dist", "node_modules"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "scripts/**/*.ts",
+    "../../packages/server/src/types/*.d.ts"
+  ]
 }
