@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Node 26 service or library (nodenext, emits to dist)",
+  "extends": "@tsconfig/node26/tsconfig.json",
+  "compilerOptions": {
+    "outDir": "${configDir}/dist",
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "jsx": "react-jsx",
+    // Workspace packages export their TypeScript source under the "source" condition, so
+    // type checks and tests never need a build first. Plain Node (production) ignores it
+    // and loads the compiled dist/ files.
+    "customConditions": ["source"]
+  },
+  "exclude": ["${configDir}/dist", "${configDir}/node_modules"]
+}

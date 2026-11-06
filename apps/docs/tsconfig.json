@@ -1,28 +1,16 @@
 {
+  "extends": "@rateup/tsconfig/vite-react.json",
   "include": ["**/*.ts", "**/*.tsx", "**/*.mdx"],
   "compilerOptions": {
     "target": "ES2022",
-    "jsx": "react-jsx",
-    "module": "ESNext",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "paths": {
       "@/*": ["./src/*"],
       "collections/*": ["./.source/*"]
     },
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["vite/client"],
-
-    /* Bundler mode */
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
-    "noEmit": true,
-
-    /* Linting */
-    "skipLibCheck": true,
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    // The docs site never set these; null resets them to TypeScript's defaults.
+    "allowArbitraryExtensions": null,
+    "resolveJsonModule": null,
+    "moduleDetection": null
   }
 }

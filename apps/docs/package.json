@@ -23,6 +23,7 @@
     "vite": "catalog:"
   },
   "devDependencies": {
+    "@rateup/tsconfig": "workspace:*",
     "@tailwindcss/vite": "^4.3.4",
     "@types/node": "26.6.6",
     "@types/react": "19.3.0",
