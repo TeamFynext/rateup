@@ -21,6 +21,7 @@
     "class-variance-authority": "catalog:",
     "cmdk": "catalog:",
     "cn": "catalog:",
+    "react-is": "catalog:",
     "recharts": "catalog:",
     "shadcn": "catalog:",
     "sonner": "catalog:",
