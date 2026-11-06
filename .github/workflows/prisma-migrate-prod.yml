@@ -6,6 +6,10 @@ on:
     branches:
       - main
   workflow_dispatch:
+# One migration run at a time against the prod database; a second push waits.
+concurrency:
+  group: prisma-migrate-prod
+  cancel-in-progress: false
 # The token is never used by these jobs; keep it read-only.
 permissions:
   contents: read
