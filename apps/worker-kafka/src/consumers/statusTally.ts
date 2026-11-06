@@ -21,7 +21,7 @@
 // Distinctness needs a set of every pair seen, which is memory a long-lived
 // production consumer should not be spending — hence off unless asked for, and
 // capped even then.
-import { log } from "@rateup/server/workers/shared/logger.js";
+import { log } from "@rateup/api/workers/shared/logger.js";
 
 /** The statuses a WhatsApp send produces, in the order it produces them. */
 const STATUSES = ["sent", "delivered", "read", "failed"] as const;

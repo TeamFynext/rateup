@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
-vi.mock("@rateup/server/workers/shared/logger.js", () => ({
+vi.mock("@rateup/api/workers/shared/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), warn: vi.fn() },
 }));
-vi.mock("@rateup/server/utils/logger.js", () => ({
+vi.mock("@rateup/api/utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), warn: vi.fn() },
 }));
 // The run record lives in Redis; a Map stands in for it.
 const store = vi.hoisted(() => new Map<string, string>());
-vi.mock("@rateup/server/utils/redisConnection.js", () => ({
+vi.mock("@rateup/api/utils/redisConnection.js", () => ({
   default: {
     duplicate: () => ({}),
     get: async (key: string) => store.get(key) ?? null,
@@ -23,15 +23,15 @@ vi.mock("bullmq", () => ({
   UnrecoverableError: class extends Error {},
 }));
 const auditUpdate = vi.hoisted(() => vi.fn(async (_args: unknown) => ({})));
-vi.mock("@rateup/server/utils/prisma.js", () => ({
+vi.mock("@rateup/api/utils/prisma.js", () => ({
   default: { staffAuditLog: { update: auditUpdate } },
 }));
 const findTask = vi.hoisted(() => vi.fn());
-vi.mock("@rateup/server/modules/maintenance/maintenance.tasks.js", () => ({ findTask }));
+vi.mock("@rateup/api/modules/maintenance/maintenance.tasks.js", () => ({ findTask }));
 
 const { processMaintenanceRun } = await import("./maintenance.processor.js");
 const { newBackgroundRun, readBackgroundRun, updateBackgroundRun } =
-  await import("@rateup/server/modules/maintenance/backgroundRun.js");
+  await import("@rateup/api/modules/maintenance/backgroundRun.js");
 
 const job = (taskId: string) =>
   ({ data: { taskId, auditId: "audit-1" }, attemptsMade: 0, updateProgress: vi.fn() }) as never;

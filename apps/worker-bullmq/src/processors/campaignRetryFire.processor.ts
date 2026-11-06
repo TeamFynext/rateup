@@ -6,9 +6,9 @@
 // only reports what happened.
 import { Job, Worker } from "bullmq";
 
-import { log } from "@rateup/server/workers/shared/logger.js";
-import baseRedis from "@rateup/server/utils/redisConnection.js";
-import { fireCampaignSendById } from "@rateup/server/modules/campaign/campaignRetry.service.js";
+import { log } from "@rateup/api/workers/shared/logger.js";
+import baseRedis from "@rateup/api/utils/redisConnection.js";
+import { fireCampaignSendById } from "@rateup/api/modules/campaign/campaignRetry.service.js";
 
 const workerConnection = baseRedis.duplicate();
 

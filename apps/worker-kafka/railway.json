@@ -5,7 +5,7 @@
     "buildCommand": "pnpm --filter @rateup/worker-kafka... run build",
     "watchPatterns": [
       "apps/worker-kafka/**",
-      "packages/server/**",
+      "apps/api/**",
       "packages/db/**",
       "packages/tsconfig/**",
       "pnpm-lock.yaml"

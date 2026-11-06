@@ -1,8 +1,8 @@
 import { timingSafeEqual } from "node:crypto";
 
 import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
-import { checkKafkaHealth } from "@rateup/server/plugins/kafka.js";
-import { metricsRegistry } from "@rateup/server/utils/metrics.js";
+import { checkKafkaHealth } from "../plugins/kafka.js";
+import { metricsRegistry } from "../utils/metrics.js";
 
 /** Constant-time compare, so the token cannot be guessed a byte at a time. */
 function tokenMatches(header: string | undefined, token: string): boolean {

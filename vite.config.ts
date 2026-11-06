@@ -11,7 +11,7 @@ export default defineConfig({
     "apps/web/**/*.{ts,tsx,js,jsx,json,css,md}": "vp fmt --no-error-on-unmatched-pattern",
     "{apps/admin,apps/docs,packages/ui}/**": "vp check --fix --no-error-on-unmatched-pattern",
     // Backend code (formerly all of rateup-api) only formats on commit.
-    "{apps/api,apps/worker-*,packages/server,packages/db}/**/*.{ts,js,md,json}":
+    "{apps/api,apps/worker-*,packages/db}/**/*.{ts,js,md,json}":
       "vp fmt --no-error-on-unmatched-pattern",
     "apps/mobile/**/*.{ts,tsx,js,jsx,mjs,cjs}": [
       "oxlint -c apps/mobile/.oxlintrc.json --fix",
@@ -27,7 +27,7 @@ export default defineConfig({
       "**/.claude/**",
       "apps/*/src/routeTree.gen.ts",
       "apps/docs/.source/**",
-      "packages/server/src/generated/**",
+      "apps/api/src/generated/**",
       // MDX pages stay hand-formatted: oxfmt collapses `<Step>` blocks onto one line, which
       // turns their paragraph into inline text and changes how the page renders.
       "apps/docs/src/content/**",
@@ -46,7 +46,6 @@ export default defineConfig({
       // linting reports ~750 existing issues in the backend and ~120 in apps/mobile.
       "apps/api/**",
       "apps/worker-*/**",
-      "packages/server/**",
       "apps/mobile/**",
       "tools/meta-mock/**",
     ],

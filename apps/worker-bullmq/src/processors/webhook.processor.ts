@@ -1,21 +1,21 @@
 import { Worker, Job } from "bullmq";
-import { log } from "@rateup/server/utils/logger.js";
-import baseRedis from "@rateup/server/utils/redisConnection.js";
-import { handleWebhook } from "@rateup/server/modules/integrations/shopify/shopify.inbound.js";
-import { processShopifySurveySchedule } from "@rateup/server/modules/integrations/shopify/shopify.orders.js";
-import type { ShopifyWebhookJobData } from "@rateup/server/modules/integrations/shopify/shopify.types.js";
-import { ShopifyEvents } from "@rateup/server/types/enums.js";
+import { log } from "@rateup/api/utils/logger.js";
+import baseRedis from "@rateup/api/utils/redisConnection.js";
+import { handleWebhook } from "@rateup/api/modules/integrations/shopify/shopify.inbound.js";
+import { processShopifySurveySchedule } from "@rateup/api/modules/integrations/shopify/shopify.orders.js";
+import type { ShopifyWebhookJobData } from "@rateup/api/modules/integrations/shopify/shopify.types.js";
+import { ShopifyEvents } from "@rateup/api/types/enums.js";
 import {
   toCommerceLoyaltyJob,
   type ShopifyLoyaltyJobData,
-} from "@rateup/server/modules/integrations/shopify/shopifyLoyalty.service.js";
+} from "@rateup/api/modules/integrations/shopify/shopifyLoyalty.service.js";
 import {
   commerceAwardKey,
   processCommerceOrderLoyalty,
   type CommerceLoyaltyJobData,
-} from "@rateup/server/modules/integrations/commerce/loyalty.js";
-import { getCommerceProvider } from "@rateup/server/modules/integrations/commerce/registry.js";
-import { LoyaltyError } from "@rateup/server/modules/loyalty/loyalty.errors.js";
+} from "@rateup/api/modules/integrations/commerce/loyalty.js";
+import { getCommerceProvider } from "@rateup/api/modules/integrations/commerce/registry.js";
+import { LoyaltyError } from "@rateup/api/modules/loyalty/loyalty.errors.js";
 
 const workerConnection = baseRedis.duplicate();
 

@@ -1,10 +1,10 @@
 // Hangs up WhatsApp calls whose browser tab has gone away (see calling.watchdog.ts).
 import { Job, Worker } from "bullmq";
 
-import { log } from "@rateup/server/workers/shared/logger.js";
-import baseRedis from "@rateup/server/utils/redisConnection.js";
-import { checkCallAlive } from "@rateup/server/modules/whatsapp/calling/calling.watchdog.js";
-import { armCallWatchdog } from "@rateup/server/workers/bullmq/queues/callWatchdog.queue.js";
+import { log } from "@rateup/api/workers/shared/logger.js";
+import baseRedis from "@rateup/api/utils/redisConnection.js";
+import { checkCallAlive } from "@rateup/api/modules/whatsapp/calling/calling.watchdog.js";
+import { armCallWatchdog } from "@rateup/api/workers/bullmq/queues/callWatchdog.queue.js";
 
 const workerConnection = baseRedis.duplicate();
 

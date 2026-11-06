@@ -15,7 +15,7 @@
     "lint": "oxlint"
   },
   "dependencies": {
-    "@rateup/server": "workspace:*",
+    "@rateup/api": "workspace:*",
     "dotenv": "^18.0.9",
     "kafkajs": "^2.2.4"
   },

@@ -4,7 +4,7 @@
 generator client {
   provider        = "prisma-client"
   // The client lives with the code that uses it; see packages/db/AGENTS.md.
-  output          = "../../server/src/generated/prisma"
+  output          = "../../../apps/api/src/generated/prisma"
   // `where:` on @@unique/@@index. Without it a partial index cannot be declared
   // here, and an index the schema does not declare is dropped by the next
   // `prisma db push` (see 20260918120000_analytics_indexes).

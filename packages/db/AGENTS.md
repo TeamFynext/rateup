@@ -3,9 +3,9 @@
 Prisma schema (`prisma/schema.prisma`), migrations and `prisma.config.ts`. No runtime code.
 
 `prisma generate` (run on every install) writes the client into
-`packages/server/src/generated/prisma`: the client's types depend on the server's global
-`PrismaJson` declarations, so it lives next to them. Import it from
-`@rateup/server/generated/prisma/client.js` (relative paths inside `packages/server`).
+`apps/api/src/generated/prisma`: the client's types depend on the API's global `PrismaJson`
+declarations (`src/types/global.d.ts`), so it lives next to them. The workers import it as
+`@rateup/api/generated/prisma/client.js`.
 
 ```bash
 pnpm run generate          # after a schema change

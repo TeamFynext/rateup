@@ -4,20 +4,20 @@
 // Each handler re-reads its rows, so a job that fires late or twice does the right thing.
 import { Job, Worker } from "bullmq";
 
-import { log } from "@rateup/server/workers/shared/logger.js";
-import baseRedis from "@rateup/server/utils/redisConnection.js";
-import type { ShopJobData } from "@rateup/server/workers/bullmq/queues/shop.queue.js";
-import { publishProductToMeta } from "@rateup/server/modules/commerce/shop/catalogPublish.service.js";
+import { log } from "@rateup/api/workers/shared/logger.js";
+import baseRedis from "@rateup/api/utils/redisConnection.js";
+import type { ShopJobData } from "@rateup/api/workers/bullmq/queues/shop.queue.js";
+import { publishProductToMeta } from "@rateup/api/modules/commerce/shop/catalogPublish.service.js";
 import {
   fireShopReminder,
   runBackInStock,
-} from "@rateup/server/modules/commerce/shop/recovery.service.js";
-import { reportAdPurchase } from "@rateup/server/modules/commerce/shop/adConversion.service.js";
-import { sendInvoice } from "@rateup/server/modules/commerce/shop/invoice.service.js";
+} from "@rateup/api/modules/commerce/shop/recovery.service.js";
+import { reportAdPurchase } from "@rateup/api/modules/commerce/shop/adConversion.service.js";
+import { sendInvoice } from "@rateup/api/modules/commerce/shop/invoice.service.js";
 import {
   mirrorStoreById,
   writeBackOrder,
-} from "@rateup/server/modules/commerce/shop/storeSync.service.js";
+} from "@rateup/api/modules/commerce/shop/storeSync.service.js";
 
 const workerConnection = baseRedis.duplicate();
 

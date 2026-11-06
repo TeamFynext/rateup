@@ -1,19 +1,19 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
-vi.mock("@rateup/server/utils/logger.js", () => ({
+vi.mock("@rateup/api/utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));
 const processWhatsappWebhook = vi.fn();
-vi.mock("@rateup/server/modules/whatsapp/whatsappSurvey/wasurvey.webhook.js", () => ({
+vi.mock("@rateup/api/modules/whatsapp/whatsappSurvey/wasurvey.webhook.js", () => ({
   processWhatsappWebhook,
 }));
 const addBulk = vi.fn();
-vi.mock("@rateup/server/workers/bullmq/queues/waWebhookRetry.queue.js", async (importOriginal) => ({
+vi.mock("@rateup/api/workers/bullmq/queues/waWebhookRetry.queue.js", async (importOriginal) => ({
   // The job id helper and options are pure; only the Queue (Redis) is replaced.
   ...(await importOriginal<object>()),
   waWebhookRetryQueue: { addBulk },
 }));
-vi.mock("@rateup/server/utils/redisConnection.js", () => ({ default: {} }));
+vi.mock("@rateup/api/utils/redisConnection.js", () => ({ default: {} }));
 vi.mock("bullmq", () => ({ Queue: class {} }));
 
 const { isStatusOnly, startWaWebhookConsumer } = await import("./waWebhook.consumer.js");

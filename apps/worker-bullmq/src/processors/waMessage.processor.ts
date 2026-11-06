@@ -11,22 +11,19 @@
 // gets notified.
 import { DelayedError, Job, Worker } from "bullmq";
 
-import { log } from "@rateup/server/workers/shared/logger.js";
-import baseRedis from "@rateup/server/utils/redisConnection.js";
-import { processParticipant } from "@rateup/server/workers/shared/modules/messageDispatch/messageDispatch.service.js";
-import { WaFailureClass } from "@rateup/server/utils/waRetryableErrors.js";
-import { notify } from "@rateup/server/modules/notification/notify.js";
-import {
-  campaignSendJobsKey,
-  getCampaignById,
-} from "@rateup/server/workers/shared/whatsapp/index.js";
-import { completeCampaignSend } from "@rateup/server/modules/campaign/campaignSend.service.js";
-import { scheduleNextRetry } from "@rateup/server/modules/campaign/campaignRetry.service.js";
-import { finishCampaignIfSettled } from "@rateup/server/modules/campaign/campaignSettle.service.js";
+import { log } from "@rateup/api/workers/shared/logger.js";
+import baseRedis from "@rateup/api/utils/redisConnection.js";
+import { processParticipant } from "@rateup/api/workers/shared/modules/messageDispatch/messageDispatch.service.js";
+import { WaFailureClass } from "@rateup/api/utils/waRetryableErrors.js";
+import { notify } from "@rateup/api/modules/notification/notify.js";
+import { campaignSendJobsKey, getCampaignById } from "@rateup/api/workers/shared/whatsapp/index.js";
+import { completeCampaignSend } from "@rateup/api/modules/campaign/campaignSend.service.js";
+import { scheduleNextRetry } from "@rateup/api/modules/campaign/campaignRetry.service.js";
+import { finishCampaignIfSettled } from "@rateup/api/modules/campaign/campaignSettle.service.js";
 import {
   acquirePhoneSendSlot,
   resolvePhoneRate,
-} from "@rateup/server/workers/shared/phoneRateLimit.js";
+} from "@rateup/api/workers/shared/phoneRateLimit.js";
 
 /**
  * In-flight jobs per worker process. Not a throughput control — throughput is

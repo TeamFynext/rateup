@@ -3,11 +3,11 @@ import cors from "@fastify/cors";
 import formDataPlugin from "@fastify/formbody";
 import supertokens from "supertokens-node";
 import { plugin, errorHandler } from "supertokens-node/framework/fastify/index.js";
-import { SuperTokensConfig } from "@rateup/server/config.js";
-import { parseCorsWhitelist } from "@rateup/server/utils/corsWhitelist.js";
+import { SuperTokensConfig } from "../config.js";
+import { parseCorsWhitelist } from "../utils/corsWhitelist.js";
 import { registerSwagger } from "./swagger.js";
-import { registerKafka } from "@rateup/server/plugins/kafka.js";
-import { rateLimit } from "@rateup/server/utils/rateLimit.js";
+import { registerKafka } from "./kafka.js";
+import { rateLimit } from "../utils/rateLimit.js";
 
 type Limiter = (request: FastifyRequest, reply: FastifyReply) => Promise<unknown>;
 

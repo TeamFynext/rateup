@@ -6,9 +6,9 @@
 // The job *name* is the trigger key (new_contact_create, contact_updated, …).
 import { Job, Worker } from "bullmq";
 
-import { log } from "@rateup/server/workers/shared/logger.js";
-import baseRedis from "@rateup/server/utils/redisConnection.js";
-import { drainLegacyZapierJob } from "@rateup/server/modules/integrations/external/zapier/zapier.deliver.js";
+import { log } from "@rateup/api/workers/shared/logger.js";
+import baseRedis from "@rateup/api/utils/redisConnection.js";
+import { drainLegacyZapierJob } from "@rateup/api/modules/integrations/external/zapier/zapier.deliver.js";
 
 const workerConnection = baseRedis.duplicate();
 

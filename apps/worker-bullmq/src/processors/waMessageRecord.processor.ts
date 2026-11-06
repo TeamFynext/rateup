@@ -3,12 +3,12 @@
 // for a message Meta has already accepted.
 import { Job, Worker } from "bullmq";
 
-import { PlatformType } from "@rateup/server/generated/prisma/enums.js";
-import { handleWaMessages } from "@rateup/server/modules/whatsapp/inbox/message/wamessage.controller.js";
-import { getWaMessageByMessageId } from "@rateup/server/modules/whatsapp/inbox/message/wamessage.service.js";
-import baseRedis from "@rateup/server/utils/redisConnection.js";
-import { log } from "@rateup/server/workers/shared/logger.js";
-import type { WaMessageRecordJob } from "@rateup/server/workers/bullmq/queues/whatsapp.queue.js";
+import { PlatformType } from "@rateup/api/generated/prisma/enums.js";
+import { handleWaMessages } from "@rateup/api/modules/whatsapp/inbox/message/wamessage.controller.js";
+import { getWaMessageByMessageId } from "@rateup/api/modules/whatsapp/inbox/message/wamessage.service.js";
+import baseRedis from "@rateup/api/utils/redisConnection.js";
+import { log } from "@rateup/api/workers/shared/logger.js";
+import type { WaMessageRecordJob } from "@rateup/api/workers/bullmq/queues/whatsapp.queue.js";
 
 const workerConnection = baseRedis.duplicate();
 

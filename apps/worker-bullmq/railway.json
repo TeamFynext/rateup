@@ -5,7 +5,7 @@
     "buildCommand": "pnpm --filter @rateup/worker-bullmq... run build",
     "watchPatterns": [
       "apps/worker-bullmq/**",
-      "packages/server/**",
+      "apps/api/**",
       "packages/db/**",
       "packages/tsconfig/**",
       "pnpm-lock.yaml"

@@ -365,8 +365,7 @@ describe("contactFormPublicRoutes", () => {
 
   test("is not registered anywhere in registerRoutes", async () => {
     const source = await import("node:fs/promises").then((fs) =>
-      // The route list lives in the API app; tests run from packages/server.
-      fs.readFile("../../apps/api/src/registerRoutes.ts", "utf8"),
+      fs.readFile("src/registerRoutes.ts", "utf8"),
     );
 
     expect(source).not.toContain("contactFormPublicRoutes");

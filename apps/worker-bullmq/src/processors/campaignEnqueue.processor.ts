@@ -8,10 +8,10 @@
 // retry.
 import { Job, Worker } from "bullmq";
 
-import { log } from "@rateup/server/workers/shared/logger.js";
-import baseRedis from "@rateup/server/utils/redisConnection.js";
-import prisma from "@rateup/server/utils/prisma.js";
-import { CampaignStatus } from "@rateup/server/workers/shared/types/enum.js";
+import { log } from "@rateup/api/workers/shared/logger.js";
+import baseRedis from "@rateup/api/utils/redisConnection.js";
+import prisma from "@rateup/api/utils/prisma.js";
+import { CampaignStatus } from "@rateup/api/workers/shared/types/enum.js";
 import {
   decryptAccessToken,
   enqueueCampaignMessages,
@@ -19,14 +19,14 @@ import {
   markParticipantsUnreachable,
   getSurveyTeamMapId,
   updateCampaignStatus,
-} from "@rateup/server/workers/shared/whatsapp/index.js";
-import { waMessageQueue } from "@rateup/server/workers/bullmq/queues/whatsapp.queue.js";
+} from "@rateup/api/workers/shared/whatsapp/index.js";
+import { waMessageQueue } from "@rateup/api/workers/bullmq/queues/whatsapp.queue.js";
 import {
   cancelCampaignSend,
   failCampaignSend,
   startCampaignSend,
-} from "@rateup/server/modules/campaign/campaignSend.service.js";
-import { notifyCampaignStopped } from "@rateup/server/modules/campaign/campaignNotify.js";
+} from "@rateup/api/modules/campaign/campaignSend.service.js";
+import { notifyCampaignStopped } from "@rateup/api/modules/campaign/campaignNotify.js";
 
 /**
  * A reason worth putting in front of the sender.

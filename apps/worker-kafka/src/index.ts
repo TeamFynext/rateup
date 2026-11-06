@@ -6,18 +6,18 @@ import {
   connectKafkaProducer,
   isKafkaProducerConnected,
   producer as sharedProducer,
-} from "@rateup/server/plugins/kafka.js";
-import { log } from "@rateup/server/utils/logger.js";
+} from "@rateup/api/plugins/kafka.js";
+import { log } from "@rateup/api/utils/logger.js";
 import {
   createKafkaClient,
   provisionKafkaTopics,
   STATUS_EVENTS_TOPIC,
   WA_WEBHOOKS_TOPIC,
-} from "@rateup/server/utils/kafka.js";
-import { initProcessMetrics, metricsRegistry } from "@rateup/server/utils/metrics.js";
-import { statusRetryQueue } from "@rateup/server/workers/bullmq/queues/statusRetry.queue.js";
-import { waWebhookRetryQueue } from "@rateup/server/workers/bullmq/queues/waWebhookRetry.queue.js";
-import { startHealthServer } from "@rateup/server/workers/shared/healthServer.js";
+} from "@rateup/api/utils/kafka.js";
+import { initProcessMetrics, metricsRegistry } from "@rateup/api/utils/metrics.js";
+import { statusRetryQueue } from "@rateup/api/workers/bullmq/queues/statusRetry.queue.js";
+import { waWebhookRetryQueue } from "@rateup/api/workers/bullmq/queues/waWebhookRetry.queue.js";
+import { startHealthServer } from "@rateup/api/workers/shared/healthServer.js";
 import { GROUP_ID as STATUS_GROUP_ID, startStatusConsumer } from "./consumers/status.consumer.js";
 import {
   GROUP_ID as WA_WEBHOOK_GROUP_ID,
@@ -27,7 +27,7 @@ import {
   kafkaHealthCheck,
   registerKafkaMetrics,
   trackConsumerConnection,
-} from "@rateup/server/workers/kafka/metrics.js";
+} from "@rateup/api/workers/kafka/metrics.js";
 
 /**
  * Kafka worker service entrypoint — stream consumers, no BullMQ workers (the

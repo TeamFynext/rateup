@@ -3,13 +3,7 @@
   "build": {
     "builder": "RAILPACK",
     "buildCommand": "pnpm --filter @rateup/api... run build",
-    "watchPatterns": [
-      "apps/api/**",
-      "packages/server/**",
-      "packages/db/**",
-      "packages/tsconfig/**",
-      "pnpm-lock.yaml"
-    ]
+    "watchPatterns": ["apps/api/**", "packages/db/**", "packages/tsconfig/**", "pnpm-lock.yaml"]
   },
   "deploy": {
     "startCommand": "pnpm --filter @rateup/api run start",

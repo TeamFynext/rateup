@@ -2,16 +2,16 @@ import "dotenv/config";
 
 import { Worker } from "bullmq";
 
-import { log } from "@rateup/server/utils/logger.js";
-import { connectKafkaProducer, disconnectKafkaProducer } from "@rateup/server/plugins/kafka.js";
-import baseRedis from "@rateup/server/utils/redisConnection.js";
-import { initProcessMetrics, metricsRegistry } from "@rateup/server/utils/metrics.js";
-import { startHealthServer } from "@rateup/server/workers/shared/healthServer.js";
-import { bullmqHealthCheck, registerQueueMetrics } from "@rateup/server/workers/bullmq/metrics.js";
-import { syncJobSchedulers } from "@rateup/server/workers/bullmq/queues/cron.queue.js";
-import { reconcileScheduledCampaignSends } from "@rateup/server/modules/campaign/campaignRetry.service.js";
-import { reconcileScheduledFeedbackRequests } from "@rateup/server/modules/loyalty/feedback/feedback.scheduler.js";
-import { reconcileCheckoutReminders } from "@rateup/server/modules/integrations/shopify/shopify.checkouts.service.js";
+import { log } from "@rateup/api/utils/logger.js";
+import { connectKafkaProducer, disconnectKafkaProducer } from "@rateup/api/plugins/kafka.js";
+import baseRedis from "@rateup/api/utils/redisConnection.js";
+import { initProcessMetrics, metricsRegistry } from "@rateup/api/utils/metrics.js";
+import { startHealthServer } from "@rateup/api/workers/shared/healthServer.js";
+import { bullmqHealthCheck, registerQueueMetrics } from "@rateup/api/workers/bullmq/metrics.js";
+import { syncJobSchedulers } from "@rateup/api/workers/bullmq/queues/cron.queue.js";
+import { reconcileScheduledCampaignSends } from "@rateup/api/modules/campaign/campaignRetry.service.js";
+import { reconcileScheduledFeedbackRequests } from "@rateup/api/modules/loyalty/feedback/feedback.scheduler.js";
+import { reconcileCheckoutReminders } from "@rateup/api/modules/integrations/shopify/shopify.checkouts.service.js";
 
 import * as abandonedCheckoutReminder from "./processors/abandonedCheckoutReminder.processor.js";
 import * as callWatchdog from "./processors/callWatchdog.processor.js";

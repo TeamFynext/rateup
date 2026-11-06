@@ -1,9 +1,9 @@
 import { Worker, Job } from "bullmq";
-import { log } from "@rateup/server/utils/logger.js";
-import prisma from "@rateup/server/utils/prisma.js";
-import baseRedis from "@rateup/server/utils/redisConnection.js";
-import { processNextNode } from "@rateup/server/modules/whatsapp/whatsappSurvey/wasurvey.controller.js";
-import { WaAutomationProgressStatus } from "@rateup/server/generated/prisma/enums.js";
+import { log } from "@rateup/api/utils/logger.js";
+import prisma from "@rateup/api/utils/prisma.js";
+import baseRedis from "@rateup/api/utils/redisConnection.js";
+import { processNextNode } from "@rateup/api/modules/whatsapp/whatsappSurvey/wasurvey.controller.js";
+import { WaAutomationProgressStatus } from "@rateup/api/generated/prisma/enums.js";
 
 const workerConnection = baseRedis.duplicate();
 

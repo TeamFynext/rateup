@@ -4,13 +4,13 @@
 // live in `runContactImport`, which the tests drive directly.
 import { Job, Worker } from "bullmq";
 
-import { log } from "@rateup/server/workers/shared/logger.js";
-import baseRedis from "@rateup/server/utils/redisConnection.js";
-import { runContactImport } from "@rateup/server/modules/contact/contactImport.service.js";
+import { log } from "@rateup/api/workers/shared/logger.js";
+import baseRedis from "@rateup/api/utils/redisConnection.js";
+import { runContactImport } from "@rateup/api/modules/contact/contactImport.service.js";
 import type {
   ContactImportJobData,
   ContactImportProgress,
-} from "@rateup/server/workers/bullmq/queues/contactImport.queue.js";
+} from "@rateup/api/workers/bullmq/queues/contactImport.queue.js";
 
 const workerConnection = baseRedis.duplicate();
 

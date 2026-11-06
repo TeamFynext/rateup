@@ -1,13 +1,13 @@
 import { Worker } from "bullmq";
 import { randomUUID } from "node:crypto";
 
-import { PlatformType } from "@rateup/server/generated/prisma/enums.js";
-import { handleWaMessages } from "@rateup/server/modules/whatsapp/inbox/message/wamessage.controller.js";
-import baseRedis from "@rateup/server/utils/redisConnection.js";
-import { log } from "@rateup/server/utils/logger.js";
-import { createTextMessage } from "@rateup/server/workers/shared/whatsapp/index.js";
-import { simulateIncomingMessage } from "@rateup/server/utils/metaMock.js";
-import { sendMetaMessage } from "@rateup/server/modules/whatsapp/meta/metaMessage.service.js";
+import { PlatformType } from "@rateup/api/generated/prisma/enums.js";
+import { handleWaMessages } from "@rateup/api/modules/whatsapp/inbox/message/wamessage.controller.js";
+import baseRedis from "@rateup/api/utils/redisConnection.js";
+import { log } from "@rateup/api/utils/logger.js";
+import { createTextMessage } from "@rateup/api/workers/shared/whatsapp/index.js";
+import { simulateIncomingMessage } from "@rateup/api/utils/metaMock.js";
+import { sendMetaMessage } from "@rateup/api/modules/whatsapp/meta/metaMessage.service.js";
 
 const workerConnection = baseRedis.duplicate();
 

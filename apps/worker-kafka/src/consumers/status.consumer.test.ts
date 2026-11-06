@@ -3,11 +3,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const bulkUpdateStatuses = vi.fn();
 const enqueueStatusRetries = vi.fn();
 
-vi.mock("@rateup/server/workers/shared/whatsapp/index.js", () => ({ bulkUpdateStatuses }));
-vi.mock("@rateup/server/workers/bullmq/queues/statusRetry.queue.js", () => ({
+vi.mock("@rateup/api/workers/shared/whatsapp/index.js", () => ({ bulkUpdateStatuses }));
+vi.mock("@rateup/api/workers/bullmq/queues/statusRetry.queue.js", () => ({
   enqueueStatusRetries,
 }));
-vi.mock("@rateup/server/workers/shared/logger.js", () => ({
+vi.mock("@rateup/api/workers/shared/logger.js", () => ({
   log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 

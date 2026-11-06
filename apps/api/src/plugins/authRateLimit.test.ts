@@ -1,15 +1,15 @@
 import { describe, expect, test, vi } from "vitest";
 
-vi.mock("@rateup/server/config.js", () => ({ SuperTokensConfig: {} }));
+vi.mock("../config.js", () => ({ SuperTokensConfig: {} }));
 vi.mock("./swagger.js", () => ({ registerSwagger: vi.fn() }));
-vi.mock("@rateup/server/plugins/kafka.js", () => ({ registerKafka: vi.fn() }));
+vi.mock("./kafka.js", () => ({ registerKafka: vi.fn() }));
 vi.mock("supertokens-node", () => ({ default: { init: vi.fn(), getAllCORSHeaders: () => [] } }));
 vi.mock("supertokens-node/framework/fastify/index.js", () => ({
   plugin: vi.fn(),
   errorHandler: vi.fn(),
 }));
 // Each limiter records its options and refuses when told to.
-vi.mock("@rateup/server/utils/rateLimit.js", () => ({
+vi.mock("../utils/rateLimit.js", () => ({
   rateLimit: vi.fn((opts) =>
     Object.assign(
       vi.fn(async (_request, reply) => {

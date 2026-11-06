@@ -24,17 +24,17 @@
 // its job id.
 import { Consumer, Kafka, Producer } from "kafkajs";
 
-import { log } from "@rateup/server/workers/shared/logger.js";
-import { bulkUpdateStatuses } from "@rateup/server/workers/shared/whatsapp/index.js";
+import { log } from "@rateup/api/workers/shared/logger.js";
+import { bulkUpdateStatuses } from "@rateup/api/workers/shared/whatsapp/index.js";
 import {
   enqueueStatusRetries,
   type StatusRetry,
-} from "@rateup/server/workers/bullmq/queues/statusRetry.queue.js";
+} from "@rateup/api/workers/bullmq/queues/statusRetry.queue.js";
 import {
   STATUS_EVENTS_DLQ_TOPIC,
   STATUS_EVENTS_TOPIC,
   kafkaProducerConfig,
-} from "@rateup/server/utils/kafka.js";
+} from "@rateup/api/utils/kafka.js";
 import { MAX_RETRIES, retryDelayMs } from "./statusRetry.js";
 import { createStatusTally } from "./statusTally.js";
 

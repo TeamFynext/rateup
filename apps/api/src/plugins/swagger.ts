@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import swagger from "@fastify/swagger";
-import { swaggerConfig } from "@rateup/server/config.js";
+import { swaggerConfig } from "../config.js";
 
 /**
  * The spec is the partner API's contract, so it is always generated and always served as

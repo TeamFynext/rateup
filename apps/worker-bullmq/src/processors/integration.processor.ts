@@ -1,7 +1,7 @@
 import { Worker } from "bullmq";
-import baseRedis from "@rateup/server/utils/redisConnection.js";
-import { log } from "@rateup/server/utils/logger.js";
-import { processIntegrationJob } from "@rateup/server/modules/integrations/external/integrationDispatch.js";
+import baseRedis from "@rateup/api/utils/redisConnection.js";
+import { log } from "@rateup/api/utils/logger.js";
+import { processIntegrationJob } from "@rateup/api/modules/integrations/external/integrationDispatch.js";
 
 const workerConnection = baseRedis.duplicate();
 

@@ -1,16 +1,16 @@
 import { describe, expect, test, vi } from "vitest";
 
-vi.mock("@rateup/server/utils/logger.js", () => ({
+vi.mock("@rateup/api/utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), warn: vi.fn() },
 }));
-vi.mock("@rateup/server/utils/redisConnection.js", () => ({ default: { duplicate: () => ({}) } }));
+vi.mock("@rateup/api/utils/redisConnection.js", () => ({ default: { duplicate: () => ({}) } }));
 vi.mock("bullmq", () => ({
   Worker: class {
     on() {}
   },
 }));
 const send = vi.fn();
-vi.mock("@rateup/server/plugins/kafka.js", () => ({ producer: { send } }));
+vi.mock("@rateup/api/plugins/kafka.js", () => ({ producer: { send } }));
 
 const { republishWaWebhookRetry } = await import("./waWebhookRetry.processor.js");
 

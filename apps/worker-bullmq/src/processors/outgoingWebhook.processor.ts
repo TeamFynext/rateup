@@ -1,10 +1,10 @@
 import { Worker, Job } from "bullmq";
-import baseRedis from "@rateup/server/utils/redisConnection.js";
-import { log } from "@rateup/server/utils/logger.js";
+import baseRedis from "@rateup/api/utils/redisConnection.js";
+import { log } from "@rateup/api/utils/logger.js";
 import {
   deliverOutgoingWebhook,
   type OutgoingWebhookJobData,
-} from "@rateup/server/modules/webhook/webhook.service.js";
+} from "@rateup/api/modules/webhook/webhook.service.js";
 
 export const outgoingWebhookWorker = new Worker(
   "outgoingWebhookQueue",

@@ -7,19 +7,18 @@ split; this file still documents the whole backend.
 
 ## Where the code lives
 
-| Folder               | Package                 | Holds                                                                                                                                                                                                |
-| -------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `apps/api`           | `@rateup/api`           | `src/index.ts`, `app.ts`, `registerRoutes.ts`, `routes/`, HTTP plugins, `scripts/`                                                                                                                   |
-| `apps/worker-bullmq` | `@rateup/worker-bullmq` | the BullMQ entry and `processors/`                                                                                                                                                                   |
-| `apps/worker-kafka`  | `@rateup/worker-kafka`  | the Kafka entry and `consumers/`                                                                                                                                                                     |
-| `packages/server`    | `@rateup/server`        | everything shared: `modules/`, `utils/`, `types/`, `authz/`, `external/`, `emails/`, `workers/shared/`, `workers/bullmq/queues/`, worker `metrics.ts`, the Kafka plugin, the generated Prisma client |
-| `packages/db`        | `@rateup/db`            | `prisma/schema.prisma`, migrations, `prisma.config.ts`                                                                                                                                               |
+| Folder               | Package                 | Holds                                                                                                                                            |
+| -------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `apps/api`           | `@rateup/api`           | all backend code: routes, modules (services), utils, types, authz, external API, emails, queues, worker shared code, the generated Prisma client |
+| `apps/worker-bullmq` | `@rateup/worker-bullmq` | the BullMQ entry and `processors/`                                                                                                               |
+| `apps/worker-kafka`  | `@rateup/worker-kafka`  | the Kafka entry and `consumers/`                                                                                                                 |
+| `packages/db`        | `@rateup/db`            | `prisma/schema.prisma`, migrations, `prisma.config.ts`                                                                                           |
 
-Paths below such as `src/modules/...` or `src/workers/shared/...` are inside
-`packages/server` unless the table puts them in an app. Apps import shared code as
-`@rateup/server/<path under src>.js` (for example `@rateup/server/utils/prisma.js`); inside
-`packages/server` imports stay relative. In dev, tests and type checks the package loads
-from source (the `source` export condition); in production Node loads its compiled `dist/`.
+Paths below such as `src/modules/...` are inside `apps/api` unless the table puts them in a
+worker. The workers import what they need as `@rateup/api/<path under src>.js` (for example
+`@rateup/api/utils/prisma.js`). In dev, tests and type checks that loads the TypeScript source
+(the `source` export condition); in production Node loads the API's compiled `dist/src/`.
+Code here must never import from a worker.
 
 ## Commands
 
@@ -32,8 +31,8 @@ vp run @rateup/worker-bullmq#dev      # BullMQ worker (pnpm run dev:workers star
 vp run @rateup/worker-kafka#dev       # Kafka worker
 vp run --filter "@rateup/api..." build   # build the API and what it depends on
 vp run -r typecheck                   # every package (the pre-push hook)
-vp run @rateup/server#test            # most tests live here; also @rateup/api#test, workers
-pnpm -C packages/server exec vitest run <file>   # one file; add -t "name" to filter
+vp run @rateup/api#test               # most tests; the workers have their own
+pnpm -C apps/api exec vitest run <file>   # one file; add -t "name" to filter
 vp run @rateup/db#generate            # after any schema change
 vp run @rateup/db#migrate:dev         # create a migration locally
 pnpm -C apps/api run staff:add <email> --owner   # first staff-console owner
@@ -43,8 +42,8 @@ Each backend package lints with `pnpm run lint` (oxlint, its own `.oxlintrc.json
 
 Git hooks live at the monorepo root (`.vite-hooks/`, rules in the root `vite.config.ts`):
 pre-commit formats staged files with `vp fmt`; pre-push runs every package's `typecheck`,
-so type errors block a push. Each app's `build` type-checks first, then emits only its own
-files (`tsconfig.build.json`).
+so type errors block a push. The workers' `build` type-checks first, then emits only their
+own files (`tsconfig.build.json`); build the API first (`vp run --filter "@rateup/worker-bullmq..." build` does).
 
 ## Tech Stack
 

@@ -5,9 +5,9 @@
 // `fireFeedbackRequest`, so a stale or duplicated job needs no reasoning here.
 import { Job, Worker } from "bullmq";
 
-import { log } from "@rateup/server/workers/shared/logger.js";
-import baseRedis from "@rateup/server/utils/redisConnection.js";
-import { fireFeedbackRequest } from "@rateup/server/modules/loyalty/feedback/feedback.sender.js";
+import { log } from "@rateup/api/workers/shared/logger.js";
+import baseRedis from "@rateup/api/utils/redisConnection.js";
+import { fireFeedbackRequest } from "@rateup/api/modules/loyalty/feedback/feedback.sender.js";
 
 const workerConnection = baseRedis.duplicate();
 

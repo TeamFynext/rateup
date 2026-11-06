@@ -4,18 +4,18 @@
 // until it reports `details.finished`, or someone presses Stop.
 import { Job, UnrecoverableError, Worker } from "bullmq";
 
-import { log } from "@rateup/server/workers/shared/logger.js";
-import baseRedis from "@rateup/server/utils/redisConnection.js";
-import prisma from "@rateup/server/utils/prisma.js";
-import { findTask } from "@rateup/server/modules/maintenance/maintenance.tasks.js";
-import { runTask } from "@rateup/server/modules/maintenance/task.js";
+import { log } from "@rateup/api/workers/shared/logger.js";
+import baseRedis from "@rateup/api/utils/redisConnection.js";
+import prisma from "@rateup/api/utils/prisma.js";
+import { findTask } from "@rateup/api/modules/maintenance/maintenance.tasks.js";
+import { runTask } from "@rateup/api/modules/maintenance/task.js";
 import {
   addToTotals,
   readBackgroundRun,
   updateBackgroundRun,
   type BackgroundRun,
-} from "@rateup/server/modules/maintenance/backgroundRun.js";
-import type { MaintenanceJobData } from "@rateup/server/workers/bullmq/queues/maintenance.queue.js";
+} from "@rateup/api/modules/maintenance/backgroundRun.js";
+import type { MaintenanceJobData } from "@rateup/api/workers/bullmq/queues/maintenance.queue.js";
 
 const workerConnection = baseRedis.duplicate();
 

@@ -31,20 +31,20 @@
 // payment-capture confirmation; a lead-gen automation; call events.
 import { IHeaders, Kafka, KafkaMessage } from "kafkajs";
 
-import { log } from "@rateup/server/workers/shared/logger.js";
-import { kafkaProducerConfig } from "@rateup/server/utils/kafka.js";
+import { log } from "@rateup/api/workers/shared/logger.js";
+import { kafkaProducerConfig } from "@rateup/api/utils/kafka.js";
 import {
   WA_WEBHOOK_DLQ_TOPIC,
   WA_WEBHOOK_TOPIC,
-} from "@rateup/server/modules/whatsapp/whatsappSurvey/waWebhookRecords.js";
-import { processWhatsappWebhook } from "@rateup/server/modules/whatsapp/whatsappSurvey/wasurvey.webhook.js";
-import type { WaMessageBody } from "@rateup/server/types/whatsapp.types.js";
+} from "@rateup/api/modules/whatsapp/whatsappSurvey/waWebhookRecords.js";
+import { processWhatsappWebhook } from "@rateup/api/modules/whatsapp/whatsappSurvey/wasurvey.webhook.js";
+import type { WaMessageBody } from "@rateup/api/types/whatsapp.types.js";
 import {
   WA_WEBHOOK_RETRY_JOB_OPTIONS,
   waWebhookRetryJobId,
   waWebhookRetryQueue,
   type WaWebhookRetryJobData,
-} from "@rateup/server/workers/bullmq/queues/waWebhookRetry.queue.js";
+} from "@rateup/api/workers/bullmq/queues/waWebhookRetry.queue.js";
 import { MAX_RETRIES, retryDelayMs } from "./statusRetry.js";
 
 export const GROUP_ID = "wa-webhook-workers";

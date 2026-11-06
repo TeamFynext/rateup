@@ -1,16 +1,10 @@
 {
-  // Type check: loads @rateup/server from source, plus its global declarations
-  // (Fastify route config, PrismaJson and friends), which nothing imports directly.
   "extends": "@rateup/tsconfig/node.json",
   "compilerOptions": {
-    // Nothing is emitted here; the root only has to contain the @rateup/server sources.
-    "rootDir": "../..",
-    "noEmit": true
+    "rootDir": "."
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "scripts/**/*.ts",
-    "../../packages/server/src/types/*.d.ts"
-  ]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "scripts/**/*.ts"],
+  // Generated Prisma files are compiled when something imports them. pjtg.ts is imported by
+  // nothing and does not pass nodenext's extension rule.
+  "exclude": ["dist", "node_modules", "src/generated"]
 }

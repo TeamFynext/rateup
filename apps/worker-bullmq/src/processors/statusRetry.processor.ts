@@ -5,14 +5,14 @@
 // Uses the shared producer, which the bullmq entrypoint connects at startup.
 import { Job, Worker } from "bullmq";
 
-import { log } from "@rateup/server/workers/shared/logger.js";
-import baseRedis from "@rateup/server/utils/redisConnection.js";
-import { producer } from "@rateup/server/plugins/kafka.js";
-import { STATUS_EVENTS_TOPIC } from "@rateup/server/utils/kafka.js";
+import { log } from "@rateup/api/workers/shared/logger.js";
+import baseRedis from "@rateup/api/utils/redisConnection.js";
+import { producer } from "@rateup/api/plugins/kafka.js";
+import { STATUS_EVENTS_TOPIC } from "@rateup/api/utils/kafka.js";
 import {
   STATUS_RETRY_QUEUE,
   type StatusRetryJobData,
-} from "@rateup/server/workers/bullmq/queues/statusRetry.queue.js";
+} from "@rateup/api/workers/bullmq/queues/statusRetry.queue.js";
 
 const workerConnection = baseRedis.duplicate();
 

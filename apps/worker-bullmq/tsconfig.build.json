@@ -1,6 +1,6 @@
 {
   // Emit only this app's files. Types were checked by tsconfig.json (the build runs it
-  // first); at runtime @rateup/server resolves to its compiled dist/.
+  // first); at runtime @rateup/api resolves to its compiled dist/.
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "rootDir": "src",

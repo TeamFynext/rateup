@@ -325,43 +325,211 @@ importers:
 
   apps/api:
     dependencies:
+      '@aws-sdk/client-s3':
+        specifier: ^3.1161.0
+        version: 3.1161.0
+      '@aws-sdk/client-sesv2':
+        specifier: ^3.1161.0
+        version: 3.1161.0
+      '@aws-sdk/lib-storage':
+        specifier: ^3.1161.0
+        version: 3.1161.0(@aws-sdk/client-s3@3.1161.0)
+      '@aws-sdk/s3-request-presigner':
+        specifier: ^3.1161.0
+        version: 3.1161.0
+      '@faker-js/faker':
+        specifier: ^10.6.0
+        version: 10.6.0
+      '@fastify/cookie':
+        specifier: ^11.1.5
+        version: 11.1.5
       '@fastify/cors':
         specifier: ^11.4.0
         version: 11.4.0
       '@fastify/formbody':
         specifier: ^9.0.1
         version: 9.0.1
+      '@fastify/multipart':
+        specifier: ^10.1.7
+        version: 10.1.7
       '@fastify/swagger':
         specifier: ^9.9.3
         version: 9.9.3(supports-color@8.1.1)
       '@fastify/websocket':
         specifier: ^11.3.7
         version: 11.3.7
-      '@rateup/server':
+      '@ffmpeg-installer/ffmpeg':
+        specifier: ^1.1.0
+        version: 1.1.0
+      '@prisma/adapter-pg':
+        specifier: ^7.10.1
+        version: 7.10.1
+      '@prisma/client':
+        specifier: ^7.10.1
+        version: 7.10.1(prisma@7.10.1(@types/node@26.6.6)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@7.0.2))(typescript@7.0.2)
+      '@rateup/db':
         specifier: workspace:*
-        version: link:../../packages/server
+        version: link:../../packages/db
       '@scalar/fastify-api-reference':
         specifier: ^1.76.4
         version: 1.76.4
+      '@shopify/shopify-api':
+        specifier: ^15.0.1
+        version: 15.0.1
+      axios:
+        specifier: ^1.21.0
+        version: 1.21.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      bcrypt:
+        specifier: ^6.0.0
+        version: 6.0.0
+      bullmq:
+        specifier: ^6.6.0
+        version: 6.6.0(ioredis@6.0.0(supports-color@8.1.1))(pg@8.23.1)
+      cheerio:
+        specifier: ^1.2.0
+        version: 1.2.0
+      dayjs:
+        specifier: ^1.11.23
+        version: 1.11.23
       dotenv:
         specifier: ^18.0.9
         version: 18.0.9
       fastify:
         specifier: ^5.12.8
         version: 5.12.8
+      fastify-raw-body:
+        specifier: ^6.0.3
+        version: 6.0.3
       fastify-type-provider-zod:
         specifier: ^7.0.0
         version: 7.0.0(@fastify/swagger@9.9.3(supports-color@8.1.1))(fastify@5.12.8)(openapi-types@12.1.3)(zod@4.6.7)
+      fluent-ffmpeg:
+        specifier: ^2.1.3
+        version: 2.1.3
+      form-data:
+        specifier: ^4.0.6
+        version: 4.0.6
+      google-spreadsheet:
+        specifier: ^5.3.0
+        version: 5.3.0(google-auth-library@11.1.0(supports-color@8.1.1))
+      googleapis:
+        specifier: ^189.0.0
+        version: 189.0.0(supports-color@8.1.1)
+      hucre:
+        specifier: ^1.3.0
+        version: 1.3.0
+      immer:
+        specifier: ^11.2.9
+        version: 11.2.9
+      ioredis:
+        specifier: ^6.0.0
+        version: 6.0.0(supports-color@8.1.1)
+      jose:
+        specifier: ^6.2.15
+        version: 6.2.15
+      kafkajs:
+        specifier: ^2.2.4
+        version: 2.2.4
+      libphonenumber-js:
+        specifier: ^1.13.15
+        version: 1.13.15
+      lodash:
+        specifier: ^4.18.1
+        version: 4.18.1
+      nanoid:
+        specifier: ^6.0.2
+        version: 6.0.2
+      nanoid-dictionary:
+        specifier: ^5.0.0
+        version: 5.0.0
+      nodemailer:
+        specifier: ^10.3.1
+        version: 10.3.1
+      pdf-lib:
+        specifier: ^1.17.1
+        version: 1.17.1
+      pg:
+        specifier: ^8.23.1
+        version: 8.23.1
+      pino:
+        specifier: ^10.4.0
+        version: 10.4.0
+      pino-pretty:
+        specifier: ^13.2.0
+        version: 13.2.0
+      prom-client:
+        specifier: ^15.1.3
+        version: 15.1.3
+      qrcode:
+        specifier: ^1.5.4
+        version: 1.5.4
+      razorpay:
+        specifier: ^2.9.8
+        version: 2.9.8(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      react:
+        specifier: 19.3.1
+        version: 19.3.1
+      react-dom:
+        specifier: 19.3.1
+        version: 19.3.1(react@19.3.1)
+      react-email:
+        specifier: 6.11.6
+        version: 6.11.6(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)
+      sharp:
+        specifier: ^0.35.5
+        version: 0.35.5(@types/node@26.6.6)
+      stripe:
+        specifier: ^22.6.2
+        version: 22.6.2(@types/node@26.6.6)
       supertokens-node:
         specifier: ^24.1.0
         version: 24.1.0(supports-color@8.1.1)
+      tailwindcss:
+        specifier: ^4.3.4
+        version: 4.3.4
+      uuid:
+        specifier: ^14.0.3
+        version: 14.0.3
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
     devDependencies:
       '@rateup/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig
+      '@react-email/ui':
+        specifier: 6.11.6
+        version: 6.11.6(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.10.0)(@types/node@26.6.6)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      '@types/bcrypt':
+        specifier: ^6.0.0
+        version: 6.0.0
+      '@types/fluent-ffmpeg':
+        specifier: ^2.1.28
+        version: 2.1.28
+      '@types/http-errors':
+        specifier: ^2.0.5
+        version: 2.0.5
+      '@types/lodash':
+        specifier: ^4.17.27
+        version: 4.17.27
       '@types/node':
         specifier: ^26.6.6
         version: 26.6.6
+      '@types/nodemailer':
+        specifier: ^8.0.2
+        version: 8.0.2
+      '@types/pg':
+        specifier: ^8.23.1
+        version: 8.23.1
+      '@types/qrcode':
+        specifier: ^1.5.6
+        version: 1.5.6
+      '@types/react':
+        specifier: 19.3.0
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: 19.3.0
+        version: 19.3.0(@types/react@19.3.0)
       '@types/ws':
         specifier: ^8.18.2
         version: 8.18.2
@@ -1118,9 +1286,9 @@ importers:
 
   apps/worker-bullmq:
     dependencies:
-      '@rateup/server':
+      '@rateup/api':
         specifier: workspace:*
-        version: link:../../packages/server
+        version: link:../api
       bullmq:
         specifier: ^6.6.0
         version: 6.6.0(ioredis@6.0.0(supports-color@8.1.1))(pg@8.23.1)
@@ -1149,9 +1317,9 @@ importers:
 
   apps/worker-kafka:
     dependencies:
-      '@rateup/server':
+      '@rateup/api':
         specifier: workspace:*
-        version: link:../../packages/server
+        version: link:../api
       dotenv:
         specifier: ^18.0.9
         version: 18.0.9
@@ -1192,220 +1360,6 @@ importers:
       prisma-json-types-generator:
         specifier: ^6.0.0
         version: 6.0.0(@prisma/client@7.10.1(prisma@7.10.1(@types/node@26.6.6)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@7.0.2))(typescript@7.0.2))(pg@8.23.1)(prisma@7.10.1(@types/node@26.6.6)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@7.0.2))
-
-  packages/server:
-    dependencies:
-      '@aws-sdk/client-s3':
-        specifier: ^3.1161.0
-        version: 3.1161.0
-      '@aws-sdk/client-sesv2':
-        specifier: ^3.1161.0
-        version: 3.1161.0
-      '@aws-sdk/lib-storage':
-        specifier: ^3.1161.0
-        version: 3.1161.0(@aws-sdk/client-s3@3.1161.0)
-      '@aws-sdk/s3-request-presigner':
-        specifier: ^3.1161.0
-        version: 3.1161.0
-      '@faker-js/faker':
-        specifier: ^10.6.0
-        version: 10.6.0
-      '@fastify/cookie':
-        specifier: ^11.1.5
-        version: 11.1.5
-      '@fastify/multipart':
-        specifier: ^10.1.7
-        version: 10.1.7
-      '@fastify/swagger':
-        specifier: ^9.9.3
-        version: 9.9.3(supports-color@8.1.1)
-      '@fastify/websocket':
-        specifier: ^11.3.7
-        version: 11.3.7
-      '@ffmpeg-installer/ffmpeg':
-        specifier: ^1.1.0
-        version: 1.1.0
-      '@prisma/adapter-pg':
-        specifier: ^7.10.1
-        version: 7.10.1
-      '@prisma/client':
-        specifier: ^7.10.1
-        version: 7.10.1(prisma@7.10.1(@types/node@26.6.6)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@7.0.2))(typescript@7.0.2)
-      '@rateup/db':
-        specifier: workspace:*
-        version: link:../db
-      '@shopify/shopify-api':
-        specifier: ^15.0.1
-        version: 15.0.1
-      axios:
-        specifier: ^1.21.0
-        version: 1.21.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
-      bcrypt:
-        specifier: ^6.0.0
-        version: 6.0.0
-      bullmq:
-        specifier: ^6.6.0
-        version: 6.6.0(ioredis@6.0.0(supports-color@8.1.1))(pg@8.23.1)
-      cheerio:
-        specifier: ^1.2.0
-        version: 1.2.0
-      dayjs:
-        specifier: ^1.11.23
-        version: 1.11.23
-      dotenv:
-        specifier: ^18.0.9
-        version: 18.0.9
-      fastify:
-        specifier: ^5.12.8
-        version: 5.12.8
-      fastify-raw-body:
-        specifier: ^6.0.3
-        version: 6.0.3
-      fastify-type-provider-zod:
-        specifier: ^7.0.0
-        version: 7.0.0(@fastify/swagger@9.9.3(supports-color@8.1.1))(fastify@5.12.8)(openapi-types@12.1.3)(zod@4.6.7)
-      fluent-ffmpeg:
-        specifier: ^2.1.3
-        version: 2.1.3
-      form-data:
-        specifier: ^4.0.6
-        version: 4.0.6
-      google-spreadsheet:
-        specifier: ^5.3.0
-        version: 5.3.0(google-auth-library@11.1.0(supports-color@8.1.1))
-      googleapis:
-        specifier: ^189.0.0
-        version: 189.0.0(supports-color@8.1.1)
-      hucre:
-        specifier: ^1.3.0
-        version: 1.3.0
-      immer:
-        specifier: ^11.2.9
-        version: 11.2.9
-      ioredis:
-        specifier: ^6.0.0
-        version: 6.0.0(supports-color@8.1.1)
-      jose:
-        specifier: ^6.2.15
-        version: 6.2.15
-      kafkajs:
-        specifier: ^2.2.4
-        version: 2.2.4
-      libphonenumber-js:
-        specifier: ^1.13.15
-        version: 1.13.15
-      lodash:
-        specifier: ^4.18.1
-        version: 4.18.1
-      nanoid:
-        specifier: ^6.0.2
-        version: 6.0.2
-      nanoid-dictionary:
-        specifier: ^5.0.0
-        version: 5.0.0
-      nodemailer:
-        specifier: ^10.3.1
-        version: 10.3.1
-      pdf-lib:
-        specifier: ^1.17.1
-        version: 1.17.1
-      pg:
-        specifier: ^8.23.1
-        version: 8.23.1
-      pino:
-        specifier: ^10.4.0
-        version: 10.4.0
-      pino-pretty:
-        specifier: ^13.2.0
-        version: 13.2.0
-      prom-client:
-        specifier: ^15.1.3
-        version: 15.1.3
-      qrcode:
-        specifier: ^1.5.4
-        version: 1.5.4
-      razorpay:
-        specifier: ^2.9.8
-        version: 2.9.8(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
-      react:
-        specifier: 19.3.1
-        version: 19.3.1
-      react-dom:
-        specifier: 19.3.1
-        version: 19.3.1(react@19.3.1)
-      react-email:
-        specifier: 6.11.6
-        version: 6.11.6(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)
-      sharp:
-        specifier: ^0.35.5
-        version: 0.35.5(@types/node@26.6.6)
-      stripe:
-        specifier: ^22.6.2
-        version: 22.6.2(@types/node@26.6.6)
-      supertokens-node:
-        specifier: ^24.1.0
-        version: 24.1.0(supports-color@8.1.1)
-      tailwindcss:
-        specifier: ^4.3.4
-        version: 4.3.4
-      uuid:
-        specifier: ^14.0.3
-        version: 14.0.3
-      zod:
-        specifier: ^4.6.7
-        version: 4.6.7
-    devDependencies:
-      '@fastify/formbody':
-        specifier: ^9.0.1
-        version: 9.0.1
-      '@rateup/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
-      '@react-email/ui':
-        specifier: 6.11.6
-        version: 6.11.6(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.10.0)(@types/node@26.6.6)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
-      '@types/bcrypt':
-        specifier: ^6.0.0
-        version: 6.0.0
-      '@types/fluent-ffmpeg':
-        specifier: ^2.1.28
-        version: 2.1.28
-      '@types/http-errors':
-        specifier: ^2.0.5
-        version: 2.0.5
-      '@types/lodash':
-        specifier: ^4.17.27
-        version: 4.17.27
-      '@types/node':
-        specifier: ^26.6.6
-        version: 26.6.6
-      '@types/nodemailer':
-        specifier: ^8.0.2
-        version: 8.0.2
-      '@types/pg':
-        specifier: ^8.23.1
-        version: 8.23.1
-      '@types/qrcode':
-        specifier: ^1.5.6
-        version: 1.5.6
-      '@types/react':
-        specifier: 19.3.0
-        version: 19.3.0
-      '@types/react-dom':
-        specifier: 19.3.0
-        version: 19.3.0(@types/react@19.3.0)
-      '@types/ws':
-        specifier: ^8.18.2
-        version: 8.18.2
-      oxlint:
-        specifier: ^1.91.0
-        version: 1.91.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.5.0(@opentelemetry/api@1.10.0)(@types/node@26.6.6)(@vitest/ui@5.1.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(typescript@7.0.2)(yaml@2.9.1))
-      typescript:
-        specifier: ^7.0.2
-        version: 7.0.2
-      vitest:
-        specifier: ^5.1.0
-        version: 5.1.0(@opentelemetry/api@1.10.0)(@types/node@26.6.6)(@vitest/browser-preview@5.1.0)(@vitest/ui@5.1.0)(@voidzero-dev/vite-plus-core@1.5.0(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(typescript@7.0.2)(yaml@2.9.1))(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(typescript@7.0.2)(yaml@2.9.1)
 
   packages/tsconfig:
     dependencies:

@@ -2,9 +2,9 @@
 // whether it may send at all is decided by the claim in `fireCheckoutReminder`.
 import { Job, Worker } from "bullmq";
 
-import { log } from "@rateup/server/workers/shared/logger.js";
-import baseRedis from "@rateup/server/utils/redisConnection.js";
-import { fireCheckoutReminder } from "@rateup/server/modules/integrations/shopify/shopify.checkouts.service.js";
+import { log } from "@rateup/api/workers/shared/logger.js";
+import baseRedis from "@rateup/api/utils/redisConnection.js";
+import { fireCheckoutReminder } from "@rateup/api/modules/integrations/shopify/shopify.checkouts.service.js";
 
 const workerConnection = baseRedis.duplicate();
 

@@ -1,10 +1,10 @@
 import { Job, Worker } from "bullmq";
-import prisma from "@rateup/server/utils/prisma.js";
-import baseRedis from "@rateup/server/utils/redisConnection.js";
-import { UserPresenceMode } from "@rateup/server/generated/prisma/enums.js";
-import { updateUserAvailablityStatus } from "@rateup/server/modules/user/user.service.js";
-import { UserAvailabilityStatus } from "@rateup/server/modules/user/user.schema.js";
-import { log } from "@rateup/server/utils/logger.js";
+import prisma from "@rateup/api/utils/prisma.js";
+import baseRedis from "@rateup/api/utils/redisConnection.js";
+import { UserPresenceMode } from "@rateup/api/generated/prisma/enums.js";
+import { updateUserAvailablityStatus } from "@rateup/api/modules/user/user.service.js";
+import { UserAvailabilityStatus } from "@rateup/api/modules/user/user.schema.js";
+import { log } from "@rateup/api/utils/logger.js";
 
 const workerConnection = baseRedis.duplicate();
 
