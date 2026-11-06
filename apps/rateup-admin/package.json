@@ -4,9 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "vp dev",
     "build": "vp build",
     "start": "node .output/server/index.mjs",
-    "prepare": "vp config"
+    "typecheck": "vp check --no-fmt --no-lint"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
@@ -52,6 +53,5 @@
   },
   "engines": {
     "node": "26.x"
-  },
-  "packageManager": "pnpm@12.16.1"
+  }
 }

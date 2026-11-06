@@ -17,7 +17,7 @@ Tooling is [Vite+](https://viteplus.dev) (`vp`, installed globally); see the Vit
 end. `package.json` only keeps scripts that do something extra.
 
 ```bash
-vp install                    # also installs the git hooks (`prepare` runs `vp config`)
+vp install                    # run at the monorepo root; installs every app + the git hooks
 vp dev                        # dev server on port 4000 (fixed: the API's STAFF_CONSOLE_ORIGIN)
 vp check                      # format + lint + type check (--fix to fix)
 vp test run                   # pure src/**/*.test.ts modules, node environment
@@ -28,8 +28,10 @@ pnpm run start                # serve the build on $PORT
 Tests are configured by the `test` block in `vite.config.ts`; the app plugins are skipped while
 Vitest runs. `VITE_STAFF_MOCK=true` in `.env.local` signs in as a fake staff user (dev only).
 
-Git hooks (`.vite-hooks/`): pre-commit runs `vp staged` (`vp check --fix` on staged files, from the
-`staged` block of `vite.config.ts`); pre-push runs `vp check --no-fmt --no-lint` (type check).
+Git hooks live at the monorepo root (`.vite-hooks/`, rules in the root `vite.config.ts`):
+pre-commit runs `vp check --fix` on this app's staged files; pre-push runs every package's
+`typecheck` (here `vp check --no-fmt --no-lint`). Format and lint settings also live in the
+root `vite.config.ts`; this app's `vite.config.ts` only holds build, dev and test settings.
 
 ## Design language: RateUp Design System V2
 

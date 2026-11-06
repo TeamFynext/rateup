@@ -1,20 +1,23 @@
-name: prisma-migrate-dev
+name: prisma-migrate-prod
 on:
   push:
     paths:
-      - prisma/**
+      - apps/rateup-api/prisma/**
     branches:
-      - dev
+      - main
   workflow_dispatch:
 # The token is never used by these jobs; keep it read-only.
 permissions:
   contents: read
+defaults:
+  run:
+    working-directory: apps/rateup-api
 jobs:
   generate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      # Reads the pnpm version from package.json's packageManager field.
+      # Reads the pnpm version from the root package.json's packageManager field.
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
       - name: Setup Nodejs
@@ -23,7 +26,7 @@ jobs:
           node-version: 26.x
           cache: "pnpm"
       - name: Install
-        run: pnpm install --frozen-lockfile --ignore-scripts
+        run: pnpm install --frozen-lockfile --ignore-scripts --filter rateup-api
       - name: Generate Prisma Client
         run: pnpm exec prisma generate
         env:
@@ -34,7 +37,7 @@ jobs:
     needs: generate
     steps:
       - uses: actions/checkout@v7
-      # Reads the pnpm version from package.json's packageManager field.
+      # Reads the pnpm version from the root package.json's packageManager field.
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
       - name: Setup Nodejs
@@ -43,8 +46,8 @@ jobs:
           node-version: 26.x
           cache: "pnpm"
       - name: Install
-        run: pnpm install --frozen-lockfile --ignore-scripts
+        run: pnpm install --frozen-lockfile --ignore-scripts --filter rateup-api
       - name: Deploy Migrations
         run: pnpm exec prisma migrate deploy
         env:
-          DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}

@@ -10,7 +10,7 @@ The project uses Vite for development/build, Nitro for server output, and Tailwi
 - Vite+ (`vp`): Vite 8, Vitest, Oxlint and Oxfmt behind one CLI, with Nitro runtime output
 - Tailwind CSS
 - shadcn/ui built on Base UI (`@base-ui/react`, preferred for new UI) + existing Mantine components
-- Git hooks in `.vite-hooks/` (pre-commit formats staged files, pre-push type-checks)
+- Git hooks in the monorepo root's `.vite-hooks/` (pre-commit formats staged files, pre-push type-checks)
 
 ## Prerequisites
 

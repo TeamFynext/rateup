@@ -19,13 +19,13 @@
     "email:dev": "email dev -d src/emails -p 3002",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
-    "fmt": "oxfmt",
-    "fmt:check": "oxfmt --check",
+    "fmt": "vp fmt",
+    "fmt:check": "vp fmt --check",
     "test": "vitest --silent",
-    "prepare": "husky",
     "postinstall": "prisma generate",
     "backfill:wa-echoes": "tsx scripts/backfill-wa-echoes.ts",
-    "staff:add": "tsx scripts/staff-add.ts"
+    "staff:add": "tsx scripts/staff-add.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1161.0",
@@ -98,9 +98,6 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@types/ws": "^8.18.2",
-    "husky": "^9.1.7",
-    "lint-staged": "^17.6.0",
-    "oxfmt": "^0.76.0",
     "oxlint": "^1.91.0",
     "prisma": "^7.10.1",
     "prisma-json-types-generator": "^6.0.0",
@@ -108,11 +105,7 @@
     "typescript": "^7.0.2",
     "vitest": "^5.1.0"
   },
-  "lint-staged": {
-    "*.{ts,js,md,json}": "oxfmt"
-  },
   "engines": {
     "node": "26.x"
-  },
-  "packageManager": "pnpm@12.16.1"
+  }
 }

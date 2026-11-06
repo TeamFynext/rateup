@@ -1,8 +1,12 @@
-# pnpm settings for this single-package repo (pnpm 11+ reads them here, not from package.json).
-# Dependencies may only run install/build scripts when listed below.
-allowBuilds:
-  browser-tabs-lock: true
-  core-js: true
+packages:
+  - apps/*
+  - packages/*
+  - tools/*
+
+# rateup-app (Expo / React Native) needs the flat, npm-style node_modules layout, and pnpm
+# applies the linker to the whole workspace. Every app ran on this layout under npm.
+nodeLinker: hoisted
+
 catalog:
   vite: npm:@voidzero-dev/vite-plus-core@1.5.0
   vite-plus: 1.5.0
@@ -13,6 +17,18 @@ peerDependencyRules:
     - vite
   allowedVersions:
     vite: "*"
+
+# Dependencies may only run install/build scripts when listed below.
+allowBuilds:
+  "@ffmpeg-installer/linux-x64": true
+  "@prisma/engines": true
+  bcrypt: true
+  browser-tabs-lock: true
+  core-js: true
+  esbuild: true
+  msgpackr-extract: true
+  prisma: true
+
 # What each dependency may do beyond installing; `pnpm approve` writes this.
 permissions:
   "@tanstack/devtools-vite":
@@ -25,6 +41,11 @@ permissions:
     skills: true
   "@tanstack/react-table":
     skills: true
+  expo-sqlite:
+    skills: true
+  prisma-json-types-generator:
+    skills: true
+
 # Agent skills shipped inside dependencies (`pnpm approve`) are linked into both folders:
 # .agents/skills for Codex and other agents, .claude/skills for Claude Code.
 skills:

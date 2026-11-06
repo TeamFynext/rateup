@@ -30,7 +30,7 @@ Tooling is [Vite+](https://viteplus.dev) (`vp`, installed globally); see the Vit
 end. `package.json` only keeps scripts that do something extra.
 
 ```bash
-vp install                    # also installs the git hooks (`prepare` runs `vp config`)
+vp install                    # run at the monorepo root; installs every app + the git hooks
 vp dev                        # dev server
 vp check                      # format + lint + type check (--fix to fix)
 vp check --no-fmt --no-lint   # type check only
@@ -43,8 +43,10 @@ pnpm run check:tokens         # design-token colour debt (scripts/check-design-t
 pnpm run translate            # extract i18n keys and auto-translate locales
 ```
 
-Git hooks (`.vite-hooks/`): pre-commit runs `vp staged` (formats staged files, from the `staged`
-block of `vite.config.ts`); pre-push runs `vp check --no-fmt --no-lint` (type check).
+Git hooks live at the monorepo root (`.vite-hooks/`, rules in the root `vite.config.ts`):
+pre-commit runs `vp staged` (formats this app's staged files); pre-push runs every package's
+`typecheck` (here `vp check --no-fmt --no-lint`). Format and lint settings also live in the
+root `vite.config.ts`; this app's `vite.config.ts` only holds build, dev and test settings.
 
 ## Key Conventions
 

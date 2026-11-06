@@ -21,8 +21,9 @@ pnpm exec prisma generate     # after any schema change
 pnpm run staff:add <email> --owner   # first staff-console owner
 ```
 
-Git hooks (Husky, `.husky/`): pre-commit formats staged files with oxfmt via lint-staged;
-pre-push runs `pnpm run build`, so type errors block a push.
+Git hooks live at the monorepo root (`.vite-hooks/`, rules in the root `vite.config.ts`):
+pre-commit formats staged files with `vp fmt`; pre-push runs every package's `typecheck`
+(here `tsc --noEmit`), so type errors block a push.
 
 ## Tech Stack
 
@@ -347,8 +348,8 @@ its Kafka consumer became `kafka/consumers/status.consumer.ts`, and its `src/uti
 - **Prisma**: run `pnpm exec prisma generate` after any schema change; migrations live in
   `prisma/`. Import types and enums from `generated/prisma/client.js` by relative path, not
   `@prisma/client`.
-- **Formatting/linting**: oxfmt + oxlint, never Prettier or ESLint. The pre-commit hook only
-  formats, so run `pnpm run lint` yourself.
+- **Formatting/linting**: `vp fmt` (oxfmt, root `vite.config.ts`) + oxlint (`.oxlintrc.json`),
+  never Prettier or ESLint. The pre-commit hook only formats, so run `pnpm run lint` yourself.
 - **Node.js 26.x (LTS)** is required (`engines` in package.json). Configuration comes from `.env`.
 - **External partner API**: two versions, distinct from the first-party `/api/*` routes, with
   token auth via the `apiAccessToken` module. `src/external/v2/` (`/api/external/v2`, current)

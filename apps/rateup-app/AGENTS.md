@@ -19,8 +19,9 @@ pnpm run brand:assets         # regenerate icons and splash from assets/brand/ (
 pnpm run ota:android "msg"    # production OTA update (ota:ios for iOS), see below
 ```
 
-Git hooks (Husky, `.husky/`): pre-commit runs lint-staged (`.lintstagedrc.mjs`: `oxlint --fix`
-and `oxfmt` on staged files, skipping `.agents/`); pre-push runs `pnpm run typecheck`.
+Git hooks live at the monorepo root (`.vite-hooks/`, rules in the root `vite.config.ts`):
+pre-commit runs `oxlint --fix` (this app's `.oxlintrc.json`) and `vp fmt` on staged files,
+skipping `.agents/`; pre-push runs every package's `typecheck`.
 
 ## Project Overview
 

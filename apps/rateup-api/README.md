@@ -88,7 +88,7 @@ generated/              # Generated Prisma client
 
 ## Conventions
 
-- **Linting & Formatting:** oxlint + oxfmt, enforced on staged files via lint-staged + husky.
+- **Linting & Formatting:** oxlint + `vp fmt`; staged files are formatted by the monorepo's Vite+ pre-commit hook.
 - **Prisma:** Run `pnpm exec prisma generate` after schema changes (also runs automatically on `pnpm install`).
 - **ESM:** The project uses ES modules (`"type": "module"`).
 

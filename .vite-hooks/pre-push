@@ -1,0 +1,2 @@
+# Type errors in any app block a push. Each package defines what "typecheck" means.
+vp run -r typecheck

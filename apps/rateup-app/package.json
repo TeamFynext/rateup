@@ -16,9 +16,8 @@
     "test:watch": "vitest",
     "lint:ox": "oxlint src",
     "lint:ox:fix": "oxlint src --fix",
-    "format": "oxfmt .",
-    "format:check": "oxfmt --check .",
-    "prepare": "husky",
+    "format": "vp fmt .",
+    "format:check": "vp fmt --check .",
     "brand:assets": "node scripts/generate-brand-assets.mjs",
     "ota:android": "node scripts/ota-update.mjs android",
     "ota:ios": "node scripts/ota-update.mjs ios"
@@ -107,9 +106,6 @@
   "devDependencies": {
     "@types/lodash": "^4.17.24",
     "@types/react": "^19.2.14",
-    "husky": "^9.1.7",
-    "lint-staged": "^17.3.0",
-    "oxfmt": "^0.74.0",
     "oxlint": "^1.77.0",
     "sharp": "^0.35.4",
     "typescript": "~6.0.3",
@@ -117,6 +113,5 @@
   },
   "engines": {
     "node": "26.x"
-  },
-  "packageManager": "pnpm@12.16.1"
+  }
 }

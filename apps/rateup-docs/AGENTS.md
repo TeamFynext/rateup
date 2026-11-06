@@ -13,7 +13,7 @@ Tooling is [Vite+](https://viteplus.dev) (`vp`, installed globally); see the Vit
 end. `package.json` only keeps scripts that do something extra.
 
 ```bash
-vp install                    # also installs the git hooks (`prepare` runs `vp config`)
+vp install                    # run at the monorepo root; installs every app + the git hooks
 vp dev                        # local dev server
 vp check                      # format + lint + type check (--fix to fix; MDX pages are not formatted)
 pnpm run build                # production build: must pass before committing
@@ -23,8 +23,10 @@ pnpm run start                # serve the built output
 Stack: TanStack Start + fumadocs (`fumadocs-core`, `fumadocs-mdx`, `fumadocs-ui`), Vite, Tailwind v4.
 Content is discovered by glob, so new files need no registration beyond `meta.json`.
 
-Git hooks (`.vite-hooks/`): pre-commit runs `vp staged` (`vp check --fix` on staged files, from the
-`staged` block of `vite.config.ts`); pre-push runs `vp check --no-fmt --no-lint` (type check).
+Git hooks live at the monorepo root (`.vite-hooks/`, rules in the root `vite.config.ts`):
+pre-commit runs `vp check --fix` on this app's staged files; pre-push runs every package's
+`typecheck` (here `vp check --no-fmt --no-lint`). Format and lint settings also live in the
+root `vite.config.ts`; this app's `vite.config.ts` only holds build, dev and test settings.
 
 ---
 
