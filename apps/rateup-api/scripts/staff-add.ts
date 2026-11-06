@@ -3,14 +3,14 @@
  * there is deliberately no bootstrap env var, which would be a standing path to owner if
  * the StaffUser table were ever emptied.
  *
- *   npm run staff:add -- someone@rateup.app            # a regular staff member
- *   npm run staff:add -- someone@rateup.app --owner    # can manage the staff list
- *   npm run staff:add -- someone@rateup.app --name "Some One"
+ *   pnpm run staff:add someone@rateup.app            # a regular staff member
+ *   pnpm run staff:add someone@rateup.app --owner    # can manage the staff list
+ *   pnpm run staff:add someone@rateup.app --name "Some One"
  *
  * With NODE_ENV=development any domain is accepted, and Google sign-in then takes it too:
- *   npm run staff:add -- you@gmail.com --owner
+ *   pnpm run staff:add you@gmail.com --owner
  *
- * Against a deployed database: `railway run npm run staff:add -- …`.
+ * Against a deployed database: `railway run pnpm run staff:add …`.
  */
 import "dotenv/config";
 
@@ -31,7 +31,7 @@ async function main() {
   const domain = (process.env.STAFF_GOOGLE_HD ?? "rateup.app").toLowerCase();
 
   if (!email || !/^[^@\s]+@[^@\s]+$/.test(email)) {
-    throw new Error('Usage: npm run staff:add -- <email> [--owner] [--name "Full Name"]');
+    throw new Error('Usage: pnpm run staff:add <email> [--owner] [--name "Full Name"]');
   }
   // Locally, any address may be added; Google sign-in accepts any domain there too
   // (staffSignInDomain). Only an explicit NODE_ENV=development opens this: production does

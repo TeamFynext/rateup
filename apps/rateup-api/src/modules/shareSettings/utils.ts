@@ -44,7 +44,8 @@ interface MultipartFilePart {
   fieldname: string;
   mimetype: string;
   toBuffer: () => Promise<Buffer>;
-  value?: UploadedFilePart;
+  // @fastify/multipart types this as `unknown`; onFile always sets an UploadedFilePart.
+  value?: unknown;
 }
 
 const ALLOWED_LOGO_TYPES: Record<string, string> = {
@@ -74,7 +75,7 @@ async function onFile(part: MultipartFilePart) {
   if (buff.length > MAX_LOGO_BYTES) {
     throw new LogoUploadError("Logo is larger than 2MB");
   }
-  part.value = {
+  const uploaded: UploadedFilePart = {
     fileBuffer: buff,
     filename,
     fieldname,
@@ -84,6 +85,7 @@ async function onFile(part: MultipartFilePart) {
     // extension. The extension is derived from the allowlisted type instead.
     fileExtension: ALLOWED_LOGO_TYPES[mimetype]!,
   };
+  part.value = uploaded;
 }
 
 async function uploadFileToS3(fileBuffer: Buffer, mimetype: string, fileExtension: string) {

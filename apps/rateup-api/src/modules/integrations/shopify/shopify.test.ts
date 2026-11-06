@@ -86,6 +86,10 @@ vi.mock("../../whatsapp/whatsappSurvey/wasurvey.controller.js", () => ({
   wait: vi.fn(),
 }));
 vi.mock("../../stats/stats.service.js", () => ({ updateMonthlyStat: vi.fn() }));
+// The fake Redis above is not a real client, so a real BullMQ queue would open its own
+// connection to localhost:6379 and the dev worker would act on the job (the uninstall test
+// sent "integration.error" notifications for the fixture org).
+vi.mock("../../notification/notify.js", () => ({ notify: vi.fn() }));
 vi.mock("../../whatsapp/automatedReply/wa_automatedReply.utils.js", () => ({
   checkAndExecuteRuleByTriggerEvent: vi.fn(),
 }));
