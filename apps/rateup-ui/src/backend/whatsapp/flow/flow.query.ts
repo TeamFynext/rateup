@@ -1,0 +1,322 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+import { surveyKeys } from "@/backend/surveys/survey.keys";
+import type { NewPendingMessage } from "@/store/pendingMessages.ts";
+import { usePendingSend } from "@/store/pendingMessages.ts";
+import { getApiErrorData, getApiErrorMessage } from "@/utils/apiError.ts";
+
+import type { cloneFlowsProps, createFlowInput } from "./flow.api";
+import {
+  cloneAndDeprecateFlows,
+  cloneFlows,
+  createFlow,
+  deleteFlow,
+  deprecateFlow,
+  getFlowPreview,
+  getFlowTemplates,
+  getUnsyncedFlows,
+  getWaFlowFromDb,
+  getWaFlowJson,
+  getWaFlowMetrics,
+  getWaFlowsFromDb,
+  getWaFlowsFromWa,
+  importFlows,
+  publishFlow,
+  pushFlowJsonToWa,
+  sendFlow,
+  updateFlow,
+  updateFlowMetaData,
+} from "./flow.api";
+
+/**
+ * @param whatsappSettingsPhoneId narrows the list to the flows that live on that
+ *   number's WABA — see getWaFlowsFromDb. Part of the query key, so switching numbers
+ *   refetches rather than reusing the previous number's flows.
+ */
+export const useWaFlowsFromDb = (enabled = true, whatsappSettingsPhoneId?: string) =>
+  useQuery({
+    // "list" keeps this apart from useWaFlowFromDb's ["flow", "db", dbFlowId].
+    queryKey: ["flow", "db", "list", whatsappSettingsPhoneId ?? null],
+    queryFn: () => getWaFlowsFromDb(whatsappSettingsPhoneId),
+    enabled,
+  });
+
+export const useWaFlowsFromWa = () =>
+  useQuery({
+    queryKey: ["flow", "wa"],
+    queryFn: getWaFlowsFromWa,
+  });
+
+/**
+ * The ready-made flows for a category. The catalogue never changes between deploys, so it does
+ * not need refetching.
+ *
+ * `undefined` means there is nothing to load and the query stays idle. Passing the category
+ * rather than gating a fixed key on `enabled` matters: a disabled query still hands back
+ * whatever is cached under its key, so a constant key would serve the loyalty catalogue to a
+ * run for a purpose that has no templates.
+ */
+export const useFlowTemplates = (category: string | undefined, enabled = true) =>
+  useQuery({
+    queryKey: ["flow", "templates", category ?? null],
+    // Never reached without a category: the query is disabled.
+    queryFn: () => getFlowTemplates(category ?? ""),
+    enabled: enabled && category !== undefined,
+    staleTime: Infinity,
+  });
+
+export const useUnsyncedFlows = (enabled: boolean) =>
+  useQuery({
+    queryKey: ["flow", "wa"],
+    queryFn: getUnsyncedFlows,
+    enabled,
+  });
+
+export const useWaFlowFromDb = (dbFlowId: string) =>
+  useQuery({
+    queryKey: ["flow", "db", dbFlowId],
+    queryFn: () => getWaFlowFromDb(dbFlowId),
+    enabled: !!dbFlowId,
+  });
+
+export const useWaFlowJson = (flowId: string) =>
+  useQuery({
+    queryKey: ["flow", "wa", flowId],
+    queryFn: () => getWaFlowJson(flowId),
+    enabled: !!flowId,
+  });
+
+export const useWaFlowPreview = (dbFlowId: string) =>
+  useQuery({
+    queryKey: ["flow", "preview", dbFlowId],
+    queryFn: () => getFlowPreview(dbFlowId),
+    enabled: !!dbFlowId,
+  });
+
+export const useWaFlowMetrics = (dbFlowId: string, enabled: boolean) =>
+  useQuery({
+    queryKey: ["flow-metrics", dbFlowId],
+    queryFn: () => getWaFlowMetrics(dbFlowId),
+    enabled,
+  });
+
+export const useImportFlowsMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      waFlowIds,
+      teamIds,
+      mapData,
+    }: {
+      waFlowIds: string[];
+      teamIds: string[];
+      mapData: object;
+    }) => importFlows(waFlowIds, teamIds, mapData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["flow"] });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.all() });
+      toast.success("Flows Imported Successfully");
+    },
+    onError: (error) => {
+      toast.error(error?.message || "Error importing flows");
+    },
+  });
+};
+
+export const useCloneAndDeprecateFlowsMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (flowId: string) => cloneAndDeprecateFlows(flowId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["flow"] });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.all() });
+      toast.success("Copy & Renew Flow Successfully", {
+        id: "copy-renew",
+      });
+    },
+    onError: (error) => {
+      toast.error(error?.message || "Error Copy & Renew Flow", {
+        id: "copy-renew",
+      });
+    },
+  });
+};
+
+export const useCloneFlowsMutation = (onSucess: () => void) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ flowId, teamId }: cloneFlowsProps) => cloneFlows({ flowId, teamId }),
+    onSuccess: () => {
+      onSucess();
+      queryClient.invalidateQueries({ queryKey: ["flow"] });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.all() });
+      toast.success("Clone Flow Successfully", {
+        id: "copy",
+      });
+    },
+    onError: (error) => {
+      toast.error(error?.message || "Error Clone Flow", {
+        id: "copy",
+      });
+    },
+  });
+};
+
+export const useCreateFlowMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: createFlowInput) => createFlow(data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["flow"] });
+      qc.invalidateQueries({ queryKey: surveyKeys.all() });
+      toast.success("Flow created");
+    },
+    onError: (error) => {
+      toast.error(error?.message || (error?.message ?? "Error creating flows"));
+    },
+  });
+};
+export const useUpdateFlowMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { dbFlowId: string; data: Partial<Omit<DbFlow, "dbFlowId">> }) =>
+      updateFlow(data.dbFlowId, data.data),
+    onSuccess: () => {
+      toast.success("Saved Changes..", {
+        id: "flow-update",
+      });
+      qc.invalidateQueries({ queryKey: ["flow"] });
+      qc.invalidateQueries({ queryKey: surveyKeys.all() });
+    },
+    onError: (error) => {
+      toast.error(error?.message || "Error saving flows");
+    },
+  });
+};
+
+export const useDeleteFlowMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: deleteFlow,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["flow"] });
+      qc.invalidateQueries({ queryKey: surveyKeys.all() });
+      toast.success("Flow deleted");
+    },
+    onError: (error) => {
+      toast.error(error?.message || "Error deleting flows");
+    },
+  });
+};
+
+export const usePublishFlowMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: publishFlow,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["flow"] });
+      toast.success("Flow Published Successfully");
+    },
+    onError: (error) => {
+      toast.error(error?.message || "Error publishing flows");
+    },
+  });
+};
+
+export const useDeprecateFlowMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: deprecateFlow,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["flow"] });
+      toast.success("Flow Deprecated Successfully");
+    },
+    onError: (error) => {
+      toast.error(error?.message || "Error deprecating flows");
+    },
+  });
+};
+
+export const useSendFlowToUser = (
+  phone: string | undefined,
+  contactId?: string,
+  rowKey?: string,
+) => {
+  const pending = usePendingSend(rowKey, contactId);
+  return useMutation({
+    mutationFn: ({
+      dbFlowId,
+      teamId,
+      flowId,
+      whatsappSettingsPhoneId,
+    }: {
+      dbFlowId: string;
+      teamId: string | null;
+      flowId: string | undefined;
+      whatsappSettingsPhoneId: string | undefined;
+      /** The card to draw while this is in flight; not part of the request. */
+      pending?: NewPendingMessage;
+    }) =>
+      sendFlow(dbFlowId, phone ?? "", teamId ?? "", flowId ?? "", whatsappSettingsPhoneId ?? ""),
+    onMutate: (variables) => ({ pendingId: pending.begin(variables.pending) }),
+    onSuccess: (_data, _variables, context) => {
+      toast.success("Flow sent");
+      // Invalidates the thread itself, then takes the pending card back down.
+      return pending.settle(context?.pendingId);
+    },
+    onError: (error, _variables, context) => {
+      pending.rollback(context?.pendingId);
+      toast.error(error?.message || "Error sending flow");
+    },
+  });
+};
+
+export const useUpdateFlowMetaDataMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { dbFlowId: string; data: { name: string; anonymous: boolean } }) =>
+      updateFlowMetaData(data.dbFlowId, data.data),
+    onSuccess: () => {
+      toast.success("Saved Changes..", {
+        id: "flow-meta-data-update",
+      });
+      qc.invalidateQueries({ queryKey: ["flow"] });
+      qc.invalidateQueries({ queryKey: surveyKeys.all() });
+    },
+    onError: (error) => {
+      toast.error(error?.message || "Error saving flows");
+    },
+  });
+};
+
+export const usePushToWaMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: pushFlowJsonToWa,
+    onSuccess: (_, dbFlowId) => {
+      toast.success("Flow saved to WhatsApp successfully");
+      qc.invalidateQueries({ queryKey: ["flow", "db", dbFlowId] });
+    },
+    // The builder saves unfinished elements on purpose, so this is where the user
+    // finds out what WhatsApp still needs filled in.
+    onError: (error) => {
+      const errors = getApiErrorData(error)?.errors ?? [];
+      const shown = errors.slice(0, MAX_LISTED_FLOW_ERRORS);
+      const more = errors.length - shown.length;
+      toast.error(getApiErrorMessage(error, "Couldn't save the flow to WhatsApp"), {
+        id: "flow-push-to-wa",
+        description:
+          shown.length > 1
+            ? [...shown.map((line) => `• ${line}`), ...(more > 0 ? [`and ${more} more`] : [])].join(
+                "\n",
+              )
+            : undefined,
+        classNames: { description: "whitespace-pre-line" },
+        duration: 15000,
+      });
+    },
+  });
+};
+
+const MAX_LISTED_FLOW_ERRORS = 5;

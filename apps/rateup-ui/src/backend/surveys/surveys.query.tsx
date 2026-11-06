@@ -1,0 +1,578 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+import { surveyKeys } from "@/backend/surveys/survey.keys";
+import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
+import type { RequestPayload } from "@/types/api.ts";
+
+import { getTeamSurveys } from "../team/team.api";
+import {
+  cloneSurvey,
+  createSurvey,
+  createSurveyLandingPage,
+  createSurveyVariable,
+  deleteSurvey,
+  deleteSurveyVariable,
+  getActiveSurveysSummary,
+  getLandingpage,
+  getNPSSurveyResponseForGraph,
+  getPhoneNumberFromSurveyTeamMapId,
+  getPublicSurvey,
+  getPublicSurveyGoogleLink,
+  getSurvey,
+  getSurveyByLandingId,
+  getSurveyLandings,
+  getSurveyResponseForGraph,
+  getSurveys,
+  getSurveysSummary,
+  getSurveyStats,
+  getSurveyStatsBySurveyTeamMapId,
+  getSurveyTemplates,
+  getSurveyVariables,
+  getSurveyWithQuestions,
+  getWhatsappSurveys,
+  sendEmail,
+  sendOTPEmail,
+  updateReviewLinkStatsOnSurvey,
+  updateSurvey,
+  updateSurveyCompleted,
+  updateSurveyGoogleLink,
+  updateSurveyLandingPage,
+  updateSurveyPassword,
+  updateSurveyStarted,
+  updateSurveyVariable,
+  updateSurveyVisited,
+  validateOTP,
+  verifySurveyPassword,
+} from "./survey.api";
+
+export const useSurvey = (surveyId: string) => {
+  return useQuery({
+    queryKey: surveyKeys.detail(surveyId),
+    enabled: !!surveyId,
+    queryFn: () => getSurvey(surveyId),
+    refetchOnWindowFocus: "always",
+  });
+};
+
+// ------------get landing page -----------
+export const useLandingPage = (LandingpageId: string) =>
+  useQuery({
+    enabled: !!LandingpageId,
+    queryKey: surveyKeys.detail(LandingpageId),
+    queryFn: () => getLandingpage(LandingpageId),
+  });
+
+export const useSurveysBylandingId = (landingId: string) =>
+  useQuery({
+    enabled: !!landingId,
+    queryKey: ["landingSurveys", landingId],
+    queryFn: () => getSurveyByLandingId(landingId),
+  });
+
+// ------------whatsapp survey --------------
+// ----@author:harshad-----------
+
+export const useWhatsappSurveys = (enabled: boolean) => {
+  return useQuery({
+    enabled: enabled,
+    queryKey: surveyKeys.whatsapp(),
+    queryFn: getWhatsappSurveys,
+  });
+};
+
+export const usePublicSurvey = (surveyId: string) => {
+  return useQuery({
+    enabled: !!surveyId,
+    queryKey: ["public-survey", surveyId],
+    queryFn: () => getPublicSurvey(surveyId),
+  });
+};
+
+export const usePhoneFromSurveyTeamMapId = (surveyTeamMapId: string) =>
+  useQuery({
+    enabled: !!surveyTeamMapId,
+    queryKey: whatsappKeys.settings(),
+    queryFn: () => getPhoneNumberFromSurveyTeamMapId(surveyTeamMapId),
+  });
+
+export const usePublicSurveyGoogleLink = (surveyTeamMapId: string) =>
+  useQuery({
+    enabled: !!surveyTeamMapId,
+    queryKey: ["public-survey-google-link", surveyTeamMapId],
+    queryFn: () => getPublicSurveyGoogleLink(surveyTeamMapId),
+  });
+
+// export const useSurveys = (teamIsSelected) =>
+//   useQuery({
+//     enabled: !teamIsSelected,
+//     queryKey: surveyKeys.all(),
+//     queryFn: getSurveys,
+//   });
+// --------------survey landing pages----------
+export const useSurveysLanding = (_teamIsSelected?: boolean) =>
+  useQuery({
+    enabled: true,
+    queryKey: surveyKeys.landing(),
+    queryFn: getSurveyLandings,
+  });
+
+// export function useSurveysLanding(queryClient) {
+//   return useQuery(["surveysLanding"], getSurveyLandings, {
+//     //refetchOnWindowFocus: "always",
+//     //refetchOnMount: "always",
+//     initialData: () => queryClient.getQueryData(["surveysLanding"]),
+//     onSuccess: (data) => {},
+//   });
+// }
+
+export const useSurveyTemplates = (surveyType: string) => {
+  return useQuery({
+    queryKey: surveyKeys.templates(surveyType),
+    queryFn: () => getSurveyTemplates(surveyType),
+  });
+};
+
+export const useSurveys = (enabled: boolean = true) => {
+  return useQuery({
+    queryKey: surveyKeys.all(),
+    queryFn: getSurveys,
+    enabled,
+  });
+};
+
+export const useSurveysWithQuestions = (specificTeamIsSelected: boolean) => {
+  return useQuery({
+    enabled: !specificTeamIsSelected,
+    queryKey: surveyKeys.withQuestions(),
+    queryFn: getSurveyWithQuestions,
+  });
+};
+
+export const useSurveysSummary = () => {
+  return useQuery({
+    queryKey: surveyKeys.summary(),
+    queryFn: getActiveSurveysSummary,
+  });
+};
+
+export const useAllSurveysSummary = () => {
+  return useQuery({
+    queryKey: ["allSurveysSummary"],
+    queryFn: getSurveysSummary,
+  });
+};
+
+export const useSurveysByTeam = (teamId: string, specificTeamIsSelected: boolean) =>
+  useQuery({
+    enabled: specificTeamIsSelected,
+    queryKey: surveyKeys.byTeam(teamId),
+    queryFn: async () => (await getTeamSurveys(teamId)).data as Array<Survey>,
+  });
+
+export const useCreateSurveyMutation = () => {
+  const queryClient = useQueryClient();
+  const createMutation = useMutation({
+    mutationFn: createSurvey,
+    onSuccess: (_data) => {
+      toast.success("Survey Created...!", {
+        id: "load-data",
+      });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.whatsapp() });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.all() });
+    },
+    onError: (error) => {
+      toast.error(error?.message, {
+        id: "load-data",
+      });
+    },
+  });
+
+  return createMutation;
+};
+
+// --------------create survey landing page query-----------------
+interface LandingProps {
+  close: () => void;
+  resetForm: () => void;
+  setIsCreating: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+export const useCreateSurveyLandingPageMutation = ({
+  close,
+  resetForm,
+  setIsCreating,
+}: LandingProps) => {
+  const queryClient = useQueryClient();
+  const createMutation = useMutation({
+    mutationFn: createSurveyLandingPage,
+    onSuccess: () => {
+      toast.success("Landing page created", {
+        id: "load-data",
+      });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.landing() });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.all() });
+      close();
+      setIsCreating(false);
+      resetForm();
+    },
+    onError: (error) => {
+      toast.error(error?.message, {
+        id: "load-data",
+      });
+    },
+  });
+
+  return createMutation;
+};
+
+// -------update landinf page -------------
+
+interface UpdateLandingProps {
+  close: () => void;
+  resetForm: () => void;
+  setIsCreating: React.Dispatch<React.SetStateAction<boolean>>;
+}
+export const useUpdateSurveyLandingPageMutation = ({
+  close,
+  resetForm,
+  setIsCreating,
+}: UpdateLandingProps) => {
+  const queryClient = useQueryClient();
+  const updateMutation = useMutation({
+    mutationFn: updateSurveyLandingPage,
+    onSuccess: () => {
+      toast.success("Survey Landing Page Updated...!", {
+        id: "load-data",
+      });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.landing() });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.all() });
+      close();
+      setIsCreating(false);
+      resetForm();
+    },
+    onError: (error) => {
+      toast.error(error?.message, {
+        id: "load-data",
+      });
+    },
+  });
+
+  return updateMutation;
+};
+
+interface CloneProps {
+  close: () => void;
+  selectedTeamId: string;
+}
+
+export function useCloneSurveyMutation({ close, selectedTeamId }: CloneProps) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, teamIds }: { id: string; teamIds: string[] }) => cloneSurvey(id, teamIds),
+    onSuccess: (_data, _variables) => {
+      toast.success("Survey Copy created!", {
+        id: "load-data",
+      });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.byTeam(selectedTeamId) });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.all() });
+      close();
+    },
+    onError: (error) => {
+      console.error("Error Survey Clone:", error.message);
+      toast.error(error?.message, {
+        id: "load-data",
+      });
+    },
+  });
+}
+
+export function useUpdateSurveyPwdMutation(surveyId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: updateSurveyPassword,
+    onSuccess: () => {
+      toast.success("Sucessfully updated Password Protection ", {
+        id: "load-data",
+      });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(surveyId) });
+    },
+    onError: (error) => {
+      console.error("Error Password Protection:", error.message);
+      toast.error(error?.message, {
+        id: "load-data",
+      });
+    },
+  });
+}
+
+export function useVerifySurveyPwdMutation(
+  surveyId: string,
+  password: string,
+  close: () => void,
+  setIsPasswordVerified: (verified: boolean) => void,
+) {
+  return useMutation({
+    mutationFn: () => handleSurveyVerifyPwd(surveyId, password),
+    onSuccess: (_response) => {
+      toast.success("Start attending the survey. ", {
+        id: "load-data",
+      });
+      setIsPasswordVerified(true);
+      close();
+    },
+    onError: (error) => {
+      console.error("Error Survey Login", error.message);
+      toast.error(error?.message, {
+        id: "load-data",
+      });
+    },
+  });
+}
+
+async function handleSurveyVerifyPwd(surveyId: string, password: string) {
+  const data = { password: password };
+  return verifySurveyPassword(surveyId, data);
+}
+
+export function useEditSurveyMutation(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: RequestPayload) => updateSurvey(id, data),
+    onSuccess: () => {
+      toast.success("Survey updated", {
+        id: "load-data",
+      });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.all() });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.questions(id) });
+    },
+    onError: (error) => {
+      console.error("Error Survey Update:", error.message);
+      toast.error(error?.message, {
+        id: "load-data",
+      });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.root() });
+    },
+  });
+}
+
+export const useUpdateSurveyGoogleLinkMutation = (
+  surveyTeamMapId: string,
+  setLinkUpdateStatus: (value: boolean) => void,
+) => {
+  const updateMutation = useMutation({
+    mutationFn: ({ data }: { data: RequestPayload }) => {
+      return updateSurveyGoogleLink(surveyTeamMapId, data);
+    },
+    onSuccess: (_data) => {
+      toast.dismiss();
+      setLinkUpdateStatus(true);
+    },
+    onError: (err) => {
+      console.error(err);
+      toast.error("Error updating google link");
+      setLinkUpdateStatus(false);
+    },
+  });
+
+  return updateMutation;
+};
+
+export function useUpdateVisitedMutation(surveyId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => updateSurveyVisited(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(surveyId) });
+    },
+  });
+}
+
+export function useUpdateStartedMutation(surveyId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => updateSurveyStarted(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(surveyId) });
+    },
+  });
+}
+
+export function useUpdateCompletedMutation(surveyId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => updateSurveyCompleted(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(surveyId) });
+    },
+  });
+}
+
+export function useUpdateReviewLinkStatsOnSurveyMutation(surveyId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => updateReviewLinkStatsOnSurvey(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(surveyId) });
+    },
+  });
+}
+
+export const useDeleteSurveyMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (surveyId: string) => deleteSurvey(surveyId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: surveyKeys.all() });
+    },
+  });
+};
+
+export function useUpdateSurveyMutation() {
+  const queryClient = useQueryClient();
+  const surveyUpdateMutation = useMutation({
+    mutationFn: ({ surveyId, data }: { surveyId: string; data: RequestPayload }) =>
+      updateSurvey(surveyId, data),
+    onSuccess: () => {
+      toast.success("Survey updated");
+      queryClient.invalidateQueries({ queryKey: surveyKeys.all() });
+    },
+  });
+  return surveyUpdateMutation;
+}
+
+export const useGetSurveyStatsBySurveyTeamMapId = (surveyTeamMapId: string) => {
+  return useQuery({
+    enabled: !!surveyTeamMapId,
+    queryKey: surveyKeys.stats(surveyTeamMapId),
+    queryFn: () => getSurveyStatsBySurveyTeamMapId(surveyTeamMapId),
+  });
+};
+
+export const useGetSurveyStats = (surveyId: string) => {
+  return useQuery({
+    queryFn: () => getSurveyStats(surveyId),
+    queryKey: ["SurveyStats", surveyId],
+    enabled: !!surveyId,
+  });
+};
+
+export const useGetSurveyVariables = (surveyId: string, isPublic?: boolean) => {
+  return useQuery({
+    queryKey: surveyKeys.variables(surveyId),
+    queryFn: () => getSurveyVariables(surveyId, isPublic),
+    enabled: !!surveyId,
+  });
+};
+
+export const useCreateSurveyVariableMutation = (surveyId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createSurveyVariable,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: surveyKeys.variables(surveyId),
+      });
+      toast.success("Variable created successfully");
+    },
+    onError: (error) => {
+      toast.error(error?.message || `Error creating variable`);
+    },
+  });
+};
+
+export const useUpdateSurveyVariableMutation = (surveyId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: updateSurveyVariable,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: surveyKeys.variables(surveyId),
+      });
+      toast.success("Variable updated successfully");
+    },
+    onError: (error) => {
+      toast.error(error?.message || `Error updating variable`);
+    },
+  });
+};
+
+export const useDeleteSurveyVariableMutation = (surveyId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteSurveyVariable,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: surveyKeys.variables(surveyId),
+      });
+      toast.success("Variable deleted successfully");
+    },
+    onError: (error) => {
+      toast.error(error?.message || `Error deleting variable`);
+    },
+  });
+};
+
+export const useSendEmail = () => {
+  return useMutation({
+    mutationFn: sendEmail,
+  });
+};
+
+export const useSendOTPEmail = () => {
+  return useMutation({
+    mutationFn: sendOTPEmail,
+  });
+};
+
+export const useValidateOtp = () => {
+  return useMutation({
+    mutationFn: validateOTP,
+  });
+};
+
+export const useSurveyUpdateMutation = (surveyId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ surveyId, data }: { surveyId: string; data: RequestPayload }) => {
+      return updateSurvey(surveyId, data);
+    },
+    onSuccess: () => {
+      toast.success("Data updated Successfully", {
+        id: surveyId,
+      });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(surveyId) });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.templates("web") });
+    },
+    onError: (error) => {
+      toast.error(error?.message || "Something went wrong, Please try again later.", {
+        id: surveyId,
+      });
+    },
+  });
+};
+
+export const useAllResponseForGraph = (
+  timePeriod: string,
+  userTimeZone: string,
+  surveyId = "",
+  teamMapIds: string[] = [],
+) => {
+  return useQuery({
+    queryKey: ["reponse", "graph", timePeriod, userTimeZone, surveyId, teamMapIds],
+    queryFn: () => getSurveyResponseForGraph(timePeriod, userTimeZone, surveyId, teamMapIds),
+  });
+};
+
+export const useAllResponseNPSForGraph = (
+  timePeriod: string,
+  userTimeZone: string,
+  surveyId = "",
+  teamMapIds: string[] = [],
+) => {
+  return useQuery({
+    queryKey: ["reponse-nps", "graph-nps", timePeriod, userTimeZone, surveyId, teamMapIds],
+    queryFn: () => getNPSSurveyResponseForGraph(timePeriod, userTimeZone, surveyId, teamMapIds),
+  });
+};

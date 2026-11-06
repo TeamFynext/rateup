@@ -1,0 +1,258 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useContext } from "react";
+import { toast } from "sonner";
+
+import { campaignKeys } from "@/backend/campaign/campaign.keys";
+import { contactKeys } from "@/backend/campaign/contacts/contacts.keys";
+import { responseKeys, surveyKeys } from "@/backend/surveys/survey.keys";
+import { allResponsesKeys } from "@/backend/whatsapp/automation.keys";
+import SurveyContext from "@/context/SurveyContext.ts";
+import { useUser } from "@/context/UserContext.tsx";
+import type { QueryFilter } from "@/types/api.ts";
+import { decryptResultResponse } from "@/utils/response.ts";
+import { toText } from "@/utils/toText";
+
+import { useSurvey } from "../surveys.query";
+import type { downloadExcelResponseType } from "./response.api";
+import {
+  deleteResponse,
+  downloadExcelResponse,
+  exportContactResponseToContacts,
+  generateResponse,
+  getAllResponses,
+  getHappyIndex,
+  getLargeTextResponseSummaryByAI,
+  getResponseForComparison,
+  getResponses,
+  getResponsesBySurveyId,
+  getSurveyHappyResponseAnalytics,
+  getSurveyResponseAnalytics,
+  getSurveyResponseCount,
+  resetResponsesStats,
+  syncResponseToGoogleSheet,
+} from "./response.api";
+
+export const useResponses = (surveyTeamMapId: string) =>
+  useQuery({
+    queryKey: responseKeys.bySurveyTeamMap(surveyTeamMapId),
+    queryFn: () => getResponses(surveyTeamMapId),
+    enabled: !!surveyTeamMapId,
+  });
+
+export const useAllResponses = (surveyId: string) => {
+  const { data: survey } = useSurvey(surveyId);
+  const { user } = useUser();
+  const { encryptionpassword: passkey } = useContext(SurveyContext);
+  return useQuery({
+    queryKey: allResponsesKeys.bySurvey(survey?.id),
+    queryFn: async () => {
+      let response = await getAllResponses(survey?.id ?? "");
+      if (passkey) {
+        const { decryptedResponses } = await decryptResultResponse(
+          response,
+          user?.encryptionKeys?.privateKey ?? "",
+          user?.encryptionKeys?.publicKey ?? "",
+          passkey,
+        );
+        response = decryptedResponses;
+      }
+      return response;
+    },
+    enabled: !!survey?.id && (survey.isEncrypted ? !!passkey : true),
+    refetchOnWindowFocus: "always",
+  });
+};
+
+export const useResponsesBySurvey = (surveyId: string, filter: QueryFilter) => {
+  const filterQuery = Object.entries(filter)
+    .map(([key, value]) => `${key}=${toText(value)}`)
+    .join("&");
+  return useQuery({
+    queryFn: () => getResponsesBySurveyId(surveyId, filterQuery),
+    queryKey: responseKeys.bySurvey(surveyId, filter),
+  });
+};
+export function useResetResponsesStats(
+  surveyId: string,
+  _surveyTeamMapId: string,
+  close: () => void,
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
+) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => resetResponsesStats(surveyId),
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: responseKeys.all() });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(surveyId) });
+
+      toast.success(response?.success ? "Cleaned up responses & Stats" : "Please try again", {
+        id: "load-data",
+      });
+      if (response?.success) close();
+      setIsLoading(false);
+    },
+    onError: (error) => {
+      console.error("Error Reseting", error.message);
+      toast.error(error.message, {
+        id: "load-data",
+      });
+      setIsLoading(false);
+    },
+  });
+}
+
+export function useDeleteResponse(surveyId: string, surveyTeamMapId: string, close: () => void) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => deleteResponse(id, surveyTeamMapId),
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: responseKeys.all() });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(surveyId) });
+      queryClient.invalidateQueries({ queryKey: allResponsesKeys.bySurvey(surveyId) });
+
+      toast.success(response?.success ? "Deleted Response successfully" : "Please try again", {
+        id: "load-data",
+      });
+      if (response?.success) close();
+    },
+    onError: (error) => {
+      console.error("Error Deleting", error.message);
+      toast.error(error.message, {
+        id: "load-data",
+      });
+    },
+  });
+}
+
+export function useGenerateResponse(surveyId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: { surveyTeamMapId: string; batchSize: number }) => generateResponse(data),
+    onSuccess: (_response) => {
+      queryClient.invalidateQueries({ queryKey: responseKeys.all() });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(surveyId) });
+      queryClient.invalidateQueries({ queryKey: allResponsesKeys.bySurvey(surveyId) });
+
+      toast.success("Generate Response successfully", {
+        id: "generateResponse",
+      });
+    },
+    onError: (error) => {
+      toast.error(error?.message ?? "An error occurred", {
+        id: "generateResponse",
+      });
+    },
+  });
+}
+
+export function useSyncResponseToGoogleSheet(surveyId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: syncResponseToGoogleSheet,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(surveyId) });
+    },
+  });
+}
+
+export function useDownloadExcelResponse() {
+  return useMutation({
+    mutationFn: (data: downloadExcelResponseType) => downloadExcelResponse(data),
+    onSuccess: (_response) => {
+      toast.success("Downloaded Response successfully", {
+        id: "downloadExcel",
+      });
+    },
+    onError: (error) => {
+      toast.error(error?.message || "Try again after some time", {
+        id: "downloadExcel",
+      });
+    },
+  });
+}
+
+export function useGenerateLargeTextResponseSummaryByAI(surveyId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: getLargeTextResponseSummaryByAI,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(surveyId) });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.questions(surveyId) });
+    },
+  });
+}
+
+export const useExportContactResponses = (surveyId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => exportContactResponseToContacts(surveyId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: contactKeys.all() });
+      queryClient.invalidateQueries({
+        queryKey: campaignKeys.contactGroups(),
+      });
+      toast.success("Contacts exported successfully", {
+        id: "export-contacts",
+      });
+    },
+    onError: (error) => {
+      toast.error(error?.message || "Contacts export failed", {
+        id: "export-contacts",
+      });
+    },
+  });
+};
+
+export const useResponseCount = (surveyId: string) => {
+  return useQuery({
+    queryFn: () => getSurveyResponseCount(surveyId),
+    queryKey: responseKeys.count(surveyId),
+    enabled: !!surveyId,
+  });
+};
+
+interface FilterAnalytics {
+  teamMapIds?: string[];
+  dateRange?: string[];
+}
+export const useResponseAnalytics = (surveyId: string, filter: FilterAnalytics) => {
+  const filterQuery = Object.entries(filter)
+    .map(([key, value]) => `${key}=${value}`)
+    .join("&");
+  return useQuery({
+    queryFn: () => getSurveyResponseAnalytics(surveyId, filterQuery),
+    queryKey: ["responnseAnalytics", surveyId, filter],
+    enabled: !!surveyId,
+  });
+};
+
+export const useResponseForComparison = (surveyId: string) => {
+  return useQuery({
+    queryFn: () => getResponseForComparison(surveyId),
+    queryKey: responseKeys.comparison(surveyId),
+    enabled: !!surveyId,
+  });
+};
+
+export function useSurveyHappyResponseAnalytics(
+  surveyId: string,
+  timeFilter?: string,
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: surveyKeys.happyResponseAnalytics(surveyId, timeFilter),
+    queryFn: () => getSurveyHappyResponseAnalytics(surveyId, `timeFilter=${timeFilter}`),
+    enabled: !!surveyId && enabled,
+  });
+}
+
+export function useHappyIndex(surveyId: string, filterTeams?: string[]) {
+  return useQuery({
+    queryKey: ["happy-index", surveyId, filterTeams],
+    queryFn: () => getHappyIndex(surveyId, filterTeams),
+    enabled: !!surveyId,
+  });
+}

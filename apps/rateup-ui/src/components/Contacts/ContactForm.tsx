@@ -1,0 +1,585 @@
+import { IconChevronDown, IconPlus, IconStar, IconStarFilled, IconX } from "@tabler/icons-react";
+import { type ReactNode, useId } from "react";
+import type { ControllerRenderProps, UseFormReturn } from "react-hook-form";
+import { Controller, useFieldArray } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+
+import type { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
+import { useContactLabels } from "@/backend/campaign/contacts/contacts.query";
+import { StageSelector, usePipelineStages } from "@/components/pipeline/shared/StageSelector.tsx";
+import { PhoneInput } from "@/components/ui/phone-input.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
+import { ContactIdentitySection } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayBody/components/contact/ContactIdentitySection.tsx";
+import { cn } from "@/lib/utils.ts";
+import { ContactGroupType } from "@/types/enums.ts";
+
+import { Button } from "../ui/button.tsx";
+import { Calendar } from "../ui/calendar.tsx";
+import { Field, FieldDescription, FieldError, FieldLabel, FieldTitle } from "../ui/field.tsx";
+import { Input } from "../ui/input.tsx";
+import { MultiSelect } from "../ui/multi-select.tsx";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
+import { Textarea } from "../ui/textarea.tsx";
+import type { ContactFormValues } from "./contact-form-schema.ts";
+import ContactGroupSelector from "./ContactGroupSelector.tsx";
+import { UserSelector } from "./CreateContactModal.tsx";
+
+type ContactFormProps = Readonly<{
+  form: UseFormReturn<ContactFormValues>;
+  customFields: CustomFieldData[];
+  type: ContactGroupType;
+  /**
+   * Set when editing a saved contact: the phone and email fields become lists of everything
+   * it is known by (main first), saved with the form, and its WhatsApp/Instagram/Messenger
+   * accounts and merges are shown below them.
+   */
+  contactId?: string;
+}>;
+
+const ContactForm = ({ form, customFields, type, contactId }: ContactFormProps) => {
+  const uid = useId();
+  const { t: translations } = useTranslation();
+  const { data: labels = [], isPending } = useContactLabels();
+  const stages = usePipelineStages();
+  const contactType = form.watch("contactType");
+  const customFieldValues = form.watch("customFields");
+
+  /**
+   * Custom field values live in a positional array, so editing one means finding (or
+   * appending) its entry and writing the whole array back.
+   */
+  const updateCustomField = (
+    fieldId: string,
+    value: string,
+    customFieldData: CustomFieldData | undefined,
+  ) => {
+    const current = form.getValues("customFields") ?? [];
+    const existingIndex = current.findIndex((entry) => entry.fieldId === fieldId);
+    const next =
+      existingIndex >= 0
+        ? current.map((entry, index) => (index === existingIndex ? { ...entry, value } : entry))
+        : [...current, { id: customFieldData?.id, fieldId, value }];
+    form.setValue("customFields", next, { shouldDirty: true, shouldValidate: true });
+  };
+
+  const renderCustomField = (fieldId: string) => {
+    if (fieldId === "phone") return null;
+
+    const customField = customFields.find((field) => field.slug === fieldId);
+    if (!customField) return null;
+
+    const entryIndex = customFieldValues?.findIndex((entry) => entry.fieldId === fieldId) ?? -1;
+    const fieldValue = entryIndex >= 0 ? (customFieldValues[entryIndex]?.value ?? "") : "";
+    const fieldError =
+      entryIndex >= 0
+        ? form.formState.errors.customFields?.[entryIndex]?.value?.message
+        : undefined;
+
+    const commonProps = {
+      label: customField.name,
+      placeholder: `Enter ${customField.name}`,
+      required: customField.required,
+    };
+
+    const options =
+      customField?.listValues?.map((option: string) => ({
+        value: option,
+        label: option,
+      })) || [];
+
+    switch (customField.type) {
+      case "multivalue":
+        return (
+          <Field key={fieldId} className="flex flex-col gap-1" data-invalid={!!fieldError}>
+            <FieldLabel htmlFor={`${uid}-${fieldId}`}>{commonProps.label}</FieldLabel>
+            <Select
+              required={commonProps.required}
+              value={fieldValue}
+              onValueChange={(value) => updateCustomField(fieldId, value || "", customField)}
+              items={options}
+            >
+              <SelectTrigger
+                id={`${uid}-${fieldId}`}
+                className="bg-accent border-none placeholder:text-sm"
+                aria-invalid={!!fieldError}
+                aria-describedby={fieldError ? `${uid}-${fieldId}-error` : undefined}
+              >
+                <SelectValue placeholder={commonProps.placeholder} />
+              </SelectTrigger>
+              <SelectContent>
+                {options.map((op: { value: string; label: string }) => (
+                  <SelectItem value={op.value} key={op.value}>
+                    {op.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {fieldError && <FieldError id={`${uid}-${fieldId}-error`}>{fieldError}</FieldError>}
+          </Field>
+        );
+
+      case "email":
+      case "number":
+      case "text":
+      default:
+        return (
+          <Field key={fieldId} className="flex flex-col gap-1" data-invalid={!!fieldError}>
+            <FieldLabel htmlFor={`${uid}-${fieldId}`}>{commonProps.label}</FieldLabel>
+            <Input
+              id={`${uid}-${fieldId}`}
+              {...commonProps}
+              type={customField.type === "email" ? "email" : customField.type}
+              defaultValue={fieldValue}
+              aria-invalid={!!fieldError}
+              aria-describedby={fieldError ? `${uid}-${fieldId}-error` : undefined}
+              onChange={(event) =>
+                updateCustomField(fieldId, event.currentTarget.value, customField)
+              }
+              className="bg-accent border-none placeholder:text-sm"
+            />
+            {fieldError && <FieldError id={`${uid}-${fieldId}-error`}>{fieldError}</FieldError>}
+          </Field>
+        );
+    }
+  };
+
+  if (isPending)
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Spinner className="size-5 text-muted-foreground" />
+      </div>
+    );
+
+  const renderedCustomFields = contactType?.map((fieldId) => renderCustomField(fieldId)) ?? [];
+  const hasCustomFields = renderedCustomFields.some(Boolean);
+
+  return (
+    <div className="flex flex-col gap-6">
+      <FormSection title={translations("Contact details")}>
+        <Controller
+          name="name"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field className="order-1 flex flex-col gap-1" data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor={field.name}>{translations("Full Name")}*</FieldLabel>
+              <Input
+                {...field}
+                id={field.name}
+                placeholder={translations("Enter full name")}
+                required
+                autoComplete="name"
+                aria-invalid={fieldState.invalid}
+                aria-describedby={fieldState.invalid ? `${field.name}-error` : undefined}
+                className="bg-accent border-none placeholder:text-sm"
+              />
+              {fieldState.invalid && (
+                <FieldError id={`${field.name}-error`} errors={[fieldState.error]} />
+              )}
+            </Field>
+          )}
+        />
+        {contactId ? (
+          <>
+            <IdentityListField
+              form={form}
+              name="phones"
+              className="order-3"
+              label={`${translations("Phone numbers")}*`}
+              mainLabel={translations("Main number")}
+              hint={translations(
+                "The starred number is the main one: shown on the contact and used for WhatsApp.",
+              )}
+              addLabel={translations("Add phone")}
+              renderInput={(field, invalid) => (
+                <PhoneInput
+                  name={field.name}
+                  defaultCountry="IN"
+                  international
+                  countryCallingCodeEditable={false}
+                  placeholder={translations("Enter phone number")}
+                  value={field.value ?? ""}
+                  onChange={(value) => field.onChange(value ?? "")}
+                  onBlur={field.onBlur}
+                  aria-invalid={invalid}
+                  className="w-full"
+                />
+              )}
+            />
+            <IdentityListField
+              form={form}
+              name="emails"
+              className="order-4"
+              label={translations("Emails")}
+              mainLabel={translations("Main email")}
+              hint={translations("The starred email is the main one.")}
+              addLabel={translations("Add email")}
+              renderInput={(field, invalid) => (
+                <Input
+                  {...field}
+                  placeholder={translations("email@example.com")}
+                  type="email"
+                  autoComplete="email"
+                  aria-invalid={invalid}
+                  className="bg-accent border-none placeholder:text-sm"
+                />
+              )}
+            />
+          </>
+        ) : (
+          <>
+            <Controller
+              name="phone"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field className="order-3 flex flex-col gap-1" data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name}>{translations("Phone Number")}*</FieldLabel>
+                  <PhoneInput
+                    name={field.name}
+                    defaultCountry="IN"
+                    international
+                    countryCallingCodeEditable={false}
+                    placeholder={translations("Enter phone number")}
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    aria-invalid={fieldState.invalid}
+                    aria-describedby={fieldState.invalid ? `${field.name}-error` : undefined}
+                    className="w-full"
+                  />
+                  {fieldState.invalid && (
+                    <FieldError id={`${field.name}-error`}>*{fieldState.error?.message}</FieldError>
+                  )}
+                </Field>
+              )}
+            />
+            <Controller
+              name="email"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field className="order-4 flex flex-col gap-1" data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name}>{translations("Email")}</FieldLabel>
+                  <Input
+                    {...field}
+                    id={field.name}
+                    placeholder={translations("email@example.com")}
+                    type="email"
+                    autoComplete="email"
+                    aria-invalid={fieldState.invalid}
+                    aria-describedby={fieldState.invalid ? `${field.name}-error` : undefined}
+                    className="bg-accent border-none placeholder:text-sm"
+                  />
+                  {fieldState.invalid && (
+                    <FieldError id={`${field.name}-error`} errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
+          </>
+        )}
+        <Controller
+          name="dob"
+          control={form.control}
+          render={({ field }) => {
+            const selected = field.value ? new Date(field.value) : undefined;
+            return (
+              <Field className="order-2 flex flex-col gap-1">
+                <FieldTitle>{translations("Date of Birth")}</FieldTitle>
+                <Popover>
+                  <PopoverTrigger
+                    render={
+                      <Button
+                        variant="outline"
+                        className="w-full justify-between font-normal bg-accent border-none"
+                      />
+                    }
+                  >
+                    <span className={selected ? undefined : "text-muted-foreground"}>
+                      {selected ? selected.toLocaleDateString() : translations("Select date")}
+                    </span>
+                    <IconChevronDown />
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={selected}
+                      defaultMonth={selected}
+                      captionLayout="dropdown"
+                      onSelect={(date) => field.onChange(date ?? null)}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </Field>
+            );
+          }}
+        />
+        <Controller
+          name="external_id"
+          control={form.control}
+          render={({ field }) => (
+            <Field className="order-5 flex flex-col gap-1">
+              <FieldLabel htmlFor={field.name}>{translations("External ID")}</FieldLabel>
+              <Input
+                {...field}
+                id={field.name}
+                placeholder={translations("Enter External ID")}
+                className="bg-accent border-none placeholder:text-sm"
+              />
+            </Field>
+          )}
+        />
+        <Controller
+          name="address"
+          control={form.control}
+          render={({ field }) => (
+            <Field className="order-6 sm:col-span-2 flex flex-col gap-1">
+              <FieldLabel htmlFor={field.name}>{translations("Address")}</FieldLabel>
+              <Textarea
+                {...field}
+                id={field.name}
+                rows={2}
+                autoComplete="street-address"
+                placeholder={translations("Street, city, state, postal code")}
+                className="min-h-16 border-none bg-accent placeholder:text-sm"
+              />
+            </Field>
+          )}
+        />
+      </FormSection>
+
+      {contactId && (
+        <ContactIdentitySection
+          contactId={contactId}
+          embedded
+          // Phones and emails are edited in the fields above.
+          hideKinds={["PHONE", "EMAIL"]}
+          title={translations("Accounts")}
+          emptyText={translations("No WhatsApp, Instagram or Messenger accounts yet.")}
+        />
+      )}
+
+      {type !== ContactGroupType.LOYALTY && (
+        <FormSection title={translations("Assignment")}>
+          <Controller
+            name="labels"
+            control={form.control}
+            render={({ field }) => (
+              <Field className="flex flex-col gap-1">
+                <FieldLabel htmlFor={`${uid}-labels`}>{translations("Labels")}</FieldLabel>
+                <MultiSelect
+                  id={`${uid}-labels`}
+                  options={
+                    labels?.map((label: { id: string; name: string }) => ({
+                      value: label.id,
+                      label: label.name,
+                    })) ?? []
+                  }
+                  value={field.value ?? []}
+                  onValueChange={field.onChange}
+                  placeholder="Select labels"
+                  emptyIndicator="No labels found."
+                  className="bg-accent hover:bg-accent border-none placeholder:text-sm min-h-9"
+                />
+              </Field>
+            )}
+          />
+          {/* Dropped when the org has no board. Picking a stage opens a lead for the
+              contact once it saves; leaving it empty opens none. */}
+          {stages.length > 0 && (
+            <Controller
+              name="stageId"
+              control={form.control}
+              render={({ field }) => (
+                <Field className="flex flex-col gap-1">
+                  <FieldTitle>{translations("Lead stage")}</FieldTitle>
+                  <StageSelector value={field.value} onChange={field.onChange} className="w-full" />
+                </Field>
+              )}
+            />
+          )}
+          <Controller
+            name="assignedUserIds"
+            control={form.control}
+            render={({ field }) => (
+              <Field className="flex flex-col gap-1">
+                <FieldTitle>{translations("Assignee")}</FieldTitle>
+                <UserSelector
+                  value={field.value}
+                  onChange={field.onChange}
+                  className="bg-accent border-none hover:bg-accent"
+                  allowMultiSelect
+                />
+              </Field>
+            )}
+          />
+          <Controller
+            name="contactGroupIds"
+            control={form.control}
+            render={({ field }) => (
+              <Field className="flex flex-col gap-1">
+                <FieldTitle>{translations("Audience")}</FieldTitle>
+                <ContactGroupSelector
+                  value={field.value}
+                  onChange={field.onChange}
+                  className="border-none bg-accent placeholder:text-sm hover:bg-accent"
+                  allowMultiSelect
+                />
+              </Field>
+            )}
+          />
+        </FormSection>
+      )}
+
+      {hasCustomFields && (
+        <FormSection title={translations("Custom fields")}>{renderedCustomFields}</FormSection>
+      )}
+
+      {type !== ContactGroupType.LOYALTY && (
+        <Controller
+          name="notes"
+          control={form.control}
+          render={({ field }) => (
+            <Field className="flex flex-col gap-1">
+              <FieldLabel
+                htmlFor={field.name}
+                className="text-xs font-medium uppercase tracking-wide text-muted-foreground"
+              >
+                {translations("notes")}
+              </FieldLabel>
+              <Textarea
+                {...field}
+                id={field.name}
+                className="border-none bg-accent placeholder:text-sm"
+                placeholder="Add any additional notes..."
+              />
+            </Field>
+          )}
+        />
+      )}
+    </div>
+  );
+};
+
+/**
+ * A list of phones or emails, main one first: an input per row, ★ marking the main one,
+ * ☆ to make another row the main one (it moves to the top), ✕ to drop it, and an add button.
+ * Saved with the rest of the form.
+ */
+function IdentityListField({
+  form,
+  name,
+  label,
+  mainLabel,
+  hint,
+  addLabel,
+  className,
+  renderInput,
+}: Readonly<{
+  form: UseFormReturn<ContactFormValues>;
+  name: "phones" | "emails";
+  label: string;
+  mainLabel: string;
+  hint: string;
+  addLabel: string;
+  className?: string;
+  renderInput: (
+    field: ControllerRenderProps<ContactFormValues, `${"phones" | "emails"}.${number}.value`>,
+    invalid: boolean,
+  ) => ReactNode;
+}>) {
+  const { t } = useTranslation();
+  // `keyName` keeps react-hook-form's row key off `id`, which is the identity's id here.
+  const { fields, append, remove, move } = useFieldArray({
+    control: form.control,
+    name,
+    keyName: "key",
+  });
+  const several = fields.length > 1;
+  return (
+    <Field className={cn("flex flex-col gap-1.5", className)}>
+      <FieldLabel>{label}</FieldLabel>
+      {fields.map((row, index) => (
+        <Controller
+          key={row.key}
+          name={`${name}.${index}.value`}
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-0.5">
+                <div className="min-w-0 flex-1">{renderInput(field, fieldState.invalid)}</div>
+                {several && (
+                  <>
+                    {index === 0 ? (
+                      <RowAction label={mainLabel}>
+                        <IconStarFilled className="text-amber-500 dark:text-amber-400" />
+                      </RowAction>
+                    ) : (
+                      <RowAction label={t("Make main")} onClick={() => move(index, 0)}>
+                        <IconStar />
+                      </RowAction>
+                    )}
+                    <RowAction label={t("Remove")} onClick={() => remove(index)}>
+                      <IconX />
+                    </RowAction>
+                  </>
+                )}
+              </div>
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </div>
+          )}
+        />
+      ))}
+      <div className="flex flex-wrap items-center justify-between gap-x-3">
+        <Button
+          type="button"
+          variant="link"
+          size="sm"
+          className="h-7 px-0"
+          onClick={() => append({ value: "" })}
+        >
+          <IconPlus />
+          {addLabel}
+        </Button>
+        {several && <FieldDescription className="text-xs">{hint}</FieldDescription>}
+      </div>
+    </Field>
+  );
+}
+
+/** A row's icon button with a tooltip; without `onClick` it only marks (the main star). */
+function RowAction({
+  label,
+  onClick,
+  children,
+}: Readonly<{ label: string; onClick?: () => void; children: ReactNode }>) {
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            aria-label={label}
+            aria-disabled={!onClick || undefined}
+            className={cn("shrink-0", !onClick && "cursor-default hover:bg-transparent")}
+            onClick={onClick}
+          />
+        }
+      >
+        {children}
+      </TooltipTrigger>
+      <TooltipContent side="top">{label}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+const FormSection = ({ title, children }: { title: string; children: ReactNode }) => (
+  <section className="flex flex-col gap-3">
+    <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{title}</h3>
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">{children}</div>
+  </section>
+);
+
+export default ContactForm;

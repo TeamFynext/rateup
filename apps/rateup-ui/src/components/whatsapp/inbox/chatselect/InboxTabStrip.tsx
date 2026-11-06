@@ -1,0 +1,72 @@
+import {
+  IconAt,
+  IconCircleCheck,
+  IconInbox,
+  IconShieldExclamation,
+  IconSparkles,
+  IconStack2,
+  IconStar,
+  IconUserCheck,
+} from "@tabler/icons-react";
+import { Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
+
+import { cn } from "@/lib/utils.ts";
+import { useChatContactCountStore } from "@/store/inbox.store.ts";
+
+/**
+ * The inbox tabs, for widths where the sidebar's filter rail is not on screen.
+ *
+ * The rail lives in the second nav sidebar, which is `hidden md:flex` — below
+ * that there is no way to leave the tab you landed on, so the list panel carries
+ * its own copy. Same tabs, same counts, same `?tab=` links; only the shape
+ * differs, so nothing here can disagree with the rail.
+ */
+const TABS = [
+  { value: "open", label: "Open", icon: IconInbox, countKey: "openCount" },
+  { value: "unassigned", label: "Unassigned", icon: IconSparkles, countKey: "newCount" },
+  { value: "closed", label: "Closed", icon: IconCircleCheck, countKey: "closedCount" },
+  { value: "all", label: "All", icon: IconStack2, countKey: "allCount" },
+  { value: "assigned", label: "Assigned to me", icon: IconUserCheck, countKey: "mineCount" },
+  { value: "mentions", label: "Unread mentions", icon: IconAt, countKey: "mentionsCount" },
+  { value: "starred", label: "Starred", icon: IconStar, countKey: "favouriteCount" },
+  { value: "spam", label: "Spam contacts", icon: IconShieldExclamation, countKey: "spamCount" },
+] as const;
+
+/** The English label (a translation key) for a `?tab=` value, or undefined for an unknown one. */
+export function inboxTabLabel(tab: string): string | undefined {
+  return TABS.find((t) => t.value === tab)?.label;
+}
+
+export default function InboxTabStrip({ tab }: Readonly<{ tab: string }>) {
+  const { t: translations } = useTranslation();
+  const sectionCounts = useChatContactCountStore((state) => state.sectionCounts);
+
+  return (
+    <div className="flex shrink-0 gap-1.5 overflow-x-auto border-b border-border px-3 py-2 md:hidden">
+      {TABS.map(({ value, label, icon: Icon, countKey }) => {
+        const isActive = tab === value;
+        const count = sectionCounts?.[countKey] ?? 0;
+
+        return (
+          <Link
+            key={value}
+            to="/dashboard/inbox"
+            search={{ tab: value } as never}
+            aria-current={isActive ? "page" : undefined}
+            className={cn(
+              "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors",
+              isActive
+                ? "border-transparent bg-primary/10 text-primary"
+                : "border-border text-muted-foreground",
+            )}
+          >
+            <Icon className="size-3.5" />
+            {translations(label)}
+            {count > 0 && <span className="tabular-nums opacity-70">{count}</span>}
+          </Link>
+        );
+      })}
+    </div>
+  );
+}

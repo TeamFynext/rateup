@@ -1,0 +1,56 @@
+import { createFileRoute } from "@tanstack/react-router";
+
+import GoogleReview from "@/components/Survey/TakeSurvey/GoogleReview/index.tsx";
+import type { ReviewSuggestion } from "@/types/global";
+
+export const Route = createFileRoute(
+  "/(public-facing)/public/survey/$surveyId/review-us-on-google/",
+)({
+  component: ReviewUsOnGoogle,
+  loader: async ({ params }) => {
+    const { surveyId } = params;
+    // Imported here: route options land in the client entry, and these bring axios.
+    const [{ getPublicSurvey, getPublicSurveyGoogleLink }, { getPublicReviewsBySurveyTeamMapId }] =
+      await Promise.all([
+        import("@/backend/surveys/survey.api"),
+        import("@/backend/team/reviewSuggestion/reviewSuggestion.api"),
+      ]);
+
+    const propsToPass: {
+      googleLink?: string;
+      reviews?: {
+        reviews: ReviewSuggestion[];
+        reviewLink: string;
+      };
+      orgLogoUrl?: string | null;
+      surveyTeamMapId?: string;
+    } = {};
+    const { orgLogo } = await getPublicSurvey(surveyId);
+
+    const [googleLink, reviews] = await Promise.all([
+      getPublicSurveyGoogleLink(surveyId),
+      getPublicReviewsBySurveyTeamMapId(surveyId),
+    ]);
+
+    const orgLogoUrl = `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${orgLogo}`;
+    propsToPass.googleLink = googleLink;
+    propsToPass.reviews = reviews;
+    propsToPass.orgLogoUrl = orgLogo && orgLogo !== "REMOVED_PHOTO" ? orgLogoUrl : null;
+    return propsToPass;
+  },
+});
+
+// TODO REMOVE THIS PAGE AFTER TESTING  --  CURRENTLY MERGED WITHIN PUBLIC SURVEY PAGE
+
+function ReviewUsOnGoogle() {
+  const propsToPass = Route.useLoaderData();
+
+  return (
+    <GoogleReview
+      reviewSuggestions={propsToPass?.reviews?.reviews}
+      orgLogoUrl={propsToPass?.orgLogoUrl ?? undefined}
+      surveyTeamMapId={propsToPass?.surveyTeamMapId}
+      survey={null}
+    />
+  );
+}

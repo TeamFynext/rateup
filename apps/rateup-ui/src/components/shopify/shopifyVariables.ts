@@ -1,0 +1,53 @@
+export const shopifyVariablePresets = [
+  { label: "Order Name", value: "name" },
+  // { label: "Order Number", value: "order_number" },
+  { label: "Customer First Name", value: "customer.first_name" },
+  { label: "Customer Last Name", value: "customer.last_name" },
+  { label: "Customer Email", value: "customer.email" },
+  { label: "Total Price", value: "total_price" },
+  { label: "Currency", value: "currency" },
+  { label: "Order URL", value: "order_status_url" },
+  { label: "Shipping Address City", value: "shipping_address.city" },
+  { label: "Billing Address City", value: "billing_address.city" },
+  { label: "Financial Status", value: "financial_status" },
+  { label: "Fulfillment Status", value: "fulfillment_status" },
+  { label: "Order Date", value: "created_at" },
+  { label: "Payment Method", value: "payment_gateway_names" },
+  { label: "Tracking URL", value: "tracking_url" },
+  { label: "Items Fulfilled", value: "items_fulfilled" },
+  { label: "Pending Items", value: "pending_items" },
+  { label: "Cancellation Reason", value: "cancel_reason" },
+  { label: "Draft Order Invoice URL", value: "invoice_url" },
+  { label: "Checkout Recovery Link", value: "abandoned_checkout_url" },
+  // The code alone, for a URL button approved with the tracked-link base (see VariableMapping).
+  { label: "Checkout Recovery Link — button code", value: "recovery_link_code" },
+  { label: "Cancellation Date", value: "cancelled_at" },
+  { label: "Refund Amount", value: "refund_amount" },
+  { label: "Store Credit Amount", value: "store_credit_amount" },
+  { label: "Refund Note", value: "note" },
+];
+
+/** Paths into a WooCommerce order (REST v3), plus the two the API computes. */
+export const wooVariablePresets = [
+  { label: "Order Number", value: "number" },
+  { label: "Customer Name", value: "customer_name" },
+  { label: "Customer First Name", value: "billing.first_name" },
+  { label: "Customer Last Name", value: "billing.last_name" },
+  { label: "Customer Email", value: "billing.email" },
+  { label: "Order Total", value: "total" },
+  { label: "Currency", value: "currency" },
+  { label: "Items", value: "items" },
+  { label: "Order Status", value: "status" },
+  { label: "Payment Method", value: "payment_method_title" },
+  { label: "Shipping Method", value: "shipping_lines.0.method_title" },
+  { label: "Order Date", value: "date_created" },
+  { label: "Shipping City", value: "shipping.city" },
+  { label: "Billing City", value: "billing.city" },
+  { label: "Customer Note", value: "customer_note" },
+];
+
+export const contactVariablePresets = [
+  { label: "Contact Name", value: "contact.name" },
+  { label: "Contact Email", value: "contact.email" },
+  { label: "Contact Phone", value: "contact.phone" },
+];

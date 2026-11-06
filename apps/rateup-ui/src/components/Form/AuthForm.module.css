@@ -1,0 +1,173 @@
+.auth-form-container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 30rem;
+  background-color: white;
+  margin: auto;
+  padding: 1.25rem;
+}
+
+.color-scheme-dark {
+  background-color: #868e96;
+}
+
+.auth-type-signup-form {
+  justify-content: center;
+}
+
+.auth-type-signup-form .login-signup-form-heading {
+  margin-bottom: 2rem;
+}
+
+.rateup-logo-img {
+  display: inline;
+  width: 6.25rem;
+  padding: 0.625rem 0;
+  object-fit: contain;
+}
+
+/* login signup pages common styles */
+.login-signup-form-heading {
+  font-size: 1.5rem;
+  color: var(--primary);
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.signup-form-heading span {
+  display: block;
+}
+
+.signup-form-heading span:nth-last-child(1) {
+  font-weight: normal;
+}
+
+.login-form-forgot-password-link {
+  display: inline;
+  margin-bottom: 1rem;
+  text-decoration: none;
+  color: var(--primary);
+  font-size: 14px;
+}
+
+.forgot-password-container {
+  text-align: end;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+.login-signup-form-submit-btn {
+  display: block;
+  width: 100%;
+  height: 3.125rem;
+  margin-bottom: 1rem;
+  border-radius: 1rem;
+  font-size: 1rem;
+}
+
+.login-signup-with-google-btn {
+  display: block;
+  width: 100%;
+  height: 2.125rem;
+  border-radius: 6px;
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  font-size: 14px;
+}
+
+.login-sign-up-form .root {
+  margin-bottom: 1.25rem;
+}
+
+.login-sign-up-form .input {
+  font-size: 1rem;
+  height: 3.125rem;
+  border-radius: 1rem;
+}
+
+.login-form .root:nth-child(2) {
+  margin-bottom: 0;
+}
+
+/* VerifyEmailPage Styles */
+.verify-email-para {
+  text-align: center;
+}
+
+.resend-change-email-navlink-component {
+  font-weight: 600;
+  color: rgb(34, 139, 230);
+  background-color: var(--muted);
+}
+
+.inputBox {
+  background-color: var(--input-background-color, white);
+  color: var(--input-text-color, black);
+  border-radius: 1rem;
+  padding: 6px var(--input-padding, 12px);
+  border-color: #ced4da;
+  border-width: 1px;
+  border-style: solid;
+}
+
+/* Signup form styles */
+.signup-form .root {
+  margin-bottom: 0;
+}
+
+.go-back-btn button {
+  margin-bottom: 0;
+}
+
+.signup-btn button {
+  margin-bottom: 0;
+}
+
+.phone-input-container {
+  border: 1px solid #ced4da;
+  padding: 0 1rem;
+  border-radius: 1rem;
+}
+
+.phone-input-container.phone-input-focused {
+  border: 1px solid var(--primary);
+  outline: 0;
+}
+
+.inputPhone {
+  font-size: 16px;
+}
+
+.phone-input-error {
+  border-color: var(--destructive);
+}
+
+.phone-input-error.phone-input-container.phone-input-focused {
+  border-color: var(--destructive);
+}
+
+.phone-input-error input {
+  color: var(--destructive);
+}
+
+.phone-input-err-text {
+  color: var(--destructive);
+  font-size: 0.75rem;
+}
+
+.inputPhone > input {
+  border: none;
+  font-size: 16px;
+  outline: none;
+  height: 3.125rem;
+  border-radius: 1rem;
+}
+
+/* Media Queries */
+@media screen and (max-width: 768px) {
+  .auth-form-container {
+    border-radius: 1rem;
+  }
+}

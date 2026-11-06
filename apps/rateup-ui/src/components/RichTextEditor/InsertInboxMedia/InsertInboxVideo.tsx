@@ -1,0 +1,102 @@
+import { IconUpload, IconVideo, IconX } from "@tabler/icons-react";
+import { useState } from "react";
+import { toast } from "sonner";
+
+import { Button } from "@/components/ui/button.tsx";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
+import { useMediaStore } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter/index.tsx";
+import { uploadFile } from "@/utils/file-upload/upload.ts";
+
+const InsertInboxVideo = () => {
+  const [file, setFile] = useState<File | null>(null);
+  const [isUploadingFile, setIsUploadingFile] = useState(false);
+
+  const { addMedia, media, resetMedia } = useMediaStore();
+
+  function handleSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const selected = e.target.files?.[0];
+    if (selected) setFile(selected);
+  }
+
+  function removeFile() {
+    setFile(null);
+  }
+
+  async function onSubmit() {
+    if (!file) return;
+
+    setIsUploadingFile(true);
+
+    try {
+      const fileKey = await uploadFile(file);
+      const fileUrl = `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${fileKey}`;
+
+      addMedia({
+        type: "video",
+        name: file.name,
+        url: fileUrl,
+        key: fileKey,
+      });
+
+      setFile(null);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      toast.error(message || "Error uploading video");
+      resetMedia();
+    }
+
+    setIsUploadingFile(false);
+  }
+
+  return (
+    <Popover>
+      <PopoverTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 p-0 sm:h-9 sm:w-9"
+            aria-label="Upload Video"
+            title="Upload Video"
+            disabled={isUploadingFile || media.length > 0}
+          />
+        }
+      >
+        <IconVideo size={16} />
+      </PopoverTrigger>
+      <PopoverContent className="w-64 flex flex-col gap-2">
+        <Button variant="outline" size="sm" render={<label className="cursor-pointer" />}>
+          <div className="flex items-center justify-center gap-1">
+            <IconVideo size={16} />
+            Select Video
+          </div>
+          <input
+            type="file"
+            accept="video/3gpp,video/mp4"
+            className="hidden"
+            onChange={handleSelect}
+          />
+        </Button>
+
+        {/* Selected video */}
+        {file && (
+          <div className="flex items-center justify-between text-sm border rounded px-2 py-1">
+            <span className="truncate max-w-[180px]">{file.name}</span>
+            <button onClick={removeFile}>
+              <IconX size={14} />
+            </button>
+          </div>
+        )}
+
+        <Button size="sm" onClick={onSubmit} disabled={isUploadingFile || !file}>
+          {isUploadingFile && <Spinner />}
+          Upload
+          <IconUpload size="1rem" />
+        </Button>
+      </PopoverContent>
+    </Popover>
+  );
+};
+
+export default InsertInboxVideo;

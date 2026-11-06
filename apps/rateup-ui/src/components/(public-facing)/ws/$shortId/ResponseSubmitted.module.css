@@ -1,0 +1,48 @@
+.response-submitted-root-div {
+  min-height: 100vh;
+  gap: 0;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  padding: 1rem;
+}
+
+.response-submitted-root-div.survey-preview {
+  min-height: 100%;
+}
+
+.check-icon-container-and-thankyou-message-container {
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--primary);
+}
+
+.thankyou-message-p {
+  font-size: 2rem;
+  font-weight: bold;
+  text-align: center;
+}
+
+.create-surveys-text-and-try-now-btn-container {
+  gap: 1.5rem;
+}
+
+.create-surveys-text {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  font-size: 1.5rem;
+  line-height: normal;
+  color: var(--muted-foreground);
+  text-align: center;
+}
+
+.try-now-btn {
+  height: auto;
+  padding: 0.5rem 2rem;
+  align-self: center;
+  font-size: 1.125rem;
+}

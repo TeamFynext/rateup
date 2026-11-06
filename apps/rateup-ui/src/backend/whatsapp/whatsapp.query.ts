@@ -1,0 +1,253 @@
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
+import type { NewPendingMessage } from "@/store/pendingMessages.ts";
+import { usePendingSend } from "@/store/pendingMessages.ts";
+import type { RequestPayload } from "@/types/api.ts";
+import type { WaTemplateComponent } from "@/types/global";
+
+import type {
+  CreateFromLibraryInput,
+  SyncTemplatesInput,
+  TemplateLibraryQuery,
+} from "./whatsapp.api";
+import {
+  createTemplateFromLibrary,
+  getTemplateLibrary,
+  createWaTemplate,
+  deleteWaTemplate,
+  getShareUrlFromSurveyTeamMapId,
+  getUnregisteredTemplates,
+  getWaTemplateById,
+  getWaTemplates,
+  registerTemplates,
+  saveTemplateAsDraft,
+  sendWaTemplateToUser,
+  syncTemplates,
+  updateWaTemplate,
+} from "./whatsapp.api";
+
+export const useWaTemplates = (templateType?: string) =>
+  useQuery({
+    queryKey: whatsappKeys.templatesByType(templateType),
+    queryFn: () => getWaTemplates(templateType),
+  });
+
+export const useWaTemplateById = (id: string) =>
+  useQuery({
+    enabled: !!id,
+    queryKey: whatsappKeys.template(id),
+    queryFn: () => getWaTemplateById(id),
+  });
+
+/** Meta's template library, a page at a time. Waits for a channel: the catalogue is per account. */
+export const useTemplateLibrary = (query: TemplateLibraryQuery) =>
+  useInfiniteQuery({
+    enabled: Boolean(query.whatsappSettingsPhoneId),
+    queryKey: whatsappKeys.templateLibrary(query),
+    queryFn: ({ pageParam }) => getTemplateLibrary(query, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last) => last.after ?? undefined,
+    staleTime: 10 * 60 * 1000,
+  });
+
+export const useCreateTemplateFromLibraryMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateFromLibraryInput) => createTemplateFromLibrary(input),
+    onSuccess: () => {
+      toast.success("Template created and sent to Meta");
+      void queryClient.invalidateQueries({ queryKey: whatsappKeys.templates() });
+    },
+    onError: (error) => {
+      toast.error(error.message || "Couldn't create the template");
+    },
+  });
+};
+
+export const useCreateTemplateMutation = (onSuccess: () => void, onError: () => void) => {
+  const queryClient = useQueryClient();
+  const createMutation = useMutation({
+    mutationFn: (templateData: RequestPayload) => createWaTemplate(templateData),
+    onSuccess: () => {
+      toast.success("Template created");
+      queryClient.invalidateQueries({ queryKey: whatsappKeys.templates() });
+      onSuccess();
+    },
+    onError: (error) => {
+      toast.error(error?.message || "Error creating template!");
+      onError();
+    },
+  });
+
+  return createMutation;
+};
+
+export const useSaveTemplateAsDraftMutation = (
+  id: string,
+  onSuccess: (data: unknown) => void,
+  onError: () => void,
+) => {
+  const queryClient = useQueryClient();
+  const createMutation = useMutation({
+    mutationFn: (templateData: RequestPayload) => saveTemplateAsDraft(templateData),
+    onSuccess: (data) => {
+      toast.success("Template Saved as Draft Successfully");
+      queryClient.invalidateQueries({ queryKey: whatsappKeys.templates() });
+      queryClient.invalidateQueries({ queryKey: whatsappKeys.template(id) });
+      onSuccess(data);
+    },
+    onError: (error) => {
+      toast.error(error?.message || "Error saving as draft template!");
+      onError();
+    },
+  });
+
+  return createMutation;
+};
+export const useUpdateTemplateMutation = (
+  id: string,
+  onSuccess?: () => void,
+  onError?: () => void,
+) => {
+  const queryClient = useQueryClient();
+  const updateMutation = useMutation({
+    mutationFn: ({
+      templateId,
+      templateData,
+    }: {
+      templateId: string;
+      templateData: RequestPayload;
+    }) => updateWaTemplate(templateId, templateData),
+    onSuccess: () => {
+      toast.success("Template updated");
+      queryClient.invalidateQueries({ queryKey: whatsappKeys.templates() });
+      queryClient.invalidateQueries({ queryKey: whatsappKeys.template(id) });
+      onSuccess?.();
+    },
+    onError: (error) => {
+      toast.error(error?.message || "Error updating template!");
+      onError?.();
+    },
+  });
+  return updateMutation;
+};
+
+export const useDeleteWaTemplateMutation = (onSuccess?: () => void, onError?: () => void) => {
+  const queryClient = useQueryClient();
+  const deleteMutation = useMutation({
+    mutationFn: deleteWaTemplate,
+    onSuccess: () => {
+      toast.success("Template deleted", {
+        id: "template-delete",
+      });
+      queryClient.invalidateQueries({ queryKey: whatsappKeys.templates() });
+      onSuccess?.();
+    },
+    onError: (error) => {
+      toast.error(error?.message || "Error deleting template!", {
+        id: "template-delete",
+      });
+      onError?.();
+    },
+  });
+  return deleteMutation;
+};
+
+export const useSyncTemplatesMutation = (onSuccess?: () => void, onError?: () => void) => {
+  const queryClient = useQueryClient();
+  const syncMutation = useMutation({
+    mutationFn: (data?: SyncTemplatesInput) => syncTemplates(data),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: whatsappKeys.templates() });
+      toast.success("Templates Synced Successfully");
+      // A template Meta no longer has comes back as an editable draft rather than
+      // silently vanishing, so say so - it is the user's cue to resubmit it.
+      if (result?.revertedToDraft) {
+        toast.info(
+          result.revertedToDraft === 1
+            ? "1 template no longer exists on WhatsApp and was moved back to draft"
+            : `${result.revertedToDraft} templates no longer exist on WhatsApp and were moved back to draft`,
+        );
+      }
+      onSuccess?.();
+    },
+    onError: (error) => {
+      toast.error(error?.message || "Error syncing templates!");
+      onError?.();
+    },
+  });
+  return syncMutation;
+};
+
+export const useUnregisteredTemplates = (enabled: boolean) =>
+  useQuery({
+    enabled: enabled,
+    queryKey: whatsappKeys.unregisteredTemplates(),
+    queryFn: getUnregisteredTemplates,
+  });
+
+export const useRegisterTemplatesMutation = (onSuccess?: () => void, onError?: () => void) => {
+  const queryClient = useQueryClient();
+  const registerMutation = useMutation({
+    mutationFn: registerTemplates,
+    onSuccess: () => {
+      toast.success("Templates synced successfully");
+      queryClient.invalidateQueries({ queryKey: whatsappKeys.templates() });
+      onSuccess?.();
+    },
+    onError: (error) => {
+      toast.error(error?.message || "Error syncing templates!");
+      onError?.();
+    },
+  });
+  return registerMutation;
+};
+
+/**
+ * @param rowKey thread the template is going to, so the card it will become shows
+ *   there while the send is in flight.
+ */
+export const useSendWaTemplateToUser = (
+  phone: string,
+  contactId: string | undefined,
+  rowKey?: string,
+) => {
+  const queryClient = useQueryClient();
+  const pending = usePendingSend(rowKey, contactId);
+  return useMutation({
+    mutationFn: ({
+      templateId,
+      parameterData,
+      teamId,
+      whatsappSettingsPhoneId,
+    }: {
+      templateId: string;
+      parameterData: WaTemplateComponent[];
+      teamId: string;
+      whatsappSettingsPhoneId: string;
+      /** The card to draw while this is in flight; not part of the request. */
+      pending?: NewPendingMessage;
+    }) => sendWaTemplateToUser(templateId, phone, parameterData, teamId, whatsappSettingsPhoneId),
+    onMutate: (variables) => ({ pendingId: pending.begin(variables.pending) }),
+    onSuccess: (_data, _variables, context) => {
+      queryClient.invalidateQueries({ queryKey: whatsappKeys.contacts() });
+      queryClient.invalidateQueries({ queryKey: whatsappKeys.contact(contactId) });
+      toast.success("Template sent successfully");
+      // Invalidates the thread itself, then takes the pending card back down.
+      return pending.settle(context?.pendingId);
+    },
+    onError: (error, _variables, context) => {
+      pending.rollback(context?.pendingId);
+      toast.error(error?.message || "Error sending template!");
+    },
+  });
+};
+
+export const useWaShareUrl = (surveyTeamMapShortId: string) =>
+  useQuery({
+    enabled: !!surveyTeamMapShortId,
+    queryKey: whatsappKeys.shareUrl(surveyTeamMapShortId),
+    queryFn: () => getShareUrlFromSurveyTeamMapId(surveyTeamMapShortId),
+  });

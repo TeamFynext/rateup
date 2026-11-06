@@ -1,0 +1,1035 @@
+import {
+  IconBan,
+  IconCamera,
+  IconCheck,
+  IconChevronDown,
+  IconCircleX,
+  IconHash,
+  IconLayoutSidebarRightCollapse,
+  IconLink,
+  IconMessageCircle,
+  IconMessages,
+  IconPencil,
+  IconPhone,
+  IconPlus,
+  IconRosetteDiscountCheck,
+  IconSeeding,
+  IconShieldCheck,
+  IconShieldExclamation,
+  IconShieldOff,
+  IconShieldX,
+  IconTicket,
+  IconTrash,
+  IconUser,
+  IconX,
+} from "@tabler/icons-react";
+import dayjs from "dayjs";
+import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import type { ContactLabelOption } from "@/backend/campaign/contacts/contacts.api";
+import {
+  useAssignContactLabelsToContactId,
+  useContactLabels,
+} from "@/backend/campaign/contacts/contacts.query";
+import { useChannels } from "@/backend/channels/channels.query";
+import {
+  useClearContactStageMutation,
+  useContactStageQuery,
+  usePipelineQuery,
+  usePipelinesQuery,
+  useSetContactStageMutation,
+} from "@/backend/pipeline/pipeline.query.tsx";
+import type { StageStatus } from "@/backend/pipeline/pipeline.types.ts";
+import { useTeamsByUser } from "@/backend/team/team.query";
+import type { ConversationTagOption } from "@/backend/whatsapp/inbox/conversationTag/conversationTag.api.ts";
+import {
+  useAssignConversationTags,
+  useConversationTags,
+} from "@/backend/whatsapp/inbox/conversationTag/conversationTag.query.ts";
+import { getRowKey, type ResolutionResult } from "@/backend/whatsapp/inbox/message/wamessage.api";
+import {
+  useBlockWhatsAppUser,
+  useEditConversation,
+  useSetContactSpam,
+} from "@/backend/whatsapp/inbox/message/wamessage.query";
+import ChipAddPicker from "@/components/common/chip-add-picker.tsx";
+import { ContactDetailDialog } from "@/components/Contacts/ContactDetailedView.tsx";
+import { InboxOrdersPanel } from "@/components/dashboard/commerce/inbox/InboxOrdersPanel.tsx";
+import { resolveChannel } from "@/components/input/channelOptions.ts";
+import { findLeadsPipeline } from "@/components/pipeline/pipelineTypes.ts";
+import { Button } from "@/components/ui/button.tsx";
+import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { Textarea } from "@/components/ui/textarea.tsx";
+import AssigneePicker from "@/components/whatsapp/inbox/assign/AssigneePicker.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
+import { useTeamFeatures } from "@/context/TeamFeaturesContext.tsx";
+import { useUser } from "@/context/UserContext.tsx";
+import { useOrgModules } from "@/hooks/useOrgModules.ts";
+import { cn } from "@/lib/utils.ts";
+import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
+import { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";
+import {
+  MessagePlatform,
+  NOT_SPAM_EVENT,
+  TeamFeature,
+  WaMessageAssignStatus,
+} from "@/types/enums.ts";
+import {
+  getContactChannelSource,
+  getContactDisplayPhone,
+  getContactLabel,
+  getContactWaAddress,
+  isInboxSessionExpired,
+} from "@/utils/whatsapp/inbox.ts";
+
+import { useDeleteTicket } from "../useDeleteTicket.ts";
+import { generateInternalMessageId } from "../util.tsx";
+import { AdReferralPanel } from "./AdReferralPanel.tsx";
+import { ContactIdentitySection } from "./chatdisplayBody/components/contact/ContactIdentitySection.tsx";
+import type { OptimisticMessage } from "./chatdisplayFooter/index.tsx";
+import { deriveStatus, STATUS_PILL_BASE } from "./chatdisplayHeader/ticket.ts";
+
+interface TicketPanelProps {
+  contact: ContactWithUpdatedAt;
+  groupId: string;
+  isOpen: boolean;
+  setIsOpen: (value: boolean) => void;
+  /** Placement, owned by the parent: inline column at xl, overlay sheet below it. */
+  className?: string;
+}
+
+const RESULT_LABELS: Record<ResolutionResult, string> = {
+  RESOLVED: "Resolved",
+  ANSWERED: "Question answered",
+  NO_RESPONSE: "No response",
+  DUPLICATE: "Duplicate",
+};
+
+// Channel brand colours are consumed as inline `style` values (avatar chips), so
+// they stay as literal hex rather than Tailwind utilities.
+const CHANNELS: Record<string, { label: string; color: string; icon: typeof IconMessageCircle }> = {
+  [MessagePlatform.WHATSAPP]: {
+    label: "WhatsApp",
+    color: "#25d366",
+    icon: IconMessageCircle,
+  },
+  [MessagePlatform.INSTAGRAM]: {
+    label: "Instagram",
+    color: "#dd2a7b",
+    icon: IconCamera,
+  },
+  [MessagePlatform.FACEBOOK]: {
+    label: "Messenger",
+    color: "#0084ff",
+    icon: IconMessages,
+  },
+  [MessagePlatform.WEBCHAT]: {
+    label: "Webchat",
+    color: "#1c518e",
+    icon: IconMessages,
+  },
+};
+
+/**
+ * The lead-stage picker marks a column by what its band means — still open, won,
+ * or lost — rather than by the column itself, since stage names are org-authored
+ * and there is no per-stage icon to read. The column's own colour, which the org
+ * does choose, paints the marker and the label.
+ */
+const STAGE_STATUS_ICON: Record<StageStatus, typeof IconSeeding> = {
+  OPEN: IconSeeding,
+  WON: IconRosetteDiscountCheck,
+  LOST: IconCircleX,
+};
+
+/** Shared section shell: compact padding plus the design's hairline divider. */
+function Section({
+  label,
+  action,
+  className,
+  children,
+}: {
+  label?: string;
+  action?: React.ReactNode;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className={cn("border-b border-border px-4 py-3.5", className)}>
+      {label && (
+        <div className="mb-2.5 flex min-h-5 items-center justify-between">
+          <span className="text-xs font-medium text-muted-foreground">{label}</span>
+          {action}
+        </div>
+      )}
+      {children}
+    </div>
+  );
+}
+
+/** Label / value row used by the Contact and Ticket Info sections. */
+function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="grid min-h-7 grid-cols-[6rem_minmax(0,1fr)] items-center gap-2">
+      <span className="text-[13px] text-muted-foreground">{label}</span>
+      <span
+        className="truncate text-[13px] font-semibold text-foreground"
+        title={typeof value === "string" ? value : undefined}
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
+/** The small pencil / action buttons the sections share. */
+const ICON_BUTTON =
+  "inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground";
+
+/** Tag and label chips. */
+const CHIP =
+  "inline-flex max-w-full items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[12px] font-semibold";
+
+/** The spam / block / delete row at the foot of the panel. */
+const DANGER_OUTLINE =
+  "border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive";
+
+const ADD_CHIP =
+  "inline-flex cursor-pointer items-center gap-1 rounded-full border border-dashed border-border px-2.5 py-0.5 text-[12px] font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground";
+
+export default function TicketPanel({
+  contact,
+  isOpen,
+  setIsOpen,
+  className,
+}: Readonly<TicketPanelProps>) {
+  const { t } = useTranslation();
+  const { user } = useUser();
+  const { updateContactById, setSelectedContact } = useContactsStore();
+  const messagesStore = useMessagesStore();
+
+  // The board replaces the lifecycle chips. Gated on the same checks as the
+  // sidebar entry, so the section is absent wherever Pipeline is.
+  const { allowedFeatures } = useTeamFeatures();
+  const { isOn: isModuleOn } = useOrgModules();
+  const canSeePipeline =
+    isModuleOn("pipeline") &&
+    (allowedFeatures === null || allowedFeatures.has(TeamFeature.Pipeline));
+
+  const { data: pipelines = [] } = usePipelinesQuery(canSeePipeline);
+  const { data: board } = usePipelineQuery(
+    canSeePipeline ? findLeadsPipeline(pipelines)?.id : undefined,
+  );
+  const { data: contactStage } = useContactStageQuery(contact?.id, canSeePipeline);
+  const setStage = useSetContactStageMutation(contact?.id);
+  const clearStage = useClearContactStageMutation(contact?.id);
+  const [clearOpen, setClearOpen] = useState(false);
+  const [stagePickerOpen, setStagePickerOpen] = useState(false);
+  const stagePickerRef = useRef<HTMLDivElement>(null);
+  const { data: allLabels = [] } = useContactLabels();
+  const { data: allTags = [] } = useConversationTags();
+  const { data: teamRes } = useTeamsByUser();
+  const teams = teamRes?.data ?? [];
+  const { data: channels } = useChannels();
+
+  const spamMutation = useSetContactSpam();
+  const blockMutation = useBlockWhatsAppUser();
+  const confirm = useConfirm();
+  // WhatsApp only accepts a block inside the 24h customer-service window.
+  const canBlock =
+    !isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp) && !contact?.blockedOnWhatsApp;
+
+  async function blockContact() {
+    const address = getContactWaAddress(contact);
+    if (!contact || !address) return;
+    const ok = await confirm({
+      title: t("Block {name}", { name: getContactLabel(contact) ?? address }),
+      description: t(
+        "They will not be able to message you, and you will not be able to message them.",
+      ),
+      confirmText: t("Block"),
+      cancelText: t("Cancel"),
+    });
+    if (!ok) return;
+    blockMutation.mutate(
+      { phoneNumbersList: [address] },
+      { onSuccess: () => setSelectedContact({ ...contact, blockedOnWhatsApp: true }) },
+    );
+  }
+  const { canDelete, deleteTicket, isPending: isDeletingTicket } = useDeleteTicket(contact);
+  const assignLabels = useAssignContactLabelsToContactId();
+  const assignTags = useAssignConversationTags();
+  const editConversation = useEditConversation();
+
+  const [copied, setCopied] = useState(false);
+  const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
+  const [editingTicket, setEditingTicket] = useState(false);
+  const [subjectDraft, setSubjectDraft] = useState("");
+  const [descriptionDraft, setDescriptionDraft] = useState("");
+
+  // The stage picker is an inline dropdown rather than a portalled popover, to
+  // match the rest of the panel, so dismissing it is ours to wire.
+  useEffect(() => {
+    if (!stagePickerOpen) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (!stagePickerRef.current?.contains(event.target as Node)) setStagePickerOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setStagePickerOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [stagePickerOpen]);
+
+  // Every editor closes when the selected ticket changes.
+  useEffect(() => {
+    setIsContactDialogOpen(false);
+    setEditingTicket(false);
+    setStagePickerOpen(false);
+    setCopied(false);
+  }, [contact?.conversationId, contact?.id]);
+
+  const contactLabels: ContactLabelOption[] = contact?.contactLabels ?? [];
+  const activeLabelIds = contactLabels.map((l) => l.id);
+  const conversationTags: ConversationTagOption[] = contact?.conversationTags ?? [];
+  const activeTagIds = conversationTags.map((tag) => tag.id);
+  const assignedUsers: { id: string; name: string; teamId: string }[] =
+    contact?.assignedUsers ?? [];
+  const primaryAssignee = assignedUsers[0];
+  const teamName = teams.find((team) => team.id === primaryAssignee?.teamId)?.name;
+  // A stage id with no matching column means the board changed under us; the
+  // trigger then reads as "not on the board" until the stage query catches up.
+  const activeStage = board?.stages.find((stage) => stage.id === contactStage?.stageId) ?? null;
+  const ActiveStageIcon = STAGE_STATUS_ICON[activeStage?.status ?? "OPEN"];
+  const { platform, identifier: channelIdentifier } = getContactChannelSource(contact);
+  const channel = CHANNELS[platform] ?? CHANNELS[MessagePlatform.WHATSAPP];
+  const ChannelIcon = channel.icon;
+  // The connected number/account this ticket ran through, read off the ticket's
+  // own messages. `contact.metadata` is the last webhook payload seen for the
+  // *contact*, so on a multi-channel org it names whichever number they wrote to
+  // last — not necessarily the one this ticket is on.
+  const connectedChannel = resolveChannel(channels, platform, channelIdentifier);
+  const displayPhone = getContactDisplayPhone(contact);
+  const resolutionResult: ResolutionResult | null = contact?.resolutionResult ?? null;
+  const status = deriveStatus(contact);
+
+  const startEditingTicket = () => {
+    setSubjectDraft(contact?.ticketSubject || "");
+    setDescriptionDraft(contact?.ticketDescription || "");
+    setEditingTicket(true);
+  };
+
+  const copyTicketLink = async () => {
+    const id = contact?.conversationId ?? contact?.id;
+    const link = `${globalThis.location.origin}/dashboard/inbox?ticket=${id}`;
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      setCopied(false);
+    }
+  };
+
+  /**
+   * Picking a column moves the contact's lead there, opening one if it has none.
+   * Picking the column it is already on just closes the picker — taking the lead
+   * off the board deletes it, so that lives on its own row and asks first.
+   */
+  const handleStageClick = (stageId: string) => {
+    setStagePickerOpen(false);
+    if (!contact?.id || contactStage?.stageId === stageId) return;
+    // The conversation list's chip is patched by the mutation itself, which the
+    // board's own move goes through too — one place, so the two directions
+    // cannot drift apart.
+    setStage.mutate(stageId);
+  };
+
+  const handleToggleLabel = (labelId: string) => {
+    if (!contact?.id) return;
+    const nextIds = activeLabelIds.includes(labelId)
+      ? activeLabelIds.filter((id) => id !== labelId)
+      : [...activeLabelIds, labelId];
+    const nextLabels = allLabels.filter((label: { id: string }) => nextIds.includes(label.id));
+
+    assignLabels.mutate(
+      { contactId: contact.id, labelIds: nextIds },
+      {
+        onSuccess: () => {
+          updateContactById(contact.id, (c) => ({ ...c, contactLabels: nextLabels }));
+          setSelectedContact({ ...contact, contactLabels: nextLabels });
+        },
+      },
+    );
+  };
+
+  /**
+   * Tags live on the ticket, so this keys off `conversationId` rather than the
+   * contact — the same customer's other tickets keep their own tag set.
+   */
+  const handleToggleTag = (tagId: string) => {
+    const conversationId = contact?.conversationId;
+    if (!conversationId) return;
+    const nextIds = activeTagIds.includes(tagId)
+      ? activeTagIds.filter((id) => id !== tagId)
+      : [...activeTagIds, tagId];
+
+    assignTags.mutate(
+      { conversationId, tagIds: nextIds },
+      {
+        onSuccess: (nextTags) => {
+          // The server answers with the tag set it settled on, so the row and the
+          // selection are updated from that rather than from the optimistic guess.
+          // Keyed by the *row*, not the contact: `updateContactById` resolves a
+          // bare contact id to that contact's live ticket, which would move the
+          // tags onto the wrong ticket when an older one is open.
+          updateContactById(getRowKey(contact), (c) => ({ ...c, conversationTags: nextTags }));
+          setSelectedContact({ ...contact, conversationTags: nextTags });
+        },
+      },
+    );
+  };
+
+  const saveTicket = () => {
+    if (!contact?.conversationId) return;
+    editConversation.mutate(
+      {
+        conversationId: contact.conversationId,
+        subject: subjectDraft.trim() || null,
+        description: descriptionDraft.trim() || null,
+      },
+      { onSuccess: () => setEditingTicket(false) },
+    );
+  };
+
+  /**
+   * Spam is a *contact* flag, not a ticket status: this hits the dedicated
+   * endpoint, which closes the contact's open tickets and drops them out of every
+   * tab but Spam. The same button takes them back out again.
+   */
+  const toggleSpam = (next: boolean) => {
+    if (!contact?.id) return;
+    const messageId = generateInternalMessageId();
+    const newMessage: OptimisticMessage = {
+      id: messageId,
+      contactId: contact.id,
+      waCreatedAt: new Date().toISOString(),
+      messageBody: {
+        send: null,
+        receive: null,
+        internal: {
+          text: { body: next ? "marked this contact as spam" : "marked this contact as not spam" },
+          assignedUsers: [],
+          assignStatus: next ? WaMessageAssignStatus.SPAM : NOT_SPAM_EVENT,
+          triggeredByUser: { id: user?.userId ?? "", name: user?.userName ?? "" },
+        },
+        exchangeProcess: "internal",
+      },
+      sourcePlatform: "INTERNAL",
+      sourceIdentifier: null,
+      sendBy: user?.userId,
+      sender: { name: user?.userName, profilePhoto: user?.profilePhoto },
+      stats: { read: "", sent: "", failed: "", delivered: "" },
+      messageId,
+    };
+    const rowKey = getRowKey(contact);
+    messagesStore.addMessage(`${rowKey}_all`, newMessage);
+    messagesStore.addMessage(`${rowKey}_internal`, newMessage);
+
+    spamMutation.mutate(
+      { contactId: contact.id, isSpam: next, messageId },
+      {
+        onError: () => {
+          messagesStore.removeMessage(`${rowKey}_all`, messageId);
+          messagesStore.removeMessage(`${rowKey}_internal`, messageId);
+        },
+      },
+    );
+  };
+
+  // No persistent rail: the panel unmounts entirely when closed, as in the design.
+  // It is reopened from the panel-right toggle in the thread header.
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className={cn(
+        "flex h-full w-77 shrink-0 flex-col overflow-y-auto border-l border-border bg-background",
+        className,
+      )}
+    >
+      {/* ---- Header ---- */}
+      <div className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-4">
+        <div className="flex min-w-0 items-center gap-2">
+          <IconTicket className="size-4 shrink-0 text-primary" />
+          <span className="truncate text-[14px] font-extrabold text-foreground">
+            {t("Ticket")} {contact?.ticketNumber ? `#${contact.ticketNumber}` : "—"}
+          </span>
+          <span className={cn(STATUS_PILL_BASE, status.className)}>{t(status.label)}</span>
+        </div>
+        <div className="flex shrink-0 items-center gap-0.5">
+          <button
+            type="button"
+            title={t("Copy link to ticket")}
+            aria-label={t("Copy link to ticket")}
+            onClick={copyTicketLink}
+            className={cn(ICON_BUTTON, "w-auto min-w-6 gap-1 px-1", copied && "text-green-600")}
+          >
+            {copied ? <IconCheck className="size-3.75" /> : <IconLink className="size-3.75" />}
+            {copied && <span className="text-[10px] font-bold">{t("Copied")}</span>}
+          </button>
+          <button
+            type="button"
+            title={t("Collapse Panel")}
+            aria-label={t("Collapse Panel")}
+            onClick={() => setIsOpen(false)}
+            className={ICON_BUTTON}
+          >
+            <IconLayoutSidebarRightCollapse className="size-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* ---- Assignment ---- */}
+      <Section label={t("Assignment")}>
+        <AssigneePicker
+          contact={contact}
+          acceptsShortcut
+          triggerClassName="-mx-2 flex w-[calc(100%+1rem)] cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-muted"
+        >
+          {primaryAssignee ? (
+            <>
+              <CreativeAvatar name={primaryAssignee.name} size="sm" />
+              <div className="flex-1 min-w-0">
+                <div className="truncate text-[14px] font-bold leading-tight text-foreground">
+                  {primaryAssignee.name}
+                  {assignedUsers.length > 1 && ` +${assignedUsers.length - 1}`}
+                </div>
+                {teamName && (
+                  <div className="text-[11px] truncate text-muted-foreground">{teamName}</div>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <span className="size-8 rounded-full flex items-center justify-center shrink-0 border-[1.5px] border-dashed border-border">
+                <IconUser className="size-3.75 text-muted-foreground" />
+              </span>
+              <div className="flex-1 min-w-0 text-[14px] text-muted-foreground">
+                {t("Unassigned")}
+              </div>
+            </>
+          )}
+        </AssigneePicker>
+      </Section>
+
+      {/* ---- Title & Description ----
+           Directly under Assignment, per the design: the ticket's own words are
+           what an agent reads first, so they sit above the contact/meta sections
+           rather than at the foot of the panel. */}
+      <Section
+        label={t("Title & description")}
+        action={
+          !editingTicket &&
+          contact?.conversationId && (
+            <button
+              type="button"
+              title={t("Edit title and description")}
+              onClick={startEditingTicket}
+              className={cn(ICON_BUTTON, "-mr-1")}
+            >
+              <IconPencil className="size-3.5" />
+            </button>
+          )
+        }
+      >
+        {editingTicket ? (
+          <div className="flex flex-col gap-2">
+            <Input
+              value={subjectDraft}
+              onChange={(e) => setSubjectDraft(e.target.value)}
+              placeholder={t("Ticket title")}
+              className="h-8 text-[13px] font-bold"
+            />
+            <Textarea
+              value={descriptionDraft}
+              onChange={(e) => setDescriptionDraft(e.target.value)}
+              rows={4}
+              placeholder={t("Description")}
+              className="text-[13px] resize-y"
+            />
+            <div className="flex gap-1.5">
+              <Button
+                size="sm"
+                className="h-7 text-[11px]"
+                onClick={saveTicket}
+                loading={editConversation.isPending}
+              >
+                {t("Save")}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-[11px]"
+                onClick={() => setEditingTicket(false)}
+              >
+                {t("Cancel")}
+              </Button>
+            </div>
+          </div>
+        ) : contact?.ticketSubject || contact?.ticketDescription ? (
+          <>
+            <div className="mb-1 text-[14px] font-bold text-foreground">
+              {contact?.ticketSubject || t("Untitled ticket")}
+            </div>
+            {contact?.ticketDescription && (
+              <div className="text-[13px] leading-relaxed text-muted-foreground">
+                {contact.ticketDescription}
+              </div>
+            )}
+          </>
+        ) : (
+          contact?.conversationId && (
+            <button
+              type="button"
+              onClick={startEditingTicket}
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-1.5 text-[13px] font-bold text-primary transition-colors hover:bg-primary/5"
+            >
+              <IconPlus className="size-4" />
+              {t("Add title")}
+            </button>
+          )
+        )}
+      </Section>
+
+      {/* ---- Lead Stage ----
+           A single compact row rather than the chip grid it replaces: the panel
+           is a narrow column and a board can carry a dozen columns, which the
+           grid grew to fill. The trigger reads as the current stage in that
+           stage's own colour, and the picker under it is the whole board. */}
+      {canSeePipeline && !!board?.stages.length && (
+        <div className="border-b border-border px-4 py-2.5">
+          <div className="flex items-center gap-2.5">
+            <span className="shrink-0 text-xs font-medium text-muted-foreground">
+              {t("Lead stage")}
+            </span>
+
+            <div ref={stagePickerRef} className="relative flex-1 min-w-0">
+              <button
+                type="button"
+                aria-haspopup="listbox"
+                aria-expanded={stagePickerOpen}
+                onClick={() => setStagePickerOpen((open) => !open)}
+                disabled={setStage.isPending || clearStage.isPending}
+                className="flex w-full cursor-pointer items-center justify-between gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 transition-colors hover:bg-muted"
+              >
+                {activeStage ? (
+                  <span
+                    className="inline-flex items-center gap-1.5 min-w-0"
+                    style={{ color: activeStage.color ?? "var(--color-primary)" }}
+                  >
+                    <ActiveStageIcon className="size-3.5 shrink-0" />
+                    <span className="truncate text-[13px] font-bold">{activeStage.name}</span>
+                  </span>
+                ) : (
+                  <span className="truncate text-[13px] text-muted-foreground">
+                    {t("Not on the board")}
+                  </span>
+                )}
+                <IconChevronDown className="size-3.25 shrink-0 text-muted-foreground" />
+              </button>
+
+              {stagePickerOpen && (
+                <div
+                  role="listbox"
+                  className="absolute top-[calc(100%+4px)] left-0 right-0 z-40 max-h-64 overflow-y-auto overscroll-contain rounded-[9px] border border-border bg-background p-1 shadow-md"
+                >
+                  {board.stages.map((stage) => {
+                    const active = contactStage?.stageId === stage.id;
+                    const color = stage.color ?? "var(--color-primary)";
+                    const StageIcon = STAGE_STATUS_ICON[stage.status];
+                    return (
+                      <button
+                        key={stage.id}
+                        type="button"
+                        role="option"
+                        aria-selected={active}
+                        onClick={() => handleStageClick(stage.id)}
+                        className="flex w-full items-center gap-1.75 rounded-md px-2 py-1.5 cursor-pointer hover:bg-muted"
+                        style={
+                          active
+                            ? { backgroundColor: `color-mix(in oklab, ${color} 12%, transparent)` }
+                            : undefined
+                        }
+                      >
+                        <StageIcon
+                          className="size-3.25 shrink-0"
+                          style={{ color: active ? color : "var(--color-muted-foreground)" }}
+                        />
+                        <span
+                          className={cn(
+                            "flex-1 truncate text-left text-[12px]",
+                            active ? "font-bold" : "font-semibold",
+                          )}
+                          style={{ color: active ? color : undefined }}
+                        >
+                          {stage.name}
+                        </span>
+                        {active && <IconCheck className="size-3.25 shrink-0 text-primary" />}
+                      </button>
+                    );
+                  })}
+
+                  {/* Taking the lead off the board is not a stage, and it deletes
+                      the lead, so it sits apart from the columns and confirms. */}
+                  {contactStage?.stageId && (
+                    <>
+                      <div className="my-1 h-px bg-border" />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStagePickerOpen(false);
+                          setClearOpen(true);
+                        }}
+                        className="flex w-full items-center gap-1.75 rounded-md px-2 py-1.5 cursor-pointer text-destructive hover:bg-destructive/10"
+                      >
+                        <IconTrash className="size-3.25 shrink-0" />
+                        <span className="flex-1 truncate text-left text-[12px] font-semibold">
+                          {t("Remove from the board")}
+                        </span>
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {contact?.id && (
+        <AdReferralPanel contactId={contact.id} conversationId={contact.conversationId} />
+      )}
+      {contact?.id && <InboxOrdersPanel contactId={contact.id} />}
+
+      {/* ---- Conversation Tags ----
+           Ticket-grained, so they sit directly above the contact-grained labels
+           and the two are named apart on screen: a tag describes *this* ticket,
+           a label describes the customer. */}
+      {contact?.conversationId && (
+        <Section label={t("Conversation tags")}>
+          <div className="flex flex-wrap gap-1.5">
+            {conversationTags.map((tag) => (
+              <span
+                key={tag.id}
+                className={cn(CHIP, "border")}
+                style={{ borderColor: tag.color ?? undefined, color: tag.color ?? undefined }}
+              >
+                <IconHash className="size-2.5 shrink-0" />
+                <span className="truncate">{tag.name}</span>
+                <button
+                  type="button"
+                  aria-label={t("Remove tag")}
+                  onClick={() => handleToggleTag(tag.id)}
+                  disabled={assignTags.isPending}
+                  className="cursor-pointer shrink-0"
+                >
+                  <IconX className="size-3" />
+                </button>
+              </span>
+            ))}
+            <ChipAddPicker
+              options={allTags}
+              activeIds={activeTagIds}
+              onAdd={handleToggleTag}
+              disabled={assignTags.isPending}
+              placeholder={t("Search tags")}
+              emptyText={t("No conversation tags yet — create them in Inbox Settings.")}
+              marker={(tag) => (
+                <IconHash className="size-3 shrink-0" style={{ color: tag.color ?? undefined }} />
+              )}
+              className={ADD_CHIP}
+            />
+          </div>
+        </Section>
+      )}
+
+      {/* ---- Contact Labels ---- */}
+      <Section label={t("Contact labels")}>
+        <div className="flex flex-wrap gap-1.5">
+          {contactLabels.map((label) => (
+            <span
+              key={label.id}
+              className={CHIP}
+              style={{ background: `${label.color}1a`, color: label.color }}
+            >
+              <span className="truncate">{label.name}</span>
+              <button
+                type="button"
+                aria-label={t("Remove label")}
+                onClick={() => handleToggleLabel(label.id)}
+                className="cursor-pointer shrink-0"
+              >
+                <IconX className="size-3" />
+              </button>
+            </span>
+          ))}
+          <ChipAddPicker
+            options={allLabels}
+            activeIds={activeLabelIds}
+            onAdd={handleToggleLabel}
+            placeholder={t("Search labels")}
+            emptyText={t("No contact labels yet.")}
+            marker={(label) => (
+              <span
+                className="size-2.25 shrink-0 rounded-full"
+                style={{ background: label.color ?? undefined }}
+              />
+            )}
+            className={ADD_CHIP}
+          />
+        </div>
+      </Section>
+
+      {/* ---- Contact ---- */}
+      <Section
+        label={t("Contact")}
+        action={
+          <button
+            type="button"
+            onClick={() => setIsContactDialogOpen(true)}
+            className="inline-flex cursor-pointer items-center gap-1 rounded-md px-1.5 py-0.5 text-[12px] font-semibold text-primary transition-colors hover:bg-muted"
+          >
+            <IconUser className="size-3.5" />
+            {t("View contact")}
+          </button>
+        }
+      >
+        <div className="flex items-center gap-3">
+          <div className="relative shrink-0">
+            <CreativeAvatar
+              name={contact?.name || contact?.whatsappUserName || undefined}
+              size="md"
+            />
+            <span
+              className="absolute -right-0.5 -bottom-0.5 flex size-4 items-center justify-center rounded-full ring-2 ring-background"
+              style={{ background: channel.color }}
+              title={channel.label}
+            >
+              <ChannelIcon className="size-2.5 text-white" />
+            </span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex min-w-0 items-center gap-1">
+              <span className="truncate text-[15px] font-bold text-foreground">
+                {contact?.name || contact?.whatsappUserName || "—"}
+              </span>
+              {contact?.consent ? (
+                <IconShieldCheck
+                  className="size-4 shrink-0 text-green-600"
+                  role="img"
+                  aria-label={t("Consent given")}
+                  title={t("Consent given")}
+                />
+              ) : (
+                <IconShieldX
+                  className="size-4 shrink-0 text-amber-600"
+                  role="img"
+                  aria-label={t("No consent")}
+                  title={t("No consent")}
+                />
+              )}
+            </div>
+            {displayPhone && (
+              <div className="flex items-center gap-1 truncate text-[13px] text-muted-foreground">
+                <IconPhone className="size-3.5 shrink-0" />
+                {displayPhone}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {contact?.createdAt && (
+          <dl className="mt-3 rounded-lg bg-muted px-3 py-2">
+            <dt className="text-[11px] text-muted-foreground">{t("Customer since")}</dt>
+            <dd className="truncate text-[13px] font-bold text-foreground">
+              {dayjs(contact.createdAt).format("MMM YYYY")}
+            </dd>
+          </dl>
+        )}
+      </Section>
+
+      {/* ---- Identities, duplicates and merge history (contact-level) ---- */}
+      {contact?.id && <ContactIdentitySection contactId={contact.id} />}
+
+      {/* ---- Ticket Info ---- */}
+      <Section label={t("Ticket info")}>
+        <div className="flex flex-col gap-2.5">
+          <InfoRow
+            label={t("Channel")}
+            value={
+              <span className="inline-flex items-center gap-1.5">
+                <span
+                  className="flex size-4.5 shrink-0 items-center justify-center rounded-[5px]"
+                  style={{ background: channel.color }}
+                >
+                  <ChannelIcon className="size-3 text-white" />
+                </span>
+                {channel.label}
+              </span>
+            }
+          />
+          {connectedChannel && (
+            <InfoRow
+              label={t("Account")}
+              value={
+                <span className="inline-flex items-center gap-1.5">
+                  {[connectedChannel.label, connectedChannel.account].filter(Boolean).join(" · ")}
+                  {!connectedChannel.isConnected && (
+                    <span className="text-[11px] text-muted-foreground">
+                      ({t("no longer connected")})
+                    </span>
+                  )}
+                </span>
+              }
+            />
+          )}
+          {contact?.ticketCreatedAt && (
+            <InfoRow
+              label={t("Created")}
+              value={dayjs(contact.ticketCreatedAt).format("MMM D, YYYY")}
+            />
+          )}
+          {resolutionResult && (
+            <InfoRow
+              label={t("Result")}
+              value={
+                <span className="inline-flex items-center gap-1.5 text-[12px] font-bold px-2.5 py-0.5 rounded-full text-green-600 bg-green-600/10">
+                  {t(RESULT_LABELS[resolutionResult] ?? resolutionResult)}
+                </span>
+              }
+            />
+          )}
+        </div>
+      </Section>
+
+      {/* ---- Board ticket / spam (contact-level, so it toggles both ways) ---- */}
+      <div className="flex gap-1.5 p-4">
+        <Button
+          type="button"
+          size="xs"
+          onClick={() => toggleSpam(!contact?.isSpam)}
+          loading={spamMutation.isPending}
+          variant="outline"
+          title={contact?.isSpam ? t("Not spam") : t("Mark contact as spam")}
+          className={cn("flex-1", !contact?.isSpam && DANGER_OUTLINE)}
+        >
+          {contact?.isSpam ? <IconShieldOff /> : <IconShieldExclamation />}
+          {contact?.isSpam ? t("Not spam") : t("Spam")}
+        </Button>
+
+        {canBlock && (
+          <Button
+            type="button"
+            size="xs"
+            variant="outline"
+            onClick={() => void blockContact()}
+            loading={blockMutation.isPending}
+            title={t("Block contact")}
+            className={cn("flex-1", DANGER_OUTLINE)}
+          >
+            <IconBan />
+            {t("Block")}
+          </Button>
+        )}
+
+        {/* Deleting is ticket-grained, unlike spam beside it: it takes this one
+            ticket and its messages and leaves the contact alone. Admin-only,
+            matching the endpoint's own gate. */}
+        {canDelete && (
+          <Button
+            type="button"
+            size="xs"
+            variant="outline"
+            onClick={() => deleteTicket()}
+            disabled={isDeletingTicket}
+            title={t("Delete conversation")}
+            className={cn("flex-1", DANGER_OUTLINE)}
+          >
+            <IconTrash />
+            {t("Delete")}
+          </Button>
+        )}
+      </div>
+
+      {/* Removing a contact from the board deletes the lead, and with it every
+          note, task and timeline entry on that deal. The confirmation is the only
+          guard, so it names what goes rather than asking a generic "are you sure". */}
+      <Dialog open={clearOpen} onOpenChange={setClearOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("Remove from the board?")}</DialogTitle>
+            <DialogDescription>
+              {contactStage?.loss && (
+                <>
+                  {t(
+                    "This deletes the lead and cannot be undone: {notes} note(s), {tasks} task(s), {activities} timeline entr(y/ies) and {assignees} assignee(s) go with it.",
+                    contactStage.loss,
+                  )}
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose render={<Button variant="outline" />}>{t("Cancel")}</DialogClose>
+            <Button
+              variant="destructive"
+              loading={clearStage.isPending}
+              onClick={() =>
+                clearStage.mutate(undefined, {
+                  onSuccess: () => setClearOpen(false),
+                })
+              }
+            >
+              {t("Remove")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {contact?.id && (
+        <ContactDetailDialog
+          contact={{
+            id: contact.id,
+            name: contact.name ?? undefined,
+            phone: contact.phone ?? undefined,
+            profilePic: contact.profilePic ?? undefined,
+          }}
+          open={isContactDialogOpen}
+          onOpenChange={setIsContactDialogOpen}
+          showInboxLink={false}
+          showConversations={false}
+          onSaved={({ name, phone, email }) => {
+            // The list keeps a row until its ticket changes, and a contact edit is not one.
+            updateContactById(contact.id, (c) => ({ ...c, name, phone, email }));
+            setSelectedContact({ ...contact, name, phone, email });
+          }}
+        />
+      )}
+    </div>
+  );
+}

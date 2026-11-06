@@ -1,0 +1,391 @@
+import { useNavigate, useRouterState } from "@tanstack/react-router";
+import { useEffect, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
+
+import { useContactLabels, useCustomFields } from "@/backend/campaign/contacts/contacts.query";
+import { useChannels, useWebchatInUse } from "@/backend/channels/channels.query";
+import { useLifeCyclesQuery } from "@/backend/lifecycle/lifecycle.query";
+import { useLoyaltyFeedback } from "@/backend/loyalty/feedback.query";
+import { useLoyaltyOnboardingState } from "@/backend/loyalty/onboarding.query";
+import { useChecklist, useTeamsMembersOfOrg } from "@/backend/org/org.query";
+import {
+  usePipelinesQuery,
+  usePipelineQuery,
+  usePipelineStatsQuery,
+} from "@/backend/pipeline/pipeline.query.tsx";
+import { useActiveContactLimit, useSubscription } from "@/backend/subscription/subscription.query";
+import { useTeamsByUser } from "@/backend/team/team.query";
+import type { IUserInfoApiResponse } from "@/backend/user/user.api";
+import { useUserInfo } from "@/backend/user/user.query";
+import { useConversationTags } from "@/backend/whatsapp/inbox/conversationTag/conversationTag.query.ts";
+import { useGetInboxUserCount } from "@/backend/whatsapp/inbox/message/wamessage.query.ts";
+import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import { feedbackNavState } from "@/components/dashboard/loyalty/feedback/feedbackStatus.ts";
+import type { LoyaltyNavInput } from "@/components/dashboard/loyalty/loyalty.nav.ts";
+import { programStateOf } from "@/components/dashboard/loyalty/program/programState.ts";
+import type { MetaAgentNavInput } from "@/components/dashboard/metaAgent/metaAgent.nav.ts";
+import { useAgentSetup } from "@/components/dashboard/metaAgent/setup/useAgentSetup.ts";
+import type { SetupNavInput } from "@/components/dashboard/setup/setup.nav.ts";
+import { getChannelOptions, webchatChannelOption } from "@/components/input/channelOptions.ts";
+import type { PipelineNavInput } from "@/components/pipeline/pipeline.nav.tsx";
+import { findLeadsPipeline } from "@/components/pipeline/pipelineTypes.ts";
+import { useUser } from "@/context/UserContext.tsx";
+import useLocalStorage from "@/hooks/localStorage.tsx";
+import { useOrgModules } from "@/hooks/useOrgModules.ts";
+import i18n from "@/i18n.ts";
+import { useChatContactCountStore } from "@/store/inbox.store.ts";
+import { useMetaAgentChannelStore } from "@/store/metaAgent.store.ts";
+import { usePipelineStore } from "@/store/pipeline.store.ts";
+import { SubscriptionFeaturePathName } from "@/types/enums.ts";
+import { can, resolvePermissions } from "@/utils/authz/can.ts";
+import { normalizeLocale } from "@/utils/locale.ts";
+import { hasFeature } from "@/utils/subscription/subscription.ts";
+
+import {
+  getSignupRedirect,
+  getStoredRedirect,
+  getUserInfoErrorMessage,
+  hasUserPayload,
+} from "./main-sidebar.utils.ts";
+
+type UseMainSidebarArgs = Readonly<{
+  welcomeMessage: boolean;
+}>;
+
+export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
+  const { t } = useTranslation();
+  const { isPending: isLoadingUserInfo, data, isFetched, refetch, error } = useUserInfo();
+
+  const navigate = useNavigate();
+  const location = useRouterState({
+    select: (s) => s.location,
+  });
+  const pathname = location.pathname;
+  const search = location.search as Record<string, unknown>;
+
+  const [storedUserInfo, setStoredUserInfo] = useLocalStorage<IUserInfoApiResponse | null>(
+    "userInfo",
+    null,
+  );
+
+  const { setUser } = useUser();
+  const welcomeRefetchDone = useRef(false);
+
+  const { data: sub, isPending } = useSubscription();
+  const { data: lifecycles, isPending: isPendingLifecycles } = useLifeCyclesQuery();
+  const { data: customFieldData, isPending: isCustomFieldPending } = useCustomFields();
+  const { data: contactLabels = [], isPending: isPendingContactLabels } = useContactLabels();
+  // Inbox-only, but the sidebar is mounted app-wide; the query is cheap and
+  // shared with the ticket panel and inbox settings.
+  const { data: conversationTags = [] } = useConversationTags();
+  const { data: userRes, isLoading: isStaffLoading } = useTeamsMembersOfOrg();
+  const { data: teamRes, isLoading: isTeamLoading } = useTeamsByUser();
+
+  const isLoading =
+    isPending ||
+    isPendingLifecycles ||
+    isLoadingUserInfo ||
+    isCustomFieldPending ||
+    isPendingContactLabels ||
+    isStaffLoading ||
+    isTeamLoading;
+
+  const hasUserData = hasUserPayload(data);
+  const userQueryData = hasUserData ? data : null;
+  const resolvedUserInfo = userQueryData ?? storedUserInfo;
+  const resolvedUserData = resolvedUserInfo?.data ?? null;
+  const missingOrgId = Boolean(userQueryData?.data?.email && !userQueryData?.data?.orgId);
+
+  const userInfoErrorMessage = getUserInfoErrorMessage(data, error);
+
+  const isCorruptedSession = !isLoading && isFetched && !userQueryData?.data;
+
+  const signupRedirect = getSignupRedirect({
+    hasUserData,
+    missingOrgId,
+    userInfoErrorMessage,
+    // Invited members join a finished org; only someone who may edit it is asked about the business.
+    profileIncomplete:
+      userQueryData?.data?.profileCompleted === false &&
+      can(resolvePermissions(userQueryData.data), "org.settings"),
+  });
+
+  const isInbox = pathname?.includes("/dashboard/inbox");
+  // The chat screen itself is full-bleed; Calls under it is an ordinary padded page.
+  const isInboxChat = /^\/dashboard\/inbox\/?$/.test(pathname ?? "");
+  const paddingExclusion = isInboxChat
+    ? true
+    : // The setup guide, and the Meta AI Agent built like it, carry a fixed
+      // header over their own scroller.
+      pathname?.includes("/dashboard/setup") ||
+      pathname?.includes("/dashboard/meta-agent") ||
+      // The automation builder and campaign wizard: a full-bleed 56px bar that must
+      // line up with the device preview panel's header beside it.
+      /^\/dashboard\/automation\/rules\/[^/]+/.test(pathname ?? "") ||
+      /^\/dashboard\/campaigns\/(new|[^/]+\/edit)/.test(pathname ?? "") ||
+      // The template wizard, built the same way. The template's analytics page
+      // below it is an ordinary padded page.
+      /^\/dashboard\/(whatsapp|loyalty)\/templates\/[^/]+\/?$/.test(pathname ?? "") ||
+      pathname?.includes("/dashboard/whatsapp/flows/v2/") ||
+      // The link page editor, built like the automation builder. The list keeps its padding.
+      /^\/dashboard\/link-pages\/[^/]+/.test(pathname ?? "") ||
+      // The journey builder, on any channel. The list at /dashboard/journeys keeps its padding.
+      /^\/dashboard\/automation\/journeys\/[^/]+/.test(pathname ?? "");
+
+  // Only the inbox's Channel filter needs these, and the query is shared and
+  // cached forever — so it costs nothing on the pages that already fetched it.
+  const { data: connectedChannels } = useChannels(Boolean(isInbox));
+  // The website chat widget is no connected account, so it joins the list on its own.
+  const { data: webchatInUse } = useWebchatInUse(Boolean(isInbox));
+  const channels = useMemo(
+    () => [
+      ...getChannelOptions(connectedChannels, { platform: "all", usePhoneNumber: true }),
+      ...(webchatInUse ? [webchatChannelOption(t("Webchat"))] : []),
+    ],
+    [connectedChannels, webchatInUse, t],
+  );
+
+  // Same shape as the inbox counts above: the sidebar is mounted app-wide, so
+  // the pipeline's leads are only fetched while the user is actually on it.
+  const isPipeline = pathname?.includes("/dashboard/pipelines");
+  const { data: pipelines = [] } = usePipelinesQuery(Boolean(isPipeline));
+  const activePipelineId =
+    (typeof search?.p === "string" ? search.p : undefined) ??
+    (findLeadsPipeline(pipelines) ?? pipelines[0])?.id;
+  const { data: activePipeline } = usePipelineQuery(isPipeline ? activePipelineId : undefined);
+  const { data: pipelineStats } = usePipelineStatsQuery(isPipeline ? activePipelineId : undefined);
+
+  // Gated on the pipeline for the same reason as the leads above: this query
+  // refetches on every window focus, and only this panel shows the number.
+  const activeContactLimit = useActiveContactLimit(Boolean(isPipeline));
+
+  // The board's own view state, so a sidebar row highlights what is on screen
+  // and clicking one drives the same store the page reads.
+  const pipelineView = usePipelineStore();
+
+  const pipelineNav = useMemo<PipelineNavInput>(
+    () => ({
+      t,
+      pipelines,
+      pipeline: activePipeline,
+      stats: pipelineStats,
+      view: pipelineView,
+      activePipelineId,
+      currentUserId: resolvedUserData?.userId,
+      setView: pipelineView.patch,
+      toggleFacet: pipelineView.toggle,
+      activeContactLimit,
+    }),
+    [
+      t,
+      pipelines,
+      activePipeline,
+      pipelineStats,
+      pipelineView,
+      activePipelineId,
+      resolvedUserData?.userId,
+      activeContactLimit,
+    ],
+  );
+
+  // Same rule as the pipeline: the sidebar is mounted app-wide, so the loyalty state —
+  // which carries the badge counts — is only fetched while the user is on a loyalty page,
+  // where the pages read the same query anyway.
+  const isLoyalty = Boolean(pathname?.includes("/dashboard/loyalty"));
+  const { data: loyaltyState } = useLoyaltyOnboardingState(isLoyalty);
+  // Same query the Feedback page reads, so the chip and the page never disagree.
+  const { data: feedback } = useLoyaltyFeedback(isLoyalty);
+  const loyaltyNav = useMemo<LoyaltyNavInput>(
+    () => ({
+      t,
+      programState: loyaltyState
+        ? loyaltyState.program
+          ? programStateOf(loyaltyState.program)
+          : null
+        : null,
+      members: loyaltyState?.counts.members,
+      pendingApprovals: loyaltyState?.counts.pendingApprovals,
+      templatesPending: loyaltyState?.counts.templatesPending,
+      feedbackState: feedback
+        ? feedbackNavState(feedback.flow, feedback.template, feedback.setting?.enabled)
+        : null,
+      pathname,
+    }),
+    [t, loyaltyState, feedback, pathname],
+  );
+
+  const isSetup = pathname?.includes("/dashboard/setup");
+
+  // Once the org has finished (or dismissed) setup the guide is gone for good, so
+  // the checklist is only fetched while it can still put a row in the rail.
+  const setupDismissed = resolvedUserData?.onboardingChecklistCompleted ?? true;
+  const { data: checklist } = useChecklist(!setupDismissed);
+
+  const { isOn: isModuleOn } = useOrgModules();
+  const setupNav = useMemo<SetupNavInput>(
+    () => ({
+      t,
+      checklist: checklist?.onboardingChecklist,
+      dismissed: setupDismissed || Boolean(checklist?.onboardingChecklistCompleted),
+      // Only WhatsApp is known here; the checklist carries the rest, which the guide
+      // writes as soon as it sees a channel linked.
+      connected: { whatsapp: Boolean(resolvedUserData?.hasWhatsAppSettings) },
+      hasLoyaltyFeature: sub
+        ? Boolean(hasFeature(sub, SubscriptionFeaturePathName.Whatsapp)) && isModuleOn("loyalty")
+        : null,
+      activeStep: isSetup && typeof search?.step === "string" ? search.step : undefined,
+    }),
+    [
+      t,
+      checklist,
+      setupDismissed,
+      resolvedUserData?.hasWhatsAppSettings,
+      sub,
+      isModuleOn,
+      isSetup,
+      search?.step,
+    ],
+  );
+
+  // Same rule again: the agent's step ticks read nine queries, so they run only
+  // on the agent's own pages — which make the same queries, so it costs nothing
+  // there. The channel is the one the page is showing, or the first as it would.
+  const isMetaAgent = Boolean(pathname?.includes("/dashboard/meta-agent"));
+  const { data: waChannels } = useWaSettings(isMetaAgent);
+  const pickedChannelId = useMetaAgentChannelStore((state) => state.waSettingsId);
+  const agentChannelId = isMetaAgent
+    ? ((waChannels?.some((channel) => channel.id === pickedChannelId) ? pickedChannelId : null) ??
+      waChannels?.[0]?.id ??
+      "")
+    : "";
+  const agentSetup = useAgentSetup(agentChannelId);
+  const agentStatus = agentChannelId && !agentSetup.isLoading ? agentSetup.status : null;
+  const metaAgentNav = useMemo<MetaAgentNavInput>(
+    () => ({ t, status: agentStatus }),
+    [t, agentStatus],
+  );
+
+  const { data: inboxCount } = useGetInboxUserCount(Boolean(isInbox));
+  const setSectionCounts = useChatContactCountStore((state) => state.setSectionCounts);
+
+  useEffect(() => {
+    if (inboxCount) {
+      setSectionCounts({
+        openCount: inboxCount.open,
+        closedCount: inboxCount.closed,
+        allCount: inboxCount.total,
+        newCount: inboxCount.new ?? 0,
+        // NB: the API spells this count "favourite" while the filter param and the
+        // DB column are "favorite". Not a typo.
+        favouriteCount: inboxCount.favourite ?? 0,
+        mentionsCount: inboxCount.mentions ?? 0,
+        mineCount: inboxCount.mine ?? 0,
+        spamCount: inboxCount.spam ?? 0,
+      });
+    }
+  }, [inboxCount, setSectionCounts]);
+
+  useEffect(() => {
+    if (!welcomeMessage || welcomeRefetchDone.current) {
+      return;
+    }
+
+    welcomeRefetchDone.current = true;
+    refetch();
+  }, [refetch, welcomeMessage]);
+
+  useEffect(() => {
+    if (hasUserData) {
+      setStoredUserInfo(data);
+    }
+  }, [data, hasUserData, setStoredUserInfo]);
+
+  useEffect(() => {
+    if (welcomeMessage || !signupRedirect) {
+      return;
+    }
+
+    if (userInfoErrorMessage) {
+      console.error(userInfoErrorMessage);
+    }
+
+    void navigate({
+      ...signupRedirect,
+      replace: true,
+    });
+  }, [navigate, signupRedirect, userInfoErrorMessage, welcomeMessage]);
+
+  useEffect(() => {
+    setUser(resolvedUserData);
+  }, [resolvedUserData, setUser]);
+
+  // The saved language wins on a browser with no cookie of its own — a new browser, or one
+  // whose cookies were cleared.
+  useEffect(() => {
+    const preferred = normalizeLocale(resolvedUserData?.prefLanguage);
+    if (!preferred || preferred === i18n.language) return;
+    if (document.cookie.includes("i18next=")) return;
+
+    document.cookie = `i18next=${preferred}; path=/; max-age=31536000`;
+    void i18n.changeLanguage(preferred);
+  }, [resolvedUserData?.prefLanguage]);
+
+  useEffect(() => {
+    if (resolvedUserData?.isOrgPaused) {
+      void navigate({
+        to: "/login/callback/paused",
+        search: { pausedby: "rateup" },
+        replace: true,
+      });
+
+      return;
+    }
+
+    if (resolvedUserData?.isPaused) {
+      void navigate({
+        to: `/login/callback/paused?pausedby=${resolvedUserData.pausedBy}`,
+        replace: true,
+      });
+
+      return;
+    }
+
+    const shopifySetUpFinishRoute = getStoredRedirect("shopify-auth-callback");
+    if (shopifySetUpFinishRoute) {
+      void navigate({
+        to: shopifySetUpFinishRoute,
+        replace: true,
+      });
+
+      return;
+    }
+
+    const shopifySubscriptionReturn = getStoredRedirect("shopify-subscription-callback");
+    if (shopifySubscriptionReturn) {
+      void navigate({
+        to: shopifySubscriptionReturn,
+        replace: true,
+      });
+    }
+  }, [navigate, resolvedUserData]);
+
+  return {
+    channels,
+    contactLabels,
+    conversationTags,
+    customFieldData,
+    isCorruptedSession,
+    isLoading,
+    lifecycles,
+    loyaltyNav,
+    paddingExclusion,
+    pathname,
+    pipelineNav,
+    resolvedUserInfo,
+    setupNav,
+    metaAgentNav,
+    staff: userRes?.data ?? [],
+    subscription: sub,
+    teams: teamRes?.data ?? [],
+  };
+}

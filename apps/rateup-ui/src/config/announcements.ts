@@ -1,0 +1,1278 @@
+/**
+ * Product announcements — the source for the sidebar's "What's new" card.
+ *
+ * Add an entry in the same PR that ships the change. Order here does not matter;
+ * the UI sorts by `publishedAt`, newest first.
+ *
+ * `id` is what read state is keyed on, and that state lives in the reader's
+ * browser. Never reuse or renumber an id: an entry that changes id comes back as
+ * unread for everyone, and an entry that inherits a retired id is never seen.
+ *
+ * Keep `title` under ~50 characters — the card is 224px wide and clamps to two
+ * lines — and `summary` to one or two sentences. Customers read these, and they
+ * want what changed and what it means for them, not how it was built: no
+ * reasoning, no edge cases, no internal names. The rest belongs in the PR.
+ */
+
+export type AnnouncementKind = "new" | "improvement" | "fix";
+
+export interface AnnouncementLink {
+  /** In-app route, e.g. "/dashboard/inbox". */
+  readonly to: string;
+  /** Optional search params for the route, e.g. `{ tab: "spam" }`. */
+  readonly search?: Record<string, unknown>;
+  /** Call to action; falls back to "Take a look". */
+  readonly label?: string;
+}
+
+export interface Announcement {
+  /** Stable, never reused. Convention: `YYYY-MM-DD-short-slug`. */
+  readonly id: string;
+  readonly title: string;
+  readonly summary: string;
+  /** ISO date (YYYY-MM-DD). */
+  readonly publishedAt: string;
+  readonly kinds: readonly AnnouncementKind[];
+  /** Product area chip, e.g. "Inbox". Keep to one or two words. */
+  readonly area?: string;
+  readonly link?: AnnouncementLink;
+}
+
+export const ANNOUNCEMENTS: readonly Announcement[] = [
+  {
+    id: "2026-11-05-continue-on-whatsapp",
+    title: "Continue on WhatsApp step in journeys",
+    summary:
+      "Instagram and Messenger journeys can send a button that moves the chat to your WhatsApp number. When the customer sends that message, their WhatsApp and Instagram or Messenger contacts become one.",
+    publishedAt: "2026-11-05",
+    kinds: ["new"],
+    area: "Journeys",
+    link: { to: "/dashboard/automation/journeys", label: "Open Journeys" },
+  },
+  {
+    id: "2026-11-05-merge-contacts",
+    title: "Merge duplicate contacts",
+    summary:
+      "When one customer shows up as two contacts, merge them to keep a single history. Possible duplicates are listed under Contacts for you to review.",
+    publishedAt: "2026-11-05",
+    kinds: ["new"],
+    area: "Contacts",
+    link: { to: "/dashboard/contacts/duplicates", label: "Review duplicates" },
+  },
+  {
+    id: "2026-11-05-multiple-businesses",
+    title: "WhatsApp numbers from several businesses",
+    summary:
+      "Connect numbers from more than one Meta business, grouped by business in Channels. Replies now go out on the number the ticket is on, and numbers that can't reach a customer are greyed out.",
+    publishedAt: "2026-11-05",
+    kinds: ["new", "improvement"],
+    area: "Channels",
+    link: { to: "/dashboard/settings/channels/whatsapp", label: "Open Channels" },
+  },
+  {
+    id: "2026-11-04-instagram-inbox",
+    title: "Reply on Instagram for up to 7 days",
+    summary:
+      "Your team can now answer Instagram and Messenger chats up to 7 days after the customer's last message, and on Instagram quote a message, send several photos or a PDF, and block or move a chat to spam.",
+    publishedAt: "2026-11-04",
+    kinds: ["new", "improvement"],
+    area: "Inbox",
+    link: { to: "/dashboard/inbox" },
+  },
+  {
+    id: "2026-11-04-instagram-mention-points",
+    title: "Loyalty points for Instagram mentions",
+    summary:
+      "Reward members with points when they tag you in a story, post or comment. Turn it on under Earning rules in your loyalty Program.",
+    publishedAt: "2026-11-04",
+    kinds: ["new"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/program", label: "Open Program" },
+  },
+  {
+    id: "2026-11-04-instagram-comment-moderation",
+    title: "Moderate Instagram comments",
+    summary:
+      "Pick a post on the Instagram page to read its comments and reply, like, hide or delete them without opening the app. Comments your automations already answered are marked Auto-replied.",
+    publishedAt: "2026-11-04",
+    kinds: ["new"],
+    area: "Instagram",
+    link: { to: "/dashboard/instagram", search: { tool: "comments" } },
+  },
+  {
+    id: "2026-11-04-instagram-analytics",
+    title: "Instagram analytics",
+    summary:
+      "A new Instagram view in Analytics shows your account's views, reach and followers, and ranks your posts by the DMs, leads and orders they brought in.",
+    publishedAt: "2026-11-04",
+    kinds: ["new"],
+    area: "Analytics",
+    link: { to: "/dashboard/analytics", search: { tab: "instagram" } },
+  },
+  {
+    id: "2026-11-01-instagram-messenger-pages",
+    title: "A new home for Instagram and Messenger",
+    summary:
+      "Each channel page now opens on an overview of every tool and whether it is live, with the tools listed down the side. Ice breakers, menus and the Messenger welcome screen show a live phone preview as you edit.",
+    publishedAt: "2026-11-01",
+    kinds: ["improvement"],
+    area: "Meta",
+    link: { to: "/dashboard/instagram" },
+  },
+  {
+    id: "2026-10-30-feature-renames",
+    title: "Clearer names across RateUp",
+    summary:
+      "Chatbots are now Journeys, contact groups are Audiences and Web Forms are Surveys, and a few inbox tabs and settings pages have clearer names. Your old links still work.",
+    publishedAt: "2026-10-30",
+    kinds: ["improvement"],
+  },
+  {
+    id: "2026-10-30-sidebar-regroup",
+    title: "A tidier sidebar",
+    summary:
+      "WhatsApp, Instagram and Messenger now sit together under Meta, and Rules and Journeys under Automation. Calls moved to the Inbox and the audit log to Settings.",
+    publishedAt: "2026-10-30",
+    kinds: ["improvement"],
+  },
+  {
+    id: "2026-10-28-chatbots-section",
+    title: "All your journeys in one place",
+    summary:
+      "WhatsApp, Instagram and Messenger journeys now live together under Journeys in the sidebar. A new wizard sets up the rule that starts each one, every card shows its runs and an on/off switch, and you can start an Instagram or Messenger journey from the inbox.",
+    publishedAt: "2026-10-28",
+    kinds: ["improvement"],
+    area: "Journeys",
+    link: { to: "/dashboard/automation/journeys", label: "Open Journeys" },
+  },
+  {
+    id: "2026-10-28-template-analytics",
+    title: "See how each template performs",
+    summary:
+      "Each template now has an Analytics page with sends, reads, button clicks and cost from Meta. An admin turns it on once per WhatsApp number.",
+    publishedAt: "2026-10-28",
+    kinds: ["new"],
+    area: "WhatsApp",
+    link: { to: "/dashboard/whatsapp/templates", label: "Open templates" },
+  },
+  {
+    id: "2026-10-28-inbox-typing-indicators",
+    title: "Typing indicators in the inbox",
+    summary:
+      "While you write a reply, customers see you typing on WhatsApp, Instagram and Messenger. You also see when a teammate is typing in the same chat.",
+    publishedAt: "2026-10-28",
+    kinds: ["new"],
+    area: "Inbox",
+  },
+  {
+    id: "2026-10-27-template-wizard-meta-library",
+    title: "Step-by-step templates, with Meta's library",
+    summary:
+      "Creating a WhatsApp template is now a guided wizard. Start from Meta's ready-written templates, one of our starters or a blank page.",
+    publishedAt: "2026-10-27",
+    kinds: ["new", "improvement"],
+    area: "WhatsApp",
+    link: {
+      to: "/dashboard/whatsapp/templates/create",
+      label: "Create a template",
+    },
+  },
+  {
+    id: "2026-10-19-checkout-in-your-store",
+    title: "Check out in Shopify or WooCommerce",
+    summary:
+      "If your products stay in sync with Shopify or WooCommerce, customers can now pay on that store's own checkout from your storefront, chat links and comment replies. Choose where customers pay in Commerce → Settings → Checkout.",
+    publishedAt: "2026-10-19",
+    kinds: ["new"],
+    area: "Commerce",
+    link: {
+      to: "/dashboard/commerce/settings",
+      search: { tab: "checkout" },
+      label: "Open Checkout settings",
+    },
+  },
+  {
+    id: "2026-10-18-verify-phone-on-whatsapp",
+    title: "Shoppers confirm their number on WhatsApp",
+    summary:
+      "Back-in-stock alerts and cash or bank-transfer orders from your storefront now start with a quick WhatsApp message from the shopper, so you only ever message numbers that asked to hear from you. Unpaid transfer orders are cancelled after 72 hours unless you change it in Getting paid.",
+    publishedAt: "2026-10-18",
+    kinds: ["improvement"],
+    area: "Commerce",
+    link: {
+      to: "/dashboard/commerce/settings",
+      search: { tab: "payments" },
+      label: "Open Getting paid",
+    },
+  },
+  {
+    id: "2026-10-18-order-invoices",
+    title: "PDF invoices for paid orders",
+    summary:
+      "Every paid order now has a numbered PDF invoice you can download or send from the order. Turn on automatic sending in Commerce → Settings → Getting paid and customers get it in the chat as soon as they pay.",
+    publishedAt: "2026-10-18",
+    kinds: ["new"],
+    area: "Commerce",
+    link: {
+      to: "/dashboard/commerce/settings",
+      search: { tab: "payments" },
+      label: "Open Getting paid",
+    },
+  },
+  {
+    id: "2026-10-18-chat-product-cards",
+    title: "Products you send now show in the chat",
+    summary:
+      "Product cards and checkout links you send on Instagram and Messenger, and products sent on WhatsApp, now appear in the conversation as the customer sees them.",
+    publishedAt: "2026-10-18",
+    kinds: ["fix"],
+    area: "Inbox",
+  },
+  {
+    id: "2026-10-18-ctwa-ad-orders",
+    title: "Turn ad clicks into orders",
+    summary:
+      "Sales from your click-to-WhatsApp ads are now credited to the ad, reported back to Meta, and shown per ad on Commerce → Overview. An automation can also send the products an ad promoted to everyone who taps it.",
+    publishedAt: "2026-10-18",
+    kinds: ["new"],
+    area: "Commerce",
+    link: { to: "/dashboard/commerce/overview", label: "Open Overview" },
+  },
+  {
+    id: "2026-10-18-message-cost-roi",
+    title: "See what your messages cost vs what they sell",
+    summary:
+      "Commerce → Overview now shows your estimated WhatsApp messaging cost next to the orders each campaign and automation brought in. Enter your own rates for a closer figure.",
+    publishedAt: "2026-10-18",
+    kinds: ["new"],
+    area: "Commerce",
+    link: { to: "/dashboard/commerce/overview", label: "Open Overview" },
+  },
+  {
+    id: "2026-10-18-storefront-seo",
+    title: "Every product has its own link",
+    summary:
+      "Each product on your storefront now has its own address that shows a photo and price when shared, and your storefront can now appear in search results.",
+    publishedAt: "2026-10-18",
+    kinds: ["improvement"],
+    area: "Commerce",
+  },
+  {
+    id: "2026-10-18-ig-comment-to-buy",
+    title: "Sell from Instagram comments",
+    summary:
+      "When someone comments a keyword on your post, reel or live, RateUp DMs them the product with a checkout link. Limited drops sell only as many as you set, first come.",
+    publishedAt: "2026-10-18",
+    kinds: ["new"],
+    area: "Instagram",
+    link: { to: "/dashboard/automation/rules", label: "Open rules" },
+  },
+  {
+    id: "2026-10-18-bulk-edit-products",
+    title: "Edit many products at once",
+    summary:
+      "Select products to change their prices, stock or status together, or duplicate one to start a similar product. Importing from Meta now lets you pick which catalog to copy from.",
+    publishedAt: "2026-10-18",
+    kinds: ["improvement"],
+    area: "Commerce",
+    link: { to: "/dashboard/commerce/products", label: "Open products" },
+  },
+  {
+    id: "2026-10-18-import-products",
+    title: "Import products from Meta, Shopify or WooCommerce",
+    summary:
+      "Commerce → Products → Import brings in the products from your WhatsApp catalog, your Shopify or WooCommerce store, or a CSV file.",
+    publishedAt: "2026-10-18",
+    kinds: ["new"],
+    area: "Commerce",
+    link: { to: "/dashboard/commerce/products", label: "Import products" },
+  },
+  {
+    id: "2026-10-18-commerce-setup",
+    title: "Guided shop setup and simpler settings",
+    summary:
+      "A new Setup page in Commerce takes you from connecting WhatsApp to your first test order, one step at a time. Payments, delivery, checkout and store settings now sit together under Commerce → Settings.",
+    publishedAt: "2026-10-18",
+    kinds: ["new", "improvement"],
+    area: "Commerce",
+    link: { to: "/dashboard/commerce/setup", label: "Set up your shop" },
+  },
+  {
+    id: "2026-10-17-social-commerce",
+    title: "Sell in WhatsApp and Instagram chats",
+    summary:
+      "Add your products once in Commerce and they publish to WhatsApp, Instagram and your own storefront. Customers check out in the chat, and you manage orders, coupons, payments and shipping in one place.",
+    publishedAt: "2026-10-17",
+    kinds: ["new"],
+    area: "Commerce",
+    link: { to: "/dashboard/commerce/overview", label: "Open Commerce" },
+  },
+  {
+    id: "2026-10-16-choose-your-features",
+    title: "Choose the features you see",
+    summary:
+      "See everything RateUp offers under Features in the menu. Admins can turn features like Loyalty, Commerce and QR & Links on or off to keep the menu to what your team uses.",
+    publishedAt: "2026-10-16",
+    kinds: ["new"],
+    area: "Settings",
+    link: { to: "/dashboard/customize-menu", label: "Open Customize Menu" },
+  },
+  {
+    id: "2026-10-17-messenger-welcome-menu",
+    title: "Get Started button, ice breakers and menu for Messenger",
+    summary:
+      "Set the greeting and Get Started button people see when they first message your Page, add tap-to-ask questions and an always-there menu, each starting the journey you choose.",
+    publishedAt: "2026-10-17",
+    kinds: ["new"],
+    area: "Messenger",
+    link: { to: "/dashboard/messenger", label: "Set it up" },
+  },
+  {
+    id: "2026-10-17-facebook-comment-replies",
+    title: "Reply to Facebook comments in Messenger",
+    summary:
+      "When someone comments on your Page's posts, send them a private Messenger reply or start a journey, and thank them publicly under the comment.",
+    publishedAt: "2026-10-17",
+    kinds: ["new"],
+    area: "Messenger",
+    link: { to: "/dashboard/messenger", label: "Set it up" },
+  },
+  {
+    id: "2026-10-17-messenger-m-me-links",
+    title: "m.me links start a Messenger automation",
+    summary:
+      "Share an m.me link or QR code on your website, ads or emails. When someone opens it, the journey or message you choose starts right away.",
+    publishedAt: "2026-10-17",
+    kinds: ["new"],
+    area: "Messenger",
+    link: { to: "/dashboard/messenger", label: "Create a link" },
+  },
+  {
+    id: "2026-10-16-campaign-device-preview",
+    title: "Campaign preview moves to the side panel",
+    summary:
+      "When you pick a template for a campaign, the phone preview now opens in the panel on the right, with a Preview button in the header to show or hide it.",
+    publishedAt: "2026-10-16",
+    kinds: ["improvement"],
+    area: "Campaigns",
+  },
+  {
+    id: "2026-10-16-automation-builder-refresh",
+    title: "A clearer automation builder",
+    summary:
+      "Pick what starts an automation from cards, add actions from a menu, and keep a live phone preview open beside every step.",
+    publishedAt: "2026-10-16",
+    kinds: ["improvement"],
+    area: "Automation",
+    link: { to: "/dashboard/automation/rules", label: "Open rules" },
+  },
+  {
+    id: "2026-10-16-automation-multi-channel",
+    title: "One automation for all your channels",
+    summary:
+      "An automation can now run on WhatsApp, Instagram and Messenger at once, replying to each customer on the channel they wrote from.",
+    publishedAt: "2026-10-16",
+    kinds: ["new"],
+    area: "Automation",
+    link: { to: "/dashboard/automation/rules", label: "Open rules" },
+  },
+  {
+    id: "2026-10-16-automation-templates",
+    title: "Start an automation from a template",
+    summary:
+      "Pick a ready-made automation like a keyword auto-reply or an order confirmation, and watch a live preview of what your customer will see as you set it up.",
+    publishedAt: "2026-10-16",
+    kinds: ["new", "improvement"],
+    area: "Automation",
+    link: { to: "/dashboard/automation/rules", label: "Open rules" },
+  },
+  {
+    id: "2026-10-16-webhook-settings-redesign",
+    title: "A clearer webhook settings page",
+    summary:
+      "Pick webhook events by group and save them together, and see how to verify each delivery's signature, with ready-to-copy Node.js and Python code.",
+    publishedAt: "2026-10-16",
+    kinds: ["improvement"],
+    area: "Integrations",
+    link: { to: "/dashboard/settings/integrations/webhook", label: "Open webhook settings" },
+  },
+  {
+    id: "2026-10-16-webchat-widget-key",
+    title: "A dedicated key for your webchat widget",
+    summary:
+      "You can now give the webchat widget a key that can only run the widget, so the key in your page's source opens nothing else. Create one from the Widget integration.",
+    publishedAt: "2026-10-16",
+    kinds: ["new"],
+    area: "API",
+    link: { to: "/dashboard/settings/integrations/widget", label: "Open the widget setup" },
+  },
+  {
+    id: "2026-10-16-multiple-api-keys",
+    title: "Multiple API keys, with usage",
+    summary:
+      "You can now create a separate API key for each integration, limit what it can do, and rotate it without downtime. A usage chart shows each key's requests and errors.",
+    publishedAt: "2026-10-16",
+    kinds: ["new"],
+    area: "API",
+    link: { to: "/dashboard/settings/integrations/apiservice", label: "Open API keys" },
+  },
+  {
+    id: "2026-10-14-automation-wizard",
+    title: "Automations are built step by step",
+    summary:
+      "Creating an automation now walks you through it one step at a time, with a review before you save.",
+    publishedAt: "2026-10-14",
+    kinds: ["improvement"],
+    area: "Automation",
+    link: { to: "/dashboard/automation/rules", label: "Open rules" },
+  },
+  {
+    id: "2026-10-14-chatbot-examples",
+    title: "Start a journey from a ready-made example",
+    summary:
+      "Creating a journey now lets you pick WhatsApp, Instagram or Messenger and start from an example for welcomes, FAQs, leads, bookings and more, previewed before you create it.",
+    publishedAt: "2026-10-14",
+    kinds: ["new", "improvement"],
+    area: "Journeys",
+    link: { to: "/dashboard/automation/journeys" },
+  },
+  {
+    id: "2026-10-14-messenger-chatbots",
+    title: "Journeys for Facebook Messenger",
+    summary:
+      "Build journeys for your Facebook Page in the same editor you use for WhatsApp and Instagram, and start them from an automation rule when someone messages your Page.",
+    publishedAt: "2026-10-14",
+    kinds: ["new"],
+    area: "Messenger",
+    link: { to: "/dashboard/automation/journeys", search: { channel: "messenger" } },
+  },
+  {
+    id: "2026-10-14-live-calls-strip",
+    title: "Calls moved to Analytics, with a live view",
+    summary:
+      "Calls has moved from WhatsApp to Analytics. It now shows who is on a call, who is waiting and for how long, and what was missed in the last hour.",
+    publishedAt: "2026-10-14",
+    kinds: ["improvement"],
+    area: "Analytics",
+    link: { to: "/dashboard/inbox/calls", label: "Open calls" },
+  },
+  {
+    id: "2026-10-07-whatsapp-call-log",
+    title: "Call log and call analytics",
+    summary:
+      "Analytics → Calls lists every voice call with its outcome, length and agent, and shows your answer rate, missed calls and busiest hours.",
+    publishedAt: "2026-10-07",
+    kinds: ["new"],
+    area: "Inbox",
+    link: { to: "/dashboard/inbox/calls", label: "Open calls" },
+  },
+  {
+    id: "2026-10-07-whatsapp-voice-calls",
+    title: "Take WhatsApp voice calls in the inbox",
+    summary:
+      "Customers can now call your WhatsApp number and you answer right in your browser, or call them from a chat once they allow it. Turn it on per number in the Calling tab under Settings → Channels.",
+    publishedAt: "2026-10-07",
+    kinds: ["new"],
+    area: "Inbox",
+    link: { to: "/dashboard/settings/channels/whatsapp", label: "Set up calling" },
+  },
+  {
+    id: "2026-10-06-ig-me-link-stats-qr",
+    title: "See how often your ig.me links are opened",
+    summary:
+      "Each ig.me link now shows its opens and the people behind them, and downloads as a QR code for packaging, posters and in-store signs.",
+    publishedAt: "2026-10-06",
+    kinds: ["improvement"],
+    area: "Instagram",
+    link: { to: "/dashboard/instagram" },
+  },
+  {
+    id: "2026-10-05-instagram-messenger-standalone",
+    title: "Connect Instagram or Messenger on their own",
+    summary:
+      "Instagram and Facebook Messenger no longer need WhatsApp — connect either one alone, and as many accounts and Pages as you like.",
+    publishedAt: "2026-10-05",
+    kinds: ["new"],
+    area: "Channels",
+    link: { to: "/dashboard/settings/channels" },
+  },
+  {
+    id: "2026-10-03-flow-analytics-refresh",
+    title: "A cleaner look for WhatsApp Flows",
+    summary:
+      "Flow cards now show status and response counts at a glance, and flow and survey analytics use clearer charts in RateUp colours that work in dark mode.",
+    publishedAt: "2026-10-03",
+    kinds: ["improvement"],
+    area: "Flows",
+    link: { to: "/dashboard/whatsapp/flows" },
+  },
+  {
+    id: "2026-10-01-instagram-comment-replies",
+    title: "Instagram comments: public replies and lives",
+    summary:
+      "Comment automations can now post a public reply under the comment as well as sending the DM, and can answer comments on your live videos. The DM now arrives as a private reply, so it reaches people who have never messaged you.",
+    publishedAt: "2026-10-01",
+    kinds: ["new", "fix"],
+    area: "Instagram",
+    link: { to: "/dashboard/instagram" },
+  },
+  {
+    id: "2026-10-01-instagram-links-follow-check",
+    title: "ig.me links and follow-to-unlock",
+    summary:
+      "Create ig.me links that start a chosen automation when someone opens them, and add a Follow check step to a journey to reward people who follow you.",
+    publishedAt: "2026-10-01",
+    kinds: ["new"],
+    area: "Instagram",
+    link: { to: "/dashboard/instagram" },
+  },
+  {
+    id: "2026-10-01-instagram-chatbot-replies",
+    title: "Instagram journeys continue after a reply",
+    summary:
+      "Journeys now carry on when someone taps a button or answers a question, and can ask for details like an email address.",
+    publishedAt: "2026-10-01",
+    kinds: ["fix", "improvement"],
+    area: "Instagram",
+    link: { to: "/dashboard/instagram" },
+  },
+  {
+    id: "2026-09-30-shopify-cart-reminder-results",
+    title: "See the revenue your cart reminders bring back",
+    summary:
+      "The Shopify page now has a Results tab with orders and revenue recovered by your abandoned-cart reminders. Their links are tagged so Shopify's own reports credit WhatsApp too.",
+    publishedAt: "2026-09-30",
+    kinds: ["new"],
+    area: "Shopify",
+    link: { to: "/dashboard/settings/integrations/shopify" },
+  },
+  {
+    id: "2026-09-30-shopify-cart-reminders",
+    title: "Abandoned-cart reminders, sent on time",
+    summary:
+      "Choose how long a Shopify checkout sits untouched before your reminder goes out, and add a second rule for a follow-up. Reminders stop as soon as the order comes through.",
+    publishedAt: "2026-09-30",
+    kinds: ["improvement"],
+    area: "Automation",
+  },
+
+  {
+    id: "2026-09-26-quick-reply-media",
+    title: "Quick replies with images, audio and video",
+    summary:
+      "Attach images, voice notes or videos to a quick reply in Inbox Settings, and they are added to your message when you use it.",
+    publishedAt: "2026-09-26",
+    kinds: ["new"],
+    area: "Inbox",
+    link: { to: "/dashboard/inbox", search: { tab: "settings" } },
+  },
+  {
+    id: "2026-09-26-inbox-one-click-assign",
+    title: "Assign a chat in one click",
+    summary:
+      "Click the assignee in a chat's side panel (or press A), search for a teammate and pick them. You can also let a team hand the chat to whoever's turn it is.",
+    publishedAt: "2026-09-26",
+    kinds: ["improvement"],
+    area: "Inbox",
+    link: { to: "/dashboard/inbox" },
+  },
+
+  {
+    id: "2026-09-25-notification-settings",
+    title: "Choose your own notifications",
+    summary:
+      "Pick what RateUp tells you about and where: in the app, on your phone, by email or as desktop alerts. Find it under Settings → Notifications.",
+    publishedAt: "2026-09-25",
+    kinds: ["new"],
+    area: "Settings",
+    link: { to: "/dashboard/settings/notifications", label: "Open settings" },
+  },
+  {
+    id: "2026-09-25-pipeline-import",
+    title: "Import cards from a spreadsheet",
+    summary:
+      "Bring leads, tickets or tasks into any pipeline from a CSV or Excel file. Download the board's template, fill it in and upload it.",
+    publishedAt: "2026-09-25",
+    kinds: ["new"],
+    area: "Pipeline",
+    link: { to: "/dashboard/pipelines" },
+  },
+  {
+    id: "2026-09-25-pipeline-types",
+    title: "More boards in Pipeline",
+    summary:
+      "Add Support, Projects or Custom boards alongside your Leads pipeline, each with its own columns. The inbox and automations keep using your Leads pipeline.",
+    publishedAt: "2026-09-25",
+    kinds: ["new"],
+    area: "Pipeline",
+    link: { to: "/dashboard/pipelines" },
+  },
+  {
+    id: "2026-09-23-meta-agent-rateup-connector",
+    title: "Your AI agent can use RateUp data",
+    summary:
+      "Install the RateUp connector in one click and your AI agent can check a customer's loyalty points and rewards, and label, move or route their conversation to the right team.",
+    publishedAt: "2026-09-23",
+    kinds: ["new"],
+    area: "AI Agent",
+    link: { to: "/dashboard/meta-agent/connectors", label: "Open connectors" },
+  },
+  {
+    id: "2026-09-23-meta-agent-insights",
+    title: "AI agent insights and usage caps",
+    summary:
+      "A new Insights page shows how many conversations your AI agent handled, which chats are waiting on your team, and how your tools performed. On Go live you can now cap the agent's usage so costs stay predictable.",
+    publishedAt: "2026-09-23",
+    kinds: ["new"],
+    area: "AI Agent",
+    link: { to: "/dashboard/meta-agent/insights", label: "Open insights" },
+  },
+  {
+    id: "2026-09-23-meta-agent-handoff-message",
+    title: "Choose your AI agent's handoff message",
+    summary:
+      "When the agent hands a customer to your team, it can now use Meta's standard line, write its own, or send yours. Releasing the conversation to your team is now a separate switch.",
+    publishedAt: "2026-09-23",
+    kinds: ["improvement"],
+    area: "AI Agent",
+    link: { to: "/dashboard/meta-agent/go-live", label: "Open Go live" },
+  },
+  {
+    id: "2026-09-23-qr-codes-link-pages",
+    title: "QR codes and link pages, redesigned",
+    summary:
+      "QR Studio is now QR & Links: QR Creator is QR codes and Access Links is Link pages. The link page editor shows a live phone preview as you add links and change the look.",
+    publishedAt: "2026-09-23",
+    kinds: ["improvement"],
+    area: "QR & Links",
+    link: { to: "/dashboard/link-pages", label: "Open link pages" },
+  },
+  {
+    id: "2026-09-22-meta-ai-handover-badge",
+    title: "See when Meta AI hands a chat to you",
+    summary:
+      "The inbox now shows whether Meta AI or your team is answering each customer, and lets you hand a chat back to Meta AI. Closing a ticket hands it back automatically; you can turn that off in the agent's settings.",
+    publishedAt: "2026-09-22",
+    kinds: ["new"],
+    area: "Inbox",
+    link: { to: "/dashboard/inbox", label: "Open the inbox" },
+  },
+  {
+    id: "2026-09-22-meta-agent-setup-flow",
+    title: "A guided setup for your AI agent",
+    summary:
+      "Meta AI Agent now opens on a setup guide that walks you from connecting with Meta to going live, with your progress shown as you go. Every page has Back and Continue, so you can follow the steps in order.",
+    publishedAt: "2026-09-22",
+    kinds: ["improvement"],
+    area: "AI Agent",
+    link: { to: "/dashboard/meta-agent/setup-guide", label: "Open the setup guide" },
+  },
+  {
+    id: "2026-09-20-fine-tune-abilities",
+    title: "Each member on their own page",
+    summary:
+      "Click a name in Settings → Members to open that person's page: their role, teams and profile on one tab, and everything they have changed on an Activity tab. You can also add an ability their role lacks or take one away.",
+    publishedAt: "2026-09-20",
+    kinds: ["new"],
+    area: "Settings",
+    link: { to: "/dashboard/settings/members", label: "Open Members" },
+  },
+  {
+    id: "2026-09-20-members-and-roles",
+    title: "Members and roles, in one place",
+    summary:
+      "Settings → Members now lists everyone with their role and teams, and a new Roles page shows exactly what each of the six roles can do. Roles decide what a person may do; teams decide where.",
+    publishedAt: "2026-09-20",
+    kinds: ["new", "improvement"],
+    area: "Settings",
+    link: { to: "/dashboard/settings/members", label: "Open Members" },
+  },
+  {
+    id: "2026-09-19-analytics-redesign",
+    title: "Analytics, now loads faster with a clean UI",
+    summary:
+      "Analytics is now Overview, Conversations, Messages and Logs, with one set of filters that applies everywhere, including by team. The Overview puts conversation and WhatsApp delivery health side by side, with changes against the previous period.",
+    publishedAt: "2026-09-19",
+    kinds: ["improvement"],
+    area: "Analytics",
+    link: { to: "/dashboard/analytics", label: "Open Analytics" },
+  },
+  {
+    id: "2026-09-18-integrations-redesign",
+    title: "Integrations, redesigned",
+    summary:
+      "Every integration page now shares one layout, and the status line names what you actually connected instead of showing a generic badge. Forms, empty states and page width are consistent across all of them.",
+    publishedAt: "2026-09-18",
+    kinds: ["improvement"],
+    area: "Integrations",
+    link: { to: "/dashboard/settings/integrations", label: "Open Integrations" },
+  },
+  {
+    id: "2026-09-18-admins-manage-teams",
+    title: "Admins can now invite and manage team members",
+    summary:
+      "Admins can now invite users into a team, manage its members and edit its settings. Creating and deleting teams, Feature Access and granting Super Admin stay with the owner.",
+    publishedAt: "2026-09-18",
+    kinds: ["improvement"],
+    area: "Settings",
+    link: { to: "/dashboard/settings/teams", label: "Open Teams" },
+  },
+  {
+    id: "2026-09-17-settings-ui-improvements",
+    title: "Settings menu improvements",
+    summary: "General UI improvements across the settings menu.",
+    publishedAt: "2026-09-17",
+    kinds: ["improvement"],
+    area: "Settings",
+    link: { to: "/dashboard/settings/profile", label: "Open Settings" },
+  },
+  {
+    id: "2026-09-12-loyalty-keyword-menu-chatbot",
+    title: "Turn your keyword replies into a tappable menu",
+    summary:
+      "Messages has a new Journey tab that turns your keyword replies into a tappable WhatsApp menu. Customers pick from a list instead of having to know that POINTS or REFER are the magic words.",
+    publishedAt: "2026-09-12",
+    kinds: ["new"],
+    area: "Loyalty",
+    link: {
+      to: "/dashboard/loyalty/messages",
+      search: { tab: "chatbot" },
+      label: "Open Messages",
+    },
+  },
+  {
+    id: "2026-09-11-loyalty-message-opens-editor",
+    title: "Loyalty messages open straight in the template editor",
+    summary:
+      "Loyalty messages now open straight in the WhatsApp template editor, and nothing is saved until you save it yourself. A draft you started shows up on the message card, ready to carry on.",
+    publishedAt: "2026-09-11",
+    kinds: ["improvement", "fix"],
+    area: "Loyalty",
+    link: {
+      to: "/dashboard/loyalty/messages",
+      search: { tab: "automatic" },
+      label: "Open Messages",
+    },
+  },
+  {
+    id: "2026-09-11-brochure-background-colour",
+    title: "Brochure: your photo in the header, any background",
+    summary:
+      "Your hero photo is now the background of the rewards brochure header, and the card background is a full colour picker rather than eleven fixed papers. Text and accent colours adjust to stay readable on whatever you choose.",
+    publishedAt: "2026-09-11",
+    kinds: ["improvement"],
+    area: "Loyalty",
+    link: {
+      to: "/dashboard/loyalty/materials",
+      search: { tab: "brochure" },
+      label: "Open Materials",
+    },
+  },
+  {
+    id: "2026-09-11-activity-customer-links",
+    title: "Open a customer from the Activity ledger",
+    summary:
+      "Customer names on the Activity ledger are now links that open that member's full record. The page can also be bookmarked, reloaded and shared.",
+    publishedAt: "2026-09-11",
+    kinds: ["improvement"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/activity", label: "Open Activity" },
+  },
+  {
+    id: "2026-09-10-loyalty-reminders",
+    title: "Reminders: choose when each one sends",
+    summary:
+      "Scheduled messages, such as birthdays, quiet customers and expiring points, now have their own Reminders page where you set how far ahead and what hour each one sends, in your own time zone. Three new occasions were added, including a warning before a member loses their VIP tier.",
+    publishedAt: "2026-09-10",
+    kinds: ["new", "fix"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/reminders", label: "Open Reminders" },
+  },
+  {
+    id: "2026-09-10-flow-purpose-grid",
+    title: "Creating a Flow starts with what it is for",
+    summary:
+      "Creating a Flow now starts with what it is for, from sign up and booking to support and surveys, and that choice sets the flow's category for you. One fewer thing to fill in later.",
+    publishedAt: "2026-09-10",
+    kinds: ["improvement", "fix"],
+    area: "WhatsApp",
+    link: {
+      to: "/dashboard/whatsapp/flows",
+      search: { action: "create" },
+      label: "Create a Flow",
+    },
+  },
+  {
+    id: "2026-09-10-loyalty-feedback",
+    title: "Feedback: a WhatsApp survey after every visit",
+    summary:
+      "A new Feedback page sends a WhatsApp survey a set time after a customer earns points, with ready-made questions for your kind of business. Happy customers are asked to leave a Google review, and you can reward them for it.",
+    publishedAt: "2026-09-10",
+    kinds: ["new"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/feedback", label: "Set up Feedback" },
+  },
+  {
+    id: "2026-09-10-rewards-per-tier-brochure-redesign",
+    title: "Rewards per tier, and a new brochure",
+    summary:
+      "Rewards can now be set per tier, so a perk can be Gold-only. The rewards brochure has been redrawn as a menu card in your brand colour.",
+    publishedAt: "2026-09-10",
+    kinds: ["new", "improvement"],
+    area: "Loyalty",
+    link: {
+      to: "/dashboard/loyalty/materials",
+      search: { tab: "brochure" },
+      label: "Open the brochure",
+    },
+  },
+  {
+    id: "2026-09-10-loyalty-three-tiers",
+    title: "Loyalty tiers: up to three, with members re-placed on save",
+    summary:
+      "Loyalty now takes up to three tiers. Save the ladder and every member is re-placed on the tier their spend earns, with promotions messaged as usual.",
+    publishedAt: "2026-09-10",
+    kinds: ["new", "improvement"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/program", search: { section: "tiers" }, label: "Open Tiers" },
+  },
+  {
+    id: "2026-09-10-program-sections-full-editors",
+    title: "Program: every section opens its full editor",
+    summary:
+      "Sections on the Loyalty Program page now open their full editor at full width, instead of a short form with a link to the real one.",
+    publishedAt: "2026-09-10",
+    kinds: ["improvement"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/program", label: "Open Program" },
+  },
+  {
+    id: "2026-09-10-cashier-add-from-contacts",
+    title: "Cashier: add from contacts, birthday and gender",
+    summary:
+      "The cashier can now enrol someone from your existing contacts instead of retyping their details. The register form also takes an optional date of birth and gender.",
+    publishedAt: "2026-09-10",
+    kinds: ["new", "improvement"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/cashier", label: "Open the cashier" },
+  },
+  {
+    id: "2026-09-09-loyalty-materials",
+    title: "Loyalty Materials: QR card and rewards brochure",
+    summary:
+      "A new Materials page holds the print-ready pieces for your venue: the counter QR card, and a rewards brochure you can edit, download and print.",
+    publishedAt: "2026-09-09",
+    kinds: ["new"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/materials", label: "Open Materials" },
+  },
+  {
+    id: "2026-09-09-loyalty-onboarding-profile-launch",
+    title: "Loyalty setup: profile, VIP tier and a QR poster",
+    summary:
+      "Loyalty setup now opens with a branding profile that seeds every later step for your kind of business, and ends with a printable QR poster. Points from a web signup are held until the customer's first real activity, so bots gain nothing.",
+    publishedAt: "2026-09-09",
+    kinds: ["new", "improvement"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/onboarding", label: "Open setup" },
+  },
+  {
+    id: "2026-09-08-loyalty-onboarding-simplified",
+    title: "Simplified loyalty onboarding flow",
+    summary:
+      "Setting up loyalty is now a guided six-step flow that fills in points, tiers, rewards and WhatsApp messages tuned to your kind of business. The Loyalty menu is down from eleven entries to seven, with a new Overview leading on what your programme gives back.",
+    publishedAt: "2026-09-08",
+    kinds: ["new", "improvement", "fix"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/program", label: "Open Program" },
+  },
+  {
+    id: "2026-09-15-campaign-auto-pause",
+    title: "Campaigns pause when your account can't send",
+    summary:
+      "A campaign now pauses instead of failing when your conversation allowance runs out or Meta rejects your payment method. Fix the cause and Resume sends to exactly the people who were missed.",
+    publishedAt: "2026-09-15",
+    kinds: ["improvement"],
+    area: "Campaigns",
+    link: { to: "/dashboard/campaigns", label: "Open campaigns" },
+  },
+  {
+    id: "2026-09-12-inbox-channel-on-ticket",
+    title: "See which number a ticket came in on",
+    summary:
+      "Every inbox row now shows which of your numbers the ticket came in on, read from the ticket's own messages. A number you have since disconnected is still named and marked.",
+    publishedAt: "2026-09-12",
+    kinds: ["new"],
+    area: "Inbox",
+    link: { to: "/dashboard/inbox", label: "Open inbox" },
+  },
+  {
+    id: "2026-09-12-inbox-delete-conversation",
+    title: "Delete a conversation",
+    summary:
+      "Admins can now delete a conversation and all its messages outright, one at a time or several at once. The contact and their other tickets are left untouched.",
+    publishedAt: "2026-09-12",
+    kinds: ["new"],
+    area: "Inbox",
+    link: { to: "/dashboard/inbox", label: "Open inbox" },
+  },
+  {
+    id: "2026-09-11-facebook-page-picker",
+    title: "Pick your Page for Messenger and Instagram",
+    summary:
+      "Connecting Messenger or Instagram now shows your Pages as a list that refreshes itself, so a Page you only just granted appears without pressing sync. Pages that cannot be used are greyed out before you pick them.",
+    publishedAt: "2026-09-11",
+    kinds: ["improvement"],
+    area: "Channels",
+    link: { to: "/dashboard/settings/channels", label: "Open channels" },
+  },
+  {
+    id: "2026-09-08-inbox-image-download",
+    title: "Save an image from the inbox",
+    summary:
+      "Images in a conversation now carry a download button, on the thumbnail and again in the full-size view.",
+    publishedAt: "2026-09-08",
+    kinds: ["new"],
+    area: "Inbox",
+    link: { to: "/dashboard/inbox", label: "Open inbox" },
+  },
+  {
+    id: "2026-09-08-campaign-retry-failed",
+    title: "Retry a campaign's failures from Overview",
+    summary:
+      "A finished campaign now shows its failures on Overview with one button to re-send to them. Messages rejected the instant they were sent are now retried too, which they never used to be.",
+    publishedAt: "2026-09-08",
+    kinds: ["new", "improvement", "fix"],
+    area: "Campaigns",
+    link: { to: "/dashboard/campaigns", label: "Open campaigns" },
+  },
+  {
+    id: "2026-09-08-campaign-resume-when",
+    title: "Choose when a paused campaign resumes",
+    summary:
+      "Resuming a paused campaign now asks when: keep the original schedule, send immediately, or pick a new time. The numbers across Overview were renamed to say what they actually count.",
+    publishedAt: "2026-09-08",
+    kinds: ["new", "improvement"],
+    area: "Campaigns",
+    link: { to: "/dashboard/campaigns", label: "Open campaigns" },
+  },
+  {
+    id: "2026-09-07-campaign-page-controls",
+    title: "Pause a campaign, retry one recipient",
+    summary:
+      "A sending campaign can now be paused and picked back up without messaging anyone twice. A single failed recipient can also be retried on its own.",
+    publishedAt: "2026-09-07",
+    kinds: ["new", "improvement"],
+    area: "Campaigns",
+    link: { to: "/dashboard/campaigns", label: "Open campaigns" },
+  },
+  {
+    id: "2026-09-06-campaign-wizard",
+    title: "Campaigns: a guided setup, and retries",
+    summary:
+      "Creating a campaign is now a six-step guided flow, saved as a draft as you go, with a live preview and a test send before you commit. The campaign page adds an Analytics tab, and campaign status finally reads accurately.",
+    publishedAt: "2026-09-06",
+    kinds: ["new", "improvement"],
+    area: "Campaigns",
+    link: { to: "/dashboard/campaigns", label: "Create a campaign" },
+  },
+  {
+    id: "2026-08-31-channels-page-rebuilt",
+    title: "Channels, rebuilt to match setup",
+    summary:
+      "Settings then Channels is now laid out like the setup guide, one row per channel with its status and its action. Nothing moved and nothing was removed.",
+    publishedAt: "2026-08-31",
+    kinds: ["improvement"],
+    area: "Channels",
+    link: { to: "/dashboard/settings/channels", label: "Open channels" },
+  },
+  {
+    id: "2026-08-31-setup-guide-v2",
+    title: "A rebuilt setup guide",
+    summary:
+      "The setup guide now lives inside the app as Get started in the sidebar, ordered around the three Meta steps that actually block you from sending. Channels connect in place, and anything optional can be skipped.",
+    publishedAt: "2026-08-31",
+    kinds: ["improvement"],
+    area: "Onboarding",
+    link: { to: "/dashboard/setup", label: "Open the setup guide" },
+  },
+  {
+    id: "2026-08-29-ticket-boards-retired",
+    title: "Ticket boards have been retired",
+    summary:
+      "The Tickets board is no longer part of RateUp. Use the Inbox, where every conversation is already a ticket, or a Pipeline board for anything sales-shaped.",
+    publishedAt: "2026-08-29",
+    kinds: ["improvement"],
+    area: "Tickets",
+    link: { to: "/dashboard/inbox", search: { tab: "open" }, label: "Open the Inbox" },
+  },
+  {
+    id: "2026-08-28-lifecycle-to-pipeline-stages",
+    title: "Lifecycle stages are now pipeline stages",
+    summary:
+      "Pipeline columns are now the board's own, named for your sales process and each marked Open, Won or Lost. Contact lifecycle is unchanged; the two are simply no longer tied together.",
+    publishedAt: "2026-08-28",
+    kinds: ["new", "improvement"],
+    area: "Pipeline",
+    link: { to: "/dashboard/pipelines", label: "Open the pipeline" },
+  },
+  {
+    id: "2026-10-06-active-contact-pricing",
+    title: "Plans now count active contacts",
+    summary:
+      "Plans are now sized by the contacts you talk to each month plus campaign credits, and contacts who only get broadcasts are free. Billing shows both meters, with packs for each.",
+    publishedAt: "2026-10-06",
+    kinds: ["new", "improvement"],
+    area: "Billing",
+    link: { to: "/dashboard/settings/billing", search: { tab: "usage" }, label: "See usage" },
+  },
+  {
+    id: "2026-08-22-conversation-packs",
+    title: "Buy conversation packs from Billing",
+    summary:
+      "Buy a one-off pack of 5,000 extra conversations from Billing, good for 30 days. Nothing renews, and packs stack.",
+    publishedAt: "2026-08-22",
+    kinds: ["new"],
+    area: "Billing",
+    link: { to: "/dashboard/settings/billing", search: { tab: "usage" }, label: "See packs" },
+  },
+  {
+    id: "2026-08-22-five-tier-plans",
+    title: "A new plan sits between Plus and Max",
+    summary:
+      "A new Pro plan fills the gap between Plus and Max at 40,000 conversations a month. Existing subscriptions were renamed in place, with no change to price, allowances or renewal date.",
+    publishedAt: "2026-08-22",
+    kinds: ["new", "improvement"],
+    area: "Billing",
+    link: { to: "/dashboard/settings/billing", label: "See the plans" },
+  },
+  {
+    id: "2026-08-22-plan-usage-banner",
+    title: "A heads-up when you run out of an allowance",
+    summary:
+      "A banner now appears when your organisation has used up an allowance for the billing period, so a feature going quiet is explained rather than mysterious. Admins are notified in-app and the owner by email, at most once a week.",
+    publishedAt: "2026-08-22",
+    kinds: ["new"],
+    area: "Billing",
+    link: { to: "/dashboard/settings/billing", label: "See your usage" },
+  },
+  {
+    id: "2026-08-22-plans-return-to-free",
+    title: "Cancelled plans now return to Free",
+    summary:
+      "A cancelled or lapsed plan now returns to Free limits a day after the paid period ends. Nothing changes mid-cycle, and you can resubscribe at any time.",
+    publishedAt: "2026-08-22",
+    kinds: ["improvement"],
+    area: "Billing",
+    link: { to: "/dashboard/settings/billing", label: "Open billing" },
+  },
+  {
+    id: "2026-08-20-billing-invoices-and-charges",
+    title: "Change plans, and see invoices, on billing",
+    summary:
+      "You can now switch plans without cancelling first, and Billing shows what you will be charged and when. One Billing History covers every charge, renewals included, with a downloadable invoice for each.",
+    publishedAt: "2026-08-20",
+    kinds: ["new", "improvement"],
+    area: "Billing",
+    link: { to: "/dashboard/settings/billing", label: "Open billing" },
+  },
+  {
+    id: "2026-08-17-pipeline-feature-access",
+    title: "Pipeline is its own team permission",
+    summary:
+      "Pipeline is now its own team permission instead of riding on Tickets. Switch it on for each team that works a board.",
+    publishedAt: "2026-08-17",
+    kinds: ["new", "improvement"],
+    area: "Pipeline",
+    link: { to: "/dashboard/settings/teams", label: "Open teams" },
+  },
+  {
+    id: "2026-08-15-inbox-sending-feedback",
+    title: "Sends show up straight away in the inbox",
+    summary:
+      "A message, template or flow now appears in the conversation the moment you send it, marked with a clock until WhatsApp confirms it. A send that fails now says so instead of passing quietly.",
+    publishedAt: "2026-08-15",
+    kinds: ["improvement", "fix"],
+    area: "Inbox",
+    link: { to: "/dashboard/inbox", label: "Open inbox" },
+  },
+  {
+    id: "2026-08-14-flows-per-number",
+    title: "Flows now belong to a WhatsApp number",
+    summary:
+      "Flows now belong to the WhatsApp number they were created on, which is how WhatsApp itself scopes them. Template pickers only offer flows from the matching number.",
+    publishedAt: "2026-08-14",
+    kinds: ["improvement", "fix"],
+    area: "Flows",
+    link: { to: "/dashboard/whatsapp/flows", label: "Open flows" },
+  },
+  {
+    id: "2026-08-13-wa-display-name",
+    title: "Manage your WhatsApp channel and profile",
+    summary:
+      "Editing a WhatsApp number now opens three tabs: your own label for it inside RateUp, the display name customers see, and the business profile.",
+    publishedAt: "2026-08-13",
+    kinds: ["new", "improvement"],
+    area: "Channels",
+    link: { to: "/dashboard/settings/channels", label: "Open channels" },
+  },
+  {
+    id: "2026-08-13-team-pipelines",
+    title: "Send each team's contacts to its own board",
+    summary:
+      "Pick the board each team works, and a lead opens there automatically when a contact reaches a matching lifecycle stage. Changing a contact's lifecycle now moves their existing leads too.",
+    publishedAt: "2026-08-13",
+    kinds: ["new"],
+    area: "Pipeline",
+    link: { to: "/dashboard/contacts/lifecycle", label: "Open lifecycle setup" },
+  },
+  {
+    id: "2026-08-12-lead-pipeline",
+    title: "Lead Pipeline",
+    summary:
+      "A new Pipeline section turns your conversations into a sales board, with leads you drag between stages and assign to several people at once. It comes with List, Forecast, Insights and Settings views alongside the board.",
+    publishedAt: "2026-08-12",
+    kinds: ["new"],
+    area: "Pipeline",
+    link: { to: "/dashboard/pipelines", label: "Open the pipeline" },
+  },
+  {
+    id: "2026-08-19-plan-tiers",
+    title: "New plans, priced per conversation",
+    summary:
+      "Free, Starter, Pro and Enterprise replace the old catalog. Your allowance is now counted in conversations rather than inbox tickets, so a thread that stays open no longer ties up your quota.",
+    publishedAt: "2026-08-19",
+    kinds: ["new", "improvement"],
+    area: "Billing",
+    link: { to: "/dashboard/settings/billing", label: "See your plan" },
+  },
+  {
+    id: "2026-08-11-meta-agent-rebuild",
+    title: "Meta Business Agent, rebuilt",
+    summary:
+      "Every area of the Meta Business Agent is now its own page under Meta AI Agent in the sidebar. New: UI skills so the agent can answer with carousels and buttons, a connector workspace with a live test runner, and validation against Meta's limits before you send.",
+    publishedAt: "2026-08-11",
+    kinds: ["new", "improvement"],
+    area: "AI Agent",
+    link: { to: "/dashboard/meta-agent", label: "Open the agent" },
+  },
+  {
+    id: "2026-08-07-inbox-settings-redesign",
+    title: "Inbox Settings, rebuilt",
+    summary:
+      "Inbox Settings has a new layout with everything on one row of tabs, plus new Teams and Channels tabs. Quick replies and automation are unchanged, just relocated.",
+    publishedAt: "2026-08-07",
+    kinds: ["improvement"],
+    area: "Inbox",
+    link: { to: "/dashboard/inbox", search: { tab: "settings" }, label: "Open settings" },
+  },
+  {
+    id: "2026-08-07-conversation-tags",
+    title: "Conversation tags, separate from contact labels",
+    summary:
+      "Tickets can now carry their own tags, separate from the labels that stay on the customer. Both filter the conversation list.",
+    publishedAt: "2026-08-07",
+    kinds: ["new"],
+    area: "Inbox",
+    link: { to: "/dashboard/inbox", search: { tab: "settings" }, label: "Manage tags" },
+  },
+  {
+    id: "2026-08-05-campaign-whatsapp-participants",
+    title: "Campaigns only pick WhatsApp contacts",
+    summary:
+      "Adding participants to a campaign now lists only WhatsApp contacts, so the people you add are the people the campaign can actually message.",
+    publishedAt: "2026-08-05",
+    kinds: ["improvement"],
+    area: "Campaigns",
+    link: { to: "/dashboard/campaigns", label: "Open campaigns" },
+  },
+  {
+    id: "2026-08-05-ig-comment-post-link",
+    title: "Jump to the post a comment is on",
+    summary:
+      "An Instagram comment in the inbox now carries a View post link, so you can see what the customer is replying to before you answer.",
+    publishedAt: "2026-08-05",
+    kinds: ["new"],
+    area: "Inbox",
+    link: { to: "/dashboard/inbox", search: { tab: "open" }, label: "Open inbox" },
+  },
+  {
+    id: "2026-07-25-docs-shortcut",
+    title: "Documentation is one click away",
+    summary:
+      "A book icon now sits in the sidebar rail and opens docs.rateup.app in a new tab, from wherever you are in the app.",
+    publishedAt: "2026-07-25",
+    kinds: ["new"],
+    area: "Navigation",
+  },
+  {
+    id: "2026-07-25-inbox-channel-filter",
+    title: "Channel filter moved to the sidebar",
+    summary:
+      "Pick the channel you are working in from the inbox sidebar, alongside lifecycle, labels, users and teams. It scopes every tab.",
+    publishedAt: "2026-07-25",
+    kinds: ["improvement"],
+    area: "Inbox",
+    link: { to: "/dashboard/inbox", search: { tab: "open" }, label: "Open inbox" },
+  },
+  {
+    id: "2026-07-23-spam-tab",
+    title: "Spam has its own tab",
+    summary:
+      "Flag a contact as spam and every conversation with them moves to the new Spam tab. The flag is per contact, so unflagging brings the whole history back.",
+    publishedAt: "2026-07-23",
+    kinds: ["new"],
+    area: "Inbox",
+    link: { to: "/dashboard/inbox", search: { tab: "spam" }, label: "Open Spam" },
+  },
+  {
+    id: "2026-07-22-inbox-conversations",
+    title: "The inbox is conversation-first",
+    summary:
+      "Each inbox row is now a conversation rather than a contact, so a customer who writes back after a closed ticket opens a fresh one and the resolved thread stays resolved.",
+    publishedAt: "2026-07-22",
+    kinds: ["improvement"],
+    area: "Inbox",
+    link: { to: "/dashboard/inbox", label: "Open inbox" },
+  },
+  {
+    id: "2026-09-03-campaigns-on-free",
+    title: "Campaigns are open on every plan",
+    summary:
+      "Campaigns no longer need a paid plan. A free account can build and send one against its 100 monthly conversations.",
+    publishedAt: "2026-09-03",
+    kinds: ["new"],
+    area: "Campaigns",
+    link: { to: "/dashboard/campaigns", label: "Open campaigns" },
+  },
+  {
+    id: "2026-09-03-campaign-allowance-warning",
+    title: "Campaigns warn before they outrun your allowance",
+    summary:
+      "The send dialog now says how many conversations you have left and how many recipients may not be reached, before the campaign starts rather than after messages have quietly failed.",
+    publishedAt: "2026-09-03",
+    kinds: ["new"],
+    area: "Campaigns",
+    link: { to: "/dashboard/campaigns", label: "Open campaigns" },
+  },
+  {
+    id: "2026-07-22-team-channel-permissions",
+    title: "Per-team channel permissions",
+    summary:
+      "Decide which teams can see and reply on which channels. Agents only get the conversations their team is entitled to, and assignment respects the same boundary.",
+    publishedAt: "2026-07-22",
+    kinds: ["new"],
+    area: "Settings",
+    link: { to: "/dashboard/settings/teams", label: "Manage teams" },
+  },
+  {
+    id: "2026-07-22-survey-builder",
+    title: "Rebuilt survey builder",
+    summary:
+      "Question editing, settings and theming are now separate panes, so you can restyle a survey without touching its questions, and preview the result as you go.",
+    publishedAt: "2026-07-22",
+    kinds: ["new", "improvement"],
+    area: "Surveys",
+    link: { to: "/dashboard/surveys", label: "Open surveys" },
+  },
+];

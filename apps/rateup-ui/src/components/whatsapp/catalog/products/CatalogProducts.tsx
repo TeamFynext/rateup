@@ -1,0 +1,91 @@
+import { IconBrandMeta, IconPlus, IconRefresh } from "@tabler/icons-react";
+import { toast } from "sonner";
+
+import type { WaCatalog } from "@/backend/whatsapp/catalog/catalog.api";
+import { useSyncCatalogProducts } from "@/backend/whatsapp/catalog/products/products.query";
+import { Button } from "@/components/ui/button.tsx";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu.tsx";
+import { useDisclosure } from "@/hooks/useDisclosure";
+
+import { AddCatalogProductModal } from "./AddCatalogProduct.tsx";
+import ProductItems from "./ProductItems.tsx";
+
+const CatalogProducts = ({ catalogData }: { catalogData: WaCatalog }) => {
+  const [addOpened, { open: openAdd, close: closeAdd }] = useDisclosure(false);
+  const syncFromMetaMut = useSyncCatalogProducts(catalogData?.catalogId);
+
+  function handleSyncFromMeta(data: { limit?: number; next?: string } | null = null) {
+    toast.loading("Syncing products from Meta...", {
+      id: "sync-catalog-products-meta",
+    });
+    syncFromMetaMut.mutate(data, {
+      onSuccess: (res) => {
+        toast.success("Products synced from Meta", {
+          id: "sync-catalog-products-meta",
+        });
+        if (res?.hasNextPage) {
+          handleSyncFromMeta({ limit: 50, next: res.next });
+        }
+      },
+      onError: (error) => {
+        toast.error(error?.message || "Sync from Meta failed", {
+          id: "sync-catalog-products-meta",
+        });
+      },
+    });
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button disabled={!catalogData} onClick={openAdd}>
+            <IconPlus size={15} className="mr-1" />
+            Add Product
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="outline"
+                  size="icon"
+                  disabled={!catalogData}
+                  aria-label="Sync products"
+                />
+              }
+            >
+              <IconRefresh size={16} />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-[220px]">
+              {/* <DropdownMenuItem
+                className="text-green-600 focus:text-green-700 dark:focus:text-green-400 focus:bg-green-50 dark:focus:bg-green-950/40"
+                onClick={handleSyncFromShopify}
+                disabled={syncFromShopifyMut.isPending}
+              >
+                <IconShoppingBag size={16} className="mr-2" />
+                Sync from Shopify
+              </DropdownMenuItem> */}
+              <DropdownMenuItem
+                className="text-blue-600 focus:text-blue-700 dark:focus:text-blue-400 focus:bg-ru-blue-50 dark:focus:bg-blue-950/40"
+                onClick={() => handleSyncFromMeta()}
+                disabled={syncFromMetaMut.isPending}
+              >
+                <IconBrandMeta size={16} className="mr-2" />
+                Sync from Meta
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+      {catalogData?.vertical === "commerce" && <ProductItems catalogId={catalogData?.catalogId} />}
+      <AddCatalogProductModal catalogData={catalogData} opened={addOpened} close={closeAdd} />
+    </div>
+  );
+};
+
+export default CatalogProducts;

@@ -1,0 +1,53 @@
+.driverjs-theme :global(.driver-popover) {
+  all: unset;
+  box-sizing: border-box;
+  color: #2d2d2d;
+  margin: 0;
+  padding: 30px;
+  text-align: justify;
+  border-radius: 5px;
+  min-width: 250px;
+  max-width: 300px;
+  box-shadow: 0 1px 10px #0006;
+  background-color: #fff;
+}
+.driverjs-theme :global(.driver-popover-title) {
+  font-weight: 700;
+  color: black;
+}
+.driverjs-theme :global(.driver-popover-description) {
+  font: 14px / normal sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #2d2d2d;
+}
+.driverjs-theme :global(.driver-popover-footer button) {
+  all: unset;
+  display: inline-block;
+  box-sizing: border-box;
+  padding: 3px 7px;
+  text-decoration: none;
+  background-color: #225fa4;
+  color: #f0f0f0;
+  font: 12px / normal sans-serif;
+  cursor: pointer;
+  margin-right: 10px;
+  outline: 0;
+  zoom: 1;
+  line-height: 2;
+  border-radius: 15px;
+}
+.driverjs-theme :global(.driver-popover-footer .driver-popover-next-btn) {
+  background-color: #225fa4; /* Blue background */
+  color: white; /* White text */
+  border: none; /* No border */
+}
+.driverjs-theme :global(.driver-popover-footer .driver-popover-prev-btn) {
+  background-color: white;
+  color: var(--primary);
+  border: 1px solid var(--primary);
+}
+.driverjs-theme :global(.driver-popover-footer button:hover),
+.driverjs-theme :global(.driver-popover-footer button:focus) {
+  background-color: none;
+}

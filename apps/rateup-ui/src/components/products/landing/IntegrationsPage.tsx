@@ -1,0 +1,167 @@
+import { Link } from "@tanstack/react-router";
+
+import HeroCanvas from "@/components/RateupHomePage/shared/hero-bg/HeroCanvas";
+import { syncRails } from "@/components/RateupHomePage/shared/hero-bg/scenes/syncRails";
+import { ArrowRight, ClosingCta } from "@/components/RateupHomePage/shared/home-ui";
+import {
+  HERO_H1,
+  HERO_SUB,
+  HeroActions,
+  NavyHero,
+} from "@/components/RateupHomePage/shared/NavyHero";
+import { DEVELOPER_DOCS_URL, INTEGRATIONS, integrationPath } from "@/config/integrations";
+
+import { Band, RelatedLinks } from "./sections";
+import ShowcaseSheet from "./shared/ShowcaseSheet";
+
+/**
+ * `/integrations` — the hub for the integration cluster.
+ *
+ * Cards come from `src/config/integrations.ts`. Only entries with `page: true` render as links,
+ * so the hub can list an integration we support before its landing page exists without shipping
+ * a link to a 404.
+ */
+
+const PlugIcon = (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.75"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="size-4"
+    aria-hidden="true"
+  >
+    <path d="M9 3v5M15 3v5" />
+    <path d="M6 8h12v3a6 6 0 0 1-6 6 6 6 0 0 1-6-6V8Z" />
+    <path d="M12 17v4" />
+  </svg>
+);
+
+const RELATED = [
+  {
+    to: "/products/whatsapp-loyalty",
+    label: "WhatsApp Loyalty",
+    body: "Points awarded from the orders your store already records.",
+  },
+  {
+    to: "/products/whatsapp-broadcast",
+    label: "WhatsApp Broadcast",
+    body: "Campaigns segmented by what customers actually bought.",
+  },
+  {
+    to: "/products/whatsapp-feedback",
+    label: "WhatsApp Feedback",
+    body: "Post-purchase surveys triggered by order status.",
+  },
+] as const;
+
+const RAIL_PARTNERS = [
+  ...INTEGRATIONS.flatMap(({ name, logo }) => (logo ? [{ name, logo }] : [])),
+  { name: "REST API", logo: null },
+];
+const partnerRails = () => syncRails(RAIL_PARTNERS);
+
+export default function IntegrationsPage() {
+  return (
+    <>
+      <NavyHero background={<HeroCanvas scene={partnerRails} className="-z-10" />}>
+        <h1 className={HERO_H1}>
+          Plug RateUp into <span className="text-ru-blue-300">the stack you already run.</span>
+        </h1>
+        <p className={`max-w-[42ch] ${HERO_SUB}`}>
+          Orders, customers and loyalty points move both ways between RateUp and your store, POS and
+          CRM — so points post without anyone typing them in.
+        </p>
+        <HeroActions />
+      </NavyHero>
+
+      <ShowcaseSheet
+        eyebrow="Connectors"
+        icon={PlugIcon}
+        title="Native connectors for the systems most of our customers run."
+        lead="Everything else connects through Zapier, outbound webhooks or the REST API."
+        caption={null}
+      >
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-3.5">
+          {INTEGRATIONS.map((integration) => {
+            const inner = (
+              <>
+                <div className="flex items-center gap-3.5">
+                  <span className="flex size-11 flex-none items-center justify-center rounded-xl border border-ru-n-200 bg-ru-n-50">
+                    <integration.Mark className="size-7.5" />
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="font-display text-[18.5px] font-bold tracking-[-0.02em] text-ru-n-700">
+                      {integration.name}
+                    </h3>
+                    <div className="text-[13.5px] text-ru-n-400">{integration.role}</div>
+                  </div>
+                </div>
+                <p className="text-[15px]/[1.55] text-ru-n-500">{integration.description}</p>
+                {integration.page && (
+                  <span className="mt-auto inline-flex items-center gap-1.5 text-[15px] font-semibold text-ru-blue-600">
+                    See the integration
+                    <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+                  </span>
+                )}
+              </>
+            );
+
+            const shell =
+              "group flex h-full flex-col gap-3.5 rounded-[20px] border border-ru-n-200 bg-white p-5.5 sm:p-7";
+
+            return integration.page ? (
+              <Link
+                key={integration.slug}
+                to={integrationPath(integration.slug)}
+                className={`${shell} transition-all hover:border-ru-blue-300 hover:shadow-md`}
+              >
+                {inner}
+              </Link>
+            ) : (
+              <div key={integration.slug} className={shell}>
+                {inner}
+              </div>
+            );
+          })}
+          <a
+            href={DEVELOPER_DOCS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex h-full flex-col gap-3.5 rounded-[20px] border border-dashed border-ru-n-300 bg-white p-5.5 transition-all hover:border-ru-blue-300 hover:shadow-md sm:p-7"
+          >
+            <div className="flex items-center gap-3.5">
+              <span className="flex size-11 flex-none items-center justify-center rounded-xl border border-ru-n-200 bg-ru-n-50 font-mono text-sm font-bold text-ru-n-500">
+                {"{ }"}
+              </span>
+              <div className="min-w-0">
+                <h3 className="font-display text-[18.5px] font-bold tracking-[-0.02em] text-ru-n-700">
+                  REST API &amp; webhooks
+                </h3>
+                <div className="text-[13.5px] text-ru-n-400">Build your own</div>
+              </div>
+            </div>
+            <p className="text-[15px]/[1.55] text-ru-n-500">
+              A documented REST API and outbound webhooks for anything without a native connector.
+            </p>
+            <span className="mt-auto inline-flex items-center gap-1.5 text-[15px] font-semibold text-ru-blue-600">
+              Read the docs
+              <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+            </span>
+          </a>
+        </div>
+      </ShowcaseSheet>
+
+      <Band tone="muted" title="What the sync is for">
+        <RelatedLinks links={RELATED} />
+      </Band>
+
+      <ClosingCta eyebrow="30+ more via webhooks" title="Don't see yours?">
+        Anything with a webhook or an API can talk to RateUp, and Zapier alone covers thousands of
+        apps. Tell us what you run and we will confirm how it connects.
+      </ClosingCta>
+    </>
+  );
+}

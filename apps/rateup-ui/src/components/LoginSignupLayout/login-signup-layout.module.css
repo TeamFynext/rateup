@@ -1,0 +1,42 @@
+.decorative-image-form-container {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.form-container {
+  flex: 1 1 0;
+  position: relative;
+}
+
+.form-wrapper {
+  width: 110%;
+  height: 100%;
+  top: 0;
+  right: 0;
+  position: absolute;
+  border-top-left-radius: 25px;
+  border-bottom-left-radius: 25px;
+  background-color: white;
+  overflow: auto;
+  padding: 1rem;
+}
+
+.color-scheme-dark {
+  background-color: #868e96;
+}
+
+.color-scheme-light {
+  background-color: #f8f9fa;
+}
+
+/* Media Queries */
+@media screen and (max-width: 768px) {
+  .form-wrapper {
+    width: 100%;
+    position: initial;
+    border-radius: initial;
+    background-image:
+      url("https://djd7kjh9uwow0.cloudfront.net/images/login-signup-pages/abstract-pattern.svg"),
+      linear-gradient(135deg, #2564ae, #00397b);
+  }
+}

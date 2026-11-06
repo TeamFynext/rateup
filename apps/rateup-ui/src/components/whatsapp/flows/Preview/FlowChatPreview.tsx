@@ -1,0 +1,26 @@
+import type { WaFlowFormElement, WaFlowScreen } from "@/types/global";
+import {
+  getFlowFooterElementsFromScreen,
+  getFlowFormElementsFromScreen,
+} from "@/utils/whatsapp/flow.utils";
+
+import { FlowFormElementPreview, FlowPreviewContainer } from "./FlowPreviewComponents.tsx";
+
+interface FlowChatPreviewProps {
+  currentScreen: WaFlowScreen;
+  version: number;
+}
+export const FlowChatPreview = ({ currentScreen, version }: FlowChatPreviewProps) => {
+  const elementsInScreen =
+    (getFlowFormElementsFromScreen(currentScreen, false, version) as WaFlowFormElement[]) ?? [];
+  const footerElement = getFlowFooterElementsFromScreen(currentScreen, version)?.[0] as {
+    label: string;
+  };
+  return (
+    <FlowPreviewContainer title={currentScreen?.title} footerLabel={footerElement?.label}>
+      {elementsInScreen?.map((fe) => (
+        <FlowFormElementPreview fe={fe} key={fe?.id} />
+      ))}
+    </FlowPreviewContainer>
+  );
+};

@@ -1,0 +1,123 @@
+import { IconPlus, IconRefresh } from "@tabler/icons-react";
+import type { Content } from "@tiptap/react";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import z from "zod";
+
+import type {
+  QuickReply,
+  QuickReplyMedia,
+} from "@/backend/whatsapp/inbox/quickReply/quickreply.api";
+import {
+  useDeleteReply,
+  useGetWaQuickReplies,
+} from "@/backend/whatsapp/inbox/quickReply/quickreply.query";
+import { Button } from "@/components/ui/button.tsx";
+import { Empty, EmptyDescription, EmptyHeader } from "@/components/ui/empty.tsx";
+
+import CreateOrEditQuickReply from "./CreateOrEditQuickReply.tsx";
+import QuickReplyItem from "./QuickReplyItem.tsx";
+
+const WaQuickReplySettings = () => {
+  const { data: quickReplies, isLoading, refetch, isRefetching } = useGetWaQuickReplies();
+  const { t } = useTranslation();
+  const [opened, setOpened] = useState(false);
+  const deleteReply = useDeleteReply();
+
+  const [selectedItem, setSelectedItem] = useState<QuickReply | null>(null);
+
+  function handleEditClick(reply: QuickReply) {
+    setSelectedItem(reply);
+    setOpened(true);
+  }
+  function handleDeleteQuickReply(reply: QuickReply) {
+    deleteReply.mutate(reply.id, {
+      onSuccess: () => {
+        toast.success("Quick reply deleted successfully");
+      },
+      onError: (error) => {
+        toast.error(error?.message || "Deletion failed");
+      },
+    });
+  }
+
+  useEffect(() => {
+    if (!opened && selectedItem) {
+      setSelectedItem(null);
+    }
+  }, [opened]);
+
+  return (
+    <div className="space-y-4">
+      {/* Sub-header row */}
+      <div className="flex items-center justify-between py-2">
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-semibold text-foreground">{t("Quick Replies")}</h2>
+          <span className="bg-muted text-muted-foreground px-2 py-0.5 rounded-full text-xs font-semibold">
+            {quickReplies?.length || 0}
+          </span>
+          <Button
+            aria-label={t("Refresh")}
+            variant="ghost"
+            onClick={() => refetch()}
+            className="text-muted-foreground hover:text-foreground h-7 w-7 p-0"
+            size="icon"
+          >
+            <IconRefresh
+              className={`w-3.5 h-3.5 ${isLoading || isRefetching ? "animate-spin" : ""}`}
+            />
+          </Button>
+        </div>
+        <Button
+          size="sm"
+          className="bg-primary text-primary-foreground hover:bg-primary/95 flex items-center gap-1.5 px-4 font-medium"
+          onClick={() => {
+            setSelectedItem(null);
+            setOpened(true);
+          }}
+        >
+          <IconPlus className="w-4 h-4" />
+          <span className="text-sm">{t("Add Quick Reply")}</span>
+        </Button>
+      </div>
+
+      {/* Quick replies list container */}
+      {quickReplies && quickReplies.length > 0 ? (
+        <div className="bg-white dark:bg-card border border-border rounded-2xl shadow-sm divide-y divide-border overflow-hidden">
+          {quickReplies.map((reply: QuickReply) => (
+            <QuickReplyItem
+              reply={reply}
+              key={reply?.id}
+              onEditClick={() => handleEditClick(reply)}
+              onDelete={() => handleDeleteQuickReply(reply)}
+            />
+          ))}
+        </div>
+      ) : (
+        <Empty className="rounded-2xl border">
+          <EmptyHeader>
+            <EmptyDescription>{t("No quick replies found")}</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      )}
+
+      <CreateOrEditQuickReply
+        open={opened}
+        setOpen={setOpened}
+        isEdit={!!selectedItem}
+        reply={selectedItem}
+      />
+    </div>
+  );
+};
+
+export const quickReplySchema = z.object({
+  // The editor stores its value as a tiptap document (or plain text); it is not validated here.
+  text: z.custom<Content>(),
+  key: z.string().min(1, { message: "key is required" }),
+  topic: z.string(),
+  media: z.array(z.custom<QuickReplyMedia>()).max(5),
+});
+
+export default WaQuickReplySettings;

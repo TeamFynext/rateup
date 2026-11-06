@@ -1,0 +1,656 @@
+import type { ContactLabelOption } from "@/backend/campaign/contacts/contacts.api";
+import type { ConversationTagOption } from "@/backend/whatsapp/inbox/conversationTag/conversationTag.api.ts";
+import type { PaginationState, RequestPayload } from "@/types/api.ts";
+import type { MessagePlatform } from "@/types/enums.ts";
+import type { WaInboxMessage, WaTemplateComponent } from "@/types/global";
+
+import { WA_INBOX_BASE_PATH } from "..";
+import { axiosClient } from "../../../apiClient";
+
+/** Filter accepted by the WhatsApp message-log endpoints. */
+export interface WaMessageLogFilter {
+  dateKey?: string;
+  /** Either a preformatted range string or a two-element [from, to] tuple. */
+  dateRange?: string | (string | Date)[];
+  status?: string;
+  source?: string;
+  team?: string;
+  searchQuery?: string;
+  pagination?: PaginationState;
+}
+
+const WA_CONTACT_BASE_PATH = `${WA_INBOX_BASE_PATH}/message`;
+
+export interface WaGetMessagesBody {
+  id: string;
+  /**
+   * Set by the server. A message the composer has added optimistically carries neither this,
+   * `createdAt`, nor `templateComponentParams` until the send round-trips.
+   */
+  waContctId?: string;
+  createdAt?: string;
+  waCreatedAt: string;
+  messageBody: WaInboxMessage;
+  templateComponentParams?: WaTemplateComponent[];
+  stats?: { read: string; delivered: string; sent: string; failed: string };
+  sender?: {
+    name?: string;
+    profilePhoto?: string;
+  };
+  messageId?: string;
+  /** `NOTE` for a private note; notes are kept apart from customer traffic on the server. */
+  kind?: "NOTE";
+  sendBy?: string | null;
+  readUsers?: string[];
+  reactionMessage?: {
+    id: string;
+    messageBody: WaGetMessagesBody;
+    createdAt: string;
+    sender?: {
+      name?: string;
+      profilePhoto?: string;
+    };
+  };
+  /** `INTERNAL` for a private note, which belongs to no channel. */
+  sourcePlatform: MessagePlatform | "INTERNAL";
+  sourceIdentifier: string | null;
+  // The ticket a message belongs to. Nullable for legacy messages that predate
+  // the conversation backfill.
+  conversationId?: string | null;
+  // Set when the sender deleted the message on WhatsApp. The body is still here,
+  // but the thread shows it as deleted instead of rendering it.
+  deletedAt?: string | null;
+  /** Set when the customer edited the message (Instagram); the body holds the edited text. */
+  editedAt?: string | null;
+  // What produced the message: INBOX, TEMPLATE, CAMPAIGN, AUTOMATED, FLOW, …
+  // Free text on the API side; older rows may be lowercase or null.
+  sourceMessage?: string | null;
+}
+
+interface WaMessagePage {
+  messages: WaGetMessagesBody[];
+  nextCursor: string;
+  hasNextPage: boolean;
+}
+
+export async function getMessagesByContactId(
+  contactId: string,
+  cursor: string,
+  selectedPhone: string,
+  conversationId?: string | null,
+) {
+  const params = new URLSearchParams({ cursor, phone: selectedPhone });
+  if (conversationId) params.set("conversationId", conversationId);
+  return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/${contactId}?${params.toString()}`))
+    .data as WaMessagePage;
+}
+
+export async function sendNewWaMessage(contactId: string, message: RequestPayload) {
+  return await axiosClient.post(`${WA_CONTACT_BASE_PATH}/${contactId}`, message);
+}
+
+/** Close-with-result taxonomy — mirrors the API's `ResolutionResult` enum. */
+export type ResolutionResult = "RESOLVED" | "ANSWERED" | "NO_RESPONSE" | "DUPLICATE";
+
+/**
+ * Inbox Tickets v2 — a row is a *ticket* (one Conversation), not a contact.
+ * A contact with three tickets produces three rows sharing one `id` (the contact
+ * id) but distinct `conversationId`s, so `conversationId` is the row identity.
+ * Use `getRowKey` rather than `.id` anywhere a list key is needed.
+ */
+export type ContactsWithLastMessage = ContactsData & {
+  groups?: string[];
+  lastMessage: {
+    waCreatedAt: string;
+    messageBody: WaInboxMessage;
+    sourcePlatform: MessagePlatform;
+    sourceIdentifier: string;
+    // Set when the preview's message was revoked — the snippet says so instead
+    // of quoting text the customer deleted.
+    deletedAt?: string | null;
+  };
+  metadata?: {
+    display_phone_number?: string;
+    phone_number_id?: string;
+  };
+  lastReceivedMessageTimeStamp: string;
+  /**
+   * Who holds the thread under Meta AI thread control — contact-level, so it
+   * carries across tickets. Null until a handover or standby message is seen.
+   */
+  metaAgentThreadOwner?: "AI" | "STAFF" | null;
+  metaAgentThreadOwnerAt?: string | null;
+  /** Meta's handover reason (e.g. `customer_request`), or ours (`staff_reply`, `released`, `ticket_closed`). */
+  metaAgentHandoverReason?: string | null;
+  /** Meta AI has replied to this customer, on a number that still has the agent. */
+  metaAgentInvolved?: boolean;
+  total_contact_count?: string;
+  unReadMessageCount?: number;
+  assignedUsers: { id: string; name: string; teamId: string }[];
+  messages: Partial<WaGetMessagesBody>[];
+
+  // ---- Ticket identity (from Conversation) ----
+  conversationId?: string | null;
+  /**
+   * The channel registry row the ticket runs on — what a reply goes out on. Null for
+   * tickets opened before tickets were per channel.
+   */
+  conversationChannelId?: string | null;
+  ticketNumber?: number | null;
+  ticketSubject?: string | null;
+  ticketDescription?: string | null;
+  resolutionResult?: ResolutionResult | null;
+  /** The ticket's own status. Prefer this over the contact-level `waMessageAssignStatus`. */
+  conversationStatus?: string | null;
+  ticketCreatedAt?: string | null;
+  ticketClosedAt?: string | null;
+  ticketReopenCount?: number | null;
+  conversationLastMessageAt?: string | null;
+  conversationLastCustomerMessageAt?: string | null;
+  /**
+   * The ticket's `Conversation.updatedAt` (see `filterChats` in the API). Row
+   * freshness for the client cache: the store only replaces a cached row when
+   * the response's stamp is at least as new, so this is what lets a reload
+   * correct a row whose status or last message moved on the server.
+   */
+  updatedAt?: string;
+
+  // ---- Inbox signals ----
+  isFavorite?: boolean;
+  /**
+   * Spam is contact-grained, not ticket-grained: every row of a spam contact
+   * carries it. The Spam tab is the only list that shows these rows, and it shows
+   * one row per contact rather than one per ticket.
+   */
+  isSpam?: boolean;
+  spamMarkedAt?: string | null;
+  /** When the business blocked this person on Instagram. Replies are refused while set. */
+  igBlockedAt?: string | null;
+  /** Instagram/Messenger: a click-to-Direct ad keeps the thread open until this time. */
+  adThreadUntil?: string | null;
+  /**
+   * Instagram/Messenger reply window as the API saw it (null elsewhere). The web client
+   * recomputes it live (`contactMessagingWindow`); this is for clients that cannot.
+   */
+  messagingWindow?: {
+    state: "open" | "human_agent" | "closed";
+    openUntil: string | null;
+    closesAt: string | null;
+  } | null;
+  /** Unseen @mentions for the current user on this ticket. */
+  mentionCount?: number;
+  /** Sibling tickets for the same contact — drives the thread's history strip. */
+  otherTicketCount?: number;
+  /**
+   * The board column the contact's lead sits in — contact-grained, like labels.
+   * Absent when the contact is not on a board at all, which is the ordinary case
+   * for a conversation nobody has turned into a lead.
+   */
+  stageName?: string | null;
+  stageColor?: string | null;
+  /** Contact-grained: these follow the customer across every one of their tickets. */
+  contactLabels?: ContactLabelOption[];
+  /** Ticket-grained: these describe this conversation only. */
+  conversationTags?: ConversationTagOption[];
+};
+
+/**
+ * Stable list key for a ticket row. Falls back to the contact id for rows that
+ * somehow arrive without a conversation (an empty inbox contact).
+ */
+export function getRowKey(row: { id: string; conversationId?: string | null }): string {
+  return row.conversationId ?? row.id;
+}
+interface ContactsWithLastMessageResponse {
+  rows: ContactsWithLastMessage[];
+  nextOffset: number | null;
+}
+
+export async function getFilteredContacts(filterData: string, page: number) {
+  return (
+    await axiosClient.get(
+      `${WA_CONTACT_BASE_PATH}/contactsfiltered?filterData=${filterData}&page=${page}`,
+      {
+        timeout: 16000,
+      },
+    )
+  ).data as ContactsWithLastMessageResponse;
+}
+interface assignedTo {
+  name: string;
+  recipeName: string | null;
+  phone: string | null;
+}
+interface comments {
+  id: string;
+  text: string;
+  createdById: string;
+  createdAt: string;
+  ticketId: string;
+}
+export interface _tickets {
+  id: string;
+  number: number;
+  title: string;
+  description: string;
+  type: string;
+  createdById: string;
+  createdAt: string;
+  status: string;
+  priority: string;
+  teamId: string;
+  deadline: string | null;
+  assignedToId: string;
+  reviewId: string | null;
+  surveyResponseId: string;
+  comments: comments[];
+  assignedTo: assignedTo;
+}
+
+export async function exportWaChats({
+  constraints,
+  filterData,
+}: {
+  constraints: string;
+  /** The store keeps `null` until a filter is applied; it is interpolated as-is. */
+  filterData: string | null;
+}) {
+  return (
+    await axiosClient.post(
+      `${WA_CONTACT_BASE_PATH}/exportmessages?constraints=${constraints}&filterData=${filterData}`,
+      {},
+      { responseType: "arraybuffer", timeout: 0 },
+    )
+  ).data;
+}
+
+export async function getWaChatMediaFile(mediaId: string) {
+  try {
+    const response = await axiosClient.get(`${WA_CONTACT_BASE_PATH}/mediafile/${mediaId}`, {
+      responseType: "arraybuffer", // Ensure the response is returned as raw binary data
+    });
+
+    // Convert the binary data to a Blob and return it
+    return new Blob([response.data]);
+  } catch (error) {
+    console.error("Error fetching media file:", error);
+    throw error;
+  }
+}
+
+/**
+ * Assigning a contact whose last ticket is closed does not revive that ticket —
+ * the API opens a successor and assigns that instead — so the response names the
+ * ticket the assignment landed on.
+ */
+export interface AssignInboxResult {
+  assignees: { userId: string; teamId: string }[];
+  conversation: { id: string; number: number | null; status: string } | null;
+}
+
+export async function assignInboxToUser(data: {
+  contactId: string;
+  assignees: { userId: string; teamId: string }[];
+  messageId: string; // for internal message
+  /** The ticket on screen; without it the API assigns the contact's newest ticket. */
+  conversationId?: string | null;
+}): Promise<AssignInboxResult> {
+  return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/assign`, data)).data;
+}
+
+/**
+ * Set a ticket's single owner. `userId` names them; `teamId` alone lets the API
+ * pick one member of that team in turn; neither unassigns. The API chooses the
+ * team a named person is recorded under, so callers never have to.
+ */
+export async function assignOwner(data: {
+  contactId: string;
+  conversationId?: string | null;
+  userId?: string | null;
+  teamId?: string | null;
+  messageId: string;
+}): Promise<AssignInboxResult> {
+  return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/assign/owner`, data)).data;
+}
+
+/**
+ * Reopen a closed ticket. The API opens the successor ticket and carries the
+ * closed ticket's assignees onto it, so the result has the same shape as an
+ * assignment — it *is* one.
+ */
+export async function reopenConversation(data: {
+  contactId: string;
+  conversationId?: string;
+  messageId?: string;
+}): Promise<AssignInboxResult> {
+  return (
+    await axiosClient.post(`${WA_CONTACT_BASE_PATH}/reopen/${data.contactId}`, {
+      conversationId: data.conversationId,
+      messageId: data.messageId,
+    })
+  ).data;
+}
+
+export interface BulkAssignResult {
+  assignedCount: number;
+  failedCount: number;
+  results: { contactId: string; success: boolean; result?: AssignInboxResult }[];
+}
+
+/** One `assignee` for every chat, or a `teamId` whose members take the chats in turn. */
+export async function bulkAssignInboxToUser(
+  data: { contactIds: string[] } & (
+    | { assignee: { userId: string; teamId: string } }
+    | { teamId: string }
+  ),
+): Promise<BulkAssignResult> {
+  return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/assign-bulk`, data)).data;
+}
+
+export async function getAssignedUserForContact(contactId: string) {
+  return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/assign/${contactId}`)).data;
+}
+
+export async function getInboxUserCount() {
+  return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/count`, { timeout: 30000 })).data;
+}
+
+export async function markWaMessagesAsRead(contactId: string) {
+  return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/mark/${contactId}`)).data;
+}
+
+export interface AgentTypingBody {
+  typing: boolean;
+  conversationId?: string | null;
+  /** Typing stopped because the reply went out. */
+  sent?: boolean;
+}
+
+/**
+ * Tells teammates this agent is (or stopped) typing, and shows the customer a
+ * typing bubble on WhatsApp, Instagram or Messenger.
+ */
+export async function sendAgentTyping(contactId: string, body: AgentTypingBody) {
+  await axiosClient.post(`${WA_CONTACT_BASE_PATH}/typing/${contactId}`, body);
+}
+
+/**
+ * Inbox Tickets v2 — set (not toggle) the favourite/star flag. The flag lives on
+ * the conversation (ticket), so each of a contact's tickets stars independently.
+ */
+export async function setConversationFavorite(data: {
+  conversationId: string;
+  isFavorite: boolean;
+}) {
+  return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/favorite`, data)).data as {
+    success: boolean;
+    isFavorite: boolean;
+  };
+}
+
+/**
+ * Set (not toggle) the spam flag on a **contact**. Spam describes the person, not
+ * one of their tickets, so this takes a contactId — marking closes their open
+ * tickets server-side and drops the contact out of every tab but Spam.
+ *
+ * `messageId` is the id of the optimistic internal event message so the server
+ * writes the same one rather than a duplicate.
+ */
+export async function setContactSpam(data: {
+  contactId: string;
+  isSpam: boolean;
+  messageId?: string;
+}) {
+  return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/spam`, data)).data as {
+    success: boolean;
+    isSpam: boolean;
+  };
+}
+
+export type InstagramModerationAction = "block" | "unblock" | "spam";
+
+/**
+ * Block, unblock or move to spam on Instagram itself (Meta's Moderate Conversations API).
+ * "spam" also marks the contact spam here, like `setContactSpam`.
+ */
+export async function moderateInstagramContact(
+  contactId: string,
+  action: InstagramModerationAction,
+) {
+  return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/${contactId}/instagram/${action}`))
+    .data as { igBlockedAt: string | null; isSpam: boolean };
+}
+
+/**
+ * Inbox Tickets v2 — explicitly clear the current user's unseen @mentions on a
+ * conversation (the "clear mention" action). `conversationId` scopes it to one
+ * ticket; omit it to clear every mention on the contact.
+ */
+export async function clearConversationMentions(data: {
+  contactId: string;
+  conversationId?: string | null;
+}) {
+  return (
+    await axiosClient.post(`${WA_CONTACT_BASE_PATH}/mentions/clear/${data.contactId}`, {
+      conversationId: data.conversationId ?? undefined,
+    })
+  ).data as { success: boolean };
+}
+
+/**
+ * Inbox Tickets v2 — edit a ticket's title/description.
+ *
+ * Only these fields are sent: the endpoint's date fields are `z.date()` and reject
+ * JSON date strings, and writing `status` here bypasses the contact/conversation
+ * status mirror. Status changes go through the contact endpoints instead.
+ */
+export async function updateConversation(
+  conversationId: string,
+  data: { subject?: string | null; description?: string | null },
+) {
+  // NB: axiosClient's baseURL already ends in `/api` — paths must not repeat it.
+  return (await axiosClient.put(`/contact/conversations/${conversationId}`, data))
+    .data as UpdatedConversation;
+}
+
+/**
+ * Inbox Tickets v2 — permanently delete a ticket **and its messages**.
+ *
+ * Admin-only on the server. The whole row goes: the thread's messages are deleted
+ * with the conversation rather than left behind attached to nothing, so there is
+ * nothing to undo this with.
+ */
+export async function deleteConversation(conversationId: string) {
+  // NB: axiosClient's baseURL already ends in `/api` — paths must not repeat it.
+  return (await axiosClient.delete(`/contact/conversations/${conversationId}`)).data as {
+    id: string;
+    contactId: string;
+    deletedMessages: number;
+    remainingConversations: boolean;
+  };
+}
+
+/**
+ * Inbox Tickets v2 — delete several tickets at once (the list's bulk action).
+ *
+ * Admin-only, and as final as the single delete. Ids the org no longer owns are
+ * skipped server-side rather than failing the batch, so the answer says how many
+ * actually went.
+ */
+export async function deleteConversations(conversationIds: string[]) {
+  // NB: axiosClient's baseURL already ends in `/api` — paths must not repeat it.
+  return (await axiosClient.delete(`/contact/conversations`, { data: { conversationIds } }))
+    .data as {
+    conversationIds: string[];
+    contactIds: string[];
+    deletedConversations: number;
+    deletedMessages: number;
+  };
+}
+
+/** What the conversation edit endpoint echoes back. */
+export interface UpdatedConversation {
+  subject?: string | null;
+  description?: string | null;
+}
+
+/**
+ * Inbox Tickets v2 — one conversation of a contact, as returned by
+ * `GET /api/contact/conversations/by-contact/:contactId`.
+ *
+ * This is NOT an inbox row: it carries only ticket-level fields, so it must be
+ * merged onto a real contact before it can be handed to `setSelectedContact`.
+ */
+export interface ContactConversation {
+  id: string;
+  number: number | null;
+  subject: string | null;
+  description: string | null;
+  status: string;
+  resolutionResult: ResolutionResult | null;
+  createdAt: string;
+  closedAt: string | null;
+  lastMessageAt: string | null;
+  messageCount: number;
+  assignedUsers: { userId: string; teamId: string; user: { name: string } }[];
+}
+
+/** Every conversation for a contact, newest first, org-scoped by the API. */
+export async function getConversationsByContactId(contactId: string) {
+  // NB: axiosClient's baseURL already ends in `/api` — paths must not repeat it.
+  return (await axiosClient.get(`/contact/conversations/by-contact/${contactId}`))
+    .data as ContactConversation[];
+}
+
+export async function blockWhatsAppUser(data: { phoneNumbersList: string[] }) {
+  return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/block-user`, data)).data;
+}
+
+export async function unblockWhatsAppUser(data: { phoneNumbersList: string[] }) {
+  return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/unblock-user`, data)).data;
+}
+
+export async function getInboxAnalytics() {
+  return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/analytics`)).data;
+}
+
+export async function generateInboxResponse(data: RequestPayload) {
+  return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/generate-response`, data)).data;
+}
+
+export interface CreateNotePayload {
+  /** The editor's Tiptap document, or plain text. */
+  text: { body: unknown };
+  /** The composer's placeholder id; the server echoes it back as `messageId`. */
+  messageId: string;
+  conversationId?: string | null;
+  mentionedUserIds: string[];
+}
+
+export async function createPrivateMessage(
+  contactId: string,
+  data: CreateNotePayload,
+): Promise<WaGetMessagesBody> {
+  const { conversationId, ...rest } = data;
+  return (
+    await axiosClient.post(`${WA_CONTACT_BASE_PATH}/privatemessage/${contactId}`, {
+      ...rest,
+      ...(conversationId && { conversationId }),
+    })
+  ).data;
+}
+
+export async function editPrivateNote(
+  noteId: string,
+  text: { body: unknown },
+): Promise<WaGetMessagesBody> {
+  return (
+    await axiosClient.patch(`${WA_CONTACT_BASE_PATH}/privatemessage/note/${noteId}`, { text })
+  ).data;
+}
+
+export async function deletePrivateNote(noteId: string): Promise<WaGetMessagesBody> {
+  return (await axiosClient.delete(`${WA_CONTACT_BASE_PATH}/privatemessage/note/${noteId}`)).data;
+}
+
+/** One row of the message-logs report. */
+export interface WaMessageLogRow {
+  id: string;
+  createdAt?: string;
+  phone?: string;
+  status?: string;
+  sourceMessage?: string;
+  messageType?: string;
+  messagePreview?: string;
+  /** Meta's raw error payload, kept verbatim so the popover can pretty-print it. */
+  logs?: { message?: string; error_data?: { details?: string }; [key: string]: unknown } | null;
+}
+
+export interface WaMessageLogsResponse {
+  data: WaMessageLogRow[];
+  pagination?: { total?: number };
+}
+
+export async function getWaMessageLogs(filter: WaMessageLogFilter): Promise<WaMessageLogsResponse> {
+  // Format date range if it's an array of Date objects
+  let dateRange = filter.dateRange;
+  if (Array.isArray(dateRange) && dateRange.length === 2) {
+    dateRange = dateRange.join(",");
+  }
+
+  // Build params object
+  const params = {
+    dateKey: filter.dateKey,
+    dateRange,
+    status: filter.status,
+    source: filter.source,
+    team: filter.team,
+    searchQuery: filter.searchQuery,
+    ...(filter.pagination && {
+      pageIndex: filter.pagination.pageIndex,
+      pageSize: filter.pagination.pageSize,
+    }),
+  };
+
+  // Add pagination if provided
+  if (filter.pagination) {
+    params.pageIndex = filter.pagination.pageIndex;
+    params.pageSize = filter.pagination.pageSize;
+  }
+
+  // Filter out undefined/null values
+  const filteredParams = Object.fromEntries(Object.entries(params).filter(([, v]) => v != null));
+
+  return (
+    await axiosClient.get(`${WA_CONTACT_BASE_PATH}/message-logs`, {
+      params: filteredParams,
+      timeout: 60000,
+    })
+  ).data;
+}
+
+export async function exportWaMessageLogs(filter: WaMessageLogFilter) {
+  let dateRange = filter.dateRange;
+  if (Array.isArray(dateRange) && dateRange.length === 2) {
+    dateRange = dateRange.join(",");
+  }
+
+  const params = {
+    dateKey: filter.dateKey,
+    dateRange,
+    status: filter.status,
+    source: filter.source,
+    team: filter.team,
+    searchQuery: filter.searchQuery,
+  };
+
+  const filteredParams = Object.fromEntries(Object.entries(params).filter(([, v]) => v != null));
+
+  return (
+    await axiosClient.get(`${WA_CONTACT_BASE_PATH}/export-message-logs`, {
+      params: filteredParams,
+      responseType: "arraybuffer",
+      timeout: 120000,
+    })
+  ).data;
+}

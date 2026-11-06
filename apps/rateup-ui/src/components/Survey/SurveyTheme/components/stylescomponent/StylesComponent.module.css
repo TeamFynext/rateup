@@ -1,0 +1,225 @@
+.styles-component-root-div {
+  height: 100%;
+  gap: 0.875rem;
+}
+
+.theme-selector-div {
+  padding: 0.875rem;
+  padding-bottom: 0;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.theme-selector-div :global(.choose-theme-dropdown) {
+  width: 100%;
+}
+
+.theme-selector-div > :global(.create-theme-btn) {
+  padding: 0.3125rem 1rem;
+  margin-bottom: 0;
+  border-radius: 2rem;
+  font-size: 0.75rem;
+  font-weight: bold;
+  align-self: auto;
+}
+
+.use-survey-theme-checkbox-container {
+  padding: 0 1.1875rem;
+  padding-top: 0.875rem;
+}
+
+.expand-all-collapse-all-btn-container {
+  padding: 0 0.75rem;
+  justify-content: center;
+}
+
+.expand-all-collapse-all-btn-container button {
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  height: auto;
+  line-height: normal;
+}
+
+.styles-component-div {
+  display: flex;
+  flex-direction: column;
+  padding: 0 0.875rem;
+  height: 100%;
+  flex: 1;
+}
+
+.styles-component-div :global(.custom-color-picker-container) {
+  max-width: 18.75rem;
+}
+
+.styles-component-root-div .styles-component-div :global(.custom-color-picker-container button),
+.styles-component-root-div .styles-component-div :global(.custom-color-picker-container input) {
+  height: 2rem;
+}
+
+.styles-component-root-div
+  .styles-component-div
+  :global(.custom-color-picker-container .color-indicator) {
+  width: 2rem;
+  border-radius: 50%;
+}
+
+.styles-component-div :global(.local-or-unsplash-image-picker-div) {
+  width: auto;
+  gap: 0.625rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.styles-component-div :global(.local-or-unsplash-image-picker-label) {
+  flex: initial;
+  display: none;
+}
+
+.accordion-root-div [data-slot="accordion-trigger"] {
+  padding: 0 0.3125rem;
+}
+
+.accordion-root-div [data-slot="accordion-content"] > div {
+  padding-left: 0.3125rem;
+  padding-right: 0.3125rem;
+}
+
+.editor-selector-dropdown-input {
+  font-family: var(--font-geist);
+  font-weight: 400;
+  background-color: var(--primary);
+  color: white;
+  border-radius: 0.625rem;
+}
+
+.label {
+  font-size: 0.75rem;
+  color: #495057;
+}
+
+.section-heading {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.welcome-page-switch-container {
+  margin-bottom: 1rem;
+}
+
+.switch-body {
+  justify-content: flex-start;
+  gap: 0.625rem;
+}
+
+.switch-body label {
+  cursor: pointer;
+}
+
+.switch-disabled-track {
+  background-color: #adb5bd;
+}
+
+.styles-component-div :global(.custom-color-picker-and-heading-container) h2 {
+  color: #495057;
+  font-size: 0.75rem;
+  margin-bottom: 0.3125rem;
+  font-weight: 500;
+}
+
+.styles-component-div :global(.styles-section-div) {
+  width: 100%;
+}
+
+.styles-component-div :global(.styles-section-div h2) {
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.styles-component-div :global(.button-position-styles-div h2) {
+  margin-bottom: 0.3125rem;
+}
+
+.default-theme-not-editable-overlay-message-container-root-div {
+  width: 100%;
+  height: 100%;
+  padding: 1rem;
+}
+
+.overlay-message-container {
+  padding: 1rem;
+  background-color: #ced4da;
+  border-radius: 1rem;
+}
+
+.overlay-message-p {
+  font-size: 0.875rem;
+}
+
+/* Individual Styles components like BackgrounsStyles,ButtonStyles, others styles */
+.style-inputs-container {
+  width: 100%;
+  gap: 1rem;
+}
+
+.logo-styles-number-inputs-container {
+  justify-content: center;
+}
+
+.logo-styles-number-inputs-container > div {
+  flex: 1 1 0;
+}
+
+.logo-styles-logo-upload-file-input-container {
+  justify-content: center;
+}
+
+.close-save-btns-container {
+  position: relative;
+  padding: 0.875rem;
+  padding-top: 0;
+  justify-content: center;
+}
+
+.close-save-btns-container > div {
+  flex: 0 1 auto;
+}
+
+.close-btn,
+.page-theme-save-btn {
+  height: auto;
+  line-height: normal;
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  width: 100%;
+  font-size: 0.75rem;
+}
+
+.page-theme-save-btn {
+  width: auto;
+}
+
+.close-save-btns-container .save-btn-div {
+  width: auto;
+}
+
+.save-btn-div button {
+  width: 100%;
+  font-size: 0.75rem;
+}
+
+.font-weight-popover-container > div {
+  min-width: 130px;
+}
+
+.button-position-input input {
+  font-size: 0.75rem;
+  height: 2.25rem;
+}
+
+.button-position-input-container > div {
+  min-width: 120px;
+}

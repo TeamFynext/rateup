@@ -1,0 +1,51 @@
+.item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 12px;
+  background-color: white;
+  cursor: pointer;
+  position: relative;
+  border-left: 3px solid transparent;
+  transition:
+    background 120ms,
+    border-color 120ms;
+}
+
+.item[data-select="true"] {
+  border-left-color: var(--primary);
+  background-color: var(--accent);
+}
+
+.item:hover:not([data-select="true"]) {
+  background-color: var(--background);
+}
+
+.itemDragging {
+  box-shadow: 0 4px 16px rgba(11, 31, 72, 0.12);
+  background-color: white;
+  border-radius: 8px;
+}
+
+.dragHandle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-ru-n-300);
+  flex-shrink: 0;
+}
+
+.questionIconBox {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: white;
+}
+
+.transition {
+  transition: all 0.12s;
+}

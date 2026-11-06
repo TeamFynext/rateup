@@ -1,0 +1,115 @@
+import { IconPhoto, IconUpload, IconX } from "@tabler/icons-react";
+import { useState } from "react";
+import { toast } from "sonner";
+
+import { Button } from "@/components/ui/button.tsx";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
+import { useMediaStore } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter/index.tsx";
+import { getApiErrorMessage } from "@/utils/apiError.ts";
+import { uploadFile } from "@/utils/file-upload/upload.ts";
+
+const InsertInboxImage = () => {
+  const [isUploadingFile, setIsUploadingFile] = useState(false);
+  const [files, setFiles] = useState<File[]>([]);
+
+  const { addMedia, media, resetMedia } = useMediaStore();
+
+  async function onSubmit() {
+    if (!files.length) return;
+
+    setIsUploadingFile(true);
+
+    try {
+      for (const file of files) {
+        const fileKey = await uploadFile(file);
+        const fileUrl = `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${fileKey}`;
+
+        addMedia({
+          type: "image",
+          name: file.name,
+          url: fileUrl,
+          key: fileKey,
+        });
+      }
+
+      setFiles([]);
+    } catch (e) {
+      // uploadFile rejects with the message itself.
+      const errorMessage = typeof e === "string" ? e : getApiErrorMessage(e, "");
+      toast.error(errorMessage || "Failed to upload image. Please try again.");
+      resetMedia();
+    }
+
+    setIsUploadingFile(false);
+  }
+
+  function handleSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const selected = Array.from(e.target.files || []);
+    setFiles((prev) => [...prev, ...selected]);
+  }
+
+  function removeFile(index: number) {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  return (
+    <Popover>
+      <PopoverTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 p-0 sm:h-9 sm:w-9"
+            aria-label="Upload Photo"
+            title="Upload Photo"
+            disabled={isUploadingFile || media.length > 0}
+          />
+        }
+      >
+        <IconPhoto size={16} />
+      </PopoverTrigger>
+      <PopoverContent className="w-64 flex flex-col gap-3">
+        <Button variant="outline" size="sm" render={<label className="cursor-pointer" />}>
+          <div className="flex items-center justify-center gap-1">
+            <IconPhoto size={16} />
+            Select Images
+          </div>
+          <input
+            type="file"
+            multiple
+            accept="image/png,image/jpeg"
+            className="hidden"
+            onChange={handleSelect}
+          />
+        </Button>
+
+        {/* Selected file names */}
+        {files.length > 0 && (
+          <div className="flex flex-col gap-1">
+            {files.map((file, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between text-sm border rounded px-2 py-1"
+              >
+                <span className="truncate">{file.name}</span>
+
+                <button onClick={() => removeFile(index)}>
+                  <IconX size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <Button size="sm" onClick={onSubmit} disabled={isUploadingFile || !files.length}>
+          {isUploadingFile && <Spinner />}
+          Upload
+          <IconUpload size="1rem" />
+        </Button>
+      </PopoverContent>
+    </Popover>
+  );
+};
+
+export default InsertInboxImage;

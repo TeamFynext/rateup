@@ -1,0 +1,363 @@
+import { IconLogin2, IconRefresh, IconTrash } from "@tabler/icons-react";
+import { useNavigate } from "@tanstack/react-router";
+import { useId, useEffect, useState } from "react";
+import { toast } from "sonner";
+
+import { useWooStatus } from "@/backend/appsIntegration/woocommerce/woocommerce.query";
+import type { WaCatalog } from "@/backend/whatsapp/catalog/catalog.api";
+import {
+  useDeleteWaCatalog,
+  useDisconnectCatalogFromWa,
+  useUpateCatalog,
+} from "@/backend/whatsapp/catalog/catalog.query";
+import {
+  useProductSetsByCatalog,
+  useSyncProductSets,
+} from "@/backend/whatsapp/catalog/productSet.query";
+import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import { WooCommerceLogo } from "@/components/integrations/logos.tsx";
+import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Card } from "@/components/ui/card";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
+import { Switch } from "@/components/ui/switch.tsx";
+import { ImportStoreProductsModal } from "@/components/whatsapp/catalog/products/ImportStoreProductsModal.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
+import { useDisclosure } from "@/hooks/useDisclosure";
+import { MetaLoginAssets, WaConfigType } from "@/types/enums.ts";
+
+const CatalogSettings = ({ catalogData }: { catalogData: WaCatalog }) => {
+  const uid = useId();
+  const navigate = useNavigate();
+  const update = useUpateCatalog(catalogData?.catalogId);
+  const disconnect = useDisconnectCatalogFromWa(catalogData?.catalogId);
+  const deleteCatalog = useDeleteWaCatalog();
+  const confirm = useConfirm();
+  const [wabaId, setWabaId] = useState("");
+  const [connectMode, setConnectMode] = useState<"manual" | "automatic">("automatic");
+  const { data: waSettings, isLoading } = useWaSettings();
+  const wabaIds = waSettings
+    ? Array.from(
+        new Set(
+          waSettings
+            .filter((s) =>
+              s.type === WaConfigType.Automated
+                ? s.assets.includes(MetaLoginAssets.CATALOGS)
+                : true,
+            )
+            .map((s) => s.wabaId),
+        ),
+      )
+    : [];
+  useEffect(() => {
+    if (waSettings && catalogData) {
+      const setting = waSettings.find((s) =>
+        catalogData.connectedWaPhoneIds.some(
+          (c: { whatsappSettingsPhoneId?: string }) => c.whatsappSettingsPhoneId === s.phoneId,
+        ),
+      );
+      if (setting) {
+        setWabaId(setting.wabaId);
+      } else {
+        setWabaId("");
+      }
+    }
+  }, [catalogData, waSettings]);
+  async function handleDisconnect() {
+    if (!wabaId) {
+      toast.error("No WhatsApp account is connected.");
+      return;
+    }
+
+    const shouldDisconnect = await confirm({
+      title: "Disconnect Whatsapp Business Account",
+      description: "Are you sure you want to disconnect catalog from whatsapp",
+      warning: "The catalog in automation on the connected accont won't work.",
+      confirmText: "Disconnect",
+    });
+
+    if (!shouldDisconnect) return;
+
+    const settings = waSettings?.find((s) =>
+      s.wabaId === wabaId && s.type === WaConfigType.Automated
+        ? s.assets.includes(MetaLoginAssets.CATALOGS)
+        : true,
+    );
+    disconnect.mutate(
+      { catalogId: catalogData?.catalogId, whatsappSettingsId: settings?.id },
+      {
+        onSuccess: () => {
+          setWabaId("");
+        },
+      },
+    );
+  }
+  async function handleConnect(selectedWabaId: string) {
+    const shouldConnect = await confirm({
+      title: "Connect Whatsapp Business Account",
+      description: `Are you sure you want to connect this catalog to WhatsApp Business Account (WABA ID: ${selectedWabaId})? Mode: ${connectMode === "automatic" ? "Normal Account — will also update in Meta" : "SMB (Coexistence Account) — DB only, no Meta update"}`,
+      confirmText: "Connect",
+    });
+
+    if (!shouldConnect) return;
+
+    update.mutate({ wabaId: selectedWabaId, syncWithMeta: connectMode === "automatic" });
+  }
+  async function handleDeleteCatalog() {
+    const shouldDelete = await confirm({
+      title: "Delete Catalog",
+      description: `Are you sure you want to permanently delete "${catalogData?.name}"?`,
+      warning:
+        "All products, orders, product sets, and automation links tied to this catalog will be permanently deleted.",
+      confirmText: "Delete Catalog",
+    });
+
+    if (!shouldDelete) return;
+
+    deleteCatalog.mutate(catalogData?.catalogId, {
+      onSuccess: () => {
+        navigate({ to: "/dashboard/commerce/catalogs" });
+      },
+    });
+  }
+  if (isLoading) return <RateupLoader />;
+  return (
+    <Card className="flex flex-col gap-4 p-2">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+        <Field className="w-full sm:w-1/2">
+          <FieldLabel htmlFor={`${uid}-connected-whatsapp-business-account-id`}>
+            Connected WhatsApp Business Account ID
+          </FieldLabel>
+          <div className="flex items-center gap-3 mb-2">
+            <span className="text-sm font-medium">Normal Account</span>
+            <Switch
+              id={`${uid}-connected-whatsapp-business-account-id`}
+              checked={connectMode === "manual"}
+              onCheckedChange={(checked) => setConnectMode(checked ? "manual" : "automatic")}
+            />
+            <span className="text-sm font-medium">SMB (Coexistence Account)</span>
+          </div>
+          <Select
+            value={wabaId}
+            items={wabaIds.map((id) => ({ value: id, label: id }))}
+            onValueChange={(value) => {
+              setWabaId(value ?? "");
+              handleConnect(value ?? "");
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select" />
+            </SelectTrigger>
+            <SelectContent>
+              {wabaIds.map((id) => (
+                <SelectItem key={id} value={id}>
+                  {id}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+        <Button variant="destructive" onClick={handleDisconnect} loading={disconnect.isPending}>
+          <IconLogin2 size={16} />
+          Disconnect WhatsApp Business Account
+        </Button>
+      </div>
+
+      <p className="font-semibold mt-4">Shopify Checkout Automation</p>
+      <div className="flex items-center justify-between rounded-lg border p-4">
+        <div className="flex flex-col gap-0.5">
+          <FieldLabel htmlFor="auto-checkout" className="cursor-pointer">
+            Auto-generate Shopify Checkout Link
+          </FieldLabel>
+          <p className="text-sm text-muted-foreground">
+            Automatically send a Shopify checkout link when a customer sends a cart.
+          </p>
+        </div>
+        <Switch
+          id="auto-checkout"
+          checked={catalogData.autoCheckoutEnabled}
+          onCheckedChange={(checked) => {
+            update.mutate({ autoCheckoutEnabled: checked });
+          }}
+        />
+      </div>
+      {catalogData.autoCheckoutEnabled && (
+        <Field>
+          <FieldLabel htmlFor={`${uid}-checkout-message`}>Checkout Message</FieldLabel>
+          <Input
+            id={`${uid}-checkout-message`}
+            placeholder="Thanks for your order! Complete your purchase here: {link}"
+            defaultValue={catalogData.checkoutMessage || ""}
+            onBlur={(e) => {
+              if (e.target.value !== catalogData.checkoutMessage) {
+                update.mutate({ checkoutMessage: e.target.value });
+              }
+            }}
+          />
+          <FieldDescription>
+            Use {"{link}"} where you want the Shopify URL to appear.
+          </FieldDescription>
+        </Field>
+      )}
+
+      <Separator className="mt-4" />
+      <ProductManagementSection catalogData={catalogData} />
+
+      <Separator className="mt-4" />
+      <ProductSetsSection catalogId={catalogData?.catalogId} />
+
+      <Separator className="mt-8" />
+      <div className="flex flex-col gap-3 p-4 border border-destructive/30 rounded-lg bg-destructive/5">
+        <div className="flex flex-col gap-1">
+          <p className="font-semibold text-destructive">Danger Zone</p>
+          <p className="text-sm text-destructive/80">
+            Deleting this catalog is permanent and cannot be undone. All associated products,
+            product sets, orders, and settings will be removed. Any automations using this catalog
+            will stop working.
+          </p>
+        </div>
+        <Button
+          variant="destructive"
+          className="w-fit"
+          onClick={handleDeleteCatalog}
+          loading={deleteCatalog.isPending}
+        >
+          <IconTrash size={16} />
+          Delete Catalog
+        </Button>
+      </div>
+    </Card>
+  );
+};
+
+const ProductManagementSection = ({ catalogData }: { catalogData: WaCatalog }) => {
+  const catalogId = catalogData?.catalogId;
+  const [shopifyImportOpened, { close: closeShopifyImport }] = useDisclosure(false);
+  const [wooImportOpened, { open: openWooImport, close: closeWooImport }] = useDisclosure(false);
+  const { data: wooStatus } = useWooStatus();
+
+  return (
+    <div className="flex flex-col gap-2 mt-4">
+      <p className="font-semibold">Product Management</p>
+
+      {/* Import from Shopify
+      <div className="flex flex-col gap-1">
+        <div className="flex justify-between items-center p-3 border border-border rounded-lg bg-muted">
+          <div className="flex flex-col gap-1">
+            <p className="font-medium text-sm">Import from Shopify</p>
+            <p className="text-xs text-muted-foreground">
+              Browse your Shopify products and selectively add new ones to this
+              catalog.
+            </p>
+          </div>
+          <Button
+            className="w-fit"
+            onClick={openShopifyImport}
+            disabled={!catalogId || !shopifyIntegration || shopifyLoading}
+          >
+            <IconShoppingBag size={16} />
+            Import from Shopify
+          </Button>
+        </div>
+        {!shopifyLoading && !shopifyIntegration && (
+          <p className="text-xs text-destructive italic mt-1 ml-1">
+            Shopify is not connected. Connect your store from Apps & Services to
+            enable imports.
+          </p>
+        )}
+      </div>
+      */}
+
+      {/* Shown only with a store connected; its products stay current through product.updated. */}
+      {wooStatus?.connected && (
+        <div className="flex justify-between items-center gap-3 p-3 border border-border rounded-lg bg-muted">
+          <div className="flex flex-col gap-1">
+            <p className="font-medium text-sm">Import from WooCommerce</p>
+            <p className="text-xs text-muted-foreground">
+              Pick products from your store to add to this catalog. Price, stock and details stay in
+              step when you change them in WooCommerce.
+            </p>
+          </div>
+          <Button className="w-fit shrink-0" onClick={openWooImport} disabled={!catalogId}>
+            <WooCommerceLogo className="size-4" />
+            Import from WooCommerce
+          </Button>
+        </div>
+      )}
+
+      <ImportStoreProductsModal
+        catalogId={catalogId}
+        source="shopify"
+        opened={shopifyImportOpened}
+        onClose={closeShopifyImport}
+      />
+      <ImportStoreProductsModal
+        catalogId={catalogId}
+        source="woocommerce"
+        opened={wooImportOpened}
+        onClose={closeWooImport}
+      />
+    </div>
+  );
+};
+
+const ProductSetsSection = ({ catalogId }: { catalogId: string }) => {
+  const syncProductSetsMut = useSyncProductSets();
+  const { data: productSets, isLoading } = useProductSetsByCatalog(catalogId);
+
+  return (
+    <div className="flex flex-col gap-2 mt-4">
+      <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-0">
+          <p className="font-semibold">Product Sets</p>
+          <p className="text-sm text-muted-foreground">
+            Curated collections synced from your Meta Catalog
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => syncProductSetsMut.mutate(catalogId)}
+          loading={syncProductSetsMut.isPending}
+        >
+          <IconRefresh size={16} />
+          Sync from Meta
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <div className="w-5 h-5 border-2 border-border border-t-primary rounded-full animate-spin" />
+      ) : productSets && productSets.length > 0 ? (
+        <div className="flex flex-col gap-3 mt-2">
+          {productSets.map((set) => (
+            <div
+              key={set.productSetId}
+              className="flex justify-between items-center p-3 border rounded-lg bg-muted/40"
+            >
+              <div className="flex flex-col gap-1">
+                <p className="font-medium text-sm">{set.name}</p>
+                <p className="text-xs text-muted-foreground">ID: {set.productSetId}</p>
+              </div>
+              <span className="bg-primary/10 text-primary px-2 py-1 rounded text-xs font-medium">
+                {set.productIds?.length || 0} Products
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground italic">No product sets synced yet.</p>
+      )}
+    </div>
+  );
+};
+
+export default CatalogSettings;

@@ -1,0 +1,142 @@
+// Extracted verbatim from the `/dashboard/whatsapp/flows/` route so the route file carries routing
+// config only. Behaviour is unchanged.
+
+import { IconPlus } from "@tabler/icons-react";
+import { useSearch } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import { useTeamsByUser } from "@/backend/team/team.query";
+import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
+import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import RefreshButton from "@/components/Button/RefreshButton.tsx";
+import {
+  ListPage,
+  ListPageContent,
+  ListPageHeader,
+  ListPageHeaderSection,
+  ListPageSearchInput,
+  ListPageSortDropdown,
+} from "@/components/common/list-page-layout.tsx";
+import { sortData } from "@/components/dashboard/SortDropDown.tsx";
+import { TeamSelector } from "@/components/input/TeamSelector.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
+import { isFlowType } from "@/components/whatsapp/flows/CreateFlowWizard/createFlowWizard.steps.ts";
+import { CreateFlowWizard } from "@/components/whatsapp/flows/CreateFlowWizard/CreateFlowWizard.tsx";
+import FlowCardsList from "@/components/whatsapp/flows/FlowCardsList/index.tsx";
+import { SyncFlowsButton } from "@/components/whatsapp/flows/SyncFlows.tsx";
+
+export function FlowsPage() {
+  const searchParams = useSearch({ strict: false });
+  const { t: translations } = useTranslation();
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOption, setSortOption] = useState("latest");
+  const [selectedTeamId, setSelectedTeamId] = useState("");
+  const [isCreateFlowModalOpened, setIsCreateFlowModalOpened] = useState(
+    searchParams.action === "create",
+  );
+  // `?for=` names a purpose to open the wizard on; ignored unless it is one we know, so a
+  // stale or hand-edited link falls back to the ordinary grid rather than breaking the step.
+  const initialFlowType = isFlowType(searchParams.for) ? searchParams.for : undefined;
+
+  const { data: flows, isPending, isError, refetch } = useWaFlowsFromDb();
+  const { data: waSettings, isPending: waSettingsPending } = useWaSettings();
+  const { isPending: isPendingTeamsUser, data: teamsDataUser } = useTeamsByUser();
+
+  const teamsData = teamsDataUser?.data;
+  const isLoading = isPending || isPendingTeamsUser || waSettingsPending;
+  const hasWaSettings = Boolean(waSettings?.length);
+  const handleCreateFlowModalOpen = () => setIsCreateFlowModalOpened(true);
+  const handleCreateFlowModalClose = () => setIsCreateFlowModalOpened(false);
+
+  const hasSelectedTeamFilter = Boolean(selectedTeamId && selectedTeamId !== "all");
+
+  let filteredFlows = hasSelectedTeamFilter
+    ? flows?.filter((flow) => flow.survey?.teams?.some((team) => team.teamId === selectedTeamId))
+    : flows;
+
+  if (searchQuery) {
+    filteredFlows = filteredFlows?.filter((flow) =>
+      flow.name.toLowerCase().includes(searchQuery.toLowerCase()),
+    );
+  }
+
+  const sortedFlows = useMemo(
+    () => sortData(filteredFlows ?? [], sortOption),
+    [filteredFlows, sortOption],
+  );
+
+  const shouldShowEmptyState = !isLoading && !isError && sortedFlows.length === 0;
+
+  return (
+    <>
+      <ListPage>
+        <ListPageHeader>
+          <ListPageHeaderSection className="gap-3">
+            {/* Not gated on a connected channel: the wizard is reachable before one
+                exists. The flow itself is still created on a WABA at Meta, so the
+                create call is what reports a missing channel. */}
+            <Button onClick={handleCreateFlowModalOpen} loading={isLoading}>
+              {translations("Create Flow")}
+              <IconPlus size={16} className="ml-2" />
+            </Button>
+            <RefreshButton queryKeys={["flow", "db"]} />
+          </ListPageHeaderSection>
+
+          <ListPageHeaderSection>
+            <ListPageSearchInput
+              placeholder={translations("Search flows...")}
+              value={searchQuery}
+              onChange={setSearchQuery}
+            />
+            <div className="flex gap-2">
+              <TeamSelector
+                value={selectedTeamId}
+                onChange={(teamId) => setSelectedTeamId(teamId)}
+                enableAll={true}
+                allowDeselect={false}
+                placeholder={translations("Filter by Teams")}
+              />
+
+              {hasWaSettings ? (
+                <SyncFlowsButton disabled={isLoading} />
+              ) : (
+                <Tooltip>
+                  <TooltipTrigger render={<div />}>
+                    <SyncFlowsButton disabled />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{translations("Connect a WhatsApp number in settings to sync a Flow")}</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+            </div>
+            <ListPageSortDropdown value={sortOption} onChange={setSortOption} />
+          </ListPageHeaderSection>
+        </ListPageHeader>
+
+        <ListPageContent
+          isLoading={isLoading}
+          isError={isError}
+          isEmpty={shouldShowEmptyState}
+          emptyTitle={
+            searchQuery ? translations("No results found") : translations("No Flows Available")
+          }
+          emptyDescription={translations("Try adjusting your filters or create a new flow.")}
+          onRetry={refetch}
+        >
+          <div className="p-1">
+            <FlowCardsList flows={sortedFlows} teamsData={teamsData ?? []} />
+          </div>
+        </ListPageContent>
+      </ListPage>
+      <CreateFlowWizard
+        open={isCreateFlowModalOpened}
+        onClose={handleCreateFlowModalClose}
+        initialType={initialFlowType}
+      />
+    </>
+  );
+}

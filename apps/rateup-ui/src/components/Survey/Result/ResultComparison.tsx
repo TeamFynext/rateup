@@ -1,0 +1,239 @@
+import {
+  IconChartBar,
+  IconChartPie as PieChartIcon,
+  IconRadar as RadarIcon,
+} from "@tabler/icons-react";
+import { useContext, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Pie,
+  PieChart,
+  PolarAngleAxis,
+  PolarGrid,
+  Radar,
+  RadarChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+
+import {
+  useResponseCount,
+  useResponseForComparison,
+} from "@/backend/surveys/response/response.query";
+import { Badge } from "@/components/ui/badge.tsx";
+import { Card, CardContent } from "@/components/ui/card.tsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import type { FlowQuestionSummary } from "@/components/whatsapp/flow-v2/utils/store.ts";
+import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
+import SurveyContext from "@/context/SurveyContext.ts";
+import { QuestionType2 } from "@/types/enums.ts";
+import { getResponseArrayByQuestionType } from "@/utils/response.ts";
+
+import RateupLoader from "../../Loaders/RateupLoader.tsx";
+import NothingFound from "../../NothingFound/NothingFound.tsx";
+import Heading from "../../styled/Heading/Heading.tsx";
+import { getReplacedTitleFromVariable } from "../TakeSurvey/TakeSurveyComponent/util.tsx";
+
+export default function ResultComparison({
+  surveyId,
+  version = 1,
+  flowQuestions,
+  questions,
+}: {
+  surveyId: string;
+  version?: number;
+  flowQuestions: FlowQuestionSummary[];
+  questions: Question[];
+}) {
+  const { filterTeams } = useContext(SurveyContext);
+  const { defaultLanguage } = useContext(SelectedLanguageContext);
+  /**
+   * Title, badge and response type of a question, read from whichever list this flow version
+   * uses — a survey `Question` for v1, the flattened flow elements otherwise.
+   */
+  const describeQuestion = (questionId: string) => {
+    if (version === 1) {
+      const question = questions.find((item) => item.id === questionId);
+      if (!question) return null;
+      return {
+        title: question.title || question.label,
+        badge: question.type,
+        responseType: question.type,
+      };
+    }
+    const question = flowQuestions.find((item) => item.id === questionId);
+    if (!question) return null;
+    return {
+      title: question.header || question.label,
+      badge: QuestionType2[question.metaType as keyof typeof QuestionType2],
+      responseType: question.metaType,
+    };
+  };
+  const { t: translations } = useTranslation();
+  const {
+    data: responseCountData,
+    isPending: isPendingCount,
+    isError: countError,
+  } = useResponseCount(surveyId);
+  const data = useMemo(
+    () =>
+      responseCountData
+        ? responseCountData?.teamWiseCount?.map(
+            (t: { mapId: string; count: number; teamCode?: string }) => ({
+              teamCode: t.teamCode,
+              count: t.count,
+            }),
+          )
+        : [],
+    [responseCountData],
+  );
+
+  const { data: teamWiseComparison, isPending } = useResponseForComparison(surveyId);
+
+  if (isPendingCount || isPending) return <RateupLoader className="h-dvh" />;
+  if (countError) return <div>Error...</div>;
+  if (responseCountData?.all === 0)
+    return <NothingFound text={translations("No responses found for comparison")} />;
+
+  return (
+    <Card className="min-w-[300px]">
+      <CardContent className="flex flex-col gap-4 pt-6">
+        <Heading subtitle={translations("Team Response Activity")} />
+        <TeamResponseActivitySection data={data} />
+        <Heading subtitle={translations("Team Question Activity")} />
+        {teamWiseComparison?.map((q: { questionId: string; data?: unknown[] }) => {
+          const question = describeQuestion(q.questionId);
+          if (!question) return null;
+          const questionTitle = question.title;
+          const localizedTitle =
+            typeof questionTitle === "object"
+              ? getReplacedTitleFromVariable({
+                  title: questionTitle[defaultLanguage],
+                  surveyId,
+                })
+              : questionTitle;
+          const graphData = filterTeams.length
+            ? ((q.data ?? []) as Array<{ mapId: string }>).filter((d) =>
+                filterTeams.includes(d.mapId),
+              )
+            : (q.data ?? []);
+          return (
+            <Card key={q.questionId} className="min-h-[500px]">
+              <CardContent className="flex flex-col gap-4 pt-6">
+                <div className="flex items-start justify-between gap-4">
+                  <p className="w-[85%] text-sm font-semibold text-foreground">{localizedTitle}</p>
+                  <Badge variant="secondary">{question.badge}</Badge>
+                </div>
+                <ResponsiveContainer height={400}>
+                  <BarChart data={graphData} margin={{ top: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="teamCode" tickLine={false} axisLine={false} />
+                    <YAxis tickLine={false} axisLine={false} allowDecimals={false} />
+                    <Tooltip />
+                    {Object.keys(q.data?.[0] ?? {})
+                      .filter((key) => !["teamCode", "mapId"].includes(key))
+                      .map((key, i) => (
+                        <Bar
+                          dataKey={key}
+                          key={key}
+                          stackId="a"
+                          // Answers off a known scale take its colour; free choices step through
+                          // the ramp, with a card-coloured gap so adjacent segments stay apart.
+                          fill={
+                            getResponseArrayByQuestionType(question.responseType)?.find(
+                              (j) => j.value.toString() === key,
+                            )?.color ?? `var(--chart-${(i % 4) + 1})`
+                          }
+                          stroke="var(--card)"
+                          strokeWidth={1}
+                          maxBarSize={48}
+                        />
+                      ))}
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </CardContent>
+    </Card>
+  );
+}
+
+const TeamResponseActivitySection = ({ data }: { data: { teamCode: string; count: number }[] }) => {
+  const { t: translations } = useTranslation();
+
+  enum ActivePlot {
+    Radar = "radar",
+    Bar = "bar",
+    Pie = "pie",
+  }
+
+  const [activePlot, setActivePlot] = useState<ActivePlot>(ActivePlot.Bar);
+
+  return (
+    <Tabs value={activePlot} onValueChange={(v) => setActivePlot(v as ActivePlot)}>
+      <TabsList>
+        <TabsTrigger value={ActivePlot.Bar}>
+          <IconChartBar className="size-4" />
+          {translations("Bar")}
+        </TabsTrigger>
+        <TabsTrigger value={ActivePlot.Pie}>
+          <PieChartIcon className="size-4" />
+          {translations("Pie")}
+        </TabsTrigger>
+        <TabsTrigger value={ActivePlot.Radar}>
+          <RadarIcon className="size-4" />
+          {translations("Radar")}
+        </TabsTrigger>
+      </TabsList>
+      <TabsContent value={ActivePlot.Bar}>
+        <ResponsiveContainer width="100%" height={400}>
+          <BarChart data={data} margin={{ top: 20 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="teamCode" tickLine={false} axisLine={false} />
+            <YAxis tickLine={false} axisLine={false} allowDecimals={false} />
+            <Tooltip />
+            <Bar dataKey="count" fill="var(--chart-2)" maxBarSize={48} radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </TabsContent>
+      <TabsContent value={ActivePlot.Pie}>
+        <ResponsiveContainer width="100%" height={400}>
+          <PieChart height={400}>
+            <Pie
+              data={data}
+              dataKey="count"
+              cx="50%"
+              cy="50%"
+              fill="var(--chart-2)"
+              label={({ index }) => data?.[index]?.teamCode}
+            />
+            <Tooltip />
+          </PieChart>
+        </ResponsiveContainer>
+      </TabsContent>
+      <TabsContent value={ActivePlot.Radar}>
+        <ResponsiveContainer height={400}>
+          <RadarChart height={400} data={data}>
+            <PolarGrid />
+            <PolarAngleAxis dataKey="teamCode" />
+            <Radar
+              name="Responses"
+              dataKey="count"
+              stroke="var(--chart-2)"
+              fill="var(--chart-2)"
+              fillOpacity={0.25}
+            />
+            <Tooltip />
+          </RadarChart>
+        </ResponsiveContainer>
+      </TabsContent>
+    </Tabs>
+  );
+};

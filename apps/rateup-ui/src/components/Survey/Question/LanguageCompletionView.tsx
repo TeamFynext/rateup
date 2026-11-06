@@ -1,0 +1,70 @@
+import { IconChevronDown } from "@tabler/icons-react";
+
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
+
+export const LanguageCompletionView = ({
+  languages,
+  notCompletedLanguages,
+  selectedLanguage,
+  setSelectedLanguage,
+}: {
+  languages: string[];
+  notCompletedLanguages: string[];
+  selectedLanguage?: string;
+  setSelectedLanguage?: React.Dispatch<React.SetStateAction<string | null>>;
+}) => {
+  const hasIncomplete = notCompletedLanguages.length > 0;
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "h-8 shrink-0 gap-1.5 px-2.5",
+              hasIncomplete
+                ? "border-destructive/40 text-destructive hover:border-destructive/50 hover:text-destructive"
+                : "border-green-300 text-green-600 hover:border-green-400 hover:text-green-700 dark:hover:text-green-400",
+            )}
+          />
+        }
+      >
+        <span
+          className={cn("size-2 rounded-full", hasIncomplete ? "bg-destructive" : "bg-green-500")}
+        />
+        <span className="text-xs font-medium">{selectedLanguage}</span>
+        <IconChevronDown className="size-3.5 opacity-60" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {languages?.map((language) => {
+          const isComplete = !notCompletedLanguages.includes(language);
+          const isSelected = selectedLanguage === language;
+          return (
+            <DropdownMenuItem
+              key={language}
+              onClick={() => setSelectedLanguage?.(language)}
+              className={cn("gap-2", isSelected && "bg-accent")}
+            >
+              <span
+                className={cn(
+                  "size-2 rounded-full",
+                  isComplete ? "bg-green-500" : "bg-destructive",
+                )}
+              />
+              {language}
+            </DropdownMenuItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};

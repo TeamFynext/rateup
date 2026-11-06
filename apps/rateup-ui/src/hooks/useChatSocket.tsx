@@ -1,0 +1,428 @@
+import { type QueryClient, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
+import type { TFunction } from "i18next";
+import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+
+import { shopKeys } from "@/backend/commerce/shop.query";
+import type { LiveNotification } from "@/backend/notification/notification.api";
+import { notificationKeys } from "@/backend/notification/notification.keys";
+import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "@/backend/org/ws/org.ws.api";
+import type { CallWsEvent } from "@/backend/whatsapp/calling/calling.api";
+import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
+import {
+  isNotificationEvent,
+  notificationMessage,
+} from "@/components/dashboard/settings/notifications/notificationCopy.ts";
+import { getBrowserId } from "@/lib/browserId.ts";
+import { receiveCallEvent } from "@/store/call.store.ts";
+import { applyContactMerged } from "@/store/contact-merged.ts";
+import {
+  resolveIncomingRowKey,
+  useChatContactCountStore,
+  useContactsStore,
+  useMessagesStore,
+} from "@/store/inbox.store.ts";
+import { useTypingStore } from "@/store/typing.store.ts";
+import { WaMessageAssignStatus } from "@/types/enums.ts";
+import { soundsPath } from "@/utils/constants.ts";
+import { claimAcrossTabs } from "@/utils/crossTabClaim";
+import { showDesktopNotification } from "@/utils/desktopNotifications";
+
+/** Fired on `window` each time the inbox socket (re)connects. */
+export const WS_REOPENED_EVENT = "rateup:ws-reopened";
+
+export const useChatSocket = () => {
+  const socketRef = useRef<WebSocket | null>(null);
+  const retryCountRef = useRef(0);
+  const browserId = getBrowserId();
+  const navigate = useNavigate();
+  // Held in a ref so the connection effect does not depend on it. Everything
+  // else the handler needs is read from `getState()` at event time.
+  const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
+  const { t } = useTranslation();
+  const tRef = useRef(t);
+  tRef.current = t;
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!browserId) return;
+
+    let ws: WebSocket | null = null;
+    let closedByUser = false;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const connect = () => {
+      ws = new WebSocket(`${WA_INBOX_WEBSOCKET_CONNECTION_STRING}/${browserId}`);
+      socketRef.current = ws;
+
+      // Without this the retry budget is spent across the whole life of the
+      // page rather than per outage: five idle-timeouts from a proxy over an
+      // afternoon and realtime never came back until a reload.
+      ws.onopen = () => {
+        retryCountRef.current = 0;
+        // Anything pushed while the socket was down is gone; listeners that cannot afford
+        // to miss an event (a ringing call) re-read their state when this fires.
+        window.dispatchEvent(new Event(WS_REOPENED_EVENT));
+      };
+
+      ws.onmessage = async (event) => {
+        const data = JSON.parse(event.data);
+        const contactsStore = useContactsStore.getState();
+        const messageStore = useMessagesStore.getState();
+        const { updateContactById, addContactsForFilter } = contactsStore;
+        const { bumpSectionCounts } = useChatContactCountStore.getState();
+        const selectedContact = contactsStore.selectedContact;
+        switch (data.type) {
+          case "inbox":
+            const { message, contact: incomingContact } = data.inbox;
+            // The message names its ticket even though the contact payload does
+            // not, so the row is resolved from that rather than the contact id.
+            const incomingConversationId = message?.conversationId ?? null;
+            const existingRowKey = resolveIncomingRowKey(
+              useContactsStore.getState().contactsById,
+              incomingContact.id,
+              incomingConversationId,
+            );
+            const isOpenInThread =
+              !!selectedContact &&
+              (existingRowKey
+                ? getRowKey(selectedContact) === existingRowKey
+                : selectedContact.id === incomingContact.id);
+            if (existingRowKey) {
+              updateContactById(existingRowKey, (contact) => ({
+                ...contact,
+                waMessageAssignStatus: incomingContact.waMessageAssignStatus,
+                unReadMessageCount: isOpenInThread ? 0 : (contact.unReadMessageCount ?? 0) + 1,
+                lastMessage: {
+                  messageBody: message.messageBody,
+                  sourceIdentifier: message.sourceIdentifier,
+                  sourcePlatform: message.sourcePlatform,
+                  waCreatedAt: message.waCreatedAt,
+                },
+                ...conversationClocksFor(message),
+              }));
+            } else if (
+              // Spam is contact-grained and exclusive to the Spam tab: a spam
+              // contact's message must not spawn a row in Open/All, and a
+              // non-spam contact's must not spawn one in Spam.
+              !!incomingContact.isSpam ===
+              !!useContactsStore.getState().currentFilterKey?.includes("spam:true")
+            ) {
+              addContactsForFilter(
+                useContactsStore.getState().currentFilterKey!,
+                [
+                  {
+                    ...incomingContact,
+                    // Without this the row would be keyed by contact id and would
+                    // sit beside the same contact's real ticket rows.
+                    conversationId: incomingConversationId ?? incomingContact.conversationId,
+                    unReadMessageCount: 1,
+                    lastMessage: {
+                      messageBody: message.messageBody,
+                      sourceIdentifier: message.sourceIdentifier,
+                      sourcePlatform: message.sourcePlatform,
+                      waCreatedAt: message.waCreatedAt,
+                    },
+                    ...conversationClocksFor(message),
+                    updatedAt: new Date().toISOString(),
+                  },
+                ],
+                true,
+              );
+
+              // Optimistically bump the sidebar counts; the next backend fetch
+              // (see useGetInboxUserCount) will overwrite this with the authoritative value.
+              if (
+                [WaMessageAssignStatus.ASSIGNED, WaMessageAssignStatus.UNASSIGNED].includes(
+                  incomingContact.waMessageAssignStatus,
+                )
+              ) {
+                bumpSectionCounts({ openCount: 1, allCount: 1 });
+              } else if (incomingContact.waMessageAssignStatus === WaMessageAssignStatus.CLOSED) {
+                bumpSectionCounts({ closedCount: 1, allCount: 1 });
+              } else {
+                bumpSectionCounts({ allCount: 1 });
+              }
+            }
+
+            // Bucket the live message by the row it landed on, so a legacy
+            // contact-keyed row and its thread stay on the same key.
+            const messageRowKey =
+              existingRowKey ?? incomingConversationId ?? getRowKey(incomingContact);
+            for (const key of [
+              `${messageRowKey}_all`,
+              `${messageRowKey}_${message.sourceIdentifier}`,
+            ]) {
+              messageStore.mergeMessages(key, [message]);
+            }
+            break;
+          case "inbox_note": {
+            // A note joins the thread and nothing else: the row's preview, unread
+            // count and sort clocks belong to customer traffic.
+            const { message: note, contactId, conversationId } = data.inbox_note;
+            const noteRowKey =
+              resolveIncomingRowKey(
+                useContactsStore.getState().contactsById,
+                contactId,
+                conversationId,
+              ) ?? conversationId;
+            for (const key of [`${noteRowKey}_all`, `${noteRowKey}_internal`]) {
+              // Clears the author's placeholder, which shares the note's messageId.
+              messageStore.removeMessage(key, note.messageId);
+              messageStore.mergeMessages(key, [note]);
+            }
+            break;
+          }
+          case "message_status_update":
+            if (selectedContact && selectedContact?.id === data?.message_status_update?.contactId) {
+              // Status receipts target the open thread — key by its ticket bucket.
+              const statusRowKey =
+                data?.message_status_update?.conversationId ?? getRowKey(selectedContact);
+              messageStore.updateMessageByMessageId(
+                `${statusRowKey}_${data.message_status_update.sourceIdentifier}`,
+                data?.message_status_update.messageId,
+                { stats: data?.message_status_update?.stats },
+              );
+              messageStore.updateMessageByMessageId(
+                `${statusRowKey}_all`,
+                data?.message_status_update.messageId,
+                { stats: data?.message_status_update?.stats },
+              );
+            }
+
+            break;
+          case "message_deleted":
+            // The message is still in the thread — flagging it is what turns it
+            // into the "deleted" placeholder. Deliberately not scoped to the open
+            // thread the way a status receipt is: whoever is connected corrects
+            // every cached copy, memory and IDB, so the message does not come
+            // back intact when that ticket is opened later.
+            messageStore.patchMessageEverywhere(data?.message_deleted?.messageId, {
+              deletedAt: data?.message_deleted?.deletedAt,
+            });
+
+            // The list snippet is a copy of the message body with no id on it, so
+            // the row is matched by the message's own timestamp. Anything else and
+            // the list would keep quoting text the customer deleted.
+            {
+              const deletedRowKey =
+                data?.message_deleted?.conversationId ?? data?.message_deleted?.contactId;
+              if (deletedRowKey && data?.message_deleted?.waCreatedAt) {
+                updateContactById(deletedRowKey, (contact) =>
+                  contact?.lastMessage?.waCreatedAt === data.message_deleted.waCreatedAt
+                    ? {
+                        ...contact,
+                        lastMessage: {
+                          ...contact.lastMessage,
+                          deletedAt: data.message_deleted.deletedAt,
+                        },
+                      }
+                    : contact,
+                );
+              }
+            }
+
+            break;
+          case "message_edited": {
+            // The customer edited an Instagram message: the server sends the whole
+            // updated row (new text in the body, the old ones in `editHistory`), and
+            // every cached copy takes it, as with a deletion.
+            const edited = data?.message_edited;
+            const row = edited?.message;
+            if (!edited?.messageId || !row?.messageBody) break;
+            messageStore.patchMessageEverywhere(edited.messageId, {
+              messageBody: row.messageBody,
+              editedAt: edited.editedAt ?? row.editedAt,
+            });
+            const editedRowKey = edited.conversationId ?? edited.contactId;
+            if (editedRowKey && row.waCreatedAt) {
+              updateContactById(editedRowKey, (contact) =>
+                contact?.lastMessage?.waCreatedAt === row.waCreatedAt
+                  ? {
+                      ...contact,
+                      lastMessage: {
+                        ...contact.lastMessage,
+                        messageBody: row.messageBody,
+                        editedAt: edited.editedAt ?? row.editedAt,
+                      },
+                    }
+                  : contact,
+              );
+            }
+            break;
+          }
+          case "inbox_typing":
+            // A teammate started or stopped a reply; the composer shows who.
+            if (data?.inbox_typing?.contactId) useTypingStore.getState().receive(data.inbox_typing);
+            break;
+          case "meta_agent_thread":
+            // Contact-level: routed to that contact's live ticket, which also
+            // refreshes the open header when it is the selected one.
+            if (data?.meta_agent_thread?.contactId) {
+              updateContactById(data.meta_agent_thread.contactId, (contact) => ({
+                ...contact,
+                metaAgentThreadOwner: data.meta_agent_thread.owner,
+                metaAgentThreadOwnerAt: data.meta_agent_thread.at,
+                metaAgentHandoverReason: data.meta_agent_thread.reason,
+              }));
+            }
+            break;
+          case "contact_merged":
+            // Someone merged two contacts: the source is gone, its tickets are the target's.
+            if (data?.contact_merged?.sourceContactId && data.contact_merged.targetContactId) {
+              void applyContactMerged(queryClient, data.contact_merged);
+            }
+            break;
+          case "call":
+            if (data?.call) {
+              receiveCallEvent(data.call, queryClient);
+              if (data.call.event === "incoming") notifyIncomingCall(data.call, tRef.current);
+            }
+            break;
+          case "notification":
+            if (data?.notification) {
+              handleLiveNotification(data.notification, {
+                t: tRef.current,
+                navigate: navigateRef.current,
+                queryClient,
+              });
+            }
+            break;
+          case "shop_order":
+            void queryClient.invalidateQueries({ queryKey: shopKeys.all });
+            break;
+          default:
+            break;
+        }
+      };
+
+      ws.onclose = () => {
+        // Never gives up: a socket that stopped retrying left the inbox — and incoming
+        // calls — silent until a reload. The back-off caps at 15 s instead.
+        if (closedByUser) return;
+        retryCountRef.current += 1;
+        // Back off rather than hammering a server that is still coming up.
+        const delay = Math.min(1000 * 2 ** Math.min(retryCountRef.current - 1, 4), 15_000);
+        retryTimer = setTimeout(connect, delay);
+      };
+    };
+
+    connect();
+
+    return () => {
+      closedByUser = true;
+      if (retryTimer) clearTimeout(retryTimer);
+      ws?.close();
+    };
+    // `browserId` is the only input to the connection. The handler reads the
+    // stores through `getState()` precisely so they stay out of here: this hook
+    // sits in a component that re-renders on store activity, and depending on a
+    // store's identity — `useMessagesStore.getState()` returns a fresh object
+    // after every merge — tore the socket down and rebuilt it on each inbound
+    // message, dropping whatever arrived during the gap.
+  }, [browserId]);
+};
+
+const playSound = () => {
+  new Audio(`${soundsPath}/noti.wav`).play().catch((e) => {
+    console.warn("Audio playback failed:", e);
+  });
+};
+
+/** Gives a visible tab time to claim a notification's sound and popup before hidden tabs try. */
+const HIDDEN_TAB_CLAIM_DELAY_MS = 400;
+
+/**
+ * One of this member's notifications, already filtered by their settings on the server. Every
+ * open tab receives it; the sound and desktop popup fire in one tab only (a visible one if any).
+ * A desktop notification stands in for the toast while hidden, where a toast would expire unseen.
+ */
+function handleLiveNotification(
+  notification: LiveNotification,
+  {
+    t,
+    navigate,
+    queryClient,
+  }: { t: TFunction; navigate: ReturnType<typeof useNavigate>; queryClient: QueryClient },
+) {
+  if (notification.id) {
+    void queryClient.invalidateQueries({ queryKey: notificationKeys.all() });
+    void queryClient.invalidateQueries({ queryKey: notificationKeys.count() });
+  }
+  if (!isNotificationEvent(notification.event)) return;
+
+  const message = notificationMessage(t, notification.event, notification.data);
+  const open = () => void navigate({ href: notification.path });
+  const isNewMessage = notification.event.startsWith("inbox.message.");
+  // The chat screen, not the Calls page under it.
+  const onInbox = /^\/dashboard\/inbox\/?$/.test(window.location.pathname);
+  const tag = notification.id ?? `${notification.event}:${notification.data?.contactId ?? ""}`;
+  // The inbox shows a new message by itself; a toast on top of it is noise.
+  const wantsToast = notification.toast && !(isNewMessage && onInbox);
+  const showToast = () =>
+    toast.info(message, {
+      id: notification.id ?? undefined,
+      action: { label: t("View"), onClick: open },
+    });
+
+  if (document.visibilityState === "visible") {
+    if (wantsToast) showToast();
+    void claimAcrossTabs(tag).then((claimed) => {
+      if (claimed && wantsToast && notification.sound) playSound();
+    });
+    return;
+  }
+
+  void (async () => {
+    await new Promise((resolve) => setTimeout(resolve, HIDDEN_TAB_CLAIM_DELAY_MS));
+    if (!(await claimAcrossTabs(tag))) return;
+    const shownOnDesktop =
+      notification.desktop &&
+      showDesktopNotification({ title: "RateUp", body: message, tag, onClick: open });
+    const toasted = !shownOnDesktop && wantsToast;
+    if (toasted) showToast();
+    if (notification.sound && (shownOnDesktop || toasted)) playSound();
+  })();
+}
+
+/**
+ * The row's sort clocks after a live message, bumped the way `createMessage` in rateup-api
+ * bumps the conversation: any non-internal message is activity, and an inbound one is also
+ * the customer's last message. The list sorts on these, so they must move with the thread.
+ */
+function conversationClocksFor(message: {
+  waCreatedAt: string;
+  sourcePlatform?: string | null;
+  messageBody?: { exchangeProcess?: string } | null;
+}) {
+  const exchange = message.messageBody?.exchangeProcess;
+  if (message.sourcePlatform === "INTERNAL") return {};
+  if (exchange !== "receive") return { conversationLastMessageAt: message.waCreatedAt };
+  return {
+    conversationLastMessageAt: message.waCreatedAt,
+    conversationLastCustomerMessageAt: message.waCreatedAt,
+    lastReceivedMessageTimeStamp: message.waCreatedAt,
+  };
+}
+
+/** A system notification for a ringing call, once across this browser's tabs. */
+function notifyIncomingCall(event: CallWsEvent, t: TFunction) {
+  void claimAcrossTabs(`call:${event.call.id}`).then((claimed) => {
+    if (!claimed) return;
+    showDesktopNotification({
+      title: t("Incoming WhatsApp call"),
+      body: event.call.contactName ?? `+${event.call.customerWaId}`,
+      tag: `call:${event.call.id}`,
+      // The ringtone is the call's only sound.
+      silent: true,
+    });
+  });
+}
+
+// The socket handler and the media singletons are captured once per page: a hot update
+// left them running the old code (the old ring kept playing after an edit). Any change
+// here reloads the page instead.
+import.meta.hot?.accept(() => window.location.reload());

@@ -1,0 +1,13 @@
+/*
+ * The buyer-facing shop's stylesheet (/s storefront, /c checkout), loaded by
+ * `routes/(shop)/route.tsx` on top of `base.css`, which already carries `components/ui`.
+ * A shop component outside these directories renders unstyled; add its directory here.
+ */
+@import "tailwindcss" source(none);
+
+@source "../components/shop-public";
+@source "../routes/(shop)";
+@source "../lib";
+@source "../utils";
+
+@import "./foundation.css";

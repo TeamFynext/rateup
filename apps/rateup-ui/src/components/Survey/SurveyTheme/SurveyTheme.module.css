@@ -1,0 +1,181 @@
+.survey-theme-root-div {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.survey-theme-root-div > div:nth-child(2) {
+  flex: 1 1 0;
+  overflow: auto;
+}
+
+.page-selector-tabs-root {
+  display: block;
+}
+
+.page-selector-tabs-root-hidden {
+  display: none;
+}
+
+.selected-page-tab-panels-and-styles-div-container {
+  display: flex;
+  gap: 0.625rem;
+  max-height: 800px;
+}
+
+.theme-preview-container,
+.styles-component-container,
+.theme-selector-div {
+  position: relative;
+  box-shadow:
+    rgba(0, 0, 0, 0.05) 0px 1px 0px,
+    rgba(0, 0, 0, 0.11) 0px 0px 8px;
+  border-radius: 1rem;
+}
+
+.theme-preview-container {
+  box-shadow: none;
+  flex: 1 1 0;
+}
+
+.theme-preview-container :global(.preview-device-selector) {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 100;
+  background-color: white;
+  border-radius: 0.3125rem;
+}
+
+.theme-preview-container .edit-page-theme-btn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 100;
+  height: auto;
+  border-radius: 2rem;
+  padding: 0.5rem 1rem;
+}
+
+.theme-preview-container .edit-preview-edit-page-theme-btn {
+  right: 3.5rem;
+}
+
+.survey-theme-preview-tab-panels-root {
+  height: 100%;
+}
+
+.welcome-page-switch-container {
+  padding: 0.625rem;
+  background-color: white;
+  border-radius: 0.625rem;
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 105;
+}
+
+.welcome-page-switch {
+  font-size: 0.875rem;
+  height: auto;
+}
+
+.switch-body {
+  gap: 0.625rem;
+}
+
+.switch-body label {
+  cursor: pointer;
+  border: none;
+}
+
+.survey-theme-preview-layout-div {
+  height: 100%;
+  width: 100%;
+}
+
+.styles-component-container {
+  flex: 1;
+  overflow: hidden;
+}
+
+.styles-component-container :global(.custom-color-picker-container) {
+  max-width: 18.75rem;
+}
+
+/* styles for different preview view components */
+.titleBox {
+  position: relative;
+  padding: 5px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.buttonBox {
+  position: relative;
+}
+
+.actionIcon {
+  position: absolute;
+  top: calc(50% - 11px);
+  right: -35px;
+  color: var(--muted-foreground);
+  z-index: 1;
+}
+
+.bgActionIcon {
+  right: 100px;
+}
+
+.welcomePageBgDtEditActionIcon {
+  top: 7px;
+  right: 11.25rem;
+}
+
+.welcomePageBgMbEditActionIcon {
+  top: 3px;
+  right: 3px;
+}
+
+.saveButton {
+  margin-top: 1rem;
+  background-color: #fff;
+  width: 100%;
+}
+
+.overlay {
+  background-color: light-dark(#ffffff8e, #2e2e2ec0);
+}
+
+.start-btn-input-div:global(.auto-save-input-div) {
+  width: auto;
+}
+
+.start-btn-input-div :global(.text-input) {
+  width: auto;
+  padding: 0.5rem;
+}
+
+.start-btn-input-div :global(.auto-save-input-edit-btn) {
+  position: relative;
+  padding: 0.75rem 2rem;
+  left: 0;
+  overflow: visible;
+  width: auto;
+}
+
+/* Survey Editor Header styles */
+.survey-editor-page-header {
+  padding: 0.3125rem;
+}
+
+.preview-survey-btn,
+.edit-theme-btn {
+  border-radius: 2rem;
+}
+
+.selected-page-tab-panels-and-styles-div-container {
+  flex: 1 1 0;
+  overflow: auto;
+}

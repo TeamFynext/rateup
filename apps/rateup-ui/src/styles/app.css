@@ -1,0 +1,81 @@
+/*
+ * The logged-in application's stylesheet — dashboard, admin, auth and the tenant-facing utility
+ * pages. Loaded by each of those surfaces' layout routes.
+ *
+ * Unlike `marketing.css` this keeps Tailwind's default full-tree scan. The app is behind a login,
+ * so its CSS weight is not an SEO or Core Web Vitals concern, and a full scan means none of the
+ * hundreds of app components can lose its styling to a missing `@source` glob. The saving comes
+ * from marketing pages no longer loading this file at all.
+ */
+@import "tailwindcss";
+
+/* Tiptap editor content styles (.ProseMirror, placeholder, --editor-* tokens).
+   Editors are inlined across many app routes, so the rules stay global to this surface. */
+@import "../components/tiptap/tiptap.css";
+
+@import "./foundation.css";
+
+/*
+ * Dark mode for the app surface. Components are mostly written against the light ramp
+ * (`text-ru-n-700` ink, `border-ru-n-200`, `bg-ru-blue-50` tints, `bg-white` cards), so the ramp
+ * itself turns dark here, from the `--dk-*` values in foundation.css. Marketing pages never load
+ * this file, so their ramp stays light.
+ *
+ * Neutrals and tints invert. Mid tones (300–500) read on both grounds and keep their values.
+ * The deep steps stay deep enough for white text, because they are mostly button fills.
+ */
+.dark {
+  --ru-n-25: var(--dk-n-25);
+  --ru-n-50: var(--dk-n-50);
+  --ru-n-100: var(--dk-n-100);
+  --ru-n-200: var(--dk-n-200);
+  --ru-n-300: var(--dk-n-300);
+  --ru-n-400: var(--dk-n-400);
+  --ru-n-500: var(--dk-n-500);
+  --ru-n-600: var(--dk-n-600);
+  --ru-n-700: var(--dk-n-700);
+  --ru-blue-50: var(--dk-blue-50);
+  --ru-blue-100: var(--dk-blue-100);
+  --ru-blue-200: var(--dk-blue-200);
+  --ru-blue-600: var(--dk-blue-600);
+  --ru-blue-700: var(--dk-blue-700);
+  --ru-green-50: var(--dk-green-50);
+  --ru-green-100: var(--dk-green-100);
+  --ru-amber-50: var(--dk-amber-50);
+  --ru-amber-100: var(--dk-amber-100);
+  --ru-amber-200: var(--dk-amber-200);
+}
+
+/*
+ * One colour cannot be both a fill under white text and readable text on a dark ground, so in
+ * dark mode the text utilities of the deep steps take a light version. `:where()` keeps these at
+ * the specificity of the utility itself, so an explicit `dark:` class still wins.
+ */
+@layer utilities {
+  :where(.dark) .bg-white {
+    background-color: var(--card);
+  }
+  :where(.dark) .text-primary,
+  :where(.dark) .text-ru-blue-500,
+  :where(.dark) .text-ru-blue-600 {
+    color: var(--dk-text-blue);
+  }
+  :where(.dark) .text-ru-blue-200,
+  :where(.dark) .text-ru-blue-700,
+  :where(.dark) .text-ru-blue-800 {
+    color: var(--dk-text-blue-strong);
+  }
+  :where(.dark) .text-ru-blue-900,
+  :where(.dark) .text-ru-blue-950 {
+    color: var(--dk-n-700);
+  }
+  :where(.dark) .text-ru-green-500,
+  :where(.dark) .text-ru-green-600,
+  :where(.dark) .text-ru-green-700 {
+    color: var(--dk-text-green);
+  }
+  :where(.dark) .text-ru-amber-600,
+  :where(.dark) .text-ru-amber-700 {
+    color: var(--dk-text-amber);
+  }
+}

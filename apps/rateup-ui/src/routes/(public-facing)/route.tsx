@@ -1,0 +1,31 @@
+import { createFileRoute, Outlet } from "@tanstack/react-router";
+
+import { AppProviders } from "@/components/AppProviders";
+import { loadAppRuntime } from "@/lib/appRuntime";
+import { noindexHead } from "@/lib/metadata.ts";
+
+import appCss from "@/styles/app.css?url";
+
+/**
+ * Layout for the tenant-facing utility URLs — short links (`/ws`, `/was`, `/lt`, `/qr`), public
+ * surveys and testimonial walls, loyalty registration and the cashier screen.
+ *
+ * These leak into the index from shared WhatsApp messages and bloat it with per-tenant pages that
+ * have no search intent. They are `noindex, nofollow` rather than a robots.txt `Disallow`: Google
+ * has to crawl a URL to see the noindex, and blocking would freeze the `/ws/*` URLs already in the
+ * index. Individual routes may still override this with their own head.
+ */
+export const Route = createFileRoute("/(public-facing)")({
+  beforeLoad: loadAppRuntime,
+  component: () => (
+    <AppProviders>
+      <Outlet />
+    </AppProviders>
+  ),
+  head: () => ({
+    ...noindexHead(undefined, { follow: false }),
+    /* The application half of the Tailwind scan — these pages render survey, loyalty and
+       short-link screens built from the app's components, not the marketing ones. */
+    links: [{ rel: "stylesheet", href: appCss }],
+  }),
+});

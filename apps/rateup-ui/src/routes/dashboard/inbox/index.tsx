@@ -1,0 +1,206 @@
+import {
+  createFileRoute,
+  Navigate,
+  redirect,
+  useNavigate,
+  useSearch,
+} from "@tanstack/react-router";
+import { Activity, useEffect } from "react";
+
+import { useContactById } from "@/backend/campaign/contacts/contacts.query";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable.tsx";
+import WaInboxChatDisplay from "@/components/whatsapp/inbox/chatdisplay/index.tsx";
+import WaInboxChatSelect from "@/components/whatsapp/inbox/chatselect/index.tsx";
+import InboxSettings from "@/components/whatsapp/inbox/InboxSettings/index.tsx";
+import { isLegacyInboxTab, normalizeInboxTab } from "@/components/whatsapp/inbox/inboxTabs.ts";
+import { useMediaQuery } from "@/hooks/use-media-query.ts";
+import { cn } from "@/lib/utils.ts";
+import { useChatFilterStore } from "@/store/chat-filter.store.ts";
+import { useConversationHistoryRequest } from "@/store/conversation-history.store.ts";
+import { useContactsStore } from "@/store/inbox.store.ts";
+import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
+
+export const Route = createFileRoute("/dashboard/inbox/")({
+  /** Declares the search params this route reads, so links to it type-check. */
+  validateSearch: (search: Record<string, unknown>): InboxSearch => ({
+    // Old tab names (`new`, `mine`, `favourites`) read as the tabs that replaced them.
+    tab: normalizeInboxTab(search.tab),
+    contactId: typeof search.contactId === "string" ? search.contactId : undefined,
+    // Opens the thread's past-conversations strip; only meaningful with `contactId`.
+    history: search.history === true || search.history === "true" ? true : undefined,
+    // Searches the list for the contact, so it shows in the list pane as well as the thread.
+    reveal: search.reveal === true || search.reveal === "true" ? true : undefined,
+  }),
+  // Bookmarks and notification links to an old tab name land on a URL the sidebar can match.
+  beforeLoad: ({ location, search }) => {
+    const tab = new URLSearchParams(location.searchStr).get("tab");
+    if (isLegacyInboxTab(tab)) {
+      throw redirect({ to: "/dashboard/inbox", search, hash: location.hash, replace: true });
+    }
+  },
+  component: WhatsAppInbox,
+});
+
+interface InboxSearch {
+  tab?: string;
+  contactId?: string;
+  history?: boolean;
+  reveal?: boolean;
+}
+
+/**
+ * What the list search matches a contact on: the phone is unique, the name is the
+ * fallback, and the WhatsApp username covers a customer whose phone is withheld.
+ */
+const listSearchTermFor = (contact: {
+  phone?: string | null;
+  name?: string | null;
+  whatsappUserName?: string | null;
+}) => contact.phone || contact.name || contact.whatsappUserName || "";
+
+function WhatsAppInbox() {
+  const searchParams: InboxSearch = useSearch({
+    from: Route.id,
+  });
+  const tab = searchParams.tab;
+  const contactId = searchParams.contactId;
+  const history = searchParams.history;
+  const reveal = searchParams.reveal;
+  const navigate = useNavigate();
+  const requestHistoryFor = useConversationHistoryRequest((state) => state.requestFor);
+
+  const { selectedContact, setSelectedContact, contactsById } = useContactsStore();
+  // Rows are keyed by ticket (conversation) id, so a `?contactId=` deep link has
+  // to be resolved by scanning for that contact's row rather than a Map lookup.
+  const rowForContactId = contactId
+    ? (Array.from(contactsById.values()).find((c) => c?.id === contactId) ?? null)
+    : null;
+  const { data: fetchedContact } = useContactById(contactId && !rowForContactId ? contactId : "");
+
+  useEffect(() => {
+    if (!contactId) return;
+    const alreadySelected = selectedContact?.id === contactId ? selectedContact : null;
+    // A contact fetched by id carries no list-side `updatedAt`; the store
+    // registers it as a synthesized row, which is what this path wants.
+    const resolved =
+      alreadySelected ?? rowForContactId ?? (fetchedContact as ContactWithUpdatedAt | undefined);
+    if (!resolved) return;
+
+    if (!alreadySelected) setSelectedContact(resolved);
+    if (history) requestHistoryFor(contactId);
+    if (reveal) {
+      const { filter, setFilter } = useChatFilterStore.getState();
+      const searchTerm = listSearchTermFor(resolved);
+      if (searchTerm) setFilter({ ...filter, searchTerm });
+    }
+    // Consume the parameters so a refresh or back-navigation does not re-apply them.
+    navigate({
+      to: "/dashboard/inbox",
+      search: { tab } as never,
+      replace: true,
+    });
+  }, [
+    contactId,
+    fetchedContact,
+    rowForContactId,
+    selectedContact,
+    setSelectedContact,
+    navigate,
+    tab,
+    history,
+    reveal,
+    requestHistoryFor,
+  ]);
+
+  useEffect(() => {
+    if (!tab) {
+      navigate({
+        to: "/dashboard/inbox",
+        replace: true,
+        // Lowercase: every consumer compares against lowercase tab values, so
+        // "All" silently fell through to the legacy branch.
+        //
+        // `contactId` is carried across rather than dropped: this runs on the
+        // same mount as the effect above, and a deep link whose contact is not
+        // in the store yet — the list has not loaded, the fetch by id is still
+        // in flight — has not been consumed at that point. Rewriting the URL
+        // without it threw the link away, and the thread only opened on a
+        // second click, once the contact was in cache to be resolved
+        // synchronously.
+        search: { tab: "open", ...(contactId && { contactId, history, reveal }) } as never,
+      });
+    }
+  }, [tab, contactId, history, reveal]);
+
+  return (
+    <div className="h-full min-h-0">
+      {tab === "analytics" ? (
+        <Navigate to="/dashboard/analytics" replace />
+      ) : tab === "settings" ? (
+        <InboxSettings />
+      ) : (
+        <ResizeableChat />
+      )}
+    </div>
+  );
+}
+
+/**
+ * List and thread, side by side from `lg` up and stacked below it.
+ *
+ * The two panes are one tree at every width — no viewport branch in JS, so there
+ * is no first-paint flash of the wrong layout and neither pane remounts (losing
+ * its scroll position and in-flight queries) when the window crosses the
+ * breakpoint. Which pane is on screen when stacked follows the selection itself
+ * rather than a separate "is the thread open" flag: a second source of truth for
+ * the same thing is exactly what used to drift out of step with the selection.
+ */
+function ResizeableChat() {
+  const hasSelection = useContactsStore((s) => Boolean(s.selectedContact));
+  // Matches the `lg` breakpoint the CSS above uses to stack the panes.
+  const isStacked = useMediaQuery("(max-width: 1023.98px)");
+  const shouldHideListPanel = isStacked && hasSelection;
+  const shouldHideThreadPanel = isStacked && !hasSelection;
+  return (
+    <ResizablePanelGroup
+      orientation="horizontal"
+      // A panel's `className` goes on an inner div by design ("to avoid styles
+      // that interfere with Flex layout"), so the stacked layout cannot be
+      // written on the panels themselves — sizing lives on the outer
+      // `<div data-panel id=…>` the library documents, and that is what these
+      // target. `!` because those wrappers carry `display` and `flex` inline,
+      // which no selector outranks on its own.
+      className={cn(
+        "h-full",
+        "max-lg:*:data-panel:flex-[1_1_100%]!",
+        shouldHideListPanel && "max-lg:[&>#inbox-list-panel]:hidden!",
+        shouldHideThreadPanel && "max-lg:[&>#inbox-thread-panel]:hidden!",
+      )}
+    >
+      <ResizablePanel id="inbox-list-panel" defaultSize={"28%"} minSize={"22%"} maxSize={"40%"}>
+        {/* While the thread covers the list, the list stops rendering entirely —
+            every store change (each arriving message, each status receipt) was
+            re-rendering a virtualized list nobody could see. `Activity` keeps its
+            state and DOM, so coming back is a single render rather than a rebuild.
+            The media query only gates that render skipping, never the layout: if
+            it is momentarily wrong (before hydration) the pane merely renders when
+            it did not have to, and CSS still decides what is on screen. */}
+        <Activity mode={isStacked && hasSelection ? "hidden" : "visible"}>
+          <WaInboxChatSelect />
+        </Activity>
+      </ResizablePanel>
+      {/* Dragging only means something when both panes are on screen, so the
+          handle exists from lg up. Stated as hidden-by-default rather than
+          hidden-below-lg: that beats the handle's own `flex` outright instead of
+          relying on the media-query rule being emitted later. */}
+      <ResizableHandle className="hidden lg:flex cursor-col-resize" />
+      <ResizablePanel id="inbox-thread-panel" defaultSize={"72%"} minSize={"60%"} maxSize={"78%"}>
+        <WaInboxChatDisplay />
+      </ResizablePanel>
+    </ResizablePanelGroup>
+  );
+}

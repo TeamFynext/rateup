@@ -1,0 +1,482 @@
+import {
+  IconMoodAngry,
+  IconMoodCrazyHappy,
+  IconMoodEmpty,
+  IconMoodHappy,
+  IconMoodSad,
+} from "@tabler/icons-react";
+import dayjs from "dayjs";
+import { useContext } from "react";
+
+import type { TeamWiseResponses } from "@/backend/surveys/response/response.api";
+import { NPS_COLORS, SENTIMENT } from "@/components/common/sentimentScale.ts";
+import type { QuestionType2, WaFlowFormElementType } from "@/types/enums.ts";
+import {
+  PageType,
+  LDResponse,
+  LDResponse2,
+  NPSWeightage,
+  QuestionType,
+  SmileyResponse,
+  SmileyResponse2,
+  WaQuestions,
+  YNResponse,
+} from "@/types/enums.ts";
+import { toText } from "@/utils/toText";
+
+import SelectedLanguageContext from "../context/SelectedLanguage.ts";
+import { decryptPrivateKey, decryptResponse } from "./encryption/index.ts";
+
+/** A single choice a respondent picked, or typed into the "other" field. */
+interface ChoiceResponse {
+  value?: string;
+  other?: string;
+}
+
+/** An answer as stored on a response record: text, or a keyed bag of values. */
+type ResponseRecord = Record<string, unknown>;
+
+/** A stored answer. Which member applies follows the question's type. */
+export type StoredResponse = string | number | boolean | Date | ResponseRecord | ResponseRecord[];
+
+/**
+ * The fields a question form reads off an answer. Which apply depends on the question type —
+ * a choice question stores `{ value, other }`, a contact question `{ name, phone, email }` —
+ * so the shared ones are named and the rest stay open.
+ */
+export interface AnswerFields {
+  value?: string;
+  other?: string;
+  name?: string;
+  phone?: string;
+  email?: string;
+  isValid?: boolean;
+  [key: string]: unknown;
+}
+
+/** Reads an answer as the keyed bag a question form stores; other shapes have no fields. */
+export const asAnswer = (response: StoredResponse | null | undefined): AnswerFields =>
+  typeof response === "object" &&
+  response !== null &&
+  !Array.isArray(response) &&
+  !(response instanceof Date)
+    ? (response as AnswerFields)
+    : {};
+
+/** Reads an answer as the list of picks a multi-select question stores. */
+export const asAnswerList = (response: StoredResponse | null | undefined): AnswerFields[] =>
+  Array.isArray(response) ? (response as AnswerFields[]) : [];
+
+/** Reads one row of a grid answer, which stores `{ [row]: { value } }`. */
+export const asAnswerRow = (
+  response: StoredResponse | null | undefined,
+  row: string,
+): AnswerFields => asAnswer(asAnswer(response)[row] as StoredResponse | undefined);
+
+/** Reads an answer as the plain text a free-text question stores. */
+export const asAnswerText = (response: StoredResponse | null | undefined): string =>
+  typeof response === "string" ? response : "";
+
+/** Narrows an answer to the choice shape(s) the choice questions store. */
+function asChoices(response: StoredResponse): ChoiceResponse | ChoiceResponse[] {
+  if (Array.isArray(response)) return response as ChoiceResponse[];
+  return typeof response === "object" && response !== null && !(response instanceof Date)
+    ? (response as ChoiceResponse)
+    : {};
+}
+
+/** Narrows an answer to its keyed form; a non-object answer has no fields. */
+function asRecord(response: StoredResponse): ResponseRecord {
+  return typeof response === "object" &&
+    response !== null &&
+    !Array.isArray(response) &&
+    !(response instanceof Date)
+    ? response
+    : {};
+}
+
+export function getResponse(q: Question | undefined, response: StoredResponse) {
+  if (!response && response !== 0) return "";
+
+  switch (q?.type) {
+    case QuestionType.Testimonial:
+      return formatTestimonialResponse(
+        typeof response === "string" ? response : asRecord(response),
+      );
+    case QuestionType.Date:
+      return formatDateTime(response instanceof Date ? response : toText(response));
+    case QuestionType.Contact:
+    case QuestionType.Phone:
+    case QuestionType.Email:
+    case QuestionType.EmailPhone:
+      return formatContactInfo(typeof response === "string" ? response : asRecord(response));
+    case QuestionType.DDMS:
+    case QuestionType.MSQ:
+    case QuestionType.CustomNPS:
+    case QuestionType.MCQ:
+    case QuestionType.DDSS:
+    case QuestionType.WaButtons:
+      return formatChoiceTypeQuestions(q, asChoices(response));
+    case QuestionType.WaList:
+      return formatWaList(asRecord(response));
+    case QuestionType.MultiTextInput:
+      return formatMultiTextInput(q, typeof response === "string" ? response : asRecord(response));
+    case QuestionType.MCQGrid:
+      return formatMCQGridResponse(q, asRecord(response));
+    case QuestionType.EmailOtp:
+      return formatEmailOtpResponse(asRecord(response));
+    default:
+      return formatDefaultResponse(response);
+  }
+}
+
+function formatDateTime(response: string | number | Date) {
+  const date = dayjs(response);
+  return date.format("DD, MMM YYYY");
+}
+
+function formatContactInfo(response: string | ResponseRecord) {
+  if (typeof response === "string") return response;
+  return Object.entries(response)
+    .filter(Boolean)
+    .map(([key, value]) => `${key}: ${String(value)}`)
+    .join(", ");
+}
+
+function formatEmailOtpResponse(response: ResponseRecord) {
+  return `Verified Email Id: ${toText(response?.email)}`;
+}
+function formatMultiTextInput(q: Question, response: string | ResponseRecord) {
+  if (typeof response === "string") return response;
+  const { selectedLanguage, defaultLanguage } = useContext(SelectedLanguageContext);
+  const fields = q?.features?.[selectedLanguage || defaultLanguage]?.fields;
+  if (fields) {
+    return fields?.map(
+      (f: { fieldKey: string }) => `${f.fieldKey}:  ${toText(response?.[f.fieldKey], "NA")}`,
+    );
+  }
+}
+
+function formatMCQGridResponse(question: Question, response: ResponseRecord) {
+  if (!response) return;
+  const { selectedLanguage, defaultLanguage } = useContext(SelectedLanguageContext);
+  const gridQuestions = question?.features?.[selectedLanguage || defaultLanguage]?.questions;
+  return gridQuestions?.map((q: string) => {
+    const cell = response?.[q] as { value?: unknown } | undefined;
+    return `${q}: ${toText(cell?.value, "NA")}`;
+  });
+}
+
+function formatChoiceTypeQuestions(q: Question, response: ChoiceResponse | ChoiceResponse[]) {
+  const { selectedLanguage, defaultLanguage } = useContext(SelectedLanguageContext);
+  let formattedValue = "";
+  if (response) {
+    if (q?.type === QuestionType.DDMS || q?.type === QuestionType.MSQ) {
+      // These two question types always store their answer as a list of choices.
+      formattedValue = (response as ChoiceResponse[])
+        .map(
+          (item) =>
+            item?.value?.trim() ||
+            `${q?.features?.[selectedLanguage || defaultLanguage]?.other?.title} : ${item?.other}`,
+        )
+        .join(", ");
+    } else if (
+      q?.type === QuestionType.DDSS ||
+      q?.type === QuestionType.MCQ ||
+      q?.type === QuestionType.CustomNPS ||
+      q?.type === QuestionType.WaButtons
+    ) {
+      const single = response as ChoiceResponse;
+      formattedValue =
+        single.value ||
+        `${q?.features?.[selectedLanguage || defaultLanguage]?.other?.title} : ${single?.other}`;
+    }
+  }
+  return formattedValue;
+}
+
+function formatWaList(response: ResponseRecord) {
+  const { title, description } = (response[QuestionType.WaList] ?? {}) as {
+    title?: string;
+    description?: string;
+  };
+  return description ? `${title}: ${description}` : title;
+}
+
+function formatTestimonialResponse(response: string | ResponseRecord) {
+  if (typeof response === "string") return response;
+  const contentArray: string[] = [];
+  Object.entries(response).map(([key, value]) => {
+    if (key === "photo") return;
+    contentArray.push(`${key}:  ${value ? toText(value) : "NA"}`);
+  });
+  return {
+    content: contentArray.join(", "),
+    photo: response?.photo,
+  };
+}
+
+function formatDefaultResponse(response: StoredResponse) {
+  // Handle other types or default case
+  return response;
+}
+
+export function getResponseObjectByQuestionType(questionType: QuestionType) {
+  switch (questionType) {
+    case QuestionType.Rating: {
+      return {
+        1: 0,
+        2: 0,
+        3: 0,
+        4: 0,
+        5: 0,
+      };
+    }
+    case QuestionType.Opinion: {
+      return {
+        1: 0,
+        2: 0,
+        3: 0,
+        4: 0,
+        5: 0,
+        6: 0,
+        7: 0,
+        8: 0,
+        9: 0,
+        10: 0,
+      };
+    }
+    case QuestionType.Smiley: {
+      return {
+        [SmileyResponse.VeryHappy]: 0,
+        [SmileyResponse.Happy]: 0,
+        [SmileyResponse.Neutral]: 0,
+        [SmileyResponse.Sad]: 0,
+        [SmileyResponse.VerySad]: 0,
+      };
+    }
+    case QuestionType.YN: {
+      return {
+        [YNResponse.Yes]: 0,
+        [YNResponse.No]: 0,
+      };
+    }
+    case QuestionType.LD: {
+      return {
+        [LDResponse.Like]: 0,
+        [LDResponse.Dislike]: 0,
+      };
+    }
+    case QuestionType.CustomNPS: {
+      return {
+        [NPSWeightage.PROMOTER]: 0,
+        [NPSWeightage.PASSIVE]: 0,
+        [NPSWeightage.DETRACTOR]: 0,
+      };
+    }
+    default: {
+      return null;
+    }
+  }
+}
+
+/**
+ * A question's type as any of the vocabularies it can arrive in — a survey `QuestionType` or
+ * `PageType`, or one of the flow editor's names — and `undefined` when the question is gone.
+ */
+export type AnyQuestionType =
+  | QuestionType
+  | PageType
+  | QuestionType2
+  | WaQuestions
+  | WaFlowFormElementType
+  | undefined;
+
+export function getResponseArrayByQuestionType(questionType: AnyQuestionType): Array<{
+  value: string | number;
+  color: string;
+  Icon?: React.ComponentType<{
+    size?: number | string;
+    color?: string;
+    stroke?: number;
+    className?: string;
+  }>;
+}> | null {
+  switch (questionType) {
+    case QuestionType.Rating: {
+      return [
+        { value: 1, color: SENTIMENT.worst },
+        { value: 2, color: SENTIMENT.poor },
+        { value: 3, color: SENTIMENT.neutral },
+        { value: 4, color: SENTIMENT.good },
+        { value: 5, color: SENTIMENT.best },
+      ];
+    }
+    case QuestionType.Opinion:
+    case WaQuestions.Opinion: {
+      return [
+        { value: 1, color: SENTIMENT.worst },
+        { value: 2, color: SENTIMENT.worst },
+        { value: 3, color: SENTIMENT.poor },
+        { value: 4, color: SENTIMENT.poor },
+        { value: 5, color: SENTIMENT.neutral },
+        { value: 6, color: SENTIMENT.neutral },
+        { value: 7, color: SENTIMENT.good },
+        { value: 8, color: SENTIMENT.good },
+        { value: 9, color: SENTIMENT.best },
+        { value: 10, color: SENTIMENT.best },
+      ];
+    }
+    case QuestionType.Smiley: {
+      return [
+        {
+          value: SmileyResponse.VerySad,
+          color: SENTIMENT.worst,
+          Icon: IconMoodAngry,
+        },
+        { value: SmileyResponse.Sad, color: SENTIMENT.poor, Icon: IconMoodSad },
+        {
+          value: SmileyResponse.Neutral,
+          color: SENTIMENT.neutral,
+          Icon: IconMoodEmpty,
+        },
+        {
+          value: SmileyResponse.Happy,
+          color: SENTIMENT.good,
+          Icon: IconMoodHappy,
+        },
+        {
+          value: SmileyResponse.VeryHappy,
+          color: SENTIMENT.best,
+          Icon: IconMoodCrazyHappy,
+        },
+      ];
+    }
+    case QuestionType.YN:
+    case WaQuestions.YN: {
+      return [
+        { value: YNResponse.No, color: SENTIMENT.worst },
+        { value: YNResponse.Yes, color: SENTIMENT.best },
+      ];
+    }
+    case QuestionType.LD:
+    case WaQuestions.LD: {
+      return [
+        { value: LDResponse.Dislike, color: SENTIMENT.worst },
+        { value: LDResponse.Like, color: SENTIMENT.best },
+      ];
+    }
+    case QuestionType.CustomNPS: {
+      return [
+        { value: NPSWeightage.DETRACTOR, color: SENTIMENT.worst },
+        { value: NPSWeightage.PASSIVE, color: NPS_COLORS.passive },
+        { value: NPSWeightage.PROMOTER, color: SENTIMENT.best },
+      ];
+    }
+    default: {
+      return null;
+    }
+  }
+}
+export function getResponseArrayByQuestionTypeV2(questionType: AnyQuestionType): Array<{
+  value: string | number;
+  color: string;
+  Icon?: React.ComponentType<{
+    size?: number | string;
+    color?: string;
+    stroke?: number;
+    className?: string;
+  }>;
+}> | null {
+  switch (questionType) {
+    case WaQuestions.Rating: {
+      return [
+        { value: 1, color: SENTIMENT.worst },
+        { value: 2, color: SENTIMENT.poor },
+        { value: 3, color: SENTIMENT.neutral },
+        { value: 4, color: SENTIMENT.good },
+        { value: 5, color: SENTIMENT.best },
+      ];
+    }
+    case WaQuestions.Opinion: {
+      return [
+        { value: 1, color: SENTIMENT.worst },
+        { value: 2, color: SENTIMENT.worst },
+        { value: 3, color: SENTIMENT.poor },
+        { value: 4, color: SENTIMENT.poor },
+        { value: 5, color: SENTIMENT.neutral },
+        { value: 6, color: SENTIMENT.neutral },
+        { value: 7, color: SENTIMENT.good },
+        { value: 8, color: SENTIMENT.good },
+        { value: 9, color: SENTIMENT.best },
+        { value: 10, color: SENTIMENT.best },
+      ];
+    }
+    case WaQuestions.Smiley: {
+      return [
+        {
+          value: SmileyResponse2.VerySad,
+          color: SENTIMENT.worst,
+          Icon: IconMoodAngry,
+        },
+        { value: SmileyResponse2.Sad, color: SENTIMENT.poor, Icon: IconMoodSad },
+        {
+          value: SmileyResponse2.Neutral,
+          color: SENTIMENT.neutral,
+          Icon: IconMoodEmpty,
+        },
+        {
+          value: SmileyResponse2.Happy,
+          color: SENTIMENT.good,
+          Icon: IconMoodHappy,
+        },
+        {
+          value: SmileyResponse2.VeryHappy,
+          color: SENTIMENT.best,
+          Icon: IconMoodCrazyHappy,
+        },
+      ];
+    }
+    case WaQuestions.YN: {
+      return [
+        { value: YNResponse.No, color: SENTIMENT.worst },
+        { value: YNResponse.Yes, color: SENTIMENT.best },
+      ];
+    }
+    case WaQuestions.LD: {
+      return [
+        { value: LDResponse2.Dislike, color: SENTIMENT.worst },
+        { value: LDResponse2.Like, color: SENTIMENT.best },
+      ];
+    }
+    default: {
+      return null;
+    }
+  }
+}
+
+export async function decryptResultResponse(
+  responses: TeamWiseResponses[],
+  nonceWithEncryptedPrivateKey: string,
+  publicKey: string,
+  passkey: string,
+) {
+  const decryptedResponses = responses;
+  const { privateKey } = await decryptPrivateKey(nonceWithEncryptedPrivateKey, passkey);
+  if (!privateKey) return { decryptedResponses };
+  for (let i = 0; i < responses.length; i++) {
+    const teamResponses = responses[i]?.responses ?? [];
+    for (let j = 0; j < teamResponses.length; j++) {
+      const response = teamResponses[j]!;
+      if (response.encryptedResponses) {
+        const { decryptedResponse } = await decryptResponse(
+          response.encryptedResponses,
+          privateKey,
+          publicKey,
+        );
+        decryptedResponses[i]!.responses![j]!.responses = decryptedResponse;
+      }
+    }
+  }
+  return { decryptedResponses };
+}

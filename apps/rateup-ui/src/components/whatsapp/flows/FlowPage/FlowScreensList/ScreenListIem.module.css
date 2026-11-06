@@ -1,0 +1,17 @@
+.screen-title-input-and-chevrons-container :nth-child(2) {
+  flex: 1;
+}
+
+.text-input input {
+  cursor: pointer;
+  border-radius: 0.5rem;
+}
+
+.text-input input:focus {
+  cursor: initial;
+}
+
+.footer-label-input input {
+  font-size: 1rem;
+  text-align: center;
+}

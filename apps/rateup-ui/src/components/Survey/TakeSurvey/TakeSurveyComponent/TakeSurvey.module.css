@@ -1,0 +1,180 @@
+.take-survey-root-div {
+  height: 100%;
+}
+
+.inputBox {
+  width: 100%;
+  max-width: 500px;
+  color: var(--input-text-color, black);
+  border-radius: var(--input-border-radius, 8px);
+  transition: background-color 100ms ease;
+  background-color: var(--input-background-color, white);
+  padding: 6px var(--input-padding, 12px);
+  border-color: var(--border);
+  border-width: 1px;
+  border-style: solid;
+  font-size: 16px;
+}
+
+.input {
+  font-size: 16px;
+}
+
+.textRoot {
+  width: 100%;
+}
+
+.inputBox:focus-within {
+  border-color: var(--input-focus-color, var(--primary));
+}
+
+.inputPhone > input {
+  border: none;
+  font-size: 16px;
+  outline: none;
+  background-color: transparent;
+}
+.inputPhone {
+  margin: 5px;
+  background-color: transparent;
+}
+
+.sglabel {
+  text-align: left;
+  min-width: 300px;
+  max-width: 500px;
+  height: auto;
+  white-space: normal;
+  font-size: "16px";
+  box-shadow:
+    2px 2px 3px rgba(0, 0, 0, 0.12),
+    -1px 0px 3px #0000003d;
+  margin-top: 5px;
+}
+
+.ring-progress svg circle {
+  transition: all 0.3s linear;
+}
+
+.question-form-title-desc-container {
+  position: relative;
+  flex: 1;
+}
+
+.question-form-title-desc-motion-div {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.question-and-error-text-containers-wrapper {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 0 0.3125rem;
+  gap: 0.625rem;
+}
+
+.question-div {
+  flex: 1;
+  max-height: 100%;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+
+.question-div > div {
+  justify-content: center;
+}
+
+.title-desc-container {
+  margin-bottom: 0.625rem;
+}
+
+.message-p {
+  border-radius: 0.625rem;
+  font-size: 0.875rem;
+}
+
+/* Next Prev component styles */
+.next-prev-btns-root-div {
+  padding: 0 0.3125rem 2rem;
+}
+
+.next-prev-btns-and-progress-container {
+  gap: 1rem;
+}
+
+.next-prev-btns-and-progress-container button {
+  height: auto;
+  padding: 0.625rem 1rem;
+  border-radius: 0.625rem;
+}
+
+.next-prev-btns-and-progress-container .prev-btn {
+  width: 2.875rem;
+}
+
+.next-prev-btns-and-progress-container .submit-next-btn {
+  font-size: 1rem;
+  padding-right: 0.625rem;
+}
+
+@media (max-width: 480px) {
+  .rating svg {
+    height: 50px;
+    width: 50px;
+  }
+
+  .sglabel {
+    text-align: left;
+    min-width: 250px;
+    max-width: 300px;
+    height: auto;
+    white-space: normal;
+    font-size: "16px";
+  }
+
+  /* Next Prev component styles */
+  .next-prev-btns-root-div {
+    padding-bottom: 1.25rem;
+  }
+
+  .next-prev-btns-and-progress-container {
+    gap: 1rem;
+  }
+
+  .next-prev-btns-and-progress-container .prev-btn {
+    width: 2.625rem;
+  }
+
+  .next-prev-btns-and-progress-container button {
+    height: auto;
+    padding-bottom: 0.625rem;
+  }
+
+  .next-prev-btns-and-progress-container .submit-next-btn {
+    font-size: 0.875rem;
+    padding: 0.625rem 1rem;
+    padding-right: 0.625rem;
+    flex: 1;
+  }
+}
+
+.questionTitle {
+  line-height: 1.2;
+  margin-top: 10px;
+}
+
+.questionDesc {
+  line-height: 1.2;
+}
+
+.questionRichText * {
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}

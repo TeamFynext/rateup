@@ -1,0 +1,829 @@
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+
+import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
+import type { OrderContent } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayBody/components/order";
+import type { WaTemplateDefaultValues } from "@/components/whatsapp/templates/Schema/templateSchema.ts";
+import type { WaMessageAssignStatus } from "@/types/enums.ts";
+import { MessagePlatform, WaTemplateComponentTypeUpperCase } from "@/types/enums.ts";
+import type {
+  IgReceiveMessageBody,
+  IgTemplateButton,
+  InstagramInboundAttachment,
+  IgTemplateElement,
+  IgSendMessageBody,
+  WaReceiveMessageBody,
+  WaSendMessageBody,
+  WaTemplateComponent,
+  WaTemplateFetchBody,
+  WaTemplateFetchBodyComponent,
+} from "@/types/global";
+import { toText } from "@/utils/toText";
+
+import { WaMessageClosedStatus } from "../constants.ts";
+
+dayjs.extend(utc);
+
+/** The channel a conversation ran on, and which connected account it ran through. */
+export interface ContactChannelSource {
+  platform: MessagePlatform;
+  /**
+   * The connected account the messages went to: a WhatsApp number, an Instagram
+   * account id or a Facebook page id. Null for webchat, for internal-only rows,
+   * and for legacy messages written before the identifier was recorded.
+   */
+  identifier: string | null;
+}
+
+interface ChannelSourceMessage {
+  sourcePlatform?: MessagePlatform | string | null;
+  sourceIdentifier?: string | null;
+}
+
+/**
+ * Resolve the channel (WhatsApp / Instagram / Facebook / Webchat) a conversation
+ * lives on, together with the account it came in on. `lastMessage.sourcePlatform`
+ * alone is unreliable: the last message can be an INTERNAL note (private or
+ * system message), whose `sourcePlatform` is "INTERNAL" — not the real channel —
+ * and "INTERNAL" is truthy so a plain `|| WHATSAPP` fallback never fires. Resolve
+ * in order of confidence:
+ *   1. the last message, when it is a real channel message
+ *   2. the most recent non-internal message the row already carries
+ *   3. the contact's channel identity (igsId → Instagram, psid → Facebook)
+ *   4. WhatsApp as the default
+ *
+ * The identifier is read off the *same* message that settled the platform, so the
+ * pair always describes one real send — never a WhatsApp number paired with an
+ * Instagram thread. Steps 3 and 4 are guesses about the platform only and carry
+ * no identifier.
+ */
+export function getContactChannelSource(
+  contact?: {
+    lastMessage?: ChannelSourceMessage | null;
+    messages?: Array<ChannelSourceMessage | null | undefined> | null;
+    igsId?: string | null;
+    psid?: string | null;
+  } | null,
+): ContactChannelSource {
+  const asChannel = (p?: MessagePlatform | string | null): MessagePlatform | undefined =>
+    p && p !== "INTERNAL" ? (p as MessagePlatform) : undefined;
+
+  const fromMessage = (m?: ChannelSourceMessage | null): ContactChannelSource | undefined => {
+    const platform = asChannel(m?.sourcePlatform);
+    return platform ? { platform, identifier: m?.sourceIdentifier || null } : undefined;
+  };
+
+  return (
+    fromMessage(contact?.lastMessage) ??
+    fromMessage(contact?.messages?.find((m) => asChannel(m?.sourcePlatform))) ?? {
+      platform: contact?.igsId
+        ? MessagePlatform.INSTAGRAM
+        : contact?.psid
+          ? MessagePlatform.FACEBOOK
+          : MessagePlatform.WHATSAPP,
+      identifier: null,
+    }
+  );
+}
+
+/** The channel a conversation lives on. See {@link getContactChannelSource}. */
+export function getContactPlatform(
+  contact?: Parameters<typeof getContactChannelSource>[0],
+): MessagePlatform {
+  return getContactChannelSource(contact).platform;
+}
+
+/**
+ * The phone number to show for a contact.
+ *
+ * A webchat visitor types their number into the widget and it is stored on
+ * `other`, not on `phone` — the org has no WhatsApp thread with that number, and
+ * `phone` is the key the WhatsApp pipeline is unique on, so webchat deliberately
+ * leaves it null. Without this the inbox shows a webchat ticket with no number at
+ * all, even though the visitor gave one.
+ *
+ * Scoped to webchat on purpose: Messenger writes its PSID to the same `other`
+ * column, and a raw PSID rendered as a phone number is worse than nothing.
+ *
+ * For display only. Anything that *sends* — templates, flows, block/unblock —
+ * must keep using `phone`, since a webchat number is not a reachable WhatsApp
+ * thread.
+ */
+export function getContactDisplayPhone(
+  contact?:
+    | (Parameters<typeof getContactChannelSource>[0] & {
+        phone?: string | null;
+        other?: string | null;
+      })
+    | null,
+): string | undefined {
+  if (contact?.phone) return contact.phone;
+  if (getContactPlatform(contact) === MessagePlatform.WEBCHAT) return contact?.other || undefined;
+  return undefined;
+}
+
+/**
+ * Where a WhatsApp send to this contact goes: their phone number, or — for a
+ * customer with a WhatsApp username whose number Meta withholds — their
+ * business-scoped user ID. The API turns a BSUID into Meta's `recipient` field.
+ * For sending only; show `getContactDisplayPhone` or `getContactLabel` instead.
+ */
+export function getContactWaAddress(
+  contact?: { phone?: string | null; bsuid?: string | null } | null,
+): string | undefined {
+  return contact?.phone || contact?.bsuid || undefined;
+}
+
+/**
+ * A short way to name a contact in a sentence ("Block …"): name, then phone,
+ * then WhatsApp username, then "WhatsApp user" for someone known only by BSUID.
+ */
+export function getContactLabel(
+  contact?: {
+    name?: string | null;
+    phone?: string | null;
+    whatsappUserName?: string | null;
+    bsuid?: string | null;
+  } | null,
+): string | undefined {
+  if (!contact) return undefined;
+  if (contact.name) return contact.name;
+  if (contact.phone) return `+${contact.phone}`;
+  if (contact.whatsappUserName) return `@${contact.whatsappUserName}`;
+  if (contact.bsuid) return "WhatsApp user";
+  return undefined;
+}
+
+/**
+ * A parsed message body. Which member applies follows `messageType`: the media
+ * and text kinds are strings (media pack `link_caption_caption`), and the
+ * structured kinds keep the shape their renderer expects.
+ */
+export type ParsedWaMessageContent =
+  | string
+  | { text?: string; commentId?: string; mediaId?: string; permalink?: string }
+  | IgAttachmentsContent
+  | IgStoryReplyContent
+  | WaSendMessageBody["contacts"]
+  | WaSendMessageBody["location"]
+  | OrderContent
+  | CallPermissionReplyContent
+  | IgTemplateContent;
+
+/** One attachment of an Instagram/Messenger DM, flattened for the bubble. */
+export interface IgAttachmentItem {
+  /** The media URL (for a shared post or reel, Meta's CDN link to it). */
+  content: string;
+  type: InstagramInboundAttachment["type"];
+  /** Shared post / reel only: the title (caption) Meta sends with it. */
+  title?: string;
+  /** Shared post / reel only: the shared media's id. */
+  mediaId?: string;
+}
+
+/** `attachments` and `ig_shared_post` messages: a list of media, plus any text sent with them. */
+export interface IgAttachmentsContent {
+  attachments: IgAttachmentItem[];
+  text?: string;
+}
+
+/** A customer's reply to one of the business's stories. */
+export interface IgStoryReplyContent {
+  text?: string;
+  story: {
+    id: string;
+    /** Meta's CDN URL for the story; it stops working once the story expires. */
+    url?: string;
+    /** The story's link sticker, when it had one. */
+    linkStickerUrl?: string;
+  };
+}
+
+/** Attachment types that are a post or reel someone shared into the chat, not their own media. */
+const SHARED_POST_TYPES: ReadonlySet<string> = new Set(["ig_post", "ig_reel", "share", "reel"]);
+
+export function isSharedPostAttachment(type: string): boolean {
+  return SHARED_POST_TYPES.has(type);
+}
+
+export function isIgStoryReplyContent(
+  content: ParsedWaMessageContent,
+): content is IgStoryReplyContent {
+  return typeof content === "object" && content !== null && "story" in content;
+}
+
+export function isIgAttachmentsContent(
+  content: ParsedWaMessageContent,
+): content is IgAttachmentsContent {
+  return (
+    typeof content === "object" &&
+    content !== null &&
+    "attachments" in content &&
+    Array.isArray(content.attachments)
+  );
+}
+
+/** An Instagram/Messenger template we sent: product cards, or text with link buttons. */
+export interface IgTemplateContent {
+  templateType: string;
+  text?: string;
+  elements: IgTemplateElement[];
+  buttons: IgTemplateButton[];
+}
+
+export function isIgTemplateContent(content: ParsedWaMessageContent): content is IgTemplateContent {
+  return typeof content === "object" && content !== null && "templateType" in content;
+}
+
+export interface ParsedWaMessageReturn {
+  timeStamp: string;
+  messageType: string;
+  messageContent: ParsedWaMessageContent;
+  template?: WaTemplateFetchBody;
+  interactive?: WaSendMessageBody["interactive"];
+}
+
+/** The Instagram comment body carries the comment's text and ids. */
+function isCommentContent(
+  content: ParsedWaMessageContent,
+): content is { text?: string; commentId?: string; mediaId?: string } {
+  return typeof content === "object" && content !== null && "commentId" in content;
+}
+
+interface EventPerson {
+  id: string;
+  name: string;
+}
+
+/** "Sara", "Sara and Leo", "Sara, Leo and Ana". */
+function joinNames(people: EventPerson[]): string {
+  if (people.length <= 1) return people[0]?.name ?? "";
+  const last = people[people.length - 1].name;
+  return `${people
+    .slice(0, -1)
+    .map((p) => p.name)
+    .join(", ")} and ${last}`;
+}
+
+/**
+ * The sentence an assignment event is saved with, for the optimistic copy shown before the
+ * server's row arrives. Mirrors the user-actor branches of `internalEventSentence` in
+ * rateup-api; keep the two in step.
+ */
+export function assignEventSentence(
+  actor: EventPerson,
+  status: string,
+  added: EventPerson[],
+  removed: EventPerson[] = [],
+): string {
+  const who = actor.name;
+  const selfOnly = (people: EventPerson[]) => people.length === 1 && people[0].id === actor.id;
+
+  if (status === "REASSIGNED" && added.length && removed.length) {
+    return `${who} moved this chat from ${joinNames(removed)} to ${joinNames(added)}`;
+  }
+  if (added.length) {
+    return selfOnly(added)
+      ? `${who} took this chat`
+      : `${who} assigned this chat to ${joinNames(added)}`;
+  }
+  if (removed.length) {
+    return selfOnly(removed)
+      ? `${who} left this chat`
+      : `${who} removed ${joinNames(removed)} from this chat`;
+  }
+  return `${who} assigned this chat`;
+}
+
+export function parseWaMessage(message: Partial<WaGetMessagesBody>): ParsedWaMessageReturn {
+  const { messageBody, waCreatedAt } = message;
+
+  let timeStamp: string = waCreatedAt ?? new Date().toLocaleTimeString();
+  let messageType = "text";
+  let messageContent: ParsedWaMessageContent = "No messages yet";
+  let template: WaTemplateFetchBody = {} as WaTemplateFetchBody;
+  let interactive: WaSendMessageBody["interactive"] = {} as WaSendMessageBody["interactive"];
+  if (
+    message.sourcePlatform === MessagePlatform.INSTAGRAM ||
+    message.sourcePlatform === MessagePlatform.FACEBOOK
+  ) {
+    if (messageBody?.exchangeProcess === "send") {
+      const { send } = messageBody as { send: IgSendMessageBody };
+      const { message, sender_action, payload } = send;
+      if (message) {
+        if (message.attachment?.type === "template") {
+          const payload = message.attachment.payload;
+          messageType = "ig_template";
+          messageContent = {
+            templateType: payload?.template_type ?? "generic",
+            text: payload?.text,
+            elements: payload?.elements ?? [],
+            buttons: payload?.buttons ?? [],
+          };
+        } else if (message.attachment) {
+          messageContent =
+            message.attachment.payload?.id ||
+            message.attachment.payload?.url ||
+            message.attachment.payload?.attachment_id;
+
+          messageType = message.attachment.type;
+        } else if (message.attachments?.length) {
+          // Several images in one message.
+          messageType = "attachments";
+          messageContent = {
+            attachments: message.attachments.map((a) => ({
+              content: a.payload.url ?? a.payload.attachment_id ?? "",
+              type: a.type,
+            })),
+            text: message.text,
+          };
+        } else if (message.text) {
+          messageType = "text";
+          messageContent = message.text;
+        }
+      } else if (sender_action && sender_action === "react") {
+        messageType = "reaction";
+        messageContent = payload?.emoji || payload?.reaction;
+      }
+    }
+    if (messageBody?.exchangeProcess === "receive") {
+      const { receive } = messageBody as { receive: IgReceiveMessageBody };
+      if (receive.message) {
+        if (receive.message.comment_id || receive.message.mid?.startsWith("ig_comment_")) {
+          messageType = "ig_comment";
+          messageContent = {
+            text: receive.message.text,
+            commentId: receive.message.comment_id,
+            mediaId: receive.message.media_id,
+            permalink: receive.message.media_permalink,
+          };
+        } else if (receive.message.reply_to?.story) {
+          const { story } = receive.message.reply_to;
+          messageType = "ig_story_reply";
+          messageContent = {
+            text: receive.message.text,
+            story: { id: story.id, url: story.url, linkStickerUrl: story.link_sticker_url },
+          };
+        } else if (receive.message.attachments?.length) {
+          const attachments = receive.message.attachments.map((r): IgAttachmentItem => ({
+            content: r.payload?.url ?? "",
+            type: r.type,
+            title: r.payload?.title,
+            mediaId: r.payload?.ig_post_media_id ?? r.payload?.reel_video_id ?? r.payload?.id,
+          }));
+          messageContent = { attachments, text: receive.message.text };
+          messageType = attachments.every((a) => isSharedPostAttachment(a.type))
+            ? "ig_shared_post"
+            : "attachments";
+        } else if (receive.message.text) {
+          messageContent = receive.message.text;
+          messageType = "text";
+        } else if (receive.message.quick_reply) {
+          messageContent = receive.message.quick_reply.payload;
+          messageType = "quickreply";
+        } else if (receive.message.is_unsupported) {
+          // Instagram withholds the content (an unsupported media type); say so
+          // rather than "No messages yet".
+          messageType = "ig_unsupported";
+          messageContent = "";
+        }
+      } else if (receive.reaction && receive.reaction.action === "react") {
+        messageContent = receive.reaction.emoji || receive.reaction.reaction;
+        messageType = "reaction";
+      } else {
+        // Stored by the API as `{ type, … }` rather than a message: a tapped button
+        // (Get Started, a card button, a menu item) and an ig.me / m.me link visit.
+        const event = receive as unknown as {
+          type?: string;
+          title?: string;
+          payload?: string;
+          referral?: { ref?: string };
+        };
+        if (event.type === "postback" && (event.title || event.payload)) {
+          messageContent = event.title || event.payload || "";
+          messageType = "text";
+        } else if (event.type === "referral") {
+          const ref = event.referral?.ref;
+          messageContent = ref ? `Opened a link (ref: ${ref})` : "Opened a link";
+          messageType = "text";
+        }
+      }
+    }
+  } else {
+    if (messageBody?.exchangeProcess === "send") {
+      const { send } = messageBody as { send: WaSendMessageBody };
+      messageType = send.type;
+      switch (messageType) {
+        case "text":
+          messageContent = send?.text?.body;
+          break;
+        case "image":
+          messageContent = `${send?.image?.link}_caption_${send?.image?.caption ?? ""}`;
+          break;
+        case "video":
+          messageContent = `${send?.video?.link ?? send?.video?.id}_caption_${send?.video?.caption ?? ""}`;
+          break;
+        // A reply sent from the WhatsApp Business app (an echo) carries only Meta's
+        // media id, no link; the bubble fetches the file by id when it is not a URL.
+        case "audio":
+          messageContent = `${send?.audio?.link ?? send?.audio?.id}`;
+          break;
+        case "template":
+          messageContent = send.template?.name ?? "";
+          template = send.template!;
+          break;
+        case "interactive":
+          messageContent = "";
+          interactive = send.interactive;
+          break;
+        case "reaction":
+          messageContent = send.reaction!.emoji;
+          break;
+        case "document":
+          messageContent = `${send?.document?.link ?? send?.document?.id}_caption_${send?.document?.filename}_caption_${send?.document?.caption ?? ""}`;
+          break;
+        case "contacts":
+          messageContent = [...send.contacts!];
+          break;
+        case "location":
+          messageContent = { ...send.location! };
+          break;
+      }
+    }
+    if (messageBody?.exchangeProcess === "receive") {
+      const { receive } = messageBody as { receive: WaReceiveMessageBody };
+      // The `type` discriminant guarantees its matching payload field is set.
+      const inbound = receive.messages[0]!;
+      timeStamp = inbound.timestamp;
+      messageType = inbound.type;
+      switch (messageType) {
+        case "text":
+          messageContent = inbound.text!.body;
+          break;
+        case "image":
+          messageContent = `${inbound.image?.link}_caption_${inbound.image?.caption ?? ""}`;
+          break;
+        case "button":
+          messageContent = inbound.button!.text;
+          break;
+        case "audio":
+          messageContent = `${inbound.audio?.id}_caption_${inbound.audio?.caption ?? ""}`;
+          break;
+        case "video":
+          messageContent = `${inbound.video?.id}_caption_${inbound.video?.caption ?? ""}`;
+          break;
+        case "document":
+          messageContent = `${inbound.document!.id}_caption_${inbound.document!.filename}_caption_${inbound.document!.caption ?? ""}`;
+          break;
+        case "interactive":
+          switch (inbound.interactive!.type) {
+            case "button_reply":
+              messageContent = inbound.interactive!.button_reply.title;
+              break;
+            case "list_reply":
+              messageContent = inbound.interactive!.list_reply.title;
+              break;
+            case "nfm_reply":
+              messageContent = inbound.interactive!.nfm_reply.name;
+              break;
+            case "call_permission_reply": {
+              const reply = inbound.interactive!.call_permission_reply;
+              messageType = "call_permission_reply";
+              messageContent = {
+                accepted: reply?.response === "accept",
+                permanent: Boolean(reply?.is_permanent),
+                expiresAt: reply?.expiration_timestamp
+                  ? new Date(Number(reply.expiration_timestamp) * 1000).toISOString()
+                  : null,
+              };
+              break;
+            }
+          }
+          break;
+        case "reaction":
+          messageContent = inbound.reaction!.emoji;
+          break;
+        case "contacts":
+          messageContent = [...inbound.contacts!];
+          break;
+        case "location":
+          messageContent = { ...inbound.location! };
+          break;
+        case "order":
+          messageContent = { ...inbound.order! };
+          break;
+      }
+    }
+    if (messageBody?.exchangeProcess === "internal") {
+      const { internal } = messageBody;
+      if (internal?.summary) {
+        messageContent = internal.summary;
+      } else {
+        // Rows written before the server composed the sentence: the actor is still glued on
+        // here, and where it goes depends on how the fragment was phrased.
+        const isClosedType = WaMessageClosedStatus.includes(
+          internal?.assignStatus as WaMessageAssignStatus,
+        );
+        const actor = internal?.triggeredByUser?.name;
+        messageContent = isClosedType
+          ? `${actor} ${internal!.text.body}`
+          : internal!.text.body === `Chat assigned to ${actor}`
+            ? `${actor} took this chat`
+            : `${internal!.text.body} by ${actor}`;
+      }
+    }
+    if (messageBody?.exchangeProcess === "privateNote") {
+      const { privateNote } = messageBody;
+      messageContent = `${privateNote!.text.body}`;
+    }
+  }
+
+  return {
+    timeStamp,
+    messageType,
+    messageContent,
+    template,
+    interactive,
+  };
+}
+
+/** How an attachment of each type reads in a one-line preview. */
+const ATTACHMENT_PREVIEW: Partial<Record<InstagramInboundAttachment["type"], string>> = {
+  image: "Image",
+  video: "Video",
+  audio: "Audio",
+  file: "Document",
+  sticker: "Sticker",
+  story_mention: "Mentioned you in their story",
+  ephemeral: "Disappearing media",
+  ig_post: "Shared a post",
+  share: "Shared a post",
+  ig_reel: "Shared a reel",
+  reel: "Shared a reel",
+  story: "Story",
+  ig_story: "Story",
+};
+
+/** One-line preview of a message, for the chat list and notifications. */
+export function returnMessageContentBasedOnParsedMessage(
+  parsedMessage: ParsedWaMessageReturn,
+  exchangeProcess: "send" | "receive" | "internal" | "privateNote",
+): string {
+  if (parsedMessage.messageType === "text") {
+    return typeof parsedMessage.messageContent === "string" ? parsedMessage.messageContent : "";
+  } else if (parsedMessage.messageType === "image") {
+    return "Image";
+  } else if (parsedMessage.messageType === "video") {
+    return "Video";
+  } else if (parsedMessage.messageType === "audio") {
+    return "Audio";
+  } else if (parsedMessage.messageType === "document") {
+    return "Document";
+  } else if (parsedMessage.messageType === "location") {
+    return "Location";
+  } else if (parsedMessage.messageType === "contacts") {
+    return "Contact";
+  } else if (parsedMessage.messageType === "sticker") {
+    return "Sticker";
+  } else if (parsedMessage.messageType === "voice") {
+    return "Voice";
+  } else if (parsedMessage.messageType === "gif") {
+    return "GIF";
+  } else if (parsedMessage.messageType === "template") {
+    return "Template";
+  } else if (parsedMessage.messageType === "button") {
+    return typeof parsedMessage.messageContent === "string" ? parsedMessage.messageContent : "";
+  } else if (parsedMessage.messageType === "interactive") {
+    return "Interactive Message";
+  } else if (parsedMessage.messageType === "call_permission_reply") {
+    return isCallPermissionReply(parsedMessage.messageContent) &&
+      parsedMessage.messageContent.accepted
+      ? "Allowed calls"
+      : "Declined calls";
+  } else if (parsedMessage.messageType === "reaction") {
+    return exchangeProcess === "send"
+      ? parsedMessage.messageContent === "love"
+        ? "You Liked a message"
+        : `You reacted ${toText(parsedMessage.messageContent)}`
+      : parsedMessage.messageContent === "love"
+        ? "Liked a message"
+        : `Reacted ${toText(parsedMessage.messageContent)}`;
+  } else if (parsedMessage.messageType === "attachments") {
+    const attachments = isIgAttachmentsContent(parsedMessage.messageContent)
+      ? parsedMessage.messageContent.attachments
+      : [];
+    const last = attachments.at(-1)?.type;
+    return (last && ATTACHMENT_PREVIEW[last]) || "Attachment";
+  } else if (parsedMessage.messageType === "ig_shared_post") {
+    const attachments = isIgAttachmentsContent(parsedMessage.messageContent)
+      ? parsedMessage.messageContent.attachments
+      : [];
+    return attachments.some((a) => a.type === "ig_reel" || a.type === "reel")
+      ? "Shared a reel"
+      : "Shared a post";
+  } else if (parsedMessage.messageType === "ig_unsupported") {
+    return "Unsupported message";
+  } else if (parsedMessage.messageType === "ig_story_reply") {
+    const content = isIgStoryReplyContent(parsedMessage.messageContent)
+      ? parsedMessage.messageContent
+      : null;
+    return content?.text || "Replied to your story";
+  } else if (parsedMessage.messageType === "ig_template") {
+    const content = isIgTemplateContent(parsedMessage.messageContent)
+      ? parsedMessage.messageContent
+      : null;
+    if (content?.text) return content.text;
+    return content?.elements.length === 1 && content.elements[0].title
+      ? content.elements[0].title
+      : "Products";
+  } else if (parsedMessage.messageType === "ig_comment") {
+    return isCommentContent(parsedMessage.messageContent)
+      ? (parsedMessage.messageContent.text ?? "Comment")
+      : "Comment";
+  } else {
+    return "Unsupported message type";
+  }
+}
+
+/**
+ * Unread messages on an assigned chat are the assignees' business: anyone else
+ * sees no count. An unassigned chat shows everyone their own count, as before.
+ *
+ * Gated here rather than in the list query so the per-user count is still on
+ * the row — unassigning, or being assigned, shows the real figure straight away
+ * instead of a zero that waits for the next fetch.
+ */
+export function getVisibleUnreadCount(
+  contact: { unReadMessageCount?: number; assignedUsers?: { id: string }[] } | null | undefined,
+  userId: string | null | undefined,
+) {
+  const count = contact?.unReadMessageCount ?? 0;
+  const assignees = contact?.assignedUsers ?? [];
+  if (!count || assignees.length === 0) return count;
+  return assignees.some((assignee) => assignee.id === userId) ? count : 0;
+}
+
+export function isInboxSessionExpired(timeStamp?: string) {
+  if (!timeStamp) return true;
+  const currentTime = dayjs().utc();
+  const givenTime = dayjs(timeStamp).utc();
+  const diffInHours = currentTime.diff(givenTime, "hours");
+  return diffInHours >= 24;
+}
+
+export function validateInboxTemplateSending(
+  createTemplateComponents: WaTemplateFetchBodyComponent[],
+  sendTemplateComponents: WaTemplateComponent[],
+  defaultValues: WaTemplateDefaultValues,
+) {
+  return createTemplateComponents?.map((componentC) => {
+    switch (componentC.type) {
+      case "HEADER":
+        const sendHeaderComponent = sendTemplateComponents.find(
+          (componentS) => componentS.type === "header",
+        );
+        switch (componentC.format) {
+          case "IMAGE":
+            const hasDefaultImage = !!defaultValues?.image?.link;
+            const hasSelectedImage = !!sendHeaderComponent?.parameters[0]?.image?.link;
+            return hasDefaultImage || hasSelectedImage;
+          case "VIDEO":
+          case "DOCUMENT":
+            const hasDefaultFile = !!createTemplateComponents.find(
+              (data) => data.type === WaTemplateComponentTypeUpperCase.HEADER,
+            )?.example?.header_handle?.[0];
+            // "VIDEO" | "DOCUMENT" lowercased — the media key on the parameter.
+            const mediaKey = componentC.format.toLowerCase() as "video" | "document";
+            const hasSelectedFile = !!sendHeaderComponent?.parameters[0]?.[mediaKey]?.link;
+            return hasDefaultFile || hasSelectedFile;
+          case "LOCATION":
+            if (!sendHeaderComponent) return false;
+            if (
+              sendHeaderComponent?.parameters[0]?.location?.latitude &&
+              sendHeaderComponent?.parameters[0]?.location?.longitude &&
+              sendHeaderComponent?.parameters[0]?.location?.name &&
+              sendHeaderComponent?.parameters[0]?.location?.address
+            )
+              return true;
+            else return false;
+          default:
+            return true;
+        }
+      default:
+        return true;
+    }
+  });
+}
+
+/**
+ * Whether a sent message was written by the Meta Business Agent (Meta AI). Meta
+ * tags the agent's replies with `biz_opaque_callback_data` of
+ * `{"originator":"bizai",…}`, and the API stores the echo as it arrived, so the
+ * tag is on the stored body.
+ */
+export function isMetaAiMessage(message: Pick<WaGetMessagesBody, "messageBody">): boolean {
+  const send = message.messageBody?.send;
+  const tag = send && "biz_opaque_callback_data" in send ? send.biz_opaque_callback_data : null;
+  if (typeof tag !== "string" || !tag) return false;
+  try {
+    const parsed: unknown = JSON.parse(tag);
+    return (
+      typeof parsed === "object" &&
+      parsed !== null &&
+      "originator" in parsed &&
+      parsed.originator === "bizai"
+    );
+  } catch {
+    return false;
+  }
+}
+
+/** The row fields the inbox list sorts on. */
+interface SortableInboxRow {
+  conversationLastMessageAt?: string | null;
+  conversationLastCustomerMessageAt?: string | null;
+  lastReceivedMessageTimeStamp?: string | null;
+}
+
+/**
+ * The time a row sorts on under the list's `sortBy` (read from its filter key). Mirrors the
+ * ORDER BY in `filterChats` (rateup-api): `*_wa_created` is the customer's last message, the
+ * rest the ticket's last activity in either direction.
+ */
+export function inboxRowSortTime(row: SortableInboxRow | undefined, filterKey: string): number {
+  const stamp = filterKey.includes("_wa_created")
+    ? (row?.conversationLastCustomerMessageAt ??
+      row?.conversationLastMessageAt ??
+      row?.lastReceivedMessageTimeStamp)
+    : (row?.conversationLastMessageAt ?? row?.lastReceivedMessageTimeStamp);
+  return stamp ? new Date(stamp).getTime() : 0;
+}
+
+/** Newest first unless the key asks for oldest; undated rows go last either way, as NULLS LAST does. */
+export const compareInboxRowTimes =
+  (filterKey: string) =>
+  (a: { time: number }, b: { time: number }): number => {
+    if (!a.time || !b.time) return (b.time ? 1 : 0) - (a.time ? 1 : 0);
+    return filterKey.includes("sortBy:oldest") ? a.time - b.time : b.time - a.time;
+  };
+
+/** The parsed form of a customer's answer to a call permission request. */
+export interface CallPermissionReplyContent {
+  accepted: boolean;
+  permanent: boolean;
+  expiresAt: string | null;
+}
+
+export function isCallPermissionReply(content: unknown): content is CallPermissionReplyContent {
+  return typeof content === "object" && content !== null && "accepted" in content;
+}
+
+const isMetaPlatform = (platform?: string | null) =>
+  platform === MessagePlatform.INSTAGRAM || platform === MessagePlatform.FACEBOOK;
+
+/**
+ * The Meta id (`mid`) of the message this one quotes: an inbound inline reply
+ * carries it on `message.reply_to.mid`, a reply an agent sent with a quote on the
+ * send payload's top-level `reply_to.mid`. Instagram and Messenger only.
+ */
+export function getReplyToMid(
+  message: Partial<Pick<WaGetMessagesBody, "messageBody" | "sourcePlatform">>,
+): string | undefined {
+  if (!isMetaPlatform(message.sourcePlatform)) return undefined;
+  const body = message.messageBody;
+  if (body?.exchangeProcess === "receive" && body.receive && "message" in body.receive) {
+    return body.receive.message?.reply_to?.mid || undefined;
+  }
+  if (body?.exchangeProcess === "send" && body.send && "reply_to" in body.send) {
+    return body.send.reply_to?.mid || undefined;
+  }
+  return undefined;
+}
+
+/** One line of what a message says, for a quote block or the composer's reply strip. */
+export function getMessagePreview(message: Partial<WaGetMessagesBody>): string {
+  const exchangeProcess = message.messageBody?.exchangeProcess ?? "receive";
+  return returnMessageContentBasedOnParsedMessage(parseWaMessage(message), exchangeProcess);
+}
+
+/** Who wrote a message, for a quote's label: the agent, "Automation", or the customer. */
+export function getMessageAuthor(
+  message: Pick<WaGetMessagesBody, "messageBody" | "sender">,
+  contact?: {
+    name?: string | null;
+    whatsappUserName?: string | null;
+    phone?: string | null;
+    igsId?: string | null;
+    psid?: string | null;
+  } | null,
+): string | null {
+  if (message.messageBody?.exchangeProcess === "send") return message.sender?.name || "Automation";
+  return (
+    contact?.name ||
+    contact?.whatsappUserName ||
+    contact?.phone ||
+    contact?.igsId ||
+    contact?.psid ||
+    null
+  );
+}

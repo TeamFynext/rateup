@@ -1,0 +1,249 @@
+import type { PaginationState, SortingState } from "@tanstack/react-table";
+
+import type { RequestPayload } from "@/types/api.ts";
+import { getApiErrorData } from "@/utils/apiError.ts";
+
+import { axiosClient } from "../apiClient";
+
+export interface ICreateGoogleUser {
+  name: string;
+  /** Asked on the business step after signup, so absent here. */
+  orgName?: string;
+  /** Comes straight off the `authType` search param, which may repeat. */
+  type: string | string[] | undefined;
+  email?: string;
+  referralCode?: string;
+  industry?: string;
+  website?: string;
+  phoneNumber?: string;
+  location?: string;
+  goals?: string[];
+  integrationsSelected?: string[];
+}
+
+export interface IChangePassword {
+  existingPassword: string;
+  newPassword: string;
+}
+
+export interface IUpdateProfile {
+  title: string;
+  name: string;
+  phone: string;
+}
+
+export interface IUpdateUserLanguage {
+  prefLanguage: string;
+}
+
+export interface IUpdateProfilePhoto {
+  profilePhoto: string;
+}
+
+export interface _IUserData {
+  orgId: string;
+  role: string;
+  userId: string;
+  userName: string;
+  email: string;
+  profilePhoto: string;
+  orgName: string;
+  orgLogo: string;
+  orgPhone: string;
+  orgAddress: string;
+  teams: Array<string>;
+  encryptionKeys: EncryptionKeys | undefined;
+  prefLanguage: string;
+  showLifecycle: boolean;
+}
+
+export interface IUserInfoApiResponse {
+  message: string;
+  data: UserData;
+}
+const PUBLICUSER_URL = "/public/user/";
+
+export async function fetchUserInfo() {
+  try {
+    const response: IUserInfoApiResponse = (await axiosClient.get("/user/info")).data;
+    return response;
+  } catch (e) {
+    return { error: getApiErrorData(e) }; // TODO: improve error handling for react query
+  }
+}
+
+export const fetchUserProfile = () =>
+  axiosClient({
+    url: `/user/profile`,
+    method: "GET",
+  });
+
+export const updateUserProfile = (data: IUpdateProfile) =>
+  axiosClient({
+    url: `/user/update-profile`,
+    method: "PUT",
+    data: data,
+  });
+
+export const updateUserLanguage = (data: IUpdateUserLanguage) =>
+  axiosClient({
+    url: `/user/update-language`,
+    method: "PUT",
+    data: data,
+  });
+
+export const updateUserProfilePhoto = (data: IUpdateProfilePhoto) =>
+  axiosClient({
+    url: `/user/update-profile-photo`,
+    method: "PUT",
+    data: data,
+  });
+
+export const createGoogleUser = (data: RequestPayload) => {
+  return axiosClient({
+    url: `/user/complete-google-signup`,
+    method: "POST",
+    data: data,
+  });
+};
+
+export const createAppleUser = (data: RequestPayload) => {
+  return axiosClient({
+    url: `/user/complete-apple-signup`,
+    method: "POST",
+    data: data,
+  });
+};
+
+export const changeUserPassword = (data: IChangePassword) =>
+  axiosClient({
+    url: `/user/change-password`,
+    method: "POST",
+    data: data,
+  });
+
+// Soft-deletes the account. `password` is sent only for self-deletion, which the API
+// re-verifies; a super-admin removing someone else is gated by the role check instead.
+export const updateActiveStatus = (userId: string, password?: string) =>
+  axiosClient({
+    url: `/user/update-active-status/${userId}`,
+    method: "PUT",
+    data: password ? { password } : {},
+  });
+
+export const checkEmailExist = async (data: { email: string }) => {
+  const response = await axiosClient({
+    url: `${PUBLICUSER_URL}check-email`,
+    method: "POST",
+    data,
+  });
+  return response?.data as { success: boolean };
+};
+
+export async function getAllUsers() {
+  return (await axiosClient.get(`user/all`)).data as Array<UserData>;
+}
+
+export async function updateRecipeName() {
+  return (await axiosClient.post(`user/update-recipe`)).data;
+}
+
+export async function updateUserPause({ userId, data }: { userId: string; data: RequestPayload }) {
+  return await axiosClient.put(`user/pause/${userId}`, data);
+}
+
+export interface IUpdateMemberProfile {
+  title: string;
+  name: string;
+  phone: string;
+}
+
+export const updateMemberProfile = (userId: string, data: IUpdateMemberProfile) =>
+  axiosClient.put(`user/update-profile/${userId}`, data);
+
+export enum UserAvailabilityStatus {
+  offline = "offline",
+  online = "online",
+  busy = "busy",
+}
+
+export enum UserPresenceMode {
+  automatic = "automatic",
+  manual = "manual",
+}
+
+export async function updateUserAvailabilityStatus(data: {
+  status: UserAvailabilityStatus;
+  presenceMode: UserPresenceMode;
+}) {
+  return await axiosClient.put(`user/status`, data);
+}
+
+interface IPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
+export type AuditLog = Record<string, unknown>;
+export interface AuditLogData {
+  id: string;
+  userId: string;
+  user: {
+    name: string;
+  };
+  orgId: string;
+  action: string;
+  method: string;
+  route: string;
+  body: RequestPayload;
+  createdAt: string;
+  rawCreatedAt: Date;
+}
+export interface IPaginatedResponse<_T> {
+  data: AuditLogData[];
+  pagination: IPagination;
+}
+
+export interface AuditLogFilters {
+  from?: Date;
+  to?: Date;
+  userId?: string;
+  /** A feature key from `getAuditLogFeatures`, e.g. `contact` or `wa/inbox`. */
+  feature?: string;
+}
+
+export async function getAuditLogs(params: {
+  pagination: PaginationState;
+  sorting: SortingState;
+  filters?: AuditLogFilters;
+}) {
+  const sortParams =
+    params?.sorting?.length > 0
+      ? {
+          sortBy: params.sorting?.[0]?.id,
+          sortOrder: params.sorting?.[0]?.desc ? "desc" : "asc",
+        }
+      : {};
+
+  const response = await axiosClient.get<IPaginatedResponse<AuditLog>>(`user/audit-logs`, {
+    params: {
+      page: params?.pagination.pageIndex + 1,
+      limit: params?.pagination.pageSize,
+      ...sortParams,
+      from: params.filters?.from?.toISOString(),
+      to: params.filters?.to?.toISOString(),
+      userId: params.filters?.userId,
+      feature: params.filters?.feature,
+    },
+  });
+  return response.data;
+}
+
+/** The features that appear in the org's activity log, busiest first. */
+export async function getAuditLogFeatures() {
+  return (await axiosClient.get<{ key: string; count: number }[]>(`user/audit-logs/features`)).data;
+}

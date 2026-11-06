@@ -1,0 +1,44 @@
+/*
+ * .survey-settings-root-div carries no local rules of its own here — it exists purely
+ * as an anchor class so the :global() descendant selectors below can still target
+ * Mantine Paper/heading markup rendered by not-yet-converted child settings components.
+ * Do not remove this class name from index.tsx's JSX.
+ */
+
+/* Clean card styling for all PaperLayout (Mantine Paper) inside settings */
+
+/* Section headings */
+.survey-settings-root-div :global(.settings-section-heading) {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.survey-settings-root-div :global(.settings-section-description) {
+  font-size: 0.875rem;
+  color: #868e96;
+}
+
+/* Common section div */
+.survey-settings-root-div :global(.section-div) {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  flex-shrink: 0;
+}
+
+.survey-settings-root-div :global(.section-div label) {
+  color: #868e96;
+}
+
+.survey-settings-root-div :global(.switch-heading-and-desc-container h3) {
+  font-family: var(--font-geist);
+  font-weight: 400;
+  font-size: 1rem;
+  color: var(--muted-foreground);
+}
+
+.survey-settings-root-div :global(.switch-heading-and-desc-container p) {
+  font-size: 0.875rem;
+  color: #868e96;
+}
