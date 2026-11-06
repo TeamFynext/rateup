@@ -209,9 +209,9 @@ Rules to keep in mind when adding code:
   the delivery to `wa-webhooks` and only then answers 200 (`wasurvey.ingress.ts`). The
   kafka service processes it (`consumers/waWebhook.consumer.ts` → `wasurvey.webhook.ts`).
   New webhook handling goes in `wasurvey.webhook.ts`, not in the route.
-- Railway config-as-code lives in each app's `railway.json` (`apps/api`, `apps/worker-bullmq`,
-  `apps/worker-kafka`). Each service builds from the repo root: set its config path to that
-  file and leave the root directory empty so the workspace installs.
+- Railway: each service's build, start and watch settings are set on the service itself, not in
+  a `railway.json`; the table under "Deployment" in the root README lists them. Every service
+  builds from the repo root so the workspace installs.
 
 ### Worker capacity, health and metrics
 

@@ -11,5 +11,5 @@ pnpm run start      # node dist/index.js
 vp test             # tests (vp lint for lint; rules in vite.config.ts)
 ```
 
-Railway: `railway.json` here is this service's config-as-code; the service builds from the
-repo root. Env comes from `.env` in this folder (same variables as `apps/api`).
+Railway: the service builds from the repo root; its settings are in the table under
+"Deployment" in the root README. Env comes from `.env` in this folder (same variables as `apps/api`).

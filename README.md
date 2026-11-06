@@ -233,12 +233,27 @@ Migrations deploy from CI: `.github/workflows/prisma-migrate-dev.yml` on pushes 
 
 ## Deployment
 
-- **Railway:** each service has config-as-code in its app folder:
-  `apps/api/railway.json`, `apps/worker-bullmq/railway.json`, `apps/worker-kafka/railway.json`.
-  Services build from the repository root (leave Railway's root directory empty) and point
-  their config path at that file.
-- **Web, admin, docs:** `vp run --filter <package>... build`, then `pnpm -C apps/<app> start`
-  serves `.output/`.
+- **Railway:** one service per app in the `Rateup` project, all built from this repository:
+  the `dev` environment deploys the `dev` branch, `production` deploys `main`. The settings
+  live on each service (Railway no longer lets new services opt in to a `railway.json`), so
+  keep this table and the services in step. Every service but the mock builds from the
+  repository root, with Railpack, so the whole workspace installs:
+
+  | Service             | Build command                                      | Start command                                   | Healthcheck      | Environments    |
+  | ------------------- | -------------------------------------------------- | ----------------------------------------------- | ---------------- | --------------- |
+  | `rateup-api`        | `pnpm --filter @rateup/api... run build`           | `pnpm --filter @rateup/api run start`           | `/api/health`    | dev, production |
+  | `bullmq-worker`     | `pnpm --filter @rateup/worker-bullmq... run build` | `pnpm --filter @rateup/worker-bullmq run start` | `/health`        | dev, production |
+  | `kafka-worker`      | `pnpm --filter @rateup/worker-kafka... run build`  | `pnpm --filter @rateup/worker-kafka run start`  | `/health`        | dev, production |
+  | `rateup-ui`         | `pnpm --filter @rateup/web... run build`           | `pnpm --filter @rateup/web run start`           | `/`              | dev, production |
+  | `rateup-admin`      | `pnpm --filter @rateup/admin... run build`         | `pnpm --filter @rateup/admin run start`         | `/`              | dev, production |
+  | `rateup-docs`       | `pnpm --filter @rateup/docs... run build`          | `pnpm --filter @rateup/docs run start`          | `/`              | dev, production |
+  | `whatsapp-mock-api` | root directory `tools/meta-mock`, its `Dockerfile` | (the Dockerfile's `CMD`)                        | `/__stub/health` | dev only        |
+
+  Watch patterns limit each service to its own folder plus what it imports (the workers
+  include `apps/api/**`; web and admin include `packages/ui/**` and `packages/utils/**`), and
+  `pnpm-lock.yaml`. Migrations are not run by Railway: `.github/workflows/prisma-migrate-*.yml`
+  apply them on a push to `dev` or `main`.
+
 - **Mobile:** EAS builds run from `apps/mobile` (`eas.json`), which has its own lockfile.
 
 ## Troubleshooting
