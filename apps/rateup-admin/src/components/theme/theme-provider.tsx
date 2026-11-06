@@ -35,8 +35,14 @@ function applyTheme(theme: Theme) {
 }
 
 /**
- * Client-only counterpart of rateup-ui's ThemeProvider. The console is a static SPA, so there is
- * no SSR flash to guard against with an inline script; the theme is applied on first render.
+ * Runs in `<head>` before first paint, so a dark-theme user never sees a light flash while the
+ * app's JavaScript loads. Mirrors `readStoredTheme` + `applyTheme`.
+ */
+export const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem(${JSON.stringify(STORAGE_KEY)});if(t!=='light'&&t!=='dark'&&t!=='system'){t='light'}var d=matchMedia('(prefers-color-scheme: dark)').matches;var r=t==='system'?(d?'dark':'light'):t;var e=document.documentElement;e.classList.add(r);e.style.colorScheme=r}catch(e){}})();`;
+
+/**
+ * Counterpart of rateup-ui's ThemeProvider. It renders in the browser only (routes are not
+ * server-rendered, see `start.ts`); `THEME_INIT_SCRIPT` covers the paint before it mounts.
  */
 export function ThemeProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   const [theme, setThemeState] = useState<Theme>(readStoredTheme);

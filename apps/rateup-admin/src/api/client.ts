@@ -20,7 +20,7 @@ export const api = axios.create({
 let onUnauthorized: (() => void) | undefined;
 
 /**
- * Registered once from main.tsx. Lives here as a setter rather than an import of the router,
+ * Registered by `getRouter()` in the browser. Lives here as a setter rather than an import of the router,
  * which would be circular (router → routes → api → router).
  */
 export function setUnauthorizedHandler(handler: () => void) {
