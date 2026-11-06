@@ -1,2 +1,4 @@
-# Type errors in any app block a push. Each package defines what "typecheck" means.
+# Type errors in any app block a push. Each package defines what "typecheck" means;
+# apps/mobile is its own pnpm install, so it runs separately.
 vp run -r typecheck
+pnpm --dir apps/mobile run typecheck

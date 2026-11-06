@@ -26,11 +26,12 @@ is the workers importing backend code from `@rateup/api`; the API never imports 
 ## Commands (run at the root)
 
 ```bash
-vp install                        # install everything, git hooks, prisma generate (never npm)
+vp install                        # install the workspace, git hooks, prisma generate (never npm)
+pnpm run install:mobile           # install apps/mobile (its own pnpm install)
 pnpm run dev                      # API + dashboard; `pnpm run dev:workers` for both workers
 vp run @rateup/api#dev            # one package's script
 vp -C apps/web dev                # a Vite app's dev server
-vp run -r typecheck               # every package (the pre-push hook)
+pnpm run typecheck                # every package, mobile included (the pre-push hook)
 vp run -r build                   # every package, in dependency order
 vp run --filter "@rateup/worker-kafka..." build   # one app and what it needs
 vp check                          # format + lint (root vite.config.ts)
@@ -45,10 +46,14 @@ vp check                          # format + lint (root vite.config.ts)
   `"catalog:"` in each `package.json`, with its version once in `pnpm-workspace.yaml`
   (`catalogMode: prefer`, so `vp add` does this for listed packages). Upgrade it there.
   apps/mobile is the exception: Expo pins its own React, Tailwind 3 and TypeScript 6.
-- **Isolated `node_modules` (pnpm's default) everywhere, Expo included.** A package can only
-  import what its own `package.json` declares; an undeclared import fails at once instead of
-  working by accident. Do not switch to `nodeLinker: hoisted`: pnpm applies it to the whole
-  workspace, and Expo 58 does not need it.
+- **Isolated `node_modules` (pnpm's default) for the workspace.** A package can only import
+  what its own `package.json` declares; an undeclared import fails at once instead of working
+  by accident.
+- **apps/mobile is its own pnpm install** with `nodeLinker: hoisted` (Expo / React Native),
+  its own `pnpm-workspace.yaml` and `pnpm-lock.yaml`, outside the root workspace (pnpm applies
+  the linker per workspace). Install it with `pnpm run install:mobile`; shared packages come in
+  as `link:` dependencies (e.g. `"@rateup/utils": "link:../../packages/utils"`), and
+  `metro.config.js` watches them. Root `pnpm run typecheck` and the pre-push hook include it.
 - **Internal packages ship TypeScript source.** `ui` and `utils` are compiled by the app that
   imports them. `@rateup/api` exports source under the `source` condition (dev, tests, type
   checks) and its compiled `dist/` to plain Node in production, for the workers.

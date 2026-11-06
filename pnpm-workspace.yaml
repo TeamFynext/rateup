@@ -2,10 +2,11 @@ packages:
   - apps/*
   - packages/*
   - tools/*
+  # apps/mobile is its own install (hoisted node_modules for Expo): see apps/mobile/pnpm-workspace.yaml.
+  - "!apps/mobile"
 
 # One version per shared dependency: packages declare what they use as "catalog:" and the
 # version lives here, so an upgrade (TanStack, Tailwind, TypeScript, oxlint...) is one line.
-# apps/mobile keeps its own ranges: Expo pins React, Tailwind 3 and TypeScript 6.
 # `catalogMode: prefer` makes `vp add <pkg>` write "catalog:" when the package is listed here.
 catalogMode: prefer
 catalog:

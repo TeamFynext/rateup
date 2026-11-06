@@ -1,4 +1,4 @@
-# rateup-app
+# apps/mobile (@rateup/mobile)
 
 The RateUp mobile app for businesses (iOS and Android): the team inbox and chat, voice calls,
 loyalty (the cashier counter), forms, flows and web-form responses, teams, and shop orders. It
@@ -6,22 +6,27 @@ is an Expo app (React Native, Expo Router file routes) that talks to rateup-api.
 
 ## Commands
 
+This app is its own pnpm install, not part of the root workspace: `pnpm-workspace.yaml` here
+sets `nodeLinker: hoisted` (the flat node_modules Expo was built on) and `pnpm-lock.yaml` here
+is its lockfile. Shared monorepo code comes in as `link:` dependencies (`@rateup/utils`), which
+`metro.config.js` adds to Metro's watch folders. Run every command below in this folder.
+
 ```bash
-pnpm install
+pnpm install                  # or `pnpm run install:mobile` at the monorepo root
 pnpm start                    # Expo dev server (expo start)
 pnpm run android              # native build + run (expo run:android); `source use-java17.sh` first
 pnpm run ios                  # native build + run (expo run:ios)
 pnpm run typecheck            # tsc --noEmit (typecheck:watch to watch)
 pnpm run lint                 # oxlint src (lint:ox:fix to fix)
-pnpm run format               # oxfmt . (format:check to check only)
+pnpm run format               # vp fmt . (format:check to check only)
 pnpm test                     # Vitest, run once (test:watch to watch)
 pnpm run brand:assets         # regenerate icons and splash from assets/brand/ (outputs are committed)
 pnpm run ota:android "msg"    # production OTA update (ota:ios for iOS), see below
 ```
 
 Git hooks live at the monorepo root (`.vite-hooks/`, rules in the root `vite.config.ts`):
-pre-commit runs `oxlint --fix` (this app's `.oxlintrc.json`) and `vp fmt` on staged files,
-skipping `.agents/`; pre-push runs every package's `typecheck`.
+pre-commit runs this app's `oxlint --fix` (its `.oxlintrc.json`, skipping `.agents/`) and
+`vp fmt` on staged files; pre-push runs every package's `typecheck`, this app's included.
 
 ## Project Overview
 

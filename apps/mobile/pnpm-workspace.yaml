@@ -1,0 +1,15 @@
+# apps/mobile is its own pnpm install, outside the root workspace: Expo / React Native gets the
+# flat, npm-style node_modules it was built on (`nodeLinker` is workspace-wide in pnpm, so the
+# root workspace could not give it to mobile alone). Install with `pnpm install` here, or
+# `pnpm run install:mobile` at the root. Shared code comes in through `link:` dependencies.
+nodeLinker: hoisted
+# What each dependency may do beyond installing; `pnpm approve` writes this.
+permissions:
+  expo-sqlite:
+    skills: true
+# Agent skills shipped inside dependencies (`pnpm approve`) are linked into both folders:
+# .agents/skills for Codex and other agents, .claude/skills for Claude Code.
+skills:
+  dirs:
+    - .agents/skills
+    - .claude/skills

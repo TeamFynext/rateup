@@ -14,7 +14,8 @@ export default defineConfig({
     "{apps/api,apps/worker-*,packages/db}/**/*.{ts,js,md,json}":
       "vp fmt --no-error-on-unmatched-pattern",
     "apps/mobile/**/*.{ts,tsx,js,jsx,mjs,cjs}": [
-      "oxlint -c apps/mobile/.oxlintrc.json --fix",
+      // Mobile is its own install, with its own oxlint and .oxlintrc.json.
+      "pnpm --dir apps/mobile exec oxlint --fix",
       "vp fmt --no-error-on-unmatched-pattern",
     ],
     "apps/mobile/**/*.{json,jsonc,md,css}": "vp fmt --no-error-on-unmatched-pattern",
