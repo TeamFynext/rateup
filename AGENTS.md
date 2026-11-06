@@ -41,6 +41,10 @@ vp check                          # format + lint (root vite.config.ts)
 - **One lockfile.** `pnpm-lock.yaml` and `pnpm-workspace.yaml` live only at the root. Add a
   dependency from the package folder (`vp add <pkg>`), or `vp add <pkg> --filter <name>`.
   Internal packages use `"workspace:*"`.
+- **Versions live in the catalog.** A dependency used by two or more packages is declared as
+  `"catalog:"` in each `package.json`, with its version once in `pnpm-workspace.yaml`
+  (`catalogMode: prefer`, so `vp add` does this for listed packages). Upgrade it there.
+  apps/mobile is the exception: Expo pins its own React, Tailwind 3 and TypeScript 6.
 - **`nodeLinker: hoisted`** is workspace-wide because the Expo app needs it.
 - **Internal packages ship TypeScript source.** `ui` and `utils` are compiled by the app that
   imports them. `@rateup/api` exports source under the `source` condition (dev, tests, type

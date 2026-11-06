@@ -14,7 +14,7 @@
     "studio": "prisma studio"
   },
   "dependencies": {
-    "dotenv": "^18.0.9",
+    "dotenv": "catalog:",
     "prisma": "^7.10.1",
     "prisma-json-types-generator": "^6.0.0"
   },
