@@ -11,35 +11,35 @@
     {
       "label": "Backend",
       "type": "shell",
-      "command": "vp run rateup-api#dev",
+      "command": "vp run @rateup/api#dev",
       "isBackground": true,
       "presentation": { "group": "backend" }
     },
     {
       "label": "Frontend",
       "type": "shell",
-      "command": "vp -C apps/rateup-ui dev",
+      "command": "vp -C apps/web dev",
       "isBackground": true,
       "presentation": { "group": "frontend" }
     },
     {
       "label": "Admin",
       "type": "shell",
-      "command": "vp -C apps/rateup-admin dev",
+      "command": "vp -C apps/admin dev",
       "isBackground": true,
       "presentation": { "group": "admin" }
     },
     {
       "label": "bullmq",
       "type": "shell",
-      "command": "vp run rateup-api#dev:bullmq",
+      "command": "vp run @rateup/api#dev:bullmq",
       "isBackground": true,
       "presentation": { "group": "system" }
     },
     {
       "label": "kafka Worker",
       "type": "shell",
-      "command": "vp run rateup-api#dev:kafka",
+      "command": "vp run @rateup/api#dev:kafka",
       "isBackground": true,
       "presentation": { "group": "system" }
     },

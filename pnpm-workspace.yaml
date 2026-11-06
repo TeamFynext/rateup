@@ -3,7 +3,7 @@ packages:
   - packages/*
   - tools/*
 
-# rateup-app (Expo / React Native) needs the flat, npm-style node_modules layout, and pnpm
+# apps/mobile (Expo / React Native) needs the flat, npm-style node_modules layout, and pnpm
 # applies the linker to the whole workspace. Every app ran on this layout under npm.
 nodeLinker: hoisted
 

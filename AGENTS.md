@@ -3,21 +3,21 @@
 One pnpm workspace managed with Vite+ (`vp`). Each app keeps its own `AGENTS.md` with the
 details for that app; read it before working there.
 
-| Folder              | Package             | What it is                                               |
-| ------------------- | ------------------- | -------------------------------------------------------- |
-| `apps/rateup-api`   | `rateup-api`        | Fastify + Prisma API, BullMQ and Kafka workers           |
-| `apps/rateup-ui`    | `rateup-ui`         | Customer dashboard (TanStack Start)                      |
-| `apps/rateup-admin` | `rateup-admin`      | Staff console (TanStack Start)                           |
-| `apps/rateup-docs`  | `rateup-docs`       | Public docs site (TanStack Start + Fumadocs)             |
-| `apps/rateup-app`   | `rateup`            | Mobile app (Expo / React Native)                         |
-| `tools/meta-mock`   | `@rateup/meta-mock` | Local mock of Meta's Graph API for development and tests |
-| `packages/`         |                     | Shared libraries (none yet)                              |
+| Folder            | Package             | What it is                                               |
+| ----------------- | ------------------- | -------------------------------------------------------- |
+| `apps/api`        | `rateup-api`        | Fastify + Prisma API, BullMQ and Kafka workers           |
+| `apps/web`        | `rateup-ui`         | Customer dashboard (TanStack Start)                      |
+| `apps/admin`      | `rateup-admin`      | Staff console (TanStack Start)                           |
+| `apps/docs`       | `rateup-docs`       | Public docs site (TanStack Start + Fumadocs)             |
+| `apps/mobile`     | `rateup`            | Mobile app (Expo / React Native)                         |
+| `tools/meta-mock` | `@rateup/meta-mock` | Local mock of Meta's Graph API for development and tests |
+| `packages/`       |                     | Shared libraries (none yet)                              |
 
 ## Commands (run at the root)
 
 ```bash
 vp install                        # install every package + git hooks (never npm)
-vp run rateup-api#dev             # one package's script; `vp -C apps/rateup-ui dev` also works
+vp run @rateup/api#dev             # one package's script; `vp -C apps/web dev` also works
 pnpm run dev                      # API + dashboard together
 vp run -r typecheck               # type-check every package (the pre-push hook)
 vp run -r build                   # build every package

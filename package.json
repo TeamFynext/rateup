@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "prepare": "vp config",
-    "dev": "vp run --parallel --filter rateup-api --filter rateup-ui dev",
+    "dev": "vp run --parallel --filter @rateup/api --filter @rateup/web dev",
     "build": "vp run -r build",
     "typecheck": "vp run -r typecheck",
     "check": "vp check",

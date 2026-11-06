@@ -1,5 +1,5 @@
 {
-  "name": "rateup-api",
+  "name": "@rateup/api",
   "version": "2.0.0",
   "private": true,
   "description": "A scalable API backend for Rateup platform",
