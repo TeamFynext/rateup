@@ -1,0 +1,298 @@
+export type ContactsWithLastMessageResponse = {
+  rows: ContactsWithLastMessage[];
+  nextOffset: number | null;
+};
+
+export type ContactLabel = {
+  id: string;
+  name: string;
+  color?: string;
+};
+
+export type ContactsWithLastMessage = {
+  id: string;
+  name: string;
+  phone: string;
+  unReadMessageCount: number;
+  lastReceivedMessageTimeStamp: any;
+  /**
+   * The ticket's own recency clock — `COALESCE(conv.lastMessageAt,
+   * conv.createdAt, c.lastReceivedMessageTimeStamp)` from the list query, and
+   * what the server orders the page by. The contact-level
+   * `lastReceivedMessageTimeStamp` only moves when the *customer* writes, so
+   * sorting on it alone buried every ticket whose newest message was outbound
+   * (a flow or template send) below chats days older.
+   */
+  conversationLastMessageAt?: string | null;
+  /** The ticket's newest *inbound* message, for the `newest_wa_created` sorts. */
+  conversationLastCustomerMessageAt?: string | null;
+  lastMessage: any;
+  /** The ticket's newest messages (up to ten), each with its `sender`. */
+  messages?: any[];
+  lastMessageTimeStamp: any;
+  waMessageAssignStatus: string;
+  /** The ticket's own status. Preferred over the contact-wide `waMessageAssignStatus`. */
+  conversationStatus?: string | null;
+  assignedUsers: any;
+  isSessionActive: boolean;
+  whatsappUserName?: string;
+  igsId?: string;
+  /** Messenger's page-scoped id — set only for contacts reached on Facebook. */
+  psid?: string;
+  platform?: string;
+  lifecycleId?: string;
+  /** The ticket this row belongs to. Favouriting is keyed on it, not the contact. */
+  conversationId?: string;
+  /** Ticket identity — `Conversation.number`, rendered as `#RT-<n>`. */
+  ticketNumber?: number;
+  ticketSubject?: string | null;
+  /** Per-ticket star flag (`Conversation.isFavorite`). */
+  isFavorite?: boolean;
+  contactLabels?: ContactLabel[];
+  /** When the business blocked this person on Instagram. Replies are refused while set. */
+  igBlockedAt?: string | null;
+  /** Instagram/Messenger: a click-to-Direct ad keeps the thread open until this time. */
+  adThreadUntil?: string | null;
+  /** Spam is contact-grained: every row of a spam contact carries it. */
+  isSpam?: boolean;
+};
+
+export enum WaMessageAssignStatus {
+  NEW = "NEW",
+  ASSIGNED = "ASSIGNED",
+  CLOSED = "CLOSED",
+  UNASSIGNED = "UNASSIGNED",
+  SPAM = "SPAM",
+  RESOLVED = "RESOLVED",
+  UNRESOLVED = "UNRESOLVED",
+}
+
+export type MultiGV = {
+  group: string;
+  value: string;
+};
+
+export interface ICreateContact {
+  name: string;
+  phone?: string;
+  email?: string;
+  teamId?: string;
+  source?: string;
+  tags?: any;
+  external_id?: string;
+}
+
+export interface filteredContactCount {
+  all: number;
+  total?: number;
+  assigned: number;
+  assignedToMe: number;
+  closed: number;
+  new: number;
+  sent: number;
+  unassigned: number;
+}
+
+export type HomeInterface = string | "inbox" | "flow" | "webform" | "";
+
+export enum WaMessageTypes {
+  text = "text",
+  image = "image",
+  interactive = "interactive",
+  button = "button",
+}
+
+export type WaInboxMessage = {
+  exchangeProcess: "send" | "receive";
+  send?: WaSendMessageBody;
+  receive?: WaReceiveMessageBody;
+};
+
+export type WaReceiveMessageBody = {
+  messaging_product: "whatsapp";
+  metadata: {
+    display_phone_number: string;
+    phone_number_id: string;
+  };
+  contacts: [
+    {
+      profile: {
+        name: string;
+      };
+      wa_id: string;
+    },
+  ];
+  messages: [
+    {
+      from: string;
+      id: string;
+      timestamp: string;
+      type: WaMessageTypes;
+      text: {
+        body: string;
+      };
+      interactive?: {
+        type: "list_reply" | "button_reply" | "nfm_reply";
+        list_reply: {
+          id: string;
+          title: string;
+        };
+        button_reply: {
+          id: string;
+          title: string;
+        };
+        nfm_reply: {
+          response_json: string;
+          name: string;
+        };
+      };
+      image: {
+        id: string;
+        mime_type: string;
+        sha256: string;
+        link?: string;
+        caption?: string;
+      };
+      audio: {
+        id: string;
+        mime_type: string;
+        sha256: string;
+        voice?: boolean;
+        caption?: string;
+      };
+      video: {
+        id: string;
+        mime_type: string;
+        sha256: string;
+        caption?: string;
+      };
+      document: {
+        id: string;
+        caption?: string;
+        filename: string;
+      };
+      button?: {
+        text: string;
+        payload: string;
+      };
+      reaction?: {
+        emoji: string;
+        message_id: string;
+      };
+    },
+  ];
+  statuses: [
+    {
+      id: string;
+      status: string;
+      timestamp: string;
+      recipient_id: string;
+      conversation: {
+        id: string;
+      };
+    },
+  ];
+};
+export type WaSendMessageBody = {
+  messaging_product: "whatsapp";
+  recipient_type: "individual";
+  to: string; // PHONE_NUMBER type
+  type:
+    | "text"
+    | "image"
+    | "interactive"
+    | "audio"
+    | "document"
+    | "contacts"
+    | "sticker"
+    | "location"
+    | "template"
+    | "reaction";
+  text?: {
+    preview_url?: boolean;
+    body: string;
+  };
+  interactive?: {
+    type: "button" | "list" | "cta_url" | "flow" | "catalog_message" | "product" | "product_list";
+    action?: WaInteractiveMessageAction;
+    body?: {
+      text: string; // max 1024 chars
+    };
+    footer?: {
+      text: string; // max 60 chars
+    };
+    header?: {
+      type: "text" | "image" | "video" | "document";
+      text?: string; // max 60 chars
+      image?: {
+        link: string;
+      };
+      // add image, video, document if needed in future
+    };
+  };
+  image?: {
+    link: string;
+    caption?: string;
+  };
+  reaction?: {
+    emoji: string;
+    message_id: string;
+  };
+  document?: {
+    link: string;
+    caption?: string;
+    filename?: string;
+  };
+  audio?: {
+    link: string;
+  };
+  video?: {
+    link: string;
+    caption?: string;
+  };
+};
+
+type WaInteractiveMessageAction = {
+  name?: string;
+  button?: string; // max 20 chars
+  sections?: Array<WaSection>;
+  buttons?: Array<WaButton>;
+  parameters?: {
+    display_text?: string;
+    url?: string;
+    flow_message_version?: number;
+    flow_token?: string;
+    flow_id?: string;
+    flow_cta?: string; // text to be displayed on the button. max 20 chars
+    flow_action_payload?: {
+      screen: string; // id of the screen
+      data?: any; // data to be sent to the screen
+    };
+    mode?: WaFlowStatus.DRAFT | WaFlowStatus.PUBLISHED;
+  };
+};
+
+type WaButton = {
+  type: "reply";
+  reply: {
+    title: string; // max 20 chars
+    id: string;
+  };
+};
+
+type WaSection = {
+  title?: string; // max 24 chars
+  rows: Array<{
+    title: string; // max 24 chars
+    description?: string; // max 72 chars
+    id: string;
+  }>;
+};
+
+export enum WaFlowStatus {
+  PUBLISHED = "PUBLISHED",
+  DRAFT = "DRAFT",
+  DEPRECATED = "DEPRECATED",
+  BLOCKED = "BLOCKED",
+  THROTTLED = "THROTTLED",
+}
