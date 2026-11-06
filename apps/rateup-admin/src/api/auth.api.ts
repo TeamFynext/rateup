@@ -1,0 +1,39 @@
+import { api, API_URL } from "./client";
+
+export interface StaffUser {
+  id: string;
+  email: string;
+  name: string | null;
+  isOwner: boolean;
+  avatarUrl?: string | null;
+}
+
+const MOCK_STAFF: StaffUser = {
+  id: "mock-staff",
+  email: "dev@rateup.app",
+  name: "Dev Staff",
+  isOwner: true,
+};
+
+export const isStaffMock = import.meta.env.DEV && import.meta.env.VITE_STAFF_MOCK === "true";
+
+export async function getMe(): Promise<StaffUser> {
+  if (isStaffMock) return MOCK_STAFF;
+  const { data } = await api.get<{ data: StaffUser }>("/auth/me");
+  return data.data;
+}
+
+export async function logout(): Promise<void> {
+  if (isStaffMock) return;
+  await api.post("/auth/logout");
+}
+
+/**
+ * Google sign-in is a full-page redirect through the API (the OIDC state lives in a cookie set
+ * there), so this navigates rather than calling axios. The API sends the browser back to this
+ * console's `returnTo` when it is done.
+ */
+export function startGoogleLogin({ returnTo = "/" }: { returnTo?: string } = {}) {
+  const params = new URLSearchParams({ returnTo });
+  window.location.assign(`${API_URL}/api/staff/auth/google/start?${params}`);
+}
