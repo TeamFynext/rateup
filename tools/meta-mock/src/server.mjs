@@ -1,0 +1,513 @@
+import { createServer } from "node:http";
+
+import { fallbackResponse, fixtures, matchFixture, stripVersion } from "./fixtures.mjs";
+import {
+  HTTP_STATUS,
+  KNOWN_ERROR_CODES,
+  parseErrorCode,
+  parseErrorCodes,
+  parseRate,
+  RANDOM_SEND_ERROR_CODES,
+} from "./graph-errors.mjs";
+import { createGraphRoutes } from "./graph-routes.mjs";
+import { runStatusProgression, statusPayload } from "./status-progression.mjs";
+import { postWebhook } from "./deliver.mjs";
+import { listWebhooks, replayWebhook } from "./webhooks.mjs";
+
+/**
+ * A local stand-in for Meta's Graph API.
+ *
+ * Requests are answered in three layers, and `/__stub/calls` reports which one
+ * answered:
+ *
+ *   1. **stateful handlers** — flows and templates behave, because a canned
+ *      example cannot model "created, then listed, then published";
+ *   2. **fixtures** — Meta's own saved example response for that route,
+ *      generated from its published Cloud API collection;
+ *   3. **fallback** — a generic Graph-shaped answer, marked `matched: false`
+ *      so unmapped calls stay visible instead of being papered over.
+ *
+ * Every request is recorded, which is what turns the mock into an assertion
+ * surface: a test can check the payload that *would* have gone to Meta without
+ * sending it.
+ */
+export function createMetaMock(options = {}) {
+  const port = Number(options.port ?? process.env.PORT ?? 8081);
+  const host = options.host ?? process.env.META_MOCK_HOST ?? "127.0.0.1";
+  const verbose = options.verbose ?? process.env.META_MOCK_VERBOSE === "1";
+
+  /**
+   * Which API wins on the endpoints WhatsApp and Instagram share, when the
+   * request body gives nothing away (a GET, mostly). WhatsApp by default —
+   * it is the dominant integration and the one with stateful handlers.
+   */
+  const defaultApi = options.defaultApi ?? process.env.META_MOCK_DEFAULT_API ?? "whatsapp";
+
+  /** Where replayed webhooks are delivered. */
+  const webhookTarget =
+    options.webhookUrl ??
+    process.env.META_MOCK_WEBHOOK_URL ??
+    "http://localhost:3001/api/wa/webhook";
+
+  /**
+   * The app secret webhooks are signed with — the app's `waclient_secret`.
+   * rateup-api refuses unsigned deliveries unless META_WEBHOOK_SIGNATURES is
+   * `log` or `off`, so without this every callback is answered 401.
+   */
+  const appSecret = (options.appSecret ?? process.env.META_MOCK_APP_SECRET)?.trim() || undefined;
+
+  /**
+   * Deliver sent → delivered → read after each send.
+   *
+   * Off by default: firing webhooks at an external URL as a side effect of a
+   * request is a surprise, and suites that only assert on the outbound payload
+   * do not want it. The `whatsapp-mock-api` server this replaces did it
+   * unconditionally, which is why message-dispatcher's dev setup expects it.
+   */
+  const statusProgression =
+    options.statusProgression ?? process.env.META_MOCK_STATUS_PROGRESSION === "1";
+
+  /** Identity stamped onto status callbacks, so the app can resolve the tenant. */
+  const identity = {
+    wabaId: options.wabaId ?? process.env.META_MOCK_WABA_ID ?? "",
+    phoneNumberId: options.phoneNumberId ?? process.env.META_MOCK_PHONE_NUMBER_ID ?? "",
+    displayPhoneNumber:
+      options.displayPhoneNumber ?? process.env.META_MOCK_DISPLAY_PHONE_NUMBER ?? "",
+  };
+
+  /** Chance a send fails after `sent`. Zero by default — a test cannot assert on dice. */
+  const failureRate = Number(options.failureRate ?? process.env.META_MOCK_FAILURE_RATE ?? 0);
+  const statusDelays = options.statusDelays;
+  /**
+   * Random spread (ms) on every status callback, so receipts interleave across
+   * contacts and can arrive out of order within a message — what real Graph
+   * traffic looks like. Zero keeps the lockstep order, which tests prefer.
+   */
+  const statusJitter = Number(options.statusJitter ?? process.env.META_MOCK_STATUS_JITTER ?? 0);
+
+  /** Statuses in flight, so `close()` does not leave timers behind. */
+  const pending = new Set();
+
+  const startedAt = Date.now();
+
+  /** Every request this mock has answered, oldest first. */
+  const calls = [];
+  /**
+   * `sendError` is the Graph error code every send is refused with, or null to
+   * send normally. Starts from `META_MOCK_SEND_ERROR` and can be flipped at
+   * runtime through `/__stub/send-error` — which is how "the payment method is
+   * fixed now" is simulated without restarting the mock.
+   */
+  const initialSendError = parseErrorCode(options.sendError ?? process.env.META_MOCK_SEND_ERROR);
+  /**
+   * `sendErrorRate` is the fraction of sends refused with a random Graph error,
+   * drawn from `sendErrorCodes` — or, when that is unset, every code a send can
+   * return except 131042, which only `sendError` produces.
+   */
+  const initialSendErrorRate = parseRate(
+    options.sendErrorRate ?? process.env.META_MOCK_SEND_ERROR_RATE,
+  );
+  const initialSendErrorCodes = parseErrorCodes(
+    options.sendErrorCodes ?? process.env.META_MOCK_SEND_ERROR_CODES,
+  );
+  const state = {
+    flows: new Map(),
+    templates: new Map(),
+    sendError: initialSendError,
+    sendErrorRate: initialSendErrorRate,
+    sendErrorCodes: initialSendErrorCodes,
+    /** Injectable so a test can pin which error a random failure picks. */
+    random: options.random ?? Math.random,
+  };
+  const sendErrorState = () => ({
+    sendError: state.sendError,
+    sendErrorRate: state.sendErrorRate,
+    sendErrorCodes: state.sendErrorCodes ?? RANDOM_SEND_ERROR_CODES,
+  });
+
+  let nextId = 1;
+  /** Graph ids are numeric strings; keep that shape so nothing downstream trips. */
+  const mintId = () => String(100000000000000 + nextId++);
+
+  let listening = null;
+
+  /**
+   * A wildcard bind is not a hostname anyone can dial, but it is still the base
+   * every request URL is parsed against — and an IPv6 literal has to be
+   * bracketed or `new URL` rejects it, taking down every request with it.
+   * Binding `::` is the normal case wherever the network is IPv6-only, which
+   * includes Railway's private network.
+   */
+  const authority = (h) => (h.includes(":") ? `[${h}]` : h);
+  const publicUrl = () => `http://${authority(host)}:${listening?.port ?? port}`;
+
+  const rules = createGraphRoutes({
+    state,
+    mintId,
+    publicUrl,
+    onMessageSent: ({ messageId, recipientId, phoneNumberId }) => {
+      if (!statusProgression) return;
+
+      const run = runStatusProgression({
+        messageId,
+        recipientId,
+        target: webhookTarget,
+        appSecret,
+        identity: { ...identity, phoneNumberId: identity.phoneNumberId || phoneNumberId },
+        delays: statusDelays,
+        jitter: statusJitter,
+        failureRate,
+        log: (line) => verbose && console.log(`[meta-mock] ${line}`),
+      }).finally(() => pending.delete(run));
+
+      pending.add(run);
+    },
+  });
+
+  /* ---------------------------------------------------------------- *
+   * Plumbing
+   * ---------------------------------------------------------------- */
+
+  const readBody = (req) =>
+    new Promise((resolve) => {
+      const chunks = [];
+      req.on("data", (chunk) => chunks.push(chunk));
+      req.on("end", () => resolve(Buffer.concat(chunks)));
+      req.on("error", () => resolve(Buffer.alloc(0)));
+    });
+
+  const parseBody = (raw, contentType = "") => {
+    if (raw.length === 0) return undefined;
+    if (contentType.includes("multipart")) return "<multipart>";
+    const text = raw.toString("utf8");
+    try {
+      return JSON.parse(text);
+    } catch {
+      return text.slice(0, 2000);
+    }
+  };
+
+  const send = (res, status, payload) => {
+    const body = JSON.stringify(payload);
+    res.writeHead(status, {
+      "content-type": "application/json",
+      "content-length": Buffer.byteLength(body),
+    });
+    res.end(body);
+  };
+
+  /* ---------------------------------------------------------------- *
+   * Control plane
+   * ---------------------------------------------------------------- */
+
+  async function handleControl(req, res, url, rawBody) {
+    if (!url.pathname.startsWith("/__stub/")) return false;
+
+    if (url.pathname === "/__stub/health") {
+      send(res, 200, {
+        ok: true,
+        calls: calls.length,
+        flows: state.flows.size,
+        templates: state.templates.size,
+        routes: fixtures.routes.length,
+        webhooks: fixtures.webhooks.length,
+        statusProgression,
+        ...sendErrorState(),
+        collections: fixtures.collections,
+        uptimeMs: Date.now() - startedAt,
+      });
+      return true;
+    }
+
+    if (url.pathname === "/__stub/calls") {
+      const since = Number(url.searchParams.get("since") ?? 0);
+      const pathFilter = url.searchParams.get("path");
+      const methodFilter = url.searchParams.get("method");
+      const selected = calls
+        .slice(Number.isFinite(since) ? since : 0)
+        .filter((call) => (pathFilter ? call.path.includes(pathFilter) : true))
+        .filter((call) => (methodFilter ? call.method === methodFilter.toUpperCase() : true));
+      send(res, 200, { total: calls.length, calls: selected });
+      return true;
+    }
+
+    if (url.pathname === "/__stub/routes") {
+      send(res, 200, {
+        collections: fixtures.collections,
+        routes: fixtures.routes.map((route) => ({
+          api: route.api,
+          method: route.method,
+          path: route.path,
+          select: route.select,
+          name: route.name,
+          folder: route.folder,
+          variants: route.variants?.length ?? 0,
+        })),
+      });
+      return true;
+    }
+
+    if (url.pathname === "/__stub/webhooks") {
+      send(res, 200, { target: webhookTarget, webhooks: listWebhooks() });
+      return true;
+    }
+
+    if (url.pathname === "/__stub/webhook" && req.method === "POST") {
+      const request = parseBody(rawBody, req.headers["content-type"] ?? "") ?? {};
+      if (!request.name) {
+        send(res, 400, {
+          error: 'POST /__stub/webhook needs { "name": "<payload name>" }',
+          available: listWebhooks().map((entry) => entry.name),
+        });
+        return true;
+      }
+      const result = await replayWebhook({ target: webhookTarget, appSecret, ...request });
+      send(res, result.ok ? 200 : 502, result);
+      return true;
+    }
+
+    /* Fire one status by hand, for the cases progression does not cover. */
+    if (url.pathname === "/__stub/status" && req.method === "POST") {
+      const request = parseBody(rawBody, req.headers["content-type"] ?? "") ?? {};
+      if (!request.messageId || !request.status) {
+        send(res, 400, {
+          error: 'POST /__stub/status needs { "messageId": "...", "status": "delivered" }',
+          statuses: ["sent", "delivered", "read", "failed"],
+        });
+        return true;
+      }
+
+      const payload = statusPayload({ ...identity, ...request });
+      try {
+        const response = await postWebhook(webhookTarget, payload, appSecret);
+        send(res, response.ok ? 200 : 502, {
+          ok: response.ok,
+          status: response.status,
+          target: webhookTarget,
+          payload,
+        });
+      } catch (error) {
+        send(res, 502, { ok: false, error: error.message, payload });
+      }
+      return true;
+    }
+
+    /* Make every send fail with a Graph error, or stop doing so. */
+    if (url.pathname === "/__stub/send-error") {
+      if (req.method === "POST" || req.method === "PUT") {
+        const request = parseBody(rawBody, req.headers["content-type"] ?? "") ?? {};
+        if ("code" in request) {
+          const code = parseErrorCode(request.code);
+          if (request.code != null && code === null && String(request.code).trim() !== "") {
+            send(res, 400, {
+              error:
+                'POST /__stub/send-error takes { "code": 131042 } ({ "code": null } clears), ' +
+                '{ "rate": 0.1 } and { "codes": [131026, 130429] }',
+              known: KNOWN_ERROR_CODES,
+            });
+            return true;
+          }
+          state.sendError = code;
+        }
+        if ("rate" in request) state.sendErrorRate = parseRate(request.rate);
+        if ("codes" in request) state.sendErrorCodes = parseErrorCodes(request.codes);
+      } else if (req.method === "DELETE") {
+        // Everything off: the fixed error and the random ones.
+        state.sendError = null;
+        state.sendErrorRate = 0;
+      }
+      console.log(`[meta-mock] sends: ${describeSendErrors()}`);
+      send(res, 200, { ...sendErrorState(), known: KNOWN_ERROR_CODES });
+      return true;
+    }
+
+    if (url.pathname === "/__stub/reset" && req.method === "POST") {
+      reset();
+      send(res, 200, { ok: true });
+      return true;
+    }
+
+    /* Flow JSON and preview URLs the mock hands out point back here. */
+    if (url.pathname.startsWith("/__stub/flow-json/")) {
+      const id = url.pathname.split("/").pop();
+      send(res, 200, state.flows.get(id)?.json ?? { version: "7.2", screens: [] });
+      return true;
+    }
+    if (url.pathname.startsWith("/__stub/preview/")) {
+      res.writeHead(200, { "content-type": "text/html" });
+      res.end("<!doctype html><title>mock flow preview</title><p>mock flow preview</p>");
+      return true;
+    }
+
+    send(res, 404, { error: { message: `no control route ${url.pathname}` } });
+    return true;
+  }
+
+  /* ---------------------------------------------------------------- *
+   * Request handling
+   * ---------------------------------------------------------------- */
+
+  const server = createServer(async (req, res) => {
+    const url = new URL(req.url, publicUrl());
+
+    const raw = await readBody(req);
+    if (await handleControl(req, res, url, raw)) return;
+
+    const body = parseBody(raw, req.headers["content-type"] ?? "");
+    const requestPath = stripVersion(url.pathname);
+    const query = Object.fromEntries(url.searchParams);
+    const method = req.method.toUpperCase();
+
+    const rule = rules.find((candidate) => {
+      if (candidate.method !== method) return false;
+      const match = candidate.match.exec(requestPath);
+      if (!match) return false;
+      if (!candidate.when) return true;
+      return candidate.when({ query: { ...query, __params: match.groups ?? {} }, body });
+    });
+
+    const fixture = rule ? null : matchFixture(method, requestPath, query, { body, defaultApi });
+
+    let status = 200;
+    let payload;
+    let source = "fallback";
+
+    try {
+      if (rule) {
+        const params = rule.match.exec(requestPath).groups ?? {};
+        payload = rule.handle({ params, query, body, raw, method, path: requestPath });
+        if (payload?.[HTTP_STATUS]) status = payload[HTTP_STATUS];
+        source = "handler";
+      } else if (fixture) {
+        payload = fixture.response;
+        status = fixture.status ?? 200;
+        source = "fixture";
+      } else {
+        payload = fallbackResponse(method, mintId);
+      }
+    } catch (error) {
+      status = 500;
+      payload = { error: { message: `mock handler threw: ${error.message}`, type: "MockError" } };
+    }
+
+    calls.push({
+      at: new Date().toISOString(),
+      method,
+      path: requestPath,
+      rawPath: url.pathname,
+      query,
+      body,
+      matched: source !== "fallback",
+      source,
+      /** Which collection request answered this, when a fixture did. */
+      fixture: fixture ? fixture.name : null,
+      /** Which API answered — "whatsapp" or "instagram". */
+      api: fixture ? fixture.api : rule ? "whatsapp" : null,
+      status,
+    });
+
+    if (verbose) {
+      const tag = source === "fixture" ? `${fixture.api} fixture: ${fixture.name}` : source;
+      console.log(`[meta-mock] ${method} ${requestPath} -> ${status} (${tag})`);
+    }
+
+    send(res, status, payload);
+  });
+
+  function reset() {
+    calls.length = 0;
+    state.flows.clear();
+    state.templates.clear();
+    // Back to how it was started, not to "off": a reset between tests should
+    // not undo the mode the mock was launched in.
+    state.sendError = initialSendError;
+    state.sendErrorRate = initialSendErrorRate;
+    state.sendErrorCodes = initialSendErrorCodes;
+  }
+
+  function describeSendErrors() {
+    if (state.sendError != null) return `every send fails with Graph error ${state.sendError}`;
+    if (state.sendErrorRate > 0) {
+      const pool = state.sendErrorCodes ? state.sendErrorCodes.join(", ") : "any send error except 131042";
+      return `${state.sendErrorRate * 100}% of sends fail with a random Graph error (${pool})`;
+    }
+    return "normal";
+  }
+
+  return {
+    /** Start listening. Resolves once the port is bound. */
+    async listen() {
+      await new Promise((resolve, reject) => {
+        server.once("error", reject);
+        server.listen(port, host, resolve);
+      });
+      listening = server.address();
+      return this;
+    },
+
+    /** Stop listening and release the port. */
+    async close() {
+      // Let in-flight status callbacks finish, so they do not fire into a
+      // closed test or keep the process alive.
+      await Promise.allSettled([...pending]);
+      await new Promise((resolve) => server.close(resolve));
+      listening = null;
+    },
+
+    get url() {
+      return publicUrl();
+    },
+    get port() {
+      return listening?.port ?? port;
+    },
+
+    /** Everything the mock has answered, for assertions. */
+    calls: (filter = {}) =>
+      calls
+        .slice(filter.since ?? 0)
+        .filter((call) => (filter.path ? call.path.includes(filter.path) : true))
+        .filter((call) =>
+          filter.method ? call.method === String(filter.method).toUpperCase() : true,
+        ),
+
+    /** How this instance is configured — the CLI prints it so the mode is never a guess. */
+    config: {
+      statusProgression,
+      webhookUrl: webhookTarget,
+      signsWebhooks: Boolean(appSecret),
+      failureRate,
+      statusJitter,
+      get sendError() {
+        return state.sendError;
+      },
+      get sendErrorRate() {
+        return state.sendErrorRate;
+      },
+      get sendErrorCodes() {
+        return state.sendErrorCodes ?? RANDOM_SEND_ERROR_CODES;
+      },
+      get sendErrors() {
+        return describeSendErrors();
+      },
+      wabaId: identity.wabaId,
+      phoneNumberId: identity.phoneNumberId,
+      displayPhoneNumber: identity.displayPhoneNumber,
+      defaultApi,
+    },
+
+    reset,
+    /** Fail every send with this Graph error code; null sends normally again. */
+    setSendError: (code) => {
+      state.sendError = parseErrorCode(code);
+    },
+    /** Refuse this fraction of sends with a random error; `codes` narrows the pool. */
+    setSendErrorRate: (rate, codes) => {
+      state.sendErrorRate = parseRate(rate);
+      if (codes !== undefined) state.sendErrorCodes = parseErrorCodes(codes);
+    },
+    replayWebhook: (request) => replayWebhook({ target: webhookTarget, appSecret, ...request }),
+    webhooks: listWebhooks,
+    fixtures,
+    server,
+  };
+}

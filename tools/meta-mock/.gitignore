@@ -1,0 +1,5 @@
+node_modules/
+*.log
+
+# local account identity for the CLI
+.env
