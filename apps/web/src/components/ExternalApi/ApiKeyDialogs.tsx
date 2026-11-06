@@ -8,6 +8,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
 import { IconAlertTriangle, IconX } from "@tabler/icons-react";
@@ -27,15 +36,6 @@ import {
   useUpdateApiKey,
 } from "@/backend/apiKeys/apiKeys.query.ts";
 import { DatePicker } from "@/components/ui/date-picker.tsx";
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-  FieldLegend,
-  FieldSet,
-} from "@/components/ui/field.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 
 import { ApiCopyButton } from "./ApiCopyButton.tsx";

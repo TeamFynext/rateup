@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@rateup/ui/components/dropdown-menu";
+import { useTheme } from "@rateup/ui/components/theme-provider";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import { getInitials } from "@rateup/ui/lib/initials";
 import { IconDeviceDesktop, IconLogout, IconMoon, IconSearch, IconSun } from "@tabler/icons-react";
@@ -17,7 +18,6 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
 import { useLogout, useStaff } from "@/api/auth.query";
-import { useTheme } from "@/components/theme/theme-provider";
 import { cn, isOwnImage } from "@/lib/utils";
 
 import { EnvPill, RateUpStar } from "./brand";

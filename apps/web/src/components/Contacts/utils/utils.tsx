@@ -1,5 +1,6 @@
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Checkbox } from "@rateup/ui/components/checkbox";
 import {
   Select,
   SelectContent,
@@ -26,7 +27,6 @@ import dayjs from "dayjs";
 import type { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
 import { useContactTableStore } from "@/components/dashboard/contacts/store/contact-table-store.ts";
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { ContactAvatar } from "@/components/ui/contact-avatar.tsx";
 
 /**

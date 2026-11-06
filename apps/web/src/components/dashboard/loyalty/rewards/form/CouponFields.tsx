@@ -1,3 +1,4 @@
+import { Field, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import {
   Select,
   SelectContent,
@@ -10,7 +11,6 @@ import { useTranslation } from "react-i18next";
 
 import type { LoyaltyTier } from "@/backend/loyalty/tier.api";
 import { DatePicker } from "@/components/ui/date-picker.tsx";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { fromDateKey, toDateKey } from "@/utils/dateTime.ts";
 
 import type { CouponFormValues, CouponValues } from "../schemas.ts";

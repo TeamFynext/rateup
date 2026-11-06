@@ -1,10 +1,10 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
 import { IconLanguage } from "@tabler/icons-react";
 import { isEqual } from "lodash";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useAllThemes } from "@/backend/surveyTheme/surveyTheme.query";
-import { Card } from "@/components/ui/card.tsx";
 import { cn } from "@/lib/utils";
 
 import StylesComponent from "./SurveyTheme/components/stylescomponent/index.tsx";

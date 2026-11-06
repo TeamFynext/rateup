@@ -17,6 +17,7 @@ import {
   EmptyTitle,
 } from "@rateup/ui/components/empty";
 import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Switch } from "@rateup/ui/components/switch";
 import { IconDots, IconPencil, IconPlus, IconTrash, type TablerIcon } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
@@ -28,7 +29,6 @@ import {
   useUpdateRuleMutation,
 } from "@/backend/whatsapp/rule/rule.query";
 import TimeSinceText from "@/components/DateAndTime/TimeSinceText.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import type { Rule } from "@/types/rule.ts";
 

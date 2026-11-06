@@ -1,12 +1,28 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@rateup/ui/components/button";
 import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@rateup/ui/components/card";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldTitle,
+} from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Tooltip,
@@ -25,22 +41,6 @@ import z from "zod";
 
 import { chatbotKeys, useUpdateChatbotMutation } from "@/backend/chatbots/chatbots.query.ts";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
-import {
-  Field,
-  FieldContent,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-  FieldTitle,
-} from "@/components/ui/field.tsx";
 import type { RequestPayloadFields } from "@/types/api.ts";
 import type { WaAutomatedReply } from "@/types/global";
 import { AutomationPlatform, automationPlatformOf } from "@/types/platform.ts";

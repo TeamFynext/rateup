@@ -1,3 +1,4 @@
+import { Card } from "@rateup/ui/components/card";
 import {
   Select,
   SelectContent,
@@ -11,7 +12,6 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useTeamsByUser } from "@/backend/team/team.query";
-import { Card } from "@/components/ui/card.tsx";
 import { cn } from "@/lib/utils.ts";
 
 interface TeamSelectorProps {

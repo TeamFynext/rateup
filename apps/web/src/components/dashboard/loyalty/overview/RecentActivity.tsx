@@ -1,11 +1,11 @@
 import { Badge } from "@rateup/ui/components/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@rateup/ui/components/card";
 import { IconArrowRight } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
 
 import type { LoyaltyDashboardStats } from "@/backend/loyalty/dashboard/dashboard.query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { ContactAvatar } from "@/components/ui/contact-avatar.tsx";
 
 import { LOYALTY_PATHS } from "../paths.ts";

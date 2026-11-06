@@ -2,6 +2,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent } from "@rateup/ui/components/card";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   IconAlertTriangle,
@@ -20,8 +22,6 @@ import type {
   SavedOnboardingData,
   SkippedCommand,
 } from "@/backend/loyalty/onboarding.api";
-import { Card, CardContent } from "@/components/ui/card.tsx";
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 
 import {
   loyaltyEventDefinition,

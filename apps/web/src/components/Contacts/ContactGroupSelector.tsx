@@ -1,3 +1,4 @@
+import { Card } from "@rateup/ui/components/card";
 import {
   Select,
   SelectContent,
@@ -9,7 +10,6 @@ import { Skeleton } from "@rateup/ui/components/skeleton";
 
 import { useContactGroup } from "@/backend/campaign/contactGroup/contactGroup.query";
 
-import { Card } from "../ui/card.tsx";
 import { MultiSelect } from "../ui/multi-select.tsx";
 
 /**

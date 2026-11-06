@@ -1,4 +1,5 @@
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldDescription, FieldLabel } from "@rateup/ui/components/field";
 import {
   Select,
   SelectContent,
@@ -16,7 +17,6 @@ import {
   useStartOAuthConnect,
 } from "@/backend/appsIntegration/integration.query";
 import { IntegrationFormCard } from "@/components/dashboard/settings/integrations/IntegrationFormCard.tsx";
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { IntegratedApps } from "@/types/enums";
 
 /** The `products` the connect asks Zoho for, per choice — the scopes follow from it. */

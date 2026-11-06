@@ -1,5 +1,6 @@
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
 import {
   IconArrowRight,
   IconBook,
@@ -22,7 +23,6 @@ import { useState } from "react";
 
 import { PartnerApplyModal } from "@/components/partner/partnerData";
 import Layout from "@/components/RateupHomePage/Layout";
-import { Card } from "@/components/ui/card";
 import { buildPageHead } from "@/lib/metadata.ts";
 
 export const Route = createFileRoute("/(marketing)/partner-page/")({

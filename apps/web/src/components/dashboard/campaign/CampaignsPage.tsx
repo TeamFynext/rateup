@@ -3,6 +3,7 @@
 
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldLabel, FieldTitle } from "@rateup/ui/components/field";
 import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
 import {
   Select,
@@ -40,7 +41,6 @@ import {
 import { sortData } from "@/components/dashboard/SortDropDown.tsx";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import useDebounce from "@/components/menu/hook/useDebounce.ts";
-import { Field, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
 import { CampaignStatus, CampaignType } from "@/types/enums.ts";
 import type { Campaign } from "@/types/global";
 import { getAccessDenialReason, isPlanDenial } from "@/utils/apiError.ts";

@@ -1,19 +1,19 @@
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent } from "@rateup/ui/components/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@rateup/ui/components/dropdown-menu";
+import { Switch } from "@rateup/ui/components/switch";
 import { IconDots, IconPencil, IconTrash } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import type { LoyaltyReward } from "@/backend/loyalty/reward.api";
 import type { LoyaltyTier } from "@/backend/loyalty/tier.api";
-import { Card, CardContent } from "@/components/ui/card.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import { cn } from "@/lib/utils.ts";
 
 import { formatPoints } from "../giveback/format.ts";

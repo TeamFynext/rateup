@@ -1375,6 +1375,9 @@ importers:
       '@tabler/icons-react':
         specifier: ^3.50.0
         version: 3.50.0(react@19.3.1)
+      '@tailwindcss/typography':
+        specifier: ^0.5.20
+        version: 0.5.20(tailwindcss@4.3.4)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -1384,10 +1387,25 @@ importers:
       cn:
         specifier: ^0.5.2
         version: 0.5.2
+      recharts:
+        specifier: ^3.10.1
+        version: 3.10.1(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react-is@19.3.1)(react@19.3.1)(redux@5.0.1)
+      shadcn:
+        specifier: ^4.23.0
+        version: 4.23.0(babel-plugin-macros@3.1.0)(supports-color@8.1.1)
+      sonner:
+        specifier: ^2.0.8
+        version: 2.0.8(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      tw-animate-css:
+        specifier: ^1.4.0
+        version: 1.4.0
     devDependencies:
       '@rateup/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
+      '@tanstack/react-router':
+        specifier: ^1.170.46
+        version: 1.170.46(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@types/react':
         specifier: 19.3.0
         version: 19.3.0

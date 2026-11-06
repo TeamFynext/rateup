@@ -1,4 +1,5 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
 import { Spinner } from "@rateup/ui/components/spinner";
 import { IconArrowAutofitLeft } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -10,7 +11,6 @@ import { signOut } from "supertokens-auth-react/recipe/session";
 
 import { teamKeys } from "@/backend/org/org.keys";
 import { completeInvite, type CompleteInviteResponse } from "@/backend/team/team.api";
-import { Card } from "@/components/ui/card";
 import { asApiError, getApiErrorMessage } from "@/utils/apiError";
 import { imagesPath, rateupLogo } from "@/utils/constants";
 

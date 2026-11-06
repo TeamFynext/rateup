@@ -1,4 +1,13 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
+import {
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@rateup/ui/components/chart";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@rateup/ui/components/empty";
 import { Progress } from "@rateup/ui/components/progress";
 import { Skeleton } from "@rateup/ui/components/skeleton";
@@ -20,15 +29,6 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { formatMoney, type ShopOverview } from "@/backend/commerce/shop.api";
 import { useShopOverview, useShopStore } from "@/backend/commerce/shop.query";
 import { BarList } from "@/components/dashboard/analytics/kit/BarList.tsx";
-import { Card } from "@/components/ui/card.tsx";
-import {
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from "@/components/ui/chart.tsx";
 import { useCan } from "@/hooks/usePermission.ts";
 import { cn } from "@/lib/utils";
 import { getApiErrorMessage } from "@/utils/apiError.ts";

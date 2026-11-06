@@ -1,3 +1,4 @@
+import { Card } from "@rateup/ui/components/card";
 import { Spinner } from "@rateup/ui/components/spinner";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
@@ -7,7 +8,6 @@ import { useTranslation } from "react-i18next";
 import Session from "supertokens-auth-react/recipe/session";
 
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import { Card } from "@/components/ui/card";
 
 export const Route = createFileRoute("/auth/shopify/logout/")({
   component: Page,

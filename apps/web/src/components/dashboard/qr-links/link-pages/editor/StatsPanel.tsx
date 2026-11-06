@@ -1,4 +1,5 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent } from "@rateup/ui/components/card";
 import {
   Empty,
   EmptyDescription,
@@ -19,7 +20,6 @@ import { useTranslation } from "react-i18next";
 
 import type { LinktreeData } from "@/backend/linktree/linktree.api.ts";
 import { useGetLinktreeWithShortId } from "@/backend/linktree/linktree.query";
-import { Card, CardContent } from "@/components/ui/card.tsx";
 
 export function StatsPanel({ page }: Readonly<{ page: LinktreeData }>) {
   const { t } = useTranslation();

@@ -1,5 +1,6 @@
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
 import {
   Empty,
   EmptyContent,
@@ -32,7 +33,6 @@ import {
 } from "@/components/Contacts/merge/identity.tsx";
 import { MergeContactsDialog } from "@/components/Contacts/merge/MergeContactsDialog.tsx";
 import { useOpenKeptContact } from "@/components/Contacts/merge/useOpenKeptContact.ts";
-import { Card } from "@/components/ui/card.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import { useCan } from "@/hooks/usePermission.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";

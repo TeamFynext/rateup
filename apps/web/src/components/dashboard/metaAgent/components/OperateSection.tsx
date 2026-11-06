@@ -2,6 +2,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Alert, AlertDescription } from "@rateup/ui/components/alert";
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@rateup/ui/components/card";
+import { Checkbox } from "@rateup/ui/components/checkbox";
+import { FieldGroup } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Progress } from "@rateup/ui/components/progress";
 import { Spinner } from "@rateup/ui/components/spinner";
@@ -28,9 +37,6 @@ import {
   useSubmitEvalRun,
   useTestAgent,
 } from "@/backend/metaAgent/metaAgent.query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { FieldGroup } from "@/components/ui/field";
 import { PhoneInput } from "@/components/ui/phone-input";
 
 import {

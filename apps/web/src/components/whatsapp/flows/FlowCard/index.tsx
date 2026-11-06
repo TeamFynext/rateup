@@ -12,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@rateup/ui/components/dropdown-menu";
+import { Field, FieldError } from "@rateup/ui/components/field";
 import {
   Select,
   SelectContent,
@@ -34,7 +35,6 @@ import {
   useDeprecateFlowMutation,
 } from "@/backend/whatsapp/flow/flow.query";
 import { ActionCard } from "@/components/common/action-card.tsx";
-import { Field, FieldError } from "@/components/ui/field.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { LOYALTY_FEEDBACK_FLOW_CATEGORY, WaFlowStatus } from "@/types/enums.ts";
 import { SAVE_HOTKEY } from "@/utils/constants.ts";

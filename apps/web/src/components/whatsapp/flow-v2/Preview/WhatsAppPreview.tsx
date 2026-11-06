@@ -1,4 +1,6 @@
 import { Button } from "@rateup/ui/components/button";
+import { Checkbox } from "@rateup/ui/components/checkbox";
+import { Field, FieldLabel, FieldTitle } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -13,8 +15,6 @@ import { useTranslation } from "react-i18next";
 
 import MarkdownToReact from "@/components/RichTextEditor/MarkdownToReact.tsx";
 import { Calendar } from "@/components/ui/calendar.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { Field, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import type { FormElement, Screen } from "@/components/whatsapp/flow-v2/utils/store.ts";
 import {

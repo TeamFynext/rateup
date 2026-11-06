@@ -1,8 +1,3 @@
-import { Separator } from "@rateup/ui/components/separator";
-import { IconCalendar } from "@tabler/icons-react";
-import type { ReactNode } from "react";
-
-import CreatedSinceText from "@/components/DateAndTime/CreatedSinceText/index.tsx";
 import {
   Card,
   CardContent,
@@ -10,8 +5,13 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
+} from "@rateup/ui/components/card";
+import { Separator } from "@rateup/ui/components/separator";
+import { Switch } from "@rateup/ui/components/switch";
+import { IconCalendar } from "@tabler/icons-react";
+import type { ReactNode } from "react";
+
+import CreatedSinceText from "@/components/DateAndTime/CreatedSinceText/index.tsx";
 import { cn } from "@/lib/utils";
 
 interface ActionCardProps {

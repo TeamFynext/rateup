@@ -1,8 +1,7 @@
+import { Card, CardContent } from "@rateup/ui/components/card";
 import { IconCrown, IconUser } from "@tabler/icons-react";
 import { useWatch, type Control } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-
-import { Card, CardContent } from "@/components/ui/card.tsx";
 
 import { toFiniteNumber } from "../../giveback/calculateGiveback.ts";
 import { formatMoney } from "../../giveback/format.ts";

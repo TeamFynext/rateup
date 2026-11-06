@@ -8,13 +8,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import * as z from "zod";
-
-import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 
 import useFlowStoreV3 from "../utils/store.ts";
 

@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { FieldGroup } from "@rateup/ui/components/field";
 import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconCircleX, IconPlus } from "@tabler/icons-react";
 import { useForm } from "react-hook-form";
@@ -12,7 +13,6 @@ import {
   useRemoveAllowlistEntry,
   useSyncAllowlist,
 } from "@/backend/metaAgent/metaAgent.query";
-import { FieldGroup } from "@/components/ui/field";
 import { PhoneInput } from "@/components/ui/phone-input";
 
 import { allowlistFormSchema, type AllowlistFormValues } from "../metaAgent.schemas";

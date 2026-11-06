@@ -1,5 +1,6 @@
 import { Alert, AlertDescription } from "@rateup/ui/components/alert";
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@rateup/ui/components/empty";
 import { Progress } from "@rateup/ui/components/progress";
 import { Skeleton } from "@rateup/ui/components/skeleton";
@@ -30,7 +31,6 @@ import {
   type ShopStore,
 } from "@/backend/commerce/shop.api";
 import { useInvalidateShop, useShopSetup, useShopStore } from "@/backend/commerce/shop.query";
-import { Card } from "@/components/ui/card.tsx";
 import { CurrencySelect } from "@/components/ui/currency-select.tsx";
 import { useCan, usePermissions } from "@/hooks/usePermission.ts";
 import { cn } from "@/lib/utils";

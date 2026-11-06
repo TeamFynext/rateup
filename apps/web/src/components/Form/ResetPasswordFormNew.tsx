@@ -1,5 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@rateup/ui/components/field";
 import {
   InputGroup,
   InputGroupAddon,
@@ -29,8 +31,6 @@ import { SAVE_HOTKEY } from "@/utils/constants.ts";
 import { ResetSteps } from "@/utils/enums/index.ts";
 import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 
-import { Card } from "../ui/card.tsx";
-import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field.tsx";
 import { AUTH_CONTROL, AUTH_CTA, AuthShell, AuthTitle } from "./AuthShell.tsx";
 import { CheckInboxCard } from "./CheckInboxCard.tsx";
 import { PasswordStrengthMeter } from "./PasswordStrength.tsx";

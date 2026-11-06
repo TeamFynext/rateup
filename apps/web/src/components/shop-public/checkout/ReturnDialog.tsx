@@ -1,4 +1,5 @@
 import { Button } from "@rateup/ui/components/button";
+import { Checkbox } from "@rateup/ui/components/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +14,6 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { type PublicOrder, requestPublicReturn } from "@/backend/commerce/shop.api";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 
 import { QuantityStepper } from "../shared.tsx";

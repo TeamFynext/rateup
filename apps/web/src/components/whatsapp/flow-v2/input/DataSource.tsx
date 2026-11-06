@@ -1,5 +1,8 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
+import { Checkbox } from "@rateup/ui/components/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
 import { IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useId, useEffect, useRef, useState } from "react";
@@ -9,9 +12,6 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod/v4";
 
 import { LengthTracker } from "@/components/input/LengthTracker.tsx";
-import { Card } from "@/components/ui/card.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { FileUploadButton } from "@/components/ui/file-upload-button.tsx";
 import { useDisclosure } from "@/hooks/useDisclosure";
 import type { QuestionType2 } from "@/types/enums.ts";

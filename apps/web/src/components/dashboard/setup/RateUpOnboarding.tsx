@@ -5,6 +5,7 @@
 
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Checkbox } from "@rateup/ui/components/checkbox";
 import { IconArrowRight, IconCircleCheck, IconCircleX, IconLoader2 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -25,7 +26,6 @@ import { ContinueWithFacebookButton } from "@/components/common/continue-with-fa
 import { SectionHeading } from "@/components/common/page-heading.tsx";
 import { SetupRowCard } from "@/components/common/setup-row-card.tsx";
 import { BookDemoLink } from "@/components/RateupHomePage/helper/BookDemoLink.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { useOrgModules } from "@/hooks/useOrgModules.ts";
 import { SubscriptionFeaturePathName } from "@/types/enums.ts";
 import { rateupIcon } from "@/utils/constants";

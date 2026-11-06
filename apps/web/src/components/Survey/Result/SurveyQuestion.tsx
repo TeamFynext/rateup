@@ -1,21 +1,21 @@
-import { useTranslation } from "react-i18next";
-import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
-
-import { NPS_COLORS } from "@/components/common/sentimentScale.ts";
-import { StatTile } from "@/components/common/StatTile.tsx";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card.tsx";
+} from "@rateup/ui/components/card";
 import {
   type ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart.tsx";
+} from "@rateup/ui/components/chart";
+import { useTranslation } from "react-i18next";
+import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
+
+import { NPS_COLORS } from "@/components/common/sentimentScale.ts";
+import { StatTile } from "@/components/common/StatTile.tsx";
 import type { FlowQuestionSummary } from "@/components/whatsapp/flow-v2/utils/store.ts";
 import { getResponseArrayByQuestionType } from "@/utils/response.ts";
 

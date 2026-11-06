@@ -1,6 +1,7 @@
 import { Alert, AlertDescription } from "@rateup/ui/components/alert";
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldDescription, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -39,7 +40,6 @@ import {
   WithChannelPreview,
 } from "@/components/dashboard/meta-channels/ChannelPreview.tsx";
 import { ChannelSection } from "@/components/dashboard/meta-channels/ChannelSection.tsx";
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useCan } from "@/hooks/usePermission.ts";
 

@@ -1,5 +1,7 @@
 import { Avatar, AvatarFallback } from "@rateup/ui/components/avatar";
 import { Button } from "@rateup/ui/components/button";
+import { Checkbox } from "@rateup/ui/components/checkbox";
+import { FieldTitle } from "@rateup/ui/components/field";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
 import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
 import { ScrollArea } from "@rateup/ui/components/scroll-area";
@@ -12,8 +14,6 @@ import { useContactGroup } from "@/backend/campaign/contactGroup/contactGroup.qu
 import { useContacts } from "@/backend/campaign/contacts/contacts.query";
 import ContactPagination from "@/components/Contacts/ContactPagination.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { FieldTitle } from "@/components/ui/field.tsx";
 import { useMessageBodyStore } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter/index.tsx";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 

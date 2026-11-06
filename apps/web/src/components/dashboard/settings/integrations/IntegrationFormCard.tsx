@@ -1,5 +1,3 @@
-import type { FormEventHandler, ReactNode } from "react";
-
 import {
   Card,
   CardContent,
@@ -7,8 +5,9 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card.tsx";
-import { FieldGroup } from "@/components/ui/field.tsx";
+} from "@rateup/ui/components/card";
+import { FieldGroup } from "@rateup/ui/components/field";
+import type { FormEventHandler, ReactNode } from "react";
 
 /**
  * The one form card every integration uses, so a credential form reads the same whichever

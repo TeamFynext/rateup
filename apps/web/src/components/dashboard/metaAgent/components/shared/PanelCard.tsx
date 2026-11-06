@@ -1,7 +1,5 @@
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
-import { IconRefresh } from "@tabler/icons-react";
-
 import {
   Card,
   CardAction,
@@ -9,7 +7,9 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@rateup/ui/components/card";
+import { IconRefresh } from "@tabler/icons-react";
+
 import { cn } from "@/lib/utils";
 
 import { formatSyncedAt } from "../../utils/formatSyncedAt";

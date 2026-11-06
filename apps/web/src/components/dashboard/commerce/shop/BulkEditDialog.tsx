@@ -1,5 +1,6 @@
 import { Alert, AlertDescription } from "@rateup/ui/components/alert";
 import { Button } from "@rateup/ui/components/button";
+import { Checkbox } from "@rateup/ui/components/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -27,7 +28,6 @@ import {
   type ShopProduct,
 } from "@/backend/commerce/shop.api";
 import { useInvalidateShop } from "@/backend/commerce/shop.query";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 
 type PriceMode = "keep" | "set" | "percent" | "amount";

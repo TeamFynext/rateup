@@ -1,7 +1,7 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@rateup/ui/components/card";
 import { IconShieldCheck } from "@tabler/icons-react";
 
 import PremiumFeature from "@/components/Premium/PremiumFeature.tsx";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 
 import ETESettings from "./ETESettings.tsx";
 import PasswordSettings from "./PasswordSettings.tsx";

@@ -1,6 +1,20 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@rateup/ui/components/avatar";
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@rateup/ui/components/card";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+} from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -10,6 +24,7 @@ import {
   SelectValue,
 } from "@rateup/ui/components/select";
 import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Switch } from "@rateup/ui/components/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import { IconCrown, IconLock, IconTrash } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -41,23 +56,8 @@ import {
 import { BackLink } from "@/components/common/back-link.tsx";
 import { RoleBadge } from "@/components/common/RoleBadge.tsx";
 import { RoleSelect } from "@/components/common/RoleSelect.tsx";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
-import {
-  Field,
-  FieldContent,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";

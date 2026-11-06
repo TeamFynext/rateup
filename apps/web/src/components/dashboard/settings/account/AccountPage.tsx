@@ -4,6 +4,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Avatar, AvatarFallback, AvatarImage } from "@rateup/ui/components/avatar";
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
+
+import "react-phone-number-input/style.css";
+
 import {
   Dialog,
   DialogContent,
@@ -12,9 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
-
-import "react-phone-number-input/style.css";
-
+import { Field, FieldError, FieldGroup, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -55,8 +57,6 @@ import {
 import { BusinessHoursSection } from "@/components/account/business-hours/BusinessHoursSection.tsx";
 import { RoleBadge } from "@/components/common/RoleBadge.tsx";
 import LocaleSwitcher from "@/components/translation/LocaleSwitcher.tsx";
-import { Card } from "@/components/ui/card.tsx";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";

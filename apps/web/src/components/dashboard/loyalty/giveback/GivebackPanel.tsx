@@ -1,9 +1,8 @@
 import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
 import { Badge } from "@rateup/ui/components/badge";
+import { Card, CardContent } from "@rateup/ui/components/card";
 import { IconAlertTriangle, IconInfoCircle } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
-
-import { Card, CardContent } from "@/components/ui/card.tsx";
 
 import { givebackBand, type GivebackBand, type GivebackResult } from "./calculateGiveback";
 import { formatMoney, formatPercent, formatPoints, singularPoints } from "./format";

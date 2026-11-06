@@ -1,4 +1,4 @@
-import { Card } from "@/components/ui/card.tsx";
+import { Card } from "@rateup/ui/components/card";
 
 import TemplateCard from "./templateCard.tsx";
 

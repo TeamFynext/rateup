@@ -1,6 +1,14 @@
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
 import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@rateup/ui/components/card";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -39,14 +47,6 @@ import { useTranslation } from "react-i18next";
 
 import { MAX_API_KEYS, type ApiKey } from "@/backend/apiKeys/apiKeys.api.ts";
 import { useApiKeys, useRevokeApiKey } from "@/backend/apiKeys/apiKeys.query.ts";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
 import { cn } from "@/lib/utils.ts";

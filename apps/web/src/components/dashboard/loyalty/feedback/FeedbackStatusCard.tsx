@@ -1,4 +1,6 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@rateup/ui/components/card";
+import { Switch } from "@rateup/ui/components/switch";
 import { IconChartBar, IconEdit, IconUnlink, IconSend } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -9,8 +11,6 @@ import {
   useSubmitFeedbackFlowMutation,
   useUpdateFeedbackSettingsMutation,
 } from "@/backend/loyalty/feedback.query.ts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { WaFlowStatus } from "@/types/enums.ts";
 

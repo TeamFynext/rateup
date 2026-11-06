@@ -1,5 +1,13 @@
 import { Alert, AlertDescription } from "@rateup/ui/components/alert";
 import { Button } from "@rateup/ui/components/button";
+import { Checkbox } from "@rateup/ui/components/checkbox";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  FieldTitle,
+} from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -19,14 +27,6 @@ import {
   useInstagramMediaPosts,
   useInstagramStories,
 } from "@/backend/whatsapp/instagram-profile/instagramProfile.query";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-  FieldTitle,
-} from "@/components/ui/field.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { cn } from "@/lib/utils.ts";
 import { ShopifyEvents } from "@/types/enums.ts";

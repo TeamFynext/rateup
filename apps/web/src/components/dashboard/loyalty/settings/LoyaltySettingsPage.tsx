@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@rateup/ui/components/card";
 import {
   Dialog,
   DialogContent,
@@ -8,7 +9,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldContent, FieldDescription, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
+import { Switch } from "@rateup/ui/components/switch";
 import { IconLoader2, IconPlayerPause, IconPlayerPlay, IconRocket } from "@tabler/icons-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useId, useState } from "react";
@@ -31,9 +34,6 @@ import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import { DangerZone } from "@/components/loyalty/settings/DangerZone.tsx";
 import { PointsExpirationSettings } from "@/components/loyalty/settings/PointsExpirationSettings.tsx";
 import { ExpirationSettingsSchema } from "@/components/loyalty/settings/schemas.ts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
-import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";

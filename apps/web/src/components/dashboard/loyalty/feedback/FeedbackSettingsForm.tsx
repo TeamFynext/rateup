@@ -1,5 +1,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@rateup/ui/components/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@rateup/ui/components/card";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -18,14 +26,6 @@ import { useUpdateFeedbackSettingsMutation } from "@/backend/loyalty/feedback.qu
 import type { LoyaltyReward } from "@/backend/loyalty/reward.api.ts";
 import { useLoyaltyRewards } from "@/backend/loyalty/reward.query.ts";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 
 import { CreateReviewRewardDialog } from "./CreateReviewRewardDialog.tsx";
 import {

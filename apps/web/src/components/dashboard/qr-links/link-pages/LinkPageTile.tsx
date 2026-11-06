@@ -1,4 +1,5 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent } from "@rateup/ui/components/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,7 +11,6 @@ import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import type { LinktreeData } from "@/backend/linktree/linktree.api.ts";
-import { Card, CardContent } from "@/components/ui/card.tsx";
 
 import { CopyButton } from "../shared/CopyButton.tsx";
 import { linkPageUrl, QR_LINKS_PATHS } from "../shared/paths.ts";

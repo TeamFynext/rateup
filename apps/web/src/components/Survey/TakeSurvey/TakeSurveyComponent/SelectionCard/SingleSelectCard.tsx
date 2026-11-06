@@ -1,6 +1,6 @@
+import { Checkbox } from "@rateup/ui/components/checkbox";
 import React, { useState } from "react";
 
-import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { getImageValue } from "@/utils/file-upload/upload.ts";
 

@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -30,7 +31,6 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox.tsx";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 
 import { CustomLinkFields, useCustomLinkForm } from "./CustomLinkFields.tsx";
 import { type LinkKind, linkKinds, type SurveyLinkType, surveyLinkUrl } from "./linkTypes.ts";

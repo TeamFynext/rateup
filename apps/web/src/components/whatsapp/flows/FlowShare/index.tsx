@@ -1,4 +1,5 @@
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -21,7 +22,6 @@ import { toast } from "sonner";
 
 import { useUpdateFlowMutation, useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
 import ShareQR from "@/components/Survey/ShareSurvey/ShareQR/index.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { WaBubble, WaWallpaper } from "@/components/whatsapp/whatsapp-preview-shell.tsx";
 import { getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
 

@@ -3,7 +3,17 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent } from "@rateup/ui/components/card";
+import { Checkbox } from "@rateup/ui/components/checkbox";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  FieldTitle,
+} from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
+import { Switch } from "@rateup/ui/components/switch";
 import { Textarea } from "@rateup/ui/components/textarea";
 import {
   IconCalendar,
@@ -27,16 +37,6 @@ import {
   useUpdateLoyaltyEarningRuleMutation,
 } from "@/backend/loyalty/earningRules.query";
 import { useLoyaltyTiers } from "@/backend/loyalty/tiers.query";
-import { Card, CardContent } from "@/components/ui/card.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-  FieldTitle,
-} from "@/components/ui/field.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 
 import { EarnRateField } from "./EarnRateField.tsx";
 import { earningRuleSchema, formatStatusLabel, getRuleIcon, toDateInputValue } from "./shared.tsx";

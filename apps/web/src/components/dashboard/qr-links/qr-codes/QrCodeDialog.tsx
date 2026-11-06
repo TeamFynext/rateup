@@ -8,6 +8,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
@@ -15,13 +22,6 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
 import { useCreateQrMutation, useUpdateQrMutation } from "@/backend/generateQr/generateQr.query";
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field.tsx";
 
 import { QR_LINKS_PATHS } from "../shared/paths.ts";
 import { destinationUrlSchema } from "./destinationUrl.ts";

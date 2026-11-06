@@ -1,8 +1,7 @@
+import { Card, CardContent } from "@rateup/ui/components/card";
 import { IconSparkles, IconStar } from "@tabler/icons-react";
 import { useWatch, type Control } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-
-import { Card, CardContent } from "@/components/ui/card.tsx";
 
 import { brandGradient, initialsOf, readableTextOn } from "../brand.ts";
 import type { ProfileFormInput } from "../schemas.ts";

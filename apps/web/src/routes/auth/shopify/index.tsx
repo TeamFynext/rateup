@@ -1,4 +1,5 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
 import { Spinner } from "@rateup/ui/components/spinner";
 import { IconMoodSad } from "@tabler/icons-react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
@@ -14,7 +15,6 @@ import {
 import { useUpdateShopifySession } from "@/backend/appsIntegration/shopify/shopify.query";
 import { useRouteAndCartStore } from "@/components/HomePage/pages/Pricing/store/RouteAndCartStore.ts";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import { Card } from "@/components/ui/card";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 
 export const Route = createFileRoute("/auth/shopify/")({

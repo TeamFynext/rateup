@@ -13,6 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@rateup/ui/components/dropdown-menu";
+import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "@rateup/ui/components/field";
 import {
   IconCopy,
   IconDots,
@@ -33,7 +34,6 @@ import z from "zod";
 import { deleteSurvey, deleteSurveyForOneTeam, updateSurvey } from "@/backend/surveys/survey.api";
 import { surveyKeys } from "@/backend/surveys/survey.keys";
 import { useCloneSurveyMutation } from "@/backend/surveys/surveys.query";
-import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";

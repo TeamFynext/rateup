@@ -1,5 +1,14 @@
 import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
 import { Button } from "@rateup/ui/components/button";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@rateup/ui/components/card";
+import { Field, FieldDescription, FieldLabel } from "@rateup/ui/components/field";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
 import { IconAlertTriangle, IconRefresh, IconReload, IconTrash } from "@tabler/icons-react";
 import type { TFunction } from "i18next";
@@ -20,15 +29,6 @@ import { INTEGRATIONS_CONFIG } from "@/components/dashboard/settings/integration
 import { IntegrationShell } from "@/components/dashboard/settings/integrations/IntegrationShell.tsx";
 import { ApiCopyButton } from "@/components/ExternalApi/ApiCopyButton.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { IntegratedApps, ZapierTriggers } from "@/types/enums.ts";
 import type { ZapierIntegration } from "@/types/global";

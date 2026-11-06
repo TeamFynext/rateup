@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -30,7 +31,6 @@ import {
   useIsSurveyThemePreview,
 } from "../../Survey/SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext.tsx";
 import { useSelectedPreview } from "../../Survey/SurveyTheme/SurveyThemeContext.tsx";
-import { Field, FieldError, FieldLabel } from "../../ui/field.tsx";
 import LanguageSelectionPage from "../LanguageSelectionPage/index.tsx";
 import WelcomePage from "../WelcomePage/WelcomePage.tsx";
 import { getBgImgAndBgColor } from "./utils.ts";

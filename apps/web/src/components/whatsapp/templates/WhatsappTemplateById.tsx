@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Alert, AlertDescription } from "@rateup/ui/components/alert";
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
 import {
@@ -56,7 +57,6 @@ import { WizardSection } from "@/components/dashboard/automation/components/wiza
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import { LengthTracker } from "@/components/input/LengthTracker.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { PhonePreviewButton } from "@/components/ui/phone-preview.tsx";
 import { Stepper } from "@/components/ui/stepper.tsx";
 import { BroadCastTypeValue } from "@/components/whatsapp/templates/Details/BroadCastTypeValue.tsx";

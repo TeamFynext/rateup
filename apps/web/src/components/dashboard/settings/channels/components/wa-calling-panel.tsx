@@ -2,6 +2,7 @@ import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert
 import { Button } from "@rateup/ui/components/button";
 import { Input } from "@rateup/ui/components/input";
 import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Switch } from "@rateup/ui/components/switch";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -14,7 +15,6 @@ import {
   getCallSettings,
   updateCallSettings,
 } from "@/backend/whatsapp/calling/calling.api";
-import { Switch } from "@/components/ui/switch.tsx";
 import { getApiErrorMessage } from "@/utils/apiError";
 
 const DAYS: { day: DayOfWeek; label: string }[] = [

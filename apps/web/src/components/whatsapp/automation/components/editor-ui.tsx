@@ -1,5 +1,13 @@
 import { Badge as UiBadge } from "@rateup/ui/components/badge";
 import { Button as UiButton } from "@rateup/ui/components/button";
+import {
+  Field as UiField,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  FieldTitle,
+} from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select as UiSelect,
@@ -8,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@rateup/ui/components/select";
+import { Switch as UiSwitch } from "@rateup/ui/components/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 /*
  * shadcn-based drop-in replacements for the Mantine + Contained* inputs that the
@@ -18,17 +27,8 @@ import { IconLoader2 } from "@tabler/icons-react";
 import * as React from "react";
 
 import { DatePicker } from "@/components/ui/date-picker.tsx";
-import {
-  Field as UiField,
-  FieldContent,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-  FieldTitle,
-} from "@/components/ui/field.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { RadioGroup as UiRadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
-import { Switch as UiSwitch } from "@/components/ui/switch.tsx";
 import { cn } from "@/lib/utils.ts";
 
 type Option = { value: string; label: React.ReactNode };

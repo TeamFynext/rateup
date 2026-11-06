@@ -1,4 +1,5 @@
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import {
   Select,
   SelectContent,
@@ -9,8 +10,6 @@ import {
 import { IconArrowLeft, IconArrowRight, IconBuilding, IconSparkles } from "@tabler/icons-react";
 import { motion } from "motion/react";
 import { useId } from "react";
-
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 
 import type { OnboardingFormData } from "./onboarding-types.ts";
 

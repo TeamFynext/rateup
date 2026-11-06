@@ -1,4 +1,6 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
+import { Field, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Textarea } from "@rateup/ui/components/textarea";
 import { IconCircleCheck, IconRefresh } from "@tabler/icons-react";
@@ -10,8 +12,6 @@ import { toast } from "sonner";
 
 import { useSurvey } from "@/backend/surveys/surveys.query";
 import { useUpdateFlowMutation, useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
-import { Card } from "@/components/ui/card.tsx";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { cn } from "@/lib/utils";
 import { SaveStatus } from "@/types/enums.ts";
 import type { WaFlowStartMessageConfig } from "@/types/global";

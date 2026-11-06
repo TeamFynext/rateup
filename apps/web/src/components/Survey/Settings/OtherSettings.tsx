@@ -1,4 +1,5 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent } from "@rateup/ui/components/card";
 import {
   Dialog,
   DialogContent,
@@ -6,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldGroup, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useId, useContext, useEffect, useState } from "react";
@@ -14,8 +16,6 @@ import { toast } from "sonner";
 
 import { useResetResponsesStats } from "@/backend/surveys/response/response.query";
 import { useDeleteSurveyMutation } from "@/backend/surveys/surveys.query";
-import { Card, CardContent } from "@/components/ui/card.tsx";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
 

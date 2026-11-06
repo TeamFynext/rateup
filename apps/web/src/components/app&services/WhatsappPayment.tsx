@@ -1,6 +1,7 @@
 import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@rateup/ui/components/card";
 import {
   Empty,
   EmptyDescription,
@@ -20,7 +21,6 @@ import {
 } from "@/backend/appsIntegration/integration.query";
 import { INTEGRATIONS_CONFIG } from "@/components/dashboard/settings/integrations/integrations.config.ts";
 import { IntegrationShell } from "@/components/dashboard/settings/integrations/IntegrationShell.tsx";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { getApiErrorMessage } from "@/utils/apiError";
 
 /**

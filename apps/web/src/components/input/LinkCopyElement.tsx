@@ -1,4 +1,5 @@
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import {
   InputGroup,
   InputGroupAddon,
@@ -9,8 +10,6 @@ import { IconCheck, IconCopy } from "@tabler/icons-react";
 import type { ComponentProps, ReactNode } from "react";
 import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
-
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 
 interface LinkCopyElementProps extends Omit<ComponentProps<"input">, "value"> {
   link: string;

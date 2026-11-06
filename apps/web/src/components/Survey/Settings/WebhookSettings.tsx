@@ -1,4 +1,6 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@rateup/ui/components/card";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
 import {
@@ -15,8 +17,6 @@ import { useGetWebhookClientSecret } from "@/backend/org/org.query";
 import { ApiCopyButton } from "@/components/ExternalApi/ApiCopyButton.tsx";
 import PremiumFeature from "@/components/Premium/PremiumFeature.tsx";
 import type { SurveyUpdateMutation } from "@/components/Survey/Settings/updateSettings.ts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
-import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { isValidUrl } from "@/utils/index.ts";
 
 const WebhookSettings = ({

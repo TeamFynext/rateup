@@ -1,6 +1,6 @@
+import { Field, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import { useTranslation } from "react-i18next";
 
-import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import { cn } from "@/lib/utils";
 

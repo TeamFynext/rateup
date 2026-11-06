@@ -1,8 +1,8 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
 import { IconLogout } from "@tabler/icons-react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
-import { Card } from "@/components/ui/card";
 import { useMediaQuery } from "@/hooks/use-media-query.ts";
 import { rateupIconBw } from "@/utils/constants";
 

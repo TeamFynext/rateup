@@ -1,23 +1,23 @@
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@rateup/ui/components/select";
-import React from "react";
-import { Controller, useFormContext, useWatch } from "react-hook-form";
-
-import { useGetAllBusinessHours } from "@/backend/org/business-hours/business-hours.query";
-import {
   Field,
   FieldContent,
   FieldDescription,
   FieldError,
   FieldLabel,
   FieldTitle,
-} from "@/components/ui/field.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
+} from "@rateup/ui/components/field";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@rateup/ui/components/select";
+import { Switch } from "@rateup/ui/components/switch";
+import React from "react";
+import { Controller, useFormContext, useWatch } from "react-hook-form";
+
+import { useGetAllBusinessHours } from "@/backend/org/business-hours/business-hours.query";
 
 import type { CreateRuleInput } from "./schema.ts";
 

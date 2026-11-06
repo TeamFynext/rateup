@@ -1,7 +1,10 @@
 import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@rateup/ui/components/card";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Separator } from "@rateup/ui/components/separator";
+import { Switch } from "@rateup/ui/components/switch";
 import {
   IconDeviceFloppy,
   IconInfoCircle,
@@ -16,9 +19,6 @@ import {
   useCatalogSettings,
   useUpdateCatalogSettings,
 } from "@/backend/whatsapp/catalog/catalog.query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field, FieldLabel } from "@/components/ui/field";
-import { Switch } from "@/components/ui/switch";
 
 /**
  * Shopify's hosted checkout collects address and delivery on the Shopify store,

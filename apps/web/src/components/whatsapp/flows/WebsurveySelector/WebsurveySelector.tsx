@@ -1,3 +1,4 @@
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import {
   Select,
   SelectContent,
@@ -9,7 +10,6 @@ import { Skeleton } from "@rateup/ui/components/skeleton";
 import { useId } from "react";
 
 import { useSurveys } from "@/backend/surveys/surveys.query";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { SurveyType } from "@/types/enums.ts";
 import { toText } from "@/utils/toText";
 

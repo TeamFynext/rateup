@@ -1,4 +1,5 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent } from "@rateup/ui/components/card";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +16,6 @@ import { useTranslation } from "react-i18next";
 
 import { useIntegrationStatuses } from "@/backend/appsIntegration/integration.query";
 import { useWebhook } from "@/backend/webhook/webhook.query";
-import { Card, CardContent } from "@/components/ui/card.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
 import { cn } from "@/lib/utils";
 

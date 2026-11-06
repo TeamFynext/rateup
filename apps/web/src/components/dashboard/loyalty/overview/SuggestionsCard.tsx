@@ -1,8 +1,7 @@
+import { Card, CardContent } from "@rateup/ui/components/card";
 import { IconArrowRight } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-
-import { Card, CardContent } from "@/components/ui/card.tsx";
 
 import type { Suggestion } from "./suggestions.ts";
 

@@ -1,5 +1,6 @@
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +15,6 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { OrgInvoice } from "@/backend/payment/payment.api";
-import { Card } from "@/components/ui/card.tsx";
 import { formatIsoDateString } from "@/utils/dateTime.ts";
 
 import type { PaymentOrder } from "./types.ts";

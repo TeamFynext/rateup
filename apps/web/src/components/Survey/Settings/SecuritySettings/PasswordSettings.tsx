@@ -1,5 +1,7 @@
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
+import { Switch } from "@rateup/ui/components/switch";
 import {
   Tooltip,
   TooltipContent,
@@ -10,8 +12,6 @@ import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useUpdateSurveyPwdMutation } from "@/backend/surveys/surveys.query";
-import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 
 import { updatePwdSurvey } from "../updateSettings.ts";
 

@@ -1,11 +1,11 @@
 import { Button } from "@rateup/ui/components/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { useId, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Cropper, type CropperRef } from "@/components/Cropper/Cropper.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { LoadingOverlay } from "@/components/ui/loading-overlay.tsx";
 import { mimeTypesForImage } from "@/utils/constants.ts";
 

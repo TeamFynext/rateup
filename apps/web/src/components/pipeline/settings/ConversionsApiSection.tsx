@@ -1,4 +1,6 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -7,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@rateup/ui/components/select";
+import { Switch } from "@rateup/ui/components/switch";
 import { IconCheck } from "@tabler/icons-react";
 import { useEffect, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -19,9 +22,6 @@ import {
   useUpdateWaSettingsMutation,
   useWaSettings,
 } from "@/backend/whatsapp/settings/waSettings.query";
-import { Card } from "@/components/ui/card";
-import { Field, FieldLabel } from "@/components/ui/field";
-import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 
 interface ConversionData {

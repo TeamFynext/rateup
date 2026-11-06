@@ -1,4 +1,11 @@
 import { Button } from "@rateup/ui/components/button";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  FieldTitle,
+} from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
 import {
@@ -26,7 +33,6 @@ import { cn } from "@/lib/utils.ts";
 import { ContactGroupType } from "@/types/enums.ts";
 
 import { Calendar } from "../ui/calendar.tsx";
-import { Field, FieldDescription, FieldError, FieldLabel, FieldTitle } from "../ui/field.tsx";
 import { MultiSelect } from "../ui/multi-select.tsx";
 import type { ContactFormValues } from "./contact-form-schema.ts";
 import ContactGroupSelector from "./ContactGroupSelector.tsx";

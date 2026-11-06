@@ -1,5 +1,7 @@
 import { Alert, AlertDescription } from "@rateup/ui/components/alert";
 import { Button } from "@rateup/ui/components/button";
+import { Checkbox } from "@rateup/ui/components/checkbox";
+import { Field, FieldTitle } from "@rateup/ui/components/field";
 import { ScrollArea } from "@rateup/ui/components/scroll-area";
 import { Separator } from "@rateup/ui/components/separator";
 import { IconInfoCircle } from "@tabler/icons-react";
@@ -15,8 +17,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { Field, FieldTitle } from "@/components/ui/field.tsx";
 
 import { getSurveyThemeKeyOf, supportedPageEditors } from "../../SurveyTheme.constants";
 import { ThemeTabEnum } from "../../SurveyTheme.enums";

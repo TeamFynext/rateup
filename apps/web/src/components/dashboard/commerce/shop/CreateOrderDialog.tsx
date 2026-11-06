@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -30,7 +31,6 @@ import {
 } from "@/backend/commerce/shop.api";
 import { useInvalidateShop, useShopPayments, useShopStore } from "@/backend/commerce/shop.query";
 import { ContactPicker, type PickedContact } from "@/components/pipeline/lead/ContactPicker.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { cn } from "@/lib/utils.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";

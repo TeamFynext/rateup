@@ -1,12 +1,12 @@
 import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldDescription, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { IconAlertTriangle, IconCircleCheck, IconLock, IconPencil } from "@tabler/icons-react";
 import { useId } from "react";
 
 import type { LibraryTemplate } from "@/backend/whatsapp/whatsapp.api";
 import { WizardSection } from "@/components/dashboard/automation/components/wizard/WizardSection.tsx";
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
 
 import type { LibraryInputs } from "./library.ts";
 import { humanize } from "./library.ts";

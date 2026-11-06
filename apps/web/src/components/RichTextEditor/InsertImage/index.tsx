@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
 import {
@@ -17,7 +18,6 @@ import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import z from "zod";
 
-import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { uploadToCdn } from "@/utils/file-upload/upload.ts";
 
 const ENTER_URL = "Enter Image Url";

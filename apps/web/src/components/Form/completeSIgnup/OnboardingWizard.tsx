@@ -1,3 +1,4 @@
+import { Card } from "@rateup/ui/components/card";
 import { Spinner } from "@rateup/ui/components/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import {
@@ -18,7 +19,6 @@ import { useCompleteOrgDetails, useOrgNameAndPhone } from "@/backend/org/org.que
 import { userKeys } from "@/backend/user/user.keys";
 import { ChannelDetailsPage } from "@/components/dashboard/settings/channels/ChannelDetailsPage.tsx";
 import { useRouteAndCartStore } from "@/components/HomePage/pages/Pricing/store/RouteAndCartStore.ts";
-import { Card } from "@/components/ui/card.tsx";
 
 import type { OnboardingFormData } from "./onboarding-types.ts";
 import OnboardingStep1 from "./Onboarding1.tsx";

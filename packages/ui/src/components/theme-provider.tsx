@@ -1,7 +1,7 @@
 import { ScriptOnce } from "@tanstack/react-router";
 import { createContext, useContext, useEffect, useState } from "react";
 
-type Theme = "dark" | "light" | "system";
+export type Theme = "dark" | "light" | "system";
 
 interface ThemeProviderProps {
   children: React.ReactNode;
@@ -14,7 +14,11 @@ interface ThemeProviderState {
   setTheme: (theme: Theme) => void;
 }
 
-function getThemeScript(storageKey: string, defaultTheme: Theme) {
+/**
+ * Inline script that sets the `light`/`dark` class before first paint. The provider renders it
+ * with `ScriptOnce` for server-rendered apps; a client-only app (admin) puts it in `<head>`.
+ */
+export function themeInitScript(storageKey = "theme", defaultTheme: Theme = "light") {
   const key = JSON.stringify(storageKey);
   const fallback = JSON.stringify(defaultTheme);
 
@@ -47,7 +51,12 @@ export function ThemeProvider({
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem(storageKey);
+    let stored: string | null = null;
+    try {
+      stored = localStorage.getItem(storageKey);
+    } catch {
+      // Storage blocked: fall back to the default.
+    }
     setThemeState(
       stored === "light" || stored === "dark" || stored === "system" ? stored : defaultTheme,
     );
@@ -69,7 +78,11 @@ export function ThemeProvider({
   }, [themeState, mounted]);
 
   const setTheme = (next: Theme) => {
-    localStorage.setItem(storageKey, next);
+    try {
+      localStorage.setItem(storageKey, next);
+    } catch {
+      // Not persisted; still applies for this session.
+    }
     setThemeState(next);
   };
 
@@ -94,9 +107,7 @@ export function ThemeProvider({
       event.preventDefault();
       const prefersDark = globalThis.matchMedia("(prefers-color-scheme: dark)").matches;
       const resolved = themeState === "system" ? (prefersDark ? "dark" : "light") : themeState;
-      const next: Theme = resolved === "dark" ? "light" : "dark";
-      localStorage.setItem(storageKey, next);
-      setThemeState(next);
+      setTheme(resolved === "dark" ? "light" : "dark");
     }
 
     document.addEventListener("keydown", handleKeyDown);
@@ -105,7 +116,7 @@ export function ThemeProvider({
 
   return (
     <ThemeProviderContext value={{ theme: themeState, setTheme }}>
-      <ScriptOnce>{getThemeScript(storageKey, defaultTheme)}</ScriptOnce>
+      <ScriptOnce>{themeInitScript(storageKey, defaultTheme)}</ScriptOnce>
       {children}
     </ThemeProviderContext>
   );

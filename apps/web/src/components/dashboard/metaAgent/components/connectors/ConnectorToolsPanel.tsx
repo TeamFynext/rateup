@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@rateup/ui/components/dialog";
 import { Empty, EmptyDescription, EmptyTitle } from "@rateup/ui/components/empty";
+import { FieldDescription, FieldGroup } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -19,6 +20,7 @@ import {
   SelectValue,
 } from "@rateup/ui/components/select";
 import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Switch } from "@rateup/ui/components/switch";
 import { Textarea } from "@rateup/ui/components/textarea";
 import { IconPencil, IconPlayerPlay, IconPlus, IconRefresh, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
@@ -37,8 +39,6 @@ import {
   useSyncConnectorTools,
   useUpdateConnectorTool,
 } from "@/backend/metaAgent/metaAgent.query";
-import { FieldDescription, FieldGroup } from "@/components/ui/field";
-import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 
 import {

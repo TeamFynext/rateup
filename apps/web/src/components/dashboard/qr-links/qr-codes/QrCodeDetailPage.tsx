@@ -1,5 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent } from "@rateup/ui/components/card";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconPencil } from "@tabler/icons-react";
@@ -19,8 +21,6 @@ import { BackLink } from "@/components/common/back-link.tsx";
 import { PageHeading, SectionHeading } from "@/components/common/page-heading.tsx";
 import type { QrDesign } from "@/components/common/qr-designer/qrDesign.ts";
 import { QrDesigner } from "@/components/common/qr-designer/QrDesigner.tsx";
-import { Card, CardContent } from "@/components/ui/card.tsx";
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
 import { isNotFound } from "@/utils/apiError.ts";
 

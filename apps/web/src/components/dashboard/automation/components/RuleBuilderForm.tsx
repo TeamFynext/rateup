@@ -1,4 +1,5 @@
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldError } from "@rateup/ui/components/field";
 import { IconArrowLeft, IconArrowRight, IconBolt, IconDeviceFloppy } from "@tabler/icons-react";
 import React, { useRef, useState } from "react";
 import type { FieldErrors, UseFormReturn } from "react-hook-form";
@@ -13,7 +14,6 @@ import {
 } from "@/components/dashboard/automation/automation-templates.ts";
 import type { WizardStep } from "@/components/dashboard/automation/rule-sentence.ts";
 import { actionPart } from "@/components/dashboard/automation/rule-sentence.ts";
-import { Field, FieldError } from "@/components/ui/field.tsx";
 import { Stepper } from "@/components/ui/stepper.tsx";
 import { cn } from "@/lib/utils.ts";
 

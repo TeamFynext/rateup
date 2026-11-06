@@ -1,13 +1,13 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@rateup/ui/components/card";
+import { Field, FieldGroup, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
+import { Switch } from "@rateup/ui/components/switch";
 import { useId } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 import { useUpdateFlowMetaDataMutation } from "@/backend/whatsapp/flow/flow.query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 
 const FlowSettingsUpdate = ({
   name,

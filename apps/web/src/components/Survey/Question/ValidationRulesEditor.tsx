@@ -1,5 +1,7 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
+import { Field, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { ScrollArea } from "@rateup/ui/components/scroll-area";
 import {
@@ -19,8 +21,6 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
-import { Card } from "@/components/ui/card.tsx";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import type { QuestionType } from "@/types/enums.ts";
 import { QuestionType as Q } from "@/types/enums.ts";

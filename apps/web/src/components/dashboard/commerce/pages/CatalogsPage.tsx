@@ -1,5 +1,6 @@
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,7 +43,6 @@ import {
   useProductSetsByCatalog,
   useSyncProductSets,
 } from "@/backend/whatsapp/catalog/productSet.query";
-import { Card } from "@/components/ui/card";
 import { AddCatalogProductModal } from "@/components/whatsapp/catalog/products/AddCatalogProduct";
 import { useConfirm } from "@/context/confirm-provider";
 import { cn } from "@/lib/utils";

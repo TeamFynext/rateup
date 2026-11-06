@@ -1,6 +1,8 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@rateup/ui/components/avatar";
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent } from "@rateup/ui/components/card";
+import { Checkbox } from "@rateup/ui/components/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -9,10 +11,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { ScrollArea } from "@rateup/ui/components/scroll-area";
 import { Separator } from "@rateup/ui/components/separator";
 import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Switch } from "@rateup/ui/components/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import {
   IconCheck,
@@ -51,9 +55,6 @@ import {
 import { ColorField } from "@/components/common/color-field.tsx";
 import { RoleBadge } from "@/components/common/RoleBadge.tsx";
 import { RoleSelect } from "@/components/common/RoleSelect.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
 import { cn } from "@/lib/utils.ts";
 import { resolveRoleKey } from "@/utils/authz/can.ts";
@@ -61,8 +62,6 @@ import { roleKeyToLegacy, type RoleKey } from "@/utils/authz/roles.ts";
 import { HEX_COLOR } from "@/utils/color.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 import { groupByBusiness, spansSeveralBusinesses } from "@/utils/whatsapp/businesses.ts";
-
-import { Card, CardContent } from "../ui/card.tsx";
 
 /** What a team is coloured when nobody chooses. */
 export const DEFAULT_TEAM_COLOR = "#5a8cc6";

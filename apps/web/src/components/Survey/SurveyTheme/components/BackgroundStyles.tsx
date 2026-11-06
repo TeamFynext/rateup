@@ -1,6 +1,6 @@
+import { FieldLabel } from "@rateup/ui/components/field";
 import { useId, useCallback } from "react";
 
-import { FieldLabel } from "@/components/ui/field.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { cn } from "@/lib/utils.ts";
 

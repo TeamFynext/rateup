@@ -1,5 +1,13 @@
 import { Button } from "@rateup/ui/components/button";
 import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@rateup/ui/components/card";
+import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
@@ -19,14 +27,6 @@ import { useTranslation } from "react-i18next";
 
 import { useRotateWebhookSecretMutation, useWebhookSecret } from "@/backend/webhook/webhook.query";
 import { ApiCopyButton } from "@/components/ExternalApi/ApiCopyButton.tsx";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 
 const DOCS_URL = "https://docs.rateup.app/settings/integrations#verify-the-signature";

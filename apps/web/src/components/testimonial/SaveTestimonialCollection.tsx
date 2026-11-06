@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -24,7 +25,6 @@ import z from "zod";
 
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { useCreateTestimonialCollection } from "@/backend/testimonials/testimonial.query";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { defaultTestimonialStyle } from "@/utils/testimonial.ts";
 
 type SaveTestimonialCollectionProps = Readonly<{

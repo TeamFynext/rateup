@@ -1,9 +1,9 @@
 // Extracted verbatim from `LifecyclePage.tsx`. Behaviour is unchanged.
 
 import { Badge } from "@rateup/ui/components/badge";
+import { Card } from "@rateup/ui/components/card";
 import { useTranslation } from "react-i18next";
 
-import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 import { getProgressToneStyle, getStageToneStyle } from "./shared.tsx";

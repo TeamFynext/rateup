@@ -2,6 +2,14 @@
 // config only. Behaviour is unchanged.
 
 import { Button } from "@rateup/ui/components/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@rateup/ui/components/card";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconPlus, IconRefresh, IconTrash } from "@tabler/icons-react";
@@ -18,14 +26,6 @@ import {
 } from "@/backend/whatsapp/settings/waSettings.query";
 import { PageHeading } from "@/components/common/page-heading.tsx";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 
 export function ConversationalComponents() {
   const { data: waSettings } = useWaSettings();

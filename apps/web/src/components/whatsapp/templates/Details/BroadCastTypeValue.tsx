@@ -1,11 +1,11 @@
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
 import { useId, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { LengthTracker } from "@/components/input/LengthTracker.tsx";
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { WHATSAPP_TEMPLATE_BROADCAST_TYPE } from "@/utils/constants.ts";
 import { getLabel } from "@/utils/file-upload/upload.ts";
 

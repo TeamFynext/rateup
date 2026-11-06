@@ -8,6 +8,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@rateup/ui/components/empty";
+import { Switch } from "@rateup/ui/components/switch";
 import { IconInfoCircle, IconLink, IconTrash } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
@@ -21,7 +22,6 @@ import {
 import { CopyLinkButton, QrButton } from "@/components/dashboard/instagram/tabs/IgMeLinksTab.tsx";
 import { ChannelSection } from "@/components/dashboard/meta-channels/ChannelSection.tsx";
 import { CreateRuleButton } from "@/components/dashboard/meta-channels/RuleAutomationsSection.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 
 import { mMeLink } from "./mMeLink.ts";

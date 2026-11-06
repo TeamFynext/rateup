@@ -1,6 +1,5 @@
+import { Card } from "@rateup/ui/components/card";
 import type { ComponentType, ReactNode } from "react";
-
-import { Card } from "@/components/ui/card.tsx";
 
 import { IntegrationPlate } from "./IntegrationPlate.tsx";
 

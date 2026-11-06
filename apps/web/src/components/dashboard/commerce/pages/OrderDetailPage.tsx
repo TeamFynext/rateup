@@ -1,5 +1,6 @@
 import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
 import { Button } from "@rateup/ui/components/button";
+import { Checkbox } from "@rateup/ui/components/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@rateup/ui/components/dropdown-menu";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@rateup/ui/components/empty";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Label } from "@rateup/ui/components/label";
 import { Skeleton } from "@rateup/ui/components/skeleton";
@@ -74,9 +76,7 @@ import {
   useShopOrder,
   useShopShippingProviders,
 } from "@/backend/commerce/shop.query";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { ContactAvatar } from "@/components/ui/contact-avatar.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
 import { getApiErrorData, getApiErrorMessage } from "@/utils/apiError.ts";

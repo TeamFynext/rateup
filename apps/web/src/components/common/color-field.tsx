@@ -1,8 +1,8 @@
+import { Field, FieldDescription, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { IconCheck } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { cn } from "@/lib/utils.ts";
 import { HEX_COLOR, readableTextOn } from "@/utils/color.ts";
 

@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Card } from "@rateup/ui/components/card";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -8,7 +9,6 @@ import { z } from "zod/v4";
 import type { ICreateGoogleUser } from "@/backend/user/user.api";
 import { useUserInfo } from "@/backend/user/user.query";
 
-import { Card } from "../ui/card.tsx";
 import { AuthShell, AuthTitle } from "./AuthShell.tsx";
 import { asSignupForm } from "./signup/shared.tsx";
 import { SIGNUP_COPY, SignupProgress } from "./signup/SignupProgress.tsx";

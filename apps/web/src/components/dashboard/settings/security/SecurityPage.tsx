@@ -4,6 +4,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
 import {
   Dialog,
   DialogContent,
@@ -12,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldError, FieldLabel, FieldTitle } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Separator } from "@rateup/ui/components/separator";
 import {
@@ -38,8 +40,6 @@ import {
   useGetUserProfile,
   useUpdateActiveStatusMutation,
 } from "@/backend/user/user.query";
-import { Card } from "@/components/ui/card.tsx";
-import { Field, FieldError, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
 

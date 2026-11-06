@@ -1,8 +1,8 @@
+import { Field, FieldError, FieldTitle } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Controller, useFormContext } from "react-hook-form";
 
 import type { SentencePart, WizardStep } from "@/components/dashboard/automation/rule-sentence.ts";
-import { Field, FieldError, FieldTitle } from "@/components/ui/field.tsx";
 
 import RuleOptions from "../RuleOptions.tsx";
 import type { CreateRuleInput } from "../schema.ts";

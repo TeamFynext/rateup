@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Textarea } from "@rateup/ui/components/textarea";
 import { useEffect } from "react";
@@ -9,7 +10,6 @@ import z from "zod";
 
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import { useUpsertWaSettingsMutation } from "@/backend/whatsapp/settings/waSettings.query";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 
 type WaSetting = WaSettings[number];
 

@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Spinner } from "@rateup/ui/components/spinner";
 import { Controller, useForm } from "react-hook-form";
@@ -7,7 +8,6 @@ import { useTranslation } from "react-i18next";
 import z from "zod";
 
 import { useUpdateWaSettingsMutation } from "@/backend/whatsapp/settings/waSettings.query";
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 
 interface ChannelNameFormValues {
   phoneDisplayName: string;

@@ -1,4 +1,5 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -55,7 +56,6 @@ import { useOpenKeptContact } from "@/components/Contacts/merge/useOpenKeptConta
 import { StageSelector, usePipelineStages } from "@/components/pipeline/shared/StageSelector.tsx";
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { DataTableViewOptions } from "@/components/Table/data-table-view-option.tsx";
-import { Card } from "@/components/ui/card.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useTeamFeatures } from "@/context/TeamFeaturesContext.tsx";
 import { useCan } from "@/hooks/usePermission.ts";

@@ -7,7 +7,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
+import { Switch } from "@rateup/ui/components/switch";
 import {
   Table,
   TableBody,
@@ -40,9 +42,7 @@ import {
 } from "@/backend/commerce/shop.api";
 import { useInvalidateShop, useShopShippingProviders } from "@/backend/commerce/shop.query";
 import { CountryDropdown } from "@/components/ui/country-dropdown.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useCan } from "@/hooks/usePermission.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";

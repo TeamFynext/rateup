@@ -1,6 +1,5 @@
+import { Field, FieldDescription, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import { useTranslation } from "react-i18next";
-
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 
 import { messageVariables, variableHint } from "./loyaltyMessageCatalog.ts";
 import { MessageBodyEditor } from "./MessageBodyEditor.tsx";

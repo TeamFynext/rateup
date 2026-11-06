@@ -1,5 +1,6 @@
 import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
 import {
   Empty,
   EmptyContent,
@@ -42,7 +43,6 @@ import {
 import { StatTile } from "@/components/common/StatTile.tsx";
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
-import { Card } from "@/components/ui/card.tsx";
 
 import { AnalyticsCard } from "../kit/AnalyticsCard.tsx";
 import { TrendArea } from "../kit/charts.tsx";

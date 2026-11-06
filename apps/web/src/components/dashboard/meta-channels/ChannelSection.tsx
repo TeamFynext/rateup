@@ -1,16 +1,15 @@
 // The card every Instagram and Messenger tab is built from: an icon, a title, one line of
 // description and the section's actions on the right.
 
-import type { TablerIcon } from "@tabler/icons-react";
-import type { ReactNode } from "react";
-
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card.tsx";
+} from "@rateup/ui/components/card";
+import type { TablerIcon } from "@tabler/icons-react";
+import type { ReactNode } from "react";
 
 export function ChannelSection({
   icon: Icon,

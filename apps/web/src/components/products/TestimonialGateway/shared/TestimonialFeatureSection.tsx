@@ -1,7 +1,6 @@
+import { Card } from "@rateup/ui/components/card";
 import { IconCamera, IconCircleCheck, IconHeart, IconMessage, IconStar } from "@tabler/icons-react";
 import { motion } from "motion/react";
-
-import { Card } from "@/components/ui/card.tsx";
 
 const TestimonialTemplate: React.FC<{
   type: string;

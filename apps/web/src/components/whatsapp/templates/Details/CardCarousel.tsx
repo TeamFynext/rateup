@@ -1,10 +1,12 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@rateup/ui/components/dropdown-menu";
+import { Field, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -35,9 +37,7 @@ import { toast } from "sonner";
 import type { WaConnectedCatalog } from "@/backend/whatsapp/catalog/catalog.api";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import { LengthTracker } from "@/components/input/LengthTracker.tsx";
-import { Card } from "@/components/ui/card.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { WaCarouselCard } from "@/components/whatsapp/wa-template-bubble.tsx";
 import { WHATSAPP_BUTTON_TYPE, WHATSAPP_TEMPLATE_BROADCAST_TYPE } from "@/utils/constants.ts";
 import { parseStringWithVariables } from "@/utils/whatsapp/templates.tsx";

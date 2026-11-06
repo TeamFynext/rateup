@@ -1,7 +1,6 @@
 import { Button } from "@rateup/ui/components/button";
+import { useTheme } from "@rateup/ui/components/theme-provider";
 import { IconMoon, IconSun } from "@tabler/icons-react";
-
-import { useTheme } from "./theme-provider";
 
 export function ModeToggle() {
   const { theme, setTheme } = useTheme();

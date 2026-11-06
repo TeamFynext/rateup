@@ -2,6 +2,7 @@ import type { DraggableProvidedDragHandleProps } from "@hello-pangea/dnd";
 import { Draggable, Droppable } from "@hello-pangea/dnd";
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
 import { ScrollArea } from "@rateup/ui/components/scroll-area";
 import { Spinner } from "@rateup/ui/components/spinner";
@@ -26,7 +27,6 @@ import { useReplaceQuestionsMutation } from "@/backend/surveys/questions/questio
 import { usePushToWaMutation, useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
 import { pressable } from "@/components/common/pressable.ts";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { FlowMaxElementsPerScreen, FlowMaxScreens } from "@/components/whatsapp/whatsappConfig.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useDisclosure } from "@/hooks/useDisclosure";

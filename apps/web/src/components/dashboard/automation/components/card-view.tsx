@@ -1,5 +1,6 @@
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Switch } from "@rateup/ui/components/switch";
 import { IconTrash } from "@tabler/icons-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -9,7 +10,6 @@ import { useTranslation } from "react-i18next";
 import { CardGrid } from "@/components/common/generic-card.tsx";
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { DataTable } from "@/components/Table/data-table.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import type { Rule } from "@/types/rule.ts";
 

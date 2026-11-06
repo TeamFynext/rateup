@@ -8,6 +8,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@rateup/ui/components/empty";
+import { Switch } from "@rateup/ui/components/switch";
 import {
   IconCheck,
   IconCopy,
@@ -32,7 +33,6 @@ import { IgMeLinkPhone } from "@/components/dashboard/instagram/instagram-previe
 import { ChannelSection } from "@/components/dashboard/meta-channels/ChannelSection.tsx";
 import { CreateRuleButton } from "@/components/dashboard/meta-channels/RuleAutomationsSection.tsx";
 import { PhonePreviewButton } from "@/components/ui/phone-preview.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 
 /** Copies a link, confirming for a moment. Shared with the Messenger m.me links tab. */

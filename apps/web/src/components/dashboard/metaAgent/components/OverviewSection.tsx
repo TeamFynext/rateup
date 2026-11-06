@@ -6,6 +6,13 @@
 import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@rateup/ui/components/card";
 import { Skeleton } from "@rateup/ui/components/skeleton";
 import {
   IconAlertTriangle,
@@ -26,7 +33,6 @@ import {
 } from "@/backend/metaAgent/metaAgent.query";
 import { PageHeading, SectionHeading } from "@/components/common/page-heading.tsx";
 import { SetupRowCard } from "@/components/common/setup-row-card.tsx";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useConfirm } from "@/context/confirm-provider";
 
 import { StepIconChip } from "../../loyalty/onboarding/StepChrome.tsx";

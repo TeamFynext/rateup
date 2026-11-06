@@ -1,4 +1,6 @@
+import { Field, FieldGroup, FieldLabel } from "@rateup/ui/components/field";
 import { ScrollArea } from "@rateup/ui/components/scroll-area";
+import { Switch } from "@rateup/ui/components/switch";
 import { Textarea } from "@rateup/ui/components/textarea";
 import {
   Tooltip,
@@ -23,8 +25,6 @@ import {
   ComboboxTrigger,
   ComboboxValue,
 } from "@/components/ui/combobox";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Switch } from "@/components/ui/switch";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { cn } from "@/lib/utils";
 import { QuestionType } from "@/types/enums.ts";

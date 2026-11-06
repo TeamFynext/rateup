@@ -1,10 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { type UseFormReturn, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 
 interface LinkValues {
   linkDisplayName: string;

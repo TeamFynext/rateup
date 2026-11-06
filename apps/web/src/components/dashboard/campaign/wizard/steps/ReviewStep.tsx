@@ -1,5 +1,6 @@
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldDescription, FieldLabel } from "@rateup/ui/components/field";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
 import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
 import {
@@ -23,7 +24,6 @@ import {
 } from "@/backend/campaign/campaign.query";
 import { useContacts } from "@/backend/campaign/contacts/contacts.query";
 import { CampaignCreditsCta } from "@/components/dashboard/campaign/CampaignCreditsCta.tsx";
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import useTemplatesAvailableForTeam from "@/hooks/team.tsx";
 import { useDebounce } from "@/hooks/use-debounce.ts";

@@ -1,4 +1,6 @@
 import { Button } from "@rateup/ui/components/button";
+import { Checkbox } from "@rateup/ui/components/checkbox";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@rateup/ui/components/field";
 import {
   InputGroup,
   InputGroupAddon,
@@ -22,8 +24,6 @@ import { useTranslation } from "react-i18next";
 
 import { useCheckEmailExistMutation } from "@/backend/user/user.query";
 
-import { Checkbox } from "../../ui/checkbox.tsx";
-import { Field, FieldError, FieldGroup, FieldLabel } from "../../ui/field.tsx";
 import AppleSignInButton from "../AppleSigninButton.tsx";
 import { AUTH_CONTROL, AUTH_CTA } from "../AuthShell.tsx";
 import GoogleSignInButton from "../GoogleSigninButton.tsx";

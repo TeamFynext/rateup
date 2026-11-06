@@ -1,5 +1,13 @@
 import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
 import { Button } from "@rateup/ui/components/button";
+import { Checkbox } from "@rateup/ui/components/checkbox";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  FieldTitle,
+} from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { IconBrandWhatsapp, IconChevronDown, IconCreditCard } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -18,15 +26,7 @@ import {
   type ShopBankDetails,
   type WhatsappConfirmLink,
 } from "@/backend/commerce/shop.api";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { CountryDropdown } from "@/components/ui/country-dropdown.tsx";
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-  FieldTitle,
-} from "@/components/ui/field.tsx";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { cn } from "@/lib/utils.ts";

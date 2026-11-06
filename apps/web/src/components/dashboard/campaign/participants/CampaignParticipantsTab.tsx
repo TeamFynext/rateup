@@ -1,5 +1,6 @@
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Checkbox } from "@rateup/ui/components/checkbox";
 import { Input } from "@rateup/ui/components/input";
 import { Skeleton } from "@rateup/ui/components/skeleton";
 import {
@@ -20,7 +21,6 @@ import {
   useRemoveMulitpleGroupParticipants,
 } from "@/backend/campaign/campaignParticipants/campaignParticipants.query";
 import useDebounce from "@/components/menu/hook/useDebounce.ts";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { ContactAvatar } from "@/components/ui/contact-avatar.tsx";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group.tsx";
 import { cn } from "@/lib/utils";

@@ -1,9 +1,9 @@
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { useId, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { LoadingOverlay } from "@/components/ui/loading-overlay.tsx";
 import { useCropperJS } from "@/hooks/useCropperJS.ts";
 import { mimeTypesForImage } from "@/utils/constants.ts";

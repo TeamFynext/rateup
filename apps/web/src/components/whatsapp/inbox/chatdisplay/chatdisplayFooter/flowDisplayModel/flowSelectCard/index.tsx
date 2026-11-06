@@ -1,6 +1,6 @@
 import { Badge } from "@rateup/ui/components/badge";
+import { FieldLabel } from "@rateup/ui/components/field";
 
-import { FieldLabel } from "@/components/ui/field.tsx";
 import { RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { cn } from "@/lib/utils.ts";
 

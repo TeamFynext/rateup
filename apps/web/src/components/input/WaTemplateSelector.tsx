@@ -1,3 +1,4 @@
+import { Field, FieldDescription, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import {
   Select,
   SelectContent,
@@ -13,7 +14,6 @@ import useTemplatesAvailableForTeam from "@/hooks/team.tsx";
 import type { TemplateType } from "@/types/enums.ts";
 
 import { SelectSkeleton } from "../LoyaltyComponents/utils.tsx";
-import { Field, FieldDescription, FieldError, FieldLabel } from "../ui/field.tsx";
 
 interface WaTemplateSelector {
   value?: string;

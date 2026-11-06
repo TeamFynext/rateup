@@ -1,4 +1,6 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent } from "@rateup/ui/components/card";
+import { Field, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -10,9 +12,6 @@ import {
 import { IconCheck, IconCopy } from "@tabler/icons-react";
 import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
-
-import { Card, CardContent } from "@/components/ui/card.tsx";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 
 const units = [
   { value: "px", label: "px" },

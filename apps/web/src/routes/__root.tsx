@@ -2,6 +2,8 @@
    the stylesheet's `@font-face` rules point at — a different URL would download the face twice. */
 import figtreeLatin from "@fontsource-variable/figtree/files/figtree-latin-wght-normal.woff2?url";
 import instrumentSansLatin from "@fontsource-variable/instrument-sans/files/instrument-sans-latin-wght-normal.woff2?url";
+import { Toaster } from "@rateup/ui/components/sonner";
+import { ThemeProvider } from "@rateup/ui/components/theme-provider";
 import type { QueryClient } from "@tanstack/react-query";
 import {
   createRootRouteWithContext,
@@ -15,8 +17,6 @@ import { Suspense } from "react";
 import ErrorPage from "@/components/error.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import Error from "@/components/not-found.tsx";
-import { ThemeProvider } from "@/components/theme/theme-provider.tsx";
-import { Toaster } from "@/components/ui/sonner.tsx";
 import { cn } from "@/lib/utils.ts";
 import { cloudfrontOrigin, isProduction, rateupLogoOg, rateupUrl } from "@/utils/constants.ts";
 import {

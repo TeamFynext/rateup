@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent } from "@rateup/ui/components/card";
 import {
   Empty,
   EmptyContent,
@@ -8,6 +9,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@rateup/ui/components/empty";
+import { Switch } from "@rateup/ui/components/switch";
 import { IconMessageStar, IconTrash } from "@tabler/icons-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
@@ -27,9 +29,7 @@ import type { LoyaltyTier } from "@/backend/loyalty/tier.api";
 import { useLoyaltyTiers } from "@/backend/loyalty/tier.query";
 import { BackLink } from "@/components/common/back-link.tsx";
 import { PageHeading } from "@/components/common/page-heading.tsx";
-import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Loader } from "@/components/ui/loader.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 
 import { RewardExamplePicker, type RewardExamplePick } from "../giveback/RewardExamplePicker.tsx";
 import { useRewardEconomicsContext } from "../giveback/useRewardEconomicsContext.ts";

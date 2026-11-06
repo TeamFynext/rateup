@@ -2,6 +2,13 @@ import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
 import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@rateup/ui/components/card";
+import {
   Empty,
   EmptyContent,
   EmptyDescription,
@@ -9,6 +16,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@rateup/ui/components/empty";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { Spinner } from "@rateup/ui/components/spinner";
 import {
   IconAlertTriangle,
@@ -28,14 +36,6 @@ import {
   useSetupFeedbackMutation,
 } from "@/backend/loyalty/feedback.query.ts";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { cn } from "@/lib/utils.ts";
 import { LOYALTY_FEEDBACK_FLOW_CATEGORY, WaFlowStatus } from "@/types/enums.ts";
 

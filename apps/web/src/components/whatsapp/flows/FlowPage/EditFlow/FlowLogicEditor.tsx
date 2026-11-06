@@ -1,4 +1,5 @@
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldTitle } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { ScrollArea } from "@rateup/ui/components/scroll-area";
 import {
@@ -18,7 +19,6 @@ import type { Updater } from "use-immer";
 import { useImmer } from "use-immer";
 
 import { useUpdateFlowMutation, useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
-import { Field, FieldTitle } from "@/components/ui/field.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { cn } from "@/lib/utils";

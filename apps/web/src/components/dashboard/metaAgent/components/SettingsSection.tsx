@@ -1,6 +1,14 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Alert, AlertDescription } from "@rateup/ui/components/alert";
 import { Button } from "@rateup/ui/components/button";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+  FieldSeparator,
+} from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -11,6 +19,7 @@ import {
 } from "@rateup/ui/components/select";
 import { Skeleton } from "@rateup/ui/components/skeleton";
 import { Spinner } from "@rateup/ui/components/spinner";
+import { Switch } from "@rateup/ui/components/switch";
 import { Textarea } from "@rateup/ui/components/textarea";
 import { IconInfoCircle } from "@tabler/icons-react";
 import { useEffect } from "react";
@@ -23,15 +32,6 @@ import {
   useUpdateAgentInboxSettings,
   useUpdateAgentSettings,
 } from "@/backend/metaAgent/metaAgent.query";
-import {
-  Field,
-  FieldContent,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-  FieldSeparator,
-} from "@/components/ui/field";
-import { Switch } from "@/components/ui/switch";
 import { TagsInput } from "@/components/ui/tags-input";
 
 import { settingsFormSchema, type SettingsFormValues } from "../metaAgent.schemas";

@@ -1,3 +1,4 @@
+import { Field, FieldDescription, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import type {
   ControllerRenderProps,
   FieldPath,
@@ -5,8 +6,6 @@ import type {
   UseControllerProps,
 } from "react-hook-form";
 import { Controller } from "react-hook-form";
-
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 
 /** Spread onto the control so the error is announced with the field. */
 export interface ControlProps {

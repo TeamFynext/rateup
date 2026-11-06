@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@rateup/ui/components/avatar";
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -34,7 +35,6 @@ import {
 } from "@/backend/team/team.query";
 import { useUserInfo } from "@/backend/user/user.query";
 import { RoleBadge } from "@/components/common/RoleBadge.tsx";
-import { Card } from "@/components/ui/card.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
 import { cn } from "@/lib/utils.ts";
 import { resolveRoleKey } from "@/utils/authz/can.ts";

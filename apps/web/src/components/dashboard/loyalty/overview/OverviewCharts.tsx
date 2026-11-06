@@ -1,3 +1,10 @@
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@rateup/ui/components/card";
 import { useTranslation } from "react-i18next";
 import {
   Area,
@@ -12,13 +19,6 @@ import {
 } from "recharts";
 
 import type { LoyaltyDashboardStats } from "@/backend/loyalty/dashboard/dashboard.query";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
 
 import type { ProgramState } from "../program/programState.ts";
 import {

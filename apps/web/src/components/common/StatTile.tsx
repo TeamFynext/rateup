@@ -1,13 +1,13 @@
-import { IconArrowDownRight, IconArrowUpRight } from "@tabler/icons-react";
-import type { ReactNode } from "react";
-
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card.tsx";
+} from "@rateup/ui/components/card";
+import { IconArrowDownRight, IconArrowUpRight } from "@tabler/icons-react";
+import type { ReactNode } from "react";
+
 import { cn } from "@/lib/utils";
 
 /** A change against an earlier period, in percent. `goodWhen` says which direction is good news. */

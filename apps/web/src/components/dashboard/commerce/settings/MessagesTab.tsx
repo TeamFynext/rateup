@@ -5,6 +5,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@rateup/ui/components/select";
+import { Switch } from "@rateup/ui/components/switch";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 
@@ -14,7 +15,6 @@ import type {
   ShopStoreUpdate,
 } from "@/backend/commerce/shop.api";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
-import { Switch } from "@/components/ui/switch.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
 import { WaTemplateStatus } from "@/types/enums.ts";
 

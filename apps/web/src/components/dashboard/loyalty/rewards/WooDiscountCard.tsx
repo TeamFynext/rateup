@@ -1,11 +1,11 @@
+import { Field, FieldDescription, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
+import { Switch } from "@rateup/ui/components/switch";
 import { Link } from "@tanstack/react-router";
 import { useId } from "react";
 
 import { useWooStatus } from "@/backend/appsIntegration/woocommerce/woocommerce.query.ts";
 import { WooCommerceLogo } from "@/components/integrations/logos.tsx";
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import { numberInputValue } from "@/utils/form.ts";
 
 interface WooDiscountCardProps {

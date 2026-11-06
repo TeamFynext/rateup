@@ -1,4 +1,6 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@rateup/ui/components/card";
+import { Field, FieldDescription, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -8,6 +10,7 @@ import {
   SelectValue,
 } from "@rateup/ui/components/select";
 import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Switch } from "@rateup/ui/components/switch";
 import { IconLogout, IconTrash } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -20,9 +23,6 @@ import {
   useUpateCatalog,
 } from "@/backend/whatsapp/catalog/catalog.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
-import { Switch } from "@/components/ui/switch";
 import { useConfirm } from "@/context/confirm-provider";
 import { MetaLoginAssets, WaConfigType } from "@/types/enums";
 

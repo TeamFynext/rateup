@@ -1,7 +1,7 @@
+import { FieldTitle } from "@rateup/ui/components/field";
+import { Switch } from "@rateup/ui/components/switch";
 import type { ReactNode } from "react";
 
-import { FieldTitle } from "@/components/ui/field.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import { cn } from "@/lib/utils";
 
 function CustomSwitch({

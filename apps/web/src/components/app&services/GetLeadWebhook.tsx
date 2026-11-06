@@ -9,6 +9,7 @@ import {
   AlertDialogTitle,
 } from "@rateup/ui/components/alert-dialog";
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
 import { IconAlertTriangle, IconLoader2 } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -18,7 +19,6 @@ import {
   useIssueGetLeadWebhookMutation,
 } from "@/backend/appsIntegration/getlead/getlead.query";
 import { LinkCopyElement } from "@/components/input/LinkCopyElement.tsx";
-import { Card } from "@/components/ui/card";
 
 /**
  * The payload templates an admin pastes into a workflow's JSON Template box.

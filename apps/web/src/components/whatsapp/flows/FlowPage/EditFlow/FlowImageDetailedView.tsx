@@ -1,5 +1,6 @@
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { ScrollArea } from "@rateup/ui/components/scroll-area";
 import { Separator } from "@rateup/ui/components/separator";
@@ -9,7 +10,6 @@ import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import type { WaFlowFormElement } from "@/types/global";
 import { getWaFlowFormElementTypeLabel } from "@/utils/enums/index.ts";
 import { fileToBase64 } from "@/utils/misc/base64.utils";

@@ -1,6 +1,7 @@
 // Extracted verbatim from `Zoho.tsx`. Behaviour is unchanged.
 
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardHeader, CardTitle } from "@rateup/ui/components/card";
 import {
   Dialog,
   DialogContent,
@@ -29,7 +30,6 @@ import {
 } from "@/components/dashboard/settings/integrations/mapping/StageMappingEditor.tsx";
 import { BiginLogo, ZohoLogo } from "@/components/integrations/logos";
 import { usePipelineStages } from "@/components/pipeline/shared/StageSelector.tsx";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUser } from "@/context/UserContext";
 import { IntegratedApps } from "@/types/enums";
 

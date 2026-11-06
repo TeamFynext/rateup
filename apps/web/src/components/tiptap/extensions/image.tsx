@@ -9,6 +9,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from "@rateup/ui/components/dropdown-menu";
+import { FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Separator } from "@rateup/ui/components/separator";
 import {
@@ -28,7 +29,6 @@ import Image from "@tiptap/extension-image";
 import { type NodeViewProps, NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
 import { useEffect, useRef, useState } from "react";
 
-import { FieldLabel } from "@/components/ui/field.tsx";
 import { useImageUpload } from "@/hooks/use-image-upload";
 import { cn } from "@/lib/utils";
 

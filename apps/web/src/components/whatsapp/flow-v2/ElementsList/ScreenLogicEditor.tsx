@@ -1,4 +1,5 @@
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { ScrollArea } from "@rateup/ui/components/scroll-area";
 import {
   Select,
@@ -14,7 +15,6 @@ import { toast } from "sonner";
 import type { Updater } from "use-immer";
 import { useImmer } from "use-immer";
 
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { LogicAction, LogicCondition, QuestionType2, WaQuestions } from "@/types/enums.ts";
 import type { FlowLogicCondition, FlowLogicJump } from "@/types/global";

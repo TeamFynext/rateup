@@ -1,8 +1,8 @@
+import { useResolvedTheme } from "@rateup/ui/components/theme-provider";
 import { useSearch } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 
 import { useCreateAppleUserMutation, useCreateUserMutation } from "@/backend/user/user.query";
-import { useResolvedTheme } from "@/components/theme/theme-provider.tsx";
 import {
   useConsumeVerificationCode,
   useEmailSend,

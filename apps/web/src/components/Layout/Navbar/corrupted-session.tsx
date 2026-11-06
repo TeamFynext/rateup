@@ -1,9 +1,5 @@
 import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
 import { Button } from "@rateup/ui/components/button";
-import { IconAlertTriangle } from "@tabler/icons-react";
-import { useNavigate } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
-
 import {
   Card,
   CardContent,
@@ -11,7 +7,10 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card.tsx";
+} from "@rateup/ui/components/card";
+import { IconAlertTriangle } from "@tabler/icons-react";
+import { useNavigate } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 
 export default function CorruptedSessionScreen() {
   const navigate = useNavigate();

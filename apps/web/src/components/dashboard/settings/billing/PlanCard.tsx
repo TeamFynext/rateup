@@ -1,4 +1,5 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent } from "@rateup/ui/components/card";
 import {
   IconArrowsExchange,
   IconExternalLink,
@@ -7,8 +8,6 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
-
-import { Card, CardContent } from "@/components/ui/card.tsx";
 
 import type { BillingData } from "./useBillingData.ts";
 import { currencySymbol, formatAmount } from "./useBillingData.ts";

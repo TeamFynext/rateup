@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import {
   Select,
   SelectContent,
@@ -24,7 +25,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { LogicAction, LogicCondition, QuestionType2 } from "@/types/enums.ts";
 import type { FlowLogicCondition, FlowLogicJump } from "@/types/global";
 import { logicSupportedTypes3 } from "@/utils/data.ts";

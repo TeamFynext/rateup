@@ -1,5 +1,7 @@
 import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
+import { Checkbox } from "@rateup/ui/components/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -62,8 +64,6 @@ import {
 } from "@/backend/commerce/shop.api";
 import { useInvalidateShop, useShopOrders } from "@/backend/commerce/shop.query";
 import { ListPageSearchInput } from "@/components/common/list-page-layout.tsx";
-import { Card } from "@/components/ui/card.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { useDebounce } from "@/hooks/use-debounce.ts";
 import { usePermissions } from "@/hooks/usePermission.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";

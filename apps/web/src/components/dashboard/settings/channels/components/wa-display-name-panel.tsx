@@ -2,6 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconRefresh } from "@tabler/icons-react";
@@ -14,7 +15,6 @@ import {
   useReRegisterPhoneNumberMutation,
   useUpdateDisplayNameMutation,
 } from "@/backend/whatsapp/settings/waSettings.query";
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { getApiErrorMessage } from "@/utils/apiError";
 
 interface DisplayNameFormValues {

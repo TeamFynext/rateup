@@ -8,7 +8,10 @@ type RedirectError = { url: string; time: string };
 export type RedirectValue = { enable?: boolean; url?: string; time?: string | number };
 
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@rateup/ui/components/card";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
+import { Switch } from "@rateup/ui/components/switch";
 import {
   Tooltip,
   TooltipContent,
@@ -18,9 +21,6 @@ import {
 import type { Dispatch, SetStateAction } from "react";
 
 import type { SurveyUpdateMutation } from "@/components/Survey/Settings/updateSettings.ts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
-import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 
 import { updateRedirect } from "../updateSettings.ts";
 

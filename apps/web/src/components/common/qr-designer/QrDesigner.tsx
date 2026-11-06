@@ -1,5 +1,8 @@
 import { Alert, AlertDescription } from "@rateup/ui/components/alert";
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent } from "@rateup/ui/components/card";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
+import { Switch } from "@rateup/ui/components/switch";
 import {
   IconAlertTriangle,
   IconDeviceFloppy,
@@ -15,10 +18,7 @@ import { ColorField } from "@/components/common/color-field.tsx";
 import { CopyButton } from "@/components/common/copy-button.tsx";
 import { SectionHeading } from "@/components/common/page-heading.tsx";
 import { useArtboardExport } from "@/components/dashboard/loyalty/poster/usePosterExport.ts";
-import { Card, CardContent } from "@/components/ui/card.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Slider } from "@/components/ui/slider.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import { cn } from "@/lib/utils.ts";
 import { rateupIcon } from "@/utils/constants.ts";
 

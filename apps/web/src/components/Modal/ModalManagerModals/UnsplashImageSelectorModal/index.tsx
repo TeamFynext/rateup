@@ -1,4 +1,5 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
 import { IconArrowRight, IconSearch } from "@tabler/icons-react";
@@ -7,7 +8,6 @@ import { useTranslation } from "react-i18next";
 
 import { useTriggeringDownload, useUnsplashPhotosList } from "@/backend/unsplash/unsplash.query";
 import type { SelectedImage } from "@/components/LocalOrUnsplashImagePicker/index.tsx";
-import { Card } from "@/components/ui/card.tsx";
 import { LoadingOverlay } from "@/components/ui/loading-overlay.tsx";
 import { useIntersection } from "@/hooks/use-intersection.ts";
 import { useMediaQuery } from "@/hooks/use-media-query.ts";

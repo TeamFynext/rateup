@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
@@ -17,7 +18,6 @@ import { z } from "zod";
 
 import { loyaltyKeys } from "@/backend/loyalty/loyalty.keys.ts";
 import { useEditTeamMutation } from "@/backend/team/team.query";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { ReviewPagePlatform } from "@/types/enums.ts";
 
 const urlSchema = z.object({

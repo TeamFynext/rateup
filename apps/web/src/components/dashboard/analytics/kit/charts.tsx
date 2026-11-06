@@ -1,13 +1,13 @@
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
-
-import { deliveryConfig, singleSeriesConfig } from "@/components/common/chartTheme.ts";
 import {
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart.tsx";
+} from "@rateup/ui/components/chart";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+
+import { deliveryConfig, singleSeriesConfig } from "@/components/common/chartTheme.ts";
 import { toText } from "@/utils/toText";
 
 /**

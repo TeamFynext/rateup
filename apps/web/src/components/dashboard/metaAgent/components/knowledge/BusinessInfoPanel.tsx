@@ -11,6 +11,7 @@ import {
   AlertDialogTrigger,
 } from "@rateup/ui/components/alert-dialog";
 import { Button } from "@rateup/ui/components/button";
+import { FieldGroup, FieldLegend, FieldSeparator, FieldSet } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Skeleton } from "@rateup/ui/components/skeleton";
 import { Spinner } from "@rateup/ui/components/spinner";
@@ -26,7 +27,6 @@ import {
   useSyncBusinessInfo,
   useUpdateBusinessInfo,
 } from "@/backend/metaAgent/metaAgent.query";
-import { FieldGroup, FieldLegend, FieldSeparator, FieldSet } from "@/components/ui/field";
 
 import { businessInfoFormSchema, type BusinessInfoFormValues } from "../../metaAgent.schemas";
 import { FormField } from "../shared/FormField";

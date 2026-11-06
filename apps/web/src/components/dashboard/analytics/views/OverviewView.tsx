@@ -1,4 +1,5 @@
 import { Badge } from "@rateup/ui/components/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@rateup/ui/components/card";
 import { Skeleton } from "@rateup/ui/components/skeleton";
 import {
   IconChevronRight,
@@ -19,7 +20,6 @@ import {
   useGetStaffPerformanceonConversation,
 } from "@/backend/conversation/conversation.query";
 import { StatTile } from "@/components/common/StatTile.tsx";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { previousRange } from "@/components/whatsapp/inbox/analytics/dateRangePresets.ts";
 import { cn } from "@/lib/utils";
 

@@ -1,4 +1,6 @@
 import { Button } from "@rateup/ui/components/button";
+import { Checkbox } from "@rateup/ui/components/checkbox";
+import { FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { ScrollArea } from "@rateup/ui/components/scroll-area";
 import { Skeleton } from "@rateup/ui/components/skeleton";
@@ -25,8 +27,6 @@ import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useDebouncedState } from "@/hooks/use-debounced-state.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 
-import { Checkbox } from "../ui/checkbox.tsx";
-import { FieldLabel } from "../ui/field.tsx";
 import {
   ContactListFilters,
   toContactListQuery,

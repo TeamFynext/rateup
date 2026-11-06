@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { ScrollArea } from "@rateup/ui/components/scroll-area";
 import {
   Select,
@@ -18,7 +19,6 @@ import { toast } from "sonner";
 import z from "zod";
 
 import { TextareaWithLengthTracker } from "@/components/input/TextareaWithLengthTracker.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { WaFlowFormElementType } from "@/types/enums.ts";
 import { SAVE_HOTKEY } from "@/utils/constants.ts";
 import { getWaFlowFormElementTypeLabel } from "@/utils/enums/index.ts";

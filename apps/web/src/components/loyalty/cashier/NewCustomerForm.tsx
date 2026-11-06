@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -18,7 +19,6 @@ import { z } from "zod";
 import { LOYALTY_GENDERS, type LoyaltyGender } from "@/backend/loyalty/customer/customer.api";
 import { useContactLookupByPhone } from "@/backend/loyalty/customer/customer.query";
 import { DatePicker } from "@/components/ui/date-picker.tsx";
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import { useDebounce } from "@/hooks/use-debounce.ts";
 

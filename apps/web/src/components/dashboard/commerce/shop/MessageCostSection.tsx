@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Skeleton } from "@rateup/ui/components/skeleton";
 import {
@@ -31,7 +32,6 @@ import {
   type ShopMessageCost,
 } from "@/backend/commerce/shop.api";
 import { useInvalidateShop, useShopMessageCost } from "@/backend/commerce/shop.query";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { useCan } from "@/hooks/usePermission.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 

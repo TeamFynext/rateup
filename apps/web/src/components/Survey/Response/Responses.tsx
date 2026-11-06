@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { useNavigate } from "@tanstack/react-router";
 import type { ColumnFiltersState, SortingState } from "@tanstack/react-table";
@@ -26,7 +27,6 @@ import {
 } from "@/backend/surveys/response/response.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import type { DataTableToolbarProps } from "@/components/Table/data-table.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { useUser } from "@/context/UserContext.tsx";

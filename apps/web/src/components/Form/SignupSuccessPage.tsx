@@ -1,4 +1,5 @@
 import { Button, buttonVariants } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
 import { IconArrowRight, IconCheck, IconExternalLink, IconStarFilled } from "@tabler/icons-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -6,7 +7,6 @@ import { useTranslation } from "react-i18next";
 import { useUserInfo } from "@/backend/user/user.query";
 import { docsPath } from "@/utils/constants.ts";
 
-import { Card } from "../ui/card.tsx";
 import { AUTH_CTA, AuthShell, AuthTitle } from "./AuthShell.tsx";
 
 /**

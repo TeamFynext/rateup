@@ -1,3 +1,10 @@
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@rateup/ui/components/card";
 import { Progress } from "@rateup/ui/components/progress";
 import { Skeleton } from "@rateup/ui/components/skeleton";
 import {
@@ -16,13 +23,6 @@ import { useTranslation } from "react-i18next";
 import { useHappyIndex } from "@/backend/surveys/response/response.query";
 import { NPS_COLORS, SCALE_5, SENTIMENT } from "@/components/common/sentimentScale.ts";
 import { DotBadge } from "@/components/dashboard/analytics/kit/StatusBadges.tsx";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
 import SurveyContext from "@/context/SurveyContext.ts";
 
 const HappinessRing = ({

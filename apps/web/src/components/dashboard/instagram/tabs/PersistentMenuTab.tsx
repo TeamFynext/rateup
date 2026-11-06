@@ -1,5 +1,6 @@
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -34,7 +35,6 @@ import {
   WithChannelPreview,
 } from "@/components/dashboard/meta-channels/ChannelPreview.tsx";
 import { ChannelSection } from "@/components/dashboard/meta-channels/ChannelSection.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { useCan } from "@/hooks/usePermission.ts";
 
 import type { DraftMenuItem } from "./shared.tsx";

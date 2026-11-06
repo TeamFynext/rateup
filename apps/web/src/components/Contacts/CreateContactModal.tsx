@@ -1,5 +1,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
+import { Checkbox } from "@rateup/ui/components/checkbox";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -10,6 +20,7 @@ import {
 } from "@rateup/ui/components/select";
 import { Skeleton } from "@rateup/ui/components/skeleton";
 import { Spinner } from "@rateup/ui/components/spinner";
+import { Switch } from "@rateup/ui/components/switch";
 import { IconDownload, IconInfoCircle, IconUser } from "@tabler/icons-react";
 import { Activity, useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -33,12 +44,8 @@ import { importMethod } from "@/utils/enums/index.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 
-import { Card } from "../ui/card.tsx";
-import { Checkbox } from "../ui/checkbox.tsx";
-import { Field, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "../ui/field.tsx";
 import { MultiSelect } from "../ui/multi-select.tsx";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group.tsx";
-import { Switch } from "../ui/switch.tsx";
 import {
   buildContactSchema,
   type ContactFormValues,

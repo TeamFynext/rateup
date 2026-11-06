@@ -1,7 +1,6 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@rateup/ui/components/card";
 import { useTranslation } from "react-i18next";
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 
 interface DangerZoneProps {
   onReset: () => void;

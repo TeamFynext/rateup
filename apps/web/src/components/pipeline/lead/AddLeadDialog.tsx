@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Label } from "@rateup/ui/components/label";
 import { Textarea } from "@rateup/ui/components/textarea";
@@ -34,7 +35,6 @@ import type {
   PipelineUser,
 } from "@/backend/pipeline/pipeline.types.ts";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import { useDebounce } from "@/hooks/use-debounce";
 import { cn } from "@/lib/utils";

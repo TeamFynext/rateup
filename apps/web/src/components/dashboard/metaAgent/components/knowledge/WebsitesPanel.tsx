@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@rateup/ui/components/dialog";
 import { Empty, EmptyDescription, EmptyTitle } from "@rateup/ui/components/empty";
+import { FieldGroup } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconGlobe, IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
@@ -24,7 +25,6 @@ import {
   useUpdateWebsite,
   useWebsites,
 } from "@/backend/metaAgent/metaAgent.query";
-import { FieldGroup } from "@/components/ui/field";
 
 import { websiteFormSchema, type WebsiteFormValues } from "../../metaAgent.schemas";
 import { FormField } from "../shared/FormField";

@@ -1,5 +1,7 @@
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@rateup/ui/components/card";
+import { Field, FieldGroup, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   IconBuilding,
@@ -19,8 +21,6 @@ import {
   useCatalogSettings,
   useUpdateCatalogSettings,
 } from "@/backend/whatsapp/catalog/catalog.query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 import { toText } from "@/utils/toText";

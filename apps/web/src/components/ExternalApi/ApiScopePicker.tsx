@@ -1,9 +1,9 @@
+import { Checkbox } from "@rateup/ui/components/checkbox";
+import { FieldDescription, FieldLabel, FieldLegend, FieldSet } from "@rateup/ui/components/field";
 import { useId } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { ApiKeyFeature } from "@/backend/apiKeys/apiKeys.api.ts";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { FieldDescription, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 
 import { FEATURE_OPTIONS } from "./apiKeyFormat.ts";

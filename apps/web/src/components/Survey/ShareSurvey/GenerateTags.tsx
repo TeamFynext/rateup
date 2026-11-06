@@ -1,5 +1,6 @@
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldTitle } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Tooltip,
@@ -11,8 +12,6 @@ import { IconArrowsShuffle, IconX } from "@tabler/icons-react";
 import { useState, type KeyboardEvent } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
-
-import { Field, FieldTitle } from "@/components/ui/field.tsx";
 
 const GenerateTags = ({
   tagSelectData,

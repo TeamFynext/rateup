@@ -1,4 +1,12 @@
 import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  FieldTitle,
+} from "@rateup/ui/components/field";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -27,14 +35,6 @@ import {
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 
 import { PLAIN_TRIGGERS } from "@/components/dashboard/automation/rule-sentence.ts";
-import {
-  Field,
-  FieldContent,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-  FieldTitle,
-} from "@/components/ui/field.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { cn } from "@/lib/utils.ts";
 import { shopifyEventData, wooEventData } from "@/utils/constants.ts";

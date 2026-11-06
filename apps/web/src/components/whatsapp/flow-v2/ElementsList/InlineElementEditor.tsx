@@ -1,5 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@rateup/ui/components/button";
+import { Checkbox } from "@rateup/ui/components/checkbox";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { Separator } from "@rateup/ui/components/separator";
 import { IconDeviceFloppy } from "@tabler/icons-react";
 import { Image } from "@unpic/react";
@@ -9,8 +11,6 @@ import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 import RateupSwitch from "@/components/Switch/RateupSwitch.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import {
   DateField,
   MultiSelectField,

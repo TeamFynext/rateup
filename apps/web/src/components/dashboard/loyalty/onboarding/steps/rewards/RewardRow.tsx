@@ -1,9 +1,12 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent } from "@rateup/ui/components/card";
+import { Checkbox } from "@rateup/ui/components/checkbox";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@rateup/ui/components/collapsible";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
 import {
@@ -18,9 +21,6 @@ import { useMemo } from "react";
 import { Controller, type ControllerRenderProps, type useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
-import { Card, CardContent } from "@/components/ui/card.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { cn } from "@/lib/utils.ts";
 import { numberInputValue } from "@/utils/form.ts";
 

@@ -1,5 +1,6 @@
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Switch } from "@rateup/ui/components/switch";
 import {
   Tooltip,
   TooltipContent,
@@ -14,7 +15,6 @@ import { toast } from "sonner";
 
 import { useAllResponses } from "@/backend/surveys/response/response.query";
 import { useEditSurveyMutation } from "@/backend/surveys/surveys.query";
-import { Switch } from "@/components/ui/switch.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";

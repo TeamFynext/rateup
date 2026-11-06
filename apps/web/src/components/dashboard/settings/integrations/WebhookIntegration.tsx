@@ -1,4 +1,5 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent, CardHeader } from "@rateup/ui/components/card";
 import {
   Empty,
   EmptyContent,
@@ -14,7 +15,6 @@ import { useTranslation } from "react-i18next";
 
 import type { WebhookEvent } from "@/backend/webhook/webhook.api";
 import { useUpdateWebhookEventsMutation, useWebhook } from "@/backend/webhook/webhook.query";
-import { Card, CardContent, CardHeader } from "@/components/ui/card.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
 
 import { INTEGRATIONS_CONFIG } from "./integrations.config.ts";

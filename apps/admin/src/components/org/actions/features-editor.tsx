@@ -1,9 +1,9 @@
+import { Checkbox } from "@rateup/ui/components/checkbox";
 import { Input } from "@rateup/ui/components/input";
 import { Label } from "@rateup/ui/components/label";
+import { Switch } from "@rateup/ui/components/switch";
 
 import { UNLIMITED_COUNT, type SubscriptionFeatures } from "@/api/org-actions.api";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Switch } from "@/components/ui/switch";
 
 import { formatLimit, isUnlimited, isUnmetered, LIMITS, SWITCHES } from "./features";
 

@@ -1,6 +1,7 @@
 // Extracted verbatim from `Zoho.tsx`. Behaviour is unchanged.
 
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@rateup/ui/components/card";
 import {
   Dialog,
   DialogContent,
@@ -9,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldDescription, FieldLabel } from "@rateup/ui/components/field";
 import {
   Select,
   SelectContent,
@@ -16,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@rateup/ui/components/select";
+import { Switch } from "@rateup/ui/components/switch";
 import { IconDeviceFloppy, IconSettings } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -32,12 +35,9 @@ import {
 import { StageMappingEditor } from "@/components/dashboard/settings/integrations/mapping/StageMappingEditor.tsx";
 import { BiginLogo, ZohoLogo } from "@/components/integrations/logos";
 import { usePipelineStages } from "@/components/pipeline/shared/StageSelector.tsx";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
 import { useUser } from "@/context/UserContext";
 import { IntegratedApps } from "@/types/enums";
 
-import { Field, FieldDescription, FieldLabel } from "../../ui/field";
 import { ZohoTriggers, getTriggerLabel, getTriggerDescription } from "./shared.tsx";
 
 /**

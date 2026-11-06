@@ -1,5 +1,6 @@
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -27,7 +28,6 @@ import {
   useWaSettings,
 } from "@/backend/whatsapp/settings/waSettings.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import type { LeadgenNodeData } from "@/components/whatsapp/automation/types/node-types.ts";
 import { cn } from "@/lib/utils.ts";

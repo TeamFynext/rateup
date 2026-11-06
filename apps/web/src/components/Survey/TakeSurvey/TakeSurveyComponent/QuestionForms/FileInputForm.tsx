@@ -1,11 +1,11 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
 import { Spinner } from "@rateup/ui/components/spinner";
 import { IconFileFilled, IconUpload, IconX } from "@tabler/icons-react";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { pressable } from "@/components/common/pressable.ts";
-import { Card } from "@/components/ui/card.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
 import { cn } from "@/lib/utils";

@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { FieldError } from "@rateup/ui/components/field";
 import { Spinner } from "@rateup/ui/components/spinner";
 import { IconCircleCheck, IconUserPlus } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -39,7 +40,6 @@ import { ContactGroupType } from "@/types/enums.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 
 import { ContactAvatar } from "../ui/contact-avatar.tsx";
-import { FieldError } from "../ui/field.tsx";
 import {
   buildContactSchema,
   type ContactFormValues,

@@ -8,6 +8,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -23,13 +30,6 @@ import z from "zod";
 
 import type { UpdateLoyaltyCustomerInput } from "@/backend/loyalty/customer/customer.api";
 import type { LoyaltyChannel } from "@/backend/loyalty/program.api";
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field.tsx";
 
 import { channelLabel } from "../channels/channels.ts";
 

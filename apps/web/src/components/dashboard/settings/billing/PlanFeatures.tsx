@@ -1,9 +1,9 @@
+import { Card } from "@rateup/ui/components/card";
 import { IconCircleCheck, IconSparkles } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import { isUnlimitedCount } from "@/components/HomePage/pages/Pricing/pricing.data.ts";
 import type { PricingPlan } from "@/components/HomePage/pages/Pricing/types.ts";
-import { Card } from "@/components/ui/card.tsx";
 
 /**
  * What the current plan actually includes.

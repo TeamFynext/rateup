@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { IconCheck, IconMail } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -19,7 +20,6 @@ import z from "zod";
 
 import { orgKeys, teamKeys } from "@/backend/org/org.keys";
 import { inviteTeamMember } from "@/backend/team/team.api";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { cn } from "@/lib/utils.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";

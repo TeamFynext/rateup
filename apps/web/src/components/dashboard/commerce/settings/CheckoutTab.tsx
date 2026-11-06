@@ -1,3 +1,4 @@
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -6,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@rateup/ui/components/select";
+import { Switch } from "@rateup/ui/components/switch";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 
@@ -16,9 +18,7 @@ import {
   type ShopStoreUpdate,
 } from "@/backend/commerce/shop.api";
 import { useShopDiscounts } from "@/backend/commerce/shop.query";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group.tsx";
 import { useCan } from "@/hooks/usePermission.ts";
 import { cn } from "@/lib/utils.ts";

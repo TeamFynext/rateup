@@ -1,4 +1,5 @@
 import { Button } from "@rateup/ui/components/button";
+import { Checkbox } from "@rateup/ui/components/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -7,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { ScrollArea } from "@rateup/ui/components/scroll-area";
 import {
@@ -24,8 +26,6 @@ import { useTranslation } from "react-i18next";
 import { useImmer } from "use-immer";
 
 import { useUpdateCollection } from "@/backend/testimonials/testimonial.query";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import type { Testimonial, TestimonialStyleType } from "@/types/global";
 
 import CustomColorPicker from "../Survey/SurveyTheme/components/customelements/CustomColorPicker.tsx";

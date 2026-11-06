@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
@@ -18,7 +19,6 @@ import {
   useCreateLinktreeMutation,
   useUpdateLinktreeMutation,
 } from "@/backend/linktree/linktree.query";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 
 import { QR_LINKS_PATHS } from "../shared/paths.ts";
 

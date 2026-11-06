@@ -1,4 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Card, CardContent } from "@rateup/ui/components/card";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { IconBuildingStore, IconPalette, IconSparkles } from "@tabler/icons-react";
 import { Controller, useForm } from "react-hook-form";
@@ -7,9 +9,7 @@ import { useTranslation } from "react-i18next";
 import type { LoyaltyPreset, LoyaltyPresetKey } from "@/backend/loyalty/onboarding.api";
 import { ColorField } from "@/components/common/color-field.tsx";
 import TimeZoneSelector from "@/components/common/time-zone-selector.tsx";
-import { Card, CardContent } from "@/components/ui/card.tsx";
 import { CurrencySelect } from "@/components/ui/currency-select.tsx";
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import { cn } from "@/lib/utils.ts";
 

@@ -1,3 +1,4 @@
+import { Switch } from "@rateup/ui/components/switch";
 import { IconEye, IconPencil, IconSend } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -18,7 +19,6 @@ import { ErrorState, ListSkeleton } from "@/components/ds/query-states";
 import { ResponsiveTable, type Column } from "@/components/ds/responsive-table";
 import { StatCard } from "@/components/ds/stat-card";
 import { EmailPreviewDialog, TestSendDialog } from "@/components/engage/engage-dialogs";
-import { Switch } from "@/components/ui/switch";
 import { getApiErrorMessage } from "@/lib/apiError";
 import { formatNumber } from "@/lib/format";
 

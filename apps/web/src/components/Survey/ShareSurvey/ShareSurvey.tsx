@@ -1,4 +1,5 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent } from "@rateup/ui/components/card";
 import {
   Dialog,
   DialogContent,
@@ -6,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldLabel, FieldLegend, FieldSet } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { ScrollArea } from "@rateup/ui/components/scroll-area";
 import {
@@ -15,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@rateup/ui/components/select";
+import { Switch } from "@rateup/ui/components/switch";
 import {
   Tooltip,
   TooltipContent,
@@ -40,10 +43,7 @@ import { updateSurvey } from "@/backend/surveys/survey.api";
 import { surveyKeys } from "@/backend/surveys/survey.keys";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import type { SurveyUpdateMutation } from "@/components/Survey/Settings/updateSettings.ts";
-import { Card, CardContent } from "@/components/ui/card.tsx";
-import { Field, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import type { RequestPayload } from "@/types/api.ts";
 import { SurveyType } from "@/types/enums.ts";
 import { imagesPath } from "@/utils/constants.ts";

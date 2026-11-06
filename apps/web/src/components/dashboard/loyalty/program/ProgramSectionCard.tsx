@@ -1,10 +1,10 @@
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent } from "@rateup/ui/components/card";
 import { IconAlertTriangle, IconChevronRight } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
-import { Card, CardContent } from "@/components/ui/card.tsx";
 import { cn } from "@/lib/utils.ts";
 
 import { LOYALTY_PATHS } from "../paths.ts";

@@ -1,3 +1,4 @@
+import { Checkbox } from "@rateup/ui/components/checkbox";
 import { Input } from "@rateup/ui/components/input";
 import { Label } from "@rateup/ui/components/label";
 import { useId, useState } from "react";
@@ -11,7 +12,6 @@ import {
 } from "@/api/access.api";
 import { useLogout } from "@/api/auth.query";
 import { ActionDialog, done, Notice } from "@/components/ds/action-dialog";
-import { Checkbox } from "@/components/ui/checkbox";
 
 export type StaffAction =
   | { kind: "add" }

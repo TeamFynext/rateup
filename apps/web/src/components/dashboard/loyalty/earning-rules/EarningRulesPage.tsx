@@ -5,6 +5,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent } from "@rateup/ui/components/card";
+import { Checkbox } from "@rateup/ui/components/checkbox";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  FieldTitle,
+} from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -13,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@rateup/ui/components/select";
+import { Switch } from "@rateup/ui/components/switch";
 import { Textarea } from "@rateup/ui/components/textarea";
 import { IconAlertTriangle, IconArrowLeft, IconLoader2, IconPlus } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
@@ -43,16 +53,6 @@ import { PAGE_TITLE } from "@/components/common/page-heading.tsx";
 import { calculateGiveback } from "@/components/dashboard/loyalty/giveback/calculateGiveback.ts";
 import { GivebackPanel } from "@/components/dashboard/loyalty/giveback/GivebackPanel.tsx";
 import { useProgrammeGiveback } from "@/components/dashboard/loyalty/giveback/useProgrammeGiveback.ts";
-import { Card, CardContent } from "@/components/ui/card.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-  FieldTitle,
-} from "@/components/ui/field.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import { useConfirm } from "@/context/confirm-provider";
 import { cn } from "@/lib/utils.ts";
 import { docsPath } from "@/utils/constants.ts";

@@ -1,4 +1,4 @@
-import type { ChartConfig } from "@/components/ui/chart.tsx";
+import type { ChartConfig } from "@rateup/ui/components/chart";
 
 /**
  * Chart colors, taken from the theme's own `--chart-*` tokens rather than hex.

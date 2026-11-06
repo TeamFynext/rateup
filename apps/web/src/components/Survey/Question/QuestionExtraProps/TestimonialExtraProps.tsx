@@ -1,4 +1,6 @@
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
+import { Switch } from "@rateup/ui/components/switch";
 import { Textarea } from "@rateup/ui/components/textarea";
 import {
   Tooltip,
@@ -11,8 +13,6 @@ import { useId, useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
-import { Field, FieldLabel } from "@/components/ui/field";
-import { Switch } from "@/components/ui/switch";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 
 import type { QuestionExtraPropsForm, QuestionFormFeatures } from "./questionForm.ts";

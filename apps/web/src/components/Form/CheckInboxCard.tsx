@@ -1,10 +1,10 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
 import { IconArrowLeft, IconInfoCircle, IconMail } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Card } from "../ui/card.tsx";
 import { AUTH_CTA, AuthTitle } from "./AuthShell.tsx";
 
 /** Seconds a viewer must wait before the mail can be sent again. */

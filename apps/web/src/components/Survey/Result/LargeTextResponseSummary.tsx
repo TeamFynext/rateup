@@ -1,5 +1,6 @@
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent } from "@rateup/ui/components/card";
 import { Separator } from "@rateup/ui/components/separator";
 import {
   Tooltip,
@@ -13,7 +14,6 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useGenerateLargeTextResponseSummaryByAI } from "@/backend/surveys/response/response.query";
-import { Card, CardContent } from "@/components/ui/card.tsx";
 import type { FormElement } from "@/components/whatsapp/flow-v2/utils/store.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";

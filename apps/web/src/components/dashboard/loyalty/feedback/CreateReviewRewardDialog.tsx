@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -23,7 +24,6 @@ import { useTranslation } from "react-i18next";
 import type { LoyaltyReward } from "@/backend/loyalty/reward.api.ts";
 import { useCreateLoyaltyRewardMutation } from "@/backend/loyalty/reward.query.ts";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { TemplateType } from "@/types/enums.ts";
 
 import { reviewRewardSchema, type ReviewRewardFormValues } from "./schemas.ts";

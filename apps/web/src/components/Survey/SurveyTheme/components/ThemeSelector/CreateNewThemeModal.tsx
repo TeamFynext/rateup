@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Tooltip,
@@ -19,7 +20,6 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useCreateNewThemeMutation } from "@/backend/surveyTheme/surveyTheme.query";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 
 const NAME_REGEX = /^[a-zA-Z][a-zA-Z0-9_\s]{0,}$/;
 

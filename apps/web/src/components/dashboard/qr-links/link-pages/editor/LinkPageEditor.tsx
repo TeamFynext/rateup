@@ -1,5 +1,6 @@
 import { Button } from "@rateup/ui/components/button";
 import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Switch } from "@rateup/ui/components/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import {
   IconArrowLeft,
@@ -18,7 +19,6 @@ import { useImmerReducer } from "use-immer";
 import type { LinktreeData } from "@/backend/linktree/linktree.api.ts";
 import { useGetLinktreeWithShortId } from "@/backend/linktree/linktree.query";
 import { PhonePreviewButton } from "@/components/ui/phone-preview.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
 import { isNotFound } from "@/utils/apiError.ts";
 

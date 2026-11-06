@@ -21,7 +21,7 @@ Before editing files for a substantial task:
 
 - **Framework:** TanStack Start + TanStack Router, React 19, TypeScript
 - **Build Tooling:** Vite+ (Vite 8, Vitest, Oxlint, Oxfmt) + Nitro runtime output
-- **UI:** Tailwind CSS + shadcn/ui on Base UI, against Design System V2 tokens (`src/styles/foundation.css`)
+- **UI:** Tailwind CSS + shadcn/ui on Base UI, against Design System V2 tokens (`packages/ui/src/styles/theme.css`, shared with admin)
 - **Monorepo:** No (single app)
 
 ## Commands
@@ -118,7 +118,7 @@ visitor downloaded the dashboard, the survey editor and the admin panel (563 KB)
 
 | File                        | Loaded by                                                                | Scans                                                     |
 | --------------------------- | ------------------------------------------------------------------------ | --------------------------------------------------------- |
-| `src/styles/foundation.css` | imported by all of the below                                             | nothing — tokens, `@theme`, `@utility`, base layer        |
+| `src/styles/foundation.css` | imported by all of the below                                             | nothing — imports the shared theme, adds web-only globals |
 | `src/styles/base.css`       | `__root.tsx`, so every page                                              | the shell + `components/ui` minus the app-only primitives |
 | `src/styles/marketing.css`  | `routes/(marketing)/route.tsx`                                           | the marketing component tree                              |
 | `src/styles/app.css`        | the `dashboard`, `admin`, `(auth)`, `auth` and `(public-facing)` layouts | everything (Tailwind's default scan)                      |
@@ -127,10 +127,10 @@ visitor downloaded the dashboard, the survey editor and the admin panel (563 KB)
 - **Adding a marketing component in a new directory?** Add its directory to `marketing.css`'s
   `@source` list, or it renders unstyled. The same goes for `shop.css` and the buyer pages. The
   app is on a full scan and needs nothing.
-- **Design tokens go in `foundation.css`.** That is also what `components.json` points
-  `tailwind.css` at, so `pnpm dlx shadcn add` writes component variables there. Do not repoint it at
-  `app.css` — the CLI auto-detects that one, and tokens written there never reach the marketing
-  site.
+- **Design tokens go in `packages/ui/src/styles/theme.css`**, shared with admin; `foundation.css`
+  imports it and keeps only web-only globals. `components.json` points `tailwind.css` at the
+  shared file, so `pnpm dlx shadcn add` writes component variables there. Do not repoint it at
+  `app.css` — tokens written there never reach the marketing site or admin.
 - Marketing HTML is edge-cacheable (`s-maxage`) from the `(marketing)` layout, which also sets
   `Vary: Accept` because those routes serve Markdown to clients that ask for it.
 

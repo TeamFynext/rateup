@@ -1,5 +1,6 @@
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent } from "@rateup/ui/components/card";
 import {
   Dialog,
   DialogContent,
@@ -14,6 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@rateup/ui/components/dropdown-menu";
+import { Field, FieldDescription, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -22,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@rateup/ui/components/select";
+import { Switch } from "@rateup/ui/components/switch";
 import {
   IconDots,
   IconPencil,
@@ -35,9 +38,6 @@ import { useTranslation } from "react-i18next";
 import type { LoyaltyProgram } from "@/backend/loyalty/program.api";
 import { useUpdateLoyaltyProgramMutation } from "@/backend/loyalty/program.query";
 import type { LoyaltyReward } from "@/backend/loyalty/reward.api";
-import { Card, CardContent } from "@/components/ui/card.tsx";
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import { cn } from "@/lib/utils.ts";
 
 import { formatPoints } from "../giveback/format.ts";

@@ -1,4 +1,5 @@
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldLabel, FieldTitle } from "@rateup/ui/components/field";
 import {
   Select,
   SelectContent,
@@ -14,7 +15,6 @@ import { useTranslation } from "react-i18next";
 import { useChannels } from "@/backend/channels/channels.query";
 import { MessagePlatform } from "@/types/enums.ts";
 
-import { Field, FieldLabel, FieldTitle } from "../ui/field.tsx";
 import { MultiSelect } from "../ui/multi-select.tsx";
 import { getChannelOptions } from "./channelOptions.ts";
 

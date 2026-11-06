@@ -1,7 +1,16 @@
 import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
 import { Button } from "@rateup/ui/components/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@rateup/ui/components/card";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Separator } from "@rateup/ui/components/separator";
+import { Switch } from "@rateup/ui/components/switch";
 import {
   Tooltip,
   TooltipContent,
@@ -31,15 +40,6 @@ import {
   useRegisterWebhookByTopic,
   useRegisterWebhooks,
 } from "@/backend/appsIntegration/shopify/shopify.query";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { IntegratedApps, ShopifyEvents } from "@/types/enums.ts";
 import type { ShopifyIntegration } from "@/types/global";

@@ -1,4 +1,19 @@
 import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@rateup/ui/components/card";
+import {
+  type ChartConfig,
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+} from "@rateup/ui/components/chart";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -19,21 +34,6 @@ import { useTranslation } from "react-i18next";
 import { Bar, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from "recharts";
 
 import { NPS_COLORS } from "@/components/common/sentimentScale.ts";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
-import {
-  type ChartConfig,
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartTooltip,
-} from "@/components/ui/chart.tsx";
 
 const TIME_PERIODS = [
   { label: "Hourly", value: "hourly" },

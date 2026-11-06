@@ -2,6 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@rateup/ui/components/avatar";
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -26,7 +27,6 @@ import {
   useUpdateBusinessProfileMutation,
   useUpdateProfilePictureMutation,
 } from "@/backend/whatsapp/settings/waSettings.query";
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { getApiErrorMessage } from "@/utils/apiError";
 
 /** What WhatsApp accepts for a profile photo, and the ceiling the API enforces anyway. */

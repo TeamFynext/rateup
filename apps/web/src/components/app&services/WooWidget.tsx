@@ -1,4 +1,11 @@
 import { Button } from "@rateup/ui/components/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@rateup/ui/components/card";
 import { IconCircleCheck, IconPlug } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -14,13 +21,6 @@ import {
   StoreWidgetLoadError,
   StoreWidgetSkeleton,
 } from "@/components/integrations/storeWidget/StoreWidgetEditor.tsx";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 

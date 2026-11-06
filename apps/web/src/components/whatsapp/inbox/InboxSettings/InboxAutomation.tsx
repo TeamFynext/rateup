@@ -8,6 +8,7 @@ import {
   SelectValue,
 } from "@rateup/ui/components/select";
 import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Switch } from "@rateup/ui/components/switch";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -19,7 +20,6 @@ import {
   useInboxAutomation,
   useUpdateInboxAutomationMutation,
 } from "@/backend/whatsapp/inbox/inboxAutomation/inboxautomation.query";
-import { Switch } from "@/components/ui/switch.tsx";
 
 import { SettingsPanel } from "./SettingsPanel.tsx";
 

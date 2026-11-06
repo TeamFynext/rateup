@@ -1,9 +1,9 @@
+import { Card, CardContent } from "@rateup/ui/components/card";
 import { IconArrowRight } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import type { LoyaltyDashboardStats } from "@/backend/loyalty/dashboard/dashboard.query";
-import { Card, CardContent } from "@/components/ui/card.tsx";
 
 import type { GivebackResult } from "../giveback/calculateGiveback";
 import { formatMoney, formatPercent } from "../giveback/format";

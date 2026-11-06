@@ -1,5 +1,6 @@
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Checkbox } from "@rateup/ui/components/checkbox";
 import {
   Collapsible,
   CollapsibleContent,
@@ -9,7 +10,6 @@ import { IconAdjustments, IconChevronDown, IconRotate } from "@tabler/icons-reac
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { useOrgModules } from "@/hooks/useOrgModules.ts";
 import { cn } from "@/lib/utils.ts";
 import {

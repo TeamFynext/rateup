@@ -1,5 +1,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@rateup/ui/components/button";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  FieldTitle,
+} from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Skeleton } from "@rateup/ui/components/skeleton";
 import { IconPencil, IconTrash, IconX } from "@tabler/icons-react";
@@ -7,14 +14,6 @@ import { useState, type ReactNode } from "react";
 import { Controller, useForm, type Resolver } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { z } from "zod/v4";
-
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-  FieldTitle,
-} from "@/components/ui/field.tsx";
 
 import { IntegrationFormCard } from "../IntegrationFormCard.tsx";
 

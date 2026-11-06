@@ -1,4 +1,12 @@
 import {
+  type ChartConfig,
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@rateup/ui/components/chart";
+import {
   Table,
   TableBody,
   TableCell,
@@ -18,14 +26,6 @@ import { StatTile } from "@/components/common/StatTile.tsx";
 import { AnalyticsCard } from "@/components/dashboard/analytics/kit/AnalyticsCard.tsx";
 import { formatCount, formatDuration } from "@/components/dashboard/analytics/kit/format.ts";
 import { TileGroup } from "@/components/dashboard/analytics/kit/TileGroup.tsx";
-import {
-  type ChartConfig,
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart.tsx";
 
 import type { CallsScope } from "./CallsPage.tsx";
 

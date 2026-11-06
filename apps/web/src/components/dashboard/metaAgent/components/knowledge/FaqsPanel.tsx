@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@rateup/ui/components/dialog";
 import { Empty, EmptyDescription, EmptyTitle } from "@rateup/ui/components/empty";
+import { FieldGroup } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Skeleton } from "@rateup/ui/components/skeleton";
 import { Textarea } from "@rateup/ui/components/textarea";
@@ -30,7 +31,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { FieldGroup } from "@/components/ui/field";
 
 import { faqFormSchema, type FaqFormValues } from "../../metaAgent.schemas";
 import { FormField } from "../shared/FormField";

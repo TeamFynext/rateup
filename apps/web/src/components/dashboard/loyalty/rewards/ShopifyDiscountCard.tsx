@@ -1,12 +1,12 @@
+import { Field, FieldDescription, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
+import { Switch } from "@rateup/ui/components/switch";
 import { IconShoppingBag } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useId } from "react";
 
 import type { AppIntegration } from "@/backend/appsIntegration/integration.api.ts";
 import { useIntegrationByType } from "@/backend/appsIntegration/integration.query.ts";
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import { IntegratedApps } from "@/types/enums.ts";
 import { numberInputValue } from "@/utils/form.ts";
 

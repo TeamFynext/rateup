@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
 import { TooltipProvider } from "@rateup/ui/components/tooltip";
@@ -35,7 +36,6 @@ import { RedoToolbar } from "@/components/tiptap/toolbars/redo.tsx";
 import { StrikeThroughToolbar } from "@/components/tiptap/toolbars/strikethrough.tsx";
 import { ToolbarProvider } from "@/components/tiptap/toolbars/toolbar-provider.tsx";
 import { UndoToolbar } from "@/components/tiptap/toolbars/undo.tsx";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { deleteUploadedFiles } from "@/utils/file-upload/upload.ts";
 
 import { isJSONString } from ".";

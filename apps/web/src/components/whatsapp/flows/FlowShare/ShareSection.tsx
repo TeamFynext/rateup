@@ -1,6 +1,5 @@
+import { Card, CardContent } from "@rateup/ui/components/card";
 import type { ReactNode } from "react";
-
-import { Card, CardContent } from "@/components/ui/card.tsx";
 
 interface ShareSectionProps {
   title?: string;

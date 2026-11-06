@@ -1,6 +1,9 @@
 import { Alert, AlertDescription } from "@rateup/ui/components/alert";
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent } from "@rateup/ui/components/card";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
+import { Switch } from "@rateup/ui/components/switch";
 import { Textarea } from "@rateup/ui/components/textarea";
 import { IconAlertTriangle } from "@tabler/icons-react";
 import { isEqual } from "lodash";
@@ -11,10 +14,7 @@ import { useTranslation } from "react-i18next";
 import type { LinktreeTheme } from "@/backend/linktree/linktree.api.ts";
 import { ColorField } from "@/components/common/color-field.tsx";
 import { SectionHeading } from "@/components/common/page-heading.tsx";
-import { Card, CardContent } from "@/components/ui/card.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Slider } from "@/components/ui/slider.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import { cn } from "@/lib/utils.ts";
 
 import {

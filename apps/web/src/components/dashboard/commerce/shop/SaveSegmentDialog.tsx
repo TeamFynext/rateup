@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -28,7 +29,6 @@ import {
 } from "@/backend/commerce/shop.api";
 import { useShopCollections, useShopProducts } from "@/backend/commerce/shop.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { useDebounce } from "@/hooks/use-debounce.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";

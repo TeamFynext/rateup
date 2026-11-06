@@ -1,4 +1,5 @@
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { IconBrandGoogleDrive } from "@tabler/icons-react";
 import { useId } from "react";
@@ -16,8 +17,6 @@ import { INTEGRATIONS_CONFIG } from "@/components/dashboard/settings/integration
 import { IntegrationShell } from "@/components/dashboard/settings/integrations/IntegrationShell.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { IntegratedApps } from "@/types/enums.ts";
-
-import { Field, FieldLabel } from "../ui/field";
 
 export function GoogleSheet() {
   const uid = useId();

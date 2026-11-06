@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@rateup/ui/components/select";
 import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Switch } from "@rateup/ui/components/switch";
 import {
   Table,
   TableBody,
@@ -21,7 +22,6 @@ import { IconAlertTriangle, IconChartBar, IconRefresh } from "@tabler/icons-reac
 import { useState } from "react";
 
 import { useConnectorLogs } from "@/backend/metaAgent/metaAgent.query";
-import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 
 // Meta keeps 7 days and rejects anything wider, so those are the only windows

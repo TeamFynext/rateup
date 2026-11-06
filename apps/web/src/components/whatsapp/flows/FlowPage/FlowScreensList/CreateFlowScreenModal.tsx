@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldError, FieldGroup } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { useParams } from "@tanstack/react-router";
 import { useCallback, useContext, useEffect } from "react";
@@ -15,7 +16,6 @@ import { useTranslation } from "react-i18next";
 import z from "zod";
 
 import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
-import { Field, FieldError, FieldGroup } from "@/components/ui/field.tsx";
 import type { WaFlowScreen } from "@/types/global";
 import { SAVE_HOTKEY } from "@/utils/constants.ts";
 import { getHotkeyHandler } from "@/utils/hotkeys.ts";

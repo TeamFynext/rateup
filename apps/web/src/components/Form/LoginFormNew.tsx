@@ -1,5 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
+import { Checkbox } from "@rateup/ui/components/checkbox";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@rateup/ui/components/field";
 import {
   InputGroup,
   InputGroupAddon,
@@ -20,9 +23,6 @@ import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
-import { Card } from "../ui/card.tsx";
-import { Checkbox } from "../ui/checkbox.tsx";
-import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field.tsx";
 import AppleSignInButton from "./AppleSigninButton.tsx";
 import { AuthShell, AuthTitle } from "./AuthShell.tsx";
 import GoogleSignInButton from "./GoogleSigninButton.tsx";

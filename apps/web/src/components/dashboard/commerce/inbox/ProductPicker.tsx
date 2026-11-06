@@ -1,4 +1,5 @@
 import { Button } from "@rateup/ui/components/button";
+import { Checkbox } from "@rateup/ui/components/checkbox";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@rateup/ui/components/empty";
 import { Input } from "@rateup/ui/components/input";
 import { Skeleton } from "@rateup/ui/components/skeleton";
@@ -16,7 +17,6 @@ import {
 } from "@/backend/commerce/shop.api";
 import { useShopCollections, useShopProducts, useShopStore } from "@/backend/commerce/shop.query";
 import { QuantityStepper } from "@/components/shop-public/shared.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { useDebounce } from "@/hooks/use-debounce.ts";
 import { cn } from "@/lib/utils.ts";
 

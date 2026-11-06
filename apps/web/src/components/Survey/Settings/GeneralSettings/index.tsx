@@ -1,5 +1,14 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@rateup/ui/components/card";
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+  FieldTitle,
+} from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
+import { Switch } from "@rateup/ui/components/switch";
 import { IconAdjustmentsHorizontal } from "@tabler/icons-react";
 import { useId, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -7,7 +16,6 @@ import { useTranslation } from "react-i18next";
 
 import { useEditSurveyMutation } from "@/backend/surveys/surveys.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import {
   Combobox,
   ComboboxChip,
@@ -19,15 +27,7 @@ import {
   ComboboxList,
   ComboboxValue,
 } from "@/components/ui/combobox.tsx";
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-  FieldTitle,
-} from "@/components/ui/field.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import { docsPath } from "@/utils/constants.ts";
 
 import InfoButton from "../../../Button/InfoButton.tsx";

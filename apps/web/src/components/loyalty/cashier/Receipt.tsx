@@ -1,8 +1,7 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent } from "@rateup/ui/components/card";
 import { IconBrandWhatsapp, IconCheck } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
-
-import { Card, CardContent } from "@/components/ui/card.tsx";
 
 import { formatMoney } from "../../dashboard/loyalty/giveback/format.ts";
 import type { Receipt as ReceiptData } from "./cashier.types.ts";

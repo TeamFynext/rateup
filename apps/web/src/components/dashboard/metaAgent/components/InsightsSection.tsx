@@ -1,6 +1,14 @@
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@rateup/ui/components/card";
 import { Empty, EmptyDescription, EmptyTitle } from "@rateup/ui/components/empty";
+import { Field, FieldDescription, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Table,
@@ -26,8 +34,6 @@ import type {
   InsightsRange,
 } from "@/backend/metaAgent/metaAgent.api";
 import { useConversationTurns, useLoadInsights } from "@/backend/metaAgent/metaAgent.query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 
 /** Meta caps tool-call and event ranges at 30 days, counting both ends. */
 const MAX_RANGE_DAYS = 30;

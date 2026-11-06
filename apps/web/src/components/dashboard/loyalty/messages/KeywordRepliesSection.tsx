@@ -1,5 +1,7 @@
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent } from "@rateup/ui/components/card";
+import { Field, FieldDescription, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -24,8 +26,6 @@ import {
 } from "@/backend/loyalty/settings/settings.query";
 import type { WaTemplateListEntry } from "@/backend/whatsapp/whatsapp.api";
 import { SectionHeading } from "@/components/common/page-heading.tsx";
-import { Card, CardContent } from "@/components/ui/card.tsx";
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
 import { useConfirm } from "@/context/confirm-provider";
 
 import {

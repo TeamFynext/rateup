@@ -1,4 +1,6 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import {
   Select,
   SelectContent,
@@ -19,8 +21,6 @@ import { useTranslation } from "react-i18next";
 
 import { usePushToWaMutation, useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
-import { Card } from "@/components/ui/card.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { cn } from "@/lib/utils";
 import { SurveyType, WaFlowStatus } from "@/types/enums.ts";
 

@@ -2,6 +2,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Checkbox } from "@rateup/ui/components/checkbox";
+import { Field, FieldDescription, FieldLabel, FieldTitle } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
 import { ScrollArea } from "@rateup/ui/components/scroll-area";
@@ -13,6 +15,7 @@ import {
   SelectValue,
 } from "@rateup/ui/components/select";
 import { Separator } from "@rateup/ui/components/separator";
+import { Switch } from "@rateup/ui/components/switch";
 import { IconBrandGoogle, IconDeviceSdCard } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 import { isEqual } from "lodash";
@@ -32,10 +35,7 @@ import { LengthTracker } from "@/components/input/LengthTracker.tsx";
 import { TextareaWithLengthTracker } from "@/components/input/TextareaWithLengthTracker.tsx";
 import GoogleReviewEditor from "@/components/Survey/Question/GoogleReviewEditor.tsx";
 import { ChoicesCreator } from "@/components/Survey/Question/QuestionExtraProps/ChoicesCreator.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { Field, FieldDescription, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import {
   getFlowLabelLimit,
   getFlowOptionsLimit,

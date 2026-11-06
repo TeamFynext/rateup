@@ -1,6 +1,6 @@
+import { Checkbox } from "@rateup/ui/components/checkbox";
 import { useState } from "react";
 
-import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 
 import { useIsSurveyThemePreview } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext.tsx";

@@ -1,6 +1,8 @@
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Checkbox } from "@rateup/ui/components/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -37,8 +39,6 @@ import { DEFAULT_QR_DESIGN } from "@/components/common/qr-designer/qrDesign.ts";
 import { downloadBlob } from "@/utils/downloadBlob.ts";
 
 import Heading from "../../../styled/Heading/Heading.tsx";
-import { Checkbox } from "../../../ui/checkbox.tsx";
-import { Field, FieldLabel } from "../../../ui/field.tsx";
 import Preview from "../Preview/Preview.tsx";
 
 function TagManager({

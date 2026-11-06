@@ -1,6 +1,8 @@
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Checkbox } from "@rateup/ui/components/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
+import { Field, FieldLegend, FieldSet, FieldTitle } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Progress } from "@rateup/ui/components/progress";
 import {
@@ -29,9 +31,7 @@ import z from "zod/v4";
 
 import { usePartnerApplicationMutation } from "@/backend/partnerdata/partnerdata.query";
 import { partnerApplicationSchema } from "@/components/RateupHomePage/schema";
-import { Checkbox } from "@/components/ui/checkbox";
 import { CountryDropdown } from "@/components/ui/country-dropdown";
-import { Field, FieldLegend, FieldSet, FieldTitle } from "@/components/ui/field";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 

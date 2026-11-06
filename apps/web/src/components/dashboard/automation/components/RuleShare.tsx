@@ -1,4 +1,6 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent } from "@rateup/ui/components/card";
+import { FieldTitle } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -15,8 +17,6 @@ import { toast } from "sonner";
 import { useChannels } from "@/backend/channels/channels.query";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import ShareQR from "@/components/Survey/ShareSurvey/ShareQR/index.tsx";
-import { Card, CardContent } from "@/components/ui/card.tsx";
-import { FieldTitle } from "@/components/ui/field.tsx";
 import type { RuleGroup } from "@/types/rule.ts";
 
 import { PLATFORMS, toMessagePlatform } from "./schema.ts";

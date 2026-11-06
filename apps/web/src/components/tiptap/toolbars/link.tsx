@@ -1,11 +1,11 @@
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import { IconTrash, IconX } from "@tabler/icons-react";
 import React, { type SubmitEvent } from "react";
 
-import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { getUrlFromString } from "@/lib/tiptap-utils";
 import { cn } from "@/lib/utils";
 

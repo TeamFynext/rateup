@@ -1,3 +1,4 @@
+import { Field, FieldDescription, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -7,8 +8,6 @@ import {
   SelectValue,
 } from "@rateup/ui/components/select";
 import { useTranslation } from "react-i18next";
-
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
 
 /**
  * How a provider field is filled in.

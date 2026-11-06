@@ -1,6 +1,6 @@
+import { FieldDescription, FieldLegend, FieldSet } from "@rateup/ui/components/field";
 import type { ReactNode } from "react";
 
-import { FieldDescription, FieldLegend, FieldSet } from "@/components/ui/field.tsx";
 import { cn } from "@/lib/utils.ts";
 
 /** A titled block of a wizard step, so every step labels its sections the same way. */

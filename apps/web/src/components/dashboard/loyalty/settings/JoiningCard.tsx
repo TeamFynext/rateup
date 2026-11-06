@@ -1,4 +1,5 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@rateup/ui/components/card";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +14,6 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { CopyButton } from "@/components/common/copy-button.tsx";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 
 import { formatWhatsappNumber, whatsappJoinUrl } from "../joinLink.ts";
 import { LOYALTY_PATHS } from "../paths.ts";

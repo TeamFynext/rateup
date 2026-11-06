@@ -1,8 +1,7 @@
 // Extracted verbatim from `LifecyclePage.tsx`. Behaviour is unchanged.
 
+import { Card, CardContent } from "@rateup/ui/components/card";
 import { useTranslation } from "react-i18next";
-
-import { Card, CardContent } from "@/components/ui/card";
 
 import { getStageToneStyle } from "./shared.tsx";
 import type { UILifecycleStage } from "./shared.tsx";

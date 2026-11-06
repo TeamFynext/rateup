@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Textarea } from "@rateup/ui/components/textarea";
 import { IconPlus } from "@tabler/icons-react";
@@ -13,7 +14,6 @@ import { useId, useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
-import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 
 import DraggableTable from "../../../styled/Table/DraggableTable.tsx";

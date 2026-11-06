@@ -1,10 +1,10 @@
 import { Button } from "@rateup/ui/components/button";
+import { Checkbox } from "@rateup/ui/components/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
+import { FieldLabel } from "@rateup/ui/components/field";
 import { useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { FieldLabel } from "@/components/ui/field.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import type { TNC } from "@/types/global";

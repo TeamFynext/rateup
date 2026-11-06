@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
 import { Button } from "@rateup/ui/components/button";
+import { FieldGroup, FieldLegend, FieldSet } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -19,7 +20,6 @@ import {
   useUpsertConnectorCertificate,
   useUpsertConnectorOAuth,
 } from "@/backend/metaAgent/metaAgent.query";
-import { FieldGroup, FieldLegend, FieldSet } from "@/components/ui/field";
 import { TagsInput } from "@/components/ui/tags-input";
 
 import {

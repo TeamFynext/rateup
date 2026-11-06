@@ -1,15 +1,15 @@
-import { Progress } from "@rateup/ui/components/progress";
-import { IconStarFilled } from "@tabler/icons-react";
-import { useTranslation } from "react-i18next";
-
-import type { FeedbackResults } from "@/backend/loyalty/feedback.api.ts";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card.tsx";
+} from "@rateup/ui/components/card";
+import { Progress } from "@rateup/ui/components/progress";
+import { IconStarFilled } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
+
+import type { FeedbackResults } from "@/backend/loyalty/feedback.api.ts";
 
 /** Mean rating per question over the period — the line an owner reads to staff. */
 export function QuestionAveragesCard({

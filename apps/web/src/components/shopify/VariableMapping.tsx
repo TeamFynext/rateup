@@ -1,3 +1,4 @@
+import { Field, FieldDescription, FieldLabel } from "@rateup/ui/components/field";
 import {
   Select,
   SelectContent,
@@ -11,7 +12,6 @@ import { useId, useMemo } from "react";
 import { useCustomFields } from "@/backend/campaign/contacts/contacts.query";
 import { useWaTemplateById } from "@/backend/whatsapp/whatsapp.query";
 
-import { Field, FieldDescription, FieldLabel } from "../ui/field.tsx";
 import {
   contactVariablePresets,
   shopifyVariablePresets,

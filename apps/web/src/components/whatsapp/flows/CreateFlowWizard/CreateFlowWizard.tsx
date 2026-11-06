@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Spinner } from "@rateup/ui/components/spinner";
 import { IconStar, IconMessage } from "@tabler/icons-react";
@@ -23,7 +24,6 @@ import type { FlowTemplate } from "@/backend/whatsapp/flow/flow.api";
 import { useCreateFlowMutation, useFlowTemplates } from "@/backend/whatsapp/flow/flow.query";
 import { StepTransition } from "@/components/dashboard/loyalty/onboarding/StepChrome.tsx";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { Stepper, type StepperStep } from "@/components/ui/stepper.tsx";
 import { cn } from "@/lib/utils.ts";

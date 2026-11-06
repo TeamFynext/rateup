@@ -1,3 +1,6 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@rateup/ui/components/card";
+import { FieldLabel } from "@rateup/ui/components/field";
+import { Switch } from "@rateup/ui/components/switch";
 import {
   Tooltip,
   TooltipContent,
@@ -10,9 +13,6 @@ import type { Dispatch, SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { SurveyUpdateMutation } from "@/components/Survey/Settings/updateSettings.ts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
-import { FieldLabel } from "@/components/ui/field.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 
 import UniqueDeviceSettings from "../UniqueDeviceSettings.tsx";
 import {

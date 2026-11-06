@@ -1,4 +1,6 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent } from "@rateup/ui/components/card";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { ScrollArea } from "@rateup/ui/components/scroll-area";
 import {
   Select,
@@ -18,8 +20,6 @@ import {
   useQuestions,
   useQuestionUpdateMutation,
 } from "@/backend/surveys/questions/questions.query";
-import { Card, CardContent } from "@/components/ui/card.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import type { QuestionType } from "@/types/enums.ts";

@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@rateup/ui/components/button";
+import { FieldGroup } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -19,7 +20,6 @@ import {
   useSyncAgentBudgets,
   useUpdateAgentBudgets,
 } from "@/backend/metaAgent/metaAgent.query";
-import { FieldGroup } from "@/components/ui/field";
 import { useCan } from "@/hooks/usePermission";
 
 import { budgetFormSchema, type BudgetFormValues } from "../metaAgent.schemas";

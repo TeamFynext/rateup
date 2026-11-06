@@ -1,5 +1,7 @@
 import { Button } from "@rateup/ui/components/button";
+import { Checkbox } from "@rateup/ui/components/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
+import { Field, FieldLabel, FieldTitle } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Progress } from "@rateup/ui/components/progress";
 import {
@@ -29,7 +31,6 @@ import {
   useUnsyncedFlows,
   useWaFlowJson,
 } from "@/backend/whatsapp/flow/flow.query";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { useListState } from "@/hooks/use-list-state.ts";
 import { useDisclosure } from "@/hooks/useDisclosure";
 import { WaFlowFormElementType } from "@/types/enums.ts";
@@ -46,7 +47,6 @@ import {
 
 import { TeamSelector } from "../../input/TeamSelector.tsx";
 import RateupLoader from "../../Loaders/RateupLoader.tsx";
-import { Field, FieldLabel, FieldTitle } from "../../ui/field.tsx";
 import WaTemplateStatusBadge from "./WaTemplateStatusBadge.tsx";
 
 /**

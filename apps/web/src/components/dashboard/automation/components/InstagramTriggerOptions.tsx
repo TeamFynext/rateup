@@ -1,4 +1,5 @@
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldDescription, FieldError, FieldTitle } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { IconCheck, IconCopy, IconQrcode } from "@tabler/icons-react";
 import { useState } from "react";
@@ -8,7 +9,6 @@ import { useChannels } from "@/backend/channels/channels.query";
 import { useInstagramStories } from "@/backend/whatsapp/instagram-profile/instagramProfile.query";
 import { igMeLink } from "@/components/dashboard/instagram/igMeLink.ts";
 import { downloadIgMeQr } from "@/components/dashboard/instagram/igMeQr.ts";
-import { Field, FieldDescription, FieldError, FieldTitle } from "@/components/ui/field.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { TagsInput } from "@/components/ui/tags-input.tsx";
 import { cn } from "@/lib/utils.ts";

@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldGroup, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Textarea } from "@rateup/ui/components/textarea";
 import { IconPlus, IconTag } from "@tabler/icons-react";
@@ -24,7 +25,6 @@ import { DataTableToolbar } from "@/components/dashboard/contacts/labels/data-ta
 import type { ContactLabel } from "@/components/dashboard/contacts/labels/utils.tsx";
 import { createColumns } from "@/components/dashboard/contacts/labels/utils.tsx";
 import { DataTable } from "@/components/Table/data-table.tsx";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 
 export function LabelsPage() {

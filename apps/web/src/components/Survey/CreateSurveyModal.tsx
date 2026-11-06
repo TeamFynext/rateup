@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@rateup/ui/components/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
+import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -22,7 +23,6 @@ import type { CreateSurveyResponse } from "@/backend/surveys/survey.api";
 import { surveyKeys } from "@/backend/surveys/survey.keys";
 import { useCreateSurveyMutation } from "@/backend/surveys/surveys.query";
 import { useAllThemes } from "@/backend/surveyTheme/surveyTheme.query";
-import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 

@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@rateup/ui/components/dialog";
 import { Empty, EmptyDescription, EmptyTitle } from "@rateup/ui/components/empty";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -20,6 +21,7 @@ import {
   SelectValue,
 } from "@rateup/ui/components/select";
 import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Switch } from "@rateup/ui/components/switch";
 import { Textarea } from "@rateup/ui/components/textarea";
 import {
   IconAlertTriangle,
@@ -52,8 +54,6 @@ import {
 } from "@/backend/metaAgent/metaAgent.query";
 import { useAllSurveysSummary } from "@/backend/surveys/surveys.query";
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
-import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Switch } from "@/components/ui/switch";
 import { FlowSelector } from "@/components/whatsapp/flows/FlowSelector/FlowSelector";
 import { FRONTEND_URL } from "@/utils/constants";
 

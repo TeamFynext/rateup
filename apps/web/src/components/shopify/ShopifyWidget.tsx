@@ -1,4 +1,11 @@
 import { Button } from "@rateup/ui/components/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@rateup/ui/components/card";
 import { IconExternalLink } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
@@ -12,13 +19,6 @@ import {
   StoreWidgetLoadError,
   StoreWidgetSkeleton,
 } from "@/components/integrations/storeWidget/StoreWidgetEditor.tsx";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
 
 /** The one-time step that puts the button on a Shopify storefront: the theme's app embed. */

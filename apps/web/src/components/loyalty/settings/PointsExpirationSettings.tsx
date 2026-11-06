@@ -1,4 +1,12 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@rateup/ui/components/card";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@rateup/ui/components/field";
 import {
   Select,
   SelectContent,
@@ -6,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@rateup/ui/components/select";
+import { Switch } from "@rateup/ui/components/switch";
 import { IconLoader2 } from "@tabler/icons-react";
 import { useId } from "react";
 import { Controller, type UseFormReturn } from "react-hook-form";
@@ -13,15 +22,6 @@ import { useTranslation } from "react-i18next";
 import type { z } from "zod";
 
 import { useUpdateLoyaltyProgramMutation } from "@/backend/loyalty/program.query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
-import {
-  Field,
-  FieldContent,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-} from "@/components/ui/field.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 
 import type { ExpirationSettingsSchema } from "./schemas.ts";
 

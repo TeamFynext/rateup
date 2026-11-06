@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { FieldGroup, FieldSeparator } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -16,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@rateup/ui/components/select";
+import { Switch } from "@rateup/ui/components/switch";
 import { Textarea } from "@rateup/ui/components/textarea";
 import { useForm } from "react-hook-form";
 
@@ -26,8 +28,6 @@ import type {
 } from "@/backend/metaAgent/metaAgent.api";
 import { CONNECTOR_AUTH_TYPES } from "@/backend/metaAgent/metaAgent.api";
 import { useCreateConnector, useUpdateConnector } from "@/backend/metaAgent/metaAgent.query";
-import { FieldGroup, FieldSeparator } from "@/components/ui/field";
-import { Switch } from "@/components/ui/switch";
 
 import { connectorFormSchema, type ConnectorFormValues } from "../../metaAgent.schemas";
 import { FormField } from "../shared/FormField";

@@ -1,10 +1,10 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
+import { Checkbox } from "@rateup/ui/components/checkbox";
 import { IconArrowLeft, IconArrowRight, IconBolt } from "@tabler/icons-react";
 import { motion } from "motion/react";
 import type { ComponentType } from "react";
 
-import { Card } from "@/components/ui/card.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Loader } from "@/components/ui/loader.tsx";
 
 import type { OnboardingFormData } from "./onboarding-types.ts";

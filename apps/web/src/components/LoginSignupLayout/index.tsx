@@ -1,9 +1,8 @@
 import { ScrollArea } from "@rateup/ui/components/scroll-area";
+import { useResolvedTheme } from "@rateup/ui/components/theme-provider";
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 import type { ReactNode } from "react";
-
-import { useResolvedTheme } from "@/components/theme/theme-provider.tsx";
 
 import { rateupLogoUrl } from "../HomePage/constants.tsx";
 

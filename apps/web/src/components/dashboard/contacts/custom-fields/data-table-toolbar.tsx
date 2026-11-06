@@ -1,4 +1,5 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +16,6 @@ import { useTranslation } from "react-i18next";
 import { CustomFieldForm } from "@/components/Contacts/label-form.tsx";
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { DataTableViewOptions } from "@/components/Table/data-table-view-option.tsx";
-import { Card } from "@/components/ui/card.tsx";
 
 interface DataTableToolbarProps<TData extends RowData> {
   table: ReactTable<DataTableFeatures, TData>;

@@ -5,6 +5,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@rateup/ui/components/avatar";
 import { Button } from "@rateup/ui/components/button";
+import { Checkbox } from "@rateup/ui/components/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -30,7 +31,6 @@ import {
 } from "@/backend/meta/metaChannels.query";
 import type { FacebookBrandButtonProps } from "@/components/common/facebook-brand-button.tsx";
 import { FacebookBrandButton } from "@/components/common/facebook-brand-button.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { loadFacebookSdk } from "@/lib/facebook-sdk";
 import { cn } from "@/lib/utils";
 

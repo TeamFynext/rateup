@@ -1,3 +1,4 @@
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import {
   Select,
   SelectContent,
@@ -9,7 +10,6 @@ import { Skeleton } from "@rateup/ui/components/skeleton";
 import { useId } from "react";
 
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { WaFlowStatus } from "@/types/enums.ts";
 
 interface FlowSelectorProps {

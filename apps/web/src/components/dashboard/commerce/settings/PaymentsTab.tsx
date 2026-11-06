@@ -1,4 +1,5 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
 import {
   Dialog,
   DialogContent,
@@ -14,8 +15,10 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@rateup/ui/components/empty";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Switch } from "@rateup/ui/components/switch";
 import { Textarea } from "@rateup/ui/components/textarea";
 import { IconCircleCheck, IconClock, IconExternalLink } from "@tabler/icons-react";
 import { useMutation } from "@tanstack/react-query";
@@ -38,9 +41,6 @@ import {
   type ShopStoreUpdate,
 } from "@/backend/commerce/shop.api";
 import { useInvalidateShop, useShopPayments } from "@/backend/commerce/shop.query";
-import { Card } from "@/components/ui/card.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useCan } from "@/hooks/usePermission.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";

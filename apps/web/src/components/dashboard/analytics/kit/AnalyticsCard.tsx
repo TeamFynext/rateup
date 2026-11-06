@@ -1,5 +1,13 @@
 import { Button } from "@rateup/ui/components/button";
 import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@rateup/ui/components/card";
+import {
   Empty,
   EmptyContent,
   EmptyDescription,
@@ -12,14 +20,6 @@ import { IconAlertTriangle, IconChartBarOff, IconLoader2, IconRefresh } from "@t
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
 import { cn } from "@/lib/utils";
 
 /** The slice of a react-query result every analytics surface reads its state from. */

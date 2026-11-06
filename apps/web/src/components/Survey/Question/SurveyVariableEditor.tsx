@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
 import {
   Dialog,
   DialogContent,
@@ -7,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { ScrollArea } from "@rateup/ui/components/scroll-area";
 import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
@@ -20,8 +22,6 @@ import {
   useDeleteSurveyVariableMutation,
   useUpdateSurveyVariableMutation,
 } from "@/backend/surveys/surveys.query";
-import { Card } from "@/components/ui/card.tsx";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { SurveyVariableType } from "@/types/enums.ts";
 

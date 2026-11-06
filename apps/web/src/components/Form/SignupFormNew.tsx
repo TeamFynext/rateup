@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Card } from "@rateup/ui/components/card";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -6,7 +7,6 @@ import { z } from "zod/v4";
 
 import type { useSignUp } from "@/utils/auth/index.tsx";
 
-import { Card } from "../ui/card.tsx";
 import { AuthShell, AuthTitle } from "./AuthShell.tsx";
 import { signUpType, STEP_ONE_FIELDS, asSignupForm, isPasswordValid } from "./signup/shared.tsx";
 import { SIGNUP_COPY, SignupProgress } from "./signup/SignupProgress.tsx";

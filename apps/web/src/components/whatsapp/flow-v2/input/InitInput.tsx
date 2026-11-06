@@ -1,3 +1,4 @@
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -7,8 +8,6 @@ import {
   SelectValue,
 } from "@rateup/ui/components/select";
 import { useId } from "react";
-
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 
 import type { FlowInputProps } from "./inputProps.ts";
 import { asText } from "./inputProps.ts";

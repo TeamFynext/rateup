@@ -2,6 +2,8 @@
 // config only. Behaviour is unchanged.
 
 import { Button } from "@rateup/ui/components/button";
+import { Checkbox } from "@rateup/ui/components/checkbox";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import { IconDeviceFloppy, IconPencil, IconShare, IconTrash } from "@tabler/icons-react";
 import { useParams, useSearch } from "@tanstack/react-router";
@@ -21,8 +23,6 @@ import TestimonialSelect from "@/components/testimonial/TestimonialSelect.tsx";
 import TestimonialShare, {
   TestimonialShareModal,
 } from "@/components/testimonial/TestimonialShare.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
 import { getFilteredTestimonials } from "@/utils/testimonial.ts";

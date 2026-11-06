@@ -1,8 +1,8 @@
+import { Field, FieldContent, FieldDescription, FieldLabel } from "@rateup/ui/components/field";
+import { Switch } from "@rateup/ui/components/switch";
 import { useTranslation } from "react-i18next";
 
 import type { LoyaltyChannel } from "@/backend/loyalty/program.api";
-import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 
 import { channelLabel, toggleChannel } from "../channels/channels.ts";
 

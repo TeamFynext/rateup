@@ -1,5 +1,12 @@
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@rateup/ui/components/card";
 import { Skeleton } from "@rateup/ui/components/skeleton";
 import {
   IconAlertCircle,
@@ -15,7 +22,6 @@ import {
 import { toast } from "sonner";
 
 import { useCatalogSettings, useCreateAddressFlow } from "@/backend/whatsapp/catalog/catalog.query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PhonePreviewButton } from "@/components/ui/phone-preview";
 import { WaQuestions } from "@/types/enums";
 

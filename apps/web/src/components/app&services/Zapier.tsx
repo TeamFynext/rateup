@@ -1,4 +1,6 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
+import { Field, FieldDescription, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
 import {
@@ -31,9 +33,6 @@ import { useUser } from "@/context/UserContext.tsx";
 import { IntegratedApps, ZapierTriggers } from "@/types/enums.ts";
 import type { ZapierIntegration } from "@/types/global";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime.ts";
-
-import { Card } from "../ui/card";
-import { Field, FieldDescription, FieldLabel } from "../ui/field";
 
 export function Zapier() {
   const {

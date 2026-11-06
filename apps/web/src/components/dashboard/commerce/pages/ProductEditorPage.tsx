@@ -1,7 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
 import { Button } from "@rateup/ui/components/button";
+import { Checkbox } from "@rateup/ui/components/checkbox";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@rateup/ui/components/empty";
+import { Field, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
 import {
@@ -12,6 +14,7 @@ import {
   SelectValue,
 } from "@rateup/ui/components/select";
 import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Switch } from "@rateup/ui/components/switch";
 import { Textarea } from "@rateup/ui/components/textarea";
 import {
   IconAlertTriangle,
@@ -51,10 +54,7 @@ import {
   useShopStockHistory,
   useShopStore,
 } from "@/backend/commerce/shop.query";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import { TagsInput } from "@/components/ui/tags-input.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";

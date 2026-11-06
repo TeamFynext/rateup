@@ -45,6 +45,7 @@
 @source not "../components/ui/tags-input.tsx";
 /* Shared components (packages/ui), with the same exclusions they had in components/ui. */
 @source "../../../../packages/ui/src/components";
+@source not "../../../../packages/ui/src/components/chart.tsx";
 @source not "../../../../packages/ui/src/components/command.tsx";
 @source not "../../../../packages/ui/src/components/dropdown-menu.tsx";
 @source not "../../../../packages/ui/src/components/sidebar.tsx";

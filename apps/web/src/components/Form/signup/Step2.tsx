@@ -1,4 +1,5 @@
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@rateup/ui/components/field";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
 import {
   Select,
@@ -14,7 +15,6 @@ import { useTranslation } from "react-i18next";
 
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
 
-import { Field, FieldError, FieldGroup, FieldLabel } from "../../ui/field.tsx";
 import { AUTH_CONTROL } from "../AuthShell.tsx";
 import { errorMessage, RequiredMark, STEP_TWO_FIELDS } from "./shared.tsx";
 import type { SignupForm } from "./shared.tsx";

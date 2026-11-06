@@ -2,12 +2,12 @@ import type { DropResult } from "@hello-pangea/dnd";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import { Button } from "@rateup/ui/components/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
+import { Field, FieldError } from "@rateup/ui/components/field";
 import { Textarea } from "@rateup/ui/components/textarea";
 import { IconEdit, IconGripVertical, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useContext, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Field, FieldError } from "@/components/ui/field.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { cn } from "@/lib/utils";
 import { SurveyType } from "@/types/enums.ts";

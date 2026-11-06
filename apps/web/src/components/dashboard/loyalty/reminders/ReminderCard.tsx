@@ -1,5 +1,7 @@
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent } from "@rateup/ui/components/card";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -8,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@rateup/ui/components/select";
+import { Switch } from "@rateup/ui/components/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
 import { IconAlertTriangle, IconClock, IconGift, IconPencil } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
@@ -16,9 +19,6 @@ import { useTranslation } from "react-i18next";
 
 import type { EventTrigger } from "@/backend/loyalty/eventTriggers.api";
 import type { SaveReminderInput } from "@/backend/loyalty/reminders.api";
-import { Card, CardContent } from "@/components/ui/card.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 
 import type { LoyaltyEventDefinition } from "../messages/loyaltyMessageCatalog.ts";
 import { LoyaltyTemplateStatusBadge } from "../messages/LoyaltyTemplateStatusBadge.tsx";

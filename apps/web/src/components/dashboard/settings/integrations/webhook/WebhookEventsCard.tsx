@@ -1,12 +1,5 @@
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
-import { IconSearch } from "@tabler/icons-react";
-import { useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
-
-import type { WebhookEvent } from "@/backend/webhook/webhook.api";
 import {
   Card,
   CardAction,
@@ -15,8 +8,15 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
+} from "@rateup/ui/components/card";
+import { Checkbox } from "@rateup/ui/components/checkbox";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@rateup/ui/components/input-group";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/tooltip";
+import { IconSearch } from "@tabler/icons-react";
+import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import type { WebhookEvent } from "@/backend/webhook/webhook.api";
 
 import { ALL_EVENT_VALUES, ENVELOPE_EVENTS, EVENT_GROUPS } from "./webhookEvents.ts";
 

@@ -1,3 +1,4 @@
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -7,8 +8,6 @@ import {
   SelectValue,
 } from "@rateup/ui/components/select";
 import { useId, useCallback } from "react";
-
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 
 import CustomColorPicker from "../../ShareSurvey/components/CustomColorPicker/index.tsx";
 import { FontWeights, getSurveyThemeKeyOf } from "../SurveyTheme.constants";

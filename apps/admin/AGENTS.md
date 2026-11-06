@@ -35,8 +35,11 @@ root `vite.config.ts`; this app's `vite.config.ts` only holds build, dev and tes
 
 ## Design language: RateUp Design System V2
 
-The console uses the same system as rateup-ui (`rateup-ui/src/styles/foundation.css`). Tokens
-live in `src/styles/theme.css` (light + dark) and mirror foundation.css; change both together.
+The console and the dashboard share one theme: `packages/ui/src/styles/theme.css` (tokens,
+light + dark, `@theme`, base layer). Change a token there and both apps follow.
+`src/styles/theme.css` imports it and adds only what the console alone has: the white nav panel
+(`--sidebar`), the rail, the `tone-*` tints and `positive`/`negative`. The shadcn components
+and the theme provider come from `@rateup/ui` too.
 
 - **Shell** (`components/shell/`): a navy icon rail (`bg-rail`, idle `text-rail-foreground/55`,
   active `bg-rail-foreground/14`), then a white nav panel (`w-72`, `bg-sidebar`), then the page

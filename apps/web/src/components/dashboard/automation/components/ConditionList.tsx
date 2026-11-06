@@ -1,4 +1,6 @@
 import { Button } from "@rateup/ui/components/button";
+import { Checkbox } from "@rateup/ui/components/checkbox";
+import { Field, FieldError } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -17,8 +19,6 @@ import { useContactLabels } from "@/backend/campaign/contacts/contacts.query";
 import type { GetLabelsRes } from "@/backend/lifecycle/lifecycle.types";
 import { useGetAllBusinessHours } from "@/backend/org/business-hours/business-hours.query";
 import { StageSelector } from "@/components/pipeline/shared/StageSelector.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { Field, FieldError } from "@/components/ui/field.tsx";
 import { useLifecycleContext } from "@/context/LifecycleContext.ts";
 
 import { MatchSentence } from "./MatchSentence.tsx";

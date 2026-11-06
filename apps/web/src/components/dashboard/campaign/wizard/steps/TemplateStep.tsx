@@ -1,5 +1,6 @@
 import { Badge } from "@rateup/ui/components/badge";
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent } from "@rateup/ui/components/card";
 import { Empty, EmptyHeader, EmptyTitle } from "@rateup/ui/components/empty";
 import { Input } from "@rateup/ui/components/input";
 import {
@@ -22,7 +23,6 @@ import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { Card, CardContent } from "@/components/ui/card.tsx";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group.tsx";
 import useTemplatesAvailableForTeam from "@/hooks/team.tsx";
 import { cn } from "@/lib/utils";

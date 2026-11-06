@@ -1,3 +1,5 @@
+import { Card, CardContent } from "@rateup/ui/components/card";
+import { Field, FieldDescription, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -6,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@rateup/ui/components/select";
+import { Switch } from "@rateup/ui/components/switch";
 import { Tabs, TabsList, TabsTrigger } from "@rateup/ui/components/tabs";
 import { IconAlertTriangle, IconCalendarCheck, IconClock } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
@@ -13,9 +16,6 @@ import { useTranslation } from "react-i18next";
 
 import { useCampaignSendPreflight } from "@/backend/campaign/campaign.query";
 import { CampaignCreditsCta } from "@/components/dashboard/campaign/CampaignCreditsCta.tsx";
-import { Card, CardContent } from "@/components/ui/card.tsx";
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import { cn } from "@/lib/utils";
 import { CampaignParticipantStatus } from "@/types/enums.ts";
 

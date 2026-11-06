@@ -1,4 +1,6 @@
 import { Button } from "@rateup/ui/components/button";
+import { Checkbox } from "@rateup/ui/components/checkbox";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@rateup/ui/components/popover";
 import { Separator } from "@rateup/ui/components/separator";
@@ -8,8 +10,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@rateup/ui/components/t
 import { IconArrowLeft, IconArrowRight, IconRepeat, IconX } from "@tabler/icons-react";
 import { useId, useEffect, useState } from "react";
 
-import { Checkbox } from "@/components/ui/checkbox";
-import { Field, FieldLabel } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
 
 import { type SearchAndReplaceStorage } from "../extensions/search-and-replace";

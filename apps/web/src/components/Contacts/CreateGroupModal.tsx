@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldError, FieldLabel, FieldTitle } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Label } from "@rateup/ui/components/label";
 import { IconUsersGroup } from "@tabler/icons-react";
@@ -30,7 +31,6 @@ import { getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
 import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 
 import { TeamSelector } from "../input/TeamSelector.tsx";
-import { Field, FieldError, FieldLabel, FieldTitle } from "../ui/field.tsx";
 
 interface GroupModalProps {
   opened: boolean;

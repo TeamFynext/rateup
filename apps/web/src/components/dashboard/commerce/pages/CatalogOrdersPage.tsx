@@ -1,4 +1,5 @@
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,7 +31,6 @@ import {
   useExportCommerceOrdersMutation,
 } from "@/backend/commerce/commerce.query";
 import OrderDetailsDialog from "@/components/dashboard/whatsapp/orders-and-payments/components/OrderDetailsDialog";
-import { Card } from "@/components/ui/card";
 import { ContactAvatar } from "@/components/ui/contact-avatar.tsx";
 import { useDebouncedValue } from "@/hooks/use-debounced-state.ts";
 import { useCan } from "@/hooks/usePermission.ts";

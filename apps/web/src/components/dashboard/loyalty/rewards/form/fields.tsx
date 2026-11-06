@@ -1,19 +1,19 @@
-import { Input } from "@rateup/ui/components/input";
-import { Textarea } from "@rateup/ui/components/textarea";
-import { useState, type ReactNode } from "react";
-import { Controller, type Control, type FieldPath, type FieldValues } from "react-hook-form";
-import { useTranslation } from "react-i18next";
-
-import type { LoyaltyTier } from "@/backend/loyalty/tier.api";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { Checkbox } from "@rateup/ui/components/checkbox";
 import {
   Field,
   FieldDescription,
   FieldError,
   FieldLabel,
   FieldTitle,
-} from "@/components/ui/field.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
+} from "@rateup/ui/components/field";
+import { Input } from "@rateup/ui/components/input";
+import { Switch } from "@rateup/ui/components/switch";
+import { Textarea } from "@rateup/ui/components/textarea";
+import { useState, type ReactNode } from "react";
+import { Controller, type Control, type FieldPath, type FieldValues } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+
+import type { LoyaltyTier } from "@/backend/loyalty/tier.api";
 import { numberInputValue } from "@/utils/form.ts";
 
 interface BaseFieldProps<T extends FieldValues, O> {

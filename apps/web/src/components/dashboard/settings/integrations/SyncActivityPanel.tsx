@@ -1,5 +1,13 @@
 import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
 import { Button } from "@rateup/ui/components/button";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@rateup/ui/components/card";
 import { Skeleton } from "@rateup/ui/components/skeleton";
 import {
   IconAlertTriangle,
@@ -14,14 +22,6 @@ import { useTranslation } from "react-i18next";
 
 import type { IntegrationActivityEntry } from "@/backend/appsIntegration/integration.api";
 import { useIntegrationActivity } from "@/backend/appsIntegration/integration.query";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
 import { cn } from "@/lib/utils";
 import { usePipelineStore } from "@/store/pipeline.store.ts";
 import { formatIsoDateStringWithTime, formatToRelativeTime } from "@/utils/dateTime.ts";

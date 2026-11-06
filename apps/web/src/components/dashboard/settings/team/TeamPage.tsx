@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { IconChevronRight, IconPlus, IconRefresh, IconUsers } from "@tabler/icons-react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
@@ -26,7 +27,6 @@ import { ActionCard } from "@/components/common/action-card.tsx";
 import { ColorField } from "@/components/common/color-field.tsx";
 import { CardGrid } from "@/components/common/generic-card.tsx";
 import { DEFAULT_TEAM_COLOR } from "@/components/settings/team.tsx";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
 import { HEX_COLOR } from "@/utils/color.ts";
 

@@ -3,6 +3,7 @@
 
 import { Alert, AlertDescription } from "@rateup/ui/components/alert";
 import { Button } from "@rateup/ui/components/button";
+import { Card } from "@rateup/ui/components/card";
 import { ScrollArea } from "@rateup/ui/components/scroll-area";
 import { Spinner } from "@rateup/ui/components/spinner";
 import { IconActivity, IconAlertTriangle, IconPlus, IconSettings } from "@tabler/icons-react";
@@ -19,7 +20,6 @@ import {
   useUpdateLifeCycleMutation,
 } from "@/backend/lifecycle/lifecycle.query";
 import { useUserInfo } from "@/backend/user/user.query";
-import { Card } from "@/components/ui/card";
 import { useConfirm } from "@/context/confirm-provider";
 
 import { FunnelVisualization } from "./parts/FunnelVisualization.tsx";

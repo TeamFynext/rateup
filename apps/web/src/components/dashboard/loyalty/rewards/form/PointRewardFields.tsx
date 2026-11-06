@@ -1,3 +1,5 @@
+import { Checkbox } from "@rateup/ui/components/checkbox";
+import { Field, FieldError, FieldLabel, FieldTitle } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -11,8 +13,6 @@ import { Controller, useWatch, type Control, type UseFormReturn } from "react-ho
 import { useTranslation } from "react-i18next";
 
 import type { LoyaltyTier } from "@/backend/loyalty/tier.api";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { Field, FieldError, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
 
 import { RewardWorthLine } from "../../giveback/RewardWorthLine.tsx";
 import { useRewardEconomicsContext } from "../../giveback/useRewardEconomicsContext.ts";

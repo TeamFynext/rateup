@@ -8,6 +8,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+  FieldTitle,
+} from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   Select,
@@ -26,7 +33,6 @@ import { z } from "zod/v4";
 import { useResponses } from "@/backend/surveys/response/response.query";
 import { LengthTracker } from "@/components/input/LengthTracker.tsx";
 import { ImageCropModal } from "@/components/Modal/ImageCropModal.tsx";
-import { Field, FieldDescription, FieldGroup, FieldLabel, FieldTitle } from "@/components/ui/field";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";

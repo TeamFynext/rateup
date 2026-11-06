@@ -1,10 +1,26 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@rateup/ui/components/button";
 import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@rateup/ui/components/card";
+import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@rateup/ui/components/collapsible";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import {
   InputGroup,
@@ -27,22 +43,6 @@ import * as z from "zod";
 import type { WebhookEvent } from "@/backend/webhook/webhook.api";
 import { useDeleteWebhookMutation, useSaveWebhookMutation } from "@/backend/webhook/webhook.query";
 import { ApiCopyButton } from "@/components/ExternalApi/ApiCopyButton.tsx";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 
 const formSchema = z.object({

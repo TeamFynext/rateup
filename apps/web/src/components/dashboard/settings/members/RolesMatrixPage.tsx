@@ -1,9 +1,9 @@
+import { Card } from "@rateup/ui/components/card";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import { BackLink } from "@/components/common/back-link.tsx";
 import { RoleBadge } from "@/components/common/RoleBadge.tsx";
-import { Card } from "@/components/ui/card.tsx";
 import { useOrgModules } from "@/hooks/useOrgModules.ts";
 import { cn } from "@/lib/utils.ts";
 import { PERMISSION_GROUPS, PERMISSION_LABELS } from "@/utils/authz/permissions.ts";

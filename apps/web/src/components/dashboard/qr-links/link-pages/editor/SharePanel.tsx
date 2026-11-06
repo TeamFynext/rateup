@@ -1,5 +1,6 @@
 import { Alert, AlertDescription } from "@rateup/ui/components/alert";
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent } from "@rateup/ui/components/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@rateup/ui/components/dialog";
 import { IconBrandFacebook, IconBrandWhatsapp, IconCode, IconMail } from "@tabler/icons-react";
 import { useState } from "react";
@@ -12,7 +13,6 @@ import { SectionHeading } from "@/components/common/page-heading.tsx";
 import type { QrDesign } from "@/components/common/qr-designer/qrDesign.ts";
 import { QrDesigner } from "@/components/common/qr-designer/QrDesigner.tsx";
 import IFrameModal from "@/components/Survey/ShareSurvey/IFrameModal.tsx";
-import { Card, CardContent } from "@/components/ui/card.tsx";
 import { uploadToCdn } from "@/utils/file-upload/upload.ts";
 
 import { CopyField } from "../../shared/CopyField.tsx";

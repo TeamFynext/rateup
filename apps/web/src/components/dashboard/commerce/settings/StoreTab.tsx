@@ -1,5 +1,7 @@
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
+import { Switch } from "@rateup/ui/components/switch";
 import { Textarea } from "@rateup/ui/components/textarea";
 import { IconDownload, IconExternalLink, IconEye } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
@@ -9,8 +11,6 @@ import { useTranslation } from "react-i18next";
 
 import { toMoney, type ShopStore, type ShopStoreUpdate } from "@/backend/commerce/shop.api";
 import { CurrencySelect } from "@/components/ui/currency-select.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
 
 import { SettingsSaveBar } from "../shop/SettingsSaveBar.tsx";

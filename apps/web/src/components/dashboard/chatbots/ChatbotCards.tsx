@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@rateup/ui/components/dropdown-menu";
 import { Input } from "@rateup/ui/components/input";
+import { Switch } from "@rateup/ui/components/switch";
 import { IconCopy, IconDots, IconTrash } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -26,7 +27,6 @@ import { PLATFORM_BADGE } from "@/components/dashboard/automation/components/rul
 import { PLATFORMS } from "@/components/dashboard/automation/components/schema.ts";
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { DataTable } from "@/components/Table/data-table.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 
 /** The channel badge, coloured as on the automation rule cards. */

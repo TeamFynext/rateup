@@ -1,4 +1,6 @@
 import { Button } from "@rateup/ui/components/button";
+import { Toaster } from "@rateup/ui/components/sonner";
+import { ThemeProvider, themeInitScript } from "@rateup/ui/components/theme-provider";
 import { TooltipProvider } from "@rateup/ui/components/tooltip";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
@@ -13,8 +15,6 @@ import {
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 
-import { THEME_INIT_SCRIPT, ThemeProvider } from "@/components/theme/theme-provider";
-import { Toaster } from "@/components/ui/sonner";
 import { getApiErrorMessage } from "@/lib/apiError";
 
 import appCss from "../styles/app.css?url";
@@ -38,7 +38,8 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       { rel: "icon", type: "image/png", sizes: "256x256", href: "/favicon.png" },
       { rel: "apple-touch-icon", href: "/favicon.png" },
     ],
-    scripts: [{ children: THEME_INIT_SCRIPT }],
+    // Routes render in the browser only (see start.ts), so the no-flash script goes in <head>.
+    scripts: [{ children: themeInitScript("theme", "light") }],
   }),
   shellComponent: RootShell,
   component: RootLayout,
@@ -68,7 +69,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootLayout() {
   const { queryClient } = Route.useRouteContext();
   return (
-    <ThemeProvider>
+    <ThemeProvider defaultTheme="light" storageKey="theme">
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Outlet />

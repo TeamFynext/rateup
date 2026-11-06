@@ -1,5 +1,6 @@
 import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
 import { Button } from "@rateup/ui/components/button";
+import { Card, CardContent } from "@rateup/ui/components/card";
 import {
   IconAlertTriangle,
   IconCircle,
@@ -15,7 +16,6 @@ import Confetti from "react-confetti";
 import { useTranslation } from "react-i18next";
 
 import type { OnboardingState } from "@/backend/loyalty/onboarding.api";
-import { Card, CardContent } from "@/components/ui/card.tsx";
 import { cn } from "@/lib/utils.ts";
 
 import { calculateGiveback } from "../../giveback/calculateGiveback.ts";

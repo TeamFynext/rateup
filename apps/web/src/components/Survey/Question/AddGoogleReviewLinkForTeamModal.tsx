@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { IconEdit } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
@@ -15,7 +16,6 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
 import { useEditTeamMutation } from "@/backend/team/team.query";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { ReviewPagePlatform } from "@/types/enums.ts";
 
 const urlSchema = z.object({

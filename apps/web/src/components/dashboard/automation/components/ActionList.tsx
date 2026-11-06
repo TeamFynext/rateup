@@ -2,6 +2,7 @@ import type { DropResult } from "@hello-pangea/dnd";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import { Alert, AlertDescription, AlertTitle } from "@rateup/ui/components/alert";
 import { Button } from "@rateup/ui/components/button";
+import { Checkbox } from "@rateup/ui/components/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@rateup/ui/components/dropdown-menu";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@rateup/ui/components/empty";
+import { Field, FieldError, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Label } from "@rateup/ui/components/label";
 import {
@@ -21,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@rateup/ui/components/select";
+import { Switch } from "@rateup/ui/components/switch";
 import {
   IconChevronDown,
   IconCircleCheck,
@@ -57,9 +60,6 @@ import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import { MessageBodyEditor } from "@/components/dashboard/loyalty/messages/MessageBodyEditor.tsx";
 import { findLeadsPipeline } from "@/components/pipeline/pipelineTypes.ts";
 import VariableMapping from "@/components/shopify/VariableMapping.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import { cn } from "@/lib/utils.ts";
 import { WaTemplateComponentTypeUpperCase } from "@/types/enums.ts";
 import { WaMessageAssignStatus } from "@/types/enums.ts";

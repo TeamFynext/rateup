@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { FieldLabel } from "@rateup/ui/components/field";
 import { Skeleton } from "@rateup/ui/components/skeleton";
 import { Textarea } from "@rateup/ui/components/textarea";
 import {
@@ -47,7 +48,6 @@ import { cn } from "@/lib/utils.ts";
 import { copyToClipboard } from "@/utils/whatsappLink.ts";
 
 import { ContactAvatar } from "../ui/contact-avatar.tsx";
-import { FieldLabel } from "../ui/field.tsx";
 import { contactRowToInitialValues, realPhone } from "./contact-form-schema.ts";
 import CreateOrEditContactModal from "./CreatOrEditContactModal.tsx";
 import { getSourceBadge } from "./utils/utils.tsx";

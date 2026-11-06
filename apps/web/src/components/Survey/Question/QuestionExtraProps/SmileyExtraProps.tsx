@@ -1,4 +1,5 @@
 import { Button } from "@rateup/ui/components/button";
+import { Field, FieldLabel, FieldTitle } from "@rateup/ui/components/field";
 import {
   Select,
   SelectContent,
@@ -10,7 +11,6 @@ import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
 import { useId, useRef, useState } from "react";
 
 import { pressable } from "@/components/common/pressable.ts";
-import { Field, FieldLabel, FieldTitle } from "@/components/ui/field";
 import { PopoverEmojiPicker } from "@/components/whatsapp/templates/Details/TextFormateToolBar.tsx";
 import { SmileyResponse } from "@/types/enums.ts";
 import { SmileyColorType, SmileyVariantStyle } from "@/types/enums.ts";

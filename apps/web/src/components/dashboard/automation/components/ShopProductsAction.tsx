@@ -8,8 +8,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@rateup/ui/components/dialog";
+import { Field, FieldDescription, FieldLabel } from "@rateup/ui/components/field";
 import { Input } from "@rateup/ui/components/input";
 import { Skeleton } from "@rateup/ui/components/skeleton";
+import { Switch } from "@rateup/ui/components/switch";
 import { Textarea } from "@rateup/ui/components/textarea";
 import { IconPlus, IconX } from "@tabler/icons-react";
 import { useState } from "react";
@@ -17,8 +19,6 @@ import { useTranslation } from "react-i18next";
 
 import { useShopProduct, useShopStore } from "@/backend/commerce/shop.query";
 import { ProductPicker } from "@/components/dashboard/commerce/inbox/ProductPicker.tsx";
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 
 export interface ShopProductsActionValue {
   productIds: string[];
