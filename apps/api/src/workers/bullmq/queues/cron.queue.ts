@@ -76,6 +76,9 @@ export const SCHEDULED_JOBS = [
   { id: "customerOnboardingDrip", pattern: "5 * * * *", tz: "Etc/UTC" },
   // Staff console sessions that ended over 30 days ago.
   { id: "staffSessionPurge", pattern: "45 3 * * *" },
+  // Workspaces unused for a year: warn the owner, delete 30 days later unless someone
+  // signs in (inactiveOrgCleanup.service.ts).
+  { id: "inactiveOrgCleanup", pattern: "0 6 * * *", tz: "Etc/UTC" },
   // TODO: re-enable once the report is working again.
   // { id: "weeklyInboxReport", pattern: "0 9 * * 0" }, // Sundays at 9:00 AM
 ] as const satisfies ReadonlyArray<{

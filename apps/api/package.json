@@ -40,6 +40,7 @@
     "@rateup/db": "workspace:*",
     "@scalar/fastify-api-reference": "^1.76.4",
     "@shopify/shopify-api": "^15.0.1",
+    "@supertokens-plugins/captcha-nodejs": "catalog:",
     "axios": "catalog:",
     "bcrypt": "^6.0.0",
     "bullmq": "catalog:",

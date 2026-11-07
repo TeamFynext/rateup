@@ -201,7 +201,14 @@ model Org {
   /// Set once the list has been chosen — at signup, by an admin, or by the backfill task.
   modulesChosenAt   DateTime?
 
-  deletionMailSent DateTime?
+  /// When the inactivity warning went to the owner (automatic sweep or the staff button).
+  /// Cleared by the next sign-in.
+  deletionMailSent    DateTime?
+  /// Last signed-in request from any member, stamped at most hourly (orgActivity.ts).
+  lastActiveAt        DateTime?
+  /// Set with the automatic inactivity warning; the sweep deletes the org once this passes
+  /// with no activity since. Cleared by the next sign-in. See inactiveOrgCleanup.service.ts.
+  scheduledDeletionAt DateTime?
   addons           SubscriptionAddon[]
 
   members                 OrgMember[]
@@ -273,6 +280,8 @@ model Org {
   contactMergeSuggestions ContactMergeSuggestion[]
 
   @@index([suspendedAt])
+  @@index([lastActiveAt])
+  @@index([scheduledDeletionAt])
 }
 
 /// A note staff keep on an org: context for whoever picks the account up next.
