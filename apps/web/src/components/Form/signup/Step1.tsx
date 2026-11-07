@@ -18,7 +18,7 @@ import {
 } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
@@ -37,6 +37,7 @@ export function Step1({
   authType,
   submitLabel = "Continue",
   submitting = false,
+  beforeSubmit,
 }: {
   formData: SignupForm;
   handleNext: () => void;
@@ -44,6 +45,8 @@ export function Step1({
   submitLabel?: string;
   /** The caller's own request, started by `handleNext`, is still running. */
   submitting?: boolean;
+  /** Shown just above the submit button (the sign-up CAPTCHA). */
+  beforeSubmit?: ReactNode;
 }) {
   const values = formData.watch();
   const { errors } = formData.formState;
@@ -305,6 +308,8 @@ export function Step1({
           </FieldError>
         )}
       </div>
+
+      {beforeSubmit}
 
       <Button
         onClick={handleClick}

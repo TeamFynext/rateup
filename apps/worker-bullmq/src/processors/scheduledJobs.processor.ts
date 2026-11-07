@@ -37,6 +37,7 @@ import type { ScheduledJobId } from "@rateup/api/workers/bullmq/queues/cron.queu
 import { reevaluateRollingTiers } from "@rateup/api/modules/loyalty/tiers/tierReevaluation.service.js";
 import { settleSentCampaigns } from "@rateup/api/modules/campaign/campaignSettle.service.js";
 import { purgeStaffSessions } from "@rateup/api/modules/staff/staff.session.js";
+import { runInactiveOrgCleanup } from "@rateup/api/modules/org/inactiveOrgCleanup.service.js";
 import { runOnboardingDrip } from "@rateup/api/modules/customerComms/drip.service.js";
 import { flushUsageCounters } from "@rateup/api/workers/shared/usageCounter.js";
 
@@ -171,6 +172,11 @@ const HANDLERS: Record<ScheduledJobId, () => Promise<void>> = {
   staffSessionPurge: async () => {
     log.info("Running Daily at 3:45 AM --> Purging ended staff console sessions");
     await safeRun("purgeStaffSessions", purgeStaffSessions);
+  },
+
+  inactiveOrgCleanup: async () => {
+    log.info("Running Daily at 6:00 AM UTC --> Inactive workspace warnings and deletions");
+    await safeRun("runInactiveOrgCleanup", runInactiveOrgCleanup);
   },
 
   inboxAutomation: async () => {

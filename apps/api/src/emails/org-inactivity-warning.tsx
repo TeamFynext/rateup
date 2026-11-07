@@ -14,6 +14,8 @@ export interface OrgInactivityWarningEmailProps {
   ownerName: string;
   /** Pre-formatted for the recipient by the caller. */
   deadline: string;
+  /** How long it has been idle, e.g. "over a year". */
+  idleFor?: string;
   dashboardLink: string;
 }
 
@@ -21,11 +23,12 @@ export function OrgInactivityWarningEmail({
   orgName,
   ownerName,
   deadline,
+  idleFor = "a long time",
   dashboardLink,
 }: OrgInactivityWarningEmailProps) {
   return (
     <EmailLayout
-      preview={`${orgName} will be scheduled for deletion on ${deadline}`}
+      preview={`${orgName} will be deleted on ${deadline} unless you sign in`}
       note={
         <Muted>
           Think this is a mistake? Write to {brand.supportEmail} and we&apos;ll look into it before
@@ -37,21 +40,21 @@ export function OrgInactivityWarningEmail({
         <Display>Your workspace is about to close</Display>
         <Paragraph>
           Hi {ownerName} — there&apos;s been no activity in <strong>{orgName}</strong> on RateUp for
-          six months, so it&apos;s been flagged as dormant.
+          {idleFor}, so it&apos;s been flagged as dormant.
         </Paragraph>
       </Section>
 
       <Callout tone="danger">
         <Text className="font-14 text-danger m-0">
-          If nothing changes by {deadline}, {orgName} will be scheduled for deletion, along with its
-          surveys, responses, and contacts.
+          If nobody signs in before {deadline}, {orgName} will be permanently deleted, along with
+          its surveys, responses, and contacts. This can&apos;t be undone.
         </Text>
       </Callout>
 
       <Section className="pt-8">
         <Paragraph tight>
-          Keeping it open takes one sign-in. Open your dashboard, look at a survey, read a response
-          — any of those clears the flag straight away.
+          Keeping it open takes one sign-in by you or anyone on your team. Open your dashboard and
+          the flag clears straight away.
         </Paragraph>
       </Section>
 
@@ -66,6 +69,7 @@ OrgInactivityWarningEmail.PreviewProps = {
   orgName: "Northside Coffee",
   ownerName: "Priya",
   deadline: "16 Sep 2026",
+  idleFor: "over a year",
   dashboardLink: "https://rateup.app/dashboard",
 } satisfies OrgInactivityWarningEmailProps;
 
