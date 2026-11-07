@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod/v4";
 
+import { CaptchaSlot } from "@/lib/auth/captcha.tsx";
 import type { useSignUp } from "@/utils/auth/index.tsx";
 
 import { AuthShell, AuthTitle } from "./AuthShell.tsx";
@@ -83,6 +84,7 @@ export function SignUpFlow({
             authType={signUpType.SIGNUP_WITH_EMAIL}
             submitLabel="Create account"
             submitting={isLoading}
+            beforeSubmit={<CaptchaSlot action="signup" />}
           />
         </Card>
       </div>

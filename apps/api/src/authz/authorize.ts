@@ -9,6 +9,7 @@ import {
   ORG_SUSPENDED_CODE,
   ORG_SUSPENDED_MESSAGE,
 } from "../modules/org/orgSuspension.js";
+import { touchOrgActivity } from "../modules/org/orgActivity.js";
 import { isUserBlocked, loadActor } from "./actor.js";
 import type { Permission } from "./permissions.js";
 import { roleKeyToLegacy } from "./roles.js";
@@ -59,6 +60,7 @@ export async function attachSessionActor(
     }
     request.user = { userId, role, orgId, email };
     if (orgId && !(await allowSuspendedThrough(request, reply, orgId))) return false;
+    if (orgId) void touchOrgActivity(orgId);
     await auditLogHook(request, reply);
     return true;
   } catch (err) {

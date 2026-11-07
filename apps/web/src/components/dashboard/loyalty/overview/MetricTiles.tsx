@@ -1,7 +1,6 @@
 import { Card, CardContent } from "@rateup/ui/components/card";
 import { Skeleton } from "@rateup/ui/components/skeleton";
-
-import { cn } from "@/lib/utils.ts";
+import { cn } from "cn";
 
 import type { MetricTile } from "./metricTiles.ts";
 

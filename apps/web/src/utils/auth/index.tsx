@@ -28,6 +28,7 @@ export function isSuperTokensGeneralError(
 }
 
 import { useRouteAndCartStore } from "@/components/HomePage/pages/Pricing/store/RouteAndCartStore.ts";
+import { CaptchaError, captchaOptions, getCaptchaToken } from "@/lib/auth/captcha.tsx";
 
 import {
   isEmailVerified,
@@ -37,8 +38,10 @@ import {
 
 const handleCreateCode = async (phoneNumber: string, navigate: ReturnType<typeof useNavigate>) => {
   try {
+    const captcha = await getCaptchaToken("sms-code");
     const response = await createCode({
       phoneNumber,
+      ...captchaOptions(captcha),
     });
     if (response.status === "OK") {
       // OTP sent successfully.
@@ -49,7 +52,9 @@ const handleCreateCode = async (phoneNumber: string, navigate: ReturnType<typeof
       // this can happen due to automatic account linking. See that section in our docs.
     }
   } catch (err) {
-    if (isSuperTokensGeneralError(err)) {
+    if (err instanceof CaptchaError) {
+      toast.error(err.message, { id: "load-data" });
+    } else if (isSuperTokensGeneralError(err)) {
       // this may be a custom error message sent from the API by you,
       // or if the input email / phone number is not valid.
       toast.error(err.message || "Failed to send OTP", {
@@ -169,7 +174,10 @@ export function useSignUp() {
         { id: "referralCode", value: referralCode },
       ].filter((field): field is { id: string; value: string } => !!field.value);
 
+      // The API asks for a CAPTCHA on sign-up when Turnstile is configured.
+      const captcha = await getCaptchaToken("signup");
       const response = await signUp({
+        ...captchaOptions(captcha),
         formFields: [
           {
             id: "email",
@@ -224,7 +232,9 @@ export function useSignUp() {
       }
       // }
     } catch (err) {
-      if (isSuperTokensGeneralError(err)) {
+      if (err instanceof CaptchaError) {
+        toast.error(err.message, { id: "load-data" });
+      } else if (isSuperTokensGeneralError(err)) {
         // this may be a custom error message sent from the API by you.
         toast.error(err?.message || "Failed", { id: "load-data" });
       } else {

@@ -7,14 +7,17 @@ export function createInactivityWarningTemplate({
   orgName,
   ownerName,
   deadlineDate,
+  idleFor,
 }: {
   orgName: string;
   ownerName: string;
   deadlineDate: string | number | Date;
+  idleFor?: string;
 }) {
   return renderOrgInactivityWarningEmail({
     orgName,
     ownerName,
+    idleFor,
     deadline: new Date(deadlineDate).toDateString(),
   });
 }

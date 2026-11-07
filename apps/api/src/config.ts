@@ -21,6 +21,7 @@ import { sendResetPasswordMail } from "./utils/email/supertoken/passwordReset.js
 import { sendVerifyMail } from "./utils/email/supertoken/verifyEmail.js";
 import { log } from "./utils/logger.js";
 import { getUserInfo } from "./utils/supertoken/supertoken.js";
+import { captchaPlugins } from "./utils/supertoken/captcha.js";
 import { jsonSchemaTransform } from "fastify-type-provider-zod";
 import { errorMessage } from "./utils/commonUtils.js";
 
@@ -421,6 +422,8 @@ export const SuperTokensConfig: TypeInput = {
       : []),
     jwt.init(),
   ],
+  // CAPTCHA on sign-up and SMS codes, when TURNSTILE_SECRET_KEY is set.
+  experimental: { plugins: captchaPlugins() },
 };
 
 // Swagger tags
