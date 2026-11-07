@@ -32,62 +32,13 @@ export async function backfillContactIdentities({
   timeLimitMs,
 }: TaskContext): Promise<TaskOutcome> {
   const started = Date.now();
-  // Earlier runs turned an Instagram/Messenger id that older code had copied into `phone`
-  // into a PHONE identity. Those are platform ids, never numbers (more than 15 digits, or
-  // the contact's own Instagram/Messenger id), so they go.
-  const bogusPhones = await prisma.$queryRaw<{ id: string }[]>`
-    SELECT i.id FROM "ContactIdentity" i
-    JOIN "Contact" c ON c.id = i."contactId"
-    WHERE i.kind = 'PHONE'
-      AND (i.value !~ '^[0-9]{7,15}$' OR i.value = c."igsId" OR i.value = c.psid)
-  `;
-  if (bogusPhones.length) {
-    log(
-      `${bogusPhones.length} phone identities that are really Instagram/Messenger ids ` +
-        (apply ? "removed" : "to remove"),
-    );
-    if (apply) {
-      await prisma.contactIdentity.deleteMany({
-        where: { id: { in: bogusPhones.map((row) => row.id) } },
-      });
-    }
-  }
-  // Merges before the fix recorded an Instagram/Messenger id from the old column without its
-  // channel, beside the row that has it: the same identity twice. The channel-less copy goes.
-  const duplicates = await prisma.$queryRaw<{ id: string }[]>`
-    SELECT loose.id FROM "ContactIdentity" loose
-    WHERE loose.scope = '' AND loose.kind IN ('IG_SCOPED', 'FB_PSID', 'WEBCHAT')
-      AND EXISTS (
-        SELECT 1 FROM "ContactIdentity" scoped
-        WHERE scoped."contactId" = loose."contactId" AND scoped.kind = loose.kind
-          AND scoped.value = loose.value AND scoped.scope <> ''
-      )
-  `;
-  if (duplicates.length) {
-    log(
-      `${duplicates.length} duplicate channel-less identities ${apply ? "removed" : "to remove"}`,
-    );
-    if (apply) {
-      await prisma.contactIdentity.deleteMany({
-        where: { id: { in: duplicates.map((row) => row.id) } },
-      });
-      // The removed copy may have been the primary one; the oldest remaining takes over.
-      await prisma.$executeRaw`
-        UPDATE "ContactIdentity" i SET "isPrimary" = true
-        WHERE i.kind IN ('IG_SCOPED', 'FB_PSID', 'WEBCHAT')
-          AND i.id = (
-            SELECT o.id FROM "ContactIdentity" o
-            WHERE o."contactId" = i."contactId" AND o.kind = i.kind
-            ORDER BY o."createdAt" LIMIT 1
-          )
-          AND NOT EXISTS (
-            SELECT 1 FROM "ContactIdentity" p
-            WHERE p."contactId" = i."contactId" AND p.kind = i.kind AND p."isPrimary"
-          )
-      `;
-    }
-  }
   let cursor = await readTaskCursor(TASK_ID);
+  // The cleanups scan every identity, so they run once, at the start of a pass, not every
+  // round. Parallel workers are off for them: parallel hash joins over the whole table need
+  // more shared memory than the Railway Postgres container's /dev/shm holds (error 53100).
+  const { bogusPhones, duplicates } = cursor
+    ? { bogusPhones: [], duplicates: [] }
+    : await cleanUpIdentities(apply, log);
   let contacts = 0;
   let written = 0;
   let finished = false;
@@ -163,4 +114,69 @@ export async function backfillContactIdentities({
       duplicatesRemoved: duplicates.length,
     },
   };
+}
+
+async function cleanUpIdentities(apply: boolean, log: TaskContext["log"]) {
+  return prisma.$transaction(
+    async (tx) => {
+      await tx.$executeRaw`SET LOCAL max_parallel_workers_per_gather = 0`;
+      // Earlier runs turned an Instagram/Messenger id that older code had copied into `phone`
+      // into a PHONE identity. Those are platform ids, never numbers (more than 15 digits, or
+      // the contact's own Instagram/Messenger id), so they go.
+      const bogusPhones = await tx.$queryRaw<{ id: string }[]>`
+      SELECT i.id FROM "ContactIdentity" i
+      JOIN "Contact" c ON c.id = i."contactId"
+      WHERE i.kind = 'PHONE'
+        AND (i.value !~ '^[0-9]{7,15}$' OR i.value = c."igsId" OR i.value = c.psid)
+    `;
+      if (bogusPhones.length) {
+        log(
+          `${bogusPhones.length} phone identities that are really Instagram/Messenger ids ` +
+            (apply ? "removed" : "to remove"),
+        );
+        if (apply) {
+          await tx.contactIdentity.deleteMany({
+            where: { id: { in: bogusPhones.map((row) => row.id) } },
+          });
+        }
+      }
+      // Merges before the fix recorded an Instagram/Messenger id from the old column without its
+      // channel, beside the row that has it: the same identity twice. The channel-less copy goes.
+      const duplicates = await tx.$queryRaw<{ id: string }[]>`
+      SELECT loose.id FROM "ContactIdentity" loose
+      WHERE loose.scope = '' AND loose.kind IN ('IG_SCOPED', 'FB_PSID', 'WEBCHAT')
+        AND EXISTS (
+          SELECT 1 FROM "ContactIdentity" scoped
+          WHERE scoped."contactId" = loose."contactId" AND scoped.kind = loose.kind
+            AND scoped.value = loose.value AND scoped.scope <> ''
+        )
+    `;
+      if (duplicates.length) {
+        log(
+          `${duplicates.length} duplicate channel-less identities ${apply ? "removed" : "to remove"}`,
+        );
+        if (apply) {
+          await tx.contactIdentity.deleteMany({
+            where: { id: { in: duplicates.map((row) => row.id) } },
+          });
+          // The removed copy may have been the primary one; the oldest remaining takes over.
+          await tx.$executeRaw`
+          UPDATE "ContactIdentity" i SET "isPrimary" = true
+          WHERE i.kind IN ('IG_SCOPED', 'FB_PSID', 'WEBCHAT')
+            AND i.id = (
+              SELECT o.id FROM "ContactIdentity" o
+              WHERE o."contactId" = i."contactId" AND o.kind = i.kind
+              ORDER BY o."createdAt" LIMIT 1
+            )
+            AND NOT EXISTS (
+              SELECT 1 FROM "ContactIdentity" p
+              WHERE p."contactId" = i."contactId" AND p.kind = i.kind AND p."isPrimary"
+            )
+        `;
+        }
+      }
+      return { bogusPhones, duplicates };
+    },
+    { timeout: 10 * 60 * 1000 },
+  );
 }
