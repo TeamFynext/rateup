@@ -11,6 +11,7 @@ import { enqueueWaMessageRecord } from "../../../workers/bullmq/queues/whatsapp.
 import { assertCampaignCredit, assertCanMessageContact } from "../whatsappSurvey/wasurvey.auth.js";
 import { getMetaChannel, type MetaChannelContext, type MetaCredentials } from "./metaChannels.js";
 import { getSentMessageId, markMessageSent } from "./sendIdempotency.js";
+import { cleanTemplateTextParams } from "./templateParams.js";
 import {
   gateSendApiMessage,
   HUMAN_AGENT_REFUSED_MESSAGE,
@@ -158,7 +159,8 @@ export async function sendMetaMessage(input: MetaSendInput): Promise<MetaSendRes
   // Instagram/Messenger: a blocked person or a closed window is refused here, before a
   // credit is spent or Meta is called. Nothing is recorded — the message never existed.
   // A human inbox reply also gets its `messaging_type` (and the Human Agent tag) here.
-  let payload = input.payload;
+  // Meta rejects a template whose text parameter has a new line or tab (132018).
+  let payload = cleanTemplateTextParams(input.payload);
   if (!priorMessageId) {
     try {
       payload = await gateSendApiMessage({

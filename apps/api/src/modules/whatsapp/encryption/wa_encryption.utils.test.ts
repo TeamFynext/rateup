@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 
 vi.mock("../settings/wa_settings.service.js", () => ({
   getWaSettings: vi.fn(),
+  getWaSettingsById: vi.fn(),
   updateWaSettings: vi.fn(),
 }));
 vi.mock("./wa_encryption.service.js", () => ({ setBusinessPublicKey: vi.fn() }));
@@ -14,7 +15,11 @@ vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));
 
-import { getWaSettings, updateWaSettings } from "../settings/wa_settings.service.js";
+import {
+  getWaSettings,
+  getWaSettingsById,
+  updateWaSettings,
+} from "../settings/wa_settings.service.js";
 import { sealFlowKeys } from "./flowKeysAtRest.js";
 import { getFlowFromDb, handleDecryptedFlowRequest } from "../flows/flow.service.js";
 import { unusableRequest } from "../flows/flow.errors.js";
@@ -28,6 +33,7 @@ import {
 
 type Mock = ReturnType<typeof vi.fn>;
 const getWaSettingsMock = getWaSettings as unknown as Mock;
+const getWaSettingsByIdMock = getWaSettingsById as unknown as Mock;
 const updateWaSettingsMock = updateWaSettings as unknown as Mock;
 const getFlowFromDbMock = getFlowFromDb as unknown as Mock;
 const handleDecryptedMock = handleDecryptedFlowRequest as unknown as Mock;
@@ -264,6 +270,49 @@ describe("handleFlowResponse", () => {
     await handleFlowResponse(request(body), rep);
 
     expect(rep.status).toHaveBeenCalledWith(421);
+  });
+
+  // Each number has its own key pair. A flow on the org's second number must be decrypted
+  // with that number's keys; the org default's keys fail every request with a 421.
+  test("decrypts with the keys of the number the flow lives on", async () => {
+    getWaSettingsMock.mockResolvedValue({
+      orgId: "org-1",
+      phoneId: "phone-1",
+      accessToken: "token",
+      encryption: generateKeyPairsForWaEncryption("other"),
+    });
+    getWaSettingsByIdMock.mockResolvedValue({
+      orgId: "org-1",
+      phoneId: "phone-2",
+      accessToken: "token",
+      encryption: keys,
+    });
+    getFlowFromDbMock.mockResolvedValue({
+      name: "Feedback",
+      status: "PUBLISHED",
+      orgId: "org-1",
+      whatsappSettingsId: "settings-2",
+    });
+    const { body } = encryptedRequest({ action: "INIT", version: "3.0" });
+    const rep = reply();
+
+    await handleFlowResponse(request(body), rep);
+
+    expect(getWaSettingsByIdMock).toHaveBeenCalledWith("settings-2", "org-1");
+    expect(getWaSettingsMock).not.toHaveBeenCalled();
+    expect(rep.status).not.toHaveBeenCalled();
+    expect(typeof rep.send.mock.calls[0][0]).toBe("string");
+  });
+
+  // A disconnected org's published flow keeps getting calls; a 500 only makes Meta retry.
+  test("answers 427 when the org has no WhatsApp channel", async () => {
+    getWaSettingsMock.mockResolvedValue(null);
+    const { body } = encryptedRequest({ action: "INIT" });
+    const rep = reply();
+
+    await handleFlowResponse(request(body), rep);
+
+    expect(rep.status).toHaveBeenCalledWith(427);
   });
 
   // A run we cannot serve closes the flow with a message, rather than a 500 that

@@ -233,11 +233,14 @@ export async function handleAutomatedReply(
         await updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
       }
     } else {
-      if (!waMessage || !parsedMessage || !message) {
+      if (!waMessage || !parsedMessage) {
         throw new Error(
-          "waMessage, parsedMessage, and message are required when no automatedReplyId is provided",
+          "waMessage and parsedMessage are required when no automatedReplyId is provided",
         );
       }
+      // A sticker, reaction or uncaptioned photo has no text for an automation to match.
+      // These were never answered; they just used to throw and log an error each time.
+      if (!message) return;
       const inputHandled = await handleInputReply({
         phone,
         orgId,

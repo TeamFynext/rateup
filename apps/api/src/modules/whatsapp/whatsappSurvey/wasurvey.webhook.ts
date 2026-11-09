@@ -283,7 +283,7 @@ async function handleMessageEvent(body: WaMessageBody, options: InboundOptions =
   const waSettings = await getWaSettingsByPhoneId(phoneId);
 
   if (!waSettings) {
-    log.error("WaSettings not found for phone_id: %s", phoneId);
+    log.warn("WaSettings not found for phone_id: %s", phoneId);
     return;
   }
 
@@ -344,7 +344,7 @@ async function handleSMBMessageEchoes(body: WaMessageBody) {
 
       const waSettings = await getWaSettingsByPhoneId(phoneId);
       if (!waSettings) {
-        log.error("WaSettings not found for phone_id: %s", phoneId);
+        log.warn("WaSettings not found for phone_id: %s", phoneId);
         continue;
       }
 
@@ -547,7 +547,7 @@ async function handleMessagingHandoversEvent(body: WaMessageBody) {
 
       const waSettings = await getWaSettingsByPhoneId(phoneId);
       if (!waSettings) {
-        log.error("WaSettings not found for phone_id: %s", phoneId);
+        log.warn("WaSettings not found for phone_id: %s", phoneId);
         continue;
       }
 

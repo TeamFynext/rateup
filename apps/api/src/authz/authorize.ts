@@ -64,10 +64,26 @@ export async function attachSessionActor(
     await auditLogHook(request, reply);
     return true;
   } catch (err) {
-    log.error({ err }, "Error checking session");
+    logSessionFailure(err);
     reply.code(401).send({ message: "Not authorized" });
     return false;
   }
+}
+
+/**
+ * An expired, missing or invalid token is a normal 401 (the browser refreshes and retries),
+ * so it is logged at debug. Anything else, such as the SuperTokens core being unreachable or
+ * a database error while loading the actor, stays an error.
+ */
+export function logSessionFailure(err: unknown) {
+  // SessionError's `type` values; read by shape so a test that mocks the Session module
+  // without its Error class still logs.
+  const type = (err as { type?: unknown } | null)?.type;
+  if (type === "TRY_REFRESH_TOKEN" || type === "UNAUTHORISED") {
+    log.debug({ reason: type, message: (err as Error).message }, "Session check refused");
+    return;
+  }
+  log.error({ err }, "Error checking session");
 }
 
 /**

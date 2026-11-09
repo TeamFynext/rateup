@@ -28,6 +28,7 @@ is the workers importing backend code from `@rateup/api`; the API never imports 
 ```bash
 vp install                        # install the workspace, git hooks, prisma generate (never npm)
 pnpm run install:mobile           # install apps/mobile (its own pnpm install)
+pnpm run infra:up                 # Redis + Kafka in Docker (`infra:down` stops them)
 pnpm run dev                      # API + dashboard; `pnpm run dev:workers` for both workers
 vp run @rateup/api#dev            # one package's script
 vp -C apps/web dev                # a Vite app's dev server

@@ -80,10 +80,11 @@ Android emulator.
 
 ### 3. Services: Postgres, Redis, Kafka, SuperTokens
 
-Redis and Kafka come from the API's compose file:
+Redis and Kafka come from the API's compose file. Start them from the root with Docker or
+Podman (waits until both are healthy); stop them with `pnpm run infra:down`:
 
 ```bash
-docker compose -f apps/api/docker-compose.yaml up -d
+pnpm run infra:up
 ```
 
 Postgres: use a local install, or run one in Docker:

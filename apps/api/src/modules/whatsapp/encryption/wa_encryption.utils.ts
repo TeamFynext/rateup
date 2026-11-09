@@ -1,6 +1,10 @@
 import crypto from "node:crypto";
 import { FastifyReply, FastifyRequest } from "fastify";
-import { getWaSettings, updateWaSettings } from "../settings/wa_settings.service.js";
+import {
+  getWaSettings,
+  getWaSettingsById,
+  updateWaSettings,
+} from "../settings/wa_settings.service.js";
 import { setBusinessPublicKey } from "./wa_encryption.service.js";
 import { openFlowKeys } from "./flowKeysAtRest.js";
 import { log } from "../../../utils/logger.js";
@@ -138,9 +142,18 @@ export async function handleFlowResponse(
     return res.status(427).send();
   }
 
-  const waSettings = await getWaSettings(orgId);
+  // Each number has its own key pair, so decrypt with the keys of the number the flow
+  // lives on. The org's oldest number (getWaSettings' default) only holds for flows
+  // that never recorded one; for any other it fails every request with an OAEP error.
+  const dbFlow = await getFlowFromDb(dbFlowId, orgId);
+  const waSettings = dbFlow?.whatsappSettingsId
+    ? await getWaSettingsById(dbFlow.whatsappSettingsId, orgId)
+    : await getWaSettings(orgId);
   if (!waSettings) {
-    throw new Error("No WhatsApp settings found for orgId " + orgId);
+    // The org disconnected WhatsApp but a published flow still points here. A 500 only
+    // makes Meta retry; 427 closes the flow for the respondent.
+    log.warn({ orgId, dbFlowId }, "Flow endpoint called for an org with no WhatsApp channel");
+    return res.status(427).send();
   }
   const { encryption: storedEncryption, phoneId, accessToken } = waSettings;
   // Sealed rows and legacy plain rows both read here (WEBH-8). A sealed value that does not
@@ -186,7 +199,6 @@ export async function handleFlowResponse(
   const { aesKeyBuffer, initialVectorBuffer, decryptedBody } = decryptedRequest;
 
   try {
-    const dbFlow = await getFlowFromDb(dbFlowId, orgId);
     if (!dbFlow) {
       throw new Error(`Flow not found in db for dbFlowId: ${dbFlowId}`);
     }

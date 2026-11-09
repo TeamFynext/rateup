@@ -6,6 +6,8 @@
   "scripts": {
     "prepare": "vp config",
     "dev": "vp run --parallel --filter @rateup/api --filter @rateup/web dev",
+    "infra:up": "$(command -v docker >/dev/null && echo docker || echo podman) compose -f apps/api/docker-compose.yaml up -d --wait",
+    "infra:down": "$(command -v docker >/dev/null && echo docker || echo podman) compose -f apps/api/docker-compose.yaml down",
     "dev:workers": "vp run --parallel --filter @rateup/worker-bullmq --filter @rateup/worker-kafka dev",
     "build": "vp run -r build",
     "typecheck": "vp run -r typecheck && pnpm --dir apps/mobile run typecheck",

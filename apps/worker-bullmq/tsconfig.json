@@ -7,5 +7,8 @@
     "rootDir": "../..",
     "noEmit": true
   },
-  "include": ["src/**/*.ts", "../../apps/api/src/types/*.d.ts"]
+  // The API's .tsx files are listed so `tsx` (dev) compiles them with this config's
+  // "jsx": "react-jsx"; it skips a tsconfig for files outside its include and falls back
+  // to classic JSX, which throws "React is not defined" when an email renders.
+  "include": ["src/**/*.ts", "../../apps/api/src/types/*.d.ts", "../../apps/api/src/**/*.tsx"]
 }

@@ -61,6 +61,7 @@ import { assertCanMessageContact } from "./wasurvey.auth.js";
 import type { sendPaymentInitTemplate } from "../automatedReply/wa_automatedReply.utils.js";
 import { channelDigits } from "../../../utils/channelIdentifier.js";
 import { getInstagramChannel, getMessengerChannel } from "../metaChannel/metaChannel.service.js";
+import { cleanTemplateTextParams } from "../meta/templateParams.js";
 import {
   gateSendApiMessage,
   isOutsideWindowError,
@@ -155,6 +156,8 @@ export async function sendMessage(
     userId,
     isAutomated,
   })) as typeof messageData;
+  // Meta rejects a template whose text parameter has a new line or tab (132018).
+  messageData = cleanTemplateTextParams(messageData);
   // Gated once the recipient is known: past the allowance, contacts already counted this
   // month can still be messaged, new ones cannot.
   if (!skipActiveContactLimit) {
