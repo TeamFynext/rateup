@@ -1,7 +1,7 @@
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
-import { callMetaApi } from "../../whatsapp/wa_axios.js";
-import { getWaSettings } from "../../whatsapp/settings/wa_settings.service.js";
+import { callMetaApi } from "../../meta/whatsapp/wa_axios.js";
+import { getWaSettings } from "../../meta/whatsapp/settings/settings.service.js";
 import { toNumber } from "./pricing.js";
 import type { ShopAttribution } from "./shop.types.js";
 

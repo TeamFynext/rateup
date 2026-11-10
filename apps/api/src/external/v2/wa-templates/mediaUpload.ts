@@ -8,7 +8,7 @@ import type { MultipartFile } from "@fastify/multipart";
 import axios from "axios";
 import FormData from "form-data";
 
-import { GraphApiError } from "../../../modules/whatsapp/wa_axios.js";
+import { GraphApiError } from "../../../modules/meta/whatsapp/wa_axios.js";
 import { graphUrl } from "../../../utils/meta.js";
 import { ExternalApiError } from "../../shared/errors.js";
 import type { HeaderMediaType } from "./waTemplates.schema.js";

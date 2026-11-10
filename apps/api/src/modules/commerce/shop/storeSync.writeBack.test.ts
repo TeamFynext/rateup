@@ -37,7 +37,7 @@ vi.mock("../../../workers/bullmq/queues/shop.queue.js", () => queue);
 vi.mock("./orders.service.js", () => orders);
 vi.mock("../../integrations/woocommerce/woocommerce.shopOrders.js", () => woo);
 vi.mock("../../integrations/shopify/shopify.shopOrders.js", () => shopify);
-vi.mock("../../whatsapp/catalog/products/product.service.js", () => fetchers);
+vi.mock("../catalogs/products/product.service.js", () => fetchers);
 vi.mock("../../integrations/shopify/shopify.orders.js", () => resume);
 
 const {

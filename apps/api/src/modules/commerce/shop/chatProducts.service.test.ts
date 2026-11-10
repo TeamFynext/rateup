@@ -8,7 +8,7 @@ const db = vi.hoisted(() => ({
 const meta = vi.hoisted(() => ({ sendMetaMessage: vi.fn() }));
 
 vi.mock("../../../utils/prisma.js", () => ({ default: db }));
-vi.mock("../../whatsapp/meta/metaMessage.service.js", () => meta);
+vi.mock("../../meta/shared/metaMessage.service.js", () => meta);
 vi.mock("../../loyalty/messaging/channels/whatsapp/session.js", () => ({
   findOpenSession: vi.fn(),
 }));

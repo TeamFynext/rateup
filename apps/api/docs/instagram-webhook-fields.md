@@ -2,10 +2,10 @@
 
 Instagram's webhook fields are subscribed at **app level** in the Meta dashboard
 (App → Webhooks → Instagram), not by code. `PAGE_SUBSCRIBED_FIELDS` in
-`src/modules/whatsapp/metaChannel/metaChannel.service.ts` subscribes only the linked
+`src/modules/meta/channels/metaChannel.service.ts` subscribes only the linked
 Facebook Page. If a field below is not ticked in the dashboard, the matching feature
 silently does nothing. Keep this list in step with `handleInstagramWebhook`
-(`src/modules/whatsapp/instagram/instagram.service.ts`).
+(`src/modules/meta/instagram/instagram.service.ts`).
 
 Callback URL: `https://<api host>/api/instagram/webhook`
 

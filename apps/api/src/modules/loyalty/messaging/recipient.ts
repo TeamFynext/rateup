@@ -5,7 +5,7 @@ import {
   contactFields,
   contactWhereIdentity,
   primaryIdentities,
-} from "../../contact/identity/contactFields.js";
+} from "../../contacts/identity/contactFields.js";
 
 export type RecipientRef =
   | { accountId: string }

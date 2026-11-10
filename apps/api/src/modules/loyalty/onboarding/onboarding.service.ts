@@ -20,12 +20,12 @@ import {
   reevaluateProgramTiers,
   type ProgramTierMoves,
 } from "../tiers/tierReevaluation.service.js";
-import { getAutomatedRepliesByKeyWeords } from "../../whatsapp/automatedReply/wa_automatedReply.service.js";
+import { getAutomatedRepliesByKeyWeords } from "../../automation/rules/rules.service.js";
 import {
   createTemplate,
   getTemplateByNameAndOrgId,
   saveTemplate,
-} from "../../whatsapp/messageTemplates/wa_templates.service.js";
+} from "../../meta/whatsapp/templates/templates.service.js";
 import type {
   EarningStepInput,
   EventTemplateResult,

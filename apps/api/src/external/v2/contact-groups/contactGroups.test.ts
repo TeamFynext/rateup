@@ -55,13 +55,13 @@ vi.mock("../../../utils/prisma.js", () => ({
     contactCustomField: { findMany: vi.fn() },
   },
 }));
-vi.mock("../../../modules/contact/contact.service.js", () => ({
+vi.mock("../../../modules/contacts/contact.service.js", () => ({
   createMultipleContacts: vi.fn(),
 }));
-vi.mock("../../../modules/contact/contactGroup/contactGroup.service.js", async () => {
+vi.mock("../../../modules/contacts/audiences/audience.service.js", async () => {
   const errors = await vi.importActual<
-    typeof import("../../../modules/contact/contactGroup/contactGroup.errors.js")
-  >("../../../modules/contact/contactGroup/contactGroup.errors.js");
+    typeof import("../../../modules/contacts/audiences/audience.errors.js")
+  >("../../../modules/contacts/audiences/audience.errors.js");
   return {
     ContactGroupNotFoundError: errors.ContactGroupNotFoundError,
     addExistingContactsToGroup: vi.fn(),
@@ -71,13 +71,13 @@ vi.mock("../../../modules/contact/contactGroup/contactGroup.service.js", async (
 });
 
 import prisma from "../../../utils/prisma.js";
-import { createMultipleContacts } from "../../../modules/contact/contact.service.js";
+import { createMultipleContacts } from "../../../modules/contacts/contact.service.js";
 import {
   addExistingContactsToGroup,
   ContactGroupNotFoundError,
   createContactGroup,
   removeContactsFromGroup,
-} from "../../../modules/contact/contactGroup/contactGroup.service.js";
+} from "../../../modules/contacts/audiences/audience.service.js";
 import { buildActor } from "../../../authz/actor.js";
 import { externalErrorHandler } from "../../shared/errors.js";
 import { requireScope } from "../../shared/scopes.js";

@@ -7,7 +7,7 @@ import { externalTeamRoutes } from "./teams/teams.route.js";
 import { externalCampaignRoutes } from "./campaigns/campaigns.route.js";
 import { externalWaTemplateRoutes } from "./wa-templates/waTemplates.route.js";
 import { externalLoyaltyRoutes } from "./loyalty/loyalty.route.js";
-import { assertApiKeyV2 } from "../../modules/apiAccessToken/apiAccessToken.auth.js";
+import { assertApiKeyV2 } from "../../modules/settings/apiKeys/apiKey.auth.js";
 import { registerPartnerHooks } from "../shared/partnerHooks.js";
 import { recordV2Route } from "../mcp/catalog.js";
 import { EXTERNAL_V2_PREFIX } from "./prefix.js";

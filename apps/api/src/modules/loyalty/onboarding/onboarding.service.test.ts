@@ -61,11 +61,11 @@ vi.mock("../tiers/tierReevaluation.service.js", () => ({
   reevaluateProgramTiers: vi.fn(async () => ({ evaluated: 0, promoted: 0, demoted: 0 })),
 }));
 
-vi.mock("../../whatsapp/automatedReply/wa_automatedReply.service.js", () => ({
+vi.mock("../../automation/rules/rules.service.js", () => ({
   getAutomatedRepliesByKeyWeords: vi.fn(),
 }));
 
-vi.mock("../../whatsapp/messageTemplates/wa_templates.service.js", () => ({
+vi.mock("../../meta/whatsapp/templates/templates.service.js", () => ({
   createTemplate: vi.fn(),
   saveTemplate: vi.fn(),
   getTemplateByNameAndOrgId: vi.fn(),
@@ -74,12 +74,12 @@ vi.mock("../../whatsapp/messageTemplates/wa_templates.service.js", () => ({
 import prisma from "../../../utils/prisma.js";
 import { LoyaltyEventType, LoyaltyTemplateTypes } from "../../../types/enums.js";
 import { LoyaltyRewardType } from "../../../types/loyalty.js";
-import { getAutomatedRepliesByKeyWeords } from "../../whatsapp/automatedReply/wa_automatedReply.service.js";
+import { getAutomatedRepliesByKeyWeords } from "../../automation/rules/rules.service.js";
 import {
   createTemplate,
   getTemplateByNameAndOrgId,
   saveTemplate,
-} from "../../whatsapp/messageTemplates/wa_templates.service.js";
+} from "../../meta/whatsapp/templates/templates.service.js";
 import { reevaluateProgramTiers } from "../tiers/tierReevaluation.service.js";
 import { tiersStepSchema, earningStepSchema, profileStepSchema } from "./onboarding.schema.js";
 import { LOYALTY_PRESETS, suggestPresetKey } from "./presets.js";

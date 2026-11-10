@@ -5,7 +5,7 @@ import {
   contactWhereIdentityContains,
   primaryIdentities,
   withContactFields,
-} from "../../../contact/identity/contactFields.js";
+} from "../../../contacts/identity/contactFields.js";
 import { WaMessageAssignStatus } from "../../../../types/enums.js";
 import { emitIntegrationEvent } from "../../events/emitIntegrationEvent.js";
 import { ZapierTriggers } from "./zapier.types.js";

@@ -8,7 +8,7 @@ import { Prisma } from "../../../generated/prisma/client.js";
 import {
   primaryIdentityPgSql,
   primaryIdentitySql,
-} from "../../../modules/contact/identity/contactFields.js";
+} from "../../../modules/contacts/identity/contactFields.js";
 import type { PrismaTransaction } from "../prismaTypes.js";
 import type { WaMessageOrgTeamType } from "../../../generated/prisma/enums.js";
 import {
@@ -28,12 +28,12 @@ import type {
 import {
   metaErrorMessage,
   sendMetaMessage,
-} from "../../../modules/whatsapp/meta/metaMessage.service.js";
+} from "../../../modules/meta/shared/metaMessage.service.js";
 import type { WaStatusPricing } from "../../../types/whatsapp.types.js";
 import {
   normalizePricingCategory,
   normalizePricingModel,
-} from "../../../modules/whatsapp/metering/pricing.utils.js";
+} from "../../../modules/meta/whatsapp/metering/pricing.utils.js";
 import { aes_decrypt } from "../../../utils/encryption/encryption.utils.js";
 import { Queue } from "bullmq";
 // Defined in its own dependency-free module so `queues/campaign.queue.ts` can
@@ -43,7 +43,7 @@ import { campaignSendJobId, campaignSendJobsKey } from "../campaignSendKeys.js";
 import {
   emitWebhookEvents,
   type WebhookEventInput,
-} from "../../../modules/webhook/webhook.events.js";
+} from "../../../modules/settings/webhooks/webhook.events.js";
 import { messageStatusWebhookEvents } from "./statusWebhook.js";
 
 export { campaignSendJobsKey };

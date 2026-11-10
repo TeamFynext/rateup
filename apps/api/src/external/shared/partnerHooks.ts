@@ -1,8 +1,8 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
 
-import { apiUsageOnResponse, flushApiUsage } from "../../modules/apiAccessToken/apiUsage.js";
+import { apiUsageOnResponse, flushApiUsage } from "../../modules/settings/apiKeys/apiUsage.js";
 import { clientIp } from "../../utils/http.js";
-import { isOrgSuspended, ORG_SUSPENDED_MESSAGE } from "../../modules/org/orgSuspension.js";
+import { isOrgSuspended, ORG_SUSPENDED_MESSAGE } from "../../modules/settings/org/orgSuspension.js";
 import { ExternalApiError, externalErrorHandler } from "./errors.js";
 import {
   documentIdempotencyHeader,

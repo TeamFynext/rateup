@@ -1,5 +1,5 @@
 /**
- * A survey question as returned by `GET /api/question/:surveyId`.
+ * A survey question as returned by `GET /api/surveys/:surveyId/questions`.
  *
  * Localized fields are keyed by language, and the key varies by survey vintage
  * — web forms use full names ("English") while flows use codes ("en") — so

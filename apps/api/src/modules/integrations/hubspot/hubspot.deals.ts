@@ -4,7 +4,7 @@ import type { Integration } from "../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
 import { IntegratedApps } from "../../../types/enums.js";
 import { integrationTriggerQueue } from "../../../workers/bullmq/queues/index.js";
-import { LEADS_PIPELINE_TYPE } from "../../pipeline/pipelineTypes.js";
+import { LEADS_PIPELINE_TYPE } from "../../pipelines/pipelineTypes.js";
 import type { IntegrationEvent } from "../events/integrationEvent.types.js";
 import type {
   IntegrationEventContext,

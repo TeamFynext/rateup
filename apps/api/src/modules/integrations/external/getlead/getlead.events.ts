@@ -1,4 +1,4 @@
-import { LEADS_PIPELINE_TYPE } from "../../../pipeline/pipelineTypes.js";
+import { LEADS_PIPELINE_TYPE } from "../../../pipelines/pipelineTypes.js";
 import type { IntegrationEvent } from "../../events/integrationEvent.types.js";
 import type { IntegrationEventContext } from "../../providers/integrationProvider.types.js";
 import { addGetLeadSyncToQueue } from "./getlead.queue.js";

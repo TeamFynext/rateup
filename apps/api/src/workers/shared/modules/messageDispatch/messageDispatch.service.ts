@@ -1,14 +1,14 @@
 import { log } from "../../logger.js";
 import { CampaignParticipantStatus, WaTemplateCategory } from "../../types/enum.js";
-import { createTemplateMessage } from "../../../../modules/whatsapp/whatsappSurvey/wasurvey.utils.js";
+import { createTemplateMessage } from "../../../../modules/meta/whatsapp/webhook/whatsapp.utils.js";
 import {
   sendMetaMessage,
   type MetaSendResult,
-} from "../../../../modules/whatsapp/meta/metaMessage.service.js";
-import { CampaignCreditsExhaustedError } from "../../../../modules/whatsapp/whatsappSurvey/wasurvey.auth.js";
+} from "../../../../modules/meta/shared/metaMessage.service.js";
+import { CampaignCreditsExhaustedError } from "../../../../modules/meta/whatsapp/webhook/whatsapp.auth.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
-import { buildTemplateComponents } from "../../../../modules/whatsapp/messageTemplates/templateComponents.js";
-import { signFlowToken } from "../../../../modules/whatsapp/flows/flowToken.js";
+import { buildTemplateComponents } from "../../../../modules/meta/whatsapp/templates/templateComponents.js";
+import { signFlowToken } from "../../../../modules/meta/whatsapp/flows/flowToken.js";
 import {
   updateCampaignParticipant,
   updateCampaignSendStats,
@@ -27,7 +27,7 @@ import {
   isCampaignSendPaused,
   pauseCampaignForAccountIssue,
   pauseReasonForMetaError,
-} from "../../../../modules/campaign/campaignPause.service.js";
+} from "../../../../modules/campaigns/campaignPause.service.js";
 import { CampaignPauseReason } from "../../../../types/enums.js";
 
 // Define proper interfaces

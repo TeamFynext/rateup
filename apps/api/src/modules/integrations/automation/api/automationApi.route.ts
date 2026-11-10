@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 
 import { declareAccess } from "../../../../authz/registry.js";
-import { createContactHandler } from "../../../contact/contact.controller.js";
+import { createContactHandler } from "../../../contacts/contact.controller.js";
 import { automationKeyAuth } from "../automation.auth.js";
 import type { AutomationPlatform } from "../automation.platforms.js";
 import {

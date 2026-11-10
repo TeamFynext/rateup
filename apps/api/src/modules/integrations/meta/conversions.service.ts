@@ -1,9 +1,9 @@
-import { callMetaApi } from "../../whatsapp/wa_axios.js";
+import { callMetaApi } from "../../meta/whatsapp/wa_axios.js";
 import crypto from "crypto";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
-import { getWaSettings } from "../../whatsapp/settings/wa_settings.service.js";
-import { notify } from "../../notification/notify.js";
+import { getWaSettings } from "../../meta/whatsapp/settings/settings.service.js";
+import { notify } from "../../settings/notifications/notify.js";
 
 /** Meta nests the useful text under `response.data.error.message`; fall back to the Error. */
 function metaConversionErrorMessage(error: unknown): string {

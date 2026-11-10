@@ -6,9 +6,9 @@ const session = vi.hoisted(() => ({ findOpenSession: vi.fn() }));
 
 vi.mock("../../../utils/prisma.js", () => ({ default: db }));
 vi.mock("../../../utils/logger.js", () => ({ log: { warn: vi.fn() } }));
-vi.mock("../../whatsapp/meta/metaMessage.service.js", () => meta);
+vi.mock("../../meta/shared/metaMessage.service.js", () => meta);
 vi.mock("../../loyalty/messaging/channels/whatsapp/session.js", () => session);
-vi.mock("../../whatsapp/messageTemplates/wa_templates.controller.js", () => ({
+vi.mock("../../meta/whatsapp/templates/templates.controller.js", () => ({
   sendTemplateToUserCore: vi.fn(),
 }));
 

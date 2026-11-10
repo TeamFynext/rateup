@@ -1,7 +1,6 @@
-import { WHATSAPP_URL } from ".";
 import { axiosClient } from "../apiClient";
 
-const ANALYTICS_URL = `${WHATSAPP_URL}/templates/analytics`;
+const ANALYTICS_URL = "/whatsapp/templates/analytics";
 
 /** Whether the WhatsApp account has opted in to Meta's template analytics. */
 export type TemplateInsightsStatus = "enabled" | "disabled" | "unknown";

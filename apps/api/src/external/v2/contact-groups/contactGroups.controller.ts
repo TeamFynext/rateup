@@ -1,14 +1,14 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 
 import { Prisma } from "../../../generated/prisma/client.js";
-import { createMultipleContacts } from "../../../modules/contact/contact.service.js";
+import { createMultipleContacts } from "../../../modules/contacts/contact.service.js";
 import {
   addExistingContactsToGroup,
   ContactGroupNotFoundError,
   createContactGroup,
   removeContactsFromGroup,
-} from "../../../modules/contact/contactGroup/contactGroup.service.js";
-import { ContactGroupType } from "../../../modules/contact/contactGroup/contactGroup.schema.js";
+} from "../../../modules/contacts/audiences/audience.service.js";
+import { ContactGroupType } from "../../../modules/contacts/audiences/audience.schema.js";
 import { presentContact } from "../contacts/presenters.js";
 import { ExternalApiError } from "../../shared/errors.js";
 import { decodeCursor, toPage, type PaginationQuery } from "../pagination.js";

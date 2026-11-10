@@ -4,7 +4,7 @@ import { LoyaltyFeedbackRequestStatus } from "../../../generated/prisma/client.j
 import { WaFlowStatus } from "../../../types/enums.js";
 import { sendLoyalty } from "../messaging/send.js";
 import { ensureSurveyTeamMap } from "./feedback.teamMap.js";
-import { contactFields, primaryIdentities } from "../../contact/identity/contactFields.js";
+import { contactFields, primaryIdentities } from "../../contacts/identity/contactFields.js";
 
 /**
  * Fires one feedback request when its delayed job comes due. Worker-only: this reaches

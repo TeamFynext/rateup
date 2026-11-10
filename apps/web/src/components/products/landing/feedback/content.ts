@@ -1,5 +1,5 @@
 /* Copy for the WhatsApp Feedback landing page. Everything here describes something the product
-   really does — check `components/dashboard/loyalty/feedback`, `rateup-api/src/modules/loyalty/
+   really does — check `components/dashboard/loyalty/feedback`, `apps/api/src/modules/loyalty/
    feedback` and the survey settings before adding a claim. The review reward is left out on
    purpose: incentivised reviews break Google's policy. */
 

@@ -17,9 +17,9 @@ import { priceOrder, round2, shippingFor, toNumber, type PricedLine } from "./pr
 import { adjustStock, afterStockChange } from "./products.service.js";
 import { notFound, ShopError } from "./shop.errors.js";
 import { countsTowardOrders, orderAllowance, orderLimitError } from "./orderAllowance.js";
-import { countPlacedOrder } from "../../subscription/shopOrders.js";
-import { currentPeriodStart } from "../../subscription/billingPeriod.js";
-import { maybeNotifyOrderUsage } from "../../subscription/limitAlerts.js";
+import { countPlacedOrder } from "../../settings/subscription/shopOrders.js";
+import { currentPeriodStart } from "../../settings/subscription/billingPeriod.js";
+import { maybeNotifyOrderUsage } from "../../settings/subscription/limitAlerts.js";
 import { shopProductsActionSchema } from "./commentToBuy.schema.js";
 import {
   pointsOffer,
@@ -31,7 +31,7 @@ import {
 import type { ShopAddress, ShopAttribution, ShopSelectedShipping } from "./shop.types.js";
 import { getStoreById, nextOrderNumber, ratesForDestination } from "./store.service.js";
 import { fulfilledInStore, inStoreCheckout, paysInStore, storeLabel } from "./checkoutVia.js";
-import { contactFields, primaryIdentities } from "../../contact/identity/contactFields.js";
+import { contactFields, primaryIdentities } from "../../contacts/identity/contactFields.js";
 
 export const orderDetailInclude = {
   items: { orderBy: { title: "asc" } },
@@ -859,7 +859,7 @@ async function notifyNeedsReview(
   reason: string,
 ) {
   try {
-    const { notify } = await import("../../notification/notify.js");
+    const { notify } = await import("../../settings/notifications/notify.js");
     await notify({
       event: "commerce.order_needs_review",
       orgId: order.orgId,

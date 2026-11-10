@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 // Unmetered plan: the monthly order cap has its own tests (orders.orderLimit.test.ts).
-vi.mock("../../subscription/planLimits.js", () => ({
+vi.mock("../../settings/subscription/planLimits.js", () => ({
   checkPlanLimit: vi.fn(async () => ({ metered: false, used: 0, exceeded: false })),
 }));
-vi.mock("../../subscription/shopOrders.js", () => ({ countPlacedOrder: vi.fn(async () => 1) }));
-vi.mock("../../subscription/limitAlerts.js", () => ({ maybeNotifyOrderUsage: vi.fn() }));
+vi.mock("../../settings/subscription/shopOrders.js", () => ({
+  countPlacedOrder: vi.fn(async () => 1),
+}));
+vi.mock("../../settings/subscription/limitAlerts.js", () => ({ maybeNotifyOrderUsage: vi.fn() }));
 
 const db = vi.hoisted(() => ({
   shopOrder: {
@@ -48,7 +50,7 @@ const store = vi.hoisted(() => ({
 vi.mock("../../../utils/prisma.js", () => ({ default: db }));
 vi.mock("../../../utils/logger.js", () => ({ log: { warn: vi.fn(), info: vi.fn() } }));
 vi.mock("../../../workers/bullmq/queues/shop.queue.js", () => queue);
-vi.mock("../../whatsapp/catalog/catalogSettings.service.js", () => ({
+vi.mock("../catalogs/catalogSettings.service.js", () => ({
   sendAddressFlowToCustomer: vi.fn(),
 }));
 vi.mock("./events.js", () => ({ checkoutUrl: (t: string) => `https://shop.test/c/${t}` }));
@@ -66,7 +68,7 @@ const {
   sendCheckoutLink,
   startCheckoutFromCart,
 } = await import("./checkout.service.js");
-const { checkPlanLimit } = await import("../../subscription/planLimits.js");
+const { checkPlanLimit } = await import("../../settings/subscription/planLimits.js");
 const { ShopError } = await import("./shop.errors.js");
 const { ORDER_LIMIT_MESSAGE } = await import("./orderAllowance.js");
 

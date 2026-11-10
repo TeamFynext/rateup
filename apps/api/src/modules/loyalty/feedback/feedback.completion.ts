@@ -1,14 +1,14 @@
 import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
 import { LoyaltyFeedbackRequestStatus } from "../../../generated/prisma/client.js";
-import { getWaSettingsById } from "../../whatsapp/settings/wa_settings.service.js";
+import { getWaSettingsById } from "../../meta/whatsapp/settings/settings.service.js";
 import { LoyaltyChannel } from "../messaging/channelIds.js";
 import { replyLoyalty } from "../messaging/reply.js";
 import { buildReviewRedirectUrl } from "./feedback.redirect.js";
 import { extractOverallRating, type FlowAnswer } from "./feedback.evaluate.js";
 import { resolveTeamGoogleLink } from "./feedback.googleLink.js";
-import { notify } from "../../notification/notify.js";
-import { contactFields, primaryIdentities } from "../../contact/identity/contactFields.js";
+import { notify } from "../../settings/notifications/notify.js";
+import { contactFields, primaryIdentities } from "../../contacts/identity/contactFields.js";
 
 export { resolveTeamGoogleLink } from "./feedback.googleLink.js";
 

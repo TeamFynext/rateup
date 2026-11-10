@@ -9,8 +9,8 @@ const settings = vi.hoisted(() => ({ getWaSettings: vi.fn() }));
 
 vi.mock("../../../utils/prisma.js", () => ({ default: db }));
 vi.mock("../../../utils/logger.js", () => ({ log: { info: vi.fn(), warn: vi.fn() } }));
-vi.mock("../../whatsapp/wa_axios.js", () => meta);
-vi.mock("../../whatsapp/settings/wa_settings.service.js", () => settings);
+vi.mock("../../meta/whatsapp/wa_axios.js", () => meta);
+vi.mock("../../meta/whatsapp/settings/settings.service.js", () => settings);
 
 const { buildPurchaseEvent, reportAdPurchase } = await import("./adConversion.service.js");
 

@@ -13,7 +13,7 @@ import { SubscriptionFeaturePathName } from "@/types/enums.ts";
 
 /**
  * Product areas an org can hide from its navigation. Mirrors `ORG_MODULES` in
- * rateup-api/src/modules/org/modules.ts. Off hides, it never blocks: the API still serves
+ * apps/api/src/modules/settings/org/modules.ts. Off hides, it never blocks: the API still serves
  * the area, so an automation or cron built on it keeps running.
  */
 export const ORG_MODULES = [

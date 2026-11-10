@@ -3,7 +3,7 @@ import {
   contactFields,
   primaryIdentities,
   type PrimaryIdentityRow,
-} from "../../contact/identity/contactFields.js";
+} from "../../contacts/identity/contactFields.js";
 
 /**
  * Closed conversations and survey responses written up as CRM notes: the part
@@ -247,7 +247,7 @@ export async function loadSurveyResponseNote(
 
   // Loaded on use: the formatting helpers sit in the heavy response module.
   const [{ getFormattedResponse }, { getContent }] = await Promise.all([
-    import("../../response/response.service.js"),
+    import("../../surveys/responses/response.service.js"),
     import("../../../utils/survey/response.data.js"),
   ]);
   const questions = response.surveyTeamMap.survey.questions as unknown as Question[];

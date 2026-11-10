@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 import { appConfig } from "../../../../config.js";
 import prisma from "../../../../utils/prisma.js";
 import { IntegratedApps } from "../../../../types/enums.js";
-import { generateApiKey } from "../../../apiAccessToken/apiAccessToken.service.js";
+import { generateApiKey } from "../../../settings/apiKeys/apiKey.service.js";
 import { mergeGetLeadCredential } from "./getlead.credential.js";
 import { getGetLeadCredential, type GetLeadInbound } from "./getlead.types.js";
 

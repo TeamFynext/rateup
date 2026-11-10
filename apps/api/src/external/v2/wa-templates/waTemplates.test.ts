@@ -15,13 +15,13 @@ vi.mock("../../../utils/prisma.js", () => ({
     waMessage: { findFirst: vi.fn() },
   },
 }));
-vi.mock("../../../modules/whatsapp/messageTemplates/wa_templates.controller.js", () => ({
+vi.mock("../../../modules/meta/whatsapp/templates/templates.controller.js", () => ({
   sendTemplateToUserCore: vi.fn(),
 }));
-vi.mock("../../../modules/whatsapp/settings/wa_settings.service.js", () => ({
+vi.mock("../../../modules/meta/whatsapp/settings/settings.service.js", () => ({
   getWaSendingSettings: vi.fn(),
 }));
-vi.mock("../../../modules/whatsapp/whatsappSurvey/wasurvey.auth.js", () => ({
+vi.mock("../../../modules/meta/whatsapp/webhook/whatsapp.auth.js", () => ({
   ActiveContactLimitError: class ActiveContactLimitError extends Error {},
   OrgSuspendedError: class OrgSuspendedError extends Error {},
 }));
@@ -32,9 +32,9 @@ vi.mock("axios", async (importOriginal) => {
 
 import axios from "axios";
 import prisma from "../../../utils/prisma.js";
-import { sendTemplateToUserCore } from "../../../modules/whatsapp/messageTemplates/wa_templates.controller.js";
-import { getWaSendingSettings } from "../../../modules/whatsapp/settings/wa_settings.service.js";
-import { TemplateSendError } from "../../../modules/whatsapp/messageTemplates/templateSendError.js";
+import { sendTemplateToUserCore } from "../../../modules/meta/whatsapp/templates/templates.controller.js";
+import { getWaSendingSettings } from "../../../modules/meta/whatsapp/settings/settings.service.js";
+import { TemplateSendError } from "../../../modules/meta/whatsapp/templates/templateSendError.js";
 import { externalErrorHandler } from "../../shared/errors.js";
 import { externalWaTemplateRoutes } from "./waTemplates.route.js";
 

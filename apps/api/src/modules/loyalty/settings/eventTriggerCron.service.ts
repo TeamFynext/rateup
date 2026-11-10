@@ -11,7 +11,7 @@ import {
   localDay,
   POINTS_EXPIRY_LEDGER_HOUR,
 } from "./reminderSchedule.js";
-import { primaryIdentities } from "../../contact/identity/contactFields.js";
+import { primaryIdentities } from "../../contacts/identity/contactFields.js";
 import { withMemberContact } from "../memberContact.js";
 
 /**

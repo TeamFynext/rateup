@@ -5,8 +5,8 @@ import {
   contactWhereIdentity,
   primaryIdentities,
   type PrimaryIdentityRow,
-} from "../../../contact/identity/contactFields.js";
-import { getTemplatesByOrgId } from "../../../whatsapp/messageTemplates/wa_templates.service.js";
+} from "../../../contacts/identity/contactFields.js";
+import { getTemplatesByOrgId } from "../../../meta/whatsapp/templates/templates.service.js";
 
 /** The contact fields a platform's modules map from; the same set every contact action returns. */
 export const AUTOMATION_CONTACT_FIELDS = [

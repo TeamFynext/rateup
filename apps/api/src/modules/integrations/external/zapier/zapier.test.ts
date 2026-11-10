@@ -18,14 +18,14 @@ vi.mock("../../integrations.service.js", () => ({
 
 vi.mock("bcrypt", () => ({ default: { compare: vi.fn() } }));
 
-vi.mock("../../../contact/contact.service.js", () => ({
+vi.mock("../../../contacts/contact.service.js", () => ({
   deleteContactById: vi.fn(),
   getContactById: vi.fn(),
   updateContactById: vi.fn(),
   updateContactLabelsById: vi.fn(),
 }));
 
-vi.mock("../../../whatsapp/whatsappSurvey/wasurvey.service.js", () => ({
+vi.mock("../../../meta/whatsapp/webhook/whatsapp.service.js", () => ({
   sendTextMessage: vi.fn(),
 }));
 
@@ -41,30 +41,30 @@ vi.mock("./zapier.service.js", async () => {
   };
 });
 
-vi.mock("../../../contact/contactGroup/contactGroup.service.js", () => ({
+vi.mock("../../../contacts/audiences/audience.service.js", () => ({
   addNewContactsToGroup: vi.fn(),
   getContactGroupsByOrgId: vi.fn(),
   getContactGroupsByTeamId: vi.fn(),
 }));
-vi.mock("../../../team/team.service.js", () => ({
+vi.mock("../../../settings/teams/team.service.js", () => ({
   getTeamsByOrgId: vi.fn(),
   inviteTeamMember: vi.fn(),
 }));
-vi.mock("../../../contact/contact.controller.js", () => ({ createContactHandler: vi.fn() }));
+vi.mock("../../../contacts/contact.controller.js", () => ({ createContactHandler: vi.fn() }));
 vi.mock("../../../../external/v1/contacts/contactRefs.js", () => ({
   findForeignContactRef: vi.fn(async () => null),
 }));
 
 import bcrypt from "bcrypt";
 import { getIntegrationByName, updateIntegrationByName } from "../../integrations.service.js";
-import { sendTextMessage } from "../../../whatsapp/whatsappSurvey/wasurvey.service.js";
-import { inviteTeamMember } from "../../../team/team.service.js";
+import { sendTextMessage } from "../../../meta/whatsapp/webhook/whatsapp.service.js";
+import { inviteTeamMember } from "../../../settings/teams/team.service.js";
 import {
   deleteContactById,
   getContactById,
   updateContactById,
   updateContactLabelsById,
-} from "../../../contact/contact.service.js";
+} from "../../../contacts/contact.service.js";
 import {
   deleteContactByPhoneNumberAndOrgId,
   getContactsByPhoneNumberAndOrgId,

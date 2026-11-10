@@ -8,7 +8,7 @@ import { Job, Worker } from "bullmq";
 
 import { log } from "@rateup/api/workers/shared/logger.js";
 import baseRedis from "@rateup/api/utils/redisConnection.js";
-import { fireCampaignSendById } from "@rateup/api/modules/campaign/campaignRetry.service.js";
+import { fireCampaignSendById } from "@rateup/api/modules/campaigns/campaignRetry.service.js";
 
 const workerConnection = baseRedis.duplicate();
 

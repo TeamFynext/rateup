@@ -35,7 +35,7 @@ const dashboard = vi.hoisted(() => ({
   getTemplateByIdAndOrgId: vi.fn(),
   sendTemplateToPhone: vi.fn(),
 }));
-vi.mock("../../modules/contact/contact.controller.js", () => ({
+vi.mock("../../modules/contacts/contact.controller.js", () => ({
   createContactHandler: dashboard.createContactHandler,
   createMultipleContactsHandler: dashboard.createMultipleContactsHandler,
   updateContactByIdHandler: dashboard.updateContactByIdHandler,
@@ -43,7 +43,7 @@ vi.mock("../../modules/contact/contact.controller.js", () => ({
   getAllContactsHandler: vi.fn(),
   getContactByIdHandler: vi.fn(),
 }));
-vi.mock("../../modules/contact/contactGroup/contactGroup.controller.js", () => ({
+vi.mock("../../modules/contacts/audiences/audience.controller.js", () => ({
   addExistingContactsToGroupHandler: vi.fn(),
   addNewContactsToGroupHandler: dashboard.addNewContactsToGroupHandler,
   createContactGroupHandler: vi.fn(),
@@ -53,28 +53,28 @@ vi.mock("../../modules/contact/contactGroup/contactGroup.controller.js", () => (
   removeContactsFromGroupHandler: vi.fn(),
   updateContactGroupHandler: vi.fn(),
 }));
-vi.mock("../../modules/campaign/campaign.controller.js", () => ({
+vi.mock("../../modules/campaigns/campaign.controller.js", () => ({
   createCampaignHandler: dashboard.createCampaignHandler,
   deleteCampaignByIdHandler: vi.fn(),
   getCampaignsHandler: vi.fn(),
   getResponseByCampaignByIdHandler: vi.fn(),
   sendCampaignHandler: vi.fn(),
 }));
-vi.mock("../../modules/campaign/campaignParticipants/campaignParticipants.controller.js", () => ({
+vi.mock("../../modules/campaigns/campaignParticipants/campaignParticipants.controller.js", () => ({
   createCampaignParticipantsFromContactsHandler: vi.fn(),
   getCampaignParticipantsByCampaignIdHandler: vi.fn(),
 }));
-vi.mock("../../modules/whatsapp/messageTemplates/wa_templates.controller.js", () => ({
+vi.mock("../../modules/meta/whatsapp/templates/templates.controller.js", () => ({
   sendTemplateToUserCore: dashboard.sendTemplateToUserCore,
 }));
-vi.mock("../../modules/whatsapp/messageTemplates/wa_templates.service.js", () => ({
+vi.mock("../../modules/meta/whatsapp/templates/templates.service.js", () => ({
   getTemplateByIdAndOrgId: dashboard.getTemplateByIdAndOrgId,
   getTemplatesByOrgIdAndTemplateType: vi.fn(),
 }));
-vi.mock("../../modules/whatsapp/settings/wa_settings.service.js", () => ({
+vi.mock("../../modules/meta/whatsapp/settings/settings.service.js", () => ({
   getWaSettings: vi.fn(),
 }));
-vi.mock("../../modules/whatsapp/wa_axios.js", () => ({ callMetaApi: vi.fn() }));
+vi.mock("../../modules/meta/whatsapp/wa_axios.js", () => ({ callMetaApi: vi.fn() }));
 vi.mock("./wa-templates/sendTemplateToPhone.js", () => ({
   sendTemplateToPhone: dashboard.sendTemplateToPhone,
 }));

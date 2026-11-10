@@ -1,7 +1,7 @@
 import z from "zod";
 
 import { WaMessageAssignStatus } from "../../../../types/enums.js";
-import { contactCoreSchema } from "../../../contact/contact.schema.js";
+import { contactCoreSchema } from "../../../contacts/contact.schema.js";
 import { ZapierTriggers } from "../../external/zapier/zapier.types.js";
 
 // Customers' Make scenarios and Pabbly workflows are built on these shapes;

@@ -6,17 +6,17 @@ vi.mock("../../../../../utils/prisma.js", () => ({
 vi.mock("../../../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));
-vi.mock("../../../../whatsapp/meta/metaMessage.service.js", () => ({ sendMetaMessage: vi.fn() }));
-vi.mock("../../../../whatsapp/messageTemplates/wa_templates.controller.js", () => ({
+vi.mock("../../../../meta/shared/metaMessage.service.js", () => ({ sendMetaMessage: vi.fn() }));
+vi.mock("../../../../meta/whatsapp/templates/templates.controller.js", () => ({
   sendTemplateToUserCore: vi.fn(),
 }));
-vi.mock("../../../../whatsapp/flows/flow.service.js", () => ({ sendFlow: vi.fn() }));
+vi.mock("../../../../meta/whatsapp/flows/flow.service.js", () => ({ sendFlow: vi.fn() }));
 vi.mock("./session.js", () => ({ findOpenSession: vi.fn() }));
 
 import prisma from "../../../../../utils/prisma.js";
-import { sendFlow } from "../../../../whatsapp/flows/flow.service.js";
-import { sendMetaMessage } from "../../../../whatsapp/meta/metaMessage.service.js";
-import { sendTemplateToUserCore } from "../../../../whatsapp/messageTemplates/wa_templates.controller.js";
+import { sendFlow } from "../../../../meta/whatsapp/flows/flow.service.js";
+import { sendMetaMessage } from "../../../../meta/shared/metaMessage.service.js";
+import { sendTemplateToUserCore } from "../../../../meta/whatsapp/templates/templates.controller.js";
 import type { AcceptedPlan, ChannelSendContext, LoyaltyMessage } from "../../types.js";
 import { whatsappChannel } from "./adapter.js";
 import { findOpenSession } from "./session.js";

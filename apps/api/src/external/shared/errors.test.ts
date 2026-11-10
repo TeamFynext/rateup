@@ -5,7 +5,7 @@ vi.mock("../../utils/logger.js", () => ({
 }));
 
 import { LoyaltyError } from "../../modules/loyalty/loyalty.errors.js";
-import { ApiAuthError } from "../../modules/apiAccessToken/apiAccessToken.auth.js";
+import { ApiAuthError } from "../../modules/settings/apiKeys/apiKey.auth.js";
 import { ExternalApiError, externalErrorHandler } from "./errors.js";
 
 function reply() {

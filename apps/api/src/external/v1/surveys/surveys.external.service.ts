@@ -1,5 +1,5 @@
 import prisma from "../../../utils/prisma.js";
-import { primaryIdentitySql } from "../../../modules/contact/identity/contactFields.js";
+import { primaryIdentitySql } from "../../../modules/contacts/identity/contactFields.js";
 
 interface ResponseBySurveyRawRow {
   id: string;

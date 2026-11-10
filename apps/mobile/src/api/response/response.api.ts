@@ -1,8 +1,8 @@
 import axios from "@/config/axios";
 import type { SurveyResponseAnalytics } from "./types";
 
-const RESPONSE_URL = "/api/response";
-const SURVEYURL = "/api/survey";
+const RESPONSE_URL = "/api/surveys/responses";
+const SURVEYURL = "/api/surveys";
 export async function getSurveyResponseAnalyics(
   surveyId: string,
   filter = "",
@@ -30,7 +30,7 @@ export async function getHappyIndex(surveyId: string) {
   return (await axios.get(`${RESPONSE_URL}/analytics/happyindex/${surveyId}`)).data;
 }
 
-/** Time bucketing supported by `GET /api/survey/summary/response/nps`. */
+/** Time bucketing supported by `GET /api/surveys/summary/response/nps`. */
 export type NpsGraphTimePeriod = "hourly" | "daily" | "weekly";
 
 export async function getNPSSurveyResponseForGraph(

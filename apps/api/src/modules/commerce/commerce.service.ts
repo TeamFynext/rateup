@@ -11,7 +11,7 @@ import {
   contactWhereIdentityContains,
   primaryIdentities,
   type PrimaryIdentityRow,
-} from "../contact/identity/contactFields.js";
+} from "../contacts/identity/contactFields.js";
 import type {
   CommerceFilter,
   CommerceOrdersQuery,

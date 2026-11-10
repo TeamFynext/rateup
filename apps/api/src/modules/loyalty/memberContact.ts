@@ -4,7 +4,7 @@ import {
   primaryIdentities,
   type PrimaryIdentityRow,
   withContactFields,
-} from "../contact/identity/contactFields.js";
+} from "../contacts/identity/contactFields.js";
 
 /** `contact: true` on a loyalty account, plus the identities its phone/email are read from. */
 export const memberContactInclude = { include: primaryIdentities } as const;

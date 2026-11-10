@@ -17,7 +17,7 @@ import { findProgramMember } from "./memberLookup.js";
 import { replyText, type InboundReplyContext } from "../messaging/reply.js";
 import { NOT_SENT, sendLoyaltyEvent } from "../messaging/send.js";
 import type { LoyaltySendOutcome } from "../messaging/types.js";
-import { generateWhatsAppJoinLink } from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
+import { generateWhatsAppJoinLink } from "../../meta/whatsapp/webhook/whatsapp.utils.js";
 import { LoyaltyEventType, LoyaltyTemplateTypes } from "../../../types/enums.js";
 import { renderReplyText } from "../richText.js";
 import { scheduleFeedbackRequest } from "../feedback/feedback.scheduler.js";
@@ -34,7 +34,7 @@ import {
   primaryIdentities,
   type PrimaryIdentityRow,
   setPrimaryIdentities,
-} from "../../contact/identity/contactFields.js";
+} from "../../contacts/identity/contactFields.js";
 import { memberContactInclude, withMemberContact, withMemberPhoneEmail } from "../memberContact.js";
 
 /**
@@ -360,7 +360,7 @@ async function payInstagramMentionsOnJoin(
     });
     if (!waiting) return;
     const { awardInstagramMentionsOnJoin } =
-      await import("../../whatsapp/instagram/instagram_mentions.service.js");
+      await import("../../meta/instagram/instagram_mentions.service.js");
     await awardInstagramMentionsOnJoin({ orgId, contactId, mentionId });
   } catch (e) {
     log.error({ err: e, orgId, contactId }, "Could not pay Instagram mentions after enrolment");

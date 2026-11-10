@@ -2,14 +2,14 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 import Session from "supertokens-node/recipe/session/index.js";
 import { log } from "../utils/logger.js";
 import { auditLogHook } from "../utils/auditLog.js";
-import { getOrgIdAndRole } from "../modules/user/user.service.js";
+import { getOrgIdAndRole } from "../modules/settings/user/user.service.js";
 import {
   isOrgSuspended,
   isSuspensionExemptRoute,
   ORG_SUSPENDED_CODE,
   ORG_SUSPENDED_MESSAGE,
-} from "../modules/org/orgSuspension.js";
-import { touchOrgActivity } from "../modules/org/orgActivity.js";
+} from "../modules/settings/org/orgSuspension.js";
+import { touchOrgActivity } from "../modules/settings/org/orgActivity.js";
 import { isUserBlocked, loadActor } from "./actor.js";
 import type { Permission } from "./permissions.js";
 import { roleKeyToLegacy } from "./roles.js";

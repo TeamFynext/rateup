@@ -5,7 +5,7 @@ import {
   CONTACT_FIELD_KIND,
   contactFields,
   type PrimaryIdentityRow,
-} from "../../contact/identity/contactFields.js";
+} from "../../contacts/identity/contactFields.js";
 import type {
   ContactRecord,
   IntegrationEvent,

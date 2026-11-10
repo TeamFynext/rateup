@@ -4,7 +4,7 @@ import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
 import { findOpenSession } from "../../loyalty/messaging/channels/whatsapp/session.js";
 import { parsePhoneforWa } from "../../loyalty/util.js";
-import { sendMetaMessage } from "../../whatsapp/meta/metaMessage.service.js";
+import { sendMetaMessage } from "../../meta/shared/metaMessage.service.js";
 
 import { toNumber } from "./pricing.js";
 import { storefrontProductUrl } from "./storefrontLinks.js";
@@ -14,7 +14,7 @@ import {
   contactWhereIdentity,
   primaryIdentities,
   withContactFields,
-} from "../../contact/identity/contactFields.js";
+} from "../../contacts/identity/contactFields.js";
 
 /**
  * Product cards in a conversation. WhatsApp shows catalog items natively (one product, or a

@@ -2,7 +2,7 @@ import type { ShopChannel } from "../../../generated/prisma/client.js";
 import { ContactIdentitySource } from "../../../generated/prisma/enums.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
-import { findOrCreateContactByIdentity } from "../../contact/identity/contactFields.js";
+import { findOrCreateContactByIdentity } from "../../contacts/identity/contactFields.js";
 import { parsePhoneforWa } from "../../loyalty/util.js";
 import {
   armShopReminder,

@@ -3,20 +3,20 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 import { log } from "../../../../utils/logger.js";
 import prisma from "../../../../utils/prisma.js";
 import { assertPublicUrl } from "../../../../utils/ssrf.js";
-import { ContactNotFoundError } from "../../../contact/contact.errors.js";
+import { ContactNotFoundError } from "../../../contacts/contact.errors.js";
 import {
   deleteContactById,
   updateContactById,
   updateContactLabelsById,
-} from "../../../contact/contact.service.js";
+} from "../../../contacts/contact.service.js";
 import {
   addNewContactsToGroup,
   getContactGroupsByOrgId,
   getContactGroupsByTeamId,
-} from "../../../contact/contactGroup/contactGroup.service.js";
-import { getTeamsByOrgId } from "../../../team/team.service.js";
-import { sendTemplateToUserCore } from "../../../whatsapp/messageTemplates/wa_templates.controller.js";
-import { sendTextMessage } from "../../../whatsapp/whatsappSurvey/wasurvey.service.js";
+} from "../../../contacts/audiences/audience.service.js";
+import { getTeamsByOrgId } from "../../../settings/teams/team.service.js";
+import { sendTemplateToUserCore } from "../../../meta/whatsapp/templates/templates.controller.js";
+import { sendTextMessage } from "../../../meta/whatsapp/webhook/whatsapp.service.js";
 import { addAutomationHook, removeAutomationHookById } from "../automation.hooks.js";
 import { AUTOMATION_PLATFORM_LABELS, type AutomationPlatform } from "../automation.platforms.js";
 import {

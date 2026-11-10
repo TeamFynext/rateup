@@ -69,7 +69,7 @@ const chatProducts = vi.hoisted(() => ({ sendProductsInChat: vi.fn() }));
 
 vi.mock("../../../utils/prisma.js", () => ({ default: db }));
 vi.mock("../../../utils/logger.js", () => ({ log: { warn: vi.fn(), info: vi.fn() } }));
-vi.mock("../../whatsapp/instagram/instagram_messaging.service.js", () => messaging);
+vi.mock("../../meta/instagram/instagram_messaging.service.js", () => messaging);
 vi.mock("./orders.service.js", () => orders);
 vi.mock("./attribution.js", () => attribution);
 vi.mock("./chatProducts.service.js", () => chatProducts);

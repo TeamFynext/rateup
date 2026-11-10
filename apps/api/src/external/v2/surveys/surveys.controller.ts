@@ -1,7 +1,7 @@
 import type { FastifyRequest } from "fastify";
 
 import prisma from "../../../utils/prisma.js";
-import { primaryIdentities } from "../../../modules/contact/identity/contactFields.js";
+import { primaryIdentities } from "../../../modules/contacts/identity/contactFields.js";
 import { ExternalApiError } from "../../shared/errors.js";
 import {
   cursorOrderBy,

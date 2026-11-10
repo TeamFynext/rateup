@@ -6,16 +6,16 @@ vi.mock("../../../utils/logger.js", () => ({
 vi.mock("../../../utils/prisma.js", () => ({
   default: { contact: { findFirst: vi.fn(), update: vi.fn() } },
 }));
-vi.mock("../../contact/identity/contactFields.js", async (importOriginal) => ({
+vi.mock("../../contacts/identity/contactFields.js", async (importOriginal) => ({
   ...(await importOriginal<object>()),
   setPrimaryIdentities: vi.fn(),
 }));
 vi.mock("../../../utils/redisConnection.js", () => ({ default: {} }));
-vi.mock("../../contact/contact.service.js", () => ({ createContact: vi.fn() }));
+vi.mock("../../contacts/contact.service.js", () => ({ createContact: vi.fn() }));
 
 import prisma from "../../../utils/prisma.js";
-import { setPrimaryIdentities } from "../../contact/identity/contactFields.js";
-import { createContact } from "../../contact/contact.service.js";
+import { setPrimaryIdentities } from "../../contacts/identity/contactFields.js";
+import { createContact } from "../../contacts/contact.service.js";
 import { handleWooOrderOptIn, readWooOptIn } from "./woocommerce.optin.js";
 import type { WooCredential } from "./woocommerce.types.js";
 

@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 
 import type { Integration } from "../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
-import { contactFields, primaryIdentities } from "../../contact/identity/contactFields.js";
+import { contactFields, primaryIdentities } from "../../contacts/identity/contactFields.js";
 import { PageType, QuestionType, WaQuestions } from "../../../types/enums.js";
 import { getContent } from "../../../utils/survey/response.data.js";
 import {
@@ -11,8 +11,8 @@ import {
   getFormattedResponse,
   markdownToPlainText,
   toCell,
-} from "../../response/response.service.js";
-import { getFlowBySurveyId } from "../../whatsapp/flows/flow.service.js";
+} from "../../surveys/responses/response.service.js";
+import { getFlowBySurveyId } from "../../meta/whatsapp/flows/flow.service.js";
 import { googleClientFor } from "./googlesheet.auth.js";
 
 /**

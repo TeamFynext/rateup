@@ -8,7 +8,7 @@ import {
   loyaltyFeedbackJobId,
   loyaltyFeedbackSendQueue,
 } from "../../../workers/bullmq/queues/loyaltyFeedback.queue.js";
-import { contactFields, primaryIdentities } from "../../contact/identity/contactFields.js";
+import { contactFields, primaryIdentities } from "../../contacts/identity/contactFields.js";
 
 /**
  * Opens a feedback request when points are earned and arms its delayed job.

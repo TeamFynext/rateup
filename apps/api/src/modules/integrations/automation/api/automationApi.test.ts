@@ -25,29 +25,29 @@ vi.mock("../automation.hooks.js", () => ({
   addAutomationHook: vi.fn(),
   removeAutomationHookById: vi.fn(),
 }));
-vi.mock("../../../contact/contact.service.js", () => ({
+vi.mock("../../../contacts/contact.service.js", () => ({
   deleteContactById: vi.fn(),
   updateContactById: vi.fn(),
   updateContactLabelsById: vi.fn(),
 }));
-vi.mock("../../../contact/contact.controller.js", () => ({
+vi.mock("../../../contacts/contact.controller.js", () => ({
   createContactHandler: vi.fn(async (request: any, reply: any) =>
     reply.code(201).send({ id: "c-new", orgId: request.user.orgId, ...request.body }),
   ),
 }));
-vi.mock("../../../contact/contactGroup/contactGroup.service.js", () => ({
+vi.mock("../../../contacts/audiences/audience.service.js", () => ({
   addNewContactsToGroup: vi.fn(),
   getContactGroupsByOrgId: vi.fn(),
   getContactGroupsByTeamId: vi.fn(),
 }));
-vi.mock("../../../team/team.service.js", () => ({ getTeamsByOrgId: vi.fn() }));
-vi.mock("../../../whatsapp/messageTemplates/wa_templates.controller.js", () => ({
+vi.mock("../../../settings/teams/team.service.js", () => ({ getTeamsByOrgId: vi.fn() }));
+vi.mock("../../../meta/whatsapp/templates/templates.controller.js", () => ({
   sendTemplateToUserCore: vi.fn(),
 }));
-vi.mock("../../../whatsapp/messageTemplates/wa_templates.service.js", () => ({
+vi.mock("../../../meta/whatsapp/templates/templates.service.js", () => ({
   getTemplatesByOrgId: vi.fn(),
 }));
-vi.mock("../../../whatsapp/whatsappSurvey/wasurvey.service.js", () => ({
+vi.mock("../../../meta/whatsapp/webhook/whatsapp.service.js", () => ({
   sendTextMessage: vi.fn(),
 }));
 vi.mock("../../external/zapier/zapier.service.js", () => ({
@@ -60,10 +60,10 @@ import {
   deleteContactById,
   updateContactById,
   updateContactLabelsById,
-} from "../../../contact/contact.service.js";
-import { sendTemplateToUserCore } from "../../../whatsapp/messageTemplates/wa_templates.controller.js";
-import { getTemplatesByOrgId } from "../../../whatsapp/messageTemplates/wa_templates.service.js";
-import { sendTextMessage } from "../../../whatsapp/whatsappSurvey/wasurvey.service.js";
+} from "../../../contacts/contact.service.js";
+import { sendTemplateToUserCore } from "../../../meta/whatsapp/templates/templates.controller.js";
+import { getTemplatesByOrgId } from "../../../meta/whatsapp/templates/templates.service.js";
+import { sendTextMessage } from "../../../meta/whatsapp/webhook/whatsapp.service.js";
 import { addAutomationHook, removeAutomationHookById } from "../automation.hooks.js";
 import { generateAutomationKey } from "../automation.keys.js";
 import { makeRoutes } from "../../external/make/make.route.js";

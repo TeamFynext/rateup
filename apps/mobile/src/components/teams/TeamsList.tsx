@@ -58,7 +58,7 @@ export default function TeamsList() {
     setRefreshing(false);
   };
 
-  // `/team/user` answers a user with no teams with a message and no `data`.
+  // `/teams/user` answers a user with no teams with a message and no `data`.
   const teams = (teamsQuery.data?.data ?? []) as UserTeam[];
   const members = (membersQuery.data?.data ?? []) as TeamMembersData[];
 

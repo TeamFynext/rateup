@@ -20,11 +20,11 @@ export const Route = createFileRoute("/.well-known/api-catalog")({
                   rel: "status",
                 },
                 {
-                  href: "https://api.rateup.app/api/campaign",
+                  href: "https://api.rateup.app/api/campaigns",
                   rel: "item",
                 },
                 {
-                  href: "https://api.rateup.app/api/contact",
+                  href: "https://api.rateup.app/api/contacts",
                   rel: "item",
                 },
                 {

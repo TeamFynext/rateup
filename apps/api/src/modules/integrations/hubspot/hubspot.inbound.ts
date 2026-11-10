@@ -2,9 +2,9 @@ import { isAxiosError, type AxiosInstance } from "axios";
 
 import type { Integration } from "../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
-import { IdentityTakenError } from "../../contact/identity/identity.service.js";
+import { IdentityTakenError } from "../../contacts/identity/identity.service.js";
 import { log } from "../../../utils/logger.js";
-import { LEADS_PIPELINE_TYPE } from "../../pipeline/pipelineTypes.js";
+import { LEADS_PIPELINE_TYPE } from "../../pipelines/pipelineTypes.js";
 import { emitIntegrationEvent } from "../events/emitIntegrationEvent.js";
 import { noteContactSelect, toNoteContact } from "../shared/activityNotes.js";
 import {
@@ -235,7 +235,7 @@ export async function importHubSpotContact(
   if (!person.phone) return { outcome: "no_phone" };
 
   // Loaded on use: contact creation reaches the automation engine and the fan-out.
-  const { createContact } = await import("../../contact/contact.service.js");
+  const { createContact } = await import("../../contacts/contact.service.js");
   try {
     // Quiet, so no per-contact pushes fire before the link exists; the event is
     // emitted below, once HubSpot's own push would find the contact linked.
@@ -318,7 +318,7 @@ async function processDeal(
     await prisma.lead.update({ where: { id: lead.id }, data: { name: properties.dealname } });
   }
   if (column && column !== lead.stageId) {
-    const { moveLead } = await import("../../pipeline/pipelineLead/lead.service.js");
+    const { moveLead } = await import("../../pipelines/pipelineLead/lead.service.js");
     // `false`: an integration made this move, so it is not pushed back to HubSpot.
     await moveLead(lead.id, column, null, false);
   }
@@ -406,7 +406,7 @@ async function importDeal(
   }
 
   const name = properties.dealname || contact?.name || contact?.phone || "HubSpot deal";
-  const { createLead } = await import("../../pipeline/pipelineLead/lead.service.js");
+  const { createLead } = await import("../../pipelines/pipelineLead/lead.service.js");
   const lead = await createLead({
     pipelineId: stage.pipelineId,
     stageId: column,

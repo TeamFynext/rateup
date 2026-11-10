@@ -26,7 +26,9 @@ vi.mock("../external/zapier/zapier.deliver.js", () => ({
 
 vi.mock("../external/getlead/getlead.queue.js", () => ({ addGetLeadSyncToQueue: vi.fn() }));
 
-vi.mock("../../webhook/webhook.service.js", () => ({ enqueueOrgWebhookDispatch: vi.fn() }));
+vi.mock("../../settings/webhooks/webhook.service.js", () => ({
+  enqueueOrgWebhookDispatch: vi.fn(),
+}));
 
 vi.mock("../external/getlead/getlead.push.js", () => ({ processGetLeadJob: vi.fn() }));
 vi.mock("../external/zoho/zoho.crm.js", () => ({
@@ -43,14 +45,14 @@ import { queueZapierTrigger } from "../external/zapier/zapier.deliver.js";
 import { ZapierTriggers } from "../external/zapier/zapier.types.js";
 import { zapierProvider } from "../external/zapier/zapier.provider.js";
 import { addGetLeadSyncToQueue } from "../external/getlead/getlead.queue.js";
-import { enqueueOrgWebhookDispatch } from "../../webhook/webhook.service.js";
+import { enqueueOrgWebhookDispatch } from "../../settings/webhooks/webhook.service.js";
 import {
   emitIntegrationEvent,
   INTEGRATION_EVENT_JOB,
   emitSurveyResponseSubmitted,
 } from "./emitIntegrationEvent.js";
 import { processIntegrationEvent, subscribedEventTypes } from "./integrationEvent.fanout.js";
-import { webhookProvider } from "../../webhook/webhook.provider.js";
+import { webhookProvider } from "../../settings/webhooks/webhook.provider.js";
 import { processIntegrationJob } from "../external/integrationDispatch.js";
 import type { IntegrationEvent, IntegrationEventOf } from "./integrationEvent.types.js";
 import type { IntegrationProvider } from "../providers/integrationProvider.types.js";

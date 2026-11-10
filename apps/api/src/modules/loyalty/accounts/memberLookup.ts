@@ -1,7 +1,7 @@
 import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
 import { normalisePhone } from "../util.js";
-import { contactWhereIdentity, primaryIdentities } from "../../contact/identity/contactFields.js";
+import { contactWhereIdentity, primaryIdentities } from "../../contacts/identity/contactFields.js";
 import { withMemberPhoneEmail } from "../memberContact.js";
 
 /**

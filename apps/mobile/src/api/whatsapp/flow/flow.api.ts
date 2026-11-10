@@ -1,7 +1,7 @@
 import axios from "@/config/axios";
 import { DbFlow } from "../types";
 
-const BASE = `/api/wa/flows`;
+const BASE = `/api/whatsapp/flows`;
 
 export async function getWaFlowsFromDb() {
   const res = await axios.get(`${BASE}?source=db`);

@@ -10,18 +10,18 @@ export async function getMessagesByContactId(
   cursor: string,
   conversationId?: string | null,
 ) {
-  const res = await axios.get(`/api/wa/inbox/message/${contactId}`, {
+  const res = await axios.get(`/api/inbox/message/${contactId}`, {
     params: { cursor, ...(conversationId ? { conversationId } : {}) },
   });
   return res.data;
 }
 
 export async function sendNewWaMessage(contactId: string, message: any) {
-  return await axios.post(`/api/wa/inbox/message/${contactId}`, message);
+  return await axios.post(`/api/inbox/message/${contactId}`, message);
 }
 
 export async function getWaChatMediaFile(mediaId: string) {
-  const response = await axios.get(`/api/wa/inbox/message/mediafile/${mediaId}`, {
+  const response = await axios.get(`/api/inbox/message/mediafile/${mediaId}`, {
     responseType: "arraybuffer",
   });
   return response.data;
@@ -32,7 +32,7 @@ export async function assignInboxToUser(data: {
   assignees: { userId: string; teamId: string }[];
   messageId: string; // for internal message
 }): Promise<{ id: string; name: string }[]> {
-  return (await axios.post(`/api/wa/inbox/message/assign`, data)).data;
+  return (await axios.post(`/api/inbox/message/assign`, data)).data;
 }
 
 /**
@@ -46,7 +46,7 @@ export async function assignOwner(data: {
   teamId?: string | null;
   messageId: string;
 }): Promise<{ assignees: { userId: string; teamId: string }[] }> {
-  return (await axios.post(`/api/wa/inbox/message/assign/owner`, data)).data;
+  return (await axios.post(`/api/inbox/message/assign/owner`, data)).data;
 }
 
 /** One `assignee` for every chat, or a `teamId` whose members take the chats in turn. */
@@ -64,15 +64,15 @@ export async function bulkAssign(
     result?: { assignees: { userId: string; teamId: string }[] };
   }[];
 }> {
-  return (await axios.post(`/api/wa/inbox/message/assign-bulk`, data)).data;
+  return (await axios.post(`/api/inbox/message/assign-bulk`, data)).data;
 }
 
 export async function getAssignedUserForContact(contactId: any) {
-  return (await axios.get(`/api/wa/inbox/message/assign/${contactId}`)).data;
+  return (await axios.get(`/api/inbox/message/assign/${contactId}`)).data;
 }
 
 export async function createPrivateMessage(contactId: string, data: any) {
-  return (await axios.post(`/api/wa/inbox/message/privatemessage/${contactId}`, data)).data;
+  return (await axios.post(`/api/inbox/message/privatemessage/${contactId}`, data)).data;
 }
 
 export type InstagramModerationAction = "block" | "unblock" | "spam";
@@ -82,5 +82,5 @@ export async function moderateInstagramContact(
   contactId: string,
   action: InstagramModerationAction,
 ): Promise<{ igBlockedAt: string | null; isSpam: boolean }> {
-  return (await axios.post(`/api/wa/inbox/message/${contactId}/instagram/${action}`)).data;
+  return (await axios.post(`/api/inbox/message/${contactId}/instagram/${action}`)).data;
 }

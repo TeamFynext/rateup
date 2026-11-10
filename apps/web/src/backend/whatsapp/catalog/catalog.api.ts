@@ -1,9 +1,7 @@
 import { axiosClient } from "@/backend/apiClient";
 import type { RequestPayload } from "@/types/api.ts";
 
-import { WHATSAPP_URL } from "..";
-
-export const waCatalogUrl = `${WHATSAPP_URL}/catalog`;
+export const waCatalogUrl = "/commerce/catalogs";
 
 /** A WhatsApp product catalog as the catalog endpoints return it. */
 export interface WaCatalog {

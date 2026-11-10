@@ -2,7 +2,7 @@
  * The loyalty shapes as the API actually returns them.
  *
  * These mirror `rateup-ui/src/backend/loyalty/*`, which in turn mirrors the handlers in
- * `rateup-api/src/modules/loyalty/`. The two clients share no code, so a column added on
+ * `apps/api/src/modules/loyalty/`. The two clients share no code, so a column added on
  * the server has to be added in both places — keeping the field order and the comments
  * aligned with the web file is what makes that a diff rather than an archaeology exercise.
  *

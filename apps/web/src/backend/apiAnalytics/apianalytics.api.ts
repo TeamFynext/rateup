@@ -3,7 +3,7 @@ import type { QueryFilter } from "@/types/api.ts";
 import { ANALYTICS_TIMEOUT_MS, analyticsRequestParams } from "../analytics/analyticsFilter";
 import { axiosClient } from "../apiClient";
 
-const API_BASE_URL = "/apianalytics";
+const API_BASE_URL = "/analytics";
 
 /** Encoded, normalised params and the analytics timeout — see analyticsFilter.ts. */
 const analyticsRequest = (filter: QueryFilter) => ({

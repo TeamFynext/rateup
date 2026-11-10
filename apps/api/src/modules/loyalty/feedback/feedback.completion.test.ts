@@ -8,12 +8,12 @@ vi.mock("../../../utils/prisma.js", () => ({
     },
   },
 }));
-vi.mock("../../notification/notify.js", () => ({ notify: vi.fn() }));
+vi.mock("../../settings/notifications/notify.js", () => ({ notify: vi.fn() }));
 vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));
 vi.mock("../messaging/reply.js", () => ({ replyLoyalty: vi.fn() }));
-vi.mock("../../whatsapp/settings/wa_settings.service.js", () => ({
+vi.mock("../../meta/whatsapp/settings/settings.service.js", () => ({
   getWaSettingsById: vi.fn(async () => ({ phoneId: "phone-2" })),
 }));
 
@@ -21,8 +21,8 @@ process.env.FLOW_TOKEN_SECRET = "test-secret";
 process.env.API_URL = "https://api.example.test";
 
 import prisma from "../../../utils/prisma.js";
-import { notify } from "../../notification/notify.js";
-import { getWaSettingsById } from "../../whatsapp/settings/wa_settings.service.js";
+import { notify } from "../../settings/notifications/notify.js";
+import { getWaSettingsById } from "../../meta/whatsapp/settings/settings.service.js";
 import { replyLoyalty } from "../messaging/reply.js";
 
 /** What the completion replied: who to, on which number, and the message. */
@@ -30,7 +30,10 @@ const replied = () => {
   const [ctx, message] = vi.mocked(replyLoyalty).mock.calls[0]!;
   return { ctx, message, cta: message.parts!.cta! };
 };
-import { buildFeedbackFlowJson, getFeedbackDraft } from "../../whatsapp/flows/flowTemplates.js";
+import {
+  buildFeedbackFlowJson,
+  getFeedbackDraft,
+} from "../../meta/whatsapp/flows/flowTemplates.js";
 import { onFeedbackFlowCompleted } from "./feedback.completion.js";
 import { resolveTeamGoogleLink } from "./feedback.googleLink.js";
 

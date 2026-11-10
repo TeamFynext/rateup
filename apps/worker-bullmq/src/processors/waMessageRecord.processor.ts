@@ -4,8 +4,8 @@
 import { Job, Worker } from "bullmq";
 
 import { PlatformType } from "@rateup/api/generated/prisma/enums.js";
-import { handleWaMessages } from "@rateup/api/modules/whatsapp/inbox/message/wamessage.controller.js";
-import { getWaMessageByMessageId } from "@rateup/api/modules/whatsapp/inbox/message/wamessage.service.js";
+import { handleWaMessages } from "@rateup/api/modules/inbox/message/wamessage.controller.js";
+import { getWaMessageByMessageId } from "@rateup/api/modules/inbox/message/wamessage.service.js";
 import baseRedis from "@rateup/api/utils/redisConnection.js";
 import { log } from "@rateup/api/workers/shared/logger.js";
 import type { WaMessageRecordJob } from "@rateup/api/workers/bullmq/queues/whatsapp.queue.js";

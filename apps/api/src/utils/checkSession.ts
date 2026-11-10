@@ -2,7 +2,7 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { log } from "./logger.js";
 import Session from "supertokens-node/recipe/session/index.js";
 import { auditLogHook } from "./auditLog.js";
-import { getOrgIdAndRole } from "../modules/user/user.service.js";
+import { getOrgIdAndRole } from "../modules/settings/user/user.service.js";
 import { allowSuspendedThrough, logSessionFailure } from "../authz/authorize.js";
 import { isUserBlocked } from "../authz/actor.js";
 

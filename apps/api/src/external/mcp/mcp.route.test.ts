@@ -7,7 +7,7 @@ vi.mock("../../utils/logger.js", () => ({
   log: { error: vi.fn(), warn: vi.fn(), info: vi.fn(), trace: vi.fn(), debug: vi.fn() },
 }));
 vi.mock("../shared/rateLimit.js", () => ({ externalRateLimit: () => async () => {} }));
-vi.mock("../../modules/org/orgSuspension.js", () => ({
+vi.mock("../../modules/settings/org/orgSuspension.js", () => ({
   isOrgSuspended: vi.fn(async () => false),
   ORG_SUSPENDED_MESSAGE: "suspended",
 }));
@@ -17,7 +17,7 @@ const auth = vi.hoisted(() => ({
   assertApiKeyV2: vi.fn(async (request: FastifyRequest) => {
     const key = request.headers.authorization?.replace("Bearer ", "");
     if (!key || !["rk_full", "rk_read", "rk_test"].includes(key)) {
-      const { ApiAuthError } = await import("../../modules/apiAccessToken/apiAccessToken.auth.js");
+      const { ApiAuthError } = await import("../../modules/settings/apiKeys/apiKey.auth.js");
       throw new ApiAuthError(401, "invalid_token", "Invalid access token");
     }
     const can = (p: string) => key !== "rk_read" || p === "contacts.read";
@@ -29,7 +29,7 @@ const auth = vi.hoisted(() => ({
     return {};
   }),
 }));
-vi.mock("../../modules/apiAccessToken/apiAccessToken.auth.js", async (importOriginal) => ({
+vi.mock("../../modules/settings/apiKeys/apiKey.auth.js", async (importOriginal) => ({
   ...(await importOriginal<object>()),
   assertApiKeyV2: auth.assertApiKeyV2,
 }));

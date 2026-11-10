@@ -1,6 +1,6 @@
 import { Queue } from "bullmq";
 import connection from "../../../utils/redisConnection.js";
-import { CALL_WATCHDOG_INTERVAL_MS } from "../../../modules/whatsapp/calling/calling.watchdog.js";
+import { CALL_WATCHDOG_INTERVAL_MS } from "../../../modules/inbox/calls/calling.watchdog.js";
 
 /**
  * Checks that the browser holding a WhatsApp call is still there (see calling.watchdog.ts).

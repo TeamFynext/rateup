@@ -15,7 +15,7 @@ import {
   primaryIdentities,
   withContactFields,
   type ContactField,
-} from "../../../modules/contact/identity/contactFields.js";
+} from "../../../modules/contacts/identity/contactFields.js";
 import {
   attachIdentity,
   ensurePrimary,
@@ -23,10 +23,10 @@ import {
   listContactIdentities,
   normalizeIdentityValue,
   removeIdentity,
-} from "../../../modules/contact/identity/identity.service.js";
-import { mergeContacts } from "../../../modules/contact/merge/merge.service.js";
-import { suggestMerge } from "../../../modules/contact/merge/suggestions.service.js";
-import type { MergeFieldChoices } from "../../../modules/contact/merge/merge.types.js";
+} from "../../../modules/contacts/identity/identity.service.js";
+import { mergeContacts } from "../../../modules/contacts/merge/merge.service.js";
+import { suggestMerge } from "../../../modules/contacts/merge/suggestions.service.js";
+import type { MergeFieldChoices } from "../../../modules/contacts/merge/merge.types.js";
 import { ExternalApiError } from "../../shared/errors.js";
 import { phoneSchema } from "../phone.js";
 import type {

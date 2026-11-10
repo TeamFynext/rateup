@@ -36,8 +36,8 @@ import { kafkaProducerConfig } from "@rateup/api/utils/kafka.js";
 import {
   WA_WEBHOOK_DLQ_TOPIC,
   WA_WEBHOOK_TOPIC,
-} from "@rateup/api/modules/whatsapp/whatsappSurvey/waWebhookRecords.js";
-import { processWhatsappWebhook } from "@rateup/api/modules/whatsapp/whatsappSurvey/wasurvey.webhook.js";
+} from "@rateup/api/modules/meta/whatsapp/webhook/waWebhookRecords.js";
+import { processWhatsappWebhook } from "@rateup/api/modules/meta/whatsapp/webhook/whatsapp.webhook.js";
 import type { WaMessageBody } from "@rateup/api/types/whatsapp.types.js";
 import {
   WA_WEBHOOK_RETRY_JOB_OPTIONS,

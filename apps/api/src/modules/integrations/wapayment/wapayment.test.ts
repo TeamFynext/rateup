@@ -19,7 +19,7 @@ vi.mock("../../../utils/prisma.js", () => {
   return { default: db };
 });
 // callMetaApi throws on any non-2xx; a GraphApiError carries Meta's error.
-vi.mock("../../whatsapp/wa_axios.js", () => ({
+vi.mock("../../meta/whatsapp/wa_axios.js", () => ({
   callMetaApi: vi.fn(),
   GraphApiError: class GraphApiError extends Error {
     error: { message: string };
@@ -29,11 +29,11 @@ vi.mock("../../whatsapp/wa_axios.js", () => ({
     }
   },
 }));
-vi.mock("../../whatsapp/settings/wa_settings.service.js", () => ({ getWaSettings: vi.fn() }));
+vi.mock("../../meta/whatsapp/settings/settings.service.js", () => ({ getWaSettings: vi.fn() }));
 
 import prisma from "../../../utils/prisma.js";
-import { callMetaApi, GraphApiError } from "../../whatsapp/wa_axios.js";
-import { getWaSettings } from "../../whatsapp/settings/wa_settings.service.js";
+import { callMetaApi, GraphApiError } from "../../meta/whatsapp/wa_axios.js";
+import { getWaSettings } from "../../meta/whatsapp/settings/settings.service.js";
 import { waPaymentProvider } from "./wapayment.provider.js";
 import { regenerateWaPaymentOauthLink, syncWaPaymentConfigurations } from "./wapayment.service.js";
 import { readWaPaymentConfigurations, WaPaymentError } from "./wapayment.types.js";

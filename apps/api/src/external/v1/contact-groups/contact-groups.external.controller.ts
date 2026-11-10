@@ -8,13 +8,13 @@ import {
   getContactsByContactGroupIdHandler,
   removeContactsFromGroupHandler,
   updateContactGroupHandler,
-} from "../../../modules/contact/contactGroup/contactGroup.controller.js";
+} from "../../../modules/contacts/audiences/audience.controller.js";
 import { findForeignContactRef } from "../contacts/contactRefs.js";
-import { ContactGroupNotFoundError } from "../../../modules/contact/contactGroup/contactGroup.errors.js";
+import { ContactGroupNotFoundError } from "../../../modules/contacts/audiences/audience.errors.js";
 import {
   getContactGroupById,
   getContactsByContactGroupIdWithPagination,
-} from "../../../modules/contact/contactGroup/contactGroup.service.js";
+} from "../../../modules/contacts/audiences/audience.service.js";
 
 export async function createContactGroupExternalController(
   request: Parameters<typeof createContactGroupHandler>[0],

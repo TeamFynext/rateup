@@ -32,7 +32,7 @@ vi.mock("../../../workers/bullmq/queues/abandonedCheckout.queue.js", () => ({
   disarmCheckoutReminder: vi.fn(),
   hasCheckoutReminderJob: vi.fn(),
 }));
-vi.mock("../../whatsapp/automatedReply/wa_automatedReply.utils.js", () => ({
+vi.mock("../../automation/rules/rules.utils.js", () => ({
   executeScheduledRule: vi.fn(),
 }));
 vi.mock("../../../utils/constants/constants.js", () => ({ API_URL: "https://api.rateup.test" }));
@@ -43,8 +43,8 @@ import {
   disarmCheckoutReminder,
   hasCheckoutReminderJob,
 } from "../../../workers/bullmq/queues/abandonedCheckout.queue.js";
-import { executeScheduledRule } from "../../whatsapp/automatedReply/wa_automatedReply.utils.js";
-import { ruleOptionsSchema } from "../../whatsapp/automatedReply/wa_rule.schema.js";
+import { executeScheduledRule } from "../../automation/rules/rules.utils.js";
+import { ruleOptionsSchema } from "../../automation/rules/rule.schema.js";
 import {
   checkoutPhone,
   cleanupShopifyCheckouts,

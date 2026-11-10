@@ -1,7 +1,7 @@
 import prisma from "./prisma.js";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { log } from "./logger.js";
-import { getSubscription } from "../modules/subscription/subscription.service.js";
+import { getSubscription } from "../modules/settings/subscription/subscription.service.js";
 import { SubscriptionFeaturePathName } from "../types/enums.js";
 import dayjs from "dayjs";
 import { getNestedProperty } from "./misc/obj.utils.js";

@@ -9,20 +9,20 @@ vi.mock("../../usageCounter.js", () => ({ incrementUsage: vi.fn(async () => {}) 
 vi.mock("../../logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), warn: vi.fn() },
 }));
-vi.mock("../../../../modules/whatsapp/whatsappSurvey/wasurvey.utils.js", () => ({
+vi.mock("../../../../modules/meta/whatsapp/webhook/whatsapp.utils.js", () => ({
   createTemplateMessage: vi.fn((to: string) => ({ to })),
 }));
-vi.mock("../../../../modules/whatsapp/meta/metaMessage.service.js", () => ({
+vi.mock("../../../../modules/meta/shared/metaMessage.service.js", () => ({
   sendMetaMessage: vi.fn(),
 }));
-vi.mock("../../../../modules/whatsapp/whatsappSurvey/wasurvey.auth.js", () => {
+vi.mock("../../../../modules/meta/whatsapp/webhook/whatsapp.auth.js", () => {
   class CampaignCreditsExhaustedError extends Error {}
   return { CampaignCreditsExhaustedError };
 });
-vi.mock("../../../../modules/whatsapp/messageTemplates/templateComponents.js", () => ({
+vi.mock("../../../../modules/meta/whatsapp/templates/templateComponents.js", () => ({
   buildTemplateComponents: vi.fn(async () => []),
 }));
-vi.mock("../../../../modules/whatsapp/flows/flowToken.js", () => ({ signFlowToken: vi.fn() }));
+vi.mock("../../../../modules/meta/whatsapp/flows/flowToken.js", () => ({ signFlowToken: vi.fn() }));
 vi.mock("../../campaign.js", () => ({
   updateCampaignParticipant: vi.fn(),
   updateCampaignSendStats: vi.fn(),
@@ -31,7 +31,7 @@ vi.mock("../../campaign.js", () => ({
   updateDripCampaignStats: vi.fn(),
 }));
 // The real module reaches Prisma and Redis; only the code-to-reason rule is kept.
-vi.mock("../../../../modules/campaign/campaignPause.service.js", () => ({
+vi.mock("../../../../modules/campaigns/campaignPause.service.js", () => ({
   pauseReasonForMetaError: (code?: number | null) => (code === 131042 ? "PAYMENT_METHOD" : null),
   isCampaignSendPaused: vi.fn(async () => false),
   pauseCampaignForAccountIssue: vi.fn(async () => true),
@@ -44,13 +44,13 @@ vi.mock("../../accessTokenCache.js", () => ({
 import dbPool from "../../../../utils/db.js";
 import { resolveCampaignAccessToken } from "../../accessTokenCache.js";
 import { incrementUsage } from "../../usageCounter.js";
-import { sendMetaMessage } from "../../../../modules/whatsapp/meta/metaMessage.service.js";
-import { CampaignCreditsExhaustedError } from "../../../../modules/whatsapp/whatsappSurvey/wasurvey.auth.js";
+import { sendMetaMessage } from "../../../../modules/meta/shared/metaMessage.service.js";
+import { CampaignCreditsExhaustedError } from "../../../../modules/meta/whatsapp/webhook/whatsapp.auth.js";
 import { updateCampaignParticipant, updateCampaignStats } from "../../campaign.js";
 import {
   isCampaignSendPaused,
   pauseCampaignForAccountIssue,
-} from "../../../../modules/campaign/campaignPause.service.js";
+} from "../../../../modules/campaigns/campaignPause.service.js";
 import { CampaignPauseReason } from "../../../../types/enums.js";
 import { WaFailureClass } from "../../../../utils/waRetryableErrors.js";
 import { processParticipant } from "./messageDispatch.service.js";

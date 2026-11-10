@@ -179,7 +179,7 @@ export function loyaltyMenuGraph(
   };
 }
 
-/** The create body for `POST /chatbots`. */
+/** The create body for `POST /automation/journeys`. */
 export function loyaltyChatbotPayload(input: {
   name: string;
   graph: WaAutomationFlowJson;

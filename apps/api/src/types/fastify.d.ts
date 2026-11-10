@@ -15,7 +15,7 @@ declare module "fastify" {
      * the route registry refuses to boot (AUTHZ_STRICT=1) when neither is present.
      * `public`: no session. `session`: any signed-in user, even one with no membership yet.
      * `token`: an API access token (external v1).
-     * `staff`: the staff console (src/modules/staff); its plugin's own hooks authenticate, never SuperTokens.
+     * `staff`: the staff console (src/modules/platform/staff); its plugin's own hooks authenticate, never SuperTokens.
      */
     access?: "public" | "session" | "token" | "staff";
     /** Permission(s) the actor needs; any one of a list suffices. Implies a session. */

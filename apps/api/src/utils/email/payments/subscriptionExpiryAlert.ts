@@ -6,7 +6,7 @@ import { log } from "../../logger.js";
 import { Prisma } from "../../../generated/prisma/client.js";
 import type { ExpiryStage } from "../../../emails/subscription-expiry.js";
 import { renderSubscriptionExpiryEmail } from "../react/templates.js";
-import { GATEWAY_BILLED_PLAN } from "../../../modules/subscription/planBilling.js";
+import { GATEWAY_BILLED_PLAN } from "../../../modules/settings/subscription/planBilling.js";
 
 type SubscriptionWithOwnerAndPlan = Prisma.SubscriptionGetPayload<{
   include: { org: { select: { owner: true } }; basePlan: true };

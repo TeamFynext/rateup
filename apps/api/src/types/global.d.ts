@@ -24,7 +24,7 @@ import {
 import { RouteShorthandOptionsWithHandler } from "fastify";
 import type { StoredShopifySession } from "../modules/integrations/shopify/shopify.session.js";
 import type { ShopifyWidgetSettings } from "../modules/integrations/shopify/shopify.schema.js";
-import type { ThreadNote } from "../modules/whatsapp/inbox/note/note.service.js";
+import type { ThreadNote } from "../modules/inbox/note/note.service.js";
 import z from "zod";
 import { ZapierTriggers } from "../modules/integrations/external/zapier/zapier.types.js";
 
@@ -720,7 +720,7 @@ declare global {
      * Present on flow-builder automations: the node/edge graph driving the
      * conversation. Keyword-only automations have no `json`.
      */
-    json?: import("../modules/whatsapp/whatsappSurvey/node-types.js").AutomationGraph;
+    json?: import("../modules/meta/whatsapp/webhook/node-types.js").AutomationGraph;
   }
   /**
    * A ProseMirror/TipTap-style rich-text document, as stored in
@@ -1554,7 +1554,8 @@ declare global {
 
     type PWaMessageBody = WaInboxMessageBody;
     type PWaTemplateWithTypesData = WaTemplateWithTypes["data"];
-    type PBroadcastAudience = import("../modules/customerComms/audience.js").BroadcastAudience;
+    type PBroadcastAudience =
+      import("../modules/platform/customerComms/audience.js").BroadcastAudience;
     // The column stores the filled-in component ARRAY of the template that was sent —
     // `messageBody.template.components` verbatim.
     type PWaTemplateComponentParams = import("./whatsapp.types.js").OutgoingTemplateComponent[];
@@ -1593,14 +1594,14 @@ declare global {
       import("../modules/commerce/shop/shop.types.js").ShopNotificationSettings;
 
     type PMetaAgentBusinessInfo =
-      import("../modules/metaAgent/metaAgent.schema.js").BusinessInfoBody;
+      import("../modules/meta/agent/metaAgent.schema.js").BusinessInfoBody;
     /** Meta's FAQ metadata is a flat string map. */
     type PMetaAgentFaqMetadata = Record<string, string>;
     /** Skill metadata is the same flat string map as FAQ metadata. */
     type PMetaAgentSkillMetadata = Record<string, string>;
     /** An OpenAPI-ish request spec Meta stores verbatim for a connector tool. */
     type PMetaAgentRequestDefinition =
-      import("../modules/metaAgent/metaAgent.schema.js").RequestDefinition;
+      import("../modules/meta/agent/metaAgent.schema.js").RequestDefinition;
     interface PMetaAgentUserAuthInjectionConfig {
       location: "body" | "headers" | "path" | "query";
       field_name: string;
@@ -1614,7 +1615,7 @@ declare global {
       expires_at_type?: "absolute" | "relative_seconds";
     }
     /** Meta's agent_budget list, as last read or saved. */
-    type PMetaAgentBudgets = import("../modules/metaAgent/metaAgent.schema.js").AgentBudget[];
+    type PMetaAgentBudgets = import("../modules/meta/agent/metaAgent.schema.js").AgentBudget[];
     /** Non-secret mTLS metadata Meta echoes back after a certificate upsert. */
     interface PMetaAgentMtlsConfig {
       has_certificate: boolean;
@@ -1633,7 +1634,7 @@ declare global {
     type PLoyaltyUsedContext = LoyaltyUsedContext;
     type PContactIntegrationIds = ContactIntegrationIds;
     type PContactMergeSnapshot =
-      import("../modules/contact/merge/merge.types.js").ContactMergeSnapshot;
+      import("../modules/contacts/merge/merge.types.js").ContactMergeSnapshot;
     type PLinktreeLinks = LinktreeLink[];
     // Rows written before the current schema keep older shapes; readers migrate them
     // (see migrateFeaturesToCurrentSchema), so the stored type is the legacy superset.
@@ -1645,8 +1646,7 @@ declare global {
       | Record<string, unknown>;
     type LoyaltyEarningRuleTimeRanges = LoyaltyAllowedTimeRanges;
     type LoyaltyEarningRuleConditions = import("./loyalty.js").LoyaltyEarningRuleConditions;
-    type PWaRuleOptions =
-      import("../modules/whatsapp/automatedReply/wa_rule.schema.js").RuleOptions;
+    type PWaRuleOptions = import("../modules/automation/rules/rule.schema.js").RuleOptions;
     type PTicketChecklists = TicketChecklist[];
     type PRichTextContent = RichTextNode | string;
     type PWaGraphApiErrorDetail = WaGraphApiErrorDetail;
@@ -1781,7 +1781,7 @@ export interface orgWsMessage {
     message: ThreadNote;
   };
   /** A WhatsApp voice call rang, changed state, got its SDP answer, or ended. */
-  call?: import("../modules/whatsapp/calling/calling.types.js").CallWsEvent;
+  call?: import("../modules/inbox/calls/calling.types.js").CallWsEvent;
   /** A message the customer revoked. The row still exists; only its rendering changes. */
   message_deleted?: {
     /** WhatsApp message id (wamid) of the revoked message. */

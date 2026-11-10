@@ -1,8 +1,8 @@
 import prisma from "../../utils/prisma.js";
 import { log } from "../../utils/logger.js";
-import { emitWebhookEvents } from "../webhook/webhook.events.js";
-import type { EnvelopeWebhookEventName } from "../webhook/webhook.schema.js";
-import { contactFields, primaryIdentities } from "../contact/identity/contactFields.js";
+import { emitWebhookEvents } from "../settings/webhooks/webhook.events.js";
+import type { EnvelopeWebhookEventName } from "../settings/webhooks/webhook.schema.js";
+import { contactFields, primaryIdentities } from "../contacts/identity/contactFields.js";
 
 /**
  * `loyalty.points.*` webhook events, one per ledger row.

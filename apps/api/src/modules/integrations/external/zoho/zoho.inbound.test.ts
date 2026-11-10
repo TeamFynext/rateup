@@ -18,13 +18,13 @@ vi.mock("../../../../utils/prisma.js", () => {
   };
   return { default: db };
 });
-vi.mock("../../../contact/identity/contactFields.js", () => ({ setPrimaryIdentities: vi.fn() }));
+vi.mock("../../../contacts/identity/contactFields.js", () => ({ setPrimaryIdentities: vi.fn() }));
 
 vi.mock("../../../../workers/bullmq/queues/index.js", () => ({
   integrationTriggerQueue: { add: (...a: unknown[]) => queueAdd(...a) },
 }));
 
-vi.mock("../../../pipeline/pipelineLead/lead.service.js", () => ({
+vi.mock("../../../pipelines/pipelineLead/lead.service.js", () => ({
   moveLead: vi.fn(),
   resolvePipelineForContact: vi.fn(),
   setContactStage: vi.fn(),
@@ -43,8 +43,8 @@ import {
   moveLead,
   resolvePipelineForContact,
   setContactStage,
-} from "../../../pipeline/pipelineLead/lead.service.js";
-import { setPrimaryIdentities } from "../../../contact/identity/contactFields.js";
+} from "../../../pipelines/pipelineLead/lead.service.js";
+import { setPrimaryIdentities } from "../../../contacts/identity/contactFields.js";
 import { getValidZohoAccessToken } from "./zoho.auth.js";
 import { getZohoRecordById } from "./zoho.client.js";
 import { handleZohoInbound, processZohoInboundJob } from "./zoho.inbound.js";

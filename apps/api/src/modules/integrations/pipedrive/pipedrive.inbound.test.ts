@@ -25,8 +25,8 @@ vi.mock("../shared/entityLink.js", async (importOriginal) => ({
   recordLink: vi.fn(),
   removeLink: vi.fn(),
 }));
-vi.mock("../../contact/contact.service.js", () => ({ createContact: vi.fn() }));
-vi.mock("../../pipeline/pipelineLead/lead.service.js", () => ({
+vi.mock("../../contacts/contact.service.js", () => ({ createContact: vi.fn() }));
+vi.mock("../../pipelines/pipelineLead/lead.service.js", () => ({
   moveLead: vi.fn(),
   createLead: vi.fn(),
 }));
@@ -35,8 +35,8 @@ const client = vi.hoisted(() => ({ get: vi.fn() }));
 vi.mock("./pipedrive.client.js", () => ({ pipedriveClientFor: vi.fn(async () => client) }));
 
 import prisma from "../../../utils/prisma.js";
-import { createContact } from "../../contact/contact.service.js";
-import { createLead, moveLead } from "../../pipeline/pipelineLead/lead.service.js";
+import { createContact } from "../../contacts/contact.service.js";
+import { createLead, moveLead } from "../../pipelines/pipelineLead/lead.service.js";
 import { emitIntegrationEvent } from "../events/emitIntegrationEvent.js";
 import {
   findLinkByExternalId,

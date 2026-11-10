@@ -40,7 +40,7 @@ describe("signReviewRedirect / verifyReviewRedirect", () => {
   });
 
   test("is not interchangeable with a flow token signed over the same id", async () => {
-    const { signFlowToken } = await import("../../whatsapp/flows/flowToken.js");
+    const { signFlowToken } = await import("../../meta/whatsapp/flows/flowToken.js");
     const token = signFlowToken({ surveyTeamMapId: REQUEST_ID, orgId: "o", phone: "1" });
     const flowSig = token.split(".")[2]!;
     expect(verifyReviewRedirect(REQUEST_ID, flowSig)).toBe(false);

@@ -6,8 +6,8 @@ import {
   contactWhereIdentity,
   primaryIdentities,
   setPrimaryIdentities,
-} from "../../contact/identity/contactFields.js";
-import { IdentityTakenError } from "../../contact/identity/identity.service.js";
+} from "../../contacts/identity/contactFields.js";
+import { IdentityTakenError } from "../../contacts/identity/identity.service.js";
 import { log } from "../../../utils/logger.js";
 import { findLinkByExternalId, recordLink } from "../shared/entityLink.js";
 import type { WooDeliveryJobData } from "./woocommerce.inbound.js";
@@ -71,7 +71,7 @@ export async function handleWooCustomer(
 
   // Loaded on use: contact creation reaches the automation engine and the
   // integration fan-out, which the registry importing this module has no need for.
-  const { createContact } = await import("../../contact/contact.service.js");
+  const { createContact } = await import("../../contacts/contact.service.js");
   try {
     const created = await createContact({
       orgId,

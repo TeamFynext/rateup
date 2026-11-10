@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import dayjs from "dayjs";
 
 import prisma from "../../../utils/prisma.js";
-import { contactWhereIdentity } from "../../contact/identity/contactFields.js";
+import { contactWhereIdentity } from "../../contacts/identity/contactFields.js";
 import { log } from "../../../utils/logger.js";
 import {
   Prisma,
@@ -13,7 +13,7 @@ import {
 } from "../../../generated/prisma/client.js";
 import { IntegratedApps, ShopifyEvents } from "../../../types/enums.js";
 import { normalisePhone } from "../../loyalty/util.js";
-import { executeScheduledRule } from "../../whatsapp/automatedReply/wa_automatedReply.utils.js";
+import { executeScheduledRule } from "../../automation/rules/rules.utils.js";
 import {
   armCheckoutReminder,
   disarmCheckoutReminder,

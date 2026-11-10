@@ -30,13 +30,13 @@ vi.mock("./getlead.push.js", () => ({
 
 const moveLead = vi.fn();
 const createLead = vi.fn();
-vi.mock("../../../pipeline/pipelineLead/lead.service.js", () => ({
+vi.mock("../../../pipelines/pipelineLead/lead.service.js", () => ({
   moveLead: (...args: unknown[]) => moveLead(...args),
   createLead: (...args: unknown[]) => createLead(...args),
 }));
 
 const createContact = vi.fn();
-vi.mock("../../../contact/contact.service.js", () => ({
+vi.mock("../../../contacts/contact.service.js", () => ({
   createContact: (...args: unknown[]) => createContact(...args),
 }));
 

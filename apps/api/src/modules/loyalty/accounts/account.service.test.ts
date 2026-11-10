@@ -29,8 +29,8 @@ vi.mock("../../../utils/prisma.js", () => ({
 }));
 
 // Identity writes are covered by contactFields' own tests; here only what is written counts.
-vi.mock("../../contact/identity/contactFields.js", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("../../contact/identity/contactFields.js")>()),
+vi.mock("../../contacts/identity/contactFields.js", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../contacts/identity/contactFields.js")>()),
   setPrimaryIdentities: vi.fn(),
 }));
 
@@ -45,7 +45,7 @@ vi.mock("../../../utils/misc/random.utils.js", () => ({
 }));
 
 vi.mock("../messaging/reply.js", () => ({ replyText: vi.fn() }));
-vi.mock("../../whatsapp/whatsappSurvey/wasurvey.utils.js", () => ({
+vi.mock("../../meta/whatsapp/webhook/whatsapp.utils.js", () => ({
   generateWhatsAppJoinLink: vi.fn(() => "https://wa.me/join"),
 }));
 vi.mock("../messaging/send.js", () => ({
@@ -90,7 +90,7 @@ function sentEvent(event: string) {
 import { scheduleFeedbackRequest } from "../feedback/feedback.scheduler.js";
 import { announceLoyaltyTransactions } from "../loyalty.webhooks.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
-import { primaryIdentities, setPrimaryIdentities } from "../../contact/identity/contactFields.js";
+import { primaryIdentities, setPrimaryIdentities } from "../../contacts/identity/contactFields.js";
 
 /** A contact's primary identities, as `primaryIdentities` loads them. */
 function ids(phone: string | null, email?: string) {

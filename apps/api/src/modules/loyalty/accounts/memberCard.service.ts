@@ -13,7 +13,7 @@ import {
   contactFields,
   contactWhereIdentity,
   primaryIdentities,
-} from "../../contact/identity/contactFields.js";
+} from "../../contacts/identity/contactFields.js";
 
 /**
  * The member card: a QR the customer keeps in their WhatsApp chat and shows at the

@@ -1,7 +1,7 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 
-import { assertApiKeyV2 } from "../../modules/apiAccessToken/apiAccessToken.auth.js";
-import { isOrgSuspended, ORG_SUSPENDED_MESSAGE } from "../../modules/org/orgSuspension.js";
+import { assertApiKeyV2 } from "../../modules/settings/apiKeys/apiKey.auth.js";
+import { isOrgSuspended, ORG_SUSPENDED_MESSAGE } from "../../modules/settings/org/orgSuspension.js";
 import { clientIp } from "../../utils/http.js";
 import { log } from "../../utils/logger.js";
 import { ExternalApiError, externalErrorHandler } from "../shared/errors.js";

@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 // Unmetered plan: the monthly order cap has its own tests (orders.orderLimit.test.ts).
-vi.mock("../../subscription/planLimits.js", () => ({
+vi.mock("../../settings/subscription/planLimits.js", () => ({
   checkPlanLimit: vi.fn(async () => ({ metered: false, used: 0, exceeded: false })),
 }));
-vi.mock("../../subscription/shopOrders.js", () => ({ countPlacedOrder: vi.fn(async () => 1) }));
-vi.mock("../../subscription/limitAlerts.js", () => ({ maybeNotifyOrderUsage: vi.fn() }));
+vi.mock("../../settings/subscription/shopOrders.js", () => ({
+  countPlacedOrder: vi.fn(async () => 1),
+}));
+vi.mock("../../settings/subscription/limitAlerts.js", () => ({ maybeNotifyOrderUsage: vi.fn() }));
 
 const db = vi.hoisted(() => {
   const db = {
@@ -54,7 +56,7 @@ const notifier = vi.hoisted(() => ({ notify: vi.fn() }));
 vi.mock("../../../utils/prisma.js", () => ({ default: db }));
 vi.mock("../../../utils/logger.js", () => ({ log: { warn: vi.fn(), info: vi.fn() } }));
 vi.mock("../../../workers/bullmq/queues/shop.queue.js", () => ({ enqueueCatalogPublish: vi.fn() }));
-vi.mock("../../notification/notify.js", () => notifier);
+vi.mock("../../settings/notifications/notify.js", () => notifier);
 vi.mock("./events.js", () => events);
 vi.mock("./attribution.js", () => ({ adAttribution: vi.fn() }));
 vi.mock("./shopLoyalty.js", () => loyalty);

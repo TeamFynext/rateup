@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import { channelDigits } from "../../../../../utils/channelIdentifier.js";
 import prisma from "../../../../../utils/prisma.js";
 import { parsePhoneforWa } from "../../../util.js";
-import { contactWhereIdentity } from "../../../../contact/identity/contactFields.js";
+import { contactWhereIdentity } from "../../../../contacts/identity/contactFields.js";
 
 /** Meta's window is 24 h from the customer's last message; keep a margin for clock skew. */
 export const SESSION_WINDOW_MINUTES = 24 * 60 - 10;

@@ -29,11 +29,11 @@ vi.mock("../../../utils/logger.js", () => ({
 }));
 
 vi.mock("../messaging/send.js", () => ({ sendLoyaltyEvent: vi.fn() }));
-vi.mock("../../notification/notify.js", () => ({ notify: vi.fn() }));
+vi.mock("../../settings/notifications/notify.js", () => ({ notify: vi.fn() }));
 
 import prisma from "../../../utils/prisma.js";
 import { sendLoyaltyEvent } from "../messaging/send.js";
-import { notify } from "../../notification/notify.js";
+import { notify } from "../../settings/notifications/notify.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
 import {
   approveApprovalRequest,

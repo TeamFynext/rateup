@@ -20,7 +20,7 @@ export async function externalCampaignRoutes(server: FastifyInstance) {
   const TAG = ["Campaigns"];
   declareExternalScopes(server, { read: "campaigns.read", write: "campaigns.manage" });
 
-  // The dashboard's plan gate for /api/campaign.
+  // The dashboard's plan gate for /api/campaigns.
   server.addHook("preHandler", requireCampaignSubscription);
 
   const writeLimit = externalRateLimit({ max: 120, windowSeconds: 60, key: "extCampaignsWrite" });

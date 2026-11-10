@@ -1,6 +1,6 @@
 import prisma from "../../../utils/prisma.js";
 import { createCustomerAccount, findAccountByReferralCode } from "../accounts/account.service.js";
-import { primaryIdentities, withContactFields } from "../../contact/identity/contactFields.js";
+import { primaryIdentities, withContactFields } from "../../contacts/identity/contactFields.js";
 
 export async function trackReferral(
   programId: string,

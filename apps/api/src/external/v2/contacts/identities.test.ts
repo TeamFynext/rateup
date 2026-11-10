@@ -24,9 +24,9 @@ const db = vi.hoisted(() => {
 });
 vi.mock("../../../utils/prisma.js", () => ({ default: db }));
 
-vi.mock("../../../modules/contact/identity/identity.service.js", async (importOriginal) => {
+vi.mock("../../../modules/contacts/identity/identity.service.js", async (importOriginal) => {
   const actual =
-    await importOriginal<typeof import("../../../modules/contact/identity/identity.service.js")>();
+    await importOriginal<typeof import("../../../modules/contacts/identity/identity.service.js")>();
   return {
     ...actual,
     attachIdentity: vi.fn(),
@@ -36,11 +36,11 @@ vi.mock("../../../modules/contact/identity/identity.service.js", async (importOr
     ensurePrimary: vi.fn(),
   };
 });
-vi.mock("../../../modules/contact/merge/merge.service.js", () => ({ mergeContacts: vi.fn() }));
-vi.mock("../../../modules/contact/merge/suggestions.service.js", () => ({
+vi.mock("../../../modules/contacts/merge/merge.service.js", () => ({ mergeContacts: vi.fn() }));
+vi.mock("../../../modules/contacts/merge/suggestions.service.js", () => ({
   suggestMerge: vi.fn(),
 }));
-vi.mock("../../../modules/contact/contact.service.js", () => ({
+vi.mock("../../../modules/contacts/contact.service.js", () => ({
   createContact: vi.fn(),
   createMultipleContacts: vi.fn(),
   deleteContactById: vi.fn(),
@@ -55,9 +55,9 @@ import {
   listContactIdentities,
   removeIdentity,
   ensurePrimary,
-} from "../../../modules/contact/identity/identity.service.js";
-import { mergeContacts } from "../../../modules/contact/merge/merge.service.js";
-import { suggestMerge } from "../../../modules/contact/merge/suggestions.service.js";
+} from "../../../modules/contacts/identity/identity.service.js";
+import { mergeContacts } from "../../../modules/contacts/merge/merge.service.js";
+import { suggestMerge } from "../../../modules/contacts/merge/suggestions.service.js";
 import { emitIntegrationEvent } from "../../../modules/integrations/events/emitIntegrationEvent.js";
 import { HttpError } from "../../../utils/http.js";
 import { externalErrorHandler } from "../../shared/errors.js";

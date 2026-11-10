@@ -4,8 +4,8 @@ import {
   contactFields,
   contactWhereIdentity,
   primaryIdentities,
-} from "../../contact/identity/contactFields.js";
-import { IdentityTakenError } from "../../contact/identity/identity.service.js";
+} from "../../contacts/identity/contactFields.js";
+import { IdentityTakenError } from "../../contacts/identity/identity.service.js";
 import { log } from "../../../utils/logger.js";
 import redisConnection from "../../../utils/redisConnection.js";
 import { fillEmail } from "./woocommerce.customers.js";
@@ -152,7 +152,7 @@ async function applyOptIn(orgId: string, buyer: OptInBuyer): Promise<"created" |
 
   // Loaded on use, as in woocommerce.customers.ts: contact creation reaches the
   // automation engine and the integration fan-out.
-  const { createContact } = await import("../../contact/contact.service.js");
+  const { createContact } = await import("../../contacts/contact.service.js");
   try {
     await createContact({
       orgId,

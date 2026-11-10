@@ -7,22 +7,22 @@ import axios from "../config/axios";
  */
 export const addToken = async (token: string) => {
   const platform = Platform.OS === "ios" || Platform.OS === "android" ? Platform.OS : undefined;
-  const res = await axios.post("/api/mobilenotification", { expoToken: token, platform });
+  const res = await axios.post("/api/mobile-notifications", { expoToken: token, platform });
   return res.data;
 };
 
 /** This iPhone's PushKit token, which lets a call ring through CallKit with the app closed. */
 export const addVoipToken = async (token: string) => {
-  await axios.post("/api/mobilenotification/voip", { token });
+  await axios.post("/api/mobile-notifications/voip", { token });
 };
 
 export const getToken = async () => {
-  const res = await axios.get("/api/mobilenotification");
+  const res = await axios.get("/api/mobile-notifications");
   return res.data;
 };
 
 export const deleteToken = async (token: string) => {
-  const res = await axios.delete("/api/mobilenotification", {
+  const res = await axios.delete("/api/mobile-notifications", {
     data: {
       expoToken: token,
     },

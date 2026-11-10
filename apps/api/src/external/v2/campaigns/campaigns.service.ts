@@ -7,18 +7,18 @@ import {
   CampaignIncompleteError,
   CampaignNoRecipientsError,
   CampaignNotFoundError,
-} from "../../../modules/campaign/campaign.errors.js";
-import { createCampaign, deleteCampaign } from "../../../modules/campaign/campaign.service.js";
+} from "../../../modules/campaigns/campaign.errors.js";
+import { createCampaign, deleteCampaign } from "../../../modules/campaigns/campaign.service.js";
 import {
   launchCampaign,
   type LaunchCampaignResult,
-} from "../../../modules/campaign/campaignLaunch.service.js";
-import { CampaignSendInProgressError } from "../../../modules/campaign/campaignSend.service.js";
-import { createCampaignParticipants } from "../../../modules/campaign/campaignParticipants/campaignParticipants.service.js";
+} from "../../../modules/campaigns/campaignLaunch.service.js";
+import { CampaignSendInProgressError } from "../../../modules/campaigns/campaignSend.service.js";
+import { createCampaignParticipants } from "../../../modules/campaigns/campaignParticipants/campaignParticipants.service.js";
 import { CampaignParticipantStatus, CampaignStatus, CampaignType } from "../../../types/enums.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
-import { primaryIdentities } from "../../../modules/contact/identity/contactFields.js";
+import { primaryIdentities } from "../../../modules/contacts/identity/contactFields.js";
 import { getFlowIdFromTemplateComponents } from "../../../utils/waTemplateComponents.js";
 import type { WaTemplateComponent } from "../../../types/whatsapp.types.js";
 import { ExternalApiError } from "../../shared/errors.js";

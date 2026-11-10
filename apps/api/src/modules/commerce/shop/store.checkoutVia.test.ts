@@ -6,12 +6,14 @@ const db = vi.hoisted(() => ({
   integration: { findFirst: vi.fn() },
 }));
 vi.mock("../../../utils/prisma.js", () => ({ default: db }));
-vi.mock("../../subscription/subscription.service.js", () => ({ getSubscriptionGate: vi.fn() }));
-vi.mock("../../org/modules.js", () => ({ revealModule: vi.fn() }));
+vi.mock("../../settings/subscription/subscription.service.js", () => ({
+  getSubscriptionGate: vi.fn(),
+}));
+vi.mock("../../settings/org/modules.js", () => ({ revealModule: vi.fn() }));
 const queue = vi.hoisted(() => ({ enqueueStoreMirror: vi.fn() }));
 vi.mock("../../../workers/bullmq/queues/shop.queue.js", () => queue);
 const notifications = vi.hoisted(() => ({ notify: vi.fn() }));
-vi.mock("../../notification/notify.js", () => notifications);
+vi.mock("../../settings/notifications/notify.js", () => notifications);
 
 const { onOnlineStoreConnected, onOnlineStoreDisconnected, updateStore } =
   await import("./store.service.js");

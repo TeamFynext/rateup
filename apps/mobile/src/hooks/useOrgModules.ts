@@ -2,7 +2,7 @@ import { useMemo } from "react";
 
 import { useLoggedInUser } from "@/api/api";
 
-/** Mirrors `ORG_MODULES` in rateup-api/src/modules/org/modules.ts. */
+/** Mirrors `ORG_MODULES` in apps/api/src/modules/settings/org/modules.ts. */
 export type OrgModule = "pipeline" | "loyalty" | "commerce" | "web_forms" | "qr_links" | "ai_agent";
 
 /**

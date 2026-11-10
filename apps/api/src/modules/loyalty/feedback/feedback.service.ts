@@ -11,17 +11,17 @@ import {
   getWaSettingsForFlow,
   syncLocalFlowToWhatsapp,
   updateFlowInDb,
-} from "../../whatsapp/flows/flow.service.js";
+} from "../../meta/whatsapp/flows/flow.service.js";
 import {
   DEFAULT_HAPPY_MIN_RATING,
   findOverallRatingElement,
   setHappyMinRating,
-} from "../../whatsapp/flows/flowTemplates.js";
+} from "../../meta/whatsapp/flows/flowTemplates.js";
 import {
   createTemplate,
   getTemplateByNameAndOrgId,
   saveTemplate,
-} from "../../whatsapp/messageTemplates/wa_templates.service.js";
+} from "../../meta/whatsapp/templates/templates.service.js";
 import { isValidTimeZone, resolvePeriod } from "../dashboard/dashboard.period.js";
 import { feedbackEligibility } from "./feedback.eligibility.js";
 import { ratingAveragesByElement, type FlowAnswer } from "./feedback.evaluate.js";
@@ -45,7 +45,7 @@ import {
   contactFields,
   primaryIdentities,
   type PrimaryIdentityRow,
-} from "../../contact/identity/contactFields.js";
+} from "../../contacts/identity/contactFields.js";
 
 /**
  * The admin side of loyalty feedback. Feedback never owns the flow: the business creates one

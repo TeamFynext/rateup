@@ -1,4 +1,4 @@
-import type { WebhookEventInput } from "../../../modules/webhook/webhook.events.js";
+import type { WebhookEventInput } from "../../../modules/settings/webhooks/webhook.events.js";
 
 /**
  * `message.status` events for one message's batch of receipts, built in

@@ -30,7 +30,7 @@ export function leadAgeDays(lead: Lead): number {
  * window.
  *
  * Mirrored by `rottingSql()` in
- * `rateup-api/src/modules/pipeline/pipelineLead/lead.filters.ts`, which counts
+ * `apps/api/src/modules/pipelines/pipelineLead/lead.filters.ts`, which counts
  * them: this draws the badge on a card, that produces the number above the
  * column. Keep both in step.
  */

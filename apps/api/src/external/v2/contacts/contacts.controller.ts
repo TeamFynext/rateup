@@ -8,15 +8,15 @@ import {
   createContact,
   createMultipleContacts,
   deleteContactById,
-} from "../../../modules/contact/contact.service.js";
-import type { ContactCore } from "../../../modules/contact/contact.schema.js";
+} from "../../../modules/contacts/contact.service.js";
+import type { ContactCore } from "../../../modules/contacts/contact.schema.js";
 import {
   contactFields,
   contactWhereIdentity,
   contactWhereIdentityContains,
   setPrimaryIdentities,
-} from "../../../modules/contact/identity/contactFields.js";
-import { IdentityTakenError } from "../../../modules/contact/identity/identity.service.js";
+} from "../../../modules/contacts/identity/contactFields.js";
+import { IdentityTakenError } from "../../../modules/contacts/identity/identity.service.js";
 import { ExternalApiError } from "../../shared/errors.js";
 import { cursorOrderBy, cursorWhere, decodeCursor, toPage } from "../pagination.js";
 import { contactSelect, presentContact, presentContactDetail } from "./presenters.js";

@@ -9,7 +9,7 @@ import {
   addExistingContactsToGroupInputSchema,
   extAddNewContactsToGroupInputSchema,
   removeGroupContactsSchema,
-} from "../../../modules/contact/contactGroup/contactGroup.schema.js";
+} from "../../../modules/contacts/audiences/audience.schema.js";
 import {
   addExistingContactsToGroupExternalController,
   addNewContactsToGroupExternalController,

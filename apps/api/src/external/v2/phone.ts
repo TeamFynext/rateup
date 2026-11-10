@@ -1,7 +1,7 @@
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import z from "zod";
 
-import { isBsuid } from "../../modules/whatsapp/bsuid.js";
+import { isBsuid } from "../../modules/meta/whatsapp/bsuid.js";
 
 const EXAMPLE = "Digits with the country code, no `+`, e.g. 919876543210";
 

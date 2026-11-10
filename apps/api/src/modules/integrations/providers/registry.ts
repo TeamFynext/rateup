@@ -6,7 +6,7 @@ import { makeProvider } from "../external/make/make.provider.js";
 import { pabblyProvider } from "../external/pabbly/pabbly.provider.js";
 import { zapierProvider } from "../external/zapier/zapier.provider.js";
 import { zohoProvider } from "../external/zoho/zoho.provider.js";
-import { webhookProvider } from "../../webhook/webhook.provider.js";
+import { webhookProvider } from "../../settings/webhooks/webhook.provider.js";
 import { hubSpotProvider } from "../hubspot/hubspot.provider.js";
 import { pipedriveProvider } from "../pipedrive/pipedrive.provider.js";
 import { shopifyProvider } from "../shopify/shopify.provider.js";

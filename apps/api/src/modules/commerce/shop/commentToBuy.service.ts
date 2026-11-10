@@ -5,7 +5,7 @@ import prisma from "../../../utils/prisma.js";
 import {
   sendInstagramPrivateReply,
   sendInstagramTextMessage,
-} from "../../whatsapp/instagram/instagram_messaging.service.js";
+} from "../../meta/instagram/instagram_messaging.service.js";
 import { rememberSocialSource } from "./attribution.js";
 import { shopProductsActionSchema } from "./commentToBuy.schema.js";
 import { storefrontUrl } from "./events.js";
@@ -15,7 +15,7 @@ import { toNumber } from "./pricing.js";
 import type { ShopAttribution } from "./shop.types.js";
 import { storefrontProductUrl } from "./storefrontLinks.js";
 import { commerceEnabled } from "./store.service.js";
-import { contactWhereIdentity } from "../../contact/identity/contactFields.js";
+import { contactWhereIdentity } from "../../contacts/identity/contactFields.js";
 
 export type DropClaim =
   | { status: "claimed"; claimId: string }

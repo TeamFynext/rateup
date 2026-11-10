@@ -4,31 +4,31 @@ import { ContactsWithLastMessageResponse } from "../types";
 import { describeError, logger } from "@/utils/logger";
 
 export const createContact = async (data: ICreateContact) => {
-  const response = await axios.post("/api/contact", data);
+  const response = await axios.post("/api/contacts", data);
   return response.data;
 };
 
 export const assignedContact = async (contactId: string) => {
-  const response = await axios.get(`/api/wa/inbox/message/assign/${contactId}`);
+  const response = await axios.get(`/api/inbox/message/assign/${contactId}`);
   return response.data;
 };
 
 export const markMessageAsRead = async (contactId: string) => {
-  await axios.post(`/api/wa/inbox/message/mark/${contactId}`);
+  await axios.post(`/api/inbox/message/mark/${contactId}`);
 };
 
 export const getContactById = async (contactId: string) => {
-  const res = await axios.get(`/api/contact/${contactId}`);
+  const res = await axios.get(`/api/contacts/${contactId}`);
   return res.data;
 };
 
 export const editContactById = async (contactId: string, data: any) => {
-  const res = await axios.put(`/api/contact/${contactId}`, data);
+  const res = await axios.put(`/api/contacts/${contactId}`, data);
   return res.data;
 };
 
 export const closeChat = async (contactId: string, data: any) => {
-  const res = await axios.put(`/api/contact/${contactId}`, data);
+  const res = await axios.put(`/api/contacts/${contactId}`, data);
   return res.data;
 };
 
@@ -37,7 +37,7 @@ export async function assignInboxToUser(data: {
   assignedUserIds: string[];
   teamId: string;
 }) {
-  await axios.post("/api/wa/inbox/message/assign", data);
+  await axios.post("/api/inbox/message/assign", data);
 }
 
 /**
@@ -49,21 +49,21 @@ export async function setConversationFavorite(data: {
   conversationId: string;
   isFavorite: boolean;
 }) {
-  return (await axios.post(`/api/wa/inbox/message/favorite`, data)).data as {
+  return (await axios.post(`/api/inbox/message/favorite`, data)).data as {
     success: boolean;
     isFavorite: boolean;
   };
 }
 
 export const filteredContactsCount = async () => {
-  const res = await axios.get(`/api/wa/inbox/message/count`);
+  const res = await axios.get(`/api/inbox/message/count`);
   return res.data;
 };
 
 export const getFilteredContacts = async (filterData: string, page: number) => {
   try {
     const response = await axios.get<ContactsWithLastMessageResponse>(
-      `/api/wa/inbox/message/contactsfiltered`,
+      `/api/inbox/message/contactsfiltered`,
       {
         params: {
           filterData,
@@ -79,10 +79,10 @@ export const getFilteredContacts = async (filterData: string, page: number) => {
 };
 
 export async function getChatFilterData() {
-  return (await axios.get(`/api/wa/inbox/message/filterdata`)).data;
+  return (await axios.get(`/api/inbox/message/filterdata`)).data;
 }
 
 export const editContact = async ({ data, contactId }: { data: any; contactId: string }) => {
-  let res = await axios.put(`/api/contact/${contactId}`, data);
+  let res = await axios.put(`/api/contacts/${contactId}`, data);
   return res;
 };

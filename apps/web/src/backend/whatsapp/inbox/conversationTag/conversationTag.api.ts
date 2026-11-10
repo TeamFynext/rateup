@@ -1,6 +1,6 @@
 import { axiosClient } from "@/backend/apiClient";
 
-const CONVERSATION_TAG_BASE_URL = "/contact/conversation-tags";
+const CONVERSATION_TAG_BASE_URL = "/inbox/conversation-tags";
 
 /**
  * A conversation tag as the API returns it.

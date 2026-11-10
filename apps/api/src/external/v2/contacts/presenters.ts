@@ -4,7 +4,7 @@ import {
   contactFields,
   primaryIdentities,
   type PrimaryIdentityRow,
-} from "../../../modules/contact/identity/contactFields.js";
+} from "../../../modules/contacts/identity/contactFields.js";
 import { toWirePhone } from "../phone.js";
 import type { ContactDetailView, ContactIdentityView, ContactView } from "./contacts.schema.js";
 

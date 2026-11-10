@@ -1,7 +1,7 @@
 import type { Integration } from "../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
-import { notify } from "../../notification/notify.js";
+import { notify } from "../../settings/notifications/notify.js";
 
 /** Longest error kept on the row: enough to diagnose, short enough for a card. */
 const MAX_ERROR_LENGTH = 500;

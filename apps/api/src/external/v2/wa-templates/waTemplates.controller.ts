@@ -7,7 +7,7 @@ import prisma from "../../../utils/prisma.js";
 import {
   contactFields,
   primaryIdentities,
-} from "../../../modules/contact/identity/contactFields.js";
+} from "../../../modules/contacts/identity/contactFields.js";
 import { log } from "../../../utils/logger.js";
 import {
   isRetryableCode,
@@ -16,14 +16,14 @@ import {
 } from "../../../utils/waRetryableErrors.js";
 import { WaTemplateComponentType, WaTemplateStatus } from "../../../types/enums.js";
 import type { OutgoingTemplateComponent } from "../../../types/whatsapp.types.js";
-import { sendTemplateToUserCore } from "../../../modules/whatsapp/messageTemplates/wa_templates.controller.js";
-import { TemplateSendError } from "../../../modules/whatsapp/messageTemplates/templateSendError.js";
-import { getWaSendingSettings } from "../../../modules/whatsapp/settings/wa_settings.service.js";
+import { sendTemplateToUserCore } from "../../../modules/meta/whatsapp/templates/templates.controller.js";
+import { TemplateSendError } from "../../../modules/meta/whatsapp/templates/templateSendError.js";
+import { getWaSendingSettings } from "../../../modules/meta/whatsapp/settings/settings.service.js";
 import {
   ActiveContactLimitError,
   OrgSuspendedError,
-} from "../../../modules/whatsapp/whatsappSurvey/wasurvey.auth.js";
-import { GraphApiError } from "../../../modules/whatsapp/wa_axios.js";
+} from "../../../modules/meta/whatsapp/webhook/whatsapp.auth.js";
+import { GraphApiError } from "../../../modules/meta/whatsapp/wa_axios.js";
 import { ExternalApiError } from "../../shared/errors.js";
 import { cursorOrderBy, cursorWhere, decodeCursor, toPage } from "../pagination.js";
 import { uploadHeaderMedia } from "./mediaUpload.js";

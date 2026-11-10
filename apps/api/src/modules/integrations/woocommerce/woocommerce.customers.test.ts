@@ -6,7 +6,7 @@ vi.mock("../../../utils/logger.js", () => ({
 vi.mock("../../../utils/prisma.js", () => ({
   default: { contact: { findFirst: vi.fn(), update: vi.fn() } },
 }));
-vi.mock("../../contact/identity/contactFields.js", async (importOriginal) => ({
+vi.mock("../../contacts/identity/contactFields.js", async (importOriginal) => ({
   ...(await importOriginal<object>()),
   setPrimaryIdentities: vi.fn(),
 }));
@@ -14,12 +14,12 @@ vi.mock("../shared/entityLink.js", () => ({
   findLinkByExternalId: vi.fn(),
   recordLink: vi.fn(),
 }));
-vi.mock("../../contact/contact.service.js", () => ({ createContact: vi.fn() }));
+vi.mock("../../contacts/contact.service.js", () => ({ createContact: vi.fn() }));
 
 import prisma from "../../../utils/prisma.js";
-import { createContact } from "../../contact/contact.service.js";
-import { setPrimaryIdentities } from "../../contact/identity/contactFields.js";
-import { IdentityTakenError } from "../../contact/identity/identity.service.js";
+import { createContact } from "../../contacts/contact.service.js";
+import { setPrimaryIdentities } from "../../contacts/identity/contactFields.js";
+import { IdentityTakenError } from "../../contacts/identity/identity.service.js";
 import { findLinkByExternalId, recordLink } from "../shared/entityLink.js";
 import { handleWooCustomer } from "./woocommerce.customers.js";
 import { toWooContact, type WooCustomerPayload } from "./woocommerce.mapping.js";

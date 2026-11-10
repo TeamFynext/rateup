@@ -15,7 +15,7 @@ import {
   getUserByEmail,
   getUserRecipeName,
   updateLastLoggedInTime,
-} from "./modules/user/user.service.js";
+} from "./modules/settings/user/user.service.js";
 import { getValueByKey } from "./utils/signUp/index.js";
 import { sendResetPasswordMail } from "./utils/email/supertoken/passwordReset.js";
 import { sendVerifyMail } from "./utils/email/supertoken/verifyEmail.js";

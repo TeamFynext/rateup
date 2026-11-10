@@ -1,6 +1,6 @@
 import { axiosClient } from "../apiClient";
 
-const base = "/notification";
+const base = "/notifications";
 
 export const NOTIFICATION_CHANNELS = ["inApp", "push", "email", "desktop"] as const;
 export type NotificationChannel = (typeof NOTIFICATION_CHANNELS)[number];

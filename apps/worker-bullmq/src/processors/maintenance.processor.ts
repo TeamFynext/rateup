@@ -7,14 +7,14 @@ import { Job, UnrecoverableError, Worker } from "bullmq";
 import { log } from "@rateup/api/workers/shared/logger.js";
 import baseRedis from "@rateup/api/utils/redisConnection.js";
 import prisma from "@rateup/api/utils/prisma.js";
-import { findTask } from "@rateup/api/modules/maintenance/maintenance.tasks.js";
-import { runTask } from "@rateup/api/modules/maintenance/task.js";
+import { findTask } from "@rateup/api/modules/platform/maintenance/maintenance.tasks.js";
+import { runTask } from "@rateup/api/modules/platform/maintenance/task.js";
 import {
   addToTotals,
   readBackgroundRun,
   updateBackgroundRun,
   type BackgroundRun,
-} from "@rateup/api/modules/maintenance/backgroundRun.js";
+} from "@rateup/api/modules/platform/maintenance/backgroundRun.js";
 import type { MaintenanceJobData } from "@rateup/api/workers/bullmq/queues/maintenance.queue.js";
 
 const workerConnection = baseRedis.duplicate();

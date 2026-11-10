@@ -9,7 +9,7 @@ import { formatMoney } from "./money.js";
 import { ShopError } from "./shop.errors.js";
 import { assertCanTakeOrder } from "./orderAllowance.js";
 import { assertCommerceEnabled } from "./store.service.js";
-import { contactWhereIdentity } from "../../contact/identity/contactFields.js";
+import { contactWhereIdentity } from "../../contacts/identity/contactFields.js";
 
 /**
  * What the Meta AI agent's shop tools answer. Shapes are flat and snake_case because a model

@@ -28,7 +28,7 @@ const db = vi.hoisted(() => {
 });
 vi.mock("../../../utils/prisma.js", () => ({ default: db }));
 
-vi.mock("../../../modules/contact/contact.service.js", () => ({
+vi.mock("../../../modules/contacts/contact.service.js", () => ({
   createContact: vi.fn(),
   createMultipleContacts: vi.fn(),
   deleteContactById: vi.fn(),
@@ -36,7 +36,7 @@ vi.mock("../../../modules/contact/contact.service.js", () => ({
 vi.mock("../../../modules/integrations/events/emitIntegrationEvent.js", () => ({
   emitIntegrationEvent: vi.fn(),
 }));
-vi.mock("../../../modules/contact/identity/contactFields.js", async (importOriginal) => ({
+vi.mock("../../../modules/contacts/identity/contactFields.js", async (importOriginal) => ({
   ...(await importOriginal<object>()),
   setPrimaryIdentities: vi.fn(),
 }));
@@ -45,10 +45,10 @@ import {
   createContact,
   createMultipleContacts,
   deleteContactById,
-} from "../../../modules/contact/contact.service.js";
+} from "../../../modules/contacts/contact.service.js";
 import { emitIntegrationEvent } from "../../../modules/integrations/events/emitIntegrationEvent.js";
-import { setPrimaryIdentities } from "../../../modules/contact/identity/contactFields.js";
-import { IdentityTakenError } from "../../../modules/contact/identity/identity.service.js";
+import { setPrimaryIdentities } from "../../../modules/contacts/identity/contactFields.js";
+import { IdentityTakenError } from "../../../modules/contacts/identity/identity.service.js";
 import { externalErrorHandler } from "../../shared/errors.js";
 import { externalContactRoutes } from "./contacts.route.js";
 

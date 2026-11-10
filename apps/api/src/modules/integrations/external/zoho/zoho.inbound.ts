@@ -6,7 +6,7 @@ import { ContactIdentitySource } from "../../../../generated/prisma/enums.js";
 import {
   setPrimaryIdentities,
   type ContactFields,
-} from "../../../contact/identity/contactFields.js";
+} from "../../../contacts/identity/contactFields.js";
 import { log } from "../../../../utils/logger.js";
 import { IntegratedApps } from "../../../../types/enums.js";
 import { integrationTriggerQueue } from "../../../../workers/bullmq/queues/index.js";
@@ -14,8 +14,8 @@ import {
   moveLead,
   resolvePipelineForContact,
   setContactStage,
-} from "../../../pipeline/pipelineLead/lead.service.js";
-import { LEADS_PIPELINE_TYPE } from "../../../pipeline/pipelineTypes.js";
+} from "../../../pipelines/pipelineLead/lead.service.js";
+import { LEADS_PIPELINE_TYPE } from "../../../pipelines/pipelineTypes.js";
 import type { ProviderJobData } from "../../providers/integrationProvider.types.js";
 import {
   InboundWebhookRejected,

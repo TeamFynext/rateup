@@ -9,7 +9,7 @@ vi.mock("../../../utils/prisma.js", () => ({
     waCatalogProduct: { findMany: vi.fn() },
   },
 }));
-vi.mock("../../whatsapp/catalog/products/product.service.js", () => ({
+vi.mock("../../commerce/catalogs/products/product.service.js", () => ({
   createCatalogProductsBatch: vi.fn(),
   updateCatalogProducts: vi.fn(),
 }));
@@ -28,7 +28,7 @@ import prisma from "../../../utils/prisma.js";
 import {
   createCatalogProductsBatch,
   updateCatalogProducts,
-} from "../../whatsapp/catalog/products/product.service.js";
+} from "../../commerce/catalogs/products/product.service.js";
 import type { WooCatalogProduct, WooVariation } from "./woocommerce.client.js";
 import {
   getWooProductsForCatalog,

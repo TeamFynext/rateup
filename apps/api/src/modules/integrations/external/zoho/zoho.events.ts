@@ -1,6 +1,6 @@
 import prisma from "../../../../utils/prisma.js";
 import { integrationTriggerQueue } from "../../../../workers/bullmq/queues/index.js";
-import { LEADS_PIPELINE_TYPE } from "../../../pipeline/pipelineTypes.js";
+import { LEADS_PIPELINE_TYPE } from "../../../pipelines/pipelineTypes.js";
 import type {
   ContactRecord,
   IntegrationEvent,

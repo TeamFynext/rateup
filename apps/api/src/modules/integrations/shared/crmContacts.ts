@@ -5,8 +5,8 @@ import {
   primaryIdentities,
   setPrimaryIdentities,
   withContactFields,
-} from "../../contact/identity/contactFields.js";
-import { findContactIdByIdentity } from "../../contact/identity/identity.service.js";
+} from "../../contacts/identity/contactFields.js";
+import { findContactIdByIdentity } from "../../contacts/identity/identity.service.js";
 import { noteContactSelect, toNoteContact } from "./activityNotes.js";
 
 /**

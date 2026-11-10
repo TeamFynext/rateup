@@ -7,7 +7,7 @@
 import {
   contactFields,
   type PrimaryIdentityRow,
-} from "../../../modules/contact/identity/contactFields.js";
+} from "../../../modules/contacts/identity/contactFields.js";
 import { toWirePhone } from "../phone.js";
 
 /** The first language's text of a localised field. */

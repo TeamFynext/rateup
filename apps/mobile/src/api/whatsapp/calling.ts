@@ -2,9 +2,9 @@ import axios from "@/config/axios";
 
 /**
  * WhatsApp voice calls. Mirrors rateup-ui's `backend/whatsapp/calling/calling.api.ts`; the
- * API is the same one the dashboard uses (`/api/wa/calls`).
+ * API is the same one the dashboard uses (`/api/inbox/calls`).
  */
-const CALLS_URL = "/api/wa/calls";
+const CALLS_URL = "/api/inbox/calls";
 
 export type CallDirection = "USER_INITIATED" | "BUSINESS_INITIATED";
 export type CallStatus = "RINGING" | "ACCEPTED" | "REJECTED" | "COMPLETED" | "MISSED" | "FAILED";
@@ -95,7 +95,7 @@ export function callErrorMessage(error: unknown, fallback: string): string {
 
 export type CallOutcome = "answered" | "missed" | "declined" | "failed";
 
-/** One row of `GET /api/wa/calls/log`, scoped server-side the way the inbox is. */
+/** One row of `GET /api/inbox/calls/log`, scoped server-side the way the inbox is. */
 export interface CallLogRow extends CallDto {
   contactPhone: string | null;
   agentId: string | null;

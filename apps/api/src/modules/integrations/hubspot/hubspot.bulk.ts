@@ -2,12 +2,12 @@ import { isAxiosError, type AxiosInstance } from "axios";
 
 import type { Integration } from "../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
-import { contactWhereHasIdentity } from "../../contact/identity/contactFields.js";
+import { contactWhereHasIdentity } from "../../contacts/identity/contactFields.js";
 import { noteContactSelect, toNoteContact } from "../shared/activityNotes.js";
 import { log } from "../../../utils/logger.js";
 import { IntegratedApps } from "../../../types/enums.js";
 import { integrationTriggerQueue } from "../../../workers/bullmq/queues/index.js";
-import { LEADS_PIPELINE_TYPE } from "../../pipeline/pipelineTypes.js";
+import { LEADS_PIPELINE_TYPE } from "../../pipelines/pipelineTypes.js";
 import type { ProviderJobData } from "../providers/integrationProvider.types.js";
 import { findLinkByExternalId, recordLink } from "../shared/entityLink.js";
 import { OAuthConnectError } from "../shared/oauthConnectError.js";

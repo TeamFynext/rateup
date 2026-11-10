@@ -6,7 +6,7 @@ import {
   isWebchatMessageId,
   WEBCHAT_ID_PREFIX,
 } from "./messageId.js";
-import { generateInternalMessageId } from "../modules/whatsapp/automatedReply/wa_automatedReply.utils.js";
+import { generateInternalMessageId } from "../modules/automation/rules/rules.utils.js";
 
 const WHATSAPP = /^wamid\.[0-9a-z]+-[0-9a-f]{32}$/;
 const WEBCHAT = /^wcmid\.[0-9a-z]+-[0-9a-f]{32}$/;

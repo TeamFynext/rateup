@@ -23,6 +23,6 @@ export interface PartnerData {
 }
 
 export async function submitPartnerApplication(data: PartnerData) {
-  const res = await axiosClient.post("/bookdemo/partner", data);
+  const res = await axiosClient.post("/book-demo/partner", data);
   return res.data;
 }

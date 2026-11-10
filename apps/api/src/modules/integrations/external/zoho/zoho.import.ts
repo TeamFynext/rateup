@@ -6,11 +6,11 @@ import {
   contactWhereIdentity,
   setPrimaryIdentities,
   type ContactFields,
-} from "../../../contact/identity/contactFields.js";
+} from "../../../contacts/identity/contactFields.js";
 import {
   resolvePipelineForContact,
   setContactStage,
-} from "../../../pipeline/pipelineLead/lead.service.js";
+} from "../../../pipelines/pipelineLead/lead.service.js";
 import { getValidZohoAccessToken, loadZohoIntegration } from "./zoho.auth.js";
 import { getZohoRecords, type ZohoProduct } from "./zoho.client.js";
 import { getZohoCredential, type ZohoRecord } from "./zoho.types.js";

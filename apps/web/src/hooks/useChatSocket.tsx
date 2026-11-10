@@ -33,6 +33,12 @@ import { showDesktopNotification } from "@/utils/desktopNotifications";
 
 /** Fired on `window` each time the inbox socket (re)connects. */
 export const WS_REOPENED_EVENT = "rateup:ws-reopened";
+/** Fired on `window` each time the inbox socket drops. */
+export const WS_CLOSED_EVENT = "rateup:ws-closed";
+
+let socketOpen = false;
+/** Whether the inbox socket is connected right now, so pushes are arriving. */
+export const isInboxSocketOpen = () => socketOpen;
 
 export const useChatSocket = () => {
   const socketRef = useRef<WebSocket | null>(null);
@@ -64,6 +70,7 @@ export const useChatSocket = () => {
       // afternoon and realtime never came back until a reload.
       ws.onopen = () => {
         retryCountRef.current = 0;
+        socketOpen = true;
         // Anything pushed while the socket was down is gone; listeners that cannot afford
         // to miss an event (a ringing call) re-read their state when this fires.
         window.dispatchEvent(new Event(WS_REOPENED_EVENT));
@@ -304,6 +311,10 @@ export const useChatSocket = () => {
       };
 
       ws.onclose = () => {
+        if (socketOpen) {
+          socketOpen = false;
+          window.dispatchEvent(new Event(WS_CLOSED_EVENT));
+        }
         // Never gives up: a socket that stopped retrying left the inbox — and incoming
         // calls — silent until a reload. The back-off caps at 15 s instead.
         if (closedByUser) return;

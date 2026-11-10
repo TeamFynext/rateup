@@ -36,7 +36,7 @@ import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
 import { sendLoyaltyEvent } from "../messaging/send.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
-import { notify } from "../../notification/notify.js";
+import { notify } from "../../settings/notifications/notify.js";
 import { announceLoyaltyTransactions } from "../loyalty.webhooks.js";
 import { LoyaltyError } from "../loyalty.errors.js";
 import { memberContactInclude, withMemberContact } from "../memberContact.js";

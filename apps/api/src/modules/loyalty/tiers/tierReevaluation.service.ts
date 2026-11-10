@@ -3,7 +3,7 @@ import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
 import { sendLoyaltyEvent } from "../messaging/send.js";
 import { computeQualifyingSpendBatch, pickQualifiedTier } from "./qualifyingSpend.js";
-import { contactFields, primaryIdentities } from "../../contact/identity/contactFields.js";
+import { contactFields, primaryIdentities } from "../../contacts/identity/contactFields.js";
 
 /** Members are read in pages this size so a large programme never loads all at once. */
 const PAGE_SIZE = 500;

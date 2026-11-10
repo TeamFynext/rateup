@@ -7,7 +7,7 @@ import { assignRewardToCustomer } from "../accounts/account.service.js";
 import { sendLoyaltyEvent } from "../messaging/send.js";
 import type { ProgramForSend } from "../messaging/types.js";
 import { isDueThisHour, leadDaysFor, localDay, targetDay } from "./reminderSchedule.js";
-import { contactFields, primaryIdentities } from "../../contact/identity/contactFields.js";
+import { contactFields, primaryIdentities } from "../../contacts/identity/contactFields.js";
 
 /**
  * The three occasions this branch adds: a member about to lose their tier, a redemption

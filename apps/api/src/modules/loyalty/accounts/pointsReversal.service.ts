@@ -5,7 +5,7 @@ import { LoyaltyEventType } from "../../../types/enums.js";
 import { checkAndUpgradeTier } from "../earningRulesEngine.js";
 import { sendLoyaltyEvent } from "../messaging/send.js";
 import { announceLoyaltyTransactions } from "../loyalty.webhooks.js";
-import { contactFields, primaryIdentities } from "../../contact/identity/contactFields.js";
+import { contactFields, primaryIdentities } from "../../contacts/identity/contactFields.js";
 
 /**
  * Taking back the points an order earned, when that order stops being a sale.
