@@ -35,38 +35,18 @@ vi.mock("./fileUpload.owner.js", () => {
   return { UploadOwnerError, resolveUploadOwner: vi.fn() };
 });
 
-vi.mock("@ffmpeg-installer/ffmpeg", () => ({ default: { path: "/usr/bin/ffmpeg" } }));
-
-vi.mock("fluent-ffmpeg", () => {
-  const chain: any = {
-    videoCodec: vi.fn(() => chain),
-    audioChannels: vi.fn(() => chain),
-    audioFrequency: vi.fn(() => chain),
-    audioCodec: vi.fn(() => chain),
-    audioBitrate: vi.fn(() => chain),
-    outputOptions: vi.fn(() => chain),
-    format: vi.fn(() => chain),
-    on: vi.fn((event: string, cb: any) => {
-      if (event === "end") chain.__end = cb;
-      if (event === "error") chain.__error = cb;
-      return chain;
-    }),
-    save: vi.fn(() => {
-      if (chain.__shouldFail) chain.__error?.(new Error("ffmpeg failed"));
-      else chain.__end?.();
-      return chain;
-    }),
-  };
-  const ffmpeg: any = vi.fn(() => chain);
-  ffmpeg.setFfmpegPath = vi.fn();
-  ffmpeg.__chain = chain;
-  return { default: ffmpeg };
-});
+// ffmpeg itself never runs: each conversion's arguments are checked instead.
+const ffmpegRun = vi.hoisted(() => ({ fail: false }));
+vi.mock("../../utils/ffmpeg.js", () => ({
+  runFfmpeg: vi.fn(async () => {
+    if (ffmpegRun.fail) throw new Error("ffmpeg failed");
+  }),
+}));
 
 import fs from "node:fs";
 import fsp from "node:fs/promises";
 import sharp from "sharp";
-import ffmpeg from "fluent-ffmpeg";
+import { runFfmpeg } from "../../utils/ffmpeg.js";
 import { Readable, Writable } from "node:stream";
 import { deleteFile, uploadFile } from "../../utils/upload/s3Upload.js";
 import { resolveUploadOwner, UploadOwnerError } from "./fileUpload.owner.js";
@@ -81,7 +61,14 @@ type Mock = ReturnType<typeof vi.fn>;
 const s3 = { uploadFile: uploadFile as unknown as Mock, deleteFile: deleteFile as unknown as Mock };
 const fsMock = fs as unknown as Record<string, Mock>;
 const fspMock = fsp as unknown as Record<string, Mock>;
-const chain = (ffmpeg as any).__chain;
+const ffmpeg = runFfmpeg as unknown as Mock;
+/** The codec, filter and format arguments of the last conversion. */
+const ffmpegArgs = (): string[] => ffmpeg.mock.calls.at(-1)?.[0]?.args ?? [];
+/** True when `flag` is followed by `value` in the last conversion's arguments. */
+const hasArg = (flag: string, value: string) => {
+  const args = ffmpegArgs();
+  return args.some((a, i) => a === flag && args[i + 1] === value);
+};
 
 function reply() {
   const rep: any = { code: vi.fn(() => rep), send: vi.fn(() => rep) };
@@ -152,9 +139,7 @@ beforeEach(() => {
     webp: vi.fn().mockReturnThis(),
     toBuffer: vi.fn(async () => Buffer.from("thumb")),
   });
-  chain.__shouldFail = false;
-  chain.__end = undefined;
-  chain.__error = undefined;
+  ffmpegRun.fail = false;
 });
 
 // ===========================================================================
@@ -277,7 +262,7 @@ describe("uploadController — audio conversion", () => {
 
     await uploadController(request(audio("audio/mpeg")), rep);
 
-    expect(chain.audioCodec).toHaveBeenCalledWith("aac");
+    expect(hasArg("-c:a", "aac")).toBe(true);
     const params = s3.uploadFile.mock.calls[0][0];
     expect(params.ContentType).toBe("audio/mp4");
     expect(params.Body).toEqual(Buffer.from("converted"));
@@ -289,8 +274,8 @@ describe("uploadController — audio conversion", () => {
 
     await uploadController(request(audio("audio/ogg")), rep);
 
-    expect(chain.audioCodec).toHaveBeenCalledWith("libopus");
-    expect(chain.format).toHaveBeenCalledWith("ogg");
+    expect(hasArg("-c:a", "libopus")).toBe(true);
+    expect(hasArg("-f", "ogg")).toBe(true);
     expect(s3.uploadFile.mock.calls[0][0].ContentType).toBe("audio/ogg");
   });
 
@@ -311,7 +296,7 @@ describe("uploadController — audio conversion", () => {
   });
 
   test("answers 500 and removes both temp files when the transcode fails", async () => {
-    chain.__shouldFail = true;
+    ffmpegRun.fail = true;
     const rep = reply();
 
     await uploadController(request(audio("audio/mpeg")), rep);
@@ -321,7 +306,7 @@ describe("uploadController — audio conversion", () => {
   });
 
   test("a temp file that is already gone does not mask the real error", async () => {
-    chain.__shouldFail = true;
+    ffmpegRun.fail = true;
     fspMock.unlink.mockRejectedValue(Object.assign(new Error("ENOENT"), { code: "ENOENT" }));
     const rep = reply();
 
@@ -351,9 +336,9 @@ describe("uploadController — voice notes", () => {
 
     await uploadController(voice(), rep);
 
-    expect(chain.audioCodec).toHaveBeenCalledWith("libopus");
-    expect(chain.audioChannels).toHaveBeenCalledWith(1);
-    expect(chain.format).toHaveBeenCalledWith("ogg");
+    expect(hasArg("-c:a", "libopus")).toBe(true);
+    expect(hasArg("-ac", "1")).toBe(true);
+    expect(hasArg("-f", "ogg")).toBe(true);
     const params = s3.uploadFile.mock.calls[0][0];
     expect(params.ContentType).toBe("audio/ogg");
     expect(params.Key).toMatch(/-voice-1\.ogg$/);
@@ -363,7 +348,7 @@ describe("uploadController — voice notes", () => {
   test("without ?voice=1 the recording stays an M4A, as before", async () => {
     await uploadController(voice("audio/mp4", {}), reply());
 
-    expect(chain.audioChannels).not.toHaveBeenCalled();
+    expect(ffmpegArgs()).not.toContain("-ac");
     expect(s3.uploadFile.mock.calls[0][0].ContentType).toBe("audio/mp4");
   });
 
@@ -378,7 +363,7 @@ describe("uploadController — voice notes", () => {
   });
 
   test("answers 500 and removes both temp files when the conversion fails", async () => {
-    chain.__shouldFail = true;
+    ffmpegRun.fail = true;
     const rep = reply();
 
     await uploadController(voice(), rep);
@@ -399,9 +384,9 @@ describe("uploadController — video conversion", () => {
 
     await uploadController(request(video("video/quicktime")), rep);
 
-    expect(chain.videoCodec).toHaveBeenCalledWith("libx264");
-    expect(chain.audioCodec).toHaveBeenCalledWith("aac");
-    expect(chain.format).toHaveBeenCalledWith("mp4");
+    expect(hasArg("-c:v", "libx264")).toBe(true);
+    expect(hasArg("-c:a", "aac")).toBe(true);
+    expect(hasArg("-f", "mp4")).toBe(true);
     const params = s3.uploadFile.mock.calls[0][0];
     expect(params.ContentType).toBe("video/mp4");
     // The key drops the underscore, as it does every character but letters, digits, dots and dashes.
@@ -413,12 +398,12 @@ describe("uploadController — video conversion", () => {
   test("re-encodes an MP4 too, since it may hold HEVC that WhatsApp refuses", async () => {
     await uploadController(request(video("video/mp4", "clip.mp4")), reply());
 
-    expect(chain.videoCodec).toHaveBeenCalledWith("libx264");
+    expect(hasArg("-c:v", "libx264")).toBe(true);
     expect(s3.uploadFile.mock.calls[0][0].Key).toMatch(/-clip\.mp4$/);
   });
 
   test("answers 500 and removes both temp files when the transcode fails", async () => {
-    chain.__shouldFail = true;
+    ffmpegRun.fail = true;
     const rep = reply();
 
     await uploadController(request(video("video/quicktime")), rep);

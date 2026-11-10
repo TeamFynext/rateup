@@ -34,6 +34,7 @@ import { paymentStripeRoutes } from "./modules/payment/stripe/stripe.route.js";
 import { apiAccessTokenRoutes } from "./modules/apiAccessToken/apiAccessToken.route.js";
 import { externalV1Routes } from "./external/v1/index.js";
 import { externalV2Routes } from "./external/v2/index.js";
+import { externalMcpRoutes, MCP_PATH } from "./external/mcp/mcp.route.js";
 import { orgWsRoutes } from "./modules/org/ws/org.ws.routes.js";
 import { stripePublicRoutes } from "./modules/payment/stripe/stripe.public.route.js";
 import { emailPublicRoutes } from "./modules/email/email.public.route.js";
@@ -133,6 +134,8 @@ const routeConfigs = [
   { plugin: apiAccessTokenRoutes, prefix: "/api/api-access-token" },
   { plugin: externalV1Routes, prefix: "/api/external/v1/:orgId" },
   { plugin: externalV2Routes, prefix: "/api/external/v2" },
+  // The v2 API as an MCP server; a sibling of v2, so it runs none of v2's per-route hooks itself.
+  { plugin: externalMcpRoutes, prefix: MCP_PATH },
   { plugin: emailPublicRoutes, prefix: "/api/email" },
   { plugin: generateQrRoutes, prefix: "/api/generateQr" },
   { plugin: integrationsRoutes, prefix: "/api/integrations" },

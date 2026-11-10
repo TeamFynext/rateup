@@ -1787,6 +1787,7 @@ const DashboardWhatsappTemplatesTemplateIdAnalyticsIndexRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof marketingIndexRoute
   '/auth': typeof AuthRouteRouteWithChildren
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/llms.txt': typeof LlmsDottxtRoute
@@ -1799,7 +1800,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/meta-agent': typeof DashboardMetaAgentRouteRouteWithChildren
   '/.well-known/api-catalog': typeof DotwellKnownApiCatalogRoute
   '/pl/$shortId': typeof PlShortIdRoute
-  '/': typeof marketingIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/s/$slug': typeof shopSSlugRouteRouteWithChildren
   '/blog/rss.xml': typeof marketingBlogRssDotxmlRoute
@@ -2049,6 +2049,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/whatsapp/templates/$templateId/analytics/': typeof DashboardWhatsappTemplatesTemplateIdAnalyticsIndexRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof marketingIndexRoute
   '/auth': typeof AuthRouteRouteWithChildren
   '/llms.txt': typeof LlmsDottxtRoute
   '/robots.txt': typeof RobotsDottxtRoute
@@ -2057,7 +2058,6 @@ export interface FileRoutesByTo {
   '/dashboard/loyalty': typeof DashboardLoyaltyRouteRouteWithChildren
   '/.well-known/api-catalog': typeof DotwellKnownApiCatalogRoute
   '/pl/$shortId': typeof PlShortIdRoute
-  '/': typeof marketingIndexRoute
   '/dashboard': typeof DashboardIndexRoute
   '/blog/rss.xml': typeof marketingBlogRssDotxmlRoute
   '/blog/sitemap.xml': typeof marketingBlogSitemapDotxmlRoute
@@ -2575,6 +2575,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/auth'
     | '/dashboard'
     | '/llms.txt'
@@ -2587,7 +2588,6 @@ export interface FileRouteTypes {
     | '/dashboard/meta-agent'
     | '/.well-known/api-catalog'
     | '/pl/$shortId'
-    | '/'
     | '/dashboard/'
     | '/s/$slug'
     | '/blog/rss.xml'
@@ -2837,6 +2837,7 @@ export interface FileRouteTypes {
     | '/dashboard/whatsapp/templates/$templateId/analytics/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/auth'
     | '/llms.txt'
     | '/robots.txt'
@@ -2845,7 +2846,6 @@ export interface FileRouteTypes {
     | '/dashboard/loyalty'
     | '/.well-known/api-catalog'
     | '/pl/$shortId'
-    | '/'
     | '/dashboard'
     | '/blog/rss.xml'
     | '/blog/sitemap.xml'
@@ -3380,28 +3380,28 @@ declare module '@tanstack/react-router' {
     '/(auth)': {
       id: '/(auth)'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof authRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(marketing)': {
       id: '/(marketing)'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof marketingRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(public-facing)': {
       id: '/(public-facing)'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof publicFacingRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(shop)': {
       id: '/(shop)'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof shopRouteRouteImport
       parentRoute: typeof rootRouteImport
     }

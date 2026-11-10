@@ -206,6 +206,19 @@ interface ContactsWithLastMessageResponse {
   nextOffset: number | null;
 }
 
+/** A campaign the inbox list can be filtered by — only ones that have sent. */
+export interface InboxCampaignOption {
+  id: string;
+  name: string;
+  type: "WHATSAPP" | "DRIP";
+  sentAt: string | null;
+}
+
+export async function getInboxCampaignOptions() {
+  return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/campaign-options`))
+    .data as InboxCampaignOption[];
+}
+
 export async function getFilteredContacts(filterData: string, page: number) {
   return (
     await axiosClient.get(

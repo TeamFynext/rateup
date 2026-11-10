@@ -31,6 +31,7 @@ import {
   exportWhatsapChats,
   filterChats,
   generateChatFilterData,
+  getInboxCampaignOptions,
   getAssignedUserForContact,
   getContactsCountByInbox,
   getMediaFile,
@@ -981,6 +982,17 @@ export async function reopenConversationHandler(
   } catch (e) {
     log.error({ err: e }, "Error reopening conversation");
     reply.code(500).send("Internal Server Error");
+  }
+}
+
+/** Campaigns for the inbox list's campaign filter. */
+export async function getInboxCampaignOptionsHandler(request: FastifyRequest, reply: FastifyReply) {
+  try {
+    const campaigns = await getInboxCampaignOptions(request.user.orgId);
+    reply.status(200).send(campaigns);
+  } catch (error) {
+    log.error({ err: error }, "Error in getInboxCampaignOptionsHandler");
+    reply.status(500).send("Internal Server Error");
   }
 }
 

@@ -8,7 +8,7 @@ import { findLeadsPipeline, PIPELINE_TYPE_ORDER, pipelineTypeConfig } from "./pi
 
 // Echoes the key with its values filled, which is all these assertions need.
 const t = ((key: string, values?: Record<string, unknown>) =>
-  key.replace(/\{(\w+)\}/g, (_, name: string) => toText(values?.[name]))) as TFunction;
+  key.replace(/\{(\w+)\}/g, (_, name: string) => toText(values?.[name]))) as unknown as TFunction;
 
 describe("pipeline types", () => {
   test("only the Leads board carries the sales funnel", () => {

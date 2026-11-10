@@ -106,7 +106,11 @@ const WaChatFilterSchema = z.object({
   strictFilter: z.boolean().default(false),
   searchTerm: loose(z.string()),
   contactGroups: loose(z.array(z.string())),
-  campaigns: loose(z.array(z.string())),
+  /// Campaign ids. Matches the tickets that were open when the campaign's message
+  /// reached the contact, or opened after it — see `campaignTicketFilter`.
+  campaigns: loose(z.array(z.uuid())),
+  /// With `campaigns`: only the tickets the customer wrote in after that message.
+  campaignReplied: loose(z.boolean()),
   tags: loose(z.array(z.any())),
   waMessageAssignStatus: loose(z.string()),
   blockedUsers: loose(z.boolean()),

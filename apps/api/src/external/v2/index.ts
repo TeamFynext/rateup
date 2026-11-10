@@ -9,8 +9,10 @@ import { externalWaTemplateRoutes } from "./wa-templates/waTemplates.route.js";
 import { externalLoyaltyRoutes } from "./loyalty/loyalty.route.js";
 import { assertApiKeyV2 } from "../../modules/apiAccessToken/apiAccessToken.auth.js";
 import { registerPartnerHooks } from "../shared/partnerHooks.js";
+import { recordV2Route } from "../mcp/catalog.js";
+import { EXTERNAL_V2_PREFIX } from "./prefix.js";
 
-export const EXTERNAL_V2_PREFIX = "/api/external/v2";
+export { EXTERNAL_V2_PREFIX };
 
 /**
  * Partner API v2. The URL names no org: an `rk_` key belongs to exactly one, and the key is
@@ -25,6 +27,9 @@ export async function externalV2Routes(server: FastifyInstance) {
       return { suspended: null };
     },
   });
+
+  // The MCP server (src/external/mcp) offers each of these routes as a tool.
+  server.addHook("onRoute", recordV2Route);
 
   registerV2Modules(server);
 }

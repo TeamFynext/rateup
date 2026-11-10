@@ -15,6 +15,7 @@ import {
   exportWhatsappChatsHandler,
   generateChatAnalyticsHandler,
   generateChatFilterDataHandler,
+  getInboxCampaignOptionsHandler,
   generateInboxResponseHandler,
   getAssignedUserForContactHandler,
   getContactsCountByInboxTabHandler,
@@ -116,6 +117,7 @@ export async function waMessageRoutes(server: FastifyInstance) {
   );
 
   server.get("/filterdata", generateChatFilterDataHandler);
+  server.get("/campaign-options", getInboxCampaignOptionsHandler);
 
   server.get(
     "/contactsfiltered",

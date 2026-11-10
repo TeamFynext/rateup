@@ -5,10 +5,9 @@ import sharp from "sharp";
 import fs from "node:fs";
 import fsp from "node:fs/promises";
 import { randomUUID } from "node:crypto";
-import ffmpeg from "fluent-ffmpeg";
 import path from "node:path";
 import { pipeline } from "node:stream/promises";
-import ffmpegInstaller from "@ffmpeg-installer/ffmpeg";
+import { runFfmpeg } from "../../utils/ffmpeg.js";
 import { normalizeMimeType, validateFile } from "../../utils/upload/validate.js";
 import {
   matchesSignature,
@@ -19,8 +18,6 @@ import {
 import { resolveUploadOwner, UploadOwnerError } from "./fileUpload.owner.js";
 import { log } from "../../utils/logger.js";
 import type { PutObjectCommandInput } from "@aws-sdk/client-s3";
-
-ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
 const bucket = () => process?.env?.AWS_S3_BUCKET || "rateup-survey-uploads";
 
@@ -235,43 +232,32 @@ function pumpToFile(source: NodeJS.ReadableStream, filePath: string): Promise<vo
   return pipeline(source, fs.createWriteStream(filePath));
 }
 
-function convertToM4A(input: string, output: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    ffmpeg(input, { timeout: FFMPEG_TIMEOUT_SECONDS })
-      .audioCodec("aac")
-      .audioBitrate("64k")
-      .outputOptions("-movflags +faststart")
-      .on("end", () => resolve())
-      .on("error", reject)
-      .save(output);
-  });
+function transcode(input: string, output: string, args: string[]): Promise<void> {
+  return runFfmpeg({ input, output, args, timeoutSeconds: FFMPEG_TIMEOUT_SECONDS });
 }
 
-function convertToWhatsAppCompatibleOGG(inputPath: string, outputPath: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    ffmpeg(inputPath, { timeout: FFMPEG_TIMEOUT_SECONDS })
-      .audioCodec("libopus")
-      .audioBitrate("64k")
-      .format("ogg")
-      .on("end", () => resolve())
-      .on("error", reject)
-      .save(outputPath);
-  });
+function convertToM4A(input: string, output: string): Promise<void> {
+  return transcode(input, output, ["-c:a", "aac", "-b:a", "64k", "-movflags", "+faststart"]);
+}
+
+function convertToWhatsAppCompatibleOGG(input: string, output: string): Promise<void> {
+  return transcode(input, output, ["-c:a", "libopus", "-b:a", "64k", "-f", "ogg"]);
 }
 
 /** WhatsApp's voice note format: Opus in an OGG container, mono, at speech bitrate. */
 function convertToVoiceNote(input: string, output: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    ffmpeg(input, { timeout: FFMPEG_TIMEOUT_SECONDS })
-      .audioCodec("libopus")
-      .audioChannels(1)
-      .audioFrequency(48000)
-      .audioBitrate("32k")
-      .format("ogg")
-      .on("end", () => resolve())
-      .on("error", reject)
-      .save(output);
-  });
+  return transcode(input, output, [
+    "-c:a",
+    "libopus",
+    "-ac",
+    "1",
+    "-ar",
+    "48000",
+    "-b:a",
+    "32k",
+    "-f",
+    "ogg",
+  ]);
 }
 
 /**
@@ -279,24 +265,27 @@ function convertToVoiceNote(input: string, output: string): Promise<void> {
  * with the index up front so it plays before it is fully downloaded.
  */
 function convertToWhatsAppCompatibleMP4(input: string, output: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    ffmpeg(input, { timeout: FFMPEG_TIMEOUT_SECONDS })
-      .videoCodec("libx264")
-      .audioCodec("aac")
-      .audioBitrate("128k")
-      .outputOptions([
-        "-preset veryfast",
-        "-crf 26",
-        "-pix_fmt yuv420p",
-        // Fit inside 1280x1280 without upscaling; -2 keeps the other side even, as x264 needs.
-        "-vf scale='if(gte(iw,ih),min(1280,iw),-2)':'if(gte(iw,ih),-2,min(1280,ih))'",
-        "-movflags +faststart",
-      ])
-      .format("mp4")
-      .on("end", () => resolve())
-      .on("error", reject)
-      .save(output);
-  });
+  return transcode(input, output, [
+    "-c:v",
+    "libx264",
+    "-preset",
+    "veryfast",
+    "-crf",
+    "26",
+    "-pix_fmt",
+    "yuv420p",
+    // Fit inside 1280x1280 without upscaling; -2 keeps the other side even, as x264 needs.
+    "-vf",
+    "scale='if(gte(iw,ih),min(1280,iw),-2)':'if(gte(iw,ih),-2,min(1280,ih))'",
+    "-c:a",
+    "aac",
+    "-b:a",
+    "128k",
+    "-movflags",
+    "+faststart",
+    "-f",
+    "mp4",
+  ]);
 }
 
 export async function uploadWithThumbnailsController(req: FastifyRequest, reply: FastifyReply) {

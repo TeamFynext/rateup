@@ -15,6 +15,13 @@ export interface ChatFilter {
   labels: string[];
   /** Conversation-tag ids. Ticket-grained: matches only the tagged conversations. */
   conversationTags: string[];
+  /**
+   * Campaign ids. Matches the tickets that were live when the campaign's message reached
+   * the contact, or opened after it. The UI picks one at a time.
+   */
+  campaigns?: string[];
+  /** With `campaigns`: only the tickets the customer wrote in after the campaign message. */
+  campaignReplied?: boolean;
   sortBy: "newest" | "oldest" | "newest_wa_created" | "oldest_wa_created";
   lifecycle?: string;
   assignedUserIds: string[];

@@ -280,6 +280,31 @@ describe("filterChats - which tickets the list may show", () => {
   });
 });
 
+describe("filterChats - campaign filter", () => {
+  const CAMPAIGN = "11111111-1111-4111-8111-111111111111";
+
+  test("leaves the list alone with no campaign picked", async () => {
+    const { sql } = await runFilter({ campaigns: [] });
+
+    expect(sql).not.toContain(`"CampaignParticipant"`);
+  });
+
+  test("matches tickets live when the campaign message reached the contact", async () => {
+    const { sql, params } = await runFilter({ campaigns: [CAMPAIGN] });
+
+    expect(sql).toContain(`cp."contactId" = c.id`);
+    expect(sql).toContain(`conv."closedAt" >= cwm."createdAt"`);
+    expect(sql).not.toContain(`conv."lastCustomerMessageAt" > cwm."createdAt"`);
+    expect(params).toContainEqual([CAMPAIGN]);
+  });
+
+  test("keeps only the tickets the customer replied in when asked", async () => {
+    const { sql } = await runFilter({ campaigns: [CAMPAIGN], campaignReplied: true });
+
+    expect(sql).toContain(`conv."lastCustomerMessageAt" > cwm."createdAt"`);
+  });
+});
+
 describe("filterChats - channel scoping", () => {
   test("does not narrow channels for a super admin", async () => {
     await runFilter({}, { actor: ALL_ACTOR });

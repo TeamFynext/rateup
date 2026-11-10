@@ -17,6 +17,7 @@ import {
 } from "@/components/dashboard/settings/notifications/notificationCopy.ts";
 import { getBrowserId } from "@/lib/browserId.ts";
 import { receiveCallEvent } from "@/store/call.store.ts";
+import { useChatFilterStore } from "@/store/chat-filter.store.ts";
 import { applyContactMerged } from "@/store/contact-merged.ts";
 import {
   resolveIncomingRowKey,
@@ -109,7 +110,10 @@ export const useChatSocket = () => {
               // contact's message must not spawn a row in Open/All, and a
               // non-spam contact's must not spawn one in Spam.
               !!incomingContact.isSpam ===
-              !!useContactsStore.getState().currentFilterKey?.includes("spam:true")
+                !!useContactsStore.getState().currentFilterKey?.includes("spam:true") &&
+              // Whether a new ticket belongs to a campaign is only known to the API,
+              // so a campaign-filtered list takes new rows on its next fetch instead.
+              !useChatFilterStore.getState().filter.campaigns?.length
             ) {
               addContactsForFilter(
                 useContactsStore.getState().currentFilterKey!,

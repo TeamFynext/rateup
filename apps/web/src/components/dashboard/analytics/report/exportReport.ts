@@ -24,6 +24,7 @@ import { previousRange } from "@/components/whatsapp/inbox/analytics/dateRangePr
 import i18n from "@/i18n.ts";
 import { rateupIcon } from "@/utils/constants.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
+import { plainT } from "@/utils/translate";
 
 import { type AnalyticsFilters, conversationFilter, deliveryFilter } from "../kit/filters.ts";
 import {
@@ -139,8 +140,7 @@ export async function downloadReport(
 }
 
 function englishT(): Translate {
-  const english = i18n.getFixedT("en");
-  return (key, values) => english(key, values);
+  return plainT(i18n.getFixedT("en"));
 }
 
 /** Builds and downloads one of the section's views as a PDF report. */

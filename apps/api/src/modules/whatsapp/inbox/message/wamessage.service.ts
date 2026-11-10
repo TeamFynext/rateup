@@ -552,6 +552,52 @@ export async function generateChatFilterData(orgId: string) {
 }
 
 /**
+ * Campaigns the inbox list can be filtered by: WhatsApp and drip campaigns that have
+ * actually sent, newest first. A draft or never-started campaign has no replies to find.
+ */
+export async function getInboxCampaignOptions(orgId: string) {
+  const campaigns = await prisma.campaign.findMany({
+    where: {
+      team: { orgId },
+      type: { in: ["WHATSAPP", "DRIP"] },
+      OR: [{ campaignSentAt: { not: null } }, { startedAt: { not: null } }],
+    },
+    select: { id: true, name: true, type: true, campaignSentAt: true, startedAt: true },
+    orderBy: [{ campaignSentAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
+    take: 200,
+  });
+  return campaigns.map((campaign) => ({
+    id: campaign.id,
+    name: campaign.name,
+    type: campaign.type,
+    sentAt: campaign.campaignSentAt ?? campaign.startedAt,
+  }));
+}
+
+/**
+ * Tickets that belong to a campaign: the contact was sent one of its messages, and the
+ * ticket was still open at that moment or opened after it. A reply to a campaign lands
+ * in whichever ticket is live; a contact's older closed tickets have nothing to do with
+ * it. Drip campaigns send several messages, and any one of them counts.
+ *
+ * `repliedOnly` keeps the tickets the customer wrote in after that message, which is
+ * what "show me the responses" means. It reads the ticket's own clock, so the thread
+ * is never scanned.
+ */
+function campaignTicketFilter(campaignIdsParam: string, repliedOnly: boolean): string {
+  return `EXISTS (
+    SELECT 1
+    FROM "CampaignParticipant" cp
+    JOIN "WaMessageCampaginParticipantMap" mp ON mp."campaignParticipantId" = cp.id
+    JOIN "WaMessage" cwm ON cwm.id = mp."waMessageId"
+    WHERE cp."campaignId" = ANY(${campaignIdsParam}::uuid[])
+      AND cp."contactId" = c.id
+      AND (conv."closedAt" IS NULL OR conv."closedAt" >= cwm."createdAt")
+      ${repliedOnly ? `AND conv."lastCustomerMessageAt" > cwm."createdAt"` : ""}
+  )`;
+}
+
+/**
  * For a ticket whose channel is not known yet: is it on one of these channel spellings?
  * Its own messages decide when it has any tagged with it; only a ticket with none (legacy
  * messages carry no conversationId) falls back to the contact's messages, as before. A
@@ -691,6 +737,13 @@ export async function filterChats(
           WHERE ctm."conversationId" = conv.id
           AND ctm."tagId" = ANY($${paramIndex++}::uuid[])
         )`);
+      }
+
+      if ((bodyFilterProps?.campaigns?.length ?? 0) > 0) {
+        params.push(bodyFilterProps.campaigns);
+        filters.push(
+          campaignTicketFilter(`$${paramIndex++}`, Boolean(bodyFilterProps.campaignReplied)),
+        );
       }
 
       if (bodyFilterProps?.lifecycle) {

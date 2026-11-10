@@ -227,7 +227,7 @@ Rules to keep in mind when adding code:
   counter nothing enforces — `campaignCreditsUsed` and the active-contact meter must
   stay conditional UPDATEs.
 - **Health and metrics.** The bullmq and kafka services serve `/health` (Redis ping /
-  consumer connected) and `/metrics` (prom-client: queue depth, failures, consumer lag,
+  consumer connected) and `/metrics` (@prometheus-io/client: queue depth, failures, consumer lag,
   Meta errors, send latency, process metrics) on `PORT` via
   `workers/shared/healthServer.ts`; Railway's `healthcheckPath` points at `/health`.
   The api serves `/api/health/metrics` only when `METRICS_TOKEN` is set.
@@ -383,3 +383,7 @@ its Kafka consumer became `kafka/consumers/status.consumer.ts`, and its `src/uti
   integrations. Each key works only on its own `version`. Both roots share
   `src/external/shared/` (error envelope, scopes, idempotency, rate limits, `partnerHooks.ts`);
   every route declares a `config.permission` that the key's scopes must include.
+  `src/external/mcp/` serves v2 as an MCP server at `/api/external/v2/mcp` (stateless
+  Streamable HTTP, same `rk_` key): each v2 route is a tool built from its Zod schemas, and a
+  call is `inject`ed into the real route. A new v2 route needs a name in `TOOL_NAMES`
+  (`mcp/tools.ts`), or `null` to leave it out; `tools.test.ts` fails otherwise.
