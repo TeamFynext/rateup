@@ -6,9 +6,9 @@ const session = vi.hoisted(() => ({ findOpenSession: vi.fn() }));
 
 vi.mock("../../../utils/prisma.js", () => ({ default: db }));
 vi.mock("../../../utils/logger.js", () => ({ log: { warn: vi.fn() } }));
-vi.mock("../../whatsapp/meta/metaMessage.service.js", () => meta);
+vi.mock("../../meta/shared/metaMessage.service.js", () => meta);
 vi.mock("../../loyalty/messaging/channels/whatsapp/session.js", () => session);
-vi.mock("../../whatsapp/messageTemplates/wa_templates.controller.js", () => ({
+vi.mock("../../meta/whatsapp/templates/templates.controller.js", () => ({
   sendTemplateToUserCore: vi.fn(),
 }));
 
@@ -22,9 +22,11 @@ const invoice = {
 beforeEach(() => {
   vi.clearAllMocks();
   db.contact.findUnique.mockResolvedValue({
-    phone: "+15555550164",
-    igsId: "ig-1",
-    psid: "ps-1",
+    identities: [
+      { kind: "PHONE", value: "15555550164" },
+      { kind: "IG_SCOPED", value: "ig-1" },
+      { kind: "FB_PSID", value: "ps-1" },
+    ],
     lastMessageSourceIdentifier: null,
   });
   meta.sendMetaMessage.mockResolvedValue({ ok: true, messageId: "m1" });

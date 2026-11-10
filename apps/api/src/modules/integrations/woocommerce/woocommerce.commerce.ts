@@ -43,7 +43,7 @@ export const wooCommerceCommerce: CommerceProvider = {
     // Loaded on use: the automation engine pulls in most of the messaging stack,
     // which the registries importing this module have no need for.
     const { checkAndExecuteRuleByTriggerEvent } =
-      await import("../../whatsapp/automatedReply/wa_automatedReply.utils.js");
+      await import("../../automation/rules/rules.utils.js");
     const { TriggerEvent } = await import("../../../generated/prisma/enums.js");
     await checkAndExecuteRuleByTriggerEvent(TriggerEvent.WOOCOMMERCE_EVENT, {
       orgId: store.orgId,

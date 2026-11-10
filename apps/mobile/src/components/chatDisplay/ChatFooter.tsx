@@ -34,7 +34,7 @@ const ChatFooter = ({ id }: { id: string }) => {
   // one, and channel is what decides which business number the reply goes out on.
   const contact = selectedContact?.id === id ? selectedContact : undefined;
 
-  // A chat opened by deep link has no `lastMessage`: `/api/contact/:id` returns
+  // A chat opened by deep link has no `lastMessage`: `/api/contacts/:id` returns
   // the bare contact row. The loaded thread (newest first) carries the same
   // `sourcePlatform`/`sourceIdentifier`, so it stands in. Without it the reply is
   // sent with an empty phoneId — from the wrong number, or not at all.

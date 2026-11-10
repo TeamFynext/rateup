@@ -15,13 +15,13 @@ vi.mock("../../../utils/prisma.js", () => ({
     waMessage: { findFirst: vi.fn() },
   },
 }));
-vi.mock("../../../modules/whatsapp/messageTemplates/wa_templates.controller.js", () => ({
+vi.mock("../../../modules/meta/whatsapp/templates/templates.controller.js", () => ({
   sendTemplateToUserCore: vi.fn(),
 }));
-vi.mock("../../../modules/whatsapp/settings/wa_settings.service.js", () => ({
+vi.mock("../../../modules/meta/whatsapp/settings/settings.service.js", () => ({
   getWaSendingSettings: vi.fn(),
 }));
-vi.mock("../../../modules/whatsapp/whatsappSurvey/wasurvey.auth.js", () => ({
+vi.mock("../../../modules/meta/whatsapp/webhook/whatsapp.auth.js", () => ({
   ActiveContactLimitError: class ActiveContactLimitError extends Error {},
   OrgSuspendedError: class OrgSuspendedError extends Error {},
 }));
@@ -32,9 +32,9 @@ vi.mock("axios", async (importOriginal) => {
 
 import axios from "axios";
 import prisma from "../../../utils/prisma.js";
-import { sendTemplateToUserCore } from "../../../modules/whatsapp/messageTemplates/wa_templates.controller.js";
-import { getWaSendingSettings } from "../../../modules/whatsapp/settings/wa_settings.service.js";
-import { TemplateSendError } from "../../../modules/whatsapp/messageTemplates/templateSendError.js";
+import { sendTemplateToUserCore } from "../../../modules/meta/whatsapp/templates/templates.controller.js";
+import { getWaSendingSettings } from "../../../modules/meta/whatsapp/settings/settings.service.js";
+import { TemplateSendError } from "../../../modules/meta/whatsapp/templates/templateSendError.js";
 import { externalErrorHandler } from "../../shared/errors.js";
 import { externalWaTemplateRoutes } from "./waTemplates.route.js";
 
@@ -468,7 +468,9 @@ describe("GET /messages/:messageId/status", () => {
 
 describe("POST /:templateId/send/contacts", () => {
   test("only the org's contacts are sent to; the rest are skipped", async () => {
-    db.contact.findMany.mockResolvedValue([{ id: CONTACT_A, phone: "919000000001" }]);
+    db.contact.findMany.mockResolvedValue([
+      { id: CONTACT_A, identities: [{ kind: "PHONE", value: "919000000001" }] },
+    ]);
     const app = await buildApp();
     const res = await app.inject({
       method: "POST",
@@ -504,8 +506,8 @@ describe("POST /:templateId/send/contacts", () => {
 
   test("a per-contact Meta refusal is reported, not thrown", async () => {
     db.contact.findMany.mockResolvedValue([
-      { id: CONTACT_A, phone: "919000000001" },
-      { id: CONTACT_B, phone: "919000000002" },
+      { id: CONTACT_A, identities: [{ kind: "PHONE", value: "919000000001" }] },
+      { id: CONTACT_B, identities: [{ kind: "PHONE", value: "919000000002" }] },
     ]);
     core
       .mockResolvedValueOnce({ status: true, message: "wamid.1" })

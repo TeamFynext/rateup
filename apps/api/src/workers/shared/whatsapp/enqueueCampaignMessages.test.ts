@@ -6,7 +6,7 @@ vi.mock("../../../utils/prisma.js", () => ({ default: {} }));
 vi.mock("../../../utils/db.js", () => ({ default: { connect: vi.fn() } }));
 vi.mock("../ws.publisher.js", () => ({ publisher: { publish: vi.fn() }, WS_CHANNEL: "ws" }));
 vi.mock("../../../utils/redisConnection.js", () => ({ default: { duplicate: () => ({}) } }));
-vi.mock("../../../modules/whatsapp/meta/metaMessage.service.js", () => ({
+vi.mock("../../../modules/meta/shared/metaMessage.service.js", () => ({
   sendMetaMessage: vi.fn(),
   metaErrorMessage: vi.fn(),
 }));

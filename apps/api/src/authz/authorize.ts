@@ -2,14 +2,14 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 import Session from "supertokens-node/recipe/session/index.js";
 import { log } from "../utils/logger.js";
 import { auditLogHook } from "../utils/auditLog.js";
-import { getOrgIdAndRole } from "../modules/user/user.service.js";
+import { getOrgIdAndRole } from "../modules/settings/user/user.service.js";
 import {
   isOrgSuspended,
   isSuspensionExemptRoute,
   ORG_SUSPENDED_CODE,
   ORG_SUSPENDED_MESSAGE,
-} from "../modules/org/orgSuspension.js";
-import { touchOrgActivity } from "../modules/org/orgActivity.js";
+} from "../modules/settings/org/orgSuspension.js";
+import { touchOrgActivity } from "../modules/settings/org/orgActivity.js";
 import { isUserBlocked, loadActor } from "./actor.js";
 import type { Permission } from "./permissions.js";
 import { roleKeyToLegacy } from "./roles.js";
@@ -64,10 +64,26 @@ export async function attachSessionActor(
     await auditLogHook(request, reply);
     return true;
   } catch (err) {
-    log.error({ err }, "Error checking session");
+    logSessionFailure(err);
     reply.code(401).send({ message: "Not authorized" });
     return false;
   }
+}
+
+/**
+ * An expired, missing or invalid token is a normal 401 (the browser refreshes and retries),
+ * so it is logged at debug. Anything else, such as the SuperTokens core being unreachable or
+ * a database error while loading the actor, stays an error.
+ */
+export function logSessionFailure(err: unknown) {
+  // SessionError's `type` values; read by shape so a test that mocks the Session module
+  // without its Error class still logs.
+  const type = (err as { type?: unknown } | null)?.type;
+  if (type === "TRY_REFRESH_TOKEN" || type === "UNAUTHORISED") {
+    log.debug({ reason: type, message: (err as Error).message }, "Session check refused");
+    return;
+  }
+  log.error({ err }, "Error checking session");
 }
 
 /**

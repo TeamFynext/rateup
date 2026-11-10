@@ -36,6 +36,7 @@ import { useChatFilterStore } from "@/store/chat-filter.store.ts";
 import { useInboxViewStore } from "@/store/inbox-view.store.ts";
 
 import { AddUnknownContactForm } from "./addUnknownContactModal/index.tsx";
+import { CampaignFilterBar, CampaignFilterButton } from "./CampaignFilter.tsx";
 import ChannelFilter from "./ChannelFilter.tsx";
 import WaInboxChatExport from "./chatExport/index.tsx";
 import InboxTabStrip, { inboxTabLabel } from "./InboxTabStrip.tsx";
@@ -149,6 +150,8 @@ const ChatselectPanelHeader = ({
               value={filter?.sortBy}
               onChange={(value) => setFilter({ ...filter, sortBy: value })}
             />
+
+            <CampaignFilterButton />
 
             <CustomTooltip
               trigger={
@@ -293,6 +296,8 @@ const ChatselectPanelHeader = ({
         <div className="shrink-0 border-b border-border px-3 py-2 md:hidden">
           <ChannelFilter />
         </div>
+
+        <CampaignFilterBar />
       </div>
     </div>
   );

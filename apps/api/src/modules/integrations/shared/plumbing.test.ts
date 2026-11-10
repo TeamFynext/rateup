@@ -9,7 +9,7 @@ vi.mock("../../../utils/prisma.js", () => ({
 vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), warn: vi.fn(), debug: vi.fn(), trace: vi.fn() },
 }));
-vi.mock("../../notification/notify.js", () => ({ notify: vi.fn() }));
+vi.mock("../../settings/notifications/notify.js", () => ({ notify: vi.fn() }));
 vi.mock("axios", () => ({ default: { post: vi.fn() } }));
 // The real registry drags in every provider; these tests pass their own.
 vi.mock("../providers/registry.js", () => ({
@@ -19,7 +19,7 @@ vi.mock("../providers/registry.js", () => ({
 
 import axios from "axios";
 import prisma from "../../../utils/prisma.js";
-import { notify } from "../../notification/notify.js";
+import { notify } from "../../settings/notifications/notify.js";
 import type { IntegrationProvider } from "../providers/integrationProvider.types.js";
 import { refreshIntegrationCredentials } from "./credentialRefresh.js";
 import { hashSyncPayload, isEchoOfLastSync, recordLink } from "./entityLink.js";

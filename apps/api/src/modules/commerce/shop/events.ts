@@ -16,6 +16,7 @@ import { toNumber } from "./pricing.js";
 import type { ShopOrderEventType } from "./shopEvents.constants.js";
 import type { ShopAttribution, ShopNotificationEvent } from "./shop.types.js";
 import { inStoreCheckout } from "./checkoutVia.js";
+import { contactFields, primaryIdentities } from "../../contacts/identity/contactFields.js";
 
 export type { ShopOrderEventType } from "./shopEvents.constants.js";
 
@@ -43,7 +44,7 @@ function loadOrder(orderId: string) {
       store: true,
       items: true,
       shipments: { orderBy: { createdAt: "desc" }, take: 1 },
-      contact: { select: { phone: true } },
+      contact: { select: primaryIdentities },
     },
   });
 }
@@ -286,9 +287,9 @@ export async function onShopOrderEvent(orderId: string, type: ShopOrderEventType
   // Automations message the customer too, so an unproven storefront number gets none.
   await step("automation", async () => {
     if (!customerReachable(o)) return;
-    const phone = o.customerPhone ?? o.contact?.phone ?? null;
+    const phone = o.customerPhone ?? contactFields(o.contact?.identities).phone ?? null;
     const { checkAndExecuteRuleByTriggerEvent } =
-      await import("../../whatsapp/automatedReply/wa_automatedReply.utils.js");
+      await import("../../automation/rules/rules.utils.js");
     await checkAndExecuteRuleByTriggerEvent(TriggerEvent.SHOP_ORDER_EVENT, {
       orgId: o.orgId,
       phone,

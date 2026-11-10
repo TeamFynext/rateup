@@ -3,7 +3,7 @@ import type { ReviewSuggestion, WebSurveyTheme } from "@/types/global";
 
 import { axiosClient, axiosClientIP } from "../apiClient";
 
-const SURVEYURL = "/survey";
+const SURVEYURL = "/surveys";
 const SURVEY_PUBLIC_URL = "/public/survey";
 
 /** Mirrors FORM_CLOSED_REASON in the API's survey.limits.ts. */
@@ -106,7 +106,7 @@ export async function getSurveysSummary() {
 
 export const getSurveysList = () =>
   axiosClient({
-    url: `/survey`,
+    url: SURVEYURL,
     method: "GET",
   });
 // ----------get all survey landings-------------

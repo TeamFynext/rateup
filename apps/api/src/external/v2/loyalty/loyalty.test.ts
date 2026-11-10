@@ -90,8 +90,8 @@ describe("the response schemas are a boundary, not documentation", () => {
   /**
    * The behaviour this replaced: not one loyalty route declared a `response` schema, so
    * handlers sent Prisma rows back whole. A partner asking for a customer list received
-   * every inbox column hanging off Contact — `chatbotId`, `lastReceivedMetadata`,
-   * `lifecycleId`, the lot — plus internal ids.
+   * every inbox column hanging off Contact — `lastReceivedMetadata`, `lifecycleId`,
+   * the lot — plus internal ids.
    */
   test("internal columns do not survive serialisation", async () => {
     (getCustomerAccountsPaged as Mock).mockResolvedValue({
@@ -114,7 +114,6 @@ describe("the response schemas are a boundary, not documentation", () => {
             // Stored with a +, as some older rows are; the wire shape is digits only.
             phone: "+919000000001",
             email: "ann@example.com",
-            chatbotId: "bot-9",
             lifecycleId: "lc-1",
             lastReceivedMetadata: { secret: true },
             blockedOnWhatsApp: false,
@@ -131,7 +130,6 @@ describe("the response schemas are a boundary, not documentation", () => {
 
     expect(res.statusCode).toBe(200);
     for (const leaked of [
-      "chatbotId",
       "lifecycleId",
       "lastReceivedMetadata",
       "blockedOnWhatsApp",

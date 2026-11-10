@@ -9,7 +9,7 @@ import {
   getTemplateByNameAndOrgId,
   saveTemplate,
   updateTemplateInDb,
-} from "../../whatsapp/messageTemplates/wa_templates.service.js";
+} from "../../meta/whatsapp/templates/templates.service.js";
 import { LOYALTY_EVENT_TEMPLATE_NAMES, versionedTemplateName } from "../loyaltyEventTemplates.js";
 import type { EventTemplateResult } from "../onboarding/onboarding.schema.js";
 import {

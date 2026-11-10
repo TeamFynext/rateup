@@ -113,8 +113,7 @@ beforeEach(() => {
     id: "contact-1",
     orgId: ORG,
     name: "Bobby",
-    phone: "919000000002",
-    email: null,
+    identities: [{ kind: "PHONE", value: "919000000002" }],
     dob: null,
   });
   db.loyaltyProgram.findUnique.mockResolvedValue(program());
@@ -166,7 +165,7 @@ describe("trackReferral — preconditions", () => {
   });
 
   test("refuses a contact with no phone number to enrol", async () => {
-    db.contact.findFirst.mockResolvedValue({ id: "contact-1", orgId: ORG, phone: null });
+    db.contact.findFirst.mockResolvedValue({ id: "contact-1", orgId: ORG, identities: [] });
 
     await expect(trackReferral(PROGRAM, "ANN-AB12", "contact-1", ORG)).rejects.toThrow(
       "Contact has no phone number",
@@ -202,8 +201,10 @@ describe("trackReferral — the account it opens", () => {
       id: "contact-1",
       orgId: ORG,
       name: "Bobby",
-      phone: "919000000002",
-      email: "bob@example.com",
+      identities: [
+        { kind: "PHONE", value: "919000000002" },
+        { kind: "EMAIL", value: "bob@example.com" },
+      ],
       dob: new Date("1990-05-04T00:00:00.000Z"),
     });
 

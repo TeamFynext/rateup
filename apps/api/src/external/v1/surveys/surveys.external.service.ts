@@ -1,4 +1,5 @@
 import prisma from "../../../utils/prisma.js";
+import { primaryIdentitySql } from "../../../modules/contacts/identity/contactFields.js";
 
 interface ResponseBySurveyRawRow {
   id: string;
@@ -26,7 +27,8 @@ export async function getResponsesBySurveyId(surveyId: string, orgId: string) {
   const responses = await prisma.$queryRaw<ResponseBySurveyRawRow[]>`
   SELECT sr.id, sr."createdAt",
       sr.responses,
-      sr.language, sr.tag, sr."surveyTeamMapId", s.questions, stm."teamId", co.phone
+      sr.language, sr.tag, sr."surveyTeamMapId", s.questions, stm."teamId",
+      ${primaryIdentitySql("co", "phone")} AS phone
   FROM "SurveyResponse" sr
   INNER JOIN "SurveyTeamMap" stm ON sr."surveyTeamMapId" = stm.id
   INNER JOIN "Survey" s ON s.id = stm."surveyId"

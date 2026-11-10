@@ -153,7 +153,7 @@ export function AutomatedReplyForm({
   const waAutomatedReplyId =
     typeof searchParams.waAutomatedReplyId === "string" ? searchParams.waAutomatedReplyId : "";
 
-  // Every channel saves through /api/chatbots.
+  // Every channel saves through /api/automation/journeys.
   const updateMutation = useUpdateChatbotMutation();
   const platformValue = automationPlatformOf(rootForm.watch("platform"));
   const metaPlatform = platformValue === AutomationPlatform.WHATSAPP ? null : platformValue;

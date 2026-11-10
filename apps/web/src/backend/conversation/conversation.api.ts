@@ -2,9 +2,8 @@ import type { QueryFilter } from "@/types/api.ts";
 
 import { ANALYTICS_TIMEOUT_MS, analyticsRequestParams } from "../analytics/analyticsFilter";
 import { axiosClient } from "../apiClient";
-import { CONTACT_BASE_URL } from "../campaign/contacts/contacts.api";
 
-const baseUrl = `${CONTACT_BASE_URL}/conversations`;
+const baseUrl = "/inbox/conversations";
 
 /** Encoded, normalised params and the analytics timeout — see analyticsFilter.ts. */
 const analyticsRequest = (filter: QueryFilter | null | undefined) => ({

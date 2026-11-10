@@ -1,5 +1,5 @@
 /* Copy for the Social Commerce landing page. Every claim maps to something
-   `rateup-api/src/modules/commerce/shop` really does — check there before adding one. Meta bills
+   `apps/api/src/modules/commerce/shop` really does — check there before adding one. Meta bills
    its AI agent directly, and RateUp takes no cut of sales, so nothing here prices either. */
 
 import type { ProductFaqItem } from "../shared/ProductFaq";

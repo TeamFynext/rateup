@@ -1,0 +1,416 @@
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
+
+vi.mock("../../../../utils/prisma.js", () => ({
+  default: { waTemplate: { count: vi.fn() } },
+  excludeFields: vi.fn(),
+}));
+vi.mock("./templates.service.js", () => ({ getTemplateByIdAndOrgId: vi.fn() }));
+
+import prisma from "../../../../utils/prisma.js";
+import { getTemplateByIdAndOrgId } from "./templates.service.js";
+import {
+  WaTemplateCategory,
+  WaTemplateComponentType,
+  WaTemplateSupportedFormats,
+} from "../../../../types/enums.js";
+import {
+  generateTemplate,
+  getFlowIdFromTemplateComponents,
+  getTemplateInMessageFormat,
+  getTemplateQuery,
+  waAllowedMimeTypes,
+} from "./templates.utils.js";
+
+type Mock = ReturnType<typeof vi.fn>;
+
+const templateCountMock = (prisma as unknown as { waTemplate: { count: Mock } }).waTemplate.count;
+const getTemplateByIdMock = getTemplateByIdAndOrgId as unknown as Mock;
+
+/** The minimum a create-template request has to carry. */
+function input(overrides: Record<string, unknown> = {}): any {
+  return { name: "order_update", body: "Your order is ready", language: "en", ...overrides };
+}
+
+/** The component of a given type from a generated template. */
+function componentOfType(result: any, type: string) {
+  return result.components.find((c: any) => c.type === type);
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  templateCountMock.mockResolvedValue(0);
+});
+
+describe("generateTemplate - the body", () => {
+  test("carries the plain body text through", () => {
+    const result = generateTemplate(input());
+
+    expect(componentOfType(result, WaTemplateComponentType.BODY)).toEqual({
+      type: WaTemplateComponentType.BODY,
+      text: "Your order is ready",
+    });
+  });
+
+  test("attaches an example for a body that uses variables", () => {
+    const result = generateTemplate(
+      input({ body: "Hi {{1}}, your order is ready", example: ["Ada"] }),
+    );
+
+    expect(componentOfType(result, WaTemplateComponentType.BODY)).toEqual({
+      type: WaTemplateComponentType.BODY,
+      text: "Hi {{1}}, your order is ready",
+      example: { body_text: [["Ada"]] },
+    });
+  });
+
+  test("names the template, its language and a default category", () => {
+    const result = generateTemplate(input());
+
+    expect(result).toMatchObject({
+      name: "order_update",
+      language: "en",
+      category: WaTemplateCategory.MARKETING,
+      allow_category_change: true,
+    });
+  });
+
+  test("keeps an explicit category", () => {
+    const result = generateTemplate(input({ category: WaTemplateCategory.UTILITY }));
+
+    expect(result.category).toBe(WaTemplateCategory.UTILITY);
+  });
+
+  test("silently drops the body text of an authentication template", () => {
+    const result = generateTemplate(
+      input({ category: WaTemplateCategory.AUTHENTICATION, body: "Your code is {{1}}" }),
+    );
+
+    expect(componentOfType(result, WaTemplateComponentType.BODY)).toEqual({
+      type: WaTemplateComponentType.BODY,
+      add_security_recommendation: true,
+    });
+  });
+});
+
+describe("generateTemplate - headers, footers and buttons", () => {
+  test("renders a text header inline", () => {
+    const result = generateTemplate(
+      input({ header: "Order update", format: WaTemplateSupportedFormats.TEXT }),
+    );
+
+    expect(componentOfType(result, WaTemplateComponentType.HEADER)).toEqual({
+      type: WaTemplateComponentType.HEADER,
+      format: WaTemplateSupportedFormats.TEXT,
+      text: "Order update",
+    });
+  });
+
+  test("renders a media header as an uploaded handle", () => {
+    const result = generateTemplate(
+      input({ header: "file-handle-1", format: WaTemplateSupportedFormats.IMAGE }),
+    );
+
+    expect(componentOfType(result, WaTemplateComponentType.HEADER)).toEqual({
+      type: WaTemplateComponentType.HEADER,
+      format: WaTemplateSupportedFormats.IMAGE,
+      example: { header_handle: ["file-handle-1"] },
+    });
+  });
+
+  test("renders a location header with no payload of its own", () => {
+    const result = generateTemplate(
+      input({ header: "anything", format: WaTemplateSupportedFormats.LOCATION }),
+    );
+
+    expect(componentOfType(result, WaTemplateComponentType.HEADER)).toEqual({
+      type: WaTemplateComponentType.HEADER,
+      format: WaTemplateSupportedFormats.LOCATION,
+    });
+  });
+
+  test("adds a product header even when no header text was given", () => {
+    const result = generateTemplate(input({ format: WaTemplateSupportedFormats.PRODUCT }));
+
+    expect(componentOfType(result, WaTemplateComponentType.HEADER)).toEqual({
+      type: WaTemplateComponentType.HEADER,
+      format: WaTemplateSupportedFormats.PRODUCT,
+    });
+  });
+
+  test("carries the buttons through", () => {
+    const buttons = [{ type: "URL", text: "Track", url: "https://x/{{1}}" }];
+    const result = generateTemplate(input({ buttons }));
+
+    expect(componentOfType(result, WaTemplateComponentType.BUTTONS)).toEqual({
+      type: WaTemplateComponentType.BUTTONS,
+      buttons,
+    });
+  });
+
+  test("carries a plain footer through", () => {
+    const result = generateTemplate(input({ footer: "Reply STOP to opt out" }));
+
+    expect(componentOfType(result, WaTemplateComponentType.FOOTER)).toEqual({
+      type: WaTemplateComponentType.FOOTER,
+      text: "Reply STOP to opt out",
+    });
+  });
+
+  test("turns an authentication footer into a code expiry", () => {
+    const result = generateTemplate(
+      input({
+        category: WaTemplateCategory.AUTHENTICATION,
+        footer: "anything",
+        code_expiration_minutes: "10",
+      }),
+    );
+
+    expect(componentOfType(result, WaTemplateComponentType.FOOTER)).toEqual({
+      type: WaTemplateComponentType.FOOTER,
+      code_expiration_minutes: 10,
+    });
+  });
+
+  test("omits the expiry from an authentication footer that states none", () => {
+    const result = generateTemplate(
+      input({ category: WaTemplateCategory.AUTHENTICATION, footer: "anything" }),
+    );
+
+    expect(componentOfType(result, WaTemplateComponentType.FOOTER)).toEqual({
+      type: WaTemplateComponentType.FOOTER,
+    });
+  });
+
+  test("puts the buttons ahead of the header in the component list", () => {
+    const result = generateTemplate(
+      input({
+        buttons: [{ type: "QUICK_REPLY", text: "Yes" }],
+        header: "Order update",
+        format: WaTemplateSupportedFormats.TEXT,
+        footer: "Thanks",
+      }),
+    );
+
+    expect(result.components.map((c: any) => c.type)).toEqual([
+      WaTemplateComponentType.BODY,
+      WaTemplateComponentType.BUTTONS,
+      WaTemplateComponentType.HEADER,
+      WaTemplateComponentType.FOOTER,
+    ]);
+  });
+});
+
+describe("generateTemplate - carousels", () => {
+  const card = {
+    header: "handle-1",
+    format: WaTemplateSupportedFormats.IMAGE,
+    body: "Card one",
+    buttons: [{ type: "QUICK_REPLY", text: "More" }],
+  };
+
+  test("builds a media carousel card from its header, body and buttons", () => {
+    const result = generateTemplate(input({ mediaCarousel: [card] }));
+
+    const carousel = componentOfType(result, WaTemplateComponentType.CAROUSEL);
+    expect(carousel.cards).toHaveLength(1);
+    expect(carousel.cards[0].components.map((c: any) => c.type)).toEqual([
+      WaTemplateComponentType.HEADER,
+      WaTemplateComponentType.BODY,
+      WaTemplateComponentType.BUTTONS,
+    ]);
+  });
+
+  test("attaches an example to a carousel body that uses variables", () => {
+    const result = generateTemplate(
+      input({ mediaCarousel: [{ ...card, body: "Hi {{1}}", example: ["Ada"] }] }),
+    );
+
+    const body = componentOfType(result, WaTemplateComponentType.CAROUSEL).cards[0].components.find(
+      (c: any) => c.type === WaTemplateComponentType.BODY,
+    );
+    expect(body.example).toEqual({ body_text: [["Ada"]] });
+  });
+
+  test("builds a product carousel card from its button alone", () => {
+    const result = generateTemplate(
+      input({ productCarousel: [{ button: { type: "SPM", text: "Buy" } }] }),
+    );
+
+    const carousel = componentOfType(result, WaTemplateComponentType.CAROUSEL);
+    expect(carousel.cards[0].components).toEqual([
+      { type: WaTemplateComponentType.HEADER, format: WaTemplateSupportedFormats.PRODUCT },
+      { type: WaTemplateComponentType.BUTTONS, buttons: [{ type: "SPM", text: "Buy" }] },
+    ]);
+  });
+
+  test("leaves the top-level header and buttons out once a carousel is present", () => {
+    const result = generateTemplate(
+      input({ mediaCarousel: [card], header: "Ignored", buttons: [{ type: "URL" }] }),
+    );
+
+    expect(result.components.map((c: any) => c.type)).toEqual([
+      WaTemplateComponentType.BODY,
+      WaTemplateComponentType.CAROUSEL,
+    ]);
+  });
+
+  test("produces a button-less card when the card has no buttons array", () => {
+    const result: any = generateTemplate(input({ mediaCarousel: [{ header: "h", body: "b" }] }));
+
+    const carousel = result.components.find(
+      (c: any) => String(c.type).toUpperCase() === "CAROUSEL",
+    );
+    expect(
+      carousel.cards[0].components.some((c: any) => String(c.type).toUpperCase() === "BUTTONS"),
+    ).toBe(false);
+  });
+});
+
+describe("getFlowIdFromTemplateComponents", () => {
+  test("finds the flow behind a flow button", () => {
+    const components: any = [
+      { type: "BODY", text: "hi" },
+      { type: "BUTTONS", buttons: [{ type: "FLOW", flow_id: 12345 }] },
+    ];
+
+    expect(getFlowIdFromTemplateComponents(components)).toBe("12345");
+  });
+
+  test("reports nothing for a template with no buttons at all", () => {
+    expect(getFlowIdFromTemplateComponents([{ type: "BODY", text: "hi" }] as any)).toBeUndefined();
+  });
+
+  test("reports nothing when none of the buttons opens a flow", () => {
+    const components: any = [{ type: "BUTTONS", buttons: [{ type: "URL", url: "https://x" }] }];
+
+    expect(getFlowIdFromTemplateComponents(components)).toBeUndefined();
+  });
+
+  test("finds the flow button whatever its position", () => {
+    const components: any = [
+      { type: "BUTTONS", buttons: [{ type: "URL" }, { type: "FLOW", flow_id: 99 }] },
+    ];
+
+    expect(getFlowIdFromTemplateComponents(components)).toBe("99");
+  });
+});
+
+describe("getTemplateInMessageFormat", () => {
+  function messageBody(components: any[]): any {
+    return { template: { name: "order_update", language: "en", components } };
+  }
+
+  test("nests the language code the way the send API expects", () => {
+    const result = getTemplateInMessageFormat(messageBody([]), null);
+
+    expect(result.template.language).toEqual({ code: "en" });
+  });
+
+  test("renders a media header as a link parameter", () => {
+    const result = getTemplateInMessageFormat(messageBody([{ type: "HEADER", format: "IMAGE" }]), {
+      header: "https://cdn/i.jpg",
+    });
+
+    expect(result.template.components![0]).toEqual({
+      type: "header",
+      format: "image",
+      parameters: [{ type: "image", image: { link: "https://cdn/i.jpg" } }],
+    });
+  });
+
+  test("renders a text header inline", () => {
+    const result = getTemplateInMessageFormat(
+      messageBody([{ type: "HEADER", format: "TEXT", text: "Order update" }]),
+      null,
+    );
+
+    expect(result.template.components![0]).toEqual({
+      type: "header",
+      format: "text",
+      text: "Order update",
+    });
+  });
+
+  test("flattens each button into its own component", () => {
+    const result = getTemplateInMessageFormat(
+      messageBody([{ type: "BUTTONS", buttons: [{ text: "Yes" }, { text: "No" }] }]),
+      null,
+    );
+
+    expect(result.template.components).toEqual([
+      { type: "button", sub_type: "quick_reply", index: "0", text: "Yes" },
+      { type: "button", sub_type: "quick_reply", index: "1", text: "No" },
+    ]);
+  });
+
+  test("leaves an undefined hole for a header format it cannot render", () => {
+    const result = getTemplateInMessageFormat(
+      messageBody([{ type: "HEADER", format: "PRODUCT" }]),
+      null,
+    );
+
+    expect(result.template.components).toEqual([undefined]);
+  });
+
+  test("leaves an undefined hole for a component type it does not know", () => {
+    const result = getTemplateInMessageFormat(messageBody([{ type: "CAROUSEL" }]), null);
+
+    expect(result.template.components).toEqual([undefined]);
+  });
+});
+
+describe("getTemplateQuery", () => {
+  const template = {
+    data: {
+      name: "order_update",
+      language: "en",
+      components: [{ type: "HEADER", format: "IMAGE" }],
+    },
+  };
+
+  beforeEach(() => {
+    getTemplateByIdMock.mockResolvedValue(template);
+  });
+
+  test("returns just the name and language when there is nothing to fill in", async () => {
+    await expect(getTemplateQuery("tpl-1", "org-1", null)).resolves.toEqual({
+      name: "order_update",
+      language: { code: "en" },
+    });
+  });
+
+  test("scopes the template lookup to the caller's org", async () => {
+    await getTemplateQuery("tpl-1", "org-1", null);
+
+    expect(getTemplateByIdMock).toHaveBeenCalledWith("tpl-1", "org-1");
+  });
+
+  test("refuses when a media header has no link to fill in", async () => {
+    await expect(getTemplateQuery("tpl-1", "org-1", {})).rejects.toThrow(
+      "Header parameter is missing",
+    );
+  });
+
+  test("sends the link it resolved, under the name Meta expects", async () => {
+    const result: any = await getTemplateQuery("tpl-1", "org-1", { header: "https://cdn/i.jpg" });
+
+    expect(result.components[0]).toHaveProperty("parameters");
+    expect(result.components[0]).not.toHaveProperty("paramteters");
+  });
+
+  test("leaves a null for a header format the inner switch does not match", async () => {
+    getTemplateByIdMock.mockResolvedValue({
+      data: { name: "n", language: "en", components: [{ type: "HEADER", format: "TEXT" }] },
+    });
+
+    const result: any = await getTemplateQuery("tpl-1", "org-1", { header: "x" });
+
+    expect(result.components).toEqual([null]);
+  });
+});
+
+describe("waAllowedMimeTypes", () => {
+  test("allows exactly the four formats WhatsApp headers support", () => {
+    expect(waAllowedMimeTypes).toEqual(["image/jpeg", "image/png", "video/mp4", "application/pdf"]);
+  });
+});

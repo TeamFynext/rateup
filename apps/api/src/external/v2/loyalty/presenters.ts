@@ -9,6 +9,10 @@
  * part of a public contract.
  */
 
+import {
+  contactFields,
+  type PrimaryIdentityRow,
+} from "../../../modules/contacts/identity/contactFields.js";
 import { toWirePhone } from "../phone.js";
 
 const num = (v: unknown): number => {
@@ -28,10 +32,13 @@ export function presentTierRef(tier: AnyRow | null | undefined) {
 
 export function presentMember(account: AnyRow) {
   const contact = (account.contact ?? {}) as AnyRow;
+  // phone/email come mapped from the contact's identities, or as the identities themselves.
+  const identities = contact.identities as PrimaryIdentityRow[] | undefined;
+  const fields = identities ? contactFields(identities) : null;
   return {
     name: (contact.name as string | null) ?? null,
-    phone: toWirePhone(contact.phone as string | null),
-    email: (contact.email as string | null) ?? null,
+    phone: toWirePhone((contact.phone as string | null | undefined) ?? fields?.phone),
+    email: (contact.email as string | null | undefined) ?? fields?.email ?? null,
     cardCode: (account.cardCode as string | null) ?? null,
     cardSentAt: iso(account.cardSentAt),
     status: String(account.status ?? "active"),

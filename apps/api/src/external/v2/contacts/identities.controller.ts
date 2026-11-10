@@ -11,20 +11,24 @@ import prisma from "../../../utils/prisma.js";
 import { HttpError } from "../../../utils/http.js";
 import { emitIntegrationEvent } from "../../../modules/integrations/events/emitIntegrationEvent.js";
 import {
+  CONTACT_FIELD_KIND,
+  primaryIdentities,
+  withContactFields,
+  type ContactField,
+} from "../../../modules/contacts/identity/contactFields.js";
+import {
   attachIdentity,
+  ensurePrimary,
   findContactIdByIdentity,
-  identitiesFromContact,
-  LEGACY_COLUMN,
   listContactIdentities,
   normalizeIdentityValue,
   removeIdentity,
-  syncLegacyColumn,
-} from "../../../modules/contact/identity/identity.service.js";
-import { mergeContacts } from "../../../modules/contact/merge/merge.service.js";
-import { suggestMerge } from "../../../modules/contact/merge/suggestions.service.js";
-import type { MergeFieldChoices } from "../../../modules/contact/merge/merge.types.js";
+} from "../../../modules/contacts/identity/identity.service.js";
+import { mergeContacts } from "../../../modules/contacts/merge/merge.service.js";
+import { suggestMerge } from "../../../modules/contacts/merge/suggestions.service.js";
+import type { MergeFieldChoices } from "../../../modules/contacts/merge/merge.types.js";
 import { ExternalApiError } from "../../shared/errors.js";
-import { phoneSchema, storedPhoneSpellings } from "../phone.js";
+import { phoneSchema } from "../phone.js";
 import type {
   AddContactIdentityBody,
   ContactIdParams,
@@ -53,25 +57,19 @@ const CHANNEL_SCOPED: ContactIdentityKind[] = [
   ContactIdentityKind.WEBCHAT,
 ];
 
-/** The legacy columns a contact's identities are read from before it is backfilled. */
-const legacySelect = {
-  id: true,
-  phone: true,
-  email: true,
-  bsuid: true,
-  igsId: true,
-  psid: true,
-  external_id: true,
-  whatsappUserName: true,
-} satisfies Prisma.ContactSelect;
+/** The contact field (phone, email, …) each kind's primary identity is shown as. */
+const FIELD_BY_KIND = Object.fromEntries(
+  Object.entries(CONTACT_FIELD_KIND).map(([field, kind]) => [kind, field]),
+) as Partial<Record<ContactIdentityKind, ContactField>>;
 
-async function loadLegacyContact(orgId: string, contactId: string) {
+/** The contact with its phone, email, BSUID, Instagram and Messenger ids. 404 when not the org's. */
+async function loadContactFields(orgId: string, contactId: string) {
   const contact = await prisma.contact.findFirst({
     where: { id: contactId, orgId },
-    select: legacySelect,
+    select: { id: true, ...primaryIdentities },
   });
   if (!contact) throw new ExternalApiError(404, "contact_not_found", "No such contact");
-  return contact;
+  return withContactFields(contact);
 }
 
 /** The value as stored, or a 400 naming the field. */
@@ -96,25 +94,16 @@ function normalizedValue(kind: ContactIdentityKind, raw: string, path: string): 
 }
 
 /**
- * Where the legacy columns would hold this identity, for contacts not backfilled yet. Null
- * for an EXTERNAL id from a named integration: only `externalId` has a column.
+ * Where a Contact column still holds this identity: a webchat visitor id or the external id.
+ * Null otherwise (phone, email and the Meta ids are only identities now), and for an EXTERNAL
+ * id from a named integration: only `externalId` has a column.
  */
-function legacyWhere(
+function columnWhere(
   kind: ContactIdentityKind,
   value: string,
   integration?: string,
 ): Prisma.ContactWhereInput | null {
   switch (kind) {
-    case ContactIdentityKind.PHONE:
-      return { phone: { in: storedPhoneSpellings(value) } };
-    case ContactIdentityKind.EMAIL:
-      return { email: { equals: value, mode: "insensitive" } };
-    case ContactIdentityKind.WA_BSUID:
-      return { bsuid: value };
-    case ContactIdentityKind.IG_SCOPED:
-      return { igsId: value };
-    case ContactIdentityKind.FB_PSID:
-      return { psid: value };
     case ContactIdentityKind.WEBCHAT:
       return { other: value, source: PlatformType.WEBCHAT };
     case ContactIdentityKind.EXTERNAL:
@@ -151,7 +140,7 @@ async function identityOwner(
 
 /**
  * Any identity → its contact. Identities first (a merged contact's second phone or second
- * Instagram id is only there), then the legacy columns, exactly as inbound messages resolve.
+ * Instagram id is only there), then the webchat and external id columns.
  */
 export async function lookupContactHandler(
   request: FastifyRequest<{ Querystring: ContactLookupQuery }>,
@@ -165,7 +154,7 @@ export async function lookupContactHandler(
   const contact = ownerId
     ? await prisma.contact.findFirst({ where: { id: ownerId, orgId }, select: contactDetailSelect })
     : null;
-  const where = contact ? null : legacyWhere(kind, value, integration);
+  const where = contact ? null : columnWhere(kind, value, integration);
   const found =
     contact ??
     (where
@@ -184,21 +173,25 @@ export async function listContactIdentitiesHandler(
 ) {
   const orgId = request.user.orgId;
   const { contactId } = request.params;
-  await loadLegacyContact(orgId, contactId);
+  await loadContactFields(orgId, contactId);
   const rows = await listContactIdentities(orgId, contactId);
   return { data: rows.map(presentIdentity) };
 }
 
-/** Tells the CRMs when an identity change moved the contact's phone or email. */
-async function emitIfColumnChanged(
+/** Tells the CRMs when an identity change moved the contact's phone, email or other id. */
+async function emitIfFieldChanged(
   orgId: string,
-  before: Record<string, unknown>,
+  before: Awaited<ReturnType<typeof loadContactFields>>,
   kind: ContactIdentityKind,
 ) {
-  const column = LEGACY_COLUMN[kind];
-  if (!column) return;
-  const after = await prisma.contact.findFirst({ where: { id: before.id as string, orgId } });
-  if (after && after[column] !== before[column]) {
+  const field = FIELD_BY_KIND[kind];
+  if (!field) return;
+  const row = await prisma.contact.findFirst({
+    where: { id: before.id, orgId },
+    include: primaryIdentities,
+  });
+  const after = row && withContactFields(row);
+  if (after && after[field] !== before[field]) {
     await emitIntegrationEvent(orgId, {
       type: "contact.updated",
       contact: after,
@@ -214,12 +207,12 @@ export async function addContactIdentityHandler(
   const orgId = request.user.orgId;
   const { contactId } = request.params;
   const { kind, integration } = request.body;
-  const contact = await loadLegacyContact(orgId, contactId);
+  const contact = await loadContactFields(orgId, contactId);
   const value = normalizedValue(kind, request.body.value, "/value");
 
-  // Held by someone else — as an identity, or only in a legacy column — is a 409 naming
-  // them. Nothing moves: joining two contacts is a merge, and the caller can ask for one.
-  const where = legacyWhere(kind, value, integration);
+  // Held by someone else — as an identity, or only in a column — is a 409 naming them.
+  // Nothing moves: joining two contacts is a merge, and the caller can ask for one.
+  const where = columnWhere(kind, value, integration);
   const holder =
     (await identityOwner(orgId, kind, value, { integration })) ??
     (where
@@ -250,12 +243,6 @@ export async function addContactIdentityHandler(
     inUse(holder);
   }
 
-  // A contact not backfilled yet holds its phone/email only in the column: record that one
-  // first, so it stays the primary and the column is not overwritten by the new value.
-  for (const input of identitiesFromContact(contact)) {
-    if (input.kind === kind) await attachIdentity(orgId, contactId, input);
-  }
-
   const result = await attachIdentity(orgId, contactId, {
     kind,
     value,
@@ -272,8 +259,9 @@ export async function addContactIdentityHandler(
   }
   if (result.status === "owned_by_other") inUse(result.ownerContactId);
 
-  if (LEGACY_COLUMN[kind]) await syncLegacyColumn(contactId, kind);
-  await emitIfColumnChanged(orgId, contact, kind);
+  // The first of its kind becomes the primary: the contact's phone, email, … from now on.
+  if (FIELD_BY_KIND[kind]) await ensurePrimary(contactId, kind);
+  await emitIfFieldChanged(orgId, contact, kind);
 
   const row = await prisma.contactIdentity.findFirst({
     where: { id: result.identityId, orgId, contactId },
@@ -289,7 +277,7 @@ export async function removeContactIdentityHandler(
 ) {
   const orgId = request.user.orgId;
   const { contactId, identityId } = request.params;
-  const contact = await loadLegacyContact(orgId, contactId);
+  const contact = await loadContactFields(orgId, contactId);
   const kind = (
     await prisma.contactIdentity.findFirst({
       where: { id: identityId, contactId, orgId },
@@ -308,7 +296,7 @@ export async function removeContactIdentityHandler(
       "A contact keeps at least one identity; delete the contact instead",
     );
   }
-  await emitIfColumnChanged(orgId, contact, kind);
+  await emitIfFieldChanged(orgId, contact, kind);
   return { id: identityId, deleted: true as const };
 }
 

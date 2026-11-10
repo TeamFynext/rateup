@@ -195,7 +195,7 @@ export default function InboxLayout() {
 
   useEffect(() => {
     if (contactCountsData) {
-      // `/wa/inbox/message/count` returns `open` directly; the per-status
+      // `/inbox/message/count` returns `open` directly; the per-status
       // `assigned`/`unassigned` fields it used to carry are gone (they are
       // commented out server-side), so summing them pinned this badge at 0.
       // The sum is kept only as a fallback for an older API build.

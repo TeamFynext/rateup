@@ -11,17 +11,17 @@ import {
   getWaSettingsForFlow,
   syncLocalFlowToWhatsapp,
   updateFlowInDb,
-} from "../../whatsapp/flows/flow.service.js";
+} from "../../meta/whatsapp/flows/flow.service.js";
 import {
   DEFAULT_HAPPY_MIN_RATING,
   findOverallRatingElement,
   setHappyMinRating,
-} from "../../whatsapp/flows/flowTemplates.js";
+} from "../../meta/whatsapp/flows/flowTemplates.js";
 import {
   createTemplate,
   getTemplateByNameAndOrgId,
   saveTemplate,
-} from "../../whatsapp/messageTemplates/wa_templates.service.js";
+} from "../../meta/whatsapp/templates/templates.service.js";
 import { isValidTimeZone, resolvePeriod } from "../dashboard/dashboard.period.js";
 import { feedbackEligibility } from "./feedback.eligibility.js";
 import { ratingAveragesByElement, type FlowAnswer } from "./feedback.evaluate.js";
@@ -41,6 +41,11 @@ import type {
   TemplateStep,
   UpdateFeedbackSettingInput,
 } from "./feedback.schema.js";
+import {
+  contactFields,
+  primaryIdentities,
+  type PrimaryIdentityRow,
+} from "../../contacts/identity/contactFields.js";
 
 /**
  * The admin side of loyalty feedback. Feedback never owns the flow: the business creates one
@@ -502,7 +507,7 @@ interface RequestRowSource {
   completedAt: Date | null;
   reviewClickedAt: Date | null;
   rewardGrantedAt: Date | null;
-  account: { contact: { name: string | null; phone: string | null } | null };
+  account: { contact: { name: string | null; identities: PrimaryIdentityRow[] } | null };
 }
 
 const REQUEST_ROW_SELECT = {
@@ -517,7 +522,7 @@ const REQUEST_ROW_SELECT = {
   completedAt: true,
   reviewClickedAt: true,
   rewardGrantedAt: true,
-  account: { select: { contact: { select: { name: true, phone: true } } } },
+  account: { select: { contact: { select: { name: true, ...primaryIdentities } } } },
 } as const;
 
 const iso = (date: Date | null) => (date ? date.toISOString() : null);
@@ -526,7 +531,7 @@ function toRequestRow(row: RequestRowSource): FeedbackRequestRow {
   return {
     id: row.id,
     customerName: row.account.contact?.name?.trim() || "Customer",
-    phoneMasked: maskPhone(row.account.contact?.phone),
+    phoneMasked: maskPhone(contactFields(row.account.contact?.identities).phone),
     status: row.status,
     happy: row.happy,
     overallRating: row.overallRating,

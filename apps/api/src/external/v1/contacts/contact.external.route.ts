@@ -10,7 +10,7 @@ import {
   byContactIdSchema,
   updateContactSchema,
   createMultipleContactSchema,
-} from "../../../modules/contact/contact.schema.js";
+} from "../../../modules/contacts/contact.schema.js";
 import { createContactSchema } from "../contact-groups/contact.external.schema.js";
 import z from "zod";
 import { declareExternalScopes } from "../../shared/scopes.js";

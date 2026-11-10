@@ -1,10 +1,16 @@
 import prisma from "../../../../utils/prisma.js";
 import { log } from "../../../../utils/logger.js";
 import type { Prisma } from "../../../../generated/prisma/client.js";
+import { ContactIdentitySource } from "../../../../generated/prisma/enums.js";
+import {
+  contactWhereIdentity,
+  setPrimaryIdentities,
+  type ContactFields,
+} from "../../../contacts/identity/contactFields.js";
 import {
   resolvePipelineForContact,
   setContactStage,
-} from "../../../pipeline/pipelineLead/lead.service.js";
+} from "../../../pipelines/pipelineLead/lead.service.js";
 import { getValidZohoAccessToken, loadZohoIntegration } from "./zoho.auth.js";
 import { getZohoRecords, type ZohoProduct } from "./zoho.client.js";
 import { getZohoCredential, type ZohoRecord } from "./zoho.types.js";
@@ -14,6 +20,25 @@ import { getZohoCredential, type ZohoRecord } from "./zoho.types.js";
  * leads into Rateup, matching on the linked id, then phone, then email. The
  * `fetch*` variants only preview what a sync would bring in.
  */
+
+/**
+ * Creates or updates the contact and makes the Zoho phone and email its own, in one
+ * transaction: a phone another contact has fails the record, as the unique column did.
+ */
+async function writeImportedContact(
+  orgId: string,
+  existingId: string | undefined,
+  data: Omit<Prisma.ContactUncheckedCreateInput, "orgId">,
+  identities: Pick<ContactFields, "phone" | "email">,
+) {
+  return prisma.$transaction(async (tx) => {
+    const contact = existingId
+      ? await tx.contact.update({ where: { id: existingId }, data })
+      : await tx.contact.create({ data: { ...data, orgId } });
+    await setPrimaryIdentities(orgId, contact.id, identities, ContactIdentitySource.IMPORT, tx);
+    return contact;
+  });
+}
 
 export async function fetchZohoContacts(orgId: string, product: ZohoProduct = "crm") {
   const integration = await loadZohoIntegration(orgId);
@@ -114,15 +139,11 @@ export async function syncZohoContactsToRateup(
       ];
 
       if (zohoContact.Phone) {
-        orConditions.push({
-          phone: zohoContact.Phone,
-        });
+        orConditions.push(contactWhereIdentity("phone", zohoContact.Phone));
       }
 
       if (zohoContact.Email) {
-        orConditions.push({
-          email: zohoContact.Email,
-        });
+        orConditions.push(contactWhereIdentity("email", zohoContact.Email));
       }
 
       const existingContact = await prisma.contact.findFirst({
@@ -158,34 +179,20 @@ export async function syncZohoContactsToRateup(
             }),
       };
 
+      // Missing in Zoho clears it here, as the import always has.
+      const identities = { phone: zohoContact.Phone || null, email: zohoContact.Email || null };
       const contactData = {
         name,
-        email: zohoContact.Email || "",
-        phone: zohoContact.Phone || "",
         source: existingContact?.source || (product === "bigin" ? "BIGIN" : "ZOHO"),
         integrationIds,
         notes: zohoContact.Description || "",
       };
 
-      if (existingContact) {
-        await prisma.contact.update({
-          where: {
-            id: existingContact.id,
-          },
-          data: contactData,
-        });
-
-        log.info("Updated Rateup contact from %s", product);
-      } else {
-        await prisma.contact.create({
-          data: {
-            ...contactData,
-            orgId,
-          },
-        });
-
-        log.info("Created Rateup contact from %s", product);
-      }
+      await writeImportedContact(orgId, existingContact?.id, contactData, identities);
+      log.info(
+        existingContact ? "Updated Rateup contact from %s" : "Created Rateup contact from %s",
+        product,
+      );
     } catch (error) {
       log.error({ err: error, product }, "Failed syncing contact");
     }
@@ -283,15 +290,11 @@ export async function syncZohoLeadsToRateup(leads: ZohoRecord[], orgId: string) 
       ];
 
       if (zohoLead.Phone) {
-        orConditions.push({
-          phone: zohoLead.Phone,
-        });
+        orConditions.push(contactWhereIdentity("phone", zohoLead.Phone));
       }
 
       if (zohoLead.Email) {
-        orConditions.push({
-          email: zohoLead.Email,
-        });
+        orConditions.push(contactWhereIdentity("email", zohoLead.Email));
       }
 
       const existingContact = await prisma.contact.findFirst({
@@ -313,10 +316,9 @@ export async function syncZohoLeadsToRateup(leads: ZohoRecord[], orgId: string) 
         },
       };
 
+      const identities = { phone: zohoLead.Phone || null, email: zohoLead.Email || null };
       const contactData = {
         name,
-        email: zohoLead.Email || "",
-        phone: zohoLead.Phone || "",
         source: existingContact?.source || "ZOHO_LEAD",
         integrationIds,
         notes: zohoLead.Description || "",
@@ -325,19 +327,12 @@ export async function syncZohoLeadsToRateup(leads: ZohoRecord[], orgId: string) 
         lifecycleId: existingContact?.lifecycleId || null,
       };
 
-      const contact = existingContact
-        ? await prisma.contact.update({
-            where: {
-              id: existingContact.id,
-            },
-            data: contactData,
-          })
-        : await prisma.contact.create({
-            data: {
-              ...contactData,
-              orgId,
-            },
-          });
+      const contact = await writeImportedContact(
+        orgId,
+        existingContact?.id,
+        contactData,
+        identities,
+      );
 
       if (mappedStageId && pipelineId) {
         // Inbound, so no outbound echo — see `applyInboundStage`.

@@ -66,6 +66,18 @@ const contact = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
+/** The same contact as the database holds it: phone and email are primary identities. */
+const contactRow = (over: Record<string, unknown> = {}) => {
+  const { email, phone, ...rest } = contact(over);
+  return {
+    ...rest,
+    identities: [
+      ...(phone ? [{ kind: "PHONE", value: phone }] : []),
+      ...(email ? [{ kind: "EMAIL", value: email }] : []),
+    ],
+  };
+};
+
 const PROPERTIES = {
   firstname: "Asha",
   lastname: "Nair",
@@ -91,7 +103,7 @@ const httpError = (status: number, data: unknown = {}) =>
 
 beforeEach(() => {
   vi.clearAllMocks();
-  findContact.mockResolvedValue(contact());
+  findContact.mockResolvedValue(contactRow());
   findLink.mockResolvedValue(null);
 });
 
@@ -168,7 +180,7 @@ describe("sending a contact", () => {
   });
 
   test("a contact with neither email nor phone is skipped", async () => {
-    findContact.mockResolvedValue(contact({ email: null, phone: null }));
+    findContact.mockResolvedValue(contactRow({ email: null, phone: null }));
     await expect(processHubSpotContactJob(integration(), job())).resolves.toBe("nothing_to_send");
     expect(client.post).not.toHaveBeenCalled();
   });

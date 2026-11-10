@@ -28,7 +28,7 @@ const db = vi.hoisted(() => {
 });
 vi.mock("../../../utils/prisma.js", () => ({ default: db }));
 
-vi.mock("../../../modules/contact/contact.service.js", () => ({
+vi.mock("../../../modules/contacts/contact.service.js", () => ({
   createContact: vi.fn(),
   createMultipleContacts: vi.fn(),
   deleteContactById: vi.fn(),
@@ -36,13 +36,19 @@ vi.mock("../../../modules/contact/contact.service.js", () => ({
 vi.mock("../../../modules/integrations/events/emitIntegrationEvent.js", () => ({
   emitIntegrationEvent: vi.fn(),
 }));
+vi.mock("../../../modules/contacts/identity/contactFields.js", async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  setPrimaryIdentities: vi.fn(),
+}));
 
 import {
   createContact,
   createMultipleContacts,
   deleteContactById,
-} from "../../../modules/contact/contact.service.js";
+} from "../../../modules/contacts/contact.service.js";
 import { emitIntegrationEvent } from "../../../modules/integrations/events/emitIntegrationEvent.js";
+import { setPrimaryIdentities } from "../../../modules/contacts/identity/contactFields.js";
+import { IdentityTakenError } from "../../../modules/contacts/identity/identity.service.js";
 import { externalErrorHandler } from "../../shared/errors.js";
 import { externalContactRoutes } from "./contacts.route.js";
 
@@ -52,20 +58,62 @@ const ORG = "11111111-1111-4111-8111-111111111111";
 const ID = "22222222-2222-4222-8222-222222222222";
 const LABEL = "33333333-3333-4333-8333-333333333333";
 
+const CREATED = new Date("2026-01-01T00:00:00.000Z");
+
+/** A ContactIdentity row as the selects load it. */
+function identity(kind: string, value: string, extra: Record<string, unknown> = {}) {
+  return {
+    id: `${kind.toLowerCase()}-identity`,
+    kind,
+    scope: "",
+    value,
+    source: "IMPORT",
+    verified: true,
+    isPrimary: true,
+    username: null,
+    displayName: null,
+    channelId: null,
+    lastSeenAt: null,
+    createdAt: CREATED,
+    ...extra,
+  };
+}
+
+/** `phone` and `email` become the contact's primary identities, as they are stored now. */
 function row(overrides: Record<string, unknown> = {}) {
+  const { phone = "919876543210", email = "ann@example.com", ...rest } = overrides;
   return {
     id: ID,
     name: "Ann",
-    phone: "919876543210",
-    email: "ann@example.com",
+    identities: [
+      ...(phone ? [identity("PHONE", phone as string)] : []),
+      ...(email ? [identity("EMAIL", email as string)] : []),
+    ],
     external_id: "crm-1",
     source: "external",
     consent: true,
     createdAt: new Date("2026-01-01T00:00:00.000Z"),
     ContactLabelMap: [{ label: { id: LABEL, name: "VIP" } }],
     customFields: [{ value: "Gold", field: { slug: "tier" } }],
-    identities: [],
-    ...overrides,
+    ...rest,
+  };
+}
+
+/** `identity` as the partner API presents it. */
+function presented(kind: string, value: string) {
+  return {
+    id: `${kind.toLowerCase()}-identity`,
+    kind,
+    value,
+    channelId: null,
+    integration: null,
+    source: "IMPORT",
+    verified: true,
+    primary: true,
+    username: null,
+    displayName: null,
+    lastSeenAt: null,
+    createdAt: CREATED.toISOString(),
   };
 }
 
@@ -94,7 +142,6 @@ describe("the response schema is a boundary", () => {
     db.contact.findFirst.mockResolvedValue(
       row({
         orgId: ORG,
-        chatbotId: "bot-9",
         lifecycleId: "lc-1",
         lastReceivedMetadata: { secret: true },
         lastMessageBody: { text: "private" },
@@ -111,7 +158,6 @@ describe("the response schema is a boundary", () => {
     expect(res.statusCode).toBe(200);
     for (const leaked of [
       "orgId",
-      "chatbotId",
       "lifecycleId",
       "lastReceivedMetadata",
       "lastMessageBody",
@@ -137,7 +183,28 @@ describe("the response schema is a boundary", () => {
       labels: [{ id: LABEL, name: "VIP" }],
       customFields: { tier: "Gold" },
       createdAt: "2026-01-01T00:00:00.000Z",
-      identities: [],
+      identities: [presented("PHONE", "919876543210"), presented("EMAIL", "ann@example.com")],
+    });
+  });
+
+  test("phone and email are the primary identities, never a secondary one", async () => {
+    db.contact.findFirst.mockResolvedValue(
+      row({
+        identities: [
+          identity("PHONE", "14155552671", { id: "second", isPrimary: false }),
+          identity("PHONE", "919876543210"),
+          identity("WA_BSUID", "US.13491208655302741918"),
+        ],
+      }),
+    );
+    const app = await buildApp();
+    const res = await app.inject({ method: "GET", url: `/${ID}` });
+
+    expect(res.statusCode).toBe(200);
+    expect(JSON.parse(res.payload)).toMatchObject({
+      phone: "919876543210",
+      email: null,
+      businessScopedUserId: "US.13491208655302741918",
     });
   });
 
@@ -297,20 +364,25 @@ describe("listing", () => {
       url: `/?search=${encodeURIComponent("+91 98765")}&labelId=${LABEL}&contactGroupId=${ID}`,
     });
     const where = JSON.stringify(db.contact.findMany.mock.calls[0]![0].where);
-    expect(where).toContain('"phone":{"contains":"9198765"}');
+    expect(where).toContain(
+      '"identities":{"some":{"kind":{"in":["PHONE"]},"value":{"contains":"9198765","mode":"insensitive"}}}',
+    );
     expect(where).toContain(`"labelId":"${LABEL}"`);
     expect(where).toContain(`"contactGroupId":"${ID}"`);
   });
 
-  test("lookup by phone is scoped to the org and tries both stored spellings", async () => {
+  test("lookup by phone finds the identity within the key's org", async () => {
+    db.contactIdentity.findFirst.mockResolvedValue({ contactId: ID });
     db.contact.findFirst.mockResolvedValue(row());
     const app = await buildApp();
     const res = await app.inject({ method: "GET", url: "/lookup?phone=%2B919876543210" });
     expect(res.statusCode).toBe(200);
-    expect(db.contact.findFirst.mock.calls[0]![0].where).toEqual({
-      phone: { in: ["919876543210", "+919876543210"] },
+    expect(db.contactIdentity.findFirst.mock.calls[0]![0].where).toEqual({
       orgId: ORG,
+      kind: "PHONE",
+      value: "919876543210",
     });
+    expect(db.contact.findFirst.mock.calls[0]![0].where).toEqual({ id: ID, orgId: ORG });
   });
 });
 
@@ -319,6 +391,7 @@ describe("phone format: digits with the country code, no +", () => {
     ["digits with the country code", "919876543210"],
     ["a leading + with spaces and a dash", "+91 98765-43210"],
   ])("lookup takes %s", async (_, phone) => {
+    db.contactIdentity.findFirst.mockResolvedValue({ contactId: ID });
     db.contact.findFirst.mockResolvedValue(row());
     const app = await buildApp();
     const res = await app.inject({
@@ -326,18 +399,19 @@ describe("phone format: digits with the country code, no +", () => {
       url: `/lookup?phone=${encodeURIComponent(phone)}`,
     });
     expect(res.statusCode).toBe(200);
-    // Both spellings, so a row stored as "+91…" is still found.
-    expect(db.contact.findFirst.mock.calls[0]![0].where.phone).toEqual({
-      in: ["919876543210", "+919876543210"],
-    });
+    // Identities hold the digits only.
+    expect(db.contactIdentity.findFirst.mock.calls[0]![0].where.value).toBe("919876543210");
   });
 
-  test("create finds a contact stored with a leading + and answers 409, not a duplicate", async () => {
-    db.contact.findFirst.mockResolvedValueOnce({ id: ID, phone: "+919876543210" });
+  test("create looks the phone up as an identity and answers 409, not a duplicate", async () => {
+    db.contact.findFirst.mockResolvedValueOnce({ id: ID, identities: [{ id: "phone-identity" }] });
     const app = await buildApp();
-    const res = await app.inject({ method: "POST", url: "/", payload: { phone: "919876543210" } });
+    const res = await app.inject({ method: "POST", url: "/", payload: { phone: "+919876543210" } });
     expect(res.statusCode).toBe(409);
     expect(JSON.parse(res.payload).error.details).toMatchObject({ contactId: ID, field: "phone" });
+    expect(JSON.stringify(db.contact.findFirst.mock.calls[0]![0].where)).toContain(
+      '{"identities":{"some":{"kind":"PHONE","value":"919876543210"}}}',
+    );
     expect(createContact).not.toHaveBeenCalled();
   });
 
@@ -426,7 +500,7 @@ describe("create", () => {
   });
 
   test("a taken phone is 409 contact_already_exists with the existing id", async () => {
-    db.contact.findFirst.mockResolvedValue({ id: ID, phone: "919876543210" });
+    db.contact.findFirst.mockResolvedValue({ id: ID, identities: [{ id: "phone-identity" }] });
     const app = await buildApp();
     const res = await app.inject({ method: "POST", url: "/", payload: { phone: "+919876543210" } });
     expect(res.statusCode).toBe(409);
@@ -450,16 +524,33 @@ describe("create", () => {
     expect(res.statusCode).toBe(409);
     expect(JSON.parse(res.payload).error.code).toBe("contact_already_exists");
   });
+
+  test("losing the race for the phone or email identity is a 409 naming the owner", async () => {
+    db.contact.findFirst.mockResolvedValue(null);
+    (createContact as Mock).mockRejectedValue(
+      new IdentityTakenError("EMAIL", "ann@example.com", "owner-1"),
+    );
+    const app = await buildApp();
+    const res = await app.inject({
+      method: "POST",
+      url: "/",
+      payload: { phone: "+919876543210", email: "ann@example.com" },
+    });
+    expect(res.statusCode).toBe(409);
+    expect(JSON.parse(res.payload).error).toMatchObject({
+      code: "contact_already_exists",
+      details: { contactId: "owner-1", field: "email" },
+    });
+  });
 });
 
 describe("bulk create", () => {
   test("creates the new, skips existing and in-request duplicates, in order", async () => {
-    db.contact.findMany
-      // existing in the org
-      .mockResolvedValueOnce([{ phone: "14155552671", external_id: null }])
-      // the created rows, read back
-      .mockResolvedValueOnce([row({ id: "a", phone: "919876543210" })]);
-    (createMultipleContacts as Mock).mockResolvedValue([{ id: "a", phone: "919876543210" }]);
+    // existing in the org
+    db.contactIdentity.findMany.mockResolvedValueOnce([{ value: "14155552671" }]);
+    // the created rows, read back
+    db.contact.findMany.mockResolvedValueOnce([row({ id: "a", phone: "919876543210" })]);
+    (createMultipleContacts as Mock).mockResolvedValue([{ id: "a" }]);
 
     const app = await buildApp();
     const res = await app.inject({
@@ -490,10 +581,15 @@ describe("bulk create", () => {
       "447911123456",
     ]);
     expect(sent[0].every((c: { source: string }) => c.source === "external")).toBe(true);
+    expect(db.contactIdentity.findMany.mock.calls[0]![0].where).toEqual({
+      orgId: ORG,
+      kind: "PHONE",
+      value: { in: ["919876543210", "14155552671", "447911123456"] },
+    });
   });
 
   test("all duplicates is a 200 with everything skipped, not a 500", async () => {
-    db.contact.findMany.mockResolvedValueOnce([{ phone: "919876543210", external_id: null }]);
+    db.contactIdentity.findMany.mockResolvedValueOnce([{ value: "919876543210" }]);
     const app = await buildApp();
     const res = await app.inject({
       method: "POST",
@@ -532,6 +628,7 @@ describe("update and delete", () => {
     ]);
     db.contactLabel.findMany.mockResolvedValue([{ id: LABEL }]);
     db.contact.update.mockResolvedValue({ id: ID, orgId: ORG });
+    db.contactIdentity.findMany.mockResolvedValue([{ kind: "PHONE", value: "919876543210" }]);
 
     const app = await buildApp();
     const res = await app.inject({
@@ -554,8 +651,58 @@ describe("update and delete", () => {
     expect(db.contactLabelMap.deleteMany).toHaveBeenCalledWith({ where: { contactId: ID } });
     expect(emitIntegrationEvent).toHaveBeenCalledWith(
       ORG,
-      expect.objectContaining({ type: "contact.updated" }),
+      expect.objectContaining({
+        type: "contact.updated",
+        contact: expect.objectContaining({ id: ID, phone: "919876543210", email: null }),
+      }),
     );
+    // Nothing to write on the identities.
+    expect(setPrimaryIdentities).not.toHaveBeenCalled();
+  });
+
+  test("PATCH writes phone and email as the contact's primary identities", async () => {
+    db.contact.findFirst.mockResolvedValue(row());
+    db.contact.update.mockResolvedValue({ id: ID, orgId: ORG });
+    db.contactIdentity.findMany.mockResolvedValue([]);
+
+    const app = await buildApp();
+    const res = await app.inject({
+      method: "PATCH",
+      url: `/${ID}`,
+      payload: { phone: "+14155552671", email: null },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(setPrimaryIdentities).toHaveBeenCalledWith(
+      ORG,
+      ID,
+      { phone: "14155552671", email: null },
+      "IMPORT",
+      db,
+    );
+    expect(db.contact.update.mock.calls[0]![0].data).not.toHaveProperty("phone");
+  });
+
+  test("PATCH to another contact's phone is 409 contact_already_exists with its id", async () => {
+    db.contact.findFirst.mockResolvedValue(row());
+    db.contact.update.mockResolvedValue({ id: ID, orgId: ORG });
+    (setPrimaryIdentities as Mock).mockRejectedValueOnce(
+      new IdentityTakenError("PHONE", "14155552671", "owner-1"),
+    );
+
+    const app = await buildApp();
+    const res = await app.inject({
+      method: "PATCH",
+      url: `/${ID}`,
+      payload: { phone: "+14155552671" },
+    });
+
+    expect(res.statusCode).toBe(409);
+    expect(JSON.parse(res.payload).error).toMatchObject({
+      code: "contact_already_exists",
+      details: { contactId: "owner-1", field: "phone" },
+    });
+    expect(emitIntegrationEvent).not.toHaveBeenCalled();
   });
 
   test("DELETE answers { id, deleted: true }", async () => {

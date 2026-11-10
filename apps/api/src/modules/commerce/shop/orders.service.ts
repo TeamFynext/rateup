@@ -17,9 +17,9 @@ import { priceOrder, round2, shippingFor, toNumber, type PricedLine } from "./pr
 import { adjustStock, afterStockChange } from "./products.service.js";
 import { notFound, ShopError } from "./shop.errors.js";
 import { countsTowardOrders, orderAllowance, orderLimitError } from "./orderAllowance.js";
-import { countPlacedOrder } from "../../subscription/shopOrders.js";
-import { currentPeriodStart } from "../../subscription/billingPeriod.js";
-import { maybeNotifyOrderUsage } from "../../subscription/limitAlerts.js";
+import { countPlacedOrder } from "../../settings/subscription/shopOrders.js";
+import { currentPeriodStart } from "../../settings/subscription/billingPeriod.js";
+import { maybeNotifyOrderUsage } from "../../settings/subscription/limitAlerts.js";
 import { shopProductsActionSchema } from "./commentToBuy.schema.js";
 import {
   pointsOffer,
@@ -31,6 +31,7 @@ import {
 import type { ShopAddress, ShopAttribution, ShopSelectedShipping } from "./shop.types.js";
 import { getStoreById, nextOrderNumber, ratesForDestination } from "./store.service.js";
 import { fulfilledInStore, inStoreCheckout, paysInStore, storeLabel } from "./checkoutVia.js";
+import { contactFields, primaryIdentities } from "../../contacts/identity/contactFields.js";
 
 export const orderDetailInclude = {
   items: { orderBy: { title: "asc" } },
@@ -42,16 +43,34 @@ export const orderDetailInclude = {
     select: {
       id: true,
       name: true,
-      phone: true,
-      igsId: true,
-      psid: true,
-      email: true,
       profilePic: true,
+      ...primaryIdentities,
     },
   },
 } satisfies Prisma.ShopOrderInclude;
 
-export type ShopOrderDetail = Prisma.ShopOrderGetPayload<{ include: typeof orderDetailInclude }>;
+type ShopOrderDetailRow = Prisma.ShopOrderGetPayload<{ include: typeof orderDetailInclude }>;
+
+/** An order loaded with `orderDetailInclude`, its contact in the shape the API returns. */
+export function withOrderContact<T extends Pick<ShopOrderDetailRow, "contact">>(order: T) {
+  const { contact, ...rest } = order;
+  if (!contact) return { ...rest, contact: null };
+  const { phone, igsId, psid, email } = contactFields(contact.identities);
+  return {
+    ...rest,
+    contact: {
+      id: contact.id,
+      name: contact.name,
+      phone,
+      igsId,
+      psid,
+      email,
+      profilePic: contact.profilePic,
+    },
+  };
+}
+
+export type ShopOrderDetail = ReturnType<typeof withOrderContact<ShopOrderDetailRow>>;
 
 export interface CartLineInput {
   variantId?: string;
@@ -167,9 +186,10 @@ export async function createDraftOrder(input: CreateDraftInput) {
   const contact = input.contactId
     ? await prisma.contact.findUnique({
         where: { id: input.contactId },
-        select: { name: true, phone: true, email: true },
+        select: { name: true, ...primaryIdentities },
       })
     : null;
+  const contactIds = contactFields(contact?.identities);
 
   const order = await prisma.$transaction(async (tx) => {
     const number = await nextOrderNumber(tx, store.id);
@@ -186,8 +206,8 @@ export async function createDraftOrder(input: CreateDraftInput) {
         checkoutVia: store.checkoutVia,
         checkoutStage: stageAfterCreate(store),
         customerName: input.customer?.name ?? contact?.name ?? null,
-        customerPhone: input.customer?.phone ?? contact?.phone ?? null,
-        customerEmail: input.customer?.email ?? contact?.email ?? null,
+        customerPhone: input.customer?.phone ?? contactIds.phone ?? null,
+        customerEmail: input.customer?.email ?? contactIds.email ?? null,
         attribution: attribution ?? undefined,
         createdById: input.createdById ?? null,
         legacyWaOrderId: input.legacyWaOrderId ?? null,
@@ -370,7 +390,7 @@ export async function repriceOrder(orderId: string, patch: CheckoutPatch = {}) {
     await releaseOrderBenefits(order.id);
   }
 
-  return prisma.shopOrder.update({
+  const updated = await prisma.shopOrder.update({
     where: { id: order.id },
     data: {
       shippingAddress: address ?? undefined,
@@ -386,6 +406,7 @@ export async function repriceOrder(orderId: string, patch: CheckoutPatch = {}) {
     },
     include: orderDetailInclude,
   });
+  return withOrderContact(updated);
 }
 
 /** An order's lines and saved coupon, priced the way `repriceOrder` prices them. */
@@ -838,7 +859,7 @@ async function notifyNeedsReview(
   reason: string,
 ) {
   try {
-    const { notify } = await import("../../notification/notify.js");
+    const { notify } = await import("../../settings/notifications/notify.js");
     await notify({
       event: "commerce.order_needs_review",
       orgId: order.orgId,
@@ -1193,7 +1214,7 @@ export async function listOrders(storeId: string, q: OrderListQuery) {
       where,
       include: {
         items: { select: { id: true, quantity: true } },
-        contact: { select: { id: true, name: true, phone: true, whatsappUserName: true } },
+        contact: { select: { id: true, name: true, whatsappUserName: true, ...primaryIdentities } },
       },
       orderBy: { createdAt: "desc" },
       skip: page * limit,
@@ -1203,7 +1224,18 @@ export async function listOrders(storeId: string, q: OrderListQuery) {
     ...TABS.map((t) => prisma.shopOrder.count({ where: { AND: [{ storeId }, tabWhere(t)] } })),
   ]);
   return {
-    items: items.map(({ invoiceKey: _key, ...o }) => ({ ...o, nextStep: nextStep(o) })),
+    items: items.map(({ invoiceKey: _key, contact, ...o }) => ({
+      ...o,
+      contact: contact
+        ? {
+            id: contact.id,
+            name: contact.name,
+            phone: contactFields(contact.identities).phone,
+            whatsappUserName: contact.whatsappUserName,
+          }
+        : null,
+      nextStep: nextStep(o),
+    })),
     total,
     page,
     limit,
@@ -1280,7 +1312,7 @@ export async function getOrder(storeId: string, id: string) {
       ? import("./shopLoyalty.js").then((m) => m.memberFor(order.orgId, order.contactId))
       : null,
   ]);
-  const { invoiceKey, ...rest } = order;
+  const { invoiceKey, ...rest } = withOrderContact(order);
   return {
     ...rest,
     hasInvoice: Boolean(invoiceKey),
@@ -1298,7 +1330,7 @@ export async function getOrderByToken(token: string) {
     include: orderDetailInclude,
   });
   if (!order) throw notFound("Checkout");
-  return order;
+  return withOrderContact(order);
 }
 
 export async function updateStaffNote(storeId: string, id: string, staffNote: string | null) {

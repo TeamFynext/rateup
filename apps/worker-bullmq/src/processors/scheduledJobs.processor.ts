@@ -8,15 +8,18 @@ import { Job, Worker } from "bullmq";
 
 import { log } from "@rateup/api/utils/logger.js";
 import { sweepExpiredIdempotencyRecords } from "@rateup/api/external/shared/idempotency.js";
-import { drainApiUsage, sweepOldApiUsage } from "@rateup/api/modules/apiAccessToken/apiUsage.js";
-import { sweepExpiredApiKeys } from "@rateup/api/modules/apiAccessToken/apiAccessToken.service.js";
+import { drainApiUsage, sweepOldApiUsage } from "@rateup/api/modules/settings/apiKeys/apiUsage.js";
+import { sweepExpiredApiKeys } from "@rateup/api/modules/settings/apiKeys/apiKey.service.js";
 import baseRedis from "@rateup/api/utils/redisConnection.js";
-import { resetAnnualCounts, resetMonthlyCounts } from "@rateup/api/modules/stats/stats.service.js";
+import {
+  resetAnnualCounts,
+  resetMonthlyCounts,
+} from "@rateup/api/modules/analytics/stats/stats.service.js";
 import {
   endSurveyCronAction,
   publishSurveyCronAction,
-} from "@rateup/api/modules/survey/survey.service.js";
-import { sendCampaignCronAction } from "@rateup/api/modules/campaign/campaign.service.js";
+} from "@rateup/api/modules/surveys/survey.service.js";
+import { sendCampaignCronAction } from "@rateup/api/modules/campaigns/campaign.service.js";
 import { syncShopifyWebhooks } from "@rateup/api/modules/integrations/shopify/shopify.webhooks.js";
 import { syncShopifyWidgets } from "@rateup/api/modules/integrations/shopify/shopify.widget.js";
 import { cleanupShopifyCheckouts } from "@rateup/api/modules/integrations/shopify/shopify.checkouts.service.js";
@@ -26,19 +29,19 @@ import { refreshIntegrationCredentials } from "@rateup/api/modules/integrations/
 import {
   processDripCampaigns,
   sendSchedulesWaMessages,
-} from "@rateup/api/modules/whatsapp/wa_message_scheduler.js";
-import { runInboxAutomationCron } from "@rateup/api/modules/whatsapp/inbox/automation/inboxautomation.service.js";
+} from "@rateup/api/modules/meta/whatsapp/wa_message_scheduler.js";
+import { runInboxAutomationCron } from "@rateup/api/modules/inbox/automation/inboxautomation.service.js";
 import { runLoyaltyReminderSweep } from "@rateup/api/modules/loyalty/settings/reminderSweep.service.js";
 import { getWeeklyConversationReport } from "@rateup/api/workers/shared/bullmqCronJobs/sendMail/weeklyMail.js";
-import { downgradeExpiredSubscriptions } from "@rateup/api/modules/subscription/subscription.service.js";
-import { sweepMissedPayments } from "@rateup/api/modules/payment/payment.service.js";
+import { downgradeExpiredSubscriptions } from "@rateup/api/modules/settings/subscription/subscription.service.js";
+import { sweepMissedPayments } from "@rateup/api/modules/settings/billing/payment.service.js";
 import { subscriptionExpiryAlert } from "@rateup/api/utils/email/payments/subscriptionExpiryAlert.js";
 import type { ScheduledJobId } from "@rateup/api/workers/bullmq/queues/cron.queue.js";
 import { reevaluateRollingTiers } from "@rateup/api/modules/loyalty/tiers/tierReevaluation.service.js";
-import { settleSentCampaigns } from "@rateup/api/modules/campaign/campaignSettle.service.js";
-import { purgeStaffSessions } from "@rateup/api/modules/staff/staff.session.js";
-import { runInactiveOrgCleanup } from "@rateup/api/modules/org/inactiveOrgCleanup.service.js";
-import { runOnboardingDrip } from "@rateup/api/modules/customerComms/drip.service.js";
+import { settleSentCampaigns } from "@rateup/api/modules/campaigns/campaignSettle.service.js";
+import { purgeStaffSessions } from "@rateup/api/modules/platform/staff/staff.session.js";
+import { runInactiveOrgCleanup } from "@rateup/api/modules/settings/org/inactiveOrgCleanup.service.js";
+import { runOnboardingDrip } from "@rateup/api/modules/platform/customerComms/drip.service.js";
 import { flushUsageCounters } from "@rateup/api/workers/shared/usageCounter.js";
 
 const workerConnection = baseRedis.duplicate();

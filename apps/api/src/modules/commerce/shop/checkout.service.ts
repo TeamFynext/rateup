@@ -3,7 +3,7 @@ import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
 import redis from "../../../utils/redisConnection.js";
 import { armShopReminder } from "../../../workers/bullmq/queues/shop.queue.js";
-import { sendAddressFlowToCustomer } from "../../whatsapp/catalog/catalogSettings.service.js";
+import { sendAddressFlowToCustomer } from "../catalogs/catalogSettings.service.js";
 import { DiscountRefused } from "./discounts.service.js";
 import { checkoutUrl } from "./events.js";
 import { paysInStore, storeLabel } from "./checkoutVia.js";
@@ -991,7 +991,7 @@ export async function createOrderFromInbox(input: {
   const store = await getOrCreateStore(input.orgId);
   const contact = await prisma.contact.findFirst({
     where: { id: input.contactId, orgId: input.orgId },
-    select: { id: true, name: true, phone: true },
+    select: { id: true, name: true },
   });
   if (!contact) throw new ShopError("NOT_FOUND", "Contact not found");
   const external = storeChecksOut(store);

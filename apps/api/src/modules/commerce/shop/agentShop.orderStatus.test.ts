@@ -27,7 +27,7 @@ beforeEach(() => {
 test("finds orders by the chatter's own contact or a number its owner confirmed, never a typed one", async () => {
   await agentOrderStatus("org", "+1 555 0100");
   expect(db.shopOrder.findMany.mock.calls[0][0].where.OR).toEqual([
-    { contact: { phone: "15550100" } },
+    { contact: { identities: { some: { kind: "PHONE", value: "15550100" } } } },
     { customerPhone: "15550100", phoneVerifiedAt: { not: null } },
   ]);
 });

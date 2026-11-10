@@ -10,8 +10,8 @@ import {
 import { LoyaltyWaCommand } from "../../../generated/prisma/client.js";
 import { getLCustomerByPhone, updateCustomerAccount } from "../accounts/account.service.js";
 import { renderReplyText } from "../richText.js";
-import { handleWaJoinRegistration } from "../../whatsapp/whatsappSurvey/wasurvey.controller.js";
-import { generateWhatsAppJoinLink } from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
+import { handleWaJoinRegistration } from "../../meta/whatsapp/webhook/whatsapp.controller.js";
+import { generateWhatsAppJoinLink } from "../../meta/whatsapp/webhook/whatsapp.utils.js";
 import { buildKeywordReply, SYSTEM_TEXTS } from "../messaging/content.js";
 import {
   replyLoyalty,

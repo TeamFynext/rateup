@@ -4,7 +4,7 @@ import type { Integration } from "../../../generated/prisma/client.js";
 import { IntegratedApps } from "../../../types/enums.js";
 import prisma from "../../../utils/prisma.js";
 import { integrationTriggerQueue } from "../../../workers/bullmq/queues/index.js";
-import { LEADS_PIPELINE_TYPE } from "../../pipeline/pipelineTypes.js";
+import { LEADS_PIPELINE_TYPE } from "../../pipelines/pipelineTypes.js";
 import type { IntegrationEvent } from "../events/integrationEvent.types.js";
 import type {
   IntegrationEventContext,
@@ -16,6 +16,7 @@ import {
   recordLink,
   removeLink,
 } from "../shared/entityLink.js";
+import { noteContactSelect, toNoteContact } from "../shared/activityNotes.js";
 import { pipedriveClientFor } from "./pipedrive.client.js";
 import { PIPEDRIVE_JOB_OPTIONS, pipedrivePersonIdFor } from "./pipedrive.contacts.js";
 import { readPipedriveCredential, type PipedrivePipeline } from "./pipedrive.types.js";
@@ -135,7 +136,7 @@ export async function processPipedriveDealJob(
       stage: { select: { status: true } },
       lostReason: { select: { label: true } },
       pipeline: { select: { orgId: true, type: true } },
-      contact: { select: { id: true, name: true, email: true, phone: true } },
+      contact: { select: noteContactSelect },
     },
   });
   if (
@@ -166,7 +167,7 @@ export async function processPipedriveDealJob(
   }
 
   const personId = lead.contact
-    ? await pipedrivePersonIdFor(integration, client, lead.contact)
+    ? await pipedrivePersonIdFor(integration, client, toNoteContact(lead.contact))
     : null;
   const response = await client.post<{ data: { id: number } }>("/v2/deals", {
     ...fields,

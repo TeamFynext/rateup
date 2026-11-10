@@ -21,8 +21,10 @@ vi.mock("./logger.js", () => ({
   },
 }));
 
-vi.mock("../modules/subscription/subscription.service.js", () => ({ getSubscription: vi.fn() }));
-vi.mock("../modules/subscription/subscription.data.js", () => ({
+vi.mock("../modules/settings/subscription/subscription.service.js", () => ({
+  getSubscription: vi.fn(),
+}));
+vi.mock("../modules/settings/subscription/subscription.data.js", () => ({
   FreePlanSubscriptionFeatures: { whatsapp: { active: true } },
 }));
 vi.mock("../generated/prisma/client.js", () => ({
@@ -31,7 +33,7 @@ vi.mock("../generated/prisma/client.js", () => ({
 }));
 
 import prisma from "./prisma.js";
-import { getSubscription } from "../modules/subscription/subscription.service.js";
+import { getSubscription } from "../modules/settings/subscription/subscription.service.js";
 import { log } from "./logger.js";
 import { SubscriptionFeaturePathName } from "../types/enums.js";
 import {

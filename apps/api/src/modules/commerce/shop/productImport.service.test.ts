@@ -23,10 +23,10 @@ const meta = vi.hoisted(() => ({ callMetaApi: vi.fn() }));
 
 vi.mock("../../../utils/prisma.js", () => ({ default: db }));
 vi.mock("../../../utils/logger.js", () => ({ log: { info: vi.fn(), warn: vi.fn() } }));
-vi.mock("../../whatsapp/settings/wa_settings.service.js", () => ({
+vi.mock("../../meta/whatsapp/settings/settings.service.js", () => ({
   getWaSettings: vi.fn(async () => ({ accessToken: "token" })),
 }));
-vi.mock("../../whatsapp/wa_axios.js", () => meta);
+vi.mock("../../meta/whatsapp/wa_axios.js", () => meta);
 vi.mock("./products.service.js", () => products);
 vi.mock("./storeSync.service.js", () => sync);
 

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 const gate = vi.hoisted(() => ({ getSubscriptionGate: vi.fn() }));
 vi.mock("../../../utils/prisma.js", () => ({ default: {} }));
-vi.mock("../../subscription/subscription.service.js", () => gate);
+vi.mock("../../settings/subscription/subscription.service.js", () => gate);
 
 const { assertCommerceEnabled, commerceEnabled } = await import("./store.service.js");
 

@@ -16,7 +16,10 @@ import {
   RateupPlan,
   SubscriptionStatus,
 } from "../../../generated/prisma/client.js";
-import { bustSubscriptionGate, getSubscription } from "../../subscription/subscription.service.js";
+import {
+  bustSubscriptionGate,
+  getSubscription,
+} from "../../settings/subscription/subscription.service.js";
 import dayjs from "dayjs";
 import { createEmailBodySubscriptionActivated } from "../../../utils/email/payments/subscriptionActivated.js";
 import { getShopifyIntegrationByShop } from "./shopify.credential.js";

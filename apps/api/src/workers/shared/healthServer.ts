@@ -18,7 +18,7 @@ export interface HealthCheckResult {
 export interface HealthServerOptions {
   service: string;
   check: () => Promise<HealthCheckResult>;
-  /** A prom-client `Registry`, or anything shaped like its exposition half. */
+  /** A `Registry` from @prometheus-io/client, or anything shaped like its exposition half. */
   registry: { metrics(): Promise<string>; contentType: string };
   /** A check slower than this counts as a failure. */
   checkTimeoutMs?: number;

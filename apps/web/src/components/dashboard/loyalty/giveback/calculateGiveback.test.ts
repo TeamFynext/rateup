@@ -11,7 +11,7 @@ import {
 
 /**
  * This table is mirrored, by hand, in
- * rateup-api/src/modules/loyalty/giveback.test.ts.
+ * apps/api/src/modules/loyalty/giveback.test.ts.
  * The wizard computes giveback live and the server repeats it at activation; if the two
  * drift, a merchant sees one number while typing and a different one in the warning.
  */

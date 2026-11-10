@@ -1,6 +1,6 @@
 import { axiosClient } from "../apiClient";
 
-const WEBHOOK_URL = "webhook";
+const WEBHOOK_URL = "webhooks";
 
 /** Mirrors `WEBHOOK_EVENTS` in rateup-api's `webhook.schema.ts`. */
 export const WEBHOOK_EVENTS = [

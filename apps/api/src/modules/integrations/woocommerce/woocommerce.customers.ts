@@ -1,5 +1,13 @@
 import type { Integration } from "../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
+import { ContactIdentitySource } from "../../../generated/prisma/enums.js";
+import {
+  contactFields,
+  contactWhereIdentity,
+  primaryIdentities,
+  setPrimaryIdentities,
+} from "../../contacts/identity/contactFields.js";
+import { IdentityTakenError } from "../../contacts/identity/identity.service.js";
 import { log } from "../../../utils/logger.js";
 import { findLinkByExternalId, recordLink } from "../shared/entityLink.js";
 import type { WooDeliveryJobData } from "./woocommerce.inbound.js";
@@ -27,7 +35,8 @@ export type WooCustomerOutcome =
 
 const LINK = (integrationId: string) => ({ integrationId, entityType: "contact" as const });
 
-const isUniqueViolation = (error: unknown) => (error as { code?: string } | null)?.code === "P2002";
+const isUniqueViolation = (error: unknown) =>
+  error instanceof IdentityTakenError || (error as { code?: string } | null)?.code === "P2002";
 
 export async function handleWooCustomer(
   integration: Integration,
@@ -52,7 +61,7 @@ export async function handleWooCustomer(
 
   const existing = await findContactByPhone(orgId, contact.phone);
   if (existing) {
-    await fillMissing(existing, contact);
+    await fillMissing(orgId, existing, contact);
     await recordLink(LINK(integration.id), {
       rateupId: existing.id,
       externalId: contact.externalId,
@@ -62,7 +71,7 @@ export async function handleWooCustomer(
 
   // Loaded on use: contact creation reaches the automation engine and the
   // integration fan-out, which the registry importing this module has no need for.
-  const { createContact } = await import("../../contact/contact.service.js");
+  const { createContact } = await import("../../contacts/contact.service.js");
   try {
     const created = await createContact({
       orgId,
@@ -88,22 +97,33 @@ export async function handleWooCustomer(
   }
 }
 
-function findContactByPhone(orgId: string, phone: string) {
-  return prisma.contact.findUnique({
-    where: { contact_phone_org_id_unique: { phone, orgId } },
-    select: { id: true, name: true, email: true },
+async function findContactByPhone(orgId: string, phone: string) {
+  const row = await prisma.contact.findFirst({
+    where: { orgId, ...contactWhereIdentity("phone", phone) },
+    select: { id: true, name: true, ...primaryIdentities },
   });
+  return row && { id: row.id, name: row.name, email: contactFields(row.identities).email };
 }
 
 async function fillMissing(
+  orgId: string,
   existing: { id: string; name: string | null; email: string | null },
   contact: WooContact,
 ) {
-  const patch = {
-    ...(!existing.name?.trim() && contact.name && { name: contact.name }),
-    ...(!existing.email?.trim() && contact.email && { email: contact.email }),
-  };
-  if (Object.keys(patch).length) {
-    await prisma.contact.update({ where: { id: existing.id }, data: patch });
+  if (!existing.name?.trim() && contact.name) {
+    await prisma.contact.update({ where: { id: existing.id }, data: { name: contact.name } });
+  }
+  if (!existing.email?.trim() && contact.email) {
+    await fillEmail(orgId, existing.id, contact.email);
+  }
+}
+
+/** The store's email, unless another contact is already known by it. */
+export async function fillEmail(orgId: string, contactId: string, email: string) {
+  try {
+    await setPrimaryIdentities(orgId, contactId, { email }, ContactIdentitySource.IMPORT);
+  } catch (error) {
+    if (!(error instanceof IdentityTakenError)) throw error;
+    log.info({ contactId }, "WooCommerce email belongs to another contact; left off this one");
   }
 }

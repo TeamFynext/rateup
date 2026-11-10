@@ -5,7 +5,7 @@ import prisma from "../../../utils/prisma.js";
 import {
   sendInstagramPrivateReply,
   sendInstagramTextMessage,
-} from "../../whatsapp/instagram/instagram_messaging.service.js";
+} from "../../meta/instagram/instagram_messaging.service.js";
 import { rememberSocialSource } from "./attribution.js";
 import { shopProductsActionSchema } from "./commentToBuy.schema.js";
 import { storefrontUrl } from "./events.js";
@@ -15,6 +15,7 @@ import { toNumber } from "./pricing.js";
 import type { ShopAttribution } from "./shop.types.js";
 import { storefrontProductUrl } from "./storefrontLinks.js";
 import { commerceEnabled } from "./store.service.js";
+import { contactWhereIdentity } from "../../contacts/identity/contactFields.js";
 
 export type DropClaim =
   | { status: "claimed"; claimId: string }
@@ -137,8 +138,8 @@ export async function runShopProductsAction(input: CommentToBuyInput): Promise<b
     return false;
   }
 
-  const contact = await prisma.contact.findUnique({
-    where: { contact_igsid_org_id_unique: { igsId: input.recipient, orgId: input.orgId } },
+  const contact = await prisma.contact.findFirst({
+    where: { orgId: input.orgId, ...contactWhereIdentity("igsId", input.recipient) },
     select: { id: true },
   });
   const kind = SOCIAL_KINDS[input.triggerEvent];

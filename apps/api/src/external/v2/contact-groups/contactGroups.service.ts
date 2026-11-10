@@ -1,5 +1,5 @@
-import { storedPhoneSpellings, toWirePhone } from "../phone.js";
 import type { Prisma } from "../../../generated/prisma/client.js";
+import { ContactIdentityKind } from "../../../generated/prisma/enums.js";
 import prisma from "../../../utils/prisma.js";
 import { contactSelect } from "../contacts/presenters.js";
 import { ExternalApiError } from "../../shared/errors.js";
@@ -98,14 +98,24 @@ export async function ownedContactIds(orgId: string, contactIds: string[]): Prom
   return new Set(rows.map((r) => r.id));
 }
 
+/** Phone (digits, as the schema hands them on) → the contact known by it. */
 export async function contactsByPhone(orgId: string, phones: string[]) {
   if (!phones.length) return new Map<string, string>();
-  const rows = await prisma.contact.findMany({
-    where: { orgId, phone: { in: phones.flatMap(storedPhoneSpellings) } },
-    select: { id: true, phone: true },
+  const rows = await prisma.contactIdentity.findMany({
+    where: { orgId, kind: ContactIdentityKind.PHONE, value: { in: phones } },
+    select: { contactId: true, value: true },
   });
-  // Keyed by the digits the caller asked with, whichever spelling the row is stored under.
-  return new Map(rows.map((r) => [toWirePhone(r.phone) as string, r.id]));
+  return new Map(rows.map((r) => [r.value, r.contactId]));
+}
+
+/** Contact id → its phone, for contacts just created. */
+export async function primaryPhones(contactIds: string[]) {
+  if (!contactIds.length) return new Map<string, string>();
+  const rows = await prisma.contactIdentity.findMany({
+    where: { contactId: { in: contactIds }, kind: ContactIdentityKind.PHONE, isPrimary: true },
+    select: { contactId: true, value: true },
+  });
+  return new Map(rows.map((r) => [r.contactId, r.value]));
 }
 
 /** Custom field slugs → ids, this org's fields only. */

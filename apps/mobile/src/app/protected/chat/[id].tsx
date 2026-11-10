@@ -20,7 +20,7 @@ import KeyboardAvoider from "@/components/common/KeyboardAvoider";
 import { logger } from "@/utils/logger";
 
 /**
- * `/api/contact/:id` and the cached row both return a bare Contact, which carries no
+ * `/api/contacts/:id` and the cached row both return a bare Contact, which carries no
  * session flag. Derived from the 24h reply window, the same way the inbox does; at worst
  * the template-only footer shows for a moment, never a free-form composer on a closed
  * session.

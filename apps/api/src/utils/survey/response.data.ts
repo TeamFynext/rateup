@@ -2,7 +2,7 @@ import { faker } from "@faker-js/faker";
 import { LDResponse, QuestionType, SmileyResponse, YNResponse } from "../../types/enums.js";
 import { ResponsePlatform } from "../../generated/prisma/client.js";
 import { load } from "cheerio";
-import { CreateResponseInput } from "../../modules/response/response.schema.js";
+import { CreateResponseInput } from "../../modules/surveys/responses/response.schema.js";
 
 export const generateResponseData = (
   surveyTeamMapId: string,

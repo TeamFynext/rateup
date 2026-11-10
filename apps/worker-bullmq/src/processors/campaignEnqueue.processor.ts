@@ -25,8 +25,8 @@ import {
   cancelCampaignSend,
   failCampaignSend,
   startCampaignSend,
-} from "@rateup/api/modules/campaign/campaignSend.service.js";
-import { notifyCampaignStopped } from "@rateup/api/modules/campaign/campaignNotify.js";
+} from "@rateup/api/modules/campaigns/campaignSend.service.js";
+import { notifyCampaignStopped } from "@rateup/api/modules/campaigns/campaignNotify.js";
 
 /**
  * A reason worth putting in front of the sender.

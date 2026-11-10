@@ -9,8 +9,8 @@ import {
   syncConnectedCatalog,
   syncWaCatalogs,
   updateConnectWaCatalog,
-} from "../../whatsapp/catalog/catalog.service.js";
-import { sendMetaMessage } from "../../whatsapp/meta/metaMessage.service.js";
+} from "../catalogs/catalog.service.js";
+import { sendMetaMessage } from "../../meta/shared/metaMessage.service.js";
 import { checkoutUrl } from "./events.js";
 import { checkoutLinkFor } from "./externalCheckout.service.js";
 import { formatMoney } from "./money.js";

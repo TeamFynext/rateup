@@ -19,7 +19,7 @@ const redis = vi.hoisted(() => {
 });
 vi.mock("../../../utils/redisConnection.js", () => ({ default: redis }));
 vi.mock("../../../utils/prisma.js", () => ({ default: { integration: { update: vi.fn() } } }));
-vi.mock("../../whatsapp/automatedReply/wa_automatedReply.utils.js", () => ({
+vi.mock("../../automation/rules/rules.utils.js", () => ({
   checkAndExecuteRuleByTriggerEvent: vi.fn(),
 }));
 const shopSync = vi.hoisted(() => ({ syncOrderFromStore: vi.fn() }));
@@ -215,7 +215,7 @@ describe("an order delivery", () => {
 describe("WooCommerce as a commerce store", () => {
   test("hands its order statuses to the automation engine as WOOCOMMERCE_EVENT", async () => {
     const { checkAndExecuteRuleByTriggerEvent: spy } =
-      await import("../../whatsapp/automatedReply/wa_automatedReply.utils.js");
+      await import("../../automation/rules/rules.utils.js");
     const order = toCommerceOrder(payload({ status: "completed" }), credential, null)!;
 
     await wooCommerceCommerce.runOrderAutomation!(

@@ -1,11 +1,11 @@
 import { log } from "../../../utils/logger.js";
 import { WaTemplateComponentType } from "../../../types/enums.js";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload.js";
-import { getFlowWithSurveyTeamMapIds } from "../../../modules/whatsapp/flows/flow.service.js";
-import { signFlowToken } from "../../../modules/whatsapp/flows/flowToken.js";
-import { sendMessage } from "../../../modules/whatsapp/whatsappSurvey/wasurvey.service.js";
-import { createTemplateMessage } from "../../../modules/whatsapp/whatsappSurvey/wasurvey.utils.js";
-import type { templateData } from "../../../modules/whatsapp/messageTemplates/wa_templates.service.js";
+import { getFlowWithSurveyTeamMapIds } from "../../../modules/meta/whatsapp/flows/flow.service.js";
+import { signFlowToken } from "../../../modules/meta/whatsapp/flows/flowToken.js";
+import { sendMessage } from "../../../modules/meta/whatsapp/webhook/whatsapp.service.js";
+import { createTemplateMessage } from "../../../modules/meta/whatsapp/webhook/whatsapp.utils.js";
+import type { templateData } from "../../../modules/meta/whatsapp/templates/templates.service.js";
 import { getFlowIdFromTemplateComponents } from "./wa_templates.utils.js";
 import type { SendTemplateHeaderComponent } from "./wa_templates.external.schema.js";
 

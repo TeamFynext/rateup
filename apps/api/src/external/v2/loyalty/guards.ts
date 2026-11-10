@@ -1,7 +1,7 @@
 import type { FastifyRequest } from "fastify";
 import dayjs from "dayjs";
 
-import { getSubscriptionGate } from "../../../modules/subscription/subscription.service.js";
+import { getSubscriptionGate } from "../../../modules/settings/subscription/subscription.service.js";
 import { getNestedProperty } from "../../../utils/misc/obj.utils.js";
 import { SubscriptionFeaturePathName } from "../../../types/enums.js";
 import { getLoyaltyProgramSummary } from "../../../modules/loyalty/program/program.service.js";

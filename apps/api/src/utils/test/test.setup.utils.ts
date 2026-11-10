@@ -1,4 +1,4 @@
-import { deleteUser, getUserByEmail } from "../../modules/user/user.service.js";
+import { deleteUser, getUserByEmail } from "../../modules/settings/user/user.service.js";
 import supertokens from "supertokens-node";
 import { SuperTokensConfig } from "../../config.js";
 import { FastifyInstance } from "fastify";

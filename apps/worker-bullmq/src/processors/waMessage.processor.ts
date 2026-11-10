@@ -15,11 +15,11 @@ import { log } from "@rateup/api/workers/shared/logger.js";
 import baseRedis from "@rateup/api/utils/redisConnection.js";
 import { processParticipant } from "@rateup/api/workers/shared/modules/messageDispatch/messageDispatch.service.js";
 import { WaFailureClass } from "@rateup/api/utils/waRetryableErrors.js";
-import { notify } from "@rateup/api/modules/notification/notify.js";
+import { notify } from "@rateup/api/modules/settings/notifications/notify.js";
 import { campaignSendJobsKey, getCampaignById } from "@rateup/api/workers/shared/whatsapp/index.js";
-import { completeCampaignSend } from "@rateup/api/modules/campaign/campaignSend.service.js";
-import { scheduleNextRetry } from "@rateup/api/modules/campaign/campaignRetry.service.js";
-import { finishCampaignIfSettled } from "@rateup/api/modules/campaign/campaignSettle.service.js";
+import { completeCampaignSend } from "@rateup/api/modules/campaigns/campaignSend.service.js";
+import { scheduleNextRetry } from "@rateup/api/modules/campaigns/campaignRetry.service.js";
+import { finishCampaignIfSettled } from "@rateup/api/modules/campaigns/campaignSettle.service.js";
 import {
   acquirePhoneSendSlot,
   resolvePhoneRate,

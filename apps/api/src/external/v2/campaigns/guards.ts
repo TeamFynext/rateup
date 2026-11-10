@@ -1,13 +1,13 @@
 import type { FastifyRequest } from "fastify";
 import dayjs from "dayjs";
 
-import { getSubscription } from "../../../modules/subscription/subscription.service.js";
+import { getSubscription } from "../../../modules/settings/subscription/subscription.service.js";
 import { getNestedProperty } from "../../../utils/misc/obj.utils.js";
 import { SubscriptionFeaturePathName } from "../../../types/enums.js";
 import { ExternalApiError } from "../../shared/errors.js";
 
 /**
- * The plan gate `/api/campaign` mounts as `getVerifySubscriptionHandler([WhatsappCampaign])`,
+ * The plan gate `/api/campaigns` mounts as `getVerifySubscriptionHandler([WhatsappCampaign])`,
  * which the partner routes used to skip: an API key could create and send campaigns on a
  * plan without campaigns at all.
  *

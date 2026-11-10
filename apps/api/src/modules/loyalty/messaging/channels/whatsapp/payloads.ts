@@ -5,7 +5,7 @@ import {
   createReplyButtonsMessage,
   createReplyImageMessage,
   createTextMessage,
-} from "../../../../whatsapp/whatsappSurvey/wasurvey.utils.js";
+} from "../../../../meta/whatsapp/webhook/whatsapp.utils.js";
 import type { LoyaltyMessage } from "../../types.js";
 
 /** The one WhatsApp payload a session message becomes, from its richest part down. */

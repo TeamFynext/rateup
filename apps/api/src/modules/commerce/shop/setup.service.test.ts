@@ -18,14 +18,14 @@ const session = vi.hoisted(() => ({ findOpenSession: vi.fn() }));
 vi.mock("../../../utils/prisma.js", () => ({ default: db }));
 vi.mock("../../../utils/logger.js", () => ({ log: { warn: vi.fn() } }));
 vi.mock("../../../workers/bullmq/queues/shop.queue.js", () => queue);
-vi.mock("../../whatsapp/catalog/catalog.service.js", () => catalog);
+vi.mock("../catalogs/catalog.service.js", () => catalog);
 vi.mock("../../loyalty/messaging/channels/whatsapp/session.js", () => session);
 const meta = vi.hoisted(() => ({
   sendMetaMessage: vi.fn<(input: { payload: { type: string } }) => Promise<unknown>>(async () => ({
     ok: true,
   })),
 }));
-vi.mock("../../whatsapp/meta/metaMessage.service.js", () => meta);
+vi.mock("../../meta/shared/metaMessage.service.js", () => meta);
 vi.mock("./orders.service.js", () => ({ createDraftOrder: vi.fn() }));
 vi.mock("./events.js", () => ({
   checkoutUrl: (t: string) => `https://shop.test/c/${t}`,

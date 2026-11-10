@@ -2,7 +2,7 @@ import axios from "@/config/axios";
 import { MembersResponse } from "@/context/type";
 import { logger } from "@/utils/logger";
 
-/** A team as `/team/user` returns it: the caller's own teams, with active member counts. */
+/** A team as `/teams/user` returns it: the caller's own teams, with active member counts. */
 export interface UserTeam {
   id: string;
   name: string;
@@ -12,7 +12,7 @@ export interface UserTeam {
 }
 
 export async function getTeamsByUser() {
-  let teams = await axios.get("/api/team/user");
+  let teams = await axios.get("/api/teams/user");
   return teams.data;
 }
 

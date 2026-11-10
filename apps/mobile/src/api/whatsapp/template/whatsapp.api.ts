@@ -1,7 +1,7 @@
 import axios from "@/config/axios";
 import { WaSettings, WaTemplate } from "../types";
 
-const TEMPLATES_URL = `/api/wa/templates`;
+const TEMPLATES_URL = `/api/whatsapp/templates`;
 
 export const getWaTemplates = async (templatType: any) => {
   const url = templatType ? `${TEMPLATES_URL}?templateType=${templatType}` : TEMPLATES_URL;
@@ -24,7 +24,7 @@ export async function sendWaTemplateToUser(
     whatsappSettingsPhoneId,
   });
 }
-const SettingsUrl = `/api/wa/settings`;
+const SettingsUrl = `/api/whatsapp/settings`;
 
 export const getWaSettings = async () => {
   const res = await axios.get(SettingsUrl);

@@ -6,7 +6,7 @@ import {
   deliverCustomerMessage,
   fireBroadcast,
   markCustomerMessageFailed,
-} from "@rateup/api/modules/customerComms/send.js";
+} from "@rateup/api/modules/platform/customerComms/send.js";
 import type { CustomerCommsJob } from "@rateup/api/workers/bullmq/queues/customerComms.queue.js";
 
 const workerConnection = baseRedis.duplicate();

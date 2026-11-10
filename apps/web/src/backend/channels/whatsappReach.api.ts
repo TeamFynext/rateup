@@ -39,7 +39,7 @@ export type WhatsappReach = WhatsappReachBase &
 /** One row per WhatsApp number of the org. */
 export const getWhatsappReach = async (contactId: string): Promise<WhatsappReach[]> => {
   const res = await axiosClient.get<WhatsappReach[]>(
-    `/contact/identities/${contactId}/whatsapp-reach`,
+    `/contacts/identities/${contactId}/whatsapp-reach`,
   );
   return res.data;
 };

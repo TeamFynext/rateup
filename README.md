@@ -41,7 +41,6 @@ Never run `npm` in this repo: it would write a second lockfile.
 
 ```bash
 vp install                 # the workspace, the git hooks, and `prisma generate`
-pnpm run install:mobile    # apps/mobile is a separate install (see "Mobile" below)
 ```
 
 ### 2. Environment files
@@ -80,10 +79,11 @@ Android emulator.
 
 ### 3. Services: Postgres, Redis, Kafka, SuperTokens
 
-Redis and Kafka come from the API's compose file:
+Redis and Kafka come from the API's compose file. Start them from the root with Docker or
+Podman (waits until both are healthy); stop them with `pnpm run infra:down`:
 
 ```bash
-docker compose -f apps/api/docker-compose.yaml up -d
+pnpm run infra:up
 ```
 
 Postgres: use a local install, or run one in Docker:
@@ -167,12 +167,11 @@ covers stubbing errors and sending test webhooks.
 
 ### Mobile
 
-`apps/mobile` is its own pnpm install with a flat (hoisted) `node_modules`, which Expo needs.
-It has its own `pnpm-workspace.yaml` and `pnpm-lock.yaml`; run its commands inside the folder:
+`apps/mobile` is part of the workspace: `vp install` at the root installs it with everything
+else. Run its commands inside the folder:
 
 ```bash
 cd apps/mobile
-pnpm install                 # after its dependencies change (or `pnpm run install:mobile` at the root)
 pnpm start                   # Expo dev server
 source use-java17.sh         # Android builds need Java 17
 npx expo prebuild            # first time: generates android/ and ios/ (gitignored)
@@ -180,8 +179,7 @@ pnpm run android             # build and run on a device or emulator
 pnpm run ios                 # macOS only
 ```
 
-Shared code reaches mobile through `link:` dependencies (`@rateup/utils`), which
-`metro.config.js` watches. OTA updates and store builds: see
+Shared code reaches mobile as `workspace:*` dependencies (`@rateup/utils`). OTA updates and store builds: see
 [apps/mobile/AGENTS.md](apps/mobile/AGENTS.md).
 
 ## Everyday commands
@@ -204,7 +202,7 @@ pnpm -C apps/mobile test              # mobile tests
 ```bash
 vp add <pkg> --filter @rateup/web     # add to one package
 vp add -D <pkg> --filter @rateup/api  # as a dev dependency
-pnpm -C apps/mobile add <pkg>         # mobile (separate install); prefer `npx expo install <pkg>`
+pnpm -C apps/mobile exec expo install <pkg>   # mobile: picks the version Expo expects
 ```
 
 A dependency used by two or more packages takes its version from the catalog in
@@ -239,12 +237,12 @@ Migrations deploy from CI: `.github/workflows/prisma-migrate-dev.yml` on pushes 
   their config path at that file.
 - **Web, admin, docs:** `vp run --filter <package>... build`, then `pnpm -C apps/<app> start`
   serves `.output/`.
-- **Mobile:** EAS builds run from `apps/mobile` (`eas.json`), which has its own lockfile.
+- **Mobile:** EAS builds run from `apps/mobile` (`eas.json`); EAS installs from the workspace
+  root with the root lockfile.
 
 ## Troubleshooting
 
-- **`Cannot find module` after pulling:** run `vp install` (and `pnpm run install:mobile` if
-  mobile changed).
+- **`Cannot find module` after pulling:** run `vp install`.
 - **Prisma types missing or stale:** `vp run @rateup/db#generate`.
 - **API exits at start with a Kafka or Redis error:** the containers are not running;
   `docker compose -f apps/api/docker-compose.yaml up -d`.

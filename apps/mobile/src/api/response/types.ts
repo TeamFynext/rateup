@@ -20,7 +20,7 @@ export type NpsEntry = {
   };
 };
 
-/** Response of `GET /api/response/analytics/:surveyId`, both maps keyed by question id. */
+/** Response of `GET /api/surveys/responses/analytics/:surveyId`, both maps keyed by question id. */
 export type SurveyResponseAnalytics = {
   nps: Record<string, NpsEntry>;
   choiceWise: Record<string, ChoiceWiseEntry>;

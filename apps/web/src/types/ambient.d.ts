@@ -701,6 +701,14 @@ declare global {
     id: string;
     name: string;
     phone: string;
+    /** Every way the contact is known, primaries first (the contacts list sends these). */
+    identities?: {
+      kind: "PHONE" | "EMAIL" | "WA_BSUID" | "IG_SCOPED" | "FB_PSID" | "WEBCHAT" | "EXTERNAL";
+      value: string;
+      username?: string | null;
+      displayName?: string | null;
+      isPrimary?: boolean;
+    }[];
     /**
      * WhatsApp's business-scoped user ID ("US.1349…"). A customer with a WhatsApp
      * username can reach us with this and no phone. Never show it as a number.

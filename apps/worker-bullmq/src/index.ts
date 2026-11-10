@@ -9,7 +9,7 @@ import { initProcessMetrics, metricsRegistry } from "@rateup/api/utils/metrics.j
 import { startHealthServer } from "@rateup/api/workers/shared/healthServer.js";
 import { bullmqHealthCheck, registerQueueMetrics } from "@rateup/api/workers/bullmq/metrics.js";
 import { syncJobSchedulers } from "@rateup/api/workers/bullmq/queues/cron.queue.js";
-import { reconcileScheduledCampaignSends } from "@rateup/api/modules/campaign/campaignRetry.service.js";
+import { reconcileScheduledCampaignSends } from "@rateup/api/modules/campaigns/campaignRetry.service.js";
 import { reconcileScheduledFeedbackRequests } from "@rateup/api/modules/loyalty/feedback/feedback.scheduler.js";
 import { reconcileCheckoutReminders } from "@rateup/api/modules/integrations/shopify/shopify.checkouts.service.js";
 

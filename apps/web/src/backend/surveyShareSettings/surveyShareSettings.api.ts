@@ -7,7 +7,7 @@ import { axiosClient } from "../apiClient";
 type ShareSettingsResource = { resourceName?: string; id?: string };
 type ShareSettingsQueryKey = readonly [string, ShareSettingsResource];
 
-const settingsApiUrl = "/shareSettings";
+const settingsApiUrl = "/share-settings";
 
 const getShareSettings = async ({ queryKey }: QueryFunctionContext<ShareSettingsQueryKey>) => {
   const [_key, { resourceName, id }] = queryKey;

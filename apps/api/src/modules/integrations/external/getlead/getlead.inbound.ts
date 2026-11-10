@@ -1,11 +1,12 @@
 import type { Integration } from "../../../../generated/prisma/client.js";
 import prisma from "../../../../utils/prisma.js";
+import { contactWhereIdentity } from "../../../contacts/identity/contactFields.js";
 import { log } from "../../../../utils/logger.js";
 import { recordIntegrationSyncActivity } from "../integrationActivity.js";
 import { getCachedGetLeadMeta } from "./getlead.connect.js";
 import { writeGetLeadId } from "./getlead.push.js";
 import { getGetLeadCredential } from "./getlead.types.js";
-import { LEADS_PIPELINE_TYPE } from "../../../pipeline/pipelineTypes.js";
+import { LEADS_PIPELINE_TYPE } from "../../../pipelines/pipelineTypes.js";
 
 /**
  * Applying a status change GetLead pushed to us — the inbound half of the stage
@@ -123,7 +124,7 @@ async function findLeadForDelivery(orgId: string, data: GetLeadDeliveryData) {
   if (!phone) return null;
 
   const contact = await prisma.contact.findFirst({
-    where: { orgId, phone },
+    where: { orgId, ...contactWhereIdentity("phone", phone) },
     select: { id: true, leads: leadInclude },
   });
   return contact?.leads?.[0] ?? null;
@@ -222,7 +223,7 @@ async function applyStatusChange(
 
   // Imported here rather than at the top: `lead.service` reaches back into the
   // integrations through its stage fan-out, and an eager edge closes that cycle.
-  const { moveLead } = await import("../../../pipeline/pipelineLead/lead.service.js");
+  const { moveLead } = await import("../../../pipelines/pipelineLead/lead.service.js");
   await moveLead(lead.id, stageId, null, false);
 
   await recordIntegrationSyncActivity(lead.id, "INTEGRATION_RECEIVED", "GetLead", {
@@ -280,7 +281,7 @@ async function createLeadFromInbound(
   const email = data.email?.trim() || null;
   const contactId = phone ? await findOrCreateContact(orgId, name, phone, email, data) : null;
 
-  const { createLead } = await import("../../../pipeline/pipelineLead/lead.service.js");
+  const { createLead } = await import("../../../pipelines/pipelineLead/lead.service.js");
   const lead = await createLead({
     pipelineId: stage.pipelineId,
     stageId,
@@ -335,12 +336,12 @@ async function findOrCreateContact(
   data: GetLeadDeliveryData,
 ) {
   const existing = await prisma.contact.findFirst({
-    where: { orgId, phone },
+    where: { orgId, ...contactWhereIdentity("phone", phone) },
     select: { id: true },
   });
   if (existing) return existing.id;
 
-  const { createContact } = await import("../../../contact/contact.service.js");
+  const { createContact } = await import("../../../contacts/contact.service.js");
   const contact = await createContact({
     orgId,
     name,

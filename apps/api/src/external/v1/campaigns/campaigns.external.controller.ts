@@ -5,11 +5,11 @@ import {
   getCampaignsHandler,
   getResponseByCampaignByIdHandler,
   sendCampaignHandler,
-} from "../../../modules/campaign/campaign.controller.js";
+} from "../../../modules/campaigns/campaign.controller.js";
 import {
   createCampaignParticipantsFromContactsHandler,
   getCampaignParticipantsByCampaignIdHandler,
-} from "../../../modules/campaign/campaignParticipants/campaignParticipants.controller.js";
+} from "../../../modules/campaigns/campaignParticipants/campaignParticipants.controller.js";
 import prisma from "../../../utils/prisma.js";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

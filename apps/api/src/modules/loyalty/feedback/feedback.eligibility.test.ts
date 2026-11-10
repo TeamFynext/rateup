@@ -1,7 +1,10 @@
 import { describe, expect, test } from "vite-plus/test";
 
 import { WaFlowStatus } from "../../../types/enums.js";
-import { buildFeedbackFlowJson, getFeedbackDraft } from "../../whatsapp/flows/flowTemplates.js";
+import {
+  buildFeedbackFlowJson,
+  getFeedbackDraft,
+} from "../../meta/whatsapp/flows/flowTemplates.js";
 import { feedbackEligibility } from "./feedback.eligibility.js";
 
 const json = buildFeedbackFlowJson(getFeedbackDraft("restaurant")!);

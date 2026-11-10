@@ -3,7 +3,7 @@ import type { MemberCardSendResult } from "@/api/loyalty/loyalty.type";
 /**
  * The member card code — what the QR on a customer's card encodes.
  *
- * A mirror of `rateup-api/src/modules/loyalty/accounts/cardCode.ts`: twelve characters
+ * A mirror of `apps/api/src/modules/loyalty/accounts/cardCode.ts`: twelve characters
  * from the till-code alphabet (A–Z and 2–9 without I, O, 0 and 1). The two parsers must
  * accept the same inputs, because the server is the one that finally decides.
  */

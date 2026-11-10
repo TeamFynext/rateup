@@ -32,7 +32,7 @@ vi.mock("../integrations.service.js", () => ({
   deleteIntegrationByName: vi.fn(),
 }));
 
-vi.mock("../../org/org.services.js", () => ({ pauseOrg: vi.fn() }));
+vi.mock("../../settings/org/org.services.js", () => ({ pauseOrg: vi.fn() }));
 const shopStore = vi.hoisted(() => ({
   onOnlineStoreConnected: vi.fn(async () => {}),
   onOnlineStoreDisconnected: vi.fn(),
@@ -74,42 +74,44 @@ vi.mock("./shopify.config.js", () => ({
 
 // The service module pulls in most of the WhatsApp tree; stub the leaves it
 // only calls at runtime so the import graph stays cheap.
-vi.mock("../../whatsapp/whatsappSurvey/wasurvey.service.js", () => ({
+vi.mock("../../meta/whatsapp/webhook/whatsapp.service.js", () => ({
   createSession: vi.fn(),
   deleteSession: vi.fn(),
   getSession: vi.fn(),
   sendMessage: vi.fn(),
 }));
-vi.mock("../../whatsapp/whatsappSurvey/wasurvey.controller.js", () => ({
+vi.mock("../../meta/whatsapp/webhook/whatsapp.controller.js", () => ({
   convertComponentForSenting: vi.fn(),
   updateButtonText: vi.fn(),
   wait: vi.fn(),
 }));
-vi.mock("../../stats/stats.service.js", () => ({ updateMonthlyStat: vi.fn() }));
+vi.mock("../../analytics/stats/stats.service.js", () => ({ updateMonthlyStat: vi.fn() }));
 // The fake Redis above is not a real client, so a real BullMQ queue would open its own
 // connection to localhost:6379 and the dev worker would act on the job (the uninstall test
 // sent "integration.error" notifications for the fixture org).
-vi.mock("../../notification/notify.js", () => ({ notify: vi.fn() }));
-vi.mock("../../whatsapp/automatedReply/wa_automatedReply.utils.js", () => ({
+vi.mock("../../settings/notifications/notify.js", () => ({ notify: vi.fn() }));
+vi.mock("../../automation/rules/rules.utils.js", () => ({
   checkAndExecuteRuleByTriggerEvent: vi.fn(),
 }));
-vi.mock("../../whatsapp/whatsappSurvey/wasurvey.utils.js", () => ({
+vi.mock("../../meta/whatsapp/webhook/whatsapp.utils.js", () => ({
   createTemplateMessage: vi.fn(),
   validateSession: vi.fn(),
 }));
-vi.mock("../../whatsapp/messageTemplates/wa_templates.service.js", () => ({
+vi.mock("../../meta/whatsapp/templates/templates.service.js", () => ({
   getDbTemplate: vi.fn(),
 }));
-vi.mock("../../whatsapp/messageTemplates/wa_templates.utils.js", () => ({
+vi.mock("../../meta/whatsapp/templates/templates.utils.js", () => ({
   getFlowIdFromTemplateComponents: vi.fn(),
 }));
-vi.mock("../../whatsapp/messageTemplates/wa_templates.controller.js", () => ({
+vi.mock("../../meta/whatsapp/templates/templates.controller.js", () => ({
   sendTemplateToUserCore: vi.fn(),
 }));
-vi.mock("../../whatsapp/messageTemplates/wa_templates.auth.js", () => ({
+vi.mock("../../meta/whatsapp/templates/templates.auth.js", () => ({
   verifyTemplateMessageLimit: vi.fn(),
 }));
-vi.mock("../../subscription/subscription.service.js", () => ({ getSubscription: vi.fn() }));
+vi.mock("../../settings/subscription/subscription.service.js", () => ({
+  getSubscription: vi.fn(),
+}));
 vi.mock("../../../workers/bullmq/queues/index.js", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../../../workers/bullmq/queues/index.js")>()),
   webhookQueue: { add: vi.fn() },
@@ -128,7 +130,7 @@ vi.mock("../events/emitIntegrationEvent.js", () => ({
 
 import dayjs from "dayjs";
 import prisma from "../../../utils/prisma.js";
-import { pauseOrg } from "../../org/org.services.js";
+import { pauseOrg } from "../../settings/org/org.services.js";
 import { getIntegrationByName, deleteIntegrationByName } from "../integrations.service.js";
 import {
   getShopifyIntegrationByShop,
@@ -146,7 +148,7 @@ import {
 import { mintShopifyClaimToken, verifyShopifyClaimToken } from "./shopify.claim.js";
 import shopifyConfig from "./shopify.config.js";
 import { enqueueCommerceOrderLoyalty as enqueueShopifyOrderLoyalty } from "../commerce/loyalty.js";
-import { checkAndExecuteRuleByTriggerEvent } from "../../whatsapp/automatedReply/wa_automatedReply.utils.js";
+import { checkAndExecuteRuleByTriggerEvent } from "../../automation/rules/rules.utils.js";
 import webhookHandlers, {
   customersDataRequestHandler,
   customersRedactHandler,

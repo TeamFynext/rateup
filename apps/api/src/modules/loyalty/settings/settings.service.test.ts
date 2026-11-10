@@ -27,10 +27,10 @@ vi.mock("../../../utils/prisma.js", () => ({
 
 // The reply helpers are real; everything they say lands on the one sender.
 vi.mock("../messaging/send.js", () => ({ sendLoyalty: vi.fn() }));
-vi.mock("../../whatsapp/whatsappSurvey/wasurvey.utils.js", () => ({
+vi.mock("../../meta/whatsapp/webhook/whatsapp.utils.js", () => ({
   generateWhatsAppJoinLink: vi.fn(() => "https://wa.me/join"),
 }));
-vi.mock("../../whatsapp/whatsappSurvey/wasurvey.controller.js", () => ({
+vi.mock("../../meta/whatsapp/webhook/whatsapp.controller.js", () => ({
   handleWaJoinRegistration: vi.fn(),
 }));
 vi.mock("../accounts/account.service.js", () => ({
@@ -54,7 +54,7 @@ vi.mock("../redemptions/redemption.service.js", () => ({ redeemReward: vi.fn() }
 vi.mock("../../../generated/prisma/client.js", () => ({}));
 
 import prisma from "../../../utils/prisma.js";
-import { handleWaJoinRegistration } from "../../whatsapp/whatsappSurvey/wasurvey.controller.js";
+import { handleWaJoinRegistration } from "../../meta/whatsapp/webhook/whatsapp.controller.js";
 import { sendLoyalty } from "../messaging/send.js";
 import type { LoyaltyMessage } from "../messaging/types.js";
 import {

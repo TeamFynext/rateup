@@ -2,7 +2,7 @@ import axios from "@/config/axios";
 
 /**
  * Contact details, identities and merging. Mirrors rateup-api's
- * `src/modules/contact/merge/merge.route.ts` (`/api/contact/merge`, `/api/contact/identities`)
+ * `src/modules/contacts/merge/merge.route.ts` (`/api/contacts/merge`, `/api/contacts/identities`)
  * and rateup-ui's `merge.api.ts`, which has the same types.
  */
 
@@ -138,7 +138,7 @@ export interface ContactIdentityOverview {
   }>;
 }
 
-/** The part of `GET /api/contact/:id/details` the Contact info screen shows. */
+/** The part of `GET /api/contacts/:id/details` the Contact info screen shows. */
 export interface ContactFullDetails {
   id: string;
   createdAt: string;
@@ -167,7 +167,7 @@ export interface ContactFullDetails {
   }>;
 }
 
-/** A row of the contacts list (`GET /api/contact`), as the merge picker reads it. */
+/** A row of the contacts list (`GET /api/contacts`), as the merge picker reads it. */
 export interface ContactSearchRow {
   id: string;
   name: string | null;
@@ -178,11 +178,11 @@ export interface ContactSearchRow {
   bsuid?: string | null;
 }
 
-const MERGE_URL = "/api/contact/merge";
-const IDENTITY_URL = "/api/contact/identities";
+const MERGE_URL = "/api/contacts/merge";
+const IDENTITY_URL = "/api/contacts/identities";
 
 export async function getContactFullDetails(contactId: string) {
-  return (await axios.get<ContactFullDetails>(`/api/contact/${contactId}/details`)).data;
+  return (await axios.get<ContactFullDetails>(`/api/contacts/${contactId}/details`)).data;
 }
 
 export async function getContactIdentityOverview(contactId: string) {
@@ -190,7 +190,7 @@ export async function getContactIdentityOverview(contactId: string) {
 }
 
 export async function searchContacts(search: string) {
-  const res = await axios.get<{ users: ContactSearchRow[]; totalCount: number }>("/api/contact", {
+  const res = await axios.get<{ users: ContactSearchRow[]; totalCount: number }>("/api/contacts", {
     params: { page: 0, limit: 20, search, sort: "createdAt", desc: "desc", type: "NORMAL" },
   });
   return res.data;

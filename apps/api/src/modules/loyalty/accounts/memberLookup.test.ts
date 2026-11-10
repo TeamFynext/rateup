@@ -14,11 +14,21 @@ const db = prisma as unknown as Record<string, any>;
 const PROGRAM = "prog-1";
 const ORG = "org-1";
 const base = { programId: PROGRAM, orgId: ORG, defaultCountryCode: "IN" };
+/** A contact's primary identities, the way `primaryIdentities` loads them. */
+const identities = (phone: string | null, email: string | null = null) => [
+  ...(phone ? [{ kind: "PHONE", value: phone }] : []),
+  ...(email ? [{ kind: "EMAIL", value: email }] : []),
+];
 const member = (over: Record<string, unknown> = {}) => ({
   id: "acct-1",
-  contact: { id: "contact-1", phone: "919000000001", email: "ann@example.com", orgId: ORG },
+  contact: {
+    id: "contact-1",
+    orgId: ORG,
+    identities: identities("919000000001", "ann@example.com"),
+  },
   ...over,
 });
+const phoneWhere = (value: string) => ({ identities: { some: { kind: "PHONE", value } } });
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -40,9 +50,16 @@ describe("phone normalisation", () => {
     const res = await resolveProgramMember({ ...base, phone: raw });
 
     expect(res.status).toBe("matched");
-    expect(db.customerLoyaltyAccount.findFirst.mock.calls[0][0].where.contact.phone).toBe(
-      "919000000001",
+    expect(db.customerLoyaltyAccount.findFirst.mock.calls[0][0].where.contact).toMatchObject(
+      phoneWhere("919000000001"),
     );
+    // The account comes back with the contact's phone and email as before.
+    expect((res as { account: { contact: unknown } }).account.contact).toEqual({
+      id: "contact-1",
+      orgId: ORG,
+      phone: "919000000001",
+      email: "ann@example.com",
+    });
   });
 
   test("the country comes from the programme, not a hardcoded IN", async () => {
@@ -54,8 +71,8 @@ describe("phone normalisation", () => {
       phone: "(415) 555-2671",
     });
 
-    expect(db.customerLoyaltyAccount.findFirst.mock.calls[0][0].where.contact.phone).toBe(
-      "14155552671",
+    expect(db.customerLoyaltyAccount.findFirst.mock.calls[0][0].where.contact).toMatchObject(
+      phoneWhere("14155552671"),
     );
   });
 
@@ -76,7 +93,7 @@ describe("scoping", () => {
     expect(db.customerLoyaltyAccount.findFirst.mock.calls[0][0].where).toMatchObject({
       programId: PROGRAM,
       status: "active",
-      contact: { orgId: ORG, phone: "919000000001" },
+      contact: { orgId: ORG, ...phoneWhere("919000000001") },
     });
   });
 
@@ -104,9 +121,10 @@ describe("email fallback", () => {
     const res = await resolveProgramMember({ ...base, email: "Ann@Example.com" });
 
     expect(res).toMatchObject({ status: "matched", matchedBy: "email" });
-    expect(db.customerLoyaltyAccount.findMany.mock.calls[0][0].where.contact.email).toEqual({
-      equals: "ann@example.com",
-      mode: "insensitive",
+    // Identity values are stored lowercase, so the match is exact on the lowercased address.
+    expect(db.customerLoyaltyAccount.findMany.mock.calls[0][0].where.contact).toEqual({
+      orgId: ORG,
+      identities: { some: { kind: "EMAIL", value: "ann@example.com" } },
     });
   });
 
@@ -150,8 +168,8 @@ describe("email fallback", () => {
 
   test("a supplied phone is the one tie-break allowed on a shared email", async () => {
     db.customerLoyaltyAccount.findMany.mockResolvedValue([
-      member({ id: "acct-1", contact: { phone: "919000000001", orgId: ORG } }),
-      member({ id: "acct-2", contact: { phone: "919000000002", orgId: ORG } }),
+      member({ id: "acct-1", contact: { orgId: ORG, identities: identities("919000000001") } }),
+      member({ id: "acct-2", contact: { orgId: ORG, identities: identities("919000000002") } }),
     ]);
 
     const res = await resolveProgramMember({
@@ -166,8 +184,8 @@ describe("email fallback", () => {
 
   test("a shared email that the phone cannot narrow stays ambiguous", async () => {
     db.customerLoyaltyAccount.findMany.mockResolvedValue([
-      member({ id: "acct-1", contact: { phone: "919000000003", orgId: ORG } }),
-      member({ id: "acct-2", contact: { phone: "919000000004", orgId: ORG } }),
+      member({ id: "acct-1", contact: { orgId: ORG, identities: identities("919000000003") } }),
+      member({ id: "acct-2", contact: { orgId: ORG, identities: identities("919000000004") } }),
     ]);
 
     const res = await resolveProgramMember({

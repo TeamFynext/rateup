@@ -1,5 +1,5 @@
 /* Copy for the WhatsApp Loyalty landing page. Everything here describes something the loyalty
-   programme really does — check `components/dashboard/loyalty`, `rateup-api/src/modules/loyalty`
+   programme really does — check `components/dashboard/loyalty`, `apps/api/src/modules/loyalty`
    and `rateup-app/src/components/loyalty` before adding a claim. Loyalty messages go out on
    WhatsApp only. */
 

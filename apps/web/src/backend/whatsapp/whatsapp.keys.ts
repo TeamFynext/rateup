@@ -33,6 +33,8 @@ export const whatsappKeys = {
     ["wa-messages", contactId, phone, conversationId] as const,
 
   contacts: () => ["wa-contacts"] as const,
+  /** Sent campaigns the inbox list can be filtered by. */
+  inboxCampaignOptions: () => ["wa-inbox-campaign-options"] as const,
   contact: (contactId: KeyPart) => ["wa-contact", contactId] as const,
 
   assignedInboxUser: () => ["assignedInboxUser"] as const,

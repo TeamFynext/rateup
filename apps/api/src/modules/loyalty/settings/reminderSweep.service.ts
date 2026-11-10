@@ -1,7 +1,7 @@
 import { LoyaltyEventType } from "../../../types/enums.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
-import { getActiveContactBudget } from "../../subscription/activeContacts.js";
+import { getActiveContactBudget } from "../../settings/subscription/activeContacts.js";
 import {
   checkBirthdayEventTriggers,
   checkInactivityEventTriggers,

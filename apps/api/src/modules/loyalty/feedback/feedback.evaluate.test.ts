@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vite-plus/test";
 
-import { buildFeedbackFlowJson, getFeedbackDraft } from "../../whatsapp/flows/flowTemplates.js";
+import {
+  buildFeedbackFlowJson,
+  getFeedbackDraft,
+} from "../../meta/whatsapp/flows/flowTemplates.js";
 import { extractOverallRating, parseRating, ratingAveragesByElement } from "./feedback.evaluate.js";
 
 const JSON_RESTAURANT = buildFeedbackFlowJson(getFeedbackDraft("restaurant")!);

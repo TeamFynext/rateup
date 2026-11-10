@@ -1,9 +1,8 @@
 import { analyticsRequestParams, ANALYTICS_TIMEOUT_MS } from "@/backend/analytics/analyticsFilter";
 
-import { WHATSAPP_URL } from "..";
 import { axiosClient } from "../../apiClient";
 
-const base = `${WHATSAPP_URL}/instagram-insights`;
+const base = "/instagram/insights";
 
 export const INSTAGRAM_INSIGHTS_RANGES = ["7d", "30d", "90d"] as const;
 export type InstagramInsightsRange = (typeof INSTAGRAM_INSIGHTS_RANGES)[number];

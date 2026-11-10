@@ -1,5 +1,5 @@
 /* Copy for the WhatsApp Broadcast landing page. Everything here describes something campaigns
-   really do — check `components/dashboard/campaign` and `rateup-api/src/modules/campaign`
+   really do — check `components/dashboard/campaign` and `apps/api/src/modules/campaigns`
    before adding a claim. There is no click tracking, A/B testing or recurring send. */
 
 import type { ProductFaqItem } from "../shared/ProductFaq";

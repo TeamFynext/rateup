@@ -1,21 +1,21 @@
 import prisma from "../../../utils/prisma.js";
 import { TriggerEvent } from "../../../generated/prisma/enums.js";
 import { log } from "../../../utils/logger.js";
-import { sendMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
+import { sendMessage } from "../../meta/whatsapp/webhook/whatsapp.service.js";
 import {
   convertComponentForSenting,
   updateButtonText,
   wait,
-} from "../../whatsapp/whatsappSurvey/wasurvey.controller.js";
-import { updateMonthlyStat } from "../../stats/stats.service.js";
-import { checkAndExecuteRuleByTriggerEvent } from "../../whatsapp/automatedReply/wa_automatedReply.utils.js";
+} from "../../meta/whatsapp/webhook/whatsapp.controller.js";
+import { updateMonthlyStat } from "../../analytics/stats/stats.service.js";
+import { checkAndExecuteRuleByTriggerEvent } from "../../automation/rules/rules.utils.js";
 import { ShopifyEvents, SubscriptionFeaturePathName } from "../../../types/enums.js";
-import { createTemplateMessage } from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
-import { getDbTemplate } from "../../whatsapp/messageTemplates/wa_templates.service.js";
-import { getFlowIdFromTemplateComponents } from "../../whatsapp/messageTemplates/wa_templates.utils.js";
+import { createTemplateMessage } from "../../meta/whatsapp/webhook/whatsapp.utils.js";
+import { getDbTemplate } from "../../meta/whatsapp/templates/templates.service.js";
+import { getFlowIdFromTemplateComponents } from "../../meta/whatsapp/templates/templates.utils.js";
 import type { CommerceOrder, CommerceStore } from "../commerce/commerce.types.js";
 import { ShopifyBody } from "./shopify.types.js";
-import { signFlowToken } from "../../whatsapp/flows/flowToken.js";
+import { signFlowToken } from "../../meta/whatsapp/flows/flowToken.js";
 
 /** The Shopify automation rule trigger, for an order that carries a phone number. */
 export async function runShopifyOrderAutomation(

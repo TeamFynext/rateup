@@ -4,7 +4,7 @@ import { markCheckoutRecovered } from "./shopify.checkouts.service.js";
 import { getActiveShopifySession } from "./shopify.session.js";
 import { GraphQLClientResponse } from "@shopify/shopify-api";
 import { log } from "../../../utils/logger.js";
-import { checkAndExecuteRuleByTriggerEvent } from "../../whatsapp/automatedReply/wa_automatedReply.utils.js";
+import { checkAndExecuteRuleByTriggerEvent } from "../../automation/rules/rules.utils.js";
 import { ShopifyEvents } from "../../../types/enums.js";
 import type { Integration as PrismaIntegration } from "../../../generated/prisma/client.js";
 import {

@@ -1,4 +1,3 @@
-import { WHATSAPP_URL } from "..";
 import { axiosClient } from "../../apiClient";
 
 /** Mirrors rateup-api's InstagramCommentReply (instagram_comments.service.ts). */
@@ -28,7 +27,7 @@ export interface InstagramCommentsPage {
 export type InstagramCommentAction = "hide" | "unhide" | "like" | "unlike";
 
 const commentsUrl = (ibaId: string, mediaId: string) =>
-  `${WHATSAPP_URL}/instagram/${ibaId}/media/${mediaId}/comments`;
+  `/instagram/${ibaId}/media/${mediaId}/comments`;
 
 export async function getInstagramComments(ibaId: string, mediaId: string, after?: string) {
   const res = await axiosClient.get(commentsUrl(ibaId, mediaId), {

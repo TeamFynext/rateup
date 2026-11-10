@@ -5,7 +5,7 @@ import prisma from "../../../utils/prisma.js";
 import { assertCheckoutVia } from "./externalCheckout.service.js";
 import { notFound, ShopError } from "./shop.errors.js";
 import { storeLogoUrl } from "./storeLogo.js";
-import { getSubscriptionGate } from "../../subscription/subscription.service.js";
+import { getSubscriptionGate } from "../../settings/subscription/subscription.service.js";
 
 export function slugify(input: string): string {
   return (
@@ -175,7 +175,7 @@ export async function assertCommerceEnabled(orgId: string) {
  * import.
  */
 export async function onOnlineStoreConnected(orgId: string, mode: "SHOPIFY" | "WOOCOMMERCE") {
-  const { revealModule } = await import("../../org/modules.js");
+  const { revealModule } = await import("../../settings/org/modules.js");
   await revealModule(orgId, "commerce");
   const store = await prisma.shopStore.findUnique({
     where: { orgId },
@@ -196,7 +196,7 @@ export async function onOnlineStoreDisconnected(orgId: string, mode: "SHOPIFY" |
   if (!store || store.checkoutVia !== mode) return;
   await prisma.shopStore.update({ where: { id: store.id }, data: { checkoutVia: "RATEUP" } });
   const label = mode === "SHOPIFY" ? "Shopify" : "WooCommerce";
-  const { notify } = await import("../../notification/notify.js");
+  const { notify } = await import("../../settings/notifications/notify.js");
   await notify({
     event: "integration.error",
     orgId,

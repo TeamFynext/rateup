@@ -1,7 +1,6 @@
-import { WHATSAPP_URL } from "..";
 import { axiosClient } from "../../apiClient";
 
-const base = `${WHATSAPP_URL}/instagram-profile`;
+const base = "/instagram/profile";
 
 export interface InstagramIceBreaker {
   question: string;

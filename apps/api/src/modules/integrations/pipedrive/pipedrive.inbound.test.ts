@@ -3,14 +3,17 @@ import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), warn: vi.fn(), debug: vi.fn(), trace: vi.fn() },
 }));
-vi.mock("../../../utils/prisma.js", () => ({
-  default: {
+vi.mock("../../../utils/prisma.js", () => {
+  const db = {
     contact: { findUnique: vi.fn(), findFirst: vi.fn(), update: vi.fn() },
+    contactIdentity: { findFirst: vi.fn() },
     lead: { findUnique: vi.fn(), update: vi.fn() },
     pipelineStage: { findMany: vi.fn(), findFirst: vi.fn(), findUnique: vi.fn() },
     pipelineLostReason: { findFirst: vi.fn() },
-  },
-}));
+    $transaction: (fn: (tx: unknown) => unknown) => fn(db),
+  };
+  return { default: db };
+});
 vi.mock("../../../utils/redisConnection.js", () => ({ default: { set: vi.fn(), del: vi.fn() } }));
 vi.mock("../../../workers/bullmq/queues/index.js", () => ({
   integrationTriggerQueue: { add: vi.fn() },
@@ -22,8 +25,8 @@ vi.mock("../shared/entityLink.js", async (importOriginal) => ({
   recordLink: vi.fn(),
   removeLink: vi.fn(),
 }));
-vi.mock("../../contact/contact.service.js", () => ({ createContact: vi.fn() }));
-vi.mock("../../pipeline/pipelineLead/lead.service.js", () => ({
+vi.mock("../../contacts/contact.service.js", () => ({ createContact: vi.fn() }));
+vi.mock("../../pipelines/pipelineLead/lead.service.js", () => ({
   moveLead: vi.fn(),
   createLead: vi.fn(),
 }));
@@ -32,8 +35,8 @@ const client = vi.hoisted(() => ({ get: vi.fn() }));
 vi.mock("./pipedrive.client.js", () => ({ pipedriveClientFor: vi.fn(async () => client) }));
 
 import prisma from "../../../utils/prisma.js";
-import { createContact } from "../../contact/contact.service.js";
-import { createLead, moveLead } from "../../pipeline/pipelineLead/lead.service.js";
+import { createContact } from "../../contacts/contact.service.js";
+import { createLead, moveLead } from "../../pipelines/pipelineLead/lead.service.js";
 import { emitIntegrationEvent } from "../events/emitIntegrationEvent.js";
 import {
   findLinkByExternalId,
@@ -102,12 +105,15 @@ const deal = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
+/** As the database holds it: phone and email are primary identities. */
 const contactRow = (over: Record<string, unknown> = {}) => ({
   id: "c-1",
   orgId: "org-1",
   name: "Asha Nair",
-  email: "asha@example.com",
-  phone: "919876543210",
+  identities: [
+    { kind: "PHONE", value: "919876543210" },
+    { kind: "EMAIL", value: "asha@example.com" },
+  ],
   ...over,
 });
 
@@ -132,6 +138,7 @@ beforeEach(() => {
   db.contact.findUnique.mockResolvedValue(null);
   db.contact.findFirst.mockResolvedValue(null);
   db.contact.update.mockImplementation(async ({ data }) => ({ ...contactRow(), ...data }));
+  db.contactIdentity.findFirst.mockResolvedValue(null);
 });
 
 describe("a Pipedrive person in RateUp's terms", () => {
@@ -167,10 +174,9 @@ describe("person changes", () => {
 
     expect(await processPipedriveInboundJob(integration(), job("person"))).toBe("applied");
 
-    expect(db.contact.update).toHaveBeenCalledWith({
-      where: { id: "c-1" },
-      data: { name: "Asha N. Nair" },
-    });
+    expect(db.contact.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "c-1" }, data: { name: "Asha N. Nair" } }),
+    );
     expect(recordLink).toHaveBeenCalledWith(CONTACT_LINK, {
       rateupId: "c-1",
       externalId: "77",
@@ -178,7 +184,11 @@ describe("person changes", () => {
     });
     expect(emitIntegrationEvent).toHaveBeenCalledWith(
       "org-1",
-      expect.objectContaining({ type: "contact.updated", changed: ["details"] }),
+      expect.objectContaining({
+        type: "contact.updated",
+        changed: ["details"],
+        contact: expect.objectContaining({ phone: "919876543210", email: "asha@example.com" }),
+      }),
     );
   });
 
@@ -200,11 +210,15 @@ describe("person changes", () => {
   test("a phone another contact has is left as it was", async () => {
     records.set("/v2/persons/77", person({ phones: [{ value: "+15550100", primary: true }] }));
     findLink.mockResolvedValue({ rateupId: "c-1", lastSyncHash: "old" });
-    db.contact.findUnique
-      .mockResolvedValueOnce(contactRow())
-      .mockResolvedValueOnce({ id: "c-other" });
+    db.contact.findUnique.mockResolvedValueOnce(contactRow());
+    db.contactIdentity.findFirst.mockResolvedValue({ contactId: "c-other" });
 
     expect(await processPipedriveInboundJob(integration(), job("person"))).toBe("unchanged");
+    expect(db.contactIdentity.findFirst.mock.calls[0][0].where).toEqual({
+      orgId: "org-1",
+      kind: "PHONE",
+      value: "15550100",
+    });
     expect(db.contact.update).not.toHaveBeenCalled();
   });
 
@@ -350,9 +364,8 @@ describe("deal changes", () => {
     db.pipelineStage.findFirst.mockResolvedValue({ id: "col-new" });
     db.pipelineStage.findUnique.mockResolvedValue({ pipelineId: "board-1" });
     findLink.mockResolvedValue(null);
-    db.contact.findUnique
-      .mockResolvedValueOnce(contactRow()) // the person matched by phone
-      .mockResolvedValueOnce(contactRow()); // read back for the lead
+    db.contact.findFirst.mockResolvedValueOnce(contactRow()); // the person matched by phone
+    db.contact.findUnique.mockResolvedValueOnce(contactRow()); // read back for the lead
     (createLead as unknown as Mock).mockResolvedValue({ id: "lead-new" });
 
     expect(

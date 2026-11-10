@@ -2,6 +2,11 @@ import { timingSafeEqual } from "node:crypto";
 
 import type { Integration, Prisma } from "../../../../generated/prisma/client.js";
 import prisma from "../../../../utils/prisma.js";
+import { ContactIdentitySource } from "../../../../generated/prisma/enums.js";
+import {
+  setPrimaryIdentities,
+  type ContactFields,
+} from "../../../contacts/identity/contactFields.js";
 import { log } from "../../../../utils/logger.js";
 import { IntegratedApps } from "../../../../types/enums.js";
 import { integrationTriggerQueue } from "../../../../workers/bullmq/queues/index.js";
@@ -9,8 +14,8 @@ import {
   moveLead,
   resolvePipelineForContact,
   setContactStage,
-} from "../../../pipeline/pipelineLead/lead.service.js";
-import { LEADS_PIPELINE_TYPE } from "../../../pipeline/pipelineTypes.js";
+} from "../../../pipelines/pipelineLead/lead.service.js";
+import { LEADS_PIPELINE_TYPE } from "../../../pipelines/pipelineTypes.js";
 import type { ProviderJobData } from "../../providers/integrationProvider.types.js";
 import {
   InboundWebhookRejected,
@@ -228,11 +233,15 @@ export async function syncContactFromZohoRecord({
   }
 
   const updateData: Prisma.ContactUncheckedUpdateInput = {};
+  // The phone and email are the contact's primary identities; written with the row.
+  let identities: Pick<ContactFields, "phone" | "email"> | undefined;
 
   if (module === "Contacts" || module === "Leads") {
     updateData.name = zohoRecord.Full_Name || null;
-    updateData.email = zohoRecord.Email || null;
-    updateData.phone = zohoRecord.Phone || zohoRecord.Mobile || null;
+    identities = {
+      email: zohoRecord.Email || null,
+      phone: zohoRecord.Phone || zohoRecord.Mobile || null,
+    };
     updateData.other = zohoRecord.Description || null;
     updateData.source = zohoRecord.Lead_Source || null;
     updateData.external_id = zohoRecord.id;
@@ -271,11 +280,17 @@ export async function syncContactFromZohoRecord({
     }
   }
 
-  const updatedContact = await prisma.contact.update({
-    where: {
-      id: existingContact.id,
-    },
-    data: updateData,
+  const updatedContact = await prisma.$transaction(async (tx) => {
+    const row = await tx.contact.update({
+      where: {
+        id: existingContact.id,
+      },
+      data: updateData,
+    });
+    if (identities) {
+      await setPrimaryIdentities(orgId, row.id, identities, ContactIdentitySource.IMPORT, tx);
+    }
+    return row;
   });
 
   if (inboundStageId) {

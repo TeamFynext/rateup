@@ -13,9 +13,9 @@ vi.mock("../../../utils/prisma.js", () => ({
 vi.mock("../../../workers/bullmq/queues/index.js", () => ({
   integrationTriggerQueue: { add: vi.fn() },
 }));
-vi.mock("../../whatsapp/flows/flow.service.js", () => ({ getFlowBySurveyId: vi.fn() }));
+vi.mock("../../meta/whatsapp/flows/flow.service.js", () => ({ getFlowBySurveyId: vi.fn() }));
 // The row formatting is the response module's; only the routing is tested here.
-vi.mock("../../response/response.service.js", () => ({
+vi.mock("../../surveys/responses/response.service.js", () => ({
   getAnswerValue: (response: Record<string, unknown>, type: string) => response[type],
   getCellData: (response: unknown) => String(response),
   getFormattedResponse: (answer: unknown) => String(answer),
@@ -57,7 +57,7 @@ vi.mock("google-spreadsheet", () => ({
 
 import prisma from "../../../utils/prisma.js";
 import { integrationTriggerQueue } from "../../../workers/bullmq/queues/index.js";
-import { getFlowBySurveyId } from "../../whatsapp/flows/flow.service.js";
+import { getFlowBySurveyId } from "../../meta/whatsapp/flows/flow.service.js";
 import { getIntegrationProvider } from "../providers/registry.js";
 import { oauthRedirectUri } from "../shared/oauthConnect.js";
 import { OAuthConnectError } from "../shared/oauthConnectError.js";
@@ -256,7 +256,7 @@ describe("appendResponseToSheet", () => {
     language: "en",
     createdAt: new Date("2026-10-02T09:30:00"),
     tag: "vip",
-    Contact: { phone: "919876543210" },
+    Contact: { identities: [{ kind: "PHONE", value: "919876543210" }] },
     surveyTeamMap: {
       survey: { spreadSheetId: "sheet-1", questions, id: "survey-1" },
       team: { name: "Kochi", orgId: ORG },

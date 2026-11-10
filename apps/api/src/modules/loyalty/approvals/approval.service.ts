@@ -12,7 +12,7 @@ import { syncRedemptionDiscount } from "../../integrations/commerce/discounts.js
 const approvalWithAccount = {
   account: {
     include: {
-      contact: true,
+      contact: memberContactInclude,
       currentTier: true,
     },
   },
@@ -24,16 +24,22 @@ const approvalWithAccount = {
   transaction: true,
 } satisfies Prisma.ApprovalRequestInclude;
 
-type ApprovalWithAccount = Prisma.ApprovalRequestGetPayload<{
-  include: typeof approvalWithAccount;
-}>;
+/** The account's contact keeps its old `phone`/`email`/... keys, read from its identities. */
+function presentApproval<T extends { account: Parameters<typeof withMemberContact>[0] }>(row: T) {
+  return { ...row, account: withMemberContact(row.account) };
+}
+
+type ApprovalWithAccount = ReturnType<
+  typeof presentApproval<Prisma.ApprovalRequestGetPayload<{ include: typeof approvalWithAccount }>>
+>;
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
 import { sendLoyaltyEvent } from "../messaging/send.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
-import { notify } from "../../notification/notify.js";
+import { notify } from "../../settings/notifications/notify.js";
 import { announceLoyaltyTransactions } from "../loyalty.webhooks.js";
 import { LoyaltyError } from "../loyalty.errors.js";
+import { memberContactInclude, withMemberContact } from "../memberContact.js";
 
 /**
  * Create a new approval request
@@ -51,7 +57,7 @@ export async function createApprovalRequest(
     if (programId !== undefined) {
       await assertApprovalTargetsInProgram(data, programId);
     }
-    const approval = await prisma.approvalRequest.create({
+    const created = await prisma.approvalRequest.create({
       data: {
         requestType: data.requestType,
         accountId: data.accountId,
@@ -68,7 +74,7 @@ export async function createApprovalRequest(
       include: {
         account: {
           include: {
-            contact: true,
+            contact: memberContactInclude,
             currentTier: true,
           },
         },
@@ -80,6 +86,7 @@ export async function createApprovalRequest(
         transaction: true,
       },
     });
+    const approval = presentApproval(created);
 
     log.info(`Created approval request ${approval.id} for account ${data.accountId}`);
     const program = await prisma.loyaltyProgram.findUnique({
@@ -170,7 +177,7 @@ export async function getApprovalRequests(programId: string, filters: GetApprova
         include: {
           account: {
             include: {
-              contact: true,
+              contact: memberContactInclude,
               currentTier: true,
             },
           },
@@ -191,7 +198,7 @@ export async function getApprovalRequests(programId: string, filters: GetApprova
     ]);
 
     return {
-      approvals,
+      approvals: approvals.map(presentApproval),
       pagination: {
         page,
         limit,
@@ -215,7 +222,7 @@ export async function getApprovalRequestById(approvalId: string, programId: stri
       include: {
         account: {
           include: {
-            contact: true,
+            contact: memberContactInclude,
             currentTier: true,
           },
         },
@@ -232,7 +239,7 @@ export async function getApprovalRequestById(approvalId: string, programId: stri
       throw new Error("Approval request not found");
     }
 
-    return approval;
+    return presentApproval(approval);
   } catch (error) {
     log.error({ err: error }, "Error getting approval request:");
     throw error;
@@ -306,7 +313,7 @@ export async function rejectApprovalRequest(data: RejectRequestInput, programId:
         include: {
           account: {
             include: {
-              contact: true,
+              contact: memberContactInclude,
               currentTier: true,
             },
           },
@@ -329,7 +336,7 @@ export async function rejectApprovalRequest(data: RejectRequestInput, programId:
       }
 
       log.info(`Rejected approval request ${data.approvalId}`);
-      return updatedApproval;
+      return presentApproval(updatedApproval);
     });
   } catch (error) {
     log.error({ err: error }, "Error rejecting request:");
@@ -363,7 +370,7 @@ export async function cancelApprovalRequest(data: CancelRequestInput, programId:
         include: {
           account: {
             include: {
-              contact: true,
+              contact: memberContactInclude,
               currentTier: true,
             },
           },
@@ -381,7 +388,7 @@ export async function cancelApprovalRequest(data: CancelRequestInput, programId:
       }
 
       log.info(`Cancelled approval request ${data.approvalId}`);
-      return updatedApproval;
+      return presentApproval(updatedApproval);
     });
   } catch (error) {
     log.error({ err: error }, "Error cancelling request:");
@@ -481,7 +488,7 @@ async function approveRedemption(approval: ApprovalWithAccount, data: ApproveReq
       include: {
         account: {
           include: {
-            contact: true,
+            contact: memberContactInclude,
             currentTier: true,
           },
         },
@@ -511,7 +518,7 @@ async function approveRedemption(approval: ApprovalWithAccount, data: ApproveReq
       );
     }
 
-    return updatedApproval;
+    return presentApproval(updatedApproval);
   });
 
   // Outside the transaction on purpose: this is an HTTP call to Shopify, and making one
@@ -619,7 +626,7 @@ async function approvePointsAdjustment(approval: ApprovalWithAccount, data: Appr
       include: {
         account: {
           include: {
-            contact: true,
+            contact: memberContactInclude,
             currentTier: true,
           },
         },
@@ -642,7 +649,7 @@ async function approvePointsAdjustment(approval: ApprovalWithAccount, data: Appr
       );
     }
 
-    return updatedApproval;
+    return presentApproval(updatedApproval);
   });
 
   announceApprovedTransaction(approval, approved.transaction);
@@ -687,7 +694,7 @@ async function approveTierOverride(approval: ApprovalWithAccount, data: ApproveR
       include: {
         account: {
           include: {
-            contact: true,
+            contact: memberContactInclude,
             currentTier: true,
           },
         },
@@ -710,7 +717,7 @@ async function approveTierOverride(approval: ApprovalWithAccount, data: ApproveR
       );
     }
 
-    return updatedApproval;
+    return presentApproval(updatedApproval);
   });
 }
 
@@ -743,7 +750,7 @@ async function approveAccountSuspension(approval: ApprovalWithAccount, data: App
       include: {
         account: {
           include: {
-            contact: true,
+            contact: memberContactInclude,
             currentTier: true,
           },
         },
@@ -751,7 +758,7 @@ async function approveAccountSuspension(approval: ApprovalWithAccount, data: App
     });
 
     log.info(`Approved account suspension for account ${approval.accountId}`);
-    return updatedApproval;
+    return presentApproval(updatedApproval);
   });
 }
 
@@ -787,7 +794,7 @@ async function approveAccountReactivation(
       include: {
         account: {
           include: {
-            contact: true,
+            contact: memberContactInclude,
             currentTier: true,
           },
         },
@@ -795,7 +802,7 @@ async function approveAccountReactivation(
     });
 
     log.info(`Approved account reactivation for account ${approval.accountId}`);
-    return updatedApproval;
+    return presentApproval(updatedApproval);
   });
 }
 

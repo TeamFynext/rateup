@@ -15,22 +15,22 @@ import { downloadBlob } from "@/utils/downloadBlob.ts";
 import { axiosClient } from "../apiClient";
 
 export const getCampaigns = async (type: string) => {
-  const res = await axiosClient.get(`/campaign/?type=${type}`);
+  const res = await axiosClient.get(`/campaigns/?type=${type}`);
   return res;
 };
 
 export const getCampaignsByTeam = async (teamId: string) => {
-  const res = await axiosClient.get(`/campaign?teamId=${teamId}`);
+  const res = await axiosClient.get(`/campaigns?teamId=${teamId}`);
   return res;
 };
 
 export const createCampaign = async (data: RequestPayload) => {
-  const res = await axiosClient.post("/campaign/", data);
+  const res = await axiosClient.post("/campaigns/", data);
   return res;
 };
 
 export const getCampaignById = async (campaignId: string) => {
-  const res = await axiosClient.get(`/campaign?campaignId=${campaignId}`);
+  const res = await axiosClient.get(`/campaigns?campaignId=${campaignId}`);
   return res?.data;
 };
 
@@ -41,12 +41,12 @@ export const updateCampaign = async ({
   data: RequestPayload;
   campaignId: string;
 }) => {
-  const res = await axiosClient.put(`/campaign/${campaignId}`, data);
+  const res = await axiosClient.put(`/campaigns/${campaignId}`, data);
   return res;
 };
 
 export const deleteCampaign = async (campaignId: string) => {
-  const res = await axiosClient.delete(`/campaign/${campaignId}`);
+  const res = await axiosClient.delete(`/campaigns/${campaignId}`);
   return res;
 };
 
@@ -86,7 +86,7 @@ export interface DripSchedule {
  * rather than read off the campaign's sends.
  */
 export const getDripSchedule = async (campaignId: string) => {
-  const res = await axiosClient.get(`/campaign/${campaignId}/drip-schedule`);
+  const res = await axiosClient.get(`/campaigns/${campaignId}/drip-schedule`);
   return res.data as DripSchedule;
 };
 
@@ -115,12 +115,12 @@ export const getCampaignSendPreflight = async (
   sendToStatuses: CampaignParticipantStatus[],
 ) => {
   const query = sendToStatuses.map((status) => `sendToStatuses=${status}`).join("&");
-  return (await axiosClient.get(`/campaign/${campaignId}/send-preflight?${query}`))
+  return (await axiosClient.get(`/campaigns/${campaignId}/send-preflight?${query}`))
     .data as CampaignSendPreflight;
 };
 
 /**
- * Body of `POST /campaign/:id/send`, mirroring `sendCampaignInputSchema`.
+ * Body of `POST /campaigns/:id/send`, mirroring `sendCampaignInputSchema`.
  *
  * An object rather than the run of eight optional positionals it used to be:
  * `participantIds` was the ninth, and a cohort silently landing in the
@@ -140,12 +140,12 @@ export interface SendCampaignBody {
 }
 
 export const sendCampaign = async (campaignId: string, body: SendCampaignBody) => {
-  return axiosClient.post(`/campaign/${campaignId}/send`, body);
+  return axiosClient.post(`/campaigns/${campaignId}/send`, body);
 };
 
 // this get req is primarily used in flows result page
 export const getCampaignFilterForFlows = async (surveyId: string) => {
-  return (await axiosClient.get(`/campaign/flow/filter?surveyId=${surveyId}`)).data as {
+  return (await axiosClient.get(`/campaigns/flow/filter?surveyId=${surveyId}`)).data as {
     id: string;
     name: string;
   }[];
@@ -165,7 +165,7 @@ export const campaignResponseDownloadById = async ({
     params.set("selectedDripStage", selectedDripStage);
   }
   const response = await axiosClient.post(
-    `/campaign/${campaignId}/download?${params.toString()}`,
+    `/campaigns/${campaignId}/download?${params.toString()}`,
     {},
     {
       timeout: 25000,
@@ -182,7 +182,7 @@ export const campaignResponseDownloadById = async ({
 export async function getCampaignStatsById(campaignId: string, selectedDripStage?: string) {
   return (
     await axiosClient.get(
-      `/campaign/${campaignId}/stats?selectedDripStage=${selectedDripStage ?? "all"}`,
+      `/campaigns/${campaignId}/stats?selectedDripStage=${selectedDripStage ?? "all"}`,
     )
   ).data;
 }
@@ -192,7 +192,7 @@ export async function getCampaignStatsById(campaignId: string, selectedDripStage
 // table and the funnel are reads rather than anything reconstructed here.
 
 export const getCampaignSends = async (campaignId: string) => {
-  return (await axiosClient.get(`/campaign/${campaignId}/sends`)).data as CampaignSend[];
+  return (await axiosClient.get(`/campaigns/${campaignId}/sends`)).data as CampaignSend[];
 };
 
 export interface CampaignSendParticipantsFilters {
@@ -213,20 +213,20 @@ export const getCampaignSendParticipants = async (
   const query = params.toString();
   return (
     await axiosClient.get(
-      `/campaign/${campaignId}/sends/${sendId}/participants${query ? `?${query}` : ""}`,
+      `/campaigns/${campaignId}/sends/${sendId}/participants${query ? `?${query}` : ""}`,
     )
   ).data as CampaignSendParticipantsPage;
 };
 
 export const getCampaignAnalytics = async (campaignId: string) => {
-  return (await axiosClient.get(`/campaign/${campaignId}/analytics`)).data as CampaignAnalytics;
+  return (await axiosClient.get(`/campaigns/${campaignId}/analytics`)).data as CampaignAnalytics;
 };
 
 // ── Automatic retries ─────────────────────────────────────────────────────────
 
 /** Null when the campaign has no policy, which is how "retries off" is stored. */
 export const getCampaignRetryPolicy = async (campaignId: string) => {
-  return (await axiosClient.get(`/campaign/${campaignId}/retry-policy`))
+  return (await axiosClient.get(`/campaigns/${campaignId}/retry-policy`))
     .data as CampaignRetryPolicy | null;
 };
 
@@ -248,12 +248,12 @@ export const updateCampaignRetryPolicy = async ({
   campaignId: string;
   data: CampaignRetryPolicyInput;
 }) => {
-  return (await axiosClient.put(`/campaign/${campaignId}/retry-policy`, data))
+  return (await axiosClient.put(`/campaigns/${campaignId}/retry-policy`, data))
     .data as CampaignRetryPolicy;
 };
 
 export const cancelPendingRetries = async (campaignId: string) => {
-  return (await axiosClient.post(`/campaign/${campaignId}/retries/cancel`, {})).data as {
+  return (await axiosClient.post(`/campaigns/${campaignId}/retries/cancel`, {})).data as {
     cancelled: number;
     message: string;
   };
@@ -267,7 +267,7 @@ export const sendCampaignTest = async ({
   campaignId: string;
   phone: string;
 }) => {
-  return (await axiosClient.post(`/campaign/${campaignId}/send-test`, { phone })).data as {
+  return (await axiosClient.post(`/campaigns/${campaignId}/send-test`, { phone })).data as {
     messageId?: string;
     message: string;
   };

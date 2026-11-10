@@ -1,0 +1,251 @@
+import type { ContactCore } from "./contact.schema.js";
+import { FastifyInstance } from "fastify";
+import {
+  contactCoreSchema,
+  createMultipleContactSchema,
+  paginationQuery,
+  byContactIdSchema,
+  updateContactSchema,
+  updateContactLabelsSchema,
+  deleteManyContactSchema,
+  customFieldSchema,
+  byFieldIdSchema,
+  bulkUpdateContactStatusSchema,
+  contactImportJobParamsSchema,
+} from "./contact.schema.js";
+import {
+  addCustomFieldHandler,
+  bulkUpdateWaMessageAssignStatusHandler,
+  createContactHandler,
+  createMultipleContactsHandler,
+  deleteContactByIdHandler,
+  deleteCustomFieldHandler,
+  deleteManyContactsHandler,
+  exportContactHandler,
+  getAllContactsHandler,
+  getContactByIdHandler,
+  getContactFullDetailsByIdHandler,
+  getContactImportStatusHandler,
+  getCustomFieldHandler,
+  importCSVContactsHandler,
+  updateContactByIdHandler,
+  updateContactLabelsByIdHandler,
+  updateCustomFieldHandler,
+  updateLifecycleStageofContactsHandler,
+} from "./contact.controller.js";
+import { contactGroupRoutes } from "./audiences/audience.route.js";
+import { contactLabelRoutes } from "./labels/contactLabel.route.js";
+import fastifyMultipart from "@fastify/multipart";
+import { getVerifySubscriptionHandler } from "../../utils/auth.js";
+import { SubscriptionFeaturePathName } from "../../types/enums.js";
+import { conversationRoutes } from "../inbox/conversations/conversation.route.js";
+import { conversationTagRoutes } from "../inbox/conversationTags/conversationTag.route.js";
+import { contactIdentityRoutes, contactMergeRoutes } from "./merge/merge.route.js";
+import { lifecycleIdParamSchema } from "./lifecycle/lifecycle.schema.js";
+
+import { declareAccess } from "../../authz/registry.js";
+
+/**
+ * `/api/inbox/conversations` and `/api/inbox/conversation-tags` (were under `/api/contact`).
+ * They keep the contacts permissions they had there.
+ */
+export async function inboxConversationRoutes(server: FastifyInstance) {
+  declareAccess(server, { read: "contacts.read", write: "contacts.manage" });
+  server.register(conversationRoutes, { prefix: "/conversations" });
+  // Conversation-scoped tags — the ticket-grained counterpart to the contact's `/labels`.
+  server.register(conversationTagRoutes, { prefix: "/conversation-tags" });
+}
+
+/** `/api/contacts` (was `/api/contact`). */
+export async function contactRoutes(server: FastifyInstance) {
+  declareAccess(server, { read: "contacts.read", write: "contacts.manage" });
+
+  // Audiences (contact groups); was `/api/contact/group`.
+  server.register(contactGroupRoutes, { prefix: "/audiences" });
+
+  server.register(contactLabelRoutes, { prefix: "/labels" });
+
+  // Merging two contacts into one, merge suggestions, and a contact's identities.
+  server.register(contactMergeRoutes, { prefix: "/merge" });
+  server.register(contactIdentityRoutes, { prefix: "/identities" });
+
+  server.register(fastifyMultipart, {
+    limits: {
+      fileSize: 1048576 * 10,
+    },
+    throwFileSizeLimit: true,
+  });
+
+  server.post<{ Body: ContactCore }>(
+    "/",
+    {
+      preHandler: [getVerifySubscriptionHandler([SubscriptionFeaturePathName.Whatsapp])],
+      schema: {
+        body: contactCoreSchema,
+      },
+    },
+    createContactHandler,
+  );
+
+  server.post(
+    "/importcontacts",
+    {
+      schema: {
+        body: createMultipleContactSchema,
+      },
+    },
+    createMultipleContactsHandler,
+  );
+
+  server.get(
+    "/",
+    {
+      schema: {
+        params: paginationQuery,
+      },
+    },
+    getAllContactsHandler,
+  );
+  server.get(
+    "/:contactId",
+    {
+      schema: {
+        params: byContactIdSchema,
+      },
+    },
+    getContactByIdHandler,
+  );
+
+  // Everything the contacts table's detail dialog renders. A route of its own so
+  // `GET /:contactId` stays the lean payload its other callers expect.
+  server.get(
+    "/:contactId/details",
+    {
+      schema: {
+        params: byContactIdSchema,
+      },
+    },
+    getContactFullDetailsByIdHandler,
+  );
+
+  server.put(
+    "/:contactId",
+    {
+      schema: {
+        params: byContactIdSchema,
+        body: updateContactSchema,
+      },
+    },
+    updateContactByIdHandler,
+  );
+  server.put(
+    "/:contactId/labels",
+    {
+      schema: {
+        params: byContactIdSchema,
+        body: updateContactLabelsSchema,
+      },
+    },
+    updateContactLabelsByIdHandler,
+  );
+
+  server.delete(
+    "/:contactId",
+    {
+      schema: {
+        params: byContactIdSchema,
+      },
+    },
+    deleteContactByIdHandler,
+  );
+
+  server.delete(
+    "/",
+    {
+      schema: {
+        body: deleteManyContactSchema,
+      },
+    },
+    deleteManyContactsHandler,
+  );
+
+  server.post(
+    "/importcsv",
+    {
+      schema: {
+        consumes: ["multipart/form-data"],
+      },
+    },
+    importCSVContactsHandler,
+  );
+  server.get(
+    "/import/:jobId",
+    {
+      schema: {
+        params: contactImportJobParamsSchema,
+      },
+    },
+    getContactImportStatusHandler,
+  );
+  server.get(
+    "/custom-fields",
+    {
+      config: {
+        fallbackEmptyArray: true,
+      },
+    },
+    getCustomFieldHandler,
+  );
+  server.post(
+    "/custom-fields",
+    {
+      schema: {
+        body: customFieldSchema,
+      },
+    },
+    addCustomFieldHandler,
+  );
+  server.put(
+    "/custom-fields/:fieldId",
+    {
+      schema: {
+        params: byFieldIdSchema,
+        body: customFieldSchema,
+      },
+    },
+    updateCustomFieldHandler,
+  );
+
+  server.delete(
+    "/custom-fields/:fieldId",
+    {
+      schema: {
+        params: byFieldIdSchema,
+      },
+    },
+    deleteCustomFieldHandler,
+  );
+  server.post("/export", { config: { permission: "contacts.export" } }, exportContactHandler);
+
+  server.put(
+    "/lifecycle-stage-update/:lifecycleId",
+    {
+      schema: {
+        params: lifecycleIdParamSchema,
+        body: deleteManyContactSchema,
+      },
+    },
+    updateLifecycleStageofContactsHandler,
+  );
+
+  server.put(
+    "/bulk-assign-status",
+    {
+      config: { permission: "inbox.assign" },
+      schema: {
+        body: bulkUpdateContactStatusSchema,
+      },
+    },
+    bulkUpdateWaMessageAssignStatusHandler,
+  );
+}

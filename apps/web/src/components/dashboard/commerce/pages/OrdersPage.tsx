@@ -67,6 +67,7 @@ import { ListPageSearchInput } from "@/components/common/list-page-layout.tsx";
 import { useDebounce } from "@/hooks/use-debounce.ts";
 import { usePermissions } from "@/hooks/usePermission.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
+import { plainT, type Translate } from "@/utils/translate";
 
 import { CreateOrderDialog } from "../shop/CreateOrderDialog.tsx";
 import { OrderAllowanceNotice } from "../shop/OrderLimit.tsx";
@@ -116,7 +117,7 @@ const PAYMENTS: readonly ShopPaymentStatus[] = [
 const ALL = "all";
 const PAGE_SIZE = 25;
 
-function when(t: (key: string, values?: Record<string, unknown>) => string, iso: string) {
+function when(t: Translate, iso: string) {
   const d = dayjs(iso);
   if (d.isSame(dayjs(), "day")) return t("Today, {time}", { time: d.format("HH:mm") });
   if (d.isSame(dayjs().subtract(1, "day"), "day"))
@@ -440,7 +441,7 @@ export function OrdersPage() {
                         #{o.number}
                       </Link>
                       <div className="text-xs text-muted-foreground">
-                        {when(t, o.placedAt ?? o.createdAt)}
+                        {when(plainT(t), o.placedAt ?? o.createdAt)}
                       </div>
                     </TableCell>
                     {showInvoice && (

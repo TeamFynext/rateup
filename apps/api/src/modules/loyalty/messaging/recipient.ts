@@ -1,13 +1,18 @@
 import prisma from "../../../utils/prisma.js";
 import { parsePhoneforWa } from "../util.js";
 import type { LoyaltyRecipient } from "./types.js";
+import {
+  contactFields,
+  contactWhereIdentity,
+  primaryIdentities,
+} from "../../contacts/identity/contactFields.js";
 
 export type RecipientRef =
   | { accountId: string }
   | { contactId: string; name?: string | null }
   | { phone: string; name?: string | null };
 
-const contactSelect = { id: true, name: true, phone: true, email: true } as const;
+const contactSelect = { id: true, name: true, ...primaryIdentities } as const;
 
 /**
  * Who a message is for, with every address the channels might use and the member's own
@@ -24,13 +29,14 @@ export async function resolveRecipient(
       select: { id: true, preferredChannel: true, contact: { select: contactSelect } },
     });
     if (!account) return null;
+    const { phone, email } = contactFields(account.contact.identities);
     return {
       orgId,
       contactId: account.contact.id,
       accountId: account.id,
       name: account.contact.name,
-      phone: account.contact.phone,
-      email: account.contact.email,
+      phone,
+      email,
       preferredChannel: account.preferredChannel,
     };
   }
@@ -44,8 +50,8 @@ export async function resolveRecipient(
             loyaltyAccounts: { select: { id: true, preferredChannel: true }, take: 1 },
           },
         })
-      : await prisma.contact.findUnique({
-          where: { contact_phone_org_id_unique: { phone: parsePhoneforWa(ref.phone), orgId } },
+      : await prisma.contact.findFirst({
+          where: { orgId, ...contactWhereIdentity("phone", parsePhoneforWa(ref.phone)) },
           select: {
             ...contactSelect,
             loyaltyAccounts: { select: { id: true, preferredChannel: true }, take: 1 },
@@ -53,13 +59,14 @@ export async function resolveRecipient(
         });
 
   const account = contact?.loyaltyAccounts[0];
+  const fields = contactFields(contact?.identities);
   return {
     orgId,
     contactId: contact?.id ?? null,
     accountId: account?.id ?? null,
     name: ref.name ?? contact?.name ?? null,
-    phone: contact?.phone ?? ("phone" in ref ? parsePhoneforWa(ref.phone) : null),
-    email: contact?.email ?? null,
+    phone: fields.phone ?? ("phone" in ref ? parsePhoneforWa(ref.phone) : null),
+    email: fields.email,
     preferredChannel: account?.preferredChannel ?? null,
   };
 }

@@ -5,7 +5,7 @@ import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
 import { getScheduleTime } from "../../../utils/date.js";
 import { shopifySurveyQueue } from "../../../workers/bullmq/queues/index.js";
-import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller.js";
+import { sendTemplateToUserCore } from "../../meta/whatsapp/templates/templates.controller.js";
 import type {
   CommerceOrder,
   CommerceProvider,

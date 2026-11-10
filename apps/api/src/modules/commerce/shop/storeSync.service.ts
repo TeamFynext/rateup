@@ -3,7 +3,7 @@ import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
 import redis from "../../../utils/redisConnection.js";
 import { enqueueStoreMirror } from "../../../workers/bullmq/queues/shop.queue.js";
-import type { CatalogProductCoreInput } from "../../whatsapp/catalog/products/product.schema.js";
+import type { CatalogProductCoreInput } from "../catalogs/products/product.schema.js";
 import { inStoreCheckout } from "./checkoutVia.js";
 import { addOrderEvent } from "./orders.service.js";
 import { round2, toNumber } from "./pricing.js";
@@ -31,7 +31,7 @@ export async function fetchStoreItems(
 ): Promise<CatalogProductCoreInput[]> {
   if (source === "shopify") {
     const { getShopifyProductsForCatalog } =
-      await import("../../whatsapp/catalog/products/product.service.js");
+      await import("../catalogs/products/product.service.js");
     return getShopifyProductsForCatalog(orgId, NO_CATALOG, { requireImage: false });
   }
   const { getWooProductsForCatalog } =

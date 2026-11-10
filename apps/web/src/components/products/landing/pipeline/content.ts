@@ -1,5 +1,5 @@
 /* Copy for the Pipeline landing page. Everything here describes something the dashboard's
-   Pipeline really does — check `components/pipeline` and `rateup-api/src/modules/pipeline`
+   Pipeline really does — check `components/pipeline` and `apps/api/src/modules/pipelines`
    before adding a claim. Leads carry no deal value, so nothing here may count money. */
 
 import type { ProductFaqItem } from "../shared/ProductFaq";

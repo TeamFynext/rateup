@@ -15,11 +15,12 @@ import { pressable } from "@/components/common/pressable.ts";
 import { cn } from "@/lib/utils";
 import { CampaignSendStatus, CampaignSendTrigger } from "@/types/enums.ts";
 import type { CampaignSend } from "@/types/global";
+import { plainT, type Translate } from "@/utils/translate";
 
 const COLUMNS = "grid-cols-[56px_92px_112px_136px_96px_84px_88px_64px_minmax(140px,1fr)]";
 
 /** "in 19h", or "any moment now" once the scheduled time has passed. */
-function countdown(iso: string, t: (key: string, opts?: Record<string, unknown>) => string) {
+function countdown(iso: string, t: Translate) {
   const ms = new Date(iso).getTime() - Date.now();
   if (ms <= 0) return t("any moment now");
   const minutes = Math.round(ms / 60_000);
@@ -192,7 +193,7 @@ export function SendAttemptsTable({
                     ) : send.scheduledFor ? (
                       <span className="inline-flex items-center gap-1.5">
                         <span className="text-foreground font-semibold">
-                          {countdown(send.scheduledFor, t)}
+                          {countdown(send.scheduledFor, plainT(t))}
                         </span>
                         <span className="text-muted-foreground/70 text-xs">
                           {new Date(send.scheduledFor).toLocaleString(undefined, {

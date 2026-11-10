@@ -158,7 +158,7 @@ async function main() {
   );
 
   const downloadAndUpload = media
-    ? (await import("../src/modules/whatsapp/whatsappSurvey/wasurvey.utils.js")).downloadAndUpload
+    ? (await import("../src/modules/meta/whatsapp/webhook/whatsapp.utils.js")).downloadAndUpload
     : undefined;
 
   const created = new Map<string, string>();

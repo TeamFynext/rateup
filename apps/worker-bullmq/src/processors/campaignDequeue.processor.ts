@@ -12,8 +12,8 @@ import { log } from "@rateup/api/workers/shared/logger.js";
 import baseRedis from "@rateup/api/utils/redisConnection.js";
 import { CampaignStatus } from "@rateup/api/workers/shared/types/enum.js";
 import { updateCampaignStatus } from "@rateup/api/workers/shared/whatsapp/index.js";
-import { cancelPendingCampaignJobs } from "@rateup/api/modules/campaign/campaignCancel.service.js";
-import { cancelCampaignSends } from "@rateup/api/modules/campaign/campaignSend.service.js";
+import { cancelPendingCampaignJobs } from "@rateup/api/modules/campaigns/campaignCancel.service.js";
+import { cancelCampaignSends } from "@rateup/api/modules/campaigns/campaignSend.service.js";
 
 const workerConnection = baseRedis.duplicate();
 

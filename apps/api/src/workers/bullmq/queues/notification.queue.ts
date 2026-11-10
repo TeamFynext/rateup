@@ -2,7 +2,7 @@ import { Queue } from "bullmq";
 import connection from "../../../utils/redisConnection.js";
 import { sendAWSEmail, type EmailParams } from "../../../utils/email/sendAWSEmail.js";
 import { log } from "../../../utils/logger.js";
-import type { NotificationJobData } from "../../../modules/notification/notification.service.js";
+import type { NotificationJobData } from "../../../modules/settings/notifications/notification.service.js";
 
 // Retries matter more than they look: `sendAWSEmail` reports failure by returning false, so a
 // transient SES throttle used to mean the mail was simply never sent. The processors now

@@ -3,7 +3,7 @@ import { Job, Worker } from "bullmq";
 
 import { log } from "@rateup/api/workers/shared/logger.js";
 import baseRedis from "@rateup/api/utils/redisConnection.js";
-import { checkCallAlive } from "@rateup/api/modules/whatsapp/calling/calling.watchdog.js";
+import { checkCallAlive } from "@rateup/api/modules/inbox/calls/calling.watchdog.js";
 import { armCallWatchdog } from "@rateup/api/workers/bullmq/queues/callWatchdog.queue.js";
 
 const workerConnection = baseRedis.duplicate();

@@ -20,7 +20,7 @@ export interface _ICreateNewContact {
   phone?: string;
   email?: string;
 }
-const CONTACT_GROUP_BASE_URL = "/contact/group";
+const CONTACT_GROUP_BASE_URL = "/contacts/audiences";
 export const getContactGroupList = async (type: ContactGroupType) => {
   const contactGroupData: ContactGroupResponse = await axiosClient.get(
     `${CONTACT_GROUP_BASE_URL}?type=${type}`,

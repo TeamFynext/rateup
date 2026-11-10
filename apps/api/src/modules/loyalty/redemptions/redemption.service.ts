@@ -9,6 +9,7 @@ import { LoyaltyEventType } from "../../../types/enums.js";
 import { ASSIGNMENT_ONLY_REWARD_TYPES } from "../../../types/loyalty.js";
 import { syncRedemptionDiscount } from "../../integrations/commerce/discounts.js";
 import { announceLoyaltyTransactions, type LoyaltyLedgerRow } from "../loyalty.webhooks.js";
+import { memberContactInclude, withMemberContact } from "../memberContact.js";
 
 /**
  * A transaction client — what `prisma.$transaction(async (tx) => …)` hands the
@@ -39,17 +40,18 @@ async function moveBalance(tx: Tx, accountId: string, cost: number, delta: numbe
 }
 
 export async function redeemReward(programId: string, data: RedeemRewardInput) {
-  const customer = await prisma.customerLoyaltyAccount.findFirst({
+  const found = await prisma.customerLoyaltyAccount.findFirst({
     where: { id: data.customerId, programId },
     include: {
-      contact: true,
+      contact: memberContactInclude,
       currentTier: true,
     },
   });
 
-  if (!customer) {
+  if (!found) {
     throw new LoyaltyError("MEMBER_NOT_FOUND", "Customer account not found");
   }
+  const customer = withMemberContact(found);
 
   // Each branch below calls this with the ledger row its transaction wrote, once that
   // transaction has returned. A row held for approval moved no points and is skipped.
@@ -495,7 +497,7 @@ export async function applyRedemption(data: ApplyRedemptionInput, orgId: string)
       reward: true,
       account: {
         include: {
-          contact: true,
+          contact: memberContactInclude,
         },
       },
     },
@@ -531,7 +533,7 @@ export async function applyRedemption(data: ApplyRedemptionInput, orgId: string)
         include: {
           account: {
             include: {
-              contact: true,
+              contact: memberContactInclude,
             },
           },
           reward: true,
@@ -558,7 +560,7 @@ export async function applyRedemption(data: ApplyRedemptionInput, orgId: string)
       }
     }
 
-    return used;
+    return { ...used, account: withMemberContact(used.account) };
   });
 
   // No message here. REWARD_REDEEMED ("your reward is confirmed, show code … to
@@ -653,7 +655,7 @@ export async function getTransactions(
       include: {
         account: {
           include: {
-            contact: true,
+            contact: memberContactInclude,
           },
         },
       },
@@ -665,7 +667,7 @@ export async function getTransactions(
   ]);
 
   return {
-    transactions,
+    transactions: transactions.map(withAccountContact),
     pagination: {
       page,
       limit,
@@ -727,7 +729,7 @@ export async function getTransactionsForExport(
     include: {
       account: {
         include: {
-          contact: true,
+          contact: memberContactInclude,
         },
       },
     },
@@ -741,5 +743,11 @@ export async function getTransactionsForExport(
     );
   }
 
-  return rows;
+  return rows.map(withAccountContact);
+}
+
+function withAccountContact<T extends { account: Parameters<typeof withMemberContact>[0] }>(
+  row: T,
+) {
+  return { ...row, account: withMemberContact(row.account) };
 }

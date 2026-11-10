@@ -4,6 +4,8 @@ import { Card, CardContent } from "@rateup/ui/components/card";
 import { IconAlertTriangle, IconInfoCircle } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
+import { plainT, type Translate } from "@/utils/translate";
+
 import { givebackBand, type GivebackBand, type GivebackResult } from "./calculateGiveback";
 import { formatMoney, formatPercent, formatPoints, singularPoints } from "./format";
 
@@ -219,7 +221,7 @@ export function GivebackPanel({
                 result.band === "excessive" ? undefined : "text-amber-600 dark:text-amber-500"
               }
             />
-            <AlertTitle>{alertTitle(result.band, topTier, t)}</AlertTitle>
+            <AlertTitle>{alertTitle(result.band, topTier, plainT(t))}</AlertTitle>
             <AlertDescription>
               {describeBand({
                 band: result.band,
@@ -228,7 +230,7 @@ export function GivebackPanel({
                 topTier,
                 currencySymbol,
                 rewardName: best?.name ?? "",
-                t,
+                t: plainT(t),
               })}
             </AlertDescription>
           </Alert>
@@ -312,8 +314,6 @@ function emptyStateMessage(status: GivebackResult["status"], t: (key: string) =>
   }
   return t("Add a reward with a value to see what your program costs you.");
 }
-
-type Translate = (key: string, options?: Record<string, unknown>) => string;
 
 /**
  * The band is judged at the top tier, so when a tier is what crosses the line the copy has

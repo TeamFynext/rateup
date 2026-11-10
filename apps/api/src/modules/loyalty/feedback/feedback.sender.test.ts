@@ -52,7 +52,10 @@ function loaded(overrides: Record<string, unknown> = {}) {
         waTemplate: { id: "tpl-1", data: { status: "APPROVED" } },
       },
     },
-    account: { status: "active", contact: { phone: "15550001", name: "Priya" } },
+    account: {
+      status: "active",
+      contact: { name: "Priya", identities: [{ kind: "PHONE", value: "15550001" }] },
+    },
     ...overrides,
   };
 }
@@ -114,11 +117,16 @@ describe("fireFeedbackRequest — re-checks after the delay", () => {
     ],
     [
       "Customer account is not active",
-      loaded({ account: { status: "closed", contact: { phone: "1", name: "x" } } }),
+      loaded({
+        account: {
+          status: "closed",
+          contact: { name: "x", identities: [{ kind: "PHONE", value: "1" }] },
+        },
+      }),
     ],
     [
       "Customer has no phone number",
-      loaded({ account: { status: "active", contact: { phone: null, name: "x" } } }),
+      loaded({ account: { status: "active", contact: { name: "x", identities: [] } } }),
     ],
   ])("cancels with %s", async (reason, row) => {
     db.loyaltyFeedbackRequest.findUnique.mockResolvedValue(row);

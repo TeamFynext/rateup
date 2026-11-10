@@ -4,7 +4,7 @@ import { axiosClient } from "../apiClient";
 import { LOYALTY_BASE } from "./base";
 
 /**
- * Mirrors `givebackResponseSchema` in `rateup-api/src/modules/loyalty/giveback/`. The
+ * Mirrors `givebackResponseSchema` in `apps/api/src/modules/loyalty/giveback/`. The
  * server runs the same `calculateGiveback` the wizard runs client-side, over the rows as
  * they stand — so the Overview and the Program page can quote a number that agrees with
  * what activation warned about.

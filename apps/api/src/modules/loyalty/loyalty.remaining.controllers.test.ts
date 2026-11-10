@@ -38,7 +38,7 @@ vi.mock("./settings/settings.service.js", () => ({
   updateLoyaltyWaCommand: vi.fn(),
 }));
 
-vi.mock("../whatsapp/automatedReply/wa_automatedReply.service.js", () => ({
+vi.mock("../automation/rules/rules.service.js", () => ({
   getWaAutomatedReplyByRequestMessage: vi.fn(),
 }));
 

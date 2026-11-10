@@ -4,7 +4,7 @@ const BASE_PATH = "/loyalty/dashboard/";
 
 /**
  * Mirrors `dashboardResponseSchema` in
- * `rateup-api/src/modules/loyalty/dashboard/dashboard.schema.ts`.
+ * `apps/api/src/modules/loyalty/dashboard/dashboard.schema.ts`.
  */
 
 import type { DashboardPeriod } from "./dashboardPeriods";

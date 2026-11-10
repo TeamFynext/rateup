@@ -6,12 +6,12 @@ vi.mock("../../utils/redisConnection.js", () => ({ default: {} }));
 vi.mock("../../utils/logger.js", () => ({
   log: { error: vi.fn(), warn: vi.fn(), info: vi.fn(), trace: vi.fn(), debug: vi.fn() },
 }));
-vi.mock("../../modules/org/orgSuspension.js", () => ({
+vi.mock("../../modules/settings/org/orgSuspension.js", () => ({
   isOrgSuspended: vi.fn(),
   ORG_SUSPENDED_MESSAGE: "This account is suspended",
 }));
 const usageOnResponse = vi.fn(async () => {});
-vi.mock("../../modules/apiAccessToken/apiUsage.js", () => ({
+vi.mock("../../modules/settings/apiKeys/apiUsage.js", () => ({
   apiUsageOnResponse: vi.fn(() => usageOnResponse),
   flushApiUsage: vi.fn(async () => {}),
 }));
@@ -26,8 +26,8 @@ vi.mock("./scopes.js", () => ({
   refuseTestKeyOnPaidRoute: vi.fn(),
 }));
 
-import { isOrgSuspended } from "../../modules/org/orgSuspension.js";
-import { apiUsageOnResponse, flushApiUsage } from "../../modules/apiAccessToken/apiUsage.js";
+import { isOrgSuspended } from "../../modules/settings/org/orgSuspension.js";
+import { apiUsageOnResponse, flushApiUsage } from "../../modules/settings/apiKeys/apiUsage.js";
 import { refuseTestKeyOnPaidRoute, requireScope } from "./scopes.js";
 import { idempotencyPreHandler } from "./idempotency.js";
 import { ExternalApiError } from "./errors.js";

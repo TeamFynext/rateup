@@ -73,7 +73,7 @@ const PROGRAM = "prog-1";
 interface CustomerFixture {
   id: string;
   currentPoints: number;
-  contact: { name: string; phone: string; orgId: string };
+  contact: { name: string; orgId: string; identities: { kind: string; value: string }[] };
   currentTier: { id: string; name: string } | null;
 }
 
@@ -92,7 +92,7 @@ function customer(over: Record<string, unknown> = {}) {
   const base: CustomerFixture = {
     id: "acct-1",
     currentPoints: 500,
-    contact: { name: "Ann", phone: "919000000001", orgId: ORG },
+    contact: { name: "Ann", orgId: ORG, identities: [{ kind: "PHONE", value: "919000000001" }] },
     currentTier: null,
   };
   return { ...base, ...over };
@@ -611,7 +611,9 @@ describe("applyRedemption", () => {
     rewardId: string;
     usedContext: { shortCode: string };
     reward: { id: string; name: string; rewardType: string; stockQuantity: number | null };
-    account: { contact: { name: string; phone: string; orgId: string } };
+    account: {
+      contact: { name: string; orgId: string; identities: { kind: string; value: string }[] };
+    };
   } = {
     id: "red-1",
     status: "APPROVED",
@@ -619,7 +621,9 @@ describe("applyRedemption", () => {
     rewardId: "rwd-1",
     usedContext: { shortCode: "SHORT123" },
     reward: { id: "rwd-1", name: "Free coffee", rewardType: "gift", stockQuantity: 10 },
-    account: { contact: { name: "Ann", phone: "919000000001", orgId: ORG } },
+    account: {
+      contact: { name: "Ann", orgId: ORG, identities: [{ kind: "PHONE", value: "919000000001" }] },
+    },
   };
 
   const applyInput = { redemptionCode: "RU-ABC123", appliedBy: "cashier-1" } as any;
@@ -840,9 +844,13 @@ describe("getTransactionsForExport", () => {
   });
 
   test("returns the rows when the export fits", async () => {
-    db.loyaltyTransaction.findMany.mockResolvedValue([{ id: "txn-1" }]);
+    db.loyaltyTransaction.findMany.mockResolvedValue([
+      { id: "txn-1", account: { contact: customer().contact } },
+    ]);
 
-    await expect(getTransactionsForExport(PROGRAM, {})).resolves.toHaveLength(1);
+    const rows = await getTransactionsForExport(PROGRAM, {});
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.account.contact).toMatchObject({ name: "Ann", phone: "919000000001" });
   });
 });
 

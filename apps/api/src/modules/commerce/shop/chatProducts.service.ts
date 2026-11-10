@@ -4,12 +4,17 @@ import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
 import { findOpenSession } from "../../loyalty/messaging/channels/whatsapp/session.js";
 import { parsePhoneforWa } from "../../loyalty/util.js";
-import { sendMetaMessage } from "../../whatsapp/meta/metaMessage.service.js";
+import { sendMetaMessage } from "../../meta/shared/metaMessage.service.js";
 
 import { toNumber } from "./pricing.js";
 import { storefrontProductUrl } from "./storefrontLinks.js";
 import { ShopError } from "./shop.errors.js";
 import { shopProductsActionSchema } from "./commentToBuy.schema.js";
+import {
+  contactWhereIdentity,
+  primaryIdentities,
+  withContactFields,
+} from "../../contacts/identity/contactFields.js";
 
 /**
  * Product cards in a conversation. WhatsApp shows catalog items natively (one product, or a
@@ -31,11 +36,12 @@ export async function sendProductsInChat(input: {
 }) {
   const store = await prisma.shopStore.findUnique({ where: { orgId: input.orgId } });
   if (!store) throw new ShopError("NOT_FOUND", "Set up your shop first");
-  const contact = await prisma.contact.findFirst({
+  const row = await prisma.contact.findFirst({
     where: { id: input.contactId, orgId: input.orgId },
-    select: { phone: true, igsId: true, psid: true, lastMessageSourceIdentifier: true },
+    select: { lastMessageSourceIdentifier: true, ...primaryIdentities },
   });
-  if (!contact) throw new ShopError("NOT_FOUND", "Contact not found");
+  if (!row) throw new ShopError("NOT_FOUND", "Contact not found");
+  const contact = withContactFields(row);
   const products = await prisma.shopProduct.findMany({
     where: {
       id: { in: input.productIds },
@@ -196,10 +202,8 @@ export async function sendRuleProductsOnWhatsApp(input: {
     log.warn({ ruleId: input.ruleId }, "Send-products action has no valid products");
     return false;
   }
-  const contact = await prisma.contact.findUnique({
-    where: {
-      contact_phone_org_id_unique: { phone: input.phone.replace(/\D/g, ""), orgId: input.orgId },
-    },
+  const contact = await prisma.contact.findFirst({
+    where: { orgId: input.orgId, ...contactWhereIdentity("phone", input.phone) },
     select: { id: true },
   });
   if (!contact) return false;

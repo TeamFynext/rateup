@@ -3,7 +3,7 @@ import { z } from "zod";
 
 /**
  * Wizard form schemas. These mirror the API's step schemas in
- * `rateup-api/src/modules/loyalty/onboarding/onboarding.schema.ts` — the server revalidates
+ * `apps/api/src/modules/loyalty/onboarding/onboarding.schema.ts` — the server revalidates
  * everything, so these exist to give the user the error inline rather than as a toast.
  *
  * Number fields use `z.coerce.number()` because they come off `<Input type="number">` as

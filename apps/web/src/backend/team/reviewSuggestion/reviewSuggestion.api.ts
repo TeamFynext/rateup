@@ -2,7 +2,7 @@ import type { ReviewSuggestion } from "@/types/global";
 
 import { axiosClient, axiosClientIP } from "../../apiClient";
 
-const REVIEW_SUGGESTION_URL = "/reviewSuggestion";
+const REVIEW_SUGGESTION_URL = "/review-suggestions";
 
 export async function getReviewsByTeamId(teamId: string) {
   return (await axiosClient.get(`${REVIEW_SUGGESTION_URL}/${teamId}`))

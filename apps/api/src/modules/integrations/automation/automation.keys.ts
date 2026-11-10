@@ -2,7 +2,7 @@ import bcrypt from "bcrypt";
 import { randomBytes } from "node:crypto";
 
 import { IntegratedApps } from "../../../types/enums.js";
-import { generateApiKey } from "../../apiAccessToken/apiAccessToken.service.js";
+import { generateApiKey } from "../../settings/apiKeys/apiKey.service.js";
 import type { AutomationPlatform } from "./automation.platforms.js";
 
 /**

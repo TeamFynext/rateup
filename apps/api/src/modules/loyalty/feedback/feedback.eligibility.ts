@@ -1,5 +1,5 @@
 import { WaFlowStatus } from "../../../types/enums.js";
-import { findOverallRatingElement } from "../../whatsapp/flows/flowTemplates.js";
+import { findOverallRatingElement } from "../../meta/whatsapp/flows/flowTemplates.js";
 
 /**
  * Whether a flow can be used for loyalty feedback. The reply handlers need three things to

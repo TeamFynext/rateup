@@ -4,6 +4,7 @@ import { LoyaltyFeedbackRequestStatus } from "../../../generated/prisma/client.j
 import { WaFlowStatus } from "../../../types/enums.js";
 import { sendLoyalty } from "../messaging/send.js";
 import { ensureSurveyTeamMap } from "./feedback.teamMap.js";
+import { contactFields, primaryIdentities } from "../../contacts/identity/contactFields.js";
 
 /**
  * Fires one feedback request when its delayed job comes due. Worker-only: this reaches
@@ -52,7 +53,7 @@ export async function fireFeedbackRequest(requestId: string): Promise<FireFeedba
         },
       },
       account: {
-        select: { status: true, contact: { select: { phone: true, name: true } } },
+        select: { status: true, contact: { select: { name: true, ...primaryIdentities } } },
       },
     },
   });
@@ -83,7 +84,7 @@ export async function fireFeedbackRequest(requestId: string): Promise<FireFeedba
   const flow = setting.flow;
   if (!flow || flow.status !== WaFlowStatus.PUBLISHED) return cancel("Flow is not published");
   if (request.account.status !== "active") return cancel("Customer account is not active");
-  const phone = request.account.contact?.phone;
+  const phone = contactFields(request.account.contact.identities).phone;
   if (!phone) return cancel("Customer has no phone number");
 
   if (setting.cooldownDays > 0) {

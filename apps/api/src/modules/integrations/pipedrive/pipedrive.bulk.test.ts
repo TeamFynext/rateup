@@ -163,7 +163,15 @@ describe("sending contacts", () => {
         { id: 12, phones: [{ value: "+91 98765 43210" }] },
       ],
     ];
-    db.contact.findMany.mockReset().mockResolvedValueOnce(contacts).mockResolvedValue([]);
+    // As the database holds them: phone and email are primary identities.
+    const rows = contacts.map(({ email, phone, ...rest }) => ({
+      ...rest,
+      identities: [
+        ...(phone ? [{ kind: "PHONE", value: phone }] : []),
+        ...(email ? [{ kind: "EMAIL", value: email }] : []),
+      ],
+    }));
+    db.contact.findMany.mockReset().mockResolvedValueOnce(rows).mockResolvedValue([]);
   });
 
   test("matches against every person once, links matches, creates the rest", async () => {

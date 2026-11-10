@@ -43,7 +43,7 @@ export default function MetaAiScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const { data: settings, isLoading: loadingNumbers } = useWaSettings(allowed);
-  // `/api/wa/settings` also lists Instagram and Messenger accounts; the agent is WhatsApp only.
+  // `/api/whatsapp/settings` also lists Instagram and Messenger accounts; the agent is WhatsApp only.
   const numbers = useMemo(
     () => (settings ?? []).filter((s) => s.id && s.phoneId && !s.ibaId && !s.fbPageId),
     [settings],

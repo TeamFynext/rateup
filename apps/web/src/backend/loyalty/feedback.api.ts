@@ -7,7 +7,7 @@ import type { LoyaltyRewardStatus } from "./reward.api.ts";
 
 /**
  * Loyalty → Feedback: the selected WhatsApp Flow, its review reward and its results.
- * Mirrors `rateup-api/src/modules/loyalty/feedback/feedback.schema.ts`. The flow itself is
+ * Mirrors `apps/api/src/modules/loyalty/feedback/feedback.schema.ts`. The flow itself is
  * created in WhatsApp → Flow with the Loyalty feedback category; Feedback only selects it.
  */
 

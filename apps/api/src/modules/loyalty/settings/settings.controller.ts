@@ -27,7 +27,7 @@ import {
   deleteEventTrigger,
   saveReminderSchedule,
 } from "./settings.service.js";
-import { getAutomatedRepliesByKeyWeords } from "../../whatsapp/automatedReply/wa_automatedReply.service.js";
+import { getAutomatedRepliesByKeyWeords } from "../../automation/rules/rules.service.js";
 import { getLoyaltyProgramByOrg } from "../program/program.service.js";
 
 async function requireProgramId(

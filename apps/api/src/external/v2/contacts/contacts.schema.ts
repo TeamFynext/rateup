@@ -1,7 +1,7 @@
 import z from "zod";
 
 import { ContactIdentityKind, ContactIdentitySource } from "../../../generated/prisma/enums.js";
-import type { MergeChoosableField } from "../../../modules/contact/merge/merge.types.js";
+import type { MergeChoosableField } from "../../../modules/contacts/merge/merge.types.js";
 import { pageSchema, paginationQuerySchema } from "../pagination.js";
 import { phoneSchema, wirePhoneSchema } from "../phone.js";
 

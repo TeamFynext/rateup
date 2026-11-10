@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 
 import type { DripSchedule, DripStageSchedule } from "@/backend/campaign/campaign.api.ts";
 import { cn } from "@/lib/utils";
+import { plainT } from "@/utils/translate";
 
 import { Detail, untilLabel } from "./NextBatchCard.tsx";
 
@@ -105,7 +106,7 @@ export function DripScheduleCard({
             {!schedule.running
               ? t("Resume the campaign to send it")
               : next.nextDueAt && !next.overdue
-                ? untilLabel(next.nextDueAt, t)
+                ? untilLabel(next.nextDueAt, plainT(t))
                 : t("On the next check")}
           </Detail>
           <div className="flex flex-col gap-0.5">

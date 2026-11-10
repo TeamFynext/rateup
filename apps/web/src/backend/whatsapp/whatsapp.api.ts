@@ -6,7 +6,7 @@ import { getApiErrorMessage } from "@/utils/apiError.ts";
 import { WHATSAPP_URL } from ".";
 import { axiosClient } from "../apiClient";
 
-const TEMPLATES_URL = `${WHATSAPP_URL}/templates`;
+const TEMPLATES_URL = "/whatsapp/templates";
 const REDIRECT_URL = `${WHATSAPP_URL}/redirect`;
 
 export interface WaTemplate {

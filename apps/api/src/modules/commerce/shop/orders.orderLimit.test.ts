@@ -27,9 +27,9 @@ const alerts = vi.hoisted(() => ({ maybeNotifyOrderUsage: vi.fn() }));
 vi.mock("../../../utils/prisma.js", () => ({ default: db }));
 vi.mock("../../../utils/logger.js", () => ({ log: { warn: vi.fn(), info: vi.fn() } }));
 vi.mock("../../../workers/bullmq/queues/shop.queue.js", () => ({ enqueueCatalogPublish: vi.fn() }));
-vi.mock("../../notification/notify.js", () => ({ notify: vi.fn() }));
-vi.mock("../../subscription/planLimits.js", () => limits);
-vi.mock("../../subscription/limitAlerts.js", () => alerts);
+vi.mock("../../settings/notifications/notify.js", () => ({ notify: vi.fn() }));
+vi.mock("../../settings/subscription/planLimits.js", () => limits);
+vi.mock("../../settings/subscription/limitAlerts.js", () => alerts);
 vi.mock("./events.js", () => ({ onShopOrderEvent: vi.fn() }));
 vi.mock("./attribution.js", () => ({ adAttribution: vi.fn() }));
 vi.mock("./shopLoyalty.js", () => ({

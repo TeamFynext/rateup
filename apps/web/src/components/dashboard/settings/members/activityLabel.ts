@@ -1,29 +1,33 @@
 /**
  * A plain sentence for an audit row. The API stores the method and the route it was made
- * on; people read "Sent a campaign", not `POST /api/campaign/:id/send`.
+ * on; people read "Sent a campaign", not `POST /api/campaigns/:id/send`.
  */
 const MODULES: Record<string, string> = {
   wa: "WhatsApp",
-  contact: "Contacts",
-  campaign: "Campaigns",
-  team: "Teams",
+  whatsapp: "WhatsApp",
+  inbox: "Inbox",
+  automation: "Automation",
+  instagram: "Instagram",
+  messenger: "Messenger",
+  contacts: "Contacts",
+  campaigns: "Campaigns",
+  teams: "Teams",
   org: "Organisation",
   user: "Account",
   loyalty: "Loyalty",
-  survey: "Surveys",
-  question: "Surveys",
-  response: "Responses",
+  surveys: "Surveys",
   pipelines: "Pipelines",
   integrations: "Integrations",
-  webhook: "Webhooks",
+  webhooks: "Webhooks",
   payment: "Billing",
   subscription: "Billing",
   "meta-agent": "Meta AI Agent",
   commerce: "Commerce",
-  testimonials: "Testimonials",
   lifecycles: "Lifecycles",
-  notification: "Notifications",
-  "api-access-token": "API key",
+  notifications: "Notifications",
+  "api-keys": "API key",
+  "link-pages": "Link pages",
+  "qr-codes": "QR codes",
 };
 
 const VERBS: Record<string, string> = {

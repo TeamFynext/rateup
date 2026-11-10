@@ -7,6 +7,7 @@ import { assignRewardToCustomer } from "../accounts/account.service.js";
 import { sendLoyaltyEvent } from "../messaging/send.js";
 import type { ProgramForSend } from "../messaging/types.js";
 import { isDueThisHour, leadDaysFor, localDay, targetDay } from "./reminderSchedule.js";
+import { contactFields, primaryIdentities } from "../../contacts/identity/contactFields.js";
 
 /**
  * The three occasions this branch adds: a member about to lose their tier, a redemption
@@ -112,9 +113,9 @@ export async function checkTierAtRiskAlerts(
 
       const account = await prisma.customerLoyaltyAccount.findUnique({
         where: { id: row.accountId },
-        select: { contact: { select: { name: true, phone: true, orgId: true } } },
+        select: { contact: { select: { name: true, orgId: true, ...primaryIdentities } } },
       });
-      if (!account?.contact.phone) continue;
+      if (!account || !contactFields(account.contact.identities).phone) continue;
       if (!program.whatsappNotifications) continue;
 
       const outcome = await sendLoyaltyEvent(
@@ -180,7 +181,10 @@ export async function checkRewardExpiringAlerts(
       expiresAt: true,
       reward: { select: { name: true } },
       account: {
-        select: { id: true, contact: { select: { name: true, phone: true, orgId: true } } },
+        select: {
+          id: true,
+          contact: { select: { name: true, orgId: true, ...primaryIdentities } },
+        },
       },
     },
   });
@@ -194,7 +198,7 @@ export async function checkRewardExpiringAlerts(
       });
       if (claimed.count === 0) continue;
 
-      if (!redemption.account.contact.phone) continue;
+      if (!contactFields(redemption.account.contact.identities).phone) continue;
       if (!program.whatsappNotifications) continue;
 
       const outcome = await sendLoyaltyEvent(
@@ -277,10 +281,10 @@ export async function checkSignupAnniversaries(
         where: { id: row.id },
         select: {
           currentPoints: true,
-          contact: { select: { name: true, phone: true, orgId: true } },
+          contact: { select: { name: true, orgId: true, ...primaryIdentities } },
         },
       });
-      if (!account?.contact.phone) continue;
+      if (!account || !contactFields(account.contact.identities).phone) continue;
       if (!program.whatsappNotifications) continue;
 
       const outcome = await sendLoyaltyEvent(
