@@ -35,6 +35,7 @@ pnpm run typecheck                # every package, mobile included (the pre-push
 vp run -r build                   # every package, in dependency order
 vp run --filter "@rateup/worker-kafka..." build   # one app and what it needs
 vp check                          # format + lint (root vite.config.ts)
+pnpm dlx knip@6.44.2              # unused files and dependencies (knip.json lists the known exceptions)
 ```
 
 ## Rules
