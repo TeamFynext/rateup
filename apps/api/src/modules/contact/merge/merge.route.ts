@@ -2,7 +2,6 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { HttpError } from "../../../utils/http.js";
 import {
   addManualIdentity,
-  identitiesFromContact,
   listContactIdentities,
   removeIdentity,
   updateManualIdentity,
@@ -109,7 +108,10 @@ export async function contactMergeRoutes(server: FastifyInstance) {
     async (request: FastifyRequest<{ Params: { contactId: string } }>, reply: FastifyReply) => {
       const orgId = orgOf(request);
       const { contactId } = request.params;
-      const contact = await prisma.contact.findFirst({ where: { id: contactId, orgId } });
+      const contact = await prisma.contact.findFirst({
+        where: { id: contactId, orgId },
+        select: { id: true },
+      });
       if (!contact) throw new HttpError("Contact not found", 404);
       const [identities, suggestions, merges] = await Promise.all([
         listContactIdentities(orgId, contactId),
@@ -118,8 +120,8 @@ export async function contactMergeRoutes(server: FastifyInstance) {
       ]);
       return reply.send({
         identities,
-        // Not backfilled yet: what the columns say, so the panel is never empty.
-        legacyIdentities: identities.length ? [] : identitiesFromContact(contact),
+        // Kept for older clients; every identity is in `identities` now.
+        legacyIdentities: [],
         suggestions,
         merges,
       });

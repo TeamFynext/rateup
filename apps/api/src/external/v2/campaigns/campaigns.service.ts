@@ -18,6 +18,7 @@ import { createCampaignParticipants } from "../../../modules/campaign/campaignPa
 import { CampaignParticipantStatus, CampaignStatus, CampaignType } from "../../../types/enums.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
+import { primaryIdentities } from "../../../modules/contact/identity/contactFields.js";
 import { getFlowIdFromTemplateComponents } from "../../../utils/waTemplateComponents.js";
 import type { WaTemplateComponent } from "../../../types/whatsapp.types.js";
 import { ExternalApiError } from "../../shared/errors.js";
@@ -177,7 +178,7 @@ export async function listCampaignResponses(
       responses: true,
       encryptedResponses: true,
       surveyTeamMap: { select: { teamId: true } },
-      Contact: { select: { phone: true } },
+      Contact: { select: primaryIdentities },
     },
     orderBy: cursorOrderBy,
     take: page.limit + 1,

@@ -1,6 +1,11 @@
 import prisma from "../../../utils/prisma.js";
 import { CreateContactLabelSchema, UpdateContactLabelSchema } from "./contactLabel.schema.js";
 import type { Prisma } from "../../../generated/prisma/client.js";
+import {
+  primaryIdentities,
+  withContactFields,
+  withContactFieldsOrNull,
+} from "../identity/contactFields.js";
 
 export async function createContactLabel(
   orgId: string,
@@ -117,6 +122,7 @@ export async function assignLabelsToContact(contactId: string, labelIds: string[
   const contact = await prisma.contact.findFirst({
     where: { id: contactId, orgId },
     include: {
+      ...primaryIdentities,
       ContactLabelMap: {
         include: {
           label: true,
@@ -125,7 +131,7 @@ export async function assignLabelsToContact(contactId: string, labelIds: string[
     },
   });
 
-  return contact;
+  return withContactFieldsOrNull(contact);
 }
 
 export async function getContactsWithLabels(orgId: string, labelIds?: string[]) {
@@ -148,6 +154,7 @@ export async function getContactsWithLabels(orgId: string, labelIds?: string[]) 
   const contacts = await prisma.contact.findMany({
     where: whereCondition,
     include: {
+      ...primaryIdentities,
       ContactLabelMap: {
         include: {
           label: true,
@@ -156,7 +163,7 @@ export async function getContactsWithLabels(orgId: string, labelIds?: string[]) 
     },
   });
 
-  return contacts;
+  return contacts.map((contact) => withContactFields(contact));
 }
 
 export async function assignLabelsToContacts(

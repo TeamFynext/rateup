@@ -2,7 +2,10 @@ import type { MultipartFile } from "@fastify/multipart";
 import { type Job, UnrecoverableError } from "bullmq";
 import { isValidPhoneNumber } from "libphonenumber-js";
 
+import { randomUUID } from "node:crypto";
+
 import type { Contact } from "../../generated/prisma/client.js";
+import { ContactIdentityKind, ContactIdentitySource } from "../../generated/prisma/enums.js";
 import { log } from "../../utils/logger.js";
 import prisma from "../../utils/prisma.js";
 import connection from "../../utils/redisConnection.js";
@@ -21,6 +24,7 @@ import { emitIntegrationEvents } from "../integrations/events/emitIntegrationEve
 import type { IntegrationEvent } from "../integrations/events/integrationEvent.types.js";
 import { triggerConversionsApiForContact } from "../integrations/meta/conversions.service.js";
 import { getCustomFields } from "./contact.service.js";
+import { contactFields, type ContactFields, primaryIdentities } from "./identity/contactFields.js";
 
 /** Rows one upload may carry. The rows sit in Redis until the worker is done with them. */
 export const CONTACT_IMPORT_ROW_LIMIT = 100_000;
@@ -297,49 +301,103 @@ export async function importContactBatch(
 
   const { created, updated, skipped, newMembers } = await prisma.$transaction(
     async (tx) => {
-      const existing = await tx.contact.findMany({
-        where: { orgId, phone: { in: batch.map(([, phone]) => phone) } },
-      });
-      const existingByPhone = new Map(existing.map((contact) => [contact.phone, contact]));
+      const phones = batch.map(([, phone]) => phone);
+      const phoneSet = new Set(phones);
+      const existing = (
+        await tx.contact.findMany({
+          where: {
+            orgId,
+            identities: { some: { kind: ContactIdentityKind.PHONE, value: { in: phones } } },
+          },
+          include: {
+            identities: {
+              // The primaries the contact's fields are read from, plus the number that matched
+              // (a merged contact's second phone is not its primary).
+              where: {
+                OR: [
+                  primaryIdentities.identities.where,
+                  { kind: ContactIdentityKind.PHONE, value: { in: phones } },
+                ],
+              },
+              select: { kind: true, value: true, isPrimary: true },
+            },
+          },
+        })
+      ).map(({ identities, ...contact }) => ({
+        ...contact,
+        ...contactFields(identities.filter((identity) => identity.isPrimary)),
+        matchedPhone: identities.find(
+          (identity) => identity.kind === ContactIdentityKind.PHONE && phoneSet.has(identity.value),
+        )!.value,
+      }));
+      const existingByPhone = new Map(existing.map((contact) => [contact.matchedPhone, contact]));
 
-      const fresh = batch.filter(([, phone]) => !existingByPhone.has(phone));
-      const created = fresh.length
-        ? await tx.contact.createManyAndReturn({
-            data: fresh.map(([name, phone]) => ({ orgId, name, phone, source: CSV_IMPORT_SOURCE })),
-            // A contact that arrived on WhatsApp between the read and this write is left alone.
-            skipDuplicates: true,
-          })
-        : [];
+      // Ids chosen here so each new contact pairs with its phone without relying on row order.
+      const fresh = batch
+        .filter(([, phone]) => !existingByPhone.has(phone))
+        .map(([name, phone]) => ({ id: randomUUID(), name, phone }));
+      let created: (Contact & ContactFields)[] = [];
+      if (fresh.length) {
+        const rows = await tx.contact.createManyAndReturn({
+          data: fresh.map(({ id, name }) => ({ id, orgId, name, source: CSV_IMPORT_SOURCE })),
+        });
+        const phoneById = new Map<string, string>(fresh.map(({ id, phone }) => [id, phone]));
+        const identities = await tx.contactIdentity.createManyAndReturn({
+          data: rows.map((row) => ({
+            orgId,
+            contactId: row.id,
+            kind: ContactIdentityKind.PHONE,
+            value: phoneById.get(row.id)!,
+            source: ContactIdentitySource.IMPORT,
+            isPrimary: true,
+          })),
+          // A contact that arrived on WhatsApp between the read and this write keeps its number.
+          skipDuplicates: true,
+          select: { contactId: true },
+        });
+        const kept = new Set(identities.map((identity) => identity.contactId));
+        const lost = rows.filter((row) => !kept.has(row.id)).map((row) => row.id);
+        if (lost.length) await tx.contact.deleteMany({ where: { id: { in: lost } } });
+        created = rows
+          .filter((row) => kept.has(row.id))
+          .map((row) => ({ ...row, ...contactFields([]), phone: phoneById.get(row.id)! }));
+      }
 
       // Update-existing rewrites the name and the source, as the upsert on main did.
       const toUpdate = updateExisting
-        ? batch.filter(([, phone]) => existingByPhone.has(phone))
+        ? batch.flatMap(([name, phone]) => {
+            const contact = existingByPhone.get(phone);
+            return contact ? [{ name, phone, id: contact.id }] : [];
+          })
         : [];
       if (toUpdate.length) {
         await tx.$executeRaw`
           UPDATE "Contact" AS c SET name = v.name, source = ${CSV_IMPORT_SOURCE}
-          FROM unnest(${toUpdate.map(([name]) => name)}::text[], ${toUpdate.map(([, phone]) => phone)}::text[]) AS v(name, phone)
-          WHERE c."orgId" = ${orgId}::uuid AND c.phone = v.phone`;
+          FROM unnest(${toUpdate.map(({ name }) => name)}::text[], ${toUpdate.map(({ id }) => id)}::uuid[]) AS v(name, id)
+          WHERE c."orgId" = ${orgId}::uuid AND c.id = v.id`;
       }
-      const nameByPhone = new Map(toUpdate.map(([name, phone]) => [phone, name]));
+      const nameById = new Map(toUpdate.map(({ id, name }) => [id, name]));
       const updated = existing
-        .filter((contact) => contact.phone && nameByPhone.has(contact.phone))
-        .map((contact) => ({
+        .filter((contact) => nameById.has(contact.id))
+        .map(({ matchedPhone: _matched, ...contact }) => ({
           ...contact,
-          name: nameByPhone.get(contact.phone ?? "") ?? null,
+          name: nameById.get(contact.id) ?? null,
           source: CSV_IMPORT_SOURCE,
         }));
+      const phoneOf = new Map<string, string>(
+        existing.map((contact) => [contact.id, contact.matchedPhone]),
+      );
 
       // An updated contact that has values in the file has all its old values replaced,
       // as main's upsert path did; one without values in the file keeps what it has.
       const replaced = updated
-        .filter((contact) => fieldsByPhone.get(contact.phone ?? "")?.length)
+        .filter((contact) => fieldsByPhone.get(phoneOf.get(contact.id)!)?.length)
         .map((contact) => contact.id);
       if (replaced.length) {
         await tx.contactCustomFieldValue.deleteMany({ where: { contactId: { in: replaced } } });
       }
       const values = [...created, ...updated].flatMap((contact) =>
-        (fieldsByPhone.get(contact.phone ?? "") ?? []).map((field) => ({
+        (fieldsByPhone.get(phoneOf.get(contact.id) ?? contact.phone!) ?? []).map((field) => ({
           contactId: contact.id,
           fieldId: field.id,
           value: field.value,
@@ -404,8 +462,8 @@ async function sendImportEvents(
     newMembers,
   }: {
     updateExisting: boolean;
-    created: Contact[];
-    updated: Contact[];
+    created: (Contact & ContactFields)[];
+    updated: (Contact & ContactFields)[];
     newMembers: { contactId: string; contactGroupId: string }[];
   },
 ) {

@@ -95,7 +95,7 @@ vi.mock("../../../../generated/prisma/client.js", () => ({
   },
   // The tag just needs to be inert here; these tests assert on the values passed
   // alongside the SQL, not on the SQL fragments themselves.
-  Prisma: { sql: vi.fn(() => ({})), join: vi.fn(() => ({})), empty: {} },
+  Prisma: { sql: vi.fn(() => ({})), join: vi.fn(() => ({})), raw: vi.fn(() => ({})), empty: {} },
 }));
 
 import prisma from "../../../../utils/prisma.js";
@@ -650,7 +650,8 @@ describe("exportWhatsapChats", () => {
   test("exports everything when no limit is given", async () => {
     const sql = await runExport({});
 
-    expect(sql).not.toContain("LIMIT");
+    // The phone's identity lookup has its own LIMIT 1; the export itself is not paged.
+    expect(sql).not.toMatch(/LIMIT \d+ OFFSET/);
   });
 });
 

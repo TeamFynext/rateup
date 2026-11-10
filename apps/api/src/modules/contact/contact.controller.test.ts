@@ -763,7 +763,9 @@ describe("exportContactHandler", () => {
   });
 
   test("exports id, name and phone by default", async () => {
-    db.contact.findMany.mockResolvedValueOnce([{ id: "c1", name: "Ann", phone: "9190001" }]);
+    db.contact.findMany.mockResolvedValueOnce([
+      { id: "c1", name: "Ann", identities: [{ kind: "PHONE", value: "9190001" }] },
+    ]);
     const rep = reply();
 
     await exportContactHandler(request({ body: {} }), rep);
@@ -771,6 +773,17 @@ describe("exportContactHandler", () => {
     const sheet = (write as Mock).mock.calls[0][0].sheets[0];
     expect(sheet.columns.map((c: any) => c.key)).toEqual(["id", "name", "phone"]);
     expect(sheet.data).toEqual([{ id: "c1", name: "Ann", phone: "9190001" }]);
+  });
+
+  test("reads the phone from the contact's primary phone identity", async () => {
+    await exportContactHandler(request({ body: {} }), reply());
+
+    const { select } = db.contact.findMany.mock.calls[0][0];
+    expect(select).not.toHaveProperty("phone");
+    expect(select.identities).toEqual({
+      where: { isPrimary: true, kind: "PHONE" },
+      select: { kind: true, value: true },
+    });
   });
 
   test("only ever reads the caller's own org", async () => {

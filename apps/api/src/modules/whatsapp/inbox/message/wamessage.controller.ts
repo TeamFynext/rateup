@@ -216,7 +216,10 @@ export async function handleWaMessages(
               phone: waIdentity.phone,
               ...(waIdentity.username ? { whatsappUserName: waIdentity.username } : {}),
             }
-          : { phone: from }),
+          : // An Instagram id is not a phone number: it is the contact's igsId only.
+            sourcePlatform === PlatformType.INSTAGRAM
+            ? {}
+            : { phone: from }),
       psid: sourcePlatform === PlatformType.FACEBOOK ? from : undefined,
       igsId: sourcePlatform === PlatformType.INSTAGRAM ? from : undefined,
       source:

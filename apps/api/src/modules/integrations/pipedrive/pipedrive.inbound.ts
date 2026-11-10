@@ -4,7 +4,14 @@ import type { Integration } from "../../../generated/prisma/client.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
 import { LEADS_PIPELINE_TYPE } from "../../pipeline/pipelineTypes.js";
+import { IdentityTakenError } from "../../contact/identity/identity.service.js";
 import { emitIntegrationEvent } from "../events/emitIntegrationEvent.js";
+import { noteContactSelect, toNoteContact } from "../shared/activityNotes.js";
+import {
+  findCrmContact,
+  heldByAnotherContact,
+  updateContactFromCrm,
+} from "../shared/crmContacts.js";
 import type { ProviderJobData } from "../providers/integrationProvider.types.js";
 import {
   findLinkByExternalId,
@@ -37,7 +44,8 @@ const LEAD = "lead";
 /** An integration that belongs to an org — every connected Pipedrive row does. */
 type OrgIntegration = Integration & { orgId: string };
 
-const isUniqueViolation = (error: unknown) => (error as { code?: string } | null)?.code === "P2002";
+const isUniqueViolation = (error: unknown) =>
+  error instanceof IdentityTakenError || (error as { code?: string } | null)?.code === "P2002";
 
 export type PipedriveInboundOutcome =
   | "ignored"
@@ -120,10 +128,11 @@ async function processPerson(
   const inbound = toPipedrivePersonFields(values);
   if (inbound && link.lastSyncHash === hashSyncPayload(inbound)) return "echo";
 
-  const contact = await prisma.contact.findUnique({
+  const row = await prisma.contact.findUnique({
     where: { id: link.rateupId },
-    select: { id: true, orgId: true, name: true, email: true, phone: true },
+    select: { orgId: true, ...noteContactSelect },
   });
+  const contact = row && { orgId: row.orgId, ...toNoteContact(row) };
   if (!contact || contact.orgId !== integration.orgId) {
     await removeLink(key, link.rateupId);
     return "rateup_gone";
@@ -133,14 +142,18 @@ async function processPerson(
   const update: { name?: string; email?: string; phone?: string } = {};
   if (values.name && values.name !== contact.name) update.name = values.name;
   if (values.email && values.email !== contact.email?.trim().toLowerCase()) {
-    update.email = values.email;
+    // One contact per email now (it is an identity); another's is left where it is.
+    if (await heldByAnotherContact(contact.orgId, contact.id, "email", values.email)) {
+      log.info(
+        { integrationId: integration.id, contactId: contact.id },
+        "Pipedrive changed a person's email to one another RateUp contact has; email left as it was",
+      );
+    } else {
+      update.email = values.email;
+    }
   }
   if (values.phone && values.phone !== contact.phone) {
-    const taken = await prisma.contact.findUnique({
-      where: { contact_phone_org_id_unique: { phone: values.phone, orgId: contact.orgId } },
-      select: { id: true },
-    });
-    if (taken) {
+    if (await heldByAnotherContact(contact.orgId, contact.id, "phone", values.phone)) {
       log.info(
         { integrationId: integration.id, contactId: contact.id },
         "Pipedrive changed a person's phone to a number another RateUp contact has; phone left as it was",
@@ -151,7 +164,7 @@ async function processPerson(
   }
 
   const current = Object.keys(update).length
-    ? await prisma.contact.update({ where: { id: contact.id }, data: update })
+    ? await updateContactFromCrm(contact.orgId, contact.id, update)
     : contact;
   await recordLink(key, {
     rateupId: contact.id,
@@ -182,20 +195,9 @@ export async function importPipedrivePerson(
 ): Promise<{ outcome: "no_phone" | "linked" | "created"; contactId?: string }> {
   const key = { integrationId: integration.id, entityType: CONTACT };
   const { orgId } = integration;
-  const select = { id: true, name: true, email: true, phone: true } as const;
-
   const existing =
-    (values.phone &&
-      (await prisma.contact.findUnique({
-        where: { contact_phone_org_id_unique: { phone: values.phone, orgId } },
-        select,
-      }))) ||
-    (values.email &&
-      (await prisma.contact.findFirst({
-        where: { orgId, email: { equals: values.email, mode: "insensitive" } },
-        select,
-      }))) ||
-    null;
+    (await findCrmContact(orgId, "phone", values.phone)) ||
+    (await findCrmContact(orgId, "email", values.email));
   const link = async (contact: { id: string } & PipedriveContactValues) => {
     await recordLink(key, {
       rateupId: contact.id,
@@ -231,10 +233,7 @@ export async function importPipedrivePerson(
   } catch (error) {
     // Created a moment ago by something else — a WhatsApp message, a retry.
     if (!isUniqueViolation(error)) throw error;
-    const raced = await prisma.contact.findUnique({
-      where: { contact_phone_org_id_unique: { phone: values.phone, orgId } },
-      select,
-    });
+    const raced = await findCrmContact(orgId, "phone", values.phone);
     if (!raced) throw error;
     await link(raced);
     return { outcome: "linked", contactId: raced.id };
@@ -432,10 +431,11 @@ async function importDeal(
       }
     }
     if (contactId) {
-      contact = await prisma.contact.findUnique({
+      const row = await prisma.contact.findUnique({
         where: { id: contactId },
-        select: { id: true, name: true, email: true, phone: true },
+        select: noteContactSelect,
       });
+      contact = row && toNoteContact(row);
     }
   }
 

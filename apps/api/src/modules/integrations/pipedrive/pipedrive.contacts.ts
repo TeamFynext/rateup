@@ -3,6 +3,7 @@ import { isAxiosError, type AxiosInstance } from "axios";
 import type { Integration } from "../../../generated/prisma/client.js";
 import { IntegratedApps } from "../../../types/enums.js";
 import prisma from "../../../utils/prisma.js";
+import { noteContactSelect, toNoteContact } from "../shared/activityNotes.js";
 import redisConnection from "../../../utils/redisConnection.js";
 import { integrationTriggerQueue } from "../../../workers/bullmq/queues/index.js";
 import type { IntegrationEvent } from "../events/integrationEvent.types.js";
@@ -160,10 +161,11 @@ export async function processPipedriveContactJob(
   if (!readPipedriveCredential(integration.credential)?.syncContacts) return "sync_off";
 
   const { contactId } = job.data as PipedriveContactJobData;
-  const contact = await prisma.contact.findUnique({
+  const row = await prisma.contact.findUnique({
     where: { id: contactId },
-    select: { id: true, orgId: true, name: true, email: true, phone: true },
+    select: { orgId: true, ...noteContactSelect },
   });
+  const contact = row && { orgId: row.orgId, ...toNoteContact(row) };
   // Deleted since the job was queued (its link went with the delete event).
   if (!contact || contact.orgId !== integration.orgId) return "contact_gone";
 

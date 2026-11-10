@@ -4,6 +4,8 @@ import type { Integration } from "../../../generated/prisma/client.js";
 import { IntegratedApps } from "../../../types/enums.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
+import { contactWhereHasIdentity } from "../../contact/identity/contactFields.js";
+import { noteContactSelect, toNoteContact, type NoteContact } from "../shared/activityNotes.js";
 import { integrationTriggerQueue } from "../../../workers/bullmq/queues/index.js";
 import { LEADS_PIPELINE_TYPE } from "../../pipeline/pipelineTypes.js";
 import type { ProviderJobData } from "../providers/integrationProvider.types.js";
@@ -292,18 +294,17 @@ async function exportContacts(
 
   let cursor: string | undefined;
   for (;;) {
-    const contacts: {
-      id: string;
-      name: string | null;
-      email: string | null;
-      phone: string | null;
-    }[] = await prisma.contact.findMany({
-      where: { orgId: integration.orgId, OR: [{ email: { not: null } }, { phone: { not: null } }] },
-      select: { id: true, name: true, email: true, phone: true },
+    const rows = await prisma.contact.findMany({
+      where: {
+        orgId: integration.orgId,
+        OR: [contactWhereHasIdentity("email"), contactWhereHasIdentity("phone")],
+      },
+      select: noteContactSelect,
       orderBy: { id: "asc" },
       take: BATCH,
       ...(cursor && { cursor: { id: cursor }, skip: 1 }),
     });
+    const contacts: NoteContact[] = rows.map(toNoteContact);
     if (!contacts.length) break;
     cursor = contacts[contacts.length - 1].id;
 

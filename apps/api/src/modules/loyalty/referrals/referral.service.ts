@@ -1,5 +1,6 @@
 import prisma from "../../../utils/prisma.js";
 import { createCustomerAccount, findAccountByReferralCode } from "../accounts/account.service.js";
+import { primaryIdentities, withContactFields } from "../../contact/identity/contactFields.js";
 
 export async function trackReferral(
   programId: string,
@@ -29,13 +30,15 @@ export async function trackReferral(
   }
 
   // Get contact info
-  const contact = await prisma.contact.findFirst({
+  const row = await prisma.contact.findFirst({
     where: { id: refereeContactId, orgId },
+    include: primaryIdentities,
   });
 
-  if (!contact) {
+  if (!row) {
     throw new Error("Contact not found");
   }
+  const contact = withContactFields(row);
 
   if (!contact.phone) {
     throw new Error("Contact has no phone number");

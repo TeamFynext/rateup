@@ -164,8 +164,17 @@ describe("sending existing contacts to HubSpot", () => {
     { id: "c-4", name: "Linked", email: "l@example.com", phone: null },
   ];
 
+  // As the database holds them: phone and email are primary identities.
+  const rows = contacts.map(({ email, phone, ...rest }) => ({
+    ...rest,
+    identities: [
+      ...(phone ? [{ kind: "PHONE", value: phone }] : []),
+      ...(email ? [{ kind: "EMAIL", value: email }] : []),
+    ],
+  }));
+
   beforeEach(() => {
-    db.contact.findMany.mockResolvedValueOnce(contacts).mockResolvedValue([]);
+    db.contact.findMany.mockResolvedValueOnce(rows).mockResolvedValue([]);
     db.integrationEntityLink.findMany.mockResolvedValue([{ rateupId: "c-4" }]);
   });
 
@@ -182,6 +191,16 @@ describe("sending existing contacts to HubSpot", () => {
 
     const run = await processHubSpotBulkJob(integration(), job("export"));
 
+    // Contacts with an email or a phone, read with their primary identities.
+    expect(db.contact.findMany.mock.calls[0][0]).toMatchObject({
+      where: {
+        OR: [
+          { identities: { some: { kind: "EMAIL" } } },
+          { identities: { some: { kind: "PHONE" } } },
+        ],
+      },
+      select: { identities: { where: { isPrimary: true } } },
+    });
     expect(client.post).toHaveBeenCalledTimes(3);
     expect(client.post.mock.calls[0][1]).toMatchObject({
       idProperty: "email",

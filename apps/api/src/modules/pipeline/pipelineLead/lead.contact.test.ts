@@ -49,17 +49,23 @@ describe("the contact behind a manually added lead", () => {
   });
 
   test("links the existing contact instead of duplicating them", async () => {
-    contact.findMany.mockResolvedValue([{ id: "contact-1", phone: "919876543210" }]);
+    contact.findMany.mockResolvedValue([
+      { id: "contact-1", identities: [{ value: "919876543210" }] },
+    ]);
 
     // Typed without the country code the contact was saved with.
     const resolved = await resolveContactForLead(ORG, "9876543210", "Ritu");
 
     expect(resolved).toEqual({ contactId: "contact-1", created: false });
     expect(createContact).not.toHaveBeenCalled();
+    expect(contact.findMany.mock.calls[0][0].where).toEqual({
+      orgId: ORG,
+      identities: { some: { kind: "PHONE", value: { endsWith: "9876543210" } } },
+    });
   });
 
   test("ignores a stored number too short to mean one person", async () => {
-    contact.findMany.mockResolvedValue([{ id: "contact-junk", phone: "43210" }]);
+    contact.findMany.mockResolvedValue([{ id: "contact-junk", identities: [{ value: "43210" }] }]);
 
     const resolved = await resolveContactForLead(ORG, "+919876543210", "Ritu");
 

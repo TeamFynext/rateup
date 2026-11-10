@@ -211,7 +211,11 @@ export async function importGroupContactsHandler(
       }),
       orgId,
     );
-    for (const row of rows) if (row.phone) created.set(row.phone, row.id);
+    const phoneById = await svc.primaryPhones(rows.map((row) => row.id));
+    for (const row of rows) {
+      const phone = phoneById.get(row.id);
+      if (phone) created.set(phone, row.id);
+    }
   }
 
   // A row the create skipped either lost a race to a concurrent create of the same phone

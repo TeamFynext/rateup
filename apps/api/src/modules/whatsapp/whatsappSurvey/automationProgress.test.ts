@@ -170,19 +170,11 @@ describe("findRecentAutomation", () => {
     await expect(findRecentAutomation(PHONE, ORG)).resolves.toBeNull();
   });
 
-  // Contacts part-way through a bot when positions moved to Redis have no key yet.
-  test("falls back to the newest log row when there is no position", async () => {
-    const row = {
-      id: "log-old",
-      currentNode: "node-5",
-      waAutomatedReplyId: "auto-1",
-      waAutomatedReply: AUTOMATION,
-    };
-    db.waAutomatedReplyMessage.findFirst.mockResolvedValue(row);
+  test("no position means no automation, without querying the log", async () => {
+    redis.get.mockResolvedValue(null);
 
-    await expect(findRecentAutomation(PHONE, ORG, { timeWindow: 60_000 })).resolves.toEqual(row);
-    const where = db.waAutomatedReplyMessage.findFirst.mock.calls[0][0].where;
-    expect(where).toMatchObject({ phone: PHONE, orgId: ORG });
-    expect(where.createdAt.gte).toBeInstanceOf(Date);
+    await expect(findRecentAutomation(PHONE, ORG, { timeWindow: 60_000 })).resolves.toBeNull();
+    expect(db.waAutomatedReplyMessage.findFirst).not.toHaveBeenCalled();
+    expect(db.waAutomatedReply.findFirst).not.toHaveBeenCalled();
   });
 });

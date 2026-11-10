@@ -1,7 +1,5 @@
 import { ContactIdentityKind, PlatformType } from "../../../generated/prisma/enums.js";
 import prisma from "../../../utils/prisma.js";
-import { isBsuid } from "../../whatsapp/bsuid.js";
-import { legacyPhone } from "./identity.service.js";
 
 /**
  * Which WhatsApp numbers can message a contact, and with which address.
@@ -30,10 +28,6 @@ async function contactAddresses(
   const contact = await prisma.contact.findFirst({
     where: { id: contactId, orgId },
     select: {
-      phone: true,
-      bsuid: true,
-      igsId: true,
-      psid: true,
       identities: {
         where: { kind: { in: [ContactIdentityKind.PHONE, ContactIdentityKind.WA_BSUID] } },
         orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
@@ -46,20 +40,14 @@ async function contactAddresses(
     },
   });
   if (!contact) return null;
-  const phoneIdentity = contact.identities.find((row) => row.kind === ContactIdentityKind.PHONE);
-  // Not the column as is: Instagram/Messenger contacts can hold their platform id there.
-  const phone = legacyPhone(contact) ?? phoneIdentity?.value ?? null;
+  const phone =
+    contact.identities.find((row) => row.kind === ContactIdentityKind.PHONE)?.value ?? null;
   const bsuids = contact.identities
     .filter((row) => row.kind === ContactIdentityKind.WA_BSUID)
     .map((row) => ({
       value: row.value,
       portfolioId: row.channel?.whatsapp?.businessPortfolioId ?? null,
     }));
-  const legacyBsuid =
-    contact.bsuid ?? (contact.phone && isBsuid(contact.phone) ? contact.phone : null);
-  if (legacyBsuid && !bsuids.some((row) => row.value === legacyBsuid)) {
-    bsuids.push({ value: legacyBsuid, portfolioId: null });
-  }
   return { phone, bsuids };
 }
 

@@ -1,4 +1,5 @@
 import prisma from "../../utils/prisma.js";
+import { contactFields, primaryIdentities } from "../contact/identity/contactFields.js";
 import { CampaignNotFoundError } from "./campaign.errors.js";
 import { CampaignParticipantStatus } from "../../types/enums.js";
 import {
@@ -181,7 +182,7 @@ export async function getCampaignSendParticipants(
             status: true,
             errorMessage: true,
             sentAt: true,
-            contact: { select: { id: true, name: true, phone: true } },
+            contact: { select: { id: true, name: true, ...primaryIdentities } },
           },
         },
       },
@@ -197,7 +198,7 @@ export async function getCampaignSendParticipants(
       participantId: row.campaignParticipant.id,
       contactId: row.campaignParticipant.contact.id,
       name: row.campaignParticipant.contact.name,
-      phone: row.campaignParticipant.contact.phone,
+      phone: contactFields(row.campaignParticipant.contact.identities).phone,
       status: row.campaignParticipant.status,
       errorMessage: row.waMessage.errorMessage ?? row.campaignParticipant.errorMessage,
       errorCode: row.waMessage.errorCode,

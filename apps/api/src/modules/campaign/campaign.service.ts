@@ -1,6 +1,7 @@
 import type { Actor } from "../../authz/actor.js";
 import { assertInScope } from "../../authz/scope.js";
 import prisma from "../../utils/prisma.js";
+import { primaryIdentitySql } from "../contact/identity/contactFields.js";
 import { CampaignNotFoundError } from "./campaign.errors.js";
 export { CampaignNotFoundError };
 import { CreateCampaignInput, UpdateCampaignInput } from "./campaign.schema.js";
@@ -631,7 +632,8 @@ export const getResponseByCampaignById = async (id: string, orgId: string) => {
   const responses = await prisma.$queryRaw<CampaignSurveyResponseRow[]>`
   SELECT sr.id, sr."createdAt",
     sr.responses,
-    sr.language, sr.tag, sr."surveyTeamMapId",sr.language, s.questions,c."teamId",co.phone
+    sr.language, sr.tag, sr."surveyTeamMapId",sr.language, s.questions,c."teamId",
+    ${primaryIdentitySql("co", "phone")} AS phone
   FROM "SurveyResponse" sr
   INNER JOIN "SurveyTeamMap" stm ON sr."surveyTeamMapId" = stm.id
   INNER JOIN "Campaign" c ON c."teamId" = stm."teamId"
@@ -736,7 +738,7 @@ export const getResponseExcelByCampaignById = async (
         SELECT 
           cpds."createdAt",
           c."name" as "contactName",
-          c."phone" as "contactPhone",
+          ${primaryIdentitySql("c", "phone")} as "contactPhone",
           cpds."status",
           cpds."sentAt"
         FROM "CampaignParticipantDripStage" cpds
@@ -759,7 +761,7 @@ export const getResponseExcelByCampaignById = async (
         SELECT 
           cp."createdAt",
           c."name" as "contactName",
-          c."phone" as "contactPhone",
+          ${primaryIdentitySql("c", "phone")} as "contactPhone",
           cp."status",
           cp."sentAt"
         FROM "CampaignParticipant" cp

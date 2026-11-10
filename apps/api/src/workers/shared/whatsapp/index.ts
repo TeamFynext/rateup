@@ -5,6 +5,10 @@ import { publisher, WS_CHANNEL } from "../ws.publisher.js";
 import prisma from "../../../utils/prisma.js";
 import dbPool from "../../../utils/db.js";
 import { Prisma } from "../../../generated/prisma/client.js";
+import {
+  primaryIdentityPgSql,
+  primaryIdentitySql,
+} from "../../../modules/contact/identity/contactFields.js";
 import type { PrismaTransaction } from "../prismaTypes.js";
 import type { WaMessageOrgTeamType } from "../../../generated/prisma/enums.js";
 import {
@@ -281,9 +285,9 @@ export async function enqueueCampaignMessages({
 /**
  * SQL for a contact's WhatsApp send address from the campaign's number `was`: the phone; else
  * the BSUID of that number's business (or one whose business is unknown on either side —
- * how sends behaved before businesses were stored); else, for a contact with no recorded
- * identities yet, the legacy column. Null means this number cannot reach them.
+ * how sends behaved before businesses were stored). Null means this number cannot reach them.
  */
+const PRIMARY_PHONE_SQL = primaryIdentityPgSql("c", "phone");
 const WA_BSUID_FOR_NUMBER_SQL = `(
       SELECT ci.value
       FROM "ContactIdentity" ci
@@ -296,12 +300,9 @@ const WA_BSUID_FOR_NUMBER_SQL = `(
       LIMIT 1)`;
 const HAS_BSUID_IDENTITY_SQL = `EXISTS (
       SELECT 1 FROM "ContactIdentity" ci2 WHERE ci2."contactId" = c.id AND ci2.kind = 'WA_BSUID')`;
-const WA_SEND_ADDRESS_SQL = `COALESCE(
-      c.phone,
-      ${WA_BSUID_FOR_NUMBER_SQL},
-      CASE WHEN NOT ${HAS_BSUID_IDENTITY_SQL} THEN c.bsuid END)`;
+const WA_SEND_ADDRESS_SQL = `COALESCE(${PRIMARY_PHONE_SQL}, ${WA_BSUID_FOR_NUMBER_SQL})`;
 /** True when the contact has only BSUIDs, all from businesses other than this number's. */
-const WA_UNREACHABLE_SQL = `(c.phone IS NULL AND ${HAS_BSUID_IDENTITY_SQL} AND ${WA_BSUID_FOR_NUMBER_SQL} IS NULL)`;
+const WA_UNREACHABLE_SQL = `(${PRIMARY_PHONE_SQL} IS NULL AND ${HAS_BSUID_IDENTITY_SQL} AND ${WA_BSUID_FOR_NUMBER_SQL} IS NULL)`;
 
 /** Shown on the recipient and counted as failed; not sent, so never billed. */
 export const UNREACHABLE_FROM_CHANNEL_MESSAGE =
@@ -1174,7 +1175,7 @@ export async function bulkUpdateStatuses(
             cp.id AS "participantId",
             cp."campaignId",
             cp.status AS "participantStatus",
-            c.phone AS "contactPhone",
+            ${primaryIdentitySql("c", "phone")} AS "contactPhone",
             c."orgId" AS "contactOrgId",
             c."id" AS "contactId",
             wmcpm."campaignParticipantDripStageId",

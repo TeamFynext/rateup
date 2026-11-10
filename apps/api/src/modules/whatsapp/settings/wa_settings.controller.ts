@@ -100,20 +100,10 @@ export async function getWaSettingsHandler(req: FastifyRequest, res: FastifyRepl
   }
   const response = waSettings?.map((data) => {
     const {
-      // The flow key pair, the WhatsApp system token and the Facebook page token
-      // are all redacted before the settings leave the API.
+      // The flow key pair and the WhatsApp system token are redacted before the settings
+      // leave the API.
       encryption: _encryption,
       accessToken: _accessToken,
-      pageAccessToken: _pageAccessToken,
-      // Legacy Messenger/Instagram columns, copied to MetaChannel and no longer kept
-      // current; /api/meta/channels is the source for those channels.
-      fbPageId: _fbPageId,
-      ibaId: _ibaId,
-      fbUserName: _fbUserName,
-      igUserName: _igUserName,
-      igDisplayName: _igDisplayName,
-      instagramIceBreakers: _instagramIceBreakers,
-      instagramPersistentMenu: _instagramPersistentMenu,
       ...safe
     } = data;
     return { ...safe, encryption: undefined };

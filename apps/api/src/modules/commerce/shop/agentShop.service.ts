@@ -9,6 +9,7 @@ import { formatMoney } from "./money.js";
 import { ShopError } from "./shop.errors.js";
 import { assertCanTakeOrder } from "./orderAllowance.js";
 import { assertCommerceEnabled } from "./store.service.js";
+import { contactWhereIdentity } from "../../contact/identity/contactFields.js";
 
 /**
  * What the Meta AI agent's shop tools answer. Shapes are flat and snake_case because a model
@@ -79,8 +80,8 @@ export async function agentStartCheckout(
   const store = await storeFor(orgId);
   await assertCanTakeOrder({ orgId, source: "ai_agent" });
   const digits = phone.replace(/\D/g, "");
-  const contact = await prisma.contact.findUnique({
-    where: { contact_phone_org_id_unique: { phone: digits, orgId } },
+  const contact = await prisma.contact.findFirst({
+    where: { orgId, ...contactWhereIdentity("phone", digits) },
     select: { id: true, name: true },
   });
   const draft = await createDraftOrder({
@@ -132,7 +133,7 @@ export async function agentOrderStatus(orgId: string, phone: string) {
       // A typed-in storefront number proves nothing; the chatter's own contact, or a number
       // its owner confirmed, does.
       OR: [
-        { contact: { phone: digits } },
+        { contact: contactWhereIdentity("phone", digits) },
         { customerPhone: digits, phoneVerifiedAt: { not: null } },
       ],
     },

@@ -147,11 +147,10 @@ export async function isContactActive(orgId: string, recipient: Recipient): Prom
       AND (
         (ac."platform" = ${recipient.platform}::"PlatformType" AND ac."customerId" = ${customerId})
         OR ac."contactId" IN (
-          SELECT c."id" FROM "Contact" c
-          WHERE c."orgId" = ${orgId}::uuid
-            AND (c."phone" IN (${customerId}, ${`+${customerId}`}, ${recipient.customerId})
-              OR c."igsId" = ${recipient.customerId}
-              OR c."psid" = ${recipient.customerId})
+          SELECT ci."contactId" FROM "ContactIdentity" ci
+          WHERE ci."orgId" = ${orgId}::uuid
+            AND ((ci."kind" = 'PHONE' AND ci."value" = ${recipient.customerId.replace(/\D/g, "")})
+              OR (ci."kind" IN ('IG_SCOPED', 'FB_PSID') AND ci."value" = ${recipient.customerId}))
         )
       )
     LIMIT 1

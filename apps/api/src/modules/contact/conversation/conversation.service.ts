@@ -20,6 +20,12 @@ import {
 } from "../../whatsapp/inbox/inboxStats/inboxStats.service.js";
 import { incrementConversationCount } from "../../stats/stats.service.js";
 import { releaseThreadsOnTicketClose } from "../../metaAgent/metaAgent.autoRelease.js";
+import {
+  contactFields,
+  primaryIdentities,
+  primaryIdentitySql,
+  withContactFields,
+} from "../identity/contactFields.js";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -188,13 +194,16 @@ export async function setInboxStatus(
     });
     if (!before) throw new Error(`Contact ${contactId} not found`);
 
-    const contact = await tx.contact.update({
-      where: { id: contactId },
-      data: {
-        waMessageAssignStatus: status,
-        ...(terminal ? { closedAt: now, closedBy } : { closedAt: null, closedBy: null }),
-      },
-    });
+    const contact = withContactFields(
+      await tx.contact.update({
+        where: { id: contactId },
+        data: {
+          waMessageAssignStatus: status,
+          ...(terminal ? { closedAt: now, closedBy } : { closedAt: null, closedBy: null }),
+        },
+        include: primaryIdentities,
+      }),
+    );
 
     const conversation = await mirrorConversationStatusTx(tx, contactId, status, actor, {
       ...opts,
@@ -306,7 +315,7 @@ async function deleteConversationsForOrg(conversationIds: string[], orgId: strin
       id: true,
       contactId: true,
       number: true,
-      contact: { select: { name: true, phone: true } },
+      contact: { select: { name: true, ...primaryIdentities } },
     },
   });
   if (conversations.length === 0) {
@@ -410,7 +419,7 @@ async function deleteConversationsForOrg(conversationIds: string[], orgId: strin
       number: conversation.number,
       contactId: conversation.contactId,
       contactName: conversation.contact?.name ?? null,
-      contactPhone: conversation.contact?.phone ?? null,
+      contactPhone: contactFields(conversation.contact?.identities).phone,
     })),
     deletedMessages: result.deletedMessages,
     remaining: new Map([...result.mirrors].map(([id, mirror]) => [id, mirror.remaining])),
@@ -1614,7 +1623,7 @@ assigned_conversations AS (
 
         json_build_object(
             'name', c."name",
-            'phone', c."phone"
+            'phone', ${primaryIdentitySql("c", "phone")}
         ) AS customer
     FROM "Conversation" cv
     JOIN "ConversationAssignedUserTeamMap" cau

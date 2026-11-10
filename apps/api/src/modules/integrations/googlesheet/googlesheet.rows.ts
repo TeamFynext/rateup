@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 
 import type { Integration } from "../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
+import { contactFields, primaryIdentities } from "../../contact/identity/contactFields.js";
 import { PageType, QuestionType, WaQuestions } from "../../../types/enums.js";
 import { getContent } from "../../../utils/survey/response.data.js";
 import {
@@ -112,7 +113,7 @@ export async function appendResponseToSheet(
       language: true,
       createdAt: true,
       tag: true,
-      Contact: { select: { phone: true } },
+      Contact: { select: primaryIdentities },
       surveyTeamMap: {
         select: {
           survey: { select: { spreadSheetId: true, questions: true, id: true } },
@@ -185,7 +186,7 @@ export async function appendResponseToSheet(
       );
     }
   });
-  resObj["Respondent's Mobile Number"] = toCell(response.Contact?.phone);
+  resObj["Respondent's Mobile Number"] = toCell(contactFields(response.Contact?.identities).phone);
   resObj["Tag"] = toCell(response.tag);
   resObj["tag"] = toCell(response.tag); // for old synced response
 

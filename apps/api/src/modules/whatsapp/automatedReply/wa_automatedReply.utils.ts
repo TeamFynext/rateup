@@ -11,6 +11,13 @@ import { assignChat } from "../whatsappSurvey/wasurvey.utils.js";
 import { log } from "../../../utils/logger.js";
 import { generateLocalMessageId } from "../../../utils/messageId.js";
 import prisma from "../../../utils/prisma.js";
+import {
+  contactWhereIdentity,
+  primaryIdentities,
+  withContactFields,
+  withContactFieldsOrNull,
+  type ContactField,
+} from "../../contact/identity/contactFields.js";
 import { readWaPaymentConfigurations } from "../../integrations/wapayment/wapayment.types.js";
 import redisConnection from "../../../utils/redisConnection.js";
 import { templateData } from "../messageTemplates/wa_templates.service.js";
@@ -34,7 +41,7 @@ import { sendTemplateToUserCore } from "../messageTemplates/wa_templates.control
 import { sendFlow } from "../flows/flow.service.js";
 import { processNextNode } from "../whatsappSurvey/wasurvey.controller.js";
 import { PlatformType, TriggerEvent } from "../../../generated/prisma/enums.js";
-import type { LeadChannel, LeadSource } from "../../../generated/prisma/client.js";
+import type { LeadChannel, LeadSource, Prisma } from "../../../generated/prisma/client.js";
 import {
   getContactStage,
   openLeadOnPipelineForContact,
@@ -276,19 +283,22 @@ export enum ReplyComponentType {
 }
 
 /**
- * How a rule finds the contact it is about. Messenger contacts have no phone, only the
- * page-scoped `psid` the event carries; WhatsApp contacts are keyed by phone, and
- * Instagram contacts carry their igsId in `phone` as well as `igsId`. `recipient` is
- * `context.phone`, which holds whichever of those the platform uses.
+ * How a rule finds the contact it is about. `recipient` is `context.phone`, which holds
+ * whichever identifier the platform uses: the phone on WhatsApp, the igsId on Instagram,
+ * the page-scoped psid on Messenger.
  */
-function ruleContactWhere(platform: string | null | undefined, recipient: string, orgId: string) {
-  return platform === "FACEBOOK" ? { psid: recipient, orgId } : { phone: recipient, orgId };
+function ruleContactField(platform: string | null | undefined): ContactField {
+  if (platform === "FACEBOOK") return "psid";
+  if (platform === "INSTAGRAM") return "igsId";
+  return "phone";
 }
 
-function ruleContactUnique(platform: string | null | undefined, recipient: string, orgId: string) {
-  return platform === "FACEBOOK"
-    ? { contact_psid_org_id_unique: { psid: recipient, orgId } }
-    : { contact_phone_org_id_unique: { phone: recipient, orgId } };
+function ruleContactWhere(
+  platform: string | null | undefined,
+  recipient: string,
+  orgId: string,
+): Prisma.ContactWhereInput {
+  return { orgId, ...contactWhereIdentity(ruleContactField(platform), recipient) };
 }
 
 /** The contact a rule's conditions read, with the groups and labels they check. */
@@ -297,11 +307,19 @@ export async function findRuleContact(
   recipient: string,
   orgId: string,
 ) {
-  if (platform !== "FACEBOOK") return getContactByPhoneNumberAndOrgId(recipient, orgId);
-  return prisma.contact.findFirst({
+  if (ruleContactField(platform) === "phone") {
+    return getContactByPhoneNumberAndOrgId(recipient, orgId);
+  }
+  const contact = await prisma.contact.findFirst({
     where: ruleContactWhere(platform, recipient, orgId),
-    include: { customFields: true, contactGroups: true, ContactLabelMap: true },
+    include: {
+      customFields: true,
+      contactGroups: true,
+      ContactLabelMap: true,
+      ...primaryIdentities,
+    },
   });
+  return withContactFieldsOrNull(contact);
 }
 
 /**
@@ -870,15 +888,17 @@ async function sendMetaRuleText(
  * stop rules that legitimately fire today.
  */
 /**
- * Who a contact event's rules act on, as the rule context's `phone`. Messenger contacts
- * have no phone: their rules run on the psid, as the inbound handler passes it. Instagram
- * contacts keep their igsId in `phone`, so that needs nothing here.
+ * Who a contact event's rules act on, as the rule context's `phone`. Messenger and
+ * Instagram contacts have no phone: their rules run on the psid / igsId, as the inbound
+ * handlers pass it.
  */
 export function ruleRecipient(
-  contact: { phone?: string | null; psid?: string | null },
+  contact: { phone?: string | null; psid?: string | null; igsId?: string | null },
   platform: string,
 ): string | null | undefined {
-  return platform === "FACEBOOK" ? (contact.psid ?? contact.phone) : contact.phone;
+  if (platform === "FACEBOOK") return contact.psid ?? contact.phone;
+  if (platform === "INSTAGRAM") return contact.igsId ?? contact.phone;
+  return contact.phone;
 }
 
 export async function resolveContactChannel(contact: {
@@ -1373,10 +1393,12 @@ async function executeCloseTicketAction(
   if (!context.orgId || !context.phone) return false;
 
   // Find the contact (fetch all needed fields at once)
-  const contact = await prisma.contact.findFirst({
+  const row = await prisma.contact.findFirst({
     where: ruleContactWhere(context.platform, context.phone, context.orgId),
+    include: primaryIdentities,
   });
-  if (!contact) return false;
+  if (!row) return false;
+  const contact = withContactFields(row);
 
   // Update the contact to closed status using the main update logic, pass existing contact
   await updateContactById(
@@ -1529,8 +1551,8 @@ export async function executeAssignStageAction(
     return false;
   }
 
-  const contact = await prisma.contact.findUnique({
-    where: ruleContactUnique(context.platform, context.phone, context.orgId),
+  const contact = await prisma.contact.findFirst({
+    where: ruleContactWhere(context.platform, context.phone, context.orgId),
     select: { id: true },
   });
   if (!contact) return false;
@@ -1606,21 +1628,27 @@ async function executeAssignLifecycleAction(
   const { lifecycleId, pipelineId } = readAssignLifecycleValue(rawValue);
   if (!context.phone || !context.orgId || !lifecycleId) return false;
 
-  const updatedContact = await prisma.contact.update({
-    where: ruleContactUnique(context.platform, context.phone, context.orgId),
-    data: { lifecycleId },
-    select: {
-      id: true,
-      orgId: true,
-      integrationIds: true,
-      name: true,
-      email: true,
-      phone: true,
-      source: true,
-      notes: true,
-      lifecycleId: true,
-    },
+  // Throws when no contact matches, as the update on the old unique column did.
+  const target = await prisma.contact.findFirstOrThrow({
+    where: ruleContactWhere(context.platform, context.phone, context.orgId),
+    select: { id: true },
   });
+  const updatedContact = withContactFields(
+    await prisma.contact.update({
+      where: { id: target.id },
+      data: { lifecycleId },
+      select: {
+        id: true,
+        orgId: true,
+        integrationIds: true,
+        name: true,
+        source: true,
+        notes: true,
+        lifecycleId: true,
+        ...primaryIdentities,
+      },
+    }),
+  );
 
   const lifecycle = await prisma.lifecycle.findUnique({
     where: {

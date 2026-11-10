@@ -12,6 +12,7 @@
 import { PlatformType } from "../../../generated/prisma/enums.js";
 import { HttpError } from "../../../utils/http.js";
 import prisma from "../../../utils/prisma.js";
+import { contactWhereIdentity } from "../../contact/identity/contactFields.js";
 
 const HOUR_MS = 60 * 60 * 1000;
 export const RESPONSE_WINDOW_MS = 24 * HOUR_MS;
@@ -177,7 +178,10 @@ export async function gateSendApiMessage<P extends Record<string, unknown>>(inpu
   if (!isHumanInboxSend(input) || !carriesMessage(payload)) return payload;
 
   const contact = await prisma.contact.findFirst({
-    where: platform === PlatformType.INSTAGRAM ? { orgId, igsId: to } : { orgId, psid: to },
+    where: {
+      orgId,
+      ...contactWhereIdentity(platform === PlatformType.INSTAGRAM ? "igsId" : "psid", to),
+    },
     select: { id: true, igBlockedAt: true, lastReceivedMessageTimeStamp: true },
   });
   if (!contact) return payload;

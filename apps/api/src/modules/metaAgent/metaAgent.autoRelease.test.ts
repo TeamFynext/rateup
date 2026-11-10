@@ -19,9 +19,9 @@ const agent = (id: string, phoneId: string, phone: string) => ({
   whatsappSettingsId: id,
   whatsappSettings: { phoneId, phone },
 });
-const contact = (over: Record<string, unknown> = {}) => ({
+const contact = ({ phone = "919188346187", ...over }: Record<string, unknown> = {}) => ({
   id: "c1",
-  phone: "919188346187",
+  identities: [{ kind: "PHONE", value: phone }],
   lastReceivedMetadata: { phone_number_id: "pid-1" },
   lastMessageSourceIdentifier: "15551323034",
   ...over,

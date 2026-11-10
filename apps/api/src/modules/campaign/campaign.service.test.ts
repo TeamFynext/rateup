@@ -38,6 +38,7 @@ vi.mock("../../generated/prisma/client.js", () => ({
       values,
     }),
     empty: { __fragment: "", values: [] },
+    raw: (text: string) => ({ __fragment: text, values: [] }),
   },
 }));
 vi.mock("../whatsapp/whatsappSurvey/wasurvey.controller.js", () => ({}));

@@ -11,6 +11,8 @@ import {
   localDay,
   POINTS_EXPIRY_LEDGER_HOUR,
 } from "./reminderSchedule.js";
+import { primaryIdentities } from "../../contact/identity/contactFields.js";
+import { withMemberContact } from "../memberContact.js";
 
 /**
  * Cron job to check for customer birthdays and send WhatsApp templates
@@ -63,21 +65,23 @@ export async function checkBirthdayEventTriggers(now: Date = new Date()) {
             AND EXTRACT(DAY FROM c.dob) = ${todayDate}
         `;
 
-        const birthdayCustomers = await prisma.customerLoyaltyAccount.findMany({
-          where: { id: { in: birthdayAccountIds.map((row) => row.id) } },
-          include: {
-            contact: {
-              select: {
-                id: true,
-                phone: true,
-                name: true,
-                dob: true,
-                orgId: true,
+        const birthdayCustomers = (
+          await prisma.customerLoyaltyAccount.findMany({
+            where: { id: { in: birthdayAccountIds.map((row) => row.id) } },
+            include: {
+              contact: {
+                select: {
+                  id: true,
+                  ...primaryIdentities,
+                  name: true,
+                  dob: true,
+                  orgId: true,
+                },
               },
+              program: true,
             },
-            program: true,
-          },
-        });
+          })
+        ).map(withMemberContact);
 
         log.info(
           `Birthday Event Trigger Cron - Program ${trigger.program.name}: ${birthdayCustomers.length} customers with birthday today`,
@@ -197,26 +201,28 @@ export async function checkInactivityEventTriggers(now: Date = new Date()) {
         );
 
         // Get all active customers who haven't had activity in X days
-        const inactiveCustomers = await prisma.customerLoyaltyAccount.findMany({
-          where: {
-            programId: trigger.programId,
-            status: "active",
-            lastActivityAt: {
-              lte: inactivityDate,
-            },
-          },
-          include: {
-            contact: {
-              select: {
-                id: true,
-                phone: true,
-                name: true,
-                orgId: true,
+        const inactiveCustomers = (
+          await prisma.customerLoyaltyAccount.findMany({
+            where: {
+              programId: trigger.programId,
+              status: "active",
+              lastActivityAt: {
+                lte: inactivityDate,
               },
             },
-            program: true,
-          },
-        });
+            include: {
+              contact: {
+                select: {
+                  id: true,
+                  ...primaryIdentities,
+                  name: true,
+                  orgId: true,
+                },
+              },
+              program: true,
+            },
+          })
+        ).map(withMemberContact);
 
         log.info(
           `Inactivity Event Trigger - Program ${trigger.program.name}: ${inactiveCustomers.length} inactive customers found`,
@@ -420,25 +426,27 @@ export async function checkPointsExpiryAlerts(now: Date = new Date()) {
           .endOf("day")
           .toDate();
 
-        const customersNearExpiry = await prisma.customerLoyaltyAccount.findMany({
-          where: {
-            programId: program.id,
-            status: "active",
-            currentPoints: { gt: 0 },
-            transactions: {
-              some: {
-                transactionType: "earn",
-                points: { gt: 0 },
-                createdAt: { gte: alertFrom, lte: alertTo },
+        const customersNearExpiry = (
+          await prisma.customerLoyaltyAccount.findMany({
+            where: {
+              programId: program.id,
+              status: "active",
+              currentPoints: { gt: 0 },
+              transactions: {
+                some: {
+                  transactionType: "earn",
+                  points: { gt: 0 },
+                  createdAt: { gte: alertFrom, lte: alertTo },
+                },
               },
             },
-          },
-          include: {
-            contact: {
-              select: { id: true, phone: true, name: true, orgId: true },
+            include: {
+              contact: {
+                select: { id: true, name: true, orgId: true, ...primaryIdentities },
+              },
             },
-          },
-        });
+          })
+        ).map(withMemberContact);
 
         log.info(
           `Points Expiry Alert - Program ${program.name}: ${customersNearExpiry.length} customers near expiry`,
@@ -579,24 +587,26 @@ export async function checkPointsExpiration(now: Date = new Date()) {
         );
 
         // Get all active customer accounts in this program
-        const customerAccounts = await prisma.customerLoyaltyAccount.findMany({
-          where: {
-            programId: program.id,
-            status: "active",
-            currentPoints: {
-              gt: 0, // Only customers with points
-            },
-          },
-          include: {
-            contact: {
-              select: {
-                id: true,
-                phone: true,
-                name: true,
+        const customerAccounts = (
+          await prisma.customerLoyaltyAccount.findMany({
+            where: {
+              programId: program.id,
+              status: "active",
+              currentPoints: {
+                gt: 0, // Only customers with points
               },
             },
-          },
-        });
+            include: {
+              contact: {
+                select: {
+                  id: true,
+                  ...primaryIdentities,
+                  name: true,
+                },
+              },
+            },
+          })
+        ).map(withMemberContact);
 
         log.info(
           `Points Expiration - Program ${program.name}: Checking ${customerAccounts.length} customer accounts`,

@@ -34,6 +34,12 @@ import { LoyaltyEventType } from "../../../types/enums.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
 import {
+  contactFields,
+  contactWhereHasIdentity,
+  contactWhereIdentity,
+  primaryIdentities,
+} from "../../contact/identity/contactFields.js";
+import {
   findInstagramMentionRule,
   toInstagramMentionConfig,
 } from "../../loyalty/earningRules/triggerRules.js";
@@ -194,15 +200,16 @@ async function fetchMentionDetails(
 }
 
 async function findContactByUsername(orgId: string, username: string) {
-  return await prisma.contact.findFirst({
+  const contact = await prisma.contact.findFirst({
     where: {
       orgId,
-      igsId: { not: null },
+      ...contactWhereHasIdentity("igsId"),
       whatsappUserName: { equals: username, mode: "insensitive" },
     },
-    select: { id: true, igsId: true },
+    select: { id: true, ...primaryIdentities },
     orderBy: { createdAt: "desc" },
   });
+  return contact && { id: contact.id, igsId: contactFields(contact.identities).igsId };
 }
 
 /* ── resolving one mention ──────────────────────────────────────────────────── */
@@ -362,7 +369,7 @@ async function notifyMentionReward(
     const contact = mention.contactId
       ? await prisma.contact.findUnique({
           where: { id: mention.contactId },
-          select: { name: true, igsId: true },
+          select: { name: true, ...primaryIdentities },
         })
       : null;
     const name = contact?.name?.trim() || mention.username || "there";
@@ -375,7 +382,7 @@ async function notifyMentionReward(
     if (outcome.sent || !outcome.skippedReason) return;
     if (!DM_FALLBACK_REASONS.has(outcome.skippedReason)) return;
 
-    const igsId = mention.igsId ?? contact?.igsId;
+    const igsId = mention.igsId ?? contactFields(contact?.identities).igsId;
     if (!igsId) return;
     const text = await mentionRewardText(mention.orgId, { name, points, balance });
     if (!text) return;
@@ -477,8 +484,8 @@ export async function recordInstagramStoryMention(input: {
     const { orgId, ibaId, igsId, storyId } = input;
     await expireStaleInstagramMentions(orgId);
 
-    const contact = await prisma.contact.findUnique({
-      where: { contact_igsid_org_id_unique: { igsId, orgId } },
+    const contact = await prisma.contact.findFirst({
+      where: { orgId, ...contactWhereIdentity("igsId", igsId) },
       select: { id: true, whatsappUserName: true },
     });
 
@@ -525,9 +532,10 @@ export async function linkPendingInstagramMentions(
     await expireStaleInstagramMentions(orgId);
     const contact = await prisma.contact.findFirst({
       where: { id: contactId, orgId },
-      select: { igsId: true },
+      select: primaryIdentities,
     });
     if (!contact) return 0;
+    const { igsId } = contactFields(contact.identities);
     const { count } = await prisma.instagramMention.updateMany({
       where: {
         orgId,
@@ -535,7 +543,7 @@ export async function linkPendingInstagramMentions(
         contactId: null,
         username: handle,
       },
-      data: { contactId, ...(contact.igsId ? { igsId: contact.igsId } : {}) },
+      data: { contactId, ...(igsId ? { igsId } : {}) },
     });
     if (count > 0) await resolvePendingForContact(orgId, contactId);
     return count;

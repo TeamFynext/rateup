@@ -4,6 +4,10 @@ import type { z } from "zod";
 import axios from "axios";
 
 import prisma from "../../../utils/prisma.js";
+import {
+  contactFields,
+  primaryIdentities,
+} from "../../../modules/contact/identity/contactFields.js";
 import { log } from "../../../utils/logger.js";
 import {
   isRetryableCode,
@@ -445,9 +449,9 @@ export async function sendToContactsHandler(
   const requested = [...new Set(body.contactIds)];
   const contacts = await prisma.contact.findMany({
     where: { orgId, id: { in: requested } },
-    select: { id: true, phone: true, bsuid: true },
+    select: { id: true, ...primaryIdentities },
   });
-  const byId = new Map(contacts.map((c) => [c.id, c]));
+  const byId = new Map(contacts.map((c) => [c.id, { id: c.id, ...contactFields(c.identities) }]));
   const skipped: { contactId: string; reason: "not_found" | "no_phone" }[] = [];
   const sendable: { id: string; phone: string }[] = [];
   for (const id of requested) {

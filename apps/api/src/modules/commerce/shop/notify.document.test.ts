@@ -22,9 +22,11 @@ const invoice = {
 beforeEach(() => {
   vi.clearAllMocks();
   db.contact.findUnique.mockResolvedValue({
-    phone: "+15555550164",
-    igsId: "ig-1",
-    psid: "ps-1",
+    identities: [
+      { kind: "PHONE", value: "15555550164" },
+      { kind: "IG_SCOPED", value: "ig-1" },
+      { kind: "FB_PSID", value: "ps-1" },
+    ],
     lastMessageSourceIdentifier: null,
   });
   meta.sendMetaMessage.mockResolvedValue({ ok: true, messageId: "m1" });

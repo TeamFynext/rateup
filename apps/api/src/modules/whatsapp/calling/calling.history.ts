@@ -1,6 +1,7 @@
 import { Prisma, WaCallStatus } from "../../../generated/prisma/client.js";
 import type { Actor } from "../../../authz/actor.js";
 import prisma from "../../../utils/prisma.js";
+import { contactFields, primaryIdentities } from "../../contact/identity/contactFields.js";
 import { getChannelScope } from "../settings/wa_channel_access.js";
 import type { CallAnalyticsQuery, CallLogQuery } from "./calling.schema.js";
 import type { CallDto } from "./calling.types.js";
@@ -114,7 +115,7 @@ export async function getCallLog(
           : {},
       ],
     },
-    include: { contact: { select: { name: true, phone: true } } },
+    include: { contact: { select: { name: true, ...primaryIdentities } } },
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     take: limit + 1,
   });
@@ -140,7 +141,7 @@ export async function getCallLog(
       customerWaId: call.customerWaId,
       contactId: call.contactId,
       contactName: call.contact?.name ?? null,
-      contactPhone: call.contact?.phone ?? null,
+      contactPhone: contactFields(call.contact?.identities).phone,
       conversationId: call.conversationId,
       initiatedById: call.initiatedById,
       answeredById: call.answeredById,

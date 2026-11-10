@@ -50,13 +50,13 @@ const WA_INBOUND = {
   messageId: "wamid.abc",
   sourceIdentifier: "15551323034",
   sourcePlatform: "WHATSAPP",
-  contact: { orgId: "org-1", phone: "15550001", igsId: null, psid: null },
+  contact: { orgId: "org-1", identities: [{ kind: "PHONE", value: "15550001" }] },
 };
 const FB_INBOUND = {
   messageId: null,
   sourceIdentifier: "page-1",
   sourcePlatform: "FACEBOOK",
-  contact: { orgId: "org-1", phone: null, igsId: null, psid: "psid-1" },
+  contact: { orgId: "org-1", identities: [{ kind: "FB_PSID", value: "psid-1" }] },
 };
 
 const base = { orgId: "org-1", userId: "user-1", contactId: "contact-1" };

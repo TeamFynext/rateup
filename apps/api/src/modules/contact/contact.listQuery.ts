@@ -2,6 +2,7 @@ import type { Prisma } from "../../generated/prisma/client.js";
 import { ContactGroupType } from "../../generated/prisma/client.js";
 import { WHATSAPP_CONTACT_CHANNEL, whatsappContactWhere } from "./contact.channel.js";
 import type { PaginationQuery } from "./contact.schema.js";
+import { contactWhereIdentityContains } from "./identity/contactFields.js";
 
 /**
  * The contacts list query — search, `type` and the filter keys — as a where clause. Split out of
@@ -26,15 +27,13 @@ export function buildContactListWhere(
     const params = new URLSearchParams(filter);
     for (const [key, value] of params.entries()) {
       switch (key) {
-        case "name":
+        case "name": {
+          filterData.push({ name: { contains: value, mode: "insensitive" as const } });
+          break;
+        }
         case "phone":
         case "email": {
-          filterData.push({
-            [key]: {
-              contains: value,
-              mode: "insensitive" as const,
-            },
-          });
+          filterData.push(contactWhereIdentityContains([key], value));
           break;
         }
         case "createdAt": {
@@ -158,19 +157,14 @@ export function buildContactListWhere(
     filterData.push({
       OR: [
         { name: { contains: search, mode: "insensitive" } },
-        { phone: { contains: search, mode: "insensitive" } },
-        { email: { contains: search, mode: "insensitive" } },
+        // Any phone, email or platform id the contact is known by (a merged second number too).
+        contactWhereIdentityContains(["phone", "email", "bsuid", "igsId", "psid"], search),
+        // Phones are stored as digits, so "+91 98…" is matched on its digits.
+        ...(/\d/.test(search) && /^[\d\s+().-]+$/.test(search) && /\D/.test(search.trim())
+          ? [contactWhereIdentityContains(["phone"], search)]
+          : []),
         // WhatsApp or Instagram username.
         { whatsappUserName: { contains: search, mode: "insensitive" } },
-        // A merged contact's second phone or email lives only in its identities.
-        {
-          identities: {
-            some: {
-              kind: { in: ["PHONE", "EMAIL"] },
-              value: { contains: search.toLowerCase() },
-            },
-          },
-        },
       ],
     });
   }

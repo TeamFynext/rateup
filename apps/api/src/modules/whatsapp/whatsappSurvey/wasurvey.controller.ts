@@ -49,6 +49,7 @@ import { getLoyaltyProgramByOrg } from "../../loyalty/program/program.service.js
 import { LoyaltyChannel } from "../../loyalty/messaging/channelIds.js";
 import { replySystem, type InboundReplyContext } from "../../loyalty/messaging/reply.js";
 import { pausedAutomationQueue } from "../../../workers/bullmq/queues/index.js";
+import { contactWhereIdentity } from "../../contact/identity/contactFields.js";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -111,10 +112,7 @@ export async function handleWaJoinRegistration({
   // 1. Check if already registered
   const existingCustomer = await prisma.customerLoyaltyAccount.findFirst({
     where: {
-      contact: {
-        phone: from,
-        orgId,
-      },
+      contact: { orgId, ...contactWhereIdentity("phone", from) },
       programId: program.id,
       status: "active",
     },

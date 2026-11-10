@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 vi.mock("../../../utils/prisma.js", () => ({
   default: {
     waMessage: { findMany: vi.fn(), findFirst: vi.fn(), update: vi.fn() },
-    contact: { findUnique: vi.fn() },
+    contactIdentity: { findFirst: vi.fn() },
   },
   excludeFields: vi.fn(),
 }));
@@ -801,8 +801,9 @@ describe("chatbots and rules on an inbound Messenger message", () => {
   });
 
   test("hands a shop button to the checkout instead of the chatbot and rules", async () => {
-    const contactDb = (prisma as unknown as { contact: { findUnique: Mock } }).contact;
-    contactDb.findUnique.mockResolvedValue({ id: "contact-1" });
+    const identityDb = (prisma as unknown as { contactIdentity: { findFirst: Mock } })
+      .contactIdentity;
+    identityDb.findFirst.mockResolvedValue({ contactId: "contact-1" });
     shop.handleShopReply.mockResolvedValue(true);
 
     await handleFacebookPostback(
@@ -815,6 +816,11 @@ describe("chatbots and rules on an inbound Messenger message", () => {
       contactId: "contact-1",
       channel: "MESSENGER",
       channelAccountId: PAGE_ID,
+    });
+    // The customer is found by their Messenger id.
+    expect(identityDb.findFirst.mock.calls[0][0].where).toMatchObject({
+      orgId: ORG_ID,
+      kind: "FB_PSID",
     });
     expect(answerFlowMock).not.toHaveBeenCalled();
     expect(runRulesMock).not.toHaveBeenCalled();

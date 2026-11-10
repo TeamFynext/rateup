@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, test, vi, type Mock } from "vite-plus/tes
 
 vi.mock("../../utils/prisma.js", () => {
   const db: any = {
-    contact: { findMany: vi.fn(), createManyAndReturn: vi.fn() },
+    contact: { findMany: vi.fn(), createManyAndReturn: vi.fn(), deleteMany: vi.fn() },
+    contactIdentity: { createManyAndReturn: vi.fn() },
     contactGroup: { findFirst: vi.fn() },
     integration: { findMany: vi.fn() },
     lifecycle: { findUnique: vi.fn() },
@@ -14,6 +15,13 @@ vi.mock("../../utils/prisma.js", () => {
   db.$transaction = vi.fn((fn: (tx: unknown) => unknown) => fn(db));
   return { default: db };
 });
+
+// New contacts get their ids before the insert: new-1, new-2, … in row order.
+const ids = vi.hoisted(() => ({ next: 0 }));
+vi.mock("node:crypto", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("node:crypto")>()),
+  randomUUID: () => `new-${++ids.next}`,
+}));
 
 vi.mock("../../utils/redisConnection.js", () => ({
   default: { get: vi.fn(), del: vi.fn() },
@@ -74,12 +82,19 @@ beforeEach(() => {
   (getCustomFields as Mock).mockResolvedValue([]);
   (enqueueContactImport as Mock).mockResolvedValue("contact-import-1");
   db.contact.findMany.mockResolvedValue([]);
-  db.contact.createManyAndReturn.mockImplementation(({ data }: any) =>
-    data.map((row: any) => ({ id: `id-${row.phone}`, ...row })),
+  ids.next = 0;
+  db.contact.createManyAndReturn.mockImplementation(({ data }: any) => data);
+  db.contactIdentity.createManyAndReturn.mockImplementation(({ data }: any) =>
+    data.map((row: any) => ({ contactId: row.contactId })),
   );
   db.contactGroupMap.createManyAndReturn.mockImplementation(({ data }: any) => data);
   events.wanted = new Set();
 });
+
+/** A contact's primary phone identity, as the batch's lookup loads it. */
+function phone(value: string) {
+  return { kind: "PHONE", value, isPrimary: true };
+}
 
 /** The integration events some provider of the org is waiting for. */
 function wanted(...types: string[]) {
@@ -283,17 +298,69 @@ describe("importContactBatch", () => {
     const res = await importContactBatch(jobData(), [["Ann", "9190001", ["Gold"]]]);
 
     expect(db.contact.createManyAndReturn).toHaveBeenCalledWith({
-      data: [{ orgId: ORG, name: "Ann", phone: "9190001", source: "CSV IMPORT" }],
+      data: [{ id: "new-1", orgId: ORG, name: "Ann", source: "CSV IMPORT" }],
+    });
+    expect(db.contactIdentity.createManyAndReturn).toHaveBeenCalledWith({
+      data: [
+        {
+          orgId: ORG,
+          contactId: "new-1",
+          kind: "PHONE",
+          value: "9190001",
+          source: "IMPORT",
+          isPrimary: true,
+        },
+      ],
       skipDuplicates: true,
+      select: { contactId: true },
     });
     expect(db.contactCustomFieldValue.createMany).toHaveBeenCalledWith({
-      data: [{ contactId: "id-9190001", fieldId: "f-tier", value: "Gold" }],
+      data: [{ contactId: "new-1", fieldId: "f-tier", value: "Gold" }],
     });
     expect(res).toEqual({ created: 1, updated: 0, skipped: 0, addedToGroup: 0 });
   });
 
+  test("looks existing contacts up by any phone identity they hold", async () => {
+    await importContactBatch(jobData(), [["Ann", "9190001", [""]]]);
+
+    expect(db.contact.findMany.mock.calls[0][0].where).toEqual({
+      orgId: ORG,
+      identities: { some: { kind: "PHONE", value: { in: ["9190001"] } } },
+    });
+  });
+
+  test("a merged contact's second number counts as existing", async () => {
+    db.contact.findMany.mockResolvedValue([
+      {
+        id: "c-ann",
+        name: "Ann",
+        identities: [phone("9190009"), { kind: "PHONE", value: "9190001", isPrimary: false }],
+      },
+    ]);
+
+    const res = await importContactBatch(jobData(), [["Ann", "9190001", [""]]]);
+
+    expect(db.contact.createManyAndReturn).not.toHaveBeenCalled();
+    expect(res).toEqual({ created: 0, updated: 0, skipped: 1, addedToGroup: 0 });
+  });
+
+  // Was skipDuplicates on the unique phone column; the identity is the unique key now.
+  test("a number another writer took meanwhile is skipped, its new contact dropped", async () => {
+    db.contactIdentity.createManyAndReturn.mockResolvedValue([{ contactId: "new-2" }]);
+
+    const res = await importContactBatch(jobData(), [
+      ["Ann", "9190001", [""]],
+      ["Bob", "9190002", [""]],
+    ]);
+
+    expect(db.contact.deleteMany).toHaveBeenCalledWith({ where: { id: { in: ["new-1"] } } });
+    expect(res).toEqual({ created: 1, updated: 0, skipped: 1, addedToGroup: 0 });
+  });
+
   test("leaves an existing contact and its fields alone when update is off", async () => {
-    db.contact.findMany.mockResolvedValue([{ id: "c-ann", phone: "9190001", name: "Ann" }]);
+    db.contact.findMany.mockResolvedValue([
+      { id: "c-ann", identities: [phone("9190001")], name: "Ann" },
+    ]);
 
     const res = await importContactBatch(jobData(), [["Ann New", "9190001", ["Gold"]]]);
 
@@ -308,8 +375,8 @@ describe("importContactBatch", () => {
   // for a row with any values — all of the contact's old values replaced by the file's.
   test("updates an existing contact the way main's upsert did", async () => {
     db.contact.findMany.mockResolvedValue([
-      { id: "c-ann", phone: "9190001", name: "Ann", source: "whatsapp" },
-      { id: "c-bob", phone: "9190002", name: "Bob", source: "whatsapp" },
+      { id: "c-ann", identities: [phone("9190001")], name: "Ann", source: "whatsapp" },
+      { id: "c-bob", identities: [phone("9190002")], name: "Bob", source: "whatsapp" },
     ]);
 
     const res = await importContactBatch(jobData({ updateExisting: true }), [
@@ -332,7 +399,7 @@ describe("importContactBatch", () => {
   test("an upsert announces every row as updated, new ones included", async () => {
     wanted("contact.created", "contact.updated");
     db.contact.findMany.mockResolvedValue([
-      { id: "c-ann", phone: "9190001", name: "Ann", source: "whatsapp" },
+      { id: "c-ann", identities: [phone("9190001")], name: "Ann", source: "whatsapp" },
     ]);
 
     await importContactBatch(jobData({ updateExisting: true }), [
@@ -352,7 +419,7 @@ describe("importContactBatch", () => {
   test("a contact with a lifecycle says so, and is told to the Conversions API", async () => {
     wanted("contact.updated");
     db.contact.findMany.mockResolvedValue([
-      { id: "c-ann", phone: "9190001", name: "Ann", lifecycleId: "lc-1" },
+      { id: "c-ann", identities: [phone("9190001")], name: "Ann", lifecycleId: "lc-1" },
     ]);
 
     await importContactBatch(jobData({ updateExisting: true }), [["Ann New", "9190001", [""]]]);
@@ -366,7 +433,9 @@ describe("importContactBatch", () => {
 
   test("left-alone contacts send nothing when update is off", async () => {
     wanted("contact.created", "contact.updated");
-    db.contact.findMany.mockResolvedValue([{ id: "c-ann", phone: "9190001", name: "Ann" }]);
+    db.contact.findMany.mockResolvedValue([
+      { id: "c-ann", identities: [phone("9190001")], name: "Ann" },
+    ]);
 
     await importContactBatch(jobData(), [["Ann New", "9190001", ["Gold"]]]);
 
@@ -374,7 +443,9 @@ describe("importContactBatch", () => {
   });
 
   test("adds every row to the group, new or existing", async () => {
-    db.contact.findMany.mockResolvedValue([{ id: "c-ann", phone: "9190001", name: "Ann" }]);
+    db.contact.findMany.mockResolvedValue([
+      { id: "c-ann", identities: [phone("9190001")], name: "Ann" },
+    ]);
 
     const res = await importContactBatch(jobData({ contactGroupId: "g1" }), [
       ["Ann", "9190001", [""]],
@@ -383,7 +454,7 @@ describe("importContactBatch", () => {
 
     expect(db.contactGroupMap.createManyAndReturn).toHaveBeenCalledWith({
       data: [
-        { contactId: "id-9190002", contactGroupId: "g1" },
+        { contactId: "new-1", contactGroupId: "g1" },
         { contactId: "c-ann", contactGroupId: "g1" },
       ],
       skipDuplicates: true,
@@ -418,7 +489,7 @@ describe("importContactBatch", () => {
       {
         type: "contact_group.members_added",
         contactGroupId: "g1",
-        contactIds: ["id-9190001", "id-9190002"],
+        contactIds: ["new-1", "new-2"],
       },
     ]);
   });
@@ -440,7 +511,9 @@ describe("importContactBatch", () => {
   });
 
   test("skips the subscription lookup when the batch changed nothing", async () => {
-    db.contact.findMany.mockResolvedValue([{ id: "c-ann", phone: "9190001", name: "Ann" }]);
+    db.contact.findMany.mockResolvedValue([
+      { id: "c-ann", identities: [phone("9190001")], name: "Ann" },
+    ]);
 
     await importContactBatch(jobData(), [["Ann", "9190001", [""]]]);
 

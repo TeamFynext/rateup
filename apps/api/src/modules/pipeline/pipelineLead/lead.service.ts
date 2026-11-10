@@ -2,6 +2,12 @@ import type { LeadChannel, LeadSource } from "../../../generated/prisma/client.j
 import { Prisma } from "../../../generated/prisma/client.js";
 import { getShortUrlId, shortIdUniqueConstraintErrHandler } from "../../../utils/commonUtils.js";
 import prisma from "../../../utils/prisma.js";
+import { ContactIdentityKind } from "../../../generated/prisma/enums.js";
+import {
+  contactFields,
+  type PrimaryIdentityRow,
+  primaryIdentities,
+} from "../../contact/identity/contactFields.js";
 import { emitIntegrationEvent } from "../../integrations/events/emitIntegrationEvent.js";
 import type {
   BulkUpdateLeadsRequestSchema,
@@ -26,7 +32,17 @@ export const leadListInclude = {
     include: { assignee: { select: { id: true, name: true, profilePhoto: true } } },
   },
   owner: { select: { id: true, name: true, profilePhoto: true } },
-  contact: { select: { id: true, name: true, phone: true } },
+  // The contact's phone is its primary PHONE identity.
+  contact: {
+    select: {
+      id: true,
+      name: true,
+      identities: {
+        where: { isPrimary: true, kind: ContactIdentityKind.PHONE },
+        select: { kind: true, value: true },
+      },
+    },
+  },
   stage: { select: { id: true, name: true, probability: true, rottingDays: true, status: true } },
   lostReason: { select: { id: true, label: true } },
   labels: { include: { label: true } },
@@ -82,10 +98,24 @@ function contactSourceToLeadSource(raw: string | null | undefined): LeadSource |
 
 type RawLead = Prisma.LeadGetPayload<{ include: typeof leadListInclude }>;
 
+/** A contact loaded with `primaryIdentities`, with its email and phone in their place. */
+function withEmailAndPhone<T extends { identities: PrimaryIdentityRow[] }>({
+  identities,
+  ...contact
+}: T) {
+  const { email, phone } = contactFields(identities);
+  return { ...contact, email, phone };
+}
+
 /** Flattens the join rows and lifts the single open task to `nextTask`. */
-export function serialiseLead({ labels, tasks, assignees, ...lead }: RawLead) {
+export function serialiseLead({ labels, tasks, assignees, contact, ...lead }: RawLead) {
   return {
     ...lead,
+    contact: contact && {
+      id: contact.id,
+      name: contact.name,
+      phone: contactFields(contact.identities).phone,
+    },
     labels: labels.map((l) => l.label),
     assignees: assignees.map((a) => a.assignee),
     nextTask: tasks[0] ?? null,
@@ -711,11 +741,10 @@ async function emitLeadStageEvent(
             select: {
               id: true,
               name: true,
-              email: true,
-              phone: true,
               source: true,
               notes: true,
               integrationIds: true,
+              ...primaryIdentities,
             },
           })
         : null;
@@ -737,7 +766,7 @@ async function emitLeadStageEvent(
         pipelineName: stage.pipeline.name,
         pipelineType: stage.pipeline.type,
       },
-      contact,
+      contact: contact && withEmailAndPhone(contact),
       origin: options.syncIntegrations ? ("rateup" as const) : ("integration" as const),
     };
 
@@ -794,15 +823,18 @@ async function fireStageUpdatedRules(lead: { contactId: string | null; stageId: 
 
     const contact = await prisma.contact.findUnique({
       where: { id: lead.contactId },
-      select: { id: true, orgId: true, phone: true, igsId: true, psid: true },
+      select: { id: true, orgId: true, ...primaryIdentities },
     });
-    if (!contact?.phone && !contact?.psid) return;
+    if (!contact) return;
+    const { phone, igsId, psid } = contactFields(contact.identities);
+    if (!phone && !psid) return;
 
     const { checkAndExecuteRuleByTriggerEvent, resolveContactChannel, ruleRecipient } =
       await import("../../whatsapp/automatedReply/wa_automatedReply.utils.js");
 
-    const channel = await resolveContactChannel(contact);
-    const recipient = ruleRecipient(contact, channel.platform);
+    const fields = { id: contact.id, orgId: contact.orgId, phone, igsId, psid };
+    const channel = await resolveContactChannel(fields);
+    const recipient = ruleRecipient(fields, channel.platform);
     if (!recipient) return;
     await checkAndExecuteRuleByTriggerEvent("STAGE_UPDATED", {
       orgId: contact.orgId,
@@ -849,7 +881,7 @@ async function reportLeadWon(lead: {
     const contact = lead.contactId
       ? await prisma.contact.findUnique({
           where: { id: lead.contactId },
-          select: { id: true, name: true, email: true, phone: true, source: true, orgId: true },
+          select: { id: true, name: true, source: true, orgId: true, ...primaryIdentities },
         })
       : null;
 
@@ -861,7 +893,7 @@ async function reportLeadWon(lead: {
       await import("../../integrations/meta/conversions.service.js");
 
     await sendWonConversionEvent(
-      contact ?? {
+      (contact && withEmailAndPhone(contact)) ?? {
         id: "",
         name: lead.name,
         email: lead.email,
@@ -944,11 +976,12 @@ export async function setContactStage({
     return moveLead(existing.id, stageId, userId, syncIntegrations);
   }
 
-  const contact = await prisma.contact.findUnique({
+  const row = await prisma.contact.findUnique({
     where: { id: contactId },
-    select: { name: true, phone: true, email: true },
+    select: { name: true, ...primaryIdentities },
   });
-  if (!contact) return null;
+  if (!row) return null;
+  const contact = withEmailAndPhone(row);
 
   try {
     return await createLead({
@@ -1166,11 +1199,12 @@ export async function openLeadOnPipelineForContact({
   });
   if (!stage) return null;
 
-  const contact = await prisma.contact.findUnique({
+  const row = await prisma.contact.findUnique({
     where: { id: contactId },
-    select: { name: true, phone: true, email: true },
+    select: { name: true, ...primaryIdentities },
   });
-  if (!contact) return null;
+  if (!row) return null;
+  const contact = withEmailAndPhone(row);
 
   return createLead({
     pipelineId,

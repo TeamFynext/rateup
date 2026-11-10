@@ -1,6 +1,5 @@
 import { Prisma } from "../../../generated/prisma/client.js";
 import type { Contact } from "../../../generated/prisma/client.js";
-import { ContactIdentityKind } from "../../../generated/prisma/enums.js";
 import { PlatformType } from "../../../generated/prisma/enums.js";
 import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
@@ -8,12 +7,14 @@ import { HttpError } from "../../../utils/http.js";
 import { emitIntegrationEvent } from "../../integrations/events/emitIntegrationEvent.js";
 import { sendViaWstoOrgHandler } from "../../org/ws/org.ws.controller.js";
 import { WaMessageClosedStatus } from "../../whatsapp/constants.js";
+import { ensurePrimary } from "../identity/identity.service.js";
 import {
-  attachIdentity,
-  identitiesFromContact,
-  LEGACY_COLUMN,
-  syncLegacyColumn,
-} from "../identity/identity.service.js";
+  CONTACT_FIELD_KIND,
+  type ContactFields,
+  primaryIdentities,
+  setPrimaryIdentities,
+  withContactFields,
+} from "../identity/contactFields.js";
 import { orderedPair, suggestMerge, SUGGESTION_STATUS } from "./suggestions.service.js";
 import {
   MERGE_CHOOSABLE_FIELDS,
@@ -76,7 +77,10 @@ const PARTICIPANT_RANK: Record<string, number> = {
 const blank = (value: unknown) =>
   value === null || value === undefined || (typeof value === "string" && value.trim() === "");
 
-function fieldValue(contact: Contact, field: MergeChoosableField) {
+/** A contact as a merge reads it: its columns plus its phone, email and platform ids. */
+type MergeContact = Contact & ContactFields;
+
+function fieldValue(contact: MergeContact, field: MergeChoosableField) {
   return contact[field];
 }
 
@@ -88,11 +92,11 @@ function sameValue(a: unknown, b: unknown) {
 async function loadPair(orgId: string, sourceId: string, targetId: string, db: Tx | typeof prisma) {
   if (sourceId === targetId) throw new HttpError("A contact cannot be merged into itself", 400);
   const [source, target] = await Promise.all([
-    db.contact.findFirst({ where: { id: sourceId, orgId } }),
-    db.contact.findFirst({ where: { id: targetId, orgId } }),
+    db.contact.findFirst({ where: { id: sourceId, orgId }, include: primaryIdentities }),
+    db.contact.findFirst({ where: { id: targetId, orgId }, include: primaryIdentities }),
   ]);
   if (!source || !target) throw new HttpError("Contact not found", 404);
-  return { source, target };
+  return { source: withContactFields(source), target: withContactFields(target) };
 }
 
 /* ------------------------------------------------------------------ preview */
@@ -243,11 +247,9 @@ export async function previewMerge(orgId: string, sourceId: string, targetId: st
       ...row,
       side: row.contactId === source.id ? "source" : "target",
     })),
-    // Contacts not backfilled yet hold identities only in their columns.
-    legacyIdentities: {
-      source: identitiesFromContact(source),
-      target: identitiesFromContact(target),
-    },
+    // Kept for older clients: contacts used to hold some identities only in columns. Every
+    // identity is in `identities` now.
+    legacyIdentities: { source: [], target: [] },
     combined: {
       labels: [...uniqueLabels.values()],
       audiences: [...uniqueGroups.values()],
@@ -287,7 +289,7 @@ function rankLoyaltyAccounts<
 /* -------------------------------------------------------------------- merge */
 
 export interface MergeResult {
-  target: Contact;
+  target: MergeContact;
   mergeId: string;
 }
 
@@ -337,13 +339,7 @@ async function mergeInTransaction(
   const { source, target } = await loadPair(orgId, sourceId, targetId, tx);
   const moved: Record<string, number> = {};
 
-  // 1. Identities. Record both sides' column identities first (contacts not backfilled
-  //    yet hold them only there), then move the source's.
-  for (const side of [target, source]) {
-    for (const input of identitiesFromContact(side)) {
-      await attachIdentity(orgId, side.id, input, tx);
-    }
-  }
+  // 1. Identities: the source's all move, as secondaries (primaries are settled in step 10).
   const sourceIdentities = await tx.contactIdentity.findMany({
     where: { contactId: source.id },
     select: { kind: true, scope: true, value: true, source: true },
@@ -413,11 +409,15 @@ async function mergeInTransaction(
 
   // 8. Scalars and flags.
   const data: Prisma.ContactUncheckedUpdateInput = {};
+  // Email is an identity, not a column: the chosen one becomes the primary in step 10.
+  let email: string | null | undefined;
   for (const field of MERGE_CHOOSABLE_FIELDS) {
     const a = fieldValue(source, field);
     const b = fieldValue(target, field);
     const pick = fieldChoices[field] === "source" ? a : blank(b) ? a : b;
-    if (!sameValue(pick, b)) (data as Record<string, unknown>)[field] = pick;
+    if (sameValue(pick, b)) continue;
+    if (field === "email") email = pick as string | null;
+    else (data as Record<string, unknown>)[field] = pick;
   }
   const fillBlanks = [
     "source",
@@ -490,12 +490,9 @@ async function mergeInTransaction(
   ];
   if (tags.length) data.tags = tags as Prisma.InputJsonValue;
 
-  // 9. Free the source's unique columns, then delete it. Its remaining rows (labels,
+  // 9. Free the source's unique external id, then delete it. Its remaining rows (labels,
   //    audiences, assignees, custom values, the dropped duplicates) go with the cascade.
-  await tx.contact.update({
-    where: { id: source.id },
-    data: { phone: null, bsuid: null, igsId: null, psid: null, external_id: null },
-  });
+  await tx.contact.update({ where: { id: source.id }, data: { external_id: null } });
   const snapshot: ContactMergeSnapshot = {
     contact: JSON.parse(JSON.stringify(source)),
     identities: sourceIdentities.map((row) => ({ ...row, source: String(row.source) })),
@@ -507,19 +504,14 @@ async function mergeInTransaction(
   };
   await tx.contact.delete({ where: { id: source.id } });
 
-  // 10. The target, its columns re-mirrored from its primary identities.
+  // 10. The target: a primary of every kind it now has (its own where it had one), and the
+  //     chosen email as its primary email.
   await tx.contact.update({ where: { id: target.id }, data });
-  for (const kind of Object.keys(LEGACY_COLUMN) as ContactIdentityKind[]) {
-    if (kind === ContactIdentityKind.EMAIL && data.email !== undefined) continue;
-    await syncLegacyColumn(target.id, kind, tx);
+  for (const kind of Object.values(CONTACT_FIELD_KIND)) {
+    await ensurePrimary(target.id, kind, tx);
   }
-  if (typeof data.email === "string" && data.email) {
-    await attachIdentity(
-      orgId,
-      target.id,
-      { kind: ContactIdentityKind.EMAIL, value: data.email, source: "AGENT" },
-      tx,
-    );
+  if (email !== undefined) {
+    await setPrimaryIdentities(orgId, target.id, { email }, "AGENT", tx);
   }
   if (!target.external_id && source.external_id) {
     await tx.contact.update({
@@ -540,8 +532,11 @@ async function mergeInTransaction(
     select: { id: true },
   });
 
-  const merged = await tx.contact.findUniqueOrThrow({ where: { id: target.id } });
-  return { mergeId: merge.id, source, target: merged };
+  const merged = await tx.contact.findUniqueOrThrow({
+    where: { id: target.id },
+    include: primaryIdentities,
+  });
+  return { mergeId: merge.id, source, target: withContactFields(merged) };
 }
 
 async function mergeCampaignParticipants(tx: Tx, sourceId: string, targetId: string) {

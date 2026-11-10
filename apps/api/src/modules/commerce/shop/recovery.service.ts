@@ -1,6 +1,8 @@
 import type { ShopChannel } from "../../../generated/prisma/client.js";
+import { ContactIdentitySource } from "../../../generated/prisma/enums.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
+import { findOrCreateContactByIdentity } from "../../contact/identity/contactFields.js";
 import { parsePhoneforWa } from "../../loyalty/util.js";
 import {
   armShopReminder,
@@ -284,12 +286,13 @@ export async function subscribeBackInStock(input: {
   if (!contactId) {
     const phone = input.phone ? parsePhoneforWa(input.phone.replace(/[^\d+]/g, "")) : null;
     if (!phone || phone.length < 7) throw new ShopError("INVALID", "Enter your WhatsApp number");
-    const contact = await prisma.contact.upsert({
-      where: { contact_phone_org_id_unique: { phone, orgId: variant.product.orgId } },
-      create: { phone, orgId: variant.product.orgId, source: "storefront" },
-      update: {},
-      select: { id: true },
-    });
+    const { contact } = await findOrCreateContactByIdentity(
+      variant.product.orgId,
+      "phone",
+      phone,
+      { source: "storefront" },
+      { source: ContactIdentitySource.CUSTOMER },
+    );
     contactId = contact.id;
   }
   const name = variantName(variant);

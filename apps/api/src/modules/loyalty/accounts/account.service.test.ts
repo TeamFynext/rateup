@@ -2,7 +2,13 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vite-plus/tes
 
 vi.mock("../../../utils/prisma.js", () => ({
   default: {
-    contact: { findFirst: vi.fn(), findMany: vi.fn(), create: vi.fn(), update: vi.fn() },
+    contact: {
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
+    },
     customerLoyaltyAccount: {
       findUnique: vi.fn(),
       findFirst: vi.fn(),
@@ -10,6 +16,7 @@ vi.mock("../../../utils/prisma.js", () => ({
       create: vi.fn(),
       update: vi.fn(),
       updateMany: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
     },
     customerReward: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
     loyaltyProgram: { findUnique: vi.fn(), findFirst: vi.fn() },
@@ -19,6 +26,12 @@ vi.mock("../../../utils/prisma.js", () => ({
     loyaltyTransaction: { create: vi.fn(), findUnique: vi.fn() },
     $transaction: vi.fn(),
   },
+}));
+
+// Identity writes are covered by contactFields' own tests; here only what is written counts.
+vi.mock("../../contact/identity/contactFields.js", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../contact/identity/contactFields.js")>()),
+  setPrimaryIdentities: vi.fn(),
 }));
 
 vi.mock("../earningRulesEngine.js", () => ({
@@ -77,6 +90,15 @@ function sentEvent(event: string) {
 import { scheduleFeedbackRequest } from "../feedback/feedback.scheduler.js";
 import { announceLoyaltyTransactions } from "../loyalty.webhooks.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
+import { primaryIdentities, setPrimaryIdentities } from "../../contact/identity/contactFields.js";
+
+/** A contact's primary identities, as `primaryIdentities` loads them. */
+function ids(phone: string | null, email?: string) {
+  return [
+    ...(phone ? [{ kind: "PHONE", value: phone }] : []),
+    ...(email ? [{ kind: "EMAIL", value: email }] : []),
+  ];
+}
 import {
   assignRewardToCustomer,
   awardPoints,
@@ -143,12 +165,13 @@ function program(over: Record<string, unknown> = {}) {
 beforeEach(() => {
   vi.clearAllMocks();
   db.contact.findFirst.mockResolvedValue(null);
-  db.contact.create.mockResolvedValue({
-    id: "contact-1",
+  db.contact.create.mockResolvedValue({ id: "contact-1", orgId: ORG, name: "Ann" });
+  db.contact.findUniqueOrThrow.mockImplementation(async ({ where }: { where: { id: string } }) => ({
+    id: where.id,
     orgId: ORG,
-    phone: "919000000001",
     name: "Ann",
-  });
+    identities: ids("919000000001"),
+  }));
   db.customerLoyaltyAccount.findUnique.mockResolvedValue(null);
   db.customerLoyaltyAccount.findFirst.mockResolvedValue(null);
   db.customerLoyaltyAccount.findMany.mockResolvedValue([]);
@@ -159,9 +182,13 @@ beforeEach(() => {
     currentPoints: 0,
     lifetimePoints: 0,
     referralCode: "ANN-AB12",
-    contact: { id: "contact-1", name: "Ann", phone: "919000000001", orgId: ORG },
+    contact: { id: "contact-1", name: "Ann", orgId: ORG, identities: ids("919000000001") },
   });
   db.customerLoyaltyAccount.update.mockResolvedValue({ id: "acct-1", currentPoints: 0 });
+  db.customerLoyaltyAccount.findUniqueOrThrow.mockResolvedValue({
+    id: "acct-1",
+    contact: { id: "contact-1", name: "Ann", identities: ids("919000000001") },
+  });
   // Nothing is waiting to be released unless a test says so.
   db.customerLoyaltyAccount.updateMany.mockResolvedValue({ count: 0 });
   db.customerReward.findUnique.mockResolvedValue(null);
@@ -185,13 +212,14 @@ describe("createCustomerAccount — the contact behind the account", () => {
     await createCustomerAccount(signupInput, PROGRAM, ORG);
 
     expect(db.contact.findFirst.mock.calls[0][0].where).toEqual({
-      phone: "919000000001",
       orgId: ORG,
+      identities: { some: { kind: "PHONE", value: "919000000001" } },
     });
   });
 
   test("reuses an existing contact in the org", async () => {
     db.contact.findFirst.mockResolvedValue({ id: "contact-existing", orgId: ORG });
+    db.contact.update.mockResolvedValue({ id: "contact-existing", orgId: ORG, name: "Ann" });
 
     await createCustomerAccount(signupInput, PROGRAM, ORG);
 
@@ -206,12 +234,18 @@ describe("createCustomerAccount — the contact behind the account", () => {
 
     expect(db.contact.create.mock.calls[0][0].data).toMatchObject({
       orgId: ORG,
-      phone: "919000000001",
       name: "Ann",
-      email: "a@b.c",
       source: "loyalty_program",
       dob: null,
     });
+    // The phone and email are the new contact's primary identities, in the same transaction.
+    expect(setPrimaryIdentities).toHaveBeenCalledWith(
+      ORG,
+      "contact-1",
+      { phone: "919000000001", email: "a@b.c" },
+      "CUSTOMER",
+      db,
+    );
   });
 
   test("parses a supplied date of birth", async () => {
@@ -253,6 +287,7 @@ describe("createCustomerAccount — the contact behind the account", () => {
     expect(db.contact.update).toHaveBeenCalledWith({
       where: { id: "contact-existing" },
       data: { dob: new Date("1990-05-05"), gender: "MALE" },
+      include: primaryIdentities,
     });
     expect(db.contact.create).not.toHaveBeenCalled();
   });
@@ -284,6 +319,7 @@ describe("createCustomerAccount — the contact behind the account", () => {
     expect(db.contact.update).toHaveBeenCalledWith({
       where: { id: "contact-existing" },
       data: { name: "Ann" },
+      include: primaryIdentities,
     });
   });
 
@@ -308,6 +344,7 @@ describe("createCustomerAccount — the contact behind the account", () => {
     expect(db.contact.update).toHaveBeenCalledWith({
       where: { id: "contact-existing" },
       data: { name: "JJ", dob: new Date("1990-05-05"), gender: "MALE" },
+      include: primaryIdentities,
     });
   });
 
@@ -327,19 +364,34 @@ describe("createCustomerAccount — the contact behind the account", () => {
 describe("searchContactsForEnrolment", () => {
   test("lists the org's phone-bearing contacts with their membership", async () => {
     db.contact.findMany.mockResolvedValue([
-      { id: "c1", name: "Ann", phone: "919000000001", loyaltyAccounts: [{ status: "active" }] },
-      { id: "c2", name: "Bob", phone: "919000000002", loyaltyAccounts: [] },
+      {
+        id: "c1",
+        name: "Ann",
+        identities: ids("919000000001", "ann@example.com"),
+        loyaltyAccounts: [{ status: "active" }],
+      },
+      { id: "c2", name: "Bob", identities: ids("919000000002"), loyaltyAccounts: [] },
     ]);
 
     const rows = await searchContactsForEnrolment(ORG, { limit: 20 });
 
     const where = db.contact.findMany.mock.calls[0][0].where;
-    expect(where).toMatchObject({ orgId: ORG, phone: { not: null }, isSpam: false });
+    expect(where).toMatchObject({
+      orgId: ORG,
+      identities: { some: { kind: "PHONE" } },
+      isSpam: false,
+    });
     expect(where.OR).toBeUndefined();
     expect(db.contact.findMany.mock.calls[0][0].take).toBe(20);
     expect(rows).toEqual([
-      { id: "c1", name: "Ann", phone: "919000000001", memberStatus: "active" },
-      { id: "c2", name: "Bob", phone: "919000000002", memberStatus: null },
+      {
+        id: "c1",
+        name: "Ann",
+        phone: "919000000001",
+        email: "ann@example.com",
+        memberStatus: "active",
+      },
+      { id: "c2", name: "Bob", phone: "919000000002", email: null, memberStatus: null },
     ]);
   });
 
@@ -350,8 +402,16 @@ describe("searchContactsForEnrolment", () => {
 
     expect(db.contact.findMany.mock.calls[0][0].where.OR).toEqual([
       { name: { contains: "+91 90", mode: "insensitive" } },
-      { email: { contains: "+91 90", mode: "insensitive" } },
-      { phone: { contains: "9190" } },
+      {
+        identities: {
+          some: { kind: { in: ["EMAIL"] }, value: { contains: "+91 90", mode: "insensitive" } },
+        },
+      },
+      {
+        identities: {
+          some: { kind: { in: ["PHONE"] }, value: { contains: "9190", mode: "insensitive" } },
+        },
+      },
     ]);
   });
 
@@ -644,7 +704,7 @@ describe("createCustomerAccount — referrals", () => {
     db.customerLoyaltyAccount.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({
       id: "acct-referrer",
       programId: PROGRAM,
-      contact: { phone: "9", orgId: ORG },
+      contact: { orgId: ORG, identities: ids("9") },
     });
 
     await createCustomerAccount({ ...signupInput, referCode: "REF-1" }, PROGRAM, ORG);
@@ -658,9 +718,11 @@ describe("createCustomerAccount — referrals", () => {
       program({ referralBonusType: "gift", referralRewardId: "rwd-1" }),
     );
     db.customerLoyaltyAccount.findFirst.mockResolvedValue(referrer);
-    db.customerLoyaltyAccount.findUnique
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({ id: "acct-referrer", programId: PROGRAM, contact: null });
+    db.customerLoyaltyAccount.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({
+      id: "acct-referrer",
+      programId: PROGRAM,
+      contact: { orgId: ORG, identities: [] },
+    });
     db.customerReward.findUnique.mockResolvedValue({ id: "already" });
 
     await expect(
@@ -771,7 +833,7 @@ describe("releasePendingSignupBonus", () => {
     programId: PROGRAM,
     contactId: "contact-1",
     referralCode: "ANN-AB12",
-    contact: { phone: "919000000001", name: "Ann", orgId: ORG },
+    contact: { name: "Ann", orgId: ORG, identities: ids("919000000001") },
   };
 
   test("credits exactly once — a second call finds nothing to claim and is a no-op", async () => {
@@ -863,7 +925,10 @@ describe("releasePendingSignupBonus", () => {
 
     expect(db.customerLoyaltyAccount.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { verifiedAt: null, contact: { phone: "919000000001", orgId: ORG } },
+        where: {
+          verifiedAt: null,
+          contact: { orgId: ORG, identities: { some: { kind: "PHONE", value: "919000000001" } } },
+        },
       }),
     );
   });
@@ -878,7 +943,7 @@ describe("awardPoints", () => {
   const customer = {
     id: "acct-1",
     programId: PROGRAM,
-    contact: { id: "contact-1", name: "Ann", phone: "919000000001", orgId: ORG },
+    contact: { id: "contact-1", name: "Ann", orgId: ORG, identities: ids("919000000001") },
     program: { id: PROGRAM },
     currentTier: { id: "tier-1", name: "Bronze" },
   };
@@ -1124,7 +1189,10 @@ describe("awardPoints", () => {
   });
 
   test("says nothing when the contact has no phone", async () => {
-    db.customerLoyaltyAccount.findUnique.mockResolvedValue({ ...customer, contact: null });
+    db.customerLoyaltyAccount.findUnique.mockResolvedValue({
+      ...customer,
+      contact: { ...customer.contact, identities: [] },
+    });
 
     await awardPoints(PROGRAM, "contact-1", 500, {});
 
@@ -1201,7 +1269,10 @@ describe("awardPoints", () => {
   });
 
   test("says why nothing was sent when the contact has no phone", async () => {
-    db.customerLoyaltyAccount.findUnique.mockResolvedValue({ ...customer, contact: null });
+    db.customerLoyaltyAccount.findUnique.mockResolvedValue({
+      ...customer,
+      contact: { ...customer.contact, identities: [] },
+    });
 
     const result = await awardPoints(PROGRAM, "contact-1", 500, {});
 
@@ -1260,8 +1331,8 @@ describe("getCustomerAccountByPhone", () => {
     await getCustomerAccountByPhone(PROGRAM, "919000000001", ORG);
 
     expect(db.contact.findFirst.mock.calls[0][0].where).toEqual({
-      phone: "919000000001",
       orgId: ORG,
+      identities: { some: { kind: "PHONE", value: "919000000001" } },
     });
     expect(db.customerLoyaltyAccount.findUnique.mock.calls[0][0].where).toEqual({
       programId_contactId: { programId: PROGRAM, contactId: "contact-1" },
@@ -1282,7 +1353,7 @@ describe("getLCustomerByPhone", () => {
 
     expect(db.customerLoyaltyAccount.findFirst.mock.calls[0][0].where).toMatchObject({
       programId: PROGRAM,
-      contact: { phone: "919000000001", orgId: ORG },
+      contact: { orgId: ORG, identities: { some: { kind: "PHONE", value: "919000000001" } } },
     });
   });
 
@@ -1295,9 +1366,9 @@ describe("getLCustomerByPhone", () => {
 
     // All three reach the same contact. Before this went through `normalisePhone`, only
     // the third did — the other two silently matched nobody.
-    expect(db.customerLoyaltyAccount.findFirst.mock.calls[0][0].where.contact.phone).toBe(
-      "919000000001",
-    );
+    expect(db.customerLoyaltyAccount.findFirst.mock.calls[0][0].where.contact.identities).toEqual({
+      some: { kind: "PHONE", value: "919000000001" },
+    });
   });
 
   test("an inactive member is still found, so the caller can say why", async () => {
@@ -1359,6 +1430,33 @@ describe("updateCustomerAccount", () => {
     expect(data.contact.update).not.toHaveProperty("gender");
   });
 
+  test("an email becomes the contact's primary EMAIL identity, and is answered back", async () => {
+    db.customerLoyaltyAccount.update.mockResolvedValue({
+      contactId: "contact-1",
+      program: { orgId: ORG },
+    });
+    db.customerLoyaltyAccount.findUniqueOrThrow.mockResolvedValue({
+      id: "acct-1",
+      contact: { id: "contact-1", name: "Ann", identities: ids("919000000001", "ann@example.com") },
+    });
+
+    const result = await updateCustomerAccount(
+      "acct-1",
+      { email: "ann@example.com" } as any,
+      PROGRAM,
+    );
+
+    expect(db.customerLoyaltyAccount.update.mock.calls[0][0].data).not.toHaveProperty("contact");
+    expect(setPrimaryIdentities).toHaveBeenCalledWith(
+      ORG,
+      "contact-1",
+      { email: "ann@example.com" },
+      "AGENT",
+      db,
+    );
+    expect(result.contact).toMatchObject({ phone: "919000000001", email: "ann@example.com" });
+  });
+
   test("a status-only edit does not reach for the contact", async () => {
     await updateCustomerAccount("acct-1", { status: "suspended" } as any, PROGRAM);
 
@@ -1376,7 +1474,7 @@ describe("assignRewardToCustomer", () => {
     db.customerLoyaltyAccount.findUnique.mockResolvedValue({
       id: "acct-1",
       programId: PROGRAM,
-      contact: { name: "Ann", phone: "919000000001", orgId: ORG },
+      contact: { name: "Ann", orgId: ORG, identities: ids("919000000001") },
     });
   });
 
@@ -1465,7 +1563,7 @@ describe("getRewardByShortCode", () => {
   const issued = {
     id: "cr-1",
     status: "ISSUED",
-    account: { program: { orgId: ORG }, contact: { name: "Ann" } },
+    account: { program: { orgId: ORG }, contact: { name: "Ann", identities: ids("919000000001") } },
     reward: { id: "rwd-1" },
   };
 
@@ -1487,7 +1585,21 @@ describe("getRewardByShortCode", () => {
   test("returns the reward when the org matches", async () => {
     db.customerReward.findUnique.mockResolvedValue(issued);
 
-    expect(await getRewardByShortCode("SHORT1", ORG)).toEqual(issued);
+    expect(await getRewardByShortCode("SHORT1", ORG)).toEqual({
+      ...issued,
+      account: {
+        program: { orgId: ORG },
+        // The contact answers with its old phone/email/... keys, read from its identities.
+        contact: {
+          name: "Ann",
+          phone: "919000000001",
+          email: null,
+          bsuid: null,
+          igsId: null,
+          psid: null,
+        },
+      },
+    });
   });
 
   test("the check cannot be skipped, because the org is not optional", async () => {
@@ -1504,7 +1616,7 @@ describe("markRewardAsRedeemed", () => {
   const issued = {
     id: "cr-1",
     status: "ISSUED",
-    account: { program: { orgId: ORG } },
+    account: { program: { orgId: ORG }, contact: { name: "Ann" } },
     reward: { id: "rwd-1" },
   };
 
@@ -1565,7 +1677,9 @@ describe("lookupContactByPhone", () => {
     await lookupContactByPhone("+919876543210", ORG);
 
     expect(db.contact.findFirst).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { phone: "919876543210", orgId: ORG } }),
+      expect.objectContaining({
+        where: { orgId: ORG, identities: { some: { kind: "PHONE", value: "919876543210" } } },
+      }),
     );
   });
 
@@ -1650,7 +1764,7 @@ describe("awardPoints — webhook", () => {
     id: "acct-1",
     programId: PROGRAM,
     cardCode: "K7Q2M9XR4",
-    contact: { id: "contact-1", name: "Ann", phone: "919000000001", orgId: ORG },
+    contact: { id: "contact-1", name: "Ann", orgId: ORG, identities: ids("919000000001") },
     program: { id: PROGRAM, orgId: ORG },
     currentTier: null,
   };

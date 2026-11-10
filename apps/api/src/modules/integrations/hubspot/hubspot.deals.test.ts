@@ -71,7 +71,14 @@ const lead = (over: Record<string, unknown> = {}) => ({
   name: "Asha Nair — bulk order",
   stageId: "col-new",
   pipeline: { orgId: "org-1", type: "LEADS" },
-  contact: { id: "c-1", name: "Asha Nair", email: "asha@example.com", phone: "919876543210" },
+  contact: {
+    id: "c-1",
+    name: "Asha Nair",
+    identities: [
+      { kind: "PHONE", value: "919876543210" },
+      { kind: "EMAIL", value: "asha@example.com" },
+    ],
+  },
   ...over,
 });
 
@@ -186,11 +193,12 @@ describe("sending a lead as a deal", () => {
   test("a new deal goes on the lead's contact, in the mapped stage", async () => {
     await expect(processHubSpotDealJob(integration(), job)).resolves.toBe("created");
 
-    expect(contactIdFor).toHaveBeenCalledWith(
-      expect.objectContaining({ id: "int-1" }),
-      client,
-      lead().contact,
-    );
+    expect(contactIdFor).toHaveBeenCalledWith(expect.objectContaining({ id: "int-1" }), client, {
+      id: "c-1",
+      name: "Asha Nair",
+      email: "asha@example.com",
+      phone: "919876543210",
+    });
     expect(client.post).toHaveBeenCalledWith("/crm/v3/objects/deals", {
       properties: PROPERTIES,
       associations: [

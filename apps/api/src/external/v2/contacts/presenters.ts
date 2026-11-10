@@ -1,5 +1,10 @@
 import type { Prisma } from "../../../generated/prisma/client.js";
 import { ContactIdentityKind } from "../../../generated/prisma/enums.js";
+import {
+  contactFields,
+  primaryIdentities,
+  type PrimaryIdentityRow,
+} from "../../../modules/contact/identity/contactFields.js";
 import { toWirePhone } from "../phone.js";
 import type { ContactDetailView, ContactIdentityView, ContactView } from "./contacts.schema.js";
 
@@ -12,28 +17,31 @@ import type { ContactDetailView, ContactIdentityView, ContactView } from "./cont
 export const contactSelect = {
   id: true,
   name: true,
-  phone: true,
-  bsuid: true,
   whatsappUserName: true,
-  email: true,
   external_id: true,
   source: true,
   consent: true,
   createdAt: true,
   ContactLabelMap: { select: { label: { select: { id: true, name: true } } } },
   customFields: { select: { value: true, field: { select: { slug: true } } } },
+  // phone, email and BSUID are the contact's primary identities of those kinds.
+  ...primaryIdentities,
 } satisfies Prisma.ContactSelect;
 
-type ContactRow = Prisma.ContactGetPayload<{ select: typeof contactSelect }>;
+type ContactRow = Omit<Prisma.ContactGetPayload<{ select: typeof contactSelect }>, "identities"> & {
+  /** Primary identities, or (on a detail row) all of them with `isPrimary`. */
+  identities: (PrimaryIdentityRow & { isPrimary?: boolean })[];
+};
 
 export function presentContact(row: ContactRow): ContactView {
+  const fields = contactFields(row.identities.filter((i) => i.isPrimary !== false));
   return {
     id: row.id,
     name: row.name,
-    phone: toWirePhone(row.phone),
-    businessScopedUserId: row.bsuid ?? null,
+    phone: toWirePhone(fields.phone),
+    businessScopedUserId: fields.bsuid,
     whatsappUsername: row.whatsappUserName ?? null,
-    email: row.email,
+    email: fields.email,
     externalId: row.external_id,
     source: row.source,
     consent: row.consent,
@@ -98,9 +106,9 @@ export function presentIdentity(row: IdentityRow): ContactIdentityView {
 }
 
 /**
- * A single contact with its identities, in the same query (one extra SELECT, batched by
- * Prisma). Only for single-contact answers: lists use `contactSelect` and stay one query per
- * page whatever the identities.
+ * A single contact with all its identities, in the same query (one extra SELECT, batched by
+ * Prisma); the primaries among them give `phone`, `email` and the BSUID. Only for
+ * single-contact answers: lists use `contactSelect`, which loads only the primaries.
  */
 export const contactDetailSelect = {
   ...contactSelect,

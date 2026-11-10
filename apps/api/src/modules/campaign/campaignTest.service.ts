@@ -1,4 +1,5 @@
 import prisma from "../../utils/prisma.js";
+import { contactWhereIdentity } from "../contact/identity/contactFields.js";
 import { log } from "../../utils/logger.js";
 import { CampaignNotFoundError } from "./campaign.errors.js";
 import { buildTemplateComponents } from "../whatsapp/messageTemplates/templateComponents.js";
@@ -108,24 +109,18 @@ function hasFlowButton(data: { components?: { type?: string; buttons?: { type?: 
   );
 }
 
-/**
- * The org's contact for the test number, shaped like the campaign worker's
- * participant row. Contacts are stored digits-only, with a few legacy `+`
- * spellings; the digits-only row wins when a number has both.
- */
+/** The org's contact for the test number, shaped like the campaign worker's participant row. */
 async function findTestContact(orgId: string, recipient: string) {
   const digits = recipient.replace(/\D/g, "");
   if (!digits) return null;
 
-  const contacts = await prisma.contact.findMany({
-    where: { orgId, phone: { in: [digits, `+${digits}`] } },
+  const contact = await prisma.contact.findFirst({
+    where: { orgId, ...contactWhereIdentity("phone", digits) },
     select: {
       name: true,
-      phone: true,
       customFields: { select: { value: true, field: { select: { slug: true } } } },
     },
   });
-  const contact = contacts.find((c) => c.phone === digits) ?? contacts[0];
   if (!contact) return null;
 
   return {

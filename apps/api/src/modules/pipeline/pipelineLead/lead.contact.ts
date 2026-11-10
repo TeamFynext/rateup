@@ -1,8 +1,9 @@
+import { ContactIdentityKind } from "../../../generated/prisma/enums.js";
 import prisma from "../../../utils/prisma.js";
 
 /**
- * The digits Rateup stores. A `Contact.phone` holds an E.164 number with the
- * `+` stripped, so every lookup and every write has to agree on that shape.
+ * The digits Rateup stores. A contact's PHONE identity holds an E.164 number with
+ * the `+` stripped, so every lookup and every write has to agree on that shape.
  */
 export function leadPhoneDigits(phone?: string | null) {
   return phone?.replace(/\D/g, "") || null;
@@ -50,17 +51,20 @@ export async function resolveContactForLead(
   // in; anything shorter is matched whole.
   const national = digits.length > 10 ? digits.slice(-10) : digits;
 
+  // Any of the contact's phones, not only its primary: a merged contact keeps both numbers.
+  const phoneEndsWith = { kind: ContactIdentityKind.PHONE, value: { endsWith: national } };
   const candidates = await prisma.contact.findMany({
-    where: { orgId, phone: { endsWith: national } },
-    select: { id: true, phone: true },
+    where: { orgId, identities: { some: phoneEndsWith } },
+    select: { id: true, identities: { where: phoneEndsWith, select: { value: true } } },
     orderBy: { createdAt: "asc" },
   });
 
-  const existing = candidates.find((candidate) => {
-    const stored = leadPhoneDigits(candidate.phone);
-    if (!stored || stored.length < 7) return false;
-    return stored.endsWith(digits) || digits.endsWith(stored);
-  });
+  const existing = candidates.find((candidate) =>
+    candidate.identities.some(({ value: stored }) => {
+      if (stored.length < 7) return false;
+      return stored.endsWith(digits) || digits.endsWith(stored);
+    }),
+  );
   if (existing) return { contactId: existing.id, created: false };
 
   try {

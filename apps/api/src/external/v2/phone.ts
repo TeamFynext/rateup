@@ -69,12 +69,3 @@ export function toWirePhone(phone: string | null | undefined): string | null {
   const digits = phone.replace(/\D/g, "");
   return digits || null;
 }
-
-/**
- * Every way a digits-only phone may be stored on Contact.phone. Most rows hold digits, but some
- * paths stored a leading `+`; a lookup or duplicate check that only tried the digits would miss
- * those rows and create a second contact for the same person.
- */
-export function storedPhoneSpellings(digits: string): string[] {
-  return [digits, `+${digits}`];
-}

@@ -1,4 +1,5 @@
 import prisma from "../../../../utils/prisma.js";
+import { contactFields, primaryIdentities } from "../../../contact/identity/contactFields.js";
 import { OrderPaginateSchema } from "./catalogOrder.schema.js";
 import type { Prisma } from "../../../../generated/prisma/client.js";
 
@@ -27,7 +28,7 @@ export async function getWaCatalogOrders(
       contact: {
         select: {
           name: true,
-          phone: true,
+          ...primaryIdentities,
         },
       },
     },
@@ -37,5 +38,14 @@ export async function getWaCatalogOrders(
     take: filter.limit,
     skip: filter.page * filter.limit,
   });
-  return { data, totalCount };
+  return {
+    data: data.map(({ contact, ...order }) => ({
+      ...order,
+      contact: contact && {
+        name: contact.name,
+        phone: contactFields(contact.identities).phone,
+      },
+    })),
+    totalCount,
+  };
 }

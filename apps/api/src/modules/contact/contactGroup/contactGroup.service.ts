@@ -4,12 +4,7 @@ import { emitIntegrationEvent } from "../../integrations/events/emitIntegrationE
 import prisma from "../../../utils/prisma.js";
 import { ContactGroupNotFoundError } from "./contactGroup.errors.js";
 export { ContactGroupNotFoundError };
-import type {
-  Contact,
-  ContactGroup,
-  ContactGroupMap,
-  Prisma,
-} from "../../../generated/prisma/client.js";
+import type { ContactGroup, ContactGroupMap, Prisma } from "../../../generated/prisma/client.js";
 import {
   AddNewContactsToGroupInput,
   CreateContactGroupInput,
@@ -21,6 +16,13 @@ import { BATCH_SIZE } from "../../../utils/constants/constants.js";
 import { ContactGroupType } from "../../../generated/prisma/client.js";
 import { WHATSAPP_CONTACT_CHANNEL, whatsappContactWhere } from "../contact.channel.js";
 import { buildContactListWhere } from "../contact.listQuery.js";
+import {
+  CONTACT_FIELD_KIND,
+  contactWhereIdentityContains,
+  primaryIdentities,
+  withContactFields,
+} from "../identity/contactFields.js";
+import { normalizeIdentityValue } from "../identity/identity.service.js";
 import type { PaginationQuery as ContactListQuery } from "../contact.schema.js";
 
 export async function getContactGroupById(contactGroupId: string, orgId: string) {
@@ -148,7 +150,7 @@ export async function getContactsByContactGroupId(contactGroupId: string, orgId:
     include: {
       contacts: {
         include: {
-          contact: true,
+          contact: { include: primaryIdentities },
         },
       },
     },
@@ -157,7 +159,7 @@ export async function getContactsByContactGroupId(contactGroupId: string, orgId:
     throw new ContactGroupNotFoundError(`Audience ${contactGroupId} not found`);
   }
 
-  return group.contacts.map((c) => c.contact);
+  return group.contacts.map((c) => withContactFields(c.contact));
 }
 export async function getContactsByContactGroupIdWithPagination(
   contactGroupId: string,
@@ -189,13 +191,10 @@ export async function getContactsByContactGroupIdWithPagination(
       ),
     );
     for await (const [key, value] of params.entries()) {
-      if (["name", "phone"].includes(key)) {
-        filterData.push({
-          [key]: {
-            contains: value,
-            mode: "insensitive",
-          },
-        });
+      if (key === "name") {
+        filterData.push({ name: { contains: value, mode: "insensitive" } });
+      } else if (key === "phone") {
+        filterData.push(contactWhereIdentityContains(["phone"], value));
       } else if ("consent" === key) {
         filterData.push({
           [key]: {
@@ -232,7 +231,7 @@ export async function getContactsByContactGroupIdWithPagination(
     filterData.push({
       OR: [
         { name: { contains: search, mode: "insensitive" } },
-        { phone: { contains: search, mode: "insensitive" } },
+        contactWhereIdentityContains(["phone"], search),
       ],
     });
   }
@@ -260,6 +259,7 @@ export async function getContactsByContactGroupIdWithPagination(
         include: {
           contact: {
             include: {
+              ...primaryIdentities,
               customFields: true,
               ContactLabelMap: {
                 select: {
@@ -281,7 +281,8 @@ export async function getContactsByContactGroupIdWithPagination(
         skip: page * limit,
         orderBy: {
           contact: {
-            [sort]: desc,
+            // Phone and email are identities now, not columns a query can sort on.
+            [sort in CONTACT_FIELD_KIND ? "createdAt" : sort]: desc,
           },
         },
       },
@@ -291,7 +292,7 @@ export async function getContactsByContactGroupIdWithPagination(
     throw new ContactGroupNotFoundError(`Audience ${contactGroupId} not found`);
   }
   return {
-    group: group.contacts.map((c) => c.contact),
+    group: group.contacts.map((c) => withContactFields(c.contact)),
     totalCount,
   };
 }
@@ -333,14 +334,22 @@ export async function addNewContactsToGroup(
     BATCH_SIZE,
   );
 
-  let createdContacts: Contact[] = [];
+  let createdContacts: { id: string }[] = [];
 
   for (const chunk of phoneChunks) {
     const result = await prisma.contact.findMany({
       where: {
-        phone: { in: chunk },
         orgId,
+        identities: {
+          some: {
+            kind: CONTACT_FIELD_KIND.phone,
+            value: {
+              in: chunk.map((phone) => normalizeIdentityValue(CONTACT_FIELD_KIND.phone, phone)),
+            },
+          },
+        },
       },
+      select: { id: true },
     });
     createdContacts = createdContacts.concat(result);
   }

@@ -35,7 +35,7 @@ import type {
 import {
   getAutomationOrg,
   listAutomationTemplates,
-  AUTOMATION_CONTACT_SELECT,
+  pickAutomationContact,
   searchAutomationContacts,
 } from "./automationApi.service.js";
 
@@ -120,7 +120,7 @@ export async function automationUpdateContactHandler(
 ) {
   try {
     const contact = await updateContactById(request.params.id, request.user.orgId, request.body);
-    return reply.send(pickContact(contact));
+    return reply.send(pickAutomationContact(contact));
   } catch (error) {
     return fail(request, reply, error, "updating a contact");
   }
@@ -249,11 +249,4 @@ export async function automationLifecyclesHandler(request: Req, reply: FastifyRe
 
 export async function automationTemplatesHandler(request: Req, reply: FastifyReply) {
   return reply.send(await listAutomationTemplates(request.user.orgId));
-}
-
-/** The same contact fields every contact action returns. */
-function pickContact(contact: Record<string, unknown>) {
-  return Object.fromEntries(
-    Object.keys(AUTOMATION_CONTACT_SELECT).map((key) => [key, contact[key] ?? null]),
-  );
 }

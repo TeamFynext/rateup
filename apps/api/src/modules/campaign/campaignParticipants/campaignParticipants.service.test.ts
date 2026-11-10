@@ -25,6 +25,8 @@ vi.mock("../../../utils/prisma.js", () => ({
 vi.mock("../../whatsapp/whatsappSurvey/wasurvey.utils.js", () => ({ mapStatuses: vi.fn() }));
 
 import prisma from "../../../utils/prisma.js";
+import { whatsappContactWhere } from "../../contact/contact.channel.js";
+import { primaryIdentities } from "../../contact/identity/contactFields.js";
 import { mapStatuses } from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
 import { CampaignParticipantSource, CampaignParticipantStatus } from "../../../types/enums.js";
 import {
@@ -128,8 +130,7 @@ describe("createCampaignParticipantsFromContacts", () => {
     expect(db.contact.findMany.mock.calls[0][0].where).toEqual({
       id: { in: ["another-orgs-contact"] },
       orgId: ORG_A,
-      psid: null,
-      igsId: null,
+      ...whatsappContactWhere,
     });
     expect(db.campaignParticipant.createMany.mock.calls[0][0].data).toEqual([]);
   });
@@ -144,8 +145,7 @@ describe("createCampaignParticipantsFromContacts", () => {
 
     expect(db.contact.findMany.mock.calls[0][0].where).toEqual({
       orgId: ORG_A,
-      psid: null,
-      igsId: null,
+      ...whatsappContactWhere,
       OR: [
         { id: { in: ["c-1"] } },
         {
@@ -201,8 +201,7 @@ describe("createCampaignParticipantsFromGroup", () => {
     });
 
     expect(db.contactGroupMap.findMany.mock.calls[0][0].where.contact).toEqual({
-      psid: null,
-      igsId: null,
+      ...whatsappContactWhere,
       orgId: ORG_A,
       AND: [{ ContactLabelMap: { some: { labelId: { in: ["l-1"] } } } }],
     });
@@ -223,7 +222,7 @@ describe("createCampaignParticipantsFromGroup", () => {
       where: {
         contactGroupId: { in: ["another-orgs-group"] },
         contactGroup: { team: { orgId: ORG_A } },
-        contact: { psid: null, igsId: null, orgId: "org-a" },
+        contact: { ...whatsappContactWhere, orgId: "org-a" },
       },
     });
   });
@@ -269,7 +268,7 @@ describe("createCampaignParticipantsFromAnotherCampaign", () => {
     expect(db.campaignParticipant.findMany.mock.calls[0][0].where).toEqual({
       campaignId: { in: ["another-orgs-campaign"] },
       campaign: { team: { orgId: ORG_A } },
-      contact: { psid: null, igsId: null },
+      contact: { ...whatsappContactWhere },
     });
   });
 
@@ -371,13 +370,18 @@ describe("getCampaignParticipantsByCampaignIdPaginated", () => {
     status: string;
     sentAt: Date | null;
     createdAt: Date;
-    contact: { name: string; phone: string; consent: boolean };
+    contact: {
+      id: string;
+      name: string;
+      consent: boolean;
+      identities: { kind: string; value: string }[];
+    };
   } = {
     id: "p-1",
     status: "PENDING",
     sentAt: null,
     createdAt: new Date("2026-03-01"),
-    contact: { name: "Ada", phone: "1", consent: true },
+    contact: { id: "c-1", name: "Ada", consent: true, identities: [{ kind: "PHONE", value: "1" }] },
   };
 
   beforeEach(() => {
@@ -397,17 +401,23 @@ describe("getCampaignParticipantsByCampaignIdPaginated", () => {
   });
 
   test("brings each participant's contact details back with them", async () => {
-    await getCampaignParticipantsByCampaignIdPaginated(CAMPAIGN_ID, ORG_A, {
+    // `id` comes back too: the participants table links a row through to the
+    // contact, and to the inbox thread for a reply.
+    const result = await getCampaignParticipantsByCampaignIdPaginated(CAMPAIGN_ID, ORG_A, {
       page: 0,
       limit: 50,
     } as any);
-
-    // `id` comes back too: the participants table links a row through to the
-    // contact, and to the inbox thread for a reply.
     expect(db.campaignParticipant.findMany.mock.calls[0][0].include.contact.select).toEqual({
       id: true,
       name: true,
-      phone: true,
+      consent: true,
+      ...primaryIdentities,
+    });
+    // The phone is read from the contact's primary PHONE identity.
+    expect(result.participants[0].contact).toEqual({
+      id: "c-1",
+      name: "Ada",
+      phone: "1",
       consent: true,
     });
   });
@@ -440,8 +450,26 @@ describe("getCampaignParticipantsByCampaignIdPaginated", () => {
     const { where } = db.campaignParticipant.findMany.mock.calls[0][0];
     expect(where.OR).toEqual([
       { contact: { name: { contains: "ada", mode: "insensitive" } } },
-      { contact: { phone: { contains: "ada" } } },
+      // No digits in the term, so no phone can match it.
+      { contact: { id: { in: [] } } },
     ]);
+  });
+
+  test("searches phone identities by the digits of the term", async () => {
+    await getCampaignParticipantsByCampaignIdPaginated(CAMPAIGN_ID, ORG_A, {
+      page: 0,
+      limit: 50,
+      search: "+91 98",
+    } as any);
+
+    const { where } = db.campaignParticipant.findMany.mock.calls[0][0];
+    expect(where.OR[1]).toEqual({
+      contact: {
+        identities: {
+          some: { kind: { in: ["PHONE"] }, value: { contains: "9198", mode: "insensitive" } },
+        },
+      },
+    });
   });
 
   test("counts the search separately from the total", async () => {
@@ -563,7 +591,7 @@ describe("reading and writing one participant", () => {
 
     expect(db.campaignParticipant.findMany.mock.calls[0][0]).toEqual({
       where: { id: { in: ["p-1", "p-2"] } },
-      include: { contact: true },
+      include: { contact: { include: primaryIdentities } },
     });
   });
 

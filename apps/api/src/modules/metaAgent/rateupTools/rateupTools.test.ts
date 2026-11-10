@@ -10,7 +10,7 @@ vi.mock("../../../utils/rateLimit.js", () => ({ rateLimit: () => async () => {} 
 vi.mock("../../../utils/prisma.js", () => ({
   default: {
     metaBusinessAgent: { findUnique: vi.fn(), update: vi.fn(), findFirst: vi.fn() },
-    contact: { findUnique: vi.fn() },
+    contact: { findFirst: vi.fn() },
     contactLabel: { findMany: vi.fn() },
     pipelineStage: { findMany: vi.fn() },
     team: { findMany: vi.fn() },
@@ -93,7 +93,7 @@ beforeEach(() => {
     orgId: "org-1",
     rateupToolsKeyHash: keyHash,
   });
-  db.contact.findUnique.mockResolvedValue({ id: "contact-1" });
+  db.contact.findFirst.mockResolvedValue({ id: "contact-1" });
 });
 
 describe("the tool endpoints' key", () => {
@@ -137,6 +137,10 @@ describe("crm", () => {
       orgId: "org-1",
       phone: "919188346187",
     });
+    expect(db.contact.findFirst.mock.calls[0][0].where).toEqual({
+      orgId: "org-1",
+      identities: { some: { kind: "PHONE", value: "919188346187" } },
+    });
   });
 
   test("an unknown label is refused with the names that exist, never created", async () => {
@@ -149,7 +153,7 @@ describe("crm", () => {
 
   test("a customer who is not a contact is not created by a label", async () => {
     db.contactLabel.findMany.mockResolvedValue([{ id: "l-1", name: "VIP" }]);
-    db.contact.findUnique.mockResolvedValue(null);
+    db.contact.findFirst.mockResolvedValue(null);
     const res = await call("POST", "/crm/label", { body: { phone: "+91918", label: "VIP" } });
     expect(res.statusCode).toBe(404);
   });

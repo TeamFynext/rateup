@@ -127,7 +127,10 @@ beforeEach(() => {
 
 describe("moderateInstagramContact", () => {
   beforeEach(() => {
-    db.contact.findFirst.mockResolvedValue({ id: "c1", igsId: "igsid-1" });
+    db.contact.findFirst.mockResolvedValue({
+      id: "c1",
+      identities: [{ kind: "IG_SCOPED", value: "igsid-1" }],
+    });
     db.waMessage.findFirst.mockResolvedValue({ sourceIdentifier: "iba-1" });
     getInstagramChannelMock.mockResolvedValue({ pageAccessToken: "page-token" });
     callMetaApiMock.mockResolvedValue({ data: { success: "true" } });
@@ -172,7 +175,7 @@ describe("moderateInstagramContact", () => {
   });
 
   test("refuses a contact with no Instagram conversation", async () => {
-    db.contact.findFirst.mockResolvedValue({ id: "c1", igsId: null });
+    db.contact.findFirst.mockResolvedValue({ id: "c1", identities: [] });
     await expect(moderateInstagramContact("org-1", "c1", "spam")).rejects.toMatchObject({
       statusCode: 400,
     });

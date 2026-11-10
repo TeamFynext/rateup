@@ -45,6 +45,7 @@ import { renderReplyText } from "../loyalty/richText.js";
 import prisma from "../../utils/prisma.js";
 import { ContactIdentityKind } from "../../generated/prisma/enums.js";
 import { assertIdentityFree, IdentityTakenError } from "./identity/identity.service.js";
+import { contactFields, type PrimaryIdentityRow } from "./identity/contactFields.js";
 import {
   getSpreadsheetContentType,
   getSpreadsheetFilename,
@@ -433,9 +434,19 @@ export async function exportContactHandler(
   // The select is built dynamically from the requested field list; naming its
   // type explicitly (rather than letting it infer inline) avoids a circular
   // "implicitly has type any" inference on `contacts` below.
+  // Phone is the contact's primary PHONE identity, not a column.
+  const wantsPhone = requestedStandardFields.includes("phone");
   const select: Prisma.ContactSelect = {
     id: true,
-    ...Object.fromEntries(requestedStandardFields.map((f) => [f, true])),
+    ...Object.fromEntries(
+      requestedStandardFields.filter((f) => f !== "phone").map((f) => [f, true]),
+    ),
+    ...(wantsPhone && {
+      identities: {
+        where: { isPrimary: true, kind: ContactIdentityKind.PHONE },
+        select: { kind: true, value: true },
+      },
+    }),
     ...(customFields.length > 0 && {
       customFields: {
         select: {
@@ -471,8 +482,11 @@ export async function exportContactHandler(
     const transformedContacts = contacts.map((contact) => {
       const result: Record<string, CellValue> = {};
       for (const [key, value] of Object.entries(contact)) {
-        if (key === "customFields") continue;
+        if (key === "customFields" || key === "identities") continue;
         result[key] = toCellValue(value);
+      }
+      if (wantsPhone) {
+        result.phone = contactFields(contact.identities as PrimaryIdentityRow[]).phone;
       }
 
       if (Array.isArray(contact.customFields)) {

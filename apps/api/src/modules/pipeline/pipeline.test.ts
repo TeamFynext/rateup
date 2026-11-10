@@ -183,6 +183,8 @@ const STAGE = "44444444-4444-4444-8444-444444444444";
 const NEXT_STAGE = "55555555-5555-4555-8555-555555555555";
 const LEAD = "66666666-6666-4666-8666-666666666666";
 const CONTACT = "77777777-7777-4777-8777-777777777777";
+/** A contact's phone, as its primary identity. */
+const PHONE_91 = { kind: "PHONE", value: "91" };
 const REASON = "99999999-9999-4999-8999-999999999999";
 
 function reply() {
@@ -864,7 +866,7 @@ describe("a rule opening a lead on a named pipeline", () => {
       pipeline: { orgId: ORG },
     });
     db.pipelineStage.findUniqueOrThrow.mockResolvedValue({ status: "OPEN" });
-    db.contact.findUnique.mockResolvedValue({ name: "Aditi", phone: "+91", email: null });
+    db.contact.findUnique.mockResolvedValue({ name: "Aditi", identities: [PHONE_91] });
     db.lead.create.mockResolvedValue({ id: LEAD, labels: [], assignees: [], tasks: [] });
   });
 
@@ -1128,7 +1130,7 @@ describe("assigning a contact to a stage", () => {
       pipeline: { orgId: ORG },
     });
     db.pipelineStage.findUniqueOrThrow.mockResolvedValue({ name: "Qualified", status: "OPEN" });
-    db.contact.findUnique.mockResolvedValue({ name: "Aditi", phone: "+91", email: null });
+    db.contact.findUnique.mockResolvedValue({ name: "Aditi", identities: [PHONE_91] });
     db.lead.create.mockResolvedValue({ id: LEAD, labels: [], assignees: [], tasks: [] });
     db.lead.update.mockResolvedValue({ id: LEAD, labels: [], assignees: [], tasks: [] });
     db.lead.findUniqueOrThrow.mockResolvedValue({
@@ -1222,7 +1224,11 @@ describe("boards other than Leads", () => {
       pipelineId: PIPELINE,
       pipeline: { orgId: "org-1", name: "Repairs", type: "SUPPORT" },
     });
-    db.contact.findUnique.mockResolvedValue({ id: CONTACT, orgId: "org-1", phone: "+91" });
+    db.contact.findUnique.mockResolvedValue({
+      id: CONTACT,
+      orgId: "org-1",
+      identities: [PHONE_91],
+    });
 
     await moveLead(LEAD, STAGE, null);
 
@@ -1242,8 +1248,7 @@ describe("reporting a win to the Conversions API", () => {
     db.contact.findUnique.mockResolvedValue({
       id: CONTACT,
       name: "Aditi",
-      email: null,
-      phone: "+91",
+      identities: [PHONE_91],
       source: "WHATSAPP",
       orgId: "org-1",
     });
@@ -1321,8 +1326,7 @@ describe("telling the CRMs a lead changed column", () => {
     id: CONTACT,
     orgId: "org-1",
     name: "Aditi",
-    email: null,
-    phone: "+91",
+    identities: [PHONE_91],
     source: "WHATSAPP",
     notes: null,
     integrationIds: { zoho: { lead: { id: "zoho-lead-1" } } },
@@ -1542,7 +1546,7 @@ describe("assigning a stage to many contacts", () => {
       pipeline: { orgId: ORG },
     });
     db.pipelineStage.findUniqueOrThrow.mockResolvedValue({ name: "Qualified", status: "OPEN" });
-    db.contact.findUnique.mockResolvedValue({ name: "Aditi", phone: "+91", email: null });
+    db.contact.findUnique.mockResolvedValue({ name: "Aditi", identities: [PHONE_91] });
     db.lead.create.mockResolvedValue({ id: LEAD, labels: [], assignees: [], tasks: [] });
     db.lead.findUnique.mockResolvedValue(null);
   });

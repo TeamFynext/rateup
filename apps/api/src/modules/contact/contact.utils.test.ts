@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 vi.mock("../../utils/prisma.js", () => ({
   default: {
-    contact: { upsert: vi.fn() },
+    contact: { update: vi.fn(), findUniqueOrThrow: vi.fn() },
     contactCustomFieldValue: { createMany: vi.fn(), deleteMany: vi.fn() },
     customerLoyaltyAccount: { count: vi.fn() },
     usageStats: { findUnique: vi.fn(), update: vi.fn() },
@@ -11,6 +11,20 @@ vi.mock("../../utils/prisma.js", () => ({
 
 vi.mock("../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
+}));
+
+vi.mock("./identity/contactFields.js", () => ({
+  findOrCreateContactByIdentity: vi.fn(),
+  setPrimaryIdentities: vi.fn(),
+  primaryIdentities: { identities: {} },
+  withContactFields: ({ identities, ...row }: any) => ({
+    ...row,
+    phone: identities?.find((i: any) => i.kind === "PHONE")?.value ?? null,
+    email: identities?.find((i: any) => i.kind === "EMAIL")?.value ?? null,
+  }),
+}));
+vi.mock("./identity/identity.service.js", () => ({
+  IdentityTakenError: class IdentityTakenError extends Error {},
 }));
 
 vi.mock("../stats/stats.service.js", () => ({ updateMonthlyStat: vi.fn() }));
@@ -23,6 +37,8 @@ import prisma from "../../utils/prisma.js";
 import { updateMonthlyStat } from "../stats/stats.service.js";
 import { getSubscription } from "../subscription/subscription.service.js";
 import { sendTemplateToUserCore } from "../whatsapp/messageTemplates/wa_templates.controller.js";
+import { findOrCreateContactByIdentity, setPrimaryIdentities } from "./identity/contactFields.js";
+import { IdentityTakenError } from "./identity/identity.service.js";
 import {
   createLCustomer,
   reconcileLoyaltyCustomerCount,
@@ -55,7 +71,16 @@ beforeEach(() => {
   vi.clearAllMocks();
   db.customerLoyaltyAccount.count.mockResolvedValue(0);
   db.usageStats.findUnique.mockResolvedValue({ loyaltyCustomerCount: 0 });
-  db.contact.upsert.mockResolvedValue({ id: "c1", name: "Ann", phone: "919000000001" });
+  vi.mocked(findOrCreateContactByIdentity).mockResolvedValue({
+    contact: { id: "c1" },
+    created: false,
+  } as any);
+  db.contact.findUniqueOrThrow.mockResolvedValue({
+    id: "c1",
+    name: "Ann",
+    dob: null,
+    identities: [{ kind: "PHONE", value: "919000000001" }],
+  });
 });
 
 describe("reconcileLoyaltyCustomerCount", () => {
@@ -113,55 +138,68 @@ describe("reconcileLoyaltyCustomerCount", () => {
 
 describe("createLCustomer", () => {
   const input = { name: "Ann", phone: "+919000000001", orgId: ORG, email: "a@b.c" };
+  const findOrCreate = () => vi.mocked(findOrCreateContactByIdentity).mock.calls[0];
 
-  test("upserts on the phone+org key with the plus stripped", async () => {
+  test("finds or creates the contact by its phone, with the plus stripped", async () => {
     await createLCustomer(input);
 
-    expect(db.contact.upsert.mock.calls[0][0].where).toEqual({
-      contact_phone_org_id_unique: { phone: "919000000001", orgId: ORG },
-    });
+    expect(findOrCreate()[0]).toBe(ORG);
+    expect(findOrCreate()[1]).toBe("phone");
+    expect(findOrCreate()[2]).toBe("919000000001");
   });
 
   test("leaves a phone that has no plus alone", async () => {
     await createLCustomer({ ...input, phone: "919000000001" });
 
-    expect(db.contact.upsert.mock.calls[0][0].where.contact_phone_org_id_unique.phone).toBe(
-      "919000000001",
-    );
+    expect(findOrCreate()[2]).toBe("919000000001");
   });
 
   test("marks the contact as a loyalty member on both branches", async () => {
     await createLCustomer(input);
+    expect(findOrCreate()[3].source).toBe("LOYALTY");
+    expect(db.contact.update.mock.calls[0][0].data.source).toBe("LOYALTY");
+  });
 
-    const call = db.contact.upsert.mock.calls[0][0];
-    expect(call.update.source).toBe("LOYALTY");
-    expect(call.create.source).toBe("LOYALTY");
+  test("a new contact is not written twice", async () => {
+    vi.mocked(findOrCreateContactByIdentity).mockResolvedValue({
+      contact: { id: "c1" },
+      created: true,
+    } as any);
+    await createLCustomer(input);
+    expect(db.contact.update).not.toHaveBeenCalled();
   });
 
   test("normalises a date of birth the payload carried as null", async () => {
     await createLCustomer({ ...input, dob: null });
 
-    expect(db.contact.upsert.mock.calls[0][0].update.dob).toBeNull();
-    expect(db.contact.upsert.mock.calls[0][0].create.dob).toBeNull();
+    expect(db.contact.update.mock.calls[0][0].data.dob).toBeNull();
+    expect(findOrCreate()[3].dob).toBeNull();
   });
 
   test("leaves a stored field alone when the registration payload omits it", async () => {
     await createLCustomer({ ...input, name: undefined, email: undefined });
 
-    const { update } = db.contact.upsert.mock.calls[0][0];
-    expect(update).not.toHaveProperty("name");
-    expect(update).not.toHaveProperty("email");
-    expect(update.source).toBe("LOYALTY");
+    const { data } = db.contact.update.mock.calls[0][0];
+    expect(data).not.toHaveProperty("name");
+    expect(data.source).toBe("LOYALTY");
+    expect(setPrimaryIdentities).not.toHaveBeenCalled();
   });
 
   test("writes the fields the registration payload does carry", async () => {
     await createLCustomer({ ...input, name: "Ann", email: "a@b.c", external_id: "x1" });
 
-    expect(db.contact.upsert.mock.calls[0][0].update).toMatchObject({
+    expect(db.contact.update.mock.calls[0][0].data).toMatchObject({
       name: "Ann",
-      email: "a@b.c",
       external_id: "x1",
     });
+    expect(setPrimaryIdentities).toHaveBeenCalledWith(ORG, "c1", { email: "a@b.c" }, "CUSTOMER");
+  });
+
+  test("an email another contact holds does not fail the registration", async () => {
+    vi.mocked(setPrimaryIdentities).mockRejectedValueOnce(
+      new IdentityTakenError("EMAIL", "a@b.c", "c2"),
+    );
+    await expect(createLCustomer(input)).resolves.toMatchObject({ id: "c1" });
   });
 
   test("replaces the custom field values when the registration carried any", async () => {
@@ -189,14 +227,14 @@ describe("createLCustomer", () => {
   });
 
   test("returns only the public fields of the contact", async () => {
-    db.contact.upsert.mockResolvedValue({
+    db.contact.findUniqueOrThrow.mockResolvedValue({
       id: "c1",
       name: "Ann",
-      phone: "919000000001",
-      email: "a@b.c",
       dob: null,
-      orgId: ORG,
-      notes: "internal",
+      identities: [
+        { kind: "PHONE", value: "919000000001" },
+        { kind: "EMAIL", value: "a@b.c" },
+      ],
     });
 
     const res = await createLCustomer(input);

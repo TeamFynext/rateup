@@ -1,10 +1,17 @@
-import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 // ---------------------------------------------------------------------------
 // contact.service.ts pulls in the queue, chatbot, zapier, zoho, inbox-stats and
 // conversation layers at import time. Everything below the module under test is
 // stubbed so the assertions are about *this* file's logic only.
 // ---------------------------------------------------------------------------
+
+// New contacts of a bulk create get their ids before the insert: c1, c2, … in row order.
+const ids = vi.hoisted(() => ({ next: 0 }));
+vi.mock("node:crypto", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("node:crypto")>()),
+  randomUUID: () => `c${++ids.next}`,
+}));
 
 vi.mock("../../utils/prisma.js", () => ({
   default: {
@@ -13,6 +20,7 @@ vi.mock("../../utils/prisma.js", () => ({
       createManyAndReturn: vi.fn(),
       findFirst: vi.fn(),
       findUnique: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
       findMany: vi.fn(),
       update: vi.fn(),
       updateMany: vi.fn(),
@@ -20,6 +28,13 @@ vi.mock("../../utils/prisma.js", () => ({
       delete: vi.fn(),
       deleteMany: vi.fn(),
       count: vi.fn(),
+    },
+    contactIdentity: {
+      findMany: vi.fn(),
+      createMany: vi.fn(),
+      createManyAndReturn: vi.fn(),
+      deleteMany: vi.fn(),
+      updateMany: vi.fn(),
     },
     contactLabelMap: { createMany: vi.fn(), deleteMany: vi.fn() },
     contactGroupMap: { createMany: vi.fn(), deleteMany: vi.fn() },
@@ -58,14 +73,27 @@ vi.mock("../integrations/events/emitIntegrationEvent.js", async () => {
   };
 });
 
-vi.mock("./identity/identity.service.js", () => ({
-  findContactIdByIdentity: vi.fn(async () => null),
-  assertIdentityFree: vi.fn(async () => undefined),
-  attachIdentity: vi.fn(async () => null),
-  identitiesFromContact: vi.fn(() => []),
-  replaceColumnIdentity: vi.fn(async () => undefined),
-  suggestFromProvidedDetails: vi.fn(async () => undefined),
-  EDITABLE_COLUMN_KINDS: { phone: "PHONE", email: "EMAIL", external_id: "EXTERNAL" },
+vi.mock("./identity/identity.service.js", async () => {
+  const actual = await vi.importActual<typeof import("./identity/identity.service.js")>(
+    "./identity/identity.service.js",
+  );
+  return {
+    findContactIdByIdentity: vi.fn(async () => null),
+    assertIdentityFree: vi.fn(async () => undefined),
+    attachIdentity: vi.fn(async () => null),
+    replaceColumnIdentity: vi.fn(async () => undefined),
+    suggestFromProvidedDetails: vi.fn(async () => undefined),
+    EDITABLE_COLUMN_KINDS: { external_id: "EXTERNAL" },
+    normalizeIdentityValue: actual.normalizeIdentityValue,
+    IdentityTakenError: actual.IdentityTakenError,
+  };
+});
+// The contact's phone, email and platform ids are identities; reading them is the real
+// helpers, writing them is stubbed so each test can assert on what was written.
+vi.mock("./identity/contactFields.js", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./identity/contactFields.js")>()),
+  setPrimaryIdentities: vi.fn(async () => undefined),
+  findOrCreateContactByIdentity: vi.fn(),
 }));
 vi.mock("./merge/suggestions.service.js", () => ({ suggestMerge: vi.fn() }));
 vi.mock("../../utils/logger.js", () => ({
@@ -171,6 +199,8 @@ import {
   transitionInboxStat,
 } from "../whatsapp/inbox/inboxStats/inboxStats.service.js";
 import { WaMessageAssignStatus } from "../../types/enums.js";
+import { findOrCreateContactByIdentity, setPrimaryIdentities } from "./identity/contactFields.js";
+import { findContactIdByIdentity } from "./identity/identity.service.js";
 import {
   addCustomField,
   bulkUpdateWaMessageAssignStatus,
@@ -201,6 +231,7 @@ type Mock = ReturnType<typeof vi.fn>;
 
 const db = prisma as unknown as {
   contact: Record<string, Mock>;
+  contactIdentity: Record<string, Mock>;
   contactLabelMap: Record<string, Mock>;
   contactLabel: Record<string, Mock>;
   contactGroupMap: Record<string, Mock>;
@@ -216,6 +247,10 @@ const db = prisma as unknown as {
 };
 
 const ORG = "11111111-1111-4111-8111-111111111111";
+/** A contact's phone, as its primary identity. */
+const PHONE_IDENTITY = { kind: "PHONE", value: "919000000001" };
+/** The phone, email and platform ids of a contact with none. */
+const NO_FIELDS = { phone: null, email: null, bsuid: null, igsId: null, psid: null };
 const USER = "22222222-2222-4222-8222-222222222222";
 
 /**
@@ -266,6 +301,7 @@ function runTransaction(fn: any) {
   if (typeof fn !== "function") return Promise.resolve(fn);
   return fn({
     contact: db.contact,
+    contactIdentity: db.contactIdentity,
     conversation: db.conversation,
     contactGroupMap: db.contactGroupMap,
     waInboxAssign: db.waInboxAssign,
@@ -275,6 +311,7 @@ function runTransaction(fn: any) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  ids.next = 0;
   // clearAllMocks keeps implementations but drops queued *Once values; every
   // mock is re-armed here so one test's leftovers cannot reach the next.
   db.$transaction.mockImplementation(runTransaction);
@@ -283,7 +320,18 @@ beforeEach(() => {
   db.lifecycle.findFirst.mockResolvedValue({ id: "lifecycle" });
   db.contactLabel.count.mockImplementation(async (args: any) => args.where.id.in.length);
   db.contactCustomField.count.mockImplementation(async (args: any) => args.where.id.in.length);
-  db.contact.create.mockResolvedValue({ id: "c1", orgId: ORG, phone: "919000000001" });
+  db.contact.create.mockResolvedValue({ id: "c1", orgId: ORG });
+  // Read back after a create: the row just created, with the phone it was given.
+  db.contact.findUniqueOrThrow.mockImplementation(async () => ({
+    ...(await db.contact.create.mock.results.at(-1)?.value),
+    identities: [PHONE_IDENTITY],
+  }));
+  db.contactIdentity.findMany.mockResolvedValue([]);
+  db.contactIdentity.createManyAndReturn.mockImplementation(async ({ data }: any) => data);
+  (findOrCreateContactByIdentity as Mock).mockImplementation(async () => ({
+    contact: { id: "c1" },
+    created: true,
+  }));
   db.contact.createManyAndReturn.mockResolvedValue([]);
   db.contact.findFirst.mockResolvedValue(null);
   db.contact.findUnique.mockResolvedValue(null);
@@ -399,9 +447,48 @@ describe("createContact", () => {
       {
         id: "c1",
         orgId: ORG,
+        ...NO_FIELDS,
         phone: "919000000001",
       },
     );
+  });
+
+  test("writes the phone and email as the contact's identities, not columns", async () => {
+    await createContact({ ...base, email: "Ann@X.com" });
+
+    const data = db.contact.create.mock.calls[0][0].data;
+    expect(data).not.toHaveProperty("phone");
+    expect(data).not.toHaveProperty("email");
+    const writes = (setPrimaryIdentities as Mock).mock.calls.map((call) => call[2]);
+    expect(writes).toEqual([{ phone: "919000000001" }, { email: "Ann@X.com" }]);
+    expect((setPrimaryIdentities as Mock).mock.calls[0][3]).toBe("AGENT");
+  });
+
+  test("a phone another contact holds rolls the create back", async () => {
+    const { IdentityTakenError } = await import("./identity/identity.service.js");
+    (setPrimaryIdentities as Mock).mockRejectedValueOnce(
+      new IdentityTakenError("PHONE", "919000000001", "other"),
+    );
+
+    await expect(createContact(base)).rejects.toThrow("Another contact already has this phone");
+    expect(checkAndExecuteRuleByTriggerEvent).not.toHaveBeenCalled();
+  });
+
+  test("an email another contact holds is left there and a merge is suggested", async () => {
+    (findContactIdByIdentity as Mock).mockImplementation(async (_org, kind) =>
+      kind === "EMAIL" ? "other" : null,
+    );
+    const { suggestMerge } = await import("./merge/suggestions.service.js");
+
+    await createContact({ ...base, email: "ann@x.com" });
+
+    const writes = (setPrimaryIdentities as Mock).mock.calls.map((call) => call[2]);
+    expect(writes).toEqual([{ phone: "919000000001" }]);
+    expect(suggestMerge).toHaveBeenCalledWith(ORG, "c1", "other", {
+      reason: "SAME_EMAIL",
+      detail: "ann@x.com",
+    });
+    (findContactIdByIdentity as Mock).mockImplementation(async () => null);
   });
 
   test("queues a zoho lead for every contact", async () => {
@@ -472,11 +559,16 @@ describe("getOrcreateContact", () => {
   const base = { name: "Ann", phone: "919000000001", source: "API", orgId: ORG } as any;
 
   test("returns the existing contact untouched", async () => {
-    db.contact.findFirst.mockResolvedValue({ id: "existing", orgId: ORG });
+    db.contact.findFirst.mockResolvedValue({
+      id: "existing",
+      orgId: ORG,
+      identities: [PHONE_IDENTITY],
+    });
 
     const res = await getOrcreateContact(base);
 
-    expect(res).toEqual({ id: "existing", orgId: ORG });
+    expect(res).toEqual({ id: "existing", orgId: ORG, ...NO_FIELDS, phone: "919000000001" });
+    expect(findOrCreateContactByIdentity).not.toHaveBeenCalled();
     expect(db.contact.create).not.toHaveBeenCalled();
     expect(queueZapierTrigger).not.toHaveBeenCalled();
   });
@@ -484,8 +576,9 @@ describe("getOrcreateContact", () => {
   test("looks the contact up by phone within the org", async () => {
     await getOrcreateContact(base);
 
-    expect(db.contact.findFirst.mock.calls[0][0]).toEqual({
-      where: { phone: "919000000001", orgId: ORG },
+    expect(db.contact.findFirst.mock.calls[0][0].where).toEqual({
+      orgId: ORG,
+      identities: { some: { kind: "PHONE", value: "919000000001" } },
     });
   });
 
@@ -498,7 +591,13 @@ describe("getOrcreateContact", () => {
   test("creates and announces a brand new contact", async () => {
     await getOrcreateContact(base);
 
-    expect(db.contact.create).toHaveBeenCalled();
+    expect(findOrCreateContactByIdentity).toHaveBeenCalledWith(
+      ORG,
+      "phone",
+      "919000000001",
+      expect.objectContaining({ name: "Ann", source: "API" }),
+      expect.objectContaining({ source: "AGENT" }),
+    );
     expect(queueZapierTrigger).toHaveBeenCalled();
     expect(integrationTriggerQueue.add).toHaveBeenCalledWith("zoho-lead-create", expect.anything());
   });
@@ -512,11 +611,23 @@ describe("getOrcreateContact", () => {
       customFields: [{ id: "f1", value: "x" }],
     });
 
-    const data = db.contact.create.mock.calls[0][0].data;
+    const data = (findOrCreateContactByIdentity as Mock).mock.calls[0][3];
     expect(data).not.toHaveProperty("labels");
     expect(data).not.toHaveProperty("contactGroupIds");
     expect(data).not.toHaveProperty("assignedUserIds");
     expect(data).not.toHaveProperty("customFields");
+    expect(data).not.toHaveProperty("phone");
+  });
+
+  test("a contact someone else created a moment ago is returned, not announced", async () => {
+    (findOrCreateContactByIdentity as Mock).mockResolvedValue({
+      contact: { id: "c1" },
+      created: false,
+    });
+
+    await getOrcreateContact(base);
+
+    expect(queueZapierTrigger).not.toHaveBeenCalled();
   });
 });
 
@@ -549,7 +660,10 @@ describe("createMultipleContacts", () => {
   });
 
   test("returns only the rows the database actually created", async () => {
-    db.contact.createManyAndReturn.mockResolvedValue([{ id: "c1", phone: "9190001" }]);
+    db.contact.createManyAndReturn.mockResolvedValue([{ id: "c1" }]);
+    db.contactIdentity.findMany.mockResolvedValue([
+      { contactId: "c1", kind: "PHONE", value: "9190001" },
+    ]);
 
     const res = await createMultipleContacts(
       [
@@ -559,7 +673,45 @@ describe("createMultipleContacts", () => {
       ORG,
     );
 
-    expect(res).toEqual([{ id: "c1", phone: "9190001" }]);
+    expect(res).toEqual([{ id: "c1", ...NO_FIELDS, phone: "9190001" }]);
+  });
+
+  test("writes each row's phone and email as its primary identities", async () => {
+    db.contact.createManyAndReturn.mockImplementation(async ({ data }: any) => data);
+
+    await createMultipleContacts(
+      [{ name: "A", phone: "919000000001", email: "A@x.com", source: "CSV" } as any],
+      ORG,
+    );
+
+    const [row] = db.contact.createManyAndReturn.mock.calls[0][0].data;
+    expect(row).not.toHaveProperty("phone");
+    expect(row).not.toHaveProperty("email");
+    expect(db.contactIdentity.createManyAndReturn.mock.calls[0][0]).toMatchObject({
+      data: [{ contactId: "c1", kind: "PHONE", value: "919000000001", isPrimary: true }],
+      skipDuplicates: true,
+    });
+    expect(db.contactIdentity.createMany.mock.calls[0][0]).toMatchObject({
+      data: [{ contactId: "c1", kind: "EMAIL", value: "a@x.com", isPrimary: true }],
+      skipDuplicates: true,
+    });
+  });
+
+  // The unique phone column used to skip these; the identity is the unique key now.
+  test("a row whose phone another contact holds is dropped", async () => {
+    db.contact.createManyAndReturn.mockImplementation(async ({ data }: any) => data);
+    db.contactIdentity.createManyAndReturn.mockResolvedValue([{ contactId: "c2", kind: "PHONE" }]);
+
+    const res = await createMultipleContacts(
+      [
+        { name: "A", phone: "919000000001", source: "CSV" },
+        { name: "B", phone: "919000000002", source: "CSV" },
+      ] as any,
+      ORG,
+    );
+
+    expect(db.contact.deleteMany).toHaveBeenCalledWith({ where: { id: { in: ["c1"] } } });
+    expect(res.map((contact) => contact.id)).toEqual(["c2"]);
   });
 
   test("clears any stale custom field values before writing the new ones", async () => {
@@ -648,9 +800,20 @@ describe("getContactByPhoneNumberAndOrgId", () => {
     await getContactByPhoneNumberAndOrgId("919000000001", ORG);
 
     expect(db.contact.findFirst.mock.calls[0][0].where).toEqual({
-      phone: "919000000001",
       orgId: ORG,
+      identities: { some: { kind: "PHONE", value: "919000000001" } },
     });
+  });
+
+  test("answers with the phone read from the contact's identities", async () => {
+    db.contact.findFirst.mockResolvedValue({ id: "c1", identities: [PHONE_IDENTITY] });
+
+    expect(await getContactByPhoneNumberAndOrgId("+91 90000 00001", ORG)).toEqual({
+      id: "c1",
+      ...NO_FIELDS,
+      phone: "919000000001",
+    });
+    expect(db.contact.findFirst.mock.calls[0][0].where.identities.some.value).toBe("919000000001");
   });
 });
 
@@ -666,7 +829,39 @@ describe("getContactsByOrgId", () => {
     const res = await getContactsByOrgId(ORG, {} as any);
 
     expect(where()).toEqual({ orgId: ORG });
-    expect(res).toEqual({ users: [{ id: "c1" }], totalCount: 3 });
+    expect(res).toEqual({ users: [{ id: "c1", ...NO_FIELDS }], totalCount: 3 });
+  });
+
+  test("each contact carries the phone and email of its primary identities", async () => {
+    const identities = [
+      { ...PHONE_IDENTITY, isPrimary: true },
+      { kind: "EMAIL", value: "a@x.com", isPrimary: true },
+      // A merged-in second number: listed, never the contact's phone.
+      { kind: "PHONE", value: "919000000002", isPrimary: false },
+    ];
+    db.contact.findMany.mockResolvedValue([{ id: "c1", identities }]);
+
+    const { users } = await getContactsByOrgId(ORG, {} as any);
+
+    expect(users).toEqual([
+      { id: "c1", identities, ...NO_FIELDS, phone: "919000000001", email: "a@x.com" },
+    ]);
+  });
+
+  test("lists every identity, primaries first, bounded per contact", async () => {
+    await getContactsByOrgId(ORG, {} as any);
+
+    expect(db.contact.findMany.mock.calls[0][0].include.identities).toEqual({
+      select: { kind: true, value: true, username: true, displayName: true, isPrimary: true },
+      orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+      take: 20,
+    });
+  });
+
+  test("a sort on phone falls back to the creation date", async () => {
+    await getContactsByOrgId(ORG, { sort: "phone", desc: "asc" } as any);
+
+    expect(db.contact.findMany.mock.calls[0][0].orderBy[0]).toEqual({ createdAt: "asc" });
   });
 
   test("counts and lists with exactly the same condition", async () => {
@@ -682,15 +877,43 @@ describe("getContactsByOrgId", () => {
       {
         OR: [
           { name: { contains: "Ann", mode: "insensitive" } },
-          { phone: { contains: "Ann", mode: "insensitive" } },
-          { email: { contains: "Ann", mode: "insensitive" } },
-          { whatsappUserName: { contains: "Ann", mode: "insensitive" } },
           {
             identities: {
-              some: { kind: { in: ["PHONE", "EMAIL"] }, value: { contains: "ann" } },
+              some: {
+                kind: { in: ["PHONE", "EMAIL", "WA_BSUID", "IG_SCOPED", "FB_PSID"] },
+                value: { contains: "Ann", mode: "insensitive" },
+              },
             },
           },
+          { whatsappUserName: { contains: "Ann", mode: "insensitive" } },
         ],
+      },
+    ]);
+  });
+
+  test("a formatted phone search also matches the stored digits", async () => {
+    await getContactsByOrgId(ORG, { search: "+91 90000" } as any);
+
+    expect(where().AND[0].OR).toContainEqual({
+      identities: {
+        some: { kind: { in: ["PHONE"] }, value: { contains: "9190000", mode: "insensitive" } },
+      },
+    });
+  });
+
+  test("the phone and email filters match the contact's identities", async () => {
+    await getContactsByOrgId(ORG, { phone: "9000", email: "ann@" } as any);
+
+    expect(where().AND).toEqual([
+      {
+        identities: {
+          some: { kind: { in: ["PHONE"] }, value: { contains: "9000", mode: "insensitive" } },
+        },
+      },
+      {
+        identities: {
+          some: { kind: { in: ["EMAIL"] }, value: { contains: "ann@", mode: "insensitive" } },
+        },
       },
     ]);
   });
@@ -880,7 +1103,18 @@ describe("deleteContactById", () => {
 
     await deleteContactById("c1", ORG);
 
-    expect(db.contact.delete).toHaveBeenCalledWith({ where: { id: "c1", orgId: ORG } });
+    expect(db.contact.delete).toHaveBeenCalledWith({
+      where: { id: "c1", orgId: ORG },
+      include: {
+        identities: {
+          where: {
+            isPrimary: true,
+            kind: { in: ["PHONE", "EMAIL", "WA_BSUID", "IG_SCOPED", "FB_PSID"] },
+          },
+          select: { kind: true, value: true },
+        },
+      },
+    });
     expect(queueZapierTrigger).toHaveBeenCalledWith(
       expect.objectContaining({ name: "zapier" }),
       "contact_deleted",
@@ -994,7 +1228,15 @@ describe("updateContactById", () => {
       waInboxAssign: [],
       contactGroups: [],
     };
-    return { ...base, ...overrides };
+    // The row as the update reads it back: phone and psid are its primary identities.
+    const { phone, psid, ...row } = { ...base, ...overrides } as Record<string, unknown>;
+    return {
+      ...row,
+      identities: [
+        ...(phone ? [{ kind: "PHONE", value: phone }] : []),
+        ...(psid ? [{ kind: "FB_PSID", value: psid }] : []),
+      ],
+    };
   }
 
   test("reuses a caller-supplied snapshot instead of re-reading the contact", async () => {
@@ -1064,11 +1306,69 @@ describe("updateContactById", () => {
       existing,
     );
 
-    expect(db.contact.update.mock.calls[0][0].data).toMatchObject({
-      email: "ann@example.com",
-      dob,
-      external_id: "crm-7",
+    expect(db.contact.update.mock.calls[0][0].data).toMatchObject({ dob, external_id: "crm-7" });
+    // The email is the contact's primary EMAIL identity now, not a column.
+    expect(db.contact.update.mock.calls[0][0].data).not.toHaveProperty("email");
+    expect(setPrimaryIdentities).toHaveBeenCalledWith(
+      ORG,
+      "c1",
+      { email: "ann@example.com" },
+      "AGENT",
+      expect.anything(),
+    );
+  });
+
+  test("an edited phone replaces the old one, which goes", async () => {
+    db.contact.findFirst.mockResolvedValue({ external_id: null, identities: [PHONE_IDENTITY] });
+    db.contact.update.mockResolvedValue(updated({ phone: "919000000002" }));
+
+    const res = await updateContactById(
+      "c1",
+      ORG,
+      { phone: "+91 90000 00002" } as any,
+      USER,
+      existing,
+    );
+
+    expect(setPrimaryIdentities).toHaveBeenCalledWith(
+      ORG,
+      "c1",
+      { phone: "919000000002" },
+      "AGENT",
+      expect.anything(),
+    );
+    expect(db.contactIdentity.deleteMany).toHaveBeenCalledWith({
+      where: {
+        orgId: ORG,
+        contactId: "c1",
+        kind: "PHONE",
+        value: "919000000001",
+        isPrimary: false,
+      },
     });
+    expect(res.phone).toBe("919000000002");
+  });
+
+  test("a phone another contact holds is refused before anything is written", async () => {
+    const { assertIdentityFree, IdentityTakenError } =
+      await import("./identity/identity.service.js");
+    (assertIdentityFree as Mock).mockRejectedValueOnce(
+      new IdentityTakenError("PHONE", "919000000002", "other"),
+    );
+
+    await expect(
+      updateContactById("c1", ORG, { phone: "919000000002" } as any, USER, existing),
+    ).rejects.toThrow("Another contact already has this phone");
+    expect(db.contact.update).not.toHaveBeenCalled();
+  });
+
+  test("an unchanged phone writes no identity", async () => {
+    db.contact.findFirst.mockResolvedValue({ external_id: null, identities: [PHONE_IDENTITY] });
+    db.contact.update.mockResolvedValue(updated());
+
+    await updateContactById("c1", ORG, { phone: "919000000001" } as any, USER, existing);
+
+    expect(setPrimaryIdentities).not.toHaveBeenCalled();
   });
 
   test("leaves untouched fields alone on a partial update", async () => {
@@ -1597,8 +1897,8 @@ describe("getExistingContactCountByPhno", () => {
 
     expect(await getExistingContactCountByPhno(["9190001", "9190002"], ORG)).toBe(2);
     expect(db.contact.count.mock.calls[0][0].where).toEqual({
-      phone: { in: ["9190001", "9190002"] },
       orgId: ORG,
+      identities: { some: { kind: "PHONE", value: { in: ["9190001", "9190002"] } } },
     });
   });
 
@@ -1673,12 +1973,20 @@ describe("custom fields", () => {
 // ===========================================================================
 
 describe("getOrCreateContactByPhone", () => {
-  test("matches on phone within the org when no source is given", async () => {
-    db.contact.findFirst.mockResolvedValue({ id: "c1", orgId: ORG });
+  /** The phone (or webchat id) belongs to contact c1. */
+  function known() {
+    (findContactIdByIdentity as Mock).mockResolvedValueOnce("c1");
+    db.contact.findFirst.mockResolvedValue({ id: "c1", orgId: ORG, identities: [PHONE_IDENTITY] });
+  }
+  const c1 = { id: "c1", orgId: ORG, ...NO_FIELDS, phone: "919000000001" };
+
+  test("matches on any phone identity within the org when no source is given", async () => {
+    known();
 
     await getOrCreateContactByPhone("9190001", ORG);
 
-    expect(db.contact.findFirst.mock.calls[0][0].where).toEqual({ phone: "9190001", orgId: ORG });
+    expect(findContactIdByIdentity).toHaveBeenCalledWith(ORG, "PHONE", "9190001");
+    expect(db.contact.findFirst.mock.calls[0][0].where).toEqual({ id: "c1", orgId: ORG });
   });
 
   test("matches on the `other` column when a source is given", async () => {
@@ -1694,16 +2002,17 @@ describe("getOrCreateContactByPhone", () => {
   });
 
   test("leaves an existing contact untouched when there is nothing to merge", async () => {
-    db.contact.findFirst.mockResolvedValue({ id: "c1", orgId: ORG });
+    known();
 
     const res = await getOrCreateContactByPhone("9190001", ORG);
 
     expect(db.contact.update).not.toHaveBeenCalled();
-    expect(res).toEqual({ contact: { id: "c1", orgId: ORG }, conversation: undefined });
+    expect(res).toEqual({ contact: c1, conversation: undefined });
   });
 
   test("does not overwrite a stored name with a blank one", async () => {
-    db.contact.findFirst.mockResolvedValue({ id: "c1", orgId: ORG });
+    known();
+    db.contact.update.mockResolvedValue({ id: "c1", orgId: ORG, identities: [] });
 
     await getOrCreateContactByPhone("9190001", ORG, { name: "", notes: "hi" } as any);
 
@@ -1711,22 +2020,46 @@ describe("getOrCreateContactByPhone", () => {
   });
 
   test("merges a supplied name into an existing contact", async () => {
-    db.contact.findFirst.mockResolvedValue({ id: "c1", orgId: ORG });
+    known();
+    db.contact.update.mockResolvedValue({ id: "c1", orgId: ORG, identities: [] });
 
     await getOrCreateContactByPhone("9190001", ORG, { name: "Ann" } as any);
 
     expect(db.contact.update.mock.calls[0][0].data).toEqual({ name: "Ann" });
   });
 
-  test("creates a contact when the phone is new", async () => {
+  test("a supplied email is written as an identity, not a column", async () => {
+    known();
+    db.contact.update.mockResolvedValue({ id: "c1", orgId: ORG, identities: [] });
+
+    await getOrCreateContactByPhone("9190001", ORG, { email: "a@x.com" } as any);
+
+    expect(db.contact.update.mock.calls[0][0].data).toEqual({});
+    expect(setPrimaryIdentities).toHaveBeenCalledWith(
+      ORG,
+      "c1",
+      { email: "a@x.com" },
+      "INBOUND",
+      expect.anything(),
+      expect.anything(),
+    );
+  });
+
+  test("creates a contact, with the phone as its identity, when the phone is new", async () => {
     db.contact.create.mockResolvedValue({ id: "c1", orgId: ORG });
 
-    await getOrCreateContactByPhone("9190001", ORG);
+    const { contact } = await getOrCreateContactByPhone("919000000001", ORG);
 
-    expect(db.contact.create.mock.calls[0][0].data).toMatchObject({
-      phone: "9190001",
-      orgId: ORG,
-    });
+    expect(db.contact.create.mock.calls[0][0].data).toEqual({ orgId: ORG });
+    expect(setPrimaryIdentities).toHaveBeenCalledWith(
+      ORG,
+      "c1",
+      { phone: "919000000001" },
+      "INBOUND",
+      expect.anything(),
+      expect.anything(),
+    );
+    expect(contact).toEqual(c1);
   });
 
   test("stores no phone at all for a source-keyed contact", async () => {
@@ -1735,6 +2068,7 @@ describe("getOrCreateContactByPhone", () => {
     await getOrCreateContactByPhone("web-123", ORG, undefined, "WEBCHAT");
 
     expect(db.contact.create.mock.calls[0][0].data.phone).toBeUndefined();
+    expect((setPrimaryIdentities as Mock).mock.calls[0][2]).toEqual({});
   });
 
   test("opens a conversation only when the caller asks for one", async () => {
@@ -1747,55 +2081,81 @@ describe("getOrCreateContactByPhone", () => {
   });
 
   test("rethrows a database failure instead of swallowing it", async () => {
-    db.contact.findFirst.mockRejectedValue(new Error("connection lost"));
+    (findContactIdByIdentity as Mock).mockRejectedValueOnce(new Error("connection lost"));
 
     await expect(getOrCreateContactByPhone("9190001", ORG)).rejects.toThrow("connection lost");
   });
 });
 
 describe("getOrCreateContactByIgsId", () => {
-  test("looks up on the igsId+org unique key", async () => {
-    db.contact.findUnique.mockResolvedValue({ id: "c1", orgId: ORG });
-
-    await getOrCreateContactByIgsId("igs-1", ORG);
-
-    expect(db.contact.findUnique.mock.calls[0][0].where).toEqual({
-      contact_igsid_org_id_unique: { igsId: "igs-1", orgId: ORG },
-    });
-  });
-
-  test("creates and announces a new instagram contact", async () => {
-    db.contact.create.mockResolvedValue({ id: "c1", orgId: ORG });
+  test("finds the contact by its Instagram identity", async () => {
+    (findContactIdByIdentity as Mock).mockResolvedValueOnce("c1");
+    db.contact.findUniqueOrThrow.mockResolvedValue({ id: "c1", orgId: ORG, identities: [] });
 
     const res = await getOrCreateContactByIgsId("igs-1", ORG);
 
-    expect(db.contact.create.mock.calls[0][0].data).toMatchObject({ igsId: "igs-1", orgId: ORG });
+    expect(findContactIdByIdentity).toHaveBeenCalledWith(ORG, "IG_SCOPED", "igs-1");
+    expect(findOrCreateContactByIdentity).not.toHaveBeenCalled();
+    expect(queueZapierTrigger).not.toHaveBeenCalled();
+    expect(res.contact.id).toBe("c1");
+  });
+
+  test("creates and announces a new instagram contact", async () => {
+    db.contact.findUniqueOrThrow.mockResolvedValue({
+      id: "c1",
+      orgId: ORG,
+      identities: [{ kind: "IG_SCOPED", value: "igs-1" }],
+    });
+
+    const res = await getOrCreateContactByIgsId("igs-1", ORG);
+
+    expect(findOrCreateContactByIdentity).toHaveBeenCalledWith(
+      ORG,
+      "igsId",
+      "igs-1",
+      {},
+      expect.objectContaining({ source: "INBOUND" }),
+    );
     expect(queueZapierTrigger).toHaveBeenCalled();
-    expect(res).toEqual({ contact: { id: "c1", orgId: ORG }, conversation: undefined });
+    expect(res).toEqual({
+      contact: { id: "c1", orgId: ORG, ...NO_FIELDS, igsId: "igs-1" },
+      conversation: undefined,
+    });
+  });
+
+  test("writes the new details on a contact it found", async () => {
+    (findContactIdByIdentity as Mock).mockResolvedValueOnce("c1");
+    db.contact.findUniqueOrThrow.mockResolvedValue({ id: "c1", orgId: ORG, identities: [] });
+
+    await getOrCreateContactByIgsId("igs-1", ORG, { name: "Ann", whatsappUserName: "ann" } as any);
+
+    expect(db.contact.update).toHaveBeenCalledWith({
+      where: { id: "c1" },
+      data: { name: "Ann", whatsappUserName: "ann" },
+    });
   });
 
   test("rethrows a database failure instead of swallowing it", async () => {
-    db.contact.findUnique.mockRejectedValue(new Error("boom"));
+    (findContactIdByIdentity as Mock).mockRejectedValueOnce(new Error("boom"));
 
     await expect(getOrCreateContactByIgsId("igs-1", ORG)).rejects.toThrow("boom");
   });
 });
 
 describe("getOrCreateContactByPsid", () => {
-  test("looks up on the psid+org unique key", async () => {
-    db.contact.findUnique.mockResolvedValue({ id: "c1", orgId: ORG });
+  test("finds the contact by its Messenger identity", async () => {
+    (findContactIdByIdentity as Mock).mockResolvedValueOnce("c1");
+    db.contact.findUniqueOrThrow.mockResolvedValue({ id: "c1", orgId: ORG, identities: [] });
 
     await getOrCreateContactByPsid("psid-1", ORG);
 
-    expect(db.contact.findUnique.mock.calls[0][0].where).toEqual({
-      contact_psid_org_id_unique: { psid: "psid-1", orgId: ORG },
-    });
+    expect(findContactIdByIdentity).toHaveBeenCalledWith(ORG, "FB_PSID", "psid-1");
   });
 
   // The messenger variant is the only one of the three that rethrows, so a
   // webhook failure is retried rather than silently dropped.
   test("rethrows a database failure instead of swallowing it", async () => {
-    db.contact.findUnique.mockRejectedValue(new Error("boom"));
+    (findContactIdByIdentity as Mock).mockRejectedValueOnce(new Error("boom"));
 
     await expect(getOrCreateContactByPsid("psid-1", ORG)).rejects.toThrow("boom");
   });
@@ -1808,7 +2168,7 @@ describe("getOrCreateContactByPsid", () => {
 describe("bulkUpdateWaMessageAssignStatus", () => {
   const contact = (over: Record<string, unknown> = {}) => ({
     id: "c1",
-    phone: "919000000001",
+    identities: [PHONE_IDENTITY],
     name: "Ann",
     orgId: ORG,
     waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED,
@@ -1979,12 +2339,13 @@ describe("bulkUpdateWaMessageAssignStatus", () => {
   });
 
   test("returns the contacts as they were before the write", async () => {
-    const before = contact();
-    db.contact.findMany.mockResolvedValue([before]);
+    const { identities: _identities, ...before } = contact();
+    db.contact.findMany.mockResolvedValue([contact()]);
 
+    // With the phone, Instagram and Messenger ids it always answered with.
     expect(
       await bulkUpdateWaMessageAssignStatus(["c1"], ORG, WaMessageAssignStatus.CLOSED, USER),
-    ).toEqual([before]);
+    ).toEqual([{ ...before, phone: "919000000001", igsId: null, psid: null }]);
   });
 });
 
@@ -2032,95 +2393,133 @@ describe("a contact's references must be its org's own (PART-2 / MSG-13)", () =>
 
 describe("getOrCreateWaContact (phone or BSUID)", () => {
   const ORG_ID = "org-1";
-  const findFirst = () => vi.mocked(prisma.contact.findFirst);
-  const findUnique = () => vi.mocked(prisma.contact.findUnique);
   const update = () => vi.mocked(prisma.contact.update);
   const create = () => vi.mocked(prisma.contact.create);
+  /** Which contact holds each identity, as the identity lookup answers. */
+  function owners(byKind: Partial<Record<"PHONE" | "WA_BSUID", string>>) {
+    (findContactIdByIdentity as Mock).mockImplementation(
+      async (_org: string, kind: "PHONE" | "WA_BSUID", value?: string) =>
+        value ? (byKind[kind] ?? null) : null,
+    );
+  }
+  const written = () => (setPrimaryIdentities as Mock).mock.calls.map((call) => [call[1], call[2]]);
 
   beforeEach(() => {
-    findFirst().mockResolvedValue(null);
-    findUnique().mockResolvedValue(null);
+    owners({});
     update().mockImplementation((async (args: any) => ({
       id: args.where.id,
       ...args.data,
+      identities: [],
     })) as any);
     create().mockImplementation((async (args: any) => ({ id: "new", ...args.data })) as any);
   });
+  afterEach(() => (findContactIdByIdentity as Mock).mockImplementation(async () => null));
 
   test("stamps the BSUID onto an existing phone contact", async () => {
-    findFirst().mockResolvedValue({ id: "c1", phone: "911", bsuid: null } as any);
+    owners({ PHONE: "c1" });
+    vi.mocked(prisma.contact.findFirst).mockResolvedValue({
+      id: "c1",
+      identities: [{ kind: "PHONE", value: "911" }],
+    } as any);
 
     await getOrCreateWaContact({ phone: "911", bsuid: "IN.42" }, ORG_ID, { name: "Ann" });
 
+    expect(written()).toEqual([["c1", { bsuid: "IN.42" }]]);
     expect(update()).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { id: "c1" },
-        data: expect.objectContaining({ bsuid: "IN.42", name: "Ann" }),
-      }),
+      expect.objectContaining({ where: { id: "c1" }, data: { name: "Ann" } }),
     );
     expect(create()).not.toHaveBeenCalled();
   });
 
   test("finds a username customer by BSUID and fills in the phone once Meta shares it", async () => {
-    findUnique().mockResolvedValue({ id: "c2", phone: null, bsuid: "IN.42" } as any);
+    owners({ WA_BSUID: "c2" });
+    vi.mocked(prisma.contact.findFirst).mockResolvedValue({
+      id: "c2",
+      identities: [{ kind: "WA_BSUID", value: "IN.42" }],
+    } as any);
 
     await getOrCreateWaContact({ phone: "911", bsuid: "IN.42" }, ORG_ID);
 
-    expect(update()).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { id: "c2" },
-        data: expect.objectContaining({ phone: "911" }),
-      }),
-    );
+    expect(written()).toEqual([["c2", { phone: "911" }]]);
   });
 
   test("creates a BSUID-only contact without inventing a phone", async () => {
     await getOrCreateWaContact({ bsuid: "US.7" }, ORG_ID, { phone: "US.7" } as any);
 
     expect(create()).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({ bsuid: "US.7", phone: undefined, orgId: ORG_ID }),
-      }),
+      expect.objectContaining({ data: { orgId: ORG_ID }, select: { id: true } }),
     );
+    expect(written()).toEqual([["new", { phone: undefined, bsuid: "US.7" }]]);
   });
 
-  test("moves the BSUID to the phone contact when both exist separately", async () => {
-    findFirst().mockResolvedValue({ id: "phone-contact", phone: "911", bsuid: null } as any);
-    findUnique().mockResolvedValue({ id: "bsuid-contact", phone: null, bsuid: "IN.42" } as any);
+  test("a customer someone created a moment ago is found again, not duplicated", async () => {
+    const { IdentityTakenError } = await import("./identity/identity.service.js");
+    (setPrimaryIdentities as Mock).mockRejectedValueOnce(
+      new IdentityTakenError("PHONE", "911", "c1"),
+    );
+    (findContactIdByIdentity as Mock)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce("c1")
+      .mockResolvedValueOnce(null);
+    vi.mocked(prisma.contact.findFirst).mockResolvedValue({ id: "c1", identities: [] } as any);
+
+    const { contact } = await getOrCreateWaContact({ phone: "911" }, ORG_ID);
+
+    expect(contact.id).toBe("c1");
+  });
+
+  test("a BSUID another contact holds stays there, and a merge is suggested", async () => {
+    owners({ PHONE: "phone-contact", WA_BSUID: "bsuid-contact" });
+    vi.mocked(prisma.contact.findFirst).mockResolvedValue({
+      id: "phone-contact",
+      identities: [{ kind: "PHONE", value: "911" }],
+    } as any);
+    const { suggestMerge } = await import("./merge/suggestions.service.js");
 
     await getOrCreateWaContact({ phone: "911", bsuid: "IN.42" }, ORG_ID);
 
-    expect(update()).toHaveBeenCalledWith({
-      where: { id: "bsuid-contact" },
-      data: { bsuid: null },
+    expect(written()).toEqual([["phone-contact", {}]]);
+    expect(suggestMerge).toHaveBeenCalledWith(ORG_ID, "phone-contact", "bsuid-contact", {
+      reason: "BSUID_PHONE_SPLIT",
+      detail: "911",
     });
-    expect(update()).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { id: "phone-contact" },
-        data: expect.objectContaining({ bsuid: "IN.42" }),
-      }),
-    );
   });
 });
 
 describe("applyWaIdentityChange", () => {
   test("moves the contact holding the old BSUID onto the new one", async () => {
     vi.mocked(prisma.contact.findFirst)
-      .mockResolvedValueOnce({ id: "c1", phone: null, bsuid: "IN.old" } as any)
+      .mockResolvedValueOnce({
+        id: "c1",
+        identities: [{ kind: "WA_BSUID", value: "IN.old" }],
+      } as any)
       .mockResolvedValueOnce(null);
 
     const id = await applyWaIdentityChange("org-1", { previousBsuid: "IN.old", bsuid: "IN.new" });
 
     expect(id).toBe("c1");
-    expect(prisma.contact.update).toHaveBeenCalledWith({
-      where: { id: "c1" },
-      data: { bsuid: "IN.new" },
+    expect(vi.mocked(prisma.contact.findFirst).mock.calls[0][0]?.where).toEqual({
+      orgId: "org-1",
+      OR: [{ identities: { some: { kind: "WA_BSUID", value: "IN.old" } } }],
     });
+    expect(setPrimaryIdentities).toHaveBeenCalledWith(
+      "org-1",
+      "c1",
+      { bsuid: "IN.new" },
+      "INBOUND",
+    );
   });
 
   test("leaves both alone when the new identity belongs to another contact", async () => {
     vi.mocked(prisma.contact.findFirst)
-      .mockResolvedValueOnce({ id: "c1", phone: "911", bsuid: "IN.old" } as any)
+      .mockResolvedValueOnce({
+        id: "c1",
+        identities: [
+          { kind: "PHONE", value: "911" },
+          { kind: "WA_BSUID", value: "IN.old" },
+        ],
+      } as any)
       .mockResolvedValueOnce({ id: "c2" } as any);
 
     const id = await applyWaIdentityChange("org-1", {
@@ -2130,7 +2529,7 @@ describe("applyWaIdentityChange", () => {
     });
 
     expect(id).toBeNull();
-    expect(prisma.contact.update).not.toHaveBeenCalled();
+    expect(setPrimaryIdentities).not.toHaveBeenCalled();
   });
 });
 
@@ -2138,8 +2537,9 @@ describe("handleContactConsent with a BSUID", () => {
   test("matches the contact on bsuid, not phone", async () => {
     vi.mocked(prisma.contact.findFirst).mockResolvedValue(null);
     await handleContactConsent("org-1", "US.7", false);
-    expect(prisma.contact.findFirst).toHaveBeenCalledWith({
-      where: { bsuid: "US.7", orgId: "org-1" },
+    expect(vi.mocked(prisma.contact.findFirst).mock.calls[0][0]?.where).toEqual({
+      orgId: "org-1",
+      identities: { some: { kind: "WA_BSUID", value: "US.7" } },
     });
   });
 });

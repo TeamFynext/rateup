@@ -5,7 +5,8 @@ type FacebookPageSettings = Pick<DecryptedMetaChannel, "orgId" | "fbPageId" | "p
 import { callMetaApi } from "../wa_axios.js";
 import { log } from "../../../utils/logger.js";
 import { updateWaMessageByMessageId } from "../inbox/message/wamessage.service.js";
-import { PlatformType } from "../../../generated/prisma/enums.js";
+import { ContactIdentityKind, PlatformType } from "../../../generated/prisma/enums.js";
+import { findContactIdByIdentity } from "../../contact/identity/identity.service.js";
 import { FacebookEvent } from "../../../types/enums.js";
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 import { getFacebookWebhookEvent } from "./facebook.util.js";
@@ -74,14 +75,11 @@ async function handleMessengerShopReply(
   orgId: string,
   fbPageId: string,
 ): Promise<boolean> {
-  const contact = await prisma.contact.findUnique({
-    where: { contact_psid_org_id_unique: { psid, orgId } },
-    select: { id: true },
-  });
+  const contactId = await findContactIdByIdentity(orgId, ContactIdentityKind.FB_PSID, psid);
   const { handleShopReply } = await import("../../commerce/shop/checkout.service.js");
   return handleShopReply(payload, {
     orgId,
-    contactId: contact?.id ?? null,
+    contactId,
     channel: "MESSENGER",
     channelAccountId: fbPageId,
   });

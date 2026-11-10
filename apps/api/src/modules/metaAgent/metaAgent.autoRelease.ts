@@ -1,5 +1,10 @@
 import { MetaAgentThreadOwner } from "../../generated/prisma/client.js";
 import prisma from "../../utils/prisma.js";
+import {
+  contactFields,
+  contactWhereHasIdentity,
+  primaryIdentities,
+} from "../contact/identity/contactFields.js";
 import { log } from "../../utils/logger.js";
 import { setThreadControl } from "./metaAgent.service.js";
 
@@ -25,11 +30,11 @@ export async function releaseThreadsOnTicketClose(orgId: string, contactIds: str
       id: { in: contactIds },
       metaAgentThreadOwner: MetaAgentThreadOwner.STAFF,
       isSpam: false,
-      phone: { not: null },
+      ...contactWhereHasIdentity("phone"),
     },
     select: {
       id: true,
-      phone: true,
+      ...primaryIdentities,
       lastReceivedMetadata: true,
       lastMessageSourceIdentifier: true,
     },
@@ -46,6 +51,8 @@ export async function releaseThreadsOnTicketClose(orgId: string, contactIds: str
   if (agents.length === 0) return;
 
   for (const contact of contacts) {
+    const { phone } = contactFields(contact.identities);
+    if (!phone) continue;
     // The thread belongs to the business number the customer wrote to: Meta's
     // phone id from their last message first, then the channel number.
     const phoneId = (contact.lastReceivedMetadata as { phone_number_id?: string } | null)
@@ -63,7 +70,7 @@ export async function releaseThreadsOnTicketClose(orgId: string, contactIds: str
       await setThreadControl(
         orgId,
         agent.whatsappSettingsId,
-        { action: "release", to: `+${digits(contact.phone)}` },
+        { action: "release", to: `+${digits(phone)}` },
         "ticket_closed",
       );
     } catch (error) {

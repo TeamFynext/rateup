@@ -3,13 +3,16 @@ import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), warn: vi.fn(), debug: vi.fn(), trace: vi.fn() },
 }));
-vi.mock("../../../utils/prisma.js", () => ({
-  default: {
+vi.mock("../../../utils/prisma.js", () => {
+  const db = {
     contact: { findUnique: vi.fn(), findFirst: vi.fn(), update: vi.fn() },
+    contactIdentity: { findFirst: vi.fn() },
     lead: { findUnique: vi.fn(), update: vi.fn() },
     pipelineStage: { findFirst: vi.fn(), findUnique: vi.fn() },
-  },
-}));
+    $transaction: (fn: (tx: unknown) => unknown) => fn(db),
+  };
+  return { default: db };
+});
 vi.mock("../../../workers/bullmq/queues/index.js", () => ({
   integrationTriggerQueue: { add: vi.fn() },
 }));
@@ -44,6 +47,7 @@ import { fromHubSpotContact, processHubSpotInboundJob } from "./hubspot.inbound.
 type Mock = ReturnType<typeof vi.fn>;
 const db = prisma as unknown as {
   contact: Record<string, Mock>;
+  contactIdentity: Record<string, Mock>;
   lead: Record<string, Mock>;
   pipelineStage: Record<string, Mock>;
 };
@@ -96,12 +100,15 @@ const hubSpotContact = (properties: Record<string, string | null> = {}) => ({
   },
 });
 
+/** As the database holds it: phone and email are primary identities. */
 const rateUpContact = (over: Record<string, unknown> = {}) => ({
   id: "c-1",
   orgId: "org-1",
   name: "Asha",
-  email: "asha@example.com",
-  phone: "919876543210",
+  identities: [
+    { kind: "PHONE", value: "919876543210" },
+    { kind: "EMAIL", value: "asha@example.com" },
+  ],
   ...over,
 });
 
@@ -121,6 +128,7 @@ beforeEach(() => {
   client.get.mockResolvedValue(hubSpotContact());
   db.contact.findUnique.mockResolvedValue(rateUpContact());
   db.contact.update.mockImplementation(async ({ data }) => ({ ...rateUpContact(), ...data }));
+  db.contactIdentity.findFirst.mockResolvedValue(null);
 });
 
 describe("a HubSpot contact, in RateUp's terms", () => {
@@ -140,10 +148,9 @@ describe("a linked contact edited in HubSpot", () => {
   test("its new name reaches RateUp, and the link records RateUp's values", async () => {
     await expect(processHubSpotInboundJob(integration(), job("contact"))).resolves.toBe("applied");
 
-    expect(db.contact.update).toHaveBeenCalledWith({
-      where: { id: "c-1" },
-      data: { name: "Asha Nair" },
-    });
+    expect(db.contact.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "c-1" }, data: { name: "Asha Nair" } }),
+    );
     expect(recordLink).toHaveBeenCalledWith(CONTACT_LINK, {
       rateupId: "c-1",
       externalId: "701",
@@ -151,7 +158,12 @@ describe("a linked contact edited in HubSpot", () => {
     });
     expect(emitIntegrationEvent).toHaveBeenCalledWith("org-1", {
       type: "contact.updated",
-      contact: expect.objectContaining({ id: "c-1", name: "Asha Nair" }),
+      contact: expect.objectContaining({
+        id: "c-1",
+        name: "Asha Nair",
+        phone: "919876543210",
+        email: "asha@example.com",
+      }),
       changed: ["details"],
     });
   });
@@ -164,13 +176,17 @@ describe("a linked contact edited in HubSpot", () => {
 
   test("a phone another RateUp contact has is left alone", async () => {
     client.get.mockResolvedValue(hubSpotContact({ phone: "+971501234567" }));
-    db.contact.findUnique
-      .mockResolvedValueOnce(rateUpContact({ name: "Asha Nair" }))
-      .mockResolvedValueOnce({ id: "c-other" });
+    db.contact.findUnique.mockResolvedValueOnce(rateUpContact({ name: "Asha Nair" }));
+    db.contactIdentity.findFirst.mockResolvedValue({ contactId: "c-other" });
 
     await expect(processHubSpotInboundJob(integration(), job("contact"))).resolves.toBe(
       "unchanged",
     );
+    expect(db.contactIdentity.findFirst.mock.calls[0][0].where).toEqual({
+      orgId: "org-1",
+      kind: "PHONE",
+      value: "971501234567",
+    });
     expect(db.contact.update).not.toHaveBeenCalled();
   });
 
@@ -201,10 +217,15 @@ describe("a contact created in HubSpot", () => {
   });
 
   test("is linked to the RateUp contact with the same number", async () => {
+    db.contact.findFirst.mockResolvedValue(rateUpContact());
     await expect(
       processHubSpotInboundJob(integration({ importContacts: true }), job("contact", true)),
     ).resolves.toBe("linked");
     expect(createContact).not.toHaveBeenCalled();
+    expect(db.contact.findFirst.mock.calls[0][0].where).toEqual({
+      orgId: "org-1",
+      identities: { some: { kind: "PHONE", value: "919876543210" } },
+    });
     expect(recordLink).toHaveBeenCalledWith(
       CONTACT_LINK,
       expect.objectContaining({ rateupId: "c-1", externalId: "701" }),

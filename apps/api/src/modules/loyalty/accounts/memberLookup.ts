@@ -1,6 +1,8 @@
 import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
 import { normalisePhone } from "../util.js";
+import { contactWhereIdentity, primaryIdentities } from "../../contact/identity/contactFields.js";
+import { withMemberPhoneEmail } from "../memberContact.js";
 
 /**
  * Finding the member behind an inbound event, for callers who hold a phone number, an email
@@ -21,14 +23,19 @@ import { normalisePhone } from "../util.js";
 
 const MEMBER_INCLUDE = {
   contact: {
-    select: { id: true, name: true, phone: true, email: true, orgId: true },
+    select: { id: true, name: true, orgId: true, ...primaryIdentities },
   },
   currentTier: { select: { id: true, name: true } },
 } as const;
 
-export type MemberAccount = Awaited<
-  ReturnType<typeof prisma.customerLoyaltyAccount.findFirst<{ include: typeof MEMBER_INCLUDE }>>
+type MemberRow = NonNullable<
+  Awaited<
+    ReturnType<typeof prisma.customerLoyaltyAccount.findFirst<{ include: typeof MEMBER_INCLUDE }>>
+  >
 >;
+
+/** The account with its contact's `phone` and `email` read from identities. */
+export type MemberAccount = ReturnType<typeof withMemberPhoneEmail<MemberRow>> | null;
 
 export type MemberMatch =
   | { status: "matched"; account: NonNullable<MemberAccount>; matchedBy: "phone" | "email" }
@@ -73,23 +80,27 @@ export async function resolveProgramMember(input: ResolveMemberInput): Promise<M
       phoneInvalid = true;
     } else {
       const byPhone = await prisma.customerLoyaltyAccount.findFirst({
-        // `[phone, orgId]` is unique on Contact, so this is single-valued by construction.
-        where: { ...scope, contact: { orgId, phone: normalisedPhone } },
+        // A phone identity belongs to one contact, so this is single-valued by construction.
+        where: { ...scope, contact: { orgId, ...contactWhereIdentity("phone", normalisedPhone) } },
         include: MEMBER_INCLUDE,
       });
-      if (byPhone) return { status: "matched", account: byPhone, matchedBy: "phone" };
+      if (byPhone) {
+        return { status: "matched", account: withMemberPhoneEmail(byPhone), matchedBy: "phone" };
+      }
     }
   }
 
   const email = input.email?.trim().toLowerCase();
   if (email) {
-    const byEmail = await prisma.customerLoyaltyAccount.findMany({
-      where: { ...scope, contact: { orgId, email: { equals: email, mode: "insensitive" } } },
-      include: MEMBER_INCLUDE,
-      // One more than we can act on, so "exactly one" is distinguishable from "several"
-      // without scanning a large shared address.
-      take: 10,
-    });
+    const byEmail = (
+      await prisma.customerLoyaltyAccount.findMany({
+        where: { ...scope, contact: { orgId, ...contactWhereIdentity("email", email) } },
+        include: MEMBER_INCLUDE,
+        // One more than we can act on, so "exactly one" is distinguishable from "several"
+        // without scanning a large shared address.
+        take: 10,
+      })
+    ).map(withMemberPhoneEmail);
 
     if (byEmail.length === 1) {
       return { status: "matched", account: byEmail[0]!, matchedBy: "email" };

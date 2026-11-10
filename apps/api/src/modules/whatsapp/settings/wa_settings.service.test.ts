@@ -122,9 +122,6 @@ function row(overrides: Record<string, unknown> = {}): any {
     phoneId: PHONE_ID,
     phone: "15550001",
     appId: "app-1",
-    fbPageId: null,
-    ibaId: null,
-    pageAccessToken: null,
     phoneDisplayName: "The Shop",
     status: "ACTIVE",
     createdAt: new Date("2026-01-01"),
@@ -187,34 +184,12 @@ describe("createWaSettings", () => {
   test("encrypts the token for a channel with no phone id too", async () => {
     await createWaSettings(ORG_A, {
       accessToken: "plain-token",
-      pageAccessToken: "page-token",
     } as any);
 
     expect(encryptMock).toHaveBeenCalledWith("plain-token", expect.anything());
     const { data } = db.whatsappSettings.create.mock.calls[0][0];
     expect(data.accessToken).not.toBe("plain-token");
     expect(data.accessToken_iv).toBeTruthy();
-  });
-
-  test("encrypts the page access token, with its iv inline", async () => {
-    await createWaSettings(ORG_A, {
-      accessToken: "plain-token",
-      phoneId: PHONE_ID,
-      phone: "1",
-      pageAccessToken: "page-token",
-    } as any);
-
-    // aes_encrypt is mocked, so the ciphertext is a stand-in; what matters is that
-    // the stored value is the `<iv>:<ciphertext>` form and not the raw token.
-    const stored = db.whatsappSettings.create.mock.calls[0][0].data.pageAccessToken;
-    expect(stored).not.toBe("page-token");
-    expect(stored).toBe("iv-hex:cipher-text");
-  });
-
-  test("leaves a channel with no page token alone", async () => {
-    await createWaSettings(ORG_A, { accessToken: "plain-token" } as any);
-
-    expect(db.whatsappSettings.create.mock.calls[0][0].data.pageAccessToken).toBeUndefined();
   });
 
   test("writes the registry row and the settings in one transaction, sharing one id", async () => {
@@ -699,21 +674,10 @@ describe("upsertWaSettings", () => {
     });
   });
 
-  test("leaves the page connected when an update doesn't mention it", async () => {
-    db.whatsappSettings.findUnique.mockResolvedValue(row({ fbPageId: "page-1" }));
-
-    await upsertWaSettings(ORG_A, PHONE_ID, { appId: "app-1" } as any);
-
-    const { data } = db.whatsappSettings.update.mock.calls[0][0];
-    expect(data).not.toHaveProperty("fbPageId");
-    expect(data).not.toHaveProperty("ibaId");
-    expect(data).not.toHaveProperty("pageAccessToken");
-  });
-
   // Pages are connected through /api/meta/channels now: saving a WhatsApp channel never
   // subscribes a Page or reads its names from Meta.
-  test("never calls Meta when updating a channel that has a legacy page", async () => {
-    db.whatsappSettings.findUnique.mockResolvedValue(row({ fbPageId: "page-1", ibaId: "iba-1" }));
+  test("never calls Meta when updating a channel", async () => {
+    db.whatsappSettings.findUnique.mockResolvedValue(row());
 
     await upsertWaSettings(ORG_A, PHONE_ID, { appId: "app-1" } as any);
 

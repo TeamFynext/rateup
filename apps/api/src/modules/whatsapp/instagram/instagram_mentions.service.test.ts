@@ -139,9 +139,13 @@ beforeEach(() => {
     id: "contact-1",
     whatsappUserName: "Anjali.K",
     name: "Anjali",
-    igsId: "igs-1",
+    identities: [{ kind: "IG_SCOPED", value: "igs-1" }],
   });
-  db.contact.findFirst.mockResolvedValue({ id: "contact-1", igsId: "igs-1" });
+  db.contact.findFirst.mockResolvedValue({
+    id: "contact-1",
+    whatsappUserName: "Anjali.K",
+    identities: [{ kind: "IG_SCOPED", value: "igs-1" }],
+  });
   db.loyaltyEventTrigger.findUnique.mockResolvedValue(null);
   (findInstagramMentionRule as Mock).mockResolvedValue(RULE);
   (creditInstagramMention as Mock).mockImplementation(async () => ({

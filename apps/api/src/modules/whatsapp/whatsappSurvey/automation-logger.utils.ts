@@ -33,7 +33,7 @@ export async function findRecentAutomation(
   const { timeWindow } = options;
 
   const position = await getAutomationPosition(orgId, phone);
-  if (!position) return findRecentAutomationFromLog(phone, orgId, timeWindow);
+  if (!position) return null;
   if (timeWindow && position.loggedAt < Date.now() - timeWindow) return null;
 
   // Scoped by org, and gone if the automation was deleted since.
@@ -49,33 +49,6 @@ export async function findRecentAutomation(
     waAutomatedReplyId: position.automationId,
     waAutomatedReply,
   };
-}
-
-/**
- * The pre-Redis lookup: the contact's newest log row. Only answers for contacts
- * who were part-way through an automation when positions moved to Redis
- * (2026-09-26); every step logged since then writes a position. Remove once
- * POSITION_TTL_SECONDS has passed since that deploy.
- */
-async function findRecentAutomationFromLog(
-  phone: string,
-  orgId: string,
-  timeWindow: number | undefined,
-): Promise<RecentAutomation | null> {
-  return await prisma.waAutomatedReplyMessage.findFirst({
-    where: {
-      phone,
-      orgId,
-      ...(timeWindow ? { createdAt: { gte: new Date(Date.now() - timeWindow) } } : {}),
-    },
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      currentNode: true,
-      waAutomatedReplyId: true,
-      waAutomatedReply: { select: automationSelect },
-    },
-  });
 }
 
 /**

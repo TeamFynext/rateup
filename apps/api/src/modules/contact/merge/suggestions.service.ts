@@ -1,6 +1,7 @@
 import { Prisma } from "../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
+import { contactFields, primaryIdentities, primaryIdentitySql } from "../identity/contactFields.js";
 
 /**
  * "These two contacts are probably one person" — raised only from strong signals (the same
@@ -59,7 +60,8 @@ const MAX_SHARED_EMAIL_GROUP = 5;
  * the live triggers (a message, an edit, a webchat visitor) only catch what happens from
  * now on. Two signals, both strong:
  *
- * - the same email on different contacts (the email column is not unique);
+ * - the same email on different contacts (an identity holds one contact now, so this only
+ *   finds pairs older data left behind);
  * - a webchat visitor whose typed id or email is another contact's phone or email
  *   (typed, so only ever a suggestion).
  *
@@ -71,11 +73,7 @@ export async function scanForDuplicates(orgId: string | null): Promise<{ pairs: 
 
   const emailGroups = await prisma.$queryRaw<{ orgId: string; email: string; ids: string[] }[]>`
     WITH emails AS (
-      SELECT c."orgId", c.id, lower(trim(c.email)) AS email
-      FROM "Contact" c
-      WHERE c.email IS NOT NULL AND trim(c.email) <> '' ${orgFilter('c."orgId"')}
-      UNION
-      SELECT i."orgId", i."contactId", i.value
+      SELECT i."orgId", i."contactId" AS id, i.value AS email
       FROM "ContactIdentity" i
       WHERE i.kind = 'EMAIL' ${orgFilter('i."orgId"')}
     )
@@ -91,7 +89,7 @@ export async function scanForDuplicates(orgId: string | null): Promise<{ pairs: 
     WITH given AS (
       SELECT w."orgId", w.id, trim(v) AS raw
       FROM "Contact" w
-      CROSS JOIN LATERAL unnest(ARRAY[w.other, w.email]) AS v
+      CROSS JOIN LATERAL unnest(ARRAY[w.other, ${primaryIdentitySql("w", "email")}]) AS v
       WHERE w.source = 'WEBCHAT' AND v IS NOT NULL AND trim(v) <> '' ${orgFilter('w."orgId"')}
     ), typed AS (
       SELECT "orgId", id,
@@ -102,11 +100,7 @@ export async function scanForDuplicates(orgId: string | null): Promise<{ pairs: 
     SELECT DISTINCT t."orgId", t.id AS "webchatId", o.id AS "otherId", t.value AS detail
     FROM typed t
     JOIN LATERAL (
-      SELECT c.id FROM "Contact" c
-      WHERE c."orgId" = t."orgId" AND c.id <> t.id
-        AND ((t.kind = 'PHONE' AND c.phone = t.value) OR (t.kind = 'EMAIL' AND lower(c.email) = t.value))
-      UNION
-      SELECT i."contactId" FROM "ContactIdentity" i
+      SELECT i."contactId" AS id FROM "ContactIdentity" i
       WHERE i."orgId" = t."orgId" AND i."contactId" <> t.id AND i.kind::text = t.kind AND i.value = t.value
     ) o ON TRUE
     WHERE (t.kind = 'EMAIL' AND t.value ~ '^[^@[:space:]]+@[^@[:space:]]+[.][^@[:space:]]+$')
@@ -155,10 +149,7 @@ export async function listMergeSuggestions(
   });
   const page = rows.slice(0, limit);
   const ids = page.flatMap((row) => [row.contactAId, row.contactBId]);
-  const contacts = await prisma.contact.findMany({
-    where: { orgId, id: { in: ids } },
-    select: CONTACT_CARD_SELECT,
-  });
+  const contacts = await contactCards(orgId, ids);
   const byId = new Map(contacts.map((contact) => [contact.id, contact]));
   return {
     items: page
@@ -197,10 +188,7 @@ export async function suggestionsForContact(orgId: string, contactId: string) {
   const otherIds = rows.map((row) =>
     row.contactAId === contactId ? row.contactBId : row.contactAId,
   );
-  const others = await prisma.contact.findMany({
-    where: { orgId, id: { in: otherIds } },
-    select: CONTACT_CARD_SELECT,
-  });
+  const others = await contactCards(orgId, otherIds);
   const byId = new Map(others.map((contact) => [contact.id, contact]));
   return rows
     .map((row) => {
@@ -222,11 +210,6 @@ export async function dismissSuggestion(orgId: string, id: string, userId: strin
 export const CONTACT_CARD_SELECT = {
   id: true,
   name: true,
-  phone: true,
-  email: true,
-  bsuid: true,
-  igsId: true,
-  psid: true,
   whatsappUserName: true,
   profilePic: true,
   createdAt: true,
@@ -248,3 +231,20 @@ export const CONTACT_CARD_SELECT = {
     },
   },
 } satisfies Prisma.ContactSelect;
+
+/**
+ * Contacts as suggestion cards: `CONTACT_CARD_SELECT` plus the phone, email, BSUID, Instagram
+ * and Messenger id the card always showed, read from their primary identities in one query
+ * (the card's own `identities` list is capped, so it may not hold every primary).
+ */
+async function contactCards(orgId: string, ids: string[]) {
+  const [contacts, primaries] = await Promise.all([
+    prisma.contact.findMany({ where: { orgId, id: { in: ids } }, select: CONTACT_CARD_SELECT }),
+    prisma.contactIdentity.findMany({
+      where: { orgId, contactId: { in: ids }, ...primaryIdentities.identities.where },
+      select: { contactId: true, ...primaryIdentities.identities.select },
+    }),
+  ]);
+  const byContact = Map.groupBy(primaries, (row) => row.contactId);
+  return contacts.map((contact) => ({ ...contact, ...contactFields(byContact.get(contact.id)) }));
+}

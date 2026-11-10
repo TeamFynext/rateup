@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 import { google } from "googleapis";
 
 import prisma from "../../../utils/prisma.js";
+import { contactFields, primaryIdentities } from "../../contact/identity/contactFields.js";
 import { IntegratedApps, PageType, QuestionType, WaQuestions } from "../../../types/enums.js";
 import { getContent } from "../../../utils/survey/response.data.js";
 import { getIntegrationByName, updateIntegrationByName } from "../integrations.service.js";
@@ -143,7 +144,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId: string)
                 team: { select: { name: true } },
               },
             },
-            Contact: { select: { phone: true } },
+            Contact: { select: primaryIdentities },
           },
           orderBy: { createdAt: "asc" },
           skip,
@@ -188,7 +189,9 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId: string)
               else resObj[qstnTitle] = getFormattedResponse(answerValue, q, lang);
             }
           }
-          resObj["Respondent's Mobile Number"] = toCell(response?.Contact?.phone);
+          resObj["Respondent's Mobile Number"] = toCell(
+            contactFields(response?.Contact?.identities).phone,
+          );
           resObj["Tag"] = toCell(response?.tag);
           responseForSheet.push(resObj);
         }
@@ -227,7 +230,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId: string)
       const responses = await prisma.surveyResponse.findMany({
         where: { surveyTeamMap: { surveyId } },
         include: {
-          Contact: { select: { phone: true } },
+          Contact: { select: primaryIdentities },
           surveyTeamMap: {
             select: {
               teamId: true,
@@ -257,7 +260,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId: string)
             const createdAtFormatted = dayjs(response.createdAt).format("DD-MM-YYYY HH:mm");
             responseValue = createdAtFormatted;
           } else if (question === RESPONDENT) {
-            responseValue = response?.Contact?.phone || "";
+            responseValue = contactFields(response?.Contact?.identities).phone || "";
           } else if (question === TAG) {
             responseValue = response.tag || "";
           } else if (question === TEAM) {

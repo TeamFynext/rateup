@@ -226,7 +226,6 @@ model Org {
   UsageStats              UsageStats?
   meteredConversations    MeteredConversation[]
   activeContacts          ActiveContact[]
-  chatbot                 Chatbot[]
   Survey                  Survey[]
   WaAccountSettings       WaAccountSettings?
   generateQr              GenerateQr[]
@@ -424,15 +423,6 @@ model WhatsappSettings {
   phone                    String? @unique
   appId                    String
   webhookPassword          String?
-  fbPageId                 String? @unique //Facebook Page ID
-  ibaId                    String? @unique //Instagram Business Account ID
-  pageAccessToken          String? //Facebook Page access token
-  igUserName               String?
-  igDisplayName            String?
-  /// [PInstagramIceBreakers]
-  instagramIceBreakers     Json?
-  /// [PInstagramPersistentMenu]
-  instagramPersistentMenu  Json?
   conversationalAutomation Json?
   phoneDisplayName         String?
   /// Meta's per-second send ceiling for this number, when it differs from the
@@ -440,7 +430,6 @@ model WhatsappSettings {
   /// dispatcher's per-phone rate limiter; see workers/shared/phoneRateLimit.ts.
   messagesPerSecond        Int?
 
-  fbUserName String?
 
   type                    String // enums.ts: WaConfigType
   status                  String                @default("ACTIVE")
@@ -457,7 +446,6 @@ model WhatsappSettings {
   conversionData          Json?
   paymentMethod           String                @default("NATIVE") // NATIVE, SHOPIFY_LINK
   metaBusinessAgent       MetaBusinessAgent?
-  teamAccess              TeamWhatsappChannel[] // teams explicitly granted this channel
   waFlows                 WaFlow[] // flows created under this channel's WABA
 
   @@index([businessPortfolioId])
@@ -502,7 +490,7 @@ model Channel {
 }
 
 /// Grants one team access to one channel of any platform. Only consulted while
-/// `Team.allChannels` is false. Replaces TeamWhatsappChannel, which is no longer read.
+/// `Team.allChannels` is false.
 model TeamChannel {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
@@ -539,10 +527,6 @@ model MetaChannelSettings {
   pageAccessToken     String
   /// Instagram Login only: when the long-lived token lapses (60 days, refreshable).
   tokenExpiresAt      DateTime?
-  /// Instagram Login only: last successful refresh (or the connect).
-  tokenRefreshedAt    DateTime?
-  /// Set when a token refresh failed and the channel must be reconnected. Cleared on reconnect.
-  reconnectRequiredAt DateTime?
   /// Token of the login that connected the channel (encrypted inline).
   accessToken         String?
   appId               String?
@@ -1048,13 +1032,11 @@ model Team {
   campaigns               Campaign[]
   reviewSuggestions       ReviewSuggestion[]
   Review                  Review[]
-  RM_Topic                RM_Topic[]
   testimonialCollections  TestimonialCollection[]
   waInboxAssign           WaInboxAssign[]
   assignedConversations   ConversationAssignedUserTeamMap[]
   waMessageOrgTeamMaps    WaMessageOrgTeamMap[]
   waMessageSchedule       WaMessageSchedule[]
-  featureAccess           TeamFeatureAccess[]
   pipelines               PipelineTeam[]
   leads                   Lead[]
   loyaltyFeedbackSettings LoyaltyFeedbackSetting[]
@@ -1069,37 +1051,12 @@ model Team {
   /// When false access is limited to `channelAccess`. Defaults to true so new teams —
   /// and every team existing at rollout — keep full access until scoped explicitly.
   allChannels   Boolean               @default(true)
-  channelAccess TeamWhatsappChannel[]
   channelGrants TeamChannel[]
 
   @@unique([name, orgId], name: "team_name_org_id_unique")
   @@unique([code, orgId], name: "team_code_org_id_unique")
   /// Every org-scoped listing reaches its rows through the org's teams.
   @@index([orgId])
-}
-
-model TeamFeatureAccess {
-  id        String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  team      Team        @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId    String      @db.Uuid
-  feature   TeamFeature
-  createdAt DateTime    @default(now())
-
-  @@unique([teamId, feature])
-}
-
-/// Legacy: superseded by TeamChannel (copied by 20261003100000) and no longer read or written.
-/// Dropped by a later contract migration.
-model TeamWhatsappChannel {
-  id        String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  team      Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId    String           @db.Uuid
-  channel   WhatsappSettings @relation(fields: [channelId], references: [id], onDelete: Cascade)
-  channelId String           @db.Uuid
-  createdAt DateTime         @default(now())
-
-  @@unique([teamId, channelId])
-  @@index([channelId])
 }
 
 model TeamMember {
@@ -1260,7 +1217,6 @@ model Contact {
   createdAt DateTime @default(now())
 
   name   String?
-  phone  String?
   source String?
 
   org                          Org                       @relation(fields: [orgId], references: [id], onDelete: Cascade)
@@ -1274,14 +1230,11 @@ model Contact {
   integrationIds               Json?
   WaMessage                    WaMessage[]
   consent                      Boolean                   @default(true)
-  email                        String?
   address                      String?
   dob                          DateTime?
   gender                       Gender?
   external_id                  String?
   aiWaChat                     Boolean                   @default(false)
-  isAiBotActive                Boolean                   @default(false)
-  chatbotId                    String                    @default("")
   waMessageAssignStatus        InboxStatus               @default(UNASSIGNED)
   waInboxAssign                WaInboxAssign[]
   lastReceivedMessageTimeStamp DateTime?
@@ -1304,11 +1257,9 @@ model Contact {
   /// Meta's `metadata` on the handover (e.g. `customer_request`), as sent.
   metaAgentHandoverReason      String?
   waCatalogOrders              WaCatalogOrder[]
-  igsId                        String? //Instagram Scoped User ID
   profilePic                   String?
   followerCount                Int?
   isIgVerifiedUser             Boolean?
-  psid                         String? // Page-Scoped ID for Facebook Messenger 
   /// When the business blocked this person on Instagram (Moderate Conversations API).
   /// Null = not blocked. Sends are refused while set.
   igBlockedAt                  DateTime?
@@ -1334,9 +1285,6 @@ model Contact {
   leads                       Lead[]
   inboxMentions               InboxMention[]
   inboxNotes                  InboxNote[]
-  /// WhatsApp's Business-Scoped User ID. A customer who messages from a username can
-  /// arrive with this and no phone number.
-  bsuid                       String?
   shopOrders                  ShopOrder[]
   shopStockAlerts             ShopBackInStockRequest[]
   adReferrals                 AdReferral[]
@@ -1347,10 +1295,6 @@ model Contact {
   identities                  ContactIdentity[]
 
   @@unique([external_id, orgId], name: "external_id_org_id_unique")
-  @@unique([phone, orgId], name: "contact_phone_org_id_unique")
-  @@unique([igsId, orgId], name: "contact_igsid_org_id_unique")
-  @@unique([psid, orgId], name: "contact_psid_org_id_unique")
-  @@unique([bsuid, orgId], name: "contact_bsuid_org_id_unique")
   @@index([orgId])
   @@index([orgId, id])
   @@index([orgId, waMessageAssignStatus])
@@ -1358,7 +1302,6 @@ model Contact {
   @@index([orgId, waMessageAssignStatus, lastReceivedMessageTimeStamp(sort: Desc)])
   @@index([orgId, isSpam])
   @@index([orgId, lifecycleId])
-  @@index([orgId, email])
 }
 
 model ContactLabel {
@@ -1778,21 +1721,6 @@ model ReviewAnalysis {
   entities  Json[] // {name: string, score: number}[]
   sentences Json[] // {text: string, sentiment: number}[]
   sentiment Float
-}
-
-model RM_Topic {
-  id       String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name     String
-  keywords String[]
-  team     Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId   String   @db.Uuid
-
-  @@unique([name, teamId], name: "rm_topic_name_team_id_unique")
-}
-
-model NLP_Cache {
-  text   String @unique
-  result Json
 }
 
 /// A pack of extra conversations an org has bought on top of its plan.
@@ -2440,17 +2368,6 @@ model ApiRequestLog {
   @@index([keyId, createdAt])
 }
 
-/// Rows a one-off data migration set aside before dropping their table, so the change can
-/// be reversed. `kind` names the table; `payload` is the row as it was.
-model AuthzMigrationArchive {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  kind      String
-  payload   Json
-  createdAt DateTime @default(now())
-
-  @@index([kind])
-}
-
 /// One partner-API write, remembered so a retry replays its answer instead of repeating the
 /// work. This is the generic layer: it covers writes that move no points and so leave no
 /// ledger row to collapse onto (applying a voucher, sending a card). Writes that DO book a
@@ -2479,19 +2396,6 @@ model ExternalIdempotencyRecord {
 
   @@unique([orgId, scope, key])
   @@index([expiresAt])
-}
-
-model Chatbot {
-  id               String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orgId            String  @db.Uuid
-  org              Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  name             String  @default("Default Chatbot")
-  shortUrlId       String  @unique
-  publicPageStatus String? @default("INACTIVE")
-  enableWaChat     Boolean @default(false)
-  waCommand        String?
-  waPrompt         String?
-  enableAllWaChat  Boolean @default(false)
 }
 
 model SurveyVariables {
@@ -3228,8 +3132,6 @@ model LoyaltyReferral {
   status String @default("pending") // 'pending', 'completed', 'expired'
 
   // Bonus Transactions (created after first purchase)
-  referrerTransactionId String? @db.Uuid
-  refereeTransactionId  String? @db.Uuid
 
   // Metadata
   createdAt   DateTime  @default(now())
@@ -3986,8 +3888,6 @@ model Pipeline {
 
   /// Flag leads idle past their stage's `rottingDays` as needing attention.
   rottingEnabled       Boolean @default(true)
-  /// Write the stage's mapped lifecycle onto the contact whenever a lead moves.
-  lifecycleSyncEnabled Boolean @default(true)
   /// Assign an incoming lead to the least-loaded member of its team.
   autoAssignEnabled    Boolean @default(false)
   /// Nudge owners about leads with no scheduled next activity.
@@ -4708,8 +4608,6 @@ model ShopCollection {
   description      String?
   imageUrl         String?
   position         Int           @default(0)
-  /// The Meta product set this collection is mirrored to.
-  metaProductSetId String?
   products         ShopProduct[]
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
@@ -5264,6 +5162,9 @@ model ContactIdentity {
   updatedAt   DateTime              @default(now()) @updatedAt
 
   @@unique([orgId, kind, scope, value])
+  /// At most one primary per kind: it is what the contact's phone/email/bsuid/igsId/psid read
+  /// (contact/identity/contactFields.ts), one index probe per contact.
+  @@unique([contactId, kind], map: "ContactIdentity_one_primary_per_kind", where: raw("\"isPrimary\""))
   /// Lookup by value across scopes: Meta's scoped ids never collide between accounts, so an
   /// inbound id is found whichever channel it was first recorded on.
   @@index([orgId, kind, value])

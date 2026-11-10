@@ -8,6 +8,7 @@ import {
   loyaltyFeedbackJobId,
   loyaltyFeedbackSendQueue,
 } from "../../../workers/bullmq/queues/loyaltyFeedback.queue.js";
+import { contactFields, primaryIdentities } from "../../contact/identity/contactFields.js";
 
 /**
  * Opens a feedback request when points are earned and arms its delayed job.
@@ -90,9 +91,9 @@ export async function scheduleFeedbackRequest(input: {
 
   const account = await prisma.customerLoyaltyAccount.findUnique({
     where: { id: input.accountId },
-    select: { contact: { select: { phone: true } } },
+    select: { contact: { select: primaryIdentities } },
   });
-  if (!account?.contact?.phone) return skip("no_phone");
+  if (!account || !contactFields(account.contact.identities).phone) return skip("no_phone");
 
   // One ask per customer per cooldown window. COMPLETED counts: it was sent too.
   if (setting.cooldownDays > 0) {

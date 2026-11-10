@@ -55,7 +55,7 @@ const db = vi.hoisted(() => ({
   shopProduct: { findMany: vi.fn() },
   shopOrder: { findUnique: vi.fn() },
   shopDropClaim: { update: vi.fn() },
-  contact: { findUnique: vi.fn() },
+  contact: { findFirst: vi.fn() },
   $transaction: vi.fn(),
 }));
 
@@ -162,7 +162,7 @@ beforeEach(() => {
     }
   });
   db.shopStore.findUnique.mockResolvedValue(store);
-  db.contact.findUnique.mockResolvedValue({ id: "contact-1" });
+  db.contact.findFirst.mockResolvedValue({ id: "contact-1" });
   db.shopProduct.findMany.mockResolvedValue([mug]);
   orders.createDraftOrder.mockResolvedValue({ id: "order-1", checkoutToken: "tok1" });
   db.shopOrder.findUnique.mockImplementation(async ({ where }: { where: { id: string } }) =>

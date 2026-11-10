@@ -131,10 +131,8 @@ function settingsRow(overrides: Record<string, unknown> = {}): any {
     id: SETTINGS_ID,
     orgId: ORG_A,
     accessToken: "plain-token",
-    pageAccessToken: "page-token",
     wabaId: "waba-1",
     phoneId: PHONE_ID,
-    fbPageId: null,
     encryption: { privateKey: "secret-key", passphrase: "secret" },
     ...overrides,
   };
@@ -293,40 +291,7 @@ describe("getWaSettingsHandler", () => {
     );
 
     expect(sent(rep)[0].accessToken).toBeUndefined();
-    expect(sent(rep)[0].pageAccessToken).toBeUndefined();
     expect(JSON.stringify(sent(rep))).not.toContain("plain-token");
-    expect(JSON.stringify(sent(rep))).not.toContain("page-token");
-  });
-
-  // Messenger/Instagram moved to MetaChannel; the stale copies on the WhatsApp row
-  // must not reach the client as if they were current.
-  test("strips the legacy Page and Instagram columns from every channel", async () => {
-    m.getAccessibleWaSettings.mockResolvedValue([
-      settingsRow({
-        fbPageId: "page-1",
-        ibaId: "iba-1",
-        fbUserName: "The Shop",
-        igUserName: "the_shop",
-        igDisplayName: "The Shop IG",
-        instagramIceBreakers: [{ question: "q", payload: "p" }],
-        instagramPersistentMenu: [{ locale: "default", call_to_actions: [] }],
-      }),
-    ]);
-    const rep = reply();
-
-    await getWaSettingsHandler(request(), rep);
-
-    for (const key of [
-      "fbPageId",
-      "ibaId",
-      "fbUserName",
-      "igUserName",
-      "igDisplayName",
-      "instagramIceBreakers",
-      "instagramPersistentMenu",
-    ]) {
-      expect(sent(rep)[0]).not.toHaveProperty(key);
-    }
   });
 
   test("still sends the fields the channel pickers need", async () => {
@@ -474,8 +439,7 @@ describe("the Meta sync handlers", () => {
     ]);
   });
 
-  // The channel row's own pageAccessToken is a legacy Messenger copy; the token of the
-  // page picked for lead ads comes in the body.
+  // The token of the page picked for lead ads comes in the body.
   test("subscribes with the page token from the request, not the channel row", async () => {
     m.getMetaAssets.mockResolvedValue({ pages: [{ id: "page-1", subscribedFields: [] }] });
 

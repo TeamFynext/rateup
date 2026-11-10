@@ -2,7 +2,8 @@ import { callMetaApi } from "../wa_axios.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
 import { updateWaMessageByMessageId } from "../inbox/message/wamessage.service.js";
-import { PlatformType } from "../../../generated/prisma/enums.js";
+import { ContactIdentityKind, PlatformType } from "../../../generated/prisma/enums.js";
+import { findContactIdByIdentity } from "../../contact/identity/identity.service.js";
 import { getInstagramWebhookEvent, resolveCommentTimestampMs } from "./instagram.util.js";
 import { getInstagramMediaPermalink } from "./instagram_messaging.service.js";
 import { InstagramEvent } from "../../../types/enums.js";
@@ -528,14 +529,15 @@ async function handleInstagramShopReply(
   waSettings: { orgId: string; ibaId: string },
 ): Promise<boolean> {
   try {
-    const contact = await prisma.contact.findUnique({
-      where: { contact_igsid_org_id_unique: { igsId, orgId: waSettings.orgId } },
-      select: { id: true },
-    });
+    const contactId = await findContactIdByIdentity(
+      waSettings.orgId,
+      ContactIdentityKind.IG_SCOPED,
+      igsId,
+    );
     const { handleShopReply } = await import("../../commerce/shop/checkout.service.js");
     return await handleShopReply(payload, {
       orgId: waSettings.orgId,
-      contactId: contact?.id ?? null,
+      contactId,
       channel: "INSTAGRAM",
       channelAccountId: waSettings.ibaId,
     });

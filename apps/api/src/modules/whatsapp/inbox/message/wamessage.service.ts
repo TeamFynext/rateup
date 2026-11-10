@@ -9,6 +9,13 @@ import {
 } from "../../../../generated/prisma/client.js";
 import prisma from "../../../../utils/prisma.js";
 import {
+  contactFields,
+  primaryIdentities,
+  primaryIdentityPgSql,
+  primaryIdentitySql,
+  withContactFields,
+} from "../../../contact/identity/contactFields.js";
+import {
   DateType,
   GenerateInboxResponseBody,
   WaChatExportConstraints,
@@ -1003,13 +1010,12 @@ export async function filterChats(
         // merged one can be known by a second number or email that only its identities hold.
         `(c."name" ILIKE $${paramIndex}::TEXT
           OR c."whatsappUserName" ILIKE $${paramIndex}::TEXT
-          OR c."email" ILIKE $${paramIndex}::TEXT
-          OR REPLACE(c."phone", ' ', '') LIKE $${paramIndex + 1}::TEXT
           OR EXISTS (
             SELECT 1 FROM "ContactIdentity" ci
             WHERE ci."contactId" = c."id"
               AND (
-                (ci."kind" = 'PHONE' AND ci."value" LIKE $${paramIndex + 2}::TEXT)
+                (ci."kind" = 'PHONE' AND (ci."value" LIKE $${paramIndex + 1}::TEXT
+                  OR ci."value" LIKE $${paramIndex + 2}::TEXT))
                 OR (ci."kind" = 'EMAIL' AND ci."value" ILIKE $${paramIndex}::TEXT)
                 OR ci."username" ILIKE $${paramIndex}::TEXT
               )
@@ -1049,8 +1055,8 @@ export async function filterChats(
           COALESCE(conv."lastCustomerMessageAt", conv."lastMessageAt", conv."createdAt", c."lastReceivedMessageTimeStamp") AS "conversationLastCustomerMessageAt",
           c.id,
           c."name",
-          c."phone",
-          c."bsuid",
+          ${primaryIdentityPgSql("c", "phone")} AS "phone",
+          ${primaryIdentityPgSql("c", "bsuid")} AS "bsuid",
           c."other",
           c."waMessageAssignStatus",
           c."lastReceivedMessageTimeStamp",
@@ -1090,8 +1096,8 @@ export async function filterChats(
           -- decide whether the composer may send (see meta/sendWindow.ts).
           conv."adThreadUntil",
           c."source",
-          c."igsId",
-          c."psid",
+          ${primaryIdentityPgSql("c", "igsId")} AS "igsId",
+          ${primaryIdentityPgSql("c", "psid")} AS "psid",
           c."igBlockedAt",
           c."profilePic",
           c."followerCount",
@@ -1466,7 +1472,7 @@ export async function exportWhatsapChats(
   const query = `
     SELECT
       wm."createdAt" AS date,
-      c."phone" AS "from",
+      ${primaryIdentityPgSql("c", "phone")} AS "from",
       c."name" AS "name",
       -- A revoked message keeps its row here as it does in the thread, but its
       -- content is withheld: the customer deleted it, so an export must not hand
@@ -1722,7 +1728,12 @@ export async function assignWaMessageToUser(
           { conversationId: ticketId },
         ),
       );
-      updatedContact = await prisma.contact.findUniqueOrThrow({ where: { id: data.contactId } });
+      updatedContact = withContactFields(
+        await prisma.contact.findUniqueOrThrow({
+          where: { id: data.contactId },
+          include: primaryIdentities,
+        }),
+      );
     } else if (isUnassign) {
       if (conversation) {
         await updateConversationAssignees(conversation.id, { assignees: [] }, userId);
@@ -2152,10 +2163,11 @@ export async function moderateInstagramContact(
 ) {
   const contact = await prisma.contact.findFirst({
     where: { id: contactId, orgId },
-    select: { id: true, igsId: true },
+    select: { id: true, ...primaryIdentities },
   });
   if (!contact) throw new HttpError("Contact not found", 404);
-  if (!contact.igsId) throw new HttpError("This contact has no Instagram conversation", 400);
+  const { igsId } = contactFields(contact.identities);
+  if (!igsId) throw new HttpError("This contact has no Instagram conversation", 400);
 
   const latest = await prisma.waMessage.findFirst({
     where: {
@@ -2178,7 +2190,7 @@ export async function moderateInstagramContact(
       "/me/moderate_conversations",
       "POST",
       channel.pageAccessToken,
-      moderateConversationsBody(contact.igsId, action),
+      moderateConversationsBody(igsId, action),
     );
   } catch (error) {
     log.error({ err: error, orgId, contactId, action }, "Instagram moderation failed");
@@ -2401,19 +2413,21 @@ export async function sendContactMessage(
     where: filterCondition,
     select: {
       name: true,
-      phone: true,
       dob: true,
-      email: true,
       whatsappUserName: true,
       org: {
         select: {
           name: true,
         },
       },
+      ...primaryIdentities,
     },
   });
 
-  const messageBody = createContactMessage(phone, contactsData);
+  const messageBody = createContactMessage(
+    phone,
+    contactsData.map((contact) => withContactFields(contact)),
+  );
   await sendMessage(
     orgId,
     messageBody,
@@ -2638,6 +2652,7 @@ export async function generateInboxResponse(
     where: { orgId: orgId },
     take: body.numberOfContacts || 5,
     skip,
+    include: primaryIdentities,
   });
 
   //if contact table does n't have 100 records
@@ -2645,6 +2660,7 @@ export async function generateInboxResponse(
     contacts = await prisma.contact.findMany({
       where: { orgId: orgId },
       take: body.numberOfContacts || 5,
+      include: primaryIdentities,
     });
   }
 
@@ -2653,7 +2669,7 @@ export async function generateInboxResponse(
     throw new Error(`WhatsApp settings not found for org ${orgId}`);
   }
 
-  for (const contact of contacts) {
+  for (const contact of contacts.map((row) => withContactFields(row))) {
     console.log(`Seeding chats for contact: ${contact.name} (${contact.phone})`);
 
     for (let i = 0; i < (body.messagesPerContact || 1); i++) {
@@ -2933,9 +2949,9 @@ export async function getWaMessageLogs(
   const searchFilter =
     searchQuery && searchQuery.trim() !== ""
       ? isNumericSearch
-        ? Prisma.sql`AND c.phone ILIKE ${`%${searchQuery}%`}`
+        ? Prisma.sql`AND ${primaryIdentitySql("c", "phone")} ILIKE ${`%${searchQuery}%`}`
         : Prisma.sql`AND (
-            c.phone ILIKE ${`%${searchQuery}%`} OR
+            ${primaryIdentitySql("c", "phone")} ILIKE ${`%${searchQuery}%`} OR
             wm."messageBody"::text ILIKE ${`%${searchQuery}%`}
           )`
       : Prisma.sql``;
@@ -3053,7 +3069,7 @@ export async function getWaMessageLogs(
       wm."contactId",
       wm.logs,
       wm."errorMessage",
-      c.phone,
+      ${primaryIdentitySql("c", "phone")} AS phone,
 
       wm."messageBody"->'send'->>'type' AS "messageType",
 

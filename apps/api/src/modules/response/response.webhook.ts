@@ -1,3 +1,4 @@
+import { ContactIdentityKind } from "../../generated/prisma/enums.js";
 import { presentSurveyResponse, questionTitles } from "../../external/v2/surveys/presenters.js";
 import { emitWebhookEvents, type WebhookEventInput } from "../webhook/webhook.events.js";
 
@@ -41,7 +42,18 @@ export function surveyResponseCreatedData(row: CreatedSurveyResponse) {
   return {
     survey: { id: surveyId, title: survey.title, type: survey.type ?? null },
     platform: String(row.platform),
-    response: presentSurveyResponse(row, questionTitles(survey.questions ?? [])),
+    response: presentSurveyResponse(
+      // The presenter reads the phone from identities; this row carries it already resolved.
+      {
+        ...row,
+        Contact: row.Contact && {
+          identities: row.Contact.phone
+            ? [{ kind: ContactIdentityKind.PHONE, value: row.Contact.phone }]
+            : [],
+        },
+      },
+      questionTitles(survey.questions ?? []),
+    ),
   };
 }
 

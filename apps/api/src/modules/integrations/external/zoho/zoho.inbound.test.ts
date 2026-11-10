@@ -9,9 +9,16 @@ const { contact, lead, queueAdd } = vi.hoisted(() => ({
   lead: { findFirst: vi.fn() },
   queueAdd: vi.fn(),
 }));
-vi.mock("../../../../utils/prisma.js", () => ({
-  default: { contact, lead, integration: { findFirst: vi.fn() } },
-}));
+vi.mock("../../../../utils/prisma.js", () => {
+  const db = {
+    contact,
+    lead,
+    integration: { findFirst: vi.fn() },
+    $transaction: (fn: (tx: unknown) => unknown) => fn(db),
+  };
+  return { default: db };
+});
+vi.mock("../../../contact/identity/contactFields.js", () => ({ setPrimaryIdentities: vi.fn() }));
 
 vi.mock("../../../../workers/bullmq/queues/index.js", () => ({
   integrationTriggerQueue: { add: (...a: unknown[]) => queueAdd(...a) },
@@ -37,6 +44,7 @@ import {
   resolvePipelineForContact,
   setContactStage,
 } from "../../../pipeline/pipelineLead/lead.service.js";
+import { setPrimaryIdentities } from "../../../contact/identity/contactFields.js";
 import { getValidZohoAccessToken } from "./zoho.auth.js";
 import { getZohoRecordById } from "./zoho.client.js";
 import { handleZohoInbound, processZohoInboundJob } from "./zoho.inbound.js";
@@ -208,6 +216,15 @@ describe("processZohoInboundJob", () => {
       equals: "z-1",
     });
     expect(contact.update.mock.calls[0][0].data.name).toBe("Ann Smith");
+    // Zoho's email and phone (none here) are written as the contact's primary identities.
+    expect(setPrimaryIdentities).toHaveBeenCalledWith(
+      ORG,
+      "c-1",
+      { email: null, phone: null },
+      "IMPORT",
+      expect.anything(),
+    );
+    expect(contact.update.mock.calls[0][0].data).not.toHaveProperty("phone");
     expect(setContactStage).toHaveBeenCalledWith(
       expect.objectContaining({ contactId: "c-1", stageId: "stage-q", syncIntegrations: false }),
     );

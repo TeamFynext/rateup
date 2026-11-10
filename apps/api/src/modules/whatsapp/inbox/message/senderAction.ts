@@ -1,5 +1,6 @@
 import { PlatformType } from "../../../../generated/prisma/client.js";
 import prisma from "../../../../utils/prisma.js";
+import { contactFields, primaryIdentities } from "../../../contact/identity/contactFields.js";
 import { callMetaApi } from "../../wa_axios.js";
 import { getWaSettings, getWaSettingsByPhone } from "../../settings/wa_settings.service.js";
 import { getInstagramChannel, getMessengerChannel } from "../../metaChannel/metaChannel.service.js";
@@ -65,7 +66,7 @@ export async function sendSenderAction(
       messageId: true,
       sourceIdentifier: true,
       sourcePlatform: true,
-      contact: { select: { orgId: true, phone: true, igsId: true, psid: true } },
+      contact: { select: { orgId: true, ...primaryIdentities } },
     },
   });
 
@@ -103,7 +104,8 @@ export async function sendSenderAction(
     : await getMessengerChannel(latest.sourceIdentifier, orgId);
   const accessToken = settings?.pageAccessToken;
   // Instagram threads key off the IGSID, Messenger off the page-scoped id.
-  const recipientId = isInstagram ? latest.contact?.igsId : latest.contact?.psid;
+  const ids = contactFields(latest.contact?.identities);
+  const recipientId = isInstagram ? ids.igsId : ids.psid;
   if (!accessToken || !recipientId) return false;
 
   const body = { recipient: { id: recipientId }, sender_action: META_SENDER_ACTION[action] };

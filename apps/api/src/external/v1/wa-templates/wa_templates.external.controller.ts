@@ -14,6 +14,10 @@ import {
 import type { ByTemplateIdParamsSchema } from "./wa_templates.schema.js";
 import { sendTemplateToPhone } from "./sendTemplateToPhone.js";
 import prisma from "../../../utils/prisma.js";
+import {
+  contactFields,
+  primaryIdentities,
+} from "../../../modules/contact/identity/contactFields.js";
 import { log } from "../../../utils/logger.js";
 import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
 import { TemplateSendError } from "../../../modules/whatsapp/messageTemplates/templateSendError.js";
@@ -312,8 +316,7 @@ export async function sendTemplatesToContactsExternalController(
     },
     select: {
       id: true,
-      phone: true,
-      bsuid: true,
+      ...primaryIdentities,
     },
   });
 
@@ -321,7 +324,8 @@ export async function sendTemplatesToContactsExternalController(
   const failed: string[] = [];
   for (const contact of contacts) {
     // The phone, or the business-scoped user ID (BSUID) of a customer whose phone is withheld.
-    const address = contact.phone ?? contact.bsuid;
+    const { phone, bsuid } = contactFields(contact.identities);
+    const address = phone ?? bsuid;
     if (!address) continue;
     try {
       await sendTemplateToPhone({

@@ -1,7 +1,14 @@
 import type { Integration } from "../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
+import {
+  contactFields,
+  contactWhereIdentity,
+  primaryIdentities,
+} from "../../contact/identity/contactFields.js";
+import { IdentityTakenError } from "../../contact/identity/identity.service.js";
 import { log } from "../../../utils/logger.js";
 import redisConnection from "../../../utils/redisConnection.js";
+import { fillEmail } from "./woocommerce.customers.js";
 import type { WooDeliveryJobData } from "./woocommerce.inbound.js";
 import { normaliseWooPhone, type WooOrderPayload } from "./woocommerce.mapping.js";
 import { readWooCredential } from "./woocommerce.types.js";
@@ -74,7 +81,8 @@ function billingName(payload: WooOptInOrder) {
   );
 }
 
-const isUniqueViolation = (error: unknown) => (error as { code?: string } | null)?.code === "P2002";
+const isUniqueViolation = (error: unknown) =>
+  error instanceof IdentityTakenError || (error as { code?: string } | null)?.code === "P2002";
 
 export async function handleWooOrderOptIn(
   integration: Integration,
@@ -138,7 +146,7 @@ interface OptInBuyer {
 async function applyOptIn(orgId: string, buyer: OptInBuyer): Promise<"created" | "updated"> {
   const existing = await findContactByPhone(orgId, buyer.phone);
   if (existing) {
-    await updateExisting(existing, buyer);
+    await updateExisting(orgId, existing, buyer);
     return "updated";
   }
 
@@ -161,29 +169,38 @@ async function applyOptIn(orgId: string, buyer: OptInBuyer): Promise<"created" |
     if (!isUniqueViolation(error)) throw error;
     const raced = await findContactByPhone(orgId, buyer.phone);
     if (!raced) throw error;
-    await updateExisting(raced, buyer);
+    await updateExisting(orgId, raced, buyer);
     return "updated";
   }
 }
 
-function findContactByPhone(orgId: string, phone: string) {
-  return prisma.contact.findUnique({
-    where: { contact_phone_org_id_unique: { phone, orgId } },
-    select: { id: true, name: true, email: true, consent: true },
+async function findContactByPhone(orgId: string, phone: string) {
+  const row = await prisma.contact.findFirst({
+    where: { orgId, ...contactWhereIdentity("phone", phone) },
+    select: { id: true, name: true, consent: true, ...primaryIdentities },
   });
+  return (
+    row && {
+      id: row.id,
+      name: row.name,
+      consent: row.consent,
+      email: contactFields(row.identities).email,
+    }
+  );
 }
 
 /** Fills only what the contact lacks; nothing a person typed in RateUp is overwritten. */
 async function updateExisting(
+  orgId: string,
   existing: { id: string; name: string | null; email: string | null; consent: boolean },
   buyer: OptInBuyer,
 ) {
   const patch = {
     ...(!existing.name?.trim() && buyer.name && { name: buyer.name }),
-    ...(!existing.email?.trim() && buyer.email && { email: buyer.email }),
     ...(buyer.optIn && !existing.consent && { consent: true }),
   };
   if (Object.keys(patch).length) {
     await prisma.contact.update({ where: { id: existing.id }, data: patch });
   }
+  if (!existing.email?.trim() && buyer.email) await fillEmail(orgId, existing.id, buyer.email);
 }

@@ -889,8 +889,10 @@ describe("ruleRecipient", () => {
     expect(ruleRecipient({ phone: null, psid: "psid-1" }, "FACEBOOK")).toBe("psid-1");
   });
 
-  test("Instagram and WhatsApp contacts are reached by phone, where Instagram keeps the igsId", () => {
-    expect(ruleRecipient({ phone: "igsid-1", psid: null }, "INSTAGRAM")).toBe("igsid-1");
+  test("an Instagram contact is reached by its igsId, a WhatsApp one by phone", () => {
+    expect(ruleRecipient({ phone: null, igsId: "igsid-1", psid: null }, "INSTAGRAM")).toBe(
+      "igsid-1",
+    );
     expect(ruleRecipient({ phone: "919800000000", psid: "psid-1" }, "WHATSAPP")).toBe(
       "919800000000",
     );
@@ -1107,8 +1109,8 @@ describe("Facebook (Messenger) rules", () => {
     await checkAndExecuteRuleByTriggerEvent(TriggerEvent.MESSAGE_RECEIVED, messengerContext);
 
     expect(db.contact.findFirst.mock.calls[0][0].where).toEqual({
-      psid: "psid-1",
       orgId: "org-1",
+      identities: { some: { kind: "FB_PSID", value: "psid-1" } },
     });
     expect(db.contactLabelMap.upsert).toHaveBeenCalled();
   });
@@ -1131,7 +1133,10 @@ describe("Facebook (Messenger) rules", () => {
   });
 
   test("checks contact conditions against the psid contact", async () => {
-    db.contact.findFirst.mockResolvedValue({ id: "contact-1", email: "a@b.com" });
+    db.contact.findFirst.mockResolvedValue({
+      id: "contact-1",
+      identities: [{ kind: "EMAIL", value: "a@b.com" }],
+    });
     db.rule.findMany.mockResolvedValue([messengerRule([], { groups: emailCondition })]);
 
     const result = await checkAndExecuteRuleByTriggerEvent(
@@ -1141,8 +1146,8 @@ describe("Facebook (Messenger) rules", () => {
 
     expect(result).toBeDefined();
     expect(db.contact.findFirst.mock.calls[0][0].where).toEqual({
-      psid: "psid-1",
       orgId: "org-1",
+      identities: { some: { kind: "FB_PSID", value: "psid-1" } },
     });
     expect(getContactByPhoneNumberAndOrgId).not.toHaveBeenCalled();
   });

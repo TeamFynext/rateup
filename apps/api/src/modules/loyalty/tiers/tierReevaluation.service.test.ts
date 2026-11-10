@@ -48,7 +48,11 @@ function program(over: Record<string, unknown> = {}) {
 }
 
 function member(id: string, currentTierId: string | null, phone: string | null = `9${id}`) {
-  return { id, currentTierId, contact: { phone, name: `Member ${id}` } };
+  return {
+    id,
+    currentTierId,
+    contact: { name: `Member ${id}`, identities: phone ? [{ kind: "PHONE", value: phone }] : [] },
+  };
 }
 
 function spent(rows: Record<string, number>) {

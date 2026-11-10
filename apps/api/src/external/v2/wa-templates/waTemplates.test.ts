@@ -468,7 +468,9 @@ describe("GET /messages/:messageId/status", () => {
 
 describe("POST /:templateId/send/contacts", () => {
   test("only the org's contacts are sent to; the rest are skipped", async () => {
-    db.contact.findMany.mockResolvedValue([{ id: CONTACT_A, phone: "919000000001" }]);
+    db.contact.findMany.mockResolvedValue([
+      { id: CONTACT_A, identities: [{ kind: "PHONE", value: "919000000001" }] },
+    ]);
     const app = await buildApp();
     const res = await app.inject({
       method: "POST",
@@ -504,8 +506,8 @@ describe("POST /:templateId/send/contacts", () => {
 
   test("a per-contact Meta refusal is reported, not thrown", async () => {
     db.contact.findMany.mockResolvedValue([
-      { id: CONTACT_A, phone: "919000000001" },
-      { id: CONTACT_B, phone: "919000000002" },
+      { id: CONTACT_A, identities: [{ kind: "PHONE", value: "919000000001" }] },
+      { id: CONTACT_B, identities: [{ kind: "PHONE", value: "919000000002" }] },
     ]);
     core
       .mockResolvedValueOnce({ status: true, message: "wamid.1" })

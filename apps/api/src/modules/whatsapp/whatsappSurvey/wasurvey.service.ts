@@ -2,6 +2,7 @@ import { isBsuid } from "../bsuid.js";
 import { emitSurveyResponseSubmitted } from "../../integrations/events/emitIntegrationEvent.js";
 import { randomUUID } from "node:crypto";
 import {
+  ContactIdentityKind,
   PlatformType,
   Prisma,
   ResponsePlatform,
@@ -33,6 +34,7 @@ import {
   updateDripCampaignParticipant,
 } from "../../campaign/campaignParticipants/campaignParticipants.service.js";
 import { getOrCreateContactByPhone } from "../../contact/contact.service.js";
+import { normalizeIdentityValue } from "../../contact/identity/identity.service.js";
 import { getQuestionsBySurveyId } from "../../question/question.service.js";
 import { CreateResponseInput } from "../../response/response.schema.js";
 import {
@@ -248,9 +250,23 @@ export async function sendMessage(
 }
 
 /** Contacts named by a block/unblock list, whose entries are phones or BSUIDs. */
-function customersIn(ids: string[] | undefined) {
+function customersIn(ids: string[] | undefined): Prisma.ContactWhereInput {
   const list = ids ?? [];
-  return { OR: [{ phone: { in: list } }, { bsuid: { in: list } }] };
+  const values = (kind: ContactIdentityKind) =>
+    list.map((id) => normalizeIdentityValue(kind, id)).filter(Boolean);
+  return {
+    identities: {
+      some: {
+        OR: [
+          { kind: ContactIdentityKind.PHONE, value: { in: values(ContactIdentityKind.PHONE) } },
+          {
+            kind: ContactIdentityKind.WA_BSUID,
+            value: { in: values(ContactIdentityKind.WA_BSUID) },
+          },
+        ],
+      },
+    },
+  };
 }
 
 function createBlockWhatsappUserBody(phoneNumbersList: string[]) {

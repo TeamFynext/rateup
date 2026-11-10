@@ -991,7 +991,7 @@ export async function createOrderFromInbox(input: {
   const store = await getOrCreateStore(input.orgId);
   const contact = await prisma.contact.findFirst({
     where: { id: input.contactId, orgId: input.orgId },
-    select: { id: true, name: true, phone: true },
+    select: { id: true, name: true },
   });
   if (!contact) throw new ShopError("NOT_FOUND", "Contact not found");
   const external = storeChecksOut(store);

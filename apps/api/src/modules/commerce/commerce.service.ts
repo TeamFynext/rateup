@@ -6,6 +6,12 @@ import utc from "dayjs/plugin/utc.js";
 dayjs.extend(utc);
 import prisma from "../../utils/prisma.js";
 import { Prisma } from "../../generated/prisma/client.js";
+import {
+  contactFields,
+  contactWhereIdentityContains,
+  primaryIdentities,
+  type PrimaryIdentityRow,
+} from "../contact/identity/contactFields.js";
 import type {
   CommerceFilter,
   CommerceOrdersQuery,
@@ -121,7 +127,7 @@ function buildOrderWhere(
     where.contact = {
       OR: [
         { name: { contains: filter.search, mode: "insensitive" } },
-        { phone: { contains: filter.search, mode: "insensitive" } },
+        contactWhereIdentityContains(["phone"], filter.search),
       ],
     };
   }
@@ -140,8 +146,23 @@ const orderSelect = {
   transactionId: true,
   createdAt: true,
   deliveryOption: true,
-  contact: { select: { id: true, name: true, phone: true } },
+  contact: { select: { id: true, name: true, ...primaryIdentities } },
 } satisfies Prisma.WaCatalogOrderSelect;
+
+/** An order row with its contact back in the `{ id, name, phone }` shape the API returns. */
+function withOrderContact<
+  T extends {
+    contact: { id: string; name: string | null; identities: PrimaryIdentityRow[] } | null;
+  },
+>(order: T) {
+  const { contact, ...rest } = order;
+  return {
+    ...rest,
+    contact: contact
+      ? { id: contact.id, name: contact.name, phone: contactFields(contact.identities).phone }
+      : null,
+  };
+}
 
 interface CommerceChannel {
   catalogId: string;
@@ -372,7 +393,7 @@ export async function getCommerceOrders(orgId: string, filter: CommerceOrdersQue
 
   return {
     totalCount,
-    data: rows.map((order) => ({
+    data: rows.map(withOrderContact).map((order) => ({
       ...order,
       total: orderTotal(order.products, order.deliveryOption),
       itemCount: orderItemCount(order.products),
@@ -392,7 +413,7 @@ export async function getAllCommerceOrders(
     select: orderSelect,
     orderBy: { createdAt: "desc" },
   });
-  return rows.map((order) => ({
+  return rows.map(withOrderContact).map((order) => ({
     ...order,
     total: orderTotal(order.products, order.deliveryOption),
     itemCount: orderItemCount(order.products),

@@ -13,11 +13,9 @@ import { suggestMerge } from "../merge/suggestions.service.js";
  * Contact identities: every way one person is known — phones, emails, WhatsApp BSUIDs,
  * Instagram and Messenger ids, integration ids — any number of each.
  *
- * During the expand phase the contact's legacy columns (`phone`, `email`, `bsuid`, `igsId`,
- * `psid`) stay authoritative for its *primary* identity of each kind, and every lookup tries
- * identities first and the column second. So a contact with no identity rows yet (not
- * backfilled) still matches, and a merged contact's second phone or second Instagram id —
- * which only exists here — matches too.
+ * A contact's `phone`, `email`, `bsuid`, `igsId` and `psid` are its *primary* identity of
+ * each kind (at most one per kind); `contactFields.ts` reads and writes them. Lookups match
+ * any identity, so a merged contact's second phone or second Instagram id matches too.
  *
  * Never match on a name, username or picture: only exact identifiers belong here.
  */
@@ -45,26 +43,15 @@ const CHANNEL_SCOPED: ContactIdentityKind[] = [
   ContactIdentityKind.WEBCHAT,
 ];
 
-/** The legacy Contact column that mirrors the primary identity of a kind, if any. */
-export const LEGACY_COLUMN: Partial<
-  Record<ContactIdentityKind, "phone" | "email" | "bsuid" | "igsId" | "psid">
-> = {
-  [ContactIdentityKind.PHONE]: "phone",
-  [ContactIdentityKind.EMAIL]: "email",
-  [ContactIdentityKind.WA_BSUID]: "bsuid",
-  [ContactIdentityKind.IG_SCOPED]: "igsId",
-  [ContactIdentityKind.FB_PSID]: "psid",
-};
-
 /** E.164 allows at most 15 digits; Instagram and Messenger ids are 16 or more. */
 const PHONE_DIGITS_RE = /^\d{7,15}$/;
 
 /**
- * The phone number a contact's `phone` column really holds, or null. Older Instagram and
- * Messenger paths copied the platform id into `phone`, and older WhatsApp paths a BSUID, so
- * the column alone is not proof of a number anyone can message or call.
+ * The phone number a stored `phone` value really is, or null. Older Instagram and Messenger
+ * paths copied the platform id into `phone`, and older WhatsApp paths a BSUID, so such a
+ * value alone is not proof of a number anyone can message or call.
  */
-export function legacyPhone(contact: {
+function legacyPhone(contact: {
   phone?: string | null;
   igsId?: string | null;
   psid?: string | null;
@@ -203,7 +190,7 @@ export async function attachIdentity(
   }
 }
 
-/** What a contact's legacy columns say about its identities (for the backfill and sync). */
+/** The identities a set of old-style contact values stands for (imports, merges). */
 export function identitiesFromContact(contact: {
   phone?: string | null;
   email?: string | null;
@@ -352,28 +339,22 @@ export async function listContactIdentities(orgId: string, contactId: string) {
 }
 
 /**
- * Keeps a contact's legacy column in step with its primary identity of one kind. Used by
- * merge and identity removal; the old readers keep working off the column.
+ * Makes sure the contact has a primary identity of this kind when it has any (after a
+ * merge or a removal took the old primary away): the oldest one is promoted.
  */
-export async function syncLegacyColumn(
+export async function ensurePrimary(
   contactId: string,
   kind: ContactIdentityKind,
   db: Db = prisma,
 ): Promise<void> {
-  const column = LEGACY_COLUMN[kind];
-  if (!column) return;
   const primary = await db.contactIdentity.findFirst({
     where: { contactId, kind },
     orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
-    select: { id: true, value: true, isPrimary: true },
+    select: { id: true, isPrimary: true },
   });
   if (primary && !primary.isPrimary) {
     await db.contactIdentity.update({ where: { id: primary.id }, data: { isPrimary: true } });
   }
-  await db.contact.update({
-    where: { id: contactId },
-    data: { [column]: primary?.value ?? null },
-  });
 }
 
 /**
@@ -397,18 +378,7 @@ export async function addManualIdentity(
   if (input.kind === ContactIdentityKind.EMAIL && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
     return { status: "invalid" as const };
   }
-  // Someone holding it only in the legacy column (not backfilled) counts as holding it.
-  const column = LEGACY_COLUMN[input.kind];
-  const holder =
-    (await findContactIdByIdentity(orgId, input.kind, value)) ??
-    (column
-      ? (
-          await prisma.contact.findFirst({
-            where: { orgId, [column]: value, id: { not: contactId } },
-            select: { id: true },
-          })
-        )?.id
-      : null);
+  const holder = await findContactIdByIdentity(orgId, input.kind, value);
   if (holder && holder !== contactId) {
     await suggestMerge(orgId, contactId, holder, {
       reason: input.kind === ContactIdentityKind.EMAIL ? "SAME_EMAIL" : "SAME_PHONE",
@@ -424,15 +394,14 @@ export async function addManualIdentity(
   if (result?.status === "owned_by_other") {
     return { status: "owned_by_other" as const, ownerContactId: result.ownerContactId };
   }
-  await syncLegacyColumn(contactId, input.kind);
   return { status: "ok" as const, identityId: result?.identityId };
 }
 
 /**
  * Changes a phone or email a contact is known by — a typo fixed, a new number — and/or makes
- * it the contact's main one of its kind, which is what the contact's phone/email column (and
- * so every older reader) shows. Platform ids (BSUID, Instagram, Messenger) are what the
- * platform told us and are never edited by hand.
+ * it the contact's main one of its kind, which is what the contact's `phone`/`email` shows.
+ * Platform ids (BSUID, Instagram, Messenger) are what the platform told us and are never
+ * edited by hand.
  */
 export async function updateManualIdentity(
   orgId: string,
@@ -456,17 +425,7 @@ export async function updateManualIdentity(
     return { status: "invalid" as const };
   }
   if (value !== identity.value) {
-    const column = LEGACY_COLUMN[identity.kind];
-    const holder =
-      (await findContactIdByIdentity(orgId, identity.kind, value)) ??
-      (column
-        ? (
-            await prisma.contact.findFirst({
-              where: { orgId, [column]: value, id: { not: contactId } },
-              select: { id: true },
-            })
-          )?.id
-        : null);
+    const holder = await findContactIdByIdentity(orgId, identity.kind, value);
     if (holder && holder !== contactId) {
       await suggestMerge(orgId, contactId, holder, {
         reason: identity.kind === ContactIdentityKind.EMAIL ? "SAME_EMAIL" : "SAME_PHONE",
@@ -495,7 +454,7 @@ export async function updateManualIdentity(
           : {}),
       },
     });
-    await syncLegacyColumn(contactId, identity.kind, tx);
+    await ensurePrimary(contactId, identity.kind, tx);
   });
   return { status: "ok" as const };
 }
@@ -525,17 +484,7 @@ export async function suggestFromProvidedDetails(
   }
   for (const candidate of candidates) {
     try {
-      const column = LEGACY_COLUMN[candidate.kind];
-      const owner =
-        (await findContactIdByIdentity(orgId, candidate.kind, candidate.value)) ??
-        (column
-          ? (
-              await prisma.contact.findFirst({
-                where: { orgId, [column]: candidate.value, id: { not: contactId } },
-                select: { id: true },
-              })
-            )?.id
-          : null);
+      const owner = await findContactIdByIdentity(orgId, candidate.kind, candidate.value);
       if (owner && owner !== contactId) {
         await suggestMerge(orgId, contactId, owner, {
           reason: "CUSTOMER_PROVIDED",
@@ -557,7 +506,7 @@ export async function removeIdentity(orgId: string, contactId: string, identityI
   const remaining = await prisma.contactIdentity.count({ where: { contactId } });
   if (remaining <= 1) return { status: "last_identity" as const };
   await prisma.contactIdentity.delete({ where: { id: identity.id } });
-  await syncLegacyColumn(contactId, identity.kind);
+  await ensurePrimary(contactId, identity.kind);
   return { status: "ok" as const };
 }
 
@@ -575,19 +524,16 @@ export class IdentityTakenError extends Error {
   }
 }
 
-/** The identity kinds a contact's edit form writes straight into a column. */
+/**
+ * Contact columns mirrored as an identity: `external_id` is still a column, and also an
+ * EXTERNAL identity. (Phone and email are identities only; `setPrimaryIdentities` writes them.)
+ */
 export const EDITABLE_COLUMN_KINDS = {
-  phone: ContactIdentityKind.PHONE,
-  email: ContactIdentityKind.EMAIL,
   external_id: ContactIdentityKind.EXTERNAL,
 } as const;
 export type EditableColumn = keyof typeof EDITABLE_COLUMN_KINDS;
 
-/**
- * Refuses a phone or email another contact is known by. The column's own unique index
- * only sees other contacts' columns; a merged contact's second number lives only in its
- * identities.
- */
+/** Refuses a phone or email another contact is known by. */
 export async function assertIdentityFree(
   orgId: string,
   contactId: string,
@@ -602,9 +548,8 @@ export async function assertIdentityFree(
 }
 
 /**
- * After an edit changed a contact's phone, email or external id column: the identity the
- * old value stood for goes, and the new value becomes the primary identity of its kind.
- * Other identities of that kind (a merged second number) are left alone. Never throws —
+ * After an edit changed a contact's external id column: the identity the old value stood
+ * for goes, and the new value becomes the primary identity of its kind. Never throws —
  * the edit itself has already been saved.
  */
 export async function replaceColumnIdentity(
@@ -615,7 +560,7 @@ export async function replaceColumnIdentity(
   newValue: string | null | undefined,
 ): Promise<void> {
   const kind = EDITABLE_COLUMN_KINDS[column];
-  const scope = kind === ContactIdentityKind.EXTERNAL ? "external_id" : "";
+  const scope = "external_id";
   const before = oldValue ? normalizeIdentityValue(kind, oldValue) : "";
   const after = newValue ? normalizeIdentityValue(kind, newValue) : "";
   if (before === after) return;
@@ -630,7 +575,7 @@ export async function replaceColumnIdentity(
       kind,
       value: after,
       source: ContactIdentitySource.AGENT,
-      ...(kind === ContactIdentityKind.EXTERNAL ? { integration: "external_id" } : {}),
+      integration: "external_id",
     });
     if (!result || result.status === "owned_by_other") return;
     await prisma.$transaction([

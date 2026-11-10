@@ -1,5 +1,6 @@
 import { WaMessage, WhatsappSettings } from "../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
+import { contactFields, primaryIdentities } from "../../contact/identity/contactFields.js";
 import { callMetaApi, GraphApiError } from "../wa_axios.js";
 import {
   CatalogWhatsappSettingSchema,
@@ -520,9 +521,9 @@ export async function handleWaOrderfromCatalog(
 
   const contact = await prisma.contact.findUnique({
     where: { id: messageObj.contactId },
-    select: { phone: true },
+    select: primaryIdentities,
   });
-  const customerPhone = contact?.phone ?? data.messages[0].from;
+  const customerPhone = contactFields(contact?.identities).phone ?? data.messages[0].from;
 
   // Route 1: Shopify Checkout URL - send cart link immediately
   if (

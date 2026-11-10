@@ -33,7 +33,7 @@ vi.mock("../../../modules/contact/identity/identity.service.js", async (importOr
     findContactIdByIdentity: vi.fn(),
     listContactIdentities: vi.fn(),
     removeIdentity: vi.fn(),
-    syncLegacyColumn: vi.fn(),
+    ensurePrimary: vi.fn(),
   };
 });
 vi.mock("../../../modules/contact/merge/merge.service.js", () => ({ mergeContacts: vi.fn() }));
@@ -54,7 +54,7 @@ import {
   findContactIdByIdentity,
   listContactIdentities,
   removeIdentity,
-  syncLegacyColumn,
+  ensurePrimary,
 } from "../../../modules/contact/identity/identity.service.js";
 import { mergeContacts } from "../../../modules/contact/merge/merge.service.js";
 import { suggestMerge } from "../../../modules/contact/merge/suggestions.service.js";
@@ -91,22 +91,21 @@ function identity(overrides: Record<string, unknown> = {}) {
   };
 }
 
+/** `phone` becomes the contact's primary PHONE identity, as it is stored now. */
 function contact(overrides: Record<string, unknown> = {}) {
+  const { phone = "919876543210", ...rest } = overrides;
   return {
     id: ID,
     name: "Ann",
-    phone: "919876543210",
-    bsuid: null,
     whatsappUserName: null,
-    email: "ann@example.com",
     external_id: null,
     source: "external",
     consent: true,
     createdAt: new Date("2026-01-01T00:00:00.000Z"),
     ContactLabelMap: [],
     customFields: [],
-    identities: [identity()],
-    ...overrides,
+    identities: phone ? [identity({ value: phone })] : [],
+    ...rest,
   };
 }
 
@@ -161,16 +160,28 @@ describe("GET /lookup", () => {
     ]);
   });
 
-  test("falls back to the legacy column for a contact not backfilled yet", async () => {
-    db.contact.findFirst.mockResolvedValue(contact({ bsuid: "US.1349120865530274" }));
+  test("a BSUID is found by its identity and shown as the contact's businessScopedUserId", async () => {
+    m(findContactIdByIdentity).mockResolvedValue(ID);
+    db.contact.findFirst.mockResolvedValue(
+      contact({
+        identities: [identity(), identity({ kind: "WA_BSUID", value: "US.1349120865530274" })],
+      }),
+    );
     const app = await buildApp();
     const res = await app.inject({ url: "/lookup?kind=WA_BSUID&value=US.1349120865530274" });
     expect(res.statusCode).toBe(200);
-    expect(db.contact.findFirst.mock.calls[0]![0].where).toEqual({
-      bsuid: "US.1349120865530274",
-      orgId: ORG,
+    expect(findContactIdByIdentity).toHaveBeenCalledWith(ORG, "WA_BSUID", "US.1349120865530274");
+    expect(body(res)).toMatchObject({
+      phone: "919876543210",
+      businessScopedUserId: "US.1349120865530274",
     });
-    expect(body(res).businessScopedUserId).toBe("US.1349120865530274");
+  });
+
+  test("a phone or BSUID nobody holds is a 404, with no column to look in", async () => {
+    const app = await buildApp();
+    const res = await app.inject({ url: "/lookup?kind=WA_BSUID&value=US.1349120865530274" });
+    expect(res.statusCode).toBe(404);
+    expect(db.contact.findFirst).not.toHaveBeenCalled();
   });
 
   test("channelId narrows a per-channel id to that channel (or one recorded unscoped)", async () => {
@@ -200,6 +211,7 @@ describe("GET /lookup", () => {
   });
 
   test("the old ?phone= form still works", async () => {
+    m(findContactIdByIdentity).mockResolvedValue(ID);
     db.contact.findFirst.mockResolvedValue(contact());
     const app = await buildApp();
     const res = await app.inject({ url: "/lookup?phone=%2B919876543210" });
@@ -254,7 +266,7 @@ describe("GET /:contactId/identities", () => {
 });
 
 describe("POST /:contactId/identities", () => {
-  test("adds a phone as IMPORT, unverified, keeping the column's phone primary", async () => {
+  test("adds a phone as IMPORT, unverified, keeping the current primary", async () => {
     db.contact.findFirst.mockResolvedValue(contact());
     m(attachIdentity).mockResolvedValue({ status: "attached", identityId: IDENTITY });
     db.contactIdentity.findFirst.mockResolvedValue(
@@ -268,17 +280,16 @@ describe("POST /:contactId/identities", () => {
     });
     expect(res.statusCode).toBe(201);
     expect(body(res)).toMatchObject({ value: "919812345678", primary: false });
-    // The not-yet-backfilled column phone first, then the new one.
-    expect(m(attachIdentity).mock.calls.map((c) => c[2].value)).toEqual([
-      "919876543210",
-      "919812345678",
-    ]);
-    expect(m(attachIdentity).mock.calls[1]![2]).toMatchObject({
+    expect(m(attachIdentity).mock.calls.map((c) => c[2].value)).toEqual(["919812345678"]);
+    expect(m(attachIdentity).mock.calls[0]![2]).toMatchObject({
       kind: "PHONE",
       source: "IMPORT",
       verified: false,
     });
-    expect(syncLegacyColumn).toHaveBeenCalledWith(ID, "PHONE");
+    // Promotes it only when the contact has no primary phone.
+    expect(ensurePrimary).toHaveBeenCalledWith(ID, "PHONE");
+    // The primary did not move, so the CRMs hear nothing.
+    expect(emitIntegrationEvent).not.toHaveBeenCalled();
   });
 
   test("an id the contact already has is a 200", async () => {
@@ -321,7 +332,7 @@ describe("POST /:contactId/identities", () => {
       source: "IMPORT",
       verified: true,
     });
-    expect(syncLegacyColumn).not.toHaveBeenCalled();
+    expect(ensurePrimary).not.toHaveBeenCalled();
   });
 
   test("platform ids cannot be added", async () => {
@@ -355,17 +366,17 @@ describe("POST /:contactId/identities", () => {
     });
   });
 
-  test("held only in another contact's legacy column is a 409 too", async () => {
+  test("held only in another contact's externalId column is a 409 too", async () => {
     db.contact.findFirst.mockResolvedValueOnce(contact()).mockResolvedValueOnce({ id: OTHER });
     const app = await buildApp();
     const res = await app.inject({
       method: "POST",
       url: `/${ID}/identities`,
-      payload: { kind: "PHONE", value: "919812345678" },
+      payload: { kind: "EXTERNAL", value: "crm-9", integration: "external_id" },
     });
     expect(res.statusCode).toBe(409);
     expect(db.contact.findFirst.mock.calls[1]![0].where).toEqual({
-      phone: { in: ["919812345678", "+919812345678"] },
+      external_id: "crm-9",
       orgId: ORG,
       id: { not: ID },
     });
@@ -374,7 +385,6 @@ describe("POST /:contactId/identities", () => {
   test("a primary phone change tells the CRMs", async () => {
     db.contact.findFirst
       .mockResolvedValueOnce(contact({ phone: null }))
-      .mockResolvedValueOnce(null)
       .mockResolvedValueOnce(contact({ phone: "919812345678" }));
     m(attachIdentity).mockResolvedValue({ status: "attached", identityId: IDENTITY });
     db.contactIdentity.findFirst.mockResolvedValue(identity({ value: "919812345678" }));
@@ -387,8 +397,13 @@ describe("POST /:contactId/identities", () => {
     expect(res.statusCode).toBe(201);
     expect(emitIntegrationEvent).toHaveBeenCalledWith(
       ORG,
-      expect.objectContaining({ type: "contact.updated", changed: ["details"] }),
+      expect.objectContaining({
+        type: "contact.updated",
+        changed: ["details"],
+        contact: expect.objectContaining({ id: ID, phone: "919812345678" }),
+      }),
     );
+    expect(ensurePrimary).toHaveBeenCalledWith(ID, "PHONE");
   });
 });
 

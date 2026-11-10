@@ -3,6 +3,7 @@ import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
 import { sendLoyaltyEvent } from "../messaging/send.js";
 import { computeQualifyingSpendBatch, pickQualifiedTier } from "./qualifyingSpend.js";
+import { contactFields, primaryIdentities } from "../../contact/identity/contactFields.js";
 
 /** Members are read in pages this size so a large programme never loads all at once. */
 const PAGE_SIZE = 500;
@@ -98,7 +99,7 @@ export async function reevaluateProgramTiers(program: ProgramLadder): Promise<Pr
         id: true,
         currentTierId: true,
         totalSpend: true,
-        contact: { select: { phone: true, name: true } },
+        contact: { select: { name: true, ...primaryIdentities } },
       },
     });
     if (members.length === 0) break;
@@ -128,7 +129,7 @@ export async function reevaluateProgramTiers(program: ProgramLadder): Promise<Pr
       if (up) {
         moves.promoted += 1;
         // An untiered member landing on the base rung is a placement, not news.
-        if (Number(target.threshold) > 0 && member.contact?.phone) {
+        if (Number(target.threshold) > 0 && contactFields(member.contact.identities).phone) {
           try {
             await sendLoyaltyEvent(
               program.orgId,

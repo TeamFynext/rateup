@@ -146,7 +146,9 @@ describe("a. survey responses are scoped to the key's org", () => {
     const sql = (strings as string[]).join("?");
     expect(sql).toMatch(/s\."orgId"\s*=\s*\?::uuid/);
     expect(sql).not.toMatch(/WaFlow/);
-    expect(values).toEqual([ID(9), ORG]);
+    // The first value is the phone column's fragment, read from the contact's identities.
+    expect((values[0] as { sql: string }).sql).toContain('"ContactIdentity"');
+    expect(values.slice(1)).toEqual([ID(9), ORG]);
   });
 
   test("keeps v1's response shape", async () => {
@@ -263,7 +265,9 @@ describe("c. template sends refuse another org's team", () => {
 
   test("send-to-contacts reaches only the org's contacts", async () => {
     dashboard.getTemplateByIdAndOrgId.mockResolvedValue({ id: "tpl" });
-    db.contact.findMany.mockResolvedValue([{ id: ID(1), phone: "919876543210" }]);
+    db.contact.findMany.mockResolvedValue([
+      { id: ID(1), identities: [{ kind: "PHONE", value: "919876543210" }] },
+    ]);
     const reply = fakeReply();
     await sendTemplatesToContactsExternalController(
       req({ params: { templateId: "tpl" }, body: { contactIds: [ID(1), ID(2)] } }),

@@ -2,6 +2,7 @@ import prisma from "../../utils/prisma.js";
 import { log } from "../../utils/logger.js";
 import { emitWebhookEvents } from "../webhook/webhook.events.js";
 import type { EnvelopeWebhookEventName } from "../webhook/webhook.schema.js";
+import { contactFields, primaryIdentities } from "../contact/identity/contactFields.js";
 
 /**
  * `loyalty.points.*` webhook events, one per ledger row.
@@ -66,10 +67,13 @@ export function loyaltyPointsData(row: LoyaltyLedgerRow, member: LoyaltyMemberRe
 async function loadMembers(accountIds: string[]): Promise<Map<string, LoyaltyMemberRef>> {
   const accounts = await prisma.customerLoyaltyAccount.findMany({
     where: { id: { in: accountIds } },
-    select: { id: true, cardCode: true, contact: { select: { phone: true } } },
+    select: { id: true, cardCode: true, contact: { select: primaryIdentities } },
   });
   return new Map(
-    accounts.map((a) => [a.id, { phone: a.contact?.phone ?? null, cardCode: a.cardCode }]),
+    accounts.map((a) => [
+      a.id,
+      { phone: contactFields(a.contact.identities).phone, cardCode: a.cardCode },
+    ]),
   );
 }
 

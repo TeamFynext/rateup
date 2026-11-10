@@ -1,4 +1,12 @@
 import { ContactGroupType } from "./contactGroup/contactGroup.schema.js";
+import { ContactIdentitySource } from "../../generated/prisma/enums.js";
+import {
+  findOrCreateContactByIdentity,
+  primaryIdentities,
+  setPrimaryIdentities,
+  withContactFields,
+} from "./identity/contactFields.js";
+import { IdentityTakenError } from "./identity/identity.service.js";
 import { log } from "../../utils/logger.js";
 import prisma from "../../utils/prisma.js";
 import { SubscriptionFeaturePathName } from "../../types/enums.js";
@@ -48,44 +56,44 @@ export async function createLCustomer(input: CreateLCustomerInput) {
     throw new Error("A loyalty customer cannot be created without a phone number");
   }
   const phone = parsePhoneforWa(input.phone);
-  const contact = await prisma.contact.upsert({
-    where: {
-      contact_phone_org_id_unique: {
-        phone,
-        orgId: input.orgId,
-      },
-    },
-    update: {
-      source: ContactGroupType.LOYALTY,
-      ...(input.name !== undefined ? { name: input.name } : {}),
-      ...(input.email !== undefined ? { email: input.email } : {}),
-      ...(input.external_id !== undefined ? { external_id: input.external_id } : {}),
-      ...(input.dob !== undefined ? { dob: input.dob ?? null } : {}),
-      // loyaltyAccounts: {
-      //   create: {
-      //     // orgId: input.orgId,
-
-      //   },
-      // },
-    },
-    create: {
-      phone,
-      name: input.name,
-      source: ContactGroupType.LOYALTY,
-      orgId: input.orgId,
-      dob: input.dob ?? null,
-      email: input.email,
-      external_id: input.external_id,
-      // loyaltyCustomer: {
-      //   create: {
-      //     orgId: input.orgId,
-      //   },
-      // },
-    },
-    // include: {
-    //   loyaltyCustomer: true,
-    // },
-  });
+  const details = {
+    ...(input.name !== undefined ? { name: input.name } : {}),
+    ...(input.external_id !== undefined ? { external_id: input.external_id } : {}),
+    ...(input.dob !== undefined ? { dob: input.dob ?? null } : {}),
+  };
+  const { contact: found, created } = await findOrCreateContactByIdentity(
+    input.orgId,
+    "phone",
+    phone,
+    { ...details, source: ContactGroupType.LOYALTY, dob: input.dob ?? null },
+    { source: ContactIdentitySource.CUSTOMER },
+  );
+  if (!created) {
+    await prisma.contact.update({
+      where: { id: found.id },
+      data: { ...details, source: ContactGroupType.LOYALTY },
+    });
+  }
+  if (input.email !== undefined) {
+    try {
+      await setPrimaryIdentities(
+        input.orgId,
+        found.id,
+        { email: input.email },
+        ContactIdentitySource.CUSTOMER,
+      );
+    } catch (err) {
+      // Emails were never unique on a contact; one another contact holds is left with it.
+      if (!(err instanceof IdentityTakenError)) throw err;
+      log.info({ contactId: found.id }, "Loyalty registration email belongs to another contact");
+    }
+  }
+  const contact = withContactFields(
+    await prisma.contact.findUniqueOrThrow({
+      where: { id: found.id },
+      select: { id: true, name: true, dob: true, ...primaryIdentities },
+    }),
+  );
   if (input.customFields?.length) {
     await prisma.contactCustomFieldValue.deleteMany({
       where: {

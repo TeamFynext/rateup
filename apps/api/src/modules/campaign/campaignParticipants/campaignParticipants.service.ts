@@ -1,6 +1,13 @@
 import { CampaignParticipantSource, CampaignParticipantStatus } from "../../../types/enums.js";
 import prisma from "../../../utils/prisma.js";
 import {
+  contactFields,
+  contactWhereIdentityContains,
+  primaryIdentities,
+  withContactFields,
+  type PrimaryIdentityRow,
+} from "../../contact/identity/contactFields.js";
+import {
   CreateCampaignParticipantsFromContactsInput,
   CreateCampaignParticipantsFromGroupsInput,
   CreateCampaignParticipantsInput,
@@ -201,14 +208,21 @@ export async function getCampaignParticipantsByCampaignId(campaignId: string, _e
       contact: {
         select: {
           name: true,
-          phone: true,
           consent: true,
+          ...primaryIdentities,
         },
       },
     },
   });
 
-  return campaignParticipants;
+  return campaignParticipants.map(({ contact, ...participant }) => ({
+    ...participant,
+    contact: {
+      name: contact.name,
+      phone: contactFields(contact.identities).phone,
+      consent: contact.consent,
+    },
+  }));
 }
 
 /** One row's worth of attempt history, as the participants table renders it. */
@@ -316,7 +330,9 @@ export async function getCampaignParticipantsByCampaignIdPaginated(
   if (filter) {
     const params = new URLSearchParams(filter);
     for await (const [key, value] of params.entries()) {
-      if (key === "name" || key === "phone") {
+      if (key === "phone") {
+        filterData.push({ contact: contactWhereIdentityContains(["phone"], value) });
+      } else if (key === "name") {
         filterData.push({
           contact: {
             [key]: {
@@ -361,13 +377,7 @@ export async function getCampaignParticipantsByCampaignIdPaginated(
         },
       },
     });
-    filterData.push({
-      contact: {
-        phone: {
-          contains: search,
-        },
-      },
-    });
+    filterData.push({ contact: contactWhereIdentityContains(["phone"], search) });
   }
 
   const totalCount = await prisma.campaignParticipant.count({
@@ -402,10 +412,21 @@ export async function getCampaignParticipantsByCampaignIdPaginated(
     select: {
       id: true,
       name: true,
-      phone: true,
       consent: true,
+      ...primaryIdentities,
     },
   } as const;
+  const contactOut = (contact: {
+    id: string;
+    name: string | null;
+    consent: boolean;
+    identities: PrimaryIdentityRow[];
+  }) => ({
+    id: contact.id,
+    name: contact.name,
+    phone: contactFields(contact.identities).phone,
+    consent: contact.consent,
+  });
 
   /**
    * Every message this participant has been sent, with the attempt it belonged
@@ -455,6 +476,7 @@ export async function getCampaignParticipantsByCampaignIdPaginated(
           const dripStage = campaignParticipant.CampaignParticipantDripStage[0];
           return {
             ...campaignParticipant,
+            contact: contactOut(campaignParticipant.contact),
             ...summariseAttempts(campaignParticipant.WaMessageCampaginParticipantMap),
             status: dripStage?.status ?? campaignParticipant.status,
             dripStageId: dripStage?.dripStageId ?? null,
@@ -477,6 +499,7 @@ export async function getCampaignParticipantsByCampaignIdPaginated(
           const dripStageId: string | null = null;
           return {
             ...campaignParticipant,
+            contact: contactOut(campaignParticipant.contact),
             ...summariseAttempts(campaignParticipant.WaMessageCampaginParticipantMap),
             dripStageId,
           };
@@ -510,10 +533,13 @@ export async function getCampaignParticipantsByIds(campaignParticipantIds: strin
       },
     },
     include: {
-      contact: true,
+      contact: { include: primaryIdentities },
     },
   });
-  return campaignParticipants;
+  return campaignParticipants.map((participant) => ({
+    ...participant,
+    contact: withContactFields(participant.contact),
+  }));
 }
 
 export async function deleteCampaignParticipantById(campaignParticipantId: string, orgId: string) {

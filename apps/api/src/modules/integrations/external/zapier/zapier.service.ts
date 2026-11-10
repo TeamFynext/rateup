@@ -1,7 +1,21 @@
 import prisma from "../../../../utils/prisma.js";
+import {
+  contactFields,
+  contactWhereIdentity,
+  contactWhereIdentityContains,
+  primaryIdentities,
+  withContactFields,
+} from "../../../contact/identity/contactFields.js";
 import { WaMessageAssignStatus } from "../../../../types/enums.js";
 import { emitIntegrationEvent } from "../../events/emitIntegrationEvent.js";
 import { ZapierTriggers } from "./zapier.types.js";
+
+/** phone, email and igsId, in the order the assign trigger sends them. */
+const pick = ({ phone, email, igsId }: ReturnType<typeof contactFields>) => ({
+  phone,
+  email,
+  igsId,
+});
 
 export async function getSampleDataForTrigger(
   triggerKey: ZapierTriggers,
@@ -21,11 +35,9 @@ export async function getSampleDataForTrigger(
         select: {
           id: true,
           name: true,
-          email: true,
-          phone: true,
-          igsId: true,
           source: true,
           waMessageAssignStatus: true,
+          ...primaryIdentities,
         },
         ...(page !== undefined
           ? {
@@ -37,7 +49,18 @@ export async function getSampleDataForTrigger(
           createdAt: "desc",
         },
       });
-      data = [...contacts];
+      data = contacts.map((c) => {
+        const { email, phone, igsId } = contactFields(c.identities);
+        return {
+          id: c.id,
+          name: c.name,
+          email,
+          phone,
+          igsId,
+          source: c.source,
+          waMessageAssignStatus: c.waMessageAssignStatus,
+        };
+      });
       break;
     }
     case ZapierTriggers.CONTACT_ASSIGN:
@@ -49,9 +72,7 @@ export async function getSampleDataForTrigger(
         select: {
           id: true,
           name: true,
-          email: true,
-          phone: true,
-          igsId: true,
+          ...primaryIdentities,
           waInboxAssign: {
             select: {
               assignedUser: {
@@ -82,9 +103,7 @@ export async function getSampleDataForTrigger(
       data = contactAssigns.map((c) => ({
         contactId: c.id,
         name: c.name,
-        phone: c.phone,
-        email: c.email,
-        igsId: c.igsId,
+        ...pick(contactFields(c.identities)),
         assignees: c.waInboxAssign.map((a) => ({
           name: a.assignedUser.name,
           email: a.assignedUser.email,
@@ -192,9 +211,7 @@ export async function getSampleDataForTrigger(
         },
         select: {
           contact: {
-            select: {
-              phone: true,
-            },
+            select: primaryIdentities,
           },
           sourcePlatform: true,
           sourceIdentifier: true,
@@ -212,7 +229,7 @@ export async function getSampleDataForTrigger(
         },
       });
       data = messages.map((m) => ({
-        from: m.contact?.phone ?? null,
+        from: (m.contact && contactFields(m.contact.identities).phone) ?? null,
         messageBody: m.messageBody.receive,
         platform: m.sourcePlatform,
         source: m.sourceIdentifier,
@@ -315,14 +332,14 @@ export async function getSampleDataForTrigger(
 }
 
 export async function deleteContactByPhoneNumberAndOrgId(orgId: string, phone: string) {
-  const contact = await prisma.contact.delete({
-    where: {
-      contact_phone_org_id_unique: {
-        orgId,
-        phone,
-      },
-    },
+  const row = await prisma.contact.findFirst({
+    where: { orgId, ...contactWhereIdentity("phone", phone) },
+    include: primaryIdentities,
   });
+  if (!row) throw new Error("No contact with that phone");
+  await prisma.contact.delete({ where: { id: row.id } });
+  // The row as it was: its identities go with it.
+  const contact = withContactFields(row);
   await emitIntegrationEvent(contact.orgId, { type: "contact.deleted", contact });
   return contact;
 }
@@ -340,14 +357,11 @@ export async function getLifecyclesByOrgId(orgId: string) {
 }
 
 export async function getContactsByPhoneNumberAndOrgId(phone: string, orgId: string) {
-  return await prisma.contact.findMany({
-    where: {
-      phone: {
-        contains: phone,
-      },
-      orgId,
-    },
+  const rows = await prisma.contact.findMany({
+    where: { ...contactWhereIdentityContains(["phone"], phone), orgId },
+    include: primaryIdentities,
   });
+  return rows.map((row) => withContactFields(row));
 }
 
 export async function getUserIdByEmailAndOrgId(email: string, orgId: string) {

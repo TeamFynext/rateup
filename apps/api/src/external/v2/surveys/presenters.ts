@@ -4,6 +4,10 @@
  * accident.
  */
 
+import {
+  contactFields,
+  type PrimaryIdentityRow,
+} from "../../../modules/contact/identity/contactFields.js";
 import { toWirePhone } from "../phone.js";
 
 /** The first language's text of a localised field. */
@@ -51,7 +55,7 @@ export function presentSurveyResponse(
     responses: unknown[];
     encryptedResponses: string | null;
     surveyTeamMap: { teamId: string };
-    Contact: { phone: string | null } | null;
+    Contact: { identities: PrimaryIdentityRow[] } | null;
   },
   titles: Map<string, string | null>,
 ) {
@@ -63,7 +67,7 @@ export function presentSurveyResponse(
     teamId: row.surveyTeamMap.teamId,
     language: row.language,
     tag: row.tag || null,
-    phone: toWirePhone(row.Contact?.phone),
+    phone: toWirePhone(contactFields(row.Contact?.identities).phone),
     encrypted,
     encryptedAnswers: row.encryptedResponses ?? null,
     answers: answers.map(({ questionId, type, response }) => ({

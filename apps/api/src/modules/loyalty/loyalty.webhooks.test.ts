@@ -59,7 +59,11 @@ beforeEach(() => {
   vi.clearAllMocks();
   emit.mockImplementation(async (events: unknown[]) => events.length);
   db.customerLoyaltyAccount.findMany.mockResolvedValue([
-    { id: "acct-1", cardCode: MEMBER.cardCode, contact: { phone: MEMBER.phone } },
+    {
+      id: "acct-1",
+      cardCode: MEMBER.cardCode,
+      contact: { identities: [{ kind: "PHONE", value: MEMBER.phone }] },
+    },
   ]);
   db.loyaltyProgram.findUnique.mockResolvedValue({ orgId: ORG });
 });

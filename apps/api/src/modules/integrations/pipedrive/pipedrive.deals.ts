@@ -16,6 +16,7 @@ import {
   recordLink,
   removeLink,
 } from "../shared/entityLink.js";
+import { noteContactSelect, toNoteContact } from "../shared/activityNotes.js";
 import { pipedriveClientFor } from "./pipedrive.client.js";
 import { PIPEDRIVE_JOB_OPTIONS, pipedrivePersonIdFor } from "./pipedrive.contacts.js";
 import { readPipedriveCredential, type PipedrivePipeline } from "./pipedrive.types.js";
@@ -135,7 +136,7 @@ export async function processPipedriveDealJob(
       stage: { select: { status: true } },
       lostReason: { select: { label: true } },
       pipeline: { select: { orgId: true, type: true } },
-      contact: { select: { id: true, name: true, email: true, phone: true } },
+      contact: { select: noteContactSelect },
     },
   });
   if (
@@ -166,7 +167,7 @@ export async function processPipedriveDealJob(
   }
 
   const personId = lead.contact
-    ? await pipedrivePersonIdFor(integration, client, lead.contact)
+    ? await pipedrivePersonIdFor(integration, client, toNoteContact(lead.contact))
     : null;
   const response = await client.post<{ data: { id: number } }>("/v2/deals", {
     ...fields,

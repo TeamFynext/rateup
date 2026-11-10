@@ -1,21 +1,34 @@
-import { Contact } from "../../generated/prisma/client.js";
+import { Contact, Prisma } from "../../generated/prisma/client.js";
 import {
   ContactIdentityKind,
   ContactIdentitySource,
   PlatformType,
 } from "../../generated/prisma/enums.js";
+import { randomUUID } from "node:crypto";
 import { log } from "../../utils/logger.js";
 import {
   assertIdentityFree,
   attachIdentity,
   EDITABLE_COLUMN_KINDS,
   findContactIdByIdentity,
-  identitiesFromContact,
   replaceColumnIdentity,
   suggestFromProvidedDetails,
   type EditableColumn,
 } from "./identity/identity.service.js";
 import { suggestMerge } from "./merge/suggestions.service.js";
+import {
+  CONTACT_FIELD_KIND,
+  contactFields,
+  type ContactField,
+  type ContactFields,
+  contactWhereIdentity,
+  findOrCreateContactByIdentity,
+  primaryIdentities,
+  setPrimaryIdentities,
+  withContactFields,
+  withContactFieldsOrNull,
+} from "./identity/contactFields.js";
+import { IdentityTakenError, normalizeIdentityValue } from "./identity/identity.service.js";
 import prisma from "../../utils/prisma.js";
 import { ContactNotFoundError } from "./contact.errors.js";
 import { isBsuid } from "../whatsapp/bsuid.js";
@@ -76,6 +89,78 @@ function toContactCustomFieldValueInput(
   return { contactId, fieldId: field.id, value: field.value };
 }
 
+const CONTACT_FIELD_KEYS = Object.keys(CONTACT_FIELD_KIND) as ContactField[];
+
+/**
+ * A contact write's data without `phone`, `email`, `bsuid`, `igsId` and `psid`: those are
+ * identities now, written by `writeContactFields`, and no longer Contact columns.
+ */
+export function withoutContactFields<T extends object>(data: T): Omit<T, ContactField> {
+  const rest: Record<string, unknown> = { ...(data as Record<string, unknown>) };
+  for (const key of CONTACT_FIELD_KEYS) delete rest[key];
+  return rest as Omit<T, ContactField>;
+}
+
+/**
+ * The identity values a contact write carries. Older callers put a BSUID, an Instagram id or
+ * a Messenger id in `phone`; those are not phones, and a BSUID is kept as one.
+ */
+export function contactFieldValues(input: Partial<Record<ContactField, string | null>>) {
+  const out: Partial<ContactFields> = {};
+  for (const key of CONTACT_FIELD_KEYS) {
+    if (key !== "phone" && input[key] !== undefined) out[key] = input[key];
+  }
+  const { phone } = input;
+  if (phone && isBsuid(phone)) out.bsuid ??= phone;
+  else if (phone !== undefined && (!phone || (phone !== input.igsId && phone !== input.psid))) {
+    out.phone = phone;
+  }
+  return out;
+}
+
+/**
+ * Writes a contact's phone, email and platform ids (its primary identities). A phone or
+ * platform id another contact holds throws `IdentityTakenError`, as the old unique columns
+ * threw P2002. Emails were never unique: with `emailClash: "skip"` one another contact holds
+ * is left there and returned, for a merge suggestion once the write has committed.
+ */
+async function writeContactFields(
+  orgId: string,
+  contactId: string,
+  values: Partial<ContactFields>,
+  source: ContactIdentitySource,
+  db: Prisma.TransactionClient | typeof prisma = prisma,
+  options: { emailClash?: "throw" | "skip"; channelId?: string | null } = {},
+): Promise<{ emailHeldBy?: string; email?: string }> {
+  const { email, ...unique } = values;
+  await setPrimaryIdentities(orgId, contactId, unique, source, db, options);
+  if (email === undefined) return {};
+  if (options.emailClash === "skip" && email) {
+    const owner = await findContactIdByIdentity(orgId, ContactIdentityKind.EMAIL, email, db);
+    if (owner && owner !== contactId) {
+      return {
+        emailHeldBy: owner,
+        email: normalizeIdentityValue(ContactIdentityKind.EMAIL, email),
+      };
+    }
+  }
+  await setPrimaryIdentities(orgId, contactId, { email }, source, db, options);
+  return {};
+}
+
+/** The merge suggestion for an email `writeContactFields` left with another contact. */
+async function suggestEmailMerge(
+  orgId: string,
+  contactId: string,
+  clash: { emailHeldBy?: string; email?: string },
+) {
+  if (!clash.emailHeldBy) return;
+  await suggestMerge(orgId, contactId, clash.emailHeldBy, {
+    reason: "SAME_EMAIL",
+    detail: clash.email,
+  });
+}
+
 /**
  * Refuses a write that points a contact at another org's lifecycle stage, labels or custom
  * fields. These ids reach here from the dashboard, Zapier and imports as given; every row
@@ -128,15 +213,38 @@ export async function createContact(
     labels,
     customFields,
   });
-  const user = await prisma.contact.create({
-    data: {
-      ...rest,
-      lifecycleId: lifecycleId?.length ? lifecycleId : undefined,
-    },
+  // The contact and its identities commit together: a phone another contact holds rolls
+  // the contact back, as the old unique phone column did.
+  const { user, emailClash } = await prisma.$transaction(async (tx) => {
+    const row = await tx.contact.create({
+      data: {
+        ...withoutContactFields(rest),
+        lifecycleId: lifecycleId?.length ? lifecycleId : undefined,
+      },
+      select: { id: true },
+    });
+    const emailClash = await writeContactFields(
+      contact.orgId,
+      row.id,
+      contactFieldValues(rest),
+      ContactIdentitySource.AGENT,
+      tx,
+      { emailClash: "skip" },
+    );
+    const user = await tx.contact.findUniqueOrThrow({
+      where: { id: row.id },
+      include: primaryIdentities,
+    });
+    return { user: withContactFields(user), emailClash };
   });
-  // New contacts are known by their identities from the start, not only after a backfill.
-  for (const input of identitiesFromContact(user)) {
-    await attachIdentity(user.orgId, user.id, { ...input, source: ContactIdentitySource.AGENT });
+  await suggestEmailMerge(user.orgId, user.id, emailClash);
+  if (user.external_id) {
+    await attachIdentity(user.orgId, user.id, {
+      kind: ContactIdentityKind.EXTERNAL,
+      value: user.external_id,
+      integration: "external_id",
+      source: ContactIdentitySource.AGENT,
+    });
   }
   if (labels && labels.length > 0) {
     await prisma.contactLabelMap.createMany({
@@ -203,13 +311,11 @@ export async function getOrcreateContact(contact: ContactCore & { orgId: string 
   if (!contact.phone) {
     throw new Error("Phone must be provided");
   }
-  let user = await prisma.contact.findFirst({
-    where: {
-      phone: contact.phone,
-      orgId: contact.orgId,
-    },
+  const existing = await prisma.contact.findFirst({
+    where: { orgId: contact.orgId, ...contactWhereIdentity("phone", contact.phone) },
+    include: primaryIdentities,
   });
-  if (user) return user;
+  if (existing) return withContactFields(existing);
   const {
     customFields,
     labels: _labels,
@@ -217,9 +323,21 @@ export async function getOrcreateContact(contact: ContactCore & { orgId: string 
     assignedUserIds: _assignedUserIds,
     ...rest
   } = contact;
-  user = await prisma.contact.create({
-    data: rest,
-  });
+  const { contact: row, created } = await findOrCreateContactByIdentity(
+    contact.orgId,
+    "phone",
+    contact.phone,
+    withoutContactFields(rest),
+    {
+      source: ContactIdentitySource.AGENT,
+      alsoSet: contactFieldValues({ ...rest, phone: undefined }),
+    },
+  );
+  const user = withContactFields(
+    await prisma.contact.findUniqueOrThrow({ where: { id: row.id }, include: primaryIdentities }),
+  );
+  // Created a moment ago by someone else: theirs, as if it had been found above.
+  if (!created) return user;
 
   await emitIntegrationEvent(user.orgId, { type: "contact.created", contact: user });
   if (customFields?.length) {
@@ -231,6 +349,89 @@ export async function getOrcreateContact(contact: ContactCore & { orgId: string 
   return user;
 }
 
+/**
+ * One batch of `createMultipleContacts`, in a transaction: the contacts, then their
+ * identities. A row whose phone or platform id another contact holds (or an earlier row of
+ * the same batch) is skipped, as the old unique columns' `skipDuplicates` did; an email
+ * another contact holds is simply not added, as emails were never unique.
+ */
+async function createContactBatch(
+  orgId: string,
+  batch: { id: string; contact: createMultipleContactInput[number] }[],
+): Promise<(Contact & ContactFields)[]> {
+  return prisma.$transaction(async (tx) => {
+    const rows = await tx.contact.createManyAndReturn({
+      skipDuplicates: true,
+      data: batch.map(({ id, contact }) => {
+        const {
+          customFields: _customFields,
+          labels: _labels,
+          contactGroupIds: _contactGroupIds,
+          assignedUserIds: _assignedUserIds,
+          ...rest
+        } = contact;
+        return {
+          ...withoutContactFields(rest),
+          id,
+          orgId,
+          lifecycleId: contact.lifecycleId?.length ? contact.lifecycleId : undefined,
+        };
+      }),
+    });
+    const created = new Set(rows.map((row) => row.id));
+    const identities = batch.flatMap(({ id, contact }) => {
+      if (!created.has(id)) return [];
+      return Object.entries(contactFieldValues(contact)).flatMap(([field, raw]) => {
+        const kind = CONTACT_FIELD_KIND[field as ContactField];
+        const value = raw ? normalizeIdentityValue(kind, raw) : "";
+        // Never a PHONE that cannot be one, as attachIdentity refuses it.
+        if (!value || (kind === ContactIdentityKind.PHONE && !/^\d{7,15}$/.test(value))) {
+          return [];
+        }
+        return [
+          {
+            orgId,
+            contactId: id,
+            kind,
+            value,
+            source: ContactIdentitySource.AGENT,
+            verified: kind !== ContactIdentityKind.EMAIL,
+            isPrimary: true,
+          },
+        ];
+      });
+    });
+    const unique = identities.filter((row) => row.kind !== ContactIdentityKind.EMAIL);
+    const written = unique.length
+      ? await tx.contactIdentity.createManyAndReturn({
+          data: unique,
+          skipDuplicates: true,
+          select: { contactId: true, kind: true },
+        })
+      : [];
+    const writtenKeys = new Set(written.map((row) => `${row.contactId}:${row.kind}`));
+    const lost = new Set(
+      unique
+        .filter((row) => !writtenKeys.has(`${row.contactId}:${row.kind}`))
+        .map((row) => row.contactId),
+    );
+    if (lost.size) await tx.contact.deleteMany({ where: { id: { in: [...lost] } } });
+    const emails = identities.filter(
+      (row) => row.kind === ContactIdentityKind.EMAIL && !lost.has(row.contactId),
+    );
+    if (emails.length) await tx.contactIdentity.createMany({ data: emails, skipDuplicates: true });
+
+    const kept = rows.filter((row) => !lost.has(row.id));
+    // What was actually written (an email another contact holds was skipped), in one read.
+    const primaries = await tx.contactIdentity.findMany({
+      where: { contactId: { in: kept.map((row) => row.id) }, isPrimary: true },
+      select: { contactId: true, kind: true, value: true },
+    });
+    const byContact = Map.groupBy(primaries, (identity) => identity.contactId);
+    return kept.map((row) => ({ ...row, ...contactFields(byContact.get(row.id)) }));
+  });
+}
+
 export async function createMultipleContacts(contacts: createMultipleContactInput, orgId: string) {
   // One check for the whole batch: every label and stage any row names.
   const lifecycleIds = [...new Set(contacts.map((c) => c.lifecycleId).filter((id) => !!id))];
@@ -238,30 +439,17 @@ export async function createMultipleContacts(contacts: createMultipleContactInpu
     await assertContactRefsInOrg(orgId, { lifecycleId });
   }
   await assertContactRefsInOrg(orgId, { labels: contacts.flatMap((c) => c.labels ?? []) });
-  // These keys come in on the input DTO but are not Contact columns — they are persisted
-  // separately below, so they are blanked out of the create payload.
-  const omitted: undefined = undefined;
-  const contactsData = contacts.map((contact) => ({
-    ...contact,
-    orgId,
-    customFields: omitted,
-    labels: omitted,
-    contactGroupIds: omitted,
-    assignedUserIds: omitted,
-    lifecycleId: contact.lifecycleId?.length ? contact.lifecycleId : undefined,
-  }));
+  // Ids are chosen here so each created contact pairs with its input row.
+  const inputs = contacts.map((contact) => ({ id: randomUUID() as string, contact }));
+  const inputById = new Map(inputs.map(({ id, contact }) => [id, contact]));
 
   // Batch size for DB operations
   const BATCH_SIZE = 1000;
-  let createdContacts: Contact[] = [];
-  for (let i = 0; i < contactsData.length; i += BATCH_SIZE) {
-    const batch = contactsData.slice(i, i + BATCH_SIZE);
-    const batchCreated = await prisma.contact.createManyAndReturn({
-      skipDuplicates: true,
-      data: batch,
-    });
+  let createdContacts: (Contact & ContactFields)[] = [];
+  for (let i = 0; i < inputs.length; i += BATCH_SIZE) {
+    const batchCreated = await createContactBatch(orgId, inputs.slice(i, i + BATCH_SIZE));
     for (const contact of batchCreated) {
-      const inputData = contacts.find((c) => contact.phone === c.phone);
+      const inputData = inputById.get(contact.id);
       if (!inputData) continue;
       if (inputData.labels && inputData.labels.length > 0) {
         await prisma.contactLabelMap.createMany({
@@ -316,13 +504,11 @@ export async function createMultipleContacts(contacts: createMultipleContactInpu
       });
     }
 
-    const customFieldValues = contacts.flatMap((contact) => {
-      const created = createdContacts.find((c) => c.phone === contact.phone);
-      if (!created) return [];
-      return (contact.customFields ?? []).map((field) =>
+    const customFieldValues = createdContacts.flatMap((created) =>
+      (inputById.get(created.id)?.customFields ?? []).map((field) =>
         toContactCustomFieldValueInput(field, created.id),
-      );
-    });
+      ),
+    );
 
     // Batch create custom field values
     for (let i = 0; i < customFieldValues.length; i += BATCH_SIZE) {
@@ -353,6 +539,7 @@ export async function getContactById(contactId: string, orgId: string) {
       orgId,
     },
     include: {
+      ...primaryIdentities,
       ContactLabelMap: {
         select: {
           label: {
@@ -365,7 +552,7 @@ export async function getContactById(contactId: string, orgId: string) {
       },
     },
   });
-  return user;
+  return withContactFieldsOrNull(user);
 }
 /**
  * Everything the contacts table's detail dialog shows about one contact.
@@ -376,9 +563,10 @@ export async function getContactById(contactId: string, orgId: string) {
  * comes through without having to be listed and kept in sync by hand.
  */
 export async function getContactFullDetailsById(contactId: string, orgId: string) {
-  return await prisma.contact.findFirst({
+  const contact = await prisma.contact.findFirst({
     where: { id: contactId, orgId },
     include: {
+      ...primaryIdentities,
       ContactLabelMap: {
         select: { label: { select: { id: true, name: true, color: true, description: true } } },
       },
@@ -443,10 +631,13 @@ export async function getContactFullDetailsById(contactId: string, orgId: string
       },
     },
   });
+  return withContactFieldsOrNull(contact);
 }
 
 export async function getContactByIdForWebhook(contactId: string) {
-  return await prisma.contact.findUnique({ where: { id: contactId } });
+  return withContactFieldsOrNull(
+    await prisma.contact.findUnique({ where: { id: contactId }, include: primaryIdentities }),
+  );
 }
 
 /** Every contact id the contacts list would show for this query, across all of its pages. */
@@ -477,6 +668,14 @@ export async function getContactsByOrgId(orgId: string, query?: PaginationQuery)
   });
   const includeCondition = {
     // loyaltyCustomer: true,
+    // Every identity, primaries first: the five contact fields are read from the first of
+    // each kind, and the table shows the rest as "also known by". Merged contacts rarely
+    // have more than a handful; the cap keeps a 500-row page bounded.
+    identities: {
+      select: { kind: true, value: true, username: true, displayName: true, isPrimary: true },
+      orderBy: [{ isPrimary: "desc" as const }, { createdAt: "asc" as const }],
+      take: 20,
+    },
     customFields: true,
     contactGroups: {
       select: {
@@ -536,38 +735,43 @@ export async function getContactsByOrgId(orgId: string, query?: PaginationQuery)
     skip: pageNo * Number(limit),
     take: Number(limit),
     orderBy: [
-      { [sort]: desc === "asc" ? "asc" : "desc" },
+      // Phone and email are identities now, not columns a query can sort on.
+      { [sort in CONTACT_FIELD_KIND ? "createdAt" : sort]: desc === "asc" ? "asc" : "desc" },
       ...(sort === "name" ? [] : [{ name: "asc" as const }]),
     ],
   });
 
   // Return the result
-  return { users, totalCount };
+  return {
+    users: users.map((user) => withContactFields(user, { keepIdentities: true })),
+    totalCount,
+  };
 }
 
 export async function getContactByPhoneNumberAndOrgId(phone: string, orgId: string) {
   const contact = await prisma.contact.findFirst({
-    where: {
-      phone,
-      orgId,
-    },
+    where: { orgId, ...contactWhereIdentity("phone", phone) },
     include: {
+      ...primaryIdentities,
       customFields: true,
       contactGroups: true,
       ContactLabelMap: true,
     },
   });
-  return contact;
+  return withContactFieldsOrNull(contact);
 }
 
 //used in zapier controller also
 export async function deleteContactById(contactId: string, orgId: string) {
-  const user = await prisma.contact.delete({
-    where: {
-      id: contactId,
-      orgId,
-    },
-  });
+  const user = withContactFields(
+    await prisma.contact.delete({
+      where: {
+        id: contactId,
+        orgId,
+      },
+      include: primaryIdentities,
+    }),
+  );
   await emitIntegrationEvent(user.orgId, { type: "contact.deleted", contact: user });
   return user;
 }
@@ -613,19 +817,32 @@ export async function updateContactById(
   if (!contactRecord) {
     throw new ContactNotFoundError(`Contact ${contactId} not found`);
   }
-  // The phone/email/external id columns are the contact's primary identities; an edit to one
-  // has to move the identity with it, and may not take one another contact holds.
+  // Phone and email are the contact's primary identities. An edit replaces the old one (it
+  // goes) and may not take one another contact holds. The external id column is mirrored as
+  // an identity too.
+  const editedFields = (["phone", "email"] as const).filter(
+    (field) => contact[field] !== undefined,
+  );
   const editedColumns = (Object.keys(EDITABLE_COLUMN_KINDS) as EditableColumn[]).filter(
     (column) => contact[column] !== undefined,
   );
-  const columnsBefore = editedColumns.length
-    ? await prisma.contact.findFirst({
-        where: { id: contactId, orgId },
-        select: { phone: true, email: true, external_id: true },
-      })
-    : null;
+  const before =
+    editedFields.length || editedColumns.length
+      ? await prisma.contact.findFirst({
+          where: { id: contactId, orgId },
+          select: { external_id: true, ...primaryIdentities },
+        })
+      : null;
+  const fieldsBefore = contactFields(before?.identities);
+  for (const field of editedFields) {
+    const kind = CONTACT_FIELD_KIND[field];
+    const next = contact[field] ? normalizeIdentityValue(kind, contact[field]) : null;
+    if (next && next !== fieldsBefore[field]) {
+      await assertIdentityFree(orgId, contactId, kind, next);
+    }
+  }
   for (const column of editedColumns) {
-    if (contact[column] && contact[column] !== columnsBefore?.[column]) {
+    if (contact[column] && contact[column] !== before?.[column]) {
       await assertIdentityFree(orgId, contactId, EDITABLE_COLUMN_KINDS[column], contact[column]);
     }
   }
@@ -703,6 +920,25 @@ export async function updateContactById(
   // The contact write and the conversation mirror must commit together, or the
   // two status columns drift whenever the second write fails.
   const updatedContact = await prisma.$transaction(async (tx) => {
+    for (const field of editedFields) {
+      const kind = CONTACT_FIELD_KIND[field];
+      const next = contact[field] ? normalizeIdentityValue(kind, contact[field]) : null;
+      const previous = fieldsBefore[field];
+      if (next === previous) continue;
+      await setPrimaryIdentities(
+        orgId,
+        contactId,
+        { [field]: next },
+        ContactIdentitySource.AGENT,
+        tx,
+      );
+      // The value it replaced goes, as it did when this was a column.
+      if (previous) {
+        await tx.contactIdentity.deleteMany({
+          where: { orgId, contactId, kind, value: previous, isPrimary: false },
+        });
+      }
+    }
     const updated = await tx.contact.update({
       where: {
         id: contactId,
@@ -710,7 +946,6 @@ export async function updateContactById(
       },
       data: {
         name: contact.name,
-        phone: contact.phone,
         waMessageAssignStatus: contactStatus,
         lastReceivedMessageTimeStamp: contact.lastReceivedMessageTimeStamp || undefined,
         ...(closing
@@ -726,7 +961,6 @@ export async function updateContactById(
               spamMarkedBy: resolveClosedByUserId(transitionActor),
             }
           : {}),
-        email: contact.email,
         address: contact.address,
         dob: contact.dob,
         external_id: contact.external_id,
@@ -734,6 +968,7 @@ export async function updateContactById(
         lifecycleId: contact.lifecycleId,
       },
       include: {
+        ...primaryIdentities,
         waInboxAssign: {
           select: {
             assignedUserId: true,
@@ -756,7 +991,7 @@ export async function updateContactById(
       });
     }
 
-    return updated;
+    return withContactFields(updated);
   });
 
   // A closed ticket ends the escalation: Meta AI takes the customer's next
@@ -880,13 +1115,7 @@ export async function updateContactById(
     });
   }
   for (const column of editedColumns) {
-    await replaceColumnIdentity(
-      orgId,
-      contactId,
-      column,
-      columnsBefore?.[column],
-      updatedContact[column],
-    );
+    await replaceColumnIdentity(orgId, contactId, column, before?.[column], updatedContact[column]);
   }
   await emitIntegrationEvent(updatedContact.orgId, {
     type: "contact.updated",
@@ -976,39 +1205,26 @@ export async function getOrCreateContactByPhone(
 ) {
   try {
     // A merged contact's second number (or a webchat visitor's id) lives only in its
-    // identities, so those are tried before the column.
+    // identities, so those are tried before the `other` field.
     const viaIdentity = await findContactIdByIdentity(
       orgId,
       source === PlatformType.WEBCHAT ? ContactIdentityKind.WEBCHAT : ContactIdentityKind.PHONE,
       source && source !== PlatformType.WEBCHAT ? null : phone,
     );
-    let contact = await prisma.contact.findFirst({
-      // TODO: findout why findUnique is giving error
-      where: viaIdentity
-        ? { id: viaIdentity, orgId }
-        : source
-          ? {
-              other: phone,
-              orgId: orgId,
-              source,
-            }
-          : {
-              phone: phone,
-              orgId: orgId,
-            },
-      include: {
-        waInboxAssign: {
-          select: {
-            assignedUser: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-      },
-    });
+    const where = viaIdentity
+      ? { id: viaIdentity, orgId }
+      : source
+        ? { other: phone, orgId, source }
+        : null;
+    let contact = where
+      ? withContactFieldsOrNull(
+          await prisma.contact.findFirst({
+            // TODO: findout why findUnique is giving error
+            where,
+            include: { ...WA_CONTACT_INCLUDE, ...primaryIdentities },
+          }),
+        )
+      : null;
     let conversation;
     if (contact) {
       if (additionalData) {
@@ -1024,24 +1240,25 @@ export async function getOrCreateContactByPhone(
         if (source === PlatformType.WEBCHAT && contact.source !== PlatformType.WEBCHAT) {
           delete (updateData as { other?: unknown }).other;
         }
-        contact = await prisma.contact.update({
-          where: {
-            id: contact.id,
-          },
-          data: updateData,
-          include: {
-            waInboxAssign: {
-              select: {
-                assignedUser: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
-                },
-              },
-            },
-          },
+        const id = contact.id;
+        const { updated, emailClash } = await prisma.$transaction(async (tx) => {
+          const emailClash = await writeContactFields(
+            orgId,
+            id,
+            contactFieldValues(updateData),
+            ContactIdentitySource.INBOUND,
+            tx,
+            { emailClash: "skip" },
+          );
+          const updated = await tx.contact.update({
+            where: { id },
+            data: withoutContactFields(updateData),
+            include: { ...WA_CONTACT_INCLUDE, ...primaryIdentities },
+          });
+          return { updated, emailClash };
         });
+        await suggestEmailMerge(orgId, id, emailClash);
+        contact = withContactFields(updated);
       }
       if (source === PlatformType.WEBCHAT) {
         await suggestFromProvidedDetails(orgId, contact.id, {
@@ -1051,25 +1268,27 @@ export async function getOrCreateContactByPhone(
       }
       return { contact, conversation };
     } else {
-      contact = await prisma.contact.create({
-        data: {
-          ...additionalData,
-          phone: source ? undefined : phone,
+      const { created, emailClash } = await prisma.$transaction(async (tx) => {
+        const row = await tx.contact.create({
+          data: { ...withoutContactFields(additionalData ?? {}), orgId },
+          select: { id: true },
+        });
+        const emailClash = await writeContactFields(
           orgId,
-        },
-        include: {
-          waInboxAssign: {
-            select: {
-              assignedUser: {
-                select: {
-                  id: true,
-                  name: true,
-                },
-              },
-            },
-          },
-        },
+          row.id,
+          contactFieldValues({ ...additionalData, phone: source ? undefined : phone }),
+          ContactIdentitySource.INBOUND,
+          tx,
+          { emailClash: "skip" },
+        );
+        const created = await tx.contact.findUniqueOrThrow({
+          where: { id: row.id },
+          include: { ...WA_CONTACT_INCLUDE, ...primaryIdentities },
+        });
+        return { created, emailClash };
       });
+      contact = withContactFields(created);
+      await suggestEmailMerge(orgId, contact.id, emailClash);
       if (addToConversation) {
         conversation = await createConversation({ contactId: contact.id, orgId: contact.orgId });
       }
@@ -1130,83 +1349,78 @@ export async function getOrCreateWaContact(
   const { phone, bsuid } = identity;
   if (!phone && !bsuid) throw new Error("A WhatsApp contact needs a phone number or a BSUID");
 
-  // Identities first: after a merge a contact's second number or second BSUID is only
-  // there. The legacy columns still answer for contacts not backfilled yet.
+  // Any identity matches: after a merge a contact's second number or second BSUID is only
+  // there, not its primary.
   const [phoneOwner, bsuidOwner] = await Promise.all([
     findContactIdByIdentity(orgId, ContactIdentityKind.PHONE, phone),
     findContactIdByIdentity(orgId, ContactIdentityKind.WA_BSUID, bsuid),
   ]);
-  const [byPhone, byBsuid] = await Promise.all([
-    phoneOwner
-      ? prisma.contact.findFirst({ where: { id: phoneOwner, orgId } })
-      : phone
-        ? prisma.contact.findFirst({ where: { phone, orgId } })
-        : null,
-    bsuidOwner
-      ? prisma.contact.findFirst({ where: { id: bsuidOwner, orgId } })
-      : bsuid
-        ? prisma.contact.findUnique({
-            where: { contact_bsuid_org_id_unique: { bsuid, orgId } },
-          })
-        : null,
-  ]);
+  const existingId = phoneOwner ?? bsuidOwner;
 
-  const updateData: Record<string, unknown> = { ...additionalData };
+  const updateData: Record<string, unknown> = withoutContactFields({ ...additionalData });
   if (!additionalData.name) delete updateData.name;
-  // Never let a caller's spelling overwrite the identity resolved here.
-  delete updateData.phone;
-  delete updateData.bsuid;
 
-  const existing = byPhone ?? byBsuid;
-  if (existing) {
-    if (bsuid && existing.bsuid !== bsuid && !bsuidOwner) {
-      if (byBsuid && byBsuid.id !== existing.id) {
-        log.warn(
-          { orgId, contactId: existing.id, otherContactId: byBsuid.id },
-          "WhatsApp customer matched two contacts (phone and BSUID); moving the BSUID to the phone contact",
-        );
-        await prisma.contact.update({ where: { id: byBsuid.id }, data: { bsuid: null } });
-        // Probably one person written to twice; a person decides whether to merge.
-        await suggestMerge(orgId, existing.id, byBsuid.id, {
+  if (existingId) {
+    const existing = await prisma.contact.findFirst({
+      where: { id: existingId, orgId },
+      select: { id: true, ...primaryIdentities },
+    });
+    if (existing) {
+      const values: Partial<ContactFields> = {};
+      if (bsuid && !bsuidOwner) {
+        values.bsuid = bsuid;
+      } else if (bsuid && bsuidOwner && bsuidOwner !== existing.id) {
+        // The BSUID is held by another contact: leave it there and ask.
+        await suggestMerge(orgId, existing.id, bsuidOwner, {
           reason: "BSUID_PHONE_SPLIT",
           detail: phone,
         });
       }
-      updateData.bsuid = bsuid;
-    } else if (bsuid && byBsuid && byBsuid.id !== existing.id) {
-      // The BSUID is held (as an identity) by another contact: leave it there and ask.
-      await suggestMerge(orgId, existing.id, byBsuid.id, {
-        reason: "BSUID_PHONE_SPLIT",
-        detail: phone,
+      if (phone && !contactFields(existing.identities).phone) values.phone = phone;
+      const contact = await prisma.$transaction(async (tx) => {
+        await setPrimaryIdentities(orgId, existing.id, values, ContactIdentitySource.INBOUND, tx);
+        return tx.contact.update({
+          where: { id: existing.id },
+          data: updateData,
+          include: { ...WA_CONTACT_INCLUDE, ...primaryIdentities },
+        });
       });
+      return { contact: withContactFields(contact), conversation: undefined };
     }
-    if (phone && !existing.phone) updateData.phone = phone;
-    const contact = await prisma.contact.update({
-      where: { id: existing.id },
-      data: updateData,
-      include: WA_CONTACT_INCLUDE,
-    });
-    return { contact, conversation: undefined };
   }
 
   let contact;
   try {
-    contact = await prisma.contact.create({
-      data: { ...(updateData as object), phone, bsuid, orgId },
-      include: WA_CONTACT_INCLUDE,
+    contact = await prisma.$transaction(async (tx) => {
+      const row = await tx.contact.create({
+        data: { ...(updateData as object), orgId },
+        select: { id: true },
+      });
+      await setPrimaryIdentities(
+        orgId,
+        row.id,
+        { phone, bsuid },
+        ContactIdentitySource.INBOUND,
+        tx,
+      );
+      return tx.contact.findUniqueOrThrow({
+        where: { id: row.id },
+        include: { ...WA_CONTACT_INCLUDE, ...primaryIdentities },
+      });
     });
   } catch (e) {
     // Another path (an echo, a send record) created this customer a moment ago.
-    if ((e as { code?: string })?.code === "P2002") {
+    if (e instanceof IdentityTakenError || (e as { code?: string })?.code === "P2002") {
       return getOrCreateWaContact(identity, orgId, additionalData, addToConversation);
     }
     throw e;
   }
+  const created = withContactFields(contact);
   const conversation = addToConversation
-    ? await createConversation({ contactId: contact.id, orgId: contact.orgId })
+    ? await createConversation({ contactId: created.id, orgId: created.orgId })
     : undefined;
-  await emitIntegrationEvent(orgId, { type: "contact.created", contact });
-  return { contact, conversation };
+  await emitIntegrationEvent(orgId, { type: "contact.created", contact: created });
+  return { contact: created, conversation };
 }
 
 /**
@@ -1218,11 +1432,11 @@ export async function findWaContactPhoneByBsuid(
   orgId: string,
   bsuid: string,
 ): Promise<string | undefined> {
-  const contact = await prisma.contact.findUnique({
-    where: { contact_bsuid_org_id_unique: { bsuid, orgId } },
-    select: { phone: true },
+  const contact = await prisma.contact.findFirst({
+    where: { orgId, ...contactWhereIdentity("bsuid", bsuid) },
+    select: primaryIdentities,
   });
-  return contact?.phone ?? undefined;
+  return contactFields(contact?.identities).phone ?? undefined;
 }
 
 /**
@@ -1245,28 +1459,34 @@ export async function applyWaIdentityChange(
 ): Promise<string | null> {
   const { previousPhone, previousBsuid, phone, bsuid } = change;
   const or = [
-    ...(previousBsuid ? [{ bsuid: previousBsuid }] : []),
-    ...(previousPhone ? [{ phone: previousPhone }] : []),
+    ...(previousBsuid ? [contactWhereIdentity("bsuid", previousBsuid)] : []),
+    ...(previousPhone ? [contactWhereIdentity("phone", previousPhone)] : []),
   ];
   if (!or.length) return null;
-  const contact = await prisma.contact.findFirst({ where: { orgId, OR: or } });
+  const contact = await prisma.contact.findFirst({
+    where: { orgId, OR: or },
+    select: { id: true, ...primaryIdentities },
+  });
   if (!contact) return null;
+  const current = contactFields(contact.identities);
 
   const data: { phone?: string; bsuid?: string } = {};
-  if (bsuid && bsuid !== contact.bsuid) data.bsuid = bsuid;
-  if (phone && phone !== contact.phone) data.phone = phone;
+  if (bsuid && bsuid !== current.bsuid) data.bsuid = bsuid;
+  if (phone && normalizeIdentityValue(ContactIdentityKind.PHONE, phone) !== current.phone) {
+    data.phone = phone;
+  }
   if (!Object.keys(data).length) return contact.id;
 
   // The new identity may already belong to another contact (they messaged from
   // the new number before Meta told us it was theirs). Leave both alone rather
-  // than break the unique index; the log is how support finds them.
+  // than take it from them; the log is how support finds them.
   const clash = await prisma.contact.findFirst({
     where: {
       orgId,
       id: { not: contact.id },
       OR: [
-        ...(data.bsuid ? [{ bsuid: data.bsuid }] : []),
-        ...(data.phone ? [{ phone: data.phone }] : []),
+        ...(data.bsuid ? [contactWhereIdentity("bsuid", data.bsuid)] : []),
+        ...(data.phone ? [contactWhereIdentity("phone", data.phone)] : []),
       ],
     },
     select: { id: true },
@@ -1278,8 +1498,84 @@ export async function applyWaIdentityChange(
     );
     return null;
   }
-  await prisma.contact.update({ where: { id: contact.id }, data });
+  await setPrimaryIdentities(orgId, contact.id, data, ContactIdentitySource.INBOUND);
   return contact.id;
+}
+
+/**
+ * The contact known by a platform id (Instagram's IGSID, Messenger's PSID), created when there
+ * is none, with `additionalData` written on it either way.
+ */
+async function getOrCreateContactByPlatformId(
+  field: "igsId" | "psid",
+  value: string,
+  orgId: string,
+  additionalData: Omit<updateContactSchema, "customFields"> | undefined,
+  addToConversation: boolean,
+) {
+  const kind = CONTACT_FIELD_KIND[field];
+  let conversation;
+  const existingId = await findContactIdByIdentity(orgId, kind, value);
+  let created = false;
+  let id = existingId;
+  if (!id) {
+    const result = await findOrCreateContactByIdentity(
+      orgId,
+      field,
+      value,
+      withoutContactFields(additionalData ?? {}),
+      {
+        source: ContactIdentitySource.INBOUND,
+        // Email is written below, where one another contact holds is skipped, not fatal.
+        alsoSet: { ...contactFieldValues(additionalData ?? {}), email: undefined },
+      },
+    );
+    id = result.contact.id;
+    created = result.created;
+  }
+  // Found (or created by someone else a moment ago): the new details are written on it.
+  if (!created && additionalData) {
+    const contactId = id;
+    const emailClash = await prisma.$transaction(async (tx) => {
+      const clash = await writeContactFields(
+        orgId,
+        contactId,
+        contactFieldValues(additionalData),
+        ContactIdentitySource.INBOUND,
+        tx,
+        { emailClash: "skip" },
+      );
+      await tx.contact.update({
+        where: { id: contactId },
+        data: withoutContactFields(additionalData),
+      });
+      return clash;
+    });
+    await suggestEmailMerge(orgId, contactId, emailClash);
+  } else if (created && additionalData?.email) {
+    await suggestEmailMerge(
+      orgId,
+      id,
+      await writeContactFields(
+        orgId,
+        id,
+        { email: additionalData.email },
+        ContactIdentitySource.INBOUND,
+        prisma,
+        { emailClash: "skip" },
+      ),
+    );
+  }
+  const contact = withContactFields(
+    await prisma.contact.findUniqueOrThrow({ where: { id }, include: primaryIdentities }),
+  );
+  if (created) {
+    if (addToConversation) {
+      conversation = await createConversation({ contactId: contact.id, orgId: contact.orgId });
+    }
+    await emitIntegrationEvent(orgId, { type: "contact.created", contact });
+  }
+  return { contact, conversation };
 }
 
 export async function getOrCreateContactByIgsId(
@@ -1289,43 +1585,13 @@ export async function getOrCreateContactByIgsId(
   addToConversation: boolean = false,
 ) {
   try {
-    const viaIdentity = await findContactIdByIdentity(orgId, ContactIdentityKind.IG_SCOPED, igsId);
-    let contact = viaIdentity
-      ? await prisma.contact.findFirst({ where: { id: viaIdentity, orgId } })
-      : await prisma.contact.findUnique({
-          where: {
-            contact_igsid_org_id_unique: {
-              igsId,
-              orgId,
-            },
-          },
-        });
-    let conversation;
-    if (contact) {
-      if (!additionalData) return { contact, conversation };
-      contact = await prisma.contact.update({
-        where: {
-          id: contact.id,
-        },
-        data: {
-          ...additionalData,
-        },
-      });
-      return { contact, conversation };
-    } else {
-      contact = await prisma.contact.create({
-        data: {
-          ...additionalData,
-          igsId,
-          orgId,
-        },
-      });
-      if (addToConversation) {
-        conversation = await createConversation({ contactId: contact.id, orgId: contact.orgId });
-      }
-      await emitIntegrationEvent(orgId, { type: "contact.created", contact });
-      return { contact, conversation };
-    }
+    return await getOrCreateContactByPlatformId(
+      "igsId",
+      igsId,
+      orgId,
+      additionalData,
+      addToConversation,
+    );
   } catch (e) {
     log.error({ err: e }, "Error in getOrCreateContactByIgsId");
     throw e;
@@ -1339,55 +1605,13 @@ export async function getOrCreateContactByPsid(
   addToConversation: boolean = false,
 ) {
   try {
-    const viaIdentity = await findContactIdByIdentity(orgId, ContactIdentityKind.FB_PSID, psid);
-    let contact = viaIdentity
-      ? await prisma.contact.findFirst({ where: { id: viaIdentity, orgId } })
-      : await prisma.contact.findUnique({
-          where: {
-            contact_psid_org_id_unique: {
-              psid,
-              orgId,
-            },
-          },
-        });
-
-    let conversation;
-
-    if (contact) {
-      if (!additionalData) {
-        return { contact, conversation };
-      }
-
-      contact = await prisma.contact.update({
-        where: {
-          id: contact.id,
-        },
-        data: {
-          ...additionalData,
-        },
-      });
-
-      return { contact, conversation };
-    }
-
-    contact = await prisma.contact.create({
-      data: {
-        ...additionalData,
-        psid,
-        orgId,
-      },
-    });
-
-    if (addToConversation) {
-      conversation = await createConversation({
-        contactId: contact.id,
-        orgId: contact.orgId,
-      });
-    }
-
-    await emitIntegrationEvent(orgId, { type: "contact.created", contact });
-
-    return { contact, conversation };
+    return await getOrCreateContactByPlatformId(
+      "psid",
+      psid,
+      orgId,
+      additionalData,
+      addToConversation,
+    );
   } catch (e) {
     log.error(
       {
@@ -1409,6 +1633,7 @@ export async function deleteManyContacts(contactIds: Array<string>, orgId: strin
       },
       orgId,
     },
+    include: primaryIdentities,
   });
   const res = await prisma.contact.deleteMany({
     where: {
@@ -1419,7 +1644,10 @@ export async function deleteManyContacts(contactIds: Array<string>, orgId: strin
     },
   });
   for (const contact of contacts) {
-    await emitIntegrationEvent(contact.orgId, { type: "contact.deleted", contact });
+    await emitIntegrationEvent(contact.orgId, {
+      type: "contact.deleted",
+      contact: withContactFields(contact),
+    });
   }
   return res;
 }
@@ -1431,10 +1659,13 @@ export async function getExistingContactCountByPhno(ids: string[], orgId: string
     const batch = ids.slice(i, i + BATCH_SIZE);
     const count = await prisma.contact.count({
       where: {
-        phone: {
-          in: batch,
-        },
         orgId,
+        identities: {
+          some: {
+            kind: ContactIdentityKind.PHONE,
+            value: { in: batch.map((id) => normalizeIdentityValue(ContactIdentityKind.PHONE, id)) },
+          },
+        },
       },
     });
     totalCount += count;
@@ -1447,7 +1678,8 @@ export const handleContactConsent = async (orgId: string, phone: string, consent
   const contact_consent = await prisma.contact.findFirst({
     // A customer with a WhatsApp username may be known only by their BSUID; their
     // STOP has to land all the same.
-    where: isBsuid(phone) ? { bsuid: phone, orgId } : { phone, orgId },
+    where: { orgId, ...contactWhereIdentity(isBsuid(phone) ? "bsuid" : "phone", phone) },
+    select: { id: true, consent: true },
   });
   if (!contact_consent) {
     log.info({ orgId }, "Consent callback for a phone number this org does not have");
@@ -1552,15 +1784,14 @@ export async function updateLifecycleStageofContacts(
       orgId: true,
       integrationIds: true,
       name: true,
-      email: true,
-      phone: true,
       source: true,
       notes: true,
       lifecycleId: true,
+      ...primaryIdentities,
     },
   });
 
-  for (const contact of contacts) {
+  for (const contact of contacts.map((row) => withContactFields(row))) {
     await emitIntegrationEvent(contact.orgId, {
       type: "contact.updated",
       contact: { ...contact, lifecycleId },
@@ -1582,22 +1813,37 @@ export async function bulkUpdateWaMessageAssignStatus(
   // tickets underneath it simply close.
   const markingSpam = requestedStatus === WaMessageAssignStatus.SPAM;
   const waMessageAssignStatus = markingSpam ? WaMessageAssignStatus.CLOSED : requestedStatus;
-  const contacts = await prisma.contact.findMany({
+  const rows = await prisma.contact.findMany({
     where: {
       id: { in: contactIds },
       orgId,
     },
     select: {
       id: true,
-      phone: true,
-      igsId: true,
-      psid: true,
       name: true,
       orgId: true,
       waMessageAssignStatus: true,
       lastReceivedMessageTimeStamp: true,
       blockedOnWhatsApp: true,
+      // phone, igsId and psid, as the response always carried them.
+      identities: {
+        where: {
+          isPrimary: true,
+          kind: {
+            in: [
+              ContactIdentityKind.PHONE,
+              ContactIdentityKind.IG_SCOPED,
+              ContactIdentityKind.FB_PSID,
+            ],
+          },
+        },
+        select: { kind: true, value: true },
+      },
     },
+  });
+  const contacts = rows.map(({ identities, ...row }) => {
+    const { phone, igsId, psid } = contactFields(identities);
+    return { ...row, phone, igsId, psid };
   });
 
   if (!contacts.length) return [];

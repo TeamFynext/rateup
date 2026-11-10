@@ -1,4 +1,9 @@
 import prisma from "../../../utils/prisma.js";
+import {
+  contactFields,
+  primaryIdentities,
+  type PrimaryIdentityRow,
+} from "../../contact/identity/contactFields.js";
 
 /**
  * Closed conversations and survey responses written up as CRM notes: the part
@@ -19,6 +24,18 @@ export interface NoteContact {
   name: string | null;
   email: string | null;
   phone: string | null;
+}
+
+/** Selects what a `NoteContact` is built from; map the row with `toNoteContact`. */
+export const noteContactSelect = { id: true, name: true, ...primaryIdentities } as const;
+
+export function toNoteContact(row: {
+  id: string;
+  name: string | null;
+  identities: PrimaryIdentityRow[];
+}): NoteContact {
+  const { email, phone } = contactFields(row.identities);
+  return { id: row.id, name: row.name, email, phone };
 }
 
 export interface LoadedNote {
@@ -68,7 +85,7 @@ export async function loadClosedConversationNote(
       createdAt: true,
       messageCount: true,
       closedByUser: { select: { name: true } },
-      contact: { select: { id: true, name: true, email: true, phone: true } },
+      contact: { select: noteContactSelect },
     },
   });
   if (!conversation?.closedAt || conversation.orgId !== orgId) return null;
@@ -95,7 +112,12 @@ export async function loadClosedConversationNote(
       text: transcriptText(message.messageBody),
     })),
   });
-  return { id: conversation.id, at: conversation.closedAt, contact: conversation.contact, body };
+  return {
+    id: conversation.id,
+    at: conversation.closedAt,
+    contact: toNoteContact(conversation.contact),
+    body,
+  };
 }
 
 export interface ConversationNoteInput {
@@ -218,7 +240,7 @@ export async function loadSurveyResponseNote(
           team: { select: { name: true, orgId: true } },
         },
       },
-      Contact: { select: { id: true, name: true, email: true, phone: true } },
+      Contact: { select: noteContactSelect },
     },
   });
   if (!response?.Contact || response.surveyTeamMap.team.orgId !== orgId) return null;
@@ -252,7 +274,12 @@ export async function loadSurveyResponseNote(
     createdAt: response.createdAt,
     answers,
   });
-  return { id: response.id, at: response.createdAt, contact: response.Contact, body };
+  return {
+    id: response.id,
+    at: response.createdAt,
+    contact: toNoteContact(response.Contact),
+    body,
+  };
 }
 
 export interface SurveyNoteInput {

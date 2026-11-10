@@ -4,35 +4,32 @@ vi.mock("../../../utils/prisma.js", () => ({ default: {} }));
 vi.mock("../../../utils/logger.js", () => ({ log: { warn: vi.fn(), error: vi.fn() } }));
 vi.mock("../merge/suggestions.service.js", () => ({ suggestMerge: vi.fn() }));
 
-const { identitiesFromContact, legacyPhone } = await import("./identity.service.js");
+const { identitiesFromContact } = await import("./identity.service.js");
 const { reachFor } = await import("./reach.js");
 
-describe("legacyPhone", () => {
-  test("a real number is a phone", () => {
-    expect(legacyPhone({ phone: "919188346187" })).toBe("919188346187");
-  });
-
-  test("an Instagram id copied into phone is not", () => {
-    expect(legacyPhone({ phone: "1660876185146676", igsId: "1660876185146676" })).toBeNull();
-  });
-
-  test("anything over 15 digits is not, even without the matching id", () => {
-    expect(legacyPhone({ phone: "1660876185146676" })).toBeNull();
-  });
-
-  test("a Messenger id or a BSUID in phone is not", () => {
-    expect(legacyPhone({ phone: "123456789", psid: "123456789" })).toBeNull();
-    expect(legacyPhone({ phone: "IN.1684570989242773" })).toBeNull();
-  });
-});
+const kindsOf = (contact: Parameters<typeof identitiesFromContact>[0]) =>
+  identitiesFromContact(contact).map((row) => row.kind);
 
 describe("identitiesFromContact", () => {
+  test("a real number is a phone", () => {
+    expect(identitiesFromContact({ phone: "919188346187" })).toEqual([
+      expect.objectContaining({ kind: "PHONE", value: "919188346187" }),
+    ]);
+  });
+
   test("an Instagram contact gets its Instagram id, not a phone", () => {
-    const kinds = identitiesFromContact({
-      phone: "1660876185146676",
-      igsId: "1660876185146676",
-    }).map((row) => row.kind);
-    expect(kinds).toEqual(["IG_SCOPED"]);
+    expect(kindsOf({ phone: "1660876185146676", igsId: "1660876185146676" })).toEqual([
+      "IG_SCOPED",
+    ]);
+  });
+
+  test("anything over 15 digits is not a phone, even without the matching id", () => {
+    expect(kindsOf({ phone: "1660876185146676" })).toEqual([]);
+  });
+
+  test("a Messenger id or a BSUID in phone is not a phone", () => {
+    expect(kindsOf({ phone: "123456789", psid: "123456789" })).toEqual(["FB_PSID"]);
+    expect(kindsOf({ phone: "IN.1684570989242773" })).toEqual(["WA_BSUID"]);
   });
 });
 
@@ -73,7 +70,7 @@ describe("attachIdentity without a channel", () => {
 });
 
 describe("replaceColumnIdentity", () => {
-  test("an edited phone replaces the old identity and becomes the primary", async () => {
+  test("an edited external id replaces the old identity and becomes the primary", async () => {
     const prisma = (await import("../../../utils/prisma.js")).default as unknown as Record<
       string,
       unknown
@@ -92,10 +89,16 @@ describe("replaceColumnIdentity", () => {
     prisma.$transaction = vi.fn(async (ops: unknown[]) => Promise.all(ops));
     const { replaceColumnIdentity } = await import("./identity.service.js");
 
-    await replaceColumnIdentity("org", "c1", "phone", "919188346187", "919000000001");
+    await replaceColumnIdentity("org", "c1", "external_id", "crm-1", "crm-2");
 
     expect(deleteMany).toHaveBeenCalledWith({
-      where: { orgId: "org", contactId: "c1", kind: "PHONE", scope: "", value: "919188346187" },
+      where: {
+        orgId: "org",
+        contactId: "c1",
+        kind: "EXTERNAL",
+        scope: "external_id",
+        value: "crm-1",
+      },
     });
     expect(update).toHaveBeenCalledWith({ where: { id: "new" }, data: { isPrimary: true } });
   });
@@ -106,7 +109,7 @@ describe("replaceColumnIdentity", () => {
       contactIdentity: { deleteMany: ReturnType<typeof vi.fn> };
     };
     prisma.contactIdentity.deleteMany.mockClear();
-    await replaceColumnIdentity("org", "c1", "email", "A@x.com", "a@x.com");
+    await replaceColumnIdentity("org", "c1", "external_id", " crm-1", "crm-1");
     expect(prisma.contactIdentity.deleteMany).not.toHaveBeenCalled();
   });
 });
@@ -119,14 +122,12 @@ describe("updateManualIdentity", () => {
     >;
     const update = vi.fn(async () => ({}));
     const updateMany = vi.fn(async () => ({ count: 1 }));
-    const contactUpdate = vi.fn(async () => ({}));
     const tx = {
       contactIdentity: {
         update,
         updateMany,
         findFirst: vi.fn(async () => ({ id: identity.id, value: "919000000001", isPrimary: true })),
       },
-      contact: { update: contactUpdate },
     };
     prisma.contactIdentity = {
       findFirst: vi.fn(async (args: { where: { id?: string } }) =>
@@ -136,13 +137,13 @@ describe("updateManualIdentity", () => {
     prisma.contact = { findFirst: vi.fn(async () => null) };
     prisma.$transaction = vi.fn(async (fn: (t: typeof tx) => unknown) => fn(tx));
     const { updateManualIdentity } = await import("./identity.service.js");
-    return { updateManualIdentity, update, updateMany, contactUpdate };
+    return { updateManualIdentity, update, updateMany };
   }
 
   const phone = { id: "i1", kind: "PHONE", value: "919188346187", contactId: "c1" };
 
   test("a second number can be corrected and made the main one", async () => {
-    const { updateManualIdentity, update, updateMany, contactUpdate } = await setup(phone);
+    const { updateManualIdentity, update, updateMany } = await setup(phone);
     const result = await updateManualIdentity("org", "c1", "i1", {
       value: "+91 90000 00001",
       isPrimary: true,
@@ -157,10 +158,6 @@ describe("updateManualIdentity", () => {
         data: expect.objectContaining({ value: "919000000001", isPrimary: true }),
       }),
     );
-    expect(contactUpdate).toHaveBeenCalledWith({
-      where: { id: "c1" },
-      data: { phone: "919000000001" },
-    });
   });
 
   test("a platform id is never edited by hand", async () => {

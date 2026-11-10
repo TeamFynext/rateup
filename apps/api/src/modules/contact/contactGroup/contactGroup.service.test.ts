@@ -144,7 +144,30 @@ describe("getContactsByContactGroupId", () => {
       contacts: [{ contact: { id: "c1" } }, { contact: { id: "c2" } }],
     });
 
-    expect(await getContactsByContactGroupId("g1", ORG)).toEqual([{ id: "c1" }, { id: "c2" }]);
+    expect(await getContactsByContactGroupId("g1", ORG)).toEqual([
+      { id: "c1", phone: null, email: null, bsuid: null, igsId: null, psid: null },
+      { id: "c2", phone: null, email: null, bsuid: null, igsId: null, psid: null },
+    ]);
+  });
+
+  test("reads each contact's phone and email from its identities", async () => {
+    db.contactGroup.findFirst.mockResolvedValue({
+      contacts: [
+        {
+          contact: {
+            id: "c1",
+            identities: [
+              { kind: "PHONE", value: "919876543210" },
+              { kind: "EMAIL", value: "a@x.com" },
+            ],
+          },
+        },
+      ],
+    });
+
+    expect(await getContactsByContactGroupId("g1", ORG)).toEqual([
+      { id: "c1", phone: "919876543210", email: "a@x.com", bsuid: null, igsId: null, psid: null },
+    ]);
   });
 
   test("throws for a group id that does not exist", async () => {
@@ -173,7 +196,7 @@ describe("getContactsByContactGroupIdWithPagination", () => {
     db.contact.count.mockResolvedValue(5);
 
     expect(await getContactsByContactGroupIdWithPagination("g1", ORG)).toEqual({
-      group: [{ id: "c1" }],
+      group: [{ id: "c1", phone: null, email: null, bsuid: null, igsId: null, psid: null }],
       totalCount: 5,
     });
   });
@@ -199,10 +222,32 @@ describe("getContactsByContactGroupIdWithPagination", () => {
       {
         OR: [
           { name: { contains: "ann", mode: "insensitive" } },
-          { phone: { contains: "ann", mode: "insensitive" } },
+          // "ann" has no digits, so it can match no phone.
+          { id: { in: [] } },
         ],
       },
     ]);
+  });
+
+  test("a search for digits matches the contact's phone identities", async () => {
+    await getContactsByContactGroupIdWithPagination("g1", ORG, { search: "+91 98" } as any);
+
+    expect(memberFilter().AND[0].OR[1]).toEqual({
+      identities: {
+        some: { kind: { in: ["PHONE"] }, value: { contains: "9198", mode: "insensitive" } },
+      },
+    });
+  });
+
+  test("a sort on phone falls back to the creation date", async () => {
+    await getContactsByContactGroupIdWithPagination("g1", ORG, {
+      sort: "phone",
+      desc: "desc",
+    } as any);
+
+    expect(db.contactGroup.findFirst.mock.calls[0][0].include.contacts.orderBy).toEqual({
+      contact: { createdAt: "desc" },
+    });
   });
 
   test("the consent filter compares against a real boolean", async () => {
@@ -309,8 +354,8 @@ describe("addNewContactsToGroup", () => {
     );
 
     expect(db.contact.findMany.mock.calls[0][0].where).toEqual({
-      phone: { in: ["919876543210"] },
       orgId: ORG,
+      identities: { some: { kind: "PHONE", value: { in: ["919876543210"] } } },
     });
   });
 

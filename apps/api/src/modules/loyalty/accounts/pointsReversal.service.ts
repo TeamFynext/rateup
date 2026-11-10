@@ -5,6 +5,7 @@ import { LoyaltyEventType } from "../../../types/enums.js";
 import { checkAndUpgradeTier } from "../earningRulesEngine.js";
 import { sendLoyaltyEvent } from "../messaging/send.js";
 import { announceLoyaltyTransactions } from "../loyalty.webhooks.js";
+import { contactFields, primaryIdentities } from "../../contact/identity/contactFields.js";
 
 /**
  * Taking back the points an order earned, when that order stops being a sale.
@@ -204,9 +205,9 @@ export async function reversePurchasePoints(input: ReversePurchaseInput): Promis
   if (input.orgId) {
     const account = await prisma.customerLoyaltyAccount.findUnique({
       where: { id: input.accountId },
-      select: { contact: { select: { name: true, phone: true } } },
+      select: { contact: { select: { name: true, ...primaryIdentities } } },
     });
-    if (account?.contact?.phone) {
+    if (account && contactFields(account.contact.identities).phone) {
       await sendLoyaltyEvent(
         input.orgId,
         LoyaltyEventType.POINTS_ADJUSTED,

@@ -14,7 +14,6 @@ import { backfillOrgModules } from "./tasks/backfillOrgModules.js";
 import { renamePlanDescriptions } from "./tasks/renamePlanDescriptions.js";
 import { rewriteDripEmailLinks } from "./tasks/rewriteDripEmailLinks.js";
 import { backfillConversationChannels } from "./tasks/backfillConversationChannels.js";
-import { backfillContactIdentities } from "./tasks/backfillContactIdentities.js";
 import { backfillBusinessPortfolios } from "./tasks/backfillBusinessPortfolios.js";
 import { findDuplicateContacts } from "./tasks/findDuplicateContacts.js";
 
@@ -210,19 +209,6 @@ export const MAINTENANCE_TASKS: TaskDefinition[] = [
     destructive: false,
     background: {},
     run: backfillConversationChannels,
-  },
-  {
-    id: "backfill-contact-identities",
-    title: "Record contacts' identities",
-    description:
-      "Writes each contact's phone, email, WhatsApp BSUID, Instagram and Messenger ids into the " +
-      "identity list that contact merge and multi-number lookups use. Until it has run, lookups " +
-      "fall back to the old columns, so nothing breaks in between. Apply runs it in the background " +
-      "until every contact is done; the preview only covers the first ~20 seconds' worth. Safe " +
-      "to re-run.",
-    destructive: false,
-    background: {},
-    run: backfillContactIdentities,
   },
   {
     id: "backfill-business-portfolios",

@@ -34,6 +34,8 @@ const db = prisma as unknown as {
   contactLabelMap: Record<string, Mock>;
 };
 
+/** The phone, email and platform ids a contact with no identities answers with. */
+const NO_FIELDS = { phone: null, email: null, bsuid: null, igsId: null, psid: null };
 const ORG = "11111111-1111-4111-8111-111111111111";
 
 beforeEach(() => {
@@ -153,11 +155,18 @@ describe("assignLabelsToContact", () => {
   });
 
   test("returns the contact with its new labels attached", async () => {
-    db.contact.findFirst
-      .mockResolvedValueOnce({ id: "c1" })
-      .mockResolvedValueOnce({ id: "c1", ContactLabelMap: [] });
+    db.contact.findFirst.mockResolvedValueOnce({ id: "c1" }).mockResolvedValueOnce({
+      id: "c1",
+      ContactLabelMap: [],
+      identities: [{ kind: "PHONE", value: "919000000001" }],
+    });
 
-    expect(await assignLabelsToContact("c1", [], ORG)).toEqual({ id: "c1", ContactLabelMap: [] });
+    expect(await assignLabelsToContact("c1", [], ORG)).toEqual({
+      id: "c1",
+      ContactLabelMap: [],
+      ...NO_FIELDS,
+      phone: "919000000001",
+    });
     expect(db.contact.findFirst.mock.calls[1][0].where).toEqual({ id: "c1", orgId: ORG });
   });
 });
@@ -283,7 +292,7 @@ describe("getContactsWithLabels", () => {
     ]);
 
     expect(await getContactsWithLabels(ORG)).toEqual([
-      { id: "c1", ContactLabelMap: [{ label: { id: "l1" } }] },
+      { id: "c1", ContactLabelMap: [{ label: { id: "l1" } }], ...NO_FIELDS },
     ]);
   });
 });

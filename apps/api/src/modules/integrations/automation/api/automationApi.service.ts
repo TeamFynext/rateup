@@ -1,18 +1,44 @@
 import { WaTemplateStatus } from "../../../../types/enums.js";
 import prisma from "../../../../utils/prisma.js";
+import {
+  contactFields,
+  contactWhereIdentity,
+  primaryIdentities,
+  type PrimaryIdentityRow,
+} from "../../../contact/identity/contactFields.js";
 import { getTemplatesByOrgId } from "../../../whatsapp/messageTemplates/wa_templates.service.js";
 
 /** The contact fields a platform's modules map from; the same set every contact action returns. */
-export const AUTOMATION_CONTACT_SELECT = {
+export const AUTOMATION_CONTACT_FIELDS = [
+  "id",
+  "name",
+  "phone",
+  "email",
+  "source",
+  "igsId",
+  "waMessageAssignStatus",
+  "createdAt",
+] as const;
+
+/** The columns behind them; phone, email and igsId are the contact's primary identities. */
+const AUTOMATION_CONTACT_SELECT = {
   id: true,
   name: true,
-  phone: true,
-  email: true,
   source: true,
-  igsId: true,
   waMessageAssignStatus: true,
   createdAt: true,
+  ...primaryIdentities,
 } as const;
+
+/**
+ * A contact as every contact action returns it, in the same key order. Takes a row with the
+ * fields already mapped, or with its primary `identities` loaded.
+ */
+export function pickAutomationContact(contact: Record<string, unknown>) {
+  const identities = contact.identities as PrimaryIdentityRow[] | undefined;
+  const row = identities ? { ...contactFields(identities), ...contact } : contact;
+  return Object.fromEntries(AUTOMATION_CONTACT_FIELDS.map((key) => [key, row[key] ?? null]));
+}
 
 /**
  * Contacts in the org with this phone (digits, `+` optional) or this email.
@@ -23,19 +49,19 @@ export async function searchAutomationContacts(
   orgId: string,
   query: { phone?: string; email?: string },
 ) {
-  const phone = query.phone?.replace(/\D/g, "");
-  return prisma.contact.findMany({
+  const rows = await prisma.contact.findMany({
     where: {
       orgId,
       OR: [
-        ...(phone ? [{ phone }] : []),
-        ...(query.email ? [{ email: { equals: query.email, mode: "insensitive" as const } }] : []),
+        ...(query.phone?.replace(/\D/g, "") ? [contactWhereIdentity("phone", query.phone)] : []),
+        ...(query.email ? [contactWhereIdentity("email", query.email)] : []),
       ],
     },
     select: AUTOMATION_CONTACT_SELECT,
     orderBy: { createdAt: "desc" },
     take: 20,
   });
+  return rows.map(pickAutomationContact);
 }
 
 /** The highest `{{n}}` in a template's body: how many variables a send must fill. */

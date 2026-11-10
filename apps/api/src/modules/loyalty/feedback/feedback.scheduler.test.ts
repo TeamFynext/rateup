@@ -64,7 +64,9 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.useRealTimers();
   db.loyaltyFeedbackSetting.findUnique.mockResolvedValue(liveSetting());
-  db.customerLoyaltyAccount.findUnique.mockResolvedValue({ contact: { phone: "15550001" } });
+  db.customerLoyaltyAccount.findUnique.mockResolvedValue({
+    contact: { identities: [{ kind: "PHONE", value: "15550001" }] },
+  });
   db.loyaltyFeedbackRequest.findFirst.mockResolvedValue(null);
   db.loyaltyFeedbackRequest.create.mockResolvedValue({ id: "req-1" });
 });
@@ -87,7 +89,7 @@ describe("scheduleFeedbackRequest — early outs", () => {
   });
 
   test("a customer with no phone cannot be asked", async () => {
-    db.customerLoyaltyAccount.findUnique.mockResolvedValue({ contact: { phone: null } });
+    db.customerLoyaltyAccount.findUnique.mockResolvedValue({ contact: { identities: [] } });
     await expect(scheduleFeedbackRequest(INPUT)).resolves.toEqual({
       scheduled: false,
       reason: "no_phone",

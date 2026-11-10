@@ -75,7 +75,7 @@ describe("setMetaAgentThreadOwner", () => {
       where: {
         orgId: "org-1",
         AND: [
-          { OR: [{ phone: "919188346187" }] },
+          { OR: [{ identities: { some: { kind: "PHONE", value: "919188346187" } } }] },
           { OR: [{ metaAgentThreadOwner: null }, { metaAgentThreadOwner: { not: "STAFF" } }] },
           { OR: [{ metaAgentThreadOwnerAt: null }, { metaAgentThreadOwnerAt: { lte: at } }] },
         ],
@@ -186,6 +186,8 @@ describe("setMetaAgentThreadOwner", () => {
 
     await setMetaAgentThreadOwner({ orgId: "org-1", phone: "IN.42", owner: "AI", at });
 
-    expect(updateMany.mock.calls[0][0].where.AND[0]).toEqual({ OR: [{ bsuid: "IN.42" }] });
+    expect(updateMany.mock.calls[0][0].where.AND[0]).toEqual({
+      OR: [{ identities: { some: { kind: "WA_BSUID", value: "IN.42" } } }],
+    });
   });
 });

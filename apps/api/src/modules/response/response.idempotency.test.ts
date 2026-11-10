@@ -58,7 +58,18 @@ describe("createResponse idempotency", () => {
 
     expect(db.surveyResponse.create).toHaveBeenCalledTimes(1);
     expect(db.surveyResponse.create.mock.calls[0][0].data.idempotencyKey).toBe(KEY);
-    expect(result).toBe(CREATED);
+    expect(result).toEqual({ ...CREATED, Contact: null });
+  });
+
+  test("the respondent's phone comes from the contact's primary PHONE identity", async () => {
+    db.surveyResponse.create.mockResolvedValue({
+      ...CREATED,
+      Contact: { identities: [{ kind: "PHONE", value: "919000000001" }] },
+    });
+
+    const result = await createResponse(input());
+
+    expect(result.Contact).toEqual({ phone: "919000000001" });
   });
 
   test("returns the original row instead of filing a retry twice", async () => {
@@ -66,7 +77,7 @@ describe("createResponse idempotency", () => {
 
     const result = await createResponse(input({ idempotencyKey: KEY }));
 
-    expect(result).toBe(EXISTING);
+    expect(result).toEqual({ ...EXISTING, Contact: null });
     expect(db.surveyResponse.create).not.toHaveBeenCalled();
     expect(db.surveyResponse.findUnique).toHaveBeenCalledWith(
       expect.objectContaining({ where: { idempotencyKey: KEY } }),
@@ -78,7 +89,10 @@ describe("createResponse idempotency", () => {
     db.surveyResponse.create.mockRejectedValue({ code: "P2002" });
     db.surveyResponse.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce(EXISTING);
 
-    await expect(createResponse(input({ idempotencyKey: KEY }))).resolves.toBe(EXISTING);
+    await expect(createResponse(input({ idempotencyKey: KEY }))).resolves.toEqual({
+      ...EXISTING,
+      Contact: null,
+    });
   });
 
   test("rethrows a constraint violation that is not the idempotency key", async () => {

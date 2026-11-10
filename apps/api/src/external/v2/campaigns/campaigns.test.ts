@@ -292,7 +292,7 @@ describe("org scoping", () => {
         responses: [{ questionId: "q1", type: "RATING", response: { RATING: 5 } }],
         encryptedResponses: null,
         surveyTeamMap: { teamId: TEAM_ID },
-        Contact: { phone: "+919000000001" },
+        Contact: { identities: [{ kind: "PHONE", value: "+919000000001" }] },
         ip: "10.0.0.1",
       },
     ]);

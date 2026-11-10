@@ -281,12 +281,37 @@ describe("contacts", () => {
   });
 
   test("search matches the exact phone, plus stripped, within the key's org", async () => {
-    db.contact.findMany.mockResolvedValue([]);
+    db.contact.findMany.mockResolvedValue([
+      {
+        id: CONTACT,
+        name: "Ann",
+        source: null,
+        waMessageAssignStatus: "OPEN",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        identities: [{ kind: "PHONE", value: "919876543210" }],
+      },
+    ]);
 
-    await call("GET", "/contacts?phone=%2B919876543210");
+    const response = await call("GET", "/contacts?phone=%2B919876543210");
 
     const { where } = db.contact.findMany.mock.calls[0][0];
-    expect(where).toEqual({ orgId: ORG, OR: [{ phone: "919876543210" }] });
+    expect(where).toEqual({
+      orgId: ORG,
+      OR: [{ identities: { some: { kind: "PHONE", value: "919876543210" } } }],
+    });
+    // The same fields, in the same order, as before phone and email became identities.
+    const [contact] = response.json();
+    expect(Object.keys(contact)).toEqual([
+      "id",
+      "name",
+      "phone",
+      "email",
+      "source",
+      "igsId",
+      "waMessageAssignStatus",
+      "createdAt",
+    ]);
+    expect(contact).toMatchObject({ id: CONTACT, phone: "919876543210", email: null });
   });
 
   test("search needs a phone or an email", async () => {

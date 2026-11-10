@@ -21,7 +21,7 @@ import type {
 import { cn } from "@/lib/utils.ts";
 import { getContactLabel } from "@/utils/whatsapp/inbox.ts";
 
-const KIND_ICON: Record<IdentityKind, typeof IconPhone> = {
+export const KIND_ICON: Record<IdentityKind, typeof IconPhone> = {
   PHONE: IconPhone,
   EMAIL: IconMail,
   WA_BSUID: IconBrandWhatsapp,
@@ -52,8 +52,13 @@ export function identityLabel(identity: ContactIdentity, t: TFunction): string {
       return handle ?? identity.displayName ?? t("Instagram user");
     case "FB_PSID":
       return identity.displayName ?? handle ?? t("Messenger user");
-    case "WEBCHAT":
+    case "WEBCHAT": {
+      // Usually a random visitor id, but some widgets use the phone or email the visitor typed.
+      const typed = identity.value.trim();
+      if (/^\+?\d{7,15}$/.test(typed)) return withPlus(typed);
+      if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(typed)) return typed;
       return identity.displayName ?? t("Web visitor");
+    }
     default:
       return identity.value;
   }

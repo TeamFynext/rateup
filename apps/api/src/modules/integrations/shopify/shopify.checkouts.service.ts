@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import dayjs from "dayjs";
 
 import prisma from "../../../utils/prisma.js";
+import { contactWhereIdentity } from "../../contact/identity/contactFields.js";
 import { log } from "../../../utils/logger.js";
 import {
   Prisma,
@@ -374,7 +375,7 @@ export async function fireCheckoutReminder(reminderId: string) {
     return "skipped";
   }
   const contact = await prisma.contact.findFirst({
-    where: { orgId: checkout.orgId, phone: checkout.phone },
+    where: { orgId: checkout.orgId, ...contactWhereIdentity("phone", checkout.phone) },
     select: { consent: true, blockedOnWhatsApp: true, isSpam: true },
   });
   if (contact && (!contact.consent || contact.blockedOnWhatsApp || contact.isSpam)) {

@@ -6,6 +6,7 @@ vi.mock("../../../utils/prisma.js", () => ({
     webhook: { findUnique: vi.fn() },
     lifecycle: { findUnique: vi.fn() },
     surveyResponse: { findUnique: vi.fn() },
+    contactIdentity: { findMany: vi.fn() },
   },
 }));
 
@@ -163,6 +164,46 @@ describe("emitIntegrationEvent", () => {
     expect(jobs()).toEqual([
       [INTEGRATION_EVENT_JOB, { orgId: ORG, event: { type: "contact.created", contact } }],
     ]);
+  });
+
+  test("a contact row without phone and email gets them from its primary identities", async () => {
+    const { email: _email, phone: _phone, ...row } = contact;
+    db.contactIdentity.findMany.mockResolvedValue([
+      { contactId: "c1", kind: "PHONE", value: "919000000001" },
+      { contactId: "c1", kind: "EMAIL", value: "ann@example.com" },
+    ]);
+
+    await emitIntegrationEvent(ORG, {
+      type: "contact.updated",
+      contact: row,
+      changed: ["details"],
+    });
+
+    expect(db.contactIdentity.findMany.mock.calls[0][0].where).toMatchObject({
+      contactId: { in: ["c1"] },
+      isPrimary: true,
+    });
+    expect(jobs()[0][1].event.contact).toEqual({
+      ...row,
+      phone: "919000000001",
+      email: "ann@example.com",
+      bsuid: null,
+      igsId: null,
+      psid: null,
+    });
+  });
+
+  test("identities loaded with the row are read in place, with no query", async () => {
+    const { email: _email, phone: _phone, ...row } = contact;
+    await emitIntegrationEvent(ORG, {
+      type: "contact.created",
+      contact: { ...row, identities: [{ kind: "PHONE", value: "919000000001" }] },
+    });
+
+    expect(db.contactIdentity.findMany).not.toHaveBeenCalled();
+    const sent = jobs()[0][1].event.contact;
+    expect(sent).toMatchObject({ phone: "919000000001", email: null });
+    expect(sent).not.toHaveProperty("identities");
   });
 
   test("a survey response is announced, an anonymous one too", async () => {

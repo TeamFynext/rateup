@@ -59,8 +59,6 @@ export async function createWaSettings(
       : data.encryption === undefined
         ? undefined
         : sealFlowKeys(data.encryption);
-  const instagramIceBreakers = jsonOrDbNull(data.instagramIceBreakers);
-  const instagramPersistentMenu = jsonOrDbNull(data.instagramPersistentMenu);
   const conversionData = jsonOrDbNull(data.conversionData);
 
   if (data.phoneId && !data.phone) {
@@ -89,14 +87,9 @@ export async function createWaSettings(
         ...data,
         channelId: id,
         encryption,
-        instagramIceBreakers,
-        instagramPersistentMenu,
         conversionData,
         accessToken: encryptedToken.encryptedData,
         accessToken_iv: encryptedToken.iv,
-        pageAccessToken: data.pageAccessToken
-          ? encryptInlineToken(data.pageAccessToken)
-          : undefined,
       },
     }),
   ]);
@@ -327,7 +320,7 @@ export function decryptInlineToken(value: string | null): string | null {
 export function getWaSettingsWithAccessTokenDecrypted(
   waSettings: WhatsappSettings,
 ): Omit<WhatsappSettings, "accessToken_iv"> {
-  const { accessToken_iv, accessToken, pageAccessToken, ...data } = waSettings;
+  const { accessToken_iv, accessToken, ...data } = waSettings;
 
   let decryptedToken = accessToken;
   if (accessToken && typeof accessToken_iv === "string" && accessToken_iv.length > 0) {
@@ -341,7 +334,6 @@ export function getWaSettingsWithAccessTokenDecrypted(
   return {
     ...data,
     accessToken: decryptedToken,
-    pageAccessToken: decryptInlineToken(pageAccessToken),
   };
 }
 
@@ -360,17 +352,12 @@ export async function updateWaSettings(
         : data.encryption === undefined
           ? undefined
           : sealFlowKeys(data.encryption),
-    instagramIceBreakers: jsonOrDbNull(data.instagramIceBreakers),
-    instagramPersistentMenu: jsonOrDbNull(data.instagramPersistentMenu),
     conversionData: jsonOrDbNull(data.conversionData),
   };
   if (data.accessToken) {
     const encryptedToken = aes_encrypt(data.accessToken, getEncryptionKey());
     dataToBeUpdated.accessToken = encryptedToken.encryptedData;
     dataToBeUpdated.accessToken_iv = encryptedToken.iv;
-  }
-  if (data.pageAccessToken) {
-    dataToBeUpdated.pageAccessToken = encryptInlineToken(data.pageAccessToken);
   }
   return updateSettingsWithChannel({ orgId, phoneId }, dataToBeUpdated);
 }

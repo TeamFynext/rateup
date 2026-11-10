@@ -256,7 +256,7 @@ describe("appendResponseToSheet", () => {
     language: "en",
     createdAt: new Date("2026-10-02T09:30:00"),
     tag: "vip",
-    Contact: { phone: "919876543210" },
+    Contact: { identities: [{ kind: "PHONE", value: "919876543210" }] },
     surveyTeamMap: {
       survey: { spreadSheetId: "sheet-1", questions, id: "survey-1" },
       team: { name: "Kochi", orgId: ORG },

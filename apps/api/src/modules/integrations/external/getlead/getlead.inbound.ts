@@ -1,5 +1,6 @@
 import type { Integration } from "../../../../generated/prisma/client.js";
 import prisma from "../../../../utils/prisma.js";
+import { contactWhereIdentity } from "../../../contact/identity/contactFields.js";
 import { log } from "../../../../utils/logger.js";
 import { recordIntegrationSyncActivity } from "../integrationActivity.js";
 import { getCachedGetLeadMeta } from "./getlead.connect.js";
@@ -123,7 +124,7 @@ async function findLeadForDelivery(orgId: string, data: GetLeadDeliveryData) {
   if (!phone) return null;
 
   const contact = await prisma.contact.findFirst({
-    where: { orgId, phone },
+    where: { orgId, ...contactWhereIdentity("phone", phone) },
     select: { id: true, leads: leadInclude },
   });
   return contact?.leads?.[0] ?? null;
@@ -335,7 +336,7 @@ async function findOrCreateContact(
   data: GetLeadDeliveryData,
 ) {
   const existing = await prisma.contact.findFirst({
-    where: { orgId, phone },
+    where: { orgId, ...contactWhereIdentity("phone", phone) },
     select: { id: true },
   });
   if (existing) return existing.id;

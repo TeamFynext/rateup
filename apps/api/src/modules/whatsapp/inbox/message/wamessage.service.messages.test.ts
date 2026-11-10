@@ -156,7 +156,9 @@ beforeEach(() => {
   db.conversation.update.mockReturnValue("conv-update-promise" as any);
   db.$transaction.mockResolvedValue([MESSAGE, {}]);
   db.waMessageOrgTeamMap.create.mockResolvedValue({ id: "map-1" });
-  db.contact.findMany.mockResolvedValue([{ name: "Ada", phone: "15550001" }]);
+  db.contact.findMany.mockResolvedValue([
+    { name: "Ada", identities: [{ kind: "PHONE", value: "15550001" }] },
+  ]);
 });
 
 describe("addNewWaMessage", () => {
@@ -886,7 +888,7 @@ describe("sendContactMessage", () => {
 
     expect(db.contact.findMany.mock.calls[0][0].where.OR).toEqual([{ id: { in: ["c1", "c2"] } }]);
     expect(createContactMessage).toHaveBeenCalledWith("15550001", [
-      { name: "Ada", phone: "15550001" },
+      { name: "Ada", phone: "15550001", email: null, bsuid: null, igsId: null, psid: null },
     ]);
     expect(sendMessageMock).toHaveBeenCalled();
   });
@@ -935,7 +937,7 @@ describe("markMessagesAsRead", () => {
     messageId: "wamid.abc",
     sourceIdentifier: "15551323034",
     sourcePlatform: PlatformType.WHATSAPP,
-    contact: { orgId: "org-1", phone: "15550001", igsId: null, psid: null },
+    contact: { orgId: "org-1", identities: [{ kind: "PHONE", value: "15550001" }] },
   };
 
   beforeEach(() => {
@@ -992,7 +994,7 @@ describe("markMessagesAsRead", () => {
       messageId: null,
       sourceIdentifier: "iba-1",
       sourcePlatform: PlatformType.INSTAGRAM,
-      contact: { orgId: "org-1", phone: null, igsId: "igsid-1", psid: null },
+      contact: { orgId: "org-1", identities: [{ kind: "IG_SCOPED", value: "igsid-1" }] },
     });
     getInstagramChannelMock.mockResolvedValue({ pageAccessToken: "page-token" });
 
@@ -1016,7 +1018,7 @@ describe("markMessagesAsRead", () => {
       messageId: null,
       sourceIdentifier: "page-1",
       sourcePlatform: PlatformType.FACEBOOK,
-      contact: { orgId: "org-1", phone: null, igsId: null, psid: "psid-1" },
+      contact: { orgId: "org-1", identities: [{ kind: "FB_PSID", value: "psid-1" }] },
     });
     getMessengerChannelByPageIdMock.mockResolvedValue({ pageAccessToken: "page-token" });
 

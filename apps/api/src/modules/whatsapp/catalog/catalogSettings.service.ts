@@ -14,6 +14,7 @@ import {
   CatalogAddressFlowStatus,
   CatalogOrderStage,
 } from "../../../types/enums.js";
+import { contactWhereIdentity } from "../../contact/identity/contactFields.js";
 
 async function getWaSettingsForCatalog(catalogId: string, orgId: string) {
   const phoneMap = await prisma.catalogPhoneIdMap.findFirst({
@@ -927,10 +928,7 @@ export async function handleDeliveryListReply({
 
   const order = await prisma.waCatalogOrder.findFirst({
     where: {
-      contact: {
-        phone: contactPhone,
-        orgId,
-      },
+      contact: { orgId, ...contactWhereIdentity("phone", contactPhone) },
       orderStage: CatalogOrderStage.PENDING_DELIVERY,
     },
     orderBy: { createdAt: "desc" },

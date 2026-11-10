@@ -12,6 +12,7 @@ import {
 import { loadProgram, requireLoyaltySubscription } from "../../../external/v2/loyalty/guards.js";
 import { memberSummary, rewardCatalogue } from "../../../external/v2/loyalty/loyalty.controller.js";
 import prisma from "../../../utils/prisma.js";
+import { contactWhereIdentity } from "../../contact/identity/contactFields.js";
 import { rateLimit } from "../../../utils/rateLimit.js";
 import {
   agentBackInStock,
@@ -84,8 +85,8 @@ async function authenticate(request: FastifyRequest<{ Params: AgentParams }>) {
 }
 
 async function contactId(orgId: string, phone: string) {
-  const contact = await prisma.contact.findUnique({
-    where: { contact_phone_org_id_unique: { phone: digits(phone), orgId } },
+  const contact = await prisma.contact.findFirst({
+    where: { orgId, ...contactWhereIdentity("phone", phone) },
     select: { id: true },
   });
   if (!contact) {

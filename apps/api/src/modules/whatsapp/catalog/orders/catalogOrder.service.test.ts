@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
+import { primaryIdentities } from "../../../contact/identity/contactFields.js";
 
 vi.mock("../../../../utils/prisma.js", () => ({
   default: {
@@ -15,6 +16,12 @@ type Mock = ReturnType<typeof vi.fn>;
 const db = (prisma as unknown as { waCatalogOrder: { count: Mock; findMany: Mock } })
   .waCatalogOrder;
 
+const ORDER_ROW = {
+  id: "order-1",
+  catalogId: "cat-1",
+  contact: { name: "Ada", identities: [{ kind: "PHONE", value: "15550001" }] },
+};
+/** What the API answers with: the phone read from the contact's identities. */
 const ORDER = {
   id: "order-1",
   catalogId: "cat-1",
@@ -32,7 +39,7 @@ function filter(overrides: Record<string, unknown> = {}) {
 beforeEach(() => {
   vi.clearAllMocks();
   db.count.mockResolvedValue(1);
-  db.findMany.mockResolvedValue([ORDER]);
+  db.findMany.mockResolvedValue([ORDER_ROW]);
 });
 
 describe("getWaCatalogOrders - what it returns", () => {
@@ -48,7 +55,7 @@ describe("getWaCatalogOrders - what it returns", () => {
     await getWaCatalogOrders(CATALOG_ID, ORG_ID, filter());
 
     expect(db.findMany.mock.calls[0][0].include).toEqual({
-      contact: { select: { name: true, phone: true } },
+      contact: { select: { name: true, ...primaryIdentities } },
     });
   });
 

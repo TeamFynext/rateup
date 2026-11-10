@@ -375,6 +375,13 @@ its Kafka consumer became `kafka/consumers/status.consumer.ts`, and its `src/uti
   `@prisma/client`.
 - **Formatting/linting**: `vp fmt` (oxfmt, root `vite.config.ts`) + `vp lint` (oxlint, this app's `vite.config.ts`),
   never Prettier or ESLint. The pre-commit hook only formats, so run `vp lint` yourself.
+- **A contact's phone, email, BSUID, Instagram id and Messenger id are identities**, not
+  Contact columns (dropped 2026-11-10): each is the contact's primary `ContactIdentity` of its
+  kind. Read them with `primaryIdentities` + `withContactFields`, filter with
+  `contactWhereIdentity`, and write with `setPrimaryIdentities` / `findOrCreateContactByIdentity`
+  (`src/modules/contact/identity/contactFields.ts`); raw SQL uses `primaryIdentitySql`. API
+  responses still carry `phone`/`email`/`bsuid`/`igsId`/`psid`. TypeScript does not catch a
+  nested `contact: { phone }` in a where or select, so grep when touching contact queries.
 - **Node.js 26.x (LTS)** is required (`engines` in package.json). Configuration comes from `.env`.
 - **External partner API**: two versions, distinct from the first-party `/api/*` routes, with
   token auth via the `apiAccessToken` module. `src/external/v2/` (`/api/external/v2`, current)

@@ -455,7 +455,12 @@ describe("getConversationById / deleteConversation", () => {
 
   test("a delete takes the ticket's messages with it", async () => {
     db.conversation.findMany.mockResolvedValue([
-      { id: "conv-1", contactId: "c1", number: 12, contact: { name: "Ada", phone: "+100" } },
+      {
+        id: "conv-1",
+        contactId: "c1",
+        number: 12,
+        contact: { name: "Ada", identities: [{ kind: "PHONE", value: "100" }] },
+      },
     ]);
     db.contact.findMany.mockResolvedValue([contactBefore(WaMessageAssignStatus.CLOSED)]);
     db.waMessage.deleteMany.mockResolvedValue({ count: 3 });
@@ -481,7 +486,18 @@ describe("getConversationById / deleteConversation", () => {
         id: true,
         contactId: true,
         number: true,
-        contact: { select: { name: true, phone: true } },
+        contact: {
+          select: {
+            name: true,
+            identities: {
+              where: {
+                isPrimary: true,
+                kind: { in: ["PHONE", "EMAIL", "WA_BSUID", "IG_SCOPED", "FB_PSID"] },
+              },
+              select: { kind: true, value: true },
+            },
+          },
+        },
       },
     });
     expect(db.waMessage.deleteMany).toHaveBeenCalledWith({
@@ -502,7 +518,12 @@ describe("getConversationById / deleteConversation", () => {
 
   test("resets the contact's mirror when its last ticket is deleted", async () => {
     db.conversation.findMany.mockResolvedValue([
-      { id: "conv-1", contactId: "c1", number: 12, contact: { name: "Ada", phone: "+100" } },
+      {
+        id: "conv-1",
+        contactId: "c1",
+        number: 12,
+        contact: { name: "Ada", identities: [{ kind: "PHONE", value: "100" }] },
+      },
     ]);
     db.contact.findMany.mockResolvedValue([contactBefore(WaMessageAssignStatus.ASSIGNED)]);
     db.conversation.findFirst.mockResolvedValue(null);
@@ -534,9 +555,24 @@ describe("deleteConversations", () => {
     // Two of the three ids are this org's, and two of them share a contact — so
     // the mirror is re-derived per contact, not per ticket.
     db.conversation.findMany.mockResolvedValue([
-      { id: "conv-1", contactId: "c1", number: 1, contact: { name: "Ada", phone: "+100" } },
-      { id: "conv-2", contactId: "c1", number: 2, contact: { name: "Ada", phone: "+100" } },
-      { id: "conv-3", contactId: "c2", number: 3, contact: { name: null, phone: "+200" } },
+      {
+        id: "conv-1",
+        contactId: "c1",
+        number: 1,
+        contact: { name: "Ada", identities: [{ kind: "PHONE", value: "100" }] },
+      },
+      {
+        id: "conv-2",
+        contactId: "c1",
+        number: 2,
+        contact: { name: "Ada", identities: [{ kind: "PHONE", value: "100" }] },
+      },
+      {
+        id: "conv-3",
+        contactId: "c2",
+        number: 3,
+        contact: { name: null, identities: [{ kind: "PHONE", value: "200" }] },
+      },
     ]);
     db.contact.findMany.mockResolvedValue([]);
     db.waMessage.deleteMany.mockResolvedValue({ count: 7 });
@@ -564,21 +600,21 @@ describe("deleteConversations", () => {
         number: 1,
         contactId: "c1",
         contactName: "Ada",
-        contactPhone: "+100",
+        contactPhone: "100",
       },
       {
         id: "conv-2",
         number: 2,
         contactId: "c1",
         contactName: "Ada",
-        contactPhone: "+100",
+        contactPhone: "100",
       },
       {
         id: "conv-3",
         number: 3,
         contactId: "c2",
         contactName: null,
-        contactPhone: "+200",
+        contactPhone: "200",
       },
     ]);
   });

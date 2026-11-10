@@ -51,6 +51,13 @@ import {
 import { Prisma } from "../../generated/prisma/client.js";
 import { notificationQueue } from "../../workers/bullmq/queues/index.js";
 import { ContactGroupType } from "../contact/contactGroup/contactGroup.schema.js";
+import {
+  contactFields,
+  contactWhereIdentity,
+  primaryIdentities,
+  primaryIdentitySql,
+  type PrimaryIdentityRow,
+} from "../contact/identity/contactFields.js";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -145,11 +152,7 @@ export async function getAllResponses(
               },
             },
           },
-          Contact: {
-            select: {
-              phone: true,
-            },
-          },
+          Contact: { select: primaryIdentities },
           platform: true,
         },
         orderBy: {
@@ -167,12 +170,12 @@ export async function getAllResponses(
           ? responses
               .filter((data) => data.contactId != null && contactIds.includes(data.contactId))
               .map(({ surveyTeamMap, ...restD }) => ({
-                ...restD,
+                ...withRespondentPhone(restD),
                 teamName: surveyTeamMap.team.name,
                 teamId: surveyTeamMap.teamId,
               }))
           : responses.map(({ surveyTeamMap, ...restD }) => ({
-              ...restD,
+              ...withRespondentPhone(restD),
               teamName: surveyTeamMap.team.name,
               teamId: surveyTeamMap.teamId,
             })),
@@ -658,19 +661,24 @@ const responseWithRelations = {
       },
     },
   },
-  Contact: {
-    select: {
-      phone: true,
-    },
-  },
+  Contact: { select: primaryIdentities },
 } as const;
+
+/** A response row with its contact cut down to `{ phone }`, the shape it had before identities. */
+function withRespondentPhone<T extends { Contact: { identities: PrimaryIdentityRow[] } | null }>(
+  row: T,
+): Omit<T, "Contact"> & { Contact: { phone: string | null } | null } {
+  const { Contact, ...rest } = row;
+  return { ...rest, Contact: Contact ? { phone: contactFields(Contact.identities).phone } : null };
+}
 
 /** Reads back a submission already filed under this key. See SurveyResponse.idempotencyKey. */
 async function findResponseByIdempotencyKey(idempotencyKey: string) {
-  return await prisma.surveyResponse.findUnique({
+  const row = await prisma.surveyResponse.findUnique({
     where: { idempotencyKey },
     include: responseWithRelations,
   });
+  return row ? withRespondentPhone(row) : null;
 }
 
 export async function createResponse(
@@ -702,7 +710,9 @@ export async function createResponse(
     const orgId = surveyTeamMap?.team?.orgId;
     const contact = orgId
       ? await prisma.contact.findFirst({
-          where: phone ? { phone, orgId } : { id: requestedContactId, orgId },
+          where: phone
+            ? { orgId, ...contactWhereIdentity("phone", phone) }
+            : { id: requestedContactId, orgId },
           select: { id: true },
         })
       : null;
@@ -730,19 +740,21 @@ export async function createResponse(
     }
   }
 
-  const create = () =>
-    prisma.surveyResponse.create({
-      data: {
-        ...rest,
-        tag: rest.tag,
-        surveyTeamMapId: rest.surveyTeamMapId,
-        language: rest.language,
-        responses: rest.responses as QuestionResponse[],
-        encryptedResponses: rest.encryptedResponses,
-        contactId,
-      },
-      include: responseWithRelations,
-    });
+  const create = async () =>
+    withRespondentPhone(
+      await prisma.surveyResponse.create({
+        data: {
+          ...rest,
+          tag: rest.tag,
+          surveyTeamMapId: rest.surveyTeamMapId,
+          language: rest.language,
+          responses: rest.responses as QuestionResponse[],
+          encryptedResponses: rest.encryptedResponses,
+          contactId,
+        },
+        include: responseWithRelations,
+      }),
+    );
 
   let surveyResponse: Awaited<ReturnType<typeof create>>;
   try {
@@ -1378,7 +1390,10 @@ export function buildResponseFilterSql(filter: ResponseFilterQuery): Prisma.Sql 
     if (to) clauses.push(Prisma.sql`sr."createdAt" <= ${to}::timestamp`);
   }
   if (mobile?.length) {
-    clauses.push(Prisma.sql`c."phone" LIKE ${likeContains(mobile)}`);
+    clauses.push(Prisma.sql`EXISTS (
+        SELECT 1 FROM "ContactIdentity" ci
+        WHERE ci."contactId" = c.id AND ci."kind" = 'PHONE' AND ci."value" LIKE ${likeContains(mobile)}
+      )`);
   }
   if (createdAtFilter?.length) {
     const from = dayBound(createdAtFilter, "start", true);
@@ -1427,7 +1442,7 @@ export async function getSurveyResponseBySurveyId(
   const responses = await prisma.$queryRaw<
     SurveyResponseRawRow[]
   >`SELECT COUNT(*) OVER()::INTEGER , sr.id, sr."contactId", sr."language",
-  sr."tag", sr."responses", sr."createdAt",sr."encryptedResponses",sr."platform", sr."surveyTeamMapId", c."phone" FROM "SurveyResponse" sr
+  sr."tag", sr."responses", sr."createdAt",sr."encryptedResponses",sr."platform", sr."surveyTeamMapId", ${primaryIdentitySql("c", "phone")} AS "phone" FROM "SurveyResponse" sr
   LEFT JOIN "Contact" c on c.id = sr."contactId"
   LEFT JOIN "SurveyTeamMap" st on st.id = sr."surveyTeamMapId"
   LEFT JOIN "Survey" s ON s.id = st."surveyId"

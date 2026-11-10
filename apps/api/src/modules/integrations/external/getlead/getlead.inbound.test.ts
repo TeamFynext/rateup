@@ -248,7 +248,11 @@ describe("applyGetLeadInbound", () => {
     expect(result).toMatchObject({ applied: true, leadId: "lead-9" });
     // Rateup stores E.164 without the leading plus.
     expect(contact.findFirst).toHaveBeenLastCalledWith(
-      expect.objectContaining({ where: expect.objectContaining({ phone: "919400651372" }) }),
+      expect.objectContaining({
+        where: expect.objectContaining({
+          identities: { some: { kind: "PHONE", value: "919400651372" } },
+        }),
+      }),
     );
   });
 

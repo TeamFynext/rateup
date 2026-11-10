@@ -1,6 +1,7 @@
 import { MetaAgentThreadOwner } from "../../generated/prisma/client.js";
 import { isBsuid } from "../whatsapp/bsuid.js";
 import prisma from "../../utils/prisma.js";
+import { contactWhereIdentity } from "../contact/identity/contactFields.js";
 import { log } from "../../utils/logger.js";
 import { sendViaWstoOrgHandler } from "../org/ws/org.ws.controller.js";
 import { notify } from "../notification/notify.js";
@@ -106,7 +107,10 @@ export async function setMetaAgentThreadOwner(input: {
   const reason = input.reason ?? null;
   const phone = isBsuid(input.phone) ? undefined : input.phone;
   const bsuid = input.bsuid ?? (isBsuid(input.phone) ? input.phone : undefined);
-  const customer = [...(phone ? [{ phone }] : []), ...(bsuid ? [{ bsuid }] : [])];
+  const customer = [
+    ...(phone ? [contactWhereIdentity("phone", phone)] : []),
+    ...(bsuid ? [contactWhereIdentity("bsuid", bsuid)] : []),
+  ];
   if (!customer.length) return false;
 
   const { count } = await prisma.contact.updateMany({

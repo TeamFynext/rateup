@@ -23,6 +23,7 @@ import { getFileUrlFromKey, uploadFile } from "../../../utils/upload/s3Upload.js
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat.js";
 import { Contact, TemplateType } from "../../../generated/prisma/client.js";
+import type { ContactFields } from "../../contact/identity/contactFields.js";
 import { sendMessage } from "./wasurvey.service.js";
 import { captureShopifyOrderPayment } from "../../integrations/shopify/shopify.catalog.js";
 import prisma from "../../../utils/prisma.js";
@@ -1449,7 +1450,7 @@ export function createAudioMessage(
 
 export function createContactMessage(
   to: string,
-  contactsData: (Partial<Contact> & { org: { name: string } })[],
+  contactsData: (Partial<Contact & ContactFields> & { org: { name: string } })[],
 ): WaSendMessageBody {
   return {
     messaging_product: "whatsapp",
