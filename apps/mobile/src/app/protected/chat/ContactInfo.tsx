@@ -27,6 +27,7 @@ import { InfoRow, Section } from "@/components/contactInfo/InfoSection";
 import ContactDetailsSection from "@/components/contactInfo/ContactDetailsSection";
 import ContactIdentitiesSection from "@/components/contactInfo/ContactIdentitiesSection";
 import ContactMergeSection from "@/components/contactInfo/ContactMergeSection";
+import TicketSection, { ContactLabelsRow } from "@/components/contactInfo/TicketSection";
 
 /** Mirrors the header's `channelLabel`, shown beside the number. */
 function platformLabel(platform?: string) {
@@ -91,7 +92,11 @@ const ContactInfo = () => {
     igsId: contact?.igsId,
     psid: contact?.psid,
   });
-  const labels = contact?.ContactLabelMap?.map((m: any) => m.label?.name).filter(Boolean) ?? [];
+  // From the contact record; the labels row prefers the inbox row's, which edits patch.
+  const labels =
+    contact?.ContactLabelMap?.map((m: any) => m.label)
+      .filter((l: any) => l?.id)
+      .map((l: any) => ({ id: l.id, name: l.name, color: l.color })) ?? [];
 
   const avatarColor = useMemo(
     () => inboxAvatarColors[paletteIndex(id, inboxAvatarColors.length)],
@@ -281,40 +286,7 @@ const ContactInfo = () => {
         ) : null}
 
         <Section label="Conversation">
-          <InfoRow
-            label="Labels"
-            value={
-              labels.length ? (
-                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
-                  {labels.map((label: string) => (
-                    <View
-                      key={label}
-                      style={{
-                        paddingHorizontal: 8,
-                        paddingVertical: 3,
-                        borderRadius: 999,
-                        backgroundColor: t.pageBg,
-                        borderWidth: 1,
-                        borderColor: t.border1,
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontSize: 12,
-                          fontFamily: "InstrumentSans_600SemiBold",
-                          color: t.fg2,
-                        }}
-                      >
-                        {label}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-              ) : (
-                "—"
-              )
-            }
-          />
+          <ContactLabelsRow contactId={id} fallback={labels} />
           <InfoRow
             label="Assigned to"
             value={
@@ -329,6 +301,8 @@ const ContactInfo = () => {
             last
           />
         </Section>
+
+        {id ? <TicketSection contactId={id} /> : null}
 
         {canReadOrders && id ? (
           <Section label="Orders">

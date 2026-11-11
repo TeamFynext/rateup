@@ -2,7 +2,7 @@ import { useColorScheme } from "nativewind";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { useChatFilterStore, useSelectedTabStore } from "@/utils/store";
-import { useChatFilterData } from "@/api/inbox/contacts/contacts.query";
+import { useContactLabels } from "@/api/inbox/contacts/contacts.query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft } from "lucide-react-native";
 import { WaMessageAssignStatus } from "@/api/inbox/types";
@@ -47,7 +47,7 @@ const FiltersScreen = () => {
   const { data: waSettings, isLoading: waSettingsLoading } = useWaSettings();
   const { data: channels, isLoading: channelsLoading } = useChannels();
   const { data: webchatStatus } = useWebchatStatus();
-  const { data: filterData, isLoading: filterDataLoading } = useChatFilterData();
+  const { data: contactLabels = [], isLoading: labelsLoading } = useContactLabels();
 
   const { filter, setFilter, clearFilter, setPreviousFilterForTab, previousFilterForTab } =
     useChatFilterStore();
@@ -113,9 +113,9 @@ const FiltersScreen = () => {
       }))
     : [];
 
-  // 6. Label Options
-  const labelGroup = filterData?.find((g: any) => g.group === "tags" || g.group === "labels");
-  const labelOptions = labelGroup ? labelGroup.values : [];
+  // 6. Label options: the org's contact labels. The filter matches on the label's id,
+  // as on the web.
+  const labelOptions = Array.isArray(contactLabels) ? contactLabels : [];
 
   const toggleStatus = (statusValue: string) => {
     const current = filter.status || [];
@@ -350,16 +350,18 @@ const FiltersScreen = () => {
               >
                 Labels
               </Text>
-              {filterDataLoading ? (
+              {labelsLoading ? (
                 <Text className="text-gray-400">Loading Labels...</Text>
+              ) : labelOptions.length === 0 ? (
+                <Text className="text-gray-400">No labels yet</Text>
               ) : (
                 <View className="flex-row flex-wrap gap-2">
-                  {labelOptions.map((opt: string) => {
-                    const isSelected = filter.labels?.includes(opt);
+                  {labelOptions.map((opt) => {
+                    const isSelected = filter.labels?.includes(opt.id);
                     return (
                       <Pressable
-                        key={opt}
-                        onPress={() => toggleLabel(opt)}
+                        key={opt.id}
+                        onPress={() => toggleLabel(opt.id)}
                         className={`px-4 py-2 rounded-full border ${
                           isSelected
                             ? "bg-primaryBlue border-primaryBlue"
@@ -376,7 +378,7 @@ const FiltersScreen = () => {
                               : "InstrumentSans_400Regular",
                           }}
                         >
-                          {opt}
+                          {opt.name}
                         </Text>
                       </Pressable>
                     );

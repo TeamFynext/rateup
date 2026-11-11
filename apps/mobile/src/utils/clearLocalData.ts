@@ -22,8 +22,9 @@ import { logger } from "@/utils/logger";
  * offline fallback — left behind, a new sign-in that cannot reach the details
  * endpoint would adopt the previous account's identity.
  *
- * Deliberately excluded: the theme preference and the browser id, which are
- * device settings rather than account data.
+ * Deliberately excluded: the theme preference, the browser id and the "Remember Me"
+ * email (REMEMBERED_EMAIL_KEY in signInScreen.tsx), which are device settings rather
+ * than account data.
  */
 /**
  * Older builds copied the SuperTokens access token into AsyncStorage under this key. No

@@ -19,13 +19,13 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import {
+  AlertCircle,
   ChevronLeft,
   ChevronUp,
   Lock,
   Mic,
   Pause,
   Play,
-  Square,
   Trash2,
 } from "lucide-react-native";
 import { Colors } from "@/constants/colors";
@@ -50,10 +50,10 @@ const WAVE_BARS = 32;
 
 /**
  * - `starting`: finger down, microphone opening.
- * - `holding`: recording while held; release sends, slide left cancels, slide up locks.
- * - `locked`: recording hands-free; stop to review, or send.
- * - `review`: stopped; listen back, then send or delete.
- * - `sending`: uploading and sending.
+ * - `holding`: recording while held; release stops, slide left cancels, slide up locks.
+ * - `locked`: recording hands-free (after a tap); tap stop to review.
+ * - `review`: stopped and uploading in the background; listen back, then send or delete.
+ * - `sending`: waiting for the upload, then sending.
  */
 type Phase = "idle" | "starting" | "holding" | "locked" | "review" | "sending";
 
@@ -80,19 +80,39 @@ function downsample(levels: number[], count: number) {
   });
 }
 
+/** One background upload of a recording, so Send has the S3 key ready. */
+type UploadJob = {
+  promise: Promise<string | null>;
+  key: string | null;
+  failed: boolean;
+  /** Deleted or abandoned before the upload finished: its file is removed when it lands. */
+  cancelled: boolean;
+};
+
 /**
- * WhatsApp's voice note, as state and gestures: hold the mic to record, release to send,
- * slide left to cancel, slide up to lock and record hands-free, then stop to listen back.
- * `onSend` uploads and sends; if it throws, the recording comes back for review so a
- * failed send never loses it.
+ * The voice note, as state and gestures. Tap the mic to record hands-free, or hold it
+ * (slide left to cancel). Stopping, by tapping stop or releasing a hold, uploads the
+ * recording straight away and shows it for review; Send then sends the uploaded file.
+ * `upload` returns the S3 key, `deliver` sends it, and `removeUpload` deletes an
+ * uploaded file the agent threw away.
  */
-export function useVoiceNote({ onSend }: { onSend: (file: VoiceNoteFile) => Promise<void> }) {
+export function useVoiceNote({
+  upload,
+  deliver,
+  removeUpload,
+}: {
+  upload: (file: VoiceNoteFile) => Promise<string>;
+  deliver: (key: string) => void;
+  removeUpload: (key: string) => void;
+}) {
   const recorder = useAudioRecorder(VOICE_NOTE_OPTIONS);
   const recorderState = useAudioRecorderState(recorder, 80);
   const [phase, setPhaseState] = useState<Phase>("idle");
   const [levels, setLevels] = useState<number[]>([]);
   const [review, setReview] = useState<VoiceNoteFile | null>(null);
+  const [uploadState, setUploadState] = useState<"idle" | "uploading" | "done" | "failed">("idle");
   const phaseRef = useRef<Phase>("idle");
+  const uploadRef = useRef<UploadJob | null>(null);
   const fingerDown = useRef(false);
   const slideX = useSharedValue(0);
   const slideY = useSharedValue(0);
@@ -130,19 +150,73 @@ export function useVoiceNote({ onSend }: { onSend: (file: VoiceNoteFile) => Prom
     return recorder.uri ? { uri: recorder.uri, durationMs } : null;
   };
 
+  const startUpload = (file: VoiceNoteFile) => {
+    setUploadState("uploading");
+    const job: UploadJob = {
+      promise: Promise.resolve(null),
+      key: null,
+      failed: false,
+      cancelled: false,
+    };
+    job.promise = upload(file).then(
+      (key) => {
+        if (job.cancelled) {
+          removeUpload(key);
+          return null;
+        }
+        job.key = key;
+        setUploadState("done");
+        return key;
+      },
+      (err) => {
+        logger.error("voice note upload failed:", err);
+        job.failed = true;
+        if (!job.cancelled) setUploadState("failed");
+        return null;
+      },
+    );
+    uploadRef.current = job;
+  };
+
+  /** Throws the upload away, deleting its file if it already reached S3. */
+  const dropUpload = () => {
+    const job = uploadRef.current;
+    uploadRef.current = null;
+    if (!job) return;
+    job.cancelled = true;
+    if (job.key) removeUpload(job.key);
+  };
+
   const discard = async () => {
     if (phaseRef.current === "holding" || phaseRef.current === "locked") await stopRecorder();
+    dropUpload();
+    setUploadState("idle");
     setReview(null);
     setLevels([]);
     resetGesture();
     setPhase("idle");
   };
 
+  /** Stops recording, starts the upload and shows the recording for review. */
+  const stop = async () => {
+    if (phaseRef.current !== "holding" && phaseRef.current !== "locked") return;
+    const file = await stopRecorder();
+    resetGesture();
+    if (!file) {
+      setPhase("idle");
+      return;
+    }
+    setReview(file);
+    setPhase("review");
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    startUpload(file);
+  };
+
   const begin = async () => {
     setPhase("starting");
     try {
       // Asked for outside the hold: the system prompt takes the finger off the button,
-      // so the first hold only grants access and the next one records.
+      // so the first tap only grants access and the next one records.
       if (!(await getRecordingPermissionsAsync()).granted) {
         const { granted } = await requestRecordingPermissionsAsync();
         if (!granted) Toast.info("Allow microphone access in Settings to record voice notes.");
@@ -170,58 +244,55 @@ export function useVoiceNote({ onSend }: { onSend: (file: VoiceNoteFile) => Prom
     await discard();
   };
 
+  /** Recording carries on hands-free: after a tap, or a hold slid up to the lock. */
   const lock = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     resetGesture();
     setPhase("locked");
   };
 
-  const send = async () => {
-    const from = phaseRef.current;
-    const file =
-      from === "review"
-        ? review
-        : from === "holding" || from === "locked"
-          ? await stopRecorder()
-          : null;
-    resetGesture();
-    if (!file) {
-      setPhase("idle");
-      return;
-    }
-    setPhase("sending");
-    try {
-      await onSend(file);
-      setReview(null);
-      setLevels([]);
-      setPhase("idle");
-    } catch {
-      // Kept, so it can be sent again.
-      setReview(file);
-      setPhase("review");
-    }
-  };
-
   const release = async () => {
     if (phaseRef.current !== "holding") return;
+    // A tap, not a hold: keep recording until stop is tapped.
     if (recorderState.durationMillis < MIN_DURATION_MS) {
-      await discard();
-      Toast.info("Hold to record, release to send.");
+      lock();
       return;
     }
-    await send();
+    await stop();
   };
 
-  const stopForReview = async () => {
-    const file = await stopRecorder();
-    setReview(file);
-    setPhase(file ? "review" : "idle");
+  /** Sends the reviewed recording, waiting for its upload, or retrying one that failed. */
+  const send = async () => {
+    if (phaseRef.current !== "review" || !review) return;
+    setPhase("sending");
+    if (!uploadRef.current || uploadRef.current.failed) startUpload(review);
+    const job = uploadRef.current!;
+    const key = job.key ?? (await job.promise);
+    // The upload failed (its error is already shown): keep the recording to try again.
+    if (!key || uploadRef.current !== job) {
+      // Read after the await, when it may have moved on (TypeScript still narrows it).
+      if ((phaseRef.current as Phase) === "sending") setPhase("review");
+      return;
+    }
+    try {
+      deliver(key);
+    } catch (err) {
+      logger.error("voice note send failed:", err);
+      Toast.error("Voice note not sent. Please try again.");
+      setPhase("review");
+      return;
+    }
+    uploadRef.current = null;
+    setUploadState("idle");
+    setReview(null);
+    setLevels([]);
+    setPhase("idle");
   };
 
   // The gesture handlers are created once, so they reach the current closures through a ref.
-  const handlers = useRef({ begin, cancel, lock, release });
+  const handlers = useRef({ begin, cancel, lock, release, dropUpload });
   useLayoutEffect(() => {
-    handlers.current = { begin, cancel, lock, release };
+    handlers.current = { begin, cancel, lock, release, dropUpload };
   });
 
   // `PanResponder.create` only stores these callbacks; the refs are read on touch events,
@@ -255,12 +326,14 @@ export function useVoiceNote({ onSend }: { onSend: (file: VoiceNoteFile) => Prom
     }),
   );
 
-  // Leaving the chat mid-recording drops the recording rather than leaving the mic open.
+  // Leaving the chat drops an unsent recording: the mic is given back, and a file already
+  // uploaded for it is deleted.
   useEffect(
     () => () => {
       if (phaseRef.current === "holding" || phaseRef.current === "locked") {
         void configurePlaybackAudioMode();
       }
+      handlers.current.dropUpload();
     },
     [],
   );
@@ -269,6 +342,8 @@ export function useVoiceNote({ onSend }: { onSend: (file: VoiceNoteFile) => Prom
     phase,
     levels,
     review,
+    uploading: uploadState === "uploading",
+    uploadFailed: uploadState === "failed",
     durationMs:
       phase === "review" || phase === "sending"
         ? (review?.durationMs ?? 0)
@@ -277,8 +352,8 @@ export function useVoiceNote({ onSend }: { onSend: (file: VoiceNoteFile) => Prom
     slideY,
     panHandlers: panResponder.panHandlers,
     discard,
+    stop,
     send,
-    stopForReview,
   };
 }
 
@@ -313,7 +388,7 @@ export function VoiceNoteMic({ voice }: { voice: VoiceNote }) {
         accessible
         accessibilityRole="button"
         accessibilityLabel="Record voice note"
-        accessibilityHint="Hold to record, release to send"
+        accessibilityHint="Tap to record, or hold to record while held"
         style={[
           {
             width: 42,
@@ -371,13 +446,9 @@ export function VoiceNoteBar({ voice, isDark }: { voice: VoiceNote; isDark: bool
       <Text style={{ color: t.textPrimary, fontVariant: ["tabular-nums"], fontSize: 15 }}>
         {formatDuration(voice.durationMs)}
       </Text>
+      {/* Locked: the button beside the bar is the stop button. */}
       {locked ? (
-        <>
-          <Waveform levels={voice.levels.slice(-WAVE_BARS)} color={t.textMuted} />
-          <Pressable onPress={voice.stopForReview} hitSlop={8} accessibilityLabel="Stop recording">
-            <Square size={18} color="#E5484D" fill="#E5484D" />
-          </Pressable>
-        </>
+        <Waveform levels={voice.levels.slice(-WAVE_BARS)} color={t.textMuted} />
       ) : (
         <SlideToCancel voice={voice} color={t.textMuted} />
       )}
@@ -423,6 +494,16 @@ function ReviewBar({ voice, isDark, box }: { voice: VoiceNote; isDark: boolean; 
       <Text style={{ color: t.textMuted, fontVariant: ["tabular-nums"], fontSize: 13 }}>
         {formatDuration(status.playing ? status.currentTime * 1000 : voice.durationMs)}
       </Text>
+      {/* Upload status: a spinner while it goes up to S3, a warning if it failed (Send retries). */}
+      {voice.uploading ? (
+        <ActivityIndicator size="small" color={t.textMuted} accessibilityLabel="Uploading" />
+      ) : voice.uploadFailed ? (
+        <AlertCircle
+          size={16}
+          color="#E5484D"
+          accessibilityLabel="Upload failed, tap send to retry"
+        />
+      ) : null}
     </View>
   );
 }

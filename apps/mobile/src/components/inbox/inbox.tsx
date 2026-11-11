@@ -18,7 +18,7 @@ import {
   resolveChannel,
 } from "@/utils/chatbox_utils";
 import { useAuth } from "@/context/AuthContext";
-import { contactMessagingWindow } from "@/utils/messagingWindow";
+import { isSessionWindowOpen } from "@/utils/sessionWindow";
 import { useCallback, useEffect, useState } from "react";
 import { FlashList } from "@shopify/flash-list";
 import { WaMessageClosedStatus } from "@/constants/constants";
@@ -214,21 +214,20 @@ export default function Inbox({
     const parsedMessage = parseWaMessage_(item.lastMessage);
 
     const lastMessageSender = getLastMessageSender(item, userId);
-    const messagePreview = returnMessageContentBasedOnParsedMessage(
-      parsedMessage,
-      // With the sender named up front, a reaction reads "Aisha: Reacted 👍",
-      // not "Aisha: You reacted 👍" — the receive wording is the neutral one.
-      lastMessageSender ? "receive" : item?.lastMessage?.messageBody?.exchangeProcess,
-    );
+    // A message the customer deleted is never quoted in the list.
+    const messagePreview = item?.lastMessage?.deletedAt
+      ? "This message was deleted"
+      : returnMessageContentBasedOnParsedMessage(
+          parsedMessage,
+          // With the sender named up front, a reaction reads "Aisha: Reacted 👍",
+          // not "Aisha: You reacted 👍" — the receive wording is the neutral one.
+          lastMessageSender ? "receive" : item?.lastMessage?.messageBody?.exchangeProcess,
+        );
     // Not `item.lastMessage` directly: a private note there names the channel
     // "internal". See `getContactChannelSource`.
     const { platform, identifier } = getContactChannelSource(item);
-    const sessionExpiry = dayjs(item.lastReceivedMessageTimeStamp).add(24, "hour");
-    const now = dayjs();
-    const diffInMinutes = sessionExpiry.diff(now, "minute");
-    // Instagram/Messenger: a person may reply for 7 days (Meta's Human Agent tag).
-    const metaWindow = contactMessagingWindow(item, platform);
-    const isSessionActive = metaWindow ? metaWindow.state !== "closed" : diffInMinutes > 0;
+    // WhatsApp 24h; Instagram/Messenger up to 7 days. Same rule as the chat screen.
+    const isSessionActive = isSessionWindowOpen(item);
     const channel = resolveChannel(waSettings, platform, identifier, channels);
     const name = item.name || item?.whatsappUserName || item.igsId || item.phone;
 

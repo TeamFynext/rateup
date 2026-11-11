@@ -1,6 +1,6 @@
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, ActivityIndicator } from "react-native";
 import { signInWithGoogle } from "../api/google_auth";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { configureGoogleSignIn } from "../config/googleConfig";
 import { useRouter } from "expo-router";
 import { GoogleIcon } from "../constants/imageExports";
@@ -8,10 +8,18 @@ import { loggedUserDetails } from "../api/api";
 import { useAuth } from "../context/AuthContext";
 import { syncPushToken } from "../utils/notification";
 import { logger } from "@/utils/logger";
+import type { SignInProgress } from "./auth/useSignInProgress";
 
-const GoogleLogin = ({ setError }: { setError: (msg: string) => void }) => {
+const GoogleLogin = ({
+  setError,
+  progress,
+}: {
+  setError: (msg: string) => void;
+  progress: SignInProgress;
+}) => {
   const router = useRouter();
-  const [loading, setLoading] = useState<boolean>(false);
+  const loading = progress.active === "google";
+  const locked = progress.active !== null;
   const { setUserId, setOrgId } = useAuth();
 
   useEffect(() => {
@@ -19,13 +27,14 @@ const GoogleLogin = ({ setError }: { setError: (msg: string) => void }) => {
   }, []);
 
   const handleLogin = async () => {
-    setLoading(true);
+    progress.begin("google");
+    let failed = false;
     try {
       const res = await signInWithGoogle();
 
       if (!res.success) {
+        failed = true;
         setError(res.message);
-        setLoading(false);
         return;
       }
 
@@ -35,6 +44,7 @@ const GoogleLogin = ({ setError }: { setError: (msg: string) => void }) => {
 
       setUserId(userId);
       setOrgId(orgId);
+      progress.succeeded();
 
       try {
         // Prompts here and only here: sign-in is the moment the user expects to
@@ -51,23 +61,25 @@ const GoogleLogin = ({ setError }: { setError: (msg: string) => void }) => {
 
       router.replace("/protected/inbox");
     } catch (error) {
+      failed = true;
       logger.error("Unexpected Google login error:", error);
       setError("Something went wrong.");
     } finally {
-      setLoading(false);
+      progress.end({ failed });
     }
   };
 
   return (
-    <View className="w-full flex items-center">
+    <View className="w-full flex items-center" style={{ opacity: locked && !loading ? 0.4 : 1 }}>
       <Pressable
-        className="bg-[#C4D7F5] py-3 rounded-md items-center flex-row justify-center w-[86vw] gap-2"
+        className="bg-[#C4D7F5] py-3 rounded-md items-center flex-row justify-center w-[86vw] gap-2 active:opacity-80"
         onPress={handleLogin}
-        disabled={loading}
+        disabled={locked}
+        accessibilityState={{ busy: loading, disabled: locked }}
       >
-        <GoogleIcon />
+        {loading ? <ActivityIndicator color="#004F98" size="small" /> : <GoogleIcon />}
         <Text className="text-[#004F98] font-medium text-[16px]">
-          {loading ? "Please Wait..." : "Sign in with Google"}
+          {loading ? "Signing in with Google…" : "Sign in with Google"}
         </Text>
       </Pressable>
     </View>

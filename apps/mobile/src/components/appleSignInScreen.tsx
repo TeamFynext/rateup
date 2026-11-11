@@ -1,4 +1,4 @@
-import { View, Text, Platform, Pressable } from "react-native";
+import { View, Text, Platform, Pressable, ActivityIndicator } from "react-native";
 import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import * as AppleAuthentication from "expo-apple-authentication";
@@ -9,10 +9,18 @@ import { useAuth } from "../context/AuthContext";
 import { syncPushToken } from "../utils/notification";
 import { FontAwesome } from "@expo/vector-icons";
 import { logger } from "@/utils/logger";
+import type { SignInProgress } from "./auth/useSignInProgress";
 
-const AppleLogin = ({ setError }: { setError: (msg: string) => void }) => {
+const AppleLogin = ({
+  setError,
+  progress,
+}: {
+  setError: (msg: string) => void;
+  progress: SignInProgress;
+}) => {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const loading = progress.active === "apple";
+  const locked = progress.active !== null;
   const { setUserId, setOrgId } = useAuth();
   const [isAvailable, setIsAvailable] = useState(false);
 
@@ -23,11 +31,13 @@ const AppleLogin = ({ setError }: { setError: (msg: string) => void }) => {
   if (Platform.OS !== "ios" || !isAvailable) return null;
 
   const handleAppleLogin = async () => {
-    setLoading(true);
+    progress.begin("apple");
+    let failed = false;
     try {
       const res = await signInWithApple();
 
       if (!res.success) {
+        failed = true;
         setError(res.message);
         return;
       }
@@ -37,6 +47,7 @@ const AppleLogin = ({ setError }: { setError: (msg: string) => void }) => {
 
       setUserId(userId);
       setOrgId(orgId);
+      progress.succeeded();
 
       try {
         // Prompts here and only here: sign-in is the moment the user expects to
@@ -53,23 +64,32 @@ const AppleLogin = ({ setError }: { setError: (msg: string) => void }) => {
 
       router.replace("/protected/inbox");
     } catch (error) {
+      failed = true;
       logger.error("Apple login error:", error);
       setError("Something went wrong.");
     } finally {
-      setLoading(false);
+      progress.end({ failed });
     }
   };
 
   return (
-    <View className="w-full flex items-center mt-3">
+    <View
+      className="w-full flex items-center mt-3"
+      style={{ opacity: locked && !loading ? 0.4 : 1 }}
+    >
       <Pressable
         onPress={handleAppleLogin}
-        disabled={loading}
-        className="bg-black py-3 rounded-md items-center flex-row justify-center w-[86vw] gap-1 dark:border dark:border-gray-500"
+        disabled={locked}
+        accessibilityState={{ busy: loading, disabled: locked }}
+        className="bg-black py-3 rounded-md items-center flex-row justify-center w-[86vw] gap-2 dark:border dark:border-gray-500 active:opacity-80"
       >
-        <FontAwesome name="apple" color="white" size={20} />
+        {loading ? (
+          <ActivityIndicator color="#FFFFFF" size="small" />
+        ) : (
+          <FontAwesome name="apple" color="white" size={20} />
+        )}
         <Text className="text-white font-medium text-[16px]">
-          {loading ? "Please Wait..." : "Sign in with Apple"}
+          {loading ? "Signing in with Apple…" : "Sign in with Apple"}
         </Text>
       </Pressable>
     </View>

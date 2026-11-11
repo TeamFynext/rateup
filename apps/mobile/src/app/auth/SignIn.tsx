@@ -7,8 +7,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AppleLogin from "@/components/appleSignInScreen";
 import { StarMark } from "@/constants/imageExports";
 import KeyboardAvoider from "@/components/common/KeyboardAvoider";
+import SignInOverlay from "@/components/auth/SignInOverlay";
+import { useSignInProgress } from "@/components/auth/useSignInProgress";
 
 const SignIn = () => {
+  const progress = useSignInProgress();
   const showError = (message: string) => {
     Toast.show({
       type: "error",
@@ -51,13 +54,14 @@ const SignIn = () => {
                 </View>
               </View>
 
-              <SignInScreen setError={showError} />
-              <GoogleLogin setError={showError} />
-              <AppleLogin setError={showError} />
+              <SignInScreen setError={showError} progress={progress} />
+              <GoogleLogin setError={showError} progress={progress} />
+              <AppleLogin setError={showError} progress={progress} />
             </View>
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoider>
+      <SignInOverlay stage={progress.stage} />
     </SafeAreaView>
   );
 };
