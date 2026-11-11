@@ -76,6 +76,8 @@ patchedDependencies:
 
 # Dependencies may only run install/build scripts when listed below.
 allowBuilds:
+  "@ffmpeg-installer/darwin-arm64": true
+  "@ffmpeg-installer/darwin-x64": true
   "@ffmpeg-installer/linux-x64": true
   "@prisma/engines": true
   bcrypt: true
