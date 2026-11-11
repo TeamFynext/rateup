@@ -10,6 +10,7 @@ import { router } from "expo-router";
 import { useColorScheme } from "nativewind";
 import Tap from "@/components/common/Tap";
 import { ScrollView, Text, View } from "react-native";
+import { mediaUrl } from "@/utils/cdn";
 
 /**
  * Fallback for the More tab. A tap on the tab opens the `more-menu` sheet instead (see the
@@ -64,7 +65,7 @@ export default function MoreScreen() {
             {user?.profilePhoto ? (
               <Image
                 source={{
-                  uri: `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${user.profilePhoto}`,
+                  uri: mediaUrl(user.profilePhoto),
                 }}
                 style={{ width: 52, height: 52 }}
               />

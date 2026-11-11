@@ -72,6 +72,7 @@ import Animated, {
 import { MessagePlatform } from "@/constants/enums";
 import { logger } from "@/utils/logger";
 import { useReplyTargetStore } from "@/store/replyTargetStore";
+import { mediaUrl } from "@/utils/cdn";
 
 type FormValues = {
   type: "text" | "media" | "contact" | "location";
@@ -394,7 +395,7 @@ const MessageSendPanel = ({
           key,
           type: file.kind,
           name: file.name,
-          url: `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${key}`,
+          url: mediaUrl(key),
           uploading: false,
         });
       } catch (err) {
@@ -652,7 +653,7 @@ const MessageSendPanel = ({
           key,
           type: "audio",
           name: "Voice message",
-          url: `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${key}`,
+          url: mediaUrl(key),
           ...(asVoiceNote && { voice: true }),
         },
       ],

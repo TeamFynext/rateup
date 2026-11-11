@@ -22,7 +22,7 @@ import TrustedBy from "../shared/TrustedBy";
 const NAV_HEIGHT = "calc(46px + 2 * clamp(8px, 1.1vw, 12px) + 2 * clamp(8px, 1.3vw, 16px))";
 
 /** Click-to-chat link for the support number, shared by the nav pill and the "in a hurry" card. */
-const WHATSAPP_HREF = `https://wa.me/${import.meta.env.VITE_SUPPORT_WHATSAPP}?text=${encodeURIComponent(
+const WHATSAPP_HREF = `https://wa.me/${import.meta.env.VITE_SUPPORT_WHATSAPP_NUMBER}?text=${encodeURIComponent(
   "Hi, I would like to see a RateUp demo",
 )}`;
 

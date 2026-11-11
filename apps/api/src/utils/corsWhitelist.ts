@@ -2,7 +2,7 @@ import { log } from "./logger.js";
 import { parseArrayString } from "./array.js";
 
 /**
- * Parses CORS_WHITELIST into a list of exact origins.
+ * Parses CORS_ALLOWED_ORIGINS into a list of exact origins.
  *
  * Accepts either a JSON array (`["http://localhost:4000"]`, the shape currently
  * deployed) or a bare comma-separated list. Each entry is normalised through the URL
@@ -30,7 +30,7 @@ export function parseCorsWhitelist(raw: string | undefined): string[] {
     if (!origin) {
       log.error(
         { entry },
-        "CORS_WHITELIST entry is not a valid origin and has been ignored. " +
+        "CORS_ALLOWED_ORIGINS entry is not a valid origin and has been ignored. " +
           "Expected something like http://localhost:4000 or https://app.example.com.",
       );
       continue;

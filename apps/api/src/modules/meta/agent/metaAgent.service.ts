@@ -60,7 +60,7 @@ async function getEntityContext(orgId: string, whatsappSettingsId: string) {
   const accessToken = settings.accessToken_iv
     ? aes_decrypt(
         settings.accessToken,
-        Buffer.from(process.env.wa_access_token_encryption_key!, "hex"),
+        Buffer.from(process.env.META_ENCRYPTION_KEY!, "hex"),
         settings.accessToken_iv,
       )
     : settings.accessToken;

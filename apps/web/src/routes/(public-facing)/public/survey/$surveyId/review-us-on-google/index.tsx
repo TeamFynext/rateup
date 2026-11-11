@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import GoogleReview from "@/components/Survey/TakeSurvey/GoogleReview/index.tsx";
 import type { ReviewSuggestion } from "@/types/global";
+import { mediaUrl } from "@/utils/cdn";
 
 export const Route = createFileRoute(
   "/(public-facing)/public/survey/$surveyId/review-us-on-google/",
@@ -32,7 +33,7 @@ export const Route = createFileRoute(
       getPublicReviewsBySurveyTeamMapId(surveyId),
     ]);
 
-    const orgLogoUrl = `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${orgLogo}`;
+    const orgLogoUrl = mediaUrl(orgLogo);
     propsToPass.googleLink = googleLink;
     propsToPass.reviews = reviews;
     propsToPass.orgLogoUrl = orgLogo && orgLogo !== "REMOVED_PHOTO" ? orgLogoUrl : null;

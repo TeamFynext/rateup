@@ -12,6 +12,7 @@ import { isNonProductionRuntime } from "../../../../utils/meta.js";
 import { getFlowFromDb, handleDecryptedFlowRequest } from "../flows/flow.service.js";
 import { FlowEndpointException, undecryptableRequest } from "../flows/flow.errors.js";
 import { WhatsappSettings } from "../../../../generated/prisma/client.js";
+import { envFlag } from "../../../../utils/envFlag.js";
 
 // The raw (still-encrypted) request body WhatsApp Flow's endpoint sends us.
 interface EncryptedFlowRequestBody {
@@ -162,7 +163,7 @@ export async function handleFlowResponse(
   if (!encryption) {
     log.warn("Encryption keys not found for org: %s", orgId);
 
-    if (!process.env.wa_flow_encryption) {
+    if (!process.env.WA_FLOW_ENCRYPTION_KEYS) {
       throw new Error("WA_FLOW_ENCRYPTION is not set in .env file");
     }
     if (!phoneId) {
@@ -174,7 +175,7 @@ export async function handleFlowResponse(
     // keys were saved to the db but never actually used for this request, so
     // the destructure below would have been reached with the original
     // (still-null) value and crashed. Reassigning fixes that.
-    const freshEncryption: WaEncryptionKeys = JSON.parse(process.env.wa_flow_encryption);
+    const freshEncryption: WaEncryptionKeys = JSON.parse(process.env.WA_FLOW_ENCRYPTION_KEYS);
     encryption = freshEncryption;
 
     await setBusinessPublicKey(freshEncryption.publicKey, phoneId, accessToken);
@@ -256,7 +257,7 @@ export type SignatureCheck =
 export function isRequestSignatureValid(req: FastifyRequest): SignatureCheck {
   // Trimmed: a trailing newline picked up from an env file or a dashboard paste
   // changes the digest and is invisible in logs.
-  const appSecret = process.env.waclient_secret?.trim();
+  const appSecret = process.env.META_APP_SECRET?.trim();
   if (!appSecret) {
     return { valid: false, reason: "no-app-secret" };
   }
@@ -286,7 +287,7 @@ export function isRequestSignatureValid(req: FastifyRequest): SignatureCheck {
   if (expected.length !== received.length || !crypto.timingSafeEqual(expected, received)) {
     // Development only: it logs the expected signature, which is an HMAC oracle for
     // the raw body, so the flag does nothing in production.
-    if (process.env.FLOW_SIGNATURE_DEBUG === "1" && isNonProductionRuntime()) {
+    if (envFlag("FLOW_SIGNATURE_DEBUG") && isNonProductionRuntime()) {
       // Everything needed to reproduce the digest offline and find which secret
       // Meta actually signed with. The body is the encrypted envelope, so this
       // leaks no answer data — but it is verbose, hence the explicit opt-in.

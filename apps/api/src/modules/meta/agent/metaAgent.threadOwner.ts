@@ -66,7 +66,7 @@ export function resolveHandoverOwner(
     return { owner, reason };
   }
 
-  const ourAppId = process.env.waclient_id;
+  const ourAppId = process.env.META_APP_ID;
   if (detail.new_owner_app_id && ourAppId) {
     const owner =
       detail.new_owner_app_id === ourAppId ? MetaAgentThreadOwner.STAFF : MetaAgentThreadOwner.AI;

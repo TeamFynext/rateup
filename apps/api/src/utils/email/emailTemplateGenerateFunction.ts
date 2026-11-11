@@ -1,4 +1,5 @@
 import { QuestionType } from "../../types/enums.js";
+import { mediaUrl, webImageUrl } from "../url.js";
 
 /**
  * One rendered piece of a survey answer. A single answer can produce several —
@@ -12,10 +13,7 @@ export interface EmailAnswerItem {
 }
 
 function imageUrl(path: string, s3Upload = false): string {
-  const base = s3Upload
-    ? process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL
-    : process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL;
-  return `${base}/${path}`;
+  return s3Upload ? mediaUrl(path) : webImageUrl(path);
 }
 
 /** The first value of an object, which is how single-field answers are stored. */

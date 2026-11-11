@@ -113,9 +113,9 @@ export async function registerBusinessClientHandler(
         phone: phone?.display_phone_number,
       });
     } else {
-      const appId = process.env.wa_app_id;
+      const appId = process.env.META_APP_ID;
       if (!appId) {
-        throw new Error("wa_app_id environment variable is not configured");
+        throw new Error("META_APP_ID environment variable is not configured");
       }
       await createWaSettings(orgId, {
         wabaId: waba_id,
@@ -187,7 +187,7 @@ export async function getUserAccessTokenHanlder(
 
     const userAccessToken = await getAccessTokenFromCode(
       code,
-      encodeURIComponent(`${process.env.FRONTEND_URL}/${process.env.wa_user_redirect_uri}`),
+      encodeURIComponent(`${process.env.FRONTEND_URL}/${process.env.META_OAUTH_REDIRECT_PATH}`),
     );
     const res = await callMetaApi(
       `/me/accounts?fields=id,name,access_token,instagram_business_account`,

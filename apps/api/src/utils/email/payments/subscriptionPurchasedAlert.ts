@@ -57,7 +57,7 @@ export async function sendSubscriptionPurchasedAlert({
 
     await notificationQueue.add("notification", {
       emailData: {
-        to: process.env.ROOT_ORG_MAIL_ID ?? "hello@rateup.app",
+        to: process.env.ROOT_ORG_EMAIL ?? "hello@rateup.app",
         subject: `ALERT: ${org?.name ?? "An organisation"} subscribed to ${planName}`,
         text: `A subscription payment cleared for the ${planName} plan (${gateway}).`,
         html,

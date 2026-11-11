@@ -22,11 +22,11 @@ const email = { to: "someone@example.com", subject: "Hi", text: "body", html: "<
 describe("sendAWSEmail", () => {
   beforeEach(() => {
     sendMail.mockReset().mockResolvedValue({});
-    delete process.env.DISABLE_EMAIL;
+    delete process.env.EMAIL_DISABLED;
   });
 
   afterEach(() => {
-    delete process.env.DISABLE_EMAIL;
+    delete process.env.EMAIL_DISABLED;
   });
 
   test("sends through SES by default", async () => {
@@ -34,8 +34,8 @@ describe("sendAWSEmail", () => {
     expect(sendMail).toHaveBeenCalledTimes(1);
   });
 
-  test("sends nothing when DISABLE_EMAIL is set", async () => {
-    process.env.DISABLE_EMAIL = "true";
+  test("sends nothing when EMAIL_DISABLED is set", async () => {
+    process.env.EMAIL_DISABLED = "true";
 
     await expect(sendAWSEmail(email)).resolves.toBe(true);
     expect(sendMail).not.toHaveBeenCalled();
@@ -44,13 +44,13 @@ describe("sendAWSEmail", () => {
   // Reporting failure would make the caller throw, which asks BullMQ to retry —
   // turning every suppressed email into three suppressed emails and a failed job.
   test("reports success when suppressed, so nothing retries", async () => {
-    process.env.DISABLE_EMAIL = "true";
+    process.env.EMAIL_DISABLED = "true";
 
     await expect(sendAWSEmail(email)).resolves.toBe(true);
   });
 
   test("only the exact value 'true' disables it", async () => {
-    process.env.DISABLE_EMAIL = "false";
+    process.env.EMAIL_DISABLED = "false";
 
     await sendAWSEmail(email);
     expect(sendMail).toHaveBeenCalledTimes(1);

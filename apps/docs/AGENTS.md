@@ -202,7 +202,7 @@ labelled dashed frame:
 - Always pair it with a `{/* TODO: … */}` comment
 
 **Screenshots are served from the CDN by default.** `<ScreenShot>` prefixes
-`VITE_CLOUDFRONT_WEB_IMAGES_URL` to whatever `src` it is given, so a shot has to be uploaded to the
+`VITE_WEB_IMAGES_CDN_URL` to whatever `src` it is given, so a shot has to be uploaded to the
 bucket before its page can render it. A shot captured but **not yet uploaded** carries `local`
 (`<ScreenShot local src="/docs/screenshots/…" />`) and is served from
 `public/docs/screenshots/…` — same path, so publishing it is: upload the file to the CDN at that
@@ -296,7 +296,7 @@ cd src/content/docs && grep -rhoE "\]\((/|\.)[^)#]*" . | sed 's/](//;s/#.*//' | 
   | while read -r u; do p="${u#/}"; [ -f "$p.mdx" ] || [ -f "$p/index.mdx" ] || echo "BROKEN $u"; done
 
 # 3. Every screenshot resolves on the CDN (a `local` one must exist under public/ instead)
-CDN=$(grep -h '^VITE_CLOUDFRONT_WEB_IMAGES_URL=' .env | cut -d= -f2)
+CDN=$(grep -h '^VITE_WEB_IMAGES_CDN_URL=' .env | cut -d= -f2)
 grep -rhoE '<ScreenShot[^>]*src="/docs/screenshots/[^"]*"' src/content/docs \
   | grep -v ' local ' | grep -oE '/docs/screenshots/[^"]*' | sort -u \
   | while read -r f; do c=$(curl -s -o /dev/null -w '%{http_code}' "$CDN$f"); [ "$c" = 200 ] || echo "$c $f"; done
@@ -443,7 +443,7 @@ changes.
   the UI and the docs now agree. Events are edited locally and saved with **Save events**; a
   WhatsApp Flow fires both `survey.response.created` and `flow.response.created`. Points expiry and programme resets emit no `loyalty.points.*` events.
 - **The browsable API reference (`/reference`) is served only when the API runs with
-  `SWAGGER=1`.** The OpenAPI JSON at `/api/external/{v1,v2}/openapi.json` is always served. The
+  `API_DOCS_ENABLED=true`.** The OpenAPI JSON at `/api/external/{v1,v2}/openapi.json` is always served. The
   docs link both; if `api.rateup.app/reference` is not live in production, drop that link.
 - **Spam is a flag on the contact** (`Contact.isSpam`), not a ticket status — `SPAM` survives in the
   enums only as a thread _event_ label and for pre-migration rows. The Spam tab is the one

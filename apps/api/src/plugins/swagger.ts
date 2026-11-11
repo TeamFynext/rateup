@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import swagger from "@fastify/swagger";
 import { swaggerConfig } from "../config.js";
+import { envFlag } from "../utils/envFlag.js";
 
 /**
  * The spec is the partner API's contract, so it is always generated and always served as
@@ -10,7 +11,7 @@ import { swaggerConfig } from "../config.js";
  * The whole surface (dashboard routes included) is internal: `/api/openapi.json` and the
  * reference's "Internal" document exist only when running locally.
  *
- * The browsable Scalar UI stays behind `SWAGGER=1`, since that is the part with a cost. It
+ * The browsable Scalar UI stays behind `API_DOCS_ENABLED=true`, since that is the part with a cost. It
  * offers the versions as separate documents with a switcher, v2 first.
  */
 export async function registerSwagger(server: FastifyInstance) {
@@ -41,7 +42,7 @@ export async function registerSwagger(server: FastifyInstance) {
     );
   }
 
-  if (process.env.SWAGGER === "1") {
+  if (envFlag("API_DOCS_ENABLED")) {
     await server.register(import("@scalar/fastify-api-reference"), {
       routePrefix: "/reference",
       configuration: {

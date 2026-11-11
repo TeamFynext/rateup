@@ -61,18 +61,18 @@ function queued(n: number) {
   return queue.mock.calls[n][1].emailData;
 }
 
-const ROOT_MAIL = process.env.ROOT_ORG_MAIL_ID;
+const ROOT_MAIL = process.env.ROOT_ORG_EMAIL;
 
 beforeEach(() => {
   vi.clearAllMocks();
   queue.mockResolvedValue({ id: "job-1" });
   vi.spyOn(console, "error").mockImplementation(() => {});
-  process.env.ROOT_ORG_MAIL_ID = "sales@rateup.test";
+  process.env.ROOT_ORG_EMAIL = "sales@rateup.test";
 });
 
 afterEach(() => {
-  if (ROOT_MAIL === undefined) delete process.env.ROOT_ORG_MAIL_ID;
-  else process.env.ROOT_ORG_MAIL_ID = ROOT_MAIL;
+  if (ROOT_MAIL === undefined) delete process.env.ROOT_ORG_EMAIL;
+  else process.env.ROOT_ORG_EMAIL = ROOT_MAIL;
 });
 
 // ===========================================================================
@@ -94,7 +94,7 @@ describe("bookDemoHandler — what reaches the queue", () => {
   });
 
   test("falls back to hello@rateup.app when no org mailbox is configured", async () => {
-    delete process.env.ROOT_ORG_MAIL_ID;
+    delete process.env.ROOT_ORG_EMAIL;
 
     await bookDemoHandler(makeRequest(demo), makeReply());
 
@@ -241,7 +241,7 @@ describe("partnerDataHandler", () => {
   });
 
   test("falls back to hello@rateup.app when no org mailbox is configured", async () => {
-    delete process.env.ROOT_ORG_MAIL_ID;
+    delete process.env.ROOT_ORG_EMAIL;
 
     await partnerDataHandler(makeRequest(partner), makeReply());
 

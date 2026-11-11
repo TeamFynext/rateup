@@ -7,13 +7,14 @@ import { Download, Eye, File } from "lucide-react-native";
 import * as IntentLauncher from "expo-intent-launcher";
 import { FONT, usePressed, useTheme } from "@/components/loyalty/cashier/ui";
 import { logger } from "@/utils/logger";
+import { mediaUrl } from "@/utils/cdn";
 
 const DocumentResponse = ({ info }: { info: string }) => {
   const { t } = useTheme();
   const { pressed, pressHandlers } = usePressed();
   const [fileExists, setFileExists] = useState(false);
 
-  const fileUrl = `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${info}`;
+  const fileUrl = mediaUrl(info);
   const fileName = info.split("/").pop();
   const appFolderPath = `${FileSystem.documentDirectory ?? ""}wa_media`;
   const localFilePath = `${appFolderPath}/${fileName}`;

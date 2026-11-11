@@ -33,9 +33,9 @@ function jsonOrDbNull<T>(value: T | null | undefined): T | typeof Prisma.DbNull 
 }
 
 function getEncryptionKey(): Buffer {
-  const key = process.env.wa_access_token_encryption_key;
+  const key = process.env.META_ENCRYPTION_KEY;
   if (!key) {
-    throw new Error("wa_access_token_encryption_key is not configured");
+    throw new Error("META_ENCRYPTION_KEY is not configured");
   }
   return Buffer.from(key, "hex");
 }

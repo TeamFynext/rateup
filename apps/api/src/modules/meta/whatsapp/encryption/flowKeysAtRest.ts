@@ -10,7 +10,7 @@ import { aes_decrypt, aes_encrypt } from "../../../../utils/encryption/encryptio
  *     { "v": 1, "iv": "<hex>", "enc": "gcm1:<ciphertext hex>:<tag hex>" }
  *
  * `enc` is the whole `{ publicKey, privateKey, passphrase }` JSON, AES-256-GCM encrypted with the
- * same `wa_access_token_encryption_key` and the same shared helpers as the access tokens.
+ * same `META_ENCRYPTION_KEY` and the same shared helpers as the access tokens.
  *
  * Rows written before this change still hold the plain object. `openFlowKeys` reads both, so no
  * data migration is needed; a legacy row is sealed the next time its keys are written (a key
@@ -44,9 +44,9 @@ export function isPlainFlowKeys(value: unknown): value is WaEncryptionKeys {
 }
 
 function getKey(): Buffer {
-  const key = process.env.wa_access_token_encryption_key;
+  const key = process.env.META_ENCRYPTION_KEY;
   if (!key) {
-    throw new Error("wa_access_token_encryption_key is not configured");
+    throw new Error("META_ENCRYPTION_KEY is not configured");
   }
   return Buffer.from(key, "hex");
 }

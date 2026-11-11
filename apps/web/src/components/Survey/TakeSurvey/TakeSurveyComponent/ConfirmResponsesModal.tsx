@@ -11,6 +11,7 @@ import type { SurveyTheme } from "@/context/SurveyThemeContext.tsx";
 import { cn } from "@/lib/utils";
 import { QuestionType as Q } from "@/types/enums.ts";
 import { SmileyVariantStyle } from "@/types/enums.ts";
+import { mediaUrl } from "@/utils/cdn";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 import { extractText, isHtml } from "@/utils/index.ts";
 import type { StoredResponse } from "@/utils/response.ts";
@@ -119,7 +120,7 @@ function ConfirmResponsesModal({
                               );
                             case Q.Photo:
                               const img = Object.values(response?.response)[0];
-                              const imgUrl = `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${img}`;
+                              const imgUrl = mediaUrl(img);
                               return img ? (
                                 <img src={imgUrl} alt="" className="max-w-[240px] rounded-md" />
                               ) : (

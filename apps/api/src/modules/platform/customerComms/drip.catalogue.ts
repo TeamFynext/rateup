@@ -10,7 +10,7 @@ export interface DripEmail {
   body: string;
   cta?: { label: string; path: string };
   highlights?: { title: string; description: string; path?: string }[];
-  /** A plain note from a person: no layout, replies go to `ROOT_ORG_MAIL_ID`. */
+  /** A plain note from a person: no layout, replies go to `ROOT_ORG_EMAIL`. */
   plain?: boolean;
 }
 

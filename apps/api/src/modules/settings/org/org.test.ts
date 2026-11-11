@@ -230,8 +230,8 @@ describe("pauseOrgHandler", () => {
   // There is no /admin twin for pause, so the platform operator keeps the
   // cross-org path through the root org rather than losing the capability.
   test("the root org may still pause any org", async () => {
-    const previous = process.env.ROOT_ORG;
-    process.env.ROOT_ORG = OWN_ORG;
+    const previous = process.env.ROOT_ORG_ID;
+    process.env.ROOT_ORG_ID = OWN_ORG;
     const rep = reply();
 
     await pauseOrgHandler(
@@ -243,7 +243,7 @@ describe("pauseOrgHandler", () => {
       rep,
     );
 
-    process.env.ROOT_ORG = previous;
+    process.env.ROOT_ORG_ID = previous;
     expect(svc.pauseOrg).toHaveBeenCalledWith(VICTIM_ORG, { isPaused: true });
     expect(answer(rep).code).toBe(200);
   });

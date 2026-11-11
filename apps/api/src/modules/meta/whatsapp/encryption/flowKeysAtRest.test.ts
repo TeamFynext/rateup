@@ -16,13 +16,13 @@ const keys: WaEncryptionKeys = {
   passphrase: "0123456789abcdef0123456789abcdef",
 };
 
-const original = process.env.wa_access_token_encryption_key;
+const original = process.env.META_ENCRYPTION_KEY;
 beforeEach(() => {
-  process.env.wa_access_token_encryption_key = KEY_A;
+  process.env.META_ENCRYPTION_KEY = KEY_A;
 });
 afterEach(() => {
-  if (original === undefined) delete process.env.wa_access_token_encryption_key;
-  else process.env.wa_access_token_encryption_key = original;
+  if (original === undefined) delete process.env.META_ENCRYPTION_KEY;
+  else process.env.META_ENCRYPTION_KEY = original;
 });
 
 describe("sealFlowKeys", () => {
@@ -59,8 +59,8 @@ describe("sealFlowKeys", () => {
   });
 
   test("refuses to run without the at-rest key", () => {
-    delete process.env.wa_access_token_encryption_key;
-    expect(() => sealFlowKeys(keys)).toThrow("wa_access_token_encryption_key is not configured");
+    delete process.env.META_ENCRYPTION_KEY;
+    expect(() => sealFlowKeys(keys)).toThrow("META_ENCRYPTION_KEY is not configured");
   });
 });
 
@@ -74,7 +74,7 @@ describe("openFlowKeys", () => {
   });
 
   test("a legacy plain row needs no at-rest key", () => {
-    delete process.env.wa_access_token_encryption_key;
+    delete process.env.META_ENCRYPTION_KEY;
     expect(openFlowKeys({ ...keys })).toEqual(keys);
   });
 
@@ -85,7 +85,7 @@ describe("openFlowKeys", () => {
 
   test("the wrong key fails instead of returning garbage", () => {
     const sealed = sealFlowKeys(keys);
-    process.env.wa_access_token_encryption_key = KEY_B;
+    process.env.META_ENCRYPTION_KEY = KEY_B;
     expect(() => openFlowKeys(sealed)).toThrow();
   });
 

@@ -27,7 +27,7 @@ beforeEach(() => {
 });
 
 describe("handlePaymentConfirmation", () => {
-  // The order is what names the paid org. There used to be a ROOT_ORG fallback,
+  // The order is what names the paid org. There used to be a ROOT_ORG_ID fallback,
   // which answered an unmatched payment from RateUp's own number.
   test("sends nothing for a payment that matches no order", async () => {
     db.waCatalogOrder.findFirst.mockResolvedValue(null);

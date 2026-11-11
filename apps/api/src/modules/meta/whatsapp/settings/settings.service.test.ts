@@ -131,7 +131,7 @@ function row(overrides: Record<string, unknown> = {}): any {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  process.env.wa_access_token_encryption_key = "00".repeat(32);
+  process.env.META_ENCRYPTION_KEY = "00".repeat(32);
   encryptMock.mockReturnValue({ encryptedData: "cipher-text", iv: "iv-hex" });
   decryptMock.mockReturnValue("plain-token");
   getPhoneDetailsMock.mockResolvedValue({ display_phone_number: "+1 555 0001" });
@@ -246,11 +246,11 @@ describe("createWaSettings", () => {
   });
 
   test("writes nothing when the token cannot be encrypted", async () => {
-    delete process.env.wa_access_token_encryption_key;
+    delete process.env.META_ENCRYPTION_KEY;
 
     await expect(
       createWaSettings(ORG_A, { accessToken: "plain-token", phone: "1" } as any),
-    ).rejects.toThrow("wa_access_token_encryption_key is not configured");
+    ).rejects.toThrow("META_ENCRYPTION_KEY is not configured");
     expect(db.$transaction).not.toHaveBeenCalled();
     expect(db.channel.create).not.toHaveBeenCalled();
   });

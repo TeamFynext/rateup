@@ -12,6 +12,7 @@ import { useColorScheme } from "nativewind";
 import { useState } from "react";
 import { Platform, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { mediaUrl } from "@/utils/cdn";
 
 const isIOS = Platform.OS === "ios";
 const SIDE_PADDING = 20;
@@ -113,7 +114,7 @@ export default function MoreMenuSheet() {
             {user?.profilePhoto ? (
               <Image
                 source={{
-                  uri: `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${user.profilePhoto}`,
+                  uri: mediaUrl(user.profilePhoto),
                 }}
                 style={StyleSheet.absoluteFill}
               />

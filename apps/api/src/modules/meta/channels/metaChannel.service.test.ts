@@ -422,7 +422,7 @@ describe("connectMetaChannel", () => {
       pageName: "The Shop Page",
       pageAccessToken: "enc(page-token)",
       accessToken: "enc(user-token)",
-      appId: process.env.wa_app_id ?? null,
+      appId: process.env.META_APP_ID ?? null,
     };
     expect(args.data.meta).toEqual({ upsert: { create: settings, update: settings } });
     expect(args.include).toEqual({ meta: true });

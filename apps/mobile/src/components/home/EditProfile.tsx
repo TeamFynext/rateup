@@ -19,6 +19,7 @@ import {
 } from "@/components/loyalty/cashier/ui";
 import { uploadFile } from "@/utils/fileUpload";
 import { namePreview } from "@/utils/chatbox_utils";
+import { mediaUrl } from "@/utils/cdn";
 
 const AVATAR = 112;
 
@@ -113,7 +114,7 @@ export default function EditProfile({
             >
               {profilePhoto ? (
                 <Image
-                  source={{ uri: `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${profilePhoto}` }}
+                  source={{ uri: mediaUrl(profilePhoto) }}
                   style={{ width: AVATAR, height: AVATAR }}
                 />
               ) : (

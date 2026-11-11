@@ -203,7 +203,7 @@ export async function resetDripContent(request: FastifyRequest, key: string) {
 /** Only an approved template whose variables the drip can fill: {{1}} name, {{2}} business. */
 async function assertDripTemplate(name: string) {
   const { configured, data } = await senderTemplates();
-  if (!configured) throw new StaffHttpError(400, "NO_SENDER", "ROOT_ORG is not set on the API.");
+  if (!configured) throw new StaffHttpError(400, "NO_SENDER", "ROOT_ORG_ID is not set on the API.");
   const template = data.find((t) => t.name === name);
   if (!template) {
     throw new StaffHttpError(
@@ -311,7 +311,7 @@ export async function testDripStep(request: FastifyRequest, key: string, input: 
 
 async function sendWhatsappTest(phone: string | undefined, template: string, vars: string[]) {
   if (!senderOrgId()) {
-    throw new StaffHttpError(400, "NO_SENDER", "ROOT_ORG is not set on the API.");
+    throw new StaffHttpError(400, "NO_SENDER", "ROOT_ORG_ID is not set on the API.");
   }
   const to = toWhatsappNumber(phone);
   if (!to)

@@ -8,8 +8,8 @@ vi.mock("node:dns/promises", () => ({
 }));
 
 vi.hoisted(() => {
-  process.env.GOOGLE_OAUTH_CLIENT_ID = "google-client-id";
-  process.env.GOOGLE_OAUTH_CLIENT_SECRET = "google-client-secret";
+  process.env.GOOGLE_SHEETS_CLIENT_ID = "google-client-id";
+  process.env.GOOGLE_SHEETS_CLIENT_SECRET = "google-client-secret";
   process.env.FRONTEND_URL = "https://app.test.example";
 });
 

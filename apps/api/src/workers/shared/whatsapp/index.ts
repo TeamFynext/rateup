@@ -596,9 +596,9 @@ export async function decryptAccessToken(encryptedToken: string, iv: string): Pr
   // Matches the guard in wa_settings.service.ts. Without it a missing key
   // reaches Buffer.from as undefined and throws about argument types, which
   // says nothing about the configuration that is actually missing.
-  const key = process.env.wa_access_token_encryption_key;
+  const key = process.env.META_ENCRYPTION_KEY;
   if (!key) {
-    throw new Error("wa_access_token_encryption_key is not configured");
+    throw new Error("META_ENCRYPTION_KEY is not configured");
   }
 
   return aes_decrypt(encryptedToken, Buffer.from(key, "hex"), iv);

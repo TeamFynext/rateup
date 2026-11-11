@@ -19,6 +19,7 @@ import {
 import type { TeamMembersData } from "@/context/type";
 import { roleLabelOf } from "@/hooks/usePermissions";
 import { namePreview } from "@/utils/chatbox_utils";
+import { mediaUrl } from "@/utils/cdn";
 
 const STATUS_ORDER: Record<TeamMembersData["status"], number> = { online: 0, busy: 1, offline: 2 };
 const AVATAR = 40;
@@ -55,7 +56,7 @@ function MemberRow({ member, isMe }: Readonly<{ member: TeamMembersData; isMe: b
           {member.profilePhoto ? (
             <Image
               source={{
-                uri: `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${member.profilePhoto}`,
+                uri: mediaUrl(member.profilePhoto),
               }}
               style={{ width: AVATAR, height: AVATAR }}
             />

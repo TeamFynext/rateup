@@ -49,7 +49,7 @@ function deliver(server: Awaited<ReturnType<typeof webhookServer>>["server"], si
 
 beforeEach(() => {
   vi.clearAllMocks();
-  process.env.waclient_secret = APP_SECRET;
+  process.env.META_APP_SECRET = APP_SECRET;
 });
 
 afterEach(() => {
@@ -102,7 +102,7 @@ describe("verifyMetaWebhookSignature - default", () => {
   });
 
   test("refuses everything when the app secret is missing", async () => {
-    delete process.env.waclient_secret;
+    delete process.env.META_APP_SECRET;
     const { server, handler } = await webhookServer();
 
     const res = await deliver(server, sign(BODY));

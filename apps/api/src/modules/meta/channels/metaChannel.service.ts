@@ -289,7 +289,7 @@ export async function connectMetaChannel(
     pageAccessToken: encryptInlineToken(input.pageAccessToken),
     // Keep the stored login token when this connection did not come with a new one.
     ...(input.accessToken && { accessToken: encryptInlineToken(input.accessToken) }),
-    appId: input.appId ?? process.env.wa_app_id ?? null,
+    appId: input.appId ?? process.env.META_APP_ID ?? null,
   };
 
   // A reconnect writes only this org's own row (by id and org), so ice breakers, menu and

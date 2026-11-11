@@ -55,7 +55,7 @@ export async function bookDemoHandler(
 
     await notificationQueue.add("notification", {
       emailData: {
-        to: process.env.ROOT_ORG_MAIL_ID ?? "hello@rateup.app",
+        to: process.env.ROOT_ORG_EMAIL ?? "hello@rateup.app",
         subject: `New Demo Request from ${name}`,
         html: inbound.html,
         text: inbound.text,
@@ -127,7 +127,7 @@ export async function partnerDataHandler(
 
     await notificationQueue.add("notification", {
       emailData: {
-        to: process.env.ROOT_ORG_MAIL_ID ?? "hello@rateup.app",
+        to: process.env.ROOT_ORG_EMAIL ?? "hello@rateup.app",
         subject: `New Partner Inquiry from ${fullName}`,
         html,
         text,

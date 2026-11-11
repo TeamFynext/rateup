@@ -1,3 +1,5 @@
+import { envFlag } from "../../../utils/envFlag.js";
+
 /**
  * Staff console settings, read at call time so tests (and a hot env change) are seen.
  *
@@ -57,7 +59,7 @@ export function staffConfig(): StaffConfig {
     cookieSecret: process.env.STAFF_COOKIE_SECRET ?? "",
     cfAccessTeam: process.env.CF_ACCESS_TEAM ?? "",
     cfAccessAud: process.env.CF_ACCESS_AUD ?? "",
-    cfAccessEnforced: process.env.STAFF_CF_ACCESS_ENFORCE !== "false",
+    cfAccessEnforced: envFlag("STAFF_CF_ACCESS_ENABLED", true),
     // Outside development always Secure, whatever API_URL says: a mistyped http:// origin
     // must not quietly drop the flag (and the __Host- prefix) in production.
     secureCookies: !development || apiOrigin.startsWith("https://"),

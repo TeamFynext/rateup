@@ -23,7 +23,7 @@ export async function buildDripEmail(step: DripEmail, person: PersonVars): Promi
   const subject = fill(step.subject, vars);
   const body = fill(step.body, vars);
   const headers = listUnsubscribeHeaders(person.userId);
-  const replyTo = process.env.ROOT_ORG_MAIL_ID || undefined;
+  const replyTo = process.env.ROOT_ORG_EMAIL || undefined;
 
   if (step.plain) {
     const text = `${body}\n\n--\nUnsubscribe: ${unsubscribeUrl(person.userId)}`;
@@ -76,6 +76,6 @@ export async function buildBroadcastEmail(
     text,
     html,
     headers: listUnsubscribeHeaders(person.userId),
-    replyTo: process.env.ROOT_ORG_MAIL_ID || undefined,
+    replyTo: process.env.ROOT_ORG_EMAIL || undefined,
   };
 }

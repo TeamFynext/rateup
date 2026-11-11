@@ -12,6 +12,7 @@
     "build": "vp run -r build",
     "typecheck": "vp run -r typecheck",
     "check": "vp check",
+    "env:rename": "node scripts/env-rename.mjs",
     "ready": "vp check && vp run -r typecheck && vp run -r build"
   },
   "devDependencies": {

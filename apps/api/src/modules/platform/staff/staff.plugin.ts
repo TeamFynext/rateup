@@ -57,7 +57,7 @@ export async function staffPlugin(server: FastifyInstance) {
   // Keyed on "not development", not on NODE_ENV=production, which production never sets.
   if (!config.cfAccessEnforced && !config.development) {
     log.error(
-      "staff console running WITHOUT Cloudflare Access (STAFF_CF_ACCESS_ENFORCE=false): the Access JWT and its email binding are not checked",
+      "staff console running WITHOUT Cloudflare Access (STAFF_CF_ACCESS_ENABLED=false): the Access JWT and its email binding are not checked",
     );
   }
   if (config.development) {

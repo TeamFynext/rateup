@@ -20,7 +20,7 @@ export type StaffAction =
   | { kind: "sign-out"; member: StaffMember };
 
 /** The console's own domain: the API refuses any other address, and so does Google. */
-const STAFF_DOMAIN = import.meta.env.VITE_STAFF_DOMAIN ?? "rateup.app";
+const STAFF_DOMAIN = import.meta.env.VITE_STAFF_GOOGLE_HD ?? "rateup.app";
 /**
  * `vite dev`: any address, for a local API with NODE_ENV=development, which accepts any domain.
  * The API still decides; a dev console pointed at a deployed API gets its WRONG_DOMAIN error.

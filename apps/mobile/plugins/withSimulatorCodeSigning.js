@@ -24,9 +24,9 @@ const APPLE_SIGN_IN = "com.apple.developer.applesignin";
  * TestFlight and App Store builds are unaffected.
  *
  * To keep it in a local prebuild — testing Sign in with Apple on a real device,
- * which does need a certificate — run prebuild with `EXPO_APPLE_SIGNIN=1`:
+ * which does need a certificate — run prebuild with `EXPO_APPLE_SIGNIN=true`:
  *
- *   EXPO_APPLE_SIGNIN=1 pnpm exec expo prebuild -p ios --clean
+ *   EXPO_APPLE_SIGNIN=true pnpm exec expo prebuild -p ios --clean
  *
  * Two ordering notes, both load-bearing:
  *   - This must be listed FIRST in app.json's `plugins`. Mods run
@@ -38,7 +38,7 @@ const APPLE_SIGN_IN = "com.apple.developer.applesignin";
  *     check.
  */
 module.exports = function withSimulatorCodeSigning(config) {
-  if (process.env.EAS_BUILD || process.env.EXPO_APPLE_SIGNIN === "1") {
+  if (process.env.EAS_BUILD || process.env.EXPO_APPLE_SIGNIN === "true") {
     return config;
   }
 
@@ -48,7 +48,7 @@ module.exports = function withSimulatorCodeSigning(config) {
       console.log(
         "[withSimulatorCodeSigning] Dropped Sign in with Apple from this local prebuild " +
           "so simulator builds need no certificate. EAS builds keep it; " +
-          "use EXPO_APPLE_SIGNIN=1 to keep it here.",
+          "use EXPO_APPLE_SIGNIN=true to keep it here.",
       );
     }
     return config;

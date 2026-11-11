@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import type { QuickReplyMedia } from "@/backend/whatsapp/inbox/quickReply/quickreply.api";
+import { mediaUrl } from "@/utils/cdn";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 
 export const MAX_QUICK_REPLY_MEDIA = 5;
@@ -74,7 +75,7 @@ export default function QuickReplyMediaField({
           type: kind.type,
           key,
           name: file.name,
-          url: `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${key}`,
+          url: mediaUrl(key),
         });
       } catch (error) {
         toast.error(typeof error === "string" ? error : t("Upload failed"));

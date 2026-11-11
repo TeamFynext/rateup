@@ -50,12 +50,12 @@ describe("resolveMetaBaseUrl", () => {
     expect(log.error).toHaveBeenCalledTimes(2);
   });
 
-  test("ALLOW_META_MOCK=1 is the explicit opt-in", () => {
+  test("ALLOW_META_MOCK=true is the explicit opt-in", () => {
     expect(
       resolveMetaBaseUrl({
         META_API_BASE_URL: MOCK,
         RAILWAY_ENVIRONMENT_NAME: "production",
-        ALLOW_META_MOCK: "1",
+        ALLOW_META_MOCK: "true",
       }),
     ).toBe(MOCK);
   });

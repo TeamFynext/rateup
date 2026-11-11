@@ -35,7 +35,7 @@ meta-mock — a local stand-in for Meta's Graph API
   --host <h>                 default 127.0.0.1
   --webhook-url <url>        where replayed webhooks and status callbacks go
   --app-secret <secret>      sign them with X-Hub-Signature-256, or META_MOCK_APP_SECRET
-                             (the app's waclient_secret)
+                             (the app's META_APP_SECRET)
   --status-progression       deliver sent → delivered → read after each send
   --waba-id <id>             stamped onto those callbacks
   --phone-number-id <id>     the same — the receiving app resolves the tenant from it
@@ -114,7 +114,7 @@ if (config.statusProgression) {
   console.log(
     "[meta-mock] status callbacks: OFF — a send is answered and nothing follows.\n" +
       "[meta-mock]          Campaign and message statuses will never update. Turn them on\n" +
-      "[meta-mock]          with --status-progression or META_MOCK_STATUS_PROGRESSION=1.",
+      "[meta-mock]          with --status-progression or META_MOCK_STATUS_PROGRESSION=true.",
   );
 }
 
@@ -122,7 +122,7 @@ if (!config.signsWebhooks) {
   console.warn(
     "[meta-mock] WARNING: no app secret, so webhooks go out without X-Hub-Signature-256\n" +
       "[meta-mock]          and rateup-api answers them 401 (no-signature-header). Set\n" +
-      "[meta-mock]          META_MOCK_APP_SECRET (or --app-secret) to its waclient_secret.",
+      "[meta-mock]          META_MOCK_APP_SECRET (or --app-secret) to its META_APP_SECRET.",
   );
 }
 

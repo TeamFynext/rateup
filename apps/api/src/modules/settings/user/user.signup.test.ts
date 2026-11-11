@@ -23,7 +23,7 @@ vi.mock("../subscription/subscription.service.js", () => ({
 }));
 vi.mock("../../surveys/survey.service.js", () => ({ cloneSurvey: vi.fn() }));
 // The real queue writes to the local Redis, and a running bullmq worker then emails every
-// "Acme" signup in this file to ROOT_ORG_MAIL_ID.
+// "Acme" signup in this file to ROOT_ORG_EMAIL.
 vi.mock("../../../workers/bullmq/queues/index.js", () => ({ notificationQueue: { add: vi.fn() } }));
 vi.mock("../../platform/referrals/referrals.service.js", () => ({ updateReferral: vi.fn() }));
 vi.mock("../../../utils/hubspot.js", () => ({

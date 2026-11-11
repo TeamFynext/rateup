@@ -164,9 +164,7 @@ export async function appendResponseToSheet(
         Object.entries(answerValue as Record<string, unknown>).forEach(
           ([key, value]) =>
             (resObj[(qstnTitle + ":" + key).trim()] =
-              key == "photo"
-                ? `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${value}`
-                : toCell(value)),
+              key == "photo" ? `https://${process.env.MEDIA_CDN_DOMAIN}/${value}` : toCell(value)),
         );
       else if (qstn.type === QuestionType.MCQGrid)
         Object.entries(answerValue as Record<string, Choice>).forEach(

@@ -18,7 +18,7 @@ export async function createMsg({ name, email, message, address }: CreateContact
   });
 
   const msg = {
-    to: process.env.ROOT_ORG_MAIL_ID ?? "hello@rateup.app", // Change to your recipient
+    to: process.env.ROOT_ORG_EMAIL ?? "hello@rateup.app", // Change to your recipient
     // from: 'hello@rateup.app', // Change to your verified sender
     subject: "New Message in Rateup Website Contact Form",
     text: `You have received new contact message from ${email}`,

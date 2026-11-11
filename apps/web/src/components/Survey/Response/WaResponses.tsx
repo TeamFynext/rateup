@@ -42,6 +42,7 @@ import SurveyContext from "@/context/SurveyContext.ts";
 import { useDebounce } from "@/hooks/use-debounce.ts";
 import { IntegratedApps, QuestionType, QuestionType2, WaQuestions } from "@/types/enums.ts";
 import { getApiErrorData } from "@/utils/apiError.ts";
+import { mediaUrl } from "@/utils/cdn";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 import { toText } from "@/utils/toText";
 import {
@@ -562,11 +563,7 @@ export const getCellData = (info: unknown, question: WaFlowQuestion) => {
       return info === true || info === "true" ? "Opted in" : "—";
     case WaQuestions.DocumentPicker:
       return info ? (
-        <a
-          href={`${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${toText(info)}`}
-          download
-          className="text-primary hover:underline"
-        >
+        <a href={mediaUrl(toText(info))} download className="text-primary hover:underline">
           Download
         </a>
       ) : (

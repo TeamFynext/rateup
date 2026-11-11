@@ -112,8 +112,8 @@ describe("createMsg — the write and the email", () => {
   });
 
   test("sends to the configured root address", async () => {
-    const original = process.env.ROOT_ORG_MAIL_ID;
-    process.env.ROOT_ORG_MAIL_ID = "ops@example.test";
+    const original = process.env.ROOT_ORG_EMAIL;
+    process.env.ROOT_ORG_EMAIL = "ops@example.test";
 
     await createMsg(submission as any);
 
@@ -121,12 +121,12 @@ describe("createMsg — the write and the email", () => {
       "ops@example.test",
     );
 
-    process.env.ROOT_ORG_MAIL_ID = original;
+    process.env.ROOT_ORG_EMAIL = original;
   });
 
   test("falls back to a hard-coded address when none is configured", async () => {
-    const original = process.env.ROOT_ORG_MAIL_ID;
-    delete process.env.ROOT_ORG_MAIL_ID;
+    const original = process.env.ROOT_ORG_EMAIL;
+    delete process.env.ROOT_ORG_EMAIL;
 
     await createMsg(submission as any);
 
@@ -134,7 +134,7 @@ describe("createMsg — the write and the email", () => {
       "hello@rateup.app",
     );
 
-    process.env.ROOT_ORG_MAIL_ID = original;
+    process.env.ROOT_ORG_EMAIL = original;
   });
 
   test("returns the stored row", async () => {

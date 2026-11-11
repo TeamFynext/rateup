@@ -433,7 +433,9 @@ function Composer({ broadcast }: { broadcast: Broadcast }) {
             <Panel className="flex flex-col gap-5">
               <SectionHeading>WhatsApp</SectionHeading>
               {templates.data && !templates.data.configured ? (
-                <Notice>ROOT_ORG is not set on the API, so there is no number to send from.</Notice>
+                <Notice>
+                  ROOT_ORG_ID is not set on the API, so there is no number to send from.
+                </Notice>
               ) : (
                 <>
                   <p className="-mt-2 text-sm text-muted-foreground">

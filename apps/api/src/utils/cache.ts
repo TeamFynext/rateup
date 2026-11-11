@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { log } from "./logger.js";
 import connection from "./redisConnection.js";
+import { envFlag } from "./envFlag.js";
 
 /**
  * A short-lived read-through cache in front of expensive, read-only aggregates.
@@ -16,7 +17,7 @@ import connection from "./redisConnection.js";
 
 /** Set to "true" to switch every `withCache` call to a straight `load()`. */
 function cacheDisabled(): boolean {
-  return process.env.ANALYTICS_CACHE_DISABLED === "true";
+  return envFlag("ANALYTICS_CACHE_DISABLED");
 }
 
 /**
