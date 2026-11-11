@@ -6,6 +6,8 @@ import WaInboxText, {
   WaInboxDocument,
   WaInboxImage,
   WaInboxInteractive,
+  WaInboxLocation,
+  WaInboxSticker,
   WaInboxTemplate,
   WaInboxVideo,
 } from "./messageBubbleTypes";
@@ -14,13 +16,17 @@ import { WaTemplateComponent } from "@/context/type";
 import { Lock, CheckCheck, Check, Clock, AlertCircle, Bot, Sparkles } from "lucide-react-native";
 import { WaMessageAssignStatus } from "@/api/inbox/types";
 import { getClosedIcon } from "@/util";
-import LinearGradient from "react-native-linear-gradient";
+import { LinearGradient } from "expo-linear-gradient";
 import { Colors } from "@/constants/colors";
 import { getInboxRowTheme } from "@/constants/inboxDesign";
 import { IgAttachmentsBubble, IgStoryReplyBubble, QuotedMessage } from "./igBubbles";
+import { DeletedMessage, IgCommentBubble, WaInboxContacts, WaInboxOrder } from "./specialBubbles";
+import type { MessageReaction } from "@/utils/messageReactions";
 
 type MessageBubbleProps = {
   messageContent: any;
+  /** Set when the customer deleted the message: it shows as "This message was deleted". */
+  deletedAt?: string | null;
   interactive?: any;
   timestamp: string;
   exchangeProcess: string;
@@ -45,6 +51,8 @@ type MessageBubbleProps = {
   };
   /** Set when the customer edited the message (Instagram). */
   editedAt?: string | null;
+  /** Emoji reactions on this message, drawn as a chip under the bubble. */
+  reactions?: MessageReaction[];
 };
 
 const MessageBubble = ({
@@ -63,24 +71,42 @@ const MessageBubble = ({
   note,
   quote,
   editedAt,
+  reactions,
+  deletedAt,
 }: MessageBubbleProps) => {
   const renderContent = useCallback(
-    (textColor?: string) => {
+    // `onBrand`: drawn on the brand-blue bubble of an agent's own message, so media goes white.
+    (textColor?: string, onBrand = false) => {
+      // Notes keep their own "Note deleted" line (drawn by the note branch).
+      if (deletedAt && exchangeProcess !== "privateNote") {
+        return <DeletedMessage textColor={textColor} />;
+      }
       switch (messageType) {
         case "text":
           return <WaInboxText messageContent={messageContent} textColor={textColor} />;
         case "image":
           return <WaInboxImage messageContent={messageContent} />;
         case "audio":
-          return <WaInboxAudio messageContent={messageContent} timestamp={timestamp} />;
+          return <WaInboxAudio messageContent={messageContent} onBrand={onBrand} />;
         case "document":
-          return <WaInboxDocument messageContent={messageContent} />;
+          return <WaInboxDocument messageContent={messageContent} onBrand={onBrand} />;
         case "video":
-          return <WaInboxVideo messageContent={messageContent} />;
+          return <WaInboxVideo messageContent={messageContent} onBrand={onBrand} />;
+        case "location":
+          return <WaInboxLocation messageContent={messageContent} onBrand={onBrand} />;
         case "reaction":
           return <Text style={{ fontSize: 20, color: textColor }}>{messageContent}</Text>;
         case "button":
-          return <Text style={{ color: textColor }}>buttons</Text>;
+          // The customer tapped a template's quick-reply button: show what it said.
+          return <WaInboxText messageContent={messageContent ?? ""} textColor={textColor} />;
+        case "contacts":
+          return <WaInboxContacts messageContent={messageContent} onBrand={onBrand} />;
+        case "order":
+          return <WaInboxOrder messageContent={messageContent} onBrand={onBrand} />;
+        case "sticker":
+          return <WaInboxSticker messageContent={messageContent} />;
+        case "ig_comment":
+          return <IgCommentBubble messageContent={messageContent} textColor={textColor} />;
         case "template":
           return <WaInboxTemplate templateBody={template} parameters={templateComponentParams} />;
         case "interactive":
@@ -89,7 +115,9 @@ const MessageBubble = ({
           );
         case "attachments":
         case "ig_shared_post":
-          return <IgAttachmentsBubble content={messageContent} textColor={textColor} />;
+          return (
+            <IgAttachmentsBubble content={messageContent} textColor={textColor} onBrand={onBrand} />
+          );
         case "ig_story_reply":
           return <IgStoryReplyBubble content={messageContent} textColor={textColor} />;
         case "ig_unsupported":
@@ -108,7 +136,15 @@ const MessageBubble = ({
           return <Text style={{ color: textColor, fontSize: 14 }}>{displayContent}</Text>;
       }
     },
-    [messageContent, messageType, timestamp, template, templateComponentParams, interactive],
+    [
+      messageContent,
+      messageType,
+      template,
+      templateComponentParams,
+      interactive,
+      deletedAt,
+      exchangeProcess,
+    ],
   );
 
   const colorScheme = useColorScheme();
@@ -214,23 +250,6 @@ const MessageBubble = ({
     );
   }
 
-  // SPECIAL CASE: Received audio message — no bubble
-  if (messageType === "audio" && exchangeProcess !== "send") {
-    return (
-      <View
-        style={{
-          flexDirection: "row",
-          width: "100%",
-          paddingHorizontal: 8,
-          marginBottom: 10,
-          justifyContent: "flex-start",
-        }}
-      >
-        {renderContent()}
-      </View>
-    );
-  }
-
   const isSender = exchangeProcess === "send";
   const isPrivateNote = exchangeProcess === "privateNote";
   // Automation has no person behind it, so it gets no avatar — matching the web
@@ -321,6 +340,17 @@ const MessageBubble = ({
     textAlign: "right" as const,
   };
 
+  // A picture or video nearly fills its bubble, with a thin frame, as in WhatsApp.
+  const isVisualMedia =
+    !deletedAt &&
+    (messageType === "image" ||
+      messageType === "video" ||
+      messageType === "location" ||
+      messageType === "sticker");
+  const bubblePadding = isVisualMedia
+    ? { padding: 4 }
+    : { paddingVertical: 9, paddingHorizontal: 13 };
+
   const borderStyle = isSender
     ? {
         borderTopLeftRadius: 16,
@@ -357,8 +387,7 @@ const MessageBubble = ({
               borderWidth: 1,
               borderColor: t.border1,
               ...borderStyle,
-              paddingVertical: 9,
-              paddingHorizontal: 13,
+              ...bubblePadding,
             }}
           >
             {quote ? <QuotedMessage quoted={quote.message} author={quote.author} /> : null}
@@ -370,6 +399,7 @@ const MessageBubble = ({
                   fontFamily: "InstrumentSans_400Regular",
                   color: timestampColor,
                   marginTop: 3,
+                  ...(isVisualMedia && { paddingHorizontal: 6, paddingBottom: 2 }),
                 }}
               >
                 {timestamp}
@@ -377,6 +407,7 @@ const MessageBubble = ({
               </Text>
             ) : null}
           </View>
+          <ReactionChip reactions={reactions} align="start" isDark={isDark} />
         </View>
       )}
 
@@ -396,15 +427,15 @@ const MessageBubble = ({
             style={{
               backgroundColor: bubbleBgColor,
               ...borderStyle,
-              paddingVertical: 9,
-              paddingHorizontal: 13,
+              ...bubblePadding,
             }}
           >
             {quote ? (
               <QuotedMessage quoted={quote.message} author={quote.author} onSender={!isAutomated} />
             ) : null}
-            {renderContent(bubbleTextColor)}
+            {renderContent(bubbleTextColor, !isAutomated)}
           </View>
+          <ReactionChip reactions={reactions} align="end" isDark={isDark} />
 
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
             <Text
@@ -434,7 +465,7 @@ const MessageBubble = ({
 
       {showAvatar && (
         <LinearGradient
-          colors={[Colors.brand.blue, Colors.brand.blueLight] as any}
+          colors={[Colors.brand.blue, Colors.brand.blueLight]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{
@@ -460,5 +491,46 @@ const MessageBubble = ({
     </View>
   );
 };
+
+/** The reactions on a message, overlapping the bottom edge of its bubble as in WhatsApp. */
+function ReactionChip({
+  reactions,
+  align,
+  isDark,
+}: {
+  reactions?: MessageReaction[];
+  align: "start" | "end";
+  isDark: boolean;
+}) {
+  if (!reactions?.length) return null;
+  const t = getInboxRowTheme(isDark);
+  const label = reactions
+    .map((r) => `${r.emoji} from ${r.from === "customer" ? "customer" : (r.by ?? "your team")}`)
+    .join(", ");
+  return (
+    <View
+      accessibilityLabel={`Reactions: ${label}`}
+      style={{
+        alignSelf: align === "start" ? "flex-start" : "flex-end",
+        flexDirection: "row",
+        gap: 2,
+        marginTop: -8,
+        marginHorizontal: 10,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 999,
+        backgroundColor: t.surface,
+        borderWidth: 1.5,
+        borderColor: isDark ? Colors.dark.bg : Colors.light.bg,
+      }}
+    >
+      {reactions.map((r) => (
+        <Text key={r.from} style={{ fontSize: 13 }}>
+          {r.emoji}
+        </Text>
+      ))}
+    </View>
+  );
+}
 
 export default memo(MessageBubble);

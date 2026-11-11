@@ -1,6 +1,6 @@
 import { useColorScheme } from "nativewind";
 import { View, Text, Pressable, Modal, Dimensions, ActivityIndicator, Alert } from "react-native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import {
   generateInternalMessageId,
@@ -21,11 +21,13 @@ import {
   paletteIndex,
 } from "@/constants/inboxDesign";
 import {
-  AlertCircle,
-  Archive,
   Ban,
+  History,
   LockOpen,
+  RotateCcw,
   ShieldAlert,
+  ShieldCheck,
+  Trash2,
   ArrowLeft,
   CheckCircle2,
   ChevronRight,
@@ -43,9 +45,20 @@ import { MessagePlatform } from "@/constants/enums";
 import { FontAwesome } from "@expo/vector-icons";
 import { useEditContactMutation, useToggleFavorite } from "@/api/inbox/contacts/contacts.query";
 import { WaMessageAssignStatus } from "@/api/inbox/types";
+import { WaMessageClosedStatus } from "@/constants/constants";
 import { useModerateInstagramContact } from "@/api/inbox/messages/message.query";
 import { contactMessagingWindow, messagingWindowLabel } from "@/utils/messagingWindow";
 import MetaAgentThreadBadge from "./MetaAgentThreadBadge";
+import OtherConversationsSheet from "./OtherConversationsSheet";
+import { usePermissions } from "@/hooks/usePermissions";
+import { Toast } from "@/components/common/Notice";
+import {
+  useClearMentions,
+  useDeleteConversation,
+  useReopenTicket,
+  useSetContactSpam,
+  useSetWhatsAppBlocked,
+} from "@/api/inbox/tickets/tickets.query";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -120,12 +133,22 @@ const InstagramModerationItems = ({
   );
 };
 
+type MenuItem = {
+  key: string;
+  label: string;
+  Icon: typeof Ban;
+  onPress: () => void;
+  destructive?: boolean;
+};
+
 const MoreOptions = ({
   visible,
   onClose,
   onCloseChatPress,
   contactId,
   instagram,
+  items = [],
+  canClose = true,
 }: {
   visible: boolean;
   onClose: () => void;
@@ -133,11 +156,15 @@ const MoreOptions = ({
   contactId: string;
   /** Set on an Instagram thread: adds Block / Unblock and Spam. */
   instagram?: { blocked: boolean; isSpam: boolean };
+  /** Ticket actions: reopen, spam, block, delete. */
+  items?: MenuItem[];
+  /** Closing needs `contacts.manage` on the server. */
+  canClose?: boolean;
 }) => {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const router = useRouter();
-  const modalWidth = screenWidth * 0.4;
+  const modalWidth = Math.min(260, screenWidth * 0.62);
   const insets = useSafeAreaInsets();
   const waAssignStatus = useChatAssignStatusStore((state) => state.waAssignStatus);
   return (
@@ -201,7 +228,44 @@ const MoreOptions = ({
             />
           )}
 
-          {waAssignStatus !== "CLOSED" ? (
+          {items.map((item) => (
+            <Pressable
+              key={item.key}
+              style={{ padding: 12, width: "100%" }}
+              onPress={() => {
+                onClose();
+                item.onPress();
+              }}
+            >
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <item.Icon
+                  color={
+                    item.destructive
+                      ? "#DC2626"
+                      : isDark
+                        ? Colors.dark.textPrimary
+                        : Colors.light.textPrimary
+                  }
+                  size={18}
+                />
+                <Text
+                  style={{
+                    fontFamily: "InstrumentSans_600SemiBold",
+                    color: item.destructive
+                      ? "#DC2626"
+                      : isDark
+                        ? "#fff"
+                        : Colors.light.textPrimary,
+                    fontSize: 15,
+                  }}
+                >
+                  {item.label}
+                </Text>
+              </View>
+            </Pressable>
+          ))}
+
+          {canClose && !WaMessageClosedStatus.includes(waAssignStatus as WaMessageAssignStatus) ? (
             <Pressable
               style={{ padding: 12, width: "100%" }}
               onPress={() => {
@@ -237,6 +301,8 @@ const MoreOptions = ({
  * statuses. Icons are the app's existing status glyphs; the colours are the
  * design's status palette.
  */
+// The web's two outcomes. Spam is its own action (it is contact-wide and closes every
+// ticket), so it is in the menu, not here.
 const CLOSE_RESULTS = [
   {
     status: WaMessageAssignStatus.RESOLVED,
@@ -245,22 +311,10 @@ const CLOSE_RESULTS = [
     color: "#16A34A",
   },
   {
-    status: WaMessageAssignStatus.CLOSED,
-    label: "Closed",
-    Icon: Archive,
-    color: Colors.brand.blue,
-  },
-  {
     status: WaMessageAssignStatus.UNRESOLVED,
     label: "Unresolved",
     Icon: Circle,
     color: "#F8951D",
-  },
-  {
-    status: WaMessageAssignStatus.SPAM,
-    label: "Spam",
-    Icon: AlertCircle,
-    color: "#DC2626",
   },
 ] as const;
 
@@ -268,10 +322,13 @@ const ConfirmationModal = ({
   visible,
   onCancel,
   contactId,
+  conversationId,
 }: {
   visible: boolean;
   onCancel: () => void;
   contactId: string;
+  /** The ticket to close. Without it the server closes the contact's newest ticket. */
+  conversationId?: string | null;
 }) => {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -292,7 +349,12 @@ const ConfirmationModal = ({
     editContactMutation.mutate(
       {
         contactId,
-        data: { waMessageAssignStatus: status, messageId: id },
+        data: {
+          waMessageAssignStatus: status,
+          resolutionResult: null,
+          messageId: id,
+          ...(conversationId ? { conversationId } : {}),
+        },
       },
       {
         onSuccess: () => {
@@ -329,6 +391,12 @@ const ConfirmationModal = ({
           queryClient.invalidateQueries({ queryKey: ["contacts", "filtered"] });
           onCancel();
         },
+        onError: (err: any) =>
+          Toast.error(
+            err?.response?.status === 403
+              ? "You don't have permission to close tickets."
+              : "Couldn't close the ticket.",
+          ),
         onSettled: () => setPendingStatus(null),
       },
     );
@@ -490,8 +558,27 @@ const ChatHeader = ({
   const storedContact = useContactsStore((state) =>
     selectRowForContact(state, id, contact?.conversationId),
   );
-  const conversationId = storedContact?.conversationId ?? contact?.conversationId;
+  const conversationId = contact?.conversationId ?? storedContact?.conversationId;
   const isFavorite = storedContact?.isFavorite ?? contact?.isFavorite;
+  // Ticket and contact flags, from the live row when the list has it.
+  const row = storedContact ?? contact;
+  const [othersVisible, setOthersVisible] = useState(false);
+  const { can } = usePermissions();
+  const reopen = useReopenTicket();
+  const setSpam = useSetContactSpam();
+  const setBlocked = useSetWhatsAppBlocked();
+  const deleteTicket = useDeleteConversation();
+  const clearMentions = useClearMentions();
+  const waAssignStatus = useChatAssignStatusStore((state) => state.waAssignStatus);
+  const isClosed = WaMessageClosedStatus.includes(waAssignStatus as WaMessageAssignStatus);
+
+  // Opening the chat is reading the mention, so it is cleared here (the web has a button).
+  const mentionCount = row?.mentionCount ?? 0;
+  useEffect(() => {
+    if (mentionCount > 0 && id) clearMentions.mutate({ contactId: id, conversationId });
+    // Once per ticket opened with mentions; the mutation object changes every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, conversationId, mentionCount > 0]);
   const toggleFavorite = useToggleFavorite();
   // A private note as the last message has `sourcePlatform: "INTERNAL"`, which
   // painted an Instagram thread as WhatsApp. The loaded thread stands in for a
@@ -535,6 +622,100 @@ const ChatHeader = ({
   const sessionColor = (metaWindow ? metaWindow.state !== "closed" : isSessionActive)
     ? t.warmStrong
     : t.danger;
+
+  const who = name || (phone ? String(phone) : "this contact");
+  const confirm = (title: string, message: string, label: string, run: () => void) =>
+    Alert.alert(title, message, [
+      { text: "Cancel", style: "cancel" },
+      { text: label, style: "destructive", onPress: run },
+    ]);
+  const isSpam = !!row?.isSpam;
+  const blockedOnWhatsApp = !!row?.blockedOnWhatsApp;
+  const waAddress = row?.phone || row?.bsuid || "";
+  const menuItems: MenuItem[] = [];
+  if (isClosed && !isSpam) {
+    menuItems.push({
+      key: "reopen",
+      label: "Reopen",
+      Icon: RotateCcw,
+      onPress: () => reopen.mutate({ contactId: id, conversationId }),
+    });
+  }
+  if (can("inbox.manage")) {
+    if (isSpam) {
+      menuItems.push({
+        key: "not-spam",
+        label: "Not spam",
+        Icon: ShieldCheck,
+        onPress: () =>
+          confirm("Remove from spam?", `Are you sure ${who} is not spam?`, "Not spam", () =>
+            setSpam.mutate({ contactId: id, isSpam: false }),
+          ),
+      });
+    } else if (platform !== MessagePlatform.INSTAGRAM) {
+      // Instagram has its own spam folder, in the Instagram items above.
+      menuItems.push({
+        key: "spam",
+        label: "Mark as spam",
+        Icon: ShieldAlert,
+        onPress: () =>
+          confirm(
+            `Mark ${who} as spam?`,
+            "Their open tickets will be closed, and the contact will be hidden from every inbox tab except Spam.",
+            "Mark as spam",
+            () => setSpam.mutate({ contactId: id, isSpam: true }),
+          ),
+      });
+    }
+    if (platform === MessagePlatform.WHATSAPP && waAddress) {
+      if (blockedOnWhatsApp) {
+        menuItems.push({
+          key: "unblock",
+          label: "Unblock on WhatsApp",
+          Icon: LockOpen,
+          onPress: () =>
+            confirm(`Unblock ${who}?`, "They will be able to message you again.", "Unblock", () =>
+              setBlocked.mutate({ contactId: id, address: waAddress, blocked: false }),
+            ),
+        });
+      } else if (isSessionActive) {
+        // WhatsApp only lets a business block someone who wrote in the last 24 hours.
+        menuItems.push({
+          key: "block",
+          label: "Block on WhatsApp",
+          Icon: Ban,
+          destructive: true,
+          onPress: () =>
+            confirm(
+              `Block ${who}?`,
+              "They won't be able to message you, and you won't be able to message them.",
+              "Block",
+              () => setBlocked.mutate({ contactId: id, address: waAddress, blocked: true }),
+            ),
+        });
+      }
+    }
+  }
+  if (can("inbox.delete") && conversationId) {
+    menuItems.push({
+      key: "delete",
+      label: "Delete conversation",
+      Icon: Trash2,
+      destructive: true,
+      onPress: () =>
+        confirm(
+          "Delete conversation?",
+          `${row?.ticketNumber ? `Ticket #RT-${row.ticketNumber}` : "This conversation"} with ${who} and every message in it will be deleted for everyone. This cannot be undone.`,
+          "Delete",
+          () =>
+            deleteTicket.mutate(
+              { contactId: id, conversationId },
+              { onSuccess: () => router.back() },
+            ),
+        ),
+    });
+  }
+  const otherTickets = row?.otherTicketCount ?? 0;
 
   return (
     <View
@@ -656,6 +837,26 @@ const ChatHeader = ({
                   {platform === MessagePlatform.WHATSAPP ? (
                     <MetaAgentThreadBadge row={storedContact ?? contact} />
                   ) : null}
+                  {/* Only when the row says so: an unknown `consent` shows nothing. */}
+                  {row?.consent === false ? (
+                    <View
+                      accessibilityLabel="No consent: this contact has not agreed to receive template messages"
+                      style={{
+                        paddingHorizontal: 6,
+                        paddingVertical: 1,
+                        borderRadius: 6,
+                        backgroundColor: t.surface2,
+                        borderWidth: 1,
+                        borderColor: t.border1,
+                      }}
+                    >
+                      <Text
+                        style={{ fontSize: 10, fontFamily: "InstrumentSans_700Bold", color: t.fg3 }}
+                      >
+                        DND
+                      </Text>
+                    </View>
+                  ) : null}
                 </View>
                 <Text
                   numberOfLines={1}
@@ -766,6 +967,20 @@ const ChatHeader = ({
               ? `Session expires in ${hoursLeft}h ${minutesLeft}m`
               : "Session expired"}
         </Text>
+        {otherTickets > 0 ? (
+          <Pressable
+            onPress={() => setOthersVisible(true)}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={`${otherTickets} other conversations with this customer`}
+            style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+          >
+            <History size={13} color={t.fg3} />
+            <Text style={{ fontSize: 12, fontFamily: "InstrumentSans_600SemiBold", color: t.fg3 }}>
+              {otherTickets} other
+            </Text>
+          </Pressable>
+        ) : null}
       </View>
 
       <MoreOptions
@@ -773,6 +988,8 @@ const ChatHeader = ({
         onClose={() => setOptionsVisible(false)}
         onCloseChatPress={() => setConfirmModalVisible(true)}
         contactId={contactId}
+        items={menuItems}
+        canClose={can("contacts.manage")}
         instagram={
           platform === MessagePlatform.INSTAGRAM
             ? {
@@ -785,8 +1002,16 @@ const ChatHeader = ({
 
       <ConfirmationModal
         contactId={contactId}
+        conversationId={conversationId}
         visible={confirmModalVisible}
         onCancel={() => setConfirmModalVisible(false)}
+      />
+
+      <OtherConversationsSheet
+        visible={othersVisible}
+        contactId={contactId}
+        currentConversationId={conversationId}
+        onClose={() => setOthersVisible(false)}
       />
     </View>
   );

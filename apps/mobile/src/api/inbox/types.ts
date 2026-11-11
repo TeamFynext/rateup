@@ -65,6 +65,29 @@ export type ContactsWithLastMessage = {
   metaAgentHandoverReason?: string | null;
   /** Meta AI has replied to this customer at some point. */
   metaAgentInvolved?: boolean;
+
+  // Ticket management. All returned by `contactsfiltered`; typed here for the mobile UI.
+  /** Tags on this ticket (per conversation). */
+  conversationTags?: { id: string; name: string; color?: string | null }[];
+  ticketDescription?: string | null;
+  ticketCreatedAt?: string | null;
+  ticketClosedAt?: string | null;
+  closedAt?: string | null;
+  closedUser?: { id?: string; name?: string } | null;
+  resolutionResult?: string | null;
+  /** How many other tickets this contact has. */
+  otherTicketCount?: number;
+  /** Unseen @mentions of the signed-in user on this ticket. */
+  mentionCount?: number;
+  /** Consent to receive template messages. Contact-grained. */
+  consent?: boolean;
+  /** Blocked through WhatsApp's block API. Contact-grained. */
+  blockedOnWhatsApp?: boolean;
+  /** WhatsApp's business-scoped user id: the address when there is no phone. */
+  bsuid?: string | null;
+  /** Lead stage on the leads board. Contact-grained. */
+  stageName?: string | null;
+  stageColor?: string | null;
 };
 
 export type MetaAgentThreadOwner = "AI" | "STAFF";

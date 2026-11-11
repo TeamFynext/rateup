@@ -57,7 +57,8 @@ export const useSendNewWaMessage = (
         ...message,
         whatsappSettingsPhoneId,
         platform,
-        teamId,
+        // Left out when there is none: the API takes a string or nothing, and rejects `null`.
+        ...(teamId && { teamId }),
       }),
     // Returned, so the mutation waits for the thread to refetch before the
     // caller's own `mutate` callbacks run — `MessageSendPanel` retires its

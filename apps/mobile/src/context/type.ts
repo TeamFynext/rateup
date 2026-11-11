@@ -29,6 +29,16 @@ export type orgWsMessage = {
     reason: string | null;
     at: string;
   };
+  /** The customer deleted (revoked) a message. The row stays; only its rendering changes. */
+  message_deleted?: {
+    /** Meta's id of the deleted message. */
+    messageId: string;
+    contactId: string | null;
+    conversationId?: string | null;
+    deletedAt: string;
+    /** Identifies the message inside the inbox row's last-message preview. */
+    waCreatedAt?: string | null;
+  };
   /** The customer edited a message (Instagram): `message` is the whole updated row. */
   message_edited?: {
     messageId: string;

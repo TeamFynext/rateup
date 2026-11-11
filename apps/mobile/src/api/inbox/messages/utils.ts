@@ -86,6 +86,13 @@ export function parseWaMessage_(message: any): ParsedWaMessageReturn {
             message.attachment.payload.attachment_id;
 
           messageType = message.attachment.type;
+          if (messageType === "file") {
+            // Shown with the document bubble, in its `link_caption_filename_caption_` form.
+            const url: string = message.attachment.payload.url ?? "";
+            const filename = decodeURIComponent(url.split("?")[0].split("/").pop() || "") || "file";
+            messageType = "document";
+            messageContent = `${url}_caption_${filename}_caption_`;
+          }
         } else if (message.attachments?.length) {
           // Several images in one message.
           messageType = "attachments";
@@ -116,6 +123,7 @@ export function parseWaMessage_(message: any): ParsedWaMessageReturn {
             text: receive.message.text,
             commentId: receive.message.comment_id,
             mediaId: receive.message.media_id,
+            permalink: receive.message.media_permalink,
           };
         } else if (receive.message.reply_to?.story) {
           const story: { id: string; url?: string; link_sticker_url?: string } =
@@ -254,6 +262,9 @@ export function parseWaMessage_(message: any): ParsedWaMessageReturn {
           case "order":
             messageContent = { ...receive.messages[0].order };
             break;
+          case "sticker":
+            messageContent = receive.messages[0].sticker?.id ?? "";
+            break;
           default:
             messageContent = "Not Supported Yet";
             break;
@@ -311,6 +322,8 @@ export function returnMessageContentBasedOnParsedMessage(
     return "Contact";
   } else if (parsedMessage.messageType === "sticker") {
     return "Sticker";
+  } else if (parsedMessage.messageType === "order") {
+    return "🛒 Order";
   } else if (parsedMessage.messageType === "voice") {
     return "Voice";
   } else if (parsedMessage.messageType === "gif") {

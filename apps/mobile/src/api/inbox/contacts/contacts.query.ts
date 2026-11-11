@@ -6,7 +6,7 @@ import { useSelectedContactStore } from "@/utils/store";
 import {
   assignedContact,
   editContact,
-  getChatFilterData,
+  getContactLabels,
   getContactById,
   getFilteredContacts,
   markMessageAsRead,
@@ -60,10 +60,10 @@ export const useMarkMessageAsRead = () =>
     mutationFn: (contactId: string) => markMessageAsRead(contactId),
   });
 
-export const useChatFilterData = () => {
+export const useContactLabels = () => {
   return useQuery({
-    queryKey: ["contacts", "filter-data"],
-    queryFn: getChatFilterData,
+    queryKey: ["contacts", "labels"],
+    queryFn: getContactLabels,
   });
 };
 

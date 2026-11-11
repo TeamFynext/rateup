@@ -1,468 +1,464 @@
-import { Toast } from "@/components/common/Notice";
-import React, { useState, useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  ScrollView,
   ActivityIndicator,
-  useColorScheme,
+  KeyboardAvoidingView,
   Modal,
-  TouchableWithoutFeedback,
-  FlatList,
+  Platform,
+  Pressable,
+  Text,
+  View,
+  useColorScheme,
+  useWindowDimensions,
 } from "react-native";
-import { ChevronDown, Search, Check } from "lucide-react-native";
-import useTemplatesAvailableForTeam from "./templates/team";
+import Animated, { FadeIn, SlideInLeft, SlideInRight, ZoomIn } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import * as Haptics from "expo-haptics";
+import { ArrowLeft, Check, Send, X } from "lucide-react-native";
 import { useTeamsByUser } from "@/api/teams/teams.query";
-import { useSendWaTemplateToUser } from "@/api/whatsapp/template/whatsapp.query";
-import { WaInboxTemplate } from "./templates/TemplateComponents";
-import { AccountSelector } from "./templates/TemplateComponents";
-import { getContactById } from "@/api/inbox/contacts/contacts.api";
+import { useContactById } from "@/api/inbox/contacts/contacts.query";
+import {
+  useSendWaTemplateToUser,
+  useWaSettings,
+  useWaTemplates,
+} from "@/api/whatsapp/template/whatsapp.query";
+import type { WaTemplate } from "@/api/whatsapp/types";
 import { Colors } from "@/constants/colors";
+import { getInboxRowTheme } from "@/constants/inboxDesign";
+import useTemplatesAvailableForTeam from "./templates/team";
+import PickTemplateStep, { type Option } from "./templates/PickTemplateStep";
+import FillVariablesStep from "./templates/FillVariablesStep";
+import ReviewStep from "./templates/ReviewStep";
+import {
+  buildBodyParameterData,
+  getBodyVariables,
+  getMissingVariables,
+} from "./templates/templateVariables";
 
-const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) => {
-  // Never written: the template body params aren't editable from the phone yet,
-  // so this stays the empty array the send call expects.
-  const [parameterData] = useState([]);
-  const [contactDetails, setContactDetails] = useState<any>(null);
-  const [teamId, setTeamId] = useState<string>("");
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
-  const [dropdownVisible, setDropdownVisible] = useState(false);
-  const [selectedTeamName, setSelectedTeamName] = useState<string>("");
-  const [loadingContact, setLoadingContact] = useState(true);
-  const [sending, setSending] = useState(false);
-  const [whatsappSettingsPhoneId, setWhatsappSettingsPhoneId] = useState<string>("");
+type Step = "pick" | "fill" | "review";
 
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+const STEP_TITLE: Record<Step, string> = {
+  pick: "Choose a template",
+  fill: "Personalize",
+  review: "Review & send",
+};
+const STEP_LABEL: Record<Step, string> = { pick: "Choose", fill: "Personalize", review: "Send" };
 
-  const teams = useTeamsByUser();
-  const templatesAvailableForTeam = useTemplatesAvailableForTeam(teamId);
+type Props = {
+  visible: boolean;
+  onClose: () => void;
+  contactId: string;
+  /** The chat's WhatsApp number; picked by default when it is one of the org's accounts. */
+  defaultAccountId?: string;
+};
 
-  const sendTemplate = useSendWaTemplateToUser(contactDetails?.phone, contactDetails?.id);
+/**
+ * Sends a WhatsApp template in steps: choose it, fill its variables (skipped when
+ * it has none), then review and send. The contents mount fresh on every open.
+ */
+export default function TemplateSending({ visible, onClose, contactId, defaultAccountId }: Props) {
+  // Android's back button steps back through the flow before it closes the sheet.
+  const backRef = useRef(onClose);
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={() => backRef.current()}
+    >
+      {visible ? (
+        <TemplateSheet
+          onClose={onClose}
+          contactId={contactId}
+          defaultAccountId={defaultAccountId}
+          backRef={backRef}
+        />
+      ) : null}
+    </Modal>
+  );
+}
+
+function TemplateSheet({
+  onClose,
+  contactId,
+  defaultAccountId,
+  backRef,
+}: Omit<Props, "visible"> & { backRef: React.MutableRefObject<() => void> }) {
+  const isDark = useColorScheme() === "dark";
+  const t = getInboxRowTheme(isDark);
+  const insets = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
+
+  // ---- data ----
+  const contact = useContactById(contactId).data as any;
+  const teamsQuery = useTeamsByUser();
+  const settingsQuery = useWaSettings();
+  const templatesQuery = useWaTemplates();
+
+  const teams: Option[] = useMemo(
+    () => (teamsQuery.data?.data ?? []).map((tm: any) => ({ value: tm.id, label: tm.name })),
+    [teamsQuery.data],
+  );
+  // The settings list carries every connected channel; only rows with a number are WhatsApp.
+  const accounts: Option[] = useMemo(
+    () =>
+      (settingsQuery.data ?? [])
+        .filter((a) => a.phone && a.phoneId)
+        .map((a) => ({
+          value: a.phoneId,
+          label: a.phoneDisplayName ? `${a.phoneDisplayName} · ${a.phone}` : a.phone,
+        })),
+    [settingsQuery.data],
+  );
+
+  // ---- choices ----
+  const [pickedTeamId, setTeamId] = useState("");
+  const [pickedAccountId, setAccountId] = useState("");
+  const teamId = pickedTeamId || teams[0]?.value || "";
+  const accountId =
+    pickedAccountId ||
+    accounts.find((a) => a.value === defaultAccountId)?.value ||
+    accounts[0]?.value ||
+    "";
+
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("");
+  const [template, setTemplate] = useState<WaTemplate | null>(null);
+  const [values, setValues] = useState<Record<string, string>>({});
+  const [showMissing, setShowMissing] = useState<string[]>([]);
+
+  const available = useTemplatesAvailableForTeam(teamId);
+  const approved = useMemo(
+    () => available.filter((tpl) => tpl?.data?.status === "APPROVED"),
+    [available],
+  );
+
+  const variables = useMemo(() => getBodyVariables(template?.data.components), [template]);
+
+  // ---- steps ----
+  const steps: Step[] = variables.length > 0 ? ["pick", "fill", "review"] : ["pick", "review"];
+  const [step, setStep] = useState<Step>("pick");
+  const [direction, setDirection] = useState<1 | -1>(1);
+  const index = steps.indexOf(step);
+
+  const goTo = (next: Step) => {
+    setDirection(steps.indexOf(next) >= index ? 1 : -1);
+    setStep(next);
+  };
+  const back = () => (index > 0 ? goTo(steps[index - 1]) : onClose());
 
   useEffect(() => {
-    async function getContactDetails() {
-      setLoadingContact(true);
-      try {
-        const detail = await getContactById(contact);
-        setContactDetails(detail);
-      } catch {
-        Toast.show({
-          type: "error",
-          text1: "Contacts fetching failed",
-        });
-      } finally {
-        setLoadingContact(false);
-      }
+    backRef.current = back;
+  });
+
+  // ---- sending ----
+  const send = useSendWaTemplateToUser(contact?.phone, contact?.id);
+  const [sent, setSent] = useState(false);
+
+  const selectTemplate = (tpl: WaTemplate) => {
+    Haptics.selectionAsync().catch(() => {});
+    if (tpl.id !== template?.id) {
+      setTemplate(tpl);
+      setValues({});
+      setShowMissing([]);
     }
-    getContactDetails();
-  }, [contact]);
+    setDirection(1);
+    setStep(getBodyVariables(tpl.data.components).length > 0 ? "fill" : "review");
+  };
 
-  // A 300ms spinner while the list re-filters, so the results don't jump under the thumb
-  // mid-type. Expressed as "the settled inputs are behind the current ones" rather than a
-  // flag raised from the effect: the flag needed a synchronous set on every keystroke,
-  // which is a second render per character on a screen already filtering a long list.
-  const templatesKey = `${teamId}|${searchTerm}`;
-  const [settledKey, setSettledKey] = useState(templatesKey);
-  const loadingTemplates = settledKey !== templatesKey;
+  const toReview = () => {
+    const missing = getMissingVariables(variables, values).map((v) => v.key);
+    setShowMissing(missing);
+    if (missing.length > 0) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
+      return;
+    }
+    goTo("review");
+  };
 
-  useEffect(() => {
-    if (settledKey === templatesKey) return;
-    const timeout = setTimeout(() => setSettledKey(templatesKey), 300);
-    return () => clearTimeout(timeout);
-  }, [templatesKey, settledKey]);
-
-  const approvedTemplates = templatesAvailableForTeam?.filter(
-    (template) => template?.data?.status === "APPROVED",
-  );
-
-  const filteredTemplates = approvedTemplates?.filter((template) =>
-    template.data.name.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
-
-  const hasTemplates = filteredTemplates?.some((data) => data.id === selectedTemplateId);
-
-  const selectedTemplate = filteredTemplates?.find(
-    (template) => template.id === selectedTemplateId,
-  );
-
-  async function handleSendTemplate() {
-    setSending(true);
+  const handleSend = async () => {
+    if (!template) return;
     try {
-      await sendTemplate?.mutateAsync({
-        templateId: selectedTemplateId,
-        parameterData: parameterData,
-        teamId: teamId,
-        whatsappSettingsPhoneId: whatsappSettingsPhoneId,
+      await send.mutateAsync({
+        templateId: template.id,
+        parameterData: buildBodyParameterData(variables, values),
+        teamId,
+        whatsappSettingsPhoneId: accountId,
       });
-      onClose(); // Close modal after send
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      setSent(true);
+      setTimeout(onClose, 900);
     } catch {
-      Toast.show({
-        type: "error",
-        text1: "Error in template sending",
-      });
-    } finally {
-      setSending(false);
+      // The mutation shows the error toast.
     }
-  }
+  };
 
-  if (loadingContact || teams.isLoading) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: isDark ? Colors.dark.bg : Colors.light.bg,
-          paddingVertical: 40,
-        }}
-      >
-        <ActivityIndicator size="large" color={Colors.brand.blue} />
-        <Text
-          style={{
-            fontFamily: "InstrumentSans_600SemiBold",
-            color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary,
-            marginTop: 10,
-          }}
-        >
-          Loading contact and teams...
-        </Text>
-      </View>
-    );
+  const loading = teamsQuery.isLoading || settingsQuery.isLoading;
+  const canSend = !!template && !!teamId && !!accountId && !!contact?.phone && !send.isPending;
+  const contactLabel = contact
+    ? [contact.name, contact.phone].filter(Boolean).join(" · ")
+    : "Loading…";
+  const suggestions = [
+    contact?.name ? { label: "Name", value: String(contact.name) } : null,
+    contact?.phone ? { label: "Phone", value: String(contact.phone) } : null,
+  ].filter(Boolean) as { label: string; value: string }[];
+
+  // ---- footer button for the current step ----
+  let footer: { label: string; onPress: () => void; disabled?: boolean; icon?: boolean } | null =
+    null;
+  if (step === "pick" && template) {
+    footer = { label: "Continue", onPress: () => selectTemplate(template) };
+  } else if (step === "fill") {
+    footer = { label: "Review", onPress: toReview };
+  } else if (step === "review") {
+    footer = { label: "Send template", onPress: handleSend, disabled: !canSend, icon: true };
   }
 
   return (
-    <View style={{ paddingVertical: 10 }}>
-      {/* Team selector */}
-      <View style={{ marginBottom: 14 }}>
-        <Text
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      style={{ flex: 1, justifyContent: "flex-end" }}
+    >
+      <Pressable
+        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+        onPress={onClose}
+        accessibilityLabel="Close"
+      >
+        <Animated.View
+          entering={FadeIn.duration(200)}
+          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.45)" }}
+        />
+      </Pressable>
+
+      <View
+        style={{
+          height: height * 0.88,
+          backgroundColor: t.surface,
+          borderTopLeftRadius: 22,
+          borderTopRightRadius: 22,
+          overflow: "hidden",
+        }}
+      >
+        {/* Grabber */}
+        <View
           style={{
-            fontFamily: "InstrumentSans_600SemiBold",
-            color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary,
-            fontSize: 14,
-            marginBottom: 6,
+            alignSelf: "center",
+            width: 36,
+            height: 4,
+            borderRadius: 2,
+            backgroundColor: t.border1,
+            marginTop: 8,
           }}
-        >
-          Select Team
-        </Text>
-        <Pressable
-          disabled={teams.isLoading}
+        />
+
+        {/* Header */}
+        <View
           style={{
-            height: 42,
             flexDirection: "row",
             alignItems: "center",
-            justifyContent: "space-between",
-            borderRadius: 12,
-            borderWidth: 1,
-            borderColor: isDark ? Colors.dark.borderLight : Colors.light.border,
-            backgroundColor: isDark ? Colors.dark.surface : "#fff",
             paddingHorizontal: 12,
+            paddingTop: 8,
+            paddingBottom: 4,
+            gap: 4,
           }}
-          onPress={() => setDropdownVisible((prev) => !prev)}
         >
-          <Text
+          <Pressable
+            onPress={back}
+            hitSlop={8}
+            disabled={index === 0}
+            accessibilityLabel="Back"
+            style={{ width: 36, height: 36, alignItems: "center", justifyContent: "center" }}
+          >
+            {index > 0 ? <ArrowLeft size={22} color={t.fg1} /> : null}
+          </Pressable>
+          <View style={{ flex: 1, alignItems: "center" }}>
+            <Text style={{ color: t.fg1, fontSize: 17, fontFamily: "Figtree_800ExtraBold" }}>
+              {STEP_TITLE[step]}
+            </Text>
+            <Text numberOfLines={1} style={{ color: t.fg3, fontSize: 12, marginTop: 1 }}>
+              To {contactLabel}
+            </Text>
+          </View>
+          <Pressable
+            onPress={onClose}
+            hitSlop={8}
+            accessibilityLabel="Close"
             style={{
-              fontFamily: "InstrumentSans_600SemiBold",
-              fontSize: 14,
-              color: selectedTeamName
-                ? isDark
-                  ? "#fff"
-                  : Colors.light.textPrimary
-                : isDark
-                  ? Colors.dark.textPlaceholder
-                  : Colors.light.textPlaceholder,
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: t.surface2,
             }}
           >
-            {selectedTeamName || "Select a team"}
-          </Text>
-          <ChevronDown size={16} color={isDark ? Colors.dark.inactive : Colors.light.inactive} />
-        </Pressable>
+            <X size={18} color={t.fg2} />
+          </Pressable>
+        </View>
 
-        <Modal
-          transparent
-          animationType="fade"
-          visible={dropdownVisible}
-          onRequestClose={() => setDropdownVisible(false)}
-        >
-          <TouchableWithoutFeedback onPress={() => setDropdownVisible(false)}>
-            <View
-              style={{
-                flex: 1,
-                justifyContent: "center",
-                backgroundColor: "rgba(0,0,0,0.4)",
-                paddingHorizontal: 20,
-              }}
+        {/* Progress */}
+        <View style={{ flexDirection: "row", gap: 6, paddingHorizontal: 16, paddingVertical: 12 }}>
+          {steps.map((s, i) => (
+            <View key={s} style={{ flex: 1, gap: 5 }}>
+              <View
+                style={{
+                  height: 4,
+                  borderRadius: 2,
+                  backgroundColor: i <= index ? t.brand : t.border1,
+                }}
+              />
+              <Text
+                style={{
+                  fontSize: 11,
+                  color: i === index ? t.fg1 : t.fg4,
+                  fontFamily: i === index ? "InstrumentSans_700Bold" : "InstrumentSans_600SemiBold",
+                }}
+              >
+                {i + 1}. {STEP_LABEL[s]}
+              </Text>
+            </View>
+          ))}
+        </View>
+
+        {/* Step body */}
+        {loading ? (
+          <ActivityIndicator style={{ marginTop: 48 }} color={t.brand} />
+        ) : (
+          <Animated.View
+            key={step}
+            entering={(direction === 1 ? SlideInRight : SlideInLeft).duration(220)}
+            style={{ flex: 1 }}
+          >
+            {step === "pick" && (
+              <PickTemplateStep
+                templates={approved}
+                loading={templatesQuery.isLoading}
+                selectedId={template?.id ?? ""}
+                onSelect={selectTemplate}
+                search={search}
+                onSearch={setSearch}
+                category={category}
+                onCategory={setCategory}
+                teams={teams}
+                teamId={teamId}
+                onTeam={(id) => {
+                  setTeamId(id);
+                  // A form template may not be available to the new team.
+                  setTemplate(null);
+                }}
+                accounts={accounts}
+                accountId={accountId}
+                onAccount={setAccountId}
+              />
+            )}
+            {step === "fill" && (
+              <FillVariablesStep
+                components={template?.data.components}
+                variables={variables}
+                values={values}
+                onChange={(key, value) => {
+                  setValues((v) => ({ ...v, [key]: value }));
+                  setShowMissing((m) => m.filter((k) => k !== key));
+                }}
+                suggestions={suggestions}
+                showMissing={showMissing}
+              />
+            )}
+            {step === "review" && template && (
+              <ReviewStep
+                templateName={template.data.name}
+                components={template.data.components}
+                variables={variables}
+                values={values}
+                to={contactLabel}
+                from={accounts.find((a) => a.value === accountId)?.label ?? ""}
+                team={teams.find((tm) => tm.value === teamId)?.label ?? ""}
+              />
+            )}
+          </Animated.View>
+        )}
+
+        {/* Pinned action */}
+        {footer && (
+          <View
+            style={{
+              paddingHorizontal: 16,
+              paddingTop: 10,
+              paddingBottom: insets.bottom + 12,
+              borderTopWidth: 1,
+              borderTopColor: t.border1,
+              backgroundColor: t.surface,
+            }}
+          >
+            {/* Styled on an inner View: NativeWind drops a Pressable's function style. */}
+            <Pressable
+              onPress={footer.onPress}
+              disabled={footer.disabled}
+              accessibilityRole="button"
             >
               <View
                 style={{
-                  backgroundColor: isDark ? Colors.dark.surface : "#fff",
-                  borderRadius: 16,
-                  paddingVertical: 8,
-                  maxHeight: "60%",
-                  borderWidth: 1,
-                  borderColor: isDark ? Colors.dark.borderLight : Colors.light.border,
+                  height: 50,
+                  borderRadius: 14,
+                  backgroundColor: Colors.brand.blue,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  opacity: footer.disabled ? 0.5 : 1,
                 }}
               >
-                <FlatList
-                  data={teams.data?.data}
-                  keyExtractor={(item) => item.id}
-                  renderItem={({ item }) => {
-                    const isSelected = item.id === teamId;
-                    return (
-                      <Pressable
-                        onPress={() => {
-                          setTeamId(item.id);
-                          setSelectedTeamName(item.name);
-                          setDropdownVisible(false);
-                          setSelectedTemplateId(""); // reset template on team change
-                        }}
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          paddingHorizontal: 16,
-                          paddingVertical: 12,
-                          borderBottomWidth: 1,
-                          borderBottomColor: isDark ? Colors.dark.border : Colors.light.border,
-                        }}
-                      >
-                        <Text
-                          style={{
-                            fontFamily: isSelected
-                              ? "InstrumentSans_700Bold"
-                              : "InstrumentSans_600SemiBold",
-                            fontSize: 15,
-                            color: isSelected
-                              ? isDark
-                                ? Colors.accent.cyan
-                                : Colors.brand.blue
-                              : isDark
-                                ? "#fff"
-                                : Colors.light.textPrimary,
-                          }}
-                        >
-                          {item.name}
-                        </Text>
-                        {isSelected && (
-                          <Check
-                            size={16}
-                            color={isDark ? Colors.accent.cyan : Colors.brand.blue}
-                          />
-                        )}
-                      </Pressable>
-                    );
-                  }}
-                  ListEmptyComponent={
+                {send.isPending && step === "review" ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <>
                     <Text
-                      style={{
-                        fontFamily: "InstrumentSans_600SemiBold",
-                        paddingHorizontal: 16,
-                        paddingVertical: 12,
-                        color: isDark ? Colors.dark.textMuted : Colors.light.textMuted,
-                        textAlign: "center",
-                      }}
+                      style={{ color: "#fff", fontSize: 16, fontFamily: "InstrumentSans_700Bold" }}
                     >
-                      No teams found!
+                      {footer.label}
                     </Text>
-                  }
-                />
+                    {footer.icon && <Send size={17} color="#fff" />}
+                  </>
+                )}
               </View>
-            </View>
-          </TouchableWithoutFeedback>
-        </Modal>
-      </View>
-
-      {/* Account Selector */}
-      <AccountSelector value={whatsappSettingsPhoneId} onChange={setWhatsappSettingsPhoneId} />
-
-      {/* Search input */}
-      {teamId && (
-        <View style={{ marginBottom: 14 }}>
-          <Text
-            style={{
-              fontFamily: "InstrumentSans_600SemiBold",
-              color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary,
-              fontSize: 14,
-              marginBottom: 6,
-            }}
-          >
-            Search Templates
-          </Text>
-          <View
-            style={{
-              height: 42,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 8,
-              borderRadius: 12,
-              borderWidth: 1,
-              borderColor: isDark ? Colors.dark.borderLight : Colors.light.border,
-              backgroundColor: isDark ? Colors.dark.inputBg : Colors.light.inputBg,
-              paddingHorizontal: 12,
-            }}
-          >
-            <Search size={16} color={isDark ? Colors.dark.inactive : Colors.light.inactive} />
-            <TextInput
-              placeholder="Search templates..."
-              placeholderTextColor={
-                isDark ? Colors.dark.textPlaceholder : Colors.light.textPlaceholder
-              }
-              value={searchTerm}
-              onChangeText={setSearchTerm}
-              style={{
-                flex: 1,
-                fontSize: 14,
-                fontFamily: "InstrumentSans_400Regular",
-                color: isDark ? "#fff" : Colors.light.textPrimary,
-                padding: 0,
-              }}
-            />
+            </Pressable>
           </View>
-        </View>
-      )}
+        )}
 
-      {/* Templates List */}
-      {teamId && (
-        <Text
-          style={{
-            fontFamily: "InstrumentSans_600SemiBold",
-            color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary,
-            fontSize: 14,
-            marginBottom: 8,
-          }}
-        >
-          Available Templates
-        </Text>
-      )}
-
-      {loadingTemplates ? (
-        <ActivityIndicator size="small" color={Colors.brand.blue} style={{ marginVertical: 10 }} />
-      ) : filteredTemplates && filteredTemplates.length > 0 ? (
-        <ScrollView style={{ maxHeight: 200, marginBottom: 14 }}>
-          {filteredTemplates.map((template) => {
-            const isSelected = selectedTemplateId === template.id;
-            return (
-              <Pressable
-                key={template.id}
-                onPress={() => setSelectedTemplateId(template.id)}
-                style={{
-                  paddingVertical: 12,
-                  paddingHorizontal: 14,
-                  marginBottom: 8,
-                  borderRadius: 12,
-                  borderWidth: 1.5,
-                  borderColor: isSelected
-                    ? isDark
-                      ? Colors.accent.cyan
-                      : Colors.brand.blue
-                    : "transparent",
-                  backgroundColor: isSelected
-                    ? isDark
-                      ? "rgba(79,195,255,0.15)"
-                      : "rgba(28,81,142,0.08)"
-                    : isDark
-                      ? Colors.dark.surface
-                      : Colors.light.surface,
-                }}
-              >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontFamily: "InstrumentSans_700Bold",
-                      fontSize: 14,
-                      color: isDark ? "#fff" : Colors.light.textPrimary,
-                    }}
-                  >
-                    {template.data.name}
-                  </Text>
-                  {isSelected && (
-                    <Check size={16} color={isDark ? Colors.accent.cyan : Colors.brand.blue} />
-                  )}
-                </View>
-                <Text
-                  style={{
-                    fontFamily: "InstrumentSans_400Regular",
-                    fontSize: 11,
-                    color: isDark ? Colors.dark.textSubtle : Colors.light.textSubtle,
-                    marginTop: 2,
-                  }}
-                >
-                  Language: {template.data.language}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-      ) : (
-        teamId && (
-          <Text
+        {/* Sent */}
+        {sent && (
+          <Animated.View
+            entering={FadeIn.duration(150)}
             style={{
-              fontFamily: "InstrumentSans_400Regular_Italic",
-              color: isDark ? Colors.dark.textMuted : Colors.light.textMuted,
-              textAlign: "center",
-              marginVertical: 12,
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: t.surface,
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 14,
             }}
           >
-            No approved templates found.
-          </Text>
-        )
-      )}
-
-      {/* Selected Template Preview */}
-      {selectedTemplate && (
-        <WaInboxTemplate
-          parameters={parameterData}
-          //@ts-ignore
-          templateBody={selectedTemplate?.data}
-        />
-      )}
-
-      {/* Send button */}
-      {hasTemplates && (
-        <Pressable
-          style={{
-            marginTop: 16,
-            height: 46,
-            borderRadius: 12,
-            backgroundColor: Colors.brand.blue,
-            alignItems: "center",
-            justifyContent: "center",
-            opacity: sending ? 0.7 : 1,
-            shadowColor: Colors.brand.blue,
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: isDark ? 0.4 : 0.2,
-            shadowRadius: 8,
-            elevation: 4,
-          }}
-          disabled={sending}
-          onPress={handleSendTemplate}
-        >
-          {sending ? (
-            <ActivityIndicator color="white" />
-          ) : (
-            <Text
+            <Animated.View
+              entering={ZoomIn.springify().damping(12)}
               style={{
-                fontFamily: "InstrumentSans_700Bold",
-                fontSize: 15,
-                color: "#fff",
+                width: 72,
+                height: 72,
+                borderRadius: 36,
+                backgroundColor: t.success,
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
-              Send Template
+              <Check size={38} color="#fff" strokeWidth={3} />
+            </Animated.View>
+            <Text style={{ color: t.fg1, fontSize: 17, fontFamily: "Figtree_800ExtraBold" }}>
+              Template sent
             </Text>
-          )}
-        </Pressable>
-      )}
-    </View>
+          </Animated.View>
+        )}
+      </View>
+    </KeyboardAvoidingView>
   );
-};
-
-export default TemplateSending;
+}

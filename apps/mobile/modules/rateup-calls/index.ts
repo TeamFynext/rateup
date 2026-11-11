@@ -1,5 +1,5 @@
-import type { EventSubscription } from "expo-modules-core";
-import { requireOptionalNativeModule } from "expo";
+import { requireOptionalNativeModule, type EventSubscription } from "expo";
+import { logger } from "../../src/utils/logger";
 
 /**
  * Android call plumbing (modules/rateup-calls/android): the full-screen incoming-call
@@ -30,7 +30,7 @@ function safely<T>(run: () => T, fallback: T): T {
   try {
     return run();
   } catch (error) {
-    console.warn("RateUpCalls:", error);
+    logger.warn("RateUpCalls:", error);
     return fallback;
   }
 }

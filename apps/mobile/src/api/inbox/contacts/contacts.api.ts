@@ -1,6 +1,6 @@
 import axios from "@/config/axios";
 import { ICreateContact } from "../types";
-import { ContactsWithLastMessageResponse } from "../types";
+import { ContactsWithLastMessageResponse, type ContactLabel } from "../types";
 import { describeError, logger } from "@/utils/logger";
 
 export const createContact = async (data: ICreateContact) => {
@@ -78,8 +78,9 @@ export const getFilteredContacts = async (filterData: string, page: number) => {
   }
 };
 
-export async function getChatFilterData() {
-  return (await axios.get(`/api/inbox/message/filterdata`)).data;
+/** The org's contact labels, for the inbox's Labels filter (the same list the web uses). */
+export async function getContactLabels(): Promise<ContactLabel[]> {
+  return (await axios.get(`/api/contacts/labels`)).data;
 }
 
 export const editContact = async ({ data, contactId }: { data: any; contactId: string }) => {
